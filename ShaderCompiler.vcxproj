@@ -1,0 +1,190 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{04B82032-C8BC-4B51-80B4-01814B357F26}</ProjectGuid>
+    <RootNamespace>ShaderCompiler</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccProvider>
+    </SccProvider>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\core_project.props" />
+    <Import Project="..\..\..\..\..\..\sdk\directx\june2010\DirectX11June2010.props" />
+    <Import Project="..\..\..\..\..\..\sdk\glew\1.7.0\glew_mx_1_7_0.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+    <Import Project="..\core_project.props" />
+    <Import Project="..\..\..\..\..\..\sdk\directx\june2010\DirectX11June2010.props" />
+    <Import Project="..\..\..\..\..\..\sdk\glew\1.7.0\glew_mx_1_7_0.props" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">..\..\tools\$(SolutionName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\tools\$(SolutionName)\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectName)d</TargetName>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;GLEW_MX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>d3dcompiler.lib;D3DX11.lib;D3D11.lib;D3D9.lib;d3dx9.lib;dxguid.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;GLEW_MX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>d3dcompiler.lib;D3DX11.lib;D3D11.lib;D3D9.lib;d3dx9.lib;dxguid.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="CachingIncludeHandler.cpp" />
+    <ClCompile Include="CompileMessageQueue.cpp" />
+    <ClCompile Include="EffectCompilerDX11.cpp" />
+    <ClCompile Include="EffectCompilerDx9.cpp" />
+    <ClCompile Include="EffectCompilerGL2.cpp" />
+    <ClCompile Include="EffectCompilerOrbis.cpp" />
+    <ClCompile Include="EffectData.cpp" />
+    <ClCompile Include="ASTNode.cpp" />
+    <ClCompile Include="FXAnalyzer.cpp" />
+    <ClCompile Include="HLSLParser.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ClCompile Include="HLSLScanner.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="ParserState.cpp" />
+    <ClCompile Include="ParserUtils.cpp" />
+    <ClCompile Include="Preprocessor.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsCpp</CompileAs>
+      <CompileAs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">CompileAsCpp</CompileAs>
+    </ClCompile>
+    <ClCompile Include="SymbolTable.cpp" />
+    <ClCompile Include="ShaderCompiler.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="StringTable.cpp" />
+    <ClCompile Include="TextureFunctionConversionDX11.cpp" />
+    <ClCompile Include="Type.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="CachingIncludeHandler.h" />
+    <ClInclude Include="CompileMessageQueue.h" />
+    <ClInclude Include="DX9AsmGrammar.h" />
+    <ClInclude Include="EffectCompilerDX11.h" />
+    <ClInclude Include="EffectCompilerDx9.h" />
+    <ClInclude Include="EffectCompilerGL2.h" />
+    <ClInclude Include="EffectCompilerOrbis.h" />
+    <ClInclude Include="EffectData.h" />
+    <ClInclude Include="ASTNode.h" />
+    <ClInclude Include="FXAnalyzer.h" />
+    <ClInclude Include="HLSLParser.h" />
+    <ClInclude Include="InlineString.h" />
+    <ClInclude Include="IntrinsicTypes.h" />
+    <ClInclude Include="ParserState.h" />
+    <ClInclude Include="ParserUtils.h" />
+    <ClInclude Include="Preprocessor.h" />
+    <ClInclude Include="SymbolTable.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="StringTable.h" />
+    <ClInclude Include="TextureFunctionConversionDX11.h" />
+    <ClInclude Include="Type.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.exe" />
+    <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.pdb" />
+    <None Include="..\..\tools\ShaderCompiler\ShaderCompilerd.exe" />
+    <None Include="..\..\tools\ShaderCompiler\ShaderCompilerd.pdb" />
+    <CustomBuild Include="HLSLScanner.re">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\re2c -o %(RelativeDir)HLSLScanner.cpp HLSLScanner.re</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">HLSLScanner.cpp</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.\re2c -o %(RelativeDir)HLSLScanner.cpp HLSLScanner.re</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">HLSLScanner.cpp</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="HLSLParser.y">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">lemon.bat %(Filename).y</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">HLSLParser.c</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">lemon.bat %(Filename).y</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">HLSLParser.c</Outputs>
+    </CustomBuild>
+    <CustomBuild Include="Preprocessor.y">
+      <FileType>Document</FileType>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">lemon.bat T=preprocessorLempar.c %(Filename).y</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">%(Filename).c</Outputs>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">lemon.bat T=preprocessorLempar.c %(Filename).y</Command>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(Filename).c</Outputs>
+    </CustomBuild>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

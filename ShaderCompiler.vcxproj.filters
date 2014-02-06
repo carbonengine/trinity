@@ -1,0 +1,171 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx;h</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav</Extensions>
+    </Filter>
+    <Filter Include="Output">
+      <UniqueIdentifier>{0b36fbc5-c5b9-4bd4-87f2-e0d2d58a84a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Grammar">
+      <UniqueIdentifier>{edc26557-a339-4f10-83c6-9b6bc2f5ab53}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="ShaderCompiler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CachingIncludeHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CompileMessageQueue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StringTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectData.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectCompilerDx9.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectCompilerDX11.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HLSLScanner.cpp">
+      <Filter>Source Files\Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="HLSLParser.c">
+      <Filter>Source Files\Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="SymbolTable.cpp">
+      <Filter>Source Files\Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="ASTNode.cpp">
+      <Filter>Source Files\Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="ParserUtils.cpp">
+      <Filter>Source Files\Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="FXAnalyzer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextureFunctionConversionDX11.cpp">
+      <Filter>Source Files\Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="Type.cpp">
+      <Filter>Source Files\Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="Preprocessor.c">
+      <Filter>Source Files\Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="ParserState.cpp">
+      <Filter>Source Files\Grammar</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectCompilerGL2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="EffectCompilerOrbis.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.exe">
+      <Filter>Output</Filter>
+    </None>
+    <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.pdb">
+      <Filter>Output</Filter>
+    </None>
+    <None Include="..\..\tools\ShaderCompiler\ShaderCompilerd.exe">
+      <Filter>Output</Filter>
+    </None>
+    <None Include="..\..\tools\ShaderCompiler\ShaderCompilerd.pdb">
+      <Filter>Output</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CachingIncludeHandler.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CompileMessageQueue.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectData.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="StringTable.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectCompilerDx9.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectCompilerDX11.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HLSLParser.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="SymbolTable.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="ASTNode.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="ParserUtils.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="FXAnalyzer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TextureFunctionConversionDX11.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="Type.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="Preprocessor.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="ParserState.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="InlineString.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectCompilerGL2.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IntrinsicTypes.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="DX9AsmGrammar.h">
+      <Filter>Source Files\Grammar</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectCompilerOrbis.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="HLSLScanner.re">
+      <Filter>Source Files\Grammar</Filter>
+    </CustomBuild>
+    <CustomBuild Include="HLSLParser.y">
+      <Filter>Source Files\Grammar</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Preprocessor.y">
+      <Filter>Source Files\Grammar</Filter>
+    </CustomBuild>
+  </ItemGroup>
+</Project>
