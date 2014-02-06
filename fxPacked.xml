@@ -1,0 +1,204 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ProjectSchemaDefinitions xmlns="clr-namespace:Microsoft.Build.Framework.XamlTypes;assembly=Microsoft.Build.Framework" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:transformCallback="Microsoft.Cpp.Dev10.ConvertPropertyCallback">
+  <Rule
+    Name="BuildTr2FX"
+    PageTemplate="tool"
+    DisplayName="BuildTr2FX"
+    Order="200">
+    <Rule.DataSource>
+      <DataSource
+        Persistence="ProjectFile"
+        ItemType="BuildTr2FX" />
+    </Rule.DataSource>
+    <Rule.Categories>
+      <Category
+        Name="General">
+        <Category.DisplayName>
+          <sys:String>General</sys:String>
+        </Category.DisplayName>
+      </Category>
+      <Category
+        Name="Command Line"
+        Subtype="CommandLine">
+        <Category.DisplayName>
+          <sys:String>Command Line</sys:String>
+        </Category.DisplayName>
+      </Category>
+    </Rule.Categories>
+    <StringListProperty
+      Name="Inputs"
+      Category="Command Line"
+      IsRequired="true"
+      Switch=" ">
+      <StringListProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          ItemType="BuildTr2FX"
+          SourceType="Item" />
+      </StringListProperty.DataSource>
+    </StringListProperty>
+    <BoolProperty
+      Name="NoWarnings"
+      HelpContext="0"
+      DisplayName="No warnings"
+      Description="Do not output compiler warnings"
+      Switch="/no_warnings" />
+    <EnumProperty
+      Name="ThreadCount"
+      HelpContext="0"
+      DisplayName="Thread Count"
+      Description="Number of compiler worker threads">
+      <EnumValue
+        Name="0"
+        DisplayName="Maximum" />
+      <EnumValue
+        Name="1"
+        DisplayName="1"
+        Switch="/threads 1" />
+      <EnumValue
+        Name="2"
+        DisplayName="2"
+        Switch="/threads 2" />
+      <EnumValue
+        Name="3"
+        DisplayName="3"
+        Switch="/threads 3" />
+      <EnumValue
+        Name="4"
+        DisplayName="4"
+        Switch="/threads 4" />
+      <EnumValue
+        Name="5"
+        DisplayName="5"
+        Switch="/threads 5" />
+      <EnumValue
+        Name="6"
+        DisplayName="6"
+        Switch="/threads 6" />
+      <EnumValue
+        Name="7"
+        DisplayName="7"
+        Switch="/threads 7" />
+      <EnumValue
+        Name="8"
+        DisplayName="8"
+        Switch="/threads 8" />
+      <EnumValue
+        Name="9"
+        DisplayName="9"
+        Switch="/threads 9" />
+      <EnumValue
+        Name="10"
+        DisplayName="10"
+        Switch="/threads 10" />
+    </EnumProperty>
+    <EnumProperty
+      Name="OptimizationLevel"
+      HelpContext="0"
+      DisplayName="Optimization Level"
+      Description="Level of compiler optimizations (only applies to DX platforms)">
+      <EnumValue
+        Name="0"
+        DisplayName="0"
+        Switch="/O0" />
+      <EnumValue
+        Name="1"
+        DisplayName="1"
+        Switch="/O1" />
+      <EnumValue
+        Name="2"
+        DisplayName="2"
+        Switch="/O2" />
+      <EnumValue
+        Name="3"
+        DisplayName="3"
+        Switch="/O3" />
+    </EnumProperty>
+    <StringProperty
+      Name="CommandLineTemplate"
+      DisplayName="Command Line"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <DynamicEnumProperty
+      Name="BuildTr2FXBeforeTargets"
+      Category="General"
+      EnumProvider="Targets"
+      IncludeInCommandLine="False">
+      <DynamicEnumProperty.DisplayName>
+        <sys:String>Execute Before</sys:String>
+      </DynamicEnumProperty.DisplayName>
+      <DynamicEnumProperty.Description>
+        <sys:String>Specifies the targets for the build customization to run before.</sys:String>
+      </DynamicEnumProperty.Description>
+      <DynamicEnumProperty.ProviderSettings>
+        <NameValuePair
+          Name="Exclude"
+          Value="^BuildTr2FXBeforeTargets|^Compute" />
+      </DynamicEnumProperty.ProviderSettings>
+      <DynamicEnumProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          HasConfigurationCondition="true" />
+      </DynamicEnumProperty.DataSource>
+    </DynamicEnumProperty>
+    <DynamicEnumProperty
+      Name="BuildTr2FXAfterTargets"
+      Category="General"
+      EnumProvider="Targets"
+      IncludeInCommandLine="False">
+      <DynamicEnumProperty.DisplayName>
+        <sys:String>Execute After</sys:String>
+      </DynamicEnumProperty.DisplayName>
+      <DynamicEnumProperty.Description>
+        <sys:String>Specifies the targets for the build customization to run after.</sys:String>
+      </DynamicEnumProperty.Description>
+      <DynamicEnumProperty.ProviderSettings>
+        <NameValuePair
+          Name="Exclude"
+          Value="^BuildTr2FXAfterTargets|^Compute" />
+      </DynamicEnumProperty.ProviderSettings>
+      <DynamicEnumProperty.DataSource>
+        <DataSource
+          Persistence="ProjectFile"
+          ItemType=""
+          HasConfigurationCondition="true" />
+      </DynamicEnumProperty.DataSource>
+    </DynamicEnumProperty>
+    <StringListProperty
+      Name="Outputs"
+      DisplayName="Outputs"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <StringProperty
+      Name="ExecutionDescription"
+      DisplayName="Execution Description"
+      Visible="False"
+      IncludeInCommandLine="False" />
+    <StringListProperty
+      Name="AdditionalDependencies"
+      DisplayName="Additional Dependencies"
+      IncludeInCommandLine="False"
+      Visible="false" />
+    <StringProperty
+      Subtype="AdditionalOptions"
+      Name="AdditionalOptions"
+      Category="Command Line">
+      <StringProperty.DisplayName>
+        <sys:String>Additional Options</sys:String>
+      </StringProperty.DisplayName>
+      <StringProperty.Description>
+        <sys:String>Additional Options</sys:String>
+      </StringProperty.Description>
+    </StringProperty>
+  </Rule>
+  <ItemType
+    Name="BuildTr2FX"
+    DisplayName="BuildTr2FX" />
+  <FileExtension
+    Name="*.fx"
+    ContentType="BuildTr2FX" />
+  <ContentType
+    Name="BuildTr2FX"
+    DisplayName="BuildTr2FX"
+    ItemType="BuildTr2FX" />
+</ProjectSchemaDefinitions>

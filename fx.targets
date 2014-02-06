@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <TrackFileAccess>false</TrackFileAccess>
+    <UseDefaultProjectTools>false</UseDefaultProjectTools>
+    <UseDefaultPropertyPageSchemas>false</UseDefaultPropertyPageSchemas>
+    <UseDefaultGeneralPropertyPageSchema>true</UseDefaultGeneralPropertyPageSchema>
+    <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <PropertyPageSchema
+      Include="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml;
+      $(MSBuildThisFileDirectory)$(MSBuildThisFileName)User.xml" />
+    <AvailableItemName
+      Include="BuildFX">
+      <Targets>FXCompile</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+  <Target Name="FXCompile" DependsOnTargets="_SelectedFiles">
+    <ItemGroup Condition="'@(SelectedFiles)'!=''">
+      <BuildFX Remove="@(BuildFX)" Condition="'%(Identity)'!='@(SelectedFiles)'"/>
+    </ItemGroup>
+    <PropertyGroup>
+      <OptimizationLevelSwitch>/O%(BuildFX.OptimizationLevel)</OptimizationLevelSwitch>
+    </PropertyGroup>
+    <PropertyGroup>
+      <PlatformDX9 Condition="'%(BuildFX.PlatformDX9)'=='true'">/DX9</PlatformDX9>
+    </PropertyGroup>
+    <PropertyGroup>
+      <PlatformDX11 Condition="'%(BuildFX.PlatformDX11)'=='true'">/DX11</PlatformDX11>
+    </PropertyGroup>
+    <PropertyGroup>
+      <PlatformGLES2 Condition="'%(BuildFX.PlatformGLES2)'=='true'">/GLES2</PlatformGLES2>
+    </PropertyGroup>
+    <PropertyGroup>
+      <MPSwitch Condition="'$(BuildCores)'=='Auto'"></MPSwitch>
+      <MPSwitch Condition="'$(BuildCores)'!='Auto'">/MP$(BuildCores)</MPSwitch>
+    </PropertyGroup>
+    <PropertyGroup>
+      <PSSwitch Condition="'$(DisplaySkipped)'=='true'">/ps</PSSwitch>
+    </PropertyGroup>
+    <Exec 
+      Condition="'@(BuildFX)' != '' and '%(BuildFX.ExcludedFromBuild)' != 'true'"
+      Command="$(MSBuildThisFileDirectory)..\..\..\..\..\..\shared_tools\python\27\Python.exe  $(MSBuildThisFileDirectory)BuildFX.py $(PlatformDX9) $(PlatformDX11) $(PlatformGLES2) /SM_DEPTH /SM_HI /SM_LO $(MPSwitch) $(PSSwitch) $(OptimizationLevelSwitch) $(IncrementalBuild) %(BuildFX.AdditionalOptions) @(BuildFX,' ')" 
+      />
+  </Target>
+  <Target Name="_SetIncremental">
+    <PropertyGroup>
+      <IncrementalBuild>/incr</IncrementalBuild>
+    </PropertyGroup>
+  </Target>
+  <Target
+    Name="Build"
+    Condition="'@(BuildFX)' != ''"
+    DependsOnTargets="PrepareForBuild;_SetIncremental;FXCompile">
+  </Target>
+  <Target
+    Name="Rebuild"
+    Condition="'@(BuildFX)' != ''"
+    DependsOnTargets="FXCompile">
+  </Target>
+
+</Project>

@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <!-- Enable incremental build by enable file tracking in tasks-->
+    <TrackFileAccess Condition="'$(TrackFileAccess)' == ''">false</TrackFileAccess>
+    <UseDefaultProjectTools>false</UseDefaultProjectTools>
+    <UseDefaultPropertyPageSchemas>false</UseDefaultPropertyPageSchemas>
+    <UseDefaultGeneralPropertyPageSchema>true</UseDefaultGeneralPropertyPageSchema>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PropertyPageSchema
+      Include="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml" />
+    <AvailableItemName
+      Include="BuildTr2FX">
+      <Targets>_BuildTr2FX</Targets>
+    </AvailableItemName>
+  </ItemGroup>
+  <UsingTask
+    TaskName="BuildTr2FX"
+    TaskFactory="XamlTaskFactory"
+    AssemblyName="Microsoft.Build.Tasks.v4.0">
+    <Task>$(MSBuildThisFileDirectory)$(MSBuildThisFileName).xml</Task>
+  </UsingTask>
+  <Target
+    Name="_BuildTr2FX"
+    BeforeTargets="$(BuildTr2FXBeforeTargets)"
+    AfterTargets="$(BuildTr2FXAfterTargets)"
+    Condition="'@(BuildTr2FX)' != ''"
+    DependsOnTargets="$(BuildTr2FXDependsOn)"
+    Outputs="%(BuildTr2FX.Outputs)"
+    Inputs="%(BuildTr2FX.Identity);%(BuildTr2FX.AdditionalDependencies);$(MSBuildProjectFile)">
+    <ItemGroup
+      Condition="'@(SelectedFiles)' != ''">
+      <BuildTr2FX
+        Remove="@(BuildTr2FX)"
+        Condition="'%(Identity)' != '@(SelectedFiles)'" />
+    </ItemGroup>
+    <Message
+      Importance="High"
+      Text="%(BuildTr2FX.ExecutionDescription)" />
+    <BuildTr2FX
+      Condition="'@(BuildTr2FX)' != '' and '%(BuildTr2FX.ExcludedFromBuild)' != 'true'"
+      CommandLineTemplate="%(BuildTr2FX.CommandLineTemplate)"
+      NoWarnings="%(BuildTr2FX.NoWarnings)"
+      ThreadCount="%(BuildTr2FX.ThreadCount)"
+      OptimizationLevel="%(BuildTr2FX.OptimizationLevel)"
+      AdditionalOptions="%(BuildTr2FX.AdditionalOptions) $(IncrementalBuild)"
+      Inputs="%(BuildTr2FX.Identity)" />
+  </Target>
+  <Target Name="_SetIncremental">
+    <PropertyGroup>
+      <IncrementalBuild>/incr</IncrementalBuild>
+    </PropertyGroup>
+  </Target>
+  <Target
+    Name="Build"
+    Condition="'@(BuildTr2FX)' != ''"
+    DependsOnTargets="PrepareForBuild;_SetIncremental;_BuildTr2FX">
+  </Target>
+  <Target
+    Name="Rebuild"
+    Condition="'@(BuildTr2FX)' != ''"
+    DependsOnTargets="_BuildTr2FX">
+  </Target>
+</Project>

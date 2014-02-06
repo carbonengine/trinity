@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup
+    Condition="'$(BuildTr2FXBeforeTargets)' == '' and '$(BuildTr2FXAfterTargets)' == '' and '$(ConfigurationType)' != 'Makefile'">
+    <BuildTr2FXBeforeTargets>Midl</BuildTr2FXBeforeTargets>
+    <BuildTr2FXAfterTargets>CustomBuild</BuildTr2FXAfterTargets>
+  </PropertyGroup>
+  <PropertyGroup>
+    <BuildTr2FXDependsOn
+      Condition="'$(ConfigurationType)' != 'Makefile'">_SelectedFiles;$(BuildTr2FXDependsOn)</BuildTr2FXDependsOn>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <BuildTr2FX>
+      <NoWarnings>False</NoWarnings>
+      <ThreadCount>0</ThreadCount>
+      <OptimizationLevel>3</OptimizationLevel>
+      <CommandLineTemplate>$(SolutionDir)..\..\..\..\..\..\..\..\shared_tools\python\26\Python.exe  $(SolutionDir)..\..\..\..\..\carbon\tools\ShaderCompiler\BuildTr2FXPacked.py [AllOptions] [AdditionalOptions] [inputs]</CommandLineTemplate>
+      <Outputs>%(Filename).fxp</Outputs>
+      <ExecutionDescription>Compiling %(Identity)...</ExecutionDescription>
+    </BuildTr2FX>
+  </ItemDefinitionGroup>
+</Project>
