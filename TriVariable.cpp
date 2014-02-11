@@ -9,6 +9,7 @@
 #include "Tr2DepthStencil.h"
 #include "Tr2RenderTarget.h"
 #include "Tr2VariableStore.h"
+#include "blue/include/TransGaming.h"
 
 BLUE_DEFINE_NONEXPOSED( TriVariable );
 
@@ -102,8 +103,10 @@ void TriVariable::CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType,
 				isSet = true;
 			}
 
-			if( !isSet )
+			if( !isSet && !IsTransgaming() )
 			{
+				// For some reason doing this on the Mac seems to cause more problems - we get a black
+				// screen on character select, at least on some older Macs with 9400m or 320m video cards
 				renderContext.m_esm.ApplyTexture( inputType, samplerIx, nullTX );
 			}
 			break;

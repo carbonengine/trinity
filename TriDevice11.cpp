@@ -134,10 +134,7 @@ void TriDevice::ApplicationActivated( ApplicationActivation activated )
 		{
 			if( renderContext.m_swapChain )
 			{
-				CComPtr<IDXGIOutput> dxgiOutput;
-				CComPtr<IDXGIAdapter1> adapterPtr;
-				if( SUCCEEDED( Tr2VideoAdapterInfo::GetVideoAdapterDX11( mAdapter, &adapterPtr, &dxgiOutput ) ) &&
-					SUCCEEDED( renderContext.m_swapChain->SetFullscreenState( TRUE, dxgiOutput ) ) )
+				if( SUCCEEDED( renderContext.m_swapChain->SetFullscreenState( TRUE, nullptr ) ) )
 				{
 					return;
 				}
