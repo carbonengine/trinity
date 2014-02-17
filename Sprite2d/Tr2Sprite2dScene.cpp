@@ -1164,7 +1164,8 @@ bool Tr2Sprite2dScene::OnPrepareResources()
 		usageFlags |= USAGE_LOCK_FREQUENTLY;
 	}
 
-	unsigned int ibSize = m_maxSpriteCount * 6 * sizeof( uint32_t );
+	unsigned int indexCount = m_maxSpriteCount * 6;
+	unsigned int ibSize = indexCount * sizeof( uint32_t );
 	unsigned int vbSize = m_maxSpriteCount * 4 * sizeof(Tr2Sprite2dD3DVertex);
 
 	if( !m_vertexBuffer.Create( vbSize ) )
@@ -1173,7 +1174,7 @@ bool Tr2Sprite2dScene::OnPrepareResources()
 		return false;
 	}
 
-	if( !m_indexBuffer.Create( m_maxSpriteCount * 4, Tr2RenderContextEnum::IB_32BIT ) )
+	if( !m_indexBuffer.Create( indexCount, Tr2RenderContextEnum::IB_32BIT ) )
 	{
 		CCP_LOGERR( "Tr2Sprite2dScene::OnPrepareResources failed to create streaming index buffer" );
 		return false;
