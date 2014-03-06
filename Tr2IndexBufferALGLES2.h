@@ -64,6 +64,9 @@ public:
 		return Lock( 0, 0, data, lockType, renderContext ); 
 	}
 	ALResult Unlock( Tr2RenderContextAL & renderContext );
+
+	ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
+
 	bool IsValid() const;
 	void Destroy();
 

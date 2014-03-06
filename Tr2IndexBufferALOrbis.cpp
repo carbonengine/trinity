@@ -163,13 +163,19 @@ ALResult Tr2IndexBufferAL::Lock(
 		}
 	}
 
-	if( lockType == LOCK_READONLY )
+	switch( lockType )
 	{
+	case LOCK_READONLY:
 		*data = reinterpret_cast<uint8_t*>( m_buffer.GetMemoryForCpuReading( renderContext ) ) + offset;
-	}
-	else
-	{
+		break;
+	case LOCK_WRITEONLY:
 		*data = reinterpret_cast<uint8_t*>( m_buffer.GetMemoryForCpuWriting( renderContext ) ) + offset;
+		break;
+	case LOCK_NO_OVERWRITE:
+		*data = reinterpret_cast<uint8_t*>( m_buffer.GetMemoryForCpuWritingNoSync( renderContext ) ) + offset;
+		break;
+	default:
+		return E_INVALIDARG;
 	}
 	return S_OK;
 }
@@ -178,6 +184,28 @@ ALResult Tr2IndexBufferAL::Unlock( Tr2RenderContextAL & /*renderContext*/ )
 {
 	AL_FUZZ_LOCK( OT_INDEX_BUFFER );
 	return S_OK;
+}
+
+ALResult Tr2IndexBufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext )
+{
+	if( !renderContext.IsValid() || !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( offset + size > GetTotalSizeInBytes() )
+	{
+		return E_INVALIDARG;
+	}
+	if( ( m_usage & USAGE_CPU_WRITE ) == 0 || ( m_usage & USAGE_LOCK_FREQUENTLY ) != 0 )
+	{
+		return E_INVALIDCALL;
+	}
+	if( size == 0 )
+	{
+		return S_OK;
+	}
+
+	memcpy( reinterpret_cast<uint8_t*>( m_buffer.GetMemoryForCpuWriting( renderContext ) ) + offset, data, size );
 }
 
 bool Tr2IndexBufferAL::operator==( const Tr2IndexBufferAL& other ) const

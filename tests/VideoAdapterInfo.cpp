@@ -1,4 +1,7 @@
 #include "StdAfx.h"
+#include "TrinityAL/Tr2DriverUtilities.h"
+
+using namespace Tr2RenderContextEnum;
 
 TEST( VideoAdapterInfo, HasAtLeastOneAdapter )
 {
@@ -35,7 +38,7 @@ TEST( VideoAdapterInfo, CanEnumerateModesForDefaultAdapter )
 	memset( &mode, 0, sizeof( mode ) );
 	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode ) );
 	
-	Tr2RenderContextEnum::PixelFormat backBufferFormat = mode.format;
+	PixelFormat backBufferFormat = mode.format;
 	unsigned count = 0;
 	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterModeCount( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, backBufferFormat, count ) );
 
@@ -73,3 +76,68 @@ TEST( VideoAdapterInfo, SameAdaptersAreNotDifferent )
 {
 	EXPECT_FALSE( Tr2VideoAdapterInfo::AreAdaptersDifferent( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, Tr2VideoAdapterInfo::DEFAULT_ADAPTER ) );
 }
+
+TEST( VideoAdapterInfo, CanQueryMsaaSupport )
+{
+	unsigned quality;
+	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterMsaaSupport( 
+		Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
+		PIXEL_FORMAT_B8G8R8A8_UNORM, 
+		true, 
+		1, 
+		quality ) );
+	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterMsaaSupport( 
+		Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
+		DSFMT_D16, 
+		true, 
+		1, 
+		quality ) );
+}
+
+TEST( VideoAdapterInfo, DefaultAdapterSupports32bppRenderTarget )
+{
+	Tr2DisplayModeInfo mode;
+	memset( &mode, 0, sizeof( mode ) );
+	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode ) );
+
+	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::SupportsRenderTargetFormat( 
+		Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
+		mode.format, 
+		PIXEL_FORMAT_B8G8R8A8_UNORM, 
+		false ) );
+}
+
+TEST( VideoAdapterInfo, DefaultAdapterSupports16bppDepthStencil )
+{
+	Tr2DisplayModeInfo mode;
+	memset( &mode, 0, sizeof( mode ) );
+	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode ) );
+
+	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::SupportsDepthStencilFormat( 
+		Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
+		mode.format, 
+		DSFMT_D16 ) );
+}
+
+#ifdef _WIN32
+TEST( VideoAdapterInfo, CanGetDriverInfo )
+{
+	Tr2AdapterInfo info;
+	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterInfo( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, info ) );
+
+	Tr2VideoDriverInfo driverInfo;
+	ASSERT_HRESULT_SUCCEEDED( Tr2DriverUtilities::GetDriverVersion( info.deviceID, driverInfo ) );
+
+	EXPECT_FALSE( driverInfo.driverVersionString.empty() );
+	EXPECT_FALSE( driverInfo.driverVendor.empty() );
+	EXPECT_FALSE( driverInfo.driverDate.empty() );
+	EXPECT_GT( driverInfo.driverVersion, 0 );
+}
+
+TEST( VideoAdapterInfo, GettingDriverInfoForInvalidVendorFails )
+{
+	Tr2VideoDriverInfo driverInfo;
+	ASSERT_HRESULT_FAILED( Tr2DriverUtilities::GetDriverVersion( 0xffffffff, driverInfo ) );
+}
+
+#endif

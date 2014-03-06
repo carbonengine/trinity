@@ -202,6 +202,7 @@ Configurations:
     - Debug
     - GLES2
     - Android
+    - WithGoogleTest
     General: 
       TargetName: libTrinityALTestGLES2_d
     AntBuild:
@@ -212,6 +213,7 @@ Configurations:
     - Release
     - GLES2
     - Android
+    - WithGoogleTest
     General: 
       TargetName: libTrinityALTestGLES2
     ClCompile:

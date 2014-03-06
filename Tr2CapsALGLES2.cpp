@@ -41,7 +41,8 @@ bool Tr2CapsAL::SupportsNoOverwriteLock() const
 #if defined(TRINITY_AL_MOBILE)
 	return false;
 #else
-	return true;
+    // TODO: for Mac there's APPLE_flush_buffer_range extension that could do the trick on GL2
+    return glMapBufferRange != nullptr;
 #endif
 }
 

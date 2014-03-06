@@ -22,7 +22,7 @@ CCP_STATS_DECLARE( sceneDrawcallCount	, "Trinity/AL/sceneDrawcallCount"	, true, 
 #define	INVALID_WIN32	0xFFFFFFFF
 #define	INVALID_HRC  	(HGLRC)0xFFFFFFFF
 
-std::map<std::pair<int, std::pair<int, bool> >, Tr2RenderContextAL::ProgramObject> Tr2RenderContextAL::s_programs;
+std::map<std::pair<int, std::pair<int, bool> >, Tr2RenderContextAL::ProgramObject*> Tr2RenderContextAL::s_programs;
 
 struct Tr2RenderContextAL::ShadowStateRestoreInfo
 {
@@ -250,10 +250,10 @@ struct Tr2RenderContextAL::Blitter
 		GL_FAIL( glActiveTexture( GL_TEXTURE0 ) );
 		GL_FAIL( glBindTexture( GL_TEXTURE_2D, *source.m_texture ) );
 		GL_IGNORE_ERROR( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
-		if( !( source.m_currentSampler == m_sampler ) )
+		if( !( source.m_currentSampler.m_hash == m_sampler.m_stateData.m_hash ) )
 		{
-			CR_RETURN_HR( (HRESULT)m_sampler.Apply( GL_TEXTURE_2D, source.GetTrueMipCount() > 1 ) );
-			source.m_currentSampler = m_sampler;
+			CR_RETURN_HR( (HRESULT)m_sampler.Apply( GL_TEXTURE_2D, source.GetTrueMipCount() > 1, m_sampler.m_stateData ) );
+			source.m_currentSampler = m_sampler.m_stateData;
 		}
 		GL_FAIL( glUseProgram( m_program ) );
 
@@ -315,7 +315,7 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	CCP_ASSERT( GetPrimaryRenderContextPointer() == nullptr );
 	GetPrimaryRenderContextPointer() = this;
 
-	m_boundProgramObject.program = 0;
+	m_boundProgramObject = nullptr;
 
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
@@ -886,7 +886,7 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 		return E_INVALIDARG;
 	}
 	AL_UPDATE_RESOURCE_FRAME_USAGE( samplerState );
-	m_boundSamplers[inputType][registerNumber] = samplerState;
+	m_boundSamplers[inputType][registerNumber] = samplerState.m_stateData;
 	return S_OK;
 }
 
@@ -982,6 +982,14 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	if( m_events )
 	{
 		m_events->OnContextCreated( *this );
+	}
+
+	for( int j = 0; j < Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++j )
+	{
+		for( int i = 0; i < 16; ++i )
+		{
+			m_boundSamplers[j][i].m_hash = 0;
+		}
 	}
 
 	return S_OK;
@@ -1100,12 +1108,35 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned /*adapter*/, const T
 	{
 		CR_RETURN_HR( CreateOpenGLContext( presentationParameters ) );
 	}
+	
+	if( pp.windowed )
+	{
+		ChangeDisplaySettings( 0, CDS_NORESET );
+	}
+	else
+	{
+		DEVMODE dm;
+		dm.dmSize = sizeof(DEVMODE);
+		dm.dmPelsWidth = pp.mode.width;
+		dm.dmPelsHeight = pp.mode.height;
+		dm.dmBitsPerPel = 32;
+		dm.dmFields = DM_PELSWIDTH | DM_PELSHEIGHT | DM_BITSPERPEL;
+		ChangeDisplaySettings( &dm, CDS_FULLSCREEN );
+	}
+
+	typedef BOOL (WINAPI * PFNWGLSWAPINTERVALEXTPROC) (int interval);
+	PFNWGLSWAPINTERVALEXTPROC wglSwapIntervalEXT = reinterpret_cast<PFNWGLSWAPINTERVALEXTPROC>( wglGetProcAddress( "wglSwapIntervalEXT" ) );
+	if( wglSwapIntervalEXT )
+	{
+		( *wglSwapIntervalEXT )( pp.presentInterval & 0xf );
+	}
 #else
     if( m_hWnd == 0 )
     {
         CR_RETURN_HR( CreateOpenGLContext( presentationParameters ) );
     }
 #endif
+
 	CR_RETURN_HR( m_defaultBackBuffer.Create(	
 		presentationParameters.mode.width,
 		presentationParameters.mode.height,
@@ -1257,7 +1288,7 @@ ALResult Tr2RenderContextAL::SetShader( const Tr2ShaderAL& shader )
 
 ALResult Tr2RenderContextAL::SetProgram()
 {
-	m_boundProgramObject.program = 0;
+	m_boundProgramObject = nullptr;
 	if( !m_vertexShader || !m_vertexShader->IsValid() || 
 		!m_pixelShader || !m_pixelShader->IsValid() )
 	{
@@ -1274,45 +1305,46 @@ ALResult Tr2RenderContextAL::SetProgram()
 	if( found != s_programs.end() )
 	{
 		m_boundProgramObject = found->second;
-		if( m_boundProgramObject.program )
+		if( m_boundProgramObject->program )
 		{
-			glUseProgram( m_boundProgramObject.program );
+			glUseProgram( m_boundProgramObject->program );
 			return S_OK;
 		}
 		return E_FAIL;
 	}
-	m_boundProgramObject.program = glCreateProgram();
-	if( m_boundProgramObject.program == 0 )
+	m_boundProgramObject = CCP_NEW( "Tr2RenderContextAL::ProgramObject" ) ProgramObject;
+	m_boundProgramObject->program = glCreateProgram();
+	if( m_boundProgramObject->program == 0 )
 	{
 		return E_FAIL;
 	}
 	glAttachShader( 
-		m_boundProgramObject.program, 
+		m_boundProgramObject->program, 
 		patchedPS && m_vertexShader->m_patchedShader	? m_vertexShader->m_patchedShader 
 														: m_vertexShader->m_shader );
 	glAttachShader( 
-		m_boundProgramObject.program, 
+		m_boundProgramObject->program, 
 		patchedPS && m_pixelShader->m_patchedShader		? m_pixelShader->m_patchedShader 
 														: m_pixelShader->m_shader );
 
-	glLinkProgram( m_boundProgramObject.program );
+	glLinkProgram( m_boundProgramObject->program );
 	GLint status = 0;
-	glGetProgramiv( m_boundProgramObject.program, GL_LINK_STATUS, &status );
+	glGetProgramiv( m_boundProgramObject->program, GL_LINK_STATUS, &status );
 	if( !status )
 	{
 		GLint length = 0;
-		glGetProgramiv( m_boundProgramObject.program, GL_INFO_LOG_LENGTH, &length );
+		glGetProgramiv( m_boundProgramObject->program, GL_INFO_LOG_LENGTH, &length );
 		char* buffer = new char[length];
-		glGetProgramInfoLog( m_boundProgramObject.program, length, nullptr, buffer );
+		glGetProgramInfoLog( m_boundProgramObject->program, length, nullptr, buffer );
 		CCP_AL_LOGERR( "Error linking vertex and pixel shader: %s", buffer );
 		delete[] buffer;
-		glDeleteProgram( m_boundProgramObject.program );
-		m_boundProgramObject.program = 0;
+		glDeleteProgram( m_boundProgramObject->program );
+		m_boundProgramObject->program = 0;
 		s_programs[key] = m_boundProgramObject;
 		return E_FAIL;
 	}
 
-	glUseProgram( m_boundProgramObject.program );
+	glUseProgram( m_boundProgramObject->program );
 
 	static const char* attributeNames[] = {
 		"attr0",  "attr1",  "attr2",  "attr3",
@@ -1321,15 +1353,15 @@ ALResult Tr2RenderContextAL::SetProgram()
 		"attr12", "attr13", "attr14", "attr15",		
 	};
 
-	m_boundProgramObject.attributes.clear();
+	m_boundProgramObject->attributes.clear();
 	for( size_t i = 0; i < m_vertexShader->GetInputDefinition().elements.size(); ++i )
 	{
 		auto& element = m_vertexShader->GetInputDefinition().elements[i];
-		int index = glGetAttribLocation( m_boundProgramObject.program, attributeNames[i] );
+		int index = glGetAttribLocation( m_boundProgramObject->program, attributeNames[i] );
 		if( index != -1 )
 		{
 			glEnableVertexAttribArray( index ); 
-			m_boundProgramObject.attributes[std::make_pair( element.usage, element.usageIndex )] = index;
+			m_boundProgramObject->attributes[std::make_pair( element.usage, element.usageIndex )] = index;
 		}
 	}
 
@@ -1342,19 +1374,19 @@ ALResult Tr2RenderContextAL::SetProgram()
 
 	for( unsigned i = 0; i < 16; ++i )
 	{
-		m_boundProgramObject.constantBuffers[i] = glGetUniformLocation( m_boundProgramObject.program, cbNames[i] );
+		m_boundProgramObject->constantBuffers[i] = glGetUniformLocation( m_boundProgramObject->program, cbNames[i] );
 	}
-	m_boundProgramObject.intConstant = glGetUniformLocation( m_boundProgramObject.program, "i15" );
+	m_boundProgramObject->intConstant = glGetUniformLocation( m_boundProgramObject->program, "i15" );
 
 	if( patchedPS )
 	{
-		m_boundProgramObject.shadowStateInt = glGetUniformLocation( m_boundProgramObject.program, "ssi" );
-		m_boundProgramObject.shadowStateFloat = glGetUniformLocation( m_boundProgramObject.program, "ssf" );
+		m_boundProgramObject->shadowStateInt = glGetUniformLocation( m_boundProgramObject->program, "ssi" );
+		m_boundProgramObject->shadowStateFloat = glGetUniformLocation( m_boundProgramObject->program, "ssf" );
 	}
 	else
 	{
-		m_boundProgramObject.shadowStateInt = -1;
-		m_boundProgramObject.shadowStateFloat = -1;
+		m_boundProgramObject->shadowStateInt = -1;
+		m_boundProgramObject->shadowStateFloat = -1;
 	}
 
 	static const char* samplerNames[] = {
@@ -1364,13 +1396,13 @@ ALResult Tr2RenderContextAL::SetProgram()
 		"s12", "s13", "s14", "s15",		
 	};
 
-	m_boundProgramObject.shadowStateOffsets = glGetUniformLocation( m_boundProgramObject.program, "ssyf" );
+	m_boundProgramObject->shadowStateOffsets = glGetUniformLocation( m_boundProgramObject->program, "ssyf" );
 
 	s_programs[key] = m_boundProgramObject;
 
 	for( unsigned i = 0; i < 16; ++i )
 	{
-		GLint location = glGetUniformLocation( m_boundProgramObject.program, samplerNames[i] );
+		GLint location = glGetUniformLocation( m_boundProgramObject->program, samplerNames[i] );
 		if( location != -1 )
 		{
 			glUniform1i( location, i );
@@ -1386,7 +1418,7 @@ void Tr2RenderContextAL::ShaderDeleted( int shader )
 	{
 		if( it->first.first == shader || it->first.second.first == shader )
 		{
-			glDeleteProgram( it->second.program );
+			glDeleteProgram( it->second->program );
 			it = s_programs.erase( it );
 		}
 		else
@@ -2306,7 +2338,7 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 		0, 0, 0,		
 	};
 
-	if( m_boundLayout == nullptr )
+	if( m_boundLayout == nullptr || m_boundProgramObject == nullptr )
 	{
 		return false;
 	}
@@ -2334,8 +2366,8 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 				return false;
 			}
 		}
-		auto it = m_boundProgramObject.attributes.find( std::make_pair( src.m_usage, src.m_usageIndex ) );
-		if( it != m_boundProgramObject.attributes.end() )
+		auto it = m_boundProgramObject->attributes.find( std::make_pair( src.m_usage, src.m_usageIndex ) );
+		if( it != m_boundProgramObject->attributes.end() )
 		{
 			if( !data )
 			{
@@ -2364,7 +2396,8 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 				info.m_instanceAttributes[info.m_instanceAttributesCount++] = it->second;
 			}
 		}
-    };
+    }
+
 	return true;
 }
 
@@ -2375,23 +2408,23 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 
 	for( unsigned i = 0; i != 16; ++i )
 	{
-		if( m_boundBuffers[i] && m_boundProgramObject.constantBuffers[i] >= 0 )
+		if( m_boundBuffers[i] && m_boundProgramObject->constantBuffers[i] >= 0 )
 		{
 			glUniform4fv( 
-				m_boundProgramObject.constantBuffers[i], 
+				m_boundProgramObject->constantBuffers[i], 
 				m_boundBuffers[i]->GetSize() / 4 / sizeof( float ), 
 				(float*)m_boundBuffers[i]->m_shadowCopy.get() );
 		}
 	}
-	if( m_boundProgramObject.intConstant >= 0 )
+	if( m_boundProgramObject->intConstant >= 0 )
 	{
-		glUniform4i( m_boundProgramObject.intConstant, m_numberOfLights, 0, 0, 0 );
+		glUniform4i( m_boundProgramObject->intConstant, m_numberOfLights, 0, 0, 0 );
 	}
 
-	if( m_boundProgramObject.shadowStateInt >= 0 )
+	if( m_boundProgramObject->shadowStateInt >= 0 )
 	{
 		glUniform4f( 
-			m_boundProgramObject.shadowStateInt, 
+			m_boundProgramObject->shadowStateInt, 
 			float( m_fragmentOpSettings.m_invertedAlphaTest ),
 			float( m_fragmentOpSettings.m_alphaTestRef ),
 			float( m_fragmentOpSettings.m_alphaTestFunc ),
@@ -2413,11 +2446,11 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 			}
 		}
 		glUniform4fv( 
-			m_boundProgramObject.shadowStateFloat,
+			m_boundProgramObject->shadowStateFloat,
 			m_fragmentOpSettings.MAX_CLIP_PLANES,
 			(GLfloat*)clipPlane );
 	}
-	if( m_boundProgramObject.shadowStateOffsets >= 0 )
+	if( m_boundProgramObject->shadowStateOffsets >= 0 )
 	{
 		uint32_t width = 0;
 		uint32_t height = 0;
@@ -2427,7 +2460,7 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 			height = m_boundRenderTarget[0]->GetHeight();
 		}
 		glUniform3f( 
-			m_boundProgramObject.shadowStateOffsets,
+			m_boundProgramObject->shadowStateOffsets,
 			1.0f / float( width ),
 			-1.0f / float( height ),
 			-1.f );
@@ -2438,7 +2471,7 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 	{
 		if( m_boundTextures[PIXEL_SHADER][j] )
 		{
-			if( !( m_boundTextures[PIXEL_SHADER][j]->m_currentSampler == m_boundSamplers[PIXEL_SHADER][j] ) )
+			if( !( m_boundTextures[PIXEL_SHADER][j]->m_currentSampler.m_hash == m_boundSamplers[PIXEL_SHADER][j].m_hash ) )
 			{
 				if( !rebindTexture )
 				{
@@ -2453,9 +2486,10 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 				glBindTexture( 
 					textureType, 
 					m_boundTextures[PIXEL_SHADER][j]->m_texture ? *m_boundTextures[PIXEL_SHADER][j]->m_texture : 0 );
-				m_boundSamplers[PIXEL_SHADER][j].Apply( 
+				Tr2SamplerStateAL::Apply( 
 					textureType, 
-					m_boundTextures[PIXEL_SHADER][j]->GetTrueMipCount() > 1 );
+					m_boundTextures[PIXEL_SHADER][j]->GetTrueMipCount() > 1,
+					m_boundSamplers[PIXEL_SHADER][j] );
 				m_boundTextures[PIXEL_SHADER][j]->m_currentSampler = m_boundSamplers[PIXEL_SHADER][j];
 			}
 		}
@@ -2666,6 +2700,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 			GL_FAIL( glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT  , GL_RENDERBUFFER, 0 ) );
 			GL_FAIL( glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, 0 ) );
 		}
+#if defined(TRINITYDEV) || defined(_DEBUG)
 		const uint32_t status = glCheckFramebufferStatus( GL_FRAMEBUFFER );
 
 		switch( status )
@@ -2676,13 +2711,6 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 			break;
 		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
 			break;
-#if 0
-		case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-			break;
-		case GL_FRAMEBUFFER_INCOMPLETE_FORMATS:
-			CCP_AL_LOGWARN( "SetRtDsToDevice: RT/DS have non-renderable formats" );
-			return E_FAIL;
-#endif
 		case GL_FRAMEBUFFER_UNSUPPORTED:
 			CCP_AL_LOGWARN(" SetRtDsToDevice: combination of internal formats not supported" );
 			return E_FAIL;
@@ -2690,6 +2718,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 			CCP_AL_LOGWARN(" SetRtDsToDevice: unknown status" );
 			break;
 		}		
+#endif
 	}
 
 	// emulate DX9 -- setting RT sets the VP, trinity relies on this
@@ -2798,20 +2827,22 @@ ALResult Tr2RenderContextAL::InternalResolveRT( Tr2RenderTargetAL& destination, 
 	{
 		CR_GL( glFramebufferTexture2D( GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *source.m_backingStore.m_texture, 0 ) );
 	}
-	uint32_t status = glCheckFramebufferStatus( GL_READ_FRAMEBUFFER_EXT );
-	if( status != GL_FRAMEBUFFER_COMPLETE )
+#if defined(TRINITYDEV) || defined(_DEBUG)
+	if( glCheckFramebufferStatus( GL_READ_FRAMEBUFFER_EXT ) != GL_FRAMEBUFFER_COMPLETE )
 	{
 		CCP_AL_LOGERR( "Tr2RenderContextAL::InternalResolveRT: invalid read buffer" );
 		return E_FAIL;
 	}
+#endif
 	CR_GL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, m_offscreenFrameBuffer1 ) );
 	CR_GL( glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *destination.m_backingStore.m_texture, 0 ) );
-	status = glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER_EXT );
-	if( status != GL_FRAMEBUFFER_COMPLETE )
+#if defined(TRINITYDEV) || defined(_DEBUG)
+	if( glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER_EXT ) != GL_FRAMEBUFFER_COMPLETE )
 	{
 		CCP_AL_LOGERR( "Tr2RenderContextAL::InternalResolveRT: invalid draw buffer" );
 		return E_FAIL;
 	}
+#endif
 	CR_GL( glBlitFramebuffer( 0, 0, source.GetWidth(), source.GetHeight(), 0, 0, destination.GetWidth(), destination.GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST ) );
 	CR_GL( glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, 0 ) );
 	CR_GL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, 0 ) );

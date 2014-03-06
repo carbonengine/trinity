@@ -2,6 +2,7 @@
 #include "WithWindowFixture.h"
 #include "WithRenderContextFixture.h"
 #include "WithValidRenderContextFixture.h"
+#include "TrinityAL/Tr2DriverUtilities.h"
 
 // Needed by CcpCore
 const char* g_moduleName = "TrinityALTest";
@@ -18,20 +19,6 @@ bool g_interactive = false;
 bool g_makeScreenShots = false;
 // Folder to save screenshots (set by --screenshotdir option)
 const char* g_screenshotFolder = ".";
-
-namespace
-{
-
-CcpMutex s_logMutex( g_moduleName, "s_logMutex" );
-
-void LogToStdErr( CcpLogChannel_t& logObject, CCP::LogType type, unsigned long userData, const char* message )
-{
-	CcpAutoMutex guard( s_logMutex );
-
-	fprintf( stderr, "\n%s\n", message );
-}
-
-}
 
 
 
@@ -206,9 +193,52 @@ size_t user_malloc_usable_size(void *ptr)
 
 #endif
 
+void PrintAdapterInfo( unsigned index )
+{
+	Tr2AdapterInfo info;
+	if( FAILED( Tr2VideoAdapterInfo::GetAdapterInfo( index, info ) ) )
+	{
+		fprintf( stderr, "Failed to get video adapter information for adapter %u\n", index );
+		return;
+	}
+	Tr2VideoDriverInfo driverInfo;
+	if( FAILED( Tr2DriverUtilities::GetDriverVersion( info.deviceID, driverInfo ) ) )
+	{
+		fprintf( stderr, "Failed to get video driver information for adapter %u\n", index );
+		return;
+	}
+
+	printf( 
+		"Device name: %s\nDescription: %ls\nVendor ID: %u\nDevice ID: %u\n", 
+		info.deviceName.c_str(), 
+		info.description.c_str(), 
+		info.vendorID, 
+		info.deviceID );
+	printf(
+		"Driver version: %s\nDriver date: %s\nDriver vendor: %s\nIs Optimus: %s\nIs AMD Dynamic Switchable: %s\n\n",
+		driverInfo.driverVersionString.c_str(),
+		driverInfo.driverDate.c_str(),
+		driverInfo.driverVendor.c_str(),
+		driverInfo.isOptimus ? "yes" : "no",
+		driverInfo.isAmdDynamicSwitchable ? "yes" : "no" );
+}
+
+void PrintAllAdapterInfo()
+{
+	unsigned count = 0;
+	if( FAILED( Tr2VideoAdapterInfo::GetAdapterCount( count ) ) )
+	{
+		fprintf( stderr, "Failed to get video adapter count\n" );
+		return;
+	}
+	for( unsigned i = 0; i < count; ++i )
+	{
+		PrintAdapterInfo( i );
+	}
+}
+
 int main( int argc, char **argv ) 
 {
-	CCP::RegisterLogEcho( LogToStdErr, CCP::LOGTYPE_INFO, true );
 	CCP::SetLogMainThreadId();
 
 	for( int i = 1; i < argc; ++i )
@@ -229,6 +259,22 @@ int main( int argc, char **argv )
 				return 1;
 			}
 			g_screenshotFolder = argv[++i];
+		}
+		else if( strcmp( argv[i], "--adapterinfo" ) == 0 )
+		{
+			if( i + 1 >= argc )
+			{
+				printf( "Error parsing arguments: --adapterinfo should be followed by adapter index or \"all\"" );
+				return 1;
+			}
+			if( strcmp( argv[i + 1], "all" ) == 0 )
+			{
+				PrintAllAdapterInfo();
+			}
+			else
+			{
+				PrintAdapterInfo( atoi( argv[i + 1] ) );
+			}
 		}
 	}
 	::testing::InitGoogleTest( &argc, argv );

@@ -27,12 +27,16 @@ TEST_F( WithValidRenderContext, CanCreateTypedGpuBuffer )
 		Tr2GpuBufferAL vb;
 		ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, 0, nullptr, *renderContext ) );
 		EXPECT_TRUE( vb.IsValid() );
+		EXPECT_EQ( 128 * 4, vb.GetTotalSizeInBytes() );
+		EXPECT_EQ( Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, vb.GetFormat() );
 	}
 	else
 	{
 		Tr2GpuBufferAL vb;
 		ASSERT_HRESULT_FAILED( vb.Create( 128, Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, 0, nullptr, *renderContext ) );
 		EXPECT_FALSE( vb.IsValid() );
+		EXPECT_EQ( 0, vb.GetTotalSizeInBytes() );
+		EXPECT_EQ( Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN, vb.GetFormat() );
 	}
 }
 

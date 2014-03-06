@@ -39,6 +39,7 @@ public:
 	uint32_t GetSize() const;
 
 	void* GetMemoryForCpuWriting( Tr2RenderContextAL & renderContext );
+	void* GetMemoryForCpuWritingNoSync( Tr2RenderContextAL & renderContext );
 	void* GetMemoryForCpuReading( Tr2RenderContextAL & renderContext ) const;
 	void* GetMemoryForGpuReading( Tr2RenderContextAL & renderContext ) const;
 private:

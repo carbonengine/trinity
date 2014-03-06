@@ -25,7 +25,7 @@ typedef uintptr_t Tr2WindowHandle;
 
 #define INCLUDE_SHADER_CODE( name ) CCP_STRINGIZE(SHADER_PATH/name.h)
 
-#if defined(__ORBIS__) || defined(TRINITY_AL_MOBILE)
+#if defined(__ORBIS__)
 #include "FakeGoogleTest.h"
 #else
 #include "gtest/gtest.h"

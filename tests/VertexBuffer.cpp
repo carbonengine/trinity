@@ -44,6 +44,18 @@ TEST_F( WithValidRenderContext, VertexBufferReportsCorrectSize )
 	EXPECT_EQ( 128, vb.GetTotalSizeInBytes() );
 }
 
+TEST_F( WithValidRenderContext, CanMoveVertexBuffer )
+{
+	Tr2VertexBufferAL vb1;
+	ASSERT_HRESULT_SUCCEEDED( vb1.Create( 128, *renderContext ) );
+	EXPECT_TRUE( vb1.IsValid() );
+	Tr2VertexBufferAL vb2;
+	vb2 = std::move( vb1 );
+	EXPECT_TRUE( vb2.IsValid() );
+	EXPECT_EQ( 128, vb2.GetTotalSizeInBytes() );
+	EXPECT_FALSE( vb1.IsValid() );
+}
+
 TEST_F( WithValidRenderContext, VertexBufferEqualsItself )
 {
 	Tr2VertexBufferAL vb;
@@ -117,3 +129,52 @@ TEST_F( WithValidRenderContext, VertexBufferHasMemoryClass )
 	auto memoryClass = vb.GetMemoryClass();
 	EXPECT_TRUE( memoryClass == AL_MEMORY_VIDEO || memoryClass == AL_MEMORY_MANAGED );
 }
+
+TEST_F( WithValidRenderContext, UpdatingInvalidVertexBufferFails )
+{
+	Tr2VertexBufferAL vb;
+	uint8_t data[128] = { 0, };
+	EXPECT_HRESULT_FAILED( vb.UpdateBuffer( 0, 128, data, *renderContext ) );
+}
+
+TEST_F( WithValidRenderContext, UpdatingImmutableVertexBufferFails )
+{
+	uint8_t data[128] = { 0, };
+	Tr2VertexBufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, USAGE_IMMUTABLE, data, *renderContext ) );
+	EXPECT_HRESULT_FAILED( vb.UpdateBuffer( 0, 64, data, *renderContext ) );
+}
+
+TEST_F( WithValidRenderContext, UpdatingNonWritableVertexBufferFails )
+{
+	uint8_t data[128] = { 0, };
+	Tr2VertexBufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, USAGE_CPU_READ, nullptr, *renderContext ) );
+	EXPECT_HRESULT_FAILED( vb.UpdateBuffer( 0, 64, data, *renderContext ) );
+}
+
+TEST_F( WithValidRenderContext, UpdatingDynamicVertexBufferFails )
+{
+	uint8_t data[128] = { 0, };
+	Tr2VertexBufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, USAGE_CPU_WRITE | USAGE_LOCK_FREQUENTLY, nullptr, *renderContext ) );
+	EXPECT_HRESULT_FAILED( vb.UpdateBuffer( 0, 64, data, *renderContext ) );
+}
+
+TEST_F( WithValidRenderContext, UpdatingVertexBufferOutOfBoundsFails )
+{
+	uint8_t data[128] = { 0, };
+	Tr2VertexBufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, USAGE_CPU_WRITE, nullptr, *renderContext ) );
+	EXPECT_HRESULT_FAILED( vb.UpdateBuffer( 64, 128, data, *renderContext ) );
+}
+
+TEST_F( WithValidRenderContext, CanUpdateVertexBuffer )
+{
+	uint8_t data[128] = { 0, };
+	Tr2VertexBufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, USAGE_CPU_WRITE, nullptr, *renderContext ) );
+	EXPECT_HRESULT_SUCCEEDED( vb.UpdateBuffer( 0, 128, data, *renderContext ) );
+	EXPECT_HRESULT_SUCCEEDED( vb.UpdateBuffer( 64, 32, data, *renderContext ) );
+}
+

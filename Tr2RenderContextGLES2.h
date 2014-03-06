@@ -287,7 +287,7 @@ private:
 
 	const Tr2ShaderAL*	m_vertexShader;
 	const Tr2ShaderAL*	m_pixelShader;
-	ProgramObject	m_boundProgramObject;
+	ProgramObject* m_boundProgramObject;
 	Tr2ConstantBufferAL* m_boundBuffers[16];
 	int m_numberOfLights;
 	Tr2VertexDefinition* m_boundLayout;
@@ -302,7 +302,7 @@ private:
 	Tr2Viewport m_currentViewport;
 
 	Tr2TextureAL*		m_boundTextures[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
-	Tr2SamplerStateAL	m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
+	Tr2SamplerStateAL::StateData m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
 
 	unsigned m_currentActiveTexture;
 
@@ -353,7 +353,7 @@ private:
 	Tr2FragmentOpSettings						m_fragmentOpSettings;
 
 	// Map from vertex+fragment shader to program
-	static std::map<std::pair<int, std::pair<int, bool> >, ProgramObject> s_programs;
+	static std::map<std::pair<int, std::pair<int, bool> >, ProgramObject*> s_programs;
 
 	uint32_t m_renderStates[Tr2RenderContextEnum::RS_MAX_STATE];
 

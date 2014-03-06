@@ -136,8 +136,7 @@ ALResult Tr2RenderTargetAL::Create(
 	{
 		CR_RETURN_HR( m_backingStore.Create2D( width, height, mipLevelCount, format, 0, nullptr, renderContext ) );
 		float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-		m_backingStore.m_currentSampler.Create(
-			renderContext,
+		Tr2SamplerStateAL::CreateStateData(
 			Tr2SamplerDescription( TF_LINEAR,
 				TF_LINEAR,
 				TF_LINEAR,
@@ -151,8 +150,8 @@ ALResult Tr2RenderTargetAL::Create(
 				borderColor,
 				0,
 				1,
-				false ) );
-		m_backingStore.m_currentSampler.Apply( GL_TEXTURE_2D, mipLevelCount != 1 );
+				false ), m_backingStore.m_currentSampler );
+		Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, mipLevelCount != 1, m_backingStore.m_currentSampler );
 		static_cast<Tr2BitmapDimensions&>(*this) = static_cast<Tr2BitmapDimensions&>( m_backingStore );
 	}
 

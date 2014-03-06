@@ -158,13 +158,49 @@ ALResult Tr2VertexBufferAL::Lock( uint32_t offset,
 		}
 	}
 
-	return m_buffer->Lock( offset, size, data, dxFlags );
+	*data = nullptr;
+	CR_RETURN_HR( m_buffer->Lock( offset, size, data, dxFlags ) );
+	if( *data == nullptr )
+	{
+		return E_FAIL;
+	}
+	return S_OK;
 }
 
 ALResult Tr2VertexBufferAL::Unlock( Tr2RenderContextAL& /*renderContext*/ )
 {
 	AL_FUZZ_LOCK( OT_VERTEX_BUFFER );
 	return m_buffer ? m_buffer->Unlock() : E_FAIL;
+}
+
+ALResult Tr2VertexBufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext )
+{
+	if( !renderContext.IsValid() || !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( offset + size > GetTotalSizeInBytes() )
+	{
+		return E_INVALIDARG;
+	}
+	if( ( m_usage & USAGE_CPU_WRITE ) == 0 || ( m_usage & USAGE_LOCK_FREQUENTLY ) != 0 )
+	{
+		return E_INVALIDCALL;
+	}
+	if( size == 0 )
+	{
+		return S_OK;
+	}
+
+	void* lockedData = nullptr;
+	CR_RETURN_HR( m_buffer->Lock( offset, size, &lockedData, 0 ) );
+	if( !lockedData )
+	{
+		m_buffer->Unlock();
+		return E_FAIL;
+	}
+	memcpy( lockedData, data, size );
+	return m_buffer->Unlock();
 }
 
 bool Tr2VertexBufferAL::IsValid() const

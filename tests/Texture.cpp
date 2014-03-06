@@ -214,3 +214,12 @@ TEST_F( WithValidRenderContext, CanCreateCompressedCubeTexture )
 	EXPECT_EQ( TEX_TYPE_CUBE, tex.GetType() );
 	EXPECT_EQ( PIXEL_FORMAT_BC1_UNORM, tex.GetFormat() );
 }
+
+TEST_F( WithValidRenderContext, Locking2DTextureWithNoOverwriteFails )
+{
+	Tr2TextureAL tex;
+	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 128, 128, 0, PIXEL_FORMAT_B8G8R8A8_UNORM, USAGE_CPU_WRITE, nullptr, *renderContext ) );
+	void* data;
+	uint32_t pitch;
+	ASSERT_HRESULT_FAILED( tex.Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_NO_OVERWRITE, *renderContext ) );
+}

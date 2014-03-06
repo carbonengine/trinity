@@ -9,13 +9,12 @@
 using namespace Tr2RenderContextEnum;
 
 Tr2VertexBufferAL::Tr2VertexBufferAL()
-: m_lengthInBytes( 0 ),
-  m_usage( 0 ),
-  m_buffer( 0 )
+	:m_lengthInBytes( 0 ),
+	m_usage( 0 ),
+	m_buffer( 0 ),
+	m_lockedOffset( 0 ),
+	m_lockedSize( 0 )
 {
-#ifdef TRINITY_AL_MOBILE
-    m_lockedSize = 0;
-#endif
 }
 
 Tr2VertexBufferAL::~Tr2VertexBufferAL()
@@ -23,7 +22,6 @@ Tr2VertexBufferAL::~Tr2VertexBufferAL()
 	Destroy();
 }
 
-#if TRINITY_HAVE_CPP0X
 Tr2VertexBufferAL& Tr2VertexBufferAL::operator=( Tr2VertexBufferAL&& other )
 {
 	if( this != &other )
@@ -37,7 +35,6 @@ Tr2VertexBufferAL& Tr2VertexBufferAL::operator=( Tr2VertexBufferAL&& other )
 
 	return *this;
 }
-#endif
 
 ALResult Tr2VertexBufferAL::CreateEx( uint32_t lengthInBytes,
 									  Tr2RenderContextEnum::BufferUsage usage,
@@ -159,13 +156,33 @@ ALResult Tr2VertexBufferAL::Lock( uint32_t offset,
 	{
 		return E_INVALIDARG;
 	}
+    if( lockType == LOCK_NO_OVERWRITE && !glMapBufferRange )
+    {
+        return E_FAIL;
+    }
 	GL_FAIL( glBindBuffer( GL_ARRAY_BUFFER, m_buffer ) );
 	if( lockType == LOCK_NO_OVERWRITE )
 	{
 		GL_FAIL( *data = glMapBufferRange( GL_ARRAY_BUFFER, offset, size, GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_WRITE_BIT ) );
 	}
+	else if( lockType == LOCK_WRITEONLY && ( m_usage & USAGE_LOCK_FREQUENTLY ) )
+	{
+		if( size == 0 )
+		{
+			size = GetTotalSizeInBytes();
+		}
+		if( offset + size > GetTotalSizeInBytes() )
+		{
+			return E_INVALIDARG;
+		}
+		m_lockedData.resize( "Tr2VertexBufferAL::Lock", size );
+		m_lockedOffset = offset;
+		m_lockedSize = size;
+		*data = m_lockedData.get();
+	}
 	else
 	{
+		m_lockedSize = 0;
 		GL_FAIL( *data = glMapBuffer( GL_ARRAY_BUFFER, lockType == LOCK_READONLY ? GL_READ_ONLY : GL_WRITE_ONLY ) );
 	}
 #endif
@@ -194,8 +211,47 @@ ALResult Tr2VertexBufferAL::Unlock( Tr2RenderContextAL& renderContext )
     }
     GL_FAIL( glBufferSubData( GL_ARRAY_BUFFER, m_lockedOffset, m_lockedSize, m_lockedData.get() ) );
 #else
-	GL_FAIL( glUnmapBuffer( GL_ARRAY_BUFFER ) );
+	if( m_lockedSize )
+	{
+		if( m_lockedSize == GetTotalSizeInBytes() )
+		{
+			GL_FAIL( glBufferData( GL_ARRAY_BUFFER, m_lockedSize, m_lockedData.get(), GL_DYNAMIC_DRAW ) );
+		}
+		else
+		{
+			GL_FAIL( glBufferSubData( GL_ARRAY_BUFFER, m_lockedOffset, m_lockedSize, m_lockedData.get() ) );
+		}
+		m_lockedSize = 0;
+	}
+	else
+	{
+		GL_FAIL( glUnmapBuffer( GL_ARRAY_BUFFER ) );
+	}
 #endif
+	return S_OK;
+}
+
+ALResult Tr2VertexBufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext )
+{
+	if( !renderContext.IsValid() || !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( offset + size > GetTotalSizeInBytes() )
+	{
+		return E_INVALIDARG;
+	}
+	if( ( m_usage & USAGE_CPU_WRITE ) == 0 || ( m_usage & USAGE_LOCK_FREQUENTLY ) != 0 )
+	{
+		return E_INVALIDCALL;
+	}
+	if( size == 0 )
+	{
+		return S_OK;
+	}
+
+	GL_FAIL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_buffer ) );
+    GL_FAIL( glBufferSubData( GL_ARRAY_BUFFER, offset, size, data ) );
 	return S_OK;
 }
 
@@ -223,9 +279,8 @@ void Tr2VertexBufferAL::Destroy()
 			glDisableVertexAttribArray( i );
 		}
 	}
-#ifdef TRINITY_AL_MOBILE
+    m_lockedOffset = 0;
     m_lockedSize = 0;
-#endif
 }
 
 #endif

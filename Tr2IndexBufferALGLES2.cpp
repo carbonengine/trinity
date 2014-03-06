@@ -186,6 +186,10 @@ ALResult Tr2IndexBufferAL::Lock(
 	{
 		return E_INVALIDARG;
 	}
+    if( lockType == LOCK_NO_OVERWRITE && !glMapBufferRange )
+    {
+        return E_FAIL;
+    }
 	GL_FAIL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_buffer ) );
 	if( lockType == LOCK_NO_OVERWRITE )
 	{
@@ -225,6 +229,30 @@ ALResult Tr2IndexBufferAL::Unlock( Tr2RenderContextAL & renderContext )
 #else
 	GL_FAIL( glUnmapBuffer( GL_ELEMENT_ARRAY_BUFFER ) );
 #endif
+	return S_OK;
+}
+
+ALResult Tr2IndexBufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext )
+{
+	if( !renderContext.IsValid() || !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( offset + size > GetTotalSizeInBytes() )
+	{
+		return E_INVALIDARG;
+	}
+	if( ( m_usage & USAGE_CPU_WRITE ) == 0 || ( m_usage & USAGE_LOCK_FREQUENTLY ) != 0 )
+	{
+		return E_INVALIDCALL;
+	}
+	if( size == 0 )
+	{
+		return S_OK;
+	}
+
+	GL_FAIL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_buffer ) );
+    GL_FAIL( glBufferSubData( GL_ELEMENT_ARRAY_BUFFER, offset, size, data ) );
 	return S_OK;
 }
 

@@ -80,6 +80,7 @@ public:
 		return Tr2BufferImplAL::Unlock( renderContext );
 	}
 
+	using Tr2BufferImplAL::UpdateBuffer;
 	using Tr2BufferImplAL::IsValid;
 	using Tr2BufferImplAL::Destroy;
 

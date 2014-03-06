@@ -45,6 +45,9 @@ public:
 				   Tr2RenderContextEnum::LockType lockType,
 				   Tr2RenderContextAL& renderContext );
 	ALResult Unlock( Tr2RenderContextAL& renderContext );
+
+	ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
+
 	bool IsValid() const;
 	void Destroy();
 

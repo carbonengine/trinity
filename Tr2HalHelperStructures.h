@@ -3,6 +3,7 @@
 #define Tr2HalHelperStructures_h_
 
 #include "Tr2RenderContextEnum.h"
+#include "include/Tr2BitmapDimensions.h"
 
 // -------------------------------------------------------------
 // Description:
@@ -215,138 +216,6 @@ extern const Tr2RenderTargetAL	nullRT;
 // -------------------------------------------------------------
 extern const Tr2GpuBufferAL		nullGB;
 
-// -------------------------------------------------------------
-// Description:
-// Helper to keep track of variables that usually go together, 
-// and functions to do some repeated math around them (computing
-// size of a given miplevel, etc).
-// -------------------------------------------------------------
-struct Tr2BitmapDimensions
-{	
-	Tr2BitmapDimensions( uint32_t							width = 0,
-						 uint32_t							height = 0,
-						 uint32_t							mipCount = 0,
-						 Tr2RenderContextEnum::PixelFormat	format = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN )
-	: m_width( width )
-	, m_height( height )
-	, m_volumeDepth( 0 )
-	, m_mipCount( mipCount )
-	, m_type( Tr2RenderContextEnum::TEX_TYPE_INVALID )
-	, m_format( format )
-	{}
-
-	uint32_t							GetWidth()  const		{ return m_width; }
-	uint32_t							GetHeight() const		{ return m_height; }
-	uint32_t							GetDepth() const		{ return m_volumeDepth; }
-	Tr2RenderContextEnum::PixelFormat	GetFormat() const		{ return m_format; }
-	uint32_t							GetMipCount() const		{ return m_mipCount; }
-	uint32_t							GetTrueMipCount() const;
-	bool								IsCompressed() const	{ return IsCompressedFormat( m_format ); }
-	uint32_t							HasMipmap()	const		{ return m_mipCount != 1; }
-
-	uint32_t							GetMipWidth	 ( uint32_t level ) const;
-	uint32_t							GetMipHeight ( uint32_t level ) const;
-	uint32_t							GetMipDepth  ( uint32_t level ) const;
-	uint32_t							GetMipPitch  ( uint32_t level ) const;	
-	uint32_t							GetMipSize	 ( uint32_t level ) const;
-	// Number of rows to copy in a mip. For non-compressed formats this is the same as GetMipHeight.
-	// For compressed formats it's that number / 4.
-	uint32_t							GetMipNumRows( uint32_t level ) const
-	{ return IsCompressed() ? GetMipHeight( level ) / 4 : GetMipHeight( level ); }
-
-	Tr2RenderContextEnum::TextureType	GetType()		const { return m_type; }
-
-protected:
-	uint32_t							m_width;
-	uint32_t							m_height;
-	uint32_t							m_volumeDepth;
-	uint32_t							m_mipCount;
-	Tr2RenderContextEnum::TextureType	m_type;
-	Tr2RenderContextEnum::PixelFormat	m_format;
-
-	void Destroy()
-	{
-		// m_width	= m_height = m_volumeDepth = m_mipCount = 0;
-		m_type	 = Tr2RenderContextEnum::TEX_TYPE_INVALID;
-		m_format = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN;
-	}
-};
-
-inline uint32_t Tr2BitmapDimensions::GetMipWidth( uint32_t level ) const
-{
-	if( level >= GetTrueMipCount() )
-	{
-		return 0;
-	}
-
-	if( IsCompressed() )
-	{
-		return std::max( ( ( m_width >> level ) + 3u ) & ~3u, 4u );
-	}
-
-	return std::max( m_width >> level, 1u );
-}
-
-inline uint32_t Tr2BitmapDimensions::GetMipHeight( uint32_t level ) const
-{
-	if( level >= GetTrueMipCount() )
-	{
-		return 0;
-	}
-
-	if( IsCompressed() )
-	{
-		return std::max( ( ( m_height >> level ) + 3u ) & ~3u, 4u );
-	}
-
-	return std::max( m_height >> level, 1u );
-}
-
-inline uint32_t Tr2BitmapDimensions::GetMipDepth( uint32_t level ) const
-{
-	if( level >= GetTrueMipCount() )
-	{
-		return 0;
-	}
-
-	if( IsCompressed() )
-	{
-		return std::max( ( ( m_volumeDepth >> level ) + 3u ) & ~3u, 4u );
-	}
-
-	return std::max( m_volumeDepth >> level, 1u );
-}
-/*
-inline uint32_t Tr2BitmapDimensions::GetTrueMipCount() const
-{
-	return	m_mipCount >= 1		? m_mipCount 
-								: uint32_t( 0.5 + log( std::max<double>( m_height, m_width ) ) / log(2.0) ) + 1;
-}
-*/
-inline uint32_t Tr2BitmapDimensions::GetMipPitch( uint32_t level ) const
-{
-	if( level >= GetTrueMipCount() )
-	{
-		return 0;
-	}
-
-	if( IsCompressed() )
-	{
-		return GetMipWidth( level ) / 4u * GetBlockByteSize( m_format );
-	}
-
-	return GetMipWidth( level ) * GetBytesPerPixel( m_format );
-}
-
-inline uint32_t Tr2BitmapDimensions::GetMipSize( uint32_t level ) const
-{
-	if( IsCompressed() )
-	{
-		return GetMipWidth( level ) * GetMipHeight( level ) / 16 * GetBlockByteSize( m_format );
-	}
-	
-	return GetMipWidth( level ) * GetMipHeight( level ) * GetBytesPerPixel( m_format );
-}
 
 bool Crop(	Tr2TextureSubresource& sourceSR,
 			const Tr2BitmapDimensions& sourceBD, 

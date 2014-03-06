@@ -25,9 +25,7 @@ public:
 	Tr2VertexBufferAL();
 	~Tr2VertexBufferAL();
 
-#if TRINITY_HAVE_CPP0X
 	Tr2VertexBufferAL& operator=( Tr2VertexBufferAL&& );
-#endif
 
 	ALResult Create( uint32_t lengthInBytes,
 					 Tr2RenderContextEnum::BufferUsage usage,
@@ -49,6 +47,9 @@ public:
 				   Tr2RenderContextEnum::LockType lockType,
 				   Tr2RenderContextAL& renderContext );
 	ALResult Unlock( Tr2RenderContextAL& renderContext );
+
+	ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
+
 	bool IsValid() const;
 	void Destroy();
 

@@ -18,10 +18,6 @@ class Tr2VertexLayoutAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_VER
 {
 public:
 	Tr2VertexLayoutAL();
-#if TRINITY_HAVE_CPP0X
-	Tr2VertexLayoutAL( Tr2VertexLayoutAL&& other );
-	Tr2VertexLayoutAL& operator=( Tr2VertexLayoutAL&& other );
-#endif
 
 	ALResult Create( const Tr2VertexDefinition& definition,
 					 Tr2RenderContextAL& renderContext );

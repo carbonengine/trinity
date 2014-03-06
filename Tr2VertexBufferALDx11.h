@@ -74,6 +74,7 @@ public:
 		return m_lengthInBytes;
 	}
 
+	using Tr2BufferImplAL::UpdateBuffer;
 	using Tr2BufferImplAL::IsValid;
 	using Tr2BufferImplAL::Destroy;
 

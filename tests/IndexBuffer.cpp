@@ -249,3 +249,52 @@ TEST_F( WithValidRenderContext, CanNotLockReadOnlyIndexBufferForWriting )
 	void* data;
 	ASSERT_HRESULT_FAILED( ib.Lock( 0, 16, &data, LOCK_WRITEONLY, *renderContext ) );
 }
+
+TEST_F( WithValidRenderContext, UpdatingInvalidIndexBufferFails )
+{
+	Tr2IndexBufferAL ib;
+	uint32_t data[128] = { 0, };
+	EXPECT_HRESULT_FAILED( ib.UpdateBuffer( 0, 128, data, *renderContext ) );
+}
+
+TEST_F( WithValidRenderContext, UpdatingImmutableIndexBufferFails )
+{
+	uint32_t data[128] = { 0, };
+	Tr2IndexBufferAL ib;
+	ASSERT_HRESULT_SUCCEEDED( ib.Create( 128, USAGE_IMMUTABLE, IB_32BIT, data, *renderContext ) );
+	EXPECT_HRESULT_FAILED( ib.UpdateBuffer( 0, 64, data, *renderContext ) );
+}
+
+TEST_F( WithValidRenderContext, UpdatingNonWritableIndexBufferFails )
+{
+	uint32_t data[128] = { 0, };
+	Tr2IndexBufferAL ib;
+	ASSERT_HRESULT_SUCCEEDED( ib.Create( 128, USAGE_CPU_READ, IB_32BIT, nullptr, *renderContext ) );
+	EXPECT_HRESULT_FAILED( ib.UpdateBuffer( 0, 64, data, *renderContext ) );
+}
+
+TEST_F( WithValidRenderContext, UpdatingDynamicIndexBufferFails )
+{
+	uint32_t data[128] = { 0, };
+	Tr2IndexBufferAL ib;
+	ASSERT_HRESULT_SUCCEEDED( ib.Create( 128, USAGE_CPU_WRITE | USAGE_LOCK_FREQUENTLY, IB_32BIT, nullptr, *renderContext ) );
+	EXPECT_HRESULT_FAILED( ib.UpdateBuffer( 0, 64, data, *renderContext ) );
+}
+
+TEST_F( WithValidRenderContext, UpdatingIndexBufferOutOfBoundsFails )
+{
+	uint32_t data[128] = { 0, };
+	Tr2IndexBufferAL ib;
+	ASSERT_HRESULT_SUCCEEDED( ib.Create( 128, USAGE_CPU_WRITE, IB_32BIT, nullptr, *renderContext ) );
+	EXPECT_HRESULT_FAILED( ib.UpdateBuffer( ib.GetTotalSizeInBytes() - 32, 128, data, *renderContext ) );
+}
+
+TEST_F( WithValidRenderContext, CanUpdateIndexBuffer )
+{
+	uint32_t data[128] = { 0, };
+	Tr2IndexBufferAL ib;
+	ASSERT_HRESULT_SUCCEEDED( ib.Create( 128, USAGE_CPU_WRITE, IB_32BIT, nullptr, *renderContext ) );
+	EXPECT_HRESULT_SUCCEEDED( ib.UpdateBuffer( 0, ib.GetTotalSizeInBytes(), data, *renderContext ) );
+	EXPECT_HRESULT_SUCCEEDED( ib.UpdateBuffer( 64, 32, data, *renderContext ) );
+}
+

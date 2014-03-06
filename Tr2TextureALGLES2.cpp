@@ -523,8 +523,7 @@ ALResult Tr2TextureAL::CreateDepthTexture( uint32_t width,
 	m_format = PIXEL_FORMAT_D32_FLOAT;
 	m_type = TEX_TYPE_2D;
 	float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-	m_currentSampler.Create( renderContext,
-							 Tr2SamplerDescription( TF_POINT,
+	Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
 													TF_POINT,
 													TF_POINT,
 													false,
@@ -537,9 +536,8 @@ ALResult Tr2TextureAL::CreateDepthTexture( uint32_t width,
 													borderColor,
 													0,
 													1,
-													false ) );
-	m_currentSampler.Apply( GL_TEXTURE_2D, false );
-	ChangeObjectId();
+													false ), m_currentSampler );
+	Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, false, m_currentSampler );
 	return S_OK;
 }
 
@@ -624,13 +622,16 @@ ALResult Tr2TextureAL::Lock( uint32_t mipLevel,
 		return E_FAIL;
 	}
 
-	if ( lockType == LOCK_READONLY )
+	switch( lockType )
 	{
+	case LOCK_READONLY:
 		// Not implemented: insanely inefficient in OpenGL
 		return E_FAIL;
+	case LOCK_WRITEONLY:
+		return LockWriting( CUBEMAP_FACE_FIRST, mipLevel, ltrb, data, pitch, renderContext );
+	default:
+		return E_INVALIDARG;
 	}
-
-	return LockWriting( CUBEMAP_FACE_FIRST, mipLevel, ltrb, data, pitch, renderContext );
 }
 
 ALResult Tr2TextureAL::Lock( uint32_t mipLevel,
@@ -657,13 +658,16 @@ ALResult Tr2TextureAL::Lock( Tr2RenderContextEnum::CubemapFace face,
 		return E_FAIL;
 	}
 
-	if ( lockType == LOCK_READONLY )
+	switch( lockType )
 	{
+	case LOCK_READONLY:
 		// Not implemented: insanely inefficient in OpenGL
 		return E_FAIL;
+	case LOCK_WRITEONLY:
+		return LockWriting( face, mipLevel, ltrb, data, pitch, renderContext );
+	default:
+		return E_INVALIDARG;
 	}
-
-	return LockWriting( face, mipLevel, ltrb, data, pitch, renderContext );
 }
 
 ALResult Tr2TextureAL::Unlock( Tr2RenderContextAL& renderContext )

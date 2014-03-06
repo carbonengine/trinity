@@ -2,6 +2,7 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files"/>
+    <Filter Include="Source Files\include"/>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ALLog.h">
@@ -68,6 +69,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2DrawUPHelper.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tr2DriverUtilities.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2FenceALDx11.h">
@@ -277,6 +281,15 @@
     <ClInclude Include="Tr2VideoAdapterInfoALOrbis.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Tr2BitmapDimensions.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2PixelFormat.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2TextureType.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
     <ClCompile Include="ALResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -329,6 +342,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2DrawUPHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2DriverUtilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2FenceALDx11.cpp">

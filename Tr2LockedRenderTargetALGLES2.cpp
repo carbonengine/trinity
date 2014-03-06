@@ -16,6 +16,7 @@ Tr2LockedRenderTargetAL::~Tr2LockedRenderTargetAL()
 void Tr2LockedRenderTargetAL::Destroy()
 {
 	m_lockedData.clear();
+	m_pitch = 0;
 }
 
 bool Tr2LockedRenderTargetAL::IsValid() const

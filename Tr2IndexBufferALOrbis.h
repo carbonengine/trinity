@@ -63,6 +63,8 @@ public:
 	}
 	ALResult Unlock( Tr2RenderContextAL & renderContext );
 
+	ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
+
 	bool IsValid() const { return m_buffer.IsValid(); }
 	bool Is16Bit() const			{ return m_is16Bit; }
 	uint32_t BytesPerIndex() const	{ return m_is16Bit ? 2 : 4; }

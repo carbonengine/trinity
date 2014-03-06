@@ -74,11 +74,11 @@ public:
 		return m_objectId;
 	}
 
-#if TRACK_AL_RESOURCES
 	static void LogAllLiveResources( Tr2ALMemoryTypes flags = AL_MEMORY_VIDEO | AL_MEMORY_MANAGED );
 
 	template<typename Operation> static void GetAllObjectDescriptions( Tr2ALMemoryTypes flags, Operation& operation );
 
+#if TRACK_AL_RESOURCES
 #if TRACK_AL_RESOURCES && AL_TACK_RESOURCE_USAGE
 	mutable uint64_t m_trackFrameUsed;
 #endif

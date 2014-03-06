@@ -150,5 +150,9 @@ void* Tr2BufferImplAL::GetMemoryForGpuReading( Tr2RenderContextAL & renderContex
 	return m_bufferData[m_currentBuffer].data;
 }
 
+void* Tr2BufferImplAL::GetMemoryForCpuWritingNoSync( Tr2RenderContextAL & renderContext )
+{
+	return m_bufferData[m_currentBuffer].data;
+}
 
 #endif

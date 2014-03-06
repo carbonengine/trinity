@@ -773,6 +773,7 @@
     <ClInclude Include="Tr2DepthStencilALGLES2.h"/>
     <ClInclude Include="Tr2DepthStencilALOrbis.h"/>
     <ClInclude Include="Tr2DrawUPHelper.h"/>
+    <ClInclude Include="Tr2DriverUtilities.h"/>
     <ClInclude Include="Tr2FenceALDx11.h"/>
     <ClInclude Include="Tr2FenceALDx9.h"/>
     <ClInclude Include="Tr2FenceALGLES2.h"/>
@@ -842,6 +843,9 @@
     <ClInclude Include="Tr2VideoAdapterInfoALDx9.h"/>
     <ClInclude Include="Tr2VideoAdapterInfoALGLES2.h"/>
     <ClInclude Include="Tr2VideoAdapterInfoALOrbis.h"/>
+    <ClInclude Include="include\Tr2BitmapDimensions.h"/>
+    <ClInclude Include="include\Tr2PixelFormat.h"/>
+    <ClInclude Include="include\Tr2TextureType.h"/>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ALResult.cpp"/>
@@ -864,6 +868,7 @@
     <ClCompile Include="Tr2DepthStencilALGLES2.cpp"/>
     <ClCompile Include="Tr2DepthStencilALOrbis.cpp"/>
     <ClCompile Include="Tr2DrawUPHelper.cpp"/>
+    <ClCompile Include="Tr2DriverUtilities.cpp"/>
     <ClCompile Include="Tr2FenceALDx11.cpp"/>
     <ClCompile Include="Tr2FenceALDx9.cpp"/>
     <ClCompile Include="Tr2FenceALGLES2.cpp"/>

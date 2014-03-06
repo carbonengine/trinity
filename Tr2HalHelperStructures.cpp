@@ -292,19 +292,3 @@ void AdvanceMip( Tr2TextureSubresource& sub, const Tr2BitmapDimensions& bd, uint
 		}
 	}
 }
-
-uint32_t Tr2BitmapDimensions::GetTrueMipCount() const
-{
-	if( m_mipCount > 0 )
-	{
-		return m_mipCount;
-	}
-	uint32_t size = std::max( m_width, m_height );
-	uint32_t count = 0;
-	while( size )
-	{
-		++count;
-		size >>= 1;
-	}
-	return count;
-}

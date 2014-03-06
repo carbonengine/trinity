@@ -25,13 +25,6 @@
 #endif
 
 
-
-#if(  _MSC_VER >= 1600 ) && !defined( TRINITY_HAVE_CPP0X )
-#	define	TRINITY_HAVE_CPP0X	1
-#else
-#	define	TRINITY_HAVE_CPP0X	0
-#endif
-
 #ifdef _MSC_VER
 #pragma warning(push, 3)
 #endif

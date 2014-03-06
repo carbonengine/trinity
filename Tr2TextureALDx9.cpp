@@ -1019,12 +1019,15 @@ ALResult Tr2TextureAL::Lock( Tr2RenderContextEnum::CubemapFace face,
 		ltrb = nullptr;
 	}
 
-	if ( lockType == LOCK_READONLY )
+	switch( lockType )
 	{
+	case LOCK_READONLY:
 		return LockReading( face, mipLevel, ltrb, data, pitch, renderContext );
+	case LOCK_WRITEONLY:
+		return LockWriting( face, mipLevel, ltrb, data, pitch, renderContext );
+	default:
+		return E_INVALIDARG;
 	}
-
-	return LockWriting( face, mipLevel, ltrb, data, pitch, renderContext );
 }
 
 ALResult Tr2TextureAL::Unlock( Tr2RenderContextAL& renderContext )

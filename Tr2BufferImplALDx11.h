@@ -48,6 +48,8 @@ public:
 	bool IsValid() const { return m_buffer != nullptr; }
 	void Destroy();
 
+	ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
+
 	CComPtr<ID3D11Buffer>	m_buffer;
 
 	uint32_t							m_lengthInBytes;

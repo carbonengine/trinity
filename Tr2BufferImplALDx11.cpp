@@ -321,6 +321,29 @@ ALResult Tr2BufferImplAL::UnlockWriting( Tr2RenderContextAL & renderContext )
 	return S_OK;
 }
 
+ALResult Tr2BufferImplAL::UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext )
+{
+	if( !renderContext.IsValid() || !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( offset + size > m_lengthInBytes )
+	{
+		return E_INVALIDARG;
+	}
+	if( ( m_usage & USAGE_CPU_WRITE ) == 0 || ( m_usage & USAGE_LOCK_FREQUENTLY ) != 0 )
+	{
+		return E_INVALIDCALL;
+	}
+	if( size == 0 )
+	{
+		return S_OK;
+	}
+	D3D11_BOX box = { 0, 0, 0, size, 1, 1 };
+	renderContext.m_context->UpdateSubresource( m_buffer, 0, &box, data, 0, 0 );
+	return S_OK;
+}
+
 void Tr2BufferImplAL::Destroy()
 {
 	if( m_currentLock != LOCK_INVALID )

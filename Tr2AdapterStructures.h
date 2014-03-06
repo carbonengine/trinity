@@ -21,6 +21,16 @@ struct Tr2DisplayModeInfo
     Tr2RenderContextEnum::DisplayScaling scaling;
 };
 
+struct Tr2VideoDriverInfo
+{
+	int64_t driverVersion;
+	std::string driverVersionString;
+	std::string driverVendor;
+	std::string driverDate;
+	bool isOptimus;
+	bool isAmdDynamicSwitchable;
+};
+
 struct Tr2AdapterInfo
 {
 	std::string driver;

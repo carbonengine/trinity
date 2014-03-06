@@ -190,4 +190,7 @@ TEST_F( WithValidRenderContext, CanGetLockedRenderTarget )
 	EXPECT_NE( nullptr, data );
 	EXPECT_LE( 4 * 128u, pitch );
 	ASSERT_HRESULT_SUCCEEDED( lockedRT.Unlock( *renderContext ) );
+
+	lockedRT.Destroy();
+	EXPECT_FALSE( lockedRT.IsValid() );
 }

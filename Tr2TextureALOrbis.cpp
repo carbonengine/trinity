@@ -644,13 +644,16 @@ ALResult Tr2TextureAL::Lock( Tr2RenderContextEnum::CubemapFace face,
 	{
 		return E_INVALIDCALL;
 	}
-	if( lockType == LOCK_WRITEONLY )
+	switch( lockType )
 	{
+	case LOCK_WRITEONLY:
 		m_texture.setBaseAddress( m_memory->GetMemoryForCpuWriting( renderContext ) );
-	}
-	else
-	{
+		break;
+	case LOCK_READONLY:
 		m_texture.setBaseAddress( m_memory->GetMemoryForCpuReading( renderContext ) );
+		break;
+	default:
+		return E_INVALIDARG;
 	}
 
 
