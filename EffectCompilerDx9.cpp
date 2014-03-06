@@ -782,7 +782,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 			{
 				Sampler ss;
 				ss.comparison = 0;
-				ss.minLOD = 0;
+				ss.minLOD = FLT_MAX;
 				ss.maxLOD = float( it->second.GetState( D3DSAMP_MAXMIPLEVEL ) );
 
 				ss.minFilter = BYTE( it->second.GetState( D3DSAMP_MINFILTER ) );

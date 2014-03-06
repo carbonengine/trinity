@@ -3563,6 +3563,18 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 		return false;
 	}
 
+	// Swap minLod and maxLod sampler states as they are recorded incorrectly in DX9.
+	for( auto pass = result.passes.begin(); pass != result.passes.end(); ++pass )
+	{
+		for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
+		{
+			for( auto sampler = stage->samplers.begin(); sampler != stage->samplers.end(); ++sampler )
+			{
+				std::swap( sampler->second.minLOD, sampler->second.maxLOD );
+			}
+		}
+	}
+
 	std::stringstream listing;
 	struct OutputListing
 	{
