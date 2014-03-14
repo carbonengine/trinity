@@ -102,7 +102,7 @@ private:
 		Vector3 normal[3];
 	};
 
-	void GetCornerValues( Vector3 coordinate, CellCorner &values );
+	void GetCornerValues( Vector3 coordinate, CellCorner* values );
 	void Triangulate( Cell cell, Triangle *triangles, int &nTriangles );
 
 	// general

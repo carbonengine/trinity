@@ -376,8 +376,8 @@ void EveMetaball::UpdateBuffers()
 					for( int z = 0; z < stepsZPP; ++z )
 					{
 						Vector3 coordinate = Vector3( (float)xpp, (float)y, (float)z );
-						CellCorner &values = CellCorner();
-						GetCornerValues( coordinate, values);
+						CellCorner values;
+						GetCornerValues( coordinate, &values);
 						cachedCornerValues[ cacheBaseY + z ] = values;
 					}
 				}
@@ -468,19 +468,19 @@ void EveMetaball::UpdateBuffers()
 // --------------------------------------------------------------------------------
 // Description:
 // --------------------------------------------------------------------------------
-void EveMetaball::GetCornerValues( Vector3 coordinate, CellCorner &values )
+void EveMetaball::GetCornerValues( Vector3 coordinate, CellCorner* values )
 {
-	values.value = 0.0f;
-	values.normal = Vector3( 0.0f, 0.0f, 0.0f );
+	values->value = 0.0f;
+	values->normal = Vector3( 0.0f, 0.0f, 0.0f );
 
 	for( int p = 0; p < 8; ++p )
+{
+	//Traverse all metball items
+	for( auto it = m_sourceItems.begin(); it != m_sourceItems.end(); ++it )
 	{
-		//Traverse all metball items
-		for( auto it = m_sourceItems.begin(); it != m_sourceItems.end(); ++it )
-		{
-			EveMetaballItemPtr item = (*it);
-			values.position = ( coordinate + s_vertexOffsetTable[p] ) * m_boxSize + m_minBounds;
-			Vector3 v = values.position - item->GetPosition();
+		EveMetaballItemPtr item = (*it);
+			values->position = ( coordinate + s_vertexOffsetTable[p] ) * m_boxSize + m_minBounds;
+			Vector3 v = values->position - item->GetPosition();
 			float radius = item->GetRadius();
 			float lengthSq = D3DXVec3LengthSq( &v );
 			float length = D3DXVec3Length( &v );
@@ -488,11 +488,10 @@ void EveMetaball::GetCornerValues( Vector3 coordinate, CellCorner &values )
 			// normal
 			Vector3 normalInfluence;
 			D3DXVec3Scale( &normalInfluence, &v, radius * m_gooValue / lengthSq);
-			values.normal += normalInfluence;
+			values->normal += normalInfluence;
 			// iso value
-			values.value += pow( item->GetRadius() / length, m_gooValue );
+			values->value += pow( item->GetRadius() / length, m_gooValue );
 		}
-		D3DXVec3Normalize( &values.normal, &values.normal );
 	}
 }
 
@@ -530,7 +529,7 @@ void EveMetaball::Triangulate(Cell cell, Triangle *triangles, int &nTriangles)
 		tri.position[0] = cell.position + m_boxSize * offset0;
 		tri.position[1] = cell.position + m_boxSize * offset1;
 		tri.position[2] = cell.position + m_boxSize * offset2;
-
+		
 		D3DXVec3Lerp( &tri.normal[0], &cell.normal[s_edgeToVertsTable[edgeIdx0][0]], &cell.normal[s_edgeToVertsTable[edgeIdx0][1]], fscale0 );
 		D3DXVec3Lerp( &tri.normal[1], &cell.normal[s_edgeToVertsTable[edgeIdx1][0]], &cell.normal[s_edgeToVertsTable[edgeIdx1][1]], fscale1 );
 		D3DXVec3Lerp( &tri.normal[2], &cell.normal[s_edgeToVertsTable[edgeIdx2][0]], &cell.normal[s_edgeToVertsTable[edgeIdx2][1]], fscale2 );
