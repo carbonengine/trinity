@@ -2,8 +2,6 @@
 #ifndef ITr2VisibilityQueryable_H
 #define ITr2VisibilityQueryable_H
 
-#include "blue/include/Blue.h"
-
 BLUE_DECLARE_INTERFACE( ITr2VisibilityQueryable );
 BLUE_DECLARE( Tr2VisibilityResults );
 

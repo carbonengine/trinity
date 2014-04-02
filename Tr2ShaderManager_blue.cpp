@@ -6,7 +6,6 @@
 
 #include "StdAfx.h"
 #include "Tr2ShaderManager.h"
-#include "Tr2ShaderMaterial.h"
 
 BLUE_DEFINE( Tr2ShaderManager );
 

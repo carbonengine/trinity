@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "TriDevice.h"
-#include "TriConstants.h"
 #include "RenderJob/Tr2RenderJobs.h"
 
 BLUE_DEFINE( TriDevice );

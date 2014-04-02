@@ -2,7 +2,6 @@
 
 #include "Obb.h"
 #include "TriFrustum.h"
-#include "Tr2Renderer.h"
 
 // -------------------------------------------------------------
 // Description:

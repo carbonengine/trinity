@@ -2,10 +2,6 @@
 #ifndef Tr2SHProbeRes_h
 #define Tr2SHProbeRes_h
 
-#include "Blue/include/BlueAsyncRes.h"
-#include "blue/include/ICacheable.h"
-#include "Enlighten2/Enlighten.h"
-
 namespace Geo
 {
 	class IGeoStream;

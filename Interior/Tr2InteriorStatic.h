@@ -3,16 +3,9 @@
 #define Tr2InteriorStatic_h
 
 #include "include/ITr2Interior.h"
-#include "ITr2Renderable.h"
 
-#include "Tr2Renderer.h"
-#include "Resources/TriGrannyRes.h"
-#include "Resources/TriTextureRes.h"
-#include "TriRenderbatch.h"
-#include "Tr2InteriorConstantBufferFormats.h"
 #include "Tr2InteriorLightSet.h"
 #include "Tr2InteriorVisualization.h"
-#include "Blue/include/BlueAsyncRes.h"
 
 //--------------------------------------------------------------------------------------------------
 // forwards
@@ -37,6 +30,8 @@ BLUE_DECLARE( TriTextureRes );
 BLUE_DECLARE( TriCurveSet );
 BLUE_DECLARE_VECTOR( TriCurveSet );
 BLUE_DECLARE( Tr2ShaderMaterial );
+BLUE_DECLARE( TriGeometryRes );
+BLUE_DECLARE( TriGrannyRes );
 
 //--------------------------------------------------------------------------------------------------
 // wod interior static

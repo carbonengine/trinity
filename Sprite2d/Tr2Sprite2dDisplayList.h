@@ -11,12 +11,13 @@
 
 #include "Tr2DeviceResource.h"
 #include "ITr2SpriteObject.h"
-#include "Tr2Effect.h"
+#include "IRenderCallback.h"
 
 const unsigned int TR2_SS_MAX_TRANSFORM_COUNT = 32;
 
 BLUE_DECLARE( TriRenderJob );
 BLUE_DECLARE( Tr2AtlasTexture );
+BLUE_DECLARE( Tr2Effect );
 
 struct Tr2Sprite2dDisplayList:
 	public Tr2DeviceResource
@@ -24,7 +25,7 @@ struct Tr2Sprite2dDisplayList:
 	Tr2VertexBufferAL vertexBuffer;
 	Tr2IndexBufferAL indexBuffer;
 
-	struct Entry : public Tr2Effect::IRenderCallback
+	struct Entry : public IRenderCallback
 	{
 		// Render job to run, rather than issuing a draw call
 		TriRenderJobPtr job;
@@ -43,7 +44,7 @@ struct Tr2Sprite2dDisplayList:
 		Tr2ConstantBufferAL* m_uiTransformsCb;
 
 		//////////////////////////////////////////////////////////////////////////
-		// Tr2Effect::IRenderCallback
+		// IRenderCallback
 		virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 	};
 

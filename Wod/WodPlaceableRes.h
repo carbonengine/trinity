@@ -3,33 +3,18 @@
 #define WodPlaceableRes_H
 
 
-#include "TriRenderBatch.h"
-#include "Resources/TriGrannyRes.h"
-#include "Tr2Mesh.h"
 #include "Tr2Model.h"
-#include "WodPlaceable.h"
-#include "WodLightSource.h"
 #include "include/TriVector.h"
 
-BLUE_DECLARE( WodPlaceableRes );
 BLUE_DECLARE( TriRenderBatch );
 
 BLUE_DECLARE( TriCurveSet );
 BLUE_DECLARE_VECTOR( TriCurveSet );
 
-namespace Umbra
-{
-    class Model;
-    class MeshModel;
-}
-
-struct granny_mesh;
-
 // See http://core/wiki/WodPlaceableRes
 // A WodPlaceableRes object holds the geometry for rendering a placeable, 
 // as well as data required for visibility determination. 
-class WodPlaceableRes : 
-	public IRoot 
+BLUE_CLASS( WodPlaceableRes) : 	public IRoot 
 {
 public:
     EXPOSE_TO_BLUE();
@@ -52,9 +37,7 @@ public:
 	// Bounding Volumes
 	void GetBoundingBox( Vector3& min, Vector3& max ) { IsReady(); min = m_minBounds; max = m_maxBounds; }
 
-    int PrepareUmbraCell( WodPlaceable* owner );
     bool IsReady();
-    WodLightSourceVector* GetLightSources() { return &m_lightSources; }
 	bool IsShadowCaster( void ) const { return m_isShadowCaster; }
 
 	Tr2ModelPtr GetVisualModel() { return m_visualModel; }
@@ -73,11 +56,9 @@ private:
     PTriVector m_maxBounds;
     bool m_bIsReady;
 
-    PWodLightSourceVector m_lightSources;
-
 	PTriCurveSetVector m_curveSets;
 };
 
-TYPEDEF_BLUECLASS_WR( WodPlaceableRes );
+TYPEDEF_BLUECLASS( WodPlaceableRes );
 
 #endif // WodPlaceableRes_H

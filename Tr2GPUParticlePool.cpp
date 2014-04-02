@@ -3,18 +3,15 @@
 #include "Tr2GPUParticlePool.h"
 
 
-#include "Resources/TriTextureRes.h"
-#include "Tr2ShaderMaterial.h"
-#include "TriUtil.h"
-#include "TriDevice.h"
-#include "Tr2Renderer.h"
+#include "Include/TriMath.h"
 #include "Tr2TextureAtlas.h"
 #include "Tr2AtlasTexture.h"
 #include "Tr2PushPopDS.h"
 #include "Tr2PushPopRT.h"
 
 #include "TriSettingsRegistrar.h"
-#include "blue/include/IBlueResMan.h"
+#include "TriDevice.h"
+#include "Resources/TriTextureRes.h"
 
 template<typename LambdaSignature>
 struct OnBlockExit 

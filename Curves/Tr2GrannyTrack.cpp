@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2GrannyTrack.h"
 #include "Resources/TriGrannyRes.h"
-#include "blue/include/IBlueResMan.h"
 
 // Curve set
 Tr2GrannyTrack::Tr2GrannyTrack( IRoot* lockobj ): 

@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "Tr2MeshArea.h"
-#include "Tr2Effect.h"
 
 Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_index( 0 ),

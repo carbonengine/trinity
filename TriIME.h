@@ -30,9 +30,6 @@
 #include "include/ITriIME.h"
 #include "TriIMEWrapper.h"
 
-#include <blue/include/IBlueOS.h>
-#include <blue/include/IBluePython.h>
-
 #if BLUE_WITH_PYTHON
 class TriIME :
 	public ITriIME,

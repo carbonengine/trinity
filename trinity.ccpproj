@@ -1,8 +1,7 @@
 # These are the SDKs that are used by all configurations
 Imports:
 - ../core_project.yaml
-- ../../../../../../sdk/libpng/1.4.0/libpng_1.4.0.yaml
-- ../../../../../../sdk/libJPG/jpeg-8c/jpeg-8c.yaml
+- ../ImageIO/uses_ImageIO.yaml
 - ../../../../../../sdk/squish/1.10/squish_1.10.yaml
 - ../CcpMath/uses_CcpMath.yaml
 - ../../../../../../sdk/Miniball/Miniball.yaml
@@ -498,7 +497,7 @@ Configurations:
     Imports:
     - ../blue/uses_blue_lua.yaml
     - ../lua/uses_lua.yaml
-    - ../../../../../../sdk/Granny/2.9.24.0/granny_2.9.24.0.yaml
+    - ../../../../../../sdk/Granny/2.9.18.0/granny_2.9.18.0.yaml
     General:
       TargetName: lib_trinity_gles2_debug
       AndroidTargetAPI: android-14

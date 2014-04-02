@@ -4,13 +4,13 @@
 #define Tr2Transform_h
 
 
-#include "Tr2Mesh.h"
 #include "ITr2Renderable.h"
-#include "Curves/TriCurveSet.h"
-#include "include/ITriFunction.h"
 
 BLUE_DECLARE( Tr2Transform );
 BLUE_DECLARE_VECTOR( Tr2Transform );
+BLUE_DECLARE( Tr2Mesh );
+BLUE_DECLARE( TriCurveSet );
+BLUE_DECLARE_VECTOR( TriCurveSet );
 
 
 enum Tr2TransformModifier

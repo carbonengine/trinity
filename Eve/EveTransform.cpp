@@ -10,6 +10,8 @@
 #include "Particle/ITr2GenericEmitter.h"
 #include "EveUpdateContext.h"
 #include "EveLODHelper.h"
+#include "Curves/TriCurveSet.h"
+#include "Tr2Mesh.h"
 
 extern float g_eveSpaceSceneLowDetailThreshold;
 extern float g_eveSpaceSceneMediumDetailThreshold;

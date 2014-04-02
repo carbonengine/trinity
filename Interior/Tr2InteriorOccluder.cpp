@@ -4,11 +4,7 @@
 
 #include "Tr2InteriorOccluder.h"
 #include "Tr2InteriorCell.h"
-#include "Tr2Renderer.h"
-#include "TriLineSet.h"
-#include "Utilities/BoundingBox.h"
 #include "umbraTypes.h"
-#include "umbra.hpp"
 
 // Initialize umbra model
 Umbra::Model* Tr2InteriorOccluder::s_umbraModel = NULL;

@@ -4,7 +4,6 @@
 
 
 
-#include "blue/include/BlueAsyncRes.h"
 #include "ITr2GeometryProvider.h"
 #include "Tr2DeviceResource.h"
 

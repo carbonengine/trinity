@@ -2,10 +2,6 @@
 #ifndef Tr2ClothingActor_h
 #define Tr2ClothingActor_h
 
-
-
-#include "blue/include/BlueAsyncRes.h"
-#include "NxMat34.h"
 #include "Utilities/BoundingBox.h"
 
 BLUE_DECLARE( Tr2ClothingActor );

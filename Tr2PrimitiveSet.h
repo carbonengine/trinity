@@ -3,9 +3,9 @@
 #define Tr2PrimitiveSet_h
 
 #include "ITr2Renderable.h"
-#include "Tr2Effect.h"
-#include "Tr2PerObjectData.h"
 #include "ITr2GeometryProvider.h"
+
+BLUE_DECLARE( Tr2Effect );
 
 /*
 	The base class of Tr2 debugging primitive sets.

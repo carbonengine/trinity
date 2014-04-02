@@ -1,39 +1,20 @@
 #include "StdAfx.h"
 #include "TriGeometryRes.h"
-#include "Tr2EffectStateManager.h"
-#include "Tr2Renderer.h"
 #include "TriGrannyRes.h"
 #include "Tr2PerObjectData.h"
 #include "Tr2VertexDefinitionUtilities.h"
-#include "granny.h"
 
-#include "TriError.h"
 #include "TriSettingsRegistrar.h"
 
 #include "Miniball3.h"
-#include "blue/include/IBlueOS.h"
-#include "logger/Logger.h"
 #include "Utilities/GeometryUtils.h"
-#include "blue/include/IBlueResMan.h"
 
 using namespace Tr2RenderContextEnum;
 
 #if INTERIORS_ENABLED
-//////////////////////////////////////////////////////////////////////////
-// Enlighten includes
-#include "GeoAtlas/GeoAtlas.h"
 #include "TriEnlightenUtils.h"
 #include "TriEnlightenStream.h"
-#if !defined( NDEBUG )
-// Required to output to a debug directory
-#include <direct.h>
 #endif
-#endif
-
-#include "blue/include/IBluePaths.h"
-#include <float.h>
-
-//////////////////////////////////////////////////////////////////////////
 
 bool g_geometryResPackedGeometryRebuild = false;
 TRI_REGISTER_SETTING( "geometryResPackedGeometryRebuild", g_geometryResPackedGeometryRebuild );

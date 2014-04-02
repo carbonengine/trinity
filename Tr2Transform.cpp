@@ -1,8 +1,8 @@
 #include "StdAfx.h"
 #include "Tr2Transform.h"
 #include "Tr2Mesh.h"
-#include "Tr2Renderer.h"
 #include "include/TriMath.h"
+#include "Curves/TriCurveSet.h"
 
 Tr2Transform::Tr2Transform( IRoot* lockobj ) :
 	PARENTLOCK( m_curveSets ),

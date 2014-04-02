@@ -2,8 +2,6 @@
 
 #include "Tr2KelvinColor.h"
 
-#include <math.h>
-
 Tr2KelvinColor::Tr2KelvinColor( IRoot* lockobj ) :
 	m_temperature( 5500.0f ),
 	m_tint( 0.5f ),

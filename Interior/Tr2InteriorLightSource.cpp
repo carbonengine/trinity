@@ -3,23 +3,24 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2InteriorLightSource.h"
+#include "Tr2InteriorConstantBufferFormats.h"
+#include "TriDebugResourceHelper.h"
 
 #include "umbraTypes.h"
-#include "umbra.hpp"
 
-#include "Blue/include/IBlueResMan.h"
-#include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 #include "Tr2AtlasTexture.h"
 #include "Tr2InteriorCell.h"
 #include "Tr2InteriorLightGeometryRenderBatch.h"
 #include "Tr2KelvinColor.h"
-#include "Tr2VariableStore.h"
 #include "ITr2UmbraUserData.h"
 #include "Tr2InteriorOrientedBoundingBox.h"
 #include "Tr2ShaderMaterial.h"
 #include "Tr2ConstGeometry.h"
-
+#include "Curves/TriCurveSet.h"
+#include "Include/TriMath.h"
+#include "Tr2Effect.h"
+#include "TriViewport.h"
 
 CCP_STATS_DECLARE( wodIntLightsAlive, "Trinity/Tr2IntLightsAlive", false, CST_COUNTER_LOW, 
 				  "Count of Tr2InteriorLightSources alive" );
@@ -117,7 +118,7 @@ namespace {
 	static const unsigned int unitConeWireLineCount = sizeof( unitConeWireIndices ) / sizeof( unsigned int ) / 2;
 
 	// share this so the other light types don't have to copy paste this.
-	struct DebugRenderEffectCallback : public Tr2Effect::IRenderCallback
+	struct DebugRenderEffectCallback : public IRenderCallback
 	{
 		TriDebugResourceHelper::VertexPosColor *polygon;
 		unsigned int vertexCount;

@@ -2,7 +2,6 @@
 #ifndef ITr2Scene_H
 #define ITr2Scene_H
 
-#include "blue/include/Blue.h"
 #include "ITr2Updateable.h"
 
 class Tr2RenderContext;

@@ -1,10 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2Model.h"
 #include "Tr2Mesh.h"
-#include "Tr2MeshArea.h"
 #include "Utilities/BoundingBox.h"
-#include "TriRenderBatch.h"
-#include "Resources/TriGeometryRes.h"
 
 Tr2Model::Tr2Model( IRoot* lockobj ):
 	PARENTLOCK( m_meshes, IRoot )

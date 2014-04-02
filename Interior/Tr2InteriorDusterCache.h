@@ -8,7 +8,6 @@
 #ifndef Tr2InteriorDusterCache_H
 #define Tr2InteriorDusterCache_H
 
-#include "GeoCore/GeoArray.h"
 
 namespace Enlighten
 {

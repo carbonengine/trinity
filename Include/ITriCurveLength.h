@@ -1,8 +1,6 @@
 #ifndef ITRICURVELENGTH_H
 #define ITRICURVELENGTH_H
 
-#include <blue/include/Blue.h>
-
 BLUE_DECLARE_INTERFACE(ITriCurveLength);
 
 BLUE_INTERFACE(ITriCurveLength): public IRoot

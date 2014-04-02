@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "Tr2ImageRes.h"
-#include "blue/include/IBlueResMan.h"
 
 BLUE_DEFINE( Tr2ImageRes );
 

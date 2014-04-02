@@ -3,6 +3,8 @@
 
 #include "include/ITriEffectParameter.h"
 
+BLUE_DECLARE_INTERFACE( ITr2ShaderState );
+
 //--------------------------------------------------------------------------------------------------
 // vector4 - is content of the parameter array, TODO: make it more flexible content
 //

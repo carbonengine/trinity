@@ -4,7 +4,6 @@
 #define Tr2LitPerObjectData_h
 
 #include "Tr2PerObjectData.h"
-#include "Tr2Renderer.h"
 
 // --------------------------------------------------------------------------------------
 // Description:

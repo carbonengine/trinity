@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include "EveTrailsSet.h"
 
-#include "blue/include/IBlueResMan.h"
 #include "Tr2Effect.h"
 #include "TriRenderBatch.h"
 #include "Resources/TriGeometryRes.h"

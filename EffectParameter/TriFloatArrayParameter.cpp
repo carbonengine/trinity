@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "TriFloatArrayParameter.h"
+#include "ITr2ShaderState.h"
 
 // ------------------------------------------------------------------------------------------------------
 TriVector4::TriVector4( IRoot* lockobj ) :

@@ -1,10 +1,9 @@
 #include "StdAfx.h"
 #include "Tr2TextureAtlas.h"
 #include "Tr2AtlasTexture.h"
-#include "ImageIO/Tr2ImageHandler.h"
 #include "Tr2Renderer.h"
 #include "TriError.h"
-#include "blue/include/IBlueResMan.h"
+#include "Tr2ImageIOHelpers.h"
 
 #if( TRINITY_PLATFORM != TRINITY_DIRECTX9 )
 #define g_usingEXDevice	false
@@ -212,7 +211,7 @@ bool Tr2TextureAtlas::DoPrepare( Tr2AtlasTexture* tex )
 
 	if( !m_isRenderTarget )
 	{
-		tex->m_imageHandler->CopyToTexture( m_texture, area->rect.left, area->rect.top, m_margin, renderContext );
+		Tr2ImageIOHelpers::CopyToTexture( *tex->m_imageHandler, m_texture, area->rect.left, area->rect.top, m_margin, renderContext );
 
 		if( m_hasMipMaps ) {
 			m_dirtyMipRegions.push_back( area->rect );

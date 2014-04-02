@@ -5,7 +5,6 @@
 #include "Tr2InteriorEnlightenUpdateTaskManager.h"
 #include "Tr2InteriorCell.h"
 #include "Tr2InteriorEnlightenSystem.h"
-#include "tbb/parallel_for.h"
 #include "TriDevice.h"
 
 // --------------------------------------------------------------------------------------

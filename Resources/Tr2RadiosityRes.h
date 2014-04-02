@@ -2,9 +2,6 @@
 #ifndef Tr2RadiosityRes_h
 #define Tr2RadiosityRes_h
 
-#include "Blue/include/BlueAsyncRes.h"
-#include "blue/include/ICacheable.h"
-
 // Forward declarations
 namespace Enlighten
 {

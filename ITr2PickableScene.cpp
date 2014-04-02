@@ -1,9 +1,6 @@
 // Precompiled header
 #include "StdAfx.h"
 
-// STL includes
-#include <set>
-
 // ITr2PickableScene header
 #include "ITr2PickableScene.h"
 
@@ -13,12 +10,9 @@
 #include "TriProjection.h"
 #include "TriRenderBatch.h"
 #include "TriView.h"
-#include "TriViewport.h"
-#include "Tr2Effect.h"
 #include "Tr2PerObjectData.h"
 #include "Tr2PickBuffer.h"
-#include "Tr2Renderer.h"
-#include "Tr2VariableStore.h"
+#include "Include/TriMath.h"
 
 // --------------------------------------------------------------------------------------
 // Description:

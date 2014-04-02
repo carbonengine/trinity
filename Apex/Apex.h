@@ -11,14 +11,6 @@ struct ITr2InteriorSHLightingSolver;
 
 BLUE_DECLARE( Tr2Apex );
 
-#define USE_APEX_DESTRUCTION 0
-#define USE_APEX_EXPLOSION 0
-#define USE_APEX_FORCE_FIELD 0
-#define USE_APEX_WIND 0
-#define USE_APEX_PARTICLES 0
-#define USE_APEX_FIELD_SAMPLER 0
-#define USE_APEX_PARAM_EDITOR 0
-
 namespace physx
 {
 	namespace apex
@@ -29,29 +21,6 @@ namespace physx
 		class NxModuleClothing;
 		class NxClothingMaterialLibrary;
 		class NxClothingActor;
-#if USE_APEX_DESTRUCTION
-		class NxModuleDestructible;
-#endif
-#if USE_APEX_EXPLOSION
-		class NxModuleExplosion;
-#endif
-#if USE_APEX_WIND
-		class NxModuleWind;
-#endif
-#if USE_APEX_DESTRUCTION
-		class NxModuleForceField;
-#endif
-#if USE_APEX_FIELD_SAMPLER
-		class NxModuleBasicFS;
-		class NxModuleFieldSampler;
-		class NxModuleTurbulenceFS;
-#endif
-#if USE_APEX_PARTICLES
-		class NxModuleBasicIos;
-		class NxModuleEmitter;
-		class NxModuleIofx;
-		class NxModuleFluidIos;
-#endif
 	};
 };
 
@@ -121,29 +90,6 @@ public:
 	physx::apex::NxApexSDK			*GetApexSDK(void) const { return m_apexSDK; };
 
 	physx::apex::NxModuleClothing	*GetModuleClothing(void) const { return m_apexModuleClothing; };
-#if USE_APEX_DESTRUCTION
-	physx::apex::NxModuleDestructible	*GetModuleDestructible(void) const { return m_apexModuleDestructible; };
-#endif
-#if USE_APEX_EXPLOSION
-	physx::apex::NxModuleExplosion	*GetModuleExplosion(void) const { return m_apexModuleExplosion; };
-#endif
-#if USE_APEX_WIND
-	physx::apex::NxModuleWind	*GetModuleWind(void) const { return m_apexModuleWind; };
-#endif
-#if USE_APEX_FORCE_FIELD
-	physx::apex::NxModuleForceField	*GetModuleForceField(void) const { return m_apexModuleForceField; };
-#endif
-#if USE_APEX_FIELD_SAMPLER
-	physx::apex::NxModuleBasicFS	*GetModuleBasicFS(void) const { return m_apexModuleBasicFS; };
-	physx::apex::NxModuleFieldSampler	*GetModuleFieldSampler(void) const { return m_apexModuleFieldSampler; };
-	physx::apex::NxModuleTurbulenceFS	*GetModuleTurbulenceFS(void) const { return m_apexModuleTurbulenceFS; };
-#endif
-#if USE_APEX_PARTICLES
-	physx::apex::NxModuleBasicIos	*GetModuleBasicIos(void) const { return m_apexModuleBasicIos; };
-	physx::apex::NxModuleEmitter	*GetModuleEmitter(void) const { return m_apexModuleEmitter; };
-	physx::apex::NxModuleIofx	*GetModuleIofx(void) const { return m_apexModuleIofx; };
-	physx::apex::NxModuleFluidIos	*GetModuleFluidIos(void) const { return m_apexModuleFluidIos; };
-#endif
 
 	physx::apex::NxModule			*LoadModule(const char* moduleName);
 	void							InitializeApex(NxPhysicsSDK* sdk,PLATFORM_ANALYZER::PlatformAnalyzer *platformAnalyzer);
@@ -195,38 +141,6 @@ private:
 	bool							m_enableLod:1;
 	float							m_lodBenefitValue;
 
-#if USE_APEX_DESTRUCTION
-	physx::apex::NxModuleDestructible	*m_apexModuleDestructible;
-	physx::apex::NxModule			*m_apexModuleDestructibleLegacy;
-#endif
-#if USE_APEX_EXPLOSION
-	physx::apex::NxModuleExplosion	*m_apexModuleExplosion;
-	physx::apex::NxModule			*m_apexModuleExplosionLegacy;
-#endif
-#if USE_APEX_WIND
-	physx::apex::NxModuleWind		*m_apexModuleWind;
-#endif
-#if USE_APEX_FORCE_FIELD
-	physx::apex::NxModuleForceField	*m_apexModuleForceField;
-	physx::apex::NxModule			*m_apexModuleForceFieldLegacy;
-#endif
-#if USE_APEX_FIELD_SAMPLER
-	physx::apex::NxModuleBasicFS	*m_apexModuleBasicFS;
-	physx::apex::NxModuleFieldSampler	*m_apexModuleFieldSampler;
-	physx::apex::NxModuleTurbulenceFS	*m_apexModuleTurbulenceFS;
-#endif
-#if USE_APEX_PARTICLES
-	physx::apex::NxModuleBasicIos	*m_apexModuleBasicIos;
-	physx::apex::NxModule			*m_apexModuleBasicIosLegacy;
-	physx::apex::NxModuleEmitter	*m_apexModuleEmitter;
-	physx::apex::NxModule			*m_apexModuleEmitterLegacy;
-	physx::apex::NxModuleIofx		*m_apexModuleIofx;
-	physx::apex::NxModule			*m_apexModuleIofxLegacy;
-	physx::apex::NxModuleFluidIos	*m_apexModuleFluidIos;
-#endif
-#if USE_APEX_PARAM_EDITOR
-	class Tr2ApexParamEditor			*m_ApexParamEditor;
-#endif
 };
 TYPEDEF_BLUECLASS( Tr2Apex );
 

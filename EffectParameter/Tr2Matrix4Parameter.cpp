@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2Matrix4Parameter.h"
 #include "TriValueBinding.h"
+#include "ITr2ShaderState.h"
 
 Tr2Matrix4Parameter::Tr2Matrix4Parameter(IRoot* lockobj):
 	m_isUsedByEffect( false ),

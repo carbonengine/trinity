@@ -3,7 +3,6 @@
 #define Tr2DistanceTracker_h
 
 #include "include/ITriFunction.h"
-#include "blue/include/Blue.h"
 
 // Forward declarations
 BLUE_DECLARE( Tr2DistanceTracker );

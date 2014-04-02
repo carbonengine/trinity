@@ -6,7 +6,6 @@
 #include "StdAfx.h"
 #include "EveTurretSet.h"
 
-#include "blue/include/IBlueResMan.h"
 #include "Tr2Effect.h"
 #include "Resources/TriGeometryRes.h"
 #include "Utilities/BoundingSphere.h"
@@ -101,6 +100,7 @@ EveTurretSet::EveTurretSet( IRoot* lockobj ) :
 	m_state( STATE_IDLE ),
 	m_activeTurret( INVALID_TURRET_INDEX ),
 	m_recheckTimeLeft( -1.f ),
+	m_missQueue( "EveTurretSet::m_missQueue" ),
 	m_lastShotAccuracy( ACCURACY_INDETERMINATE ),
 	m_lastShotTime( 0.0 ),
 	m_laserMissBehaviour( false ),
@@ -2138,7 +2138,7 @@ void EveTurretSet::ResetMissQueue()
 	m_trackMissPoint = false;
 	while( !m_missQueue.empty() ) 
 	{
-		m_missQueue.pop();
+		m_missQueue.pop_front();
 	}
 }
 
@@ -2150,7 +2150,7 @@ void EveTurretSet::PopShotMissed()
 { 
 	m_lastShotAccuracy = m_missQueue.empty() ? ACCURACY_INDETERMINATE : (ShotAccuracy)m_missQueue.back();
 	if( !m_missQueue.empty() )
-		m_missQueue.pop(); 
+		m_missQueue.pop_front(); 
 }
 
 // --------------------------------------------------------------------------------
@@ -2179,14 +2179,14 @@ void EveTurretSet::SetShotMissed( const bool missed )
 		m_lastShotAccuracy = (ShotAccuracy)missed;
 	}
 	m_trackMissPoint = true;
-	m_missQueue.push(missed); 
+	m_missQueue.push_back(missed); 
 	m_lastShotTime = TimeAsDouble(BeOS->GetActualTime());
 	//in case we get way behind, start dropping miss events,
 	// rather than infinitely accumulating.
 	//should still be representative.
 	while( m_missQueue.size() > 4 )
 	{
-		m_missQueue.pop();
+		m_missQueue.pop_front();
 	}
 }
 

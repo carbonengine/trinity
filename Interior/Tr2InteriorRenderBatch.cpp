@@ -3,8 +3,6 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2InteriorRenderBatch.h"
-
-#include "Tr2Renderer.h"
 #include "Resources/TriGeometryRes.h"
 
 

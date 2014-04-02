@@ -10,7 +10,6 @@
 
 #include "include/ITr2Interior.h"
 #include "Tr2DeviceResource.h"
-#include "Tr2InteriorConstantBufferFormats.h"
 
 // --------------------------------------------------------------------------------------
 // Blue forwards

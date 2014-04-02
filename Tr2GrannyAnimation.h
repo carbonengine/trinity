@@ -2,10 +2,8 @@
 #ifndef Tr2GrannyAnimation_h
 #define Tr2GrannyAnimation_h
 
-#include "granny.h"
 #include "ITr2AnimationUpdater.h"
 #include "GrannyBoneOffset.h"
-#include "blue/include/BlueAsyncRes.h"
 
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( TriGeometryRes );

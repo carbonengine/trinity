@@ -8,14 +8,8 @@
 #include FT_SIZES_H
 #include FT_CACHE_H
 
-#include <utility>
-#include <string>
-
-
-
-#include <blue/include/IBluePersist.h>
 #include "Tr2DeviceResource.h"
-#include "blue/include/IBlueOS.h"
+
 BLUE_DECLARE_IVECTOR( IResFile );
 
 BLUE_DECLARE( Tr2FontManager );

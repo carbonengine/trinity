@@ -3,7 +3,6 @@
 #define TRIOBSERVERLOCAL_H
 
 #include "trinity/include/ITriObserverLocal.h"
-#include "blue/include/IBluePlacementObserver.h"
 
 
 struct Vector3;

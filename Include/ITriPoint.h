@@ -26,7 +26,6 @@
 #ifndef _ITRIPOINT_H_
 #define _ITRIPOINT_H_
 
-#include <blue/include/Blue.h>
 #include "Point.h"
 
 BLUE_INTERFACE( ITriPoint ) : public IRoot	

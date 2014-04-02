@@ -2,10 +2,8 @@
 #ifndef Tr2GrannyTransformTrack_h
 #define Tr2GrannyTransformTrack_h
 
-#include "granny.h"
 #include "include/ITriFunction.h"
 #include "include/ITriCurveLength.h"
-#include "blue/include/BlueAsyncRes.h"
 #include "Curves/Tr2GrannyTrack.h"
 BLUE_DECLARE( TriGrannyRes );
 

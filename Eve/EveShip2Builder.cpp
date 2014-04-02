@@ -8,10 +8,6 @@
 #include "Tr2Mesh.h"
 #include "Tr2Effect.h"
 #include "Miniball3.h"
-#include "blue/include/IBlueResource.h"
-#include "blue/include/IBlueResMan.h"
-#include "blue/include/IBlueCallbackMan.h"
-#include "blue/include/IBluePaths.h"
 #include "EveLocator2.h"
 #include "Utilities/BoundingSphere.h"
 

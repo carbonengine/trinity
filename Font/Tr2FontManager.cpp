@@ -5,7 +5,6 @@
 #include "Tr2AtlasTexture.h"
 #include "Tr2TextureAtlas.h"
 #include "Tr2TextureAtlasMan.h"
-#include "TriDevice.h"
 #include "Tr2Renderer.h"
 
 #include FT_MULTIPLE_MASTERS_H
@@ -127,16 +126,12 @@ Tr2FontManager::Tr2FontManager( IRoot* lockobj ) :
 
 	// Put a dummy entry in the reverse face map to prevent 0 as a FaceID.
 	m_reverseFaceMap.push_back( "dummy" );
-
-	TriDevice::RegisterResource( this );
 }
 
 Tr2FontManager::~Tr2FontManager()
 {
 	FTC_Manager_Done( m_manager );
 	FT_Done_Library( m_ftLib );
-
-	TriDevice::UnregisterResource( this );
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -740,7 +735,7 @@ static unsigned long FileRead( FT_Stream stream, unsigned long offset, unsigned 
 	
 	if( count == 0 )
 	{
-		ssize_t ret = fp->Seek( offset, BS_BEGIN );
+		ssize_t ret = fp->Seek( offset, ICcpStream::SO_BEGIN );
 		if( ret == -1 )
 		{
 			return -1;
@@ -749,7 +744,7 @@ static unsigned long FileRead( FT_Stream stream, unsigned long offset, unsigned 
 	}
 	if( offset != fp->GetPosition() )
 	{
-		fp->Seek( offset, BS_BEGIN );
+		fp->Seek( offset, ICcpStream::SO_BEGIN );
 	}
 
 	// TODO: See if I can't skip the memcpy there and just read straight into buffer

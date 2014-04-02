@@ -3,7 +3,6 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2RadiosityRes.h"
-#include "blue/include/IBlueResMan.h"
 
 BLUE_DEFINE( Tr2RadiosityRes );
 

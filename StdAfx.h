@@ -27,6 +27,7 @@
 
 // for CComPtr support
 #include <atlbase.h>
+#include <direct.h>
 #endif
 
 #include <vector>
@@ -54,6 +55,13 @@ using std::max;
 #include "blue/include/IBlueResMan.h"
 #include "blue/include/IBluePersist.h"
 #include "blue/include/BlueStatistics.h"
+#include "Blue/include/BlueAsyncRes.h"
+#include "blue/include/ICacheable.h"
+#include "blue/include/IBluePlacementObserver.h"
+#include <blue/include/TransGaming.h>
+#include <blue/include/IBlueEventListener.h>
+#include "blue/include/IBlueObjectProxy.h"
+#include "blue/include/BluePySwrap.h" //simple wrapping
 
 // here we define the directInput version we are going to use
 // If this is not defiend here manually there is a build warning
@@ -89,6 +97,7 @@ using std::max;
 #endif
 
 #ifdef _WIN32
+#include <d3dx9math.h>
 #include <xnamath.h>
 #else
 #include "CcpMath/include/xnamath.h"
@@ -125,6 +134,30 @@ using std::max;
 	#define ENLIGHTEN_PRECOMPUTE_ENABLED 1
 	#include "EnlightenPrecomp2/EnlightenPrecomp.h"
 #endif
+
+#include "GeoCore/iGeoStream.h"
+
+#include "GeoCore/GeoProgress.h"
+#include "GeoBase/GeoBase.h"
+#include "GeoCore/GeoMatrixMaths.h"
+
+#include "GeoCore/GeoFileStream.h"
+#include "GeoBase/GeoMemory.h"
+#include "GeoCore/GeoArray.h"
+#include "GeoAtlas/GeoAtlas.h"
+
+#include "Enlighten2/Enlighten.h"
+#include "EnlightenUtils2/EnlightenUtils.h"
+#include "Enlighten2/EnlightenMeshSimpOutput.h"
+#endif
+
+#if TBB_ENABLED
+
+#include "tbb/parallel_sort.h"
+#include "tbb/parallel_do.h"
+#include "tbb/parallel_for.h"
+#include "tbb/task.h"
+
 #endif
 
 #if (_MSC_VER >= 1400 || _DLL)
@@ -147,5 +180,37 @@ using std::max;
 	#endif
 
 #endif
+
+#if APEX_ENABLED
+
+#include "NxApex.h"
+#include "NxParameterized.h"
+#include "NxParamUtils.h"
+#include "NxClothingActor.h"
+#include "PxAllocatorCallback.h"
+#include "PxErrorCallback.h"
+#include "NxCooking.h"
+#include "NxPhysicsSDK.h"
+#include "NxScene.h"
+#include "NxPlaneShapeDesc.h"
+#include "NxPlane.h"
+#include "NxActor.h"
+#include "NxActorDesc.h"
+#include "PhysXLoader.h"
+#include "NxModuleClothing.h"
+#include "NxDebugRenderable.h"
+#include "NxUserRenderer.h"
+#include "NxApexAsset.h"
+#include "NxMat34.h"
+#include "NxClothingAsset.h"
+
+#endif
+
+#if BINK_ENABLED
+#include "Bink.h"
+#endif
+
+#include "ImageIO/Tr2ImageHandler.h"
+#include "ImageIO/HostBitmap.h"
 
 #endif

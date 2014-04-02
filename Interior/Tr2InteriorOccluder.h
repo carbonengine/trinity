@@ -2,8 +2,6 @@
 #ifndef Tr2InteriorOccluder_H
 #define Tr2InteriorOccluder_H
 
-#include "include/TriMatrix.h"
-
 // --------------------------------------------------------------------------------------
 // Other forwards
 namespace Umbra

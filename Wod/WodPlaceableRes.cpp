@@ -7,7 +7,6 @@
 #include "Resources/TriGrannyRes.h"
 #include "Tr2MeshArea.h"
 #include "UmbraTypes.h"
-#include "umbra.hpp"
 #include "Utilities/BoundingBox.h"
 
 WodPlaceableRes::WodPlaceableRes( IRoot* lockobj ) : 
@@ -18,7 +17,6 @@ WodPlaceableRes::WodPlaceableRes( IRoot* lockobj ) :
     m_bIsReady(false),
     PARENTLOCK( m_minBounds ),
     PARENTLOCK( m_maxBounds ),
-    PARENTLOCK( m_lightSources ),
 	PARENTLOCK( m_curveSets )
 {
 
@@ -37,40 +35,6 @@ void WodPlaceableRes::GetBatches( ITriRenderBatchAccumulator* batches,
     {
         m_visualModel->GetBatches( batches, batchType, m, data );
     }
-}
-
-int WodPlaceableRes::PrepareUmbraCell( WodPlaceable* owner )
-{
-    if ( !IsReady() )
-    {
-        return WcoNotReady;
-    }
-    Vector3 vMin;
-    Vector3 vMax; 
-    m_visualModel->GetBoundingBox(vMin,vMax);
-    BoundingBoxInitialize( m_minBounds, m_maxBounds );
-    BoundingBoxUpdate( m_minBounds, m_maxBounds, vMin );
-    BoundingBoxUpdate( m_minBounds, m_maxBounds, vMax );
-
-	owner->m_umbraModel = (Umbra::Model*)Umbra::OBBModel::create( *((Umbra::Vector3*)m_minBounds.GetVector()), *((Umbra::Vector3*)m_maxBounds.GetVector()) );
-	owner->m_umbraObject = Umbra::Object::create( owner->m_umbraModel );
-
-	if( owner->m_umbraObject )
-	{
-		owner->m_umbraObject->setCell( owner->m_cell );
-
-		owner->m_umbraObject->setObjectToCellMatrix( AS_UMBRA_MATRIX( *owner->m_transform.GetMatrix() ) );
-
-		ITr2Renderable * Ptr ( owner );
-		owner->m_umbraObject->setUserPointer( Ptr );
-	}
-	else
-	{
-		owner->m_umbraModel->release();
-		owner->m_umbraModel = NULL;
-	}
-
-    return WcoOK;
 }
 
 bool WodPlaceableRes::IsReady()

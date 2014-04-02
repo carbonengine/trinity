@@ -1,10 +1,6 @@
 #include "StdAfx.h"
-#include "Tr2GPUParticlePool.h"
-
 #include "Tr2GPUParticleEmitter.h"
 #include "Tr2GPUParticleType.h"
-
-#include "blue/include/IBlueResMan.h"
 
 //===================
 //Tr2GPUParticleSubEmitter

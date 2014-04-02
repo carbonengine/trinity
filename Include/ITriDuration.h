@@ -1,7 +1,6 @@
 #ifndef _ITRIDURATION_H_
 #define _ITRIDURATION_H_
 
-#include <blue/include/Blue.h>
 #include "ITriConstants.h"
 
 // This interface ties together the properties that are shared by curves, but not all functions

@@ -30,10 +30,6 @@
 "Simple mapping of Matrix over to Blue so that it can be used in Python"
 
 #include "ITriMatrix.h"
-#include "include/TriMath.h"
-
-#include <blue/include/IBlueOS.h>
-#include <blue/include/IBluePython.h>
 
 #pragma warning (disable: 4275) // non dll-interface struct 'Matrix'
 

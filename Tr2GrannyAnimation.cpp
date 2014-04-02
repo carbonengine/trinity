@@ -3,7 +3,6 @@
 #include "Resources/TriGrannyRes.h"
 #include "Resources/TriGeometryRes.h"
 #include "Tr2Renderer.h"
-#include "blue/include/IBlueResMan.h"
 #include "include/ITr2DebugRenderer.h"
 
 static const int MAX_JOINT_COUNT = 58;

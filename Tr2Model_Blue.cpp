@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "Tr2Model.h"
-#include "Utilities/BoundingBox.h"
 
 BLUE_DEFINE( Tr2Model );
 

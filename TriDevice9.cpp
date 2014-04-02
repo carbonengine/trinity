@@ -6,17 +6,9 @@ const char ERRNODEVICE[] = "There is no D3D device available";
 
 #include "TriDevice.h"
 #include "TriError.h"
-#include "Tr2Renderer.h"
-#include "Tr2PostProcess.h"
-#include "TriViewport.h"
 
 #include "UI/App.h"
-#include "nvapi.h"
-#include "Apex/Apex.h"
 
-#include "include/ITr2DebugRenderer.h"
-#include "include/ITr2Scene.h"
-#include "UmbraLibrary.h"
 #include "RenderJob/Tr2RenderJobs.h"
 
 using namespace Tr2RenderContextEnum;

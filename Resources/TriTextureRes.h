@@ -26,8 +26,6 @@
 
 #include "include/ITriTextureRes.h"
 #include "Tr2DeviceResource.h"
-#include "Tr2Effect.h"
-#include <blue/include/IBluePersist.h>
 #include "ID3DTexture.h"
 #include "Tr2AsyncSave.h"
 

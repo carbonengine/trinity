@@ -25,8 +25,6 @@
 #ifndef _ITRIQUATERNION_H_
 #define _ITRIQUATERNION_H_
 
-#include <blue/include/Blue.h>
-
 struct Quaternion;
 struct Vector3;
 

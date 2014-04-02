@@ -2,8 +2,6 @@
 #ifndef ITr2AnimationUpdater_H
 #define ITr2AnimationUpdater_H
 
-#include <string>
-
 BLUE_INTERFACE( ITr2AnimationUpdater ) : public IRoot
 {
 	virtual void PrePhysicsAnimation( Be::Time time, const Matrix &modelTransform ) = 0;

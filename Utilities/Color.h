@@ -4,8 +4,6 @@
 
 #ifdef _WIN32
 
-#include <d3dx9math.h>
-
 struct Color : public D3DXCOLOR
 {
 	Color() {}

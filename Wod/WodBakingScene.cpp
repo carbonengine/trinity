@@ -3,10 +3,12 @@
 #if INTERIORS_ENABLED
 
 #include "WodBakingScene.h"
+#include "Tr2SkinnedObject.h"
 
 #include "TriDevice.h"
-#include "Tr2Renderer.h"
 #include "Tr2ConstantBufferFormats.h"
+#include "Tr2Renderer.h"
+#include "TriRenderBatch.h"
 
 static void PopulatePerFrameVSData( Tr2PerFrameVSData &data )
 {

@@ -3,17 +3,13 @@
 #include "blue/include/Blue.h"
 #include "BlueExposure/include/InterfaceDefinitions.cxx"
 #include "blue/include/Blue.cxx"
-#include "blue/include/IBluePython.h"
 
 #include "include/TrinityId.cxx"
 #include "include/ITr2DebugRenderer.h"
 
-#include "TriConstants.h"
-
 #include "Tr2Renderer.h"
 
 // creatable rendering types
-#include "TriDirect3D.h"
 #if APEX_ENABLED
 #include "Apex/Apex.h"
 #endif
@@ -34,13 +30,6 @@
 #include "UI/UIChoosers.h"
 #include "Tr2TextureAtlasMan.h"
 #include "Font/Tr2FontManager.h"
-
-//gpu particle pool manager
-#include "Tr2GPUParticlePool.h"
-
-#if BINK_ENABLED
-#include "Bink.h"
-#endif
 
 #ifdef _WIN32
 #include "dxerr.h"
@@ -129,6 +118,7 @@ const char* InitializeForPython()
 #endif
 
 extern bool g_isR10G10B10FormatInverted;
+extern bool g_convertA8L8FormatToB8G8R8A8;
 
 static void StartDLL()
 {
@@ -139,6 +129,11 @@ static void StartDLL()
 	g_isR10G10B10FormatInverted = true;
 #else
 	g_isR10G10B10FormatInverted = false;
+#endif
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+	g_convertA8L8FormatToB8G8R8A8 = true;
+#else
+	g_convertA8L8FormatToB8G8R8A8 = false;
 #endif
 
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );

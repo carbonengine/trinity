@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "TriRotationCurve.h"
-#include <float.h>
+#include "Include/TriMath.h"
 
 TriRotationCurve::TriRotationCurve(IRoot* lockobj) :
 	mStart         ( 0           ), 

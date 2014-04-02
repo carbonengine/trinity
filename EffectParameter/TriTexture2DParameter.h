@@ -29,6 +29,7 @@
 
 #include "include/ITriEffectParameter.h"
 
+BLUE_DECLARE_INTERFACE( ITr2ShaderState );
 BLUE_DECLARE( TriTextureRes );
 BLUE_DECLARE( TriTexture2DParameter );
 BLUE_CLASS_ALLOW_DELAYED_DELETE( TriTexture2DParameter );

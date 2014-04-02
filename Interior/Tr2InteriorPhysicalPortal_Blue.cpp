@@ -5,6 +5,7 @@
 #include "Tr2InteriorPhysicalPortal.h"
 
 #include "Tr2InteriorCell.h"
+#include "Tr2InteriorPortalSocket.h"
 
 BLUE_DEFINE( Tr2InteriorPhysicalPortal );
 

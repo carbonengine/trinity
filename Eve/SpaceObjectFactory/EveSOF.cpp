@@ -12,6 +12,7 @@
 #include "Eve/SpaceObject/Attachments/EvePlaneSet.h"
 #include "Eve/SpaceObject/Attachments/EveBoosterSet2.h"
 #include "Tr2Mesh.h"
+#include "Tr2Effect.h"
 #include "EffectParameter/TriTexture2DParameter.h"
 #include "EffectParameter/Tr2Vector4Parameter.h"
 #include "EffectParameter/Tr2FloatParameter.h"

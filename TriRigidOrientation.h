@@ -29,8 +29,6 @@
 "To be written"
 
 #include "include/ITriFunction.h"
-#include "include/TriQuaternion.h"
-#include "include/TriVector.h"
 
 class TriTorque:
 	public IRoot

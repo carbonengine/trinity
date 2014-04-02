@@ -10,8 +10,6 @@
 
 #include "include/ITr2Interior.h"
 #include "Tr2DeviceResource.h"
-#include "Blue/include/BlueAsyncRes.h"
-#include "Tr2InteriorConstantBufferFormats.h"
 #include "Utilities/BoundingBox.h"
 
 // --------------------------------------------------------------------------------------

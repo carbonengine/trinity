@@ -25,6 +25,8 @@ class TriVariable;
 BLUE_DECLARE( TriVariableParameter );
 BLUE_CLASS_ALLOW_DELAYED_DELETE( TriVariableParameter );
 
+BLUE_DECLARE_INTERFACE( ITr2ShaderState );
+
 class TriVariableParameter:
 	public ITriEffectParameter,
 	public INotify,

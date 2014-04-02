@@ -1,8 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2Blitter.h"
-#include "Tr2RenderUtils.h"
 #include "Tr2Effect.h"
-#include "Tr2VariableStore.h"
 
 #include "TriDevice.h"	//TODO gTriDev/ScreenVertexDecl.
 

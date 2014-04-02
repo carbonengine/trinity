@@ -30,9 +30,6 @@ point on the bounding sphere of a transform nearest to another transform.\r\n
 It will mostly be used for effects that need to stretch to the 'shield' edge of an object." */
 
 #include "include/ITriFunction.h"
-#include "include/ITriTransform.h"
-#include <blue/include/IBluePython.h>
-#include <blue/include/IBlueOS.h>
 
 class TriNearestBoundingPoint:
 	public ITriVectorFunction

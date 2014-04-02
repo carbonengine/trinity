@@ -1,25 +1,15 @@
 #include "StdAfx.h"
 #include "TriGrannyRes.h"
 #include "TriGeometryRes.h"
-#include "blue/include/IBlueResMan.h"
-#include "blue/include/IBluePersist.h"
 
 #if INTERIORS_ENABLED
 #include "UmbraTypes.h"
-#include "Umbra.hpp"
-#include "GeoAtlas/GeoAtlas.h"
 #include "TriEnlightenUtils.h"
 #include "TriEnlightenStream.h"
 
-// Required to output to a debug directory
-#include <direct.h>
-
 #endif
 
-#include "Tr2Renderer.h"
-
 #include "Utilities/GeometryUtils.h"
-#include "blue/include/IBluePaths.h"
 
 extern bool g_geometryResNormalizeOnLoad;
 extern bool g_outputEnlightenDebugBuildInfo;

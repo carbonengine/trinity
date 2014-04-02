@@ -20,7 +20,7 @@ class Tr2ImageHandler;
 //   A class wrapping a bunch of pixels on the CPU plus width, height,
 //   pixelformat. Replaces the old DX9 specific "offscreen surface".
 // -------------------------------------------------------------
-BLUE_CLASS( Tr2HostBitmap ) : public IRoot, public Tr2BitmapDimensions, public Tr2AsyncSave
+BLUE_CLASS( Tr2HostBitmap ) : public IRoot, public ImageIO::HostBitmap, public Tr2AsyncSave
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -28,26 +28,7 @@ public:
     Tr2HostBitmap( IRoot* = 0 );
 	~Tr2HostBitmap();
 
-	long Create( unsigned width, unsigned height, unsigned mipCount, Tr2RenderContextEnum::PixelFormat format );
-	long CreateCube( unsigned width, unsigned mipCount, Tr2RenderContextEnum::PixelFormat format );
-	long CreateVolume( unsigned width, unsigned height, unsigned depth, unsigned mipCount, Tr2RenderContextEnum::PixelFormat format );
-
-	unsigned							GetPitch() const;
-
-	const char*							GetRawData() const;
-	char*								GetRawData();
-	const char*							GetRawData( unsigned x, unsigned y ) const;
-	char*								GetRawData( unsigned x, unsigned y );
-	size_t								GetRawDataSize() const;
-
-	const char*							GetMipRawData( unsigned level, Tr2RenderContextEnum::CubemapFace face = Tr2RenderContextEnum::CUBEMAP_FACE_FIRST ) const;
-	char*								GetMipRawData( unsigned level, Tr2RenderContextEnum::CubemapFace face = Tr2RenderContextEnum::CUBEMAP_FACE_FIRST );
-
-
-	bool IsValid() const;
-	void Destroy();
-	
-	std::string m_name;
+	virtual void Destroy();
 
 	bool CopyFromRenderTarget( Tr2RenderTargetAL& rt, Tr2RenderContext& renderContext );
 	bool CopyFromRenderTarget( Tr2RenderTargetAL& rt, const int* srcRect, int offsetX, int offsetY, Tr2RenderContext& renderContext );
@@ -60,21 +41,13 @@ public:
 
 	bool Compress( unsigned compressionFormat, unsigned qualityLevel, TriTextureRes* output );
 
-	bool Downsample2x2();
-	bool Crop( unsigned left, unsigned top, unsigned right, unsigned bottom );
-
 	// Ugly methods to support old code that does ugly things.
 	bool SetPixel( int width, int height,  const void* val );
 	bool GetPixel( int width, int height,  void* val );
 
-	bool ConvertToVolume();
-
-	ALResult ChangeFormat( Tr2RenderContextEnum::PixelFormat format );
+	ALResult ChangeFormatFromScript( Tr2RenderContextEnum::PixelFormat format );
 
 private:
-	bool CreatePython( unsigned width, unsigned height, unsigned mipCount, /*Tr2RenderContextEnum::PixelFormat*/ unsigned format );
-	bool CreateCubePython( unsigned width, unsigned mipCount, /*Tr2RenderContextEnum::PixelFormat*/ unsigned format );
-	bool CreateVolumePython( unsigned width, unsigned height, unsigned depth, unsigned mipCount, /*Tr2RenderContextEnum::PixelFormat*/ unsigned format );
 	bool CopyFromRenderTargetPython( Tr2RenderTarget* rt );
 	bool CopyFromRenderTargetRegionPython( Tr2RenderTarget* rt, int left, int top, int right, int bottom, unsigned offsetX, unsigned offsetY );
 
@@ -89,8 +62,6 @@ private:
 	bool CopyFromTextureResPython( TriTextureRes* tr );
 
 	bool SharedCopyFaceFromRenderTarget( Tr2RenderContextEnum::CubemapFace face, Tr2RenderTargetAL& rt, const int* srcRect, int offsetX, int offsetY, Tr2RenderContext& renderContext );
-
-	bool CheckForMatch( const Tr2BitmapDimensions& bd, bool checkDimensions, bool& alphaConvert, const char* log );
 
 #if BLUE_WITH_PYTHON
 	PyObject* PyApplyConvFilter ( PyObject* args );
@@ -111,7 +82,6 @@ private:
 	virtual bool DoExecuteAsyncSave();
 	virtual void DoCleanupAsyncSave();
 
-	CcpMallocBuffer						m_data;
 	std::shared_ptr<Tr2ImageHandler>	m_asyncSaveImage;
 };
 

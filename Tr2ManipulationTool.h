@@ -2,24 +2,22 @@
 #ifndef Tr2ManipulationTool_h
 #define Tr2ManipulationTool_h
 
-#include "Tr2PrimitiveSet.h"
-#include "TriViewport.h"
-#include "Tr2SolidSet.h"
-#include "Tr2LineSet.h"
-
 BLUE_DECLARE( Tr2PrimitiveSet );
 BLUE_DECLARE_VECTOR( Tr2PrimitiveSet );
+BLUE_DECLARE_INTERFACE( ITr2Renderable );
 
-static const Vector4 v4Red( 1.0f, 0.01f, 0.01f, 1.0f );
-static const Vector4 v4Green( 0.01f, 1.0f, 0.01f, 1.0f );
-static const Vector4 v4Blue( 0.01f, 0.01f, 1.0f, 1.0f );
-static const Vector4 v4Cyan( 0.0f, 1.0f, 1.0f, 1.0f );
-static const Vector4 v4Yellow( 1.0f, 1.0f, 0.01f, 1.0f );
-static const Vector4 v4LightGray( 0.5f, 0.5f, 0.5f, 1.0f );
-static const Vector3 v3Zero(0.0f, 0.0f, 0.0f);
-static const Vector3 v3X(1.0f, 0.0f, 0.0f);
-static const Vector3 v3Y(0.0f, 1.0f, 0.0f);
-static const Vector3 v3Z(0.0f, 0.0f, 1.0f);
+class TriViewport;
+
+extern const Vector4 v4Red;
+extern const Vector4 v4Green;
+extern const Vector4 v4Blue;
+extern const Vector4 v4Cyan;
+extern const Vector4 v4Yellow;
+extern const Vector4 v4LightGray;
+extern const Vector3 v3Zero;
+extern const Vector3 v3X;
+extern const Vector3 v3Y;
+extern const Vector3 v3Z;
 
 BLUE_CLASS( Tr2ManipulationTool ):
      public IRoot

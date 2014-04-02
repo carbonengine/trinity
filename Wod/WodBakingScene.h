@@ -3,12 +3,10 @@
 #define WodBakingScene_H
 
 #include "include/ITr2Scene.h"
-#include "Tr2SkinnedObject.h"
 #include "Interior/Tr2InteriorVisualization.h"
-#include "TriPoolAllocator.h"
-#include "TriRenderBatch.h"
 
 BLUE_DECLARE( WodBakingScene );
+BLUE_DECLARE( Tr2SkinnedObject );
 
 class WodBakingScene:
 	public ITr2Scene

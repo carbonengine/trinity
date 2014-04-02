@@ -27,24 +27,13 @@
 #define _TRIDEVICE_H_
 
 #include "include/ITriDevice.h"
-#include "Tr2DeviceResource.h"
-#include "include/ITr2Updateable.h"
-#include "include/TriMatrix.h"
 #include "TriViewport.h"
 #include "TriDirect3D.h"
-#include <blue/include/IBlueOS.h>
-#include <blue/include/IBluePython.h>
-#include <list>
-#include <vector>
 #include "TriFrustum.h"
 
-class TriTransform;
-class TriFrustum;
-
 BLUE_DECLARE_INTERFACE( ITr2Scene );
+BLUE_DECLARE_INTERFACE( ITr2Updateable );
 
-BLUE_DECLARE( TriRenderJob );
-BLUE_DECLARE_VECTOR( TriRenderJob );
 BLUE_DECLARE( TriCurveSet );
 BLUE_DECLARE_VECTOR( TriCurveSet );
 BLUE_DECLARE( Tr2RenderJobs );

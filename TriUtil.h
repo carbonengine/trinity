@@ -35,7 +35,6 @@
 
 
 #ifdef D3DPERF
-#include <d3dx9.h>
 
 //Helper class for d3d events
 class D3DPERF_Event

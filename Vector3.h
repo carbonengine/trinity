@@ -4,10 +4,6 @@
 
 #ifdef _WIN32
 
-// System headers
-#include <d3dx9math.h>
-#include <xnamath.h>
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   This structure represents a 3-vector of floats.  It inherits from D3DXVECTOR3 and is

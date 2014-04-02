@@ -28,9 +28,6 @@
 
 #include "ITriVector.h"
 
-#include <blue/include/IBlueOS.h>
-#include <blue/include/IBluePython.h>
-
 #pragma warning (disable: 4275) // non dll-interface struct 'Vector3'
 
 BLUE_DECLARE( TriVector );

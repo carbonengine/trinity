@@ -4,10 +4,6 @@
 
 #ifdef _WIN32
 
-// System headers
-#include <d3dx9math.h>
-#include <xnamath.h>
-
 #include "Vector3.h"
 #include "Vector4.h"
 

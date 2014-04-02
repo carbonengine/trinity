@@ -31,10 +31,6 @@
 function"
 
 #include "ITriColor.h"
-#include "TriMath.h"
-
-#include <blue/include/IBlueOS.h>
-#include <blue/include/IBluePython.h>
 
 #pragma warning (disable: 4275) // non dll-interface struct 'D3DXQUATERNION'
 

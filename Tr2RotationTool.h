@@ -3,6 +3,8 @@
 #define Tr2RotationTool_h
 #include "Tr2ManipulationTool.h"
 
+BLUE_DECLARE( Tr2LineSet );
+
 BLUE_CLASS( Tr2RotationTool ):
      public Tr2ManipulationTool
 {

@@ -4,7 +4,6 @@
 
 #include "include/ITr2Interior.h"
 #include "Tr2DeviceResource.h"
-#include "blue/include/IBluePlacementObserver.h"
 #include "Utilities/BoundingBox.h"
 
 BLUE_DECLARE( Tr2ShaderMaterial );

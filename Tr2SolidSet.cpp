@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 #include "Tr2SolidSet.h"
-#include "TriDevice.h"
-#include "TriDebugResourceHelper.h"
 #include "Tr2Renderer.h"
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
@@ -12,7 +10,6 @@ Tr2SolidSet::Tr2SolidSet( IRoot* lockobj /*= NULL*/ ):
 	m_currentSubmittedTriangleCount( 0 ),
 	m_maxCurrentTriangleCount( 0 )
 {
-	TriDevice::RegisterResource( this );
 	m_maxCurrentTriangleCount = 100;
 	m_triangles.reserve( m_maxCurrentTriangleCount );
 }
@@ -20,7 +17,6 @@ Tr2SolidSet::Tr2SolidSet( IRoot* lockobj /*= NULL*/ ):
 Tr2SolidSet::~Tr2SolidSet()
 {
 	ReleaseResources( TRISTORAGE_ALL );
-	TriDevice::UnregisterResource( this );
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

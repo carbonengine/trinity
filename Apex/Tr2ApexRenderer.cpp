@@ -5,11 +5,10 @@
 #include "Tr2ApexRenderer.h"
 #include "Utilities/GeometryUtils.h"
 #include "TriRenderBatch.h"
-#include "Tr2Effect.h"
-#include "Tr2DeviceResource.h"
 #include "TriSettingsRegistrar.h"
 #include "Tr2PerObjectData.h"
 #include "Tr2VertexDefinitionUtilities.h"
+#include "Tr2Effect.h"
 
 Tr2ApexRenderer s_apexRenderer;
 Tr2ApexRenderer& g_apexRenderer = s_apexRenderer;

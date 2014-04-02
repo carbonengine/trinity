@@ -25,6 +25,7 @@
 #include "Tr2BindingVector3.h"
 #include "Eve/EveUpdateContext.h"
 #include "Eve/EveAnimationSequencer.h"
+#include "Tr2Effect.h"
 
 #include <limits>
 

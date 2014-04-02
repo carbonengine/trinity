@@ -7,6 +7,7 @@
 #include "StdAfx.h"
 #include "EveSpotlightSet.h"
 #include "TriRenderBatch.h"
+#include "Tr2Effect.h"
 #include "Utilities/BoundingSphere.h"
 
 using namespace Tr2RenderContextEnum;

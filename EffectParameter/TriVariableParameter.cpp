@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "TriVariableParameter.h"
 #include "Tr2VariableStore.h"
+#include "ITr2ShaderState.h"
 
 TriVariableParameter::TriVariableParameter(IRoot* lockobj):
 	m_isUsedByEffect( false ),

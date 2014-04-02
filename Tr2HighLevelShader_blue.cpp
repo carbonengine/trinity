@@ -5,7 +5,6 @@
 //
 #include "StdAfx.h"
 #include "Tr2HighLevelShader.h"
-#include "Tr2ShaderMaterial.h"
 
 
 BLUE_DEFINE( Tr2HighLevelShader );

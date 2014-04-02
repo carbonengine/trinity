@@ -28,14 +28,7 @@
 
 #include "include/ITriFunction.h"
 
-#include <blue/include/IBlueOS.h>
-
-#include "include/TriVector.h"
-#include "include/TriQuaternion.h"
-#include "include/ITriTransform.h"
 #include "include/ITriCurveLength.h"
-#include "include/TriColor.h"
-#include "TriConstants.h"
 
 BLUE_DECLARE( TriScalarSequencer );
 BLUE_DECLARE_INTERFACE( ITriVectorFunction );
@@ -49,6 +42,8 @@ BLUE_DECLARE_IVECTOR( ITriColorFunction );
 
 BLUE_DECLARE_INTERFACE( ITriQuaternionFunction );
 BLUE_DECLARE_IVECTOR( ITriQuaternionFunction );
+
+BLUE_DECLARE_INTERFACE( ITriTransform );
 
 class TriScalarSequencer :
 	public ITriScalarFunction,

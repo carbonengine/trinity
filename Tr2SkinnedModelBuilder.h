@@ -2,12 +2,7 @@
 #ifndef Tr2SkinnedModelBuilder_h
 #define Tr2SkinnedModelBuilder_h
 
-
-#include "Tr2Mesh.h"
-#include "granny.h"
-
-#include "Tr2SkinnedModelBuilderSource.h"
-#include "Tr2SkinnedModelBuilderBlend.h"
+#include "ITr2Renderable.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2SkinnedModel );
@@ -15,6 +10,13 @@ BLUE_DECLARE( Tr2CpuSkinnedModel );
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( Tr2DynamicMesh );
 BLUE_DECLARE( TriFloatArrayParameter );
+BLUE_DECLARE( Tr2Mesh );
+BLUE_DECLARE( Tr2MeshArea );
+BLUE_DECLARE_VECTOR( Tr2MeshArea );
+BLUE_DECLARE( Tr2SkinnedModelBuilderSource );
+BLUE_DECLARE_VECTOR( Tr2SkinnedModelBuilderSource );
+BLUE_DECLARE( Tr2SkinnedModelBuilderBlend );
+BLUE_DECLARE_VECTOR( Tr2SkinnedModelBuilderBlend );
 
 struct Tr2SkinnedModelBuilder_OutputData;
 

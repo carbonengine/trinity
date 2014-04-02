@@ -25,7 +25,6 @@
 #ifndef _TRIPYTHONTHUNKERS_H_
 #define _TRIPYTHONTHUNKERS_H_
 
-#include <blue/include/IBluePython.h>
 #include "include/ITriFunction.h"
 
 //////////////////////////////////////////////////////////////////////

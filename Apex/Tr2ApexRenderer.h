@@ -4,8 +4,6 @@
 
 #if APEX_ENABLED
 
-#include "NxUserRenderer.h"
-
 extern class Tr2ApexRenderer& g_apexRenderer;
 extern class physx::apex::NxUserRenderResourceManager* g_apexRenderResourceManager;
 

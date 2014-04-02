@@ -2,7 +2,6 @@
 #include "Tr2CpuSkinnedModel.h"
 #include "Tr2DynamicMesh.h"
 #include "Resources/TriGeometryRes.h"
-#include "TriRenderBatch.h"
 
 Matrix* TriMatCopy( Matrix* pOut, const float* pMatrix3x4 )
 {

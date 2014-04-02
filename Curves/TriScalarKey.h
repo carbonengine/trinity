@@ -32,9 +32,6 @@
 #include "include/TriQuaternion.h"
 #include "include/TriColor.h"
 
-#include <blue/include/IBlueOS.h>
-#include <blue/include/IBluePython.h>
-
 
 ////////////////////////////////////////////////////////////////////////////
 // TriScalarKey

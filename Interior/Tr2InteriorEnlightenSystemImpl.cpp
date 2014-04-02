@@ -12,11 +12,7 @@
 
 #include "TriEnlightenUtils.h"
 #include "Tr2Renderer.h"
-#include "Blue/BlueResMan.h"
-
-#include "EnlightenUtils2/EnlightenUtils.h"
-#include "Enlighten2/EnlightenMeshSimpOutput.h"
-#include "blue/include/IBluePaths.h"
+#include "Resources/Tr2RadiosityRes.h"
 
 extern CcpLogChannel_t g_enlightenBuildChannel;
 

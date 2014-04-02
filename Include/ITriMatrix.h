@@ -25,8 +25,6 @@
 #ifndef _ITRIMATRIX_H_
 #define _ITRIMATRIX_H_
 
-#include <blue/include/Blue.h>
-
 BLUE_INTERFACE( ITriMatrix ) : public IRoot
 {
 	// Construction and data access

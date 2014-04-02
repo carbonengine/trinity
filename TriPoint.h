@@ -32,10 +32,6 @@ function"
 
 #include "include/ITriPoint.h"
 
-#include "include/TriMath.h"
-
-#include <blue/include/IBlueOS.h>
-#include <blue/include/IBluePython.h>
 
 #if BLUE_WITH_PYTHON
 class TriPoint :

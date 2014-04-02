@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "TriFrustum.h"
-#include "Tr2Renderer.h"
+#include "TriViewport.h"
 #include "TriSettingsRegistrar.h"
 
 bool g_frustumCullingDisabled = false;

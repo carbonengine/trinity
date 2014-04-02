@@ -3,28 +3,18 @@
 #define Tr2InteriorScene_H
 
 
-
-#include "TriPoolAllocator.h"
-#include "TriRenderBatch.h"
-
-#include "ITr2PhysicsUpdater.h"
 #include "ITr2PickableScene.h"
 #include "ITr2VisibilityQueryable.h"
-#include "include/ITr2Interior.h"
 #include "Tr2PickBuffer.h"
 #include "Tr2UmbraScene.h"
-#include "Curves/TriCurveSet.h"
-#include "Tr2ConstantBufferFormats.h"
-#include "Tr2InteriorCell.h"
-#include "Tr2InteriorPhysicalPortal.h"
 #include "Tr2InteriorVisualization.h"
 #include "Tr2InteriorEnlightenUpdateTaskManager.h"
 #include "include/ITr2MultiPassScene.h"
 #include "ITr2VisualizationModeRenderer.h"
-#include "Tr2TextureAtlas.h"
 #include "Tr2InteriorSHLightingSolver.h"
-#include <unordered_set>
-#include "Tr2Variable.h"
+#include "Tr2InteriorLightSet.h"
+#include "Tr2InteriorEnlightenSystemImpl.h"
+#include "Include/ITr2Scene.h"
 
 // Forward declarations
 struct Tr2VisibilityEvent;
@@ -35,6 +25,7 @@ class TriVariable;
 class TriView;
 class TriViewport;
 enum Tr2InteriorBatchGroup;
+class TriEnlightenProgressBar;
 
 // lod resource unloading
 extern float g_wodAvatarResourceUnloadingTimeThreshold;
@@ -46,7 +37,17 @@ BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( TriTextureRes );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2VisibilityResults );
+BLUE_DECLARE( Tr2TextureAtlas );
 BLUE_DECLARE_VECTOR( Tr2TextureAtlas );
+BLUE_DECLARE( Tr2ShaderMaterial );
+BLUE_DECLARE_INTERFACE( ITr2PhysicsUpdater );
+BLUE_DECLARE( TriCurveSet );
+BLUE_DECLARE_VECTOR( TriCurveSet );
+BLUE_DECLARE( Tr2InteriorCell );
+BLUE_DECLARE_VECTOR( Tr2InteriorCell );
+BLUE_DECLARE( Tr2InteriorPhysicalPortal );
+BLUE_DECLARE_VECTOR( Tr2InteriorPhysicalPortal );
+BLUE_DECLARE( TriLineSet );
 
 class Tr2InteriorScene:
 	public IInitialize,

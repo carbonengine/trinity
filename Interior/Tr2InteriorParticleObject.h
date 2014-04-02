@@ -9,7 +9,6 @@
 #define Tr2InteriorParticleObject_H
 
 #include "include/ITr2Interior.h"
-#include "blue/include/IBluePlacementObserver.h"
 #include "Utilities/BoundingBox.h"
 
 BLUE_DECLARE_INTERFACE( ITr2GenericEmitter );

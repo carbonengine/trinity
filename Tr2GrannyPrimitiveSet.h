@@ -3,13 +3,7 @@
 #define Tr2GrannyPrimitiveSet_h
 
 #include "Tr2PrimitiveSet.h"
-#include "Tr2Effect.h"
-#include "ITr2Renderable.h"
 #include "Tr2DeviceResource.h"
-#include "ITr2GeometryProvider.h"
-#include "Tr2PerObjectData.h"
-#include "TriRenderBatch.h"
-#include "blue/include/BlueAsyncRes.h"
 
 BLUE_DECLARE( TriGrannyRes );
 

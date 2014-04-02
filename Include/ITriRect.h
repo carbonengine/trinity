@@ -26,8 +26,6 @@
 #ifndef _ITRIRECT_H_
 #define _ITRIRECT_H_
 
-#include <blue/include/Blue.h>
-
 struct Rect;
 
 BLUE_INTERFACE( ITriRect ) : public IRoot	

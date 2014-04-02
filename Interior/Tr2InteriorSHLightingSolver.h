@@ -8,7 +8,6 @@
 #ifndef Tr2InteriorSHLightingSolver_H
 #define Tr2InteriorSHLightingSolver_H
 
-#include "blue/include/Blue.h"
 #include "include/ITr2Interior.h"
 #include "Tr2DeviceResource.h"
 

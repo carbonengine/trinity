@@ -3,12 +3,13 @@
 #define Tr2SkinnedModel_H
 
 #include "Tr2Model.h"
-#include "blue/include/BlueAsyncRes.h"
 
 struct TriGeometryResSkeletonData;
 class Tr2PerObjectDataSkinned;
 
 BLUE_DECLARE( Tr2SkinnedModel );
+BLUE_DECLARE( TriGeometryRes );
+BLUE_DECLARE_VECTOR( Tr2MeshArea );
 
 namespace MR
 {

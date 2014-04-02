@@ -2,8 +2,6 @@
 
 #include "TriRenderBatch.h"
 #include "Resources/TriGeometryRes.h"
-#include "Tr2Effect.h"
-#include "blue/include/TransGaming.h"
 
 BLUE_DEFINE_INTERFACE( ITr2GeometryProvider );
 

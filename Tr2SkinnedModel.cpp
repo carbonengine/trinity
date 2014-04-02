@@ -1,9 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2SkinnedModel.h"
-#include "TriRenderBatch.h"
+#include "Tr2Mesh.h"
 #include "Resources/TriGeometryRes.h"
-#include "Utilities/BoundingBox.h"
-#include "blue/include/IBlueResMan.h"
 #include "Tr2PerObjectData.h"
 
 static const unsigned int NO_SKELETON = 0xffffffff;

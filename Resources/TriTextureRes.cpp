@@ -1,19 +1,13 @@
 #include "StdAfx.h"
 #include "TriTextureRes.h"
-#include "ImageIO/Tr2ImageHandler.h"
 #include "TriSettingsRegistrar.h"
 
-#include "blue/include/IBlueOS.h"
-#include "blue/include/IBlueResMan.h"
-
-#include "Tr2Renderer.h"
 #include "Tr2RenderTarget.h"
 #include "Tr2DepthStencil.h"
 #include "Tr2HostBitmap.h"
-#include "blue/include/IBluePaths.h"
+#include "Tr2ImageIOHelpers.h"
 
 #include "TriConstants.h"
-#include "TriError.h"
 #include "TriDevice.h"
 
 
@@ -280,7 +274,7 @@ bool TriTextureRes::Save( const wchar_t* filename )
 	if( m_type == TEX_TYPE_2D )
 	{
 		if( !saveBitmap.CreateInstance()										||
-			FAILED( saveBitmap->Create( GetWidth(), GetHeight(), GetTrueMipCount(), GetFormat() ) )	||
+			!saveBitmap->Create( GetWidth(), GetHeight(), GetTrueMipCount(), GetFormat() )	||
 			!saveBitmap->CopyFromTextureRes( *this, renderContext ) )
 		{
 			return false;
@@ -289,7 +283,7 @@ bool TriTextureRes::Save( const wchar_t* filename )
 	else
 	{
 		if( !saveBitmap.CreateInstance()										||
-			FAILED( saveBitmap->CreateCube( GetWidth(), GetTrueMipCount(), GetFormat() ) )	||
+			!saveBitmap->CreateCube( GetWidth(), GetTrueMipCount(), GetFormat() ) ||
 			!saveBitmap->CopyFromTextureRes( *this, renderContext ) )
 		{
 			return false;
@@ -331,7 +325,7 @@ bool TriTextureRes::DoPrepareAsyncSave( void )
 	{
 	case TEX_TYPE_2D:
 		if( !m_asyncSaveBitmap.CreateInstance()																||
-			FAILED( m_asyncSaveBitmap->Create( GetWidth(), GetHeight(), GetTrueMipCount(), GetFormat() ) )	||
+			!m_asyncSaveBitmap->Create( GetWidth(), GetHeight(), GetTrueMipCount(), GetFormat() )	||
 			!m_asyncSaveBitmap->CopyFromTextureRes( *this, renderContext ) )
 		{
 			CCP_LOGERR( "Failed to save (%S)", m_saveFilename.c_str() );
@@ -340,7 +334,7 @@ bool TriTextureRes::DoPrepareAsyncSave( void )
 		break;
 	case TEX_TYPE_CUBE:
 		if( !m_asyncSaveBitmap.CreateInstance()														||
-			FAILED( m_asyncSaveBitmap->CreateCube( GetWidth(), GetTrueMipCount(), GetFormat() ) )	||
+			!m_asyncSaveBitmap->CreateCube( GetWidth(), GetTrueMipCount(), GetFormat() )	||
 			!m_asyncSaveBitmap->CopyFromTextureRes( *this, renderContext ) )
 		{
 			return false;
@@ -402,20 +396,10 @@ BlueAsyncRes::LoadingResult TriTextureRes::DoLoad()
 
 	m_imageHandler->SetMipLevelSkipCount( ComputeMipSkipCount() );
 	m_imageHandler->SetMipLevelMaxCount( m_mipLevelMaxCount );
-	m_imageHandler->SetStream( m_dataStream );
-	bool isOK = m_imageHandler->ReadHeader();
+	bool isOK = m_imageHandler->ReadHeader( m_dataStream );
 	if(isOK)
 	{
-		isOK = m_imageHandler->IsSupported();
-		if( isOK )
-		{
-			isOK =	m_imageHandler->ReadImage() &&
-					m_imageHandler->GenerateMips();
-		}
-		else
-		{
-			CCP_LOGWARN( "Texture '%S' needs format conversion", GetPath() );
-		}
+		isOK = m_imageHandler->ReadImage( m_dataStream ) && m_imageHandler->GenerateMips();
 	}
 	else
 	{
@@ -464,7 +448,7 @@ bool TriTextureRes::DoPrepare()
 	{
 		Tr2TextureAL face;
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		if( !m_imageHandler->CreateTexture(		m_texture, 
+		if( !Tr2ImageIOHelpers::CreateTexture( *m_imageHandler, m_texture, 
 												m_memoryUse, 
 												renderContext, 
 												USAGE_IMMUTABLE ) )

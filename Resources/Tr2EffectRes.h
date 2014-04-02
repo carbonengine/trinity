@@ -3,8 +3,6 @@
 
 
 #include "ITr2EffectValue.h"
-#include "blue/include/BlueAsyncRes.h"
-#include "blue/include/ICacheable.h"
 #include "Tr2DeviceResource.h"
 #include "ITriReroutable.h"
 #include "ITr2ShaderState.h"

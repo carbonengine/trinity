@@ -1,5 +1,8 @@
 #include "StdAfx.h"
 #include "TriRigidOrientation.h"
+#include "include/TriQuaternion.h"
+#include "include/TriVector.h"
+#include "Include/TriMath.h"
 
 TriTorque::TriTorque(IRoot* lockobj) :
 	mTime(  0.0f ),	

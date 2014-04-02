@@ -8,7 +8,6 @@
 #include "Utilities/ViewDistanceInfo.h"
 #include "Resources/TriGeometryRes.h"
 #include "Resources/TriTextureRes.h"
-#include "blue/include/IBlueResMan.h"
 
 #include "EveSpherePinIndexTree.h"
 #include "TriPoolAllocator.h"

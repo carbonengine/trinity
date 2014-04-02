@@ -11,7 +11,6 @@
 #include "include/ITr2Interior.h"
 #include "Tr2DeviceResource.h"
 #include "Tr2InteriorConstantBufferFormats.h"
-#include "blue\include\BlueAsyncRes.h"
 #include "Utilities/BoundingBox.h"
 
 // --------------------------------------------------------------------------------------

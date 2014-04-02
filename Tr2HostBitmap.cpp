@@ -6,7 +6,6 @@
 #endif
 #include "Resources/TriTextureRes.h"
 #include "Tr2HostBitmap.h"
-#include "ImageIO/Tr2ImageHandler.h"
 #include "Tr2DxtCompressor.h"
 
 #pragma warning( push, 4 )
@@ -22,257 +21,15 @@ Tr2HostBitmap::~Tr2HostBitmap()
 	Destroy();
 }
 
-long Tr2HostBitmap::Create( unsigned width, unsigned height, unsigned mipCount, Tr2RenderContextEnum::PixelFormat format )
-{
-	CleanupAsyncSave( false );
-	Destroy();
-
-	if( !width || !height || format >= PIXEL_FORMAT_SENTINEL )
-	{
-		CCP_LOGWARN( "Tr2HostBitmap::Create invalid parameters: %d x %d, %d mips, format %d", width, height, mipCount, format );
-		return E_FAIL;
-	}
-
-	if( IsCompressedFormat( format ) )
-	{
-		if( ( width % 4 ) != 0 || ( height % 4 ) != 0 )
-		{
-			CCP_LOGWARN( "Tr2HostBitmap::Create invalid compressed size: %d x %d", width, height );
-			return E_FAIL;
-		}
-	}
-
-	m_width  = width;
-	m_height = height;
-	m_volumeDepth = 1;
-	m_format = format;
-	m_mipCount = mipCount;
-	m_type = TEX_TYPE_2D;
-
-	mipCount = GetTrueMipCount();
-
-	size_t size = 0;
-	if( IsCompressedFormat( format ) )
-	{
-		while( mipCount-- )
-		{
-			size += width * height * GetBlockByteSize( format ) / 16;
-			width  = std::max( width  / 2u, 4u );
-			height = std::max( height / 2u, 4u );			
-		}
-	}
-	else
-	{
-		while( mipCount-- )
-		{
-			size += width * height * GetBytesPerPixel( format );
-			width  = std::max( width  / 2u, 1u );
-			height = std::max( height / 2u, 1u );			
-		}		
-	}
-
-	m_data.resize( "Tr2HostBitmap::m_data", size );
-	
-	if( !m_data )
-	{
-		CCP_LOGWARN( "Tr2HostBitmap::Create failed to allocated %d bytes", size );
-		Destroy();
-		return E_FAIL;
-	}
-
-#if 0
-	for( unsigned j = 0; j != m_height; ++j )
-	{
-		for( unsigned i = 0; i != m_width; ++i )
-		{
-			uint8_t* rgba = (uint8_t*)GetRawData( i, j );
-			if( (j&1) == (i&1) )
-			{
-				rgba[3] = rgba[2] = rgba[1] = rgba[0] = 0xff;
-			}
-			else
-			{
-				rgba[0] = j < m_height/2 ? 0xff : 0;
-				rgba[1] = i < m_width /2 ? 0xff : 0;
-				rgba[2] = ( (j + i ) / 8 ) & 255;
-				rgba[3] = 0xff;
-			}
-		}
-	}
-#endif
-
-	return S_OK;
-}
-
-long Tr2HostBitmap::CreateCube( unsigned width, unsigned mipCount, Tr2RenderContextEnum::PixelFormat format )
-{
-	Destroy();
-
-	if( !width || format >= PIXEL_FORMAT_SENTINEL )
-	{
-		return E_FAIL;
-	}
-
-	if( IsCompressedFormat( format ) )
-	{
-		if( ( width % 4 ) != 0 )
-		{
-			return E_FAIL;
-		}
-	}
-
-	m_width  = width;
-	m_height = width;
-	m_volumeDepth = 1;
-	m_format = format;
-	m_mipCount = mipCount;
-	m_type = TEX_TYPE_CUBE;
-
-	mipCount = GetTrueMipCount();
-
-	size_t size = 0;
-	if( IsCompressedFormat( format ) )
-	{
-		while( mipCount-- )
-		{
-			size += width * width * GetBlockByteSize( format ) / 16 * 6;
-			width  = std::max( width  / 2u, 4u );
-		}
-	}
-	else
-	{
-		while( mipCount-- )
-		{
-			size += width * width * GetBytesPerPixel( format ) * 6;
-			width  = std::max( width  / 2u, 1u );
-		}		
-	}
-	m_data.resize( "Tr2HostBitmap::m_data", size );
-	
-	return S_OK;
-}
-
-long Tr2HostBitmap::CreateVolume( unsigned width, unsigned height, unsigned depth, unsigned mipCount, Tr2RenderContextEnum::PixelFormat format )
-{
-	Destroy();
-
-	if( !width || format >= PIXEL_FORMAT_SENTINEL )
-	{
-		return E_FAIL;
-	}
-
-	if( IsCompressedFormat( format ) )
-	{
-		if( ( width % 4 ) != 0 || ( height % 4 ) != 0 )
-		{
-			return E_FAIL;
-		}
-	}
-
-	m_width  = width;
-	m_height = height;
-	m_volumeDepth = depth;
-	m_format = format;
-	m_mipCount = mipCount;
-	m_type = TEX_TYPE_3D;
-
-	mipCount = GetTrueMipCount();
-
-	size_t size = 0;
-	if( IsCompressedFormat( format ) )
-	{
-		while( mipCount-- )
-		{
-			size += width * height * GetBlockByteSize( format ) / 16;
-			width  = std::max( width  / 2u, 4u );
-		}
-	}
-	else
-	{
-		while( mipCount-- )
-		{
-			size += width * height * GetBytesPerPixel( format );
-			width  = std::max( width  / 2u, 1u );
-		}		
-	}
-	size *= depth;
-	m_data.resize( "Tr2HostBitmap::m_data", size );
-
-	return S_OK;
-}
-
-bool Tr2HostBitmap::CreatePython( unsigned width, unsigned height, unsigned mipCount, /*Tr2RenderContextEnum::PixelFormat*/ unsigned format )
-{ 
-	return SUCCEEDED( Create( width, height, mipCount, static_cast<Tr2RenderContextEnum::PixelFormat>( format ) ) );
-}
-	
-bool Tr2HostBitmap::CreateCubePython( unsigned width, unsigned mipCount, /*Tr2RenderContextEnum::PixelFormat*/ unsigned format )
-{
-	return SUCCEEDED( CreateCube( width, mipCount, static_cast<Tr2RenderContextEnum::PixelFormat>( format ) ) );
-}
-
-bool Tr2HostBitmap::CreateVolumePython( unsigned width, unsigned height, unsigned depth, unsigned mipCount, /*Tr2RenderContextEnum::PixelFormat*/ unsigned format )
-{ 
-	return SUCCEEDED( CreateVolume( width, height, depth, mipCount, static_cast<Tr2RenderContextEnum::PixelFormat>( format ) ) );
-}
-	
-bool Tr2HostBitmap::IsValid() const
-{
-	return !m_data.empty();
-}
-
 void Tr2HostBitmap::Destroy()
 {
-	Tr2BitmapDimensions::Destroy();
-	
-	m_data.clear();	
+	CleanupAsyncSave( false );
+	ImageIO::HostBitmap::Destroy();
 }
 
-ALResult Tr2HostBitmap::ChangeFormat( Tr2RenderContextEnum::PixelFormat format )
+ALResult Tr2HostBitmap::ChangeFormatFromScript( Tr2RenderContextEnum::PixelFormat format )
 {
-	if( !IsValid() )
-	{
-		return E_INVALIDCALL;
-	}
-	if( Tr2RenderContextEnum::IsCompressedFormat( format ) || Tr2RenderContextEnum::IsCompressedFormat( m_format ) ||
-		Tr2RenderContextEnum::GetBytesPerPixel( format ) != Tr2RenderContextEnum::GetBytesPerPixel( m_format ) )
-	{
-		return E_INVALIDARG;
-	}
-	m_format = format;
-	return S_OK;
-}
-
-bool Tr2HostBitmap::CheckForMatch( const Tr2BitmapDimensions& bd, bool checkDimensions, bool& alphaConvert, const char* log )
-{
-	if( !IsValid() )
-	{
-		CCP_LOGWARN( "%s: invalid source or destination", log );
-		return false;
-	}
-
-	if( checkDimensions &&
-		( bd.GetWidth()	!= m_width || bd.GetHeight()	!= m_height ) )
-	{
-		CCP_LOGWARN( "%s: incompatible size", log );
-		return false;
-	}
-
-	if( bd.GetTrueMipCount() != GetTrueMipCount() )
-	{
-		CCP_LOGWARN( "%s: miplevels mismatch, data may be truncated", log );
-	}
-
-	const bool formatMatch = bd.GetFormat() == m_format;
-	alphaConvert  = bd.GetFormat() == PIXEL_FORMAT_B8G8R8X8_UNORM && m_format == PIXEL_FORMAT_B8G8R8A8_UNORM;
-
-	if( !formatMatch && !alphaConvert )
-	{
-		CCP_LOGWARN( "%s: incompatible size/pixelformat", log );
-		return false;
-	}
-
-	return true;
+	return ChangeFormat( format ) ? S_OK : E_FAIL;
 }
 
 bool Tr2HostBitmap::CopyFromRenderTarget( Tr2RenderTargetAL& rtAL, Tr2RenderContext& renderContext )
@@ -542,101 +299,6 @@ bool Tr2HostBitmap::CopyFromTextureResPython( TriTextureRes* tr )
 		return false;
 	}
 	return CopyFromTextureRes( *tr, renderContext );
-}
-
-const char* Tr2HostBitmap::GetMipRawData( unsigned level, Tr2RenderContextEnum::CubemapFace face ) const
-{
-	if( !IsValid() || level >= GetTrueMipCount() )
-	{
-		return nullptr;
-	}
-	if( ( face != Tr2RenderContextEnum::CUBEMAP_FACE_FIRST && GetType() != TEX_TYPE_CUBE ) ||
-		face >= Tr2RenderContextEnum::CUBEMAP_FACE_COUNT )
-	{
-		return nullptr;
-	}
-	unsigned offset = 0;
-	if( IsCompressedFormat( m_format ) )
-	{
-		for( unsigned i = 0; i != level; ++i )
-		{
-			offset += GetMipHeight( i ) / 4 * GetMipPitch( i );
-		}
-	}
-	else
-	{
-		for( unsigned i = 0; i != level; ++i )
-		{
-			offset += GetMipHeight( i ) * GetMipPitch( i );
-		}
-	}
-
-	if( face > Tr2RenderContextEnum::CUBEMAP_FACE_FIRST )
-	{
-		unsigned faceSize = (unsigned int)m_data.size() / 6; // is it safe to assume this?
-		offset += faceSize * face;
-	}
-
-	return GetRawData() + offset;
-}
-
-char* Tr2HostBitmap::GetMipRawData( unsigned level, Tr2RenderContextEnum::CubemapFace face )
-{
-	return const_cast<char*>( const_cast<const Tr2HostBitmap*>(this)->GetMipRawData( level, face ) );	
-}
-
-unsigned Tr2HostBitmap::GetPitch() const
-{
-	if( !IsValid() )
-	{
-		return 0;
-	}
-	if( IsCompressed() )
-	{
-		return m_width * GetBlockByteSize( m_format ) / 4;
-	}
-
-	return m_width * GetBytesPerPixel( m_format );
-}
-
-const char* Tr2HostBitmap::GetRawData() const
-{
-	return IsValid() ? m_data.get() : nullptr;
-}
-
-char* Tr2HostBitmap::GetRawData()
-{
-	return IsValid() ? m_data.get() : nullptr;
-}
-
-const char* Tr2HostBitmap::GetRawData( unsigned x, unsigned y ) const
-{
-	return const_cast<Tr2HostBitmap*>(this)->GetRawData( x, y );
-}
-
-
-
-char* Tr2HostBitmap::GetRawData( unsigned x, unsigned y )
-{
-	if( !IsValid() )
-	{
-		return nullptr;
-	}
-
-	CCP_ASSERT( x < m_width );
-	CCP_ASSERT( y < m_height );
-
-	if( IsCompressed() )
-	{
-		return m_data.get() + y * GetPitch() + x * GetBlockByteSize( m_format ) / 4;
-	}
-
-	return m_data.get() + y * GetPitch() + x * GetBytesPerPixel( m_format );
-}
-
-size_t Tr2HostBitmap::GetRawDataSize() const
-{
-	return m_data.size();
 }
 
 #if DEPRECATED_ENABLED
@@ -916,11 +578,7 @@ bool Tr2HostBitmap::CreateFromFile( const std::wstring& file )
 		return false;
 	}
 
-	imageHandler->SetStream( stream );
-
-	if( !imageHandler->ReadHeader()		||
-		!imageHandler->IsSupported()	||
-		!imageHandler->ReadImage() )
+	if( !imageHandler->ReadHeader( stream ) || !imageHandler->ReadImage( stream ) )
 	{
 		CCP_LOGERR( "Error reading file (%S)", file.c_str() );
 		return false;
@@ -930,7 +588,7 @@ bool Tr2HostBitmap::CreateFromFile( const std::wstring& file )
 
 	if( imageHandler->IsCubeTexture() )
 	{
-		if( FAILED( CreateCube( imageHandler->GetWidth(), imageHandler->GetMipLevelCount(), imageHandler->GetFormat() ) ) )
+		if( !CreateCube( imageHandler->GetWidth(), imageHandler->GetMipLevelCount(), imageHandler->GetFormat() ) )
 		{
 			CCP_LOGERR( "Error creating hostBitmap" );
 			return false;
@@ -940,7 +598,7 @@ bool Tr2HostBitmap::CreateFromFile( const std::wstring& file )
 	}
 	else if( imageHandler->IsVolumeTexture() )
 	{
-		if( FAILED( CreateVolume( imageHandler->GetWidth(), imageHandler->GetHeight(), imageHandler->GetDepth(), imageHandler->GetMipLevelCount(), imageHandler->GetFormat() ) ) )
+		if( !CreateVolume( imageHandler->GetWidth(), imageHandler->GetHeight(), imageHandler->GetDepth(), imageHandler->GetMipLevelCount(), imageHandler->GetFormat() ) )
 		{
 			CCP_LOGERR( "Error creating hostBitmap" );
 			return false;
@@ -950,7 +608,7 @@ bool Tr2HostBitmap::CreateFromFile( const std::wstring& file )
 	}
 	else
 	{
-		if( FAILED( Create( imageHandler->GetWidth(), imageHandler->GetHeight(), imageHandler->GetMipLevelCount(), imageHandler->GetFormat() ) ) )
+		if( !Create( imageHandler->GetWidth(), imageHandler->GetHeight(), imageHandler->GetMipLevelCount(), imageHandler->GetFormat() ) )
 		{
 			CCP_LOGERR( "Error creating hostBitmap" );
 			return false;
@@ -1052,93 +710,6 @@ bool Tr2HostBitmap::Compress( unsigned compressionFormat, unsigned qualityLevel,
 	output->SetTexture( texture );
 	return true;
 #endif
-}
-
-bool Tr2HostBitmap::Downsample2x2()
-{
-	if( !IsValid() || ( m_width & 1 ) || ( m_height & 1 ) || m_mipCount != 1 || m_type != TEX_TYPE_2D )
-	{
-		CCP_LOGWARN( "Downsample2x2 only works with valid, even sized, single miplevel bitmaps" );
-		return false;
-	}
-
-	if( m_format != PIXEL_FORMAT_B8G8R8A8_UNORM &&
-		m_format != PIXEL_FORMAT_B8G8R8X8_UNORM )
-	{
-		CCP_LOGWARN( "Downsample2x2 only works with BGRA or BGRX, UNORM" );
-		return false;
-	}
-
-	const uint8_t* src = (const uint8_t*)m_data.get();
-		  uint8_t* dst = (uint8_t*)m_data.get();
-
-	for( unsigned j = 0; j != m_height/2; ++j )
-	{
-		for( unsigned i = 0; i != m_width/2; ++i )
-		{
-			for( unsigned byte = 0; byte != 4; ++byte, ++src, ++dst )
-			{
-				unsigned sum = src[0] + src[4] + src[m_width*4] + src[m_width*4+4];
-				*dst = (uint8_t)(sum / 4);
-			}
-			src += 4;
-		}
-		src += m_width * 4;
-	}
-	CCP_ASSERT( (void*)src == m_data.get() + m_width * m_height * 4 );
-	m_width  /= 2;
-	m_height /= 2;
-	CCP_ASSERT( (void*)dst == m_data.get() + m_width * m_height * 4 );
-	
-	const size_t newSize = m_width * m_height * 4;
-
-	m_data.resize( "Tr2HostBitmap::m_data", newSize );
-
-	if( m_data.empty() )
-	{
-		Destroy();
-		return false;
-	}
-	
-	return true;
-}
-
-bool Tr2HostBitmap::Crop( unsigned left, unsigned top, unsigned right, unsigned bottom )
-{
-	if( !IsValid() || m_mipCount != 1 || m_type != TEX_TYPE_2D || IsCompressedFormat( m_format ) )
-	{
-		CCP_LOGWARN( "Crop only works with valid, single miplevel 2D bitmaps in uncompressed format" );
-		return false;
-	}
-
- 	left = std::min( left, m_width );
-	right = std::min( right, m_width );
-	top = std::min( top, m_height );
-	bottom = std::min( bottom, m_height );
-
-	if( left >= right || top >= bottom )
-	{
-		Destroy();
-		return true;
-	}
-
-	const unsigned bpp = GetBytesPerPixel( m_format );
-	const unsigned srcStride = m_width * bpp;
-	const unsigned dstStride = ( right - left ) * bpp;
-
-	const uint8_t* src = (const uint8_t*)m_data.get() + left * bpp + srcStride * top;
-		  uint8_t* dst = (uint8_t*)m_data.get();
-
-	for( unsigned j = top; j != bottom; ++j )
-	{
-		memmove( dst, src, dstStride );
-		dst += dstStride;
-		src += srcStride;
-	}
-	m_width = right - left;
-	m_height = bottom - top;
-	m_data.resize( "Tr2HostBitmap::m_data", m_width * m_height * bpp );
-	return true;
 }
 
 bool Tr2HostBitmap::SetPixel( int x, int y, const void *data )
@@ -1312,68 +883,3 @@ PyObject *Tr2HostBitmap::PySetPixels( PyObject *args )
     Py_RETURN_NONE;
 }
 #endif
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Special function to convert a 2d representation of a 3d texture into a real
-//   3d texture. photoshop dds plugin cannot do this properly...
-// --------------------------------------------------------------------------------
-bool Tr2HostBitmap::ConvertToVolume()
-{
-	if( !IsValid() )
-	{
-		return false;
-	}
-
-	if( GetType() != TEX_TYPE_2D )
-	{
-		CCP_LOGERR( "Tr2HostBitmap.ConvertToVolume requires 2D bitmap" );
-		return false;
-	}
-
-	unsigned cubeSize = GetHeight();
-	// only support cubic volume textures by now
-	if( cubeSize * cubeSize < GetWidth() )
-	{
-		CCP_LOGERR( "Tr2HostBitmap.ConvertToVolume: source image does not represent a cubic volume texture!" );
-		return false;
-	}
-
-	if( IsCompressedFormat( GetFormat() ) )
-	{
-		if( ( cubeSize % 4 ) != 0 )
-		{
-			CCP_LOGERR( "Tr2HostBitmap.ConvertToVolume: %i is not a valid size for compressed texture", cubeSize );
-			return false;
-		}
-	}
-
-	cubeSize = (unsigned)sqrtf(float(GetWidth()));
-	unsigned rowPitch = GetPitch() / GetWidth() * cubeSize;
-	unsigned slicePitch = rowPitch * cubeSize;
-	unsigned volumeSize = slicePitch * cubeSize;
-
-	CcpMallocBuffer newData( "Tr2HostBitmap::m_data", volumeSize );
-
-	const unsigned sourceOffset = ( GetHeight() - cubeSize ) * GetPitch();
-	for( unsigned int slice = 0; slice < cubeSize; ++slice )
-	{
-		const char* srcSlice = GetRawData() + sourceOffset + ( slice * GetPitch() / cubeSize );
-		char* destSlice = newData.get() + slice * slicePitch;
-		for( unsigned int line = 0; line < cubeSize; ++line)
-		{
-			const char* srcLine = ( line * GetPitch() ) + srcSlice;
-			char* destLine = ( line * rowPitch ) + destSlice;
-			// copy line
-			memcpy( destLine, srcLine, rowPitch );
-		}
-	}
-
-	std::swap( m_data, newData );
-
-	m_type = TEX_TYPE_3D;
-	m_mipCount = 1;
-	m_width = m_height = m_volumeDepth = cubeSize;
-
-	return true;
-}

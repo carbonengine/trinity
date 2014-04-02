@@ -4,6 +4,7 @@
 #include "TriProjection.h"
 #include "TriView.h"
 #include "TriError.h"
+#include "Include/TriMath.h"
 
 const float defFOV = TRI_PIBY2;
 const float cutoff = 0.00001f;

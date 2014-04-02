@@ -2,8 +2,6 @@
 #ifndef Tr2SkinnedObjectLod_h
 #define Tr2SkinnedObjectLod_h
 
-#include "blue/include/IBlueObjectProxy.h"
-
 class Tr2SkinnedModel;
 class TriFrustum;
 

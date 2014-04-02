@@ -2,8 +2,6 @@
 #define TR2FLOATPARAMETER_H
 
 #include "include/ITriEffectParameter.h"
-#include "include/ITriFunction.h"
-#include <blue/include/IBlueOS.h>
 #include "ITriReroutable.h"
 
 BLUE_DECLARE( Tr2FloatParameter );

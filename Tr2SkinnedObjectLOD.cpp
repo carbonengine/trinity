@@ -2,7 +2,6 @@
 #include "Tr2SkinnedObjectLOD.h"
 #include "TriSettingsRegistrar.h"
 #include "Tr2SkinnedModel.h"
-#include "TriFrustum.h"
 
 // threshold for switching to different lod
 float g_skinnedLowDetailThreshold = 150.0f;

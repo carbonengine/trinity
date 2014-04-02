@@ -3,8 +3,6 @@
 #ifdef _WIN32
 
 #include "Tr2NamedPipeListener.h"
-#include <windows.h>
-#include <process.h>
 #if BLUE_WITH_PYTHON
 #include "CcpUtils/PyCpp.h"	
 #endif

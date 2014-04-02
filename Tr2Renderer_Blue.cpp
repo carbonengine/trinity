@@ -2,7 +2,6 @@
 
 #include "Tr2Renderer.h"
 
-#include "Tr2LineGraph.h"
 #include "TriError.h"
 #include "TriPythonContext.h"
 

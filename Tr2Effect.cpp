@@ -3,7 +3,6 @@
 
 #include "Tr2Effect.h"
 #include "Tr2Renderer.h"
-#include "Tr2EffectStateManager.h"
 #include "EffectParameter/Tr2FloatParameter.h"
 #include "EffectParameter/Tr2Vector2Parameter.h"
 #include "EffectParameter/Tr2Vector3Parameter.h"
@@ -14,9 +13,6 @@
 #include "EffectParameter/TriTextureCubeParameter.h"
 #include "EffectParameter/Tr2GeometryBufferParameter.h"
 #include "EffectParameter/TriVariableParameter.h"
-#include "Tr2VariableStore.h"
-#include "ITriReroutable.h"
-#include "blue/include/IBlueResMan.h"
 
 BLUE_DEFINE_INTERFACE( ITr2EffectValue );
 

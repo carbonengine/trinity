@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "Tr2EffectDescription.h"
-#include "Tr2EffectStateManager.h"
 
 Tr2EffectStageInput::Tr2EffectStageInput()
 	: m_exists( false )

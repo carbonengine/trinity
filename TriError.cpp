@@ -6,8 +6,6 @@
 #include <dxerr.h>
 #endif
 
-#include <string>
-
 void ReportErrorV(
 	HRESULT hr,
 	Be::Clsid const *cid, 

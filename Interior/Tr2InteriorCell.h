@@ -2,17 +2,11 @@
 #ifndef Tr2InteriorCell_H
 #define Tr2InteriorCell_H
 
-#include "Blue/include/BlueAsyncRes.h"
 #include "include/ITr2Interior.h"
-#include "Tr2IntSkinnedObject.h"
-#include "Tr2InteriorPlaceable.h"
-#include "Tr2InteriorEnlightenSystem.h"
+#include "Tr2InteriorEnlightenSystemImpl.h"
 #include "Tr2InteriorVisualization.h"
 #include "Tr2InteriorProbeVolume.h"
 #include "Tr2InteriorEnlightenUpdateTaskManager.h"
-#include "Tr2InteriorPortalSocket.h"
-#include "Tr2InteriorOccluder.h"
-#include "Tr2InteriorBoundingBox.h"
 
 // forwards
 BLUE_DECLARE( Tr2InteriorCell );
@@ -21,6 +15,14 @@ BLUE_DECLARE( Tr2SHProbeRes );
 BLUE_DECLARE( Tr2InteriorProbeVisualizer );
 BLUE_DECLARE( TriTextureRes );
 BLUE_DECLARE( Tr2VariableStore );
+BLUE_DECLARE( Tr2InteriorEnlightenSystem );
+BLUE_DECLARE_VECTOR( Tr2InteriorEnlightenSystem );
+BLUE_DECLARE( Tr2InteriorPortalSocket );
+BLUE_DECLARE_VECTOR( Tr2InteriorPortalSocket );
+BLUE_DECLARE( Tr2InteriorOccluder );
+BLUE_DECLARE_VECTOR( Tr2InteriorOccluder );
+BLUE_DECLARE( Tr2InteriorBoundingBox );
+BLUE_DECLARE_VECTOR( Tr2InteriorBoundingBox );
 
 class Tr2InteriorCell :
 	public IInitialize,
@@ -185,7 +187,7 @@ public:
 
 private:
 
-	class SampleVolume;
+	struct SampleVolume;
 
 #if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
 	bool BuildEnlightenSystemsImpl( Tr2InteriorEnlightenSystemImpl::Quality quality );

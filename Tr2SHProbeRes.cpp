@@ -3,8 +3,6 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2SHProbeRes.h"
-#include "Enlighten2/Enlighten.h"
-#include "EnlightenUtils2/EnlightenUtils.h"
 #include "TriEnlightenStream.h"
 
 

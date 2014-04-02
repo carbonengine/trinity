@@ -6,13 +6,10 @@
 
 #include "Vector3.h"
 #include "Utilities/Matrix.h"
-#include "blue/include/BlueMain.h"
 #include "Tr2DeviceResource.h"
 #include "ID3DTexture.h"
 
 #include "Tr2ShaderMaterial.h"
-#include "Particle/ITr2GenericEmitter.h"
-#include <queue>
 
 BLUE_DECLARE( TriTextureRes );
 BLUE_DECLARE( Tr2TextureAtlas );

@@ -1,8 +1,5 @@
 #include "StdAfx.h"
 #include "Tr2LineSet.h"
-#include "TriDevice.h"
-#include "TriDebugResourceHelper.h"
-#include "Tr2Renderer.h"
 
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
@@ -16,13 +13,11 @@ Tr2LineSet::Tr2LineSet( IRoot* lockobj /*= NULL*/ ):
 	m_currentSubmittedLineCount( 0 ),
 	m_maxCurrentLineCount( 0 )
 {
-	TriDevice::RegisterResource( this );
 }
 
 Tr2LineSet::~Tr2LineSet()
 {
 	ReleaseResources( TRISTORAGE_ALL );
-	TriDevice::UnregisterResource( this );
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

@@ -3,12 +3,11 @@
 #include "Tr2PrimitiveScene.h"
 #include "TriProjection.h"
 #include "TriView.h"
-#include "TriViewport.h"
 #include "Tr2Effect.h"
 #include "Tr2PrimitiveSet.h"
-#include "Tr2Renderer.h"
-#include "Tr2ConstantBufferFormats.h"
 #include "TriFrustum.h"
+#include "Tr2ManipulationTool.h"
+#include "TriViewport.h"
 
 struct PerFrameVSData
 {
@@ -329,4 +328,9 @@ void Tr2PrimitiveScene::DecodeBufferPixel( const void* pBuffer, PickComponents p
 Tr2PickBuffer& Tr2PrimitiveScene::GetPickBuffer( void )
 {
 	return m_pickBuffer;
+}
+
+ITr2ShaderMaterial* Tr2PrimitiveScene::GetPickingEffect( PickComponents pass )
+{ 
+	return m_pickEffect; 
 }

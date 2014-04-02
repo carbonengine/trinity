@@ -9,8 +9,6 @@
 #include "Tr2ParticleSystem.h"
 #include "Resources/TriGrannyRes.h"
 #include "Tr2Renderer.h"
-#include "Tr2EffectStateManager.h"
-#include "blue/include/IBlueResMan.h"
 #include "Tr2VertexDefinitionUtilities.h"
 
 

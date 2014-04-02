@@ -2,8 +2,6 @@
 #ifndef Tr2DepthStencil_h_
 #define Tr2DepthStencil_h_
 
-#include "Tr2DeviceResource.h"
-
 BLUE_DECLARE( Tr2DepthStencil );
 
 // -------------------------------------------------------------

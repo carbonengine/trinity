@@ -7,7 +7,6 @@
 #pragma once
 #include "include/ITr2Updateable.h"
 #include "ITr2Sprite2dTexture.h"
-#include "Bink.h"
 
 BLUE_DECLARE( Tr2AtlasTexture );
 BLUE_DECLARE( Tr2Sprite2dBinkTexture );

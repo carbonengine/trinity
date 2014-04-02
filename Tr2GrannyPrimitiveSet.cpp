@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2GrannyPrimitiveSet.h"
 #include "Resources/TriGrannyRes.h"
-#include "blue/include/IBlueResMan.h"
 #include "TriDevice.h"
 
 using namespace Tr2RenderContextEnum;

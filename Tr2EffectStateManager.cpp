@@ -2,14 +2,10 @@
 
 #include "Tr2EffectStateManager.h"
 
-#include "Tr2Effect.h"
-#include "Resources/Tr2EffectRes.h"
 #include "TriRenderBatch.h"
-#include "Tr2VariableStore.h"
 #include "Tr2PerObjectData.h"
-
-#include <stack>
-#include "include/ITriConstants.h"
+#include "Include/ITriConstants.h"
+#include "ITr2ShaderState.h"
 
 using namespace Tr2RenderContextEnum;
 

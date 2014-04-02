@@ -3,11 +3,8 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2RadiosityRes.h"
-#include "Enlighten2/Enlighten.h"
-#include "EnlightenUtils2/EnlightenUtils.h"
 #include "TriEnlightenStream.h"
 #include "TriGeometryRes.h"
-#include "GeoCore/GeoFileStream.h"
 
 const Geo::u32 Tr2RadiosityRes::s_versionNumber = 20110118;
 

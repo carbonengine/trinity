@@ -2,6 +2,7 @@
 #include "Tr2Sprite2dScene.h"
 #include "TriDevice.h"
 #include "Tr2Renderer.h"
+#include "Tr2Effect.h"
 #include "Tr2VariableStore.h"
 #include "Curves/TriCurveSet.h"
 #include "Tr2AtlasTexture.h"
@@ -13,6 +14,7 @@
 #include "RenderJob/TriRenderJob.h"
 #include "TriSettingsRegistrar.h"
 #include "include/ITr2DebugRenderer.h"
+#include "Include/TriMath.h"
 
 #ifdef _WIN32
 #include "dxerr.h"

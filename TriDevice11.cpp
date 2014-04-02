@@ -3,11 +3,8 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 #include "TriDevice.h"
-#include "Tr2Renderer.h"
 #include "UI/App.h"
 #include "TriError.h"
-#include "include/ITr2DebugRenderer.h"
-#include "include/ITr2Scene.h"
 #include "RenderJob/Tr2RenderJobs.h"
 
 

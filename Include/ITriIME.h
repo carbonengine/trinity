@@ -24,8 +24,6 @@
 #ifndef _ITRIIME_H_
 #define _ITRIIME_H_
 
-#include <blue/include/Blue.h>
-
 BLUE_INTERFACE( ITriIME ) : public IRoot
 {
 	// Construction and data access

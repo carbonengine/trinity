@@ -4,8 +4,6 @@
 
 // Trinity headers
 #include "ITr2ShaderState.h"
-#include "Resources/Tr2EffectRes.h"
-#include "TriVariable.h"
 
 // --------------------------------------------------------------------------------------
 // Description:

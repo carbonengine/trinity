@@ -6,20 +6,14 @@
 
 #include "StdAfx.h"
 #include "Tr2ParticleSystem.h"
-#include "Tr2EffectStateManager.h"
-#include "Tr2Renderer.h"
 #include "TriDevice.h"
 #include "ITr2GenericEmitter.h"
 #include "ITr2ParticleForce.h"
 #include "ITr2GenericParticleConstraint.h"
-#include "Utilities/GeometryUtils.h"
-#include "blue/include/IBluePaths.h"
 #include "TbbStub.h"
 #include "TriSettingsRegistrar.h"
 #include "Tr2VertexDefinitionUtilities.h"
 
-#include "TriFrustum.h"
-#include "TriSettings.h"
 
 using namespace Tr2RenderContextEnum;
 

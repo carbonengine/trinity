@@ -6,7 +6,6 @@
 
 #include "StdAfx.h"
 #include "Tr2PresentParameters.h"
-#include "TrinityAL/Tr2RenderContextEnum.h"
 
 
 Tr2PresentParameters::Tr2PresentParameters( IRoot* lockobj /*= nullptr */ )

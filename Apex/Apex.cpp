@@ -4,73 +4,15 @@
 
 #include "Apex.h"
 
-#include "NxApex.h"
-#include "NxParameterized.h"
-#include "NxParamUtils.h"
-#include "NxClothingActor.h"
-#include "PxAllocatorCallback.h"
-#include "PxErrorCallback.h"
-#include "NxCooking.h"
-#include "NxPhysicsSDK.h"
-#include "NxScene.h"
-#include "NxPlaneShapeDesc.h"
-#include "NxPlane.h"
-#include "NxActor.h"
-#include "NxActorDesc.h"
-#include "PhysXLoader.h"
-
 #include "Tr2ApexScene.h"
 #include "Interior/Tr2InteriorSHLightingSolver.h"
 
-#if USE_APEX_PARAM_EDITOR
-#include "Tr2ApexParamEditor.h"
-#endif
 
-#if USE_APEX_FIELD_SAMPLER
-#include "NxModuleBasicFS.h"
-#include "NxModuleFieldSampler.h"
-#include "NxModuleTurbulenceFS.h"
-#endif
-
-#if USE_APEX_PARTICLES
-#include "NxModuleBasicIOS.h"
-#include "NxModuleIOFX.h"
-#include "NxModuleEmitter.h"
-#include "NxModuleFluidIOS.h"
-#endif
-
-#include "NxModuleClothing.h"
-
-#if USE_APEX_DESTRUCTION
-#include "NxModuleDestructible.h"
-#endif
-
-#if USE_APEX_EXPLOSION
-#include "NxModuleExplosion.h"
-#endif
-
-#if USE_APEX_FORCE_FIELD
-#include "NxModuleForceField.h"
-#endif
-
-#if USE_APEX_WIND
-#include "NxModuleWind.h"
-#endif
-
-
-#include "include/IPhysXSdk.h"
-#include "Tr2Renderer.h"
 #include "Tr2ApexRenderer.h"
 #include "Tr2ClothingActor.h"
-#include "Tr2DestructibleActor.h"
 #include "include/ITr2DebugRenderer.h"
 #include "TriSettingsRegistrar.h"
-#include "NxDebugRenderable.h"
-#include "TriDebugResourceHelper.h"
-#include "TriPoolAllocator.h"
 #include "TriRenderBatch.h"
-#include "Tr2EffectStateManager.h"
-#include "ITr2Renderable.h"
 
 #define USE_PLATFORM_ANALYZER CCP_STATS_ENABLED
 
@@ -194,38 +136,6 @@ Tr2Apex::Tr2Apex(  IRoot* lockobj /* = 0 */ ) :
 	, m_lodBenefitValue(200)
 	,m_apexViewMatrixId(0)
 	,m_apexProjectionMatrixId(0)
-#if USE_APEX_DESTRUCTION
-	,m_apexModuleDestructible(NULL)
-	,m_apexModuleDestructibleLegacy(NULL)
-#endif
-#if USE_APEX_EXPLOSION
-	,m_apexModuleExplosion(NULL)
-	,m_apexModuleExplosionLegacy(NULL)
-#endif
-#if USE_APEX_WIND
-	,m_apexModuleWind(NULL)
-#endif
-#if USE_APEX_FORCE_FIELD
-	,m_apexModuleForceField(NULL)
-	,m_apexModuleForceFieldLegacy(NULL)
-#endif
-#if USE_APEX_FIELD_SAMPLER
-	,m_apexModuleBasicFS(NULL)
-	,m_apexModuleFieldSampler(NULL)
-	,m_apexModuleTurbulenceFS(NULL)
-#endif
-#if USE_APEX_PARTICLES
-	,m_apexModuleBasicIos(NULL)
-	,m_apexModuleBasicIosLegacy(NULL)
-	,m_apexModuleEmitter(NULL)
-	,m_apexModuleEmitterLegacy(NULL)
-	,m_apexModuleIofx(NULL)
-	,m_apexModuleIofxLegacy(NULL)
-	,m_apexModuleFluidIos(NULL)
-#endif
-#if USE_APEX_PARAM_EDITOR
-	,m_ApexParamEditor(NULL)
-#endif
 {
 	g_Tr2Apex = this;
 }
@@ -503,36 +413,6 @@ void Tr2Apex::InitializeApex( NxPhysicsSDK* sdk,PLATFORM_ANALYZER::PlatformAnaly
 	m_frameworkLegacy = LoadModule("Framework_Legacy");
 	m_clothingLegacy = LoadModule("Clothing_Legacy");
 
-#if USE_APEX_DESTRUCTION
-	m_apexModuleDestructible = static_cast< physx::apex::NxModuleDestructible *>(LoadModule("Destructible"));
-	m_apexModuleDestructibleLegacy = LoadModule("Destructible_Legacy");
-#endif
-#if USE_APEX_EXPLOSION
-	m_apexModuleExplosion = static_cast< physx::apex::NxModuleExplosion *>(LoadModule("Explosion"));
-	m_apexModuleExplosionLegacy = LoadModule("Explosion_Legacy");
-#endif
-#if USE_APEX_WIND
-	m_apexModuleWind = static_cast< physx::apex::NxModuleWind *>(LoadModule("Wind"));
-#endif
-#if USE_APEX_FORCE_FIELD
-	m_apexModuleForceField = static_cast< physx::apex::NxModuleForceField *>(LoadModule("ForceField"));
-	m_apexModuleForceFieldLegacy = LoadModule("ForceField_Legacy");
-#endif
-#if USE_APEX_FIELD_SAMPLER
-	m_apexModuleBasicFS = static_cast< physx::apex::NxModuleBasicFS *>(LoadModule("BasicFS"));
-	m_apexModuleFieldSampler = static_cast< physx::apex::NxModuleFieldSampler *>(LoadModule("FieldSampler"));
-	m_apexModuleTurbulenceFS = static_cast< physx::apex::NxModuleTurbulenceFS *>(LoadModule("TurbulenceFS"));
-#endif
-#if USE_APEX_PARTICLES
-	m_apexModuleBasicIos = static_cast< physx::apex::NxModuleBasicIos *>(LoadModule("BasicIOS"));
-	m_apexModuleBasicIosLegacy = LoadModule("BasicIOS_Legacy");
-	m_apexModuleEmitter = static_cast< physx::apex::NxModuleEmitter *>(LoadModule("Emitter"));
-	m_apexModuleEmitterLegacy = LoadModule("Emitter_Legacy");
-	m_apexModuleIofx = static_cast< physx::apex::NxModuleIofx *>(LoadModule("Iofx"));
-	m_apexModuleIofxLegacy = LoadModule("Iofx_Legacy");
-	m_apexModuleFluidIos = static_cast< physx::apex::NxModuleFluidIos *>(LoadModule("FluidIOS"));
-#endif
-
 	g_apexDebugRenderAllocator = CCP_NEW( "g_apexDebugRenderAllocator" ) TriPoolAllocator();
 	g_apexDebugRenderBatches = CCP_NEW( "g_apexDebugRenderBatches" ) TriRenderBatchAccumulator<>( g_apexDebugRenderAllocator );
 
@@ -597,41 +477,6 @@ Tr2Apex::~Tr2Apex(void)
 
 void Tr2Apex::ShutdownApex(void)
 {
-#if USE_APEX_PARAM_EDITOR
-	APEX_RELEASE(m_ApexParamEditor);
-#endif
-#if USE_APEX_DESTRUCTION
-	APEX_RELEASE(m_apexModuleDestructible);
-	APEX_RELEASE(m_apexModuleDestructibleLegacy);
-#endif
-#if USE_APEX_EXPLOSION
-	APEX_RELEASE(m_apexModuleExplosion);
-	APEX_RELEASE(m_apexModuleExplosionLegacy);
-#endif
-#if USE_APEX_EXPLOSION
-	APEX_RELEASE(m_apexModuleWind);
-#endif
-#if USE_APEX_FORCE_FIELD
-	APEX_RELEASE(m_apexModuleForceField);
-	APEX_RELEASE(m_apexModuleForceFieldLegacy);
-#endif
-#if USE_APEX_WIND
-	APEX_RELEASE(m_apexModuleWind);
-#endif
-#if USE_APEX_FIELD_SAMPLER
-	APEX_RELEASE(m_apexModuleBasicFS);
-	APEX_RELEASE(m_apexModuleFieldSampler);
-	APEX_RELEASE(m_apexModuleTurbulenceFS);
-#endif
-#if USE_APEX_PARTICLES
-	APEX_RELEASE(m_apexModuleBasicIos);
-	APEX_RELEASE(m_apexModuleBasicIosLegacy);
-	APEX_RELEASE(m_apexModuleEmitter);
-	APEX_RELEASE(m_apexModuleEmitterLegacy);
-	APEX_RELEASE(m_apexModuleIofx);
-	APEX_RELEASE(m_apexModuleIofxLegacy);
-	APEX_RELEASE(m_apexModuleFluidIos);
-#endif
 	APEX_RELEASE(m_apexModuleClothing);
 	APEX_RELEASE(m_clothingLegacy);
 	APEX_RELEASE(m_frameworkLegacy);

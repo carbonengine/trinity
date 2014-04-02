@@ -11,21 +11,17 @@
 #include "Tr2InteriorCylinderLight.h"
 
 #include "umbraTypes.h"
-#include "umbra.hpp"
 
-#include "blue/include/IBlueResMan.h"
-#include "Utilities/BoundingBox.h"
-#include "Utilities/BoundingSphere.h"
 #include "Tr2InteriorLightGeometryRenderBatch.h"
 #include "Tr2InteriorCell.h"
 #include "Tr2KelvinColor.h"
-#include "Tr2VariableStore.h"
-#include "Tr2AtlasTexture.h"
 #include "ITr2UmbraUserData.h"
 #include "Tr2InteriorOrientedBoundingBox.h"
 #include "Tr2InteriorLightSource.h"
 #include "Tr2ShaderMaterial.h"
 #include "Tr2ConstGeometry.h"
+#include "Curves/TriCurveSet.h"
+#include "Tr2InteriorConstantBufferFormats.h"
 
 CCP_STATS_DECLARED_ELSEWHERE( wodIntLightsAlive );
 

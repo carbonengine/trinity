@@ -2,9 +2,9 @@
 #ifndef Tr2InteriorLightSet_H
 #define Tr2InteriorLightSet_H
 
-#include "include/ITr2Interior.h"
 #include "Tr2InteriorConstantBufferFormats.h"
 
+BLUE_DECLARE_INTERFACE( ITr2InteriorLight );
 struct Tr2InteriorPerObjectPSData;
 
 //---------------------------------------------------------------------------------------

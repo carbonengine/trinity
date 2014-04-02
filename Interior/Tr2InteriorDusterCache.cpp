@@ -9,7 +9,6 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2InteriorDusterCache.h"
-#include "Enlighten2/Enlighten.h"
 
 const unsigned Tr2InteriorDusterCache::MAX_DUSTERS_PER_NODE = 512;
 const unsigned Tr2InteriorDusterCache::MAX_TREE_DEPTH = 6;

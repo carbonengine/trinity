@@ -12,7 +12,6 @@
 #include "Tr2PickBuffer.h"
 #include "TriRenderBatch.h"
 #include "ITr2PickableScene.h"
-#include "Tr2ManipulationTool.h"
 
 BLUE_DECLARE( TriProjection );
 BLUE_DECLARE( TriView );
@@ -20,6 +19,7 @@ BLUE_DECLARE( TriViewport );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2PrimitiveSet );
 BLUE_DECLARE_VECTOR( Tr2PrimitiveSet );
+BLUE_DECLARE( Tr2ManipulationTool );
 
 // -------------------------------------------------------------
 // Description:
@@ -74,7 +74,7 @@ private:
 	// If you need special behaviour for picking, these batches are rendered without a picking override
 	ITriRenderBatchAccumulator* GetPickingBatchAccumulator( void );
 
-	ITr2ShaderMaterial* GetPickingEffect( PickComponents pass ){ return m_pickEffect; }
+	ITr2ShaderMaterial* GetPickingEffect( PickComponents pass );
 	bool RenderPickingAreasForComponents( PickComponents pass ) const { return true; }
 	unsigned int GetRequiredPasses( PickComponents requestedComponents, PickComponents* passes );
 

@@ -12,7 +12,7 @@
 #include "Tr2InteriorPhysicalPortal.h"
 #include "Tr2InteriorCell.h"
 #include "Resources/TriGeometryRes.h"
-
+#include "TriLineSet.h"
 
 Tr2InteriorPortalSocket::Tr2InteriorPortalSocket( IRoot* lockobj )
 :	m_name("PortalSocket"),

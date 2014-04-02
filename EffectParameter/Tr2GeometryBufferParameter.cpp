@@ -6,8 +6,8 @@
 
 #include "StdAfx.h"
 #include "Tr2GeometryBufferParameter.h"
-#include "Resources/TriGeometryRes.h"
 #include "include/ITr2GpuBuffer.h"
+#include "ITr2ShaderState.h"
 
 // --------------------------------------------------------------------------------------
 // Description:

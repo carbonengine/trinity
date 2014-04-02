@@ -1,5 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2SkinnedModelBuilder.h"
+#include "Tr2SkinnedModelBuilderSource.h"
+#include "Tr2SkinnedModelBuilderBlend.h"
 #include "Resources/TriGrannyRes.h"
 #include "Resources/TriGeometryRes.h"
 #include "EffectParameter/TriVector4Parameter.h"
@@ -8,17 +10,11 @@
 #include "EffectParameter/Tr2FloatParameter.h"
 #include "EffectParameter/TriFloatArrayParameter.h"
 #include "EffectParameter/TriTexture2DParameter.h"
-#include "Tr2DynamicMesh.h"
 #include "Tr2SkinnedModel.h"
-#include "Tr2CpuSkinnedModel.h"
 #include "Tr2PerObjectData.h"
 #include "Tr2Effect.h"
-#include "ITr2Renderable.h"
-#include "blue/include/IBlueResMan.h"
-#include "blue/include/IBlueCallbackMan.h"
 #include "Tr2ShaderMaterial.h"
-
-#include "blue/include/IBluePaths.h"
+#include "Tr2Mesh.h"
 
 BLUE_DECLARE( BlueCallbackMan );
 IBlueCallbackManPtr s_wodBackgroundWelder;

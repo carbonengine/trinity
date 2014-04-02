@@ -2,7 +2,6 @@
 
 #if INTERIORS_ENABLED
 
-#include "Resources/TriGeometryRes.h"
 #include "Tr2InteriorStatic.h"
 
 BLUE_DEFINE( Tr2InteriorStatic );

@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "Tr2AtlasTexture.h"
-#include "blue/include/IBlueResMan.h"
 #include "Resources/TriTextureRes.h"
 #include "Tr2HostBitmap.h"
 

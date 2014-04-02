@@ -7,6 +7,7 @@
 #include "Utilities/BoundingSphere.h"
 
 #include "EveMissileWarhead.h"
+#include "Tr2Mesh.h"
 #include "include/TriMath.h"
 
 // keep track of missiles

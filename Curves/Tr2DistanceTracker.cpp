@@ -2,7 +2,6 @@
 #include "Tr2DistanceTracker.h"
 #include "include/TriMath.h"
 #include "Tr2Renderer.h"
-#include "blue/include/IBlueOS.h"
 
 // --------------------------------------------------------------------------------------
 // Description:

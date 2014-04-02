@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "TriVector4Parameter.h"
+#include "ITr2ShaderState.h"
 
 TriVector4Parameter::TriVector4Parameter(IRoot* lockobj):
 	m_isUsedByEffect( false ),

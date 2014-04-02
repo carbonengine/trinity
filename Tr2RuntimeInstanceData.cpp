@@ -6,7 +6,6 @@
 
 #include "StdAfx.h"
 #include "Tr2RuntimeInstanceData.h"
-#include "Tr2EffectStateManager.h"
 #include "Utilities/BoundingBox.h"
 #include "Particle/Tr2ParticleSystem.h"
 

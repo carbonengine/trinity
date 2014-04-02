@@ -4,9 +4,6 @@
 
 #if APEX_ENABLED
 
-#include "NxModuleClothing.h"
-#include "NxClothingAsset.h"
-
 #include "Apex.h"
 
 #include "TriSettingsRegistrar.h"

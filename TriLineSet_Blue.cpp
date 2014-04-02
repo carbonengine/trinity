@@ -1,8 +1,5 @@
 #include "StdAfx.h"
 #include "TriLineSet.h"
-#include "Curves/Tr2ScalarCurve.h"
-#include "Curves/Tr2Vector3Curve.h"
-#include "Curves/Tr2ColorCurve.h"
 
 BLUE_DEFINE( TriLineSet );
 

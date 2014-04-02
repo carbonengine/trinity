@@ -3,9 +3,6 @@
 #define TriEnlightenUtils_h
 
 
-#include "GeoCore/GeoProgress.h"
-#include "GeoBase/GeoBase.h"
-#include "GeoCore/GeoMatrixMaths.h"
 
 class TriEnlightenProgressBar:
 	public Geo::IGeoProgressProxy

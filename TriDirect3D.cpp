@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 #include "TriDirect3D.h"
-#include "TriConstants.h"
-#include "TriError.h"
 
 //////////////////////////////////////////////////////////////////
 // PresentationParams class members.

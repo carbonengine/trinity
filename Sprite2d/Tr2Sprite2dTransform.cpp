@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "Tr2Sprite2dTransform.h"
-#include "blue/include/TransGaming.h"
 #include "Tr2Sprite2dScene.h"
 
 Tr2Sprite2dTransform::Tr2Sprite2dTransform( IRoot* lockobj ) :

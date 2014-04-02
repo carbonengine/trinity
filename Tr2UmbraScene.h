@@ -2,13 +2,7 @@
 #ifndef Tr2UmbraScene_H
 #define Tr2UmbraScene_H
 
-// Trinity headers
-#include "include/ITr2Scene.h"
-#include "Utilities/Matrix.h"
-
-// Umbra headers
 #include "umbraTypes.h"
-#include "umbra.hpp"
 
 // Forward declarations
 class TriFrustum;

@@ -2,31 +2,19 @@
 
 #if INTERIORS_ENABLED
 
+#include "Tr2InteriorCell.h"
 #include "umbraTypes.h"
-#include "umbra.hpp"
-#include "include/ITr2Interior.h"
-#include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 #include "Resources/TriGeometryRes.h"
-#include "TriLineSet.h"
-#include "Resources/TriTextureRes.h"
-#include "Tr2InteriorCell.h"
 #include "Tr2InteriorProbeVisualizer.h"
-#include "Tr2VariableStore.h"
 
-//////////////////////////////////////////////////////////////////////////
-// Enlighten includes
-#include "Blue/BlueResMan.h"
-
-#include "TriEnlightenUtils.h"
-#include "TriEnlightenStream.h"
-#include "GeoCore/GeoFileStream.h"
-#include "GeoBase/GeoMemory.h"
 #include "Tr2SHProbeRes.h"
-#include "Resources/Tr2RadiosityRes.h"
-
-// Required to output to a debug directory
-#include <direct.h>
+#include "Tr2IntSkinnedObject.h"
+#include "Tr2InteriorEnlightenSystem.h"
+#include "Tr2InteriorPortalSocket.h"
+#include "Tr2InteriorOccluder.h"
+#include "Tr2InteriorBoundingBox.h"
+#include "TriLineSet.h"
 
 extern bool g_enlightenBreakOnErrors;
 extern bool g_outputEnlightenDebugBuildInfo;

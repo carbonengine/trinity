@@ -2,7 +2,6 @@
 #include "BoundingBox.h"
 
 #include "TriViewport.h"
-#include <float.h>
 
 static const XMVECTOR g_UnitQuaternionEpsilon =
 {

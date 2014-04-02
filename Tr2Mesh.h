@@ -4,7 +4,6 @@
 
 #include "Tr2MeshArea.h"
 #include "Tr2HideableMixin.h"
-#include "blue/include/BlueAsyncRes.h"
 #include "ITr2Renderable.h"
 #include "TriRenderBatch.h"
 

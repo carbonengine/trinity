@@ -259,12 +259,10 @@ public:
 	// ***** Note: consider Tr2PushPopRT instead *****
 	static void PushRenderTarget( Tr2RenderContext& renderContext );	// does not set any RT, just stores the current one so it can be safely changed later
 	static void PushRenderTarget( unsigned slot, Tr2RenderContext& renderContext );	// does not set any RT, just stores the current one so it can be safely changed later
-	static void PushRenderTarget( IDirect3DSurface9* rt );
 	static void PushRenderTarget( const Tr2RenderTargetAL& rt, Tr2RenderContext& renderContext );
 	static void PushRenderTarget( const Tr2RenderTargetAL& rt, unsigned slot, Tr2RenderContext& renderContext );
 	static void PopRenderTarget( Tr2RenderContext& renderContext );
 	static void PopRenderTarget( unsigned slot, Tr2RenderContext& renderContext );
-	static bool SetRenderTarget( unsigned int index, IDirect3DSurface9* sur, bool updateViewport = true );
 	static bool SetRenderTarget( unsigned int index, const Tr2RenderTargetAL& rt, Tr2RenderContext& renderContext, bool updateViewport = true );
 
 	// ***** Note: consider Tr2PushPopDS instead *****

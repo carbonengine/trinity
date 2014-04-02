@@ -26,8 +26,6 @@
 #ifndef _ITRITARGETABLE_H_
 #define _ITRITARGETABLE_H_
 
-#include <blue/include/Blue.h>
-
 BLUE_INTERFACE(ITriTargetable): IRoot
 {
 	virtual int GetClosestDamageLocatorIndex( const Vector3* position ) = 0;

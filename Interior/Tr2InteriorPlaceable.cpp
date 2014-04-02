@@ -7,19 +7,15 @@
 #include "Tr2InteriorPlaceable.h"
 
 // Trinity headers
-#include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
-#include "TriPoolAllocator.h"
-#include "TriRenderBatch.h"
 #include "Tr2LitPerObjectData.h"
 #include "Tr2InteriorCell.h"
 #include "Tr2InteriorMirror.h"
-#include "Tr2InteriorRenderBatch.h"
-#include "Tr2InteriorScene.h"
 #include "Wod/WodPlaceableRes.h"
-#include "blue\include\IBlueResMan.h"
 #include "ITr2UmbraUserData.h"
-#include "Tr2VariableStore.h"
+#include "TriLineSet.h"
+#include "Tr2Mesh.h"
+#include "Curves/TriCurveSet.h"
 
 CCP_STATS_DECLARE( wodInteriorPlaceablesAlive, "Trinity/Tr2InteriorPlaceables", false, CST_COUNTER_LOW, "Count of Tr2InteriorPlaceables alive" );
 

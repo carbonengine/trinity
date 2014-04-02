@@ -9,6 +9,7 @@
 #include "include/ITriEffectParameter.h"
 
 BLUE_DECLARE_INTERFACE( ITr2GpuBuffer );
+BLUE_DECLARE_INTERFACE( ITr2ShaderState );
 
 // --------------------------------------------------------------------------------------
 // Description:

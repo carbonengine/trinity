@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "include/TriColor.h"
 #include "include/TriVector.h"
+#include "include/TriMath.h"
 
 // r,g,b values are from 0 to 1
 // h = [0,360], s = [0,1], v = [0,1]

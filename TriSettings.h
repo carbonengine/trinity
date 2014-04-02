@@ -2,9 +2,6 @@
 #ifndef TriSettings_H
 #define TriSettings_H
 
-#include <map>
-#include <string>
-
 BLUE_DECLARE( TriSettings );
 
 class TriSettings : public IRoot

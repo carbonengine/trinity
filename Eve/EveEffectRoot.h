@@ -3,11 +3,6 @@
 #ifndef EveEffectRoot_h
 #define EveEffectRoot_h
 
-
-#include "blue/include/Blue.h"
-#include "blue/include/IBlueObjectProxy.h"
-#include "blue/include/IBlueEventListener.h"
-
 #include "include/ITriFunction.h"
 
 #include "EveTransform.h"

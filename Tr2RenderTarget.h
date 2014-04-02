@@ -2,8 +2,6 @@
 #ifndef Tr2RenderTarget_h_
 #define Tr2RenderTarget_h_
 
-#include "Tr2DeviceResource.h"
-
 BLUE_DECLARE( Tr2RenderTarget );
 
 // -------------------------------------------------------------

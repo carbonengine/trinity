@@ -2,8 +2,6 @@
 #ifndef ITr2Renderable_H
 #define ITr2Renderable_H
 
-#include "blue/include/Blue.h"
-
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 class TriPoolAllocator;

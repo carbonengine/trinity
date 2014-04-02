@@ -4,6 +4,9 @@
 
 #include "Tr2ManipulationTool.h"
 
+BLUE_DECLARE( Tr2LineSet );
+BLUE_DECLARE( Tr2SolidSet );
+
 BLUE_CLASS( Tr2ScalingTool ):
      public Tr2ManipulationTool
 {

@@ -2,8 +2,6 @@
 #ifndef Tr2GRNMemoryPersist_h
 #define Tr2GRNMemoryPersist_h
 
-#include "granny.h"
-
 struct Tr2GRNMemoryPersist
 {
 	granny_int32x m_bufferSize;

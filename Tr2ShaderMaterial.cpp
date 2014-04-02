@@ -11,7 +11,9 @@
 #include "Tr2Renderer.h"
 #include "Tr2ShaderManager.h"
 #include "Tr2ShaderParameterDescription.h"
+#include "Tr2Effect.h"
 #include "EffectParameter/TriTexture2DParameter.h"
+#include "Tr2HighLevelShader.h"
 
 
 #define INVALID_PARAMETER_HASH (~0)

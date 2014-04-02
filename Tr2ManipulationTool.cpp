@@ -1,5 +1,18 @@
 #include "StdAfx.h"
 #include "Tr2ManipulationTool.h"
+#include "TriViewport.h"
+#include "Tr2PrimitiveSet.h"
+
+const Vector4 v4Red( 1.0f, 0.01f, 0.01f, 1.0f );
+const Vector4 v4Green( 0.01f, 1.0f, 0.01f, 1.0f );
+const Vector4 v4Blue( 0.01f, 0.01f, 1.0f, 1.0f );
+const Vector4 v4Cyan( 0.0f, 1.0f, 1.0f, 1.0f );
+const Vector4 v4Yellow( 1.0f, 1.0f, 0.01f, 1.0f );
+const Vector4 v4LightGray( 0.5f, 0.5f, 0.5f, 1.0f );
+const Vector3 v3Zero(0.0f, 0.0f, 0.0f);
+const Vector3 v3X(1.0f, 0.0f, 0.0f);
+const Vector3 v3Y(0.0f, 1.0f, 0.0f);
+const Vector3 v3Z(0.0f, 0.0f, 1.0f);
 
 Tr2ManipulationTool::Tr2ManipulationTool( IRoot* lockobj ):
 	PARENTLOCK( m_primitives ),

@@ -4,7 +4,6 @@
 
 #include "Tr2InteriorBoxLight.h"
 #include "TriConstants.h"
-#include "Resources/TriTextureRes.h"
 
 BLUE_DEFINE( Tr2InteriorBoxLight );
 

@@ -4,8 +4,6 @@
 
 
 
-#include "blue/include/IBlueObjectProxy.h"
-
 #include "include/ITriTargetable.h"
 #include "TriRenderBatch.h"
 
@@ -17,7 +15,6 @@
 #include "Eve/IEveSpaceObject2.h"
 #include "IWorldPosition.h"
 #include "include/ITriFunction.h"
-#include "blue/include/BlueAsyncRes.h"
 #include "Eve/IEveTransform.h"
 #include "Vector3d.h"
 #include "Tr2PersistentPerObjectData.h"

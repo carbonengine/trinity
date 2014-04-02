@@ -26,8 +26,6 @@
 #ifndef _ITRICOLOR_H_
 #define _ITRICOLOR_H_
 
-#include <blue/include/Blue.h>
-
 #define TRICOLOR_NOALPHA -9.0f
 
 struct ITriVector;

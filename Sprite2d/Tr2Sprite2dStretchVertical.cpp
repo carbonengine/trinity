@@ -2,7 +2,6 @@
 #include "Tr2Sprite2dStretchVertical.h"
 #include "Tr2AtlasTexture.h"
 #include "Tr2Sprite2dTexture.h"
-#include "blue/include/IBlueResMan.h"
 #include "Tr2Sprite2dScene.h"
 
 // All frames can use the same indices - the layout of the sprite is always the same.

@@ -4,32 +4,15 @@
 
 #include "Tr2InteriorEnlightenSystem.h"
 
-#include "Blue/BlueResMan.h"
-#include "Utilities/BoundingBox.h"
 #include "include/ITr2DebugRenderer.h"
 #include "Resources/TriGeometryRes.h"
 #include "TriLineSet.h"
 #include "TriSettingsRegistrar.h"
 #include "Tr2EnlightenArea.h"
-#include "Resources/Tr2RadiosityRes.h"
 #include "Tr2InteriorCell.h"
 #include "Tr2InteriorStatic.h"
-#include "Tr2VariableStore.h"
 #include "Tr2PushPopDS.h"
 #include "Tr2PushPopRT.h"
-
-//////////////////////////////////////////////////////////////////////////
-// Enlighten includes
-#include "TriEnlightenUtils.h"
-#include "EnlightenUtils2/EnlightenUtils.h"
-#include "TriEnlightenStream.h"
-#include "Enlighten2/EnlightenMeshSimpOutput.h"
-
-#if !defined( NDEBUG )
-// Required to output to a debug directory
-#include <direct.h>
-#endif
-//////////////////////////////////////////////////////////////////////////
 
 using namespace Tr2RenderContextEnum;
 

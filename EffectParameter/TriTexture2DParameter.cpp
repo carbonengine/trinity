@@ -1,8 +1,7 @@
 #include "StdAfx.h"
 #include "TriTexture2DParameter.h"
-#include "Tr2EffectStateManager.h"
-#include "blue/include/IBlueResMan.h"
 #include "Resources/TriTextureRes.h"
+#include "ITr2ShaderState.h"
 
 TriTexture2DParameter::TriTexture2DParameter(IRoot* lockobj):
 	m_isUsedByEffect( false ),

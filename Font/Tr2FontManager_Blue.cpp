@@ -6,7 +6,6 @@
 
 #include "StdAfx.h"
 #include "Tr2FontManager.h"
-#include "Tr2AtlasTexture.h"
 #include "Tr2SBit.h"
 
 BLUE_DEFINE_ABSTRACT( Tr2FontManager );

@@ -2,7 +2,6 @@
 #include "Tr2LineGraph.h"
 #include "Tr2Renderer.h"
 #include "Tr2Effect.h"
-#include "Tr2VariableStore.h"
 
 using namespace Tr2RenderContextEnum;
 

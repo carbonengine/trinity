@@ -10,7 +10,6 @@
 
 #include "Tr2DeviceResource.h"
 #include "TriVariable.h"
-#include "Resources/TriTextureRes.h"
 
 // -------------------------------------------------------------
 // Description:

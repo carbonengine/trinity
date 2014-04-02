@@ -3,10 +3,6 @@
 #ifndef Tr2ImageRes_h
 #define Tr2ImageRes_h
 
-
-#include "blue/include/BlueAsyncRes.h"
-#include "blue/include/ICacheable.h"
-
 class Tr2ImageHandler;
 BLUE_DECLARE( Tr2ImageRes );
 

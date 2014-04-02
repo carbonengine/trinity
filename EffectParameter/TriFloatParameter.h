@@ -24,10 +24,9 @@
 #define _TRIFLOATPARAMETER_H_
 
 #include "include/ITriEffectParameter.h"
-#include "include/ITriFunction.h"
-#include <blue/include/IBlueOS.h>
 
 BLUE_DECLARE_INTERFACE( ITr2ShaderState );
+BLUE_DECLARE_INTERFACE( ITriScalarFunction );
 
 #define TRIFLOATPARAMETER_Description "TriFloatParameter"
 

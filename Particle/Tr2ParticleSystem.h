@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "ITr2Renderable.h"
 #include "Tr2ParticleElementDeclaration.h"
 #include "Tr2DeviceResource.h"
 #include "include/ITr2InstanceData.h"

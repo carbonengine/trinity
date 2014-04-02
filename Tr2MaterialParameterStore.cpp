@@ -8,7 +8,6 @@
 #include "StdAfx.h"
 
 #include "Tr2MaterialParameterStore.h"
-#include "blue/include/IBlueResMan.h"
 
 // --------------------------------------------------------------------------------------
 Tr2MaterialParameterStore::Tr2MaterialParameterStore( IRoot* lockobj ):

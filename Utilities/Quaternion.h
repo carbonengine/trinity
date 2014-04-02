@@ -4,10 +4,6 @@
 
 #ifdef _WIN32
 
-// System headers
-#include <d3dx9math.h>
-#include <xnamath.h>
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   This structure represents a quaternion.  It inherits from D3DXQUATERNION and is

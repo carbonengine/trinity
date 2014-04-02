@@ -8,7 +8,6 @@
 #include "Tr2RenderContext.h"
 #include "Tr2VariableStore.h"
 #include "Tr2RenderTarget.h"
-#include "TriDevice.h"
 
 Tr2RenderContextBase::Tr2RenderContextBase( Tr2RenderContext& renderContext )
 	:m_esm( renderContext )

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2Effect.h"
 #include "TriError.h"
+#include "Include/ITriEffectParameter.h"
 
 BLUE_DEFINE( Tr2Effect );
 

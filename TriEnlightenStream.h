@@ -2,8 +2,6 @@
 #ifndef TriEnlightenStream_H
 #define TriEnlightenStream_H
 
-#include "GeoCore\iGeoStream.h"
-
 // Load and Save packed geometry into a buffer
 class GeoMemoryStream : public Geo::IGeoStream, Geo::NonCopyable
 {

@@ -12,7 +12,6 @@
 
 #include "Tr2LitPerObjectData.h"
 #include "TriRenderBatch.h"
-#include "Tr2InteriorConstantBufferFormats.h"
 #include "Tr2InteriorLightSet.h"
 #include "Tr2ShaderMaterial.h"
 

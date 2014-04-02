@@ -29,11 +29,6 @@
 "Simple mapping of D3DXQUATERNION over to Blue."
 
 #include "ITriQuaternion.h"
-#include "include/TriMath.h"
-
-
-#include <blue/include/IBlueOS.h>
-#include <blue/include/IBluePython.h>
 
 #pragma warning (disable: 4275) // non dll-interface struct 'D3DXCOLOR'
 

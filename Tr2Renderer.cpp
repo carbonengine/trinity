@@ -1,32 +1,21 @@
 #include "StdAfx.h"
 #include "Tr2Renderer.h"
 #include "Tr2Effect.h"
-#include "Tr2EffectStateManager.h"
-#include "Tr2LineGraph.h"
 #include "Tr2ShaderMaterial.h"
 #include "Tr2Variable.h"
 #include "TriDevice.h"
-#include "TriDebugTextRenderer.h"
-#include "TriError.h"
 #include "TriLineSet.h"
-#include "TriSettings.h"
+#include "TriError.h"
 #include "TriSettingsRegistrar.h"
-#include "TriUtil.h"
-#include "Font/Tr2FontManager.h"
-
-#include "blue/include/IBlueResMan.h"
 
 #if TBB_ENABLED
 #include "tbb/task_scheduler_init.h"
 #endif
 #if INTERIORS_ENABLED
-#include "Enlighten2/Enlighten.h"
 #include "GeoBase/GeoMsgLogger.h"
 #endif
 
 #include "TriPoolAllocator.h"
-
-#include "blue/include/IBlueResMan.h"
 
 #if defined( __ORBIS__)
 #include "TrinityAL/Tr2MemoryAllocator.h"
@@ -1120,14 +1109,6 @@ void Tr2Renderer::PushRenderTarget( unsigned slot, Tr2RenderContext& renderConte
 	renderContext.PushRenderTarget( slot );
 }
 
-void Tr2Renderer::PushRenderTarget( IDirect3DSurface9* rt )
-{
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	renderContext.PushRenderTarget();
-	
-	Tr2Renderer::SetRenderTarget( 0, rt );
-}
-
 void Tr2Renderer::PushRenderTarget( const Tr2RenderTargetAL& rt, Tr2RenderContext& renderContext )
 {
 	PushRenderTarget( rt, 0, renderContext );
@@ -1935,38 +1916,6 @@ const TriViewport& Tr2Renderer::GetViewport()
 const Tr2Viewport& Tr2Renderer::GetDeviceViewport()
 {
 	return s_viewportOnDevice;
-}
-
-bool Tr2Renderer::SetRenderTarget( unsigned int index, IDirect3DSurface9* surface, bool updateViewport )
-{
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-
-	// support for unbinding resources
-	if( !surface )
-	{
-		renderContext.m_d3dDevice9->SetRenderTarget( index, 0 );
-		return true;
-	}
-
-	D3DSURFACE_DESC desc;
-
-	surface->GetDesc( &desc );
-
-	HRESULT hr = renderContext.m_d3dDevice9->SetRenderTarget( index, surface );
-	if( TriError::IsFailed( hr, NULL, "Failed to set render target" ) )
-	{
-		return false;
-	}
-
-	// only sync viewport if MRT0 is being called,
-	if( !index && updateViewport )
-	{
-		UpdateRenderTargetViewport( desc.Width, desc.Height );
-	}
-#endif
-
-	return true;
 }
 
 bool Tr2Renderer::SetRenderTarget( unsigned int index, const Tr2RenderTargetAL& rt, Tr2RenderContext& renderContext, bool updateViewport )

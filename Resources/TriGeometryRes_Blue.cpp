@@ -1,12 +1,6 @@
 #include "StdAfx.h"
 #include "TriGeometryRes.h"
 #include "Tr2Mesh.h"
-#include "TriGeometryRes.h"
-#include "blue/include/IBlueResMan.h"
-
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-	#include "TriEnlightenUtils.h"
-#endif
 
 BLUE_DEFINE( TriGeometryRes );
 

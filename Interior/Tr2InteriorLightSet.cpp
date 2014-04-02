@@ -3,8 +3,7 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2InteriorLightSet.h"
-
-#include "Tr2VariableStore.h"
+#include "include/ITr2Interior.h"
 
 // --------------------------------------------------------------------------------------
 // Description:

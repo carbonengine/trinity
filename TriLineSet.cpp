@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "TriLineSet.h"
-#include "TriDebugResourceHelper.h"
+#include "Tr2Effect.h"
 #include "Tr2Renderer.h"
 
 #if !defined(D3DTARGET) || D3DTARGET == 9

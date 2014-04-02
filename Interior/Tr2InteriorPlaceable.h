@@ -2,11 +2,9 @@
 #ifndef Tr2InteriorPlaceable_H
 #define Tr2InteriorPlaceable_H
 
-#include "include/ITr2Updateable.h"
 #include "include/ITr2Interior.h"
 #include "include/TriMatrix.h"
 #include "ITr2Renderable.h"
-#include "Tr2UmbraScene.h"
 #include "Tr2InteriorLightSet.h"
 #include "Tr2InteriorRenderBatch.h"
 #include "Utilities/BoundingBox.h"

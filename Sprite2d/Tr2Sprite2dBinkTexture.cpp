@@ -2,7 +2,6 @@
 
 #if BINK_ENABLED
 
-#include "blue/include/IBluePaths.h"
 #include "Tr2Sprite2dBinkTexture.h"
 #include "Tr2TextureAtlasMan.h"
 #include "Tr2TextureAtlas.h"

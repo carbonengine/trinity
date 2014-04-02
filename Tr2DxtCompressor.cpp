@@ -3,7 +3,6 @@
 #if !defined(__ORBIS__)
 
 #include "Tr2DxtCompressor.h"
-#include "blue/include/IBlueCallbackMan.h"
 #include <squish.h>
 
 typedef unsigned short  word;

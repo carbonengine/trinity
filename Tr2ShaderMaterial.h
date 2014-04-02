@@ -10,8 +10,7 @@
 
 #include "include/ITriEffectParameter.h"
 #include "ITr2ShaderMaterial.h"
-#include "Tr2HighLevelShader.h"
-#include "Tr2LowLevelShader.h"
+#include "Resources/Tr2EffectRes.h"
 
 BLUE_DECLARE( Tr2HighLevelShader );
 BLUE_DECLARE( Tr2LowLevelShader );

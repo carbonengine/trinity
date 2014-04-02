@@ -4,12 +4,7 @@
 //    Copyright: CCP 2010
 //
 #include "StdAfx.h"
-
 #include "Tr2LowLevelShader.h"
-
-#include "blue/include/IBlueResMan.h"
-#include "Tr2EffectStateManager.h"
-#include "Tr2Renderer.h"
 
 using namespace Tr2RenderContextEnum;
 

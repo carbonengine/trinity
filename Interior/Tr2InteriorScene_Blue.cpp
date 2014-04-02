@@ -9,6 +9,7 @@
 #include "TriProjection.h"
 #include "TriView.h"
 #include "TriViewport.h"
+#include "TriEnlightenUtils.h"
 
 BLUE_DEFINE( Tr2InteriorScene );
 

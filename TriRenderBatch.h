@@ -4,12 +4,9 @@
 
 
 #include "TriPoolAllocator.h"
-#include "Tr2Effect.h"
-#include "Tr2EffectStateManager.h"
 #include "Tr2Renderer.h"
 #include "ITr2GeometryProvider.h"
 #include "ITr2ShaderMaterial.h"
-#include "ITr2ShaderState.h"
 #include "include/Rect.h"
 
 class Tr2PerObjectData;

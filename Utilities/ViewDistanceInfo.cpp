@@ -2,8 +2,6 @@
 #include "ViewDistanceInfo.h"
 #include "../TriFrustum.h"
 #include "../TriSettingsRegistrar.h"
-#include "../Vector3.h"
-#include "../Vector4.h"
 
 float g_nearClipMin = 6.f;
 float g_nearClipMax = 99999.f;

@@ -2,27 +2,23 @@
 
 #if INTERIORS_ENABLED
 
-#include "blue/include/IBlueResMan.h"
+#include "Tr2InteriorStatic.h"
 
 #include "umbraTypes.h"
-#include "umbra.hpp"
-
-#include "Utilities/BoundingBox.h"
 
 #include "TriLineSet.h"
-#include "Tr2VariableStore.h"
 #include "Resources/TriGeometryRes.h"
+#include "Resources/TriGrannyRes.h"
 
 #include "Tr2EnlightenArea.h"
 #include "Tr2Mesh.h"
-#include "Tr2InteriorStatic.h"
-#include "Tr2InteriorMirror.h"
-#include "Tr2InteriorRenderBatch.h"
 #include "Tr2InteriorEnlightenSystem.h"
 #include "Tr2InteriorCell.h"
 #include "Tr2LitPerObjectData.h"
 #include "ITr2UmbraUserData.h"
 #include "Tr2ShaderMaterial.h"
+#include "Curves/TriCurveSet.h"
+
 
 using namespace Tr2RenderContextEnum;
 

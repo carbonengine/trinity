@@ -3,6 +3,7 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2InteriorEnlightenSystem.h"
+#include "Tr2InteriorStatic.h"
 
 
 static Be::VarChooser EnlightenQualityTypeChooser[] =

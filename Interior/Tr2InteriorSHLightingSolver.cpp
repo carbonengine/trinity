@@ -9,8 +9,6 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2InteriorSHLightingSolver.h"
-#include "Tr2PerObjectData.h"
-#include "Tr2VariableStore.h"
 #include "TriRenderBatch.h"
 
 using namespace Tr2RenderContextEnum;

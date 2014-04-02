@@ -10,12 +10,9 @@
 #include "ITr2Renderable.h"
 #include "ITr2GeometryProvider.h"
 #include "include/ITriTargetable.h"
-#include "blue/include/BlueAsyncRes.h"
 
 // needed for override
 #include "Tr2PerObjectData.h"
-
-#include <queue>
 
 // forwards
 class TriFrustum;
@@ -287,7 +284,7 @@ private:
 
 	// miss-related state
 	Vector3 m_targetPositionMiss;
-	std::queue<bool> m_missQueue;
+	TrackableStdDeque<bool> m_missQueue;
 	mutable ShotAccuracy m_lastShotAccuracy;
 	double m_lastShotTime;
 	bool m_laserMissBehaviour, m_projectileMissBehaviour;

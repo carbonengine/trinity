@@ -25,8 +25,6 @@
 #ifndef _ITRIVECTOR_H_
 #define _ITRIVECTOR_H_
 
-#include <blue/include/Blue.h>
-
 struct Vector3;
 struct Quaternion;
 

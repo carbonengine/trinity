@@ -1,9 +1,5 @@
 #include "StdAfx.h"
 #include "TriTextureRes.h"
-#include "TriConstants.h"
-
-#include "Tr2Renderer.h"
-#include "TriError.h"
 #include "Tr2RenderTarget.h"
 #include "Tr2DepthStencil.h"
 #include "Tr2HostBitmap.h"

@@ -5,11 +5,10 @@
 #include "Tr2InteriorPhysicalPortal.h"
 
 #include "umbraTypes.h"
-#include "umbra.hpp"
 
-#include "Tr2Renderer.h"
 #include "TriLineSet.h"
 #include "Tr2InteriorCell.h"
+#include "Tr2InteriorPortalSocket.h"
 
 // ------------------------------------------------------------------------------------------------------
 Tr2InteriorPhysicalPortal::Tr2InteriorPhysicalPortal( IRoot* lockobj ) :

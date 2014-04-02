@@ -4,7 +4,6 @@
 using namespace Tr2RenderContextEnum;
 
 #include "Tr2Renderer.h"
-#include "Tr2EffectStateManager.h"
 #include "TriViewport.h"
 
 void SetupScreenQuad(	Tr2ScreenVertex quad[4], 

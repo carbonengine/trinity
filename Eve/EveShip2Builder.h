@@ -6,8 +6,6 @@
 #include "SpaceObject/EveShip2.h"
 #include "Resources/TriGrannyRes.h"
 
-#include "granny.h"
-
 BLUE_DECLARE( EveShip2Builder);
 BLUE_DECLARE( EveSpriteSet );
 BLUE_DECLARE( EveSpotlightSet );

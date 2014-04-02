@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "TriFloatParameter.h"
+#include "ITr2ShaderState.h"
 
 TriFloatParameter::TriFloatParameter(IRoot* lockobj):
 	m_value( 1.0f ),

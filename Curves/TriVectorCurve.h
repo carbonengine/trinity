@@ -35,9 +35,6 @@ mStart + mLength or less than mStart"
 #include "include/ITriVectorCurve.h"
 #include "include/ITriDuration.h"
 
-#include <blue/include/IBluePython.h>
-#include <blue/include/IBlueOS.h>
-
 #include "TriScalarKey.h"
 
 BLUE_DECLARE_VECTOR( TriVectorKey );

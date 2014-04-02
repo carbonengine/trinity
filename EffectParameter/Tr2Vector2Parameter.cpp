@@ -2,6 +2,7 @@
 
 #include "Tr2Vector2Parameter.h"
 #include "TriValueBinding.h"
+#include "ITr2ShaderState.h"
 
 // --------------------------------------------------------------------------------------
 // Description:

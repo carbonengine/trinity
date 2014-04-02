@@ -4,17 +4,18 @@
  
 #include "ITr2Renderable.h"
 #include "ITr2SkinnedObject.h"
-#include "Curves/TriCurveSet.h"
-#include "TriLineSet.h"
 #include "Tr2SkinnedModel.h"
-#include "ITr2AnimationUpdater.h"
-#include "ITr2WorldTransformUpdater.h"
 #include "IWorldPosition.h"
 #include "Tr2SkinnedObjectLOD.h"
 #include "Utilities/BoundingBox.h"
 #include "include/TriMatrix.h"
 
 BLUE_DECLARE( Tr2SkinnedObject );
+BLUE_DECLARE( TriCurveSet );
+BLUE_DECLARE_VECTOR( TriCurveSet );
+BLUE_DECLARE( TriLineSet );
+BLUE_DECLARE_INTERFACE( ITr2AnimationUpdater );
+BLUE_DECLARE_INTERFACE( ITr2WorldTransformUpdater );
 
 #if APEX_ENABLED
 BLUE_DECLARE( Tr2ClothingActor );

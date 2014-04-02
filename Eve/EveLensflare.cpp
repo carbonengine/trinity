@@ -7,11 +7,14 @@
 #include "EveLensflare.h"
 
 #include "include/TriMath.h"
+#include "Include/ITriFunction.h"
 #include "TriFrustum.h"
 #include "Tr2VariableStore.h"
 
 #include "EveOccluder.h"
 #include "EveTransform.h"
+#include "Curves/TriCurveSet.h"
+#include "Tr2Mesh.h"
 
 // --------------------------------------------------------------------------------
 // Description:

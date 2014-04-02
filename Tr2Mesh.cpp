@@ -2,7 +2,6 @@
 #include "Tr2Mesh.h"
 #include "Tr2Effect.h"
 #include "Resources/TriGeometryRes.h"
-#include "blue/include/IBlueResMan.h"
 #include "Tr2ShaderMaterial.h"
 #include "Tr2LowLevelShader.h"
 

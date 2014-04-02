@@ -3,7 +3,8 @@
 #define Tr2SkinnedModelBuilderSource_h
 
 
-#include "Tr2Mesh.h"
+BLUE_DECLARE( Tr2MeshArea );
+BLUE_DECLARE_VECTOR( Tr2MeshArea );
 
 /////////////////////////////////////////////////////////////////////////////////////
 // source info on a mesh for the assembler

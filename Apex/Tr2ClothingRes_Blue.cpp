@@ -3,7 +3,6 @@
 #if APEX_ENABLED
 
 #include "Tr2ClothingRes.h"
-#include "blue/include/IBlueResMan.h"
 
 BLUE_DEFINE( Tr2ClothingRes );
 

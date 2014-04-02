@@ -6,7 +6,6 @@
 
 #include "StdAfx.h"
 #include "Tr2GeometryBufferParameter.h"
-#include "include/ITr2InstanceData.h"
 
 BLUE_DEFINE( Tr2GeometryBufferParameter );
 

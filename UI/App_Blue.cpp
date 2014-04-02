@@ -1,11 +1,7 @@
 #include "StdAfx.h"
 #include "App.h"
-#include "TriDevice.h"
 #include "TriRect.h"
 #include "Tr2PresentParameters.h"
-#ifdef _WIN32
-#include "winuser.h"
-#endif
 
 BLUE_DEFINE( App );
 

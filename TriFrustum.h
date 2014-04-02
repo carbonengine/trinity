@@ -2,7 +2,7 @@
 #ifndef TRIFRUSTUM_H
 #define TRIFRUSTUM_H
 
-#include "TriViewport.h"
+BLUE_DECLARE( TriViewport );
 
 class TriFrustum
 {

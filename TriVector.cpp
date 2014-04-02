@@ -2,6 +2,7 @@
 #include "include/TriVector.h"
 #include "include/TriQuaternion.h"
 #include "include/TriMatrix.h"
+#include "Include/TriMath.h"
 #include "TriViewport.h"
 
 void GetNearestPointOnAABB(Vector3 &out, const Vector3 &p, const Vector3 &min, const Vector3 &max)

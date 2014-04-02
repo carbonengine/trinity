@@ -3,8 +3,6 @@
 #define Tr2PostProcess_H
 
 
-#include "Tr2DeviceResource.h"
-
 BLUE_DECLARE( Tr2PostProcess );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE_VECTOR( Tr2Effect );

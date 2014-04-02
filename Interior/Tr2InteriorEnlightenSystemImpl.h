@@ -8,11 +8,10 @@
 #ifndef Tr2InteriorEnlightenSystemImpl_H
 #define Tr2InteriorEnlightenSystemImpl_H
 
-#include "Enlighten2/Enlighten.h"
-#include "Resources/Tr2RadiosityRes.h"
 #include "Tr2InteriorDusterCache.h"
 
 BLUE_DECLARE( Tr2RadiosityRes );
+BLUE_DECLARE( TriGeometryRes );
 class TriEnlightenProgressBar;
 
 // -------------------------------------------------------------

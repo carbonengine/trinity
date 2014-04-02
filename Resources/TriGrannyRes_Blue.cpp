@@ -2,8 +2,6 @@
 #include "TriGrannyRes.h"
 #include "TriGeometryRes.h"
 
-#include <limits>
-
 BLUE_DEFINE( TriGrannyRes );
 
 #if BLUE_WITH_PYTHON

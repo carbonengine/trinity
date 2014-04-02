@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2GrannyTransformTrack.h"
 #include "Resources/TriGrannyRes.h"
-#include "blue/include/IBlueResMan.h"
 #include "include/TriMath.h"
 
 // Curve set

@@ -2,8 +2,6 @@
 #ifndef Tr2IntEnlightenTaskManager_H
 #define Tr2IntEnlightenTaskManager_H
 
-#include "tbb/task.h"
-#include "Enlighten2/enlighten.h"
 #include "include/ITr2Updateable.h"
 
 BLUE_DECLARE( Tr2InteriorCell );

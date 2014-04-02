@@ -1,13 +1,8 @@
 #pragma once
 #ifndef VECTOR4_H
 #define VECTOR4_H
-#include "BlueExposure/include/BlueVectorTypes.h"
 
 #ifdef _WIN32
-
-// System headers
-#include <d3dx9math.h>
-#include <xnamath.h>
 
 // --------------------------------------------------------------------------------------
 // Description:

@@ -9,9 +9,7 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2InteriorCylinderLight.h"
-
 #include "TriConstants.h"
-#include "Resources/TriTextureRes.h"
 
 BLUE_DEFINE( Tr2InteriorCylinderLight );
 

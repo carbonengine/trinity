@@ -5,14 +5,10 @@
 #include "Tr2Renderer.h"
 
 #include "TriPythonContext.h"
-#include "Tr2DeviceResource.h"
-#include "Tr2VariableStore.h"
 #include "RenderJob/Tr2RenderJobs.h"
 #include "Curves/TriCurveSet.h"
-#include "include/ITr2Scene.h"
 #include "Tr2RenderTargetGrabber.h"
-
-#include "granny.h"
+#include "Include/TriMath.h"
 
 #if BINK_ENABLED
 #include "Sprite2d/Tr2Sprite2dBinkTexture.h"

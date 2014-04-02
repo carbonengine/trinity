@@ -3,7 +3,6 @@
 #include "Tr2TextureAtlasMan.h"
 #include "Tr2TextureAtlas.h"
 #include "Tr2AtlasTexture.h"
-#include "blue/include/IBlueResMan.h"
 #include "Tr2Sprite2dScene.h"
 
 Tr2Sprite2dTexture::Tr2Sprite2dTexture( IRoot* lockobj /*= NULL */ ) :

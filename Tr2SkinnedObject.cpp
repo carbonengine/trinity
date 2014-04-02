@@ -2,19 +2,18 @@
 
 #include "Tr2SkinnedObject.h"
 #include "Tr2CpuSkinnedModel.h"
-#include "Tr2Renderer.h"
-#include "TriRenderBatch.h"
 #include "Resources/TriGeometryRes.h"
-#include "Tr2Effect.h"
 #include "TriFrustum.h"
 #include "TriSettingsRegistrar.h"
 #include "include/ITr2DebugRenderer.h"
-#include "Utilities/Matrix.h"
 #include "Utilities/Obb.h"
+#include "Curves/TriCurveSet.h"
+#include "TriLineSet.h"
+#include "ITr2AnimationUpdater.h"
+#include "ITr2WorldTransformUpdater.h"
 
 #if APEX_ENABLED
 #include "Apex/Apex.h"
-#include "Apex/Tr2ApexRenderer.h"
 #include "Apex/Tr2ClothingActor.h"
 
 int g_maxClothLod = 0;

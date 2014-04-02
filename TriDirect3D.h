@@ -25,8 +25,6 @@
 #ifndef _TRIDIRECT3D_H_
 #define _TRIDIRECT3D_H_
 
-#include "blue/include/BluePySwrap.h" //simple wrapping
-
 #if BLUE_WITH_PYTHON
 //typedefs for passing data opaquely around.
 typedef BluePySWrap<Structify<Tr2WindowHandle> > WrappedHWND;

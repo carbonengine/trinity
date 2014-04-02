@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2ManipulationTool.h"
+#include "TriViewport.h"
 
 BLUE_DEFINE_ABSTRACT( Tr2ManipulationTool );
 

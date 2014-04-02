@@ -1,6 +1,7 @@
 #include <StdAfx.h>
 
 #include "Tr2GPUParticleType.h"
+#include "Tr2GPUParticlePoolManager.h"
 
 //==========================
 //Tr2GPUParticleType

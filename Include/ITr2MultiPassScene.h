@@ -8,8 +8,6 @@
 #ifndef ITr2MultiPassScene_H
 #define ITr2MultiPassScene_H
 
-#include "blue/include/Blue.h"
-
 class Tr2RenderContext;
 
 // -------------------------------------------------------------

@@ -3,13 +3,8 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2InteriorProbeVolume.h"
-#include "Tr2SHProbeRes.h"
 #include "TriLineSet.h"
-#include "Blue/BlueResMan.h"
-#include "TriEnlightenUtils.h"
-#include "Resources/TriGeometryRes.h"
 #include "Tr2InteriorCell.h"
-#include "Utilities/BoundingBox.h"
 
 // Define a workaround for crashes in Geo::VConstruct when it's not inlined (compiler error?)
 #define GEO_VCONSTRUCT( x, y, z, w ) (_mm_setr_ps((x), (y), (z), (w)))

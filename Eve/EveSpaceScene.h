@@ -21,8 +21,6 @@
 class TriProjection;
 class TriView;
 
-#include "blue/include/BlueAsyncRes.h"
-
 // Objects are allowed to unload their resources if they're out of view for
 // some time. This can help reduce memory use.
 extern bool g_eveIsSpaceObjectResourceUnloadingEnabled;

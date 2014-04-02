@@ -8,7 +8,7 @@
 #include "ITr2UmbraUserData.h"
 #include "Tr2InteriorFlareData.h"
 #include "TriViewport.h"
-#include "Utilities/BoundingBox.h"
+#include "TriRenderBatch.h"
 
 const unsigned int Tr2InteriorFlare::MAX_FLARE_IMAGES = 16;
 

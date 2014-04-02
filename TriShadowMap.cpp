@@ -2,11 +2,10 @@
 #include "TriShadowMap.h"
 #include "Tr2VariableStore.h"
 #include "Tr2Renderer.h"
-#include "Tr2PushPopDS.h"
-#include "Tr2PushPopRT.h"
-#include "Utilities/BoundingBox.h"
-#include "TriSettingsRegistrar.h"
 #include "TriFrustumOrtho.h"
+#include "Tr2Effect.h"
+#include "TriViewport.h"
+#include "TriLineSet.h"
 
 using namespace Tr2RenderContextEnum;
 

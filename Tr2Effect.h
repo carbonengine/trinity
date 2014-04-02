@@ -1,19 +1,18 @@
 #ifndef TR2EFFECT_H
 #define TR2EFFECT_H
 
-#include "blue/include/BlueAsyncRes.h"
-#include "blue/include/IBluePython.h"
-#include "include/ITriEffectParameter.h"
 #include "ITr2ShaderMaterial.h"
-#include "ITr2ShaderState.h"
 #include "Resources/Tr2EffectRes.h"
-
+#include "IRenderCallback.h"
 
 BLUE_DECLARE( TriTexture2DParameter );
 BLUE_DECLARE( TriFloatParameter );
-BLUE_DECLARE_INTERFACE ( ITr2ShaderState );
-BLUE_DECLARE_INTERFACE ( ITr2ShaderMaterial );
 BLUE_DECLARE( Tr2VariableStore );
+BLUE_DECLARE_INTERFACE( ITriEffectParameter );
+BLUE_DECLARE_IVECTOR( ITriEffectParameter );
+BLUE_DECLARE_INTERFACE( ITriEffectResourceParameter );
+BLUE_DECLARE_IVECTOR( ITriEffectResourceParameter );
+BLUE_DECLARE_INTERFACE( ITr2ShaderState );
 
 BLUE_CLASS_ALLOW_DELAYED_DELETE( Tr2Effect );
 
@@ -59,12 +58,6 @@ public:
     // This function is called by Tr2Renderer to update Tr2Materials
     // with any changes to the parameters
 	virtual void UpdateMaterial() {};
-
-	class IRenderCallback
-	{
-	public:
-		virtual void SubmitGeometry( Tr2RenderContext& renderContext ) = 0;
-	};
 
 	void Render( IRenderCallback* cb, Tr2RenderContext& renderContext );
 	void RenderForPicking( IRenderCallback* cb, int objId, Tr2RenderContext& renderContext );

@@ -4,19 +4,17 @@
 
 #include "Tr2IntSkinnedObject.h"
 
-#include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
-#include "TriRenderBatch.h"
 #include "TriSettingsRegistrar.h"
 #include "Apex/Tr2ClothingActor.h"
-#include "Tr2ConstantBufferFormats.h"
 #include "Tr2InteriorCell.h"
 #include "Tr2LitPerObjectData.h"
 #include "Apex/Apex.h"
 #include "Resources/TriGeometryRes.h"
 #include "ITr2UmbraUserData.h"
-#include "Tr2VariableStore.h"
 #include "Tr2ShaderMaterial.h"
+#include "Tr2Effect.h"
+#include "Tr2Mesh.h"
 
 CCP_STATS_DECLARE( wodIntSkinnedObjectsAlive, "Trinity/wodIntSkinnedObjectsAlive", false, CST_COUNTER_LOW, "Count of Tr2IntSkinnedObjects alive" );
 

@@ -2,12 +2,6 @@
 #ifndef TriGrannyRes_H
 #define TriGrannyRes_H
 
-#include "granny.h"
-
-#include <vector>
-#include "blue/include/BlueAsyncRes.h"
-#include "blue/include/ICacheable.h"
-
 namespace Umbra
 {
     class MeshModel;

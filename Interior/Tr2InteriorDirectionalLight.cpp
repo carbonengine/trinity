@@ -11,20 +11,18 @@
 #include "Tr2InteriorDirectionalLight.h"
 
 #include "umbraTypes.h"
-#include "umbra.hpp"
 
-#include "blue/include/IBlueResMan.h"
-#include "Utilities/BoundingBox.h"
-#include "Utilities/BoundingSphere.h"
 #include "Tr2InteriorLightGeometryRenderBatch.h"
 #include "Tr2InteriorCell.h"
-#include "Tr2VariableStore.h"
 #include "Tr2AtlasTexture.h"
 #include "Tr2KelvinColor.h"
 #include "ITr2UmbraUserData.h"
 #include "Tr2ShaderMaterial.h"
 #include "Tr2InteriorLightSource.h"
-#include "TriDevice.h"
+#include "Curves/TriCurveSet.h"
+#include "Tr2InteriorConstantBufferFormats.h"
+#include "IRenderCallback.h"
+#include "TriDebugResourceHelper.h"
 
 CCP_STATS_DECLARED_ELSEWHERE( wodIntLightsAlive );
 
@@ -84,8 +82,6 @@ Tr2InteriorDirectionalLight::Tr2InteriorDirectionalLight( IRoot* lockobj ) :
 
 	m_kelvinColor.CreateInstance();
 	m_useKelvinColor = false;
-	
-	TriDevice::RegisterResource( this );
 
 	PrepareResources();
 
@@ -534,7 +530,7 @@ void Tr2InteriorDirectionalLight::RenderDebugInfo( Tr2RenderContext& renderConte
 
 
 
-	struct EffectCallback: public Tr2Effect::IRenderCallback
+	struct EffectCallback: public IRenderCallback
 	{
 		TriDebugResourceHelper::VertexPosColor polygon[8];
 		unsigned int vertexCount;

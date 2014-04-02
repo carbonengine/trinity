@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 #include "Tr2AsyncSave.h"
-#include "blue/include/IBlueOS.h"
-#include "blue/include/IBlueResMan.h"
 
 using namespace Tr2RenderContextEnum;
 

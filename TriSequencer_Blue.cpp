@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "TriSequencer.h"
+#include "TriConstants.h"
 
 BLUE_DEFINE( TriScalarSequencer );
 BLUE_DEFINE( TriVectorSequencer );

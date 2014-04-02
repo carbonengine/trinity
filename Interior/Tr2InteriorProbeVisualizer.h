@@ -2,11 +2,13 @@
 #ifndef Tr2InteriorProbeVisualizer_H
 #define Tr2InteriorProbeVisualizer_H
 
-#include "Tr2Effect.h"
+#include "IRenderCallback.h"
+
+BLUE_DECLARE( Tr2Effect );
 
 BLUE_CLASS( Tr2InteriorProbeVisualizer ) :
 	public IRoot,
-    public Tr2Effect::IRenderCallback
+    public IRenderCallback
 {
 public:
 	Tr2InteriorProbeVisualizer( IRoot* lockobj = 0 );

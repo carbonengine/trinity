@@ -4,6 +4,7 @@
 
 #include "Tr2InteriorProbeVisualizer.h"
 #include "Tr2Renderer.h"
+#include "Tr2Effect.h"
 
 using namespace Tr2RenderContextEnum;
 

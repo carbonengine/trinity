@@ -4,7 +4,6 @@
 
 #include "Resources/TriGeometryRes.h"
 #include "TriConstants.h"
-#include "Tr2VariableStore.h"
 
 BLUE_DEFINE( Tr2Mesh );
 

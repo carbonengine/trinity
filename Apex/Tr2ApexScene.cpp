@@ -4,40 +4,13 @@
 
 #include "Tr2ApexScene.h"
 
-#include "NxApex.h"
-#include "NxParameterized.h"
-#include "NxParamUtils.h"
-#include "NxClothingActor.h"
-#include "PxAllocatorCallback.h"
-#include "PxErrorCallback.h"
-#include "NxCooking.h"
-#include "NxPhysicsSDK.h"
-#include "NxScene.h"
-#include "NxPlaneShapeDesc.h"
-#include "NxPlane.h"
-#include "NxActor.h"
-#include "NxActorDesc.h"
-#include "PhysXLoader.h"
-
-#if USE_APEX_PARAM_EDITOR
-#include "Tr2ApexSceneParamEditor.h"
-#endif
-
-#include "NxModuleClothing.h"
-
-#include "include/IPhysXSdk.h"
-#include "Tr2Renderer.h"
+#include "Apex.h"
 #include "Tr2ApexRenderer.h"
-#include "Tr2ClothingActor.h"
-#include "Tr2DestructibleActor.h"
 #include "include/ITr2DebugRenderer.h"
 #include "TriSettingsRegistrar.h"
-#include "NxDebugRenderable.h"
 #include "TriDebugResourceHelper.h"
-#include "TriPoolAllocator.h"
 #include "TriRenderBatch.h"
-#include "Tr2EffectStateManager.h"
-#include "ITr2Renderable.h"
+#include "Tr2Effect.h"
 
 #define USE_PLATFORM_ANALYZER CCP_STATS_ENABLED
 

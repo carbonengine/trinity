@@ -7,13 +7,11 @@
 #include "include/ITr2Scene.h"
 #include "ITr2SpriteObject.h"
 #include "ITr2Sprite2dRenderer.h"
-#include "TriPoolAllocator.h"
-#include "Tr2Effect.h"
-#include "TriVariable.h"
 #include "Tr2SpriteObject.h"
 #include "Tr2Sprite2dDisplayList.h"
 #include "Tr2Variable.h"
 #include "Tr2DynamicRingBuffer.h"
+#include "Tr2EffectDescription.h"
 
 BLUE_DECLARE( Tr2Sprite2dScene );
 BLUE_DECLARE( Tr2Sprite2d );
@@ -21,6 +19,7 @@ BLUE_DECLARE( TriCurveSet );
 BLUE_DECLARE_VECTOR( TriCurveSet );
 BLUE_DECLARE_IVECTOR( ITr2SpriteObject );
 BLUE_DECLARE( TriViewport );
+BLUE_DECLARE( Tr2Effect );
 
 class TriProjection;
 class TriView;
@@ -28,7 +27,7 @@ class TriView;
 class Tr2Sprite2dScene:
      public ITr2Scene,
 	 public INotify,
-	 public Tr2Effect::IRenderCallback,
+	 public IRenderCallback,
 	 public Tr2DeviceResource
 {
 public:
@@ -172,8 +171,6 @@ private:
 	PTriCurveSetVector m_curveSets;
 	Tr2EffectPtr m_effect;
 
-	//CComPtr<ID3DXConstantTable> m_vsConstantTable;
-	//D3DXHANDLE m_transformsHandle;
 	Tr2EffectConstant m_transformsHandle;
 
 	// The desired visual effect

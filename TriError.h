@@ -21,8 +21,6 @@
 #ifndef TRI_ERROR_H
 #define TRI_ERROR_H
 
-#include <blue/include/IBlueOS.h>
-
 class TriError {
 public:
 	// Special Error reporting function for trinity objects, deciphers directX hresults, sets blue error state

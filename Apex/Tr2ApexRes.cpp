@@ -3,9 +3,6 @@
 #if APEX_ENABLED
 
 #include "Tr2ApexRes.h"
-
-#include "NxApexAsset.h"
-
 #include "Apex.h"
 
 Tr2ApexRes::Tr2ApexRes( IRoot* lockobj ) :

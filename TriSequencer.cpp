@@ -1,5 +1,8 @@
 #include "StdAfx.h"
 #include "TriSequencer.h"
+#include "include/TriVector.h"
+#include "include/TriMath.h"
+#include "include/ITriTransform.h"
 #include "include/ITriDuration.h"
 
 static inline void FunctionLength( ITriFunctionPtr curve, float& maxDuration )

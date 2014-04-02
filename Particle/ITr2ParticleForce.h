@@ -2,9 +2,6 @@
 #ifndef ITr2ParticleForce_H
 #define ITr2ParticleForce_H
 
-#include "Vector3d.h"
-#include "include/ITr2Updateable.h"
-
 BLUE_INTERFACE( ITr2ParticleForce ) : public IRoot
 {
 	virtual void Update( float dt ) = 0;

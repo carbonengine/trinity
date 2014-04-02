@@ -2,10 +2,11 @@
 #ifndef Tr2Model_H
 #define Tr2Model_H
 
-#include "Tr2Mesh.h"
 #include "ITr2Renderable.h"
 
 BLUE_DECLARE( Tr2Model );
+BLUE_DECLARE( Tr2Mesh );
+BLUE_DECLARE_VECTOR( Tr2Mesh );
 
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;

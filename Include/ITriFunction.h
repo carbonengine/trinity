@@ -27,7 +27,6 @@
 
 #include "ITriRenderObject.h"
 #include "ITriConstants.h"
-#include <blue/include/Blue.h>
 
 struct Vector3d;		
 struct Vector3;

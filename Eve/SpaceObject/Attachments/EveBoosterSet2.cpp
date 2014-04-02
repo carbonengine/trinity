@@ -9,6 +9,7 @@
 #include "TriFrustum.h"
 #include "TriSettingsRegistrar.h"
 #include "Curves/TriVectorCurve.h"
+#include "Include/TriMath.h"
 
 #include "EveSpriteSet.h"
 #include "EveTrailsSet.h"

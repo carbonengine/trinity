@@ -11,11 +11,13 @@
 #include "Tr2InteriorParticleObject.h"
 #include "Particle/ITr2GenericEmitter.h"
 #include "Particle/Tr2ParticleSystem.h"
-#include "Tr2Renderer.h"
-#include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 #include "Tr2InteriorCell.h"
 #include "ITr2UmbraUserData.h"
+#include "Tr2Mesh.h"
+#include "TriLineSet.h"
+#include "Curves/TriCurveSet.h"
+#include "Tr2InteriorConstantBufferFormats.h"
 
 Tr2InteriorParticleObject::Tr2InteriorParticleObject( IRoot* lockobj )
 :	PARENTLOCK( m_particleSystems ),

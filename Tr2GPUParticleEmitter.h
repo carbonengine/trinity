@@ -3,8 +3,13 @@
 #ifndef Tr2GPUParticleEmitter_h
 #define Tr2GPUParticleEmitter_h
 
-#include "Tr2GPUParticlePool.h"
-#include "Tr2GPUParticleType.h"
+#include "Particle/ITr2GenericEmitter.h"
+
+BLUE_DECLARE( TriTextureRes );
+BLUE_DECLARE( Tr2GPUParticlePool );
+BLUE_DECLARE( Tr2GPUParticleType );
+BLUE_DECLARE_VECTOR( Tr2GPUParticleType );
+BLUE_DECLARE( Tr2GPUParticlePoolManager );
 
 //Each particle emitter may contain many sub-emitters, with unique spawn rates
 // and different particle types.

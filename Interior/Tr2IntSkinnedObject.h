@@ -1,12 +1,9 @@
 #ifndef Tr2IntSkinnedObject_h
 #define Tr2IntSkinnedObject_h
 
-#include "blue/include/IBlueObjectProxy.h"
 #include "include/ITr2Interior.h"
-#include "Tr2ConstantBufferFormats.h"
 #include "Tr2InteriorLightSet.h"
 #include "Tr2SkinnedObject.h"
-#include "blue/include/IBluePlacementObserver.h"
 
 //--------------------------------------------------------------------------------------------------
 // forwards

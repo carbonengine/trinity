@@ -1,13 +1,10 @@
 #include "StdAfx.h"
 #include "Tr2AtlasTexture.h"
-#include "Resources/TriTextureRes.h"
 #include "Tr2Renderer.h"
-#include "blue/include/IBlueResMan.h"
 #include "Tr2TextureAtlas.h"
 #include "Tr2TextureAtlasMan.h"
 #include "Tr2HostBitmap.h"
-#include "blue/include/IBluePaths.h"
-#include "ImageIO/Tr2ImageHandler.h"
+#include "Tr2ImageIOHelpers.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -166,23 +163,14 @@ BlueAsyncRes::LoadingResult Tr2AtlasTexture::DoLoad()
 	}
 
 	m_imageHandler = CreateImageHandler( m_path );
-	m_imageHandler->SetStream( m_dataStream );
 	
 	// for backward compatibility, make a texture that's intended for atlassing always 32 bit.
 	m_imageHandler->SetDesiredFormat( PIXEL_FORMAT_B8G8R8A8_UNORM );
 
-	bool isOK = m_imageHandler->ReadHeader();
+	bool isOK = m_imageHandler->ReadHeader( m_dataStream );
 	if( isOK )
 	{
-		isOK = m_imageHandler->IsSupported();
-		if( isOK )
-		{
-			isOK = m_imageHandler->ReadImage();
-		}
-		else
-		{
-			CCP_LOGWARN( "Texture '%S' needs format conversion", GetPath() );
-		}
+		isOK = m_imageHandler->ReadImage( m_dataStream );
 		
 
 		// Allow loading to a specific atlas by setting this before DoLoad
@@ -229,7 +217,7 @@ bool Tr2AtlasTexture::DoPrepare()
 	if( !isOK )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		if( m_imageHandler->Create2DTexture( m_texture, m_memoryUsage, renderContext ) )
+		if( Tr2ImageIOHelpers::Create2DTexture( *m_imageHandler, m_texture, m_memoryUsage, renderContext ) )
 		{
 			m_x = 0;
 			m_y = 0;

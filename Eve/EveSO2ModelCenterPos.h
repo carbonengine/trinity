@@ -18,8 +18,6 @@ Unfortunately the same as before. I need a working camera that doesn't disrupt t
 
 #include "include/ITriFunction.h"
 #include "IEveSpaceObject2.h"
-#include <blue/include/IBluePython.h>
-#include <blue/include/IBlueOS.h>
 #include "include/TriVector.h"
 
 class EveSO2ModelCenterPos:

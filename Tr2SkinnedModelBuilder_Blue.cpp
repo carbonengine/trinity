@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2SkinnedModelBuilder.h"
+#include "Tr2SkinnedModelBuilderSource.h"
 #include "Tr2SkinnedObject.h"
 
 // ------------------------------------------------------------------------------------------------------

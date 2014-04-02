@@ -8,6 +8,8 @@
 #include "include/ITriTargetable.h"
 
 BLUE_DECLARE( EveRootTransform );
+BLUE_DECLARE_INTERFACE( ITriVectorFunction );
+BLUE_DECLARE_INTERFACE( ITriQuaternionFunction );
 
 class EveRootTransform:
 	public EveTransform,

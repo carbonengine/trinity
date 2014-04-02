@@ -12,7 +12,6 @@
     <Filter Include="Source Files\Eve\SpaceObjectFactory"/>
     <Filter Include="Source Files\Eve\SpaceObject\Attachments"/>
     <Filter Include="Source Files\Font"/>
-    <Filter Include="Source Files\ImageIO"/>
     <Filter Include="Source Files\Include"/>
     <Filter Include="Source Files\Interior"/>
     <Filter Include="Source Files\Particle"/>
@@ -33,13 +32,7 @@
     <ClInclude Include="BinkOutputStream.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="CudaDLL.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="D3DFundamentalTypes.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="EveSpaceObjectModelCenterPosition.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="EveSprite2dBracket.h">
@@ -52,6 +45,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ID3DTexture.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IRenderCallback.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ITr2AnimationUpdater.h">
@@ -94,12 +90,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ITr2WorldTransformUpdater.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ITriGRRes.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ITriPoseSequencer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="ITriReroutable.h">
@@ -214,6 +204,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2HostBitmap.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tr2ImageIOHelpers.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2InstancedMesh.h">
@@ -507,12 +500,6 @@
     <ClInclude Include="Apex\Apex.h">
       <Filter>Source Files\Apex</Filter>
     </ClInclude>
-    <ClInclude Include="Apex\Tr2ApexEmitterActor.h">
-      <Filter>Source Files\Apex</Filter>
-    </ClInclude>
-    <ClInclude Include="Apex\Tr2ApexParamEditor.h">
-      <Filter>Source Files\Apex</Filter>
-    </ClInclude>
     <ClInclude Include="Apex\Tr2ApexRenderer.h">
       <Filter>Source Files\Apex</Filter>
     </ClInclude>
@@ -526,24 +513,6 @@
       <Filter>Source Files\Apex</Filter>
     </ClInclude>
     <ClInclude Include="Apex\Tr2ClothingRes.h">
-      <Filter>Source Files\Apex</Filter>
-    </ClInclude>
-    <ClInclude Include="Apex\Tr2DestructibleActor.h">
-      <Filter>Source Files\Apex</Filter>
-    </ClInclude>
-    <ClInclude Include="Apex\Tr2ExampleFSActor.h">
-      <Filter>Source Files\Apex</Filter>
-    </ClInclude>
-    <ClInclude Include="Apex\Tr2ExplosionActor.h">
-      <Filter>Source Files\Apex</Filter>
-    </ClInclude>
-    <ClInclude Include="Apex\Tr2ForceFieldActor.h">
-      <Filter>Source Files\Apex</Filter>
-    </ClInclude>
-    <ClInclude Include="Apex\Tr2TurbulenceFSActor.h">
-      <Filter>Source Files\Apex</Filter>
-    </ClInclude>
-    <ClInclude Include="Apex\Tr2WindActor.h">
       <Filter>Source Files\Apex</Filter>
     </ClInclude>
     <ClInclude Include="Curves\Tr2BoneMatrixCurve.h">
@@ -858,30 +827,6 @@
     <ClInclude Include="Font\Tr2SBit.h">
       <Filter>Source Files\Font</Filter>
     </ClInclude>
-    <ClInclude Include="ImageIO\Tr2BmpHandler.h">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageIO\Tr2DdsHandler.h">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageIO\Tr2ImageHandler.h">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageIO\Tr2JpgHandler.h">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageIO\Tr2PngHandler.h">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageIO\Tr2SddHandler.h">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageIO\Tr2SddHeader.h">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageIO\Tr2TgaHandler.h">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClInclude>
     <ClInclude Include="Include\IEveBallpark.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
@@ -900,9 +845,6 @@
     <ClInclude Include="Include\ITr2CapturedBuffer.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ITr2ClothMesh.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
     <ClInclude Include="Include\ITr2DebugRenderer.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
@@ -913,12 +855,6 @@
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\ITr2Interior.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\ITr2InteriorPortal.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\ITr2LightPrePassScene.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\ITr2MultiPassScene.h">
@@ -972,16 +908,7 @@
     <ClInclude Include="Include\ITriObserverLocal.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ITriPickable.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
     <ClInclude Include="Include\ITriPoint.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\ITriPostProcess.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\ITriPostProcessStage.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\ITriQuaternion.h">
@@ -999,12 +926,6 @@
     <ClInclude Include="Include\ITriScalarCurve.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
-    <ClInclude Include="Include\ITriSortable.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\ITriSurface.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
     <ClInclude Include="Include\ITriTargetable.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
@@ -1018,9 +939,6 @@
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\ITriVectorCurve.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\ITriVertexElement.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\Point.h">
@@ -1042,9 +960,6 @@
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\TriMatrix.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\TriPlane.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\TriQuaternion.h">
@@ -1093,9 +1008,6 @@
       <Filter>Source Files\Interior</Filter>
     </ClInclude>
     <ClInclude Include="Interior\Tr2InteriorLightGeometryRenderBatch.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorLightmapGenerator.h">
       <Filter>Source Files\Interior</Filter>
     </ClInclude>
     <ClInclude Include="Interior\Tr2InteriorLightSet.h">
@@ -1515,34 +1427,16 @@
     <ClInclude Include="Utilities\ViewDistanceInfo.h">
       <Filter>Source Files\Utilities</Filter>
     </ClInclude>
-    <ClInclude Include="Wod\IWodUmbraObject.h">
-      <Filter>Source Files\Wod</Filter>
-    </ClInclude>
     <ClInclude Include="Wod\WodBakingScene.h">
       <Filter>Source Files\Wod</Filter>
     </ClInclude>
-    <ClInclude Include="Wod\WodLightSource.h">
-      <Filter>Source Files\Wod</Filter>
-    </ClInclude>
-    <ClInclude Include="Wod\WodLightSourceOverride.h">
-      <Filter>Source Files\Wod</Filter>
-    </ClInclude>
-    <ClInclude Include="Wod\WodPlaceable.h">
-      <Filter>Source Files\Wod</Filter>
-    </ClInclude>
     <ClInclude Include="Wod\WodPlaceableRes.h">
-      <Filter>Source Files\Wod</Filter>
-    </ClInclude>
-    <ClInclude Include="Wod\WodReceivesLights.h">
       <Filter>Source Files\Wod</Filter>
     </ClInclude>
     <ClCompile Include="ALResultBlue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BinkOutputStream.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CudaDLL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EveSprite2dBracket.cpp">
@@ -1647,9 +1541,6 @@
     <ClCompile Include="Tr2EffectStateManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2EffectStateManager_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Tr2Effect_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1732,6 +1623,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2HostBitmap_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2ImageIOHelpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2InstancedMesh.cpp">
@@ -1924,9 +1818,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2SkinnedModelBuilder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SkinnedModelBuilderBlend.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2SkinnedModelBuilderBlend_Blue.cpp">
@@ -2214,15 +2105,6 @@
     <ClCompile Include="Apex\Apex_Blue.cpp">
       <Filter>Source Files\Apex</Filter>
     </ClCompile>
-    <ClCompile Include="Apex\Tr2ApexEmitterActor.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2ApexEmitterActor_Blue.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2ApexParamEditor.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
     <ClCompile Include="Apex\Tr2ApexRenderer.cpp">
       <Filter>Source Files\Apex</Filter>
     </ClCompile>
@@ -2248,42 +2130,6 @@
       <Filter>Source Files\Apex</Filter>
     </ClCompile>
     <ClCompile Include="Apex\Tr2ClothingRes_Blue.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2DestructibleActor.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2DestructibleActor_Blue.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2ExampleFSActor.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2ExampleFSActor_Blue.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2ExplosionActor.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2ExplosionActor_Blue.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2ForceFieldActor.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2ForceFieldActor_Blue.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2TurbulenceFSActor.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2TurbulenceFSActor_Blue.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2WindActor.cpp">
-      <Filter>Source Files\Apex</Filter>
-    </ClCompile>
-    <ClCompile Include="Apex\Tr2WindActor_Blue.cpp">
       <Filter>Source Files\Apex</Filter>
     </ClCompile>
     <ClCompile Include="Curves\Tr2BoneMatrixCurve.cpp">
@@ -2506,9 +2352,6 @@
       <Filter>Source Files\EffectParameter</Filter>
     </ClCompile>
     <ClCompile Include="EffectParameter\TriTexture2DParameter_Blue.cpp">
-      <Filter>Source Files\EffectParameter</Filter>
-    </ClCompile>
-    <ClCompile Include="EffectParameter\TriTextureCubeParameter.cpp">
       <Filter>Source Files\EffectParameter</Filter>
     </ClCompile>
     <ClCompile Include="EffectParameter\TriTextureCubeParameter_Blue.cpp">
@@ -2862,27 +2705,6 @@
     <ClCompile Include="Font\Tr2Sbit_Blue.cpp">
       <Filter>Source Files\Font</Filter>
     </ClCompile>
-    <ClCompile Include="ImageIO\Tr2BmpHandler.cpp">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageIO\Tr2DdsHandler.cpp">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageIO\Tr2ImageHandler.cpp">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageIO\Tr2JpgHandler.cpp">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageIO\Tr2PngHandler.cpp">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageIO\Tr2SddHandler.cpp">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageIO\Tr2TgaHandler.cpp">
-      <Filter>Source Files\ImageIO</Filter>
-    </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorBoundingBox.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
@@ -2944,12 +2766,6 @@
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorFlare_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorLightmapGenerator.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorLightmapGenerator_Blue.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorLightSet.cpp">
@@ -3687,34 +3503,10 @@
     <ClCompile Include="Wod\WodBakingScene_Blue.cpp">
       <Filter>Source Files\Wod</Filter>
     </ClCompile>
-    <ClCompile Include="Wod\WodLightSource.cpp">
-      <Filter>Source Files\Wod</Filter>
-    </ClCompile>
-    <ClCompile Include="Wod\WodLightSourceOverride.cpp">
-      <Filter>Source Files\Wod</Filter>
-    </ClCompile>
-    <ClCompile Include="Wod\WodLightSourceOverride_Blue.cpp">
-      <Filter>Source Files\Wod</Filter>
-    </ClCompile>
-    <ClCompile Include="Wod\WodLightSource_Blue.cpp">
-      <Filter>Source Files\Wod</Filter>
-    </ClCompile>
-    <ClCompile Include="Wod\WodPlaceable.cpp">
-      <Filter>Source Files\Wod</Filter>
-    </ClCompile>
     <ClCompile Include="Wod\WodPlaceableRes.cpp">
       <Filter>Source Files\Wod</Filter>
     </ClCompile>
     <ClCompile Include="Wod\WodPlaceableRes_Blue.cpp">
-      <Filter>Source Files\Wod</Filter>
-    </ClCompile>
-    <ClCompile Include="Wod\WodPlaceable_Blue.cpp">
-      <Filter>Source Files\Wod</Filter>
-    </ClCompile>
-    <ClCompile Include="Wod\WodReceivesLights.cpp">
-      <Filter>Source Files\Wod</Filter>
-    </ClCompile>
-    <ClCompile Include="Wod\WodReceivesLights_Blue.cpp">
       <Filter>Source Files\Wod</Filter>
     </ClCompile>
     <ResourceCompile Include="Trinity.rc">

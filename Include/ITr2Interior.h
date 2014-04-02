@@ -2,11 +2,10 @@
 #ifndef ITr2Interior_H
 #define ITr2Interior_H
 
-#include "blue/include/Blue.h"
-
 #include "include/ITr2BoundingBox.h"
 #include "ITr2Renderable.h"
 #include "Tr2PerObjectData.h"
+#include "Resources/TriTextureRes.h"
 
 // fowards
 namespace Umbra

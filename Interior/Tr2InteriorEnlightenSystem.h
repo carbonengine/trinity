@@ -2,10 +2,7 @@
 #ifndef Tr2InteriorEnlightenSystem_H
 #define Tr2InteriorEnlightenSystem_H
 
-#include "Tr2InteriorStatic.h"
-#include "Enlighten2/Enlighten.h"
-#include "TriEnlightenUtils.h"
-#include "blue\include\BlueAsyncRes.h"
+#include "Include/ITr2Interior.h"
 #include "Tr2DeviceResource.h"
 #include "ID3DTexture.h"
 #include "Tr2InteriorVisualization.h"
@@ -17,6 +14,9 @@ BLUE_DECLARE( TriLineSet );
 BLUE_DECLARE( Tr2InteriorCell );
 BLUE_DECLARE( Tr2RadiosityRes );
 BLUE_DECLARE( Tr2VariableStore );
+BLUE_DECLARE( Tr2InteriorStatic );
+BLUE_DECLARE_VECTOR( Tr2InteriorStatic );
+BLUE_DECLARE( Tr2EnlightenArea );
 
 struct EnlightenMaterialProperties
 {

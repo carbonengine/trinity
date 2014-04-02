@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "GeometryUtils.h"
-#include "Tr2EffectStateManager.h"
 #include "Tr2Renderer.h"
 #include "Tr2VertexDefinitionUtilities.h"
 

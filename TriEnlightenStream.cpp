@@ -3,7 +3,6 @@
 #if INTERIORS_ENABLED
 
 #include "TriEnlightenStream.h"
-#include "EnlightenUtils2/EnlightenUtils.h"
 
 GeoMemoryStream::GeoMemoryStream( )
 {

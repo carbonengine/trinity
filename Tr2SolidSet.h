@@ -1,13 +1,8 @@
 #ifndef Tr2SolidSet_H
 #define Tr2SolidSet_H
 
-#include "Tr2Effect.h"
 #include "Tr2PrimitiveSet.h"
-#include "ITr2Renderable.h"
 #include "Tr2DeviceResource.h"
-#include "ITr2GeometryProvider.h"
-#include "Tr2PerObjectData.h"
-#include "TriRenderBatch.h"
 
 // A single triangle stored locally as they are added by the user
 struct TriangleData

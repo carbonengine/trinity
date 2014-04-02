@@ -2,7 +2,7 @@
 #include "TriVectorCurve.h"
 #include "include/TriVector.h"
 #include "Vector3d.h"
-#include <float.h>
+#include "Include/TriMath.h"
 
 TriVectorCurve::TriVectorCurve(IRoot* lockobj) :
 	mStart         ( 0           ), 

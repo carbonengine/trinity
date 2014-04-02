@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "App.h"
-#include <algorithm>
 #include "../TriRect.h"
 #include "../TriError.h"
 #include "../TriPythonContext.h"

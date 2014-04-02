@@ -26,10 +26,10 @@
 
 
 #include "include/ITriEffectParameter.h"
-#include "include/TriColor.h"
-#include "include/ITriFunction.h"
 
 #define TRIVECTOR4PARAMETER_Description "TriFloatParameter"
+
+BLUE_DECLARE_INTERFACE( ITr2ShaderState );
 
 class TriVector4Parameter:
 	public ITriEffectParameter,

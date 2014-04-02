@@ -6,7 +6,6 @@
 #include "TriEventKey.h"
 #include "include/ITriFunction.h"
 #include "include/ITriCurveLength.h"
-#include "blue/include/IBlueEventListener.h"
 
 BLUE_DECLARE( TriEventCurve );
 

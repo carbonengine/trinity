@@ -4,11 +4,7 @@
 
 #include "include/ITr2Interior.h"
 #include "Tr2DeviceResource.h"
-#include "Tr2InteriorConstantBufferFormats.h"
 #include "TriFrustum.h"
-#include "blue\include\BlueAsyncRes.h"
-#include "Tr2Effect.h"
-#include "TriDebugResourceHelper.h"
 
 // --------------------------------------------------------------------------------------
 // Blue forwards

@@ -6,6 +6,7 @@
 #include "StdAfx.h"
 #include "TriRenderBatch.h"
 #include "TriFrustum.h"
+#include "Tr2Effect.h"
 #include "EvePlaneSet.h"
 #include "EvePlaneSetItem.h"
 #include "Utilities/BoundingSphere.h"

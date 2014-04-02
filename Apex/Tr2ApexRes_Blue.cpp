@@ -1,10 +1,7 @@
 #include "StdAfx.h"
 #if APEX_ENABLED
 
-#include "Apex.h"
-
 #include "Tr2ApexRes.h"
-#include "blue/include/IBlueResMan.h"
 
 BLUE_DEFINE( Tr2ApexRes );
 

@@ -3,9 +3,6 @@
 #ifndef Tr2AtlasTexture_h
 #define Tr2AtlasTexture_h
 
-
-#include "blue/include/BlueAsyncRes.h"
-#include "blue/include/ICacheable.h"
 #include "Tr2DeviceResource.h"
 
 BLUE_DECLARE( Tr2AtlasTexture );

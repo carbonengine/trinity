@@ -3,12 +3,7 @@
 #ifndef Tr2ApexRes_h
 #define Tr2ApexRes_h
 
-#include "Apex.h"
-
 #if APEX_ENABLED
-
-#include "Blue/include/BlueAsyncRes.h"
-#include "blue/include/ICacheable.h"
 
 BLUE_DECLARE( Tr2ApexRes );
 namespace physx {
@@ -54,5 +49,5 @@ TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2ApexRes );
 
 #endif // APEX_ENABLED
 
-#endif // USE_APEX_DESTRUCTION
+#endif
 

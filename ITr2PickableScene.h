@@ -2,9 +2,6 @@
 #ifndef ITr2PickableScene_H
 #define ITr2PickableScene_H
 
-#include <vector>
-#include <set>
-
 #include "Vector3.h"
 
 // Forward declarations

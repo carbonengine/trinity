@@ -38,8 +38,6 @@ to make camera specific effect easy."
 #include "Curves/TriRotationCurve.h"
 #include "TriObserverLocal.h"
 
-#include <blue/include/IBluePython.h>
-
 BLUE_DECLARE( EveCamera );
 BLUE_DECLARE( TriProjection );
 BLUE_DECLARE( TriView );

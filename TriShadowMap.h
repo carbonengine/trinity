@@ -2,13 +2,14 @@
 #define TRISHADOWMAP_H
 
 #include "Tr2DeviceResource.h"
-#include "include/ITriEffectParameter.h"
 
 #include "TriFrustum.h"
-#include "TriLineSet.h"
 #include "Utilities/Obb.h"
 
 class TriFrustumOrtho;
+
+BLUE_DECLARE( TriLineSet );
+BLUE_DECLARE( Tr2Effect );
 
 // --------------------------------------------------------------------------------
 // Description:

@@ -3,6 +3,7 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2InteriorCell.h"
+#include "Tr2InteriorEnlightenSystem.h"
 
 BLUE_DEFINE( Tr2InteriorCell );
 

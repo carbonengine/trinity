@@ -1,12 +1,12 @@
 #ifndef _TRILINESET_H_
 #define _TRILINESET_H_
 
-#include "Tr2Effect.h"
+#include "IRenderCallback.h"
 #include "TriDebugResourceHelper.h"
 
 BLUE_CLASS( TriLineSet ) :
 	public IRoot,
-	public Tr2Effect::IRenderCallback
+	public IRenderCallback
 {
 public:
 	EXPOSE_TO_BLUE();

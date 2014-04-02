@@ -7,10 +7,7 @@
 #endif
 #include "Tr2TextureAtlas.h"
 
-#include "blue/BlueMemStream.h"
 #include "ImageIO/Tr2PngHandler.h"
-
-#include <sstream>
 
 BLUE_DEFINE( Tr2HostBitmap );
 
@@ -227,9 +224,8 @@ PyObject* Tr2HostBitmap::PyLoadFromPngInMemory( PyObject* args )
 
 		memStream->SetBuffer( data, datalen );
 		
-		if(	!handler.SetStream( memStream ) ||
-			!handler.ReadHeader()			||
-			!handler.ReadImage() )
+		if(	!handler.ReadHeader( memStream ) ||
+			!handler.ReadImage( memStream ) )
 		{
 			PyErr_SetString( PyExc_TypeError, "Error reading PNG stream" );
 			return nullptr;
@@ -409,12 +405,22 @@ static PyObject* PyCompareBitmaps( PyObject* self, PyObject* args )
 		img2->GetType()		!= TEX_TYPE_2D
 		)
 	{
-		std::ostringstream msg;
-		msg << "CompareBitmaps only works between identical layout 2D bitmaps. ";
-		msg << " image1: " << img1->GetWidth() << 'x' << img1->GetHeight() << 'x' << img1->GetMipCount() << ' ' << img1->GetFormat() << ' ' << img1->GetType();
-		msg << " image2: " << img2->GetWidth() << 'x' << img2->GetHeight() << 'x' << img2->GetMipCount() << ' ' << img2->GetFormat() << ' ' << img2->GetType();
+		char buffer[2048];
+		sprintf_s( buffer, 
+			"CompareBitmaps only works between identical layout 2D bitmaps. "
+			" image1: %ux%ux%u %i %i image2: %ux%ux%u %i %i",
+			unsigned( img1->GetWidth() ),
+			unsigned( img1->GetHeight() ),
+			unsigned( img1->GetMipCount() ),
+			int( img1->GetFormat() ),
+			int( img1->GetType() ),
+			unsigned( img2->GetWidth() ),
+			unsigned( img2->GetHeight() ),
+			unsigned( img2->GetMipCount() ),
+			int( img2->GetFormat() ),
+			int( img2->GetType() ) );
 		
-		PyErr_SetString( PyExc_TypeError, msg.str().c_str() );
+		PyErr_SetString( PyExc_TypeError, buffer );
 		return NULL;
 	}
 
@@ -441,7 +447,7 @@ static PyObject* PyCompareBitmaps( PyObject* self, PyObject* args )
 
 	if( diff )
 	{
-		if( FAILED( diff->Create( img1->GetWidth(), img1->GetHeight(), img1->GetMipCount(), img1->GetFormat() ) ) )
+		if( !diff->Create( img1->GetWidth(), img1->GetHeight(), img1->GetMipCount(), img1->GetFormat() ) )
 		{
 			PyErr_SetString( PyExc_TypeError, "CompareBitmaps: failed to create difference bitmap" );
 			return NULL;
@@ -511,7 +517,7 @@ const Be::ClassInfo* Tr2HostBitmap::ExposeToBlue()
 		MAP_METHOD_AND_WRAP
 		(
 			"Create",
-			CreatePython,
+			Create,
 			"Arguments:\n"
 			"width\n"
 			"height\n"
@@ -522,7 +528,7 @@ const Be::ClassInfo* Tr2HostBitmap::ExposeToBlue()
 		MAP_METHOD_AND_WRAP
 		(
 			"CreateCube",
-			CreateCubePython,
+			CreateCube,
 			"Arguments:\n"
 			"width\n"
 			"mipCount\n"
@@ -532,7 +538,7 @@ const Be::ClassInfo* Tr2HostBitmap::ExposeToBlue()
 		MAP_METHOD_AND_WRAP
 		(
 			"CreateVolume",
-			CreateVolumePython,
+			CreateVolume,
 			"Arguments:\n"
 			"width\n"
 			"height\n"
@@ -726,7 +732,7 @@ const Be::ClassInfo* Tr2HostBitmap::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP( 
 			"ChangeFormat", 
-			ChangeFormat, 
+			ChangeFormatFromScript, 
 			"Changes pixel format of a valid bitmap. Both the old and the new format must be\n"
 			"uncompressed and BPP of the new format must be the same as for the old one.\n"
 			"The function simply changes the format and doesn't do any image conversion.\n"

@@ -10,17 +10,12 @@
 
 #if TBB_ENABLED
 
-#include "tbb/parallel_sort.h"
-#include "tbb/parallel_do.h"
-
 #define Tr2ParallelFor tbb::parallel_for
 #define Tr2ParallelDo tbb::parallel_do
 #define Tr2BlockedRange tbb::blocked_range
 #define Tr2ParallelSort tbb::parallel_sort
 
 #else
-
-#include <algorithm>
 
 #define Tr2ParallelDo std::for_each
 #define Tr2ParallelSort std::sort

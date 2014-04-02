@@ -6,7 +6,7 @@
 
 #include "StdAfx.h"
 #include "Tr2VariableStore.h"
-#include "Tr2VariableStore.h"
+#include "Resources/TriTextureRes.h"
 #include "Tr2RenderTarget.h"
 #include "Tr2DepthStencil.h"
 

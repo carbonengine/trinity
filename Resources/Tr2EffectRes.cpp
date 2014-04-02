@@ -1,10 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2EffectRes.h"
 #include "Tr2Renderer.h"
-#include "Tr2VariableStore.h"
-#include "Tr2EffectStateManager.h"
-#include "blue/include/IBlueResMan.h"
-#include "blue/include/IBluePaths.h"
 
 static unsigned int s_effectResId = 0;
 

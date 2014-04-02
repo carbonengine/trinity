@@ -5,9 +5,6 @@
 
 #if APEX_ENABLED
 
-#include "Blue/include/BlueAsyncRes.h"
-#include "blue/include/ICacheable.h"
-
 BLUE_DECLARE( Tr2ClothingRes );
 namespace physx {
 namespace apex {

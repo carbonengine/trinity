@@ -25,13 +25,8 @@
 
 #include "Tr2DeviceResource.h"
 
-#include "blue/include/IBluePython.h"
-#include "blue/include/BlueAsyncRes.h"
-#include "blue/include/ICacheable.h"
 #include "include/ITr2InstanceData.h"
 #include "include/ITr2GpuBuffer.h"
-
-#include "granny.h"
 
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( Tr2ShaderMaterial);

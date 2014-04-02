@@ -6,15 +6,9 @@
 #include "Tr2ClothingRes.h"
 #include "Tr2ApexScene.h"
 #include "TriSettingsRegistrar.h"
-#include "blue/include/IBlueResMan.h"
 #include "Resources/TriGrannyRes.h"
-#include "Utilities/BoundingBox.h"
 
 #include "Apex.h"
-
-#include "NxClothingActor.h"
-#include "NxClothingAsset.h"
-#include "NxParamUtils.h"
 
 static bool s_apexHardwareClothEnabled = true;
 TRI_REGISTER_SETTING( "apexHardwareClothEnabled", s_apexHardwareClothEnabled );

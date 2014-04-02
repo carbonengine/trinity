@@ -17,7 +17,6 @@
 #include "TriFrustumOrtho.h"
 #include "TriProjection.h"
 #include "TriView.h"
-#include "blue/include/IBlueResMan.h"
 #include "EveCamera.h"
 #include "Particle/Tr2ParticleSystem.h"
 #include "Tr2RenderTarget.h"
@@ -27,6 +26,7 @@
 #include "Tr2GPUParticlePool.h"
 #include "Utilities/ViewDistanceInfo.h"
 #include "TbbStub.h"
+#include "Include/TriMath.h"
 
 using namespace Tr2RenderContextEnum;
 

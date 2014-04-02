@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "TriScalarKey.h"
+#include "Include/TriMath.h"
 
 
 TriScalarKey::TriScalarKey(IRoot* lockobj) :

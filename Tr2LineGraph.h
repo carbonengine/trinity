@@ -4,7 +4,6 @@
 
 
 #include "Tr2DeviceResource.h"
-#include "blue/include/ICcpStatisticsAccumulator.h"
 
 BLUE_DECLARE( Tr2LineGraph );
 BLUE_DECLARE_VECTOR( Tr2LineGraph );

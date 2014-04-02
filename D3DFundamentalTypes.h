@@ -3,7 +3,6 @@
 #define _D3DFUNDAMENTALTYPES_H_
 
 // We need to know how to deal with fundamental D3D types to persist them
-#include <d3dx9.h>
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"

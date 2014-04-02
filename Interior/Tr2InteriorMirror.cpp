@@ -3,14 +3,8 @@
 #if INTERIORS_ENABLED
 
 #include "Tr2InteriorMirror.h"
-
-// Trinity headers
 #include "Tr2Renderer.h"
-#include "Tr2InteriorPlaceable.h"
-
-// Umbra headers
 #include "umbraTypes.h"
-#include "umbra.hpp"
 
 Tr2InteriorMirror::Tr2InteriorMirror() :
 	m_umbraModel( NULL ),

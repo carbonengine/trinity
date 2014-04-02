@@ -4,26 +4,15 @@
 
 #include "Tr2InteriorScene.h"
 
-#include "blue\include\IBlueResMan.h"
-
 #include "TriFrustum.h"
-#include "Apex/Apex.h"
-#include "Utilities/BoundingBox.h"
-#include "Resources/TriGeometryRes.h"
 #include "TriProjection.h"
 #include "TriSettingsRegistrar.h"
-#include "Tr2VariableStore.h"
 #include "TriView.h"
 #include "TriViewport.h"
+#include "Apex/Apex.h"
 #include "Apex/Tr2ApexScene.h"
-#include "Apex/Tr2ApexRenderer.h"
-#include "Apex/Tr2ClothingActor.h"
-#include "Apex/Tr2DestructibleActor.h"
-#include "Tr2Effect.h"
 #include "Tr2VisibilityResults.h"
-#include "Tr2InteriorConstantBufferFormats.h"
 #include "Tr2InteriorMirror.h"
-#include "Tr2InteriorRenderBatch.h"
 #include "Tr2ShaderMaterial.h"
 #include "Tr2LitPerObjectData.h"
 #include "Tr2AtlasTexture.h"
@@ -31,14 +20,20 @@
 #include "Tr2PushPopDS.h"
 #include "Tr2PushPopRT.h"
 
-#include "EnlightenUtils2/EnlightenUtils.h"
 #include "include/ITr2DebugRenderer.h"
 #include "ITr2UmbraUserData.h"
 
-using namespace Tr2RenderContextEnum;
+#include "TriLineSet.h"
+#include "Tr2InteriorPlaceable.h"
+#include "Tr2InteriorStatic.h"
+#include "ITr2PhysicsUpdater.h"
+#include "Curves/TriCurveSet.h"
+#include "Tr2InteriorCell.h"
+#include "Tr2InteriorPhysicalPortal.h"
+#include "Tr2TextureAtlas.h"
+#include "Tr2Effect.h"
 
-// Required to output to a debug directory
-#include <direct.h>
+using namespace Tr2RenderContextEnum;
 
 extern ITr2DebugRendererPtr g_debugRenderer;
 
@@ -1469,7 +1464,7 @@ static void RenderBoxInsideBox( const Vector3& minBounds1, const Vector3& maxBou
 
 		if( inCount > 2 )
 		{
-			struct EffectCallback: public Tr2Effect::IRenderCallback
+			struct EffectCallback: public IRenderCallback
 			{
 				TriDebugResourceHelper::VertexPosColor *polygon;
 				unsigned int count;

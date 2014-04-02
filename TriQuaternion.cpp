@@ -2,6 +2,7 @@
 #include "include/TriQuaternion.h"
 #include "include/TriVector.h"
 #include "include/TriMatrix.h"
+#include "include/TriMath.h"
 
 
 /////////////////////////////////////////////////////////////////////////////////////////

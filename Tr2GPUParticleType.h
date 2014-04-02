@@ -4,7 +4,8 @@
 #define Tr2GPUParticleType_h
 
 #include "Tr2GPUParticlePool.h"
-#include "Tr2GPUParticlePoolManager.h"
+
+BLUE_DECLARE( Tr2GPUParticlePoolManager );
 
 //Essentially a blue exposure of the ParticleBehaviour POD struct,
 //for editing and saving in .red files.

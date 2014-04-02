@@ -16,7 +16,7 @@ class TriDebugTextRenderer;
 class TriStepRenderDebug: 
 	public TriRenderStep,
 	public ITr2DebugRenderer,
-	public Tr2Effect::IRenderCallback
+	public IRenderCallback
 {
 public:
 	EXPOSE_TO_BLUE();

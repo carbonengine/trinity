@@ -8,15 +8,8 @@
 #include "StdAfx.h"
 
 #include "Tr2HighLevelShader.h"
-
-#include "blue/include/IBluePersist.h"
-#include "blue/include/BlueFileUtil.h"
-#include "blue/include/TransGaming.h"
-#include "Tr2LowLevelShader.h"
 #include "Tr2ShaderMaterial.h"
-#include "Tr2ShaderParameterDescription.h"
 #include "Tr2ShaderPermuteTag.h"
-#include "Tr2Renderer.h"
 #include "TriSettingsRegistrar.h"
 
 //TriSetting to force release-like behaviour
@@ -391,7 +384,7 @@ void Tr2HighLevelShader::GetEffect( int permuteIndex, Tr2EffectDefine* currentDe
 		void* data = CCP_MALLOC( "Tr2HighLevelShader::shaderData", compiledPermutation->second.size );
 		if( data )
 		{
-			m_compiledFile->Seek( compiledPermutation->second.offset, BS_BEGIN );
+			m_compiledFile->Seek( compiledPermutation->second.offset, ICcpStream::SO_BEGIN );
 			m_compiledFile->Read( data, compiledPermutation->second.size );
 
 			if( effect.Read( data, compiledPermutation->second.size, m_shaderFileVersion, m_stringTable, m_stringTableSize, m_name.c_str() ) )

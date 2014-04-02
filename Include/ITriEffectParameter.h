@@ -23,11 +23,7 @@
 #ifndef ITr2EffectParameter_h
 #define ITr2EffectParameter_h
 
-#include "blue/include/Blue.h"
-#include "Tr2EffectStateManager.h"
 #include "ITr2EffectValue.h"
-#include "ITriReroutable.h"
-#include "ITr2ShaderState.h"
 
 // Forward declarations
 class TriTextureRes;
