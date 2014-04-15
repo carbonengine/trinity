@@ -3082,7 +3082,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 					"vec4 c1=texture2DLod(s,vec2(uvw.x,y+s1),l);\n"
 					"if(lw) return mix(c0,c1,z);\n"
 					"return z<0.5?c0:c1;\n"
-					"}\n";
+					"}\n#endif\n";
 			}
 			prefixOs <<
 				"#endif\n";
