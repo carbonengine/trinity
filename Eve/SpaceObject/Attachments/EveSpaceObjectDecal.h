@@ -108,9 +108,13 @@ public:
 	// access
 	void GetRenderables( TriGeometryResPtr geomRes, const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix* worldMatrix );
 
-	// access position
+	// access position etc.
 	const Vector3& GetPosition() const;
 	void SetPosition( const Vector3& pos );
+	const Quaternion& GetRotation() const;
+	void SetRotation( const Quaternion& rot );
+	const Vector3& GetScaling() const;
+	void SetScaling( const Vector3& sc );
 
 	// edit helper
 	void RenderDebugInfo( const Matrix* worldMatrix ) const;
@@ -118,6 +122,7 @@ public:
 	// set things from the parent, the spaceobject
 	void SetCache( EveSpaceObjectDecalCache* cache );
 	void SetBoneMatrix( const granny_matrix_3x4* bonesMatrices, int bonesMatricesCount );
+	void SetEffect( Tr2EffectPtr newEffect );
 
 private:
 	// create

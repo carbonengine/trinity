@@ -34,6 +34,8 @@ public:
 
 	void SetMaterial( ITr2ShaderMaterial* mat );
 
+	void SetName( const std::string& name );
+
 	ITr2ShaderMaterial* GetMaterialInterface() const;
 
 	unsigned int GetJointCount() const;

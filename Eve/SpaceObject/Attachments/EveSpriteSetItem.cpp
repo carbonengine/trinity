@@ -9,7 +9,7 @@ EveSpriteSetItem::EveSpriteSetItem( IRoot* lockobj ) :
 	m_blinkPhase( 0.0f ),
 	m_minScale( 1.0f ),
 	m_maxScale( 10.0f ),
-	m_falloff( 1.0f ),
+	m_falloff( 0.f ),
 	m_boneIndex( 0 )
 {
 }

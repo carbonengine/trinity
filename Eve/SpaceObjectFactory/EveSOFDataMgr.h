@@ -9,6 +9,7 @@
 
 // forwards
 BLUE_DECLARE( EveSOFData );
+BLUE_DECLARE( EveSOFDataHullArea );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -26,6 +27,12 @@ public:
 	struct TextureData
 	{
 		std::string resFilePath;
+	};
+
+	struct LocatorData
+	{
+		std::string name;
+		Matrix transform;
 	};
 
 	// hull data structs
@@ -93,9 +100,21 @@ public:
 	struct HullAreas
 	{
 		unsigned int index;
+		unsigned int count;
 		std::string designation;
 		std::string shaderPath;
 		std::map<std::string, TextureData> textures;
+		std::map<std::string, Vector4> parameters;
+	};
+
+	struct HullDecalData
+	{
+		Vector3 position;
+		Quaternion rotation;
+		Vector3 scaling;
+		std::string shaderPath;
+		std::map<std::string, TextureData> textures;
+		std::map<std::string, Vector4> parameters;
 	};
 
 	struct HullData
@@ -106,7 +125,14 @@ public:
 		std::vector<HullSpotlightSetData> spotlightSets;
 		std::vector<HullPlaneSetData> planeSets;
 		std::vector<HullAreas> opaqueAreas;
+		std::vector<HullAreas> transparentAreas;
+		std::vector<HullAreas> additiveAreas;
+		std::vector<HullAreas> distortionAreas;
+		std::vector<HullAreas> depthAreas;
+		std::vector<HullDecalData> hullDecals;
 		HullBoosterData boosters;
+		std::vector<LocatorData> locatorTurrets;
+		std::vector<LocatorData> locatorAudio;
 	};
 
 	// faction data structs
@@ -122,10 +148,12 @@ public:
 
 	struct FactionData
 	{
-		// texture overload/insert
-		std::map<std::string, TextureData> textureInserts;
+		// texture insert
+		std::string resPathInsert;
+
 		// hull area paramaters
-		std::map<std::string, FactionAreaData> areaParameters;
+		std::map<std::string, FactionAreaData> opaqueAreaParameters;
+		std::map<std::string, FactionAreaData> transparentAreaParameters;
 		// spritesets
 		std::map<int, FactionSpriteSetColorData> spriteSetsColor;
 	};
@@ -167,6 +195,7 @@ private:
 	bool LoadHullData( EveSOFDataPtr srcData );
 	bool LoadFactionData( EveSOFDataPtr srcData );
 	bool LoadRaceData( EveSOFDataPtr srcData );
+	HullAreas LoadHullAreaData( const EveSOFDataHullAreaPtr hullArea );
 
 	// keep all hull data in a map
 	std::map<std::string, HullData> m_hullData;

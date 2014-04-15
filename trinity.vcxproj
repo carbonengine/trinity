@@ -2196,6 +2196,7 @@
     <ClInclude Include="Eve\SpaceObject\EveSpaceObject2.h"/>
     <ClInclude Include="Eve\SpaceObject\EveStation2.h"/>
     <ClInclude Include="Eve\SpaceObject\Attachments\EveBoosterSet2.h"/>
+    <ClInclude Include="Eve\SpaceObject\Attachments\EveDynamicPlaneSet.h"/>
     <ClInclude Include="Eve\SpaceObject\Attachments\EvePlaneSet.h"/>
     <ClInclude Include="Eve\SpaceObject\Attachments\EvePlaneSetItem.h"/>
     <ClInclude Include="Eve\SpaceObject\Attachments\EveSpaceObjectDecal.h"/>
@@ -2812,6 +2813,8 @@
     <ClCompile Include="Eve\SpaceObject\EveStation2_Blue.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Attachments\EveBoosterSet2.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Attachments\EveBoosterSet2_Blue.cpp"/>
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveDynamicPlaneSet.cpp"/>
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveDynamicPlaneSet_Blue.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Attachments\EvePlaneSet.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Attachments\EvePlaneSetItem.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Attachments\EvePlaneSetItem_Blue.cpp"/>

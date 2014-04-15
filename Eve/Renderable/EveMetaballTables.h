@@ -8,27 +8,45 @@
 #define EveMetaballTables_H
 
 static Vector3 s_vertexOffsetTable[8] = {
-	Vector3( 0.f, 0.f, 1.f ),
-	Vector3( 1.f, 0.f, 1.f ),
-	Vector3( 1.f, 0.f, 0.f ),
-	Vector3( 0.f, 0.f, 0.f ),
-	Vector3( 0.f, 1.f, 1.f ),
-	Vector3( 1.f, 1.f, 1.f ),
-	Vector3( 1.f, 1.f, 0.f ),
-	Vector3( 0.f, 1.f, 0.f ) };
+	Vector3( 0.f, 0.f, 1.f ),   // 0
+	Vector3( 1.f, 0.f, 1.f ),   // 1
+	Vector3( 1.f, 0.f, 0.f ),   // 2
+	Vector3( 0.f, 0.f, 0.f ),   // 3
+	Vector3( 0.f, 1.f, 1.f ),   // 4
+	Vector3( 1.f, 1.f, 1.f ),   // 5
+	Vector3( 1.f, 1.f, 0.f ),   // 6
+	Vector3( 0.f, 1.f, 0.f ) }; // 7
+
+//                             0   1   2   3   4   5   6   7
+static int s_xNegVerts[8] = {  1, -1, -1,  2,  5, -1, -1,  6 };
+static int s_xPosVerts[8] = { -1,  0,  3, -1, -1,  4,  7, -1 };
+
+static int s_yNegVerts[8] = {  4,  5,  6,  7, -1, -1, -1, -1 };
+static int s_yPosVerts[8] = { -1, -1, -1, -1,  0,  1,  2,  3 };
+
+static int s_zNegVerts[8] = { -1, -1,  1,  0, -1, -1,  5,  4 };
+static int s_zPosVerts[8] = {  3,  2, -1, -1,  7,  6, -1, -1 };
+
+static int s_x0Mask = 153;
+static int s_x1Mask = 102;
+static int s_y0Mask = 240;
+static int s_y1Mask = 15;
+static int s_z0Mask = 51;
+static int s_z1Mask = 204;
+
 
 static int s_edgeToVertsTable[12][2] = {
-	{0, 1}, //0
-	{1, 2}, //1
-	{2, 3}, //2
-	{3, 0}, //3
-	{4, 5}, //4
-	{5, 6}, //5
-	{6, 7}, //6
-	{7, 4}, //7
-	{0, 4}, //8
-	{1, 5}, //9
-	{2, 6}, //10
+	{0, 1},  //0
+	{1, 2},  //1
+	{2, 3},  //2
+	{3, 0},  //3
+	{4, 5},  //4
+	{5, 6},  //5
+	{6, 7},  //6
+	{7, 4},  //7
+	{0, 4},  //8
+	{1, 5},  //9
+	{2, 6},  //10
 	{3, 7}}; //11
 
 static int s_triTable[256][16] = {

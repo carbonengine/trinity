@@ -115,6 +115,11 @@ void Tr2MeshArea::SetMaterial( ITr2ShaderMaterial* mat )
 	m_material = mat;
 }
 
+void Tr2MeshArea::SetName( const std::string& name )
+{
+	m_name = name;
+}
+
 unsigned int Tr2MeshArea::GetJointCount() const
 {
 	return m_jointCount;

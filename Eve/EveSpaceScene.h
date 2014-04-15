@@ -193,7 +193,6 @@ protected:
 	struct PerFramePSData
 	{
 		Matrix ViewInverseTransposeMat;
-		Matrix ProjectionMat;
 		Matrix ViewMat;
 		Matrix EnvMapRotationMat;
 
@@ -211,10 +210,9 @@ protected:
 		float Time;
 		float ShadowLightness;
 		Vector2 ViewportSize;
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
 		float DepthMapSampleCount;
-		Vector3 unused_;
-#endif
+		Vector2 FogFactors;
+		float GammaBrightness;
 	};
 
 	// Per-frame vertex constants for rendering scene
@@ -397,6 +395,8 @@ protected:
 	float m_fogStart; // Depth at which fogging starts
 	float m_fogEnd; // Depth at which fog does not get stronger
 	float m_fogMax; // Maximum strength of fog, range [0,1], at m_fogEnd distance.
+	float m_fogType; // blend between static fog color and dynamic nebula background
+	float m_fogBlur; // blur level of dynamic nebula background
 
 	PerFramePSData m_perFramePS;
 	PerFrameVSData m_perFrameVS;

@@ -1950,6 +1950,14 @@ void EveSpaceObject2::AddPlaneSet( EvePlaneSetPtr newPlaneSet )
 	m_planeSets.Append( newPlaneSet->GetRawRoot() );
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Add a new decal to this object from the outside
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::AddDecal( EveSpaceObjectDecalPtr newDecal )
+{
+	m_decals.Append( newDecal->GetRawRoot() );
+}
 
 //GPU ship explosion test
 unsigned EveSpaceObject2::GetDamageLocatorCount() const 

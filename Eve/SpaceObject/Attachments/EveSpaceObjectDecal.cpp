@@ -47,7 +47,7 @@ void EveSpaceObjectDecalCache::Clear()
 
 
 // ------------------------------------------------------------------------------------------------------
-EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj /*= NULL*/ ) :
+EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_display( true ),
 	m_displayBoundingBox( false ),
 	m_position( 0.f, 0.f, 0.f ),
@@ -58,10 +58,6 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj /*= NULL*/ ) :
 	m_decalPrimitiveCount( 0 ),
 	m_cache( NULL )
 {
-	// create pin draw effect
-	m_decalEffect.CreateInstance();
-	m_decalEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/Decals/V3/DecalV3.fx" );
-
 	// init
 	PrepareResources();
 	D3DXMatrixIdentity( &m_decalMatrix );
@@ -74,7 +70,6 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj /*= NULL*/ ) :
 EveSpaceObjectDecal::~EveSpaceObjectDecal()
 {
 	ReleaseResources( TRISTORAGE_ALL );
-	m_decalEffect = NULL;
 }
 
 // ------------------------------------------------------------------------------------------------------
@@ -357,6 +352,15 @@ void EveSpaceObjectDecal::SetBoneMatrix( const granny_matrix_3x4* bonesMatrices,
 
 // --------------------------------------------------------------------------------------
 // Description:
+//  Sets the main shader of this decal
+// --------------------------------------------------------------------------------------
+void EveSpaceObjectDecal::SetEffect( Tr2EffectPtr newEffect )
+{
+	m_decalEffect = newEffect;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
 //   Returns the center position of this decal
 // --------------------------------------------------------------------------------------
 const Vector3& EveSpaceObjectDecal::GetPosition() const
@@ -371,6 +375,42 @@ const Vector3& EveSpaceObjectDecal::GetPosition() const
 void EveSpaceObjectDecal::SetPosition( const Vector3& pos )
 {
 	m_position = pos;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Returns the rotation of this decal
+// --------------------------------------------------------------------------------------
+const Quaternion& EveSpaceObjectDecal::GetRotation() const
+{
+	return m_rotation;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//  Sets the rotation of this decal
+// --------------------------------------------------------------------------------------
+void EveSpaceObjectDecal::SetRotation( const Quaternion& rot )
+{
+	m_rotation = rot;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Returns the scaling of this decal
+// --------------------------------------------------------------------------------------
+const Vector3& EveSpaceObjectDecal::GetScaling() const
+{
+	return m_scaling;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//  Sets the scaling of this decal
+// --------------------------------------------------------------------------------------
+void EveSpaceObjectDecal::SetScaling( const Vector3& sc )
+{
+	m_scaling = sc;
 }
 
 // ------------------------------------------------------------------------------------------------------

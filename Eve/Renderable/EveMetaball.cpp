@@ -32,8 +32,9 @@ EveMetaball::EveMetaball( IRoot* lockobj ) :
 	m_maxBounds( 0.f, 0.f, 0.f ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_triangleCount( 0 ),
-	m_isolevel( 1.0 ),
-	m_gooValue( 1.0 )
+	m_isoValue( 1.0 ),
+	m_gooValue( 1.0 ),
+	m_cellCounter( 0 )
 {
 	// 0
 	D3DXMatrixIdentity( &m_worldTransform );
@@ -126,6 +127,143 @@ bool EveMetaball::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query 
 void EveMetaball::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
 {
 }
+
+
+// --------------------------------------------------------------------------------
+// Description:
+// --------------------------------------------------------------------------------
+EveMetaball::Cell* EveMetaball::CheckCell( int x, int y, int z, int* sharedVerts, Cell* fromCell )
+{
+	Cell* cell = new Cell();
+	cell->mask = 0;
+	cell->x = x;
+	cell->y = y;
+	cell->z = z;
+
+	// Update the counter for unique cell calculations
+	m_cellCounter++;
+
+	for( int p = 0; p < 8; ++p )
+	{
+		if( sharedVerts[p] >= 0 && fromCell)
+		{
+			cell->value[p] = fromCell->value[sharedVerts[p]];
+			cell->position[p] = fromCell->position[sharedVerts[p]];
+		}
+		else
+		{
+			Vector3 coordinate = Vector3( (float)x, (float)y, (float)z );
+			D3DXVec3Add( &coordinate, &coordinate, &s_vertexOffsetTable[p] );
+			Vector3 position;
+			D3DXVec3Scale( &position, &coordinate, m_boxSize );
+			D3DXVec3Add( &position, &position, &m_minBounds );
+			cell->position[p] = position;
+
+			float value = GetGridValue( position );
+			cell->value[p] = value;
+		}
+		
+		if( cell->value[p] > m_isoValue )
+		{
+			cell->mask |= 1 << p;
+		}
+	}
+
+	if( cell->mask != 0 && cell->mask != 255 )
+	{
+		return cell;
+	}
+
+	delete cell;
+	return nullptr;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+// --------------------------------------------------------------------------------
+void EveMetaball::RecursiveCheckCell( int x, int y, int z, int* sharedVerts, Cell* cell )
+{
+	if( x < 0 || x >= m_gridSizeX )
+	{
+		return;
+	}
+	if( y < 0 || y >= m_gridSizeY )
+	{
+		return;
+	}
+	if( z < 0 || z >= m_gridSizeZ )
+	{
+		return;
+	}
+
+	// Check whether current cell exists in cache
+	unsigned int key = z + ( y * ( m_gridSizeZ ) ) + ( x * ( m_gridSizeZ ) * ( m_gridSizeY ) );
+	auto it =  m_cellCache.find(key);
+	if( it != m_cellCache.end() )
+	{
+		return;
+	}
+
+	Cell* newCell = CheckCell( x, y, z, sharedVerts, cell );
+
+	// cache it
+	m_cellCache[key] = newCell;
+
+	if( newCell )
+	{
+		if( newCell->mask & s_x1Mask )
+		{
+			RecursiveCheckCell( x - 1, y, z, s_xPosVerts, newCell );
+		}
+		if( newCell->mask & s_x0Mask )
+		{
+			RecursiveCheckCell( x + 1, y, z, s_xNegVerts, newCell );
+		}
+		if( newCell->mask & s_y1Mask )
+		{
+			RecursiveCheckCell( x, y - 1, z, s_yPosVerts, newCell );
+		}
+		if( newCell->mask & s_y0Mask )
+		{
+			RecursiveCheckCell( x, y + 1, z, s_yNegVerts, newCell );
+		}
+		if( newCell->mask & s_z1Mask )
+		{
+			RecursiveCheckCell( x, y, z - 1, s_zPosVerts, newCell );
+		}
+		if( newCell->mask & s_z0Mask )
+		{
+			RecursiveCheckCell( x, y, z + 1, s_zNegVerts, newCell );
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+// --------------------------------------------------------------------------------
+void EveMetaball::March()
+{
+	m_cellCounter = 0;
+
+	if( m_sourceItems.size() == 0 )
+	{
+		return;
+	}
+	EveMetaballItem* firstBall = (EveMetaballItem*)m_sourceItems.GetAt( 0 );
+
+	Vector3 startPosition = firstBall->GetPosition() - m_minBounds;
+	D3DXVec3Scale( &startPosition, &startPosition, 1.0f / m_boxSize );
+	int x = (int)( startPosition.x + 0.5f );
+	int y = (int)( startPosition.y + 0.5f );
+	int z = (int)( startPosition.z + 0.5f );
+
+	while( z >= 0 )
+	{
+		RecursiveCheckCell( x, y, z, s_zPosVerts, nullptr );
+		z--;
+	}
+}
+
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -331,108 +469,38 @@ void EveMetaball::UpdateBuffers()
 
 	Vector3 totalSize = m_maxBounds - m_minBounds;
 
-	std::vector<Triangle> allTriangles;
-	allTriangles.reserve( ( m_triangleCount != 0 ) ? m_triangleCount : 10000 );
+	m_triangles.clear();
+	m_triangles.reserve( ( m_triangleCount != 0 ) ? m_triangleCount : 10000 );
 
 	Vector3 steps;
 	D3DXVec3Subtract( &steps, &m_maxBounds, &m_minBounds );
 	D3DXVec3Scale( &steps, &steps, 1.0f / m_boxSize );
 	
-	int stepsX = int(steps.x);
-	int stepsY = int(steps.y);
-	int stepsZ = int(steps.z);
+	m_gridSizeX = (int)(steps.x) + 1;
+	m_gridSizeY = (int)(steps.y) + 1;
+	m_gridSizeZ = (int)(steps.z) + 1;
 
-	// Cache 2 layers in the grid.
-	const int cacheSize = ( stepsY + 1) * ( stepsZ + 1) * 2;
-	CellCorner* cachedCornerValues = new CellCorner[ cacheSize ];
+	m_cellCache.clear();
 
-	int nextIsoCacheLayer = 0;
-	bool firstRun = true;
-
-	int startX = (int)floor( m_minBounds.x / m_boxSize );
-
-	for( int x = 0; x < stepsX; ++x )
 	{
-		// { previous bottom (now top), new bottom layer }
-		int isoCacheLayers[2] = { (nextIsoCacheLayer + 1 ) % 2, nextIsoCacheLayer };
-		nextIsoCacheLayer = isoCacheLayers[0];
-		{
-			CCP_STATS_ZONE( "Collect ISO values" );
-
-			int stepsYPP = stepsY + 1;
-			int stepsZPP = stepsZ + 1;
-			int stepsYZPP = stepsYPP * stepsZPP;
-
-			// Fill the cache. Both layers are filled in the first run.
-			for( int r = 0; r < 1 + firstRun; ++r )
-			{
-				int cacheBase = isoCacheLayers[1 - r] * stepsYZPP;
-				int xpp = x + 1 - r;
-
-				for( int y = 0; y < stepsYPP; ++y )
-				{
-					int cacheBaseY = cacheBase + y * stepsZPP;
-
-					for( int z = 0; z < stepsZPP; ++z )
-					{
-						Vector3 coordinate = Vector3( (float)xpp, (float)y, (float)z );
-						CellCorner values;
-						GetCornerValues( coordinate, &values);
-						cachedCornerValues[ cacheBaseY + z ] = values;
-					}
-				}
-			}	
-		} // CCP_STATS_ZONE
-
-		// Go over iso values and triangulate
-		{
-			CCP_STATS_ZONE( "Triangulate" );
-			for( int y = 0; y < stepsY; ++y )
-			{
-				for( int z = 0; z < stepsZ; ++z )
-				{
-					Cell cell;
-					unsigned int mask = 0;
-
-					// for each gridpoint
-					for( int i = 0; i < 8; ++i )
-					{
-						Vector3 cellCornerPos = Vector3((float)x, (float)y, (float)z) + s_vertexOffsetTable[ i ];
-						D3DXVec3Scale( &cell.position, &cellCornerPos, m_boxSize );
-						cell.position += m_minBounds;
-						// Sample iso value
-						int cacheBase = isoCacheLayers[ (int)s_vertexOffsetTable[ i ].x ] * (stepsY + 1) * (stepsZ + 1);
-						int cacheBaseY = cacheBase + (int)cellCornerPos.y * ( stepsZ + 1 );
-						float value = cachedCornerValues[ cacheBaseY + (int)cellCornerPos.z ].value;
-						Vector3 normal = cachedCornerValues[ cacheBaseY + (int)cellCornerPos.z ].normal;
-
-						cell.value[i] = value;
-						cell.normal[i] = normal;
-						if( value > m_isolevel )
-						{
-							mask |= 1 << i;
-						}
-					}
-					cell.mask = mask;
-				
-					int nTriangles = 0;
-					Triangle triangles[5];
-					Triangulate( cell, triangles, nTriangles );
-
-					for( int i = 0; i < nTriangles; ++i)
-					{
-						allTriangles.push_back( triangles[i] );
-					}
-				}
-			}
-		}// CCP_STATS_ZONE
-
-		// First run is over
-		firstRun = false;
+		CCP_STATS_ZONE( "March" );
+		March(); // caches cells.
 	}
+	{
+		CCP_STATS_ZONE( "Triangulate" );
+		for( auto it = m_cellCache.begin(); it != m_cellCache.end(); ++it )
+		{
+			Cell* cell = (*it).second;
+			if( cell )
+			{
+				Triangulate( cell );
+			}
+			delete cell;
+		}
+	} // CCP_STATS_ZONE
 
 	// now we know the triangle count
-	m_triangleCount = (unsigned int)allTriangles.size();
+	m_triangleCount = (unsigned int)m_triangles.size();
 	
 	if ( m_triangleCount == 0 )
 	{
@@ -452,14 +520,14 @@ void EveMetaball::UpdateBuffers()
 	CR_RETURN( m_vertexBuffer.Create( 3 * m_triangleCount * sizeof( Vertex ), USAGE_CPU_WRITE, nullptr, renderContext ) );
 	Vertex* vertexBuffer;
 	CR_RETURN( m_vertexBuffer.Lock( vertexBuffer, LOCK_WRITEONLY, renderContext ) );
-	for( unsigned int i = 0; i < allTriangles.size(); ++i )
+	for( unsigned int i = 0; i < m_triangles.size(); ++i )
 	{
-		vertexBuffer[ 3 * i + 0 ].position = allTriangles[ i ].position[0];
-		vertexBuffer[ 3 * i + 0 ].normal = allTriangles[ i ].normal[0];
-		vertexBuffer[ 3 * i + 1 ].position = allTriangles[ i ].position[2];
-		vertexBuffer[ 3 * i + 1 ].normal = allTriangles[ i ].normal[1];
-		vertexBuffer[ 3 * i + 2 ].position = allTriangles[ i ].position[1];
-		vertexBuffer[ 3 * i + 2 ].normal = allTriangles[ i ].normal[2];
+		vertexBuffer[ 3 * i + 0 ].position = m_triangles[ i ].position[0];
+		vertexBuffer[ 3 * i + 0 ].normal = m_triangles[ i ].normal[0];
+		vertexBuffer[ 3 * i + 1 ].position = m_triangles[ i ].position[2];
+		vertexBuffer[ 3 * i + 1 ].normal = m_triangles[ i ].normal[2];
+		vertexBuffer[ 3 * i + 2 ].position = m_triangles[ i ].position[1];
+		vertexBuffer[ 3 * i + 2 ].normal = m_triangles[ i ].normal[1];
 	}
 	m_vertexBuffer.Unlock( renderContext );
 
@@ -468,57 +536,47 @@ void EveMetaball::UpdateBuffers()
 // --------------------------------------------------------------------------------
 // Description:
 // --------------------------------------------------------------------------------
-void EveMetaball::GetCornerValues( Vector3 coordinate, CellCorner* values )
+float EveMetaball::GetGridValue( Vector3 position )
 {
-	values->value = 0.0f;
-	values->normal = Vector3( 0.0f, 0.0f, 0.0f );
+	float value = 0.0f;
 
-	for( int p = 0; p < 8; ++p )
-{
 	//Traverse all metball items
 	for( auto it = m_sourceItems.begin(); it != m_sourceItems.end(); ++it )
 	{
 		EveMetaballItemPtr item = (*it);
-			values->position = ( coordinate + s_vertexOffsetTable[p] ) * m_boxSize + m_minBounds;
-			Vector3 v = values->position - item->GetPosition();
-			float radius = item->GetRadius();
-			float lengthSq = D3DXVec3LengthSq( &v );
-			float length = D3DXVec3Length( &v );
+		Vector3 v = position - item->GetPosition();
+		float length = D3DXVec3Length( &v );
 
-			// normal
-			Vector3 normalInfluence;
-			D3DXVec3Scale( &normalInfluence, &v, radius * m_gooValue / lengthSq);
-			values->normal += normalInfluence;
-			// iso value
-			values->value += pow( item->GetRadius() / length, m_gooValue );
-		}
+		// iso value
+		value += pow( item->GetRadius() / length, m_gooValue );
+		
 	}
+	return value;
 }
 
 // --------------------------------------------------------------------------------
 // Description:
 // --------------------------------------------------------------------------------
-void EveMetaball::Triangulate(Cell cell, Triangle *triangles, int &nTriangles)
+void EveMetaball::Triangulate( const Cell* cell )
 {
-	const int* edgesList = s_triTable[cell.mask];
-
-	int triIdx = 0;
-	while( edgesList[ 3 * triIdx ] != -1 )
+	const int* edgesList = s_triTable[cell->mask];
+	int index = 0;
+	while( edgesList[ 3 * index ] != -1 )
 	{
-		int edgeIdx0 = edgesList[ 3 * triIdx + 0 ];
-		int edgeIdx1 = edgesList[ 3 * triIdx + 1 ];
-		int edgeIdx2 = edgesList[ 3 * triIdx + 2 ];
+		int edgeIdx0 = edgesList[ 3 * index + 0 ];
+		int edgeIdx1 = edgesList[ 3 * index + 1 ];
+		int edgeIdx2 = edgesList[ 3 * index + 2 ];
 
-		float edge0StartValue = cell.value[ s_edgeToVertsTable[edgeIdx0][0] ];
-		float edge0EndValue = cell.value[ s_edgeToVertsTable[edgeIdx0][1] ];
-		float edge1StartValue = cell.value[ s_edgeToVertsTable[edgeIdx1][0] ];
-		float edge1EndValue = cell.value[ s_edgeToVertsTable[edgeIdx1][1] ];
-		float edge2StartValue = cell.value[ s_edgeToVertsTable[edgeIdx2][0] ];
-		float edge2EndValue = cell.value[ s_edgeToVertsTable[edgeIdx2][1] ];
+		float edge0StartValue = cell->value[ s_edgeToVertsTable[edgeIdx0][0] ];
+		float edge0EndValue = cell->value[ s_edgeToVertsTable[edgeIdx0][1] ];
+		float edge1StartValue = cell->value[ s_edgeToVertsTable[edgeIdx1][0] ];
+		float edge1EndValue = cell->value[ s_edgeToVertsTable[edgeIdx1][1] ];
+		float edge2StartValue = cell->value[ s_edgeToVertsTable[edgeIdx2][0] ];
+		float edge2EndValue = cell->value[ s_edgeToVertsTable[edgeIdx2][1] ];
 
-		float fscale0 = ( m_isolevel - edge0StartValue ) / ( edge0EndValue - edge0StartValue );
-		float fscale1 = ( m_isolevel - edge1StartValue ) / ( edge1EndValue - edge1StartValue );
-		float fscale2 = ( m_isolevel - edge2StartValue ) / ( edge2EndValue - edge2StartValue );
+		float fscale0 = ( m_isoValue - edge0StartValue ) / ( edge0EndValue - edge0StartValue );
+		float fscale1 = ( m_isoValue - edge1StartValue ) / ( edge1EndValue - edge1StartValue );
+		float fscale2 = ( m_isoValue - edge2StartValue ) / ( edge2EndValue - edge2StartValue );
 
 		Vector3 offset0, offset1, offset2;
 		D3DXVec3Lerp( &offset0, &s_vertexOffsetTable[s_edgeToVertsTable[edgeIdx0][0]], &s_vertexOffsetTable[s_edgeToVertsTable[edgeIdx0][1]], fscale0 );
@@ -526,25 +584,41 @@ void EveMetaball::Triangulate(Cell cell, Triangle *triangles, int &nTriangles)
 		D3DXVec3Lerp( &offset2, &s_vertexOffsetTable[s_edgeToVertsTable[edgeIdx2][0]], &s_vertexOffsetTable[s_edgeToVertsTable[edgeIdx2][1]], fscale2 );
 
 		Triangle tri;
-		tri.position[0] = cell.position + m_boxSize * offset0;
-		tri.position[1] = cell.position + m_boxSize * offset1;
-		tri.position[2] = cell.position + m_boxSize * offset2;
-		
-		D3DXVec3Lerp( &tri.normal[0], &cell.normal[s_edgeToVertsTable[edgeIdx0][0]], &cell.normal[s_edgeToVertsTable[edgeIdx0][1]], fscale0 );
-		D3DXVec3Lerp( &tri.normal[1], &cell.normal[s_edgeToVertsTable[edgeIdx1][0]], &cell.normal[s_edgeToVertsTable[edgeIdx1][1]], fscale1 );
-		D3DXVec3Lerp( &tri.normal[2], &cell.normal[s_edgeToVertsTable[edgeIdx2][0]], &cell.normal[s_edgeToVertsTable[edgeIdx2][1]], fscale2 );
+		tri.position[0] = cell->position[3] + m_boxSize * offset0; // (0,0,0) has cellcorner index 3
+		tri.position[1] = cell->position[3] + m_boxSize * offset1;
+		tri.position[2] = cell->position[3] + m_boxSize * offset2;
 
-		D3DXVec3Normalize( &tri.normal[0], &tri.normal[0]);
-		D3DXVec3Normalize( &tri.normal[1], &tri.normal[1]);
-		D3DXVec3Normalize( &tri.normal[2], &tri.normal[2]);
+		tri.normal[0] = CalculateNormals( tri.position[0] );
+		tri.normal[1] = CalculateNormals( tri.position[1] );
+		tri.normal[2] = CalculateNormals( tri.position[2] );
 
-		triangles[triIdx] = tri;
-		++triIdx;
+		m_triangles.push_back(tri);
+		index++;
 	}
-	nTriangles = triIdx;
 }
 
+Vector3 EveMetaball::CalculateNormals( Vector3 position )
+{
+	Vector3 normal;
+	normal.x = 0.0f;
+	normal.y = 0.0f;
+	normal.z = 0.0f;
 
+	for( auto it = m_sourceItems.begin(); it != m_sourceItems.end(); ++it )
+	{
+		EveMetaballItemPtr item = (*it);
+		Vector3 v = position - item->GetPosition();
+
+		float radiusSq = item->GetRadius();
+		radiusSq *= radiusSq;
+		float distSq = D3DXVec3LengthSq( &v );
+		D3DXVec3Scale( &v, &v, radiusSq / ( distSq * distSq ) );
+
+		normal += v;
+	}
+	D3DXVec3Normalize( &normal, &normal );
+	return normal;
+}
 
 
 

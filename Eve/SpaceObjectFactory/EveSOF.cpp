@@ -11,6 +11,7 @@
 #include "Eve/SpaceObject/Attachments/EveSpotlightSet.h"
 #include "Eve/SpaceObject/Attachments/EvePlaneSet.h"
 #include "Eve/SpaceObject/Attachments/EveBoosterSet2.h"
+#include "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h"
 #include "Tr2Mesh.h"
 #include "Tr2Effect.h"
 #include "EffectParameter/TriTexture2DParameter.h"
@@ -118,6 +119,9 @@ IRootPtr EveSOF::Build( const char* hullName, const char* factionName, const cha
 	// materials (aka skins)
 	SetupMeshArea( newShip, hullData, factionData );
 
+	// decals
+	SetupHullDecals( newShip, hullData );
+
 	// effects on ships
 	SetupSpriteSets( newShip, hullData, factionData );
 	SetupSpotlightSets( newShip, hullData, factionData );
@@ -153,32 +157,48 @@ void EveSOF::SetupGeometry( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hul
 
 // --------------------------------------------------------------------------------
 // Description:
-//   This is where it is all going to happen
+//   Fill up mesh area vector given the hull and faction area data provided.
 // --------------------------------------------------------------------------------
-void EveSOF::SetupMeshArea( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const
+void EveSOF::FillMeshAreaVector( const std::vector<EveSOFDataMgr::HullAreas>* hullAreas, const FactionAreaMap* factionAreas, const EveSOFDataMgr::FactionData* factionData, Tr2MeshAreaVector* meshAreaVector ) const
 {
-	// start populating all areas with mesharea objects
-	Tr2MeshPtr mesh = ship->GetMesh();
-
-	// opaque
-	Tr2MeshAreaVector* opaqueMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-	for( auto area = hullData->opaqueAreas.begin(); area != hullData->opaqueAreas.end(); ++ area )
+	for( auto area = hullAreas->begin(); area != hullAreas->end(); ++area )
 	{
 		// every area has it's own shader, nothing we can share here
 		Tr2EffectPtr newShader;
 		newShader.CreateInstance();
 		newShader->SetEffectPathName( area->shaderPath.c_str() );
 
-		// shader parameters all come from faction
-		auto shaderParameters = factionData->areaParameters.find( area->designation );
-		if( shaderParameters != factionData->areaParameters.end() )
+		const std::map<std::string, Vector4>* factionShaderParams = nullptr;
+		if( factionAreas )
 		{
-			auto parameterList = shaderParameters->second.parameters;
-			for( auto param = parameterList.begin(); param != parameterList.end(); ++param )
+			// shader parameters all come from faction
+			auto shaderParameters = factionAreas->find( area->designation );
+			if( shaderParameters != factionAreas->end() )
 			{
-				newShader->AddParameterVector4( param->first.c_str(), &param->second );
+				factionShaderParams = &(shaderParameters->second.parameters);
 			}
 		}
+		// parameters
+		for( auto hullAreaParamsIt = area->parameters.begin(); hullAreaParamsIt != area->parameters.end(); ++hullAreaParamsIt )
+		{
+			if( !factionShaderParams )
+			{
+				newShader->AddParameterVector4( hullAreaParamsIt->first.c_str(), &hullAreaParamsIt->second );
+			}
+			else
+			{
+				auto factionParam = factionShaderParams->find( hullAreaParamsIt->first );
+				if( factionParam != factionShaderParams->end() )
+				{
+					newShader->AddParameterVector4( hullAreaParamsIt->first.c_str(), &factionParam->second );
+				}
+				else
+				{
+					newShader->AddParameterVector4( hullAreaParamsIt->first.c_str(), &hullAreaParamsIt->second );
+				}
+			}
+		}
+
 		// shader textures
 		for( auto it = area->textures.begin(); it != area->textures.end(); ++it )
 		{
@@ -191,10 +211,37 @@ void EveSOF::SetupMeshArea( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hul
 		// new mesharea
 		Tr2MeshAreaPtr newMeshArea;
 		newMeshArea.CreateInstance();
+		newMeshArea->SetName( area->designation );
 		newMeshArea->SetMaterial( newShader );
 		newMeshArea->SetIndex( area->index );
-		opaqueMeshAreaVector->Append( newMeshArea );
+		newMeshArea->SetCount( area->count );
+		meshAreaVector->Append( newMeshArea );
 	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   This is where it is all going to happen
+// --------------------------------------------------------------------------------
+void EveSOF::SetupMeshArea( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const
+{
+	// start populating all areas with mesharea objects
+	Tr2MeshPtr mesh = ship->GetMesh();
+
+	Tr2MeshAreaVector* opaqueMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	FillMeshAreaVector( &hullData->opaqueAreas, &factionData->opaqueAreaParameters, factionData, opaqueMeshAreaVector );
+	
+	Tr2MeshAreaVector* transparentMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT );
+	FillMeshAreaVector( &hullData->transparentAreas, &factionData->transparentAreaParameters, factionData, transparentMeshAreaVector );
+	
+	Tr2MeshAreaVector* additiveMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_ADDITIVE );
+	FillMeshAreaVector( &hullData->additiveAreas, nullptr, factionData, additiveMeshAreaVector );
+	
+	Tr2MeshAreaVector* depthMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_DEPTH );
+	FillMeshAreaVector( &hullData->depthAreas, nullptr, factionData, depthMeshAreaVector );
+	
+	Tr2MeshAreaVector* distortionMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_DISTORTION );
+	FillMeshAreaVector( &hullData->distortionAreas, nullptr, factionData, distortionMeshAreaVector );
 }
 
 // --------------------------------------------------------------------------------
@@ -444,6 +491,42 @@ void EveSOF::SetupBoosters( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hul
 	set->PrepareResources();
 	ship->SetBoosterSet( set );
 }
+// --------------------------------------------------------------------------------
+// Description:
+//   add the hull decals to the new ship
+// --------------------------------------------------------------------------------
+void EveSOF::SetupHullDecals( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData ) const
+{
+	// create and setup all hull decals
+	for( auto hdit = hullData->hullDecals.begin(); hdit != hullData->hullDecals.end(); ++hdit )
+	{
+		// create
+		EveSpaceObjectDecalPtr decal;
+		decal.CreateInstance();
+		// set general datas
+		decal->SetPosition( hdit->position );
+		decal->SetRotation( hdit->rotation );
+		decal->SetScaling( hdit->scaling );
+		// the decal effect
+		Tr2EffectPtr shader;
+		shader.CreateInstance();
+		shader->SetEffectPathName( hdit->shaderPath.c_str() );
+		// set parameters
+		for( auto hdpit = hdit->parameters.begin(); hdpit != hdit->parameters.end(); ++hdpit )
+		{
+			shader->AddParameterVector4( hdpit->first.c_str(), &hdpit->second );
+		}
+		// set textures
+		for( auto hdtit = hdit->textures.begin(); hdtit != hdit->textures.end(); ++hdtit )
+		{
+			shader->AddResourceTexture2D( hdtit->first.c_str(), hdtit->second.resFilePath.c_str() );
+		}
+		// init and add
+		decal->SetEffect( shader );
+		decal->Initialize();
+		ship->AddDecal( decal );
+	}
+}
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -451,23 +534,26 @@ void EveSOF::SetupBoosters( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hul
 // --------------------------------------------------------------------------------
 void EveSOF::ModifyTextureResPath( std::string& resPath, const char* name, const EveSOFDataMgr::FactionData* factionData ) const
 {
-	// do we have a texture insert for this texture?
-	auto finder = factionData->textureInserts.find( name );
-	if( finder == factionData->textureInserts.end() )
+	if( !strcmp( name, "PgsMap" ) && factionData->resPathInsert.size() )
 	{
-		return;
-	}
+		std::string resPathCopy = resPath;
+		size_t index = resPath.rfind("/");
+		if( index != std::string::npos )
+		{
+			resPathCopy.insert( index + 1, factionData->resPathInsert + std::string("/") );
+		}
 
-	// mangle with string...
-	size_t insertPos1 = resPath.rfind('_');
-	if( insertPos1 != std::string::npos )
-	{
-		resPath.insert( insertPos1 + 1, finder->second.resFilePath + std::string("_") );
-	}
-	size_t insertPos2 = resPath.rfind('/');
-	if( insertPos2 != std::string::npos )
-	{
-		resPath.insert( insertPos2 + 1, finder->second.resFilePath + std::string("/") );
+		index = resPathCopy.rfind("_pgs");
+		if( index  != std::string::npos )
+		{
+			resPathCopy.insert( index, "_" + factionData->resPathInsert );
+
+			std::wstring wstrCopy( resPathCopy.begin(), resPathCopy.end() );
+			if( BePaths->FileExists( wstrCopy ) )
+			{
+				resPath = resPathCopy;
+			}
+		}
 	}
 }
 

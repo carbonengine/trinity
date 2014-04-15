@@ -20,7 +20,8 @@ EveSOFData::~EveSOFData()
 {}
 
 
-EveSOFDataFactionParameter::EveSOFDataFactionParameter( IRoot* lockobj )
+EveSOFDataParameter::EveSOFDataParameter( IRoot* lockobj ) :
+	m_value( 0.f, 0.f, 0.f, 0.f )
 {}
 
 
@@ -29,14 +30,25 @@ EveSOFDataFactionHullArea::EveSOFDataFactionHullArea( IRoot* lockobj ) :
 {}
 
 
+EveSOFDataFactionDecal::EveSOFDataFactionDecal( IRoot* lockobj ) :
+	PARENTLOCK( m_parameters ),
+	PARENTLOCK( m_textures )
+{}
+
+
 EveSOFDataTexture::EveSOFDataTexture( IRoot* lockobj )
 {}
 
 
 EveSOFDataFaction::EveSOFDataFaction( IRoot* lockobj ) :
-	PARENTLOCK( m_textureResPathInsert ),
-	PARENTLOCK( m_hullAreas ),
-	PARENTLOCK( m_spriteSets )
+	PARENTLOCK( m_opaqueAreas ),
+	PARENTLOCK( m_transparentAreas ),
+	PARENTLOCK( m_additiveAreas ),
+	PARENTLOCK( m_depthAreas ),
+	PARENTLOCK( m_distortionAreas ),
+	PARENTLOCK( m_decalUsageData ),
+	PARENTLOCK( m_spriteSets ),
+	PARENTLOCK( m_spotlightSets )
 {}
 
 
@@ -54,15 +66,18 @@ EveSOFDataBooster::EveSOFDataBooster( IRoot* lockobj ) :
 {}
 
 
-EveSOFDataFactionTexture::EveSOFDataFactionTexture( IRoot* lockobj )
-{}
-
-
 EveSOFDataHull::EveSOFDataHull( IRoot* lockobj ) :
 	PARENTLOCK( m_spriteSets ),
 	PARENTLOCK( m_spotlightSets ),
 	PARENTLOCK( m_planeSets ),
+	PARENTLOCK( m_hullDecals ),
 	PARENTLOCK( m_opaqueAreas ),
+	PARENTLOCK( m_transparentAreas ),
+	PARENTLOCK( m_additiveAreas ),
+	PARENTLOCK( m_depthAreas ),
+	PARENTLOCK( m_distortionAreas ),
+	PARENTLOCK( m_locatorTurrets ),
+	PARENTLOCK( m_locatorAudio ),
 	m_boundingSphere( 0.f, 0.f, 0.f, 0.f )
 {}
 
@@ -72,13 +87,33 @@ EveSOFDataRace::EveSOFDataRace( IRoot* lockobj )
 
 
 EveSOFDataHullArea::EveSOFDataHullArea( IRoot* lockobj ) :
-	PARENTLOCK( m_textures )
+	PARENTLOCK( m_textures ),
+	PARENTLOCK( m_parameters ),
+	m_index( 0 ),
+	m_count( 1 )
 {}
+
+
+EveSOFDataHullDecal::EveSOFDataHullDecal( IRoot* lockobj ) :
+	m_position( 0.f, 0.f, 0.f ),
+	m_rotation( 0.f, 0.f, 0.f, 1.f ),
+	m_scaling( 1.f, 1.f, 1.f ),
+	m_usageID( -1 ),
+	PARENTLOCK( m_textures ),
+	PARENTLOCK( m_parameters )
+{}
+
+
+EveSOFDataHullLocator::EveSOFDataHullLocator( IRoot* lockobj )
+{
+	D3DXMatrixIdentity( &m_transform );
+}
 
 
 EveSOFDataHullSpotlightSet::EveSOFDataHullSpotlightSet( IRoot* lockobj ) :
 	PARENTLOCK( m_items ),
-	m_skinned( false )
+	m_skinned( false ),
+	m_zOffset( 0.f )
 {}
 
 
@@ -118,7 +153,7 @@ EveSOFDataHullSpriteSet::EveSOFDataHullSpriteSet( IRoot* lockobj ) :
 
 EveSOFDataHullSpriteSetItem::EveSOFDataHullSpriteSetItem( IRoot* lockobj ) :
 	m_position( 0.f, 0.f, 0.f ),
-	m_blinkRate( 0.1f ), m_blinkPhase( 0.0f ), m_minScale( 1.f ), m_maxScale( 10.f ), m_falloff( 1.f ),
+	m_blinkRate( 0.1f ), m_blinkPhase( 0.0f ), m_minScale( 1.f ), m_maxScale( 10.f ), m_falloff( 0.f ),
 	m_boneIndex( 0 ), m_groupIndex( -1 )
 {}
 
@@ -126,6 +161,13 @@ EveSOFDataHullSpriteSetItem::EveSOFDataHullSpriteSetItem( IRoot* lockobj ) :
 EveSOFDataFactionSpriteSet::EveSOFDataFactionSpriteSet( IRoot* lockobj ) :
 	m_groupIndex( -1 ),
 	m_color( 0.f, 0.f, 0.f, 0.f )
+{}
+
+EveSOFDataFactionSpotlightSet::EveSOFDataFactionSpotlightSet( IRoot* lockobj ) :
+	m_groupIndex( -1 ),
+	m_coneColor( 0.f, 0.f, 0.f, 0.f ),
+	m_spriteColor( 0.f, 0.f, 0.f, 0.f ),
+	m_flareColor( 0.f, 0.f, 0.f, 0.f )
 {}
 
 EveSOFDataHullBooster::EveSOFDataHullBooster( IRoot* lockobj ) :

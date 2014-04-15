@@ -63,6 +63,10 @@ float g_eveSpaceSceneMediumUpdateRate = 0.1f;
 TRI_REGISTER_SETTING( "eveSpaceSceneLowUpdateRate", g_eveSpaceSceneLowUpdateRate );
 TRI_REGISTER_SETTING( "eveSpaceSceneMediumUpdateRate", g_eveSpaceSceneMediumUpdateRate );
 
+// This is the global gamma brightness
+float g_eveSpaceSceneGammaBrightness = 1.f;
+TRI_REGISTER_SETTING( "eveSpaceSceneGammaBrightness", g_eveSpaceSceneGammaBrightness );
+
 
 static const char* f_writeDepthOpaqueOverridePath = "res:/Graphics/Effect/Managed/Space/SpaceObject/V3/DepthOnlyV3.fx";
 static Tr2EffectPtr f_writeDepthOpaqueOverride = NULL;
@@ -145,7 +149,9 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_shadowLightnessVar( "ShadowLightness", 0.0f ),
 	m_dynamicClipPlanes( true ),
 	m_nearClip( 0.0f ),
-	m_farClip( 0.0f )
+	m_farClip( 0.0f ),
+	m_fogType( 0.f ),
+	m_fogBlur( 0.f )
 {
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
 	m_primaryBatches[TRIBATCHTYPE_OPAQUE] = CCP_NEW( "EveSpaceScene/m_batches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
@@ -1670,8 +1676,7 @@ void EveSpaceScene::PopulatePerFrameVSData( PerFrameVSData &data )
     {
         distance = 1e-5f;
     }
-    float factor = 1.0f/distance;
-    data.FogFactors = Vector3( m_fogEnd*factor, factor, m_fogMax );
+    data.FogFactors = Vector3( m_fogEnd / distance, 1.f / distance, m_fogMax );
 	
 	// Derived from SetupViewport in Tr2Renderer.cpp
 	const Tr2Viewport& deviceViewport = Tr2Renderer::GetDeviceViewport();
@@ -1689,7 +1694,6 @@ void EveSpaceScene::PopulatePerFrameVSData( PerFrameVSData &data )
 void EveSpaceScene::PopulatePerFramePSData( PerFramePSData &data )
 {
 	// column_major for shaders
-	D3DXMatrixTranspose( &data.ProjectionMat, &Tr2Renderer::GetProjectionTransform() );
 	D3DXMatrixTranspose( &data.ViewMat, &Tr2Renderer::GetViewTransform() );
 	// attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
 	data.ViewInverseTransposeMat = *gTriDev->GetInvViewMatrix();
@@ -1703,6 +1707,13 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData &data )
 	D3DXVec3Normalize( &data.Sun.DirWorld, &data.Sun.DirWorld );
 	data.Sun.DirWorld = -data.Sun.DirWorld;
 	data.Scene = m_sceneData;
+
+	// ps data of fog
+	data.FogFactors.x = m_fogType;
+	data.FogFactors.y = m_fogBlur;
+
+	// ps gamma brightness
+	data.GammaBrightness = g_eveSpaceSceneGammaBrightness;
 
 	// resolution of rendertarget
 	data.TargetResolution.x = (float)Tr2Renderer::GetRenderTargetWidth();
@@ -1732,9 +1743,7 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData &data )
 		data.ShadowMapSettings = Vector4( 1.f, 1.f, 0.f, 0.f );
 	}
 	data.ShadowLightness = 0;
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
 	data.DepthMapSampleCount = float( m_depthMap ? m_depthMap->m_depthStencil.GetMsaaType() : 0 );
-#endif
 }
 
 bool EveSpaceScene::Initialize()

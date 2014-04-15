@@ -227,6 +227,7 @@ public:
 	void AddSpriteSet( EveSpriteSetPtr newSpriteSet );
 	void AddSpotlightSet( EveSpotlightSetPtr newSpotlightSet );
 	void AddPlaneSet( EvePlaneSetPtr newPlaneSet );
+	void AddDecal( EveSpaceObjectDecalPtr newDecal );
 
 	uint32_t GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const;
 	void UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* );

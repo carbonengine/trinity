@@ -30,9 +30,13 @@ const Be::ClassInfo* EveMetaball::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "boundingSphere", m_boundingSphere, "Used for culling", Be::READ )
 		MAP_ATTRIBUTE( "minBounds", m_minBounds, "Used for culling", Be::READ )
-		MAP_ATTRIBUTE( "maxBounds", m_maxBounds, "Used for culling", Be::READ )
+		MAP_ATTRIBUTE( "gridSizeX", m_gridSizeX, "Dimensions of grid", Be::READ )
+		MAP_ATTRIBUTE( "gridSizeY", m_gridSizeY, "Dimensions of grid", Be::READ )
+		MAP_ATTRIBUTE( "gridSizeZ", m_gridSizeZ, "Dimensions of grid", Be::READ )
+		MAP_ATTRIBUTE( "cellCounter", m_cellCounter, "", Be::READ )		
 
-		MAP_ATTRIBUTE( "isolevel", m_isolevel, "", Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE( "isoValue", m_isoValue, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "gooValue", m_gooValue, "", Be::READWRITE | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP( "UpdateBuffers", UpdateBuffers, "rebuild internal data" )

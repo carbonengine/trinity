@@ -67,19 +67,14 @@ public:
 	// update all the index and vertex buffers to the latest density field
 	void UpdateBuffers();
 
-	struct CellCorner
-	{
-		Vector3 position;
-		Vector3 normal;
-		float value;
-	};
-
 	struct Cell
 	{
 		unsigned int mask;
-		Vector3 position;
-		Vector3 normal[8];
+		Vector3 position[8];
 		float value[8];
+		int x;
+		int y;
+		int z;
 	};
 
 private:
@@ -102,8 +97,21 @@ private:
 		Vector3 normal[3];
 	};
 
-	void GetCornerValues( Vector3 coordinate, CellCorner* values );
-	void Triangulate( Cell cell, Triangle *triangles, int &nTriangles );
+	float GetGridValue( Vector3 coordinate );
+	void Triangulate( const Cell* cell );
+	void March();
+	Cell* CheckCell( int x, int y, int z, int* sharedVerts, Cell* fromCell );
+	void RecursiveCheckCell( int x, int y, int z, int* sharedVerts, Cell* cell );
+	Vector3 CalculateNormals( Vector3 position );
+
+	std::vector< Triangle > m_triangles;
+	std::map< unsigned int, Cell* > m_cellCache;
+
+	int m_gridSizeX;
+	int m_gridSizeY;
+	int m_gridSizeZ;
+
+	int m_cellCounter;
 
 	// general
 	std::string m_name;
@@ -112,7 +120,7 @@ private:
 	// debug
 	float m_boxSize;
 
-	float m_isolevel;
+	float m_isoValue;
 	float m_gooValue;
 
 	// metaball data

@@ -8,6 +8,42 @@
 #define EveSOFData_H
 
 // --------------------------------------------------------------------------------
+// All data storage classes for gerenal purposes
+// --------------------------------------------------------------------------------
+
+BLUE_CLASS( EveSOFDataParameter ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataParameter( IRoot* lockobj = NULL );
+	~EveSOFDataParameter() {}
+
+	// simple shader parameter
+	std::string m_name;
+	Vector4 m_value;
+};
+TYPEDEF_BLUECLASS( EveSOFDataParameter );
+BLUE_DECLARE_VECTOR( EveSOFDataParameter );
+
+
+BLUE_CLASS( EveSOFDataTexture ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataTexture( IRoot* lockobj = NULL );
+	~EveSOFDataTexture() {}
+
+	// data
+	std::string m_resFilePath;
+	std::string m_name;
+};
+TYPEDEF_BLUECLASS( EveSOFDataTexture );
+BLUE_DECLARE_VECTOR( EveSOFDataTexture );
+
+
+// --------------------------------------------------------------------------------
 // All data storage classes for per-hull data
 // --------------------------------------------------------------------------------
 
@@ -155,22 +191,6 @@ TYPEDEF_BLUECLASS( EveSOFDataHullBooster );
 BLUE_DECLARE_VECTOR( EveSOFDataHullBooster );
 
 
-BLUE_CLASS( EveSOFDataTexture ) :
-	public IRoot
-{
-public:
-	EXPOSE_TO_BLUE();
-	EveSOFDataTexture( IRoot* lockobj = NULL );
-	~EveSOFDataTexture() {}
-
-	// data
-	std::string m_resFilePath;
-	std::string m_name;
-};
-TYPEDEF_BLUECLASS( EveSOFDataTexture );
-BLUE_DECLARE_VECTOR( EveSOFDataTexture );
-
-
 BLUE_CLASS( EveSOFDataHullArea ) :
 	public IRoot
 {
@@ -181,12 +201,50 @@ public:
 
 	// data
 	unsigned int m_index;
+	unsigned int m_count;
 	std::string m_name;
 	std::string m_shaderPath;
 	PEveSOFDataTextureVector m_textures;
+	PEveSOFDataParameterVector m_parameters;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullArea );
 BLUE_DECLARE_VECTOR( EveSOFDataHullArea );
+
+
+BLUE_CLASS( EveSOFDataHullLocator ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataHullLocator( IRoot* lockobj = NULL );
+	~EveSOFDataHullLocator() {}
+
+	// data
+	std::string m_name;
+	Matrix m_transform;
+};
+TYPEDEF_BLUECLASS( EveSOFDataHullLocator );
+BLUE_DECLARE_VECTOR( EveSOFDataHullLocator );
+
+
+BLUE_CLASS( EveSOFDataHullDecal ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataHullDecal( IRoot* lockobj = NULL );
+	~EveSOFDataHullDecal() {}
+
+	// per-hull data of a hull decal
+	Vector3 m_position, m_scaling;
+	Quaternion m_rotation;
+	std::string m_shaderPath;
+	int m_usageID;
+	PEveSOFDataTextureVector m_textures;
+	PEveSOFDataParameterVector m_parameters;
+};
+TYPEDEF_BLUECLASS( EveSOFDataHullDecal );
+BLUE_DECLARE_VECTOR( EveSOFDataHullDecal );
 
 
 BLUE_CLASS( EveSOFDataHull ) :
@@ -209,14 +267,25 @@ public:
 
 	// materials
 	PEveSOFDataHullAreaVector m_opaqueAreas;
+	PEveSOFDataHullAreaVector m_transparentAreas;
+	PEveSOFDataHullAreaVector m_additiveAreas;
+	PEveSOFDataHullAreaVector m_depthAreas;
+	PEveSOFDataHullAreaVector m_distortionAreas;
 
 	// effects on ship
 	PEveSOFDataHullSpriteSetVector m_spriteSets;
 	PEveSOFDataHullSpotlightSetVector m_spotlightSets;
 	PEveSOFDataHullPlaneSetVector m_planeSets;
 
+	// decals
+	PEveSOFDataHullDecalVector m_hullDecals;
+
 	// boosters
 	EveSOFDataHullBoosterPtr m_booster;
+
+	// locators
+	PEveSOFDataHullLocatorVector m_locatorTurrets;
+	PEveSOFDataHullLocatorVector m_locatorAudio;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHull );
 BLUE_DECLARE_VECTOR( EveSOFDataHull );
@@ -227,22 +296,6 @@ BLUE_DECLARE_VECTOR( EveSOFDataHull );
 // --------------------------------------------------------------------------------
 // All data storage classes for per-faction data
 // --------------------------------------------------------------------------------
-
-BLUE_CLASS( EveSOFDataFactionTexture ) :
-	public IRoot
-{
-public:
-	EXPOSE_TO_BLUE();
-	EveSOFDataFactionTexture( IRoot* lockobj = NULL );
-	~EveSOFDataFactionTexture() {}
-
-	// data
-	std::string m_name;
-	std::string m_resPathInsert;
-};
-TYPEDEF_BLUECLASS( EveSOFDataFactionTexture );
-BLUE_DECLARE_VECTOR( EveSOFDataFactionTexture );
-
 
 BLUE_CLASS( EveSOFDataFactionSpriteSet ) :
 	public IRoot
@@ -260,20 +313,36 @@ TYPEDEF_BLUECLASS( EveSOFDataFactionSpriteSet );
 BLUE_DECLARE_VECTOR( EveSOFDataFactionSpriteSet );
 
 
-BLUE_CLASS( EveSOFDataFactionParameter ) :
+BLUE_CLASS( EveSOFDataFactionSpotlightSet ) :
 	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
-	EveSOFDataFactionParameter( IRoot* lockobj = NULL );
-	~EveSOFDataFactionParameter() {}
+	EveSOFDataFactionSpotlightSet( IRoot* lockobj = NULL );
+	~EveSOFDataFactionSpotlightSet() {}
 
-	// simple shader parameter
-	std::string m_name;
-	Vector4 m_value;
+	// per-faction data of a spotlight
+	int m_groupIndex;
+	Color m_coneColor, m_spriteColor, m_flareColor;
 };
-TYPEDEF_BLUECLASS( EveSOFDataFactionParameter );
-BLUE_DECLARE_VECTOR( EveSOFDataFactionParameter );
+TYPEDEF_BLUECLASS( EveSOFDataFactionSpotlightSet );
+BLUE_DECLARE_VECTOR( EveSOFDataFactionSpotlightSet );
+
+
+BLUE_CLASS( EveSOFDataFactionDecal ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataFactionDecal( IRoot* lockobj = NULL );
+	~EveSOFDataFactionDecal() {}
+
+	// list of textures and params
+	PEveSOFDataParameterVector m_parameters;
+	PEveSOFDataTextureVector m_textures;
+};
+TYPEDEF_BLUECLASS( EveSOFDataFactionDecal );
+BLUE_DECLARE_VECTOR( EveSOFDataFactionDecal );
 
 
 BLUE_CLASS( EveSOFDataFactionHullArea ) :
@@ -287,7 +356,7 @@ public:
 	// designation
 	std::string m_name;
 	// list of params
-	PEveSOFDataFactionParameterVector m_parameters;
+	PEveSOFDataParameterVector m_parameters;
 };
 TYPEDEF_BLUECLASS( EveSOFDataFactionHullArea );
 BLUE_DECLARE_VECTOR( EveSOFDataFactionHullArea );
@@ -321,13 +390,23 @@ public:
 	// description
 	std::string m_description;
 
-	// hull name
+	// faction name
 	std::string m_name;
 
+	// res path insert for pgs maps
+	std::string m_resPathInsert;
+
 	// data
-	PEveSOFDataFactionTextureVector m_textureResPathInsert;
-	PEveSOFDataFactionHullAreaVector m_hullAreas;
+	PEveSOFDataFactionHullAreaVector m_opaqueAreas;
+	PEveSOFDataFactionHullAreaVector m_transparentAreas;
+	PEveSOFDataFactionHullAreaVector m_additiveAreas;
+	PEveSOFDataFactionHullAreaVector m_depthAreas;
+	PEveSOFDataFactionHullAreaVector m_distortionAreas;
+
 	PEveSOFDataFactionSpriteSetVector m_spriteSets;
+	PEveSOFDataFactionSpotlightSetVector m_spotlightSets;
+
+	PEveSOFDataFactionDecalVector m_decalUsageData;
 };
 TYPEDEF_BLUECLASS( EveSOFDataFaction );
 BLUE_DECLARE_VECTOR( EveSOFDataFaction );

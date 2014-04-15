@@ -107,6 +107,21 @@ const Be::ClassInfo* EveSOFDataFactionSpriteSet::ExposeToBlue()
 
 
 
+BLUE_DEFINE( EveSOFDataFactionSpotlightSet );
+const Be::ClassInfo* EveSOFDataFactionSpotlightSet::ExposeToBlue()
+{
+    EXPOSURE_BEGIN( EveSOFDataFactionSpotlightSet, "" )
+        MAP_INTERFACE( EveSOFDataFactionSpotlightSet )
+
+		MAP_ATTRIBUTE( "groupIndex", m_groupIndex, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "coneColor", m_coneColor, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "spriteColor", m_spriteColor, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "flareColor", m_flareColor, "", Be::READWRITE | Be::PERSIST )
+    EXPOSURE_END()
+}
+
+
+
 BLUE_DEFINE( EveSOFDataHullSpriteSetItem );
 const Be::ClassInfo* EveSOFDataHullSpriteSetItem::ExposeToBlue()
 {
@@ -187,9 +202,24 @@ const Be::ClassInfo* EveSOFDataHullArea::ExposeToBlue()
         MAP_INTERFACE( EveSOFDataHullArea )
 
 		MAP_ATTRIBUTE( "index", m_index, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "count", m_count, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "shaderPath", m_shaderPath, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "textures", m_textures, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "parameters", m_parameters, "", Be::READWRITE | Be::PERSIST )
+    EXPOSURE_END()
+}
+
+
+
+BLUE_DEFINE( EveSOFDataHullLocator );
+const Be::ClassInfo* EveSOFDataHullLocator::ExposeToBlue()
+{
+    EXPOSURE_BEGIN( EveSOFDataHullLocator, "" )
+        MAP_INTERFACE( EveSOFDataHullLocator )
+
+		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "transform", m_transform, "", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
 
@@ -209,35 +239,31 @@ const Be::ClassInfo* EveSOFDataHull::ExposeToBlue()
 		MAP_ATTRIBUTE( "boundingSphere", m_boundingSphere, "The actual size of the gemoetry", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "opaqueAreas", m_opaqueAreas, "The opaque areas on this mesh", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "transparentAreas", m_transparentAreas, "The transparent areas on this mesh", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "additiveAreas", m_additiveAreas, "The additive areas on this mesh", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "depthAreas", m_depthAreas, "The depth areas on this mesh", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "distortionAreas", m_distortionAreas, "The distortion areas on this mesh", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "spriteSets", m_spriteSets, "The spritesets", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "spotlightSets", m_spotlightSets, "The spotlightsets", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "planeSets", m_planeSets, "The planesets", Be::READWRITE | Be::PERSIST )
 
+		MAP_ATTRIBUTE( "hullDecals", m_hullDecals, "The hull decals", Be::READWRITE | Be::PERSIST )
+
 		MAP_ATTRIBUTE( "booster", m_booster, "The booster", Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE( "locatorTurrets", m_locatorTurrets, "Turret locators", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "locatorTurrets", m_locatorAudio, "Audio locators", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
 
 
 
-BLUE_DEFINE( EveSOFDataFactionTexture );
-const Be::ClassInfo* EveSOFDataFactionTexture::ExposeToBlue()
+BLUE_DEFINE( EveSOFDataParameter );
+const Be::ClassInfo* EveSOFDataParameter::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveSOFDataFactionTexture, "" )
-        MAP_INTERFACE( EveSOFDataFactionTexture )
-
-		MAP_ATTRIBUTE( "name", m_name, "Parameter name of this texture.", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "resPathInsert", m_resPathInsert, "INsert string to build texture res path.", Be::READWRITE | Be::PERSIST )
-    EXPOSURE_END()
-}
-
-
-
-BLUE_DEFINE( EveSOFDataFactionParameter );
-const Be::ClassInfo* EveSOFDataFactionParameter::ExposeToBlue()
-{
-    EXPOSURE_BEGIN( EveSOFDataFactionParameter, "" )
-        MAP_INTERFACE( EveSOFDataFactionParameter )
+    EXPOSURE_BEGIN( EveSOFDataParameter, "" )
+        MAP_INTERFACE( EveSOFDataParameter )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "value", m_value, "", Be::READWRITE | Be::PERSIST )
@@ -259,6 +285,37 @@ const Be::ClassInfo* EveSOFDataFactionHullArea::ExposeToBlue()
 
 
 
+BLUE_DEFINE( EveSOFDataFactionDecal );
+const Be::ClassInfo* EveSOFDataFactionDecal::ExposeToBlue()
+{
+    EXPOSURE_BEGIN( EveSOFDataFactionDecal, "" )
+        MAP_INTERFACE( EveSOFDataFactionDecal )
+
+		MAP_ATTRIBUTE( "textures", m_textures, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "parameters", m_parameters, "", Be::READWRITE | Be::PERSIST )
+    EXPOSURE_END()
+}
+
+
+
+BLUE_DEFINE( EveSOFDataHullDecal );
+const Be::ClassInfo* EveSOFDataHullDecal::ExposeToBlue()
+{
+    EXPOSURE_BEGIN( EveSOFDataHullDecal, "" )
+        MAP_INTERFACE( EveSOFDataHullDecal )
+
+		MAP_ATTRIBUTE( "position", m_position, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "shaderPath", m_shaderPath, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "usageID", m_usageID, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "parameters", m_parameters, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "textures", m_textures, "", Be::READWRITE | Be::PERSIST )
+    EXPOSURE_END()
+}
+
+
+
 BLUE_DEFINE( EveSOFDataFaction );
 const Be::ClassInfo* EveSOFDataFaction::ExposeToBlue()
 {
@@ -267,9 +324,15 @@ const Be::ClassInfo* EveSOFDataFaction::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "name", m_name, "The faction name, eg sarum. This functions as an ID.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "description", m_description, "A description string. NOT used by the SOF, it's just for debugging purposes.", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "textureResPathInsert", m_textureResPathInsert, "All the textures we need to change for this faction.", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "hullAreas", m_hullAreas, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "resPathInsert", m_resPathInsert, "Insert string to build texture res path.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "opaqueAreas", m_opaqueAreas, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "transparentAreas", m_transparentAreas, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "additiveAreas", m_additiveAreas, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "depthAreas", m_depthAreas, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "distortionAreas", m_distortionAreas, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "decalUsageData", m_decalUsageData, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "spriteSets", m_spriteSets, "All the groups of sprite sets.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "spotlightSets", m_spotlightSets, "All the groups of spotlight sets.", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
 

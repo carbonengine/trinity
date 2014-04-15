@@ -170,7 +170,6 @@ void EveShip2::RebuildBoosterSet()
 bool EveShip2::Initialize()
 {
 	EveMobile::Initialize();
-	RebuildBoosterSet();
 
 	return true;
 }

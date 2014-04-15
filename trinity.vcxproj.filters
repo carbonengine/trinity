@@ -785,6 +785,9 @@
     <ClInclude Include="Eve\SpaceObject\Attachments\EveBoosterSet2.h">
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
     </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Attachments\EveDynamicPlaneSet.h">
+      <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
+    </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Attachments\EvePlaneSet.h">
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
     </ClInclude>
@@ -2619,6 +2622,12 @@
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
     </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Attachments\EveBoosterSet2_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveDynamicPlaneSet.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveDynamicPlaneSet_Blue.cpp">
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
     </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Attachments\EvePlaneSet.cpp">

@@ -148,6 +148,34 @@ bool EveSOFDataMgr::LoadData( const char* filePath )
 	return true;
 }
 
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Create hull area from sof db data
+// --------------------------------------------------------------------------------
+EveSOFDataMgr::HullAreas EveSOFDataMgr::LoadHullAreaData( const EveSOFDataHullAreaPtr areaData )
+{
+	HullAreas ha;
+	ha.index = areaData->m_index;
+	ha.count = areaData->m_count;
+	ha.designation = areaData->m_name;
+	ha.shaderPath = areaData->m_shaderPath;
+	for( auto matit = areaData->m_textures.begin(); matit != areaData->m_textures.end(); ++matit )
+	{
+		EveSOFDataTexturePtr textureData = (*matit);
+
+		TextureData td;
+		td.resFilePath = textureData->m_resFilePath;
+		ha.textures[textureData->m_name] = td;
+	}
+	for( auto paramIt = areaData->m_parameters.begin(); paramIt != areaData->m_parameters.end(); paramIt++ )
+	{
+		EveSOFDataParameter* param = *paramIt;
+		ha.parameters[param->m_name] = param->m_value;
+	}
+	return ha;
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Init hull-specific data
@@ -274,24 +302,80 @@ bool EveSOFDataMgr::LoadHullData( EveSOFDataPtr srcData )
 			hd.planeSets.push_back( hpsd );
 		}
 
+		// hulldecals
+		for( auto hdit = hullData->m_hullDecals.begin(); hdit != hullData->m_hullDecals.end(); ++hdit )
+		{
+			EveSOFDataHullDecalPtr hullDecal = (*hdit);
+
+			HullDecalData hdd;
+			hdd.position = hullDecal->m_position;
+			hdd.rotation = hullDecal->m_rotation;
+			hdd.scaling = hullDecal->m_scaling;
+			hdd.shaderPath = hullDecal->m_shaderPath;
+			for( auto hdtit = hullDecal->m_textures.begin(); hdtit != hullDecal->m_textures.end(); ++hdtit )
+			{
+				EveSOFDataTexturePtr textureData = (*hdtit);
+
+				TextureData td;
+				td.resFilePath = textureData->m_resFilePath;
+				hdd.textures[textureData->m_name] = td;
+			}
+			for( auto hdpit = hullDecal->m_parameters.begin(); hdpit != hullDecal->m_parameters.end(); ++hdpit )
+			{
+				EveSOFDataParameterPtr parameterData = (*hdpit);
+
+				hdd.parameters[parameterData->m_name] = parameterData->m_value;
+			}
+			hd.hullDecals.push_back( hdd );
+		}
+
 		// meshareas
 		for( auto mait = hullData->m_opaqueAreas.begin(); mait != hullData->m_opaqueAreas.end(); ++mait )
 		{
 			EveSOFDataHullAreaPtr areaData = (*mait);
+			hd.opaqueAreas.push_back( LoadHullAreaData( areaData ) );
+		}
+		for( auto mait = hullData->m_transparentAreas.begin(); mait != hullData->m_transparentAreas.end(); ++mait )
+		{
+			EveSOFDataHullAreaPtr areaData = (*mait);
+			hd.transparentAreas.push_back( LoadHullAreaData( areaData ) );
+		}
+		for( auto mait = hullData->m_additiveAreas.begin(); mait != hullData->m_additiveAreas.end(); ++mait )
+		{
+			EveSOFDataHullAreaPtr areaData = (*mait);
+			hd.additiveAreas.push_back( LoadHullAreaData( areaData ) );
+		}
+		for( auto mait = hullData->m_distortionAreas.begin(); mait != hullData->m_distortionAreas.end(); ++mait )
+		{
+			EveSOFDataHullAreaPtr areaData = (*mait);
+			hd.distortionAreas.push_back( LoadHullAreaData( areaData ) );
+		}
+		for( auto mait = hullData->m_depthAreas.begin(); mait != hullData->m_depthAreas.end(); ++mait )
+		{
+			EveSOFDataHullAreaPtr areaData = (*mait);
+			hd.depthAreas.push_back( LoadHullAreaData( areaData ) );
+		}
 
-			HullAreas ha;
-			ha.index = areaData->m_index;
-			ha.designation = areaData->m_name;
-			ha.shaderPath = areaData->m_shaderPath;
-			for( auto matit = areaData->m_textures.begin(); matit != areaData->m_textures.end(); ++matit )
-			{
-				EveSOFDataTexturePtr textureData = (*matit);
+		// turret locators
+		for( auto tlit = hullData->m_locatorTurrets.begin(); tlit != hullData->m_locatorTurrets.end(); ++it )
+		{
+			EveSOFDataHullLocatorPtr locatorData = (*tlit);
 
-				TextureData td;
-				td.resFilePath = textureData->m_resFilePath;
-				ha.textures[textureData->m_name] = td;
-			}
-			hd.opaqueAreas.push_back(ha);
+			LocatorData ld;
+			ld.name = locatorData->m_name;
+			ld.transform = locatorData->m_transform;
+			hd.locatorTurrets.push_back( ld );
+		}
+
+		// audio locators
+		for( auto alit = hullData->m_locatorAudio.begin(); alit != hullData->m_locatorAudio.end(); ++it )
+		{
+			EveSOFDataHullLocatorPtr locatorData = (*alit);
+
+			LocatorData ld;
+			ld.name = locatorData->m_name;
+			ld.transform = locatorData->m_transform;
+			hd.locatorAudio.push_back( ld );
 		}
 
 		m_hullData[(*it)->m_name] = hd;
@@ -321,17 +405,7 @@ bool EveSOFDataMgr::LoadFactionData( EveSOFDataPtr srcData )
 
 		// insert data
 		FactionData fd;
-
-		// texture inserts
-		for( auto tiit = factionData->m_textureResPathInsert.begin(); tiit != factionData->m_textureResPathInsert.end(); ++tiit )
-		{
-			EveSOFDataFactionTexturePtr textureInsertData = (*tiit);
-
-			TextureData td;
-			td.resFilePath = textureInsertData->m_resPathInsert;
-
-			fd.textureInserts[textureInsertData->m_name] = td;
-		}
+		fd.resPathInsert = factionData->m_resPathInsert;
 
 		// sprite set colors
 		for( auto sscit = factionData->m_spriteSets.begin(); sscit != factionData->m_spriteSets.end(); ++sscit )
@@ -345,17 +419,29 @@ bool EveSOFDataMgr::LoadFactionData( EveSOFDataPtr srcData )
 		}
 
 		// area parameters
-		for( auto hait = factionData->m_hullAreas.begin(); hait != factionData->m_hullAreas.end(); ++hait )
+		for( auto hait = factionData->m_opaqueAreas.begin(); hait != factionData->m_opaqueAreas.end(); ++hait )
 		{
 			EveSOFDataFactionHullAreaPtr hullAreaData = (*hait);
 
 			FactionAreaData ad;
 			for( auto hapit = hullAreaData->m_parameters.begin(); hapit != hullAreaData->m_parameters.end(); ++hapit )
 			{
-				EveSOFDataFactionParameterPtr parameterData = (*hapit);
+				EveSOFDataParameterPtr parameterData = (*hapit);
 				ad.parameters[parameterData->m_name] = parameterData->m_value;
 			}
-			fd.areaParameters[hullAreaData->m_name] = ad;
+			fd.opaqueAreaParameters[hullAreaData->m_name] = ad;
+		}
+		for( auto hait = factionData->m_transparentAreas.begin(); hait != factionData->m_transparentAreas.end(); ++hait )
+		{
+			EveSOFDataFactionHullAreaPtr hullAreaData = (*hait);
+
+			FactionAreaData ad;
+			for( auto hapit = hullAreaData->m_parameters.begin(); hapit != hullAreaData->m_parameters.end(); ++hapit )
+			{
+				EveSOFDataParameterPtr parameterData = (*hapit);
+				ad.parameters[parameterData->m_name] = parameterData->m_value;
+			}
+			fd.transparentAreaParameters[hullAreaData->m_name] = ad;
 		}
 
 
