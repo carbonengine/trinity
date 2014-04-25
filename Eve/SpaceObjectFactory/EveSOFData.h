@@ -227,6 +227,24 @@ TYPEDEF_BLUECLASS( EveSOFDataHullLocator );
 BLUE_DECLARE_VECTOR( EveSOFDataHullLocator );
 
 
+BLUE_CLASS( EveSOFDataHullChild ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataHullChild( IRoot* lockobj = NULL );
+	~EveSOFDataHullChild() {}
+
+	// data
+	std::string m_redFilePath;
+	Vector3 m_translation;
+	Quaternion m_rotation;
+	Vector3 m_scaling;
+};
+TYPEDEF_BLUECLASS( EveSOFDataHullChild );
+BLUE_DECLARE_VECTOR( EveSOFDataHullChild );
+
+
 BLUE_CLASS( EveSOFDataHullDecal ) :
 	public IRoot
 {
@@ -287,6 +305,9 @@ public:
 	// locators
 	PEveSOFDataHullLocatorVector m_locatorTurrets;
 	PEveSOFDataHullLocatorVector m_locatorAudio;
+
+	// children
+	PEveSOFDataHullChildVector m_children;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHull );
 BLUE_DECLARE_VECTOR( EveSOFDataHull );

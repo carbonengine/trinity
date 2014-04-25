@@ -47,6 +47,10 @@ public:
 	virtual bool HasTransparentBatches();
 	virtual float GetSortValue();
 
+	void SetScaling( Vector3 scaling ) { m_scaling = scaling; };
+	void SetRotation( Quaternion rotation ) { m_rotation = rotation; };
+	void SetTranslation( Vector3 translation ) { m_translation = translation; };
+
 	// GetPerObjectData is left unimplemented. Subclasses
 	// must be created for each type of scene to create the proper per object data.
 

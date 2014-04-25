@@ -225,6 +225,21 @@ const Be::ClassInfo* EveSOFDataHullLocator::ExposeToBlue()
 
 
 
+BLUE_DEFINE( EveSOFDataHullChild );
+const Be::ClassInfo* EveSOFDataHullChild::ExposeToBlue()
+{
+    EXPOSURE_BEGIN( EveSOFDataHullChild, "" )
+        MAP_INTERFACE( EveSOFDataHullChild )
+
+		MAP_ATTRIBUTE( "redFilePath", m_redFilePath, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
+    EXPOSURE_END()
+}
+
+
+
 BLUE_DEFINE( EveSOFDataHull );
 const Be::ClassInfo* EveSOFDataHull::ExposeToBlue()
 {
@@ -252,6 +267,8 @@ const Be::ClassInfo* EveSOFDataHull::ExposeToBlue()
 		MAP_ATTRIBUTE( "hullDecals", m_hullDecals, "The hull decals", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "booster", m_booster, "The booster", Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE( "children", m_children, "List of children", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "locatorTurrets", m_locatorTurrets, "Turret locators", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "locatorTurrets", m_locatorAudio, "Audio locators", Be::READWRITE | Be::PERSIST )

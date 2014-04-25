@@ -78,6 +78,7 @@ EveSOFDataHull::EveSOFDataHull( IRoot* lockobj ) :
 	PARENTLOCK( m_distortionAreas ),
 	PARENTLOCK( m_locatorTurrets ),
 	PARENTLOCK( m_locatorAudio ),
+	PARENTLOCK( m_children ),
 	m_boundingSphere( 0.f, 0.f, 0.f, 0.f ),
 	m_isSkinned( false )
 {}
@@ -109,6 +110,13 @@ EveSOFDataHullLocator::EveSOFDataHullLocator( IRoot* lockobj )
 {
 	D3DXMatrixIdentity( &m_transform );
 }
+
+
+EveSOFDataHullChild::EveSOFDataHullChild( IRoot* lockobj ) :
+	m_translation( 0.f, 0.f, 0.f ),
+	m_rotation( 0.f, 0.f, 0.f, 1.f ),
+	m_scaling( 1.f, 1.f, 1.f )
+{}
 
 
 EveSOFDataHullSpotlightSet::EveSOFDataHullSpotlightSet( IRoot* lockobj ) :

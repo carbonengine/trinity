@@ -387,6 +387,18 @@ bool EveSOFDataMgr::LoadHullData( EveSOFDataPtr srcData )
 			hd.locatorAudio.push_back( ld );
 		}
 
+		// children
+		for( auto chit = hullData->m_children.begin(); chit != hullData->m_children.end(); ++chit )
+		{
+			EveSOFDataHullChildPtr child = (*chit);
+			HullChild hc;
+			hc.redFilePath = child->m_redFilePath;
+			hc.translation = child->m_translation;
+			hc.rotation = child->m_rotation;
+			hc.scaling = child->m_scaling;
+			hd.children.push_back( hc );
+		}
+
 		m_hullData[(*it)->m_name] = hd;
 	}
 

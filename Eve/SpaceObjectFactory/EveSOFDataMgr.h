@@ -117,6 +117,14 @@ public:
 		std::map<std::string, Vector4> parameters;
 	};
 
+	struct HullChild
+	{
+		std::string redFilePath;
+		Vector3 translation;
+		Quaternion rotation;
+		Vector3 scaling;
+	};
+
 	struct HullData
 	{
 		std::string geometryResFilePath;
@@ -134,6 +142,7 @@ public:
 		HullBoosterData boosters;
 		std::vector<LocatorData> locatorTurrets;
 		std::vector<LocatorData> locatorAudio;
+		std::vector<HullChild> children;
 	};
 
 	// faction data structs

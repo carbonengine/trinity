@@ -1968,6 +1968,15 @@ void EveSpaceObject2::SetShadowEffect( Tr2EffectPtr newShadowEffect )
 	m_shadowEffect = newShadowEffect;
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Add a transform to the children list
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::AddToChildrenList( EveTransformPtr transform )
+{
+	m_children.Append( transform->GetRawRoot() );
+}
+
 
 //GPU ship explosion test
 unsigned EveSpaceObject2::GetDamageLocatorCount() const 

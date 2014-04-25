@@ -48,6 +48,7 @@ private:
 	void SetupSpriteSets( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const;
 	void SetupSpotlightSets( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const;
 	void SetupPlaneSets( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const;
+	void SetupChildren( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::RaceData* raceData ) const;
 	void SetupBoosters( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::RaceData* raceData ) const;
 	void SetupHullDecals( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData ) const;
 

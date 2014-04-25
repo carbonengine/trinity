@@ -5,6 +5,7 @@
 //
 #include "StdAfx.h"
 #include "EveSOF.h"
+#include "Eve/EveTransform.h"
 #include "Eve/SpaceObject/EveShip2.h"
 #include "Eve/SpaceObject/Attachments/EveSpriteSet.h"
 #include "Eve/SpaceObject/Attachments/EveTrailsSet.h"
@@ -133,6 +134,9 @@ IRootPtr EveSOF::Build( const char* hullName, const char* factionName, const cha
 
 	// attachments to ship
 	SetupBoosters( newShip, hullData, raceData );
+
+	// children
+	SetupChildren( newShip, hullData, raceData );
 
 	// ships needs a final ::Initialize call
 	newShip->Initialize();
@@ -442,11 +446,45 @@ void EveSOF::SetupPlaneSets( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hu
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Add Children to the ship
+// --------------------------------------------------------------------------------
+void EveSOF::SetupChildren( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::RaceData* raceData ) const
+{
+	for( auto chit = hullData->children.begin(); chit != hullData->children.end(); ++chit )
+	{
+		IRootPtr p;
+		IRoot* tmp = BeResMan->LoadObject( chit->redFilePath.c_str() );
+		if( !tmp )
+		{
+			CCP_LOGERR( "resource file %s is invalid!", chit->redFilePath.c_str() );
+			continue;
+		}
+		p.Attach( tmp );
+
+		// is it of right type?
+		EveTransformPtr child;
+		if( !p->QueryInterface( BlueInterfaceIID<EveTransform>(), (void**)&child ) )
+		{
+			CCP_LOGERR( "resource file %s is not of correct type!", chit->redFilePath.c_str() );
+			return;
+		}
+		child->SetRotation( chit->rotation );
+		child->SetScaling( chit->scaling );
+		child->SetTranslation( chit->translation );
+
+		ship->AddToChildrenList( child );
+
+	}
+	
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   add the booster to the new ship
 // --------------------------------------------------------------------------------
 void EveSOF::SetupBoosters( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::RaceData* raceData ) const
 {
-	// does this hull has boosters at all?
+	// does this hull have boosters at all?
 	if( hullData->boosters.items.empty() )
 	{
 		return;

@@ -40,6 +40,7 @@ BLUE_DECLARE_VECTOR( EveSpotlightSet );
 BLUE_DECLARE( EvePlaneSet );
 BLUE_DECLARE_VECTOR( EvePlaneSet );
 BLUE_DECLARE( Tr2GrannyAnimation );
+BLUE_DECLARE( EveTransform );
 
 BLUE_DECLARE( TriCurveSet );
 BLUE_DECLARE_VECTOR( TriCurveSet );
@@ -231,6 +232,9 @@ public:
 
 	// access to shadows
 	void SetShadowEffect( Tr2EffectPtr newShadowEffect );
+
+	// access to children
+	void AddToChildrenList( EveTransformPtr transform );
 
 	uint32_t GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const;
 	void UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* );
