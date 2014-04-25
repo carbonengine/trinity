@@ -2231,12 +2231,6 @@ ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport )
 	return S_OK;
 }
 
-long Tr2RenderContextAL::GetTotalVideoMemory()
-{
-	auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-	return renderContext.GetTotalVideoMemory();
-}
-
 ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot )
 {
 	TRINITY_AL_CAPTURE( PushRenderTarget, slot );

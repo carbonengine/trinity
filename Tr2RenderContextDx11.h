@@ -281,9 +281,6 @@ private:
 
 	ALResult SetRtDsToDevice( uint32_t changedSlot ) throw();
 
-	// hack until python code can be changed (move this to trinity., not trinity.renderContext)
-	long GetTotalVideoMemory() throw();
-
 private:
 
 	friend class Tr2PrimaryRenderContextAL;

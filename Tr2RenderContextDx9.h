@@ -210,8 +210,6 @@ public:
 		Tr2RenderContextEnum::PixelFormat format, 
 		bool withAutoGenMipmap = false );
 
-	long GetTotalVideoMemory();
-
 	void TrashQuery( IDirect3DQuery9* query );
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;

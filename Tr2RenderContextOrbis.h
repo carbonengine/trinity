@@ -122,8 +122,6 @@ public:
 		Tr2RenderContextEnum::PixelFormat format, 
 		bool withAutoGenMipmap = false );
 
-	long GetTotalVideoMemory();
-
 	ALResult DrawPrimitive(	uint32_t startVertex, uint32_t primitiveCount );
 	ALResult DrawIndexedPrimitive(	
 		uint32_t numVertices, 

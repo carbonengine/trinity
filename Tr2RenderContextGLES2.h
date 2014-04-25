@@ -214,8 +214,6 @@ public:
 		Tr2RenderContextEnum::PixelFormat format, 
 		bool withAutoGenMipmap = false );
 
-	long	GetTotalVideoMemory();
-
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
 
 	ALResult GetAFRGroupCount( uint32_t& count );

@@ -2071,11 +2071,6 @@ bool Tr2RenderContextAL::IsSupportedRenderTargetFormat( PixelFormat /*format*/, 
 	return true;	//TODO? 
 }
 
-long Tr2RenderContextAL::GetTotalVideoMemory()
-{
-	return long( Tr2MemoryAllocator::GetGarlicMemorySize() );
-}
-
 Tr2RenderTargetAL& Tr2RenderContextAL::GetDefaultBackBuffer()
 {
 	return m_backBufferRT;

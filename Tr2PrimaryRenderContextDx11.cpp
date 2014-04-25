@@ -541,9 +541,4 @@ bool Tr2PrimaryRenderContextAL::IsSupportedRenderTargetFormat( PixelFormat /*for
 	return true;	//TODO? 
 }
 
-long Tr2PrimaryRenderContextAL::GetTotalVideoMemory()
-{
-	return 0;
-}
-
 #endif	//DX11?

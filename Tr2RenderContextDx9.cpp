@@ -1193,41 +1193,6 @@ bool Tr2RenderContextAL::IsSupportedRenderTargetFormat( PixelFormat format, bool
 typedef HRESULT ( WINAPI* LPDIRECTDRAWCREATE )(		GUID FAR *lpGUID, 
 													LPDIRECTDRAW FAR *lplpDD, 
 													IUnknown FAR *pUnkOuter );
-long Tr2RenderContextAL::GetTotalVideoMemory()
-{
-	DWORD totalVidMemory = 0;
-
-	HINSTANCE hInstDDraw = LoadLibrary( "ddraw.dll" );
-	if( hInstDDraw )
-	{
-        LPDIRECTDRAWCREATE pDDCreate = (LPDIRECTDRAWCREATE)GetProcAddress( hInstDDraw, "DirectDrawCreate" );
-		if( pDDCreate )
-		{
-			LPDIRECTDRAW pDDraw = NULL;
-			pDDCreate( NULL, &pDDraw, NULL );
-			if( pDDraw )
-			{
-				LPDIRECTDRAW7 pDDraw7 = NULL;
-				if( SUCCEEDED( pDDraw->QueryInterface( IID_IDirectDraw7, (VOID**)&pDDraw7 ) ) )
-				{
-					if( pDDraw7 )
-					{
-						DDSCAPS2 ddscaps;
-						memset( &ddscaps, 0, sizeof(DDSCAPS2) );
-						ddscaps.dwCaps = DDSCAPS_VIDEOMEMORY | DDSCAPS_LOCALVIDMEM;
-						pDDraw7->GetAvailableVidMem( &ddscaps, &totalVidMemory, NULL );
-						pDDraw7->Release();
-					}
-				}
-				pDDraw->Release();
-			}
-		}
-		FreeLibrary( hInstDDraw );
-	}
-
-	return totalVidMemory;
-}
-
 ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot )
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );

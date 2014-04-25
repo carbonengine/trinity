@@ -1839,11 +1839,6 @@ bool Tr2RenderContextAL::IsSupportedRenderTargetFormat(	PixelFormat /*format*/,
 	return true;
 }
 
-long Tr2RenderContextAL::GetTotalVideoMemory()
-{
-	return 0;
-}
-
 ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot )
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );

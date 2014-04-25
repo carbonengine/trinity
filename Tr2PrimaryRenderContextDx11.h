@@ -35,7 +35,6 @@ public:
 	
 	bool	IsSupportedRenderTargetFormat(	Tr2RenderContextEnum::PixelFormat format, 
 											bool withAutoGenMipmap = false );
-	long GetTotalVideoMemory();
 	ALResult GetAFRGroupCount( uint32_t& count );
 
 	static const uint32_t SHADER_TYPE_MASK = 
