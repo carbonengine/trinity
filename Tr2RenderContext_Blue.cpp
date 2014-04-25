@@ -439,14 +439,6 @@ const Be::ClassInfo* Tr2PrimaryRenderContext::ExposeToBlue()
 			"Returns the PixelFormat of the default back buffer"
 		)
 
-		MAP_METHOD_AND_WRAP
-		(
-			"GetTotalVideoMemory",
-			GetTotalVideoMemory,
-			"Description:\n"
-			"Returns the maximum available video memory in bytes."
-		)
-
 	EXPOSURE_END()
 }
 
