@@ -98,9 +98,43 @@ const EveSOFDataMgr::RaceData* EveSOFDataMgr::GetRaceData( const char* raceName 
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Here we get a blue object which is the whole database and use it to
+//   set internal containers with all SOF db data
 // --------------------------------------------------------------------------------
 bool EveSOFDataMgr::SetData( IRootPtr dbData )
 {
+	// is it of right type?
+	EveSOFDataPtr srcData;
+	if( !dbData->QueryInterface( BlueInterfaceIID<EveSOFData>(), (void**)&srcData ) )
+	{
+		CCP_LOGERR( "SOF resource file is not of correct type!" );
+		return false;
+	}
+
+	// load hull data
+	if(!LoadHullData( srcData ) )
+	{
+		CCP_LOGERR( "Error loading hull data!" );
+		return false; 
+	}
+	CCP_LOGNOTICE( "SOF: loaded %d hulls", m_hullData.size() );
+
+	// load faction data
+	if(!LoadFactionData( srcData ) )
+	{
+		CCP_LOGERR( "Error loading faction data!" );
+		return false;
+	}
+	CCP_LOGNOTICE( "SOF: loaded %d factions", m_factionData.size() );
+
+	// load race data
+	if(!LoadRaceData( srcData ) )
+	{
+		CCP_LOGERR( "Error loading race data!" );
+		return false;
+	}
+	CCP_LOGNOTICE( "SOF: loaded %d races", m_raceData.size() );
+
 	return true;
 }
 
@@ -118,41 +152,16 @@ bool EveSOFDataMgr::LoadData( const char* filePath )
 	p.Attach( BeResMan->LoadObject( filePath ) );
 	if( p == NULL )
 	{
-		CCP_LOGERR( "Couldn't find hull data resource file: %s", filePath );
-		return false;
-	}
-	// is it of right type?
-	EveSOFDataPtr srcData;
-	if( !p->QueryInterface( BlueInterfaceIID<EveSOFData>(), (void**)&srcData ) )
-	{
-		CCP_LOGERR( "resource file %s is not of correct type!", filePath );
+		CCP_LOGERR( "Couldn't find SOF db data resource file: %s", filePath );
 		return false;
 	}
 
-	// load hull data
-	if(!LoadHullData( srcData ) )
+	// set it, so we create the stl containers in here
+	if( !SetData( p ) )
 	{
-		CCP_LOGERR( "Error loading hull data from %s!", filePath );
-		return false; 
-	}
-	CCP_LOGNOTICE( "SOF: loaded %d hulls", m_hullData.size() );
-
-	// load faction data
-	if(!LoadFactionData( srcData ) )
-	{
-		CCP_LOGERR( "Error loading faction data from %s!", filePath );
+		CCP_LOGERR( "resource set SOF db data resource file: %s", filePath );
 		return false;
 	}
-	CCP_LOGNOTICE( "SOF: loaded %d factions", m_factionData.size() );
-
-	// load race data
-	if(!LoadRaceData( srcData ) )
-	{
-		CCP_LOGERR( "Error loading race data from %s!", filePath );
-		return false;
-	}
-	CCP_LOGNOTICE( "SOF: loaded %d races", m_raceData.size() );
-
 	return true;
 }
 
