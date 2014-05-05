@@ -348,6 +348,10 @@ void EveMetaball::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType 
 // --------------------------------------------------------------------------------
 bool EveMetaball::HasTransparentBatches()
 {
+	if( m_transparentEffect )
+	{
+		return true;
+	}
 	return false;
 }
 
