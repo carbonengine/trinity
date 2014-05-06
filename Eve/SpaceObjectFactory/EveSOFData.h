@@ -60,6 +60,9 @@ public:
 	int m_boneIndex, m_groupIndex;
 	bool m_boosterGainInfluence;
 	Vector3 m_spriteScale;
+	float m_flareIntensity;
+	float m_spriteIntensity;
+	float m_coneIntensity;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullSpotlightSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullSpotlightSetItem );

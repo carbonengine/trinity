@@ -373,9 +373,26 @@ void EveSOF::SetupSpotlightSets( EveShip2Ptr ship, const EveSOFDataMgr::HullData
 			// fill it up
 			spotlightSetItem->m_boneIndex = ssiit->boneIndex;
 			spotlightSetItem->m_boosterGainInfluence = ssiit->boosterGainInfluence;
-			spotlightSetItem->m_coneColor = Color( 1.f, 1.f, 1.f, 1.f );
-			spotlightSetItem->m_flareColor = Color( 1.f, 1.f, 1.f, 1.f );
-			spotlightSetItem->m_spriteColor = Color( 1.f, 1.f, 1.f, 1.f );
+			
+			auto finder = factionData->spotlightSetColors.find( ssiit->groupIndex );
+			if( finder == factionData->spotlightSetColors.end() )
+			{
+				spotlightSetItem->m_coneColor = Color( 1.f, 1.f, 1.f, 1.f );
+				spotlightSetItem->m_flareColor = Color( 1.f, 1.f, 1.f, 1.f );
+				spotlightSetItem->m_spriteColor = Color( 1.f, 1.f, 1.f, 1.f );
+			}
+			else
+			{
+				const EveSOFDataMgr::FactionSpotlightSetColorData& colors = finder->second;
+				spotlightSetItem->m_coneColor = colors.coneColor;
+				spotlightSetItem->m_coneColor *= ssiit->coneIntensity;
+				
+				spotlightSetItem->m_flareColor = colors.flareColor;
+				spotlightSetItem->m_flareColor *= ssiit->flareIntensity;
+				
+				spotlightSetItem->m_spriteColor = colors.spriteColor;
+				spotlightSetItem->m_spriteColor *= ssiit->spriteIntensity;
+			}
 			spotlightSetItem->m_spriteScale = ssiit->spriteScale;
 			spotlightSetItem->m_transform = ssiit->transform;
 			// add it

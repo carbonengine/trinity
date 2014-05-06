@@ -286,6 +286,9 @@ bool EveSOFDataMgr::LoadHullData( EveSOFDataPtr srcData )
 				hssid.spriteScale = spotlightSetItemData->m_spriteScale;
 				hssid.transform = spotlightSetItemData->m_transform;
 				hssid.groupIndex = spotlightSetItemData->m_groupIndex;
+				hssid.coneIntensity = spotlightSetItemData->m_coneIntensity;
+				hssid.flareIntensity = spotlightSetItemData->m_flareIntensity;
+				hssid.spriteIntensity = spotlightSetItemData->m_spriteIntensity;
 				hssd.items.push_back( hssid );
 			}
 			hd.spotlightSets.push_back( hssd );
@@ -447,6 +450,16 @@ bool EveSOFDataMgr::LoadFactionData( EveSOFDataPtr srcData )
 			sscd.color = spriteSetData->m_color;
 
 			fd.spriteSetsColor[spriteSetData->m_groupIndex] = sscd;
+		}
+
+		// spotlight set colors
+		for( auto spotcit = factionData->m_spotlightSets.begin(); spotcit != factionData->m_spotlightSets.end(); ++spotcit )
+		{
+			FactionSpotlightSetColorData spotcd;
+			spotcd.coneColor = (*spotcit)->m_coneColor;
+			spotcd.flareColor = (*spotcit)->m_flareColor;
+			spotcd.spriteColor = (*spotcit)->m_spriteColor;
+			fd.spotlightSetColors[(*spotcit)->m_groupIndex] = spotcd;
 		}
 
 		// area parameters
