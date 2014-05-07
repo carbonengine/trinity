@@ -704,3 +704,53 @@ int Tr2Mesh::GetAreasCount() const
 {
 	return TRIBATCHTYPE_COUNT_OF_BATCH_TYPES;
 }
+
+void Tr2Mesh::UnloadWhenUnreferenced()
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	for( int i = 0; i < TRIBATCHTYPE_COUNT_OF_BATCH_TYPES; ++i )
+	{
+		if( m_areaLookupArray[ i ] )
+		{
+			for( PTr2MeshAreaVector::iterator it = m_areaLookupArray[ i ]->begin(); it != m_areaLookupArray[ i ]->end(); ++it )
+			{
+				if( *it )
+				{
+					auto material = (*it)->GetMaterialInterface();
+					if( material )
+					{
+						material->UnloadResources();
+					}
+				}
+			}
+		}
+	}
+}
+
+void Tr2Mesh::ReloadWhenReferenced()
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	for( int i = 0; i < TRIBATCHTYPE_COUNT_OF_BATCH_TYPES; ++i )
+	{
+		if( m_areaLookupArray[ i ] )
+		{
+			for( PTr2MeshAreaVector::iterator it = m_areaLookupArray[ i ]->begin(); it != m_areaLookupArray[ i ]->end(); ++it )
+			{
+				if( *it )
+				{
+					auto material = (*it)->GetMaterialInterface();
+					if( material )
+					{
+						material->LoadResources();
+					}
+				}
+			}
+		}
+	}
+}
+
+
+
+

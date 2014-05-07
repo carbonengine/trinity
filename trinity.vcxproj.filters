@@ -375,9 +375,6 @@
     <ClInclude Include="TriConstants.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="TriConvolutionMatrix5.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="TriDebugResourceHelper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -886,9 +883,6 @@
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\ITriConstants.h">
-      <Filter>Source Files\Include</Filter>
-    </ClInclude>
-    <ClInclude Include="Include\ITriConvolutionMatrix5.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
     <ClInclude Include="Include\ITriCurveLength.h">
@@ -1921,12 +1915,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TriConstants.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TriConvolutionMatrix5.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TriConvolutionMatrix5_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TriDebugResourceHelper.cpp">

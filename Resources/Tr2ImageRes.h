@@ -51,7 +51,7 @@ private:
 	size_t m_reservedMemory;
 	uint32_t m_dataSize;
 
-	Tr2ImageHandler* m_imageHandler;
+	ImageIO::HostBitmap m_bitmap;
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2ImageRes );

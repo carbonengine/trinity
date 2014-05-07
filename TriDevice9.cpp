@@ -15,6 +15,8 @@ using namespace Tr2RenderContextEnum;
 
 #include "dxerr.h"
 
+CCP_STATS_DECLARED_ELSEWHERE( presentTime );
+
 bool TriDevice::DoLowLevelDeviceReset( const Tr2PresentParametersAL& presentationParameters )
 {
 	D3DPRESENT_PARAMETERS pp;
@@ -172,7 +174,7 @@ void TriDevice::HandleRenderTick( Be::Time timestamp )
 	// acyncrounicy between EndScene() and Present(). So if we pump Python
 	// and do all the other stuff between we get a degree of paralization
 	{
-		CCP_STATS_ZONE( "Present" );
+		CCP_STATS_SCOPED_TIME( presentTime );
 		CR_RETURN( renderContext.Present() );
 	}
 		

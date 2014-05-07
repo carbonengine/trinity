@@ -133,7 +133,10 @@ void Tr2ShaderMaterial::ReleaseResources( TriStorage s )
 		{
 			for( unsigned i = 0; i != SHADER_TYPE_COUNT; ++i )
 			{
-				( *it )->m_stageInput[i].m_constantBuffer.Destroy();
+				if( ( *it )->m_stageInput[i].m_constantBuffer )
+				{
+					( *it )->m_stageInput[i].m_constantBuffer->Destroy();
+				}
 			}
 		}
 	}
@@ -213,6 +216,20 @@ unsigned Tr2ShaderMaterial::GetSortValue() const
 ITr2ShaderState* Tr2ShaderMaterial::GetShaderStateInterface() const
 {
 	return m_lowLevelShader;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Implements ITr2ShaderMaterial interface. Returns empty constant parameter set.
+// Arguments:
+//   count - (out) Number of constant parameters
+// Return Value:
+//   NULL always
+// --------------------------------------------------------------------------------------
+const Tr2ConstantEffectParameter* Tr2ShaderMaterial::GetConstParameters( size_t& count ) const
+{
+	count = 0;
+	return nullptr;
 }
 
 // --------------------------------------------------------------------------------------
@@ -461,12 +478,12 @@ bool Tr2ShaderMaterial::PopulateParameters()
 			const auto& input = pass.stageInputs[i];
 			for( auto constant = input.constants.cbegin(); constant != input.constants.end();  ++constant )
 			{
-				if( !GetBool( m_lowLevelShader, constant->name, "SasUiVisible" ) )
+				if( !GetBool( m_lowLevelShader, constant->name.c_str(), "SasUiVisible" ) )
 				{
 					continue;
 				}
 
-				if( m_parameters.find( constant->name ) != m_parameters.end() )
+				if( m_parameters.find( constant->name.c_str() ) != m_parameters.end() )
 				{
 					continue;
 				}
@@ -629,68 +646,6 @@ void Tr2ShaderMaterial::RebuildCachedDataInternal()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Returns a unique hash of the material based on parameter content
-//		TODO: So far it only considers texture parameters, which is all the existing uses of this expect
-// --------------------------------------------------------------------------------------
-unsigned int Tr2ShaderMaterial::GetParameterHash()
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	if( m_parameterHash == INVALID_PARAMETER_HASH )
-	{
-		static const char* materialType = "ShaderMaterial";
-
-		//	Hash based on the MaterialType
-		m_parameterHash = CcpHashFNV1( materialType, strlen( materialType ) );
-
-		//	Hash based on the HighLevelShaderName
-		m_parameterHash = CcpHashFNV1( m_highLevelShaderName.c_str(), m_highLevelShaderName.length(), m_parameterHash );
-
-		//	Hash based on the Situation flags
-		const std::vector<unsigned int>& situationFlags = m_currentSituation.GetSituation();
-		if( !situationFlags.empty() )
-		{
-			m_parameterHash = CcpHashFNV1( &situationFlags.front(), sizeof( unsigned int )*situationFlags.size(), m_parameterHash );
-		}
-
-		//	Hash based on the contents of the parameters
-		const Tr2ShaderParameterDescriptionVector& descriptions = m_highLevelShader->GetParameterDescriptions();
-
-		for( Tr2ShaderParameterDescriptionVector::const_iterator it = descriptions.begin();
-			it != descriptions.end(); ++it )
-		{
-			const std::string& pName = ( *it )->GetShaderParameterName();
-
-			//	If the parameter exists, hash it resource value 
-			PITriEffectParameterDict::const_iterator param_it = m_parameters.find( pName.c_str() );
-
-			if( param_it != m_parameters.end() )
-			{
-				ITriEffectParameter* param = param_it->second;
-
-				TriTexture2DParameter* texParam = dynamic_cast<TriTexture2DParameter*>( param );
-
-				if( texParam )
-				{
-					CCP_ASSERT( pName.c_str() != NULL );
-
-					m_parameterHash = CcpHashFNV1( pName.c_str(), pName.length(), m_parameterHash );
-
-					if( const void *p1 = texParam->GetResourcePointer() )
-					{					
-						m_parameterHash = CcpHashFNV1( &p1, sizeof( void* ), m_parameterHash );
-					}
-				}
-			}
-		}	
-	}
-
-
-	return m_parameterHash;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
 //   Maps the samplers to registers
 // Arguments:
 //   samplers - Map of sampler state setups
@@ -760,6 +715,16 @@ void Tr2ShaderMaterial::MapPassResources( const Tr2EffectResourceMap& resources,
 			pv.push_back( param );
 		}
 	}
+}
+
+void Tr2ShaderMaterial::UnloadResources()
+{
+
+}
+
+void Tr2ShaderMaterial::LoadResources()
+{
+
 }
 
 // --------------------------------------------------------------------------------------
@@ -880,4 +845,3 @@ void Tr2ShaderSituation::Reset()
 {
 	m_situations.clear();
 }
-

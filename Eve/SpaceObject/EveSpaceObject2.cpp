@@ -208,6 +208,8 @@ bool EveSpaceObject2::Initialize()
 
 void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	Be::Time time = updateContext.GetTime();
 
 	UpdateWorldTransform( time );

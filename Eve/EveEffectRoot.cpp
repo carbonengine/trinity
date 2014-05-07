@@ -147,6 +147,8 @@ void EveEffectRoot::UpdateLOD( Be::Time time )
 
 void EveEffectRoot::UpdateSyncronous( EveUpdateContext& updateContext ) 
 {	
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	UpdateWorldTransform( updateContext.GetTime() );
 
 	D3DXMatrixTransformation( &m_localTransform, 0, 0, &m_scaling, 0, &m_rotation, &m_translation );

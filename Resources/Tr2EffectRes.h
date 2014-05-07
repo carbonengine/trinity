@@ -62,7 +62,11 @@ public:
 			}
 
 			USE_MAIN_THREAD_RENDER_CONTEXT();
-			m_stageInput[type].m_constantBuffer.Create( 
+			if( !m_stageInput[type].m_constantBuffer )
+			{
+				m_stageInput[type].m_constantBuffer.reset( CCP_NEW( "Tr2EffectPassParameters::m_stageInput::m_constantBuffer" ) Tr2ConstantBufferAL );
+			}
+			m_stageInput[type].m_constantBuffer->Create( 
 				size, 
 				Tr2RenderContextEnum::USAGE_CPU_WRITE | Tr2RenderContextEnum::USAGE_LOCK_FREQUENTLY, 
 				nullptr, 
@@ -79,7 +83,7 @@ public:
 		Tr2EffectParamVector m_shaderParameters;
 		Tr2EffectParamVector m_samplers;
 		Tr2EffectParamVector m_uavs;
-		Tr2ConstantBufferAL m_constantBuffer;
+		std::unique_ptr<Tr2ConstantBufferAL> m_constantBuffer;
 	};
 
 	StageInput m_stageInput[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
@@ -129,29 +133,11 @@ public:
 
 	const Tr2Pass& GetPass( unsigned int passIx ) const;
 
-	const Tr2EffectConstantVector& GetConstantTable( 
-								uint32_t passIx, 
-								Tr2RenderContextEnum::ShaderType type );
-
-	void GetDefaultConstantValues(
-								uint32_t passIndex,
-								Tr2RenderContextEnum::ShaderType type,
-								unsigned &count,
-								const void*& values );
-
-	const Tr2EffectResourceMap& GetInputResources(
-								uint32_t passIx, 
-								Tr2RenderContextEnum::ShaderType type );
-
-	const Tr2EffectResourceMap& GetInputUavs(
-								uint32_t passIx, 
-								Tr2RenderContextEnum::ShaderType type );
+	const Tr2EffectDescription& GetEffectDescription() const;
 
 	const Tr2ShaderInputDefinition* GetShaderInputDefinition( 
 								uint32_t passIx, 
 								Tr2RenderContextEnum::ShaderType type );
-
-	bool HasShaderStage( uint32_t passIndex, Tr2RenderContextEnum::ShaderType type ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource

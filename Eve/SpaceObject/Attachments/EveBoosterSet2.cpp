@@ -60,6 +60,7 @@ EveBoosterSet2::EveBoosterSet2( IRoot* lockobj ) :
 	m_destinyUpdate( true ),
 	m_alwaysOn( false ),
 	m_drawDebugInfo( false ),
+	m_alwaysOnIntensity( 1.0f ),
 	m_boosterLOD( 0.f ),
 	m_trailsLOD( 0.f ),
 	m_parentSpeed( 0.f ),
@@ -171,7 +172,7 @@ float EveBoosterSet2::CalculateIntensity( ITriVectorFunctionPtr ball, Be::Time t
 	// if we want the boosters to be permanently visible
 	if ( m_alwaysOn )
 	{
-		return 1.f;
+		return m_alwaysOnIntensity;
 	}
 
 	// no ball, no gain! Cause we don't have data to build on...

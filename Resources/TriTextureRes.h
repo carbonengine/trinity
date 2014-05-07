@@ -145,7 +145,9 @@ private:
 	float	m_cutoutWidth;
 	float	m_cutoutHeight;
 
-	std::shared_ptr<Tr2ImageHandler> m_imageHandler;
+	ImageIO::Metadata m_metadata;
+
+	std::unique_ptr<ImageIO::HostBitmap> m_loadedBitmap;
 
     unsigned	m_mipLevelMaxCount;
 	bool m_isTextureLoadDisabled		: 1;

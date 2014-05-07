@@ -187,6 +187,8 @@ void EveSpherePin::ReleaseCachedData( BlueAsyncRes* p )
 // ------------------------------------------------------------------------------------------------------
 void EveSpherePin::UpdateSyncronous( EveUpdateContext& updateContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	if( !m_tree )
 	{
 		if( m_geometryResource && !m_geomResPath.empty() && m_geometryResource->IsGood() )

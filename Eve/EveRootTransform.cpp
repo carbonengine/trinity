@@ -11,6 +11,8 @@ EveRootTransform::EveRootTransform( IRoot* lockobj ):
 
 void EveRootTransform::UpdateSyncronous( EveUpdateContext& updateContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	Quaternion rotation;
 	Vector3 translation;
 	Be::Time time = updateContext.GetTime();

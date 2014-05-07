@@ -93,6 +93,7 @@ const Be::ClassInfo* Tr2Mesh::ExposeToBlue()
 		MAP_INTERFACE( Tr2Mesh )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
+		MAP_INTERFACE( IUnloadable )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAPHIDEABLE()

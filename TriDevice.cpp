@@ -104,6 +104,7 @@ CCP_STATS_DECLARE( frameTimeAbove200ms, "Trinity/FrameTimeAbove200ms", false, CS
 CCP_STATS_DECLARE( frameTimeAbove300ms, "Trinity/FrameTimeAbove300ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 300ms (but below 400)");
 CCP_STATS_DECLARE( frameTimeAbove400ms, "Trinity/FrameTimeAbove400ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 400ms (but below 500)");
 CCP_STATS_DECLARE( frameTimeAbove500ms, "Trinity/FrameTimeAbove500ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 500ms");
+CCP_STATS_DECLARE( presentTime, "Trinity/PresentTime", true, CST_TIME, "Time spent in Present call");
 
 // NOTE: This is a global pointer to a ROT object, initialized by it
 // We never want this rot object to die, so we hold a reference here.
@@ -681,7 +682,9 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 	static int s_currentFpsValue = 0;
 
 	double frameTime = s_frameTimer.GetSeconds();
-	CCP_STATS_SET( frameTime, frameTime );
+#if CCP_STATS_ENABLED
+	g_ccpStatistics_frameTime.Set( frameTime );
+#endif
 
 	if( frameTime > 0.5f )
 	{

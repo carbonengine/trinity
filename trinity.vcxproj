@@ -2059,7 +2059,6 @@
     <ClInclude Include="Tr2VideoAdapters.h"/>
     <ClInclude Include="Tr2VisibilityResults.h"/>
     <ClInclude Include="TriConstants.h"/>
-    <ClInclude Include="TriConvolutionMatrix5.h"/>
     <ClInclude Include="TriDebugResourceHelper.h"/>
     <ClInclude Include="TriDebugTextRenderer.h"/>
     <ClInclude Include="TriDebugTextRendererBitmaps.h"/>
@@ -2230,7 +2229,6 @@
     <ClInclude Include="Include\ITriColor.h"/>
     <ClInclude Include="Include\ITriColorCurve.h"/>
     <ClInclude Include="Include\ITriConstants.h"/>
-    <ClInclude Include="Include\ITriConvolutionMatrix5.h"/>
     <ClInclude Include="Include\ITriCurveLength.h"/>
     <ClInclude Include="Include\ITriDevice.h"/>
     <ClInclude Include="Include\ITriDuration.h"/>
@@ -2579,8 +2577,6 @@
     <ClCompile Include="TriColor.cpp"/>
     <ClCompile Include="TriColor_Blue.cpp"/>
     <ClCompile Include="TriConstants.cpp"/>
-    <ClCompile Include="TriConvolutionMatrix5.cpp"/>
-    <ClCompile Include="TriConvolutionMatrix5_Blue.cpp"/>
     <ClCompile Include="TriDebugResourceHelper.cpp"/>
     <ClCompile Include="TriDebugTextRenderer.cpp"/>
     <ClCompile Include="TriDevice.cpp"/>

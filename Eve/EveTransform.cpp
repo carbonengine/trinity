@@ -74,6 +74,8 @@ void EveTransform::Update( EveUpdateContext& updateContext )
 
 void EveTransform::UpdateSyncronous( EveUpdateContext& updateContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	// is this one here enabled?
 	if( m_hideOnLowQuality && Tr2Renderer::IsLowQuality() )
 	{
@@ -422,6 +424,44 @@ void EveTransform::PlayCurveSets()
 	for( TriCurveSetVector::const_iterator it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 	{
 		(*it)->Play();
+	}
+}
+
+void EveTransform::UnloadWhenUnreferenced()
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	for( auto it = m_children.begin(); it != m_children.end(); ++it )
+	{
+		IUnloadablePtr p = BlueCastPtr( *it );
+		if( p )
+		{
+			p->UnloadWhenUnreferenced();
+		}
+	}
+
+	if( m_mesh )
+	{
+		m_mesh->UnloadWhenUnreferenced();
+	}
+}
+
+void EveTransform::ReloadWhenReferenced()
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	for( auto it = m_children.begin(); it != m_children.end(); ++it )
+	{
+		IUnloadablePtr p = BlueCastPtr( *it );
+		if( p )
+		{
+			p->ReloadWhenReferenced();
+		}
+	}
+
+	if( m_mesh )
+	{
+		m_mesh->ReloadWhenReferenced();
 	}
 }
 

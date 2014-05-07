@@ -171,8 +171,8 @@ bool Tr2TextureAtlas::DoPrepare( Tr2AtlasTexture* tex )
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	unsigned int width = tex->m_imageHandler->GetWidth();
-	unsigned int height = tex->m_imageHandler->GetHeight();
+	unsigned int width = tex->m_loadedBitmap->GetWidth();
+	unsigned int height = tex->m_loadedBitmap->GetHeight();
 	const unsigned areaWidth = width + m_margin * 2;
 	const unsigned areaHeight = height + m_margin * 2;
 
@@ -211,7 +211,7 @@ bool Tr2TextureAtlas::DoPrepare( Tr2AtlasTexture* tex )
 
 	if( !m_isRenderTarget )
 	{
-		Tr2ImageIOHelpers::CopyToTexture( *tex->m_imageHandler, m_texture, area->rect.left, area->rect.top, m_margin, renderContext );
+		Tr2ImageIOHelpers::CopyToTexture( *tex->m_loadedBitmap, m_texture, area->rect.left, area->rect.top, m_margin, renderContext );
 
 		if( m_hasMipMaps ) {
 			m_dirtyMipRegions.push_back( area->rect );
@@ -1126,7 +1126,7 @@ bool Tr2TextureAtlas::CopyTextureIntoAtlas( Tr2AtlasTexture* tex )
 
 	std::vector<unsigned char> pixels;
 	unsigned pitch = 0;
-	Tr2ImageHandler::AddMargin( m_texture.GetFormat(), (const unsigned char*)srcData, tex->GetWidth(), tex->GetHeight(), m_margin, pixels, pitch );
+	Tr2ImageIOHelpers::AddMargin( m_texture.GetFormat(), (const unsigned char*)srcData, tex->GetWidth(), tex->GetHeight(), m_margin, pixels, pitch );
 
 	// Area may be larger than texture due to alignment
 	uint32_t right = r.left + tex->GetWidth() + 2*m_margin;

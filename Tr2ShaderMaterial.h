@@ -87,9 +87,11 @@ public:
 	uint32_t ApplyMaterialDataForPass( unsigned int passIndex, Tr2RenderContext& renderContext );
 	void ApplyShaderInputs( unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext );
 	unsigned int GetSortValue( void ) const;
-	unsigned int GetParameterHash( void );
 	ITr2ShaderState* GetShaderStateInterface( void ) const;
 	ITriEffectParameter* GetParameterByName( const char* name ) const { return FindParameterByName( name ); }
+	const Tr2ConstantEffectParameter* GetConstParameters( size_t& count ) const;
+	void UnloadResources();
+	void LoadResources();
 
 	// Set the high-level shader name
 	void SetHighLevelShaderName( const std::string& shaderName );

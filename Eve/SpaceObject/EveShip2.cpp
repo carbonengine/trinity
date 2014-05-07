@@ -30,6 +30,8 @@ EveShip2::~EveShip2()
 
 void EveShip2::UpdateSyncronous( EveUpdateContext& updateContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	if( !m_update )
 	{
 		return;

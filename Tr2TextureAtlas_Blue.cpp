@@ -11,16 +11,14 @@ const Be::ClassInfo* Tr2TextureAtlas::ExposeToBlue()
         MAP_INTERFACE( Tr2TextureAtlas )
 		MAP_INTERFACE( ID3DTexture )
 
-#if DEPRECATED_ENABLED
 		MAP_ATTRIBUTE_WITH_CHOOSER
 		(
 			"format",
 			m_format,
-			"D3D texture format",
+			"Texture format",
 			Be::READ | Be::ENUM,
-			TriD3DFormat
+			Tr2RenderContextEnum_PixelFormat_Chooser
 		)
-#endif
 
 		MAP_ATTRIBUTE
 		(

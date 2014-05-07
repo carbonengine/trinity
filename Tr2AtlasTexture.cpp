@@ -22,7 +22,6 @@ Tr2AtlasTexture::Tr2AtlasTexture( IRoot* lockobj ) :
 	m_atlasArea( NULL ),
 	m_data( NULL ),
 	m_dataSize( 0 ),
-	m_imageHandler( nullptr ),
 	m_renderTarget( nullptr ),
 	m_reservedMemory( 0 ),
 	m_memoryUsage( 0 ),
@@ -162,32 +161,18 @@ BlueAsyncRes::LoadingResult Tr2AtlasTexture::DoLoad()
 		return LR_FAILED;
 	}
 
-	m_imageHandler = CreateImageHandler( m_path );
-	
-	// for backward compatibility, make a texture that's intended for atlassing always 32 bit.
-	m_imageHandler->SetDesiredFormat( PIXEL_FORMAT_B8G8R8A8_UNORM );
-
-	bool isOK = m_imageHandler->ReadHeader( m_dataStream );
-	if( isOK )
+	m_loadedBitmap.reset( CCP_NEW( "Tr2AtlasTexture::m_loadedBitmap" ) ImageIO::HostBitmap );
+	auto result = ImageIO::ReadImage( *m_dataStream, ImageIO::LoadParameters( m_path.c_str() ), *m_loadedBitmap );
+	if( result )
 	{
-		isOK = m_imageHandler->ReadImage( m_dataStream );
-		
-
-		// Allow loading to a specific atlas by setting this before DoLoad
-		if( !m_textureAtlas )
-		{
-			m_textureAtlas = g_textureAtlasMan->FindAtlas( m_imageHandler->GetFormat() );
-		}
-
-		// Note that m_textureAtlas may be NULL - the texture will be stand-alone
-		// in that case - it is not an error.
+		m_loadedBitmap->ConvertFormat( PIXEL_FORMAT_B8G8R8A8_UNORM );
+		m_textureAtlas = g_textureAtlasMan->FindAtlas( m_loadedBitmap->GetFormat() );
 	}
 	else
 	{
-		CCP_LOGWARN( "Texture '%S' - couldn't read header", m_path.c_str() );
+		CCP_LOGWARN( "Tr2AtlasTexture: failed to load '%S' - %s", m_path.c_str(), result.GetErrorMessage().c_str() );
 	}
-
-	return isOK ? LR_SUCCESS : LR_FAILED;
+	return result ? LR_SUCCESS : LR_FAILED;
 }
 
 bool Tr2AtlasTexture::DoPrepare()
@@ -217,12 +202,12 @@ bool Tr2AtlasTexture::DoPrepare()
 	if( !isOK )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		if( Tr2ImageIOHelpers::Create2DTexture( *m_imageHandler, m_texture, m_memoryUsage, renderContext ) )
+		if( Tr2ImageIOHelpers::Create2DTexture( *m_loadedBitmap, m_texture, m_memoryUsage, renderContext ) )
 		{
 			m_x = 0;
 			m_y = 0;
-			m_width = m_imageHandler->GetWidth();
-			m_height = m_imageHandler->GetHeight();
+			m_width = m_loadedBitmap->GetWidth();
+			m_height = m_loadedBitmap->GetHeight();
 			m_textureWidth = m_width;
 			m_textureHeight = m_height;
 
@@ -245,11 +230,7 @@ bool Tr2AtlasTexture::DoPrepare()
 
 void Tr2AtlasTexture::DoCloseStream()
 {
-	if( m_imageHandler )
-	{
-		CCP_DELETE m_imageHandler;
-		m_imageHandler = NULL;
-	}
+	m_loadedBitmap.reset();
 
 	if( m_dataStream )
 	{

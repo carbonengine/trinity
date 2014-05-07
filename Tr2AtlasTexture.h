@@ -128,7 +128,7 @@ private:
 	uint32_t m_dataSize;
 
 	// Image handler used for loading
-	Tr2ImageHandler* m_imageHandler;
+	std::unique_ptr<ImageIO::HostBitmap> m_loadedBitmap;
 
 	Tr2TextureAL	m_texture;
 	// It is ok to have raw pointer to Tr2AtlasTexture::m_renderTarget since

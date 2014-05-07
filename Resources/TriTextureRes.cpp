@@ -211,15 +211,15 @@ bool TriTextureRes::DoOpenStream()
 
 void TriTextureRes::DoCloseStream()
 {
-	if( m_imageHandler )
+	if( m_loadedBitmap )
 	{
-		m_cutoutX		= m_imageHandler->m_cutoutX;
-		m_cutoutY		= m_imageHandler->m_cutoutY;
-		m_cutoutWidth	= m_imageHandler->m_cutoutWidth;
-		m_cutoutHeight	= m_imageHandler->m_cutoutHeight;
+		m_cutoutX		= m_metadata.cutout.x;
+		m_cutoutY		= m_metadata.cutout.y;
+		m_cutoutWidth	= m_metadata.cutout.width;
+		m_cutoutHeight	= m_metadata.cutout.height;
 	}
 
-	m_imageHandler.reset();
+	m_loadedBitmap.reset();
 
 	if( m_dataStream )
 	{
@@ -257,13 +257,7 @@ bool TriTextureRes::Save( const wchar_t* filename )
 		return false;
 	}
 	
-	std::shared_ptr<Tr2ImageHandler> saveImage( CreateImageHandler( filename ) );
-	if( !saveImage )
-	{
-		CCP_LOGERR( "Unsupported extension for saving (%S)", filename );
-		return false;
-	}
-	if( !saveImage->IsSaveSupported( *this ) )
+	if( !ImageIO::IsSaveSupported( filename, *this ) )
 	{
 		CCP_LOGERR( "Unsupported format for saving (%S)", filename );
 		return false;
@@ -290,7 +284,7 @@ bool TriTextureRes::Save( const wchar_t* filename )
 		}
 	}
 
-	return saveBitmap->Save( filename, saveImage );
+	return saveBitmap->Save( filename );
 }
 
 bool TriTextureRes::SaveAsync( const wchar_t* filename )
@@ -309,13 +303,12 @@ bool TriTextureRes::DoPrepareAsyncSave( void )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	m_asyncSaveImage.reset( CreateImageHandler( m_saveFilename ) );
 	if( !m_asyncSaveImage )
 	{
 		CCP_LOGERR( "Unsupported extension for saving (%S)", m_saveFilename.c_str() );
 		return false;
 	}
-	if( !m_asyncSaveImage->IsSaveSupported( *this ) )
+	if( !ImageIO::IsSaveSupported( m_saveFilename.c_str(), *this ) )
 	{
 		CCP_LOGERR( "Unsupported format for saving (%S)", m_saveFilename.c_str() );
 		return false;
@@ -352,7 +345,7 @@ bool TriTextureRes::DoExecuteAsyncSave()
 {
 	if( m_asyncSaveBitmap && m_asyncSaveBitmap->IsValid() )
 	{
-		return m_asyncSaveBitmap->Save( m_saveFilename.c_str(), m_asyncSaveImage );
+		return m_asyncSaveBitmap->Save( m_saveFilename.c_str() );
 	}
 
 	return false;
@@ -364,6 +357,18 @@ void TriTextureRes::DoCleanupAsyncSave()
 	m_asyncSaveImage.reset();
 }
 
+static bool IsTga( const wchar_t* filename )
+{
+	size_t len = wcslen( filename );
+	if( len > 3 )
+	{
+		const wchar_t* ext = filename + len - 3;
+		return ( ext[0] == L't' || ext[0] == L'T' ) &&
+			( ext[1] == L'g' || ext[1] == L'G' ) &&
+			( ext[2] == L'a' || ext[2] == L'A' );
+	}
+	return false;
+}
 
 // Called on background thread
 BlueAsyncRes::LoadingResult TriTextureRes::DoLoad()
@@ -391,26 +396,23 @@ BlueAsyncRes::LoadingResult TriTextureRes::DoLoad()
 		m_type = TEX_TYPE_2D;
 	}
 
-	m_imageHandler.reset( CreateImageHandler( m_path ) );
-	CCP_ASSERT( m_imageHandler != nullptr );
+	m_loadedBitmap.reset( CCP_NEW( "TriTextureRes::m_loadedBitmap" ) ImageIO::HostBitmap );
+	CCP_ASSERT( m_loadedBitmap != nullptr );
 
-	m_imageHandler->SetMipLevelSkipCount( ComputeMipSkipCount() );
-	m_imageHandler->SetMipLevelMaxCount( m_mipLevelMaxCount );
-	bool isOK = m_imageHandler->ReadHeader( m_dataStream );
-	if(isOK)
+	ImageIO::LoadParameters params( m_path.c_str(), ComputeMipSkipCount(), m_mipLevelMaxCount );
+	auto result = ImageIO::ReadImage( *m_dataStream, params, *m_loadedBitmap, &m_metadata );
+	if( !result )
 	{
-		isOK = m_imageHandler->ReadImage( m_dataStream ) && m_imageHandler->GenerateMips();
+		CCP_LOGERR( "Tr2ImageHandler failed to load texture '%S': %s", GetPath(), result.GetErrorMessage().c_str() );
+		m_loadedBitmap.reset();
 	}
-	else
+	else if( IsTga( GetPath() ) )
 	{
-		CCP_LOGWARN( "Texture '%S' - couldn't read header", GetPath() );
-	}
-
-	if( !isOK )
-	{
-		CCP_LOGERR( "Tr2ImageHandler failed to load texture '%S'", GetPath() );
-
-		m_imageHandler.reset();
+		if( !m_loadedBitmap->GenerateMipMaps() )
+		{
+			CCP_LOGERR( "Tr2ImageHandler failed to generate mipmaps for texture '%S'", GetPath() );
+			m_loadedBitmap.reset();
+		}
 	}
 
 	const float secs = (float)t.GetSeconds();
@@ -419,7 +421,7 @@ BlueAsyncRes::LoadingResult TriTextureRes::DoLoad()
 		CCP_LOGWARN( "TriTextureRes - image read '%S' took %f seconds", GetPath(), secs );
 	}
 
-	return isOK ? LR_SUCCESS : LR_FAILED;
+	return m_loadedBitmap ? LR_SUCCESS : LR_FAILED;
 }
 
 // Called on main thread
@@ -444,11 +446,11 @@ bool TriTextureRes::DoPrepare()
 	}
 
 	bool isOK = false;
-	if( m_imageHandler )
+	if( m_loadedBitmap )
 	{
 		Tr2TextureAL face;
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		if( !Tr2ImageIOHelpers::CreateTexture( *m_imageHandler, m_texture, 
+		if( !Tr2ImageIOHelpers::CreateTexture( *m_loadedBitmap, m_texture, 
 												m_memoryUse, 
 												renderContext, 
 												USAGE_IMMUTABLE ) )

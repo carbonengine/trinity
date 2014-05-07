@@ -92,6 +92,8 @@ bool EveMissile::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query )
 // --------------------------------------------------------------------------------
 void EveMissile::UpdateSyncronous( EveUpdateContext& updateContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	EveSpaceObject2::UpdateSyncronous( updateContext );
 	Be::Time time = updateContext.GetTime();
 	float deltaT = updateContext.GetDeltaT();

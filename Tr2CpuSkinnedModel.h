@@ -1,5 +1,5 @@
 #ifndef TR2CPUSKINNEDMODEL_H
-#define Tr2CPUSKINNEDMODEL_H
+#define TR2CPUSKINNEDMODEL_H
 
 #include "Tr2SkinnedModel.h"
 

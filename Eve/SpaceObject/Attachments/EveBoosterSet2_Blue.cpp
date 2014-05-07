@@ -101,6 +101,13 @@ const Be::ClassInfo* EveBoosterSet2::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST
 		)
 		MAP_ATTRIBUTE
+		(
+			"alwaysOnIntensity",
+			m_alwaysOnIntensity,
+			"Booster intensity when alwaysOn is turned on. Useful for Jessica and marketing reasons.",
+			Be::READWRITE | Be::PERSIST
+		)
+		MAP_ATTRIBUTE
 		(    
 			"haloColor",       
 			m_haloColor,       

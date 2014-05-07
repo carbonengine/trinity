@@ -26,6 +26,13 @@ CCP_STATS_DECLARE( effectCBLocks, "Trinity/effectCBLocks", true, CST_COUNTER_LOW
 CCP_STATS_DECLARE( effectCBSkippedLocks, "Trinity/effectCBSkippedLocks", true, CST_COUNTER_LOW, "number of CB locks for effect parameters skipped due to optimization" );
 CCP_STATS_DECLARE( effectCBSkippedEmptyLocks, "Trinity/effectCBSkippedEmptyLocks", true, CST_COUNTER_LOW, "number of CB locks for effect parameters skipped due to optimization with empty param list" );
 
+static BlueStructureDefinition Tr2EffectParameterStructureDef[] =
+{ 
+	{ "name", Be::SHAREDSTRING_1, 0 }, 
+	{ "value", Be::FLOAT32_4, 8 }, 
+	{0} 
+};
+
 // ---------------------------------------------------------------
 Tr2Effect::Tr2Effect(IRoot* lockobj) :
 	#if TRINITYDEV
@@ -35,11 +42,13 @@ Tr2Effect::Tr2Effect(IRoot* lockobj) :
 	m_insideStartUpdate( false ),
 	PARENTLOCK(m_parameters),
 	PARENTLOCK(m_resources),
+	PARENTLOCK( m_constParameters ),
 	m_display( true ),
 	m_parameterHash( INVALID_PARAMETER_HASH )
 {	
 	m_parameters.SetNotify( this );
 	m_resources.SetNotify( this );
+	m_constParameters.SetStructureDefinition( Tr2EffectParameterStructureDef );
 
 	m_sortValue = s_effectId++;
 
@@ -66,7 +75,10 @@ void Tr2Effect::ReleaseResources( TriStorage s )
 		{
 			for( unsigned i = 0; i != SHADER_TYPE_COUNT; ++i )
 			{
-				( *it )->m_stageInput[i].m_constantBuffer.Destroy();
+				if( ( *it )->m_stageInput[i].m_constantBuffer )
+				{
+					( *it )->m_stageInput[i].m_constantBuffer->Destroy();
+				}
 			}
 		}
 	}
@@ -74,6 +86,68 @@ void Tr2Effect::ReleaseResources( TriStorage s )
 
 bool Tr2Effect::OnPrepareResources()
 {
+	return true;
+}
+
+static bool ConvertEffectPath( const std::string path, std::string& actualPath )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	actualPath = std::string( path.size() + 8 + 10, 0 );
+	const char* str = actualPath.c_str();
+	size_t i = 0;
+	size_t dot = -1;
+	bool foundEffect = false;
+	for( auto it = std::begin( path ); it != std::end( path ); ++it )
+	{
+		char c = actualPath[i] = tolower( *it );
+		if( c == '/' )
+		{
+			if( i > 8 && strcmp( str + i - 7, "/effect/" ) == 0 )
+			{
+				--i;
+				static const char* s_platformName = "."  TRINITY_PLATFORM_NAME "/";
+				for( const char* src = s_platformName; *src; ++src )
+				{
+					actualPath[++i] = *src;
+				}
+				foundEffect = true;
+			}
+			dot = -1;
+		}
+		else if( c == '.' )
+		{
+			dot = i;
+		}
+		++i;
+	}
+	if( !foundEffect )
+	{
+		CCP_LOGERR( "Effect '%s' needs to be under /effect/", path.c_str() );
+		return false;
+	}
+	if( !dot )
+	{
+		CCP_LOGWARN( "Invalid effect path '%s', no extension", path.c_str() );
+		dot = i;
+	}
+	actualPath[dot++] = '.';
+	const char* sm;
+	switch( Tr2Renderer::GetShaderModel() )
+	{
+	case TR2SM_3_0_DEPTH:
+		sm = "sm_depth";
+		break;
+	case TR2SM_3_0_HI:
+		sm = "sm_hi";
+		break;
+	default:
+		sm = "sm_lo";
+	}
+	while( *sm )
+	{
+		actualPath[dot++] = *sm++;
+	}
 	return true;
 }
 
@@ -89,66 +163,23 @@ bool Tr2Effect::Initialize()
 		m_effectResource.Unlock();
 	}
 
-	m_actualEffectFilePath = "";
 	if( m_effectFilePath.size() > 0 )
 	{
-		// convert the effect path from something like 
-		// res:/graphics/effect/blablabla to 
-		// res:/graphics/effect.<PLATFORM>/blablabla
-		// convert the effect path from something like res:/graphics/effect/blablabla ro
-		// res:/graphics/effect.fxo/blablabla
-		std::string pathString = m_effectFilePath;
-
-		// must convert this to lower, there will be all kinds of upper/lower in there
-		std::transform(pathString.begin(), pathString.end(), pathString.begin(), ::tolower);
-
-		// rely on finding "/effect/" and turning it into "/effect.<PLATFORM>/"
-		size_t effectPos = pathString.find("/effect/");
-		if( effectPos == std::string::npos )
+		if( !ConvertEffectPath( m_effectFilePath, m_actualEffectFilePath ) )
 		{
-			CCP_LOGERR( "Effect '%s' needs to be under /effect/", m_effectFilePath.c_str() );
+			m_actualEffectFilePath = "";
 			return true;
 		}
-
-		pathString = pathString.insert( effectPos + 7, "."  TRINITY_PLATFORM_NAME );
-
-		size_t lastSlashIx = pathString.find_last_of( '/' );
-		std::string name = pathString.substr( lastSlashIx + 1 );
-		std::string path = pathString.substr( 0, lastSlashIx );
-
-		size_t lastDotIx = pathString.find_last_of( '.' );
-		std::string extension = pathString.substr( lastDotIx );
-
-		if( lastDotIx != std::string::npos && lastSlashIx < lastDotIx )
-		{
-			name.resize( name.size() - extension.size() + 1 );
-		}
-		else
-		{
-			CCP_LOGWARN( "Invalid effect path '%s', no extension", m_effectFilePath.c_str() );
-			name += '.';
-		}
-
-		const char* sm;
-		switch( Tr2Renderer::GetShaderModel() )
-		{
-		case TR2SM_3_0_DEPTH:
-			sm = "sm_depth";
-			break;
-		case TR2SM_3_0_HI:
-			sm = "sm_hi";
-			break;
-		default:
-			sm = "sm_lo";
-		}
-		
-		m_actualEffectFilePath = path + "/" + name + sm;
 		BeResMan->GetResource( m_actualEffectFilePath.c_str(), "", BlueInterfaceIID<Tr2EffectRes>(), (void**)&m_effectResource );
 
 		if( m_effectResource )
 		{
 			m_effectResource->AddNotifyTarget( this );
 		}
+	}
+	else
+	{
+		m_actualEffectFilePath = "";
 	}
 
 	return true;
@@ -370,12 +401,12 @@ bool Tr2Effect::PopulateParameters()
 
 			for( auto constant = input.constants.cbegin(); constant != input.constants.cend(); ++constant )
 			{
-				if( !GetBool( m_effectResource, constant->name, "SasUiVisible" ) )
+				if( !GetBool( m_effectResource, constant->name.c_str(), "SasUiVisible" ) )
 				{
 					continue;
 				}
 
-				if( GetParameterByName( constant->name ) )
+				if( GetParameterByName( constant->name.c_str() ) )
 				{
 					continue;
 				}
@@ -572,46 +603,6 @@ bool Tr2Effect::IsEqual( Tr2Effect* other )
 	return true;
 }
 
-unsigned int Tr2Effect::GetParameterHash()
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	if( m_parameterHash == INVALID_PARAMETER_HASH )
-	{
-		static const char* materialType = "Tr2Effect";
-	
-		//	Hash based on the MaterialType
-		m_parameterHash = CcpHashFNV1( materialType, strlen( materialType ) );
-
-		//	Hash based on the EffectRes
-		const void *p1 = GetEffectRes();
-		if( p1 != NULL )
-		{
-			m_parameterHash = CcpHashFNV1( &p1, sizeof( Tr2EffectRes* ), m_parameterHash );
-		}
-
-		//	Hash based on the length of the resource list
-		size_t resourceLen = m_resources.GetSize();
-		m_parameterHash = CcpHashFNV1( &resourceLen, sizeof( size_t ), m_parameterHash );
-
-		//	Hash based on the contents of the parameters
-		for( EffectResourceList::const_iterator it = m_resources.begin(); it != m_resources.end(); ++it )
-		{
-			ITriEffectResourceParameter* res = *it;
-
-
-			const char* paramName = res->GetParameterName();
-			size_t paramLen = strlen( paramName );
-
-			const void *p1 = res->GetResourcePointer();
-			m_parameterHash = CcpHashFNV1( paramName, paramLen, m_parameterHash );
-			m_parameterHash = CcpHashFNV1( &p1, sizeof( void* ), m_parameterHash );
-		}	
-	}
-
-	return m_parameterHash;
-}
-
 Tr2EffectRes* Tr2Effect::GetEffectRes() const
 {
 	return m_effectResource;
@@ -646,6 +637,28 @@ void Tr2Effect::SetVariableStore( Tr2VariableStore* variableStore )
 
 // --------------------------------------------------------------------------------------
 // Description:
+//   Implements ITr2ShaderMaterial interface. Returns an array of constant effect 
+//   parameters.
+// Arguments:
+//   count - (out) Number of constant parameters
+// Return Value:
+//   Pointer to the first element in constant parameter array
+// --------------------------------------------------------------------------------------
+const Tr2ConstantEffectParameter* Tr2Effect::GetConstParameters( size_t& count ) const
+{
+	count = m_constParameters.size();
+	if( count )
+	{
+		return &m_constParameters[0];
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
 //   Returns a variable store used by material to bind shader variables.
 // Return value:
 //   Variable store used by this material.
@@ -669,10 +682,14 @@ void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2Effe
 		const char* name = ss.name;
 
 		Tr2EffectParam param;
-		param.m_sourceValue.Unlock();
 
-		// First search in effect parameter list 
-		if( ITriEffectParameter* p = FindParameterByName( name ) )
+		// First search in effect resource list 
+		if( ITriEffectParameter* p = FindResourceByName( name ) )
+		{
+			param.m_sourceValue = p;
+		}
+		// Secondly search in effect parameter list
+		else if( ITriEffectParameter* p = FindParameterByName( name ) )
 		{
 			// The only parameter that can point to a resource is the TriVariableParameter
 			TriVariableParameter* vp = dynamic_cast<TriVariableParameter*>(p);
@@ -685,11 +702,6 @@ void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2Effe
 				param.m_sourceValue = p;
 			}
 
-		}
-		// Secondly search in effect resource list
-		else if( ITriEffectParameter* p = FindResourceByName( name ) )
-		{
-			param.m_sourceValue = p;
 		}
 		// Fallback to variable store
 		else if( TriVariable* v = GetVariableStore().FindVariable( name ) )
@@ -883,11 +895,10 @@ void RebuildCachedDataForEffect(	ITr2ShaderState &effectResource,
 	CCP_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	//
-	// Set up the vertex and pixel shader constant mirrors for each pass.
-	// 
-	const unsigned passCount = effectResource.GetPassCount();
 	parametersForPasses.clear();
+
+	auto& desc = effectResource.GetEffectDescription();
+	const unsigned passCount = unsigned( desc.passes.size() );
 
 	if( !passCount )
 	{
@@ -898,33 +909,36 @@ void RebuildCachedDataForEffect(	ITr2ShaderState &effectResource,
 
 	for( unsigned passIx = 0; passIx != passCount; ++passIx )
 	{
-		parametersForPasses[passIx].reset( new Tr2EffectPassParameters() );
+		parametersForPasses[passIx].reset( CCP_NEW( "Tr2EffectPassParameters" ) Tr2EffectPassParameters() );
 		Tr2EffectPassParameters& pp = *parametersForPasses[passIx];
 
 		for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++i )
 		{
-			Tr2RenderContextEnum::ShaderType stage = Tr2RenderContextEnum::ShaderType( i );
-
-			pp.m_stageInput[stage].m_shaderParameters.clear();
-			const Tr2EffectConstantVector& vsConstants = 
-				effectResource.GetConstantTable( passIx, stage );
+			auto& stage = desc.passes[passIx].stageInputs[i];
+			if( !stage.m_exists )
+			{
+				continue;
+			}
 
 			MapPassParameters( 
 				passIx,
 				pp,
-				stage,
-										vsConstants, 
+				Tr2RenderContextEnum::ShaderType( i ),
+				stage.constants, 
 				effectResource,
+				desc,
 				owner,
 				renderContext );
 
-			auto& input = pp.m_stageInput[stage];
-			input.m_samplers.clear();
-			const Tr2EffectResourceMap& resources = effectResource.GetInputResources( passIx, stage );
-			owner.MapPassResources( resources, input.m_samplers, 0 );
-			input.m_uavs.clear();
-			const Tr2EffectResourceMap& uavs = effectResource.GetInputUavs( passIx, stage );
-			owner.MapPassResources( uavs, input.m_uavs, ITr2EffectValue::RESOURCE_FLAG_UAV );
+			auto& input = pp.m_stageInput[i];
+			if( !stage.resources.empty() )
+			{
+				owner.MapPassResources( stage.resources, input.m_samplers, 0 );
+			}
+			if( !stage.uavs.empty() )
+			{
+				owner.MapPassResources( stage.uavs, input.m_uavs, ITr2EffectValue::RESOURCE_FLAG_UAV );
+			}
 		}
 	}
 }
@@ -946,11 +960,12 @@ void ApplyShaderInputs( Tr2EffectPassParameters& pp,
 {
 	auto& input = pp.m_stageInput[shaderType];
 
-	if( input.m_constantBuffer.GetSize() )
+	auto cb = input.m_constantBuffer.get();
+	if( cb && cb->GetSize() )
 	{
 		CCP_STATS_INC( effectCBLocks );
-		uint8_t* const mirror = reinterpret_cast<uint8_t*>( input.m_constantBuffer.GetBufferMirror( renderContext ) );
-		if( input.m_constantBuffer.IsValid() && mirror )
+		uint8_t* const mirror = reinterpret_cast<uint8_t*>( cb->GetBufferMirror( renderContext ) );
+		if( cb->IsValid() && mirror )
 		{
 			const auto endVS = input.m_shaderParameters.cend();
 			for( auto it = input.m_shaderParameters.cbegin(); it != endVS; ++it )
@@ -959,9 +974,9 @@ void ApplyShaderInputs( Tr2EffectPassParameters& pp,
 				uint8_t* const dst = mirror + it->m_registerIndex;
 				it->m_sourceValue->CopyValueToEffect( shaderType, dst, size, renderContext );
 			}
-			input.m_constantBuffer.UpdateFromMirror( renderContext );
+			cb->UpdateFromMirror( renderContext );
 
-			renderContext.SetConstants( input.m_constantBuffer, shaderType, CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS );
+			renderContext.SetConstants( *cb, shaderType, CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS );
 		}
 	}
 
@@ -1017,7 +1032,7 @@ void ConvertEffectConstant( const Tr2EffectConstant& constant,
     }
     else if( constant.dimension == 16 )
     {
-        if( strstr( constant.name, "Reflection" ) )
+		if( strstr( constant.name.c_str(), "Reflection" ) )
         {
             OTriVariableParameter* p = new OTriVariableParameter();
             p->m_name = BlueSharedString( constant.name );
@@ -1171,11 +1186,14 @@ void MapPassParameters(
 			Tr2EffectPassParameters& pp,
 			Tr2RenderContextEnum::ShaderType stage,
 			const Tr2EffectConstantVector& constants, 
-			ITr2ShaderState& resource, 
-									ITr2ShaderMaterial& owner,
+			ITr2ShaderState& resource,
+			const Tr2EffectDescription& desc,
+			ITr2ShaderMaterial& owner,
 			Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
+
+	static const size_t MAX_PARAMS = 64;
 
 	Tr2EffectParamVector &pv = pp.m_stageInput[stage].m_shaderParameters;
 	ITriReroutableVector& reroutables = pp.m_reroutedParameters;
@@ -1188,7 +1206,7 @@ void MapPassParameters(
 	const char* perObjectName = stage == PIXEL_SHADER ? "PerObjectPS" : "PerObjectVS";
 	for( auto constantIx = constants.begin(); constantIx != constants.end(); ++constantIx )
 	{
-		if( strcmp( constantIx->name, perObjectName ) == 0 )
+		if( strcmp( constantIx->name.c_str(), perObjectName ) == 0 )
 		{
 			perObjectStart = constantIx->offset;
 			break;
@@ -1196,45 +1214,70 @@ void MapPassParameters(
 	}
 #endif
 
-	std::vector<ITr2EffectValue*> foundParams( constants.size() );
+	CCP_ASSERT( constants.size() < MAX_PARAMS );
+	ITr2EffectValue* foundParams[MAX_PARAMS];
 	unsigned constantSize = 0;
 	unsigned index = 0;
+	bool hasConstantParams = false;
+	bool hasVariableParams = false;
+
+	size_t constParamCount;
+	auto constParams = owner.GetConstParameters( constParamCount );
+	uint32_t constIndexes[MAX_PARAMS];
 
 	// Fist pass: determine the size of the constant buffer
 	for( auto constantIx = constants.begin(); constantIx != constants.end(); ++constantIx )
 	{
-		ITr2EffectValue* paramAsEffectValue = NULL;
-
-		// First search in effect parameter list and see if we have a match
-		if( ITriEffectParameter* p = owner.FindParameterByName( constantIx->name ) )
+		constIndexes[index] = -1;
+		bool foundConstant = false;
+		for( size_t i = 0; i < constParamCount; ++i )
 		{
-			paramAsEffectValue = p;
-		}
-		// Fallback to variable store
-		else if( TriVariable* v = variableStore.FindVariable( constantIx->name ) )
-		{
-			paramAsEffectValue = v;
-		}
-		else
-		{
-			if( constantIx->isAutoregister )
+			if( constantIx->name == constParams[i].name )
 			{
-				paramAsEffectValue = GlobalStore().GetVariable( constantIx->name );
+				constIndexes[index] = uint32_t( i );
+				foundConstant = true;
+				hasConstantParams = true;
+				break;
 			}
 		}
+		ITr2EffectValue* paramAsEffectValue = NULL;
+		if( !foundConstant )
+		{
 
+			// First search in effect parameter list and see if we have a match
+			if( ITriEffectParameter* p = owner.FindParameterByName( constantIx->name.c_str() ) )
+			{
+				paramAsEffectValue = p;
+			}
+			// Fallback to variable store
+			else if( TriVariable* v = variableStore.FindVariable( constantIx->name.c_str() ) )
+			{
+				paramAsEffectValue = v;
+			}
+			else
+			{
+				if( constantIx->isAutoregister )
+				{
+					paramAsEffectValue = GlobalStore().GetVariable( constantIx->name.c_str() );
+				}
+			}
+			hasVariableParams |= paramAsEffectValue != nullptr;
+			foundConstant = paramAsEffectValue != nullptr;
+		}
 		foundParams[index++] = paramAsEffectValue;
 
-		if( paramAsEffectValue )
+		if( foundConstant )
 		{
 			// It's illegal to pass the perObjectStart if the effect has the block
 			if( constantIx->offset >= perObjectStart )
 			{
 				CCP_ASSERT_M( false, "Register is mapped beyond valid range" );
 				CCP_LOGERR( "Effect maps parameter '%s' beyond limit (target is c%d, limit is c%d)", 
-					constantIx->name, constantIx->offset, perObjectStart );
+					constantIx->name.c_str(), constantIx->offset, perObjectStart );
 
 				// We must ignore this parameter!
+				constIndexes[index - 1] = -1;
+				foundParams[index - 1] = nullptr;
 				continue;
 			}
 
@@ -1246,19 +1289,18 @@ void MapPassParameters(
 		}
 	}
 
-	unsigned int constantDefaultValueSize = 0;
-	const void* constantDefaultValues = NULL;
-	resource.GetDefaultConstantValues( passIx, stage, constantDefaultValueSize, constantDefaultValues );
+	unsigned int constantDefaultValueSize = desc.passes[passIx].stageInputs[stage].m_constantValueSize;
+	const void* constantDefaultValues = desc.passes[passIx].stageInputs[stage].constantValues;
 
 	constantSize = std::max( constantSize, constantDefaultValueSize );
 	// Allocate constant buffer
 	pp.AllocateConstantMirror( stage, constantSize );
-	if( constantSize == 0 )
-{
+	if( constantSize == 0 || !pp.m_stageInput[stage].m_constantBuffer )
+	{
 		return;
 	}
 
-	void* mirror = pp.m_stageInput[stage].m_constantBuffer.GetBufferMirror( renderContext );
+	void* mirror = pp.m_stageInput[stage].m_constantBuffer->GetBufferMirror( renderContext );
 	if( !mirror )
 	{
 		return;
@@ -1266,84 +1308,119 @@ void MapPassParameters(
 
 	memcpy( mirror, constantDefaultValues, constantDefaultValueSize );
 
-	index = 0;
-	// Now iterate again over the list and process the parameters:
-	for( auto constantIx = constants.begin(); constantIx != constants.end(); ++constantIx )
+	if( hasConstantParams )
 	{
-		ITriReroutablePtr paramAsReroutable;
-		ITr2EffectValuePtr paramAsEffectValue = foundParams[index++];
-
-		ITriEffectParameterPtr param = ITriEffectParameterPtr( BlueCastPtr( paramAsEffectValue ) );
-		if( param )
+		for( size_t i = 0; i < constants.size(); ++i )
 		{
-			// Notify a parameter of its future binding. Here
-			// the parameter might check for sRGB flags, etc.
-			param->RebuildEffectHandles( &resource );
-
-			paramAsReroutable = ITriReroutablePtr( BlueCastPtr( param ) );
-			if( paramAsReroutable )
-		{
-				paramAsEffectValue.Unlock();
-		}
-		}
-
-		if( paramAsEffectValue || paramAsReroutable )
-		{
-			// It's illegal to pass the perObjectStart if the effect has the block
-			if( constantIx->offset >= perObjectStart )
+			if( constIndexes[i] != -1 )
 			{
-				// We must ignore this parameter! ValuePassParameters will have
-				// spit out an error message.
-				continue;
+				auto& c = constants[i];
+				memcpy( static_cast<uint8_t*>( mirror ) + c.offset, &constParams[constIndexes[i]].value, sizeof( float ) * c.dimension );
+			}
+		}
+	}
+
+	if( hasVariableParams )
+	{
+		index = 0;
+		// Now iterate again over the list and process the parameters:
+		for( auto constantIx = constants.begin(); constantIx != constants.end(); ++constantIx )
+		{
+			ITriReroutablePtr paramAsReroutable;
+			ITr2EffectValuePtr paramAsEffectValue = foundParams[index++];
+
+			ITriEffectParameterPtr param = ITriEffectParameterPtr( BlueCastPtr( paramAsEffectValue ) );
+			if( param )
+			{
+				// Notify a parameter of its future binding. Here
+				// the parameter might check for sRGB flags, etc.
+				param->RebuildEffectHandles( &resource );
+
+				paramAsReroutable = ITriReroutablePtr( BlueCastPtr( param ) );
+				if( paramAsReroutable )
+				{
+					paramAsEffectValue.Unlock();
+				}
 			}
 
-			if( paramAsReroutable )
+			if( paramAsEffectValue || paramAsReroutable )
 			{
-				// Parameter is reroutable - this means we can hook it up directly
-				// and won't have to copy its value every frame
-
-				if( paramAsReroutable->IsRerouted() )
+				// It's illegal to pass the perObjectStart if the effect has the block
+				if( constantIx->offset >= perObjectStart )
 				{
-					// Parameter is already rerouted - likely used in a previous pass
-					paramAsEffectValue = param;
+					// We must ignore this parameter! ValuePassParameters will have
+					// spit out an error message.
+					continue;
 				}
-				else
+
+				if( paramAsReroutable )
 				{
-					CCP_ASSERT( constantIx->offset + constantIx->size <= constantSize );
+					// Parameter is reroutable - this means we can hook it up directly
+					// and won't have to copy its value every frame
 
-					void* dest = (void*)((uint8_t*)mirror + constantIx->offset);
-					paramAsReroutable->SetDestination( dest, constantIx->size );
-
-					// check that it actually worked; ie the param may be reroutable in theory, but not for
-					// this specific instance.
-					if( !paramAsReroutable->IsRerouted() )
+					if( paramAsReroutable->IsRerouted() )
 					{
+						// Parameter is already rerouted - likely used in a previous pass
 						paramAsEffectValue = param;
 					}
 					else
 					{
-						reroutables.push_back( paramAsReroutable.Detach() );				
+						CCP_ASSERT( constantIx->offset + constantIx->size <= constantSize );
+
+						void* dest = (void*)((uint8_t*)mirror + constantIx->offset);
+						paramAsReroutable->SetDestination( dest, constantIx->size );
+
+						// check that it actually worked; ie the param may be reroutable in theory, but not for
+						// this specific instance.
+						if( !paramAsReroutable->IsRerouted() )
+						{
+							paramAsEffectValue = param;
+						}
+						else
+						{
+							reroutables.push_back( paramAsReroutable.Detach() );				
+						}
 					}
 				}
-			}
 			
-			if( paramAsEffectValue )
-			{
+				if( paramAsEffectValue )
+				{
 
-				Tr2EffectParam param;
-				param.m_sourceValue = paramAsEffectValue;
+					Tr2EffectParam param;
+					param.m_sourceValue = paramAsEffectValue;
 
-				// Size is now passed down when copying value from parameter so
-				// we don't need to check for the size here. In fact, it is normal
-				// for the destination to be smaller than the value, in particular for
-				// TriTransformParameter where a portion of a 4x4 matrix is used.
+					// Size is now passed down when copying value from parameter so
+					// we don't need to check for the size here. In fact, it is normal
+					// for the destination to be smaller than the value, in particular for
+					// TriTransformParameter where a portion of a 4x4 matrix is used.
 
-				param.m_sourceName = constantIx->name;
-				param.m_registerIndex = constantIx->offset;
-				param.m_registerCount = constantIx->size;
+					param.m_sourceName = constantIx->name.c_str();
+					param.m_registerIndex = constantIx->offset;
+					param.m_registerCount = constantIx->size;
 
-				pv.push_back( param );
+					pv.push_back( param );
+				}
 			}
 		}
+	}
+}
+
+void Tr2Effect::UnloadResources()
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	for( auto it = m_resources.cbegin(); it != m_resources.cend(); ++it )
+	{
+		(*it)->UnloadResources();
+	}
+}
+
+void Tr2Effect::LoadResources()
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	for( auto it = m_resources.cbegin(); it != m_resources.cend(); ++it )
+	{
+		(*it)->LoadResources();
 	}
 }

@@ -7,6 +7,8 @@
 #include "ITr2Renderable.h"
 #include "TriRenderBatch.h"
 
+#include "blue/Include/IUnloadable.h"
+
 BLUE_DECLARE( Tr2Mesh );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( Tr2VariableStore );
@@ -48,7 +50,8 @@ BLUE_CLASS( Tr2Mesh ):
 	public INotify,
 	public IListNotify,
 	public IBlueAsyncResNotifyTarget,
-	public Tr2HideableMixin
+	public Tr2HideableMixin,
+	public IUnloadable
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -119,6 +122,11 @@ public:
 	// IBlueAsyncResNotifyTarget
 	virtual void ReleaseCachedData( BlueAsyncRes* p );
 	virtual void RebuildCachedData( BlueAsyncRes* p );
+
+	//////////////////////////////////////////////////////////////////////////
+	// IUnloadable
+	virtual void UnloadWhenUnreferenced();
+	virtual void ReloadWhenReferenced();
 
 	// will take a list of engine flags at some point.
 	void BindLowLevelShaders( const std::vector<unsigned int>& engineFlags, 

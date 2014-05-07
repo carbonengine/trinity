@@ -52,23 +52,7 @@ public:
 	// Return a bitfield that indicates which shader types are used by this effect/material.
 	virtual uint32_t GetShaderTypeMask();
 
-	virtual const Tr2EffectConstantVector& GetConstantTable( 
-					uint32_t passIx, 
-					Tr2RenderContextEnum::ShaderType type );
-
-	virtual void GetDefaultConstantValues(
-					uint32_t passIndex,
-					Tr2RenderContextEnum::ShaderType type,
-					unsigned &count,
-					const void*& values );
-
-	virtual const Tr2EffectResourceMap& GetInputResources(
-					uint32_t passIx, 
-					Tr2RenderContextEnum::ShaderType type );
-
-	virtual const Tr2EffectResourceMap& GetInputUavs(
-					uint32_t passIx, 
-					Tr2RenderContextEnum::ShaderType type );
+	const Tr2EffectDescription& GetEffectDescription() const;
 
 	// individual accessors if needed.
 	virtual void ApplyRenderStates( 
@@ -88,8 +72,6 @@ public:
 	virtual const Tr2EffectConstant* GetConstant( const char* name ) const;
 	virtual const Tr2EffectResource* GetResource( const char* name ) const;
 	virtual const Tr2EffectParameterAnnotationMap* GetParameterAnnotations( const char* parameterName ) const;
-
-	virtual bool HasShaderStage( uint32_t passIndex, Tr2RenderContextEnum::ShaderType type ) const;
 
 	/// 
 	unsigned int GetSortValue() const;

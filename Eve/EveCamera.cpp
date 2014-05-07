@@ -250,9 +250,6 @@ void EveCamera::Update( Be::Time t )
 	
 	CapPitchAndYaw();
 
-	fmodf (m_yawSpeed, TRI_2PI );
-	fmodf( m_yaw, TRI_2PI );
-
 	// Find absolute camera position
 	D3DXQuaternionRotationYawPitchRoll(&m_rotationAroundParent, m_yaw, m_pitch, 0.0f);
 	Vector3 vecCamPos;
@@ -398,9 +395,6 @@ void EveCamera::Update( Be::Time t )
 		else if (m_yaw < m_minYaw)
 			m_yawInt = m_minYaw;
 	}
-
-	fmodf(m_yawIntSpeed, TRI_2PI);
-	fmodf(m_yawInt, TRI_2PI);
 
 	D3DXQuaternionRotationYawPitchRoll(&m_rotationOfInterest, m_yawInt, m_pitchInt, 0.0f);
 

@@ -85,6 +85,8 @@ void EveMobile::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* va
 // --------------------------------------------------------------------------------
 void EveMobile::UpdateSyncronous( EveUpdateContext& updateContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	EveSpaceObject2::UpdateSyncronous( updateContext );
 	for( auto it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{

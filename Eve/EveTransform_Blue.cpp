@@ -13,6 +13,7 @@ const Be::ClassInfo* EveTransform::ExposeToBlue()
 		MAP_INTERFACE( IEveSpaceObject2 )
 		MAP_INTERFACE( ITr2Pickable )
 		MAP_INTERFACE( IWorldPosition )
+		MAP_INTERFACE( IUnloadable )
 
 		MAP_ATTRIBUTE
 		( 

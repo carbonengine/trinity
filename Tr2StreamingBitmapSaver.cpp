@@ -57,7 +57,7 @@ ALResult Tr2StreamingBitmapSaver::StartSaving(
 		CR_RETURN_HR( EndSaving() );
 	}
 
-	if( !Tr2TgaHandler::IsSaveSupported( m_format ) )
+	if( !ImageIO::Tga::IsSaveSupported( m_format ) )
 	{
 		CCP_LOGWARN( 
 			"Tr2StreamingBitmapSaver::StartSaving unsupported image format (%i)", 
@@ -84,7 +84,7 @@ ALResult Tr2StreamingBitmapSaver::StartSaving(
 		return E_FAIL;
 	}
 
-	if( !Tr2TgaHandler::SaveHeader( width, height, pixelFormat, stream ) )
+	if( !ImageIO::Tga::SaveHeader( width, height, pixelFormat, *stream ) )
 	{
 		CCP_LOGWARN( 
 			"Tr2StreamingBitmapSaver::StartSaving failed to write TGA header (%ls)", 
@@ -251,7 +251,7 @@ ALResult Tr2StreamingBitmapSaver::FlushBatch()
 		return E_INVALIDARG;
 	}
 
-	if( !Tr2TgaHandler::SaveRows( m_width, m_rowsPerBatch, m_format, m_data.get(), m_output ) )
+	if( !ImageIO::Tga::SaveRows( m_width, m_rowsPerBatch, m_format, m_data.get(), *m_output ) )
 	{
 		return E_FAIL;
 	}

@@ -100,12 +100,6 @@ const Be::ClassInfo* Tr2ShaderMaterial::ExposeToBlue()
 			"Call this after adding/removing parameters/resources"
 		)
 
-		MAP_METHOD_AND_WRAP
-		(
-			"GetParameterHash",
-			GetParameterHash,
-			"Returns a hash of the parameters on the material"
-		)
 		MAP_METHOD_AND_WRAP( "BindLowLevelShader", PyBindLowLevelShader, "Directly binds shader with the give situation" )
 
 	

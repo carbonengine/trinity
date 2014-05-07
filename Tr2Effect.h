@@ -68,9 +68,11 @@ public:
 	uint32_t ApplyMaterialDataForPass( unsigned int passIndex, Tr2RenderContext& renderContext );
 	void ApplyShaderInputs( unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext );
 	unsigned int GetSortValue() const;
-	unsigned int GetParameterHash();
 	ITr2ShaderState* GetShaderStateInterface() const;
 	void SetVariableStore( Tr2VariableStore* variableStore );
+	const Tr2ConstantEffectParameter* GetConstParameters( size_t& count ) const;
+	void UnloadResources();
+	void LoadResources();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
@@ -124,6 +126,8 @@ public: // TODO: make this private - need to change EveBoosterSet2...
 	// Effect Resources. These need some more care than normal parameters.
 	typedef PITriEffectResourceParameterVector EffectResourceList;
 	EffectResourceList m_resources;
+
+	PTr2ConstantEffectParameterStructureList m_constParameters;
 
 private:
 #if TRINITYDEV
@@ -190,6 +194,7 @@ void MapPassParameters(
 						Tr2RenderContextEnum::ShaderType stage,
 						const Tr2EffectConstantVector& constants, 
 						ITr2ShaderState& resource, 
+						const Tr2EffectDescription& desc,
 						ITr2ShaderMaterial& owner,
 						Tr2RenderContext& renderContext );
 

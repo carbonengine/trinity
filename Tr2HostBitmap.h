@@ -9,10 +9,6 @@ BLUE_DECLARE( Tr2HostBitmap );
 BLUE_DECLARE( Tr2RenderTarget );
 BLUE_DECLARE( TriTextureRes );
 
-struct D3DXCONVOLUTIONMATRIX3;
-struct D3DXCONVOLUTIONMATRIX5;
-struct D3DXCONVOLUTIONMATRIX7;
-
 class Tr2ImageHandler;
 
 // -------------------------------------------------------------
@@ -35,8 +31,8 @@ public:
 	bool CopyFaceFromRenderTarget( Tr2RenderContextEnum::CubemapFace face, Tr2RenderTargetAL& rt, Tr2RenderContext& renderContext );
 	bool CopyFromTextureRes  ( TriTextureRes& res, Tr2RenderContext& renderContext );
 	bool PopulateMargin( unsigned margin );
-	bool Save( const wchar_t* destFile, std::shared_ptr<Tr2ImageHandler> imageHandler = nullptr );
-	bool SaveAsync( const wchar_t* destFile, std::shared_ptr<Tr2ImageHandler> imageHandler = nullptr );
+	bool Save( const wchar_t* destFile );
+	bool SaveAsync( const wchar_t* destFile );
 	bool CreateFromFile( const std::wstring& file );
 
 	bool Compress( unsigned compressionFormat, unsigned qualityLevel, TriTextureRes* output );
@@ -68,9 +64,6 @@ private:
 	static PyObject* PyGetRawData( PyObject* self, PyObject* args );
 	static PyObject* PyGetMipRawData( PyObject* self, PyObject* args );
 #endif
-	bool ApplyConvFilter( Tr2HostBitmap* source, const D3DXCONVOLUTIONMATRIX3*  mat, bool tile );
-	bool ApplyConvFilter( Tr2HostBitmap* source, const D3DXCONVOLUTIONMATRIX5*  mat, bool tile );
-	bool ApplyConvFilter( Tr2HostBitmap* source, const D3DXCONVOLUTIONMATRIX7*  mat, bool tile );
 
 #if BLUE_WITH_PYTHON
 	PyObject* PyLoadFromPngInMemory( PyObject* args );
@@ -81,8 +74,6 @@ private:
 	virtual bool DoPrepareAsyncSave();
 	virtual bool DoExecuteAsyncSave();
 	virtual void DoCleanupAsyncSave();
-
-	std::shared_ptr<Tr2ImageHandler>	m_asyncSaveImage;
 };
 
 TYPEDEF_BLUECLASS( Tr2HostBitmap );

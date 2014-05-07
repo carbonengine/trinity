@@ -14,6 +14,8 @@
 #include "IWorldPosition.h"
 #include "Tr2GPUParticleEmitter.h"
 
+#include "blue/Include/IUnloadable.h"
+
 BLUE_DECLARE( Tr2ParticleSystem );
 BLUE_DECLARE_VECTOR( Tr2ParticleSystem );
 BLUE_DECLARE( Tr2ParticleSystem );
@@ -31,7 +33,8 @@ class EveTransform:
 	public IEveTransform,
 	public IEveSpaceObject2,
 	public ITr2Pickable,
-	public IWorldPosition
+	public IWorldPosition,
+	public IUnloadable
 {
 public:
     EXPOSE_TO_BLUE();
@@ -68,6 +71,11 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
 	virtual IRoot* GetID() { return this->GetRawRoot(); }
+
+	//////////////////////////////////////////////////////////////////////////
+	// IUnloadable
+	virtual void UnloadWhenUnreferenced();
+	virtual void ReloadWhenReferenced();
 
 	// Low detail mesh
 	bool m_usingLowDetailMesh;

@@ -84,7 +84,7 @@ const Tr2EffectConstant* Tr2LowLevelShader::GetConstant( const char* name ) cons
 		{
 			for( auto constant = pass->stageInputs[i].constants.begin(); constant != pass->stageInputs[i].constants.end(); ++constant )
 			{
-				if( strcmp( constant->name, name ) == 0 )
+				if( strcmp( constant->name.c_str(), name ) == 0 )
 				{
 					return &*constant;
 				}
@@ -146,24 +146,10 @@ const Tr2EffectParameterAnnotationMap* Tr2LowLevelShader::GetParameterAnnotation
 	return &annotations->second;
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns if the specified pass has specified shader stage.
-// Arguments:
-//   passIx - Pass index
-//   type - Shader (input stage) type
-// Return Value:
-//   true If the effect contains specified stage type in the specified pass
-//   false Otherwise
-// --------------------------------------------------------------------------------------
-bool Tr2LowLevelShader::HasShaderStage( uint32_t passIndex, 
-										Tr2RenderContextEnum::ShaderType type ) const
+
+const Tr2EffectDescription& Tr2LowLevelShader::GetEffectDescription() const
 {
-	if( passIndex >= m_effect.passes.size() || type >= SHADER_TYPE_COUNT )
-	{
-		return false;
-	}
-	return m_effect.passes[passIndex].stageInputs[type].m_exists;
+	return m_effect;
 }
 
 // --------------------------------------------------------------------------------------
@@ -368,66 +354,4 @@ void Tr2LowLevelShader::ProcessEffect( void )
 			}
 		}
 	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Gets the number of shader parameters and a pointer to the start of the data
-//   buffer for the given pass.
-// Arguments:
-//   passIndex - Index of the pass for which to get handles for the shader constants
-//   type - Shader (input stage) type
-//   count - Number of shader float registers (output parameter)
-//   values - A pointer to the start of the shader constant buffer
-// --------------------------------------------------------------------------------------
-void Tr2LowLevelShader::GetDefaultConstantValues( 
-	unsigned int passIndex, 
-	Tr2RenderContextEnum::ShaderType type,
-	unsigned int& count, 
-	const void*& values )
-{
-	count = m_effect.passes[passIndex].stageInputs[type].m_constantValueSize;
-	values = m_effect.passes[passIndex].stageInputs[type].constantValues;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Gets the shader constant table for the given pass.
-// Arguments:
-//   passIndex - The index of the pass for which to get the vertex shader constant table
-//   type - Shader (input stage) type
-// Return Value:
-//   The shader constant table for the specified pass
-// --------------------------------------------------------------------------------------
-const Tr2EffectConstantVector& Tr2LowLevelShader::GetConstantTable( unsigned int passIndex, Tr2RenderContextEnum::ShaderType type )
-{
-	return m_effect.passes[passIndex].stageInputs[type].constants;
-}
-		
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns texture inputs for the given shader.  
-// Arguments:
-//   passIx - Pass index
-//   type - Shader (input stage) type
-// Return Value:
-//   Texture input sampler map
-// --------------------------------------------------------------------------------------
-const Tr2EffectResourceMap& Tr2LowLevelShader::GetInputResources(unsigned int passIx, Tr2RenderContextEnum::ShaderType type )
-{
-	return m_effect.passes[passIx].stageInputs[type].resources;
-}
-		
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns UAV inputs for the given shader.  
-// Arguments:
-//   passIx - Pass index
-//   type - Shader (input stage) type
-// Return Value:
-//   UAV input map
-// --------------------------------------------------------------------------------------
-const Tr2EffectResourceMap& Tr2LowLevelShader::GetInputUavs(unsigned int passIx, Tr2RenderContextEnum::ShaderType type )
-{
-	return m_effect.passes[passIx].stageInputs[type].uavs;
 }

@@ -2,12 +2,7 @@
 #include "Tr2HostBitmap.h"
 #include "Resources/TriTextureRes.h"
 #include "Tr2RenderTarget.h"
-#if DEPRECATED_ENABLED
-#include "TriConvolutionMatrix5.h"
-#endif
 #include "Tr2TextureAtlas.h"
-
-#include "ImageIO/Tr2PngHandler.h"
 
 BLUE_DEFINE( Tr2HostBitmap );
 
@@ -70,58 +65,6 @@ static PyObject* PyInit( PyObject* self, PyObject* args )
 	}
 
 	Py_RETURN_NONE;
-}
-
-
-PyObject* Tr2HostBitmap::PyApplyConvFilter( PyObject* args )
-{
-#if DEPRECATED_ENABLED
-	PyObject* matrix = nullptr;
-	PyObject* src_   = nullptr;
-	int tile;
-	if( !PyArg_ParseTuple( args, "OOi", &src_, &matrix, &tile ) )
-		return nullptr;
-
-	Tr2HostBitmap* src;
-	if( !BlueExtractArgument( src_, src, 1 ) )
-	{
-		PyErr_SetString( PyExc_TypeError, "First argument must be a Tr2HostBitmap" );
-		return nullptr;
-	}
-
-	CCP_ASSERT( ITriConvolutionMatrix3Ptr( matrix ) ||
-				ITriConvolutionMatrix5Ptr( matrix ) ||
-				ITriConvolutionMatrix7Ptr( matrix ) );
-	
-	if (ITriConvolutionMatrix3Ptr(matrix))
-	{
-		if( !ApplyConvFilter( src, ITriConvolutionMatrix3Ptr(matrix)->GetMatrix(), tile != 0 ) )
-		{
-			PyErr_SetString( PyExc_TypeError, "Failed to apply the convolution matrix" );
-			return NULL;
-		}
-
-	}
-	else if (ITriConvolutionMatrix5Ptr(matrix))
-	{
-		if( !ApplyConvFilter( src, ITriConvolutionMatrix5Ptr(matrix)->GetMatrix(), tile != 0 ) )
-		{
-			PyErr_SetString( PyExc_TypeError, "Failed to apply the convolution matrix" );
-			return NULL;
-		}
-	}
-	else if (ITriConvolutionMatrix7Ptr(matrix))
-	{
-		if( !ApplyConvFilter( src, ITriConvolutionMatrix7Ptr(matrix)->GetMatrix(), tile != 0 ) )
-		{
-			PyErr_SetString( PyExc_TypeError, "Failed to apply the convolution matrix" );
-			return NULL;
-		}
-	}
-	Py_RETURN_NONE;
-#else
-	return nullptr;
-#endif
 }
 
 PyObject* Tr2HostBitmap::PyGetRawData( PyObject* self, PyObject* args )
@@ -217,35 +160,33 @@ PyObject* Tr2HostBitmap::PyLoadFromPngInMemory( PyObject* args )
 
 	if( data && datalen )
 	{
-		Tr2PngHandler handler( L"<from memory>" );
-		
 		Be::Clsid resFileClsid( "blue", "MemStream" );
 		IBlueMemStreamPtr memStream( resFileClsid );
 
 		memStream->SetBuffer( data, datalen );
 		
-		if(	!handler.ReadHeader( memStream ) ||
-			!handler.ReadImage( memStream ) )
+		ImageIO::HostBitmap bmp;
+		if( !ImageIO::ReadImage( *memStream, ImageIO::LoadParameters( L"<from memory>.png" ), bmp ) )
 		{
 			PyErr_SetString( PyExc_TypeError, "Error reading PNG stream" );
 			return nullptr;
 		}
 
-		if( handler.GetFormat() != GetFormat() ||
-			handler.GetWidth()  != GetWidth()  ||
-			handler.GetHeight() != GetHeight() )
+		if( bmp.GetFormat() != GetFormat() ||
+			bmp.GetWidth()  != GetWidth()  ||
+			bmp.GetHeight() != GetHeight() )
 		{
 			PyErr_SetString( PyExc_TypeError, "Width/Height/PixelFormat don't match" );
 			return nullptr;
 		}
 		
-		if( handler.GetMipLevelSize(0) != m_data.size() )
+		if( bmp.GetMipSize(0) != m_data.size() )
 		{
 			PyErr_SetString( PyExc_TypeError, "Data mismatch" );
 			return nullptr;
 		}
 
-		if( void* src = handler.GetMipBytes( 0 ) )
+		if( const void* src = bmp.GetMipRawData( 0 ) )
 		{
 			memcpy( m_data.get(), src, m_data.size() );
 		}
@@ -588,13 +529,6 @@ const Be::ClassInfo* Tr2HostBitmap::ExposeToBlue()
 			"Copy a TriTextureRes back to the CPU host.\n"
 			"Arguments:\n"
 			"source - TriTextureRes of the same pixelFormat, and correct width/height\n"
-		)
-
-		MAP_METHOD_AS_METHOD
-		(
-			"ApplyConvFilter",
-			PyApplyConvFilter, 
-			"Apply a convolution filter. Takes a source Tr2HostBitmap, a TriConvolutionMatrix3/5/7, and a bool 'tile on/off'" 
 		)
 		
 		MAP_METHOD_AS_METHOD

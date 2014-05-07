@@ -29,6 +29,8 @@ EveStretch::EveStretch( IRoot* lockobj ) :
 
 void EveStretch::UpdateSyncronous( EveUpdateContext& updateContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	Be::Time time = updateContext.GetTime();
 	if( !m_update )
 	{

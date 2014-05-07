@@ -1,9 +1,6 @@
 #include "StdAfx.h"
 
 #include "Tr2RenderTarget.h"
-#if DEPRECATED_ENABLED
-#include "TriConvolutionMatrix5.h"
-#endif
 #include "Resources/TriTextureRes.h"
 #include "Tr2HostBitmap.h"
 #include "Tr2DxtCompressor.h"
@@ -301,142 +298,6 @@ bool Tr2HostBitmap::CopyFromTextureResPython( TriTextureRes* tr )
 	return CopyFromTextureRes( *tr, renderContext );
 }
 
-#if DEPRECATED_ENABLED
-template<typename MATRIX>
-bool ApplyConvFilter(	
-	Tr2HostBitmap*	dest,
-	Tr2HostBitmap*	source,
-	const MATRIX&	matrix,
-	bool			tile
-	)
-{
-	if( !source											||
-		!dest											||
-		!source->IsValid()								||
-		!dest->IsValid()								||
-		source->GetType() != TEX_TYPE_2D				||
-		dest->GetType() != TEX_TYPE_2D					||
-		//source->GetWidth() != dest->GetWidth()			||
-		//source->GetHeight() != dest->GetHeight()		||
-		source->GetFormat() != dest->GetFormat()		||
-		GetBytesPerPixel( source->GetFormat() ) != 4	)
-	{
-		return false;
-	}
-
-	if( source->GetFormat() != PIXEL_FORMAT_B8G8R8A8_UNORM )
-	{
-		return false;
-	}
-
-	const float * const m_ = &matrix.m[0][0];
-
-	const unsigned numCells = sizeof( matrix.m ) / sizeof( matrix.m[0][0] );
-	const unsigned dim      = (unsigned)sqrtf( (float)numCells );
-	
-
-	const int w = std::min<int>( source->GetWidth() , dest->GetWidth()  );
-	const int h = std::min<int>( source->GetHeight(), dest->GetHeight() );
-
-	const int dx = -(int)dim / 2;
-	const int dy = -(int)dim / 2;
-
-	auto ToF_ = [&](const char* rgba){ return (*(const uint8_t*)rgba) / 255.0f; };
-	
-	for( int y = 0; y != h; ++y )
-	{
-		for( int x = 0; x != w; ++x )
-		{
-			float r = 0, g = 0, b = 0, a = 0;
-			float weight = 0;
-
-			for( unsigned j = 0; j != dim; ++j )
-			{
-				for( unsigned i = 0; i != dim; ++i )
-				{
-					int px = x + i + dx;
-					int py = y + j + dy;
-					if( tile )
-					{
-						if( px < 0 )
-						{
-							px += w;
-						}
-						else
-						{
-							px %= w;
-						}
-						if( py < 0 )
-						{
-							py += h;
-						}
-						else
-						{
-							py %= h;
-						}
-					}
-					else
-					if( px < 0 || px >= w || py < 0 || py >= h )
-					{
-						continue;
-					}
-
-					float w = m_[j * dim + i];
-					if( !w )
-					{
-						continue;
-					}
-
-					const char* src = source->GetRawData( unsigned(px), unsigned(py) );					
-
-					weight += w;
-
-					r += ToF_(src+0) * w;
-					g += ToF_(src+1) * w;
-					b += ToF_(src+2) * w;
-					a += ToF_(src+3) * w;
-				}
-			}
-
-			if( weight != 0 )
-			{
-				weight = 1.0f / weight;
-				r *= weight;
-				g *= weight;
-				b *= weight;
-				a *= weight;
-			}
-
-			char* dst = dest  ->GetRawData( unsigned(x), unsigned(y) );
-
-			auto ToC_ = [&](char* rgba, float f){ *rgba = (char)(255.0f * std::max( 0.0f, std::min (1.0f, f ) ) ); };
-
-			ToC_(dst+0, r);
-			ToC_(dst+1, g);
-			ToC_(dst+2, b);
-			ToC_(dst+3, a);
-		}
-	}
-
-	return true;
-}
-
-bool Tr2HostBitmap::ApplyConvFilter( Tr2HostBitmap* source, const D3DXCONVOLUTIONMATRIX3*  mat, bool tile )
-{
-	return mat && m_mipCount == 1 ? ::ApplyConvFilter( this, source, *mat, tile ) : false;
-}
-
-bool Tr2HostBitmap::ApplyConvFilter( Tr2HostBitmap* source, const D3DXCONVOLUTIONMATRIX5*  mat, bool tile )
-{
-	return mat && m_mipCount == 1? ::ApplyConvFilter( this, source, *mat, tile ) : false;
-}
-
-bool Tr2HostBitmap::ApplyConvFilter( Tr2HostBitmap* source, const D3DXCONVOLUTIONMATRIX7*  mat, bool tile )
-{
-	return mat && m_mipCount == 1? ::ApplyConvFilter( this, source, *mat, tile ) : false;
-}
-#endif
-
 /// --------------------------------------------------
 /// Description:
 ///   Take the pixels in the sub-block (margin, margin)...(width-margin,height-margin) and copy their
@@ -500,7 +361,7 @@ bool Tr2HostBitmap::PopulateMargin( unsigned margin )
 	return true;
 }
 
-bool Tr2HostBitmap::Save( const wchar_t* path, std::shared_ptr<Tr2ImageHandler> imageHandler )
+bool Tr2HostBitmap::Save( const wchar_t* path )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -508,17 +369,6 @@ bool Tr2HostBitmap::Save( const wchar_t* path, std::shared_ptr<Tr2ImageHandler> 
 	{
 		CCP_LOGWARN( "Tr2HostBitmap::Save not a valid bitmap" );
 		return false;
-	}
-
-	if( !imageHandler )
-	{
-		imageHandler.reset( CreateImageHandler( path ) );
-
-		if( !imageHandler )
-		{
-			CCP_LOGERR( "Unsupported extension for saving (%S)", path );
-			return false;
-		}
 	}
 
 	Be::Clsid resFileClsid( "blue", "ResFile" );
@@ -530,12 +380,11 @@ bool Tr2HostBitmap::Save( const wchar_t* path, std::shared_ptr<Tr2ImageHandler> 
 	}
 	ON_BLOCK_EXIT( [&]{ stream->Close(); } );
 
-	return imageHandler->Save( *this, stream );
+	return ImageIO::SaveImage( path, *this, *stream );
 }
 
-bool Tr2HostBitmap::SaveAsync( const wchar_t* path, std::shared_ptr<Tr2ImageHandler> imageHandler )
+bool Tr2HostBitmap::SaveAsync( const wchar_t* path )
 {
-	m_asyncSaveImage = imageHandler;
 	return StartAsyncSave( path );
 }
 
@@ -546,12 +395,11 @@ bool Tr2HostBitmap::DoPrepareAsyncSave()
 
 bool Tr2HostBitmap::DoExecuteAsyncSave()
 {
-	return Save( m_saveFilename.c_str(), m_asyncSaveImage );
+	return Save( m_saveFilename.c_str() );
 }
 
 void Tr2HostBitmap::DoCleanupAsyncSave()
 {
-	m_asyncSaveImage.reset();
 }
 
 bool Tr2HostBitmap::CreateFromFile( const std::wstring& file )
@@ -564,13 +412,6 @@ bool Tr2HostBitmap::CreateFromFile( const std::wstring& file )
 		return false;
 	}
 
-	std::unique_ptr<Tr2ImageHandler> imageHandler( CreateImageHandler( file ) );	// only need extension, so 'file' is fine
-	if( !imageHandler )
-	{
-		CCP_LOGERR( "Unsupported extension for CreateFromFile (%S)", file.c_str() );
-		return false;
-	}
-
 	IBlueStreamPtr stream;
 	if( !BePaths->GetStreamFromPathW( file.c_str(), &stream ) )
 	{
@@ -578,68 +419,11 @@ bool Tr2HostBitmap::CreateFromFile( const std::wstring& file )
 		return false;
 	}
 
-	if( !imageHandler->ReadHeader( stream ) || !imageHandler->ReadImage( stream ) )
+	if( !ImageIO::ReadImage( *stream, ImageIO::LoadParameters( file.c_str() ), *this ) )
 	{
 		CCP_LOGERR( "Error reading file (%S)", file.c_str() );
 		return false;
 	}
-
-	unsigned faces = 1;
-
-	if( imageHandler->IsCubeTexture() )
-	{
-		if( !CreateCube( imageHandler->GetWidth(), imageHandler->GetMipLevelCount(), imageHandler->GetFormat() ) )
-		{
-			CCP_LOGERR( "Error creating hostBitmap" );
-			return false;
-		}
-		m_type = TEX_TYPE_CUBE;
-		faces = 6;
-	}
-	else if( imageHandler->IsVolumeTexture() )
-	{
-		if( !CreateVolume( imageHandler->GetWidth(), imageHandler->GetHeight(), imageHandler->GetDepth(), imageHandler->GetMipLevelCount(), imageHandler->GetFormat() ) )
-		{
-			CCP_LOGERR( "Error creating hostBitmap" );
-			return false;
-		}
-		m_type = TEX_TYPE_3D;
-		m_volumeDepth = imageHandler->GetDepth();
-	}
-	else
-	{
-		if( !Create( imageHandler->GetWidth(), imageHandler->GetHeight(), imageHandler->GetMipLevelCount(), imageHandler->GetFormat() ) )
-		{
-			CCP_LOGERR( "Error creating hostBitmap" );
-			return false;
-		}
-		m_type = TEX_TYPE_2D;
-	}
-
-	if( imageHandler->GetTotalDataSize() != m_data.size() )
-	{
-		CCP_LOGERR( "Unsupported format (mipmaps/pixelFormat)" );
-		return false;
-	}
-
-
-	m_width		= imageHandler->GetWidth();
-	m_height	= imageHandler->GetHeight();
-	m_format	= imageHandler->GetFormat();
-	m_mipCount	= imageHandler->GetMipLevelCount();
-
-	size_t ofs = 0;
-	for( unsigned face = 0; face < faces; ++face )
-	{
-		for( unsigned mip = 0; mip != m_mipCount; ++mip )
-		{
-			CCP_ASSERT( ofs + imageHandler->GetMipLevelSize( mip ) <= m_data.size() );
-
-			memcpy( m_data.get() + ofs, imageHandler->GetMipBytes( mip, face ), imageHandler->GetMipLevelSize( mip ) );
-			ofs += imageHandler->GetMipLevelSize( mip );
-		}
-	}
-	CCP_ASSERT( ofs == m_data.size() );
 
 	return true;
 }

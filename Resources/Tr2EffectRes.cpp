@@ -45,7 +45,7 @@ const Tr2EffectConstant* Tr2EffectRes::GetConstant( const char* name ) const
 		{
 			for( auto constant = pass->stageInputs[i].constants.begin(); constant != pass->stageInputs[i].constants.end(); ++constant )
 			{
-				if( strcmp( constant->name, name ) == 0 )
+				if( strcmp( constant->name.c_str(), name ) == 0 )
 				{
 					return &*constant;
 				}
@@ -376,52 +376,9 @@ unsigned Tr2EffectRes::GetShaderTypeMask()
 	return m_shaderTypeMask;
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns constant table for the given shader.  
-// Arguments:
-//   passIx - Pass index
-//   type - Shader (input stage) type
-// Return Value:
-//   Shader constant table
-// --------------------------------------------------------------------------------------
-const Tr2EffectConstantVector& Tr2EffectRes::GetConstantTable( 
-								uint32_t passIx, 
-								Tr2RenderContextEnum::ShaderType type )
+const Tr2EffectDescription& Tr2EffectRes::GetEffectDescription() const
 {
-	return m_effect.passes[passIx].stageInputs[type].constants;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns texture inputs for the given shader.  
-// Arguments:
-//   passIx - Pass index
-//   type - Shader (input stage) type
-// Return Value:
-//   Texture input sampler map
-// --------------------------------------------------------------------------------------
-const Tr2EffectResourceMap& Tr2EffectRes::GetInputResources(
-								uint32_t passIx, 
-								Tr2RenderContextEnum::ShaderType type )
-{
-	return m_effect.passes[passIx].stageInputs[type].resources;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns UAV inputs for the given shader.  
-// Arguments:
-//   passIx - Pass index
-//   type - Shader (input stage) type
-// Return Value:
-//   UAV input map
-// --------------------------------------------------------------------------------------
-const Tr2EffectResourceMap& Tr2EffectRes::GetInputUavs(
-								uint32_t passIx, 
-								Tr2RenderContextEnum::ShaderType type )
-{
-	return m_effect.passes[passIx].stageInputs[type].uavs;
+	return m_effect;
 }
 
 // --------------------------------------------------------------------------------------
@@ -442,43 +399,6 @@ const Tr2ShaderInputDefinition* Tr2EffectRes::GetShaderInputDefinition(
 		return nullptr;
 	}
 	return &m_effect.passes[passIx].stageInputs[type].inputDefinition;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns if the specified pass has specified shader stage.
-// Arguments:
-//   passIx - Pass index
-//   type - Shader (input stage) type
-// Return Value:
-//   true If the effect contains specified stage type in the specified pass
-//   false Otherwise
-// --------------------------------------------------------------------------------------
-bool Tr2EffectRes::HasShaderStage( uint32_t passIndex, 
-								   Tr2RenderContextEnum::ShaderType type ) const
-{
-	if( passIndex >= m_effect.passes.size() || type >= SHADER_TYPE_COUNT )
-	{
-		return false;
-	}
-	return m_effect.passes[passIndex].stageInputs[type].m_exists;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns default constant values for the given shader.  
-// Arguments:
-//   passIx - Pass index
-//   type - Shader (input stage) type
-//   count - (out) Number of Vector4 values
-//   values - (out) Default constant values
-// Return Value:
-//   Default constant values for the given shader
-// --------------------------------------------------------------------------------------
-void Tr2EffectRes::GetDefaultConstantValues(unsigned int passIx, Tr2RenderContextEnum::ShaderType type, unsigned int& count, const void*& values )
-{
-	count = m_effect.passes[passIx].stageInputs[type].m_constantValueSize;
-	values = m_effect.passes[passIx].stageInputs[type].constantValues;
 }
 
 bool Tr2EffectRes::IsMemoryUsageKnown()

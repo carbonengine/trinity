@@ -1475,11 +1475,11 @@ bool Tr2Sprite2dScene::SelectEffect()
 			m_effect = newEffect;
 			return true;
 #else
-			const Tr2EffectConstantVector& constants = newEffect->GetEffectRes()->GetConstantTable( 0, VERTEX_SHADER );
+			const Tr2EffectConstantVector& constants = newEffect->GetEffectRes()->GetEffectDescription().passes[0].stageInputs[VERTEX_SHADER].constants;
 			bool foundHandle = false;
 			for( auto it = constants.begin(); it != constants.end(); ++it )
 			{
-				if( strcmp( it->name, "g_uiTransforms" ) == 0 )
+				if( strcmp( it->name.c_str(), "g_uiTransforms" ) == 0 )
 				{
 					m_transformsHandle = *it;
 					foundHandle = true;

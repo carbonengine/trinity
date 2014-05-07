@@ -1020,15 +1020,17 @@ bool Tr2Renderer::RunComputeShader( ITr2ShaderMaterial* effect,
 		return false;
 	}
 
-	for( unsigned i = 0; i < shader->GetPassCount(); ++i )
+	auto& desc = shader->GetEffectDescription();
+	for( unsigned i = 0; i < desc.passes.size(); ++i )
 	{
-		if( shader->HasShaderStage( i, COMPUTE_SHADER ) )
+		auto& stage = desc.passes[i].stageInputs[COMPUTE_SHADER];
+		if( stage.m_exists )
 		{
 			shader->ApplyAllStateForPass( i, renderContext );
 			effect->ApplyShaderInputs( i, COMPUTE_SHADER, renderContext );
 			CR_RETURN_VAL( renderContext.RunComputeShader( groupDimX, groupDimY, groupDimZ ), false );
 			// Unset UAVs
-			const Tr2EffectResourceMap& uavs = shader->GetInputUavs( i, COMPUTE_SHADER );
+			const Tr2EffectResourceMap& uavs = stage.uavs;
 			for( auto it = uavs.begin(); it != uavs.end(); ++it )
 			{
 				CR_RETURN_VAL( renderContext.SetUav( COMPUTE_SHADER, it->first, nullGB ), false );
@@ -1064,15 +1066,17 @@ bool Tr2Renderer::RunComputeShaderIndirect( ITr2ShaderMaterial* effect, Tr2GpuBu
 		return false;
 	}
 
+	auto& desc = shader->GetEffectDescription();
 	for( unsigned i = 0; i < shader->GetPassCount(); ++i )
 	{
-		if( shader->HasShaderStage( i, COMPUTE_SHADER ) )
+		auto& stage = desc.passes[i].stageInputs[COMPUTE_SHADER];
+		if( stage.m_exists )
 		{
 			shader->ApplyAllStateForPass( i, renderContext );
 			effect->ApplyShaderInputs( i, COMPUTE_SHADER, renderContext );
 			CR_RETURN_VAL( renderContext.RunComputeShaderIndirect( indirectParams, offset ), false );
 			// Unset UAVs
-			const Tr2EffectResourceMap& uavs = shader->GetInputUavs( i, COMPUTE_SHADER );
+			const Tr2EffectResourceMap& uavs = stage.uavs;
 			for( auto it = uavs.begin(); it != uavs.end(); ++it )
 			{
 				CR_RETURN_VAL( renderContext.SetUav( COMPUTE_SHADER, it->first, nullGB ), false );

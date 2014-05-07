@@ -35,7 +35,7 @@ struct Tr2EffectConstant
 
 	// Constant name (string is managed by the owner of string table: Tr2EffectRes or
 	// Tr2HighLevelShader)
-	const char* name;
+	BlueSharedString name;
 	// Constant data offset in constant buffer (or offset/4 = register number for DX9)
 	unsigned offset;
 	// Constant size in bytes

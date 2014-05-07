@@ -17,6 +17,15 @@ typedef std::vector<ITriReroutable*>	ITriReroutableVector;
 BLUE_DECLARE( Tr2VariableStore );
 
 
+struct Tr2ConstantEffectParameter
+{
+	BlueSharedString name;
+	Vector4 value;
+};
+
+BLUE_DECLARE_STRUCTURE_LIST( Tr2ConstantEffectParameter );
+
+
 BLUE_INTERFACE( ITr2ShaderMaterial ) : public  IRoot
 {
 public:
@@ -24,9 +33,8 @@ public:
 	virtual void ApplyShaderInputs( unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) = 0;
 	virtual unsigned int GetSortValue() const = 0;
 	virtual ITr2ShaderState* GetShaderStateInterface() const = 0;
-	virtual ITriEffectParameter* GetParameterByName( const char* name ) const = 0;
-	virtual void SetVariableStore( Tr2VariableStore* variableStore ) = 0;
 
+	virtual void SetVariableStore( Tr2VariableStore* variableStore ) = 0;
 	virtual Tr2VariableStore& GetVariableStore() = 0;
 
 	virtual void MapPassResources( 
@@ -34,11 +42,11 @@ public:
 		Tr2EffectParamVector &pv,
 		uint32_t resourceFlags ) = 0;
 
+	virtual ITriEffectParameter* GetParameterByName( const char* name ) const = 0;
 	virtual ITriEffectParameter* FindParameterByName( const char* name ) const = 0;
+	virtual const Tr2ConstantEffectParameter* GetConstParameters( size_t& count ) const = 0;
 
-	// Returns a hash based on the contents of the parameters - Used to uniquely Identify a shader material based on content
-	virtual unsigned int GetParameterHash() = 0;
-
-};
+	virtual void UnloadResources() = 0;
+	virtual void LoadResources() = 0;};
 
 #endif

@@ -9,6 +9,7 @@ const Be::ClassInfo* TriStepRenderDebug::ExposeToBlue()
 
 		MAP_INTERFACE( TriRenderStep )
 		MAP_INTERFACE( TriStepRenderDebug )
+		MAP_INTERFACE( ITr2DebugRenderer )
 
 		MAP_ATTRIBUTE
 		(

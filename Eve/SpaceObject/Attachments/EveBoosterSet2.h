@@ -176,6 +176,8 @@ private:
 	float m_boosterLOD;
 	float m_trailsLOD;
 
+	float m_alwaysOnIntensity;
+
 	// parent ship transform
 	Matrix m_parentTransform;
 	// parent ship data

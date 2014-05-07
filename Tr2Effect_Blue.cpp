@@ -181,6 +181,13 @@ const Be::ClassInfo* Tr2Effect::ExposeToBlue()
 			"Effect Parameters", 
 			Be::READWRITE | Be::PERSIST
 		)
+		MAP_ATTRIBUTE
+		( 
+			"constParameters",      
+			m_constParameters,
+			"Constant Effect Parameters", 
+			Be::READWRITE | Be::PERSIST
+		)
 		////////////////////////////////////////////////////////////////////////////
 		//
 		MAP_ATTRIBUTE

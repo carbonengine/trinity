@@ -166,7 +166,9 @@ bool Tr2EffectDescription::Read( const void* data,
 			{
 				Tr2EffectConstant constant;
 
-				READ_STRING( constant.name );
+				const char* name;
+				READ_STRING( name );
+				constant.name = BlueSharedString( name );
 
 				READ( uint32_t, unsigned, constant.offset );
 				READ( uint32_t, unsigned, constant.size );

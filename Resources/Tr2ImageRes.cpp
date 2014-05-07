@@ -1,15 +1,12 @@
 #include "StdAfx.h"
 #include "Tr2ImageRes.h"
 
-Tr2ImageRes::Tr2ImageRes( IRoot* lockobj ) :
-	m_imageHandler( nullptr )
+Tr2ImageRes::Tr2ImageRes( IRoot* lockobj )
 {
 }
 
 Tr2ImageRes::~Tr2ImageRes()
 {
-	CCP_DELETE m_imageHandler;
-	m_imageHandler = NULL;
 }
 
 bool Tr2ImageRes::IsMemoryUsageKnown()
@@ -19,9 +16,9 @@ bool Tr2ImageRes::IsMemoryUsageKnown()
 
 size_t Tr2ImageRes::GetMemoryUsage()
 {
-	if( m_imageHandler )
+	if( m_bitmap.IsValid() )
 	{
-		return m_imageHandler->GetTotalDataSize();
+		return m_bitmap.GetRawDataSize();
 	}
 	else
 	{
@@ -71,20 +68,14 @@ BlueAsyncRes::LoadingResult Tr2ImageRes::DoLoad()
 		return LR_FAILED;
 	}
 
-	m_imageHandler = CreateImageHandler( m_path );
-	CCP_ASSERT( m_imageHandler != NULL );
-
-	bool isOK = m_imageHandler->ReadHeader( m_dataStream );
-	if(isOK)
+	auto result = ImageIO::ReadImage( *m_dataStream, ImageIO::LoadParameters( m_path.c_str() ), m_bitmap );
+	if( !result )
 	{
-		isOK = m_imageHandler->ReadImage( m_dataStream );
-	}
-	else
-	{
-		CCP_LOGWARN( "Texture '%S' - couldn't read header", GetPath() );
+		CCP_LOGWARN( "Tr2ImageRes: error reading '%S' - %s", GetPath(), result.GetErrorMessage().c_str() );
+		return LR_FAILED;
 	}
 
-	return isOK ? LR_SUCCESS : LR_FAILED;
+	return LR_SUCCESS;
 }
 
 bool Tr2ImageRes::DoPrepare()
@@ -94,65 +85,50 @@ bool Tr2ImageRes::DoPrepare()
 
 int Tr2ImageRes::GetWidth() const
 {
-	if( m_imageHandler )
-	{
-		return m_imageHandler->GetWidth();
-	}
-
-	return 0;
+	return m_bitmap.GetWidth();
 }
 
 int Tr2ImageRes::GetHeight() const
 {
-	if( m_imageHandler )
-	{
-		return m_imageHandler->GetHeight();
-	}
-
-	return 0;
+	return m_bitmap.GetHeight();
 }
 
 bool Tr2ImageRes::IsPixelOpaque( int x, int y ) const
 {
-	if( !m_imageHandler )
-	{
-		return false;
-	}
-
 	// TODO: Support different formats
-	if( m_imageHandler->GetFormat() != Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM )
+	if( m_bitmap.GetFormat() != Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM )
 	{
 		CCP_LOGERR( "Tr2ImageRes::IsPixelOpaque currently only supports PIXEL_FORMAT_B8G8R8A8_UNORM" );
 		return false;
 	}
 
-	if( !m_imageHandler->GetMipBytes( 0, 0 ) )
+	if( !m_bitmap.GetRawData() )
 	{
 		return false;
 	}
 
-	if( ( x >= int( m_imageHandler->GetWidth() ) ) || ( y >= int( m_imageHandler->GetHeight() ) ) )
+	if( ( x >= int( m_bitmap.GetWidth() ) ) || ( y >= int( m_bitmap.GetHeight() ) ) )
 	{
 		return false;
 	}
 
-	unsigned char* p = m_imageHandler->GetMipBytes( 0, 0 );
+	const unsigned char* p = reinterpret_cast<const unsigned char*>( m_bitmap.GetRawData() );
 
 	const int bytesPerPixel = 4; // only works for PIXEL_FORMAT_B8G8R8A8_UNORM, etc.
-	p += y * m_imageHandler->GetWidth() * bytesPerPixel + x * bytesPerPixel;
+	p += y * m_bitmap.GetWidth() * bytesPerPixel + x * bytesPerPixel;
 
 	return p[3] > 0x7f;
 }
 
 Color Tr2ImageRes::GetPixelColor( int x, int y ) const
 {
-	if( !m_imageHandler )
+	if( !m_bitmap.IsValid() )
 	{
 		return Color( 0.0f, 0.0f, 0.0f, 0.0f );
 	}
 
 	// TODO: Support different formats
-	Tr2RenderContextEnum::PixelFormat format = m_imageHandler->GetFormat();
+	Tr2RenderContextEnum::PixelFormat format = m_bitmap.GetFormat();
 	if( format != Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM && 
 		format != Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM )
 	{
@@ -160,7 +136,7 @@ Color Tr2ImageRes::GetPixelColor( int x, int y ) const
 		return Color( 0.0f, 0.0f, 0.0f, 0.0f );
 	}
 
-	if( !m_imageHandler->GetMipBytes( 0, 0 ) )
+	if( !m_bitmap.GetRawData() )
 	{
 		if( format == Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM )
 		{
@@ -172,17 +148,17 @@ Color Tr2ImageRes::GetPixelColor( int x, int y ) const
 		}
 	}
 
-	if( ( x >= int( m_imageHandler->GetWidth() ) ) || ( y >= int( m_imageHandler->GetHeight() ) ) )
+	if( ( x >= int( m_bitmap.GetWidth() ) ) || ( y >= int( m_bitmap.GetHeight() ) ) )
 	{
 		return Color( 0.0f, 0.0f, 0.0f, 0.0f );
 	}
 
-	unsigned char* p = m_imageHandler->GetMipBytes( 0, 0 );
+	const unsigned char* p = reinterpret_cast<const unsigned char*>( m_bitmap.GetRawData() );
 
 	const int bytesPerPixel = 4; // only works for PIXEL_FORMAT_B8G8R8A8_UNORM, etc.
-	p += y * m_imageHandler->GetWidth() * bytesPerPixel + x * bytesPerPixel;
+	p += y * m_bitmap.GetWidth() * bytesPerPixel + x * bytesPerPixel;
 
-	Color color( *reinterpret_cast<uint32_t*>( p ) );
+	Color color( *reinterpret_cast<const uint32_t*>( p ) );
 	if( format == Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM )
 	{
 		color.a = 1.0f;
