@@ -138,6 +138,13 @@ const Be::ClassInfo* EveProjectBracket::ExposeToBlue()
 			"Vertical offset for the bracket",
 			Be::READWRITE
 		)
+		MAP_ATTRIBUTE
+		(
+			"integerCoordinates",
+			m_integerCoordinates,
+			"If true (default), then projected coordinates are rounded to integer coordinates",
+			Be::READWRITE
+		)
 
 	EXPOSURE_END()
 }
