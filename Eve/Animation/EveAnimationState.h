@@ -2,7 +2,7 @@
 #ifndef EveAnimationState_H
 #define EveAnimationState_H
 
-#include "../../BlueExposure/include/BlueTypes.h"
+#include "BlueExposure/include/BlueTypes.h"
 #include "EveAnimationData.h"
 
 BLUE_DECLARE( EveSpaceObject2 );
