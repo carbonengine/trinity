@@ -14,6 +14,7 @@
 #include "Eve/SpaceObject/Attachments/EveBoosterSet2.h"
 #include "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h"
 #include "Tr2Mesh.h"
+#include "Tr2MeshArea.h"
 #include "Tr2Effect.h"
 #include "EffectParameter/TriTexture2DParameter.h"
 #include "EffectParameter/Tr2Vector4Parameter.h"
@@ -120,10 +121,7 @@ IRootPtr EveSOF::Build( const char* hullName, const char* factionName, const cha
 	newShip.CreateInstance();
 
 	// get us the base geometry
-	SetupGeometry( newShip, hullData, factionData );
-
-	// materials (aka skins)
-	SetupMeshArea( newShip, hullData, factionData );
+	SetupMesh( newShip, hullData, factionData );
 
 	// decals
 	SetupHullDecals( newShip, hullData );
@@ -149,17 +147,14 @@ IRootPtr EveSOF::Build( const char* hullName, const char* factionName, const cha
 // Description:
 //   This is where it is all going to happen
 // --------------------------------------------------------------------------------
-void EveSOF::SetupGeometry( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const
+void EveSOF::SetupMesh( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const
 {
 	// need a mesh
-	Tr2MeshPtr newMesh;
-	newMesh.CreateInstance();
+	Tr2MeshPtr mesh;
+	mesh.CreateInstance();
 
 	// gr2 res path
-	newMesh->SetMeshResPath( hullData->geometryResFilePath.c_str() );
-
-	// plug it into ship
-	ship->SetMesh( newMesh );
+	mesh->SetMeshResPath( hullData->geometryResFilePath.c_str() );
 
 	// beoundingsphere comes from data, is faster
 	ship->SetBoundingSphereInformation( &hullData->boundingSphere );
@@ -173,6 +168,27 @@ void EveSOF::SetupGeometry( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hul
 	{
 		ship->SetShadowEffect( m_shadowEffect );
 	}
+
+	// setup mesh areas
+	Tr2MeshAreaVector* opaqueMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	FillMeshAreaVector( &hullData->opaqueAreas, &factionData->opaqueAreaParameters, factionData, opaqueMeshAreaVector );
+	
+	Tr2MeshAreaVector* transparentMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT );
+	FillMeshAreaVector( &hullData->transparentAreas, &factionData->transparentAreaParameters, factionData, transparentMeshAreaVector );
+	
+	Tr2MeshAreaVector* additiveMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_ADDITIVE );
+	FillMeshAreaVector( &hullData->additiveAreas, nullptr, factionData, additiveMeshAreaVector );
+	
+	Tr2MeshAreaVector* depthMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_DEPTH );
+	FillMeshAreaVector( &hullData->depthAreas, nullptr, factionData, depthMeshAreaVector );
+	
+	Tr2MeshAreaVector* distortionMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_DISTORTION );
+	FillMeshAreaVector( &hullData->distortionAreas, nullptr, factionData, distortionMeshAreaVector );
+
+	// create lod levels
+	ship->SetHighDetailMesh( mesh );
+	ship->SetMediumDetailMesh( CreateMeshLOD( mesh, "_mediumDetail" ) );
+	ship->SetLowDetailMesh( CreateMeshLOD( mesh, "_lowDetail" ) );
 }
 
 // --------------------------------------------------------------------------------
@@ -245,27 +261,67 @@ void EveSOF::FillMeshAreaVector( const std::vector<EveSOFDataMgr::HullAreas>* hu
 
 // --------------------------------------------------------------------------------
 // Description:
-//   This is where it is all going to happen
+//   Inserts insertStr before the last instance of beforeSubstr in baseString.
 // --------------------------------------------------------------------------------
-void EveSOF::SetupMeshArea( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const
+bool EveSOF::InsertStringStub( std::string& baseString, const char* beforeSubstr, const char* insertStr ) const
 {
-	// start populating all areas with mesharea objects
-	Tr2MeshPtr mesh = ship->GetMesh();
+	size_t index = baseString.rfind(beforeSubstr);
+	if( index == std::string::npos )
+	{
+		return false;
+	}
 
-	Tr2MeshAreaVector* opaqueMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-	FillMeshAreaVector( &hullData->opaqueAreas, &factionData->opaqueAreaParameters, factionData, opaqueMeshAreaVector );
+	baseString.insert( index, insertStr );
+	return true;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Helper function for replacting resource path strings
+// --------------------------------------------------------------------------------
+void EveSOF::ModifyResourcePathsForLOD( const Tr2MeshAreaVector* areas, const char* lodInsert ) const
+{
+	for( auto it = areas->begin(); it != areas->end(); ++it )
+	{
+		Tr2EffectPtr effect; 
+		if( !(*it)->GetMaterialInterface()->QueryInterface( BlueInterfaceIID<Tr2Effect>(), (void**)&effect ) )
+		{
+			continue;
+		}
+		for( auto resIt = effect->m_resources.begin(); resIt != effect->m_resources.end(); ++resIt )
+		{
+			TriTexture2DParameterPtr textureRes;
+			if( (*resIt)->QueryInterface( BlueInterfaceIID<TriTexture2DParameter>(), (void**)&textureRes ) )
+			{
+				std::string resPathCopy = textureRes->GetResourcePath();
+				if( InsertStringStub( resPathCopy, ".dds", lodInsert ) )
+				{
+					textureRes->SetResourcePath( resPathCopy.c_str() );
+				}
+			}
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Create an actual copy of the base mesh to use as LOD.
+// --------------------------------------------------------------------------------
+Tr2MeshPtr EveSOF::CreateMeshLOD( const Tr2Mesh* base, const char* lodInsert ) const
+{
+	Tr2MeshPtr mesh;
+	BeClasses->CopyTo( base->GetRawRoot(), (IRoot**)&mesh );
+
+	ModifyResourcePathsForLOD( mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), lodInsert );
+	ModifyResourcePathsForLOD( mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT ), lodInsert );
 	
-	Tr2MeshAreaVector* transparentMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT );
-	FillMeshAreaVector( &hullData->transparentAreas, &factionData->transparentAreaParameters, factionData, transparentMeshAreaVector );
+	std::string path = mesh->GetMeshResPath();
+	if( InsertStringStub( path, ".gr2", lodInsert ) )
+	{
+		mesh->SetMeshResPath( path.c_str() );
+	}
 	
-	Tr2MeshAreaVector* additiveMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_ADDITIVE );
-	FillMeshAreaVector( &hullData->additiveAreas, nullptr, factionData, additiveMeshAreaVector );
-	
-	Tr2MeshAreaVector* depthMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_DEPTH );
-	FillMeshAreaVector( &hullData->depthAreas, nullptr, factionData, depthMeshAreaVector );
-	
-	Tr2MeshAreaVector* distortionMeshAreaVector = mesh->GetAreas( TRIBATCHTYPE_DISTORTION );
-	FillMeshAreaVector( &hullData->distortionAreas, nullptr, factionData, distortionMeshAreaVector );
+	return mesh;
 }
 
 // --------------------------------------------------------------------------------
@@ -646,11 +702,8 @@ void EveSOF::ModifyTextureResPath( std::string& resPath, const char* name, const
 			resPathCopy.insert( index + 1, factionData->resPathInsert + std::string("/") );
 		}
 
-		index = resPathCopy.rfind("_pgs");
-		if( index  != std::string::npos )
+		if( InsertStringStub( resPathCopy, "_pgs", ("_" + factionData->resPathInsert).c_str() ) )
 		{
-			resPathCopy.insert( index, "_" + factionData->resPathInsert );
-
 			std::wstring wstrCopy( resPathCopy.begin(), resPathCopy.end() );
 			if( BePaths->FileExists( wstrCopy ) )
 			{

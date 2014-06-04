@@ -13,6 +13,7 @@
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( EveShip2 );
 BLUE_DECLARE( EveSOF );
+BLUE_DECLARE( Tr2Mesh );
 BLUE_DECLARE( Tr2MeshArea );
 BLUE_DECLARE_VECTOR( Tr2MeshArea );
 
@@ -43,8 +44,7 @@ private:
 	typedef std::map<std::string, EveSOFDataMgr::FactionAreaData> FactionAreaMap;
 
 	// all setup functions for the to-be-created spaceship
-	void SetupGeometry( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const;
-	void SetupMeshArea( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const;
+	void SetupMesh( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const;
 	void SetupSpriteSets( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const;
 	void SetupSpotlightSets( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const;
 	void SetupPlaneSets( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData, const EveSOFDataMgr::FactionData* factionData ) const;
@@ -54,7 +54,10 @@ private:
 
 	// helper functions
 	void ModifyTextureResPath( std::string& resPath, const char* name, const EveSOFDataMgr::FactionData* factionData ) const;
+	bool EveSOF::InsertStringStub( std::string& baseString, const char* beforeSubstr, const char* insertStr ) const;
 	void FillMeshAreaVector( const std::vector<EveSOFDataMgr::HullAreas>* hullAreas, const FactionAreaMap* factionAreas, const EveSOFDataMgr::FactionData* factionData, Tr2MeshAreaVector* meshAreaVector ) const;
+	void ModifyResourcePathsForLOD( const Tr2MeshAreaVector* areas, const char* lodInsert ) const;
+	Tr2MeshPtr CreateMeshLOD( const Tr2Mesh* base, const char* lodInsert ) const;
 
 	// all the source data
 	PEveSOFDataMgr m_dataMgr;
