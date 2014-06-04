@@ -7,6 +7,7 @@
     <Filter Include="Source Files\Curves"/>
     <Filter Include="Source Files\EffectParameter"/>
     <Filter Include="Source Files\Eve"/>
+    <Filter Include="Source Files\Eve\Animation"/>
     <Filter Include="Source Files\Eve\Renderable"/>
     <Filter Include="Source Files\Eve\SpaceObject"/>
     <Filter Include="Source Files\Eve\SpaceObjectFactory"/>
@@ -636,15 +637,6 @@
     <ClInclude Include="EffectParameter\TriVector4Parameter.h">
       <Filter>Source Files\EffectParameter</Filter>
     </ClInclude>
-    <ClInclude Include="Eve\EveAnimationData.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\EveAnimationSequencer.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\EveAnimationState.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
     <ClInclude Include="Eve\EveCamera.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
@@ -666,13 +658,7 @@
     <ClInclude Include="Eve\EveLineSet.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
-    <ClInclude Include="Eve\EveLocator2.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
     <ClInclude Include="Eve\EveLODHelper.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\EveMeshOverlayEffect.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
     <ClInclude Include="Eve\EveOccluder.h">
@@ -691,9 +677,6 @@
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
     <ClInclude Include="Eve\EveProjectBracket.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\EveRenderableMesh.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
     <ClInclude Include="Eve\EveRootTransform.h">
@@ -726,12 +709,6 @@
     <ClInclude Include="Eve\EveTransform.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
-    <ClInclude Include="Eve\EveTransformArray.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\EveTransformItem.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
     <ClInclude Include="Eve\EveTurretFiringFX.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
@@ -752,6 +729,15 @@
     </ClInclude>
     <ClInclude Include="Eve\IEveTransform.h">
       <Filter>Source Files\Eve</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\Animation\EveAnimationData.h">
+      <Filter>Source Files\Eve\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\Animation\EveAnimationSequencer.h">
+      <Filter>Source Files\Eve\Animation</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\Animation\EveAnimationState.h">
+      <Filter>Source Files\Eve\Animation</Filter>
     </ClInclude>
     <ClInclude Include="Eve\Renderable\EveMetaball.h">
       <Filter>Source Files\Eve\Renderable</Filter>
@@ -786,6 +772,9 @@
     <ClInclude Include="Eve\SpaceObject\Attachments\EveDynamicPlaneSet.h">
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
     </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Attachments\EveMeshOverlayEffect.h">
+      <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
+    </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Attachments\EvePlaneSet.h">
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
     </ClInclude>
@@ -811,6 +800,9 @@
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
     </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Utils\EveCustomMask.h">
+      <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Utils\EveLocator2.h">
       <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
     </ClInclude>
     <ClInclude Include="Eve\SpaceObjectFactory\EveSOF.h">
@@ -2370,24 +2362,6 @@
     <ClCompile Include="EffectParameter\TriVector4Parameter_Blue.cpp">
       <Filter>Source Files\EffectParameter</Filter>
     </ClCompile>
-    <ClCompile Include="Eve\EveAnimationData.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveAnimationData_Blue.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveAnimationSequencer.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveAnimationSequencer_Blue.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveAnimationState.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveAnimationState_Blue.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
     <ClCompile Include="Eve\EveCamera.cpp">
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
@@ -2424,19 +2398,7 @@
     <ClCompile Include="Eve\EveLineSet_Blue.cpp">
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
-    <ClCompile Include="Eve\EveLocator2.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveLocator2_Blue.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
     <ClCompile Include="Eve\EveLODHelper.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveMeshOverlayEffect.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveMeshOverlayEffect_Blue.cpp">
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
     <ClCompile Include="Eve\EveOccluder.cpp">
@@ -2473,12 +2435,6 @@
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
     <ClCompile Include="Eve\EveProjectBracket_Blue.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveRenderableMesh.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveRenderableMesh_Blue.cpp">
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
     <ClCompile Include="Eve\EveRootTransform.cpp">
@@ -2535,18 +2491,6 @@
     <ClCompile Include="Eve\EveTransform.cpp">
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
-    <ClCompile Include="Eve\EveTransformArray.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveTransformArray_Blue.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveTransformItem.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveTransformItem_Blue.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
     <ClCompile Include="Eve\EveTransform_Blue.cpp">
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
@@ -2561,6 +2505,24 @@
     </ClCompile>
     <ClCompile Include="Eve\EveTurretSet_Blue.cpp">
       <Filter>Source Files\Eve</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\Animation\EveAnimationData.cpp">
+      <Filter>Source Files\Eve\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\Animation\EveAnimationData_Blue.cpp">
+      <Filter>Source Files\Eve\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\Animation\EveAnimationSequencer.cpp">
+      <Filter>Source Files\Eve\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\Animation\EveAnimationSequencer_Blue.cpp">
+      <Filter>Source Files\Eve\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\Animation\EveAnimationState.cpp">
+      <Filter>Source Files\Eve\Animation</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\Animation\EveAnimationState_Blue.cpp">
+      <Filter>Source Files\Eve\Animation</Filter>
     </ClCompile>
     <ClCompile Include="Eve\Renderable\EveMetaball.cpp">
       <Filter>Source Files\Eve\Renderable</Filter>
@@ -2622,6 +2584,12 @@
     <ClCompile Include="Eve\SpaceObject\Attachments\EveDynamicPlaneSet_Blue.cpp">
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
     </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveMeshOverlayEffect.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveMeshOverlayEffect_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
+    </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Attachments\EvePlaneSet.cpp">
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
     </ClCompile>
@@ -2674,6 +2642,12 @@
       <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Utils\EveCustomMask_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Utils\EveLocator2.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Utils\EveLocator2_Blue.cpp">
       <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Eve\SpaceObjectFactory\EveSOF.cpp">
