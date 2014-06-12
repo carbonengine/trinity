@@ -1140,7 +1140,7 @@ void TriGeometryRes::PrepareFromGrannyRes( TriGrannyRes* g )
 
 struct CalcMiniballContext
 {
-	float **samplePoints;
+	double **samplePoints;
 	int pointCount;
 };
 
@@ -1149,19 +1149,19 @@ void CalcMiniball( void* context, const Vector3& p1, const Vector3& p2, const Ve
 	CalcMiniballContext* ctx = static_cast<CalcMiniballContext*>( context );
 
 	// Add points to the bounding object. We'll get duplicates, but this is ok.
-	float* point = new float[3];
+	double* point = new double[3];
 	point[0] = p1.x;
 	point[1] = p1.y;
 	point[2] = p1.z;
 	ctx->samplePoints[ctx->pointCount++] = point;
 	
-	point = new float[3];
+	point = new double[3];
 	point[0] = p2.x;
 	point[1] = p2.y;
 	point[2] = p2.z;
 	ctx->samplePoints[ctx->pointCount++] = point;
 
-	point = new float[3];
+	point = new double[3];
 	point[0] = p3.x;
 	point[1] = p3.y;
 	point[2] = p3.z;
@@ -1180,23 +1180,23 @@ void TriGeometryRes::RecalculateBoundingSphere()
 			continue;
 		}
 
-		typedef float* const* PointIterator; 
-		typedef const float* CoordIterator;
+		typedef double* const* PointIterator; 
+		typedef const double* CoordIterator;
 		typedef Miniball::Miniball <Miniball::CoordAccessor<PointIterator, CoordIterator> > MB;
 
 		CalcMiniballContext context;
 		// Figure out how many points
-		context.samplePoints = new float*[m_meshes[i]->m_primitiveCount*3];		
+		context.samplePoints = new double*[m_meshes[i]->m_primitiveCount*3];		
 		context.pointCount = 0;
 		ProcessMeshTriangles( (int)i, &CalcMiniball, &context );
 		MB mb( 3, context.samplePoints, context.samplePoints+m_meshes[i]->m_primitiveCount*3 );
 		
-		const float* boundingSphereCenter = mb.center();
+		const double* boundingSphereCenter = mb.center();
 
-		m_meshes[i]->m_boundingSphere.x = boundingSphereCenter[0];
-		m_meshes[i]->m_boundingSphere.y = boundingSphereCenter[1];
-		m_meshes[i]->m_boundingSphere.z = boundingSphereCenter[2];
-		m_meshes[i]->m_boundingSphere.w = sqrt( mb.squared_radius() );
+		m_meshes[i]->m_boundingSphere.x = float( boundingSphereCenter[0] );
+		m_meshes[i]->m_boundingSphere.y = float( boundingSphereCenter[1] );
+		m_meshes[i]->m_boundingSphere.z = float( boundingSphereCenter[2] );
+		m_meshes[i]->m_boundingSphere.w = float( sqrt( mb.squared_radius() ) );
 
 		for( int j=0; j< context.pointCount; ++j )
 		{
