@@ -118,7 +118,8 @@ EveSOFDataHullLocator::EveSOFDataHullLocator( IRoot* lockobj )
 EveSOFDataHullChild::EveSOFDataHullChild( IRoot* lockobj ) :
 	m_translation( 0.f, 0.f, 0.f ),
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
-	m_scaling( 1.f, 1.f, 1.f )
+	m_scaling( 1.f, 1.f, 1.f ),
+	m_id( -1 )
 {}
 
 

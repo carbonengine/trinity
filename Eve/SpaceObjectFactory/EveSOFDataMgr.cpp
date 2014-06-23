@@ -500,6 +500,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		hc.translation = child->m_translation;
 		hc.rotation = child->m_rotation;
 		hc.scaling = child->m_scaling;
+		hc.id = child->m_id;
 		hd.children.push_back( hc );
 	}
 

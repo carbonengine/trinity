@@ -28,7 +28,7 @@ BLUE_DECLARE_IVECTOR( ITr2GenericEmitter );
 BLUE_DECLARE( EveTransform );
 BLUE_DECLARE_VECTOR( EveTransform );
 
-class EveTransform:
+BLUE_CLASS( EveTransform ):
 	public Tr2Transform,
 	public IEveTransform,
 	public IEveSpaceObject2,

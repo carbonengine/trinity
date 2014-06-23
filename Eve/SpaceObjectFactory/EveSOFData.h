@@ -245,6 +245,7 @@ public:
 	Vector3 m_translation;
 	Quaternion m_rotation;
 	Vector3 m_scaling;
+	int m_id;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullChild );
 BLUE_DECLARE_VECTOR( EveSOFDataHullChild );

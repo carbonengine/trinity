@@ -21,9 +21,11 @@
 #include "EffectParameter/Tr2FloatParameter.h"
 #include "include/ITriFunction.h"
 #include "Curves/Tr2QuaternionCurve.h"
+#include "Curves/Tr2ScalarCurve.h"
 #include "Curves/TriCurveSet.h"
 #include "Curves/TriRotationCurve.h"
 #include "TriValueBinding.h"
+#include "Particle/Tr2DynamicEmitter.h"
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -139,11 +141,8 @@ IRootPtr EveSOF::Build( const char* hullName, const char* factionName, const cha
 	// attachments to ship
 	SetupBoosters( newShip, hullData, raceData );
 
-	// children
-	SetupChildren( newShip, hullData );
-
-	// animations
-	SetupAnimations( newShip, hullData );
+	// children, animations and particles
+	SetupChildrenAndAnimations( newShip, hullData );
 
 	// model curves
 	SetupModelCurves( newShip, hullData );
@@ -603,37 +602,111 @@ void EveSOF::SetupModelCurves( EveShip2Ptr ship, const EveSOFDataMgr::HullData* 
 	ship->SetModelTranslationCurve( translationCurve );
 }
 
+void RecursiveBindParticleEmitters( EveTransformPtr transform, TriCurveSetPtr curveSet, Tr2ScalarCurvePtr curve )
+{
+	for( auto emitterIt = transform->m_particleEmitters.begin(); emitterIt != transform->m_particleEmitters.end(); ++emitterIt )
+	{
+		Tr2DynamicEmitterPtr dynamicEmitter;
+		if( !(*emitterIt)->QueryInterface( BlueInterfaceIID<Tr2DynamicEmitter>(), (void**)&dynamicEmitter ) )
+		{
+			continue;
+		}
+
+		TriValueBindingPtr binding;
+		binding.CreateInstance();
+		binding->SetSource( "currentValue", curve->GetRawRoot() );
+		binding->SetDestination( "rate", dynamicEmitter->GetRawRoot() );
+		binding->Initialize();
+		curveSet->AddBinding( (ITr2ValueBindingPtr)binding );
+	}
+
+	for( auto childIt = transform->m_children.begin(); childIt != transform->m_children.end(); ++childIt )
+	{
+		EveTransformPtr childTransform;
+		if( !(*childIt)->QueryInterface( BlueInterfaceIID<EveTransform>(), (void**)&childTransform ) )
+		{
+			continue;
+		}
+		RecursiveBindParticleEmitters( childTransform, curveSet, curve );
+	}
+}
+
 // --------------------------------------------------------------------------------
 // Description:
-//   Add Animations to the ship
+//   Add Children and Animations to the ship
+//   
 // --------------------------------------------------------------------------------
-void EveSOF::SetupAnimations( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData ) const
+
+void EveSOF::SetupChildrenAndAnimations( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData ) const
 {
-	for( auto chit = hullData->animations.begin(); chit != hullData->animations.end(); ++chit )
+	std::map<int, std::vector<EveTransformPtr>> childrenToBindTo;
+
+	for( auto childIt = hullData->children.begin(); childIt != hullData->children.end(); ++childIt )
+	{
+		IRootPtr p;
+		IRoot* tmp = BeResMan->LoadObject( childIt->redFilePath.c_str() );
+		if( !tmp )
+		{
+			CCP_LOGERR( "resource file %s is invalid!", childIt->redFilePath.c_str() );
+			continue;
+		}
+		p.Attach( tmp );
+
+		// is it of right type?
+		EveTransformPtr child;
+		if( !p->QueryInterface( BlueInterfaceIID<EveTransform>(), (void**)&child ) )
+		{
+			CCP_LOGERR( "resource file %s is not of correct type!", childIt->redFilePath.c_str() );
+			return;
+		}
+		child->SetRotation( childIt->rotation );
+		child->SetScaling( childIt->scaling );
+		child->SetTranslation( childIt->translation );
+		if( childIt->id != -1 )
+		{
+			childrenToBindTo[childIt->id].push_back( child );
+		}
+
+		ship->AddToChildrenList( child );
+	}
+
+
+	for( auto animIt = hullData->animations.begin(); animIt != hullData->animations.end(); ++animIt )
 	{
 		TriCurveSetPtr curveSet;
 		curveSet.CreateInstance();
+		curveSet->SetName( animIt->name );
 
-		curveSet->SetName( chit->name );
-
-		// Do we control a particle system?
-		if( chit->id != -1 && chit->startRate != -1.0 )
+		// Do we control particle systems?
+		if( animIt->id != -1 && animIt->startRate != -1.0 )
 		{
-			// TODO
+			Tr2ScalarCurvePtr scalarCurve;
+			scalarCurve.CreateInstance();
+
+			scalarCurve->AddKey( 0.0f, animIt->startRate );
+			scalarCurve->AddKey( 1.0f, animIt->endRate );
+
+			std::vector<EveTransformPtr> transformVector = childrenToBindTo[animIt->id];
+			for( auto transformIt = transformVector.begin(); transformIt != transformVector.end(); ++transformIt )
+			{
+				RecursiveBindParticleEmitters( (*transformIt), curveSet, scalarCurve );
+			}
+
+			curveSet->AddCurve( (ITriFunctionPtr)scalarCurve );
 		}
 		// Do we have valid rotation info?
-		if( chit->startRotationTime != -1.0 )
+		if( animIt->startRotationTime != -1.0 )
 		{
 			// Create the rotations curve
 			Tr2QuaternionCurvePtr curve;
 			curve.CreateInstance();
-			curve->SetLength( chit->endRotationTime );
-			curve->SetEndValue( chit->endRotationValue );
-			curve->SetStartValue( chit->startRotationValue );
-			if( chit->startRotationTime != 0.0 )
+			curve->SetLength( animIt->endRotationTime );
+			curve->SetEndValue( animIt->endRotationValue );
+			curve->SetStartValue( animIt->startRotationValue );
+			if( animIt->startRotationTime != 0.0 )
 			{
-				curve->SetStartValue( chit->startRotationValue );
-				curve->AddKey( chit->startRotationTime, chit->startRotationValue );
+				curve->SetStartValue( animIt->startRotationValue );
+				curve->AddKey( animIt->startRotationTime, animIt->startRotationValue );
 			}
 			curveSet->AddCurve( (ITriFunctionPtr)curve );
 			
@@ -657,44 +730,13 @@ void EveSOF::SetupAnimations( EveShip2Ptr ship, const EveSOFDataMgr::HullData* h
 
 		}
 		// Do we have valid translation info?
-		if( chit->startTranslationTime != -1.0 )
+		if( animIt->startTranslationTime != -1.0 )
 		{
 			// TODO
 		}
 	}
 }
 
-// --------------------------------------------------------------------------------
-// Description:
-//   Add Children to the ship
-// --------------------------------------------------------------------------------
-void EveSOF::SetupChildren( EveShip2Ptr ship, const EveSOFDataMgr::HullData* hullData ) const
-{
-	for( auto chit = hullData->children.begin(); chit != hullData->children.end(); ++chit )
-	{
-		IRootPtr p;
-		IRoot* tmp = BeResMan->LoadObject( chit->redFilePath.c_str() );
-		if( !tmp )
-		{
-			CCP_LOGERR( "resource file %s is invalid!", chit->redFilePath.c_str() );
-			continue;
-		}
-		p.Attach( tmp );
-
-		// is it of right type?
-		EveTransformPtr child;
-		if( !p->QueryInterface( BlueInterfaceIID<EveTransform>(), (void**)&child ) )
-		{
-			CCP_LOGERR( "resource file %s is not of correct type!", chit->redFilePath.c_str() );
-			return;
-		}
-		child->SetRotation( chit->rotation );
-		child->SetScaling( chit->scaling );
-		child->SetTranslation( chit->translation );
-
-		ship->AddToChildrenList( child );
-	}
-}
 
 // --------------------------------------------------------------------------------
 // Description:

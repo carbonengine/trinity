@@ -129,6 +129,7 @@ public:
 		Vector3 translation;
 		Quaternion rotation;
 		Vector3 scaling;
+		int id;
 	};
 
 	struct HullAnimation

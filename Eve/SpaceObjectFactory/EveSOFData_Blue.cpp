@@ -258,6 +258,7 @@ const Be::ClassInfo* EveSOFDataHullChild::ExposeToBlue()
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "id", m_id, "", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
 
