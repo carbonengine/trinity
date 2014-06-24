@@ -27,6 +27,12 @@
 #include "TriValueBinding.h"
 #include "Particle/Tr2DynamicEmitter.h"
 
+bool FileExists( const std::string& path )
+{
+	std::wstring wstrCopy( path.begin(), path.end() );
+	return BePaths->FileExists( wstrCopy );
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Initialize data members
@@ -318,7 +324,7 @@ void EveSOF::ModifyResourcePathsForLOD( const Tr2MeshAreaVector* areas, const ch
 			if( (*resIt)->QueryInterface( BlueInterfaceIID<TriTexture2DParameter>(), (void**)&textureRes ) )
 			{
 				std::string resPathCopy = textureRes->GetResourcePath();
-				if( InsertStringStub( resPathCopy, ".dds", lodInsert ) )
+				if( InsertStringStub( resPathCopy, ".dds", lodInsert ) && FileExists( resPathCopy ) )
 				{
 					textureRes->SetResourcePath( resPathCopy.c_str() );
 				}
@@ -340,7 +346,7 @@ Tr2MeshPtr EveSOF::CreateMeshLOD( const Tr2Mesh* base, const char* lodInsert ) c
 	ModifyResourcePathsForLOD( mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT ), lodInsert );
 	
 	std::string path = mesh->GetMeshResPath();
-	if( InsertStringStub( path, ".gr2", lodInsert ) )
+	if( InsertStringStub( path, ".gr2", lodInsert ) && FileExists( path ) )
 	{
 		mesh->SetMeshResPath( path.c_str() );
 	}
@@ -922,13 +928,9 @@ void EveSOF::ModifyTextureResPath( std::string& resPath, const char* name, const
 			resPathCopy.insert( index + 1, factionData->resPathInsert + std::string("/") );
 		}
 
-		if( InsertStringStub( resPathCopy, "_pgs", ("_" + factionData->resPathInsert).c_str() ) )
+		if( InsertStringStub( resPathCopy, "_pgs", ("_" + factionData->resPathInsert).c_str() ) && FileExists( resPathCopy ) )
 		{
-			std::wstring wstrCopy( resPathCopy.begin(), resPathCopy.end() );
-			if( BePaths->FileExists( wstrCopy ) )
-			{
-				resPath = resPathCopy;
-			}
+			resPath = resPathCopy;
 		}
 	}
 }
