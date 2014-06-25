@@ -7,7 +7,6 @@ import time
 
 pkgpath = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'packages')
 sys.path.append(pkgpath)
-import ccpp4
 
 runningOnJenkins = True if os.getenv('RUNNING_ON_JENKINS') else False
 noPerforce = True if runningOnJenkins else False
@@ -248,18 +247,18 @@ if incrementalBuild:
     
 if len(outFiles):
     if not noPerforce:
+        import ccpp4
         try:
             p4 = ccpp4.P4Init("")
         except:
             noPerforce = True
             print "Warning: perforce connection failed, working in local mode"
 
-    try:
-        p4.run_edit(outFiles)
-    except ccpp4.p4exceptions.P4FilesNotOnClientWarning:
-        p4.run_add("-tbinary+m", outFiles)
-    except:
-        if not noPerforce:
+        try:
+            p4.run_edit(outFiles)
+        except ccpp4.p4exceptions.P4FilesNotOnClientWarning:
+            p4.run_add("-tbinary+m", outFiles)
+        except:
             print "Error: error checking out compiled files in Perforce"
             exit(1)
 
