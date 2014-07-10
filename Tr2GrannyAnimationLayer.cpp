@@ -93,7 +93,27 @@ bool Tr2GrannyAnimationLayer::PlayAnimation( const Tr2GrannyAnimation* grannyAni
 	float startTime = Tr2Renderer::GetAnimationTime();
 	if( !replace )
 	{
-		delay += GetAnimationRemainingTime();
+		float maxRemaining = 0.0f;
+		for(	granny_model_control_binding *binding = GrannyModelControlsBegin( m_modelInstance ); 
+				binding != GrannyModelControlsEnd( m_modelInstance ); 
+				binding = GrannyModelControlsNext( binding ) )
+		{
+			granny_control *control = GrannyGetControlFromBinding( binding );
+
+			// Force control to stop at the end of its current loop iteration
+			int loopCount = max(0, GrannyGetControlLoopIndex( control ));
+			int newLoopCount = loopCount + 1;
+		
+			GrannySetControlLoopCount( control, newLoopCount );
+			float remaining = GrannyGetControlDurationLeft( control );
+			GrannyCompleteControlAt( control, Tr2Renderer::GetAnimationTime() + remaining );
+			if( remaining > maxRemaining )
+			{
+				maxRemaining = remaining;
+			}
+		}
+
+		delay += maxRemaining;
 	}
 	startTime += delay;
 
