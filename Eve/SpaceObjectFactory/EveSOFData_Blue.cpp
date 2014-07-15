@@ -114,6 +114,7 @@ const Be::ClassInfo* EveSOFDataFactionSpriteSet::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "groupIndex", m_groupIndex, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "isVisible", m_isVisible, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "color", m_color, "", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
