@@ -2408,6 +2408,7 @@
     <ClInclude Include="Utilities\MatrixUtils.h"/>
     <ClInclude Include="Utilities\Obb.h"/>
     <ClInclude Include="Utilities\Quaternion.h"/>
+    <ClInclude Include="Utilities\StringUtils.h"/>
     <ClInclude Include="Utilities\ViewDistanceInfo.h"/>
     <ClInclude Include="Wod\WodBakingScene.h"/>
     <ClInclude Include="Wod\WodPlaceableRes.h"/>

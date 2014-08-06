@@ -1423,6 +1423,9 @@
     <ClInclude Include="Utilities\Quaternion.h">
       <Filter>Source Files\Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Utilities\StringUtils.h">
+      <Filter>Source Files\Utilities</Filter>
+    </ClInclude>
     <ClInclude Include="Utilities\ViewDistanceInfo.h">
       <Filter>Source Files\Utilities</Filter>
     </ClInclude>
