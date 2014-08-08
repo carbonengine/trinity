@@ -2404,6 +2404,7 @@
     <ClInclude Include="Utilities\BoundingSphere.h"/>
     <ClInclude Include="Utilities\Color.h"/>
     <ClInclude Include="Utilities\GeometryUtils.h"/>
+    <ClInclude Include="Utilities\GrannyCurveHelpers.h"/>
     <ClInclude Include="Utilities\Matrix.h"/>
     <ClInclude Include="Utilities\MatrixUtils.h"/>
     <ClInclude Include="Utilities\Obb.h"/>

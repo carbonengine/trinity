@@ -1411,6 +1411,9 @@
     <ClInclude Include="Utilities\GeometryUtils.h">
       <Filter>Source Files\Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Utilities\GrannyCurveHelpers.h">
+      <Filter>Source Files\Utilities</Filter>
+    </ClInclude>
     <ClInclude Include="Utilities\Matrix.h">
       <Filter>Source Files\Utilities</Filter>
     </ClInclude>
