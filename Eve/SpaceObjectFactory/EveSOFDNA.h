@@ -64,6 +64,7 @@ public:
 	const std::vector<EveSOFDataMgr::HullPlaneSetData>& GetHullPlaneSets() const;
 	const std::vector<EveSOFDataMgr::HullSpotlightSetData>& GetHullSpotlightSets() const;
 	const std::vector<EveSOFDataMgr::HullSpriteSetData>& GetHullSpriteSets() const;
+	const std::vector<EveSOFDataMgr::LocatorData>& GetHullTurretLocators() const;
 
 	// get faction data
 	const char* GetFactionResPathInsert() const;

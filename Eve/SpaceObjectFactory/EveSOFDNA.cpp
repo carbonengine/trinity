@@ -228,6 +228,15 @@ const std::vector<EveSOFDataMgr::HullSpriteSetData>& EveSOFDNA::GetHullSpriteSet
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Return an array to all the turret locators on this hull
+// --------------------------------------------------------------------------------
+const std::vector<EveSOFDataMgr::LocatorData>& EveSOFDNA::GetHullTurretLocators() const
+{
+	return m_hullData->locatorTurrets;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Return an array to all the children of this hull
 // --------------------------------------------------------------------------------
 const std::vector<EveSOFDataMgr::HullChild>& EveSOFDNA::GetHullChildren() const

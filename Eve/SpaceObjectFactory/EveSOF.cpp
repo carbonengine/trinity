@@ -15,6 +15,7 @@
 #include "Eve/SpaceObject/Attachments/EvePlaneSet.h"
 #include "Eve/SpaceObject/Attachments/EveBoosterSet2.h"
 #include "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h"
+#include "Eve/SpaceObject/Utils/EveLocator2.h"
 #include "Tr2Mesh.h"
 #include "Tr2MeshArea.h"
 #include "Tr2Effect.h"
@@ -138,6 +139,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 
 	// attachments to ship
 	SetupBoosters( newShip, dna );
+	SetupLocators( newShip, dna );
 
 	// children, animations and particles
 	SetupChildrenAndAnimations( newShip, dna );
@@ -883,6 +885,32 @@ void EveSOF::SetupDecals( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 		ship->AddDecal( decal );
 	}
 }
+
+// --------------------------------------------------------------------------------
+// Description:
+//   add the hull locators to the new ship
+// --------------------------------------------------------------------------------
+void EveSOF::SetupLocators( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
+{
+	// create and setup all turret locators
+	const std::vector<EveSOFDataMgr::LocatorData>& turretLocators = dna->GetHullTurretLocators();
+	for( auto tlit = turretLocators.begin(); tlit != turretLocators.end(); ++tlit )
+	{
+		// create a new locator
+		EveLocator2Ptr loc;
+		loc.CreateInstance();
+
+		// set it up
+		loc->SetName( tlit->name.c_str() );
+		loc->SetTransform( tlit->transform );
+
+		// add it to the new ship
+		ship->AddLocator( loc );
+	}
+}
+
+
+
 
 
 

@@ -2017,6 +2017,15 @@ void EveSpaceObject2::AddCurveSet( TriCurveSetPtr newCurveSet )
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Add a new locator to this object from the outside
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::AddLocator( EveLocator2Ptr newLocator )
+{
+	m_locators.Append( newLocator->GetRawRoot() );
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Set the shadow shader of this object from the outside
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::SetShadowEffect( Tr2EffectPtr newShadowEffect )

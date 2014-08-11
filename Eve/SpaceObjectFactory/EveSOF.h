@@ -54,6 +54,7 @@ private:
 	void SetupBoosters( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const;
 	void SetupDecals( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const;
 	void SetupModelCurves( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const;
+	void SetupLocators( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const;
 
 	// helper functions
 	void FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna ) const;

@@ -225,6 +225,7 @@ public:
 	void AddPlaneSet( EvePlaneSetPtr newPlaneSet );
 	void AddDecal( EveSpaceObjectDecalPtr newDecal );
 	void AddCurveSet( TriCurveSetPtr newCurveSet );
+	void AddLocator( EveLocator2Ptr newLocator );
 
 	// access to shadows
 	void SetShadowEffect( Tr2EffectPtr newShadowEffect );
