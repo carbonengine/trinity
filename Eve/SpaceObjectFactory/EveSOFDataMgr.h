@@ -39,6 +39,12 @@ public:
 		Matrix transform;
 	};
 
+	struct LocatorDirectionData
+	{
+		Vector3 position;
+		Quaternion rotation;
+	};
+
 	// hull data structs
 	struct HullBoosterItemData
 	{
@@ -171,6 +177,7 @@ public:
 		std::vector<HullDecalData> hullDecals;
 		HullBoosterData boosters;
 		std::vector<LocatorData> locatorTurrets;
+		std::vector<LocatorDirectionData> locatorDamage;
 		std::vector<HullChild> children;
 		std::vector<HullAnimation> animations;
 		std::string modelRotationCurvePath;

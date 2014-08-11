@@ -226,6 +226,7 @@ public:
 	void AddDecal( EveSpaceObjectDecalPtr newDecal );
 	void AddCurveSet( TriCurveSetPtr newCurveSet );
 	void AddLocator( EveLocator2Ptr newLocator );
+	void SetDamageLocators( const EveDamageLocator* damageLocators, size_t damageLocatorCount );
 
 	// access to shadows
 	void SetShadowEffect( Tr2EffectPtr newShadowEffect );

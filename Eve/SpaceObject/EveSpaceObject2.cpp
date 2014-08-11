@@ -2026,6 +2026,17 @@ void EveSpaceObject2::AddLocator( EveLocator2Ptr newLocator )
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Add a new locator to this object from the outside
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::SetDamageLocators( const EveDamageLocator* damageLocators, size_t damageLocatorCount )
+{
+	// is a structured list, so we can copy this in one big block
+	m_persistedDamageLocators.Resize( damageLocatorCount );
+	memcpy( &m_persistedDamageLocators[0], damageLocators, damageLocatorCount * sizeof( EveDamageLocator ) );
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Set the shadow shader of this object from the outside
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::SetShadowEffect( Tr2EffectPtr newShadowEffect )
