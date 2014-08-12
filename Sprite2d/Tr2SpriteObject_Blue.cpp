@@ -122,6 +122,15 @@ const Be::ClassInfo* Tr2SpriteObjectBase::ExposeToBlue()
 			Tr2SpriteObjectPickStateChooser
 		)
 
+#if BLUE_WITH_PYTHON
+		MAP_PROPERTY
+		(
+			"associatedObject",
+			GetAssociatedObject, SetAssociatedObject,
+			"Weak reference to a Python object associated with this sprite object."
+		)
+#endif
+
 	EXPOSURE_END()
 }
 

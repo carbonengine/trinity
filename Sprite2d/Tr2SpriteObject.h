@@ -40,6 +40,11 @@ public:
 	float GetDisplayHeight() const;
 	void SetDisplayHeight( float val );
 
+#if BLUE_WITH_PYTHON
+	PyObject* GetAssociatedObject() const;
+	void SetAssociatedObject( PyObject* obj );
+#endif
+
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2SpriteObject
 	void SetParent( ITr2SpriteObject* parent );
@@ -65,6 +70,11 @@ protected:
 	std::wstring m_name;
 	bool m_display;
 	Tr2SpriteObjectPickState m_pickState;
+
+#if BLUE_WITH_PYTHON
+	PyObject* m_associatedObject;
+#endif
+
 };
 
 class Tr2SpriteObject :

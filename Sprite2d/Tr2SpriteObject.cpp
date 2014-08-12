@@ -12,6 +12,9 @@ Tr2SpriteObjectBase::Tr2SpriteObjectBase() :
 	m_displayHeight( 0.0f ),
 	m_display( true ),
 	m_pickState( TR2_SPS_ON )
+#if BLUE_WITH_PYTHON
+	, m_associatedObject( nullptr )
+#endif
 {
 }
 
@@ -121,6 +124,27 @@ bool Tr2SpriteObjectBase::OnModified( Be::Var* value )
 	return true;
 }
 
+#if BLUE_WITH_PYTHON
+PyObject* Tr2SpriteObjectBase::GetAssociatedObject() const
+{
+	if( m_associatedObject )
+	{
+		return PyWeakref_GetObject( m_associatedObject );
+	}
+
+	Py_RETURN_NONE;
+}
+
+void Tr2SpriteObjectBase::SetAssociatedObject( PyObject* obj )
+{
+	if( m_associatedObject )
+	{
+		Py_DECREF( m_associatedObject );
+	}
+
+	m_associatedObject = PyWeakref_NewRef( obj, nullptr );
+}
+#endif
 
 Tr2SpriteObject::Tr2SpriteObject( IRoot* lockobj ) :
 	m_blendMode( TR2_SBM_NONE ),
