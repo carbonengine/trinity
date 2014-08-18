@@ -6,8 +6,18 @@
 #include "TriError.h"
 #include "Include/TriMath.h"
 
-const float defFOV = TRI_PIBY2;
-const float cutoff = 0.00001f;
+static const float defFOV = TRI_PIBY2;
+
+static inline float CutoffYawPitch( float value, float speed )
+{
+	// This helps avoid jitter caused by spring equations.
+	const float cutoff = 0.0001f;
+	if( fabs( value - speed ) < cutoff )
+	{
+		return speed;
+	}
+	return value;
+}
 
 EveCamera::EveCamera(IRoot* lockobj) :
 	m_friction    ( 7.0f  ),
@@ -246,7 +256,9 @@ void EveCamera::Update( Be::Time t )
 
 	// Cap the pitch input at twich the max(to keep some pressure)
 	m_yaw = (m_yaw + m_friction * dT * m_yawSpeed) / (1.0f + m_friction * dT);
+	m_yaw = CutoffYawPitch( m_yaw, m_yawSpeed );
 	m_pitch = (m_pitch + m_friction * dT * m_pitchSpeed)/(1.0f + m_friction * dT);
+	m_pitch = CutoffYawPitch( m_pitch, m_pitchSpeed );
 	
 	CapPitchAndYaw();
 
@@ -343,15 +355,9 @@ void EveCamera::Update( Be::Time t )
 	// And Finally animate the rotation around the 'other' interest if present
 	////////////////////////////////////////////////////////////////////////
 	m_yawInt = (m_yawInt + m_friction*dT*m_yawIntSpeed)/(1.0f + m_friction*dT);
+	m_yawInt = CutoffYawPitch( m_yawInt, m_yawIntSpeed );
 	m_pitchInt = (m_pitchInt + m_friction*dT*m_pitchIntSpeed)/(1.0f + m_friction*dT);
-
-
-	// cutoff
-	if(fabs(m_yawInt-m_yawIntSpeed)< 0.0001f)
-		m_yawInt = m_yawIntSpeed;
-
-	if(fabs(m_pitchInt-m_pitchIntSpeed)< 0.0001f)
-		m_pitchInt = m_pitchIntSpeed;
+	m_pitchInt = CutoffYawPitch( m_pitchInt, m_pitchIntSpeed );
 
 	// check if we are tracking an interest, in which
 	// case determine its yaw and pitch and make that the target
