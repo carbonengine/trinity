@@ -8,6 +8,7 @@
 BLUE_DECLARE( TriTexture2DParameter );
 BLUE_DECLARE( TriFloatParameter );
 BLUE_DECLARE( Tr2VariableStore );
+BLUE_DECLARE( Tr2LodResource );
 BLUE_DECLARE_INTERFACE( ITriEffectParameter );
 BLUE_DECLARE_IVECTOR( ITriEffectParameter );
 BLUE_DECLARE_INTERFACE( ITriEffectResourceParameter );
@@ -48,6 +49,7 @@ public:
 	// sets & adds
 	void SetEffectPathName( const char* path );
 	void AddResourceTexture2D( const char* name, const char* resPath );
+	void AddResourceTexture2DLod( const char* name, Tr2LodResourcePtr lodResource );
 	void AddParameterVector4( const char* name, const Vector4* value );
 	void AddParameterColor( const char* name, const Color* value );
 

@@ -194,23 +194,24 @@ void EveSOF::SetupMesh( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 	}
 
 	// setup mesh areas
-	FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), TRIBATCHTYPE_OPAQUE, dna );
-	FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT ), TRIBATCHTYPE_TRANSPARENT, dna );
-	FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_ADDITIVE ), TRIBATCHTYPE_ADDITIVE, dna );
-	FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_DEPTH ), TRIBATCHTYPE_DEPTH, dna );
-	FillMeshAreaVector( mesh->GetAreas( TRIBATCHTYPE_DISTORTION ), TRIBATCHTYPE_DISTORTION, dna );
+	FillMeshAreaVector( mesh, mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), TRIBATCHTYPE_OPAQUE, dna );
+	FillMeshAreaVector( mesh, mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT ), TRIBATCHTYPE_TRANSPARENT, dna );
+	FillMeshAreaVector( mesh, mesh->GetAreas( TRIBATCHTYPE_ADDITIVE ), TRIBATCHTYPE_ADDITIVE, dna );
+	FillMeshAreaVector( mesh, mesh->GetAreas( TRIBATCHTYPE_DEPTH ), TRIBATCHTYPE_DEPTH, dna );
+	FillMeshAreaVector( mesh, mesh->GetAreas( TRIBATCHTYPE_DISTORTION ), TRIBATCHTYPE_DISTORTION, dna );
 
-	// create lod levels
-	ship->SetHighDetailMesh( mesh );
-	ship->SetMediumDetailMesh( CreateMeshLOD( mesh, "_mediumDetail" ) );
-	ship->SetLowDetailMesh( CreateMeshLOD( mesh, "_lowDetail" ) );
+	// preselect a lod
+	mesh->SelectLod( TR2_LOD_HIGH );
+
+	// assign mesh to ship
+	ship->SetMesh( mesh );
 }
 
 // --------------------------------------------------------------------------------
 // Description:
 //   Fill up mesh area vector given the hull and faction area data provided.
 // --------------------------------------------------------------------------------
-void EveSOF::FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna ) const
+void EveSOF::FillMeshAreaVector( Tr2MeshPtr mesh, Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna ) const
 {
 	const std::vector<EveSOFDataMgr::HullAreas>* hullAreas = dna->GetHullMeshAreas( areaType );
 	for( auto area = hullAreas->begin(); area != hullAreas->end(); ++area )
@@ -252,10 +253,28 @@ void EveSOF::FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchType
 		// shader textures
 		for( auto it = area->textures.begin(); it != area->textures.end(); ++it )
 		{
-			// res path might be factional!!
-			std::string resPath = it->second.resFilePath.c_str();
-			dna->ModifyTextureResPath( resPath, it->first.c_str() );
-			newShader->AddResourceTexture2D( it->first.c_str(), resPath.c_str() );
+			// res path how it is from hull data
+			std::string highResPath = it->second.resFilePath.c_str();
+			// get's modified by the faction data
+			dna->ModifyTextureResPath( highResPath, it->first.c_str() );
+			// make three paths for the three LODs
+			std::string mediumResPath, lowResPath;
+			if( GenerateLodResourcePaths( mediumResPath, lowResPath, highResPath.c_str(), it->first.c_str() ) )
+			{
+				// alloc and init the resource loder
+				Tr2LodResourcePtr lodResource;
+				lodResource.CreateInstance();
+				lodResource->SetResourcePath( TR2_LOD_LOW, lowResPath.c_str() );
+				lodResource->SetResourcePath( TR2_LOD_MEDIUM, mediumResPath.c_str() );
+				lodResource->SetResourcePath( TR2_LOD_HIGH, highResPath.c_str() );
+				newShader->AddResourceTexture2DLod( it->first.c_str(), lodResource );
+				// also add it to the mesh for updating
+				mesh->AddLodResource( lodResource );
+			}
+			else
+			{
+				newShader->AddResourceTexture2D( it->first.c_str(), highResPath.c_str() );
+			}
 		}
 
 		// that's it for setting up this shader, must rebuild cache on it!
@@ -303,6 +322,23 @@ void EveSOF::ModifyResourcePathsForLOD( const Tr2MeshAreaVector* areas, const ch
 			}
 		}
 	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Helper function to build two med and low level texture res paths
+// --------------------------------------------------------------------------------
+bool EveSOF::GenerateLodResourcePaths( std::string& mediumResPath, std::string& lowResPath, const char* resPath, const char* usage ) const
+{
+	if( !strcmp( usage, "PgsMap" ) || !strcmp( usage, "NormalMap" ) || !strcmp( usage, "DiffuseMap" ) || !strcmp( usage, "AoMap" ) )
+	{
+		mediumResPath = resPath;
+		StringInsertStub(mediumResPath, ".dds", "_mediumDetail");
+		lowResPath = resPath;
+		StringInsertStub(lowResPath, ".dds", "_lowDetail");
+		return true;
+	}
+	return false;
 }
 
 // --------------------------------------------------------------------------------

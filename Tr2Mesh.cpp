@@ -36,7 +36,8 @@ Tr2Mesh::Tr2Mesh( IRoot* lockobj ) :
     m_pBoneList(NULL),
     m_numBones(0),
 	m_resourceLoadCbId( 0 ),
-	m_resourcePrepCbId( 0 )
+	m_resourcePrepCbId( 0 ),
+	m_selectedLod( TR2_LOD_UNSPECIFIED )
 {
 	m_opaqueAreas.SetNotify( this );
 	m_decalAreas.SetNotify( this );

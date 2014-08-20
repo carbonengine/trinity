@@ -12,6 +12,18 @@ Tr2LodResource::Tr2LodResource( IRoot* lockobj ) :
 {
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Set the individual lod's resource path.
+// Arguments:
+//   lod - which lod level?
+//   resPath - the new respath for that lod
+// --------------------------------------------------------------------------------
+void Tr2LodResource::SetResourcePath( Tr2Lod lod, const char* resPath )
+{
+	m_resPath[ lod ] = resPath;
+}
+
 IBlueResource* Tr2LodResource::GetResource()
 {
 	if( m_requested )

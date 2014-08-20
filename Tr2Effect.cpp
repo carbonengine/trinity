@@ -10,6 +10,7 @@
 #include "EffectParameter/Tr2Matrix4Parameter.h"
 #include "EffectParameter/TriFloatArrayParameter.h"
 #include "EffectParameter/TriTexture2DParameter.h"
+#include "EffectParameter/Tr2Texture2DLodParameter.h"
 #include "EffectParameter/TriTextureCubeParameter.h"
 #include "EffectParameter/Tr2GeometryBufferParameter.h"
 #include "EffectParameter/TriVariableParameter.h"
@@ -204,6 +205,21 @@ void Tr2Effect::AddResourceTexture2D( const char* name, const char* resPath )
 	texture2d.CreateInstance();
 	texture2d->SetParameterName( name );
 	texture2d->SetResourcePath( resPath );
+	// add it to this effect's resources
+	m_resources.Append( texture2d->GetRawRoot() );
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Manually adding a lod resource for textures
+// --------------------------------------------------------------------------------
+void Tr2Effect::AddResourceTexture2DLod( const char* name, Tr2LodResourcePtr lodResource )
+{
+	// alloc and init the texture lod parameter
+	Tr2Texture2dLodParameterPtr texture2d;
+	texture2d.CreateInstance();
+	texture2d->SetParameterName( name );
+	texture2d->SetLodResource( lodResource );
 	// add it to this effect's resources
 	m_resources.Append( texture2d->GetRawRoot() );
 }

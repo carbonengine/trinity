@@ -17,6 +17,9 @@ BLUE_CLASS( Tr2Texture2dLodParameter ) : public TriTexture2DParameter
 public:
 	EXPOSE_TO_BLUE();
 
+	// setup
+	void SetLodResource( Tr2LodResourcePtr newLodResource );
+
 	Tr2Texture2dLodParameter( IRoot* lockobj = nullptr );
 	virtual TriTextureRes* GetResource() const;
 

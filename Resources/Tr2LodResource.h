@@ -25,6 +25,8 @@ public:
 
 	Tr2LodResource( IRoot* lockobj = nullptr );
 
+	// access
+	void SetResourcePath( Tr2Lod lod, const char* resPath );
 	IBlueResource* GetResource();
 
 	void SelectLod( Tr2Lod lod );

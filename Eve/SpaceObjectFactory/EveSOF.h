@@ -57,9 +57,10 @@ private:
 	void SetupLocators( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const;
 
 	// helper functions
-	void FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna ) const;
+	void FillMeshAreaVector( Tr2MeshPtr mesh, Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna ) const;
 	void ModifyResourcePathsForLOD( const Tr2MeshAreaVector* areas, const char* lodInsert ) const;
 	Tr2MeshPtr CreateMeshLOD( const Tr2Mesh* base, const char* lodInsert ) const;
+	bool GenerateLodResourcePaths( std::string& mediumResPath, std::string& lowResPath, const char* resPath, const char* usage ) const;
 
 	// all the source data
 	PEveSOFDataMgr m_dataMgr;
