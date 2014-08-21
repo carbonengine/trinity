@@ -240,7 +240,6 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		MAP_ATTRIBUTE( "boundingSphereRadius", m_boundingSphereRadius, "The radius of the minimum bounding sphere of the model", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "lodLevel", m_lodLevel, "Current lod-level of this spaceobject\n", Be::READ )
-		MAP_ATTRIBUTE( "highDetailLodFader", m_highDetailLodFader, "Intensity of the high detail LOD towards becoming medium LOD\n", Be::READ )
 
 		MAP_ATTRIBUTE( "customMask", m_customMask, "\n", Be::READWRITE | Be::PERSIST )
 

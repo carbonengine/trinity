@@ -85,7 +85,6 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_modelScale( 1.f ),
 	m_lodLevel( LOD_INVALID ),
 	m_lodLevelWithChildren( LOD_INVALID ),
-	m_highDetailLodFader( 0.f ),
 	m_debugShowBoundingBox( true ),
 	m_debugShowMeshAreaBoundingBox( false ),
 	m_debugRenderDebugInfoForChildren( true ),
@@ -1559,7 +1558,6 @@ void EveSpaceObject2::SelectMeshLevelOfDetail()
 	switch( m_lodLevel )
 	{
 	case LOD_HIGH:
-		m_highDetailLodFader = Clamp( 0.05f * ( m_estimatedPixelDiameter - g_eveSpaceSceneMediumDetailThreshold ), 0.f, 1.f );
 		mesh = GetHighDetailMesh();
 		if( !mesh || mesh->IsLoading() )
 		{
@@ -1575,7 +1573,6 @@ void EveSpaceObject2::SelectMeshLevelOfDetail()
 		break;
 	case LOD_MEDIUM:
 		m_lodLevel = LOD_MEDIUM;
-		m_highDetailLodFader = 0.f;
 		mesh = GetMediumDetailMesh();
 		if( !mesh || mesh->IsLoading() )
 		{
@@ -1615,7 +1612,6 @@ void EveSpaceObject2::SelectMeshLevelOfDetail()
 	else
 	{
 		// still use the original mesh, which then acts as LOD_HIGH
-		m_highDetailLodFader = 1.f;
 		m_lodLevel = LOD_HIGH;
 	}
 
@@ -1766,7 +1762,6 @@ void EveSpaceObject2::FreezeHighDetailMesh()
 		{
 			m_allowLodSelection = false;
 			m_lodLevel = LOD_HIGH;
-			m_highDetailLodFader = 1.f;
 			m_highDetailMesh.Unlock();
 			m_mediumDetailMesh.Unlock();
 			m_lowDetailMesh.Unlock();

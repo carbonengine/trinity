@@ -314,8 +314,6 @@ protected:
 	IBlueObjectProxyPtr m_highDetailMesh;
 	IBlueObjectProxyPtr m_mediumDetailMesh;
 	IBlueObjectProxyPtr m_lowDetailMesh;
-	// lod level faders
-	float m_highDetailLodFader;
 
 	TriGeometryResPtr m_geometryResFromMesh;
 
