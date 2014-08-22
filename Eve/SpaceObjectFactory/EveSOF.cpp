@@ -185,9 +185,11 @@ void EveSOF::SetupMesh( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 
 	Tr2LodResourcePtr lodResource;
 	lodResource.CreateInstance();
+	lodResource->SetName( "Geometry" );
 	lodResource->SetResourcePath( TR2_LOD_LOW, lowDetail.c_str() );
 	lodResource->SetResourcePath( TR2_LOD_MEDIUM, mediumDetail.c_str() );
 	lodResource->SetResourcePath( TR2_LOD_HIGH, highDetail.c_str() );
+	lodResource->SelectLod( TR2_LOD_LOW );
 	
 	// gr2 res path
 	mesh->SetGeometryResource( lodResource );
@@ -220,7 +222,7 @@ void EveSOF::SetupMesh( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 	}
 
 	// preselect a lod
-	mesh->SelectLod( TR2_LOD_HIGH );
+	mesh->SelectLod( TR2_LOD_LOW );
 
 	// assign mesh to ship
 	ship->SetMeshLod( mesh );
@@ -292,6 +294,7 @@ void EveSOF::FillMeshAreaVector( std::map<std::string, Tr2LodResourcePtr>& lodRe
 					// not found, so we have to make a new one
 					Tr2LodResourcePtr lodResource;
 					lodResource.CreateInstance();
+					lodResource->SetName( it->first );
 					lodResource->SetResourcePath( TR2_LOD_LOW, lowResPath.c_str() );
 					lodResource->SetResourcePath( TR2_LOD_MEDIUM, mediumResPath.c_str() );
 					lodResource->SetResourcePath( TR2_LOD_HIGH, highResPath.c_str() );

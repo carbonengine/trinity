@@ -14,6 +14,14 @@ const Be::ClassInfo* Tr2LodResource::ExposeToBlue()
 	EXPOSURE_BEGIN( Tr2LodResource, "Wrapper for resources with multiple levels of detail" )
 		MAP_ATTRIBUTE
 		(
+			"name",
+			m_name,
+			"Name of this resource",
+			Be::READWRITE | Be::PERSIST
+		)
+
+		MAP_ATTRIBUTE
+		(
 			"highDetailResPath",
 			m_resPath[TR2_LOD_HIGH],
 			"Resource path for high detail resource",

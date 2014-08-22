@@ -25,6 +25,9 @@ public:
 
 	Tr2LodResource( IRoot* lockobj = nullptr );
 
+	const std::string& GetName() const;
+	void SetName( const std::string& val );
+
 	// access
 	void SetResourcePath( Tr2Lod lod, const char* resPath );
 	IBlueResource* GetResource();
@@ -32,6 +35,7 @@ public:
 	void SelectLod( Tr2Lod lod );
 
 protected:
+	std::string m_name;
 	std::string m_resPath[TR2_LOD_COUNT];
 	Tr2Lod m_currentLod;
 

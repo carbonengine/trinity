@@ -55,3 +55,13 @@ void Tr2LodResource::SelectLod( Tr2Lod lod )
 	auto& respath = m_resPath[ m_currentLod ];
 	BeResMan->GetResource( respath, "", m_requested );
 }
+
+const std::string& Tr2LodResource::GetName() const
+{
+	return m_name;
+}
+
+void Tr2LodResource::SetName( const std::string& val )
+{
+	m_name = val;
+}

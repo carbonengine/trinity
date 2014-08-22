@@ -14,10 +14,26 @@ const Be::ClassInfo* Tr2MeshLod::ExposeToBlue()
 	EXPOSURE_BEGIN( Tr2MeshLod, "A mesh with levels of detail" )
 		MAP_ATTRIBUTE
 		(
-			"lodResources", 
+			"geometryRes",
+			m_geometryRes,
+			"Geometry LOD resource for this mesh",
+			Be::READWRITE | Be::PERSIST
+		)
+		
+		MAP_ATTRIBUTE
+		(
+			"associatedResources", 
 			m_associatedResources, 
 			"List of resources associated with this mesh that can select level of detail", 
 			Be::READWRITE | Be::PERSIST
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"selectedLod",
+			m_selectedLod,
+			"Currently selected level of detail",
+			Be::READ
 		)
 
 		MAP_METHOD_AND_WRAP
