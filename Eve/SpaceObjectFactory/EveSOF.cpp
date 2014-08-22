@@ -16,7 +16,7 @@
 #include "Eve/SpaceObject/Attachments/EveBoosterSet2.h"
 #include "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h"
 #include "Eve/SpaceObject/Utils/EveLocator2.h"
-#include "Tr2Mesh.h"
+#include "Tr2MeshLod.h"
 #include "Tr2MeshArea.h"
 #include "Tr2Effect.h"
 #include "EffectParameter/TriTexture2DParameter.h"
@@ -174,13 +174,25 @@ IRootPtr EveSOF::Build( const char* hullName, const char* factionName, const cha
 void EveSOF::SetupMesh( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 {
 	// need a mesh
-	Tr2MeshPtr mesh;
+	Tr2MeshLodPtr mesh;
 	mesh.CreateInstance();
 
-	// gr2 res path
-	mesh->SetMeshResPath( dna->GetHullGeometryResPath() );
+	std::string highDetail = dna->GetHullGeometryResPath();
+	std::string mediumDetail = highDetail;
+	std::string lowDetail = highDetail;
+	StringInsertStub( mediumDetail, ".gr2", "_mediumDetail" );
+	StringInsertStub( lowDetail, ".gr2", "_lowDetail" );
 
-	// beoundingsphere comes from data, is faster
+	Tr2LodResourcePtr lodResource;
+	lodResource.CreateInstance();
+	lodResource->SetResourcePath( TR2_LOD_LOW, lowDetail.c_str() );
+	lodResource->SetResourcePath( TR2_LOD_MEDIUM, mediumDetail.c_str() );
+	lodResource->SetResourcePath( TR2_LOD_HIGH, highDetail.c_str() );
+	
+	// gr2 res path
+	mesh->SetGeometryResource( lodResource );
+
+	// bounding sphere comes from data, is faster
 	ship->SetBoundingSphereInformation( dna->GetHullBoundingSphere() );
 
 	// shadow
@@ -204,14 +216,14 @@ void EveSOF::SetupMesh( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 	// register all used lodresource objects with the new mesh
 	for( auto it = lodResPerTexture.begin(); it != lodResPerTexture.end(); ++it )
 	{
-		mesh->AddLodResource( it->second );
+		mesh->AddAssociatedResource( it->second );
 	}
 
 	// preselect a lod
 	mesh->SelectLod( TR2_LOD_HIGH );
 
 	// assign mesh to ship
-	ship->SetMesh( mesh );
+	ship->SetMeshLod( mesh );
 }
 
 // --------------------------------------------------------------------------------
@@ -356,27 +368,6 @@ bool EveSOF::GenerateLodResourcePaths( std::string& mediumResPath, std::string& 
 		return true;
 	}
 	return false;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Create an actual copy of the base mesh to use as LOD.
-// --------------------------------------------------------------------------------
-Tr2MeshPtr EveSOF::CreateMeshLOD( const Tr2Mesh* base, const char* lodInsert ) const
-{
-	Tr2MeshPtr mesh;
-	BeClasses->CopyTo( base->GetRawRoot(), (IRoot**)&mesh );
-
-	ModifyResourcePathsForLOD( mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), lodInsert );
-	ModifyResourcePathsForLOD( mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT ), lodInsert );
-	
-	std::string path = mesh->GetMeshResPath();
-	if( StringInsertStub( path, ".gr2", lodInsert ) )
-	{
-		mesh->SetMeshResPath( path.c_str() );
-	}
-	
-	return mesh;
 }
 
 // --------------------------------------------------------------------------------

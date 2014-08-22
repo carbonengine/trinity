@@ -15,7 +15,7 @@ BLUE_DECLARE( Tr2LodResource );
 BLUE_DECLARE( EveShip2 );
 BLUE_DECLARE( EveSOF );
 BLUE_DECLARE( EveSOFDNA );
-BLUE_DECLARE( Tr2Mesh );
+BLUE_DECLARE( Tr2MeshLod );
 BLUE_DECLARE( Tr2MeshArea );
 BLUE_DECLARE_VECTOR( Tr2MeshArea );
 enum TriBatchType;
@@ -60,7 +60,6 @@ private:
 	// helper functions
 	void FillMeshAreaVector( std::map<std::string, Tr2LodResourcePtr>& lodResCollector, Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna ) const;
 	void ModifyResourcePathsForLOD( const Tr2MeshAreaVector* areas, const char* lodInsert ) const;
-	Tr2MeshPtr CreateMeshLOD( const Tr2Mesh* base, const char* lodInsert ) const;
 	bool GenerateLodResourcePaths( std::string& mediumResPath, std::string& lowResPath, const char* resPath, const char* usage ) const;
 
 	// all the source data

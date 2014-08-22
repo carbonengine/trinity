@@ -95,8 +95,6 @@ const Be::ClassInfo* Tr2Mesh::ExposeToBlue()
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IUnloadable )
 
-		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
-		MAPHIDEABLE()
 		MAP_ATTRIBUTE( "geometry", m_geometryResource, "na", Be::READ )			
 		MAP_ATTRIBUTE_WITH_CHOOSER
 		( 
@@ -130,29 +128,6 @@ const Be::ClassInfo* Tr2Mesh::ExposeToBlue()
 			Be::READ
 		)
 
-		MAP_ATTRIBUTE( "meshIndex", m_meshIndex, "The index of the mesh within the granny file to use", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "opaqueAreas", m_opaqueAreas, "Areas that are rendered sorted by effect", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "decalAreas", m_decalAreas, "Areas that are rendered in the order that they exist, before transparency", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "depthAreas", m_depthAreas, "Areas that are rendered in the order to render depth information", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "transparentAreas", m_transparentAreas, "Areas are rendered in the order that they exist in the mesh, sorted by the mesh center", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "additiveAreas", m_additiveAreas, "Areas that are rendered sorted by effect, after transparencies", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "pickableAreas", m_pickableAreas, "Areas that are rendered for picking only", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "mirrorAreas", m_mirrorAreas, "Areas that define mirrors", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "decalNormalAreas", m_decalNormalAreas, "Areas that provide normals for prepass rendering but do not affect depth", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "depthNormalAreas", m_depthNormalAreas, "Areas that provide depth and normals for prepass rendering", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "opaquePrepassAreas", m_opaquePrepassAreas, "Prepass areas that are rendered sorted by effect", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "decalPrepassAreas", m_decalPrepassAreas, "Prepass areas that are rendered in the order that they exist, before transparency", Be::READWRITE | Be::PERSIST )
-        MAP_ATTRIBUTE( "geometryEraserAreas", m_geometryEraserAreas, "Areas that erase geometry", Be::READWRITE | Be::PERSIST )
-        MAP_ATTRIBUTE( "distortionAreas", m_distortionAreas, "", Be::READWRITE | Be::PERSIST )
-		
-		MAP_ATTRIBUTE( "lodResources", m_lodResources, "List of resources associated with this mesh that can select level of detail", Be::READWRITE | Be::PERSIST )
-		MAP_METHOD_AND_WRAP
-		(
-			"SelectLod",
-			SelectLod,
-			"Selects the level of detail on all resources associated with this mesh"
-		)
-
 		MAP_METHOD_AND_WRAP( "SetGeometryRes", PySetGeometryRes, "Set the geometry resource used by this mesh - bypassing the regular method of setting a resource name. This is used for geometry resources that require special handling, such as pre-baked blendshapes." )
 		MAP_METHOD( "BindLowLevelShaders", PyBindLowLevelShaders, "Bind a new low level shader to all areas based on the current situation" )
 
@@ -167,5 +142,5 @@ const Be::ClassInfo* Tr2Mesh::ExposeToBlue()
 			"\nArguments:"
 			"\ncallback - A callable object to execute when the mesh has been prepared")
 
-    EXPOSURE_END()
+    EXPOSURE_CHAINTO( Tr2MeshBase )
 }

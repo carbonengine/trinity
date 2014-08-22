@@ -356,7 +356,7 @@ bool EveShip2Builder::PrepareForBuild()
 			return false;
 		}
 
-		Tr2MeshPtr mesh = m_module[i]->GetMesh();
+		Tr2MeshPtr mesh = BlueCastPtr( m_module[i]->GetMesh() );
 		if( !mesh )
 		{
 			CCP_LOGERR( "EveShip2Builder::Build: Module '%s' has no mesh\n", m_moduleResPath->c_str() );
@@ -444,7 +444,8 @@ bool EveShip2Builder::Build()
 	{
 		EveShip2Ptr other = m_module[moduleIx];
 
-		if( !AddMeshToGrannyFile( m_grannies, moduleIx, other->GetMesh(), offsets[moduleIx], mesh ) )
+		Tr2Mesh* otherMesh = dynamic_cast<Tr2Mesh*>( other->GetMesh() );
+		if( !AddMeshToGrannyFile( m_grannies, moduleIx, otherMesh, offsets[moduleIx], mesh ) )
 		{
 			return false;
 		}

@@ -25,7 +25,8 @@
 BLUE_DECLARE( EveSpaceObject2 );
 BLUE_DECLARE_VECTOR( EveSpaceObject2 );
 BLUE_DECLARE( TriGeometryRes );
-BLUE_DECLARE( Tr2Mesh );
+BLUE_DECLARE( Tr2MeshBase );
+BLUE_DECLARE( Tr2MeshLod );
 BLUE_DECLARE( Tr2MeshArea );
 BLUE_DECLARE_VECTOR( Tr2MeshArea );
 BLUE_DECLARE( EveSpaceObjectDecal );
@@ -127,14 +128,16 @@ public:
 	};
 
 	// Mesh accessors, used by the builder
-	Tr2MeshPtr GetMesh() const { return m_mesh; }
-	Tr2Mesh* GetHighDetailMesh() const;
-	Tr2Mesh* GetMediumDetailMesh() const;
-	Tr2Mesh* GetLowDetailMesh() const;
-	void SetMesh( Tr2MeshPtr mesh );
-	void SetHighDetailMesh( Tr2Mesh* mesh );
-	void SetMediumDetailMesh( Tr2Mesh* mesh );
-	void SetLowDetailMesh( Tr2Mesh* mesh );
+	Tr2MeshBase* GetMesh() const { return m_mesh; }
+	Tr2MeshBase* GetHighDetailMesh() const;
+	Tr2MeshBase* GetMediumDetailMesh() const;
+	Tr2MeshBase* GetLowDetailMesh() const;
+	void SetMesh( Tr2MeshBase* mesh );
+	void SetHighDetailMesh( Tr2MeshBase* mesh );
+	void SetMediumDetailMesh( Tr2MeshBase* mesh );
+	void SetLowDetailMesh( Tr2MeshBase* mesh );
+
+	void SetMeshLod( Tr2MeshLod* meshLod );
 
 	void PlayAnimation( const char* animName, bool replace, int loopCount, float start, float speed );
 	void PlayAnimationOnce( const char* animName );
@@ -294,8 +297,8 @@ protected:
 
 	Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
 
-	Tr2MeshPtr m_mesh;
-
+	Tr2MeshBasePtr m_mesh;
+	Tr2MeshLodPtr m_meshLod;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// per-object data

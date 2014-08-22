@@ -113,6 +113,14 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 
 		MAP_ATTRIBUTE
 		(
+			"meshLod",  
+			m_meshLod, 
+			"Mesh with levels-of-detail for rendering space object", 
+			Be::READWRITE | Be::PERSIST
+		)
+
+		MAP_ATTRIBUTE
+		(
 			"shadowEffect",  
 			m_shadowEffect, 
 			"Effect used to render into shadow map. If not set, object can't cast shadows.", 

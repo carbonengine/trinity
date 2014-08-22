@@ -20,7 +20,7 @@
 #include "Attachments/EveSpotlightSet.h"
 #include "Attachments/EvePlaneSet.h"
 #include "Tr2GPUParticleEmitter.h"
-#include "Tr2Mesh.h"
+#include "Tr2MeshLod.h"
 #include "Tr2GrannyAnimation.h"
 #include "Tr2BindingVector3.h"
 #include "Eve/EveUpdateContext.h"
@@ -197,6 +197,10 @@ bool EveSpaceObject2::Initialize()
 		// one of the LODs and null out the mesh here. Can't really compare it to
 		// the LODs as that would pull them into memory.
 		m_mesh = NULL;
+	}
+	else if( m_meshLod )
+	{
+		m_allowLodSelection = true;
 	}
 
 	if( m_mesh )
@@ -497,7 +501,7 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 		return;
 	}
 
-	Tr2Mesh* mesh = NULL;
+	Tr2MeshBase* mesh = NULL;
 	if( m_mesh )
 	{
 		mesh = m_mesh;
@@ -506,7 +510,7 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 	{
 		if( m_highDetailMesh )
 		{
-			mesh = dynamic_cast<Tr2Mesh*>( m_highDetailMesh->GetObject( ) );
+			mesh = dynamic_cast<Tr2MeshBase*>( m_highDetailMesh->GetObject( ) );
 		}
 	}
 
@@ -1112,7 +1116,7 @@ bool EveSpaceObject2::GetRenderablesCastingShadow( bool isSelf, const TriFrustum
 	return false;
 }
 
-void EveSpaceObject2::SetMesh( Tr2MeshPtr mesh )
+void EveSpaceObject2::SetMesh( Tr2MeshBase* mesh )
 {
 	m_mesh = mesh;
 	m_allowLodSelection = false;
@@ -1146,10 +1150,10 @@ int EveSpaceObject2::GetBoneCount() const
 
 bool EveSpaceObject2::RebuildBoundingSphereInformation()
 {
-	Tr2Mesh* mesh = NULL;
+	Tr2MeshBase* mesh = NULL;
 	if( m_highDetailMesh )
 	{
-		mesh = dynamic_cast<Tr2Mesh*>( m_highDetailMesh->GetObject( ) );
+		mesh = dynamic_cast<Tr2MeshBase*>( m_highDetailMesh->GetObject( ) );
 	}
 	else
 	{
@@ -1554,7 +1558,7 @@ const Vector3* EveSpaceObject2::GetWorldPosition()
 
 void EveSpaceObject2::SelectMeshLevelOfDetail()
 {
-	Tr2Mesh* mesh = NULL;
+	Tr2MeshBase* mesh = NULL;
 	switch( m_lodLevel )
 	{
 	case LOD_HIGH:
@@ -1608,6 +1612,11 @@ void EveSpaceObject2::SelectMeshLevelOfDetail()
 		m_mesh = mesh;
 
 		PrepareForAnimation();
+	}
+	else if( m_meshLod )
+	{
+		m_meshLod->SelectLod( static_cast<Tr2Lod>( m_lodLevel ) );
+		m_mesh = m_meshLod;
 	}
 	else
 	{
@@ -1757,7 +1766,7 @@ void EveSpaceObject2::FreezeHighDetailMesh()
 {
 	if( m_highDetailMesh )
 	{
-		m_mesh = dynamic_cast<Tr2Mesh*>( m_highDetailMesh->GetObject( ) );
+		m_mesh = dynamic_cast<Tr2MeshBase*>( m_highDetailMesh->GetObject( ) );
 		if( m_mesh )
 		{
 			m_allowLodSelection = false;
@@ -1815,7 +1824,7 @@ bool EveSpaceObject2::DisplayDecals() const
 	if( m_lodLevel == LOD_HIGH )
 	{
 		// Prevent decals from rebuilding with anything but high-detail mesh
-		const Tr2Mesh* mesh = GetHighDetailMesh();
+		const Tr2MeshBase* mesh = GetHighDetailMesh();
 		if( mesh && mesh->IsLoading() )
 		{
 			return false;
@@ -1836,7 +1845,7 @@ bool EveSpaceObject2::DisplayChildren() const
 	return true;
 }
 
-void EveSpaceObject2::SetHighDetailMesh( Tr2Mesh* mesh )
+void EveSpaceObject2::SetHighDetailMesh( Tr2MeshBase* mesh )
 {
 	if( !m_highDetailMesh )
 	{
@@ -1853,7 +1862,7 @@ void EveSpaceObject2::SetHighDetailMesh( Tr2Mesh* mesh )
 	}
 }
 
-void EveSpaceObject2::SetMediumDetailMesh( Tr2Mesh* mesh )
+void EveSpaceObject2::SetMediumDetailMesh( Tr2MeshBase* mesh )
 {
 	if( !m_mediumDetailMesh )
 	{
@@ -1870,7 +1879,7 @@ void EveSpaceObject2::SetMediumDetailMesh( Tr2Mesh* mesh )
 	}
 }
 
-void EveSpaceObject2::SetLowDetailMesh( Tr2Mesh* mesh )
+void EveSpaceObject2::SetLowDetailMesh( Tr2MeshBase* mesh )
 {
 	if( !m_lowDetailMesh )
 	{
@@ -1887,31 +1896,30 @@ void EveSpaceObject2::SetLowDetailMesh( Tr2Mesh* mesh )
 	}
 }
 
-Tr2Mesh* EveSpaceObject2::GetHighDetailMesh() const
+Tr2MeshBase* EveSpaceObject2::GetHighDetailMesh() const
 {
 	if( !m_highDetailMesh )
 	{
 		return NULL;
 	}
-	return dynamic_cast<Tr2Mesh*>( m_highDetailMesh->GetObject( ) );
+	return dynamic_cast<Tr2MeshBase*>( m_highDetailMesh->GetObject( ) );
 }
-
-Tr2Mesh* EveSpaceObject2::GetMediumDetailMesh() const
+Tr2MeshBase* EveSpaceObject2::GetMediumDetailMesh() const
 {
 	if( !m_mediumDetailMesh )
 	{
 		return NULL;
 	}
-	return dynamic_cast<Tr2Mesh*>( m_mediumDetailMesh->GetObject( ) );
+	return dynamic_cast<Tr2MeshBase*>( m_mediumDetailMesh->GetObject( ) );
 }
 
-Tr2Mesh* EveSpaceObject2::GetLowDetailMesh() const
+Tr2MeshBase* EveSpaceObject2::GetLowDetailMesh() const
 {
 	if( !m_lowDetailMesh )
 	{
 		return NULL;
 	}
-	return dynamic_cast<Tr2Mesh*>( m_lowDetailMesh->GetObject( ) );
+	return dynamic_cast<Tr2MeshBase*>( m_lowDetailMesh->GetObject( ) );
 }
 
 void EveSpaceObject2::UpdateDamageLocatorPositions()
@@ -2194,4 +2202,10 @@ CcpMutex& EveSpaceObject2::GetObjectMutex()
 		}
 	}
 	return *mutexes[reinterpret_cast<size_t>( this ) & ( MUTEX_COUNT - 1 )];
+}
+
+void EveSpaceObject2::SetMeshLod( Tr2MeshLod* mesh )
+{
+	m_meshLod = mesh;
+	m_mesh.Unlock();
 }

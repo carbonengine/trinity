@@ -9,6 +9,7 @@
 BLUE_DECLARE( EveShip2Builder);
 BLUE_DECLARE( EveSpriteSet );
 BLUE_DECLARE( EveSpotlightSet );
+BLUE_DECLARE( Tr2Mesh );
 
 class EveShip2Builder:
      public IRoot
