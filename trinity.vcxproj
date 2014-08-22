@@ -2620,6 +2620,8 @@
     <ClInclude Include="Tr2MaterialParameterStore.h"/>
     <ClInclude Include="Tr2Mesh.h"/>
     <ClInclude Include="Tr2MeshArea.h"/>
+    <ClInclude Include="Tr2MeshBase.h"/>
+    <ClInclude Include="Tr2MeshLod.h"/>
     <ClInclude Include="Tr2Model.h"/>
     <ClInclude Include="Tr2NamedPipeListener.h"/>
     <ClInclude Include="Tr2PerObjectData.h"/>
@@ -3108,6 +3110,10 @@
     <ClCompile Include="Tr2Mesh.cpp"/>
     <ClCompile Include="Tr2MeshArea.cpp"/>
     <ClCompile Include="Tr2MeshArea_Blue.cpp"/>
+    <ClCompile Include="Tr2MeshBase.cpp"/>
+    <ClCompile Include="Tr2MeshBase_Blue.cpp"/>
+    <ClCompile Include="Tr2MeshLod.cpp"/>
+    <ClCompile Include="Tr2MeshLod_Blue.cpp"/>
     <ClCompile Include="Tr2Mesh_Blue.cpp"/>
     <ClCompile Include="Tr2Model.cpp"/>
     <ClCompile Include="Tr2Model_Blue.cpp"/>

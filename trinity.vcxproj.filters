@@ -241,6 +241,12 @@
     <ClInclude Include="Tr2MeshArea.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tr2MeshBase.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tr2MeshLod.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="Tr2Model.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -1691,6 +1697,18 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2MeshArea_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2MeshBase.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2MeshBase_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2MeshLod.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2MeshLod_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2Mesh_Blue.cpp">
