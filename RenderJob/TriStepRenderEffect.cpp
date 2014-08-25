@@ -23,7 +23,6 @@ void TriStepRenderEffect::py__init__( Tr2Effect* effect )
 
 TriStepResult TriStepRenderEffect::Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
 	CCP_STATS_INC( rsRenderEffectCount );
 
 	if( m_effect )

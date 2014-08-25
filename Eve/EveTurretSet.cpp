@@ -2278,8 +2278,6 @@ size_t EveTurretSet::MissQueueSize() const
 // --------------------------------------------------------------------------------
 void EveTurretSetPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
-
 	// add up constant count, see EveTurretSetPerObjectData
 	int vsConstantCount =
 		1 +															// Vector4

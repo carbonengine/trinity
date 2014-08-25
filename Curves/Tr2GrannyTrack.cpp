@@ -21,7 +21,6 @@ Tr2GrannyTrack::~Tr2GrannyTrack()
 
 void Tr2GrannyTrack::UpdateValue( double time )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
 	if( !TracksReady() )
 	{
 		return;
