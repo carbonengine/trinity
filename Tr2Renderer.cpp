@@ -2031,13 +2031,13 @@ void Tr2Renderer::ApplyFallbackTexture( Tr2RenderContextEnum::ShaderType stage, 
 	{
 	case Tr2EffectResource::TEXTURE_1D:
 	case Tr2EffectResource::TEXTURE_2D:
-		renderContext.SetTexture( stage, registerIndex, s_fallbackTextures[textureSet][0] );
+		renderContext.m_esm.ApplyTexture( stage, registerIndex, s_fallbackTextures[textureSet][0] );
 		break;
 	case Tr2EffectResource::TEXTURE_3D:
-		renderContext.SetTexture( stage, registerIndex, s_fallbackTextures[textureSet][1] );
+		renderContext.m_esm.ApplyTexture( stage, registerIndex, s_fallbackTextures[textureSet][1] );
 		break;
 	case Tr2EffectResource::TEXTURE_CUBE:
-		renderContext.SetTexture( stage, registerIndex, s_fallbackTextures[textureSet][2] );
+		renderContext.m_esm.ApplyTexture( stage, registerIndex, s_fallbackTextures[textureSet][2] );
 		break;
 	default:
 		return;
