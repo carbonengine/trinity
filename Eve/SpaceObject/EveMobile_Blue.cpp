@@ -19,7 +19,7 @@ const Be::ClassInfo* EveMobile::ExposeToBlue()
 		MAP_ATTRIBUTE( "activationStrengthCurve", m_activationStrengthCurve, "This one can be used to animated the activationStrength parameter", Be::READWRITE )
 		MAP_ATTRIBUTE( "playActivationCurve", m_playActivationCurve, "This one can be used to animated the activationStrength parameter", Be::READWRITE )
 		MAP_ATTRIBUTE( "activationDelta", m_activationDelta, "Activation strength curve progress", Be::READ )
-		MAP_ATTRIBUTE( "activationStrength", m_spaceObjectMiscData.y, "Ship's activation strength", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "activationStrength", m_spaceObjectMiscData.y, "Ship's activation strength", Be::READWRITE )
 		MAP_ATTRIBUTE( "clipSphereFactor", m_clipSphereFactor, "Ship's clip state", Be::READWRITE )
 		MAP_ATTRIBUTE( "clipSphereCenter", m_clipSphereCenter, "Ship's clip sphere center", Be::READWRITE | Be::PERSIST )
 
