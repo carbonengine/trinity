@@ -778,9 +778,27 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				delete[] buffer;
 			}
 
+			static char buffer[64*1024];
+			UINT bufferSize = sizeof( buffer );
+
+			if( m_pixelShader )
+			{
+				m_pixelShader->GetFunction( buffer, &bufferSize );
+				ExtractConstantTable( buffer, pass.stages[1].constants, fx, 0 );
+				ExtractShaderInputs( (DWORD*)buffer, pass.stages[1] );
+			}
+			if( m_vertexShader )
+			{
+				bufferSize = sizeof( buffer );
+				m_vertexShader->GetFunction( buffer, &bufferSize );
+				ExtractConstantTable( buffer, pass.stages[0].constants, fx, D3DVERTEXTEXTURESAMPLER0 );
+				ExtractShaderInputs( (DWORD*)buffer, pass.stages[0] );
+			}
+
 			for( auto it = m_samplers.begin(); it != m_samplers.end(); ++it )
 			{
 				Sampler ss;
+				ss.name = g_stringTable.AddString( it->second.m_name.c_str() );
 				ss.comparison = 0;
 				ss.minLOD = FLT_MAX;
 				ss.maxLOD = float( it->second.GetState( D3DSAMP_MAXMIPLEVEL ) );
@@ -875,15 +893,9 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				}
 			}
 
-			static char buffer[64*1024];
-			UINT bufferSize = sizeof( buffer );
-
-			if( m_pixelShader )
+			if( g_generateListing && !disableListing )
 			{
-				m_pixelShader->GetFunction( buffer, &bufferSize );
-				ExtractConstantTable( buffer, pass.stages[1].constants, fx, 0 );
-				ExtractShaderInputs( (DWORD*)buffer, pass.stages[1] );
-				if( g_generateListing && !disableListing )
+				if( m_pixelShader )
 				{
 					listing << "    -" << std::endl;
 					unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );
@@ -906,15 +918,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 					}
 					PrintStageInfo( listing, pass.stages[1], effectData );
 				}
-			}
-
-			if( m_vertexShader )
-			{
-				bufferSize = sizeof( buffer );
-				m_vertexShader->GetFunction( buffer, &bufferSize );
-				ExtractConstantTable( buffer, pass.stages[0].constants, fx, D3DVERTEXTEXTURESAMPLER0 );
-				ExtractShaderInputs( (DWORD*)buffer, pass.stages[0] );
-				if( g_generateListing && !disableListing )
+				if( m_vertexShader )
 				{
 					listing << "    -" << std::endl;
 					unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );

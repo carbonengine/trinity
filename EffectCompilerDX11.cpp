@@ -1129,6 +1129,7 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 					continue;
 				}
 				Sampler sampler;
+				sampler.name = g_stringTable.AddString( desc.Name );
 				if( !GetSamplerState( parserState, symbol->definition, sampler ) )
 				{
 					return false;
@@ -2005,6 +2006,7 @@ void PrintStageInfo( std::ostream& listing, const StageInput& stage, const Effec
 		{
 			listing << "        -" << std::endl;
 			listing << "          register: " << it->first << std::endl;
+			listing << "          name: " << g_stringTable.GetString( it->second.name ) << std::endl;
 			listing << "          filter: " << int( it->second.filter ) << std::endl;
 			listing << "          comparison: " << int( it->second.comparison ) << std::endl;
 			listing << "          minFilter: " << int( it->second.minFilter ) << std::endl;

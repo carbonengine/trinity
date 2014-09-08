@@ -187,10 +187,12 @@ struct Sampler
 {
 	size_t GetPackedSize()
 	{
-		return sizeof( BYTE ) * 10 + sizeof( FLOAT ) * 7;
+		return sizeof( DWORD ) + sizeof( BYTE ) * 9 + sizeof( FLOAT ) * 7;
 	}
 	void Save( BYTE*& buffer )
 	{
+		*reinterpret_cast<DWORD*>( buffer ) = name;
+		buffer += sizeof( DWORD );
 		*reinterpret_cast<BYTE*>( buffer ) = comparison;
 		buffer += sizeof( BYTE );
 		*reinterpret_cast<BYTE*>( buffer ) = minFilter;
@@ -223,8 +225,6 @@ struct Sampler
 		buffer += sizeof( float );
 		*reinterpret_cast<float*>( buffer ) = maxLOD;
 		buffer += sizeof( float );
-		*reinterpret_cast<BYTE*>( buffer ) = srgbTexture;
-		buffer += sizeof( BYTE );
 	}
 
 	bool operator==( const Sampler& sampler ) const
@@ -245,8 +245,7 @@ struct Sampler
 			borderColor.z == sampler.borderColor.z &&
 			borderColor.w == sampler.borderColor.w &&
 			minLOD == sampler.minLOD &&
-			maxLOD == sampler.maxLOD &&
-			srgbTexture == sampler.srgbTexture;
+			maxLOD == sampler.maxLOD;
 	}
 
 	bool operator<( const Sampler& sampler ) const
@@ -268,11 +267,11 @@ struct Sampler
 		COMPARE( borderColor.w );
 		COMPARE( minLOD );
 		COMPARE( maxLOD );
-		COMPARE( srgbTexture );
 #undef COMPARE
 		return false;
 	}
 
+	StringReference name;
 	BYTE filter;
 	BYTE comparison;
 	BYTE minFilter;

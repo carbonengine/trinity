@@ -1019,7 +1019,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		header[index++] = offsets[it->second].second;
 	}
 	DWORD bytesWritten;
-	DWORD version = 3;
+	DWORD version = 4;
 	WriteFile( file, &version, sizeof( DWORD ), &bytesWritten, NULL );
 	WriteFile( file, header, headerSize, &bytesWritten, NULL );
 	g_stringTable.Write( file );
