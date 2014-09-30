@@ -897,6 +897,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 			{
 				if( m_pixelShader )
 				{
+					m_pixelShader->GetFunction( buffer, &bufferSize );
 					listing << "    -" << std::endl;
 					unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );
 					listing << "        profile: ps_" << ( ( version >> 8 ) & 0xff ) << "_" << ( version & 0xff ) << std::endl;
@@ -920,6 +921,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				}
 				if( m_vertexShader )
 				{
+					m_vertexShader->GetFunction( buffer, &bufferSize );
 					listing << "    -" << std::endl;
 					unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );
 					listing << "        profile: vs_" << ( ( version >> 8 ) & 0xff ) << "_" << ( version & 0xff ) << std::endl;
