@@ -255,7 +255,7 @@ bool TriDevice::CreateSimpleDevice(
 	if( !DeviceExists() )
 	{
 		// failed to create a device, forced to give up.
-		TriError::ReportError( 0, Clsid(), "Failed to create compatible device!" );
+		TriError::ReportError( E_FAIL, Clsid(), "Failed to create compatible device!" );
 		return false;
 	}
 
