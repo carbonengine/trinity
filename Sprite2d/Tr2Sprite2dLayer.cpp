@@ -10,7 +10,10 @@ CCP_STATS_DECLARE( spriteSceneLayerMemoryUse,	"Trinity/SpriteScene/LayerMemoryUs
 Tr2Sprite2dLayer::Tr2Sprite2dLayer( IRoot* lockobj ) :
 	Tr2Sprite2dContainer( lockobj ),
 	m_backgroundColor( 0.0f, 0.0f, 0.0f, 0.0f ),
-	m_clearBackground( true )	
+	m_color( 1.0f, 1.0f, 1.0f, 1.0f ),
+	m_clearBackground( true ),
+	m_spriteEffect( TR2_SFX_COPY ),
+	m_blendMode( TR2_SBM_NONE )
 {
 }
 
@@ -68,8 +71,10 @@ void Tr2Sprite2dLayer::GatherSprites( Tr2Sprite2dScene* renderer )
 		m_isDirty = false;
 	}
 
-	renderer->SetColor( Color( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	renderer->EndLayer( m_translation.x, m_translation.y, m_displayWidth, m_displayHeight );
+	renderer->SetColor( m_color );
+	renderer->SetSpriteEffect( m_spriteEffect );
+	renderer->SetBlendmode( m_blendMode );
+	renderer->EndLayer( m_translation.x, m_translation.y, m_displayWidth, m_displayHeight, m_textureSecondary );
 
 	renderer->SetAccumulatedAlpha( oldOpacity );
 }
@@ -131,3 +136,31 @@ unsigned int Tr2Sprite2dLayer::GetVertexCount()
 	return 0;
 
 }
+
+void Tr2Sprite2dLayer::SetTextureSecondary( ITr2Sprite2dTexture* t )
+{
+	if( t != m_textureSecondary )
+	{
+		if( m_textureSecondary )
+		{
+			m_textureSecondary->UnregisterForChangeNotification( this );
+		}
+		m_textureSecondary = t;
+		if( m_textureSecondary )
+		{
+			m_textureSecondary->RegisterForChangeNotification( this );
+		}
+		SetDirty();
+	}
+}
+
+ITr2Sprite2dTexture* Tr2Sprite2dLayer::GetTextureSecondary() const
+{
+	return m_textureSecondary;
+}
+
+void Tr2Sprite2dLayer::Sprite2dTextureChanged( ITr2Sprite2dTexture* p )
+{
+	SetDirty();
+}
+

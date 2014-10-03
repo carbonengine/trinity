@@ -66,7 +66,7 @@ public:
 	const Tr2Sprite2dClipRect& GetClipRectangle() const;
 
 	void StartLayer( Tr2RenderTargetAL& rt );
-	void EndLayer( float x, float y, float width, float height );
+	void EndLayer( float x, float y, float width, float height, ITr2Sprite2dTexture* secondaryTexture );
 	void RunJob( TriRenderJob* job );
 
 	void RunJobHelper( TriRenderJob* job );

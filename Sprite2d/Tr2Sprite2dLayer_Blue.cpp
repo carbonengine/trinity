@@ -13,7 +13,15 @@ const Be::ClassInfo* Tr2Sprite2dLayer::ExposeToBlue()
 			"backgroundColor", 
 			m_backgroundColor, 
 			"Background color for this layer", 
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"color", 
+			m_color, 
+			"Color for this layer", 
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
 		MAP_ATTRIBUTE
@@ -21,7 +29,32 @@ const Be::ClassInfo* Tr2Sprite2dLayer::ExposeToBlue()
 			"clearBackground",
 			m_clearBackground,
 			"If set, background is cleared to 'backgroundColor'",
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY
+		)
+
+		MAP_ATTRIBUTE_WITH_CHOOSER
+		(
+			"blendMode",
+			m_blendMode,
+			"Blendmode controls how the object blends with the background",
+			Be::READWRITE | Be::ENUM | Be::NOTIFY,
+			Tr2SpriteObjectBlendModeChooser
+		)
+
+		MAP_ATTRIBUTE_WITH_CHOOSER
+		(
+			"spriteEffect",
+			m_spriteEffect,
+			"Sprite effect controls how textures are used to render the object",
+			Be::READWRITE | Be::ENUM | Be::NOTIFY,
+			Tr2SpriteObjectEffectChooser
+		)
+
+		MAP_PROPERTY
+		(
+			"textureSecondary",
+			GetTextureSecondary, SetTextureSecondary,
+			"Secondary texture for this sprite"
 		)
 
 		MAP_ATTRIBUTE
@@ -30,14 +63,6 @@ const Be::ClassInfo* Tr2Sprite2dLayer::ExposeToBlue()
 			m_children,
 			"Children of this Layer",
 			Be::READWRITE | Be::PERSIST
-		)
-
-		MAP_ATTRIBUTE
-		(
-			"isDirty",
-			m_isDirty,
-			"",
-			Be::READWRITE
 		)
 
 	EXPOSURE_CHAINTO( Tr2Sprite2dContainer )

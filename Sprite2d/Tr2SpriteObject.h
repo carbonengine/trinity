@@ -14,6 +14,7 @@ BLUE_DECLARE( Tr2SpriteObject );
 // This is defined in Tr2SpriteObject_Blue.cpp
 extern Be::VarChooser Tr2SpriteObjectPickStateChooser[];
 extern Be::VarChooser Tr2SpriteObjectEffectChooser[];
+extern Be::VarChooser Tr2SpriteObjectBlendModeChooser[];
 
 class Tr2SpriteObjectBase :
 	public ITr2SpriteObject,

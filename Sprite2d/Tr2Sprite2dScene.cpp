@@ -1440,7 +1440,7 @@ void Tr2Sprite2dScene::StartLayer( Tr2RenderTargetAL& rt )
 
 }
 
-void Tr2Sprite2dScene::EndLayer( float x, float y, float width, float height )
+void Tr2Sprite2dScene::EndLayer( float x, float y, float width, float height, ITr2Sprite2dTexture* secondaryTexture )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -1469,7 +1469,7 @@ void Tr2Sprite2dScene::EndLayer( float x, float y, float width, float height )
 	// Render the layer into the current one as a sprite
 	renderContext.m_esm.ApplyTexture( PIXEL_SHADER, 0, entry.renderTargetTexture->GetTexture() );
 
-	// This will side-step the TexturesReady check in RenderSprite
+	// This will side-step the TexturesReady check in PrepareSpriteVerts
 	m_texture[0] = m_defaultTexture;
 	m_texture[1] = nullptr;
 	
@@ -1478,12 +1478,15 @@ void Tr2Sprite2dScene::EndLayer( float x, float y, float width, float height )
 	m_textureSettings[0].tileX = false;
 	m_textureSettings[0].tileY = false;
 
-	SetColor( Color( 1.0f, 1.0f, 1.0f, 1.0f ) );
-	SetSpriteEffect( TR2_SFX_COPY );
+	if( secondaryTexture )
+	{
+		secondaryTexture->Apply( this, 1 );
+	}
+
 	SetTileMode( 0 );
 
 	Tr2Sprite2dD3DVertex vertices[4];
-	PrepareSpriteVerts( &vertices[0], Vector2( x, y ), width, height, TR2_SFX_COPY );
+	PrepareSpriteVerts( &vertices[0], Vector2( x, y ), width, height, m_spriteEffect );
 
 	static unsigned short s_layerIndices[6] = { 0, 1, 3, 3, 1, 2 };
 	RenderTriangleVerts( &vertices[0], 4, s_layerIndices, 6 );
