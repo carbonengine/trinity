@@ -642,6 +642,9 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 	proj->GetMatrixWithoutViewAdjustment( projMat );
 	const Matrix& viewMat = view->GetTransform();
 
+	Matrix worldView;
+	D3DXMatrixMultiply( &worldView, &world, &viewMat );
+
 	// Scaling of particles is done in view space in the shader
 
 	Matrix projection2view;
@@ -668,28 +671,30 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 	int closestParticleID = -1;
 
 	unsigned count = data->GetCount();
-	float closestParticleDistance = FLT_MAX;
+	float closestParticleDistanceSq = FLT_MAX;
 
 	for( unsigned int i = 0; i < count; ++i )
 	{
 		const Vector3* position = reinterpret_cast<const Vector3*>( positionStream );
 		
 		Vector3 particlePositionInViewSpace;
-		D3DXVec3TransformCoord( &particlePositionInViewSpace, position, &world );
-		D3DXVec3TransformCoord( &particlePositionInViewSpace, &particlePositionInViewSpace, &viewMat );
+		D3DXVec3TransformCoord( &particlePositionInViewSpace, position, &worldView );
 
-		if( D3DXSphereBoundProbe(
+		if( particlePositionInViewSpace.z < 0.0f )
+		{
+			if( D3DXSphereBoundProbe(
 				&particlePositionInViewSpace, 
 				constPickRadius,
 				&rayStart, 
 				&rayDirection ) )
-		{
-			float distance = D3DXVec3Length( &particlePositionInViewSpace );
-			if( distance < closestParticleDistance )
 			{
-				// p is closer
-				closestParticleDistance = distance;
-				closestParticleID = (int)i;
+				float distanceSq = D3DXVec3LengthSq( &particlePositionInViewSpace );
+				if( distanceSq < closestParticleDistanceSq )
+				{
+					// p is closer
+					closestParticleDistanceSq = distanceSq;
+					closestParticleID = (int)i;
+				}
 			}
 		}
 		positionStream += data->GetStride();
