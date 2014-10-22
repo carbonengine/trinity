@@ -11,6 +11,7 @@
 #include "ITr2Renderable.h"
 
 // forwards
+BLUE_DECLARE( EveTurretSet );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2LodResource );
 BLUE_DECLARE( EveShip2 );
@@ -40,6 +41,9 @@ public:
 	IRootPtr Build( const char* hullName, const char* factionName, const char* raceName );
 	// build a spaceship from a dns string and return a EveShip2 object
 	IRootPtr BuildFromDNA( const char* dnaString );
+
+	// change the material of a turret with SOF data
+	void SetupTurretMaterial( EveTurretSet* turretSet, const char* factionName );
 
 
 private:

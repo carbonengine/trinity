@@ -8,6 +8,7 @@
 #include "EveSOF.h"
 #include "EveSOFDNA.h"
 #include "Eve/EveTransform.h"
+#include "Eve/EveTurretSet.h"
 #include "Eve/SpaceObject/EveShip2.h"
 #include "Eve/SpaceObject/Attachments/EveSpriteSet.h"
 #include "Eve/SpaceObject/Attachments/EveTrailsSet.h"
@@ -945,6 +946,50 @@ void EveSOF::SetupLocators( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 	// add it to the new ship
 	ship->AddLocator( loc );
 }
+
+// --------------------------------------------------------------------------------
+// Description:
+//   setup the material of a turret with the data from SOF faction
+// --------------------------------------------------------------------------------
+void EveSOF::SetupTurretMaterial( EveTurretSet* turretSet, const char* factionName )
+{
+	// get factional data (which is also good on a turret)
+	const EveSOFDataMgr::FactionData* factionData = m_dataMgr.GetFactionData( factionName );
+	if( factionData == nullptr )
+	{
+		CCP_LOGERR( "Couldn't find the requested faction: %s", factionName );
+		return;
+	}
+
+	// only interested in opaque hull for turrets
+	auto areaFinder = factionData->opaqueAreaParameters.find( BlueSharedString( "hull" ) );
+	if( areaFinder == factionData->opaqueAreaParameters.end() )
+	{
+		return;
+	}
+	const EveSOFDataMgr::FactionAreaData* areaData = &areaFinder->second;
+
+	const Tr2Effect* shader = turretSet->GetShader();
+	if( shader )
+	{
+		// try override shader's parameter
+		for( auto it = shader->m_parameters.begin(); it != shader->m_parameters.end(); ++it )
+		{
+			auto paramFinder = areaData->parameters.find( BlueSharedString( (*it)->GetParameterName() ) );
+			if( paramFinder != areaData->parameters.end() )
+			{
+				Tr2Vector4ParameterPtr param;
+				if( (*it)->QueryInterface( BlueInterfaceIID<Tr2Vector4Parameter>(), (void**)&param, BEQI_SILENT ) )
+				{
+					param->SetValue( paramFinder->second );
+				}
+			}
+		}
+	}
+}
+
+
+
 
 
 

@@ -6,6 +6,8 @@
 #include "StdAfx.h"
 #include "EveSOF.h"
 
+#include "Eve/EveTurretSet.h"
+
 BLUE_DEFINE( EveSOF );
 
 const Be::ClassInfo* EveSOF::ExposeToBlue()
@@ -17,6 +19,8 @@ const Be::ClassInfo* EveSOF::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP( "Build", Build, "na" )
 		MAP_METHOD_AND_WRAP( "BuildFromDNA", BuildFromDNA, "na" )
+
+		MAP_METHOD_AND_WRAP( "SetupTurretMaterial", SetupTurretMaterial, "na" )
 
     EXPOSURE_END()
 }

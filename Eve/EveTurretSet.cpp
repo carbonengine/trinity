@@ -2170,6 +2170,15 @@ bool EveTurretSet::GetClosestTurretAndLocator( unsigned int& closestTurretIx, in
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Make the shader accessable to the outside
+// --------------------------------------------------------------------------------
+const Tr2Effect* EveTurretSet::GetShader() const
+{
+	return m_turretEffect;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Clears the miss queue. Do this when changing target, disabling turrets etc.
 // --------------------------------------------------------------------------------
 void EveTurretSet::ResetMissQueue()
