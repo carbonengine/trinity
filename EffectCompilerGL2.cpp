@@ -3204,8 +3204,16 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			<< "}" << endl 
 			<< "else" << endl 
 			<< "{" << endl 
+			<< "if(ssi.x>0)" << endl 
+			<< "{" << endl 
 			<< "if(av==ssi.y)" << endl 
 			<< "discard;" << endl 
+			<< "}" << endl
+			<< "else" << endl
+			<< "{" << endl 
+			<< "if(av!=ssi.y)" << endl 
+			<< "discard;" << endl 
+			<< "}" << endl
 			<< "}" << endl;
 		// Clip planes
 		if( g_maxClipPlanes == 1 )
