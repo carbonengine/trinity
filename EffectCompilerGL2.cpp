@@ -2956,8 +2956,23 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 		else
 		{
 			prefixOs <<
-				"#ifdef GL_EXT_shader_texture_lod\n"
+				"#if defined(GL_EXT_shader_texture_lod)\n"
 				"#extension GL_EXT_shader_texture_lod: enable\n"
+				"#define texture2DLod texture2DLodEXT\n"
+				"#define texture2DProjLod texture2DProjLodEXT\n"
+				"#define textureCubeLod textureCubeLodEXT\n"
+				"#define texture2DGrad texture2DGradEXT\n"
+				"#define texture2DProjGrad texture2DProjGradEXT\n"
+				"#define textureCubeGrad textureCubeGradEXT\n"
+				"#endif\n"
+				"#if defined(EXT_shader_texture_lod)\n"
+				"#extension EXT_shader_texture_lod: enable\n"
+				"#define texture2DLod texture2DLodEXT\n"
+				"#define texture2DProjLod texture2DProjLodEXT\n"
+				"#define textureCubeLod textureCubeLodEXT\n"
+				"#define texture2DGrad texture2DGradEXT\n"
+				"#define texture2DProjGrad texture2DProjGradEXT\n"
+				"#define textureCubeGrad textureCubeGradEXT\n"
 				"#endif\n"
 				"#ifdef GL_ARB_shader_texture_lod\n"
 				"#extension GL_ARB_shader_texture_lod: enable\n"
@@ -3005,7 +3020,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 	if( hasTextureLodExtension && g_glesExtensions.Supports( "EXT_shader_texture_lod" ) != GlesExtensionInfo::ENABLE )
 	{
 		prefixOs <<
-			"#if defined(GL_ES)&&!defined(GL_EXT_shader_texture_lod)\n"
+			"#if defined(GL_ES)&&!defined(GL_EXT_shader_texture_lod)&&!defined(EXT_shader_texture_lod)\n"
 			"#define texture2DLod(s,u,l) texture2D(s,u)\n"
 			"#define textureCubeLod(s,u,l) textureCube(s,u)\n"
 			"#define texture2DGrad(s,u,x,y) texture2D(s,u)\n"
@@ -3204,7 +3219,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			<< "}" << endl 
 			<< "else" << endl 
 			<< "{" << endl 
-			<< "if(ssi.x>0)" << endl 
+			<< "if(ssi.x>0.0)" << endl 
 			<< "{" << endl 
 			<< "if(av==ssi.y)" << endl 
 			<< "discard;" << endl 
