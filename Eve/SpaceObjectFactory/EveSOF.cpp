@@ -807,8 +807,16 @@ void EveSOF::SetupBoosters( EveShip2Ptr ship, const EveSOFDNAPtr dna ) const
 	}
 
 	// add all the indiviual items
+	int index = 0;
 	for( auto biit = hdata->items.begin(); biit != hdata->items.end(); ++biit )
 	{
+		EveLocator2Ptr locator;
+		locator.CreateInstance();
+		char name[128];
+		sprintf_s( name, "locator_booster_%i", ++index );
+		locator->SetName( name );
+		locator->SetTransform( biit->transform );
+		ship->AddLocator( locator );
 		set->Add( &biit->transform, &biit->functionality, biit->hasTrail );
 	}
 
