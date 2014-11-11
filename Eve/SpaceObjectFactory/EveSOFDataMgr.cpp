@@ -200,6 +200,29 @@ bool EveSOFDataMgr::UpdateRace( const char* raceName, EveSOFDataRace* raceData )
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Update an individual material, identified by it's name
+// --------------------------------------------------------------------------------
+bool EveSOFDataMgr::UpdateMaterial( const char* materialName, EveSOFDataMaterial* materialData )
+{
+	// must exist
+	if( !HasMaterialData( materialName ) )
+	{
+		CCP_LOGWARN( "Trying to update a material which does not exist: %s", materialName );
+		return false;
+	}
+
+	// fill the non-trinity struct with the provided data
+	MaterialData md;
+	GenerateMaterialData( md, materialData );
+
+	// set it to the main map
+	m_materialData[ materialName ] = md;
+
+	return true;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Here we get a blue object which is the whole database and use it to
 //   set internal containers with all SOF db data
 // --------------------------------------------------------------------------------

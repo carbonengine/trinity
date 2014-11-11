@@ -285,6 +285,7 @@ public:
 	bool UpdateHull( const char* hullName, EveSOFDataHull* hullData );
 	bool UpdateFaction( const char* factionName, EveSOFDataFaction* factionData );
 	bool UpdateRace( const char* raceName, EveSOFDataRace* raceData );
+	bool UpdateMaterial( const char* materialName, EveSOFDataMaterial* materialData );
 
 	// access to generic
 	const GenericData* GetGenericData() const;

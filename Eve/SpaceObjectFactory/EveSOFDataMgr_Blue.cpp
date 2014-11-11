@@ -22,6 +22,7 @@ const Be::ClassInfo* EveSOFDataMgr::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "UpdateHull", UpdateHull, "Update a specific hull" )
 		MAP_METHOD_AND_WRAP( "UpdateFaction", UpdateFaction, "Update a specific faction" )
 		MAP_METHOD_AND_WRAP( "UpdateRace", UpdateRace, "Update a specific race" )
+		MAP_METHOD_AND_WRAP( "UpdateMaterial", UpdateMaterial, "Update a specific material" )
 
 		MAP_METHOD_AND_WRAP( "HasFactionData", HasFactionData, "Does this faction exist?" )
 		MAP_METHOD_AND_WRAP( "HasHullData", HasHullData, "Does this hull exist?" )
