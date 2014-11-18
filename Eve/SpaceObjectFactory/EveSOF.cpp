@@ -221,9 +221,7 @@ void EveSOF::FillMeshAreaVector( std::map<std::string, Tr2LodResourcePtr>& lodRe
 		// construct res path of the shader
 		std::string shaderPath = std::string("/") + area->shader;
 		StringInsertStubAfter( shaderPath, "/", dna->GetShaderPrefix( dna->IsHullAnimated() ) );
-		CCP_LOGERR( "BEFORE: [%s] [%s]", dna->GetAreaShaderLocationResPath(), shaderPath.c_str() );
 		shaderPath = dna->GetAreaShaderLocationResPath() + shaderPath;
-		CCP_LOGERR( "AFTER: [%s] [%s]", dna->GetAreaShaderLocationResPath(), shaderPath.c_str() );
 		newShader->SetEffectPathName( shaderPath.c_str() );
 
 		// parameters
