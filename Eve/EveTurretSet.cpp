@@ -521,6 +521,9 @@ bool EveTurretSet::UpdateLOD()
 		// HIGHEST
 		m_lodLevel = LOD_HIGHEST;
 	}
+
+	m_estimatedPixelDiameter = -1.f;
+
 	// return if change of LOD?
 	return ( oldLOD != m_lodLevel );
 }
@@ -1171,9 +1174,11 @@ void EveTurretSet::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Re
 		return;
 	}
 
-	// check visibility for each single turret and keep MAX onscreen pixel diameter
+	// check visibility for each single turret and keep MAX on-screen pixel diameter.
+	// The pixel diameter is reset in UpdateLOD on next frame - this is to account for
+	// multiple views. We need to keep updating turrets as long as they're visible in any
+	// view, not just the last one rendered.
 	m_visibleCount = 0;
-	m_estimatedPixelDiameter = -1.f;
 	for( std::vector<SingleTurretData>::iterator it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
 	{
 		// transform bounding sphere into world space to check against frustum
