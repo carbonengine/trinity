@@ -231,7 +231,7 @@ def main():
         out_files, queue = fill_work_queue(files, global_options, check_mode_dir)
         if not out_files:
             return 0
-        if out_files and not global_options.get('check', False):
+        if out_files and ('check' not in global_options):
             check_files_into_perforce(out_files)
         for i in range(int(global_options['cores']) if 'cores' in global_options else multiprocessing.cpu_count()):
             w = threading.Thread(target=_worker, args=(queue, has_errors))
