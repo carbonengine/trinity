@@ -19,37 +19,52 @@
       <Targets>FXCompile</Targets>
     </AvailableItemName>
   </ItemGroup>
+  
   <Target Name="FXCompile" DependsOnTargets="_SelectedFiles">
-    <ItemGroup Condition="'@(SelectedFiles)'!=''">
-      <BuildFX Remove="@(BuildFX)" Condition="'%(Identity)'!='@(SelectedFiles)'"/>
+    <ItemGroup>
+      <BuildFX>
+        <PlatformDx9Arg Condition="'%(BuildFX.PlatformDX9)'=='true'">/platform=dx9</PlatformDx9Arg>
+        <PlatformDx9Arg Condition="'%(BuildFX.PlatformDX9)'!='true'"></PlatformDx9Arg>
+        <PlatformDx11Arg Condition="'%(BuildFX.PlatformDX11)'=='true'">/platform=dx11</PlatformDx11Arg>
+        <PlatformDx11Arg Condition="'%(BuildFX.PlatformDX11)'!='true'"></PlatformDx11Arg>
+        <PlatformGles2Arg Condition="'%(BuildFX.PlatformGLES2)'=='true'">/platform=gles2</PlatformGles2Arg>
+        <PlatformGles2Arg Condition="'%(BuildFX.PlatformGLES2)'!='true'"></PlatformGles2Arg>
+        
+        <Optimize Condition="'%(BuildFX.OptimizationLevel)'=='/O0'">/optimize=0</Optimize>
+        <Optimize Condition="'%(BuildFX.OptimizationLevel)'=='/O1'">/optimize=1</Optimize>
+        <Optimize Condition="'%(BuildFX.OptimizationLevel)'=='/O2'">/optimize=2</Optimize>
+        <Optimize Condition="'%(BuildFX.OptimizationLevel)'=='/O3'">/optimize=3</Optimize>
+      </BuildFX>
     </ItemGroup>
-    <PropertyGroup>
-      <OptimizationLevelSwitch>/O%(BuildFX.OptimizationLevel)</OptimizationLevelSwitch>
-    </PropertyGroup>
-    <PropertyGroup>
-      <PlatformDX9 Condition="'%(BuildFX.PlatformDX9)'=='true'">/DX9</PlatformDX9>
-    </PropertyGroup>
-    <PropertyGroup>
-      <PlatformDX11 Condition="'%(BuildFX.PlatformDX11)'=='true'">/DX11</PlatformDX11>
-    </PropertyGroup>
-    <PropertyGroup>
-      <PlatformGLES2 Condition="'%(BuildFX.PlatformGLES2)'=='true'">/GLES2</PlatformGLES2>
-    </PropertyGroup>
+    <ItemGroup Condition="'@(SelectedFiles)'!=''">
+        <BuildFX Remove="@(BuildFX)" Condition="'%(Identity)'!='@(SelectedFiles)'">
+        </BuildFX>
+    </ItemGroup>
+    
     <PropertyGroup>
       <MPSwitch Condition="'$(BuildCores)'=='Auto'"></MPSwitch>
-      <MPSwitch Condition="'$(BuildCores)'!='Auto'">/MP$(BuildCores)</MPSwitch>
+      <MPSwitch Condition="'$(BuildCores)'!='Auto'">/cores=$(BuildCores)</MPSwitch>
     </PropertyGroup>
     <PropertyGroup>
-      <PSSwitch Condition="'$(DisplaySkipped)'=='true'">/ps</PSSwitch>
+      <PSSwitch Condition="'$(DisplaySkipped)'=='true'">/skipped</PSSwitch>
     </PropertyGroup>
+    <PropertyGroup>
+      <ValidateSwitch Condition="'$(FXValidateOnly)'=='true'">/check</ValidateSwitch>
+      <ValidateSwitch Condition="'$(FXValidateOnly)'=='false'"></ValidateSwitch>
+    </PropertyGroup>
+    <PropertyGroup>
+      <CommandLineFull>$(MPSwitch) $(PSSwitch) $(IncrementalBuild) $(ValidateSwitch) @(BuildFX->'%(PlatformDx9Arg) %(PlatformDx11Arg) %(PlatformGles2Arg) %(Optimize) %(AdditionalOptions) %(Identity)', ' ')</CommandLineFull>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(MSBuildProjectFile).compileargs" Lines="$(CommandLineFull)" Overwrite="True"/>
     <Exec 
       Condition="'@(BuildFX)' != '' and '%(BuildFX.ExcludedFromBuild)' != 'true'"
-      Command="$(MSBuildThisFileDirectory)..\..\..\..\..\..\shared_tools\python\27\Python.exe  $(MSBuildThisFileDirectory)BuildFX.py $(PlatformDX9) $(PlatformDX11) $(PlatformGLES2) /SM_DEPTH /SM_HI /SM_LO $(MPSwitch) $(PSSwitch) $(OptimizationLevelSwitch) $(IncrementalBuild) %(BuildFX.AdditionalOptions) @(BuildFX,' ')" 
+      Command="$(MSBuildThisFileDirectory)..\..\..\..\..\..\shared_tools\python\27\Python.exe  $(MSBuildThisFileDirectory)BuildFX.py @$(MSBuildProjectFile).compileargs" 
       />
+    <Delete Files="$(MSBuildProjectFile).compileargs"/>
   </Target>
   <Target Name="_SetIncremental">
     <PropertyGroup>
-      <IncrementalBuild>/incr</IncrementalBuild>
+      <IncrementalBuild>/incremental</IncrementalBuild>
     </PropertyGroup>
   </Target>
   <Target

@@ -1,266 +1,255 @@
+import shutil
 import subprocess
 import os
 import sys
 import multiprocessing
 import tempfile
-import time
+import threading
+import Queue
+
+SHADER_COMPILER = os.path.dirname(__file__) + "\\ShaderCompiler.exe"
+SHADER_MODELS = {'lo': 3, 'hi': 4, 'depth': 5}
+PLATFORMS = {'dx9': 1, 'dx11': 2, 'gles2': 3}
+OPTION_PREFIX = '/'
+ARG_FILE_PREFIX = '@'
 
 pkgpath = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'packages')
 sys.path.append(pkgpath)
 
-runningOnJenkins = True if os.getenv('RUNNING_ON_JENKINS') else False
-noPerforce = True if runningOnJenkins else False
-incrementalBuild = False
-printSkipped = False
-coreCount = 0
 
-additionalOptions = ''
-
-SupportedShaderModels = {'SM_LO': 3, 'SM_HI':4, 'SM_DEPTH':5}
-Platforms = {'DX9': 1, 'DX11': 2, 'GLES2': 3}
-
-def PrintUsage():
-    print "Usage: BuildFX [<options>] path1 [path2...]\nOptions:"
-    print "  /SM_LO      Compile shader model low"
-    print "  /SM_HI      Compile shader model high"
-    print "  /SM_DEPTH   Compile shader model high with readable depth buffer support"
-    print "  /DX9        Compile for DirectX 9"
-    print "  /DX11       Compile for DirectX 11"
-    print "  /GLES2      Compile for OpenGL ES 2"
-    print "  /incr       Only build out of date files"
-    print "  /ps         Print files skipped when building with /incr"
-    print "  /O{0,1,2,3} Optimization level 0..3.  3 is default"
-    print "  /MPn        Specify number of threads used to be n (0 for 1 thread per core)"
-    print "\n If no shader model is specified, all supported shader models are built"
-
-def GetFXFiles(w):
-    for root, dirs, files in os.walk(w):
-        for f in files:
-            if f.lower().endswith('.fx') and not f.lower().endswith('_pool.fx'):
-                yield root + "\\" + f
-
-def BuildOutputPath(path, platform):
-    abs = os.path.abspath(path)
-    abs = abs.lower()
-    if runningOnJenkins:
-        abs = abs.replace('\\effect\\', '\\jenkins_build_result\\effect\\')
-    abs = abs.replace('\\effect\\', '\\effect.' + platform.lower() + '\\')
-    return abs
-    
-    
-def GetOutputFile(path, sm, platform):
-    if not path.endswith('.fx'):
-        print "'" + path + "' is not an .fx file\n"
-        return
-        
-    outName = path[:-2]
-    outName += sm
-    outName = BuildOutputPath(outName, platform)
-    return outName
+def print_usage():
+    print "Usage: BuildFX [<global_options>] [<path1_options>] path1 [[<path2_options>] path2...]"
+    print "Global Options:"
+    print "  %sincremental  Only build out of date files" % OPTION_PREFIX
+    print "  %sskipped      Print files skipped when building with %sincremental" % (OPTION_PREFIX, OPTION_PREFIX)
+    print "  %scores=n      Specify number of cores to use" % OPTION_PREFIX
+    print "  %scheck        Do not output compiled file (used for testing)"
+    print "Path Options:"
+    print "  %ssm=sm        Compile shader model (sm is lo, hi or depth)" % OPTION_PREFIX
+    print "  %splatform=p   Compile for platform (p is dx9, dx11 or gles2)" % OPTION_PREFIX
+    print "  %soptimize=o   Optimization level 0..3.  3 is default" % OPTION_PREFIX
+    print "If no shader model is specified, all supported shader models are built"
 
 
+def get_output_file(path, sm, platform):
+    if not path.lower().endswith('.fx'):
+        print 'warning: \'%s\' is not an .fx file' % path
+        return path
 
-commandQueue = list()
-mtimeQueue = list()
-mtimeCommands = dict()
-outFiles = list()
+    out_name = os.path.abspath(path[:-2] + 'sm_' + sm).lower()
+    return out_name.replace('\\effect\\', '\\effect.' + platform.lower() + '\\')
 
-def CheckMTime():
-    stdOut = tempfile.TemporaryFile('w+t')
-    cmdPath = os.path.split(__file__)[0] + "\\ShaderCompiler.exe /mtime"
-    if coreCount != 0:
-        cmdPath += " /threads " + str(coreCount)
-    sp = subprocess.Popen(cmdPath, stdin=subprocess.PIPE, stdout=stdOut, stderr=stdOut, universal_newlines=True)
-    for i in mtimeQueue:
-        sp.stdin.write(i)
-        sp.stdin.flush()
-    sp.stdin.close()
-    sp.wait()
-    sys.stdout.flush()
 
-    stdOut.seek(0)
-    outputs = stdOut.read().split("\n")
-    
+def get_modified_files(mtime_queue, mtime_commands, queue, out_files, print_skipped):
+    std_in = tempfile.TemporaryFile('w+')
+    std_in.write('\n'.join(mtime_queue))
+    std_in.seek(0)
 
-    for i in outputs:
-        if i in mtimeCommands:
-            commandQueue.append(mtimeCommands[i])
-            outFiles.append(i)
-            del mtimeCommands[i]
-    if printSkipped:
-        for i in mtimeCommands:
-            cmdLine, path, platform, sm = mtimeCommands[i]
-            print os.path.split(path)[1] + ' for ' + platform + ', ' + sm
+    cmd_path = '%s /mtime' % SHADER_COMPILER
+    sp = subprocess.Popen(cmd_path, stdin=std_in, stdout=subprocess.PIPE, universal_newlines=True)
+    for i in iter(sp.stdout.readline, b''):
+        i = i.strip()
+        if i in mtime_commands:
+            out_files.append(i)
+            queue.put(mtime_commands[i])
+            del mtime_commands[i]
+    sp.communicate()
+    if print_skipped:
+        for i in mtime_commands:
+            cmd_line, path, platform, sm, out_f = mtime_commands[i]
+            print '%s for %s, %s' % (os.path.basename(path), platform, sm)
             print "Output is up to date\n"
-    
-    
-def DoCompile():
-    if coreCount == 0:
-        pcount = multiprocessing.cpu_count()
-    else:
-        pcount = coreCount
-    
-    index = 0
-    processes = [None for ii in range(pcount)]
-    stdOut = [tempfile.TemporaryFile('w+t') for i in range(pcount)]
-    hasErrors = False
-    while not hasErrors and index < len(commandQueue):
-        assigned = False
-        for i in range(pcount):
-            if processes[i] is None or processes[i].poll() is not None:
-                if processes[i] is not None:
-                    stdOut[i].flush()
-                    stdOut[i].seek(0)
-                    print stdOut[i].read()
-                    if processes[i].returncode != 0:
-                        hasErrors = True
-                        stdOut[i].seek(0)
-                        stdOut[i].truncate(0)
-                        break
-                stdOut[i].seek(0)
-                stdOut[i].truncate(0)
-                cmdLine, path, platform, sm = commandQueue[index]
-                stdOut[i].write(os.path.split(path)[1] + ' for ' + platform + ', ' + sm + "\n")
-                stdOut[i].flush()
-                processes[i] = subprocess.Popen(cmdLine, stdout=stdOut[i], stderr=stdOut[i], universal_newlines=True)
-                index += 1
-                assigned = True
-                if index >= len(commandQueue):
-                    break
-        if index < len(commandQueue) and not assigned:
-            time.sleep(0.1)
 
-    # Now wait until all worker processes finish
+
+def get_incremental_command(compile_command):
+    return ('%s %s 0 -1 SHADERMODEL %s PLATFORM %s' %
+            (compile_command[1], compile_command[4], SHADER_MODELS[compile_command[3]],
+             PLATFORMS[compile_command[2]]))
+
+
+def prepare_compile_batch(path, sm, platform, optimization=3, check_mode_dir=None):
+    out_name = get_output_file(path, sm, platform)
+    out_dir = os.path.dirname(out_name)
+
+    if check_mode_dir:
+        handle, real_out_name = tempfile.mkstemp(dir=check_mode_dir)
+        os.close(handle)
+    else:
+        real_out_name = out_name
+
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    
+    cmd_line = ("%s /shaderStats /single /define SHADERMODEL %s /define PLATFORM %s /O%s %s %s" % (SHADER_COMPILER,
+                SHADER_MODELS[sm], PLATFORMS[platform], optimization, path, real_out_name))
+
+    compile_command = (cmd_line, path, platform, sm, out_name)
+    return compile_command
+
+
+GLOBAL_OPTIONS = {'incremental': lambda x: x is None, 'skipped': lambda x: x is None, 'cores': lambda x: int(x) > 0,
+                  'check': lambda x: x is None}
+FILE_OPTIONS = {'sm': lambda x: x in ('lo', 'hi', 'depth'), 'platform': lambda x: x in ('dx9', 'dx11', 'gles2'),
+                'optimize': lambda x: 0 <= int(x) <= 3}
+
+
+def _get_option_name_value(option):
+    option = option[len(OPTION_PREFIX):]
+    try:
+        index = option.index('=')
+    except ValueError:
+        return option, None
+    return option[:index], option[index + 1:]
+
+
+def _normalize_file_options(options):
+    options['sm'] = list(set(options.get('sm', ['lo', 'hi', 'depth'])))
+    options['platform'] = list(set(options.get('platform', ['dx9', 'dx11', 'gles2'])))
+    options['optimize'] = int(options.get('optimize', ['3'])[-1])
+    return options
+
+
+def get_fx_files(dir_path):
+    for root, dirs, files in os.walk(dir_path):
+        for f in files:
+            if f.lower().endswith('.fx'):
+                yield os.path.join(root, f)
+
+
+def parse_arguments(arguments):
+    global_options = {}
+    file_options = {}
+    files = []
+    if not arguments:
+        return {}, []
+    for each in arguments:
+        if each.startswith(ARG_FILE_PREFIX):
+            arg_file = each[len(ARG_FILE_PREFIX):]
+            try:
+                f = open(arg_file)
+            except OSError:
+                raise ValueError('could not open arguments file %s' % arg_file)
+            file_arguments = f.read().split()
+            if file_arguments is not None:
+                g, f = parse_arguments(file_arguments)
+                global_options.update(g)
+                files.extend(f)
+        elif each.startswith(OPTION_PREFIX):
+            name, value = _get_option_name_value(each)
+            if name in GLOBAL_OPTIONS:
+                try:
+                    # noinspection PyCallingNonCallable
+                    if not GLOBAL_OPTIONS[name](value):
+                        raise ValueError('invalid value for option %s (%s)' % (name, each))
+                except:
+                    raise ValueError('invalid value for option %s (%s)' % (name, each))
+                global_options[name] = value
+            elif name in FILE_OPTIONS:
+                try:
+                    # noinspection PyCallingNonCallable
+                    if not FILE_OPTIONS[name](value):
+                        raise ValueError('invalid value for option %s (%s)' % (name, each))
+                except:
+                    raise ValueError('invalid value for option %s (%s)' % (name, each))
+                file_options.setdefault(name, []).append(value)
+            else:
+                raise ValueError('invalid option %s' % each)
+        else:
+            file_options = _normalize_file_options(file_options)
+            if os.path.isdir(each):
+                for f in get_fx_files(each):
+                    files.append((f, file_options))
+            else:
+                files.append((each, file_options))
+            file_options = {}
+    return global_options, files
+
+
+def _worker(queue, has_errors):
     while True:
-        working = False
-        for i in range(pcount):
-            if processes[i] is not None:
-                if processes[i].poll() is None:
-                    working = True
-                    break
+        cmd_line, path, platform, sm, out_f = queue.get()
+        try:
+            p = subprocess.Popen(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            std_out, std_err = p.communicate()
+            print '%s for %s, %s\n%s\n%s' % (os.path.split(path)[1], platform, sm, std_out, std_err)
+            sys.stdout.flush()
+            if p.returncode != 0:
+                has_errors[0] = True
+        finally:
+            queue.task_done()
+
+
+def check_files_into_perforce(files):
+    import ccpp4
+    # noinspection PyBroadException
+    try:
+        p4 = ccpp4.P4Init("")
+    except:
+        print "Warning: perforce connection failed, working in local mode"
+        return
+    # noinspection PyBroadException
+    try:
+        p4.run_edit(files)
+    except ccpp4.p4exceptions.P4FilesNotOnClientWarning:
+        p4.run_add("-tbinary+m", files)
+    except:
+        print "Error: error checking out compiled files in Perforce"
+        sys.exit(2)
+
+
+def fill_work_queue(files, global_options, check_mode_dir):
+    queue = Queue.Queue()
+    out_files = []
+    mtime_queue = []
+    mtime_commands = {}
+    for each, options in files:
+        for pl in options['platform']:
+            for smodel in options['sm']:
+                compile_command = prepare_compile_batch(each, smodel, pl, options['optimize'], check_mode_dir)
+                if 'incremental' in global_options:
+                    mtime_command = get_incremental_command(compile_command)
+                    mtime_queue.append(mtime_command)
+                    mtime_commands[compile_command[4]] = compile_command
                 else:
-                    if processes[i].returncode != 0:
-                        hasErrors = True
-                    stdOut[i].flush()
-                    stdOut[i].seek(0)
-                    print stdOut[i].read()
-                    processes[i] = None
+                    queue.put(compile_command)
+                    out_files.append(compile_command[4])
+    if 'incremental' in global_options:
+        get_modified_files(mtime_queue, mtime_commands, queue, out_files, 'skipped' in global_options)
+    return out_files, queue
 
-        if working:
-            time.sleep(0.1)
-        else:
-            break
-    return not hasErrors
 
-def PrepareCompileBatch(path, sm, platform, extra=None):
-    outName = GetOutputFile(path, sm, platform)
-    outDir = os.path.dirname(outName)
-    if not os.path.exists(outDir):
-        os.makedirs(outDir)
-    
-    # Select the version of the fxc compiler to use
-    cmdLine = os.path.split(__file__)[0] + "\\ShaderCompiler.exe /shaderStats /single"
-    
-    # Add any extra options
-    if extra:
-        cmdLine += " " + extra
-    
-    # Add the shader model definition
-    cmdLine += " /define SHADERMODEL " + str(SupportedShaderModels[sm])
-    
-    # Add the platform definition
-    cmdLine += " /define PLATFORM " + str(Platforms[platform])
-    
-    cmdLine += " " + additionalOptions
-    
-    # Add the input file
-    cmdLine += " " + path
-    
-    # Add binary output
-    cmdLine += " " + outName
+def main():
+    global_options, files = parse_arguments(sys.argv[1:])
+    if not files:
+        print_usage()
+        return 1
+    check_mode_dir = None
+    if 'check' in global_options:
+        check_mode_dir = tempfile.mkdtemp()
+    try:
+        has_errors = [False]
+        out_files, queue = fill_work_queue(files, global_options, check_mode_dir)
+        if not out_files:
+            return 0
+        if out_files and not global_options.get('check', False):
+            check_files_into_perforce(out_files)
+        for i in range(int(global_options['cores']) if 'cores' in global_options else multiprocessing.cpu_count()):
+            w = threading.Thread(target=_worker, args=(queue, has_errors))
+            w.daemon = True
+            w.start()
+        queue.join()
+        if has_errors[0]:
+            return 2
+    finally:
+        if check_mode_dir:
+            shutil.rmtree(check_mode_dir)
 
-    compileCommand = (cmdLine, path, platform, sm)
-    
-    if incrementalBuild:
-        mtimeCommand = path + " " + outName + " 0 -1 SHADERMODEL " + str(SupportedShaderModels[sm]) + " PLATFORM " + str(Platforms[platform]) + "\n"
-        mtimeQueue.append(mtimeCommand)
-        mtimeCommands[outName] = compileCommand
-    else:
-        commandQueue.append(compileCommand)
-        outFiles.append(outName)
+    return 0
 
-    
-if len(sys.argv) == 1:
-    PrintUsage()
-    exit(1)
-    
-paths = []
-shaderModels = []
-platforms = []
-for narg in xrange(1, len(sys.argv)):
-    arg = sys.argv[narg]
-    if arg.startswith('/'):
-        uarg = arg[1:]
-        if uarg.upper() in SupportedShaderModels:
-            shaderModels.append(uarg)
-        elif uarg.upper() in Platforms:
-            platforms.append(uarg)
-        elif uarg == "incr":
-            incrementalBuild = True
-        elif uarg == "ps":
-            printSkipped = True
-        elif len(uarg) == 2 and uarg[0] == "O" and uarg[1] in ('0', '1', '2', '3'):
-            additionalOptions += arg
-        elif len(uarg) > 2 and uarg[0:2] == 'MP':
-            coreCount = int(uarg[2:])
-        else:
-            print 'Unknown option:', arg
-            exit(1)
-    else:
-        paths.append(arg)
-
-if len(paths) == 0:
-    PrintUsage()
-    exit(1)
-
-if len(shaderModels) == 0:
-    shaderModels = SupportedShaderModels.keys()
-
-if len(platforms) == 0:
-    print "No platforms to build"
-    exit(1)
-
-files = []
-for ipath in paths:
-    if os.path.isfile(ipath):
-        files.append(ipath)
-    else:
-        files.extend(GetFXFiles(ipath))
-
-for each in files:
-    for pl in platforms:
-        for smodel in shaderModels:
-            PrepareCompileBatch(each, smodel, pl)
-
-if incrementalBuild:
-    CheckMTime()
-    
-if len(outFiles):
-    if not noPerforce:
-        import ccpp4
-        try:
-            p4 = ccpp4.P4Init("")
-        except:
-            noPerforce = True
-            print "Warning: perforce connection failed, working in local mode"
-
-        try:
-            p4.run_edit(outFiles)
-        except ccpp4.p4exceptions.P4FilesNotOnClientWarning:
-            p4.run_add("-tbinary+m", outFiles)
-        except:
-            print "Error: error checking out compiled files in Perforce"
-            exit(1)
-
-    if not DoCompile():
-        exit(2)
+if __name__ == '__main__':
+    # noinspection PyBroadException
+    try:
+        sys.exit(main())
+    except BaseException as e:
+        print "error: %s" % e
+        sys.exit(1)
