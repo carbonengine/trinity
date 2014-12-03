@@ -1,4 +1,3 @@
-import shutil
 import subprocess
 import os
 import sys
@@ -72,16 +71,14 @@ def prepare_compile_batch(path, sm, platform, optimization=3, check_mode_dir=Non
 
     if check_mode_dir:
         e = out_name.index('\\effect.')
-        real_out_name = os.path.join(check_mode_dir, out_name[e + 1:])
-    else:
-        real_out_name = out_name
+        out_name = os.path.join(check_mode_dir, out_name[e + 1:])
 
-    out_dir = os.path.dirname(real_out_name)
+    out_dir = os.path.dirname(out_name)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     
     cmd_line = ("%s /shaderStats /single /define SHADERMODEL %s /define PLATFORM %s /O%s %s %s" % (SHADER_COMPILER,
-                SHADER_MODELS[sm], PLATFORMS[platform], optimization, path, real_out_name))
+                SHADER_MODELS[sm], PLATFORMS[platform], optimization, path, out_name))
 
     compile_command = (cmd_line, path, platform, sm, out_name)
     return compile_command
