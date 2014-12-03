@@ -49,11 +49,11 @@
       <PSSwitch Condition="'$(DisplaySkipped)'=='true'">/skipped</PSSwitch>
     </PropertyGroup>
     <PropertyGroup>
-      <ValidateSwitch Condition="'$(FXValidateOnly)'=='true'">/check</ValidateSwitch>
-      <ValidateSwitch Condition="'$(FXValidateOnly)'=='false'"></ValidateSwitch>
+      <FXOutputDirSwitch Condition="'$(FXOutputDir)'==''"></FXOutputDirSwitch>
+      <FXOutputDirSwitch Condition="'$(FXOutputDir)'!=''">/output=$(FXOutputDir)</FXOutputDirSwitch>
     </PropertyGroup>
     <PropertyGroup>
-      <CommandLineFull>$(MPSwitch) $(PSSwitch) $(IncrementalBuild) $(ValidateSwitch) @(BuildFX->'%(PlatformDx9Arg) %(PlatformDx11Arg) %(PlatformGles2Arg) %(Optimize) %(AdditionalOptions) %(Identity)', ' ')</CommandLineFull>
+      <CommandLineFull>$(MPSwitch) $(PSSwitch) $(IncrementalBuild) $(FXOutputDirSwitch) @(BuildFX->'%(PlatformDx9Arg) %(PlatformDx11Arg) %(PlatformGles2Arg) %(Optimize) %(AdditionalOptions) %(Identity)', ' ')</CommandLineFull>
     </PropertyGroup>
     <WriteLinesToFile File="$(MSBuildProjectFile).compileargs" Lines="$(CommandLineFull)" Overwrite="True"/>
     <Exec 

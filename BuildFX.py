@@ -23,7 +23,7 @@ def print_usage():
     print "  %sincremental  Only build out of date files" % OPTION_PREFIX
     print "  %sskipped      Print files skipped when building with %sincremental" % (OPTION_PREFIX, OPTION_PREFIX)
     print "  %scores=n      Specify number of cores to use" % OPTION_PREFIX
-    print "  %scheck        Do not output compiled file (used for testing)"
+    print "  %soutput=dir   Override output directory (used for testing)"
     print "Path Options:"
     print "  %ssm=sm        Compile shader model (sm is lo, hi or depth)" % OPTION_PREFIX
     print "  %splatform=p   Compile for platform (p is dx9, dx11 or gles2)" % OPTION_PREFIX
@@ -69,14 +69,14 @@ def get_incremental_command(compile_command):
 
 def prepare_compile_batch(path, sm, platform, optimization=3, check_mode_dir=None):
     out_name = get_output_file(path, sm, platform)
-    out_dir = os.path.dirname(out_name)
 
     if check_mode_dir:
-        handle, real_out_name = tempfile.mkstemp(dir=check_mode_dir)
-        os.close(handle)
+        e = out_name.index('\\effect.')
+        real_out_name = os.path.join(check_mode_dir, out_name[e + 1:])
     else:
         real_out_name = out_name
 
+    out_dir = os.path.dirname(real_out_name)
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     
@@ -88,7 +88,7 @@ def prepare_compile_batch(path, sm, platform, optimization=3, check_mode_dir=Non
 
 
 GLOBAL_OPTIONS = {'incremental': lambda x: x is None, 'skipped': lambda x: x is None, 'cores': lambda x: int(x) > 0,
-                  'check': lambda x: x is None}
+                  'output': lambda x: x is not None}
 FILE_OPTIONS = {'sm': lambda x: x in ('lo', 'hi', 'depth'), 'platform': lambda x: x in ('dx9', 'dx11', 'gles2'),
                 'optimize': lambda x: 0 <= int(x) <= 3}
 
@@ -223,33 +223,29 @@ def main():
     if not files:
         print_usage()
         return 1
-    check_mode_dir = None
-    if 'check' in global_options:
-        check_mode_dir = tempfile.mkdtemp()
-    try:
-        has_errors = [False]
-        out_files, queue = fill_work_queue(files, global_options, check_mode_dir)
-        if not out_files:
-            return 0
-        if out_files and ('check' not in global_options):
-            check_files_into_perforce(out_files)
-        for i in range(int(global_options['cores']) if 'cores' in global_options else multiprocessing.cpu_count()):
-            w = threading.Thread(target=_worker, args=(queue, has_errors))
-            w.daemon = True
-            w.start()
-        queue.join()
-        if has_errors[0]:
-            return 2
-    finally:
-        if check_mode_dir:
-            shutil.rmtree(check_mode_dir)
-
+    has_errors = [False]
+    out_files, queue = fill_work_queue(files, global_options, global_options.get('output'))
+    if not out_files:
+        return 0
+    if out_files and ('output' not in global_options):
+        check_files_into_perforce(out_files)
+    for i in range(int(global_options['cores']) if 'cores' in global_options else multiprocessing.cpu_count()):
+        w = threading.Thread(target=_worker, args=(queue, has_errors))
+        w.daemon = True
+        w.start()
+    queue.join()
+    if has_errors[0]:
+        return 2
     return 0
 
-if __name__ == '__main__':
+
+def _guarded_main():
     # noinspection PyBroadException
     try:
-        sys.exit(main())
+        return main()
     except BaseException as e:
         print "error: %s" % e
-        sys.exit(1)
+        return 1
+
+if __name__ == '__main__':
+    sys.exit(_guarded_main())
