@@ -52,7 +52,8 @@ def submit_with_description(p4, cl_description):
     try:
         run_p4(p4, 'reopen', '-c', cl, *COMPILED_FILE_PATHS)
         try:
-            run_p4(p4, 'submit', '-f', 'revertunchanged', '-c', cl)
+            pass
+            # run_p4(p4, 'submit', '-f', 'revertunchanged', '-c', cl)
         except P4Exception as e:
             if 'No files to submit' in e.value:
                 run_p4(p4, 'change', '-d', cl)
@@ -64,15 +65,38 @@ def submit_with_description(p4, cl_description):
         raise
 
 
+def clean_directory(dir_path):
+    for root, dirs, files in os.walk(dir_path):
+        for each in files:
+            file_path = os.path.join(root, each)
+            if os.access(file_path, os.W_OK):
+                print 'Removing writable file %s' % file_path
+                os.unlink(file_path)
+
+
+def delete_writable_files(dir_pattern):
+    import glob
+    for each in glob.glob(dir_pattern):
+        clean_directory(each)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Builds effect projects and submits results')
     parser.add_argument('--target', choices=('build', 'rebuild'), default='build', help='msbuild target action')
     parser.add_argument('--password', help='perforce password')
     parser.add_argument('--cl_desc', help='CL description')
+    parser.add_argument('--clean', action='append', default=[], help='Directory to clean before building')
     parser.add_argument('project', nargs='+')
 
     args = parser.parse_args()
     p4 = initialize_p4(args.password)
+    # noinspection PyBroadException
+    try:
+        run_p4(p4, 'revert', *COMPILED_FILE_PATHS)
+    except:
+        pass
+    for each in args.clean:
+        delete_writable_files(each)
     try:
         for each in args.project:
             build_project(each)
