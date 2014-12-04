@@ -1,7 +1,7 @@
 import argparse
 import os
 import subprocess
-from P4 import P4
+from P4 import P4, P4Exception
 import _winreg
 
 DEFAULT_CL_DESCRIPTION = 'Compiled effects'
@@ -37,14 +37,30 @@ def build_project(project, target='build', msbuild_version='4.0'):
                            '/p:Platform=Win32', '/verbosity:m', '/nologo', project])
 
 
+def run_p4(p4, command, *args):
+    try:
+        p4.run(command, *args)
+    except P4Exception as e:
+        msg = e.value
+        if 'Warnings during command execution' in msg:
+            return
+        raise
+
+
 def submit_with_description(p4, cl_description):
     cl = create_changelist(p4, cl_description)
     try:
-        p4.run_reopen('-c', cl, *COMPILED_FILE_PATHS)
-        p4.run_submit('-f', 'revertunchanged', '-c', cl)
+        run_p4(p4, 'reopen', '-c', cl, *COMPILED_FILE_PATHS)
+        try:
+            run_p4(p4, 'submit', '-f', 'revertunchanged', '-c', cl)
+        except P4Exception as e:
+            if 'No files to submit' in e.value:
+                run_p4(p4, 'change', '-d', cl)
+                return
+            raise
     except:
-        p4.run_revert('-c', cl)
-        p4.run_change('-d', cl)
+        run_p4(p4, 'revert', '-c', cl, '*.*')
+        run_p4(p4, 'change', '-d', cl)
         raise
 
 
@@ -62,7 +78,7 @@ def main():
             build_project(each)
         submit_with_description(p4, args.cl_desc or DEFAULT_CL_DESCRIPTION)
     except:
-        p4.run_revert('-c', 'default', *COMPILED_FILE_PATHS)
+        run_p4(p4, 'revert', '-c', 'default', *COMPILED_FILE_PATHS)
         raise
 
 
