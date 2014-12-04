@@ -3,6 +3,7 @@ import os
 import subprocess
 from P4 import P4, P4Exception
 import _winreg
+import sys
 
 DEFAULT_CL_DESCRIPTION = 'Compiled effects'
 COMPILED_FILE_PATHS = '//....sm_depth', '//....sm_hi', '//....sm_lo'
@@ -97,6 +98,7 @@ def main():
         pass
     for each in args.clean:
         delete_writable_files(each)
+    sys.stdout.flush()
     try:
         for each in args.project:
             build_project(each)

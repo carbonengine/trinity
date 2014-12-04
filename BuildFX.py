@@ -185,14 +185,15 @@ def check_files_into_perforce(files):
     try:
         p4.run_edit(files)
     except P4Exception as e:
-        if 'file(s) not on client' in e.value:
-            try:
-                p4.run_add("-tbinary+m", files)
-            except P4Exception as e:
-                if 'warning' in e.value.lower():
-                    return
-                else:
-                    raise
+        if 'error' in e.value:
+            raise
+        try:
+            p4.run_add("-tbinary+m", files)
+        except P4Exception as e:
+            if 'warning' in e.value.lower():
+                return
+            else:
+                raise
         else:
             raise
     except:
