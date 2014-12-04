@@ -4,6 +4,7 @@ import sys
 import multiprocessing
 import tempfile
 import threading
+from P4 import P4, P4Exception
 import Queue
 
 SHADER_COMPILER = os.path.dirname(__file__) + "\\ShaderCompiler.exe"
@@ -11,9 +12,6 @@ SHADER_MODELS = {'lo': 3, 'hi': 4, 'depth': 5}
 PLATFORMS = {'dx9': 1, 'dx11': 2, 'gles2': 3}
 OPTION_PREFIX = '/'
 ARG_FILE_PREFIX = '@'
-
-pkgpath = os.path.join(os.path.dirname(__file__), '..', '..', '..', 'packages')
-sys.path.append(pkgpath)
 
 
 def print_usage():
@@ -177,21 +175,23 @@ def _worker(queue, has_errors):
 
 
 def check_files_into_perforce(files):
-    import ccpp4
-    # noinspection PyBroadException
+    p4 = P4()
     try:
-        p4 = ccpp4.P4Init("")
-    except:
+        p4.connect()
+    except P4Exception:
         print "Warning: perforce connection failed, working in local mode"
         return
     # noinspection PyBroadException
     try:
         p4.run_edit(files)
-    except ccpp4.p4exceptions.P4FilesNotOnClientWarning:
-        p4.run_add("-tbinary+m", files)
+    except P4Exception as e:
+        if 'file(s) not on client' in e.value:
+            p4.run_add("-tbinary+m", files)
+        else:
+            raise
     except:
         print "Error: error checking out compiled files in Perforce"
-        sys.exit(2)
+        raise
 
 
 def fill_work_queue(files, global_options, check_mode_dir):
