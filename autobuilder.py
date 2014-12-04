@@ -53,8 +53,7 @@ def submit_with_description(p4, cl_description):
     try:
         run_p4(p4, 'reopen', '-c', cl, *COMPILED_FILE_PATHS)
         try:
-            pass
-            # run_p4(p4, 'submit', '-f', 'revertunchanged', '-c', cl)
+            run_p4(p4, 'submit', '-f', 'revertunchanged', '-c', cl)
         except P4Exception as e:
             if 'No files to submit' in e.value:
                 run_p4(p4, 'change', '-d', cl)
