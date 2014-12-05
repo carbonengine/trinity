@@ -174,32 +174,29 @@ def _worker(queue, has_errors):
             queue.task_done()
 
 
+def _ensure_files_writable(files):
+    for each in files:
+        if os.path.exists(each) and not os.access(each, os.W_OK):
+            raise RuntimeError('error: could not open file %s for writing' % each)
+
+
 def check_files_into_perforce(files):
     p4 = P4()
     try:
         p4.connect()
     except P4Exception:
-        print "Warning: perforce connection failed, working in local mode"
+        print "warning: perforce connection failed, working in local mode"
         return
-    # noinspection PyBroadException
     try:
         p4.run_edit(files)
-    except P4Exception as e:
-        print e
-        if 'error' in e.value:
-            raise
+    except P4Exception:
+        _ensure_files_writable(files)
         try:
             p4.run_add("-tbinary+m", files)
         except P4Exception as e:
             if 'warning' in e.value.lower():
                 return
-            else:
-                raise
-        else:
             raise
-    except:
-        print "Error: error checking out compiled files in Perforce"
-        raise
 
 
 def fill_work_queue(files, global_options, check_mode_dir):
