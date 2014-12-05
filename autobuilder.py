@@ -35,7 +35,7 @@ def get_msbuild_path(version='4.0'):
 
 def build_project(project, target='build', msbuild_version='4.0'):
     subprocess.check_call([get_msbuild_path(msbuild_version), '/t:' + target, '/property:BuildCores=2',
-                           '/p:Platform=Win32', '/verbosity:q', '/nologo', project])
+                           '/p:Platform=Win32', '/verbosity:m', '/nologo', project])
 
 
 def run_p4(p4, command, *args):
