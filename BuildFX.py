@@ -185,6 +185,7 @@ def check_files_into_perforce(files):
     try:
         p4.run_edit(files)
     except P4Exception as e:
+        print e
         if 'error' in e.value:
             raise
         try:
