@@ -525,6 +525,11 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		EveSOFDataHullAreaPtr areaData = (*mait);
 		hd.opaqueAreas.push_back( LoadHullAreaData( areaData ) );
 	}
+	for( auto mait = srcData->m_decalAreas.begin(); mait != srcData->m_decalAreas.end(); ++mait )
+	{
+		EveSOFDataHullAreaPtr areaData = (*mait);
+		hd.decalAreas.push_back( LoadHullAreaData( areaData ) );
+	}
 	for( auto mait = srcData->m_transparentAreas.begin(); mait != srcData->m_transparentAreas.end(); ++mait )
 	{
 		EveSOFDataHullAreaPtr areaData = (*mait);

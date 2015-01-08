@@ -172,6 +172,7 @@ public:
 		std::vector<HullSpotlightSetData> spotlightSets;
 		std::vector<HullPlaneSetData> planeSets;
 		std::vector<HullAreas> opaqueAreas;
+		std::vector<HullAreas> decalAreas;
 		std::vector<HullAreas> transparentAreas;
 		std::vector<HullAreas> additiveAreas;
 		std::vector<HullAreas> distortionAreas;

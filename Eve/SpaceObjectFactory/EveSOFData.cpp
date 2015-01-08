@@ -78,6 +78,7 @@ EveSOFDataHull::EveSOFDataHull( IRoot* lockobj ) :
 	PARENTLOCK( m_planeSets ),
 	PARENTLOCK( m_hullDecals ),
 	PARENTLOCK( m_opaqueAreas ),
+	PARENTLOCK( m_decalAreas ),
 	PARENTLOCK( m_transparentAreas ),
 	PARENTLOCK( m_additiveAreas ),
 	PARENTLOCK( m_depthAreas ),

@@ -427,6 +427,8 @@ const std::vector<EveSOFDataMgr::HullAreas>* EveSOFDNA::GetHullMeshAreas( TriBat
 	{
 	case TRIBATCHTYPE_OPAQUE:
 		return &m_hullData->opaqueAreas;
+	case TRIBATCHTYPE_DECAL:
+		return &m_hullData->decalAreas;
 	case TRIBATCHTYPE_TRANSPARENT:
 		return &m_hullData->transparentAreas;
 	case TRIBATCHTYPE_ADDITIVE:

@@ -350,6 +350,7 @@ public:
 
 	// materials
 	PEveSOFDataHullAreaVector m_opaqueAreas;
+	PEveSOFDataHullAreaVector m_decalAreas;
 	PEveSOFDataHullAreaVector m_transparentAreas;
 	PEveSOFDataHullAreaVector m_additiveAreas;
 	PEveSOFDataHullAreaVector m_depthAreas;
