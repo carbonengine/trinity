@@ -55,11 +55,6 @@ Tr2PrimaryRenderContextAL* Tr2RenderContextAL::GetPrimaryRenderContextPointer()
 	return ::GetPrimaryRenderContextPointer();
 }
 
-Tr2PrimaryRenderContextAL& Tr2RenderContextAL::GetPrimaryRenderContext()
-{
-	return *GetPrimaryRenderContextPointer();
-}
-
 void Tr2RenderContextAL::Destroy()
 {
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
