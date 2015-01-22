@@ -45,11 +45,6 @@ public:
 	// is it correctly initialized?
 	bool isValid() const;
 
-	// get standard data
-	const char* GetHullName() const;
-	const char* GetFactionName() const;
-	const char* GetRaceName() const;
-
 	// get generic data
 	const char* GetAreaShaderLocationResPath() const;
 	const char* GetDecalShaderLocationResPath() const;

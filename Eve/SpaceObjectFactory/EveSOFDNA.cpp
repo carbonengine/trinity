@@ -85,10 +85,31 @@ void EveSOFDNA::Setup( const char* dnaString, EveSOFDataMgrPtr dataMgr )
 		return;
 	}
 
+	// additional dna subparts
+	for( size_t dnaSubpart = 3; dnaSubpart < dnaParts.size(); ++dnaSubpart )
+	{
+		// split into command and args
+		std::vector<std::string> cmdAndArgs;
+		StringSplit( cmdAndArgs, dnaParts[ dnaSubpart ].c_str(), s_dnaSeperatorArg );
+		if( cmdAndArgs.size() != 2 )
+		{
+			CCP_LOGERR( "Invalid SOF DNA, incorrect command and args: %s", dnaString );
+			continue;
+		}
+
+		// get commands
+		std::vector<std::string> commandList;
+		StringSplit( commandList, cmdAndArgs[1].c_str(), s_dnaSeperatorList );
+
+		// put into map, warning: this might overwrite a similar command!
+		m_commands[cmdAndArgs[0]] = commandList;
+	}
+
 	// names
 	m_hullName = dnaParts[0];
 	m_factionName = dnaParts[1];
 	m_raceName = dnaParts[2];
+
 	// pointers
 	m_hullData = m_dataMgr->GetHullData( m_hullName.c_str() );
 	if( m_hullData == nullptr )
@@ -112,26 +133,6 @@ void EveSOFDNA::Setup( const char* dnaString, EveSOFDataMgrPtr dataMgr )
 	}
 	// generics
 	m_genericData = m_dataMgr->GetGenericData();
-
-	// additional dna subparts
-	for( size_t dnaSubpart = 3; dnaSubpart < dnaParts.size(); ++dnaSubpart )
-	{
-		// split into command and args
-		std::vector<std::string> cmdAndArgs;
-		StringSplit( cmdAndArgs, dnaParts[ dnaSubpart ].c_str(), s_dnaSeperatorArg );
-		if( cmdAndArgs.size() != 2 )
-		{
-			CCP_LOGERR( "Invalid SOF DNA, incorrect command and args: %s", dnaString );
-			continue;
-		}
-
-		// get commands
-		std::vector<std::string> commandList;
-		StringSplit( commandList, cmdAndArgs[1].c_str(), s_dnaSeperatorList );
-
-		// put into map, warning: this might overwrite a similar command!
-		m_commands[cmdAndArgs[0]] = commandList;
-	}
 }
 
 // --------------------------------------------------------------------------------
@@ -525,33 +526,6 @@ const EveSOFDataMgr::RaceBoosterData* EveSOFDNA::GetRaceBoosterData() const
 const EveSOFDataMgr::HullBoosterData* EveSOFDNA::GetHullBoosterData() const
 {
 	return &m_hullData->boosters;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Return this dna's hull name
-// --------------------------------------------------------------------------------
-const char* EveSOFDNA::GetHullName() const
-{
-	return m_hullName.c_str();
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Return this dna's faction name
-// --------------------------------------------------------------------------------
-const char* EveSOFDNA::GetFactionName() const
-{
-	return m_factionName.c_str();
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Return this dna's race name
-// --------------------------------------------------------------------------------
-const char* EveSOFDNA::GetRaceName() const
-{
-	return m_raceName.c_str();
 }
 
 // --------------------------------------------------------------------------------
