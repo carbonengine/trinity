@@ -6,8 +6,6 @@
 
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorParticleObject.h"
 
 BLUE_DEFINE( Tr2InteriorParticleObject );
@@ -26,7 +24,6 @@ const Be::ClassInfo* Tr2InteriorParticleObject::ExposeToBlue()
 		MAP_ATTRIBUTE( "emitters", m_emitters, "Particle emitters for this object", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "meshes", m_meshes, "Meshes used to render particle systems", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "transform", m_transform, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "visualizeLightProbes", m_visualizeLightProbes, "Draw lines to the nearest contributing light probes", Be::READWRITE )
 		MAP_ATTRIBUTE( "renderDebugInfo", m_renderDebugInfo, "Render particle system debug info", Be::READWRITE )
 		MAP_ATTRIBUTE( "maxParticleRadius", m_maxParticleRadius, "Max particle radius (to calculate correct bounding box)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "shBoundsMin", m_shBoundsMin, "Min bounds for SH lighting bounding box", Be::READWRITE | Be::PERSIST )
@@ -42,5 +39,3 @@ const Be::ClassInfo* Tr2InteriorParticleObject::ExposeToBlue()
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets to animate particle systems/emitters attributes", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_END()
 }
-
-#endif

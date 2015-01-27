@@ -2,11 +2,6 @@
 #ifndef Tr2SHProbeRes_h
 #define Tr2SHProbeRes_h
 
-namespace Geo
-{
-	class IGeoStream;
-}
-
 BLUE_CLASS( Tr2SHProbeRes ):
 	public BlueAsyncRes,
 	public ICacheable
@@ -14,43 +9,34 @@ BLUE_CLASS( Tr2SHProbeRes ):
 public:
 	EXPOSE_TO_BLUE();
 	Tr2SHProbeRes( IRoot* lockobj = NULL );
-	~Tr2SHProbeRes();
 
 	//////////////////////////////////////////////////////////////////////////
 	// ICacheable
 	bool IsMemoryUsageKnown();
 	size_t GetMemoryUsage();
 
-	Enlighten::RadProbeSetCore* GetSHLightProbes();
-	size_t GetAdditionalProbeSetCount() const;
-	bool GetAdditionalProbeSet(size_t index, Enlighten::RadProbeSetCore* &set, int &resolutionX, int &resolutionY, int &resolutionZ, Matrix &transform);
+	size_t GetProbeSetCount() const;
+	bool GetProbeSet( size_t index, int &resolutionX, int &resolutionY, int &resolutionZ, Matrix &transform, const Matrix*& shData );
 	void ReleaseProbeSet();
-	int GetXResolution();
-	int GetYResolution();
-	int GetZResolution();
 
-	static bool WriteSHProbeSetToDisk( const Enlighten::RadProbeSetCore* probeSet, Geo::IGeoStream& stream, int xCount, int yCount, int zCount );
-
-	// Version number stored in files
-	static const Geo::u32 s_versionNumber;
+	static const uint32_t s_versionNumber;
 protected:
 	LoadingResult DoLoad();
 	bool DoPrepare();
 
 
 protected:
-	uint32_t m_dataSize;
-	unsigned m_probeSize;
+	CcpMallocBuffer m_data;
 	struct ProbeSet
 	{
-		Enlighten::RadProbeSetCore* m_probeSet;
-		int	m_xRes;
-		int m_yRes;
-		int m_zRes;
+		uint32_t m_xRes;
+		uint32_t m_yRes;
+		uint32_t m_zRes;
 		Matrix m_transform;
+		Matrix m_shData[1];
 	};
-	std::vector<ProbeSet> m_probeSets;
+	std::vector<ProbeSet*> m_probeSets;
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2SHProbeRes );
-#endif //Tr2SHProbeRes_h
+#endif

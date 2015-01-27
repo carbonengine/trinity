@@ -2,11 +2,6 @@
 #ifndef TriGrannyRes_H
 #define TriGrannyRes_H
 
-namespace Umbra
-{
-    class MeshModel;
-}
-
 
 #if BLUE_WITH_PYTHON
 class GrannyMaterialWrapper
@@ -72,24 +67,11 @@ public:
 	// Weigh and sum the blend shapes for the given mesh index and with the given weights, but instead of applying the delta
 	// to the stored granny vertices, return the deltas explicitly in deltaXyz.
 	bool GetBlendDeltas( unsigned meshIx, const std::vector<float>& weights, std::vector<float>& deltaXyz );
-
-    static Umbra::MeshModel* CreateUmbraMeshFromGrannyMesh( granny_mesh* mesh, bool clockwise = false );
 	
 	bool SaveToGr2( const std::string& path );
-	bool ReorderEnlightenMeshes( void );
 	bool CreateShadowMesh( );
 
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-	bool CreateEnlightenPackedGeometry( const std::string& filename, unsigned guid, bool forceRebuild = false, float enlightenPixelSize = 1.0f );
-	bool ProjectEnlightenGeometry( const std::string& filename, TriGrannyRes &targetGeometry, unsigned guid, bool forceRebuild = false, float enlightenPixelSize = 1.0f );
-#endif
-
-	void SetGeometryHashesFromDatetimeAndGuid( unsigned int& hash1, unsigned int& hash2, unsigned guid );
-	bool HasExtendedData() const;
-	float GetEnlightenPixelSize( void ) const;
-	bool HasValidEnlightenData() const;
 	float GetMeshSurfaceArea( int meshIx ) const;
-	int GetEnlightenGuid( ) const;
 
 	int GetModelCount();
 	std::string GetModelName( unsigned int ix );
@@ -141,10 +123,6 @@ protected:
     virtual bool DoPrepare();
 
 	void CollectGrannyMaterials();
-
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-	Enlighten::IPrecompInputMesh* CreateEnlightenInputMesh( int meshIx, granny_file_info* fi, bool copyChartUVFromPackedGeometry );
-#endif
 
 	bool BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights  , void* pVertexData, unsigned int vertexDataSize, const NameToWeightMap* nameToWeight, bool deltaOnly );
 protected:

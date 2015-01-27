@@ -6,14 +6,11 @@
 
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorParticleObject.h"
 #include "Particle/ITr2GenericEmitter.h"
 #include "Particle/Tr2ParticleSystem.h"
 #include "Utilities/BoundingSphere.h"
 #include "Tr2InteriorCell.h"
-#include "ITr2UmbraUserData.h"
 #include "Tr2Mesh.h"
 #include "TriLineSet.h"
 #include "Curves/TriCurveSet.h"
@@ -29,20 +26,15 @@ Tr2InteriorParticleObject::Tr2InteriorParticleObject( IRoot* lockobj )
 	m_shBoundsMax( 0.f, 0.f, 0.f ),
 	m_depthOffset( 0.f ),
 	m_isVisible( true ),
-	m_shSampleIndex( -1 ),
-	m_visualizeLightProbes( false ),
-	m_umbraModel( NULL ),
 	m_renderDebugInfo( false ),
 	PARENTLOCK( m_curveSets )
 {
 	D3DXMatrixIdentity( &m_transform );
-	D3DXMatrixIdentity( &m_invBoundingBoxScale );
 	D3DXMatrixIdentity( &m_mirrorToWorldMatrix );
 }
 
 Tr2InteriorParticleObject::~Tr2InteriorParticleObject()
 {
-	ClearUmbra();
 }
 
 // --------------------------------------------------------------------------------------
@@ -79,26 +71,6 @@ void Tr2InteriorParticleObject::SetVisibility( bool bVisible )
 bool Tr2InteriorParticleObject::IsVisible( void ) const
 {
 	return m_isVisible;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Implements ITriDeviceResource interface. Does nothing.
-// Arguments:
-//   visibleLights - Number of lights affecting this object
-// --------------------------------------------------------------------------------------
-void Tr2InteriorParticleObject::SetVisibleLightCount( int visibleLights )
-{
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Implements ITriDeviceResource interface. Does nothing.
-// Arguments:
-//   visibleLightSet - Set of lights affecting this object
-// --------------------------------------------------------------------------------------
-void Tr2InteriorParticleObject::SetVisibleLightSet( const Tr2InteriorLightSet& visibleLightSet )
-{
 }
 
 // --------------------------------------------------------------------------------------
@@ -153,9 +125,9 @@ Tr2PerObjectData* Tr2InteriorParticleObject::GetPerObjectDataWithPerInstanceLigh
 	perObjectPSBuffer.shadowCaster0.y = zFar * zNear / ( zNear - zFar );
 
 	// Copy the SH matrices
-	ZeroMemory( &perObjectPSBuffer.redMat, sizeof( Matrix ) );
-	ZeroMemory( &perObjectPSBuffer.greenMat, sizeof( Matrix ) );
-	ZeroMemory( &perObjectPSBuffer.blueMat, sizeof( Matrix ) );
+	memset( &perObjectPSBuffer.redMat, 0, sizeof( Matrix ) );
+	memset( &perObjectPSBuffer.greenMat, 0, sizeof( Matrix ) );
+	memset( &perObjectPSBuffer.blueMat, 0, sizeof( Matrix ) );
 
 	D3DXMatrixTranspose( &perObjectPSBuffer.redMat, &m_redProbeMatrix );
 	D3DXMatrixTranspose( &perObjectPSBuffer.greenMat, &m_greenProbeMatrix );
@@ -175,26 +147,6 @@ Tr2PerObjectData* Tr2InteriorParticleObject::GetPerObjectDataWithPerInstanceLigh
 		( *it )->UpdateViewDependentData( m_mirrorToWorldMatrix );
 	}
 	return data;
-}
-
-// --------------------------------------------------------------------------------------
-//  Description:
-//    Gets per-object data for the object using a per-instance light-set override and 
-//    an arbitrary object-to-world matrix.  
-//  Arguments:
-//    accumulator -         The batch accumulator used to allocate memory for per-object data
-//    lightSet -            The set of lights illuminating this object
-//    objectToWorldMatrix - The transformation matrix used to position this object 
-//                          in world coordinates
-//  Return Value:
-//    The allocated per-object data, or NULL if the memory allocation failed.
-// --------------------------------------------------------------------------------------
-Tr2PerObjectData* Tr2InteriorParticleObject::GetPerObjectDataForPrePass(
-	ITriRenderBatchAccumulator* accumulator,
-	const Matrix& objectToWorldMatrix
-)
-{
-	return GetPerObjectDataWithPerInstanceLighting( accumulator, NULL, objectToWorldMatrix, Tr2Renderer::GetIdentityTransform() );
 }
 
 namespace
@@ -419,29 +371,6 @@ void Tr2InteriorParticleObject::SetSHLightingSolver( ITr2InteriorSHLightingSolve
 
 // -------------------------------------------------------------
 // Description:
-//   Returns bounding sphere for this object.
-// Arguments:
-//   sphere (out) - Bounding sphere (center.xyz, radius)
-// Return value:
-//   true If the bounding sphere is ready
-//   false Otherwise
-// -------------------------------------------------------------
-bool Tr2InteriorParticleObject::GetBoundingSphere( Vector4& sphere ) const
-{
-	Vector3 minBounds, maxBounds;
-	if( !GetLocalBoundingBox( minBounds, maxBounds ) )
-	{
-		return false;
-	}
-	Vector3 center = ( minBounds + maxBounds ) * 0.5f;
-	Vector3 size = maxBounds - minBounds;
-	sphere = Vector4( center.x, center.y, center.z, D3DXVec3Length( &size ) * 0.5f );
-	BoundingSphereTransform( m_transform, sphere );
-	return true;
-}
-
-// -------------------------------------------------------------
-// Description:
 //   Returns bounding box in local space for this object.
 // Arguments:
 //   minBounds (out) - Bounding box min bounds
@@ -517,7 +446,7 @@ bool Tr2InteriorParticleObject::IsBoundingBoxReady( void ) const
 
 // -------------------------------------------------------------
 // Description:
-//   Returns position of Enlighten SH probe in world space.
+//   Returns position of SH probe in world space.
 // -------------------------------------------------------------
 bool Tr2InteriorParticleObject::GetShProbePosition( Vector3& position ) const
 {
@@ -594,22 +523,7 @@ Matrix& Tr2InteriorParticleObject::GetBlueLightProbeMatrix( void )
 
 // -------------------------------------------------------------
 // Description:
-//   Does the scene need to visualize SH probes affecting this
-//   object?
-// Return value:
-//   true If the scene needs to visualize SH probes affecting this
-//        object
-//   false Otherwise
-// -------------------------------------------------------------
-bool Tr2InteriorParticleObject::DoVisualizeLightProbes( void ) const
-{
-	return m_visualizeLightProbes;
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Called when object is added to the scene. Updates Umbra 
-//   objects.
+//   Called when object is added to the scene. 
 // Return value:
 //   true If the object has valid bounds and can be added to a cell
 //   false Otherwise
@@ -621,32 +535,15 @@ bool Tr2InteriorParticleObject::AddToScene( Tr2ApexScene *apexScene )
 		return false;
 	}
 
-	ClearUmbra();
-	RebuildVolume();
-
 	return true;
 }
 
 // -------------------------------------------------------------
 // Description:
-//   Called when object is removed from the scene. Clears Umbra 
-//   objects.
+//   Called when object is removed from the scene. 
 // -------------------------------------------------------------
 void Tr2InteriorParticleObject::RemoveFromScene( void )
 {
-	ClearUmbra();
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Query if the dynamic object has valid Umbra objects.
-// Return value:
-//   true If Umbra objects are ready
-//   false Otherwise
-// -------------------------------------------------------------
-bool Tr2InteriorParticleObject::IsUmbraReady( void ) const
-{
-	return m_umbraModel != NULL;
 }
 
 // -------------------------------------------------------------
@@ -682,52 +579,7 @@ bool Tr2InteriorParticleObject::TestCellIntersectionAndAdd( Tr2InteriorCell* cel
 	// If we got an intersection, add to the cell
 	if( intersects )
 	{
-		Matrix boundingBoxScale;
-		{
-			Vector3 minBounds, maxBounds;
-			GetLocalBoundingBox( minBounds, maxBounds );
-			Vector3 center = ( minBounds + maxBounds ) * 0.5f;
-			Vector3 size = maxBounds - minBounds;
-			D3DXMatrixScaling( &boundingBoxScale, size.x, size.y, size.z );
-			boundingBoxScale.GetTranslation() = center;
-			D3DXMatrixInverse( &m_invBoundingBoxScale, NULL, &boundingBoxScale );
-		}
-
-		if( cell->AddDynamic( this ) )
-		{
-			Umbra::Object* object = Umbra::Object::create( m_umbraModel );
-			object->setCell( cell->GetUmbraCell() );
-
-			object->setUserPointer( CONVERT_TO_UMBRA_USER_DATA( this ) );
-			m_umbraObjects.push_back( object );
-
-			// Add to the Umbra cell
-			object->setCell( cell->GetUmbraCell() );
-
-			Matrix transformInv;
-			D3DXMatrixInverse( &transformInv, NULL, &cell->GetWorldTransform() );
-
-			Matrix m = boundingBoxScale * m_transform * transformInv;
-
-			object->setObjectToCellMatrix( AS_UMBRA_MATRIX( m ) );
-		}
-		else
-		{
-			for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-				 it != m_umbraObjects.end(); ++it )
-			{
-				if( ( *it )->getCell() == cell->GetUmbraCell() )
-				{
-					Matrix transformInv;
-					D3DXMatrixInverse( &transformInv, NULL, &cell->GetWorldTransform() );
-
-					Matrix m = boundingBoxScale * m_transform * transformInv;
-
-					( *it )->setObjectToCellMatrix( AS_UMBRA_MATRIX( m ) );
-				}
-			}
-
-		}
+		cell->AddDynamic( this );
 	}
 	else
 	{
@@ -736,81 +588,6 @@ bool Tr2InteriorParticleObject::TestCellIntersectionAndAdd( Tr2InteriorCell* cel
 
 	// Return the result of the intersection test
 	return intersects;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Blah.  Too hungover to write decent documentation.  FML.
-// --------------------------------------------------------------------------------------
-void Tr2InteriorParticleObject::CellRemoved( Tr2InteriorCell* cell )
-{
-	// Bail out if the cell is NULL
-	if( !cell )
-	{
-		return;
-	}
-
-	// Get the Umbra cell from the interior cell
-	Umbra::Cell* ucell = cell->GetUmbraCell();
-	if( !ucell )
-	{
-		return;
-	}
-
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-		 it != m_umbraObjects.end(); )
-	{
-		if( ucell == ( *it )->getCell() )
-		{
-			( *it )->release();
-			it = m_umbraObjects.erase( it );		
-		}
-		else
-		{
-			++it;
-		}
-	}
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Creates or updates an Umbra object and adds it to specified
-//   cell. Used for doors by physical portals.
-// Arguments:
-//   cell - The cell to add object to
-//   object - Umbra object that supposed to represent this dynamic
-// -------------------------------------------------------------
-void Tr2InteriorParticleObject::UpdateUmbraObject( Umbra::Cell* cell, Umbra::Object*& object ) const
-{
-	Vector3 minBounds, maxBounds;
-	if( !GetLocalBoundingBox( minBounds, maxBounds ) )
-	{
-		// Our bounding box is not ready
-		return;
-	}
-
-	Matrix boundingBoxScale;
-	{
-		Vector3 center = ( minBounds + maxBounds ) * 0.5f;
-		Vector3 size = ( maxBounds - minBounds ) * 0.5f;
-		D3DXMatrixScaling( &boundingBoxScale, size.x, size.y, size.z );
-		boundingBoxScale.GetTranslation() = center;
-	}
-
-	if( object == NULL )
-	{
-		object = Umbra::Object::create( m_umbraModel );
-		object->setCell( cell );
-		object->setUserPointer( CONVERT_TO_UMBRA_USER_DATA( GetRawRoot() ) );
-	}
-
-	Matrix transformInv;
-	cell->getCellToWorldMatrix( AS_UMBRA_MATRIX( transformInv ) );
-	D3DXMatrixInverse( &transformInv, NULL, &transformInv );
-
-	Matrix m = boundingBoxScale * m_transform * transformInv;
-
-	object->setObjectToCellMatrix( AS_UMBRA_MATRIX( m ) );
 }
 
 // -------------------------------------------------------------
@@ -827,15 +604,6 @@ bool Tr2InteriorParticleObject::IsDirty( void ) const
 
 // -------------------------------------------------------------
 // Description:
-//   Called after a dirty object was re-added to the scene. Does
-//   nothing.
-// -------------------------------------------------------------
-void Tr2InteriorParticleObject::ClearDirty( void )
-{
-}
-
-// -------------------------------------------------------------
-// Description:
 //   Directly set the bounds dirty flag. Does
 //   nothing.
 // Arguments:
@@ -843,66 +611,6 @@ void Tr2InteriorParticleObject::ClearDirty( void )
 // -------------------------------------------------------------
 void Tr2InteriorParticleObject::SetDirtyFlag( bool isDirty )
 {
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Query if the object acts as a background object. Particle
-//   systems don't support that.
-// Return value:
-//   false Always
-// -------------------------------------------------------------
-bool Tr2InteriorParticleObject::IsBackgroundProxy( void ) const
-{
-	return false;
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Add an object as a background object. Particle
-//   systems don't support that.
-// Arguments:
-//   cell - Root cell to add an object to
-// -------------------------------------------------------------
-void Tr2InteriorParticleObject::AddToCellAsBackgroundProxy( Umbra::Cell* cell )
-{
-}
-
-// --------------------------------------------------------------------------------------
-//  Description:
-//    Adds the object to the root cell. This happens as a fallback when an object
-//    happens to be outside of any normal cell.
-//  Arguments:
-//    cell - the root cell
-// --------------------------------------------------------------------------------------
-void Tr2InteriorParticleObject::AddToRootCell( Umbra::Cell* cell )
-{
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-		it != m_umbraObjects.end(); )
-	{
-		if( m_umbraObjects.size() <= 1 )
-		{
-			break;
-		}
-		( *it )->setCell( NULL );
-		( *it )->release();
-		( *it ) = NULL;
-		it = m_umbraObjects.erase( it );
-	}
-	if( m_umbraObjects.empty() )
-	{
-		Umbra::Object* object = Umbra::Object::create( m_umbraModel );
-		object->setUserPointer( CONVERT_TO_UMBRA_USER_DATA( this ) );
-		m_umbraObjects.push_back( object );
-	}
-	m_umbraObjects.front()->setCell( cell );
-	m_umbraObjects.front()->setObjectToCellMatrix( AS_UMBRA_MATRIX( m_transform ) );
-
-	m_redProbeMatrix = m_greenProbeMatrix = m_blueProbeMatrix = Matrix( 
-		0.f, 0.f, 0.f, 0.f, 
-		0.f, 0.f, 0.f, 0.f, 
-		0.f, 0.f, 0.f, 0.f, 
-		0.5f, 0.5f, 0.5f, 0.5f );
 }
 
 // -------------------------------------------------------------
@@ -926,50 +634,6 @@ bool Tr2InteriorParticleObject::IsShadowCaster( void ) const
 void Tr2InteriorParticleObject::SetLOD( const TriFrustum* frustum )
 {
 	// TODO_delder: implement LOD?
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Destroys Umbra objects.
-// -------------------------------------------------------------
-void Tr2InteriorParticleObject::ClearUmbra()
-{
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-		 it != m_umbraObjects.end(); ++it )
-	{
-		( *it )->setCell( NULL );
-		( *it )->release();
-		( *it ) = NULL;
-	}
-	m_umbraObjects.clear();
-
-	if( m_umbraModel )
-	{
-		m_umbraModel->release();
-		m_umbraModel = NULL;
-	}
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Re-create Umbra objects.
-// -------------------------------------------------------------
-void Tr2InteriorParticleObject::RebuildVolume()
-{
-	if( m_umbraModel )
-	{
-		m_umbraModel->release();
-		m_umbraModel = NULL;
-	}
-
-	// everything is there, so use bounding box
-	m_umbraModel = ( Umbra::Model* )Umbra::OBBModel::create( AS_UMBRA_VECTOR3( Vector3( -0.5f, -0.5f, -0.5f ) ), AS_UMBRA_VECTOR3( Vector3( 0.5f, 0.5f, 0.5f ) ) );
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-		 it != m_umbraObjects.end(); ++it )
-	{
-		( *it )->setTestModel( m_umbraModel );
-		( *it )->setUserPointer( CONVERT_TO_UMBRA_USER_DATA( this ) );
-	}
 }
 
 // -------------------------------------------------------------
@@ -1000,4 +664,16 @@ AxisAlignedBoundingBox Tr2InteriorParticleObject::GetBoundingBoxInWorldSpace() c
 	return result;
 }
 
-#endif
+#include "TriFrustum.h"
+
+bool Tr2InteriorParticleObject::IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const
+{
+	Vector3 minBounds, maxBounds;
+	if( !GetWorldBoundingBox( minBounds, maxBounds ) )
+	{
+		return false;
+	}
+	objectToWorld = m_transform;
+	return frustum.IsBoxVisible( minBounds, maxBounds );
+}
+

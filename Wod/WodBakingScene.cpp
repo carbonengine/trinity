@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "WodBakingScene.h"
 #include "Tr2SkinnedObject.h"
 
@@ -36,7 +34,8 @@ static void PopulatePerFramePSData( Tr2PerFramePSData &data )
 	memset( &data, 0, sizeof( Tr2PerFramePSData ) );
 
 	// column_major for shaders
-	D3DXMatrixTranspose( &data.ViewProjectionMat, &Matrix( Tr2Renderer::GetViewTransform() * Tr2Renderer::GetProjectionTransform() ) );
+    Matrix viewProj = Tr2Renderer::GetViewTransform() * Tr2Renderer::GetProjectionTransform();
+	D3DXMatrixTranspose( &data.ViewProjectionMat, &viewProj );
 	// attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
 	data.ViewInverseTransposeMat = *gTriDev->GetInvViewMatrix();
 
@@ -146,4 +145,3 @@ void WodBakingScene::Update( Be::Time realTime, Be::Time simTime )
 	}
 }
 
-#endif

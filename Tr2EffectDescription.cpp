@@ -18,6 +18,23 @@ Tr2EffectDescription::Tr2EffectDescription()
 {
 }
 
+namespace
+{
+
+template <typename A, typename B>
+void CastToType( A& a, B b )
+{
+	a = A( b );
+}
+
+template <typename B>
+void CastToType( bool& a, B b )
+{
+	a = b != 0;
+}
+
+}
+
 bool Tr2EffectDescription::Read( const void* data, 
 								 size_t dataSize, 
 								 unsigned version,
@@ -38,7 +55,7 @@ bool Tr2EffectDescription::Read( const void* data,
 		CCP_LOGERR( "Unexpected end of file while reading effect \"%s\"", effectName );		\
 		return false;																		\
 	}																						\
-	value = valueType( *reinterpret_cast<const storeType*>( buffer ) );						\
+	CastToType( value, *reinterpret_cast<const storeType*>( buffer ) );						\
 	buffer += sizeof( storeType );
 
 

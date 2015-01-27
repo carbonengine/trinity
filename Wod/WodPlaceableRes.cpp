@@ -1,18 +1,14 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "WodPlaceableRes.h"
 #include "TriRenderBatch.h"
 #include "Resources/TriGrannyRes.h"
 #include "Tr2MeshArea.h"
-#include "UmbraTypes.h"
 #include "Utilities/BoundingBox.h"
 
 WodPlaceableRes::WodPlaceableRes( IRoot* lockobj ) : 
 	m_farFadeDistance( 100.0f*100.0f ),
 	m_nearFadeDistance( 50.0f*50.0f  ),
-	m_isBackgroundProxy( false ),
 	m_isShadowCaster( true ),
     m_bIsReady(false),
     PARENTLOCK( m_minBounds ),
@@ -43,8 +39,8 @@ bool WodPlaceableRes::IsReady()
     {
         return true;
     }
-    Umbra::Vector3 myMin;
-    Umbra::Vector3 myMax;
+    Vector3 myMin;
+    Vector3 myMax;
 
     BoundingBoxInitialize( myMin, myMax );
     Vector3 meshMin;
@@ -58,8 +54,8 @@ bool WodPlaceableRes::IsReady()
     BoundingBoxUpdate( myMin, myMax, meshMin );
     BoundingBoxUpdate( myMin, myMax, meshMax );
 
-    m_minBounds.SetVector( (Vector3*)&myMin );
-    m_maxBounds.SetVector( (Vector3*)&myMax );
+    m_minBounds.SetVector( &myMin );
+    m_maxBounds.SetVector( &myMax );
 
     m_bIsReady = true;
 
@@ -75,4 +71,3 @@ bool WodPlaceableRes::HasTransparency()
     return false;
 }
 
-#endif

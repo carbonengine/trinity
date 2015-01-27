@@ -1,60 +1,12 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2SHProbeRes.h"
-#include "TriEnlightenStream.h"
 
 
-const Geo::u32 Tr2SHProbeRes::s_versionNumber = 20110118;
+const uint32_t Tr2SHProbeRes::s_versionNumber = 2;
 
-Tr2SHProbeRes::Tr2SHProbeRes( IRoot* lockobj ):
-	m_dataSize( 0 ),
-	m_probeSize( 0 )
+Tr2SHProbeRes::Tr2SHProbeRes( IRoot* lockobj )
 {
-}
-
-Tr2SHProbeRes::~Tr2SHProbeRes()
-{
-	ReleaseProbeSet();
-}
-
-int Tr2SHProbeRes::GetXResolution()
-{
-	if ( m_probeSets.size() == 0 )
-	{
-		return 0;
-	}
-	return m_probeSets[0].m_xRes;
-}
-
-int Tr2SHProbeRes::GetYResolution()
-{
-	if ( m_probeSets.size() == 0 )
-	{
-		return 0;
-	}
-	return m_probeSets[0].m_yRes;
-}
-
-int Tr2SHProbeRes::GetZResolution()
-{
-	if ( m_probeSets.size() == 0 )
-	{
-		return 0;
-	}
-	return m_probeSets[0].m_zRes;
-}
-
-void Tr2SHProbeRes::ReleaseProbeSet()
-{
-	for( std::vector<ProbeSet>::iterator it = m_probeSets.begin(); it != m_probeSets.end(); ++it )
-	{
-		using namespace Enlighten;
-		DeleteRadProbeSetCore( it->m_probeSet );
-	}	
-	m_probeSets.clear();
-	m_probeSize = 0;
 }
 
 bool Tr2SHProbeRes::IsMemoryUsageKnown()
@@ -64,84 +16,37 @@ bool Tr2SHProbeRes::IsMemoryUsageKnown()
 
 size_t Tr2SHProbeRes::GetMemoryUsage()
 {
-	return m_dataSize + m_probeSize;
-}
-
-Enlighten::RadProbeSetCore* ProtectedReadRadProbeSetCore( GeoMemoryStream& stream, const wchar_t* path )
-{
-	Enlighten::RadProbeSetCore* data = nullptr;
-	__try
-	{
-		data = Enlighten::ReadRadProbeSetCore( stream );
-	}
-	__except( EXCEPTION_EXECUTE_HANDLER )
-	{ 
-		CCP_LOGERR( "Files might be corrupt - try running the repair tool" );
-		CCP_LOGERR( "Exception caught while reading RadProbeSetCore from file %S", path );
-	}
-
-	return data;
+	return m_data.size();
 }
 
 BlueAsyncRes::LoadingResult Tr2SHProbeRes::DoLoad()
 {
+	m_probeSets.clear();
+
 	void* data;
 	if( !m_dataStream->LockData( &data, 0 ) )
 	{
 		return LR_FAILED;
 	}
 
-	m_dataSize = (unsigned int)m_dataStream->GetSize();
+	auto dataSize = m_dataStream->GetSize();
 
-	ReleaseProbeSet();
-
-	m_dataSize = (unsigned int)m_dataStream->GetSize();
-	GeoMemoryStream stream = GeoMemoryStream( m_dataSize, (BYTE*)data );
-
-	Geo::u32 version = 0;
-	stream.Read( &version, sizeof( version ), 1 );
-	if( version != s_versionNumber )
-	{
-		CCP_LOGERR( "SH resource %S has incorrect version number %u (current version is %u)", GetPath(), version, s_versionNumber );
-		return LR_FAILED;
-	}
-
-	m_probeSize = 0;
-
-	ProbeSet probeSet;
-	stream.Read( &probeSet.m_xRes, sizeof(int), 1 );
-	stream.Read( &probeSet.m_yRes, sizeof(int), 1 );
-	stream.Read( &probeSet.m_zRes, sizeof(int), 1 );
-
-	probeSet.m_probeSet = ProtectedReadRadProbeSetCore( stream, m_path.c_str() );
-	if( !probeSet.m_probeSet )
+	if( dataSize < 2 * sizeof( uint32_t ) || static_cast<uint32_t*>( data )[0] != s_versionNumber )
 	{
 		return LR_FAILED;
 	}
 
-	m_probeSize += sizeof( probeSet ) + probeSet.m_probeSet->m_ProbeSetPrecomp.m_Length;
+	m_data.resize( "Tr2SHProbeRes::m_data", dataSize );
+	memcpy( m_data.get(), data, dataSize );
 
-	m_probeSets.push_back(probeSet);
-
-	while ( !stream.IsEof())
+	uint32_t count = static_cast<uint32_t*>( data )[1];
+	auto* setData = m_data.get() + 2 * sizeof( uint32_t );
+	for( uint32_t i = 0; i < count; ++i )
 	{
-		Geo::u32 version = 0;
-		ProbeSet probeSet;
-		stream.Read( &probeSet.m_transform, sizeof(Matrix), 1 );
-		stream.Read( &version, sizeof( version ), 1 );
-		stream.Read( &probeSet.m_xRes, sizeof(int), 1 );
-		stream.Read( &probeSet.m_yRes, sizeof(int), 1 );
-		stream.Read( &probeSet.m_zRes, sizeof(int), 1 );
+		ProbeSet* set = reinterpret_cast<ProbeSet*>( setData );
+		m_probeSets.push_back( set );
+		setData += sizeof( ProbeSet ) + ( set->m_xRes * set->m_yRes * set->m_zRes - 1 ) * sizeof( Matrix );
 
-		probeSet.m_probeSet = ProtectedReadRadProbeSetCore( stream, m_path.c_str() );
-		if( !probeSet.m_probeSet )
-		{
-			return LR_FAILED;
-		}
-
-		m_probeSets.push_back(probeSet);
-
-		m_probeSize += sizeof( probeSet ) + probeSet.m_probeSet->m_ProbeSetPrecomp.m_Length;
 	}
 
 	return LR_SUCCESS;
@@ -152,46 +57,22 @@ bool Tr2SHProbeRes::DoPrepare()
 	return true;
 }
 
-Enlighten::RadProbeSetCore* Tr2SHProbeRes::GetSHLightProbes()
+size_t Tr2SHProbeRes::GetProbeSetCount() const
 {
-	if( m_probeSets.size() == 0 )
-	{
-		return NULL;
-	}
-	return m_probeSets[0].m_probeSet; 
+	return m_probeSets.size();
 }
 
-size_t Tr2SHProbeRes::GetAdditionalProbeSetCount() const
+bool Tr2SHProbeRes::GetProbeSet( size_t index, int &resolutionX, int &resolutionY, int &resolutionZ, Matrix &transform, const Matrix*& shData )
 {
-	if( m_probeSets.size() == 0 )
-	{
-		return 0;
-	}
-	return m_probeSets.size()-1;
-}
-
-bool Tr2SHProbeRes::GetAdditionalProbeSet( size_t index, Enlighten::RadProbeSetCore* &set, int &resolutionX, int &resolutionY, int &resolutionZ, Matrix &transform )
-{
-	if( m_probeSets.size() <= index + 1 )
+	if( m_probeSets.size() <= index )
 	{
 		return false;
 	}
-	set = m_probeSets[index + 1].m_probeSet;
-	resolutionX = m_probeSets[index + 1].m_xRes;
-	resolutionY = m_probeSets[index + 1].m_yRes;
-	resolutionZ = m_probeSets[index + 1].m_zRes;
-	transform = m_probeSets[index + 1].m_transform;
+	auto set = m_probeSets[index];
+	resolutionX = set->m_xRes;
+	resolutionY = set->m_yRes;
+	resolutionZ = set->m_zRes;
+	transform = set->m_transform;
+	shData = set->m_shData;
 	return true;
 }
-
-bool Tr2SHProbeRes::WriteSHProbeSetToDisk( const Enlighten::RadProbeSetCore* probeSet, Geo::IGeoStream& stream, int xCount, int yCount, int zCount )
-{ 
-	stream.Write( &s_versionNumber, sizeof( s_versionNumber ), 1 );
-	stream.Write( &xCount, sizeof(int), 1 );
-	stream.Write( &yCount, sizeof(int), 1 );
-	stream.Write( &zCount, sizeof(int), 1 );
-
-	return Enlighten::WriteRadProbeSetCore( probeSet, stream, Geo::GEO_PLATFORM_WINDOWS );
-}
-
-#endif

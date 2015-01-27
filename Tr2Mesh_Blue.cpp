@@ -134,13 +134,5 @@ const Be::ClassInfo* Tr2Mesh::ExposeToBlue()
         MAP_METHOD( "GetAreas", PyGetAreas, "" );
 		MAP_METHOD_AND_WRAP( "GetAreasCount", GetAreasCount, "" );
 
-		MAP_METHOD_AND_WRAP( 
-			"AddGeometryPreparedCallback", 
-			AddGeometryPreparedCallback, 
-			"Queues a callback to be called when the mesh geometry is Prepared.  Once the callback has been issued it is removed from the queue."
-			"\n"
-			"\nArguments:"
-			"\ncallback - A callable object to execute when the mesh has been prepared")
-
     EXPOSURE_CHAINTO( Tr2MeshBase )
 }

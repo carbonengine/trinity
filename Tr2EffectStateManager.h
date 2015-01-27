@@ -57,7 +57,6 @@ public:
 		RM_LIGHT,
         RM_ERASE,
         RM_PREPASS_COLOR,
-		RM_VIS_WIREFRAME, // For enlighten target mesh visualisation in Jessica
 
 		RM_COUNT
 	};

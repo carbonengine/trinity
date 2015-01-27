@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorRenderBatch.h"
 #include "Resources/TriGeometryRes.h"
 
@@ -54,9 +52,9 @@ void Tr2InteriorStencilMaskBatch::SubmitGeometry( Tr2RenderContext& renderContex
 		renderContext.SetRenderState( RS_STENCILREF, (uint32_t)m_stencilTest );
 		renderContext.SetRenderState( RS_STENCILMASK, 0xff );
 
-		renderContext.SetRenderState( RS_STENCILFAIL, D3DSTENCILOP_KEEP );
-		renderContext.SetRenderState( RS_STENCILZFAIL, D3DSTENCILOP_KEEP );
-		renderContext.SetRenderState( RS_STENCILPASS, D3DSTENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILFAIL, STENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILZFAIL, STENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILPASS, STENCILOP_KEEP );
 
 		return;
 	}
@@ -77,8 +75,8 @@ void Tr2InteriorStencilMaskBatch::SubmitGeometry( Tr2RenderContext& renderContex
 		renderContext.SetRenderState( RS_STENCILREF, (uint32_t)m_stencilTest );
 		renderContext.SetRenderState( RS_STENCILMASK, 0xff );
 
-		renderContext.SetRenderState( RS_STENCILFAIL, D3DSTENCILOP_KEEP );
-		renderContext.SetRenderState( RS_STENCILZFAIL, D3DSTENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILFAIL, STENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILZFAIL, STENCILOP_KEEP );
 		renderContext.SetRenderState( RS_STENCILPASS, m_stencilPassState );
 	}
 
@@ -106,9 +104,9 @@ void Tr2InteriorStencilMaskBatch::SubmitGeometry( Tr2RenderContext& renderContex
 		renderContext.SetRenderState( RS_STENCILREF, (uint32_t)m_stencilWrite );
 		renderContext.SetRenderState( RS_STENCILMASK, 0xff );
 
-		renderContext.SetRenderState( RS_STENCILFAIL, D3DSTENCILOP_KEEP );
-		renderContext.SetRenderState( RS_STENCILZFAIL, D3DSTENCILOP_KEEP );
-		renderContext.SetRenderState( RS_STENCILPASS, D3DSTENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILFAIL, STENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILZFAIL, STENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILPASS, STENCILOP_KEEP );
 
 		Tr2Viewport viewport;
 		renderContext.GetViewport( viewport );
@@ -138,9 +136,9 @@ void Tr2InteriorStencilMaskBatch::SubmitGeometry( Tr2RenderContext& renderContex
 		renderContext.SetRenderState( RS_STENCILREF, (uint32_t)m_stencilWrite );
 		renderContext.SetRenderState( RS_STENCILMASK, 0xff );
 
-		renderContext.SetRenderState( RS_STENCILFAIL, D3DSTENCILOP_KEEP );
-		renderContext.SetRenderState( RS_STENCILZFAIL, D3DSTENCILOP_KEEP );
-		renderContext.SetRenderState( RS_STENCILPASS, D3DSTENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILFAIL, STENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILZFAIL, STENCILOP_KEEP );
+		renderContext.SetRenderState( RS_STENCILPASS, STENCILOP_KEEP );
 
 		Tr2Viewport viewport;
 		renderContext.GetViewport( viewport );
@@ -161,7 +159,7 @@ void Tr2InteriorBackgroundCubemapBatch::SubmitGeometry( Tr2RenderContext& render
 	// TODO, Replace this with new shaders 
 	uint32_t oldCull;
 	renderContext.GetRenderState( RS_CULLMODE, &oldCull );
-	renderContext.SetRenderState( RS_CULLMODE, D3DCULL_NONE );
+	renderContext.SetRenderState( RS_CULLMODE, CULLMODE_NONE );
 	Tr2Renderer::DrawCameraSpaceScreenQuad( this->GetShaderStateInterface() , this->GetShaderMaterialInterface() );
 	renderContext.SetRenderState( RS_ZENABLE, TRUE );
 	renderContext.SetRenderState( RS_ZWRITEENABLE, TRUE );
@@ -169,4 +167,3 @@ void Tr2InteriorBackgroundCubemapBatch::SubmitGeometry( Tr2RenderContext& render
 
 }
 
-#endif

@@ -79,9 +79,6 @@
     <ClInclude Include="ITr2SkinnedObject.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ITr2UmbraUserData.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="ITr2VisibilityQueryable.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -155,9 +152,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2EffectStateManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2EnlightenArea.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2FileExportInfo.h">
@@ -370,9 +364,6 @@
     <ClInclude Include="Tr2TranslationTool.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2UmbraScene.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2Variable.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -404,12 +395,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="TriDirect3D.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TriEnlightenStream.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="TriEnlightenUtils.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="TriError.h">
@@ -482,12 +467,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="TriViewport.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UmbraLibrary.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UmbraTypes.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Vector2.h">
@@ -979,9 +958,6 @@
     <ClInclude Include="Include\TriVector.h">
       <Filter>Source Files\Include</Filter>
     </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorBoundingBox.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
     <ClInclude Include="Interior\Tr2InteriorBoxLight.h">
       <Filter>Source Files\Interior</Filter>
     </ClInclude>
@@ -991,22 +967,7 @@
     <ClInclude Include="Interior\Tr2InteriorConstantBufferFormats.h">
       <Filter>Source Files\Interior</Filter>
     </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorCurveLineSet.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
     <ClInclude Include="Interior\Tr2InteriorCylinderLight.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorDusterCache.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorEnlightenSystem.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorEnlightenSystemImpl.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorEnlightenUpdateTaskManager.h">
       <Filter>Source Files\Interior</Filter>
     </ClInclude>
     <ClInclude Include="Interior\Tr2InteriorFlare.h">
@@ -1027,28 +988,10 @@
     <ClInclude Include="Interior\Tr2InteriorMirror.h">
       <Filter>Source Files\Interior</Filter>
     </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorOccluder.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorOrientedBoundingBox.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
     <ClInclude Include="Interior\Tr2InteriorParticleObject.h">
       <Filter>Source Files\Interior</Filter>
     </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorPhysicalPortal.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
     <ClInclude Include="Interior\Tr2InteriorPlaceable.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorPortalSocket.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorProbeVisualizer.h">
-      <Filter>Source Files\Interior</Filter>
-    </ClInclude>
-    <ClInclude Include="Interior\Tr2InteriorProbeVolume.h">
       <Filter>Source Files\Interior</Filter>
     </ClInclude>
     <ClInclude Include="Interior\Tr2InteriorRenderBatch.h">
@@ -1318,9 +1261,6 @@
     <ClInclude Include="Resources\Tr2MaterialRes.h">
       <Filter>Source Files\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="Resources\Tr2RadiosityRes.h">
-      <Filter>Source Files\Resources</Filter>
-    </ClInclude>
     <ClInclude Include="Resources\TriGeometryRes.h">
       <Filter>Source Files\Resources</Filter>
     </ClInclude>
@@ -1562,12 +1502,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2Effect_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2EnlightenArea.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2EnlightenArea_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2FileExportInfo.cpp">
@@ -1933,9 +1867,6 @@
     <ClCompile Include="Tr2TranslationTool_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2UmbraScene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Tr2VariableStore.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1994,12 +1925,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TriDirect3D.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TriEnlightenStream.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TriEnlightenUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TriError.cpp">
@@ -2129,12 +2054,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TriView_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UmbraLibrary.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UmbraLibrary_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Apex\Apex.cpp">
@@ -2761,12 +2680,6 @@
     <ClCompile Include="Font\Tr2Sbit_Blue.cpp">
       <Filter>Source Files\Font</Filter>
     </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorBoundingBox.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorBoundingBox_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorBoxLight.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
@@ -2779,31 +2692,10 @@
     <ClCompile Include="Interior\Tr2InteriorCell_Blue.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorCurveLineSet.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorCurveLineSet_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorCylinderLight.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorCylinderLight_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorDusterCache.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorEnlightenSystem.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorEnlightenSystemImpl.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorEnlightenSystem_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorEnlightenUpdateTaskManager.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorFlare.cpp">
@@ -2830,52 +2722,16 @@
     <ClCompile Include="Interior\Tr2InteriorMirror.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorOccluder.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorOccluder_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorOrientedBoundingBox.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorOrientedBoundingBox_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorParticleObject.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorParticleObject_Blue.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorPhysicalPortal.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorPhysicalPortal_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorPlaceable.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorPlaceable_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorPortalSocket.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorPortalSocket_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorProbeVisualizer.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorProbeVisualizer_Blue.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorProbeVolume.cpp">
-      <Filter>Source Files\Interior</Filter>
-    </ClCompile>
-    <ClCompile Include="Interior\Tr2InteriorProbeVolume_Blue.cpp">
       <Filter>Source Files\Interior</Filter>
     </ClCompile>
     <ClCompile Include="Interior\Tr2InteriorRenderBatch.cpp">
@@ -3371,12 +3227,6 @@
       <Filter>Source Files\Resources</Filter>
     </ClCompile>
     <ClCompile Include="Resources\Tr2MaterialRes_Blue.cpp">
-      <Filter>Source Files\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="Resources\Tr2RadiosityRes.cpp">
-      <Filter>Source Files\Resources</Filter>
-    </ClCompile>
-    <ClCompile Include="Resources\Tr2RadiosityRes_Blue.cpp">
       <Filter>Source Files\Resources</Filter>
     </ClCompile>
     <ClCompile Include="Resources\TriGeometryRes.cpp">

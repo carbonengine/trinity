@@ -6,8 +6,6 @@
 
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "TriStepToggleCubemap.h"
 #include "ITr2VisualizationModeRenderer.h"
 #include "Interior/Tr2InteriorScene.h"
@@ -50,4 +48,3 @@ TriStepResult TriStepToggleCubemap::Execute( Be::Time realTime, Be::Time simTime
 	return RS_OK;
 }
 
-#endif

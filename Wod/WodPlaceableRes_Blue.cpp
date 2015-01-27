@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "WodPlaceableRes.h"
 
 BLUE_DEFINE( WodPlaceableRes );
@@ -18,13 +16,6 @@ const Be::ClassInfo* WodPlaceableRes::ExposeToBlue()
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets to animate light attributes", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( 
-			"isBackgroundProxy", 
-			m_isBackgroundProxy, 
-			"Is this placeable res usable as a background proxy?", 
-			Be::READWRITE | Be::PERSIST
-		)
-
-		MAP_ATTRIBUTE( 
 			"isShadowCaster", 
 			m_isShadowCaster, 
 			"Is this placeable res a shadow caster?",
@@ -33,5 +24,3 @@ const Be::ClassInfo* WodPlaceableRes::ExposeToBlue()
 
     EXPOSURE_END()
 }
-
-#endif

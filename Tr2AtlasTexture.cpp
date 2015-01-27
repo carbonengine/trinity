@@ -156,11 +156,12 @@ bool Tr2AtlasTexture::OnPrepareResources()
 
 void Tr2AtlasTexture::ReleaseResources( TriStorage s )
 {
-	CancelPendingLoad();
 	if( m_texture.GetMemoryClass() & s )
 	{
 		// When managed memory is freed, both standalone textures and the
 		// ones resident in an atlas are purged.		
+		CancelPendingLoad();
+
 		m_texture.Destroy();
 		CCP_DELETE m_atlasArea;
 		m_atlasArea = NULL;

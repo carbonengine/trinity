@@ -1222,7 +1222,7 @@ void EveSpaceScene::UpdateShLighting(
 			for( auto i = range.begin(); i != range.end(); ++i )
 			{
 				ITr2ShLightingReceiverPtr receiver = BlueCastPtr( objectsReceivingShadow[i].object );
-				if( receiver )
+				if( receiver != nullptr )
 				{
 					receiver->UpdateShLighting( *m_shLightingManager );
 				}
@@ -1234,7 +1234,7 @@ void EveSpaceScene::UpdateShLighting(
 			for( auto i = range.begin(); i != range.end(); ++i )
 			{
 				ITr2ShLightingReceiverPtr receiver = BlueCastPtr( objectsNotReceivingShadow[i] );
-				if( receiver )
+				if( receiver != nullptr )
 				{
 					receiver->UpdateShLighting( *m_shLightingManager );
 				}

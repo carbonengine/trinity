@@ -11,9 +11,6 @@
 #if TBB_ENABLED
 #include "tbb/task_scheduler_init.h"
 #endif
-#if INTERIORS_ENABLED
-#include "GeoBase/GeoMsgLogger.h"
-#endif
 
 #include "TriPoolAllocator.h"
 
@@ -405,53 +402,6 @@ namespace
 			DestroyFallbackTextures( s_fallbackTextures[1] );
 		}
 	}
-
-#if INTERIORS_ENABLED
-	bool EnlightenLogHandler( Geo::eGeoLogMsgType msgType, const Geo::c16* msgText )
-	{
-		switch( msgType )
-		{
-		case Geo::LOG_INFO:
-			//CCP_LOG( "%s", msgText );
-			break;
-		case Geo::LOG_FATAL:
-			CCP_LOGERR( "%S", msgText );
-			break;
-		case Geo::LOG_WARN:
-			CCP_LOGWARN( "%S", msgText );
-			break;
-		}
-
-		return true;
-	}
-
-	class Tr2EnlightenMemoryAllocator : public Geo::MemoryAllocator
-	{
-		virtual void* Allocate(Geo::u32 size, Geo::u32 align)
-		{
-			return CCP_ALIGNED_MALLOC( "Enlighten", size, align );
-		}
-
-		virtual void* Allocate( Geo::u32 size ) 
-		{
-			return CCP_MALLOC( "Enlighten", size );
-		}
-
-		virtual void Free( void* mem, bool aligned ) 
-		{
-			if( aligned )
-			{
-				CCP_ALIGNED_FREE( mem );
-			}
-			else
-			{
-				CCP_FREE( mem );
-			}
-		}
-	};
-
-	Tr2EnlightenMemoryAllocator s_enlightenMemoryAllocator;
-#endif
 }
 
 bool Tr2Renderer::Initialize()
@@ -481,12 +431,6 @@ bool Tr2Renderer::Initialize()
 	renderContext.m_esm.Initialize();
 
 	D3DXMatrixIdentity( &s_viewport2projectionAdjustment );
-
-#if INTERIORS_ENABLED
-	Geo::SetMemoryAllocator( &s_enlightenMemoryAllocator );
-	Enlighten::InitialiseSDK( GetEnlightenErrorBuffer(), 1024, true );
-	Geo::GeoAttachLogger( EnlightenLogHandler, Geo::LOG_ALL );
-#endif
 
 	s_globalSituation.push_back( GetShaderModelSituationHash( s_shaderModel ) );
 	static const char linearStr[] = "LinearColor";
@@ -1956,13 +1900,6 @@ TriSettings& Tr2Renderer::GetSettings()
 {
 	static CTriSettings s; // C-object & singleton, no reference counting magic!
 	return s;
-}
-
-// ------------------------------------------------------------------------------------------------
-char* Tr2Renderer::GetEnlightenErrorBuffer()
-{
-	static char errorBuffer[1024];
-	return &errorBuffer[0];
 }
 
 bool Tr2Renderer::IsRightHanded()

@@ -20,7 +20,6 @@ ClCompile:
   PreprocessorDefinitions: 
   - TRINITYBUILD
   - BLUE_OVERRIDE_VECTOR_TYPES=1
-  - UMBRA_OVERRIDE_VECTOR_TYPES=1
   PrecompiledHeader: Use
   PrecompiledHeaderFile: StdAfx.h
   PrecompiledHeaderOutputFile: $(IntDir)trinity.pch
@@ -49,9 +48,7 @@ BaseConfigurations:
   Windows:
     Imports:
     - ../../../../../../sdk/Granny/2.9.24.0/granny_2.9.24.0.yaml
-    - ../../../../../../sdk/umbra/1.5.3/umbra_1.5.3.yaml
     - ../../../../../../sdk/Bink/2.4e/Bink_2.4e.yaml
-    - ../../../../../../sdk/Enlighten/v2.08.1460/Enlighten_v2.08.1460.yaml
     - ../../../../../../sdk/nvidia/nvapi/R331/nvapi_R331.yaml
     - ../../../../../../sdk/nvidia/CUDA/3.0/CUDA_3.0.yaml
     - ../../../../../../sdk/nvidia/optix/2.6.0/optix_2.6.0.yaml
@@ -227,7 +224,6 @@ Configurations:
     - D3D9
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx9_internal_d
     ClCompile:
@@ -242,7 +238,6 @@ Configurations:
     - D3D9
     Imports:
     - ../blue/uses_blue_lua.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx9_internal
     ClCompile:
@@ -270,7 +265,6 @@ Configurations:
     - D3D11
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx11_internal_d
     ClCompile:
@@ -285,7 +279,6 @@ Configurations:
     - D3D9
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx9_dev
 
@@ -297,7 +290,6 @@ Configurations:
     - D3D11
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx11_dev
 
@@ -310,7 +302,6 @@ Configurations:
     - GLES2
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_gles2_dev
 
@@ -322,7 +313,6 @@ Configurations:
     - STUB
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
     General:
       TargetName: _trinity_stub_dev
@@ -335,7 +325,6 @@ Configurations:
     - D3D9
     Imports:
     - ../blue/uses_blue_26.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx9_dev
 
@@ -347,7 +336,6 @@ Configurations:
     - D3D9
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx9_internal
 
@@ -359,7 +347,6 @@ Configurations:
     - D3D9
     Imports:
     - ../blue/uses_blue_26.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx9_internal
 
@@ -371,7 +358,6 @@ Configurations:
     - D3D9
     Imports:
     - ../blue/uses_blue_27.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx9_internal
 
@@ -383,7 +369,6 @@ Configurations:
     - D3D11
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx11_internal
 
@@ -396,7 +381,6 @@ Configurations:
     # Note that we only have a 32bit version here - don't have glew in 64 bit
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_gles2_internal
 
@@ -408,7 +392,6 @@ Configurations:
     - D3D11
     Imports:
     - ../blue/uses_blue_26.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx11_internal
 
@@ -420,7 +403,6 @@ Configurations:
     - D3D11
     Imports:
     - ../blue/uses_blue_27.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_dx11_internal
 
@@ -432,7 +414,6 @@ Configurations:
     - GLES2
     Imports:
     - ../blue/uses_blue_26.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_gles2_internal
 
@@ -444,7 +425,6 @@ Configurations:
     - GLES2
     Imports:
     - ../blue/uses_blue_27.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     General:
       TargetName: _trinity_gles2_internal
         
@@ -564,7 +544,6 @@ Configurations:
     - STUB
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
     General:
       TargetName: _trinity_stub_internal_d
@@ -580,7 +559,6 @@ Configurations:
     - STUB
     Imports:
     - ../blue/uses_blue.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
     General:
       TargetName: _trinity_stub_internal
@@ -596,7 +574,6 @@ Configurations:
     - STUB
     Imports:
     - ../blue/uses_blue_26.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
     General:
       TargetName: _trinity_stub_internal
@@ -609,7 +586,6 @@ Configurations:
     - STUB
     Imports:
     - ../blue/uses_blue_27.yaml
-    - ../../../../../../sdk/UmbraPvs/4740/UmbraPvs_4740.yaml
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
     General:
       TargetName: _trinity_stub_internal

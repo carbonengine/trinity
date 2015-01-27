@@ -6,12 +6,7 @@
 #include "ITr2Renderable.h"
 #include "Tr2PerObjectData.h"
 #include "Resources/TriTextureRes.h"
-
-// fowards
-namespace Umbra
-{
-    class Cell;
-}
+#include "Tr2AtlasTexture.h"
 
 struct WodStencilBatchParams;
 class TriFrustum;
@@ -23,6 +18,8 @@ struct Tr2PerFrameShadowPSData;
 struct ITr2InteriorLight;
 struct ITr2InteriorSHLightingSolver;
 class Tr2RenderContext;
+class Tr2InteriorMirror;
+struct AxisAlignedBoundingBox;
 
 enum CullResult
 {
@@ -33,28 +30,21 @@ enum CullResult
 
 BLUE_DECLARE( Tr2ApexScene );
 
-BLUE_INTERFACE( ITr2Interior ) : public IRoot
+BLUE_INTERFACE( ITr2InteriorCullable ) : public IRoot
 {
-	// Umbra culling
-	virtual void SetVisibility( bool bVisible ) = 0;
-	virtual bool IsVisible( void ) const = 0;
+	virtual bool IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const = 0;
+	virtual size_t GetMirrorCount() const { return 0; }
+	virtual Tr2InteriorMirror* GetMirror( size_t index ) const { return nullptr; }
+};
 
-	// Interior lighting
-	virtual void SetVisibleLightCount( int visibleLights ) = 0;
-	virtual void SetVisibleLightSet( const Tr2InteriorLightSet& visibleLightSet ) = 0;
-
+BLUE_INTERFACE( ITr2Interior ) : public ITr2InteriorCullable
+{
 	// Per-object data for instanced lighting
 	virtual Tr2PerObjectData* GetPerObjectDataWithPerInstanceLighting( 
 		ITriRenderBatchAccumulator* accumulator,
 		Tr2InteriorLightSet* lightSet, 
 		const Matrix& objectToWorldMatrix, 
 		const Matrix& mirrorToWorldMatrix 
-	) = 0;
-
-	// Per-object data for pre-pass
-	virtual Tr2PerObjectData* GetPerObjectDataForPrePass(
-		ITriRenderBatchAccumulator* accumulator,
-		const Matrix& objectToWorldMatrix
 	) = 0;
 
 	// -------------------------------------------------------------
@@ -70,27 +60,11 @@ BLUE_INTERFACE( ITr2Interior ) : public IRoot
 	//   solver - Pointer to the solver object
 	// -------------------------------------------------------------
 	virtual void SetSHLightingSolver( ITr2InteriorSHLightingSolver* solver ) = 0;
-
-	// Set the mirror depth
-	virtual void SetMirrorDepth( int depth ) = 0;
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Returns if the object casts shadows. Object that do not
-	//   cast shadows do not trigger shadow updates when they
-	//   move.
-	// Return value:
-	//   true If the object casts shadows
-	//   false Otherwise
-	// -------------------------------------------------------------
-	virtual bool CastsShadows() const = 0;
 };
 BLUE_DECLARE_IVECTOR( ITr2Interior );
 
 BLUE_INTERFACE( ITr2InteriorDynamic ) : public ITr2Interior
 {
-	// Bounding sphere
-	virtual bool GetBoundingSphere( Vector4& sphere ) const = 0;
 	virtual bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const = 0;
 	virtual bool IsBoundingBoxReady( void ) const = 0;
 	virtual bool GetShProbePosition( Vector3& position ) const = 0;
@@ -98,45 +72,23 @@ BLUE_INTERFACE( ITr2InteriorDynamic ) : public ITr2Interior
 	// Spherical harmonics update
 	virtual void PrePhysicsUpdate( Be::Time time ) = 0;
 	virtual void PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene ) = 0;
-	virtual void SetSHSampleIndex( unsigned int index ) = 0;
-	virtual unsigned int GetSHSampleIndex() const = 0;
 	virtual Matrix& GetRedLightProbeMatrix( void ) = 0;
 	virtual Matrix& GetGreenLightProbeMatrix( void ) = 0;
 	virtual Matrix& GetBlueLightProbeMatrix( void ) = 0;
-
-	// Debug visualization
-	virtual bool DoVisualizeLightProbes( void ) const = 0;
 
 	// Scene add/remove
 	virtual bool AddToScene( Tr2ApexScene* apexScene ) = 0;
 	virtual void RemoveFromScene( void ) = 0;
 
-	// Umbra interaction
-	virtual bool IsUmbraReady( void ) const = 0;
 	virtual bool TestCellIntersectionAndAdd( Tr2InteriorCell* cell ) = 0;
-	virtual void CellRemoved( Tr2InteriorCell* cell ) = 0;
 	virtual bool IsDirty( void ) const = 0;
-	virtual void ClearDirty( void ) = 0;
 	// Set the dirty flag
 	virtual void SetDirtyFlag( bool isDirty ) = 0;
-	virtual bool IsBackgroundProxy( void ) const = 0;
-	virtual void AddToCellAsBackgroundProxy( Umbra::Cell* cell ) = 0;
-	virtual void AddToRootCell( Umbra::Cell* cell ) = 0;
 	virtual bool IsShadowCaster( void ) const = 0;
 
 	// Some 'dynamic' placeables are actually placed by level designers and do not move or change
 	// We allow these to be treated as statics from the point of view of shadows etc
 	virtual bool IsStatic( void ) const { return false; }
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Creates or updates an Umbra object and adds it to specified
-	//   cell. Used for doors by physical portals.
-	// Arguments:
-	//   cell - The cell to add object to
-	//   object - Umbra object that supposed to represent this dynamic
-	// -------------------------------------------------------------
-	virtual void UpdateUmbraObject( Umbra::Cell* cell, Umbra::Object*& object ) const = 0;
 
 	// LOD
 	virtual void SetLOD( const TriFrustum* frustum ) = 0;
@@ -153,7 +105,7 @@ BLUE_DECLARE( Tr2AtlasTexture );
 //   ITr2InteriorLight represents light source for interior 
 //   scene.
 // -------------------------------------------------------------
-BLUE_INTERFACE( ITr2InteriorLight ) : public IRoot
+BLUE_INTERFACE( ITr2InteriorLight ) : public ITr2InteriorCullable
 {
 	// Type of objects that get rendered into light's shadow map
 	enum ShadowCasterTypes
@@ -168,28 +120,6 @@ BLUE_INTERFACE( ITr2InteriorLight ) : public IRoot
 		ST_ALL				= 3,
 	};
 
-	// Type of debug visualization to use for light source
-	enum DebugInfoType
-	{
-		// Render light as white volume
-		DI_WHITE_VOLUMES,
-		// Render light using the actual light source color
-		DI_LIGHT_COLOR,
-		// Volume color depends on the shadow resolution
-		DI_SHADOW_RESOLUTION,
-		// Volume color dependent on the shadow resolution relative to its maximum
-		DI_SHADOW_RELATIVE_RESOLUTION,
-	};
-
-	// Helper structure for determining shadow intensity
-	struct ShadowCaster
-	{
-		// Pointer to the light source
-		ITr2InteriorLightPtr lightSource;
-		// Shadow intensity
-		float shadowIntensity;
-	};
-
 	// Helper structure for determining shadow caster importance
 	// To Do: Rename this guy & maybe unify it with the LightInstance structure
 	struct LightSourceItem
@@ -202,7 +132,7 @@ BLUE_INTERFACE( ITr2InteriorLight ) : public IRoot
 		unsigned int shadowMapIndex;
 
 		// Compare light importance for descending sort
-		bool operator<( const LightSourceItem& other )
+		bool operator<( const LightSourceItem& other ) const
 		{
 			// for equal importance, sort by lightSource.  this way moving the
 			// camera around a pair of lights keeps them in the same order.
@@ -221,22 +151,10 @@ BLUE_INTERFACE( ITr2InteriorLight ) : public IRoot
 
 	// -------------------------------------------------------------
 	// Description:
-	//   Returns if the light source is to be used for primary lighting.
-	// Return Value:
-	//   true If light is used for primary lighting
-	//   false Otherwise
-	// -------------------------------------------------------------
-	virtual bool UseWithPrimaryLighting() const = 0;
-
-	// -------------------------------------------------------------
-	// Description:
 	//   Returns axis aligned bounding box for light source in 
 	//   world space.
-	// Arguments:
-	//   minBounds - Light's min bounding box corner
-	//   maxBounds - Light's max bounding box corner
 	// -------------------------------------------------------------
-	virtual void GetBoundingBox( Vector3& minBounds, Vector3& maxBounds ) const = 0;
+	virtual const AxisAlignedBoundingBox& GetBoundingBox() const = 0;
 
 	// -------------------------------------------------------------
 	// Description:
@@ -277,59 +195,6 @@ BLUE_INTERFACE( ITr2InteriorLight ) : public IRoot
 
 	// -------------------------------------------------------------
 	// Description:
-	//   Called whenever a cell is removed from the scene.
-	// Arguments:
-	//   cell - Cell that is removed from the scene
-	// -------------------------------------------------------------
-	virtual void CellRemoved( Tr2InteriorCell* cell ) = 0;
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Set the light's static flag. Static lights are not supposed
-	//   to change their parameters so that they can be cached.
-	// Arguments:
-	//   isStatic - Light's static flag
-	// -------------------------------------------------------------
-	virtual void SetStatic( bool isStatic ) = 0;
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Returns light's static flag. Static lights are not supposed
-	//   to change their parameters so that they can be cached.
-	// Return Value:
-	//   true If light is static
-	//   false Otherwise
-	// -------------------------------------------------------------
-	virtual bool IsStatic( void ) const = 0;
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Returns if the static flag changed state on the previous frame.
-	// Return Value:
-	//   true If the static flag changed
-	//   false Otherwise
-	// -------------------------------------------------------------
-	virtual bool StaticFlagChanged( void ) const = 0;
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Reset the static-changed flag to false.
-	// -------------------------------------------------------------
-	virtual void ResetStaticChangedFlag( void ) = 0;
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Estimate overall scene influence.
-	// Arguments:
-	//   viewerPos - Camera position in world space
-	// Return Value:
-	//   Value indicating light's "importance": higher values indicate
-	//   more important light sources.
-	// -------------------------------------------------------------
-	virtual float GetCurrentViewImportance( const Vector3& viewerPos ) const = 0;
-
-	// -------------------------------------------------------------
-	// Description:
 	//   Estimate light's shadow map imoprtance.
 	// Arguments:
 	//   shadowMapIndex - Index of shadow map (for multi-shadow lights)
@@ -343,34 +208,13 @@ BLUE_INTERFACE( ITr2InteriorLight ) : public IRoot
 
 	// -------------------------------------------------------------
 	// Description:
-	//   Adds a light to Enlighten system for secondary lighting.
-	// Arguments:
-	//   dusters - Enlighten lighting/duster cache
-	//	 systemTransformInv - World to Enlighten system transform
-	// Return Value:
-	//   true If the light was added to Enlighten system
-	//	 false Otherwise
-	// -------------------------------------------------------------
-	virtual bool AddToEnlightenSystem( Tr2InteriorDusterCache* dusters,
-									   const Matrix &systemTransformInv ) const = 0;
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Get batches for a non-instanced light.
-	// Arguments:
-	//   batches - Batch accumulator to add batches to.
-	// -------------------------------------------------------------
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches ) = 0;
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Get batches for a instanced light.
+	//   Get batches for a light.
 	// Arguments:
 	//   batches - Batch accumulator to add batches to.
 	//   mirrorToWorldMatrix - Mirror to world space transform.
 	// -------------------------------------------------------------
-	virtual void GetInstancedBatches( ITriRenderBatchAccumulator* batches, 
-									  const Matrix& mirrorToWorldMatrix ) = 0;
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, 
+							 const Matrix& mirrorToWorldMatrix ) = 0;
 
 	// -------------------------------------------------------------
 	// Description:
@@ -514,16 +358,6 @@ BLUE_INTERFACE( ITr2InteriorLight ) : public IRoot
 
 	// -------------------------------------------------------------
 	// Description:
-	//   Returns inverse view matrix for shadow map.
-	// Arguments:
-	//   shadowMapIndex - Index of shadow map (for multi-shadow lights)
-	// Return Value:
-	//   Shadow map view to world space transform.
-	// -------------------------------------------------------------
-	virtual const Matrix& GetInvViewMatrix( unsigned int shadowMapIndex ) const = 0;
-
-	// -------------------------------------------------------------
-	// Description:
 	//   Returns projection transform matrix for shadow map.
 	// Arguments:
 	//   shadowMapIndex - Index of shadow map (for multi-shadow lights)
@@ -576,20 +410,6 @@ BLUE_INTERFACE( ITr2InteriorLight ) : public IRoot
 
 	// -------------------------------------------------------------
 	// Description:
-	//   Returns light's position for "light spider" tool.
-	// Return Value:
-	//   Position to render a ray to for "light spider" tool.
-	// -------------------------------------------------------------
-	virtual Vector3 GetPositionForLightSpider( const Matrix &objectToWorldMatrix ) const = 0;
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Render light source debug information.
-	// -------------------------------------------------------------
-	virtual void RenderDebugInfo( Tr2RenderContext& renderContext ) const = 0;
-
-	// -------------------------------------------------------------
-	// Description:
 	//   Get batches for a light to use during SH lighting step.
 	// Arguments:
 	//   batches - Batch accumulator to add batches to.
@@ -598,29 +418,11 @@ BLUE_INTERFACE( ITr2InteriorLight ) : public IRoot
 
 	// -------------------------------------------------------------
 	// Description:
-	//   Get batches for a lightmap rendering.
-	// Arguments:
-	//   batches - Batch accumulator to add batches to.
-	// -------------------------------------------------------------
-	virtual void GetLightMapBatches( ITriRenderBatchAccumulator* batches ) const = 0;
-
-	// -------------------------------------------------------------
-	// Description:
 	//   Per-frame update method.
 	// Arguments:
 	//   time - Current system time.
 	// -------------------------------------------------------------
 	virtual void Update( Be::Time time ) = 0;
-
-	// -------------------------------------------------------------
-	// Description:
-	//   Enables/disables Umbra regions of influeces for this light
-	//   source.
-	// Arguments:
-	//   enable - If true enable Umbra ROI; 
-	//            if false disable Umbra ROI
-	// -------------------------------------------------------------
-	virtual void EnableROI( bool enable ) = 0;
 
 	// -------------------------------------------------------------
 	// Description:
@@ -667,60 +469,6 @@ BLUE_INTERFACE( ITr2InteriorLight ) : public IRoot
 };
 
 BLUE_DECLARE_IVECTOR( ITr2InteriorLight );
-
-// -------------------------------------------------------------
-// Description:
-//   ITr2InteriorAttachedObject an object attached to a dynamic
-//   object. It receives SH probe lighting from dynamic object
-//   and might have a bounding box that would enlarge parent
-//   dynamic bounding box.
-// -------------------------------------------------------------
-BLUE_INTERFACE( ITr2InteriorAttachedObject ) : public IRoot
-{
-	// -------------------------------------------------------------
-	// Description:
-	//   Assign SH probe data to attached object.
-	// Arguments:
-	//   redProbeMatrix - Red SH probe coefficients
-	//   greenProbeMatrix - Green SH probe coefficients
-	//   blueProbeMatrix - Blue SH probe coefficients
-	// -------------------------------------------------------------
-	virtual void SetSHProbeMatrices( const Matrix &redProbeMatrix, 
-									 const Matrix &greenProbeMatrix, 
-									 const Matrix &blueProbeMatrix ) = 0;
-	// -------------------------------------------------------------
-	// Description:
-	//   Assign a world trasform of a parent dynamic object.
-	// Arguments:
-	//   worldTransform - Local to world space transform
-	// -------------------------------------------------------------
-	virtual void SetWorldTransform( const Matrix &worldTransform );
-	// -------------------------------------------------------------
-	// Description:
-	//   Return if bounding box of the attached object has changed.
-	// Return Value:
-	//   true If bounding box of the attached object has changed
-	//   false Otherwise
-	// -------------------------------------------------------------
-	virtual bool IsDirty() const = 0;
-	// -------------------------------------------------------------
-	// Description:
-	//   Clears object dirty flag.
-	// -------------------------------------------------------------
-	virtual void ClearDirtyFlag() = 0;
-	// -------------------------------------------------------------
-	// Description:
-	//   Return bounding box (in parent coordinate space).
-	// Arguments:
-	//   minBounds (out) - Min bounds of the attached object
-	//   maxBounds (out) - Max bounds of the attached object
-	// Return Value:
-	//   true If bounds returned are valid
-	//   false If bounds are not ready or the object does not need/have
-	//         a bounding box
-	// -------------------------------------------------------------
-	virtual bool GetBoundingBox( Vector3 &minBounds, Vector3 &maxBounds ) = 0;
-};
 
 class Tr2PerObjectDataPSBuffer;
 

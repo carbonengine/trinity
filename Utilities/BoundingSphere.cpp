@@ -102,7 +102,7 @@ bool IntersectSphereAxisAlignedBox( const Vector4& sphere, const Vector3& minBou
 	// Use a dot-product to square them and sum them together.
 	XMVECTOR d2 = XMVector3Dot( d, d );
 
-	return XMVector4LessOrEqual( d2, XMVectorMultiply( SphereRadius, SphereRadius ) );
+	return XMVector4LessOrEqual( d2, XMVectorMultiply( SphereRadius, SphereRadius ) ) != 0;
 }
 
 void BoundingSphereFromBox( Vector4& sphere, const Vector3& minBounds, const Vector3& maxBounds, const Matrix* tf )

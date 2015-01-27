@@ -1,33 +1,10 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorLightSource.h"
 #include "TriConstants.h"
 #include "Resources/TriTextureRes.h"
 
 BLUE_DEFINE( Tr2InteriorLightSource );
-
-
-static Be::VarChooser CellIntersectionTypeChooser[] =
-{
-	{
-		"BoundingBox",     
-		BeCast( Tr2InteriorLightSource::IT_BOUNDING_BOX ),     
-		"Use light BB against cell BB"
-	},
-	{
-		"Point",     
-		BeCast( Tr2InteriorLightSource::IT_POINT ),     
-		"Use light center against cell BB"
-	},
-	{
-		"Manual",     
-		BeCast( Tr2InteriorLightSource::IT_MANUAL ),     
-		"Use an explicit list of cells (explicitAffectedCellList list)"
-	},
-	{ 0 }
-};
 
 static Be::VarChooser ShadowResolutionChooser[] =
 {
@@ -96,43 +73,12 @@ BLUE_REGISTER_ENUM_EX(
     ENUM_REG_ENUM_OBJECT_ON_MODULE
 );
 
-static Be::VarChooser DebugTypeChooser[] =
-{
-	{
-		"DI_WHITE_VOLUMES",     
-		BeCast( ITr2InteriorLight::DI_WHITE_VOLUMES ),     
-		"Render light as white volume"
-	},
-	{
-		"DI_LIGHT_COLOR",     
-		BeCast( ITr2InteriorLight::DI_LIGHT_COLOR ),     
-		"Render light using the actual light source color"
-	},
-	{
-		"DI_SHADOW_RESOLUTION",     
-		BeCast( ITr2InteriorLight::DI_SHADOW_RESOLUTION ),     
-		"Volume color depends on the actual shadow resolution"
-	},
-	{
-		"DI_SHADOW_RELATIVE_RESOLUTION",
-		BeCast( ITr2InteriorLight::DI_SHADOW_RELATIVE_RESOLUTION ),
-		"Volume color depends on the relative shadow resolution"
-	},
-	{ 0 }
-};
-
-BLUE_REGISTER_ENUM_EX( "Tr2InteriorLightDebugRenderMode", 
-					   ITr2InteriorLight::DebugInfoType, 
-					   DebugTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
-
-
 const Be::ClassInfo* Tr2InteriorLightSource::ExposeToBlue()
 {
     EXPOSURE_BEGIN( Tr2InteriorLightSource, "" )
         MAP_INTERFACE( Tr2InteriorLightSource )
         MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
-		MAP_INTERFACE( IListNotify )
 		MAP_INTERFACE( ITr2InteriorLight )
 
 		MAP_ATTRIBUTE( "name", m_name, "The name of this interior light source", Be::READWRITE | Be::PERSIST )
@@ -143,7 +89,6 @@ const Be::ClassInfo* Tr2InteriorLightSource::ExposeToBlue()
 		MAP_ATTRIBUTE( "useKelvinColor", m_useKelvinColor, "Use Kelvin color or RGB?", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "falloff", m_falloff, "Exponential falloff for distance from emitter", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "specularIntensity", m_specularIntensity, "Additional specular light intensity multiplier", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "secondaryLightingMultiplier", m_secondaryLightingMultiplier, "A factor to multiply into the contribution that this light makes to the radiosity", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "shadowImportance", m_shadowImportance, "How important is this lightsource for shadowcasting", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "importanceScale", m_importanceScale, "Scale factor to multiply the light importance", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "importanceBias",  m_importanceBias,  "Bias factor to add to the light importance", Be::READWRITE | Be::PERSIST )
@@ -151,40 +96,20 @@ const Be::ClassInfo* Tr2InteriorLightSource::ExposeToBlue()
 		MAP_ATTRIBUTE( "coneAlphaInner", m_coneAlphaInner, "A spotlight's inner cone angle", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "coneDirection", m_coneDirection, "A spotlight's direction", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "primaryLighting", m_primaryLighting, "Does this lightsource contribute to primary lighting?", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "secondaryLighting", m_secondaryLighting, "Does this lightsource contribute to secondary lighting?", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "affectTransparentObjects", m_affectTransparentObjects, "Does this lightsource affect transparent objects?", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "renderDebugInfo", m_renderDebugInfo, "Render debug information", Be::READWRITE )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "renderDebugType", m_renderDebugType, "Type of debug visualization to use for light source (renderDebugInfo must be on)", Be::READWRITE | Be::ENUM, DebugTypeChooser )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "shadowResolution", m_shadowResolution, "Resolution of the shadow map for spot light", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, ShadowResolutionChooser )
 		MAP_ATTRIBUTE( "enableShadowLOD", m_enableShadowLOD, "Enable dynamic shadow resolution based on light source screen size", Be::READWRITE )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "shadowCasterTypes", m_shadowCasterTypes, "Types of objects that cast shadow from this light source", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, ShadowFilterChooser )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "projectedTexturePath", m_projectedTexturePath, "The path used to load the projected texture map", Be::READWRITE | Be::PERSIST | Be::NOTIFY, TriTextureChooser )
 		MAP_ATTRIBUTE( "projectedTextureRes", m_projectedTextureRes, "Projected texture map", Be::READ )
-		MAP_METHOD_AND_WRAP( 
-			"SetProjectedTexture", 
-			SetProjectedTexture, 
-			"Assign a projected texture to light source"
-			"\n"
-			"\nArguments:"
-			"\ntexture - The TriTextureRes to set" );
-
-		MAP_PROPERTY( "isStatic", IsStatic, SetStatic, "Should this light be treated as static by Enlighten?  Toggling forces a rebuild of cached input lighting!" )
-
-		MAP_ATTRIBUTE_WITH_CHOOSER( "cellIntersectionType", m_cellIntersectionType, "Type of intersection test to perform when adding light to a cell", Be::READWRITE | Be::PERSIST | Be::ENUM | Be::NOTIFY, CellIntersectionTypeChooser )
-		MAP_ATTRIBUTE( "explicitAffectedCellList", m_explicitAffectedCells, "A list of cells explicitely assigned to the light (when visualizeMethod = Manual)", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets to animate light attributes", Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE( "boundingBox", m_boundingBox, "Additional bounding box for the light volume", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP( "IsSpotLight", IsSpotLight, "Returns true if the light is a spot light (cone angle < 90 degrees) ")
 		MAP_METHOD_AND_WRAP( "MarkShadowDirty", MarkShadowDirty, "Mark spotlight shadow as dirty to force its update")
 
 		MAP_ATTRIBUTE( "customMaterial", m_customMaterial, "Custom shader material for light source", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 		MAP_METHOD_AND_WRAP( "UpdateInternalMaterials", UpdateInternalMaterials, "Updates internal materials after customMaterial is changed")
-
-		MAP_METHOD_AND_WRAP( "TestShadowFrustumBoxIntersection", TestShadowFrustumBoxIntersection, "Check if a given AABB intersects one of light's shadow frusums")
 	EXPOSURE_END()
 }
 
-#endif

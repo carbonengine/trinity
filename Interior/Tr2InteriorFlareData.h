@@ -43,4 +43,4 @@ public:
 TYPEDEF_BLUECLASS( Tr2InteriorFlareData );
 BLUE_DECLARE_VECTOR( Tr2InteriorFlareData );
 
-#endif Tr2InteriorFlareData_H
+#endif

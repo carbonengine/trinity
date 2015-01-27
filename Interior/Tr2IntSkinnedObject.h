@@ -9,11 +9,6 @@
 // forwards
 //
 class TriFrustum;
-namespace Umbra
-{
-	class Object;
-	class Model;
-}
 
 BLUE_DECLARE( Tr2VariableStore );
 BLUE_DECLARE( TriTextureRes );
@@ -45,23 +40,18 @@ public:
 	//
 	virtual void PrePhysicsUpdate( Be::Time time );
 	virtual void PostPhysicsUpdate( Be::Time time, Tr2ApexScene* apexScene );
-	virtual void SetSHSampleIndex( unsigned int index ) { m_shSampleIndex = index; }
-	virtual unsigned int GetSHSampleIndex() const  { return m_shSampleIndex; }
 	virtual Matrix& GetRedLightProbeMatrix( void ) { return m_SHMatrixRed; }
 	virtual Matrix& GetGreenLightProbeMatrix( void ) { return m_SHMatrixGreen; }
 	virtual Matrix& GetBlueLightProbeMatrix( void ) { return m_SHMatrixBlue; }
 
     //////////////////////////////////////////////////////////////////////////
-    // ITr2InteriorDynamic
-	virtual void SetVisibility( bool bVisible );
-	virtual bool IsVisible( void ) const { return m_isVisible; }
-	virtual bool DoVisualizeLightProbes( void ) const;
+    // ITr2InteriorCullable
+	virtual bool IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const;
 
+    //////////////////////////////////////////////////////////////////////////
+    // ITr2InteriorDynamic
 	virtual bool AddToScene( Tr2ApexScene* apexScene );
 	virtual void RemoveFromScene( void );
-
-	virtual void SetVisibleLightCount( int visibleLightCount );
-	virtual void SetVisibleLightSet( const Tr2InteriorLightSet& visibleLightSet ) { }
 
 	// Per-object data with instanced lighting
 	virtual Tr2PerObjectData* GetPerObjectDataWithPerInstanceLighting( 
@@ -71,17 +61,7 @@ public:
 		const Matrix& mirrorToWorldMatrix 
 		);
 
-	// Per-object data for pre-pass
-	virtual Tr2PerObjectData* GetPerObjectDataForPrePass(
-		ITriRenderBatchAccumulator* accumulator,
-		const Matrix& objectToWorldMatrix
-		);
-
-	// Set mirror depth
-	virtual void SetMirrorDepth( int depth ) { m_mirrorDepth = depth; }
 	virtual void SetSHLightingSolver( ITr2InteriorSHLightingSolver* solver ) { m_shSolver = solver; }
-
-	virtual bool CastsShadows() const { return m_castsShadows; }
 
 	virtual void SetPosition(const Vector3 &pos);
 	virtual void SetRotation( const Quaternion& rotQuat );
@@ -107,25 +87,14 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2InteriorDynamic
 	
-	// Umbra interaction
-	virtual bool IsUmbraReady( void ) const { return (m_umbraModel != NULL); }
 	virtual bool TestCellIntersectionAndAdd( Tr2InteriorCell* cell );
-	virtual void CellRemoved( Tr2InteriorCell* cell );
 	virtual bool IsDirty( void ) const { return m_isDirty; }
-	virtual void ClearDirty( void ) { m_isDirty = false; }
-	// Set the dirty flag
 	void SetDirtyFlag( bool isDirty ) { m_isDirty = isDirty; }
-	virtual bool IsBackgroundProxy( void ) const { return false; }
-	virtual void AddToCellAsBackgroundProxy( Umbra::Cell* cell ) {}
-	virtual void AddToRootCell( Umbra::Cell* cell );
 	virtual bool IsShadowCaster( void ) const { return true; }
-
-	virtual void UpdateUmbraObject( Umbra::Cell* cell, Umbra::Object*& object ) const;
 
 	virtual void SetLOD( const TriFrustum* frustum );
 
 	// sizes
-	virtual bool GetBoundingSphere( Vector4& sphere ) const;
 	virtual bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const;
 	virtual bool IsBoundingBoxReady( void ) const;
 	virtual bool GetShProbePosition( Vector3& position ) const;
@@ -141,7 +110,6 @@ public:
 	void BindLowLevelShaders();
 
 protected:
-	virtual bool DoDisplay( void ) const { return m_display || (m_mirrorDepth > 0); }
 	virtual void ExplicitBoundsChanged();
 
 	void AddReflectionMap( TriTextureRes* texture );
@@ -155,19 +123,12 @@ protected:
 	// lightsources on this avatar
 	Tr2InteriorLightSet m_lightSet;
 
-	// index of SH task in Enlighten task manager
-	unsigned int m_shSampleIndex;
 	// interpolated light probe matrices
 	Matrix m_SHMatrixRed;
 	Matrix m_SHMatrixGreen;
 	Matrix m_SHMatrixBlue;
 
-	// culling
-	bool m_isVisible;
-	std::vector<Umbra::Object*> m_umbraObjects;
-	Umbra::Model* m_umbraModel;
 	bool m_isDirty;
-	int m_mirrorDepth;
 
 	Vector3 m_currentPosition;
 	Vector3 m_currentScaling;
@@ -175,9 +136,6 @@ protected:
 	bool m_positionSet;
 	bool m_scalingSet;
 	bool m_rotationSet;
-
-	// Number of visible lights
-	int m_visibleLightCount;
 
 	// Apex
 	bool m_isInApexScene;
@@ -194,23 +152,6 @@ protected:
 		const Matrix& objectToWorldMatrix, 
 		const Matrix& mirrorToWorldMatrix );
 
-	// as long as we support cpu AND gpu skinning we need two different ways of ::GetPerObjectData()
-	Tr2PerObjectData* GetPerObjectDataForPrePassCpuSkinning( 
-		ITriRenderBatchAccumulator* accumulator,
-		const Matrix& objectToWorldMatrix, 
-		const Matrix& mirrorToWorldMatrix );
-	Tr2PerObjectData* GetPerObjectDataForPrePassGpuSkinning( 
-		ITriRenderBatchAccumulator* accumulator,
-		const Matrix& objectToWorldMatrix, 
-		const Matrix& mirrorToWorldMatrix );
-
-	// Clear all Umbra data
-	void ClearUmbra( void );
-
-	// Rebuild bounding volume
-	void RebuildVolume( void );
-
-	void UpdateUmbraTransforms( void );
 	// SH lighting solver for transparent rendering
 	ITr2InteriorSHLightingSolver *m_shSolver;
 
@@ -224,10 +165,7 @@ protected:
 	// Local variable store for this object
 	Tr2VariableStorePtr m_variableStore;
 
-	// Flag to indicate that this object casts shadows
-	bool m_castsShadows;
-
-	// Offset for Enlighten SH probe position (in world space)
+	// Offset for SH probe position (in world space)
 	Vector3 m_probeOffset;
 	// Depth offset for transparency sorting
 	float m_depthOffset;

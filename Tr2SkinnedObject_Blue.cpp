@@ -147,8 +147,6 @@ const Be::ClassInfo* Tr2SkinnedObject::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY 
 		)
 
-		MAP_ATTRIBUTE( "attachedObjects", m_attachedObjects, "Vector of renderables that are associated with this object.", Be::READWRITE | Be::PERSIST )
-
 		MAP_ATTRIBUTE
 		( 
 			"frameDelay", 

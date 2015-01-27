@@ -83,14 +83,11 @@ public:
 	// Attempt to execute pending low-level shader binding
 	void ExecutePendingLowLevelShaderBind( void );
 
-	void AddGeometryPreparedCallback( const BlueScriptCallback& callback );
-
 private:
 	void InitializeGeometryResource();
 
 	static void StaticResourceLoadFinished( void* pContext );
 	static void StaticResourcePrepFinished( void* pContext );
-	void DoPrepCallbacks();
 
 	void PySetGeometryRes( TriGeometryRes* geometryRes );
 	int GetAreasCount() const;
@@ -115,8 +112,6 @@ protected:
 	bool m_isBindPending;
 	bool m_pendingDefaultOverride;
 	Tr2VariableStorePtr m_pendingVariableStore;
-
-	std::vector<BlueScriptCallback> m_geometryPreparedCallbacks;
 
 	PTr2LodResourceVector m_lodResources;
 	Tr2Lod m_selectedLod;

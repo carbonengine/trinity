@@ -386,7 +386,6 @@ namespace {
 		false,	// RM_LIGHT,
         true,	// RM_ERASE,
         true,	// RM_PREPASS_COLOR,
-		true,	// RM_VIS_WIREFRAME
 	};
 
 
@@ -591,20 +590,6 @@ namespace {
 		0, 0
 	};
 
-	static uint32_t visWireframePairs[] = {
-		RS_ALPHABLENDENABLE, FALSE,
-		RS_ALPHATESTENABLE, FALSE,
-		RS_ZENABLE, TRUE,
-		RS_ZWRITEENABLE, TRUE,
-		RS_ZFUNC, CMP_LESSEQUAL,		
-		RS_COLORWRITEENABLE, 0x0f,
-		RS_DEPTHBIAS, 0,
-		RS_SLOPESCALEDEPTHBIAS, 0,
-		RS_SEPARATEALPHABLENDENABLE, FALSE, 
-		RS_FILLMODE, FM_WIREFRAME,			// keep it away from slot 0, we want this value
-		0, 0
-	};
-
 
 	static uint32_t * const modePairs[Tr2EffectStateManager::RM_COUNT] = 
 	{
@@ -622,7 +607,6 @@ namespace {
 		lightPairs,			// RM_LIGHT,
         erasePairs,			// RM_ERASE,
         prepassColorPairs,	// RM_PREPASS_COLOR,
-		visWireframePairs,	// RM_VIS_WIREFRAME
 	};
 }
 

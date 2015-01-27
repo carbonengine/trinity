@@ -63,7 +63,7 @@ const Be::ClassInfo* TriStepFilterVisibilityResults::ExposeToBlue()
 		(
 			"eventFilter", 
 			m_eventFilter,
-			"Which Umbra events are copied to new visibility results",
+			"Which events are copied to new visibility results",
 			Be::READWRITE | Be::PERSIST,
 			TriVisibilityEventTypeChooser
 		)
@@ -109,7 +109,7 @@ const Be::ClassInfo* TriStepFilterVisibilityResults::ExposeToBlue()
 			"Create a visibility results filter to exclude objects/events from visibility results"
 			"\n"
 			"\nOptional Arguments:"
-			"eventFilter - Which Umbra events are copied to new visibility results (default is All)"
+			"eventFilter - Which events are copied to new visibility results (default is All)"
 			"filterType - Type of per-object filtering to perform on visibility results"
 		)
 

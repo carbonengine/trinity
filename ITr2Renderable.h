@@ -37,10 +37,6 @@ BLUE_INTERFACE( ITr2Renderable ) : public  IRoot
     virtual float GetSortValue() = 0; 
 
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) = 0;
-
-	// Not a pure virtual function, but has more of a minimal impact on other classes.
-	virtual const ITr2RenderableVector* GetAttachedRenderables() { return NULL; };
-
 };
 
 struct ITr2RenderableEntry

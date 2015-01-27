@@ -30,7 +30,6 @@
 
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( Tr2ShaderMaterial);
-class TriEnlightenProgressBar;
 class Tr2RenderContext;
 
 struct TriGeometryResAreaData
@@ -134,14 +133,6 @@ struct TriGeometryResModelData
 	float m_orientation[4];
 };
 
-struct TriRadSystem;
-
-struct EnlightenGeometryHash
-{
-	unsigned int m_hash1;
-	unsigned int m_hash2;
-};
-
 enum TriGeometryCollisionResultFlags
 {
 	COLLISION_RESULT_ANY,
@@ -192,8 +183,6 @@ public:
 	TriGeometryResAreaData* GetAreaData( unsigned int meshIx, unsigned int areaIx );
 
 	unsigned int GetAnimationCount();
-
-	TriRadSystem* GetRadiosityData();
 
 	// query vertex component
 	int GetVertexComponentOffset( const granny_mesh* myMesh, const char* componentName ) const;
@@ -305,22 +294,7 @@ public:
 	static void PrepareGrannyFileGeometry( granny_file_info* gi );
 	static bool SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const char* filename );
 
-	//////////////////////////////////////////////////////////////////////////
-	// Hacky Enlighten Stuff
-	//////////////////////////////////////////////////////////////////////////
-	static unsigned s_currentEnlightenGeometryGuid;
-	bool RebuildEnlightenTextures();
-	void ReleaseEnlightenD3DResources();
-
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-	Enlighten::IPrecompPackedGeometry* GetEnlightenPackedGeometry( Enlighten::IPrecompute* pPrecompute, TriEnlightenProgressBar& prog, float outputPixelSize = 1.0f );
-	void ProjectEnlightenGeometry( Enlighten::IPrecompute* pPrecompute, TriGeometryRes* deferredTarget, TriEnlightenProgressBar& prog, float outputPixelSize = 1.0f );
-#endif
-
 	float GetMeshSurfaceArea( int meshIx );
-
-	
-	void GetEnlightenGeometryHashes( unsigned int& hash1, unsigned int& hash2 ) const;
 
     // Insert custom dynamically generated mesh. Ownership of inserted object 
     // is moved to this class. Returns index to inserted mesh within this container. 
@@ -353,8 +327,6 @@ private:
 	TrackableStdVector<TriGeometryResModelData*> m_models;
 	TrackableStdVector<TriGeometryResSkeletonData*> m_skeletons;
 
-	EnlightenGeometryHash m_enlightenGeometryHash;
-
 	bool m_isDynamicGeometry;
 	granny_file* m_pGrannyFile;
 	granny_file_info* m_inMemoryInfo;
@@ -384,14 +356,6 @@ private:
 	bool CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryResMeshData* pMesh, Tr2PrimaryRenderContext& renderContext, void* pVBOverride = NULL );
 	bool CreateD3DVertexBuffer( TriGeometryResMeshData* pMesh, int vtxCount, int bytesPerVtx, const granny_mesh* mesh, const void* pSrc, const granny_data_type_definition* grnVtxDecl, bool fullFloat, Tr2PrimaryRenderContext& renderContext );
 	bool CreateSystemVertexBuffer( TriGeometryResMeshData* pMesh, int vtxCount, int bytesPerVtx, const granny_mesh* mesh, const void* pSrc, const granny_data_type_definition* grnVtxDecl, bool fullFloat );
-
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-	Enlighten::IPrecompInputMesh* CreateEnlightenInputMesh( int meshIx, bool copyChartUVFromPackedGeometry );
-	Geo::GeoAutoReleasePtr< Enlighten::IPrecompPackedGeometry> m_packedGeometry;
-#endif
-
-	// Flag to indicate that the geometry was attempted to be packed
-	bool m_geometryPacked;
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN(TriGeometryRes);

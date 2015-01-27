@@ -188,19 +188,19 @@ struct Tr2IntKeyGenerator
 	// Generate a sort key for the interior render batch
 	void GenerateKey( RenderBatchSortEntry& entry ) const
 	{
-		const __int64 mask = 0x0000FFFF00000000;
-		const __int64 baseKey = entry.m_batch->GetUserData();
-		__int64 group = ( baseKey & mask ) >> 32;
+		const int64_t mask = 0x0000FFFF00000000;
+		const int64_t baseKey = entry.m_batch->GetUserData();
+		int64_t group = ( baseKey & mask ) >> 32;
 
 		// Opaque batches are sort-by-effect
 		if( group == (unsigned int)WODINTBATCHGROUP_OPAQUE )
 		{
 			// Get the effect sort key
-			__int64 effectKey = 0x00000000FFFFFFFF;
+			int64_t effectKey = 0x00000000FFFFFFFF;
 			ITr2ShaderMaterial* shaderMaterial = entry.m_batch->GetShaderMaterialInterface();
 			if( shaderMaterial )
 			{
-				effectKey = (__int64)shaderMaterial->GetSortValue();
+				effectKey = (int64_t)shaderMaterial->GetSortValue();
 			}
 
 			// Pack the effect sort key into the low 32 bits
@@ -212,7 +212,7 @@ struct Tr2IntKeyGenerator
 			// Note: the depth key is set to zero because Umbra gives objects in front-to-back order,
 			// thus allowing us to pre-sort batches in front-to-back order (for decals) or
 			// back-to-front (for alpha-blend).
-			__int64 depthKey = entry.m_batch->GetDepth();
+			int64_t depthKey = entry.m_batch->GetDepth();
 
 			// Pack the depth key into the low 32 bits
 			entry.m_sortKey = baseKey | depthKey;

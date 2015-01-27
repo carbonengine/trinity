@@ -1,8 +1,6 @@
 // Precompiled header
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 // Tr2InteriorPlaceable.h header
 #include "Tr2InteriorPlaceable.h"
 
@@ -12,33 +10,26 @@
 #include "Tr2InteriorCell.h"
 #include "Tr2InteriorMirror.h"
 #include "Wod/WodPlaceableRes.h"
-#include "ITr2UmbraUserData.h"
 #include "TriLineSet.h"
 #include "Tr2Mesh.h"
 #include "Curves/TriCurveSet.h"
+#include "TriFrustum.h"
 
 CCP_STATS_DECLARE( wodInteriorPlaceablesAlive, "Trinity/Tr2InteriorPlaceables", false, CST_COUNTER_LOW, "Count of Tr2InteriorPlaceables alive" );
 
 Tr2InteriorPlaceable::Tr2InteriorPlaceable( IRoot* lockobj ) :
     m_display( true ),
 	m_isUniqueInstance( false ),
-	m_isVisible( false ),
-	m_umbraObjects(),
-	m_umbraModel( NULL ),
 	PARENTLOCK( m_transform, IInitialize ),
 	m_isDirty( true ),
 	m_placeableResPath(),
 	m_placeableRes(),
 	m_lightSet(),
-	m_visualizeLightProbes( false ),
 	m_visibilityMode( VISIBILITYMODE_NORMAL ),
-	m_shSampleIndex( -1 ),
 	m_SHMatrixRed(),
 	m_SHMatrixGreen(),
 	m_SHMatrixBlue(),
 	m_boundingSphere( 0.f, 0.f, 0.f, 0.f ),
-	m_drawLightSpider( false ),
-	PARENTLOCK( m_attachedObjects ),
 	m_shSolver( NULL ),
 	m_isStatic( false ),
 	m_isBoundingBoxModified( false ),
@@ -49,7 +40,6 @@ Tr2InteriorPlaceable::Tr2InteriorPlaceable( IRoot* lockobj ) :
 	m_depthOffset( 0.f )
 {
     D3DXMatrixIdentity( &m_transform );
-	m_visibleLightCount = 0;
 
 	m_currentPosition = Vector3( 0.0f, 0.0f, 0.0f );
 	m_currentScaling = Vector3( 1.0f, 1.0f, 1.0f );
@@ -73,22 +63,7 @@ Tr2InteriorPlaceable::Tr2InteriorPlaceable( IRoot* lockobj ) :
 
 Tr2InteriorPlaceable::~Tr2InteriorPlaceable()
 {
-	// Clear out Umbra data
-	ClearUmbra();
-	ClearMirrors();
-
 	CCP_STATS_DEC( wodInteriorPlaceablesAlive );
-}
-
-// ------------------------------------------------------------------------------------------------------
-void Tr2InteriorPlaceable::SetVisibility( bool bVisible )
-{
-	m_isVisible = bVisible;
-}
-
-bool Tr2InteriorPlaceable::DoVisualizeLightProbes( void ) const
-{
-	return m_visualizeLightProbes;
 }
 
 bool Tr2InteriorPlaceable::AddToScene( Tr2ApexScene *apexScene )
@@ -98,9 +73,8 @@ bool Tr2InteriorPlaceable::AddToScene( Tr2ApexScene *apexScene )
 		return false;
 	}
 
-	ClearUmbra();
-	ClearMirrors();
 	RebuildVolume();
+	CreateMirrors();
 	
 	m_isDirty = true;
 
@@ -109,22 +83,6 @@ bool Tr2InteriorPlaceable::AddToScene( Tr2ApexScene *apexScene )
 
 void Tr2InteriorPlaceable::RemoveFromScene( void )
 {
-	ClearUmbra();
-	ClearMirrors();
-}
-
-bool Tr2InteriorPlaceable::GetBoundingSphere( Vector4& sphere ) const
-{
-	if( m_boundingSphere.w > 0.f )
-	{
-		sphere = m_boundingSphere;
-		BoundingSphereTransform( m_transform, sphere );
-	}
-	else
-	{
-		sphere = Vector4( GetPosition(), 2.0f );
-	}
-	return true;
 }
 
 bool Tr2InteriorPlaceable::GetLocalBoundingBox( Vector3& min, Vector3& max ) const
@@ -204,48 +162,6 @@ void Tr2InteriorPlaceable::PrePhysicsUpdate( Be::Time time )
 
 void Tr2InteriorPlaceable::PostPhysicsUpdate( Be::Time time, Tr2ApexScene *apexScene )
 {
-	bool attachmentsDirty = false;
-	for( ITr2RenderableVector::iterator it = m_attachedObjects.begin(); it != m_attachedObjects.end(); ++it )
-	{
-		ITr2InteriorAttachedObject *attachedObject = dynamic_cast<ITr2InteriorAttachedObject*>( *it );
-		if( attachedObject )
-		{
-			attachedObject->SetSHProbeMatrices( m_SHMatrixRed, m_SHMatrixGreen, m_SHMatrixBlue );
-			attachedObject->SetWorldTransform( m_transform );
-			Vector3 minBounds, maxBounds;
-			if( attachedObject->IsDirty() && attachedObject->GetBoundingBox( minBounds, maxBounds ) )
-			{
-				attachmentsDirty = true;
-				break;
-			}
-		}
-	}
-	if( attachmentsDirty && IsBoundingBoxReady() )
-	{
-		RebuildVolume();
-	}
-
-	// Update Umbra
-	if( !m_umbraObjects.empty() )
-	{
-		Matrix m = m_transform;
-
-		
-		for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-			 it != m_umbraObjects.end(); ++it )
-		{
-			Umbra::Object* object = *it;
-			if( object->getCell() )
-			{
-				Matrix cellTransform;
-				object->getCell()->getCellToWorldMatrix( AS_UMBRA_MATRIX( cellTransform ) );
-				XMVECTOR det;
-				m = XMMatrixMultiply( m, XMMatrixInverse( &det, cellTransform ) );
-			}
-			object->setObjectToCellMatrix( AS_UMBRA_MATRIX( m ) );
-		}
-	}
-
 	if( m_placeableRes )
 	{
 		for( TriCurveSetVector::const_iterator it = m_placeableRes->GetCurveSets()->begin(); it != m_placeableRes->GetCurveSets()->end(); ++it )
@@ -377,197 +293,24 @@ bool Tr2InteriorPlaceable::TestCellIntersectionAndAdd( Tr2InteriorCell* cell )
 		// Our bounding box is not ready, return false (no intersection)
 		return false;
 	}
-	Vector3 scale, translation;
-	Quaternion rotation;
-	D3DXMatrixDecompose( &scale, &rotation, &translation, &cell->GetWorldTransform() );
-	Vector3 center = ( cellMinBounds + cellMaxBounds ) / 2 + translation;
-	Vector3 extents = cellMaxBounds - center;
 
-	bool intersects = cell->IsUnbounded() || 
-		IntersectOrientedBoxAxisAlignedBox( center, extents, rotation, minBounds, maxBounds );
+	bool intersects = cell->IsUnbounded() || cell->IntersectsAABB( minBounds, maxBounds );
 
 	// If we got an intersection, add to the cell
 	if( intersects )
 	{
-		XMVECTOR det;
-		Matrix m( XMMatrixMultiply( m_transform, 
-			XMMatrixInverse( &det, cell->GetWorldTransform() ) ) );
-
-		if( cell->AddDynamic( this ) )
-		{
-			// Add to the Umbra cell
-			Umbra::Object* object = Umbra::Object::create( m_umbraModel );
-			object->setCell( cell->GetUmbraCell() );
-
-			object->setObjectToCellMatrix( AS_UMBRA_MATRIX( m ) );
-			object->setUserPointer( CONVERT_TO_UMBRA_USER_DATA( this ) );
-			m_umbraObjects.push_back( object );
-
-			EnableMirrors( cell->GetUmbraCell() );
-		}
-		else
-		{
-			for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-				 it != m_umbraObjects.end(); ++it )
-			{
-				if( ( *it )->getCell() == cell->GetUmbraCell() )
-				{
-					( *it )->setObjectToCellMatrix( AS_UMBRA_MATRIX( m ) );
-				}
-			}
-
-			for( std::vector<Tr2InteriorMirror*>::iterator it = m_mirrors.begin(); it != m_mirrors.end(); ++it )
-			{
-				( *it )->SetTransformMatrix( ( *it )->GetTransformMatrix() );
-			}
-		}
+		cell->AddDynamic( this );
 		AddReflectionMap( cell->GetReflectionMap() );
 	}
 	else
 	{
 		// Remove the dynamic from the cell's internal list
 		cell->RemoveDynamic( this );
-
-		// Iterate over the umbra object list and destroy any object in the cell we
-		// are vacating
-		for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-			 it != m_umbraObjects.end(); )
-		{
-			if( ( *it )->getCell() == cell->GetUmbraCell() )
-			{
-				( *it )->setCell( NULL );
-				( *it )->release();
-				( *it ) = NULL;
-				it = m_umbraObjects.erase( it );
-			}
-			else
-			{
-				++it;
-			}
-		}
-		std::vector<Tr2InteriorMirror*>::iterator it = m_mirrors.begin();
-		while( it != m_mirrors.end() )
-		{
-			if( ( *it )->GetCell() == cell->GetUmbraCell() )
-			{
-				Tr2InteriorMirror* mirror = *it;
-				it = m_mirrors.erase( it );
-				CCP_DELETE( mirror );
-			}
-			else
-			{
-				++it;
-			}
-		}
 		RemoveReflectionMap( cell->GetReflectionMap() );
 	}
 
 	// Return the result of the intersection test
 	return intersects;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Blah.  Too hungover to write decent documentation.  FML.
-// --------------------------------------------------------------------------------------
-void Tr2InteriorPlaceable::CellRemoved( Tr2InteriorCell* cell )
-{
-	// Bail out if the cell is NULL
-	if( !cell )
-	{
-		return;
-	}
-
-	// Get the Umbra cell from the interior cell
-	Umbra::Cell* ucell = cell->GetUmbraCell();
-	if( !ucell )
-	{
-		return;
-	}
-
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-		 it != m_umbraObjects.end(); )
-	{
-		if( ucell == ( *it )->getCell() )
-		{
-			( *it )->release();
-			it = m_umbraObjects.erase( it );		
-		}
-		else
-		{
-			++it;
-		}
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Clears the dirty flag.  Also determines whether to enable or disable mirrors.
-//   Mirrors are only enabled when the placeable is in exactly one cell.  Any other cell
-//   membership situation disables mirrors.
-// --------------------------------------------------------------------------------------
-void Tr2InteriorPlaceable::ClearDirty( void )
-{
-	m_isDirty = false;
-
-	if( m_umbraObjects.size() == 1 )
-	{
-		EnableMirrors( m_umbraObjects[0]->getCell() );
-	}
-	else
-	{
-		DisableMirrors();
-	}
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Creates or updates an Umbra object and adds it to specified
-//   cell. Used for doors by physical portals.
-// Arguments:
-//   cell - The cell to add object to
-//   object - Umbra object that supposed to represent this dynamic
-// -------------------------------------------------------------
-void Tr2InteriorPlaceable::UpdateUmbraObject( Umbra::Cell* cell, Umbra::Object*& object ) const
-{
-	Vector3 minBounds, maxBounds;
-	if( !GetLocalBoundingBox( minBounds, maxBounds ) )
-	{
-		// Our bounding box is not ready
-		return;
-	}
-
-	if( object == NULL )
-	{
-		object = Umbra::Object::create( m_umbraModel );
-		object->setCell( cell );
-		object->setUserPointer( CONVERT_TO_UMBRA_USER_DATA( GetRawRoot() ) );
-	}
-
-	Matrix transformInv;
-	cell->getCellToWorldMatrix( AS_UMBRA_MATRIX( transformInv ) );
-	D3DXMatrixInverse( &transformInv, NULL, &transformInv );
-
-	Matrix m = m_transform * transformInv;
-
-	object->setObjectToCellMatrix( AS_UMBRA_MATRIX( m ) );
-}
-
-// --------------------------------------------------------------------------------------
-//  Description:
-//    Query whether the placeable can be used as a background proxy (e.g. a stand-in
-//    for drawing a city-scape outside an interior scene)
-//  Return Value:
-//    true, if the placeable can be used as a background proxy
-//    false, if the placeable cannot be used as a background proxy
-// --------------------------------------------------------------------------------------
-bool Tr2InteriorPlaceable::IsBackgroundProxy( void ) const
-{
-	if( m_placeableRes )
-	{
-		return m_placeableRes->IsBackgroundProxy();
-	}
-	return false;
 }
 
 // --------------------------------------------------------------------------------------
@@ -586,97 +329,9 @@ bool Tr2InteriorPlaceable::IsShadowCaster( void ) const
 	return false;
 }
 
-// --------------------------------------------------------------------------------------
-//  Description:
-//    Adds the placeable to a cell as a background proxy.  This gets called by the 
-//    interior scene during OnCellImmediateReport, which is early enough in the visibility
-//    query to add objects to the cell.
-//  Arguments:
-//    cell - the current cell, which will contain the background proxy
-// --------------------------------------------------------------------------------------
-void Tr2InteriorPlaceable::AddToCellAsBackgroundProxy( Umbra::Cell* cell )
-{
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-		 it != m_umbraObjects.end(); ++it )
-	{
-		( *it )->setCell( cell );
-	}
-}
-
-// --------------------------------------------------------------------------------------
-//  Description:
-//    Adds the placeable to the root cell. This happens as a fallback when a placeable
-//    happens to be outside of any normal cell.
-//  Arguments:
-//    cell - the root cell
-// --------------------------------------------------------------------------------------
-void Tr2InteriorPlaceable::AddToRootCell( Umbra::Cell* cell )
-{
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-		it != m_umbraObjects.end(); )
-	{
-		if( m_umbraObjects.size() <= 1 )
-		{
-			break;
-		}
-		( *it )->setCell( NULL );
-		( *it )->release();
-		( *it ) = NULL;
-		it = m_umbraObjects.erase( it );
-	}
-	if( m_umbraObjects.empty() )
-	{
-		Umbra::Object* object = Umbra::Object::create( m_umbraModel );
-		object->setUserPointer( CONVERT_TO_UMBRA_USER_DATA( this ) );
-		m_umbraObjects.push_back( object );
-	}
-	m_umbraObjects.front()->setCell( cell );
-	m_umbraObjects.front()->setObjectToCellMatrix( AS_UMBRA_MATRIX( m_transform ) );
-
-	m_SHMatrixRed = m_SHMatrixGreen = m_SHMatrixBlue = Matrix( 
-		0.f, 0.f, 0.f, 0.f, 
-		0.f, 0.f, 0.f, 0.f, 
-		0.f, 0.f, 0.f, 0.f, 
-		0.5f, 0.5f, 0.5f, 0.5f );
-}
-
 void Tr2InteriorPlaceable::SetLOD( const TriFrustum* frustum )
 {
 	// TODO_delder: implement LOD?
-}
-
-void Tr2InteriorPlaceable::SetVisibleLightCount( int visibleLightCount )
-{
-	m_visibleLightCount = visibleLightCount;
-}
-
-void Tr2InteriorPlaceable::SetVisibleLightSet( const Tr2InteriorLightSet& visibleLightSet )
-{
-	if( m_drawLightSpider )
-	{
-		visibleLightSet.GetLightPositions( m_visibleLights );
-	}
-}
-
-void Tr2InteriorPlaceable::RenderDebugInfo( TriLineSetPtr lines ) const
-{
-	if( m_drawLightSpider )
-	{
-		Color color;
-		if( m_visibleLights.size() > MAX_INTERIOR_LIGHTS_PER_OBJECT )
-		{
-			color = Color( 1.0f, 0.5f, 0.0f, 1.0f );
-		}
-		else
-		{
-			color = Color( 0.2f, 1.0f, 0.2f, 1.0f );
-		}
-		Vector3 center( m_transform._41, m_transform._42, m_transform._43 );
-		for( std::vector<Vector3>::const_iterator it = m_visibleLights.begin(); it != m_visibleLights.end(); ++it )
-		{
-			lines->Add( center, color, *it, color );
-		}
-	}
 }
 
 // --------------------------------------------------------------------------------------
@@ -972,8 +627,6 @@ void Tr2InteriorPlaceable::SetPosition( const Vector3& pos )
 		m_transform._42 = pos.y;
 		m_transform._43 = pos.z;
 
-		UpdateUmbraTransforms();
-
 		for( std::vector<Tr2InteriorMirror*>::iterator mirrorIt = m_mirrors.begin(); 
 			 mirrorIt != m_mirrors.end(); ++mirrorIt )
 		{
@@ -1008,8 +661,6 @@ void Tr2InteriorPlaceable::SetRotation( const Quaternion& rotQuat )
 
 		D3DXMatrixDecompose( &tmpScale, &tmpRotation, &tmpTranslation, &m_transform );
 		D3DXMatrixTransformation( &m_transform, NULL, NULL, &tmpScale, NULL, &rotQuat, &tmpTranslation );
-
-		UpdateUmbraTransforms();
 
 		for( std::vector<Tr2InteriorMirror*>::iterator mirrorIt = m_mirrors.begin(); 
 			 mirrorIt != m_mirrors.end(); ++mirrorIt )
@@ -1046,8 +697,6 @@ void Tr2InteriorPlaceable::SetScaling( const Vector3& scaleVec )
 		D3DXMatrixDecompose( &tmpScale, &tmpRotation, &tmpTranslation, &m_transform );
 		D3DXMatrixTransformation( &m_transform, NULL, NULL, &scaleVec, NULL, &tmpRotation, &tmpTranslation );
 
-		UpdateUmbraTransforms();
-
 		for( std::vector<Tr2InteriorMirror*>::iterator mirrorIt = m_mirrors.begin(); mirrorIt != m_mirrors.end(); ++mirrorIt )
 		{
 			( *mirrorIt )->SetTransformMatrix( m_transform );
@@ -1068,35 +717,6 @@ float Tr2InteriorPlaceable::CalculateCameraDistance( void )
 	return D3DXVec3LengthSq( &cameraPos );
 }
 
-void Tr2InteriorPlaceable::ClearUmbra( void )
-{
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-		 it != m_umbraObjects.end(); ++it )
-	{
-		( *it )->setCell( NULL );
-		( *it )->release();
-		( *it ) = NULL;
-	}
-	m_umbraObjects.clear();
-
-	if( m_umbraModel )
-	{
-		m_umbraModel->release();
-		m_umbraModel = NULL;
-	}
-}
-
-void Tr2InteriorPlaceable::ClearMirrors( void )
-{
-	for( std::vector<Tr2InteriorMirror*>::iterator it = m_mirrors.begin(); it != m_mirrors.end(); ++it )
-	{
-		Tr2InteriorMirror* mirror = *it;
-		CCP_DELETE( mirror );
-	}
-
-	m_mirrors.clear();
-}
-
 // --------------------------------------------------------------------------------
 // Description:
 //   Calculates actual bounds for the object using the placeable res and
@@ -1108,19 +728,6 @@ void Tr2InteriorPlaceable::ClearMirrors( void )
 void Tr2InteriorPlaceable::CalculateBoundingBox( Vector3& minBounds, Vector3& maxBounds )
 {
 	Vector3 min, max;
-
-	for( ITr2RenderableVector::iterator it = m_attachedObjects.begin(); it != m_attachedObjects.end(); ++it )
-	{
-		ITr2InteriorAttachedObject *attachedObject = dynamic_cast<ITr2InteriorAttachedObject*>( *it );
-		if( attachedObject )
-		{
-			if( attachedObject->GetBoundingBox( min, max ) )
-			{
-				BoundingBoxUpdate( minBounds, maxBounds, min, max );
-				attachedObject->ClearDirtyFlag();
-			}
-		}
-	}
 	GetLocalBoundingBox( min, max );
 	BoundingBoxUpdate( minBounds, maxBounds, min, max );
 }
@@ -1143,45 +750,16 @@ void Tr2InteriorPlaceable::RebuildVolume( void )
 	{
 		CalculateBoundingBox( minBounds, maxBounds );
 	}
-	
-	if( m_umbraModel )
-	{
-		m_umbraModel->release();
-		m_umbraModel = NULL;
-	}
-
-	// everything is there, so use bounding box
-	m_umbraModel = ( Umbra::Model* )Umbra::OBBModel::create( AS_UMBRA_VECTOR3( minBounds ), AS_UMBRA_VECTOR3( maxBounds ) );
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-		 it != m_umbraObjects.end(); ++it )
-	{
-		( *it )->setTestModel( m_umbraModel );
-		( *it )->setUserPointer( CONVERT_TO_UMBRA_USER_DATA( this ) );
-	}
 }
 
-void Tr2InteriorPlaceable::UpdateUmbraTransforms( void )
+void Tr2InteriorPlaceable::CreateMirrors()
 {
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjects.begin();
-		it != m_umbraObjects.end(); ++it )
+	for( auto it = m_mirrors.begin(); it != m_mirrors.end(); ++it )
 	{
-		Matrix m = m_transform;
-		XMVECTOR det;
-
-		if( ( *it )->getCell() )
-		{
-			Matrix cellTransform;
-			( *it )->getCell()->getCellToWorldMatrix( AS_UMBRA_MATRIX( cellTransform ) );
-			m = XMMatrixMultiply( m, XMMatrixInverse( &det, cellTransform ) );
-		}
-
-		( *it )->setObjectToCellMatrix( AS_UMBRA_MATRIX( m ) );
+		Tr2InteriorMirror* mirror = *it;
+		CCP_DELETE( mirror );
 	}
-}
-
-void Tr2InteriorPlaceable::EnableMirrors( Umbra::Cell* cell )
-{
-	ClearMirrors();
+	m_mirrors.clear();
 
 	Vector3 minBounds, maxBounds;
 
@@ -1215,9 +793,6 @@ void Tr2InteriorPlaceable::EnableMirrors( Umbra::Cell* cell )
 			mirror->SetMeshIndex( mesh->GetMeshIndex() );
 			mirror->SetAreaIndex( ( *it )->GetIndex() );
 
-			// Set Umbra cell
-			mirror->SetCell( cell );
-			
 			// Set placeable
 			mirror->SetPlaceable( this );
 
@@ -1252,16 +827,8 @@ void Tr2InteriorPlaceable::EnableMirrors( Umbra::Cell* cell )
 
 			// Set transformation
 			mirror->SetTransformMatrix( m_transform );
-
-			// Finally, build the mirror
-			mirror->BuildUmbraMirror();
 		}
 	}
-}
-
-void Tr2InteriorPlaceable::DisableMirrors( void )
-{
-	ClearMirrors();
 }
 
 Tr2InteriorMirror* Tr2InteriorPlaceable::GetMirror( size_t index ) const
@@ -1272,21 +839,6 @@ Tr2InteriorMirror* Tr2InteriorPlaceable::GetMirror( size_t index ) const
 	}
 
 	return NULL;
-}
-
-// --------------------------------------------------------------------------------------
-// Description
-//   Enable or disable Umbra portals for all mirrors on this placeable.
-// Arguments:
-//   enable - If true - enable portals
-//			  If false - disable portals
-// --------------------------------------------------------------------------------------
-void Tr2InteriorPlaceable::EnableMirrorPortals( bool enable )
-{
-	for( std::vector<Tr2InteriorMirror*>::iterator it = m_mirrors.begin(); it != m_mirrors.end(); ++it )
-	{
-		( *it )->EnablePortals( enable );
-	}
 }
 
 // --------------------------------------------------------------------------------------
@@ -1314,45 +866,6 @@ Tr2PerObjectData* Tr2InteriorPlaceable::GetPerObjectDataWithPerInstanceLighting(
 										lightSet,
 										objectToWorldMatrix, 
 										mirrorToWorldMatrix );
-}
-
-// ---------------------------------------------------------------------------------------
-//  Description:
-//    Gets per-object data for the placeable using a reduced per-object data optimized for
-//    pre-pass.
-//  See Also:
-//    GetPerObjectData, GetPerObjectDataWithPerInstanceLighting
-//  Arguments:
-//    accumulator -         The batch accumulator used to allocate memory for per-object data
-//    objectToWorldMatrix - The transformation matrix used to position this object 
-//                          in world coordinates
-//  Return Value:
-//    The allocated per-object data, or NULL if the memory allocation failed.
-// ---------------------------------------------------------------------------------------
-Tr2PerObjectData* Tr2InteriorPlaceable::GetPerObjectDataForPrePass( 
-	ITriRenderBatchAccumulator* accumulator,
-	const Matrix& objectToWorldMatrix )
-{
-	Tr2PerObjectDataPrePass* data = accumulator->Allocate<Tr2PerObjectDataPrePass>();
-
-	if( !data )
-	{
-		return NULL;
-	}
-
-	// Standard vertex shader data
-	Tr2PerObjectVSData perObjectVSBuffer;
-
-	// 0
-	memset( &perObjectVSBuffer, 0, sizeof( perObjectVSBuffer ) );
-
-	// column_major for shaders
-	D3DXMatrixTranspose( &perObjectVSBuffer.WorldMat, &objectToWorldMatrix );
-
-	// Do the copy
-	data->CopyToVSFloatBuffer( perObjectVSBuffer );
-
-	return data;
 }
 
 // ------------------------------------------------------------------------------------------------------
@@ -1417,18 +930,6 @@ Tr2PerObjectData* Tr2InteriorPlaceable::GetPerObjectDataWithLightSet( ITriRender
 	return data;
 }
 
-// -------------------------------------------------------------
-// Description:
-//   Implements ITr2Renderable method. Returns a vector of
-//   renderable objects attached to this object.
-// Return value:
-//   Vector of attached renderable objects
-// -------------------------------------------------------------
-const ITr2RenderableVector* Tr2InteriorPlaceable::GetAttachedRenderables()
-{
-	return &m_attachedObjects;
-}
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Loads a copy of a placeableRes from the res path.
@@ -1440,7 +941,8 @@ void Tr2InteriorPlaceable::LoadPlaceableRes()
 	IRootPtr p;
 	p.Attach( BeResMan->LoadObject( m_placeableResPath.c_str() ) );
 
-	BlueQIPtrAssign( ( IRoot** )&m_placeableRes, p, BlueInterfaceIID<WodPlaceableRes>() );
+	m_placeableRes = BlueCastPtr( p );
+	BindLowLevelShaders();
 }
 
 bool Tr2InteriorPlaceable::IsStatic( void ) const
@@ -1476,4 +978,14 @@ AxisAlignedBoundingBox Tr2InteriorPlaceable::GetBoundingBoxInWorldSpace() const
 	return result;
 }
 
-#endif
+bool Tr2InteriorPlaceable::IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const
+{
+	Vector3 minBounds, maxBounds;
+	if( !GetWorldBoundingBox( minBounds, maxBounds ) )
+	{
+		return false;
+	}
+	objectToWorld = m_transform;
+	return frustum.IsBoxVisible( minBounds, maxBounds );
+}
+

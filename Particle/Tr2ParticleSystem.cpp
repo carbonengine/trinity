@@ -697,7 +697,7 @@ void Tr2ParticleSystem::UpdateSimulation( float dt )
 							XMVectorScale( XMLoadFloat4A( reinterpret_cast<XMFLOAT4A*>( velocity ) ), dt ) ) );
 
 					
-					if( m_emissionWhileAliveEmitter )
+					if( m_emissionWhileAliveEmitter != nullptr )
 					{
 						m_emissionWhileAliveEmitter->SpawnParticles( 
 							reinterpret_cast<Vector3*>( &particlePosition ),
@@ -785,7 +785,7 @@ void Tr2ParticleSystem::UpdateSimulation( float dt )
 				}
 				for( auto i = range.begin(); i < range.end(); ++i )
 				{
-					if( m_emissionWhileAliveEmitter )
+					if( m_emissionWhileAliveEmitter != nullptr )
 					{
 						m_emissionWhileAliveEmitter->SpawnParticles( 
 							reinterpret_cast<Vector3*>( position ), 
@@ -828,7 +828,7 @@ bool Tr2ParticleSystem::CompareParticles( unsigned particle1, unsigned particle2
 	XMVECTOR distance1 = XMVector3LengthSq( position1 );
 	XMVECTOR distance2 = XMVector3LengthSq( position2 );
 
-	return XMVector3Less( distance2, distance1 );
+	return XMVector3Less( distance2, distance1 ) != 0;
 }
 
 // --------------------------------------------------------------------------------------

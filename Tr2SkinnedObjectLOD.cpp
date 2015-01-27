@@ -16,7 +16,7 @@ bool g_debugLODShader = false;
 TRI_REGISTER_SETTING( "debugLODShader", g_debugLODShader );
 
 // lod resource unloading
-extern float g_wodAvatarResourceUnloadingTimeThreshold;
+static const double AVATAR_RESOURCE_UNLOADING_TIME_THRESHOLD = 10.0;
 
 TRI_REGISTER_SETTING( "skinnedLowDetailThreshold",		g_skinnedLowDetailThreshold );
 TRI_REGISTER_SETTING( "skinnedMediumDetailThreshold",	g_skinnedMediumDetailThreshold );
@@ -75,11 +75,7 @@ bool Tr2SkinnedObjectLod::UnloadLodIfNeeded( const Be::Time time, const Be::Time
 		return false;
 	}
 
-#if INTERIORS_ENABLED
-	Be::Time timeout = TimeFromDouble( (double)g_wodAvatarResourceUnloadingTimeThreshold );
-#else
-	Be::Time timeout = int64_t( 0 );
-#endif
+	Be::Time timeout = TimeFromDouble( AVATAR_RESOURCE_UNLOADING_TIME_THRESHOLD );
 
 	// Never unload the currently used proxy
 	if( m_highDetailProxy )

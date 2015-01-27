@@ -49,11 +49,11 @@ public:
 			// cull front faces & disable depth test
 			if( Tr2Renderer::IsRightHanded() != renderContext.m_esm.IsCullModeInverted() )
 			{
-				renderContext.SetRenderState( RS_CULLMODE, D3DCULL_CCW );
+				renderContext.SetRenderState( RS_CULLMODE, CULLMODE_CCW );
 			}
 			else
 			{
-				renderContext.SetRenderState( RS_CULLMODE, D3DCULL_CW );
+				renderContext.SetRenderState( RS_CULLMODE, CULLMODE_CW );
 			}
 			renderContext.SetRenderState( RS_ZFUNC, CMP_GREATER );
 		}
@@ -62,11 +62,11 @@ public:
 			// cull back faces
 			if( Tr2Renderer::IsRightHanded() )
 			{
-				renderContext.SetRenderState( RS_CULLMODE, D3DCULL_CW );
+				renderContext.SetRenderState( RS_CULLMODE, CULLMODE_CW );
 			}
 			else
 			{
-				renderContext.SetRenderState( RS_CULLMODE, D3DCULL_CCW );
+				renderContext.SetRenderState( RS_CULLMODE, CULLMODE_CCW );
 			}
 			renderContext.SetRenderState( RS_ZFUNC, CMP_LESSEQUAL );
 		}

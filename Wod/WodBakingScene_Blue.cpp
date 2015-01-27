@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "WodBakingScene.h"
 
 BLUE_DEFINE( WodBakingScene );
@@ -77,16 +75,6 @@ static Be::VarChooser VisualizerChooser[] =
 		"Enlighten only)"
 	},
 	{
-		"Enlighten target and detail meshes",
-		BeCast( VM_EN_TARGET_DETAIL ),
-		"Enlighten target and detail meshes"
-	},
-	{
-		"Enlighten output density",
-		BeCast( VM_EN_OUTPUT_DENSITY ),
-		"Enlighten output density (statics only)"
-	},
-	{
 		"Depth",
 		BeCast( VM_DEPTH ),
 		"See the depth buffer of the scene"
@@ -111,4 +99,3 @@ const Be::ClassInfo* WodBakingScene::ExposeToBlue()
 	EXPOSURE_END()
 }
 
-#endif

@@ -30,7 +30,6 @@ Tr2SkinnedObject::Tr2SkinnedObject(IRoot* lockobj) :
 #if APEX_ENABLED
 	PARENTLOCK( m_clothMeshes ),
 #endif
-	PARENTLOCK( m_attachedObjects ),
 	PARENTLOCK( m_curveSets ),
 	m_skinningMatrixFrameDelay( 0 ),
 	m_skinningMatrixQueueIndex( 0 ),
@@ -1038,11 +1037,6 @@ void Tr2SkinnedObject::SetDebugSkeletonTrailLength( unsigned int val )
 {
 	m_debugSkeletonTrailLength = val;
 	ResetSkinningMatrices();
-}
-
-const ITr2RenderableVector* Tr2SkinnedObject::GetAttachedRenderables()
-{
-	return &m_attachedObjects;
 }
 
 AxisAlignedBoundingBox Tr2SkinnedObject::GetBoundingBoxInLocalSpace() const

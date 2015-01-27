@@ -6,15 +6,13 @@
 #include "ITr2PickableScene.h"
 #include "ITr2VisibilityQueryable.h"
 #include "Tr2PickBuffer.h"
-#include "Tr2UmbraScene.h"
 #include "Tr2InteriorVisualization.h"
-#include "Tr2InteriorEnlightenUpdateTaskManager.h"
 #include "include/ITr2MultiPassScene.h"
 #include "ITr2VisualizationModeRenderer.h"
 #include "Tr2InteriorSHLightingSolver.h"
 #include "Tr2InteriorLightSet.h"
-#include "Tr2InteriorEnlightenSystemImpl.h"
 #include "Include/ITr2Scene.h"
+#include "Tr2InteriorRenderBatch.h"
 
 // Forward declarations
 struct Tr2VisibilityEvent;
@@ -24,11 +22,6 @@ class TriProjection;
 class TriVariable;
 class TriView;
 class TriViewport;
-enum Tr2InteriorBatchGroup;
-class TriEnlightenProgressBar;
-
-// lod resource unloading
-extern float g_wodAvatarResourceUnloadingTimeThreshold;
 
 // Blue forward declarations
 BLUE_DECLARE( Tr2ApexScene );
@@ -45,8 +38,6 @@ BLUE_DECLARE( TriCurveSet );
 BLUE_DECLARE_VECTOR( TriCurveSet );
 BLUE_DECLARE( Tr2InteriorCell );
 BLUE_DECLARE_VECTOR( Tr2InteriorCell );
-BLUE_DECLARE( Tr2InteriorPhysicalPortal );
-BLUE_DECLARE_VECTOR( Tr2InteriorPhysicalPortal );
 BLUE_DECLARE( TriLineSet );
 
 class Tr2InteriorScene:
@@ -54,11 +45,9 @@ class Tr2InteriorScene:
 	public INotify,
 	public IListNotify,
 	public ITr2Scene,
-	public Tr2UmbraScene,
 	public ITr2MultiPassScene,
 	public ITr2PickableScene,
 	public ITr2VisibilityQueryable,
-	public IBlueAsyncResNotifyTarget,
 	public Tr2DeviceResource,
 	public ITr2VisualizationModeRenderer
 {
@@ -81,7 +70,7 @@ public:
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList );
 
 	//////////////////////////////////////////////////////////////////////////
-	// ITr2Scene (via Tr2UmbraScene)
+	// ITr2Scene
 	virtual void Update( Be::Time realTime, Be::Time simTime );
 	virtual void Render( Tr2RenderContext& renderContext );
 	virtual void RenderDebugInfo( Tr2RenderContext& renderContext );
@@ -96,11 +85,6 @@ public:
 	virtual void SetVisibilityResults( Tr2VisibilityResults* visibilityResults );
 
 	//////////////////////////////////////////////////////////////////////////
-	// IBlueAsyncResNotifyTarget
-	virtual void ReleaseCachedData( BlueAsyncRes* p ) {}
-	virtual void RebuildCachedData( BlueAsyncRes* p );
-
-	//////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
 private:
@@ -112,20 +96,8 @@ public:
 	virtual void SetVisualizationMode( int visualizationMode );
 
 	void SetRenderBackgroundCubeMap( bool renderBackgroundCubemap );
-	
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-	void SaveEnlighten();
-	bool BuildEnlighten( TriEnlightenProgressBar &progress );
-	bool PreviewEnlighten( TriEnlightenProgressBar &progress );
-	bool BuildLightProbes();
-#endif
 
 	void RebuildSceneData( void );
-	// Populate probe volumes vector with data from SH file for all cells
-	bool PopulateProbeVolumes();
-
-	// Shader overrides for effect debugging
-	void SetVisualizeMethod( void );
 
 	// Add a light source to the scene
 	void AddLightSource( ITr2InteriorLight* lightSource );
@@ -143,33 +115,11 @@ public:
 
 protected:
 
-	//////////////////////////////////////////////////////////////////////////
-	// Umbra callbacks
-
-	// Handle Umbra::Commander::QUERY_BEGIN
-	virtual void OnQueryBegin( void );
-	// Handle Umbra::Commander::QUERY_END
-	virtual void OnQueryEnd( void );
-	// Handle Umbra::Commander::PORTAL_ENTER
-	virtual void OnPortalEnter( void );
-	// Handle Umbra::Commander::PORTAL_EXIT
-	virtual void OnPortalExit( void );
-	// Handle Umbra::Commander::PORTAL_PRE_EXIT
-	virtual void OnPortalPreExit( void );
-	// Handle Umbra::Commander::VIEW_PARAMETERS_CHANGED
-	virtual void OnViewParametersChanged( void );
-	// Handle Umbra::Commander::INSTANCE_VISIBLE
-	virtual void OnInstanceVisible( void );
-	// Handle Umbra::Commander::REGION_OF_INFLUENCE_ACTIVE
-	virtual void OnRegionOfInfluenceActive( void );
-	// Handle Umbra::Commander::REGION_OF_INFLUENCE_INACTIVE
-	virtual void OnRegionOfInfluenceInactive( void );
-	// Handle Umbra::Commander::STENCIL_MASK
-	virtual void OnStencilMask( void );
-	// Handle Umbra::Commander::CELL_IMMEDIATE_REPORT
-	virtual void OnCellImmediateReport( void );
-	// Handle Umbra::Commander::DRAW_LINE_3D
-	virtual void OnDrawLine3D( void );
+	void OnQueryBegin( void );
+	void OnQueryEnd( void );
+	void OnInstanceVisible( ITr2InteriorCullable* cullable, const Matrix& );
+	void OnPortalEnter( const Tr2InteriorMirror*, const Matrix&, bool isMirrored, const Vector4& clipPlane );
+	void OnPortalExit( const Tr2InteriorMirror*, const Matrix&, bool isMirrored, const Vector4& clipPlane );
 
 	//////////////////////////////////////////////////////////////////////////
 	// Visibility event handlers
@@ -196,15 +146,9 @@ protected:
 	void DoPortalPreExit( const Tr2VisibilityEvent& event, BatchGatherType gatherType );
 	// Handle Tr2VisibilityEvent::VIEW_PARAMETERS_CHANGED
 	void DoViewParametersChanged( const Tr2VisibilityEvent& event, 
-		BatchGatherType gatherType );
+		BatchGatherType gatherType, Tr2InteriorBatchGroup batchGroup );
 	// Handle Tr2VisibilityEvent::INSTANCE_VISIBLE
 	void DoInstanceVisible( const Tr2VisibilityEvent& event, 
-		BatchGatherType gatherType );
-	// Handle Tr2VisibilityEvent::REGION_OF_INFLUENCE_ACTIVE
-	void DoRegionOfInfluenceActive( const Tr2VisibilityEvent& event, 
-		BatchGatherType gatherType );
-	// Handle Tr2VisibilityEvent::REGION_OF_INFLUENCE_INACTIVE
-	void DoRegionOfInfluenceInactive( const Tr2VisibilityEvent& event, 
 		BatchGatherType gatherType );
 	// Handle Tr2VisibilityEvent::STENCIL_MASK
 	void DoStencilMask( const Tr2VisibilityEvent& event, BatchGatherType gatherType );
@@ -221,36 +165,20 @@ protected:
 	void GatherFlareBatches( Tr2VisibilityResults* results );
 
 private:
-	// Create Root cell (holds camera when camera is outside any physical cell)
-	void CreateRootCell( void );
-	// Release Root cell
-	void ReleaseRootCell( void );
-	// Updates Root portals (connecting root cell to interior cells)
-	void UpdateRootPortals( void );
-	// Updates the root portal for a particular cell
-	void UpdateRootPortalForCell( Tr2InteriorCell* cell );
-	// Release root portals
-	void ReleaseRootPortals( void );
-	void ResolveVisibility( Tr2UmbraCamera& camera );
-
-	// Determine which cell the camera is in
-	Umbra::Cell* GetCameraCell( void );
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-	bool BuildEnlightenImpl( Tr2InteriorEnlightenSystemImpl::Quality quality, TriEnlightenProgressBar& progress );
-#endif
+	void ResolveVisibility( const Matrix& view, const Matrix& projection, size_t maxDepth );
+	void DoVisibilityQuery( const TriFrustum&, const Matrix& view, size_t depth, size_t maxDepth, const Matrix& mirrorMatrix );
+	void FollowMirror( const Tr2InteriorMirror* mirror, const Matrix& objectToWorld, const TriFrustum&, const Matrix& view, size_t depth, size_t maxDepth );
 	// Update lights, adding to cells as needed
 	void UpdateLights( void );
 	// Update dynamics, adding to cells as needed
 	void UpdateDynamics( void );
 	void UpdateCells();
-
-	// Are we in a mirrored state?
-	bool IsMirrored( void ) const;
+	void UpdateSecondaryLighting();
 
 	// Handle list-changed events for the lights list
-	bool OnLightsListModified( long event, SSIZE_T key, SSIZE_T key2, IRoot* currvalue );
+	bool OnLightsListModified( long event, ssize_t key, ssize_t key2, IRoot* currvalue );
 	// Handle light-changed events for the dynamics list
-	bool OnDynamicsListModified( long event, SSIZE_T key, SSIZE_T key2, IRoot* currvalue );
+	bool OnDynamicsListModified( long event, ssize_t key, ssize_t key2, IRoot* currvalue );
 
 	void BeginRender( Tr2RenderContext& renderContext );
 	void RenderPrePass( Tr2RenderContext& renderContext );
@@ -281,15 +209,12 @@ private:
 	// Holds the batches for pre-pass
 	ITriRenderBatchAccumulator* m_prepassBatches;
 
-	// This is a handle to another batch accumulator, so the Umbra scene traversal can accumulate
+	// This is a handle to another batch accumulator, so the scene traversal can accumulate
 	// renderable batches into different lists, depending on the scene query type
 	ITriRenderBatchAccumulator* m_activePrimaryRenderBatches;
-	// This is a handle to a temporary transparent batch store, so the Umbra scene traversal can
+	// This is a handle to a temporary transparent batch store, so the scene traversal can
 	// accumulate transparent batches into different lists
 	ITriRenderBatchAccumulator* m_activeTransparentBatchStore;
-
-	// Manages asynchronous Enlighten updates
-	CTr2IntEnlightenTaskManager m_enlightenUpdateTaskManager;
 
 	// Direction and color of sun light
 	Vector3 m_sunDirection;
@@ -306,20 +231,8 @@ private:
 
 	Tr2Variable m_cameraPosVar;
 
-	// Hack flag to allow scene to ignore the root culling cell.  This is necessary
-	// to avoid problems with unbounded cells.  
-	// TODO: refactor this whole root cell business.
-	// <delder>
-	bool m_sceneUseRootCell;
-
-	// filtering the results of umbra culling against a list of objects allowed to draw
-	bool m_useFilterList;
-	PITr2InteriorDynamicVector	m_filterList;
-
 	// a scene is made of cells
 	PTr2InteriorCellVector m_cells;
-	// connected by portals
-	PTr2InteriorPhysicalPortalVector m_portals;
 	// lights
 	PITr2InteriorLightVector m_lights;
 	// dynamics
@@ -330,12 +243,8 @@ private:
 	// Visibility result set
 	Tr2VisibilityResultsPtr m_visibilityResults;
 
-	// Stack of objects/lights visited during scene traversal
-	std::vector<std::unordered_set<IRoot*>*> m_visitedObjects;
-
 	// Set of visible lights
 	std::set<ITr2InteriorLight*> m_visibleLights;
-	bool m_enableLightCulling;
 
 	enum VisibilityQueryType
 	{
@@ -345,36 +254,12 @@ private:
 	};
 	VisibilityQueryType m_visibilityQueryType;
 
-	// Root cell - an Uber-cell to hold the camera when the camera is outside the 'proper' cells (as in Jessica)
-	Umbra::Cell* m_rootCell;
-	Umbra::Object* m_rootObject;
-	Umbra::Model* m_rootModel;
-	std::map<Umbra::Cell*, std::pair<Umbra::Model*,Umbra::PhysicalPortal*> > m_rootPortals;
-
-	// Intersecting cell portals model (box around a camera)
-	Umbra::Model* m_cameraPortalModel;
-	// Intersecting cell portals
-	std::vector<Umbra::PhysicalPortal*> m_cameraPortals;
-
-	// Umbra cell containing the camera
-	Umbra::Cell* m_currentCameraCell;
-
-	// Umbra culling cameras
-	Tr2UmbraCamera m_sceneCamera;
-	Tr2UmbraCamera m_shadowCamera;
-
 	// Miscellaneous Umbra bullshit
-	bool m_isMirroredInLeftHandedSpace;
-	int m_mirrorDepth;
-	bool m_firstViewParameterChange;
-	Matrix m_cameraToWorldMatrix;
 	Matrix m_mirrorToWorldMatrix;
-	bool m_gatherShadowCasterBatches;
 	std::vector<Matrix> m_mirrorToWorldMatrixStack;
 	std::vector<std::pair<int, int> > m_transparencyStack;
 	std::vector<std::pair<int, int> > m_stencilStack;
 	int m_currentObjectGroup;
-	bool m_enteringPortal;
 
 
 	// Active light set
@@ -383,21 +268,15 @@ private:
 	// Maintain a list of visible objects (used for picking)
 	std::vector<ITr2Renderable*> m_visibleObjects;
 
-	// Enlighten environment
-	Geo::GeoArray<Geo::v128> m_enlightenInputEnvironmentLightingCache;
-
 	Tr2Variable m_backgroundCubeMapVar;
 	std::string m_backgroundCubeMapPath;
 	TriTextureResPtr m_backgroundCubeMapRes;
 	Tr2EffectPtr m_backgroundEffect;
 	bool m_renderBackgroundCubeMap;
-	float m_enlightenEnvironmentMultiplicationFactor;
 
 	Tr2ApexScenePtr	m_apexScene;
 
 	void SetBackgroundCubemapResPath();
-	void SetEnvironmentCubeMapToEnlighten( Tr2RenderContext &renderContext );
-	void UpdateEnvironmentLightingFromCacheWithMultiplier();
 	// Update each cell SH scale factor
 	void UpdateSHScaleFactor();
 
@@ -416,11 +295,6 @@ private:
 	// Clears the visibility results
 	void ClearVisibilityResults( void );
 
-	// Expose some Umbra stuff to Python - WoD needs this for minimap rendering
-	// TODO_DME: refactor this out a bit, it's related to cameras in proposed VisibilityQuery render-step
-	void SetUmbraProperties( unsigned int properties );
-	unsigned int GetUmbraProperties();
-
 	void SetupTransformsForPicking( float fx, float fy, TriProjection* proj, TriView* view, TriViewport* viewport );
 	const std::vector<ITr2Renderable*>& GetPickingObjectsToRender( const Vector3& dirWorld );
 	const std::vector<ITr2Renderable*>& GetPickingObjectsToRender( const Vector3& dirWorld, float fov, float aspect );
@@ -437,7 +311,7 @@ private:
 	virtual void DecodeBufferPixel( const void* pBuffer, PickComponents pass, BufferResults& results ) const;
 
 	// Construct a sort key from object & batch groups
-	__int64 ConstructKey( unsigned int objectGroup, Tr2InteriorBatchGroup batchGroup );
+    int64_t ConstructKey( unsigned int objectGroup, Tr2InteriorBatchGroup batchGroup );
 
 	// These should be moved over to a smaller per-frame data at some point without the cruft
 	void PopulatePerFramePSData( Tr2PerFramePSData &data );
@@ -464,13 +338,6 @@ private:
 		return results.uv;
 	}
 
-	bool m_drawSorted;
-	unsigned int m_sortedRenderBatchCount;
-	unsigned int m_unsortedRenderBatchCount;
-
-	// Enlighten update cut-off depth (distance from nearest visible cell)
-	int m_enlightenVisibilityUpdateThreshold;
-
 	PTriCurveSetVector m_curveSets;
 
 	// Per-frame data
@@ -488,7 +355,6 @@ private:
 
 	// debug
 	bool m_renderDebugInfo;
-	bool m_renderCullingInfo;
     TriLineSetPtr m_debugLines;
 
 	bool m_displayDynamics;
@@ -500,8 +366,6 @@ private:
 
 	// visualization
 	VisualizeMethod m_visualizeMethod;
-	Tr2EffectPtr m_visualizerOverride;
-	bool		 m_visualizerOverrideApplyPS;
 	Tr2ShaderMaterialPtr m_visualizerEffects[VM_COUNT];
 
 	// SH scale factor
@@ -509,17 +373,6 @@ private:
 
 	// Ragdoll simulation
 	ITr2PhysicsUpdaterPtr m_ragdollScene;
-
-	// Focal position (reference point to use when calculating shadow caster importance)
-	Vector3 m_shadowFocalPosition;
-	// Flag to use m_shadowFocalPosition (if true) or camera position (if false)
-	// to calculate shadow caster importance
-	bool m_useShadowFocalPosition;
-
-	// Previous frame time (for measuring frame length for shadow interpolation)
-	Be::Time m_prevTime;
-	// Time to completely fade shadow in or out
-	float m_shadowFadeTime;
 
 	// Maximum number of shadows to update per frame (including LOD switches)
 	unsigned int m_shadowsUpdatesPerFrame;
@@ -605,6 +458,8 @@ private:
 
 	Tr2ConstantBufferAL	m_perFramePSBuffer, m_perFrameShadowPSBuffer;
 	Tr2ConstantBufferAL	m_perFrameVSBuffer, m_perFrameShadowVSBuffer;
+
+
 };
 
 TYPEDEF_BLUECLASS( Tr2InteriorScene );

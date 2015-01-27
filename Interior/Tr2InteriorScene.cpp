@@ -1,16 +1,15 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorScene.h"
 
-#include "TriFrustum.h"
 #include "TriProjection.h"
 #include "TriSettingsRegistrar.h"
 #include "TriView.h"
 #include "TriViewport.h"
+#if APEX_ENABLED
 #include "Apex/Apex.h"
 #include "Apex/Tr2ApexScene.h"
+#endif
 #include "Tr2VisibilityResults.h"
 #include "Tr2InteriorMirror.h"
 #include "Tr2ShaderMaterial.h"
@@ -21,7 +20,6 @@
 #include "Tr2PushPopRT.h"
 
 #include "include/ITr2DebugRenderer.h"
-#include "ITr2UmbraUserData.h"
 
 #include "TriLineSet.h"
 #include "Tr2InteriorPlaceable.h"
@@ -29,33 +27,19 @@
 #include "ITr2PhysicsUpdater.h"
 #include "Curves/TriCurveSet.h"
 #include "Tr2InteriorCell.h"
-#include "Tr2InteriorPhysicalPortal.h"
 #include "Tr2TextureAtlas.h"
 #include "Tr2Effect.h"
+#include "TriFrustum.h"
 
 using namespace Tr2RenderContextEnum;
 
 extern ITr2DebugRendererPtr g_debugRenderer;
 
-bool g_useRootCell = false;
-
-#if !defined( NDEBUG )
-// In release builds, you can turn this on using a trinity setting
-bool g_outputEnlightenDebugBuildInfo = false;
-#else
-// In debug builds, this defaults to true
-bool g_outputEnlightenDebugBuildInfo = true;
-#endif
-
-TRI_REGISTER_SETTING( "useRootCell", g_useRootCell );
-TRI_REGISTER_SETTING( "outputEnlightenDebugBuildInfo", g_outputEnlightenDebugBuildInfo );
-
-extern bool g_enlightenBreakOnErrors;
-
 CCP_STATS_DECLARE( wodInteriorSceneShadowsNeedUpdating, "Trinity/Tr2InteriorScene/ShadowsNeedUpdating", true, CST_COUNTER_LOW, "Number of spotlight shadows that need updating" );
 CCP_STATS_DECLARE( wodInteriorSceneShadowsUpdated, "Trinity/Tr2InteriorScene/ShadowsUpdated", true, CST_COUNTER_LOW, "Number of spotlight shadows updated" );
 CCP_STATS_DECLARE( wodInteriorSceneIntersectingCellPortals, "Trinity/Tr2InteriorScene/IntersectingCellPortals", true, CST_COUNTER_LOW, "Number of temporary portals to fix intersecting cells" );
 
+BLUE_DEFINE_INTERFACE( ITr2InteriorCullable );
 BLUE_DEFINE_INTERFACE( ITr2Interior );
 
 const unsigned int INTERIOR_SHADOW_MAP_FOM_SAMPLER = 9;
@@ -69,12 +53,6 @@ const unsigned int INTERIOR_SHADOW_ATLAS_RESOLUTION = 2048;
 
 // Name of the High-level shader used for picking
 static const char* s_pickingEffectName   = "Picking";
-
-// lod resource unloading
-float g_wodAvatarResourceUnloadingTimeThreshold = 10.0f;
-TRI_REGISTER_SETTING( "wodAvatarResourceUnloadingTimeThreshold", g_wodAvatarResourceUnloadingTimeThreshold );
-
-CcpLogChannel_t g_enlightenBuildChannel = CCP_LOG_DEFINE_CHANNEL( "EnlightenBuild" );
 
 namespace
 {
@@ -93,14 +71,6 @@ namespace
 		"Visualizer_SpecularMap",
 		"Visualizer_Overdraw",
 		"Visualizer_EnlightenOnly",
-		"Visualizer_EnlightenTargetDetail",
-		"Visualizer_EnlightenOutputDensity",
-		"Visualizer_EnlightenAlbedo",
-		"Visualizer_EnlightenAlbedo",
-		"Visualizer_TexCoord1",
-		"Visualizer_EnlightenOutputDensity", //naughty pixels
-		"Visualizer_EnlightenOutputDensity", //chart viz
-		"Visualizer_EnlightenOutputDensity", //target chart viz
 		"Visualizer_Depth",
 		"Visualizer_AllLighting",
 		"Visualizer_LightPrePassNormals",
@@ -164,32 +134,23 @@ namespace
 
 Tr2InteriorScene::Tr2InteriorScene( IRoot* lockobj /*= NULL */ ):
 	PARENTLOCK( m_cells ),
-	PARENTLOCK( m_portals ),
 	PARENTLOCK( m_lights ),
 	PARENTLOCK( m_dynamics ),
 	PARENTLOCK( m_dynamicsPendingLoad ),
 	PARENTLOCK( m_curveSets ),
-	PARENTLOCK( m_filterList ),
 	m_renderDebugInfo( false ),
-	m_renderCullingInfo( false ),
 	m_sunDirection( 0.0f, 0.0f, 1.0f ),
 	m_sunDiffuseColor( 0.0f, 0.0f, 0.0f, 1.0f ),
 	m_sunSpecularColor( 0.8f, 0.8f, 0.8f, 1.0f ),
 	m_ambientColor( 0.0f, 0.0f, 0.0f, 0.0f ),
-	m_enlightenEnvironmentMultiplicationFactor( 1.0f ),
 	m_lastUpdateTime( 0 ),
 	m_apexLODResourceBudget( 100000.0f ),
 	m_apexLODResourceBudgetConsumed( 0.0f ),
 	m_visualizeMethod( VM_NONE ),
 	m_pickBuffer( NULL, Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_FLOAT, 1 ),
-	m_useFilterList( false ),
-	m_shadowFocalPosition( 0.0f, 0.0f, 0.0f ),
-	m_useShadowFocalPosition( false ),
 	m_shadowsUpdatesPerFrame( 2 ),
 	m_shadowsLODSwitchesPerFrame( 1 ),
 	m_useShadowLOD( true ),	
-	m_cameraPortalModel( NULL ),
-	m_sceneUseRootCell( true ),
 	m_maxFogAmount( 0.0f ),
 	m_maxFogDistance( 1000.0f ),
 	m_minFogDistance( 0.0f ),
@@ -224,7 +185,7 @@ Tr2InteriorScene::Tr2InteriorScene( IRoot* lockobj /*= NULL */ ):
 
 	m_prepassBatches = CCP_NEW( "Tr2InteriorScene/m_prepassBatches" ) TriRenderBatchAccumulator<Tr2IntKeyGenerator>( allocator );
 
-	// Initialize accumulator handles to NULL - these can point to the above accumulators, depending on the Umbra scene query type
+	// Initialize accumulator handles to NULL - these can point to the above accumulators, depending on the scene query type
 	m_activePrimaryRenderBatches = NULL;
 	m_activeTransparentBatchStore = NULL;
 
@@ -247,19 +208,9 @@ Tr2InteriorScene::Tr2InteriorScene( IRoot* lockobj /*= NULL */ ):
 	// create debug renderer
 	m_debugLines.CreateInstance();
 
-	// Setup Umbra culling camera for main scene
-	m_sceneCamera.SetScreenSize( Tr2Renderer::GetRenderTargetWidth(), Tr2Renderer::GetRenderTargetHeight() );
-
-	// Setup Umbra culling camera for shadow casters
-	m_shadowCamera.EnableVirtualPortals( false );
-
 	m_displayDynamics = true;
 	m_displayStatics = true;
 	m_lightGeneratingShadows = NULL;
-
-	m_enlightenInputEnvironmentLightingCache.Resize( 24, Geo::VZero() );
-
-	m_enableLightCulling = true;
 
 	// List notify
 	m_lights.SetNotify( this );
@@ -276,22 +227,8 @@ Tr2InteriorScene::Tr2InteriorScene( IRoot* lockobj /*= NULL */ ):
 		// m_visualizerEffects[i]->GetEffectRes()->AddNotifyTarget( this );
 	}
 
-	// Initialize the Umbra root cell to NULL
-	m_rootCell = NULL;
-	m_rootObject = NULL;
-	m_rootModel = NULL;
-
-	// Initialize the camera cell to NULL
-	m_currentCameraCell = NULL;
-
 	// Initialize SH scale factor
 	m_shScale = 1.0f;
-
-	// Draw sorted by default
-	m_drawSorted = true;
-
-	// Enlighten cutoff depth
-	m_enlightenVisibilityUpdateThreshold = 0;
 
 	PrepareResources();
 
@@ -301,26 +238,24 @@ Tr2InteriorScene::Tr2InteriorScene( IRoot* lockobj /*= NULL */ ):
 	BeResMan->GetResource( "res:/Texture/Global/NdotLLibrary.png", "", m_nDotLTexture );
 	m_nDotLTextureHandle = GlobalStore().RegisterPlaceholderTextureVariable( "ColorNdotLLookupMap" );
 
+#if APEX_ENABLED
     // only create apex scene if apex is initialised which at this point is denoted by having the sdk loaded and available
     if( g_Tr2Apex && g_Tr2Apex->GetApexSDK() )
 	{
 		m_apexScene.CreateInstance();
 		m_apexScene->CreateScene();
 	}
+#endif
 }
 
 Tr2InteriorScene::~Tr2InteriorScene()
 {
+#if APEX_ENABLED
 	if( m_apexScene )
 	{
 		m_apexScene->DeleteScene();
 	}
-
-	if( m_backgroundCubeMapRes )
-	{
-		m_backgroundCubeMapRes->RemoveNotifyTarget( this );
-	}
-
+#endif
 	CCP_DELETE( m_primaryRenderBatches );
 	CCP_DELETE( m_transparentBatchStore );
 	CCP_DELETE( m_shadowBatches );
@@ -340,21 +275,6 @@ Tr2InteriorScene::~Tr2InteriorScene()
 	{
 		// m_visualizerEffects[i]->GetEffectRes()->RemoveNotifyTarget( this );
 	}
-
-	// Release the root cell & portals
-	ReleaseRootCell();
-	ReleaseRootPortals();
-
-	if( m_cameraPortalModel )
-	{
-		m_cameraPortalModel->release();
-		m_cameraPortalModel = NULL;
-	}
-	for( std::vector<Umbra::PhysicalPortal*>::iterator it = m_cameraPortals.begin(); it != m_cameraPortals.end(); ++it )
-	{
-		( *it )->release();
-	}
-	m_cameraPortals.clear();
 }
 
 bool Tr2InteriorScene::Initialize()
@@ -367,33 +287,18 @@ bool Tr2InteriorScene::OnModified( Be::Var* value )
 {
     if( IsMatch( value, m_visualizeMethod ) )
     {
-        SetVisualizeMethod();
+		for( auto it = m_cells.begin(); it != m_cells.end(); ++it )
+		{
+			( *it )->SetVisualizeMethod( m_visualizeMethod );
+		}
     }
-	else if( IsMatch( value, m_backgroundCubeMapPath ) )
+    else if( IsMatch( value, m_backgroundCubeMapPath ) )
 	{
 		SetBackgroundCubemapResPath();
-		// If the texture is already loaded, or empty we need to do this here
-		if( m_backgroundCubeMapPath.empty() || ( m_backgroundCubeMapRes && m_backgroundCubeMapRes->IsPrepared() ) )
-		{
-			USE_MAIN_THREAD_RENDER_CONTEXT();
-			SetEnvironmentCubeMapToEnlighten( renderContext );
-		}
-		// If it's not loaded yet, this will happen when we get the async callback
-	}
-	else if( IsMatch( value, m_enlightenEnvironmentMultiplicationFactor ) )
-	{
-		UpdateEnvironmentLightingFromCacheWithMultiplier();
 	}
 	else if( IsMatch( value, m_shScale ) )
 	{
 		UpdateSHScaleFactor();
-	}
-	else if( IsMatch( value, m_enableROIs ) )
-	{
-		for( PITr2InteriorLightVector::iterator it = m_lights.begin(); it != m_lights.end(); ++it )
-		{
-			( *it )->EnableROI( m_enableROIs );
-		}
 	}
 
     return true;
@@ -425,56 +330,6 @@ void Tr2InteriorScene::OnListModified( long event, ssize_t key, ssize_t key2, IR
 			it != m_dynamics.end(); ++it )
 		{
 			( *it )->SetDirtyFlag( true );
-		}
-
-		if( ( event & BELIST_LOADING ) == 0  )
-		{
-			// Respond to an item removal event
-			if( ( event & BELIST_EVENTMASK ) == BELIST_REMOVED )
-			{
-				if( currvalue )
-				{
-					// See if the removed item is a cell
-					Tr2InteriorCell* cell = NULL;
-					if( currvalue->QueryInterface( BlueInterfaceIID<Tr2InteriorCell>(), ( void** )&cell ) )
-					{
-						for( PITr2InteriorLightVector::iterator it = m_lights.begin(); it != m_lights.end(); ++it )
-						{
-							( *it )->CellRemoved( cell );
-						}
-
-						for( PITr2InteriorDynamicVector::iterator it = m_dynamics.begin();
-							 it != m_dynamics.end(); ++it )
-						{
-							( *it )->CellRemoved( cell );
-						}
-
-						cell->Unlock();
-					}
-				}
-				else if( ( event & BELIST_EVENTMASK ) == BELIST_INSERTED )
-				{
-					Tr2InteriorCell* cell = NULL;
-					if( currvalue->QueryInterface( BlueInterfaceIID<Tr2InteriorCell>(), ( void** )&cell ) )
-					{
-						Geo::GeoArray<Geo::v128> postMultipliedEnvironmentLighting( 24, Geo::VZero() );
-						Geo::v128 multiplier = Geo::VBroadcast( m_enlightenEnvironmentMultiplicationFactor );
-
-						for( int i = 0; i < 24;  ++i )
-						{
-							using namespace Geo;
-							postMultipliedEnvironmentLighting[i] = multiplier * m_enlightenInputEnvironmentLightingCache[i];
-						}
-
-						for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-						{
-							( *it )->SetEnvironmentCube( postMultipliedEnvironmentLighting.GetArrayConst() );
-						}
-
-						cell->Unlock();
-					}
-				}
-			}
 		}
 	}
 }
@@ -548,7 +403,6 @@ bool Tr2InteriorScene::OnPrepareResources()
 void Tr2InteriorScene::SetVisualizationMode( int visualizationMode )
 {
 	m_visualizeMethod = VisualizeMethod( visualizationMode );
-	SetVisualizeMethod();
 }
 
 void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
@@ -560,6 +414,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 		//     but are not strictly errors, according to Dan Speed.
 		return;
 
+#if APEX_ENABLED
     // create the apex scene when it is intialised, should probably be done through the same python event that inits the sdk
     // but that is incredibly byzantine at the moment
     if( !m_apexScene && g_Tr2Apex && g_Tr2Apex->GetApexSDK() )
@@ -572,7 +427,7 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 	{
 		m_apexScene->PreUpdate( simTime, m_apexLODResourceBudget, m_apexLODResourceBudgetConsumed );
 	}
-
+#endif
 	m_lastUpdateTime = simTime;
 
 	Vector3 dir( XMVectorMultiply(
@@ -630,55 +485,17 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 		}
 	}
 
-	// Update lights for Umbra
 	UpdateLights();
-
-	// Update dynamics for Umbra
 	UpdateDynamics();
-
-	// Update moved cells
 	UpdateCells();
-
-	if( !m_enlightenUpdateTaskManager.IsExecuting() )
-	{
-		CCP_STATS_ZONE( "EnlightenUpdateSynchronous" );
-
-		// Fetch results of the previous run
-		for( Tr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-		{
-			( *it )->UpdateEnlightenWorkspaceList( m_enlightenVisibilityUpdateThreshold );
-		}
-		for( Tr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-		{
-			( *it )->ProcessEnlightenResults( m_enlightenUpdateTaskManager );
-		}
-		// Unlock cells/systems used during threaded Enlighten update
-		m_enlightenUpdateTaskManager.InvalidateResult();
-
-		// Prepare data for a new Enlighten compute
-		for( Tr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-		{
-			( *it )->UpdateEnlightenWorkspace( m_enlightenVisibilityUpdateThreshold );
-		}
-		for( PITr2InteriorDynamicVector::iterator it = m_dynamics.begin(); it != m_dynamics.end(); ++it )
-		{
-			(* it )->SetSHSampleIndex( Tr2IntEnlightenTaskManager::UninitializedIndex );
-		}
-		for( Tr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-		{
-			( *it )->PrepareUpdateEnlighten( m_enlightenVisibilityUpdateThreshold, m_enlightenUpdateTaskManager );
-		}
-
-		// Fork Enlighten update threads
-		m_enlightenUpdateTaskManager.Execute();
-	}
+	UpdateSecondaryLighting();
 
 	{
 		CCP_STATS_ZONE( "CellUpdate" );
 		// since everything in the scene is in a cell, this ::Update spreads to all renderables
 		for( Tr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
 		{
-			( *it )->Update( simTime, m_enlightenVisibilityUpdateThreshold );
+			( *it )->Update( simTime );
 		}
 	}
 
@@ -691,12 +508,6 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 		{
 			( *it )->PrePhysicsUpdate( simTime );
 		}
-	}
-
-	// Reset light statuses, since Enlighten updates are done at this point
-	for( PITr2InteriorLightVector::iterator it = m_lights.begin(); it != m_lights.end(); ++it )
-	{
-		( *it )->ResetStaticChangedFlag();
 	}
 
 	if( m_ragdollScene != NULL )
@@ -722,15 +533,76 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 			( *it )->Update( simTime );
 		}
 	}
-
-	for( PTr2InteriorPhysicalPortalVector::iterator it = m_portals.begin(); it != m_portals.end(); ++it )
-	{
-		( *it )->AddDoorToUmbra();
-	}
-
+#if APEX_ENABLED
 	if( m_apexScene )
 	{
 		m_apexScene->PostUpdate( simTime, m_apexLODResourceBudget, m_apexLODResourceBudgetConsumed );
+	}
+#endif
+}
+
+
+namespace
+{
+float GetCellDistance( Tr2InteriorCell* cell, const Vector3& point )
+{
+	Vector3 minBounds, maxBounds;
+	if( !cell->GetBoundingBox( minBounds, maxBounds ) )
+	{
+		return 0;
+	}
+
+	float distance;
+	distance = point.x - minBounds.x;
+	distance = std::min( distance, point.y - minBounds.y );
+	distance = std::min( distance, point.z - minBounds.z );
+	distance = std::min( distance, maxBounds.x - point.x );
+	distance = std::min( distance, maxBounds.y - point.y );
+	distance = std::min( distance, maxBounds.z - point.z );
+	return std::max( distance, 0.0f );
+}
+}
+
+void Tr2InteriorScene::UpdateSecondaryLighting()
+{
+	for( auto di = m_dynamics.begin(); di != m_dynamics.end(); ++di )
+	{
+		Vector3 position;
+		if( !( *di )->GetShProbePosition( position ) )
+		{
+			continue;
+		}
+		Matrix& red = ( *di )->GetRedLightProbeMatrix();
+		Matrix& green = ( *di )->GetGreenLightProbeMatrix();
+		Matrix& blue = ( *di )->GetBlueLightProbeMatrix();
+		memset( &red, 0, sizeof( Matrix ) );
+		memset( &green, 0, sizeof( Matrix ) );
+		memset( &blue, 0, sizeof( Matrix ) );
+		float totalDistance = 0;
+		for( auto ci = m_cells.begin(); ci != m_cells.end(); ++ci )
+		{
+			if( !( *ci )->HasSHProbes() )
+			{
+				continue;
+			}
+			float distance = GetCellDistance( *ci, position );
+			if( distance > 0 )
+			{
+				Matrix r, g, b;
+				( *ci )->GetSHProbe( position, r, g, b );
+				red += r * distance;
+				green += g * distance;
+				blue += b * distance;
+				totalDistance += distance;
+			}
+		}
+		if( totalDistance > 0 )
+		{
+			totalDistance = 1.f / totalDistance;
+			red *= totalDistance;
+			green *= totalDistance;
+			blue *= totalDistance;
+		}
 	}
 }
 
@@ -745,14 +617,13 @@ void Tr2InteriorScene::Render( Tr2RenderContext& renderContext )
 		m_visibilityResults.CreateInstance();
 	}
 
-	// Execute Umbra visibility query
 	VisibilityQuery( m_visibilityResults );
-
+#if APEX_ENABLED
 	if( m_apexScene )
 	{
 		m_apexScene->PreRender( m_lastUpdateTime, m_apexLODResourceBudget, m_apexLODResourceBudgetConsumed );
 	}
-
+#endif
 	// Only render the cubemaps here
 	//RenderShadowMaps();
 
@@ -762,22 +633,14 @@ void Tr2InteriorScene::Render( Tr2RenderContext& renderContext )
 	// debug info
 	RenderDebugInfo( renderContext );
 
-	// Now update the visibility of all cells
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		if( ( *it )->GetVisibility() )
-		{
-			( *it )->DetermineVisibility( 0 );
-		}
-	}
-
 	// Clear lights
 	m_activeLightSet.Clear();
-
+#if APEX_ENABLED
 	if( m_apexScene )
 	{
 		m_apexScene->PostRender( m_lastUpdateTime, m_apexLODResourceBudget, m_apexLODResourceBudgetConsumed );
 	}
+#endif
 }
 
 // --------------------------------------------------------------------------------------
@@ -807,24 +670,6 @@ void Tr2InteriorScene::VisibilityQuery( Tr2VisibilityResults* results )
 	if( !m_cells.size() )
 	{
 		return;
-	}
-
-	// Setup the root cell and its portals
-	if( g_useRootCell && m_sceneUseRootCell )
-	{
-		// Create the root cell, if necessary
-		if( !m_rootCell )
-		{
-			CreateRootCell();
-		}
-
-		UpdateRootPortals();
-	}
-	else
-	{
-		// Clean-up the root cell, if necessary
-		ReleaseRootCell();
-		ReleaseRootPortals();
 	}
 
 	// Choose LOD for dynamics
@@ -861,15 +706,9 @@ void Tr2InteriorScene::VisibilityQuery( Tr2VisibilityResults* results )
 
 	m_debugInsideSetLOD = false;
 
-	// Prepare for Umbra visibility query
-	m_cameraToWorldMatrix = Tr2Renderer::GetViewTransform();
-	m_sceneCamera.SetViewParameters( Tr2Renderer::GetInverseViewTransform(),
-		Tr2Renderer::GetProjectionTransform() );
-	m_sceneCamera.SetScreenSize( Tr2Renderer::GetViewport().width, Tr2Renderer::GetViewport().height );
-	m_gatherShadowCasterBatches = false;
 	m_visibilityQueryType = PRIMARY_QUERY;
 
-	ResolveVisibility( m_sceneCamera );
+	ResolveVisibility( Tr2Renderer::GetViewTransform(), Tr2Renderer::GetProjectionTransform(), true );
 }
 
 // --------------------------------------------------------------------------------------
@@ -883,44 +722,122 @@ void Tr2InteriorScene::SetVisibilityResults( Tr2VisibilityResults* visibilityRes
 	m_visibilityResults = visibilityResults;
 }
 
-void Tr2InteriorScene::ResolveVisibility( Tr2UmbraCamera& camera )
+namespace
 {
-	m_visitedObjects.push_back( new std::unordered_set<IRoot*> );
 
-	Umbra::Cell* cameraCell = GetCameraCell();
+XMVECTOR GetMirrorClipPlane( const Tr2InteriorMirror* mirror, const Matrix& view, const Matrix& projection )
+{
+	auto& m = mirror->GetWarpMatrixFront();
+	XMVECTOR det;
+	XMVECTOR clipPlane = XMVectorSet( -m.GetZ().x, -m.GetZ().y, -m.GetZ().z, D3DXVec3Dot( &m.GetTranslation(), &m.GetZ() ) );
+	return XMPlaneTransform( 
+		clipPlane, 
+		XMMatrixTranspose( XMMatrixInverse( &det, mirror->GetTransformMatrix() * view * projection ) ) );
+}
 
-	if( m_rootCell != NULL && cameraCell == m_rootCell )
+}
+
+void Tr2InteriorScene::FollowMirror( const Tr2InteriorMirror* mirror, const Matrix& objectToWorld, const TriFrustum& frustum, const Matrix& view, size_t depth, size_t maxDepth )
+{
+	XMVECTOR det;
+	Matrix mirrorMatrix2(
+		XMMatrixMultiply(
+			XMMatrixInverse( &det, XMMatrixMultiply( mirror->GetWarpMatrixBack(), mirror->GetTransformMatrix() ) ),
+			XMMatrixMultiply( mirror->GetWarpMatrixFront(), mirror->GetTransformMatrix() ) ) );
+
+	Matrix newView( XMMatrixInverse( &det, XMMatrixMultiply( XMMatrixInverse( &det, view ), mirrorMatrix2 ) ) );
+	TriFrustum newFrustum;
+	Vector3 camPos( XMVector3Transform( frustum.m_viewPos, mirrorMatrix2 ) );
+	CTriViewport vp;
+	newFrustum.DeriveFrustum( &newView, &camPos, &frustum.m_projectionMatrix, vp );
+
+	Vector4 clipPlane( GetMirrorClipPlane( mirror, view, Tr2Renderer::GetProjectionRawTransform() ) );
+
+	OnPortalEnter( mirror, objectToWorld, true, clipPlane );
+	DoVisibilityQuery( newFrustum, newView, depth + 1, maxDepth, mirrorMatrix2 );
+	OnPortalExit( mirror, objectToWorld, false, clipPlane );
+}
+
+void Tr2InteriorScene::DoVisibilityQuery( const TriFrustum& frustum, const Matrix& view, size_t depth, size_t maxDepth, const Matrix& mirrorMatrix )
+{
+	if( depth == 0 )
 	{
-		for( auto it = m_dynamics.begin(); it != m_dynamics.end(); ++it )
+		OnQueryBegin();
+	}
+	for( auto ct = m_cells.begin(); ct != m_cells.end(); ++ct )
+	{
+		for( auto it = ( *ct )->m_statics.begin(); it != ( *ct )->m_statics.end(); ++it )
 		{
-			Tr2InteriorPlaceable* placeable = dynamic_cast<Tr2InteriorPlaceable*>( *it );
-			if( placeable )
+			Matrix objectToWorld;
+			if( ( *it )->IsInFrustum( frustum, objectToWorld ) )
 			{
-				placeable->EnableMirrorPortals( false );
+				if( depth )
+				{
+					objectToWorld = objectToWorld * mirrorMatrix;
+				}
+				OnInstanceVisible( *it, objectToWorld );
 			}
 		}
 	}
-
-	// Execute Umbra visibility query
-	camera.ResolveVisibility( this, cameraCell, 1 );
-
-	if( m_rootCell != NULL && cameraCell == m_rootCell )
+	struct Mirror
 	{
-		for( auto it = m_dynamics.begin(); it != m_dynamics.end(); ++it )
+		Tr2InteriorMirror* mirror;
+		Matrix objectToWorld;
+	};
+	std::vector<Mirror> mirrors;
+
+	for( auto it = m_dynamics.begin(); it != m_dynamics.end(); ++it )
+	{
+		Matrix objectToWorld;
+		if( ( *it )->IsInFrustum( frustum, objectToWorld ) )
 		{
-			Tr2InteriorPlaceable* placeable = dynamic_cast<Tr2InteriorPlaceable*>( *it );
-			if( placeable )
+			if( depth )
 			{
-				placeable->EnableMirrorPortals( true );
+				objectToWorld = objectToWorld * mirrorMatrix;
+			}
+			OnInstanceVisible( *it, objectToWorld );
+			if( depth < maxDepth )
+			{
+				for( size_t i = 0; i < ( *it )->GetMirrorCount(); ++i )
+				{
+					Mirror mirror;
+					mirror.mirror = ( *it )->GetMirror( i );
+					mirror.objectToWorld = objectToWorld;
+					mirrors.push_back( mirror );
+				}
 			}
 		}
 	}
-
-	for( auto i = m_visitedObjects.begin(); i != m_visitedObjects.end(); ++i )
+	for( auto it = m_lights.begin(); it != m_lights.end(); ++it )
 	{
-		delete *i;
+		Matrix objectToWorld;
+		if( ( *it )->IsInFrustum( frustum, objectToWorld ) )
+		{
+			if( depth )
+			{
+				objectToWorld = objectToWorld * mirrorMatrix;
+			}
+			OnInstanceVisible( *it, objectToWorld );
+		}
 	}
-	m_visitedObjects.clear();
+	for( auto it = mirrors.begin(); it != mirrors.end(); ++it )
+	{
+		FollowMirror( it->mirror, it->objectToWorld, frustum, view, depth, maxDepth );
+	}
+	if( depth == 0 )
+	{
+		OnQueryEnd();
+	}
+}
+
+void Tr2InteriorScene::ResolveVisibility( const Matrix& view, const Matrix& projection, size_t maxDepth )
+{
+	CTriViewport viewport;
+	TriFrustum frustum;
+	XMVECTOR det;
+	Matrix viewInv( XMMatrixInverse( &det, view ) );
+	frustum.DeriveFrustum( &view, (Vector3*)(&viewInv._41), &projection, viewport );
+	DoVisibilityQuery( frustum, view, 0, maxDepth, Tr2Renderer::GetIdentityTransform() );
 }
 
 ITr2MultiPassScene::RenderPassResult Tr2InteriorScene::RenderPass( PassType pass, Tr2RenderContext& renderContext )
@@ -945,6 +862,8 @@ ITr2MultiPassScene::RenderPassResult Tr2InteriorScene::RenderPass( PassType pass
 	case RP_END_RENDER:
 		EndRender( renderContext );
 		break;
+    default:
+        break;
 	}
 
 	return PASS_RESULT_OK;
@@ -955,12 +874,12 @@ void Tr2InteriorScene::BeginRender( Tr2RenderContext& renderContext )
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	D3DPERF_EVENT( L"BeginRender" );
-
+#if APEX_ENABLED
 	if( m_apexScene )
 	{
 		m_apexScene->PreRender( m_lastUpdateTime, m_apexLODResourceBudget, m_apexLODResourceBudgetConsumed );
 	}
-
+#endif
 	RenderShadowMaps( renderContext );
 }
 
@@ -981,7 +900,6 @@ void Tr2InteriorScene::RenderPrePass( Tr2RenderContext& renderContext )
 	}
 
 	// Gather batches for the pre-pass
-	m_cameraToWorldMatrix = Tr2Renderer::GetViewTransform();
 	m_activePrimaryRenderBatches = m_prepassBatches;
 	m_activeTransparentBatchStore = NULL;
 	GatherPrePassBatches( m_visibilityResults );
@@ -1013,7 +931,6 @@ void Tr2InteriorScene::RenderLightPass( Tr2RenderContext& renderContext )
 	TriRenderBatchAccumulator<Tr2IntKeyGenerator> lightBatches( allocator );
 
 	// Gather light batches
-	m_cameraToWorldMatrix = Tr2Renderer::GetViewTransform();
 	m_activePrimaryRenderBatches = &lightBatches;
 	m_activeTransparentBatchStore = m_transparentBatchStore;
 	GatherLightBatches( m_visibilityResults );
@@ -1079,7 +996,6 @@ void Tr2InteriorScene::RenderGatherPass( Tr2RenderContext& renderContext )
 	// Gather geometry batches
 	m_activePrimaryRenderBatches = m_primaryRenderBatches;
 	m_activeTransparentBatchStore = m_transparentBatchStore;
-	m_cameraToWorldMatrix = Tr2Renderer::GetViewTransform();
 
 	m_shSolver.Clear();
 	GatherPrepassForwardBatches( m_visibilityResults );
@@ -1090,39 +1006,7 @@ void Tr2InteriorScene::RenderGatherPass( Tr2RenderContext& renderContext )
 
 	// Render geometry
 	renderContext.SetReadOnlyDepth( true );
-	if( m_visualizeMethod == VM_OCCLUSION )
-	{
-		RenderGeometry( NULL, renderContext );
-		ITr2ShaderState * shader = m_visualizerEffects[VM_OCCLUSION]->GetShaderStateInterface();
-		if( shader )
-		{
-			shader->ApplyAllStateForPass( 0, renderContext );
-			m_visualizerEffects[VM_OCCLUSION]->ApplyMaterialDataForPass( 0, renderContext );
-
-			uint32_t oldCullState;
-			uint32_t oldZEnableState;
-			renderContext.GetRenderState( RS_CULLMODE, &oldCullState);
-			renderContext.GetRenderState( RS_ZENABLE, &oldZEnableState);
-
-			ON_BLOCK_EXIT( [&]{ renderContext.SetRenderState( RS_CULLMODE, oldCullState ); } );
-			ON_BLOCK_EXIT( [&]{ renderContext.SetRenderState( RS_ZENABLE, oldZEnableState ); } );
-
-			renderContext.SetRenderState( RS_ZENABLE, FALSE );
-			renderContext.SetRenderState( RS_CULLMODE, D3DCULL_NONE );
-			renderContext.SetRenderState( RS_FILLMODE, Tr2RenderContextEnum::FM_WIREFRAME );
-
-			for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-			{
-				( *it )->RenderOcclusionGeometry();
-			}
-
-			renderContext.SetRenderState( RS_FILLMODE, Tr2RenderContextEnum::FM_SOLID );
-		}
-	}
-	else
-	{
-		RenderGeometry( m_visualizerEffects[m_visualizeMethod == VM_LIGHT_PRE_PASS_LIGHT_OVERDRAW ? VM_LIGHT_PRE_PASS_LIGHTING : m_visualizeMethod], renderContext );
-	}
+	RenderGeometry( m_visualizerEffects[m_visualizeMethod == VM_LIGHT_PRE_PASS_LIGHT_OVERDRAW ? VM_LIGHT_PRE_PASS_LIGHTING : m_visualizeMethod], renderContext );
 	renderContext.m_esm.UnsetAllTextures();
 	renderContext.SetReadOnlyDepth( false );
 
@@ -1168,7 +1052,6 @@ void Tr2InteriorScene::RenderFlarePass( Tr2RenderContext& renderContext )
 	TriRenderBatchAccumulator<Tr2IntKeyGenerator> lightBatches( allocator );
 
 	// Gather light batches
-	m_cameraToWorldMatrix = Tr2Renderer::GetViewTransform();
 	m_activePrimaryRenderBatches = &lightBatches;
 	m_activeTransparentBatchStore = m_transparentBatchStore;
 	GatherFlareBatches( m_visibilityResults );
@@ -1191,22 +1074,14 @@ void Tr2InteriorScene::RenderFlarePass( Tr2RenderContext& renderContext )
 
 void Tr2InteriorScene::EndRender( Tr2RenderContext& renderContext )
 {
-	// Now update the visibility of all cells
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		if( ( *it )->GetVisibility() )
-		{
-			( *it )->DetermineVisibility( 0 );
-		}
-	}
-
 	// Clear lights
 	m_activeLightSet.Clear();
-
+#if APEX_ENABLED
 	if( m_apexScene )
 	{
 		m_apexScene->PostRender( m_lastUpdateTime, m_apexLODResourceBudget, m_apexLODResourceBudgetConsumed );
 	}
+#endif
 }
 
 void Tr2InteriorScene::RenderFullForward( Tr2RenderContext& renderContext )
@@ -1234,7 +1109,6 @@ void Tr2InteriorScene::RenderFullForward( Tr2RenderContext& renderContext )
 	// Gather geometry batches
 	m_activePrimaryRenderBatches = m_primaryRenderBatches;
 	m_activeTransparentBatchStore = m_transparentBatchStore;
-	m_cameraToWorldMatrix = Tr2Renderer::GetViewTransform();
 	GatherFullForwardBatches( m_visibilityResults );
 
 	if( m_enableSHSolver )
@@ -1312,12 +1186,9 @@ void Tr2InteriorScene::RenderGeometry( ITr2ShaderMaterial* overrideEffect, Tr2Re
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		renderContext.RenderBatchesWithOverride(
 			m_activePrimaryRenderBatches,
-			m_visualizerOverride ? m_visualizerOverride : overrideEffect,
-			m_visualizerOverrideApplyPS ? Tr2RenderContext::OM_APPLY_PS : Tr2RenderContext::OM_DO_NOTHING );
+			overrideEffect,
+			Tr2RenderContext::OM_DO_NOTHING );
 	}
-
-	// Collect statistics
-	m_unsortedRenderBatchCount = (unsigned int)m_primaryRenderBatches->GetBatchCount();
 
 	// Restore original viewport and per-frame data
 	{
@@ -1479,7 +1350,7 @@ static void RenderBoxInsideBox( const Vector3& minBounds1, const Vector3& maxBou
 			} callback;
 
 			callback.polygon = inPolygon;
-			callback.count = unsigned int( inCount );
+			callback.count = unsigned( inCount );
 
 			g_debugResourceHelper.GetEffect()->Render( &callback, renderContext );
 		}
@@ -1530,19 +1401,9 @@ void Tr2InteriorScene::RenderDebugInfo( Tr2RenderContext& renderContext )
 			( *it )->RenderDebugInfo( m_debugLines );
 		}
 
-		// Portals
-		for( PTr2InteriorPhysicalPortalVector::const_iterator it = m_portals.begin(); it != m_portals.end(); ++it )
-		{
-			( *it )->RenderDebugInfo( m_debugLines );
-		}
-
 		for( PITr2InteriorDynamicVector::const_iterator it = m_dynamics.begin(); it != m_dynamics.end(); ++it )
 		{
-			if( const Tr2InteriorPlaceable* placable = dynamic_cast<const Tr2InteriorPlaceable*>( *it ) )
-			{
-				placable->RenderDebugInfo( m_debugLines );
-			}
-			else if( const Tr2InteriorParticleObject* particle = dynamic_cast<const Tr2InteriorParticleObject*>( *it ) )
+			if( const Tr2InteriorParticleObject* particle = dynamic_cast<const Tr2InteriorParticleObject*>( *it ) )
 			{
 				particle->RenderDebugInfo( m_debugLines );
 			}
@@ -1561,22 +1422,17 @@ void Tr2InteriorScene::RenderDebugInfo( Tr2RenderContext& renderContext )
 				Vector3 minBounds2, maxBounds2;
 				( *jt )->GetBoundingBox( minBounds2, maxBounds2 );
 
-				RenderBoxIntersection( minBounds1, maxBounds1, ( *it )->GetWorldTransform(),
-									   minBounds2, maxBounds2, ( *jt )->GetWorldTransform() );
+				RenderBoxIntersection( minBounds1, maxBounds1, Tr2Renderer::GetIdentityTransform(),
+									   minBounds2, maxBounds2, Tr2Renderer::GetIdentityTransform() );
 			}
 		}
 	}
-
-	// Light volumes are rendered regardless of renderDebugInfo flag
-	for( auto it = m_lights.cbegin(); it != m_lights.cend(); ++it )
-	{
-		( *it )->RenderDebugInfo( renderContext );
-	}
-
+#if APEX_ENABLED
 	if( m_apexScene )
 	{
 		m_apexScene->RenderDebugInfo( renderContext );
 	}
+#endif
 }
 
 // --------------------------------------------------------------------------------------
@@ -1632,7 +1488,6 @@ unsigned Tr2InteriorScene::ReRenderShadowMaps( Tr2RenderContext& renderContext )
 
 	m_activePrimaryRenderBatches  = m_shadowBatches;
 	m_activeTransparentBatchStore = NULL;
-	m_gatherShadowCasterBatches = true;
 	m_visibilityQueryType = SHADOW_QUERY;
 
 	unsigned shadowsUpdated = 0;
@@ -1658,19 +1513,16 @@ unsigned Tr2InteriorScene::ReRenderShadowMaps( Tr2RenderContext& renderContext )
 
 		it->first.lightSource->BeginShadowUpdate( it->first.shadowMapIndex, &shadowPerFrameVS, &shadowPerFramePS, renderContext );
 
-		// Prepare for Umbra visibility query
-		m_cameraToWorldMatrix = it->first.lightSource->GetViewMatrix( it->first.shadowMapIndex );
-
 		bool oldDisplayDynamics = m_displayDynamics;
-		m_displayDynamics = it->first.lightSource->GetShadowCasterTypes() & ITr2InteriorLight::ST_DYNAMICS_ONLY;
-		m_displayStatics = it->first.lightSource->GetShadowCasterTypes() & ITr2InteriorLight::ST_STATICS_ONLY;
+		m_displayDynamics = ( it->first.lightSource->GetShadowCasterTypes() & ITr2InteriorLight::ST_DYNAMICS_ONLY ) != 0;
+		m_displayStatics = ( it->first.lightSource->GetShadowCasterTypes() & ITr2InteriorLight::ST_STATICS_ONLY ) != 0;
 
-		m_shadowCamera.SetScreenSize( texture->GetWidth(), texture->GetHeight() );
-		m_shadowCamera.SetViewParameters( it->first.lightSource->GetInvViewMatrix( it->first.shadowMapIndex ),
-			it->first.lightSource->GetProjectionMatrix( it->first.shadowMapIndex ) );
 		m_visibilityQueryType = SHADOW_QUERY;
 		m_lightGeneratingShadows = it->first.lightSource;
-		ResolveVisibility( m_shadowCamera );
+		ResolveVisibility( 
+			it->first.lightSource->GetViewMatrix( it->first.shadowMapIndex ), 
+			it->first.lightSource->GetProjectionMatrix( it->first.shadowMapIndex ), 
+			false );
 
 		m_displayDynamics = oldDisplayDynamics;
 		m_displayStatics = true;
@@ -1747,7 +1599,6 @@ unsigned Tr2InteriorScene::ReRenderShadowMaps( Tr2RenderContext& renderContext )
 
 	m_lightGeneratingShadows = NULL;
 	m_visibilityQueryType = PRIMARY_QUERY;
-	m_gatherShadowCasterBatches = false;
 
 	return shadowsUpdated;
 }
@@ -1779,13 +1630,13 @@ void Tr2InteriorScene::RenderShadowMaps( Tr2RenderContext& renderContext )
 			return;
 		}
 
-		Vector3 focalPosition = m_useShadowFocalPosition ? m_shadowFocalPosition : Tr2Renderer::GetViewPosition();
+		Vector3 focalPosition = Tr2Renderer::GetViewPosition();
 		// put all lightsources in vector with sorting values
 		std::vector<ITr2InteriorLight::LightSourceItem> sortedLightSources;
 		std::vector<ITr2InteriorLight::LightSourceItem> sortedLightLODSources;
 		for( PITr2InteriorLightVector::const_iterator it = m_lights.begin(); it != m_lights.end(); ++it )
 		{
-			if( m_enableLightCulling && ( m_visibleLights.find( *it ) == m_visibleLights.end() ) )
+			if( m_visibleLights.find( *it ) == m_visibleLights.end() )
 			{
 				continue;
 			}
@@ -1873,7 +1724,6 @@ void Tr2InteriorScene::RenderShadowMaps( Tr2RenderContext& renderContext )
 
 			m_activePrimaryRenderBatches  = m_shadowBatches;
 			m_activeTransparentBatchStore = NULL;
-			m_gatherShadowCasterBatches = true;
 			m_visibilityQueryType = SHADOW_QUERY;
 			unsigned lodSwitches = std::min( m_shadowsLODSwitchesPerFrame, (unsigned int)sortedLightLODSources.size() );
 
@@ -1912,7 +1762,6 @@ void Tr2InteriorScene::RenderShadowMaps( Tr2RenderContext& renderContext )
 
 			m_lightGeneratingShadows = NULL;
 			m_visibilityQueryType = PRIMARY_QUERY;
-			m_gatherShadowCasterBatches = false;
 		}
 	}
 	else
@@ -1990,7 +1839,7 @@ bool Tr2InteriorScene::UpdateShadowMap(
 						if( texture )
 						{
 							item.lightSource->SetShadowAtlasTexture( item.shadowMapIndex, texture );
-							texture->Unlock();
+							texture->GetRawRoot()->Unlock();
 						}
 						break;
 					}
@@ -2037,7 +1886,7 @@ bool Tr2InteriorScene::UpdateShadowMap(
 				else
 				{
 					item.lightSource->SetShadowAtlasTexture( item.shadowMapIndex, texture );
-					texture->Unlock();
+					texture->GetRawRoot()->Unlock();
 				}
 			}
 			else
@@ -2216,19 +2065,16 @@ bool Tr2InteriorScene::UpdateShadowMap(
 
 		item.lightSource->BeginShadowUpdate( item.shadowMapIndex, &shadowPerFrameVS, &shadowPerFramePS, renderContext );
 
-		// Prepare for Umbra visibility query
-		m_cameraToWorldMatrix = item.lightSource->GetViewMatrix( item.shadowMapIndex );
-
 		bool oldDisplayDynamics = m_displayDynamics;
-		m_displayDynamics = item.lightSource->GetShadowCasterTypes() & ITr2InteriorLight::ST_DYNAMICS_ONLY;
-		m_displayStatics = item.lightSource->GetShadowCasterTypes() & ITr2InteriorLight::ST_STATICS_ONLY;
+		m_displayDynamics = ( item.lightSource->GetShadowCasterTypes() & ITr2InteriorLight::ST_DYNAMICS_ONLY ) != 0;
+		m_displayStatics = ( item.lightSource->GetShadowCasterTypes() & ITr2InteriorLight::ST_STATICS_ONLY ) != 0;
 
-		m_shadowCamera.SetScreenSize( texture->GetWidth(), texture->GetHeight() );
-		m_shadowCamera.SetViewParameters( item.lightSource->GetInvViewMatrix( item.shadowMapIndex ),
-			item.lightSource->GetProjectionMatrix( item.shadowMapIndex ) );
 		m_visibilityQueryType = SHADOW_QUERY;
 		m_lightGeneratingShadows = item.lightSource;
-		ResolveVisibility( m_shadowCamera );
+		ResolveVisibility( 
+			item.lightSource->GetViewMatrix( item.shadowMapIndex ),
+			item.lightSource->GetProjectionMatrix( item.shadowMapIndex ), 
+			false );
 
 		m_displayDynamics = oldDisplayDynamics;
 		m_displayStatics = true;
@@ -2329,41 +2175,6 @@ bool Tr2InteriorScene::UpdateShadowMap(
 	return true;
 }
 
-// ------------------------------------------------------------------------------------------------------
-void Tr2InteriorScene::SetUmbraProperties( unsigned int properties )
-{
-	unsigned int width, height;
-	width = Tr2Renderer::GetRenderTargetWidth();
-	height = Tr2Renderer::GetRenderTargetHeight();
-
-	m_sceneCamera.SetProperties( width, height, properties );
-}
-
-// ------------------------------------------------------------------------------------------------------
-unsigned int Tr2InteriorScene::GetUmbraProperties()
-{
-    return m_sceneCamera.GetProperties();
-}
-
-// ------------------------------------------------------------------------------------------------------
-void Tr2InteriorScene::SetVisualizeMethod( void )
-{
-	if( m_visualizeMethod == VM_EN_ALBEDO || m_visualizeMethod == VM_EN_TARGET_DETAIL )
-	{
-		m_displayDynamics = false;
-	}
-	else
-	{
-		m_displayDynamics = true;
-	}
-
-	// Pass down to cells
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		( *it )->SetVisualizeMethod( m_visualizeMethod );
-	}
-}
-
 //---------------------------------------------------------------------------------------
 void Tr2InteriorScene::SetRenderBackgroundCubeMap( bool renderBackgroundCubeMap )
 {
@@ -2393,7 +2204,6 @@ void Tr2InteriorScene::AddLightSource( ITr2InteriorLight* lightSource )
 	{
 		m_lights.Insert( -1, lightSource );
 
-		lightSource->EnableROI( m_enableROIs );
 		lightSource->AddToScene();
 	}
 }
@@ -2401,7 +2211,7 @@ void Tr2InteriorScene::AddLightSource( ITr2InteriorLight* lightSource )
 // --------------------------------------------------------------------------------------
 // Description:
 //   Removes an interior light source from the scene.  The light source is also removed
-//   from all cells containing it, and is removed from Umbra.  It is an error to remove a
+//   from all cells containing it.  It is an error to remove a
 //   NULL light source, and a log message is printed saying so.
 // Arguments:
 //   lightSource - The light source to remove from the interior scene (should not be NULL)
@@ -2470,7 +2280,7 @@ void Tr2InteriorScene::AddDynamic( ITr2InteriorDynamic* dynamic )
 // --------------------------------------------------------------------------------------
 // Description:
 //   Removes a dynamic object from the scene.  The dynamic is also removed from all cells
-//   containing it, and is removed from Umbra.  If the dynamic is in the pending load
+//   containing it.  If the dynamic is in the pending load
 //   queue, it is removed from the queue.  It is an error to remove a NULL dynamic, and
 //   a log message is printed saying so.
 // Arguments:
@@ -2565,10 +2375,6 @@ void Tr2InteriorScene::UpdateCells()
 		if( isCellDirty )
 		{
 			cell->RebuildBoundingBox();
-			if( g_useRootCell && m_sceneUseRootCell )
-			{
-				UpdateRootPortalForCell( cell );
-			}
 		}
 
 		if( isCellDirty && ( cell->IsUnbounded() || cell->IsBoundingBoxReady() ) )
@@ -2585,34 +2391,10 @@ void Tr2InteriorScene::UpdateCells()
 			}
 			for( PITr2InteriorDynamicVector::iterator dit = m_dynamics.begin(); dit != m_dynamics.end(); ++dit )
 			{
-				if( ( *dit )->IsBoundingBoxReady() && ( *dit )->IsUmbraReady() )
+				if( ( *dit )->IsBoundingBoxReady() )
 				{
 					( *dit )->TestCellIntersectionAndAdd( cell );
 				}
-			}
-			for( PTr2InteriorPhysicalPortalVector::iterator it = m_portals.begin(); it != m_portals.end(); ++it )
-			{
-				( *it )->OnCellTransformChanged( cell );
-			}
-
-			std::map<Umbra::Cell*, std::pair<Umbra::Model*, Umbra::PhysicalPortal*> >::iterator it = m_rootPortals.find( cell->GetUmbraCell() );
-			if( it != m_rootPortals.end() )
-			{
-				Umbra::Model* model = it->second.first;
-				if( model )
-				{
-						model->release();
-						model = NULL;
-				}
-
-				Umbra::PhysicalPortal* portal = it->second.second;
-				if( portal )
-				{
-						portal->release();
-						portal = NULL;
-				}
-
-				m_rootPortals.erase( it );
 			}
 			cell->ResetDirtyFlag();
 		}
@@ -2622,368 +2404,70 @@ void Tr2InteriorScene::UpdateCells()
 
 // --------------------------------------------------------------------------------------
 // Description
-//   This function is called at the beginning of an Umbra query.  It begins by correcting
-//   the handedness of the cameraToWorld matrix for Umbra's convention.  Then, if this is
-//   a primary visibility query, it queues up a Tr2VisibilityEvent in the current result
-//   set.  Otherwise, it immediately executes the event by calling DoQueryBegin.
+//   This function is called at the beginning of visibility query.  
 // See Also:
 //   OnQueryEnd, DoQueryBegin, DoQueryBeginPrePass
 // --------------------------------------------------------------------------------------
 void Tr2InteriorScene::OnQueryBegin( void )
 {
-	// Umbra-ize the camera-to-world matrix
-	XMVECTOR det;
-	m_cameraToWorldMatrix = XMMatrixInverse( &det, m_cameraToWorldMatrix );
-	if( Tr2Renderer::IsRightHanded() )
-	{
-		Vector3& zAxis = m_cameraToWorldMatrix.GetZ();
-		zAxis = -zAxis;
-	}
-
-	// Setup visibility event
 	Tr2VisibilityEvent event;
 	event.m_eventType = Tr2VisibilityEvent::QUERY_BEGIN;
 
-	// Main visibility query
 	if( m_visibilityQueryType == PRIMARY_QUERY )
 	{
 		m_visibleLights.clear();
-		// Add to the result set
 		m_visibilityResults->AddVisibilityEvent( event );
 	}
-	// Query for shadows
 	else if( m_visibilityQueryType == SHADOW_QUERY )
 	{
-		// Do query begin
 		DoQueryBegin( event, IMMEDIATE_GATHER );
 	}
 }
 
 // --------------------------------------------------------------------------------------
 // Description
-//   This function is called at the end of an Umbra query.  If this is a primary
-//   visibility query, it queues up a Tr2VisibilityEvent in the current result set.
-//   Otherwise, it immediately executes the event by calling DoQueryEnd.
+//   This function is called at the end of visibility query.  
 // See Also:
 //   OnQueryBegin, DoQueryEnd
 // --------------------------------------------------------------------------------------
 void Tr2InteriorScene::OnQueryEnd( void )
 {
-	// Setup visibility event
 	Tr2VisibilityEvent event;
 	event.m_eventType = Tr2VisibilityEvent::QUERY_END;
 
-	// Main visibility query
 	if( m_visibilityQueryType == PRIMARY_QUERY )
 	{
-		// Add to the result set
 		m_visibilityResults->AddVisibilityEvent( event );
 	}
-	// Query for shadows
 	else if( m_visibilityQueryType == SHADOW_QUERY )
 	{
-		// Do query end
 		DoQueryEnd( event, IMMEDIATE_GATHER );
 	}
 }
 
-// --------------------------------------------------------------------------------------
-// Description
-//   This function is called when the visibility query enters a portal.  It checks the
-//   portal user data, and if the user data is a mirror, it sets the placeable hosting
-//   the mirror as the Tr2VisibilityEvent user data.  If this is a primary visibility
-//   query, this function queues up the Tr2VisibilityEvent in the current result set.
-//   Otherwise it executes the event immediately by calling DoPortalEnter.
-// See Also:
-//   OnPortalExit, OnPortalPreExit, DoPortalEnter, DoPortalEnterPrePass
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::OnPortalEnter( void )
+void Tr2InteriorScene::OnInstanceVisible( ITr2InteriorCullable* cullable, const Matrix& objectToWorld )
 {
-	// Get the IRoot pointer from the instance user data
-	const Umbra::Commander::Instance* instance = getInstance();
-	Tr2InteriorMirror* mirror = reinterpret_cast<Tr2InteriorMirror*>(instance->getUserPointer());
-
-	if( m_rootCell == NULL || m_currentCameraCell != m_rootCell || mirror != NULL )
-	{
-		auto visitedObject = new std::unordered_set<IRoot*>;
-		if( !mirror )
-		{
-			visitedObject->insert( ( *m_visitedObjects.rbegin() )->begin(), ( *m_visitedObjects.rbegin() )->end() );
-			
-		}
-		m_visitedObjects.push_back( visitedObject );
-	}
-
-	// Setup visibility event
 	Tr2VisibilityEvent event;
-	event.m_eventType = Tr2VisibilityEvent::PORTAL_ENTER;
-	if( mirror )
-	{
-		event.m_userData = mirror->GetPlaceable()->GetRawRoot();
-		event.m_mirrorIndex = mirror->GetMirrorIndex();
-	}
-
-	// Main visibility query
-	if( m_visibilityQueryType == PRIMARY_QUERY )
-	{
-		// Add to the result set
-		m_visibilityResults->AddVisibilityEvent( event );
-	}
-	// Query for shadows
-	else if( m_visibilityQueryType == SHADOW_QUERY )
-	{
-		// Do portal enter
-		DoPortalEnter( event, IMMEDIATE_GATHER );
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description
-//   This function is called when the visibility query exits a portal.  It checks the
-//   portal user data, and if the user data is a mirror, it sets the placeable hosting
-//   the mirror as the Tr2VisibilityEvent user data.  It also computes the current
-//   objectToWorld matrix and sets it on the event.  If this is a primary visibility
-//   query, this function queues up the Tr2VisibilityEvent in the current result set.
-//   Otherwise it executes the event immediately by calling DoPortalExit.
-// See Also:
-//   OnPortalEnter, OnPortalPreExit, DoPortalExit, DoPortalExitPrePass
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::OnPortalExit( void )
-{
-	// Get the IRoot pointer from the instance user data
-	const Umbra::Commander::Instance* instance = getInstance();
-	Tr2InteriorMirror* mirror = reinterpret_cast<Tr2InteriorMirror*>(instance->getUserPointer());
-
-	if( m_rootCell == NULL || m_currentCameraCell != m_rootCell || mirror != NULL )
-	{
-		// Check if we are exiting one of the "camera" portals (built around the camera
-		// when it is located in the intersection of several cells). If we are we need
-		// to copy all visited objects into the previous stack slot since the camera
-		// portal can overlap with normal physical portal.
-		Umbra::Object* portal = instance->getObject();
-		if( std::find( m_cameraPortals.begin(), m_cameraPortals.end(), portal ) != m_cameraPortals.end() )
-		{
-			if( m_visitedObjects.size() > 1 )
-			{
-				auto previous = m_visitedObjects[m_visitedObjects.size() - 2];
-				previous->insert( m_visitedObjects.back()->begin(), m_visitedObjects.back()->end() );					
-				delete *m_visitedObjects.rbegin();
-				m_visitedObjects.pop_back();
-			}
-			// If the "camera" portal is the first one visited - just leave
-			// visited objects stack untouched.
-		}
-		else
-		{
-			delete *m_visitedObjects.rbegin();
-			m_visitedObjects.pop_back();
-		}
-	}
-
-	// IMPORTANT NOTE:
-	// Umbra gives an object-to-camera matrix per visible instance.  This is the OpenGL
-	// MODEL_VIEW matrix, not a matrix we can directly use in D3D.  We need the WorldMat
-	// (object-to-world matrix), so we multiply Umbra's object-to-camera matrix by the
-	// camera-to-world matrix (the inverse ViewMat) to get the matrix we need.
-	Umbra::Matrix4x4 tempMat;
-	instance->getObjectToCameraMatrix( tempMat );
-	Matrix objectToCameraMatrix( &tempMat.m[0][0] );
-
-	// Setup visibility event
-	Tr2VisibilityEvent event;
-	event.m_eventType = Tr2VisibilityEvent::PORTAL_EXIT;
-	if( mirror )
-	{
-		event.m_userData = mirror->GetPlaceable()->GetRawRoot();
-		event.m_mirrorIndex = mirror->GetMirrorIndex();
-	}
-	event.m_objectToWorldMatrix = objectToCameraMatrix * m_cameraToWorldMatrix;
-
-	// Main visibility query
-	if( m_visibilityQueryType == PRIMARY_QUERY )
-	{
-		// Add to the result set
-		m_visibilityResults->AddVisibilityEvent( event );
-	}
-	// Query for shadows
-	else if( m_visibilityQueryType == SHADOW_QUERY )
-	{
-		// Do portal exit
-		DoPortalExit( event, IMMEDIATE_GATHER );
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description
-//   This function is called before the visibility query exits a portal.  It checks the
-//   portal user data, and if the user data is a mirror, it sets the placeable hosting
-//   the mirror as the Tr2VisibilityEvent user data.  If this is a primary visibility
-//   query, this function queues up the Tr2VisibilityEvent in the current result set.
-//   Otherwise it executes the event immediately by calling DoPortalPreExit.
-// See Also:
-//   OnPortalEnter, OnPortalExit, DoPortalPreExit, DoPortalPreExitPrePass
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::OnPortalPreExit( void )
-{
-	// Get the IRoot pointer from the instance user data
-	const Umbra::Commander::Instance* instance = getInstance();
-	Tr2InteriorMirror* mirror = reinterpret_cast<Tr2InteriorMirror*>(instance->getUserPointer());
-
-	// Setup visibility event
-	Tr2VisibilityEvent event;
-	event.m_eventType = Tr2VisibilityEvent::PORTAL_PRE_EXIT;
-	if( mirror )
-	{
-		event.m_userData = mirror->GetPlaceable()->GetRawRoot();
-		event.m_mirrorIndex = mirror->GetMirrorIndex();
-	}
-
-	// Main visibility query
-	if( m_visibilityQueryType == PRIMARY_QUERY )
-	{
-		// Add to the result set
-		m_visibilityResults->AddVisibilityEvent( event );
-	}
-	// Query for shadows
-	else if( m_visibilityQueryType == SHADOW_QUERY )
-	{
-		// Do portal pre-exit
-		DoPortalPreExit( event, IMMEDIATE_GATHER );
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description
-//   This function is called when Umbra requests a change to the view parameters, when
-//   entering or exiting a portal.  This function gets the mirroring flag, the new
-//   scissor rectangle, and the user clip plane from Umbra.  It sets the relevant
-//   parameters on the Tr2VisibilityEvent.  If this is a primary visibility query, this
-//   function queues up the Tr2VisibilityEvent in the current result set.  Otherwise it
-//   executes the event immediately by calling DoViewParametersChanged.
-// See Also:
-//   DoViewParametersChanged
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::OnViewParametersChanged( void )
-{
-	// Get the viewer object from Umbra, which will supply us with new view parameters
-	const Umbra::Commander::Viewer* viewer = getViewer();
-
-	// Setup visibility event
-	Tr2VisibilityEvent event;
-	event.m_eventType = Tr2VisibilityEvent::VIEW_PARAMETERS_CHANGED;
-	event.m_isMirroredInLeftHandedSpace = viewer->isMirrored();
-
-	if( m_rootCell != NULL && m_currentCameraCell == m_rootCell && viewer->getFrustumPlaneCount() <= 6 )
-	{
-		event.m_deferScissorRectangle = true;
-	}
-	else
-	{
-		int left, top, right, bottom;
-		viewer->getScissor( left, top, right, bottom );
-		event.m_scissorRect.left = left;
-		event.m_scissorRect.top = top;
-		event.m_scissorRect.right = right;
-		event.m_scissorRect.bottom = bottom;
-	}
-	event.m_useClipPlane = false;
-	if( viewer->getFrustumPlaneCount() > 6 )
-	{
-		Umbra::Vector4 plane;
-		viewer->getFrustumPlane( 6, plane );
-
-		event.m_clipPlane = XMPlaneTransform(
-			XMVectorSet( plane.x, plane.y, -plane.z, plane.w ),
-			XMMatrixTranspose( Tr2Renderer::GetInverseProjectionTransform() ) );
-
-		event.m_useClipPlane = true;
-	}
-
-	// Main visibility query
-	if( m_visibilityQueryType == PRIMARY_QUERY )
-	{
-		// Add to the result set
-		m_visibilityResults->AddVisibilityEvent( event );
-	}
-	// Query for shadows
-	else if( m_visibilityQueryType == SHADOW_QUERY )
-	{
-		// Do view parameters changed
-		DoViewParametersChanged( event, IMMEDIATE_GATHER );
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description
-//   This function is called when Umbra encounters an instance of a visible object.  This
-//   function checks the Umbra user data & verifies that it is an interior object.  Then
-//   it computes the objectToWorld matrix and sets the parameters and user data on the
-//   Tr2VisibilityEvent.  If this is a primary visibility query, this function queues up
-//   the Tr2VisibilityEvent in the current result set.  Otherwise it  executes the event
-//   immediately by calling DoInstanceVisible.
-// See Also:
-//   DoInstanceVisible
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::OnInstanceVisible( void )
-{
-	// Get the IRoot pointer from the instance user data
-	const Umbra::Commander::Instance* instance = getInstance();
-
-	IRoot* iroot = CONVERT_FROM_UMBRA_USER_DATA( instance->getUserPointer() );
-
-	if ( !iroot )
-	{
-		return;
-	}
-
-	if( m_visibilityQueryType != PICKING_QUERY )
-	{
-		if( ! ( *m_visitedObjects.rbegin() )->insert( iroot ).second )
-		{
-			return;
-		}
-	}
+	event.m_eventType = Tr2VisibilityEvent::INSTANCE_VISIBLE;
+	event.m_userData = cullable;
+	event.m_objectToWorldMatrix = objectToWorld;
 
 	if( m_visibilityQueryType == PRIMARY_QUERY )
 	{
-		ITr2InteriorLight* light = dynamic_cast<ITr2InteriorLight*>( iroot );
+		ITr2InteriorLight* light = dynamic_cast<ITr2InteriorLight*>( cullable );
 		if( light )
 		{
 			m_visibleLights.insert( light );
 		}
-	}
-
-	// IMPORTANT NOTE:
-	// Umbra gives an object-to-camera matrix per visible instance.  This is the OpenGL
-	// MODEL_VIEW matrix, not a matrix we can directly use in D3D.  We need the WorldMat
-	// (object-to-world matrix), so we multiply Umbra's object-to-camera matrix by the
-	// camera-to-world matrix (the inverse ViewMat) to get the matrix we need.
-	Umbra::Matrix4x4 tempMat;
-	instance->getObjectToCameraMatrix( tempMat );
-	Matrix objectToCameraMatrix( &tempMat.m[0][0] );
-
-	// Setup visibility event
-	Tr2VisibilityEvent event;
-	event.m_eventType = Tr2VisibilityEvent::INSTANCE_VISIBLE;
-	event.m_userData = iroot;
-	event.m_objectToWorldMatrix = objectToCameraMatrix * m_cameraToWorldMatrix;
-
-	// Main visibility query
-	if( m_visibilityQueryType == PRIMARY_QUERY )
-	{
-		// Add to the result set
 		m_visibilityResults->AddVisibilityEvent( event );
 	}
-	// Query for shadows
 	else if( m_visibilityQueryType == SHADOW_QUERY )
 	{
-		// Do instance visible
 		DoInstanceVisible( event, IMMEDIATE_GATHER );
 	}
-	// Picking query
 	else if( m_visibilityQueryType == PICKING_QUERY )
 	{
-		ITr2Renderable* renderable = dynamic_cast<ITr2Renderable*>( iroot );
+		ITr2Renderable* renderable = dynamic_cast<ITr2Renderable*>( cullable );
 		if( renderable )
 		{
 			m_visibleObjects.push_back( renderable );
@@ -2991,180 +2475,62 @@ void Tr2InteriorScene::OnInstanceVisible( void )
 	}
 }
 
-// --------------------------------------------------------------------------------------
-// Description
-//   This function is called when Umbra activates a light's region of influence.  It
-//   checks to see if the Umbra user data is an interior light source, then computes
-//   the light's objectToWorld matrix.  It sets the appropriate parameters and user data
-//   on the Tr2VisibilityEvent.   If this is a primary visibility query, this function
-//   queues up the Tr2VisibilityEvent in the current result set.  Otherwise it executes
-//   the event immediately by calling DoRegionOfInfluenceActive.
-// See Also:
-//   OnRegionOfInfluenceInactive, DoRegionOfInfluenceActive
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::OnRegionOfInfluenceActive( void )
+void Tr2InteriorScene::OnPortalEnter( const Tr2InteriorMirror* mirror, const Matrix& objectToWorld, bool isMirrored, const Vector4& clipPlane )
 {
-	// Get the IRoot pointer from the instance user data
-	const Umbra::Commander::Instance* instance = getInstance();
-	ITr2InteriorLight* lightSource = dynamic_cast<ITr2InteriorLight*>( CONVERT_FROM_UMBRA_USER_DATA( instance->getUserPointer() ) );
-
-	// IMPORTANT NOTE:
-	// Umbra gives an object-to-camera matrix per visible instance.  This is the OpenGL
-	// MODEL_VIEW matrix, not a matrix we can directly use in D3D.  We need the WorldMat
-	// (object-to-world matrix), so we multiply Umbra's object-to-camera matrix by the
-	// camera-to-world matrix (the inverse ViewMat) to get the matrix we need.
-	Umbra::Matrix4x4 tempMat;
-	instance->getObjectToCameraMatrix( tempMat );
-	Matrix objectToCameraMatrix( &tempMat.m[0][0] );
-
-	// Setup visibility event
 	Tr2VisibilityEvent event;
-	event.m_eventType = Tr2VisibilityEvent::REGION_OF_INFLUENCE_ACTIVE;
-	event.m_userData = lightSource;
-	event.m_objectToWorldMatrix = objectToCameraMatrix * m_cameraToWorldMatrix;
+	event.m_eventType = Tr2VisibilityEvent::PORTAL_ENTER;
+	event.m_userData = mirror->GetPlaceable()->GetRawRoot();
+	event.m_mirrorIndex = mirror->GetMirrorIndex();
+	event.m_objectToWorldMatrix = objectToWorld;
 
-	// Main visibility query
+	event.m_stencilTest = 0;
+	event.m_stencilWrite = 1;
+
+	event.m_isMirroredInLeftHandedSpace = !isMirrored;
+
+	int left = 0, top = 0, right = Tr2Renderer::GetViewport().width, bottom = Tr2Renderer::GetViewport().height;
+	event.m_scissorRect.left = left;
+	event.m_scissorRect.top = top;
+	event.m_scissorRect.right = right;
+	event.m_scissorRect.bottom = bottom;
+	event.m_useClipPlane = false;
+	if( isMirrored )
+	{
+		event.m_clipPlane = clipPlane;
+		event.m_useClipPlane = true;
+	}
+
 	if( m_visibilityQueryType == PRIMARY_QUERY )
 	{
-		// Add to the result set
 		m_visibilityResults->AddVisibilityEvent( event );
 	}
-	// Query for shadows
-	else if( m_visibilityQueryType == SHADOW_QUERY )
-	{
-		// Do region of influence active
-		DoRegionOfInfluenceActive( event, IMMEDIATE_GATHER );
-	}
 }
 
-// --------------------------------------------------------------------------------------
-// Description
-//   This function is called when Umbra deactivates a light's region of influence.  It
-//   checks to see if the Umbra user data is an interior light source.  It sets the
-//   appropriate parameters and user data on the Tr2VisibilityEvent.   If this is a
-//   primary visibility query, this function queues up the Tr2VisibilityEvent in the
-//   current result set.  Otherwise it executes the event immediately by calling
-//   DoRegionOfInfluenceInactive.
-// See Also:
-//   OnRegionOfInfluenceActive, DoRegionOfInfluenceInctive
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::OnRegionOfInfluenceInactive( void )
+void Tr2InteriorScene::OnPortalExit( const Tr2InteriorMirror* mirror, const Matrix& objectToWorld, bool isMirrored, const Vector4& clipPlane )
 {
-	// Get the IRoot pointer from the instance user data
-	const Umbra::Commander::Instance* instance = getInstance();
-	ITr2InteriorLight* lightSource = dynamic_cast<ITr2InteriorLight*>( CONVERT_FROM_UMBRA_USER_DATA( instance->getUserPointer() ) );
-
-	// Setup visibility event
 	Tr2VisibilityEvent event;
-	event.m_eventType = Tr2VisibilityEvent::REGION_OF_INFLUENCE_INACTIVE;
-	event.m_userData = lightSource;
+	event.m_eventType = Tr2VisibilityEvent::PORTAL_EXIT;
+	event.m_userData = mirror->GetPlaceable()->GetRawRoot();
+	event.m_mirrorIndex = mirror->GetMirrorIndex();
+	event.m_objectToWorldMatrix = objectToWorld;
 
-	// Main visibility query
+	event.m_isMirroredInLeftHandedSpace = !isMirrored;
+
+	int left = 0, top = 0, right = Tr2Renderer::GetViewport().width, bottom = Tr2Renderer::GetViewport().height;
+	event.m_scissorRect.left = left;
+	event.m_scissorRect.top = top;
+	event.m_scissorRect.right = right;
+	event.m_scissorRect.bottom = bottom;
+	event.m_useClipPlane = false;
+	if( isMirrored )
+	{
+		event.m_clipPlane = clipPlane;
+		event.m_useClipPlane = true;
+	}
+
 	if( m_visibilityQueryType == PRIMARY_QUERY )
 	{
-		// Add to the result set
 		m_visibilityResults->AddVisibilityEvent( event );
-	}
-	// Query for shadows
-	else if( m_visibilityQueryType == SHADOW_QUERY )
-	{
-		// Do region of influence inactive
-		DoRegionOfInfluenceInactive( event, IMMEDIATE_GATHER );
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description
-//   This function is called when Umbra needs to draw a stencil buffer mask to isolate
-//   the surface of a portal.  It checks that the Umbra user data is a mirror, then
-//   computes the objectToWorld matrix.  It gets the stencilWrite and stencilTest values
-//   from Umbra, then sets the appropriate parameters and user data on the
-//   Tr2VisibilityEvent.  If this is a primary visibility query, this function queues up
-//   the Tr2VisibilityEvent in the current result set.  Otherwise it executes the event
-//   immediately by calling DoStencilMask.
-// See Also:
-//   OnStencilMask
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::OnStencilMask( void )
-{
-	// Get the IRoot pointer from the instance user data
-	const Umbra::Commander::Instance* instance = getInstance();
-	Tr2InteriorMirror* mirror = reinterpret_cast<Tr2InteriorMirror*>(instance->getUserPointer());
-
-	// IMPORTANT NOTE:
-	// Umbra gives an object-to-camera matrix per visible instance.  This is the OpenGL
-	// MODEL_VIEW matrix, not a matrix we can directly use in D3D.  We need the WorldMat
-	// (object-to-world matrix), so we multiply Umbra's object-to-camera matrix by the
-	// camera-to-world matrix (the inverse ViewMat) to get the matrix we need.
-	Umbra::Matrix4x4 tempMat;
-	instance->getObjectToCameraMatrix( tempMat );
-	Matrix objectToCameraMatrix( &tempMat.m[0][0] );
-
-	// Setup visibility event
-	Tr2VisibilityEvent event;
-	event.m_eventType = Tr2VisibilityEvent::STENCIL_MASK;
-	if( mirror )
-	{
-		event.m_userData = mirror->GetPlaceable()->GetRawRoot();
-		event.m_mirrorIndex = mirror->GetMirrorIndex();
-	}
-	event.m_objectToWorldMatrix = objectToCameraMatrix * m_cameraToWorldMatrix;
-	getStencilValues( event.m_stencilTest, event.m_stencilWrite );
-
-	// Main visibility query
-	if( m_visibilityQueryType == PRIMARY_QUERY )
-	{
-		// Add to the result set
-		m_visibilityResults->AddVisibilityEvent( event );
-	}
-	// Query for shadows
-	else if( m_visibilityQueryType == SHADOW_QUERY )
-	{
-		// Do stencil mask
-		DoStencilMask( event, IMMEDIATE_GATHER );
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description
-//   This function is called when Umbra enters a new cell.  This callback executes early
-//   enough in the visibility query that changes can be made to the cell's contents.
-//   This function is used to add background proxy dynamics to the current cell, ensuring
-//   that proxies are visible from all cells.  As this function only affects the internal
-//   behavior of the remainder of the current query, it does not generate a visibility
-//   for the result set.
-// ---------------------------------------------------------------------------------------
-void Tr2InteriorScene::OnCellImmediateReport( void )
-{
-	Umbra::Cell* cell = getCell();
-
-	for( PITr2InteriorDynamicVector::iterator it = m_dynamics.begin();
-		 it != m_dynamics.end(); ++it )
-	{
-		ITr2InteriorDynamic* dynamic = *it;
-
-		if( dynamic->IsBackgroundProxy() )
-		{
-			dynamic->AddToCellAsBackgroundProxy( cell );
-		}
-	}
-}
-
-void Tr2InteriorScene::OnDrawLine3D( void )
-{
-	if( m_visibilityQueryType == PRIMARY_QUERY )
-	{
-		if( m_debugLines )
-		{
-			Umbra::Vector3 a;
-			Umbra::Vector3 b;
-			Umbra::Vector4 color;
-			getLine3D( a, b, color );
-
-			Color drawColor( color.x, color.y, color.z, color.w );
-
-			m_debugLines->Add( Vector3( a.x, a.y, a.z ), drawColor, Vector3( b.x, b.y, b.z ), drawColor );
-		}
 	}
 }
 
@@ -3187,26 +2553,15 @@ void Tr2InteriorScene::DoQueryBegin( const Tr2VisibilityEvent& event,
 {
 	CCP_ASSERT( event.m_eventType == Tr2VisibilityEvent::QUERY_BEGIN );
 
-	// Not initially mirrored
-	m_isMirroredInLeftHandedSpace = false;
-	m_mirrorDepth = 0;
-
 	// Clear mirror matrix
 	m_mirrorToWorldMatrix = Tr2Renderer::GetIdentityTransform();
 	m_mirrorToWorldMatrixStack.clear();
 	m_mirrorToWorldMatrixStack.push_back( m_mirrorToWorldMatrix );
 
-	// Flag the first view parameter change so we can ignore it
-	m_firstViewParameterChange = true;
-
-	// Clear visible objects
-	m_visibleObjects.clear();
-
 	// Clear lights
 	m_activeLightSet.Clear();
 
 	// Clear the portal entry flag and object group counter
-	m_enteringPortal = false;
 	m_currentObjectGroup = 0;
 
 	// Clear stencil stack
@@ -3220,6 +2575,13 @@ void Tr2InteriorScene::DoQueryBegin( const Tr2VisibilityEvent& event,
 	if( gatherType == PREPASS_FORWARD_GATHER || gatherType == FULL_FORWARD_GATHER )
 	{
 		PrepareBackgroundCubemapBatch( m_activePrimaryRenderBatches );
+		if( m_enableROIs )
+		{
+			for( auto it = m_lights.begin(); it != m_lights.end(); ++it )
+			{
+				m_activeLightSet.AddLight( *it, Vector3( 0.f, 0.f, 0.f ) );
+			}
+		}
 	}
 }
 
@@ -3316,7 +2678,6 @@ void Tr2InteriorScene::DoPortalEnter( const Tr2VisibilityEvent& event,
 	CCP_ASSERT( event.m_eventType == Tr2VisibilityEvent::PORTAL_ENTER );
 
 	// Increment the object group id & flag that we're entering a portal
-	m_enteringPortal = true;
 	++m_currentObjectGroup;
 
 	// Push the transparency stack
@@ -3333,51 +2694,38 @@ void Tr2InteriorScene::DoPortalEnter( const Tr2VisibilityEvent& event,
 		m_transparencyStack.push_back( std::make_pair( startBatch, startBatch ) );
 	}
 
-	if( event.m_mirrorIndex != -1 )
+	Tr2InteriorMirror* mirror = dynamic_cast<ITr2Interior*>( event.m_userData.p )->GetMirror( event.m_mirrorIndex );
+
+	// Get the inverse transform and warp matrices from the mirror
+	XMVECTOR det;
+	Matrix transformBack(
+		XMMatrixInverse( &det, mirror->GetTransformMatrix() ) );
+	Matrix warpMatrixBack(
+		XMMatrixInverse( &det, mirror->GetWarpMatrixBack() ) );
+
+	// Compute the mirror matrix
+	Matrix mirrorMatrix(
+		XMMatrixMultiply(
+			XMMatrixMultiply( transformBack, warpMatrixBack ),
+			XMMatrixMultiply( mirror->GetWarpMatrixFront(), mirror->GetTransformMatrix() ) ) );
+
+	// Need the inverse-transpose for fixing up vectors in mirror space
+	mirrorMatrix = XMMatrixTranspose(
+		XMMatrixInverse( &det, mirrorMatrix ) );
+
+	// Store the current transform in the stack
+	m_mirrorToWorldMatrixStack.push_back( mirrorMatrix );
+
+	// Update the accumulated mirror-to-world matrix
+	m_mirrorToWorldMatrix = Tr2Renderer::GetIdentityTransform();
+	for( std::vector<Matrix>::iterator it = m_mirrorToWorldMatrixStack.begin();
+		it != m_mirrorToWorldMatrixStack.end(); ++it )
 	{
-		// Get a handle to the placeable
-		IRoot* iroot = event.m_userData;
-		Tr2InteriorPlaceable* placeable = dynamic_cast<Tr2InteriorPlaceable*>( iroot );
-
-		if( placeable )
-		{
-			Tr2InteriorMirror* mirror = placeable->GetMirror( event.m_mirrorIndex );
-
-			if( mirror )
-			{
-				// We're going into a mirror, increment the mirror depth
-				++m_mirrorDepth;
-
-				// Get the inverse transform and warp matrices from the mirror
-				XMVECTOR det;
-				Matrix transformBack(
-					XMMatrixInverse( &det, mirror->GetTransformMatrix() ) );
-				Matrix warpMatrixBack(
-					XMMatrixInverse( &det, mirror->GetWarpMatrixBack() ) );
-
-				// Compute the mirror matrix
-				Matrix mirrorMatrix(
-					XMMatrixMultiply(
-						XMMatrixMultiply( transformBack, warpMatrixBack ),
-						XMMatrixMultiply( mirror->GetWarpMatrixFront(), mirror->GetTransformMatrix() ) ) );
-
-				// Need the inverse-transpose for fixing up vectors in mirror space
-				mirrorMatrix = XMMatrixTranspose(
-					XMMatrixInverse( &det, mirrorMatrix ) );
-
-				// Store the current transform in the stack
-				m_mirrorToWorldMatrixStack.push_back( mirrorMatrix );
-
-				// Update the accumulated mirror-to-world matrix
-				m_mirrorToWorldMatrix = Tr2Renderer::GetIdentityTransform();
-				for( std::vector<Matrix>::iterator it = m_mirrorToWorldMatrixStack.begin();
-					it != m_mirrorToWorldMatrixStack.end(); ++it )
-				{
-					m_mirrorToWorldMatrix *= ( *it );
-				}
-			}
-		}
+		m_mirrorToWorldMatrix *= ( *it );
 	}
+
+	DoStencilMask( event, gatherType );
+	DoViewParametersChanged( event, gatherType, WODINTBATCHGROUP_BEGIN );
 }
 
 // --------------------------------------------------------------------------------------
@@ -3397,105 +2745,93 @@ void Tr2InteriorScene::DoPortalExit( const Tr2VisibilityEvent& event,
 {
 	CCP_ASSERT( event.m_eventType == Tr2VisibilityEvent::PORTAL_EXIT );
 
+	DoPortalPreExit( event, gatherType );
+	DoViewParametersChanged( event, gatherType, WODINTBATCHGROUP_END );
+
 	// Early exit if there are no active primary batches
 	if( !m_activePrimaryRenderBatches )
 	{
 		return;
 	}
 
-	if( event.m_mirrorIndex != -1 )
+	Tr2InteriorPlaceable* placeable = dynamic_cast<Tr2InteriorPlaceable*>( event.m_userData.p );
+	Tr2InteriorMirror* mirror = placeable->GetMirror( event.m_mirrorIndex );
+
+	m_mirrorToWorldMatrixStack.pop_back();
+
+	// Update the accumulated mirror-to-world matrix
+	m_mirrorToWorldMatrix = Tr2Renderer::GetIdentityTransform();
+	for( std::vector<Matrix>::iterator it = m_mirrorToWorldMatrixStack.begin();
+		it != m_mirrorToWorldMatrixStack.end(); ++it )
 	{
-		// Get a handle to the placeable
-		IRoot* iroot = event.m_userData;
-		Tr2InteriorPlaceable* placeable = dynamic_cast<Tr2InteriorPlaceable*>( iroot );
+		m_mirrorToWorldMatrix *= ( *it );
+	}
 
-		if( placeable )
+	if( gatherType == PREPASS_FORWARD_GATHER || gatherType == FULL_FORWARD_GATHER )
+	{
+		// Get the per-object data for the opaque batches
+		Tr2PerObjectData* perObjectOpaque =
+			placeable->GetPerObjectDataWithPerInstanceLighting(
+				m_activePrimaryRenderBatches,
+				&m_activeLightSet,
+				event.m_objectToWorldMatrix,
+				m_mirrorToWorldMatrix
+			);
+
+		m_activePrimaryRenderBatches->SetRenderingMode(
+			Tr2EffectStateManager::RM_ANY );
+		m_activePrimaryRenderBatches->SetUserData(
+			ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_END ) );
+
+		// Setup stencil batch parameters
+		WodStencilBatchParams params =
 		{
-			Tr2InteriorMirror* mirror = placeable->GetMirror( event.m_mirrorIndex );
+			mirror->GetMeshIndex(),
+			mirror->GetAreaIndex(),
+			m_stencilStack.back().second,
+			m_stencilStack.back().first,
+			STENCILOP_DECR,
+			false, // This flag indicates that we're coming out of a mirror,
+			// so we don't need to clear depth
+			true // We do render mirror material on forward pass
+		};
 
-			if( mirror )
-			{
-				// Coming out of a mirror, decrement the mirror depth
-				--m_mirrorDepth;
+		// Set the stencil parameters
+		placeable->SetStencilParameters( params );
 
-				m_mirrorToWorldMatrixStack.pop_back();
+		m_activePrimaryRenderBatches->SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
+		// Get the stencil batches
+		placeable->GetBatches( m_activePrimaryRenderBatches,
+						        TRIBATCHTYPE_MIRROR,
+								perObjectOpaque );
 
-				// Update the accumulated mirror-to-world matrix
-				m_mirrorToWorldMatrix = Tr2Renderer::GetIdentityTransform();
-				for( std::vector<Matrix>::iterator it = m_mirrorToWorldMatrixStack.begin();
-					it != m_mirrorToWorldMatrixStack.end(); ++it )
-				{
-					m_mirrorToWorldMatrix *= ( *it );
-				}
+		// Pop the stencil stack
+		m_stencilStack.pop_back();
+	}
+	else if( gatherType == LIGHT_GATHER || gatherType == PREPASS_GATHER )
+	{
+		Tr2InteriorStencilMaskBatch* stencilBatch =
+			m_activePrimaryRenderBatches->Allocate<Tr2InteriorStencilMaskBatch>();
 
-				if( gatherType == PREPASS_FORWARD_GATHER || gatherType == FULL_FORWARD_GATHER )
-				{
-					// Get the per-object data for the opaque batches
-					Tr2PerObjectData* perObjectOpaque =
-						placeable->GetPerObjectDataWithPerInstanceLighting(
-							m_activePrimaryRenderBatches,
-							&m_activeLightSet,
-							event.m_objectToWorldMatrix,
-							m_mirrorToWorldMatrix
-						);
+		if( stencilBatch )
+		{
+			stencilBatch->SetShaderMaterial( NULL );
+			stencilBatch->SetPerObjectData( NULL );
+			stencilBatch->SetGeometryResource( NULL );
+			stencilBatch->SetMeshParameters( 0, 0, 0 );
 
-					m_activePrimaryRenderBatches->SetRenderingMode(
-						Tr2EffectStateManager::RM_ANY );
-					m_activePrimaryRenderBatches->SetUserData(
-						ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_END ) );
+			// This flag disables the stencil test
+			stencilBatch->SetDisableStencil( false );
+			stencilBatch->SetStencilTest( m_stencilStack.back().second );
 
-					// Setup stencil batch parameters
-					WodStencilBatchParams params =
-					{
-						mirror->GetMeshIndex(),
-						mirror->GetAreaIndex(),
-						m_stencilStack.back().second,
-						m_stencilStack.back().first,
-						D3DSTENCILOP_DECR,
-						false, // This flag indicates that we're coming out of a mirror,
-						// so we don't need to clear depth
-						true // We do render mirror material on forward pass
-					};
+			stencilBatch->SetRenderingMode( Tr2EffectStateManager::RM_ANY );
+			m_activePrimaryRenderBatches->SetUserData(
+				ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_END ) );
 
-					// Set the stencil parameters
-					placeable->SetStencilParameters( params );
+			m_activePrimaryRenderBatches->Commit( stencilBatch );
 
-					m_activePrimaryRenderBatches->SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
-					// Get the stencil batches
-					placeable->GetBatches( m_activePrimaryRenderBatches,
-						                   TRIBATCHTYPE_MIRROR,
-										   perObjectOpaque );
-
-					// Pop the stencil stack
-					m_stencilStack.pop_back();
-				}
-				else if( gatherType == LIGHT_GATHER || gatherType == PREPASS_GATHER )
-				{
-					Tr2InteriorStencilMaskBatch* stencilBatch =
-						m_activePrimaryRenderBatches->Allocate<Tr2InteriorStencilMaskBatch>();
-
-					if( stencilBatch )
-					{
-						stencilBatch->SetShaderMaterial( NULL );
-						stencilBatch->SetPerObjectData( NULL );
-						stencilBatch->SetGeometryResource( NULL );
-						stencilBatch->SetMeshParameters( 0, 0, 0 );
-
-						// This flag disables the stencil test
-						stencilBatch->SetDisableStencil( false );
-						stencilBatch->SetStencilTest( m_stencilStack.back().second );
-
-						stencilBatch->SetRenderingMode( Tr2EffectStateManager::RM_ANY );
-						m_activePrimaryRenderBatches->SetUserData(
-							ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_END ) );
-
-						m_activePrimaryRenderBatches->Commit( stencilBatch );
-
-						// Pop the stencil stack
-						m_stencilStack.pop_back();
-					}
-				}
-			}
+			// Pop the stencil stack
+			m_stencilStack.pop_back();
 		}
 	}
 
@@ -3517,8 +2853,6 @@ void Tr2InteriorScene::DoPortalExit( const Tr2VisibilityEvent& event,
 void Tr2InteriorScene::DoPortalPreExit( const Tr2VisibilityEvent& event,
 									    BatchGatherType gatherType )
 {
-	CCP_ASSERT( event.m_eventType == Tr2VisibilityEvent::PORTAL_PRE_EXIT );
-
 	// Skip transparency gather during prepass
 	if( gatherType != PREPASS_GATHER && m_activeTransparentBatchStore && m_activePrimaryRenderBatches)
 	{
@@ -3547,9 +2881,6 @@ void Tr2InteriorScene::DoPortalPreExit( const Tr2VisibilityEvent& event,
 		// Pop the transparency stack
 		m_transparencyStack.pop_back();
 	}
-
-	// Flag that we're no longer entering a portal
-	m_enteringPortal = false;
 }
 
 // --------------------------------------------------------------------------------------
@@ -3566,10 +2897,8 @@ void Tr2InteriorScene::DoPortalPreExit( const Tr2VisibilityEvent& event,
 //   OnPortalViewParametersChanged
 // --------------------------------------------------------------------------------------
 void Tr2InteriorScene::DoViewParametersChanged( const Tr2VisibilityEvent& event,
-											    BatchGatherType gatherType )
+											    BatchGatherType gatherType, Tr2InteriorBatchGroup batchGroup )
 {
-	CCP_ASSERT( event.m_eventType == Tr2VisibilityEvent::VIEW_PARAMETERS_CHANGED );
-
 	// Bail out if there is no active opaque batch accumulator
 	if( !m_activePrimaryRenderBatches )
 	{
@@ -3581,11 +2910,8 @@ void Tr2InteriorScene::DoViewParametersChanged( const Tr2VisibilityEvent& event,
 		return;
 	}
 
-	// Get the isMirrored state from the event
-	m_isMirroredInLeftHandedSpace = event.m_isMirroredInLeftHandedSpace;
-
 	// Get the mirrored state
-	bool isMirrored = IsMirrored();
+	bool isMirrored = !event.m_isMirroredInLeftHandedSpace;
 
 	// Insert the new clipping batch into the opaques list
 	Tr2InteriorClippingBatch* batch =
@@ -3596,21 +2922,11 @@ void Tr2InteriorScene::DoViewParametersChanged( const Tr2VisibilityEvent& event,
 		int x = Tr2Renderer::GetViewport().x;
 		int y = Tr2Renderer::GetViewport().y;
 		Rect scissorRect;
-		if( event.m_deferScissorRectangle )
-		{
-			const TriViewport &viewport = Tr2Renderer::GetViewport();
-			scissorRect.left = 0;
-			scissorRect.top = 0;
-			scissorRect.right = viewport.width;
-			scissorRect.bottom = viewport.height;
-		}
-		else
-		{
-			scissorRect.left = event.m_scissorRect.left;
-			scissorRect.top = event.m_scissorRect.top;
-			scissorRect.right = event.m_scissorRect.right;
-			scissorRect.bottom = event.m_scissorRect.bottom;
-		}
+		scissorRect.left = event.m_scissorRect.left;
+		scissorRect.top = event.m_scissorRect.top;
+		scissorRect.right = event.m_scissorRect.right;
+		scissorRect.bottom = event.m_scissorRect.bottom;
+
 		scissorRect.left += x;
 		scissorRect.top += y;
 		scissorRect.right += x;
@@ -3622,16 +2938,8 @@ void Tr2InteriorScene::DoViewParametersChanged( const Tr2VisibilityEvent& event,
 		batch->SetClipPlane( event.m_clipPlane );
 		batch->UseClipPlane( event.m_useClipPlane );
 		batch->SetRenderingMode( Tr2EffectStateManager::RM_ANY );
-		if( m_enteringPortal )
-		{
-			m_activePrimaryRenderBatches->SetUserData(
-				ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_BEGIN ) );
-		}
-		else
-		{
-			m_activePrimaryRenderBatches->SetUserData(
-				ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_END ) );
-		}
+		m_activePrimaryRenderBatches->SetUserData(
+			ConstructKey( m_currentObjectGroup, batchGroup ) );
 
 		m_activePrimaryRenderBatches->Commit( batch );
 	}
@@ -3654,49 +2962,28 @@ void Tr2InteriorScene::DoInstanceVisible( const Tr2VisibilityEvent& event,
 {
 	CCP_STATS_ZONE( "DoInstanceVisible" );
 
-	CCP_ASSERT( event.m_eventType == Tr2VisibilityEvent::INSTANCE_VISIBLE );
-	CCP_ASSERT( event.m_userData != NULL );
-
 	bool opaqueOnly = false;
-	if( m_visualizeMethod >= VM_EN_ONLY && m_visualizeMethod <= VM_EN_TARGET_CHARTS ||
-		m_visualizeMethod >= VM_ALL_LIGHTING && m_visualizeMethod <= VM_LIGHT_PRE_PASS_SPECULAR_LIGHTING )
+	if( m_visualizeMethod == VM_EN_ONLY ||
+		( m_visualizeMethod >= VM_ALL_LIGHTING && m_visualizeMethod <= VM_LIGHT_PRE_PASS_SPECULAR_LIGHTING ) )
 	{
 		opaqueOnly = true;
 	}
-
-	// Bail out early if there are no active batch accumulators
-	if( !m_activePrimaryRenderBatches && !m_activeTransparentBatchStore )
+	if( gatherType == FLARE_GATHER && ( opaqueOnly || m_mirrorToWorldMatrixStack.size() > 1 ) )
 	{
 		return;
 	}
 
-	// Get the IRoot userdata
-	IRoot* iroot = event.m_userData;
-
 	// Handle light-pass differently, since ITr2InteriorLights aren't ITr2Interiors
 	if( gatherType == LIGHT_GATHER )
 	{
-		// Get a handle to the Wod interior light
-		ITr2InteriorLight* light = dynamic_cast<ITr2InteriorLight*>( iroot );
-
-		// Bail out if the user-data isn't a light source
-		if( !light || !light->UseWithPrimaryLighting() || !m_activeTransparentBatchStore )
+		ITr2InteriorLight* light = dynamic_cast<ITr2InteriorLight*>( event.m_userData.p );
+		if( !light )
 		{
 			return;
 		}
 
 		m_activeTransparentBatchStore->SetRenderingMode( Tr2EffectStateManager::RM_LIGHT );
-		// If we're in a mirrored state, we need to get per-instance information for the light
-		if( m_mirrorDepth > 0 )
-		{
-			// Add the instanced light to the active light set
-			light->GetInstancedBatches( m_activeTransparentBatchStore, m_mirrorToWorldMatrix );
-		}
-		else
-		{
-			// Add the non-instanced light to the active light set
-			light->GetBatches( m_activeTransparentBatchStore );
-		}
+		light->GetBatches( m_activeTransparentBatchStore, m_mirrorToWorldMatrix );
 
 		// Update batch count to indicate the range of transparent batches gathered
 		// for this cell
@@ -3705,27 +2992,11 @@ void Tr2InteriorScene::DoInstanceVisible( const Tr2VisibilityEvent& event,
 	}
 	else
 	{
-		// Get a handle to the Wod interior object
-		ITr2Interior* interior = dynamic_cast<ITr2Interior*>( iroot );
-		// Cast the interior to a renderable
-		ITr2Renderable* renderable = dynamic_cast<ITr2Renderable*>( interior );
+		ITr2Interior* interior = dynamic_cast<ITr2Interior*>( event.m_userData.p );
+		ITr2Renderable* renderable = dynamic_cast<ITr2Renderable*>( event.m_userData.p );
 
 		if( interior && renderable )
 		{
-			// Handle Bert's filter list
-			if( m_useFilterList )
-			{
-				// this is fairly slow obviously, but the filter list is supposed to be extremely small,
-				// and only used in semi-exotic scenario's where fps isn't the end of the world (eg. debug views)
-				if( std::find( m_filterList.begin(), m_filterList.end(), interior ) == m_filterList.end() )
-				{
-					return;
-				}
-			}
-
-			// Store the renderable in the visible objects list
-			m_visibleObjects.push_back( renderable );
-
 			if( m_visibilityQueryType == SHADOW_QUERY )
 			{
 				ITr2InteriorDynamic* dynamic = dynamic_cast<ITr2InteriorDynamic*>( interior );
@@ -3762,14 +3033,6 @@ void Tr2InteriorScene::DoInstanceVisible( const Tr2VisibilityEvent& event,
 				}
 			}
 
-			// Set the visibility flag, needed for determining cell visibility for
-			// Enlighten updates
-			interior->SetVisibility( true );
-
-			// Set the number of visible lights
-			interior->SetVisibleLightCount( m_activeLightSet.GetNumOfActiveLights() );
-			interior->SetVisibleLightSet( m_activeLightSet );
-
 			if( m_enableSHSolver )
 			{
 				interior->SetSHLightingSolver( &m_shSolver );
@@ -3779,224 +3042,47 @@ void Tr2InteriorScene::DoInstanceVisible( const Tr2VisibilityEvent& event,
 				interior->SetSHLightingSolver( NULL );
 			}
 
-			// Set the mirror depth
-			interior->SetMirrorDepth( m_mirrorDepth );
-
 			// Get the per-object data for opaque batches
-			Tr2PerObjectData* perObjectOpaque;
-
-			if( gatherType == PREPASS_FORWARD_GATHER || gatherType == FULL_FORWARD_GATHER )
-			{
-				perObjectOpaque =
-					interior->GetPerObjectDataWithPerInstanceLighting(
-						m_activePrimaryRenderBatches ?
-							m_activePrimaryRenderBatches : m_activeTransparentBatchStore,
-						&m_activeLightSet,
-						event.m_objectToWorldMatrix,
-						m_mirrorToWorldMatrix
-					);
-			}
-			else
-			{
-				perObjectOpaque =
-					interior->GetPerObjectDataWithPerInstanceLighting(
-						m_activePrimaryRenderBatches ?
-							m_activePrimaryRenderBatches : m_activeTransparentBatchStore,
-						NULL,
-						event.m_objectToWorldMatrix,
-						m_mirrorToWorldMatrix
-					);
-			}
+			Tr2PerObjectData* perObjectOpaque =
+				interior->GetPerObjectDataWithPerInstanceLighting(
+					m_activePrimaryRenderBatches ?
+						m_activePrimaryRenderBatches : m_activeTransparentBatchStore,
+					gatherType == FULL_FORWARD_GATHER ? &m_activeLightSet : nullptr,
+					event.m_objectToWorldMatrix,
+					m_mirrorToWorldMatrix
+				);
 
 			if( m_activePrimaryRenderBatches )
 			{
-				// Get the opaque batches
-				m_activePrimaryRenderBatches->SetRenderingMode(
-					Tr2EffectStateManager::RM_OPAQUE );
+#define DO_GET_BATCHES( batches, mode, key, batchType )						\
+	batches->SetRenderingMode( Tr2EffectStateManager::mode );				\
+	batches->SetUserData( ConstructKey( m_currentObjectGroup, key ) );		\
+	renderable->GetBatches( batches, batchType, perObjectOpaque );
 
-				// Shadow query
 				if( m_visibilityQueryType == SHADOW_QUERY )
 				{
-					m_activePrimaryRenderBatches->SetUserData( ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_OPAQUE ) );
-					renderable->GetBatches( m_activePrimaryRenderBatches,
-						TRIBATCHTYPE_DEPTH,
-						perObjectOpaque );
+					DO_GET_BATCHES( m_activePrimaryRenderBatches, RM_OPAQUE, WODINTBATCHGROUP_OPAQUE, TRIBATCHTYPE_DEPTH );
 				}
 				else
 				{
-					// Prepass gather
 					if( gatherType == PREPASS_GATHER )
 					{
-						m_activePrimaryRenderBatches->SetUserData(
-							ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_OPAQUE ) );
-						renderable->GetBatches( m_activePrimaryRenderBatches,
-							TRIBATCHTYPE_DEPTHNORMAL,
-							perObjectOpaque );
-
-						//	Decal normals only output to the Normal buffer, not the Depth buffer
-						m_activePrimaryRenderBatches->SetRenderingMode(
-							Tr2EffectStateManager::RM_DECAL_NO_DEPTH );
-						m_activePrimaryRenderBatches->SetUserData(
-							ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_DECAL ) );
-						renderable->GetBatches( m_activePrimaryRenderBatches,
-							TRIBATCHTYPE_DECALNORMAL,
-							perObjectOpaque );
+						DO_GET_BATCHES( m_activePrimaryRenderBatches, RM_OPAQUE, WODINTBATCHGROUP_OPAQUE, TRIBATCHTYPE_DEPTHNORMAL );
+						DO_GET_BATCHES( m_activePrimaryRenderBatches, RM_DECAL_NO_DEPTH, WODINTBATCHGROUP_DECAL, TRIBATCHTYPE_DECALNORMAL );
 					}
-					// Prepass forward gather
 					else if( gatherType == PREPASS_FORWARD_GATHER )
 					{
-						// Get the opaque batches
-						m_activePrimaryRenderBatches->SetUserData(
-							ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_OPAQUE ) );
-						renderable->GetBatches( m_activePrimaryRenderBatches,
-							TRIBATCHTYPE_OPAQUE_PREPASS,
-							perObjectOpaque );
-
-						// Get the decal batches
-						m_activePrimaryRenderBatches->SetRenderingMode(
-							Tr2EffectStateManager::RM_DECAL );
-						m_activePrimaryRenderBatches->SetUserData(
-							ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_DECAL ) );
-						renderable->GetBatches( m_activePrimaryRenderBatches,
-							TRIBATCHTYPE_DECAL_PREPASS,
-							perObjectOpaque );
+						DO_GET_BATCHES( m_activePrimaryRenderBatches, RM_OPAQUE, WODINTBATCHGROUP_OPAQUE, TRIBATCHTYPE_OPAQUE_PREPASS );
+						DO_GET_BATCHES( m_activePrimaryRenderBatches, RM_DECAL, WODINTBATCHGROUP_DECAL, TRIBATCHTYPE_DECAL_PREPASS );
 					}
 					else if( gatherType == FLARE_GATHER )
 					{
-						// Get the opaque batches
-						if( !opaqueOnly )
-						{
-							m_activePrimaryRenderBatches->SetUserData(
-								ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_OPAQUE ) );
-							renderable->GetBatches( m_activePrimaryRenderBatches,
-								TRIBATCHTYPE_FLARE,
-								perObjectOpaque );
-						}
+						DO_GET_BATCHES( m_activePrimaryRenderBatches, RM_OPAQUE, WODINTBATCHGROUP_OPAQUE, TRIBATCHTYPE_FLARE );
 					}
-					// Full forward gather
 					else
 					{
-						// Get the opaque batches
-						m_activePrimaryRenderBatches->SetUserData(
-							ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_OPAQUE ) );
-						renderable->GetBatches( m_activePrimaryRenderBatches,
-							TRIBATCHTYPE_OPAQUE,
-							perObjectOpaque );
-
-						// Get the decal batches
-						m_activePrimaryRenderBatches->SetRenderingMode(
-							Tr2EffectStateManager::RM_DECAL );
-						m_activePrimaryRenderBatches->SetUserData(
-							ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_DECAL ) );
-						renderable->GetBatches( m_activePrimaryRenderBatches,
-							TRIBATCHTYPE_DECAL,
-							perObjectOpaque );
-					}
-				}
-
-				// Now look at the attachments
-				const ITr2RenderableVector* attachments = renderable->GetAttachedRenderables();
-				if( attachments )
-				{
-					// Loop over the attached renderables
-					for( ITr2RenderableVector::const_iterator it = attachments->begin();
-						it != attachments->end(); ++it )
-					{
-						ITr2Renderable* attachment = *it;
-						ITr2Interior* attachedInterior = dynamic_cast<ITr2Interior*>( attachment );
-
-						// If the attached object is an interior, we can gather batches from it
-						if( attachedInterior )
-						{
-							m_visibleObjects.push_back( attachment );
-
-							// Get per-object data
-							Tr2PerObjectData* perObjectOpaqueAttachment;
-							if( gatherType == PREPASS_FORWARD_GATHER || gatherType == FULL_FORWARD_GATHER )
-							{
-								perObjectOpaqueAttachment =
-									attachedInterior->GetPerObjectDataWithPerInstanceLighting(
-									m_activePrimaryRenderBatches,
-									&m_activeLightSet,
-									event.m_objectToWorldMatrix,
-									m_mirrorToWorldMatrix
-									);
-							}
-							else
-							{
-								perObjectOpaqueAttachment =
-									attachedInterior->GetPerObjectDataWithPerInstanceLighting(
-									m_activePrimaryRenderBatches,
-									NULL,
-									event.m_objectToWorldMatrix,
-									m_mirrorToWorldMatrix
-									);
-							}
-
-							if( gatherType == PREPASS_GATHER )
-							{
-								m_activePrimaryRenderBatches->SetRenderingMode(
-									Tr2EffectStateManager::RM_OPAQUE );
-								m_activePrimaryRenderBatches->SetUserData(
-									ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_OPAQUE ) );
-								attachment->GetBatches( m_activePrimaryRenderBatches,
-									TRIBATCHTYPE_DEPTHNORMAL,
-									perObjectOpaqueAttachment );
-							}
-							else
-							{
-								// Set opaque render state
-								m_activePrimaryRenderBatches->SetRenderingMode(
-									Tr2EffectStateManager::RM_OPAQUE );
-
-								// Shadow batches
-								if( m_visibilityQueryType == SHADOW_QUERY )
-								{
-									m_activePrimaryRenderBatches->SetUserData( 0 );
-									attachment->GetBatches( m_activePrimaryRenderBatches,
-										TRIBATCHTYPE_DEPTH,
-										perObjectOpaqueAttachment );
-								}
-								// Prepass forward batches
-								else if( gatherType == PREPASS_FORWARD_GATHER )
-								{
-									// Get the opaque batches
-									m_activePrimaryRenderBatches->SetUserData(
-										ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_OPAQUE ) );
-									attachment->GetBatches( m_activePrimaryRenderBatches,
-										TRIBATCHTYPE_OPAQUE_PREPASS,
-										perObjectOpaqueAttachment );
-
-									// Get the decal batches
-									m_activePrimaryRenderBatches->SetRenderingMode(
-										Tr2EffectStateManager::RM_DECAL );
-									m_activePrimaryRenderBatches->SetUserData(
-										ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_DECAL ) );
-									attachment->GetBatches( m_activePrimaryRenderBatches,
-										TRIBATCHTYPE_DECAL_PREPASS,
-										perObjectOpaqueAttachment );
-								}
-								// Full forward batches
-								else
-								{
-									// Get the opaque batches
-									m_activePrimaryRenderBatches->SetUserData(
-										ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_OPAQUE ) );
-									attachment->GetBatches( m_activePrimaryRenderBatches,
-										TRIBATCHTYPE_OPAQUE,
-										perObjectOpaqueAttachment );
-
-									// Get the decal batches
-									m_activePrimaryRenderBatches->SetRenderingMode(
-										Tr2EffectStateManager::RM_DECAL );
-									m_activePrimaryRenderBatches->SetUserData(
-										ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_DECAL ) );
-									attachment->GetBatches( m_activePrimaryRenderBatches,
-										TRIBATCHTYPE_DECAL,
-										perObjectOpaqueAttachment );
-								}
-							}
-						}
+						DO_GET_BATCHES( m_activePrimaryRenderBatches, RM_OPAQUE, WODINTBATCHGROUP_OPAQUE, TRIBATCHTYPE_OPAQUE );
+						DO_GET_BATCHES( m_activePrimaryRenderBatches, RM_DECAL, WODINTBATCHGROUP_DECAL, TRIBATCHTYPE_DECAL );
 					}
 				}
 			}
@@ -4004,149 +3090,16 @@ void Tr2InteriorScene::DoInstanceVisible( const Tr2VisibilityEvent& event,
 			// Gather transparent batches
 			if( !opaqueOnly && m_activeTransparentBatchStore && m_visibilityQueryType != SHADOW_QUERY && gatherType != FLARE_GATHER )
 			{
-				if( renderable->HasTransparentBatches() )
-				{
-					m_activeTransparentBatchStore->SetRenderingMode(
-						Tr2EffectStateManager::RM_ALPHA );
-					m_activeTransparentBatchStore->SetUserData(
-						ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_BLEND ) );
-					renderable->GetBatches( m_activeTransparentBatchStore,
-						TRIBATCHTYPE_TRANSPARENT,
-						perObjectOpaque );
-				}
+				DO_GET_BATCHES( m_activeTransparentBatchStore, RM_ALPHA, WODINTBATCHGROUP_BLEND, TRIBATCHTYPE_TRANSPARENT );
 
 				// Update batch count to indicate the range of transparent batches gathered
 				// for this cell
 				m_transparencyStack.back().second =
 					(unsigned int)m_activeTransparentBatchStore->GetBatchCount();
-
-				// Now look at the attachments
-				const ITr2RenderableVector* attachments = renderable->GetAttachedRenderables();
-				if( attachments )
-				{
-					// Loop over the attachments
-					for( ITr2RenderableVector::const_iterator it = attachments->begin();
-						it != attachments->end(); ++it )
-					{
-						ITr2Renderable* attachment = *it;
-						ITr2Interior* attachedInterior = dynamic_cast<ITr2Interior*>( attachment );
-
-						// If the attachment is an interior, we can gather batches from it
-						if( attachedInterior )
-						{
-							// Get per-object data
-							Tr2PerObjectData* perObjectOpaqueAttachment;
-							if( gatherType == PREPASS_FORWARD_GATHER || gatherType == FULL_FORWARD_GATHER )
-							{
-								perObjectOpaqueAttachment =
-									attachedInterior->GetPerObjectDataWithPerInstanceLighting(
-									m_activeTransparentBatchStore,
-									&m_activeLightSet,
-									event.m_objectToWorldMatrix,
-									m_mirrorToWorldMatrix
-									);
-							}
-							else
-							{
-								perObjectOpaqueAttachment =
-									attachedInterior->GetPerObjectDataWithPerInstanceLighting(
-									m_activeTransparentBatchStore,
-									NULL,
-									event.m_objectToWorldMatrix,
-									m_mirrorToWorldMatrix
-									);
-							}
-
-							m_activeTransparentBatchStore->SetRenderingMode(
-								Tr2EffectStateManager::RM_ALPHA );
-							m_activeTransparentBatchStore->SetUserData(
-								ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_BLEND ) );
-							attachment->GetBatches( m_activeTransparentBatchStore,
-								TRIBATCHTYPE_TRANSPARENT,
-								perObjectOpaqueAttachment );
-							// Update batch count to indicate the range of transparent batches
-							// gathered for this cell
-							m_transparencyStack.back().second =
-								(unsigned int)m_activeTransparentBatchStore->GetBatchCount();
-						}
-					}
-				}
 			}
 		}
 	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description
-//   This function executes a region of influence active event in a normal batch
-//   gathering operation.  It determines whether the light is mirrored and adds an
-//   instanced light to the active light set (if mirrored) or a non-instanced light (if
-//   not mirrored).  It also the tracks the total set of all visible lights in the scene,
-//   but is not aware of instancing.
-// Arguments:
-//   event		- The region of influence active event to execute.
-//   gatherType - The type of batches to gather.
-// See Also:
-//   OnRegionOfInfluenceActive, DoRegionOfInfluenceInactive
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::DoRegionOfInfluenceActive( const Tr2VisibilityEvent& event,
-												  BatchGatherType gatherType )
-{
-	CCP_ASSERT( event.m_eventType == Tr2VisibilityEvent::REGION_OF_INFLUENCE_ACTIVE );
-	CCP_ASSERT( event.m_userData != NULL );
-
-	// Get a handle to the light source
-	IRoot* iroot = event.m_userData;
-	ITr2InteriorLight* lightSource = static_cast<ITr2InteriorLight*>( iroot );
-
-	// Bail out if the user-data isn't a light source
-	if( !lightSource )
-	{
-		return;
-	}
-
-	// If we're in a mirrored state, we need to get per-instance information for the light
-	if( m_mirrorDepth > 0 )
-	{
-		// Add the instanced light to the active light set
-		m_activeLightSet.AddInstancedLight( lightSource, Tr2Renderer::GetViewPosition(),
-			m_mirrorToWorldMatrix );
-	}
-	else
-	{
-		// Add the non-instanced light to the active light set
-		m_activeLightSet.AddLight( lightSource, Tr2Renderer::GetViewPosition() );
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description
-//   This function executes a region of influence inactive event in a normal batch
-//   gathering operation.  It removes the light from the active light set.
-// Arguments:
-//   event		- The region of influence inactive event to execute.
-//   gatherType - The type of batches to gather.
-// See Also:
-//   OnRegionOfInfluenceInactive, DoRegionOfInfluenceActive
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::DoRegionOfInfluenceInactive( const Tr2VisibilityEvent& event,
-												    BatchGatherType gatherType )
-{
-	CCP_ASSERT( event.m_eventType == Tr2VisibilityEvent::REGION_OF_INFLUENCE_INACTIVE );
-	CCP_ASSERT( event.m_userData != NULL );
-
-	// Get a handle to the light source
-	IRoot* iroot = event.m_userData;
-	ITr2InteriorLight* lightSource = static_cast<ITr2InteriorLight*>( iroot );
-
-	// Bail out if the user-data isn't a light source
-	if( !lightSource )
-	{
-		return;
-	}
-
-	// Remove the light from the active light set
-	m_activeLightSet.RemoveLight( lightSource );
+#undef DO_GET_BATCHES
 }
 
 // --------------------------------------------------------------------------------------
@@ -4166,104 +3119,81 @@ void Tr2InteriorScene::DoRegionOfInfluenceInactive( const Tr2VisibilityEvent& ev
 void Tr2InteriorScene::DoStencilMask( const Tr2VisibilityEvent& event,
 									  BatchGatherType gatherType )
 {
-	CCP_ASSERT( event.m_eventType == Tr2VisibilityEvent::STENCIL_MASK );
+	Tr2InteriorPlaceable* placeable = dynamic_cast<Tr2InteriorPlaceable*>( event.m_userData.p );
 
-	// Early exit if there are no active primary batches
-	if( !m_activePrimaryRenderBatches )
+	Tr2InteriorMirror* mirror = placeable->GetMirror( event.m_mirrorIndex );
+	m_stencilStack.push_back( std::make_pair( event.m_stencilWrite,
+		event.m_stencilTest ) );
+
+	if( gatherType == PREPASS_GATHER || gatherType == FULL_FORWARD_GATHER )
 	{
-		return;
+		// Get the per-object data for the opaque batches
+		Tr2PerObjectData* perObjectOpaque =
+			placeable->GetPerObjectDataWithPerInstanceLighting(
+				m_activePrimaryRenderBatches,
+				&m_activeLightSet,
+				event.m_objectToWorldMatrix,
+				m_mirrorToWorldMatrix
+			);
+
+		m_activePrimaryRenderBatches->SetRenderingMode(
+			Tr2EffectStateManager::RM_ANY );
+		m_activePrimaryRenderBatches->SetUserData(
+			ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_BEGIN ) );
+
+		// Setup stencil batch parameters
+		WodStencilBatchParams params =
+		{
+			mirror->GetMeshIndex(),
+			mirror->GetAreaIndex(),
+			event.m_stencilWrite,
+			event.m_stencilTest,
+			STENCILOP_INCR,
+			true, // This flag indicates that we're going into a mirror,
+					// so we need to clear depth
+			gatherType == FULL_FORWARD_GATHER // We render mirror material if in forward pass
+		};
+
+		// Set the stencil parameters on the placeable
+		placeable->SetStencilParameters( params );
+		if( gatherType == FULL_FORWARD_GATHER )
+		{
+			m_activePrimaryRenderBatches->SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
+		}
+		// Get the mirror batches
+		placeable->GetBatches( m_activePrimaryRenderBatches,
+							    TRIBATCHTYPE_MIRROR,
+								perObjectOpaque );
+	}
+	else if( gatherType == LIGHT_GATHER || gatherType == PREPASS_FORWARD_GATHER  )
+	{
+		Tr2InteriorStencilMaskBatch* stencilBatch =
+			m_activePrimaryRenderBatches->Allocate<Tr2InteriorStencilMaskBatch>();
+
+		if( stencilBatch )
+		{
+			stencilBatch->SetShaderMaterial( NULL );
+			stencilBatch->SetPerObjectData( NULL );
+			stencilBatch->SetGeometryResource( NULL );
+			stencilBatch->SetMeshParameters( 0, 0, 0 );
+
+			// This flag disables the stencil test
+			stencilBatch->SetDisableStencil( false );
+			stencilBatch->SetStencilTest( event.m_stencilWrite );
+
+			stencilBatch->SetRenderingMode( Tr2EffectStateManager::RM_ANY );
+			m_activePrimaryRenderBatches->SetUserData(
+				ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_BEGIN ) );
+
+			m_activePrimaryRenderBatches->Commit( stencilBatch );
+		}
 	}
 
-	if( event.m_mirrorIndex != -1 )
+	// If we're gathering batches for the forward pass, get a cubemap
+	// batch for the background
+	if( gatherType == PREPASS_FORWARD_GATHER || gatherType == FULL_FORWARD_GATHER )
 	{
-		// Get a handle to the placeable
-		IRoot* iroot = event.m_userData;
-		Tr2InteriorPlaceable* placeable = dynamic_cast<Tr2InteriorPlaceable*>( iroot );
-
-		if( placeable )
-		{
-			Tr2InteriorMirror* mirror = placeable->GetMirror( event.m_mirrorIndex );
-
-			if( mirror )
-			{
-				if( event.m_stencilWrite > event.m_stencilTest )
-				{
-					m_stencilStack.push_back( std::make_pair( event.m_stencilWrite,
-						event.m_stencilTest ) );
-
-					if( gatherType == PREPASS_GATHER || gatherType == FULL_FORWARD_GATHER )
-					{
-						// Get the per-object data for the opaque batches
-						Tr2PerObjectData* perObjectOpaque =
-							placeable->GetPerObjectDataWithPerInstanceLighting(
-								m_activePrimaryRenderBatches,
-								&m_activeLightSet,
-								event.m_objectToWorldMatrix,
-								m_mirrorToWorldMatrix
-							);
-
-						m_activePrimaryRenderBatches->SetRenderingMode(
-							Tr2EffectStateManager::RM_ANY );
-						m_activePrimaryRenderBatches->SetUserData(
-							ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_BEGIN ) );
-
-						// Setup stencil batch parameters
-						WodStencilBatchParams params =
-						{
-							mirror->GetMeshIndex(),
-							mirror->GetAreaIndex(),
-							event.m_stencilWrite,
-							event.m_stencilTest,
-							D3DSTENCILOP_INCR,
-							true, // This flag indicates that we're going into a mirror,
-								 // so we need to clear depth
-							gatherType == FULL_FORWARD_GATHER // We render mirror material if in forward pass
-						};
-
-						// Set the stencil parameters on the placeable
-						placeable->SetStencilParameters( params );
-						if( gatherType == FULL_FORWARD_GATHER )
-						{
-							m_activePrimaryRenderBatches->SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
-						}
-						// Get the mirror batches
-						placeable->GetBatches( m_activePrimaryRenderBatches,
-							                   TRIBATCHTYPE_MIRROR,
-											   perObjectOpaque );
-					}
-					else if( gatherType == LIGHT_GATHER || gatherType == PREPASS_FORWARD_GATHER  )
-					{
-						Tr2InteriorStencilMaskBatch* stencilBatch =
-							m_activePrimaryRenderBatches->Allocate<Tr2InteriorStencilMaskBatch>();
-
-						if( stencilBatch )
-						{
-							stencilBatch->SetShaderMaterial( NULL );
-							stencilBatch->SetPerObjectData( NULL );
-							stencilBatch->SetGeometryResource( NULL );
-							stencilBatch->SetMeshParameters( 0, 0, 0 );
-
-							// This flag disables the stencil test
-							stencilBatch->SetDisableStencil( false );
-							stencilBatch->SetStencilTest( event.m_stencilWrite );
-
-							stencilBatch->SetRenderingMode( Tr2EffectStateManager::RM_ANY );
-							m_activePrimaryRenderBatches->SetUserData(
-								ConstructKey( m_currentObjectGroup, WODINTBATCHGROUP_BEGIN ) );
-
-							m_activePrimaryRenderBatches->Commit( stencilBatch );
-						}
-					}
-
-					// If we're gathering batches for the forward pass, get a cubemap
-					// batch for the background
-					if( gatherType == PREPASS_FORWARD_GATHER || gatherType == FULL_FORWARD_GATHER )
-					{
-						PrepareBackgroundCubemapBatch( m_activePrimaryRenderBatches );
-					}
-				}
-			}
-		}
+		PrepareBackgroundCubemapBatch( m_activePrimaryRenderBatches );
 	}
 }
 
@@ -4298,18 +3228,11 @@ void Tr2InteriorScene::GatherPrePassBatches( Tr2VisibilityResults* results )
 			case Tr2VisibilityEvent::PORTAL_EXIT:
 				DoPortalExit( event, PREPASS_GATHER );
 				break;
-			case Tr2VisibilityEvent::PORTAL_PRE_EXIT:
-				DoPortalPreExit( event, PREPASS_GATHER );
-				break;
-			case Tr2VisibilityEvent::VIEW_PARAMETERS_CHANGED:
-				DoViewParametersChanged( event, PREPASS_GATHER );
-				break;
 			case Tr2VisibilityEvent::INSTANCE_VISIBLE:
 				DoInstanceVisible( event, PREPASS_GATHER );
 				break;
-			case Tr2VisibilityEvent::STENCIL_MASK:
-				DoStencilMask( event, PREPASS_GATHER );
-				break;
+            default:
+                break;
 			}
 		}
 	}
@@ -4349,18 +3272,11 @@ void Tr2InteriorScene::GatherLightBatches( Tr2VisibilityResults* results )
 			case Tr2VisibilityEvent::PORTAL_EXIT:
 				DoPortalExit( event, LIGHT_GATHER );
 				break;
-			case Tr2VisibilityEvent::PORTAL_PRE_EXIT:
-				DoPortalPreExit( event, LIGHT_GATHER );
-				break;
-			case Tr2VisibilityEvent::VIEW_PARAMETERS_CHANGED:
-				DoViewParametersChanged( event, LIGHT_GATHER );
-				break;
 			case Tr2VisibilityEvent::INSTANCE_VISIBLE:
 				DoInstanceVisible( event, LIGHT_GATHER );
 				break;
-			case Tr2VisibilityEvent::STENCIL_MASK:
-				DoStencilMask( event, LIGHT_GATHER );
-				break;
+            default:
+                break;
 			}
 		}
 	}
@@ -4400,24 +3316,11 @@ void Tr2InteriorScene::GatherPrepassForwardBatches( Tr2VisibilityResults* result
 			case Tr2VisibilityEvent::PORTAL_EXIT:
 				DoPortalExit( event, PREPASS_FORWARD_GATHER );
 				break;
-			case Tr2VisibilityEvent::PORTAL_PRE_EXIT:
-				DoPortalPreExit( event, PREPASS_FORWARD_GATHER );
-				break;
-			case Tr2VisibilityEvent::VIEW_PARAMETERS_CHANGED:
-				DoViewParametersChanged( event, PREPASS_FORWARD_GATHER );
-				break;
 			case Tr2VisibilityEvent::INSTANCE_VISIBLE:
 				DoInstanceVisible( event, PREPASS_FORWARD_GATHER );
 				break;
-			case Tr2VisibilityEvent::REGION_OF_INFLUENCE_ACTIVE:
-				DoRegionOfInfluenceActive( event, PREPASS_FORWARD_GATHER );
-				break;
-			case Tr2VisibilityEvent::REGION_OF_INFLUENCE_INACTIVE:
-				DoRegionOfInfluenceInactive( event, PREPASS_FORWARD_GATHER );
-				break;
-			case Tr2VisibilityEvent::STENCIL_MASK:
-				DoStencilMask( event, PREPASS_FORWARD_GATHER );
-				break;
+            default:
+                break;
 			}
 		}
 	}
@@ -4458,24 +3361,11 @@ void Tr2InteriorScene::GatherFullForwardBatches( Tr2VisibilityResults* results )
 			case Tr2VisibilityEvent::PORTAL_EXIT:
 				DoPortalExit( event, FULL_FORWARD_GATHER );
 				break;
-			case Tr2VisibilityEvent::PORTAL_PRE_EXIT:
-				DoPortalPreExit( event, FULL_FORWARD_GATHER );
-				break;
-			case Tr2VisibilityEvent::VIEW_PARAMETERS_CHANGED:
-				DoViewParametersChanged( event, FULL_FORWARD_GATHER );
-				break;
 			case Tr2VisibilityEvent::INSTANCE_VISIBLE:
 				DoInstanceVisible( event, FULL_FORWARD_GATHER );
 				break;
-			case Tr2VisibilityEvent::REGION_OF_INFLUENCE_ACTIVE:
-				DoRegionOfInfluenceActive( event, FULL_FORWARD_GATHER );
-				break;
-			case Tr2VisibilityEvent::REGION_OF_INFLUENCE_INACTIVE:
-				DoRegionOfInfluenceInactive( event, FULL_FORWARD_GATHER );
-				break;
-			case Tr2VisibilityEvent::STENCIL_MASK:
-				DoStencilMask( event, FULL_FORWARD_GATHER );
-				break;
+            default:
+                break;
 			}
 		}
 	}
@@ -4516,384 +3406,14 @@ void Tr2InteriorScene::GatherFlareBatches( Tr2VisibilityResults* results )
 			case Tr2VisibilityEvent::PORTAL_EXIT:
 				DoPortalExit( event, FLARE_GATHER );
 				break;
-			case Tr2VisibilityEvent::PORTAL_PRE_EXIT:
-				DoPortalPreExit( event, FLARE_GATHER );
-				break;
-			case Tr2VisibilityEvent::VIEW_PARAMETERS_CHANGED:
-				DoViewParametersChanged( event, FLARE_GATHER );
-				break;
 			case Tr2VisibilityEvent::INSTANCE_VISIBLE:
 				DoInstanceVisible( event, FLARE_GATHER );
 				break;
-			case Tr2VisibilityEvent::STENCIL_MASK:
-				DoStencilMask( event, FLARE_GATHER );
-				break;
+            default:
+                break;
 			}
 		}
 	}
-}
-
-// ------------------------------------------------------------------------------------------------------
-void Tr2InteriorScene::CreateRootCell( void )
-{
-	// Create the root cell
-	m_rootCell = Umbra::Cell::create();
-
-	// Create the object and dummy-sphere model
-	m_rootModel = ( Umbra::Model* )Umbra::SphereModel::create( AS_UMBRA_VECTOR3( Vector3( 0.0f, 0.0f, 0.0f ) ), 1.0f );
-	m_rootObject = Umbra::Object::create( m_rootModel );
-
-	// Set the object to 'UNBOUNDED' (this means the object is always visible in Umbra)
-	m_rootObject->set( Umbra::Object::UNBOUNDED, true );
-	m_rootObject->setCell( m_rootCell );
-}
-
-// ------------------------------------------------------------------------------------------------------
-void Tr2InteriorScene::ReleaseRootCell( void )
-{
-	if( m_rootCell == NULL )
-	{
-		return;
-	}
-
-	// Clean-up the root cell
-	if( m_rootCell )
-	{
-		m_rootCell->release();
-		m_rootCell = NULL;
-	}
-
-	// Clean-up the root model
-	if( m_rootModel )
-	{
-		m_rootModel->release();
-		m_rootModel = NULL;
-	}
-
-	// Clean-up the root object
-	if( m_rootObject )
-	{
-		m_rootObject->release();
-		m_rootObject = NULL;
-	}
-
-	// Mark all dynamics as dirty to remove those dynamics
-	// that were added to the root cell
-	for( PITr2InteriorDynamicVector::iterator it = m_dynamics.begin(); it != m_dynamics.end(); ++it )
-	{
-		( *it )->SetDirtyFlag( true );
-	}
-}
-
-// ------------------------------------------------------------------------------------------------------
-void Tr2InteriorScene::UpdateRootPortals( void )
-{
-	// Create portals for all cells
-	for( PTr2InteriorCellVector::iterator cellIt = m_cells.begin(); cellIt != m_cells.end(); ++cellIt )
-	{
-		Vector3 minBounds, maxBounds;
-		if( ( *cellIt )->GetBoundingBox( minBounds, maxBounds ) )
-		{
-			Umbra::Cell* ucell = ( *cellIt )->GetUmbraCell();
-
-			std::map< Umbra::Cell*, std::pair<Umbra::Model*, Umbra::PhysicalPortal*> >::iterator it =
-				m_rootPortals.find( ucell );
-			if( it == m_rootPortals.end() )
-			{
-				Umbra::Model* model = ( Umbra::Model* )Umbra::OBBModel::create( AS_UMBRA_VECTOR3( minBounds ), AS_UMBRA_VECTOR3( maxBounds ) );
-				model->set( Umbra::Model::BACKFACE_CULLABLE, true );
-
-				Umbra::PhysicalPortal* portal = Umbra::PhysicalPortal::create( model, ucell );
-				portal->setCell( m_rootCell );
-				portal->setObjectToCellMatrix( AS_UMBRA_MATRIX( ( *cellIt )->GetWorldTransform() ) );
-				portal->set( Umbra::Object::INFORM_PORTAL_ENTER, true );
-				portal->set( Umbra::Object::INFORM_PORTAL_EXIT, true );
-				portal->set( Umbra::Object::INFORM_PORTAL_PRE_EXIT, true );
-
-				m_rootPortals[ucell] = std::make_pair( model, portal );
-			}
-		}
-	}
-
-	// Remove portals for deleted cells
-	for( std::map<Umbra::Cell*, std::pair<Umbra::Model*, Umbra::PhysicalPortal*> >::iterator it = m_rootPortals.begin();
-		it != m_rootPortals.end(); )
-	{
-		Umbra::Cell* ucell = it->first;
-
-		bool found = false;
-		for( PTr2InteriorCellVector::iterator cellIt = m_cells.begin(); cellIt != m_cells.end(); ++cellIt )
-		{
-			if( ucell == ( *cellIt )->GetUmbraCell() )
-			{
-				found = true;
-				break;
-			}
-		}
-
-		if( found )
-		{
-			++it;
-		}
-		else
-		{
-			Umbra::Model* model = it->second.first;
-			if( model )
-			{
-				model->release();
-				model = NULL;
-			}
-
-			Umbra::PhysicalPortal* portal = it->second.second;
-			if( portal )
-			{
-				portal->release();
-				portal = NULL;
-			}
-
-			it = m_rootPortals.erase( it );
-		}
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Updates the root portal for a particular cell.  A log error message is printed if
-//   the cell is NULL.
-// Arguments:
-//   cell - The cell to update (should not be NULL)
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::UpdateRootPortalForCell( Tr2InteriorCell* cell )
-{
-	// Bail out early if the cell is NULL
-	if( !cell )
-	{
-		CCP_LOGERR( "Attempt to update root portal for NULL cell in interior scene!" );
-		return;
-	}
-
-	Vector3 minBounds, maxBounds;
-	if( cell->GetBoundingBox( minBounds, maxBounds ) )
-	{
-		Umbra::Cell* ucell = cell->GetUmbraCell();
-
-		std::map< Umbra::Cell*, std::pair<Umbra::Model*, Umbra::PhysicalPortal*> >::iterator it =
-			m_rootPortals.find( ucell );
-		if( it == m_rootPortals.end() )
-		{
-			Umbra::Model* model = ( Umbra::Model* )Umbra::OBBModel::create(
-				AS_UMBRA_VECTOR3( minBounds ), AS_UMBRA_VECTOR3( maxBounds ) );
-			model->set( Umbra::Model::BACKFACE_CULLABLE, true );
-
-			Umbra::PhysicalPortal* portal = Umbra::PhysicalPortal::create( model, ucell );
-			portal->setCell( m_rootCell );
-			portal->setObjectToCellMatrix( AS_UMBRA_MATRIX( cell->GetWorldTransform() ) );
-			portal->set( Umbra::Object::INFORM_PORTAL_ENTER, true );
-			portal->set( Umbra::Object::INFORM_PORTAL_EXIT, true );
-			portal->set( Umbra::Object::INFORM_PORTAL_PRE_EXIT, true );
-
-			m_rootPortals[ucell] = std::make_pair( model, portal );
-		}
-		else
-		{
-			Umbra::Model* model = ( *it ).second.first;
-			if( model )
-			{
-				model->release();
-			}
-
-			Umbra::PhysicalPortal* portal = ( *it ).second.second;
-			if( portal )
-			{
-				portal->release();
-			}
-
-			model = ( Umbra::Model* )Umbra::OBBModel::create(
-				AS_UMBRA_VECTOR3( minBounds ), AS_UMBRA_VECTOR3( maxBounds ) );
-			model->set( Umbra::Model::BACKFACE_CULLABLE, true );
-
-			portal = Umbra::PhysicalPortal::create( model, ucell );
-			portal->setCell( m_rootCell );
-			portal->setObjectToCellMatrix( AS_UMBRA_MATRIX( cell->GetWorldTransform() ) );
-			portal->set( Umbra::Object::INFORM_PORTAL_ENTER, true );
-			portal->set( Umbra::Object::INFORM_PORTAL_EXIT, true );
-			portal->set( Umbra::Object::INFORM_PORTAL_PRE_EXIT, true );
-
-			( *it ).second.first = model;
-			( *it ).second.second = portal;
-		}
-	}
-}
-
-// ------------------------------------------------------------------------------------------------------
-void Tr2InteriorScene::ReleaseRootPortals( void )
-{
-	for( std::map<Umbra::Cell*, std::pair<Umbra::Model*, Umbra::PhysicalPortal*> >::iterator it = m_rootPortals.begin();
-		it != m_rootPortals.end(); ++it )
-	{
-		Umbra::Model* model = it->second.first;
-		if( model )
-	{
-			model->release();
-			model = NULL;
-	}
-
-		Umbra::PhysicalPortal* portal = it->second.second;
-		if( portal )
-	{
-			portal->release();
-			portal = NULL;
-	}
-}
-
-	m_rootPortals.clear();
-}
-
-// ------------------------------------------------------------------------------------------------------
-Umbra::Cell* Tr2InteriorScene::GetCameraCell( void )
-{
-	if( g_useRootCell && m_sceneUseRootCell )
-	{
-		m_currentCameraCell = m_rootCell;
-		return m_currentCameraCell;
-	}
-
-	// Get the camera position
-	Vector3 cameraPos = Tr2Renderer::GetViewPosition();
-
-	// Temporary list of candidate cells
-	std::vector<Umbra::Cell*> candidateCells;
-	bool cameraInCurrentCell = false;
-
-	// Check if the camera position is inside any of the cells
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		Tr2InteriorCell* cell = ( *it );
-
-		// If the camera position is inside the bounding box of the cell, return the Umbra cell
-		if( cell->ContainsPoint( cameraPos ) )
-		{
-			Umbra::Cell* candidateCell = ( *it )->GetUmbraCell();
-			if( candidateCell == m_currentCameraCell )
-			{
-				cameraInCurrentCell = true;
-			}
-			candidateCells.push_back( ( *it )->GetUmbraCell() );
-		}
-	}
-
-	if( m_cameraPortalModel )
-	{
-		m_cameraPortalModel->release();
-		m_cameraPortalModel = NULL;
-	}
-	for( std::vector<Umbra::PhysicalPortal*>::iterator it = m_cameraPortals.begin(); it != m_cameraPortals.end(); ++it )
-	{
-		( *it )->release();
-	}
-	m_cameraPortals.clear();
-	CCP_STATS_RESET( wodInteriorSceneIntersectingCellPortals );
-
-	if( candidateCells.size() > 1 )
-	{
-		Umbra::Cell* cameraCell;
-		if( cameraInCurrentCell )
-		{
-			cameraCell = m_currentCameraCell;
-		}
-		else
-		{
-			cameraCell = candidateCells[0];
-		}
-
-		Vector3 minBounds( cameraPos.x - 0.1f, cameraPos.y - 0.1f, cameraPos.z - 0.1f );
-		Vector3 maxBounds( cameraPos.x + 0.1f, cameraPos.y + 0.1f, cameraPos.z + 0.1f );
-		m_cameraPortalModel = ( Umbra::Model* )Umbra::OBBModel::create( AS_UMBRA_VECTOR3( minBounds ), AS_UMBRA_VECTOR3( maxBounds ) );
-
-		for( std::vector<Umbra::Cell*>::iterator it = candidateCells.begin(); it != candidateCells.end(); ++it )
-		{
-			if( *it != cameraCell )
-			{
-				Umbra::PhysicalPortal* portal = Umbra::PhysicalPortal::create( m_cameraPortalModel, *it );
-				portal->setCell( cameraCell );
-				Umbra::Matrix4x4 objectToCell;
-				cameraCell->getWorldToCellMatrix( objectToCell );
-				portal->setObjectToCellMatrix( objectToCell );
-				portal->set( Umbra::Object::INFORM_PORTAL_ENTER, true );
-				portal->set( Umbra::Object::INFORM_PORTAL_EXIT, true );
-				portal->set( Umbra::Object::INFORM_PORTAL_PRE_EXIT, true );
-				m_cameraPortals.push_back( portal );
-
-				CCP_STATS_INC( wodInteriorSceneIntersectingCellPortals );
-			}
-		}
-	}
-
-	// If the camera is still in the current cell, just return that
-	if( cameraInCurrentCell )
-	{
-		return m_currentCameraCell;
-	}
-
-	// If we got at least one candidate cell
-	if( !candidateCells.empty() )
-	{
-		m_currentCameraCell = candidateCells[0];
-		return m_currentCameraCell;
-	}
-
-	// If we made it here, then the camera is not inside any of the Tr2InteriorCells
-	if( g_useRootCell && m_sceneUseRootCell )
-	{
-		m_currentCameraCell = m_rootCell;
-	}
-	else if( !m_cells.empty() )
-	{
-		// Find the closest cell
-		Tr2InteriorCell* closestCell = NULL;
-		float closestDistance;
-		for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-		{
-			Tr2InteriorCell* cell = ( *it );
-
-			Matrix transformInv;
-			D3DXMatrixInverse( &transformInv, NULL, &cell->GetWorldTransform() );
-			Vector3 localPos;
-			D3DXVec3TransformCoord( &localPos, &cameraPos, &transformInv );
-
-			Vector3 min, max;
-			cell->GetBoundingBox( min, max );
-
-			Vector3 closest;
-			closest.x = ( localPos.x < min.x ) ? min.x : ( localPos.x > max.x) ? max.x : localPos.x;
-			closest.y = ( localPos.y < min.y ) ? min.y : ( localPos.y > max.y) ? max.y : localPos.y;
-			closest.z = ( localPos.z < min.z ) ? min.z : ( localPos.z > max.z) ? max.z : localPos.z;
-
-			closest -= localPos;
-
-			float distance = D3DXVec3LengthSq( &closest );
-
-			if( closestCell == NULL || distance < closestDistance )
-			{
-				closestCell = cell;
-				closestDistance = distance;
-			}
-		}
-		if( closestCell )
-		{
-			m_currentCameraCell = closestCell->GetUmbraCell();
-		}
-		else
-		{
-			m_currentCameraCell = NULL;
-		}
-	}
-	else
-	{
-		m_currentCameraCell = NULL;
-	}
-
-	return m_currentCameraCell;
 }
 
 // ------------------------------------------------------------------------------------------------------
@@ -4937,15 +3457,10 @@ void Tr2InteriorScene::UpdateLights( void )
 void Tr2InteriorScene::UpdateDynamics( void )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	// Create the root cell, if necessary
-	if( ( g_useRootCell && m_sceneUseRootCell ) && !m_rootCell )
-	{
-		CreateRootCell();
-	}
 
 	for( PITr2InteriorDynamicVector::iterator dit = m_dynamics.begin(); dit != m_dynamics.end(); ++dit )
 	{
-		if( ( *dit )->IsDirty() && ( *dit )->IsBoundingBoxReady() && ( *dit )->IsUmbraReady() )
+		if( ( *dit )->IsDirty() && ( *dit )->IsBoundingBoxReady() )
 		{
 			bool cellsReady = true;
 			bool added = false;
@@ -4969,28 +3484,17 @@ void Tr2InteriorScene::UpdateDynamics( void )
 				}
 			}
 
-			if( !added && m_rootCell != NULL )
-			{
-				( *dit )->AddToRootCell( m_rootCell );
-			}
-
 			// Clear the dirty flag on the dynamic
 			if( cellsReady )
 			{
-				( *dit )->ClearDirty();
+				( *dit )->SetDirtyFlag( false );
 			}
 		}
 	}
 }
 
 // ------------------------------------------------------------------------------------------------------
-bool Tr2InteriorScene::IsMirrored( void ) const
-{
-	return( Tr2Renderer::IsRightHanded() && !m_isMirroredInLeftHandedSpace ) || ( !Tr2Renderer::IsRightHanded() && m_isMirroredInLeftHandedSpace );
-}
-
-// ------------------------------------------------------------------------------------------------------
-bool Tr2InteriorScene::OnLightsListModified( long event, SSIZE_T key, SSIZE_T key2, IRoot* currvalue )
+bool Tr2InteriorScene::OnLightsListModified( long event, ssize_t key, ssize_t key2, IRoot* currvalue )
 {
 	if( ( event & BELIST_LOADING ) == 0  )
 	{
@@ -5026,7 +3530,6 @@ bool Tr2InteriorScene::OnLightsListModified( long event, SSIZE_T key, SSIZE_T ke
 				ITr2InteriorLight* light = NULL;
 				if( currvalue->QueryInterface( BlueInterfaceIID<ITr2InteriorLight>(), ( void** )&light ) )
 				{
-					light->EnableROI( m_enableROIs );
 					light->AddToScene();
 
 					// Need to unlock, since QueryInterface Locks
@@ -5052,7 +3555,7 @@ bool Tr2InteriorScene::OnLightsListModified( long event, SSIZE_T key, SSIZE_T ke
 }
 
 // ------------------------------------------------------------------------------------------------------
-bool Tr2InteriorScene::OnDynamicsListModified( long event, SSIZE_T key, SSIZE_T key2, IRoot* currvalue )
+bool Tr2InteriorScene::OnDynamicsListModified( long event, ssize_t key, ssize_t key2, IRoot* currvalue )
 {
 	if( ( event & BELIST_LOADING ) == 0  )
 	{
@@ -5188,58 +3691,16 @@ const std::vector<ITr2Renderable*>& Tr2InteriorScene::GetPickingObjectsToRender(
 
 	// Setup view-inverse matrix
 	const Vector3 eye = Tr2Renderer::GetViewPosition();
-	XMVECTOR det;
-	Matrix newViewInv(
-		XMMatrixInverse( &det, XMMatrixLookAtLH( eye, ( eye - dirWorld ), Vector3( 0.0f, 1.0f, 0.0f ) ) )
-		);
+	Matrix newView( XMMatrixLookAtLH( eye, ( eye - dirWorld ), Vector3( 0.0f, 1.0f, 0.0f ) ) );
 
 	// Set camera parameters
-	unsigned int oldProperties = m_sceneCamera.GetProperties();
-	m_sceneCamera.SetProperties( m_sceneCamera.GetWidth(), m_sceneCamera.GetHeight(),
-		Umbra::Camera::VIEWFRUSTUM_CULLING );
-	m_sceneCamera.SetViewParameters( newViewInv, &frustum );
-
-	// Create the visibility stack
-	auto visitedObject = new std::unordered_set<IRoot*>;
-	m_visitedObjects.push_back( visitedObject );
-
-	// Disable Mirrors for picking
-	for( PITr2InteriorDynamicVector::iterator it = m_dynamics.begin(); it != m_dynamics.end(); ++it )
-	{
-		Tr2InteriorPlaceable* placeable = dynamic_cast<Tr2InteriorPlaceable*>( *it );
-		if( placeable )
-		{
-			placeable->EnableMirrorPortals( false );
-		}
-	}
+	Matrix proj;
+	D3DXMatrixPerspectiveFovRH( &proj, fov, aspect, frustum.m_zNear, frustum.m_zFar );
 
 	// Issue the query
 	m_visibleObjects.clear();
 	m_visibilityQueryType = PICKING_QUERY;
-	m_sceneCamera.ResolveVisibility( this, GetCameraCell(), 1 );
-
-	// Renable mirrors
-	for( PITr2InteriorDynamicVector::iterator it = m_dynamics.begin(); it != m_dynamics.end(); ++it )
-	{
-		Tr2InteriorPlaceable* placeable = dynamic_cast<Tr2InteriorPlaceable*>( *it );
-		if( placeable )
-		{
-			placeable->EnableMirrorPortals( true );
-		}
-	}
-
-	// Make sure that the objects allocated for the visibility stack are removed
-	for( auto i = m_visitedObjects.begin(); i != m_visitedObjects.end(); ++i )
-	{
-		delete *i;
-	}
-
-	// Clear the stack
-	m_visitedObjects.clear();
-
-	// Restore old camera properties
-	m_sceneCamera.SetProperties( m_sceneCamera.GetWidth(), m_sceneCamera.GetHeight(),
-		oldProperties );
+	ResolveVisibility( newView, proj, false );
 
 	return m_visibleObjects;
 }
@@ -5257,11 +3718,11 @@ void Tr2InteriorScene::SetPerFrameDataForPicking( void )
     Tr2BindPerFrameVSData( perFrameVS, renderContext );
 }
 
-__int64 Tr2InteriorScene::ConstructKey( unsigned int objectGroup, Tr2InteriorBatchGroup batchGroup )
+int64_t Tr2InteriorScene::ConstructKey( unsigned int objectGroup, Tr2InteriorBatchGroup batchGroup )
 {
-	__int64 objGroup64 = ( __int64 )objectGroup << 48;
+	int64_t objGroup64 = ( int64_t )objectGroup << 48;
 
-	__int64 batchGroup64 = ( __int64 )batchGroup << 32;
+	int64_t batchGroup64 = ( int64_t )batchGroup << 32;
 
 	return( objGroup64 | batchGroup64 );
 }
@@ -5357,7 +3818,7 @@ void Tr2InteriorScene::DecodeBufferPixel( const void* pBuffer, PickComponents pa
 	float g = *( ( float* )pBuffer + 1 );
 	float b = *( ( float* )pBuffer + 0 );
 	// put it "together"
-	results.objectId = unsigned short( b + 0.5f );
+	results.objectId = (unsigned short)( b + 0.5f );
 	results.objectId--;
 	if( pass & PICK_UV )
 	{
@@ -5370,12 +3831,12 @@ void Tr2InteriorScene::DecodeBufferPixel( const void* pBuffer, PickComponents pa
 		}
 		else
 		{
-			results.areaId = unsigned short( g + 0.5f );
+			results.areaId = (unsigned short)( g + 0.5f );
 		}
 	}
 	else
 	{
-		results.areaId = unsigned short( g + 0.5f );
+		results.areaId = (unsigned short)( g + 0.5f );
 		results.depth = r;
 	}
 }
@@ -5384,236 +3845,10 @@ void Tr2InteriorScene::SetBackgroundCubemapResPath()
 {
 	if( m_backgroundCubeMapRes )
 	{
-		m_backgroundCubeMapRes->RemoveNotifyTarget( this );
 		m_backgroundCubeMapRes.Unlock();
 	}
 
 	BeResMan->GetResource( m_backgroundCubeMapPath.c_str(), "", m_backgroundCubeMapRes );
-
-	if( m_backgroundCubeMapRes )
-	{
-		m_backgroundCubeMapRes->AddNotifyTarget( this );
-	}
-}
-
-void Tr2InteriorScene::RebuildCachedData( BlueAsyncRes* p )
-{
-	if( p == m_backgroundCubeMapRes )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		SetEnvironmentCubeMapToEnlighten( renderContext );
-	}
-}
-
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-// ------------------------------------------------------------------------------------------------------
-bool Tr2InteriorScene::PreviewEnlighten( TriEnlightenProgressBar &progress )
-{
-	m_enlightenUpdateTaskManager.WaitToComplete();
-	m_enlightenUpdateTaskManager.InvalidateResult();
-
-	TriEnlightenProgressBar prog;
-	return BuildEnlightenImpl( Tr2InteriorEnlightenSystemImpl::QUALITY_PREVIEW, progress );
-}
-
-// ------------------------------------------------------------------------------------------------------
-bool Tr2InteriorScene::BuildEnlighten( TriEnlightenProgressBar &progress )
-{
-	m_enlightenUpdateTaskManager.WaitToComplete();
-	m_enlightenUpdateTaskManager.InvalidateResult();
-
-	return BuildEnlightenImpl( Tr2InteriorEnlightenSystemImpl::QUALITY_RELEASE, progress );
-}
-
-// ------------------------------------------------------------------------------------------------------
-bool Tr2InteriorScene::BuildEnlightenImpl( Tr2InteriorEnlightenSystemImpl::Quality quality, TriEnlightenProgressBar& prog )
-{
-	CCP_LOG_CH( g_enlightenBuildChannel, "Enlighten build" );
-
-	m_enlightenUpdateTaskManager.WaitToComplete();
-	m_enlightenUpdateTaskManager.InvalidateResult();
-
-	BeTimer timer;
-
-	Enlighten::IPrecompute* pPrecompute = Enlighten::CreatePrecompute();
-	ON_BLOCK_EXIT( &Enlighten::IPrecompute::Release, pPrecompute );// Can't use CComPtr
-
-	if( g_outputEnlightenDebugBuildInfo )
-	{
-		_mkdir( "C:\\EnlightenDebug" );
-		CCP_LOGWARN_CH( g_enlightenBuildChannel, "Dumping Enlighten Precompute state to C:\\EnlightenDebug" );
-		pPrecompute->SetStateDumpFolder( L"C:\\EnlightenDebug" );
-		pPrecompute->SetStateDump( pPrecompute->esdInputsOnly );
-	}
-
-	// Build packed systems
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		if( !( *it )->BuildPackedSystems( quality, pPrecompute, prog ) )
-		{
-			prog.Finished( false );
-			return false;
-		}
-	}
-
-	if( prog.ShouldCancel() )
-	{
-		CCP_LOGERR_CH( g_enlightenBuildChannel, "Enlighten build canceled by user" );
-		prog.Finished( false );
-		return false;
-	}
-
-	// Gather packed systems from neighboring cells
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		( *it )->GatherPackedSystems();
-	}
-
-	if( prog.ShouldCancel() )
-	{
-		CCP_LOGERR_CH( g_enlightenBuildChannel, "Enlighten build canceled by user" );
-		prog.Finished( false );
-		return false;
-	}
-
-	// Build system clustering
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		if( !( *it )->BuildSystemPreClusters( pPrecompute, prog ) )
-		{
-			prog.Finished( false );
-			return false;
-		}
-	}
-
-	if( prog.ShouldCancel() )
-	{
-		CCP_LOGERR_CH( g_enlightenBuildChannel, "Enlighten build canceled by user" );
-		prog.Finished( false );
-		return false;
-	}
-
-	// Gather system clustering from neighboring cells
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		( *it )->GatherSystemPreClusters();
-	}
-
-	if( prog.ShouldCancel() )
-	{
-		CCP_LOGERR_CH( g_enlightenBuildChannel, "Enlighten build canceled by user" );
-		prog.Finished( false );
-		return false;
-	}
-
-	// Build system clustering
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		if( !( *it )->BuildSystemClusters( pPrecompute, prog ) )
-		{
-			prog.Finished( false );
-			return false;
-		}
-	}
-
-	if( prog.ShouldCancel() )
-	{
-		CCP_LOGERR_CH( g_enlightenBuildChannel, "Enlighten build canceled by user" );
-		prog.Finished( false );
-		return false;
-	}
-
-	// Gather system clustering from neighboring cells
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		( *it )->GatherSystemClusters();
-	}
-
-	if( prog.ShouldCancel() )
-	{
-		CCP_LOGERR_CH( g_enlightenBuildChannel, "Enlighten build canceled by user" );
-		prog.Finished( false );
-		return false;
-	}
-
-	// Build light probes
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		( *it )->BuildLightProbes( pPrecompute, prog );
-	}
-
-	if( prog.ShouldCancel() )
-	{
-		CCP_LOGERR_CH( g_enlightenBuildChannel, "Enlighten build canceled by user" );
-		prog.Finished( false );
-		return false;
-	}
-
-	// Finally, build enlighten solution
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		( *it )->BuildEnlightenSolution( pPrecompute, prog );
-	}
-
-	// Cleanup data used during precompute
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		( *it )->DeletePrecompData();
-	}
-
-	CCP_LOG_CH( g_enlightenBuildChannel, "Time taken: %fsec", timer.GetSeconds() );
-
-	prog.Finished( true );
-
-	return true;
-}
-
-// ------------------------------------------------------------------------------------------------------
-bool Tr2InteriorScene::BuildLightProbes()
-{
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		if( !( *it )->CanBuildLightProbes() )
-		{
-			CCP_LOGERR( "Full Enlighten build is required" );
-			return false;
-		}
-	}
-
-	// CCP_LOG 'progress bar'
-	TriEnlightenProgressBar prog;
-
-	Enlighten::IPrecompute* pPrecompute = Enlighten::CreatePrecompute();
-	ON_BLOCK_EXIT( &Enlighten::IPrecompute::Release, pPrecompute );// Can't use CComPtr
-
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		( *it )->BuildLightProbes( pPrecompute, prog );
-	}
-
-	return true;
-}
-
-// ------------------------------------------------------------------------------------------------------
-void Tr2InteriorScene::SaveEnlighten()
-{
-	// Save enlighten solutions for all cells
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		( *it )->SaveEnlightenSystems();
-	}
-}
-#endif
-
-// ------------------------------------------------------------------------------------------------------
-bool Tr2InteriorScene::PopulateProbeVolumes()
-{
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		( *it )->PopulateProbeVolumes();
-	}
-
-	return true;
 }
 
 // ------------------------------------------------------------------------------------------------------
@@ -5651,139 +3886,6 @@ void Tr2InteriorScene::RebuildSceneData( void )
 	UpdateSHScaleFactor();
 }
 
-void Tr2InteriorScene::SetEnvironmentCubeMapToEnlighten( Tr2RenderContext &renderContext )
-{
-	if( !Tr2Renderer::IsResourceCreationAllowed() )
-	{
-		return;
-	}
-
-	// 6 faces, 2x2 each
-	for( int f = 0; f < 6; ++f )
-	{
-		for( int p = 0; p < 4; ++p )
-		{
-			m_enlightenInputEnvironmentLightingCache[4*f+p] = Geo::VZero();
-		}
-	}
-
-	// Update enlighten with the environment
-	if( !m_backgroundCubeMapRes || !m_backgroundCubeMapRes->IsGood()  )
-	{
-		UpdateEnvironmentLightingFromCacheWithMultiplier();
-		return;
-	}
-
-	if( m_backgroundCubeMapRes->GetType() != TEX_TYPE_CUBE )
-	{
-		CCP_LOGERR( "Background texture is not a cubemap, could not add it to enlighten environment lighting" );
-		UpdateEnvironmentLightingFromCacheWithMultiplier();
-		return;
-	}
-
-	const unsigned int cubemapWidth = m_backgroundCubeMapRes->GetWidth();
-	const unsigned int cubemapHeight = m_backgroundCubeMapRes->GetHeight();
-
-	CCP_ASSERT( cubemapWidth == cubemapHeight );
-
-	// Need to get a 2x2 cubemap, so work out what level that is
-	unsigned int levelNeeded = 0;
-
-	// increment levelNeeded until it's equal to or larger than the width
-	while( ( unsigned int )( 2 << levelNeeded ) < cubemapWidth )
-	{
-		++levelNeeded;
-	}
-
-	// This could fail if the cubemap does not use a power of 2 ( w x h )
-	CCP_ASSERT( ( 2 << levelNeeded ) == cubemapWidth );
-
-	if( m_backgroundCubeMapRes->GetMipLevelCount() <= levelNeeded )
-	{
-		CCP_LOGERR( "Could not create enlighten environment cubemap, not enough MIP levels?" );
-		return;
-	}
-
-	XMVECTOR color[24];
-
-	Tr2RenderTargetAL faceRT;
-	Tr2TextureAL face;
-
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		CR_RETURN( faceRT.Create( 2, 2, 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, renderContext ) );	
-		CR_RETURN( face.Create2D( 4, 4, 1, m_backgroundCubeMapRes->GetTexture()->GetFormat(), 0, nullptr, renderContext ) );
-	}
-
-	renderContext.m_esm.BeginManagedRendering();
-	ON_BLOCK_EXIT( [&]{ renderContext.m_esm.EndManagedRendering(); } );
-
-	Tr2PushPopDS pushPopDS( nullDS, renderContext );
-
-	for( unsigned i = 0; i < 6; ++i )
-	{
-		if( FAILED( face.CopySubresourceRegion( 
-			Tr2TextureSubresource( CUBEMAP_FACE_POSITIVE_X ), 
-			*m_backgroundCubeMapRes->GetTexture(), 
-			Tr2TextureSubresource( CubemapFace( i ), levelNeeded - 1 ), 
-			renderContext ) ) )
-		{
-			CCP_LOGERR( "Could not get environment cubemap face" );
-			return;
-		}
-
-		Tr2Renderer::PushRenderTarget( faceRT, renderContext );
-		renderContext.Clear( CLEARFLAGS_TARGET, 0, 0.f );
-		Tr2Renderer::DrawTexture( face, Vector2( 0.f, 0.f ), Vector2( 1.f, 1.f ), Tr2Blitter::FILTER_LINEAR );
-		Tr2Renderer::PopRenderTarget( renderContext );
-
-		void* data;
-		unsigned pitch;
-
-		if( FAILED( faceRT.Lock( 0, nullptr, data, pitch, renderContext ) ) )
-		{
-			CCP_LOGERR( "Could not get environment cubemap face" );
-			return;
-		}
-
-		for( unsigned j = 0; j < 2; ++j )
-		{
-			memcpy( color + 4 * i + j * 2, reinterpret_cast<char*>( data ) + pitch * j, sizeof( XMVECTOR ) * 2 );
-		}
-
-		if( FAILED( faceRT.Unlock( renderContext ) ) )
-		{
-			CCP_LOGERR( "Could not get environment cubemap face" );
-			return;
-		}
-	}
-
-	XMVECTOR power = XMVectorReplicate( 2.2f );
-	for( unsigned i = 0; i < 24; ++i )
-	{
-		m_enlightenInputEnvironmentLightingCache[i] = XMVectorPow( color[i], power );
-	}
-
-	UpdateEnvironmentLightingFromCacheWithMultiplier();
-}
-
-void Tr2InteriorScene::UpdateEnvironmentLightingFromCacheWithMultiplier()
-{
-	Geo::GeoArray<Geo::v128> postMultipliedEnvironmentLighting( 24, Geo::VZero() );
-	Geo::v128 multiplier = Geo::VBroadcast( m_enlightenEnvironmentMultiplicationFactor );
-
-	for( int i = 0; i < 24;  ++i )
-	{
-		using namespace Geo;
-		postMultipliedEnvironmentLighting[i] = multiplier * m_enlightenInputEnvironmentLightingCache[i];
-	}
-
-	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
-	{
-		(*it)->SetEnvironmentCube( postMultipliedEnvironmentLighting.GetArrayConst() );
-	}
-}
-
 void Tr2InteriorScene::UpdateSHScaleFactor()
 {
 	for( PTr2InteriorCellVector::iterator it = m_cells.begin(); it != m_cells.end(); ++it )
@@ -5792,4 +3894,3 @@ void Tr2InteriorScene::UpdateSHScaleFactor()
 	}
 }
 
-#endif

@@ -241,7 +241,7 @@ void Tr2Sprite2dTexture::SetTextureRepeatMode( int repeatMode )
 
 bool Tr2Sprite2dTexture::GetTileX() const
 {
-	return m_settings & S2D_TS_TILE_X;
+	return ( m_settings & S2D_TS_TILE_X ) != 0;
 }
 
 void Tr2Sprite2dTexture::SetTileX( bool val )
@@ -262,7 +262,7 @@ void Tr2Sprite2dTexture::SetTileX( bool val )
 
 bool Tr2Sprite2dTexture::GetTileY() const
 {
-	return m_settings & S2D_TS_TILE_Y;
+	return ( m_settings & S2D_TS_TILE_Y ) != 0;
 }
 
 void Tr2Sprite2dTexture::SetTileY( bool val )

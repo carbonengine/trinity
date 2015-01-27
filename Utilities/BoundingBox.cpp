@@ -22,7 +22,7 @@ static inline bool XMQuaternionIsUnit( FXMVECTOR Q )
 {
     XMVECTOR Difference = XMVector4Length( Q ) - XMVectorSplatOne();
 
-    return XMVector4Less( XMVectorAbs( Difference ), g_UnitQuaternionEpsilon );
+    return XMVector4Less( XMVectorAbs( Difference ), g_UnitQuaternionEpsilon ) != 0;
 }
 
 
@@ -716,7 +716,7 @@ bool IntersectOrientedBoxOrientedBox( const Vector3& centerA, const Vector3& ext
                                     XMVectorGreater( XMVectorAbs(d), XMVectorAdd( d_A, d_B ) ) );
 
     // No seperating axis found, boxes must intersect.
-    return XMVector4NotEqualInt( NoIntersection, XMVectorTrueInt() );
+    return XMVector4NotEqualInt( NoIntersection, XMVectorTrueInt() ) != 0;
 }
 
 bool IntersectTriangleOrientedBox( const Vector3* triangleVertices, const Matrix& invOrientedBox )

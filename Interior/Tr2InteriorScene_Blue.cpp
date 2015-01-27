@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorScene.h"
 
 #include "TriConstants.h"
@@ -9,7 +7,6 @@
 #include "TriProjection.h"
 #include "TriView.h"
 #include "TriViewport.h"
-#include "TriEnlightenUtils.h"
 
 BLUE_DEFINE( Tr2InteriorScene );
 
@@ -82,46 +79,6 @@ static Be::VarChooser VisualizerChooser[] =
 		"VM_EN_ONLY",
 		BeCast( VM_EN_ONLY ),
 		"Enlighten only)"
-	},
-	{
-		"VM_EN_TARGET_DETAIL",
-		BeCast( VM_EN_TARGET_DETAIL ),
-		"Enlighten target and detail meshes"
-	},
-	{
-		"VM_EN_OUTPUT_DENSITY",
-		BeCast( VM_EN_OUTPUT_DENSITY ),
-		"Enlighten output density (statics only)"
-	},
-	{
-		"VM_EN_ALBEDO",
-		BeCast( VM_EN_ALBEDO ),
-		"Enlighten albedo (statics only)"
-	},
-	{
-		"VM_EN_EMISSIVE",
-		BeCast( VM_EN_EMISSIVE ),
-		"Enlighten emissive surfaces (statics only)"
-	},
-	{
-		"VM_EN_OBJECT_TEXCOORD",
-		BeCast( VM_EN_OBJECT_TEXCOORD ),
-		"Enlighten object texture coordinates (statics only)"
-	},
-	{
-		"VM_EN_NAUGHTY_PIXELS",
-		BeCast( VM_EN_NAUGHTY_PIXELS ),
-		"Enlighten naughty pixels"
-	},
-	{
-		"VM_EN_CHARTS",
-		BeCast( VM_EN_CHARTS ),
-		"Enlighten detail mesh charts"
-	},
-	{
-		"VM_EN_TARGET_CHARTS",
-		BeCast( VM_EN_TARGET_CHARTS ),
-		"Enlighten target mesh charts"
 	},
 	{
 		"VM_DEPTH",
@@ -437,116 +394,6 @@ PyObject* PyInteriorPickPointAndObject( PyObject* self, PyObject* args )
 	Py_INCREF(Py_None);
 	return Py_None;
 }
-
-static PyObject* PyMarqueePickObjects(PyObject* self, PyObject* args)
-{
-	Tr2InteriorScene* pThis = BluePythonCast<Tr2InteriorScene*>(self);
-
-	int minX, minY, maxX, maxY;
-	PyObject *pyProj, *pyView, *pyViewport;
-
-	if(PyArg_ParseTuple(args, "iiiiOOO", &minX, &minY, &maxX, &maxY, &pyProj, &pyView, &pyViewport))
-	{
-		TriProjection* proj = BluePythonCast<TriProjection*>(pyProj);
-		TriView* view = BluePythonCast<TriView*>(pyView);
-		TriViewport* viewport = BluePythonCast<TriViewport*>(pyViewport);
-
-		std::set<IRoot*> selected = pThis->MarqueePickObjects(minX, minY, maxX, maxY, proj, view, viewport);
-
-		PyObject* pyList = PyList_New(0);
-		if(!selected.empty())
-		{
-			for(std::set<IRoot*>::iterator it=selected.begin(); it!=selected.end(); it++)
-			{
-				IRoot* obj = *it;
-				PyObject* pyObj = PyOS->WrapBlueObject(obj);
-				PyList_Append(pyList, pyObj);
-				Py_XDECREF( pyObj );
-			}
-			return pyList;
-		}
-		Py_RETURN_NONE;
-	}
-	return NULL;
-}
-
-static PyObject* PyBuildEnlighten( PyObject* self, PyObject* args)
-{
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-	Tr2InteriorScene* pThis = BluePythonCast<Tr2InteriorScene*>(self);
-
-	PyObject *pyProg = NULL;
-
-	if(PyArg_ParseTuple(args, "|O", &pyProg))
-	{
-		if( pyProg )
-		{
-			TriEnlightenProgressBar* prog = BluePythonCast<TriEnlightenProgressBar*>(pyProg);
-			if( prog == NULL )
-			{
-				PyErr_SetString( PyExc_TypeError, "Function accepts one optional argument (TriEnlightenProgressBar)" );
-				return NULL;
-			}
-			pThis->BuildEnlighten( *prog );
-		}
-		else
-		{
-			TriEnlightenProgressBar prog;
-			pThis->BuildEnlighten( prog );
-		}
-
-		Py_RETURN_NONE;
-	}
-	else
-	{
-		PyErr_SetString( PyExc_TypeError, "Function accepts one optional argument (TriEnlightenProgressBar)" );
-		return NULL;
-	}
-	return NULL;
-#else
-	PyErr_SetString(PyExc_NotImplementedError, "Not available in deploy");
-	return NULL;
-#endif
-}
-
-static PyObject* PyPreviewEnlighten( PyObject* self, PyObject* args)
-{
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-	Tr2InteriorScene* pThis = BluePythonCast<Tr2InteriorScene*>(self);
-
-	PyObject *pyProg = NULL;
-
-	if(PyArg_ParseTuple(args, "|O", &pyProg))
-	{
-		if( pyProg )
-		{
-			TriEnlightenProgressBar* prog = BluePythonCast<TriEnlightenProgressBar*>(pyProg);
-			if( prog == NULL )
-			{
-				PyErr_SetString( PyExc_TypeError, "Function accepts one optional argument (TriEnlightenProgressBar)" );
-				return NULL;
-			}
-			pThis->PreviewEnlighten( *prog );
-		}
-		else
-		{
-			TriEnlightenProgressBar prog;
-			pThis->PreviewEnlighten( prog );
-		}
-
-		Py_RETURN_NONE;
-	}
-	else
-	{
-		PyErr_SetString( PyExc_TypeError, "Function accepts one optional argument (TriEnlightenProgressBar)" );
-		return NULL;
-	}
-	return NULL;
-#else
-	PyErr_SetString(PyExc_NotImplementedError, "Not available in deploy");
-	return NULL;
-#endif
-}
 #endif
 
 const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
@@ -561,38 +408,26 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 		MAP_INTERFACE( ITr2Updateable )
 
 		MAP_ATTRIBUTE( "cells", m_cells, "List of all cells in the scene", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "portals", m_portals, "List of all portals in the scene", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "lights", m_lights, "List of scene light sources", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "dynamics", m_dynamics, "List of dynamic objects in scene", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
-		MAP_ATTRIBUTE( "useRootCell", m_sceneUseRootCell, "Override flag to control whether this scene uses a root culling cell.", Be::READWRITE )
-
 		MAP_ATTRIBUTE( "renderDebugInfo", m_renderDebugInfo, "If true, objects are given a chance to render debugging info.", Be::READWRITE )
-		MAP_ATTRIBUTE( "renderCullingInfo", m_renderCullingInfo, "If true, Umbra objects render debugging info.", Be::READWRITE )
-		MAP_ATTRIBUTE( "enlightenVisibilityUpdateThreshold", m_enlightenVisibilityUpdateThreshold, "Distance, in number of portal traversals from a visible cell, at which we stop updating Enlighten", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "shScale", m_shScale, "Global scaling factor for spherical harmonics lighting from light probes", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "sunDiffuseColor", m_sunDiffuseColor, "Sun diffuse color", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sunSpecularColor", m_sunSpecularColor, "Sun specular color", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sunDirection", m_sunDirection, "Sun direction", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "ambientColor", m_ambientColor, "Scene Ambient color", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "drawSorted", m_drawSorted, "Turn the drawing of sorted batches on and off", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "sortedRenderBatchCount", m_sortedRenderBatchCount, "The number of sorted batches", Be::READ )
-		MAP_ATTRIBUTE( "unsortedRenderBatchCount", m_unsortedRenderBatchCount, "The number of unsorted batches", Be::READ )
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "", Be::READWRITE )
 
 		MAP_ATTRIBUTE( "apexLODResourceBudget", m_apexLODResourceBudget, "", Be::READWRITE )
 		MAP_ATTRIBUTE( "apexLODResourceBudgetConsumed", m_apexLODResourceBudgetConsumed, "", Be::READ )
 
-		MAP_ATTRIBUTE( "environmentLightingMultiplier", m_enlightenEnvironmentMultiplicationFactor, "A multiplier that increases the contribution of the environment cubemap in enlighten", Be::READWRITE | Be::PERSIST | Be::NOTIFY  )
 		MAP_ATTRIBUTE( "backgroundEffect", m_backgroundEffect, "The effect used to render the background behind any objects", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "backgroundCubemapPath", m_backgroundCubeMapPath, "The path used to load the background environment map", Be::READWRITE | Be::PERSIST | Be::NOTIFY, TriTextureChooser )
 		MAP_ATTRIBUTE( "backgroundCubemapRes", m_backgroundCubeMapRes, "The background environment map", Be::READ )
         MAP_ATTRIBUTE( "ragdollScene", m_ragdollScene, "ITr2PhysicsUpdater object which simulates ragdoll during the animation update.", Be::READWRITE | Be::PERSIST )
 
-        MAP_ATTRIBUTE( "useShadowFocalPosition", m_useShadowFocalPosition, "Flag to use m_shadowFocalPosition (if true) or camera position (if false)"
-					   " to calculate shadow caster importance.", Be::READWRITE | Be::PERSIST )
-        MAP_ATTRIBUTE( "shadowFocalPosition", m_shadowFocalPosition, "Focal position (reference point to use when calculating shadow caster importance).", Be::READWRITE | Be::PERSIST )
         MAP_ATTRIBUTE( "shadowUpdatesPerFrame", m_shadowsUpdatesPerFrame, "Maximum number of shadows to update per frame (including LOD switches).", Be::READWRITE | Be::PERSIST )
         MAP_ATTRIBUTE( "shadowsLODSwitchesPerFrame", m_shadowsLODSwitchesPerFrame, "Maximum number of shadow LOD switches per frame.", Be::READWRITE | Be::PERSIST )
         MAP_ATTRIBUTE( "useShadowLOD", m_useShadowLOD, "Enable shadow resolution LODs.", Be::READWRITE | Be::PERSIST )
@@ -605,7 +440,6 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
         MAP_ATTRIBUTE( "maxFogDistance", m_maxFogDistance, "Distance where fog reaches maximum density", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "shadowAtlases", m_shadowAtlases, "Shadow map atlases used for this scene (readonly for debugging)", Be::READ )
-		MAP_ATTRIBUTE( "enableLightCulling", m_enableLightCulling, "Enable light culling", Be::READWRITE )
 
 		MAP_METHOD( 
 			"Pick", 
@@ -679,45 +513,6 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 			"\nviewport - The TriViewport of the viewport to use to pick into the scene"
 		)
 
-		MAP_METHOD( "MarqueePickObjects", PyMarqueePickObjects, "Returns the picked objects under the dragged rectangle.")
-
-		MAP_METHOD(
-			"BuildEnlighten", 
-			PyBuildEnlighten, 
-			"Builds the Enlighten systems for all cells in the scene."
-			"\n"
-			"\nArguments:"
-			"\nprogressBar - optional progress bar object"
-		)
-
-		MAP_METHOD(
-			"PreviewEnlighten", 
-			PyPreviewEnlighten, 
-			"Builds the Enlighten systems in preview mode for all cells in the scene."
-			"\n"
-			"\nArguments:"
-			"\nprogressBar - optional progress bar object"
-		)
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-		MAP_METHOD_AND_WRAP(
-			"BuildLightProbes", 
-			BuildLightProbes, 
-			"Builds the Enlighten light probes for all cells and probe volumes in the scene."
-		)
-
-		MAP_METHOD_AND_WRAP(
-			"SaveEnlighten", 
-			SaveEnlighten, 
-			"Saves the Enlighten systems for all cells in the scene."
-		)
-#endif
-		MAP_METHOD_AND_WRAP(
-			"PopulateProbeVolumes", 
-			PopulateProbeVolumes, 
-			"Populate probe volumes vector with data from SH file for all cells in the scene."
-		)
-
-
 		MAP_METHOD_AND_WRAP( "RebuildSceneData", RebuildSceneData, "Rebuilds the internal data in all cells" )
 
 		MAP_METHOD_AND_WRAP( "ClearVisibilityResults", ClearVisibilityResults, "Clears the visibility result set")
@@ -754,54 +549,18 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 			"\nArguments:"
 			"\nobject - The ITr2InteriorDynamic (Tr2InteriorPlaceable or Tr2InteriorAvatar) to remove")
 
-		MAP_METHOD_AND_WRAP( 
-			"SetUmbraProperties",              
-			SetUmbraProperties,
-			"SetUmbraProperties( unsigned int )\n"
-			"Sets umbra properties with the specified bitmask" )
-
-		MAP_METHOD_AND_WRAP( 
-			"GetUmbraProperties",              
-			GetUmbraProperties,
-			"GetUmbraProperties(  )\n"
-			"Returns the umbra properties current bitmask" )
-
 		MAP_METHOD_AND_WRAP( "UpdateSpotlightShadows", UpdateSpotlightShadows, "Forces update on all spotlight shadows" )
 
-		MAP_ATTRIBUTE( 
-			"useFilterList", 
-			m_useFilterList, 
-			"If True, only objects added with AddToFilterList will actually draw when visible.", Be::READWRITE )
-
-		MAP_ATTRIBUTE( 
-			"filterList", 
-			m_filterList, 
-			"List of objects to draw, when visible, if useFilterList is True.", Be::READWRITE )
-
-		MAP_ATTRIBUTE(
-			"visualizerOverride",
-			m_visualizerOverride,
-			"Pointer to effect whose pixel shader will be the visualizer mode.  Takes precedence over visualizeMethod", 
-			Be::READWRITE 
-		)
-
-		MAP_ATTRIBUTE(
-			"visualizerOverrideApplyPS",
-			m_visualizerOverrideApplyPS,
-			"Boolean that controls if a visualizerOverride's pixelshader data should be applied (stomping existing PS blocks)",
-			Be::READWRITE
-		)
-
+#if APEX_ENABLED
 		MAP_ATTRIBUTE(
 			"apexScene",
 			m_apexScene,
 			"Apex scene used",
 			Be::READWRITE
 		)
-
+#endif
 		MAP_ATTRIBUTE( "visibilityResults", m_visibilityResults, "Results of the visibility query", Be::READ )
 		MAP_ATTRIBUTE( "enableSHSolver", m_enableSHSolver, "Enable/disable solving for SH coefficients", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "enableROIs", m_enableROIs, "Enable Umbra regions of influence for light sources", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		MAP_METHOD_AND_WRAP( "ReorderDynamic", ReorderDynamic,
 			"\nMoves the dynamic object in the dynamics list. This affects the order of updates.\n"
@@ -813,4 +572,3 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 	EXPOSURE_END()
 }
 
-#endif

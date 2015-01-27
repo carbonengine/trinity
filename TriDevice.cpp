@@ -24,10 +24,6 @@
 #include "Apex/Apex.h"
 #endif
 
-#if INTERIORS_ENABLED
-#include "UmbraLibrary.h"
-#endif
-
 using namespace Tr2RenderContextEnum;
 
 #ifdef _WIN32
@@ -179,9 +175,6 @@ TriDevice::TriDevice(IRoot* lockobj) :
 
 	mCreationTime = 0;
 		
-#if INTERIORS_ENABLED
-    Umbra::Library::init( Umbra::Library::COLUMN_MAJOR, Umbra::Library::SOFTWARE_OCCLUSION );
-#endif
 #if APEX_ENABLED
 	if( !g_Tr2Apex )
 	{
@@ -198,8 +191,6 @@ TriDevice::TriDevice(IRoot* lockobj) :
 TriDevice::~TriDevice()
 {
     m_scene = (ITr2Scene*)NULL;
-
-    // TODO: Determine where to do this: Umbra::Library::exit();
 
 	BeOS->UnregisterForSimTimeRebase( this );
 	//This is handled in a subclass, so that the IRoot interface is intact when it happens
@@ -1259,11 +1250,6 @@ bool TriDevice::Render()
 	D3DPERF_EVENT(L"TriDevice::Render");
 
 	CallCallbacks( m_beginFrameCallbacks );
-	
-#if INTERIORS_ENABLED
-	CUmbraLibrary umbraLibrary;
-	umbraLibrary.UpdateStatistics();
-#endif
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	Tr2Viewport vp;

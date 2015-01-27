@@ -46,13 +46,14 @@ public:
 	// INotify
 	bool OnModified( Be::Var* value );
 
+    //////////////////////////////////////////////////////////////////////////
+    // ITr2InteriorCullable
+	virtual bool IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const;
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2InteriorDynamic
 	void SetVisibility( bool bVisible );
 	bool IsVisible( void ) const;
-
-	void SetVisibleLightCount( int visibleLights ) {}
-	void SetVisibleLightSet( const Tr2InteriorLightSet& visibleLightSet ) {}
 
 	Tr2PerObjectData* GetPerObjectDataWithPerInstanceLighting( 
 		ITriRenderBatchAccumulator* accumulator,
@@ -60,16 +61,9 @@ public:
 		const Matrix& objectToWorldMatrix, 
 		const Matrix& mirrorToWorldMatrix 
 	);
-	Tr2PerObjectData* GetPerObjectDataForPrePass(
-		ITriRenderBatchAccumulator* accumulator,
-		const Matrix& objectToWorldMatrix
-	);
 
-	void SetMirrorDepth( int depth ) {}
 	void SetSHLightingSolver( ITr2InteriorSHLightingSolver* solver ) { }
 
-	// Bounding sphere
-	bool GetBoundingSphere( Vector4& sphere ) const;
 	bool GetLocalBoundingBox( Vector3& min, Vector3& max ) const;
 	bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const;
 	bool IsBoundingBoxReady( void ) const;
@@ -78,36 +72,18 @@ public:
 	// Spherical harmonics update
 	virtual void PrePhysicsUpdate( Be::Time time );
 	virtual void PostPhysicsUpdate( Be::Time time, Tr2ApexScene *apexScene );
-	virtual void SetSHSampleIndex( unsigned int index ) { m_shSampleIndex = index; }
-	virtual unsigned int GetSHSampleIndex() const  { return m_shSampleIndex; }
 	virtual Matrix& GetRedLightProbeMatrix( void );
 	virtual Matrix& GetGreenLightProbeMatrix( void );
 	virtual Matrix& GetBlueLightProbeMatrix( void );
-
-	virtual bool CastsShadows() const { return false; }
-
-	// Debug visualization
-	bool DoVisualizeLightProbes( void ) const { return false; }
 
 	// Scene add/remove
 	bool AddToScene( Tr2ApexScene *apexScene );
 	void RemoveFromScene( void );
 
-	// Umbra interaction
-	bool IsUmbraReady( void ) const;
 	bool TestCellIntersectionAndAdd( Tr2InteriorCell* cell );
-	virtual void CellRemoved( Tr2InteriorCell* cell );
 	bool IsDirty( void ) const;
-	void ClearDirty( void );
-
-	// Set the dirty flag
 	void SetDirtyFlag( bool isDirty );
-	bool IsBackgroundProxy( void ) const;
-	void AddToCellAsBackgroundProxy( Umbra::Cell* cell );
-	void AddToRootCell( Umbra::Cell* cell );
 	bool IsShadowCaster( void ) const;
-
-	void UpdateUmbraObject( Umbra::Cell* cell, Umbra::Object*& object ) const;
 
 	// LOD
 	void SetLOD( const TriFrustum* frustum );
@@ -122,8 +98,6 @@ public:
     float GetSortValue(); 
 
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-
-	const ITr2RenderableVector* GetAttachedRenderables() { return NULL; };
 
 	//////////////////////////////////////////////////////////////////////////
 	// IBluePlacementObserver
@@ -155,9 +129,6 @@ private:
 	void UpdateFlareVisibility( ITriRenderBatchAccumulator* batches );
 	void GetFlareBatches( ITriRenderBatchAccumulator* batches, FlareType type );
 	void RenderFlare( FlareType type, Tr2RenderContext& renderContext );
-	void ClearUmbra();
-	void RebuildVolume();
-	void UpdateUmbraObjectTransform();
 
 	AxisAlignedBoundingBox GetBoundingBoxInLocalSpace() const;
 	AxisAlignedBoundingBox GetBoundingBoxInWorldSpace() const;
@@ -171,10 +142,6 @@ private:
 
 	// Flare position in world space
 	Matrix m_transform;
-	// Umbra bounding object
-	Umbra::Object* m_umbraObject;
-	// Umbra bounding object model
-	Umbra::Model* m_umbraModel;
 	bool m_isDirty;
 
 	// Computed flare intensity
@@ -206,8 +173,6 @@ private:
 	// Flare material for flares pass
 	Tr2ShaderMaterialPtr m_flareMaterial;
 
-	// SH sample index (used for Enlighten SH probes)
-	unsigned int m_shSampleIndex;
 	// SH matrix (just a stub for Get*LightProbeMatrix functions)
 	Matrix m_shMatrix;
 	// Does the flare need to update its visibility

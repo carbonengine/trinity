@@ -106,9 +106,6 @@ void TriTextureRes::OnShutdown()
 
 void TriTextureRes::ReleaseResources( TriStorage s )
 {
-	CancelPendingLoad();
-	CleanupAsyncSave(false);
-
 	if( (s & TRISTORAGE_MANAGEDMEMORY) || 
 		((s & TRISTORAGE_VIDEOMEMORY) && m_texture.GetMemoryClass() == AL_MEMORY_VIDEO
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
@@ -118,6 +115,9 @@ void TriTextureRes::ReleaseResources( TriStorage s )
 	{
 		CCP_STATS_ADD( textureResBytes, -( int )m_memoryUse );
 		m_memoryUse = 0;
+
+		CancelPendingLoad();
+		CleanupAsyncSave(false);
 
 		m_texture.Destroy();
 		m_wrappedRenderTarget = nullptr;

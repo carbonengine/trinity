@@ -33,7 +33,7 @@ const Be::ClassInfo* TriStepVisibilityQuery::ExposeToBlue()
 			2,
 			"Create a render step that queries a queryable object for visibility results."
 			"\nNote that this step should occur after setting the render target and viewport,"
-			"\notherwise the adjusted projection matrix used in the Umbra query might be incorrect."
+			"\notherwise the adjusted projection matrix used in the visibility query might be incorrect."
 			"\n"
 			"\nOptional Arguments:"
 			"\nqueryable - an object that supports ITr2VisibilityQueryable (default None)"

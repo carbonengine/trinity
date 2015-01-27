@@ -1,8 +1,6 @@
 // Precompiled header
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 // WodInteriorPlaceable.h header
 #include "Tr2InteriorPlaceable.h"
 
@@ -36,17 +34,12 @@ const Be::ClassInfo* Tr2InteriorPlaceable::ExposeToBlue()
 		MAP_ATTRIBUTE( "transform", m_transform, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "display", m_display, "Boolean flag indicating whether or not to render this static object", Be::READWRITE )
 
-		MAP_ATTRIBUTE( "visibleLightCount", m_visibleLightCount, "The total number of visible lights affecting this placeable, taking into account the current view", Be::READ )
-
 #if BLUE_WITH_PYTHON
 		// Bounding sphere data
 		MAPFLOATARRAYSIZE( "boundingSphereCenter", m_boundingSphere, BlueDefaultIID, "bounding sphere center", Be::READ, 3 )
 #endif
 
 		MAP_ATTRIBUTE( "boundingSphereRadius", m_boundingSphere[3], "bounding sphere radius", Be::READ )
-
-		MAP_ATTRIBUTE( "visualizeLightProbes", m_visualizeLightProbes, "Draw lines to the nearest contributing light probes", Be::READWRITE )
-		MAP_ATTRIBUTE( "visualizeVisibleLights", m_drawLightSpider, "Draw lines to light sources affecting this placable", Be::READWRITE )
 
 		// Translation, rotation, scaling
 		MAP_PROPERTY( "translation", GetPosition, SetPosition, "Position of the placeable" )
@@ -56,11 +49,9 @@ const Be::ClassInfo* Tr2InteriorPlaceable::ExposeToBlue()
 		// Bounding boxes
 		MAP_METHOD_AND_WRAP( "GetBoundingBoxInLocalSpace", GetBoundingBoxInLocalSpace, "Gets the bounding box in local space" )
 		MAP_METHOD_AND_WRAP( "GetBoundingBoxInWorldSpace", GetBoundingBoxInWorldSpace, "Gets the bounding box in world space" )
-		MAP_METHOD_AND_WRAP( "MarkAsDirty", MarkAsDirty, "Marks the placeable as dirty (triggers Umbra objects, mirrors, shadows cast to be rebuilt" )
+		MAP_METHOD_AND_WRAP( "MarkAsDirty", MarkAsDirty, "Marks the placeable as dirty" )
 		MAP_METHOD_AND_WRAP( "BoundingBoxReset", BoundingBoxReset, "Resets the bounding box, removing any overrides" )
 		MAP_METHOD_AND_WRAP( "BoundingBoxOverride", BoundingBoxOverride, "Override the object's bounding box with the one provided" )
-
-		MAP_ATTRIBUTE( "attachedObjects", m_attachedObjects, "Vector of renderables that are associated with this object.", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "variableStore", m_variableStore, "Local variable store for this object", Be::READ )
 		MAP_ATTRIBUTE( "probeOffset", m_probeOffset, "Offset for Enlighten SH probe position (in world space)", Be::READWRITE | Be::PERSIST )
@@ -71,4 +62,3 @@ const Be::ClassInfo* Tr2InteriorPlaceable::ExposeToBlue()
 	EXPOSURE_END()
 }
 
-#endif

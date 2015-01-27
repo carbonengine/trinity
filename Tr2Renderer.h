@@ -49,7 +49,6 @@ BLUE_DECLARE_INTERFACE( ITr2ShaderState );
 class Tr2Renderer
 {
 public:
-	static char* GetEnlightenErrorBuffer();
 	static bool Initialize();
 	static void Shutdown();
 

@@ -330,7 +330,7 @@ void App::OnTick(
 	if( mSendResizeEvent && !gTriDev->IsDeviceLost() )
 	{
 #ifdef _WIN32
-		mIsMaximized = ::IsZoomed( mHwnd );
+		mIsMaximized = ::IsZoomed( mHwnd ) != 0;
 #else
         mIsMaximized = false;
 #endif

@@ -565,7 +565,7 @@ void Tr2GrannyAnimation::ChainAnimationEx( const char* animName, int loopCount, 
 
 bool Tr2GrannyAnimation::IsInitialized() const
 {
-	return (bool)m_baseLayer.m_modelInstance;
+	return m_baseLayer.m_modelInstance != nullptr;
 }
 
 void Tr2GrannyAnimation::AddAnimationLayer( const char* layerName )

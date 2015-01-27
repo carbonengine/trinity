@@ -21,27 +21,13 @@ BLUE_DECLARE( TriTextureRes );
 BLUE_DECLARE_INTERFACE( ITr2InteriorDynamic );
 BLUE_DECLARE( TriCurveSet );
 BLUE_DECLARE_VECTOR( TriCurveSet );
-BLUE_DECLARE( Tr2InteriorOrientedBoundingBox );
 class ITriRenderBatchAccumulator;
-
-// --------------------------------------------------------------------------------------
-// Other forwards
-namespace Umbra
-{
-	class RegionOfInfluence;
-	class Model;
-}
 
 // --------------------------------------------------------------------------------------
 // Description:
 //   Tr2InteriorCylinderLight represents an cylinder (tube) interior light. It radiates 
 //   light from and perpendicular to its cylinder axis. Lights are managed at the 
-//   Tr2InteriorScene level, and participate in spatial culling via Umbra, as well as 
-//   indirect lighting via Enlighten.  In Umbra, each light generates a RegionOfInfluence 
-//   (ROI), and the light maintains an ROI for each cell it intersects.  Lights contribute 
-//   to indirect lighting in Enlighten.  If a light is marked 'isStatic', then its
-//   Enlighten contribution is computed once, then cached.  Otherwise the light's 
-//   contribution to indirect lighting is updated every frame.
+//   Tr2InteriorScene level.
 // See Also:
 //   Tr2InteriorScene, Tr2InteriorLightSet
 // --------------------------------------------------------------------------------------
@@ -80,21 +66,18 @@ public:
 	virtual void ReleaseCachedData( BlueAsyncRes* p );
 	virtual void RebuildCachedData( BlueAsyncRes* p );
 
+    //////////////////////////////////////////////////////////////////////////
+    // ITr2InteriorCullable
+	virtual bool IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const;
+
 	/////////////////////////////////////////////////////////////
 	// ITr2InteriorLight
 
 	// Copy the light parameters into the per-object data
 	void PopulateLightData( Tr2InteriorPerObjectLightData* lightData, const Matrix& mirrorToWorldMatrix ) const;
 
-	// Does this light contribute to primary lighting?
-	bool UseWithPrimaryLighting()		const { return m_primaryLighting; }
-
-	// Add secondary light to Enlighten system
-	bool AddToEnlightenSystem( Tr2InteriorDusterCache* dusters,
-							   const Matrix &systemTransformInv ) const;
-
 	// Get the axis aligned bounding box
-	void GetBoundingBox( Vector3& minBounds, Vector3& maxBounds ) const;
+	const AxisAlignedBoundingBox& GetBoundingBox() const;
 	// Get cylinder radius
 	float GetRadius() const { return m_radius; }
 	// Get cylinder length
@@ -104,15 +87,6 @@ public:
 	bool IsDirty( void ) const { return m_isDirty; }
 	// Set the dirty flag
 	void SetDirtyFlag( bool isDirty ) { m_isDirty = isDirty; }
-
-	// Set the light's static flag
-	void SetStatic( bool isStatic );
-	// Query the light's static flag
-	bool IsStatic( void ) const { return m_isStatic; }
-	// Did the static flag change state on the previous frame?
-	bool StaticFlagChanged( void ) const { return m_staticFlagChanged; }
-	// Reset the static-changed flag to false
-	void ResetStaticChangedFlag( void ) { m_staticFlagChanged = false; }
 
 	// Cell intersection
 	bool TestCellIntersectionAndAdd( Tr2InteriorCell* cell );
@@ -127,18 +101,10 @@ public:
 	// Remove the light from the scene
 	void RemoveFromScene( void );
 
-	// Called when a cell is removed from the scene
-	void CellRemoved( Tr2InteriorCell* cell );
-
-	// Get batches for a non-instanced light
-	void GetBatches( ITriRenderBatchAccumulator* batches );
 	// Get batches for an instanced light
-	void GetInstancedBatches( ITriRenderBatchAccumulator* batches, 
-							  const Matrix& mirrorToWorldMatrix );
+	void GetBatches( ITriRenderBatchAccumulator* batches, const Matrix& mirrorToWorldMatrix );
 	// Get batches for a light to use during SH lighting step
 	void GetSHBatches( ITriRenderBatchAccumulator* batches ) const;
-	// Get batches for lightmap rendering
-	void GetLightMapBatches( ITriRenderBatchAccumulator* batches ) const;
 
 	// Returns the number of frames since the shadow was updated for spot lights
 	unsigned int GetFramesSinceShadowUpdate( unsigned int shadowMapIndex ) const { return 0; }
@@ -162,8 +128,6 @@ public:
 	void EndShadowUpdate( unsigned int shadowMapIndex );
 	// Return shadow map view matrix
 	const Matrix& GetViewMatrix( unsigned int shadowMapIndex ) const;
-	// Return shadow map inverse view matrix
-	const Matrix& GetInvViewMatrix( unsigned int shadowMapIndex ) const;
 	// Return shadow map projection transform matrix
 	const Matrix& GetProjectionMatrix( unsigned int shadowMapIndex ) const;
 
@@ -176,20 +140,10 @@ public:
 	// Return shadow caster object types
 	ShadowCasterTypes GetShadowCasterTypes() const;
 
-	// Return position for light spider tool
-	Vector3 GetPositionForLightSpider( const Matrix &objectToWorldMatrix ) const;
-
-	void RenderDebugInfo( Tr2RenderContext& renderContext ) const;
-
 	void Update( Be::Time time );
 
 	void EnableROI( bool enable );
-
-	void SetProjectedTexture( TriTextureRes* texture );
 protected:
-	// Clear all Umbra data
-	void ClearUmbra( void );
-
 	// Rebuild bounding volume
 	void RebuildVolume( void );
 
@@ -204,8 +158,6 @@ private:
 
 	// Chooses an appropriate effect for light rendering
 	void ChooseLightEffect();
-	// Rebuilds light geometry
-	void RebuildGeometry();
 
 	// Light names
 	std::string m_name;
@@ -213,6 +165,7 @@ private:
 	// Light unit to world space transform
 	// Cylinder is aligned along Z axis in its local CS
 	Matrix m_transform;
+	AxisAlignedBoundingBox m_worldBoundingBox;
 	// Cylinder radius
 	float m_radius;
 	// Cylinder length (height)
@@ -241,29 +194,11 @@ private:
 
 	// Does this light contribute to direct lighting?
 	bool m_primaryLighting;
-	// Does this light contribute to indirect (Enlighten) lighting?
-	bool m_secondaryLighting;
-	// A multipler for scaling the secondary lighting contribution
-	float m_secondaryLightingMultiplier;
 	// Does this light affect transparent objects?
 	bool m_affectTransparentObjects;
-	// Does this light affect transparent objects (enable ROI; comes from the scene)
-	bool m_enableROIs;
 
 	// Does this light source require an update?
 	bool m_isDirty;
-
-	// Is this light static?
-	bool m_isStatic;
-	// Did the static flag change on the last frame?
-	bool m_staticFlagChanged;
-
-	// Umbra model for defining the ROI geometry
-	Umbra::Model* m_umbraModel;
-	// List of Umbra RegionsOfInfluence, one per intersected Cell
-	std::vector<Umbra::RegionOfInfluence*> m_umbraRoiList;
-	// List of Umbra Objects, one per intersected Cell (used in the light-gather phase)
-	std::vector<Umbra::Object*> m_umbraObjectList;
 
 	// Matrix representation of the oriented bounding box
 	Matrix m_obbMatrix;
@@ -275,30 +210,14 @@ private:
 	Tr2ShaderMaterialPtr m_material;
 	// Shader material for SH lighting pass
 	Tr2ShaderMaterialPtr m_shMaterial;
-	// Shader material for lightmap rendering
-	Tr2ShaderMaterialPtr m_lightmapMaterial;
 
 	// Path to light's projected texture
 	std::string m_projectedTexturePath;
 	// Light's projected texture
 	TriTextureResPtr m_projectedTextureRes;
 
-	// Should we render debug information
-	bool m_renderDebugInfo;
-	// Type of debug visualization
-	DebugInfoType m_renderDebugType;
-
 	PTriCurveSetVector m_curveSets;
 
-	// Additional bounding box for light volume
-	Tr2InteriorOrientedBoundingBoxPtr m_boundingBox;
-	// Vertex array for light geometry clipped by bounding box
-	Vector4* m_vertexes;
-	// Number of vertexes in m_vertexes array
-	unsigned m_vertexCount;
-
-	// Vertex buffer for light geometry (for clipped lights)
-	Tr2VertexBufferAL m_VB;
 	// Shared vertex buffer for unclipped lights
 	Tr2VertexBufferAL* m_sharedVB;
 	// Shared index buffer for unclipped lights

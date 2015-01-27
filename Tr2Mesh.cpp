@@ -40,8 +40,6 @@ Tr2Mesh::~Tr2Mesh()
 		BeResMan->CancelFromQueue( BRMQ_MAIN, m_resourcePrepCbId );
 		m_resourcePrepCbId = 0;
 	}
-
-	m_geometryPreparedCallbacks.clear();
 }
 
 
@@ -54,17 +52,6 @@ bool Tr2Mesh::Initialize()
 	}
 
 	return true;
-}
-
-// ---------------------------------------------------------------
-void Tr2Mesh::AddGeometryPreparedCallback( const BlueScriptCallback& callback )
-{
-	CCP_ASSERT(callback);
-
-	if (callback)
-	{
-		m_geometryPreparedCallbacks.push_back( callback );
-	}
 }
 
 void Tr2Mesh::StaticResourceLoadFinished( void* pContext )
@@ -90,30 +77,6 @@ void Tr2Mesh::StaticResourcePrepFinished( void* pContext )
 
 }
 
-void Tr2Mesh::DoPrepCallbacks()
-{
-	CCP_ASSERT( GetGeometryResource() );
-	CCP_ASSERT( GetGeometryResource()->IsPrepared() );
-	CCP_ASSERT( !GetGeometryResource()->IsLoading() );
-
-	//	Call the python callback if there is one
-	for ( auto it = m_geometryPreparedCallbacks.begin(); it!=m_geometryPreparedCallbacks.end(); ++it )
-	{
-
-		auto& callback = ( *it );
-
-		CCP_ASSERT(callback);
-
-		if (callback)
-		{
-			callback.CallVoid();
-		}
-	}
-
-	//	We've done all the callbacks so clear the list
-	//	Note that it is a sin to add more callbacks DURING a callback!
-	m_geometryPreparedCallbacks.clear();
-}
 // ---------------------------------------------------------------
 bool Tr2Mesh::OnModified( Be::Var* value )
 {
@@ -170,7 +133,7 @@ struct ImmutableHelper : IBlueResManNotifications
 	bool m_immutable;
 	bool m_computeAccess;
 
-	ImmutableHelper( unsigned immutable, unsigned computeAccess ) 
+	ImmutableHelper( bool immutable, bool computeAccess ) 
 	: m_immutable( immutable ) 
 	, m_computeAccess( computeAccess )
 	{}
@@ -233,9 +196,6 @@ void Tr2Mesh::RebuildCachedData( BlueAsyncRes* p )
 		m_boundingSphere = Vector4( ( m_minBounds + m_maxBounds ) * 0.5f, D3DXVec3Length( &d ) * 0.5f );
 
 		m_areBoundsValid = true;
-
-		//	 Call our resource callbacks if we have them
-		DoPrepCallbacks();
 	}
 }
 

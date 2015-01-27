@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorFlare.h"
 #include "TriViewport.h"
 
@@ -48,5 +46,3 @@ const Be::ClassInfo* Tr2InteriorFlare::ExposeToBlue()
 
 	EXPOSURE_END()
 }
-
-#endif

@@ -1,20 +1,14 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorLightSource.h"
 #include "Tr2InteriorConstantBufferFormats.h"
 #include "TriDebugResourceHelper.h"
-
-#include "umbraTypes.h"
 
 #include "Utilities/BoundingSphere.h"
 #include "Tr2AtlasTexture.h"
 #include "Tr2InteriorCell.h"
 #include "Tr2InteriorLightGeometryRenderBatch.h"
 #include "Tr2KelvinColor.h"
-#include "ITr2UmbraUserData.h"
-#include "Tr2InteriorOrientedBoundingBox.h"
 #include "Tr2ShaderMaterial.h"
 #include "Tr2ConstGeometry.h"
 #include "Curves/TriCurveSet.h"
@@ -154,7 +148,6 @@ namespace {
 //   Tr2InteriorLightSource default constructor
 // --------------------------------------------------------------------------------------
 Tr2InteriorLightSource::Tr2InteriorLightSource( IRoot* lockobj ) :
-	PARENTLOCK( m_explicitAffectedCells ),
 	m_name(),
 	m_position( 0.f, 0.f, 0.f ),
 	m_radius( 1.f ),
@@ -166,27 +159,15 @@ Tr2InteriorLightSource::Tr2InteriorLightSource( IRoot* lockobj ) :
 	m_coneAlphaInner( 180.f ),
 	m_coneDirection( 0.f, -1.f, 0.f ),
 	m_primaryLighting( true ),
-	m_secondaryLighting( true ),
-	m_secondaryLightingMultiplier( 1.0f ),
 	m_affectTransparentObjects( true ),
-	m_enableROIs( true ),
 	m_importanceScale( 1.0f ),
 	m_importanceBias( 0.0f ),
 	m_isDirty( true ),
-	m_isStatic( true ),
-	m_staticFlagChanged( true ),
-	m_umbraModel( NULL ),
-	m_umbraRoiList(),
-	m_cellIntersectionType( IT_BOUNDING_BOX ),
 	m_lightVertexDecl( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_shadowResolution( 256 ),
 	m_enableShadowLOD( true ),
 	m_shadowCasterTypes( ST_ALL ),
-	m_renderDebugInfo( false ),
-	m_renderDebugType( DI_LIGHT_COLOR ),
 	PARENTLOCK( m_curveSets ),
-	m_vertexes( NULL ),
-	m_vertexCount( 0 ),
 	m_sharedVB( nullptr ),
 	m_sharedIB( nullptr )
 {
@@ -200,20 +181,17 @@ Tr2InteriorLightSource::Tr2InteriorLightSource( IRoot* lockobj ) :
 		m_framesSinceShadowUpdate[0] = 0;
 	}
 
-	m_explicitAffectedCells.SetNotify( this );
-
 	D3DXMatrixIdentity( &m_unitToWorldTransform );
+	m_worldBoundingBox = AxisAlignedBoundingBox( Vector3( -1.f, -1.f, -1.f ), Vector3( 1.f, 1.f, 1.f ) );
 
 	m_material.CreateInstance();
 	m_shMaterial.CreateInstance();
-	m_lightmapMaterial.CreateInstance();
 
 	m_kelvinColor.CreateInstance();
 	m_useKelvinColor = false;
 
 	m_material->SetHighLevelShaderName( "PointLight" );
 	m_shMaterial->SetHighLevelShaderName( "PointLight" );
-	m_lightmapMaterial->SetHighLevelShaderName( "PointLight" );
 	PrepareResources();
 }
 
@@ -223,9 +201,6 @@ Tr2InteriorLightSource::Tr2InteriorLightSource( IRoot* lockobj ) :
 // --------------------------------------------------------------------------------------
 Tr2InteriorLightSource::~Tr2InteriorLightSource()
 {
-	// Clear Umbra data
-	ClearUmbra();
-
 	if( m_projectedTextureRes )
 	{
 		m_projectedTextureRes->RemoveNotifyTarget( this );
@@ -233,14 +208,11 @@ Tr2InteriorLightSource::~Tr2InteriorLightSource()
 	}
 
 	CCP_STATS_DEC( wodIntLightsAlive );
-
-	CCP_DELETE []m_vertexes;
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Inherited from IInitialize interface.  Builds the Umbra culling volume after object 
-//   initialization.
+//   Inherited from IInitialize interface.
 // Return Value:
 //   true always
 // --------------------------------------------------------------------------------------
@@ -270,9 +242,8 @@ bool Tr2InteriorLightSource::Initialize()
 //   Inherited from INotify interface.  Allows the light source to respond to parameter 
 //   changes generated in Python.  If the light position changes, the regions of influence 
 //   are updated with the new transform matrix & the light is flagged as 'dirty', forcing 
-//   a new round of light-cell intersection tests on the next scene Update.  If the light 
-//   radius, cone direction, or cone outer angle changes, then a new Umbra model is 
-//   constructed and given to the regions of influence.  The light is flagged as dirty.
+//   a new round of light-cell intersection tests on the next scene Update. The light is 
+//   flagged as dirty.
 // Arguments:
 //   value - The Blue-exposed parameter that changed
 // Return Value:
@@ -283,27 +254,7 @@ bool Tr2InteriorLightSource::OnModified( Be::Var* value )
 	// Update the regions of influce if the position changes
 	if( IsMatch( value, m_position ) )
 	{
-		// Compute a world-translation matrix
-		Matrix translationMatrix;
-		D3DXMatrixTranslation( &translationMatrix, m_position.x, m_position.y, m_position.z );
-
-		// Update the matrices on the regions of influence
-		for( std::vector<Umbra::RegionOfInfluence*>::iterator it = m_umbraRoiList.begin(); 
-			 it != m_umbraRoiList.end(); ++it )
-		{
-			if( ( *it )->getCell() != NULL )
-			{
-				Matrix cellTransform;
-				( *it )->getCell()->getCellToWorldMatrix( AS_UMBRA_MATRIX( cellTransform ) );
-				D3DXMatrixInverse( &cellTransform, NULL, &cellTransform );
-				cellTransform = translationMatrix * cellTransform;
-				( *it )->setObjectToCellMatrix( AS_UMBRA_MATRIX( cellTransform ) );
-			}
-			else
-			{
-				( *it )->setObjectToCellMatrix( AS_UMBRA_MATRIX( translationMatrix ) );
-			}
-		}
+		m_worldBoundingBox = AxisAlignedBoundingBox( m_position - Vector3( m_radius, m_radius, m_radius ), m_position + Vector3( m_radius, m_radius, m_radius ) );
 
 		RecalculateUnitToWorldMatrix();
 		RebuildGeometry();
@@ -316,11 +267,12 @@ bool Tr2InteriorLightSource::OnModified( Be::Var* value )
 			m_dirtySpotLightShadow[i] = true;
 		}
 	}
-	// If the radius, cone angle, or direction changes, we need to rebuild the Umbra model
 	else if( IsMatch( value, m_radius )			||
 			 IsMatch( value, m_coneAlphaOuter ) ||
 			 IsMatch( value, m_coneDirection ) )
 	{
+		m_worldBoundingBox = AxisAlignedBoundingBox( m_position - Vector3( m_radius, m_radius, m_radius ), m_position + Vector3( m_radius, m_radius, m_radius ) );
+
 		// Rebuild the bounding volume
 		RebuildVolume();
 
@@ -358,16 +310,6 @@ bool Tr2InteriorLightSource::OnModified( Be::Var* value )
 	{
 		PrepareResources();
 	}
-	else if( IsMatch( value, m_cellIntersectionType ) )
-	{
-		// Mark the dirty flag
-		m_isDirty = true;
-		for( int i = 0; i < 6; ++i )
-		{
-			m_emptyShadow[i] = false;
-			m_dirtySpotLightShadow[i] = true;
-		}
-	}
 	else if( IsMatch( value, m_projectedTexturePath ) )
 	{
 		if( m_projectedTextureRes )
@@ -394,26 +336,6 @@ bool Tr2InteriorLightSource::OnModified( Be::Var* value )
 		}
 		PrepareResources();
 	}
-	else if( IsMatch( value, m_affectTransparentObjects ) )
-	{
-		for( std::vector<Umbra::RegionOfInfluence*>::iterator it = m_umbraRoiList.begin(); it != m_umbraRoiList.end(); ++it )
-		{
-			( *it )->set( Umbra::Object::ENABLED, m_affectTransparentObjects && m_enableROIs );
-		}
-	}
-	else if( IsMatch( value, m_boundingBox ) )
-	{
-		if( m_boundingBox )
-		{
-			m_boundingBox->AddNotifyTarget( this );
-		}
-		RebuildGeometry();
-		ChooseLightEffect();
-	}
-	else if( m_boundingBox != NULL && IsMatch( value, m_boundingBox->GetTransform() ) )
-	{
-		RebuildGeometry();
-	}
 	else if( IsMatch( value, m_customMaterial ) )
 	{
 		if( m_customMaterial )
@@ -425,11 +347,9 @@ bool Tr2InteriorLightSource::OnModified( Be::Var* value )
 		{
 			m_material = NULL;
 			m_shMaterial = NULL;
-			m_lightmapMaterial = NULL;
 
 			m_material.CreateInstance();
 			m_shMaterial.CreateInstance();
-			m_lightmapMaterial.CreateInstance();
 
 			ChooseLightEffect();
 		}
@@ -464,64 +384,9 @@ void Tr2InteriorLightSource::UpdateInternalMaterials()
 	if( m_customMaterial )
 	{
 		m_shMaterial = NULL;
-		m_lightmapMaterial = NULL;
 
 		BeClasses->CloneTo( m_customMaterial->GetRawRoot(), (IRoot**)&m_shMaterial );
-		BeClasses->CloneTo( m_customMaterial->GetRawRoot(), (IRoot**)&m_lightmapMaterial );
 		ChooseLightEffect();
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Sets the projected texture resource.
-// Arguments:
-//   texture - New texture resource
-// --------------------------------------------------------------------------------------
-void Tr2InteriorLightSource::SetProjectedTexture( TriTextureRes* texture )
-{
-	if( m_projectedTextureRes == texture )
-	{
-		return;
-	}
-
-	if( m_projectedTextureRes )
-	{
-		m_projectedTextureRes->RemoveNotifyTarget( this );
-		m_projectedTextureRes.Unlock();
-	}
-	m_projectedTextureRes = texture;
-	if( m_projectedTextureRes )
-	{
-		m_projectedTextureRes->AddNotifyTarget( this );
-	}
-	else
-	{
-		ChooseLightEffect();
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Sets the dirty flag when the explicitAffectCells list changes.
-// Arguments:
-//   event		- The list-changed event type (ignored)
-//   key		- The primary list key (ignored)
-//   key2		- The secondary list key (ignored)
-//   value		- The list item that was modified (ignored)
-//   theList	- The list that generated the event (ignored)
-// Return Value:
-//   true always
-// --------------------------------------------------------------------------------------
-void Tr2InteriorLightSource::OnListModified( long event, ssize_t key, ssize_t key2, 
-											 IRoot* value, const IList* theList )
-{
-	// Mark the dirty flag
-	m_isDirty = true;
-	for( int i = 0; i < 6; ++i )
-	{
-		m_emptyShadow[i] = false;
-		m_dirtySpotLightShadow[i] = true;
 	}
 }
 
@@ -547,7 +412,7 @@ void Tr2InteriorLightSource::RecalculateUnitToWorldMatrix()
 		D3DXVec3Cross( &orientation.GetY(), &orientation.GetZ(), &orientation.GetX() );
 
 		// Determine the radius of the cone
-		float halfAngle = D3DXToRadian( m_coneAlphaOuter );
+		float halfAngle = m_coneAlphaOuter / 180.f * XM_PI;
 		float sideLength = 1.0f / cos( halfAngle );
 		float baseRadius = sideLength * sin( halfAngle );
 
@@ -572,8 +437,7 @@ void Tr2InteriorLightSource::RecalculateUnitToWorldMatrix()
 			D3DXVec3Cross( &up, &m_coneDirection, &x );
 		}
 		D3DXMatrixLookAtRH( &m_viewMatrix[0], &eye, &at, &up );
-		D3DXMatrixInverse( &m_invViewMatrix[0], NULL, &m_viewMatrix[0] );
-		D3DXMatrixPerspectiveFovRH( &m_projectionMatrix, D3DXToRadian( m_coneAlphaOuter * 2 ), 1.f, 0.01f, m_radius );
+		D3DXMatrixPerspectiveFovRH( &m_projectionMatrix, m_coneAlphaOuter * 2 / 180.f * XM_PI, 1.f, 0.01f, m_radius );
 		UpdateSpotlightFrustum();
 
 	}
@@ -611,12 +475,7 @@ void Tr2InteriorLightSource::RecalculateUnitToWorldMatrix()
 		up = Vector3( 0.f, 1.f, 0.f );
 		D3DXMatrixLookAtRH( &m_viewMatrix[5], &eye, &at, &up );
 
-		for( int i = 0; i < 6; ++i )
-		{
-			D3DXMatrixInverse( &m_invViewMatrix[i], NULL, &m_viewMatrix[i] );
-		}
-
-		D3DXMatrixPerspectiveFovRH( &m_projectionMatrix, D3DX_PI / 2.f, 1.f, 0.01f, m_radius );
+		D3DXMatrixPerspectiveFovRH( &m_projectionMatrix, XM_PI / 2.f, 1.f, 0.01f, m_radius );
 		UpdateSpotlightFrustum();
 	}
 }
@@ -633,10 +492,6 @@ void Tr2InteriorLightSource::ReleaseResources( TriStorage s )
 	{
 		m_shadowAtlasTexture[i] = NULL;
 	}
-	if( m_VB.GetMemoryClass() & s )
-	{
-		m_VB.Destroy();
-	}
 }
 
 // --------------------------------------------------------------------------------------
@@ -652,12 +507,6 @@ bool Tr2InteriorLightSource::OnPrepareResources()
 	m_lightVertexDecl = Tr2EffectStateManager::GetVertexDeclarationHandle( vd );
 
 	CreateShadowMap();
-
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	if( m_boundingBox && !m_VB.IsValid() )
-	{
-		m_VB.Create( m_vertexCount * sizeof( Vector4 ), USAGE_IMMUTABLE, m_vertexes, renderContext );
-	}
 	return true;
 }
 
@@ -717,28 +566,10 @@ void Tr2InteriorLightSource::PopulateLightData( Tr2InteriorPerObjectLightData* l
 // --------------------------------------------------------------------------------------
 // Description:
 //   Gets the world-space axis aligned bounding box for the light
-// Arguments:
-//   minBounds - The min bounds of the BB
-//   maxBounds - The max bounds of the BB
 // --------------------------------------------------------------------------------------
-void Tr2InteriorLightSource::GetBoundingBox( Vector3& minBounds, Vector3& maxBounds ) const
+const AxisAlignedBoundingBox& Tr2InteriorLightSource::GetBoundingBox() const
 {
-	minBounds = m_position - Vector3( m_radius, m_radius, m_radius );
-	maxBounds = m_position + Vector3( m_radius, m_radius, m_radius );
-}
-
-// ---------------------------------------------------------------------------------------
-// Description:
-//   Sets the value of the isStatic flags (which controls whether or not the light is
-//   cached in Enlighten).
-// Arguments:
-//   isStatic - The new value of the isStatic flag
-// --------------------------------------------------------------------------------------
-void Tr2InteriorLightSource::SetStatic( bool isStatic )
-{
-	if( isStatic != m_isStatic )
-		m_staticFlagChanged = true;
-	m_isStatic = isStatic;
+	return m_worldBoundingBox;
 }
 
 // --------------------------------------------------------------------------------------
@@ -761,142 +592,28 @@ bool Tr2InteriorLightSource::TestCellIntersectionAndAdd( Tr2InteriorCell* cell )
 		return false;
 	}
 
-	Matrix transformInv;
-	D3DXMatrixInverse( &transformInv, NULL, &cell->GetWorldTransform() );
-
 	bool intersects = cell->IsUnbounded();
 
 	if( !intersects )
 	{
-		switch( m_cellIntersectionType )
+		if( !IsSpotLight() )
 		{
-		case IT_BOUNDING_BOX:
-			// Test point light
-			if( !IsSpotLight() )
-			{
-				intersects = cell->IntersectsSphere( m_position, m_radius );
-			}
-			// Test spot light
-			else
-			{
-				intersects = cell->IntersectsOBB( m_collisionCenter + m_position, m_collisionExtents, m_collisionOrientation );
-			}
-			break;
-		case IT_POINT:
-			{
-				intersects = cell->ContainsPoint( m_position );
-			}
-			break;
-		case IT_MANUAL:
-		default:
-			intersects = HasCellInManualList( cell );
-			break;
-		}
-	}
-
-	// If we got an intersection, setup the Umbra Region-of-influence
-	if( intersects )
-	{
-		// Compute current transform matrix
-		Matrix transMat;
-		D3DXMatrixTranslation( &transMat, m_position.x, m_position.y, m_position.z );
-		transMat = transMat * transformInv;
-
-		// Only do the ROI setup if the cell doesn't already contain this light
-		if( cell->AddLight( this ) )
-		{
-			// See if we already have an ROI for this cell
-			Umbra::RegionOfInfluence* roi = Umbra::RegionOfInfluence::create( m_umbraModel );
-			roi->setCell( cell->GetUmbraCell() );
-			roi->setObjectToCellMatrix( AS_UMBRA_MATRIX( transMat ) );
-
-			// Set our own userdata to this ROI
-			void* userData = CONVERT_TO_UMBRA_USER_DATA( this );
-
-			roi->setUserPointer( userData );
-			roi->set( Umbra::Object::ENABLED, m_affectTransparentObjects && m_enableROIs );
-
-			// Store the roi in our list
-			m_umbraRoiList.push_back( roi );
-
-			Umbra::Object* obj = Umbra::Object::create( m_umbraModel );
-			obj->setCell( cell->GetUmbraCell() );
-			obj->setObjectToCellMatrix( AS_UMBRA_MATRIX( transMat ) );
-
-			obj->setUserPointer( userData );
-
-			m_umbraObjectList.push_back( obj );
+			intersects = cell->IntersectsSphere( m_position, m_radius );
 		}
 		else
 		{
-			// Update the ROI matrix
-			for( std::vector<Umbra::RegionOfInfluence*>::iterator it = m_umbraRoiList.begin(); 
-				it != m_umbraRoiList.end(); ++it )
-			{
-				Umbra::RegionOfInfluence* roi = *it;
-				if( roi->getCell() == cell->GetUmbraCell() )
-				{
-					roi->setObjectToCellMatrix( AS_UMBRA_MATRIX( transMat ) );
-				}
-			}
-
-			// Update the Object matrix
-			for( std::vector<Umbra::Object*>::iterator it = m_umbraObjectList.begin(); 
-				it != m_umbraObjectList.end(); ++it )
-			{
-				Umbra::Object* obj = *it;
-				if( obj->getCell() == cell->GetUmbraCell() )
-				{
-					obj->setObjectToCellMatrix( AS_UMBRA_MATRIX( transMat ) );
-				}
-			}
+			intersects = cell->IntersectsOBB( m_collisionCenter + m_position, m_collisionExtents, m_collisionOrientation );
 		}
+	}
+
+	if( intersects )
+	{
+		cell->AddLight( this );
 	}
 	else
 	{
 		// Remove the light from the cell
 		cell->RemoveLight( this );
-
-		// Remove the region of influence from the cell
-		Umbra::Cell* umbraCell = cell->GetUmbraCell();
-		for( std::vector<Umbra::RegionOfInfluence*>::iterator it = m_umbraRoiList.begin(); 
-			 it != m_umbraRoiList.end(); )
-		{
-			Umbra::RegionOfInfluence* roi = *it;
-			if( roi->getCell() == umbraCell )
-			{
-				roi->setCell( NULL );
-				roi->setUserPointer( NULL );
-				roi->release();
-				roi = NULL;
-
-				it = m_umbraRoiList.erase( it );
-			}
-			else
-			{
-				++it;
-			}
-		}
-
-		// Remove the object from the cell
-		for( std::vector<Umbra::Object*>::iterator it = m_umbraObjectList.begin(); 
-			it != m_umbraObjectList.end(); )
-		{
-			Umbra::Object* obj = *it;
-			if( obj->getCell() == umbraCell )
-			{
-				obj->setCell( NULL );
-				obj->setUserPointer( NULL );
-				obj->release();
-				obj = NULL;
-
-				it = m_umbraObjectList.erase( it );
-			}
-			else
-			{
-				++it;
-			}
-		}
 	}
 
 	// Return the result of the intersection test
@@ -941,10 +658,6 @@ float Tr2InteriorLightSource::GetCurrentShadowImportance( unsigned int shadowMap
 	return GetCurrentViewImportance( viewerPos ) * m_shadowImportance * m_shadowImportance;
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Adds the light to the umbra scene
-// --------------------------------------------------------------------------------------
 void Tr2InteriorLightSource::AddToScene( void )
 {
 	// Set the dirty flag
@@ -957,102 +670,11 @@ void Tr2InteriorLightSource::AddToScene( void )
 }
 
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Removes the light from the Umbra scene.
-// --------------------------------------------------------------------------------------
 void Tr2InteriorLightSource::RemoveFromScene( void )
 {
-	ClearUmbra();
 	for( int i = 0; i < 6; ++i )
 	{
 		m_shadowAtlasTexture[i] = NULL;
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Gets the cell intersection type
-// Return Value:
-//   The cell intersection type
-// --------------------------------------------------------------------------------------
-Tr2InteriorLightSource::CellIntersectionType 
-	Tr2InteriorLightSource::GetCellIntersectionType() const
-{
-	return m_cellIntersectionType;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Sets the cell intersection type
-// Arguments:
-//   cellIntersectionType - The new cell intersection type
-// --------------------------------------------------------------------------------------
-void Tr2InteriorLightSource::SetCellIntersectionType( 
-	CellIntersectionType cellIntersectionType )
-{
-	m_cellIntersectionType = cellIntersectionType;
-}
-
-// ---------------------------------------------------------------------------------------
-// Description:
-//   Checks to see whether the given cell is in the manual explicit cell list
-// Arguments:
-//   cell - The cell to test
-// Return Value:
-//   true, if the cell is in the explicitAffectedCells list
-//   false, otherwise
-// --------------------------------------------------------------------------------------
-bool Tr2InteriorLightSource::HasCellInManualList( const Tr2InteriorCell* cell ) const
-{
-	for( PTr2InteriorCellVector::const_iterator it = m_explicitAffectedCells.begin(); 
-		 it != m_explicitAffectedCells.end(); ++it )
-	{
-		if( cell == *it )
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Adds the cell to the explicitAffectedCell list
-// Arguments:
-//   cell - The cell to add
-// --------------------------------------------------------------------------------------
-void Tr2InteriorLightSource::AddCellToManualList( Tr2InteriorCell* cell )
-{
-	if( HasCellInManualList( cell ) )
-	{
-		return;
-	}
-	m_explicitAffectedCells.Insert( -1, cell->GetRawRoot() );
-	for( int i = 0; i < 6; ++i )
-	{
-		m_emptyShadow[i] = false;
-		m_dirtySpotLightShadow[i] = true;
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Removes the cell from the explicitAffectedCell list
-// Arguments:
-//   cell - The cell to remove
-// --------------------------------------------------------------------------------------
-void Tr2InteriorLightSource::CellRemoved( Tr2InteriorCell* cell )
-{
-	ssize_t key = m_explicitAffectedCells.FindKey( cell->GetRawRoot() );
-	if( key != -1 )
-	{
-		m_explicitAffectedCells.Remove( key );
-		for( int i = 0; i < 6; ++i )
-		{
-			m_emptyShadow[i] = false;
-			m_dirtySpotLightShadow[i] = true;
-		}
 	}
 }
 
@@ -1072,26 +694,8 @@ class Tr2InteriorLightSource::PerLightData : public Tr2ShadowPerLightData<Tr2Pro
 // Arguments:
 //   batches - Render batch accumulator to add batch to
 // --------------------------------------------------------------------------------------
-void Tr2InteriorLightSource::GetBatches( ITriRenderBatchAccumulator* batches )
+void Tr2InteriorLightSource::GetBatches( ITriRenderBatchAccumulator* batches, const Matrix& mirrorToWorldMatrix )
 {
-	GetInstancedBatches( batches, Tr2Renderer::GetIdentityTransform() );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Adds light's geometry to a render batch accumulator. Used during light accumulation 
-//   pass.
-// Arguments:
-//   batches - Render batch accumulator to add batch to
-// --------------------------------------------------------------------------------------
-void Tr2InteriorLightSource::GetInstancedBatches( ITriRenderBatchAccumulator* batches,
-												  const Matrix& mirrorToWorldMatrix )
-{
-	if( m_boundingBox != NULL && m_vertexCount == 0 )
-	{
-		return;
-	}
-
 	PerLightData* data = batches->Allocate<PerLightData>(); 
 
 	if( !data )
@@ -1109,11 +713,6 @@ void Tr2InteriorLightSource::GetInstancedBatches( ITriRenderBatchAccumulator* ba
 	perObjectPSBuffer.lightData.shadow0Influence = 0.0f;
 	perObjectPSBuffer.additionalParameters.x = m_specularIntensity;
 	perObjectPSBuffer.mirrorToWorldMatrix = mirrorToWorldMatrix;
-	if( m_boundingBox )
-	{
-		D3DXMatrixInverse( &perObjectPSBuffer.boundingBox, NULL, &m_boundingBox->GetTransform() );
-		D3DXMatrixTranspose( &perObjectPSBuffer.boundingBox, &perObjectPSBuffer.boundingBox );
-	}
 
 	const XMMATRIX texAdjust = XMMatrixSet(
 		0.5f, 0.0f, 0.0f, 0.0f,
@@ -1161,30 +760,19 @@ void Tr2InteriorLightSource::GetInstancedBatches( ITriRenderBatchAccumulator* ba
 	Tr2VertexBufferAL* vb;
 	Tr2IndexBufferAL* ib;
 
-	if( m_boundingBox != NULL )
+	if( IsSpotLight() )
 	{
-		vertexes = m_vertexes;
-		vertexCount = m_vertexCount;
-		worldView = mirrorMatrix * Tr2Renderer::GetViewTransform();
-		vb = &m_VB;
-		ib = nullptr;
+		vertexes = unitConeVertices;
+		vertexCount = unitConeVertexCount;
 	}
 	else
 	{
-		if( IsSpotLight() )
-		{
-			vertexes = unitConeVertices;
-			vertexCount = unitConeVertexCount;
-		}
-		else
-		{
-			vertexes = unitIcosahedronVertices;
-			vertexCount = unitIcosahedronVertexCount;
-		}
-		vb = m_sharedVB;
-		ib = m_sharedIB;
-		worldView = m_unitToWorldTransform * mirrorMatrix * Tr2Renderer::GetViewTransform();
+		vertexes = unitIcosahedronVertices;
+		vertexCount = unitIcosahedronVertexCount;
 	}
+	vb = m_sharedVB;
+	ib = m_sharedIB;
+	worldView = m_unitToWorldTransform * mirrorMatrix * Tr2Renderer::GetViewTransform();
 
 	worldViewProj = worldView * Tr2Renderer::GetProjectionTransform();
 	D3DXMatrixTranspose( &worldViewProj, &worldViewProj );
@@ -1262,7 +850,7 @@ bool Tr2InteriorLightSource::IsShadowEmpty( unsigned int shadowMapIndex ) const
 // -------------------------------------------------------------
 unsigned int Tr2InteriorLightSource::GetRequiredShadowMapCount() const
 {
-	if( UseWithPrimaryLighting() && m_shadowImportance > 0.0f && m_shadowCasterTypes != ST_NONE )
+	if( m_primaryLighting && m_shadowImportance > 0.0f && m_shadowCasterTypes != ST_NONE )
 	{
 		if( IsSpotLight() )
 		{
@@ -1380,7 +968,18 @@ void Tr2InteriorLightSource::CacheShadowMapResolution()
 
 	size /= idealSize;
 
-	if( size <= 0 || !_finite( size ) )
+#ifdef WIN32
+    if( !_finite( size ) )
+    {
+        size = -1;
+    }
+#else
+    if( !finite( size ) )
+    {
+        size = -1;
+    }
+#endif
+	if( size <= 0 )
 	{
 		m_currentShadowResolution = 0;
 		return;
@@ -1518,19 +1117,6 @@ const Matrix& Tr2InteriorLightSource::GetViewMatrix( unsigned int shadowMapIndex
 	return m_viewMatrix[shadowMapIndex];
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns inverse of spotlight view matrix.
-// Arguments:
-//   shadowMapIndex - Index of shadow map (for multi-shadow lights)
-// Return Value:
-//   Inverse of spotlight view matrix
-// --------------------------------------------------------------------------------------
-const Matrix& Tr2InteriorLightSource::GetInvViewMatrix( unsigned int shadowMapIndex ) const
-{
-	return m_invViewMatrix[shadowMapIndex];
-}
-
 // -------------------------------------------------------------
 // Description:
 //   Returns projection transform matrix for shadow map.
@@ -1607,43 +1193,6 @@ void Tr2InteriorLightSource::MarkShadowsDirtyForBounds( const Vector3 &minBounds
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Debug/testing method to check if a given AABB intersect shadow frustums (and thus
-//   could trigger shadow updates).
-// Arguments:
-//   minBounds - Min AABB bounds
-//   minBounds - Max AABB bounds
-// Return Value:
-//   true if AABB intersects one of light's shadow frustums
-//   false otherwise
-// --------------------------------------------------------------------------------------
-bool Tr2InteriorLightSource::TestShadowFrustumBoxIntersection( const Vector3 &minBounds, const Vector3 &maxBounds )
-{
-	if( !IsSpotLight() )
-	{
-		Vector4 sphere( m_position.x, m_position.y, m_position.z, m_radius );
-		if( IntersectSphereAxisAlignedBox( sphere, minBounds, maxBounds ) )
-		{
-			for( int i = 0; i < 6; ++i )
-			{
-				if( m_frustum[i].IsBoxVisible( minBounds, maxBounds ) )
-				{
-					return true;
-				}
-			}
-		}
-	}
-	else
-	{
-		if( m_frustum[0].IsBoxVisible( minBounds, maxBounds ) )
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
 //   Sets spotlight shadow dirty flag. Dirty spotlight shadows are to be updated during
 //   subsequent scene render.
 // Arguments:
@@ -1684,113 +1233,6 @@ Tr2InteriorLightSource::ShadowCasterTypes Tr2InteriorLightSource::GetShadowCaste
 
 // -------------------------------------------------------------
 // Description:
-//   Returns light's position for "light spider" tool.
-// Return Value:
-//   Position to render a ray to for "light spider" tool.
-// -------------------------------------------------------------
-Vector3 Tr2InteriorLightSource::GetPositionForLightSpider( const Matrix &objectToWorldMatrix ) const
-{
-	Vector3 position;
-	D3DXVec3TransformCoord( &position, &m_position, &objectToWorldMatrix );
-	return position;
-}
-
-
-// -------------------------------------------------------------
-// Description:
-//   Render light source debug information.
-// -------------------------------------------------------------
-void Tr2InteriorLightSource::RenderDebugInfo( Tr2RenderContext& renderContext ) const
-{
-	if( !m_renderDebugInfo )
-	{
-		return;
-	}
-	if( ( m_renderDebugType == DI_SHADOW_RESOLUTION || m_renderDebugType == DI_SHADOW_RELATIVE_RESOLUTION ) && GetRequiredShadowMapCount() == 0 )
-	{
-		return;
-	}
-	if( m_boundingBox != NULL && m_vertexCount == 0 )
-	{
-		return;
-	}
-	
-	Color color;
-
-	switch( m_renderDebugType )
-	{
-	case DI_LIGHT_COLOR:
-		if( m_useKelvinColor )
-		{
-			color = m_kelvinColor->AsRGB();
-		}
-		else
-		{
-			color = m_color;
-		}
-		break;
-	case DI_SHADOW_RESOLUTION:
-		color = GetDebugLightShadowResultionColor( m_shadowAtlasTexture[0] ? m_shadowAtlasTexture[0]->GetWidth() : 0 );
-		break;
-	case DI_SHADOW_RELATIVE_RESOLUTION:
-		color = GetDebugLightShadowRelativeResultionColor( m_shadowResolution, m_shadowAtlasTexture[0] ? m_shadowAtlasTexture[0]->GetWidth() : 0 );
-		break;
-	default:
-		color = 0x00ffffff;
-	}
-
-	if( m_boundingBox )
-	{
-		RenderDebugLightVolume(
-			reinterpret_cast<const Vector3*>( m_vertexes ),
-			m_vertexCount,
-			sizeof( Vector4 ),
-			nullptr,
-			m_vertexCount / 3,
-			nullptr,
-			0,
-			Tr2Renderer::GetIdentityTransform(),
-			color,
-			renderContext
-			);
-	}
-	else
-	{
-		if( IsSpotLight() )
-		{
-			RenderDebugLightVolume(
-				reinterpret_cast<const Vector3*>( unitConeVertices ),
-				unitConeVertexCount,
-				sizeof( Vector4 ),
-				unitConeIndices,
-				unitConeTriangleCount,
-				unitConeWireIndices,
-				unitConeWireLineCount,
-				m_unitToWorldTransform,
-				color,
-				renderContext
-				);
-		}
-		else
-		{
-			RenderDebugLightVolume(
-				reinterpret_cast<const Vector3*>( unitIcosahedronVertices ),
-				unitIcosahedronVertexCount,
-				sizeof( Vector4 ),
-				unitIcosahedronIndices,
-				unitIcosahedronTriangleCount,
-				unitIcosahedronIndices,
-				unitIcosahedronTriangleCount,
-				m_unitToWorldTransform,
-				color,
-				renderContext
-				);
-		}
-	}
-}
-
-// -------------------------------------------------------------
-// Description:
 //   Per-frame update method. Updates curve sets.
 // Arguments:
 //   time - Current system time.
@@ -1803,93 +1245,17 @@ void Tr2InteriorLightSource::Update( Be::Time time )
 	}
 }
 
-// -------------------------------------------------------------
-// Description:
-//   Enables/disables Umbra regions of influeces for this light
-//   source.
-// Arguments:
-//   enable - If true enable Umbra ROI; 
-//            if false disable Umbra ROI
-// -------------------------------------------------------------
-void Tr2InteriorLightSource::EnableROI( bool enable )
-{
-	if( m_enableROIs != enable )
-	{
-		m_enableROIs = enable;
-		for( std::vector<Umbra::RegionOfInfluence*>::iterator it = m_umbraRoiList.begin(); it != m_umbraRoiList.end(); ++it )
-		{
-			( *it )->set( Umbra::Object::ENABLED, m_affectTransparentObjects && m_enableROIs );
-		}
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Removes the cell from the Umbra scene by destroying all the ROI's and the Umbra 
-//   model
-// --------------------------------------------------------------------------------------
-void Tr2InteriorLightSource::ClearUmbra( void )
-{
-	// Clear the regions of influence
-	for( std::vector<Umbra::RegionOfInfluence*>::iterator it = m_umbraRoiList.begin(); 
-		 it != m_umbraRoiList.end(); ++it )
-	{
-		( *it )->setCell( NULL );
-		( *it )->setUserPointer( NULL );
-		( *it )->release();
-		( *it ) = NULL;
-	}
-
-	m_umbraRoiList.clear();
-
-	// Clear the objects
-	for( std::vector<Umbra::Object*>::iterator it = m_umbraObjectList.begin();
-		 it != m_umbraObjectList.end(); ++it )
-	{
-		( *it )->setCell( NULL );
-		( *it )->setUserPointer( NULL );
-		( *it )->release();
-		( *it ) = NULL;
-	}
-
-	m_umbraObjectList.clear();
-
-	// Clear the Umbra model
-	m_umbraModel->release();
-	m_umbraModel = NULL;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Rebuilds the Umbra model and sets it as the model for all the current ROIs
-// --------------------------------------------------------------------------------------
 void Tr2InteriorLightSource::RebuildVolume( void )
 {
-	// Clear the Umbra model
-	m_umbraModel->release();
-	m_umbraModel = NULL;
-
-	// Build a volume for point light
-	if( !IsSpotLight() )
-	{
-		// Build the Umbra model
-		m_umbraModel = ( Umbra::Model* )Umbra::SphereModel::create( 
-			AS_UMBRA_VECTOR3( Vector3( 0.f, 0.f, 0.f ) ), m_radius );
-	}
-	// Build a volume for spot light
-	else
+	if( IsSpotLight() )
 	{
 		// direct:
-		float size = sinf( D3DXToRadian( m_coneAlphaOuter ) ) * m_radius;
+		float size = sinf( m_coneAlphaOuter / 180.f * XM_PI ) * m_radius;
 
-		// UMBRA needs a 4x4 matrix for constructing OBB
 		Matrix obbRotMatrix, obbScaleMatrix, obbTransMatrix;
 		TriMatrixArcFromForward( &obbRotMatrix, &m_coneDirection );
 		D3DXMatrixTranslation( &obbTransMatrix, 0.f, 0.f, -0.5f * m_radius );
 		D3DXMatrixScaling( &obbScaleMatrix, size, size, 0.5f * m_radius );
-		D3DXMatrixMultiply( &m_obbMatrix, &obbScaleMatrix, &obbTransMatrix );
-		D3DXMatrixMultiply( &m_obbMatrix, &m_obbMatrix, &obbRotMatrix );
-		m_umbraModel = ( Umbra::Model* )Umbra::OBBModel::create( AS_UMBRA_MATRIX( m_obbMatrix ) );
 
 		// Now build some vectors & quats for our own collision detection routines
 		// Since the center is in world coordinates, we must pre-multiply the direction of the light
@@ -1903,20 +1269,6 @@ void Tr2InteriorLightSource::RebuildVolume( void )
 		D3DXQuaternionNormalize( &m_collisionOrientation, &m_collisionOrientation );
 	}
 
-	// Set the new umbra test model for all the regions of influence
-	for( std::vector<Umbra::RegionOfInfluence*>::iterator it = 
-		 m_umbraRoiList.begin(); it != m_umbraRoiList.end(); ++it )
-	{
-		( *it )->setTestModel( m_umbraModel );
-	}
-
-	// Set the new umbra test model for all the umbra objects
-	for( std::vector<Umbra::Object*>::iterator it = 
-		m_umbraObjectList.begin(); it != m_umbraObjectList.end(); ++it )
-	{
-		( *it )->setTestModel( m_umbraModel );
-	}
-
 	// Set the dirty flag
 	m_isDirty = true;
 	for( int i = 0; i < 6; ++i )
@@ -1924,66 +1276,6 @@ void Tr2InteriorLightSource::RebuildVolume( void )
 		m_dirtySpotLightShadow[i] = true;
 		m_emptyShadow[i] = false;
 	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Adds light source to Enlighten system
-// Arguments:
-//   dusters - Enlighten lighting/duster cache
-//   systemTransformInv - Transform from world CS to Enlighten system CS
-// Return value:
-//   true If light source was added to Enlighten system
-//   false Otherwise
-// --------------------------------------------------------------------------------------
-bool Tr2InteriorLightSource::AddToEnlightenSystem( Tr2InteriorDusterCache* dusters,
-												   const Matrix &systemTransformInv ) const
-{
-	if( !m_secondaryLighting )
-	{
-		return false;
-	}
-
-	Vector3 position;
-	D3DXVec3TransformCoord( &position, &m_position, &systemTransformInv );
-	const Geo::v128 position1 = Geo::VConstruct( position.x, position.y, position.z, 0.0f );
-
-	const float scale = m_secondaryLightingMultiplier;
-	Color color = m_color;
-	if( m_useKelvinColor )
-	{
-		color = m_kelvinColor->AsRGB();
-	}
-	const Geo::v128 color1 = Geo::VConstruct(	TriGammaToLinear( color.r ) * scale, 
-												TriGammaToLinear( color.g ) * scale,
-												TriGammaToLinear( color.b ) * scale, 
-												m_color.a );
-
-	Enlighten::InputLight& light = dusters->AddEnlightenLightSource();
-	light.m_Position = position1;
-	light.m_Radius = 0.f;
-	light.m_CutOff = m_radius;
-	light.m_FalloffTable = dusters->GetFalloffTable( m_falloff );
-	light.m_Intensity = color1;
-	light.m_ProjectionMap = NULL;
-	light.m_ShadowMap = NULL;
-
-	if( IsSpotLight() )
-	{
-		Vector3 direction;
-		D3DXVec3TransformNormal( &direction, &m_coneDirection, &systemTransformInv );
-		Geo::v128 spotDirection = Geo::VConstruct( direction.x, direction.y, direction.z, 0.f );
-
-		light.m_LightType = Enlighten::ENLIGHTEN_SPOT_LIGHT;
-		light.m_Direction = spotDirection;
-		light.m_InnerConeAngle = 2.f * D3DXToRadian( m_coneAlphaInner );
-		light.m_ConeAngle = 2.f * D3DXToRadian( m_coneAlphaOuter );
-	}
-	else
-	{
-		light.m_LightType = Enlighten::ENLIGHTEN_POINT_LIGHT;
-	}
-	return true;
 }
 
 // --------------------------------------------------------------------------------------
@@ -2007,7 +1299,6 @@ void Tr2InteriorLightSource::ChooseLightEffect()
 		{
 			m_material->SetHighLevelShaderName( "SpotLight" );
 			m_shMaterial->SetHighLevelShaderName( "SpotLight" );
-			m_lightmapMaterial->SetHighLevelShaderName( "SpotLight" );
 		}
 		if( m_shadowAtlasTexture[0] )
 		{
@@ -2020,7 +1311,6 @@ void Tr2InteriorLightSource::ChooseLightEffect()
 		{
 			m_material->SetHighLevelShaderName( "PointLight" );
 			m_shMaterial->SetHighLevelShaderName( "PointLight" );
-			m_lightmapMaterial->SetHighLevelShaderName( "PointLight" );
 		}
 		for( int i = 0; i < 6; ++i )
 		{
@@ -2036,17 +1326,10 @@ void Tr2InteriorLightSource::ChooseLightEffect()
 		situation.AddSituationString( "ProjectedTexture" );
 	}
 
-	if( m_boundingBox )
-	{
-		situation.AddSituationString( "AdditionalBoundingBox" );
-	}
-
 	m_material->BindLowLevelShader( situation );
 	
 	situation.AddSituationString( "GenerateSHCoefficients" );
 	m_shMaterial->BindLowLevelShader( situation );
-	situation.AddSituationString( "GenerateLightMap" );
-	m_lightmapMaterial->BindLowLevelShader( situation );
 }
 
 // --------------------------------------------------------------------------------------
@@ -2106,11 +1389,6 @@ void Tr2InteriorLightSource::GetSHBatches( ITriRenderBatchAccumulator* batches )
 	perObjectPSBuffer.lightData.shadow0Influence = 0.0f;
 	perObjectPSBuffer.additionalParameters.x = m_specularIntensity;
 	D3DXMatrixIdentity( &perObjectPSBuffer.mirrorToWorldMatrix );
-	if( m_boundingBox )
-	{
-		D3DXMatrixInverse( &perObjectPSBuffer.boundingBox, NULL, &m_boundingBox->GetTransform() );
-		D3DXMatrixTranspose( &perObjectPSBuffer.boundingBox, &perObjectPSBuffer.boundingBox );
-	}
 
 	for( int i = 0; i < 6; ++i )
 	{
@@ -2155,91 +1433,6 @@ void Tr2InteriorLightSource::GetSHBatches( ITriRenderBatchAccumulator* batches )
 	{
 		batch->SetVertexDeclaration( m_lightVertexDecl );
 		batch->SetShaderMaterial( m_shMaterial );
-		batch->SetPerObjectData( data );
-
-		batches->Commit( batch );
-	}
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Get batches for a lightmap rendering.
-// Arguments:
-//   batches - Batch accumulator to add batches to.
-// -------------------------------------------------------------
-void Tr2InteriorLightSource::GetLightMapBatches( ITriRenderBatchAccumulator* batches ) const
-{
-	if( !m_primaryLighting )
-	{
-		return;
-	}
-
-	PerLightData* data = batches->Allocate<PerLightData>();
-
-	if( !data )
-	{
-		return;
-	}
-
-	data->SetShadowTexture( m_shadowAtlasTexture, 6 );
-	data->SetProjectedTexture( m_projectedTextureRes );
-
-	Tr2InteriorPerLightPSData perObjectPSBuffer;
-
-	PopulateLightData( &perObjectPSBuffer.lightData, Tr2Renderer::GetIdentityTransform() );
-
-	perObjectPSBuffer.lightData.shadow0Influence = 0.0f;
-	perObjectPSBuffer.additionalParameters.x = m_specularIntensity;
-	D3DXMatrixIdentity( &perObjectPSBuffer.mirrorToWorldMatrix );
-	if( m_boundingBox )
-	{
-		D3DXMatrixInverse( &perObjectPSBuffer.boundingBox, NULL, &m_boundingBox->GetTransform() );
-		D3DXMatrixTranspose( &perObjectPSBuffer.boundingBox, &perObjectPSBuffer.boundingBox );
-	}
-
-	for( int i = 0; i < 6; ++i )
-	{
-		Matrix texAdjust( 0.5f, 0.0f, 0.0f, 0.0f,
-						  0.0f, -0.5f, 0.0f, 0.0f,
-						  0.0f, 0.0f, 1.0f, 0.0f,
-						  0.5f, 0.5f, 0.0f, 1.0f );
-		perObjectPSBuffer.shadowMatrix[i] = GetViewMatrix( i ) * m_projectionMatrix * texAdjust;
-		D3DXMatrixTranspose( &perObjectPSBuffer.shadowMatrix[i], &perObjectPSBuffer.shadowMatrix[i] );
-		if( IsSpotLight() )
-		{
-			break;
-		}
-	}
-
-	for( int i = 0; i < 6; ++i )
-	{
-		if( m_shadowAtlasTexture[i] )
-		{
-			perObjectPSBuffer.shadowRect[i].x = float( m_shadowAtlasTexture[i]->GetX() + 0.5f ) / 
-				m_shadowAtlasTexture[i]->GetTextureWidth();
-			perObjectPSBuffer.shadowRect[i].y = float( m_shadowAtlasTexture[i]->GetY() + 0.5f ) / 
-				m_shadowAtlasTexture[i]->GetTextureHeight();
-			perObjectPSBuffer.shadowRect[i].z = float( m_shadowAtlasTexture[i]->GetWidth() - 1.0f ) / 
-				m_shadowAtlasTexture[i]->GetTextureWidth();
-			perObjectPSBuffer.shadowRect[i].w = float( m_shadowAtlasTexture[i]->GetHeight() - 1.0f ) / 
-				m_shadowAtlasTexture[i]->GetTextureHeight();
-			perObjectPSBuffer.shadowInfluence[i] = Vector4( 1, 0, 0, 0 ); 
-		}
-		else
-		{
-			perObjectPSBuffer.shadowRect[i] = Vector4( 0.0f, 0.0f, 1.0f, 1.0f );
-			perObjectPSBuffer.shadowInfluence[i] = Vector4( 0, 0, 0, 0 ); 
-		}
-	}
-
-	// Do the copy
-	data->CopyToPSFloatBuffer( perObjectPSBuffer );
-
-	Tr2InteriorFullScreenLightBatch* batch = batches->Allocate<Tr2InteriorFullScreenLightBatch>();
-	if( batch )
-	{
-		batch->SetVertexDeclaration( m_lightVertexDecl );
-		batch->SetShaderMaterial( m_lightmapMaterial );
 		batch->SetPerObjectData( data );
 
 		batches->Commit( batch );
@@ -2379,309 +1572,25 @@ static void ClipGeometry(
 // -------------------------------------------------------------
 void Tr2InteriorLightSource::RebuildGeometry()
 {
-	CCP_DELETE []m_vertexes;
-	m_vertexes = NULL;
-	m_vertexCount = 0;
-
-	if( m_boundingBox )
+	if( IsSpotLight() )
 	{
-		std::vector<Vector4> lightVertexes;
-		if( IsSpotLight() )
-		{
-			for( unsigned i = 0; i < sizeof( unitConeIndices ) / sizeof( unsigned ); ++i )
-			{
-				lightVertexes.push_back( unitConeVertices[unitConeIndices[i]] );
-			}
-		}
-		else
-		{
-			for( unsigned i = 0; i < sizeof( unitIcosahedronIndices ) / sizeof( unsigned ); ++i )
-			{
-				lightVertexes.push_back( unitIcosahedronVertices[unitIcosahedronIndices[i]] );
-			}
-		}
-		XMVector4TransformStream( (XMFLOAT4*)&lightVertexes[0], 
-								  sizeof( Vector4 ), 
-								  (XMFLOAT4*)&lightVertexes[0], 
-								  sizeof( Vector4 ), 
-								  (unsigned int)lightVertexes.size(),
-								  m_unitToWorldTransform );
-
-		Vector3 sides[6][4] = {
-			{ 
-				Vector3( -0.5f, -0.5f, -0.5f ), 
-				Vector3( -0.5f, 0.5f, -0.5f ), 
-				Vector3( -0.5f, 0.5f, 0.5f ), 
-				Vector3( -0.5f, -0.5f, 0.5f ), 
-			},
-			{ 
-				Vector3( 0.5f, -0.5f, -0.5f ), 
-				Vector3( 0.5f, -0.5f, 0.5f ), 
-				Vector3( 0.5f, 0.5f, 0.5f ), 
-				Vector3( 0.5f, 0.5f, -0.5f ), 
-			},
-			{ 
-				Vector3( -0.5f, -0.5f, -0.5f ), 
-				Vector3( -0.5f, -0.5f, 0.5f ), 
-				Vector3( 0.5f, -0.5f, 0.5f ), 
-				Vector3( 0.5f, -0.5f, -0.5f ), 
-			},
-			{ 
-				Vector3( -0.5f, 0.5f, -0.5f ), 
-				Vector3( 0.5f, 0.5f, -0.5f ), 
-				Vector3( 0.5f, 0.5f, 0.5f ), 
-				Vector3( -0.5f, 0.5f, 0.5f ), 
-			},
-			{ 
-				Vector3( -0.5f, -0.5f, -0.5f ), 
-				Vector3( 0.5f, -0.5f, -0.5f ), 
-				Vector3( 0.5f, 0.5f, -0.5f ), 
-				Vector3( -0.5f, 0.5f, -0.5f ), 
-			},
-			{ 
-				Vector3( -0.5f, -0.5f, 0.5f ), 
-				Vector3( -0.5f, 0.5f, 0.5f ), 
-				Vector3( 0.5f, 0.5f, 0.5f ), 
-				Vector3( 0.5f, -0.5f, 0.5f ), 
-			},
-		};
-
-		std::vector<Vector4> boxVertexes;
-		for( unsigned i = 0; i < 6; ++i )
-		{
-			Vector4 vertex;
-			D3DXVec3TransformCoord( (Vector3*)&vertex, &sides[i][0], &m_boundingBox->GetTransform() );
-			vertex.w = 1;
-			boxVertexes.push_back( vertex );
-			D3DXVec3TransformCoord( (Vector3*)&vertex, &sides[i][2], &m_boundingBox->GetTransform() );
-			vertex.w = 1;
-			boxVertexes.push_back( vertex );
-			D3DXVec3TransformCoord( (Vector3*)&vertex, &sides[i][1], &m_boundingBox->GetTransform() );
-			vertex.w = 1;
-			boxVertexes.push_back( vertex );
-			D3DXVec3TransformCoord( (Vector3*)&vertex, &sides[i][3], &m_boundingBox->GetTransform() );
-			vertex.w = 1;
-			boxVertexes.push_back( vertex );
-			boxVertexes.push_back( boxVertexes[boxVertexes.size() - 3] );
-			boxVertexes.push_back( boxVertexes[boxVertexes.size() - 5] );
-		}
-
-		std::vector<Vector4> clippedLight;
-		std::vector<Vector4> clippedBox;
-		ClipGeometry( lightVertexes.begin(), lightVertexes.end(), boxVertexes.begin(), boxVertexes.end(), clippedLight );
-		ClipGeometry( boxVertexes.begin(), boxVertexes.end(), lightVertexes.begin(), lightVertexes.end(), clippedBox );
-
-		m_vertexCount = (unsigned int)clippedLight.size() + (unsigned int)clippedBox.size();
-		if( m_vertexCount )
-		{
-			m_vertexes = CCP_NEW( "Tr2InteriorLightSource/m_vertexes" ) Vector4[m_vertexCount];
-			if( !clippedLight.empty() )
-			{
-				memcpy( m_vertexes, &clippedLight[0], clippedLight.size() * sizeof( Vector4 ) );
-			}
-			if( !clippedBox.empty() )
-			{
-				memcpy( m_vertexes + clippedLight.size(), &clippedBox[0], clippedBox.size() * sizeof( Vector4 ) );
-			}
-		}
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		m_VB.Create( m_vertexCount * sizeof( Vector4 ), USAGE_IMMUTABLE, m_vertexes, renderContext );
+		m_sharedVB = Tr2ConstGeometry::GetVB( unitConeVertices, unitConeVertexCount * sizeof( Vector4 ) );
+		m_sharedIB = Tr2ConstGeometry::GetIB( IB_32BIT, unitConeIndices, sizeof( unitConeIndices ) / sizeof( unitConeIndices[0] ) );
 	}
 	else
 	{
-		if( IsSpotLight() )
-		{
-			m_sharedVB = Tr2ConstGeometry::GetVB( unitConeVertices, unitConeVertexCount * sizeof( Vector4 ) );
-			m_sharedIB = Tr2ConstGeometry::GetIB( IB_32BIT, unitConeIndices, sizeof( unitConeIndices ) / sizeof( unitConeIndices[0] ) );
-		}
-		else
-		{
-			m_sharedVB = Tr2ConstGeometry::GetVB( unitIcosahedronVertices, unitIcosahedronVertexCount * sizeof( Vector4 ) );
-			m_sharedIB = Tr2ConstGeometry::GetIB( IB_32BIT, unitIcosahedronIndices, sizeof( unitIcosahedronIndices ) / sizeof( unitIcosahedronIndices[0] ) );
-		}
+		m_sharedVB = Tr2ConstGeometry::GetVB( unitIcosahedronVertices, unitIcosahedronVertexCount * sizeof( Vector4 ) );
+		m_sharedIB = Tr2ConstGeometry::GetIB( IB_32BIT, unitIcosahedronIndices, sizeof( unitIcosahedronIndices ) / sizeof( unitIcosahedronIndices[0] ) );
 	}
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   A utility function that returns a color for light volume visualization based on 
-//   shadow resolution.
-// Arguments:
-//   currentResolution - Shadow map resolution (or 0 if no shadow)
-// Return Value:
-//   Color for light volume visualizer
-// --------------------------------------------------------------------------------------
-Color GetDebugLightShadowResultionColor( unsigned currentResolution )
+bool Tr2InteriorLightSource::IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const
 {
-	int power = 0;
-	if( currentResolution > 0 )
+	if( !m_primaryLighting )
 	{
-		power = 1 + int( log( float( currentResolution / 16 ) ) / log( 2.f ) + 0.5f );
+		return false;
 	}
-	static unsigned int colorCodes[] = {
-		0x00ff0000,		// Droped shadow (0 resultion)
-		0x00ff8000,		// Resolution 16
-		0x00ffff00,		// Resolution 32
-		0x00ff00ff,		// Resolution 64
-		0x000000ff,		// Resolution 128
-		0x0000ff00,		// Resolution 256
-		0x0000ffff,		// Resolution 512
-		0x00ffffff,		// Resolution 1024
-	};
-	if( power >= sizeof( colorCodes ) / sizeof( int ) )
-	{
-		power = sizeof( colorCodes ) / sizeof( int ) - 1;
-	}
-	return colorCodes[power];
+	D3DXMatrixTranslation( &objectToWorld, m_position.x, m_position.y, m_position.z );
+	return frustum.IsBoxVisible( m_worldBoundingBox.m_min, m_worldBoundingBox.m_max );
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   A utility function that returns a color for light volume visualization based on 
-//   shadow resolution relative to the maximum resolution.
-// Arguments:
-//   originalResultion - Original (maximum) shadow map resolution
-//   currentResolution - Shadow map resolution (or 0 if no shadow)
-// Return Value:
-//   Color for light volume visualizer
-// --------------------------------------------------------------------------------------
-Color GetDebugLightShadowRelativeResultionColor( unsigned originalResultion, unsigned currentResolution )
-{
-	int power = 0;
-	if( originalResultion == currentResolution )
-	{
-		power = 1;
-	}
-	else if( currentResolution > 0 )
-	{
-		power = 1 + int( log( float( originalResultion / currentResolution ) ) / log( 2.f ) + 0.5f );
-	}
-	static unsigned int colorCodes[] = {
-		0x00ff0000,		// Droped shadow (0 resultion)
-		0x00ffffff,		// Full resolution
-		0x0000ffff,		// Differes by factor of 2
-		0x0000ff00,		// Differes by factor of 4
-		0x000000ff,		// Differes by factor of 8
-		0x00ff00ff,		// Differes by factor of 16
-		0x00ffff00,		// Differes by factor of 32
-	};
-	if( power >= sizeof( colorCodes ) / sizeof( int ) )
-	{
-		power = sizeof( colorCodes ) / sizeof( int ) - 1;
-	}
-	return colorCodes[power];
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   A helper function that renders light volume for debug visualization.
-// Arguments:
-//   vertices - Array of light volume geometry vertices
-//   vertexCount - Number of elements in vertices array
-//   vertexStride - Element size of vertices array
-//   indices - Triangle indices of light volume geometry
-//   triangleCount - Number of triangles in light volume geometry
-//   wireIndices - Indices for wireframe light volume geometry
-//   wireCount - Number of line segments for wireframe light volume geometry
-//   worldTransform - Local-to-world transform for light geometry
-//   baseColor - Color of light volume
-//   renderContext - Render context
-// --------------------------------------------------------------------------------------
-void RenderDebugLightVolume(
-	const Vector3* vertices,
-	unsigned vertexCount,
-	unsigned vertexStride,
-	const unsigned* indices,
-	unsigned triangleCount,
-	const unsigned* wireIndices,
-	unsigned wireCount,
-	const Matrix& worldTransform,
-	const Color& baseColor,
-	Tr2RenderContext& renderContext
-	)
-{
-	DebugRenderEffectCallback callback, wireCallback;
-
-	callback.polygon = new TriDebugResourceHelper::VertexPosColor[vertexCount];
-	callback.vertexCount = vertexCount;
-	callback.indices = indices;
-	callback.triangleCount = triangleCount;
-	XMVector4TransformStream( reinterpret_cast<XMFLOAT4*>( callback.polygon ), 
-								sizeof( TriDebugResourceHelper::VertexPosColor ), 
-								(const XMFLOAT4*)vertices, 
-								vertexStride, 
-								vertexCount, 
-								worldTransform );
-	if( wireIndices )
-	{
-		wireCallback.polygon = new TriDebugResourceHelper::VertexPosColor[vertexCount];
-		wireCallback.vertexCount = callback.vertexCount;
-		wireCallback.indices = wireIndices;
-		wireCallback.triangleCount = wireCount;
-		std::copy( callback.polygon, callback.polygon + callback.vertexCount, wireCallback.polygon );
-	}
-	else
-	{
-		wireCallback.polygon = new TriDebugResourceHelper::VertexPosColor[vertexCount * 2];
-		wireCallback.vertexCount = callback.vertexCount * 2;
-		wireCallback.indices = wireIndices;
-		wireCallback.triangleCount = vertexCount; 
-		for( unsigned i = 0; i < vertexCount; i += 3 )
-		{
-			wireCallback.polygon[i * 2 + 0].m_pos = callback.polygon[i + 0].m_pos;
-			wireCallback.polygon[i * 2 + 1].m_pos = callback.polygon[i + 1].m_pos;
-			wireCallback.polygon[i * 2 + 2].m_pos = callback.polygon[i + 1].m_pos;
-			wireCallback.polygon[i * 2 + 3].m_pos = callback.polygon[i + 2].m_pos;
-			wireCallback.polygon[i * 2 + 4].m_pos = callback.polygon[i + 2].m_pos;
-			wireCallback.polygon[i * 2 + 5].m_pos = callback.polygon[i + 0].m_pos;
-		}
-	}
-	wireCallback.fillMode = Tr2RenderContextEnum::FM_SOLID;
-	wireCallback.primitiveType = TOP_LINES;
-
-	callback.fillMode = Tr2RenderContextEnum::FM_SOLID;
-	callback.primitiveType = TOP_TRIANGLES;
-
-	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA_ADDITIVE );
-	renderContext.m_esm.ApplyVertexDeclaration( g_debugResourceHelper.GetVertexPosColorDecl() );
-
-	unsigned color;
-	color = ( unsigned( std::min( std::max( baseColor.b, 0.0f ), 1.0f ) * 6.f ) << 16 ) | 
-		( unsigned( std::min( std::max( baseColor.g, 0.0f ), 1.0f ) * 6.f ) << 8 ) | 
-		unsigned( std::min( std::max( baseColor.r, 0.0f ), 1.0f ) * 6.f );
-	for( unsigned int i = 0; i < callback.vertexCount; ++i )
-	{
-		callback.polygon[i].m_color = color;
-	}
-	callback.zFunc = CMP_GREATER;
-	g_debugResourceHelper.GetEffect()->Render( &callback, renderContext );
-
-	color = ( unsigned( std::min( std::max( baseColor.b, 0.0f ), 1.0f ) * 16.f ) << 16 ) | 
-		( unsigned( std::min( std::max( baseColor.g, 0.0f ), 1.0f ) * 16.f ) << 8 ) | 
-		unsigned( std::min( std::max( baseColor.r, 0.0f ), 1.0f ) * 16.f );
-	for( unsigned int i = 0; i < callback.vertexCount; ++i )
-	{
-		callback.polygon[i].m_color = color;
-	}
-	callback.zFunc = CMP_LESSEQUAL;
-	g_debugResourceHelper.GetEffect()->Render( &callback, renderContext );
-
-	for( unsigned int i = 0; i < wireCallback.vertexCount; ++i )
-	{
-		wireCallback.polygon[i].m_color = 0x00101010;
-	}
-	wireCallback.zFunc = CMP_GREATER;
-	g_debugResourceHelper.GetEffect()->Render( &wireCallback, renderContext );
-
-	for( unsigned int i = 0; i < wireCallback.vertexCount; ++i )
-	{
-		wireCallback.polygon[i].m_color = 0x00444444;
-	}
-	wireCallback.zFunc = CMP_LESSEQUAL;
-	g_debugResourceHelper.GetEffect()->Render( &wireCallback, renderContext );
-
-	delete[] callback.polygon;
-	delete[] wireCallback.polygon;
-}
-
-#endif

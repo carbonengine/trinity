@@ -16,12 +16,6 @@ class TriFrustum;
 class Tr2InteriorMirror;
 class Tr2LitPerObjectData;
 
-namespace Umbra
-{
-	class Object;
-	class Model;
-}
-
 //--------------------------------------------------------------------------------------------------
 // Blue declarations
 //
@@ -71,54 +65,35 @@ public:
     // IInitialize
     bool Initialize( void );
 
+    //////////////////////////////////////////////////////////////////////////
+    // ITr2InteriorCullable
+	virtual bool IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const;
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2InteriorDynamic
-	virtual void SetVisibility( bool bVisible );
-	virtual bool IsVisible( void ) const { return m_isVisible; }
-	virtual bool DoVisualizeLightProbes( void ) const;
 	virtual bool AddToScene( Tr2ApexScene *apexScene );
 	virtual void RemoveFromScene( void );
-	virtual bool GetBoundingSphere( Vector4& sphere ) const;
 	virtual bool GetLocalBoundingBox( Vector3& min, Vector3& max ) const;
 	virtual bool GetWorldBoundingBox( Vector3& min, Vector3& max ) const;
 	virtual bool IsBoundingBoxReady( void ) const;
 	virtual bool GetShProbePosition( Vector3& position ) const;
 	virtual void PrePhysicsUpdate( Be::Time time );
 	virtual void PostPhysicsUpdate( Be::Time time, Tr2ApexScene *apexScene );
-	virtual void SetSHSampleIndex( unsigned int index ) { m_shSampleIndex = index; }
-	virtual unsigned int GetSHSampleIndex() const  { return m_shSampleIndex; }
 	virtual Matrix& GetRedLightProbeMatrix( void ) { return m_SHMatrixRed; }
 	virtual Matrix& GetGreenLightProbeMatrix( void ) { return m_SHMatrixGreen; }
 	virtual Matrix& GetBlueLightProbeMatrix( void ) { return m_SHMatrixBlue; }
-	virtual bool CastsShadows() const { return true; }
 
-	// Umbra interaction
-	virtual bool IsUmbraReady( void ) const { return (m_umbraModel != NULL); }
 	virtual bool TestCellIntersectionAndAdd( Tr2InteriorCell* cell );
-	virtual void CellRemoved( Tr2InteriorCell* cell );
 	virtual bool IsDirty( void ) const { return m_isDirty; }
-	virtual void ClearDirty( void );
-	// Set the dirty flag
 	void SetDirtyFlag( bool isDirty ) { m_isDirty = isDirty; }
 	void MarkAsDirty() { m_isDirty = true; }
-	virtual bool IsBackgroundProxy( void ) const;
-	virtual void AddToCellAsBackgroundProxy( Umbra::Cell* cell );
-	virtual void AddToRootCell( Umbra::Cell* cell );
 	virtual bool IsShadowCaster( void ) const;
 	virtual bool IsStatic( void ) const;
 
-	virtual void UpdateUmbraObject( Umbra::Cell* cell, Umbra::Object*& object ) const;
-
 	virtual void SetLOD( const TriFrustum* frustum );
-
-	virtual void SetVisibleLightCount( int visibleLightCount );
 
 	void BoundingBoxReset(); 
 	void BoundingBoxOverride( Vector3& min, Vector3& max );
-
-	// debug
-	void RenderDebugInfo( TriLineSetPtr lines ) const;
-	virtual void SetVisibleLightSet( const Tr2InteriorLightSet& visibleLightSet );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
@@ -139,14 +114,7 @@ public:
 		const Matrix& mirrorToWorldMatrix 
 	);
 
-	// Per-object data for pre-pass
-	virtual Tr2PerObjectData* GetPerObjectDataForPrePass(
-		ITriRenderBatchAccumulator* accumulator,
-		const Matrix& objectToWorldMatrix
-	);
-
 	virtual void SetSHLightingSolver( ITr2InteriorSHLightingSolver* solver ) { m_shSolver = solver; }
-	virtual const ITr2RenderableVector* GetAttachedRenderables();
 
 	// Set stencil parameters
 	void SetStencilParameters( const WodStencilBatchParams& params )
@@ -154,13 +122,9 @@ public:
 		m_stencilParams = params;
 	}
 
-	// Set mirror depth
-	virtual void SetMirrorDepth( int depth ) {}
-
+	size_t GetMirrorCount() const { return m_mirrors.size(); }
 	// Get mirror by index
 	Tr2InteriorMirror* GetMirror( size_t index ) const;
-
-	void EnableMirrorPortals( bool enable );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable
@@ -195,12 +159,6 @@ protected:
 
 private:
 	float CalculateCameraDistance( void );
-	
-	// Clear all Umbra data (except mirrors)
-	void ClearUmbra( void );
-
-	// Clear mirrors
-	void ClearMirrors( void );
 
 	// Rebuild bounding volume
 	void RebuildVolume( void );
@@ -208,11 +166,7 @@ private:
 	// Calculate bounding box
 	void CalculateBoundingBox( Vector3& min, Vector3& max );
 
-	void UpdateUmbraTransforms( void );
-
-	// Mirrors
-	void EnableMirrors( Umbra::Cell* cell );
-	void DisableMirrors( void );
+	void CreateMirrors();
 
 	void AddReflectionMap( TriTextureRes* texture );
 	void RemoveReflectionMap( TriTextureRes* texture );
@@ -221,11 +175,6 @@ private:
 	AxisAlignedBoundingBox GetBoundingBoxInWorldSpace() const;
 
 	std::string m_name;
-
-	// Umbra object
-	bool m_isVisible;
-	std::vector<Umbra::Object*> m_umbraObjects;
-	Umbra::Model* m_umbraModel;
 
 	bool m_display;
 
@@ -242,7 +191,6 @@ private:
 	bool m_rotationSet;
 	PTriMatrix m_transform;
 
-	// Dirty flag, for signaling Umbra update
 	bool m_isDirty;
 
 	// True when a placeable is not intended to move, animate or be added and removed from the scene
@@ -256,7 +204,6 @@ private:
 	WodStencilBatchParams m_stencilParams;
 
 	Tr2InteriorLightSet m_lightSet;
-	bool m_visualizeLightProbes;
 
 	enum
 	{
@@ -265,8 +212,6 @@ private:
 		VISIBILITYMODE_HIDDEN,
 	} m_visibilityMode;
 
-	// index of SH task in Enlighten task manager
-	unsigned int m_shSampleIndex;
 	// interpolated light probe matrices
 	Matrix m_SHMatrixRed;
 	Matrix m_SHMatrixGreen;
@@ -275,18 +220,9 @@ private:
 	// Bounding sphere
 	Vector4 m_boundingSphere;
 
-	// Umbra mirrors
+	// Mirrors
 	std::vector<Tr2InteriorMirror*> m_mirrors;
 
-	// Number of lights affecting this object
-	int m_visibleLightCount;
-
-	// Draw light spider for debugging
-	bool m_drawLightSpider;
-	std::vector<Vector3> m_visibleLights;
-
-	// Vector of attached placables
-	PITr2RenderableVector m_attachedObjects;
 	// SH lighting solver for transparent rendering
 	ITr2InteriorSHLightingSolver *m_shSolver;
 

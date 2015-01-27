@@ -6,8 +6,6 @@
 
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorSHLightingSolver.h"
 #include "TriRenderBatch.h"
 
@@ -116,9 +114,12 @@ void Tr2InteriorSHLightingSolver::AddVolume( const Vector3& min, const Vector3& 
 // -------------------------------------------------------------
 void Tr2InteriorSHLightingSolver::FillPixel( int x, int y, void* data, unsigned pitch, const Vector3& point, int shIndex )
 {
-	D3DXVECTOR4_16F *pixel = reinterpret_cast<D3DXVECTOR4_16F*>( 
-		reinterpret_cast<char*>( data ) + y * pitch + sizeof( D3DXVECTOR4_16F ) * x );
-	*pixel = D3DXVECTOR4_16F( point.x, point.y, point.z, float( shIndex ) );
+	D3DXFLOAT16 *pixel = reinterpret_cast<D3DXFLOAT16*>(
+		reinterpret_cast<char*>( data ) + y * pitch + sizeof( D3DXFLOAT16 ) * 4 * x );
+	pixel[0] = point.x;
+    pixel[1] = point.y;
+    pixel[2] = point.z;
+    pixel[3] = float( shIndex );
 }
 
 // -------------------------------------------------------------
@@ -320,4 +321,3 @@ void Tr2InteriorSHLightingSolver::Solve( const ITr2InteriorLightVector& visibleL
 	m_samples.clear();
 }
 
-#endif

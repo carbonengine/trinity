@@ -2228,7 +2228,7 @@ bool EveTurretSet::GetShotMissed() const
 		m_lastShotAccuracy = ACCURACY_HIT;
 	}
 
-	return (bool)m_lastShotAccuracy;
+	return m_lastShotAccuracy != ACCURACY_HIT;
 }
 
 // --------------------------------------------------------------------------------

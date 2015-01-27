@@ -101,7 +101,6 @@ public:
 	virtual float GetSortValue() { return 0.0f; }; 
 
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) { return NULL; };
-	virtual const ITr2RenderableVector* GetAttachedRenderables();
 
 	//////////////////////////////////////////////////////////////////////////
 	// IListNotify
@@ -217,7 +216,6 @@ protected:
 	bool m_debugFreezeSkeletonTrail;
 	unsigned int m_debugSkeletonTrailLength;
 
-	PITr2RenderableVector m_attachedObjects;
 	PTriCurveSetVector m_curveSets;
 
 	bool m_useExplicitBounds;

@@ -76,8 +76,7 @@ struct Tr2VisibilityEvent
 		m_mirrorIndex( -1 ),
 		m_eventType( INSTANCE_VISIBLE ),
 		m_useClipPlane( false ),
-		m_isMirroredInLeftHandedSpace( false ),
-		m_deferScissorRectangle( false )
+		m_isMirroredInLeftHandedSpace( false )
 	{}
 
 	IRootPtr m_userData;
@@ -88,7 +87,6 @@ struct Tr2VisibilityEvent
 	int m_mirrorIndex;
 	EventType m_eventType;
 	bool m_useClipPlane, m_isMirroredInLeftHandedSpace;
-	bool m_deferScissorRectangle;
 };
 
 #endif

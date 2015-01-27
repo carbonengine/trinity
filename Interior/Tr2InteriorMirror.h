@@ -9,13 +9,6 @@
 struct ITr2Renderable;
 class Tr2InteriorPlaceable;
 
-namespace Umbra
-{
-	class Cell;
-	class Model;
-	class VirtualPortal;
-}
-
 class Tr2InteriorMirror
 {
 public:
@@ -43,11 +36,6 @@ public:
 	// Set the mirror index
 	void SetMirrorIndex( int index );
 
-	// Get the Umbra cell
-	Umbra::Cell* GetCell() const;
-	// Set the Umbra cell
-	void SetCell( Umbra::Cell* cell );
-
 	// Set the mesh index
 	void SetMeshIndex( int index );
 	// Set the area index
@@ -58,28 +46,9 @@ public:
 	void SetWarpMatrixBack( const Matrix& warpMatrix );
 	// Set the transformation matrix for the mirror
 	void SetTransformMatrix( const Matrix& transformMatrix );
-	// Set the mirror bounding box, used to create Umbra model
+	// Set the mirror bounding box
 	void SetBoundingBox( const Vector3& minBounds, const Vector3& maxBounds );
-
-	// Build the Umbra mirror
-	void BuildUmbraMirror( void );
-
-	void EnablePortals( bool enable );
-
 protected:
-	// Destroy Umbra mirror
-	void DestroyUmbraMirror( void );
-
-protected:
-	// Umbra model for the mirror
-	Umbra::Model* m_umbraModel;
-	// Umbra portal for the front of the mirror
-	Umbra::VirtualPortal* m_mirrorPortalFront;
-	// Umbra portal for the back of the mirror
-	Umbra::VirtualPortal* m_mirrorPortalBack;
-	// Umbra cell containing the mirror
-	Umbra::Cell* m_cell;
-
 	// Warp matrix for the front of the mirror
 	Matrix m_warpMatrixFront;
 	// Warp matrix for the 'back' of the mirror

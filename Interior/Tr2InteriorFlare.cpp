@@ -1,11 +1,8 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorFlare.h"
 #include "Tr2ShaderMaterial.h"
 #include "Tr2InteriorCell.h"
-#include "ITr2UmbraUserData.h"
 #include "Tr2InteriorFlareData.h"
 #include "TriViewport.h"
 #include "TriRenderBatch.h"
@@ -103,8 +100,6 @@ struct Tr2InteriorFlare::FlarePerObjectVSData
 Tr2InteriorFlare::Tr2InteriorFlare( IRoot* lockobj )
 :	m_color( 1.f, 1.f, 1.f, 1.f ),
 	m_isVisible( true ),
-	m_umbraObject( NULL ),
-	m_umbraModel( NULL ),
 	m_isDirty( true ),
 	m_flareIntensity( 0.f ),
 	m_occluderSize( 0.f ),
@@ -113,7 +108,6 @@ Tr2InteriorFlare::Tr2InteriorFlare( IRoot* lockobj )
 	m_actualNumOfPixels( 0 ),
 	m_totalNumOfPixels( 1 ),
 	m_vertexDecl( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
-	m_shSampleIndex( -1 ),
 	m_updateVisibility( true ),
 	m_debugIsHidden( false ),
 	PARENTLOCK( m_transparentFlareData ),
@@ -137,20 +131,17 @@ Tr2InteriorFlare::Tr2InteriorFlare( IRoot* lockobj )
 // --------------------------------------------------------------------------------------
 Tr2InteriorFlare::~Tr2InteriorFlare()
 {
-	ClearUmbra();
 }
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements IInitialize interface.  Builds the Umbra culling volume after object 
-//   initialization.
+//   Implements IInitialize interface.  
 // Return Value:
 //   true always
 // --------------------------------------------------------------------------------------
 bool Tr2InteriorFlare::Initialize()
 {
 	PrepareResources();
-	RebuildVolume();
 	if( m_transparentFlareMaterial )
 	{
 		std::vector<unsigned int> situation;
@@ -179,12 +170,10 @@ bool Tr2InteriorFlare::OnModified( Be::Var* value )
 	if( IsMatch( value, m_transform ) )
 	{
 		m_isDirty = true;
-		UpdateUmbraObjectTransform();
 	}
 	else if( IsMatch( value, m_occluderSize ) )
 	{
 		m_isDirty = true;
-		UpdateUmbraObjectTransform();
 		if( m_occluderSize > 0.f )
 		{
 			CreateOcclusionObjects();
@@ -194,13 +183,6 @@ bool Tr2InteriorFlare::OnModified( Be::Var* value )
 			m_totalQuery.Destroy();
 			m_actualQuery.Destroy();
 			m_billboardVB.Destroy();
-		}
-	}
-	else if( IsMatch( value, m_updateVisibility ) )
-	{
-		if( m_umbraObject )
-		{
-			m_umbraObject->set( Umbra::Object::UNBOUNDED, !m_updateVisibility );
 		}
 	}
 	return true;
@@ -219,7 +201,6 @@ void Tr2InteriorFlare::UpdatePlacement( const Vector3& front, const Vector3& top
 	m_transform.GetTranslation() = pos;
 
 	m_isDirty = true;
-	UpdateUmbraObjectTransform();
 }
 
 // --------------------------------------------------------------------------------------
@@ -244,7 +225,6 @@ void Tr2InteriorFlare::SetPosition( const Vector3& position )
 	m_transform.GetTranslation() = position;
 
 	m_isDirty = true;
-	UpdateUmbraObjectTransform();
 }
 
 // --------------------------------------------------------------------------------------
@@ -325,44 +305,6 @@ Tr2PerObjectData* Tr2InteriorFlare::GetPerObjectDataWithPerInstanceLighting(
 	return GetPerObjectData( accumulator );
 }
 
-// --------------------------------------------------------------------------------------
-//  Description:
-//    Gets per-object data for the object using a per-instance light-set override and 
-//    an arbitrary object-to-world matrix.  Flares don't render during prepass phase, 
-//    so this method is empty.
-//  Arguments:
-//    accumulator -         The batch accumulator used to allocate memory for per-object data
-//    lightSet -            The set of lights illuminating this object
-//    objectToWorldMatrix - The transformation matrix used to position this object 
-//                          in world coordinates
-//  Return Value:
-//    NULL always.
-// --------------------------------------------------------------------------------------
-Tr2PerObjectData* Tr2InteriorFlare::GetPerObjectDataForPrePass(
-											ITriRenderBatchAccumulator* accumulator,
-											const Matrix& objectToWorldMatrix
-)
-{
-	return NULL;
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Returns bounding sphere for this object.
-// Arguments:
-//   sphere (out) - Bounding sphere (center.xyz, radius)
-// Return value:
-//   true Always
-// -------------------------------------------------------------
-bool Tr2InteriorFlare::GetBoundingSphere( Vector4& sphere ) const
-{
-	sphere.x = m_transform._41;
-	sphere.y = m_transform._42;
-	sphere.z = m_transform._43;
-	sphere.w = sqrt( 2.f ) * m_occluderSize;
-	return true;
-}
-
 // -------------------------------------------------------------
 // Description:
 //   Returns bounding box in local space for this object.
@@ -407,7 +349,7 @@ bool Tr2InteriorFlare::IsBoundingBoxReady( void ) const
 
 // -------------------------------------------------------------
 // Description:
-//   Returns position of Enlighten SH probe in world space.
+//   Returns position of SH probe in world space.
 // -------------------------------------------------------------
 bool Tr2InteriorFlare::GetShProbePosition( Vector3& position ) const
 {
@@ -478,40 +420,22 @@ Matrix& Tr2InteriorFlare::GetBlueLightProbeMatrix( void )
 
 // -------------------------------------------------------------
 // Description:
-//   Called when object is added to the scene. Updates Umbra 
-//   objects.
+//   Called when object is added to the scene. 
 // Return value:
 //   true If the object has valid bounds and can be added to a cell
 //   false Otherwise
 // -------------------------------------------------------------
 bool Tr2InteriorFlare::AddToScene( Tr2ApexScene *apexScene )
 {
-	ClearUmbra();
-	RebuildVolume();
-
 	return true;
 }
 
 // -------------------------------------------------------------
 // Description:
-//   Called when object is removed from the scene. Clears Umbra 
-//   objects.
+//   Called when object is removed from the scene. 
 // -------------------------------------------------------------
 void Tr2InteriorFlare::RemoveFromScene( void )
 {
-	ClearUmbra();
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Query if the dynamic object has valid Umbra objects.
-// Return value:
-//   true If Umbra objects are ready
-//   false Otherwise
-// -------------------------------------------------------------
-bool Tr2InteriorFlare::IsUmbraReady( void ) const
-{
-	return m_umbraObject != NULL;
 }
 
 // -------------------------------------------------------------
@@ -547,13 +471,7 @@ bool Tr2InteriorFlare::TestCellIntersectionAndAdd( Tr2InteriorCell* cell )
 	// If we got an intersection, add to the cell
 	if( intersects )
 	{
-		if( cell->AddDynamic( this ) )
-		{
-			// Add to the Umbra cell
-			m_umbraObject->setCell( cell->GetUmbraCell() );
-		}
-
-		UpdateUmbraObjectTransform();
+		cell->AddDynamic( this );
 	}
 	else
 	{
@@ -562,33 +480,6 @@ bool Tr2InteriorFlare::TestCellIntersectionAndAdd( Tr2InteriorCell* cell )
 
 	// Return the result of the intersection test
 	return intersects;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Called when a cell is removed from the scene. If the object belongs to this cell
-//   the object clears its Umbra stuff.
-// --------------------------------------------------------------------------------------
-void Tr2InteriorFlare::CellRemoved( Tr2InteriorCell* cell )
-{
-	// Bail out if the cell is NULL
-	if( !cell )
-	{
-		return;
-	}
-
-	// Get the Umbra cell from the interior cell
-	Umbra::Cell* ucell = cell->GetUmbraCell();
-	if( !ucell )
-	{
-		return;
-	}
-
-	if( m_umbraObject && ( m_umbraObject->getCell() == ucell ) )
-	{
-		m_umbraObject->release();
-		m_umbraObject = NULL;
-	}
 }
 
 // -------------------------------------------------------------
@@ -605,15 +496,6 @@ bool Tr2InteriorFlare::IsDirty( void ) const
 
 // -------------------------------------------------------------
 // Description:
-//   Called after a dirty object was re-added to the scene.
-// -------------------------------------------------------------
-void Tr2InteriorFlare::ClearDirty( void )
-{
-	m_isDirty = false;
-}
-
-// -------------------------------------------------------------
-// Description:
 //   Directly set the bounds dirty flag. 
 // Arguments:
 //   isDirty - New diry flag
@@ -625,42 +507,6 @@ void Tr2InteriorFlare::SetDirtyFlag( bool isDirty )
 
 // -------------------------------------------------------------
 // Description:
-//   Query if the object acts as a background object. Flares
-//   don't support that.
-// Return value:
-//   false Always
-// -------------------------------------------------------------
-bool Tr2InteriorFlare::IsBackgroundProxy( void ) const
-{
-	return false;
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Add an object as a background object. Flares
-//   don't support that.
-// Arguments:
-//   cell - Root cell to add an object to
-// -------------------------------------------------------------
-void Tr2InteriorFlare::AddToCellAsBackgroundProxy( Umbra::Cell* cell )
-{
-}
-
-// --------------------------------------------------------------------------------------
-//  Description:
-//    Adds the object to the root cell. This happens as a fallback when an object
-//    happens to be outside of any normal cell.
-//  Arguments:
-//    cell - the root cell
-// --------------------------------------------------------------------------------------
-void Tr2InteriorFlare::AddToRootCell( Umbra::Cell* cell )
-{
-	m_umbraObject->setCell( cell );
-	UpdateUmbraObjectTransform();
-}
-
-// -------------------------------------------------------------
-// Description:
 //   Query if the object casts shadows. Flares don't.
 // Return value:
 //   false Always
@@ -668,41 +514,6 @@ void Tr2InteriorFlare::AddToRootCell( Umbra::Cell* cell )
 bool Tr2InteriorFlare::IsShadowCaster( void ) const
 {
 	return false;
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Creates or updates an Umbra object and adds it to specified
-//   cell. Used for doors by physical portals.
-// Arguments:
-//   cell - The cell to add object to
-//   object - Umbra object that supposed to represent this dynamic
-// -------------------------------------------------------------
-void Tr2InteriorFlare::UpdateUmbraObject( Umbra::Cell* cell, Umbra::Object*& object ) const
-{
-	Vector3 minBounds, maxBounds;
-	if( !GetLocalBoundingBox( minBounds, maxBounds ) )
-	{
-		// Our bounding box is not ready
-		return;
-	}
-
-	if( object == NULL )
-	{
-		object = Umbra::Object::create( m_umbraModel );
-		object->setCell( cell );
-		object->setUserPointer( CONVERT_TO_UMBRA_USER_DATA( GetRawRoot() ) );
-	}
-
-	Matrix transformInv;
-	cell->getCellToWorldMatrix( AS_UMBRA_MATRIX( transformInv ) );
-	D3DXMatrixInverse( &transformInv, NULL, &transformInv );
-	Matrix scaling;
-	D3DXMatrixScaling( &scaling, m_occluderSize, m_occluderSize, m_occluderSize );
-
-	Matrix m = scaling * m_transform * transformInv;
-
-	object->setObjectToCellMatrix( AS_UMBRA_MATRIX( m ) );
 }
 
 // -------------------------------------------------------------
@@ -783,74 +594,6 @@ float Tr2InteriorFlare::GetSortValue()
 Tr2PerObjectData* Tr2InteriorFlare::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
 	return NULL;
-}
-
-// --------------------------------------------------------------------------------------
-//  Description:
-//    Updates Umbra object to cell transform matrix.  
-// --------------------------------------------------------------------------------------
-void Tr2InteriorFlare::UpdateUmbraObjectTransform()
-{
-	if( m_umbraObject )
-	{
-		Umbra::Cell* cell = m_umbraObject->getCell();
-		if( cell )
-		{
-			Matrix transformInv;
-			cell->getWorldToCellMatrix( AS_UMBRA_MATRIX( transformInv ) );
-			Matrix scaling;
-			D3DXMatrixScaling( &scaling, m_occluderSize, m_occluderSize, m_occluderSize );
-
-			Matrix m = scaling * m_transform * transformInv;
-
-			m_umbraObject->setObjectToCellMatrix( AS_UMBRA_MATRIX( m ) );
-		}
-	}
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Destroys Umbra objects.
-// -------------------------------------------------------------
-void Tr2InteriorFlare::ClearUmbra()
-{
-	if( m_umbraObject )
-	{
-		m_umbraObject->setCell( NULL );
-		m_umbraObject->release();
-		m_umbraObject = NULL;
-	}
-
-	if( m_umbraModel )
-	{
-		m_umbraModel->release();
-		m_umbraModel = NULL;
-	}
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Re-create Umbra objects.
-// -------------------------------------------------------------
-void Tr2InteriorFlare::RebuildVolume()
-{
-	Umbra::Cell *cell = NULL;
-	if( m_umbraObject )
-	{
-		cell = m_umbraObject->getCell();
-	}
-
-	ClearUmbra();
-	
-	// everything is there, so use bounding box
-	m_umbraModel = ( Umbra::Model* )Umbra::OBBModel::create( AS_UMBRA_VECTOR3( Vector3( -1.f, -1.f, -1.f ) ), AS_UMBRA_VECTOR3( Vector3( 1.f, 1.f, 1.f ) ) );
-	m_umbraObject = Umbra::Object::create( m_umbraModel );
-	m_umbraObject->setCell( cell );
-	m_umbraObject->set( Umbra::Object::UNBOUNDED, !m_updateVisibility );
-
-	m_umbraObject->setUserPointer( CONVERT_TO_UMBRA_USER_DATA( this ) );
-
-	UpdateUmbraObjectTransform();
 }
 
 // --------------------------------------------------------------------------------------
@@ -1176,4 +919,20 @@ AxisAlignedBoundingBox Tr2InteriorFlare::GetBoundingBoxInWorldSpace() const
 	return result;
 }
 
-#endif
+#include "TriFrustum.h"
+
+bool Tr2InteriorFlare::IsInFrustum( const TriFrustum& frustum, Matrix& objectToWorld ) const
+{
+	if( !m_updateVisibility )
+	{
+		return true;
+	}
+	Vector3 minBounds, maxBounds;
+	if( !GetWorldBoundingBox( minBounds, maxBounds ) )
+	{
+		return false;
+	}
+	objectToWorld = m_transform;
+	return frustum.IsBoxVisible( minBounds, maxBounds );
+}
+

@@ -313,7 +313,7 @@ bool App::GetKeyName( uint32_t virtualKey, char* buffer, size_t bufferSize )
 	scanCode |= ( 1 << 25 );
 
 	// Lookup the key name and return true if it succeeds
-	return bool( ::GetKeyNameText( scanCode, buffer, int( bufferSize ) ) );
+	return ::GetKeyNameText( scanCode, buffer, int( bufferSize ) ) != 0;
 }
 
 

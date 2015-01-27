@@ -16,45 +16,6 @@ static bool CheckGrannyFile( TriGrannyRes *grannyRes )
 	return true;
 }
 
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-PyObject* PyCreateEnlightenPackedGeometry( PyObject* self, PyObject* args )
-{
-	TriGrannyRes* pThis = BluePythonCast<TriGrannyRes*>( self );
-	const char* outgr2;
-	unsigned int guid;
-	bool force = false;
-	float pixelSize = 1.0f;
-	if( !PyArg_ParseTuple(args, "si|bf", &outgr2, &guid, &force, &pixelSize) )
-	{
-		return NULL;
-	}
-	
-	return PyInt_FromLong(pThis->CreateEnlightenPackedGeometry( outgr2, guid, force, pixelSize ));
-}
-static PyObject* PyProjectEnlightenGeometry( PyObject* self, PyObject* args )
-{
-	TriGrannyRes* pThis = BluePythonCast<TriGrannyRes*>( self );
-	const char* outgr2;
-	PyObject* targetArg;
-	unsigned int guid;
-	bool force = false;
-	float pixelSize = 1.0f;
-	if( !PyArg_ParseTuple(args, "sOi|bf", &outgr2, &targetArg, &guid, &force, &pixelSize) )
-	{
-		return NULL;
-	}
-	
-	TriGrannyRes* target = BluePythonCast<TriGrannyRes*>( targetArg );
-	if( !target )
-	{
-		PyErr_SetString( PyExc_TypeError, "Expected a TriGrannyRes argument." );
-		return NULL;
-	}
-
-	return PyInt_FromLong(pThis->ProjectEnlightenGeometry( outgr2, *target, guid, force, pixelSize ));
-}
-#endif
-
 
 PyObject * TriGrannyRes:: GetMaterialDictionaryForArea( int mesh, int area )
 {
@@ -187,51 +148,6 @@ const Be::ClassInfo* TriGrannyRes::ExposeToBlue()
 			"  'ix' is the index of the animation\n"
 			"Gets the duration of the animation with index 'ix'\n"
 		)
-		MAP_METHOD_AND_WRAP
-		(
-			"ReorderEnlightenMeshes", ReorderEnlightenMeshes,
-			"Puts the mesh whose name begins with \'Target_\' in position 0 in the mesh array"
-		)
-#if defined(ENLIGHTEN_PRECOMPUTE_ENABLED)
-		MAP_METHOD
-		(
-			"CreateEnlightenPackedGeometry", PyCreateEnlightenPackedGeometry, 
-			"Packs geometry for use in enlighten, and saves it back out."
-			"\n"
-			"\nArguments:"
-			"\noutgr2 - the path to the output file"
-			"\nguid - the desired unique id of the packed geometry"
-			"\nforceRebuild - force a rebuild of the packed geometry regardless (False by default)"
-			"\npixelSize - the size of each enlighten texel in meters. Must be consistent with the system that will use it."
-		)
-		MAP_METHOD
-		(
-			"ProjectEnlightenGeometry", PyProjectEnlightenGeometry, 
-			"Projects geometry onto existing target mesh for use in enlighten, and saves it back out."
-			"\n"
-			"\nArguments:"
-			"\noutgr2 - the path to the output file"
-			"\ntarget - granny resource containing target geometry"
-			"\nguid - the desired unique id of the packed geometry"
-			"\nforceRebuild - force a rebuild of the packed geometry regardless (False by default)"
-			"\npixelSize - the size of each enlighten texel in meters. Must be consistent with the system that will use it."
-		)
-#endif
-		MAP_METHOD_AND_WRAP
-		(
-			"HasExtendedData", HasExtendedData, 
-			"Does the granny file contain any extended data."
-		)
-		MAP_METHOD_AND_WRAP
-		(
-			"GetEnlightenPixelSize", GetEnlightenPixelSize, 
-			"What is the enligthen pixel size of the packed geometry. Returns 0.0 on failure."
-		)
-		MAP_METHOD_AND_WRAP
-		(
-			"HasValidEnlightenData", HasValidEnlightenData, 
-			"Does the granny file contain valid Enlighten packed geometry."
-		)
 		MAP_METHOD_AND_WRAP( 
 			"GetMeshSurfaceArea", 
 			GetMeshSurfaceArea,
@@ -240,12 +156,6 @@ const Be::ClassInfo* TriGrannyRes::ExposeToBlue()
 			"\nArguments:"
 			"\nmeshID - the mesh to calculate the surface area for"
 		)
-		MAP_METHOD_AND_WRAP( 
-			"GetEnlightenGuid", 
-			GetEnlightenGuid,
-			"Gets the guid from the packed geometry data embedded in the granny file."
-		)
-
 		MAP_METHOD_AND_WRAP
 		( 
 			"CollectGrannyMaterials", 

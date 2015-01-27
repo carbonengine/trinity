@@ -28,7 +28,7 @@ bool Tr2SwapChain::OnPrepareResources()
 		{
 			m_depthStencil.Attach( new OTr2DepthStencil );
 		}
-		CR_RETURN_HR( HRESULT( m_depthStencil->Create( m_swapChain.GetWidth(), m_swapChain.GetHeight(), Tr2RenderContextEnum::DSFMT_D24S8, 0, 0 ) ) );
+		CR_RETURN_VAL( HRESULT( m_depthStencil->Create( m_swapChain.GetWidth(), m_swapChain.GetHeight(), Tr2RenderContextEnum::DSFMT_D24S8, 0, 0 ) ), false );
 		if( !m_backBuffer )
 		{
 			m_backBuffer.CreateInstance();

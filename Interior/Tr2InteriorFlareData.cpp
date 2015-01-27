@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorFlareData.h"
 
 // --------------------------------------------------------------------------------------
@@ -20,5 +18,3 @@ Tr2InteriorFlareData::Tr2InteriorFlareData( IRoot* lockobj )
 	m_centerFadeMaxRadius( 0.0f )
 {
 }
-
-#endif

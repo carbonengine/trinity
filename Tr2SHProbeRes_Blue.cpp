@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2SHProbeRes.h"
 
 BLUE_DEFINE( Tr2SHProbeRes );
@@ -27,5 +25,3 @@ const Be::ClassInfo* Tr2SHProbeRes::ExposeToBlue()
 
 		EXPOSURE_CHAINTO( BlueAsyncRes )
 }
-
-#endif

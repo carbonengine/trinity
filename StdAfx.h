@@ -121,33 +121,6 @@ using std::max;
 #include "granny.h"
 #include "TriUtil.h"
 
-#if INTERIORS_ENABLED
-#include "UmbraTypes.h"
-#include "Umbra.hpp"
-
-#include "GeoCore/GeoAutoPtr.h"
-#if !defined(CCP_DEPLOY)
-	// Must be included after the XNA vectors
-	#define ENLIGHTEN_PRECOMPUTE_ENABLED 1
-	#include "EnlightenPrecomp2/EnlightenPrecomp.h"
-#endif
-
-#include "GeoCore/iGeoStream.h"
-
-#include "GeoCore/GeoProgress.h"
-#include "GeoBase/GeoBase.h"
-#include "GeoCore/GeoMatrixMaths.h"
-
-#include "GeoCore/GeoFileStream.h"
-#include "GeoBase/GeoMemory.h"
-#include "GeoCore/GeoArray.h"
-#include "GeoAtlas/GeoAtlas.h"
-
-#include "Enlighten2/Enlighten.h"
-#include "EnlightenUtils2/EnlightenUtils.h"
-#include "Enlighten2/EnlightenMeshSimpOutput.h"
-#endif
-
 #if TBB_ENABLED
 
 #include "tbb/parallel_sort.h"

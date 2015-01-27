@@ -24,7 +24,6 @@ public:
 
     float GetNearFadeDistance() const { return m_nearFadeDistance; }
     float GetFarFadeDistance() const { return m_farFadeDistance; }
-	bool IsBackgroundProxy( void ) const { return m_isBackgroundProxy; }
 
     void GetBatches( ITriRenderBatchAccumulator* batches, 
 					 TriBatchType batchType,
@@ -49,7 +48,6 @@ private:
     float m_nearFadeDistance;
     float m_farFadeDistance;
 
-	bool m_isBackgroundProxy;
 	bool m_isShadowCaster;
 
     PTriVector m_minBounds;

@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 
-#if INTERIORS_ENABLED
-
 #include "Tr2InteriorFlareData.h"
 
 BLUE_DEFINE( Tr2InteriorFlareData );
@@ -63,4 +61,3 @@ const Be::ClassInfo* Tr2InteriorFlareData::ExposeToBlue()
 	EXPOSURE_END()
 }
 
-#endif
