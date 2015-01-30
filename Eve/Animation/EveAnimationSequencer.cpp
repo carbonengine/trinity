@@ -45,23 +45,28 @@ void EveAnimationStateMachine::SetOwner( EveSpaceObject2* owner )
 	{
 		return;
 	}
+	
+	auto ac = owner->GetAnimationController();
+	if( !m_trackMask.empty() )
+	{
+		ac->AddAnimationLayerWithTrackMask( m_trackMask.c_str(), m_trackMask.c_str() );
+	}
+
 	if( m_currentState )
 	{
 		m_currentState->Start( this, owner, EVE_ANIM_START_INIT );
 	}
 
-	auto ac = owner->GetAnimationController();
-	if( !m_trackMask.empty() )
+	if( m_autoPlayDefault && !m_defaultAnimation.empty() )
 	{
-		ac->AddAnimationLayerWithTrackMask( m_trackMask.c_str(), m_trackMask.c_str() );
-		if( m_autoPlayDefault && !m_defaultAnimation.empty() )
+		if( m_trackMask.empty() )
+		{
+			ac->PlayAnimationEx( m_defaultAnimation.c_str(), 0, 0, 1 );
+		}
+		else
 		{
 			ac->PlayLayerAnimationByName( m_trackMask.c_str(), m_defaultAnimation.c_str(), false, 0, 0, 1, false );
 		}
-	}
-	else if( m_autoPlayDefault && !m_defaultAnimation.empty() )
-	{
-		ac->PlayAnimationEx( m_defaultAnimation.c_str(), 0, 0, 1 );
 	}
 }
 
