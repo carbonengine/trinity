@@ -2507,6 +2507,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			}
 			if( samplerTypes[src1.name] == "3D" )
 			{
+				hasTextureLodExtension = true;
 				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1) )->second;
 				os << "tex3DLod";
 				os << '(' << ( stage.type == VERTEX_STAGE ? "v" : "" ) << src1.name << ',';
