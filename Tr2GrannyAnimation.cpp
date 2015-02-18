@@ -1,9 +1,12 @@
 #include "StdAfx.h"
+#include "Miniball3.h"
 #include "Tr2GrannyAnimation.h"
 #include "Resources/TriGrannyRes.h"
 #include "Resources/TriGeometryRes.h"
 #include "Tr2Renderer.h"
 #include "include/ITr2DebugRenderer.h"
+#include "Utilities/BoundingBox.h"
+#include "Utilities/BoundingSphere.h"
 
 static const int MAX_JOINT_COUNT = 58;
 
@@ -21,7 +24,8 @@ Tr2GrannyAnimation::Tr2GrannyAnimation( IRoot* lockobj ) :
 	m_debugRenderSkeleton( false ),
 	m_debugRenderJointNames( false ),
 	m_baseLayer( 1.f ),
-	m_modelIndex( 0 )
+	m_modelIndex( 0 ),
+	m_meshBindingIndex( -1 )
 {
 }
 
@@ -35,7 +39,7 @@ Tr2GrannyAnimation::~Tr2GrannyAnimation()
 
 granny_animation* Tr2GrannyAnimation::FindAnimationByName( const char* name ) const
 {
-	const granny_file_info* const fi = GetFileInfo();
+	const granny_file_info* fi = GetFileInfo();
 	if( !fi )
 	{
 		return nullptr;
@@ -101,6 +105,8 @@ bool Tr2GrannyAnimation::Initialize()
 	{
 		m_grannyRes->AddNotifyTarget( this );
 	}
+
+	m_boneBounds.clear();
 	
 	return true;
 }
@@ -157,7 +163,7 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 	{
 		// By default we take the first model in the file
 		m_modelIndex = 0;
-		int meshBindingIndex = -1;
+		m_meshBindingIndex = -1;
 
 		if( m_useMeshBinding )
 		{
@@ -169,7 +175,7 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 					if( fi->Models[i]->MeshBindings[j].Mesh == fi->Meshes[0] )
 					{
 						m_modelIndex = i;
-						meshBindingIndex = j;
+						m_meshBindingIndex = j;
 						break;
 					}
 				}
@@ -210,9 +216,9 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 				it->second.InitializeAnimationLayer( this );
 			}
 
-			if( meshBindingIndex != -1 )
+			if( m_meshBindingIndex != -1 )
 			{
-				m_meshBinding = GrannyNewMeshBinding ( fi->Models[ m_modelIndex ]->MeshBindings[ meshBindingIndex ].Mesh, m_skeleton, m_skeleton );
+				m_meshBinding = GrannyNewMeshBinding ( fi->Models[ m_modelIndex ]->MeshBindings[ m_meshBindingIndex ].Mesh, m_skeleton, m_skeleton );
 			}
 			else
 			{
@@ -275,6 +281,156 @@ void Tr2GrannyAnimation::RebuildCachedData( BlueAsyncRes* p )
 	}
 }
 
+bool Tr2GrannyAnimation::InitializeBoundingInfo()
+{
+	const granny_file_info* const fi = GetFileInfo();
+	if( !fi )
+	{
+		return false;
+	}
+
+	if( fi->ModelCount == 0 )
+	{
+		return false;
+	}
+
+	if( !m_useMeshBinding )
+	{
+		return false;
+	}
+
+	m_boneBounds.clear();
+	for( int i = 0; i < fi->ModelCount ; ++i )
+	{
+		for( int j = 0; j < fi->Models[i]->MeshBindingCount ; ++j )
+		{
+			granny_model* model = fi->Models[i];
+			granny_model_mesh_binding& meshBinding = model->MeshBindings[j];
+			granny_bone_binding* bb = meshBinding.Mesh->BoneBindings;
+			for( int boneIdx = 0; boneIdx < meshBinding.Mesh->BoneBindingCount; boneIdx++ )
+			{
+				GrannyBoneBindingBounds bounds;
+				GrannyFindBoneByName( m_skeleton, bb[boneIdx].BoneName, &bounds.m_boneIndex );
+
+				Vector3 minBounds( bb[boneIdx].OBBMin );
+				Vector3 maxBounds( bb[boneIdx].OBBMax );
+				bounds.m_corners[0] = minBounds;
+				bounds.m_corners[1] = maxBounds;
+				bounds.m_corners[2] = Vector3( minBounds.x, minBounds.y, maxBounds.z );
+				bounds.m_corners[3] = Vector3( minBounds.x, maxBounds.y, minBounds.z );
+				bounds.m_corners[4] = Vector3( minBounds.x, maxBounds.y, maxBounds.z );
+				bounds.m_corners[5] = Vector3( maxBounds.x, minBounds.y, minBounds.z );
+				bounds.m_corners[6] = Vector3( maxBounds.x, minBounds.y, maxBounds.z );
+				bounds.m_corners[7] = Vector3( maxBounds.x, maxBounds.y, minBounds.z );
+				m_boneBounds.push_back( bounds );
+			}
+		}
+	}
+	return true;
+}
+
+bool Tr2GrannyAnimation::GetDynamicBounds( Vector4& boundingSphere, Vector3 &aabbMin, Vector3 &aabbMax )
+{
+	Vector3 transformed[8];
+	if( m_boneBounds.empty() && !InitializeBoundingInfo() )
+	{
+		return false;
+	}
+
+	BoundingSphereInitialize( boundingSphere );
+	BoundingBoxInitialize( aabbMin, aabbMax );
+
+	for( unsigned i = 0; i < m_boneBounds.size(); ++i )
+	{
+		const Matrix* mat = (const Matrix*)GrannyGetWorldPose4x4( m_worldPose, m_boneBounds[i].m_boneIndex );
+
+		for( unsigned point = 0; point < 8; point++ )
+		{
+			D3DXVec3TransformCoord( &transformed[point], &m_boneBounds[i].m_corners[point], mat );
+			BoundingBoxUpdate( aabbMin, aabbMax, transformed[point] );
+			BoundingSphereUpdate( transformed[point], boundingSphere );
+		}
+	}
+	
+	const granny_file_info* fi = GetFileInfo();
+	if( fi )
+	{
+		aabbMin += Vector3( fi->Models[ m_modelIndex ]->InitialPlacement.Position );
+		aabbMax += Vector3( fi->Models[ m_modelIndex ]->InitialPlacement.Position );
+		boundingSphere.x += fi->Models[ m_modelIndex ]->InitialPlacement.Position[0];
+		boundingSphere.y += fi->Models[ m_modelIndex ]->InitialPlacement.Position[1];
+		boundingSphere.z += fi->Models[ m_modelIndex ]->InitialPlacement.Position[2];
+	}
+	return true;
+}
+
+void Tr2GrannyAnimation::RenderDynamicBounds( const Matrix& modelTransform )
+{
+	Vector3 transformed[8];
+	if( m_boneBounds.empty() && !InitializeBoundingInfo() )
+	{
+		return;
+	}
+
+	Vector4 boundingSphere;
+	bool initialized = false;
+
+	Vector3 aabbMin, aabbMax;
+	BoundingBoxInitialize( aabbMin, aabbMax );
+	Vector3 initialPlacement( 0, 0, 0 );
+	const granny_file_info* fi = GetFileInfo();
+	Matrix initialTranslation;
+	if( fi )
+	{
+		initialPlacement = Vector3( fi->Models[ m_modelIndex ]->InitialPlacement.Position );
+	}
+	D3DXMatrixTranslation( &initialTranslation, initialPlacement.x, initialPlacement.y, initialPlacement.z );
+
+	for( unsigned i = 0; i < m_boneBounds.size(); ++i )
+	{
+		
+		Matrix mat = *(const Matrix*)GrannyGetWorldPose4x4( m_worldPose, m_boneBounds[i].m_boneIndex ) * modelTransform * initialTranslation;
+
+		for( unsigned point = 0; point < 8; point++ )
+		{
+			D3DXVec3TransformCoord( &transformed[point], &m_boneBounds[i].m_corners[point], &mat );
+			BoundingBoxUpdate( aabbMin, aabbMax, transformed[point] );
+			if( !initialized )
+			{
+				boundingSphere.x = transformed[point].x;
+				boundingSphere.y = transformed[point].y;
+				boundingSphere.z = transformed[point].z;
+				boundingSphere.w = 0;
+				initialized = true;
+			}
+			else
+			{
+				BoundingSphereUpdate( transformed[point], boundingSphere );
+			}
+		}
+
+		Tr2Renderer::DrawLine( transformed[0], 0xff7f0000, transformed[2], 0xff7f0000 );
+		Tr2Renderer::DrawLine( transformed[0], 0xff7f0000, transformed[5], 0xff7f0000 );
+		Tr2Renderer::DrawLine( transformed[5], 0xff7f0000, transformed[6], 0xff7f0000 );
+		Tr2Renderer::DrawLine( transformed[2], 0xff7f0000, transformed[6], 0xff7f0000 );
+						
+		Tr2Renderer::DrawLine( transformed[1], 0xff7f0000, transformed[7], 0xff7f0000 );
+		Tr2Renderer::DrawLine( transformed[1], 0xff7f0000, transformed[4], 0xff7f0000 );
+		Tr2Renderer::DrawLine( transformed[3], 0xff7f0000, transformed[4], 0xff7f0000 );
+		Tr2Renderer::DrawLine( transformed[3], 0xff7f0000, transformed[7], 0xff7f0000 );
+
+		Tr2Renderer::DrawLine( transformed[1], 0xff7f0000, transformed[6], 0xff7f0000 );
+		Tr2Renderer::DrawLine( transformed[0], 0xff7f0000, transformed[3], 0xff7f0000 );
+		Tr2Renderer::DrawLine( transformed[7], 0xff7f0000, transformed[5], 0xff7f0000 );
+		Tr2Renderer::DrawLine( transformed[4], 0xff7f0000, transformed[2], 0xff7f0000 );
+	}
+
+	Tr2Renderer::DrawSphere( boundingSphere, 8, 0xffff0000 );
+	Tr2Renderer::DrawBox( aabbMin, aabbMax, 0xffff0000 );
+
+	return;
+}
+
 const std::string& Tr2GrannyAnimation::GetResPath() const
 {
 	return m_resPath;
@@ -290,6 +446,150 @@ const std::string& Tr2GrannyAnimation::GetModel() const
 {
 	return m_model;
 }
+
+bool Tr2GrannyAnimation::CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform, Vector3& bbMin, Vector3& bbMax, granny_file_info* fi )
+{
+	Matrix m;
+	PrePhysicsAnimation( 0, *D3DXMatrixIdentity( &m ) );
+
+	if( !m_meshBinding )
+	{
+		return false;
+	}
+
+	if( !fi )
+	{
+		fi = GetFileInfo();
+	}
+	if( !fi )
+	{
+		return false;
+	}
+
+    // Known input and output vertex format
+    granny_mesh* mesh = fi->Models[ m_modelIndex ]->MeshBindings[ m_meshBindingIndex ].Mesh;
+    granny_int32x vertCount = GrannyGetMeshVertexCount( mesh );
+
+    std::vector<granny_pwn313_vertex> sourceVerts( vertCount );
+    std::vector<granny_pn33_vertex> deformedVerts( vertCount );
+
+    GrannyCopyMeshVertices(mesh, GrannyPWN313VertexType, &sourceVerts[0]);
+
+	granny_mesh_deformer* deformer = GrannyNewMeshDeformer(GrannyPWN313VertexType,
+                                                               GrannyPN33VertexType,
+                                                               GrannyDeformPositionNormal,
+                                                               GrannyDontAllowUncopiedTail);
+	if( !deformer )
+	{
+		return false;
+	}
+
+	GrannyDeformVertices(deformer, GrannyGetMeshBindingFromBoneIndices( m_meshBinding ),
+                        (granny_real32*)GrannyGetWorldPoseComposite4x4Array( m_worldPose ), vertCount, &sourceVerts[0], &deformedVerts[0] );
+
+	// Get the transformed bounding box
+	bbMin = Vector3(  FLT_MAX,  FLT_MAX,  FLT_MAX );
+	bbMax = Vector3( -FLT_MAX, -FLT_MAX, -FLT_MAX );
+    for (int v = 0; v < vertCount; ++v)
+    {
+		Vector4 pos( 
+			deformedVerts[v].Position[0] + fi->Models[ m_modelIndex ]->InitialPlacement.Position[0], 
+			deformedVerts[v].Position[1] + fi->Models[ m_modelIndex ]->InitialPlacement.Position[1], 
+			deformedVerts[v].Position[2] + fi->Models[ m_modelIndex ]->InitialPlacement.Position[2], 1 );
+
+		D3DXVec4Transform( &pos, &pos, &transform );
+		pos /= pos.w;
+
+        bbMin.x = min(bbMin.x, pos.x);
+        bbMax.x = max(bbMax.x, pos.x);
+		
+		bbMin.y = min(bbMin.y, pos.y);
+        bbMax.y = max(bbMax.y, pos.y);
+		
+		bbMin.z = min(bbMin.z, pos.z);
+        bbMax.z = max(bbMax.z, pos.z);
+    }
+
+	return true;
+}
+
+Vector4 Tr2GrannyAnimation::CalculateSkinnedBoundingSphere( granny_file_info* fi )
+{
+	Matrix m;
+	PrePhysicsAnimation( 0, *D3DXMatrixIdentity( &m ) );
+
+	if( !m_meshBinding )
+	{
+		return Vector4(0,0,0,-1);
+	}
+
+	if( !fi )
+	{
+		fi = GetFileInfo();
+	}
+	if( !fi )
+	{
+		return Vector4(0,0,0,-1);
+	}
+
+    // Known input and output vertex format
+    granny_mesh* mesh = fi->Models[ m_modelIndex ]->MeshBindings[ m_meshBindingIndex ].Mesh;
+    granny_int32x vertCount = GrannyGetMeshVertexCount( mesh );
+
+    std::vector<granny_pwn313_vertex> sourceVerts( vertCount );
+    std::vector<granny_pn33_vertex> deformedVerts( vertCount );
+
+    GrannyCopyMeshVertices( mesh, GrannyPWN313VertexType, &sourceVerts[0] );
+
+	granny_mesh_deformer* deformer = GrannyNewMeshDeformer(GrannyPWN313VertexType,
+                                                               GrannyPN33VertexType,
+                                                               GrannyDeformPositionNormal,
+                                                               GrannyDontAllowUncopiedTail);
+	if( !deformer )
+	{
+		return Vector4(0,0,0,-1);
+	}
+
+	GrannyDeformVertices(deformer, GrannyGetMeshBindingFromBoneIndices( m_meshBinding ),
+                        (granny_real32*)GrannyGetWorldPoseComposite4x4Array( m_worldPose ), vertCount, &sourceVerts[0], &deformedVerts[0] );
+
+	// Calculate the bounding sphere
+	Vector4 boundingSphere;
+
+	typedef double* const* PointIterator; 
+	typedef const double* CoordIterator;
+	typedef Miniball::Miniball <Miniball::CoordAccessor<PointIterator, CoordIterator>> MB;
+
+	// Figure out how many points
+	double** samplePoints = new double*[vertCount];		
+
+	// Add points to the bounding object. We'll get duplicates, but this is ok.
+	for (int v = 0; v < vertCount; ++v)
+    {
+        double* point = new double[3];
+		point[0] = deformedVerts[v].Position[0];
+		point[1] = deformedVerts[v].Position[1];
+		point[2] = deformedVerts[v].Position[2];
+		samplePoints[v] = point;
+    }
+
+	MB mb( 3, samplePoints, samplePoints + vertCount );	
+	const double* boundingSphereCenter = mb.center();
+
+	boundingSphere.x = float( boundingSphereCenter[0] ) + fi->Models[ m_modelIndex ]->InitialPlacement.Position[0];
+	boundingSphere.y = float( boundingSphereCenter[1] ) + fi->Models[ m_modelIndex ]->InitialPlacement.Position[1];
+	boundingSphere.z = float( boundingSphereCenter[2] ) + fi->Models[ m_modelIndex ]->InitialPlacement.Position[2];
+	boundingSphere.w = float( sqrt( mb.squared_radius() ) );
+
+	for( int j=0; j< vertCount; ++j )
+	{
+		delete[] samplePoints[j];
+	}
+	delete[] samplePoints;
+	
+	return boundingSphere;
+}
+
 
 granny_model* Tr2GrannyAnimation::GetGrannyModel() const
 {

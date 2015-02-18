@@ -80,6 +80,14 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		)
 
 		MAP_ATTRIBUTE
+		( 
+			"debugShowDynamicBounds", 
+			m_debugShowDynamicBounds, 
+			"If set animation based bounding info is drawn(if scene is showing debug info).", 
+			Be::READWRITE | Be::PERSIST 
+		)
+
+		MAP_ATTRIBUTE
 		(
 			"mesh",  
 			m_mesh, 
@@ -241,6 +249,8 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			"Curvesets for animating things", 
 			Be::READWRITE | Be::PERSIST
 		)
+		
+		MAP_ATTRIBUTE( "isAnimated", m_isAnimated, "Indicate if object is animated", Be::READ )
 
 		MAP_METHOD_AND_WRAP( "GetBoneCount", GetBoneCount, "Returns the number of bones in the granny." )
 		MAP_METHOD_AND_WRAP
@@ -255,6 +265,20 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			GetBoundingSphereCenter,
 			"Returns the bounding sphere center."
 		)
+		
+		MAP_METHOD_AND_WRAP
+		(
+			"CalculateSkinnedBoundingSphere", 
+			CalculateSkinnedBoundingSphere, 
+			"Calculate and return skinned bounding sphere."
+		)
+		MAP_METHOD_AND_WRAP
+		(
+			"CalculateSkinnedBoundingBoxFromTransform", 
+			CalculateSkinnedBoundingBoxFromTransform, 
+			"Calculate and return bounding spehre of the object projected by the transform provided."
+		)
+
 		MAP_METHOD_AND_WRAP
 		( 
 			"RebuildBoundingSphereInformation", 

@@ -9,6 +9,14 @@
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( TriGeometryRes );
 
+
+struct GrannyBoneBindingBounds
+{
+	int m_boneIndex;
+	Vector3 m_corners[8];
+};
+
+
 BLUE_CLASS( Tr2GrannyAnimation ):
      public IInitialize,
 	 public ITr2AnimationUpdater,
@@ -48,6 +56,11 @@ public:
 	void ChainAnimation( const char* animName );
 	void ChainAnimationEx( const char* animName, int loopCount, float delay, float speed );
 
+	bool GetDynamicBounds( Vector4& boundingSphere, Vector3 &aabbMin, Vector3 &aabbMax );
+	void RenderDynamicBounds( const Matrix& modelTransform );
+	Vector4 CalculateSkinnedBoundingSphere( granny_file_info* fi=nullptr );
+	bool CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform, Vector3& bbMin, Vector3& bbMax, granny_file_info* fi=nullptr );
+
 	int GetMeshBoneCount() const;
 	const granny_matrix_3x4* GetMeshBoneMatrixList() const;
 
@@ -83,6 +96,10 @@ private:
 	TriGrannyResPtr		m_grannyRes;
 	TriGeometryResPtr	m_geometryRes;
 
+	bool m_boneBoundsInitialized;
+	std::vector<GrannyBoneBindingBounds> m_boneBounds;
+	bool InitializeBoundingInfo();
+
 	PGrannyBoneOffset m_boneOffset;
 	granny_local_pose *m_localPose;
 	granny_local_pose *m_compositePose;
@@ -96,6 +113,7 @@ private:
 	granny_matrix_3x4* m_meshBoneMatrixList;
 	int m_meshBoneCount;
 	int m_modelIndex;
+	int m_meshBindingIndex;
 
 	bool m_debugRenderSkeleton;
 	bool m_debugRenderJointNames;

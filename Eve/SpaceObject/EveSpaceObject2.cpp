@@ -82,12 +82,14 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_boundingSphereCenter( 0.f, 0.f, 0.f ),
 	m_boundingSphereRadius( -1.f ),
 	m_boundingSphereWorld( 0.f, 0.f, 0.f, -1.f ),
+	m_dynamicBoundingSphere( 0.f, 0.f, 0.f, -1.f ),
 	m_modelScale( 1.f ),
 	m_lodLevel( LOD_INVALID ),
 	m_lodLevelWithChildren( LOD_INVALID ),
 	m_debugShowBoundingBox( true ),
 	m_debugShowMeshAreaBoundingBox( false ),
 	m_debugRenderDebugInfoForChildren( true ),
+	m_debugShowDynamicBounds( true ),
 	m_isVisible( false ),
 	m_isMeshVisible( false ),
 	m_localAabbMin( 0,0,0 ),
@@ -98,7 +100,8 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_spaceObjectClipData( 0.f, 0.f, 0.f, 0.f ),
 	m_spaceObjectClipDataEx( 0.f, 0.f, 0.f, 0.f ),
 	m_psPointLightCount( 0 ),
-	m_displayChildren( true )
+	m_displayChildren( true ),
+	m_isAnimated( false )
 {
 	m_positionDelta.CreateInstance();
 
@@ -273,7 +276,13 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 	// prepare shader data: shader needs to know size of this object for some surface-scaling issues
 	m_spaceObjectMiscData.w = GetBoundingSphereRadius();
 
-	if( m_boundingSphereRadius > 0.0f )
+	if( m_isAnimated && m_animationUpdater && m_animationUpdater->IsInitialized() )
+	{
+		m_animationUpdater->GetDynamicBounds( m_dynamicBoundingSphere, m_localAabbMin, m_localAabbMax );
+		D3DXVec3TransformCoord( (Vector3*)&m_boundingSphereWorld, (Vector3*)&m_dynamicBoundingSphere, &m_worldTransform );
+		m_boundingSphereWorld.w = m_modelScale * m_dynamicBoundingSphere.w;
+	}
+	else if( m_boundingSphereRadius > 0.0f )
 	{
 		D3DXVec3TransformCoord( (Vector3*)&m_boundingSphereWorld, &m_boundingSphereCenter, &m_worldTransform );
 		m_boundingSphereWorld.w = m_modelScale * m_boundingSphereRadius;
@@ -352,7 +361,10 @@ void EveSpaceObject2::RenderDebugInfo( Tr2RenderContext& renderContext )
 			}
 		}
 	}
-
+	if( m_animationUpdater && m_debugShowDynamicBounds && m_isAnimated )
+	{
+		m_animationUpdater->RenderDynamicBounds( m_worldTransform );
+	}
 	Tr2Renderer::Printf( TRI_DBG_FONT_SMALL, m_worldTransform.GetTranslation(), 0xffffffff, m_name.c_str() );
 
 	if( m_debugRenderDebugInfoForChildren )
@@ -922,6 +934,26 @@ void EveSpaceObject2::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType sh
 	}
 }
 
+Vector4 EveSpaceObject2::CalculateSkinnedBoundingSphere()
+{
+	if( m_isAnimated )
+	{
+		return m_animationUpdater->CalculateSkinnedBoundingSphere( m_mesh->GetGeometryResource()->GetGrannyInfo() );
+	}
+	return Vector4( 0, 0, 0, -1 );
+}
+
+std::pair<Vector3, Vector3> EveSpaceObject2::CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform )
+{
+	Vector3 bbMin, bbMax;
+	BoundingBoxInitialize( bbMin, bbMax );
+	if( m_isAnimated )
+	{
+		m_animationUpdater->CalculateSkinnedBoundingBoxFromTransform( transform, bbMin, bbMax, m_geometryResFromMesh->GetGrannyInfo() );
+	}
+	return std::pair<Vector3, Vector3>( bbMin, bbMax );
+}
+
 void EveSpaceObject2::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -1054,7 +1086,7 @@ bool EveSpaceObject2::GetRenderablesCastingShadow( bool isSelf, const TriFrustum
 		return false;
 	}
 
-	if( m_boundingSphereRadius > 0.0f )
+	if( m_boundingSphereWorld.w > 0.0f  )
 	{
 		if( frustum.IsSphereVisibleAndInsideNearPlane( &m_boundingSphereWorld ) )
 		{
@@ -1073,11 +1105,19 @@ void EveSpaceObject2::SetMesh( Tr2MeshBase* mesh )
 
 float EveSpaceObject2::GetBoundingSphereRadius( )
 {
+	if( m_dynamicBoundingSphere.w != -1 )
+	{
+		return m_modelScale * m_dynamicBoundingSphere.w;
+	}
 	return m_modelScale * m_boundingSphereRadius;
 }
 
 Vector3 EveSpaceObject2::GetBoundingSphereCenter( )
 {
+	if( m_dynamicBoundingSphere.w != -1 )
+	{
+		return Vector3( m_dynamicBoundingSphere.x, m_dynamicBoundingSphere.y, m_dynamicBoundingSphere.z );
+	}
 	return m_boundingSphereCenter;
 }
 
@@ -1145,6 +1185,8 @@ void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
 		m_geometryResFromMesh = nullptr;
 		return;
 	}
+	m_isAnimated = m_geometryResFromMesh && m_geometryResFromMesh->GetAnimationCount();
+
 	m_animationUpdater->SetUseMeshBinding( true );	
 	m_animationUpdater->SetSharedGeometryRes( m_geometryResFromMesh );
 	m_animationUpdater->RebuildCachedData( p );
@@ -1197,7 +1239,7 @@ bool EveSpaceObject2::OnModified( Be::Var* val )
 
 bool EveSpaceObject2::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 {
-	if( m_boundingSphereRadius <= 0.0f )
+	if( m_boundingSphereRadius <= 0.0f && m_dynamicBoundingSphere.w <= 0 )
 	{
 		return false;
 	}
@@ -1469,14 +1511,22 @@ void EveSpaceObject2::GetModelCenterWorldPosition( Vector3 &position, Be::Time t
 {
 	// We are being looked at by a camera, so we need to make sure we update early enough
 	UpdateWorldTransform( t );
-	D3DXVec3TransformCoord( &position, &m_boundingSphereCenter, &m_worldTransform );
+
+	if( m_isAnimated && m_animationUpdater && m_animationUpdater->IsInitialized() )
+	{
+		Vector4 boundingSphere;
+		m_animationUpdater->GetDynamicBounds( boundingSphere, m_localAabbMin, m_localAabbMax );
+		D3DXVec3TransformCoord( &position, (Vector3*)&boundingSphere, &m_worldTransform );
+	}
+	else
+	{
+		D3DXVec3TransformCoord( &position, &m_boundingSphereCenter, &m_worldTransform );
+	}
 }
 
 Vector3 EveSpaceObject2::GetModelWorldPosition()
 {
-	Vector3 position;
-	D3DXVec3TransformCoord( &position, &m_boundingSphereCenter, &m_worldTransform );
-	return position;
+	return Vector3( m_boundingSphereWorld.x, m_boundingSphereWorld.y, m_boundingSphereWorld.z );
 }
 
 void EveSpaceObject2::GetMissPosition( const Vector3* hit, const Vector3* source, Vector3* out )
@@ -1631,7 +1681,8 @@ void EveSpaceObject2::GetCurrentModelCenterWorldPosition( Vector3 &position )
 
 bool EveSpaceObject2::GetLocalBoundingBox( Vector3 &min, Vector3 &max )
 {
-	if( m_mesh )
+	// Animated objects get their bounds from the animation updater
+	if( m_mesh && !m_isAnimated )
 	{
 		if( m_mesh->GetBoundingBox( min, max ) )
 		{

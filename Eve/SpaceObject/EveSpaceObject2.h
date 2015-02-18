@@ -283,6 +283,7 @@ protected:
 	bool m_debugShowBoundingBox;
 	bool m_debugShowMeshAreaBoundingBox;
 	bool m_debugRenderDebugInfoForChildren;
+	bool m_debugShowDynamicBounds;
 	bool m_allowLodSelection;
 
 	Matrix m_worldTransform;
@@ -333,12 +334,17 @@ protected:
 	float m_boundingSphereRadius;
 
 	Vector4 m_boundingSphereWorld;
+	Vector4 m_dynamicBoundingSphere;
 
 	bool m_allAreasCastShadow;
 	void CacheAllAreasCastShadow();
 
 	float GetBoundingSphereRadius();
 	Vector3 GetBoundingSphereCenter();
+
+	Vector4 CalculateSkinnedBoundingSphere();
+	std::pair<Vector3, Vector3> CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform );
+
 	bool RebuildBoundingSphereInformation();
 
 	Vector3 m_localAabbMin;
@@ -432,6 +438,7 @@ protected:
 	PTriCurveSetVector m_curveSets;
 
 private:
+	bool m_isAnimated;
 	EveAnimationSequencerPtr m_animationSequencer;
 };
 
