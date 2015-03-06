@@ -25,7 +25,7 @@ Vector3* EveSO2ModelTargetPos::Update( Vector3* in, Be::Time t )
 		{
 			Vector3 parentPos;
 			m_parentObject->GetValueAt( &parentPos, t );
-			m_index = m_targetObject->GetGoodDamageLocatorIndex( parentPos );
+			m_index = m_targetObject->GetClosestDamageLocatorIndex( &parentPos );
 		}
 
 		Vector3 locatorPos;
