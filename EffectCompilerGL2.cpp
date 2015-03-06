@@ -2215,25 +2215,17 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			{
 				PrintRegister( os, dst, 0 );
 				os << '=';
-				if( dst.swizzle )
-				{
-					os << '(';
-				}
-				if( command.modifier == MakeInlineString( "sat" ) )
-				{
-					os << "saturate(";
-				}
 				PrintRegister( os, src0, 0 );
 				os << ">=";
 				PrintRegister( os, src1, 0 );
-				os << "?vec4(1.0):vec4(0.0)";
-				if( command.modifier == MakeInlineString( "sat" ) )
+				int outLength = GetRegisterSwizzleDimension( dst );
+				if( outLength == 1 )
 				{
-					os << ")";
+					os << "?1.0:0.0;";
 				}
-				if( dst.swizzle )
+				else
 				{
-					os << ")." << dst.swizzle;
+					os << "?vec" << outLength << "(1.0):vec" << outLength << "(0.0);";
 				}
 			}
 			else
