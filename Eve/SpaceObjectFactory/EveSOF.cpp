@@ -235,7 +235,7 @@ void EveSOF::FillMeshAreaVector( std::map<std::string, Tr2LodResourcePtr>& lodRe
 		newShader->StartUpdate();
 
 		// construct res path of the shader
-		std::string shaderPath = std::string("/") + area->shader;
+		std::string shaderPath = std::string( "/" ) + std::string( area->shader.c_str() );
 		StringInsertStubAfter( shaderPath, "/", dna->GetShaderPrefix( dna->IsHullAnimated() ) );
 		shaderPath = dna->GetAreaShaderLocationResPath() + shaderPath;
 		newShader->SetEffectPathName( shaderPath.c_str() );
@@ -254,7 +254,7 @@ void EveSOF::FillMeshAreaVector( std::map<std::string, Tr2LodResourcePtr>& lodRe
 			}
 		}
 
-		// shader textures
+		// shader textures from the hull data
 		for( auto it = area->textures.begin(); it != area->textures.end(); ++it )
 		{
 			CCP_STATS_ZONE( __FUNCTION__ " texture" );
@@ -294,6 +294,16 @@ void EveSOF::FillMeshAreaVector( std::map<std::string, Tr2LodResourcePtr>& lodRe
 			else
 			{
 				newShader->AddResourceTexture2D( it->first, highResPath.c_str() );
+			}
+		}
+
+		// shader textures from the generic data
+		auto genericTextures = dna->GetGenericShaderTextures( area->shader );
+		if( genericTextures )
+		{
+			for( auto gtit = genericTextures->begin(); gtit != genericTextures->end(); ++gtit )
+			{
+				newShader->AddResourceTexture2D( gtit->first, gtit->second.resFilePath.c_str() );
 			}
 		}
 

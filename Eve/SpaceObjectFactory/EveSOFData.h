@@ -228,7 +228,7 @@ public:
 	unsigned int m_index;
 	unsigned int m_count;
 	BlueSharedString m_name;
-	std::string m_shader;
+	BlueSharedString m_shader;
 	PEveSOFDataTextureVector m_textures;
 	PEveSOFDataParameterVector m_parameters;
 };
@@ -600,6 +600,22 @@ public:
 TYPEDEF_BLUECLASS( EveSOFDataGenericString );
 BLUE_DECLARE_VECTOR( EveSOFDataGenericString );
 
+BLUE_CLASS( EveSOFDataGenericShader ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataGenericShader( IRoot* lockobj = NULL );
+	~EveSOFDataGenericShader() {}
+
+	BlueSharedString m_shader;
+
+	// textures
+	PEveSOFDataTextureVector m_textures;
+};
+TYPEDEF_BLUECLASS( EveSOFDataGenericShader );
+BLUE_DECLARE_VECTOR( EveSOFDataGenericShader );
+
 BLUE_CLASS( EveSOFDataGeneric ) :
 	public IRoot
 {
@@ -616,6 +632,9 @@ public:
 
 	// shader material pre-fixes
 	PEveSOFDataGenericStringVector m_materialPrefixes;
+
+	// shader-specific data
+	PEveSOFDataGenericShaderVector m_shaders;
 
 	// hull area data
 	PEveSOFDataFactionHullAreaVector m_hullAreas;

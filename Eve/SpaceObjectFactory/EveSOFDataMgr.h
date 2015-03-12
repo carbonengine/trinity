@@ -116,7 +116,7 @@ public:
 		unsigned int index;
 		unsigned int count;
 		BlueSharedString designation;
-		std::string shader;
+		BlueSharedString shader;
 		std::map<BlueSharedString, TextureData> textures;
 		std::map<BlueSharedString, Vector4> parameters;
 	};
@@ -262,6 +262,12 @@ public:
 		std::map<BlueSharedString, Vector4> parameters;
 	};
 
+	// generic shader data
+	struct GenericShaderData
+	{
+		std::map<BlueSharedString, TextureData> textures;
+	};
+
 	// generic data structs
 	struct GenericData
 	{
@@ -271,6 +277,8 @@ public:
 		std::string decalShaderLocation;
 		// material perfixes
 		std::vector<std::string> materialPrefixes;
+		// shader-specific data
+		std::map<BlueSharedString, GenericShaderData> shaderData;
 		// hull area parameter overloads
 		std::map<BlueSharedString, FactionAreaData> hullAreaParameters;
 	};

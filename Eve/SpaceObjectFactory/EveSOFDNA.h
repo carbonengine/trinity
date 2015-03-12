@@ -47,6 +47,7 @@ public:
 	const char* GetAreaShaderLocationResPath() const;
 	const char* GetDecalShaderLocationResPath() const;
 	const char* GetShaderPrefix( bool isAnimated ) const;
+	const std::map<BlueSharedString, EveSOFDataMgr::TextureData>* GetGenericShaderTextures( const BlueSharedString& shaderName ) const;
 
 	// get racial data
 	const EveSOFDataMgr::RaceBoosterData* GetRaceBoosterData() const;

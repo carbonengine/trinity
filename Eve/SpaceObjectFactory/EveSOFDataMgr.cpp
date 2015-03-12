@@ -897,6 +897,22 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 		gd.materialPrefixes.push_back( str->m_str );
 	}
 
+	// shader-specific data
+	gd.shaderData.clear();
+	for( auto sit = srcData->m_shaders.begin(); sit != srcData->m_shaders.end(); ++sit )
+	{
+		EveSOFDataGenericShaderPtr shaderData = (*sit);
+
+		GenericShaderData gsd;
+		for( auto tdit = shaderData->m_textures.begin(); tdit != shaderData->m_textures.end(); ++tdit )
+		{
+			EveSOFDataTexturePtr textureData = (*tdit);
+			gsd.textures[ textureData->m_name ].resFilePath = textureData->m_resFilePath;
+		}
+
+		gd.shaderData[ shaderData->m_shader ] = gsd;
+	}
+
 	// hull area parameters
 	gd.hullAreaParameters.clear();
 	for( auto hait = srcData->m_hullAreas.begin(); hait != srcData->m_hullAreas.end(); ++hait )

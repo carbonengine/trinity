@@ -188,6 +188,21 @@ const char* EveSOFDNA::GetShaderPrefix( bool isAnimated ) const
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Return the generic textures for a given shader
+// --------------------------------------------------------------------------------
+const std::map<BlueSharedString, EveSOFDataMgr::TextureData>* EveSOFDNA::GetGenericShaderTextures( const BlueSharedString& shaderName ) const
+{
+	auto finder = m_genericData->shaderData.find( shaderName );
+	if( finder == m_genericData->shaderData.end() )
+	{
+		return nullptr;
+	}
+
+	return &finder->second.textures;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Return the factional group-decal-data by a given groupindex
 // --------------------------------------------------------------------------------
 const EveSOFDataMgr::FactionDecalData* EveSOFDNA::GetFactionDecalData( int groupIndex ) const
