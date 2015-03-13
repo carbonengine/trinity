@@ -1,9 +1,9 @@
 #include "StdAfx.h"
-
 #include "App.h"
 #include "Tr2MouseCursor.h"
 #include "../TriDevice.h"
-
+#include "Scancodes.h"
+ 
 static CcpLogChannel_t s_appChannel = CCP_LOG_DEFINE_CHANNEL( "App" );
 
 #ifdef _WIN32
@@ -20,19 +20,26 @@ LRESULT App::WndProc(HWND hwnd, UINT msg, WPARAM w, LPARAM l)
 	switch(msg)
 	{
 	case WM_LBUTTONDOWN:
-		{
-			RECT rc;
-			::GetClientRect(hwnd, &rc);
-			POINT offs = {0};
-			ClientToScreen(hwnd, &offs);
-			OffsetRect(&rc, offs.x, offs.y);
-			::ClipCursor(&rc);
-		}
+		::SetCapture(hwnd);
 		break;
 
+
 	case WM_LBUTTONUP:
-		::ClipCursor(NULL);
+		if (!::GetAsyncKeyState(VK_RBUTTON))
+			::ReleaseCapture();
 		break;
+
+
+	case WM_RBUTTONDOWN:
+		::SetCapture(hwnd);
+		break;
+
+
+	case WM_RBUTTONUP:
+		if (!::GetAsyncKeyState(VK_LBUTTON))
+			::ReleaseCapture();
+		break;
+
 
     case WM_GETMINMAXINFO:
         ((MINMAXINFO*)l)->ptMinTrackSize = reinterpret_cast<const POINT&>( GetMinBounds() );
