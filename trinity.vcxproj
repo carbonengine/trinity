@@ -2677,7 +2677,6 @@
     <ClInclude Include="TriFrustum.h"/>
     <ClInclude Include="TriFrustumOrtho.h"/>
     <ClInclude Include="TriLineSet.h"/>
-    <ClInclude Include="TriNearestBoundingPoint.h"/>
     <ClInclude Include="TriObserverLocal.h"/>
     <ClInclude Include="TriPoint.h"/>
     <ClInclude Include="TriPoolAllocator.h"/>
@@ -2757,6 +2756,7 @@
     <ClInclude Include="Eve\EveEffectRoot.h"/>
     <ClInclude Include="Eve\EveLensflare.h"/>
     <ClInclude Include="Eve\EveLineSet.h"/>
+    <ClInclude Include="Eve\EveLocalPositionCurve.h"/>
     <ClInclude Include="Eve\EveLODHelper.h"/>
     <ClInclude Include="Eve\EveOccluder.h"/>
     <ClInclude Include="Eve\EveParticleDirectForce.h"/>
@@ -2766,8 +2766,6 @@
     <ClInclude Include="Eve\EveProjectBracket.h"/>
     <ClInclude Include="Eve\EveRootTransform.h"/>
     <ClInclude Include="Eve\EveShip2Builder.h"/>
-    <ClInclude Include="Eve\EveSO2ModelCenterPos.h"/>
-    <ClInclude Include="Eve\EveSO2ModelTargetPos.h"/>
     <ClInclude Include="Eve\EveSpaceScene.h"/>
     <ClInclude Include="Eve\EveSpaceSceneLightMgr.h"/>
     <ClInclude Include="Eve\EveSpherePin.h"/>
@@ -3199,8 +3197,6 @@
     <ClCompile Include="TriMath.cpp"/>
     <ClCompile Include="TriMatrix.cpp"/>
     <ClCompile Include="TriMatrix_Blue.cpp"/>
-    <ClCompile Include="TriNearestBoundingPoint.cpp"/>
-    <ClCompile Include="TriNearestBoundingPoint_Blue.cpp"/>
     <ClCompile Include="trinity.cpp"/>
     <ClCompile Include="TriObserverLocal.cpp"/>
     <ClCompile Include="TriObserverLocal_Blue.cpp"/>
@@ -3340,6 +3336,8 @@
     <ClCompile Include="Eve\EveLensflare_Blue.cpp"/>
     <ClCompile Include="Eve\EveLineSet.cpp"/>
     <ClCompile Include="Eve\EveLineSet_Blue.cpp"/>
+    <ClCompile Include="Eve\EveLocalPositionCurve.cpp"/>
+    <ClCompile Include="Eve\EveLocalPositionCurve_Blue.cpp"/>
     <ClCompile Include="Eve\EveLODHelper.cpp"/>
     <ClCompile Include="Eve\EveOccluder.cpp"/>
     <ClCompile Include="Eve\EveOccluder_Blue.cpp"/>
@@ -3357,10 +3355,6 @@
     <ClCompile Include="Eve\EveRootTransform_Blue.cpp"/>
     <ClCompile Include="Eve\EveShip2Builder.cpp"/>
     <ClCompile Include="Eve\EveShip2Builder_Blue.cpp"/>
-    <ClCompile Include="Eve\EveSO2ModelCenterPos.cpp"/>
-    <ClCompile Include="Eve\EveSO2ModelCenterPos_Blue.cpp"/>
-    <ClCompile Include="Eve\EveSO2ModelTargetPos.cpp"/>
-    <ClCompile Include="Eve\EveSO2ModelTargetPos_Blue.cpp"/>
     <ClCompile Include="Eve\EveSpaceScene.cpp"/>
     <ClCompile Include="Eve\EveSpaceSceneLightMgr.cpp"/>
     <ClCompile Include="Eve\EveSpaceSceneLightMgr_Blue.cpp"/>

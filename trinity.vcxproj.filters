@@ -412,9 +412,6 @@
     <ClInclude Include="TriLineSet.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="TriNearestBoundingPoint.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="TriObserverLocal.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -652,6 +649,9 @@
     <ClInclude Include="Eve\EveLineSet.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
+    <ClInclude Include="Eve\EveLocalPositionCurve.h">
+      <Filter>Source Files\Eve</Filter>
+    </ClInclude>
     <ClInclude Include="Eve\EveLODHelper.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
@@ -677,12 +677,6 @@
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
     <ClInclude Include="Eve\EveShip2Builder.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\EveSO2ModelCenterPos.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\EveSO2ModelTargetPos.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
     <ClInclude Include="Eve\EveSpaceScene.h">
@@ -1966,12 +1960,6 @@
     <ClCompile Include="TriMatrix_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TriNearestBoundingPoint.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TriNearestBoundingPoint_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="trinity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2389,6 +2377,12 @@
     <ClCompile Include="Eve\EveLineSet_Blue.cpp">
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
+    <ClCompile Include="Eve\EveLocalPositionCurve.cpp">
+      <Filter>Source Files\Eve</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\EveLocalPositionCurve_Blue.cpp">
+      <Filter>Source Files\Eve</Filter>
+    </ClCompile>
     <ClCompile Include="Eve\EveLODHelper.cpp">
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
@@ -2438,18 +2432,6 @@
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
     <ClCompile Include="Eve\EveShip2Builder_Blue.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveSO2ModelCenterPos.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveSO2ModelCenterPos_Blue.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveSO2ModelTargetPos.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveSO2ModelTargetPos_Blue.cpp">
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
     <ClCompile Include="Eve\EveSpaceScene.cpp">
