@@ -41,7 +41,9 @@ public:
 	void Setup( const char* dnaString, EveSOFDataMgrPtr dataMgr );
 
 	// is it correctly initialized?
-	bool isValid() const;
+	bool IsValid() const;
+	// does it have the correct content?
+	bool ValidateContent();
 
 	// get generic data
 	const char* GetAreaShaderLocationResPath() const;

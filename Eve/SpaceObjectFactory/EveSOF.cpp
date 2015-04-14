@@ -89,7 +89,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 
 	// init it with given dna string
 	dna->Setup( dnaString, &m_dataMgr );
-	if( !dna->isValid() )
+	if( !dna->IsValid() )
 	{
 		return nullptr;
 	}
@@ -140,6 +140,36 @@ IRootPtr EveSOF::Build( const char* hullName, const char* factionName, const cha
 
 	// pass on to real build function
 	return BuildFromDNA( dnaString.c_str() );
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Validate a given DNA string. This is slow and should be used only for offline
+//   validation!
+// --------------------------------------------------------------------------------
+bool EveSOF::ValidateDNA( const char* dnaString )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	// create a DNA object
+	EveSOFDNAPtr dna;
+	dna.CreateInstance();
+
+	// init it with given dna string
+	dna->Setup( dnaString, &m_dataMgr );
+	if( !dna->IsValid() )
+	{
+		return false;
+	}
+
+	// let the dna validate itself. this is the slow part
+	if( !dna->ValidateContent() )
+	{
+		return false;
+	}
+
+	// if we made it this far, this DNA is valid
+	return true;
 }
 
 // --------------------------------------------------------------------------------

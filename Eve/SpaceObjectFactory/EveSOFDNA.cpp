@@ -50,7 +50,7 @@ EveSOFDNA::~EveSOFDNA()
 // Description:
 //   Checks if this DNA is valid and ready to go
 // --------------------------------------------------------------------------------
-bool EveSOFDNA::isValid() const
+bool EveSOFDNA::IsValid() const
 {
 	// need all three basic parts
 	if( !m_hullData || !m_factionData || !m_raceData )
@@ -58,6 +58,74 @@ bool EveSOFDNA::isValid() const
 		return false;
 	}
 
+	return true;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Checks the content of the DNA. This is slow and should only be called
+//   for offline validation.
+// --------------------------------------------------------------------------------
+bool EveSOFDNA::ValidateContent()
+{
+	// just to be sure
+	if( !IsValid() )
+	{
+		return false;
+	}
+
+	// check every single command
+	for( auto cit = m_commands.begin(); cit != m_commands.end(); ++cit )
+	{
+		// the command string itself must exist!
+		unsigned int cmd = CMD_INVALID;
+		for( unsigned int i = 0; i < CMD_MAX; ++i )
+		{
+			if( cit->first.compare( s_dnaCommands[i] ) == 0 )
+			{
+				cmd = i;
+				break;
+			}
+		}
+		if( cmd == CMD_INVALID )
+		{
+			CCP_LOGERR( "Invalid command found: %s", cit->first.c_str() );
+			return false;
+		}
+
+		// now validate the args for every command
+		switch( cmd )
+		{
+		case CMD_MESH:
+			// number of arguments must be number of materials
+			if( m_genericData->materialPrefixes.size() != cit->second.size() )
+			{
+				return false;
+			}
+			// each arg is a material or "none" and must exist
+			for( auto ait = cit->second.begin(); ait != cit->second.end(); ++ait )
+			{
+				if( ait->compare( "none" ) == 0 )
+				{
+					continue;
+				}
+				else if( !m_dataMgr->HasMaterialData( ait->c_str() ) )
+				{
+					return false;
+				}
+			}
+			break;
+		case CMD_DIRTLEVEL:
+			// has argument
+			if( cit->second.size() != 1 )
+			{
+				return false;
+			}
+			break;
+		}
+	}
+
+	// if we make it this far, it's all ok
 	return true;
 }
 
@@ -92,7 +160,7 @@ void EveSOFDNA::Setup( const char* dnaString, EveSOFDataMgrPtr dataMgr )
 		if( cmdAndArgs.size() != 2 )
 		{
 			CCP_LOGERR( "Invalid SOF DNA, incorrect command and args: %s", dnaString );
-			continue;
+			return;
 		}
 
 		// get commands
