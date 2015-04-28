@@ -131,8 +131,8 @@ void Tr2FontMeasurer::Reset()
 
 	m_cursorX = 0;
 	m_cursorY = 0;
-	m_ascender = m_currentAscender;
-	m_descender = m_currentDescender;
+	m_ascender = 0;
+	m_descender = 0;
 
 	for( auto it = m_renderData.begin(); it != m_renderData.end(); ++it )
 	{
