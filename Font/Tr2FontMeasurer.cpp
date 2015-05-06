@@ -131,9 +131,12 @@ void Tr2FontMeasurer::Reset()
 
 	m_cursorX = 0;
 	m_cursorY = 0;
+
+	// Reset ascender/descender and font to get fresh sizes on next AddText
 	m_ascender = 0;
 	m_descender = 0;
-
+	m_currentFace = 0;
+	
 	for( auto it = m_renderData.begin(); it != m_renderData.end(); ++it )
 	{
 		Tr2FontRenderData* rd = *it;
@@ -145,7 +148,7 @@ void Tr2FontMeasurer::Reset()
 	{
 		Tr2FontRenderData* rd = *it;
 		delete rd;
-	}
+	} 
 
 	m_committedRenderData.clear();
 
