@@ -1379,7 +1379,7 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	// fill with data
 	if( !m_singleTurrets.empty() )
 	{
-		unsigned int maxBonesPerTurret = EVE_MAX_TURRET_SET_BONES / m_singleTurrets.size();
+		unsigned int maxBonesPerTurret = EVE_MAX_TURRET_SET_BONES / (unsigned int)m_singleTurrets.size();
 		// to-bone-index-mapping for the shader (is the same for all turrets of the set)
 		const int* toBoneIndices = m_grnMeshBinding ? GrannyGetMeshBindingToBoneIndices( m_grnMeshBinding ) : NULL;
 		unsigned int boneCount = m_grnMeshBinding ? GrannyGetMeshBindingBoneCount( m_grnMeshBinding ) : maxBonesPerTurret;
