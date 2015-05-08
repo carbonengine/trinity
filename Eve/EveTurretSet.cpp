@@ -660,7 +660,7 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 		// this validates this turret
 		it->valid = true;
 	}
-
+	
 	// handle fading of turret tracking
 	if( m_trackingInfluenceDelta != 0.f )
 	{
@@ -739,22 +739,12 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 	{
 		m_targetObject->GetDamageLocatorPosition( &m_targetPosition, m_targetLocator );
 
-		if( !m_trackMissPoint )
-		{
-			m_targetPositionMiss = m_targetPosition;
-		}
-
 		if( m_targetPositionOldInfluence > 0.f )
 		{
 			// lerp the old position "in"
 			D3DXVec3Lerp( &m_targetPosition, &m_targetPosition, &m_targetPositionOld, m_targetPositionOldInfluence );
 			// fadeout the influence
 			m_targetPositionOldInfluence -= deltaT / m_trackingFadeTime;
-		}
-
-		if( m_laserMissBehaviour )
-		{
-			UpdateMissPosition( &m_parentData.transform );
 		}
 	}
 
@@ -773,9 +763,18 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 			}
 			m_firingEffectMuzzlePosSet = true;
 		}
-		
-		// is targeted! so did we miss or hit the target?
-		SetEffectEndPoint();
+
+		if( m_firingEffect->ReadyToFire() )
+		{
+			PopShotMissed();
+			UpdateMissPosition( &m_parentData.transform );
+			SetEffectEndPoint();
+		}
+		else if( m_laserMissBehaviour )
+		{
+			UpdateMissPosition( &m_parentData.transform );
+			SetEffectEndPoint();
+		}		
 
 		// time update (return value tells us if effect is ready to fire!)
 		if( m_firingEffect->Update( time, deltaT ) )
@@ -786,7 +785,7 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 			// properly set
 			if( !m_firingEffectMuzzlePosSet )
 			{
-				
+
 				for( unsigned int i = 0; i < m_firingEffect->GetPerMuzzleEffectCount(); ++i )
 				{
 					// use something relatively sensible, even absent geometry
@@ -795,17 +794,8 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 
 				m_firingEffectMuzzlePosSet = true;
 			}
-
-
-			if( !m_laserMissBehaviour )
-			{
-				UpdateMissPosition( &m_parentData.transform );
-			}
-			PopShotMissed();
-			SetEffectEndPoint();
 			m_firingEffect->SetDisplayDestObject( !GetShotMissed() || m_projectileMissBehaviour );
 
-			// pop miss state
 			m_randomMissDistanceOffset = TriFloatRandom01();
 			const float u = TriFloatRandom01(), v = TriFloatRandom01();
 			const float phi = u * 3.14159f * 2.f;
@@ -2329,6 +2319,7 @@ void EveTurretSet::SetEffectEndPoint()
 		m_firingEffect->SetEndPosition( &m_targetPosition );
 	}
 }
+
 
 // --------------------------------------------------------------------------------
 // Description:

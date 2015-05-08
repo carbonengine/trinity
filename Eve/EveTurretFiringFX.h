@@ -49,6 +49,7 @@ public:
 	};
 	
 public:
+	bool ReadyToFire();
 	// timing and worldspace positioning
 	bool Update( Be::Time time, float deltaT );
 	// rendering

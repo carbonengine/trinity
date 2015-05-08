@@ -261,6 +261,25 @@ void EveTurretFiringFX::StopFiring()
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Returns true if any muzzle is not started but is ready to start
+// --------------------------------------------------------------------------------
+bool EveTurretFiringFX::ReadyToFire()
+{
+	for( unsigned int i = 0; i < m_stretch.size(); ++i )
+	{
+		if( m_perMuzzleData[i].elapsedTime < m_firingDuration || m_isLoopFiring )
+		{
+			if( !m_perMuzzleData[i].started && m_perMuzzleData[i].readyToStart)
+			{
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   First thing to do iterate through all the stretch effects and see if the
 //   time is right to start playing curveSets. If a stretch effect is running,
 //   then update both its source and destination positions.
