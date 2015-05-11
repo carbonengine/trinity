@@ -653,8 +653,12 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 	// update single turret list
 	for( std::vector<SingleTurretData>::iterator it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
 	{
+		Matrix localMatrix;		
+		D3DXMatrixRotationQuaternion( &localMatrix, &it->localQuaternion );
+		TriMatrixTranslate(&localMatrix, &localMatrix, &Vector3(it->localPosition.x, it->localPosition.y, it->localPosition.z));
+		
 		// first parent matrix (ship or station), then local matrix (locator position)
-		D3DXMatrixMultiply( &it->worldMatrix, &it->localMatrix, &m_parentData.transform );
+		D3DXMatrixMultiply( &it->worldMatrix, &localMatrix, &m_parentData.transform );
 		// we need the inverse matrix for the tracking later
 		D3DXMatrixInverse( &it->invWorldMatrix, NULL, &it->worldMatrix );
 		// this validates this turret
@@ -1051,8 +1055,7 @@ void EveTurretSet::SetLocalTransform( unsigned int turretIndex, const Matrix* lo
 				data.grnSkeleton = NULL;
 				data.grnLocalPose = NULL;
 				data.grnWorldPose = NULL;
-			}
-			D3DXMatrixIdentity( &data.localMatrix );
+			}			
 			D3DXMatrixIdentity( &data.worldMatrix );
 			D3DXMatrixIdentity( &data.invWorldMatrix );
 			data.valid = false;
@@ -1064,11 +1067,14 @@ void EveTurretSet::SetLocalTransform( unsigned int turretIndex, const Matrix* lo
 		}
 	}
 	
+	Matrix noScaleLocalMatrix;
+	D3DXMatrixIdentity( &noScaleLocalMatrix );
+
 	// remove scaling: this matrix comes from a locator which can have scaling, but we don't want it!
-	TriMatrixRemoveScaling( &m_singleTurrets[turretIndex].localMatrix, localMatrix );
+	TriMatrixRemoveScaling( &noScaleLocalMatrix , localMatrix );
 
 	Vector3 translation, scale;
-	D3DXMatrixDecompose( &scale, &m_singleTurrets[turretIndex].localQuaternion, &translation, &m_singleTurrets[turretIndex].localMatrix );
+	D3DXMatrixDecompose( &scale, &m_singleTurrets[turretIndex].localQuaternion, &translation, &noScaleLocalMatrix );
 	m_singleTurrets[turretIndex].localPosition = Vector4(translation, 1.0f);
 
 	// new one is not yet valid, cause it needs to get all calculated
