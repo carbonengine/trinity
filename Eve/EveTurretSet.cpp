@@ -780,6 +780,10 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 			UpdateMissPosition( &m_parentData.transform );
 			SetEffectEndPoint();
 		}		
+		else
+		{
+			SetEffectEndPoint();
+		}
 
 		// time update (return value tells us if effect is ready to fire!)
 		if( m_firingEffect->Update( time, deltaT ) )
