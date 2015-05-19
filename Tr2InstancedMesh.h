@@ -65,7 +65,7 @@ public:
 	void SetInstanceMeshResPath( const char* path ) { m_instanceGeometryResPath = path; }
 	int GetInstanceMeshIndex() const { return m_instanceMeshIndex; };
 
-	ITr2InstanceData* GetInstanceGeometryResource() { return m_instanceGeometryResource; };
+	ITr2InstanceData* GetInstanceGeometryResource() const;
 	void SetInstanceGeometryRes( ITr2InstanceData* res );
 
 	void GetBatches( ITriRenderBatchAccumulator* batches,
@@ -114,6 +114,8 @@ private:
 	std::string m_instanceGeometryResPath;
 	// Instance geometry resource
 	ITr2InstanceDataPtr m_instanceGeometryResource;
+	// Instance geometry resource loaded from m_instanceGeometryResPath
+	ITr2InstanceDataPtr m_loadedGeometryResource;
 	// Mesh index of instance data in instance geometry resource
 	int m_instanceMeshIndex;
 	// Combined vertex declaration

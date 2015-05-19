@@ -133,7 +133,7 @@ bool Tr2InstancedMesh::Initialize()
 		{
 			TriGeometryResPtr res;
 			BeResMan->GetResource( m_instanceGeometryResPath.c_str(), "", res );
-			m_instanceGeometryResource = res;
+			m_loadedGeometryResource = res;
 		}
 	}
 	return Tr2Mesh::Initialize();
@@ -189,7 +189,7 @@ bool Tr2InstancedMesh::OnModified( Be::Var* value )
 	}
 	else if( IsMatch( value, m_deferGeometryLoad ) )
 	{
-		if( !m_deferGeometryLoad && !m_instanceGeometryResource )
+		if( !m_deferGeometryLoad && !m_loadedGeometryResource )
 		{
 			Initialize();
 		}
@@ -361,6 +361,15 @@ void Tr2InstancedMesh::RebuildCachedData( BlueAsyncRes* p )
 
 // --------------------------------------------------------------------------------------
 // Description:
+//   Returns an instance resource (either loaded from gr2 or assigned).
+// --------------------------------------------------------------------------------------
+ITr2InstanceData* Tr2InstancedMesh::GetInstanceGeometryResource() const
+{
+	return m_loadedGeometryResource ? m_loadedGeometryResource : m_instanceGeometryResource;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
 //   Changes instance geometry resource.
 // Arguments:
 //   res - New instanced geometry resource
@@ -372,6 +381,7 @@ void Tr2InstancedMesh::SetInstanceGeometryRes( ITr2InstanceData* res )
 		return;
 	}
 	m_instanceGeometryResource = res;
+	m_loadedGeometryResource = nullptr;
 	CreateVertexDeclaration();
 }
 
@@ -392,7 +402,7 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 	{
 		return;
 	}
-	if( m_instanceGeometryResource == nullptr && ( m_instanceCount == nullptr || !m_instanceCount->GetGpuBuffer( 0 ) ) )
+	if( GetInstanceGeometryResource() == nullptr && ( m_instanceCount == nullptr || !m_instanceCount->GetGpuBuffer( 0 ) ) )
 	{
 		return;
 	}
@@ -532,7 +542,7 @@ bool Tr2InstancedMesh::GetBoundingSphere( Vector4& sphere )
 // --------------------------------------------------------------------------------------
 bool Tr2InstancedMesh::IsLoading() const
 {
-	return Tr2Mesh::IsLoading() && m_instanceGeometryResource && !m_instanceGeometryResource->IsInstanceDataReady();
+	return Tr2Mesh::IsLoading() && GetInstanceGeometryResource() && !GetInstanceGeometryResource()->IsInstanceDataReady();
 }
 
 // --------------------------------------------------------------------------------------
@@ -600,6 +610,8 @@ void Tr2InstancedMesh::RenderAreas( unsigned int areaIx,
 	}
 	else
 	{
+		auto instanceGeometryResource = GetInstanceGeometryResource();
+
 		if( m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 		{
 			return;
@@ -610,7 +622,7 @@ void Tr2InstancedMesh::RenderAreas( unsigned int areaIx,
 			return;
 		}
 
-		if( !m_instanceGeometryResource || !m_instanceGeometryResource->IsInstanceDataReady() )
+		if( !instanceGeometryResource || !instanceGeometryResource->IsInstanceDataReady() )
 		{
 			return;
 		}
@@ -620,7 +632,7 @@ void Tr2InstancedMesh::RenderAreas( unsigned int areaIx,
 			return;
 		}
 
-		if( m_instanceMeshIndex >= int( m_instanceGeometryResource->GetInstanceBufferCount() ) )
+		if( m_instanceMeshIndex >= int( instanceGeometryResource->GetInstanceBufferCount() ) )
 		{
 			return;
 		}
@@ -650,7 +662,7 @@ void Tr2InstancedMesh::RenderAreas( unsigned int areaIx,
 			primCount += curArea.m_primitiveCount;
 		}
 
-		const unsigned instanceCount = m_instanceGeometryResource->GetInstanceBufferVertexCount( m_instanceMeshIndex );
+		const unsigned instanceCount = instanceGeometryResource->GetInstanceBufferVertexCount( m_instanceMeshIndex );
 
 		if( primCount && instanceCount )
 		{
@@ -658,7 +670,7 @@ void Tr2InstancedMesh::RenderAreas( unsigned int areaIx,
 			renderContext.m_esm.ApplyStreamSource( 0, pMesh->m_vertexBuffer, 0, pMesh->m_bytesPerVertex );
 			Tr2VertexBufferAL* vb;
 			unsigned stride;
-			m_instanceGeometryResource->GetVertexBuffer( m_instanceMeshIndex, vb, stride );
+			instanceGeometryResource->GetVertexBuffer( m_instanceMeshIndex, vb, stride );
 			renderContext.m_esm.ApplyStreamSource( 1, *vb, 0, stride );
 			if( reversed )
 			{
@@ -769,12 +781,12 @@ void Tr2InstancedMesh::CreateVertexDeclaration() const
 	}
 	else
 	{
-		if( !m_instanceGeometryResource || !m_instanceGeometryResource->IsInstanceDataReady() )
+		if( !GetInstanceGeometryResource() || !GetInstanceGeometryResource()->IsInstanceDataReady() )
 		{
 			return;
 		}
 
-		const unsigned declaration = m_instanceGeometryResource->GetInstanceBufferVertexDeclaration( m_instanceMeshIndex );
+		const unsigned declaration = GetInstanceGeometryResource()->GetInstanceBufferVertexDeclaration( m_instanceMeshIndex );
 		if( declaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 		{
 			return;
