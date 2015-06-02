@@ -3586,7 +3586,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 	bool useOpenGLValidation = TryOpenGLCall();
 	if( !useOpenGLValidation )
 	{
-		g_messages.AddMessage( "\\memory(0): error X0000: OpenGL calls are failing; skipping OpenGL shader validation" );
+		g_messages.AddMessage( "\\memory(0): warning X0000: OpenGL calls are failing; skipping OpenGL shader validation" );
 	}
 
 	// Fist compile effect as DX9
