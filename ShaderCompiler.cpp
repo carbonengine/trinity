@@ -931,9 +931,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		fflush( stdout );
 		return 1;
 	}
-	printf( "Compilers created\n" );
-	fflush( stdout );
-	
 
 	// Read permutation strings
 	char buffer[BUFFER_SIZE];
