@@ -3707,6 +3707,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 			GLuint shader = glCreateShader( stage->type == VERTEX_STAGE ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER );
 			if( !shader )
 			{
+				g_messages.AddMessage( "\\memory(0): error X0000: could not create OpenGL shader" );
 				return false;
 			}
 			const char* codeSource = glesSource.c_str();
@@ -3725,6 +3726,10 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					glGetShaderInfoLog( shader, infoLen, nullptr, buffer );
 					g_messages.AddMessage( "%s", buffer );
 					delete[] buffer;
+				}
+				else
+				{
+					g_messages.AddMessage( "\\memory(0): error X0000: undefined error compiling OpenGL shader" );
 				}
 				glDeleteShader( shader );
 				return false;
@@ -3871,6 +3876,10 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					glGetProgramInfoLog( program, infoLen, nullptr, buffer );
 					g_messages.AddMessage( "%s", buffer );
 					delete[] buffer;
+				}
+				else
+				{
+					g_messages.AddMessage( "\\memory(0): error X0000: undefined error linking OpenGL shader" );
 				}
 				glDeleteProgram( program );
 				return false;
