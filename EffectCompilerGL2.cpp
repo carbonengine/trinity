@@ -3542,7 +3542,7 @@ static bool RunProcess( const char* commandLine )
 	return true;
 }
 
-static void TryOpenGLCall()
+static bool TryOpenGLCall()
 {
 	__try
 	{
@@ -3551,7 +3551,9 @@ static void TryOpenGLCall()
 	}
 	__except( EXCEPTION_EXECUTE_HANDLER )
 	{ 
+		return false;
 	}
+	return true;
 }
 
 // --------------------------------------------------------------------------------------
@@ -3581,7 +3583,11 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 	}
 
 	// WGL will crash if we exit the program without making a single GL call
-	TryOpenGLCall();
+	bool useOpenGLValidation = TryOpenGLCall();
+	if( !useOpenGLValidation )
+	{
+		g_messages.AddMessage( "\\memory(0): error X0000: OpenGL calls are failing; skipping OpenGL shader validation" );
+	}
 
 	// Fist compile effect as DX9
 	if( !g_compilerDX9.CompileEffect( source, sourceLength, defines, include, result, true ) )
@@ -3714,35 +3720,39 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 			stage->shadowShaderData = nullptr;
 
 			// Validate resulting shader
-			GLuint shader = glCreateShader( stage->type == VERTEX_STAGE ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER );
-			if( !shader )
+			GLuint shader = 0;
+			if( useOpenGLValidation )
 			{
-				g_messages.AddMessage( "\\memory(0): error X0000: could not create OpenGL shader" );
-				return false;
-			}
-			const char* codeSource = glesSource.c_str();
-			glShaderSource( shader, 1, &codeSource, nullptr );
-			glCompileShader( shader );
+				shader = glCreateShader( stage->type == VERTEX_STAGE ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER );
+				if( !shader )
+				{
+					g_messages.AddMessage( "\\memory(0): error X0000: could not create OpenGL shader" );
+					return false;
+				}
+				const char* codeSource = glesSource.c_str();
+				glShaderSource( shader, 1, &codeSource, nullptr );
+				glCompileShader( shader );
 
-			GLint compiled;
-			glGetShaderiv( shader, GL_COMPILE_STATUS, &compiled );
-			if( !compiled )
-			{
-				GLint infoLen = 0;
-				glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &infoLen );
-				if( infoLen > 1 )
+				GLint compiled;
+				glGetShaderiv( shader, GL_COMPILE_STATUS, &compiled );
+				if( !compiled )
 				{
-					char* buffer = new char[infoLen];
-					glGetShaderInfoLog( shader, infoLen, nullptr, buffer );
-					g_messages.AddMessage( "%s", buffer );
-					delete[] buffer;
+					GLint infoLen = 0;
+					glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &infoLen );
+					if( infoLen > 1 )
+					{
+						char* buffer = new char[infoLen];
+						glGetShaderInfoLog( shader, infoLen, nullptr, buffer );
+						g_messages.AddMessage( "%s", buffer );
+						delete[] buffer;
+					}
+					else
+					{
+						g_messages.AddMessage( "\\memory(0): error X0000: undefined error compiling OpenGL shader" );
+					}
+					glDeleteShader( shader );
+					return false;
 				}
-				else
-				{
-					g_messages.AddMessage( "\\memory(0): error X0000: undefined error compiling OpenGL shader" );
-				}
-				glDeleteShader( shader );
-				return false;
 			}
 			// We should not issue warnings from GL compiler since GLSL code is 100% generated,
 			// but it might be of interest
@@ -3846,21 +3856,24 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 				DeleteFile( outFile );
 			}
 
-			if( stage->type == VERTEX_STAGE )
+			if( useOpenGLValidation )
 			{
-				if( vertexShader )
+				if( stage->type == VERTEX_STAGE )
 				{
-					glDeleteShader( vertexShader );
+					if( vertexShader )
+					{
+						glDeleteShader( vertexShader );
+					}
+					vertexShader = shader;
 				}
-				vertexShader = shader;
-			}
-			else
-			{
-				if( fragmentShader )
+				else
 				{
-					glDeleteShader( fragmentShader );
+					if( fragmentShader )
+					{
+						glDeleteShader( fragmentShader );
+					}
+					fragmentShader = shader;
 				}
-				fragmentShader = shader;
 			}
 		}
 	}
