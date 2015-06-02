@@ -3542,7 +3542,7 @@ static bool RunProcess( const char* commandLine )
 	return true;
 }
 
-static bool TryOpenGLCall()
+static void TryOpenGLCall()
 {
 	__try
 	{
@@ -3551,10 +3551,7 @@ static bool TryOpenGLCall()
 	}
 	__except( EXCEPTION_EXECUTE_HANDLER )
 	{ 
-		g_messages.AddMessage( "\\memory(0): warning X0000: OpenGL is not available; shader validation is disabled" );
-		return false;
 	}
-	return true;
 }
 
 // --------------------------------------------------------------------------------------
@@ -3576,9 +3573,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 										ID3DXInclude* include, 
 										EffectData& result )
 {
-	g_messages.AddMessage( "\\memory(0): error X0000: initializing glue" );
 	auto ret = glewInit();
-	g_messages.AddMessage( "\\memory(0): error X0000: glue initialized" );
 	if( ret != GLEW_OK )
 	{
 		g_messages.AddMessage( "Errorr initializing OpenGL: %s\n", glewGetErrorString( ret ) );
@@ -3586,16 +3581,13 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 	}
 
 	// WGL will crash if we exit the program without making a single GL call
-	bool openGLValidation = TryOpenGLCall();
-
-	g_messages.AddMessage( "\\memory(0): error X0000: shader created" );
+	TryOpenGLCall();
 
 	// Fist compile effect as DX9
 	if( !g_compilerDX9.CompileEffect( source, sourceLength, defines, include, result, true ) )
 	{
 		return false;
 	}
-	g_messages.AddMessage( "\\memory(0): error X0000: dx9 shader compiled" );
 
 	// Swap minLod and maxLod sampler states as they are recorded incorrectly in DX9.
 	for( auto pass = result.passes.begin(); pass != result.passes.end(); ++pass )
