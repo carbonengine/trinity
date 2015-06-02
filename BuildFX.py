@@ -166,7 +166,7 @@ def _worker(queue, has_errors):
         try:
             p = subprocess.Popen(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             std_out, std_err = p.communicate()
-            print '%s for %s, %s (%s)\n%s\n%s' % (os.path.split(path)[1], platform, sm, p.returncode, std_out, std_err)
+            print '%s for %s, %s\n%s\n%s' % (os.path.split(path)[1], platform, sm, std_out, std_err)
             sys.stdout.flush()
             if p.returncode != 0:
                 has_errors[0] = True
