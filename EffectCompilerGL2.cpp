@@ -3542,6 +3542,21 @@ static bool RunProcess( const char* commandLine )
 	return true;
 }
 
+static bool TryOpenGLCall()
+{
+	__try
+	{
+		GLuint shader = glCreateShader( GL_VERTEX_SHADER );
+		glDeleteShader( shader );
+	}
+	__except( EXCEPTION_EXECUTE_HANDLER )
+	{ 
+		g_messages.AddMessage( "\\memory(0): warning X0000: OpenGL is not available; shader validation is disabled" );
+		return false;
+	}
+	return true;
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Compiles effect and stores all compiled data in EffectData structure.
@@ -3569,11 +3584,10 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 		g_messages.AddMessage( "Errorr initializing OpenGL: %s\n", glewGetErrorString( ret ) );
 		return false;
 	}
-	{
-		// WGL will crash if we exit the program without making a single GL call
-		GLuint shader = glCreateShader( GL_VERTEX_SHADER );
-		glDeleteShader( shader );
-	}
+
+	// WGL will crash if we exit the program without making a single GL call
+	bool openGLValidation = TryOpenGLCall();
+
 	g_messages.AddMessage( "\\memory(0): error X0000: shader created" );
 
 	// Fist compile effect as DX9
