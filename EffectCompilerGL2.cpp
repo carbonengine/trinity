@@ -3561,7 +3561,9 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 										ID3DXInclude* include, 
 										EffectData& result )
 {
+	g_messages.AddMessage( "\\memory(0): error X0000: initializing glue" );
 	auto ret = glewInit();
+	g_messages.AddMessage( "\\memory(0): error X0000: glue initialized" );
 	if( ret != GLEW_OK )
 	{
 		g_messages.AddMessage( "Errorr initializing OpenGL: %s\n", glewGetErrorString( ret ) );
@@ -3572,12 +3574,14 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 		GLuint shader = glCreateShader( GL_VERTEX_SHADER );
 		glDeleteShader( shader );
 	}
+	g_messages.AddMessage( "\\memory(0): error X0000: shader created" );
 
 	// Fist compile effect as DX9
 	if( !g_compilerDX9.CompileEffect( source, sourceLength, defines, include, result, true ) )
 	{
 		return false;
 	}
+	g_messages.AddMessage( "\\memory(0): error X0000: dx9 shader compiled" );
 
 	// Swap minLod and maxLod sampler states as they are recorded incorrectly in DX9.
 	for( auto pass = result.passes.begin(); pass != result.passes.end(); ++pass )
