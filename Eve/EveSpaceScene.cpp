@@ -1455,6 +1455,7 @@ bool EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 	// nebula
 	if( m_backgroundEffect )
 	{
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
 		Tr2Renderer::DrawCameraSpaceScreenQuad( m_backgroundEffect->GetEffectRes(), m_backgroundEffect );
 	}
 
