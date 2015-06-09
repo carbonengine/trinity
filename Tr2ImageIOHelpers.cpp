@@ -101,6 +101,7 @@ bool CreateVolumeTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL &out,
 }
 
 
+#ifndef _WIN64
 
 struct CairoData
 {
@@ -141,6 +142,8 @@ cairo_t* ContextCreate( void *closure, cairo_surface_t *surface )
 	return context;
 }
 
+#endif
+
 const BlueAsyncRes::QueryArgument* FindFirstQueryArgumentByName( const BlueAsyncRes::QueryArguments& arguments, const wchar_t* name )
 {
 	for( auto it = std::begin( arguments ); it != std::end( arguments ); ++it )
@@ -152,7 +155,6 @@ const BlueAsyncRes::QueryArgument* FindFirstQueryArgumentByName( const BlueAsync
 	}
 	return nullptr;
 }
-
 
 }
 
@@ -422,6 +424,7 @@ bool IsCairoScriptPath( const wchar_t* path )
 
 bool RasterizeCairoScript( const char* script, size_t length, uint32_t width, uint32_t height, ImageIO::HostBitmap& bitmap )
 {
+#ifndef _WIN64
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	std::unique_ptr<CairoData> data( new CairoData );
@@ -445,7 +448,7 @@ bool RasterizeCairoScript( const char* script, size_t length, uint32_t width, ui
 
 		auto interpreter = cairo_script_interpreter_create();
 		cairo_script_interpreter_install_hooks( interpreter, &hooks );
-		success = cairo_script_interpreter_feed_string( interpreter, script, length ) == CAIRO_STATUS_SUCCESS;
+		success = cairo_script_interpreter_feed_string( interpreter, script, int( length ) ) == CAIRO_STATUS_SUCCESS;
 		cairo_script_interpreter_finish( interpreter );
 		cairo_script_interpreter_destroy( interpreter );
 	}
@@ -481,6 +484,9 @@ bool RasterizeCairoScript( const char* script, size_t length, uint32_t width, ui
 		cairo_surface_destroy( data->surface );
 	}
 	return true;
+#else
+	return false;
+#endif
 }
 
 ImageIO::Result RasterizeCairoScript( IBlueStream* stream, const BlueAsyncRes::QueryArguments& arguments, ImageIO::HostBitmap& bitmap )
