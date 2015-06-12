@@ -424,5 +424,51 @@ void EveTransform::PlayCurveSets()
 	}
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Play curve sets with the appropriate name if they exist.
+// --------------------------------------------------------------------------------
+void EveTransform::PlayCurveSet( const std::string& name )
+{
+	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
+	{
+		if( (*it)->GetName() == name )
+		{
+			(*it)->Play();
+		}
+	}
+}
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Stop curve sets with the appropriate name if they exist.
+// --------------------------------------------------------------------------------
+void EveTransform::StopCurveSet( const std::string& name )
+{
+	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
+	{
+		if( (*it)->GetName() == name )
+		{
+			(*it)->Stop();
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Get maximum curve set duration for the provided name.
+// --------------------------------------------------------------------------------
+float EveTransform::GetCurveSetDuration( const std::string& name ) const
+{
+	float maxDuration = 0.f;
+	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
+	{
+		if( (*it)->GetName() == name )
+		{
+			maxDuration = max( maxDuration, (*it)->GetMaxCurveDuration() );
+		}
+	}
+
+	return maxDuration;
+}
 

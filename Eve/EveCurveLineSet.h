@@ -45,6 +45,9 @@ public:
 	void GetCurrentModelCenterWorldPosition( Vector3 &position ) {}
 	bool GetLocalBoundingBox( Vector3 &min, Vector3 &max ) { return false; }
 	void GetLocalToWorldTransform( Matrix &transform ) { D3DXMatrixIdentity( &transform ); }
+	void PlayCurveSet( const std::string& name ) {}
+	void StopCurveSet( const std::string& name ) {}
+	float GetCurveSetDuration( const std::string& name ) const { return 0.f; } 
 };
 
 TYPEDEF_BLUECLASS( EveCurveLineSet );

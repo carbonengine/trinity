@@ -2056,8 +2056,12 @@ void EveSpaceObject2::PlayCurveSet( const std::string& name )
 	{
 		if( (*it)->GetName() == name )
 		{
-			return (*it)->Play();
+			(*it)->Play();
 		}
+	}
+	for( auto childIt = m_children.begin(); childIt != m_children.end(); childIt++ )
+	{
+		(*childIt)->PlayCurveSet( name );
 	}
 }
 
@@ -2074,6 +2078,10 @@ void EveSpaceObject2::StopCurveSet( const std::string& name )
 			return (*it)->Stop();
 		}
 	}
+	for( auto childIt = m_children.begin(); childIt != m_children.end(); childIt++ )
+	{
+		(*childIt)->StopCurveSet( name );
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -2082,14 +2090,19 @@ void EveSpaceObject2::StopCurveSet( const std::string& name )
 // --------------------------------------------------------------------------------
 float EveSpaceObject2::GetCurveSetDuration( const std::string& name ) const
 {
+	float maxDuration = 0.f;
 	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
 	{
 		if( (*it)->GetName() == name )
 		{
-			return (*it)->GetMaxCurveDuration();
+			maxDuration = max( maxDuration, (*it)->GetMaxCurveDuration() );
 		}
 	}
-	return 0.f;
+	for( auto childIt = m_children.begin(); childIt != m_children.end(); childIt++ )
+	{
+		maxDuration = max( maxDuration, (*childIt)->GetCurveSetDuration( name ) );
+	}
+	return maxDuration;
 }
 
 // --------------------------------------------------------------------------------

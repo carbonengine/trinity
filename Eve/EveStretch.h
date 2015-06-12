@@ -45,6 +45,9 @@ public:
 	virtual void Update( EveUpdateContext& updateContext );
 	virtual void UpdateViewDependentData( const Matrix& parentTransform ) {};
 	virtual Tr2Lod GetLODLevel() const { return m_lodLevel; }
+	void PlayCurveSet( const std::string& name ) {}
+	void StopCurveSet( const std::string& name ) {}
+	float GetCurveSetDuration( const std::string& name ) const { return 0.f; } 
 
 	unsigned int GetCurveSetCount() const { return (unsigned int)m_curveSets.size(); }
 	TriCurveSetPtr GetCurveSet( unsigned int n ) { return m_curveSets[n]; }

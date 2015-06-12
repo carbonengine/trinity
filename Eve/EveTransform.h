@@ -91,6 +91,9 @@ public:
 	Tr2Lod GetLODLevel() const;
 
 	void PlayCurveSets();
+	void PlayCurveSet( const std::string& name );
+	void StopCurveSet( const std::string& name );
+	float GetCurveSetDuration( const std::string& name ) const;
 protected:
 	bool m_debugShowBoundingBox;
 	bool m_debugRenderDebugInfoForChildren;
