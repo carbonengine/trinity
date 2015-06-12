@@ -23,7 +23,6 @@ struct PlaneVertex
 	Vector4 layer2Transform;
 	Vector4 layer1Scroll;
 	Vector4 layer2Scroll;
-	Vector4 scaling;
 	uint8_t index;
 	uint8_t boneIndex;
 
@@ -118,8 +117,7 @@ bool EvePlaneSet::OnPrepareResources()
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 4 );
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 5 );
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 6 );
-		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 7 );
-		vd.Add( vd.UBYTE_4, vd.TEXCOORD, 8 );
+		vd.Add( vd.UBYTE_4, vd.TEXCOORD, 7 );
 	}
 	m_vertexDeclHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_spriteVertexDecl );
 	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
@@ -137,7 +135,7 @@ bool EvePlaneSet::OnPrepareResources()
 	{
 		// build transformation matrix out of the individual item data
 		Matrix itemTransform;
-		D3DXMatrixTransformation( &itemTransform, NULL, NULL, NULL, NULL, &m_planes[i]->m_rotation, &m_planes[i]->m_position );
+		D3DXMatrixTransformation( &itemTransform, NULL, NULL, &m_planes[i]->m_scaling, NULL, &m_planes[i]->m_rotation, &m_planes[i]->m_position );
 		for( unsigned int j = 0; j < 4; ++j )
 		{
 			PlaneVertex& vertex = verts[i * 4 + j];
@@ -145,7 +143,6 @@ bool EvePlaneSet::OnPrepareResources()
 			vertex.transform1 = Vector4( itemTransform._11, itemTransform._21, itemTransform._31, itemTransform._41 );
 			vertex.transform2 = Vector4( itemTransform._12, itemTransform._22, itemTransform._32, itemTransform._42 );
 			vertex.transform3 = Vector4( itemTransform._13, itemTransform._23, itemTransform._33, itemTransform._43 );
-			vertex.scaling = Vector4( m_planes[i]->m_scaling, 0.f );
 			vertex.color = Vector4( m_planes[i]->m_color.r, m_planes[i]->m_color.g, m_planes[i]->m_color.b, m_planes[i]->m_color.a );
 			vertex.layer1Transform = m_planes[i]->m_layer1Transform;
 			vertex.layer2Transform = m_planes[i]->m_layer2Transform;
