@@ -12,6 +12,7 @@
     <Filter Include="Source Files\Eve\SpaceObject"/>
     <Filter Include="Source Files\Eve\SpaceObjectFactory"/>
     <Filter Include="Source Files\Eve\SpaceObject\Attachments"/>
+    <Filter Include="Source Files\Eve\SpaceObject\Children"/>
     <Filter Include="Source Files\Eve\SpaceObject\Utils"/>
     <Filter Include="Source Files\Font"/>
     <Filter Include="Source Files\Include"/>
@@ -804,6 +805,18 @@
     </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Attachments\EveTrailsSet.h">
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildBillboard.h">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildContainer.h">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildParticleSystem.h">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\IEveSpaceObjectChild.h">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Utils\EveCustomMask.h">
       <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
@@ -2658,6 +2671,24 @@
     </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Attachments\EveTrailsSet_Blue.cpp">
       <Filter>Source Files\Eve\SpaceObject\Attachments</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildBillboard.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildBillboard_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildContainer.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildContainer_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildParticleSystem.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildParticleSystem_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Utils\EveCustomMask.cpp">
       <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
