@@ -26,6 +26,7 @@ static std::string s_dnaCommands[] = {
 	"invalid",				// CMD_INVALID
 	"mesh",					// CMD_MESH
 	"dirtlevel",			// CMD_DIRTLEVEL
+	"respathinsert",		// CMD_RESPATHINSERT
 };
 
 // --------------------------------------------------------------------------------
@@ -117,7 +118,14 @@ bool EveSOFDNA::ValidateContent()
 			}
 			break;
 		case CMD_DIRTLEVEL:
-			// has argument
+			// has one argument
+			if( cit->second.size() != 1 )
+			{
+				return false;
+			}
+			break;
+		case CMD_RESPATHINSERT:
+			// has one argument
 			if( cit->second.size() != 1 )
 			{
 				return false;
@@ -428,27 +436,35 @@ const std::vector<EveSOFDataMgr::HullDecalData>& EveSOFDNA::GetHullDecals() cons
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Return the faction's resource path insert string
-// --------------------------------------------------------------------------------
-const char* EveSOFDNA::GetFactionResPathInsert() const
-{
-	if( m_factionData->resPathInsert.empty() )
-	{
-		return nullptr;
-	}
-	return m_factionData->resPathInsert.c_str();
-}
-
-// --------------------------------------------------------------------------------
-// Description:
 //   Changes the provided texture resource path, maybe modified depending on dna
 // --------------------------------------------------------------------------------
 void EveSOFDNA::ModifyTextureResPath( std::string& resPath, const char* resName ) const
 {
-	if( !m_factionData->resPathInsert.empty() )
+	// try finding the insert string...
+	const char* pathInsert = nullptr;
+
+	// ...from faction?
+	if( !m_factionData->resPathInsert.empty())
+	{
+		pathInsert = m_factionData->resPathInsert.c_str();
+	}
+
+	// ...from dna?
+	std::vector<std::string> commandArgs;
+	if( GetDnaCommandArgs( CMD_RESPATHINSERT, commandArgs ) )
+	{
+		// has only one parameter: a string
+		if( commandArgs.size() == 1 )
+		{
+			pathInsert = commandArgs[0].c_str();
+		}
+	}
+
+	// found anyting?
+	if( pathInsert )
 	{
 		// hardcoded texture param names which'll get an override
-		if( !strcmp( resName, "PgrMap" ) || !strcmp( resName, "PgsMap" ) || !strcmp( resName, "MaterialMap" ) || !strcmp( resName, "PmdgMap" ) )
+		if( !strcmp( resName, "MaterialMap" ) || !strcmp( resName, "PmdgMap" ) )
 		{
 			std::string resPathCopy = resPath;
 
@@ -456,11 +472,11 @@ void EveSOFDNA::ModifyTextureResPath( std::string& resPath, const char* resName 
 			size_t index = resPath.rfind("/");
 			if( index != std::string::npos )
 			{
-				resPathCopy.insert( index + 1, m_factionData->resPathInsert + "/" );
+				resPathCopy.insert( index + 1, std::string( pathInsert ) + "/" );
 			}
 
 			// insert part into filename
-			std::string insertStr = "_" + m_factionData->resPathInsert;
+			std::string insertStr = "_" + std::string( pathInsert );
 			if( StringInsertStubBefore( resPathCopy, "_", insertStr.c_str() ) && FileExists( resPathCopy ) )
 			{
 				resPath = resPathCopy;

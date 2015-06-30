@@ -34,6 +34,7 @@ public:
 		CMD_INVALID = 0,
 		CMD_MESH,
 		CMD_DIRTLEVEL,
+		CMD_RESPATHINSERT,
 		CMD_MAX
 	}; 
 
@@ -73,7 +74,6 @@ public:
 	const std::vector<EveSOFDataMgr::LocatorDirectionData>& GetHullDamageLocators() const;
 
 	// get faction data
-	const char* GetFactionResPathInsert() const;
 	void ModifyTextureResPath( std::string& resPath, const char* resName ) const;
 	const Vector4* GetFactionTurretParameters( const BlueSharedString& parameterName ) const;
 	const EveSOFDataMgr::FactionDecalData* GetFactionDecalData( int groupIndex ) const;
