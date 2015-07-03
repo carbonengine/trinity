@@ -1109,7 +1109,7 @@ void EveSpaceScene::UpdatePostProcessPSData()
 	double translationThisFrame[16];
 	// Amount to translate by this frame
 	Vector3 lookAdjustment(0, 0, 0);
-	// How much the look-at position has changed, ego look-at shift is(almost) sationary
+	// How much the look-at position has changed, ego look-at shift is(almost) stationary
 	Vector3 lookAtShift = Tr2Renderer::GetViewLookAtPosition() - m_lastLookAt;
 	m_lastLookAt = Tr2Renderer::GetViewLookAtPosition();
 	// Estimation of actual look-at target movement
