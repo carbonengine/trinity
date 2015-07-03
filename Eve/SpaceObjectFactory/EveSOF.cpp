@@ -734,20 +734,28 @@ void EveSOF::SetupChildrenAndAnimations( EveShip2Ptr ship, const EveSOFDNAPtr dn
 
 		// is it of right type?
 		EveTransformPtr child;
-		if( !p->QueryInterface( BlueInterfaceIID<EveTransform>(), (void**)&child ) )
+		IEveSpaceObjectChildPtr effectChild;
+		if( p->QueryInterface( BlueInterfaceIID<EveTransform>(), (void**)&child ) )
+		{
+			child->SetRotation( childIt->rotation );
+			child->SetScaling( childIt->scaling );
+			child->SetTranslation( childIt->translation );
+			if( childIt->id != -1 )
+			{
+				childrenToBindTo[childIt->id].push_back( child );
+			}
+
+			ship->AddToChildrenList( child );
+		}
+		else if( p->QueryInterface( BlueInterfaceIID<IEveSpaceObjectChild>(), (void**)&effectChild ) )
+		{
+			ship->AddToEffectChildrenList( effectChild );
+		}
+		else
 		{
 			CCP_LOGERR( "resource file %s is not of correct type!", childIt->redFilePath.c_str() );
 			return;
 		}
-		child->SetRotation( childIt->rotation );
-		child->SetScaling( childIt->scaling );
-		child->SetTranslation( childIt->translation );
-		if( childIt->id != -1 )
-		{
-			childrenToBindTo[childIt->id].push_back( child );
-		}
-
-		ship->AddToChildrenList( child );
 	}
 
 
@@ -805,11 +813,11 @@ void EveSOF::SetupChildrenAndAnimations( EveShip2Ptr ship, const EveSOFDNAPtr dn
 			binding->Initialize();
 
 			curveSet->AddBinding( (ITr2ValueBindingPtr)binding );
-
-			// Append the curveSet
-			ship->AddCurveSet( curveSet );
-
 		}
+
+		// Append the curveSet
+		ship->AddCurveSet( curveSet );
+
 		// Do we have valid translation info?
 		if( animIt->startTranslationTime != -1.0 )
 		{
