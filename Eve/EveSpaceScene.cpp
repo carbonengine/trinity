@@ -2256,6 +2256,22 @@ void EveSpaceScene::OnListModified(
 {
 	switch( event & BELIST_EVENTMASK )
 	{
+	case BELIST_UNLOADSTART:
+		if( m_shLightingManager )
+		{
+			for( ssize_t i = 0; i < theList->GetSize(); ++i )
+			{
+				if( ITr2SecondaryLightSourcePtr lightSource = BlueCastPtr( theList->GetAt( i ) ) )
+				{
+					lightSource->UnregisterSecondaryLightSource( *m_shLightingManager );
+				}
+				if( ITr2ShLightingReceiverPtr receiver = BlueCastPtr( theList->GetAt( i ) ) )
+				{
+					receiver->ClearShLighting();
+				}
+			}
+		}
+		break;
 	case BELIST_INSERTED:
 		{
 			if( m_shLightingManager )
