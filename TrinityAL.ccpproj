@@ -103,13 +103,6 @@ BaseConfigurations:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_OPENGLES2
 
-  Orbis:
-    ClCompile:
-      GenerateDebugInformation: true
-      PreprocessorDefinitions:
-      - TRINITY_PLATFORM=TRINITY_ORBIS
-      - TRACK_AL_RESOURCES=0
-
   Stub:
     ClCompile:
       PreprocessorDefinitions:
@@ -241,20 +234,6 @@ Configurations:
     - Android
     General:
       TargetName: libTrinityAL_gles2
-
-  Debug_Orbis|ORBIS:
-    BaseConfigurations:
-    - Debug
-    - Orbis
-    General:
-      TargetName: libTrinityAL_orbis_d
-  
-  Release_Orbis|ORBIS:
-    BaseConfigurations:
-    - Release
-    - Orbis
-    General:
-      TargetName: libTrinityAL_orbis
 
   Debug_Stub|Win32,x64,Mac32,Mac64:
     BaseConfigurations:

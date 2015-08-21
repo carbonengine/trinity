@@ -42,7 +42,7 @@ void ReportHresultError( const char* fileName, int lineNumber, const char* state
 #endif
 }
 
-#if !defined( _WIN32 ) && !defined( __ORBIS__ )
+#if !defined( _WIN32 )
 static void emptySignalHandler(int)
 {
 }
@@ -60,7 +60,7 @@ void BreakInDebugger()
 	__except(GetExceptionCode() == EXCEPTION_BREAKPOINT ? EXCEPTION_EXECUTE_HANDLER : EXCEPTION_CONTINUE_SEARCH) 
 	{
 	}
-#elif !defined( __ORBIS__ )
+#else
     struct sigaction action, oldAction;
     memset( &action, 0, sizeof( action ) );
     action.sa_handler = &emptySignalHandler;

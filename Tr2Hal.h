@@ -14,7 +14,6 @@
 #define TRINITY_DIRECTX9	1
 #define TRINITY_DIRECTX11	2
 #define TRINITY_OPENGLES2	3
-#define TRINITY_ORBIS		4
 #define TRINITY_STUB		5
 
 #ifndef TRINITY_PLATFORM
@@ -185,33 +184,6 @@ const float AL_TEXEL_OFFSET = 0.0f;
 
 #include "Tr2RenderContextGLES2.h"
 
-
-#elif( TRINITY_PLATFORM==TRINITY_ORBIS )
-
-#define TRINITY_PLATFORM_NAME "orbis"
-
-const float AL_TEXEL_OFFSET = 0.0f;
-
-#include "Tr2VideoAdapterInfoALOrbis.h"
-
-#include "Tr2VertexBufferALOrbis.h"
-#include "Tr2IndexBufferALOrbis.h"
-#include "Tr2ConstantBufferALOrbis.h"
-#include "Tr2VertexLayoutALOrbis.h"
-#include "Tr2ShaderALOrbis.h"
-#include "Tr2TextureALOrbis.h"
-#include "Tr2SamplerStateALOrbis.h"
-#include "Tr2GpuBufferALOrbis.h"
-
-#include "Tr2RenderTargetALOrbis.h"
-#include "Tr2DepthStencilALOrbis.h"
-#include "Tr2SwapChainALOrbis.h"
-
-#include "Tr2RenderContextOrbis.h"
-
-#include "Tr2OcclusionQueryALOrbis.h"
-#include "Tr2FenceALOrbis.h"
-#include "Tr2LockedRenderTargetALOrbis.h"
 
 #elif( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
