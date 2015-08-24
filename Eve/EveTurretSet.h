@@ -162,6 +162,7 @@ public:
 	void EnterStateIdle();
 	void EnterStateTargeting();
 	void EnterStateFiring();
+	bool SetupFiringState();
 	void EnterStateReloading();
 
 	void ForceStateDeactive();
