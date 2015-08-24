@@ -12,7 +12,6 @@ const Be::ClassInfo* EveShip2::ExposeToBlue()
 		MAP_INTERFACE( IListNotify )
 
 		MAP_ATTRIBUTE( "speed", m_speed, "The speed of the ship", Be::READ )
-		MAP_ATTRIBUTE( "dirtLevel", m_dirtLevel, "The dirt amount of the ship", Be::READWRITE )
 		MAP_ATTRIBUTE( "maxSpeed", m_maxSpeed, "The maximum speed of the ship", Be::READWRITE )
 		MAP_PROPERTY( "audioSpeedParameter", GetAudioParameter, SetAudioParameter, "The audio parameter related to the ship speed" )
 

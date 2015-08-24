@@ -19,8 +19,7 @@ CCP_STATS_DECLARE( eveShipsRendered, "Trinity/EveShip2/ShipsRendered", true, CST
 //   Initialize data members
 // --------------------------------------------------------------------------------
 EveShip2::EveShip2( IRoot* lockobj ) :
-	m_maxSpeed( 0.f ),
-	m_dirtLevel( EVE_SPACEOBJECT_DIRT_LEVEL_DEFAULT )
+	m_maxSpeed( 0.f )
 {
 	m_speed.CreateInstance();
 
@@ -174,15 +173,6 @@ void EveShip2::SetBoosterSet( EveBoosterSet2Ptr set )
 	m_boosters = set;
 }
 
-// -----------------------------------------------------------------------------
-// Description:
-//   Set the dirt level of this ship from the outside
-// -----------------------------------------------------------------------------
-void EveShip2::SetDirtLevel( float lvl )
-{
-	m_dirtLevel = lvl;
-}
-
 void EveShip2::RebuildBoosterSet()
 {
 	if( !m_boosters )
@@ -235,8 +225,6 @@ Tr2PerObjectData* EveShip2::GetPerObjectData( ITriRenderBatchAccumulator* accumu
 
 	// extra data for ps and vs: booster glow intensity
 	m_spaceObjectMiscData.x = boosterGlowIntensity;
-	// dirt level of a spaceship
-	m_spaceObjectMiscData.z = m_dirtLevel;
 
 	// parent
 	return EveMobile::GetPerObjectData( accumulator );

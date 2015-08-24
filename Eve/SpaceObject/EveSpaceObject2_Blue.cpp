@@ -231,6 +231,7 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		MAP_ATTRIBUTE( "lodLevel", m_lodLevel, "Current lod-level of this spaceobject\n", Be::READ )
 
 		MAP_ATTRIBUTE( "customMask", m_customMask, "\n", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "dirtLevel", m_dirtLevel, "The dirt amount of the object", Be::READWRITE )
 		MAP_ATTRIBUTE
 		(
 			"effectChildren",

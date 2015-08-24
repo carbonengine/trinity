@@ -10,7 +10,7 @@ BLUE_DECLARE_VECTOR( EveDynamicPlaneSet );
 BLUE_DECLARE( EveSpriteSet );
 BLUE_DECLARE_VECTOR( EveSpriteSet );
 
-class EveStation2 :
+BLUE_CLASS( EveStation2 ):
 	public EveSpaceObject2
 {
 public:

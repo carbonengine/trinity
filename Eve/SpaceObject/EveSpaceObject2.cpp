@@ -109,6 +109,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_spaceObjectClipDataEx( 0.f, 0.f, 0.f, 0.f ),
 	m_psPointLightCount( 0 ),
 	m_displayChildren( true ),
+	m_dirtLevel( EVE_SPACEOBJECT_DIRT_LEVEL_DEFAULT ),
 	m_isAnimated( false )
 {
 	m_positionDelta.CreateInstance();
@@ -316,6 +317,8 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 
 	// prepare shader data: shader needs to know size of this object for some surface-scaling issues
 	m_spaceObjectMiscData.w = GetBoundingSphereRadius();
+	// prepare shader data: dirt level of a spaceobject
+	m_spaceObjectMiscData.z = m_dirtLevel;
 
 	if( m_isAnimated && m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
@@ -2019,6 +2022,15 @@ void EveSpaceObject2::SetModelTranslationCurve( ITriVectorFunctionPtr translatio
 void EveSpaceObject2::SetDnaString( const char* dna )
 {
 	m_dna = dna;
+}
+
+// -----------------------------------------------------------------------------
+// Description:
+//   Set the dirt level of this spaceobject from the outside
+// -----------------------------------------------------------------------------
+void EveSpaceObject2::SetDirtLevel( float lvl )
+{
+	m_dirtLevel = lvl;
 }
 
 //GPU ship explosion test

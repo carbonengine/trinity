@@ -270,6 +270,9 @@ public:
 	// access to dna
 	void SetDnaString( const char* dna );
 
+	// access to dirt level
+	void SetDirtLevel( float lvl );
+
 	uint32_t GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const;
 	void UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* );
 
@@ -460,6 +463,11 @@ protected:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// custom masks
 	EveCustomMaskPtr m_customMask;
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// dirt levels
+	float m_dirtLevel;
+
 
 
 	Be::Time m_lastCurveUpdateTime;
