@@ -613,6 +613,7 @@ bool TriTextureRes::SetTexture( Tr2TextureAL& texture )
 	}
 
 	*static_cast<Tr2BitmapDimensions*>( this ) = texture;
+	m_texture = texture;
 		
 	if( !m_memoryUse )
 	{
@@ -628,7 +629,7 @@ bool TriTextureRes::SetTexture( Tr2TextureAL& texture )
 			h /= 2;
 			m_memoryUse += w * h * 4;
 		}
-		m_memoryUse *= m_arraySize;
+		m_memoryUse *= std::max( m_arraySize, 1u );
 	}
 
 	CCP_STATS_ADD( textureResBytes, m_memoryUse );
