@@ -31,10 +31,11 @@
 struct Vector3d;		
 struct Vector3;
 
-// This interface used for type checking in TriAnimator
+// This interface is the basis of our curves
 BLUE_INTERFACE(ITriFunction) : public IRoot
 {
 	virtual void UpdateValue( double time ) = 0;
+	virtual void Reset() {}
 };
 
 BLUE_INTERFACE(ITriScalarFunction) : public ITriFunction
