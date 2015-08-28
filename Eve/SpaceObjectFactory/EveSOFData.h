@@ -194,6 +194,8 @@ public:
 	// per-hull data of a booster
 	Matrix m_transform;
 	Vector4 m_functionality;
+	uint32_t m_atlasIndex0;
+	uint32_t m_atlasIndex1;
 	bool m_hasTrail;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullBoosterItem );
@@ -532,6 +534,23 @@ BLUE_DECLARE_VECTOR( EveSOFDataFaction );
 // All data storage classes for per-race data
 // --------------------------------------------------------------------------------
 
+BLUE_CLASS( EveSOFDataBoosterShape ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataBoosterShape( IRoot* lockobj = NULL );
+
+	float m_noiseFunction;
+	float m_noiseSpeed;
+	Vector4 m_noiseAmplitureStart;
+	Vector4 m_noiseAmplitureEnd;
+	Vector4 m_noiseFrequency;
+	Color m_color;
+};
+TYPEDEF_BLUECLASS( EveSOFDataBoosterShape );
+
+
 BLUE_CLASS( EveSOFDataBooster ) :
 	public IRoot
 {
@@ -545,6 +564,24 @@ public:
 	Color m_color, m_glowColor, m_haloColor, m_trailColor;
 	std::string m_textureResPath;
 	Vector4 m_trailSize, m_scale;
+
+	EveSOFDataBoosterShapePtr m_shape0, m_shape1;
+	EveSOFDataBoosterShapePtr m_warpShape0, m_warpShape1;
+	std::string m_shapeAtlasResPath;
+	std::string m_gradient0ResPath;
+	std::string m_gradient1ResPath;
+	uint32_t m_shapeAtlasHeight;
+	uint32_t m_shapeAtlasCount;
+
+	float m_lightOffset;
+	float m_lightRadius;
+	float m_lightWarpRadius;
+	float m_lightFlickerAmplitude;
+	float m_lightFlickerFrequency;
+	Color m_lightColor;
+	Color m_lightWarpColor;
+
+	bool m_volumetric;
 };
 TYPEDEF_BLUECLASS( EveSOFDataBooster );
 

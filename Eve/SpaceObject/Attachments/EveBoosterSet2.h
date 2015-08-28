@@ -16,6 +16,7 @@ class Tr2PerObjectData;
 class TriFrustum;
 struct ViewDistanceInfo;
 class Tr2QuadRenderer;
+class Tr2LightManager;
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( EveSpriteSet );
 BLUE_DECLARE( EveTrailsSet );
@@ -143,6 +144,8 @@ public:
 		Matrix transform;
 		Vector4 functionality;
 		float wavePhase;
+		float atlasIndex0;
+		float atlasIndex1;
 	};
 
 	// timing
@@ -150,9 +153,11 @@ public:
 	void UpdateTrails( float deltaT, Be::Time t );
 	// manage individual exhaust points
 	void Clear();
-	void Add( const Matrix* localMatrix, const Vector4* functionality, bool hasTrail );
+	void Add( const Matrix* localMatrix, const Vector4* functionality, bool hasTrail, uint32_t atlasIndex0, uint32_t atlasIndex1 );
 	// set internal visual data
 	void SetData( float glowScale, const Color* glowColor, float symHaloScale, float haloScaleX, float haloScaleY, const Color* haloColor, bool alwaysOn );
+	void SetVolumetric( bool isVolumetric );
+	void SetLightData( float offset, float flickerAmplitude, float flickerFrequency, float radius, const Color& color, float warpRadius, const Color& warpColor );
 	void SetEffect( Tr2EffectPtr effect );
 	void SetGlow( EveSpriteSetPtr glow );
 	void SetTrail( EveTrailsSetPtr trail );
@@ -168,6 +173,8 @@ public:
 
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& pool );
 	void AddToQuadRenderer( Tr2QuadRenderer& pool, const Matrix& world );
+
+	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const;
 
 private:
 	// re-alloc and init the instance vertex buffers
@@ -217,10 +224,15 @@ private:
 	{
 		Matrix transform;
 		Vector4 functionality;
+		Vector3 lightPosition;
+		float lightRadius;
+		float lightPhase;
+		uint32_t atlasIndex0;
+		uint32_t atlasIndex1;
 	};
 	std::vector<SingleBoosterData> m_singleBoosters;
 
-	Shape m_shape;
+	bool m_isVolumetric;
 
 	// booster gain
 	float m_maxVel;
@@ -262,6 +274,14 @@ private:
 	bool m_destinyUpdate;
 	// trail static positions
 	Vector3 m_trailsStaticOffsets[EVE_MAX_CONTROL_POINT_COUNT];
+
+	float m_lightOffset;
+	float m_lightRadius;
+	float m_lightWarpRadius;
+	float m_lightFlickerAmplitude;
+	float m_lightFlickerFrequency;
+	Color m_lightColor;
+	Color m_lightWarpColor;
 };
 
 TYPEDEF_BLUECLASS( EveBoosterSet2 );

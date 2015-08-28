@@ -13,6 +13,7 @@
 
 #include "EveSpriteSet.h"
 #include "EveTrailsSet.h"
+#include "Tr2LightManager.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -42,6 +43,10 @@ TRI_REGISTER_SETTING( "eveSpaceObjectTrailsMaxLength", g_eveSpaceObjectTrailsMax
 float g_eveSpaceObjectTrailsMaxLengthFade = 20000.f;
 TRI_REGISTER_SETTING( "eveSpaceObjectTrailsMaxLengthFade", g_eveSpaceObjectTrailsMaxLengthFade );
 
+const unsigned g_lightNoiseSize = 128;
+float g_lightNoise[g_lightNoiseSize];
+bool g_lightNoiseInitialized = false;
+
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -62,7 +67,7 @@ EveBoosterSet2::EveBoosterSet2( IRoot* lockobj ) :
 	m_parentSpeed( 0.f ),
 	m_parentRotation( 0.f, 0.f, 0.f, 1.f ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
-	m_shape( STAR ),
+	m_isVolumetric( false ),
 	m_maxVel( 250.f ),
 	m_lastAccFactor( 0.f ),
 	m_lastValue( 0.f ),
@@ -79,7 +84,14 @@ EveBoosterSet2::EveBoosterSet2( IRoot* lockobj ) :
 	m_trailsTimeToNext( 0.f ),
 	m_trailsTimeDelta( 1.f ),
 	m_trailsOffsetLatest( 0 ),
-	m_trailsOffsetAccu( 0.f, 0.f, 0.f )
+	m_trailsOffsetAccu( 0.f, 0.f, 0.f ),
+	m_lightOffset( 0.f ),
+	m_lightRadius( 0.f ),
+	m_lightWarpRadius( 0.f ),
+	m_lightFlickerAmplitude( 0.f ),
+	m_lightFlickerFrequency( 0.f ),
+	m_lightColor( 0.f, 0.f, 0.f, 0.f ),
+	m_lightWarpColor( 0.f, 0.f, 0.f, 0.f )
 {
 	// 0
 	D3DXMatrixIdentity( &m_parentTransform );
@@ -156,6 +168,15 @@ EveBoosterSet2::EveBoosterSet2( IRoot* lockobj ) :
 
 	m_trailsOffsets = (XMVECTOR*)CCP_ALIGNED_MALLOC( "EveBoosterSet2::m_trailsOffsets", sizeof( XMVECTOR ) * EVE_MAX_POSITION_OFFSET_COUNT, 16 );
 	memset( m_trailsOffsets, 0, EVE_MAX_POSITION_OFFSET_COUNT * sizeof( XMVECTOR ) );
+
+	if( !g_lightNoiseInitialized )
+	{
+		g_lightNoiseInitialized = true;
+		for( unsigned i = 0; i < g_lightNoiseSize; ++i )
+		{
+			g_lightNoise[i] = float( rand() ) / float( RAND_MAX );
+		}
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -183,12 +204,8 @@ bool EveBoosterSet2::Initialize()
 // --------------------------------------------------------------------------------
 bool EveBoosterSet2::OnModified( Be::Var* val )
 {
-	if( IsMatch( val, m_shape ) )
+	if( IsMatch( val, m_isVolumetric ) )
 	{
-		if( m_shape < 0 || m_shape >= SHAPE_COUNT )
-		{
-			m_shape = STAR;
-		}
 		ReleaseResources( TRISTORAGE_ALL );
 		PrepareResources();
 	}
@@ -395,18 +412,33 @@ void EveBoosterSet2::Clear()
 // SeeAlso:
 //   EveSpriteSet
 // --------------------------------------------------------------------------------
-void EveBoosterSet2::Add( const Matrix* localMatrix, const Vector4* functionality, bool hasTrail )
+void EveBoosterSet2::Add( const Matrix* localMatrix, const Vector4* functionality, bool hasTrail, uint32_t atlasIndex0, uint32_t atlasIndex1 )
 {
 	// keep it in our list of boosters
 	SingleBoosterData sbd;
 	sbd.transform = *localMatrix;
 	sbd.functionality = *functionality;
+	Vector3 lightOffset( 0.f, 0.f, -m_lightOffset );
+	D3DXVec3TransformCoord( &sbd.lightPosition, &lightOffset, localMatrix );
+	sbd.lightRadius = std::max( D3DXVec3Length( &localMatrix->GetX() ), D3DXVec3Length( &localMatrix->GetY() ) );
+	sbd.lightPhase = float( g_lightNoiseSize ) * float( rand() ) / float( RAND_MAX );
+	sbd.atlasIndex0 = atlasIndex0;
+	sbd.atlasIndex1 = atlasIndex1;
 	m_singleBoosters.push_back( sbd );
 
 	// grab pos/dir/scale from the local transform matrix
 	Vector3 pos( localMatrix->_41, localMatrix->_42, localMatrix->_43 );
 	Vector3 dir( localMatrix->_31, localMatrix->_32, localMatrix->_33 );
-	float scale = D3DXVec3Length( &dir );
+	float scale;
+	if( m_isVolumetric )
+	{
+		scale = std::max( D3DXVec3Length( &localMatrix->GetX() ),  D3DXVec3Length( &localMatrix->GetY() ) );
+		D3DXVec3Normalize( &dir, &dir );
+	}
+	else
+	{
+		scale = D3DXVec3Length( &dir );
+	}
 
 	// also add it to all the lensflares
 	if( m_glows )
@@ -456,6 +488,30 @@ void EveBoosterSet2::SetData( float glowScale, const Color* glowColor, float sym
 	m_haloScaleY = haloScaleY;
 	m_haloColor = *haloColor;
 	m_alwaysOn = alwaysOn;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Sets if the booster is using a volumetric shader
+// --------------------------------------------------------------------------------
+void EveBoosterSet2::SetVolumetric( bool isVolumetric )
+{
+	m_isVolumetric = isVolumetric;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Assigns dynamic lighting parameters
+// --------------------------------------------------------------------------------
+void EveBoosterSet2::SetLightData( float offset, float flickerAmplitude, float flickerFrequency, float radius, const Color& color, float warpRadius, const Color& warpColor )
+{
+	m_lightOffset = offset;
+	m_lightFlickerAmplitude = flickerAmplitude;
+	m_lightFlickerFrequency = flickerFrequency;
+	m_lightRadius = radius;
+	m_lightColor = color;
+	m_lightWarpRadius = warpRadius;
+	m_lightWarpColor = warpColor;
 }
 
 // --------------------------------------------------------------------------------
@@ -519,6 +575,7 @@ bool EveBoosterSet2::OnPrepareResources()
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 4, 1, 1 );
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 5, 1, 1 );
 		vd.Add( vd.FLOAT32_1, vd.TEXCOORD, 6, 1, 1 );
+		vd.Add( vd.FLOAT32_2, vd.TEXCOORD, 7, 1, 1 );
 	}
 
 	// create vertex-declarartion
@@ -529,10 +586,11 @@ bool EveBoosterSet2::OnPrepareResources()
 	}
 
 	// create star-shape geometry as "indexed" geometry
+	auto shape = m_isVolumetric && Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI ? BOX : STAR;
 	CR_RETURN_VAL(	
-		m_vertexBuffer.Create(	4 * EVE_BOOSTER_PLANES_COUNT[m_shape] * sizeof( BoosterVertex ), 
+		m_vertexBuffer.Create(	4 * EVE_BOOSTER_PLANES_COUNT[shape] * sizeof( BoosterVertex ), 
 								USAGE_IMMUTABLE, 
-								&s_shapeMesh[m_shape][0], 
+								&s_shapeMesh[shape][0], 
 								renderContext )
 		, false );
 	// now build the "instance" buffer, which depends on the actual number of booster, this set currently holds
@@ -577,6 +635,8 @@ void EveBoosterSet2::RebuildInstanceData( Tr2RenderContext& /*renderContext*/ )
 		vertices[i].transform = m_singleBoosters[i].transform;
 		vertices[i].wavePhase = (float)rand() / (float)RAND_MAX;
 		vertices[i].functionality = m_singleBoosters[i].functionality;
+		vertices[i].atlasIndex0 = float( m_singleBoosters[i].atlasIndex0 );
+		vertices[i].atlasIndex1 = float( m_singleBoosters[i].atlasIndex1 );
 	}
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	CR_RETURN(	m_instanceBuffer.Create(	
@@ -763,7 +823,8 @@ void EveBoosterSet2::SubmitGeometry( Tr2RenderContext& renderContext )
 	// how many indiviual boosters are in this set?
 	unsigned int boosterCount = (unsigned int)m_singleBoosters.size();
 
-	Tr2IndexBufferAL* indexBuffer = Tr2Renderer::GetQuadListIndexBuffer( EVE_BOOSTER_PLANES_COUNT[m_shape] );
+	auto shape = m_isVolumetric && Tr2Renderer::GetShaderModel() >= TR2SM_3_0_HI ? BOX : STAR;
+	Tr2IndexBufferAL* indexBuffer = Tr2Renderer::GetQuadListIndexBuffer( EVE_BOOSTER_PLANES_COUNT[shape] );
 	if( !indexBuffer )
 	{
 		return;
@@ -778,7 +839,7 @@ void EveBoosterSet2::SubmitGeometry( Tr2RenderContext& renderContext )
 	renderContext.m_esm.ApplyStreamSource( 1, m_instanceBuffer, 0, sizeof( InstanceVertex ) );
 	// draw	
 	renderContext.SetTopology( TOP_TRIANGLES );	
-	renderContext.DrawIndexedInstanced( 4 * EVE_BOOSTER_PLANES_COUNT[m_shape], 0, 2 * EVE_BOOSTER_PLANES_COUNT[m_shape], boosterCount );
+	renderContext.DrawIndexedInstanced( 4 * EVE_BOOSTER_PLANES_COUNT[shape], 0, 2 * EVE_BOOSTER_PLANES_COUNT[shape], boosterCount );
 }
 
 // --------------------------------------------------------------------------------
@@ -1059,6 +1120,39 @@ void EveBoosterSet2::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Mat
 	if( m_glows && m_boosterLOD > g_eveSpaceSceneLowDetailThreshold )
 	{
 		m_glows->AddBoosterGlowToQuadRenderer( quadRenderer, world, m_overallIntensity );
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Adds lights from boosters to light manager
+// Arguments:
+//   lightManager - light manager
+//   parentTransform - parent local to world transform
+// --------------------------------------------------------------------------------
+void EveBoosterSet2::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+{
+	if( ( m_lightRadius <= 0.f && m_lightWarpRadius <= 0.f ) || m_overallIntensity <= 0.f )
+	{
+		return;
+	}
+	float warpIntensity = std::min( std::max( m_warpIntensity, 0.f ), 1.f );
+	float radiusFactor = m_lightRadius * ( 1.f - warpIntensity ) + m_lightWarpRadius * warpIntensity;
+	radiusFactor *= m_overallIntensity;
+	Color color = m_lightColor * ( 1.f - warpIntensity ) + m_lightWarpColor * warpIntensity;
+	XMMATRIX transform = parentTransform;
+	for( auto it = std::begin( m_singleBoosters ); it != std::end( m_singleBoosters ); ++it )
+	{
+		float phase = ( it->lightPhase + Tr2Renderer::GetAnimationTime() ) * m_lightFlickerFrequency;
+		float p0 = g_lightNoise[int( phase ) % g_lightNoiseSize];
+		float p1 = g_lightNoise[( int( phase ) + 1 ) % g_lightNoiseSize];
+		float t = phase - std::floor( phase );
+		float flicker = 1 + m_lightFlickerAmplitude * 2.0f * ( p0 * ( 1.0f - t ) + p1 * t ) - m_lightFlickerAmplitude;
+		lightManager.AddPointLight( 
+			Vector3( XMVector3TransformCoord( it->lightPosition, transform ) ), 
+			it->lightRadius * radiusFactor * flicker,
+			color );
+
 	}
 }
 

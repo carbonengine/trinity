@@ -44,6 +44,8 @@ public:
 	{
 		Matrix transform;
 		Vector4 functionality;
+		uint32_t atlasIndex0;
+		uint32_t atlasIndex1;
 		bool hasTrail;
 	};
 
@@ -234,6 +236,16 @@ public:
 		std::map<int, FactionDecalData> decalData;
 	};
 
+	struct RaceBoosterDataShape
+	{
+		float noiseFunction;
+		float noiseSpeed;
+		Vector4 noiseAmplitureStart;
+		Vector4 noiseAmplitureEnd;
+		Vector4 noiseFrequency;
+		Color color;
+	};
+
 	// race data structs
 	struct RaceBoosterData
 	{
@@ -241,6 +253,26 @@ public:
 		Color color, glowColor, haloColor, trailColor;
 		Vector4 scale, trailSize;
 		std::string textureResPath;
+
+		RaceBoosterDataShape shape0, shape1;
+		RaceBoosterDataShape warpShape0, warpShape1;
+
+		std::string shapeAtlasResPath;
+		std::string gradient0ResPath;
+		std::string gradient1ResPath;
+
+		uint32_t shapeAtlasHeight;
+		uint32_t shapeAtlasCount;
+
+		float lightOffset;
+		float lightRadius;
+		float lightWarpRadius;
+		float lightFlickerAmplitude;
+		float lightFlickerFrequency;
+		Color lightColor;
+		Color lightWarpColor;
+
+		bool volumetric;
 	};
 
 	struct RaceData

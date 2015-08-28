@@ -412,6 +412,8 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hbid.transform = boosterItemData->m_transform;
 			hbid.functionality = boosterItemData->m_functionality;
 			hbid.hasTrail = boosterItemData->m_hasTrail;
+			hbid.atlasIndex0 = boosterItemData->m_atlasIndex0;
+			hbid.atlasIndex1 = boosterItemData->m_atlasIndex1;
 
 			hbd.items.push_back( hbid );
 		}
@@ -817,6 +819,35 @@ void EveSOFDataMgr::GenerateRaceData( RaceData& rd, EveSOFDataRacePtr srcData ) 
 	rd.boosters.symHaloScale = srcData->m_booster->m_symHaloScale;
 	rd.boosters.trailColor = srcData->m_booster->m_trailColor;
 	rd.boosters.trailSize = srcData->m_booster->m_trailSize;
+
+	auto copyShape = [=]( RaceBoosterDataShape& dest, EveSOFDataBoosterShape* src )
+	{
+		dest.noiseFunction = src->m_noiseFunction;
+		dest.noiseSpeed = src->m_noiseSpeed;
+		dest.noiseAmplitureStart = src->m_noiseAmplitureStart;
+		dest.noiseAmplitureEnd = src->m_noiseAmplitureEnd;
+		dest.noiseFrequency = src->m_noiseFrequency;
+		dest.color = src->m_color;
+	};
+
+	copyShape( rd.boosters.shape0, srcData->m_booster->m_shape0 );
+	copyShape( rd.boosters.shape1, srcData->m_booster->m_shape1 );
+	copyShape( rd.boosters.warpShape0, srcData->m_booster->m_warpShape0 );
+	copyShape( rd.boosters.warpShape1, srcData->m_booster->m_warpShape1 );
+
+	rd.boosters.shapeAtlasResPath = srcData->m_booster->m_shapeAtlasResPath;
+	rd.boosters.gradient0ResPath = srcData->m_booster->m_gradient0ResPath;
+	rd.boosters.gradient1ResPath = srcData->m_booster->m_gradient1ResPath;
+	rd.boosters.shapeAtlasHeight = srcData->m_booster->m_shapeAtlasHeight;
+	rd.boosters.shapeAtlasCount = srcData->m_booster->m_shapeAtlasCount;
+	rd.boosters.lightOffset = srcData->m_booster->m_lightOffset;
+	rd.boosters.lightRadius = srcData->m_booster->m_lightRadius;
+	rd.boosters.lightWarpRadius = srcData->m_booster->m_lightWarpRadius;
+	rd.boosters.lightFlickerAmplitude = srcData->m_booster->m_lightFlickerAmplitude;
+	rd.boosters.lightFlickerFrequency = srcData->m_booster->m_lightFlickerFrequency;
+	rd.boosters.lightColor = srcData->m_booster->m_lightColor;
+	rd.boosters.lightWarpColor = srcData->m_booster->m_lightWarpColor;
+	rd.boosters.volumetric = srcData->m_booster->m_volumetric;
 
 	// shader data
 	for( auto hait = srcData->m_hullAreas.begin(); hait != srcData->m_hullAreas.end(); ++hait )

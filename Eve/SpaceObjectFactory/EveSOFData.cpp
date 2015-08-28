@@ -73,6 +73,16 @@ EveSOFDataFaction::EveSOFDataFaction( IRoot* lockobj ) :
 {}
 
 
+EveSOFDataBoosterShape::EveSOFDataBoosterShape( IRoot* lockobj ) :
+	m_noiseFunction( 0.f ),
+	m_noiseSpeed( 0.f ),
+	m_noiseAmplitureStart( 0.f, 0.f, 0.f, 0.f ),
+	m_noiseAmplitureEnd( 0.f, 0.f, 0.f, 0.f ),
+	m_noiseFrequency( 0.f, 0.f, 0.f, 0.f ),
+	m_color( 0.f, 0.f, 0.f, 0.f )
+{}
+	
+
 EveSOFDataBooster::EveSOFDataBooster( IRoot* lockobj ) :
 	m_color( 0.f, 0.f, 0.f, 0.f ),
 	m_scale( 1.f, 1.f, 1.f, 1.f ),
@@ -83,8 +93,23 @@ EveSOFDataBooster::EveSOFDataBooster( IRoot* lockobj ) :
 	m_haloScaleY( 1.f ),
 	m_symHaloScale( 1.f ),
 	m_trailColor( 0.f, 0.f, 0.f, 0.f ),
-	m_trailSize( 0.f, 0.f, 0.f, 0.f )
-{}
+	m_trailSize( 0.f, 0.f, 0.f, 0.f ),
+	m_shapeAtlasHeight( 0 ),
+	m_shapeAtlasCount( 0 ),
+	m_lightOffset( 0.f ),
+	m_lightRadius( 0.f ),
+	m_lightWarpRadius( 0.f ),
+	m_lightFlickerAmplitude( 0.f ),
+	m_lightFlickerFrequency( 0.f ),
+	m_lightColor( 0.f, 0.f, 0.f, 0.f ),
+	m_lightWarpColor( 0.f, 0.f, 0.f, 0.f ),
+	m_volumetric( false )
+{
+	m_shape0.CreateInstance();
+	m_shape1.CreateInstance();
+	m_warpShape0.CreateInstance();
+	m_warpShape1.CreateInstance();
+}
 
 
 EveSOFDataHull::EveSOFDataHull( IRoot* lockobj ) :
@@ -266,7 +291,9 @@ EveSOFDataHullBooster::EveSOFDataHullBooster( IRoot* lockobj ) :
 
 EveSOFDataHullBoosterItem::EveSOFDataHullBoosterItem( IRoot* lockobj ) :
 	m_functionality( 0.f, 1.f, 1.f, 1.f ),
-	m_hasTrail( true )
+	m_hasTrail( true ),
+	m_atlasIndex0( 0 ),
+	m_atlasIndex1( 0 )
 {
 	D3DXMatrixIdentity( &m_transform );
 }

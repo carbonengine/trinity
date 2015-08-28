@@ -3,27 +3,6 @@
 
 BLUE_DEFINE( EveBoosterSet2 );
 
-Be::VarChooser EveBoosterSet2ShapeChooser[] =
-{
-	{
-		"STAR",
-		BeCast( EveBoosterSet2::STAR ),
-		""
-	},
-	{
-		"BOX",
-		BeCast( EveBoosterSet2::BOX ),
-		""
-	},
-	{ 0 }
-};
-
-BLUE_REGISTER_ENUM_EX( 
-	"EveBoosterSet2Shape", 
-	EveBoosterSet2::Shape, 
-	EveBoosterSet2ShapeChooser, 
-	ENUM_REG_ENUM_OBJECT_ON_MODULE );
-
 const Be::ClassInfo* EveBoosterSet2::ExposeToBlue()
 {
     EXPOSURE_BEGIN( EveBoosterSet2, "" )
@@ -39,7 +18,7 @@ const Be::ClassInfo* EveBoosterSet2::ExposeToBlue()
 			"",
 			Be::READWRITE | Be::PERSIST
 		)
-		MAP_ATTRIBUTE_WITH_CHOOSER( "shape", m_shape, "booster geometry shape", Be::READWRITE | Be::ENUM | Be::NOTIFY, EveBoosterSet2ShapeChooser )
+		MAP_ATTRIBUTE( "volumetric", m_isVolumetric, "booster uses volumetric shader", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "physicsUpdate", m_physicsUpdate, "This enables updating of the boosters trails based on physics sim", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "destinyUpdate", m_destinyUpdate, "This enables updating speed etc. from destiny simulation", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "drawDebugInfo", m_drawDebugInfo, "Enable debug drawing", Be::READWRITE )

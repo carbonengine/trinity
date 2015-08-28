@@ -6,6 +6,23 @@
 #include "StdAfx.h"
 #include "EveSOFData.h"
 
+BLUE_DEFINE( EveSOFDataBoosterShape );
+const Be::ClassInfo* EveSOFDataBoosterShape::ExposeToBlue()
+{
+    EXPOSURE_BEGIN( EveSOFDataBoosterShape, "" )
+        MAP_INTERFACE( EveSOFDataBoosterShape )
+
+		MAP_ATTRIBUTE( "noiseFunction", m_noiseFunction, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseSpeed", m_noiseSpeed, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseAmplitureStart", m_noiseAmplitureStart, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseAmplitureEnd", m_noiseAmplitureEnd, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseFrequency", m_noiseFrequency, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "color", m_color, "", Be::READWRITE | Be::PERSIST )
+		
+	EXPOSURE_END()
+}
+
+
 BLUE_DEFINE( EveSOFDataBooster );
 const Be::ClassInfo* EveSOFDataBooster::ExposeToBlue()
 {
@@ -23,6 +40,23 @@ const Be::ClassInfo* EveSOFDataBooster::ExposeToBlue()
 		MAP_ATTRIBUTE( "textureResPath", m_textureResPath, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "trailColor", m_trailColor, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "trailSize", m_trailSize, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "shape0", m_shape0, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "shape1", m_shape1, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "warpShape0", m_warpShape0, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "warpShape1", m_warpShape1, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "shapeAtlasResPath", m_shapeAtlasResPath, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "gradient0ResPath", m_gradient0ResPath, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "gradient1ResPath", m_gradient1ResPath, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "shapeAtlasHeight", m_shapeAtlasHeight, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "shapeAtlasCount", m_shapeAtlasCount, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lightOffset", m_lightOffset, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lightRadius", m_lightRadius, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lightWarpRadius", m_lightWarpRadius, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lightFlickerAmplitude", m_lightFlickerAmplitude, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lightFlickerFrequency", m_lightFlickerFrequency, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lightColor", m_lightColor, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lightWarpColor", m_lightWarpColor, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "volumetric", m_volumetric, "", Be::READWRITE | Be::PERSIST )
 
     EXPOSURE_END()
 }
@@ -207,6 +241,8 @@ const Be::ClassInfo* EveSOFDataHullBoosterItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "transform", m_transform, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "functionality", m_functionality, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "hasTrail", m_hasTrail, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "atlasIndex0", m_atlasIndex0, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "atlasIndex1", m_atlasIndex1, "", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
 

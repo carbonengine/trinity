@@ -31,6 +31,7 @@ public:
 	virtual void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const;
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void AddQuadsToQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	virtual void GetLights( Tr2LightManager& lightManager ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable - overriding EveSpaceObject2 implementations

@@ -193,7 +193,7 @@ void EveShip2::RebuildBoosterSet()
 		if( strncmp( locatorName, kLocatorPrefix, kLocatorPrefixLength ) == 0 )
 		{
 			Vector4 functionality( 0.f, 1.f, 1.f, 1.f );
-			m_boosters->Add( &locator->GetTransform(), &functionality, true );
+			m_boosters->Add( &locator->GetTransform(), &functionality, true, 0, 0 );
 		}
 	}
 
@@ -387,4 +387,19 @@ bool EveShip2::ExecuteAnimationStateCommand( EveAnimationCmd cmd, const std::str
 	}
 
 	return false;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Adds ship dynamic lights to the manager.
+// Arguments:
+//   lightManager - light manager
+// --------------------------------------------------------------------------------
+void EveShip2::GetLights( Tr2LightManager& lightManager ) const
+{
+	EveMobile::GetLights( lightManager );
+	if( m_boosters )
+	{
+		m_boosters->GetLights( lightManager, m_worldTransform );
+	}
 }
