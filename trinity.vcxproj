@@ -2810,6 +2810,7 @@
     <ClInclude Include="Eve\SpaceObject\Attachments\EveTrailsSet.h"/>
     <ClInclude Include="Eve\SpaceObject\Children\EveChildBillboard.h"/>
     <ClInclude Include="Eve\SpaceObject\Children\EveChildContainer.h"/>
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildMesh.h"/>
     <ClInclude Include="Eve\SpaceObject\Children\EveChildParticleSystem.h"/>
     <ClInclude Include="Eve\SpaceObject\Children\IEveSpaceObjectChild.h"/>
     <ClInclude Include="Eve\SpaceObject\Utils\EveCustomMask.h"/>
@@ -3438,6 +3439,8 @@
     <ClCompile Include="Eve\SpaceObject\Children\EveChildBillboard_Blue.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Children\EveChildContainer.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Children\EveChildContainer_Blue.cpp"/>
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildMesh.cpp"/>
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildMesh_Blue.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Children\EveChildParticleSystem.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Children\EveChildParticleSystem_Blue.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Utils\EveCustomMask.cpp"/>
