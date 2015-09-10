@@ -1251,7 +1251,9 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 					declOs << 'v';
 				}
 				declOs << reg.name << ';' << endl;
-				declOs << "#ifndef GL_OES_texture_3D" << endl << "uniform float " << reg.name << "sl;" << endl << "#endif" << endl;
+				declOs << "#ifndef GL_OES_texture_3D" << endl << "uniform float " << reg.name << "sl;" << endl << 
+					"#else" << endl << "#define " << reg.name << "sl 0" << endl <<
+					"#endif" << endl;
 			}
 			else if( reg.name == MakeInlineString( "vFace" ) )
 			{
