@@ -1192,6 +1192,30 @@ bool EffectCompilerDX9::Create()
 	return true;
 }
 
+namespace
+{
+
+enum CompileStatus
+{
+	COMPILE_STATUS_SUCCESS,
+	COMPILE_STATUS_ERROR,
+	COMPILE_STATUS_CRASH,
+};
+
+CompileStatus SafeCompileEffect( ID3DXEffectCompiler* effectCompiler, DWORD flags, LPD3DXBUFFER* effect, LPD3DXBUFFER* errorMsgs )
+{
+	__try
+	{
+		return SUCCEEDED( effectCompiler->CompileEffect( flags, effect, errorMsgs ) ) ? COMPILE_STATUS_SUCCESS : COMPILE_STATUS_ERROR;
+	}
+	__except( EXCEPTION_EXECUTE_HANDLER )
+	{ 
+		return COMPILE_STATUS_CRASH;
+	}
+}
+
+}
+
 bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, const D3DXMACRO* defines, ID3DXInclude* include, EffectData& result, bool disableListing )
 {
 	CComPtr<ID3DXEffectCompiler> effectCompiler;
@@ -1235,15 +1259,19 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	}
 	errors = nullptr;
 
-	if( FAILED( effectCompiler->CompileEffect( 
+	switch( SafeCompileEffect( effectCompiler,
 		D3DXSHADER_PACKMATRIX_COLUMNMAJOR | D3DXSHADER_NO_PRESHADER | optimizationLevel | ( g_avoidFlowControl ? D3DXSHADER_AVOID_FLOW_CONTROL : 0 ), 
 		&effectData, 
-		&errors ) ) )
+		&errors ) )
 	{
+	case COMPILE_STATUS_ERROR:
 		if( errors )
 		{
 			g_messages.AddMessages( errors );
 		}
+		return false;
+	case COMPILE_STATUS_CRASH:
+		g_messages.AddMessage( "\\memory(0): error C0000: WTF? D3D compiler has crashed(" );
 		return false;
 	}
 	if( g_printWarnings && errors )
