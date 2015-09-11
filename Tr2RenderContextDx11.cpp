@@ -1087,12 +1087,11 @@ ALResult Tr2RenderContextAL::Clear(
 	uint32_t clearFlags,
 	uint32_t color, 
 	float depth, 
-	uint32_t stencil )
+	uint32_t stencil,
+	uint32_t slot )
 {
 	if( clearFlags & CLEARFLAGS_TARGET )
 	{
-		uint32_t slot = 0;	// in the future we might want to clear other things :)
-		
 		ID3D11RenderTargetView*	rtView = 
 			m_boundRenderTarget[slot]	?	m_boundRenderTarget[slot]->m_RTV 
 										:	slot == 0	? m_secondaryDefaultBackBuffer->m_RTV 

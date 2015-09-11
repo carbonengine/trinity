@@ -508,7 +508,8 @@ ALResult Tr2RenderContextAL::Clear(
 	uint32_t clearFlags, 
 	uint32_t color, 
 	float depth, 
-	uint32_t stencil )
+	uint32_t stencil,
+	uint32_t slot )
 {
 	if( !IsValid() )
 	{ 

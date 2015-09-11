@@ -154,7 +154,8 @@ public:
 		uint32_t clearFlags, 
 		uint32_t color, 
 		float depth, 
-		uint32_t stencil = 0 ) throw();
+		uint32_t stencil = 0,
+		uint32_t slot = 0 ) throw();
 
 	// rather hacky call to make integer loops work across DX9 and DX11.
 	ALResult SetNumberOfLights( uint32_t numLights ) throw();

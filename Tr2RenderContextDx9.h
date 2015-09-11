@@ -184,7 +184,8 @@ public:
 		uint32_t clearFlags, 
 		uint32_t color, 
 		float depth, 
-		uint32_t stencil = 0 );
+		uint32_t stencil = 0,
+		uint32_t slot = 0 );
 
 	ALResult SetDepthStencil( const Tr2DepthStencilAL& depthStencil );
 	void SetReadOnlyDepth(			bool enable );
