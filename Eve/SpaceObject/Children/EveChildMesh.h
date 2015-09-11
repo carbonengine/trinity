@@ -33,8 +33,8 @@ public:
 	// IEveSpaceObjectChild
 	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext, const EveSpaceObject2* parent );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, const EveSpaceObject2* parent );
+	virtual void UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
+	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
 
 	virtual void PlayCurveSet( const std::string& name ) {};
 	virtual void StopCurveSet( const std::string& name ) {};
@@ -52,7 +52,8 @@ public:
 	// PerObjectData
 	void UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* );
 	uint32_t GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const;
-private:
+
+protected:
 	BlueSharedString m_name;
 	Vector3 m_translation;
 	Quaternion m_rotation;

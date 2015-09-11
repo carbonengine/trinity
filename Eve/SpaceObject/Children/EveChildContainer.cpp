@@ -42,14 +42,14 @@ bool EveChildContainer::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery 
 	return success;
 }
 	
-void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, const EveSpaceObject2* parent )
+void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
 		(*it)->UpdateSyncronous( updateContext, parent );
 	}
 }
-void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, const EveSpaceObject2* parent )
+void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{

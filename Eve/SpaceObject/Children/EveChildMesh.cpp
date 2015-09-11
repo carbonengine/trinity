@@ -113,11 +113,11 @@ void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shade
 	}
 }
 
-void EveChildMesh::UpdateSyncronous( EveUpdateContext& updateContext, const EveSpaceObject2* parent )
+void EveChildMesh::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
 }
 
-void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, const EveSpaceObject2* parent )
+void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
@@ -128,5 +128,5 @@ void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, const Eve
 
 	D3DXMatrixMultiply( &m_worldTransform, &localTransform, &localToWorldTransform );
 	parent->GetPerObjectStructs( m_vsData, m_psData );
-	D3DXMatrixTranspose( &m_vsData.m_worldTransform, &m_worldTransform );
+	D3DXMatrixTranspose( &m_vsData.worldTransform, &m_worldTransform );
 }

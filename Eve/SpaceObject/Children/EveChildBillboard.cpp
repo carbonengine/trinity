@@ -101,11 +101,11 @@ float EveChildBillboard::GetSortValue()
 }
 
 
-void EveChildBillboard::UpdateSyncronous( EveUpdateContext& updateContext, const EveSpaceObject2* parent )
+void EveChildBillboard::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
 }
 
-void EveChildBillboard::UpdateAsyncronous( EveUpdateContext& updateContext, const EveSpaceObject2* parent )
+void EveChildBillboard::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
 	Matrix localTransform, localToWorldTransform;
 	D3DXMatrixTransformation( &localTransform, 0, 0, &m_scaling, 0, 0, &m_translation );

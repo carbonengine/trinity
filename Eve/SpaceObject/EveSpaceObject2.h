@@ -84,10 +84,12 @@ BLUE_DECLARE_STRUCTURE_LIST( EveDamageLocator );
 // --------------------------------------------------------------------------------
 struct EveSpaceObjectVSData
 {
-	Matrix m_worldTransform;
-	Matrix m_worldTransformLast;
-	Vector4 m_spaceObjectMiscData;
-	Vector4 m_spaceObjectClipData;
+	Matrix worldTransform;
+	Matrix worldTransformLast;
+	Vector4 miscData;
+	Vector4 clipData;
+	Vector4 ellpsoidRadii;
+	Vector4 ellpsoidCenter;
 };
 
 // --------------------------------------------------------------------------------
@@ -96,10 +98,10 @@ struct EveSpaceObjectVSData
 // --------------------------------------------------------------------------------
 struct EveSpaceObjectPSData
 {
-	Vector4 m_spaceObjectMiscData;
-	Vector4 m_spaceObjectClipData;
-	Vector4 m_spaceObjectClipDataEx;
-	Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
+	Vector4 miscData;
+	Vector4 clipData;
+	Vector4 clipDataEx;
+	Vector4 shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
 };
 
 // --------------------------------------------------------------------------------
@@ -371,8 +373,8 @@ protected:
 	bool m_allAreasCastShadow;
 	void CacheAllAreasCastShadow();
 
-	float GetBoundingSphereRadius();
-	Vector3 GetBoundingSphereCenter();
+	float GetBoundingSphereRadius() const;
+	Vector3 GetBoundingSphereCenter() const;
 
 	Vector4 CalculateSkinnedBoundingSphere();
 	std::pair<Vector3, Vector3> CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform );

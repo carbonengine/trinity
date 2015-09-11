@@ -107,11 +107,11 @@ Tr2PerObjectData* EveChildParticleSystem::GetPerObjectData( ITriRenderBatchAccum
 	return data;
 }
 
-void EveChildParticleSystem::UpdateSyncronous( EveUpdateContext& updateContext, const EveSpaceObject2* parent )
+void EveChildParticleSystem::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
 }
 
-void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext, const EveSpaceObject2* parent )
+void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
 	Matrix localTransform, localToWorldTransform;
 	D3DXMatrixTransformation( &localTransform, 0, 0, &m_scaling, 0, &m_rotation, &m_translation );

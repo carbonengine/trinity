@@ -159,8 +159,8 @@ void EveMobile::PrepareShaderData( EveUpdateContext& updateContext )
 	float nearDist = std::max( 0.f, D3DXVec3Length( &m_clipSphereCenter ) - GetBoundingSphereRadius() );
 	float insideSpherePercentage = std::min( 1.f, D3DXVec3Length( &m_clipSphereCenter ) / GetBoundingSphereRadius() );
 	float disolveRadius = nearDist + m_clipSphereFactor * GetBoundingSphereRadius() * ( 1.f + insideSpherePercentage );
-	m_psData.m_spaceObjectClipData = m_vsData.m_spaceObjectClipData = Vector4( m_clipSphereCenter + GetBoundingSphereCenter(), TriFloatSign( disolveRadius ) * disolveRadius * disolveRadius );
-	m_psData.m_spaceObjectClipDataEx = Vector4( TriFloatSign( disolveRadius ), 0.f, 0.f, 0.f );
+	m_psData.clipData = m_vsData.clipData = Vector4( m_clipSphereCenter + GetBoundingSphereCenter(), TriFloatSign( disolveRadius ) * disolveRadius * disolveRadius );
+	m_psData.clipDataEx = Vector4( TriFloatSign( disolveRadius ), 0.f, 0.f, 0.f );
 }
 
 // --------------------------------------------------------------------------------
@@ -181,8 +181,8 @@ void EveMobile::UpdateAsyncronous( EveUpdateContext& updateContext )
 	EveTurretSet::ParentData pd;
 	pd.transform = m_worldTransform;
 	pd.shipData = m_spaceObjectMiscData;
-	pd.clipData = m_psData.m_spaceObjectClipData;
-	pd.clipDataEx = m_psData.m_spaceObjectClipDataEx;
+	pd.clipData = m_psData.clipData;
+	pd.clipDataEx = m_psData.clipDataEx;
 
 	for( EveTurretSetVector::iterator it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{
@@ -207,7 +207,7 @@ void EveMobile::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Rende
 	// collect renderables of the turrets
 	for( EveTurretSetVector::iterator it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{
-		(*it)->GetRenderables( frustum, renderables, m_psData.m_shLightingCoefficients );
+		(*it)->GetRenderables( frustum, renderables, m_psData.shLightingCoefficients );
 	}
 }
 

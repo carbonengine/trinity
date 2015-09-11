@@ -113,7 +113,9 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 
 	m_animationUpdater.CreateInstance();
 	m_persistedDamageLocators.SetStructureDefinition( EveDamageLocatorStructureDef );
-	memset( m_psData.m_shLightingCoefficients, 0, sizeof( m_psData.m_shLightingCoefficients ) );
+
+	memset( &m_psData, 0, sizeof( EveSpaceObjectPSData ) );
+	memset( &m_vsData, 0, sizeof( EveSpaceObjectVSData ) );
 }
 
 EveSpaceObject2::~EveSpaceObject2()
@@ -182,7 +184,7 @@ void EveSpaceObject2::UnregisterSecondaryLightSource( Tr2ShLightingManager& mana
 void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 {
 	Be::Time time = updateContext.GetTime();
-	D3DXMatrixTranspose( &m_vsData.m_worldTransformLast, &m_worldTransform );;
+	D3DXMatrixTranspose( &m_vsData.worldTransformLast, &m_worldTransform );;
 
 	UpdateWorldTransform( time );
 
@@ -305,9 +307,18 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 	m_perObjectDataPs.InvalidateBufferData();
 
 	PrepareShaderData( updateContext );
-	m_psData.m_spaceObjectMiscData = m_spaceObjectMiscData;
-	D3DXMatrixTranspose( &m_vsData.m_worldTransform, &m_worldTransform );
-	m_vsData.m_spaceObjectMiscData = m_spaceObjectMiscData;
+	m_psData.miscData = m_spaceObjectMiscData;
+	D3DXMatrixTranspose( &m_vsData.worldTransform, &m_worldTransform );
+	m_vsData.miscData = m_spaceObjectMiscData;
+
+
+	Vector3 parentBBoxMin( -1.f, -1.f, -1.f ), parentBBoxMax( 1.f, 1.f, 1.f );
+	if( GetLocalBoundingBox( parentBBoxMin, parentBBoxMax ) )
+	{
+		m_vsData.ellpsoidRadii = Vector4( 0.5f * TRI_SQRT3 * ( parentBBoxMax - parentBBoxMin ), 0.f );
+		m_vsData.ellpsoidCenter = Vector4( parentBBoxMin + 0.5f * ( parentBBoxMax - parentBBoxMin ), 0.f );
+	}
+
 
 	if( !m_curveSets.empty() || !m_overlayEffects.empty() )
 	{
@@ -353,9 +364,9 @@ void EveSpaceObject2::PrepareShaderData( EveUpdateContext& updateContext )
 		m_boundingSphereWorld.w = m_modelScale * m_boundingSphereRadius;
 	}
 
-	// prepare shader data: shader needs to know size of this object for some surface-scaling issues
+	// shader needs to know size of this object for some surface-scaling issues
 	m_spaceObjectMiscData.w = GetBoundingSphereRadius();
-	// prepare shader data: dirt level of a spaceobject
+	// dirt level of a spaceobject
 	m_spaceObjectMiscData.z = m_dirtLevel;
 }
 
@@ -824,19 +835,19 @@ bool EveSpaceObject2::FindLocatorTransformByName( const char* name, unsigned int
 
 void EveSpaceObject2::UpdateShLighting( Tr2ShLightingManager& manager )
 {
-	memset( m_psData.m_shLightingCoefficients, 0, sizeof( m_psData.m_shLightingCoefficients ) );
+	memset( m_psData.shLightingCoefficients, 0, sizeof( m_psData.shLightingCoefficients ) );
 	if( m_estimatedPixelDiameterWithChildren > g_eveSpaceSceneLowDetailThreshold )
 	{
 		float intensityFadeRadius = ( g_eveSpaceSceneMediumDetailThreshold - g_eveSpaceSceneLowDetailThreshold ) * 0.25f;
 		float intensity = ( m_estimatedPixelDiameterWithChildren - g_eveSpaceSceneLowDetailThreshold ) / intensityFadeRadius;
 		intensity = std::min( std::max( intensity, 0.f ), 1.f );
-		manager.GetLighting( m_worldPosition, intensity, m_boundingSphereRadius * g_secondaryLightingRadiusCutoffFactor, m_psData.m_shLightingCoefficients );
+		manager.GetLighting( m_worldPosition, intensity, m_boundingSphereRadius * g_secondaryLightingRadiusCutoffFactor, m_psData.shLightingCoefficients );
 	}
 }
 
 void EveSpaceObject2::ClearShLighting()
 {
-	memset( m_psData.m_shLightingCoefficients, 0, sizeof( m_psData.m_shLightingCoefficients ) );
+	memset( m_psData.shLightingCoefficients, 0, sizeof( m_psData.shLightingCoefficients ) );
 }
 
 // --------------------------------------------------------------------------------
@@ -1064,9 +1075,9 @@ void EveSpaceObject2::GetRenderables( const TriFrustum& frustum, std::vector<ITr
 					EveSpaceObjectDecal::ParentData pd;
 					pd.transform = m_worldTransform;
 					pd.shipData = m_spaceObjectMiscData;
-					pd.clipData = m_psData.m_spaceObjectClipData;
-					pd.clipDataEx = m_psData.m_spaceObjectClipDataEx;
-					pd.shLighting = m_psData.m_shLightingCoefficients;
+					pd.clipData = m_psData.clipData;
+					pd.clipDataEx = m_psData.clipDataEx;
+					pd.shLighting = m_psData.shLightingCoefficients;
 					(*it)->GetRenderables( geometryRes, frustum, renderables, &pd );
 				}
 				m_decalCache->Clear();
@@ -1157,7 +1168,12 @@ void EveSpaceObject2::SetMesh( Tr2MeshBase* mesh )
 	m_allowLodSelection = false;
 }
 
-float EveSpaceObject2::GetBoundingSphereRadius( )
+// --------------------------------------------------------------------------------
+// Description:
+//   Access to the bounding sphere radius, but make sure we use the dynamic one
+//   if this object has one!
+// --------------------------------------------------------------------------------
+float EveSpaceObject2::GetBoundingSphereRadius() const
 {
 	if( m_dynamicBoundingSphere.w != -1 )
 	{
@@ -1166,7 +1182,12 @@ float EveSpaceObject2::GetBoundingSphereRadius( )
 	return m_modelScale * m_boundingSphereRadius;
 }
 
-Vector3 EveSpaceObject2::GetBoundingSphereCenter( )
+// --------------------------------------------------------------------------------
+// Description:
+//   Access to the bounding sphere center, but make sure we use the dynamic one
+//   if this object has one!
+// --------------------------------------------------------------------------------
+Vector3 EveSpaceObject2::GetBoundingSphereCenter( ) const
 {
 	if( m_dynamicBoundingSphere.w != -1 )
 	{
