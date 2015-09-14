@@ -124,13 +124,13 @@ void GetProjectedCubeBounds(  AxisAlignedBoundingBox& box, const Matrix& worldVi
 			float v1 = D3DXPlaneDotCoord( &plane, &vertex2 );
 			if( v0 <= 0 )
 		{
-				points[count++] = sides[side][edge];
+				points[count++] = Vector4( sides[side][edge], 0.f );
 		}
 			if( v0 * v1 < 0 )
 		{
 				Vector3 result;
 				D3DXPlaneIntersectLine( &result, &plane, &vertex1, &vertex2 );
-				points[count++] = result;
+				points[count++] = Vector4( result, 0.f );
 			}
 		}
 		}
@@ -415,7 +415,7 @@ Tr2PerObjectData* EveCloud::GetPerObjectData( ITriRenderBatchAccumulator* accumu
 	data->m_data.m_screenDepth = center.z;
 
 	AxisAlignedBoundingBox box;
-	GetProjectedCubeBounds( box, m_worldTransform * Tr2Renderer::GetViewTransform(), fakeProjection, fakeNearPlane, m_min, m_max );
+	GetProjectedCubeBounds( box, m_worldTransform * Tr2Renderer::GetViewTransform(), fakeProjection, 1, m_min, m_max );
 
 	data->m_data.m_screenSize.x = box.m_min.x;
 	data->m_data.m_screenSize.y = box.m_min.y;
