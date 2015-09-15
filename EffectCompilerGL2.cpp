@@ -2967,7 +2967,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 				"#define texture2DGrad texture2DGradEXT\n"
 				"#define texture2DProjGrad texture2DProjGradEXT\n"
 				"#define textureCubeGrad textureCubeGradEXT\n"
-				"#elifdef GL_ARB_shader_texture_lod\n"
+				"#elif defined(GL_ARB_shader_texture_lod)\n"
 				"#extension GL_ARB_shader_texture_lod: enable\n"
 				"#define texture2DGrad texture2DGradARB\n"
 				"#endif\n";
