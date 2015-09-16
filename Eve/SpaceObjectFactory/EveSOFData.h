@@ -61,6 +61,21 @@ TYPEDEF_BLUECLASS( EveSOFDataTransform );
 BLUE_DECLARE_VECTOR( EveSOFDataTransform );
 
 
+BLUE_CLASS( EveSOFDataKeyValue ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataKeyValue( IRoot* lockobj = NULL );
+	~EveSOFDataKeyValue() {}
+
+	// simple key/value pair
+	BlueSharedString m_key;
+	BlueSharedString m_value;
+};
+TYPEDEF_BLUECLASS( EveSOFDataKeyValue );
+BLUE_DECLARE_VECTOR( EveSOFDataKeyValue );
+
 
 // --------------------------------------------------------------------------------
 // All data storage classes for per-hull data
@@ -691,6 +706,9 @@ public:
 	// shader-specific data
 	PEveSOFDataGenericShaderVector m_areaShaders;
 	PEveSOFDataGenericShaderVector m_decalShaders;
+
+	// texture filename extensions
+	PEveSOFDataKeyValueVector m_textureExtensions;
 
 	// hull area data
 	PEveSOFDataFactionHullAreaVector m_hullAreas;
