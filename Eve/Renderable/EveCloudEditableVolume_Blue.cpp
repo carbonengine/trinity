@@ -6,6 +6,7 @@
 
 #include "StdAfx.h"
 #include "EveCloudEditableVolume.h"
+#include "Tr2HostBitmap.h"
 
 BLUE_DEFINE( EveCloudVolumeBall );
 
@@ -43,6 +44,7 @@ const Be::ClassInfo* EveCloudEditableVolume::ExposeToBlue()
 		MAP_ATTRIBUTE( "animated", m_animated, "If set than balls are sampled at different time intervals and packed into a texture", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets for balls", Be::READWRITE | Be::PERSIST )
 		MAP_METHOD_AND_WRAP( "OnVolumeModified", OnVolumeModified, "Trigger re-rasterizing of the volume into the texture" )
+		MAP_METHOD_AND_WRAP( "Rasterize", Rasterize, "Rasterizes balls into a texture and returns result as a Tr2HostBitmap" )
     EXPOSURE_END()
 }
 

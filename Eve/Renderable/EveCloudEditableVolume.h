@@ -117,6 +117,8 @@ private:
 	static void RasterizeBallsAnimated( RasterizeParams& params );
 	static void RasterizeBall( const EveCloudVolumeBall::BallData& ball, const RasterizeParams& params, float* pixels );
 
+	Tr2HostBitmapPtr Rasterize();
+
 	RasterizeParams m_currentParams;
 	CcpThreadHandle_t m_thread;
 

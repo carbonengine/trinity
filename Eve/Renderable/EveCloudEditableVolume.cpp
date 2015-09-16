@@ -77,6 +77,28 @@ bool EveCloudEditableVolume::OnModified( Be::Var* value )
 	return true;
 }
 
+Tr2HostBitmapPtr EveCloudEditableVolume::Rasterize()
+{
+	OnVolumeModified();
+	if( m_thread )
+	{
+		uint32_t result;
+		CcpJoinThread( m_thread, &result );
+		m_thread = 0;
+		if( m_currentParams.status == DataReady )
+		{
+			m_bitmap->CreateVolume( m_currentParams.width, m_currentParams.height, m_currentParams.depth, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM );
+			memcpy( m_bitmap->GetRawData(), m_currentParams.pixels.get(), m_bitmap->GetRawDataSize() );
+			m_texture->CreateFromHostBitmap( m_bitmap );
+			if( m_volumeDirty )
+			{
+				OnVolumeModified();
+			}
+		}
+	}
+	return m_bitmap;
+}
+
 void EveCloudEditableVolume::Update( Be::Time time )
 {
 	if( m_currentParams.status == DataReady )
