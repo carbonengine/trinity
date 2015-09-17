@@ -1065,21 +1065,24 @@ void EveSOF::SetupDecals( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 		shader.CreateInstance();
 		shader->StartUpdate();
 
-		// construct shader path
-		std::string shaderPath;
+		// what shader to use?
+		std::string shaderName;
 		if( fdd && !fdd->shader.empty() )
 		{
-			shaderPath = dna->GetDecalShaderLocationResPath() + std::string("/") + dna->GetShaderPrefix( false ) + fdd->shader;
+			shaderName = fdd->shader;
 		}
 		else if( !hdit->shader.empty() )
 		{
-			shaderPath = dna->GetDecalShaderLocationResPath() + std::string("/") + dna->GetShaderPrefix( false ) + hdit->shader;
+			shaderName = hdit->shader;
 		}
 		else
 		{
 			// we couldn't construct a valid shader path. So no decal!
 			continue;
 		}
+
+		// construct shader path and set it on the Tr2Effect
+		std::string shaderPath = dna->GetDecalShaderLocationResPath() + std::string("/") + dna->GetShaderPrefix( false ) + shaderName;
 		shader->SetEffectPathName( shaderPath.c_str() );
 
 		// always set hull parameters & textures for this decal
@@ -1102,6 +1105,17 @@ void EveSOF::SetupDecals( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 			for( auto fdtit = fdd->textures.begin(); fdtit != fdd->textures.end(); ++fdtit )
 			{
 				shader->AddResourceTexture2D( fdtit->first, fdtit->second.resFilePath.c_str() );
+			}
+		}
+
+		// find data on this shader from generics, we need it!
+		const EveSOFDataMgr::GenericShaderData* shaderData = dna->GetGenericDecalShaderData( BlueSharedString( shaderName ) );
+		if( shaderData )
+		{
+			// default shader textures from the generic data
+			for( auto gtit = shaderData->defaultTextures.begin(); gtit != shaderData->defaultTextures.end(); ++gtit )
+			{
+				shader->AddResourceTexture2D( gtit->first, gtit->second.resFilePath.c_str() );
 			}
 		}
 
