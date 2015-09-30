@@ -1007,7 +1007,7 @@ bool Tr2RenderContextAL::IsValid()
 	return m_d3dDevice9 != nullptr;
 }
 
-ALResult Tr2RenderContextAL::SetVertexLayout( Tr2VertexLayoutAL& layout )
+ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 {
 	if( !m_d3dDevice9 || !layout.IsValid() )
 	{

@@ -278,7 +278,7 @@ bool Tr2RenderContextAL::IsValid()
 	return m_isValid;
 }
 
-ALResult Tr2RenderContextAL::SetVertexLayout( Tr2VertexLayoutAL& layout )
+ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 {
 	return S_OK;
 }

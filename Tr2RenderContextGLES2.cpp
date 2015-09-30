@@ -1257,7 +1257,7 @@ ALResult Tr2RenderContextAL::Present()
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetVertexLayout( Tr2VertexLayoutAL& layout )
+ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 {
 	if( !layout.IsValid() )
 	{

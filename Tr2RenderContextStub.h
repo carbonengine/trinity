@@ -155,7 +155,7 @@ public:
 		return E_FAIL;
 	}
 
-	ALResult SetVertexLayout( Tr2VertexLayoutAL& layout );
+	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout );
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value );
 	ALResult SetRenderStates( const uint32_t * stateValuePairs, uint32_t count );

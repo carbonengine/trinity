@@ -160,7 +160,7 @@ public:
 		return E_FAIL;
 	}
 
-	ALResult SetVertexLayout( Tr2VertexLayoutAL& layout );
+	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout );
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value );
 	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count );
@@ -301,7 +301,7 @@ private:
 	ProgramObject* m_boundProgramObject;
 	Tr2ConstantBufferAL* m_boundBuffers[16];
 	int m_numberOfLights;
-	Tr2VertexDefinition* m_boundLayout;
+	const Tr2VertexDefinition* m_boundLayout;
 	struct VertexStream
 	{
 		GLuint buffer;
