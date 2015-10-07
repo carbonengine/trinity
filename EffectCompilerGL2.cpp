@@ -3035,7 +3035,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			{
 				prefixOs <<
 					"#ifdef GL_EXT_shader_texture_lod\n"
-					"#define tex3DLod(s,uvw,l,sl,su,sw,lw) texture3DLod(s,uvw,l)\n"
+					"#define tex3DLod(s,uvw,l,sl,su,sw,lw) texture3DLodEXT(s,uvw,l)\n"
 					"#else\n"
 					"#define tex3DLod(s,uvw,l,sl,su,sw,lw) texture3D(s,uvw)\n"
 					"#endif\n";
