@@ -33,9 +33,10 @@ def get_msbuild_path(version='4.0'):
         return os.path.join(build_dir, 'msbuild.exe')
 
 
-def build_project(project, target='build', msbuild_version='4.0'):
+def build_project(project, target='build', msbuild_version='4.0', toolset=None):
+    toolset_args = ['/p:PlatformToolset=%s' % toolset] if toolset else []
     subprocess.check_call([get_msbuild_path(msbuild_version), '/t:' + target, '/property:BuildCores=2',
-                           '/p:Platform=Win32', '/verbosity:q', '/nologo', project])
+                           '/p:Platform=Win32', '/verbosity:q', '/nologo'] + toolset_args + [project])
 
 
 def run_p4(p4, command, *args):
@@ -86,6 +87,7 @@ def main():
     parser.add_argument('--password', help='perforce password')
     parser.add_argument('--cl_desc', help='CL description')
     parser.add_argument('--clean', action='append', default=[], help='Directory to clean before building')
+    parser.add_argument('--toolset', default=None, help='Override MSBuild platform toolset')
     parser.add_argument('project', nargs='+')
 
     args = parser.parse_args()
@@ -100,7 +102,7 @@ def main():
     sys.stdout.flush()
     try:
         for each in args.project:
-            build_project(each)
+            build_project(each, toolset=args.toolset)
         submit_with_description(p4, args.cl_desc or DEFAULT_CL_DESCRIPTION)
     except:
         run_p4(p4, 'revert', '-c', 'default', *COMPILED_FILE_PATHS)
