@@ -19,6 +19,16 @@
       <Targets>FXCompile</Targets>
     </AvailableItemName>
   </ItemGroup>
+
+  <Target Name="_SelectedFiles">
+    <ItemGroup>
+      <SelectedFiles Include="$(SelectedFiles)"/>
+    </ItemGroup>
+    <PropertyGroup>
+      <BuildType Condition="'$(BuildType)' == ''">Build</BuildType>
+    </PropertyGroup>
+  </Target>
+
   
   <Target Name="FXCompile" DependsOnTargets="_SelectedFiles">
     <ItemGroup>
@@ -70,7 +80,7 @@
   <Target
     Name="Build"
     Condition="'@(BuildFX)' != ''"
-    DependsOnTargets="PrepareForBuild;_SetIncremental;FXCompile">
+    DependsOnTargets="_SetIncremental;FXCompile">
   </Target>
   <Target
     Name="Rebuild"
