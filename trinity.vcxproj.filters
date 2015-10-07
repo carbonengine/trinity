@@ -104,6 +104,9 @@
     <ClInclude Include="TbbStub.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tr2AddSafeGrowableBuffer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="Tr2AtlasTexture.h">
       <Filter>Source Files</Filter>
     </ClInclude>

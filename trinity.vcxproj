@@ -2750,6 +2750,7 @@
     <ClInclude Include="resource.h"/>
     <ClInclude Include="StdAfx.h"/>
     <ClInclude Include="TbbStub.h"/>
+    <ClInclude Include="Tr2AddSafeGrowableBuffer.h"/>
     <ClInclude Include="Tr2AtlasTexture.h"/>
     <ClInclude Include="Tr2BindingVector3.h"/>
     <ClInclude Include="Tr2Blitter.h"/>
