@@ -1252,7 +1252,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 				}
 				declOs << reg.name << ';' << endl;
 				declOs << "#ifndef GL_OES_texture_3D" << endl << "uniform float " << reg.name << "sl;" << endl << 
-					"#else" << endl << "#define " << reg.name << "sl 0" << endl <<
+					"#else" << endl << "#define " << reg.name << "sl 0.0" << endl <<
 					"#endif" << endl;
 			}
 			else if( reg.name == MakeInlineString( "vFace" ) )
@@ -3035,7 +3035,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			{
 				prefixOs <<
 					"#ifdef GL_EXT_shader_texture_lod\n"
-					"#define tex3DLod(s,uvw,l,sl,su,sw,lw) texture3DLodEXT(s,uvw,l)\n"
+					"#define tex3DLod(s,uvw,l,sl,su,sw,lw) texture3DLod(s,uvw,l)\n"
 					"#else\n"
 					"#define tex3DLod(s,uvw,l,sl,su,sw,lw) texture3D(s,uvw)\n"
 					"#endif\n";
