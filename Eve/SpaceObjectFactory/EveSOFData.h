@@ -375,6 +375,8 @@ public:
 	// geometry
 	std::string m_geometryResFilePath;
 	Vector4 m_boundingSphere;
+	Vector3 m_shapeEllipsoidCenter;
+	Vector3 m_shapeEllipsoidRadius;
 	bool m_isSkinned;
 
 	// materials

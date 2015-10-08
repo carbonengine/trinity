@@ -534,6 +534,24 @@ const Vector4* EveSOFDNA::GetHullBoundingSphere() const
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Return a pointer to the center of this hull's shape ellipsoid
+// --------------------------------------------------------------------------------
+const Vector3* EveSOFDNA::GetHullShapeEllipsoidCenter() const
+{
+	return &m_hullData->shapeEllipsoidCenter;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Return a pointer to the radiuses of this hull's shape ellipsoid
+// --------------------------------------------------------------------------------
+const Vector3* EveSOFDNA::GetHullShapeEllipsoidRadius() const
+{
+	return &m_hullData->shapeEllipsoidRadius;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Return a pointer to the audio position of this hull
 // --------------------------------------------------------------------------------
 const Vector3* EveSOFDNA::GetHullAudioPosition() const

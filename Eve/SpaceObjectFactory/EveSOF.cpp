@@ -274,6 +274,7 @@ void EveSOF::SetupMesh( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 
 	// bounding sphere comes from data, is faster
 	obj->SetBoundingSphereInformation( dna->GetHullBoundingSphere() );
+	obj->SetShapeEllipsoid( dna->GetHullShapeEllipsoidCenter(), dna->GetHullShapeEllipsoidRadius() );
 
 	// shadow
 	if( dna->IsHullAnimated() )
@@ -1088,6 +1089,22 @@ void EveSOF::SetupDecals( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 			// we couldn't construct a valid shader path. So no decal!
 			continue;
 		}
+
+		/*
+		// shader is hull-only and MUST exist!
+		if( hdit->shader.empty() )
+		{
+			continue;
+		}
+		// also it must match the faction-data, if that exists
+		if( fdd && !fdd->shader.empty() )
+		{
+			if( fdd->shader != hdit->shader )
+			{
+				continue;
+			}
+		}
+		*/
 
 		// construct shader path and set it on the Tr2Effect
 		std::string shaderPath = dna->GetDecalShaderLocationResPath() + std::string("/") + dna->GetShaderPrefix( false ) + shaderName;

@@ -163,6 +163,8 @@ public:
 		EveSOFDataHull::BuildClass buildClass;
 		std::string geometryResFilePath;
 		Vector4 boundingSphere;
+		Vector3 shapeEllipsoidCenter;
+		Vector3 shapeEllipsoidRadius;
 		bool isSkinned;
 		Vector3 audioPosition;
 		std::vector<HullSpriteSetData> spriteSets;

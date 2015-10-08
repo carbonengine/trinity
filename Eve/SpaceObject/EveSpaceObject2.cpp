@@ -2200,6 +2200,17 @@ void EveSpaceObject2::GetShapeEllipsoid( Vector3& center, Vector3& radius )
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Set the user-authored shape ellipsoid. This will be used instead of the
+//   dynamically generated
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::SetShapeEllipsoid( const Vector3* center, const Vector3* radius )
+{
+	m_shapeEllipsoidCenter = *center;
+	m_shapeEllipsoidRadius = *radius;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Update the curve set with the appropriate name
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::UpdateCurveSet( const std::string& name, Be::Time time )

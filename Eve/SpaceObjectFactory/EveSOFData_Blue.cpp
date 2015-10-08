@@ -387,7 +387,9 @@ const Be::ClassInfo* EveSOFDataHull::ExposeToBlue()
 		MAP_ATTRIBUTE_WITH_CHOOSER("buildClass", m_buildClass, "Choose the output trinity class", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFBuildClassChooser )
 
 		MAP_ATTRIBUTE( "geometryResFilePath", m_geometryResFilePath, "The res file path to the gr2 file", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "boundingSphere", m_boundingSphere, "The actual size of the gemoetry", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "boundingSphere", m_boundingSphere, "The actual size of the geometry", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "shapeEllipsoidCenter", m_shapeEllipsoidCenter, "The geometry's shape ellipsoid: center", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "shapeEllipsoidRadius", m_shapeEllipsoidRadius, "The geometry's shape ellipsoid: center", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "isSkinned", m_isSkinned, "Does this hull need skinned shaders?", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "opaqueAreas", m_opaqueAreas, "The opaque areas on this mesh", Be::READWRITE | Be::PERSIST )

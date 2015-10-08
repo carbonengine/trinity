@@ -58,6 +58,8 @@ public:
 	// get hull data
 	EveSOFDataHull::BuildClass GetBuildClass() const;
 	const Vector4* GetHullBoundingSphere() const;
+	const Vector3* GetHullShapeEllipsoidCenter() const;
+	const Vector3* GetHullShapeEllipsoidRadius() const;
 	bool IsHullAnimated() const;
 	const EveSOFDataMgr::HullBoosterData* GetHullBoosterData() const;
 	const Vector3* GetHullAudioPosition() const;

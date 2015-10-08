@@ -253,6 +253,7 @@ public:
 	void SetBoundingSphereInformation( const Vector4* centerAndRadius );
 	Be::Result<std::string> GetLocalBoundingBoxFromScript( std::pair<Vector3, Vector3>& result );
 	void GetShapeEllipsoid( Vector3& center, Vector3& radius );
+	void SetShapeEllipsoid( const Vector3* center, const Vector3* radius );
 
 	// access curve sets
 	void UpdateCurveSet( const std::string& name, Be::Time time );

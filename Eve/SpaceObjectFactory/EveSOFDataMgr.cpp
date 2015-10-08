@@ -391,6 +391,8 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 	hd.buildClass = srcData->m_buildClass;
 	hd.geometryResFilePath = srcData->m_geometryResFilePath;
 	hd.boundingSphere = srcData->m_boundingSphere;
+	hd.shapeEllipsoidCenter = srcData->m_shapeEllipsoidCenter;
+	hd.shapeEllipsoidRadius = srcData->m_shapeEllipsoidRadius;
 	hd.isSkinned = srcData->m_isSkinned;
 	hd.audioPosition = srcData->m_audioPosition;
 
