@@ -14,7 +14,6 @@
 
 #include "EveTurretFiringFX.h"
 #include "include/TriMath.h"
-#include "Utilities/ViewDistanceInfo.h"
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 
@@ -1203,27 +1202,6 @@ void EveTurretSet::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Re
 		if( m_firingEffect )
 		{
 			m_firingEffect->GetRenderables( frustum, renderables );
-		}
-	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Update view distance info using this object's bounds. 
-// --------------------------------------------------------------------------------
-void EveTurretSet::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{ 
-	if( !m_display )
-	{
-		return;
-	}
-
-	Vector4 v; 
-	if( m_displayEffects )
-	{
-		if( m_firingEffect && m_firingEffect->GetBoundingSphere( v ) && frustum.IsSphereVisible( &v ) )
-		{
-			viewDistance.UpdateClipPlanes( v, frustum );
 		}
 	}
 }

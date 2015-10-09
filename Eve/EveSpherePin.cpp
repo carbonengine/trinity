@@ -5,7 +5,6 @@
 #include "Curves/TriCurveSet.h"
 #include "EffectParameter/Tr2Vector4Parameter.h"
 #include "Utilities/BoundingSphere.h"
-#include "Utilities/ViewDistanceInfo.h"
 #include "Resources/TriGeometryRes.h"
 #include "Resources/TriTextureRes.h"
 
@@ -280,16 +279,6 @@ bool EveSpherePin::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query
 {
 	sphere = m_boundingSphere;
 	return true;
-}
-
-// ------------------------------------------------------------------------------------------------------
-void EveSpherePin::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{ 
-	Vector4 v; 
-	if( GetBoundingSphere( v ) )
-	{
-		viewDistance.UpdateClipPlanes( v, frustum );
-	}
 }
 
 // ------------------------------------------------------------------------------------------------------

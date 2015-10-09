@@ -24,7 +24,6 @@
 #include "EveTransform.h"
 #include "EveDustfieldConstraint.h"
 #include "Tr2GPUParticlePool.h"
-#include "Utilities/ViewDistanceInfo.h"
 #include "TbbStub.h"
 #include "Include/TriMath.h"
 #include "EveDistanceField.h"
@@ -159,9 +158,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_reflectionMapTransformVar( "ReflectionMapTransform", Tr2Renderer::GetIdentityTransform() ),
 	m_suncVecVar( "SunVec", Vector3( 0.0f, 0.0f, 1.0f )),
 	m_shadowLightnessVar( "ShadowLightness", 0.0f ),
-	m_dynamicClipPlanes( true ),
-	m_nearClip( 0.0f ),
-	m_farClip( 0.0f ),
 	m_fogType( 0.f ),
 	m_fogBlur( 0.f ),
 	m_nebulaIntensity( 1.f ),
@@ -1084,16 +1080,9 @@ void EveSpaceScene::UpdatePostProcessPSData()
 {
 	double currentViewProjD[16];
 	Matrix currentProj;
-	if( m_dynamicClipPlanes )
-	{
-		currentProj = m_frameData.projectionDynamic;
-		currentProj = EveCamera::AddCenterOffset( currentProj, -m_xProjOffset, -m_yProjOffset, m_nearClip, m_farClip );
-	}
-	else
-	{
-		currentProj = m_frameData.projection;
-		currentProj = EveCamera::AddCenterOffset( currentProj, -m_xProjOffset, -m_yProjOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
-	}
+	
+	currentProj = m_frameData.projection;
+	currentProj = EveCamera::AddCenterOffset( currentProj, -m_xProjOffset, -m_yProjOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
 
 	// Find the current inverse view projection
 	double viewTransform[16];
@@ -1173,10 +1162,6 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
 
 	GatherBatches( renderContext );
-	if( m_dynamicClipPlanes )
-	{
-		m_frameData.projectionDynamic = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), m_nearClip, m_farClip );
-	}
 
 	UpdatePostProcessPSData();
 	UpdateVariableStore();
@@ -1227,23 +1212,9 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 		renderContext.Clear( CLEARFLAGS_TARGET, 0x00000000, 1.f, 0, 1 );
 	}
 
-	if( m_dynamicClipPlanes )
-	{
-		Tr2Renderer::SetProjectionTransform( m_frameData.projection );
-	}
 	PopulatePerFramePSData( m_perFramePS );
 	PopulatePerFrameVSData( m_perFrameVS );
 	ApplyPerFrameData( renderContext );
-}
-
-template<class T>
-static void UpdateViewDistanceInfo( T& objs, TriFrustum& frustum, ViewDistanceInfo& viewDistance )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-	for( auto it = objs.begin(); it != objs.end(); it++ )
-	{
-		(*it)->UpdateViewDistanceInfo( frustum, viewDistance );
-	}
 }
 
 // --------------------------------------------------------------------------------------
@@ -1260,8 +1231,6 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 	std::vector<IEveSpaceObject2*> objectsNotReceivingShadow;
 	std::vector<ITr2Renderable*> renderables;
 	Tr2RenderableSortList transparentObjects;
-
-	ViewDistanceInfo viewDistance( frustum.m_zNear, frustum.m_zFar );
 
 	// Separate objects that will receive shadows from others. Shadowed objects will be rendered object by object,
 	// with a shadow map generated for each object. Remaining objects will be batched up.
@@ -1348,18 +1317,6 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 	FinalizeBatches( m_primaryBatches );
 
 	UpdateShLighting( objectsReceivingShadow, objectsNotReceivingShadow );
-
-	if( m_dynamicClipPlanes )
-	{
-		UpdateViewDistanceInfo<IEveSpaceObject2Vector>( m_objects, frustum, viewDistance );
-		UpdateViewDistanceInfo<PEvePlanetVector>( m_planets, frustum, viewDistance );
-		if( m_staticParticles )
-		{
-			m_staticParticles->UpdateViewDistanceInfo( frustum, viewDistance );
-		}
-		m_nearClip = viewDistance.m_near;
-		m_farClip = viewDistance.m_far;
-	}
 }
 
 // --------------------------------------------------------------------------------------
@@ -1604,13 +1561,6 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	// Render to depth map
 	if( Tr2Renderer::GetShaderModel() == TR2SM_3_0_DEPTH )
 	{
-		if( m_dynamicClipPlanes )
-		{
-			Tr2Renderer::SetProjectionTransform( m_frameData.projectionDynamic );
-			PopulatePerFramePSData( m_perFramePS );
-			PopulatePerFrameVSData( m_perFrameVS );
-			ApplyPerFrameData( renderContext );
-		}
 		Tr2Renderer::ClearDepthBuffer( 0.0f );
 
 		ApplyPerFrameData( renderContext );
@@ -1670,14 +1620,6 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext )
 
 	TriFrustum& frustum = m_frameData.frustum;
 	std::vector<ITr2Renderable*> objectRenderables;
-	
-	if( m_dynamicClipPlanes )
-	{
-		Tr2Renderer::SetProjectionTransform( m_frameData.projectionDynamic );
-		PopulatePerFramePSData( m_perFramePS );
-		PopulatePerFrameVSData( m_perFrameVS );
-		ApplyPerFrameData( renderContext );
-	}
 
 	if( auto lightManager = Tr2LightManager::GetInstance() )
 	{
@@ -1777,10 +1719,6 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 	// collect visible lensflares
 	std::vector<ITr2Renderable*> visible;
 
-	if( m_dynamicClipPlanes )
-	{
-		Tr2Renderer::SetProjectionTransform( m_frameData.projection );
-	}
 	PopulatePerFramePSData( m_perFramePS );
 	PopulatePerFrameVSData( m_perFrameVS );
 	ApplyPerFrameData( renderContext );
@@ -1844,24 +1782,10 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 	// finally: debug output
 	if( m_renderDebugInfo )
 	{
-		if( m_dynamicClipPlanes )
-		{
-			Tr2Renderer::SetProjectionTransform( m_frameData.projectionDynamic );
-			PopulatePerFramePSData( m_perFramePS );
-			PopulatePerFrameVSData( m_perFrameVS );
-			ApplyPerFrameData( renderContext );
-		}
 		RenderDebugInfo( renderContext );
 		if( m_debugShowShadowCasters && m_shadowMap )
 		{
 			m_shadowMap->DrawDebugInfo();
-		}
-		if( m_dynamicClipPlanes )
-		{
-			Tr2Renderer::SetProjectionTransform( m_frameData.projection );
-			PopulatePerFramePSData( m_perFramePS );
-			PopulatePerFrameVSData( m_perFrameVS );
-			ApplyPerFrameData( renderContext );
 		}
 	}
 
@@ -1883,27 +1807,17 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 	float xOffset = m_xProjOffset;
 	float yOffset = m_yProjOffset;
 	TAAOffset();
+
 	Matrix currentProj = Tr2Renderer::GetReversedDepthProjectionTransform();
-	if( m_dynamicClipPlanes )
-	{
-		currentProj = m_frameData.projectionDynamic;
-		currentProj = EveCamera::AddCenterOffset( currentProj, m_xProjOffset-xOffset, m_yProjOffset-yOffset, m_nearClip, m_farClip );
-	}
-	else
-	{
-		currentProj = m_frameData.projection;
-		currentProj = EveCamera::AddCenterOffset( currentProj, m_xProjOffset-xOffset, m_yProjOffset-yOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
-	}
+	currentProj = m_frameData.projection;
+	currentProj = EveCamera::AddCenterOffset( currentProj, m_xProjOffset-xOffset, m_yProjOffset-yOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
+
 	m_viewProjectLast = Tr2Renderer::GetViewTransform() * currentProj; 
 	ClearVariableStore();
 }
 
 void EveSpaceScene::PopulateAndApplyPerFrameData( Tr2RenderContext& renderContext ) 
 {
-	if( m_dynamicClipPlanes )
-	{
-		Tr2Renderer::SetProjectionTransform( m_frameData.projectionDynamic );
-	}
 	PopulatePerFramePSData( m_perFramePS );
 	PopulatePerFrameVSData( m_perFrameVS );
 	ApplyPerFrameData( renderContext );

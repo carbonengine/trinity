@@ -151,8 +151,6 @@ public:
 	void RebuildBoundingSphere();
 	// disable LODing
 	void FreezeHighDetailLOD();
-	// update view distance info
-	void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const;
 	// get the shader
 	const Tr2Effect* GetShader() const;
 	Tr2Effect* GetShader();

@@ -545,30 +545,6 @@ void EveSpotlightSet::Rebuild()
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Update view distance info based on an estimate of the spotlight set's cones.
-//   Cone size is mostly determined by the shader used, if that changes this
-//   estimation may become invalid.
-// Arguments:
-//   frustum - the frustum
-//   viewDistance - the ViewDistanceInfo stuct that we want to update
-//   parentTransform - the spotlight set's owner's transform
-// --------------------------------------------------------------------------------
-void EveSpotlightSet::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance, const Matrix& parentTransform ) const
-{
-	for( auto it = m_spotlightItems.begin(); it != m_spotlightItems.end(); it++ )
-	{
-		// We only consider the cones. The base size is a quad who's origin is at 0, 0, 0
-		// size 2x1 and lies in the positive z direction(see SpotlightCone.fx if you need to
-		// figure this out).
-		Vector4 bs( 0.f, 0.0f, 0.5f, 1.1191f );
-		BoundingSphereTransform( (*it)->m_transform, bs );
-		BoundingSphereTransform( parentTransform, bs );
-		viewDistance.UpdateClipPlanes( bs, frustum );
-	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
 //   Get shader for the spotlight's cone
 // Return value:
 //   The cone effect.

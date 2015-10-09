@@ -21,8 +21,6 @@ BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 	virtual float GetCurveSetDuration( const std::string& name ) const = 0;
 
 	virtual void Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation ) = 0;
-
-	virtual void SetName( const char* name ) {}
 };
 
 BLUE_DECLARE_IVECTOR( IEveSpaceObjectChild );

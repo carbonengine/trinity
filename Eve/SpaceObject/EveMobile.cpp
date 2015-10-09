@@ -13,7 +13,6 @@
 #include "Eve/EveTurretSet.h"
 #include "Eve/SpaceObject/Utils/EveLocator2.h"
 #include "Eve/EveUpdateContext.h"
-#include "Utilities/ViewDistanceInfo.h"
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -208,25 +207,6 @@ void EveMobile::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Rende
 	for( EveTurretSetVector::iterator it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{
 		(*it)->GetRenderables( frustum, renderables, m_psData.shLightingCoefficients );
-	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Update view distance info using this object's bounds.
-// --------------------------------------------------------------------------------
-void EveMobile::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{ 
-	EveSpaceObject2::UpdateViewDistanceInfo( frustum, viewDistance );
-
-	if( !m_display || !m_isVisible )
-	{
-		return;
-	}
-	
-	for( auto it = m_turretSets.begin(); it != m_turretSets.end(); it++ )
-	{
-		(*it)->UpdateViewDistanceInfo( frustum, viewDistance );
 	}
 }
 

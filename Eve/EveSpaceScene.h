@@ -181,7 +181,6 @@ protected:
 	struct FrameData
 	{
 		Matrix projection;
-		Matrix projectionDynamic;
 		TriFrustum frustum;
 
 		std::vector<ShadowReceiver> objectsReceivingShadow;
@@ -523,10 +522,6 @@ private:
 		Tr2RenderContext& renderContext );
 
 	Tr2QuadRenderer* GetQuadRenderer() const;
-
-	bool m_dynamicClipPlanes;
-	float m_nearClip;
-	float m_farClip;
 
 	Tr2ShLightingManagerPtr m_shLightingManager;
 

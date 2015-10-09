@@ -14,7 +14,6 @@
 #include "EveSpriteSet.h"
 #include "EveSpotlightSetItem.h"
 #include "TriFrustum.h"
-#include "Utilities/ViewDistanceInfo.h"
 
 BLUE_DECLARE( ITriRenderBatchAccumulator );
 BLUE_DECLARE( Tr2PerObjectData );
@@ -62,7 +61,6 @@ public:
 	void ReleaseResources( TriStorage s );
 
 	void Rebuild();
-	void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance, const Matrix& parentTransform ) const;
 
 	// access effects
 	Tr2EffectPtr GetConeEffect() const;

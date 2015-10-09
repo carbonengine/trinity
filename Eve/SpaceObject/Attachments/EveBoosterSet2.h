@@ -178,7 +178,6 @@ public:
 	void RenderDebugInfo( Tr2RenderContext& renderContext );
 	// get the transformed bounding sphere, ready for use
 	void GetBoundingSphere( Vector4& boundingSphere ) const;
-	void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const;
 
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& pool );
 	void AddToQuadRenderer( Tr2QuadRenderer& pool, const Matrix& world );

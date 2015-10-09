@@ -2,7 +2,6 @@
 #include "EveEffectRoot.h"
 
 #include "Utilities/BoundingSphere.h"
-#include "Utilities/ViewDistanceInfo.h"
 #include "TriFrustum.h"
 #include "Tr2PointLight.h"
 #include "Tr2LightManager.h"
@@ -233,16 +232,6 @@ bool EveEffectRoot::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery quer
 	sphere = m_boundingSphere;
 	return true;
 };
-
-
-void EveEffectRoot::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{ 
-	Vector4 v; 
-	if( GetBoundingSphere( v ) )
-	{
-		viewDistance.UpdateClipPlanes( v, frustum ); 
-	}
-}
 
 
 void EveEffectRoot::UpdateWorldTransform( Be::Time time )

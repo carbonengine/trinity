@@ -4,7 +4,6 @@
 #include "Vector3d.h"
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/BoundingBox.h"
-#include "Utilities/ViewDistanceInfo.h"
 #include "TriFrustum.h"
 #include "Particle/Tr2ParticleSystem.h"
 #include "Particle/ITr2GenericEmitter.h"
@@ -362,33 +361,6 @@ bool EveTransform::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query
 	}
 
 	return valid;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Update view distance info using this object's bounds. Should be called AFTER
-//   GetRenderables is called or the object might be ignored.
-// --------------------------------------------------------------------------------
-void EveTransform::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{
-	if( !m_display || !m_isVisible )
-	{
-		return;
-	}
-
-	Vector4 v; 
-	if( GetBoundingSphere( v, EVE_BOUNDS_WITH_CHILDREN ) )
-	{
-		viewDistance.UpdateClipPlanes( v, frustum );
-	}
-	if( !m_particleEmittersGPU.empty() ) 
-	{
-		// This isn't exactly pretty... but is kind of safer to have than not to...
-		Vector4 boundingSphere(0,0,0,100.f);
-		BoundingSphereTransform( m_worldTransform, boundingSphere );
-		boundingSphere.w = 100.f;
-		viewDistance.UpdateClipPlanes( v, frustum );
-	}
 }
 
 void EveTransform::GetModelCenterWorldPosition( Vector3 &position, Be::Time t )

@@ -3,7 +3,6 @@
 
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/BoundingBox.h"
-#include "Utilities/ViewDistanceInfo.h"
 #include "Tr2Effect.h"
 #include "TriRenderBatch.h"
 #include "TriFrustum.h"
@@ -1120,17 +1119,6 @@ void EveBoosterSet2::GetBoundingSphere( Vector4& boundingSphere ) const
 	D3DXVec3TransformCoord( (Vector3*)&boundingSphere, (Vector3*)&boundingSphere, &m_parentTransform );
 	// blow up radius so we contain all the glowy stuff coming out of a booster
 	boundingSphere.w = 2.f * m_boosterBoundingSphere.w;
-}
-
-void EveBoosterSet2::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{
-	Vector4 bs;
-
-	BoundingSphereFromBox( bs, m_trailsBoundsMin, m_trailsBoundsMax );
-	viewDistance.UpdateClipPlanes( bs, frustum );
-
-	GetBoundingSphere( bs );
-	viewDistance.UpdateClipPlanes( bs, frustum );
 }
 
 // --------------------------------------------------------------------------------

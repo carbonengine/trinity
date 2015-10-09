@@ -22,7 +22,6 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Overrides of EveSpaceObject2 implementations
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
-	virtual void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Overrides of animation controller

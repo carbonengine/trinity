@@ -4,7 +4,6 @@
 #include "EveUpdateContext.h"
 #include "Include/TriMath.h"
 #include "Utilities/BoundingSphere.h"
-#include "Utilities/ViewDistanceInfo.h"
 
 static const Vector3 Y_AXIS(0.0f, 1.0f, 0.0f);
 
@@ -314,28 +313,6 @@ bool EveStretch::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query )
 	}
 
 	return valid;
-}
-
-void EveStretch::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{
-	if( !m_display )
-	{
-		return;
-	}
-
-	Vector4 v;
-	if( m_destObject && m_destObject->GetBoundingSphere( v, EVE_BOUNDS_WITH_CHILDREN ) )
-	{
-		viewDistance.UpdateClipPlanes( v, frustum );
-	}
-	if( m_sourceObject && m_sourceObject->GetBoundingSphere( v, EVE_BOUNDS_WITH_CHILDREN ) )
-	{
-		viewDistance.UpdateClipPlanes( v, frustum );
-	}
-	if( m_stretchObject && m_stretchObject->GetBoundingSphere( v, EVE_BOUNDS_WITH_CHILDREN ) )
-	{
-		viewDistance.UpdateClipPlanes( v, frustum );
-	}
 }
 
 void EveStretch::SetSourcePosition( Vector3 val )

@@ -9,7 +9,6 @@
 #include "Curves/TriCurveSet.h"
 #include "Tr2GrannyAnimation.h"
 #include "Eve/EveUpdateContext.h"
-#include "Utilities/ViewDistanceInfo.h"
 using namespace Tr2RenderContextEnum;
 
 CCP_STATS_DECLARE( eveShipsRendered, "Trinity/EveShip2/ShipsRendered", true, CST_COUNTER_LOW, "Number of EveShip objects rendered per frame." );
@@ -118,26 +117,6 @@ void EveShip2::AddQuadsToQuadRenderer( Tr2QuadRenderer& quadRenderer )
 		{
 			m_boosters->AddToQuadRenderer( quadRenderer, m_worldTransform );
 		}
-	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Update view distance info using this object's bounds. Should be called AFTER
-//   GetRenderables is called or the object might be ignored.
-// --------------------------------------------------------------------------------
-void EveShip2::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{ 
-	EveMobile::UpdateViewDistanceInfo( frustum, viewDistance );
-
-	if( !m_display || !m_isVisible )
-	{
-		return;
-	}
-
-	if( m_boosters )
-	{
-		m_boosters->UpdateViewDistanceInfo( frustum, viewDistance );
 	}
 }
 

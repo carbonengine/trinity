@@ -56,7 +56,6 @@ public:
 	// update & render
 	void UpdateAsyncronous( EveUpdateContext& updateContext );
 	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables );
-	void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const;
 	void RenderDebugInfo( Tr2RenderContext& renderContext );
 
 	// manage clusters

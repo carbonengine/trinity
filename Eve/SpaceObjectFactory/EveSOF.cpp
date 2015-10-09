@@ -905,6 +905,7 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 			newShader->StartUpdate();
 
 			// construct res path of the shader
+			// TODO: construct shader path in dna
 			std::string shaderPath = std::string( "/" ) + std::string( him.shader.c_str() );
 			StringInsertStubAfter( shaderPath, "/", dna->GetShaderPrefix( dna->IsHullAnimated() ) );
 			shaderPath = dna->GetAreaShaderLocationResPath() + shaderPath;

@@ -4,7 +4,6 @@
 #include "TriFrustum.h"
 #include "Tr2Effect.h"
 #include "Utilities/BoundingSphere.h"
-#include "Utilities/ViewDistanceInfo.h"
 #include "Tr2PerObjectData.h"
 #include "TriPoolAllocator.h"
 #include "TriRenderBatch.h"
@@ -96,16 +95,6 @@ bool EveCurveLineSet::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery qu
 {
 	sphere = m_boundingSphere;
 	return true;
-}
-
-// ------------------------------------------------------------------------------------------------------
-void EveCurveLineSet::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{ 
-	Vector4 v; 
-	if( GetBoundingSphere( v ) )
-	{
-		viewDistance.UpdateClipPlanes( v, frustum );
-	}
 }
 
 // ------------------------------------------------------------------------------------------------------

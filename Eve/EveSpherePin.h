@@ -72,7 +72,6 @@ public:
 	virtual void RenderDebugInfo( Tr2RenderContext& renderContext );
 	virtual void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform );
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	virtual void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTransform

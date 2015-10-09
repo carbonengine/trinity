@@ -5,7 +5,6 @@
 #include "TriDevice.h"
 #include "TriSettingsRegistrar.h"
 #include "EveUpdateContext.h"
-#include "Utilities/ViewDistanceInfo.h"
 #include "Eve/EveSpaceSceneLightMgr.h"
 
 const float EvePlanet::SCALE = 1000000.0f;
@@ -304,23 +303,6 @@ void EvePlanet::GetZOnlyRenderables( const TriFrustum& frustum, std::vector<ITr2
 	if( m_zOnlyModel )
 	{
 		m_zOnlyModel->GetRenderables( frustum, renderables, m_worldTransform );
-	}
-}
-
-void EvePlanet::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{
-	if( !m_display )
-	{
-		return;
-	}
-
-	if( m_zOnlyModel )
-	{
-		Vector4 boundingSphere;
-		if( m_zOnlyModel->GetBoundingSphere( boundingSphere, EVE_BOUNDS_WITH_CHILDREN ) )
-		{
-			viewDistance.UpdateClipPlanesIfInFront( boundingSphere, frustum );
-		}
 	}
 }
 

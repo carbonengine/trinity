@@ -9,7 +9,6 @@
 #include "TriFrustum.h"
 #include "TriRenderBatch.h"
 #include "include/ITriFunction.h"
-#include "Utilities/ViewDistanceInfo.h"
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/BoundingBox.h"
 #include "Tr2PerObjectData.h"
@@ -239,16 +238,6 @@ bool EveCloud::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) c
 {
 	sphere = m_boundingSphere;
 	return true;
-}
-
-void EveCloud::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{
-	if( !m_display )
-	{
-		return;
-	}
-
-	viewDistance.UpdateClipPlanes( m_boundingSphere, frustum );
 }
 
 void EveCloud::RenderDebugInfo( Tr2RenderContext& renderContext )

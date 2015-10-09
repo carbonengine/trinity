@@ -31,7 +31,6 @@ public:
 	void Update( EveUpdateContext& updateContext );
 	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform );
 	void GetZOnlyRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables );
-	void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const;
 	void SetRenderScale( float value );
 
 	static const float SCALE;

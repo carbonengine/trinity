@@ -7,7 +7,6 @@
 #include "EveSceneStaticParticles.h"
 
 #include "Include/TriMath.h"
-#include "Utilities/ViewDistanceInfo.h"
 #include "Utilities/BoundingSphere.h"
 #include "Tr2RuntimeInstanceData.h"
 #include "Tr2InstancedMesh.h"
@@ -122,28 +121,6 @@ void EveSceneStaticParticles::GetRenderables( const TriFrustum& frustum, std::ve
 
 	// eve transform does this
 	m_transform->GetRenderables( frustum, renderables, m_worldMatrix );
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   This thing is pretty big so it will change the scene's znear/zfar
-// --------------------------------------------------------------------------------
-void EveSceneStaticParticles::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{
-	// nothing to do here?
-	if( m_clusters.empty() )
-	{
-		return;
-	}
-	if( !m_transform )
-	{
-		return;
-	}
-
-	// update the distances
-	Vector4 transformedMatrix = m_boundingSphere;
-	BoundingSphereTransform( m_worldMatrix, transformedMatrix );
-	viewDistance.UpdateClipPlanes( transformedMatrix, frustum );
 }
 
 // --------------------------------------------------------------------------------

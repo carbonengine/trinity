@@ -2,7 +2,6 @@
 
 #include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
-#include "Utilities/ViewDistanceInfo.h"
 
 #include "include/ITr2DebugRenderer.h"
 #include "include/IEveBallpark.h"
@@ -1391,37 +1390,6 @@ bool EveSpaceObject2::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery qu
 		}
 	}
 	return true;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Update view distance info using this object's bounds. Should be called AFTER
-//   GetRenderables is called or the object might be ignored.
-// --------------------------------------------------------------------------------
-void EveSpaceObject2::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{
-	if( !m_display || !m_isVisible )
-	{
-		return;
-	}
-
-	Vector4 v;
-	if( GetBoundingSphere( v ) )
-	{
-		viewDistance.UpdateClipPlanes( v, frustum );
-	}
-	for( auto it = m_children.begin(); it != m_children.end(); it++ )
-	{
-		(*it)->UpdateViewDistanceInfo( frustum, viewDistance );
-	}
-	for( auto it = m_spotlightSets.begin(); it != m_spotlightSets.end(); it++ )
-	{
-		(*it)->UpdateViewDistanceInfo( frustum, viewDistance, m_worldTransform );
-	}
-	for( auto it = m_planeSets.begin(); it != m_planeSets.end(); it++ )
-	{
-		(*it)->UpdateViewDistanceInfo( frustum, viewDistance, m_worldTransform );
-	}
 }
 
 void EveSpaceObject2::PlayAnimation( const char* animName, bool replace, int loopCount, float delay, float speed )

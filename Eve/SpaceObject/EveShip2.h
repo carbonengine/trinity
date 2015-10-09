@@ -28,7 +28,6 @@ public:
 	virtual void UpdateAsyncronous( EveUpdateContext& updateContext );
 	virtual void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform );
 	virtual void RenderDebugInfo( Tr2RenderContext& renderContext );
-	virtual void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const;
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void AddQuadsToQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void GetLights( Tr2LightManager& lightManager ) const;

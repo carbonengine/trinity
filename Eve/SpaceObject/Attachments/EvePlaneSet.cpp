@@ -10,7 +10,6 @@
 #include "EvePlaneSet.h"
 #include "EvePlaneSetItem.h"
 #include "Utilities/BoundingSphere.h"
-#include "Utilities/ViewDistanceInfo.h"
 #include "Tr2PickingHelperBatch.h"
 
 // vertex layout struct
@@ -213,28 +212,6 @@ void EvePlaneSet::GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr2
 		batch->SetShaderMaterial( m_effect );
 		batch->SetGeometryProvider( this );
 		accumulator->Commit( batch );
-	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Update view distance info based on an estimate of the plane set's size.
-//   Each 'plane' is a square unit quad centered at the origin. See PlaneGlow.fx
-// Arguments:
-//   frustum - the frustum
-//   viewDistance - the ViewDistanceInfo stuct that we want to update
-//   parentTransform - the plane set's owner's transform
-// See also:
-// --------------------------------------------------------------------------------
-void EvePlaneSet::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance, const Matrix& parentTransform ) const
-{
-	for( auto it = m_cachedTransforms.begin(); it != m_cachedTransforms.end(); it++ )
-	{
-		// Each 'plane' is a square unit quad centered at the origin.
-		Vector4 bs( 0.f, 0.0f, 0.0f, 0.7072f );
-		BoundingSphereTransform( *it, bs );
-		BoundingSphereTransform( parentTransform, bs );
-		viewDistance.UpdateClipPlanes( bs, frustum );
 	}
 }
 

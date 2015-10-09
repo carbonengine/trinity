@@ -68,8 +68,6 @@ public:
 
 	// rebuild the interal vertexbuffers etc.
 	void Rebuild();
-	
-	void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance, const Matrix& parentTransform ) const;
 
 	void GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData );
 

@@ -121,13 +121,6 @@ bool EveMetaball::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query 
 	return true;
 }
 
-// --------------------------------------------------------------------------------
-// Description:
-// --------------------------------------------------------------------------------
-void EveMetaball::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{
-}
-
 
 // --------------------------------------------------------------------------------
 // Description:

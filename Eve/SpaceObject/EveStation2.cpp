@@ -61,30 +61,6 @@ void EveStation2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType 
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Update view distance info using this object's bounds. Should be called AFTER
-//   GetRenderables is called or the object might be ignored.
-// --------------------------------------------------------------------------------
-void EveStation2::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{
-	EveSpaceObject2::UpdateViewDistanceInfo( frustum, viewDistance );
-
-	if( !m_display || !m_isVisible )
-	{
-		return;
-	}
-
-	for( auto it = m_hologramSets.begin(); it != m_hologramSets.end(); it++ )
-	{
-		(*it)->UpdateViewDistanceInfo( frustum, viewDistance, m_worldTransform );
-	}
-	for( auto it = m_environmentSpriteSets.begin(); it != m_environmentSpriteSets.end(); it++ )
-	{
-//		(*it)->UpdateViewDistanceInfo( frustum, viewDistance, m_worldTransform );
-	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
 //   Gets called by the state machine of this object to execute some command.
 // Return Value:
 //   Returns true if this implementation has handled the command.

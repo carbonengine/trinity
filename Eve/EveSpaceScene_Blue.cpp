@@ -512,30 +512,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "perFrameDebug", m_perFrameDebug, "This is a debug/visualization value, which gets passed to the perframePS data, so the shader can use it.", Be::READWRITE )
 
-		MAP_ATTRIBUTE
-		(
-			"dynamicClipPlanes",
-			m_dynamicClipPlanes,
-			"",
-			Be::READWRITE
-		)
-		
-		MAP_ATTRIBUTE
-		( 
-			"nearClip", 
-			m_nearClip, 
-			"", 
-			Be::READ
-		)
-
-		MAP_ATTRIBUTE
-		( 
-			"farClip", 
-			m_farClip, 
-			"", 
-			Be::READ
-		)
-
 		MAP_METHOD_AND_WRAP(
 			"GetPostProcessPSBuffer",
 			GetPostProcessPSBuffer,

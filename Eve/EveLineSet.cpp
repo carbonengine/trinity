@@ -7,7 +7,6 @@
 #include "EveUpdateContext.h"
 #include "TriRenderBatch.h"
 #include "Tr2Effect.h"
-#include "Utilities/ViewDistanceInfo.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -146,15 +145,6 @@ bool EveLineSet::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query )
 {
 	sphere = m_boundingSphere;
 	return true;
-}
-
-void EveLineSet::UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const
-{ 
-	Vector4 v; 
-	if( GetBoundingSphere( v ) )
-	{
-		viewDistance.UpdateClipPlanes( v, frustum );
-	}
 }
 
 /////////////////////////////////////////////////////////////////////////////////////

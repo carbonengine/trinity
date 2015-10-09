@@ -32,7 +32,6 @@ public:
 	void UpdateAsyncronous( EveUpdateContext& updateContext );
 	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	void UpdateViewDistanceInfo( const TriFrustum& frustum, ViewDistanceInfo& viewDistance ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTransform
