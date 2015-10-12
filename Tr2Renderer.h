@@ -188,6 +188,7 @@ public:
     static float GetFrontClip();
     static float GetBackClip();
 	static float GetFrustumRadius();
+	static void GetFrustumPlane( size_t index, Vector4& plane );
     static float GetFieldOfView();
     static float GetAspectRatio();
 	static float GetOrthoWidth();

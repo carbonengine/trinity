@@ -667,6 +667,11 @@ float Tr2Renderer::GetFrustumRadius()
     return s_frustumRadius;
 }
 
+void Tr2Renderer::GetFrustumPlane( size_t index, Vector4& plane )
+{
+	s_frustumPlanes[index].GetValue( plane );
+}
+
 float Tr2Renderer::GetFieldOfView()
 {
     return s_fieldOfView;
