@@ -42,7 +42,6 @@ extern float g_eveSpaceSceneLowDetailThreshold;
 extern float g_eveSpaceSceneMediumDetailThreshold;
 extern float g_eveSpaceSceneHighDetailThreshold;
 
-BLUE_DECLARE( EveSpaceSceneLightMgr );
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriTextureRes );
@@ -58,6 +57,7 @@ BLUE_DECLARE( EveDistanceField );
 BLUE_DECLARE_VECTOR( EveDistanceField );
 BLUE_DECLARE( EveSceneStaticParticles );
 BLUE_DECLARE( Tr2ShaderBuffer );
+BLUE_DECLARE( Tr2DataTextureManager );
 
 enum TAASampling { TAA_NONE=0, TAA_RANDOM=1, TAA_2X=2, TAA_3X=3, TAA_4X=4 };
 
@@ -127,45 +127,6 @@ public:
 		VM_WHITE,
 		VM_OVERDRAW,
 		VW_WIREFRAME,
-
-		/*
-
-		VM_WHITE,
-
-		VM_OBJECT_NORMAL,
-		VM_SHADED_OBJECT_NORMAL,
-
-		VM_TANGENT,
-		VM_BITANGENT,
-
-		VM_TEXCOORD0,
-		VM_TEXCOORD1,
-
-		VM_TEXELDENSITY0,
-
-		VM_NORMALMAP,
-		VM_NORMALMAP_UNPACKED,
-		VM_NORMALMAP_RED_INVERTED,
-		VM_NORMALMAP_GREEN_INVERTED,
-		VM_NORMALMAP_BOTH_INVERTED,
-
-		VM_SHADED_NORMALMAP,
-		VM_SHADED_NORMALMAP_UNPACKED,
-		VM_SHADED_NORMALMAP_RED_INVERTED,
-		VM_SHADED_NORMALMAP_GREEN_INVERTED,
-		VM_SHADED_NORMALMAP_BOTH_INVERTED,
-
-		VM_DIFFUSEMAP,
-		VM_GLOWMAP,
-		VM_GLOWMAP_UNPACKED,
-		VM_SPECULARMAP,
-		VM_SPECULARMAP_UNPACKED,
-		VM_REFLECTIONMAP,
-		VM_AOMAP,
-		VM_SHADOW_ONLY,
-
-		VM_WIREFRAME,
-		*/
 
 		VM_COUNT
 	};
@@ -459,6 +420,8 @@ protected:
 
 	EveSceneStaticParticlesPtr m_staticParticles;
 
+	Tr2DataTextureManagerPtr m_dataTextureMgr;
+
 	// For tracking the sunlight direction
 	ITriVectorFunctionPtr m_sunBall;
 
@@ -482,7 +445,6 @@ private:
 	Be::Time m_updateTime;
 	EveSpaceObject2Ptr m_egoBall;
 
-private:
 	Tr2ConstantBufferAL	m_perFrameVSBuffer;
 	Tr2ConstantBufferAL	m_perFramePSBuffer;
 	Tr2ConstantBufferAL	m_shadowPerFrameVSBuffer;

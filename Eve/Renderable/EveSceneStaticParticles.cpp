@@ -85,7 +85,7 @@ bool EveSceneStaticParticles::Initialize()
 // Description:
 //   Update. Mainly calculate a new worldmatrix based on the ever changing ego pos
 // --------------------------------------------------------------------------------
-void EveSceneStaticParticles::UpdateAsyncronous( EveUpdateContext& updateContext )
+void EveSceneStaticParticles::Update( EveUpdateContext& updateContext )
 {
 	// nothing to do here?
 	if( m_clusters.empty() )

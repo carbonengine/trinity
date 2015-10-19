@@ -28,6 +28,7 @@
 #include "Include/TriMath.h"
 #include "EveDistanceField.h"
 #include "Renderable/EveSceneStaticParticles.h"
+#include "Shader/Utils/Tr2DataTextureManager.h"
 #include "Shader/Tr2ShaderBuffer.h"
 
 using namespace Tr2RenderContextEnum;
@@ -216,7 +217,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_objects.SetNotify( this );
 	
 	m_staticParticles.CreateInstance();
-	
+	m_dataTextureMgr.CreateInstance();
 	m_postProcessPSBuffer.CreateInstance();
 	// 2x sampling pattern
 	m_taaSamplingPatterns[0] = Vector2( .5f, -.5f );
@@ -285,6 +286,7 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 
 	m_updateContext.SetTime( simTime );
 	m_updateContext.UpdateOrigin( m_ballpark );
+	m_updateContext.SetDataTextureManager( m_dataTextureMgr );
 
 	{
 		EveTransformVector::const_iterator it;
@@ -327,7 +329,12 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 
 	if( m_staticParticles )
 	{
-		m_staticParticles->UpdateAsyncronous( m_updateContext );
+		m_staticParticles->Update( m_updateContext );
+	}
+
+	if( m_dataTextureMgr )
+	{
+		m_dataTextureMgr->Update( m_updateContext );
 	}
 	
 	for( auto it = m_distanceFields.begin(); it != m_distanceFields.end(); ++it )

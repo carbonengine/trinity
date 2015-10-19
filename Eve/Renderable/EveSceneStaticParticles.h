@@ -54,7 +54,7 @@ public:
 	virtual bool Initialize();
 
 	// update & render
-	void UpdateAsyncronous( EveUpdateContext& updateContext );
+	void Update( EveUpdateContext& updateContext );
 	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables );
 	void RenderDebugInfo( Tr2RenderContext& renderContext );
 

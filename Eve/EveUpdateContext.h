@@ -5,6 +5,8 @@
 #include "Tr2GPUParticlePoolManager.h"
 #include "Vector3d.h"
 
+BLUE_DECLARE( Tr2DataTextureManager );
+
 static const double UNINITIALIZED_ORIGIN = std::numeric_limits<double>::infinity();
 
 class EveUpdateContext
@@ -42,6 +44,14 @@ public:
 	}
 
 	// Any extra objects you would like to pass along
+	Tr2DataTextureManagerPtr GetDataTextureManager() const
+	{
+		return m_dataTextureManager;
+	}
+	void SetDataTextureManager( Tr2DataTextureManagerPtr manager )
+	{
+		m_dataTextureManager = manager;
+	}
 	Tr2GPUParticlePoolManager* GetParticlePoolManager()
 	{
 		return m_gpuParticleManager;
@@ -50,7 +60,7 @@ public:
 	{
 		m_gpuParticleManager = manager;
 	}
-
+	
 	// World origin change
 	void UpdateOrigin( IEveBallpark* ballpark )
 	{
@@ -86,6 +96,7 @@ private:
 
 	// extra stuff
 	Tr2GPUParticlePoolManagerPtr m_gpuParticleManager;
+	Tr2DataTextureManagerPtr m_dataTextureManager;
 
 	// For tracking world origin
 	Vector3d m_origin;

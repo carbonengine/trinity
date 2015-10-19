@@ -11,6 +11,7 @@
 #include "Curves/TriCurveSet.h"
 #include "Utilities/BoundingSphere.h"
 #include "Tr2MeshBase.h"
+#include "Shader/Utils/Tr2DataTextureManager.h"
 #include "Eve/EveUpdateContext.h"
 
 EveImpactOverlay::EveImpactOverlay( IRoot* lockobj ) :
@@ -21,11 +22,9 @@ EveImpactOverlay::EveImpactOverlay( IRoot* lockobj ) :
 	m_shieldEllipsoidCenter( 0.f, 0.f, 0.f ),
 	m_shieldEllipsoidRadii( 1.f, 1.f, 1.f ),
 	m_shieldImpactDataNextIdx( 1 ),
-	m_armorImpactDataNextIdx( 1 )
+	m_armorImpactDataNextIdx( 1 ),
+	m_dataTextureBlockID( -1 )
 {
-	GlobalStore().RegisterVariable( "ImpactShieldDataMap", &m_shieldDataTexture );
-
-	PrepareResources();
 }
 
 EveImpactOverlay::~EveImpactOverlay()
@@ -43,115 +42,32 @@ bool EveImpactOverlay::Initialize()
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Release all device resources here
-// --------------------------------------------------------------------------------
-void EveImpactOverlay::ReleaseResources( TriStorage s )
-{
-	// get rid of data texture
-	m_shieldDataTexture.Destroy();
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Debug/dev helper strings to show up in some tools
-// --------------------------------------------------------------------------------
-#ifdef TRINITYDEV
-void EveImpactOverlay::GetDescription( std::string& desc )
-{
-	desc = std::string( "EveImpactOverlay" );
-}
-#endif
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Allocate all device resources here
-// --------------------------------------------------------------------------------
-bool EveImpactOverlay::OnPrepareResources()
-{
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-
-	// create the shield impact data texture here, prefill it with zeros
-	std::vector<Vector4> prefillData( m_maxShieldImpacts * 2 * IMPACT_DATA_ROW_COUNT, Vector4( 0.f, 0.f, 0.f, 0.f ) );
-	Tr2SubresourceData init = { &prefillData, m_maxShieldImpacts * uint32_t(sizeof(Vector4)), 2 * IMPACT_DATA_ROW_COUNT * m_maxShieldImpacts * uint32_t(sizeof(Vector4)) };
-	if( FAILED( m_shieldDataTexture.Create2D( m_maxShieldImpacts, 2 * IMPACT_DATA_ROW_COUNT, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_FLOAT, Tr2RenderContextEnum::USAGE_CPU_WRITE, &init, renderContext ) ) )
-	{
-		return false;
-	}
-
-	return true;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
 //   Trinity's way of providing batches to render
 // --------------------------------------------------------------------------------
 void EveImpactOverlay::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
 {
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-
-	// update data texture
-	void* data = nullptr;
-	uint32_t pitch = 0;
-	if( SUCCEEDED( m_shieldDataTexture.Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_WRITEONLY, renderContext ) ) )
+	// do we have something to do at all?
+	if( !HasActivity() )
 	{
-		uint8_t* mem = (uint8_t*)data;
-
-		// shield info in first lines
-		for( uint32_t x = 0; x < m_shieldDataTexture.GetWidth(); ++x )
-		{
-			Vector4* texelRow0 = (Vector4*)&mem[pitch * 0 + 16 * x];
-			Vector4* texelRow1 = (Vector4*)&mem[pitch * 1 + 16 * x];
-
-			// first one is special
-			if( x == 0 )
-			{
-				*texelRow0 = Vector4( float( m_shieldTexelData.size() ), m_overallShieldImpact, 0.f, 0.f );
-				memset( texelRow1, 0, sizeof(Vector4) );
-			}
-			else
-			{
-				if( x - 1 < m_shieldTexelData.size() )
-				{
-					*texelRow0 = m_shieldTexelData[ x - 1 ].rows[0];
-					*texelRow1 = m_shieldTexelData[ x - 1 ].rows[1];
-				}
-				else
-				{
-					memset( texelRow0, 0, sizeof(Vector4) );
-					memset( texelRow1, 0, sizeof(Vector4) );
-				}
-			}
-		}
-
-		// armor data on second line
-		for( uint32_t x = 0; x < m_shieldDataTexture.GetWidth(); ++x )
-		{
-			Vector4* texelRow0 = (Vector4*)&mem[pitch * ( IMPACT_DATA_ROW_COUNT + 0 ) + 16 * x];
-			Vector4* texelRow1 = (Vector4*)&mem[pitch * ( IMPACT_DATA_ROW_COUNT + 1 ) + 16 * x];
-
-			// first one is special
-			if( x == 0 )
-			{
-				*texelRow0 = Vector4( float( m_armorTexelData.size() ), 0.f, 0.f, 0.f );
-				memset( texelRow1, 0, sizeof(Vector4) );
-			}
-			else
-			{
-				if( x - 1 < m_armorTexelData.size() )
-				{
-					*texelRow0 = m_armorTexelData[ x - 1 ].rows[0];
-					*texelRow1 = m_armorTexelData[ x - 1 ].rows[1];
-				}
-				else
-				{
-					memset( texelRow0, 0, sizeof(Vector4) );
-					memset( texelRow1, 0, sizeof(Vector4) );
-				}
-			}
-		}
-
-		m_shieldDataTexture.Unlock( renderContext );
+		m_dataTextureBlockID = -1;
+		return;
 	}
+
+	// temporary
+	CCP_ASSERT( m_impactTexelData.size() == std::max( m_shieldImpactData.size(), m_armorImpactData.size() ) );
+
+	// this comes from the scene via EveUpdateContext
+	Tr2DataTextureManagerPtr dataTextureMgr = updateContext.GetDataTextureManager();
+
+	// the block header is the first column in the data texture, set it!
+	DataRow header;
+	header.v[0] = Vector4( float( m_shieldImpactData.size() ), m_overallShieldImpact, 0.f, 0.f );
+	header.v[1] = Vector4( 0.f, 0.f, 0.f, 0.f );
+	header.v[2] = Vector4( float( m_armorImpactData.size() ), 0.f, 0.f, 0.f );
+	header.v[3] = Vector4( 0.f, 0.f, 0.f, 0.f );
+
+	// update block data
+	m_dataTextureBlockID = dataTextureMgr->requestBlockData( &header.v[0], m_impactTexelData.size(), m_impactTexelData.empty() ? nullptr : &m_impactTexelData[0].v[0] );
 }
 
 // --------------------------------------------------------------------------------
@@ -174,6 +90,15 @@ void EveImpactOverlay::UpdateAsyncronous( EveUpdateContext& updateContext, EveSp
 		}
 	}
 
+	// resize the texture data array based on both shield and armor impact
+	m_impactTexelData.resize( std::max( m_shieldImpactData.size(), m_armorImpactData.size() ) );
+
+	// no activity?
+	if( !HasActivity() )
+	{
+		return;
+	}
+
 	// get parent's bounding ellipsoid shape
 	parent->GetShapeEllipsoid( m_shieldEllipsoidCenter, m_shieldEllipsoidRadii );
 
@@ -184,13 +109,12 @@ void EveImpactOverlay::UpdateAsyncronous( EveUpdateContext& updateContext, EveSp
 	{
 		parentInverseWorldTransform = parentWorldTransform;
 	}
-
-	m_shieldTexelData.resize( m_shieldImpactData.size() );
+	
 	size_t i = 0;
 	for( auto sidit = m_shieldImpactData.begin(); sidit != m_shieldImpactData.end(); ++sidit )
 	{
 		ShieldImpactData* shieldData = &sidit->second;
-		ShieldTexelData* texelData = &m_shieldTexelData[i];
+		DataRow* texelData = &m_impactTexelData[i];
 
 		// get worldpos of damagelocator from parent
 		Vector3 tgtPosWS( 0.f, 0.f, 0.f );
@@ -203,8 +127,8 @@ void EveImpactOverlay::UpdateAsyncronous( EveUpdateContext& updateContext, EveSp
 		Vector3 p( 0.f, 0.f, 0.f );
 		IntersectEllipsoidRay( p, m_shieldEllipsoidCenter, m_shieldEllipsoidRadii, tgtPosOS, dirOS );
 		// "encode" it in texels
-		texelData->rows[0] = Vector4( p, shieldData->timeLeft );
-		texelData->rows[1] = Vector4( 0.f, 0.f, 0.f, shieldData->lifeTime );
+		texelData->v[0] = Vector4( p, shieldData->timeLeft );
+		texelData->v[1] = Vector4( 0.f, 0.f, 0.f, shieldData->lifeTime );
 		// also need this intercept position in WS
 		D3DXVec3TransformCoord( &shieldData->interceptPosition, &p, &parentWorldTransform );
 	
@@ -212,12 +136,11 @@ void EveImpactOverlay::UpdateAsyncronous( EveUpdateContext& updateContext, EveSp
 	}
 
 	// armor
-	m_armorTexelData.resize( m_armorImpactData.size() );
 	i = 0;
 	for( auto aidit = m_armorImpactData.begin(); aidit != m_armorImpactData.end(); ++aidit )
 	{
 		ArmorImpactData* armorData = &aidit->second;
-		ArmorTexelData* texelData = &m_armorTexelData[i];
+		DataRow* texelData = &m_impactTexelData[i];
 
 		// get position from damage locator
 		Vector3 tgtPosWS( 0.f, 0.f, 0.f );
@@ -225,8 +148,8 @@ void EveImpactOverlay::UpdateAsyncronous( EveUpdateContext& updateContext, EveSp
 		// convert position and direction into object space
 		Vector3 tgtPosOS;
 		D3DXVec3TransformCoord( &tgtPosOS, &tgtPosWS, &parentInverseWorldTransform );
-		texelData->rows[0] = Vector4( tgtPosOS, 0.f );
-		texelData->rows[1] = Vector4( 0.f, 0.f, 0.f, 0.f );
+		texelData->v[2] = Vector4( tgtPosOS, 0.f );
+		texelData->v[3] = Vector4( 0.f, 0.f, 0.f, 0.f );
 
 		++i;
 	}
@@ -253,18 +176,26 @@ void EveImpactOverlay::GetBatches( ITriRenderBatchAccumulator* accumulator, TriB
 	{
 		return;
 	}
-	if( !m_shieldDataTexture.IsValid() )
+	if( m_dataTextureBlockID == -1 )
 	{
 		return;
 	}
 
 	// anything on shields?
-	if( !m_shieldTexelData.empty() || ( m_overallShieldImpact > 0.f ) )
+	if( HasActivity() )
 	{
-		GlobalStore().RegisterVariable( "ImpactShieldDataMap", &m_shieldDataTexture );
 		const Tr2MeshAreaVector* areas = m_mesh->GetAreas( batchType );
 		m_mesh->GetBatches( accumulator, areas, perObjectData );
 	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Small helper function that checks if this impact overlay is active
+// --------------------------------------------------------------------------------
+bool EveImpactOverlay::HasActivity() const
+{
+	return !m_armorImpactData.empty() || !m_shieldImpactData.empty() || ( m_overallShieldImpact > 0.f );
 }
 
 // --------------------------------------------------------------------------------
@@ -362,6 +293,12 @@ int EveImpactOverlay::CreateArmorImpact( int damageLocatorIndex )
 // --------------------------------------------------------------------------------
 Tr2EffectPtr EveImpactOverlay::GetArmorDamageShader( TriBatchType batchType ) const
 {
+	// no activity?
+	if( !HasActivity() )
+	{
+		return nullptr;
+	}
+
 	if( batchType == TRIBATCHTYPE_DECAL )
 	{
 		return m_armorDamageShader;

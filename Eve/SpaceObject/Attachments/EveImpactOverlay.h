@@ -18,8 +18,7 @@ BLUE_DECLARE( Tr2MeshBase );
 BLUE_DECLARE( EveUpdateContext );
 
 BLUE_CLASS( EveImpactOverlay ) :
-	public IInitialize,
-	public Tr2DeviceResource
+	public IInitialize
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -29,7 +28,17 @@ public:
 
 	enum
 	{
-		IMPACT_DATA_ROW_COUNT = 2
+		IMPACT_DATA_ROW_0 = 0,
+		IMPACT_DATA_ROW_1,
+		IMPACT_DATA_ROW_2,
+		IMPACT_DATA_ROW_3,
+		IMPACT_DATA_ROW_COUNT
+	};
+
+	// a row in the data texture
+	struct DataRow
+	{
+		Vector4 v[IMPACT_DATA_ROW_COUNT];
 	};
 
 	// shield impacts
@@ -42,12 +51,6 @@ public:
 		float timeLeft;
 	};
 
-	// shield texture data
-	struct ShieldTexelData
-	{
-		Vector4 rows[IMPACT_DATA_ROW_COUNT];
-	};
-	
 	// armor impacts
 	struct ArmorImpactData
 	{
@@ -55,25 +58,9 @@ public:
 		float timeLeft;
 	};
 
-	// armor texture data
-	struct ArmorTexelData
-	{
-		Vector4 rows[IMPACT_DATA_ROW_COUNT];
-	};
-	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
-
-	/////////////////////////////////////////////////////////////
-	// Tr2DeviceResource
-	virtual void ReleaseResources( TriStorage s );
-private:
-	bool OnPrepareResources();
-public:
-#if TRINITYDEV
-	void GetDescription( std::string& desc );
-#endif
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Updates
@@ -97,6 +84,9 @@ public:
 	// control armor impacts
 	int CreateArmorImpact( int damageLocatorIndex );
 
+	// helper for checking activity
+	bool HasActivity() const;
+
 private:
 	// general data
 	BlueSharedString m_name;
@@ -117,17 +107,14 @@ private:
 	std::map<int, ShieldImpactData> m_shieldImpactData;
 
 	// a list of data used in the data texture
-	std::vector<ShieldTexelData> m_shieldTexelData;
+	std::vector<DataRow> m_impactTexelData;
 
 	// a map of all armor impacts going on at the moment
 	int m_armorImpactDataNextIdx;
 	std::map<int, ArmorImpactData> m_armorImpactData;
 
-	// a list of data used in the data texture
-	std::vector<ArmorTexelData> m_armorTexelData;
-
-	// the data texture
-	Tr2TextureAL m_shieldDataTexture;
+	// the data texture block ID
+	int32_t m_dataTextureBlockID;
 
 	// what to render
 	Tr2MeshBasePtr m_mesh;

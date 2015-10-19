@@ -1,0 +1,23 @@
+////////////////////////////////////////////////////////////
+//
+//    Created:   October 2015
+//    Copyright: CCP 2015
+//
+
+#include "StdAfx.h"
+#include "Tr2DataTextureManager.h"
+
+BLUE_DEFINE( Tr2DataTextureManager );
+
+const Be::ClassInfo* Tr2DataTextureManager::ExposeToBlue()
+{
+    EXPOSURE_BEGIN( Tr2DataTextureManager, "" )
+        MAP_INTERFACE( Tr2DataTextureManager )
+
+		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST	)
+		MAP_ATTRIBUTE( "maxDataSize", m_maxDataSize, "", Be::READ )
+		MAP_ATTRIBUTE( "textureHeight", m_textureHeight, "", Be::READ )
+		MAP_ATTRIBUTE( "blockDataNextIdx", m_blockDataNextIdx, "", Be::READ )
+
+    EXPOSURE_END()
+}

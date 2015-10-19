@@ -438,6 +438,13 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		)
 		MAP_ATTRIBUTE
 		( 
+			"dataTextureMgr", 
+			m_dataTextureMgr,
+			"A module helping with data transfer from CPU to GPU via textures.",
+			Be::READ
+		)
+		MAP_ATTRIBUTE
+		( 
 			"ballpark", 
 			m_ballpark, 
 			"The ballpark for this space scene", 
