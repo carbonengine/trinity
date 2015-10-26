@@ -417,6 +417,7 @@ public:
 	PEveSOFDataHullSpriteSetVector m_spriteSets;
 	PEveSOFDataHullSpotlightSetVector m_spotlightSets;
 	PEveSOFDataHullPlaneSetVector m_planeSets;
+	bool m_hasImpactEffect;
 
 	// decals
 	PEveSOFDataHullDecalVector m_hullDecals;
@@ -650,6 +651,9 @@ public:
 
 	// hull area data
 	PEveSOFDataFactionHullAreaVector m_hullAreas;
+
+	// impact effect
+	BlueSharedString m_impactEffectResPath;
 };
 TYPEDEF_BLUECLASS( EveSOFDataRace );
 BLUE_DECLARE_VECTOR( EveSOFDataRace );

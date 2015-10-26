@@ -2039,6 +2039,15 @@ void EveSpaceObject2::SetDnaString( const char* dna )
 	m_dna = dna;
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Set the impact ovleray of this guy
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::SetImpactOverlay( EveImpactOverlayPtr overlay )
+{
+	m_impactOverlay = overlay;
+}
+
 // -----------------------------------------------------------------------------
 // Description:
 //   Create a shield impact effect on this object

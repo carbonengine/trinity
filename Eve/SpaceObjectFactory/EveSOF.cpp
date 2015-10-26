@@ -130,6 +130,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	SetupSpriteSets( newObj, dna );
 	SetupSpotlightSets( newObj, dna );
 	SetupPlaneSets( newObj, dna );
+	SetupEffects( newObj, dna );
 
 	// attachments to ship
 	SetupLocators( newObj, dna );
@@ -873,7 +874,6 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, const EveSOFDNA
 	}
 }
 
-
 // --------------------------------------------------------------------------------
 // Description:
 //   add instanced meshes to the ship
@@ -944,7 +944,29 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 	}
 }
 
-
+// --------------------------------------------------------------------------------
+// Description:
+//   add the booster to the new ship
+// --------------------------------------------------------------------------------
+void EveSOF::SetupEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
+{
+	// impact effect
+	const char* impactEffectPath = dna->GetImpactEffectResPath();
+	if( impactEffectPath )
+	{
+		IRootPtr p;
+		IRoot* tmp = BeResMan->LoadObject( impactEffectPath );
+		if( tmp )
+		{
+			p.Attach( tmp );
+			EveImpactOverlayPtr impactOverlay;
+			if( p->QueryInterface( BlueInterfaceIID<EveImpactOverlay>(), (void**)&impactOverlay ) )
+			{
+				obj->SetImpactOverlay( impactOverlay );
+			}
+		}
+	}
+}
 
 // --------------------------------------------------------------------------------
 // Description:

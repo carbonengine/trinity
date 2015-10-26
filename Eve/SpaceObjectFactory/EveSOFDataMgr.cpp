@@ -395,6 +395,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 	hd.shapeEllipsoidRadius = srcData->m_shapeEllipsoidRadius;
 	hd.isSkinned = srcData->m_isSkinned;
 	hd.audioPosition = srcData->m_audioPosition;
+	hd.hasImpactEffect = srcData->m_hasImpactEffect;
 
 	// boosters
 	if( srcData->m_booster )
@@ -622,12 +623,13 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 	hd.instancedMeshes.clear();
 	for( auto imit = srcData->m_instancedMeshes.begin(); imit != srcData->m_instancedMeshes.end(); ++imit )
 	{
+		EveSOFDataInstancedMeshPtr instMesh = (*imit);
 		HullInstancedMesh him;
-		him.name = (*imit)->m_name;
-		him.geometryResPath = (*imit)->m_geometryResPath;
-		him.instanceGeometryResPath = (*imit)->m_instanceGeometryResPath;
-		him.shader = (*imit)->m_shader;
-		for( auto tit = (*imit)->m_textures.begin(); tit != (*imit)->m_textures.end(); ++tit )
+		him.name = instMesh->m_name;
+		him.geometryResPath = instMesh->m_geometryResPath;
+		him.instanceGeometryResPath = instMesh->m_instanceGeometryResPath;
+		him.shader = instMesh->m_shader;
+		for( auto tit = instMesh->m_textures.begin(); tit != instMesh->m_textures.end(); ++tit )
 		{
 			EveSOFDataTexturePtr textureData = (*tit);
 			TextureData td;
@@ -843,6 +845,7 @@ void EveSOFDataMgr::GenerateRaceData( RaceData& rd, EveSOFDataRacePtr srcData ) 
 	rd.boosters.warpGlowColor = srcData->m_booster->m_warpGlowColor;
 	rd.boosters.warpHaloColor = srcData->m_booster->m_warpHaloColor;
 	rd.boosters.trailSize = srcData->m_booster->m_trailSize;
+	rd.impactEffectResPath = srcData->m_impactEffectResPath;
 
 	auto copyShape = [=]( RaceBoosterDataShape& dest, EveSOFDataBoosterShape* src )
 	{

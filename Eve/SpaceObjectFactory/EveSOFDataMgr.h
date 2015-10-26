@@ -180,6 +180,7 @@ public:
 		std::vector<HullSpriteSetData> spriteSets;
 		std::vector<HullSpotlightSetData> spotlightSets;
 		std::vector<HullPlaneSetData> planeSets;
+		bool hasImpactEffect;
 		std::vector<HullAreas> opaqueAreas;
 		std::vector<HullAreas> decalAreas;
 		std::vector<HullAreas> transparentAreas;
@@ -294,6 +295,8 @@ public:
 		RaceBoosterData boosters;
 		// hull area parameter overloads
 		std::map<BlueSharedString, FactionAreaData> hullAreaParameters;
+		// impact effect respath
+		BlueSharedString impactEffectResPath;
 	};
 
 	// material data structs

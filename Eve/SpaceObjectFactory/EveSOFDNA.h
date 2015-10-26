@@ -55,6 +55,7 @@ public:
 
 	// get racial data
 	const EveSOFDataMgr::RaceBoosterData* GetRaceBoosterData() const;
+	const char* GetImpactEffectResPath() const;
 
 	// get hull data
 	EveSOFDataHull::BuildClass GetBuildClass() const;

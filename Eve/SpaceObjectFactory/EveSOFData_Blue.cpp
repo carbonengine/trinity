@@ -418,6 +418,7 @@ const Be::ClassInfo* EveSOFDataHull::ExposeToBlue()
 		MAP_ATTRIBUTE( "spriteSets", m_spriteSets, "The spritesets", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "spotlightSets", m_spotlightSets, "The spotlightsets", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "planeSets", m_planeSets, "The planesets", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "hasImpactEffect", m_hasImpactEffect, "Does this hull get an impact effect?", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "hullDecals", m_hullDecals, "The hull decals", Be::READWRITE | Be::PERSIST )
 
@@ -577,6 +578,7 @@ const Be::ClassInfo* EveSOFDataRace::ExposeToBlue()
 		MAP_ATTRIBUTE( "name", m_name, "The race name, eg caldari. This functions as an ID.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "booster", m_booster, "All the booster data for this race.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "hullAreas", m_hullAreas, "Per race shader data", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "impactEffectResPath", m_impactEffectResPath, "The res path to the impact effect for this race", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
 

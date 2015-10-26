@@ -147,6 +147,7 @@ EveSOFDataHull::EveSOFDataHull( IRoot* lockobj ) :
 	m_shapeEllipsoidCenter( 0.f, 0.f, 0.f ),
 	m_shapeEllipsoidRadius( -1.f, -1.f, -1.f ),
 	m_isSkinned( false ),
+	m_hasImpactEffect( false ),
 	m_audioPosition( Vector3( 0.f, 0.f, 0.f ) )
 {}
 

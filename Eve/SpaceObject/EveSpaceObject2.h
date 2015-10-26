@@ -281,6 +281,7 @@ public:
 	void SetDnaString( const char* dna );
 
 	// access to impacts
+	void SetImpactOverlay( EveImpactOverlayPtr overlay );
 	int CreateShieldImpact( int damageLocatorIndex, const Vector3& direction, float lifeTime );
 	bool UpdateShieldImpact( const Vector3& direction, int shieldImpactIndex );
 	bool GetShieldImpactPosition( Vector3& out, int shieldImpactIndex ) const;

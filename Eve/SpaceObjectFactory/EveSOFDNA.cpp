@@ -746,6 +746,27 @@ const EveSOFDataMgr::RaceBoosterData* EveSOFDNA::GetRaceBoosterData() const
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Return the res path to the impact effect for this race
+// --------------------------------------------------------------------------------
+const char* EveSOFDNA::GetImpactEffectResPath() const
+{
+	// enabled?
+	if( !m_hullData->hasImpactEffect )
+	{
+		return nullptr;
+	}
+
+	// set?
+	if( m_raceData->impactEffectResPath.empty() )
+	{
+		return nullptr;
+	}
+
+	return m_raceData->impactEffectResPath.c_str();
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Return a pointer to the hull part of booster data
 // --------------------------------------------------------------------------------
 const EveSOFDataMgr::HullBoosterData* EveSOFDNA::GetHullBoosterData() const
