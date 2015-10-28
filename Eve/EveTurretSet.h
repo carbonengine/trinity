@@ -55,8 +55,8 @@ public:
 	Quaternion m_turretRotation[EVE_MAX_TURRETS_PER_SET];
 
 	// pose information
-	Vector4 m_turretPoseTrans[EVE_MAX_TURRET_SET_BONES];
-	Quaternion m_turretPoseRot[EVE_MAX_TURRET_SET_BONES];
+	// For each turret we have a position (Vector4) and then quaternion (and then position and then quaternion etc.)
+	float m_turretPosAndRotationBuffer[4 * 2 * EVE_MAX_TURRET_SET_BONES];
 
 	// pixel shader per object data
 	Vector4 m_shipData;
@@ -263,6 +263,8 @@ private:
 	void CalcRandomDelay();
 	// calc best suited turret and target's locator
 	bool GetClosestTurretAndLocator( unsigned int& closestTurretIx, int& closestLocatorIx ) const;
+
+	void SetTurretBonePose( EveTurretSetPerObjectData* perObjectData, int boneIndex, Vector3 poseTranslation, Quaternion poseRotation );
 
 	// name
 	std::string m_name;

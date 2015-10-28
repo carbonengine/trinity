@@ -1354,13 +1354,14 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 					if( m_singleTurrets[i].valid && toBoneIndices && compositeMatrixArray)
 					{
 						Matrix m = compositeMatrixArray[toBoneIndices[j]];
-						D3DXMatrixDecompose( &scale, &perObjectData->m_turretPoseRot[boneIndex], &translation, &m );
-						perObjectData->m_turretPoseTrans[boneIndex] = Vector4( translation, 1.0f );
+						Quaternion poseRotation;
+						D3DXMatrixDecompose( &scale, &poseRotation, &translation, &m );
+
+						SetTurretBonePose( perObjectData, boneIndex, translation, poseRotation );
 					}
 					else
 					{
-						perObjectData->m_turretPoseTrans[boneIndex] = Vector4( 0, 0, 0, 1 );
-						perObjectData->m_turretPoseRot[boneIndex] = Quaternion( 0, 0, 0, 1 );
+						SetTurretBonePose( perObjectData, boneIndex, Vector3( 0, 0, 0 ), Quaternion( 0, 0, 0, 1 ) );
 					}
 
 					// Increment the bone index so the index in the arrays is correct
@@ -2388,6 +2389,25 @@ float EveTurretSet::GetBonePitchOffset(unsigned int boneIndex) const{
 	default:
 		return 0.0f;
 	}
+}
+
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Adds the turret pose translation and rotation to the turret pos and rotation  
+//   buffer at the correct position 
+// --------------------------------------------------------------------------------
+void EveTurretSet::SetTurretBonePose( EveTurretSetPerObjectData* perObjectData, int boneIndex, Vector3 poseTranslation, Quaternion poseRotation )
+{
+	int startIndex = boneIndex * 8;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex] = poseTranslation.x;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+1] = poseTranslation.y;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+2] = poseTranslation.z;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+3] = 1.0f;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+4] = poseRotation.x;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+5] = poseRotation.y;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+6] = poseRotation.z;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+7] = poseRotation.w;
 }
 
 // --------------------------------------------------------------------------------
