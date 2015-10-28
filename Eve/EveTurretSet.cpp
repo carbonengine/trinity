@@ -2397,7 +2397,7 @@ float EveTurretSet::GetBonePitchOffset(unsigned int boneIndex) const{
 //   Adds the turret pose translation and rotation to the turret pos and rotation  
 //   buffer at the correct position 
 // --------------------------------------------------------------------------------
-void EveTurretSet::SetTurretBonePose( EveTurretSetPerObjectData* perObjectData, int boneIndex, Vector3 poseTranslation, Quaternion poseRotation )
+void EveTurretSet::SetTurretBonePose( EveTurretSetPerObjectData* perObjectData, int boneIndex, const Vector3& poseTranslation, const Quaternion& poseRotation )
 {
 	int startIndex = boneIndex * 8;
 	perObjectData->m_turretPosAndRotationBuffer[startIndex] = poseTranslation.x;

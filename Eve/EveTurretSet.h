@@ -264,7 +264,7 @@ private:
 	// calc best suited turret and target's locator
 	bool GetClosestTurretAndLocator( unsigned int& closestTurretIx, int& closestLocatorIx ) const;
 
-	void SetTurretBonePose( EveTurretSetPerObjectData* perObjectData, int boneIndex, Vector3 poseTranslation, Quaternion poseRotation );
+	void SetTurretBonePose( EveTurretSetPerObjectData* perObjectData, int boneIndex, const Vector3& poseTranslation, const Quaternion& poseRotation );
 
 	// name
 	std::string m_name;
