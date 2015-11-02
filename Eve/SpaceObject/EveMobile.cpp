@@ -10,7 +10,7 @@
 
 #include "EveMobile.h"
 #include "Curves/TriScalarCurve.h"
-#include "Eve/EveTurretSet.h"
+#include "Eve/Turret/EveTurretSet.h"
 #include "Eve/SpaceObject/Utils/EveLocator2.h"
 #include "Eve/EveUpdateContext.h"
 

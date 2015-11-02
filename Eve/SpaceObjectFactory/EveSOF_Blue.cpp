@@ -6,7 +6,7 @@
 #include "StdAfx.h"
 #include "EveSOF.h"
 
-#include "Eve/EveTurretSet.h"
+#include "Eve/Turret/EveTurretSet.h"
 
 BLUE_DEFINE( EveSOF );
 

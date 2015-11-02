@@ -9,7 +9,7 @@
 #include "EveSOFDNA.h"
 #include "EveSOFUtils.h"
 #include "Eve/EveTransform.h"
-#include "Eve/EveTurretSet.h"
+#include "Eve/Turret/EveTurretSet.h"
 #include "Eve/SpaceObject/EveShip2.h"
 #include "Eve/SpaceObject/EveStation2.h"
 #include "Eve/SpaceObject/Attachments/EveSpriteSet.h"

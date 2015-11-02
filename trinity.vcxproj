@@ -2931,8 +2931,6 @@
     <ClInclude Include="Eve\EveSpherePinIndexTree.h"/>
     <ClInclude Include="Eve\EveStarfield.h"/>
     <ClInclude Include="Eve\EveTransform.h"/>
-    <ClInclude Include="Eve\EveTurretFiringFX.h"/>
-    <ClInclude Include="Eve\EveTurretSet.h"/>
     <ClInclude Include="Eve\EveUpdateContext.h"/>
     <ClInclude Include="Eve\IEveShadowCaster.h"/>
     <ClInclude Include="Eve\IEveSpaceObject2.h"/>
@@ -2981,6 +2979,8 @@
     <ClInclude Include="Eve\SpaceObjectFactory\EveSOFDataMgr.h"/>
     <ClInclude Include="Eve\SpaceObjectFactory\EveSOFDNA.h"/>
     <ClInclude Include="Eve\SpaceObjectFactory\EveSOFUtils.h"/>
+    <ClInclude Include="Eve\Turret\EveTurretFiringFX.h"/>
+    <ClInclude Include="Eve\Turret\EveTurretSet.h"/>
     <ClInclude Include="Font\Tr2FontManager.h"/>
     <ClInclude Include="Font\Tr2FontMeasurer.h"/>
     <ClInclude Include="Font\Tr2SBit.h"/>
@@ -3522,10 +3522,6 @@
     <ClCompile Include="Eve\EveStarfield_Blue.cpp"/>
     <ClCompile Include="Eve\EveTransform.cpp"/>
     <ClCompile Include="Eve\EveTransform_Blue.cpp"/>
-    <ClCompile Include="Eve\EveTurretFiringFX.cpp"/>
-    <ClCompile Include="Eve\EveTurretFiringFX_Blue.cpp"/>
-    <ClCompile Include="Eve\EveTurretSet.cpp"/>
-    <ClCompile Include="Eve\EveTurretSet_Blue.cpp"/>
     <ClCompile Include="Eve\Animation\EveAnimationData.cpp"/>
     <ClCompile Include="Eve\Animation\EveAnimationData_Blue.cpp"/>
     <ClCompile Include="Eve\Animation\EveAnimationSequencer.cpp"/>
@@ -3608,6 +3604,10 @@
     <ClCompile Include="Eve\SpaceObjectFactory\EveSOFDNA_Blue.cpp"/>
     <ClCompile Include="Eve\SpaceObjectFactory\EveSOFUtils.cpp"/>
     <ClCompile Include="Eve\SpaceObjectFactory\EveSOF_Blue.cpp"/>
+    <ClCompile Include="Eve\Turret\EveTurretFiringFX.cpp"/>
+    <ClCompile Include="Eve\Turret\EveTurretFiringFX_Blue.cpp"/>
+    <ClCompile Include="Eve\Turret\EveTurretSet.cpp"/>
+    <ClCompile Include="Eve\Turret\EveTurretSet_Blue.cpp"/>
     <ClCompile Include="Font\Tr2FontManager.cpp"/>
     <ClCompile Include="Font\Tr2FontManager_Blue.cpp"/>
     <ClCompile Include="Font\Tr2FontMeasurer.cpp"/>
