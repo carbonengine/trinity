@@ -25,6 +25,7 @@ BLUE_DECLARE( Tr2Mesh );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( EveTurretFiringFX );
+BLUE_DECLARE( EveTurretTarget );
 
 // constants
 // maximum number of single turrets per turret set
@@ -75,7 +76,7 @@ public:
 // SeeAlso:
 //   EveShip2
 // --------------------------------------------------------------------------------
-class EveTurretSet :
+BLUE_CLASS( EveTurretSet ):
 	public IInitialize,
 	public INotify,
 	public ITr2GeometryProvider,
@@ -256,8 +257,8 @@ private:
 	float GetBonePitchOffset(unsigned int boneIndex) const;
 
 	// animation
-	float PlayAnimation( unsigned int turretIndex, const std::string& animName, const std::string& animNameIdle, float delay );
-	void StopAnimation( unsigned int turretIndex, float delay );
+	float PlayAnimation( unsigned int turretIndex, const std::string& animName, const std::string& animNameIdle, float delay = 0.f );
+	void StopAnimation( unsigned int turretIndex, float delay = 0.f );
 	std::string GetFireAnimationName() const;
 	// request a random delay to make turrets on ships look more alive
 	void CalcRandomDelay();
@@ -328,13 +329,11 @@ private:
 
 	// Assign the target object
 	void SetTargetObject( IRoot* target );
-	ITriTargetablePtr GetTargetObject() { return m_targetObject; };
+	ITriTargetablePtr GetTargetObject();
 	void SetTargetScale();
 
 	// target (object we are tracking)
-	ITriTargetablePtr m_targetObject;
-	int m_targetLocator;
-	Vector3 m_targetPosition;
+	EveTurretTargetPtr m_target;
 
 	// miss-related state
 	Vector3 m_targetPositionMiss;
@@ -352,11 +351,6 @@ private:
 	float m_trackingInfluenceDelta;
 	float m_delayToFadeOutTracking;
 	float m_delayToFadeInTracking;
-	float m_trackingFadeTime;
-
-	// smooth fading
-	Vector3 m_targetPositionOld;
-	float m_targetPositionOldInfluence;
 
 	// animation
 	struct AnimationRequest

@@ -59,23 +59,15 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "lodLevel", m_lodLevel, "current LOD", Be::READ )
 		MAP_ATTRIBUTE( "trackingInfluence", m_trackingInfluence, "How much tracking is alowed?", Be::READ )
 
-		MAP_ATTRIBUTE( "targetPosition", m_targetPosition, "Test shooting target", Be::READWRITE )
-
 		MAP_ATTRIBUTE( "boundingSphere", m_boundingSphere, "Bounding sphere for visibility detection", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "bottomClipHeight", m_bottomClipHeight, "Everything gets cut-off below this height (y-coord)", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "locatorName", m_locatorName, "locator name for all turrets of this pair (A, B, C is auto-attached!)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "slotNumber", m_slotNumber, "the slot number of the turret", Be::READWRITE )
 		
-		MAP_PROPERTY
-		(
-			"targetObject",
-			GetTargetObject,
-			SetTargetObject,
-			"object this set of turrets will track"
-		)
+		MAP_PROPERTY( "targetObject", GetTargetObject, SetTargetObject, "object this set of turrets will track"	)
+//		MAP_ATTRIBUTE( "target", m_target, "Info on the target", Be::READ )
 
-		MAP_ATTRIBUTE( "targetLocatorID", m_targetLocator, "targetLocatorID of the target object", Be::READWRITE )
 		MAP_ATTRIBUTE( "turretEffect", m_turretEffect, "The effect to use to draw the turret pair", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "geometryResource", m_geometryResource, "geometry resource for this turret, is read-only", Be::READ )
 		MAP_ATTRIBUTE( "geometryResPath", m_geomResPath, "resource path to the turrets granny file", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
@@ -85,7 +77,6 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "maxCyclingFirePos", m_maxCyclingFirePos, "If greater than one we cycle through the given number of muzzles.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "cyclingFireGroupCount", m_cyclingFireGroupCount, "The number of muzzles in one cycle group, usually only one.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "currentCyclingFiresPos", m_currentCyclingFiresPos, "Current muzzle id due to cycling muzzles", Be::READ )
-		MAP_ATTRIBUTE( "trackingFadeTime", m_trackingFadeTime, "Time it takes this turret to go from IDLE into TRACKING", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "sysBoneHeight", m_sysBoneHeight, "System bone HEIGHT extension factor", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sysBonePitchFactor", m_sysBonePitchFactor, "main pitch factor", Be::READWRITE | Be::PERSIST )

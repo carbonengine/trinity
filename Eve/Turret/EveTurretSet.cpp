@@ -12,6 +12,7 @@
 #include "TriFrustumOrtho.h"
 #include "TriRenderBatch.h"
 
+#include "Eve/Turret/EveTurretTarget.h"
 #include "EveTurretFiringFX.h"
 #include "include/TriMath.h"
 
@@ -48,6 +49,9 @@ static const char* SHADOW_EFFECT_PATH = "res:/Graphics/Effect/Managed/Space/Turr
 // use options visibility threshold when to turn off turret rendering, NOT the firingeffect
 extern float g_eveSpaceSceneVisibilityThreshold;
 
+// some very static timings, no need to confuse artists by exposing them
+const float TRACKING_FADE_TIME = 1.f;
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Initialize data members, set everything to inlavid/empty and call
@@ -62,16 +66,11 @@ EveTurretSet::EveTurretSet( IRoot* lockobj ) :
 	m_visibleCount( 0 ),
 	m_estimatedPixelDiameter( -1.f ),
 	m_lodLevel( LOD_INVALID ),
-	m_targetLocator( -1 ),
-	m_targetPosition( 0.f, 0.f, 0.f ),
 	m_targetPositionMiss( 0.f, 0.f, 0.f ),
 	m_trackingInfluence( 0.f ),
-	m_targetPositionOldInfluence( -1.f ),
-	m_targetPositionOld( 0.f, 0.f, 0.f ),
 	m_trackingInfluenceDelta( 0.f ),
 	m_delayToFadeOutTracking( 0.f ),
 	m_delayToFadeInTracking( 0.f ),
-	m_trackingFadeTime( 1.f ),
 	m_boundingSphere( 0.f, 0.f, 0.f, 0.f ),
 	m_bottomClipHeight( 0.f ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
@@ -121,6 +120,9 @@ EveTurretSet::EveTurretSet( IRoot* lockobj ) :
 	// create shaders for shadow-map rendering
 	m_shadowEffect.CreateInstance();
 	m_shadowEffect->SetEffectPathName( SHADOW_EFFECT_PATH );
+
+	// create target data
+	m_target.CreateInstance();
 
 	PrepareResources();
 }
@@ -467,7 +469,7 @@ void EveTurretSet::RebuildCachedData( BlueAsyncRes* p )
 			std::vector<AnimationRequest> queueSnapshot = m_animationQueue;
 			for( std::vector<AnimationRequest>::const_iterator it = queueSnapshot.begin(); it != queueSnapshot.end(); ++it )
 			{
-				PlayAnimation( it->turretIndex, it->animName, it->animNameIdle, 0.f );
+				PlayAnimation( it->turretIndex, it->animName, it->animNameIdle );
 			}
 			m_animationQueue.clear();
 		}
@@ -623,7 +625,7 @@ void EveTurretSet::UpdateSyncronous( float deltaT, Be::Time time, const Matrix* 
 						int currentClosestLocator = -1;
 						if( GetClosestTurretAndLocator( currentClosestTurret, currentClosestLocator ) )
 						{
-							if( ( currentClosestTurret != m_activeTurret ) || ( currentClosestLocator != m_targetLocator ) )
+							if( ( currentClosestTurret != m_activeTurret ) || ( currentClosestLocator != m_target->GetLocator() ) )
 							{				
 								// Set up the firing states correctly
 								SetupFiringState( );
@@ -700,7 +702,7 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 		if( m_delayToFadeOutTracking <= 0.f )
 		{
 			m_delayToFadeOutTracking = 0.f;
-			m_trackingInfluenceDelta = -1.f / m_trackingFadeTime;
+			m_trackingInfluenceDelta = -1.f / TRACKING_FADE_TIME;
 		}
 	}
 
@@ -710,7 +712,7 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 		if( m_delayToFadeInTracking <= 0.f )
 		{
 			m_delayToFadeInTracking = 0.f;
-			m_trackingInfluenceDelta = 1.f / m_trackingFadeTime;
+			m_trackingInfluenceDelta = 1.f / TRACKING_FADE_TIME;
 		}
 	}
 
@@ -728,7 +730,7 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 				{
 					// transform traget pos (which is in world space) into objectspace
 					Vector3 targetPosOS;
-					D3DXVec3TransformCoord( &targetPosOS, &m_targetPosition, &it->invWorldMatrix );
+					D3DXVec3TransformCoord( &targetPosOS, m_target->GetTargetPosition(), &it->invWorldMatrix );
 
 					// "do" all the system bones, we have found
 					for( unsigned int bone = 0; bone < SYSBONE_MAX; ++bone )
@@ -750,20 +752,8 @@ void EveTurretSet::UpdateAsyncronous( float deltaT, Be::Time time, const ParentD
 		}
 	}
 
-	// update the target locator position, but do it smoothly by using another locator (if set!)
-	// to lerp between their positions
-	if( m_targetObject )
-	{
-		m_targetObject->GetDamageLocatorPosition( &m_targetPosition, m_targetLocator );
-		
-		if( m_targetPositionOldInfluence > 0.f )
-		{
-			// lerp the old position "in"
-			D3DXVec3Lerp( &m_targetPosition, &m_targetPosition, &m_targetPositionOld, m_targetPositionOldInfluence );
-			// fadeout the influence
-			m_targetPositionOldInfluence -= deltaT / m_trackingFadeTime;
-		}
-	}
+	// update the target locator position
+	m_target->Update( deltaT );
 
 	// setup and update attached firing effect
 	if( m_firingEffect )
@@ -878,7 +868,7 @@ Matrix EveTurretSet::GetFiringBoneWorldTransform( unsigned int muzzle ) const
 			if( m_sysBonePitchMin < 45.f )
 			{
 				// aiming directly at target, because target cone is large
-				Vector3 nrmToTarget = m_targetPosition - m.GetTranslation();
+				Vector3 nrmToTarget = *m_target->GetTargetPosition() - m.GetTranslation();
 				// get direct rotation quaternion
 				Quaternion directRotationQuaternion;
 				static const Vector3 zAxis( 0.f, 0.f, 1.f );
@@ -1039,7 +1029,7 @@ void EveTurretSet::SetLocalTransform( unsigned int turretIndex, const Matrix* lo
 
 			m_singleTurrets.push_back( data );
 
-			PlayAnimation( i, "", "Active", 0.f );
+			PlayAnimation( i, "", "Active" );
 		}
 	}
 	
@@ -1637,7 +1627,7 @@ void EveTurretSet::EnterStateDeactive()
 		m_trackingInfluence = 0.f;
 		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
 		{
-			PlayAnimation( i, "Pack", "Inactive", 0.f );
+			PlayAnimation( i, "Pack", "Inactive" );
 			m_delayToFadeOutTracking = 0.f;
 		}
 		break;
@@ -1652,11 +1642,10 @@ void EveTurretSet::EnterStateDeactive()
 		// fadeout the tracking, play deactive anim and then the deactive loop
 		m_delayToFadeOutTracking = 0.0001f;
 		m_activeTurret = INVALID_TURRET_INDEX;
-		m_targetLocator = -1;
-		m_targetPositionOldInfluence = -1.f;
+		m_target->StopFireAtLocator();
 		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
 		{
-			PlayAnimation( i, "Pack", "Inactive", m_trackingFadeTime );
+			PlayAnimation( i, "Pack", "Inactive", TRACKING_FADE_TIME );
 		}
 
 		ResetMissQueue();
@@ -1689,14 +1678,14 @@ void EveTurretSet::EnterStateIdle()
 		// just play active loop
 		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
 		{
-			PlayAnimation( i, "", "Active", 0.f );
+			PlayAnimation( i, "", "Active" );
 		}
 		break;
 	case STATE_DEACTIVE:
 		// start unpack animation, disable tracking and then into active loop
 		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
 		{
-			PlayAnimation( i, "Deploy", "Active", 0.f );
+			PlayAnimation( i, "Deploy", "Active" );
 		}
 		m_trackingInfluence = 0.f;
 		break;
@@ -1708,15 +1697,14 @@ void EveTurretSet::EnterStateIdle()
 		// stop shooting, fadout tracking, then into active loop
 		m_delayToFadeOutTracking = 0.0001f;
 		m_activeTurret = INVALID_TURRET_INDEX;
-		m_targetLocator = -1;
-		m_targetPositionOldInfluence = -1.f;
+		m_target->StopFireAtLocator();
 		if( m_firingEffect )
 		{
 			m_firingEffect->StopFiring();
 		}
 		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
 		{
-			PlayAnimation( i, "", "Active", m_trackingFadeTime );
+			PlayAnimation( i, "", "Active", TRACKING_FADE_TIME );
 		}
 
 		ResetMissQueue();
@@ -1745,7 +1733,7 @@ void EveTurretSet::EnterStateTargeting()
 		// play deplpoy anim, then active loop and fade in tracking
 		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
 		{
-			animLength = PlayAnimation( i, "Deploy", "Active", 0.f );
+			animLength = PlayAnimation( i, "Deploy", "Active", TRACKING_FADE_TIME );
 		}
 		// fade in tracking
 		m_delayToFadeInTracking = animLength + 0.0001f;
@@ -1756,25 +1744,15 @@ void EveTurretSet::EnterStateTargeting()
 		m_delayToFadeInTracking = 0.0001f;
 		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
 		{
-			PlayAnimation( i, "", "Active", m_trackingFadeTime );
+			PlayAnimation( i, "", "Active", TRACKING_FADE_TIME);
 		}
 		break;
 	case STATE_TARGETING:
-		// are we already targeting something?
-		if( m_targetObject )
-		{
-			// this most likely is new target, so trigger a smooth fade
-			m_targetPositionOld = m_targetPosition;
-			m_targetPositionOldInfluence = 1.f;
-		}
 		break;
 	case STATE_FIRING:
 		// stop shooting, then into active loop
 		m_activeTurret = INVALID_TURRET_INDEX;
-		m_targetLocator = -1;
-		// we sure as hell were targeting something, so we were facing to a damage locator: fade back
-		m_targetPositionOld = m_targetPosition;
-		m_targetPositionOldInfluence = 1.f;
+		m_target->StopFireAtLocator();
 		if( m_firingEffect )
 		{
 			m_firingEffect->StopFiring();
@@ -1873,7 +1851,7 @@ bool EveTurretSet::SetupFiringState()
 	case STATE_IDLE:
 	case STATE_RELOADING:
 		// and delay the effect until we are facing target
-		m_randomFiringDelay += m_trackingFadeTime;
+		m_randomFiringDelay += TRACKING_FADE_TIME;
 		// fadein tracking, play fire anim (only one the firing turret!) and then the active anim
 		m_delayToFadeInTracking = 0.0001f;
 		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
@@ -1890,8 +1868,7 @@ bool EveTurretSet::SetupFiringState()
 			}
 		}
 		// assign locator and turret
-		m_targetLocator = closestLocator;
-		m_targetPositionOldInfluence = -1.f;
+		m_target->StartFireAtLocator( closestLocator );
 		m_activeTurret = closestTurret;
 		break;
 	case STATE_FIRING:
@@ -1912,7 +1889,7 @@ bool EveTurretSet::SetupFiringState()
 		}
 		// switch to new location
 		m_activeTurret = closestTurret;
-		m_targetLocator = closestLocator;
+		m_target->StartFireAtLocator( closestLocator );
 		break;
 
 	default:
@@ -1948,15 +1925,14 @@ void EveTurretSet::EnterStateReloading()
 		// stop shooting, fadout tracking, then into active loop
 		m_delayToFadeOutTracking = 0.0001f;
 		m_activeTurret = INVALID_TURRET_INDEX;
-		m_targetLocator = -1;
-		m_targetPositionOldInfluence = -1.f;
+		m_target->StopFireAtLocator();
 		if( m_firingEffect )
 		{
 			m_firingEffect->StopFiring();
 		}
 		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
 		{
-			PlayAnimation( i, "Reload", "Active", m_trackingFadeTime );
+			PlayAnimation( i, "Reload", "Active", TRACKING_FADE_TIME );
 		}
 
 		ResetMissQueue();
@@ -1980,8 +1956,7 @@ void EveTurretSet::ForceStateDeactive()
 	m_trackingInfluence = 0.f;
 	m_delayToFadeOutTracking = 0.f;
 	m_activeTurret = INVALID_TURRET_INDEX;
-	m_targetLocator = -1;
-	m_targetPositionOldInfluence = -1.f;
+	m_target->StopFireAtLocator();
 	if( m_firingEffect )
 	{
 		m_firingEffect->StopFiring();
@@ -2107,18 +2082,13 @@ bool EveTurretSet::GetClosestTurretAndLocator( unsigned int& closestTurretIx, in
 		if( m_singleTurrets[i].valid )
 		{
 			int locatorIx = -1;
-			Vector3 position = m_targetPosition;
+			Vector3 source = m_singleTurrets[i].worldMatrix.GetTranslation();
+			Vector3 position = source;
 			// get position of closest damagelocator
-			if( m_targetObject )
-			{
-				// the target object tells us the target position via damage locators
-				position = m_singleTurrets[i].worldMatrix.GetTranslation();
-				locatorIx = m_targetObject->GetClosestDamageLocatorIndex( &position );
-				m_targetObject->GetDamageLocatorPosition( &position, locatorIx );
-			}
+			locatorIx = m_target->FindClosestLocator( &source, &position );
 
 			// find normal from turret to target
-			Vector3 nrmToTarget = position - m_singleTurrets[i].worldMatrix.GetTranslation();
+			Vector3 nrmToTarget = position - source;
 			D3DXVec3Normalize( &nrmToTarget, &nrmToTarget );
 			// find "up" normal of turret
 			Vector3 nrmUp = Vector3( 0.f, 1.f, 0.f );
@@ -2232,16 +2202,16 @@ void EveTurretSet::SetShotMissed( const bool missed )
 void EveTurretSet::UpdateMissPosition( const Matrix *parentMatrix )
 {
 	//early out if we're not tracking miss positions
-	if( !m_trackMissPoint || !m_targetObject )
+	if( !m_trackMissPoint || !m_target->GetTargetable() )
 	{
-		m_targetPositionMiss = m_targetPosition;
+		m_targetPositionMiss = *m_target->GetTargetPosition();
 		return;
 	}
 
 
 	const Vector3 muzzlePos = Vector3( parentMatrix->_41, parentMatrix->_42, parentMatrix->_43 );
 
-	m_targetObject->GetMissPosition( &m_targetPosition, &muzzlePos, &m_targetPositionMiss );
+	m_target->GetMissPosition( m_target->GetTargetPosition(), &muzzlePos, &m_targetPositionMiss );
 	m_targetPositionMiss += m_randomMissPositionOffset;
 	Vector3 direction = m_targetPositionMiss - muzzlePos;
 
@@ -2280,7 +2250,7 @@ void EveTurretSet::SetEffectEndPoint()
 	}
 	else
 	{
-		m_firingEffect->SetEndPosition( &m_targetPosition );
+		m_firingEffect->SetEndPosition( m_target->GetTargetPosition() );
 	}
 }
 
@@ -2292,7 +2262,7 @@ void EveTurretSet::SetTargetScale()
 {
 	if ( m_firingEffect )
 	{
-		float radius = m_targetObject->GetRadius();
+		float radius =m_target->GetRadius();
 		m_firingEffect->SetScaleByRadius( radius );
 	}
 }
@@ -2308,15 +2278,16 @@ void EveTurretSet::SetTargetObject( IRoot* target )
 		return;
 	}
 
-	m_targetObject = nullptr;
-	if( target->QueryInterface( BlueInterfaceIID<ITriTargetable>(), (void**)&m_targetObject ) )
-	{
-		SetTargetScale();
-	}
-	else
-	{
-		CCP_LOGERR( "EveTurretSet::SetTarget: ITriTargetable object required." );
-	}
+	// attach to target
+	m_target->SetTargetable( target );
+
+	// update the firing effect we have one
+	SetTargetScale();
+}
+
+ITriTargetablePtr EveTurretSet::GetTargetObject()
+{
+	return nullptr;
 }
 
 // --------------------------------------------------------------------------------
