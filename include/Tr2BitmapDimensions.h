@@ -220,6 +220,11 @@ inline uint32_t Tr2BitmapDimensions::GetMipHeight( uint32_t level ) const
 
 inline uint32_t Tr2BitmapDimensions::GetMipDepth( uint32_t level ) const
 {
+	if( m_type != Tr2RenderContextEnum::TEX_TYPE_3D )
+	{
+		return 1;
+	}
+
 	if( level >= GetTrueMipCount() )
 	{
 		return 0;
@@ -252,10 +257,10 @@ inline uint32_t Tr2BitmapDimensions::GetMipSize( uint32_t level ) const
 {
 	if( IsCompressed() )
 	{
-		return GetMipWidth( level ) * GetMipHeight( level ) / 16 * GetBlockByteSize( m_format );
+		return GetMipWidth( level ) * GetMipHeight( level ) * GetMipDepth( level ) / 16 * GetBlockByteSize( m_format );
 	}
 	
-	return GetMipWidth( level ) * GetMipHeight( level ) * GetBytesPerPixel( m_format );
+	return GetMipWidth( level ) * GetMipHeight( level ) * GetMipDepth( level ) * GetBytesPerPixel( m_format );
 }
 
 inline uint32_t Tr2BitmapDimensions::GetArraySize() const
