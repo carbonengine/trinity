@@ -46,7 +46,7 @@ public:
 								 const Vector3 *positionStart, const Vector3 *positionEnd,
 								 const Vector3 *velocityStart, const Vector3 *velocityEnd,
 								 float deltaTime );
-	void SpawnOnce( const UpdateArguments& arguments, const Vector3& velocity, float scale = 1.0f );
+	void SpawnOnce( const UpdateArguments& arguments, const Vector3& velocity, float scale = 1.f, float rateModifier = 1.f );
 	virtual void SetThreadSafeFlag() {}
 
 	// access

@@ -30,6 +30,7 @@ static const float IMPACT_ARMOR_SIZE_MAX = 10.f;
 static const float IMPACT_SHIELD_SIZE_MAX = 2000.f;
 static const float IMPACT_SHIELD_SIZE_MIN = 70.f;
 static const float IMPACT_SHIELD_FADEOUT = 1.5f;
+static const float IMPACT_ARMOR_PARTICLE_LOD_FACTOR = 400.f;
 
 
 EveImpactOverlay::EveImpactOverlay( IRoot* lockobj ) :
@@ -121,10 +122,12 @@ void EveImpactOverlay::UpdateSyncronous( EveUpdateContext& updateContext, EveSpa
 						parent->GetWorldVelocity( parentVelocityWS );
 						// scaling?
 						float scale = aidit->second.size * m_armorImpactParentSize / ( IMPACT_ARMOR_SIZE_MAX / IMPACT_ARMOR_SIZE_FACTOR );
+						// loding for emit rate?
+						float rateModifier = Clamp( m_renderPriority / IMPACT_ARMOR_PARTICLE_LOD_FACTOR, 0.f, 1.f );
 						// put together particle update info
 						ITr2GenericEmitter::UpdateArguments args( updateContext.GetTime(), updateContext.GetGpuParticleSystem(), Tr2Renderer::GetIdentityTransform(), updateContext.GetOriginShift() );
 						// do the spawn here once!
-						m_armorImpactEmitter->SpawnOnce( args, parentVelocityWS, scale );
+						m_armorImpactEmitter->SpawnOnce( args, parentVelocityWS, scale, rateModifier );
 						aidit->second.requestSpawnDebris = false;
 					}
 				}

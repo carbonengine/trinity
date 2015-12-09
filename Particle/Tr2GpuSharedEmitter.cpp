@@ -210,7 +210,7 @@ float Tr2GpuSharedEmitter::SpawnParticles(
 	return carryOverCount;
 }
 
-void Tr2GpuSharedEmitter::SpawnOnce( const UpdateArguments& arguments, const Vector3& velocity, float scale )
+void Tr2GpuSharedEmitter::SpawnOnce( const UpdateArguments& arguments, const Vector3& velocity, float scale, float rateModifier)
 {
 	if( !arguments.system || !m_enabled )
 	{
@@ -218,7 +218,7 @@ void Tr2GpuSharedEmitter::SpawnOnce( const UpdateArguments& arguments, const Vec
 	}
 
 	auto emitter = m_emitter;
-	emitter.count = int( m_rate );
+	emitter.count = int( m_rate * rateModifier );
 
 	if( emitter.count )
 	{
