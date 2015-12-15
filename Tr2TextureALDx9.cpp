@@ -218,6 +218,11 @@ ALResult Tr2TextureAL::Create2D( uint32_t width,
 			{
 				return hr;
 			}
+			if( m_format9 == MAKEFOURCC( 'A', 'T', 'I', '1' ) )
+			{
+				// dx9 incorrectly reports pitch for BC4 format as if it's uncompressed
+				l.Pitch *= 2;
+			}
 
 			const uint32_t numRows = GetMipNumRows( i );
 			const uint32_t mipLevelSize = std::min( GetMipSize( i ), initialData[i].m_sysMemSlicePitch );
