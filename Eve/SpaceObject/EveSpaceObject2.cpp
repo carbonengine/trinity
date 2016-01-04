@@ -1465,9 +1465,6 @@ int EveSpaceObject2::GetGoodDamageLocatorIndex( const Vector3& position )
 			Vector3 damageLocatorPosition = GetObjectSpaceDamageLocatorPosition(i);
 			Vector3 damageLocatorDirection = GetObjectSpaceDamageLocatorDirection(i);
 
-			damageLocatorPositions.push_back(damageLocatorPosition);
-			damageLocatorDirections.push_back(damageLocatorDirection);
-
 			v = XMVectorSubtract( damageLocatorPosition, posInObjectSpace );
 			float length = D3DXVec3Length( &v );
 			minDistance = min( minDistance, length );
@@ -1486,12 +1483,13 @@ int EveSpaceObject2::GetGoodDamageLocatorIndex( const Vector3& position )
 	{
 		if( IsDamageLocatorFacingPosition( i, posInObjectSpace ) )
 		{
-			Vector3 damageLocatorPos = damageLocatorPositions[i];
-			Vector3 damageLocatorDir = damageLocatorDirections[i];
-			v = XMVectorSubtract( damageLocatorPos, posInObjectSpace );
+			Vector3 damageLocatorPosition = GetObjectSpaceDamageLocatorPosition(i);
+			Vector3 damageLocatorDirection = GetObjectSpaceDamageLocatorDirection(i);
+
+			v = XMVectorSubtract( damageLocatorPosition, posInObjectSpace );
 			float fitValue = GetDistanceFit( minDistance, maxDistance - minDistance, v );
 			D3DXVec3Normalize( &v, &v );
-			fitValue *= GetDirectionFit( damageLocatorDir, v );
+			fitValue *= GetDirectionFit( damageLocatorDirection, v );
 			if( std::abs( fitValue - desiredFit ) < bestFit )
 			{
 				bestFit = std::abs( fitValue - desiredFit );
