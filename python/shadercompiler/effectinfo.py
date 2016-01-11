@@ -323,7 +323,7 @@ class EffectInfo(object):
 
         self.parameters = self._extract_parameters('constants')
         self.resources = self._extract_parameters('resources')
-        self.uavs = self._extract_parameters('uavs')
+        self.resources.update(self._extract_parameters('uavs'))
 
     def _extract_parameters(self, stage_attr):
         result = {}
