@@ -133,10 +133,10 @@
 			sourceTree = "<group>";
 			};
 		0000072E000044b827000cae = {
-			name = EveCloudEditableVolume.h;
+			name = EveLocalPositionCurve.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Renderable/EveCloudEditableVolume.h";
+			path = "Eve/Renderable/Stretch/EveLocalPositionCurve.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -177,10 +177,10 @@
 			sourceTree = "<group>";
 			};
 		0000023A000044b827000cae = {
-			name = EveEffectRoot_Blue.cpp;
+			name = EveLensflare_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveEffectRoot_Blue.cpp";
+			path = "Eve/EveLensflare_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -229,10 +229,10 @@
 			fileRef = 0000061E000044b827000cae;
 			};
 		000002C8000044b827000cae = {
-			name = EveImpactOverlay.cpp;
+			name = EveSpaceObjectDecal_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveImpactOverlay.cpp";
+			path = "Eve/SpaceObject/Attachments/EveSpaceObjectDecal_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -317,10 +317,10 @@
 			fileRef = 000005D8000044b827000cae;
 			};
 		00000712000044b827000cae = {
-			name = EveShip2Builder.h;
+			name = EveTransform.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveShip2Builder.h";
+			path = "Eve/EveTransform.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -385,10 +385,10 @@
 			fileRef = 00000120000044b827000cae;
 			};
 		00000718000044b827000cae = {
-			name = EveSpherePinIndexTree.h;
+			name = IEveSpaceObject2.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveSpherePinIndexTree.h";
+			path = "Eve/IEveSpaceObject2.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -425,22 +425,22 @@
 			sourceTree = "<group>";
 			children = (
 				00000970000044b827000cae,
-				00000284000044b827000cae,
+				00000272000044b827000cae,
+				00000722000044b827000cae,
+				00000276000044b827000cae,
+				00000724000044b827000cae,
+				00000278000044b827000cae,
+				00000274000044b827000cae,
+				0000027A000044b827000cae,
+				00000726000044b827000cae,
+				0000027E000044b827000cae,
+				00000728000044b827000cae,
+				00000280000044b827000cae,
+				0000072A000044b827000cae,
+				0000027C000044b827000cae,
+				00000282000044b827000cae,
 				0000072C000044b827000cae,
-				00000288000044b827000cae,
-				0000072E000044b827000cae,
-				0000028A000044b827000cae,
-				00000286000044b827000cae,
-				0000028C000044b827000cae,
-				00000730000044b827000cae,
-				00000290000044b827000cae,
-				00000732000044b827000cae,
-				00000292000044b827000cae,
-				00000734000044b827000cae,
-				0000028E000044b827000cae,
-				00000294000044b827000cae,
-				00000736000044b827000cae,
-				00000296000044b827000cae,
+				00000284000044b827000cae,
 				);
 			name = Renderable;
 			};
@@ -583,10 +583,10 @@
 			sourceTree = "<group>";
 			};
 		0000025E000044b827000cae = {
-			name = EveRootTransform.cpp;
+			name = EveStarfield.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveRootTransform.cpp";
+			path = "Eve/EveStarfield.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -703,10 +703,10 @@
 			sourceTree = "<group>";
 			};
 		000002DC000044b827000cae = {
-			name = EveSpotlightSet.cpp;
+			name = EveTrailsSet_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveSpotlightSet.cpp";
+			path = "Eve/SpaceObject/Attachments/EveTrailsSet_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -883,10 +883,10 @@
 			fileRef = 00000750000044b827000cae;
 			};
 		0000074E000044b827000cae = {
-			name = EveDynamicPlaneSet.h;
+			name = EveSpaceObjectDecal.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EveDynamicPlaneSet.h";
+			path = "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -946,20 +946,20 @@
 			isa = PBXGroup;
 			sourceTree = "<group>";
 			children = (
-				0000030E000044b827000cae,
-				00000776000044b827000cae,
-				0000031A000044b827000cae,
-				0000077C000044b827000cae,
-				0000031C000044b827000cae,
-				00000312000044b827000cae,
-				00000778000044b827000cae,
-				00000316000044b827000cae,
-				0000077A000044b827000cae,
-				00000318000044b827000cae,
-				00000314000044b827000cae,
-				0000031E000044b827000cae,
-				0000077E000044b827000cae,
-				00000310000044b827000cae,
+				000002FC000044b827000cae,
+				0000076C000044b827000cae,
+				00000308000044b827000cae,
+				00000772000044b827000cae,
+				0000030A000044b827000cae,
+				00000300000044b827000cae,
+				0000076E000044b827000cae,
+				00000304000044b827000cae,
+				00000770000044b827000cae,
+				00000306000044b827000cae,
+				00000302000044b827000cae,
+				0000030C000044b827000cae,
+				00000774000044b827000cae,
+				000002FE000044b827000cae,
 				);
 			name = SpaceObjectFactory;
 			};
@@ -1028,10 +1028,10 @@
 			fileRef = 000006D6000044b827000cae;
 			};
 		00000260000044b827000cae = {
-			name = EveRootTransform_Blue.cpp;
+			name = EveStarfield_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveRootTransform_Blue.cpp";
+			path = "Eve/EveStarfield_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1076,10 +1076,10 @@
 			fileRef = 00000276000044b827000cae;
 			};
 		000002EA000044b827000cae = {
-			name = EveSpriteSetItem_Blue.cpp;
+			name = EveChildMesh.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveSpriteSetItem_Blue.cpp";
+			path = "Eve/SpaceObject/Children/EveChildMesh.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1112,10 +1112,10 @@
 			fileRef = 000006B4000044b827000cae;
 			};
 		00000290000044b827000cae = {
-			name = EveMetaballItem.cpp;
+			name = EveStretch_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/EveMetaballItem.cpp";
+			path = "Eve/Renderable/Stretch/EveStretch_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1124,10 +1124,10 @@
 			fileRef = 000001D8000044b827000cae;
 			};
 		00000770000044b827000cae = {
-			name = IEveSpaceObjectChild.h;
+			name = EveSOFDataMgr.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Children/IEveSpaceObjectChild.h";
+			path = "Eve/SpaceObjectFactory/EveSOFDataMgr.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1276,10 +1276,10 @@
 			sourceTree = "<group>";
 			};
 		00000298000044b827000cae = {
-			name = EveLocalPositionCurve.cpp;
+			name = EveMissileWarhead_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/Stretch/EveLocalPositionCurve.cpp";
+			path = "Eve/SpaceObject/EveMissileWarhead_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1424,10 +1424,10 @@
 			fileRef = 000001DA000044b827000cae;
 			};
 		0000027A000044b827000cae = {
-			name = EveAnimationData_Blue.cpp;
+			name = EveMetaball.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Animation/EveAnimationData_Blue.cpp";
+			path = "Eve/Renderable/EveMetaball.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1512,10 +1512,10 @@
 			sourceTree = "<group>";
 			};
 		00000330000044b827000cae = {
-			name = EveLineContainer.cpp;
+			name = EveSpherePin_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/UI/EveLineContainer.cpp";
+			path = "Eve/UI/EveSpherePin_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1572,10 +1572,10 @@
 			fileRef = 000002F0000044b827000cae;
 			};
 		000002FC000044b827000cae = {
-			name = EveChildMesh.cpp;
+			name = EveSOF.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildMesh.cpp";
+			path = "Eve/SpaceObjectFactory/EveSOF.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1596,10 +1596,10 @@
 			fileRef = 000008CE000044b827000cae;
 			};
 		000002E6000044b827000cae = {
-			name = EveSpriteSet_Blue.cpp;
+			name = EveChildLink.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveSpriteSet_Blue.cpp";
+			path = "Eve/SpaceObject/Children/EveChildLink.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1632,10 +1632,10 @@
 			sourceTree = "<group>";
 			};
 		00000752000044b827000cae = {
-			name = EveMeshOverlayEffect.h;
+			name = EveSpotlightSetItem.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EveMeshOverlayEffect.h";
+			path = "Eve/SpaceObject/Attachments/EveSpotlightSetItem.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1668,10 +1668,10 @@
 			fileRef = 00000828000044b827000cae;
 			};
 		000002D8000044b827000cae = {
-			name = EveSpaceObjectDecal.cpp;
+			name = EveSpriteSetItem_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.cpp";
+			path = "Eve/SpaceObject/Attachments/EveSpriteSetItem_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1680,10 +1680,10 @@
 			fileRef = 000003EA000044b827000cae;
 			};
 		00000240000044b827000cae = {
-			name = EveLineSet.cpp;
+			name = EveOccluder_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveLineSet.cpp";
+			path = "Eve/EveOccluder_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1704,10 +1704,10 @@
 			fileRef = 00000734000044b827000cae;
 			};
 		00000236000044b827000cae = {
-			name = EveDustfieldConstraint_Blue.cpp;
+			name = EveEffectRoot_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveDustfieldConstraint_Blue.cpp";
+			path = "Eve/EveEffectRoot_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1724,10 +1724,10 @@
 			fileRef = 00000220000044b827000cae;
 			};
 		0000070E000044b827000cae = {
-			name = EveProjectBracket.h;
+			name = EveSpaceScene.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveProjectBracket.h";
+			path = "Eve/EveSpaceScene.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1740,10 +1740,10 @@
 			fileRef = 00000792000044b827000cae;
 			};
 		00000314000044b827000cae = {
-			name = EveSOFData_Blue.cpp;
+			name = EveTurretSet_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObjectFactory/EveSOFData_Blue.cpp";
+			path = "Eve/Turret/EveTurretSet_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1768,10 +1768,10 @@
 			fileRef = 00000966000044b827000cae;
 			};
 		00000750000044b827000cae = {
-			name = EveImpactOverlay.h;
+			name = EveSpotlightSet.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EveImpactOverlay.h";
+			path = "Eve/SpaceObject/Attachments/EveSpotlightSet.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1800,10 +1800,10 @@
 			fileRef = 000000A8000044b827000cae;
 			};
 		00000252000044b827000cae = {
-			name = EveParticleSpringAttractor.cpp;
+			name = EveRootTransform.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveParticleSpringAttractor.cpp";
+			path = "Eve/EveRootTransform.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1840,10 +1840,10 @@
 			fileRef = 000007F4000044b827000cae;
 			};
 		0000022C000044b827000cae = {
-			name = EveCurveLineSet.cpp;
+			name = EveDistanceField.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveCurveLineSet.cpp";
+			path = "Eve/EveDistanceField.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2124,10 +2124,10 @@
 			fileRef = 00000866000044b827000cae;
 			};
 		0000026C000044b827000cae = {
-			name = EveSpherePin_Blue.cpp;
+			name = EveAnimationSequencer_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveSpherePin_Blue.cpp";
+			path = "Eve/Animation/EveAnimationSequencer_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2200,18 +2200,18 @@
 			sourceTree = "<group>";
 			};
 		000002D4000044b827000cae = {
-			name = EvePlaneSetItem.cpp;
+			name = EveSpriteSet_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EvePlaneSetItem.cpp";
+			path = "Eve/SpaceObject/Attachments/EveSpriteSet_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		0000077A000044b827000cae = {
-			name = EveSOFDataMgr.h;
+			name = EveTurretTarget.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObjectFactory/EveSOFDataMgr.h";
+			path = "Eve/Turret/EveTurretTarget.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2243,15 +2243,15 @@
 			isa = PBXGroup;
 			sourceTree = "<group>";
 			children = (
-				00000278000044b827000cae,
-				00000726000044b827000cae,
-				0000027A000044b827000cae,
-				0000027C000044b827000cae,
-				00000728000044b827000cae,
-				0000027E000044b827000cae,
-				00000280000044b827000cae,
-				0000072A000044b827000cae,
-				00000282000044b827000cae,
+				00000266000044b827000cae,
+				0000071C000044b827000cae,
+				00000268000044b827000cae,
+				0000026A000044b827000cae,
+				0000071E000044b827000cae,
+				0000026C000044b827000cae,
+				0000026E000044b827000cae,
+				00000720000044b827000cae,
+				00000270000044b827000cae,
 				);
 			name = Animation;
 			};
@@ -2354,18 +2354,18 @@
 			sourceTree = "<group>";
 			};
 		00000238000044b827000cae = {
-			name = EveEffectRoot.cpp;
+			name = EveLensflare.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveEffectRoot.cpp";
+			path = "Eve/EveLensflare.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		0000071C000044b827000cae = {
-			name = EveTransform.h;
+			name = EveAnimationData.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveTransform.h";
+			path = "Eve/Animation/EveAnimationData.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2494,10 +2494,10 @@
 			fileRef = 000002FE000044b827000cae;
 			};
 		000002E2000044b827000cae = {
-			name = EveSpotlightSetItem_Blue.cpp;
+			name = EveChildContainer.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveSpotlightSetItem_Blue.cpp";
+			path = "Eve/SpaceObject/Children/EveChildContainer.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2586,10 +2586,10 @@
 			sourceTree = "<group>";
 			};
 		0000024E000044b827000cae = {
-			name = EveParticleDragForce.cpp;
+			name = EvePlanet.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveParticleDragForce.cpp";
+			path = "Eve/EvePlanet.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2597,15 +2597,15 @@
 			isa = PBXGroup;
 			sourceTree = "<group>";
 			children = (
-				00000320000044b827000cae,
-				00000780000044b827000cae,
-				00000322000044b827000cae,
-				00000324000044b827000cae,
-				00000782000044b827000cae,
-				00000326000044b827000cae,
-				00000328000044b827000cae,
-				00000784000044b827000cae,
-				0000032A000044b827000cae,
+				0000030E000044b827000cae,
+				00000776000044b827000cae,
+				00000310000044b827000cae,
+				00000312000044b827000cae,
+				00000778000044b827000cae,
+				00000314000044b827000cae,
+				00000316000044b827000cae,
+				0000077A000044b827000cae,
+				00000318000044b827000cae,
 				);
 			name = Turret;
 			};
@@ -2622,10 +2622,10 @@
 			sourceTree = "<group>";
 			};
 		00000282000044b827000cae = {
-			name = EveAnimationState_Blue.cpp;
+			name = EveSceneStaticParticles.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Animation/EveAnimationState_Blue.cpp";
+			path = "Eve/Renderable/EveSceneStaticParticles.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2710,10 +2710,10 @@
 			sourceTree = "<group>";
 			};
 		0000023C000044b827000cae = {
-			name = EveLensflare.cpp;
+			name = EveLODHelper.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveLensflare.cpp";
+			path = "Eve/EveLODHelper.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2807,10 +2807,10 @@
 			fileRef = 000008E4000044b827000cae;
 			};
 		00000300000044b827000cae = {
-			name = EveChildParticleSystem.cpp;
+			name = EveSOFData.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildParticleSystem.cpp";
+			path = "Eve/SpaceObjectFactory/EveSOFData.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2863,10 +2863,10 @@
 			fileRef = 000004C6000044b827000cae;
 			};
 		00000304000044b827000cae = {
-			name = EveChildTransform.cpp;
+			name = EveSOFDataMgr.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildTransform.cpp";
+			path = "Eve/SpaceObjectFactory/EveSOFDataMgr.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2907,10 +2907,10 @@
 			fileRef = 000006A6000044b827000cae;
 			};
 		0000029E000044b827000cae = {
-			name = EveRemotePositionCurve_Blue.cpp;
+			name = EveShip2.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/Stretch/EveRemotePositionCurve_Blue.cpp";
+			path = "Eve/SpaceObject/EveShip2.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2923,10 +2923,10 @@
 			fileRef = 0000046E000044b827000cae;
 			};
 		000002B0000044b827000cae = {
-			name = EveShip2.cpp;
+			name = EveBoosterSet2_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveShip2.cpp";
+			path = "Eve/SpaceObject/Attachments/EveBoosterSet2_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2971,10 +2971,10 @@
 			sourceTree = "<group>";
 			};
 		0000022E000044b827000cae = {
-			name = EveCurveLineSet_Blue.cpp;
+			name = EveDistanceField_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveCurveLineSet_Blue.cpp";
+			path = "Eve/EveDistanceField_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -2987,10 +2987,10 @@
 			fileRef = 000004A4000044b827000cae;
 			};
 		0000072C000044b827000cae = {
-			name = EveCloud.h;
+			name = EveSceneStaticParticles.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Renderable/EveCloud.h";
+			path = "Eve/Renderable/EveSceneStaticParticles.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3039,10 +3039,10 @@
 			sourceTree = "<group>";
 			};
 		0000031C000044b827000cae = {
-			name = EveSOFDNA_Blue.cpp;
+			name = EveConnector_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObjectFactory/EveSOFDNA_Blue.cpp";
+			path = "Eve/UI/EveConnector_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3050,12 +3050,26 @@
 			isa = PBXGroup;
 			sourceTree = "<group>";
 			children = (
+				0000031A000044b827000cae,
+				0000077C000044b827000cae,
+				0000031C000044b827000cae,
+				0000031E000044b827000cae,
+				0000077E000044b827000cae,
+				00000320000044b827000cae,
+				00000322000044b827000cae,
+				00000780000044b827000cae,
+				00000324000044b827000cae,
+				00000326000044b827000cae,
+				00000782000044b827000cae,
+				00000328000044b827000cae,
+				0000032A000044b827000cae,
+				00000784000044b827000cae,
 				0000032C000044b827000cae,
-				00000786000044b827000cae,
 				0000032E000044b827000cae,
-				00000330000044b827000cae,
-				00000788000044b827000cae,
+				00000786000044b827000cae,
 				00000332000044b827000cae,
+				00000788000044b827000cae,
+				00000330000044b827000cae,
 				);
 			name = UI;
 			};
@@ -3253,10 +3267,10 @@
 			sourceTree = "<group>";
 			};
 		000002EE000044b827000cae = {
-			name = EveTrailsSet_Blue.cpp;
+			name = EveChildParticleSystem.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveTrailsSet_Blue.cpp";
+			path = "Eve/SpaceObject/Children/EveChildParticleSystem.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3301,18 +3315,18 @@
 			sourceTree = "<group>";
 			};
 		00000748000044b827000cae = {
-			name = EveStation2.h;
+			name = EveMeshOverlayEffect.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/EveStation2.h";
+			path = "Eve/SpaceObject/Attachments/EveMeshOverlayEffect.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		00000268000044b827000cae = {
-			name = EveSpaceScene_Blue.cpp;
+			name = EveAnimationData_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveSpaceScene_Blue.cpp";
+			path = "Eve/Animation/EveAnimationData_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3481,18 +3495,18 @@
 			sourceTree = "<group>";
 			};
 		0000074C000044b827000cae = {
-			name = EveBoosterSet2.h;
+			name = EvePlaneSetItem.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EveBoosterSet2.h";
+			path = "Eve/SpaceObject/Attachments/EvePlaneSetItem.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		00000782000044b827000cae = {
-			name = EveTurretSet.h;
+			name = EveLineSet.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Turret/EveTurretSet.h";
+			path = "Eve/UI/EveLineSet.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3513,10 +3527,10 @@
 			fileRef = 0000048A000044b827000cae;
 			};
 		000002B6000044b827000cae = {
-			name = EveSpaceObject2_Blue.cpp;
+			name = EveImpactOverlay.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveSpaceObject2_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EveImpactOverlay.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3553,10 +3567,10 @@
 			sourceTree = "<group>";
 			};
 		0000073A000044b827000cae = {
-			name = EveRemotePositionCurve.h;
+			name = EveShip2.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Renderable/Stretch/EveRemotePositionCurve.h";
+			path = "Eve/SpaceObject/EveShip2.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3589,10 +3603,10 @@
 			fileRef = 00000452000044b827000cae;
 			};
 		0000076E000044b827000cae = {
-			name = EveChildTransform.h;
+			name = EveSOFData.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Children/EveChildTransform.h";
+			path = "Eve/SpaceObjectFactory/EveSOFData.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3735,17 +3749,17 @@
 				00000234000044b827000cae,
 				000006FA000044b827000cae,
 				00000236000044b827000cae,
+				0000023C000044b827000cae,
+				000006FE000044b827000cae,
 				00000238000044b827000cae,
 				000006FC000044b827000cae,
 				0000023A000044b827000cae,
-				00000244000044b827000cae,
-				00000702000044b827000cae,
-				0000023C000044b827000cae,
-				000006FE000044b827000cae,
 				0000023E000044b827000cae,
-				00000240000044b827000cae,
 				00000700000044b827000cae,
+				00000240000044b827000cae,
 				00000242000044b827000cae,
+				00000702000044b827000cae,
+				00000244000044b827000cae,
 				00000246000044b827000cae,
 				00000704000044b827000cae,
 				00000248000044b827000cae,
@@ -3770,24 +3784,10 @@
 				00000262000044b827000cae,
 				00000712000044b827000cae,
 				00000264000044b827000cae,
-				00000266000044b827000cae,
 				00000714000044b827000cae,
-				00000268000044b827000cae,
-				0000026A000044b827000cae,
 				00000716000044b827000cae,
-				0000026E000044b827000cae,
 				00000718000044b827000cae,
-				0000026C000044b827000cae,
-				00000270000044b827000cae,
 				0000071A000044b827000cae,
-				00000272000044b827000cae,
-				00000274000044b827000cae,
-				0000071C000044b827000cae,
-				00000276000044b827000cae,
-				0000071E000044b827000cae,
-				00000720000044b827000cae,
-				00000722000044b827000cae,
-				00000724000044b827000cae,
 				);
 			name = Eve;
 			};
@@ -3924,10 +3924,10 @@
 			sourceTree = "<group>";
 			};
 		000002DE000044b827000cae = {
-			name = EveSpotlightSet_Blue.cpp;
+			name = EveChildBillboard.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveSpotlightSet_Blue.cpp";
+			path = "Eve/SpaceObject/Children/EveChildBillboard.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3944,10 +3944,10 @@
 			fileRef = 000008EC000044b827000cae;
 			};
 		000002C0000044b827000cae = {
-			name = EveBoosterSet2.cpp;
+			name = EvePlaneSet_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveBoosterSet2.cpp";
+			path = "Eve/SpaceObject/Attachments/EvePlaneSet_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4008,10 +4008,10 @@
 			fileRef = 000003C4000044b827000cae;
 			};
 		0000025A000044b827000cae = {
-			name = EveProjectBracket.cpp;
+			name = EveSpaceScene.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveProjectBracket.cpp";
+			path = "Eve/EveSpaceScene.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4020,10 +4020,10 @@
 			fileRef = 000000B4000044b827000cae;
 			};
 		00000264000044b827000cae = {
-			name = EveShip2Builder_Blue.cpp;
+			name = EveTransform_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveShip2Builder_Blue.cpp";
+			path = "Eve/EveTransform_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4036,10 +4036,10 @@
 			sourceTree = "<group>";
 			};
 		000002B2000044b827000cae = {
-			name = EveShip2_Blue.cpp;
+			name = EveDynamicPlaneSet.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveShip2_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EveDynamicPlaneSet.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4072,10 +4072,10 @@
 			sourceTree = "<group>";
 			};
 		00000708000044b827000cae = {
-			name = EveParticleDragForce.h;
+			name = EvePlanet.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveParticleDragForce.h";
+			path = "Eve/EvePlanet.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4138,10 +4138,10 @@
 			fileRef = 0000053C000044b827000cae;
 			};
 		00000332000044b827000cae = {
-			name = EveLineContainer_Blue.cpp;
+			name = EveSpherePinIndexTree.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/UI/EveLineContainer_Blue.cpp";
+			path = "Eve/UI/EveSpherePinIndexTree.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4241,10 +4241,10 @@
 			sourceTree = "<group>";
 			};
 		00000234000044b827000cae = {
-			name = EveDustfieldConstraint.cpp;
+			name = EveEffectRoot.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveDustfieldConstraint.cpp";
+			path = "Eve/EveEffectRoot.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4404,10 +4404,10 @@
 			sourceTree = "<group>";
 			};
 		00000284000044b827000cae = {
-			name = EveCloud.cpp;
+			name = EveSceneStaticParticles_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/EveCloud.cpp";
+			path = "Eve/Renderable/EveSceneStaticParticles_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4480,10 +4480,10 @@
 			fileRef = 0000019A000044b827000cae;
 			};
 		0000032E000044b827000cae = {
-			name = EveConnector_Blue.cpp;
+			name = EveSpherePin.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/UI/EveConnector_Blue.cpp";
+			path = "Eve/UI/EveSpherePin.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4540,10 +4540,10 @@
 			fileRef = 000004BC000044b827000cae;
 			};
 		00000702000044b827000cae = {
-			name = EveLODHelper.h;
+			name = EveParticleDirectForce.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveLODHelper.h";
+			path = "Eve/EveParticleDirectForce.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4648,10 +4648,10 @@
 			fileRef = 0000040C000044b827000cae;
 			};
 		00000248000044b827000cae = {
-			name = EveOccluder_Blue.cpp;
+			name = EveParticleDragForce_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveOccluder_Blue.cpp";
+			path = "Eve/EveParticleDragForce_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4675,10 +4675,10 @@
 			fileRef = 000007C0000044b827000cae;
 			};
 		00000744000044b827000cae = {
-			name = EveShip2.h;
+			name = EveDynamicPlaneSet.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/EveShip2.h";
+			path = "Eve/SpaceObject/Attachments/EveDynamicPlaneSet.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4807,10 +4807,10 @@
 			fileRef = 00000460000044b827000cae;
 			};
 		00000780000044b827000cae = {
-			name = EveTurretFiringFX.h;
+			name = EveLineContainer.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Turret/EveTurretFiringFX.h";
+			path = "Eve/UI/EveLineContainer.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4863,10 +4863,10 @@
 			sourceTree = "<group>";
 			};
 		0000070C000044b827000cae = {
-			name = EvePlanet.h;
+			name = EveShip2Builder.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EvePlanet.h";
+			path = "Eve/EveShip2Builder.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4931,10 +4931,10 @@
 			sourceTree = "<group>";
 			};
 		00000296000044b827000cae = {
-			name = EveSceneStaticParticles_Blue.cpp;
+			name = EveMissileWarhead.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/EveSceneStaticParticles_Blue.cpp";
+			path = "Eve/SpaceObject/EveMissileWarhead.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -4983,10 +4983,10 @@
 			fileRef = 0000020E000044b827000cae;
 			};
 		00000292000044b827000cae = {
-			name = EveMetaballItem_Blue.cpp;
+			name = EveMissile.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/EveMetaballItem_Blue.cpp";
+			path = "Eve/SpaceObject/EveMissile.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5362,10 +5362,10 @@
 			sourceTree = "<group>";
 			};
 		00000734000044b827000cae = {
-			name = EveMetaballTables.h;
+			name = EveMissile.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Renderable/EveMetaballTables.h";
+			path = "Eve/SpaceObject/EveMissile.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5410,18 +5410,18 @@
 			fileRef = 00000580000044b827000cae;
 			};
 		00000310000044b827000cae = {
-			name = EveSOF_Blue.cpp;
+			name = EveTurretFiringFX_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObjectFactory/EveSOF_Blue.cpp";
+			path = "Eve/Turret/EveTurretFiringFX_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		00000294000044b827000cae = {
-			name = EveSceneStaticParticles.cpp;
+			name = EveMissile_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/EveSceneStaticParticles.cpp";
+			path = "Eve/SpaceObject/EveMissile_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5506,10 +5506,10 @@
 			sourceTree = "<group>";
 			};
 		00000776000044b827000cae = {
-			name = EveSOF.h;
+			name = EveTurretFiringFX.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObjectFactory/EveSOF.h";
+			path = "Eve/Turret/EveTurretFiringFX.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5675,10 +5675,10 @@
 			fileRef = 000003F2000044b827000cae;
 			};
 		0000028A000044b827000cae = {
-			name = EveCloudEditableVolume_Blue.cpp;
+			name = EveRemotePositionCurve.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/EveCloudEditableVolume_Blue.cpp";
+			path = "Eve/Renderable/Stretch/EveRemotePositionCurve.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5691,18 +5691,18 @@
 			sourceTree = "<group>";
 			};
 		000002BC000044b827000cae = {
-			name = EveSwarm.cpp;
+			name = EveMeshOverlayEffect_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveSwarm.cpp";
+			path = "Eve/SpaceObject/Attachments/EveMeshOverlayEffect_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000002CC000044b827000cae = {
-			name = EveMeshOverlayEffect.cpp;
+			name = EveSpotlightSet_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveMeshOverlayEffect.cpp";
+			path = "Eve/SpaceObject/Attachments/EveSpotlightSet_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5727,10 +5727,10 @@
 			sourceTree = "<group>";
 			};
 		00000740000044b827000cae = {
-			name = EveMissileWarhead.h;
+			name = EveSwarm.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/EveMissileWarhead.h";
+			path = "Eve/SpaceObject/EveSwarm.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5751,10 +5751,10 @@
 			fileRef = 0000065E000044b827000cae;
 			};
 		00000762000044b827000cae = {
-			name = EveTrailsSet.h;
+			name = EveChildParticleSystem.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EveTrailsSet.h";
+			path = "Eve/SpaceObject/Children/EveChildParticleSystem.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5775,26 +5775,26 @@
 			fileRef = 000006F6000044b827000cae;
 			};
 		00000758000044b827000cae = {
-			name = EveSpaceObjectDecal.h;
+			name = EveTrailsSet.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.h";
+			path = "Eve/SpaceObject/Attachments/EveTrailsSet.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000002EC000044b827000cae = {
-			name = EveTrailsSet.cpp;
+			name = EveChildMesh_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveTrailsSet.cpp";
+			path = "Eve/SpaceObject/Children/EveChildMesh_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		00000736000044b827000cae = {
-			name = EveSceneStaticParticles.h;
+			name = EveMissileWarhead.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Renderable/EveSceneStaticParticles.h";
+			path = "Eve/SpaceObject/EveMissileWarhead.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5839,10 +5839,10 @@
 			fileRef = 0000027A000044b827000cae;
 			};
 		0000029A000044b827000cae = {
-			name = EveLocalPositionCurve_Blue.cpp;
+			name = EveMobile.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/Stretch/EveLocalPositionCurve_Blue.cpp";
+			path = "Eve/SpaceObject/EveMobile.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5855,10 +5855,10 @@
 			fileRef = 0000068A000044b827000cae;
 			};
 		00000242000044b827000cae = {
-			name = EveLineSet_Blue.cpp;
+			name = EveParticleDirectForce.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveLineSet_Blue.cpp";
+			path = "Eve/EveParticleDirectForce.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5903,10 +5903,10 @@
 			fileRef = 000001D4000044b827000cae;
 			};
 		000006FE000044b827000cae = {
-			name = EveLensflare.h;
+			name = EveLODHelper.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveLensflare.h";
+			path = "Eve/EveLODHelper.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5935,10 +5935,10 @@
 			sourceTree = "<group>";
 			};
 		00000788000044b827000cae = {
-			name = EveLineContainer.h;
+			name = EveSpherePinIndexTree.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/UI/EveLineContainer.h";
+			path = "Eve/UI/EveSpherePinIndexTree.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -5971,10 +5971,10 @@
 			sourceTree = "<group>";
 			};
 		0000025C000044b827000cae = {
-			name = EveProjectBracket_Blue.cpp;
+			name = EveSpaceScene_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveProjectBracket_Blue.cpp";
+			path = "Eve/EveSpaceScene_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6063,10 +6063,10 @@
 			fileRef = 0000056C000044b827000cae;
 			};
 		00000778000044b827000cae = {
-			name = EveSOFData.h;
+			name = EveTurretSet.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObjectFactory/EveSOFData.h";
+			path = "Eve/Turret/EveTurretSet.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6079,10 +6079,10 @@
 			fileRef = 000007F0000044b827000cae;
 			};
 		00000256000044b827000cae = {
-			name = EvePlanet.cpp;
+			name = EveShip2Builder.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EvePlanet.cpp";
+			path = "Eve/EveShip2Builder.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6095,10 +6095,10 @@
 			sourceTree = "<group>";
 			};
 		000002A8000044b827000cae = {
-			name = EveMissileWarhead.cpp;
+			name = EveStation2_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveMissileWarhead.cpp";
+			path = "Eve/SpaceObject/EveStation2_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6115,10 +6115,10 @@
 			fileRef = 00000950000044b827000cae;
 			};
 		00000308000044b827000cae = {
-			name = EveCustomMask_Blue.cpp;
+			name = EveSOFDNA.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Utils/EveCustomMask_Blue.cpp";
+			path = "Eve/SpaceObjectFactory/EveSOFDNA.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6195,10 +6195,10 @@
 			sourceTree = "<group>";
 			};
 		00000716000044b827000cae = {
-			name = EveSpherePin.h;
+			name = IEveShadowCaster.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveSpherePin.h";
+			path = "Eve/IEveShadowCaster.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6219,10 +6219,10 @@
 			fileRef = 00000092000044b827000cae;
 			};
 		00000760000044b827000cae = {
-			name = EveSpriteSetItem.h;
+			name = EveChildMesh.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EveSpriteSetItem.h";
+			path = "Eve/SpaceObject/Children/EveChildMesh.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6526,10 +6526,10 @@
 			fileRef = 00000888000044b827000cae;
 			};
 		0000030A000044b827000cae = {
-			name = EveLocator2.cpp;
+			name = EveSOFDNA_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Utils/EveLocator2.cpp";
+			path = "Eve/SpaceObjectFactory/EveSOFDNA_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6658,10 +6658,10 @@
 			fileRef = 00000954000044b827000cae;
 			};
 		0000024C000044b827000cae = {
-			name = EveParticleDirectForce_Blue.cpp;
+			name = EveParticleSpringAttractor_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveParticleDirectForce_Blue.cpp";
+			path = "Eve/EveParticleSpringAttractor_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6726,18 +6726,18 @@
 			sourceTree = "<group>";
 			};
 		0000030E000044b827000cae = {
-			name = EveSOF.cpp;
+			name = EveTurretFiringFX.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObjectFactory/EveSOF.cpp";
+			path = "Eve/Turret/EveTurretFiringFX.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		00000726000044b827000cae = {
-			name = EveAnimationData.h;
+			name = EveMetaball.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Animation/EveAnimationData.h";
+			path = "Eve/Renderable/EveMetaball.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6786,10 +6786,10 @@
 			fileRef = 0000015A000044b827000cae;
 			};
 		00000764000044b827000cae = {
-			name = EveChildBillboard.h;
+			name = EveChildTransform.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Children/EveChildBillboard.h";
+			path = "Eve/SpaceObject/Children/EveChildTransform.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6798,10 +6798,10 @@
 			fileRef = 0000055C000044b827000cae;
 			};
 		000002CA000044b827000cae = {
-			name = EveImpactOverlay_Blue.cpp;
+			name = EveSpotlightSet.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveImpactOverlay_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EveSpotlightSet.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6912,10 +6912,10 @@
 			fileRef = 00000684000044b827000cae;
 			};
 		0000077C000044b827000cae = {
-			name = EveSOFDNA.h;
+			name = EveConnector.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObjectFactory/EveSOFDNA.h";
+			path = "Eve/UI/EveConnector.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6940,10 +6940,10 @@
 			fileRef = 00000730000044b827000cae;
 			};
 		000006FA000044b827000cae = {
-			name = EveDustfieldConstraint.h;
+			name = EveEffectRoot.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveDustfieldConstraint.h";
+			path = "Eve/EveEffectRoot.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -6972,10 +6972,10 @@
 			sourceTree = "<group>";
 			};
 		00000254000044b827000cae = {
-			name = EveParticleSpringAttractor_Blue.cpp;
+			name = EveRootTransform_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveParticleSpringAttractor_Blue.cpp";
+			path = "Eve/EveRootTransform_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7020,10 +7020,10 @@
 			sourceTree = "<group>";
 			};
 		0000028C000044b827000cae = {
-			name = EveMetaball.cpp;
+			name = EveRemotePositionCurve_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/EveMetaball.cpp";
+			path = "Eve/Renderable/Stretch/EveRemotePositionCurve_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7032,10 +7032,10 @@
 			fileRef = 000002A8000044b827000cae;
 			};
 		0000074A000044b827000cae = {
-			name = EveSwarm.h;
+			name = EvePlaneSet.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/EveSwarm.h";
+			path = "Eve/SpaceObject/Attachments/EvePlaneSet.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7044,18 +7044,18 @@
 			fileRef = 000003E4000044b827000cae;
 			};
 		000002F4000044b827000cae = {
-			name = EveChildContainer.cpp;
+			name = EveCustomMask.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildContainer.cpp";
+			path = "Eve/SpaceObject/Utils/EveCustomMask.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		0000027E000044b827000cae = {
-			name = EveAnimationSequencer_Blue.cpp;
+			name = EveMetaballItem.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Animation/EveAnimationSequencer_Blue.cpp";
+			path = "Eve/Renderable/EveMetaballItem.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7096,10 +7096,10 @@
 			fileRef = 000005A2000044b827000cae;
 			};
 		00000312000044b827000cae = {
-			name = EveSOFData.cpp;
+			name = EveTurretSet.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObjectFactory/EveSOFData.cpp";
+			path = "Eve/Turret/EveTurretSet.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7112,10 +7112,10 @@
 			fileRef = 00000310000044b827000cae;
 			};
 		00000730000044b827000cae = {
-			name = EveMetaball.h;
+			name = EveRemotePositionCurve.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Renderable/EveMetaball.h";
+			path = "Eve/Renderable/Stretch/EveRemotePositionCurve.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7132,18 +7132,18 @@
 			sourceTree = "<group>";
 			};
 		000006F8000044b827000cae = {
-			name = EveDistanceField.h;
+			name = EveDustfieldConstraint.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveDistanceField.h";
+			path = "Eve/EveDustfieldConstraint.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		0000029C000044b827000cae = {
-			name = EveRemotePositionCurve.cpp;
+			name = EveMobile_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/Stretch/EveRemotePositionCurve.cpp";
+			path = "Eve/SpaceObject/EveMobile_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7152,10 +7152,10 @@
 			fileRef = 000006C4000044b827000cae;
 			};
 		00000306000044b827000cae = {
-			name = EveCustomMask.cpp;
+			name = EveSOFDataMgr_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Utils/EveCustomMask.cpp";
+			path = "Eve/SpaceObjectFactory/EveSOFDataMgr_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7176,10 +7176,10 @@
 			fileRef = 000008D2000044b827000cae;
 			};
 		000002E0000044b827000cae = {
-			name = EveSpotlightSetItem.cpp;
+			name = EveChildBillboard_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveSpotlightSetItem.cpp";
+			path = "Eve/SpaceObject/Children/EveChildBillboard_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7204,10 +7204,10 @@
 			sourceTree = "<group>";
 			};
 		00000754000044b827000cae = {
-			name = EvePlaneSet.h;
+			name = EveSpriteSet.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EvePlaneSet.h";
+			path = "Eve/SpaceObject/Attachments/EveSpriteSet.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7416,10 +7416,10 @@
 			sourceTree = "<group>";
 			};
 		00000288000044b827000cae = {
-			name = EveCloudEditableVolume.cpp;
+			name = EveLocalPositionCurve_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/EveCloudEditableVolume.cpp";
+			path = "Eve/Renderable/Stretch/EveLocalPositionCurve_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7496,10 +7496,10 @@
 			sourceTree = "<group>";
 			};
 		00000738000044b827000cae = {
-			name = EveLocalPositionCurve.h;
+			name = EveMobile.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Renderable/Stretch/EveLocalPositionCurve.h";
+			path = "Eve/SpaceObject/EveMobile.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7800,10 +7800,10 @@
 			sourceTree = "<group>";
 			};
 		00000786000044b827000cae = {
-			name = EveConnector.h;
+			name = EveSpherePin.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/UI/EveConnector.h";
+			path = "Eve/UI/EveSpherePin.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7844,10 +7844,10 @@
 			sourceTree = "<group>";
 			};
 		000002CE000044b827000cae = {
-			name = EveMeshOverlayEffect_Blue.cpp;
+			name = EveSpotlightSetItem.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveMeshOverlayEffect_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EveSpotlightSetItem.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -7941,10 +7941,10 @@
 			fileRef = 00000254000044b827000cae;
 			};
 		0000075A000044b827000cae = {
-			name = EveSpotlightSet.h;
+			name = EveChildBillboard.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EveSpotlightSet.h";
+			path = "Eve/SpaceObject/Children/EveChildBillboard.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8053,10 +8053,10 @@
 			fileRef = 0000069E000044b827000cae;
 			};
 		0000023E000044b827000cae = {
-			name = EveLensflare_Blue.cpp;
+			name = EveOccluder.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveLensflare_Blue.cpp";
+			path = "Eve/EveOccluder.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8152,15 +8152,15 @@
 			isa = PBXGroup;
 			sourceTree = "<group>";
 			children = (
-				00000298000044b827000cae,
-				00000738000044b827000cae,
-				0000029A000044b827000cae,
-				0000029C000044b827000cae,
-				0000073A000044b827000cae,
-				0000029E000044b827000cae,
-				000002A0000044b827000cae,
-				0000073C000044b827000cae,
-				000002A2000044b827000cae,
+				00000286000044b827000cae,
+				0000072E000044b827000cae,
+				00000288000044b827000cae,
+				0000028A000044b827000cae,
+				00000730000044b827000cae,
+				0000028C000044b827000cae,
+				0000028E000044b827000cae,
+				00000732000044b827000cae,
+				00000290000044b827000cae,
 				);
 			name = Stretch;
 			};
@@ -8205,10 +8205,10 @@
 			fileRef = 00000402000044b827000cae;
 			};
 		00000230000044b827000cae = {
-			name = EveDistanceField.cpp;
+			name = EveDustfieldConstraint.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveDistanceField.cpp";
+			path = "Eve/EveDustfieldConstraint.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8221,10 +8221,10 @@
 			sourceTree = "<group>";
 			};
 		0000031E000044b827000cae = {
-			name = EveSOFUtils.cpp;
+			name = EveCurveLineSet.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObjectFactory/EveSOFUtils.cpp";
+			path = "Eve/UI/EveCurveLineSet.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8253,10 +8253,10 @@
 			fileRef = 00000266000044b827000cae;
 			};
 		000002AC000044b827000cae = {
-			name = EveMobile.cpp;
+			name = EveSwarm_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveMobile.cpp";
+			path = "Eve/SpaceObject/EveSwarm_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8277,10 +8277,10 @@
 			sourceTree = "<group>";
 			};
 		00000246000044b827000cae = {
-			name = EveOccluder.cpp;
+			name = EveParticleDragForce.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveOccluder.cpp";
+			path = "Eve/EveParticleDragForce.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8293,10 +8293,10 @@
 			fileRef = 000000B8000044b827000cae;
 			};
 		00000706000044b827000cae = {
-			name = EveParticleDirectForce.h;
+			name = EveParticleSpringAttractor.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveParticleDirectForce.h";
+			path = "Eve/EveParticleSpringAttractor.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8369,10 +8369,10 @@
 			fileRef = 000002F6000044b827000cae;
 			};
 		000006F6000044b827000cae = {
-			name = EveCurveLineSet.h;
+			name = EveDistanceField.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveCurveLineSet.h";
+			path = "Eve/EveDistanceField.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8503,27 +8503,27 @@
 				00000972000044b827000cae,
 				00000973000044b827000cae,
 				00000974000044b827000cae,
+				00000292000044b827000cae,
+				00000734000044b827000cae,
+				00000296000044b827000cae,
+				00000736000044b827000cae,
+				00000298000044b827000cae,
+				00000294000044b827000cae,
+				0000029A000044b827000cae,
+				00000738000044b827000cae,
+				0000029C000044b827000cae,
+				0000029E000044b827000cae,
+				0000073A000044b827000cae,
+				000002A0000044b827000cae,
+				000002A2000044b827000cae,
+				0000073C000044b827000cae,
 				000002A4000044b827000cae,
+				000002A6000044b827000cae,
 				0000073E000044b827000cae,
 				000002A8000044b827000cae,
-				00000740000044b827000cae,
 				000002AA000044b827000cae,
-				000002A6000044b827000cae,
+				00000740000044b827000cae,
 				000002AC000044b827000cae,
-				00000742000044b827000cae,
-				000002AE000044b827000cae,
-				000002B0000044b827000cae,
-				00000744000044b827000cae,
-				000002B2000044b827000cae,
-				000002B4000044b827000cae,
-				00000746000044b827000cae,
-				000002B6000044b827000cae,
-				000002B8000044b827000cae,
-				00000748000044b827000cae,
-				000002BA000044b827000cae,
-				000002BC000044b827000cae,
-				0000074A000044b827000cae,
-				000002BE000044b827000cae,
 				);
 			name = SpaceObject;
 			};
@@ -8536,10 +8536,10 @@
 			sourceTree = "<group>";
 			};
 		00000328000044b827000cae = {
-			name = EveTurretTarget.cpp;
+			name = EveLineSet_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Turret/EveTurretTarget.cpp";
+			path = "Eve/UI/EveLineSet_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8644,10 +8644,10 @@
 			fileRef = 00000556000044b827000cae;
 			};
 		0000030C000044b827000cae = {
-			name = EveLocator2_Blue.cpp;
+			name = EveSOFUtils.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Utils/EveLocator2_Blue.cpp";
+			path = "Eve/SpaceObjectFactory/EveSOFUtils.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8688,10 +8688,10 @@
 			sourceTree = "<group>";
 			};
 		0000076C000044b827000cae = {
-			name = EveChildParticleSystem.h;
+			name = EveSOF.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Children/EveChildParticleSystem.h";
+			path = "Eve/SpaceObjectFactory/EveSOF.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8716,10 +8716,10 @@
 			fileRef = 000004AC000044b827000cae;
 			};
 		00000286000044b827000cae = {
-			name = EveCloud_Blue.cpp;
+			name = EveLocalPositionCurve.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/EveCloud_Blue.cpp";
+			path = "Eve/Renderable/Stretch/EveLocalPositionCurve.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -8992,10 +8992,10 @@
 			sourceTree = "<group>";
 			};
 		00000232000044b827000cae = {
-			name = EveDistanceField_Blue.cpp;
+			name = EveDustfieldConstraint_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveDistanceField_Blue.cpp";
+			path = "Eve/EveDustfieldConstraint_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9068,10 +9068,10 @@
 			sourceTree = "<group>";
 			};
 		000002D2000044b827000cae = {
-			name = EvePlaneSet_Blue.cpp;
+			name = EveSpriteSet.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EvePlaneSet_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EveSpriteSet.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9092,10 +9092,10 @@
 			sourceTree = "<group>";
 			};
 		00000326000044b827000cae = {
-			name = EveTurretSet_Blue.cpp;
+			name = EveLineSet.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Turret/EveTurretSet_Blue.cpp";
+			path = "Eve/UI/EveLineSet.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9172,10 +9172,10 @@
 			sourceTree = "<group>";
 			};
 		000002C6000044b827000cae = {
-			name = EveDynamicPlaneSet_Blue.cpp;
+			name = EveSpaceObjectDecal.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveDynamicPlaneSet_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EveSpaceObjectDecal.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9461,10 +9461,10 @@
 			sourceTree = "<group>";
 			};
 		0000032A000044b827000cae = {
-			name = EveTurretTarget_Blue.cpp;
+			name = EveProjectBracket.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Turret/EveTurretTarget_Blue.cpp";
+			path = "Eve/UI/EveProjectBracket.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9513,10 +9513,10 @@
 			sourceTree = "<group>";
 			};
 		0000076A000044b827000cae = {
-			name = EveChildMesh.h;
+			name = EveLocator2.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Children/EveChildMesh.h";
+			path = "Eve/SpaceObject/Utils/EveLocator2.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9545,10 +9545,10 @@
 			fileRef = 0000017E000044b827000cae;
 			};
 		00000280000044b827000cae = {
-			name = EveAnimationState.cpp;
+			name = EveMetaballItem_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Animation/EveAnimationState.cpp";
+			path = "Eve/Renderable/EveMetaballItem_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9621,10 +9621,10 @@
 			fileRef = 0000069A000044b827000cae;
 			};
 		00000720000044b827000cae = {
-			name = IEveShadowCaster.h;
+			name = EveAnimationState.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/IEveShadowCaster.h";
+			path = "Eve/Animation/EveAnimationState.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9689,10 +9689,10 @@
 			sourceTree = "<group>";
 			};
 		0000026E000044b827000cae = {
-			name = EveSpherePinIndexTree.cpp;
+			name = EveAnimationState.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveSpherePinIndexTree.cpp";
+			path = "Eve/Animation/EveAnimationState.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9725,10 +9725,10 @@
 			sourceTree = "<group>";
 			};
 		00000276000044b827000cae = {
-			name = EveTransform_Blue.cpp;
+			name = EveCloudEditableVolume.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveTransform_Blue.cpp";
+			path = "Eve/Renderable/EveCloudEditableVolume.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9749,10 +9749,10 @@
 			sourceTree = "<group>";
 			};
 		000002F8000044b827000cae = {
-			name = EveChildLink.cpp;
+			name = EveLocator2.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildLink.cpp";
+			path = "Eve/SpaceObject/Utils/EveLocator2.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9960,10 +9960,10 @@
 			fileRef = 00000372000044b827000cae;
 			};
 		00000272000044b827000cae = {
-			name = EveStarfield_Blue.cpp;
+			name = EveCloud.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveStarfield_Blue.cpp";
+			path = "Eve/Renderable/EveCloud.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -9984,10 +9984,10 @@
 			sourceTree = "<group>";
 			};
 		00000732000044b827000cae = {
-			name = EveMetaballItem.h;
+			name = EveStretch.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Renderable/EveMetaballItem.h";
+			path = "Eve/Renderable/Stretch/EveStretch.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10016,10 +10016,10 @@
 			sourceTree = "<group>";
 			};
 		00000756000044b827000cae = {
-			name = EvePlaneSetItem.h;
+			name = EveSpriteSetItem.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EvePlaneSetItem.h";
+			path = "Eve/SpaceObject/Attachments/EveSpriteSetItem.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10092,18 +10092,18 @@
 			sourceTree = "<group>";
 			};
 		00000766000044b827000cae = {
-			name = EveChildContainer.h;
+			name = IEveSpaceObjectChild.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Children/EveChildContainer.h";
+			path = "Eve/SpaceObject/Children/IEveSpaceObjectChild.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		0000075C000044b827000cae = {
-			name = EveSpotlightSetItem.h;
+			name = EveChildContainer.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EveSpotlightSetItem.h";
+			path = "Eve/SpaceObject/Children/EveChildContainer.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10136,10 +10136,10 @@
 			sourceTree = "<group>";
 			};
 		0000024A000044b827000cae = {
-			name = EveParticleDirectForce.cpp;
+			name = EveParticleSpringAttractor.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveParticleDirectForce.cpp";
+			path = "Eve/EveParticleSpringAttractor.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10244,10 +10244,10 @@
 			fileRef = 000003A2000044b827000cae;
 			};
 		000002E4000044b827000cae = {
-			name = EveSpriteSet.cpp;
+			name = EveChildContainer_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveSpriteSet.cpp";
+			path = "Eve/SpaceObject/Children/EveChildContainer_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10509,10 +10509,10 @@
 			fileRef = 0000057A000044b827000cae;
 			};
 		00000714000044b827000cae = {
-			name = EveSpaceScene.h;
+			name = EveUpdateContext.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveSpaceScene.h";
+			path = "Eve/EveUpdateContext.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10553,10 +10553,10 @@
 			fileRef = 000004E4000044b827000cae;
 			};
 		0000027C000044b827000cae = {
-			name = EveAnimationSequencer.cpp;
+			name = EveMetaball_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Animation/EveAnimationSequencer.cpp";
+			path = "Eve/Renderable/EveMetaball_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10577,10 +10577,10 @@
 			fileRef = 000007C6000044b827000cae;
 			};
 		000002F6000044b827000cae = {
-			name = EveChildContainer_Blue.cpp;
+			name = EveCustomMask_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildContainer_Blue.cpp";
+			path = "Eve/SpaceObject/Utils/EveCustomMask_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10589,10 +10589,10 @@
 			fileRef = 000002D4000044b827000cae;
 			};
 		00000710000044b827000cae = {
-			name = EveRootTransform.h;
+			name = EveStarfield.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveRootTransform.h";
+			path = "Eve/EveStarfield.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10641,10 +10641,10 @@
 			sourceTree = "<group>";
 			};
 		00000270000044b827000cae = {
-			name = EveStarfield.cpp;
+			name = EveAnimationState_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveStarfield.cpp";
+			path = "Eve/Animation/EveAnimationState_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10677,10 +10677,10 @@
 			fileRef = 000000D0000044b827000cae;
 			};
 		00000262000044b827000cae = {
-			name = EveShip2Builder.cpp;
+			name = EveTransform.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveShip2Builder.cpp";
+			path = "Eve/EveTransform.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10905,10 +10905,10 @@
 			fileRef = 00000924000044b827000cae;
 			};
 		000002A0000044b827000cae = {
-			name = EveStretch.cpp;
+			name = EveShip2_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/Stretch/EveStretch.cpp";
+			path = "Eve/SpaceObject/EveShip2_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -10996,10 +10996,10 @@
 			fileRef = 000003FA000044b827000cae;
 			};
 		000002A4000044b827000cae = {
-			name = EveMissile.cpp;
+			name = EveSpaceObject2_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveMissile.cpp";
+			path = "Eve/SpaceObject/EveSpaceObject2_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -11143,10 +11143,10 @@
 			sourceTree = "<group>";
 			};
 		00000742000044b827000cae = {
-			name = EveMobile.h;
+			name = EveBoosterSet2.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/EveMobile.h";
+			path = "Eve/SpaceObject/Attachments/EveBoosterSet2.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -11154,24 +11154,24 @@
 			isa = PBXGroup;
 			sourceTree = "<group>";
 			children = (
+				000002DE000044b827000cae,
+				0000075A000044b827000cae,
+				000002E0000044b827000cae,
+				000002E2000044b827000cae,
+				0000075C000044b827000cae,
+				000002E4000044b827000cae,
+				000002E6000044b827000cae,
+				0000075E000044b827000cae,
+				000002E8000044b827000cae,
+				000002EA000044b827000cae,
+				00000760000044b827000cae,
+				000002EC000044b827000cae,
+				000002EE000044b827000cae,
+				00000762000044b827000cae,
 				000002F0000044b827000cae,
-				00000764000044b827000cae,
 				000002F2000044b827000cae,
-				000002F4000044b827000cae,
+				00000764000044b827000cae,
 				00000766000044b827000cae,
-				000002F6000044b827000cae,
-				000002F8000044b827000cae,
-				00000768000044b827000cae,
-				000002FA000044b827000cae,
-				000002FC000044b827000cae,
-				0000076A000044b827000cae,
-				000002FE000044b827000cae,
-				00000300000044b827000cae,
-				0000076C000044b827000cae,
-				00000302000044b827000cae,
-				00000304000044b827000cae,
-				0000076E000044b827000cae,
-				00000770000044b827000cae,
 				);
 			name = Children;
 			};
@@ -12029,10 +12029,10 @@
 			fileRef = 00000424000044b827000cae;
 			};
 		000002B8000044b827000cae = {
-			name = EveStation2.cpp;
+			name = EveImpactOverlay_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveStation2.cpp";
+			path = "Eve/SpaceObject/Attachments/EveImpactOverlay_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12049,10 +12049,10 @@
 			sourceTree = "<group>";
 			};
 		00000784000044b827000cae = {
-			name = EveTurretTarget.h;
+			name = EveProjectBracket.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Turret/EveTurretTarget.h";
+			path = "Eve/UI/EveProjectBracket.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12261,10 +12261,10 @@
 			fileRef = 00000498000044b827000cae;
 			};
 		00000324000044b827000cae = {
-			name = EveTurretSet.cpp;
+			name = EveLineContainer_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Turret/EveTurretSet.cpp";
+			path = "Eve/UI/EveLineContainer_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12349,10 +12349,10 @@
 			sourceTree = "<group>";
 			};
 		000002BA000044b827000cae = {
-			name = EveStation2_Blue.cpp;
+			name = EveMeshOverlayEffect.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveStation2_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EveMeshOverlayEffect.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12409,10 +12409,10 @@
 			fileRef = 0000016C000044b827000cae;
 			};
 		00000768000044b827000cae = {
-			name = EveChildLink.h;
+			name = EveCustomMask.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Children/EveChildLink.h";
+			path = "Eve/SpaceObject/Utils/EveCustomMask.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12433,10 +12433,10 @@
 			fileRef = 00000902000044b827000cae;
 			};
 		0000072A000044b827000cae = {
-			name = EveAnimationState.h;
+			name = EveMetaballTables.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Animation/EveAnimationState.h";
+			path = "Eve/Renderable/EveMetaballTables.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12481,10 +12481,10 @@
 			sourceTree = "<group>";
 			};
 		000002AE000044b827000cae = {
-			name = EveMobile_Blue.cpp;
+			name = EveBoosterSet2.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveMobile_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EveBoosterSet2.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12561,10 +12561,10 @@
 			fileRef = 000001B8000044b827000cae;
 			};
 		00000320000044b827000cae = {
-			name = EveTurretFiringFX.cpp;
+			name = EveCurveLineSet_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Turret/EveTurretFiringFX.cpp";
+			path = "Eve/UI/EveCurveLineSet_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12589,10 +12589,10 @@
 			sourceTree = "<group>";
 			};
 		000002A6000044b827000cae = {
-			name = EveMissile_Blue.cpp;
+			name = EveStation2.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveMissile_Blue.cpp";
+			path = "Eve/SpaceObject/EveStation2.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12705,10 +12705,10 @@
 			sourceTree = "<group>";
 			};
 		00000258000044b827000cae = {
-			name = EvePlanet_Blue.cpp;
+			name = EveShip2Builder_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EvePlanet_Blue.cpp";
+			path = "Eve/EveShip2Builder_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12821,10 +12821,10 @@
 			sourceTree = "<group>";
 			};
 		00000746000044b827000cae = {
-			name = EveSpaceObject2.h;
+			name = EveImpactOverlay.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/EveSpaceObject2.h";
+			path = "Eve/SpaceObject/Attachments/EveImpactOverlay.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12885,10 +12885,10 @@
 			sourceTree = "<group>";
 			};
 		00000700000044b827000cae = {
-			name = EveLineSet.h;
+			name = EveOccluder.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveLineSet.h";
+			path = "Eve/EveOccluder.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12897,18 +12897,18 @@
 			fileRef = 0000049A000044b827000cae;
 			};
 		00000266000044b827000cae = {
-			name = EveSpaceScene.cpp;
+			name = EveAnimationData.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveSpaceScene.cpp";
+			path = "Eve/Animation/EveAnimationData.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		0000071A000044b827000cae = {
-			name = EveStarfield.h;
+			name = IEveTransform.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveStarfield.h";
+			path = "Eve/IEveTransform.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12933,10 +12933,10 @@
 			sourceTree = "<group>";
 			};
 		000002F0000044b827000cae = {
-			name = EveChildBillboard.cpp;
+			name = EveChildParticleSystem_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildBillboard.cpp";
+			path = "Eve/SpaceObject/Children/EveChildParticleSystem_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -13080,12 +13080,12 @@
 			isa = PBXGroup;
 			sourceTree = "<group>";
 			children = (
-				00000306000044b827000cae,
-				00000772000044b827000cae,
-				00000308000044b827000cae,
-				0000030A000044b827000cae,
-				00000774000044b827000cae,
-				0000030C000044b827000cae,
+				000002F4000044b827000cae,
+				00000768000044b827000cae,
+				000002F6000044b827000cae,
+				000002F8000044b827000cae,
+				0000076A000044b827000cae,
+				000002FA000044b827000cae,
 				);
 			name = Utils;
 			};
@@ -13106,10 +13106,10 @@
 			fileRef = 000003C8000044b827000cae;
 			};
 		000002C2000044b827000cae = {
-			name = EveBoosterSet2_Blue.cpp;
+			name = EvePlaneSetItem.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveBoosterSet2_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EvePlaneSetItem.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -13206,10 +13206,10 @@
 			sourceTree = "<group>";
 			};
 		000002C4000044b827000cae = {
-			name = EveDynamicPlaneSet.cpp;
+			name = EvePlaneSetItem_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveDynamicPlaneSet.cpp";
+			path = "Eve/SpaceObject/Attachments/EvePlaneSetItem_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -13334,18 +13334,18 @@
 			fileRef = 000007A0000044b827000cae;
 			};
 		0000073E000044b827000cae = {
-			name = EveMissile.h;
+			name = EveStation2.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/EveMissile.h";
+			path = "Eve/SpaceObject/EveStation2.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		0000070A000044b827000cae = {
-			name = EveParticleSpringAttractor.h;
+			name = EveRootTransform.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveParticleSpringAttractor.h";
+			path = "Eve/EveRootTransform.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -13506,10 +13506,10 @@
 			sourceTree = "<group>";
 			};
 		0000071E000044b827000cae = {
-			name = EveUpdateContext.h;
+			name = EveAnimationSequencer.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveUpdateContext.h";
+			path = "Eve/Animation/EveAnimationSequencer.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -13550,10 +13550,10 @@
 			fileRef = 00000770000044b827000cae;
 			};
 		000002D0000044b827000cae = {
-			name = EvePlaneSet.cpp;
+			name = EveSpotlightSetItem_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EvePlaneSet.cpp";
+			path = "Eve/SpaceObject/Attachments/EveSpotlightSetItem_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -13756,10 +13756,10 @@
 			sourceTree = "<group>";
 			};
 		00000244000044b827000cae = {
-			name = EveLODHelper.cpp;
+			name = EveParticleDirectForce_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveLODHelper.cpp";
+			path = "Eve/EveParticleDirectForce_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -13932,10 +13932,10 @@
 			fileRef = 0000045C000044b827000cae;
 			};
 		00000774000044b827000cae = {
-			name = EveLocator2.h;
+			name = EveSOFUtils.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Utils/EveLocator2.h";
+			path = "Eve/SpaceObjectFactory/EveSOFUtils.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -13976,18 +13976,18 @@
 			sourceTree = "<group>";
 			};
 		0000026A000044b827000cae = {
-			name = EveSpherePin.cpp;
+			name = EveAnimationSequencer.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveSpherePin.cpp";
+			path = "Eve/Animation/EveAnimationSequencer.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		0000032C000044b827000cae = {
-			name = EveConnector.cpp;
+			name = EveProjectBracket_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/UI/EveConnector.cpp";
+			path = "Eve/UI/EveProjectBracket_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -14677,18 +14677,18 @@
 			sourceTree = "<group>";
 			};
 		00000722000044b827000cae = {
-			name = IEveSpaceObject2.h;
+			name = EveCloud.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/IEveSpaceObject2.h";
+			path = "Eve/Renderable/EveCloud.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000002E8000044b827000cae = {
-			name = EveSpriteSetItem.cpp;
+			name = EveChildLink_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveSpriteSetItem.cpp";
+			path = "Eve/SpaceObject/Children/EveChildLink_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -14725,10 +14725,10 @@
 			fileRef = 000007FC000044b827000cae;
 			};
 		0000031A000044b827000cae = {
-			name = EveSOFDNA.cpp;
+			name = EveConnector.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObjectFactory/EveSOFDNA.cpp";
+			path = "Eve/UI/EveConnector.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -14977,10 +14977,10 @@
 			sourceTree = "<group>";
 			};
 		00000274000044b827000cae = {
-			name = EveTransform.cpp;
+			name = EveCloud_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveTransform.cpp";
+			path = "Eve/Renderable/EveCloud_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15149,18 +15149,18 @@
 			sourceTree = "<group>";
 			};
 		00000318000044b827000cae = {
-			name = EveSOFDataMgr_Blue.cpp;
+			name = EveTurretTarget_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObjectFactory/EveSOFDataMgr_Blue.cpp";
+			path = "Eve/Turret/EveTurretTarget_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		00000772000044b827000cae = {
-			name = EveCustomMask.h;
+			name = EveSOFDNA.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Utils/EveCustomMask.h";
+			path = "Eve/SpaceObjectFactory/EveSOFDNA.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15209,10 +15209,10 @@
 			fileRef = 00000588000044b827000cae;
 			};
 		000002DA000044b827000cae = {
-			name = EveSpaceObjectDecal_Blue.cpp;
+			name = EveTrailsSet.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EveSpaceObjectDecal_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EveTrailsSet.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15293,10 +15293,10 @@
 			sourceTree = "<group>";
 			};
 		000002B4000044b827000cae = {
-			name = EveSpaceObject2.cpp;
+			name = EveDynamicPlaneSet_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveSpaceObject2.cpp";
+			path = "Eve/SpaceObject/Attachments/EveDynamicPlaneSet_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15325,10 +15325,10 @@
 			fileRef = 000004B2000044b827000cae;
 			};
 		000002FE000044b827000cae = {
-			name = EveChildMesh_Blue.cpp;
+			name = EveSOF_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildMesh_Blue.cpp";
+			path = "Eve/SpaceObjectFactory/EveSOF_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15445,10 +15445,10 @@
 			fileRef = 000004CE000044b827000cae;
 			};
 		00000704000044b827000cae = {
-			name = EveOccluder.h;
+			name = EveParticleDragForce.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveOccluder.h";
+			path = "Eve/EveParticleDragForce.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15561,10 +15561,10 @@
 			sourceTree = "<group>";
 			};
 		000002D6000044b827000cae = {
-			name = EvePlaneSetItem_Blue.cpp;
+			name = EveSpriteSetItem.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Attachments/EvePlaneSetItem_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EveSpriteSetItem.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15617,10 +15617,10 @@
 			fileRef = 0000072E000044b827000cae;
 			};
 		0000077E000044b827000cae = {
-			name = EveSOFUtils.h;
+			name = EveCurveLineSet.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObjectFactory/EveSOFUtils.h";
+			path = "Eve/UI/EveCurveLineSet.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15673,10 +15673,10 @@
 			sourceTree = "<group>";
 			};
 		000002FA000044b827000cae = {
-			name = EveChildLink_Blue.cpp;
+			name = EveLocator2_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildLink_Blue.cpp";
+			path = "Eve/SpaceObject/Utils/EveLocator2_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15689,10 +15689,10 @@
 			sourceTree = "<group>";
 			};
 		000006FC000044b827000cae = {
-			name = EveEffectRoot.h;
+			name = EveLensflare.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/EveEffectRoot.h";
+			path = "Eve/EveLensflare.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15777,26 +15777,26 @@
 			fileRef = 00000380000044b827000cae;
 			};
 		00000322000044b827000cae = {
-			name = EveTurretFiringFX_Blue.cpp;
+			name = EveLineContainer.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Turret/EveTurretFiringFX_Blue.cpp";
+			path = "Eve/UI/EveLineContainer.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		00000728000044b827000cae = {
-			name = EveAnimationSequencer.h;
+			name = EveMetaballItem.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Animation/EveAnimationSequencer.h";
+			path = "Eve/Renderable/EveMetaballItem.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		00000724000044b827000cae = {
-			name = IEveTransform.h;
+			name = EveCloudEditableVolume.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/IEveTransform.h";
+			path = "Eve/Renderable/EveCloudEditableVolume.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15869,10 +15869,10 @@
 			fileRef = 00000928000044b827000cae;
 			};
 		00000302000044b827000cae = {
-			name = EveChildParticleSystem_Blue.cpp;
+			name = EveSOFData_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildParticleSystem_Blue.cpp";
+			path = "Eve/SpaceObjectFactory/EveSOFData_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -15921,10 +15921,10 @@
 			fileRef = 000008E2000044b827000cae;
 			};
 		0000075E000044b827000cae = {
-			name = EveSpriteSet.h;
+			name = EveChildLink.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/SpaceObject/Attachments/EveSpriteSet.h";
+			path = "Eve/SpaceObject/Children/EveChildLink.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -16129,10 +16129,10 @@
 			sourceTree = "<group>";
 			};
 		000002A2000044b827000cae = {
-			name = EveStretch_Blue.cpp;
+			name = EveSpaceObject2.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/Stretch/EveStretch_Blue.cpp";
+			path = "Eve/SpaceObject/EveSpaceObject2.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -16165,10 +16165,10 @@
 			fileRef = 000002B4000044b827000cae;
 			};
 		00000316000044b827000cae = {
-			name = EveSOFDataMgr.cpp;
+			name = EveTurretTarget.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObjectFactory/EveSOFDataMgr.cpp";
+			path = "Eve/Turret/EveTurretTarget.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -16213,42 +16213,42 @@
 			isa = PBXGroup;
 			sourceTree = "<group>";
 			children = (
-				000002C0000044b827000cae,
-				0000074C000044b827000cae,
+				000002AE000044b827000cae,
+				00000742000044b827000cae,
+				000002B0000044b827000cae,
+				000002B2000044b827000cae,
+				00000744000044b827000cae,
+				000002B4000044b827000cae,
+				000002B6000044b827000cae,
+				00000746000044b827000cae,
+				000002B8000044b827000cae,
+				000002BA000044b827000cae,
+				00000748000044b827000cae,
+				000002BC000044b827000cae,
+				000002BE000044b827000cae,
+				0000074A000044b827000cae,
 				000002C2000044b827000cae,
+				0000074C000044b827000cae,
 				000002C4000044b827000cae,
-				0000074E000044b827000cae,
+				000002C0000044b827000cae,
 				000002C6000044b827000cae,
+				0000074E000044b827000cae,
 				000002C8000044b827000cae,
-				00000750000044b827000cae,
 				000002CA000044b827000cae,
-				000002CC000044b827000cae,
-				00000752000044b827000cae,
+				00000750000044b827000cae,
 				000002CE000044b827000cae,
+				00000752000044b827000cae,
 				000002D0000044b827000cae,
-				00000754000044b827000cae,
-				000002D4000044b827000cae,
-				00000756000044b827000cae,
-				000002D6000044b827000cae,
+				000002CC000044b827000cae,
 				000002D2000044b827000cae,
+				00000754000044b827000cae,
+				000002D6000044b827000cae,
+				00000756000044b827000cae,
 				000002D8000044b827000cae,
-				00000758000044b827000cae,
+				000002D4000044b827000cae,
 				000002DA000044b827000cae,
+				00000758000044b827000cae,
 				000002DC000044b827000cae,
-				0000075A000044b827000cae,
-				000002E0000044b827000cae,
-				0000075C000044b827000cae,
-				000002E2000044b827000cae,
-				000002DE000044b827000cae,
-				000002E4000044b827000cae,
-				0000075E000044b827000cae,
-				000002E8000044b827000cae,
-				00000760000044b827000cae,
-				000002EA000044b827000cae,
-				000002E6000044b827000cae,
-				000002EC000044b827000cae,
-				00000762000044b827000cae,
-				000002EE000044b827000cae,
 				);
 			name = Attachments;
 			};
@@ -16305,10 +16305,10 @@
 			fileRef = 00000650000044b827000cae;
 			};
 		000002AA000044b827000cae = {
-			name = EveMissileWarhead_Blue.cpp;
+			name = EveSwarm.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveMissileWarhead_Blue.cpp";
+			path = "Eve/SpaceObject/EveSwarm.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -16441,10 +16441,10 @@
 			fileRef = 00000830000044b827000cae;
 			};
 		00000250000044b827000cae = {
-			name = EveParticleDragForce_Blue.cpp;
+			name = EvePlanet_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/EveParticleDragForce_Blue.cpp";
+			path = "Eve/EvePlanet_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -16529,10 +16529,10 @@
 			sourceTree = "<group>";
 			};
 		00000278000044b827000cae = {
-			name = EveAnimationData.cpp;
+			name = EveCloudEditableVolume_Blue.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Animation/EveAnimationData.cpp";
+			path = "Eve/Renderable/EveCloudEditableVolume_Blue.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -16709,10 +16709,10 @@
 			fileRef = 0000002E000044b827000cae;
 			};
 		0000073C000044b827000cae = {
-			name = EveStretch.h;
+			name = EveSpaceObject2.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = "Eve/Renderable/Stretch/EveStretch.h";
+			path = "Eve/SpaceObject/EveSpaceObject2.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -16753,10 +16753,10 @@
 			fileRef = 00000664000044b827000cae;
 			};
 		000002BE000044b827000cae = {
-			name = EveSwarm_Blue.cpp;
+			name = EvePlaneSet.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/EveSwarm_Blue.cpp";
+			path = "Eve/SpaceObject/Attachments/EvePlaneSet.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -16925,10 +16925,10 @@
 			fileRef = 00000604000044b827000cae;
 			};
 		0000028E000044b827000cae = {
-			name = EveMetaball_Blue.cpp;
+			name = EveStretch.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/Renderable/EveMetaball_Blue.cpp";
+			path = "Eve/Renderable/Stretch/EveStretch.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -17021,10 +17021,10 @@
 			fileRef = 0000079E000044b827000cae;
 			};
 		000002F2000044b827000cae = {
-			name = EveChildBillboard_Blue.cpp;
+			name = EveChildTransform.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = "Eve/SpaceObject/Children/EveChildBillboard_Blue.cpp";
+			path = "Eve/SpaceObject/Children/EveChildTransform.cpp";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
