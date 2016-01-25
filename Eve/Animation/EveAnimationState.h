@@ -51,7 +51,7 @@ private:
 	EveAnimationPtr m_animation;
 	PEveAnimationCurveVector m_curves;
 	PEveAnimationCommandVector m_commands;
-	PEveMeshOverlayEffectVector m_overlays;
+	EveMeshOverlayEffectPtr m_overlay;
 	
 	PEveAnimationCurveVector m_initCurves;
 	PEveAnimationCommandVector m_initCommands;
@@ -72,7 +72,7 @@ private:
 	void EndAnimation( EveAnimationStateMachine* sm, EveSpaceObject2* owner );
 	void UpdateDuration( EveAnimationStateMachine* sm, EveSpaceObject2* so );
 
-	void LoadOverlayEffect();
+	void LoadOverlayEffect( EveSpaceObject2* owner );
 	void Cleanup( EveSpaceObject2* owner, Be::Time time );
 };
 TYPEDEF_BLUECLASS( EveAnimationState );

@@ -7,6 +7,7 @@
 #include "Curves/TriCurveSet.h"
 #include "Tr2GrannyAnimation.h"
 #include "Tr2Renderer.h"
+#include "Utilities/StringUtils.h"
 
 static BlueStructureDefinition EveAnimationStateTransitionStructureDef[] =
 { 
@@ -26,7 +27,6 @@ EveAnimationState::EveAnimationState( IRoot* lockobj ) :
 	PARENTLOCK( m_initCommands ),
 	PARENTLOCK( m_initCurves ),
 	PARENTLOCK( m_transitions ),
-	PARENTLOCK( m_overlays ),
 	m_progress( EVE_ANIM_INACTIVE ),
 	m_animationDuration( 0.f ),
 	m_startTime( 0.f ),
@@ -43,25 +43,40 @@ EveAnimationState::~EveAnimationState()
 // --------------------------------------------------------------------------------
 // Description:
 //   If the state has an overlay that is needed to be set on the owner prior to 
-//   playing the state, then it is loaded here.
+//   playing the state, then it is loaded here. 
 // --------------------------------------------------------------------------------
-void EveAnimationState::LoadOverlayEffect()
+void EveAnimationState::LoadOverlayEffect( EveSpaceObject2* owner )
 {
-	IRootPtr p; 
-	p.Attach( BeResMan->LoadObject( m_overlayPath.c_str() ) );
-	if( p == NULL )
+	if( owner == nullptr )
 	{
-		CCP_LOGERR( "EveAnimationState: Couldn't find effect overlay resource file: %s", m_overlayPath.c_str() );
 		return;
 	}
 
-	EveMeshOverlayEffectPtr ptr;
-	if( !p->QueryInterface( BlueInterfaceIID<IInitialize>(), (void**)&ptr ) )
+	std::string tmpShaderPath = m_overlayPath;
+	
+	// Change the Check if we need skinned or unskinned overlay
+	if( owner->IsAnimated() && !StringFind( tmpShaderPath.c_str(), "_skinned" ) )
 	{
-		CCP_LOGERR( "EveMobile: Overlay effect resource file %s is not of correct type!", m_overlayPath.c_str() );
+		StringInsertStubBefore( tmpShaderPath, ".red", "_skinned" );
+	}
+	else if( !owner->IsAnimated() && StringFind( tmpShaderPath.c_str(), "_skinned" ) )
+	{
+		StringRemove( tmpShaderPath, "_skinned" );
+	}
+	
+	IRootPtr p; 
+	p.Attach( BeResMan->LoadObject( tmpShaderPath.c_str() ) );
+	if( p == NULL )
+	{
+		CCP_LOGERR( "EveAnimationState: Couldn't find effect overlay resource file: %s", tmpShaderPath.c_str() );
 		return;
 	}
-	m_overlays.Append( ptr );
+
+	if( !p->QueryInterface( BlueInterfaceIID<IInitialize>(), (void**)&m_overlay ) )
+	{
+		CCP_LOGERR( "EveMobile: Overlay effect resource file %s is not of correct type!", tmpShaderPath.c_str() );
+		return;
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -108,13 +123,10 @@ void EveAnimationState::Stop( EveAnimationStateMachine* sm, EveSpaceObject2* own
 	m_progress = EVE_ANIM_FINALIZING;
 	EndAnimation( sm, owner );
 	
-	if( m_overlays.size() > 0 )
+	if( m_overlay != nullptr )
 	{
-		for( auto it = m_overlays.begin(); it != m_overlays.end(); it++ )
-		{
-			owner->RemoveOverlayEffect( *it );
-		}
-		m_overlays.Clear();
+		owner->RemoveOverlayEffect( m_overlay );
+		m_overlay = nullptr;
 	}
 }
 
@@ -125,23 +137,23 @@ void EveAnimationState::Stop( EveAnimationStateMachine* sm, EveSpaceObject2* own
 //   owner - the owning animation sequencer
 //   mode - is it a transition, does it need to run init curves etc.
 // --------------------------------------------------------------------------------
-void EveAnimationState::Start( EveAnimationStateMachine* sm, EveSpaceObject2* so, EveAnimationStateStartCommand mode )
+void EveAnimationState::Start( EveAnimationStateMachine* sm, EveSpaceObject2* owner, EveAnimationStateStartCommand mode )
 {
 	m_doInitialization = mode == EVE_ANIM_START_INIT;
 
 	m_startTime = Tr2Renderer::GetAnimationTime();
 	m_animationDuration = 0.f;
 	
-	if( m_overlayPath.length() != 0 && m_overlays.size() == 0 )
+	if( m_overlay == nullptr )
 	{
-		LoadOverlayEffect();
+		LoadOverlayEffect(owner);
 	}
-
-	for( auto it = m_overlays.begin(); it != m_overlays.end(); it++ )
+	
+	if( m_overlay != nullptr )
 	{
-		so->AddOverlayEffect( *it );
+		owner->AddOverlayEffect( m_overlay );
 	}
-
+	
 	if( mode == EVE_ANIM_START_TRANSITION )
 	{
 		m_progress = EVE_ANIM_FINALIZING;
@@ -151,8 +163,8 @@ void EveAnimationState::Start( EveAnimationStateMachine* sm, EveSpaceObject2* so
 		m_progress = EVE_ANIM_RUNNING;
 	}
 
-	PlayAnimation( sm, so );
-	UpdateDuration( sm, so );
+	PlayAnimation( sm, owner );
+	UpdateDuration( sm, owner );
 }
 
 // --------------------------------------------------------------------------------
