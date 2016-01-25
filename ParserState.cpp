@@ -301,7 +301,11 @@ bool ParserState::FindConcatOperator( size_t depth )
 				return false;
 			}
 		}
-		if( m_fileStack.size() > depth )
+		if( InMacro() && m_fileStack.size() > 1 )
+		{
+			m_fileStack.pop_back();
+		}
+		else if( m_fileStack.size() > depth )
 		{
 			m_fileStack.pop_back();
 		}
