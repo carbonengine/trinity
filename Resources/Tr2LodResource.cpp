@@ -18,20 +18,6 @@ Tr2LodResource::Tr2LodResource( IRoot* lockobj ) :
 
 // --------------------------------------------------------------------------------
 // Description:
-//   If someone changed any of the paths we must re-create the resource
-// --------------------------------------------------------------------------------
-bool Tr2LodResource::OnModified( Be::Var* val )
-{
-	if( IsMatch( val, m_resPath[TR2_LOD_LOW] ) || IsMatch( val, m_resPath[TR2_LOD_MEDIUM] ) || IsMatch( val, m_resPath[TR2_LOD_HIGH] ) || IsMatch( val, m_resPath[TR2_LOD_ULTRA] ) )
-	{
-		// put new resource in requested
-		BeResMan->GetResource( m_resPath[m_currentLod], "", m_requested );
-	}
-	return true;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
 //   Set the individual lod's resource path.
 // Arguments:
 //   lod - which lod level?
