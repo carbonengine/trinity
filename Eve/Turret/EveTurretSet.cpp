@@ -1589,8 +1589,8 @@ std::string EveTurretSet::GetFireAnimationName() const
 	std::string res = "Fire";
 	if( m_currentCyclingFiresPos > 0 )
 	{
-		res.push_back('0');
-		res.push_back('0' + m_currentCyclingFiresPos);
+		res.push_back( '0' );
+		res.push_back( '0' + m_currentCyclingFiresPos / m_cyclingFireGroupCount );
 	}
 
 	return res;
