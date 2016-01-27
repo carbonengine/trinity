@@ -123,12 +123,6 @@ void EveAnimationState::Stop( EveAnimationStateMachine* sm, EveSpaceObject2* own
 
 	m_progress = EVE_ANIM_FINALIZING;
 	EndAnimation( sm, owner );
-	
-	if( m_overlay != nullptr )
-	{
-		owner->RemoveOverlayEffect( m_overlay );
-		m_overlay = nullptr;
-	}
 }
 
 // --------------------------------------------------------------------------------
@@ -145,22 +139,21 @@ void EveAnimationState::Start( EveAnimationStateMachine* sm, EveSpaceObject2* ow
 	m_startTime = Tr2Renderer::GetAnimationTime();
 	m_animationDuration = 0.f;
 	
-	if( m_overlay == nullptr && m_overlayPath != "" )
-	{
-		LoadOverlayEffect(owner);
-	}
-	
-	if( m_overlay != nullptr )
-	{
-		owner->AddOverlayEffect( m_overlay );
-	}
-	
 	if( mode == EVE_ANIM_START_TRANSITION )
 	{
 		m_progress = EVE_ANIM_FINALIZING;
 	}
 	else
 	{
+		if( m_overlay == nullptr && m_overlayPath != "" )
+		{
+			LoadOverlayEffect(owner);
+		}
+
+		if( m_overlay != nullptr )
+		{
+			owner->AddOverlayEffect( m_overlay );
+		}
 		m_progress = EVE_ANIM_RUNNING;
 	}
 
@@ -280,6 +273,8 @@ void EveAnimationState::PlayAnimation( EveAnimationStateMachine* sm, EveSpaceObj
 // --------------------------------------------------------------------------------
 // Description:
 //   End current animation.
+// Side Effects:
+//   Removes the overlayEffect if there was one applied to the owner
 // --------------------------------------------------------------------------------
 void EveAnimationState::EndAnimation( EveAnimationStateMachine* sm, EveSpaceObject2* owner )
 {
@@ -301,6 +296,12 @@ void EveAnimationState::EndAnimation( EveAnimationStateMachine* sm, EveSpaceObje
 	}
 
 	m_animationDuration = max( m_animationDuration, animationDuration );
+	
+	if( m_overlay != nullptr )
+	{
+		owner->RemoveOverlayEffect( m_overlay );
+		m_overlay = nullptr;
+	}
 }
 
 // --------------------------------------------------------------------------------
