@@ -63,8 +63,10 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
+	virtual void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent );
+	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent );
+	virtual void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent );
+	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent );
 	virtual void PlayCurveSet( const std::string& name );
 	virtual void StopCurveSet( const std::string& name );
 	virtual float GetCurveSetDuration( const std::string& name ) const; 

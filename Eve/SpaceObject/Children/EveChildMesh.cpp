@@ -137,22 +137,54 @@ void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shade
 	}
 }
 
-void EveChildMesh::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveChildMesh::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
 }
 
-void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
 
-	parent->GetPerObjectStructs( m_vsData, m_psData );
+	EveSpaceObject2Ptr parentSpaceObject;
+	if( parent->QueryInterface( BlueInterfaceIID<EveSpaceObject2>(), (void**)&parentSpaceObject ) )
+	{
+		parentSpaceObject->GetPerObjectStructs( m_vsData, m_psData );
+		m_vsData.worldTransformLast = m_worldTransform;
+	}
+
+	Matrix localToWorldTransform;
+	parent->GetLocalToWorldTransform( localToWorldTransform );
+	UpdateTransform( localToWorldTransform );
+	D3DXMatrixTranspose( &m_vsData.worldTransform, &m_worldTransform );
+}
+
+void EveChildMesh::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+}
+
+void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+	m_perObjectDataVs.InvalidateBufferData();
+	m_perObjectDataPs.InvalidateBufferData();
+
+	EveSpaceObject2Ptr parentSpaceObject;
+	if( parent->QueryInterface( BlueInterfaceIID<EveSpaceObject2>(), (void**)&parentSpaceObject ) )
+	{
+		parentSpaceObject->GetPerObjectStructs( m_vsData, m_psData );
+	}
+
 	m_vsData.worldTransformLast = m_worldTransform;
 
 	Matrix localToWorldTransform;
 	parent->GetLocalToWorldTransform( localToWorldTransform );
 	UpdateTransform( localToWorldTransform );
 	D3DXMatrixTranspose( &m_vsData.worldTransform, &m_worldTransform );
+}
+
+void EveChildMesh::GetLocalToWorldTransform( Matrix& transform ) const
+{
+	transform = m_worldTransform;
 }
 
 void EveChildMesh::SetMesh( Tr2MeshBase* mesh )

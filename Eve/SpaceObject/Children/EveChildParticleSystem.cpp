@@ -114,11 +114,11 @@ Tr2PerObjectData* EveChildParticleSystem::GetPerObjectData( ITriRenderBatchAccum
 	return data;
 }
 
-void EveChildParticleSystem::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveChildParticleSystem::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
 }
 
-void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
 	Matrix localToWorldTransform;
 	parent->GetLocalToWorldTransform( localToWorldTransform );
@@ -146,4 +146,47 @@ void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext,
 			(*it)->Update( args );
 		}
 	}
+}
+
+void EveChildParticleSystem::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+}
+
+void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+	Matrix localToWorldTransform;
+	parent->GetLocalToWorldTransform( localToWorldTransform );
+	UpdateTransform( localToWorldTransform );
+	
+	Vector3 minBounds, maxBounds;
+	if( m_mesh && m_mesh->GetBoundingBox( minBounds, maxBounds ) )
+	{
+		BoundingSphereFromBox( m_boundingSphere, minBounds, maxBounds, &m_worldTransform );
+	}
+
+	for( auto it = m_particleSystems.begin(); it != m_particleSystems.end(); ++it )
+	{
+		(*it)->UpdateTransform( m_worldTransform );
+	}
+	if( !m_particleEmitters.empty() )
+	{
+		ITr2GenericEmitter::UpdateArguments args( 
+			updateContext.GetTime(), 
+			updateContext.GetGpuParticleSystem(), 
+			m_worldTransform, 
+			updateContext.GetOriginShift() );
+		for( auto it = m_particleEmitters.begin(); it != m_particleEmitters.end(); ++it )
+		{
+			(*it)->Update( args );
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Returns the Local to World transformation matrix
+// --------------------------------------------------------------------------------
+void EveChildParticleSystem::GetLocalToWorldTransform( Matrix& transform ) const
+{
+	transform = m_worldTransform;
 }

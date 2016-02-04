@@ -2,6 +2,7 @@
 #define IEveSpaceObjectChild_H
 
 #include "../../EveLODHelper.h"
+#include "Eve/IEveSpaceObject2.h"
 
 class TriFrustum;
 struct ITr2Renderable;
@@ -13,9 +14,14 @@ BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 	virtual void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform ) = 0;
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const = 0;
 	
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent ) = 0;
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent ) = 0;
+	virtual void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent ) = 0;
+	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent ) = 0;
 	
+	virtual void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent ) = 0;
+	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent ) = 0;
+
+	virtual void GetLocalToWorldTransform( Matrix& transform ) const = 0;
+
 	virtual void PlayCurveSet( const std::string& name ) = 0;
 	virtual void StopCurveSet( const std::string& name ) = 0;
 	virtual float GetCurveSetDuration( const std::string& name ) const = 0;

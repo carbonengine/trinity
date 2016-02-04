@@ -41,18 +41,6 @@ void EveChildBillboard::GetRenderables( const TriFrustum& frustum, std::vector<I
 		return;
 	}
 
-	// Do the billboard magic
-	const Matrix& invView = Tr2Renderer::GetInverseViewTransform();
-	m_worldTransform._11 = invView._11 * m_scaling.x;
-	m_worldTransform._12 = invView._12 * m_scaling.x;
-	m_worldTransform._13 = invView._13 * m_scaling.x;
-	m_worldTransform._21 = invView._21 * m_scaling.y;
-	m_worldTransform._22 = invView._22 * m_scaling.y;
-	m_worldTransform._23 = invView._23 * m_scaling.y;
-	m_worldTransform._31 = invView._31 * m_scaling.z;
-	m_worldTransform._32 = invView._32 * m_scaling.z;
-	m_worldTransform._33 = invView._33 * m_scaling.z;
-
 	if( GetBoundingSphere( boundingSphere ) && frustum.IsSphereVisible( &boundingSphere ) )
 	{
 		renderables.push_back( this );
@@ -108,15 +96,40 @@ float EveChildBillboard::GetSortValue()
 }
 
 
-void EveChildBillboard::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveChildBillboard::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
 }
 
-void EveChildBillboard::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveChildBillboard::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
 	Matrix localToWorldTransform;
 	parent->GetLocalToWorldTransform( localToWorldTransform );
 	UpdateTransform( localToWorldTransform );
+}
+
+void EveChildBillboard::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+}
+
+void EveChildBillboard::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+	Matrix localToWorldTransform;
+	parent->GetLocalToWorldTransform( localToWorldTransform );
+	
+	// Do the billboard magic
+	Matrix invView = Tr2Renderer::GetInverseViewTransform();
+	invView._41 = 0.0;
+	invView._42 = 0.0;
+	invView._43 = 0.0;
+	invView._44 = 1.0;
+	D3DXMatrixMultiply( &localToWorldTransform, &localToWorldTransform, &invView );
+
+	UpdateTransform( localToWorldTransform );
+}
+
+void EveChildBillboard::GetLocalToWorldTransform( Matrix& transform ) const
+{
+	transform = m_worldTransform;
 }
 
 Tr2PerObjectData* EveChildBillboard::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )

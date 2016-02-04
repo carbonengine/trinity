@@ -36,8 +36,11 @@ public:
 	// IEveSpaceObjectChild
 	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
+	void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent );
+	void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent );
+	void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent );
+	void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent );
+	void GetLocalToWorldTransform( Matrix& transform ) const;
 
 	virtual void PlayCurveSet( const std::string& name ) {};
 	virtual void StopCurveSet( const std::string& name ) {};

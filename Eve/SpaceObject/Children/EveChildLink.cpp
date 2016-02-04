@@ -37,20 +37,21 @@ EveChildLink::~EveChildLink()
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Syncronous updates happen here
+//   Synchronous updates happen here
 // --------------------------------------------------------------------------------
-void EveChildLink::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveChildLink::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
 	EveChildMesh::UpdateSyncronous( updateContext, parent );
 
-	// if we have a target, we can calc the diretion
+	// if we have a target, we can calc the direction
 	if( m_target )
 	{
 		// target comes from attached ball
 		Vector3 tgtPos;
 		m_target->GetValueAt( &tgtPos, updateContext.GetTime() );
 		// source is form parent
-		Vector3 srcPos = parent->GetModelWorldPosition();
+		Vector3 srcPos;
+		parent->GetCurrentModelCenterWorldPosition( srcPos );
 
 		// and that gives the direcion and current distance
 		m_currentDirection = tgtPos - srcPos;
@@ -62,9 +63,9 @@ void EveChildLink::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceOb
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Assyncronous updates happen here
+//   Asynchronous updates happen here
 // --------------------------------------------------------------------------------
-void EveChildLink::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveChildLink::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
 	// update the special link curves
 	for( ITriFunctionVector::const_iterator it = m_linkStrengthCurves.begin(); it != m_linkStrengthCurves.end(); ++it )
@@ -99,10 +100,39 @@ void EveChildLink::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceO
 	// update perobject data buffers
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
-	parent->GetPerObjectStructs( m_vsData, m_psData );
+	
+	EveSpaceObject2Ptr parentSpaceObject;
+	if( parent->QueryInterface( BlueInterfaceIID<EveSpaceObject2>(), (void**)&parentSpaceObject ) )
+	{
+		parentSpaceObject->GetPerObjectStructs( m_vsData, m_psData );
+	}
 	m_vsData.worldTransformLast = linkRotationMat;
 	D3DXMatrixTranspose( &m_vsData.worldTransform, &m_worldTransform );
 	D3DXMatrixTranspose( &m_vsData.worldTransformLast, &linkRotationMat );
+}
 
-//	EveChildMesh::UpdateAsyncronous( updateContext, parent );
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Synchronous updates happen here
+// --------------------------------------------------------------------------------
+void EveChildLink::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Asynchronous updates happen here
+// --------------------------------------------------------------------------------
+void EveChildLink::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Returns the Local to World transformation matrix
+// --------------------------------------------------------------------------------
+void EveChildLink::GetLocalToWorldTransform( Matrix& transform ) const
+{
+	transform = m_worldTransform;
 }

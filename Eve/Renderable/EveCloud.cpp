@@ -447,12 +447,22 @@ void EveCloud::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTy
 	}
 }
 
-void EveCloud::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveCloud::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
 	UpdateSyncronous( updateContext );
 }
 
-void EveCloud::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveCloud::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
+{
+	UpdateAsyncronous( updateContext );
+}
+
+void EveCloud::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+	UpdateSyncronous( updateContext );
+}
+
+void EveCloud::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
 {
 	UpdateAsyncronous( updateContext );
 }

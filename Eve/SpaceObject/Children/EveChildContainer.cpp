@@ -11,6 +11,7 @@
 #include "Eve/EveUpdateContext.h"
 
 EveChildContainer::EveChildContainer( IRoot* lockobj ):
+	EveChildTransform(),
 	PARENTLOCK( m_objects ),
 	PARENTLOCK( m_curveSets ),
 	m_display( true )
@@ -32,6 +33,7 @@ void EveChildContainer::GetRenderables( const TriFrustum& frustum, std::vector<I
 		(*it)->GetRenderables( frustum, renderables, parentTransform );
 	}
 }
+
 bool EveChildContainer::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 {
 	bool success = false;
@@ -47,18 +49,31 @@ bool EveChildContainer::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery 
 	return success;
 }
 	
-void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
-		(*it)->UpdateSyncronous( updateContext, parent );
+		(*it)->UpdateSyncronous( updateContext, this );
 	}
 }
-void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent )
+void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent )
 {
+	Matrix localToWorldTransform;
+	parent->GetLocalToWorldTransform( localToWorldTransform );
+	UpdateAsyncronous( updateContext, localToWorldTransform );
+}
+
+void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+}
+
+void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, Matrix& parentTransform )
+{
+	UpdateTransform( parentTransform );
+
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
-		(*it)->UpdateAsyncronous( updateContext, parent );
+		(*it)->UpdateAsyncronous( updateContext, this );
 	}
 	
 	Be::Time time = updateContext.GetTime();
@@ -67,7 +82,20 @@ void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, EveS
 		(*it)->Update( time, time );
 	}
 }
-	
+
+
+void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent )
+{
+	Matrix localToWorldTransform;
+	parent->GetLocalToWorldTransform( localToWorldTransform );
+	UpdateAsyncronous( updateContext, localToWorldTransform );
+}
+
+void EveChildContainer::GetLocalToWorldTransform( Matrix& transform ) const
+{
+	transform = m_worldTransform;
+}
+
 void EveChildContainer::PlayCurveSet( const std::string& name )
 {
 	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )

@@ -27,8 +27,11 @@ public:
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
-	virtual void UpdateSyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
-	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, EveSpaceObject2* parent );
+	void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent );
+	void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* parent );
+	void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent );
+	void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObjectChild* parent );
+	void GetLocalToWorldTransform( Matrix& transform ) const;
 
 private:
 	// what's it pointing at?
