@@ -2502,16 +2502,18 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			if( samplerTypes[src1.name] == "3D" )
 			{
 				hasTextureLodExtension = true;
+				hasTexture3DExtension = true;
 				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1) )->second;
 				os << "tex3DLod";
 				os << '(' << ( stage.type == VERTEX_STAGE ? "v" : "" ) << src1.name << ',';
 				PrintRegister( os, src0, samplerTypes[src1.name] == "2D" ? 2 : 3 );
-				os << ',' << src1.name << "sl,";
+				os << ',';
+				PrintRegister( os, src0, 4 );
+				os << ".w,";
+				os << src1.name << "sl,";
 				os << (sampler.addressV == D3D11_TEXTURE_ADDRESS_WRAP ? "true" : "false" ) << ',';
 				os << (sampler.addressW == D3D11_TEXTURE_ADDRESS_WRAP ? "true" : "false" ) << ',';
-				os << (sampler.minFilter == D3DTEXF_LINEAR || sampler.magFilter == D3DTEXF_LINEAR ? "true" : "false" ) << ",";
-				PrintRegister( os, src0, 4 );
-				os << ".w";
+				os << (sampler.minFilter == D3DTEXF_LINEAR || sampler.magFilter == D3DTEXF_LINEAR ? "true" : "false" );
 				os << ")";
 			}
 			else
