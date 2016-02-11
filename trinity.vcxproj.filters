@@ -771,6 +771,9 @@
     <ClInclude Include="Eve\SpaceObject\Utils\EveLocator2.h">
       <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Utils\EveLocatorSets.h">
+      <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
+    </ClInclude>
     <ClInclude Include="Eve\SpaceObjectFactory\EveSOF.h">
       <Filter>Source Files\Eve\SpaceObjectFactory</Filter>
     </ClInclude>
@@ -2623,6 +2626,12 @@
       <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Utils\EveLocator2_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Utils\EveLocatorSets.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Utils\EveLocatorSets_Blue.cpp">
       <Filter>Source Files\Eve\SpaceObject\Utils</Filter>
     </ClCompile>
     <ClCompile Include="Eve\SpaceObjectFactory\EveSOF.cpp">
