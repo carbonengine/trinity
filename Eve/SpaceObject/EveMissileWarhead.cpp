@@ -643,6 +643,7 @@ uint32_t EveMissileWarhead::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderTy
 	{
 		return
 			64 +				// m_vsWorldMatrix
+			64 +				// m_vsWorldMatrixLast
 			16 +				// m_vsSpaceObjectData
 			16; 				// m_spaceObjectClipData
 	}
@@ -671,6 +672,8 @@ void EveMissileWarhead::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType 
 	else
 	{
 		uint8_t* perObjectVS = (uint8_t*)data;
+		D3DXMatrixTranspose( (Matrix*)perObjectVS, &m_worldTransform );
+		perObjectVS += sizeof(Matrix);
 		D3DXMatrixTranspose( (Matrix*)perObjectVS, &m_worldTransform );
 		perObjectVS += sizeof(Matrix);
 		memset( perObjectVS, 0, sizeof( Vector4 ) * 2 );

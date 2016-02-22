@@ -495,6 +495,7 @@ void Tr2GpuParticleSystem::Update( Be::Time time, const Vector3& originShift, Tr
 	}
 
 	// prepare draw arguments for Render
+	renderContext.m_esm.UnsetAllTextures();
 	Tr2Renderer::RunComputeShader( m_setDrawParameters, 1, 1, 1, renderContext );
 #endif
 }
