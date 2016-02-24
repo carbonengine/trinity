@@ -899,6 +899,7 @@ void Tr2GpuParticleSystem::Sort( Tr2RenderContext& renderContext )
 
 	Tr2GpuTimerALContext ctx( m_sortTimer, renderContext );
 
+	renderContext.m_esm.UnsetAllTextures();
 	Tr2Renderer::RunComputeShader( m_setSortParameters, 1, 1, 1, renderContext );
 	Tr2Renderer::RunComputeShaderIndirect( m_sort, *m_drawParameters, 0, renderContext );
 
