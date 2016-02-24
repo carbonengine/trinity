@@ -288,9 +288,9 @@ void EveStretch::Start()
 {
 	StartMoving();
 
-	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
+	if ( !m_curveSets.empty() )
 	{
-		(*it)->Play();
+		m_curveSets.front()->Play();
 	}
 }
 
