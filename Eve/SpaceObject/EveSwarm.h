@@ -245,8 +245,7 @@ private:
 	Vector3 Calculate_Cohesion( Vector3 p0, Vector3 p1 );
 	Vector3 Calculate_Separation( Vector3 p0, Vector3 p1 );
 	Vector3 Calculate_Wander( SwarmVehicle& s, float wanderDistance, float radius, float fluctuation, float t );
-	void Clamp( Vector3* v, float maxLength ) const;
-
+	void UpdateOrientation( SwarmVehicle* s, float t );
 	
 	bool m_debugShowSwarmBounds;
 	bool m_debugShowVehicle;

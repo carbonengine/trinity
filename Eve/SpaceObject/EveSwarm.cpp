@@ -133,7 +133,7 @@ EveSwarm::EveSwarm( IRoot* lockobj ) :
 
 	m_swarmingEnabled( false ),
 	m_debugSize( 24.f ),
-	m_count( 10 ),
+	m_count( 1 ),
 
 	m_debugShowSwarmBounds( true ),
 	m_debugShowVehicle( true ),
@@ -143,19 +143,6 @@ EveSwarm::EveSwarm( IRoot* lockobj ) :
 
 EveSwarm::~EveSwarm()
 {
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Clamp vector length to maxLength
-// --------------------------------------------------------------------------------
-inline void EveSwarm::Clamp( Vector3* v, float maxLength ) const
-{
-	if( D3DXVec3Length( v ) > maxLength )
-	{
-		D3DXVec3Normalize( v, v );
-		D3DXVec3Scale( v, v, maxLength );
-	}
 }
 
 // --------------------------------------------------------------------------------
@@ -215,7 +202,7 @@ void EveSwarm::UpdateSyncronous( EveUpdateContext& updateContext )
 // Description:
 //   Calculate and set the vehcile's rotation
 // --------------------------------------------------------------------------------
-void UpdateOrientation( SwarmVehicle* vehicle, float timeDiff )
+void EveSwarm::UpdateOrientation( SwarmVehicle* vehicle, float timeDiff )
 {
 	Vector3 frontDir( 0, 0, 1 ), upDir( 0, 1, 0 ), dir, side;
 	D3DXVec3Normalize( &dir, &vehicle->velocity );
@@ -312,14 +299,14 @@ void EveSwarm::UpdateAsyncronous( EveUpdateContext& context )
 		force += m_behavior.m_weightParentAcceleration * m_worldAcceleration;
 		Vector3 acc = force * 1.f / m_behavior.m_mass;
 		m_vehicles[i].acceleration = acc;
-		Clamp( &m_vehicles[i].acceleration, maxAcceleration );
+		TriVectorClampLength( &m_vehicles[i].acceleration, maxAcceleration );
 	}
 
 	// Update velocities and positions
 	for( unsigned i = 0; i < m_vehicles.size(); i++ )
 	{
 		m_vehicles[i].velocity = m_vehicles[i].velocity + m_vehicles[i].acceleration * timeSeconds;
-		Clamp( &m_vehicles[i].velocity, maxSpeed );
+		TriVectorClampLength( &m_vehicles[i].velocity, maxSpeed );
 		m_vehicles[i].position += m_vehicles[i].velocity * timeSeconds;
 		BoundingBoxUpdate( m_squadBoundsMin, m_squadBoundsMax, m_vehicles[i].position );
 	}
@@ -717,7 +704,7 @@ Vector3 EveSwarm::CalculateForces( int i0, std::vector<SwarmVehicle>& swarmers, 
 	anchor = m_behavior.m_weightAnchor * Calculate_Cohesion( swarmers[i0].position, m_worldPosition );
 	align = m_behavior.m_weightAlign * alignment;
 	decelerate = swarmers[i0].velocity * -m_behavior.m_weightDecelerate;
-	Clamp( &decelerate, m_behavior.m_maxDeceleration );
+	TriVectorClampLength( &decelerate, m_behavior.m_maxDeceleration );
 
 	for( unsigned i = 0; i < swarmers.size(); i++ )
 	{
