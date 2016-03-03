@@ -37,5 +37,35 @@ const Be::ClassInfo* TriRenderStep::ExposeToBlue()
 			Be::READWRITE
 		)
 
+		MAP_PROPERTY
+		(
+			"debugCaptureGpuTime",
+			GetCaptureGpuTime,
+			SetCaptureGpuTime,
+			"Enable/disable capturing time it takes to execture the step on GPU"
+		)
+
+		MAP_PROPERTY_READONLY
+		(
+			"gpuTime",
+			GpuTime,
+			"Time it takes to execture the step on GPU in milliseconds (if debugCaptureGpuTime is on)"
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"debugCaptureCpuTime",
+			m_captureCpuTime,
+			"Enable/disable capturing time it takes to execture the step on CPU",
+			Be::READWRITE
+		)
+
+		MAP_PROPERTY_READONLY
+		(
+			"cpuTime",
+			CpuTime,
+			"Time it takes to execture the step on CPU in milliseconds (if debugCaptureGpuTime is on)"
+		)
+
 	EXPOSURE_END()
 }

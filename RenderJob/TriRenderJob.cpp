@@ -94,7 +94,9 @@ TriRenderJobStatus TriRenderJob::Run( Be::Time realTime, Be::Time simTime, Tr2Re
 	{
 		if( copyOfSteps[m_currentStep] && copyOfSteps[m_currentStep]->IsEnabled() )
 		{
+			copyOfSteps[m_currentStep]->BeginExecute( renderContext );
 			result = copyOfSteps[m_currentStep]->Execute( realTime, simTime, renderContext );
+			copyOfSteps[m_currentStep]->EndExecute( renderContext );
 
 			// We almost never want a job that leaves the renderTarget/depthStencil stack in a changed state.
 			if( m_stackGuard )

@@ -25,10 +25,23 @@ public:
 	bool IsEnabled() const;
 	virtual TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext ) = 0;
 
+	void BeginExecute( Tr2RenderContext& renderContext );
+	void EndExecute( Tr2RenderContext& renderContext );
 protected:
+	bool GetCaptureGpuTime() const;
+	void SetCaptureGpuTime( bool capture );
+	float GpuTime() const;
+	float CpuTime() const;
+
 	std::string m_name;
+	mutable Tr2GpuTimerAL m_gpuTimer;
+	uint64_t m_beginTime;
+	float m_cpuTime;
+
 	// Enabled/disabled flag: disabled steps are not executed
 	bool m_enabled;
+	bool m_captureGpuTime;
+	bool m_captureCpuTime;
 };
 
 BLUE_DECLARE_VECTOR( TriRenderStep );
