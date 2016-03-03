@@ -156,6 +156,9 @@
     <ClInclude Include="Tr2DynamicRingBuffer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tr2ExternalParameter.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="Tr2FileExportInfo.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -1561,6 +1564,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2DynamicRingBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2ExternalParameter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2ExternalParameter_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2FileExportInfo.cpp">

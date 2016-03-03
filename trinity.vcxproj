@@ -2765,6 +2765,7 @@
     <ClInclude Include="Tr2DxtCompressor.h"/>
     <ClInclude Include="Tr2DynamicMesh.h"/>
     <ClInclude Include="Tr2DynamicRingBuffer.h"/>
+    <ClInclude Include="Tr2ExternalParameter.h"/>
     <ClInclude Include="Tr2FileExportInfo.h"/>
     <ClInclude Include="Tr2GpuBuffer.h"/>
     <ClInclude Include="Tr2GpuBufferAlias.h"/>
@@ -3238,6 +3239,8 @@
     <ClCompile Include="Tr2DynamicMesh.cpp"/>
     <ClCompile Include="Tr2DynamicMesh_Blue.cpp"/>
     <ClCompile Include="Tr2DynamicRingBuffer.cpp"/>
+    <ClCompile Include="Tr2ExternalParameter.cpp"/>
+    <ClCompile Include="Tr2ExternalParameter_Blue.cpp"/>
     <ClCompile Include="Tr2FileExportInfo.cpp"/>
     <ClCompile Include="Tr2FileExportInfo_Blue.cpp"/>
     <ClCompile Include="Tr2GpuBuffer.cpp"/>
