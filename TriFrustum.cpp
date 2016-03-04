@@ -254,6 +254,10 @@ float TriFrustum::GetPixelSizeAccross( const Vector4* sphere ) const
 	}
 
 	float ratio = sphere->w / depth;
+
+	// get it out of linear to adjust it to the crazy sizes we have in EVE
+	ratio *= min( 32.f * powf( sphere->w, -0.43f ), 1.f );
+
 	return ( ratio * m_halfWidthProjection ) * 2.f;
 }
 
