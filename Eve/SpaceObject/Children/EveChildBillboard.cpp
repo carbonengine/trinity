@@ -33,7 +33,7 @@ bool EveChildBillboard::Initialize()
 	return true;
 }
 
-void EveChildBillboard::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform )
+void EveChildBillboard::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	Vector4 boundingSphere;
 	if( !m_display )

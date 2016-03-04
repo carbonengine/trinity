@@ -21,9 +21,9 @@ EveEffectRoot2::EveEffectRoot2( IRoot* lockobj ) :
 	m_estimatedSize( 0.0f ),
 	m_display( true ),
 	m_startTime( 0 ),
-	m_effectDuration( -1 )
+	m_effectDuration( -1 ),
+	m_lodLevel( TR2_LOD_HIGH )
 {
-	m_lodLevel = TR2_LOD_HIGH;
 }
 
 bool EveEffectRoot2::Initialize()
@@ -98,7 +98,7 @@ void EveEffectRoot2::GetRenderables( const TriFrustum& frustum, std::vector<ITr2
 		{
 			for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt ) 
 			{
-				(*ecIt)->SetLOD( m_lodLevel );
+				(*ecIt)->ChangeLOD( m_lodLevel );
 			}
 		}
 	}
@@ -106,7 +106,7 @@ void EveEffectRoot2::GetRenderables( const TriFrustum& frustum, std::vector<ITr2
 
 	for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 	{
-		(*ecIt)->GetRenderables( frustum, renderables, m_worldTransform );
+		(*ecIt)->GetRenderables( frustum, renderables, m_worldTransform, m_lodLevel );
 	}
 }
 

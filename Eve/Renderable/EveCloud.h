@@ -65,11 +65,12 @@ public:
 	// IEveSpaceObjectChild
 	virtual void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* spaceObjectParent, IEveSpaceObjectChild* childParent );
 	virtual void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* spaceObjectParent, IEveSpaceObjectChild* childParent );
+	virtual void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod );
 	virtual void PlayCurveSet( const std::string& name );
 	virtual void StopCurveSet( const std::string& name );
 	virtual float GetCurveSetDuration( const std::string& name ) const; 
 	virtual void Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation ) {}
-	virtual void SetLOD( Tr2Lod lod ) {};
+	virtual void ChangeLOD( Tr2Lod lod ) {};
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable

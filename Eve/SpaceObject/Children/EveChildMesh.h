@@ -34,12 +34,12 @@ public:
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
-	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform );
+	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 	void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* spaceObjectParent, IEveSpaceObjectChild* childParent );
 	void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* spaceObjectParent, IEveSpaceObjectChild* childParent );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
-	void SetLOD( Tr2Lod lod ) {};
+	void ChangeLOD( Tr2Lod lod ) {};
 
 	virtual void PlayCurveSet( const std::string& name ) {};
 	virtual void StopCurveSet( const std::string& name ) {};
@@ -67,10 +67,15 @@ public:
 	void SetMesh( Tr2MeshBase* mesh );
 
 protected:
+	// general data
 	BlueSharedString m_name;
-	Tr2MeshBasePtr m_mesh;
 	bool m_display;
-	
+
+	// the mesh
+	Tr2MeshBasePtr m_mesh;
+	Tr2Lod m_lowestLodVisible;
+
+	// per-object data
 	bool m_useSpaceObjectData;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataVs;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataPs;

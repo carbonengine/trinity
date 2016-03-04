@@ -81,7 +81,7 @@ bool EveChildBulletStorm::OnModified( Be::Var* val )
 // Description:
 //   Trinity's way of rendering
 // --------------------------------------------------------------------------------
-void EveChildBulletStorm::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform )
+void EveChildBulletStorm::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
 	{

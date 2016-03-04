@@ -22,7 +22,7 @@ EveChildContainer::~EveChildContainer()
 {
 }
 
-void EveChildContainer::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform )
+void EveChildContainer::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
 	{
@@ -30,7 +30,7 @@ void EveChildContainer::GetRenderables( const TriFrustum& frustum, std::vector<I
 	}
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
-		(*it)->GetRenderables( frustum, renderables, parentTransform );
+		(*it)->GetRenderables( frustum, renderables, parentTransform, parentLod );
 	}
 }
 
@@ -93,11 +93,11 @@ void EveChildContainer::GetLocalToWorldTransform( Matrix& transform ) const
 	transform = m_worldTransform;
 }
 
-void EveChildContainer::SetLOD( Tr2Lod lod )
+void EveChildContainer::ChangeLOD( Tr2Lod lod )
 {
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
-		(*it)->SetLOD( lod );
+		(*it)->ChangeLOD( lod );
 	}
 }
 

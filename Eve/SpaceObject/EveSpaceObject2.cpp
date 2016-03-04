@@ -971,7 +971,7 @@ void EveSpaceObject2::PushRenderables( const TriFrustum& frustum, std::vector<IT
 		}
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
-			(*ecIt)->GetRenderables( frustum, renderables, m_worldTransform );
+			(*ecIt)->GetRenderables( frustum, renderables, m_worldTransform, m_lodLevelWithChildren );
 		}
 	}
 
@@ -1077,6 +1077,7 @@ void EveSpaceObject2::GetRenderables( const TriFrustum& frustum, std::vector<ITr
 		{
 			SelectMeshLevelOfDetail();
 		}
+
 		PushRenderables( frustum, renderables );
 	}
 }

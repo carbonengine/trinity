@@ -43,7 +43,7 @@ bool EveChildParticleSystem::Initialize()
 	return true;
 }
 
-void EveChildParticleSystem::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform )
+void EveChildParticleSystem::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display || !frustum.IsSphereVisible( &m_boundingSphere ) )
 	{
@@ -171,7 +171,11 @@ void EveChildParticleSystem::GetLocalToWorldTransform( Matrix& transform ) const
 	transform = m_worldTransform;
 }
 
-void EveChildParticleSystem::SetLOD( Tr2Lod lod )
+// --------------------------------------------------------------------------------
+// Description:
+//   Called if the parent's LOD changed
+// --------------------------------------------------------------------------------
+void EveChildParticleSystem::ChangeLOD( Tr2Lod lod )
 {
 	if ( !m_useDynamicLod )
 	{

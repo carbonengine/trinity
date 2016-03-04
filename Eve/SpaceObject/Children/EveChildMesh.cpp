@@ -11,6 +11,7 @@
 
 EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_display( true ),
+	m_lowestLodVisible( TR2_LOD_LOW ),
 	m_useSpaceObjectData( true ),
 	EveChildTransform()
 {
@@ -29,9 +30,13 @@ bool EveChildMesh::Initialize()
 	return true;
 }
 
-void EveChildMesh::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform )
+void EveChildMesh::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display )
+	{
+		return;
+	}
+	if( parentLod < m_lowestLodVisible )
 	{
 		return;
 	}

@@ -30,7 +30,7 @@ public:
 	void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* spaceObjectParent, IEveSpaceObjectChild* childParent );
 	void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* spaceObjectParent, IEveSpaceObjectChild* childParent );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
-	void SetLOD( Tr2Lod lod ) {};
+	void ChangeLOD( Tr2Lod lod ) {};
 
 private:
 	// what's it pointing at?

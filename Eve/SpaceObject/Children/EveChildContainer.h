@@ -23,14 +23,14 @@ public:
 	EveChildContainer( IRoot* lockobj = NULL );
 	~EveChildContainer();
 
-	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform );
+	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod );
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query=EVE_BOUNDS_NORMAL ) const;
 	
 	void UpdateSyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* spaceObjectParent, IEveSpaceObjectChild* childParent );
 	void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* spaceObjectParent, IEveSpaceObjectChild* childParent );
 	void UpdateAsyncronous( EveUpdateContext& updateContext, Matrix& parentTransform );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
-	void SetLOD( Tr2Lod lod );
+	void ChangeLOD( Tr2Lod lod );
 
 	void Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation );
 

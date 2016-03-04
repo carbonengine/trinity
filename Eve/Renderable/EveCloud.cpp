@@ -221,6 +221,11 @@ void EveCloud::UpdateAsyncronous( EveUpdateContext& updateContext )
 	BoundingSphereFromBox( m_boundingSphere, m_min, m_max, &m_worldTransform );
 }
 
+void EveCloud::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod )
+{
+	GetRenderables( frustum, renderables, parentTransform );
+}
+
 void EveCloud::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform )
 {
 	m_worldTransform = m_localTransform * parentTransform;
