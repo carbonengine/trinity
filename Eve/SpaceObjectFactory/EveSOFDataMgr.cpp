@@ -649,6 +649,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		EveSOFDataHullChildPtr child = (*chit);
 		HullChild hc;
 		hc.redFilePath = child->m_redFilePath;
+		hc.lowestLodVisible = child->m_lowestLodVisible;
 		hc.translation = child->m_translation;
 		hc.rotation = child->m_rotation;
 		hc.scaling = child->m_scaling;
@@ -663,6 +664,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		EveSOFDataInstancedMeshPtr instMesh = (*imit);
 		HullInstancedMesh him;
 		him.name = instMesh->m_name;
+		him.lowestLodVisible = instMesh->m_lowestLodVisible;
 		him.geometryResPath = instMesh->m_geometryResPath;
 		him.instanceGeometryResPath = instMesh->m_instanceGeometryResPath;
 		him.shader = instMesh->m_shader;

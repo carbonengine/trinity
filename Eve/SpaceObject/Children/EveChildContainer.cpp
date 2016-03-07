@@ -150,10 +150,10 @@ float EveChildContainer::GetCurveSetDuration( const std::string& name ) const
 	return maxDuration;
 }
 
-void EveChildContainer::Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation )
+void EveChildContainer::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
 {
 	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
 	{
-		(*it)->Transform( scale, rotation, translation );
+		(*it)->Setup( scale, rotation, translation, lowestLodVisible );
 	}
 }

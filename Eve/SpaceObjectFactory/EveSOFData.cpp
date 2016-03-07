@@ -44,6 +44,7 @@ EveSOFDataTexture::EveSOFDataTexture( IRoot* lockobj )
 
 
 EveSOFDataInstancedMesh::EveSOFDataInstancedMesh( IRoot* lockobj ) :
+	m_lowestLodVisible( TR2_LOD_LOW ),
 	PARENTLOCK( m_textures )
 {}
 
@@ -242,6 +243,7 @@ EveSOFDataTransform::EveSOFDataTransform( IRoot* lockobj ) :
 
 
 EveSOFDataHullChild::EveSOFDataHullChild( IRoot* lockobj ) :
+	m_lowestLodVisible( TR2_LOD_LOW ),
 	m_translation( 0.f, 0.f, 0.f ),
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
 	m_scaling( 1.f, 1.f, 1.f ),

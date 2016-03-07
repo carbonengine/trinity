@@ -149,6 +149,7 @@ public:
 	struct HullChild
 	{
 		std::string redFilePath;
+		Tr2Lod lowestLodVisible;
 		Vector3 translation;
 		Quaternion rotation;
 		Vector3 scaling;
@@ -158,6 +159,7 @@ public:
 	struct HullInstancedMesh
 	{
 		BlueSharedString name;
+		Tr2Lod lowestLodVisible;
 		std::string geometryResPath;
 		std::string instanceGeometryResPath;
 		BlueSharedString shader;

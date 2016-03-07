@@ -8,12 +8,14 @@
 #ifndef EveChildTransform_H
 #define EveChildTransform_H
 
+#include "Resources/Tr2LodResource.h"
+
 class EveChildTransform
 {
 public:
 	EveChildTransform();
 
-	void Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation );
+	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	void RebuildLocalTransform();
 	
 protected:

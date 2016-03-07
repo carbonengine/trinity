@@ -20,7 +20,7 @@ void EveChildTransform::RebuildLocalTransform()
 	}
 }
 
-void EveChildTransform::Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation )
+void EveChildTransform::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
 {
 	Matrix temp;
 	if( m_useSRT )

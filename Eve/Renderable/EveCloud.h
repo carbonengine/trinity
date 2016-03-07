@@ -69,7 +69,7 @@ public:
 	virtual void PlayCurveSet( const std::string& name );
 	virtual void StopCurveSet( const std::string& name );
 	virtual float GetCurveSetDuration( const std::string& name ) const; 
-	virtual void Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation ) {}
+	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) {}
 	virtual void ChangeLOD( Tr2Lod lod ) {};
 
 	/////////////////////////////////////////////////////////////////////////////////////

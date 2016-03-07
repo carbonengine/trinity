@@ -312,7 +312,7 @@ float EveChildBulletStorm::GetCurveSetDuration( const std::string& name ) const
 // Description:
 //   Used by state machine to animate state-related stuff
 // --------------------------------------------------------------------------------
-void EveChildBulletStorm::Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation )
+void EveChildBulletStorm::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
 {
 }
 

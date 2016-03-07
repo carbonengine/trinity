@@ -69,7 +69,7 @@ public:
 	void PlayCurveSet( const std::string& name );
 	void StopCurveSet( const std::string& name );
 	float GetCurveSetDuration( const std::string& name ) const;
-	void Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation );
+	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable

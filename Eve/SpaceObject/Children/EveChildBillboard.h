@@ -38,12 +38,10 @@ public:
 	void UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpaceObject2* spaceObjectParent, IEveSpaceObjectChild* childParent );
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void ChangeLOD( Tr2Lod lod ) {};
-
 	void PlayCurveSet( const std::string& name ) {};
 	void StopCurveSet( const std::string& name ) {};
 	float GetCurveSetDuration( const std::string& name ) const { return 0; }
-
-	virtual void Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation ) { EveChildTransform::Transform( scale, rotation, translation ); }
+	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable

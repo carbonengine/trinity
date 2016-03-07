@@ -180,3 +180,18 @@ void EveChildMesh::SetMesh( Tr2MeshBase* mesh )
 {
 	m_mesh = mesh;
 }
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Setup function to set data from outside, in this case just pass it to
+//   function of base class
+// --------------------------------------------------------------------------------
+void EveChildMesh::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
+{
+	// call base class's setup
+	EveChildTransform::Setup( scale, rotation, translation, lowestLodVisible );
+
+	// and remember lodding!
+	m_lowestLodVisible = lowestLodVisible;
+}
+

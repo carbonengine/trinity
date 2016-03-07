@@ -55,6 +55,7 @@ public:
 
 	// data
 	BlueSharedString m_name;
+	Tr2Lod m_lowestLodVisible;
 	std::string m_geometryResPath;
 	std::string m_instanceGeometryResPath;
 	BlueSharedString m_shader;
@@ -336,6 +337,7 @@ public:
 	// data
 	std::string m_name;
 	std::string m_redFilePath;
+	Tr2Lod m_lowestLodVisible;
 	Vector3 m_translation;
 	Quaternion m_rotation;
 	Vector3 m_scaling;

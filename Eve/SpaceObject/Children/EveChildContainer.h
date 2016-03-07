@@ -32,7 +32,7 @@ public:
 	void GetLocalToWorldTransform( Matrix& transform ) const;
 	void ChangeLOD( Tr2Lod lod );
 
-	void Transform( const Vector3* scale, const Quaternion* rotation, const Vector3* translation );
+	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 
 	void PlayCurveSet( const std::string& name );
 	void StopCurveSet( const std::string& name );

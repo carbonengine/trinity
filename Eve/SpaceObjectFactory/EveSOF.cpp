@@ -878,8 +878,8 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, const EveSOFDNA
 		}
 		else if( p->QueryInterface( BlueInterfaceIID<IEveSpaceObjectChild>(), (void**)&effectChild, BEQI_SILENT ) )
 		{
+			effectChild->Setup( &childIt->scaling, &childIt->rotation, &childIt->translation, childIt->lowestLodVisible );
 			obj->AddToEffectChildrenList( effectChild );
-			effectChild->Transform( &childIt->scaling, &childIt->rotation, &childIt->translation );
 		}
 		else
 		{
@@ -965,17 +965,17 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 	const std::vector<EveSOFDataMgr::HullInstancedMesh>& hullInstanced = dna->GetHullInstancedMeshes();
 	for( auto instIt = hullInstanced.begin(); instIt != hullInstanced.end(); ++instIt )
 	{
-		EveSOFDataMgr::HullInstancedMesh him = *instIt;
+		const EveSOFDataMgr::HullInstancedMesh* him = &(*instIt);
 
 		Tr2InstancedMeshPtr mesh;
 		mesh.CreateInstance();
-		mesh->SetInstanceMeshResPath( him.instanceGeometryResPath.c_str() );
-		mesh->SetMeshResPath( him.geometryResPath.c_str() );
+		mesh->SetInstanceMeshResPath( him->instanceGeometryResPath.c_str() );
+		mesh->SetMeshResPath( him->geometryResPath.c_str() );
 
 		Tr2MeshAreaVector* areas = mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 
 		// find data on this shader from generics, we need it!
-		const EveSOFDataMgr::GenericShaderData* shaderData = dna->GetGenericAreaShaderData( him.shader );
+		const EveSOFDataMgr::GenericShaderData* shaderData = dna->GetGenericAreaShaderData( him->shader );
 		if( shaderData )
 		{
 			// every area has it's own shader, nothing we can share here
@@ -984,7 +984,7 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 			newShader->StartUpdate();
 
 			// construct res path of the shader
-			newShader->SetEffectPathName( dna->GetCompleteShaderPath( him.shader.c_str() ).c_str() );
+			newShader->SetEffectPathName( dna->GetCompleteShaderPath( him->shader.c_str() ).c_str() );
 
 			// parameters
 			for( auto shaderParamIt = shaderData->parameters.begin(); shaderParamIt != shaderData->parameters.end(); ++shaderParamIt )
@@ -997,10 +997,11 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 			}
 
 			// shader textures from the hull data
-			for( auto it = him.textures.begin(); it != him.textures.end(); ++it )
+			for( auto it = him->textures.begin(); it != him->textures.end(); ++it )
 			{
-				dna->ModifyTextureResPath( it->second.resFilePath, it->first.c_str() );
-				newShader->AddResourceTexture2D( it->first, it->second.resFilePath.c_str() );
+				std::string resPath = it->second.resFilePath;
+				dna->ModifyTextureResPath( resPath, it->first.c_str() );
+				newShader->AddResourceTexture2D( it->first, resPath.c_str() );
 			}
 
 			// default shader textures from the generic data
@@ -1022,6 +1023,7 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		EveChildMeshPtr childMesh;
 		childMesh.CreateInstance();
 		childMesh->SetMesh( (Tr2MeshBase*)mesh );
+		childMesh->Setup( nullptr, nullptr, nullptr, him->lowestLodVisible );
 		newObj->AddToEffectChildrenList( (IEveSpaceObjectChild*)childMesh );
 	}
 }

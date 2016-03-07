@@ -33,6 +33,16 @@ bool EveChildBillboard::Initialize()
 	return true;
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Setup function to set data from outside, in this case just pass it to
+//   function of base class
+// --------------------------------------------------------------------------------
+void EveChildBillboard::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
+{
+	EveChildTransform::Setup( scale, rotation, translation, lowestLodVisible );
+}
+
 void EveChildBillboard::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	Vector4 boundingSphere;

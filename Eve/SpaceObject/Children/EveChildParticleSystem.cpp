@@ -43,6 +43,16 @@ bool EveChildParticleSystem::Initialize()
 	return true;
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Setup function to set data from outside, in this case just pass it to
+//   function of base class
+// --------------------------------------------------------------------------------
+void EveChildParticleSystem::Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
+{
+	EveChildTransform::Setup( scale, rotation, translation, lowestLodVisible );
+}
+
 void EveChildParticleSystem::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	if( !m_display || !frustum.IsSphereVisible( &m_boundingSphere ) )
