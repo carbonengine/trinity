@@ -66,6 +66,7 @@ public:
 	unsigned GetWidth()				const { return Tr2BitmapDimensions::GetWidth();    }
 	unsigned GetHeight()			const { return Tr2BitmapDimensions::GetHeight();   }
 	unsigned GetMipLevelCount()		const { return Tr2BitmapDimensions::GetMipCount(); }
+	bool IsValid() const { return IsGood(); }
 	Tr2RenderContextEnum::TextureType GetType() const { return Tr2BitmapDimensions::GetType(); }
 	long UpdateSubresource( unsigned left, unsigned top, unsigned right, unsigned bottom, const void* source, unsigned sourcePitch );
 	const Tr2TextureAL* GetTexture() const;

@@ -33,6 +33,7 @@ BLUE_INTERFACE(ITriTextureRes) :
 	virtual unsigned int GetWidth() const = 0;
 	virtual unsigned int GetHeight() const = 0;
 	virtual unsigned int GetMipLevelCount() const = 0;
+	virtual bool IsValid() const = 0;
 
 	virtual void SetName( const char* name ) = 0;
 	virtual const char* GetName() const = 0;
