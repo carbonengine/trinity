@@ -508,7 +508,14 @@ bool EveSwarm::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) c
 // --------------------------------------------------------------------------------
 void EveSwarm::GetModelCenterWorldPosition( Vector3 &position, Be::Time t )
 {
-	position = ( m_squadBoundsMax + m_squadBoundsMin ) * 0.5f;
+	if( m_swarmingEnabled )
+	{
+		position = ( m_squadBoundsMax + m_squadBoundsMin ) * 0.5f;
+	}
+	else
+	{
+		EveShip2::GetModelCenterWorldPosition( position, t );
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -517,7 +524,14 @@ void EveSwarm::GetModelCenterWorldPosition( Vector3 &position, Be::Time t )
 // --------------------------------------------------------------------------------
 void EveSwarm::GetCurrentModelCenterWorldPosition( Vector3 &position )
 {
-	position = ( m_squadBoundsMax + m_squadBoundsMin ) * 0.5f;
+	if( m_swarmingEnabled )
+	{
+		position = ( m_squadBoundsMax + m_squadBoundsMin ) * 0.5f;
+	}
+	else
+	{
+		EveShip2::GetCurrentModelCenterWorldPosition( position );
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -703,7 +717,7 @@ Vector3 EveSwarm::GetObjectSpaceDamageLocatorPosition( uint32_t index ) const
 	{
 		return position;
 	}
-	Matrix localTransform = m_invWorldTransform * *m_renderables[m_targetIndex]->GetWorldTransform();
+	Matrix localTransform = *m_renderables[m_targetIndex]->GetWorldTransform() * m_invWorldTransform;
 	return *D3DXVec3TransformCoord( &position, &position, &localTransform );
 }
 
@@ -718,7 +732,7 @@ Vector3 EveSwarm::GetObjectSpaceDamageLocatorDirection( uint32_t index ) const
 	{
 		return direction;
 	}
-	Matrix localTransform = m_invWorldTransform * *m_renderables[m_targetIndex]->GetWorldTransform();
+	Matrix localTransform = *m_renderables[m_targetIndex]->GetWorldTransform() * m_invWorldTransform;
 	return *D3DXVec3TransformNormal( &direction, &direction, &localTransform );
 }
 
@@ -741,7 +755,7 @@ bool EveSwarm::GetDamageLocatorPosition( Vector3* out, int index, bool inWorldSp
 		}
 		else
 		{
-			Matrix localTransform = m_invWorldTransform * *m_renderables[m_targetIndex]->GetWorldTransform();
+			Matrix localTransform = *m_renderables[m_targetIndex]->GetWorldTransform() * m_invWorldTransform;
 			*out = localTransform.GetTranslation();
 		}
 		return false;
