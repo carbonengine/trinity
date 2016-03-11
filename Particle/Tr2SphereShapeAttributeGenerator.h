@@ -30,6 +30,9 @@ public:
 	bool Bind( const Tr2ParticleElementDataMap& declaration, 
 			   std::set<Tr2ParticleElementDeclarationName> &boundElements );
 	std::string GetName() const;
+
+	void GetTransform( Vector3& position, Quaternion& rotation );
+	void SetTransform( const Vector3& position, const Quaternion& rotation );
 private:
 	// Generator position
 	Vector3 m_position;

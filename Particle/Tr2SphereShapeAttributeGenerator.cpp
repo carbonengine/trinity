@@ -208,3 +208,15 @@ std::string Tr2SphereShapeAttributeGenerator::GetName() const
 		return "NONE";
 	}
 }
+
+void Tr2SphereShapeAttributeGenerator::GetTransform( Vector3& position, Quaternion& rotation )
+{
+	position = m_position;
+	rotation = m_rotation;
+}
+
+void Tr2SphereShapeAttributeGenerator::SetTransform( const Vector3& position, const Quaternion& rotation )
+{
+	m_position = position;
+	m_rotation = rotation;
+}
