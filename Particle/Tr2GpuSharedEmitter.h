@@ -62,6 +62,7 @@ protected:
 	uintptr_t GetHash( const Tr2GpuParticleSystem::EmitterParams& params ) const;
 
 	float SpawnParticles( 
+		Tr2GpuParticleSystem::Emitter& emitter,
 		const UpdateArguments& arguments,
 		const Vector3& positionStart, const Vector3& positionEnd,
 		const Vector3& velocityStart, const Vector3& velocityEnd,

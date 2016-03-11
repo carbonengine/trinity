@@ -138,7 +138,7 @@ void Tr2GpuSharedEmitter::Update( const UpdateArguments& arguments )
 
 	if( m_continuousEmitter )
 	{
-		m_carryOver = SpawnParticles( arguments, m_prevPosition + arguments.originShift, position, m_prevVelocity, velocity, m_carryOver, std::min( dt, MAXIMUM_FRAME_TIME ) );
+		m_carryOver = SpawnParticles( m_emitter, arguments, m_prevPosition + arguments.originShift, position, m_prevVelocity, velocity, m_carryOver, std::min( dt, MAXIMUM_FRAME_TIME ) );
 	}
 
 	m_prevPosition = position;
@@ -157,7 +157,8 @@ void Tr2GpuSharedEmitter::SpawnParticles( const UpdateArguments& arguments, cons
 	{
 		vel = XMVector3TransformNormal( *velocity, arguments.parentTransform );
 	}
-	SpawnParticles( arguments, pos, pos, vel, vel, 0.f, rateModifier );
+	auto emitter = m_emitter;
+	SpawnParticles( emitter, arguments, pos, pos, vel, vel, 0.f, rateModifier );
 }
 
 void Tr2GpuSharedEmitter::SpawnParticles( 
@@ -182,21 +183,23 @@ void Tr2GpuSharedEmitter::SpawnParticles(
 	{
 		velStart = velEnd = Vector3( 0.f, 0.f, 0.f );
 	}
-	m_carryOver = SpawnParticles( arguments, posStart, posEnd, velStart, velEnd, m_carryOver, std::min( deltaTime, MAXIMUM_FRAME_TIME ) );
+	auto emitter = m_emitter;
+	m_carryOver = SpawnParticles( emitter, arguments, posStart, posEnd, velStart, velEnd, m_carryOver, std::min( deltaTime, MAXIMUM_FRAME_TIME ) );
 }
 
 float Tr2GpuSharedEmitter::SpawnParticles( 
+	Tr2GpuParticleSystem::Emitter& emitter,
 	const UpdateArguments& arguments,
 	const Vector3& positionStart, const Vector3& positionEnd,
 	const Vector3& velocityStart, const Vector3& velocityEnd,
 	float carryOverCount,
 	float deltaTime )
 {
-	m_emitter.position = positionEnd;
+	emitter.position = positionEnd;
 
 	float total = carryOverCount + deltaTime * m_rate;
 
-	Vector3 move = m_emitter.position - positionStart;
+	Vector3 move = emitter.position - positionStart;
 	float moveLength = XMVectorGetX( XMVector3Length( move ) );
 	if( moveLength > m_maxDisplacement )
 	{
@@ -209,18 +212,18 @@ float Tr2GpuSharedEmitter::SpawnParticles(
 	}
 
 	carryOverCount = total - std::floor( total );
-	m_emitter.count = std::max( int( total ), 0 );
+	emitter.count = std::max( int( total ), 0 );
 
-	if( m_emitter.count )
+	if( emitter.count )
 	{
-		m_emitter.positionPrevious = positionStart;
+		emitter.positionPrevious = positionStart;
 
-		m_emitter.velocity = velocityEnd * m_inheritVelocity;
-		m_emitter.velocityPrevious = velocityStart * m_inheritVelocity;
+		emitter.velocity = velocityEnd * m_inheritVelocity;
+		emitter.velocityPrevious = velocityStart * m_inheritVelocity;
 
-		m_emitter.directionPrevious = m_emitter.direction;
-		m_emitter.direction = XMVector3TransformNormal( m_direction, arguments.parentTransform );
-		arguments.system->Emit( m_emitter, m_id, m_paramsHash, m_params );
+		emitter.directionPrevious = emitter.direction;
+		emitter.direction = XMVector3TransformNormal( m_direction, arguments.parentTransform );
+		arguments.system->Emit( emitter, m_id, m_paramsHash, m_params );
 	}
 	return carryOverCount;
 }
