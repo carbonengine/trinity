@@ -753,6 +753,9 @@
     <ClInclude Include="Eve\SpaceObject\Children\EveChildContainer.h">
       <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildExplosion.h">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Children\EveChildLink.h">
       <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClInclude>
@@ -763,9 +766,6 @@
       <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Children\EveChildTransform.h">
-      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\SpaceObject\Children\EveExplosion.h">
       <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Children\IEveSpaceObjectChild.h">
