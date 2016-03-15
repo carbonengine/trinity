@@ -8,11 +8,12 @@
 #include "EveChildExplosion.h"
 
 
-BLUE_DEFINE( EveExplosion );
+BLUE_DEFINE( EveChildExplosion );
 
-const Be::ClassInfo* EveExplosion::ExposeToBlue()
+const Be::ClassInfo* EveChildExplosion::ExposeToBlue()
 {
-    EXPOSURE_BEGIN( EveExplosion, "Specialized explosion space object child" )
+    EXPOSURE_BEGIN( EveChildExplosion, "Specialized explosion space object child" )
+        MAP_INTERFACE( EveChildExplosion )
         MAP_INTERFACE( EveChildContainer )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 

@@ -5,8 +5,8 @@
 //
 
 #pragma once
-#ifndef EveExplosion_H
-#define EveExplosion_H
+#ifndef EveChildExplosion_H
+#define EveChildExplosion_H
 
 #include "EveChildContainer.h"
 
@@ -15,18 +15,18 @@ BLUE_DECLARE_VECTOR( Tr2SphereShapeAttributeGenerator );
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   EveExplosion is a specialized EveSpaceObject2 child class that creates an explosion
-//   animation. The explosion contains multiple "local" explosions and a single "global"
-//   explosion.
+//   EveChildExplosion is a specialized EveSpaceObject2 child class that creates an 
+//   explosion animation. The explosion contains multiple "local" explosions and a single 
+//   "global" explosion.
 // --------------------------------------------------------------------------------------
-BLUE_CLASS( EveExplosion ) :
+BLUE_CLASS( EveChildExplosion ) :
 	public EveChildContainer
 {
 public:
 	EXPOSE_TO_BLUE();
 
-	EveExplosion( IRoot* lockobj = nullptr );
-	~EveExplosion();
+	EveChildExplosion( IRoot* lockobj = nullptr );
+	~EveChildExplosion();
 
 	void Play();
 	void Stop();
@@ -87,6 +87,6 @@ private:
 	bool m_globalExplosionAdded;
 };
 
-TYPEDEF_BLUECLASS( EveExplosion );
+TYPEDEF_BLUECLASS( EveChildExplosion );
 
 #endif

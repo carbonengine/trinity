@@ -9,7 +9,7 @@
 #include "Eve/EveUpdateContext.h"
 #include "Particle/Tr2SphereShapeAttributeGenerator.h"
 
-EveExplosion::EveExplosion( IRoot* lockobj )
+EveChildExplosion::EveChildExplosion( IRoot* lockobj )
 	:EveChildContainer( lockobj ),
 	m_localExplosionDelay( 0.f ),
 	m_localExplosionInterval( 1.f ),
@@ -29,7 +29,7 @@ EveExplosion::EveExplosion( IRoot* lockobj )
 {
 }
 
-EveExplosion::~EveExplosion()
+EveChildExplosion::~EveChildExplosion()
 {
 }
 
@@ -37,7 +37,7 @@ EveExplosion::~EveExplosion()
 // Description:
 //   Starts explosion playback
 // --------------------------------------------------------------------------------------
-void EveExplosion::Play()
+void EveChildExplosion::Play()
 {
 	Stop();
 	if( !m_localExplosion && !m_globalExplosion )
@@ -58,7 +58,7 @@ void EveExplosion::Play()
 // Description:
 //   Stops explosion playback
 // --------------------------------------------------------------------------------------
-void EveExplosion::Stop()
+void EveChildExplosion::Stop()
 {
 	m_objects.Clear();
 	m_isPlaying = true;
@@ -71,7 +71,7 @@ void EveExplosion::Stop()
 // Arguments:
 //   transforms - Transforms for local explosions
 // --------------------------------------------------------------------------------------
-void EveExplosion::SetLocalExplosionTransforms( const std::vector<Matrix>& transforms )
+void EveChildExplosion::SetLocalExplosionTransforms( const std::vector<Matrix>& transforms )
 {
 	m_localExplosionTransforms.clear();
 	m_localExplosionTransforms.insert( 
@@ -89,7 +89,7 @@ void EveExplosion::SetLocalExplosionTransforms( const std::vector<Matrix>& trans
 //   spaceObjectParent - Space object parent
 //   childParent - Child parent
 // --------------------------------------------------------------------------------------
-void EveExplosion::UpdateSyncronous( 
+void EveChildExplosion::UpdateSyncronous( 
 	EveUpdateContext& updateContext, 
 	IEveSpaceObject2* spaceObjectParent, 
 	IEveSpaceObjectChild* childParent )
@@ -146,7 +146,7 @@ void EveExplosion::UpdateSyncronous(
 //   Searches for all IRoot descendants in m_localExplosionShared and puts them into
 //   m_sharedObjects vector. I wish we had a helper function for this in blue.
 // --------------------------------------------------------------------------------------
-void EveExplosion::FindSharedObjects()
+void EveChildExplosion::FindSharedObjects()
 {
 	m_sharedObjects.clear();
 
@@ -228,10 +228,10 @@ void EveExplosion::FindSharedObjects()
 //   copier - ICopier instance (unused)
 //   context - Callback context (EveExplosion pointer)
 // --------------------------------------------------------------------------------------
-ICopier::OverrideResult EveExplosion::CopyElement( IRoot* source, IRoot** dest, ICopier* copier, void* context )
+ICopier::OverrideResult EveChildExplosion::CopyElement( IRoot* source, IRoot** dest, ICopier* copier, void* context )
 {
 	source = source ? source->GetRootObject() : nullptr;
-	auto self = static_cast<EveExplosion*>( context );
+	auto self = static_cast<EveChildExplosion*>( context );
 	auto found = self->m_sharedObjects.find( source );
 	if( found == self->m_sharedObjects.end() )
 	{
@@ -262,7 +262,7 @@ ICopier::OverrideResult EveExplosion::CopyElement( IRoot* source, IRoot** dest, 
 //   copier - ICopier instance (unused)
 //   context - Callback context (EveExplosion::Transform pointer)
 // --------------------------------------------------------------------------------------
-void EveExplosion::UpdateEmitter( IRoot* source, IRoot** dest, ICopier* copier, void* context )
+void EveChildExplosion::UpdateEmitter( IRoot* source, IRoot** dest, ICopier* copier, void* context )
 {
 	IRootPtr obj( *dest );
 	if( Tr2SphereShapeAttributeGeneratorPtr generator = BlueCastPtr( *dest ) )
@@ -284,7 +284,7 @@ void EveExplosion::UpdateEmitter( IRoot* source, IRoot** dest, ICopier* copier, 
 // Arguments:
 //   transform - Local explosion transform
 // --------------------------------------------------------------------------------------
-void EveExplosion::SpawnLocalExplosion( const Matrix& transform )
+void EveChildExplosion::SpawnLocalExplosion( const Matrix& transform )
 {
 	if( !m_localExplosion )
 	{
