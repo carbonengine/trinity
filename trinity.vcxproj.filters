@@ -39,9 +39,6 @@
     <ClInclude Include="autoversion.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="BinkOutputStream.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="D3DFundamentalTypes.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -1368,9 +1365,6 @@
     <ClInclude Include="Sprite2d\Tr2Sprite2dArc.h">
       <Filter>Source Files\Sprite2d</Filter>
     </ClInclude>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dBinkTexture.h">
-      <Filter>Source Files\Sprite2d</Filter>
-    </ClInclude>
     <ClInclude Include="Sprite2d\Tr2Sprite2dContainer.h">
       <Filter>Source Files\Sprite2d</Filter>
     </ClInclude>
@@ -1477,9 +1471,6 @@
       <Filter>Source Files\Wod</Filter>
     </ClInclude>
     <ClCompile Include="ALResultBlue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BinkOutputStream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="EveSprite2dBracket.cpp">
@@ -3469,12 +3460,6 @@
       <Filter>Source Files\Sprite2d</Filter>
     </ClCompile>
     <ClCompile Include="Sprite2d\Tr2Sprite2dArc_Blue.cpp">
-      <Filter>Source Files\Sprite2d</Filter>
-    </ClCompile>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dBinkTexture.cpp">
-      <Filter>Source Files\Sprite2d</Filter>
-    </ClCompile>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dBinkTexture_Blue.cpp">
       <Filter>Source Files\Sprite2d</Filter>
     </ClCompile>
     <ClCompile Include="Sprite2d\Tr2Sprite2dContainer.cpp">
