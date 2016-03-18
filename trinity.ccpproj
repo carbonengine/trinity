@@ -48,7 +48,6 @@ BaseConfigurations:
   Windows:
     Imports:
     - ../../../../../../sdk/Granny/2.9.24.0/granny_2.9.24.0.yaml
-    - ../../../../../../sdk/Bink/2.4e/Bink_2.4e.yaml
     - ../../../../../../sdk/nvidia/nvapi/R331/nvapi_R331.yaml
     - ../../../../../../sdk/nvidia/CUDA/3.0/CUDA_3.0.yaml
     - ../../../../../../sdk/nvidia/optix/2.6.0/optix_2.6.0.yaml
@@ -69,7 +68,6 @@ BaseConfigurations:
       - DEPRECATED_ENABLED=1
       - INTERIORS_ENABLED=1
       - TBB_ENABLED=1
-      - BINK_ENABLED=1
 
     Link:
       IgnoreAllDefaultLibraries: true

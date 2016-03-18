@@ -12,10 +12,6 @@
 
 #include "Blue/Include/IBlueCallbackMan.h"
 
-#if BINK_ENABLED
-#include "Sprite2d/Tr2Sprite2dBinkTexture.h"
-#endif
-
 #ifdef _WIN32
 #include "nvapi.h"
 #endif
@@ -402,11 +398,6 @@ void TriDevice::Update( Be::Time realTime, Be::Time simTime )
 	{
 		(*i)->Update( realTime, simTime );
 	}
-
-#if BINK_ENABLED
-	// Kick off bink video updates into other worker threads
-	Tr2Sprite2dBinkTexture::UpdateAllBinkBideos();
-#endif
 
 	// Callbacks to Python when curve sets finish may add curve sets to the device curve sets
 	// list. This will mess up the iterator unless we iterate over a copy.

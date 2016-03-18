@@ -60,18 +60,6 @@ void Tr2GrannyDeallocate( const char* file, granny_int32x line, void* memory )
 	return CCPAlignedFreeWithTracking( memory );
 }
 
-#if BINK_ENABLED
-void* __stdcall Tr2BinkAllocate( U32 size )
-{
-	return CCP_MALLOC( "Bink", size );
-}
-
-void __stdcall Tr2BinkFree( void* p )
-{
-	CCP_FREE( p );
-}
-#endif
-
 #if BLUE_WITH_PYTHON
 const char* InitializeForPython()
 {
@@ -136,9 +124,6 @@ static void StartDLL()
 #endif
 
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );
-#if BINK_ENABLED
-	BinkSetMemory( Tr2BinkAllocate, Tr2BinkFree );
-#endif
 
 	Tr2FontManager::Initialize();
 

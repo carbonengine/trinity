@@ -179,10 +179,6 @@ using std::max;
 
 #endif
 
-#if BINK_ENABLED
-#include "Bink.h"
-#endif
-
 #include "ImageIO/Tr2ImageHandler.h"
 #include "ImageIO/HostBitmap.h"
 
