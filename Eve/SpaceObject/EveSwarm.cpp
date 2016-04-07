@@ -342,7 +342,6 @@ void EveSwarm::UpdateSwarm( Be::Time t )
 		m_origin = originNow;
 	}
 
-	BoundingBoxInitialize( m_squadBoundsMin, m_squadBoundsMax );
 
 	if( !m_started )
 	{
@@ -360,52 +359,56 @@ void EveSwarm::UpdateSwarm( Be::Time t )
 			m_vehicles[i].position += originShift;
 		}
 	}
-
-	// Calculate average velocity direction(alignment and center position(pre update)
+	
 	Vector3 center( 0, 0, 0 );
 	Vector3 alignment( 0, 0, 0 );
-	for( unsigned i = 0; i < m_vehicles.size(); i++ )
+	if( m_isVisible )
 	{
-		center += m_vehicles[i].position;
-		alignment += m_vehicles[i].velocity;
-	}
-	if( m_vehicles.size() > 0 )
-	{
-		center *= 1.f / (float)m_vehicles.size();
-		D3DXVec3Normalize( &alignment, &alignment );
-	}
+		BoundingBoxInitialize( m_squadBoundsMin, m_squadBoundsMax );
+		// Calculate average velocity direction(alignment and center position(pre update)
+		for( unsigned i = 0; i < m_vehicles.size(); i++ )
+		{
+			center += m_vehicles[i].position;
+			alignment += m_vehicles[i].velocity;
+		}
+		if( m_vehicles.size() > 0 )
+		{
+			center *= 1.f / (float)m_vehicles.size();
+			D3DXVec3Normalize( &alignment, &alignment );
+		}
 
-	// Max speed is based of the ball speed + a minimum allowed speed
-	float maxSpeed = m_behavior.m_speedMinimum;
-	if( m_speed )
-	{
-		maxSpeed += m_behavior.m_speedMultiplier * m_speed->m_value;
-	}
-	float maxAcceleration = maxSpeed;
+		// Max speed is based of the ball speed + a minimum allowed speed
+		float maxSpeed = m_behavior.m_speedMinimum;
+		if( m_speed )
+		{
+			maxSpeed += m_behavior.m_speedMultiplier * m_speed->m_value;
+		}
+		float maxAcceleration = maxSpeed;
 
-	// Calculate formation directions
-	Vector3 formationSide, formationDirection, up( 0, 1, 0 );
-	D3DXVec3Normalize( &formationDirection, &m_vehicles[0].velocity );
-	D3DXVec3Cross( &formationSide, &formationDirection, &up );
+		// Calculate formation directions
+		Vector3 formationSide, formationDirection, up( 0, 1, 0 );
+		D3DXVec3Normalize( &formationDirection, &m_vehicles[0].velocity );
+		D3DXVec3Cross( &formationSide, &formationDirection, &up );
 
-	Vector3 followPosition = m_worldPosition + ( m_worldVelocity + m_worldAcceleration * timeDelta ) * timeDelta;
-	// Calculate forces and acceleration
-	for( unsigned i = 0; i < m_vehicles.size(); i++ )
-	{
-		Vector3 force = CalculateForces( i, m_vehicles, followPosition, center, alignment, formationDirection, formationSide, timeSeconds );
-		Vector3 acc = force * 1.f / m_behavior.m_mass;
-		m_vehicles[i].acceleration = acc;
-		TriVectorClampLength( &m_vehicles[i].acceleration, maxAcceleration );
-	}
+		Vector3 followPosition = m_worldPosition + ( m_worldVelocity + m_worldAcceleration * timeDelta ) * timeDelta;
+		// Calculate forces and acceleration
+		for( unsigned i = 0; i < m_vehicles.size(); i++ )
+		{
+			Vector3 force = CalculateForces( i, m_vehicles, followPosition, center, alignment, formationDirection, formationSide, timeSeconds );
+			Vector3 acc = force * 1.f / m_behavior.m_mass;
+			m_vehicles[i].acceleration = acc;
+			TriVectorClampLength( &m_vehicles[i].acceleration, maxAcceleration );
+		}
 
-	// Update velocities and positions
-	for( unsigned i = 0; i < m_vehicles.size(); i++ )
-	{
-		m_vehicles[i].velocity = m_vehicles[i].velocity + m_vehicles[i].acceleration * timeSeconds;
-		TriVectorClampLength( &m_vehicles[i].velocity, maxSpeed );
-		m_vehicles[i].position += m_vehicles[i].velocity * timeSeconds;
-		UpdateOrientation( &m_vehicles[i], timeSeconds );
-		BoundingBoxUpdate( m_squadBoundsMin, m_squadBoundsMax, m_vehicles[i].position );
+		// Update velocities and positions
+		for( unsigned i = 0; i < m_vehicles.size(); i++ )
+		{
+			m_vehicles[i].velocity = m_vehicles[i].velocity + m_vehicles[i].acceleration * timeSeconds;
+			TriVectorClampLength( &m_vehicles[i].velocity, maxSpeed );
+			m_vehicles[i].position += m_vehicles[i].velocity * timeSeconds;
+			UpdateOrientation( &m_vehicles[i], timeSeconds );
+			BoundingBoxUpdate( m_squadBoundsMin, m_squadBoundsMax, m_vehicles[i].position );
+		}
 	}
 
 	// Never let the center of the squadron get more than m_maxDistance from the world position(client hangs for while f.x.)
