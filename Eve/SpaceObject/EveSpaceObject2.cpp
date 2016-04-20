@@ -1599,7 +1599,7 @@ void EveSpaceObject2::GetImpactPosition( Vector3& out, int damageLocatorIndex, c
 	D3DXVec3TransformNormal( &dirOS, &direction, &m_invWorldTransform );
 	
 	Vector3 center, radii;
-	GetShapeEllipsoid(center, radii);
+	GetShapeEllipsoid( center, radii );
 	IntersectEllipsoidRay( out, center, radii, tgtPosOS, dirOS );
 	D3DXVec3TransformCoord( &out, &out, &m_worldTransform );
 }

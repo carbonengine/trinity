@@ -86,10 +86,17 @@ void EveChildLink::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpace
 		(*it)->CopyValue();
 	}
 
-	// get parent worldmatrix
+	// get parent worldmatrix and parent's shield ellipsoid offset
+	Vector3 shieldEllipsoidCenter( 0.f, 0.f, 0.f );
 	if( spaceObjectParent )
 	{
 		spaceObjectParent->GetLocalToWorldTransform( m_worldTransform );
+		EveSpaceObject2Ptr p;
+		if( spaceObjectParent->QueryInterface( BlueInterfaceIID<EveSpaceObject2>(), (void**)&p, BEQI_SILENT ) )
+		{
+			Vector3 t;
+			p->GetShapeEllipsoid( shieldEllipsoidCenter, t );
+		}
 	}
 	else if ( childParent )
 	{
@@ -120,6 +127,11 @@ void EveChildLink::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpace
 	Vector3 offsetToTarget = m_currentDistance * m_currentDirection;
 	TriMatrixOverwriteTranslation( &linkRotationMat, &linkRotationMat, &offsetToTarget );
 
+	// the link is to attach to the shield ellipsoid, so use ellipsoid center on worldmatrix
+	Matrix ellipsoidCenterMat, finalWorldMat;
+	D3DXMatrixTranslation( &ellipsoidCenterMat, shieldEllipsoidCenter.x, shieldEllipsoidCenter.y, shieldEllipsoidCenter.z );
+	D3DXMatrixMultiply( &finalWorldMat, &ellipsoidCenterMat, &m_worldTransform );
+
 	// update perobject data buffers
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
@@ -128,7 +140,7 @@ void EveChildLink::UpdateAsyncronous( EveUpdateContext& updateContext, IEveSpace
 	{
 		spaceObjectParent->GetPerObjectStructs( m_vsData, m_psData );
 	}
-	D3DXMatrixTranspose( &m_vsData.worldTransform, &m_worldTransform );
+	D3DXMatrixTranspose( &m_vsData.worldTransform, &finalWorldMat );
 	D3DXMatrixTranspose( &m_vsData.worldTransformLast, &linkRotationMat );
 }
 
