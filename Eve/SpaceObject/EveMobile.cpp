@@ -160,6 +160,9 @@ void EveMobile::PrepareShaderData( EveUpdateContext& updateContext )
 		float deltaT = updateContext.GetDeltaT();
 		m_clipSphereFactorDelta += deltaT;
 		m_clipSphereFactor = m_clipSphereFactorCurve->Update( m_clipSphereFactorDelta );
+
+		// This is here so we always have a correct clipsphere center, even when the ANIM_CMD_PLAY_CLIPSPHERE animation state is started when the object is not loaded
+		m_clipSphereCenter = -1.f * GetBoundingSphereCenter();
 	}
 
 	// the m_clipSphereFactor goes from 0.0 to 1.0 and is the "amount" of visibility of this whole
