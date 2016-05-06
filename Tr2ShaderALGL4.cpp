@@ -42,13 +42,19 @@ static int CreateShader( Tr2RenderContextEnum::ShaderType type, const void* byte
 		return 0;
 	}
 	ON_BLOCK_EXIT( [&]{ if( shader ) { glDeleteShader( shader ); } } );
-	GLint length = GLint( bytecodeSize );
-	CR_GL_RETURN_VAL( glShaderSource( shader, 1, (const char**)&bytecode, &length ), 0 );
+
+	static const char* prefix = "#version 410 core\n";
+	static const GLint prefixLength = strlen( prefix );
+
+	const char* code[] = { prefix, reinterpret_cast<const char*>( bytecode ) };
+	GLint length[] = { prefixLength, GLint( bytecodeSize ) };
+	CR_GL_RETURN_VAL( glShaderSource( shader, 2, code, length ), 0 );
 	CR_GL_RETURN_VAL( glCompileShader( shader ), 0 );
 	GLint status = 0;
 	CR_GL_RETURN_VAL( glGetShaderiv( shader, GL_COMPILE_STATUS, &status ), 0 );
 	if( !status )
 	{
+		GLint length;
 		glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &length );
 		char* buffer = new char[length];
 		glGetShaderInfoLog( shader, length, nullptr, buffer );
