@@ -579,12 +579,7 @@ void EveSpaceObject2::GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVecto
 														  ITriRenderBatchAccumulator* batches, 
 														  const Tr2PerObjectData* perObjectData ) const
 {
-	TriGeometryRes* geomRes = NULL;
-
-	if( !geomRes )
-	{
-		geomRes = m_mesh->GetGeometryResource();
-	}
+	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
 
 	if( !geomRes || !geomRes->IsGood() )
 	{
@@ -651,11 +646,7 @@ void EveSpaceObject2::GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVecto
 // ---------------------------------------------------------------------------------------
 void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType )
 {
-	TriGeometryRes* geomRes = NULL;
-	if( !geomRes )
-	{
-		geomRes = m_mesh->GetGeometryResource();
-	}
+	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
 
 	if( !geomRes || !geomRes->IsGood() )
 	{
@@ -1678,8 +1669,6 @@ const Vector3* EveSpaceObject2::GetWorldPosition()
 
 void EveSpaceObject2::SelectMeshLevelOfDetail()
 {
-	Tr2MeshBase* mesh = NULL;
-
 	if( m_meshLod )
 	{
 		m_meshLod->SelectLod( static_cast<Tr2Lod>( m_lodLevel ) );
@@ -2247,10 +2236,9 @@ Vector3 EveSpaceObject2::GetObjectSpaceDamageLocatorDirection( uint32_t index ) 
 	}
 	
 	// If the damage locator is animated we extract the bone matrix and apply it to the damage locator direction
-	size_t boneCount = 0;	
 	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
-		boneCount = size_t( m_animationUpdater->GetMeshBoneCount() );
+		size_t boneCount = size_t( m_animationUpdater->GetMeshBoneCount() );
 		if( boneCount )
 		{
 			const granny_matrix_3x4* bones = m_animationUpdater->GetMeshBoneMatrixList();

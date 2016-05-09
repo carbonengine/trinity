@@ -273,9 +273,9 @@ bool EveMobile::ValidateTurretLocatorName( const char* locatorName, unsigned int
 			++i;
 		}
 
-		unsigned int ix = atoi( index.c_str() );
+		int ix = atoi( index.c_str() );
 
-		if( (ix == 0) && (ix > 32) )
+		if( ( ix == 0 ) || ( ix > 32 ) )
 		{
 			// Invalid turret locator index found
 			return false;

@@ -727,7 +727,6 @@ static PyObject* PyPickParticle( PyObject* self, PyObject* args )
 	// since we'd frequently want to turn this off for the map (which is additive)
 	// and because to know what the ID returned actually means, you wouldn't want it moving around
 	
-	const Vector3* closestParticle = nullptr;
 	int closestParticleID = -1;
 
 	unsigned count = data->GetCount();

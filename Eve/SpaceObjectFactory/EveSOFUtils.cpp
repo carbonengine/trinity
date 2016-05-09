@@ -12,13 +12,8 @@
 // Description:
 //   Initialize data members and do all initial analyzing
 // --------------------------------------------------------------------------------
-EveSOFUtilsParameterName::EveSOFUtilsParameterName( const EveSOFDataMgr::GenericData* genericData, const char* parameterName )
+EveSOFUtilsParameterName::EveSOFUtilsParameterName( const EveSOFDataMgr::GenericData* genericData, const char* parameterName ) : m_fullname( parameterName ), m_shortname( parameterName ), m_materialIdx( -1 )
 {
-	// store
-	m_fullname = parameterName;
-	m_shortname = parameterName;
-	m_materialIdx = -1;
-
 	// try to find the material prefix and with that indentify the index
 	for( size_t i = 0; i < genericData->materialPrefixes.size(); ++i )
 	{

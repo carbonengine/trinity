@@ -1769,9 +1769,8 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 	float yOffset = m_yProjOffset;
 	TAAOffset();
 
-	Matrix currentProj = Tr2Renderer::GetReversedDepthProjectionTransform();
-		currentProj = m_frameData.projection;
-		currentProj = EveCamera::AddCenterOffset( currentProj, m_xProjOffset-xOffset, m_yProjOffset-yOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
+	Matrix currentProj = m_frameData.projection;
+	currentProj = EveCamera::AddCenterOffset( currentProj, m_xProjOffset-xOffset, m_yProjOffset-yOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
 
 	m_viewProjectLast = Tr2Renderer::GetViewTransform() * currentProj; 
 	ClearVariableStore();

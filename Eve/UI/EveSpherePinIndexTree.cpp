@@ -32,11 +32,7 @@ struct EveSpherePinIndexTree::TreeNode
 
 struct EveSpherePinIndexTree::Face
 {
-	Face( ) : 
-		index1(0), 
-		index2(0), 
-		index3(0), 
-		flag( 0 ) 
+	Face( ) : index1( 0 ), index2( 0 ),  index3( 0 ), flag( false ), radius( 0.f )
 	{}
 
 	Vector3 center;

@@ -488,7 +488,7 @@ void EveSOF::SetupSpriteSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) c
 			const EveSOFDataMgr::HullSpriteSetItemData* itemData = &(*ssiit);
 
 			// faction data?
-			const EveSOFDataMgr::FactionSpriteSetColorData* factionSpriteData = dna->GetFactionSpriteSetData( ssiit->groupIndex );
+			const EveSOFDataMgr::FactionSpriteSetColorData* factionSpriteData = dna->GetFactionSpriteSetData( itemData->groupIndex );
 			if( !factionSpriteData )
 			{
 				// This spriteset item is not used for this faction.
@@ -503,13 +503,13 @@ void EveSOF::SetupSpriteSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) c
 			spriteSetItem->m_color = factionSpriteData->color;
 
 			// set it up the per-hull data
-			spriteSetItem->m_blinkPhase = ssiit->blinkPhase;
-			spriteSetItem->m_blinkRate = ssiit->blinkRate;
-			spriteSetItem->m_boneIndex = ssiit->boneIndex;
-			spriteSetItem->m_falloff = ssiit->falloff;
-			spriteSetItem->m_maxScale = ssiit->maxScale;
-			spriteSetItem->m_minScale = ssiit->minScale;
-			spriteSetItem->m_position = ssiit->position;
+			spriteSetItem->m_blinkPhase = itemData->blinkPhase;
+			spriteSetItem->m_blinkRate = itemData->blinkRate;
+			spriteSetItem->m_boneIndex = itemData->boneIndex;
+			spriteSetItem->m_falloff = itemData->falloff;
+			spriteSetItem->m_maxScale = itemData->maxScale;
+			spriteSetItem->m_minScale = itemData->minScale;
+			spriteSetItem->m_position = itemData->position;
 
 			// put it into spriteset
 			spriteSet->Add( spriteSetItem );
@@ -729,7 +729,7 @@ void EveSOF::SetupSpriteLineSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna
 			const EveSOFDataMgr::HullSpriteLineSetItemData* itemData = &( *slsiit );
 
 			// faction data?
-			const EveSOFDataMgr::FactionSpriteSetColorData* factionSpriteData = dna->GetFactionSpriteSetData( slsiit->groupIndex );
+			const EveSOFDataMgr::FactionSpriteSetColorData* factionSpriteData = dna->GetFactionSpriteSetData( itemData->groupIndex );
 			if( !factionSpriteData )
 			{
 				// This spritelineset item is not used for this faction.
@@ -744,17 +744,17 @@ void EveSOF::SetupSpriteLineSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna
 			spriteLineSetItem->m_color = factionSpriteData->color;
 
 			// set it up the per-hull data
-			spriteLineSetItem->m_blinkPhaseShift = slsiit->blinkPhaseShift;
-			spriteLineSetItem->m_blinkPhase = slsiit->blinkPhase;
-			spriteLineSetItem->m_blinkRate = slsiit->blinkRate;
-			spriteLineSetItem->m_boneIndex = slsiit->boneIndex;
-			spriteLineSetItem->m_falloff = slsiit->falloff;
-			spriteLineSetItem->m_maxScale = slsiit->maxScale;
-			spriteLineSetItem->m_minScale = slsiit->minScale;
-			spriteLineSetItem->m_position = slsiit->position;
-			spriteLineSetItem->m_rotation = slsiit->rotation;
-			spriteLineSetItem->m_scaling = slsiit->scaling;
-			spriteLineSetItem->m_spacing = slsiit->spacing;
+			spriteLineSetItem->m_blinkPhaseShift = itemData->blinkPhaseShift;
+			spriteLineSetItem->m_blinkPhase = itemData->blinkPhase;
+			spriteLineSetItem->m_blinkRate = itemData->blinkRate;
+			spriteLineSetItem->m_boneIndex = itemData->boneIndex;
+			spriteLineSetItem->m_falloff = itemData->falloff;
+			spriteLineSetItem->m_maxScale = itemData->maxScale;
+			spriteLineSetItem->m_minScale = itemData->minScale;
+			spriteLineSetItem->m_position = itemData->position;
+			spriteLineSetItem->m_rotation = itemData->rotation;
+			spriteLineSetItem->m_scaling = itemData->scaling;
+			spriteLineSetItem->m_spacing = itemData->spacing;
 
 			// put it into spriteset
 			spriteLineSet->Add( spriteLineSetItem );
@@ -1486,10 +1486,10 @@ void EveSOF::SetupTurretMaterialFromFaction( EveTurretSet* turretSet, const char
 			shader->StartUpdate();
 			for( auto it = shader->m_constParameters.begin(); it != shader->m_constParameters.end(); ++it )
 			{
-				EveSOFUtilsParameterName param( m_dataMgr.GetGenericData(), it->name.c_str() );
+				EveSOFUtilsParameterName param( genericData, it->name.c_str() );
 				if( param.IsValid() )
 				{
-					std::string newParamName = param.ChangeMaterialIdx( m_dataMgr.GetGenericData(), factionData->materialUsageList[ param.GetMaterialIdx() ] );
+					std::string newParamName = param.ChangeMaterialIdx( genericData, factionData->materialUsageList[ param.GetMaterialIdx() ] );
 					auto paramFinder = areaData->parameters.find( BlueSharedString( newParamName ) );
 					if( paramFinder != areaData->parameters.end() )
 					{
@@ -1504,10 +1504,10 @@ void EveSOF::SetupTurretMaterialFromFaction( EveTurretSet* turretSet, const char
 			// then non-const parameters
 			for( auto it = shader->m_parameters.begin(); it != shader->m_parameters.end(); ++it )
 			{
-				EveSOFUtilsParameterName param( m_dataMgr.GetGenericData(), (*it)->GetParameterName() );
+				EveSOFUtilsParameterName param( genericData, (*it)->GetParameterName() );
 				if( param.IsValid() )
 				{
-					std::string newParamName = param.ChangeMaterialIdx( m_dataMgr.GetGenericData(), factionData->materialUsageList[ param.GetMaterialIdx() ] );
+					std::string newParamName = param.ChangeMaterialIdx( genericData, factionData->materialUsageList[ param.GetMaterialIdx() ] );
 					auto paramFinder = areaData->parameters.find( BlueSharedString( newParamName ) );
 					if( paramFinder != areaData->parameters.end() )
 					{
@@ -1529,8 +1529,6 @@ void EveSOF::SetupTurretMaterialFromFaction( EveTurretSet* turretSet, const char
 // --------------------------------------------------------------------------------
 void EveSOF::SetupTurretMaterialFromDNA( EveTurretSet* turretSet, const char* dnaString )
 {
-	// get generic data
-	const EveSOFDataMgr::GenericData* genericData = m_dataMgr.GetGenericData();
 	// get parent ship's DNA
 	EveSOFDNAPtr dna;
 	dna.CreateInstance();

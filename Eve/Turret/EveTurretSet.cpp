@@ -278,7 +278,7 @@ void EveTurretSet::InitializeFiringEffect()
 
 					// firing bones should always be on the format Pos_FireXX where XX can range form 01 to 99
 					char boneNameBuffer[11];
-					unsigned int boneNameIndex = i+1;
+					int boneNameIndex = i + 1;
 					sprintf_s( boneNameBuffer, "Pos_Fire%.2d", boneNameIndex );
 					
 					// in case we don't find positional bone, ::FindJoint() returns 0xffffffff
@@ -2065,11 +2065,10 @@ bool EveTurretSet::GetClosestTurretAndLocator( unsigned int& closestTurretIx, in
 	{
 		if( m_singleTurrets[i].valid )
 		{
-			int locatorIx = -1;
 			Vector3 source = m_singleTurrets[i].worldMatrix.GetTranslation();
 			Vector3 position = source;
 			// get position of closest damagelocator
-			locatorIx = m_target->FindClosestLocator( &source, &position );
+			int locatorIx = m_target->FindClosestLocator( &source, &position );
 
 			// find normal from turret to target
 			Vector3 nrmToTarget = position - source;

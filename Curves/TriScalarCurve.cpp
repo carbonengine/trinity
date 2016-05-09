@@ -99,8 +99,7 @@ float TriScalarCurve::GetValueAt(
 		}
 		else
 		{// (mExtrapolation == TRIEXT_CYCLE)
-			double cycledTime = pos - (double)startTime;
-			cycledTime = fmod( pos, (double)length );
+			double cycledTime = fmod( pos, (double)length );
 			// re-adjust to be within the bounds of the curve
 			pos = (double)startTime + cycledTime;
 		}

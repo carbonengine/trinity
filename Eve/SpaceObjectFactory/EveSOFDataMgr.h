@@ -241,7 +241,6 @@ public:
 
 	struct FactionDecalData
 	{
-		int groupIndex;
 		bool isVisible;
 		std::string shader;
 		std::map<BlueSharedString, TextureData> textures;

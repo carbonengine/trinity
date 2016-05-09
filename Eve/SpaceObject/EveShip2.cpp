@@ -42,7 +42,6 @@ void EveShip2::UpdateSyncronous( EveUpdateContext& updateContext )
 	}
 	EveMobile::UpdateSyncronous( updateContext );
 	Be::Time time = updateContext.GetTime();
-	float deltaT = updateContext.GetDeltaT();
 
 	// need the speed!
 	Vector3 v;
@@ -224,51 +223,6 @@ Tr2PerObjectData* EveShip2::GetPerObjectData( ITriRenderBatchAccumulator* accumu
 
 	// parent
 	return EveMobile::GetPerObjectData( accumulator );
-}
-
-bool ValidateTurretLocatorName2( const char* locatorName, unsigned int& locatorsFoundA, unsigned int& locatorsFoundB )
-{
-	static const char* kLocatorPrefix = "locator_turret_";
-	const unsigned int kLocatorPrefixLength = (unsigned int)strlen( kLocatorPrefix );
-
-	if( strncmp( locatorName, kLocatorPrefix, kLocatorPrefixLength ) == 0 )
-	{
-		std::string index;
-		unsigned int i = kLocatorPrefixLength;
-		while( isdigit( locatorName[i] ) )
-		{
-			index += locatorName[i];
-			++i;
-		}
-
-		unsigned int ix = atoi( index.c_str() );
-
-		if( (ix == 0) && (ix > 32) )
-		{
-			// Invalid turret locator index found
-			return false;
-		}
-
-		--ix; // Indices start at 1
-
-		if( locatorName[i] == 'a' )
-		{
-			locatorsFoundA |= 1 << ix;
-		}
-		else if( locatorName[i] == 'b' )
-		{
-			locatorsFoundB |= 1 << ix;
-		}
-		else
-		{
-			// Invalid turret name found
-			return false;
-		}
-
-		return true;
-	}
-
-	return false;
 }
 
 void EveShip2::SetAudioParameter( IRoot* aud )
