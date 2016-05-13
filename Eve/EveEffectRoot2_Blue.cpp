@@ -109,8 +109,18 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 			m_secondaryLightingEmissiveColor, 
 			"Color of the secondary light source", 
 			Be::READWRITE | Be::PERSIST )
-		MAP_METHOD_AND_WRAP( "Start", Start, "Play all top level curveSets" )
-		MAP_METHOD_AND_WRAP( "Stop", Stop, "Stop all top level curveSets." )
+		MAP_METHOD_AND_WRAP( 
+			"Start", 
+			Start, 
+			"Play all top level curveSets\n"
+			":jessica-favorite:\n"
+			":jessica-icon: timeline/play.png" )
+		MAP_METHOD_AND_WRAP( 
+			"Stop", 
+			Stop, 
+			"Stop all top level curveSets.\n" 
+			":jessica-favorite:\n"
+			":jessica-icon: timeline/stop.png" )
 
     EXPOSURE_END();
 }

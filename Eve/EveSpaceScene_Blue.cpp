@@ -141,21 +141,24 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"enableShadows", 
 			m_enableShadows, 
 			"If true, shadow maps are generated for objects that are estimated to exceed"
-			"'shadowThreshold' in pixel diameter.", 
+			"'shadowThreshold' in pixel diameter.\n"
+			":jessica-group: Shadows", 
 			Be::READWRITE | Be::PERSIST
 		)
 		MAP_ATTRIBUTE
 		( 
 			"enableShadowObb", 
 			m_enableShadowObb, 
-			"If true, use OBBs to focus the shadow maps.", 
+			"If true, use OBBs to focus the shadow maps.\n"
+			":jessica-group: Shadows", 
 			Be::READWRITE | Be::PERSIST
 		)
 		MAP_ATTRIBUTE
 		( 
 			"enableShadowDistanceTweak", 
 			m_enableShadowDistanceTweak, 
-			"for debugging",
+			"for debugging\n"
+			":jessica-group: Shadows",
 			Be::READWRITE | Be::PERSIST
 		)		
 
@@ -165,7 +168,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_selfShadowOnly, 
 			"If true, shadow maps that are generated for objects render only the object"
 			"itself into the shadow map. This means that ships only cast shadows on"
-			"themselves, not other ships, but is faster.", 
+			"themselves, not other ships, but is faster.\n"
+			":jessica-group: Shadows", 
 			Be::READWRITE | Be::PERSIST
 		)
 		MAP_ATTRIBUTE
@@ -179,14 +183,16 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		( 
 			"debugShowShadowCasters", 
 			m_debugShowShadowCasters, 
-			"If set, shadow casters and shadowing light direction is identified (if scene is showing debug info).", 
+			"If set, shadow casters and shadowing light direction is identified (if scene is showing debug info).\n"
+			":jessica-group: Shadows", 
 			Be::READWRITE | Be::PERSIST
 		)
 		MAP_ATTRIBUTE
 		( 
 			"displayShadowMap", 
 			m_displayShadowMap, 
-			"Displays the shadowmap on top of the screen (if scene is showing debug info).", 
+			"Displays the shadowmap on top of the screen (if scene is showing debug info).\n"
+			":jessica-group: Shadows", 
 			Be::READWRITE
 		)
 
@@ -194,7 +200,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		(
 			"displayShadowMapMipLevel", 
 			m_displayShadowMapMipLevel, 
-			"Determines shadow map miplevel displayed",
+			"Determines shadow map miplevel displayed\n"
+			":jessica-group: Shadows",
 			Be::READWRITE
 		)
 
@@ -318,14 +325,16 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		(
 			"envMapRotation",
 			m_envMapRotation,
-			"Texture transform rotation applied to all envMaps",
+			"Texture transform rotation applied to all envMaps\n"
+			":jessica-group: Lighting",
 			Be::READWRITE | Be::PERSIST
 		)
 		MAP_ATTRIBUTE_WITH_CHOOSER
         ( 
             "envMapResPath", 
             m_envMapResPath, 
-            "Resource path for the scene's environemnt map aka the nebula.",
+            "Resource path for the scene's environemnt map aka the nebula.\n"
+			":jessica-group: Lighting",
             Be::READWRITE | Be::PERSIST | Be::NOTIFY,
             TriTextureChooser 
         )
@@ -333,7 +342,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
         ( 
             "envMap1ResPath", 
             m_envMap1ResPath, 
-            "Resource path for EnvMap1 shader variable.", 
+            "Resource path for EnvMap1 shader variable.\n"
+			":jessica-group: Lighting", 
             Be::READWRITE | Be::PERSIST | Be::NOTIFY, 
             TriTextureChooser 
         )
@@ -341,14 +351,16 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		(
 			"envMap1",
 			m_envMap1,
-			"Value of EnvMap1 shader variable.",
+			"Value of EnvMap1 shader variable.\n"
+			":jessica-group: Lighting",
 			Be::READ
 		)
 		MAP_ATTRIBUTE_WITH_CHOOSER
         ( 
             "envMap2ResPath", 
             m_envMap2ResPath, 
-            "Resource path for EnvMap2 shader variable.", 
+            "Resource path for EnvMap2 shader variable.\n"
+			":jessica-group: Lighting", 
             Be::READWRITE | Be::PERSIST | Be::NOTIFY,
             TriTextureChooser 
         )
@@ -356,14 +368,16 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		(
 			"envMap2",
 			m_envMap2,
-			"Value of EnvMap2 shader variable.",
+			"Value of EnvMap2 shader variable.\n"
+			":jessica-group: Lighting",
 			Be::READ
 		)
 		MAP_ATTRIBUTE_WITH_CHOOSER
         ( 
             "envMap3ResPath", 
             m_envMap3ResPath, 
-            "Resource path for EnvMap3 shader variable.", 
+            "Resource path for EnvMap3 shader variable.\n"
+			":jessica-group: Lighting", 
             Be::READWRITE | Be::PERSIST | Be::NOTIFY, 
             TriTextureChooser 
         )
@@ -371,7 +385,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		(
 			"envMap3",
 			m_envMap3,
-			"Value of EnvMap3 shader variable.",
+			"Value of EnvMap3 shader variable.\n"
+			":jessica-group: Lighting",
 			Be::READ
 		)
 		MAP_ATTRIBUTE
@@ -452,16 +467,16 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			Be::READWRITE
 		)
 
-		MAP_ATTRIBUTE( "sunDiffuseColor", m_sunData.DiffuseColor, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "sunDirection", m_sunData.DirWorld, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "ambientColor", m_ambientColor, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "nebulaIntensity", m_nebulaIntensity, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "fogColor", m_fogColor, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "fogStart", m_fogStart, "Depth at which fogging starts.", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "fogEnd", m_fogEnd, "Depth at which the fog does not get thicker.", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "fogMax", m_fogMax, "Maximum strength of fog at end depth, range [0,1].", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "fogType", m_fogType, "Blend between static fog color (0.0) and dynamic nebula background (1.0).", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "fogBlur", m_fogBlur, "Blur level of dynamic nebula background.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "sunDiffuseColor", m_sunData.DiffuseColor, ":jessica-group: Lighting", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "sunDirection", m_sunData.DirWorld, ":jessica-group: Lighting", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "ambientColor", m_ambientColor, ":jessica-group: Lighting", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "nebulaIntensity", m_nebulaIntensity, ":jessica-group: Lighting", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "fogColor", m_fogColor, ":jessica-group: Fog", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "fogStart", m_fogStart, "Depth at which fogging starts.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "fogEnd", m_fogEnd, "Depth at which the fog does not get thicker.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "fogMax", m_fogMax, "Maximum strength of fog at end depth, range [0,1].\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "fogType", m_fogType, "Blend between static fog color (0.0) and dynamic nebula background (1.0).\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "fogBlur", m_fogBlur, "Blur level of dynamic nebula background.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
 		
 		MAP_ATTRIBUTE( "shadowMap", m_shadowMap, "Shadow map used to shadow the whole space scene.", Be::READWRITE )
 
@@ -469,7 +484,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		( 
 			"shadowThreshold", 
 			m_shadowThreshold, 
-			"Minimum estimated size of objects that receive shadows.", 
+			"Minimum estimated size of objects that receive shadows.\n"
+			":jessica-group: Shadows", 
 			Be::READWRITE | Be::PERSIST
 		)
 
@@ -477,7 +493,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		( 
 			"shadowFadeThreshold", 
 			m_shadowFadeThreshold, 
-			"Estimated size of objects where shadow begins to fade.", 
+			"Estimated size of objects where shadow begins to fade.\n"
+			":jessica-group: Shadows", 
 			Be::READWRITE | Be::PERSIST
 		)
 
@@ -486,7 +503,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"shadowReceiverMaxCount", 
 			m_shadowReceiverMaxCount, 
 			"To help avoid horrible performance in degenerate situations we\n"
-			"put a hard limit on the number of shadow maps drawn per frame.", 
+			"put a hard limit on the number of shadow maps drawn per frame.\n"
+			":jessica-group: Shadows", 
 			Be::READWRITE | Be::PERSIST
 		)
 
@@ -496,7 +514,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_shadowCasterMaxCount, 
 			"To help avoid horrible performance in degenerate situations we\n"
 			"put a hard limit on the number of shadow casters drawn into\n"
-			"each shadow map.", 
+			"each shadow map.\n"
+			":jessica-group: Shadows", 
 			Be::READWRITE | Be::PERSIST
 		)
 
@@ -504,7 +523,8 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		( 
 			"shadowCameraDistance", 
 			m_shadowCameraDistance, 
-			"Shadow camera distance from shadow receiver.", 
+			"Shadow camera distance from shadow receiver.\n"
+			":jessica-group: Shadows", 
 			Be::READWRITE | Be::PERSIST
 		)
 

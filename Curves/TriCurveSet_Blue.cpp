@@ -92,9 +92,21 @@ const Be::ClassInfo* TriCurveSet::ExposeToBlue()
 			"Updates the curve set with the current frame time."
 		)
 
-		MAP_METHOD_AND_WRAP( "Play", Play, "Play this curve set from the start" )
+		MAP_METHOD_AND_WRAP( 
+			"Play", 
+			Play, 
+			"Play this curve set from the start\n"
+			":jessica-favorite:\n"
+			":jessica-icon: timeline/play.png"
+			)
 		MAP_METHOD_AND_WRAP( "PlayFrom", PlayFrom, "Play this curve set from the given time (in seconds)" )
-		MAP_METHOD_AND_WRAP( "Stop", Stop, "Stop the playback of this curveset" )
+		MAP_METHOD_AND_WRAP( 
+			"Stop", 
+			Stop, 
+			"Stop the playback of this curveset\n" 
+			":jessica-favorite:\n"
+			":jessica-icon: timeline/stop.png"
+			)
 		MAP_METHOD_AND_WRAP( "StopOnNextFrame", StopOnNextFrame, "Stop the playback of this curveset on the next frame" )
 		MAP_METHOD_AND_WRAP( "StopAfter", StopAfter, "Stop the playback of this curveset after the given number of seconds" )
 		MAP_METHOD_AND_WRAP( "GetMaxCurveDuration", GetMaxCurveDuration, "Gets the duration of the longest non-cycling curve" )
