@@ -3223,6 +3223,272 @@ TEST_F( Rendering, CanSampleBc3Texture )
 }
 
 
+TEST_F( Rendering, CanSampleVolumeTexture )
+{
+	uint32_t vsBytecode[] = {
+#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
+	};
+
+	Tr2ShaderInputDefinition vsInput;
+	vsInput.elements.resize( 2 );
+	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
+	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
+	vsInput.elements[1].usageIndex = 0;
+	vsInput.ComputeHash();
+
+	Tr2ShaderAL vs;
+	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
+		*renderContext, 
+		Tr2RenderContextEnum::VERTEX_SHADER,
+		vsBytecode,
+		sizeof( vsBytecode ),
+		nullptr,
+		0,
+		vsInput ) );
+
+	uint32_t psBytecode[] = {
+#include INCLUDE_SHADER_CODE( SampleVolumeTexture.ps )
+	};
+
+	Tr2ShaderAL ps;
+	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
+		*renderContext,  
+		Tr2RenderContextEnum::PIXEL_SHADER,
+		psBytecode,
+		sizeof( psBytecode ),
+		nullptr,
+		0,
+		Tr2ShaderInputDefinition() ) );
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
+		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
+		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
+		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+	};
+	const uint32_t vbStride = 5 * sizeof( float );
+	Tr2VertexBufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+
+	Tr2VertexDefinition definition;
+	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+	definition.Add( Tr2VertexDefinition::FLOAT32_2, Tr2VertexDefinition::TEXCOORD );
+
+	Tr2VertexLayoutAL vertexLayout;
+	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
+
+	const uint32_t width = 32;
+	const uint32_t height = 32;
+	const uint32_t depth = 32;
+
+	static uint32_t texturePixels0[] = {
+#include "XrgbVolume.h"
+	};
+	Tr2SubresourceData textureData[1];
+	textureData[0].m_sysMem = texturePixels0;
+	textureData[0].m_sysMemPitch = sizeof( texturePixels0 ) / depth / height;
+	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 ) / depth;
+
+	Tr2TextureAL tex;
+	ASSERT_HRESULT_SUCCEEDED( tex.CreateVolume( width, height, depth, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM, 0, textureData, *renderContext ) );
+
+	float border[4] = { 0 };
+	Tr2SamplerStateAL sampl;
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
+		*renderContext,
+		Tr2SamplerDescription( 
+			Tr2RenderContextEnum::TF_LINEAR,
+			Tr2RenderContextEnum::TF_LINEAR,
+			Tr2RenderContextEnum::TF_LINEAR,
+			false,
+			Tr2RenderContextEnum::TA_WRAP,
+			Tr2RenderContextEnum::TA_WRAP,
+			Tr2RenderContextEnum::TA_WRAP,
+			0.0f,
+			1,
+			Tr2RenderContextEnum::CMP_ALWAYS,
+			border,
+			0.0f,
+			0.0f ) ) );
+
+	uint32_t g = 127;
+
+
+	Tr2ConstantBufferAL cb;
+	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), Tr2RenderContextEnum::USAGE_CPU_WRITE, nullptr, *renderContext ) );
+
+	auto frame = [&] {
+		PerObjectData* data;
+		ASSERT_HRESULT_SUCCEEDED( cb.Lock( (void**)&data, *renderContext ) );
+		data->x = float( g % 100 ) / 100.0f - 0.5f;
+		data->y = 0;
+		ASSERT_HRESULT_SUCCEEDED( cb.Unlock( *renderContext ) );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSamplerState( sampl, Tr2RenderContextEnum::PIXEL_SHADER, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::PIXEL_SHADER, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+	};
+
+	RunLoop( frame );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+}
+
+
+TEST_F( Rendering, CanSampleBc3VolumeTexture )
+{
+	uint32_t vsBytecode[] = {
+#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
+	};
+
+	Tr2ShaderInputDefinition vsInput;
+	vsInput.elements.resize( 2 );
+	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
+	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
+	vsInput.elements[1].usageIndex = 0;
+	vsInput.ComputeHash();
+
+	Tr2ShaderAL vs;
+	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
+		*renderContext, 
+		Tr2RenderContextEnum::VERTEX_SHADER,
+		vsBytecode,
+		sizeof( vsBytecode ),
+		nullptr,
+		0,
+		vsInput ) );
+
+	uint32_t psBytecode[] = {
+#include INCLUDE_SHADER_CODE( SampleVolumeTexture.ps )
+	};
+
+	Tr2ShaderAL ps;
+	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
+		*renderContext,  
+		Tr2RenderContextEnum::PIXEL_SHADER,
+		psBytecode,
+		sizeof( psBytecode ),
+		nullptr,
+		0,
+		Tr2ShaderInputDefinition() ) );
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
+		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
+		0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
+		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
+	};
+	const uint32_t vbStride = 5 * sizeof( float );
+	Tr2VertexBufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+
+	Tr2VertexDefinition definition;
+	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+	definition.Add( Tr2VertexDefinition::FLOAT32_2, Tr2VertexDefinition::TEXCOORD );
+
+	Tr2VertexLayoutAL vertexLayout;
+	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
+
+	const uint32_t width = 32;
+	const uint32_t height = 32;
+	const uint32_t depth = 32;
+
+	uint32_t texturePixels0[] = {
+#include "Dxt5Volume.h"
+	};
+	Tr2SubresourceData textureData[1];
+	textureData[0].m_sysMem = texturePixels0;
+	textureData[0].m_sysMemPitch = sizeof( texturePixels0 ) / depth / height * 4; // *4 because it's a compressed format
+	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 ) / depth;
+
+	Tr2TextureAL tex;
+	ASSERT_HRESULT_SUCCEEDED( tex.CreateVolume( width, height, depth, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC3_UNORM, 0, textureData, *renderContext ) );
+
+	float border[4] = { 0 };
+	Tr2SamplerStateAL sampl;
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
+		*renderContext,
+		Tr2SamplerDescription( 
+			Tr2RenderContextEnum::TF_LINEAR,
+			Tr2RenderContextEnum::TF_LINEAR,
+			Tr2RenderContextEnum::TF_LINEAR,
+			false,
+			Tr2RenderContextEnum::TA_WRAP,
+			Tr2RenderContextEnum::TA_WRAP,
+			Tr2RenderContextEnum::TA_WRAP,
+			0.0f,
+			1,
+			Tr2RenderContextEnum::CMP_ALWAYS,
+			border,
+			0.0f,
+			0.0f ) ) );
+
+	uint32_t g = 127;
+
+
+	Tr2ConstantBufferAL cb;
+	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), Tr2RenderContextEnum::USAGE_CPU_WRITE, nullptr, *renderContext ) );
+
+	auto frame = [&] {
+		PerObjectData* data;
+		ASSERT_HRESULT_SUCCEEDED( cb.Lock( (void**)&data, *renderContext ) );
+		data->x = float( g % 100 ) / 100.0f - 0.5f;
+		data->y = 0;
+		ASSERT_HRESULT_SUCCEEDED( cb.Unlock( *renderContext ) );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetSamplerState( sampl, Tr2RenderContextEnum::PIXEL_SHADER, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::PIXEL_SHADER, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+	};
+
+	RunLoop( frame );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+}
+
+
 TEST_F( Rendering, CanSampleUnassignedTexture )
 {
 	uint32_t vsBytecode[] = {
