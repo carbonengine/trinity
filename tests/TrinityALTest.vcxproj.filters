@@ -20,6 +20,9 @@
     <ClInclude Include="Dxt5Image.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Dxt5Volume.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="FakeGoogleTest.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -36,6 +39,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="WithWindowFixture.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="XrgbVolume.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.DX11\ConstantColor.ps.h">
@@ -78,6 +84,12 @@
       <Filter>Source Files\Shaders.DX11</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.DX11\SampleTextureMipFromTexCoord.ps.patched.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX11\SampleVolumeTexture.ps.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX11\SampleVolumeTexture.ps.patched.h">
       <Filter>Source Files\Shaders.DX11</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.DX11\TexCoordAndPosition.vs.h">
@@ -128,6 +140,12 @@
     <ClInclude Include="Shaders.DX9\SampleTextureMipFromTexCoord.ps.patched.h">
       <Filter>Source Files\Shaders.DX9</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders.DX9\SampleVolumeTexture.ps.h">
+      <Filter>Source Files\Shaders.DX9</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX9\SampleVolumeTexture.ps.patched.h">
+      <Filter>Source Files\Shaders.DX9</Filter>
+    </ClInclude>
     <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.h">
       <Filter>Source Files\Shaders.DX9</Filter>
     </ClInclude>
@@ -176,6 +194,12 @@
     <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.patched.h">
       <Filter>Source Files\Shaders.GL4</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.patched.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
     <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.h">
       <Filter>Source Files\Shaders.GL4</Filter>
     </ClInclude>
@@ -222,6 +246,12 @@
       <Filter>Source Files\Shaders.GLES2</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.GLES2\SampleTextureMipFromTexCoord.ps.patched.h">
+      <Filter>Source Files\Shaders.GLES2</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GLES2\SampleVolumeTexture.ps.h">
+      <Filter>Source Files\Shaders.GLES2</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GLES2\SampleVolumeTexture.ps.patched.h">
       <Filter>Source Files\Shaders.GLES2</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.GLES2\TexCoordAndPosition.vs.h">

@@ -1094,12 +1094,14 @@
     <ClInclude Include="Dxt1Image.h"/>
     <ClInclude Include="Dxt3Image.h"/>
     <ClInclude Include="Dxt5Image.h"/>
+    <ClInclude Include="Dxt5Volume.h"/>
     <ClInclude Include="FakeGoogleTest.h"/>
     <ClInclude Include="RenderWindow.h"/>
     <ClInclude Include="StdAfx.h"/>
     <ClInclude Include="WithRenderContextFixture.h"/>
     <ClInclude Include="WithValidRenderContextFixture.h"/>
     <ClInclude Include="WithWindowFixture.h"/>
+    <ClInclude Include="XrgbVolume.h"/>
     <ClInclude Include="Shaders.DX11\ConstantColor.ps.h"/>
     <ClInclude Include="Shaders.DX11\ConstantColor.ps.patched.h"/>
     <ClInclude Include="Shaders.DX11\InstancedRendering.vs.h"/>
@@ -1114,6 +1116,8 @@
     <ClInclude Include="Shaders.DX11\SampleTextureFromTexCoord.ps.patched.h"/>
     <ClInclude Include="Shaders.DX11\SampleTextureMipFromTexCoord.ps.h"/>
     <ClInclude Include="Shaders.DX11\SampleTextureMipFromTexCoord.ps.patched.h"/>
+    <ClInclude Include="Shaders.DX11\SampleVolumeTexture.ps.h"/>
+    <ClInclude Include="Shaders.DX11\SampleVolumeTexture.ps.patched.h"/>
     <ClInclude Include="Shaders.DX11\TexCoordAndPosition.vs.h"/>
     <ClInclude Include="Shaders.DX11\TexCoordAndPosition.vs.patched.h"/>
     <ClInclude Include="Shaders.DX9\ConstantColor.ps.h"/>
@@ -1130,6 +1134,8 @@
     <ClInclude Include="Shaders.DX9\SampleTextureFromTexCoord.ps.patched.h"/>
     <ClInclude Include="Shaders.DX9\SampleTextureMipFromTexCoord.ps.h"/>
     <ClInclude Include="Shaders.DX9\SampleTextureMipFromTexCoord.ps.patched.h"/>
+    <ClInclude Include="Shaders.DX9\SampleVolumeTexture.ps.h"/>
+    <ClInclude Include="Shaders.DX9\SampleVolumeTexture.ps.patched.h"/>
     <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.h"/>
     <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.patched.h"/>
     <ClInclude Include="Shaders.GL4\ConstantColor.ps.h"/>
@@ -1146,6 +1152,8 @@
     <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.patched.h"/>
     <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.h"/>
     <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.patched.h"/>
+    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.h"/>
+    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.patched.h"/>
     <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.h"/>
     <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.patched.h"/>
     <ClInclude Include="Shaders.GLES2\ConstantColor.ps.h"/>
@@ -1162,6 +1170,8 @@
     <ClInclude Include="Shaders.GLES2\SampleTextureFromTexCoord.ps.patched.h"/>
     <ClInclude Include="Shaders.GLES2\SampleTextureMipFromTexCoord.ps.h"/>
     <ClInclude Include="Shaders.GLES2\SampleTextureMipFromTexCoord.ps.patched.h"/>
+    <ClInclude Include="Shaders.GLES2\SampleVolumeTexture.ps.h"/>
+    <ClInclude Include="Shaders.GLES2\SampleVolumeTexture.ps.patched.h"/>
     <ClInclude Include="Shaders.GLES2\TexCoordAndPosition.vs.h"/>
     <ClInclude Include="Shaders.GLES2\TexCoordAndPosition.vs.patched.h"/>
   </ItemGroup>
