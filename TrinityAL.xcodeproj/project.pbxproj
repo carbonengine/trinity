@@ -45,21 +45,49 @@
 			fileRef = 000000FC0000367aef9fe374;
 			};
 		000001CC0000367aef9fe374 = {
+			dependencies = (
+				);
+			productReference = 000001BD0000367aef9fe374;
+			name = Release_GLES2_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001CD0000367aef9fe374;
+			buildPhases = (
+				000001C10000367aef9fe374,
+				);
+			};
+		0000000A0000367aef9fe374 = {
+			name = Tr2CapsALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2CapsALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001D50000367aef9fe374 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/2.1A3/include",
 					..,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				PRODUCT_NAME = TrinityAL_stub_d;
+				PRODUCT_NAME = TrinityAL_gles2_cc;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
@@ -72,6 +100,10 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
 					"../../../../../../sdk/telemetry/2.1A3/lib",
 					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
 					);
@@ -80,28 +112,20 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_PREPROCESSOR_DEFINITIONS = (
-					_DEBUG,
-					"CCP_ASSERT_ENABLED=1",
-					"TRINITY_PLATFORM=TRINITY_STUB",
+					NDEBUG,
+					"TRINITY_PLATFORM=TRINITY_OPENGLES2",
 					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
 					"$(inherited)",
 					);
 				COPY_PHASE_STRIP = NO;
 				CLANG_CXX_LIBRARY = "libc++";
 				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				};
 			name = Release;
-			};
-		0000000A0000367aef9fe374 = {
-			name = Tr2CapsALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2CapsALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
 			};
 		0000000D0000367aef9fe374 = {
 			isa = PBXBuildFile;
@@ -184,19 +208,12 @@
 			fileRef = 000001520000367aef9fe374;
 			};
 		000001C70000367aef9fe374 = {
-			dependencies = (
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001D60000367aef9fe374,
 				);
-			productReference = 000001BC0000367aef9fe374;
-			name = Debug_GLES2_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001C80000367aef9fe374;
-			buildPhases = (
-				000001BE0000367aef9fe374,
-				);
+			defaultConfigurationIsVisible = 0;
 			};
 		000000DD0000367aef9fe374 = {
 			isa = PBXBuildFile;
@@ -243,7 +260,7 @@
 			sourceTree = "<group>";
 			};
 		000001BA0000367aef9fe374 = {
-			path = TrinityAL_gles2.lib;
+			path = TrinityAL_gl4.lib;
 			isa = PBXFileReference;
 			includeInIndex = 0;
 			explicitFileType = archive.ar;
@@ -396,6 +413,12 @@
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
+		000001DC0000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				};
+			name = Release;
+			};
 		000000EE0000367aef9fe374 = {
 			name = Tr2ConstantBufferALStub.h;
 			fileEncoding = 4;
@@ -517,12 +540,11 @@
 			fileRef = 000000900000367aef9fe374;
 			};
 		000001BD0000367aef9fe374 = {
-			isa = PBXGroup;
-			children = (
-				000001B50000367aef9fe374,
-				000001B70000367aef9fe374,
-				);
-			sourceTree = "<group>";
+			path = TrinityAL_gles2.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
 			};
 		000001960000367aef9fe374 = {
 			name = Tr2VertexDefinition.h;
@@ -590,6 +612,14 @@
 		000001690000367aef9fe374 = {
 			isa = PBXBuildFile;
 			fileRef = 0000016A0000367aef9fe374;
+			};
+		000001D10000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001DB0000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
 			};
 		000000800000367aef9fe374 = {
 			name = Tr2RenderTargetALGLES2.cpp;
@@ -845,6 +875,64 @@
 			isa = PBXBuildFile;
 			fileRef = 000000560000367aef9fe374;
 			};
+		000001D90000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_gles2;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = s;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					NDEBUG,
+					"TRINITY_PLATFORM=TRINITY_OPENGLES2",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
+			};
 		000000ED0000367aef9fe374 = {
 			isa = PBXBuildFile;
 			fileRef = 000000EE0000367aef9fe374;
@@ -942,19 +1030,11 @@
 			sourceTree = "<group>";
 			};
 		000001BF0000367aef9fe374 = {
-			dependencies = (
-				);
-			productReference = 000001B80000367aef9fe374;
-			name = Release_GLES2_Coverage_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001C00000367aef9fe374;
-			buildPhases = (
-				000001BE0000367aef9fe374,
-				);
+			path = TrinityAL_stub.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
 			};
 		0000013D0000367aef9fe374 = {
 			isa = PBXBuildFile;
@@ -975,6 +1055,64 @@
 			path = Tr2DepthStencilALGL4.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
+			};
+		000001D60000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_gl4;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = s;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					NDEBUG,
+					"TRINITY_PLATFORM=TRINITY_OPENGL4",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
 			};
 		000000F60000367aef9fe374 = {
 			name = Tr2DepthStencilALGLES2.h;
@@ -1032,6 +1170,66 @@
 			isa = PBXBuildFile;
 			fileRef = 000000620000367aef9fe374;
 			};
+		000001DA0000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_gl4_cc;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					NDEBUG,
+					"TRINITY_PLATFORM=TRINITY_OPENGL4",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
+			};
 		0000015C0000367aef9fe374 = {
 			name = Tr2RenderTargetALGLES2.h;
 			fileEncoding = 4;
@@ -1081,64 +1279,12 @@
 			fileRef = 000001780000367aef9fe374;
 			};
 		000001CB0000367aef9fe374 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					.,
-					"../../../carbon/src",
-					"../../../../../../sdk/telemetry/2.1A3/include",
-					..,
-					);
-				CLANG_WARN_INT_CONVERSION = YES;
-				GCC_GENERATE_TEST_COVERAGE_FILES = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				PRODUCT_NAME = TrinityAL_gles2_cc;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				ONLY_ACTIVE_ARCH = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/telemetry/2.1A3/lib",
-					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					);
-				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					NDEBUG,
-					"TRINITY_PLATFORM=TRINITY_OPENGLES2",
-					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
-					"$(inherited)",
-					);
-				COPY_PHASE_STRIP = NO;
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_PREFIX_HEADER = StdAfx.h;
-				GCC_INSTRUMENT_PROGRAM_FLOW_ARCS = YES;
-				GCC_DYNAMIC_NO_PIC = NO;
-				SDKROOT = macosx;
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				};
-			name = Release;
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001D80000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
 			};
 		000000AC0000367aef9fe374 = {
 			name = Tr2TrackedALObject.cpp;
@@ -1151,6 +1297,14 @@
 		000001730000367aef9fe374 = {
 			isa = PBXBuildFile;
 			fileRef = 000001740000367aef9fe374;
+			};
+		000001D30000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001DC0000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
 			};
 		000000D50000367aef9fe374 = {
 			isa = PBXBuildFile;
@@ -1187,6 +1341,65 @@
 		0000005F0000367aef9fe374 = {
 			isa = PBXBuildFile;
 			fileRef = 000000600000367aef9fe374;
+			};
+		000001D80000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_gles2_d;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					_DEBUG,
+					"CCP_ASSERT_ENABLED=1",
+					"TRINITY_PLATFORM=TRINITY_OPENGLES2",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
 			};
 		0000006C0000367aef9fe374 = {
 			name = Tr2RenderContextDx11.cpp;
@@ -1232,62 +1445,12 @@
 			name = include;
 			};
 		000001CD0000367aef9fe374 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					.,
-					"../../../carbon/src",
-					"../../../../../../sdk/telemetry/2.1A3/include",
-					..,
-					);
-				CLANG_WARN_INT_CONVERSION = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				PRODUCT_NAME = TrinityAL_gles2;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				GCC_OPTIMIZATION_LEVEL = s;
-				ONLY_ACTIVE_ARCH = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/telemetry/2.1A3/lib",
-					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					);
-				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					NDEBUG,
-					"TRINITY_PLATFORM=TRINITY_OPENGLES2",
-					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
-					"$(inherited)",
-					);
-				COPY_PHASE_STRIP = NO;
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_PREFIX_HEADER = StdAfx.h;
-				GCC_DYNAMIC_NO_PIC = NO;
-				SDKROOT = macosx;
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				};
-			name = Release;
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001D90000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
 			};
 		000000A90000367aef9fe374 = {
 			isa = PBXBuildFile;
@@ -1378,12 +1541,19 @@
 			fileRef = 000001140000367aef9fe374;
 			};
 		000001C60000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001CE0000367aef9fe374,
+			dependencies = (
 				);
-			defaultConfigurationIsVisible = 0;
+			productReference = 000001BA0000367aef9fe374;
+			name = Release_GL4_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001C70000367aef9fe374;
+			buildPhases = (
+				000001C10000367aef9fe374,
+				);
 			};
 		000000B50000367aef9fe374 = {
 			isa = PBXBuildFile;
@@ -1458,28 +1628,12 @@
 			sourceTree = "<group>";
 			};
 		000001C90000367aef9fe374 = {
-			projectDirPath = "";
-			targets = (
-				000001BF0000367aef9fe374,
-				000001C10000367aef9fe374,
-				000001C30000367aef9fe374,
-				000001C50000367aef9fe374,
-				000001C70000367aef9fe374,
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001D70000367aef9fe374,
 				);
-			knownRegions = (
-				en,
-				);
-			developmentRegion = English;
-			projectRoot = "";
-			hasScannedForEncodings = 0;
-			compatibilityVersion = "Xcode 3.2";
-			mainGroup = 000001BD0000367aef9fe374;
-			attributes = {
-				ORGANIZATIONNAME = CCP;
-				LastUpgradeCheck = 0460;
-				};
-			isa = PBXProject;
-			buildConfigurationList = 000001CA0000367aef9fe374;
+			defaultConfigurationIsVisible = 0;
 			};
 		0000009A0000367aef9fe374 = {
 			name = Tr2SwapChainALDx9.cpp;
@@ -1488,6 +1642,56 @@
 			path = Tr2SwapChainALDx9.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
+			};
+		000001DB0000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_stub;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = s;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					NDEBUG,
+					"TRINITY_PLATFORM=TRINITY_STUB",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
 			};
 		000001010000367aef9fe374 = {
 			isa = PBXBuildFile;
@@ -1554,7 +1758,7 @@
 			sourceTree = "<group>";
 			};
 		000001B90000367aef9fe374 = {
-			path = TrinityAL_stub_d.lib;
+			path = TrinityAL_gles2_cc.lib;
 			isa = PBXFileReference;
 			includeInIndex = 0;
 			explicitFileType = archive.ar;
@@ -1581,12 +1785,12 @@
 			fileRef = 0000014E0000367aef9fe374;
 			};
 		000001C00000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001CB0000367aef9fe374,
+			isa = PBXGroup;
+			children = (
+				000001B50000367aef9fe374,
+				000001B70000367aef9fe374,
 				);
-			defaultConfigurationIsVisible = 0;
+			sourceTree = "<group>";
 			};
 		000001830000367aef9fe374 = {
 			isa = PBXBuildFile;
@@ -1645,63 +1849,12 @@
 			sourceTree = "<group>";
 			};
 		000001CF0000367aef9fe374 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					.,
-					"../../../carbon/src",
-					"../../../../../../sdk/telemetry/2.1A3/include",
-					..,
-					);
-				CLANG_WARN_INT_CONVERSION = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				PRODUCT_NAME = TrinityAL_gles2_d;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				ONLY_ACTIVE_ARCH = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/telemetry/2.1A3/lib",
-					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					);
-				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					_DEBUG,
-					"CCP_ASSERT_ENABLED=1",
-					"TRINITY_PLATFORM=TRINITY_OPENGLES2",
-					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
-					"$(inherited)",
-					);
-				COPY_PHASE_STRIP = NO;
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_PREFIX_HEADER = StdAfx.h;
-				GCC_DYNAMIC_NO_PIC = NO;
-				SDKROOT = macosx;
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				};
-			name = Release;
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001DA0000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
 			};
 		000000E50000367aef9fe374 = {
 			isa = PBXBuildFile;
@@ -1784,12 +1937,19 @@
 			sourceTree = "<group>";
 			};
 		000001C20000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001CC0000367aef9fe374,
+			dependencies = (
 				);
-			defaultConfigurationIsVisible = 0;
+			productReference = 000001B80000367aef9fe374;
+			name = Debug_GL4_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001C30000367aef9fe374;
+			buildPhases = (
+				000001C10000367aef9fe374,
+				);
 			};
 		0000017C0000367aef9fe374 = {
 			name = Tr2SwapChainALStub.h;
@@ -2076,54 +2236,19 @@
 			sourceTree = "<group>";
 			};
 		000001CE0000367aef9fe374 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					.,
-					"../../../carbon/src",
-					"../../../../../../sdk/telemetry/2.1A3/include",
-					..,
-					);
-				CLANG_WARN_INT_CONVERSION = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				PRODUCT_NAME = TrinityAL_stub;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				GCC_OPTIMIZATION_LEVEL = s;
-				ONLY_ACTIVE_ARCH = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"../../../../../../sdk/telemetry/2.1A3/lib",
-					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					);
-				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					NDEBUG,
-					"TRINITY_PLATFORM=TRINITY_STUB",
-					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
-					"$(inherited)",
-					);
-				COPY_PHASE_STRIP = NO;
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_PREFIX_HEADER = StdAfx.h;
-				GCC_DYNAMIC_NO_PIC = NO;
-				SDKROOT = macosx;
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				};
-			name = Release;
+			dependencies = (
+				);
+			productReference = 000001BE0000367aef9fe374;
+			name = Release_GL4_Coverage_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001CF0000367aef9fe374;
+			buildPhases = (
+				000001C10000367aef9fe374,
+				);
 			};
 		000001980000367aef9fe374 = {
 			name = Tr2VertexLayoutALDx11.h;
@@ -2566,276 +2691,6 @@
 			sourceTree = "<group>";
 			};
 		000001C10000367aef9fe374 = {
-			dependencies = (
-				);
-			productReference = 000001B90000367aef9fe374;
-			name = Debug_Stub_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001C20000367aef9fe374;
-			buildPhases = (
-				000001BE0000367aef9fe374,
-				);
-			};
-		000000490000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000004A0000367aef9fe374;
-			};
-		000001760000367aef9fe374 = {
-			name = Tr2SwapChainALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SwapChainALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000006B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000006C0000367aef9fe374;
-			};
-		000001920000367aef9fe374 = {
-			name = Tr2VertexBufferALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexBufferALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000780000367aef9fe374 = {
-			name = Tr2RenderStateEmulationDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderStateEmulationDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001500000367aef9fe374 = {
-			name = Tr2RenderContextGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderContextGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000009F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000A00000367aef9fe374;
-			};
-		0000004C0000367aef9fe374 = {
-			name = Tr2IndexBufferALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2IndexBufferALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000004F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000500000367aef9fe374;
-			};
-		000000BA0000367aef9fe374 = {
-			name = Tr2VertexLayoutALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexLayoutALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001350000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001360000367aef9fe374;
-			};
-		000000B20000367aef9fe374 = {
-			name = Tr2VertexBufferALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexBufferALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000001D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000001E0000367aef9fe374;
-			};
-		000001680000367aef9fe374 = {
-			name = Tr2SamplerStateALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SamplerStateALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000001B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000001C0000367aef9fe374;
-			};
-		0000015B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000015C0000367aef9fe374;
-			};
-		0000011B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000011C0000367aef9fe374;
-			};
-		000000E80000367aef9fe374 = {
-			name = Tr2ConstantBufferALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ConstantBufferALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000014F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001500000367aef9fe374;
-			};
-		0000008A0000367aef9fe374 = {
-			name = Tr2SamplerStateALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SamplerStateALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F90000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000FA0000367aef9fe374;
-			};
-		000000500000367aef9fe374 = {
-			name = Tr2IndexBufferALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2IndexBufferALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B00000367aef9fe374 = {
-			name = Tr2VertexBufferALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexBufferALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001C40000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001CD0000367aef9fe374,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		000000650000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000660000367aef9fe374;
-			};
-		000000440000367aef9fe374 = {
-			name = Tr2GpuTimerALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2GpuTimerALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001CA0000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001D00000367aef9fe374,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		0000000B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000000C0000367aef9fe374;
-			};
-		000001A90000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001AA0000367aef9fe374;
-			};
-		0000012C0000367aef9fe374 = {
-			name = Tr2IndexBufferALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2IndexBufferALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001440000367aef9fe374 = {
-			name = Tr2OcclusionQueryALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2OcclusionQueryALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001410000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001420000367aef9fe374;
-			};
-		0000013E0000367aef9fe374 = {
-			name = Tr2OcclusionQueryALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2OcclusionQueryALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000015D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000015E0000367aef9fe374;
-			};
-		0000015F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001600000367aef9fe374;
-			};
-		000001B20000367aef9fe374 = {
-			name = Tr2PixelFormat.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "include/Tr2PixelFormat.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001AD0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001AE0000367aef9fe374;
-			};
-		0000009C0000367aef9fe374 = {
-			name = Tr2SwapChainALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SwapChainALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001B80000367aef9fe374 = {
-			path = TrinityAL_gles2_cc.lib;
-			isa = PBXFileReference;
-			includeInIndex = 0;
-			explicitFileType = archive.ar;
-			sourceTree = BUILT_PRODUCTS_DIR;
-			};
-		0000010E0000367aef9fe374 = {
-			name = Tr2GpuBufferALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuBufferALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001800000367aef9fe374 = {
-			name = Tr2TextureALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2TextureALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001BE0000367aef9fe374 = {
 			files = (
 				000000010000367aef9fe374,
 				000000030000367aef9fe374,
@@ -2944,6 +2799,360 @@
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
 			};
+		000000490000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000004A0000367aef9fe374;
+			};
+		000001760000367aef9fe374 = {
+			name = Tr2SwapChainALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2SwapChainALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000006B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000006C0000367aef9fe374;
+			};
+		000001920000367aef9fe374 = {
+			name = Tr2VertexBufferALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexBufferALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000780000367aef9fe374 = {
+			name = Tr2RenderStateEmulationDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2RenderStateEmulationDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001500000367aef9fe374 = {
+			name = Tr2RenderContextGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2RenderContextGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000009F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000A00000367aef9fe374;
+			};
+		0000004C0000367aef9fe374 = {
+			name = Tr2IndexBufferALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2IndexBufferALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000004F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000500000367aef9fe374;
+			};
+		000000BA0000367aef9fe374 = {
+			name = Tr2VertexLayoutALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexLayoutALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001350000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001360000367aef9fe374;
+			};
+		000000B20000367aef9fe374 = {
+			name = Tr2VertexBufferALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexBufferALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000001D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000001E0000367aef9fe374;
+			};
+		000001D20000367aef9fe374 = {
+			projectDirPath = "";
+			targets = (
+				000001C20000367aef9fe374,
+				000001C40000367aef9fe374,
+				000001C60000367aef9fe374,
+				000001C80000367aef9fe374,
+				000001CA0000367aef9fe374,
+				000001CC0000367aef9fe374,
+				000001CE0000367aef9fe374,
+				000001D00000367aef9fe374,
+				);
+			knownRegions = (
+				en,
+				);
+			developmentRegion = English;
+			projectRoot = "";
+			hasScannedForEncodings = 0;
+			compatibilityVersion = "Xcode 3.2";
+			mainGroup = 000001C00000367aef9fe374;
+			attributes = {
+				ORGANIZATIONNAME = CCP;
+				LastUpgradeCheck = 0460;
+				};
+			isa = PBXProject;
+			buildConfigurationList = 000001D30000367aef9fe374;
+			};
+		000001680000367aef9fe374 = {
+			name = Tr2SamplerStateALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2SamplerStateALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000001B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000001C0000367aef9fe374;
+			};
+		0000015B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000015C0000367aef9fe374;
+			};
+		0000011B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000011C0000367aef9fe374;
+			};
+		000000E80000367aef9fe374 = {
+			name = Tr2ConstantBufferALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2ConstantBufferALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000014F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001500000367aef9fe374;
+			};
+		0000008A0000367aef9fe374 = {
+			name = Tr2SamplerStateALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2SamplerStateALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F90000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000FA0000367aef9fe374;
+			};
+		000000500000367aef9fe374 = {
+			name = Tr2IndexBufferALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2IndexBufferALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B00000367aef9fe374 = {
+			name = Tr2VertexBufferALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexBufferALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001C40000367aef9fe374 = {
+			dependencies = (
+				);
+			productReference = 000001B90000367aef9fe374;
+			name = Release_GLES2_Coverage_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001C50000367aef9fe374;
+			buildPhases = (
+				000001C10000367aef9fe374,
+				);
+			};
+		000000650000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000660000367aef9fe374;
+			};
+		000000440000367aef9fe374 = {
+			name = Tr2GpuTimerALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2GpuTimerALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001CA0000367aef9fe374 = {
+			dependencies = (
+				);
+			productReference = 000001BC0000367aef9fe374;
+			name = Debug_GLES2_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001CB0000367aef9fe374;
+			buildPhases = (
+				000001C10000367aef9fe374,
+				);
+			};
+		0000000B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000000C0000367aef9fe374;
+			};
+		000001A90000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001AA0000367aef9fe374;
+			};
+		0000012C0000367aef9fe374 = {
+			name = Tr2IndexBufferALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2IndexBufferALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001440000367aef9fe374 = {
+			name = Tr2OcclusionQueryALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2OcclusionQueryALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001D70000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_stub_d;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					_DEBUG,
+					"CCP_ASSERT_ENABLED=1",
+					"TRINITY_PLATFORM=TRINITY_STUB",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
+			};
+		000001410000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001420000367aef9fe374;
+			};
+		0000013E0000367aef9fe374 = {
+			name = Tr2OcclusionQueryALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2OcclusionQueryALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000015D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000015E0000367aef9fe374;
+			};
+		0000015F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001600000367aef9fe374;
+			};
+		000001B20000367aef9fe374 = {
+			name = Tr2PixelFormat.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "include/Tr2PixelFormat.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001AD0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001AE0000367aef9fe374;
+			};
+		0000009C0000367aef9fe374 = {
+			name = Tr2SwapChainALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2SwapChainALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001B80000367aef9fe374 = {
+			path = TrinityAL_gl4_d.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
+			};
+		0000010E0000367aef9fe374 = {
+			name = Tr2GpuBufferALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2GpuBufferALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001800000367aef9fe374 = {
+			name = Tr2TextureALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2TextureALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001BE0000367aef9fe374 = {
+			path = TrinityAL_gl4_cc.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
+			};
 		000000BB0000367aef9fe374 = {
 			isa = PBXBuildFile;
 			fileRef = 000000BC0000367aef9fe374;
@@ -2961,12 +3170,19 @@
 			fileRef = 000000F60000367aef9fe374;
 			};
 		000001C80000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001CF0000367aef9fe374,
+			dependencies = (
 				);
-			defaultConfigurationIsVisible = 0;
+			productReference = 000001BB0000367aef9fe374;
+			name = Debug_Stub_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001C90000367aef9fe374;
+			buildPhases = (
+				000001C10000367aef9fe374,
+				);
 			};
 		000000DB0000367aef9fe374 = {
 			isa = PBXBuildFile;
@@ -3016,6 +3232,65 @@
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
+		000001D40000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_gl4_d;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					_DEBUG,
+					"CCP_ASSERT_ENABLED=1",
+					"TRINITY_PLATFORM=TRINITY_OPENGL4",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
+			};
 		000001940000367aef9fe374 = {
 			name = Tr2VertexBufferALStub.h;
 			fileEncoding = 4;
@@ -3025,25 +3300,27 @@
 			sourceTree = "<group>";
 			};
 		000001D00000367aef9fe374 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				};
-			name = Release;
-			};
-		000001C30000367aef9fe374 = {
 			dependencies = (
 				);
-			productReference = 000001BA0000367aef9fe374;
-			name = Release_GLES2_Mac64;
+			productReference = 000001BF0000367aef9fe374;
+			name = Release_Stub_Mac64;
 			productType = "com.apple.product-type.library.static";
 			buildRules = (
 				);
 			isa = PBXNativeTarget;
 			productName = TrinityAL;
-			buildConfigurationList = 000001C40000367aef9fe374;
+			buildConfigurationList = 000001D10000367aef9fe374;
 			buildPhases = (
-				000001BE0000367aef9fe374,
+				000001C10000367aef9fe374,
 				);
+			};
+		000001C30000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001D40000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
 			};
 		000001660000367aef9fe374 = {
 			name = Tr2SamplerStateALGLES2.h;
@@ -3070,7 +3347,7 @@
 			fileRef = 000001AC0000367aef9fe374;
 			};
 		000001BB0000367aef9fe374 = {
-			path = TrinityAL_stub.lib;
+			path = TrinityAL_stub_d.lib;
 			isa = PBXFileReference;
 			includeInIndex = 0;
 			explicitFileType = archive.ar;
@@ -3369,19 +3646,12 @@
 			fileRef = 000000760000367aef9fe374;
 			};
 		000001C50000367aef9fe374 = {
-			dependencies = (
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001D50000367aef9fe374,
 				);
-			productReference = 000001BB0000367aef9fe374;
-			name = Release_Stub_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001C60000367aef9fe374;
-			buildPhases = (
-				000001BE0000367aef9fe374,
-				);
+			defaultConfigurationIsVisible = 0;
 			};
 		0000004A0000367aef9fe374 = {
 			name = Tr2IndexBufferALDx11.cpp;
@@ -3445,5 +3715,5 @@
 			};
 		};
 	objectVersion = 46;
-	rootObject = 000001C90000367aef9fe374;
+	rootObject = 000001D20000367aef9fe374;
 	}
