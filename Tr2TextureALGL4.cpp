@@ -451,7 +451,7 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 		}
 		else if ( initialData )
 		{
-			if( GL_NV_texture_compression_vtc )
+			if( GLEW_NV_texture_compression_vtc )
 			{
 				std::unique_ptr<uint8_t[]> level( new uint8_t[initialData[i].m_sysMemSlicePitch * levelDepth] );
 				int blockSize = m_targetFormat == GL_COMPRESSED_RGBA_S3TC_DXT5_EXT ? 16 : 8;
