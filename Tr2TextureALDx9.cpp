@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2TextureALDx9.h"
+#include "BcDecompress.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -442,13 +443,22 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 	}
 
 	const uint32_t trueMipLevelCount = mipLevelCount ? mipLevelCount : 1;
+	bool needsDecompression = false;
 
 	uint32_t usage9 = 0;
 	ConvertUsage( usage, usage9, m_pool9 );
 
 	CComPtr<IDirect3DVolumeTexture9> tex;
-	CR_RETURN_HR( renderContext.m_d3dDevice9->CreateVolumeTexture( width, height, depth, trueMipLevelCount, usage9, m_format9, m_pool9, &tex, 0 ) )
-	;
+	if( FAILED( renderContext.m_d3dDevice9->CreateVolumeTexture( width, height, depth, trueMipLevelCount, usage9, m_format9, m_pool9, &tex, 0 ) ) )
+	{
+		if( IsCompressedFormat( format ) )
+		{
+			m_format9 = renderContext.ConvertToD3D9Format( PIXEL_FORMAT_B8G8R8A8_UNORM );
+			CR_RETURN_HR( renderContext.m_d3dDevice9->CreateVolumeTexture( width, height, depth, trueMipLevelCount, usage9, m_format9, m_pool9, &tex, 0 ) );
+			needsDecompression = true;
+		}
+	}
+	
 
 	bool needsStagingTexture = false;
 	if ( initialData && m_pool9 == D3DPOOL_DEFAULT && ( usage9 & D3DUSAGE_DYNAMIC ) == 0 )
@@ -476,6 +486,8 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 		stagingTexture = tex;
 	}
 
+	std::unique_ptr<uint8_t[]> decompressed;
+
 	for ( uint32_t i = 0; i != trueMipLevelCount; ++i )
 	{
 		D3DLOCKED_BOX l =
@@ -492,9 +504,21 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 			return E_FAIL;
 		}
 
-		const uint32_t mipDepth = std::max( depth >> i, 1u );
-
-		memcpy( l.pBits, initialData[i].m_sysMem, initialData[i].m_sysMemSlicePitch * mipDepth );
+		uint32_t levelDepth = std::max( depth >> i, 1U );
+		if( needsDecompression )
+		{
+			uint32_t levelWidth = std::max( width >> i, 1U );
+			uint32_t levelHeight = std::max( height >> i, 1U );
+			if( !BcDecompress( levelWidth, levelHeight, levelDepth, format, initialData[i], decompressed ) )
+			{
+				return E_FAIL;
+			}
+			memcpy( l.pBits, decompressed.get(), levelWidth * levelHeight * 4 * levelDepth );
+		}
+		else
+		{
+			memcpy( l.pBits, initialData[i].m_sysMem, initialData[i].m_sysMemSlicePitch * levelDepth );
+		}
 	}
 	if ( needsStagingTexture )
 	{
