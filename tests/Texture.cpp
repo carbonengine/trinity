@@ -87,7 +87,7 @@ TEST_F( WithValidRenderContext, TextureCubeIsValidAfterCreation )
 
 TEST_F( WithValidRenderContext, TextureVolumeIsValidAfterCreation )
 {
-	uint32_t pixels[4 * 4 * 4] = { 0 };
+	uint32_t pixels[4 * 4 * 4 * 4] = { 0 };
 	Tr2SubresourceData initialData;
 	initialData.m_sysMemPitch = 4 * 4;
 	initialData.m_sysMemSlicePitch = 4 * 4 * 4;

@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2TextureALGLES2.h"
+#include "BcDecompress.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -426,12 +427,23 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 
 	const uint32_t trueMipLevelCount = mipLevelCount ? mipLevelCount : 1;
 
+	std::unique_ptr<uint8_t[]> decompressed;
+
 	for ( uint32_t i = 0; i != trueMipLevelCount; ++i )
 	{
 		uint32_t levelWidth = std::max( width >> i, 1U );
 		uint32_t levelHeight = std::max( height >> i, 1U );
 		uint32_t levelDepth = std::max( depth >> i, 1U );
-		if ( m_targetType )
+		if( decompressed )
+		{
+			if( !BcDecompress( levelWidth, levelHeight, levelDepth, format, initialData[i], decompressed ) )
+			{
+				return E_FAIL;
+			}
+			GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+									m_targetFormat, m_targetType, decompressed.get() ) );
+		}
+		else if ( m_targetType )
 		{
 			GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
 								   m_targetFormat, m_targetType,
@@ -474,9 +486,16 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 			}
 			else
 			{
-				GL_VALIDATE( glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
-												 initialData[i].m_sysMemSlicePitch * levelDepth,
-												 initialData[i].m_sysMem ) );
+				glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0, initialData[i].m_sysMemSlicePitch * levelDepth, initialData[i].m_sysMem );
+				if( glGetError() )
+				{
+					if( BcDecompress( levelWidth, levelHeight, levelDepth, format, initialData[i], decompressed ) )
+					{
+						Tr2RenderContextAL::ConvertToGLPixelFormat( PIXEL_FORMAT_B8G8R8A8_UNORM, m_internalFormat, m_targetFormat, m_targetType );
+						GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+											   m_targetFormat, m_targetType, decompressed.get() ) );
+					}
+				}
 			}
 		}
 		else
