@@ -865,7 +865,7 @@ ALResult Tr2RenderContextAL::GetAFRGroupCount( uint32_t& count )
 	return S_OK;
 }
 
-#if defined( TRINITYDEV ) || !defined( NDEBUG )
+#if defined(_WIN32) && ( defined( TRINITYDEV ) || !defined( NDEBUG ) )
 
 namespace
 {

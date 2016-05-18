@@ -91,9 +91,10 @@ typedef int32_t HRESULT;
 #endif
 
 #if TRINITY_PLATFORM==TRINITY_OPENGLES2 || TRINITY_PLATFORM==TRINITY_OPENGL4
-#if defined(_DEBUG) || defined(TRINITYDEV)
 
 void ReportGLError( const char* fileName, int lineNumber, const char* statement, unsigned errorCode );
+
+#if defined(_DEBUG) || defined(TRINITYDEV)
 
 #define	CR_GL(x)											\
 	{														\
