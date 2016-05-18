@@ -474,8 +474,12 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 		return E_INVALIDARG;
 	}
 
-	GLuint texture;
+	GLuint texture = 0;
 	GL_FAIL( glGenTextures( 1, &texture ) );
+	if( !texture )
+	{
+		return E_FAIL;
+	}
 	m_texture = std::shared_ptr<GLuint>( new GLuint( texture ), OnDeleteTexture() );
 
 	GL_FAIL( glBindTexture( GL_TEXTURE_3D, *m_texture ) );
@@ -490,7 +494,7 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 		uint32_t levelDepth = std::max( depth >> i, 1U );
 		if ( m_targetType )
 		{
-			GL_FAIL( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+			GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
 								   m_targetFormat, m_targetType,
 								   initialData ? initialData[i].m_sysMem : nullptr ) );
 		}
@@ -525,20 +529,20 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 						}
 					}
 				}
-				GL_FAIL( glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+				GL_VALIDATE( glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
 												 initialData[i].m_sysMemSlicePitch * levelDepth,
 												 level.get() ) );
 			}
 			else
 			{
-				GL_FAIL( glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+				GL_VALIDATE( glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
 												 initialData[i].m_sysMemSlicePitch * levelDepth,
 												 initialData[i].m_sysMem ) );
 			}
 		}
 		else
 		{
-			GL_FAIL( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+			GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
 								   GL_RGB, GL_UNSIGNED_BYTE,
 								   nullptr ) );
 		}

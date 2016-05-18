@@ -81,6 +81,21 @@ BaseConfigurations:
       AdditionalDependencies:
       - TrinityAL_gles2_cc.lib
 
+  CodeCoverageGL4:
+    Imports:
+    - ../TrinityAL/uses_TrinityALGL4Coverage.yaml
+    General: 
+      GenerateCodeCoverage: true
+    ClCompile:
+      PreprocessorDefinitions:
+      - NDEBUG
+      Optimization: Disabled
+      RuntimeLibrary: MultiThreadedDLL
+      DebugInformationFormat: ProgramDatabase
+    Link:
+      AdditionalDependencies:
+      - TrinityAL_gl4_cc.lib
+
   D3D9:
     # These are settings that apply to all variants of Trinity that use D3D9
     Imports:
@@ -183,6 +198,14 @@ Configurations:
       TargetName: TrinityALTestGLES2
 
 
+  Debug_GL4|Mac64:
+    BaseConfigurations:
+    - Debug
+    - GL4
+    - WithGoogleTest
+    General: 
+      TargetName: TrinityALTestGL4_d
+
   Dev_GL4|Win32,x64:
     BaseConfigurations:
     - Dev
@@ -191,13 +214,20 @@ Configurations:
     General: 
       TargetName: TrinityALTestGL4_dev
 
-  Release_GL4|Win32,x64:
+  Release_GL4|Win32,x64,Mac64:
     BaseConfigurations:
     - Release
     - GL4
     - WithGoogleTest
     General:
       TargetName: TrinityALTestGL4
+
+  Release_GL4_Coverage|Mac64:
+    BaseConfigurations:
+    - CodeCoverageGL4
+    - WithGoogleTest
+    General:
+      TargetName: TrinityALTestGL4_cc
 
 
   Release_GLES2_Coverage|Mac64:

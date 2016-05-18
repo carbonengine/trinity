@@ -413,8 +413,12 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 		return E_INVALIDARG;
 	}
 
-	GLuint texture;
+	GLuint texture = 0;
 	GL_FAIL( glGenTextures( 1, &texture ) );
+	if( !texture )
+	{
+		return E_FAIL;
+	}
 	m_texture = std::shared_ptr<GLuint>( new GLuint( texture ), OnDeleteTexture() );
 
 	GL_FAIL( glBindTexture( GL_TEXTURE_3D, *m_texture ) );
@@ -429,7 +433,7 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 		uint32_t levelDepth = std::max( depth >> i, 1U );
 		if ( m_targetType )
 		{
-			GL_FAIL( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+			GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
 								   m_targetFormat, m_targetType,
 								   initialData ? initialData[i].m_sysMem : nullptr ) );
 		}
@@ -464,46 +468,24 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 						}
 					}
 				}
-				GL_FAIL( glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+				GL_VALIDATE( glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
 												 initialData[i].m_sysMemSlicePitch * levelDepth,
 												 level.get() ) );
 			}
 			else
 			{
-				GL_FAIL( glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+				GL_VALIDATE( glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
 												 initialData[i].m_sysMemSlicePitch * levelDepth,
 												 initialData[i].m_sysMem ) );
 			}
 		}
 		else
 		{
-			GL_FAIL( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+			GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
 								   GL_RGB, GL_UNSIGNED_BYTE,
 								   nullptr ) );
 		}
 	}
-
-	/*if ( trueMipLevelCount > 1 )
-	{
-		for ( uint32_t i = trueMipLevelCount;
-			  i < uint32_t( 0.5 + log( std::max<double>( height, width ) ) / log( 2.0 ) ) + 1; ++i )
-		{
-			uint32_t levelWidth = std::max( width >> i, 1U );
-			uint32_t levelHeight = std::max( height >> i, 1U );
-			if ( m_targetType )
-			{
-				GL_FAIL( glTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
-									   m_targetFormat, m_targetType,
-									   nullptr ) );
-			}
-			else
-			{
-				GL_FAIL( glCompressedTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
-												 0,
-												 nullptr ) );
-			}
-		}
-	}*/
 
 	if ( !mipLevelCount )
 	{
@@ -565,45 +547,6 @@ ALResult Tr2TextureAL::CreateDepthTexture( uint32_t width,
 #endif
 	GL_FAIL( glBindTexture( GL_TEXTURE_2D, *m_texture ) );
 	//CR_GL( glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ) );
-#ifdef TRINITY_AL_MOBILE
-    if( CHECK_EXT( OES_packed_depth_stencil ) )
-	{
-		GL_FAIL( glTexImage2D( GL_TEXTURE_2D,
-                              0,
-                              GL_DEPTH_STENCIL_OES,
-                              width,
-                              height,
-                              0,
-                              GL_DEPTH_STENCIL_OES,
-                              GL_UNSIGNED_INT_24_8_OES,
-                              nullptr ) );
-	}
-	else
-	{
-        GLint glDepthFormat = 0;
-        if( CHECK_EXT( OES_depth24 ) )
-        {
-            glDepthFormat = GL_DEPTH_COMPONENT24_OES;
-        }
-        else if( CHECK_EXT( OES_depth32 ) )
-        {
-            glDepthFormat = GL_DEPTH_COMPONENT32_OES;
-        }
-        else
-        {
-			return GL_DEPTH_COMPONENT16;
-        }
-		GL_FAIL( glTexImage2D( GL_TEXTURE_2D,
-                              0,
-                              glDepthFormat,
-                              width,
-                              height,
-                              0,
-                              GL_DEPTH_COMPONENT,
-                              GL_FLOAT,
-                              nullptr ) );
-	}
-#else
 	if ( GLEW_EXT_packed_depth_stencil )
 	{
 		GL_FAIL( glTexImage2D( GL_TEXTURE_2D,
@@ -628,7 +571,6 @@ ALResult Tr2TextureAL::CreateDepthTexture( uint32_t width,
 							   GL_FLOAT,
 							   nullptr ) );
 	}
-#endif
 	m_width = width;
 	m_height = height;
 	m_volumeDepth = 0;

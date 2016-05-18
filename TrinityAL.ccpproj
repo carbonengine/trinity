@@ -212,6 +212,30 @@ Configurations:
     General:
       TargetName: TrinityAL_gl4
 
+  Debug_GL4|Linux32,Linux64,Mac32,Mac64:
+    BaseConfigurations:
+    - Posix
+    - Debug
+    - GL4
+    General:
+      TargetName: TrinityAL_gl4_d
+  
+  Release_GL4_Coverage|Mac32,Mac64:
+    BaseConfigurations:
+    - Posix
+    - CodeCoverage
+    - GL4
+    General:
+      TargetName: TrinityAL_gl4_cc
+  
+  Release_GL4|Linux32,Linux64,Mac32,Mac64:
+    BaseConfigurations:
+    - Posix
+    - Release
+    - GL4
+    General:
+      TargetName: TrinityAL_gl4
+
   Debug_GLES2|Win32,x64:
     BaseConfigurations:
     - Windows
