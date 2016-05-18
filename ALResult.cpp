@@ -70,6 +70,8 @@ void BreakInDebugger()
 #endif
 }
 
+#endif
+
 #if TRINITY_PLATFORM==TRINITY_OPENGLES2 ||  TRINITY_PLATFORM==TRINITY_OPENGL4
 
 void ReportGLError( const char* fileName, int lineNumber, const char* statement, unsigned errorCode )
@@ -110,8 +112,6 @@ void ReportGLError( const char* fileName, int lineNumber, const char* statement,
 	_snprintf_s( buffer, _TRUNCATE, msgFormat, fileName, lineNumber, statement, errorName, errorCode );
 	CCP_AL_LOGERR( buffer );
 }
-
-#endif
 
 #endif
 
