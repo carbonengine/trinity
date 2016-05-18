@@ -1430,6 +1430,7 @@
     <ClInclude Include="ALLog.h"/>
     <ClInclude Include="ALResult.h"/>
     <ClInclude Include="autoversion.h"/>
+    <ClInclude Include="BcDecompress.h"/>
     <ClInclude Include="ITr2RenderContextEvents.h"/>
     <ClInclude Include="StdAfx.h"/>
     <ClInclude Include="Tr2AdapterStructures.h"/>
@@ -1547,6 +1548,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ALResult.cpp"/>
+    <ClCompile Include="BcDecompress.cpp"/>
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
