@@ -85,8 +85,6 @@ TEST_F( WithValidRenderContext, TextureCubeIsValidAfterCreation )
 	EXPECT_EQ( TEX_TYPE_CUBE, tex.GetType() );
 }
 
-// Volume textures don't exist in GLES2
-#if TRINITY_PLATFORM != TRINITY_OPENGLES2
 TEST_F( WithValidRenderContext, TextureVolumeIsValidAfterCreation )
 {
 	uint32_t pixels[4 * 4 * 4] = { 0 };
@@ -100,7 +98,6 @@ TEST_F( WithValidRenderContext, TextureVolumeIsValidAfterCreation )
 	EXPECT_TRUE( tex.IsValid() );
 	EXPECT_EQ( TEX_TYPE_3D, tex.GetType() );
 }
-#endif
 
 TEST_F( WithValidRenderContext, CanCreateMipMapped2DTexture )
 {
@@ -166,7 +163,6 @@ TEST_F( WithValidRenderContext, Texture2DUsageIsSetAfterCreate )
 	EXPECT_EQ( tex2.GetUsage(), USAGE_CPU_READ );
 }
 
-#if TRINITY_PLATFORM != TRINITY_OPENGLES2
 TEST_F( WithValidRenderContext, TextrueVolumeUsageIsSetAfterCreate )
 {
 	uint32_t pixels[4 * 4 * 4] = { 0 };
@@ -182,7 +178,6 @@ TEST_F( WithValidRenderContext, TextrueVolumeUsageIsSetAfterCreate )
 	ASSERT_HRESULT_SUCCEEDED( tex2.CreateVolume( 4, 4, 4, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, USAGE_CPU_READ, &initialData, *renderContext ) );
 	EXPECT_EQ( tex2.GetUsage(), USAGE_CPU_READ );
 }
-#endif
 
 TEST_F( WithValidRenderContext, TextureCubeUsageIsSetAfterCreate )
 {

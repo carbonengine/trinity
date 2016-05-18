@@ -136,7 +136,15 @@ void ReportGLError( const char* fileName, int lineNumber, const char* statement,
 #endif
 
 #define GL_FAIL(x)				CR_GL_RETURN_VAL(x,E_FAIL)
-
+#define GL_VALIDATE(x) 										\
+	{														\
+		x;													\
+		if( GLenum error = glGetError() )					\
+		{													\
+			ReportGLError( __FILE__, __LINE__, #x, error ); \
+			return E_FAIL;									\
+		}													\
+	}
 #endif
 
 
