@@ -9,10 +9,10 @@
 			fileRef = 000000040000367aef9fe374;
 			};
 		0000003C0000367aef9fe374 = {
-			name = Tr2GpuTelemetry.cpp;
+			name = Tr2GpuBufferALGL4.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2GpuTelemetry.cpp;
+			path = Tr2GpuBufferALGL4.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -25,18 +25,18 @@
 			fileRef = 0000009E0000367aef9fe374;
 			};
 		000001580000367aef9fe374 = {
-			name = Tr2RenderTargetALDx9.h;
+			name = Tr2RenderStateEmulationDx11.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderTargetALDx9.h;
+			path = Tr2RenderStateEmulationDx11.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000000E00000367aef9fe374 = {
-			name = Tr2CapsALGL4.h;
+			name = Tr2CapsALDx11.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2CapsALGL4.h;
+			path = Tr2CapsALDx11.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -47,8 +47,8 @@
 		000001CC0000367aef9fe374 = {
 			dependencies = (
 				);
-			productReference = 000001BD0000367aef9fe374;
-			name = Release_GLES2_Mac64;
+			productReference = 000001BF0000367aef9fe374;
+			name = Debug_Stub_Mac64;
 			productType = "com.apple.product-type.library.static";
 			buildRules = (
 				);
@@ -56,18 +56,610 @@
 			productName = TrinityAL;
 			buildConfigurationList = 000001CD0000367aef9fe374;
 			buildPhases = (
-				000001C10000367aef9fe374,
+				000001C50000367aef9fe374,
 				);
 			};
 		0000000A0000367aef9fe374 = {
-			name = Tr2CapsALDx11.cpp;
+			name = Tr2BufferImplALDx11.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2CapsALDx11.cpp;
+			path = Tr2BufferImplALDx11.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000001D50000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001DF0000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		0000000D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000000E0000367aef9fe374;
+			};
+		000000810000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000820000367aef9fe374;
+			};
+		000000340000367aef9fe374 = {
+			name = Tr2FenceALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2FenceALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000018A0000367aef9fe374 = {
+			name = Tr2TextureALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2TextureALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000700000367aef9fe374 = {
+			name = Tr2RenderContextDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2RenderContextDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000930000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000940000367aef9fe374;
+			};
+		000000510000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000520000367aef9fe374;
+			};
+		0000019E0000367aef9fe374 = {
+			name = Tr2VertexLayoutALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexLayoutALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000016A0000367aef9fe374 = {
+			name = Tr2SamplerStateALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2SamplerStateALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000D70000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000D80000367aef9fe374;
+			};
+		000001820000367aef9fe374 = {
+			name = Tr2TextureALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2TextureALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000C10000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000C20000367aef9fe374;
+			};
+		000000390000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000003A0000367aef9fe374;
+			};
+		000001510000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001520000367aef9fe374;
+			};
+		000001C70000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001D80000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		000000DD0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000DE0000367aef9fe374;
+			};
+		000001A40000367aef9fe374 = {
+			name = Tr2VertexLayoutALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexLayoutALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000A30000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000A40000367aef9fe374;
+			};
+		0000002C0000367aef9fe374 = {
+			name = Tr2DriverUtilities.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2DriverUtilities.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001250000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001260000367aef9fe374;
+			};
+		000001270000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001280000367aef9fe374;
+			};
+		0000004D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000004E0000367aef9fe374;
+			};
+		000000420000367aef9fe374 = {
+			name = Tr2GpuTimerALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2GpuTimerALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001BA0000367aef9fe374 = {
+			isa = PBXGroup;
+			sourceTree = "<group>";
+			children = (
+				000001B20000367aef9fe374,
+				000001B40000367aef9fe374,
+				000001B60000367aef9fe374,
+				000001B80000367aef9fe374,
+				);
+			name = include;
+			};
+		000001BC0000367aef9fe374 = {
+			path = TrinityAL_gl4_d.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
+			};
+		000000300000367aef9fe374 = {
+			name = Tr2FenceALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2FenceALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000190000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000001A0000367aef9fe374;
+			};
+		000000C20000367aef9fe374 = {
+			name = Tr2VertexLayoutALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexLayoutALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000790000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000007A0000367aef9fe374;
+			};
+		000000AE0000367aef9fe374 = {
+			name = Tr2TrackedALObject.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2TrackedALObject.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F20000367aef9fe374 = {
+			name = Tr2ConstantBufferALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2ConstantBufferALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000C50000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000C60000367aef9fe374;
+			};
+		000001170000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001180000367aef9fe374;
+			};
+		0000018C0000367aef9fe374 = {
+			name = Tr2TrackedALObject.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2TrackedALObject.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001360000367aef9fe374 = {
+			name = Tr2LockedRenderTargetALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2LockedRenderTargetALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000007F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000800000367aef9fe374;
+			};
+		000001340000367aef9fe374 = {
+			name = Tr2LockedRenderTargetALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2LockedRenderTargetALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000009B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000009C0000367aef9fe374;
+			};
+		000001600000367aef9fe374 = {
+			name = Tr2RenderTargetALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2RenderTargetALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000E90000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000EA0000367aef9fe374;
+			};
+		0000018B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000018C0000367aef9fe374;
+			};
+		000001650000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001660000367aef9fe374;
+			};
+		000001550000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001560000367aef9fe374;
+			};
+		000000310000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000320000367aef9fe374;
+			};
+		0000011D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000011E0000367aef9fe374;
+			};
+		000000580000367aef9fe374 = {
+			name = Tr2LockedRenderTargetALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2LockedRenderTargetALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000210000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000220000367aef9fe374;
+			};
+		000000850000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000860000367aef9fe374;
+			};
+		000001530000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001540000367aef9fe374;
+			};
+		000001320000367aef9fe374 = {
+			name = Tr2IndexBufferALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2IndexBufferALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001DC0000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_gles2_d;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					_DEBUG,
+					"CCP_ASSERT_ENABLED=1",
+					"TRINITY_PLATFORM=TRINITY_OPENGLES2",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
+			};
+		000000EE0000367aef9fe374 = {
+			name = Tr2ConstantBufferALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2ConstantBufferALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000003B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000003C0000367aef9fe374;
+			};
+		000000A10000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000A20000367aef9fe374;
+			};
+		000000940000367aef9fe374 = {
+			name = Tr2ShaderALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2ShaderALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001200000367aef9fe374 = {
+			name = Tr2GpuTimerALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2GpuTimerALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000017F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001800000367aef9fe374;
+			};
+		0000019A0000367aef9fe374 = {
+			name = Tr2VertexDefinition.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexDefinition.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000E60000367aef9fe374 = {
+			name = Tr2CapsALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2CapsALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000007B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000007C0000367aef9fe374;
+			};
+		0000005B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000005C0000367aef9fe374;
+			};
+		000001050000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001060000367aef9fe374;
+			};
+		0000012B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000012C0000367aef9fe374;
+			};
+		000000240000367aef9fe374 = {
+			name = Tr2DepthStencilALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2DepthStencilALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001AC0000367aef9fe374 = {
+			name = Tr2VideoAdapterInfoALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VideoAdapterInfoALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000001E0000367aef9fe374 = {
+			name = Tr2ConstantBufferALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2ConstantBufferALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000002E0000367aef9fe374 = {
+			name = Tr2FenceALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2FenceALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000016F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001700000367aef9fe374;
+			};
+		000000B10000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000B20000367aef9fe374;
+			};
+		000001710000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001720000367aef9fe374;
+			};
+		000000830000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000840000367aef9fe374;
+			};
+		0000008F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000900000367aef9fe374;
+			};
+		000001BD0000367aef9fe374 = {
+			path = TrinityAL_gles2_cc.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
+			};
+		000001960000367aef9fe374 = {
+			name = Tr2VertexBufferALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexBufferALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000320000367aef9fe374 = {
+			name = Tr2FenceALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2FenceALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001B70000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001B80000367aef9fe374;
+			};
+		000000F80000367aef9fe374 = {
+			name = Tr2DepthStencilALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2DepthStencilALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B80000367aef9fe374 = {
+			name = Tr2VertexBufferALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexBufferALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000D30000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000D40000367aef9fe374;
+			};
+		000000380000367aef9fe374 = {
+			name = Tr2FragmentOpSettings.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2FragmentOpSettings.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000FD0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000FE0000367aef9fe374;
+			};
+		000000270000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000280000367aef9fe374;
+			};
+		000000670000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000680000367aef9fe374;
+			};
+		000001690000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000016A0000367aef9fe374;
+			};
+		000001D10000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001DD0000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		000000800000367aef9fe374 = {
+			name = Tr2RenderTargetALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2RenderTargetALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001610000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001620000367aef9fe374;
+			};
+		000001020000367aef9fe374 = {
+			name = Tr2FenceALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2FenceALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000230000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000240000367aef9fe374;
+			};
+		000001B50000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001B60000367aef9fe374;
+			};
+		000001630000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001640000367aef9fe374;
+			};
+		000000550000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000560000367aef9fe374;
+			};
+		000001D90000367aef9fe374 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
@@ -127,812 +719,6 @@
 				};
 			name = Release;
 			};
-		0000000D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000000E0000367aef9fe374;
-			};
-		000000810000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000820000367aef9fe374;
-			};
-		000000340000367aef9fe374 = {
-			name = Tr2FenceALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2FenceALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000018A0000367aef9fe374 = {
-			name = Tr2TrackedALObjectImpl.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2TrackedALObjectImpl.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000700000367aef9fe374 = {
-			name = Tr2RenderContextEnum.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderContextEnum.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000930000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000940000367aef9fe374;
-			};
-		000000510000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000520000367aef9fe374;
-			};
-		0000019E0000367aef9fe374 = {
-			name = Tr2VertexLayoutALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexLayoutALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000016A0000367aef9fe374 = {
-			name = Tr2ShaderALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ShaderALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000D70000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000D80000367aef9fe374;
-			};
-		000001820000367aef9fe374 = {
-			name = Tr2TextureALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2TextureALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000C10000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000C20000367aef9fe374;
-			};
-		000000390000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000003A0000367aef9fe374;
-			};
-		000001510000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001520000367aef9fe374;
-			};
-		000001C70000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001D60000367aef9fe374,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		000000DD0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000DE0000367aef9fe374;
-			};
-		000001A40000367aef9fe374 = {
-			name = Tr2VideoAdapterInfoALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VideoAdapterInfoALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000A30000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000A40000367aef9fe374;
-			};
-		0000002C0000367aef9fe374 = {
-			name = Tr2FenceALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2FenceALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001250000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001260000367aef9fe374;
-			};
-		000001270000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001280000367aef9fe374;
-			};
-		0000004D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000004E0000367aef9fe374;
-			};
-		000000420000367aef9fe374 = {
-			name = Tr2GpuTimerALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2GpuTimerALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001BA0000367aef9fe374 = {
-			path = TrinityAL_gl4.lib;
-			isa = PBXFileReference;
-			includeInIndex = 0;
-			explicitFileType = archive.ar;
-			sourceTree = BUILT_PRODUCTS_DIR;
-			};
-		000001BC0000367aef9fe374 = {
-			path = TrinityAL_gles2_d.lib;
-			isa = PBXFileReference;
-			includeInIndex = 0;
-			explicitFileType = archive.ar;
-			sourceTree = BUILT_PRODUCTS_DIR;
-			};
-		000000300000367aef9fe374 = {
-			name = Tr2FenceALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2FenceALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000190000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000001A0000367aef9fe374;
-			};
-		000000C20000367aef9fe374 = {
-			name = Tr2VertexLayoutALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexLayoutALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000790000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000007A0000367aef9fe374;
-			};
-		000000AE0000367aef9fe374 = {
-			name = Tr2VertexBufferALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexBufferALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F20000367aef9fe374 = {
-			name = Tr2DepthStencilALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2DepthStencilALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000C50000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000C60000367aef9fe374;
-			};
-		000001170000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001180000367aef9fe374;
-			};
-		0000018C0000367aef9fe374 = {
-			name = Tr2VertexBufferALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexBufferALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001360000367aef9fe374 = {
-			name = Tr2LockedRenderTargetALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2LockedRenderTargetALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000007F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000800000367aef9fe374;
-			};
-		000001340000367aef9fe374 = {
-			name = Tr2LockedRenderTargetALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2LockedRenderTargetALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000009B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000009C0000367aef9fe374;
-			};
-		000001600000367aef9fe374 = {
-			name = Tr2SamplerStateALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SamplerStateALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000E90000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000EA0000367aef9fe374;
-			};
-		0000018B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000018C0000367aef9fe374;
-			};
-		000001650000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001660000367aef9fe374;
-			};
-		000001550000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001560000367aef9fe374;
-			};
-		000000310000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000320000367aef9fe374;
-			};
-		0000011D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000011E0000367aef9fe374;
-			};
-		000000580000367aef9fe374 = {
-			name = Tr2LockedRenderTargetALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2LockedRenderTargetALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000210000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000220000367aef9fe374;
-			};
-		000000850000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000860000367aef9fe374;
-			};
-		000001530000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001540000367aef9fe374;
-			};
-		000001320000367aef9fe374 = {
-			name = Tr2LockedRenderTargetALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2LockedRenderTargetALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001DC0000367aef9fe374 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				};
-			name = Release;
-			};
-		000000EE0000367aef9fe374 = {
-			name = Tr2ConstantBufferALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ConstantBufferALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000003B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000003C0000367aef9fe374;
-			};
-		000000A10000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000A20000367aef9fe374;
-			};
-		000000940000367aef9fe374 = {
-			name = Tr2ShaderALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2ShaderALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001200000367aef9fe374 = {
-			name = Tr2GpuTimerALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuTimerALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000017F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001800000367aef9fe374;
-			};
-		0000019A0000367aef9fe374 = {
-			name = Tr2VertexLayoutALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexLayoutALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000E60000367aef9fe374 = {
-			name = Tr2ConstantBufferALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ConstantBufferALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000007B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000007C0000367aef9fe374;
-			};
-		0000005B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000005C0000367aef9fe374;
-			};
-		000001050000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001060000367aef9fe374;
-			};
-		0000012B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000012C0000367aef9fe374;
-			};
-		000000240000367aef9fe374 = {
-			name = Tr2DepthStencilALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2DepthStencilALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001AC0000367aef9fe374 = {
-			name = wglext.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = wglext.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000001E0000367aef9fe374 = {
-			name = Tr2DepthStencilALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2DepthStencilALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000002E0000367aef9fe374 = {
-			name = Tr2FenceALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2FenceALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000016F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001700000367aef9fe374;
-			};
-		000000B10000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000B20000367aef9fe374;
-			};
-		000001710000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001720000367aef9fe374;
-			};
-		000000830000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000840000367aef9fe374;
-			};
-		0000008F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000900000367aef9fe374;
-			};
-		000001BD0000367aef9fe374 = {
-			path = TrinityAL_gles2.lib;
-			isa = PBXFileReference;
-			includeInIndex = 0;
-			explicitFileType = archive.ar;
-			sourceTree = BUILT_PRODUCTS_DIR;
-			};
-		000001960000367aef9fe374 = {
-			name = Tr2VertexDefinition.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexDefinition.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000320000367aef9fe374 = {
-			name = Tr2FenceALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2FenceALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001B70000367aef9fe374 = {
-			isa = PBXGroup;
-			sourceTree = "<group>";
-			children = (
-				);
-			name = Dependencies;
-			};
-		000000F80000367aef9fe374 = {
-			name = Tr2DepthStencilALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2DepthStencilALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B80000367aef9fe374 = {
-			name = Tr2VertexDefinition.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexDefinition.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000D30000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000D40000367aef9fe374;
-			};
-		000000380000367aef9fe374 = {
-			name = Tr2GpuBufferALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2GpuBufferALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000FD0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000FE0000367aef9fe374;
-			};
-		000000270000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000280000367aef9fe374;
-			};
-		000000670000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000680000367aef9fe374;
-			};
-		000001690000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000016A0000367aef9fe374;
-			};
-		000001D10000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001DB0000367aef9fe374,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		000000800000367aef9fe374 = {
-			name = Tr2RenderTargetALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderTargetALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001610000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001620000367aef9fe374;
-			};
-		000001020000367aef9fe374 = {
-			name = Tr2FenceALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2FenceALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000230000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000240000367aef9fe374;
-			};
-		000001B50000367aef9fe374 = {
-			isa = PBXGroup;
-			sourceTree = "<group>";
-			children = (
-				000001B60000367aef9fe374,
-				000000CE0000367aef9fe374,
-				000000020000367aef9fe374,
-				000000D00000367aef9fe374,
-				000000D20000367aef9fe374,
-				000000040000367aef9fe374,
-				000000D40000367aef9fe374,
-				000000D60000367aef9fe374,
-				000000060000367aef9fe374,
-				000000D80000367aef9fe374,
-				000000080000367aef9fe374,
-				000000DA0000367aef9fe374,
-				0000000A0000367aef9fe374,
-				000000DC0000367aef9fe374,
-				0000000C0000367aef9fe374,
-				000000DE0000367aef9fe374,
-				0000000E0000367aef9fe374,
-				000000E00000367aef9fe374,
-				000000100000367aef9fe374,
-				000000E20000367aef9fe374,
-				000000120000367aef9fe374,
-				000000E40000367aef9fe374,
-				000000140000367aef9fe374,
-				000000E60000367aef9fe374,
-				000000160000367aef9fe374,
-				000000E80000367aef9fe374,
-				000000180000367aef9fe374,
-				000000EA0000367aef9fe374,
-				0000001A0000367aef9fe374,
-				000000EC0000367aef9fe374,
-				0000001C0000367aef9fe374,
-				000000EE0000367aef9fe374,
-				0000001E0000367aef9fe374,
-				000000F00000367aef9fe374,
-				000000200000367aef9fe374,
-				000000F20000367aef9fe374,
-				000000220000367aef9fe374,
-				000000F40000367aef9fe374,
-				000000240000367aef9fe374,
-				000000F60000367aef9fe374,
-				000000260000367aef9fe374,
-				000000F80000367aef9fe374,
-				000000280000367aef9fe374,
-				000000FA0000367aef9fe374,
-				0000002A0000367aef9fe374,
-				000000FC0000367aef9fe374,
-				0000002C0000367aef9fe374,
-				000000FE0000367aef9fe374,
-				0000002E0000367aef9fe374,
-				000001000000367aef9fe374,
-				000000300000367aef9fe374,
-				000001020000367aef9fe374,
-				000000320000367aef9fe374,
-				000001040000367aef9fe374,
-				000000340000367aef9fe374,
-				000001060000367aef9fe374,
-				000000360000367aef9fe374,
-				000001080000367aef9fe374,
-				000000380000367aef9fe374,
-				0000010A0000367aef9fe374,
-				0000010C0000367aef9fe374,
-				0000003A0000367aef9fe374,
-				0000010E0000367aef9fe374,
-				000001100000367aef9fe374,
-				000001120000367aef9fe374,
-				0000003C0000367aef9fe374,
-				000001140000367aef9fe374,
-				000001160000367aef9fe374,
-				0000003E0000367aef9fe374,
-				000001180000367aef9fe374,
-				000000400000367aef9fe374,
-				0000011A0000367aef9fe374,
-				000000420000367aef9fe374,
-				0000011C0000367aef9fe374,
-				000000440000367aef9fe374,
-				0000011E0000367aef9fe374,
-				000000460000367aef9fe374,
-				000001200000367aef9fe374,
-				000001220000367aef9fe374,
-				000000480000367aef9fe374,
-				000001240000367aef9fe374,
-				0000004A0000367aef9fe374,
-				000001260000367aef9fe374,
-				0000004C0000367aef9fe374,
-				000001280000367aef9fe374,
-				0000004E0000367aef9fe374,
-				0000012A0000367aef9fe374,
-				000000500000367aef9fe374,
-				0000012C0000367aef9fe374,
-				000000520000367aef9fe374,
-				0000012E0000367aef9fe374,
-				0000005E0000367aef9fe374,
-				0000013A0000367aef9fe374,
-				000000540000367aef9fe374,
-				000001300000367aef9fe374,
-				000000560000367aef9fe374,
-				000001320000367aef9fe374,
-				000000580000367aef9fe374,
-				000001340000367aef9fe374,
-				0000005A0000367aef9fe374,
-				000001360000367aef9fe374,
-				0000005C0000367aef9fe374,
-				000001380000367aef9fe374,
-				000000600000367aef9fe374,
-				0000013C0000367aef9fe374,
-				000000620000367aef9fe374,
-				0000013E0000367aef9fe374,
-				000000640000367aef9fe374,
-				000001400000367aef9fe374,
-				000000660000367aef9fe374,
-				000001420000367aef9fe374,
-				000000680000367aef9fe374,
-				000001440000367aef9fe374,
-				0000006A0000367aef9fe374,
-				000001460000367aef9fe374,
-				0000006C0000367aef9fe374,
-				000001480000367aef9fe374,
-				0000006E0000367aef9fe374,
-				0000014A0000367aef9fe374,
-				000000700000367aef9fe374,
-				0000014C0000367aef9fe374,
-				000000720000367aef9fe374,
-				0000014E0000367aef9fe374,
-				000000740000367aef9fe374,
-				000001500000367aef9fe374,
-				000000760000367aef9fe374,
-				000001520000367aef9fe374,
-				000000780000367aef9fe374,
-				000001540000367aef9fe374,
-				0000007A0000367aef9fe374,
-				000001560000367aef9fe374,
-				0000007C0000367aef9fe374,
-				000001580000367aef9fe374,
-				0000007E0000367aef9fe374,
-				0000015A0000367aef9fe374,
-				000000800000367aef9fe374,
-				0000015C0000367aef9fe374,
-				000000820000367aef9fe374,
-				0000015E0000367aef9fe374,
-				000000840000367aef9fe374,
-				000001600000367aef9fe374,
-				000000860000367aef9fe374,
-				000001620000367aef9fe374,
-				000000880000367aef9fe374,
-				000001640000367aef9fe374,
-				0000008A0000367aef9fe374,
-				000001660000367aef9fe374,
-				0000008C0000367aef9fe374,
-				000001680000367aef9fe374,
-				0000008E0000367aef9fe374,
-				0000016A0000367aef9fe374,
-				000000900000367aef9fe374,
-				0000016C0000367aef9fe374,
-				000000920000367aef9fe374,
-				0000016E0000367aef9fe374,
-				000000940000367aef9fe374,
-				000001700000367aef9fe374,
-				000000960000367aef9fe374,
-				000001720000367aef9fe374,
-				000000980000367aef9fe374,
-				000001740000367aef9fe374,
-				0000009A0000367aef9fe374,
-				000001760000367aef9fe374,
-				0000009C0000367aef9fe374,
-				000001780000367aef9fe374,
-				0000009E0000367aef9fe374,
-				0000017A0000367aef9fe374,
-				000000A00000367aef9fe374,
-				0000017C0000367aef9fe374,
-				000000A20000367aef9fe374,
-				0000017E0000367aef9fe374,
-				000000A40000367aef9fe374,
-				000001800000367aef9fe374,
-				000000A60000367aef9fe374,
-				000001820000367aef9fe374,
-				000000A80000367aef9fe374,
-				000001840000367aef9fe374,
-				000000AA0000367aef9fe374,
-				000001860000367aef9fe374,
-				000000AC0000367aef9fe374,
-				000001880000367aef9fe374,
-				0000018A0000367aef9fe374,
-				000000AE0000367aef9fe374,
-				0000018C0000367aef9fe374,
-				000000B00000367aef9fe374,
-				0000018E0000367aef9fe374,
-				000000B20000367aef9fe374,
-				000001900000367aef9fe374,
-				000000B40000367aef9fe374,
-				000001920000367aef9fe374,
-				000000B60000367aef9fe374,
-				000001940000367aef9fe374,
-				000000B80000367aef9fe374,
-				000001960000367aef9fe374,
-				000000BA0000367aef9fe374,
-				000001980000367aef9fe374,
-				000000BC0000367aef9fe374,
-				0000019A0000367aef9fe374,
-				000000BE0000367aef9fe374,
-				0000019C0000367aef9fe374,
-				000000C00000367aef9fe374,
-				0000019E0000367aef9fe374,
-				000000C20000367aef9fe374,
-				000001A00000367aef9fe374,
-				000000C40000367aef9fe374,
-				000001A20000367aef9fe374,
-				000000C60000367aef9fe374,
-				000001A40000367aef9fe374,
-				000000C80000367aef9fe374,
-				000001A60000367aef9fe374,
-				000000CA0000367aef9fe374,
-				000001A80000367aef9fe374,
-				000000CC0000367aef9fe374,
-				000001AA0000367aef9fe374,
-				000001AC0000367aef9fe374,
-				);
-			name = "Source Files";
-			};
-		000001630000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001640000367aef9fe374;
-			};
-		000000550000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000560000367aef9fe374;
-			};
-		000001D90000367aef9fe374 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					.,
-					"../../../carbon/src",
-					"../../../../../../sdk/telemetry/2.1A3/include",
-					..,
-					);
-				CLANG_WARN_INT_CONVERSION = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				PRODUCT_NAME = TrinityAL_gles2;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				GCC_OPTIMIZATION_LEVEL = s;
-				ONLY_ACTIVE_ARCH = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/telemetry/2.1A3/lib",
-					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					);
-				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					NDEBUG,
-					"TRINITY_PLATFORM=TRINITY_OPENGLES2",
-					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
-					"$(inherited)",
-					);
-				COPY_PHASE_STRIP = NO;
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_PREFIX_HEADER = StdAfx.h;
-				GCC_DYNAMIC_NO_PIC = NO;
-				SDKROOT = macosx;
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				};
-			name = Release;
-			};
 		000000ED0000367aef9fe374 = {
 			isa = PBXBuildFile;
 			fileRef = 000000EE0000367aef9fe374;
@@ -942,10 +728,10 @@
 			fileRef = 000000B00000367aef9fe374;
 			};
 		000001180000367aef9fe374 = {
-			name = Tr2GpuTimerALDx11.h;
+			name = Tr2GpuTelemetry.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuTimerALDx11.h;
+			path = Tr2GpuTelemetry.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -954,18 +740,18 @@
 			fileRef = 0000004C0000367aef9fe374;
 			};
 		000001780000367aef9fe374 = {
-			name = Tr2SwapChainALGL4.h;
+			name = Tr2SwapChainALDx11.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SwapChainALGL4.h;
+			path = Tr2SwapChainALDx11.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		0000009E0000367aef9fe374 = {
-			name = Tr2SwapChainALGLES2.cpp;
+			name = Tr2SwapChainALGL4.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SwapChainALGLES2.cpp;
+			path = Tr2SwapChainALGL4.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -974,10 +760,10 @@
 			fileRef = 000001B00000367aef9fe374;
 			};
 		000000160000367aef9fe374 = {
-			name = Tr2ConstantBufferALDx9.cpp;
+			name = Tr2ConstantBufferALDx11.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2ConstantBufferALDx9.cpp;
+			path = Tr2ConstantBufferALDx11.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -986,10 +772,10 @@
 			fileRef = 0000019A0000367aef9fe374;
 			};
 		000001740000367aef9fe374 = {
-			name = Tr2SwapChainALDx11.h;
+			name = Tr2ShaderALGLES2.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SwapChainALDx11.h;
+			path = Tr2ShaderALGLES2.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1002,10 +788,10 @@
 			fileRef = 0000012A0000367aef9fe374;
 			};
 		0000001C0000367aef9fe374 = {
-			name = Tr2ConstantBufferALStub.cpp;
+			name = Tr2ConstantBufferALGLES2.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2ConstantBufferALStub.cpp;
+			path = Tr2ConstantBufferALGLES2.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -1014,23 +800,29 @@
 			fileRef = 000001880000367aef9fe374;
 			};
 		0000006E0000367aef9fe374 = {
-			name = Tr2RenderContextDx9.cpp;
+			name = Tr2RenderContextDx11.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderContextDx9.cpp;
+			path = Tr2RenderContextDx11.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
+		000001E00000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				};
+			name = Release;
+			};
 		0000007E0000367aef9fe374 = {
-			name = Tr2RenderTargetALGL4.cpp;
+			name = Tr2RenderTargetALDx9.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderTargetALGL4.cpp;
+			path = Tr2RenderTargetALDx9.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000001BF0000367aef9fe374 = {
-			path = TrinityAL_stub.lib;
+			path = TrinityAL_stub_d.lib;
 			isa = PBXFileReference;
 			includeInIndex = 0;
 			explicitFileType = archive.ar;
@@ -1049,14 +841,97 @@
 			fileRef = 000001920000367aef9fe374;
 			};
 		000000F40000367aef9fe374 = {
-			name = Tr2DepthStencilALGL4.h;
+			name = Tr2DepthStencilALDx11.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2DepthStencilALGL4.h;
+			path = Tr2DepthStencilALDx11.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		000001D60000367aef9fe374 = {
+			projectDirPath = "";
+			targets = (
+				000001C60000367aef9fe374,
+				000001C80000367aef9fe374,
+				000001CA0000367aef9fe374,
+				000001CC0000367aef9fe374,
+				000001CE0000367aef9fe374,
+				000001D00000367aef9fe374,
+				000001D20000367aef9fe374,
+				000001D40000367aef9fe374,
+				);
+			knownRegions = (
+				en,
+				);
+			developmentRegion = English;
+			projectRoot = "";
+			hasScannedForEncodings = 0;
+			compatibilityVersion = "Xcode 3.2";
+			mainGroup = 000001C40000367aef9fe374;
+			attributes = {
+				ORGANIZATIONNAME = CCP;
+				LastUpgradeCheck = 0460;
+				};
+			isa = PBXProject;
+			buildConfigurationList = 000001D70000367aef9fe374;
+			};
+		000000F60000367aef9fe374 = {
+			name = Tr2DepthStencilALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2DepthStencilALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001000000367aef9fe374 = {
+			name = Tr2DriverUtilities.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2DriverUtilities.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000360000367aef9fe374 = {
+			name = Tr2FenceALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2FenceALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000012D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000012E0000367aef9fe374;
+			};
+		000001A80000367aef9fe374 = {
+			name = Tr2VideoAdapterInfoALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VideoAdapterInfoALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000002F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000300000367aef9fe374;
+			};
+		000000D40000367aef9fe374 = {
+			name = BcDecompress.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = BcDecompress.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000890000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000008A0000367aef9fe374;
+			};
+		000000610000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000620000367aef9fe374;
+			};
+		000001DA0000367aef9fe374 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
@@ -1114,47 +989,333 @@
 				};
 			name = Release;
 			};
-		000000F60000367aef9fe374 = {
-			name = Tr2DepthStencilALGLES2.h;
+		0000015C0000367aef9fe374 = {
+			name = Tr2RenderTargetALDx9.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2DepthStencilALGLES2.h;
+			path = Tr2RenderTargetALDx9.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001000000367aef9fe374 = {
-			name = Tr2FenceALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2FenceALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000360000367aef9fe374 = {
-			name = Tr2FragmentOpSettings.cpp;
+		000000B60000367aef9fe374 = {
+			name = Tr2VertexBufferALGLES2.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2FragmentOpSettings.cpp;
+			path = Tr2VertexBufferALGLES2.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000012D0000367aef9fe374 = {
+		0000001F0000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 0000012E0000367aef9fe374;
+			fileRef = 000000200000367aef9fe374;
 			};
-		000001A80000367aef9fe374 = {
-			name = Tr2VideoAdapterInfoALGLES2.h;
+		0000007C0000367aef9fe374 = {
+			name = Tr2RenderTargetALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2RenderTargetALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000007A0000367aef9fe374 = {
+			name = Tr2RenderStateEmulationDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2RenderStateEmulationDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000003A0000367aef9fe374 = {
+			name = Tr2GpuBufferALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2GpuBufferALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001770000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001780000367aef9fe374;
+			};
+		000001CB0000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001DA0000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		000000AC0000367aef9fe374 = {
+			name = Tr2TextureALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2TextureALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001730000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001740000367aef9fe374;
+			};
+		000001D30000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001DE0000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		000000D50000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000D60000367aef9fe374;
+			};
+		000000990000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000009A0000367aef9fe374;
+			};
+		000000BE0000367aef9fe374 = {
+			name = Tr2VertexLayoutALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexLayoutALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000DE0000367aef9fe374 = {
+			name = Tr2BufferImplALDx11.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VideoAdapterInfoALGLES2.h;
+			path = Tr2BufferImplALDx11.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000002F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000300000367aef9fe374;
+		0000013C0000367aef9fe374 = {
+			name = Tr2LockedRenderTargetALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2LockedRenderTargetALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
 			};
-		000000D40000367aef9fe374 = {
+		0000005F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000600000367aef9fe374;
+			};
+		000001D80000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_gl4_d;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					_DEBUG,
+					"CCP_ASSERT_ENABLED=1",
+					"TRINITY_PLATFORM=TRINITY_OPENGL4",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
+			};
+		0000006C0000367aef9fe374 = {
+			name = Tr2PrimaryRenderContextDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2PrimaryRenderContextDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001400000367aef9fe374 = {
+			name = Tr2OcclusionQueryALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2OcclusionQueryALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F10000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000F20000367aef9fe374;
+			};
+		000001A70000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001A80000367aef9fe374;
+			};
+		000001300000367aef9fe374 = {
+			name = Tr2IndexBufferALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2IndexBufferALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001B60000367aef9fe374 = {
+			name = Tr2PixelFormat.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "include/Tr2PixelFormat.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001CD0000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001DB0000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		000000A90000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000AA0000367aef9fe374;
+			};
+		000000980000367aef9fe374 = {
+			name = Tr2ShaderALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2ShaderALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000FC0000367aef9fe374 = {
+			name = Tr2DepthStencilALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2DepthStencilALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000260000367aef9fe374 = {
+			name = Tr2DepthStencilALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2DepthStencilALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000FF0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001000000367aef9fe374;
+			};
+		000000DF0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000E00000367aef9fe374;
+			};
+		000000860000367aef9fe374 = {
+			name = Tr2SamplerStateALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2SamplerStateALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B40000367aef9fe374 = {
+			name = Tr2VertexBufferALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexBufferALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000010F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001100000367aef9fe374;
+			};
+		000000100000367aef9fe374 = {
+			name = Tr2CapsALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2CapsALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001390000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000013A0000367aef9fe374;
+			};
+		000000680000367aef9fe374 = {
+			name = Tr2OcclusionQueryALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2OcclusionQueryALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000CE0000367aef9fe374 = {
+			name = Tr2VideoAdapterInfoALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VideoAdapterInfoALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001130000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001140000367aef9fe374;
+			};
+		000001C60000367aef9fe374 = {
+			dependencies = (
+				);
+			productReference = 000001BC0000367aef9fe374;
+			name = Debug_GL4_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001C70000367aef9fe374;
+			buildPhases = (
+				000001C50000367aef9fe374,
+				);
+			};
+		000000B50000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000B60000367aef9fe374;
+			};
+		000000D80000367aef9fe374 = {
 			name = StdAfx.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
@@ -1162,15 +1323,1309 @@
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000890000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000008A0000367aef9fe374;
+		0000010C0000367aef9fe374 = {
+			name = Tr2FragmentOpSettings.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2FragmentOpSettings.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
 			};
-		000000610000367aef9fe374 = {
+		0000011F0000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 000000620000367aef9fe374;
+			fileRef = 000001200000367aef9fe374;
 			};
-		000001DA0000367aef9fe374 = {
+		0000014B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000014C0000367aef9fe374;
+			};
+		0000013A0000367aef9fe374 = {
+			name = Tr2LockedRenderTargetALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2LockedRenderTargetALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000005A0000367aef9fe374 = {
+			name = Tr2LockedRenderTargetALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2LockedRenderTargetALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000003F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000400000367aef9fe374;
+			};
+		000000A20000367aef9fe374 = {
+			name = Tr2SwapChainALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2SwapChainALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000480000367aef9fe374 = {
+			name = Tr2GpuTimerALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2GpuTimerALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001A20000367aef9fe374 = {
+			name = Tr2VertexLayoutALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexLayoutALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001C90000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001D90000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		0000009A0000367aef9fe374 = {
+			name = Tr2SwapChainALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2SwapChainALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001DB0000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_stub_d;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					_DEBUG,
+					"CCP_ASSERT_ENABLED=1",
+					"TRINITY_PLATFORM=TRINITY_STUB",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
+			};
+		000001010000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001020000367aef9fe374;
+			};
+		0000002D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000002E0000367aef9fe374;
+			};
+		000000620000367aef9fe374 = {
+			name = Tr2OcclusionQueryALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2OcclusionQueryALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000140000367aef9fe374 = {
+			name = Tr2CapsALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2CapsALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001460000367aef9fe374 = {
+			name = Tr2OcclusionQueryALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2OcclusionQueryALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000011C0000367aef9fe374 = {
+			name = Tr2GpuTimerALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2GpuTimerALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000017D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000017E0000367aef9fe374;
+			};
+		000000C40000367aef9fe374 = {
+			name = Tr2VertexLayoutALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexLayoutALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000290000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000002A0000367aef9fe374;
+			};
+		000000840000367aef9fe374 = {
+			name = Tr2RenderTargetALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2RenderTargetALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001B90000367aef9fe374 = {
+			isa = PBXGroup;
+			sourceTree = "<group>";
+			children = (
+				000001BA0000367aef9fe374,
+				000000D00000367aef9fe374,
+				000000020000367aef9fe374,
+				000000D20000367aef9fe374,
+				000000040000367aef9fe374,
+				000000D40000367aef9fe374,
+				000000D60000367aef9fe374,
+				000000060000367aef9fe374,
+				000000D80000367aef9fe374,
+				000000DA0000367aef9fe374,
+				000000080000367aef9fe374,
+				000000DC0000367aef9fe374,
+				0000000A0000367aef9fe374,
+				000000DE0000367aef9fe374,
+				0000000C0000367aef9fe374,
+				000000E00000367aef9fe374,
+				0000000E0000367aef9fe374,
+				000000E20000367aef9fe374,
+				000000100000367aef9fe374,
+				000000E40000367aef9fe374,
+				000000120000367aef9fe374,
+				000000E60000367aef9fe374,
+				000000140000367aef9fe374,
+				000000E80000367aef9fe374,
+				000000160000367aef9fe374,
+				000000EA0000367aef9fe374,
+				000000180000367aef9fe374,
+				000000EC0000367aef9fe374,
+				0000001A0000367aef9fe374,
+				000000EE0000367aef9fe374,
+				0000001C0000367aef9fe374,
+				000000F00000367aef9fe374,
+				0000001E0000367aef9fe374,
+				000000F20000367aef9fe374,
+				000000200000367aef9fe374,
+				000000F40000367aef9fe374,
+				000000220000367aef9fe374,
+				000000F60000367aef9fe374,
+				000000240000367aef9fe374,
+				000000F80000367aef9fe374,
+				000000260000367aef9fe374,
+				000000FA0000367aef9fe374,
+				000000280000367aef9fe374,
+				000000FC0000367aef9fe374,
+				0000002A0000367aef9fe374,
+				000000FE0000367aef9fe374,
+				0000002C0000367aef9fe374,
+				000001000000367aef9fe374,
+				0000002E0000367aef9fe374,
+				000001020000367aef9fe374,
+				000000300000367aef9fe374,
+				000001040000367aef9fe374,
+				000000320000367aef9fe374,
+				000001060000367aef9fe374,
+				000000340000367aef9fe374,
+				000001080000367aef9fe374,
+				000000360000367aef9fe374,
+				0000010A0000367aef9fe374,
+				000000380000367aef9fe374,
+				0000010C0000367aef9fe374,
+				0000003A0000367aef9fe374,
+				0000010E0000367aef9fe374,
+				000001100000367aef9fe374,
+				0000003C0000367aef9fe374,
+				000001120000367aef9fe374,
+				000001140000367aef9fe374,
+				000001160000367aef9fe374,
+				0000003E0000367aef9fe374,
+				000001180000367aef9fe374,
+				0000011A0000367aef9fe374,
+				000000400000367aef9fe374,
+				0000011C0000367aef9fe374,
+				000000420000367aef9fe374,
+				0000011E0000367aef9fe374,
+				000000440000367aef9fe374,
+				000001200000367aef9fe374,
+				000000460000367aef9fe374,
+				000001220000367aef9fe374,
+				000000480000367aef9fe374,
+				000001240000367aef9fe374,
+				000001260000367aef9fe374,
+				0000004A0000367aef9fe374,
+				000001280000367aef9fe374,
+				0000004C0000367aef9fe374,
+				0000012A0000367aef9fe374,
+				0000004E0000367aef9fe374,
+				0000012C0000367aef9fe374,
+				000000500000367aef9fe374,
+				0000012E0000367aef9fe374,
+				000000520000367aef9fe374,
+				000001300000367aef9fe374,
+				000000540000367aef9fe374,
+				000001320000367aef9fe374,
+				000000600000367aef9fe374,
+				0000013E0000367aef9fe374,
+				000000560000367aef9fe374,
+				000001340000367aef9fe374,
+				000000580000367aef9fe374,
+				000001360000367aef9fe374,
+				0000005A0000367aef9fe374,
+				000001380000367aef9fe374,
+				0000005C0000367aef9fe374,
+				0000013A0000367aef9fe374,
+				0000005E0000367aef9fe374,
+				0000013C0000367aef9fe374,
+				000000620000367aef9fe374,
+				000001400000367aef9fe374,
+				000000640000367aef9fe374,
+				000001420000367aef9fe374,
+				000000660000367aef9fe374,
+				000001440000367aef9fe374,
+				000000680000367aef9fe374,
+				000001460000367aef9fe374,
+				0000006A0000367aef9fe374,
+				000001480000367aef9fe374,
+				0000006C0000367aef9fe374,
+				0000014A0000367aef9fe374,
+				0000006E0000367aef9fe374,
+				0000014C0000367aef9fe374,
+				000000700000367aef9fe374,
+				0000014E0000367aef9fe374,
+				000000720000367aef9fe374,
+				000001500000367aef9fe374,
+				000000740000367aef9fe374,
+				000001520000367aef9fe374,
+				000000760000367aef9fe374,
+				000001540000367aef9fe374,
+				000000780000367aef9fe374,
+				000001560000367aef9fe374,
+				0000007A0000367aef9fe374,
+				000001580000367aef9fe374,
+				0000007C0000367aef9fe374,
+				0000015A0000367aef9fe374,
+				0000007E0000367aef9fe374,
+				0000015C0000367aef9fe374,
+				000000800000367aef9fe374,
+				0000015E0000367aef9fe374,
+				000000820000367aef9fe374,
+				000001600000367aef9fe374,
+				000000840000367aef9fe374,
+				000001620000367aef9fe374,
+				000000860000367aef9fe374,
+				000001640000367aef9fe374,
+				000000880000367aef9fe374,
+				000001660000367aef9fe374,
+				0000008A0000367aef9fe374,
+				000001680000367aef9fe374,
+				0000008C0000367aef9fe374,
+				0000016A0000367aef9fe374,
+				0000008E0000367aef9fe374,
+				0000016C0000367aef9fe374,
+				000000900000367aef9fe374,
+				0000016E0000367aef9fe374,
+				000000920000367aef9fe374,
+				000001700000367aef9fe374,
+				000000940000367aef9fe374,
+				000001720000367aef9fe374,
+				000000960000367aef9fe374,
+				000001740000367aef9fe374,
+				000000980000367aef9fe374,
+				000001760000367aef9fe374,
+				0000009A0000367aef9fe374,
+				000001780000367aef9fe374,
+				0000009C0000367aef9fe374,
+				0000017A0000367aef9fe374,
+				0000009E0000367aef9fe374,
+				0000017C0000367aef9fe374,
+				000000A00000367aef9fe374,
+				0000017E0000367aef9fe374,
+				000000A20000367aef9fe374,
+				000001800000367aef9fe374,
+				000000A40000367aef9fe374,
+				000001820000367aef9fe374,
+				000000A60000367aef9fe374,
+				000001840000367aef9fe374,
+				000000A80000367aef9fe374,
+				000001860000367aef9fe374,
+				000000AA0000367aef9fe374,
+				000001880000367aef9fe374,
+				000000AC0000367aef9fe374,
+				0000018A0000367aef9fe374,
+				000000AE0000367aef9fe374,
+				0000018C0000367aef9fe374,
+				0000018E0000367aef9fe374,
+				000000B00000367aef9fe374,
+				000001900000367aef9fe374,
+				000000B20000367aef9fe374,
+				000001920000367aef9fe374,
+				000000B40000367aef9fe374,
+				000001940000367aef9fe374,
+				000000B60000367aef9fe374,
+				000001960000367aef9fe374,
+				000000B80000367aef9fe374,
+				000001980000367aef9fe374,
+				000000BA0000367aef9fe374,
+				0000019A0000367aef9fe374,
+				000000BC0000367aef9fe374,
+				0000019C0000367aef9fe374,
+				000000BE0000367aef9fe374,
+				0000019E0000367aef9fe374,
+				000000C00000367aef9fe374,
+				000001A00000367aef9fe374,
+				000000C20000367aef9fe374,
+				000001A20000367aef9fe374,
+				000000C40000367aef9fe374,
+				000001A40000367aef9fe374,
+				000000C60000367aef9fe374,
+				000001A60000367aef9fe374,
+				000000C80000367aef9fe374,
+				000001A80000367aef9fe374,
+				000000CA0000367aef9fe374,
+				000001AA0000367aef9fe374,
+				000000CC0000367aef9fe374,
+				000001AC0000367aef9fe374,
+				000000CE0000367aef9fe374,
+				000001AE0000367aef9fe374,
+				000001B00000367aef9fe374,
+				);
+			name = "Source Files";
+			};
+		000000530000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000540000367aef9fe374;
+			};
+		000000710000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000720000367aef9fe374;
+			};
+		000001040000367aef9fe374 = {
+			name = Tr2FenceALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2FenceALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000014D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000014E0000367aef9fe374;
+			};
+		000001C00000367aef9fe374 = {
+			path = TrinityAL_gles2_d.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
+			};
+		000001830000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001840000367aef9fe374;
+			};
+		000001810000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001820000367aef9fe374;
+			};
+		000001A50000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001A60000367aef9fe374;
+			};
+		000000A70000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000A80000367aef9fe374;
+			};
+		000000FE0000367aef9fe374 = {
+			name = Tr2DrawUPHelper.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2DrawUPHelper.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000E10000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000E20000367aef9fe374;
+			};
+		0000016E0000367aef9fe374 = {
+			name = Tr2ShaderALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2ShaderALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000005C0000367aef9fe374 = {
+			name = Tr2LockedRenderTargetALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2LockedRenderTargetALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000AB0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000AC0000367aef9fe374;
+			};
+		000000C60000367aef9fe374 = {
+			name = Tr2VideoAdapterInfoALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VideoAdapterInfoALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001CF0000367aef9fe374 = {
+			isa = XCConfigurationList;
+			defaultConfigurationName = Release;
+			buildConfigurations = (
+				000001DC0000367aef9fe374,
+				);
+			defaultConfigurationIsVisible = 0;
+			};
+		000000E50000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000E60000367aef9fe374;
+			};
+		000001930000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001940000367aef9fe374;
+			};
+		000001090000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000010A0000367aef9fe374;
+			};
+		000001540000367aef9fe374 = {
+			name = Tr2RenderContextGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2RenderContextGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001150000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001160000367aef9fe374;
+			};
+		000001750000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001760000367aef9fe374;
+			};
+		000000370000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000380000367aef9fe374;
+			};
+		000000B70000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000B80000367aef9fe374;
+			};
+		000000DA0000367aef9fe374 = {
+			name = Tr2AdapterStructures.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2AdapterStructures.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001790000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000017A0000367aef9fe374;
+			};
+		000001880000367aef9fe374 = {
+			name = Tr2TextureALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2TextureALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000CF0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000D00000367aef9fe374;
+			};
+		000000130000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000140000367aef9fe374;
+			};
+		000000760000367aef9fe374 = {
+			name = Tr2RenderContextGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2RenderContextGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000920000367aef9fe374 = {
+			name = Tr2ShaderALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2ShaderALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001C20000367aef9fe374 = {
+			path = TrinityAL_gl4_cc.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
+			};
+		0000017C0000367aef9fe374 = {
+			name = Tr2SwapChainALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2SwapChainALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000000E0000367aef9fe374 = {
+			name = Tr2CapsALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2CapsALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000200000367aef9fe374 = {
+			name = Tr2DepthStencilALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2DepthStencilALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000220000367aef9fe374 = {
+			name = Tr2DepthStencilALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2DepthStencilALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000280000367aef9fe374 = {
+			name = Tr2DepthStencilALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2DepthStencilALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000A00000367aef9fe374 = {
+			name = Tr2SwapChainALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2SwapChainALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000019D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000019E0000367aef9fe374;
+			};
+		000000EB0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000EC0000367aef9fe374;
+			};
+		000000A80000367aef9fe374 = {
+			name = Tr2TextureALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2TextureALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000600000367aef9fe374 = {
+			name = Tr2LockGuard.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2LockGuard.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000016C0000367aef9fe374 = {
+			name = Tr2SamplerStateALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2SamplerStateALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001450000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001460000367aef9fe374;
+			};
+		000000D90000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000DA0000367aef9fe374;
+			};
+		000001110000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001120000367aef9fe374;
+			};
+		000001B40000367aef9fe374 = {
+			name = Tr2CubemapFace.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = "include/Tr2CubemapFace.h";
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001640000367aef9fe374 = {
+			name = Tr2SamplerStateALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2SamplerStateALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001310000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001320000367aef9fe374;
+			};
+		000000150000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000160000367aef9fe374;
+			};
+		000000170000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000180000367aef9fe374;
+			};
+		000001860000367aef9fe374 = {
+			name = Tr2TextureALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2TextureALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001060000367aef9fe374 = {
+			name = Tr2FenceALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2FenceALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000018E0000367aef9fe374 = {
+			name = Tr2TrackedALObjectImpl.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2TrackedALObjectImpl.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001030000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001040000367aef9fe374;
+			};
+		000000720000367aef9fe374 = {
+			name = Tr2RenderContextEnum.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2RenderContextEnum.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000690000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000006A0000367aef9fe374;
+			};
+		000001260000367aef9fe374 = {
+			name = Tr2Hal.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2Hal.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000013B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000013C0000367aef9fe374;
+			};
+		000001520000367aef9fe374 = {
+			name = Tr2RenderContextGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2RenderContextGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001A30000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001A40000367aef9fe374;
+			};
+		000000070000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000080000367aef9fe374;
+			};
+		0000010D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000010E0000367aef9fe374;
+			};
+		000000740000367aef9fe374 = {
+			name = Tr2RenderContextGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2RenderContextGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000110000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000120000367aef9fe374;
+			};
+		000000640000367aef9fe374 = {
+			name = Tr2OcclusionQueryALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2OcclusionQueryALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000CC0000367aef9fe374 = {
+			name = Tr2VideoAdapterInfoALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VideoAdapterInfoALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000950000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000960000367aef9fe374;
+			};
+		000000250000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000260000367aef9fe374;
+			};
+		000000090000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000000A0000367aef9fe374;
+			};
+		0000005E0000367aef9fe374 = {
+			name = Tr2LockedRenderTargetALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2LockedRenderTargetALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000C00000367aef9fe374 = {
+			name = Tr2VertexLayoutALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexLayoutALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001AE0000367aef9fe374 = {
+			name = Tr2VideoAdapterInfoALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VideoAdapterInfoALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000003D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000003E0000367aef9fe374;
+			};
+		000000400000367aef9fe374 = {
+			name = Tr2GpuTimerALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2GpuTimerALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000020000367aef9fe374 = {
+			name = ALResult.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = ALResult.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000014E0000367aef9fe374 = {
+			name = Tr2RenderContextDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2RenderContextDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001CE0000367aef9fe374 = {
+			dependencies = (
+				);
+			productReference = 000001C00000367aef9fe374;
+			name = Debug_GLES2_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001CF0000367aef9fe374;
+			buildPhases = (
+				000001C50000367aef9fe374,
+				);
+			};
+		000001980000367aef9fe374 = {
+			name = Tr2VertexBufferALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexBufferALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000000C0000367aef9fe374 = {
+			name = Tr2CapsALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2CapsALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000002B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000002C0000367aef9fe374;
+			};
+		000000520000367aef9fe374 = {
+			name = Tr2IndexBufferALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2IndexBufferALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000010B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000010C0000367aef9fe374;
+			};
+		000001570000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001580000367aef9fe374;
+			};
+		000001720000367aef9fe374 = {
+			name = Tr2ShaderALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2ShaderALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000180000367aef9fe374 = {
+			name = Tr2ConstantBufferALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2ConstantBufferALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B90000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000BA0000367aef9fe374;
+			};
+		000000A60000367aef9fe374 = {
+			name = Tr2TextureALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2TextureALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001850000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001860000367aef9fe374;
+			};
+		000000D60000367aef9fe374 = {
+			name = ITr2RenderContextEvents.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = ITr2RenderContextEvents.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000E70000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000E80000367aef9fe374;
+			};
+		000001160000367aef9fe374 = {
+			name = Tr2GpuBufferALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2GpuBufferALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001840000367aef9fe374 = {
+			name = Tr2TextureALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2TextureALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001970000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001980000367aef9fe374;
+			};
+		000001A10000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001A20000367aef9fe374;
+			};
+		0000008B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000008C0000367aef9fe374;
+			};
+		000000010000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000020000367aef9fe374;
+			};
+		000000C90000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000CA0000367aef9fe374;
+			};
+		0000012F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001300000367aef9fe374;
+			};
+		0000006D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000006E0000367aef9fe374;
+			};
+		0000006F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000700000367aef9fe374;
+			};
+		000001DD0000367aef9fe374 = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/glfw/3.0/include",
+					"../../../../../../sdk/glew/1.7.0/include",
+					.,
+					"../../../carbon/src",
+					"../../../../../../sdk/telemetry/2.1A3/include",
+					..,
+					);
+				CLANG_WARN_INT_CONVERSION = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				PRODUCT_NAME = TrinityAL_gles2;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
+				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				GCC_OPTIMIZATION_LEVEL = s;
+				ONLY_ACTIVE_ARCH = YES;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/telemetry/2.1A3/lib",
+					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
+					);
+				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
+				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					NDEBUG,
+					"TRINITY_PLATFORM=TRINITY_OPENGLES2",
+					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
+					"$(inherited)",
+					);
+				COPY_PHASE_STRIP = NO;
+				CLANG_CXX_LIBRARY = "libc++";
+				GCC_PREFIX_HEADER = StdAfx.h;
+				GCC_DYNAMIC_NO_PIC = NO;
+				SDKROOT = macosx;
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				};
+			name = Release;
+			};
+		000001380000367aef9fe374 = {
+			name = Tr2LockedRenderTargetALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2LockedRenderTargetALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000010A0000367aef9fe374 = {
+			name = Tr2FenceALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2FenceALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001070000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001080000367aef9fe374;
+			};
+		000000470000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000480000367aef9fe374;
+			};
+		000000050000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000060000367aef9fe374;
+			};
+		000000330000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000340000367aef9fe374;
+			};
+		000000E40000367aef9fe374 = {
+			name = Tr2CapsALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2CapsALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000970000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000980000367aef9fe374;
+			};
+		000001470000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001480000367aef9fe374;
+			};
+		000000CB0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000CC0000367aef9fe374;
+			};
+		000000CA0000367aef9fe374 = {
+			name = Tr2VideoAdapterInfoALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VideoAdapterInfoALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000E30000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000E40000367aef9fe374;
+			};
+		000001B30000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001B40000367aef9fe374;
+			};
+		000000590000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000005A0000367aef9fe374;
+			};
+		0000015A0000367aef9fe374 = {
+			name = Tr2RenderTargetALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2RenderTargetALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001120000367aef9fe374 = {
+			name = Tr2GpuBufferALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2GpuBufferALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000570000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000580000367aef9fe374;
+			};
+		000001240000367aef9fe374 = {
+			name = Tr2GpuTimerALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2GpuTimerALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001480000367aef9fe374 = {
+			name = Tr2OcclusionQueryALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2OcclusionQueryALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000016B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000016C0000367aef9fe374;
+			};
+		000001140000367aef9fe374 = {
+			name = Tr2GpuBufferALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2GpuBufferALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001430000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001440000367aef9fe374;
+			};
+		000000A40000367aef9fe374 = {
+			name = Tr2TextureALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2TextureALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001900000367aef9fe374 = {
+			name = Tr2VertexBufferALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexBufferALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000005D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000005E0000367aef9fe374;
+			};
+		0000006A0000367aef9fe374 = {
+			name = Tr2OcclusionQueryALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2OcclusionQueryALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000450000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000460000367aef9fe374;
+			};
+		000000BD0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000BE0000367aef9fe374;
+			};
+		000000BF0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000C00000367aef9fe374;
+			};
+		0000002A0000367aef9fe374 = {
+			name = Tr2DrawUPHelper.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2DrawUPHelper.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000080000367aef9fe374 = {
+			name = Tr2AutoResetObjectAL.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2AutoResetObjectAL.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000018D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000018E0000367aef9fe374;
+			};
+		0000015E0000367aef9fe374 = {
+			name = Tr2RenderTargetALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2RenderTargetALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000017A0000367aef9fe374 = {
+			name = Tr2SwapChainALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2SwapChainALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000008D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000008E0000367aef9fe374;
+			};
+		000000630000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000640000367aef9fe374;
+			};
+		000001210000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001220000367aef9fe374;
+			};
+		0000013F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001400000367aef9fe374;
+			};
+		000000660000367aef9fe374 = {
+			name = Tr2OcclusionQueryALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2OcclusionQueryALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001DE0000367aef9fe374 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
@@ -1230,186 +2685,308 @@
 				};
 			name = Release;
 			};
-		0000015C0000367aef9fe374 = {
-			name = Tr2RenderTargetALGLES2.h;
+		0000007D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000007E0000367aef9fe374;
+			};
+		000001B10000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001B20000367aef9fe374;
+			};
+		000000540000367aef9fe374 = {
+			name = Tr2IndexBufferALStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2IndexBufferALStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001B00000367aef9fe374 = {
+			name = wglext.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderTargetALGLES2.h;
+			path = wglext.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000B60000367aef9fe374 = {
-			name = Tr2VertexBufferALStub.cpp;
+		000000D20000367aef9fe374 = {
+			name = ALResult.h;
 			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexBufferALStub.cpp;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = ALResult.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000001F0000367aef9fe374 = {
+		000000770000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 000000200000367aef9fe374;
+			fileRef = 000000780000367aef9fe374;
 			};
-		0000007C0000367aef9fe374 = {
-			name = Tr2RenderTargetALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderTargetALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000007A0000367aef9fe374 = {
-			name = Tr2RenderTargetALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderTargetALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000003A0000367aef9fe374 = {
-			name = Tr2GpuBufferALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2GpuBufferALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001770000367aef9fe374 = {
+		0000019B0000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 000001780000367aef9fe374;
+			fileRef = 0000019C0000367aef9fe374;
 			};
-		000001CB0000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001D80000367aef9fe374,
+		000001220000367aef9fe374 = {
+			name = Tr2GpuTimerALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2GpuTimerALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001280000367aef9fe374 = {
+			name = Tr2HalHelperStructures.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2HalHelperStructures.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000014C0000367aef9fe374 = {
+			name = Tr2RenderContextDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2RenderContextDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000014A0000367aef9fe374 = {
+			name = Tr2PrimaryRenderContextDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2PrimaryRenderContextDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000910000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000920000367aef9fe374;
+			};
+		000000D10000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000D20000367aef9fe374;
+			};
+		0000008C0000367aef9fe374 = {
+			name = Tr2SamplerStateALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2SamplerStateALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001C10000367aef9fe374 = {
+			path = TrinityAL_gles2.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
+			};
+		000000490000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000004A0000367aef9fe374;
+			};
+		000001760000367aef9fe374 = {
+			name = Tr2ShaderALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2ShaderALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000006B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000006C0000367aef9fe374;
+			};
+		000001920000367aef9fe374 = {
+			name = Tr2VertexBufferALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexBufferALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000780000367aef9fe374 = {
+			name = Tr2RenderContextStub.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2RenderContextStub.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001500000367aef9fe374 = {
+			name = Tr2RenderContextEnum.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2RenderContextEnum.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000009F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000A00000367aef9fe374;
+			};
+		0000004C0000367aef9fe374 = {
+			name = Tr2IndexBufferALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2IndexBufferALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000004F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000500000367aef9fe374;
+			};
+		000000BA0000367aef9fe374 = {
+			name = Tr2VertexDefinition.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexDefinition.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001350000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001360000367aef9fe374;
+			};
+		000000B20000367aef9fe374 = {
+			name = Tr2VertexBufferALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexBufferALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000001D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000001E0000367aef9fe374;
+			};
+		000001D20000367aef9fe374 = {
+			dependencies = (
 				);
-			defaultConfigurationIsVisible = 0;
-			};
-		000000AC0000367aef9fe374 = {
-			name = Tr2TrackedALObject.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2TrackedALObject.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001730000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001740000367aef9fe374;
-			};
-		000001D30000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001DC0000367aef9fe374,
+			productReference = 000001C20000367aef9fe374;
+			name = Release_GL4_Coverage_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
 				);
-			defaultConfigurationIsVisible = 0;
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001D30000367aef9fe374;
+			buildPhases = (
+				000001C50000367aef9fe374,
+				);
 			};
-		000000D50000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000D60000367aef9fe374;
-			};
-		000000990000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000009A0000367aef9fe374;
-			};
-		000000BE0000367aef9fe374 = {
-			name = Tr2VertexLayoutALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexLayoutALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000DE0000367aef9fe374 = {
-			name = Tr2CapsALDx9.h;
+		000001680000367aef9fe374 = {
+			name = Tr2SamplerStateALGL4.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2CapsALDx9.h;
+			path = Tr2SamplerStateALGL4.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000013C0000367aef9fe374 = {
-			name = Tr2OcclusionQueryALDx11.h;
+		0000001B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000001C0000367aef9fe374;
+			};
+		0000015B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000015C0000367aef9fe374;
+			};
+		0000011B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000011C0000367aef9fe374;
+			};
+		000000E80000367aef9fe374 = {
+			name = Tr2CapsALStub.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2OcclusionQueryALDx11.h;
+			path = Tr2CapsALStub.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000005F0000367aef9fe374 = {
+		0000014F0000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 000000600000367aef9fe374;
+			fileRef = 000001500000367aef9fe374;
 			};
-		000001D80000367aef9fe374 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					.,
-					"../../../carbon/src",
-					"../../../../../../sdk/telemetry/2.1A3/include",
-					..,
-					);
-				CLANG_WARN_INT_CONVERSION = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				PRODUCT_NAME = TrinityAL_gles2_d;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				ONLY_ACTIVE_ARCH = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/telemetry/2.1A3/lib",
-					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					);
-				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					_DEBUG,
-					"CCP_ASSERT_ENABLED=1",
-					"TRINITY_PLATFORM=TRINITY_OPENGLES2",
-					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
-					"$(inherited)",
-					);
-				COPY_PHASE_STRIP = NO;
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_PREFIX_HEADER = StdAfx.h;
-				GCC_DYNAMIC_NO_PIC = NO;
-				SDKROOT = macosx;
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				};
-			name = Release;
-			};
-		0000006C0000367aef9fe374 = {
-			name = Tr2RenderContextDx11.cpp;
+		0000008A0000367aef9fe374 = {
+			name = Tr2SamplerStateALGL4.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderContextDx11.cpp;
+			path = Tr2SamplerStateALGL4.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001400000367aef9fe374 = {
+		000000F90000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000FA0000367aef9fe374;
+			};
+		000000500000367aef9fe374 = {
+			name = Tr2IndexBufferALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2IndexBufferALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B00000367aef9fe374 = {
+			name = Tr2VertexBufferALDx11.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VertexBufferALDx11.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001C40000367aef9fe374 = {
+			isa = PBXGroup;
+			children = (
+				000001B90000367aef9fe374,
+				000001BB0000367aef9fe374,
+				);
+			sourceTree = "<group>";
+			};
+		000000650000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000660000367aef9fe374;
+			};
+		000000440000367aef9fe374 = {
+			name = Tr2GpuTimerALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2GpuTimerALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001CA0000367aef9fe374 = {
+			dependencies = (
+				);
+			productReference = 000001BE0000367aef9fe374;
+			name = Release_GL4_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001CB0000367aef9fe374;
+			buildPhases = (
+				000001C50000367aef9fe374,
+				);
+			};
+		0000000B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000000C0000367aef9fe374;
+			};
+		000001A90000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001AA0000367aef9fe374;
+			};
+		0000012C0000367aef9fe374 = {
+			name = Tr2IndexBufferALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2IndexBufferALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001440000367aef9fe374 = {
 			name = Tr2OcclusionQueryALGL4.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
@@ -1417,233 +2994,15 @@
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000F10000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000F20000367aef9fe374;
-			};
-		000001A70000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001A80000367aef9fe374;
-			};
-		000001300000367aef9fe374 = {
-			name = Tr2LockedRenderTargetALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2LockedRenderTargetALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001B60000367aef9fe374 = {
-			isa = PBXGroup;
-			sourceTree = "<group>";
-			children = (
-				000001AE0000367aef9fe374,
-				000001B00000367aef9fe374,
-				000001B20000367aef9fe374,
-				000001B40000367aef9fe374,
-				);
-			name = include;
-			};
-		000001CD0000367aef9fe374 = {
+		000001D70000367aef9fe374 = {
 			isa = XCConfigurationList;
 			defaultConfigurationName = Release;
 			buildConfigurations = (
-				000001D90000367aef9fe374,
+				000001E00000367aef9fe374,
 				);
 			defaultConfigurationIsVisible = 0;
 			};
-		000000A90000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000AA0000367aef9fe374;
-			};
-		000000980000367aef9fe374 = {
-			name = Tr2SwapChainALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SwapChainALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000FC0000367aef9fe374 = {
-			name = Tr2DriverUtilities.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2DriverUtilities.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000260000367aef9fe374 = {
-			name = Tr2DepthStencilALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2DepthStencilALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000FF0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001000000367aef9fe374;
-			};
-		000000DF0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000E00000367aef9fe374;
-			};
-		000000860000367aef9fe374 = {
-			name = Tr2SamplerStateALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SamplerStateALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B40000367aef9fe374 = {
-			name = Tr2VertexBufferALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexBufferALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000010F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001100000367aef9fe374;
-			};
-		000000100000367aef9fe374 = {
-			name = Tr2CapsALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2CapsALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001390000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000013A0000367aef9fe374;
-			};
-		000000680000367aef9fe374 = {
-			name = Tr2OcclusionQueryALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2OcclusionQueryALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000CE0000367aef9fe374 = {
-			name = ALLog.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = ALLog.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001130000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001140000367aef9fe374;
-			};
-		000001C60000367aef9fe374 = {
-			dependencies = (
-				);
-			productReference = 000001BA0000367aef9fe374;
-			name = Release_GL4_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001C70000367aef9fe374;
-			buildPhases = (
-				000001C10000367aef9fe374,
-				);
-			};
-		000000B50000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000B60000367aef9fe374;
-			};
-		000000D80000367aef9fe374 = {
-			name = Tr2AutoResetObjectAL.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2AutoResetObjectAL.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000010C0000367aef9fe374 = {
-			name = Tr2GpuBufferALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuBufferALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000011F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001200000367aef9fe374;
-			};
-		0000014B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000014C0000367aef9fe374;
-			};
-		0000013A0000367aef9fe374 = {
-			name = Tr2LockGuard.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2LockGuard.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000005A0000367aef9fe374 = {
-			name = Tr2LockedRenderTargetALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2LockedRenderTargetALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000003F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000400000367aef9fe374;
-			};
-		000000A20000367aef9fe374 = {
-			name = Tr2TextureALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2TextureALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000480000367aef9fe374 = {
-			name = Tr2HalHelperStructures.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2HalHelperStructures.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001A20000367aef9fe374 = {
-			name = Tr2VideoAdapterInfoALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VideoAdapterInfoALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001C90000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001D70000367aef9fe374,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		0000009A0000367aef9fe374 = {
-			name = Tr2SwapChainALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SwapChainALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001DB0000367aef9fe374 = {
+		000001DF0000367aef9fe374 = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				HEADER_SEARCH_PATHS = (
@@ -1693,513 +3052,27 @@
 				};
 			name = Release;
 			};
-		000001010000367aef9fe374 = {
+		000001410000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 000001020000367aef9fe374;
+			fileRef = 000001420000367aef9fe374;
 			};
-		0000002D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000002E0000367aef9fe374;
-			};
-		000000620000367aef9fe374 = {
-			name = Tr2OcclusionQueryALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2OcclusionQueryALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000140000367aef9fe374 = {
-			name = Tr2ConstantBufferALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2ConstantBufferALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001460000367aef9fe374 = {
-			name = Tr2PrimaryRenderContextDx11.h;
+		0000013E0000367aef9fe374 = {
+			name = Tr2LockGuard.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2PrimaryRenderContextDx11.h;
+			path = Tr2LockGuard.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000011C0000367aef9fe374 = {
-			name = Tr2GpuTimerALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuTimerALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000017D0000367aef9fe374 = {
+		0000015D0000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 0000017E0000367aef9fe374;
+			fileRef = 0000015E0000367aef9fe374;
 			};
-		000000C40000367aef9fe374 = {
-			name = Tr2VideoAdapterInfoALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VideoAdapterInfoALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000290000367aef9fe374 = {
+		0000015F0000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 0000002A0000367aef9fe374;
+			fileRef = 000001600000367aef9fe374;
 			};
-		000000840000367aef9fe374 = {
-			name = Tr2SamplerStateALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SamplerStateALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001B90000367aef9fe374 = {
-			path = TrinityAL_gles2_cc.lib;
-			isa = PBXFileReference;
-			includeInIndex = 0;
-			explicitFileType = archive.ar;
-			sourceTree = BUILT_PRODUCTS_DIR;
-			};
-		000000530000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000540000367aef9fe374;
-			};
-		000000710000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000720000367aef9fe374;
-			};
-		000001040000367aef9fe374 = {
-			name = Tr2FenceALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2FenceALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000014D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000014E0000367aef9fe374;
-			};
-		000001C00000367aef9fe374 = {
-			isa = PBXGroup;
-			children = (
-				000001B50000367aef9fe374,
-				000001B70000367aef9fe374,
-				);
-			sourceTree = "<group>";
-			};
-		000001830000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001840000367aef9fe374;
-			};
-		000001810000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001820000367aef9fe374;
-			};
-		000001A50000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001A60000367aef9fe374;
-			};
-		000000A70000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000A80000367aef9fe374;
-			};
-		000000FE0000367aef9fe374 = {
-			name = Tr2FenceALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2FenceALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000E10000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000E20000367aef9fe374;
-			};
-		0000016E0000367aef9fe374 = {
-			name = Tr2ShaderALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ShaderALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000005C0000367aef9fe374 = {
-			name = Tr2LockedRenderTargetALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2LockedRenderTargetALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000AB0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000AC0000367aef9fe374;
-			};
-		000000C60000367aef9fe374 = {
-			name = Tr2VideoAdapterInfoALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VideoAdapterInfoALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001CF0000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001DA0000367aef9fe374,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		000000E50000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000E60000367aef9fe374;
-			};
-		000001930000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001940000367aef9fe374;
-			};
-		000001090000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000010A0000367aef9fe374;
-			};
-		000001540000367aef9fe374 = {
-			name = Tr2RenderStateEmulationDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderStateEmulationDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001150000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001160000367aef9fe374;
-			};
-		000001750000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001760000367aef9fe374;
-			};
-		000000370000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000380000367aef9fe374;
-			};
-		000000B70000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000B80000367aef9fe374;
-			};
-		000000DA0000367aef9fe374 = {
-			name = Tr2BufferImplALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2BufferImplALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001790000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000017A0000367aef9fe374;
-			};
-		000001880000367aef9fe374 = {
-			name = Tr2TrackedALObject.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2TrackedALObject.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000CF0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000D00000367aef9fe374;
-			};
-		000000130000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000140000367aef9fe374;
-			};
-		000000760000367aef9fe374 = {
-			name = Tr2RenderContextStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderContextStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000920000367aef9fe374 = {
-			name = Tr2ShaderALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2ShaderALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001C20000367aef9fe374 = {
-			dependencies = (
-				);
-			productReference = 000001B80000367aef9fe374;
-			name = Debug_GL4_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001C30000367aef9fe374;
-			buildPhases = (
-				000001C10000367aef9fe374,
-				);
-			};
-		0000017C0000367aef9fe374 = {
-			name = Tr2SwapChainALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SwapChainALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000000E0000367aef9fe374 = {
-			name = Tr2CapsALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2CapsALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000200000367aef9fe374 = {
-			name = Tr2DepthStencilALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2DepthStencilALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000220000367aef9fe374 = {
-			name = Tr2DepthStencilALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2DepthStencilALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000280000367aef9fe374 = {
-			name = Tr2DrawUPHelper.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2DrawUPHelper.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000A00000367aef9fe374 = {
-			name = Tr2SwapChainALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SwapChainALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000019D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000019E0000367aef9fe374;
-			};
-		000000EB0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000EC0000367aef9fe374;
-			};
-		000000A80000367aef9fe374 = {
-			name = Tr2TextureALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2TextureALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000600000367aef9fe374 = {
-			name = Tr2OcclusionQueryALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2OcclusionQueryALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000016C0000367aef9fe374 = {
-			name = Tr2ShaderALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ShaderALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001450000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001460000367aef9fe374;
-			};
-		000000D90000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000DA0000367aef9fe374;
-			};
-		000001110000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001120000367aef9fe374;
-			};
-		000001B40000367aef9fe374 = {
-			name = Tr2TextureType.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "include/Tr2TextureType.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001640000367aef9fe374 = {
-			name = Tr2SamplerStateALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SamplerStateALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001310000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001320000367aef9fe374;
-			};
-		000000150000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000160000367aef9fe374;
-			};
-		000000170000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000180000367aef9fe374;
-			};
-		000001860000367aef9fe374 = {
-			name = Tr2TextureALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2TextureALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001060000367aef9fe374 = {
-			name = Tr2FenceALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2FenceALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000018E0000367aef9fe374 = {
-			name = Tr2VertexBufferALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexBufferALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001030000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001040000367aef9fe374;
-			};
-		000000720000367aef9fe374 = {
-			name = Tr2RenderContextGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderContextGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000690000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000006A0000367aef9fe374;
-			};
-		000001260000367aef9fe374 = {
-			name = Tr2IndexBufferALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2IndexBufferALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000013B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000013C0000367aef9fe374;
-			};
-		000001520000367aef9fe374 = {
-			name = Tr2RenderContextStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderContextStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001A30000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001A40000367aef9fe374;
-			};
-		000000070000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000080000367aef9fe374;
-			};
-		0000010D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000010E0000367aef9fe374;
-			};
-		000000740000367aef9fe374 = {
-			name = Tr2RenderContextGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderContextGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000110000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000120000367aef9fe374;
-			};
-		000000640000367aef9fe374 = {
-			name = Tr2OcclusionQueryALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2OcclusionQueryALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000CC0000367aef9fe374 = {
-			name = Tr2VideoAdapterInfoALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VideoAdapterInfoALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000950000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000960000367aef9fe374;
-			};
-		000000250000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000260000367aef9fe374;
-			};
-		000000090000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000000A0000367aef9fe374;
-			};
-		0000005E0000367aef9fe374 = {
-			name = Tr2LockGuard.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2LockGuard.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000C00000367aef9fe374 = {
-			name = Tr2VertexLayoutALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexLayoutALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001AE0000367aef9fe374 = {
+		000001B20000367aef9fe374 = {
 			name = Tr2BitmapDimensions.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
@@ -2207,186 +3080,27 @@
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000003D0000367aef9fe374 = {
+		000001AD0000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 0000003E0000367aef9fe374;
+			fileRef = 000001AE0000367aef9fe374;
 			};
-		000000400000367aef9fe374 = {
-			name = Tr2GpuTimerALDx9.cpp;
+		0000009C0000367aef9fe374 = {
+			name = Tr2SwapChainALDx9.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2GpuTimerALDx9.cpp;
+			path = Tr2SwapChainALDx9.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000020000367aef9fe374 = {
-			name = ALResult.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = ALResult.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000014E0000367aef9fe374 = {
-			name = Tr2RenderContextGL4.h;
+		000001B80000367aef9fe374 = {
+			name = Tr2TextureType.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderContextGL4.h;
+			path = "include/Tr2TextureType.h";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001CE0000367aef9fe374 = {
-			dependencies = (
-				);
-			productReference = 000001BE0000367aef9fe374;
-			name = Release_GL4_Coverage_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001CF0000367aef9fe374;
-			buildPhases = (
-				000001C10000367aef9fe374,
-				);
-			};
-		000001980000367aef9fe374 = {
-			name = Tr2VertexLayoutALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexLayoutALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000000C0000367aef9fe374 = {
-			name = Tr2CapsALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2CapsALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000002B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000002C0000367aef9fe374;
-			};
-		000000520000367aef9fe374 = {
-			name = Tr2IndexBufferALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2IndexBufferALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000010B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000010C0000367aef9fe374;
-			};
-		000001570000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001580000367aef9fe374;
-			};
-		000001720000367aef9fe374 = {
-			name = Tr2ShaderALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ShaderALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000180000367aef9fe374 = {
-			name = Tr2ConstantBufferALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2ConstantBufferALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B90000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000BA0000367aef9fe374;
-			};
-		000000A60000367aef9fe374 = {
-			name = Tr2TextureALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2TextureALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001850000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001860000367aef9fe374;
-			};
-		000000D60000367aef9fe374 = {
-			name = Tr2AdapterStructures.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2AdapterStructures.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000E70000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000E80000367aef9fe374;
-			};
-		000001160000367aef9fe374 = {
-			name = Tr2GpuTimerALContext.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuTimerALContext.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001840000367aef9fe374 = {
-			name = Tr2TextureALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2TextureALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001970000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001980000367aef9fe374;
-			};
-		000001A10000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001A20000367aef9fe374;
-			};
-		0000008B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000008C0000367aef9fe374;
-			};
-		000000010000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000020000367aef9fe374;
-			};
-		000000C90000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000CA0000367aef9fe374;
-			};
-		0000012F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001300000367aef9fe374;
-			};
-		0000006D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000006E0000367aef9fe374;
-			};
-		0000006F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000700000367aef9fe374;
-			};
-		000001380000367aef9fe374 = {
-			name = Tr2LockedRenderTargetALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2LockedRenderTargetALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000010A0000367aef9fe374 = {
+		0000010E0000367aef9fe374 = {
 			name = Tr2GpuBufferALDx11.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
@@ -2394,183 +3108,81 @@
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001070000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001080000367aef9fe374;
-			};
-		000000470000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000480000367aef9fe374;
-			};
-		000000050000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000060000367aef9fe374;
-			};
-		000000330000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000340000367aef9fe374;
-			};
-		000000E40000367aef9fe374 = {
-			name = Tr2CapsALStub.h;
+		000001800000367aef9fe374 = {
+			name = Tr2SwapChainALStub.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2CapsALStub.h;
+			path = Tr2SwapChainALStub.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000970000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000980000367aef9fe374;
+		000001BE0000367aef9fe374 = {
+			path = TrinityAL_gl4.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
 			};
-		000001470000367aef9fe374 = {
+		000000BB0000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 000001480000367aef9fe374;
+			fileRef = 000000BC0000367aef9fe374;
 			};
-		000000CB0000367aef9fe374 = {
+		000001080000367aef9fe374 = {
+			name = Tr2FenceALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2FenceALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F50000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 000000CC0000367aef9fe374;
+			fileRef = 000000F60000367aef9fe374;
 			};
-		000000CA0000367aef9fe374 = {
-			name = Tr2VideoAdapterInfoALGLES2.cpp;
+		000001C80000367aef9fe374 = {
+			dependencies = (
+				);
+			productReference = 000001BD0000367aef9fe374;
+			name = Release_GLES2_Coverage_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001C90000367aef9fe374;
+			buildPhases = (
+				000001C50000367aef9fe374,
+				);
+			};
+		000000DB0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000DC0000367aef9fe374;
+			};
+		000000350000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000360000367aef9fe374;
+			};
+		000000BC0000367aef9fe374 = {
+			name = Tr2VertexLayoutALDx11.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VideoAdapterInfoALGLES2.cpp;
+			path = Tr2VertexLayoutALDx11.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000E30000367aef9fe374 = {
+		0000000F0000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 000000E40000367aef9fe374;
+			fileRef = 000000100000367aef9fe374;
 			};
-		000001B30000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001B40000367aef9fe374;
-			};
-		000000590000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000005A0000367aef9fe374;
-			};
-		0000015A0000367aef9fe374 = {
-			name = Tr2RenderTargetALGL4.h;
+		0000011E0000367aef9fe374 = {
+			name = Tr2GpuTimerALDx9.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderTargetALGL4.h;
+			path = Tr2GpuTimerALDx9.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001120000367aef9fe374 = {
-			name = Tr2GpuBufferALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuBufferALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000570000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000580000367aef9fe374;
-			};
-		000001240000367aef9fe374 = {
-			name = Tr2HalHelperStructures.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2HalHelperStructures.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001480000367aef9fe374 = {
-			name = Tr2RenderContextDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderContextDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000016B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000016C0000367aef9fe374;
-			};
-		000001140000367aef9fe374 = {
-			name = Tr2GpuTelemetry.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuTelemetry.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001430000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001440000367aef9fe374;
-			};
-		000000A40000367aef9fe374 = {
-			name = Tr2TextureALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2TextureALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001900000367aef9fe374 = {
-			name = Tr2VertexBufferALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexBufferALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000005D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000005E0000367aef9fe374;
-			};
-		0000006A0000367aef9fe374 = {
-			name = Tr2PrimaryRenderContextDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2PrimaryRenderContextDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000450000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000460000367aef9fe374;
-			};
-		000000BD0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000BE0000367aef9fe374;
-			};
-		000000BF0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000C00000367aef9fe374;
-			};
-		0000002A0000367aef9fe374 = {
-			name = Tr2DriverUtilities.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2DriverUtilities.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000080000367aef9fe374 = {
-			name = Tr2BufferImplALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2BufferImplALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000018D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000018E0000367aef9fe374;
-			};
-		0000015E0000367aef9fe374 = {
-			name = Tr2RenderTargetALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderTargetALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000017A0000367aef9fe374 = {
+		0000017E0000367aef9fe374 = {
 			name = Tr2SwapChainALGLES2.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
@@ -2578,39 +3190,167 @@
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000008D0000367aef9fe374 = {
+		000000410000367aef9fe374 = {
 			isa = PBXBuildFile;
-			fileRef = 0000008E0000367aef9fe374;
+			fileRef = 000000420000367aef9fe374;
 			};
-		000000630000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000640000367aef9fe374;
-			};
-		000001210000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001220000367aef9fe374;
-			};
-		0000013F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001400000367aef9fe374;
-			};
-		000000660000367aef9fe374 = {
-			name = Tr2OcclusionQueryALGLES2.cpp;
+		000000900000367aef9fe374 = {
+			name = Tr2ShaderALDx11.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2OcclusionQueryALGLES2.cpp;
+			path = Tr2ShaderALDx11.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000007D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000007E0000367aef9fe374;
+		000001D40000367aef9fe374 = {
+			dependencies = (
+				);
+			productReference = 000001C30000367aef9fe374;
+			name = Release_Stub_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001D50000367aef9fe374;
+			buildPhases = (
+				000001C50000367aef9fe374,
+				);
 			};
-		000001B10000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001B20000367aef9fe374;
+		000001940000367aef9fe374 = {
+			name = Tr2VertexBufferALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexBufferALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
 			};
-		000000540000367aef9fe374 = {
+		000001D00000367aef9fe374 = {
+			dependencies = (
+				);
+			productReference = 000001C10000367aef9fe374;
+			name = Release_GLES2_Mac64;
+			productType = "com.apple.product-type.library.static";
+			buildRules = (
+				);
+			isa = PBXNativeTarget;
+			productName = TrinityAL;
+			buildConfigurationList = 000001D10000367aef9fe374;
+			buildPhases = (
+				000001C50000367aef9fe374,
+				);
+			};
+		000001C30000367aef9fe374 = {
+			path = TrinityAL_stub.lib;
+			isa = PBXFileReference;
+			includeInIndex = 0;
+			explicitFileType = archive.ar;
+			sourceTree = BUILT_PRODUCTS_DIR;
+			};
+		000001660000367aef9fe374 = {
+			name = Tr2SamplerStateALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2SamplerStateALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000C70000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000C80000367aef9fe374;
+			};
+		0000003E0000367aef9fe374 = {
+			name = Tr2GpuTelemetry.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2GpuTelemetry.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001AB0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001AC0000367aef9fe374;
+			};
+		000001BB0000367aef9fe374 = {
+			isa = PBXGroup;
+			sourceTree = "<group>";
+			children = (
+				);
+			name = Dependencies;
+			};
+		000000C30000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000C40000367aef9fe374;
+			};
+		000000EA0000367aef9fe374 = {
+			name = Tr2ConstantBufferALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2ConstantBufferALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F00000367aef9fe374 = {
+			name = Tr2ConstantBufferALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2ConstantBufferALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000DC0000367aef9fe374 = {
+			name = Tr2AutoResetObjectAL.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2AutoResetObjectAL.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001230000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001240000367aef9fe374;
+			};
+		000000730000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000740000367aef9fe374;
+			};
+		000000FA0000367aef9fe374 = {
+			name = Tr2DepthStencilALGLES2.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2DepthStencilALGLES2.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000004E0000367aef9fe374 = {
+			name = Tr2IndexBufferALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2IndexBufferALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000018F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001900000367aef9fe374;
+			};
+		0000019C0000367aef9fe374 = {
+			name = Tr2VertexLayoutALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexLayoutALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000870000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000880000367aef9fe374;
+			};
+		000001330000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001340000367aef9fe374;
+			};
+		000000560000367aef9fe374 = {
 			name = Tr2LockedRenderTargetALDx11.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
@@ -2618,79 +3358,219 @@
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001B00000367aef9fe374 = {
-			name = Tr2CubemapFace.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "include/Tr2CubemapFace.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000D20000367aef9fe374 = {
-			name = ITr2RenderContextEvents.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = ITr2RenderContextEvents.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000770000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000780000367aef9fe374;
-			};
-		0000019B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000019C0000367aef9fe374;
-			};
-		000001220000367aef9fe374 = {
-			name = Tr2Hal.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2Hal.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001280000367aef9fe374 = {
-			name = Tr2IndexBufferALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2IndexBufferALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000014C0000367aef9fe374 = {
-			name = Tr2RenderContextEnum.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderContextEnum.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000014A0000367aef9fe374 = {
-			name = Tr2RenderContextDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderContextDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000910000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000920000367aef9fe374;
-			};
-		000000D10000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000D20000367aef9fe374;
-			};
-		0000008C0000367aef9fe374 = {
-			name = Tr2SamplerStateALStub.cpp;
+		000000820000367aef9fe374 = {
+			name = Tr2RenderTargetALGLES2.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SamplerStateALStub.cpp;
+			path = Tr2RenderTargetALGLES2.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001C10000367aef9fe374 = {
+		000000EC0000367aef9fe374 = {
+			name = Tr2ConstantBufferALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2ConstantBufferALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000AA0000367aef9fe374 = {
+			name = Tr2TextureALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2TextureALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001190000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000011A0000367aef9fe374;
+			};
+		000001A00000367aef9fe374 = {
+			name = Tr2VertexLayoutALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VertexLayoutALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000011A0000367aef9fe374 = {
+			name = Tr2GpuTimerALContext.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2GpuTimerALContext.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000016D0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000016E0000367aef9fe374;
+			};
+		0000017B0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000017C0000367aef9fe374;
+			};
+		000000D00000367aef9fe374 = {
+			name = ALLog.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = ALLog.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F30000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000F40000367aef9fe374;
+			};
+		000000060000367aef9fe374 = {
+			name = StdAfx.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = StdAfx.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001100000367aef9fe374 = {
+			name = Tr2GpuBufferALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2GpuBufferALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000040000367aef9fe374 = {
+			name = BcDecompress.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = BcDecompress.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001AA0000367aef9fe374 = {
+			name = Tr2VideoAdapterInfoALGL4.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2VideoAdapterInfoALGL4.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000C80000367aef9fe374 = {
+			name = Tr2VideoAdapterInfoALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2VideoAdapterInfoALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000F70000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000F80000367aef9fe374;
+			};
+		000001420000367aef9fe374 = {
+			name = Tr2OcclusionQueryALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2OcclusionQueryALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001670000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001680000367aef9fe374;
+			};
+		000000CD0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000CE0000367aef9fe374;
+			};
+		0000012A0000367aef9fe374 = {
+			name = Tr2IndexBufferALDx11.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2IndexBufferALDx11.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000880000367aef9fe374 = {
+			name = Tr2SamplerStateALDx9.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2SamplerStateALDx9.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000B30000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000B40000367aef9fe374;
+			};
+		000000EF0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000F00000367aef9fe374;
+			};
+		000001370000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001380000367aef9fe374;
+			};
+		000000120000367aef9fe374 = {
+			name = Tr2CapsALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2CapsALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000E20000367aef9fe374 = {
+			name = Tr2CapsALDx9.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2CapsALDx9.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000001620000367aef9fe374 = {
+			name = Tr2RenderTargetALStub.h;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.h;
+			path = Tr2RenderTargetALStub.h;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000430000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000440000367aef9fe374;
+			};
+		000000A50000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000A60000367aef9fe374;
+			};
+		000000460000367aef9fe374 = {
+			name = Tr2GpuTimerALGLES2.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2GpuTimerALGLES2.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		0000019F0000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000001A00000367aef9fe374;
+			};
+		000001490000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 0000014A0000367aef9fe374;
+			};
+		0000001A0000367aef9fe374 = {
+			name = Tr2ConstantBufferALGL4.cpp;
+			fileEncoding = 4;
+			lastKnownFileType = sourcecode.cpp.cpp;
+			path = Tr2ConstantBufferALGL4.cpp;
+			isa = PBXFileReference;
+			sourceTree = "<group>";
+			};
+		000000750000367aef9fe374 = {
+			isa = PBXBuildFile;
+			fileRef = 000000760000367aef9fe374;
+			};
+		000001C50000367aef9fe374 = {
 			files = (
 				000000010000367aef9fe374,
 				000000030000367aef9fe374,
@@ -2794,770 +3674,37 @@
 				000000C70000367aef9fe374,
 				000000C90000367aef9fe374,
 				000000CB0000367aef9fe374,
+				000000CD0000367aef9fe374,
 				);
 			buildActionMask = 2147483647;
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
 			};
-		000000490000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000004A0000367aef9fe374;
-			};
-		000001760000367aef9fe374 = {
-			name = Tr2SwapChainALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SwapChainALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000006B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000006C0000367aef9fe374;
-			};
-		000001920000367aef9fe374 = {
-			name = Tr2VertexBufferALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexBufferALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000780000367aef9fe374 = {
-			name = Tr2RenderStateEmulationDx11.cpp;
+		0000004A0000367aef9fe374 = {
+			name = Tr2HalHelperStructures.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderStateEmulationDx11.cpp;
+			path = Tr2HalHelperStructures.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000001500000367aef9fe374 = {
-			name = Tr2RenderContextGLES2.h;
+		000001700000367aef9fe374 = {
+			name = Tr2ShaderALDx9.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderContextGLES2.h;
+			path = Tr2ShaderALDx9.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000009F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000A00000367aef9fe374;
-			};
-		0000004C0000367aef9fe374 = {
-			name = Tr2IndexBufferALDx9.cpp;
+		000000960000367aef9fe374 = {
+			name = Tr2ShaderALGLES2.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2IndexBufferALDx9.cpp;
+			path = Tr2ShaderALGLES2.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		0000004F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000500000367aef9fe374;
-			};
-		000000BA0000367aef9fe374 = {
-			name = Tr2VertexLayoutALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexLayoutALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001350000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001360000367aef9fe374;
-			};
-		000000B20000367aef9fe374 = {
-			name = Tr2VertexBufferALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexBufferALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000001D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000001E0000367aef9fe374;
-			};
-		000001D20000367aef9fe374 = {
-			projectDirPath = "";
-			targets = (
-				000001C20000367aef9fe374,
-				000001C40000367aef9fe374,
-				000001C60000367aef9fe374,
-				000001C80000367aef9fe374,
-				000001CA0000367aef9fe374,
-				000001CC0000367aef9fe374,
-				000001CE0000367aef9fe374,
-				000001D00000367aef9fe374,
-				);
-			knownRegions = (
-				en,
-				);
-			developmentRegion = English;
-			projectRoot = "";
-			hasScannedForEncodings = 0;
-			compatibilityVersion = "Xcode 3.2";
-			mainGroup = 000001C00000367aef9fe374;
-			attributes = {
-				ORGANIZATIONNAME = CCP;
-				LastUpgradeCheck = 0460;
-				};
-			isa = PBXProject;
-			buildConfigurationList = 000001D30000367aef9fe374;
-			};
-		000001680000367aef9fe374 = {
-			name = Tr2SamplerStateALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SamplerStateALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000001B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000001C0000367aef9fe374;
-			};
-		0000015B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000015C0000367aef9fe374;
-			};
-		0000011B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000011C0000367aef9fe374;
-			};
-		000000E80000367aef9fe374 = {
-			name = Tr2ConstantBufferALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ConstantBufferALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000014F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001500000367aef9fe374;
-			};
-		0000008A0000367aef9fe374 = {
-			name = Tr2SamplerStateALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SamplerStateALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F90000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000FA0000367aef9fe374;
-			};
-		000000500000367aef9fe374 = {
-			name = Tr2IndexBufferALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2IndexBufferALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B00000367aef9fe374 = {
-			name = Tr2VertexBufferALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexBufferALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001C40000367aef9fe374 = {
-			dependencies = (
-				);
-			productReference = 000001B90000367aef9fe374;
-			name = Release_GLES2_Coverage_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001C50000367aef9fe374;
-			buildPhases = (
-				000001C10000367aef9fe374,
-				);
-			};
-		000000650000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000660000367aef9fe374;
-			};
-		000000440000367aef9fe374 = {
-			name = Tr2GpuTimerALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2GpuTimerALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001CA0000367aef9fe374 = {
-			dependencies = (
-				);
-			productReference = 000001BC0000367aef9fe374;
-			name = Debug_GLES2_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001CB0000367aef9fe374;
-			buildPhases = (
-				000001C10000367aef9fe374,
-				);
-			};
-		0000000B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000000C0000367aef9fe374;
-			};
-		000001A90000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001AA0000367aef9fe374;
-			};
-		0000012C0000367aef9fe374 = {
-			name = Tr2IndexBufferALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2IndexBufferALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001440000367aef9fe374 = {
-			name = Tr2OcclusionQueryALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2OcclusionQueryALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001D70000367aef9fe374 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					.,
-					"../../../carbon/src",
-					"../../../../../../sdk/telemetry/2.1A3/include",
-					..,
-					);
-				CLANG_WARN_INT_CONVERSION = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				PRODUCT_NAME = TrinityAL_stub_d;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				ONLY_ACTIVE_ARCH = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"../../../../../../sdk/telemetry/2.1A3/lib",
-					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					);
-				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					_DEBUG,
-					"CCP_ASSERT_ENABLED=1",
-					"TRINITY_PLATFORM=TRINITY_STUB",
-					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
-					"$(inherited)",
-					);
-				COPY_PHASE_STRIP = NO;
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_PREFIX_HEADER = StdAfx.h;
-				GCC_DYNAMIC_NO_PIC = NO;
-				SDKROOT = macosx;
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				};
-			name = Release;
-			};
-		000001410000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001420000367aef9fe374;
-			};
-		0000013E0000367aef9fe374 = {
-			name = Tr2OcclusionQueryALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2OcclusionQueryALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000015D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000015E0000367aef9fe374;
-			};
-		0000015F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001600000367aef9fe374;
-			};
-		000001B20000367aef9fe374 = {
-			name = Tr2PixelFormat.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = "include/Tr2PixelFormat.h";
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001AD0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001AE0000367aef9fe374;
-			};
-		0000009C0000367aef9fe374 = {
-			name = Tr2SwapChainALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SwapChainALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001B80000367aef9fe374 = {
-			path = TrinityAL_gl4_d.lib;
-			isa = PBXFileReference;
-			includeInIndex = 0;
-			explicitFileType = archive.ar;
-			sourceTree = BUILT_PRODUCTS_DIR;
-			};
-		0000010E0000367aef9fe374 = {
-			name = Tr2GpuBufferALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuBufferALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001800000367aef9fe374 = {
-			name = Tr2TextureALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2TextureALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001BE0000367aef9fe374 = {
-			path = TrinityAL_gl4_cc.lib;
-			isa = PBXFileReference;
-			includeInIndex = 0;
-			explicitFileType = archive.ar;
-			sourceTree = BUILT_PRODUCTS_DIR;
-			};
-		000000BB0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000BC0000367aef9fe374;
-			};
-		000001080000367aef9fe374 = {
-			name = Tr2FragmentOpSettings.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2FragmentOpSettings.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F50000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000F60000367aef9fe374;
-			};
-		000001C80000367aef9fe374 = {
-			dependencies = (
-				);
-			productReference = 000001BB0000367aef9fe374;
-			name = Debug_Stub_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001C90000367aef9fe374;
-			buildPhases = (
-				000001C10000367aef9fe374,
-				);
-			};
-		000000DB0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000DC0000367aef9fe374;
-			};
-		000000350000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000360000367aef9fe374;
-			};
-		000000BC0000367aef9fe374 = {
-			name = Tr2VertexLayoutALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VertexLayoutALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000000F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000100000367aef9fe374;
-			};
-		0000011E0000367aef9fe374 = {
-			name = Tr2GpuTimerALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuTimerALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000017E0000367aef9fe374 = {
-			name = Tr2TextureALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2TextureALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000410000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000420000367aef9fe374;
-			};
-		000000900000367aef9fe374 = {
-			name = Tr2ShaderALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2ShaderALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001D40000367aef9fe374 = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				HEADER_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					"../../../../../../sdk/glfw/3.0/include",
-					"../../../../../../sdk/glew/1.7.0/include",
-					.,
-					"../../../carbon/src",
-					"../../../../../../sdk/telemetry/2.1A3/include",
-					..,
-					);
-				CLANG_WARN_INT_CONVERSION = YES;
-				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_WARN_ENUM_CONVERSION = YES;
-				CLANG_WARN_EMPTY_BODY = YES;
-				GCC_WARN_ABOUT_RETURN_TYPE = YES;
-				PRODUCT_NAME = TrinityAL_gl4_d;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				GCC_WARN_UNINITIALIZED_AUTOS = YES;
-				CONFIGURATION_BUILD_DIR = "$(BUILD_DIR)/";
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				ONLY_ACTIVE_ARCH = YES;
-				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
-				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
-				CLANG_WARN_CONSTANT_CONVERSION = YES;
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
-				LIBRARY_SEARCH_PATHS = (
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
-					"../../../../../../sdk/telemetry/2.1A3/lib",
-					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					);
-				SYMROOT = "../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../temp/TrinityAL/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					_DEBUG,
-					"CCP_ASSERT_ENABLED=1",
-					"TRINITY_PLATFORM=TRINITY_OPENGL4",
-					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
-					"$(inherited)",
-					);
-				COPY_PHASE_STRIP = NO;
-				CLANG_CXX_LIBRARY = "libc++";
-				GCC_PREFIX_HEADER = StdAfx.h;
-				GCC_DYNAMIC_NO_PIC = NO;
-				SDKROOT = macosx;
-				ALWAYS_SEARCH_USER_PATHS = NO;
-				};
-			name = Release;
-			};
-		000001940000367aef9fe374 = {
-			name = Tr2VertexBufferALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexBufferALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001D00000367aef9fe374 = {
-			dependencies = (
-				);
-			productReference = 000001BF0000367aef9fe374;
-			name = Release_Stub_Mac64;
-			productType = "com.apple.product-type.library.static";
-			buildRules = (
-				);
-			isa = PBXNativeTarget;
-			productName = TrinityAL;
-			buildConfigurationList = 000001D10000367aef9fe374;
-			buildPhases = (
-				000001C10000367aef9fe374,
-				);
-			};
-		000001C30000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001D40000367aef9fe374,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		000001660000367aef9fe374 = {
-			name = Tr2SamplerStateALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SamplerStateALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000C70000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000C80000367aef9fe374;
-			};
-		0000003E0000367aef9fe374 = {
-			name = Tr2GpuTimerALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2GpuTimerALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001AB0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001AC0000367aef9fe374;
-			};
-		000001BB0000367aef9fe374 = {
-			path = TrinityAL_stub_d.lib;
-			isa = PBXFileReference;
-			includeInIndex = 0;
-			explicitFileType = archive.ar;
-			sourceTree = BUILT_PRODUCTS_DIR;
-			};
-		000000C30000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000C40000367aef9fe374;
-			};
-		000000EA0000367aef9fe374 = {
-			name = Tr2ConstantBufferALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ConstantBufferALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F00000367aef9fe374 = {
-			name = Tr2DepthStencilALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2DepthStencilALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000DC0000367aef9fe374 = {
-			name = Tr2CapsALDx11.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2CapsALDx11.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001230000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001240000367aef9fe374;
-			};
-		000000730000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000740000367aef9fe374;
-			};
-		000000FA0000367aef9fe374 = {
-			name = Tr2DrawUPHelper.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2DrawUPHelper.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000004E0000367aef9fe374 = {
-			name = Tr2IndexBufferALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2IndexBufferALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000018F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001900000367aef9fe374;
-			};
-		0000019C0000367aef9fe374 = {
-			name = Tr2VertexLayoutALGL4.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexLayoutALGL4.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000870000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000880000367aef9fe374;
-			};
-		000001330000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001340000367aef9fe374;
-			};
-		000000560000367aef9fe374 = {
-			name = Tr2LockedRenderTargetALDx9.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2LockedRenderTargetALDx9.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000820000367aef9fe374 = {
-			name = Tr2RenderTargetALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2RenderTargetALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000EC0000367aef9fe374 = {
-			name = Tr2ConstantBufferALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ConstantBufferALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000AA0000367aef9fe374 = {
-			name = Tr2TextureALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2TextureALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001190000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000011A0000367aef9fe374;
-			};
-		000001A00000367aef9fe374 = {
-			name = Tr2VertexLayoutALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VertexLayoutALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000011A0000367aef9fe374 = {
-			name = Tr2GpuTimerALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuTimerALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000016D0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000016E0000367aef9fe374;
-			};
-		0000017B0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000017C0000367aef9fe374;
-			};
-		000000D00000367aef9fe374 = {
-			name = ALResult.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = ALResult.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F30000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000F40000367aef9fe374;
-			};
-		000000060000367aef9fe374 = {
-			name = Tr2AutoResetObjectAL.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2AutoResetObjectAL.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001100000367aef9fe374 = {
-			name = Tr2GpuBufferALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2GpuBufferALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000040000367aef9fe374 = {
-			name = StdAfx.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = StdAfx.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001AA0000367aef9fe374 = {
-			name = Tr2VideoAdapterInfoALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VideoAdapterInfoALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000C80000367aef9fe374 = {
-			name = Tr2VideoAdapterInfoALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2VideoAdapterInfoALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000F70000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000F80000367aef9fe374;
-			};
-		000001420000367aef9fe374 = {
-			name = Tr2OcclusionQueryALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2OcclusionQueryALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001670000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001680000367aef9fe374;
-			};
-		000000CD0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000CE0000367aef9fe374;
-			};
-		0000012A0000367aef9fe374 = {
+		0000012E0000367aef9fe374 = {
 			name = Tr2IndexBufferALGL4.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
@@ -3565,139 +3712,19 @@
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
-		000000880000367aef9fe374 = {
-			name = Tr2SamplerStateALGL4.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2SamplerStateALGL4.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000B30000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000B40000367aef9fe374;
-			};
-		000000EF0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000F00000367aef9fe374;
-			};
-		000001370000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001380000367aef9fe374;
-			};
-		000000120000367aef9fe374 = {
-			name = Tr2CapsALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2CapsALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000E20000367aef9fe374 = {
-			name = Tr2CapsALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2CapsALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001620000367aef9fe374 = {
-			name = Tr2SamplerStateALDx9.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2SamplerStateALDx9.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000430000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000440000367aef9fe374;
-			};
-		000000A50000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000A60000367aef9fe374;
-			};
-		000000460000367aef9fe374 = {
-			name = Tr2GpuTimerALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2GpuTimerALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000019F0000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000001A00000367aef9fe374;
-			};
-		000001490000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 0000014A0000367aef9fe374;
-			};
-		0000001A0000367aef9fe374 = {
-			name = Tr2ConstantBufferALGLES2.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2ConstantBufferALGLES2.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000750000367aef9fe374 = {
-			isa = PBXBuildFile;
-			fileRef = 000000760000367aef9fe374;
-			};
-		000001C50000367aef9fe374 = {
-			isa = XCConfigurationList;
-			defaultConfigurationName = Release;
-			buildConfigurations = (
-				000001D50000367aef9fe374,
-				);
-			defaultConfigurationIsVisible = 0;
-			};
-		0000004A0000367aef9fe374 = {
-			name = Tr2IndexBufferALDx11.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2IndexBufferALDx11.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000001700000367aef9fe374 = {
-			name = Tr2ShaderALGLES2.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2ShaderALGLES2.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		000000960000367aef9fe374 = {
-			name = Tr2ShaderALStub.cpp;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2ShaderALStub.cpp;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
-		0000012E0000367aef9fe374 = {
-			name = Tr2IndexBufferALStub.h;
-			fileEncoding = 4;
-			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2IndexBufferALStub.h;
-			isa = PBXFileReference;
-			sourceTree = "<group>";
-			};
 		000001560000367aef9fe374 = {
-			name = Tr2RenderTargetALDx11.h;
+			name = Tr2RenderContextStub.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2RenderTargetALDx11.h;
+			path = Tr2RenderContextStub.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		0000008E0000367aef9fe374 = {
-			name = Tr2ShaderALDx11.cpp;
+			name = Tr2SamplerStateALStub.cpp;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.cpp;
-			path = Tr2ShaderALDx11.cpp;
+			path = Tr2SamplerStateALStub.cpp;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -3706,14 +3733,14 @@
 			fileRef = 000001960000367aef9fe374;
 			};
 		000001A60000367aef9fe374 = {
-			name = Tr2VideoAdapterInfoALGL4.h;
+			name = Tr2VideoAdapterInfoALDx11.h;
 			fileEncoding = 4;
 			lastKnownFileType = sourcecode.cpp.h;
-			path = Tr2VideoAdapterInfoALGL4.h;
+			path = Tr2VideoAdapterInfoALDx11.h;
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
 		};
 	objectVersion = 46;
-	rootObject = 000001D20000367aef9fe374;
+	rootObject = 000001D60000367aef9fe374;
 	}
