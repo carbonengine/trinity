@@ -84,7 +84,7 @@ ALResult Tr2DepthStencilAL::Create(
 	case DSFMT_D24FS8:
 	case DSFMT_D24X8:
 	case DSFMT_AUTO:
-		glDepthFormat = GL_DEPTH24_STENCIL8_EXT;
+		glDepthFormat = GL_DEPTH24_STENCIL8;
 		break;
 	
 	case DSFMT_D32F: 
