@@ -12,7 +12,7 @@ RenderWindow::RenderWindow( uint32_t width, uint32_t height )
         glfwInitialized = true;
         glfwInit();
     }
-#if TRINITY_PLATFORM != TRINITY_GLES2
+#if TRINITY_PLATFORM != TRINITY_OPENGLES2
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
