@@ -118,17 +118,26 @@ ALResult Tr2GpuBufferAL::Create(
 		return E_INVALIDARG;
 	}
 
-	GLuint buffer;
+	GLuint buffer = 0;
 	GL_FAIL( glGenBuffers( 1, &buffer ) );
+	if( !buffer )
+	{
+		return E_FAIL;
+	}
+
 	GL_FAIL( glBindBuffer( GL_TEXTURE_BUFFER, buffer ) );
-	GL_FAIL( glBufferData( GL_TEXTURE_BUFFER, elementSize * numberOfElements, initialData, GL_STATIC_DRAW ) );
+	GL_VALIDATE( glBufferData( GL_TEXTURE_BUFFER, elementSize * numberOfElements, initialData, GL_STATIC_DRAW ) );
 	GL_FAIL( glBindBuffer( GL_TEXTURE_BUFFER, 0 ) );
 
-	GLuint texture;
+	GLuint texture = 0;
 	GL_FAIL( glGenTextures( 1, &texture ) );
+	if( !texture )
+	{
+		return E_FAIL;
+	}
 
 	GL_FAIL( glBindTexture( GL_TEXTURE_BUFFER, texture ) );
-	GL_FAIL( glTexBuffer( GL_TEXTURE_BUFFER, texture, buffer ) );
+	GL_VALIDATE( glTexBuffer( GL_TEXTURE_BUFFER, internalFormat, buffer ) );
 	GL_FAIL( glBindTexture( GL_TEXTURE_BUFFER, 0 ) );
 
 	m_buffer = std::shared_ptr<GLuint>( new GLuint( buffer ), OnDeleteBuffer() );
@@ -174,11 +183,15 @@ ALResult Tr2GpuBufferAL::CreateAlias(
 		return E_INVALIDARG;
 	}
 
-	GLuint texture;
+	GLuint texture = 0;
 	GL_FAIL( glGenTextures( 1, &texture ) );
+	if( !texture )
+	{
+		return E_FAIL;
+	}
 
 	GL_FAIL( glBindTexture( GL_TEXTURE_BUFFER, texture ) );
-	GL_FAIL( glTexBuffer( GL_TEXTURE_BUFFER, texture, *other.m_buffer ) );
+	GL_VALIDATE( glTexBuffer( GL_TEXTURE_BUFFER, internalFormat, *other.m_buffer ) );
 	GL_FAIL( glBindTexture( GL_TEXTURE_BUFFER, 0 ) );
 
 	m_buffer = other.m_buffer;
@@ -231,11 +244,21 @@ ALResult Tr2GpuBufferAL::Lock(
 	GL_FAIL( glBindBuffer( GL_TEXTURE_BUFFER, *m_buffer ) );
 	if( lockType == LOCK_NO_OVERWRITE )
 	{
+		*data = nullptr;
 		GL_FAIL( *data = glMapBufferRange( GL_TEXTURE_BUFFER, offset, size, GL_MAP_UNSYNCHRONIZED_BIT | GL_MAP_WRITE_BIT ) );
+		if( !*data )
+		{
+			return E_FAIL;
+		}
 	}
 	else
 	{
+		*data = nullptr;
 		GL_FAIL( *data = glMapBufferRange( GL_TEXTURE_BUFFER, offset, size ? size : ( GetTotalSizeInBytes() - offset ), lockType == LOCK_READONLY ? GL_MAP_READ_BIT : GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_WRITE_BIT ) );
+		if( !*data )
+		{
+			return E_FAIL;
+		}
 	}
 
 	return S_OK;

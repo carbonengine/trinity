@@ -141,8 +141,13 @@ ALResult Tr2TextureAL::Create2D( uint32_t width,
 		return E_INVALIDARG;
 	}
 
-	GLuint texture;
+	GLuint texture = 0;
 	GL_FAIL( glGenTextures( 1, &texture ) );
+	if( !texture )
+	{
+		return E_FAIL;
+	}
+
 	m_texture = std::shared_ptr<GLuint>( new GLuint( texture ), OnDeleteTexture() );
 
 	GL_FAIL( glBindTexture( GL_TEXTURE_2D, *m_texture ) );
@@ -156,19 +161,19 @@ ALResult Tr2TextureAL::Create2D( uint32_t width,
 		uint32_t levelHeight = std::max( height >> i, 1U );
 		if ( m_targetType )
 		{
-			GL_FAIL( glTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
+			GL_VALIDATE( glTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
 								   m_targetFormat, m_targetType,
 								   initialData ? initialData[i].m_sysMem : nullptr ) );
 		}
 		else if ( initialData )
 		{
-			GL_FAIL( glCompressedTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
+			GL_VALIDATE( glCompressedTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
 											 initialData[i].m_sysMemSlicePitch,
 											 initialData[i].m_sysMem ) );
 		}
 		else
 		{
-			GL_FAIL( glTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
+			GL_VALIDATE( glTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
 								   GL_RGB, GL_UNSIGNED_BYTE,
 								   nullptr ) );
 		}
@@ -260,15 +265,14 @@ ALResult Tr2TextureAL::CreateCube( uint32_t width,
 		return E_INVALIDARG;
 	}
 
-	GLuint texture;
+	GLuint texture = 0;
 	GL_FAIL( glGenTextures( 1, &texture ) );
-#ifdef __ANDROID__
-    m_texture = new GLuint[2];
-    m_texture[0] = texture;
-    m_texture[1] = 1;
-#else
+	if( !texture )
+	{
+		return E_FAIL;
+	}
 	m_texture = std::shared_ptr<GLuint>( new GLuint( texture ), OnDeleteTexture() );
-#endif
+
 	GL_FAIL( glBindTexture( GL_TEXTURE_CUBE_MAP, *m_texture ) );
 	GL_FAIL( glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ) );
 
@@ -282,14 +286,14 @@ ALResult Tr2TextureAL::CreateCube( uint32_t width,
 			uint32_t levelHeight = std::max( height >> i, 1U );
 			if ( m_targetType )
 			{
-				GL_FAIL( glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
+				GL_VALIDATE( glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
 									   i, m_internalFormat, levelWidth, levelHeight, 0,
 									   m_targetFormat, m_targetType,
 									   initialData ? initialData[face * trueMipLevelCount + i].m_sysMem : nullptr ) );
 			}
 			else if( initialData )
 			{
-				GL_FAIL( glCompressedTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
+				GL_VALIDATE( glCompressedTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
 												 i, 
 												 m_internalFormat, 
 												 levelWidth, 
@@ -300,7 +304,7 @@ ALResult Tr2TextureAL::CreateCube( uint32_t width,
 			}
 			else
 			{
-				GL_FAIL( glTexImage2D( 
+				GL_VALIDATE( glTexImage2D( 
 					GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 
 					i, 
 					m_internalFormat, 
@@ -328,14 +332,14 @@ ALResult Tr2TextureAL::CreateCube( uint32_t width,
 				uint32_t levelHeight = std::max( height >> i, 1U );
 				if ( m_targetType )
 				{
-					GL_FAIL( glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
+					GL_VALIDATE( glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
 										   i, m_internalFormat, levelWidth, levelHeight, 0,
 										   m_targetFormat, m_targetType,
 										   nullptr ) );
 				}
 				else
 				{
-					GL_FAIL( glCompressedTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
+					GL_VALIDATE( glCompressedTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
 													 i, m_internalFormat, levelWidth, levelHeight, 0,
 													 0,
 													 nullptr ) );
