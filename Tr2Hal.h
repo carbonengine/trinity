@@ -248,12 +248,14 @@ const float AL_TEXEL_OFFSET = 0.0f;
 
 #elif( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
+#define GLFW_INCLUDE_GLCOREARB
+
 #if defined(_WIN32)
 #include <GL/glew.h>
 #include <GL/gl.h>
 #elif defined(__APPLE__)
-#include <GL/glew.h>
-#include <OpenGL/gl.h>
+#include <OpenGL/gl3.h>
+#include <OpenGL/glext.h>
 #else
 #include <GL/glew.h>
 #endif

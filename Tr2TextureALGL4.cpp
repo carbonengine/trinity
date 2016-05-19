@@ -455,6 +455,7 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 		}
 		else if ( initialData )
 		{
+#ifndef __APPLE__
 			if( GLEW_NV_texture_compression_vtc )
 			{
 				std::unique_ptr<uint8_t[]> level( new uint8_t[initialData[i].m_sysMemSlicePitch * levelDepth] );
@@ -489,6 +490,7 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 												 level.get() ) );
 			}
 			else
+#endif
 			{
 				glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0, initialData[i].m_sysMemSlicePitch * levelDepth, initialData[i].m_sysMem );
 				if( glGetError() )
@@ -570,31 +572,17 @@ ALResult Tr2TextureAL::CreateDepthTexture( uint32_t width,
 #endif
 	GL_FAIL( glBindTexture( GL_TEXTURE_2D, *m_texture ) );
 	//CR_GL( glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ) );
-	if ( GLEW_EXT_packed_depth_stencil )
-	{
-		GL_FAIL( glTexImage2D( GL_TEXTURE_2D,
-							   0,
-							   GL_DEPTH24_STENCIL8,
-							   width,
-							   height,
-							   0,
-							   GL_DEPTH_STENCIL_EXT,
-							   GL_UNSIGNED_INT_24_8_EXT,
-							   nullptr ) );
-	}
-	else
-	{
-		GL_FAIL( glTexImage2D( GL_TEXTURE_2D,
-							   0,
-							   GL_DEPTH_COMPONENT32,
-							   width,
-							   height,
-							   0,
-							   GL_DEPTH_COMPONENT,
-							   GL_FLOAT,
-							   nullptr ) );
-	}
-	m_width = width;
+    GL_FAIL( glTexImage2D( GL_TEXTURE_2D,
+                           0,
+                           GL_DEPTH24_STENCIL8,
+                           width,
+                           height,
+                           0,
+                           GL_DEPTH_STENCIL,
+                           GL_UNSIGNED_INT_24_8,
+                           nullptr ) );
+
+    m_width = width;
 	m_height = height;
 	m_volumeDepth = 0;
 	m_mipCount = 1;

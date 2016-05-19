@@ -961,7 +961,7 @@ ALResult Tr2RenderContextAL::CreateOpenGLContext( Tr2PresentParametersAL& pp )
 	}
 #endif
 
-#else
+#elif !defined(__APPLE__)
 	auto ret = glewInit();
 	CCP_AL_LOG( "glewInit %d", ret );
 #endif
@@ -1856,7 +1856,7 @@ bool Tr2RenderContextAL::ConvertToGLPixelFormat(	PixelFormat format,
 
 	case PIXEL_FORMAT_R32G32_TYPELESS:
 	case PIXEL_FORMAT_R32G32_FLOAT:
-		internalFormat = GL_RG32F;	// GLES has an extension for floating point textures http://www.khronos.org/registry/gles/extensions/OES/OES_texture_float.txt
+		internalFormat = GL_RG32F;
 		targetFormat = GL_RG;
 		targetType   = GL_FLOAT;
 		return true;
@@ -1889,13 +1889,13 @@ bool Tr2RenderContextAL::ConvertToGLPixelFormat(	PixelFormat format,
 	case PIXEL_FORMAT_R11G11B10_FLOAT:
 		internalFormat = GL_R11F_G11F_B10F;
 		targetFormat = GL_RGB;
-		targetType   = GL_R11F_G11F_B10F; // <- is this correct?
+		targetType   = GL_R11F_G11F_B10F;
 		return true;
 
 	case PIXEL_FORMAT_R8G8B8A8_TYPELESS:
 	case PIXEL_FORMAT_R8G8B8A8_UNORM:
 	case PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB:
-		internalFormat = GL_SRGB8_ALPHA8_EXT;
+		internalFormat = GL_SRGB8_ALPHA8;
 		targetFormat = GL_RGBA;
 		targetType   = GL_UNSIGNED_BYTE;
 		return true;
@@ -1951,106 +1951,106 @@ bool Tr2RenderContextAL::ConvertToGLPixelFormat(	PixelFormat format,
 
 	case PIXEL_FORMAT_R32_TYPELESS:
 	case PIXEL_FORMAT_R32_FLOAT:
-		internalFormat = GL_R32F;	// GLES has an extension for floating point textures http://www.khronos.org/registry/gles/extensions/OES/OES_texture_float.txt
-		targetFormat = GL_LUMINANCE;
+		internalFormat = GL_R32F;
+		targetFormat = GL_RED;
 		targetType   = GL_FLOAT;
 		return true;
 
 	case PIXEL_FORMAT_R32_UINT:
 		internalFormat = GL_R32UI;
-		targetFormat = GL_LUMINANCE;
+		targetFormat = GL_RED;
 		targetType   = GL_UNSIGNED_INT;
 		return true;
 
 	case PIXEL_FORMAT_R32_SINT:
 		internalFormat = GL_R32I;
-		targetFormat = GL_LUMINANCE;
+		targetFormat = GL_RED;
 		targetType   = GL_INT;
 		return true;
 
 	case PIXEL_FORMAT_R8G8_TYPELESS:
 	case PIXEL_FORMAT_R8G8_UNORM:
-		internalFormat = GL_SLUMINANCE8_ALPHA8_EXT;
-		targetFormat = GL_LUMINANCE_ALPHA;
+		internalFormat = GL_RG8;
+		targetFormat = GL_RG;
 		targetType   = GL_UNSIGNED_BYTE;
 		return true;
 
 	case PIXEL_FORMAT_R8G8_UINT:
 		internalFormat = GL_RG8UI;
-		targetFormat = GL_LUMINANCE_ALPHA;
+		targetFormat = GL_RG;
 		targetType   = GL_UNSIGNED_BYTE;
 		return true;
 
 	case PIXEL_FORMAT_R8G8_SNORM:
 		internalFormat = GL_RG8_SNORM;
-		targetFormat = GL_LUMINANCE_ALPHA;
+		targetFormat = GL_RG;
 		targetType   = GL_BYTE;
 		return true;
 
 	case PIXEL_FORMAT_R8G8_SINT:
 		internalFormat = GL_RG8I;
-		targetFormat = GL_LUMINANCE_ALPHA;
+		targetFormat = GL_RG;
 		targetType   = GL_BYTE;
 		return true;
 
 	case PIXEL_FORMAT_R16_TYPELESS:
 	case PIXEL_FORMAT_R16_FLOAT:
-		internalFormat = GL_LUMINANCE16F_ARB;
-		targetFormat = GL_LUMINANCE;
+		internalFormat = GL_R16F;
+		targetFormat = GL_RED;
 		targetType   = GL_HALF_FLOAT;
 		return true;
 
 	case PIXEL_FORMAT_R16_UNORM:
-		internalFormat = GL_LUMINANCE16;
-		targetFormat = GL_LUMINANCE;
+		internalFormat = GL_R16;
+		targetFormat = GL_RED;
 		targetType   = GL_UNSIGNED_SHORT;
 		return true;
 
 	case PIXEL_FORMAT_R16_UINT:
 		internalFormat = GL_R16UI;
-		targetFormat = GL_LUMINANCE;
+		targetFormat = GL_RED;
 		targetType   = GL_UNSIGNED_SHORT;
 		return true;
 
 	case PIXEL_FORMAT_R16_SNORM:
 		internalFormat = GL_R16_SNORM;
-		targetFormat = GL_LUMINANCE;
+		targetFormat = GL_RED;
 		targetType   = GL_SHORT;
 		return true;
 
 	case PIXEL_FORMAT_R16_SINT:
 		internalFormat = GL_R16I;
-		targetFormat = GL_LUMINANCE;
+		targetFormat = GL_RED;
 		targetType   = GL_SHORT;
 		return true;
 
 	case PIXEL_FORMAT_R8_TYPELESS:
 	case PIXEL_FORMAT_R8_UNORM:
-		internalFormat = GL_SLUMINANCE_EXT;
-		targetFormat = GL_LUMINANCE;
+		internalFormat = GL_R8;
+		targetFormat = GL_RED;
 		targetType = GL_UNSIGNED_BYTE;
 		return true;
 
 	case PIXEL_FORMAT_R8_UINT:
 		internalFormat = GL_R8UI;
-		targetFormat = GL_LUMINANCE;
+		targetFormat = GL_RED;
 		targetType = GL_UNSIGNED_BYTE;
 		return true;
 
 	case PIXEL_FORMAT_R8_SNORM:
 		internalFormat = GL_R8_SNORM;
-		targetFormat = GL_LUMINANCE;
+		targetFormat = GL_RED;
 		targetType = GL_BYTE;
 		return true;
 
 	case PIXEL_FORMAT_R8_SINT:
 		internalFormat = GL_R8I;
-		targetFormat = GL_LUMINANCE;
+		targetFormat = GL_RED;
 		targetType = GL_BYTE;
 		return true;
 
 	case PIXEL_FORMAT_A8_UNORM:
-		internalFormat = GL_SRGB8_ALPHA8_EXT;
+		internalFormat = GL_SRGB8_ALPHA8;
 		targetFormat = GL_ALPHA;
 		targetType = GL_UNSIGNED_BYTE;
 		return true;
@@ -2094,7 +2094,7 @@ bool Tr2RenderContextAL::ConvertToGLPixelFormat(	PixelFormat format,
 	case PIXEL_FORMAT_B8G8R8A8_UNORM:
 	case PIXEL_FORMAT_B8G8R8A8_TYPELESS:
 	case PIXEL_FORMAT_B8G8R8A8_UNORM_SRGB:
-		internalFormat = GL_SRGB8_ALPHA8_EXT;
+		internalFormat = GL_SRGB8_ALPHA8;
 		targetFormat = GL_BGRA;
 		targetType   = GL_UNSIGNED_BYTE;
 		return true;
@@ -2102,7 +2102,7 @@ bool Tr2RenderContextAL::ConvertToGLPixelFormat(	PixelFormat format,
 	case PIXEL_FORMAT_B8G8R8X8_UNORM:
 	case PIXEL_FORMAT_B8G8R8X8_TYPELESS:
 	case PIXEL_FORMAT_B8G8R8X8_UNORM_SRGB:
-		internalFormat = GL_SRGB8_EXT;
+		internalFormat = GL_SRGB8;
 		targetFormat = GL_BGRA;
 		targetType   = GL_UNSIGNED_BYTE;
 		return true;

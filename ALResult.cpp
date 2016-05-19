@@ -95,7 +95,7 @@ void ReportGLError( const char* fileName, int lineNumber, const char* statement,
 	case GL_OUT_OF_MEMORY:
 		errorName = "OUT_OF_MEMORY";
 		break;
-#if !defined(TRINITY_AL_MOBILE)
+#if defined(_WIN32)
 	case GL_STACK_UNDERFLOW:
 		errorName = "STACK_UNDERFLOW";
 		break;
