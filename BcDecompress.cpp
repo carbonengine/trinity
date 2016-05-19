@@ -203,11 +203,11 @@ void DecompressBc3( uint32_t width, uint32_t height, uint32_t depth, const Tr2Su
 						uint32_t alphaValue;
 						if( y < 2 )
 						{
-							alphaValue = alpha[alphaMask0 >> ( x + y * 4 ) * 3];
+							alphaValue = alpha[( alphaMask0 >> ( x + y * 4 ) * 3 ) & 0x7];
 						}
 						else
 						{
-							alphaValue = alpha[alphaMask1 >> ( x + ( y - 2 ) * 4 ) * 3];
+							alphaValue = alpha[( alphaMask1 >> ( x + ( y - 2 ) * 4 ) * 3 ) & 0x7];
 						}
 						alphaValue <<= 24;
 						uint32_t destY = j + y;

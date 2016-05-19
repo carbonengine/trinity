@@ -449,13 +449,18 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 	ConvertUsage( usage, usage9, m_pool9 );
 
 	CComPtr<IDirect3DVolumeTexture9> tex;
-	if( FAILED( renderContext.m_d3dDevice9->CreateVolumeTexture( width, height, depth, trueMipLevelCount, usage9, m_format9, m_pool9, &tex, 0 ) ) )
+	auto hr = renderContext.m_d3dDevice9->CreateVolumeTexture( width, height, depth, trueMipLevelCount, usage9, m_format9, m_pool9, &tex, 0 );
+	if( FAILED( hr ) )
 	{
 		if( IsCompressedFormat( format ) )
 		{
 			m_format9 = renderContext.ConvertToD3D9Format( PIXEL_FORMAT_B8G8R8A8_UNORM );
 			CR_RETURN_HR( renderContext.m_d3dDevice9->CreateVolumeTexture( width, height, depth, trueMipLevelCount, usage9, m_format9, m_pool9, &tex, 0 ) );
 			needsDecompression = true;
+		}
+		else
+		{
+			return hr;
 		}
 	}
 	
