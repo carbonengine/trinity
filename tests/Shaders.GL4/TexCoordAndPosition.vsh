@@ -1,13 +1,13 @@
 uniform vec3 ssyf;
 #ifdef PS
 uniform vec4 ssf[4];
-varying float ssv;
+out float ssv;
 #endif
 
-attribute vec2 attr0;
-attribute vec3 attr1;
+in vec2 attr0;
+in vec3 attr1;
 
-varying vec2 texCoord;
+out vec2 texCoord;
 
 void main()
 {
