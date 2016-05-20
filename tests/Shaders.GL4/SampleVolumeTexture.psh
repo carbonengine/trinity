@@ -1,11 +1,9 @@
-#ifdef GL_ES
-precision mediump float;
-#endif
-
 #ifdef PS
 uniform vec4 ssi;
-varying float ssv;
+in float ssv;
 #endif
+
+layout(location = 0) out vec4 FragColor;
 
 in vec2 texCoord;
 
@@ -15,9 +13,9 @@ uniform sampler3D s0;
 
 void main()
 {
-    gl_FragData[0] = texture( s0, vec3( texCoord, cb7[0].x ) );
+    FragColor = texture( s0, vec3( texCoord, cb7[0].x ) );
 #ifdef PS
-float av=floor(clamp(gl_FragData[0].a,0.0,1.0)*255.0+0.5);
+float av=floor(clamp(FragColor.a,0.0,1.0)*255.0+0.5);
 if(ssi.z==0.0)
 {
 if(av*ssi.x+ssi.y<0.0)
