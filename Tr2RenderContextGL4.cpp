@@ -82,8 +82,10 @@ struct Tr2RenderContextAL::Blitter
 	ALResult Create( Tr2RenderContextAL& renderContext )
 	{
 		GLuint vertexShader = glCreateShader( GL_VERTEX_SHADER );
-		const char* vsSource = "attribute vec4 aPos;\n"
-			"varying vec2 vTex;\n"
+		const char* vsSource =
+            "#version 410 core\n"
+            "in vec4 aPos;\n"
+			"out vec2 vTex;\n"
 			"void main()\n"
 			"{\n"
 			"vTex.xy=aPos.zw;\n"
@@ -105,12 +107,14 @@ struct Tr2RenderContextAL::Blitter
 		}
 
 		GLuint fragmentShader = glCreateShader( GL_FRAGMENT_SHADER );
-		const char* fsSource =
-            "varying vec2 vTex;\n"
+        const char* fsSource =
+            "#version 410 core\n"
+            "in vec2 vTex;\n"
 			"uniform sampler2D tex;\n"
+            "layout(location=0) out vec4 FragColor;\n"
 			"void main()\n"
 			"{\n"
-			"gl_FragColor=texture2D(tex, vTex);\n"
+			"FragColor=texture(tex, vTex);\n"
 			"}";
 		GL_FAIL( glShaderSource( fragmentShader, 1, &fsSource, nullptr ) );
 		GL_FAIL( glCompileShader( fragmentShader ) );
