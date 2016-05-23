@@ -82,6 +82,8 @@ public:
 	// set the scale of the destination object
 	void SetScaleByRadius( float radius );
 
+	// reset the move objets when looping
+	void PrepareFiringEffectMoveObjects();
 	// action: prepare (== "start with delay" ) firing
 	void PrepareFiring( float delay, unsigned int muzzleID = 0xffffffff, unsigned int muzzleCount = 0xffffffff );
 	// action: stop all firing

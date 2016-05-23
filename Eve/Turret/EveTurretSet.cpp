@@ -1775,6 +1775,7 @@ void EveTurretSet::EnterStateFiring()
 		if( m_firingEffect->IsLooping() )
 		{
 			// We don't want to start and stop the curves when the turret is looping and firing
+			m_firingEffect->PrepareFiringEffectMoveObjects();
 			return;
 		}
 		m_firingEffect->StopFiring();

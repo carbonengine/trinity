@@ -163,6 +163,18 @@ bool EveTurretFiringFX::OnModified( Be::Var* val )
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Called when looping when we need to reset the move object
+// --------------------------------------------------------------------------------
+void EveTurretFiringFX::PrepareFiringEffectMoveObjects()
+{
+	for( unsigned int i = 0; i < m_stretch.size(); ++i )
+	{
+		m_stretch[i]->StartMoving();
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Start this firing effect with a delay!
 // Arguments:
 //   delay - the delay until it starts
