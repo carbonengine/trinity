@@ -2136,7 +2136,10 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 		};
 		if( m_fragmentOpSettings.m_clipPlaneEnable & 1 )
 		{
-			std::copy( m_fragmentOpSettings.m_clipPlane[0], m_fragmentOpSettings.m_clipPlane[0] + 4, vsShadowState + 4 );
+			vsShadowState[4] = m_fragmentOpSettings.m_clipPlane[0][0];
+			vsShadowState[5] = m_fragmentOpSettings.m_clipPlane[0][1];
+			vsShadowState[6] = m_fragmentOpSettings.m_clipPlane[0][2];
+			vsShadowState[7] = m_fragmentOpSettings.m_clipPlane[0][3];
 		}
 		CR_GL_RETURN_VAL( glProgramUniform4fv( vs.shader, vs.constantBuffers[15],
 			2, 
