@@ -51,8 +51,6 @@ void Tr2TextureAL::Destroy()
 	m_targetFormat = 0;
 	m_targetType = 0;
 	m_texture = nullptr;
-
-	memset( &m_currentSampler, 0, sizeof( m_currentSampler ) );
 }
 
 Tr2TextureAL::~Tr2TextureAL()
@@ -150,65 +148,31 @@ ALResult Tr2TextureAL::Create2D( uint32_t width,
 
 	m_texture = std::shared_ptr<GLuint>( new GLuint( texture ), OnDeleteTexture() );
 
-	GL_FAIL( glBindTexture( GL_TEXTURE_2D, *m_texture ) );
-	GL_FAIL( glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ) );
-
 	const uint32_t trueMipLevelCount = mipLevelCount ? mipLevelCount : 1;
 
+	GL_FAIL( glBindTexture( GL_TEXTURE_2D, *m_texture ) );
+	GL_FAIL( glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ) );
+	GL_VALIDATE( glTexStorage2D(GL_TEXTURE_2D, trueMipLevelCount, m_internalFormat, width, height) );
+
+	if( initialData )
+	{
 	for ( uint32_t i = 0; i != trueMipLevelCount; ++i )
 	{
 		uint32_t levelWidth = std::max( width >> i, 1U );
 		uint32_t levelHeight = std::max( height >> i, 1U );
 		if ( m_targetType )
 		{
-			GL_VALIDATE( glTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
-								   m_targetFormat, m_targetType,
-								   initialData ? initialData[i].m_sysMem : nullptr ) );
+				GL_VALIDATE( glTexSubImage2D( GL_TEXTURE_2D, i, 0, 0, levelWidth, levelHeight, 
+									   m_targetFormat, m_targetType, initialData[i].m_sysMem ) );
 		}
-		else if ( initialData )
+			else
 		{
-			GL_VALIDATE( glCompressedTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
+				GL_VALIDATE( glCompressedTexSubImage2D( GL_TEXTURE_2D, i, 0, 0, levelWidth, levelHeight, m_internalFormat,
 											 initialData[i].m_sysMemSlicePitch,
 											 initialData[i].m_sysMem ) );
 		}
-		else
-		{
-			GL_VALIDATE( glTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
-								   GL_RGB, GL_UNSIGNED_BYTE,
-								   nullptr ) );
-		}
-	}
-
-	/*if ( trueMipLevelCount > 1 )
-	{
-		for ( uint32_t i = trueMipLevelCount;
-			  i < uint32_t( 0.5 + log( std::max<double>( height, width ) ) / log( 2.0 ) ) + 1; ++i )
-		{
-			uint32_t levelWidth = std::max( width >> i, 1U );
-			uint32_t levelHeight = std::max( height >> i, 1U );
-			if ( m_targetType )
-			{
-				GL_FAIL( glTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
-									   m_targetFormat, m_targetType,
-									   nullptr ) );
-			}
-			else
-			{
-				GL_FAIL( glCompressedTexImage2D( GL_TEXTURE_2D, i, m_internalFormat, levelWidth, levelHeight, 0,
-												 0,
-												 nullptr ) );
 			}
 		}
-	}*/
-
-	if ( !mipLevelCount )
-	{
-		GL_FAIL( glGenerateMipmap( GL_TEXTURE_2D ) );
-	}
-	else if ( mipLevelCount == 1 )
-	{
-		CR_GL( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ) );
-	}
 
 	m_format = format;
 	m_usage = usage;
@@ -220,21 +184,6 @@ ALResult Tr2TextureAL::Create2D( uint32_t width,
 	m_arraySize = 1;
 	m_isAlias = false;
 	ChangeObjectId();
-	float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-	Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
-													TF_POINT,
-													TF_POINT,
-													false,
-													TA_CLAMP,
-													TA_CLAMP,
-													TA_CLAMP,
-													0,
-													0,
-													CMP_ALWAYS,
-													borderColor,
-													0,
-													1 ), m_currentSampler );
-	Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, false, m_currentSampler );
 
 	return S_OK;
 }
@@ -273,11 +222,14 @@ ALResult Tr2TextureAL::CreateCube( uint32_t width,
 	}
 	m_texture = std::shared_ptr<GLuint>( new GLuint( texture ), OnDeleteTexture() );
 
-	GL_FAIL( glBindTexture( GL_TEXTURE_CUBE_MAP, *m_texture ) );
-	GL_FAIL( glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ) );
-
 	const uint32_t trueMipLevelCount = mipLevelCount ? mipLevelCount : 1;
 
+	GL_FAIL( glBindTexture( GL_TEXTURE_CUBE_MAP, *m_texture ) );
+	GL_FAIL( glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ) );
+	GL_VALIDATE( glTexStorage2D( GL_TEXTURE_CUBE_MAP, trueMipLevelCount, m_internalFormat, width, height ) );
+
+	if( initialData )
+	{
 	for ( uint32_t face = 0; face < 6; ++face )
 	{
 		for ( uint32_t i = 0; i != trueMipLevelCount; ++i )
@@ -286,75 +238,20 @@ ALResult Tr2TextureAL::CreateCube( uint32_t width,
 			uint32_t levelHeight = std::max( height >> i, 1U );
 			if ( m_targetType )
 			{
-				GL_VALIDATE( glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
-									   i, m_internalFormat, levelWidth, levelHeight, 0,
+					GL_VALIDATE( glTexSubImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
+										   i, 0, 0, levelWidth, levelHeight,
 									   m_targetFormat, m_targetType,
 									   initialData ? initialData[face * trueMipLevelCount + i].m_sysMem : nullptr ) );
 			}
-			else if( initialData )
+				else
 			{
-				GL_VALIDATE( glCompressedTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
-												 i, 
-												 m_internalFormat, 
-												 levelWidth, 
-												 levelHeight, 
-												 0,
+					GL_VALIDATE( glCompressedTexSubImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, i, 0, 0, 
+											levelWidth, levelHeight, m_internalFormat,
 												 initialData[face * trueMipLevelCount + i].m_sysMemSlicePitch,
 												 initialData[face * trueMipLevelCount + i].m_sysMem ) );
 			}
-			else
-			{
-				GL_VALIDATE( glTexImage2D( 
-					GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 
-					i, 
-					m_internalFormat, 
-					levelWidth, 
-					levelHeight, 
-					0,
-					GL_RGB, 
-					GL_UNSIGNED_BYTE,
-					nullptr ) );
 			}
 		}
-	}
-
-	if ( trueMipLevelCount > 1 )
-	{
-		// If we have mipmapped texture, but do not provide all mip levels, GL will
-		// think of such texture as invalid. So we define lower mip levels leaving
-		// them with garbage. ...And GLES does not have a way of limiting mips used(
-		for ( uint32_t face = 0; face < 6; ++face )
-		{
-			for ( uint32_t i = trueMipLevelCount;
-				  i < uint32_t( 0.5 + log( std::max<double>( height, width ) ) / log( 2.0 ) ) + 1; ++i )
-			{
-				uint32_t levelWidth = std::max( width >> i, 1U );
-				uint32_t levelHeight = std::max( height >> i, 1U );
-				if ( m_targetType )
-				{
-					GL_VALIDATE( glTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
-										   i, m_internalFormat, levelWidth, levelHeight, 0,
-										   m_targetFormat, m_targetType,
-										   nullptr ) );
-				}
-				else
-				{
-					GL_VALIDATE( glCompressedTexImage2D( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
-													 i, m_internalFormat, levelWidth, levelHeight, 0,
-													 0,
-													 nullptr ) );
-				}
-			}
-		}
-	}
-
-	if ( !mipLevelCount && initialData )
-	{
-		GL_FAIL( glGenerateMipmap( GL_TEXTURE_CUBE_MAP ) );
-	}
-	else if ( mipLevelCount == 1 )
-	{
-		CR_GL( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ) );
 	}
 
 	m_format = format;
@@ -367,22 +264,6 @@ ALResult Tr2TextureAL::CreateCube( uint32_t width,
 	m_arraySize = 1;
 	m_isAlias = false;
 	ChangeObjectId();
-	float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-	Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
-													TF_POINT,
-													TF_POINT,
-													false,
-													TA_CLAMP,
-													TA_CLAMP,
-													TA_CLAMP,
-													0,
-													0,
-													CMP_ALWAYS,
-													borderColor,
-													0,
-													1 ), m_currentSampler );
-	Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, false, m_currentSampler );
-
 	return S_OK;
 }
 
@@ -426,10 +307,22 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 	}
 	m_texture = std::shared_ptr<GLuint>( new GLuint( texture ), OnDeleteTexture() );
 
+	const uint32_t trueMipLevelCount = mipLevelCount ? mipLevelCount : 1;
+	bool decompress = false;
+
 	GL_FAIL( glBindTexture( GL_TEXTURE_3D, *m_texture ) );
 	GL_FAIL( glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ) );
+	glGetError();
+	glTexStorage3D( GL_TEXTURE_3D, trueMipLevelCount, m_internalFormat, width, height, depth );
+	if( glGetError() && IsCompressedFormat( format ) )
+	{
+		Tr2RenderContextAL::ConvertToGLPixelFormat( PIXEL_FORMAT_B8G8R8A8_UNORM, m_internalFormat, m_targetFormat, m_targetType );
+		GL_VALIDATE( glTexStorage3D( GL_TEXTURE_3D, trueMipLevelCount, m_internalFormat, width, height, depth ) );
+		decompress = true;
+	}
 
-	const uint32_t trueMipLevelCount = mipLevelCount ? mipLevelCount : 1;
+	if( initialData )
+	{
 
 	std::unique_ptr<uint8_t[]> decompressed;
 
@@ -438,22 +331,21 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 		uint32_t levelWidth = std::max( width >> i, 1U );
 		uint32_t levelHeight = std::max( height >> i, 1U );
 		uint32_t levelDepth = std::max( depth >> i, 1U );
-		if( decompressed )
+			if( decompress )
 		{
 			if( !BcDecompress( levelWidth, levelHeight, levelDepth, format, initialData[i], decompressed ) )
 			{
 				return E_FAIL;
 			}
-			GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
+				GL_VALIDATE( glTexSubImage3D( GL_TEXTURE_3D, i, 0, 0, 0, levelWidth, levelHeight, levelDepth,
 									m_targetFormat, m_targetType, decompressed.get() ) );
 		}
 		else if ( m_targetType )
 		{
-			GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
-								   m_targetFormat, m_targetType,
-								   initialData ? initialData[i].m_sysMem : nullptr ) );
+				GL_VALIDATE( glTexSubImage3D( GL_TEXTURE_3D, i, 0, 0, 0, levelWidth, levelHeight, levelDepth,
+										m_targetFormat, m_targetType, initialData[i].m_sysMem ) );
 		}
-		else if ( initialData )
+			else 
 		{
 #ifndef __APPLE__
 			if( GLEW_NV_texture_compression_vtc )
@@ -485,40 +377,17 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 						}
 					}
 				}
-				GL_VALIDATE( glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
-												 initialData[i].m_sysMemSlicePitch * levelDepth,
-												 level.get() ) );
+					GL_VALIDATE( glCompressedTexSubImage3D( GL_TEXTURE_3D, i, 0, 0, 0, levelWidth, levelHeight, levelDepth, m_internalFormat,
+													 initialData[i].m_sysMemSlicePitch * levelDepth, level.get() ) );
 			}
 			else
 #endif
 			{
-				glCompressedTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0, initialData[i].m_sysMemSlicePitch * levelDepth, initialData[i].m_sysMem );
-				if( glGetError() )
-				{
-					if( BcDecompress( levelWidth, levelHeight, levelDepth, format, initialData[i], decompressed ) )
-					{
-						Tr2RenderContextAL::ConvertToGLPixelFormat( PIXEL_FORMAT_B8G8R8A8_UNORM, m_internalFormat, m_targetFormat, m_targetType );
-						GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
-											   m_targetFormat, m_targetType, decompressed.get() ) );
-					}
-				}
-			}
-		}
-		else
-		{
-			GL_VALIDATE( glTexImage3D( GL_TEXTURE_3D, i, m_internalFormat, levelWidth, levelHeight, levelDepth, 0,
-								   GL_RGB, GL_UNSIGNED_BYTE,
-								   nullptr ) );
+					GL_VALIDATE( glCompressedTexSubImage3D( GL_TEXTURE_3D, i, 0, 0, 0, levelWidth, levelHeight, levelDepth, m_internalFormat,
+													 initialData[i].m_sysMemSlicePitch * levelDepth, initialData[i].m_sysMem ) );
 		}
 	}
-
-	if ( !mipLevelCount )
-	{
-		GL_FAIL( glGenerateMipmap( GL_TEXTURE_3D ) );
 	}
-	else if ( mipLevelCount == 1 )
-	{
-		CR_GL( glTexParameteri( GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ) );
 	}
 
 	m_format = format;
@@ -531,22 +400,6 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 	m_arraySize = 1;
 	m_isAlias = false;
 	ChangeObjectId();
-	float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-	Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
-													TF_POINT,
-													TF_POINT,
-													false,
-													TA_CLAMP,
-													TA_CLAMP,
-													TA_CLAMP,
-													0,
-													0,
-													CMP_ALWAYS,
-													borderColor,
-													0,
-													1 ), m_currentSampler );
-	Tr2SamplerStateAL::Apply( GL_TEXTURE_3D, false, m_currentSampler );
-
 	return S_OK;
 }
 
@@ -555,32 +408,16 @@ ALResult Tr2TextureAL::CreateDepthTexture( uint32_t width,
 										   Tr2RenderContextAL& renderContext )
 {
 	Destroy();
-#ifdef TRINITY_AL_MOBILE
-    if( !CHECK_EXT( OES_depth_texture ) )
+	GLuint texture = 0;
+	GL_FAIL( glGenTextures( 1, &texture ) );
+	if( !texture )
     {
         return E_FAIL;
     }
-#endif
-	GLuint texture;
-	GL_FAIL( glGenTextures( 1, &texture ) );
-#ifdef __ANDROID__
-    m_texture = new GLuint[2];
-    m_texture[0] = texture;
-    m_texture[1] = 1;
-#else
 	m_texture = std::shared_ptr<GLuint>( new GLuint( texture ), OnDeleteTexture() );
-#endif
 	GL_FAIL( glBindTexture( GL_TEXTURE_2D, *m_texture ) );
 	//CR_GL( glPixelStorei( GL_UNPACK_ALIGNMENT, 1 ) );
-    GL_FAIL( glTexImage2D( GL_TEXTURE_2D,
-                           0,
-                           GL_DEPTH24_STENCIL8,
-                           width,
-                           height,
-                           0,
-                           GL_DEPTH_STENCIL,
-                           GL_UNSIGNED_INT_24_8,
-                           nullptr ) );
+	GL_VALIDATE( glTexStorage2D( GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, width, height ) );
 
     m_width = width;
 	m_height = height;
@@ -589,21 +426,6 @@ ALResult Tr2TextureAL::CreateDepthTexture( uint32_t width,
 	m_arraySize = 1;
 	m_format = PIXEL_FORMAT_D32_FLOAT;
 	m_type = TEX_TYPE_2D;
-	float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-	Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
-													TF_POINT,
-													TF_POINT,
-													false,
-													TA_CLAMP,
-													TA_CLAMP,
-													TA_CLAMP,
-													0,
-													0,
-													CMP_ALWAYS,
-													borderColor,
-													0,
-													1 ), m_currentSampler );
-	Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, false, m_currentSampler );
 	return S_OK;
 }
 

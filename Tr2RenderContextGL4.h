@@ -299,8 +299,8 @@ private:
 
 	Tr2Viewport m_currentViewport;
 
-	Tr2TextureAL*		m_boundTextures[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
-	Tr2SamplerStateAL::StateData m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
+	bool m_srgbDecode[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
+	GLuint m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
 
 	unsigned m_currentActiveTexture;
 
