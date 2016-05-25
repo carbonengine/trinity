@@ -19,6 +19,7 @@ def _to_hex(s):
         d1 = ord(s[i + 1]) if i + 1 < len(s) else 0
         d = (d3 << 24) | (d2 << 16) | (d1 << 8) | (ord(s[i]) << 0)
         l.append(hex(d))
+    l.append(hex(0))
     return ', '.join(l)
 
 def _process_dir(path):

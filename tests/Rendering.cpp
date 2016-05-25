@@ -45,6 +45,7 @@ TEST_F( Rendering, CanRenderASingleTriangle )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -122,6 +123,7 @@ TEST_F( Rendering, CanRenderTriangleStrip )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -200,6 +202,7 @@ TEST_F( Rendering, CanRenderIndexedTriangles )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -289,8 +292,10 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -369,8 +374,10 @@ TEST_F( Rendering, CanSampleTexture )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -487,8 +494,10 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -619,6 +628,7 @@ TEST_F( Rendering, CanPassConstantBufferToRendering )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -708,8 +718,10 @@ TEST_F( Rendering, CanDoInstancedRendering )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 8;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -804,8 +816,10 @@ TEST_F( Rendering, CanClearRenderTarget )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -925,8 +939,10 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -1071,8 +1087,10 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -1222,6 +1240,7 @@ TEST_F( Rendering, CanClearDepthBuffer )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -1301,8 +1320,10 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -1387,6 +1408,7 @@ TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -1460,6 +1482,7 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -1536,6 +1559,7 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith32BitDrawIndexedPrimitiveUP )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -1616,6 +1640,7 @@ TEST_F( Rendering, CanUseClippingPlaneAndScissor )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -1698,6 +1723,7 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -1845,6 +1871,7 @@ TEST_F( Rendering, CanUseViewport )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -1933,8 +1960,10 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -2062,8 +2091,10 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -2191,8 +2222,10 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -2320,8 +2353,10 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -2454,8 +2489,10 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -2626,8 +2663,10 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -2782,8 +2821,10 @@ TEST_F( Rendering, CanSampleBc1Texture )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -2902,6 +2943,7 @@ TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 	vsInput.elements.resize( 1 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -2991,8 +3033,10 @@ TEST_F( Rendering, CanSampleBc2Texture )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -3112,8 +3156,10 @@ TEST_F( Rendering, CanSampleBc3Texture )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -3233,8 +3279,10 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -3366,8 +3414,10 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -3499,8 +3549,10 @@ TEST_F( Rendering, CanSampleUnassignedTexture )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -3584,8 +3636,10 @@ TEST_F( Rendering, CanLockTextureTwice )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -3728,8 +3782,10 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;
@@ -3846,8 +3902,10 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 	vsInput.elements.resize( 2 );
 	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
 	vsInput.elements[0].usageIndex = 0;
+	vsInput.elements[0].registerIndex = 0;
 	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
 	vsInput.elements[1].usageIndex = 0;
+	vsInput.elements[1].registerIndex = 1;
 	vsInput.ComputeHash();
 
 	Tr2ShaderAL vs;

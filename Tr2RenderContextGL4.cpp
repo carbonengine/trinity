@@ -21,8 +21,6 @@ CCP_STATS_DECLARE( sceneDrawcallCount	, "Trinity/AL/sceneDrawcallCount"	, true, 
 #define	INVALID_WIN32	0xFFFFFFFF
 #define	INVALID_HRC  	(HGLRC)0xFFFFFFFF
 
-std::map<std::pair<int, std::pair<int, bool> >, Tr2RenderContextAL::ProgramObject*> Tr2RenderContextAL::s_programs;
-
 struct Tr2RenderContextAL::ShadowStateRestoreInfo
 {
 	GLenum m_instanceAttributes[16];
@@ -60,15 +58,25 @@ static GLenum ConvertTextureType( TextureType type )
 struct Tr2RenderContextAL::Blitter
 {
 	Blitter()
-		:m_program( 0 )
+		:m_pipeline( 0 ),
+		m_vertexShader( 0 ),
+		m_pixelShader( 0 )
 	{
 	}
 
 	~Blitter()
 	{
-		if( m_program )
+		if( m_pipeline )
 		{
-			glDeleteProgram( m_program );
+			glDeleteProgramPipelines( 1, &m_pipeline );
+		}
+		if( m_vertexShader )
+		{
+			glDeleteProgram( m_vertexShader );
+		}
+		if( m_pixelShader )
+		{
+			glDeleteProgram( m_pixelShader );
 		}
 	}
 	// ----------------------------------------------------------------------------------
@@ -81,71 +89,61 @@ struct Tr2RenderContextAL::Blitter
 	// ----------------------------------------------------------------------------------
 	ALResult Create( Tr2RenderContextAL& renderContext )
 	{
-		GLuint vertexShader = glCreateShader( GL_VERTEX_SHADER );
 		const char* vsSource =
             "#version 410 core\n"
-            "in vec4 aPos;\n"
-			"out vec2 vTex;\n"
+			"out gl_PerVertex { vec4 gl_Position; };\n"
+			"layout(location=0) in vec4 aPos;\n"
+			"layout(location=0) out vec2 vTex;\n"
 			"void main()\n"
 			"{\n"
 			"vTex.xy=aPos.zw;\n"
 			"gl_Position=vec4(aPos.xy,0.0,1.0);\n"
 			"}";
-		GL_FAIL( glShaderSource( vertexShader, 1, &vsSource, nullptr ) );
-		GL_FAIL( glCompileShader( vertexShader ) );
+		m_vertexShader = glCreateShaderProgramv( GL_VERTEX_SHADER, 1, &vsSource );
+		if( !m_vertexShader )
+		{
+			return E_FAIL;
+		}
 		GLint status = 0;
-		GL_FAIL( glGetShaderiv( vertexShader, GL_COMPILE_STATUS, &status ) );
+		GL_FAIL( glGetProgramiv( m_vertexShader, GL_LINK_STATUS, &status ) );
 		if( !status )
 		{
 			GLint length;
-			glGetShaderiv( vertexShader, GL_INFO_LOG_LENGTH, &length );
+			glGetProgramiv( m_vertexShader, GL_INFO_LOG_LENGTH, &length );
 			char* buffer = new char[length];
-			glGetShaderInfoLog( vertexShader, length, nullptr, buffer );
+			glGetProgramInfoLog( m_vertexShader, length, nullptr, buffer );
 			CCP_AL_LOGERR( "Tr2ShaderAL: error compiling shader: %s", buffer );
 			delete[] buffer;
 			return E_FAIL;
 		}
 
-		GLuint fragmentShader = glCreateShader( GL_FRAGMENT_SHADER );
         const char* fsSource =
             "#version 410 core\n"
-            "in vec2 vTex;\n"
+            "layout(location=0) in vec2 vTex;\n"
 			"uniform sampler2D tex;\n"
             "layout(location=0) out vec4 FragColor;\n"
 			"void main()\n"
 			"{\n"
 			"FragColor=texture(tex, vTex);\n"
 			"}";
-		GL_FAIL( glShaderSource( fragmentShader, 1, &fsSource, nullptr ) );
-		GL_FAIL( glCompileShader( fragmentShader ) );
-		GL_FAIL( glGetShaderiv( fragmentShader, GL_COMPILE_STATUS, &status ) );
+		m_pixelShader = glCreateShaderProgramv( GL_FRAGMENT_SHADER, 1, &fsSource );
+		GL_FAIL( glGetProgramiv( m_pixelShader, GL_LINK_STATUS, &status ) );
 		if( !status )
 		{
 			GLint length;
-			glGetShaderiv( vertexShader, GL_INFO_LOG_LENGTH, &length );
+			glGetProgramiv( m_pixelShader, GL_INFO_LOG_LENGTH, &length );
 			char* buffer = new char[length];
-			glGetShaderInfoLog( vertexShader, length, nullptr, buffer );
+			glGetProgramInfoLog( m_pixelShader, length, nullptr, buffer );
 			CCP_AL_LOGERR( "Tr2ShaderAL: error compiling shader: %s", buffer );
 			delete[] buffer;
 			return E_FAIL;
 		}
+		glGenProgramPipelines( 1, &m_pipeline );
+		glUseProgramStages( m_pipeline, GL_VERTEX_SHADER_BIT, m_vertexShader );
+		glUseProgramStages( m_pipeline, GL_FRAGMENT_SHADER_BIT, m_pixelShader );
 
-		m_program = glCreateProgram();
-		GL_FAIL( glAttachShader( m_program, vertexShader ) );
-		GL_FAIL( glAttachShader( m_program, fragmentShader ) );
-
-		GL_FAIL( glLinkProgram( m_program ) );
-		glGetProgramiv( m_program, GL_LINK_STATUS, &status );
-
-		m_position = glGetAttribLocation( m_program, "aPos" );
-
-		GL_FAIL( glUseProgram( m_program ) );
-
-		GLint location = glGetUniformLocation( m_program, "tex" );
-		GL_FAIL( glUniform1i( location, 0 ) );
-
-		glDeleteShader( vertexShader );
-		glDeleteShader( fragmentShader );
+		GLint location = glGetUniformLocation( m_pixelShader, "tex" );
+		GL_FAIL( glProgramUniform1i( m_pixelShader, location, 0 ) );
 
 		float border[4] = { 0 };
 		Tr2SamplerDescription desc( 
@@ -187,6 +185,8 @@ struct Tr2RenderContextAL::Blitter
 		AL_UPDATE_RESOURCE_FRAME_USAGE( m_sampler );
 		AL_UPDATE_RESOURCE_FRAME_USAGE( m_buffer );
 
+		glBindProgramPipeline( m_pipeline );
+
 		GL_FAIL( glActiveTexture( GL_TEXTURE0 ) );
 		GL_FAIL( glBindTexture( GL_TEXTURE_2D, *source.m_texture ) );
 		GL_IGNORE_ERROR( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
@@ -195,11 +195,10 @@ struct Tr2RenderContextAL::Blitter
 			CR_RETURN_HR( (HRESULT)m_sampler.Apply( GL_TEXTURE_2D, source.GetTrueMipCount() > 1, m_sampler.m_stateData ) );
 			source.m_currentSampler = m_sampler.m_stateData;
 		}
-		GL_FAIL( glUseProgram( m_program ) );
 
 		GL_FAIL( glBindBuffer( GL_ARRAY_BUFFER, m_buffer.m_buffer ) );
-		GL_FAIL( glEnableVertexAttribArray( m_position ) );
-		GL_FAIL( glVertexAttribPointer( m_position,
+		GL_FAIL( glEnableVertexAttribArray( 0 ) );
+		GL_FAIL( glVertexAttribPointer( 0,
 								4,
 								GL_FLOAT, 
 								GL_FALSE,
@@ -219,9 +218,10 @@ struct Tr2RenderContextAL::Blitter
 	}
 
 	Tr2SamplerStateAL m_sampler;
-	GLuint m_program;
+	GLuint m_vertexShader;
+	GLuint m_pixelShader;
+	GLuint m_pipeline;
 	Tr2VertexBufferAL m_buffer;
-	GLint m_position;
 };
 
 Tr2RenderContextAL::Tr2RenderContextAL()
@@ -249,8 +249,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 {
 	CCP_ASSERT( GetPrimaryRenderContextPointer() == nullptr );
 	::GetPrimaryRenderContextPointer() = this;
-
-	m_boundProgramObject = nullptr;
 
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
@@ -306,6 +304,7 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	m_alphaTestParameters.m_alphaTestRef = 0;
 	m_alphaTestParameters.m_alphaTestFunc = CMP_ALWAYS;
 	m_fragmentOpSettings.m_clipPlaneEnable = 0;
+	m_pipeline = 0;
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
@@ -366,6 +365,7 @@ Tr2PrimaryRenderContextAL* Tr2RenderContextAL::GetPrimaryRenderContextPointer()
 
 void Tr2RenderContextAL::Destroy()
 {
+	glDeleteProgramPipelines( 1, &m_pipeline );
 	m_drawUP.Destroy();
 
 	ReleaseDeviceResources();
@@ -829,6 +829,9 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray( vao );
 
+	glGenProgramPipelines( 1, &m_pipeline );
+	glBindProgramPipeline( m_pipeline );
+
 	glEnable( GL_CULL_FACE );
 	glEnable( GL_DEPTH_TEST );
 
@@ -1075,7 +1078,8 @@ ALResult Tr2RenderContextAL::InternalBlitToBackBuffer( Tr2TextureAL& source )
 	}
 	ALResult result = m_blitter->Blit( source );
 
-	m_boundProgramObject = nullptr;
+	glBindProgramPipeline( m_pipeline );
+
 	m_currentActiveTexture = 0;
 	if( m_renderStates[RS_ZENABLE] )
 	{
@@ -1165,7 +1169,6 @@ ALResult Tr2RenderContextAL::SetProgram()
 	if( !m_vertexShader || !m_vertexShader->IsValid() || 
 		!m_pixelShader || !m_pixelShader->IsValid() )
 	{
-		m_boundProgramObject = nullptr;
 		return E_FAIL;
 	}
 
@@ -1173,136 +1176,20 @@ ALResult Tr2RenderContextAL::SetProgram()
 		m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS) ||
 		m_fragmentOpSettings.m_clipPlaneEnable;
 
-	auto key = std::make_pair(	m_vertexShader->m_shader, 
-								std::make_pair( m_pixelShader->m_shader, patchedPS ) );
-	auto found = s_programs.find( key );
-	if( found != s_programs.end() )
-	{
-		if( m_boundProgramObject == found->second )
-		{
-			return S_OK;
-		}
-		m_boundProgramObject = found->second;
-		if( m_boundProgramObject->program )
-		{
-			glUseProgram( m_boundProgramObject->program );
-			return S_OK;
-		}
-		return E_FAIL;
-	}
-	m_boundProgramObject = CCP_NEW( "Tr2RenderContextAL::ProgramObject" ) ProgramObject;
-	m_boundProgramObject->program = glCreateProgram();
-	if( m_boundProgramObject->program == 0 )
-	{
-		return E_FAIL;
-	}
-	glAttachShader( 
-		m_boundProgramObject->program, 
-		patchedPS && m_vertexShader->m_patchedShader	? m_vertexShader->m_patchedShader 
-														: m_vertexShader->m_shader );
-	glAttachShader( 
-		m_boundProgramObject->program, 
-		patchedPS && m_pixelShader->m_patchedShader		? m_pixelShader->m_patchedShader 
-														: m_pixelShader->m_shader );
-
-	glLinkProgram( m_boundProgramObject->program );
-	GLint status = 0;
-	glGetProgramiv( m_boundProgramObject->program, GL_LINK_STATUS, &status );
-	if( !status )
-	{
-		GLint length = 0;
-		glGetProgramiv( m_boundProgramObject->program, GL_INFO_LOG_LENGTH, &length );
-		char* buffer = new char[length];
-		glGetProgramInfoLog( m_boundProgramObject->program, length, nullptr, buffer );
-		CCP_AL_LOGERR( "Error linking vertex and pixel shader: %s", buffer );
-		delete[] buffer;
-		glDeleteProgram( m_boundProgramObject->program );
-		m_boundProgramObject->program = 0;
-		s_programs[key] = m_boundProgramObject;
-		return E_FAIL;
-	}
-
-	glUseProgram( m_boundProgramObject->program );
-
-	static const char* attributeNames[] = {
-		"attr0",  "attr1",  "attr2",  "attr3",
-		"attr4",  "attr5",  "attr6",  "attr7",
-		"attr8",  "attr9",  "attr10", "attr11",
-		"attr12", "attr13", "attr14", "attr15",		
-	};
-
-	m_boundProgramObject->attributes.clear();
-	for( size_t i = 0; i < m_vertexShader->GetInputDefinition().elements.size(); ++i )
-	{
-		auto& element = m_vertexShader->GetInputDefinition().elements[i];
-		int index = glGetAttribLocation( m_boundProgramObject->program, attributeNames[i] );
-		if( index != -1 )
-		{
-			m_boundProgramObject->attributes[std::make_pair( element.usage, element.usageIndex )] = index;
-		}
-	}
-
-	static const char* cbNames[] = {
-		"cb0",  "cb1",  "cb2",  "cb3",
-		"cb4",  "cb5",  "cb6",  "cb7",
-		"cb8",  "cb9",  "cb10", "cb11",
-		"cb12", "cb13", "cb14", "cb15",		
-	};
-
-	for( unsigned i = 0; i < 16; ++i )
-	{
-		m_boundProgramObject->constantBuffers[i] = glGetUniformLocation( m_boundProgramObject->program, cbNames[i] );
-	}
-	m_boundProgramObject->intConstant = glGetUniformLocation( m_boundProgramObject->program, "i15" );
-
-	if( patchedPS )
-	{
-		m_boundProgramObject->shadowStateInt = glGetUniformLocation( m_boundProgramObject->program, "ssi" );
-		m_boundProgramObject->shadowStateFloat = glGetUniformLocation( m_boundProgramObject->program, "ssf" );
-	}
-	else
-	{
-		m_boundProgramObject->shadowStateInt = -1;
-		m_boundProgramObject->shadowStateFloat = -1;
-	}
-
-	static const char* samplerNames[] = {
-		"s0",  "s1",  "s2",  "s3",
-		"s4",  "s5",  "s6",  "s7",
-		"s8",  "s9",  "s10", "s11",
-		"s12", "s13", "s14", "s15",		
-	};
-
-	m_boundProgramObject->shadowStateOffsets = glGetUniformLocation( m_boundProgramObject->program, "ssyf" );
-
-	s_programs[key] = m_boundProgramObject;
-
-	for( unsigned i = 0; i < 16; ++i )
-	{
-		GLint location = glGetUniformLocation( m_boundProgramObject->program, samplerNames[i] );
-		if( location != -1 )
-		{
-			glUniform1i( location, i );
-		}
-	}
+	GL_FAIL( glUseProgramStages( 
+		m_pipeline, 
+		GL_VERTEX_SHADER_BIT, 
+		patchedPS && m_vertexShader->m_patchedShader.shader ? m_vertexShader->m_patchedShader.shader : m_vertexShader->m_shader.shader ) );
+	GL_FAIL( glUseProgramStages( 
+		m_pipeline, 
+		GL_FRAGMENT_SHADER_BIT, 
+		patchedPS && m_pixelShader->m_patchedShader.shader ? m_pixelShader->m_patchedShader.shader : m_pixelShader->m_shader.shader ) );
 
 	return S_OK;
 }
 
 void Tr2RenderContextAL::ShaderDeleted( int shader )
 {
-	for( auto it = s_programs.begin(); it != s_programs.end(); )
-	{
-		if( it->first.first == shader || it->first.second.first == shader )
-		{
-			glDeleteProgram( it->second->program );
-			it = s_programs.erase( it );
-		}
-		else
-		{
-			++it;
-		}
-	}
 }
 
 ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, uint32_t count )
@@ -1394,6 +1281,14 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 	case RS_ALPHAFUNC:
 	case RS_CLIPPING:
 	case RS_CLIPPLANEENABLE:
+		if( value )
+		{
+			glEnable( GL_CLIP_DISTANCE0 );
+		}
+		else
+		{
+			glDisable( GL_CLIP_DISTANCE0 );
+		}
 		m_fragmentOpSettings.SetRenderState( state, value, m_alphaTestParameters );
 		return S_OK;
 	case RS_SRCBLEND:
@@ -2122,7 +2017,7 @@ void Tr2RenderContextAL::ReleaseDeviceResources()
 	m_blitter = nullptr;
 }
 
-bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, const void* data, size_t stride )
+bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info )
 {
 	static const GLenum elemType[ 16 ] =
 	{
@@ -2142,7 +2037,7 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 		0, 0, 0,		
 	};
 
-	if( m_boundLayout == nullptr || m_boundProgramObject == nullptr )
+	if( m_boundLayout == nullptr )
 	{
 		return false;
 	}
@@ -2151,11 +2046,6 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 	auto& definition = *m_boundLayout;
 	info.m_instanceAttributesCount = 0;
 
-	if( data )
-	{
-		glBindBuffer( GL_ARRAY_BUFFER, 0 );
-	}
-
 	for( size_t i = 0; i != definition.m_items.size(); ++i )
     {
 		const Tr2VertexDefinition::Item& src = definition.m_items[i];
@@ -2163,27 +2053,17 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 		{
 			return false;
 		}
-		if( data )
+		auto it = m_vertexShader->m_inputs.find( std::make_pair( src.m_usage, src.m_usageIndex ) );
+		if( it != m_vertexShader->m_inputs.end() )
 		{
-			if( src.m_stream > 0 )
+			if( !m_boundStreams[src.m_stream].buffer )
 			{
 				return false;
 			}
-		}
-		auto it = m_boundProgramObject->attributes.find( std::make_pair( src.m_usage, src.m_usageIndex ) );
-		if( it != m_boundProgramObject->attributes.end() )
-		{
-			if( !data )
+			if( src.m_stream != currentArray )
 			{
-				if( !m_boundStreams[src.m_stream].buffer )
-				{
-					return false;
-				}
-				if( src.m_stream != currentArray )
-				{
-					glBindBuffer( GL_ARRAY_BUFFER, m_boundStreams[src.m_stream].buffer );
-					currentArray = src.m_stream;
-				}
+				glBindBuffer( GL_ARRAY_BUFFER, m_boundStreams[src.m_stream].buffer );
+				currentArray = src.m_stream;
 			}
 			glEnableVertexAttribArray( it->second ); 
 
@@ -2192,8 +2072,8 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 									definition.GetDataTypeSizeInMembers( src.m_dataType ),
 									elemType[ src.m_dataType & ( Tr2VertexDefinition::DT_TYPE_MASK | Tr2VertexDefinition::DT_UNSIGNED_BIT ) ], 
 									src.m_dataType & Tr2VertexDefinition::DT_NORMALIZED_BIT ? GL_TRUE : GL_FALSE,
-									GLsizei( data ? stride : m_boundStreams[src.m_stream].stride ), 
-									static_cast<const uint8_t*>( data ) + offset );
+									m_boundStreams[src.m_stream].stride, 
+									reinterpret_cast<const GLvoid*>( offset ) );
 			if( src.m_instanceStepRate )
 			{
 				glVertexAttribDivisorARB( it->second, 1 );
@@ -2210,57 +2090,57 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 	m_fragmentOpSettings.UpdateContents( m_alphaTestParameters );
 	CR_RETURN_VAL( SetProgram(), false );
 
-	for( unsigned i = 0; i != 16; ++i )
+	bool patchedPS = (m_alphaTestParameters.m_alphaTestEnabled && 
+		m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS) ||
+		m_fragmentOpSettings.m_clipPlaneEnable;
+
+	const Tr2ShaderAL::GLShader& vs = patchedPS && m_vertexShader->m_patchedShader.shader ? m_vertexShader->m_patchedShader : m_vertexShader->m_shader;
+	const Tr2ShaderAL::GLShader& ps = patchedPS && m_pixelShader->m_patchedShader.shader ? m_pixelShader->m_patchedShader : m_pixelShader->m_shader;
+	for( unsigned i = 0; i != 15; ++i )
 	{
-		if( m_boundBuffers[i] && m_boundProgramObject->constantBuffers[i] >= 0 )
+		if( m_boundBuffers[i] && vs.constantBuffers[i] != -1 )
 		{
-			glUniform4fv( 
-				m_boundProgramObject->constantBuffers[i], 
+			CR_GL_RETURN_VAL( glProgramUniform4fv( vs.shader, vs.constantBuffers[i],
 				m_boundBuffers[i]->GetSize() / 4 / sizeof( float ), 
-				(float*)m_boundBuffers[i]->m_shadowCopy.get() );
+				(float*)m_boundBuffers[i]->m_shadowCopy.get() ), false );
 		}
-	}
-	if( m_boundProgramObject->intConstant >= 0 )
-	{
-		glUniform4i( m_boundProgramObject->intConstant, m_numberOfLights, 0, 0, 0 );
+		if( m_boundBuffers[i] && ps.constantBuffers[i] != -1 )
+		{
+			CR_GL_RETURN_VAL( glProgramUniform4fv( ps.shader, ps.constantBuffers[i],
+				m_boundBuffers[i]->GetSize() / 4 / sizeof( float ), 
+				(float*)m_boundBuffers[i]->m_shadowCopy.get() ), false );
+		}
 	}
 
-	if( m_boundProgramObject->shadowStateInt >= 0 )
+	if( ps.constantBuffers[15] != -1 )
 	{
-		glUniform4f( 
-			m_boundProgramObject->shadowStateInt, 
-			float( m_fragmentOpSettings.m_invertedAlphaTest ),
-			float( m_fragmentOpSettings.m_alphaTestRef ),
-			float( m_fragmentOpSettings.m_alphaTestFunc ),
-			float( m_fragmentOpSettings.m_clipPlaneEnable )
-			);
-		float clipPlane[Tr2FragmentOpSettings::MAX_CLIP_PLANES][4];
-		for( int i = 0; i < Tr2FragmentOpSettings::MAX_CLIP_PLANES; ++i )
-		{
-			if( m_fragmentOpSettings.m_clipPlaneEnable & ( 1 << i ) )
-			{
-				std::copy( m_fragmentOpSettings.m_clipPlane[i], m_fragmentOpSettings.m_clipPlane[i] + 4, clipPlane[i] );
-			}
-			else
-			{
-				clipPlane[i][0] = 0.0f;
-				clipPlane[i][1] = 0.0f;
-				clipPlane[i][2] = 0.0f;
-				clipPlane[i][3] = 0.0f;
-			}
-		}
-		glUniform4fv( 
-			m_boundProgramObject->shadowStateFloat,
-			m_fragmentOpSettings.MAX_CLIP_PLANES,
-			(GLfloat*)clipPlane );
+		float psShadowState[] = {
+				float( m_fragmentOpSettings.m_invertedAlphaTest ),
+				float( m_fragmentOpSettings.m_alphaTestRef ),
+				float( m_fragmentOpSettings.m_alphaTestFunc ),
+				float( m_alphaTestParameters.m_alphaTestEnabled ),
+				float( m_numberOfLights ),
+				0,0,0 };
+		CR_GL_RETURN_VAL( glProgramUniform4fv( ps.shader, ps.constantBuffers[15],
+			2, 
+			psShadowState ), false );
 	}
-	if( m_boundProgramObject->shadowStateOffsets >= 0 )
+	if( vs.constantBuffers[15] != -1 )
 	{
-		glUniform3f( 
-			m_boundProgramObject->shadowStateOffsets,
-			1.0f / float( m_currentViewport.m_width ),
-			-1.0f / float( m_currentViewport.m_height ),
-			-1.f );
+		float vsShadowState[] = {
+				1.0f / float( m_currentViewport.m_width ),
+				-1.0f / float( m_currentViewport.m_height ),
+				-1.f,
+				0,
+				0, 0, 0, 0,
+		};
+		if( m_fragmentOpSettings.m_clipPlaneEnable & 1 )
+		{
+			std::copy( m_fragmentOpSettings.m_clipPlane[0], m_fragmentOpSettings.m_clipPlane[0] + 4, vsShadowState + 4 );
+		}
+		CR_GL_RETURN_VAL( glProgramUniform4fv( vs.shader, vs.constantBuffers[15],
+			2, 
+			vsShadowState ), false );
 	}
 
 	bool rebindTexture = false;

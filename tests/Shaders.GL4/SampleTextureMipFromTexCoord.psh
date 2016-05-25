@@ -1,11 +1,10 @@
 #ifdef PS
-uniform vec4 ssi;
-in float ssv;
+uniform vec4 ss[2];
 #endif
 
 layout(location = 0) out vec4 FragColor;
 
-in vec2 texCoord;
+layout(location = 0) in vec2 texCoord;
 
 uniform vec4 cb7[1];
 uniform sampler2D s0;
@@ -14,25 +13,21 @@ void main()
 {
     FragColor = textureLod( s0, texCoord, cb7[0].x );
 #ifdef PS
+if(ss[0].w!=0.0)
+{
 float av=floor(clamp(FragColor.a,0.0,1.0)*255.0+0.5);
-if(ssi.z==0.0)
+if(ss[0].z==0.0)
 {
-if(av*ssi.x+ssi.y<0.0)
-discard;
+if(av*ss[0].x+ss[0].y<0.0) discard;
+}
+else if(ss[0].x>0.0)
+{
+if(av==ss[0].y) discard;
 }
 else
 {
-if(ssi.x>0.0)
-{
-if(av==ssi.y)
-discard;
-}
-else
-{
-if(av!=ssi.y)
-discard;
+if(av!=ss[0].y) discard;
 }
 }
-if(ssv<0.0)discard;
 #endif
 }
