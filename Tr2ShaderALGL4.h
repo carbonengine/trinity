@@ -49,8 +49,16 @@ private:
 	TrackableStdVector<uint8_t>	m_bytecode;
 	Tr2ShaderInputDefinition m_inputDefinition;
 
-	int32_t m_shader;
-	int32_t m_patchedShader;
+	std::map<std::pair<Tr2VertexDefinition::UsageCode, unsigned>, unsigned> m_inputs;
+
+	struct GLShader
+	{
+		GLuint shader;
+		GLint constantBuffers[16];
+	};
+
+	GLShader m_shader;
+	GLShader m_patchedShader;
 
 	friend class Tr2RenderContextAL;
 };

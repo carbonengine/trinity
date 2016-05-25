@@ -275,31 +275,17 @@ private:
 	Tr2DrawUPHelper	m_drawUP;
 
 	bool	m_boundIndexBufferIs16Bit;
+	GLuint m_pipeline;
 
 private:
 	Tr2RenderTargetAL m_defaultBackBuffer;
 	Tr2DepthStencilAL m_defaultDepthStencil;
-
-	struct ProgramObject
-	{
-		int program;
-		int constantBuffers[16];
-		int intConstant;
-		int shadowStateInt;
-		int shadowStateFloat;
-		int shadowStateOffsets;
-		std::map<	std::pair<	Tr2VertexDefinition::UsageCode, 
-								uint32_t>, 
-					int> 
-			attributes;
-	};
 
 	struct Blitter;
 	Blitter* m_blitter;
 
 	const Tr2ShaderAL*	m_vertexShader;
 	const Tr2ShaderAL*	m_pixelShader;
-	ProgramObject* m_boundProgramObject;
 	Tr2ConstantBufferAL* m_boundBuffers[16];
 	int m_numberOfLights;
 	const Tr2VertexDefinition* m_boundLayout;
@@ -364,9 +350,6 @@ private:
 	Tr2FragmentOpSettings::TAlphaTestParameters	m_alphaTestParameters;
 	Tr2FragmentOpSettings						m_fragmentOpSettings;
 
-	// Map from vertex+fragment shader to program
-	static std::map<std::pair<int, std::pair<int, bool> >, ProgramObject*> s_programs;
-
 	uint32_t m_renderStates[Tr2RenderContextEnum::RS_MAX_STATE];
 
 	ALResult CreateOpenGLContext( Tr2PresentParametersAL& pPresentationParameters );
@@ -380,7 +363,7 @@ private:
 	struct ShadowStateRestoreInfo;
 
 	bool ApplyShadowRenderStates( ShadowStateRestoreInfo& info );
-	bool ApplyVertexDeclaration( ShadowStateRestoreInfo& info, const void* data = nullptr, size_t stride = 0 );
+	bool ApplyVertexDeclaration( ShadowStateRestoreInfo& info );
 
 	void    RestoreState( const ShadowStateRestoreInfo& info );
 public:
