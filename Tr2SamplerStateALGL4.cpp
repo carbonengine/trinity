@@ -18,12 +18,12 @@ uint32_t g_forceAnisotropy = 0;
 using namespace Tr2RenderContextEnum;
 
 Tr2SamplerStateAL::Tr2SamplerStateAL()
-:   m_isValid( false )
+:   m_isValid( false ),
+	m_sampler( 0 )
 {
 	m_stateData.m_hash = 0;
 	m_stateData.m_magFilter = GL_LINEAR;
 	m_stateData.m_minFilter = GL_LINEAR;
-	m_stateData.m_minFilterNoMips = GL_LINEAR;
 	m_stateData.m_wrapT = GL_REPEAT;
 	m_stateData.m_wrapS = GL_REPEAT;
 	m_stateData.m_wrapR = GL_REPEAT;
@@ -39,7 +39,29 @@ ALResult Tr2SamplerStateAL::Create(
 	Tr2RenderContextAL& /*renderContext*/,
 	const Tr2SamplerDescription& description )
 {
+	if( m_sampler )
+	{
+		glDeleteSamplers( 1, &m_sampler );
+		m_sampler = 0;
+	}
+	glGenSamplers( 1, &m_sampler );
+	if( !m_sampler )
+	{
+		return E_FAIL;
+	}
 	CR_RETURN_HR( CreateStateData( description, m_stateData ) );
+
+	CR_GL( glSamplerParameteri( m_sampler, GL_TEXTURE_MIN_FILTER, m_stateData.m_minFilter ) );
+	CR_GL( glSamplerParameteri( m_sampler, GL_TEXTURE_MAG_FILTER, m_stateData.m_magFilter ) );
+	CR_GL( glSamplerParameteri( m_sampler, GL_TEXTURE_WRAP_S, m_stateData.m_wrapT ) );
+	CR_GL( glSamplerParameteri( m_sampler, GL_TEXTURE_WRAP_T, m_stateData.m_wrapS ) );
+	CR_GL( glSamplerParameteri( m_sampler, GL_TEXTURE_WRAP_R, m_stateData.m_wrapR ) );
+
+	CR_GL( glSamplerParameterf( m_sampler, GL_TEXTURE_MAX_ANISOTROPY_EXT, GLfloat( std::max( m_stateData.m_anisotropy, 1 ) ) ) );
+	CR_GL( glSamplerParameterf( m_sampler, GL_TEXTURE_MIN_LOD, m_stateData.m_minLod ) );
+	CR_GL( glSamplerParameterf( m_sampler, GL_TEXTURE_MAX_LOD, m_stateData.m_maxLod ) );
+	CR_GL( glSamplerParameteri( m_sampler, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
+
     m_isValid = true;
 	return S_OK;
 }
@@ -70,7 +92,6 @@ ALResult Tr2SamplerStateAL::CreateStateData( const Tr2SamplerDescription& descri
 		default:
 			stateData.m_minFilter = GL_NEAREST_MIPMAP_LINEAR;
 		}
-		stateData.m_minFilterNoMips = GL_NEAREST;
 		break;
 	default:
 		switch( description.m_mipFilter )
@@ -84,7 +105,6 @@ ALResult Tr2SamplerStateAL::CreateStateData( const Tr2SamplerDescription& descri
 		default:
 			stateData.m_minFilter = GL_LINEAR_MIPMAP_LINEAR;
 		}
-		stateData.m_minFilterNoMips = GL_LINEAR;
 	}
 	if( description.m_magFilter == TF_POINT )
 	{
@@ -116,31 +136,9 @@ ALResult Tr2SamplerStateAL::CreateStateData( const Tr2SamplerDescription& descri
 	{
 		stateData.m_anisotropy = 1;
 	}
-#if !defined(TRINITY_AL_MOBILE)
 	stateData.m_minLod = description.m_minLOD;
 	stateData.m_maxLod = description.m_maxLOD;
-#endif
 	stateData.m_hash = CcpHashFNV1( &stateData, sizeof( stateData ) );
-	return S_OK;
-}
-
-ALResult Tr2SamplerStateAL::Apply( GLenum textureType, bool hasMipLevels, const StateData& stateData )
-{
-	CR_GL( glTexParameteri( textureType, GL_TEXTURE_MIN_FILTER, hasMipLevels ? stateData.m_minFilter : stateData.m_minFilterNoMips ) );
-	CR_GL( glTexParameteri( textureType, GL_TEXTURE_MAG_FILTER, stateData.m_magFilter ) );
-	CR_GL( glTexParameteri( textureType, GL_TEXTURE_WRAP_S, textureType == GL_TEXTURE_CUBE_MAP ? GL_CLAMP_TO_EDGE : stateData.m_wrapT ) );
-	CR_GL( glTexParameteri( textureType, GL_TEXTURE_WRAP_T, textureType == GL_TEXTURE_CUBE_MAP ? GL_CLAMP_TO_EDGE : stateData.m_wrapS ) );
-	if( textureType == GL_TEXTURE_3D )
-	{
-		CR_GL( glTexParameteri( textureType, GL_TEXTURE_WRAP_R, stateData.m_wrapR ) );
-	}
-	// setting max anisotropy might fail if ext. is not there, but it is
-	// ok, since then we'll have nice fallback to linear/nearest
-	GL_IGNORE_ERROR( glTexParameterf( textureType, GL_TEXTURE_MAX_ANISOTROPY_EXT, GLfloat( std::max( stateData.m_anisotropy, 1 ) ) ) );
-#if !defined(TRINITY_AL_MOBILE)
-	CR_GL( glTexParameterf( textureType, GL_TEXTURE_MIN_LOD, stateData.m_minLod ) );
-	CR_GL( glTexParameterf( textureType, GL_TEXTURE_MAX_LOD, stateData.m_maxLod ) );
-#endif
 	return S_OK;
 }
 

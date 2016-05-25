@@ -161,6 +161,7 @@ struct Tr2RenderContextAL::Blitter
 			0, 
 			std::numeric_limits<float>::max() );
 		CR_RETURN_HR( m_sampler.Create( renderContext, desc ) );
+		GL_IGNORE_ERROR( glSamplerParameteri( m_sampler.m_sampler, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
 
 		float vb[] = {
 			-1.0f, -1.0f, 0.0f, 1.0f,
@@ -189,12 +190,7 @@ struct Tr2RenderContextAL::Blitter
 
 		GL_FAIL( glActiveTexture( GL_TEXTURE0 ) );
 		GL_FAIL( glBindTexture( GL_TEXTURE_2D, *source.m_texture ) );
-		GL_IGNORE_ERROR( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
-		if( !( source.m_currentSampler.m_hash == m_sampler.m_stateData.m_hash ) )
-		{
-			CR_RETURN_HR( (HRESULT)m_sampler.Apply( GL_TEXTURE_2D, source.GetTrueMipCount() > 1, m_sampler.m_stateData ) );
-			source.m_currentSampler = m_sampler.m_stateData;
-		}
+		GL_FAIL( glBindSampler( 0, m_sampler.m_sampler ) );
 
 		GL_FAIL( glBindBuffer( GL_ARRAY_BUFFER, m_buffer.m_buffer ) );
 		GL_FAIL( glEnableVertexAttribArray( 0 ) );
@@ -259,14 +255,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	for( unsigned i = 0; i < 16; ++i )
 	{
 		m_boundBuffers[i] = nullptr;
-	}
-
-	for( int i = SHADER_TYPE_FIRST; i != SHADER_TYPE_COUNT; ++i )
-	{
-		for( int j = 0; j < 16; ++j )
-		{
-			m_boundTextures[i][j] = nullptr;
-		}
 	}
 
 	m_blendState.separateAlphaBlend = false;
@@ -610,7 +598,7 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	}
 
 	uintptr_t si = startIndex;
-	CR_GL( glDrawElementsInstancedARB(
+	CR_GL( glDrawElementsInstanced(
 		lookup[ m_topology ],
 		ComputeVertexCount( primitiveCount ),
 		m_boundIndexBufferIs16Bit ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT, 
@@ -735,7 +723,15 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 		return E_INVALIDARG;
 	}
 	AL_UPDATE_RESOURCE_FRAME_USAGE( samplerState );
-	m_boundSamplers[inputType][registerNumber] = samplerState.m_stateData;
+
+	GL_FAIL( glBindSampler( registerNumber, samplerState.m_sampler ) );
+	if( samplerState.m_sampler )
+	{
+		GL_FAIL( glSamplerParameteri( samplerState.m_sampler,
+									GL_TEXTURE_SRGB_DECODE_EXT, 
+									m_srgbDecode[inputType][registerNumber] ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT  ) );
+	}
+	m_boundSamplers[inputType][registerNumber] = samplerState.m_sampler;
 	return S_OK;
 }
 
@@ -840,13 +836,8 @@ ALResult Tr2RenderContextAL::CreateDevice(
 		m_events->OnContextCreated( *this );
 	}
 
-	for( int j = 0; j < Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++j )
-	{
-		for( int i = 0; i < 16; ++i )
-		{
-			m_boundSamplers[j][i].m_hash = 0;
-		}
-	}
+	memset( m_boundSamplers, 0, sizeof( m_boundSamplers ) );
+	memset( m_srgbDecode, 0, sizeof( m_srgbDecode ) );
 
 	return S_OK;
 }
@@ -1501,11 +1492,11 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 	case RS_SRGBWRITEENABLE:
 		if( value )
 		{
-			GL_FAIL( glEnable( GL_FRAMEBUFFER_SRGB_EXT ) );
+			GL_FAIL( glEnable( GL_FRAMEBUFFER_SRGB ) );
 		}
 		else
 		{
-			GL_FAIL( glDisable( GL_FRAMEBUFFER_SRGB_EXT ) );
+			GL_FAIL( glDisable( GL_FRAMEBUFFER_SRGB ) );
 		}
 		return S_OK;
 	default:
@@ -1555,8 +1546,7 @@ ALResult Tr2RenderContextAL::SetTexture(
 	}
 	if( !texture.IsValid() )
 	{
-		m_boundTextures[inputType][slot] = nullptr;
-		return S_OK;
+		return &texture == &nullTX ? S_OK : E_INVALIDARG;
 	}
 	AL_UPDATE_RESOURCE_FRAME_USAGE( texture );
 	// TODO: handle sRGB: like in DX11 with texture.m_texture[2]?
@@ -1566,11 +1556,13 @@ ALResult Tr2RenderContextAL::SetTexture(
 		m_currentActiveTexture = slot;
 	}
 	GL_FAIL( glBindTexture( ConvertTextureType( texture.GetType() ), *texture.m_texture ) );
-	GL_IGNORE_ERROR( glTexParameteri(	ConvertTextureType( texture.GetType() ),
-								GL_TEXTURE_SRGB_DECODE_EXT, 
-								colorSpace == COLOR_SPACE_SRGB ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT  ) );
-
-	m_boundTextures[inputType][slot] = const_cast<Tr2TextureAL*>( &texture );
+	m_srgbDecode[inputType][slot] = colorSpace == COLOR_SPACE_SRGB;
+	if( m_boundSamplers[inputType][slot] )
+	{
+		GL_FAIL( glSamplerParameteri( m_boundSamplers[inputType][slot],
+									GL_TEXTURE_SRGB_DECODE_EXT, 
+									m_srgbDecode[inputType][slot] ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT  ) );
+	}
 	return S_OK;
 }
 
@@ -2146,43 +2138,6 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 			vsShadowState ), false );
 	}
 
-	bool rebindTexture = false;
-	for( int j = 0; j < 16; ++j )
-	{
-		if( m_boundTextures[PIXEL_SHADER][j] )
-		{
-			if( !( m_boundTextures[PIXEL_SHADER][j]->m_currentSampler.m_hash == m_boundSamplers[PIXEL_SHADER][j].m_hash ) )
-			{
-				if( !rebindTexture )
-				{
-					rebindTexture = true;
-					if( m_currentActiveTexture != 0 )
-					{
-						glActiveTexture( GL_TEXTURE0 );
-                        m_currentActiveTexture = 0;
-					}
-				}
-				GLenum textureType = ConvertTextureType( m_boundTextures[PIXEL_SHADER][j]->GetType() );
-				glBindTexture( 
-					textureType, 
-					m_boundTextures[PIXEL_SHADER][j]->m_texture ? *m_boundTextures[PIXEL_SHADER][j]->m_texture : 0 );
-				Tr2SamplerStateAL::Apply( 
-					textureType, 
-					m_boundTextures[PIXEL_SHADER][j]->GetTrueMipCount() > 1,
-					m_boundSamplers[PIXEL_SHADER][j] );
-				m_boundTextures[PIXEL_SHADER][j]->m_currentSampler = m_boundSamplers[PIXEL_SHADER][j];
-			}
-		}
-	}
-
-	// Restore whatever was in slot 0
-	if( rebindTexture && m_boundTextures[PIXEL_SHADER][0] )
-	{
-		glBindTexture( 
-			ConvertTextureType( m_boundTextures[PIXEL_SHADER][0]->GetType() ), 
-			m_boundTextures[PIXEL_SHADER][0]->m_texture ? *m_boundTextures[PIXEL_SHADER][0]->m_texture : 0 );
-	}
-
 	if( m_blendState.dirty )
 	{
 		if( m_blendState.separateAlphaBlend )
@@ -2487,35 +2442,35 @@ ALResult Tr2RenderContextAL::InternalResolveRT( Tr2RenderTargetAL& destination, 
 	}
 	AL_UPDATE_RESOURCE_FRAME_USAGE( source );
 	AL_UPDATE_RESOURCE_FRAME_USAGE( destination );
-	CR_GL( glBindFramebuffer( GL_FRAMEBUFFER_EXT, 0 ) );
-	CR_GL( glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, m_offscreenFrameBuffer0 ) );
+	CR_GL( glBindFramebuffer( GL_FRAMEBUFFER, 0 ) );
+	CR_GL( glBindFramebuffer( GL_READ_FRAMEBUFFER, m_offscreenFrameBuffer0 ) );
 	if( source.m_msaaTarget )
 	{
-		CR_GL( glFramebufferRenderbuffer( GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, source.m_msaaTarget ) );
+		CR_GL( glFramebufferRenderbuffer( GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, source.m_msaaTarget ) );
 	}
 	else
 	{
-		CR_GL( glFramebufferTexture2D( GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *source.m_backingStore.m_texture, 0 ) );
+		CR_GL( glFramebufferTexture2D( GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *source.m_backingStore.m_texture, 0 ) );
 	}
 #if defined(TRINITYDEV) || defined(_DEBUG)
-	if( glCheckFramebufferStatus( GL_READ_FRAMEBUFFER_EXT ) != GL_FRAMEBUFFER_COMPLETE )
+	if( glCheckFramebufferStatus( GL_READ_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE )
 	{
 		CCP_AL_LOGERR( "Tr2RenderContextAL::InternalResolveRT: invalid read buffer" );
 		return E_FAIL;
 	}
 #endif
-	CR_GL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, m_offscreenFrameBuffer1 ) );
-	CR_GL( glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *destination.m_backingStore.m_texture, 0 ) );
+	CR_GL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, m_offscreenFrameBuffer1 ) );
+	CR_GL( glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *destination.m_backingStore.m_texture, 0 ) );
 #if defined(TRINITYDEV) || defined(_DEBUG)
-	if( glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER_EXT ) != GL_FRAMEBUFFER_COMPLETE )
+	if( glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE )
 	{
 		CCP_AL_LOGERR( "Tr2RenderContextAL::InternalResolveRT: invalid draw buffer" );
 		return E_FAIL;
 	}
 #endif
 	CR_GL( glBlitFramebuffer( 0, 0, source.GetWidth(), source.GetHeight(), 0, 0, destination.GetWidth(), destination.GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST ) );
-	CR_GL( glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, 0 ) );
-	CR_GL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, 0 ) );
+	CR_GL( glBindFramebuffer( GL_READ_FRAMEBUFFER, 0 ) );
+	CR_GL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER, 0 ) );
 	CR_GL( glBindFramebuffer( GL_FRAMEBUFFER, m_defaultFrameBufferObject ) ); 
 	return S_OK;
 }

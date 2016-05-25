@@ -127,23 +127,12 @@ ALResult Tr2RenderTargetAL::Create(
 	}
 	else
 	{
-		CR_RETURN_HR( m_backingStore.Create2D( width, height, mipLevelCount, format, 0, nullptr, renderContext ) );
-		float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-		Tr2SamplerStateAL::CreateStateData(
-			Tr2SamplerDescription( TF_LINEAR,
-				TF_LINEAR,
-				TF_LINEAR,
-				false,
-				TA_CLAMP,
-				TA_CLAMP,
-				TA_CLAMP,
-				0,
-				0,
-				CMP_ALWAYS,
-				borderColor,
-				0,
-				1 ), m_backingStore.m_currentSampler );
-		Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, mipLevelCount != 1, m_backingStore.m_currentSampler );
+		m_width = width;
+		m_height = height;
+		m_mipCount = mipLevelCount;
+		m_format = format;
+		m_type = TEX_TYPE_2D;
+		CR_RETURN_HR( m_backingStore.Create2D( width, height, GetTrueMipCount(), format, 0, nullptr, renderContext ) );
 		static_cast<Tr2BitmapDimensions&>(*this) = static_cast<Tr2BitmapDimensions&>( m_backingStore );
 	}
 
