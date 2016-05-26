@@ -28,6 +28,7 @@ void Tr2TextureAL::Destroy()
 	m_view[1]		= nullptr;
 	m_staging		= nullptr;
 	m_arraySize = 0;
+	m_uav = nullptr;
 
 	//m_writeStaging.swap( TrackableStdVector<char>() );
 	m_writeStaging.clear();
@@ -54,6 +55,7 @@ Tr2TextureAL& Tr2TextureAL::operator=( Tr2TextureAL&& other )
 		m_texture.Attach( other.m_texture.Detach() );
 		m_view[0].Attach( other.m_view[0].Detach() );
 		m_view[1].Attach( other.m_view[1].Detach() );
+		m_uav.Attach( other.m_uav.Detach() );
 		
 		m_format		= other.m_format;
 		m_usage			= other.m_usage;
@@ -93,6 +95,7 @@ Tr2TextureAL& Tr2TextureAL::operator=( Tr2TextureAL& other )
 		m_texture		= other.m_texture;
 		m_view[0]		= other.m_view[0];
 		m_view[1]		= other.m_view[1];
+		m_uav			= other.m_uav;
 		ChangeObjectId();
 	}
 
