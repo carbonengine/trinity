@@ -1069,7 +1069,7 @@ ALResult Tr2RenderContextAL::CreateDevice(
 			0,
 		};
 
-		cl_uint deviceCount = 0;
+		size_t deviceCount = 0;
 		pclGetGLContextInfoKHR( props, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, 0, nullptr, &deviceCount ); 
 		if( deviceCount )
 		{
