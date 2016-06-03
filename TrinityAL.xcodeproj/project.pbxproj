@@ -937,8 +937,10 @@
 				HEADER_SEARCH_PATHS = (
 					"../../../../../../sdk/glfw/3.0/include",
 					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/nvidia/cuda/3.0/include",
 					"../../../../../../sdk/glfw/3.0/include",
 					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/nvidia/cuda/3.0/include",
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/2.1A3/include",
@@ -964,9 +966,11 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/nvidia/cuda/3.0/lib",
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
 					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/nvidia/cuda/3.0/lib",
 					"../../../../../../sdk/telemetry/2.1A3/lib",
 					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
 					);
@@ -1107,8 +1111,10 @@
 				HEADER_SEARCH_PATHS = (
 					"../../../../../../sdk/glfw/3.0/include",
 					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/nvidia/cuda/3.0/include",
 					"../../../../../../sdk/glfw/3.0/include",
 					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/nvidia/cuda/3.0/include",
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/2.1A3/include",
@@ -1134,9 +1140,11 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/nvidia/cuda/3.0/lib",
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
 					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/nvidia/cuda/3.0/lib",
 					"../../../../../../sdk/telemetry/2.1A3/lib",
 					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
 					);
@@ -2631,8 +2639,10 @@
 				HEADER_SEARCH_PATHS = (
 					"../../../../../../sdk/glfw/3.0/include",
 					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/nvidia/cuda/3.0/include",
 					"../../../../../../sdk/glfw/3.0/include",
 					"../../../../../../sdk/glew/1.7.0/include",
+					"../../../../../../sdk/nvidia/cuda/3.0/include",
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/2.1A3/include",
@@ -2659,9 +2669,11 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
+					"../../../../../../sdk/nvidia/cuda/3.0/lib",
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
 					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
+					"../../../../../../sdk/nvidia/cuda/3.0/lib",
 					"../../../../../../sdk/telemetry/2.1A3/lib",
 					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
 					);
