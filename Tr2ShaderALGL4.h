@@ -45,6 +45,8 @@ private:
 	Tr2ShaderAL( const Tr2ShaderAL& shader );
 	Tr2ShaderAL& operator=( const Tr2ShaderAL& shader );
 
+	ALResult CreateCL( const void* bytecode, uint32_t bytecodeSize, const Tr2ShaderInputDefinition& inputDefinition, Tr2RenderContextAL& renderContext );
+
 	Tr2RenderContextEnum::ShaderType m_type;
 	TrackableStdVector<uint8_t>	m_bytecode;
 	Tr2ShaderInputDefinition m_inputDefinition;
@@ -59,6 +61,7 @@ private:
 
 	GLShader m_shader;
 	GLShader m_patchedShader;
+	cl_kernel m_clKernel;
 
 	friend class Tr2RenderContextAL;
 };

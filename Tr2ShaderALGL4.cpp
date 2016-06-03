@@ -8,7 +8,8 @@ using namespace Tr2RenderContextEnum;
 
 Tr2ShaderAL::Tr2ShaderAL()
 	: m_type( INVALID_SHADER ),
-	m_bytecode( "Tr2ShaderAL::m_byteCode" )
+	m_bytecode( "Tr2ShaderAL::m_byteCode" ),
+	m_clKernel( nullptr )
 {
 	m_shader.shader = 0;
 	m_patchedShader.shader = 0;
@@ -76,7 +77,7 @@ static int CreateShader( Tr2RenderContextEnum::ShaderType type, const char* pref
 }
 
 ALResult Tr2ShaderAL::Create( 
-	Tr2RenderContextAL& /*renderContext*/, 
+	Tr2RenderContextAL& renderContext, 
 	Tr2RenderContextEnum::ShaderType type, 
 	const void* bytecode, 
 	uint32_t bytecodeSize, 
@@ -86,6 +87,10 @@ ALResult Tr2ShaderAL::Create(
 {
 	Destroy();
 
+	if( type == COMPUTE_SHADER )
+	{
+		return CreateCL( bytecode, bytecodeSize, inputDefinition, renderContext );
+	}
 	m_type = type;
 
 	int shader = CreateShader( type, "", bytecode, bytecodeSize );
@@ -165,24 +170,68 @@ void Tr2ShaderAL::Destroy()
 	{
 		glDeleteProgram( m_shader.shader );
 		Tr2RenderContextAL::ShaderDeleted( m_shader.shader );
+		m_shader.shader = 0;
 	}
 	if( m_patchedShader.shader )
 	{
 		glDeleteProgram( m_patchedShader.shader );
 		Tr2RenderContextAL::ShaderDeleted( m_patchedShader.shader );
+		m_patchedShader.shader = 0;
+	}
+	if( m_clKernel )
+	{
+		clReleaseKernel( m_clKernel );
+		m_clKernel = nullptr;
 	}
 	m_type = INVALID_SHADER;
 	m_inputs.clear();
 }
 
+ALResult Tr2ShaderAL::CreateCL( const void* bytecode, uint32_t bytecodeSize, const Tr2ShaderInputDefinition& inputDefinition, Tr2RenderContextAL& renderContext )
+{
+    size_t size = size_t( bytecodeSize );
+	cl_program program = clCreateProgramWithSource(renderContext.m_clContext, 1, (const char**)&bytecode, &size, nullptr);
+	if( !program )
+	{
+		return E_FAIL;
+	}
+	if( clBuildProgram( program, 1, &renderContext.m_clDevice, "", nullptr, nullptr ) != CL_SUCCESS ) 
+	{
+		size_t length;
+		clGetProgramBuildInfo( program, renderContext.m_clDevice, CL_PROGRAM_BUILD_LOG, 0, nullptr, &length );
+		if( length )
+		{
+			std::unique_ptr<char[]> buffer( new char[length] );
+			clGetProgramBuildInfo(program, renderContext.m_clDevice, CL_PROGRAM_BUILD_LOG, length, buffer.get(), nullptr);
+			CCP_AL_LOGERR( "Tr2ShaderAL: errors compiling shader: %s", buffer.get() );
+		}
+		return E_FAIL;
+	}
+	auto kernel = clCreateKernel( program, "cs", nullptr );
+	clReleaseProgram( program );
+	if( !kernel )
+	{
+		return E_FAIL;
+	}
+	m_type = COMPUTE_SHADER;
+	m_bytecode.resize( bytecodeSize );
+	if( !m_bytecode.empty() )
+	{
+		memcpy( &m_bytecode[0], bytecode, bytecodeSize );
+	}
+	m_clKernel = kernel;
+	m_inputDefinition = inputDefinition;
+	return S_OK;
+}
+
 bool Tr2ShaderAL::IsValid() const
 {
-	return m_type != INVALID_SHADER && m_shader.shader != 0;
+	return m_type != INVALID_SHADER && ( m_shader.shader != 0 || m_clKernel );
 }
 
 bool Tr2ShaderAL::operator==( const Tr2ShaderAL& shader ) const
 {
-	return m_shader.shader == shader.m_shader.shader;
+	return m_shader.shader == shader.m_shader.shader && m_clKernel == shader.m_clKernel;
 }
 
 Tr2RenderContextEnum::ShaderType Tr2ShaderAL::GetType() const

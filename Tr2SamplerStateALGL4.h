@@ -8,6 +8,8 @@ class Tr2SamplerStateAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMP
 {
 public:
 	Tr2SamplerStateAL();
+	~Tr2SamplerStateAL();
+
 	ALResult Create(
 		Tr2RenderContextAL& renderContext,
 		const Tr2SamplerDescription& description );
@@ -40,6 +42,7 @@ private:
 
     bool m_isValid;
 	StateData m_stateData;
+	mutable cl_sampler m_clObject;
 	// mip LOD bias, min/max LOD?
 	// border?
 };

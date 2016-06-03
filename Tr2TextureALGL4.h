@@ -155,6 +155,7 @@ private:
 	GLenum m_internalFormat;
 	GLenum m_targetFormat;
 	GLenum m_targetType;
+	mutable cl_mem m_clObject;
 
 public:	//DEBUG
 	std::shared_ptr<GLuint> m_texture;

@@ -256,6 +256,13 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	{
 		m_boundBuffers[i] = nullptr;
 	}
+	for( unsigned i = 0; i < 16; ++i )
+	{
+		m_boundUavs[i] = nullptr;
+		m_boundTextures[i] = nullptr;
+		m_boundClBuffers[i] = nullptr;
+		m_boundClSamplers[i] = nullptr;
+	}
 
 	m_blendState.separateAlphaBlend = false;
 	m_blendState.blendMode = GL_FUNC_ADD;
@@ -370,6 +377,40 @@ void Tr2RenderContextAL::Destroy()
 	{
 		m_boundStreams[i].buffer = 0;
 	}
+	for( unsigned i = 0; i < 16; ++i )
+	{
+		if( m_boundUavs[i] )
+		{
+			clReleaseMemObject( m_boundUavs[i] );
+		}
+		m_boundUavs[i] = nullptr;
+		if( m_boundTextures[i] )
+		{
+			clReleaseMemObject( m_boundTextures[i] );
+		}
+		m_boundTextures[i] = nullptr;
+		if( m_boundClBuffers[i] )
+		{
+			clReleaseMemObject( m_boundClBuffers[i] );
+		}
+		m_boundClBuffers[i] = nullptr;
+		if( m_boundClSamplers[i] )
+		{
+			clReleaseSampler( m_boundClSamplers[i] );
+		}
+		m_boundClSamplers[i] = nullptr;
+	}
+	if( m_clQueue )
+	{
+		clReleaseCommandQueue( m_clQueue );
+		m_clQueue = nullptr;
+	}
+	if( m_clContext )
+	{
+		clReleaseContext( m_clContext );
+		m_clContext = nullptr;
+	}
+	m_clDevice = nullptr;
 
 	m_alphaTestParameters.m_alphaTestEnabled = 0;
 	m_alphaTestParameters.m_alphaTestRef = 0;
@@ -678,6 +719,82 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 											*this );
 }
 
+ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw()
+{
+	if( !m_computeShader )
+	{
+		return E_INVALIDCALL;
+	}
+
+	auto& def = m_computeShader->GetInputDefinition();
+	std::vector<cl_mem> inputs;
+	inputs.reserve( def.elements.size() );
+	for( cl_uint i = 0; i < def.elements.size(); ++i )
+	{
+		cl_mem input = nullptr;
+		switch( def.elements[i].usageIndex )
+		{
+		case 0:
+			input = m_boundUavs[def.elements[i].registerIndex];
+			break;
+		case 1:
+			input = m_boundTextures[def.elements[i].registerIndex];
+			break;
+		case 2:
+			input = m_boundClBuffers[def.elements[i].registerIndex];
+			break;
+		case 3:
+			{
+				auto sampler = m_boundClSamplers[def.elements[i].registerIndex];
+				if( !sampler )
+				{
+					return E_INVALIDCALL;
+				}
+				clSetKernelArg( m_computeShader->m_clKernel, i, sizeof( sampler ), &sampler );
+				continue;
+			}
+		default:
+			return E_INVALIDCALL;
+		}
+		if( !input )
+		{
+			return E_INVALIDCALL;
+		}
+		clSetKernelArg( m_computeShader->m_clKernel, i, sizeof( input ), &input );
+		if( def.elements[i].usageIndex != 2 )
+		{
+			inputs.push_back( input );
+		}
+	}
+
+	glFinish();
+	clEnqueueAcquireGLObjects( m_clQueue, cl_uint( inputs.size() ), &inputs[0], 0, nullptr, nullptr );
+
+	size_t globalWorkSize[] = { groupDimX, groupDimY, groupDimZ };
+
+	size_t workgroup[3];
+	clGetKernelWorkGroupInfo( m_computeShader->m_clKernel, m_clDevice, CL_KERNEL_COMPILE_WORK_GROUP_SIZE, 3 * sizeof( size_t ), workgroup, nullptr );
+	if( !workgroup[0] )
+	{
+		workgroup[0] = 1;
+		workgroup[1] = 1;
+		workgroup[2] = 1;
+	}
+	globalWorkSize[0] *= workgroup[0];
+	globalWorkSize[1] *= workgroup[1];
+	globalWorkSize[2] *= workgroup[2];
+	auto res = clEnqueueNDRangeKernel( m_clQueue, m_computeShader->m_clKernel, 3, NULL, globalWorkSize, workgroup, 0, NULL, NULL);
+	 
+	clEnqueueReleaseGLObjects( m_clQueue, cl_uint( inputs.size() ), &inputs[0], 0, nullptr, nullptr );
+	clFinish( m_clQueue );
+
+	if( res == CL_SUCCESS )
+	{
+		return S_OK;
+	}
+	return E_FAIL;
+}
+
 ALResult Tr2RenderContextAL::SetConstants(	
 	Tr2ConstantBufferAL& buffer, 
 	ShaderType constantType, 
@@ -688,6 +805,34 @@ ALResult Tr2RenderContextAL::SetConstants(
 	{
 		return E_INVALIDARG;
 	}
+
+	if( constantType == COMPUTE_SHADER )
+	{
+		cl_mem mem = nullptr;
+		if( !buffer.IsValid() )
+		{
+			if( &buffer != &nullCB )
+			{
+				return E_INVALIDARG;
+			}
+		}
+		else
+		{
+			AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
+			mem = clCreateBuffer( m_clContext, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, buffer.GetSize(), buffer.m_shadowCopy.get(), nullptr );
+			if( !mem )
+			{
+				return E_FAIL;
+			}
+		}
+		if( m_boundClBuffers[registerIndex] )
+		{
+			clReleaseMemObject( m_boundClBuffers[registerIndex] );
+		}
+		m_boundClBuffers[registerIndex] = mem;
+		return S_OK;
+	}
+
 
 	if( constantType == PIXEL_SHADER && registerIndex == 0 )
 	{
@@ -722,6 +867,37 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 	{
 		return E_INVALIDARG;
 	}
+	if( inputType == COMPUTE_SHADER )
+	{
+		cl_sampler mem = nullptr;
+		if( samplerState.IsValid() )
+		{
+			AL_UPDATE_RESOURCE_FRAME_USAGE( samplerState );
+			if( !samplerState.m_clObject )
+			{
+				samplerState.m_clObject = clCreateSampler( m_clContext, CL_TRUE, 
+					samplerState.m_stateData.m_wrapT == GL_TEXTURE_WRAP_S ? CL_ADDRESS_REPEAT : CL_ADDRESS_CLAMP, 
+					samplerState.m_stateData.m_magFilter == GL_NEAREST ? CL_FILTER_NEAREST : CL_FILTER_LINEAR, 
+					nullptr );
+				if( !samplerState.m_clObject )
+				{
+					return E_FAIL;
+				}
+			}
+			mem = samplerState.m_clObject;
+		}
+		if( m_boundClSamplers[registerNumber] )
+		{
+			clReleaseSampler( m_boundClSamplers[registerNumber] );
+		}
+		m_boundClSamplers[registerNumber] = mem;
+		if( mem )
+		{
+			clRetainSampler( mem );
+		}
+		return S_OK;
+	}
+
 	AL_UPDATE_RESOURCE_FRAME_USAGE( samplerState );
 
 	GL_FAIL( glBindSampler( registerNumber, samplerState.m_sampler ) );
@@ -793,6 +969,27 @@ LRESULT CALLBACK WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
 	GLuint programObject;
 
+	void OnClError( const char *errinfo, const void *private_info, size_t cb, void *user_data )
+	{
+		CCP_AL_LOGERR( "OpenCL error: %s", errinfo );
+	}
+
+	template<typename Func, typename Obj, typename Enum>
+	std::string GetClString( Func func, Obj obj, Enum arg )
+	{
+		size_t length;
+		if( func( obj, arg, 0, nullptr, &length ) != CL_SUCCESS )
+		{
+			return "";
+		}
+		std::string result;
+		result.resize( length );
+		if( func( obj, arg, length, &result[0], nullptr ) != CL_SUCCESS )
+		{
+			return "";
+		}
+		return result;
+	}
 }
 
 ALResult Tr2RenderContextAL::CreateDevice(	
@@ -838,6 +1035,74 @@ ALResult Tr2RenderContextAL::CreateDevice(
 
 	memset( m_boundSamplers, 0, sizeof( m_boundSamplers ) );
 	memset( m_srgbDecode, 0, sizeof( m_srgbDecode ) );
+
+#ifdef _WIN32
+
+	std::vector<cl_platform_id> platforms;
+	cl_uint platformCount = 0;
+	clGetPlatformIDs( 1000, nullptr, &platformCount );
+	platforms.resize( platformCount );
+	clGetPlatformIDs( platformCount, &platforms[0], nullptr );
+
+	if( platformCount == 0 )
+	{
+		return E_FAIL;
+	}
+
+	typedef CL_API_ENTRY cl_int (CL_API_CALL *clGetGLContextInfoKHR_fn)( 
+		const cl_context_properties * properties, 
+		cl_gl_context_info param_name,
+		size_t param_value_size, 
+		void * param_value, 
+		size_t * param_value_size_ret );
+	clGetGLContextInfoKHR_fn pclGetGLContextInfoKHR = (clGetGLContextInfoKHR_fn)clGetExtensionFunctionAddress( "clGetGLContextInfoKHR" );
+
+	m_clContext = nullptr;
+	m_clQueue = nullptr;
+	for( cl_uint i = 0; i < platformCount; ++i )
+	{
+		cl_context_properties props[] =
+		{
+			CL_CONTEXT_PLATFORM, (cl_context_properties) platforms[i],
+			CL_GL_CONTEXT_KHR, (cl_context_properties) m_hRC,
+			CL_WGL_HDC_KHR, (cl_context_properties) m_hDC,
+			0,
+		};
+
+		cl_uint deviceCount = 0;
+		pclGetGLContextInfoKHR( props, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, 0, nullptr, &deviceCount ); 
+		if( deviceCount )
+		{
+			pclGetGLContextInfoKHR( props, CL_CURRENT_DEVICE_FOR_GL_CONTEXT_KHR, sizeof( m_clDevice ), &m_clDevice, nullptr ); 
+
+			m_clContext = clCreateContext( props, 1, &m_clDevice, &OnClError, nullptr, nullptr );
+			m_clQueue = clCreateCommandQueue( m_clContext, m_clDevice, CL_QUEUE_PROFILING_ENABLE, nullptr );
+			break;
+		}
+
+	}
+#else
+    auto cglContext = CGLGetCurrentContext();
+    auto shareGroup = CGLGetShareGroup( cglContext );
+    
+    cl_context_properties props[] = {
+        CL_CONTEXT_PROPERTY_USE_CGL_SHAREGROUP_APPLE, (cl_context_properties)shareGroup,
+        0 };
+    m_clContext = clCreateContext( props, 0, nullptr, &OnClError, nullptr, nullptr );
+    clGetContextInfo( m_clContext, CL_CONTEXT_DEVICES, sizeof( m_clDevice ), &m_clDevice, nullptr );
+    m_clQueue = clCreateCommandQueue( m_clContext,m_clDevice,CL_QUEUE_PROFILING_ENABLE,NULL );
+#endif
+	if( !m_clContext || !m_clQueue || !m_clDevice )
+	{
+		return E_FAIL;
+	}
+
+	CCP_AL_LOG( "OpenCL device: %s %s %s %s\nDevice extensions: %s\n", 
+		GetClString( clGetDeviceInfo, m_clDevice, CL_DEVICE_PROFILE ).c_str(),
+		GetClString( clGetDeviceInfo, m_clDevice, CL_DEVICE_VERSION ).c_str(),
+		GetClString( clGetDeviceInfo, m_clDevice, CL_DEVICE_NAME ).c_str(),
+		GetClString( clGetDeviceInfo, m_clDevice, CL_DEVICE_VENDOR ).c_str(),
+		GetClString( clGetDeviceInfo, m_clDevice, CL_DEVICE_EXTENSIONS ).c_str() );
 
 	return S_OK;
 }
@@ -1149,7 +1414,9 @@ ALResult Tr2RenderContextAL::SetShader( const Tr2ShaderAL& shader )
 	case PIXEL_SHADER:
 		m_pixelShader = &shader;
 		return S_OK;
-
+	case COMPUTE_SHADER:
+		m_computeShader = &shader;
+		return S_OK;
 	default:
 		return E_INVALIDARG;
 	}
@@ -1527,12 +1794,92 @@ ALResult Tr2RenderContextAL::SetScissorRect(
 }
 
 ALResult Tr2RenderContextAL::SetShaderBuffer(		
-	ShaderType /* inputType */, 
-	uint32_t /* slot */, 
-	const Tr2GpuBufferAL& /* buffer */ )
+	ShaderType inputType, 
+	uint32_t slot, 
+	const Tr2GpuBufferAL& buffer )
 {
+	if( inputType == COMPUTE_SHADER )
+	{
+		cl_mem mem = nullptr;
+		if( !buffer.IsValid() )
+		{
+			if( &buffer != &nullGB )
+			{
+				return E_INVALIDARG;
+			}
+		}
+		else
+		{
+			AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
+			if( !buffer.m_clObject )
+			{
+				int error;
+				buffer.m_clObject = clCreateFromGLBuffer( m_clContext, CL_MEM_READ_WRITE, *buffer.m_buffer, &error );
+				if( !buffer.m_clObject )
+				{
+					return E_FAIL;
+				}
+			}
+			mem = buffer.m_clObject;
+		}
+		if( m_boundTextures[slot] )
+		{
+			clReleaseMemObject( m_boundTextures[slot] );
+		}
+		m_boundTextures[slot] = mem;
+		if( mem )
+		{
+			clRetainMemObject( mem );
+		}
+		return S_OK;
+	}
 	return E_FAIL;
 }
+
+ALResult Tr2RenderContextAL::SetUav(
+	Tr2RenderContextEnum::ShaderType inputType, 
+	uint32_t slot, 
+	const Tr2GpuBufferAL& buffer,
+	uint32_t initialCount ) throw()
+{
+	if( inputType != COMPUTE_SHADER || slot > 16 )
+	{
+		return E_INVALIDARG;
+	}
+	cl_mem mem = nullptr;
+	if( !buffer.IsValid() )
+	{
+		if( &buffer != &nullGB )
+		{
+			return E_INVALIDARG;
+		}
+	}
+	else
+	{
+		AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
+		if( !buffer.m_clObject )
+		{
+			int error;
+			buffer.m_clObject = clCreateFromGLBuffer( m_clContext, CL_MEM_READ_WRITE, *buffer.m_buffer, &error );
+			if( !buffer.m_clObject )
+			{
+				return E_FAIL;
+			}
+		}
+		mem = buffer.m_clObject;
+	}
+	if( m_boundUavs[slot] )
+	{
+		clReleaseMemObject( m_boundUavs[slot] );
+	}
+	m_boundUavs[slot] = mem;
+	if( mem )
+	{
+		clRetainMemObject( mem );
+	}
+	return S_OK;
+}
+
 
 ALResult Tr2RenderContextAL::SetTexture(	
 	ShaderType inputType, 
@@ -1544,6 +1891,61 @@ ALResult Tr2RenderContextAL::SetTexture(
 	{
 		return E_INVALIDARG;
 	}
+	if( inputType == COMPUTE_SHADER )
+	{
+		cl_mem mem = nullptr;
+		if( !texture.IsValid() )
+		{
+			if( &texture != &nullTX )
+			{
+				return E_INVALIDARG;
+			}
+		}
+		else
+		{
+			AL_UPDATE_RESOURCE_FRAME_USAGE( texture );
+			if( !texture.m_clObject )
+			{
+				switch( texture.GetType() )
+				{
+				case TEX_TYPE_1D:
+				case TEX_TYPE_2D:
+#ifdef _WIN32
+					texture.m_clObject = clCreateFromGLTexture2D( m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, *texture.m_texture, nullptr );
+#else
+					texture.m_clObject = clCreateFromGLTexture( m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, *texture.m_texture, nullptr );
+#endif
+					break;
+				case TEX_TYPE_3D:
+#ifdef _WIN32
+					texture.m_clObject = clCreateFromGLTexture3D( m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, *texture.m_texture, nullptr );
+#else
+					texture.m_clObject = clCreateFromGLTexture( m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, *texture.m_texture, nullptr );
+#endif
+					break;
+				default:
+					return E_FAIL;
+				}
+				if( !texture.m_clObject )
+				{
+					return E_FAIL;
+				}
+			}
+			mem = texture.m_clObject;
+		}
+		if( m_boundTextures[slot] )
+		{
+			clReleaseMemObject( m_boundTextures[slot] );
+		}
+		m_boundTextures[slot] = mem;
+		if( mem )
+		{
+			clRetainMemObject( mem );
+		}
+		return S_OK;
+	}
+
+
 	if( !texture.IsValid() )
 	{
 		return &texture == &nullTX ? S_OK : E_INVALIDARG;

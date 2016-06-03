@@ -208,3 +208,22 @@ TEST_F( WithValidRenderContext, CanCopyGpuBuffer )
 		ASSERT_HRESULT_SUCCEEDED( vb1.CopySubBuffer( 0, 4, vb2, 16, *renderContext ) );
 	}
 }
+
+TEST_F( WithValidRenderContext, CanPassInitialDataToGpuBuffer )
+{
+	if( renderContext->GetCaps().SupportsGpuBuffer() )
+	{
+		float original[] = { 1.f, 2.f, 3.f, 4.f };
+
+		Tr2GpuBufferAL buffer;
+		ASSERT_HRESULT_SUCCEEDED( buffer.Create( 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_FLOAT, Tr2RenderContextEnum::USAGE_CPU_READ, original, *renderContext ) );
+
+		float* data;
+		ASSERT_HRESULT_SUCCEEDED( buffer.Lock( 0, 0, (void**)&data, Tr2RenderContextEnum::LOCK_READONLY, *renderContext ) );
+		EXPECT_EQ( original[0], data[0] );
+		EXPECT_EQ( original[1], data[1] );
+		EXPECT_EQ( original[2], data[2] );
+		EXPECT_EQ( original[3], data[3] );
+		ASSERT_HRESULT_SUCCEEDED( buffer.Unlock( *renderContext ) );
+	}
+}

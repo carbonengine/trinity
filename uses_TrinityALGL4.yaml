@@ -4,6 +4,7 @@ Imports:
 - ../core_project.yaml
 - ../CcpCore/uses_CcpCore.yaml
 - ../../../../../../sdk/glew/1.7.0/glew_1.7.0.yaml
+- ../../../../../../sdk/nvidia/cuda/3.0/CUDA_3.0.yaml
 
 ClCompile:
   PreprocessorDefinitions:
@@ -11,6 +12,8 @@ ClCompile:
 Link:
   AdditionalLibraryDirectories:
   - ../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/
+  AdditionalAppleFrameworks:
+  - OpenCL
 
 Configurations:
   Debug|Win32,x64:
@@ -19,6 +22,7 @@ Configurations:
     Link:
       AdditionalDependencies:
       - TrinityAL_gl4_d.lib
+      - OpenCL.lib
   
   Dev|Win32,x64:
     Imports:
@@ -29,6 +33,7 @@ Configurations:
     Link:
       AdditionalDependencies:
       - TrinityAL_gl4_dev.lib
+      - OpenCL.lib
   
   Release|Win32,x64:
     Imports:
@@ -36,6 +41,7 @@ Configurations:
     Link:
       AdditionalDependencies:
       - TrinityAL_gl4.lib
+      - OpenCL.lib
 
   Debug|Linux32,Linux64,Mac32,Mac64:
     Imports:

@@ -19,7 +19,8 @@ using namespace Tr2RenderContextEnum;
 
 Tr2SamplerStateAL::Tr2SamplerStateAL()
 :   m_isValid( false ),
-	m_sampler( 0 )
+	m_sampler( 0 ),
+	m_clObject( nullptr )
 {
 	m_stateData.m_hash = 0;
 	m_stateData.m_magFilter = GL_LINEAR;
@@ -33,6 +34,14 @@ Tr2SamplerStateAL::Tr2SamplerStateAL()
 	m_stateData.m_maxLod = std::numeric_limits<float>::max();
 #endif
 	m_stateData.m_hash = CcpHashFNV1( &m_stateData, sizeof( m_stateData ) );
+}
+
+Tr2SamplerStateAL::~Tr2SamplerStateAL()
+{
+	if( m_clObject )
+	{
+		clReleaseSampler( m_clObject );
+	}
 }
 
 ALResult Tr2SamplerStateAL::Create( 

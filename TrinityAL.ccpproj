@@ -103,6 +103,7 @@ BaseConfigurations:
   GL4:
     Imports:
     - ../../../../../../sdk/glew/1.7.0/glew_1.7.0.yaml
+    - ../../../../../../sdk/nvidia/cuda/3.0/CUDA_3.0.yaml
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_OPENGL4

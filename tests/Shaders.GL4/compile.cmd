@@ -24,7 +24,7 @@ def _to_hex(s):
 
 def _process_dir(path):
     for each in os.listdir(path):
-        if each.lower().endswith(('.vsh', '.psh')):
+        if each.lower().endswith(('.vsh', '.psh', '.csh')):
             with open(os.path.join(path, each)) as f:
                 contents = f.read()
             contents = _to_hex(contents)

@@ -36,7 +36,8 @@ Tr2GpuBufferAL::Tr2GpuBufferAL()
 	:m_numElements( 0 ),
 	m_elementSize( 0 ),
 	m_format( PIXEL_FORMAT_UNKNOWN ),
-	m_usage( 0 )
+	m_usage( 0 ),
+	m_clObject( nullptr )
 {
 }
 	
@@ -47,7 +48,7 @@ ALResult Tr2GpuBufferAL::Create(
 	const void* initialData, 
 	Tr2RenderContextAL & renderContext ) 
 { 
-	return CreateEx( numberOfElements, format, usage, nullptr, 0, renderContext );
+	return CreateEx( numberOfElements, format, usage, initialData, 0, renderContext );
 }	
 
 ALResult Tr2GpuBufferAL::CreateEx(			
@@ -293,6 +294,11 @@ void Tr2GpuBufferAL::Destroy()
 	m_numElements = 0;
 	m_elementSize = 0;
 	m_format = PIXEL_FORMAT_UNKNOWN;
+	if( m_clObject )
+	{
+		clReleaseMemObject( m_clObject );
+		m_clObject = nullptr;
+	}
 }
 
 unsigned Tr2GpuBufferAL::BytesPerElement() const		

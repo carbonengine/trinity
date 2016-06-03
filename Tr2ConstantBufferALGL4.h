@@ -53,6 +53,7 @@ private:
 	CcpMallocBuffer	m_shadowCopy;
 	bool			m_debugUsingMirror;
 	Tr2RenderContextEnum::BufferUsage m_usage;
+	cl_mem m_clObject;
 
 	friend class Tr2RenderContextAL;
 };

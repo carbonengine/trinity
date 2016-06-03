@@ -91,6 +91,7 @@ private:
 	Tr2RenderContextEnum::BufferUsage m_usage;
 	std::shared_ptr<GLuint> m_buffer;
 	std::shared_ptr<GLuint> m_texture;
+	mutable cl_mem m_clObject;
 
 	Tr2GpuBufferAL( const Tr2GpuBufferAL& ) /* = delete */;
 	Tr2GpuBufferAL& operator=( const Tr2GpuBufferAL& ) /* = delete */;

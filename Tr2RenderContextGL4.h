@@ -71,10 +71,7 @@ public:
 		Tr2RenderContextEnum::ShaderType inputType, 
 		uint32_t slot, 
 		const Tr2GpuBufferAL& buffer,
-		uint32_t initialCount = -1 ) throw()
-	{ 
-		return E_FAIL; 
-	}
+		uint32_t initialCount = -1 ) throw();
 
 	ALResult SetUav( 
 		Tr2RenderContextEnum::ShaderType inputType, 
@@ -144,10 +141,8 @@ public:
 		return E_FAIL;
 	}
 	
-	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw()
-	{
-		return E_FAIL;
-	}
+	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw();
+
 	ALResult RunComputeShaderIndirect( Tr2GpuBufferAL& indirectParams, unsigned offset )
 	{
 		return E_FAIL;
@@ -286,6 +281,8 @@ private:
 
 	const Tr2ShaderAL*	m_vertexShader;
 	const Tr2ShaderAL*	m_pixelShader;
+	const Tr2ShaderAL*	m_computeShader;
+
 	Tr2ConstantBufferAL* m_boundBuffers[16];
 	int m_numberOfLights;
 	const Tr2VertexDefinition* m_boundLayout;
@@ -301,6 +298,11 @@ private:
 
 	bool m_srgbDecode[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
 	GLuint m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
+
+	cl_mem m_boundUavs[16];
+	cl_mem m_boundTextures[16];
+	cl_mem m_boundClBuffers[16];
+	cl_sampler m_boundClSamplers[16];
 
 	unsigned m_currentActiveTexture;
 
@@ -367,6 +369,10 @@ private:
 
 	void    RestoreState( const ShadowStateRestoreInfo& info );
 public:
+	cl_context m_clContext;
+	cl_command_queue m_clQueue;
+	cl_device_id m_clDevice;
+
 #ifdef _WIN32
 	HGLRC			m_hRC;
 	HDC				m_hDC;

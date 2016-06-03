@@ -4,6 +4,7 @@ Imports:
 - ../core_project.yaml
 - ../CcpCore/uses_CcpCore.yaml
 - ../../../../../../sdk/glew/1.7.0/glew_1.7.0.yaml
+- ../../../../../../sdk/nvidia/cuda/3.0/CUDA_3.0.yaml
 
 ClCompile:
   PreprocessorDefinitions:
@@ -11,6 +12,8 @@ ClCompile:
 Link:
   AdditionalLibraryDirectories:
   - ../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/
+  AdditionalAppleFrameworks:
+  - OpenCL
 
 Configurations:
   Release|Mac64:

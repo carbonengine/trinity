@@ -253,9 +253,16 @@ const float AL_TEXEL_OFFSET = 0.0f;
 #if defined(_WIN32)
 #include <GL/glew.h>
 #include <GL/gl.h>
+#include "CL/cl.h"
+#include "CL/cl_gl.h"
+
 #elif defined(__APPLE__)
 #include <OpenGL/gl3.h>
+#include <OpenGL/OpenGL.h>
 #include <OpenGL/gl3ext.h>
+#include <OpenCL/cl.h>
+#include <OpenCL/cl_gl.h>
+#include <OpenCL/opencl.h>
 #else
 #include <GL/glew.h>
 #endif

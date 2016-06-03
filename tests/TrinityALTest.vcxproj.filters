@@ -8,9 +8,6 @@
     <Filter Include="Source Files\Shaders.GLES2"/>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="autoversion.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Dxt1Image.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -44,10 +41,19 @@
     <ClInclude Include="XrgbVolume.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders.DX11\AddConstantToBuffer.cs.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX11\AddVectors.cs.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
     <ClInclude Include="Shaders.DX11\ConstantColor.ps.h">
       <Filter>Source Files\Shaders.DX11</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.DX11\ConstantColor.ps.patched.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX11\GroupShared.cs.h">
       <Filter>Source Files\Shaders.DX11</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.DX11\InstancedRendering.vs.h">
@@ -62,6 +68,9 @@
     <ClInclude Include="Shaders.DX11\OutputTexCoord.ps.patched.h">
       <Filter>Source Files\Shaders.DX11</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders.DX11\OutputVector.cs.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
     <ClInclude Include="Shaders.DX11\PositionOnly.vs.h">
       <Filter>Source Files\Shaders.DX11</Filter>
     </ClInclude>
@@ -72,6 +81,9 @@
       <Filter>Source Files\Shaders.DX11</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.DX11\PositionOnlyWithPerObjectData.vs.patched.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX11\SampleTexture.cs.h">
       <Filter>Source Files\Shaders.DX11</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.DX11\SampleTextureFromTexCoord.ps.h">
@@ -152,10 +164,28 @@
     <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.patched.h">
       <Filter>Source Files\Shaders.DX9</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.patched.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GL4\AddVectors.cs.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GL4\AddVectors.cs.patched.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
     <ClInclude Include="Shaders.GL4\ConstantColor.ps.h">
       <Filter>Source Files\Shaders.GL4</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.GL4\ConstantColor.ps.patched.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GL4\GroupShared.cs.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GL4\GroupShared.cs.patched.h">
       <Filter>Source Files\Shaders.GL4</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.GL4\InstancedRendering.vs.h">
@@ -170,6 +200,12 @@
     <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.patched.h">
       <Filter>Source Files\Shaders.GL4</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders.GL4\OutputVector.cs.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GL4\OutputVector.cs.patched.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
     <ClInclude Include="Shaders.GL4\PositionOnly.vs.h">
       <Filter>Source Files\Shaders.GL4</Filter>
     </ClInclude>
@@ -180,6 +216,12 @@
       <Filter>Source Files\Shaders.GL4</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.patched.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GL4\SampleTexture.cs.h">
+      <Filter>Source Files\Shaders.GL4</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.GL4\SampleTexture.cs.patched.h">
       <Filter>Source Files\Shaders.GL4</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.h">
@@ -264,6 +306,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="BitmapDimensions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Compute.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ConstantBuffer.cpp">

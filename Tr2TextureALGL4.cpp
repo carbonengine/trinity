@@ -37,7 +37,8 @@ Tr2TextureAL::Tr2TextureAL()
   m_targetFormat( 0 ),
   m_targetType( 0 ),
   m_texture( 0 ),
-  m_isAlias( false )
+  m_isAlias( false ),
+  m_clObject( nullptr )
 {
 	Destroy();
 }
@@ -51,6 +52,11 @@ void Tr2TextureAL::Destroy()
 	m_targetFormat = 0;
 	m_targetType = 0;
 	m_texture = nullptr;
+	if( m_clObject )
+	{
+		clReleaseMemObject( m_clObject );
+		m_clObject = nullptr;
+	}
 }
 
 Tr2TextureAL::~Tr2TextureAL()
@@ -76,6 +82,12 @@ Tr2TextureAL& Tr2TextureAL::operator=( const Tr2TextureAL& other )
 		m_internalFormat = other.m_internalFormat;
 		m_targetFormat	= other.m_targetFormat;
 		m_targetType	= other.m_targetType;
+
+		m_clObject = other.m_clObject;
+		if( m_clObject )
+		{
+			clRetainMemObject( m_clObject );
+		}
 		ChangeObjectId();
 	}
 
@@ -102,6 +114,8 @@ Tr2TextureAL& Tr2TextureAL::operator=( Tr2TextureAL&& other )
 		m_internalFormat = other.m_internalFormat;
 		m_targetFormat	= other.m_targetFormat;
 		m_targetType	= other.m_targetType;
+		m_clObject = other.m_clObject;
+		other.m_clObject = nullptr;
 		ChangeObjectId();
 	}
 
