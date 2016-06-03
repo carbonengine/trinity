@@ -734,7 +734,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGL4;D3DTARGET=9;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_OPENGL4;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;NOMINMAX;BLUEBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\2.1A3\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\2.1A3\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -748,10 +748,10 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
-      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\2.1A3\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalAppleFrameworks>CoreFoundation;OpenCL;CoreFoundation;CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\nvidia\cuda\3.0\lib;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\2.1A3\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\nvidia\cuda\3.0\lib;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>TrinityAL_gl4.lib;atimgpud_s_x64.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;gtest.lib;telemetry64.link.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;TrinityAL_gl4.lib;atimgpud_s_x64.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>TrinityAL_gl4.lib;OpenCL.lib;atimgpud_s_x64.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;gtest.lib;telemetry64.link.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;TrinityAL_gl4.lib;OpenCL.lib;atimgpud_s_x64.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -764,7 +764,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;CCP_ASSERT_ENABLED=1;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGL4;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_OPENGL4;AL_TACK_RESOURCE_USAGE=1;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;NOMINMAX;BLUEBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\2.1A3\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\2.1A3\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -778,10 +778,10 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
-      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\2.1A3\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalAppleFrameworks>CoreFoundation;OpenCL;CoreFoundation;CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\nvidia\cuda\3.0\lib;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\2.1A3\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\nvidia\cuda\3.0\lib;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>TrinityAL_gl4_dev.lib;atimgpud_s_x64.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;gtest.lib;telemetry64.link.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;TrinityAL_gl4_dev.lib;atimgpud_s_x64.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>TrinityAL_gl4_dev.lib;OpenCL.lib;atimgpud_s_x64.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;gtest.lib;telemetry64.link.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;TrinityAL_gl4_dev.lib;OpenCL.lib;atimgpud_s_x64.lib;CcpCore.lib;psapi.lib;telemetry64.link.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -824,7 +824,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGL4;D3DTARGET=9;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_OPENGL4;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;NOMINMAX;BLUEBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\2.1A3\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\2.1A3\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -838,10 +838,10 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
-      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\2.1A3\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalAppleFrameworks>CoreFoundation;OpenCL;CoreFoundation;CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\nvidia\cuda\3.0\lib;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\2.1A3\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\nvidia\cuda\3.0\lib;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>TrinityAL_gl4.lib;atimgpud_s_x86.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;gtest.lib;telemetry32.link.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;TrinityAL_gl4.lib;atimgpud_s_x86.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>TrinityAL_gl4.lib;OpenCL.lib;atimgpud_s_x86.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;gtest.lib;telemetry32.link.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;TrinityAL_gl4.lib;OpenCL.lib;atimgpud_s_x86.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -884,7 +884,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;CCP_ASSERT_ENABLED=1;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGL4;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_OPENGL4;AL_TACK_RESOURCE_USAGE=1;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;NOMINMAX;BLUEBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\2.1A3\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\2.1A3\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\telemetry\2.1A3\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -898,10 +898,10 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
-      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\2.1A3\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalAppleFrameworks>CoreFoundation;OpenCL;CoreFoundation;CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\nvidia\cuda\3.0\lib;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\2.1A3\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\2.1A3\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\nvidia\cuda\3.0\lib;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>TrinityAL_gl4_dev.lib;atimgpud_s_x86.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;gtest.lib;telemetry32.link.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;TrinityAL_gl4_dev.lib;atimgpud_s_x86.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>TrinityAL_gl4_dev.lib;OpenCL.lib;atimgpud_s_x86.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;gtest.lib;telemetry32.link.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;TrinityAL_gl4_dev.lib;OpenCL.lib;atimgpud_s_x86.lib;CcpCore.lib;psapi.lib;telemetry32.link.lib;opengl32.lib;glew32.lib;gtest.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -1090,7 +1090,6 @@
     <PostBuildEvent/>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="autoversion.h"/>
     <ClInclude Include="Dxt1Image.h"/>
     <ClInclude Include="Dxt3Image.h"/>
     <ClInclude Include="Dxt5Image.h"/>
@@ -1102,16 +1101,21 @@
     <ClInclude Include="WithValidRenderContextFixture.h"/>
     <ClInclude Include="WithWindowFixture.h"/>
     <ClInclude Include="XrgbVolume.h"/>
+    <ClInclude Include="Shaders.DX11\AddConstantToBuffer.cs.h"/>
+    <ClInclude Include="Shaders.DX11\AddVectors.cs.h"/>
     <ClInclude Include="Shaders.DX11\ConstantColor.ps.h"/>
     <ClInclude Include="Shaders.DX11\ConstantColor.ps.patched.h"/>
+    <ClInclude Include="Shaders.DX11\GroupShared.cs.h"/>
     <ClInclude Include="Shaders.DX11\InstancedRendering.vs.h"/>
     <ClInclude Include="Shaders.DX11\InstancedRendering.vs.patched.h"/>
     <ClInclude Include="Shaders.DX11\OutputTexCoord.ps.h"/>
     <ClInclude Include="Shaders.DX11\OutputTexCoord.ps.patched.h"/>
+    <ClInclude Include="Shaders.DX11\OutputVector.cs.h"/>
     <ClInclude Include="Shaders.DX11\PositionOnly.vs.h"/>
     <ClInclude Include="Shaders.DX11\PositionOnly.vs.patched.h"/>
     <ClInclude Include="Shaders.DX11\PositionOnlyWithPerObjectData.vs.h"/>
     <ClInclude Include="Shaders.DX11\PositionOnlyWithPerObjectData.vs.patched.h"/>
+    <ClInclude Include="Shaders.DX11\SampleTexture.cs.h"/>
     <ClInclude Include="Shaders.DX11\SampleTextureFromTexCoord.ps.h"/>
     <ClInclude Include="Shaders.DX11\SampleTextureFromTexCoord.ps.patched.h"/>
     <ClInclude Include="Shaders.DX11\SampleTextureMipFromTexCoord.ps.h"/>
@@ -1138,16 +1142,26 @@
     <ClInclude Include="Shaders.DX9\SampleVolumeTexture.ps.patched.h"/>
     <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.h"/>
     <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.patched.h"/>
+    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.h"/>
+    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.patched.h"/>
+    <ClInclude Include="Shaders.GL4\AddVectors.cs.h"/>
+    <ClInclude Include="Shaders.GL4\AddVectors.cs.patched.h"/>
     <ClInclude Include="Shaders.GL4\ConstantColor.ps.h"/>
     <ClInclude Include="Shaders.GL4\ConstantColor.ps.patched.h"/>
+    <ClInclude Include="Shaders.GL4\GroupShared.cs.h"/>
+    <ClInclude Include="Shaders.GL4\GroupShared.cs.patched.h"/>
     <ClInclude Include="Shaders.GL4\InstancedRendering.vs.h"/>
     <ClInclude Include="Shaders.GL4\InstancedRendering.vs.patched.h"/>
     <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.h"/>
     <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.patched.h"/>
+    <ClInclude Include="Shaders.GL4\OutputVector.cs.h"/>
+    <ClInclude Include="Shaders.GL4\OutputVector.cs.patched.h"/>
     <ClInclude Include="Shaders.GL4\PositionOnly.vs.h"/>
     <ClInclude Include="Shaders.GL4\PositionOnly.vs.patched.h"/>
     <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.h"/>
     <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.patched.h"/>
+    <ClInclude Include="Shaders.GL4\SampleTexture.cs.h"/>
+    <ClInclude Include="Shaders.GL4\SampleTexture.cs.patched.h"/>
     <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.h"/>
     <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.patched.h"/>
     <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.h"/>
@@ -1178,6 +1192,7 @@
   <ItemGroup>
     <ClCompile Include="ALResultTest.cpp"/>
     <ClCompile Include="BitmapDimensions.cpp"/>
+    <ClCompile Include="Compute.cpp"/>
     <ClCompile Include="ConstantBuffer.cpp"/>
     <ClCompile Include="DepthStencil.cpp"/>
     <ClCompile Include="Fence.cpp"/>
