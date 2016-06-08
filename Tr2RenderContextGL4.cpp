@@ -1198,11 +1198,18 @@ ALResult Tr2RenderContextAL::CreateOpenGLContext( Tr2PresentParametersAL& pp )
 	int iFormat = ChoosePixelFormat( m_hDC, &pfd );
 	SetPixelFormat( m_hDC, iFormat, &pfd );
 
-	int attriblist[] = { WGL_CONTEXT_MAJOR_VERSION_ARB, 4, WGL_CONTEXT_MINOR_VERSION_ARB, 1, WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB, 
+	int flags = WGL_CONTEXT_FORWARD_COMPATIBLE_BIT_ARB;
 #if defined( TRINITYDEV ) || !defined( NDEBUG )
-	WGL_CONTEXT_FLAGS_ARB, WGL_CONTEXT_DEBUG_BIT_ARB,
+	flags |= WGL_CONTEXT_DEBUG_BIT_ARB;
 #endif
-	0
+
+	int attriblist[] = 
+	{ 
+		WGL_CONTEXT_MAJOR_VERSION_ARB, 4, 
+		WGL_CONTEXT_MINOR_VERSION_ARB, 1, 
+		WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB, 
+		WGL_CONTEXT_FLAGS_ARB, flags,
+		0
 	};
 
 	auto tempCtx = wglCreateContext( m_hDC );
