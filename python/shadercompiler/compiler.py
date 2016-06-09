@@ -1,5 +1,6 @@
 import os
 import subprocess
+from . import paths
 
 COMPILER_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'carbon', 'tools', 'shadercompiler',
                                              'shadercompiler.exe'))
@@ -10,19 +11,30 @@ class GLESExtensionOption(object):
     ENABLE = 'e'
     DISABLE = 'd'
 
-
 CompilerError = subprocess.CalledProcessError
 
 
-def compile_shader(effect_path, output_path, threads=None, warnings=True, defines=None, optimizations=3, clip_planes=1,
-                   gles_emulate_samplers=False, avoid_flow_control=False,
+def compile_shader(effect_path, output_path=None, platform=None, shader_model=None, threads=None, warnings=True,
+                   defines=None, optimizations=3, clip_planes=1, gles_emulate_samplers=False, avoid_flow_control=False,
                    gles_extension_option=GLESExtensionOption.WARN, gles_extensions=None):
+    if output_path is None:
+        if platform is None or shader_model is None:
+            raise RuntimeError('cannot have both output_path and platform or shader_model None')
+        output_path = paths.get_compiled_path(effect_path, shader_model, platform)
+    try:
+        os.makedirs(os.path.dirname(output_path))
+    except OSError:
+        pass
     args = [COMPILER_PATH, '/single', '/O%s' % optimizations, '/clipPlanes', str(clip_planes),
             '/E%s' % gles_extension_option]
     if threads is not None:
         args.extend(('/threads', str(threads)))
     if not warnings:
         args.append('/no_warnings')
+    if platform is not None:
+        args.extend(('/define', 'PLATFORM', str(platform)))
+    if shader_model is not None:
+        args.extend(('/define', 'SHADERMODEL', str(shader_model)))
     for name, value in (defines or {}).iteritems():
         args.extend(('/define', name, str(value)))
     if gles_emulate_samplers:
@@ -33,4 +45,5 @@ def compile_shader(effect_path, output_path, threads=None, warnings=True, define
         args.append('/E%s%s' % (value, name))
     args.append(effect_path)
     args.append(output_path)
+    print args
     return subprocess.check_output(args)

@@ -1,4 +1,4 @@
-from . import paths
+from . import paths, PLATFORM_NAMES, SHADER_MODEL_NAMES
 import struct
 
 
@@ -266,13 +266,16 @@ class EffectInfo(object):
     def __init__(self, path, permutation=None):
         if path.lower().endswith('.fx'):
             first = True
-            for platform in paths.PLATFORMS:
-                for sm in paths.SHADER_MODELS:
+            for platform in PLATFORM_NAMES.iterkeys():
+                for sm in SHADER_MODEL_NAMES.iterkeys():
                     if first:
                         self._load(paths.get_compiled_path(path, sm, platform), permutation)
                         first = False
                     else:
-                        e = EffectInfo(paths.get_compiled_path(path, sm, platform), permutation)
+                        try:
+                            e = EffectInfo(paths.get_compiled_path(path, sm, platform), permutation)
+                        except IOError:
+                            continue
                         _merge_parameters(self.parameters, e.parameters)
                         _merge_parameters(self.resources, e.resources)
                         _merge_parameters(self.uavs, e.uavs)
@@ -323,7 +326,8 @@ class EffectInfo(object):
 
         self.parameters = self._extract_parameters('constants')
         self.resources = self._extract_parameters('resources')
-        self.resources.update(self._extract_parameters('uavs'))
+        self.uavs = self._extract_parameters('uavs')
+        self.resources.update(self.uavs)
 
     def _extract_parameters(self, stage_attr):
         result = {}
