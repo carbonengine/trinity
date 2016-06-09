@@ -102,6 +102,7 @@
     <ClCompile Include="EffectCompilerDX11.cpp" />
     <ClCompile Include="EffectCompilerDx9.cpp" />
     <ClCompile Include="EffectCompilerGL2.cpp" />
+    <ClCompile Include="EffectCompilerGL4.cpp" />
     <ClCompile Include="EffectCompilerOrbis.cpp" />
     <ClCompile Include="EffectData.cpp" />
     <ClCompile Include="ASTNode.cpp" />
@@ -141,6 +142,7 @@
     <ClInclude Include="EffectCompilerDX11.h" />
     <ClInclude Include="EffectCompilerDx9.h" />
     <ClInclude Include="EffectCompilerGL2.h" />
+    <ClInclude Include="EffectCompilerGL4.h" />
     <ClInclude Include="EffectCompilerOrbis.h" />
     <ClInclude Include="EffectData.h" />
     <ClInclude Include="ASTNode.h" />
