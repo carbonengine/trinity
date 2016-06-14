@@ -15,6 +15,11 @@ const Be::ClassInfo* Tr2GpuUniqueEmitter::ExposeToBlue()
 	EXPOSURE_BEGIN( Tr2GpuUniqueEmitter, "Emitter with unique per-instance data for GPU particle systems" )
 		MAP_INTERFACE( Tr2GpuUniqueEmitter )
 
+        MAP_ATTRIBUTE( 
+            "scaledByParent", 
+            m_scaledByParent, 
+            "Apply parent scaling to particles", 
+            Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( 
 			"attractorPosition", 
 			m_attractorPosition, 

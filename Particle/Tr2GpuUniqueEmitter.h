@@ -26,10 +26,19 @@ public:
 	EXPOSE_TO_BLUE();
 
 	virtual void Update( const UpdateArguments& arguments );
+	virtual void SpawnParticles( const UpdateArguments& arguments,
+								 const Vector3* position = nullptr, 
+								 const Vector3* velocity = nullptr, 
+								 float rateModifier = 1.0f );
+	virtual void SpawnParticles( const UpdateArguments& arguments,
+								 const Vector3 *positionStart, const Vector3 *positionEnd,
+								 const Vector3 *velocityStart, const Vector3 *velocityEnd,
+								 float deltaTime );
 protected:
 	virtual void GenerateID();
 
 	Vector3 m_attractorPosition;
+	bool m_scaledByParent;
 };
 
 TYPEDEF_BLUECLASS( Tr2GpuUniqueEmitter );

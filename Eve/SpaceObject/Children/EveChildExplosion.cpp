@@ -121,7 +121,10 @@ void EveChildExplosion::UpdateSyncronous(
 			{
 				if( m_nextLocalExplosion < m_localExplosionTransforms.size() )
 				{
-					SpawnLocalExplosion( m_localExplosionTransforms[m_nextLocalExplosion] );
+					XMVECTOR det;
+					Matrix transform = m_localExplosionTransforms[m_nextLocalExplosion];
+					transform.GetTranslation() = XMVector3TransformCoord( transform.GetTranslation(), XMMatrixInverse( &det, m_localTransform ) );
+					SpawnLocalExplosion( transform );
 					++m_nextLocalExplosion;
 					m_nextLocalExplosionTime = std::pow( m_localExplosionIntervalFactor, float( m_nextLocalExplosion ) ) * 
 						m_localExplosionInterval * float( rand() ) / float( RAND_MAX );
