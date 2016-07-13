@@ -342,7 +342,7 @@ public:
 	struct PatternData
 	{
 		// projection type
-		EveSOFDataPattern::ProjectionType projectionType;
+		Tr2RenderContextEnum::TextureAddressMode projectionAddressModeU, projectionAddressModeV;
 		// shared data
 		std::map<BlueSharedString, TextureData> patternTextures;
 		// non-shared data (per hull)

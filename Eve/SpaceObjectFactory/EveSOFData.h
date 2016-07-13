@@ -817,7 +817,7 @@ public:
 	std::string m_name;
 
 	// how is the texture projected?
-	ProjectionType m_projectionType;
+	ProjectionType m_projectionTypeU, m_projectionTypeV;
 
 	// pattern textures res path
 	PEveSOFDataTextureVector m_patternTextures;

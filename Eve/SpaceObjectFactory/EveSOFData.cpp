@@ -217,7 +217,8 @@ EveSOFDataPatternPerHull::EveSOFDataPatternPerHull( IRoot* lockobj ) :
 
 
 EveSOFDataPattern::EveSOFDataPattern( IRoot* lockobj ) :
-	m_projectionType( PROJECTION_REPEAT ),
+	m_projectionTypeU( PROJECTION_REPEAT ),
+	m_projectionTypeV( PROJECTION_REPEAT ),
 	PARENTLOCK( m_projections ),
 	PARENTLOCK( m_areas ),
 	PARENTLOCK( m_patternTextures )

@@ -1095,8 +1095,31 @@ void EveSOFDataMgr::GeneratePatternData( PatternData& pd, EveSOFDataPatternPtr s
 		pd.areaParameters[hullAreaData->m_name] = ad;
 	}
 
-	// projection type
-	pd.projectionType = srcData->m_projectionType;
+	// projection types, translate to AL enums right here
+	switch( srcData->m_projectionTypeU )
+	{
+	case EveSOFDataPattern::PROJECTION_BORDER:
+		pd.projectionAddressModeU = Tr2RenderContextEnum::TA_BORDER;
+		break;
+	case EveSOFDataPattern::PROJECTION_CLAMP:
+		pd.projectionAddressModeU = Tr2RenderContextEnum::TA_CLAMP;
+		break;
+	default:
+		pd.projectionAddressModeU = Tr2RenderContextEnum::TA_WRAP;
+		break;
+	}
+	switch( srcData->m_projectionTypeV )
+	{
+	case EveSOFDataPattern::PROJECTION_BORDER:
+		pd.projectionAddressModeV = Tr2RenderContextEnum::TA_BORDER;
+		break;
+	case EveSOFDataPattern::PROJECTION_CLAMP:
+		pd.projectionAddressModeV = Tr2RenderContextEnum::TA_CLAMP;
+		break;
+	default:
+		pd.projectionAddressModeV = Tr2RenderContextEnum::TA_WRAP;
+		break;
+	}
 }
 
 // --------------------------------------------------------------------------------

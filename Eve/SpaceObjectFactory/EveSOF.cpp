@@ -426,17 +426,7 @@ void EveSOF::FillMeshAreaVector( std::map<std::string, Tr2LodResourcePtr>& lodRe
 					newShader->AddResourceTexture2D( ptit->first, ptit->second.resFilePath.c_str() );
 
 					// pattern textures almost always require a sampler change: repeat is boring....
-					switch( patternData->projectionType )
-					{
-					case EveSOFDataPattern::PROJECTION_BORDER:
-						newShader->AddSamplerOverride( BlueSharedString( std::string( ptit->first.c_str() ) + "Sampler" ), Tr2RenderContextEnum::TA_BORDER );
-						break;
-					case EveSOFDataPattern::PROJECTION_CLAMP:
-						newShader->AddSamplerOverride( BlueSharedString( std::string( ptit->first.c_str() ) + "Sampler" ), Tr2RenderContextEnum::TA_CLAMP );
-						break;
-					default:
-						break;
-					}
+					newShader->AddSamplerOverride( BlueSharedString( std::string( ptit->first.c_str() ) + "Sampler" ), patternData->projectionAddressModeU, patternData->projectionAddressModeV );
 				}
 			}
 
