@@ -1007,6 +1007,14 @@ void EveSpaceObject2::GetRenderables( const TriFrustum& frustum, std::vector<ITr
 	}
 
 	Vector4 bounds;
+	if( DisplayChildren() )
+	{
+		for( IEveTransformVector::const_iterator it = m_children.begin(); it != m_children.end(); ++it )
+		{
+			IEveTransform* p = *it;
+			p->UpdateViewDependentData( m_worldTransform, true );
+		}
+	}
 	if( GetBoundingSphere( bounds, EVE_BOUNDS_WITH_CHILDREN ) )
 	{
 		m_isInFrustum = frustum.IsSphereVisible( &bounds );

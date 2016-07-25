@@ -127,7 +127,7 @@ void EveLineSet::RenderDebugInfo( Tr2RenderContext& renderContext )
 // Arguments:
 //   parentTransform - we have transform hierarchy
 // --------------------------------------------------------------------------------
-void EveLineSet::UpdateViewDependentData( const Matrix& parentTransform )
+void EveLineSet::UpdateViewDependentData( const Matrix& parentTransform, bool children )
 {
 }
 

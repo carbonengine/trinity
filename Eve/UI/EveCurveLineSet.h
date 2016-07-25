@@ -36,7 +36,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTransform
 	void Update( EveUpdateContext& updateContext );
-	void UpdateViewDependentData( const Matrix& parentTransform );
+	void UpdateViewDependentData( const Matrix& parentTransform, bool children=false );
 	Tr2Lod GetLODLevel() const { return TR2_LOD_HIGH; }
 
 	// No sensible implementation?

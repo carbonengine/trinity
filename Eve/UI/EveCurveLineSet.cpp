@@ -60,7 +60,7 @@ void EveCurveLineSet::RenderDebugInfo( Tr2RenderContext& renderContext )
 }
 
 // ------------------------------------------------------------------------------------------------------
-void EveCurveLineSet::UpdateViewDependentData( const Matrix& parentTransform )
+void EveCurveLineSet::UpdateViewDependentData( const Matrix& parentTransform, bool children )
 {
 	// local transform
 	Matrix localTransform;

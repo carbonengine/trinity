@@ -41,7 +41,7 @@ public:
 
     EveTransform( IRoot* lockobj = NULL );
 
-    virtual void UpdateViewDependentData( const Matrix& parentTransform );
+    virtual void UpdateViewDependentData( const Matrix& parentTransform, bool includeChildren=false );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2	
@@ -99,6 +99,7 @@ protected:
 	bool m_isVisible;
 	bool m_useLodLevel;
 	bool m_hideOnLowQuality;
+	bool m_viewUpdatedThisFrame;
 	Tr2Lod m_lodLevel;
 	
 	float m_visibilityThreshold;

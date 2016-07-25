@@ -76,7 +76,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveTransform
 	virtual void Update( EveUpdateContext& updateContext );
-	virtual void UpdateViewDependentData( const Matrix& parentTransform );
+	virtual void UpdateViewDependentData( const Matrix& parentTransform, bool children=false );
 	Tr2Lod GetLODLevel() const { return TR2_LOD_HIGH; }
 	void PlayCurveSet( const std::string& name ) {}
 	void StopCurveSet( const std::string& name ) {}

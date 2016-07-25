@@ -32,7 +32,8 @@ EveTransform::EveTransform( IRoot* lockobj ) :
 	m_lastDeltaTime(0.f),
 	m_lastCurveUpdateDelta( g_eveSpaceSceneLowUpdateRate ),
 	m_useLodLevel( true ),
-	m_lodLevel( TR2_LOD_LOW )
+	m_lodLevel( TR2_LOD_LOW ),
+	m_viewUpdatedThisFrame( false )
 {
 }
 
@@ -82,6 +83,7 @@ void EveTransform::Update( EveUpdateContext& updateContext )
 
 void EveTransform::UpdateSyncronous( EveUpdateContext& updateContext )
 {
+	m_viewUpdatedThisFrame = false;
 }
 
 void EveTransform::UpdateAsyncronous( EveUpdateContext& updateContext )
@@ -138,19 +140,32 @@ void EveTransform::UpdateAsyncronous( EveUpdateContext& updateContext )
 	m_isVisible = false;
 }
 
-void EveTransform::UpdateViewDependentData( const Matrix& parentTransform )
+void EveTransform::UpdateViewDependentData( const Matrix& parentTransform, bool updateChildren )
 {
-	Tr2Transform::UpdateViewDependentData( parentTransform );
-
-	for( auto it = m_particleSystems.begin(); it != m_particleSystems.end(); ++it )
+	if( !m_viewUpdatedThisFrame )
 	{
-		(*it)->UpdateViewDependentData( m_worldTransform );
+		Tr2Transform::UpdateViewDependentData( parentTransform );
+
+		for( auto it = m_particleSystems.begin(); it != m_particleSystems.end(); ++it )
+		{
+			(*it)->UpdateViewDependentData( m_worldTransform );
+		}
+
+		TriObserverLocalVector::iterator observersEnd = m_observers.end();
+		for( TriObserverLocalVector::iterator it = m_observers.begin(); it != observersEnd; ++it )
+		{
+			(*it)->Update( m_worldTransform );
+		}
+		m_viewUpdatedThisFrame = true;
 	}
 
-	TriObserverLocalVector::iterator observersEnd = m_observers.end();
-	for( TriObserverLocalVector::iterator it = m_observers.begin(); it != observersEnd; ++it )
+	if( updateChildren )
 	{
-		(*it)->Update( m_worldTransform );
+		for( IEveTransformVector::const_iterator it = m_children.begin(); it != m_children.end(); ++it )
+		{
+			IEveTransform* p = *it;
+			p->UpdateViewDependentData( m_worldTransform, true );
+		}
 	}
 }
 
