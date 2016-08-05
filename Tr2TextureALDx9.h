@@ -23,6 +23,7 @@ public:
 	Tr2TextureAL();
 	~Tr2TextureAL();
 
+	Tr2TextureAL& operator=( Tr2TextureAL& ) throw();
 	Tr2TextureAL& operator=( Tr2TextureAL&& );
 
 	ALResult Create2D( uint32_t width,
