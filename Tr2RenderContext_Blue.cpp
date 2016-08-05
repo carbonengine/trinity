@@ -24,6 +24,8 @@ const Be::VarChooser Tr2RenderContextEnum_ObjectType_Chooser[] =
 	OP_ITEM( OCCLUSION_QUERY )
 	OP_ITEM( SWAP_CHAIN )
 	OP_ITEM( GPU_BUFFER )
+	OP_ITEM( FENCE )
+	OP_ITEM( TIMER )
 #undef OP_ITEM
 	{0}
 };
