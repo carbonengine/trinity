@@ -24,6 +24,7 @@ extern bool g_generateListing;
 extern std::string g_listing;
 extern CRITICAL_SECTION g_listingCS;
 extern bool g_printWarnings;
+extern bool g_validateOpenGL;
 
 extern std::string g_glExternalCompilerSwitch;
 extern std::string g_glExternalCompilerPath;
@@ -3585,10 +3586,14 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 	}
 
 	// WGL will crash if we exit the program without making a single GL call
-	bool useOpenGLValidation = TryOpenGLCall();
-	if( !useOpenGLValidation )
+	bool useOpenGLValidation = false;
+	if( g_validateOpenGL )
 	{
-		g_messages.AddMessage( "\\memory(0): warning X0000: OpenGL calls are failing; skipping OpenGL shader validation" );
+		useOpenGLValidation = TryOpenGLCall();
+		if( !useOpenGLValidation )
+		{
+			g_messages.AddMessage( "\\memory(0): warning X0000: OpenGL calls are failing; skipping OpenGL shader validation" );
+		}
 	}
 
 	// Fist compile effect as DX9

@@ -209,6 +209,9 @@ int g_maxClipPlanes = 1;
 bool g_glesEmulateSampler = false;
 // Avoid flow control in compiled shaders (especially useful for GLES)
 bool g_avoidFlowControl = false;
+// Try validating converted OpenGL
+bool g_validateOpenGL = true;
+
 // Allowed GLES extensions
 GlesExtensionInfo g_glesExtensions;
 
@@ -661,6 +664,7 @@ void PrintUsage()
 	printf( "  /Gfa - Avoid flow control constructs\n" );
 	printf( "  /Gc <switch> <path> - Compile GLSL to binary shader using external compiler\n" );
 	printf( "  /E{e,w,d}[extension] - Specify support for all or certain GLES extensions\n" );
+	printf( "  /novalidate - Skip validating converted GLSL code\n" );
 	printf( "input_file - Path to input .fx file\n" );
 	printf( "output_file - Path to output .fxp file\n" );
 }
@@ -721,6 +725,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		else if( strcmp(argv[i], "/single" ) == 0 )
 		{
 			singlePermutation = true;
+		}
+		else if( strcmp(argv[i], "/novalidate" ) == 0 )
+		{
+			g_validateOpenGL = false;
 		}
 		else if( strcmp(argv[i], "/define" ) == 0 )
 		{
