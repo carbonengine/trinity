@@ -753,6 +753,21 @@ const Be::ClassInfo* EveSOFDataPattern::ExposeToBlue()
 
 
 
+BLUE_DEFINE( EveSOFDataPatternTransform );
+const Be::ClassInfo* EveSOFDataPatternTransform::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( EveSOFDataPatternTransform, "" )
+		MAP_INTERFACE( EveSOFDataPatternTransform )
+
+		MAP_ATTRIBUTE( "position", m_position, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "isMirrored", m_isMirrored, "This pattern is mirrored across all this ship's hull.", Be::READWRITE | Be::PERSIST )
+		EXPOSURE_END()
+}
+
+
+
 BLUE_DEFINE( EveSOFDataPatternPerHull );
 const Be::ClassInfo* EveSOFDataPatternPerHull::ExposeToBlue()
 {
@@ -760,10 +775,9 @@ const Be::ClassInfo* EveSOFDataPatternPerHull::ExposeToBlue()
 		MAP_INTERFACE( EveSOFDataPatternPerHull )
 
 		MAP_ATTRIBUTE( "name", m_name, "The exact hull name. This functions as an ID.", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "position", m_position, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "isMirrored", m_isMirrored, "This pattern is mirrored across all this ship's hull.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "transformLayer1", m_transformLayer1, "Pattern projection transform for layer #1.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "transformLayer2", m_transformLayer2, "Pattern projection transform for layer #2.", Be::READWRITE | Be::PERSIST )
+
 		EXPOSURE_END()
 }
 

@@ -1119,7 +1119,7 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 // --------------------------------------------------------------------------------
 void EveSOF::SetupCustomMask( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 {
-	const EveSOFDataMgr::PatternProjectionData* patternProjectionData = dna->GetPatternProjectionData( dna->GetHullName() );
+	const EveSOFDataMgr::PatternProjectionData* patternProjectionData = dna->GetPatternProjectionData( dna->GetHullName(), 0 );
 	const EveSOFDataMgr::PatternData* patternData = dna->GetPatternData();
 
 	// if we don't have this specific hull in the patter data, we don't need to set it to the spaceobject!

@@ -1079,12 +1079,27 @@ void EveSOFDataMgr::GeneratePatternData( PatternData& pd, EveSOFDataPatternPtr s
 	{
 		EveSOFDataPatternPerHullPtr pattern = ( *ppit );
 
-		PatternProjectionData ppd;
-		ppd.position = pattern->m_position;
-		ppd.scaling = pattern->m_scaling;
-		ppd.rotation = pattern->m_rotation;
-		ppd.isMirrored = pattern->m_isMirrored;
-		pd.projectionData[pattern->m_name] = ppd;
+		pd.projectionData[pattern->m_name].clear();
+		if( pattern->m_transformLayer1 )
+		{
+			PatternProjectionData ppd;
+			ppd.enabled = true;
+			ppd.position = pattern->m_transformLayer1->m_position;
+			ppd.scaling = pattern->m_transformLayer1->m_scaling;
+			ppd.rotation = pattern->m_transformLayer1->m_rotation;
+			ppd.isMirrored = pattern->m_transformLayer1->m_isMirrored;
+			pd.projectionData[pattern->m_name].push_back( ppd );
+		}
+		if( pattern->m_transformLayer2 )
+		{
+			PatternProjectionData ppd;
+			ppd.enabled = true;
+			ppd.position = pattern->m_transformLayer2->m_position;
+			ppd.scaling = pattern->m_transformLayer2->m_scaling;
+			ppd.rotation = pattern->m_transformLayer2->m_rotation;
+			ppd.isMirrored = pattern->m_transformLayer2->m_isMirrored;
+			pd.projectionData[pattern->m_name].push_back( ppd );
+		}
 	}
 
 	// area parameters

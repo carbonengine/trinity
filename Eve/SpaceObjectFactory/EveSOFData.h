@@ -774,6 +774,28 @@ BLUE_DECLARE_VECTOR( EveSOFDataMaterial );
 // --------------------------------------------------------------------------------
 // All data storage classes for per pattern data
 // --------------------------------------------------------------------------------
+BLUE_CLASS( EveSOFDataPatternTransform ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataPatternTransform( IRoot* lockobj = NULL );
+	~EveSOFDataPatternTransform() {}
+
+	// per-hull positional data
+	Vector3 m_position;
+	Vector3 m_scaling;
+	Quaternion m_rotation;
+
+	// mirrored at yz plane?
+	bool m_isMirrored;
+};
+TYPEDEF_BLUECLASS( EveSOFDataPatternTransform );
+
+
+
+
+
 BLUE_CLASS( EveSOFDataPatternPerHull ) :
 	public IRoot
 {
@@ -786,12 +808,8 @@ public:
 	BlueSharedString m_name;
 
 	// per-hull positional data
-	Vector3 m_position;
-	Vector3 m_scaling;
-	Quaternion m_rotation;
-
-	// mirrored at yz plane?
-	bool m_isMirrored;
+	EveSOFDataPatternTransformPtr m_transformLayer1;
+	EveSOFDataPatternTransformPtr m_transformLayer2;
 };
 TYPEDEF_BLUECLASS( EveSOFDataPatternPerHull );
 BLUE_DECLARE_VECTOR( EveSOFDataPatternPerHull );

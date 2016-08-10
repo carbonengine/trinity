@@ -209,7 +209,11 @@ EveSOFDataMaterial::EveSOFDataMaterial( IRoot* lockobj ) :
 {}
 
 
-EveSOFDataPatternPerHull::EveSOFDataPatternPerHull( IRoot* lockobj ) :
+EveSOFDataPatternPerHull::EveSOFDataPatternPerHull( IRoot* lockobj )
+{}
+
+
+EveSOFDataPatternTransform::EveSOFDataPatternTransform( IRoot* lockobj ) :
 	m_position( 0.f, 0.f, 0.f ),
 	m_scaling( 1.f, 1.f, 1.f ),
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),

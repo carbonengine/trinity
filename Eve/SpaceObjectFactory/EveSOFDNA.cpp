@@ -966,7 +966,7 @@ const EveSOFDataMgr::HullBoosterData* EveSOFDNA::GetHullBoosterData() const
 // Description:
 //   Return pattern data, but needs to exist for provided hull!
 // --------------------------------------------------------------------------------
-const EveSOFDataMgr::PatternProjectionData* EveSOFDNA::GetPatternProjectionData( const char* hullName ) const
+const EveSOFDataMgr::PatternProjectionData* EveSOFDNA::GetPatternProjectionData( const char* hullName, uint32_t layer ) const
 {
 	// find hull in the pattern data
 	BlueSharedString s( hullName );
@@ -980,7 +980,11 @@ const EveSOFDataMgr::PatternProjectionData* EveSOFDNA::GetPatternProjectionData(
 	{
 		return nullptr;
 	}
-	return &finder->second;
+	if( finder->second.size() < layer )
+	{
+		return nullptr;
+	}
+	return &finder->second[ layer ];
 }
 
 // --------------------------------------------------------------------------------
