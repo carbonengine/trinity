@@ -359,8 +359,7 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 	}
 	else
 	{
-		m_vsData.customMaskData = Vector4( 0.f, 0.f, 0.f, 0.f );
-		m_psData.customMaskData = Vector4( 0.f, 0.f, 0.f, 0.f );
+		m_psData.customMaskTargets = Vector4( 0.f, 0.f, 0.f, 0.f );
 	}
 
 	if( !m_curveSets.empty() || !m_overlayEffects.empty() )

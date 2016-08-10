@@ -71,17 +71,9 @@ void EveCustomMask::FillPerObjectDataPS( EveSpaceObjectVSData* vsData, EveSpaceO
 	D3DXMatrixTranspose( &vsData->customMaskMatrix, &invCustomMaskTransform );
 	// additional data
 	vsData->customMaskData = Vector4( 1.f, m_isMirrored ? 1.f : 0.f, 0.f, 0.f );
-	// material source IDs goes into PS data
-	vsData->customMaskMaterialIDs = Vector4( (float)m_materialIndex1, 0.f, 0.f, 0.f );
-	// pattern targets
-	vsData->customMaskTargets = m_targetMaterials;
-
-	D3DXMatrixTranspose( &psData->customMaskMatrix, &invCustomMaskTransform );
-	// additional data
-	psData->customMaskData = Vector4( 1.f, m_isMirrored ? 1.f : 0.f, 0.f, 0.f );
-	// material source IDs goes into PS data
+	// material source IDs go into PS data
 	psData->customMaskMaterialIDs = Vector4( (float)m_materialIndex1, 0.f, 0.f, 0.f );
-	// pattern targets
+	// pattern targets go into PS data
 	psData->customMaskTargets = m_targetMaterials;
 }
 
