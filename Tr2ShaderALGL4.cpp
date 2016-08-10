@@ -134,10 +134,10 @@ ALResult Tr2ShaderAL::Create(
 	}
 
 	static const char* samplerNames[] = {
-		"s0",  "s1",  "s2",  "s3",
-		"s4",  "s5",  "s6",  "s7",
-		"s8",  "s9",  "s10", "s11",
-		"s12", "s13", "s14", "s15",		
+		"t0",  "t1",  "t2",  "t3",
+		"t4",  "t5",  "t6",  "t7",
+		"t8",  "t9",  "t10", "t11",
+		"t12", "t13", "t14", "t15",		
 	};
 
 	for( unsigned i = 0; i < 16; ++i )

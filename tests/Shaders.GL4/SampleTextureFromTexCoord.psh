@@ -6,11 +6,11 @@ layout(location = 0) out vec4 FragColor;
 
 layout(location = 0) in vec2 texCoord;
 
-uniform sampler2D s0;
+uniform sampler2D t0;
 
 void main()
 {
-    FragColor = texture( s0, texCoord );
+    FragColor = texture( t0, texCoord );
 #ifdef PS
 if(ss[0].w!=0.0)
 {

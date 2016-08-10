@@ -252,9 +252,12 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 		m_stackRT[i].SetName( "Tr2RenderContextAL::m_stackRT" );
 	}
 
-	for( unsigned i = 0; i < 16; ++i )
+	for( unsigned j = 0; j < Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++j )
 	{
-		m_boundBuffers[i] = nullptr;
+		for( unsigned i = 0; i < 16; ++i )
+		{
+			m_boundBuffers[j][i] = nullptr;
+		}
 	}
 	for( unsigned i = 0; i < 16; ++i )
 	{
@@ -300,6 +303,10 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	m_alphaTestParameters.m_alphaTestFunc = CMP_ALWAYS;
 	m_fragmentOpSettings.m_clipPlaneEnable = 0;
 	m_pipeline = 0;
+
+	m_clQueue = nullptr;
+	m_clContext = nullptr;
+	m_clDevice = nullptr;
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
@@ -834,14 +841,9 @@ ALResult Tr2RenderContextAL::SetConstants(
 	}
 
 
-	if( constantType == PIXEL_SHADER && registerIndex == 0 )
-	{
-		registerIndex = CONSTANT_BUFFER_FOR_FRAGMENT_PARAMETERS;
-	}
-
 	if( !buffer.IsValid() )
 	{
-		m_boundBuffers[registerIndex] = nullptr;
+		m_boundBuffers[constantType][registerIndex] = nullptr;
 		if( &buffer == &nullCB )
 		{
 			return S_OK;
@@ -853,7 +855,7 @@ ALResult Tr2RenderContextAL::SetConstants(
 	}
 
 	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	m_boundBuffers[registerIndex] = &buffer;
+	m_boundBuffers[constantType][registerIndex] = &buffer;
 
 	return S_OK;
 }
@@ -2379,6 +2381,20 @@ bool Tr2RenderContextAL::ConvertToGLPixelFormat(	PixelFormat format,
 		targetType   = 0;
 		return true;
 			
+	case PIXEL_FORMAT_BC4_TYPELESS:
+	case PIXEL_FORMAT_BC4_UNORM:
+		internalFormat = GL_COMPRESSED_RED_RGTC1_EXT;
+		targetFormat = GL_COMPRESSED_RED_RGTC1_EXT;
+		targetType   = 0;
+		return true;
+			
+	case PIXEL_FORMAT_BC5_TYPELESS:
+	case PIXEL_FORMAT_BC5_UNORM:
+		internalFormat = GL_COMPRESSED_RED_GREEN_RGTC2_EXT;
+		targetFormat = GL_COMPRESSED_RED_GREEN_RGTC2_EXT;
+		targetType   = 0;
+		return true;
+			
 	case PIXEL_FORMAT_B5G6R5_UNORM:
 		internalFormat = GL_RGB;
 		targetFormat = GL_RGB;
@@ -2499,17 +2515,17 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 	const Tr2ShaderAL::GLShader& ps = patchedPS && m_pixelShader->m_patchedShader.shader ? m_pixelShader->m_patchedShader : m_pixelShader->m_shader;
 	for( unsigned i = 0; i != 15; ++i )
 	{
-		if( m_boundBuffers[i] && vs.constantBuffers[i] != -1 )
+		if( m_boundBuffers[Tr2RenderContextEnum::VERTEX_SHADER][i] && vs.constantBuffers[i] != -1 )
 		{
 			CR_GL_RETURN_VAL( glProgramUniform4fv( vs.shader, vs.constantBuffers[i],
-				m_boundBuffers[i]->GetSize() / 4 / sizeof( float ), 
-				(float*)m_boundBuffers[i]->m_shadowCopy.get() ), false );
+				m_boundBuffers[Tr2RenderContextEnum::VERTEX_SHADER][i]->GetSize() / 4 / sizeof( float ), 
+				(float*)m_boundBuffers[Tr2RenderContextEnum::VERTEX_SHADER][i]->m_shadowCopy.get() ), false );
 		}
-		if( m_boundBuffers[i] && ps.constantBuffers[i] != -1 )
+		if( m_boundBuffers[Tr2RenderContextEnum::PIXEL_SHADER][i] && ps.constantBuffers[i] != -1 )
 		{
 			CR_GL_RETURN_VAL( glProgramUniform4fv( ps.shader, ps.constantBuffers[i],
-				m_boundBuffers[i]->GetSize() / 4 / sizeof( float ), 
-				(float*)m_boundBuffers[i]->m_shadowCopy.get() ), false );
+				m_boundBuffers[Tr2RenderContextEnum::PIXEL_SHADER][i]->GetSize() / 4 / sizeof( float ), 
+				(float*)m_boundBuffers[Tr2RenderContextEnum::PIXEL_SHADER][i]->m_shadowCopy.get() ), false );
 		}
 	}
 

@@ -283,7 +283,7 @@ private:
 	const Tr2ShaderAL*	m_pixelShader;
 	const Tr2ShaderAL*	m_computeShader;
 
-	Tr2ConstantBufferAL* m_boundBuffers[16];
+	Tr2ConstantBufferAL* m_boundBuffers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
 	int m_numberOfLights;
 	const Tr2VertexDefinition* m_boundLayout;
 	struct VertexStream
