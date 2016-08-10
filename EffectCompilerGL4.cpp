@@ -34,7 +34,7 @@ CRITICAL_SECTION s_glCS;
 HWND s_glWnd;
 
 
-const std::regex s_id( "([-!])?(\\|)?([[:alpha:]][[:alnum:]]*)(?:_([a-zA-Z0-9_]+))?[ \\t]*(?:\\[([^\\]]*)\\])?(?:\\.([[:alpha:]]+))?(\\|)?" );
+const std::regex s_id( "([-!])?(\\|)?([a-zA-Z_][[:alnum:]]*)(?:_([a-zA-Z0-9_]+))?[ \\t]*(?:\\[([^\\]]*)\\])?(?:\\.([[:alpha:]]+))?(\\|)?" );
 const std::regex s_literal( "l\\((\\-?[[:digit:]](?:[[:alnum:]\\.+-])*)(?:,[ \\t]*(\\-?[[:digit:]](?:[[:alnum:]\\.+-])*))?(?:,[ \\t]*(\\-?[[:digit:]](?:[[:alnum:]\\.+-])*))?(?:,[ \\t]*(\\-?[[:digit:]](?:[[:alnum:]\\.+-])*))?\\)" );
 const std::regex s_number( "\\-?[[:digit:]]([[:digit:]\\.eE+-])*" );
 const std::regex s_coma( "," );
@@ -384,9 +384,10 @@ public:
 		ADD_HANDLER( vs );
 	}
 
-	std::string parse( const char* source, InputStageType stage )
+	std::string parse( const char* source, InputStageType stage, const std::vector<InputDescription>& inputs )
 	{
 		m_stage = stage;
+		m_inputs = inputs;
 
 		InlineString stream = MakeInlineString( source );
 		while( true )
@@ -708,7 +709,27 @@ public:
 			if( m_usedInputs.find( reg.name ) == m_usedInputs.end() )
 			{
 				m_usedInputs.insert( reg.name );
-				m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
+
+				int regIndex = atoi( reg.name.start + 1 );
+				for( auto each = m_inputs.begin(); each != m_inputs.end(); ++each )
+				{
+					if( each->registerIndex == regIndex )
+					{
+						switch( each->componentType )
+						{
+						case 1:
+							m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
+							break;
+						case 2:
+							m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
+							break;
+						default:
+							m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
+							break;
+						}
+						break;
+					}
+				}
 			}
 		}
 		else if( command.modifier == MakeInlineString( "input_ps" ) )
@@ -1185,7 +1206,7 @@ public:
 
 		bool precise = command.index == MakeInlineString( "precise" );
 
-		m_codeOs << Dest( dst, precise ) << "=uintBitsToFloat(" << GlslType( Uint, dst ) << "(clamp(";
+		m_codeOs << Dest( dst, precise ) << "=(" << GlslType( Uint, dst ) << "(clamp(";
 		m_codeOs << Src( src0, dst.swizzle );
 		m_codeOs << "," << GlslType( Float, dst ) << "(0.0)," << GlslType( Float, dst ) << "(4294967295.999))";
 		m_codeOs << "));" << endl;
@@ -1370,7 +1391,7 @@ public:
 		auto& src2 = ExpectToken( DX11AsmToken::ID );
 
 		m_codeOs << Dest( dst ) << "=intBitsToFloat(";
-		m_codeOs << Src( src0, dst.swizzle, Int ) << '*' << Src( src1, dst.swizzle, Int ) << '+' << Src( src1, dst.swizzle, Int );
+		m_codeOs << Src( src0, dst.swizzle, Int ) << '*' << Src( src1, dst.swizzle, Int ) << '+' << Src( src2, dst.swizzle, Int );
 		m_codeOs << ");" << endl;
 	}
 
@@ -1486,18 +1507,53 @@ public:
 		ExpectToken( DX11AsmToken::Coma );
 		auto& src0 = ExpectToken( DX11AsmToken::ID );
 
-		m_codeOs << Dest( dst ) << "=" << GlslType( Float, dst ) << '(' << Src( src0, dst.swizzle, Int ) << ");" << endl;
+		m_codeOs << Dest( dst ) << "=intBitsToFloat(" << Src( src0, dst.swizzle, Int ) << ");" << endl;
 	}
 
 	void ld( const DX11AsmToken& command )
 	{
-		auto& dst = ExpectToken( DX11AsmToken::ID );
 		if( command.modifier == MakeInlineString( "structured" ) )
 		{
 			unexpected();
 		}
+		else if( command.modifier == MakeInlineString( "structured_indexable" ) )
+		{
+			ExpectToken( DX11AsmToken::OpenParen );
+			ExpectToken( DX11AsmToken::ID );
+			ExpectToken( DX11AsmToken::Coma );
+			ExpectToken( DX11AsmToken::ID );
+			ExpectToken( DX11AsmToken::Assign );
+			auto& stride = ExpectToken( DX11AsmToken::Number );
+			ExpectToken( DX11AsmToken::CloseParen );
+			ExpectToken( DX11AsmToken::OpenParen );
+			ExpectToken( DX11AsmToken::ID );
+			ExpectToken( DX11AsmToken::Coma );
+			ExpectToken( DX11AsmToken::ID );
+			ExpectToken( DX11AsmToken::Coma );
+			ExpectToken( DX11AsmToken::ID );
+			ExpectToken( DX11AsmToken::Coma );
+			ExpectToken( DX11AsmToken::ID );
+			ExpectToken( DX11AsmToken::CloseParen );
+
+
+			auto& dst = ExpectToken( DX11AsmToken::ID );
+			ExpectToken( DX11AsmToken::Coma );
+			auto& src0 = ExpectToken( DX11AsmToken::ID );
+			ExpectToken( DX11AsmToken::Coma );
+			auto& offset = ExpectToken( DX11AsmToken::ID );
+			ExpectToken( DX11AsmToken::Coma );
+			auto& src1 = ExpectToken( DX11AsmToken::ID );
+
+			m_codeOs << Dest( dst ) << "=texelFetch(" << src1.name<< ',' << Src( src0, dst.swizzle, Int ) << '*' << stride.name << ",0)";
+			if( src1.swizzle.start )
+			{
+				m_codeOs << "." << src1.swizzle;
+			}
+			m_codeOs << ';';
+		}
 		else
 		{
+			auto& dst = ExpectToken( DX11AsmToken::ID );
 			ExpectToken( DX11AsmToken::Coma );
 			auto& src0 = ExpectToken( DX11AsmToken::ID );
 			ExpectToken( DX11AsmToken::Coma );
@@ -1508,6 +1564,7 @@ public:
 			{
 				m_codeOs << "." << src1.swizzle;
 			}
+			m_codeOs << ';';
 		}
 		m_codeOs << endl;
 	}
@@ -1558,7 +1615,7 @@ public:
 
 		m_codeOs << Dest( dst, precise ) << '=';
 		Saturate( m_codeOs, command, dst, [&]() {
-			m_codeOs << "log2(" << Src( src0, dst.swizzle ) << ')';
+			m_codeOs << "log(" << Src( src0, dst.swizzle ) << ')';
 		});
 		m_codeOs << ';' << endl;
 	}
@@ -1608,7 +1665,7 @@ public:
 
 		m_codeOs << Dest( dst, precise ) << '=';
 		Saturate( m_codeOs, command, dst, [&]() {
-			m_codeOs << Src( src0, dst.swizzle ) << '*' << Src( src1, dst.swizzle ) << '+' << Src( src1, dst.swizzle );
+			m_codeOs << Src( src0, dst.swizzle ) << '*' << Src( src1, dst.swizzle ) << '+' << Src( src2, dst.swizzle );
 		});
 		m_codeOs << ';' << endl;
 	}
@@ -1672,7 +1729,7 @@ public:
 
 		m_codeOs << Dest( dst ) << '=';
 		Saturate( m_codeOs, command, dst, [&]() {
-			m_codeOs << "mix(" << Src( src0, dst.swizzle ) << ',' << Src( src1, dst.swizzle ) << ',';
+			m_codeOs << "mix(" << Src( src2, dst.swizzle ) << ',' << Src( src1, dst.swizzle ) << ',';
 			auto length = dst.swizzle.end - dst.swizzle.start;
 			if( length == 1 )
 			{
@@ -1682,7 +1739,7 @@ public:
 			{
 				m_codeOs << "bvec" << length << "(";
 			}
-			m_codeOs << Src( src2, dst.swizzle ) << "))";
+			m_codeOs << Src( src0, dst.swizzle ) << "))";
 		} );
 		m_codeOs << ';' << endl;
 	}
@@ -1775,13 +1832,35 @@ public:
 
 	void resinfo( const DX11AsmToken& command )
 	{
+		ExpectToken( DX11AsmToken::OpenParen );
+		auto& resType = ExpectToken( DX11AsmToken::ID );
+		ExpectToken( DX11AsmToken::CloseParen );
+		ExpectToken( DX11AsmToken::OpenParen );
+		ExpectToken( DX11AsmToken::ID );
+		ExpectToken( DX11AsmToken::Coma );
+		ExpectToken( DX11AsmToken::ID );
+		ExpectToken( DX11AsmToken::Coma );
+		ExpectToken( DX11AsmToken::ID );
+		ExpectToken( DX11AsmToken::Coma );
+		ExpectToken( DX11AsmToken::ID );
+		ExpectToken( DX11AsmToken::CloseParen );
+		ExpectToken( DX11AsmToken::ID );
+
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
 		auto& src0 = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
 		auto& src1 = ExpectToken( DX11AsmToken::ID );
 
-		m_codeOs << Dest( dst ) << "=intBitsToFloat(textureSize(" << src1.name << ',' << Src( src0, dst.swizzle ) << "));" << endl;
+		m_codeOs << Dest( dst ) << "=intBitsToFloat(textureSize(" << src1.name;
+		if( resType.name.end[-1] == 's' )
+		{
+			m_codeOs << ").xy);" << endl;
+		}
+		else
+		{
+			m_codeOs << ',' << Src( src0, "x" ) << "));" << endl;
+		}
 	}
 
 	void ret( const DX11AsmToken& )
@@ -1913,7 +1992,21 @@ public:
 		m_codeOs << ").";
 		for( int i = 0; i < dst.swizzle.end - dst.swizzle.start; ++i )
 		{
-			m_codeOs << src1.swizzle.start[i];
+			switch( dst.swizzle.start[i] )
+			{
+			case 'x':
+				m_codeOs << src1.swizzle.start[0];
+				break;
+			case 'y':
+				m_codeOs << src1.swizzle.start[1];
+				break;
+			case 'z':
+				m_codeOs << src1.swizzle.start[2];
+				break;
+			case 'w':
+				m_codeOs << src1.swizzle.start[3];
+				break;
+			}
 		}
 		m_codeOs << ';' << endl;
 	}
@@ -2269,9 +2362,24 @@ private:
 				{
 					os << '.';
 					int offset = 0;
+					int srcMax = m_reg.swizzle.end - m_reg.swizzle.start - 1;
 					for( auto it = m_destSwizzle.start; it != m_destSwizzle.end; ++it )
 					{
-						os << m_reg.swizzle.start[offset++];
+						switch( *it )
+						{
+						case 'x':
+							os << m_reg.swizzle.start[0];
+							break;
+						case 'y':
+							os << m_reg.swizzle.start[min( srcMax, 1 )];
+							break;
+						case 'z':
+							os << m_reg.swizzle.start[min( srcMax, 2 )];
+							break;
+						case 'w':
+							os << m_reg.swizzle.start[min( srcMax, 3 )];
+							break;
+						}
 					}
 				}
 			}
@@ -2292,26 +2400,31 @@ private:
 		std::ostream& Literal( std::ostream& os, const DX11AsmToken& reg, const InlineString& destSwizzle ) const
 		{
 			int length = 4;
-			InlineString components[] = { reg.name, reg.modifier, reg.index, reg.swizzle };
+			int srcMax = 3;
+			InlineString components[] = { reg.name, reg.modifier, reg.swizzle, reg.index };
+			for( auto it = 0; it < 4; ++it )
+			{
+				if( !components[it].start )
+				{
+					srcMax = it - 1;
+					break;
+				}
+			}
 			if( destSwizzle.start )
 			{
 				length = destSwizzle.end - destSwizzle.start;
 			}
 			else
 			{
-				for( auto it = 0; it < 4; ++it )
-				{
-					if( !components[it].start )
-					{
-						length = it;
-						break;
-					}
-				}
+				length = srcMax + 1;
 			}
 			if( length > 1 )
 			{
 				switch( m_type )
 				{
+				case Uint:
+					os << "uvec" << length << '(';
+					break;
 				case Int:
 					os << "ivec" << length << '(';
 					break;
@@ -2319,13 +2432,35 @@ private:
 					os << "vec" << length << "(";
 				}
 			}
+
 			for( int i = 0; i < length; ++i )
 			{
 				if( i )
 				{
 					os << ',';
 				}
-				os << components[i];
+				if( destSwizzle.start )
+				{
+					switch( destSwizzle.start[i] )
+					{
+					case 'x':
+						os << components[0];
+						break;
+					case 'y':
+						os << components[min(1, srcMax)];
+						break;
+					case 'z':
+						os << components[min(2, srcMax)];
+						break;
+					case 'w':
+						os << components[min(3, srcMax)];
+						break;
+					}
+				}
+				else
+				{
+					os << components[i];
+				}
 			}
 			if( length > 1 )
 			{
@@ -2499,6 +2634,8 @@ private:
 
 	std::set<InlineString> m_usedInputs;
 	std::set<InlineString> m_usedOutputs;
+
+	std::vector<InputDescription> m_inputs;
 };
 
 std::ostream& operator<<( std::ostream& os, const State::_Dest& dest )
@@ -2874,7 +3011,7 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 	}
 
 	// Fist compile effect as DX11
-	if( !g_compilerDX11.CompileEffect( source, sourceLength, newDefines, include, result ) )
+	if( !g_compilerDX11.CompileEffect( source, sourceLength, newDefines, include, result, false ) )
 	{
 		return false;
 	}
@@ -2951,7 +3088,7 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 			State state;
 			try
 			{
-				glesSource = state.parse( src, stage->type );
+				glesSource = state.parse( src, stage->type, stage->inputs );
 			}
 			catch( CompilerError e )
 			{

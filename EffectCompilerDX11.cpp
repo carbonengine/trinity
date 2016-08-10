@@ -1291,6 +1291,7 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 					input.registerIndex = desc.Register;
 					input.index = desc.SemanticIndex;
 					input.usedMask = desc.ReadWriteMask;
+					input.componentType = desc.ComponentType;
 					stage.inputs.push_back( input );
 					found = true;
 				}
@@ -1420,7 +1421,7 @@ void PrintValuePath( std::ostream& os, const std::vector<Symbol*>& path, const c
 
 
 
-static PatchAction PatchShader( InputStageType type, bool patchOutput, ASTNode* callNode, ParserState& state, CodeStream& os, std::string& entryPointName, bool& hasShadowState )
+static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixelOffset, ASTNode* callNode, ParserState& state, CodeStream& os, std::string& entryPointName, bool& hasShadowState )
 {
 	// 1. wrap uniforms
 	// 2. fix VPOS
@@ -1724,7 +1725,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, ASTNode* 
 		}
 	}
 	os << ");\n";
-	if( type == VERTEX_STAGE )
+	if( type == VERTEX_STAGE && pixelOffset)
 	{
 		PrintValuePath( os, outPositionPath, "__returnValue" );
 		os << ".xy += DX11ShadowState.renderTargetSize.xy * ";
@@ -2154,7 +2155,7 @@ void PrintStageInfo( std::ostream& listing, const StageInput& stage, const Effec
 	}
 }
 
-bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const D3DXMACRO* defines, ID3DXInclude* include, EffectData& result )
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const D3DXMACRO* defines, ID3DXInclude* include, EffectData& result, bool patchShaders )
 {
 	CComPtr<ID3D10Blob> effectData;
 	CComPtr<ID3D10Blob> errors;
@@ -2360,7 +2361,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 			std::string patchEntryPoint = entryPoint;
 			bool hasShadowState = false;
-			switch( PatchShader( stage.type, false, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
+			switch( PatchShader( stage.type, false, patchShaders, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
 			{
 			case PATCH_ERROR:
 				return false;
@@ -2450,7 +2451,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			{
 				os.freeze( false );
 				patchEntryPoint = entryPoint;
-				switch( PatchShader( stage.type, true, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
+				switch( PatchShader( stage.type, true, true, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
 				{
 				case PATCH_ERROR:
 					return false;

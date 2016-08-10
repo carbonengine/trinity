@@ -315,6 +315,7 @@ struct InputDescription
 	BYTE registerIndex;
 	BYTE index;
 	BYTE usedMask;
+	BYTE componentType;
 };
 
 // Saved as:
