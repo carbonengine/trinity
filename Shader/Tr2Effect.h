@@ -67,8 +67,8 @@ public:
 
 	// sets & adds
 	void SetEffectPathName( const char* path );
-	void AddResourceTexture2D( const BlueSharedString& name, const char* resPath );
-	void AddResourceTexture2DLod( const BlueSharedString& name, Tr2LodResourcePtr lodResource );
+	bool AddResourceTexture2D( const BlueSharedString& name, const char* resPath );
+	bool AddResourceTexture2DLod( const BlueSharedString& name, Tr2LodResourcePtr lodResource );
 	void AddSamplerOverride( const BlueSharedString& name, Tr2RenderContextEnum::TextureAddressMode addressModeU, Tr2RenderContextEnum::TextureAddressMode addressModeV );
 	void AddParameterVector4( const BlueSharedString& name, const Vector4* value );
 	void AddParameterFloat( const BlueSharedString& name, float value );
@@ -77,7 +77,7 @@ public:
 	// access parameters and resources
 	const char* GetEffectPathName() const;
 	ITriEffectParameter* GetParameterByName( const char* name ) const;
-
+	ITriEffectParameter* GetResourceByName( const char* name ) const;
 
     // This function is called by Tr2Renderer to update Tr2Materials
     // with any changes to the parameters
@@ -178,7 +178,6 @@ protected:
 
 	// Utility
 	virtual ITriEffectParameter* FindParameterByName( const char* name ) const;
-	virtual ITriEffectParameter* FindResourceByName ( const char* name ) const;
 
 	// Variable store to use for binding variables
 	Tr2VariableStorePtr m_variableStore;

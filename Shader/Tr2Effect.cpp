@@ -289,10 +289,15 @@ void Tr2Effect::SetEffectPathName( const char* path )
 // --------------------------------------------------------------------------------
 // Description:
 //   Manually adding a texture 2d resource to this effect's list with creating
-//   it
+//   it. This can fail if the texture name already exists
 // --------------------------------------------------------------------------------
-void Tr2Effect::AddResourceTexture2D( const BlueSharedString& name, const char* resPath )
+bool Tr2Effect::AddResourceTexture2D( const BlueSharedString& name, const char* resPath )
 {
+	// check if have that name already!
+	if( GetResourceByName( name.c_str() ) )
+	{
+		return false;
+	}
 	// alloc and init the texture parameter
 	TriTextureParameterPtr texture2d;
 	texture2d.CreateInstance();
@@ -300,14 +305,20 @@ void Tr2Effect::AddResourceTexture2D( const BlueSharedString& name, const char* 
 	texture2d->SetResourcePath( resPath );
 	// add it to this effect's resources
 	m_resources.Append( texture2d->GetRawRoot() );
+	return true;
 }
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Manually adding a lod resource for textures
+//   Manually adding a lod resource for textures. This can fail if the texture name already exists
 // --------------------------------------------------------------------------------
-void Tr2Effect::AddResourceTexture2DLod( const BlueSharedString& name, Tr2LodResourcePtr lodResource )
+bool Tr2Effect::AddResourceTexture2DLod( const BlueSharedString& name, Tr2LodResourcePtr lodResource )
 {
+	// check if have that name already!
+	if( GetResourceByName( name.c_str() ) )
+	{
+		return false;
+	}
 	// alloc and init the texture lod parameter
 	Tr2Texture2dLodParameterPtr texture2d;
 	texture2d.CreateInstance();
@@ -315,6 +326,7 @@ void Tr2Effect::AddResourceTexture2DLod( const BlueSharedString& name, Tr2LodRes
 	texture2d->SetLodResource( lodResource );
 	// add it to this effect's resources
 	m_resources.Append( texture2d->GetRawRoot() );
+	return true;
 }
 
 // --------------------------------------------------------------------------------
@@ -874,7 +886,7 @@ ITriEffectParameter* Tr2Effect::GetParameterByName( const char* name ) const
 
 	if ( !result )
 	{
-		result = FindResourceByName( name );
+		result = GetResourceByName( name );
 	}
 
 	return result;
@@ -942,7 +954,7 @@ void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2Effe
 		Tr2EffectParam param;
 
 		// First search in effect resource list 
-		if( ITriEffectParameter* p = FindResourceByName( name ) )
+		if( ITriEffectParameter* p = GetResourceByName( name ) )
 		{
 			param.m_sourceValue = p;
 		}
@@ -1119,7 +1131,7 @@ ITriEffectParameter* Tr2Effect::FindParameterByName( const char* name ) const
 	return nullptr;
 }
 
-ITriEffectParameter* Tr2Effect::FindResourceByName( const char* name ) const
+ITriEffectParameter* Tr2Effect::GetResourceByName( const char* name ) const
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
