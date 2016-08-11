@@ -2383,15 +2383,15 @@ bool Tr2RenderContextAL::ConvertToGLPixelFormat(	PixelFormat format,
 			
 	case PIXEL_FORMAT_BC4_TYPELESS:
 	case PIXEL_FORMAT_BC4_UNORM:
-		internalFormat = GL_COMPRESSED_RED_RGTC1_EXT;
-		targetFormat = GL_COMPRESSED_RED_RGTC1_EXT;
+		internalFormat = GL_COMPRESSED_RED_RGTC1;
+		targetFormat = GL_COMPRESSED_RED_RGTC1;
 		targetType   = 0;
 		return true;
 			
 	case PIXEL_FORMAT_BC5_TYPELESS:
 	case PIXEL_FORMAT_BC5_UNORM:
-		internalFormat = GL_COMPRESSED_RED_GREEN_RGTC2_EXT;
-		targetFormat = GL_COMPRESSED_RED_GREEN_RGTC2_EXT;
+		internalFormat = GL_COMPRESSED_RG_RGTC2;
+		targetFormat = GL_COMPRESSED_RG_RGTC2;
 		targetType   = 0;
 		return true;
 			
