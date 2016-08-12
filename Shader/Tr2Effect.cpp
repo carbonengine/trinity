@@ -314,7 +314,7 @@ bool Tr2Effect::AddResourceTexture2D( const BlueSharedString& name, const char* 
 // --------------------------------------------------------------------------------
 bool Tr2Effect::AddResourceTexture2DLod( const BlueSharedString& name, Tr2LodResourcePtr lodResource )
 {
-	// check if have that name already!
+	// check if we have that name already!
 	if( GetResourceByName( name.c_str() ) )
 	{
 		return false;
@@ -333,11 +333,16 @@ bool Tr2Effect::AddResourceTexture2DLod( const BlueSharedString& name, Tr2LodRes
 // Description:
 //   Manually adding a sampler override to change texture lookups
 // --------------------------------------------------------------------------------
-void Tr2Effect::AddSamplerOverride( const BlueSharedString& name, Tr2RenderContextEnum::TextureAddressMode addressModeU, Tr2RenderContextEnum::TextureAddressMode addressModeV )
+bool Tr2Effect::AddSamplerOverride( const BlueSharedString& name, Tr2RenderContextEnum::TextureAddressMode addressModeU, Tr2RenderContextEnum::TextureAddressMode addressModeV )
 {
-	Tr2SamplerOverride o;
+	// check if we have that name already!
+	if( HasSamplerOverride( name.c_str() ) )
+	{
+		return false;
+	}
 
 	// set up the const stuff
+	Tr2SamplerOverride o;
 	o.name = name;
 	o.mipFilter = Tr2RenderContextEnum::TF_LINEAR;
 	o.maxAnisotropy = 4;
@@ -351,6 +356,8 @@ void Tr2Effect::AddSamplerOverride( const BlueSharedString& name, Tr2RenderConte
 	o.addressV = addressModeV;
 
 	m_samplerOverrides.Append( &o );
+
+	return true;
 }
 
 // --------------------------------------------------------------------------------
@@ -358,12 +365,19 @@ void Tr2Effect::AddSamplerOverride( const BlueSharedString& name, Tr2RenderConte
 //   Manually adding a vector4 parameter to this effect's list with creating
 //   it
 // --------------------------------------------------------------------------------
-void Tr2Effect::AddParameterVector4( const BlueSharedString& name, const Vector4* value )
+bool Tr2Effect::AddParameterVector4( const BlueSharedString& name, const Vector4* value )
 {
+	// check if we have that name already!
+	if( HasParameter( name.c_str() ) )
+	{
+		return false;
+	}
+
 	Tr2ConstantEffectParameter param;
 	param.name = name;
 	param.value = *value;
 	m_constParameters.Append( &param );
+	return true;
 }
 
 // --------------------------------------------------------------------------------
@@ -371,11 +385,11 @@ void Tr2Effect::AddParameterVector4( const BlueSharedString& name, const Vector4
 //   Manually adding a float parameter to this effect's list with creating
 //   it
 // --------------------------------------------------------------------------------
-void Tr2Effect::AddParameterFloat( const BlueSharedString& name, float value )
+bool Tr2Effect::AddParameterFloat( const BlueSharedString& name, float value )
 {
 	// turn float vlaue into a vector4, cause that's what we put into constant parameters
 	Vector4 vec4( value, value, value, value );
-	AddParameterVector4( name, &vec4 );
+	return AddParameterVector4( name, &vec4 );
 }
 
 // --------------------------------------------------------------------------------
@@ -383,12 +397,19 @@ void Tr2Effect::AddParameterFloat( const BlueSharedString& name, float value )
 //   Manually adding a color parameter to this effect's list with creating
 //   it
 // --------------------------------------------------------------------------------
-void Tr2Effect::AddParameterColor( const BlueSharedString& name, const Color* value )
+bool Tr2Effect::AddParameterColor( const BlueSharedString& name, const Color* value )
 {
+	// check if we have that name already!
+	if( HasParameter( name.c_str() ) )
+	{
+		return false;
+	}
+
 	Tr2ConstantEffectParameter param;
 	param.name = BlueSharedString( name );
 	param.value = *reinterpret_cast<const Vector4*>( value );
 	m_constParameters.Append( &param );
+	return true;
 }
 
 static Tr2SamplerDescription&& CreateSamplerDescription( const Tr2SamplerOverride& samplerOverride )
@@ -1144,9 +1165,49 @@ ITriEffectParameter* Tr2Effect::GetResourceByName( const char* name ) const
 			return p;
 		}
 	}
-
 	return nullptr;
 }
+
+// --------------------------------------------------------------------------------------
+// Description:
+//	Run through all the existing sampler overrides and check if we already have it, by it's name
+// Return Value:
+//   True if already exists on this effect
+// -------------------------------------------------------------------------------------
+bool Tr2Effect::HasSamplerOverride( const char* name ) const
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	for( auto it = m_samplerOverrides.begin(); it != m_samplerOverrides.end(); ++it )
+	{
+		if( strcmp( it->name.c_str(), name ) == 0 )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//	Run through all the existing const(!) parameters and check if we already have it, by it's name
+// Return Value:
+//   True if already exists on this effect
+// -------------------------------------------------------------------------------------
+bool Tr2Effect::HasParameter( const char* name ) const
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	for( auto it = m_constParameters.begin(); it != m_constParameters.end(); ++it )
+	{
+		if( strcmp( it->name.c_str(), name ) == 0 )
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 
 
 // --------------------------------------------------------------------------------------

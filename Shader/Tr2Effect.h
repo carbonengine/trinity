@@ -69,15 +69,16 @@ public:
 	void SetEffectPathName( const char* path );
 	bool AddResourceTexture2D( const BlueSharedString& name, const char* resPath );
 	bool AddResourceTexture2DLod( const BlueSharedString& name, Tr2LodResourcePtr lodResource );
-	void AddSamplerOverride( const BlueSharedString& name, Tr2RenderContextEnum::TextureAddressMode addressModeU, Tr2RenderContextEnum::TextureAddressMode addressModeV );
-	void AddParameterVector4( const BlueSharedString& name, const Vector4* value );
-	void AddParameterFloat( const BlueSharedString& name, float value );
-	void AddParameterColor( const BlueSharedString& name, const Color* value );
+	bool AddSamplerOverride( const BlueSharedString& name, Tr2RenderContextEnum::TextureAddressMode addressModeU, Tr2RenderContextEnum::TextureAddressMode addressModeV );
+	bool AddParameterVector4( const BlueSharedString& name, const Vector4* value );
+	bool AddParameterFloat( const BlueSharedString& name, float value );
+	bool AddParameterColor( const BlueSharedString& name, const Color* value );
 
 	// access parameters and resources
 	const char* GetEffectPathName() const;
-	ITriEffectParameter* GetParameterByName( const char* name ) const;
 	ITriEffectParameter* GetResourceByName( const char* name ) const;
+	bool HasSamplerOverride( const char* name ) const;
+	bool HasParameter( const char* name ) const;
 
     // This function is called by Tr2Renderer to update Tr2Materials
     // with any changes to the parameters
@@ -99,6 +100,7 @@ public:
 	const Tr2ConstantEffectParameter* GetConstParameters( size_t& count ) const;
 	void UnloadResources();
 	bool LoadResources();
+	ITriEffectParameter* GetParameterByName( const char* name ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
