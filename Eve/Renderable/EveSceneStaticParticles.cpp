@@ -97,6 +97,7 @@ void EveSceneStaticParticles::Update( EveUpdateContext& updateContext )
 		return;
 	}
 
+	m_transform->Update( updateContext );
 	// calc float offset from egopos to center of particles
 	Vector3d offset = m_centerOfClusters - updateContext.GetOrigin();
 	// build a transform matrix
