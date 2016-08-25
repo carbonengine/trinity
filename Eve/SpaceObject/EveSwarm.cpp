@@ -164,6 +164,7 @@ EveSwarm::EveSwarm( IRoot* lockobj ) :
 	m_origin( UNINITIALIZED_ORIGIN, UNINITIALIZED_ORIGIN, UNINITIALIZED_ORIGIN ),
 	m_timeLast( 0 ),
 	m_lodUpdateTime( 1.f ),
+	m_timeSinceUpdate( 0.f ),
 
 	m_swarmingEnabled( false ),
 	m_debugSize( 24.f ),
@@ -353,7 +354,10 @@ void EveSwarm::UpdateSwarm( Be::Time t )
 		timeSeconds = m_behavior.m_maxTime;
 	}
 	
-	bool updateNow = m_isVisible || timeDelta >= m_lodUpdateTime;
+	m_timeSinceUpdate += timeDelta;
+	m_timeLast = t;
+	
+	bool updateNow = m_isVisible || m_timeSinceUpdate >= m_lodUpdateTime;
 	if( !updateNow )
 	{
 		if( m_started )
@@ -370,7 +374,7 @@ void EveSwarm::UpdateSwarm( Be::Time t )
 		m_started = true;
 		return;
 	}
-	m_timeLast = t;
+	m_timeSinceUpdate = 0;
 
 	Vector3 originShift( 0.f, 0.f, 0.f );
 	Vector3d originNow( 0.0, 0.0, 0.0 );

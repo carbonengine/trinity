@@ -230,6 +230,7 @@ private:
 	void UpdateSwarm( Be::Time t );
 	Vector3d m_origin;
 	Be::Time m_timeLast;
+	float m_timeSinceUpdate;
 	float m_lodUpdateTime;
 
 	// Which fighter is being shot
