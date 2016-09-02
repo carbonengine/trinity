@@ -27,6 +27,8 @@ EveChildExplosion::EveChildExplosion( IRoot* lockobj )
 	m_nextLocalExplosion( 0 ),
 	m_isPlaying( false )
 {
+	m_localExplosionScaling = Vector3( 1.0f, 1.0f, 1.0f );
+	m_globalExplosionScaling = Vector3( 1.0f, 1.0f, 1.0f );
 }
 
 EveChildExplosion::~EveChildExplosion()
@@ -128,6 +130,11 @@ void EveChildExplosion::UpdateSyncronous(
 					++m_nextLocalExplosion;
 					m_nextLocalExplosionTime = std::pow( m_localExplosionIntervalFactor, float( m_nextLocalExplosion ) ) * 
 						m_localExplosionInterval * float( rand() ) / float( RAND_MAX );
+
+					if( m_nextLocalExplosion > m_localExplosionTransforms.size() )
+					{
+						m_globalExplosionTime = m_nextLocalExplosionTime + m_globalExplosionDelay;
+					}
 				}
 				else if( -m_nextLocalExplosionTime > m_localDuration && 
 					( !m_globalExplosion || -m_globalExplosionTime > m_globalDuration ) )
@@ -136,7 +143,7 @@ void EveChildExplosion::UpdateSyncronous(
 				}
 			}
 		}
-		if( m_globalExplosion )
+		if( m_globalExplosion && m_nextLocalExplosion >= m_localExplosionTransforms.size())
 		{
 			m_globalExplosionTime -= dt;
 			if( m_globalExplosionTime < 0 )
@@ -145,7 +152,12 @@ void EveChildExplosion::UpdateSyncronous(
 				{
 					m_globalExplosionInstance.Unlock();
 					if( BeClasses->CopyTo( m_globalExplosion, (IRoot**)&m_globalExplosionInstance.p ) )
-					{
+					{	
+						Quaternion rotation = Quaternion(0.0, 0.0 ,0.0, 1.0);
+						Vector3 translation = Vector3(0.0, 0.0, 0.0);
+
+						m_globalExplosionInstance->Setup( &m_globalExplosionScaling, &rotation, &translation, TR2_LOD_LOW );
+
 						m_objects.Append( m_globalExplosionInstance );
 					}
 				}
@@ -329,6 +341,7 @@ void EveChildExplosion::SpawnLocalExplosion( const Matrix& transform )
 	Transform t;
 	Vector3 scale;
 	D3DXMatrixDecompose( &scale, &t.rotation, &t.position, &transform );
+	scale *= m_localExplosionScaling;
 
 	auto localExplosion = m_localExplosion;
 	if( !m_localExplosions.empty() )

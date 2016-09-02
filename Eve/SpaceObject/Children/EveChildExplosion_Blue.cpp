@@ -57,7 +57,7 @@ const Be::ClassInfo* EveChildExplosion::ExposeToBlue()
 		MAP_ATTRIBUTE( 
 			"globalExplosionDelay", 
 			m_globalExplosionDelay, 
-			"Delay from explosion start to the \"global\" explosion in seconds", 
+			"Delay from the end of the last \"local\" explosion to the start of the \"global\" explosion in seconds", 
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( 
 			"wreckSwitchTime", 
@@ -88,7 +88,9 @@ const Be::ClassInfo* EveChildExplosion::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "scaling", m_scaling,"", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "localScaling", m_localExplosionScaling,"", Be::READWRITE | Be::PERSIST )		
+		MAP_ATTRIBUTE( "globalScaling", m_globalExplosionScaling,"", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "localTransform", m_localTransform, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "worldTransform", m_worldTransform, "", Be::READ )
 		MAP_ATTRIBUTE( "useSRT", m_useSRT, "Should local transform be built from scaling, rotation and translation attributes.", Be::READWRITE | Be::PERSIST )
