@@ -1640,7 +1640,7 @@ bool Tr2Sprite2dScene::SelectEffect()
 	{
 		m_effect = nullptr;
 
-		if( newEffect && newEffect->GetEffectRes() && newEffect->GetEffectRes()->IsGood() )
+		if( newEffect && newEffect->GetShaderStateInterface() )
 		{
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 || TRINITY_PLATFORM == TRINITY_ORBIS || TRINITY_PLATFORM == TRINITY_STUB )
 			// In DX11 g_uiTransforms is in a separate constant buffer and is not exposed
@@ -1648,7 +1648,7 @@ bool Tr2Sprite2dScene::SelectEffect()
 			m_effect = newEffect;
 			return true;
 #else
-			const Tr2EffectConstantVector& constants = newEffect->GetEffectRes()->GetEffectDescription().passes[0].stageInputs[VERTEX_SHADER].constants;
+			const Tr2EffectConstantVector& constants = newEffect->GetShaderStateInterface()->GetEffectDescription().passes[0].stageInputs[VERTEX_SHADER].constants;
 			bool foundHandle = false;
 			for( auto it = constants.begin(); it != constants.end(); ++it )
 			{
@@ -2197,17 +2197,18 @@ bool Tr2Sprite2dScene::PrepareResourcesForRender()
 		return false;
 	}
 
-	if( m_uberShader2d->GetEffectRes()->IsLoading() )
+	Tr2EffectResPtr effectRes = m_uberShader2d->GetEffectRes();
+	if( !effectRes || effectRes->IsLoading() )
 	{
 		// Effect is still loading - can't render any UI
 		return false;
 	}
 
-	if( !m_uberShader2d->GetEffectRes()->IsGood() )
+	if( !effectRes->IsGood() )
 	{
 		// Effect load failed - can't render any UI
 		CCP_LOGERR( "%s: Effect used for rendering failed to load - attempting to reload", __FUNCTION__ );
-		m_uberShader2d->GetEffectRes()->Reload();
+		effectRes->Reload();
 		return false;
 	}
 

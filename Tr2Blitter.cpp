@@ -120,7 +120,7 @@ bool Tr2Blitter::DrawCube( Tr2TextureAL& texture, Tr2RenderContextEnum::CubemapF
 	m_cubeFaceVar = (float)face;
 	m_mipLevelVar = (float)mipLevel;
 
-	return DrawHelper( m_blitCubeEffect->GetEffectRes(), m_blitCubeEffect, &texture, false );
+	return DrawHelper( m_blitCubeEffect->GetShaderStateInterface(), m_blitCubeEffect, &texture, false );
 }
 
 bool Tr2Blitter::DrawHelper( ITr2ShaderState* shader, ITr2ShaderMaterial* material, 

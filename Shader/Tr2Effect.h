@@ -129,6 +129,8 @@ public:
 	void ReleaseCachedData( BlueAsyncRes* p );
 	void RebuildCachedData( BlueAsyncRes* p );
 
+	void RebuildCachedData();
+
 protected:
 	void RebuildCachedDataInternal();
 

@@ -512,6 +512,11 @@ void Tr2Effect::RebuildCachedData( BlueAsyncRes* p )
 	}
 }
 
+void Tr2Effect::RebuildCachedData()
+{
+	RebuildCachedDataInternal();
+}
+
 void Tr2Effect::ReleaseCachedData( BlueAsyncRes* p )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -817,13 +822,13 @@ bool Tr2Effect::PruneParameters()
 
 bool Tr2Effect::IsParameterUsedByTechnique( const std::string& parameterName )
 {
-	if (!GetEffectRes())
+	if (!GetShaderStateInterface())
 	{
 		CCP_LOGERR( "No effect resource loaded." );
 		return false;
 	}
 
-	return GetEffectRes()->GetConstant( parameterName.c_str() ) != nullptr;
+	return GetShaderStateInterface()->GetConstant( parameterName.c_str() ) != nullptr;
 }
 
 unsigned int Tr2Effect::GetSortValue() const
@@ -850,7 +855,7 @@ bool Tr2Effect::IsEqual( Tr2Effect* other )
 		return true;
 	}
 
-	if( GetEffectRes() != other->GetEffectRes() )
+	if( GetShaderStateInterface() != other->GetShaderStateInterface() )
 	{
 		return false;
 	}
@@ -1045,16 +1050,16 @@ ITr2ShaderState* Tr2Effect::GetShaderStateInterface() const
 
 uint32_t Tr2Effect::ApplyMaterialDataForPass( unsigned int passIndex, Tr2RenderContext& renderContext )
 {
-	return ::ApplyMaterialDataForPass( m_parametersForPasses, GetEffectRes(), passIndex, renderContext );
+	return ::ApplyMaterialDataForPass( m_parametersForPasses, GetShaderStateInterface(), passIndex, renderContext );
 }
 
 void Tr2Effect::Render( IRenderCallback* cb, Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	Tr2EffectRes* effectResource = GetEffectRes();
+	auto effectResource = GetShaderStateInterface();
 
-	if( !effectResource || !effectResource->IsGood() )
+	if( !effectResource )
 	{
 		return;
 	}
@@ -1076,9 +1081,9 @@ void Tr2Effect::RenderForPicking( IRenderCallback* cb, int objId, Tr2RenderConte
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	Tr2EffectRes* effectResource = GetEffectRes();
+	auto effectResource = GetShaderStateInterface();
 
-	if( !effectResource || !effectResource->IsGood() )
+	if( !effectResource )
 	{
 		return;
 	}

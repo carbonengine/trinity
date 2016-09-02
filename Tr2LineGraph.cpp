@@ -90,8 +90,8 @@ bool Tr2LineGraph::OnPrepareResources()
 		return true;
 	}
 
-	Tr2EffectRes* effectRes = s_lineGraphEffect->GetEffectRes();
-	if( !effectRes || !effectRes->IsGood() )
+	auto effectRes = s_lineGraphEffect->GetShaderStateInterface();
+	if( !effectRes )
 	{
 		return true;
 	}
@@ -171,7 +171,7 @@ void Tr2LineGraph::Render( float scale )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( m_isPrepared && ( !s_lineGraphEffect || !s_lineGraphEffect->GetEffectRes() || !s_lineGraphEffect->GetEffectRes()->IsGood() ) )
+	if( m_isPrepared && ( !s_lineGraphEffect || !s_lineGraphEffect->GetShaderStateInterface() ) )
 	{
 		m_isPrepared = false;
 	}
@@ -290,7 +290,7 @@ void Tr2LineGraph::Render( float scale )
 		}
 	}
 
-	Tr2EffectRes* effectRes = s_lineGraphEffect->GetEffectRes();
+	auto effectRes = s_lineGraphEffect->GetShaderStateInterface();
 	s_lineGraphScale->SetValue( scale );
 	s_lineGraphColor->SetValue( m_color );
 

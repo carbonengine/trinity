@@ -224,7 +224,6 @@ Tr2InteriorScene::Tr2InteriorScene( IRoot* lockobj /*= NULL */ ):
 		m_visualizerEffects[i]->SetHighLevelShaderName( VISUALIZER_NAME[i] );
 		Tr2ShaderSituation situation;
 		m_visualizerEffects[i]->BindLowLevelShader( situation );
-		// m_visualizerEffects[i]->GetEffectRes()->AddNotifyTarget( this );
 	}
 
 	// Initialize SH scale factor
@@ -270,11 +269,6 @@ Tr2InteriorScene::~Tr2InteriorScene()
 	}
 
     m_pickBuffer.ReleaseResources( TRISTORAGE_ALL );
-
-	for( unsigned int i = 1; i < VM_COUNT; ++i )
-	{
-		// m_visualizerEffects[i]->GetEffectRes()->RemoveNotifyTarget( this );
-	}
 }
 
 bool Tr2InteriorScene::Initialize()

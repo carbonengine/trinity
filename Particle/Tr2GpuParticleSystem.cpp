@@ -52,7 +52,7 @@ void GetMinPow2Rectange( uint32_t area, uint32_t& width, uint32_t& height )
 // --------------------------------------------------------------------------------------
 bool CheckEffect( Tr2Effect* effect )
 {
-	return effect && effect->GetEffectRes() && effect->GetEffectRes()->IsGood();
+	return effect && effect->GetShaderStateInterface();
 }
 
 }
@@ -828,9 +828,9 @@ void Tr2GpuParticleSystem::EmitParticles( Tr2RenderContext& renderContext )
 // --------------------------------------------------------------------------------------
 void Tr2GpuParticleSystem::EmitParticles( Tr2RenderContext& renderContext )
 {
-	Tr2EffectRes* effectResource = m_emit->GetEffectRes();
+	auto* effectResource = m_emit->GetShaderStateInterface();
 
-	if( !effectResource || !effectResource->IsGood() )
+	if( !effectResource || !effectResource->GetPassCount() )
 	{
 		return;
 	}

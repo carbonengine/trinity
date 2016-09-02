@@ -77,9 +77,7 @@ public:
 	unsigned int GetSortValue() const;
 	
 	unsigned int GetPermuteIndex() const { return m_permuteIndex; }
-	Tr2ShaderCodeSource GetCodeSource() const { return m_codeSource; }
 	Tr2EffectDefine* GetCompilerDefines() const { return m_compilerDefines; }
-	const std::string& GetEffectPath() const { return m_effectPath; }
 		
 	void SetPermuteIndex( unsigned int permuteIndex );
 	void SetCodeSource( Tr2ShaderCodeSource codeSource );

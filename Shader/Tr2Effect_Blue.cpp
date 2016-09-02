@@ -18,7 +18,7 @@ static PyObject* PyGetTechniques( PyObject* self, PyObject* args )
 {
 	Tr2Effect* pThis = BluePythonCast<Tr2Effect*>( self );
 
-	if (!pThis->GetEffectRes())
+	if (!pThis->GetShaderStateInterface())
 	{
 		CCP_LOGERR( "No effect resource loaded." );
 		Py_INCREF(Py_None);
@@ -52,7 +52,7 @@ static PyObject* PyGetParameterAnnotations( PyObject* self, PyObject* args )
 
 	std::string parameterNameString;
 
-	if (!pThis->GetEffectRes())
+	if (!pThis->GetShaderStateInterface())
 	{
 		CCP_LOGERR( "No effect resource loaded." );
 		Py_INCREF(Py_None);
@@ -77,7 +77,7 @@ static PyObject* PyGetParameterAnnotations( PyObject* self, PyObject* args )
 	PyObject* tmpValue = NULL;
 	PyObject* annotationDict = PyDict_New();
 
-	auto annotations = pThis->GetEffectRes()->GetParameterAnnotations( parameterNameString.c_str() );
+	auto annotations = pThis->GetShaderStateInterface()->GetParameterAnnotations( parameterNameString.c_str() );
 	if( annotations == nullptr )
 	{
 		Py_INCREF(Py_None);

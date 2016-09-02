@@ -1441,7 +1441,7 @@ bool EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 	if( m_backgroundEffect )
 	{
 		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
-		Tr2Renderer::DrawCameraSpaceScreenQuad( m_backgroundEffect->GetEffectRes(), m_backgroundEffect );
+		Tr2Renderer::DrawCameraSpaceScreenQuad( m_backgroundEffect->GetShaderStateInterface(), m_backgroundEffect );
 	}
 
 	// stars

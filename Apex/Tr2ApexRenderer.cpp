@@ -793,10 +793,10 @@ public:
 
 		renderContext.m_esm.ApplyVertexDeclaration( m_vertexDecl );
 
-		if( m_skinned && g_apexRenderer.m_skinnedVS && g_apexRenderer.m_skinnedVS->GetEffectRes() && g_apexRenderer.m_skinnedVS->GetEffectRes()->IsGood() )
+		if( m_skinned && g_apexRenderer.m_skinnedVS && g_apexRenderer.m_skinnedVS->GetShaderStateInterface() )
 		{
 			//g_apexRenderer.m_skinnedVS->ApplyVertexShaderInputs( 0 );
-			g_apexRenderer.m_skinnedVS->GetEffectRes()->ApplyShader( 0, Tr2RenderContextEnum::VERTEX_SHADER, renderContext );
+			g_apexRenderer.m_skinnedVS->GetShaderStateInterface()->ApplyShader( 0, Tr2RenderContextEnum::VERTEX_SHADER, renderContext );
 		}
 
 		if( !reverseOrder )

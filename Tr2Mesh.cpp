@@ -236,7 +236,7 @@ void Tr2Mesh::BindAreaShaders( Tr2MeshAreaVector* areas,
 		else if( Tr2Effect* fx = dynamic_cast<Tr2Effect*>( ( *areaIt )->GetMaterialInterface() ) )
 		{
 			fx->SetVariableStore( variableStore );
-			fx->RebuildCachedData( fx->GetEffectRes() );
+			fx->RebuildCachedData();
 		}
 	}
 }

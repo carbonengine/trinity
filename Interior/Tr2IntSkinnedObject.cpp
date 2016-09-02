@@ -160,7 +160,7 @@ void SetVariableStore( ITr2ShaderMaterial* const effect, const std::vector<unsig
 		}
 		else if( Tr2Effect* fx = dynamic_cast<Tr2Effect*>( effect ) )
 		{
-			fx->RebuildCachedData( fx->GetEffectRes() );
+			fx->RebuildCachedData();
 		}
 	}
 }
