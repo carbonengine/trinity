@@ -40,7 +40,8 @@ private:
 		Quaternion rotation;
 		Vector3 position;
 	};
-
+	
+	void CalculateExplosionTimes(uint32_t localExplosionCount);
 	void FindSharedObjects();
 	void SpawnLocalExplosion( const Matrix& transform );
 	static ICopier::OverrideResult CopyElement( IRoot* source, IRoot** dest, ICopier* copier, void* context );
@@ -52,6 +53,10 @@ private:
 	float m_localExplosionInterval;
 	// Coefficent to apply to m_localExplosionInterval for consecutive explosions
 	float m_localExplosionIntervalFactor;
+	// Store the localExplosion times in seconds so we can safely calculate the global explosion time
+	std::vector<float> m_localExplosionTimes;
+	// The start time of the global explosion in seconds
+	float m_globalExplosionStartTime;
 	// Delay from explosion start to the "global" explosion in seconds
 	float m_globalExplosionDelay;
 	// Time from the start of the explosion to the point when original model needs to be switched to the wreck
@@ -60,6 +65,8 @@ private:
 	float m_localDuration;
 	// Duration of the global explosion
 	float m_globalDuration;
+
+	
 
 	// Child containing local explosion effect
 	IEveSpaceObjectChildPtr m_localExplosion;

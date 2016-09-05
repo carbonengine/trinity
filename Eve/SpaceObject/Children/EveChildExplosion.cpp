@@ -48,9 +48,9 @@ void EveChildExplosion::Play()
 
 	m_nextLocalExplosionTime = m_localExplosionDelay;
 	m_nextLocalExplosion = 0;
-	m_globalExplosionTime = m_globalExplosionDelay;
 	m_objects.Append( m_localExplosionShared );
 	FindSharedObjects();
+	CalculateExplosionTimes( m_localExplosionTransforms.size() );
 	m_isPlaying = true;
 	m_playTime = 0;
 }
@@ -69,17 +69,40 @@ void EveChildExplosion::Stop()
 
 // --------------------------------------------------------------------------------------
 // Description:
+//   Calculates the local explosion and global explosion start times
+// --------------------------------------------------------------------------------------
+void EveChildExplosion::CalculateExplosionTimes( uint32_t localExplosionCount )
+{
+	m_localExplosionTimes.clear();
+	m_globalExplosionTime = m_localExplosionDelay;
+	for(uint32_t i = 0; i < localExplosionCount; i++)
+	{
+		auto explosionTime = std::pow( m_localExplosionIntervalFactor, float( i ) ) *  
+			m_localExplosionInterval * float( rand() ) / float( RAND_MAX );	
+		
+		m_localExplosionTimes.push_back(explosionTime);
+		m_globalExplosionTime += explosionTime;
+	}
+	
+	m_globalExplosionTime += m_globalExplosionDelay;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
 //   Assigns transforms to be used for local explosions
 // Arguments:
 //   transforms - Transforms for local explosions
 // --------------------------------------------------------------------------------------
 void EveChildExplosion::SetLocalExplosionTransforms( const std::vector<Matrix>& transforms )
 {
+	
 	m_localExplosionTransforms.clear();
 	m_localExplosionTransforms.insert( 
 		m_localExplosionTransforms.begin(), 
 		transforms.begin(), 
 		transforms.end() );
+
+	CalculateExplosionTimes(m_localExplosionTransforms.size());
 }
 
 // --------------------------------------------------------------------------------------
@@ -126,14 +149,7 @@ void EveChildExplosion::UpdateSyncronous(
 					Matrix transform = m_localExplosionTransforms[m_nextLocalExplosion];
 					transform.GetTranslation() = XMVector3TransformCoord( transform.GetTranslation(), XMMatrixInverse( &det, m_localTransform ) );
 					SpawnLocalExplosion( transform );
-					++m_nextLocalExplosion;
-					m_nextLocalExplosionTime = std::pow( m_localExplosionIntervalFactor, float( m_nextLocalExplosion ) ) * 
-						m_localExplosionInterval * float( rand() ) / float( RAND_MAX );
-
-					if( m_nextLocalExplosion > m_localExplosionTransforms.size() )
-					{
-						m_globalExplosionTime = m_nextLocalExplosionTime + m_globalExplosionDelay;
-					}
+					m_nextLocalExplosionTime = m_localExplosionTimes[++m_nextLocalExplosion];
 				}
 				else if( -m_nextLocalExplosionTime > m_localDuration && 
 					( !m_globalExplosion || -m_globalExplosionTime > m_globalDuration ) )
@@ -142,7 +158,7 @@ void EveChildExplosion::UpdateSyncronous(
 				}
 			}
 		}
-		if( m_globalExplosion && m_nextLocalExplosion >= m_localExplosionTransforms.size())
+		if( m_globalExplosion)
 		{
 			m_globalExplosionTime -= dt;
 			if( m_globalExplosionTime < 0 )

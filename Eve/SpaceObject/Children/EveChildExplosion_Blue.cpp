@@ -76,6 +76,12 @@ const Be::ClassInfo* EveChildExplosion::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( 
+			"globalExplosionTime", 
+			m_globalExplosionTime, 
+			"The start of the global explosion", 
+			Be::READ )
+
+		MAP_ATTRIBUTE( 
 			"isPlaying", 
 			m_isPlaying, 
 			"Is the effect playing", 
