@@ -48,8 +48,7 @@ void EveChildMesh::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Re
 	{
 		return;
 	}
-	const Vector3 zero( 0.f, 0.f, 0.f );
-	if( m_worldTransform.GetX() == zero && m_worldTransform.GetY() == zero && m_worldTransform.GetZ() == zero )
+	if( parentLod < m_lowestLodVisible )
 	{
 		return;
 	}
@@ -58,11 +57,6 @@ void EveChildMesh::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Re
 	{
 		renderables.push_back( this );
 	}
-	if( parentLod < m_lowestLodVisible )
-	{
-		return;
-	}
-	renderables.push_back( this );
 }
 
 bool EveChildMesh::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
