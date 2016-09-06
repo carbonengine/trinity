@@ -31,6 +31,7 @@ struct PerFrameData
 {
 	Matrix viewProjInverse;
 	Vector3 cameraPos;
+	// cppcheck-suppress unusedStructMember 
 	float _padding0;
 	uint32_t width;
 	uint32_t height;
