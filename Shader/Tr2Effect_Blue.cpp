@@ -176,7 +176,7 @@ const Be::ClassInfo* Tr2Effect::ExposeToBlue()
 		(    
 			"options",
 			m_options,
-			":jessica-widget: effectoptions",
+			"",
 			Be::READ | Be::PERSIST
 		)
 		////////////////////////////////////////////////////////////////////////////
