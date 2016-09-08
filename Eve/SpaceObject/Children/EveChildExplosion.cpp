@@ -168,13 +168,18 @@ void EveChildExplosion::UpdateSyncronous(
 					m_globalExplosionInstance.Unlock();
 					if( BeClasses->CopyTo( m_globalExplosion, (IRoot**)&m_globalExplosionInstance.p ) )
 					{	
-						Quaternion rotation = Quaternion(0.0, 0.0 ,0.0, 1.0);
-						Vector3 translation = Vector3(0.0, 0.0, 0.0);
+						EveChildContainerPtr container;
+						container.CreateInstance();
+						
+						Quaternion rotation = Quaternion( 0.0, 0.0 ,0.0, 1.0 );
+						Vector3 translation = Vector3( 0.0, 0.0, 0.0 );
+						
 						Vector3 scaling = m_globalExplosionScaling;
+						container->Setup(&scaling, &rotation, &translation, TR2_LOD_LOW );
 
-						m_globalExplosionInstance->Setup( &scaling, &rotation, &translation, TR2_LOD_LOW );
-
-						m_objects.Append( m_globalExplosionInstance );
+						container->m_objects.Append( m_globalExplosionInstance );
+						
+						m_objects.Append( container );
 					}
 				}
 				else if( !m_localExplosion && m_localExplosions.empty() && -m_globalExplosionTime > m_globalDuration )
