@@ -53,7 +53,7 @@ void EveChildMesh::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Re
 		return;
 	}
 	Vector4 boundingSphere;
-	if( GetBoundingSphere( boundingSphere ) && frustum.IsSphereVisible( &boundingSphere ) && frustum.GetPixelSizeAccross( &boundingSphere ) >= m_minScreenSize * g_eveSpaceSceneLODFactor )
+	if( GetBoundingSphere( boundingSphere ) && frustum.GetPixelSizeAccross( &boundingSphere ) >= m_minScreenSize * g_eveSpaceSceneLODFactor )
 	{
 		renderables.push_back( this );
 	}
