@@ -2425,8 +2425,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				memcpy( stage.shaderData, effectData->GetBufferPointer(), effectData->GetBufferSize() );
 				stage.shaderSize = effectData->GetBufferSize();
 			}
+			stage.shaderDataStr = g_stringTable.AddString( stage.shaderData, stage.shaderSize );
 			stage.shadowShaderSize = 0;
 			stage.shadowShaderData = nullptr;
+			stage.shadowShaderDataStr = -1;
 
 			CComPtr<ID3D11ShaderReflection> reflection;
 			if( FAILED( D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**) &reflection.p ) ) )
@@ -2438,6 +2440,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			if( !GetStageData( state, reflection, stage, result.annotations ) )
 			{
 				return false;
+			}
+			if( !stage.defaultValues.empty() )
+			{
+				stage.defaultValuesStr = g_stringTable.AddString( &stage.defaultValues[0], stage.defaultValues.size() );
+			}
+			else
+			{
+				stage.defaultValuesStr = -1;
 			}
 
 			if( g_generateListing )
@@ -2512,10 +2522,11 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						}
 						else
 						{
-							stage.shaderData = new char[effectData->GetBufferSize()];
-							memcpy( stage.shaderData, effectData->GetBufferPointer(), effectData->GetBufferSize() );
-							stage.shaderSize = effectData->GetBufferSize();
+							stage.shadowShaderData = new char[effectData->GetBufferSize()];
+							memcpy( stage.shadowShaderData, effectData->GetBufferPointer(), effectData->GetBufferSize() );
+							stage.shadowShaderSize = effectData->GetBufferSize();
 						}
+						stage.shadowShaderDataStr = g_stringTable.AddString( stage.shadowShaderData, stage.shadowShaderSize );
 
 
 						CComPtr<ID3D11ShaderReflection> reflection;

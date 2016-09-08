@@ -171,6 +171,67 @@ HRESULT CachingIncludeHandler::Open( D3DXINCLUDE_TYPE includeType,
 	return S_OK;
 }
 
+HRESULT CachingIncludeHandler::AddPrefix( const char* fileName, const char* prefix, LPCVOID *outData, UINT *bytes )
+{
+	EnterCriticalSection( &m_CS );
+	char fullPath[MAX_PATH];
+	if( PathIsRelative( fileName ) )
+	{
+		char parentPath[MAX_PATH];
+		strcpy_s( parentPath, MAX_PATH, m_rootPath.c_str() );
+		if( !PathAppend( parentPath, fileName ) )
+		{
+			LeaveCriticalSection( &m_CS );
+			return E_FAIL;
+		}
+		if( !PathCanonicalize( fullPath, parentPath ) )
+		{
+			LeaveCriticalSection( &m_CS );
+			return E_FAIL;
+		}
+	}
+	else
+	{
+		strcpy_s( fullPath, MAX_PATH, fileName );
+	}
+	FileFromPath::iterator fileFromPath = m_fileFromPath.find( fullPath );
+	if( fileFromPath == m_fileFromPath.end() )
+	{
+		LeaveCriticalSection( &m_CS );
+		return E_FAIL;
+	}
+
+	auto &info = fileFromPath->second;
+	auto length = strlen( prefix );
+	auto data = malloc( info.size + length + 2 );
+	if( data == NULL )
+	{
+		LeaveCriticalSection( &m_CS );
+		return E_FAIL;
+	}
+	*reinterpret_cast<char*>( data ) = '\n';
+	memcpy( static_cast<char*>( data ) + 1, prefix, length );
+	memcpy( static_cast<char*>( data ) + 1 + length, static_cast<char*>( info.data ) + 1, info.size + 1 );
+	info.size += length;
+
+	m_pathFromFile[data] = m_pathFromFile[info.data];
+	m_pathFromFile.erase( info.data );
+	free( info.data );
+	info.data = data;
+
+	LeaveCriticalSection( &m_CS );
+
+	if( outData )
+	{
+		*outData = static_cast<char*>( data ) + 1;
+	}
+	if( bytes )
+	{
+		*bytes = info.size;
+	}
+	return S_OK;
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Implements ID3DXInclude interface. Supposed to free contents of a previously opened

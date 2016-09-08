@@ -160,6 +160,24 @@ struct PreprocessorCondition
 	bool seenElse;
 };
 
+
+struct PermutationOption
+{
+	std::string name;
+	int value;
+};
+
+struct Permutation
+{
+	std::string name;
+	std::vector<PermutationOption> options;
+	std::string defaultOption;
+	std::string description;
+	FileLocation location;
+};
+
+typedef std::vector<Permutation> Permutations;
+
 class ParserState
 {
 public:
@@ -172,6 +190,7 @@ public:
 	ParserState( const InlineString& code );
 	~ParserState();
 
+	bool DiscoverPermutations( Permutations& permutations );
 	bool Parse();
 	PreprocessorScanResult EvaluatePreprocessorCondition( const InlineString& string, bool& result );
 
@@ -196,6 +215,7 @@ public:
 	const char* GetStreamEnd();
 	bool InMacro() const;
 	bool InSkipMode() const;
+	bool InDiscoverMode() const;
 	PreprocessorScanResult GetPreprocessorToken( PreprocessorToken& token );
 
 	void IncludeFile( const InlineString& fileName );
@@ -245,6 +265,7 @@ private:
 	ASTNode* m_offlineStatements;
 	bool m_hasErrors;
 	bool m_inPreprocessorCondition;
+	bool m_inDiscoverMode;
 
 	std::vector<char*> m_strings;
 	std::set<Symbol*> m_dx9TextureFunctions;

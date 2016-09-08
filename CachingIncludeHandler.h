@@ -39,6 +39,8 @@ public:
 							UINT *bytes,
 							LPCSTR rootPath,
 							FILETIME& mtime );
+
+	HRESULT AddPrefix( const char* fileName, const char* prefix, LPCVOID *data, UINT *bytes );
 private:
 	// Cached file contents
 	struct FileInfo

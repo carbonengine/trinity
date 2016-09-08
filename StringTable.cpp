@@ -13,8 +13,14 @@ StringTable::~StringTable()
 
 StringReference StringTable::AddString( const char* string )
 {
+	return AddString( string, strlen( string ) + 1 );
+}
+
+StringReference StringTable::AddString( const void* string, size_t length )
+{
+	Blob blob( string, length );
 	EnterCriticalSection( &m_CS );
-	auto it = m_table.find( string );
+	auto it = m_table.find( blob );
 	if( it != m_table.end() )
 	{
 		StringReference result = it->second;
@@ -22,8 +28,8 @@ StringReference StringTable::AddString( const char* string )
 		return result;
 	}
 	StringReference index = StringReference( m_size );
-	m_size += strlen( string ) + 1;
-	m_table[string] = index;
+	m_size += blob.m_size;
+	m_table[blob] = index;
 	LeaveCriticalSection( &m_CS );
 	return index;
 }
@@ -34,7 +40,7 @@ const char* StringTable::GetString( StringReference ref )
 	{
 		if( it->second == ref )
 		{
-			return it->first.c_str();
+			return static_cast<const char*>( it->first.m_data );
 		}
 	}
 	return nullptr;
@@ -62,7 +68,7 @@ bool StringTable::Write( HANDLE file ) const
 	char* buffer = new char[m_size];
 	for( auto it = m_table.begin(); it != m_table.end(); ++it )
 	{
-		strcpy( buffer + it->second, it->first.c_str() );
+		memcpy( buffer + it->second, it->first.m_data, it->first.m_size );
 	}
 	if( !WriteFile( file, buffer, m_size, &bytesWritten, nullptr ) || bytesWritten != m_size )
 	{

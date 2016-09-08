@@ -2643,9 +2643,11 @@ bool EffectCompilerOrbis::CompileEffect( const char* source, size_t sourceLength
 			stage.shaderData = new char[orbisEffectData->GetBufferSize()];
 			memcpy( stage.shaderData, orbisEffectData->GetBufferPointer(), orbisEffectData->GetBufferSize() );
 			stage.shaderSize = orbisEffectData->GetBufferSize();
+			stage.shaderDataStr = g_stringTable.AddString( stage.shaderData, stage.shaderSize );
 
 			stage.shadowShaderSize = 0;
 			stage.shadowShaderData = nullptr;
+			stage.shadowShaderDataStr = -1;
 
 			CComPtr<ID3D11ShaderReflection> reflection;
 			if( FAILED( D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**) &reflection.p ) ) )
@@ -2657,6 +2659,14 @@ bool EffectCompilerOrbis::CompileEffect( const char* source, size_t sourceLength
 			if( !GetStageData( state, reflection, stage, result.annotations ) )
 			{
 				return false;
+			}
+			if( !stage.defaultValues.empty() )
+			{
+				stage.defaultValuesStr = g_stringTable.AddString( &stage.defaultValues[0], stage.defaultValues.size() );
+			}
+			else
+			{
+				stage.defaultValuesStr = -1;
 			}
 
 			if( g_generateListing )
@@ -2752,6 +2762,7 @@ bool EffectCompilerOrbis::CompileEffect( const char* source, size_t sourceLength
 						stage.shadowShaderData = new char[orbisEffectData->GetBufferSize()];
 						memcpy( stage.shadowShaderData, orbisEffectData->GetBufferPointer(), orbisEffectData->GetBufferSize() );
 						stage.shadowShaderSize = orbisEffectData->GetBufferSize();
+						stage.shadowShaderDataStr = g_stringTable.AddString( stage.shadowShaderData, stage.shadowShaderSize );
 
 						CComPtr<ID3D11ShaderReflection> reflection;
 						D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**) &reflection.p );

@@ -665,8 +665,19 @@ void PrintUsage()
 	printf( "  /Gc <switch> <path> - Compile GLSL to binary shader using external compiler\n" );
 	printf( "  /E{e,w,d}[extension] - Specify support for all or certain GLES extensions\n" );
 	printf( "  /novalidate - Skip validating converted GLSL code\n" );
+	printf( "  /permutations - Print permutations of the shader\n" );
 	printf( "input_file - Path to input .fx file\n" );
 	printf( "output_file - Path to output .fxp file\n" );
+}
+
+#include "ParserUtils.h"
+#include "HLSLParser.h"
+#include "ParserState.h"
+
+bool DiscoverPermutations( Permutations& permutations )
+{
+	ParserState state( MakeInlineString( g_shaderSource, g_shaderSource + g_shaderLength ) );
+	return state.DiscoverPermutations( permutations );
 }
 
 // --------------------------------------------------------------------------------------
@@ -695,6 +706,8 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	// The /mtime option
 	bool checkMTime = false;
+	bool printPermutations = false;
+	bool ignorePermutations = false;
 
 	g_glesExtensions.m_all = GlesExtensionInfo::WARN;
 
@@ -729,6 +742,14 @@ int _tmain(int argc, _TCHAR* argv[])
 		else if( strcmp(argv[i], "/novalidate" ) == 0 )
 		{
 			g_validateOpenGL = false;
+		}
+		else if( strcmp( argv[i], "/permutations" ) == 0 )
+		{
+			printPermutations = true;
+		}
+		else if( strcmp( argv[i], "/no_permutations" ) == 0 )
+		{
+			ignorePermutations = true;
 		}
 		else if( strcmp(argv[i], "/define" ) == 0 )
 		{
@@ -849,8 +870,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	if( outputPath == nullptr && ( !checkMTime || singlePermutation ) )
 	{
-		PrintUsage();
-		return 1;
+		if( !printPermutations )
+		{
+			PrintUsage();
+			return 1;
+		}
 	}
 
 	if( checkMTime )
@@ -959,13 +983,92 @@ int _tmain(int argc, _TCHAR* argv[])
 	// Read permutation strings
 	char buffer[BUFFER_SIZE];
 
+	Permutations permutations;
 	if( singlePermutation )
 	{
+		if( !DiscoverPermutations( permutations ) )
+		{
+			g_messages.Flush();
+			return 1;
+		}
+
+		if( printPermutations )
+		{
+			for( auto it = permutations.begin(); it != permutations.end(); ++it )
+			{
+				printf( "%s:\n", it->name.c_str() );
+				printf( "  options:\n" );
+				for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
+				{
+					printf( "  - name: %s\n", jt->name.c_str() );
+					printf( "    value: %i\n", jt->value );
+				}
+				printf( "  default: %s\n", it->defaultOption.c_str() );
+				printf( "  description: %s\n", it->description.c_str() );
+			}
+			return 0;
+		}
+
+		std::ostringstream os;
+		os << '\n';
+		for( auto it = permutations.begin(); it != permutations.end(); ++it )
+		{
+			for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
+			{
+				os << "#line " << it->location.lineNumber << std::endl << "#define " << jt->name << ' ' << jt->value << std::endl;
+			}
+		}
+		os << "#line 0" << std::endl;
+		auto prefix = os.str();
+
+		g_includeHandler.AddPrefix( shaderPath, prefix.c_str(), (LPCVOID*)&g_shaderSource, &g_shaderLength );
+
 		*singleDefineStart = 0;
-		size_t length = strlen( singleDefines ) + 1;
-		char* inputLine = new char[length];
-		strcpy_s( inputLine, length, singleDefines );
-		g_workQueue.Put( inputLine );
+
+		std::vector<size_t> indexes;
+		indexes.resize( permutations.size() );
+		unsigned permutation = 0;
+		bool done = false;
+		while( !done )
+		{
+			std::ostringstream os;
+			os << permutation << " -1 " << ( singleDefines + 5 );
+			if( !ignorePermutations )
+			{
+				for( size_t i = 0; i < permutations.size(); ++i )
+				{
+					os << permutations[i].name << ' ' << permutations[i].options[indexes[i]].value << ' ';
+				}
+			}
+			auto line = os.str();
+
+			size_t length = line.length() + 1;
+			char* inputLine = new char[length];
+			strcpy_s( inputLine, length, line.c_str() );
+			g_workQueue.Put( inputLine );
+
+			for( size_t i = 0; i < permutations.size(); ++i )
+			{
+				++indexes[i];
+				if( indexes[i] >= permutations[i].options.size() )
+				{
+					if( i + 1 == permutations.size() )
+					{
+						done = true;
+					}
+					indexes[i] = 0;
+				}
+				else
+				{
+					break;
+				}
+			}
+			if( ignorePermutations || permutations.empty() )
+			{
+				break;
+			}
+			++permutation;
+		}
 	}
 	else
 	{
@@ -1007,6 +1110,30 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 	}
 
+	std::vector<unsigned> keys;
+
+	for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
+	{
+		keys.push_back( it->first );
+	}
+
+	for( size_t i = 0; i < keys.size(); ++i )
+	{
+		auto b0 = g_compiledEffects[keys[i]];
+		for( size_t j = i + 1; j < keys.size(); ++j )
+		{
+			auto b1 = g_compiledEffects[keys[j]];
+			if( b0->GetBufferSize() == b1->GetBufferSize() && memcmp( b0->GetBufferPointer(), b1->GetBufferPointer(), b0->GetBufferSize() ) == 0 )
+			{
+				g_aliases[keys[j]] = keys[i];
+				b1->Release();
+				g_compiledEffects.erase( keys[j] );
+				keys.erase( keys.begin() + j );
+				--j;
+			}
+		}
+	}
+
 	// Open the output file
 	HANDLE file = CreateFile( outputPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
 	if( file == INVALID_HANDLE_VALUE )
@@ -1021,12 +1148,54 @@ int _tmain(int argc, _TCHAR* argv[])
 		printf( "Compiled %u permutations and %u aliases\n", g_compiledEffects.size(), g_aliases.size() );
 	}
 
+	size_t permutationSize = 1;
+	for( auto it = permutations.begin(); it != permutations.end(); ++it )
+	{
+		permutationSize += 2 * sizeof( DWORD ) + 1 + 1 + it->options.size() * sizeof( DWORD );
+	}
+
+
+
+
 	// Write file header
 	unsigned totalSize = unsigned( g_compiledEffects.size() + g_aliases.size() );
-	unsigned headerSize = ( totalSize * 3 + 1 ) * sizeof( unsigned );
-	DWORD *header = new DWORD[totalSize * 3 + 1];
-	header[0] = totalSize;
-	unsigned index = 1;
+	unsigned headerSize = ( totalSize * 3 + 1 ) * sizeof( unsigned ) + permutationSize;
+	BYTE* fullHeader = new BYTE[headerSize];
+	BYTE* headerHead = fullHeader;
+
+	*headerHead++ = BYTE( permutations.size() );
+	for( auto it = permutations.begin(); it != permutations.end(); ++it )
+	{
+		*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.AddString( it->name.c_str() );
+		headerHead += sizeof( DWORD );
+		for( size_t j = 0; j < it->options.size(); ++j )
+		{
+			if( it->options[j].name == it->defaultOption )
+			{
+				*reinterpret_cast<BYTE*>( headerHead ) = BYTE( j );
+				++headerHead;
+				break;
+			}
+		}
+		*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.AddString( it->description.c_str() );
+		headerHead += sizeof( DWORD );
+
+		*headerHead++ = BYTE( it->options.size() );
+		for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
+		{
+			*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.AddString( jt->name.c_str() );
+			headerHead += sizeof( DWORD );
+		}
+	}
+
+
+	DWORD *header = reinterpret_cast<DWORD*>( headerHead );
+	unsigned index = 0;
+	
+
+
+
+	header[index++] = totalSize;
 	unsigned offset = sizeof( DWORD ) + headerSize + g_stringTable.GetSize();
 
 	std::map<unsigned, std::pair<unsigned, unsigned> > offsets;
@@ -1045,10 +1214,10 @@ int _tmain(int argc, _TCHAR* argv[])
 		header[index++] = offsets[it->second].second;
 	}
 	DWORD bytesWritten;
-	DWORD version = 4;
+	DWORD version = 5;
 	WriteFile( file, &version, sizeof( DWORD ), &bytesWritten, NULL );
-	WriteFile( file, header, headerSize, &bytesWritten, NULL );
 	g_stringTable.Write( file );
+	WriteFile( file, fullHeader, headerSize, &bytesWritten, NULL );
 
 	// Write compiled code
 	for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
@@ -1056,7 +1225,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		WriteFile( file, it->second->GetBufferPointer(), it->second->GetBufferSize(), &bytesWritten, NULL );
 	}
 
-	delete[] header;
+	delete[] fullHeader;
 
 	CloseHandle( file );
 

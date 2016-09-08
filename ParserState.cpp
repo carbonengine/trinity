@@ -8,6 +8,7 @@
 #include "ParserUtils.h"
 #include "Preprocessor.h"
 #include "IntrinsicTypes.h"
+#include <regex>
 
 extern CompileMessageQueue g_messages;
 
@@ -175,7 +176,8 @@ ParserState::ParserState( const InlineString& code )
 	m_offlineStatements( nullptr ),
 	m_hasErrors( false ),
 	m_expandMacros( true ),
-	m_inPreprocessorCondition( false )
+	m_inPreprocessorCondition( false ),
+	m_inDiscoverMode( false )
 {
 	FileContents fileContents;
 	fileContents.location.fileName = MakeInlineString( "\\memory" );
@@ -277,6 +279,11 @@ bool ParserState::InSkipMode() const
 		return false;
 	}
 	return m_prepocessorConditions.back().inheridedSkipMode || m_prepocessorConditions.back().skipMode;
+}
+
+bool ParserState::InDiscoverMode() const
+{
+	return m_inDiscoverMode;
 }
 
 bool ParserState::FindConcatOperator( size_t depth )
@@ -390,6 +397,161 @@ PreprocessorScanResult ParserState::GetPreprocessorToken( PreprocessorToken& tok
 	}
 
 	return PPSR_OK;
+}
+
+namespace
+{
+
+bool IsPermutationPragma( const std::string& pragma )
+{
+	const char* prefix = "permutation";
+	return strncmp( pragma.c_str(), prefix, strlen( prefix ) ) == 0 && !isalnum( pragma[strlen( prefix )] );
+}
+
+bool GetPermutationInfo( const std::string& pragma, Permutation& permutation )
+{
+	const std::regex permutationExpr( "permutation[[:space:]]*\\([[:space:]]*"
+		"([[:alpha:]_][[:alnum:]_]*)[[:space:]]*,[[:space:]]*"
+		"(?:values[[:space:]]*=[[:space:]]*)?"
+		"\\([[:space:]]*"
+		"([[:alpha:]_][[:alnum:]_]*(?:[[:space:]]*=[[:space:]]*[[:digit:]])?"
+		"(?:[[:space:]]*,[[:space:]]*[[:alpha:]_][[:alnum:]_]*(?:[[:space:]]*=[[:space:]]*[[:digit:]])?)*)"
+		"[[:space:]]*\\)"
+		"(?:[[:space:]]*,[[:space:]]*(?:default[[:space:]]*=[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*))?"
+		"(?:[[:space:]]*,[[:space:]]*(?:description[[:space:]]*=[[:space:]]*)?\"([^\"]*)\")?"
+		"[[:space:]]*\\)[[:space:]]*"
+		);
+	const std::regex valueExpr( "[[:space:]]*(?:,[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*)(?:[[:space:]]*=[[:space:]]*([[:digit:]]))?" );
+
+	std::smatch match;
+	if( !std::regex_match( pragma, match, permutationExpr ) )
+	{
+		return false;
+	}
+
+	permutation.name = match[1];
+	permutation.defaultOption = match[match.size() - 2];
+	permutation.description = match[match.size() - 1];
+	bool takenValues[256];
+	memset( takenValues, 0, sizeof( takenValues ) );
+
+	const std::string values = match[2];
+	auto begin = values.begin();
+	while( std::regex_search( begin, values.end(), match, valueExpr ) )
+	{
+		PermutationOption opt;
+		opt.name = match[1];
+
+		opt.value = -1;
+		if( !match[2].str().empty() )
+		{
+			opt.value = atoi( match[2].str().c_str() );
+			if( opt.value < 0 || opt.value > 255 )
+			{
+				return false;
+			}
+			if( takenValues[opt.value] )
+			{
+				return false;
+			}
+			takenValues[opt.value] = true;
+		}
+		permutation.options.push_back( opt );
+		begin += match[0].length();
+	}
+	if( permutation.options.size() > 256 )
+	{
+		return false;
+	}
+	size_t next = 0;
+	for( auto it = permutation.options.begin(); it != permutation.options.end(); ++it )
+	{
+		if( it->value < 0 )
+		{
+			while( takenValues[next] )
+			{
+				++next;
+			}
+			it->value = next;
+			takenValues[next] = true;
+		}
+	}
+	if( permutation.defaultOption.empty() )
+	{
+		permutation.defaultOption = permutation.options[0].name;
+	}
+	else
+	{
+		bool found = false;
+		for( auto it = permutation.options.begin(); it != permutation.options.end(); ++it )
+		{
+			if( permutation.defaultOption == it->name )
+			{
+				found = true;
+				break;
+			}
+		}
+		if( !found )
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+}
+
+bool ParserState::DiscoverPermutations( Permutations& permutations )
+{
+	m_inDiscoverMode = true;
+	ScannerToken token;
+
+	bool done = false;
+	while( !done )
+	{
+		PreprocessorToken ppToken;
+		PreprocessorScanResult scanCode = GetPreprocessorToken( ppToken );
+		switch( scanCode )
+		{
+		case PPSR_ERROR:
+			break;
+		case PPSR_EOF:
+			{
+				if( m_fileStack.size() > 1 )
+				{
+					m_fileStack.pop_back();
+				}
+				else
+				{
+					done = true;
+					break;
+				}
+			}
+			break;
+		case PPSR_OK:
+			ConvertToScannerToken( *this, ppToken, token );
+			break;
+		}
+	}
+
+	for( auto it = m_pragmas.begin(); it != m_pragmas.end(); ++it )
+	{
+		auto pragma = ToString( it->pragma );
+		if( !IsPermutationPragma( pragma ) )
+		{
+			break;
+		}
+		Permutation p;
+		if( !GetPermutationInfo( pragma, p ) )
+		{
+			ShowMessage( it->location, EC_SYNTAX_ERROR, "pragma permutation" );
+			return false;
+		}
+		p.location = it->location;
+		permutations.push_back( p );
+	}
+	m_inDiscoverMode = false;
+	return true;
 }
 
 bool ParserState::Parse()
@@ -717,6 +879,13 @@ void ParserState::AddPragma( const InlineString& string )
 	pragma.pragma = string;
 	pragma.location = GetCurrentLocation();
 	pragma.used = false;
+	if( !m_inDiscoverMode )
+	{
+		if( IsPermutationPragma( ToString( pragma.pragma ) ) )
+		{
+			return;
+		}
+	}
 	m_pragmas.push_back( pragma );
 }
 

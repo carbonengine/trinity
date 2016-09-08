@@ -2,6 +2,7 @@
 #include "EffectCompilerDx9.h"
 #include "EffectData.h"
 #include "CompileMessageQueue.h"
+#include <regex>
 
 extern CompileMessageQueue g_messages;
 extern StringTable g_stringTable;
@@ -678,8 +679,10 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 
 			pass.stages[0].shadowShaderSize = 0;
 			pass.stages[0].shadowShaderData = nullptr;
+			pass.stages[0].shadowShaderDataStr = -1;
 			pass.stages[1].shadowShaderSize = 0;
 			pass.stages[1].shadowShaderData = nullptr;
+			pass.stages[1].shadowShaderDataStr = -1;
 			pass.stages[0].threadGroupSize[0] = 0;
 			pass.stages[0].threadGroupSize[1] = 0;
 			pass.stages[0].threadGroupSize[2] = 0;
@@ -700,6 +703,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				g_messages.AddMessage( "\\memory(0): warning X0000: Vertex shader NULL encountered when analyzing DX9 effect" );
 				pass.stages[0].shaderSize = 0;
 				pass.stages[0].shaderData = nullptr;
+				pass.stages[0].shaderDataStr = -1;
 				if( g_printShaderStats )
 				{
 					shaderStatistics += "   -";
@@ -734,6 +738,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 					}
 				}
 				StripComments( buffer, pass.stages[0].shaderSize, pass.stages[0].shaderData );
+				pass.stages[0].shaderDataStr = g_stringTable.AddString( pass.stages[0].shaderData, pass.stages[0].shaderSize );
 				delete[] buffer;
 			}
 
@@ -742,6 +747,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				g_messages.AddMessage( "\\memory(0): warning X0000: Pixel shader NULL encountered when analyzing DX9 effect" );
 				pass.stages[1].shaderSize = 0;
 				pass.stages[1].shaderData = nullptr;
+				pass.stages[1].shaderDataStr = -1;
 				if( g_printShaderStats )
 				{
 					shaderStatistics += "   -";
@@ -776,6 +782,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				}
 				StripComments( buffer, pass.stages[1].shaderSize, pass.stages[1].shaderData );
 				delete[] buffer;
+				pass.stages[1].shaderDataStr = g_stringTable.AddString( pass.stages[1].shaderData, pass.stages[1].shaderSize );
 			}
 
 			static char buffer[64*1024];
@@ -949,11 +956,21 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 			{
 				pass.stages[1].defaultValues.resize( m_pixelConstantValueCount * sizeof( Vector4 ) );
 				memcpy( &pass.stages[1].defaultValues[0], m_pixelConstantValues, m_pixelConstantValueCount * sizeof( Vector4 ) );
+				pass.stages[1].defaultValuesStr = g_stringTable.AddString( &pass.stages[1].defaultValues[0], pass.stages[1].defaultValues.size() );
+			}
+			else
+			{
+				pass.stages[1].defaultValuesStr = -1;
 			}
 			if( m_vertexConstantValueCount )
 			{
 				pass.stages[0].defaultValues.resize( m_vertexConstantValueCount * sizeof( Vector4 ) );
 				memcpy( &pass.stages[0].defaultValues[0], m_vertexConstantValues, m_vertexConstantValueCount * sizeof( Vector4 ) );
+				pass.stages[0].defaultValuesStr = g_stringTable.AddString( &pass.stages[0].defaultValues[0], pass.stages[0].defaultValues.size() );
+			}
+			else
+			{
+				pass.stages[0].defaultValuesStr = -1;
 			}
 
 			Reset();
@@ -1214,10 +1231,17 @@ CompileStatus SafeCompileEffect( ID3DXEffectCompiler* effectCompiler, DWORD flag
 	}
 }
 
+const std::regex s_premutationPragma( "^[[:space:]]*#[[:space:]]*pragma[[:space:]]*permutation.*" );
+
 }
 
 bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, const D3DXMACRO* defines, ID3DXInclude* include, EffectData& result, bool disableListing )
 {
+	auto src = std::regex_replace( std::string( source, sourceLength ), s_premutationPragma, std::string( "" ) );
+	source = src.c_str();
+	sourceLength = src.length();
+
+
 	CComPtr<ID3DXEffectCompiler> effectCompiler;
 	CComPtr<ID3DXBuffer> errors;
 	CComPtr<ID3DXBuffer> effectData;

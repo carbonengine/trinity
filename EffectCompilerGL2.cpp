@@ -3670,6 +3670,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 			{
 				stage->shadowShaderSize = 0;
 				stage->shadowShaderData = nullptr;
+				stage->shadowShaderDataStr = -1;
 
 				continue;
 			}
@@ -3722,9 +3723,11 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 			stage->shaderSize = glesSource.length() + 1;
 			stage->shaderData = new char[stage->shaderSize];
 			strcpy_s( (char*)stage->shaderData, stage->shaderSize, glesSource.c_str() );
+			stage->shaderDataStr = g_stringTable.AddString( stage->shaderData, stage->shaderSize );
 
 			stage->shadowShaderSize = 0;
 			stage->shadowShaderData = nullptr;
+			stage->shadowShaderDataStr = -1;
 
 			// Validate resulting shader
 			GLuint shader = 0;
@@ -3837,6 +3840,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 				stage->shaderData = new char[stage->shaderSize];
 				fread( stage->shaderData, sz, 1, f );
 				fclose( f );
+				stage->shaderDataStr = g_stringTable.AddString( stage->shaderData, stage->shaderSize );
 
 				if( !RunProcess( ( cmdLinePrefix + " -DPS=1 " + inFile ).c_str() ) )
 				{
@@ -3858,6 +3862,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 				stage->shadowShaderData = new char[stage->shadowShaderSize];
 				fread( stage->shadowShaderData, sz, 1, f );
 				fclose( f );
+				stage->shadowShaderDataStr = g_stringTable.AddString( stage->shadowShaderData, stage->shadowShaderSize );
 
 				DeleteFile( inFile );
 				DeleteFile( outFile );

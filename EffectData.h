@@ -332,12 +332,12 @@ struct StageInput
 {
 	size_t GetPackedSize()
 	{
-		size_t size = sizeof( BYTE ) + sizeof( DWORD ) + shaderSize + sizeof( DWORD ) + shadowShaderSize + sizeof( DWORD ) + 3 * sizeof( DWORD );
+		size_t size = sizeof( BYTE ) + sizeof( DWORD ) + sizeof( DWORD ) + sizeof( DWORD ) + sizeof( DWORD ) + sizeof( DWORD ) + 3 * sizeof( DWORD );
 		for( auto it = constants.begin(); it != constants.end(); ++it )
 		{
 			size += it->GetPackedSize();
 		}
-		size += sizeof( DWORD ) + defaultValues.size() + sizeof( BYTE ) + sizeof( BYTE );
+		size += sizeof( DWORD ) + sizeof( DWORD ) + sizeof( BYTE ) + sizeof( BYTE );
 		for( auto it = textures.begin(); it != textures.end(); ++it )
 		{
 			size += sizeof( BYTE );
@@ -375,12 +375,12 @@ struct StageInput
 		}
 		*reinterpret_cast<DWORD*>( buffer ) = shaderSize;
 		buffer += sizeof( DWORD );
-		memcpy( buffer, shaderData, shaderSize );
-		buffer += shaderSize;
+		*reinterpret_cast<DWORD*>( buffer ) = shaderDataStr;
+		buffer += sizeof( DWORD );
 		*reinterpret_cast<DWORD*>( buffer ) = shadowShaderSize;
 		buffer += sizeof( DWORD );
-		memcpy( buffer, shadowShaderData, shadowShaderSize );
-		buffer += shadowShaderSize;
+		*reinterpret_cast<DWORD*>( buffer ) = shadowShaderDataStr;
+		buffer += sizeof( DWORD );
 		*reinterpret_cast<DWORD*>( buffer ) = threadGroupSize[0];
 		buffer += sizeof( DWORD );
 		*reinterpret_cast<DWORD*>( buffer ) = threadGroupSize[1];
@@ -397,11 +397,8 @@ struct StageInput
 		}
 		*reinterpret_cast<DWORD*>( buffer ) = defaultValues.size();
 		buffer += sizeof( DWORD );
-		if( !defaultValues.empty() )
-		{
-			memcpy( buffer, &defaultValues[0], defaultValues.size() );
-			buffer += defaultValues.size();
-		}
+		*reinterpret_cast<DWORD*>( buffer ) = defaultValuesStr;
+		buffer += sizeof( DWORD );
 		*reinterpret_cast<BYTE*>( buffer ) = textures.size();
 		buffer += sizeof( BYTE );
 		for( auto it = textures.begin(); it != textures.end(); ++it )
@@ -438,11 +435,14 @@ struct StageInput
 	std::vector<InputDescription> inputs;
 	unsigned shaderSize;
 	void* shaderData;
+	StringReference shaderDataStr;
 	unsigned shadowShaderSize;
 	void* shadowShaderData;
+	StringReference shadowShaderDataStr;
 	unsigned threadGroupSize[3];
 	std::vector<Constant> constants;
 	std::vector<BYTE> defaultValues;
+	StringReference defaultValuesStr;
 	std::map<unsigned, Texture> textures;
 	std::map<unsigned, Sampler> samplers;
 	std::map<unsigned, Uav> uavs;
