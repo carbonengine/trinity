@@ -174,6 +174,8 @@ class ShaderWindow(wx.Frame):
         wx.Frame.__init__(self, None, -1, '', size=(1024, 900))
 
         panel = wx.Panel(self)
+
+        self.permutations = []
         
         slashIndex = max(shaderFileName.rfind('/'), shaderFileName.rfind('\\'))
         self.SetTitle(shaderFileName[slashIndex + 1:])
@@ -213,6 +215,9 @@ class ShaderWindow(wx.Frame):
             self.situations.Bind(wx.EVT_CHECKLISTBOX, self.OnSituation)
             vbox.Add(self.situations, 1, wx.ALL | wx.EXPAND, 2)
         else:
+            self.permutationsParent = wx.StaticBox(panel, label="Options")
+            vbox.Add(self.permutationsParent, 0, wx.EXPAND)
+
             self.sm = wx.RadioBox(
                 panel, 
                 choices=['SM_DEPTH', 'SM_HIGH', 'SM_LOW'],
@@ -226,6 +231,8 @@ class ShaderWindow(wx.Frame):
 
         if self.isShaderMaterial:
             self.GetSituations()
+        else:
+            self.GetPermutations()
 
         self.Centre()
         
@@ -240,11 +247,31 @@ class ShaderWindow(wx.Frame):
                 self.situations.Append(tag['name'])
                 self.defines.append((tag['permuteDefineString'], tag['tagBits']))
 
+    def GetPermutations(self):
+        cmdLine = os.path.dirname(__file__) + r'\ShaderCompiler.exe /single /permutations %s' % self.shaderFileName
+        output = subprocess.check_output(cmdLine)
+        data = yaml.load(output)
+        if data:
+            sizer = wx.GridSizer(len(data), 2, 10, 10)
+            for name, description in data.iteritems():
+                sizer.Add(wx.StaticText(self.permutationsParent, label=name))
+                cb = wx.Choice(self.permutationsParent)
+                for option in description['options']:
+                    cb.Append(option['name'], (name, option['value']))
+                cb.SetStringSelection(description['default'])
+                cb.Bind(wx.EVT_CHOICE, self.OnPermutation)
+                self.permutations.append(cb)
+                sizer.Add(cb)
+            box = wx.BoxSizer(wx.VERTICAL)
+            box.AddSpacer(20)
+            box.Add(sizer, flag=wx.EXPAND | wx.ALL, border=10)
+            self.permutationsParent.SetSizerAndFit(box)
+        self.Layout()
 
     def CompileShader(self, platform):
         tempFile = tempfile.NamedTemporaryFile(delete=False)
         tempFile.close()
-        cmdLine = os.path.dirname(__file__) + r'\ShaderCompiler.exe /no_warnings /single /listing %s ' % tempFile.name
+        cmdLine = os.path.dirname(__file__) + r'\ShaderCompiler.exe /no_warnings /no_permutations /single /listing %s ' % tempFile.name
         cmdLine += ' /define PLATFORM %s' % platform
         if self.isShaderMaterial:
             for index in range(self.situations.GetCount()):
@@ -257,7 +284,12 @@ class ShaderWindow(wx.Frame):
         else:
             cmdLine += ' /define SHADERMODEL '
             cmdLine += '%s' % (5 - self.sm.GetSelection())
+            for each in self.permutations:
+                s = each.GetSelection()
+                cmdLine += ' /define %s %s' % each.GetClientData(s)
+
         cmdLine += " " + self.shaderFileName
+        print cmdLine
 
         tempOutput = tempfile.NamedTemporaryFile(delete=False)
         tempOutput.close()
