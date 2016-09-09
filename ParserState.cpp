@@ -414,14 +414,14 @@ bool GetPermutationInfo( const std::string& pragma, Permutation& permutation )
 		"([[:alpha:]_][[:alnum:]_]*)[[:space:]]*,[[:space:]]*"
 		"(?:values[[:space:]]*=[[:space:]]*)?"
 		"\\([[:space:]]*"
-		"([[:alpha:]_][[:alnum:]_]*(?:[[:space:]]*=[[:space:]]*[[:digit:]])?"
-		"(?:[[:space:]]*,[[:space:]]*[[:alpha:]_][[:alnum:]_]*(?:[[:space:]]*=[[:space:]]*[[:digit:]])?)*)"
+		"([[:alpha:]_][[:alnum:]_]*[[:space:]]*(?:=[[:space:]]*[[:digit:]]+[[:space:]]*)?"
+		"(?:,[[:space:]]*[[:alpha:]_][[:alnum:]_]*[[:space:]]*(?:=[[:space:]]*[[:digit:]]+[[:space:]]*)?)+)"
 		"[[:space:]]*\\)"
 		"(?:[[:space:]]*,[[:space:]]*(?:default[[:space:]]*=[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*))?"
 		"(?:[[:space:]]*,[[:space:]]*(?:description[[:space:]]*=[[:space:]]*)?\"([^\"]*)\")?"
 		"[[:space:]]*\\)[[:space:]]*"
 		);
-	const std::regex valueExpr( "[[:space:]]*(?:,[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*)(?:[[:space:]]*=[[:space:]]*([[:digit:]]))?" );
+	const std::regex valueExpr( "[[:space:]]*(?:,[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*)(?:[[:space:]]*=[[:space:]]*([[:digit:]]+))?" );
 
 	std::smatch match;
 	if( !std::regex_match( pragma, match, permutationExpr ) )

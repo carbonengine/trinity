@@ -178,7 +178,7 @@ HRESULT CachingIncludeHandler::AddPrefix( const char* fileName, const char* pref
 	if( PathIsRelative( fileName ) )
 	{
 		char parentPath[MAX_PATH];
-		strcpy_s( parentPath, MAX_PATH, m_rootPath.c_str() );
+		parentPath[0] = 0;
 		if( !PathAppend( parentPath, fileName ) )
 		{
 			LeaveCriticalSection( &m_CS );
