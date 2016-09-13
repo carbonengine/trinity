@@ -1,4 +1,4 @@
-from . import paths, PLATFORM_NAMES, SHADER_MODEL_NAMES
+from . import paths, PLATFORM_NAMES, SHADER_MODEL_NAMES, ShaderModel, Platform
 import struct
 
 
@@ -27,6 +27,9 @@ class _StructStream(object):
 
     def read_uint16(self):
         return self.read('H')[0]
+
+    def read_int32(self):
+        return self.read('i')[0]
 
     def read_uint32(self):
         return self.read('I')[0]
@@ -73,7 +76,7 @@ class ShaderInput(object):
 
 
 _TRINITY_FLOAT_PARAMETERS = {1: 'Tr2FloatParameter', 2: 'Tr2Vector2Parameter', 3: 'Tr2Vector3Parameter',
-                             4: 'Tr2Vector4Parameter'}
+                             4: 'Tr2Vector4Parameter', 16: 'Tr2Matrix4Parameter'}
 
 
 class Constant(object):
@@ -91,10 +94,10 @@ class Constant(object):
             if self.elements > 1:
                 self.trinity_type = 'TriFloatArrayParameter'
             else:
-                try:
-                    self.trinity_type = _TRINITY_FLOAT_PARAMETERS[self.dimension]
-                except KeyError:
-                    pass
+                if self.dimension == 16 and 'Reflection' in self.name:
+                    self.trinity_type = 'TriVariableParameter'
+                else:
+                    self.trinity_type = _TRINITY_FLOAT_PARAMETERS.get(self.dimension)
 
 
 class Resource(object):
@@ -155,8 +158,14 @@ class Stage(object):
         for input_index in xrange(stream.read_uint8()):
             self.inputs.append(ShaderInput(stream))
 
-        stream.seek(stream.read_uint32() + stream.offset())
-        stream.seek(stream.read_uint32() + stream.offset())
+        if version < 5:
+            stream.seek(stream.read_uint32() + stream.offset())
+            stream.seek(stream.read_uint32() + stream.offset())
+        else:
+            stream.read_uint32()
+            stream.read_uint32()
+            stream.read_uint32()
+            stream.read_uint32()
 
         if version >= 3:
             self.thread_group_size = stream.read_uint32(), stream.read_uint32(), stream.read_uint32()
@@ -168,7 +177,10 @@ class Stage(object):
             self.constants.append(Constant(stream, string_table))
 
         constant_value_size = stream.read_uint32()
-        stream.seek(stream.offset() + constant_value_size)
+        if version < 5:
+            stream.seek(stream.offset() + constant_value_size)
+        else:
+            stream.read_uint32()
 
         self.resources = []
         for i in xrange(stream.read_uint8()):
@@ -179,8 +191,9 @@ class Stage(object):
             self.samplers.append(Sampler(stream, string_table, version))
 
         self.uavs = []
-        for i in xrange(stream.read_uint8()):
-            self.uavs.append(UAV(stream, string_table))
+        if version >= 3:
+            for i in xrange(stream.read_uint8()):
+                self.uavs.append(UAV(stream, string_table))
 
 
 class Pass(object):
@@ -198,8 +211,8 @@ class Pass(object):
         self.states = {}
         state_count = stream.read_uint8()
         for i in xrange(state_count):
-            state = stream.read_uint8()
-            value = stream.read_uint8()
+            state = stream.read_uint32()
+            value = stream.read_uint32()
             self.states[state] = value
 
 
@@ -248,6 +261,9 @@ class _Parameter(object):
     def __getitem__(self, item):
         return self.annotation[item]
 
+    def get_annotation(self, name, default=None):
+        return self.annotation.annotations.get(name, default)
+
     def update(self, other):
         for k, v in other.annotation.annotations.iteritems():
             if k not in self.annotation.annotations:
@@ -262,57 +278,19 @@ def _merge_parameters(destination, other):
             destination[k].update(v)
 
 
-class EffectInfo(object):
-    def __init__(self, path, permutation=None):
-        if path.lower().endswith('.fx'):
-            first = True
-            for platform in PLATFORM_NAMES.iterkeys():
-                for sm in SHADER_MODEL_NAMES.iterkeys():
-                    if first:
-                        self._load(paths.get_compiled_path(path, sm, platform), permutation)
-                        first = False
-                    else:
-                        try:
-                            e = EffectInfo(paths.get_compiled_path(path, sm, platform), permutation)
-                        except IOError:
-                            continue
-                        _merge_parameters(self.parameters, e.parameters)
-                        _merge_parameters(self.resources, e.resources)
-                        _merge_parameters(self.uavs, e.uavs)
-        else:
-            self._load(path, permutation)
+class Permutation(object):
+    def __init__(self, stream, string_table):
+        self.name = string_table.get_string(stream.read_uint32())
+        self.default_index = stream.read_uint8()
+        self.description = string_table.get_string(stream.read_uint32())
+        count = stream.read_uint8()
+        self.options = []
+        for i in xrange(count):
+            self.options.append(string_table.get_string(stream.read_uint32()))
 
-    def _load(self, path, permutation):
-        with open(path, 'rb') as f:
-            data = f.read()
-        stream = _StructStream(data)
-        version = stream.read_uint32()
-        if version < 2 or version > 4:
-            raise RuntimeError('unsupported effect file version')
-        header_size = stream.read_uint32()
-        if header_size == 0:
-            raise RuntimeError('effect file contains no compiled effects')
-        if header_size * 3 * 4 + 4 > stream.remaining():
-            raise RuntimeError('invalid header size')
 
-        if permutation is None:
-            stream.read_uint32()
-            offset = stream.read_uint32()
-        else:
-            for i in xrange(header_size):
-                p = stream.read_uint32()
-                offset = stream.read_uint32()
-                if p == permutation:
-                    break
-            else:
-                raise ValueError('permutation not found')
-        if offset > stream.size():
-            raise RuntimeError('invalid offset')
-
-        stream.seek(2 * 4 + header_size * 3 * 4)
-        string_table = _StringTable(stream)
-
-        stream.seek(offset)
+class ShaderInfo(object):
+    def __init__(self, stream, string_table, version):
         pass_count = stream.read_uint8()
 
         self.passes = []
@@ -344,3 +322,105 @@ class EffectInfo(object):
                         continue
                     result.setdefault(const.name, _Parameter(const, annotation))
         return result
+
+
+class EffectInfo(object):
+    def __init__(self, path, platform=Platform.DX11, shader_model=ShaderModel.DEPTH):
+        self._stream = None
+        self._version = None
+        self.permutations = []
+
+        if path.lower().endswith('.fx'):
+            self._load(paths.get_compiled_path(path, shader_model, platform))
+        else:
+            self._load(path)
+
+    def _load(self, path):
+        with open(path, 'rb') as f:
+            data = f.read()
+        self._stream = _StructStream(data)
+        stream = self._stream
+        version = stream.read_uint32()
+        self._version = version
+        if version < 2 or version > 5:
+            raise RuntimeError('unsupported effect file version')
+        if version < 5:
+            header_size = stream.read_uint32()
+            if header_size == 0:
+                raise RuntimeError('effect file contains no compiled effects')
+            if header_size * 3 * 4 + 4 > stream.remaining():
+                raise RuntimeError('invalid header size')
+            self._offsets = {}
+            for i in xrange(header_size):
+                key = stream.read_uint32()
+                self._offsets[key] = (stream.read_uint32(), stream.read_uint32())
+            self._string_table = _StringTable(stream)
+        else:
+            self._string_table = _StringTable(stream)
+            permutation_count = stream.read_uint8()
+            self.permutations = []
+            for i in xrange(permutation_count):
+                self.permutations.append(Permutation(stream, self._string_table))
+            header_size = stream.read_uint32()
+            if header_size == 0:
+                raise RuntimeError('effect file contains no compiled effects')
+            if header_size * 3 * 4 + 4 > stream.remaining():
+                raise RuntimeError('invalid header size')
+            self._offsets = {}
+            for i in xrange(header_size):
+                key = stream.read_uint32()
+                self._offsets[key] = (stream.read_uint32(), stream.read_uint32())
+
+    def get_shader(self, permutation=0):
+        """
+        Return particular permutation information
+        :param permutation: Either a permutation number (Incarna shaders) or a dict of permutation options
+        :type permutation: int|dict
+        :rtype: ShaderInfo
+        """
+        if isinstance(permutation, int):
+            self._stream.seek(self._offsets[permutation][0])
+        else:
+            multiplier = 1
+            index = 0
+            for each in self.permutations:
+                value = each.default_index
+                if each.name in permutation:
+                    value = each.options.index(permutation[each.name])
+                index += value * multiplier
+                multiplier *= len(each.options)
+
+            self._stream.seek(self._offsets[index][0])
+        return ShaderInfo(self._stream, self._string_table, self._version)
+
+    def index_to_options(self, index):
+        options = []
+        for each in self.permutations:
+            options.append((each.name, each.options[index % len(each.options)]))
+            index /= len(each.options)
+
+
+def get_merged_parameters(path, shader_filter=None):
+    parameters = {}
+    resources = {}
+    has_compiled = False
+    for platform in PLATFORM_NAMES.iterkeys():
+        for sm in SHADER_MODEL_NAMES.iterkeys():
+            try:
+                effect = EffectInfo(paths.get_compiled_path(path, sm, platform))
+            except IOError:
+                continue
+            has_compiled = True
+            count = 1
+            for each in effect.permutations:
+                count *= len(each.options)
+            for each in xrange(count):
+                if shader_filter:
+                    if not shader_filter(platform, sm, effect.index_to_options(each)):
+                        continue
+                shader = effect.get_shader(each)
+                _merge_parameters(parameters, shader.parameters)
+                _merge_parameters(resources, shader.resources)
+    if not has_compiled:
+        raise IOError('could not find any compiled effect for %s' % path)
+    return parameters, resources
