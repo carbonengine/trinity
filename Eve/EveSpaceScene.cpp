@@ -123,6 +123,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	PARENTLOCK( m_curveSets ),
 	PARENTLOCK( m_lensflares ),
 	PARENTLOCK( m_distanceFields ),
+	PARENTLOCK( m_staticParticles ),
 	PARENTLOCK( m_externalParameters ),
 	m_display( true ),
 	m_update( true ),
@@ -218,7 +219,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_planets.SetNotify( this );
 	m_objects.SetNotify( this );
 	
-	m_staticParticles.CreateInstance();
 	m_dataTextureMgr.CreateInstance();
 	m_postProcessPSBuffer.CreateInstance();
 	// 2x sampling pattern
@@ -329,11 +329,11 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 		m_starfield->Update( simTime );
 	}
 
-	if( m_staticParticles )
+	for( auto it = m_staticParticles.begin(); it != m_staticParticles.end(); ++it )
 	{
-		m_staticParticles->Update( m_updateContext );
+		(*it)->Update( m_updateContext );
 	}
-
+	
 	if( m_dataTextureMgr )
 	{
 		m_dataTextureMgr->Update( m_updateContext );
@@ -1293,10 +1293,10 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 		IEveSpaceObject2* obj = *it;
 		obj->GetRenderables( frustum, renderables, Tr2Renderer::GetIdentityTransform() );
 	}
-
-	if( m_staticParticles )
+	
+	for( auto it = m_staticParticles.begin(); it != m_staticParticles.end(); ++it )
 	{
-		m_staticParticles->GetRenderables( frustum, renderables );
+		(*it)->GetRenderables( frustum, renderables );
 	}
 
 	std::vector<ITr2Renderable*> shadowRenderables;
@@ -2562,10 +2562,10 @@ void EveSpaceScene::RenderDebugInfo( Tr2RenderContext& renderContext )
 		IEveSpaceObject2* obj = *it;
 		obj->RenderDebugInfo( renderContext );
 	}
-
-	if( m_staticParticles )
+		
+	for( auto it = m_staticParticles.begin(); it != m_staticParticles.end(); ++it )
 	{
-		m_staticParticles->RenderDebugInfo( renderContext );
+		(*it)->RenderDebugInfo( renderContext );
 	}
 
 	Tr2Renderer::RenderDebugInfo( renderContext );

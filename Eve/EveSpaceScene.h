@@ -55,6 +55,7 @@ BLUE_DECLARE_VECTOR( EveTransform );
 BLUE_DECLARE( EveDistanceField );
 BLUE_DECLARE_VECTOR( EveDistanceField );
 BLUE_DECLARE( EveSceneStaticParticles );
+BLUE_DECLARE_VECTOR( EveSceneStaticParticles );
 BLUE_DECLARE( Tr2ShaderBuffer );
 BLUE_DECLARE( Tr2DataTextureManager );
 BLUE_DECLARE( Tr2GpuParticleSystem );
@@ -425,7 +426,7 @@ protected:
 	EveTransformPtr m_cloudfield;
 	EveDustfieldConstraintPtr m_cloudfieldConstaint;
 
-	EveSceneStaticParticlesPtr m_staticParticles;
+	PEveSceneStaticParticlesVector m_staticParticles;
 
 	Tr2DataTextureManagerPtr m_dataTextureMgr;
 
