@@ -1,36 +1,36 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Resource Files" />
-    <Filter Include="Source Files" />
-    <Filter Include="Source Files\Apex" />
-    <Filter Include="Source Files\Curves" />
-    <Filter Include="Source Files\Curves\Fader" />
-    <Filter Include="Source Files\Eve" />
-    <Filter Include="Source Files\Eve\Animation" />
-    <Filter Include="Source Files\Eve\Renderable" />
-    <Filter Include="Source Files\Eve\Renderable\Stretch" />
-    <Filter Include="Source Files\Eve\SpaceObject" />
-    <Filter Include="Source Files\Eve\SpaceObjectFactory" />
-    <Filter Include="Source Files\Eve\SpaceObject\Attachments" />
-    <Filter Include="Source Files\Eve\SpaceObject\Attachments\Sets" />
-    <Filter Include="Source Files\Eve\SpaceObject\Children" />
-    <Filter Include="Source Files\Eve\SpaceObject\Utils" />
-    <Filter Include="Source Files\Eve\Turret" />
-    <Filter Include="Source Files\Eve\UI" />
-    <Filter Include="Source Files\Font" />
-    <Filter Include="Source Files\Include" />
-    <Filter Include="Source Files\Interior" />
-    <Filter Include="Source Files\Particle" />
-    <Filter Include="Source Files\RenderJob" />
-    <Filter Include="Source Files\Resources" />
-    <Filter Include="Source Files\Shader" />
-    <Filter Include="Source Files\Shader\Parameter" />
-    <Filter Include="Source Files\Shader\Utils" />
-    <Filter Include="Source Files\Sprite2d" />
-    <Filter Include="Source Files\UI" />
-    <Filter Include="Source Files\Utilities" />
-    <Filter Include="Source Files\Wod" />
+    <Filter Include="Resource Files"/>
+    <Filter Include="Source Files"/>
+    <Filter Include="Source Files\Apex"/>
+    <Filter Include="Source Files\Curves"/>
+    <Filter Include="Source Files\Curves\Fader"/>
+    <Filter Include="Source Files\Eve"/>
+    <Filter Include="Source Files\Eve\Animation"/>
+    <Filter Include="Source Files\Eve\Renderable"/>
+    <Filter Include="Source Files\Eve\Renderable\Stretch"/>
+    <Filter Include="Source Files\Eve\SpaceObject"/>
+    <Filter Include="Source Files\Eve\SpaceObjectFactory"/>
+    <Filter Include="Source Files\Eve\SpaceObject\Attachments"/>
+    <Filter Include="Source Files\Eve\SpaceObject\Attachments\Sets"/>
+    <Filter Include="Source Files\Eve\SpaceObject\Children"/>
+    <Filter Include="Source Files\Eve\SpaceObject\Utils"/>
+    <Filter Include="Source Files\Eve\Turret"/>
+    <Filter Include="Source Files\Eve\UI"/>
+    <Filter Include="Source Files\Font"/>
+    <Filter Include="Source Files\Include"/>
+    <Filter Include="Source Files\Interior"/>
+    <Filter Include="Source Files\Particle"/>
+    <Filter Include="Source Files\RenderJob"/>
+    <Filter Include="Source Files\Resources"/>
+    <Filter Include="Source Files\Shader"/>
+    <Filter Include="Source Files\Shader\Parameter"/>
+    <Filter Include="Source Files\Shader\Utils"/>
+    <Filter Include="Source Files\Sprite2d"/>
+    <Filter Include="Source Files\UI"/>
+    <Filter Include="Source Files\Utilities"/>
+    <Filter Include="Source Files\Wod"/>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ALResultBlue.h">
@@ -193,6 +193,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2ImageIOHelpers.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tr2ImpostorManager.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2InstancedMesh.h">
@@ -1630,6 +1633,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2ImageIOHelpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2ImpostorManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2ImpostorManager_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2InstancedMesh.cpp">
@@ -3642,16 +3651,5 @@
     <ResourceCompile Include="Trinity.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-    <ClInclude Include="Tr2ImpostorManager.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Tr2ImpostorManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ImpostorManager_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
