@@ -1431,14 +1431,17 @@ void EveSpaceScene::UpdateImpostors()
 		auto spaceObject = m_impostorManager->BeginImpostorUpdate( i, renderContext );
 		Matrix transform;
 		spaceObject->GetLocalToWorldTransform( transform );
-		Vector3 viewDir = eye - transform.GetTranslation();
-		D3DXVec3Normalize( &viewDir, &viewDir );
 
 		Vector4 sphere( 0.f, 0.f, 0.f, 1.f );
 		spaceObject->GetImpostorBoundingSphere( sphere );
 
+		Vector3 position( XMVector3TransformCoord( sphere, transform ) );
+
+		Vector3 viewDir = eye - position;
+		D3DXVec3Normalize( &viewDir, &viewDir );
+
 		const float distance = sphere.w * 50;
-		Matrix view( XMMatrixLookAtRH( transform.GetTranslation() + viewDir * distance, transform.GetTranslation(), up ) );
+		Matrix view( XMMatrixLookAtRH( position + viewDir * distance, position, up ) );
 		Matrix proj( XMMatrixPerspectiveRH( sphere.w * 2, sphere.w * 2, distance - sphere.w, distance + sphere.w ) );
 
 		Tr2Renderer::SetViewTransform( view );
