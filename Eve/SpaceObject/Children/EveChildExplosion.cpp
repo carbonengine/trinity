@@ -53,9 +53,11 @@ void EveChildExplosion::Play()
 	m_objects.Append( m_localExplosionShared );
 	FindSharedObjects();
 	CalculateExplosionTimes( uint32_t( m_localExplosionTransforms.size() ) );
-	m_isPlaying = true;
 	m_playTime = 0;
 	m_countdownToGlobalExplosionStart = m_globalExplosionTime;
+	
+	RebuildLocalTransform();
+	m_isPlaying = true;	
 }
 
 // --------------------------------------------------------------------------------------
