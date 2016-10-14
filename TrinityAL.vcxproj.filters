@@ -11,6 +11,9 @@
     <ClInclude Include="ALResult.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="autoversion.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="BcDecompress.h">
       <Filter>Source Files</Filter>
     </ClInclude>
