@@ -6,7 +6,8 @@ EveChildTransform::EveChildTransform() :
 	m_rotation( 0, 0, 0, 1 ),
 	m_translation( 0, 0, 0 ),
 	m_useSRT( true ),
-	m_staticTransform( false )
+	m_staticTransform( false ),
+	m_useStaticRotation( false )
 {
 	D3DXMatrixIdentity( &m_localTransform );
 	D3DXMatrixIdentity( &m_worldTransform );
@@ -40,6 +41,12 @@ void EveChildTransform::Setup( const Vector3* scale, const Quaternion* rotation,
 	}
 }
 
+void EveChildTransform::SetupWithStaticRotation( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible )
+{
+	m_useStaticRotation = true;
+	Setup( scale, rotation, translation, lowestLodVisible );
+}
+
 void EveChildTransform::UpdateTransform( const Matrix& parentTransform ) 
 {
 	if( m_staticTransform || !m_useSRT )
@@ -49,6 +56,24 @@ void EveChildTransform::UpdateTransform( const Matrix& parentTransform )
 	else
 	{
 		D3DXMatrixTransformation( &m_localTransform, nullptr, nullptr, &m_scaling, nullptr, &m_rotation, &m_translation );
-		D3DXMatrixMultiply( &m_worldTransform, &m_localTransform, &parentTransform );
+		if( !m_useStaticRotation )
+		{
+			D3DXMatrixMultiply( &m_worldTransform, &m_localTransform, &parentTransform );
+		}
+		else
+		{
+			// Take out the rotation
+			Vector3 scale, translation;
+			Quaternion rotation;
+			Matrix parentTransformWithoutRotation;
+
+			Quaternion identityRotation = Quaternion( 0, 0, 0, 1 );
+			Vector3 zero = Vector3( 0, 0, 0 );
+
+			D3DXMatrixDecompose( &scale, &rotation, &translation, &parentTransform );
+			D3DXMatrixTransformation( &parentTransformWithoutRotation, &zero, &identityRotation, &scale, &zero, &identityRotation, &translation );
+						
+			D3DXMatrixMultiply( &m_worldTransform, &m_localTransform, &parentTransformWithoutRotation );
+		}
 	}
 }

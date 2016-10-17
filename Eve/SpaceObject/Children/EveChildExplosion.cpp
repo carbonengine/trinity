@@ -182,7 +182,7 @@ void EveChildExplosion::UpdateSyncronous(
 						Vector3 scaling = m_globalExplosionScaling;
 
 						m_globalExplosionContainer.CreateInstance();
-						m_globalExplosionContainer->Setup(&scaling, &rotation, &translation, TR2_LOD_LOW );
+						m_globalExplosionContainer->SetupWithStaticRotation(&scaling, &rotation, &translation, TR2_LOD_LOW );
 
 						m_globalExplosionContainer->m_objects.Append( m_globalExplosionInstance );
 						

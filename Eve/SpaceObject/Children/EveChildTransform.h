@@ -16,6 +16,7 @@ public:
 	EveChildTransform();
 
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
+	void SetupWithStaticRotation( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	void RebuildLocalTransform();
 	
 protected:
@@ -29,6 +30,8 @@ protected:
 	bool m_staticTransform;
 	// Do we want to use the SRT fields or only the local transform.
 	bool m_useSRT;
+	// Do we want rotation from the parent
+	bool m_useStaticRotation;
 	
 	void UpdateTransform( const Matrix& parentTransform );
 };
