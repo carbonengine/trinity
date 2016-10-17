@@ -526,7 +526,10 @@ void Tr2Effect::RebuildCachedData( BlueAsyncRes* p )
 	CCP_ASSERT( p == m_effectResource );
 	if( p == m_effectResource )
 	{
+		auto bk = m_insideStartUpdate;
+		m_insideStartUpdate = false;
 		RebuildCachedDataInternal();
+		m_insideStartUpdate = bk;
 	}
 }
 
