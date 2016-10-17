@@ -8,9 +8,6 @@
     <Filter Include="Source Files\Shaders.GLES2"/>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="autoversion.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Dxt1Image.h">
       <Filter>Source Files</Filter>
     </ClInclude>
