@@ -125,6 +125,13 @@ const Be::ClassInfo* Tr2SpriteObjectBase::ExposeToBlue()
 			Tr2SpriteObjectPickStateChooser
 		)
 
+		MAP_METHOD_AND_WRAP
+		(
+			"SetDirty",
+			SetDirty,
+			"Marks this object as dirty and informs its parent"
+		)
+
 #if BLUE_WITH_PYTHON
 		MAP_PROPERTY
 		(

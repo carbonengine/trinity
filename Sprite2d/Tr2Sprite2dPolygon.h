@@ -16,7 +16,7 @@ BLUE_DECLARE_INTERFACE( ITr2Sprite2dTexture );
 BLUE_DECLARE( Tr2AtlasTexture );
 
 // Tr2Sprite2dVertex is used for rendering Tr2Sprite2dPolygon objects.
-class Tr2Sprite2dVertex :
+BLUE_CLASS( Tr2Sprite2dVertex ) :
 	public IRoot,
 	public Tr2Sprite2dVertexBase
 {
@@ -34,16 +34,14 @@ TYPEDEF_BLUECLASS( Tr2Sprite2dVertex );
 // Tr2Sprite2dTriangle is used for rendering Tr2Sprite2dPolygon objects.
 // The triangle contains indices into the vertex list of a Tr2Sprite2dPolygon
 // instance, one for each of the three vertices.
-class Tr2Sprite2dTriangle :
+BLUE_CLASS( Tr2Sprite2dTriangle ) :
 	public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
 	Tr2Sprite2dTriangle( IRoot* lockobj = NULL );
 
-private:
-	friend class Tr2Sprite2dPolygon;
-	unsigned short m_index[3];
+	uint16_t m_index[3];
 };
 
 TYPEDEF_BLUECLASS( Tr2Sprite2dTriangle );
@@ -77,6 +75,12 @@ public:
 		);
 
 private:
+#if BLUE_WITH_PYTHON
+	static PyObject* PyAppendVertices( PyObject* self, PyObject* args );
+	static PyObject* PySetVertices( PyObject* self, PyObject* args );
+	static PyObject* PyAppendTriangles( PyObject* self, PyObject* args );
+#endif
+
 	PTr2Sprite2dVertexVector m_vertices;
 	PTr2Sprite2dTriangleVector m_triangles;
 

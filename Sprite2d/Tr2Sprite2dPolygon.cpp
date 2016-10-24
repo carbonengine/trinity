@@ -68,8 +68,25 @@ void Tr2Sprite2dPolygon::GatherSprites( Tr2Sprite2dScene* renderer )
 
 ITr2SpriteObject* Tr2Sprite2dPolygon::PickPoint( float x, float y, Tr2Sprite2dScene* renderer )
 {
-	// TODO: Implement
-	return NULL;
+	if( !m_display || m_pickState != TR2_SPS_ON )
+	{
+		return nullptr;
+	}
+
+	Vector2 query( x, y );
+
+	for( auto it = m_triangles.begin(); it != m_triangles.end(); ++it )
+	{
+		auto p0 = m_vertices[(*it)->m_index[0]]->position;
+		auto p1 = m_vertices[(*it)->m_index[1]]->position;
+		auto p2 = m_vertices[(*it)->m_index[2]]->position;
+
+		if( renderer->IsInsideTriangle( query, Vector2( p0.x, p0.y ), Vector2( p1.x, p1.y ), Vector2( p2.x, p2.y ) ) )
+		{
+			return this;
+		}
+	}
+	return nullptr;
 }
 
 Color Tr2Sprite2dPolygon::GetColor() const
