@@ -230,11 +230,6 @@ inline uint32_t Tr2BitmapDimensions::GetMipDepth( uint32_t level ) const
 		return 0;
 	}
 
-	if( IsCompressed() )
-	{
-		return std::max( ( ( m_volumeDepth >> level ) + 3u ) & ~3u, 4u );
-	}
-
 	return std::max( m_volumeDepth >> level, 1u );
 }
 
