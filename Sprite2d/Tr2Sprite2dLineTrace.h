@@ -16,7 +16,7 @@ BLUE_DECLARE_INTERFACE( ITr2Sprite2dTexture );
 BLUE_DECLARE( Tr2Sprite2dLineTraceVertex );
 BLUE_DECLARE_VECTOR( Tr2Sprite2dLineTraceVertex );
 
-class Tr2Sprite2dLineTraceVertex :
+BLUE_CLASS( Tr2Sprite2dLineTraceVertex ) :
 	public IRoot
 {
 public:
@@ -97,6 +97,9 @@ private:
 		float halfWidth);
 	Vector2 GetMiterPoint(float halfWidth, Vector2 basePoint, float startAngle, float endAngle, float sign);
 private:
+#if BLUE_WITH_PYTHON
+	static PyObject* PyAppendVertices( PyObject* self, PyObject* args );
+#endif
 	std::wstring m_name;
 
 	PTr2Sprite2dLineTraceVertexVector m_vertices;
