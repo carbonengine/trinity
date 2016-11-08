@@ -328,6 +328,7 @@ public:
 	Quaternion m_rotation;
 	float m_spacing, m_blinkRate, m_blinkPhase, m_blinkPhaseShift, m_minScale, m_maxScale, m_falloff;
 	int m_boneIndex, m_groupIndex;
+	bool m_isCircle;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullSpriteLineSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullSpriteLineSetItem );

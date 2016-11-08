@@ -601,6 +601,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hslsid.scaling = spriteLineSetItemData->m_scaling;
 			hslsid.rotation = spriteLineSetItemData->m_rotation;
 			hslsid.spacing = spriteLineSetItemData->m_spacing;
+			hslsid.isCircle = spriteLineSetItemData->m_isCircle;
 			hslsd.items.push_back( hslsid );
 		}
 		hd.spriteLineSets.push_back( hslsd );

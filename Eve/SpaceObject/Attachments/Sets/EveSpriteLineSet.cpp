@@ -127,7 +127,7 @@ bool EveSpriteLineSet::OnPrepareResources()
 			{
 				// position on an ellipsoid in x,z-plane
 				Vector3 pos( spriteLine->m_scaling.x * sinf( alpha ), 0.f, spriteLine->m_scaling.y * cosf( alpha ) );
-				D3DXVec3TransformCoord( &vtx->position, &pos, &m );
+				D3DXVec3TransformCoord( &pos, &pos, &m );
 				pos += spriteLine->m_position;
 				// fill static pool data
 				vtx->position = pos;

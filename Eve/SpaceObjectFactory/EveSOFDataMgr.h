@@ -146,6 +146,7 @@ public:
 		Quaternion rotation;
 		float spacing, blinkRate, blinkPhase, blinkPhaseShift, minScale, maxScale, falloff;
 		int boneIndex, groupIndex;
+		bool isCircle;
 	};
 
 	struct HullSpriteLineSetData

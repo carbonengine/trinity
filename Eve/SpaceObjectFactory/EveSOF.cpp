@@ -805,6 +805,7 @@ void EveSOF::SetupSpriteLineSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna
 			spriteLineSetItem->m_rotation = itemData->rotation;
 			spriteLineSetItem->m_scaling = itemData->scaling;
 			spriteLineSetItem->m_spacing = itemData->spacing;
+			spriteLineSetItem->m_isCircle = itemData->isCircle;
 
 			// put it into spriteset
 			spriteLineSet->Add( spriteLineSetItem );
