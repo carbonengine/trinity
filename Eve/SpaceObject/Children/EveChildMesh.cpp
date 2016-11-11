@@ -44,6 +44,9 @@ bool EveChildMesh::Initialize()
 
 void EveChildMesh::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables, const Matrix& parentTransform, Tr2Lod parentLod )
 {
+	bool whatImLookingFor = std::string(this->m_name.c_str()) == std::string("FX_mesh1");
+
+
 	if( !m_display )
 	{
 		return;
@@ -71,6 +74,9 @@ bool EveChildMesh::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query
 				// Fix asap <Logi 27. aug 2015>
 				sphere.w = 100000;
 			}
+			// Take scaling into account
+			float maxScale = std::max(this->m_scaling.x, std::max(this->m_scaling.y, this->m_scaling.z));
+			sphere.w *= maxScale;
 			return true;
 		}
 	}
