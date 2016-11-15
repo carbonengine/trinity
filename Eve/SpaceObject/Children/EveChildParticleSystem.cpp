@@ -164,6 +164,10 @@ void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext,
 
 	if( m_lodSphereRadius > 0 )
 	{
+		m_lodSphere.x = 0.0f;
+		m_lodSphere.y = 0.0f;
+		m_lodSphere.z = 0.0f;		
+
 		m_lodSphere.w = m_lodSphereRadius;
 		BoundingSphereTransform( m_worldTransform, m_lodSphere );
 	}
