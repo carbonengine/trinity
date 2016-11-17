@@ -1021,28 +1021,34 @@ function_header(A) ::= fully_specified_type(B) OP_ID(C) OP_LEFT_PAREN.
 
 
 %type interpolation_modifier {int}
+%type interpolation_modifier2 {int}
 
 interpolation_modifier(A) ::= .
 {
 	A = 0;
 }
 
-interpolation_modifier(A) ::= OP_LINEAR(B).
+interpolation_modifier(A) ::= interpolation_modifier2(B).
+{
+	A = B;
+}
+
+interpolation_modifier2(A) ::= OP_LINEAR(B).
 {
 	A = B.type;
 }
 
-interpolation_modifier(A) ::= OP_CENTROID(B).
+interpolation_modifier2(A) ::= OP_CENTROID(B).
 {
 	A = B.type;
 }
 
-interpolation_modifier(A) ::= OP_NOINTERPOLATION(B).
+interpolation_modifier2(A) ::= OP_NOINTERPOLATION(B).
 {
 	A = B.type;
 }
 
-interpolation_modifier(A) ::= OP_NOPERSPECTIVE(B).
+interpolation_modifier2(A) ::= OP_NOPERSPECTIVE(B).
 {
 	A = B.type;
 }
@@ -2085,6 +2091,51 @@ struct_declaration(A) ::= type_modifier(D) type_specifier(B) struct_declarator_l
 		if( symbol )
 		{
 			symbol->type = type;
+		}
+	}
+	A = C;
+	A->SetType( B );
+}
+
+struct_declaration(A) ::= interpolation_modifier2(E) type_modifier(D) type_specifier(B) struct_declarator_list(C) OP_SEMICOLON.
+{
+	B.modifier = D.type;
+	for( unsigned i = 0; i < C->GetChildrenCount(); ++i )
+	{
+		Type type = B;
+		if( C->GetChild( i )->GetChildOrNull( 0 ) )
+		{
+			type.arraySizes[0] = EvaluateIntegerExpression( *parserState, C->GetChild( i )->GetChild( 0 ), 0 );
+			type.arrayDimensions = 1;
+		}
+		C->GetChild( i )->SetType( type );
+		Symbol* symbol = C->GetChild( i )->GetSymbol();
+		if( symbol )
+		{
+			symbol->type = type;
+			symbol->interpolationModifier = E;
+		}
+	}
+	A = C;
+	A->SetType( B );
+}
+
+struct_declaration(A) ::= interpolation_modifier2(E) type_specifier(B) struct_declarator_list(C) OP_SEMICOLON.
+{
+	for( unsigned i = 0; i < C->GetChildrenCount(); ++i )
+	{
+		Type type = B;
+		if( C->GetChild( i )->GetChildOrNull( 0 ) )
+		{
+			type.arraySizes[0] = EvaluateIntegerExpression( *parserState, C->GetChild( i )->GetChild( 0 ), 0 );
+			type.arrayDimensions = 1;
+		}
+		C->GetChild( i )->SetType( type );
+		Symbol* symbol = C->GetChild( i )->GetSymbol();
+		if( symbol )
+		{
+			symbol->type = type;
+			symbol->interpolationModifier = E;
 		}
 	}
 	A = C;

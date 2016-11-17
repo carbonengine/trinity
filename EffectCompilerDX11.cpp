@@ -544,6 +544,24 @@ void PrintHLSL11( CodeStream& os, ASTNode* node, int level )
 				break;
 			}
 		}
+		if( node->GetSymbol() )
+		{
+			switch( node->GetSymbol()->interpolationModifier )
+			{
+			case OP_LINEAR:
+				os << "linear ";
+				break;
+			case OP_CENTROID:
+				os << "centroid ";
+				break;
+			case OP_NOINTERPOLATION:
+				os << "nointerpolation ";
+				break;
+			case OP_NOPERSPECTIVE:
+				os << "noperspective ";
+				break;
+			}
+		}
 		if( node->GetChildOrNull( 2 ) )
 		{
 			PrintHLSL11( os, node->GetChild( 2 ), level + 1 );
@@ -566,21 +584,6 @@ void PrintHLSL11( CodeStream& os, ASTNode* node, int level )
 			{
 				os << " : " << node->GetSymbol()->semantic;
 			}
-			switch( node->GetSymbol()->interpolationModifier )
-			{
-			case OP_LINEAR:
-				os << " linear";
-				break;
-			case OP_CENTROID:
-				os << " centroid";
-				break;
-			case OP_NOINTERPOLATION:
-				os << " nointerpolation";
-				break;
-			case OP_NOPERSPECTIVE:
-				os << " noperspective";
-				break;
-			}
 		}
 		if( node->GetChildOrNull( 1 ) )
 		{
@@ -592,6 +595,21 @@ void PrintHLSL11( CodeStream& os, ASTNode* node, int level )
 		{
 			if( !node->GetSymbol()->used )
 			{
+				break;
+			}
+			switch( node->GetSymbol()->interpolationModifier )
+			{
+			case OP_LINEAR:
+				os << "linear ";
+				break;
+			case OP_CENTROID:
+				os << "centroid ";
+				break;
+			case OP_NOINTERPOLATION:
+				os << "nointerpolation ";
+				break;
+			case OP_NOPERSPECTIVE:
+				os << "noperspective ";
 				break;
 			}
 			PrintTypeHLSL11( os, node->GetSymbol()->type );
