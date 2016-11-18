@@ -30,7 +30,8 @@ class Tr2PerObjectData;
 BLUE_CLASS( EvePlaneSet ):
 	public IInitialize,
 	public ITr2GeometryProvider,
-	public Tr2DeviceResource
+	public Tr2DeviceResource,
+	public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -45,6 +46,10 @@ public:
 	// IInitialize
 	bool Initialize();
 	
+	//////////////////////////////////////////////////////////////////////////
+	// INotify
+	bool OnModified( Be::Var* val );
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITr2GeometryProvider
 	void SubmitGeometry( Tr2RenderContext& renderContext );
@@ -57,7 +62,7 @@ private:
 
 public:
 	// hand out batches
-	void GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData );
+	void GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
 
 	// access effect
 	void SetEffect( Tr2EffectPtr effect );
@@ -75,6 +80,8 @@ private:
 	// toggle visibility
 	bool m_display;
 	bool m_hideOnLowQuality;
+	// pickbuffer ID
+	uint8_t m_pickBufferID;
 	// keep a name
 	std::string m_name;
 
@@ -82,8 +89,9 @@ private:
 	PEvePlaneSetItemVector m_planes;
 	// transforms for each of the planes
 	std::vector<Matrix> m_cachedTransforms;
-	// this shader renders them all
+	// this shader renders or picks them all
 	Tr2EffectPtr m_effect;
+	Tr2EffectPtr m_pickEffect;
 
 	// has it's own vertex handle and buffer
 	unsigned int m_vertexDeclHandle;

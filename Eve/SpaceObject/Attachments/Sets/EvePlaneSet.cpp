@@ -12,6 +12,9 @@
 #include "Utilities/BoundingSphere.h"
 #include "Tr2PickingHelperBatch.h"
 
+static const char* PLANESET_PICK_EFFECT_PATH = "res:/Graphics/Effect/Managed/Space/SpaceObject/FX/PlanePicking.fx";
+
+
 // vertex layout struct
 struct PlaneVertex
 {
@@ -26,8 +29,7 @@ struct PlaneVertex
 	uint8_t index;
 	uint8_t boneIndex;
 	uint8_t maskMapAtlasIndex;
-	// cppcheck-suppress unusedStructMember 
-	uint8_t padding;
+	uint8_t pickBufferID;
 };
 
 
@@ -42,9 +44,13 @@ EvePlaneSet::EvePlaneSet( IRoot* lockobj ) :
 	PARENTLOCK( m_planes ),
 	m_display( true ),
 	m_hideOnLowQuality( false ),
+	m_pickBufferID( 0 ),
 	m_vertexCount( 0 ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 {
+	// create picking effect
+	m_pickEffect.CreateInstance();
+	m_pickEffect->SetEffectPathName( PLANESET_PICK_EFFECT_PATH );
 }
 
 // --------------------------------------------------------------------------------
@@ -71,6 +77,19 @@ void EvePlaneSet::SetEffect( Tr2EffectPtr effect )
 bool EvePlaneSet::Initialize()
 {
 	PrepareResources();
+	return true;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   If someone changed some data we must re-create buffers etc.
+// --------------------------------------------------------------------------------
+bool EvePlaneSet::OnModified( Be::Var* val )
+{
+	if( IsMatch( val, m_pickBufferID ) )
+	{
+		Rebuild();
+	}
 	return true;
 }
 
@@ -152,6 +171,7 @@ bool EvePlaneSet::OnPrepareResources()
 			vertex.index = j;
 			vertex.boneIndex = m_planes[i]->m_boneIndex;
 			vertex.maskMapAtlasIndex = m_planes[i]->m_maskAtlasID;
+			vertex.pickBufferID = m_pickBufferID;
 		}
 		// We cache this for updating view distance info
 		m_cachedTransforms.push_back( itemTransform );
@@ -185,14 +205,14 @@ void EvePlaneSet::SubmitGeometry( Tr2RenderContext& renderContext )
 // Description:
 //   Trinity's way of providing batches to render
 // --------------------------------------------------------------------------------
-void EvePlaneSet::GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData )
+void EvePlaneSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
 {
 	if( m_hideOnLowQuality && Tr2Renderer::IsLowQuality() )
 	{
 		return;
 	}
 
-	if( !m_vertexBuffer.IsValid() || !m_effect )
+	if( !m_vertexBuffer.IsValid() )
 	{
 		return;
 	}
@@ -207,13 +227,37 @@ void EvePlaneSet::GetBatches( ITriRenderBatchAccumulator* accumulator, const Tr2
 		return;
 	}
 
-	TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
-	if( batch )
+	// handle different batch types
+	switch( batchType )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_effect );
-		batch->SetGeometryProvider( this );
-		accumulator->Commit( batch );
+	case TRIBATCHTYPE_ADDITIVE:
+		if( m_effect )
+		{
+			TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
+			if( batch )
+			{
+				batch->SetPerObjectData( perObjectData );
+				batch->SetShaderMaterial( m_effect );
+				batch->SetGeometryProvider( this );
+				accumulator->Commit( batch );
+			}
+		}
+		break;
+	case TRIBATCHTYPE_PICKING:
+		if( m_pickEffect && m_pickBufferID )
+		{
+			TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
+			if( batch )
+			{
+				batch->SetPerObjectData( perObjectData );
+				batch->SetShaderMaterial( m_pickEffect );
+				batch->SetGeometryProvider( this );
+				accumulator->Commit( batch );
+			}
+		}
+		break;
+	default:
+		return;
 	}
 }
 

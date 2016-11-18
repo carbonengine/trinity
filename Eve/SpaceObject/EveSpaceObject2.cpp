@@ -568,7 +568,15 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 
 		for( auto it = m_planeSets.begin(); it != m_planeSets.end(); ++it )
 		{
-			(*it)->GetBatches( batches, perObjectData );
+			(*it)->GetBatches( batches, batchType, perObjectData );
+		}
+	}
+
+	if( batchType == TRIBATCHTYPE_PICKING )
+	{
+		for( auto it = m_planeSets.begin(); it != m_planeSets.end(); ++it )
+		{
+			( *it )->GetBatches( batches, batchType, perObjectData );
 		}
 	}
 
