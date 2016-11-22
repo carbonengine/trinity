@@ -31,6 +31,7 @@ const Be::ClassInfo* EveAnimationStateMachine::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP( "Clear", Clear, "" )
 		MAP_METHOD_AND_WRAP( "GoToState", GoToState, "" )
+		MAP_METHOD_AND_WRAP( "GetEndStateName", GetEndStateName, "Returns the name of the last of the pending states" )
 		
 		MAP_ATTRIBUTE( "defaultState", m_defaultState, "State that should be used for previews etc.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "defaultAnimation", m_defaultAnimation, "", Be::READWRITE | Be::PERSIST )

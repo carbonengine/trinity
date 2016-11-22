@@ -41,7 +41,6 @@ public:
 	EveAnimationStateProgress GetProgress() const { return m_progress; }
 	const std::string& GetName() const { return m_name; }
 	const char* GetTransition( const std::string& stateName ) const;
-	const char* GetTransitionEndState( const std::string& transitionName ) const;
 
 private:
 	std::string m_name;

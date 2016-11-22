@@ -197,27 +197,6 @@ const char* EveAnimationState::GetTransition( const std::string& stateName ) con
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Gets the end state for a transition
-// Arguments:
-//   transitionName - The name of the transition we would like to get the end state of
-// Returns:
-//   name of the end state or nullptr
-// --------------------------------------------------------------------------------
-const char* EveAnimationState::GetTransitionEndState( const std::string& transitionName ) const
-{
-	for( auto it = m_transitions.begin(); it != m_transitions.end(); it++ )
-	{
-		if( transitionName == it->transitionName.c_str() )
-		{
-			return it->name.c_str();
-		}
-	}
-	return nullptr;
-}
-
-
-// --------------------------------------------------------------------------------
-// Description:
 //   Play curves in the animation sequence
 // --------------------------------------------------------------------------------
 void EveAnimationState::PlayCurves( EveSpaceObject2* owner )
