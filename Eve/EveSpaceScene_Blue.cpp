@@ -73,7 +73,8 @@ PyObject* PyPickObjectAndAreaID( PyObject* self, PyObject* args )
 		&y,
 		&pyProjection,
 		&pyView,
-		&pyViewport
+		&pyViewport,
+		&flags
 		))
 		return NULL;
 
