@@ -11,6 +11,7 @@
 #include "Tr2DeviceResource.h"
 #include "TriVariable.h"
 
+BLUE_DECLARE_INTERFACE( ITr2TextureProvider );
 BLUE_DECLARE_INTERFACE( ITr2GpuBuffer );
 
 // -------------------------------------------------------------
@@ -44,9 +45,7 @@ public:
     TriVariable* RegisterVariable( const char* name, const IRoot* value );
 	TriVariable* RegisterVariable( const char* name );
 
-	TriVariable* RegisterVariable( const char* name, TriTextureRes* value );
-	TriVariable* RegisterVariable( const char* name, Tr2DepthStencil* value );
-	TriVariable* RegisterVariable( const char* name, Tr2RenderTarget* value );
+	TriVariable* RegisterVariable( const char* name, ITr2TextureProvider* value );
 	TriVariable* RegisterVariable( const char* name, ITr2GpuBuffer* value );
 
     void UnregisterVariable( const char* name );

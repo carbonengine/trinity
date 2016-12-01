@@ -23,7 +23,7 @@ Tr2DataTextureManager::Tr2DataTextureManager( IRoot* lockobj ) :
 
 Tr2DataTextureManager::~Tr2DataTextureManager()
 {
-	GlobalStore().RegisterVariable( "ImpactShieldDataMap", (TriTextureRes*)nullptr );
+	GlobalStore().RegisterVariable( "ImpactShieldDataMap", (Tr2TextureAL*)nullptr );
 }
 
 // --------------------------------------------------------------------------------

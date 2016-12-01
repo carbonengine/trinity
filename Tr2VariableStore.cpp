@@ -253,35 +253,12 @@ TriVariable* Tr2VariableStore::RegisterVariable( const char* name )
 	return RegisterVariableType( name, TRIVARIABLE_INVALID );
 }
 
-// -------------------------------------------------------------
-// Description:
-//   Registers a new variable. If the variable with that name
-//   is already registered in this store then if its type is the
-//   same the variable is reused otherwise the error is logged
-//   and the function returns NULL.
-// Arguments:
-//   name - Name of the new variable
-//   value - Value for the new variable
-// Return Value:
-//   New variable (or old with the same name or NULL if function
-//   fails).
-// -------------------------------------------------------------
-TriVariable* Tr2VariableStore::RegisterVariable( const char* name, TriTextureRes* value )
+TriVariable* Tr2VariableStore::RegisterVariable( const char* name, ITr2TextureProvider* value )
 {
 	return RegisterVariableInternal( name, value );
 }
 
 TriVariable* Tr2VariableStore::RegisterVariable( const char* name, ITr2GpuBuffer* value )
-{
-	return RegisterVariableInternal( name, value );
-}
-
-TriVariable* Tr2VariableStore::RegisterVariable( const char* name, Tr2DepthStencil* value )
-{
-	return RegisterVariableInternal( name, value );
-}
-
-TriVariable* Tr2VariableStore::RegisterVariable( const char* name, Tr2RenderTarget* value )
 {
 	return RegisterVariableInternal( name, value );
 }
@@ -531,8 +508,6 @@ TriVariable* Tr2VariableStore::RegisterVariableType( const char* name, TriVariab
 		else if( type == TRIVARIABLE_TEXTURE_RES && existingType == TRIVARIABLE_TEXTURE_AL )
 		{
 			var->m_type = type;
-			var->m_depthStencil = nullptr;
-			var->m_renderTarget = nullptr;
 		}
 		else if( ( type == TRIVARIABLE_TEXTURE_AL && existingType == TRIVARIABLE_TEXTURE_RES ) )
 		{

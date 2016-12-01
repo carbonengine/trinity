@@ -27,22 +27,22 @@ PyObject* TriStepSetVariableStore::GetValue()
 {
 	if( m_type == TRIVARIABLE_TEXTURE_RES )
 	{
-		return PyOS->WrapBlueObject( m_textureRes->GetRawRoot() );
+		if( !m_texture )
+		{
+			Py_RETURN_NONE;
+		}
+		return PyOS->WrapBlueObject( m_texture );
 	}
 	else if( m_type == TRIVARIABLE_IROOT )
 	{
+		if( !m_object )
+		{
+			Py_RETURN_NONE;
+		}
 		return PyOS->WrapBlueObject( m_object );
 	}
 	else if( m_type == TRIVARIABLE_TEXTURE_AL )
 	{
-		if( m_depthStencil )
-		{
-			return PyOS->WrapBlueObject( m_depthStencil->GetRawRoot() );
-		}
-		if( m_renderTarget )
-		{
-			return PyOS->WrapBlueObject( m_renderTarget->GetRawRoot() );
-		}
 		Py_RETURN_NONE;
 	}
 	else
@@ -56,9 +56,7 @@ void TriStepSetVariableStore::SetValue( PyObject* valueArg )
 {
 	const unsigned valueArgPosition = 0;
 
-	Tr2DepthStencil* valDepthStencil;
-	Tr2RenderTarget* valRenderTarget;
-	TriTextureRes* valTextureRes; // TRIVARIABLE_TEXTURE_RES,
+	ITr2TextureProvider* valTextureRes; // TRIVARIABLE_TEXTURE_RES,
 	int valInt; // TRIVARIABLE_INT,
 	float valFloat; // TRIVARIABLE_FLOAT,
 	Vector2 valVector2; // TRIVARIABLE_FLOAT2,
@@ -68,23 +66,10 @@ void TriStepSetVariableStore::SetValue( PyObject* valueArg )
 	Color valColor; // TRIVARIABLE_COLOR,
 	IRoot* valIroot; // TRIVARIABLE_IROOT,
 
-	if( BlueExtractArgument( valueArg, valDepthStencil, valueArgPosition ) )
-	{
-		m_type = TRIVARIABLE_TEXTURE_AL;
-		m_depthStencil = valDepthStencil;		
-	}
-	else 
-	if( BlueExtractArgument( valueArg, valRenderTarget, valueArgPosition ) )
-	{
-		m_type = TRIVARIABLE_TEXTURE_AL;
-		m_renderTarget = valRenderTarget;
-	}
-	else 
 	if( BlueExtractArgument( valueArg, valTextureRes, valueArgPosition ) )
 	{
 		m_type = TRIVARIABLE_TEXTURE_RES;
-		m_textureRes = valTextureRes;
-		m_texture.Unlock();
+		m_texture = valTextureRes;
 	}
 	else if( BlueExtractArgument( valueArg, valInt, valueArgPosition ) )
 	{

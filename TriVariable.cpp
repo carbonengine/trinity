@@ -25,21 +25,7 @@ void TriVariable::GetValueTextureAL( Tr2TextureAL*& value ) const
 { 
 	CCP_ASSERT( m_type == TRIVARIABLE_TEXTURE_AL );
 	value = nullptr;
-	if( m_depthStencil )
-	{
-		if( m_depthStencil->m_depthStencil.GetTexture().IsValid() )
-		{
-			value = &m_depthStencil->m_depthStencil.GetTexture();
-		}
-	}
-	else if( m_renderTarget )
-	{
-		if( m_renderTarget->GetRenderTarget().GetTexture().IsValid() )
-		{
-			value = &m_renderTarget->GetRenderTarget().GetTexture();
-		}
-	}
-	else if( Tr2TextureAL* tex = *(Tr2TextureAL**)m_value )
+	if( Tr2TextureAL* tex = *(Tr2TextureAL**)m_value )
 	{
 		value = *(Tr2TextureAL**)m_value;
 	}
@@ -81,25 +67,7 @@ void TriVariable::CopyValueToEffect(	Tr2RenderContextEnum::ShaderType inputType,
 		{
 			bool isSet = false;
 			uint32_t samplerIx = *destHandle;
-			if( m_depthStencil )
-			{
-				if( m_depthStencil->m_depthStencil.GetTexture().IsValid() )
-				{
-					auto colorSpace = ( size & RESOURCE_FLAG_SRGB ) != 0 ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-					renderContext.m_esm.ApplyTexture( inputType, samplerIx, m_depthStencil->m_depthStencil.GetTexture(), colorSpace );					
-					isSet = true;
-				}
-			}
-			else if( m_renderTarget )
-			{
-				if( m_renderTarget->GetRenderTarget().GetTexture().IsValid() )
-				{
-					auto colorSpace = ( size & RESOURCE_FLAG_SRGB ) != 0 ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-					renderContext.m_esm.ApplyTexture( inputType, samplerIx, m_renderTarget->GetRenderTarget().GetTexture(), colorSpace );					
-					isSet = true;
-				}
-			}
-			else if( Tr2TextureAL* tex = *(Tr2TextureAL**)m_value )
+			if( Tr2TextureAL* tex = *(Tr2TextureAL**)m_value )
 			{
 				auto colorSpace = ( size & RESOURCE_FLAG_SRGB ) != 0 ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
 				renderContext.m_esm.ApplyTexture( inputType, samplerIx, *tex, colorSpace );
@@ -179,8 +147,6 @@ void TriVariable::Invalidate()
 void TriVariable::Clear()
 {
 	m_texture		= nullptr;	
-	m_depthStencil	= nullptr;
-	m_renderTarget	= nullptr;
 	m_gpuBuffer = nullptr;
 
 	memset( m_value, 0, GetTypeSize() );

@@ -25,18 +25,9 @@ TriStepResult TriStepSetVariableStore::Execute( Be::Time realTime, Be::Time simT
 	switch( m_type )
 	{
 	case TRIVARIABLE_TEXTURE_AL:
-		if( m_depthStencil )
-		{
-			GlobalStore().RegisterVariable( m_variableName.c_str(), m_depthStencil );
-		}
-		else
-		if( m_renderTarget )
-		{
-			GlobalStore().RegisterVariable( m_variableName.c_str(), m_renderTarget );
-		}
 		break;
 	case TRIVARIABLE_TEXTURE_RES:
-		GlobalStore().RegisterVariable( m_variableName.c_str(), m_textureRes );
+		GlobalStore().RegisterVariable( m_variableName.c_str(), m_texture );
 		break;
 	case TRIVARIABLE_INT:
 		GlobalStore().RegisterVariable( m_variableName.c_str(), *reinterpret_cast<int*>( m_data ) );

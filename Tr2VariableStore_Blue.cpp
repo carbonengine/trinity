@@ -31,10 +31,10 @@ static PyObject* PyWrapVariable( TriVariable* variable )
 		}
 	case TRIVARIABLE_TEXTURE_RES:
 		{
-			TriTextureRes* res = NULL;
+			ITr2TextureProvider* res = NULL;
 			variable->GetValue( res );
 
-			return PyOS->WrapBlueObject( res->GetRawRoot() );
+			return PyOS->WrapBlueObject( res );
 		}
 	case TRIVARIABLE_GPUBUFFER:
 		{

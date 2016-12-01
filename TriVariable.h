@@ -9,6 +9,7 @@ BLUE_DECLARE(TriTextureRes);
 
 BLUE_DECLARE( Tr2DepthStencil );
 BLUE_DECLARE( Tr2RenderTarget );
+BLUE_DECLARE_INTERFACE( ITr2TextureProvider );
 BLUE_DECLARE_INTERFACE( ITr2GpuBuffer );
 
 enum TriVariableContentType
@@ -30,7 +31,7 @@ enum TriVariableContentType
     TRIVARIABLE_COUNT,
 };
 
-inline TriVariableContentType GetVariableType( const TriTextureRes* const )
+inline TriVariableContentType GetVariableType( const ITr2TextureProvider* const )
 {
 	return TRIVARIABLE_TEXTURE_RES;
 }
@@ -41,16 +42,6 @@ inline TriVariableContentType GetVariableType( const ITr2GpuBuffer* const )
 }
 
 inline TriVariableContentType GetVariableType( const Tr2TextureAL* const )
-{
-    return TRIVARIABLE_TEXTURE_AL;
-}
-
-inline TriVariableContentType GetVariableType( Tr2DepthStencil* const )
-{
-    return TRIVARIABLE_TEXTURE_AL;
-}
-
-inline TriVariableContentType GetVariableType( Tr2RenderTarget* const )
 {
     return TRIVARIABLE_TEXTURE_AL;
 }
@@ -160,7 +151,7 @@ private:
 
 	void GetValueTextureAL( Tr2TextureAL*& value ) const;
 
-	void GetValueTextureRes( TriTextureRes*& value ) const
+	void GetValueTextureRes( ITr2TextureProvider*& value ) const
 	{
 		CCP_ASSERT( m_type == GetVariableType( value ) );
 		value = m_texture;
@@ -172,18 +163,6 @@ private:
 		value = m_gpuBuffer;
 	}
 
-	void GetValueDepthStencil( Tr2DepthStencil*& value ) const
-	{
-		CCP_ASSERT( m_type == GetVariableType( value ) );
-		value = m_depthStencil;
-	}
-
-	void GetValueRenderTarget( Tr2RenderTarget*& value ) const
-	{
-		CCP_ASSERT( m_type == GetVariableType( value ) );
-		value = m_renderTarget;
-	}
-
 	template<typename T>
 	void SetValue_( const T& value )
 	{
@@ -192,7 +171,7 @@ private:
 	}
 
 	// Storing a texture res pointer 
-	void SetValueTextureRes( TriTextureRes*& value  )
+	void SetValueTextureRes( ITr2TextureProvider*& value  )
 	{
 		CCP_ASSERT( m_type == GetVariableType( value ) || m_type == TRIVARIABLE_UNKNOWN_TEXTURE );
 		m_texture = value;
@@ -204,18 +183,6 @@ private:
 		CCP_ASSERT( m_type == GetVariableType( value ) );
 		m_gpuBuffer = value;
 		m_type = TRIVARIABLE_GPUBUFFER;
-	}
-
-	void SetValueDepthStencil( Tr2DepthStencil* value  )
-	{
-		CCP_ASSERT( m_type == GetVariableType( value ) );
-		m_depthStencil = value;
-	}
-
-	void SetValueRenderTarget( Tr2RenderTarget* value  )
-	{
-		CCP_ASSERT( m_type == GetVariableType( value ) );
-		m_renderTarget = value;
 	}
 
 	void SetValue_( const Tr2TextureAL*& value  )
@@ -233,15 +200,8 @@ private:
 
 	bool	m_multithreaded;
 
-	// We have quite a few issues with raw texture points that do not have their
-	// lifetime managed.
-	TriTextureResPtr m_texture;
+	ITr2TextureProviderPtr m_texture;
 	ITr2GpuBufferPtr m_gpuBuffer;
-
-	// Smart pointer reference to depthstencil or rendertarget that can alias as a
-	// texture (when they are IsReadable()).  Simplify lifetime management.
-	Tr2DepthStencilPtr	m_depthStencil;
-	Tr2RenderTargetPtr	m_renderTarget;
 
 	std::string		m_name;
 	
@@ -288,10 +248,8 @@ public:
 	void GetValue( Vector4& value )	const				{ GetValue_( value ); }
 	void GetValue( Color& value ) const					{ GetValue_( value ); }
 	void GetValue( Matrix& value ) const				{ GetValue_( value ); }
-	void GetValue( TriTextureRes*& value ) const		{ GetValueTextureRes( value ); }
+	void GetValue( ITr2TextureProvider*& value ) const	{ GetValueTextureRes( value ); }
 	void GetValue( Tr2TextureAL*& value ) const			{ GetValueTextureAL( value ); }
-	void GetValue( Tr2DepthStencil*& value ) const		{ GetValueDepthStencil( value ); }
-	void GetValue( Tr2RenderTarget*& value ) const		{ GetValueRenderTarget( value ); }
 	void GetValue( IRoot*& value ) const				{ GetValue_( value ); }
 	void GetValue( ITr2GpuBuffer*& value ) const		{ GetValueGpuBuffer( value ); }
 
@@ -317,11 +275,9 @@ public:
 	void SetValue( const Vector4& value )				{ SetValue_( value ); }
 	void SetValue( const Color& value )					{ SetValue_( value ); }
 	void SetValue( const Matrix& value )				{ SetValue_( value ); }
-	void SetValue( TriTextureRes* value )				{ SetValueTextureRes( value ); }
+	void SetValue( ITr2TextureProvider* value )			{ SetValueTextureRes( value ); }
 	void SetValue( ITr2GpuBuffer* value )				{ SetValueGpuBuffer( value ); }
 	void SetValue( const Tr2TextureAL* value )			{ SetValue_( value ); }
-	void SetValue( Tr2DepthStencil* value )				{ SetValueDepthStencil( value ); }
-	void SetValue( Tr2RenderTarget* value )				{ SetValueRenderTarget( value ); }
 	void SetValue( const IRoot* value )					{ SetValue_( value ); }
 
 	// Invalidate the variable

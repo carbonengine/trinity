@@ -53,10 +53,7 @@ private:
 	std::string m_variableName;
 	TriVariableContentType m_type;
 	IRootPtr m_object;
-	ITriTextureResPtr m_texture;
-	TriTextureResPtr m_textureRes;
-	Tr2DepthStencilPtr	m_depthStencil;
-	Tr2RenderTargetPtr	m_renderTarget;
+	ITr2TextureProviderPtr m_texture;
 	char m_data[ sizeof(float) * 16 ];
 };
 
