@@ -32,7 +32,7 @@ TriShadowMap::TriShadowMap( IRoot* lockobj ) :
 	PrepareResources();
 
 	// register variable handle to texture
-	m_shadowMapHandle    = GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", this );
+	m_shadowMapHandle    = GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 	m_shadowSizeHandle   = GlobalStore().RegisterVariable( "EveSpaceSceneShadowMapSettings", Vector4( 1.0f / m_size, 1.0f / m_size, m_depthBias, m_lightLeakStep ) );
 	m_invInputSizeHandle = GlobalStore().RegisterVariable( "invTexelSize", Vector2( 0, 0 ) );
 
@@ -267,6 +267,7 @@ void TriShadowMap::SetShadowTexture( bool useBlankTexture )
 	if( m_shadowMapHandle )
 	{
 		m_useBlankTexture = useBlankTexture;
+		m_shadowMapHandle->SetValue( this );
 	}
 }
 
