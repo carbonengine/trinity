@@ -152,7 +152,7 @@ const char* EveAnimationStateMachine::GetEndStateName( )
 	{
 		return m_pendingStates[ pendingStateSize - 1 ]->GetName().c_str();
 	}
-	return nullptr;
+	return "";
 }
 
 // --------------------------------------------------------------------------------
