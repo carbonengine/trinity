@@ -11,6 +11,8 @@
 #include "include/ITr2Interior.h"
 #include "Tr2DeviceResource.h"
 
+BLUE_DECLARE( Tr2TextureReference );
+
 // -------------------------------------------------------------
 // Description:
 //   Tr2InteriorSHLightingSolver computes SH lighting coefficients
@@ -18,7 +20,7 @@
 //   a render pass similar to lighting pass to compute 
 //   SH coefficients on GPU.
 // -------------------------------------------------------------
-class Tr2InteriorSHLightingSolver: 
+BLUE_CLASS( Tr2InteriorSHLightingSolver ): 
 	public ITr2InteriorSHLightingSolver,
 	public Tr2DeviceResource
 {
@@ -29,6 +31,10 @@ public:
 	void AddVolume( const Vector3& min, const Vector3& max, const Matrix& transform, Tr2PerObjectDataPSBuffer* perAreaData );
 	void Solve( const ITr2InteriorLightVector& visibleLights, Tr2RenderContext& renderContext );
 	void Clear();
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// ITr2TextureProvider
+	Tr2TextureAL* GetTexture();
 
 	void ReleaseResources( TriStorage s );
 private:
@@ -56,9 +62,9 @@ private:
 	// Data for areas that require SH lighting
 	std::vector<SampleData> m_samples;
 	// Texture containing probe positions
-	Tr2TextureAL m_sampleTexture;
+	Tr2TextureReferencePtr m_sampleTexture;
 	// Resulting texture containing SH coefficients
-	Tr2RenderTargetAL m_shTexture;
+	Tr2RenderTargetPtr m_shTexture;
 	// Render batch accumulator for light sources
 	ITriRenderBatchAccumulator* m_shRenderBatches;
 

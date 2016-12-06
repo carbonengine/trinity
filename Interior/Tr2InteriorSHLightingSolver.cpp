@@ -8,6 +8,9 @@
 
 #include "Tr2InteriorSHLightingSolver.h"
 #include "TriRenderBatch.h"
+#include "Tr2TextureReference.h"
+#include "Tr2RenderTarget.h"
+
 
 using namespace Tr2RenderContextEnum;
 
@@ -17,10 +20,13 @@ Tr2InteriorSHLightingSolver::Tr2InteriorSHLightingSolver()
 :	m_shRenderBatches( NULL ),
 	m_textureSize( 256 )
 {
+	m_sampleTexture.CreateInstance();
+	m_shTexture.CreateInstance();
+
 	PrepareResources();
 
-	GlobalStore().RegisterVariable( "SHSampleMap", static_cast<Tr2TextureAL*>( nullptr ) );
-	GlobalStore().RegisterVariable( "SHLightingMap", static_cast<Tr2TextureAL*>( nullptr ) );
+	GlobalStore().RegisterVariable( "SHSampleMap", static_cast<ITr2TextureProvider*>( nullptr ) );
+	GlobalStore().RegisterVariable( "SHLightingMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
 	m_shRenderBatches = CCP_NEW( "Tr2InteriorSHLightingSolver1Sample/m_shRenderBatches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
@@ -40,12 +46,12 @@ Tr2InteriorSHLightingSolver::~Tr2InteriorSHLightingSolver()
 // --------------------------------------------------------------------------------------
 void Tr2InteriorSHLightingSolver::ReleaseResources( TriStorage s )
 {
-	m_sampleTexture.Destroy();
-	m_shTexture.Destroy();
+	m_sampleTexture->GetTexture()->Destroy();
+	m_shTexture->GetTexture()->Destroy();
 
 	// Make sure that these are cleared
-	GlobalStore().RegisterVariable( "SHSampleMap", static_cast<Tr2TextureAL*>( nullptr ) );
-	GlobalStore().RegisterVariable( "SHLightingMap", static_cast<Tr2TextureAL*>( nullptr ) );
+	GlobalStore().RegisterVariable( "SHSampleMap", static_cast<ITr2TextureProvider*>( nullptr ) );
+	GlobalStore().RegisterVariable( "SHLightingMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 }
 
 // --------------------------------------------------------------------------------------
@@ -56,23 +62,8 @@ bool Tr2InteriorSHLightingSolver::OnPrepareResources()
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	CR_RETURN_VAL(	
-			m_sampleTexture.Create2D(	m_textureSize, 
-										m_textureSize, 
-										1, 
-										Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT, 
-										0, 
-										nullptr, 
-										renderContext )
-			, false );
-
-	CR_RETURN_VAL( 
-			m_shTexture.Create(			m_textureSize, 
-										m_textureSize, 
-										1, 
-										Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT, 
-										renderContext )
-			, false );
+	CR_RETURN_VAL(	m_sampleTexture->GetTexture()->Create2D( m_textureSize, m_textureSize, 1, PIXEL_FORMAT_R16G16B16A16_FLOAT, 0, nullptr, renderContext ), false );
+	CR_RETURN_VAL( m_shTexture->Create( m_textureSize, m_textureSize, 1, PIXEL_FORMAT_R16G16B16A16_FLOAT ), false );
 
 	return true;
 }
@@ -152,8 +143,8 @@ void Tr2InteriorSHLightingSolver::Clear()
 	m_samples.clear();
 
 	// Make sure that these are cleared
-	GlobalStore().RegisterVariable( "SHSampleMap", static_cast<Tr2TextureAL*>( nullptr ) );
-	GlobalStore().RegisterVariable( "SHLightingMap", static_cast<Tr2TextureAL*>( nullptr ) );
+	GlobalStore().RegisterVariable( "SHSampleMap", static_cast<ITr2TextureProvider*>( nullptr ) );
+	GlobalStore().RegisterVariable( "SHLightingMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 }
 
 // -------------------------------------------------------------
@@ -169,7 +160,7 @@ void Tr2InteriorSHLightingSolver::Solve( const ITr2InteriorLightVector& visibleL
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( !m_sampleTexture.IsValid() || !m_shTexture.IsValid() )
+	if( !m_sampleTexture->GetTexture()->IsValid() || !m_shTexture->IsValid() )
 	{
 		Clear();
 		return;
@@ -177,8 +168,8 @@ void Tr2InteriorSHLightingSolver::Solve( const ITr2InteriorLightVector& visibleL
 
 	if( m_samples.empty() )
 	{
-		GlobalStore().RegisterVariable( "SHSampleMap", &m_sampleTexture );
-		GlobalStore().RegisterVariable( "SHLightingMap", &m_shTexture.GetTexture() );
+		GlobalStore().RegisterVariable( "SHSampleMap", m_sampleTexture );
+		GlobalStore().RegisterVariable( "SHLightingMap", m_shTexture );
 		return;
 	}
 	
@@ -203,7 +194,7 @@ void Tr2InteriorSHLightingSolver::Solve( const ITr2InteriorLightVector& visibleL
 		ReleaseResources( TRISTORAGE_ALL );
 		PrepareResources();
 
-		if( !m_sampleTexture.IsValid() || !m_shTexture.IsValid() )
+		if( !m_sampleTexture->GetTexture()->IsValid() || !m_shTexture->IsValid() )
 		{
 			Clear();
 			return;
@@ -212,10 +203,10 @@ void Tr2InteriorSHLightingSolver::Solve( const ITr2InteriorLightVector& visibleL
 
 	m_sampleTextureMirror.resize( 
 		"Tr2InteriorSHLightingSolver::m_sampleTextureMirror", 
-		m_textureSize * m_textureSize * Tr2RenderContextEnum::GetBytesPerPixel( m_sampleTexture.GetFormat() ) );
+		m_textureSize * m_textureSize * Tr2RenderContextEnum::GetBytesPerPixel( m_sampleTexture->GetTexture()->GetFormat() ) );
 
 	void* data = m_sampleTextureMirror.get();
-	unsigned pitch = m_textureSize * Tr2RenderContextEnum::GetBytesPerPixel( m_sampleTexture.GetFormat() );
+	unsigned pitch = m_textureSize * Tr2RenderContextEnum::GetBytesPerPixel( m_sampleTexture->GetTexture()->GetFormat() );
 
 	unsigned index = 0;
 	XMVECTOR det;
@@ -282,7 +273,7 @@ void Tr2InteriorSHLightingSolver::Solve( const ITr2InteriorLightVector& visibleL
 		FillCoefficients( x + 1, y2 + 1, data, pitch, point, 2 );
 	}
 
-	if( FAILED( m_sampleTexture.UpdateSubresource( 0, 0, m_textureSize, m_textureSize, m_sampleTextureMirror.get(), pitch, renderContext ) ) )
+	if( FAILED( m_sampleTexture->GetTexture()->UpdateSubresource( 0, 0, m_textureSize, m_textureSize, m_sampleTextureMirror.get(), pitch, renderContext ) ) )
 	{
 		Clear();
 		return;
@@ -290,7 +281,7 @@ void Tr2InteriorSHLightingSolver::Solve( const ITr2InteriorLightVector& visibleL
 
 	Tr2Renderer::PushViewport();
 
-	Tr2Renderer::PushRenderTarget( m_shTexture, renderContext );
+	Tr2Renderer::PushRenderTarget( *m_shTexture, renderContext );
 	Tr2Renderer::PushDepthStencilBuffer( nullDS, renderContext );
 
 	for( auto it = visibleLights.begin(); it != visibleLights.end(); ++it )
@@ -299,7 +290,7 @@ void Tr2InteriorSHLightingSolver::Solve( const ITr2InteriorLightVector& visibleL
 	}
 	m_shRenderBatches->Finalize();
 	
-	GlobalStore().RegisterVariable( "SHSampleMap", &m_sampleTexture );
+	GlobalStore().RegisterVariable( "SHSampleMap", m_sampleTexture );
 
 	renderContext.Clear( CLEARFLAGS_TARGET, 0, 0.f, 0 );
 
@@ -315,7 +306,7 @@ void Tr2InteriorSHLightingSolver::Solve( const ITr2InteriorLightVector& visibleL
 
 	m_shRenderBatches->Clear();
 
-	GlobalStore().RegisterVariable( "SHLightingMap", &m_shTexture.GetTexture() );
+	GlobalStore().RegisterVariable( "SHLightingMap", m_shTexture );
 	
 	m_samples.clear();
 }
