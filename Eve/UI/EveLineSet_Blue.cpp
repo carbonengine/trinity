@@ -43,13 +43,49 @@ const Be::ClassInfo* EveLineSet::ExposeToBlue()
 		)
 		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
 
-		MAP_METHOD_AND_WRAP( "AddLine", AddLine, "AddLine( startPosition, startColor, endPosition, endColor )\nAdds a line to the line set, but does not submit it." )
-		MAP_METHOD_AND_WRAP( "RemoveLine", RemoveLine, "RemoveLine()\nRemoves a line, requires a call to SubmitChanges before being updated on the video card." )
+		MAP_METHOD_AND_WRAP( 
+			"AddLine", 
+			AddLine, 
+			"Adds a line to the line set, but does not submit it. Returns line ID.\n"
+			":param startPosition: line start position\n"
+			":param startColor: line start color\n"
+			":param endPosition: line end position\n"
+			":param endColor: line end color\n"
+			)
+		MAP_METHOD_AND_WRAP( 
+			"RemoveLine", 
+			RemoveLine, 
+			"Removes a line, requires a call to SubmitChanges before being updated on the video card.\n"
+			":param idx: line ID\n"
+			)
 
-		MAP_METHOD_AND_WRAP( "ChangeLine", ChangeLine, "ChangeLine( id, startPosition, startColor, endPosition, endColor )\n Changes the properties of a line. Requires a call to SubmitChanges before it will show up." )
-		MAP_METHOD_AND_WRAP( "ChangeLineColor", ChangeLineColor, "ChangeLineColor( id, startColor, endColor )\nChanges just the colour of a line. Requires a call to SubmitChanges before it will show up." )
-		MAP_METHOD_AND_WRAP( "ChangeLinePosition", ChangeLinePosition, "ChangeLine( id, startPosition, endPosition, )\n Changes the start and endpositions of a line. Requires a call to SubmitChanges before it will show up." )
-		MAP_METHOD_AND_WRAP( "ClearLines", ClearLines, "ClearLines()\nClears all lines. Requires a call to SubmitChanges to complete." )
+		MAP_METHOD_AND_WRAP( 
+			"ChangeLine", 
+			ChangeLine, 
+			"Changes the properties of a line. Requires a call to SubmitChanges before it will show up.\n"
+			":param idx: line ID\n"
+			":param startPosition: line start position\n"
+			":param startColor: line start color\n"
+			":param endPosition: line end position\n"
+			":param endColor: line end color\n"
+			)
+		MAP_METHOD_AND_WRAP( 
+			"ChangeLineColor", 
+			ChangeLineColor, 
+			"Changes just the colour of a line. Requires a call to SubmitChanges before it will show up.\n"
+			":param idx: line ID\n"
+			":param startColor: line start color\n"
+			":param endColor: line end color\n"
+			)
+		MAP_METHOD_AND_WRAP( 
+			"ChangeLinePosition", 
+			ChangeLinePosition, 
+			"Changes the start and endpositions of a line. Requires a call to SubmitChanges before it will show up.\n"
+			":param idx: line ID\n"
+			":param startPosition: line start position\n"
+			":param endPosition: line end position\n"
+			)
+		MAP_METHOD_AND_WRAP( "ClearLines", ClearLines, "Clears all lines. Requires a call to SubmitChanges to complete." )
 		MAP_METHOD_AND_WRAP( "SubmitChanges", SubmitChanges, "Submits changes, returning false if it fails for any reason." )
 
 	EXPOSURE_END()

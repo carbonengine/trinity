@@ -420,7 +420,8 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		(
 			"CalculateSkinnedBoundingBoxFromTransform", 
 			CalculateSkinnedBoundingBoxFromTransform, 
-			"Calculate and return bounding spehre of the object projected by the transform provided."
+			"Calculate and return bounding sphere of the object projected by the transform provided.\n"
+			":param transform: object transform matrix"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -439,35 +440,37 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		(
 			"PlayAnimation",
 			PlayAnimationOnce,
-			"PlayAnimation( animName )\n\nPlays the given animation, replacing whatever animation was playing before."
+			"Plays the given animation, replacing whatever animation was playing before.\n"
+			":param name: animation name"
 		)
 		MAP_METHOD_AND_WRAP
 		(
 			"PlayAnimationEx",
 			PlayAnimationEx,
-			"PlayAnimation( animName, loopCount, delay, speed )\n\n"
 			"Plays the given animation, replacing whatever animation was playing before.\n"
-			"loopCount can be 0 to loop forever.\n"
-			"delay is time (in seconds) from now before animation should start playing.\n"
-			"speed can be used speed up or slow down playback - use negative values to play backwards.\n"
+			":param name: animation name\n"
+			":param loopCount: can be 0 to loop forever.\n"
+			":param delay: time (in seconds) from now before animation should start playing.\n"
+			":param speed: can be used speed up or slow down playback - use negative values to play backwards.\n"
 		)
 		MAP_METHOD_AND_WRAP
 		(
 			"ChainAnimation",
 			ChainAnimation,
-			"ChainAnimation( animName )\n\nPlays the given animation, starting when currently playing animation finishes."
-			"If it is looping then it is replaced at the end of the current loop."
+			"Plays the given animation, starting when currently playing animation finishes.\n"
+			"If it is looping then it is replaced at the end of the current loop.\n"
+			":param name: animation name"
 		)
 		MAP_METHOD_AND_WRAP
 		(
 			"ChainAnimationEx",
 			ChainAnimationEx,
-			"ChainAnimation( animName, loopCount, delay, speed )\n\n"
-			"Plays the given animation, starting when currently playing animation finishes."
-			"If it is looping then it is replaced at the end of the current loop."
-			"loopCount can be 0 to loop forever.\n"
-			"delay is time (in seconds) from now before animation should start playing.\n"
-			"speed can be used speed up or slow down playback - use negative values to play backwards.\n"
+			"Plays the given animation, starting when currently playing animation finishes.\n"
+			"If it is looping then it is replaced at the end of the current loop.\n"
+			":param name: animation name\n"
+			":param loopCount: can be 0 to loop forever.\n"
+			":param delay: time (in seconds) from now before animation should start playing.\n"
+			":param speed: can be used speed up or slow down playback - use negative values to play backwards.\n"
 		)
 		MAP_METHOD_AND_WRAP
 		(
@@ -547,14 +550,57 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		)
 
 		MAP_METHOD_AND_WRAP( "GetDamageLocatorCount", GetDamageLocatorCount, "Get number of damage locators on this ship" )
-		MAP_METHOD_AND_WRAP( "GetDamageLocator", GetDamageLocator, "Get the position of indexed damage locator, (0,0,0) is returned for indices out of range." )
-		MAP_METHOD_AND_WRAP( "GetDamageLocatorDirection", GetDamageLocatorDirectionLocal, "Get the direction of indexed damage locator, (0,0,0) is returned for indices out of range." )
-		MAP_METHOD_AND_WRAP( "GetTransformedDamageLocator", GetTransformedDamageLocator, "Get the position of indexed damage locator, (0,0,0) is returned for indices out of range." )
-		MAP_METHOD_AND_WRAP( "SetImpactDamageState", SetImpactDamageState, "Set the damage states of shield and armor and hull." )
-		MAP_METHOD_AND_WRAP( "SetImpactAnimation", SetImpactAnimation, "Set the impact's animations." )
+		MAP_METHOD_AND_WRAP( 
+			"GetDamageLocator", 
+			GetDamageLocator, 
+			"Get the position of indexed damage locator, (0,0,0) is returned for indices out of range.\n"
+			":param idx: locator index" )
+		MAP_METHOD_AND_WRAP( 
+			"GetDamageLocatorDirection", 
+			GetDamageLocatorDirectionLocal, 
+			"Get the direction of indexed damage locator, (0,0,0) is returned for indices out of range.\n"
+			":param idx: locator index" )
+		MAP_METHOD_AND_WRAP( 
+			"GetTransformedDamageLocator", 
+			GetTransformedDamageLocator, 
+			"Get the position of indexed damage locator, (0,0,0) is returned for indices out of range.\n"
+			":param idx: locator index" )
+		MAP_METHOD_AND_WRAP( 
+			"SetImpactDamageState", 
+			SetImpactDamageState, 
+			"Set the damage states of shield and armor and hull.\n"
+			":param shield: shield damage\n"
+			":param armor: armor damage\n"
+			":param hull: hull damage\n"
+			":param createArmorImpacts: True to create armor impacts\n"
+			)
+		MAP_METHOD_AND_WRAP( 
+			"SetImpactAnimation", 
+			SetImpactAnimation, 
+			"Set the impact's animations.\n"
+			":param name: animation name\n"
+			":param enable: enable/disable animation\n"
+			":param duration: animation duration\n"
+			)
 		MAP_METHOD_AND_WRAP( "ClearImpactDamage", ClearImpactDamage, "Clear all the impact/damage effects." )
-		MAP_METHOD_AND_WRAP( "CreateImpact", CreateImpact, "debug only" );
-		MAP_METHOD_AND_WRAP( "CreateImpactFromPosition", CreateImpactFromPosition, "Creates an impact facing a position" );
+		MAP_METHOD_AND_WRAP( 
+			"CreateImpact", 
+			CreateImpact, 
+			"debug only\n"
+			":param idx: damage locator index\n"
+			":param direction: incoming damage direction\n"
+			":param lifeTime: effect time\n"
+			":param size: effect size"
+			);
+		MAP_METHOD_AND_WRAP( 
+			"CreateImpactFromPosition", 
+			CreateImpactFromPosition, 
+			"Creates an impact facing a position\n"
+			":param position: damage source position\n"
+			":param direction: incoming damage direction\n"
+			":param lifeTime: effect time\n"
+			":param size: effect size"
+			);
 		MAP_METHOD_AND_WRAP( "IsImpostor", IsImpostor, "Is this object in the impostor mode?" );
 
 		// Temporarily need this to get camera LookAt working. Shouldn't be here for too long <Logi, dec 2012>

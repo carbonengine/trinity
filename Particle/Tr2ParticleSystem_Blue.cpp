@@ -139,17 +139,14 @@ const Be::ClassInfo* Tr2ParticleSystem::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( 
 			"SaveToGranny", 
 			SaveToGranny, 
-			"Saves particle data into a granny file"
-			"\n"
-			"\nArguments:"
-			"path - res path to granny file where to save particle data" )
+			"Saves particle data into a granny file\n"
+			":param path: res path to granny file where to save particle data" )
 		MAP_METHOD_AND_WRAP( "RebindConstraints", RebindConstraints, "Rebinds all system constraints." )
 		MAP_METHOD_AND_WRAP( 
 			"UpdateSimulation", 
 			UpdateSimulationScript, 
 			"Updates particle system manually.\n" 
-			"Arguments:\n"
-			"dt - time inteval (in seconds)" )
+			":param dt: time inteval (in seconds)" )
 
 	EXPOSURE_END()
 }

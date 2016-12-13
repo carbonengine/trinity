@@ -140,7 +140,9 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_METHOD_AND_WRAP(
 			"SetShotMissed",
 			SetShotMissed,
-			"Set whether the last turret shot missed." )
+			"Set whether the last turret shot missed.\n"
+			":param missed: was the last shot a miss"
+			)
 		
 		MAP_METHOD_AND_WRAP(
 			"GetLastShotTime",
@@ -161,11 +163,8 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 			"GetFiringBoneWorldTransform",
 			GetFiringBoneWorldTransform,
 			"Returns the world transform matrix of the specfified firing bone in the currently firing turret."
-			"\n"
-			"\nArguments:"
-			"\ni - The number of the firing bone in the current model."
-			"\nReturn value:"
-			"\nThe world transform matrix.")
+			"\n:param idx: index of the firing bone in the current model."
+			"\n:returns: The world transform matrix.")
 
 	EXPOSURE_END()
 }

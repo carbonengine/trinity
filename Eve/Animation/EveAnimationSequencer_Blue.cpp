@@ -30,7 +30,12 @@ const Be::ClassInfo* EveAnimationStateMachine::ExposeToBlue()
 		MAP_ATTRIBUTE( "transitions", m_transitions, "", Be::READWRITE | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP( "Clear", Clear, "" )
-		MAP_METHOD_AND_WRAP( "GoToState", GoToState, "" )
+		MAP_METHOD_AND_WRAP( 
+			"GoToState", 
+			GoToState, 
+			"Switch the state\n"
+			":param owner: owner space object\n"
+			":param name: state name" )
 		MAP_METHOD_AND_WRAP( "GetEndStateName", GetEndStateName, "Returns the name of the last of the pending states" )
 		
 		MAP_ATTRIBUTE( "defaultState", m_defaultState, "State that should be used for previews etc.", Be::READWRITE | Be::PERSIST )
@@ -52,8 +57,22 @@ const Be::ClassInfo* EveAnimationSequencer::ExposeToBlue()
 		MAP_ATTRIBUTE( "owner", m_owner, "", Be::READ )
 		MAP_ATTRIBUTE( "stateMachines", m_stateMachines, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
-		MAP_METHOD_AND_WRAP( "GoToState", GoToState, "" )
-		MAP_METHOD_AND_WRAP( "ForceState", ForceState, "Forces the statemachines to go into a specific state" )
-		MAP_METHOD_AND_WRAP( "SetStateParameter", SetStateParameter, "" )
+		MAP_METHOD_AND_WRAP( 
+			"GoToState", 
+			GoToState, 
+			"Switches to a different state\n"
+			":param name: state name" )
+		MAP_METHOD_AND_WRAP( 
+			"ForceState", 
+			ForceState, 
+			"Forces the statemachines to go into a specific state\n"
+			":param name: state name" )
+		MAP_METHOD_AND_WRAP( 
+			"SetStateParameter", 
+			SetStateParameter, 
+			"Changes value for a state parameter\n"
+			":param stateName: state name\n"
+			":param parameterName: parameter name\n"
+			":param value: parameter value" )
     EXPOSURE_END()
 }

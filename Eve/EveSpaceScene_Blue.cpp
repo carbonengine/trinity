@@ -578,33 +578,49 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"PickObject",
 			PickObject,
 			1,
-			"Given mouse position and a view setup, returns the object that the mouse is over"
-			"\nreturns <Object> or None if nothing pickable was hit by the ray"
-			"\n"
-			"\nArguments:"
-			"\nx - integer x coordinate of the mouse over the viewport"
-			"\ny - integer y coordinate of the mouse over the viewport"
-			"\nprojection - The TriProjection to use to pick into the scene"
-			"\nview - The TriView to use to pick into the scene"
-			"\nviewport - The TriViewport of the viewport to use to pick into the scene"
-			"\nfilter - Bitfield of pickable object types" )
+			"Given mouse position and a view setup, returns the object that the mouse is over\n"
+			"returns <Object> or None if nothing pickable was hit by the ray\n"
+			":param x: integer x coordinate of the mouse over the viewport\n"
+			":param y: integer y coordinate of the mouse over the viewport\n"
+			":param projection: The TriProjection to use to pick into the scene\n"
+			":param view: The TriView to use to pick into the scene\n"
+			":param viewport: The TriViewport of the viewport to use to pick into the scene\n"
+			":param filter: Bitfield of pickable object types" )
 
 		MAP_METHOD(
 			"PickObjectAndAreaID",
 			PyPickObjectAndAreaID,
-			"Given mouse position and a view setup, returns the object that the mouse is over, as well as an additional value depending on what has been clicked"
-			"\nreturns (<Object>,<AreaID>) or None if nothing pickable was hit by the ray"
-			"\n"
-			"\nArguments:"
-			"\nx - integer x coordinate of the mouse over the viewport"
-			"\ny - integer y coordinate of the mouse over the viewport"
-			"\nprojection - The TriProjection to use to pick into the scene"
-			"\nview - The TriView to use to pick into the scene"
-			"\nviewport - The TriViewport of the viewport to use to pick into the scene" )
+			"Given mouse position and a view setup, returns the object that the mouse is over, as well as an additional value depending on what has been clicked\n"
+			"returns (<Object>,<AreaID>) or None if nothing pickable was hit by the ray\n"
+			":param x: integer x coordinate of the mouse over the viewport\n"
+			":type x: int\n"
+			":param y: integer y coordinate of the mouse over the viewport\n"
+			":type y: int\n"
+			":param projection: The TriProjection to use to pick into the scene\n"
+			":type projection: int\n"
+			":param view: The TriView to use to pick into the scene\n"
+			":type view: int\n"
+			":param viewport: The TriViewport of the viewport to use to pick into the scene\n" 
+			":type viewport: int\n"
+			":rtype: None | (IRoot, long)\n"
+			)
 
-		MAP_METHOD_AND_WRAP("UpdateScene", UpdateSceneFromScript, "Run the scene's update loop")
+		MAP_METHOD_AND_WRAP(
+			"UpdateScene", 
+			UpdateSceneFromScript, 
+			"Run the scene's update loop\n"
+			":param time: current time"
+			)
 		
-		MAP_METHOD_AND_WRAP("PickInfinity", PickInfinity, "Pick infinity")
+		MAP_METHOD_AND_WRAP(
+			"PickInfinity", 
+			PickInfinity, 
+			"Pick infinity\n"
+			":param x: integer x coordinate of the mouse over the viewport\n"
+			":param y: integer y coordinate of the mouse over the viewport\n"
+			":param projection: The TriProjection to use to pick into the scene\n"
+			":param view: The TriView to use to pick into the scene\n"
+			)
 
 		MAP_ATTRIBUTE(
 			"updateTime",

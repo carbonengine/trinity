@@ -41,18 +41,14 @@ const Be::ClassInfo* Tr2InteriorCell::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( 
 			"AddStatic", 
 			AddStatic, 
-			"Add an interior static object to this cell"
-			"\n"
-			"\nArguments:"
-			"\ninteriorStatic - The Tr2InteriorStatic to add" );
+			"Add an interior static object to this cell\n"
+			"\n:param interiorStatic: The Tr2InteriorStatic to add" );
 
 		MAP_METHOD_AND_WRAP( 
 			"RemoveStatic", 
 			RemoveStatic, 
 			"Remove a Tr2InteriorStatic from this cell"
-			"\n"
-			"\nArguments:"
-			"\ninteriorStatic - The Tr2InteriorStatic to remove");
+			"\n:param interiorStatic: The Tr2InteriorStatic to remove");
 
 		MAP_METHOD_AND_WRAP( "ClearStatics", ClearStatics, "Remove ALL interior static objects from this cell" );
 	EXPOSURE_END()

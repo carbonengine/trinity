@@ -130,7 +130,8 @@ const Be::ClassInfo* EvePlanet::ExposeToBlue()
 		(
 			"PrepareForWarp",
 			PrepareForWarp,
-			""
+			":param minDist: minimal distance\n"
+			":param dest: destination position"
 		)
 
 		MAP_METHOD_AND_WRAP

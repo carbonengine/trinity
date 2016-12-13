@@ -364,20 +364,16 @@ const Be::ClassInfo* EveCamera::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( 
 			"SetRotationOnOrbit", 
 			SetRotationOnOrbit, 
-			"Sets the rotation away from the parent look-at direction in terms of yaw and pitch"
-			"\n"
-			"\nArguments:"
-			"\nyaw - yaw in radians"
-			"\npitch - pitch in radians" )
+			"Sets the rotation away from the parent look-at direction in terms of yaw and pitch\n"
+			":param yaw: yaw in radians\n"
+			":param pitch: pitch in radians" )
 
 		MAP_METHOD_AND_WRAP( 
 			"SetOrbit", 
 			SetOrbit, 
-			"Sets the orbit around parent in terms of yaw and pitch"
-			"\n"
-			"\nArguments:"
-			"\nyaw - yaw in radians"
-			"\npitch - pitch in radians" )
+			"Sets the orbit around parent in terms of yaw and pitch\n"
+			":param yaw: yaw in radians\n"
+			":param pitch: pitch in radians" )
 
 		MAP_ATTRIBUTE
 		(  
@@ -394,10 +390,27 @@ const Be::ClassInfo* EveCamera::ExposeToBlue()
 			Be::READ
 		)
 
-		MAP_METHOD_AND_WRAP( "OrbitParent", OrbitParent, "" )
-		MAP_METHOD_AND_WRAP( "RotateOnOrbit", RotateOnOrbit, "" )
-		MAP_METHOD_AND_WRAP( "Dolly", Dolly, "" )
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( "Zoom", Zoom, 1, "" )
+		MAP_METHOD_AND_WRAP( 
+			"OrbitParent", 
+			OrbitParent, 
+			":param horizontal: \n"
+			":param vertical: \n"
+			)
+		MAP_METHOD_AND_WRAP( 
+			"RotateOnOrbit", 
+			RotateOnOrbit, 
+			":param horizontal: \n"
+			":param vertical: \n"
+			)
+		MAP_METHOD_AND_WRAP( 
+			"Dolly", 
+			Dolly, 
+			":param factor: " )
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
+			"Zoom", 
+			Zoom, 
+			1, 
+			":param key: \n" )
 
 	EXPOSURE_END();
 }

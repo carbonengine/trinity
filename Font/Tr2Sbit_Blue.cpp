@@ -81,13 +81,13 @@ const Be::ClassInfo* Tr2SBitWrapper::ExposeToBlue()
 			ToBuffer,
 			"ToBuffer(dest, width, height, pitch, x, y, color)"
 			"\nCopies the glyph bitmap to the destination buffer."
-			"\n\nArguments:"
-			"\n  dest     - the destination buffer"
-			"\n  width    - width of the destination buffer"
-			"\n  height   - height of the destination buffer"
-			"\n  pitch    - pitch of the destination buffer"
-			"\n  x, y     - where to draw the bitmap within the destination buffer"
-			"\n  color    - color to apply to the bitmap"
+			"\n:param dest: the destination buffer"
+			"\n:param width: width of the destination buffer"
+			"\n:param height: height of the destination buffer"
+			"\n:param pitch: pitch of the destination buffer"
+			"\n:param x: where to draw the bitmap within the destination buffer"
+			"\n:param y: where to draw the bitmap within the destination buffer"
+			"\n:param color: color to apply to the bitmap"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -96,14 +96,14 @@ const Be::ClassInfo* Tr2SBitWrapper::ExposeToBlue()
 			ToBufferWithUnderline,
 			"ToBufferWithUnderline(dest, width, height, pitch, x, y, color)"
 			"\nCopies the glyph bitmap to the destination buffer, with an added underline."
-			"\n\nArguments:"
-			"\n  dest     - the destination buffer"
-			"\n  width    - width of the destination buffer"
-			"\n  height   - height of the destination buffer"
-			"\n  pitch    - pitch of the destination buffer"
-			"\n  x, y     - where to draw the bitmap within the destination buffer"
-			"\n  color    - color to apply to the bitmap"
-			"\n  letterspace - extra space after this letter"
+			"\n:param dest: the destination buffer"
+			"\n:param width: width of the destination buffer"
+			"\n:param height: height of the destination buffer"
+			"\n:param pitch: pitch of the destination buffer"
+			"\n:param x: where to draw the bitmap within the destination buffer"
+			"\n:param y: where to draw the bitmap within the destination buffer"
+			"\n:param color: color to apply to the bitmap"
+			"\n:param letterspace: extra space after this letter"
 		)
 #endif
 

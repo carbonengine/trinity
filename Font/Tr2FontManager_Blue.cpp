@@ -81,10 +81,9 @@ const Be::ClassInfo* Tr2FontManager::ExposeToBlue()
 			LookupFaceIDAndGlyphIndex, 
 			"fgi = LookupGlyphIndex(font, charCode)"
 			"\nLooks up a glyph index from the given font."
-			"\n\nArguments:"
-			"\n  font       - res path for the font"
-			"\n  charCode"
-			"\n\nReturns:"
+			"\n:param font: res path for the font"
+			"\n:param charCode:"
+			"\n\n:returns:"
 			"\n  A tuple, (faceID, glyphIndex)"
 			"\n  These values are used by LookupKerningXP and LookupSBit"
 		)
@@ -95,11 +94,10 @@ const Be::ClassInfo* Tr2FontManager::ExposeToBlue()
 			PyLookupKerningXP,
 			"kern = LookupKerningXP(faceID, glyphIndex1, glyphIndex2)"
 			"\nLooks up kerning values for the given face ID and char code pair."
-			"\n\nArguments:"
-			"\n  faceID      - as returned from LookupGlyphIndex"
-			"\n  glyphIndex1 - as returned from LookupGlyphIndex"
-			"\n  glyphIndex2 - as returned from LookupGlyphIndex"
-			"\n\nReturns:"
+			"\n:param faceID: as returned from LookupGlyphIndex"
+			"\n:param glyphIndex1: as returned from LookupGlyphIndex"
+			"\n:param glyphIndex2: as returned from LookupGlyphIndex"
+			"\n\n:returns:"
 			"\n  Kerning value in pixels as an integer."
 		)
 
@@ -109,12 +107,11 @@ const Be::ClassInfo* Tr2FontManager::ExposeToBlue()
 			LookupSBit,
 			"sbit = LookupSBit(faceID, width, height, glyphIndex)"
 			"\nLook up an SBit (small bitmap) for the given faceID, dimensions and glyph index."
-			"\n\nArguments:"
-			"\n  faceID      - as returned from LookupGlyphIndex"
-			"\n  width"
-			"\n  height"
-			"\n  glyphIndex  - as returned from LookupGlyphIndex"
-			"\n\nReturns:"
+			"\n:param faceID: as returned from LookupGlyphIndex"
+			"\n:param width: "
+			"\n:param height: "
+			"\n:param glyphIndex: as returned from LookupGlyphIndex"
+			"\n\n:returns:"
 			"\n  An SBit structure that can be used to render the font"
 		)
 
@@ -124,11 +121,10 @@ const Be::ClassInfo* Tr2FontManager::ExposeToBlue()
 			LookupMetricsFromScript,
 			"metrics = LookupMetrics(faceID, width, height)" 
 			"\nLooks up metrics for the given faceID and dimensions."
-			"\n\nArguments:"
-			"\n  faceID      - as returned from LookupGlyphIndex"
-			"\n  width"
-			"\n  height"
-			"\n\nReturns:"
+			"\n:param faceID: as returned from LookupGlyphIndex"
+			"\n:param width: "
+			"\n:param height: "
+			"\n\n:returns:"
 			"\n  A tuple, (ascender, descender)"
 		)
 
@@ -138,11 +134,15 @@ const Be::ClassInfo* Tr2FontManager::ExposeToBlue()
 			PyClearBuffer,
 			"ClearBuffer(buffer, width, height, pitch)"
 			"\nClears a rectangular buffer to 0 values."
-			"\n\nArguments:"
-			"\n  buffer"
-			"\n  width"
-			"\n  height"
-			"\n  pitch"
+			"\n:param buffer:"
+			"\n:type buffer: buffer"
+			"\n:param width:"
+			"\n:type width: int"
+			"\n:param height:"
+			"\n:type height: int"
+			"\n:param pitch:"
+			"\n:type pitch: Optional[int]"
+			"\n:rtype: None"
 		)
 
 		MAP_ATTRIBUTE
@@ -180,8 +180,7 @@ const Be::ClassInfo* Tr2FontManager::ExposeToBlue()
 			TrimGlyphCache,
 			"TrimGlyphCache(size)"
 			"\nTrims the glyph cache to size. Discards cached glyphs in LRU order."
-			"\n\nArguments:"
-			"\n size - the desired cache size"
+			"\n:param size: the desired cache size"
 		)
 
 		MAP_ATTRIBUTE

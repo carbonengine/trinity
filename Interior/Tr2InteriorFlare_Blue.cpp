@@ -35,9 +35,7 @@ const Be::ClassInfo* Tr2InteriorFlare::ExposeToBlue()
 			"OverrideViewport", 
 			OverrideViewport, 
 			"Overrides render target size (for tiled rendering)"
-			"\n"
-			"\nArguments:"
-			"\nxviewport - overriden viewport (TriViewport or None)" )
+			"\n:param xviewport: overriden viewport (TriViewport or None)" )
 		MAP_ATTRIBUTE( "debugIsHidden", m_debugIsHidden, "Hide flare", Be::READWRITE )
 
 		// Bounding boxes

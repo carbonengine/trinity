@@ -28,8 +28,24 @@ const Be::ClassInfo* EveDistanceField::ExposeToBlue()
 		MAP_ATTRIBUTE( "maxXZRatio", m_maxXZRatio, "", Be::READWRITE );
 		MAP_ATTRIBUTE( "minYRatio", m_minYRatio, "", Be::READWRITE );
 		
-		MAP_METHOD_AND_WRAP( "SetupDynamicDistanceField", SetupDynamicDistanceField, "Sets up the distance  field as a dynamic distance field" )
-		MAP_METHOD_AND_WRAP( "SetupStaticDistanceField", SetupStaticDistanceField, "Sets up the distance field as a static distance field" )
+		MAP_METHOD_AND_WRAP( 
+			"SetupDynamicDistanceField", 
+			SetupDynamicDistanceField, 
+			"Sets up the distance  field as a dynamic distance field\n"
+			":param threshold: distance threshold\n"
+			":param timeOut: time adjustment seconds out\n"
+			":param timeIn: time adjustment seconds in\n"
+			)
+		MAP_METHOD_AND_WRAP( 
+			"SetupStaticDistanceField", 
+			SetupStaticDistanceField, 
+			"Sets up the distance field as a static distance field\n"
+			":param dimensions: field size\n"
+			":param position: field position\n"
+			":param threshold: distance threshold\n"
+			":param timeOut: time adjustment seconds out\n"
+			":param timeIn: time adjustment seconds in\n"
+			)
 
 	EXPOSURE_END()
 }

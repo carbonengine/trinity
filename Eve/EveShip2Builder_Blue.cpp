@@ -22,7 +22,12 @@ const Be::ClassInfo* EveShip2Builder::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "PrepareForBuild", PrepareForBuild, "Loads the modules and initiates loading of resources used by them." )
 		MAP_METHOD_AND_WRAP( "Build", Build, "Builds the final ship. Assumes resources have finished loading." )
 #if BLUE_WITH_PYTHON
-		MAP_METHOD_AND_WRAP( "BuildAsync", BuildAsync, "Builds the final ship on a background thread. Assumes resources have finished loading." )
+		MAP_METHOD_AND_WRAP( 
+			"BuildAsync", 
+			BuildAsync, 
+			"Builds the final ship on a background thread. Assumes resources have finished loading.\n"
+			":param cb: callback function that is called when the build is finished"
+			)
 #endif
 
 

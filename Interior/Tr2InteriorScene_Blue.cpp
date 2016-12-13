@@ -447,14 +447,19 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 			"Given mouse position and a view setup, can return the object that the mouse is over, the mesh and area indices "
 			"and object\'s texture coordinates"
 			"\n returns dict (pick attribute -> value) or empty dict if nothing pickable was hit by the ray"
-			"\n"
-			"\nArguments:"
-			"\nx - integer x coordinate of the mouse over the viewport"
-			"\ny - integer y coordinate of the mouse over the viewport"
-			"\nprojection - The TriProjection to use to pick into the scene"
-			"\nview - The TriView to use to pick into the scene"
-			"\nviewport - The TriViewport of the viewport to use to pick into the scene"
-			"\ncomponents - The TriViewport of the viewport to use to pick into the scene"
+			"\n:param x: integer x coordinate of the mouse over the viewport"
+			"\n:type x: int"
+			"\n:param y: integer y coordinate of the mouse over the viewport"
+			"\n:type y: int"
+			"\n:param projection: The TriProjection to use to pick into the scene"
+			"\n:type projection: TriProjection"
+			"\n:param view: The TriView to use to pick into the scene"
+			"\n:type view: TriView"
+			"\n:param viewport: The TriViewport of the viewport to use to pick into the scene"
+			"\n:type viewport: TriViewport"
+			"\n:param components: bitfield for components to pick"
+			"\n:type components: int"
+			"\n:rtype: dict"
 		)
 
 		MAP_METHOD( 
@@ -462,13 +467,17 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 			PyPickObjectAndArea, 
 			"Given mouse position and a view setup, returns the object that the mouse is over, as well as the mesh and area indices"
 			"\n returns (<Object>,(<MeshID>,<AreaID>)) or None if nothing pickable was hit by the ray"
-			"\n"
-			"\nArguments:"
-			"\nx - integer x coordinate of the mouse over the viewport"
-			"\ny - integer y coordinate of the mouse over the viewport"
-			"\nprojection - The TriProjection to use to pick into the scene"
-			"\nview - The TriView to use to pick into the scene"
-			"\nviewport - The TriViewport of the viewport to use to pick into the scene"
+			"\n:param x: integer x coordinate of the mouse over the viewport"
+			"\n:type x: int"
+			"\n:param y: integer y coordinate of the mouse over the viewport"
+			"\n:type y: int"
+			"\n:param projection: The TriProjection to use to pick into the scene"
+			"\n:type projection: TriProjection"
+			"\n:param view: The TriView to use to pick into the scene"
+			"\n:type view: TriView"
+			"\n:param viewport: The TriViewport of the viewport to use to pick into the scene"
+			"\n:type viewport: TriViewport"
+			"\n:rtype: None | tuple"
 		)
 		
 		MAP_METHOD( 
@@ -476,13 +485,17 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 			PyInteriorPickPointAndObject, 
 			"Given mouse position and a view setup, returns the object that the mouse is over, as well as the mesh and area indices"
 			"\n returns (<Object>,(x,y,z)) or None if nothing pickable was hit by the ray"
-			"\n"
-			"\nArguments:"
-			"\nx - integer x coordinate of the mouse over the viewport"
-			"\ny - integer y coordinate of the mouse over the viewport"
-			"\nprojection - The TriProjection to use to pick into the scene"
-			"\nview - The TriView to use to pick into the scene"
-			"\nviewport - The TriViewport of the viewport to use to pick into the scene"
+			"\n:param x: integer x coordinate of the mouse over the viewport"
+			"\n:type x: int"
+			"\n:param y: integer y coordinate of the mouse over the viewport"
+			"\n:type y: int"
+			"\n:param projection: The TriProjection to use to pick into the scene"
+			"\n:type projection: TriProjection"
+			"\n:param view: The TriView to use to pick into the scene"
+			"\n:type view: TriView"
+			"\n:param viewport: The TriViewport of the viewport to use to pick into the scene"
+			"\n:type viewport: TriViewport"
+			"\n:rtype: None | tuple"
 		)
 		
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
@@ -491,14 +504,12 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 			1,
 			"Given mouse position and a view setup, returns the object that the mouse is over, as well as the mesh and area indices"
 			"\nreturns <Object> or None if nothing pickable was hit by the ray"
-			"\n"
-			"\nArguments:"
-			"\nx - integer x coordinate of the mouse over the viewport"
-			"\ny - integer y coordinate of the mouse over the viewport"
-			"\nprojection - The TriProjection to use to pick into the scene"
-			"\nview - The TriView to use to pick into the scene"
-			"\nviewport - The TriViewport of the viewport to use to pick into the scene"
-			"\nfilter - Bitfield of pickable object types"
+			"\n:param x: integer x coordinate of the mouse over the viewport"
+			"\n:param y: integer y coordinate of the mouse over the viewport"
+			"\n:param projection: The TriProjection to use to pick into the scene"
+			"\n:param view: The TriView to use to pick into the scene"
+			"\n:param viewport: The TriViewport of the viewport to use to pick into the scene"
+			"\n:param filter: Bitfield of pickable object types"
 		)
 
 		MAP_METHOD_AND_WRAP( 
@@ -506,13 +517,11 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 			PickObjectUV, 
 			"Given mouse position and a view setup, returns the UV coordinates of the texel the mouse is over."
 			"\nreturns 2-float tuple with UV coordinates"
-			"\n"
-			"\nArguments:"
-			"\nx - integer x coordinate of the mouse over the viewport"
-			"\ny - integer y coordinate of the mouse over the viewport"
-			"\nprojection - The TriProjection to use to pick into the scene"
-			"\nview - The TriView to use to pick into the scene"
-			"\nviewport - The TriViewport of the viewport to use to pick into the scene"
+			"\n:param x: integer x coordinate of the mouse over the viewport"
+			"\n:param y: integer y coordinate of the mouse over the viewport"
+			"\n:param projection: The TriProjection to use to pick into the scene"
+			"\n:param view: The TriView to use to pick into the scene"
+			"\n:param viewport: The TriViewport of the viewport to use to pick into the scene"
 		)
 
 		MAP_METHOD_AND_WRAP( "RebuildSceneData", RebuildSceneData, "Rebuilds the internal data in all cells" )
@@ -523,33 +532,25 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 			"AddLightSource", 
 			AddLightSource, 
 			"Add an interior lightsource to the scene"
-			"\n"
-			"\nArguments:"
-			"\nlight - The light to add" )
+			"\n:param light: The light to add" )
 
 		MAP_METHOD_AND_WRAP( 
 			"RemoveLightSource", 
 			RemoveLightSource, 
 			"Remove an interior lightsource from the scene"
-			"\n"
-			"\nArguments:"
-			"\nlight - The light to remove" )
+			"\n:param light: The light to remove" )
 
 		MAP_METHOD_AND_WRAP( 
 			"AddDynamic", 
 			AddDynamic, 
 			"Add an interior dynamic (avatar, placeable, etc.) to the scene"
-			"\n"
-			"\nArguments:"
-			"\nobject - The ITr2InteriorDynamic (Tr2InteriorPlaceable or Tr2InteriorAvatar) to add")
+			"\n:param object: The ITr2InteriorDynamic (Tr2InteriorPlaceable or Tr2InteriorAvatar) to add")
 
 		MAP_METHOD_AND_WRAP( 
 			"RemoveDynamic", 
 			RemoveDynamic, 
 			"Remove an interior dynamic (avatar, placeable, etc.) from the scene"
-			"\n"
-			"\nArguments:"
-			"\nobject - The ITr2InteriorDynamic (Tr2InteriorPlaceable or Tr2InteriorAvatar) to remove")
+			"\n:param object: The ITr2InteriorDynamic (Tr2InteriorPlaceable or Tr2InteriorAvatar) to remove")
 
 		MAP_METHOD_AND_WRAP( "UpdateSpotlightShadows", UpdateSpotlightShadows, "Forces update on all spotlight shadows" )
 
@@ -566,9 +567,8 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP( "ReorderDynamic", ReorderDynamic,
 			"\nMoves the dynamic object in the dynamics list. This affects the order of updates.\n"
-			"\nArguments:"
-			"\ndynamic : Dynamic object to move in the list (needs to be in the dynamics list)"
-			"\ninsertAfter : Dynamic object to put the fist object after in the list (needs to be in the dynamics list)" 
+			"\n:param dynamic: Dynamic object to move in the list (needs to be in the dynamics list)"
+			"\n:param insertAfter: Dynamic object to put the fist object after in the list (needs to be in the dynamics list)" 
 			)
 
 	EXPOSURE_END()

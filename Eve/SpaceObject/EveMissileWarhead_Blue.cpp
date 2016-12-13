@@ -37,10 +37,8 @@ const Be::ClassInfo* EveMissileWarhead::ExposeToBlue()
 		MAP_METHOD_AND_WRAP(
 			"Launch",
 			Launch,
-			"Description:\n"
 			"Launch warhead.\n"
-			"Arguments:\n"
-			"startTransform - transform matrix of initial position/orientation in warheads's destinyball's space.\n" )
+			":param startTransform: transform matrix of initial position/orientation in warheads's destinyball's space.\n" )
 
 	EXPOSURE_CHAINTO( EveTransform )
 }

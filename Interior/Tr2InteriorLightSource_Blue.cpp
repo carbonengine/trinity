@@ -106,7 +106,13 @@ const Be::ClassInfo* Tr2InteriorLightSource::ExposeToBlue()
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets to animate light attributes", Be::READWRITE | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP( "IsSpotLight", IsSpotLight, "Returns true if the light is a spot light (cone angle < 90 degrees) ")
-		MAP_METHOD_AND_WRAP( "MarkShadowDirty", MarkShadowDirty, "Mark spotlight shadow as dirty to force its update")
+		MAP_METHOD_AND_WRAP( 
+			"MarkShadowDirty", 
+			MarkShadowDirty, 
+			"Mark spotlight shadow as dirty to force its update\n"
+			":param idx: shadow map index\n"
+			":param dirty: dirty flag"
+			)
 
 		MAP_ATTRIBUTE( "customMaterial", m_customMaterial, "Custom shader material for light source", Be::READWRITE | Be::NOTIFY | Be::PERSIST )
 		MAP_METHOD_AND_WRAP( "UpdateInternalMaterials", UpdateInternalMaterials, "Updates internal materials after customMaterial is changed")

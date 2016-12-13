@@ -51,7 +51,13 @@ const Be::ClassInfo* Tr2InteriorPlaceable::ExposeToBlue()
 		MAP_METHOD_AND_WRAP( "GetBoundingBoxInWorldSpace", GetBoundingBoxInWorldSpace, "Gets the bounding box in world space" )
 		MAP_METHOD_AND_WRAP( "MarkAsDirty", MarkAsDirty, "Marks the placeable as dirty" )
 		MAP_METHOD_AND_WRAP( "BoundingBoxReset", BoundingBoxReset, "Resets the bounding box, removing any overrides" )
-		MAP_METHOD_AND_WRAP( "BoundingBoxOverride", BoundingBoxOverride, "Override the object's bounding box with the one provided" )
+		MAP_METHOD_AND_WRAP( 
+			"BoundingBoxOverride", 
+			BoundingBoxOverride, 
+			"Override the object's bounding box with the one provided\n"
+			":param boundsMin: min bounding box corner\n"
+			":param boundsMax: max bounding box corner\n"
+			)
 
 		MAP_ATTRIBUTE( "variableStore", m_variableStore, "Local variable store for this object", Be::READ )
 		MAP_ATTRIBUTE( "probeOffset", m_probeOffset, "Offset for Enlighten SH probe position (in world space)", Be::READWRITE | Be::PERSIST )

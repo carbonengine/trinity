@@ -32,7 +32,12 @@ const Be::ClassInfo* EveMobile::ExposeToBlue()
         MAP_METHOD_AND_WRAP( "RebuildTurretPositions", RebuildTurretPositions, "Re-positions all the turrets on this ship" )
 		MAP_METHOD_AND_WRAP( "PlayActivationCurve", PlayActivationCurve, "Play the object's activation strength curve" )
 		MAP_METHOD_AND_WRAP( "PlayClipSphereFactorCurve", PlayClipSphereFactorCurve, "Play the object's clip sphere factor curve" )
-		MAP_METHOD_AND_WRAP( "ModifyClipSphereCurve", ModifyClipSphereCurve, "Modifies the clip sphere curve by changing it's length and current time" )
+		MAP_METHOD_AND_WRAP( 
+			"ModifyClipSphereCurve", 
+			ModifyClipSphereCurve, 
+			"Modifies the clip sphere curve by changing it's length and current time\n"
+			":param parameters: a strange way to pass arguments to a function"
+			)
 
 
     EXPOSURE_CHAINTO( EveSpaceObject2 )

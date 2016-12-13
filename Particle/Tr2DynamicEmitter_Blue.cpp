@@ -30,8 +30,7 @@ const Be::ClassInfo* Tr2DynamicEmitter::ExposeToBlue()
 			"UpdateSimulation", 
 			UpdateSimulation, 
 			"Updates emitter manually.\n" 
-			"Arguments:\n"
-			"dt - time inteval (in seconds)" )
+			":param dt: time inteval (in seconds)" )
 
 	EXPOSURE_END()
 }

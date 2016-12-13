@@ -29,16 +29,13 @@ const Be::ClassInfo* EveMissile::ExposeToBlue()
 		MAP_METHOD_AND_WRAP(
 			"Start",
 			Start,
-			"Description:\n"
 			"Start a missile from a ship into space.\n"
-			"Arguments:\n"
-			"shipVelocity - velocity vector of initial ship speed in missile's destinyball's space.\n"
-			"estimatedFlyingTime - rough estimate fo the flight time." )
+			":param shipVelocity: velocity vector of initial ship speed in missile's destinyball's space.\n"
+			":param estimatedFlyingTime: rough estimate fo the flight time." )
 
 		MAP_METHOD_AND_WRAP(
 			"RebuildMissileBoundingSphere",
 			RebuildMissileBoundingSphere,
-			"Description:\n"
 			"Rebuild the missile object's bounding sphere based on the internal position of all attached warheads.\n" )
 
     EXPOSURE_CHAINTO( EveSpaceObject2 )

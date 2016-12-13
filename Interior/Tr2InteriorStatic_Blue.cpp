@@ -81,16 +81,23 @@ const Be::ClassInfo* Tr2InteriorStatic::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP( "SetInstanceData", SetInstanceData, 
 				"\nSet the per instance data. Should only be used for data that has been loaded from database and not disk.\n" 
-				"\nArguments:"
-				"\nlinearTransform : (4tuple) linear transformation"
-				"\ntranslation : (2tuple)the uv translation"
-				"\ninstanceInSystemIdx: the system index for the static instance"
+				"\n:param linearTransform: (4tuple) linear transformation"
+				"\n:param translation: (2tuple)the uv translation"
+				"\n:param instanceInSystemIdx: the system index for the static instance"
 				)
 
 		MAP_METHOD_AND_WRAP( "BindLowLevelShaders", BindLowLevelShaders, "Binds low level shaders for all meshes of the static." );
 
-		MAP_METHOD( "GetBoundingBoxInLocalSpace", PyGetBoundingBoxInLocalSpace, "Gets the bounding box in local space" )
-		MAP_METHOD( "GetBoundingBoxInWorldSpace", PyGetBoundingBoxInWorldSpace, "Gets the bounding box in world space" )
+		MAP_METHOD( 
+			"GetBoundingBoxInLocalSpace", 
+			PyGetBoundingBoxInLocalSpace, 
+			"Gets the bounding box in local space\n"
+			":rtype: ((float, float, float), (float, float, float))" )
+		MAP_METHOD( 
+			"GetBoundingBoxInWorldSpace", 
+			PyGetBoundingBoxInWorldSpace, 
+			"Gets the bounding box in world space\n"
+			":rtype: ((float, float, float), (float, float, float))" )
 
 	EXPOSURE_END()
 }

@@ -144,9 +144,7 @@ const Be::ClassInfo* EveLocalPositionCurve::ExposeToBlue()
 			SetBehavior,
 			1,
 			"Create a EveLocalPostitionCurve with a render step that issues a Python callback\n"
-			"\n"
-			"Optional argument:\n"
-			"  cb - A Python callable (default None)"
+			":param cb: a Python callable (default None)"
 		)
 
 	EXPOSURE_END()
