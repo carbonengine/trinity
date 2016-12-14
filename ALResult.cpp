@@ -14,6 +14,13 @@
 #include <dxerr.h>
 #endif
 
+#if( TRINITYDEV == 1 )
+bool g_requestDeviceDebugLayer = true;
+#else
+bool g_requestDeviceDebugLayer = false;
+#endif
+
+
 namespace
 {
 

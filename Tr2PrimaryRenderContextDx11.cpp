@@ -13,6 +13,7 @@
 using namespace Tr2RenderContextEnum;
 
 bool g_gatherDX11Statistics = false;
+extern bool g_requestDeviceDebugLayer;
 
 CCP_STATS_DECLARE( dx11IAVertices, "Trinity/AL/dx11/IAVertices", false, CST_COUNTER_HIGH, "Number of vertices read by input assembler" );
 CCP_STATS_DECLARE( dx11IAPrimitives, "Trinity/AL/dx11/IAPrimitives", false, CST_COUNTER_HIGH, "Number of primitives read by input assembler" );
@@ -125,9 +126,10 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	
 	uint32_t dwFlags = 0;
 
-#if( TRINITYDEV == 1 )
-	dwFlags |= D3D11_CREATE_DEVICE_DEBUG;
-#endif
+	if( g_requestDeviceDebugLayer )
+	{
+		dwFlags |= D3D11_CREATE_DEVICE_DEBUG;
+	}
 
 	const D3D_FEATURE_LEVEL levelWanted = D3D_FEATURE_LEVEL_11_0;
 	D3D_FEATURE_LEVEL levelSupported;
@@ -206,45 +208,50 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 		m_d3dDevice11 = nullptr;			
 		m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
 
-#if( TRINITYDEV == 1 )	
-		// Try once again without DEVICE_DEBUG flag for people without DirectX SDK
-		dwFlags &= ~D3D11_CREATE_DEVICE_DEBUG;
-
-		if( isWindowless ) 
+		if( g_requestDeviceDebugLayer )
 		{
-			HR = D3D11CreateDevice(
-				NULL,
-				driverType,
-				0,
-				dwFlags,
-				&levelWanted,
-				1,
-				D3D11_SDK_VERSION,
-				&m_d3dDevice11,
-				&levelSupported,
-				&m_context );
-		} else 	{
-			HR = D3D11CreateDeviceAndSwapChain(
-					pp.software ? NULL : adapterPtr,
+			// Try once again without DEVICE_DEBUG flag for people without DirectX SDK
+			dwFlags &= ~D3D11_CREATE_DEVICE_DEBUG;
+
+			if( isWindowless ) 
+			{
+				HR = D3D11CreateDevice(
+					NULL,
 					driverType,
 					0,
 					dwFlags,
 					&levelWanted,
 					1,
 					D3D11_SDK_VERSION,
-					&sd,
-					&m_swapChain,
 					&m_d3dDevice11,
 					&levelSupported,
 					&m_context );
-		}
+			} else 	{
+				HR = D3D11CreateDeviceAndSwapChain(
+						pp.software ? NULL : adapterPtr,
+						driverType,
+						0,
+						dwFlags,
+						&levelWanted,
+						1,
+						D3D11_SDK_VERSION,
+						&sd,
+						&m_swapChain,
+						&m_d3dDevice11,
+						&levelSupported,
+						&m_context );
+			}
 
-		if( SUCCEEDED( HR ) )
-		{
-			CCP_AL_LOGWARN( "DX11: Created device without DEVICE_DEBUG flag, no error logging will be available" );
+			if( SUCCEEDED( HR ) )
+			{
+				CCP_AL_LOGWARN( "DX11: Created device without DEVICE_DEBUG flag, no error logging will be available" );
+			}
+			else
+			{
+				CCP_AL_LOG( "DX11: device creation failed, error 0x%08x", HR );
+			}
 		}
 		else
-#endif
 		{
 			CCP_AL_LOG( "DX11: device creation failed, error 0x%08x", HR );
 		}
