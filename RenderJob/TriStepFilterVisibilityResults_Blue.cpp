@@ -106,11 +106,11 @@ const Be::ClassInfo* TriStepFilterVisibilityResults::ExposeToBlue()
 			"__init__", 
 			py__init__, 
 			4,
-			"Create a visibility results filter to exclude objects/events from visibility results"
-			"\n"
-			"\nOptional Arguments:"
-			"eventFilter - Which events are copied to new visibility results (default is All)"
-			"filterType - Type of per-object filtering to perform on visibility results"
+			"Create a visibility results filter to exclude objects/events from visibility results\n"
+			":param source: source visibility results\n"
+			":param dest: destination visibility results\n"
+			":param eventFilter: Which events are copied to new visibility results (default is All)\n"
+			":param filterType: Type of per-object filtering to perform on visibility results\n"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

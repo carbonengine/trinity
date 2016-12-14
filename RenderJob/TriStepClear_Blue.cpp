@@ -81,11 +81,13 @@ const Be::ClassInfo* TriStepClear::ExposeToBlue()
 			"Creates a render step that performs a Clear() on the currently set"
 			"\nRT back-buffer / depth-stencil. When optional arguments are not set"
 			"\nor are set to None, they will not be cleared."
-			"\n"
-			"\nOptional Arguments:"
-			"\ncolor - (r,g,b,a) or None (default None)"
-			"\ndepth - float or None (default None)"
-			"\nstencil - uint or None (default None)")
+			"\n:param color: (r,g,b,a) or None (default None)\n"
+			"\n:type color: Optional[(float, float, float, float) | None]"
+			"\n:param depth: float or None (default None)"
+			"\n:type depth: Optional[float | None]"
+			"\n:param stencil: uint or None (default None)"
+			"\n:type stencil: Optional[int | None]"
+			)
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

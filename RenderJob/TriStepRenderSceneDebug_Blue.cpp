@@ -17,10 +17,8 @@ const Be::ClassInfo* TriStepRenderSceneDebug::ExposeToBlue()
 			"__init__", 
 			py__init__, 
 			1,
-			"Create a render step to render a ITr2Scene with debug rendering"
-			"\n"
-			"\nOptional Arguments:"
-			"\nscene - an ITr2Scene (default None)"
+			"Create a render step to render a ITr2Scene with debug rendering\n"
+			":param scene: an ITr2Scene (default None)"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

@@ -17,7 +17,13 @@ const Be::ClassInfo* TriStepSetVisualizationMode::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "object", m_object, "The object to set visualization mode for", Be::READWRITE)
 		MAP_ATTRIBUTE( "mode", m_mode, "Visualization mode for the object", Be::READWRITE)
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( "__init__", py__init__, 2, "n/a" )
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
+			"__init__", 
+			py__init__, 
+			2, 
+			":param obj: The object to set visualization mode for\n"
+			":param mode: Visualization mode for the object"
+			)
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

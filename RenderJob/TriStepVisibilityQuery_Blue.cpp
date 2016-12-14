@@ -34,10 +34,8 @@ const Be::ClassInfo* TriStepVisibilityQuery::ExposeToBlue()
 			"Create a render step that queries a queryable object for visibility results."
 			"\nNote that this step should occur after setting the render target and viewport,"
 			"\notherwise the adjusted projection matrix used in the visibility query might be incorrect."
-			"\n"
-			"\nOptional Arguments:"
-			"\nqueryable - an object that supports ITr2VisibilityQueryable (default None)"
-			"\nresults - a Tr2VisibilityResults object to store the results in"
+			"\n:param queryable: an object that supports ITr2VisibilityQueryable (default None)"
+			"\n:param results: a Tr2VisibilityResults object to store the results in"
 		)
 
 		EXPOSURE_CHAINTO( TriRenderStep )

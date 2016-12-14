@@ -19,10 +19,8 @@ const Be::ClassInfo* TriStepSetRenderTarget::ExposeToBlue()
 			"__init__", 
 			py__init__, 
 			1,
-			"Creates a render job that sets a depth stencil to the device"
-			"\n"
-			"\nOptional Arguments:"
-			"\nrenderTarget - a Tr2RenderTarget"
+			"Creates a render job that sets a depth stencil to the device\n"
+			":param renderTarget: a Tr2RenderTarget"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

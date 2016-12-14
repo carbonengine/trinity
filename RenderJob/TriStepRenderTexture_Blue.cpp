@@ -77,12 +77,9 @@ const Be::ClassInfo* TriStepRenderTexture::ExposeToBlue()
 		(
 			"__init__", 
 			py__init__, 
-			"Creates a render step that renders a texture" 
-			"\n"
-			"\nOptional Arguments:"
-			"\ntexture - an ID3DTexture (default None), OR"
-			"\nrenderTarget - a Tr2RenderTarget (readable), OR"
-			"\ndepthStencil - a Tr2DepthStencil (readable)"
+			"Creates a render step that renders a texture\n" 
+			":param texture: texture to render\n"
+			":type texture: Optional[ITr2TextureProvider | Tr2AtlasTexture]"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

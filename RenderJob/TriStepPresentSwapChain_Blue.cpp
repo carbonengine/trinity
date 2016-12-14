@@ -21,10 +21,8 @@ const Be::ClassInfo* TriStepPresentSwapChain::ExposeToBlue()
 			"__init__", 
 			py__init__, 
 			1,
-			"Create a step that will set a swap chain as active on the device."
-			"\n"
-			"\nOptional Arguments:"
-			"\nswapChain (default None)"
+			"Create a step that will set a swap chain as active on the device.\n"
+			":param swapChain: swap chain"
 		)
 
     EXPOSURE_CHAINTO( TriRenderStep )

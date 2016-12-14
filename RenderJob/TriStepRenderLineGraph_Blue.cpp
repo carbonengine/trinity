@@ -66,7 +66,15 @@ const Be::ClassInfo* TriStepRenderLineGraph::ExposeToBlue()
 		)
 #endif
 
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( "__init__", py__init__, 4, INIT_DOC_STRING	)
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
+			"__init__", 
+			py__init__, 
+			4, 
+			":param graphs: list of graphs\n"
+			":param legendScale: scale of the legend\n"
+			":param scale: graph scale\n"
+			":param autoScale: use automatic scale to content\n"
+			)
 
     EXPOSURE_CHAINTO( TriRenderStep )
 }

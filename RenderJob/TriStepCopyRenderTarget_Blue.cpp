@@ -90,7 +90,18 @@ const Be::ClassInfo* TriStepCopyRenderTarget::ExposeToBlue()
 		MAP_ATTRIBUTE( "sourceViewport", m_sourceViewport, "", Be::READWRITE)
 		MAP_ATTRIBUTE( "destinationViewport", m_destinationViewport, "", Be::READWRITE)
 
-		MAP_METHOD( "__init__", PyInitLowLevel, "n/a" )
+		MAP_METHOD( 
+			"__init__", 
+			PyInitLowLevel, 
+			":param dest: copy destination\n" 
+			":type dest: Optional[Tr2RenderTarget | TriTextureRes]\n"
+			":param source: copy source\n" 
+			":type source: Optional[Tr2RenderTarget]\n"
+			":param destViewport: destination rectangle\n" 
+			":type destViewport: Optional[TriViewport]\n"
+			":param sourceViewport: source rectangle\n" 
+			":type sourceViewport: Optional[TriViewport]\n"
+			)
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

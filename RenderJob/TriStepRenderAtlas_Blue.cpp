@@ -28,10 +28,9 @@ const Be::ClassInfo* TriStepRenderAtlas::ExposeToBlue()
 			"__init__", 
 			py__init__, 
 			2,
-			"Creates a render step that renders an atlas" 
-			"\n"
-			"\nOptional Arguments:"
-			"\natlas - an atlas (default None)"
+			"Creates a render step that renders an atlas\n" 
+			":param atlas: an atlas (default None)\n"
+			":param texture: texture in the atlas\n"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

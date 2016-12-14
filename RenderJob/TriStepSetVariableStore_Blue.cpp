@@ -127,10 +127,8 @@ const Be::ClassInfo* TriStepSetVariableStore::ExposeToBlue()
 			py__init__,
 			2,
 			"Create a render step that sets a variable value to the variable store"
-			"\n"
-			"\nOptional Arguments:"
-			"\nname - string name of the variable"
-			"\nvalue - a valid python object to set"
+			"\n:param name: string name of the variable"
+			"\n:param value: a valid python object to set"
 		)
 #endif
 		MAP_ATTRIBUTE( "variableName", m_variableName, "The name of the Tr2VariableStore variable to set", Be::READWRITE | Be::PERSIST )

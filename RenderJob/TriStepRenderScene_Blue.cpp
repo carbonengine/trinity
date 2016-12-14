@@ -23,10 +23,8 @@ const Be::ClassInfo* TriStepRenderScene::ExposeToBlue()
 			"__init__", 
 			py__init__,
 			1,
-			"Creates a render step that renders an ITr2Scene"
-			"\n"
-			"\nOptional Arguments:"
-			"\nscene - an ITr2Scene object"
+			"Creates a render step that renders an ITr2Scene\n"
+			":param scene: an ITr2Scene object"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

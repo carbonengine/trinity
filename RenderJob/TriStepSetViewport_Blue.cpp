@@ -19,10 +19,8 @@ const Be::ClassInfo* TriStepSetViewport::ExposeToBlue()
 			"__init__", 
 			SetViewport, 
 			1,
-			"Creates a render step that sets a viewport to the device"
-			"\n"
-			"\nOptional Arguments:"
-			"\nviewport - the TriViewport to set (default None)"
+			"Creates a render step that sets a viewport to the device\n"
+			":param viewport: the TriViewport to set (default None)"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

@@ -19,10 +19,8 @@ const Be::ClassInfo* TriStepPushRenderTarget::ExposeToBlue()
 			"__init__", 
 			py__init__, 
 			1, 
-			"Creates a render job that pushes a rendertarget to the device"
-			"\n"
-			"\nOptional Arguments:"
-			"\nrenderTarget - a Tr2RenderTarget"
+			"Creates a render job that pushes a rendertarget to the device\n"
+			":param renderTarget: a Tr2RenderTarget"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

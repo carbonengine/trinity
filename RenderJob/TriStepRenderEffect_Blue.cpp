@@ -22,11 +22,9 @@ const Be::ClassInfo* TriStepRenderEffect::ExposeToBlue()
 			"__init__", 
 			py__init__,
 			2,
-			"Create a render step that draws a fullscreen quad using a specified effect"
-			"\n"
-			"\nOptional Arguments:"
-			"\neffect - A Tr2Effect (default None)"
-			"\nshaderBuffer - A Tr2ShaderBuffer (default None)"
+			"Create a render step that draws a fullscreen quad using a specified effect\n"
+			":param effect: A Tr2Effect (default None)\n"
+			":param shaderBuffer: A Tr2ShaderBuffer (default None)"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

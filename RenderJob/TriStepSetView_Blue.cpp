@@ -21,11 +21,9 @@ const Be::ClassInfo* TriStepSetView::ExposeToBlue()
 			SetViewCameraParent, 
 			3,
 			"Creates a render step that sets the view to the device"
-			"\n"
-			"\nOptional Arguments:"
-			"\nview - TriView (default None)"
-			"\ncamera - an EveCamera (default None)"
-			"\ncameraParent - an ITr2Transform that is the parent of the camera (default None)"
+			"\n:param view: TriView (default None)"
+			"\n:param camera: an EveCamera (default None)"
+			"\n:param cameraParent: an ITr2Transform that is the parent of the camera (default None)"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

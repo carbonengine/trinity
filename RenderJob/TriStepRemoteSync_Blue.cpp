@@ -17,8 +17,7 @@ const Be::ClassInfo* TriStepRemoteSync::ExposeToBlue()
 		1,
 		"Creates a render step that syncs the rendering to a windows event primitive.\n"
 		"Usefull when needed to sync to an external process like Maya.\n"
-		"\n"
-		"\nid	- int. This id will be appended to the event names if it is >= 0")
+		":param id: this id will be appended to the event names if it is >= 0")
 		EXPOSURE_CHAINTO( TriRenderStep )
 }
 

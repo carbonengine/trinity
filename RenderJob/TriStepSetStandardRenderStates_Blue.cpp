@@ -34,10 +34,8 @@ const Be::ClassInfo* TriStepSetStdRndStates::ExposeToBlue()
 			"__init__", 
 			py__init__, 
 			1,
-			"Creates a render step that sets a set of standard render states"
-			"\n"
-			"\nOptional Arguments:"
-			"renderMode - a value from the RM_ enumeration"
+			"Creates a render step that sets a set of standard render states\n"
+			":param renderMode: a value from the RM_ enumeration"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

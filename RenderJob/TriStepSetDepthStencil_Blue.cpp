@@ -20,10 +20,8 @@ const Be::ClassInfo* TriStepSetDepthStencil::ExposeToBlue()
 			"__init__", 
 			SetDepthStencil,
 			1,
-			"Creates a render job that sets a depth stencil surface to the device"
-			"\n"
-			"\nOptional Arguments:"
-			"\ndepthStencil - a Tr2DepthStencil"
+			"Creates a render job that sets a depth stencil surface to the device\n"
+			":param depthStencil: a Tr2DepthStencil"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

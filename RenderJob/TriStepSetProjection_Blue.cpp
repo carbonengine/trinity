@@ -18,10 +18,8 @@ const Be::ClassInfo* TriStepSetProjection::ExposeToBlue()
 			"__init__",
 			SetProjection, 
 			1,
-			"Create a render step to set the projection to the device"
-			"\n"
-			"\nOptional Arguments:"
-			"projection - a TriProjection to set (default None)"
+			"Create a render step to set the projection to the device\n"
+			":param projection: a TriProjection to set (default None)"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

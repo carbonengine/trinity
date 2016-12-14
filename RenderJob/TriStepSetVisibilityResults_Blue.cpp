@@ -35,11 +35,9 @@ const Be::ClassInfo* TriStepSetVisibilityResults::ExposeToBlue()
 			"__init__", 
 			py__init__, 
 			2,
-			"Create a render step that assigns already generated visibility results to a queryable scene"
-			"\n"
-			"\nOptional Arguments:"
-			"\nqueryable - an object that supports ITr2VisibilityQueryable (default None)"
-			"\nresults - a Tr2VisibilityResults object that stores visibility results"
+			"Create a render step that assigns already generated visibility results to a queryable scene\n"
+			":param queryable: an object that supports ITr2VisibilityQueryable (default None)\n"
+			":param results: a Tr2VisibilityResults object that stores visibility results"
 		)
 
 		EXPOSURE_CHAINTO( TriRenderStep )

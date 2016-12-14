@@ -22,10 +22,8 @@ const Be::ClassInfo* TriStepRunJob::ExposeToBlue()
 			"__init__",
 			SetRenderJob,
 			1,
-			"Creates a render job that runs another renderjob"
-			"\n"
-			"\nOptional Arguments:"
-			"renderJob - the TriRenderJob to run"
+			"Creates a render job that runs another renderjob\n"
+			":param renderJob: the TriRenderJob to run"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

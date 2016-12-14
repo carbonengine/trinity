@@ -20,12 +20,10 @@ const Be::ClassInfo* TriStepResolve::ExposeToBlue()
 			"__init__", 
 			py__init__, 
 			2,
-			"Creates a render step that resolves source into destination rendertargets. If source is not MSAA,"
-			"\nthis is a copy (but formats and dimensions must still match exactly)."
-			"\n"
-			"\nArguments:"
-			"\ndestination - Tr2RenderTarget"
-			"\nsource - Tr2RenderTarget"
+			"Creates a render step that resolves source into destination rendertargets. If source is not MSAA,\n"
+			"this is a copy (but formats and dimensions must still match exactly).\n"
+			":param destination: Tr2RenderTarget\n"
+			":param source: Tr2RenderTarget"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

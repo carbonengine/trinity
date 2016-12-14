@@ -18,10 +18,8 @@ const Be::ClassInfo* TriStepRenderCubeMap::ExposeToBlue()
 			"__init__", 
 			py__init__,
 			1,
-			"Creates a render step that renders a cubemap on the screen for debugging"
-			"\n"
-			"\nOptional Arguments:"
-			"\ncubeMap - a TriTextureRes containing a cubemap (default None)"
+			"Creates a render step that renders a cubemap on the screen for debugging\n"
+			":param cubeMap: a TriTextureRes containing a cubemap (default None)"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

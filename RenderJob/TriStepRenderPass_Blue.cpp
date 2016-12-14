@@ -51,11 +51,9 @@ const Be::ClassInfo* TriStepRenderPass::ExposeToBlue()
 			"__init__", 
 			py__init__, 
 			2, 
-			"Create a render step to render a scene with a specific pass"
-			"\n"
-			"\nOptional Arguments:"
-			"scene - ITr2MultiPassScene (default None)"
-			"passType - TRIPREPASS pass type (default TRIPREPASS_BEGIN_RENDER)"
+			"Create a render step to render a scene with a specific pass\n"
+			":param scene: ITr2MultiPassScene (default None)\n"
+			":param passType: TRIPREPASS pass type (default TRIPREPASS_BEGIN_RENDER)"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

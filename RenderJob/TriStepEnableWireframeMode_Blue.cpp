@@ -28,9 +28,7 @@ const Be::ClassInfo* TriStepEnableWireframeMode::ExposeToBlue()
 			py__init__,
 			1,
 			"Creates a render step that enables/disables wireframe rendering.\n"
-			"\n"
-			"Optional arguments:\n"
-			"  enable - True/False (default False)"
+			":param enable: True/False (default False)"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

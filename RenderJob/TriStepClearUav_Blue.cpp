@@ -93,11 +93,11 @@ const Be::ClassInfo* TriStepClearUav::ExposeToBlue()
 		MAP_METHOD(
 			"__init__", 
 			py__init__,
-			"Creates a render step that clears a writable UAV buffer with a value."
-			"\n"
-			"\nOptional Arguments:"
-			"\nbuffer - Tr2UavBuffer to clear"
-			"\nclearValue - 4-tuple of values to clear" )
+			"Creates a render step that clears a writable UAV buffer with a value.\n"
+			":param buffer: - Tr2UavBuffer to clear\n"
+			":type buffer: Optional[ITr2GpuBuffer]\n"
+			":param clearValue: 4-tuple of values to clear\n"
+			":type clearValue: Optional[(float, float, float, float) | (int, int, int, int)]" )
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

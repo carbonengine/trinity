@@ -65,7 +65,8 @@ const Be::ClassInfo* TriRenderJob::ExposeToBlue()
 		(
 			"SetThreadAffinity",
 			SetThreadAffinity,
-			"for debugging only for now"
+			"for debugging only for now\n"
+			":param threadAffinity: "
 		)
 
 		MAP_METHOD_AND_WRAP

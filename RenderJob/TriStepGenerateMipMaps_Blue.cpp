@@ -22,9 +22,7 @@ const Be::ClassInfo* TriStepGenerateMipMaps::ExposeToBlue()
 			1,
 			"Creates a render job that generates mipmaps. Note that the target of a TriStepResolve\n"
 			"generates the mipmaps, so use this only with non-MSAA targets.\n"
-			"\n"
-			"\nOptional Arguments:"
-			"\nrenderTarget - a Tr2RenderTarget"
+			":param renderTarget: a Tr2RenderTarget"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

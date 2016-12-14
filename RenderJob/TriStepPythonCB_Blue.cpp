@@ -16,19 +16,15 @@ const Be::ClassInfo* TriStepPythonCB::ExposeToBlue()
 			SetCallback,
 			1,
 			"Create a render step that issues a Python callback\n"
-			"\n"
-			"Optional argument:\n"
-			"  cb - A Python callable (default None)"
+			":param cb: A Python callable (default None)"
 		)
 		
 		MAP_METHOD_AND_WRAP
 		( 
 			"SetCallback",
 			SetCallback, 
-			"Set the callback called when this renderstep executes."
-			"\n"
-			"\nArguments:"
-			"\nCallback - a method which has no arguments."				
+			"Set the callback called when this renderstep executes.\n"
+			":param cb: a method which has no arguments."				
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

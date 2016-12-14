@@ -24,7 +24,13 @@ const Be::ClassInfo* TriStepToggleCubemap::ExposeToBlue()
 						Be::READWRITE
 					  )
 
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( "__init__", py__init__, 2, "n/a" )
+		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
+			"__init__", 
+			py__init__, 
+			2, 
+			":param show: show/hide cubemap\n"
+			":param scene: cubemap scene"
+			)
 
 	EXPOSURE_CHAINTO( TriRenderStep )
 }

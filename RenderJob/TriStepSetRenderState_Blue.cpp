@@ -62,10 +62,10 @@ const Be::ClassInfo* TriStepSetRenderState::ExposeToBlue()
 			py__init__, 
 			"Creates a render step to set a specific D3D state"
 			"\nIf one of the optional arguments is set, then both must be"
-			"\n"
-			"\nOptional Arguments:"
-			"\nstate - A TriD3DRenderState value (unsigned int)"
-			"\nstateValue - A valid value to set (unsigned int)"
+			"\n:param state: A TriD3DRenderState value (unsigned int)"
+			"\n:type state: int"
+			"\n:param stateValue: A valid value to set (unsigned int)"
+			"\n:type stateValue: int"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )

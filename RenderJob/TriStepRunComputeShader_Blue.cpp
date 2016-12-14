@@ -27,13 +27,11 @@ const Be::ClassInfo* TriStepRunComputeShader::ExposeToBlue()
 			"__init__", 
 			py__init__,
 			4,
-			"Run a compute shader in renderStep.Execute"
-			"\n"
-			"\nOptional Arguments:"
-			"\neffect - A Tr2Effect containing a compute shader (default None)"
-			"\ngroup dimension X - unsigned int, dispatch group dimension.X, default 1"
-			"\ngroup dimension Y - unsigned int, dispatch group dimension.Y, default 1"
-			"\ngroup dimension Z - unsigned int, dispatch group dimension.Z, default 1"
+			"Run a compute shader in renderStep.Execute\n"
+			"\n:param effect: A Tr2Effect containing a compute shader (default None)"
+			"\n:param dimX: unsigned int, dispatch group dimension.X, default 1"
+			"\n:param dimY: unsigned int, dispatch group dimension.Y, default 1"
+			"\n:param dimZ: unsigned int, dispatch group dimension.Z, default 1"
 		)
 
 	EXPOSURE_CHAINTO( TriRenderStep )
