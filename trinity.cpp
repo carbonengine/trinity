@@ -116,6 +116,7 @@ const char* InitializeForPython()
 
 extern bool g_isR10G10B10FormatInverted;
 extern bool g_convertA8L8FormatToB8G8R8A8;
+extern bool g_requestDeviceDebugLayer;
 
 static void StartDLL()
 {
@@ -136,6 +137,12 @@ static void StartDLL()
 #else
 	g_convertA8L8FormatToB8G8R8A8 = false;
 #endif
+
+	auto debugArg = BeOS->GetStartupArgValue( L"deviceDebug" );
+	if( !debugArg.empty() )
+	{
+		g_requestDeviceDebugLayer = debugArg == L"1";
+	}
 
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );
 
@@ -246,7 +253,7 @@ MAP_FUNCTION(
 	PyBreakInDebugger, 
 	"BreakInDebugger( [contextString] )\nBreaks in the debugger, if one is attached, allowing you to look at the program state at a point determined from Python.\n"
 	":param contextString: string that is dumped into the debugger output\n"
-	":param contextString: str\n"
+	":type contextString: str\n"
 	":rtype: None" );
 #endif
 
