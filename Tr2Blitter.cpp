@@ -164,9 +164,9 @@ bool Tr2Blitter::DrawHelper( ITr2ShaderState* shader, ITr2ShaderMaterial* materi
 	renderContext.m_esm.ApplyVertexDeclaration( m_screenVertexDecl );
 	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( Tr2ScreenVertex ) );
 
+	static CTr2TextureReference textureReference;
 	if( halTexture )
 	{
-		static CTr2TextureReference textureReference;
 		*textureReference.GetTexture() = *halTexture;
 
 		//m_blitSourceVar = halTexture;
@@ -185,6 +185,10 @@ bool Tr2Blitter::DrawHelper( ITr2ShaderState* shader, ITr2ShaderMaterial* materi
 		}
 	}
 
+	if( textureReference.GetTexture() )
+	{
+		textureReference.GetTexture()->Destroy();
+	}
 	GlobalStore().GetVariable( "BlitSource" )->Clear();	
 
 	return true;
