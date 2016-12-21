@@ -99,6 +99,10 @@ EveSOF::~EveSOF()
 
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Route this call through to the data manager
+// --------------------------------------------------------------------------------
 bool EveSOF::LoadData( const char* filePath )
 {
 	return m_dataMgr.LoadData( filePath );

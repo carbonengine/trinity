@@ -6,6 +6,53 @@
 #include "StdAfx.h"
 #include "EveSOFData.h"
 
+BLUE_DEFINE( EveSOFDataAreaMaterial );
+const Be::ClassInfo* EveSOFDataAreaMaterial::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( EveSOFDataAreaMaterial, "" )
+		MAP_INTERFACE( EveSOFDataAreaMaterial )
+
+		MAP_ATTRIBUTE( "material1", m_material1, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "material2", m_material2, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "material3", m_material3, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "material4", m_material4, "", Be::READWRITE | Be::PERSIST )
+		EXPOSURE_END()
+}
+
+
+
+
+Be::VarChooser EveSOFDataAreaTypeChooser[] =
+{
+	{ "Hull", BeCast( EveSOFDataArea::TYPE_HULL ), "Area Type Hull" },
+	{ "Glass", BeCast( EveSOFDataArea::TYPE_GLASS ), "Area Type Glass" },
+	{ "Sails", BeCast( EveSOFDataArea::TYPE_SAILS ), "Area Type Sails" },
+	{ "Reactor", BeCast( EveSOFDataArea::TYPE_REACTOR ), "Area Type Reactor" },
+	{ "Darkhull", BeCast( EveSOFDataArea::TYPE_DARKHULL), "Area Type Dark Hull" },
+	{ "Wreck", BeCast( EveSOFDataArea::TYPE_WRECK ), "Area Type Generic Wreck" },
+	{ "NoOverwrite", BeCast( EveSOFDataArea::TYPE_NO_OVERWRITE ), "Area Type No Overwrite" },
+	{ 0 }
+};
+BLUE_REGISTER_ENUM_EX( "EveSOFDataAreaType", EveSOFDataArea::AreaType, EveSOFDataAreaTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
+BLUE_DEFINE( EveSOFDataArea );
+const Be::ClassInfo* EveSOFDataArea::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( EveSOFDataArea, "" )
+		MAP_INTERFACE( EveSOFDataArea )
+
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[TYPE_HULL].mKey, m_materials[TYPE_HULL], "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[TYPE_GLASS].mKey, m_materials[TYPE_GLASS], "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[TYPE_REACTOR].mKey, m_materials[TYPE_REACTOR], "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[TYPE_SAILS].mKey, m_materials[TYPE_SAILS], "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[TYPE_DARKHULL].mKey, m_materials[TYPE_DARKHULL], "", Be::READWRITE | Be::PERSIST )
+	EXPOSURE_END()
+}
+
+
+
+
+
 BLUE_DEFINE( EveSOFDataBoosterShape );
 const Be::ClassInfo* EveSOFDataBoosterShape::ExposeToBlue()
 {
@@ -138,24 +185,12 @@ BLUE_DEFINE( EveSOFDataHullPlaneSet );
 
 Be::VarChooser EveSOFDataHullPlaneSetUsageChooser[] =
 {
-	{
-		"Standard", BeCast( EveSOFDataHullPlaneSet::USAGE_STANDARD ), "Standard planeset"
-	},
-	{
-		"Hologram", BeCast( EveSOFDataHullPlaneSet::USAGE_HOLOGRAM), "Hologram planeset"
-	},
-	{
-		"Video", BeCast( EveSOFDataHullPlaneSet::USAGE_VIDEO ), "Video planeset"
-	},
+	{	"Standard", BeCast( EveSOFDataHullPlaneSet::USAGE_STANDARD ), "Standard planeset" },
+	{	"Hologram", BeCast( EveSOFDataHullPlaneSet::USAGE_HOLOGRAM), "Hologram planeset" },
+	{	"Video", BeCast( EveSOFDataHullPlaneSet::USAGE_VIDEO ), "Video planeset" },
 	{ 0 }
 };
-
-BLUE_REGISTER_ENUM_EX( 
-	"HullPlanesetUsage",
-	EveSOFDataHullPlaneSet::Usage,
-	EveSOFDataHullPlaneSetUsageChooser,
-	ENUM_REG_ENUM_OBJECT_ON_MODULE
-	);
+BLUE_REGISTER_ENUM_EX( "HullPlanesetUsage", EveSOFDataHullPlaneSet::Usage, EveSOFDataHullPlaneSetUsageChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 const Be::ClassInfo* EveSOFDataHullPlaneSet::ExposeToBlue()
 {
@@ -353,6 +388,8 @@ const Be::ClassInfo* EveSOFDataInstancedMesh::ExposeToBlue()
 
 
 
+
+
 BLUE_DEFINE( EveSOFDataHullArea );
 const Be::ClassInfo* EveSOFDataHullArea::ExposeToBlue()
 {
@@ -364,6 +401,7 @@ const Be::ClassInfo* EveSOFDataHullArea::ExposeToBlue()
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "shader", m_shader, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "blockedMaterials", m_blockedMaterials, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "areaType", m_areaType, "na", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFDataAreaTypeChooser )
 		MAP_ATTRIBUTE( "textures", m_textures, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "parameters", m_parameters, "", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
@@ -586,30 +624,12 @@ BLUE_DEFINE( EveSOFDataHullDecal );
 
 Be::VarChooser EveSOFDecalUsageChooser[] =
 {
-	{
-		"Standard",
-		BeCast( EveSOFDataHullDecal::USAGE_STANDARD ),
-		"Standard decal"
-	},
-	{
-		"KillCounter",
-		BeCast( EveSOFDataHullDecal::USAGE_KILLCOUNTER ),
-		"The killcounter decal"
-	},
-	{
-		"Logo",
-		BeCast( EveSOFDataHullDecal::USAGE_LOGO ),
-		"tbd"
-	},
+	{	"Standard", BeCast( EveSOFDataHullDecal::USAGE_STANDARD ), "Standard decal" },
+	{	"KillCounter", BeCast( EveSOFDataHullDecal::USAGE_KILLCOUNTER ), "The killcounter decal" },
+	{	"Logo", BeCast( EveSOFDataHullDecal::USAGE_LOGO ), "tbd" },
 	{ 0 }
 };
-
-BLUE_REGISTER_ENUM_EX( 
-	"DecalUsage",
-	EveSOFDataHullDecal::Usage,
-	EveSOFDecalUsageChooser,
-	ENUM_REG_ENUM_OBJECT_ON_MODULE
-);
+BLUE_REGISTER_ENUM_EX( "DecalUsage", EveSOFDataHullDecal::Usage, EveSOFDecalUsageChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 const Be::ClassInfo* EveSOFDataHullDecal::ExposeToBlue()
 {
@@ -653,6 +673,9 @@ const Be::ClassInfo* EveSOFDataFaction::ExposeToBlue()
 		MAP_ATTRIBUTE( "materialUsageMtl4", m_materialUsageMtl4, "Material usage of Mtl4\n:jessica-group: MaterialUsage", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "defaultPattern", m_defaultPattern, "The default pattern data for this faction\n:jessica-group: DefaultPattern", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "defaultPatternLayer1MaterialName", m_defaultPatternLayer1MaterialName, "The default pattern material name for this faction and layer 1\n:jessica-group: DefaultPattern", Be::READWRITE | Be::PERSIST )
+
+//		MAP_ATTRIBUTE( "areas2", m_areas2, "", Be::READWRITE | Be::PERSIST )
+
 		EXPOSURE_END()
 }
 
@@ -704,73 +727,25 @@ const Be::ClassInfo* EveSOFDataPattern::ExposeToBlue()
 BLUE_DEFINE( EveSOFDataPatternLayer );
 Be::VarChooser EveSOFDataPatternLayerProjectionTypeChooser[] =
 {
-	{
-		"Repeat",
-		BeCast( EveSOFDataPatternLayer::PROJECTION_REPEAT ),
-		"Repeat pattern texture projection"
-	},
-	{
-		"Clamp",
-		BeCast( EveSOFDataPatternLayer::PROJECTION_CLAMP ),
-		"Clamp the projection"
-	},
-	{
-		"Border",
-		BeCast( EveSOFDataPatternLayer::PROJECTION_BORDER ),
-		"Border the projection"
-	},
+	{	"Repeat", BeCast( EveSOFDataPatternLayer::PROJECTION_REPEAT ), "Repeat pattern texture projection" },
+	{	"Clamp", BeCast( EveSOFDataPatternLayer::PROJECTION_CLAMP ), "Clamp the projection" },
+	{ 	"Border", BeCast( EveSOFDataPatternLayer::PROJECTION_BORDER ), "Border the projection" },
 	{ 0 }
 };
-
-BLUE_REGISTER_ENUM_EX(
-	"EveSOFDataPatternLayerProjectionType",
-	EveSOFDataPatternLayer::ProjectionType,
-	EveSOFDataPatternLayerProjectionTypeChooser,
-	ENUM_REG_ENUM_OBJECT_ON_MODULE
-);
+BLUE_REGISTER_ENUM_EX( "EveSOFDataPatternLayerProjectionType", EveSOFDataPatternLayer::ProjectionType, EveSOFDataPatternLayerProjectionTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 
 Be::VarChooser EveSOFDataPatternLayerMaterialSourceChooser[] =
 {
-	{
-		"Material 1",
-		BeCast( EveSOFDataPatternLayer::SOURCE_MATERIAL1 ),
-		"Base material #1"
-	},
-	{
-		"Material 2",
-		BeCast( EveSOFDataPatternLayer::SOURCE_MATERIAL2 ),
-		"Base material #2"
-	},
-	{
-		"Material 3",
-		BeCast( EveSOFDataPatternLayer::SOURCE_MATERIAL3 ),
-		"Base material #3"
-	},
-	{
-		"Material 4",
-		BeCast( EveSOFDataPatternLayer::SOURCE_MATERIAL4 ),
-		"Base material #4"
-	},
-	{
-		"Pattern Material 1",
-		BeCast( EveSOFDataPatternLayer::SOURCE_PATTERN1 ),
-		"Pattern material 1"
-	},
-	{
-		"Pattern Material 2",
-		BeCast( EveSOFDataPatternLayer::SOURCE_PATTERN2 ),
-		"Pattern material 2"
-	},
+	{	"Material 1", BeCast( EveSOFDataPatternLayer::SOURCE_MATERIAL1 ), "Base material #1" },
+	{	"Material 2", BeCast( EveSOFDataPatternLayer::SOURCE_MATERIAL2 ), "Base material #2" },
+	{	"Material 3", BeCast( EveSOFDataPatternLayer::SOURCE_MATERIAL3 ), "Base material #3" },
+	{	"Material 4", BeCast( EveSOFDataPatternLayer::SOURCE_MATERIAL4 ), "Base material #4" },
+	{	"Pattern Material 1", BeCast( EveSOFDataPatternLayer::SOURCE_PATTERN1 ), "Pattern material 1" },
+	{	"Pattern Material 2", BeCast( EveSOFDataPatternLayer::SOURCE_PATTERN2 ), "Pattern material 2" },
 	{ 0 }
 };
-
-BLUE_REGISTER_ENUM_EX(
-	"EveSOFDataPatternLayerMaterialSource",
-	EveSOFDataPatternLayer::MaterialSource,
-	EveSOFDataPatternLayerMaterialSourceChooser,
-	ENUM_REG_ENUM_OBJECT_ON_MODULE
-);
+BLUE_REGISTER_ENUM_EX( "EveSOFDataPatternLayerMaterialSource", EveSOFDataPatternLayer::MaterialSource, EveSOFDataPatternLayerMaterialSourceChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 
 const Be::ClassInfo* EveSOFDataPatternLayer::ExposeToBlue()

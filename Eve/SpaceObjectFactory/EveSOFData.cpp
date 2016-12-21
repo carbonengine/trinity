@@ -22,6 +22,14 @@ EveSOFData::~EveSOFData()
 {}
 
 
+EveSOFDataAreaMaterial::EveSOFDataAreaMaterial( IRoot* lockobj )
+{}
+
+
+EveSOFDataArea::EveSOFDataArea( IRoot* lockobj )
+{}
+
+
 EveSOFDataParameter::EveSOFDataParameter( IRoot* lockobj ) :
 	m_value( 0.f, 0.f, 0.f, 0.f )
 {}
@@ -123,7 +131,7 @@ EveSOFDataGenericVariant::EveSOFDataGenericVariant( IRoot* lockobj ) :
 	{}
 
 
-	EveSOFDataFaction::EveSOFDataFaction( IRoot* lockobj ) :
+EveSOFDataFaction::EveSOFDataFaction( IRoot* lockobj ) :
 	PARENTLOCK( m_areas ),
 	PARENTLOCK( m_decals ),
 	PARENTLOCK( m_spriteSets ),
@@ -134,7 +142,8 @@ EveSOFDataGenericVariant::EveSOFDataGenericVariant( IRoot* lockobj ) :
 	m_materialUsageMtl2( 1 ),
 	m_materialUsageMtl3( 2 ),
 	m_materialUsageMtl4( 3 )
-{}
+{
+}
 
 
 EveSOFDataBoosterShape::EveSOFDataBoosterShape( IRoot* lockobj ) :
@@ -257,7 +266,8 @@ EveSOFDataHullArea::EveSOFDataHullArea( IRoot* lockobj ) :
 	PARENTLOCK( m_parameters ),
 	m_index( 0 ),
 	m_count( 1 ),
-	m_blockedMaterials( 0 )
+	m_blockedMaterials( 0 ),
+	m_areaType( EveSOFDataArea::TYPE_HULL )
 {}
 
 

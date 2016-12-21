@@ -80,6 +80,50 @@ public:
 TYPEDEF_BLUECLASS( EveSOFDataTransform );
 BLUE_DECLARE_VECTOR( EveSOFDataTransform );
 
+BLUE_CLASS( EveSOFDataAreaMaterial ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataAreaMaterial( IRoot* lockobj = NULL );
+	~EveSOFDataAreaMaterial() {}
+
+	// data
+	std::string m_material1;
+	std::string m_material2;
+	std::string m_material3;
+	std::string m_material4;
+};
+TYPEDEF_BLUECLASS( EveSOFDataAreaMaterial );
+
+BLUE_CLASS( EveSOFDataArea ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataArea( IRoot* lockobj = NULL );
+	~EveSOFDataArea() {}
+
+	// area type
+	enum AreaType
+	{
+		TYPE_HULL = 0,
+		TYPE_GLASS,
+		TYPE_SAILS,
+		TYPE_REACTOR,
+		TYPE_DARKHULL,
+		TYPE_WRECK,
+
+		TYPE_MAX,
+		TYPE_NO_OVERWRITE = TYPE_MAX,
+	};
+
+	// data
+	EveSOFDataAreaMaterialPtr m_materials[TYPE_MAX];
+};
+TYPEDEF_BLUECLASS( EveSOFDataArea );
+
+
 
 
 
@@ -402,6 +446,7 @@ public:
 	BlueSharedString m_name;
 	BlueSharedString m_shader;
 	unsigned int m_blockedMaterials;
+	EveSOFDataArea::AreaType m_areaType;
 	PEveSOFDataTextureVector m_textures;
 	PEveSOFDataParameterVector m_parameters;
 };
@@ -760,6 +805,9 @@ public:
 	int m_materialUsageMtl2;
 	int m_materialUsageMtl3;
 	int m_materialUsageMtl4;
+
+	// material lib names
+//	EveSOFDataAreaPtr m_areas2;
 
 	// default pattern
 	EveSOFDataPatternLayerPtr m_defaultPattern;
