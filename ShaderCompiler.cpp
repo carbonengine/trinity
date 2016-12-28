@@ -11,6 +11,7 @@
 #include "EffectCompilerDx9.h"
 #include "EffectCompilerDX11.h"
 #include "EffectCompilerGL2.h"
+#include "EffectCompilerGL3.h"
 #include "EffectCompilerGL4.h"
 #include "EffectCompilerOrbis.h"
 #include "EffectData.h"
@@ -222,6 +223,7 @@ EffectCompilerDX11 g_compilerDX11;
 EffectCompilerGL2 g_compilerGL2;
 EffectCompilerOrbis g_compilerOrbis;
 EffectCompilerGL4 g_compilerGL4;
+EffectCompilerGL3 g_compilerGL3;
 
 
 enum Platform
@@ -231,6 +233,7 @@ enum Platform
 	PLATFORM_GL2 = 3,
 	PLATFORM_ORBIS = 4,
 	PLATFORM_GL4 = 6,
+	PLATFORM_GL3 = 7,
 
 	_PLATFORM_END,
 	_PLATFORM_BEGIN = 1,
@@ -621,6 +624,13 @@ DWORD WINAPI WorkerThread( LPVOID param )
 				return 1;
 			}
 			break;
+		case PLATFORM_GL3:
+			if( !g_compilerGL3.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+			{
+				InterlockedExchange( &g_error, 1 );
+				return 1;
+			}
+			break;
 		case PLATFORM_GL4:
 			if( !g_compilerGL4.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
 			{
@@ -969,6 +979,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 	
 	if( !g_compilerGL2.Create() )
+	{
+		fflush( stdout );
+		return 1;
+	}
+	
+	if( !g_compilerGL3.Create() )
 	{
 		fflush( stdout );
 		return 1;
