@@ -80,6 +80,9 @@
     <ClCompile Include="EffectCompilerGL4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="EffectCompilerGL3.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.exe">
@@ -160,6 +163,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="EffectCompilerGL4.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="EffectCompilerGL3.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
