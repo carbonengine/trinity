@@ -1675,7 +1675,6 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	
 	renderContext.m_esm.BeginManagedRendering();
 
-	TriFrustum& frustum = m_frameData.frustum;
 	std::vector<ITr2Renderable*> visible;
 
 	// Render to depth map
@@ -1738,7 +1737,6 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	TriFrustum& frustum = m_frameData.frustum;
 	std::vector<ITr2Renderable*> objectRenderables;
 	
 	if( auto lightManager = Tr2LightManager::GetInstance() )
