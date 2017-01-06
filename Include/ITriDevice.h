@@ -25,22 +25,9 @@
 #ifndef _ITRIDEVICE_H_
 #define _ITRIDEVICE_H_
 
-#include "Tr2WindowHandle.h"
-
-struct ID3DXMatrixStack;
-struct ITriRenderObject;
-struct ITriArea; 
-struct ITriTransform; 
-struct ITextureResource;
-struct IMeshResource;
-struct ITriVector;
-struct IUILib;
-class Tr2DeviceResource;
-struct Tr2PresentParametersAL;
-
+// forwards
 BLUE_DECLARE_INTERFACE( ITriDevice );
 BLUE_DECLARE_INTERFACE( ITr2RenderTargetGrabber );
-
 
 // --------------------------------------------------------------------------------------
 // Description:

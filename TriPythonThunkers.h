@@ -249,58 +249,6 @@ public:
 };
 
 
-//////////////////////////////////////////////////////////////////////
-// ITriRenderObject Thunkers
-//////////////////////////////////////////////////////////////////////
-class ITriRenderObject_Thunk : public ITriRenderObject
-{
-public:
-
-	typedef ITriRenderObject_Thunk _Class;
-	typedef ITriRenderObject _Interface;
-
-	static const Be::IID& IID()
-	{
-		return BlueInterfaceIID<ITriRenderObject>();
-	}
-
-	const Be::Clsid* Clsid()
-	{
-		return ClassType()->mClassId;
-	}
-
-	static const PyMethodDef* Defs()
-	{
-		THUNKER_BEGIN()
-			MAPPYTHON
-			( 
-				RebuildCachedData,                    
-				"n/a\r\n" 
-			)
-			MAPPYTHON
-			( 
-				Update,                
-				"n/a\r\n" 
-			)
-			MAPPYTHON
-			( 
-				Render,   
-				"n/a\r\n" 
-			)
-			MAPPYTHON
-			( 
-				Reload, 
-				"n/a\r\n" 
-			)
-		THUNKER_END()
-	}
-
-	// compatible python methods
-	DECLARE_PYMETHODTHUNK( Reload );
-	DECLARE_PYMETHODTHUNK( Update );
-	DECLARE_PYMETHODTHUNK( Render );
-	DECLARE_PYMETHODTHUNK( RebuildCachedData );
-};
 
 
 

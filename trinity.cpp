@@ -103,7 +103,6 @@ const char* InitializeForPython()
 	BLUE_REGISTER_THUNKER(ITriVectorFunction_Thunk::Defs(), ITriVectorFunction_Thunk::IID());
 	BLUE_REGISTER_THUNKER(ITriQuaternionFunction_Thunk::Defs(), ITriQuaternionFunction_Thunk::IID());
 	BLUE_REGISTER_THUNKER(ITriColorFunction_Thunk::Defs(), ITriColorFunction_Thunk::IID());
-	BLUE_REGISTER_THUNKER(ITriRenderObject_Thunk::Defs(), ITriRenderObject_Thunk::IID());
 
 	BlueRegisterToModule( module, BlueRegistration::GetClassRegs(), 
 						  BlueRegistration::GetFuncRegs(),

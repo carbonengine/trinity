@@ -24,9 +24,6 @@
 #ifndef _ITRITEXTURERES_H_
 #define _ITRITEXTURERES_H_
 
-#include "ITriRenderObject.h"
-
-
 BLUE_INTERFACE(ITriTextureRes) : 
 	public IRoot
 {

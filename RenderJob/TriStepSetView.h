@@ -2,13 +2,10 @@
 #ifndef _TRISTEPSETVIEW_H_
 #define _TRISTEPSETVIEW_H_
 
-
 #include "TriRenderStep.h"
 #include "TriView.h"
-#include "Eve/EveCamera.h"
 
-#include "include/ITriTransform.h"
-
+// forwards
 BLUE_DECLARE( EveCamera );
 
 BLUE_CLASS( TriStepSetView ) : public TriRenderStep
@@ -23,12 +20,11 @@ public:
 	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
 
 	// Python __init__ constructor
-	void SetViewCameraParent( TriView* view, EveCamera* camera, ITriTransform* cameraParent );
+	void SetViewCameraParent( TriView* view, EveCamera* camera );
 
 private:
 	TriViewPtr m_view;
 	EveCameraPtr m_camera;
-	ITriTransformPtr m_cameraParent;
 };
 
 TYPEDEF_BLUECLASS( TriStepSetView );

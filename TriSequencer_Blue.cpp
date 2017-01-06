@@ -10,7 +10,6 @@ BLUE_DEFINE( TriXYZScalarSequencer );
 BLUE_DEFINE( TriYPRSequencer );
 BLUE_DEFINE( TriRGBAScalarSequencer );
 BLUE_DEFINE( TriPerlinCurve );
-BLUE_DEFINE( TriScalarDistanceCurve );
 BLUE_DEFINE( TriSineCurve );
 BLUE_DEFINE( TriRandomConstantCurve );
 
@@ -569,66 +568,6 @@ const Be::ClassInfo* TriPerlinCurve::ExposeToBlue()
             Be::READWRITE | Be::PERSIST 
         )
         
-    EXPOSURE_END()
-}
-
-const Be::ClassInfo* TriScalarDistanceCurve::ExposeToBlue()
-{
-    EXPOSURE_BEGIN(TriScalarDistanceCurve, "A scalar function that generates returns the distance to the set transform")
-        MAP_INTERFACE(ITriFunction)
-        MAP_INTERFACE(ITriScalarFunction)
-
-        ////////////////////////////////////////////////////////////////////////////
-        //               name
-        
-        
-        MAP_ATTRIBUTE
-        (  
-            "name",          
-            mName,     
-            "Yes you can name your sequencer", 
-            Be::READWRITE | Be::PERSIST 
-        )
-    
-        ////////////////////////////////////////////////////////////////////////////
-        //               value
-        MAP_ATTRIBUTE
-        (  
-            "value",         
-            mValue,         
-            "The last value of the curve, can be set externally, wont be changed on Update() if lenght is 0", 
-            Be::READWRITE | Be::PERSIST 
-        )
-
-        ////////////////////////////////////////////////////////////////////////////
-        //               value
-        MAP_ATTRIBUTE
-        (  
-            "offset",         
-            mOffset,         
-            "The result of the ScalarDistance function is offset by this value. The default value is 0.0.", 
-            Be::READWRITE | Be::PERSIST 
-        )
-
-
-        ////////////////////////////////////////////////////////////////////////////
-        //               value
-        MAP_ATTRIBUTE
-        (  
-            "scale",         
-            mScale,         
-            "The result of the ScalarDistance function is multiplied by this value. The default value is 1.0.", 
-            Be::READWRITE | Be::PERSIST 
-        )
-
-		MAP_ATTRIBUTE
-		( 
-			"transform", 
-			mTransform, 
-			"the transform whose distance to camera dictates the value of the function", 
-			Be::READWRITE | Be::PERSIST
-		)
-           
     EXPOSURE_END()
 }
 

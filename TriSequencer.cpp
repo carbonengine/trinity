@@ -2,7 +2,6 @@
 #include "TriSequencer.h"
 #include "include/TriVector.h"
 #include "include/TriMath.h"
-#include "include/ITriTransform.h"
 #include "include/ITriDuration.h"
 
 static inline void FunctionLength( ITriFunctionPtr curve, float& maxDuration )
@@ -1115,76 +1114,7 @@ void TriPerlinCurve::ScaleTime(
 	mScale = s;
 }
 
-/////////////////////////////
-
-TriScalarDistanceCurve::TriScalarDistanceCurve(IRoot* lockobj) :
-    mValue  ( 0.0f ),
-    mScale  ( 1.0f),
-    mOffset ( 0.0f)
-{
-}
-
-TriScalarDistanceCurve::~TriScalarDistanceCurve()
-{
-}
-
 /////////////////////////////////////////////////////////////////////////////////////
-// ITriFunction
-/////////////////////////////////////////////////////////////////////////////////////
-float TriScalarDistanceCurve::Update(
-    Be::Time t
-    )
-{
-    return mValue = GetValueAt(t);
-}
-
-float TriScalarDistanceCurve::Update(
-    double t
-    )
-{
-    return mValue = GetValueAt(t);
-}
-
-
-float TriScalarDistanceCurve::GetValueAt(
-    Be::Time now
-    )
-{
-	return GetValue();
-}
-
-
-float TriScalarDistanceCurve::GetValueAt(
-    double pos
-    )
-{
-	return GetValue();
-}
-
-float TriScalarDistanceCurve::GetValue()
-{
-	float ret = 0.0;
-
-	if (mTransform)
-	{
-			float dist = sqrtf(mTransform->GetCameraDistanceSq());
-			ret = dist * mScale + mOffset;
-	}
-    return ret;
-}
-
-
-void TriScalarDistanceCurve::ScaleTime(
-	float s
-	)
-{
-	mScale = s;
-}
-
-
-/////////
-
-
 TriSineCurve::TriSineCurve(IRoot* lockobj) :
     mValue  ( 0.0f ),
     mSpeed  ( 1.0f),

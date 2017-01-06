@@ -25,7 +25,6 @@
 #ifndef _ITRIFUNCTION_H_
 #define _ITRIFUNCTION_H_
 
-#include "ITriRenderObject.h"
 #include "ITriConstants.h"
 
 struct Vector3d;		
@@ -220,14 +219,6 @@ BLUE_INTERFACE(ITriColorFunction) : public ITriFunction
 		) = 0;
 };
 
-//this is similiar to ITriScalarFunction, except this 
-//one's value is not strictly time based, so it needs to 
-//to be Update-d/Render-ed like a normal TriRenderObject before it's
-//mValue is valid.
-BLUE_INTERFACE(ITriScalarRenderFunc) : public ITriRenderObject
-{
-	virtual float GetValue() = 0;
-};
 
 
 #endif

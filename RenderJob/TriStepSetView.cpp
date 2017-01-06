@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "TriStepSetView.h"
 #include "Tr2Renderer.h"
+#include "Eve/EveCamera.h"
 
 TriStepSetView::TriStepSetView( IRoot* lockobj )
 {
@@ -10,11 +11,10 @@ TriStepSetView::~TriStepSetView(void)
 {
 }
 
-void TriStepSetView::SetViewCameraParent( TriView* view, EveCamera* camera, ITriTransform* cameraParent )
+void TriStepSetView::SetViewCameraParent( TriView* view, EveCamera* camera )
 {
 	m_view = view;
 	m_camera = camera;
-	m_cameraParent = cameraParent;
 }
 
 TriStepResult TriStepSetView::Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext )

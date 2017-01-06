@@ -43,8 +43,6 @@ BLUE_DECLARE_IVECTOR( ITriColorFunction );
 BLUE_DECLARE_INTERFACE( ITriQuaternionFunction );
 BLUE_DECLARE_IVECTOR( ITriQuaternionFunction );
 
-BLUE_DECLARE_INTERFACE( ITriTransform );
-
 BLUE_CLASS( TriScalarSequencer ) :
 	public ITriScalarFunction,
 	public ITriCurveLength
@@ -630,59 +628,6 @@ public:
 };
 TYPEDEF_BLUECLASS( TriPerlinCurve );
 
-
-////
-
-BLUE_CLASS( TriScalarDistanceCurve ) :
-    public ITriScalarFunction
-{
-public:
-	EXPOSE_TO_BLUE();
-
-    std::wstring  mName;
-    Be::Time mStart;
-    float mValue;
-    float mOffset;
-    float mScale;
-
-    //BlueSimplePtr<TriTransform, &ITriTransformType> mTransform;
-    ITriTransformPtr mTransform;
-
-    /////////////////////////////////////////////////////////////////////////////////////
-    // ITriFunction
-    /////////////////////////////////////////////////////////////////////////////////////
-	void UpdateValue( double time ) { Update( time ); }
-
-    /////////////////////////////////////////////////////////////////////////////////////
-    // ITriScalarFunction
-    /////////////////////////////////////////////////////////////////////////////////////
-    float Update(
-        Be::Time time
-        );
-
-    float Update(
-        double time
-        );
-
-    float GetValueAt(
-        Be::Time time
-        );
-
-    float GetValueAt(
-        double time
-        );
-
-	float GetValue()
-		;
-
-	void ScaleTime(
-		float s
-		);
-
-    TriScalarDistanceCurve(IRoot* lockobj = NULL);
-    ~TriScalarDistanceCurve();
-};
-TYPEDEF_BLUECLASS( TriScalarDistanceCurve );
 
 
 BLUE_CLASS( TriSineCurve ) :
