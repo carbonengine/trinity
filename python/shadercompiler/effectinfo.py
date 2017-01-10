@@ -54,6 +54,9 @@ class _StructStream(object):
     def remaining(self):
         return len(self._data) - self._offset
 
+    def get_data(self, offset, length):
+        return self._data[offset:offset + length]
+
 
 class _StringTable(object):
     def __init__(self, stream):
@@ -65,6 +68,9 @@ class _StringTable(object):
             return self._data[offset:self._data.index('\000', offset)]
         except ValueError:
             return self._data[offset:]
+
+    def get_blob(self, offset, size):
+        return self._data[offset:offset + size]
 
 
 class ShaderInput(object):
@@ -89,6 +95,7 @@ class Constant(object):
         self.elements = stream.read_uint32()
         self.is_srgb = stream.read_uint8() != 0
         self.is_autoregister = stream.read_uint8() != 0
+        self.default_value = None
         self.trinity_type = None
         if self.type == 0:  # float
             if self.elements > 1:
@@ -98,6 +105,26 @@ class Constant(object):
                     self.trinity_type = 'TriVariableParameter'
                 else:
                     self.trinity_type = _TRINITY_FLOAT_PARAMETERS.get(self.dimension)
+
+    def read_default_value(self, data):
+        if self.type == 0:
+            value = []
+            if self.elements > 1:
+                for i in range(self.elements):
+                    value.append(struct.unpack_from('f', data, self.offset + 4 * i)[0])
+                self.default_value = value
+            else:
+                for i in range(self.dimension):
+                    try:
+                        value.append(struct.unpack_from('f', data, self.offset + 4 * i)[0])
+                    except struct.error:
+                        value.append(0.0)
+                if self.dimension == 16:
+                    self.default_value = tuple(value[0:4]), tuple(value[4:9]), tuple(value[8:13]), tuple(value[12:16])
+                elif self.dimension == 1:
+                    self.default_value = value[0]
+                else:
+                    self.default_value = tuple(value)
 
 
 class Resource(object):
@@ -178,9 +205,14 @@ class Stage(object):
 
         constant_value_size = stream.read_uint32()
         if version < 5:
+            constant_value_offset = stream.offset()
             stream.seek(stream.offset() + constant_value_size)
+            const_data = stream.get_data(constant_value_offset, constant_value_size)
         else:
-            stream.read_uint32()
+            constant_value_offset = stream.read_uint32()
+            const_data = string_table.get_blob(constant_value_offset, constant_value_size)
+        for const in self.constants:
+            const.read_default_value(const_data)
 
         self.resources = []
         for i in xrange(stream.read_uint8()):
@@ -199,6 +231,7 @@ class Stage(object):
 class Pass(object):
     def __init__(self, stream, string_table, version):
         self.stages = {}
+        """:type: dict[str, Stage]"""
 
         stage_count = stream.read_uint8()
         if stage_count > Stages.COUNT:
@@ -294,6 +327,7 @@ class ShaderInfo(object):
         pass_count = stream.read_uint8()
 
         self.passes = []
+        """:type: list[Pass]"""
         for pass_index in xrange(pass_count):
             self.passes.append(Pass(stream, string_table, version))
 
@@ -306,6 +340,7 @@ class ShaderInfo(object):
         self.resources = self._extract_parameters('resources')
         self.uavs = self._extract_parameters('uavs')
         self.resources.update(self.uavs)
+        self.samplers = self._extract_samplers()
 
     def _extract_parameters(self, stage_attr):
         result = {}
@@ -321,6 +356,14 @@ class ShaderInfo(object):
                     except KeyError:
                         continue
                     result.setdefault(const.name, _Parameter(const, annotation))
+        return result
+
+    def _extract_samplers(self):
+        result = {}
+        for p in self.passes:
+            for stage in p.stages.itervalues():
+                for sampler in stage.samplers:
+                    result[sampler.name] = sampler
         return result
 
 
@@ -398,11 +441,23 @@ class EffectInfo(object):
         for each in self.permutations:
             options.append((each.name, each.options[index % len(each.options)]))
             index /= len(each.options)
+        return options
 
 
 def get_merged_parameters(path, shader_filter=None):
+    """
+    Returns all referenced parameters and resources from all effect permutations
+
+    :param path: effect path
+    :type path: basestring
+    :param shader_filter: optional filter for permutations, called with platform, shader model
+    :type shader_filter: (int, int, list[(str, Permutation)])->bool
+    :return: a tuple of parameters and resources dicts
+    :rtype: (dict[str, _Parameter], dict[str, _Parameter], dict[str, Sampler])
+    """
     parameters = {}
     resources = {}
+    samplers = {}
     has_compiled = False
     for platform in PLATFORM_NAMES.iterkeys():
         for sm in SHADER_MODEL_NAMES.iterkeys():
@@ -421,6 +476,7 @@ def get_merged_parameters(path, shader_filter=None):
                 shader = effect.get_shader(each)
                 _merge_parameters(parameters, shader.parameters)
                 _merge_parameters(resources, shader.resources)
+                samplers.update(shader.samplers)
     if not has_compiled:
         raise IOError('could not find any compiled effect for %s' % path)
-    return parameters, resources
+    return parameters, resources, samplers
