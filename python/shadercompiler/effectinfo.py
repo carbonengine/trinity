@@ -283,6 +283,11 @@ class ParameterAnnotation(object):
     def __getitem__(self, item):
         return self.annotations[item].value
 
+    def get(self, name, default):
+        if name in self.annotations:
+            return self.annotations[name].value
+        return default
+
 
 class _Parameter(object):
     def __init__(self, constant, annotation):
@@ -295,6 +300,8 @@ class _Parameter(object):
         return self.annotation[item]
 
     def get_annotation(self, name, default=None):
+        if name in self.annotation.annotations:
+            return
         return self.annotation.annotations.get(name, default)
 
     def update(self, other):
