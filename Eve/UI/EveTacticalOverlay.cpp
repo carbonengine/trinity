@@ -30,8 +30,8 @@ void EveTacticalOverlayTrackObject::UpdatePosition( EveUpdateContext& updateCont
 {
 	if( m_positionCurve )
 	{
-		m_positionCurve->GetValueAt( &m_position, updateContext.GetTime() );
 		m_positionCurve->GetValueDotAt( &m_velocity, updateContext.GetTime() );
+		m_positionCurve->GetValueAt( &m_position, updateContext.GetTime() );
 	}
 }
 
