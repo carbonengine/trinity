@@ -300,8 +300,6 @@ class _Parameter(object):
         return self.annotation[item]
 
     def get_annotation(self, name, default=None):
-        if name in self.annotation.annotations:
-            return
         return self.annotation.annotations.get(name, default)
 
     def update(self, other):
