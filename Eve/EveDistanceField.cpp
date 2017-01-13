@@ -78,6 +78,8 @@ void EveDistanceField::CalculateFieldCoverage( Be::Time t )
 
 void EveDistanceField::Update( const EveUpdateContext& updateContext )
 {
+	CCP_STATS_ZONE( __FUNCTION__ );
+
 	Vector3 posObj;
 
 	Vector3 posRef( 0, 0, 0 );
