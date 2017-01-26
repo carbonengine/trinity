@@ -555,12 +555,12 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			);
 		MAP_METHOD_AND_WRAP( "IsImpostor", IsImpostor, "Is this object in the impostor mode?" );
 
-		// Temporarily need this to get camera LookAt working. Shouldn't be here for too long <Logi, dec 2012>
-		MAP_PROPERTY_READONLY
+		MAP_ATTRIBUTE
 		(
 			"modelWorldPosition",
-			GetModelWorldPosition,
-			"The spaceobject's model world position"
+			m_boundingSphereWorldCenter,
+			"The spaceobject's model world position",
+			Be::READ
 		)
 
 		MAP_ATTRIBUTE( "lights", m_lights, "List of dynamic lights", Be::READ | Be::PERSIST );

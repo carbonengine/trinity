@@ -2,6 +2,7 @@
 #include "TriFrustum.h"
 #include "TriViewport.h"
 #include "TriSettingsRegistrar.h"
+#include "Tr2Renderer.h"
 
 bool g_frustumCullingDisabled = false;
 TRI_REGISTER_SETTING( "frustumCullingDisabled", g_frustumCullingDisabled );
@@ -144,11 +145,13 @@ void TriFrustum::ExtractFrustum( const Matrix* proj )
 }
 
 bool TriFrustum::IsSphereVisible( const Vector4* sphere, bool cullBackPlane ) const
-{/**
-	Test if a sphere is within the current frustum.
+{
+	return IsSphereVisible( *reinterpret_cast<const Vector3*>( sphere ), sphere->w, cullBackPlane );
+}
 
-	sphere	-	[xyz] center position, [w] radius of sphere
-*/
+// ---------------------------------------------------------------------------
+bool TriFrustum::IsSphereVisible( const Vector3& center, float radius, bool cullBackPlane ) const
+{
 	if( g_frustumCullingDisabled )
 	{
 		return true;
@@ -159,7 +162,7 @@ bool TriFrustum::IsSphereVisible( const Vector4* sphere, bool cullBackPlane ) co
 	// For some reason the old code ignored the back plane. I don't know why!!
 	for( int i = 0; i < (PLANE_COUNT - 1) + cullBackPlane; i++ )
 	{
-		if( D3DXPlaneDotCoord( &m_planes[i], reinterpret_cast<const Vector3*>( sphere ) )  < -sphere->w )
+		if( D3DXPlaneDotCoord( &m_planes[i], &center )  < radius )
 		{
 #ifdef TRINITYDEV
 			m_frustumRejectionCounter++;
@@ -227,14 +230,15 @@ bool TriFrustum::IsBoxVisible( const Vector3& boundsMin, const Vector3& boundsMa
 	return true;
 }
 
-#include "Tr2Renderer.h"
 float TriFrustum::GetPixelSizeAccross( const Vector4* sphere ) const
-{/**
-	Get the pixel coverage of a bounding sphere on screen
-	
-	sphere	-	[xyz] center position, [w] radius of sphere
-*/
-	Vector3 d( *reinterpret_cast<const Vector3*>( sphere ) - m_viewPos );
+{
+	return GetPixelSizeAccross( *reinterpret_cast<const Vector3*>( sphere ), sphere->w );
+}
+
+// ---------------------------------------------------------------------------
+float TriFrustum::GetPixelSizeAccross( const Vector3& center, float radius ) const
+{
+	Vector3 d( center - m_viewPos );
 
 	// cfr. the difference between D3DXMatrixLookAtLH and RH -- line of sight is basically reversed
 	if (Tr2Renderer::IsRightHanded())
@@ -248,12 +252,12 @@ float TriFrustum::GetPixelSizeAccross( const Vector4* sphere ) const
 		depth = epsilon;
 	}
 
-	if ( sphere->w < epsilon )
+	if ( radius < epsilon )
 	{
 		return 0.0f;
 	}
 
-	float ratio = sphere->w / depth;
+	float ratio = radius / depth;
 
 	return ( ratio * m_halfWidthProjection ) * 2.f;
 }

@@ -17,10 +17,16 @@ void TriFrustumOrtho::DeriveFrustum( const Matrix& view, const Vector3& minBound
 
 bool TriFrustumOrtho::IsSphereVisibleAndInsideNearPlane( const Vector4* sphere ) const
 {
-	Vector3 centerInView;
-	D3DXVec3TransformCoord( &centerInView, reinterpret_cast<const Vector3*>( sphere ), &m_view );
+	return IsSphereVisibleAndInsideNearPlane( *reinterpret_cast<const Vector3*>( sphere ), sphere->w );
+}
 
-	if( centerInView.z - sphere->w > m_boundsMax.z )
+// -----------------------------------------
+bool TriFrustumOrtho::IsSphereVisibleAndInsideNearPlane( const Vector3& center, float radius ) const
+{
+	Vector3 centerInView;
+	D3DXVec3TransformCoord( &centerInView, &center, &m_view );
+
+	if( centerInView.z - radius > m_boundsMax.z )
 	{
 		return false;
 	}
@@ -44,7 +50,7 @@ bool TriFrustumOrtho::IsSphereVisibleAndInsideNearPlane( const Vector4* sphere )
 		}
 	}
 	
-	float r2 = sphere->w * sphere->w;
+	float r2 = radius * radius;
 	if( d > r2 )
 	{
 		return false;

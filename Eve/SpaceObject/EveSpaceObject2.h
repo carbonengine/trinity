@@ -443,7 +443,8 @@ protected:
 	Vector3 m_boundingSphereCenter;
 	float m_boundingSphereRadius;
 
-	Vector4 m_boundingSphereWorld;
+	Vector3 m_boundingSphereWorldCenter;
+	float m_boundingSphereWorldRadius;
 	Vector4 m_dynamicBoundingSphere;
 
 	bool m_allAreasCastShadow;

@@ -42,6 +42,7 @@ public:
 	
 	// Returns true if any part of the sphere is inside the frustum
 	bool IsSphereVisible( const Vector4* sphere, bool cullBackPlane = false ) const;
+	bool IsSphereVisible( const Vector3& center, float radius, bool cullBackPlane = false ) const;
 
 	// Returns true if the point is inside the frustum
 	bool IsPointVisible( const Vector3* point ) const;
@@ -51,6 +52,7 @@ public:
 
 	// Get the pixel coverage of a bounding sphere on screen
 	float GetPixelSizeAccross( const Vector4* sphere ) const;
+	float GetPixelSizeAccross( const Vector3& center, float radius ) const;
 
 	void ExtractFrustum( const Matrix* proj );
 

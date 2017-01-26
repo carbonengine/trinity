@@ -150,7 +150,8 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_estimatedPixelDiameterWithChildren( 0.f ),
 	m_boundingSphereCenter( 0.f, 0.f, 0.f ),
 	m_boundingSphereRadius( -1.f ),
-	m_boundingSphereWorld( 0.f, 0.f, 0.f, -1.f ),
+	m_boundingSphereWorldCenter( 0.f, 0.f, 0.f ),
+	m_boundingSphereWorldRadius( -1 ),
 	m_dynamicBoundingSphere( 0.f, 0.f, 0.f, -1.f ),
 	m_albedoColor( 0.f, 0.f, 0.f, 1.f ),
 	m_secondaryLightingSphereRadius( 0.f ),
@@ -401,13 +402,13 @@ void EveSpaceObject2::PrepareShaderData( EveUpdateContext& updateContext )
 	if( m_dynamicBoundingSphereEnabled && m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
 		m_animationUpdater->GetDynamicBounds( m_dynamicBoundingSphere, m_localAabbMin, m_localAabbMax );
-		D3DXVec3TransformCoord( (Vector3*)&m_boundingSphereWorld, (Vector3*)&m_dynamicBoundingSphere, &m_worldTransform );
-		m_boundingSphereWorld.w = m_modelScale * m_dynamicBoundingSphere.w;
+		D3DXVec3TransformCoord( &m_boundingSphereWorldCenter, reinterpret_cast<Vector3*>( &m_dynamicBoundingSphere ), &m_worldTransform );
+		m_boundingSphereWorldRadius = m_modelScale * m_dynamicBoundingSphere.w;
 	}
 	else if( m_boundingSphereRadius > 0.0f )
 	{
-		D3DXVec3TransformCoord( (Vector3*)&m_boundingSphereWorld, &m_boundingSphereCenter, &m_worldTransform );
-		m_boundingSphereWorld.w = m_modelScale * m_boundingSphereRadius;
+		D3DXVec3TransformCoord( &m_boundingSphereWorldCenter, &m_boundingSphereCenter, &m_worldTransform );
+		m_boundingSphereWorldRadius = m_modelScale * m_boundingSphereRadius;
 	}
 
 	// if we have an impact overlay it can modify the activation strength, otherwise just full on
@@ -1103,9 +1104,9 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 
 	if( m_boundingSphereRadius > 0.0f )
 	{
-		if( frustum.IsSphereVisible( &m_boundingSphereWorld ) )
+		if( frustum.IsSphereVisible( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) )
 		{
-			m_estimatedPixelDiameter = frustum.GetPixelSizeAccross( &m_boundingSphereWorld );
+			m_estimatedPixelDiameter = frustum.GetPixelSizeAccross( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius );
 			m_isMeshVisible = true;
 		}
 	}
@@ -1132,7 +1133,7 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	if( m_isVisible )
 	{
 		// base the LOD on the pixel diameter modulated with a value to lod out gigantic objects earlier
-		float detailLevel = m_estimatedPixelDiameter * min( 32.f * powf( m_boundingSphereWorld.w, -0.43f ), 1.f );
+		float detailLevel = m_estimatedPixelDiameter * min( 32.f * powf( m_boundingSphereWorldRadius, -0.43f ), 1.f );
 
 		if( g_lodLevelUltraEnabled && detailLevel > g_eveSpaceSceneHighDetailThreshold )
 		{
@@ -1312,9 +1313,9 @@ bool EveSpaceObject2::GetRenderablesCastingShadow( bool isSelf, const TriFrustum
 		return false;
 	}
 
-	if( m_boundingSphereWorld.w > 0.0f  )
+	if( m_boundingSphereWorldRadius > 0.0f  )
 	{
-		if( frustum.IsSphereVisibleAndInsideNearPlane( &m_boundingSphereWorld ) )
+		if( frustum.IsSphereVisibleAndInsideNearPlane( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) )
 		{
 			renderables.push_back( this );
 			return true;
@@ -1482,7 +1483,7 @@ bool EveSpaceObject2::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery qu
 		return false;
 	}
 
-	sphere = m_boundingSphereWorld;
+	sphere = *reinterpret_cast<const Vector4*>( &m_boundingSphereWorldCenter );
 	if( query == EVE_BOUNDS_NORMAL || !DisplayChildren())
 	{
 		return true;
@@ -1793,7 +1794,7 @@ void EveSpaceObject2::UpdateModelCenterWorldPosition( Vector3 &position, Be::Tim
 
 Vector3 EveSpaceObject2::GetModelWorldPosition() const
 {
-	return Vector3( m_boundingSphereWorld.x, m_boundingSphereWorld.y, m_boundingSphereWorld.z );
+	return m_boundingSphereWorldCenter;
 }
 
 void EveSpaceObject2::GetWorldVelocity( Vector3& velocity ) const
@@ -1805,9 +1806,7 @@ void EveSpaceObject2::GetMissPosition( const Vector3* hit, const Vector3* source
 {
 	if( m_boundingSphereRadius > 0.0f )
 	{
-		out->x = m_boundingSphereWorld.x;
-		out->y = m_boundingSphereWorld.y;
-		out->z = m_boundingSphereWorld.z;
+		*out = m_boundingSphereWorldCenter;
 		
 		if( hit && source ) 
 		{
@@ -1818,7 +1817,7 @@ void EveSpaceObject2::GetMissPosition( const Vector3* hit, const Vector3* source
 			local -= dir * D3DXVec3Dot( &dir, &local );
 
 			D3DXVec3Normalize( &local, &local );
-			const Vector3 off = local * m_boundingSphereWorld.w * 1.125f;
+			const Vector3 off = local * m_boundingSphereWorldRadius * 1.125f;
 			*out += off;
 		}
 	}
