@@ -896,7 +896,10 @@ void Tr2DebugRenderer::SetSelectedObjects( const std::vector<std::pair<IRoot*, u
 	m_selectedObjects.clear();
 	for( auto it = objects.begin(); it != objects.end(); ++it )
 	{
-		m_selectedObjects.insert( Tr2DebugObjectReference( it->first, it->second ) );
+		if( it->first )
+		{
+			m_selectedObjects.insert( Tr2DebugObjectReference( it->first, it->second ) );
+		}
 	}
 }
 
