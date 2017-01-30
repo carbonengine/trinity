@@ -72,6 +72,7 @@ public:
 	Tr2PerObjectDataPSBuffer()
 		: m_pixelShaderFloatBufferSize( 0 )
 	{
+		memset( m_pixelShaderFloatConstantBuffer, 0, sizeof( m_pixelShaderFloatConstantBuffer ) );
 	}
 	
 	template<typename T> void CopyToPSFloatBuffer( const T& objectRef )
@@ -256,7 +257,9 @@ public:
 	Tr2PerAreaDataSkinned() : 
 		m_jointCount( 0 ),
 		m_perObjectDataPtr( NULL )
-	{}
+	{
+		memset( m_jointTransforms, 0, sizeof( m_jointTransforms ) );
+	}
 
 	virtual void UpdateConstantBuffer( Tr2RenderContextEnum::ShaderType type, 
 									   Tr2ConstantBufferAL& buffer, 
