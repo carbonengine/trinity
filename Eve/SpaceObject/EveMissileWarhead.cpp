@@ -642,15 +642,15 @@ void EveMissileWarhead::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType 
 {
 	if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
 	{
-		uint8_t* perObjectPS = (uint8_t*)data;
+		uint8_t* perObjectPS = static_cast<uint8_t*>( data );
 		memset( perObjectPS, 0, sizeof( Vector4 ) * 3 );
 	}
 	else
 	{
-		uint8_t* perObjectVS = (uint8_t*)data;
-		D3DXMatrixTranspose( (Matrix*)perObjectVS, &m_worldTransform );
+		uint8_t* perObjectVS = static_cast<uint8_t*>( data );
+		D3DXMatrixTranspose( reinterpret_cast<Matrix*>( perObjectVS ), &m_worldTransform );
 		perObjectVS += sizeof(Matrix);
-		D3DXMatrixTranspose( (Matrix*)perObjectVS, &m_worldTransform );
+		D3DXMatrixTranspose( reinterpret_cast<Matrix*>( perObjectVS ), &m_worldTransform );
 		perObjectVS += sizeof(Matrix);
 		memset( perObjectVS, 0, sizeof( Vector4 ) * 2 );
 	}

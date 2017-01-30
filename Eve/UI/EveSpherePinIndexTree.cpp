@@ -155,11 +155,11 @@ bool ExtractVertices( TriGeometryResMeshData* mesh, std::vector<Vector2>& spheri
 		Vector3 p1;
 		if( position->m_dataType == vd.FLOAT16_4 )
 		{
-			D3DXFloat16To32Array( (float*)&p1, (const D3DXFLOAT16*)(pVertices + position->m_offset + i * vertSize ), 3 );
+			D3DXFloat16To32Array( reinterpret_cast<float*>( &p1 ), reinterpret_cast<const D3DXFLOAT16*>( pVertices + position->m_offset + i * vertSize ), 3 );
 		}
 		else
 		{
-			p1 = *(Vector3*)(pVertices + position->m_offset + i * vertSize);
+			p1 = *reinterpret_cast<Vector3*>( pVertices + position->m_offset + i * vertSize );
 		}
 		verts[i] = p1;
 		CarthesianToSpherical( p1, sphericalVerts[i] );

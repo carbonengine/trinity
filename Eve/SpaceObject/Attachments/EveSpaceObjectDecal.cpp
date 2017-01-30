@@ -477,16 +477,16 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffer( TriGeometryResPtr geomRes )
 	ON_BLOCK_EXIT( [&] { meshData->m_vertexBuffer.Unlock( renderContext ); } );
 
 
-	if( FAILED( meshData->m_indexBuffer.Lock( 0, 0, (void**)&originalIndices, LOCK_READONLY, renderContext) ) )
+	if( FAILED( meshData->m_indexBuffer.Lock( 0, 0, reinterpret_cast<void**>( &originalIndices ), LOCK_READONLY, renderContext) ) )
 	{
 		return;
 	}
 	ON_BLOCK_EXIT( [&] { meshData->m_indexBuffer.Unlock( renderContext ); } );
 
 	// correct source pointers
-	const unsigned int* indices32 = (const unsigned int*)originalIndices;
-	const unsigned short* indices16 = (const unsigned short*)originalIndices;
-	const Vector3* positions = (const Vector3*)originalVertices;
+	const unsigned int* indices32 = reinterpret_cast<const unsigned int*>( originalIndices );
+	const unsigned short* indices16 = reinterpret_cast<const unsigned short*>( originalIndices );
+	const Vector3* positions = reinterpret_cast<const Vector3*>( originalVertices );
 	// collect indices for decal geometry
 	std::vector<unsigned int> decalIndices32;
 	std::vector<unsigned short> decalIndices16;
@@ -518,16 +518,16 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffer( TriGeometryResPtr geomRes )
 	for( unsigned int t = 0; t < meshData->m_primitiveCount; ++t )
 	{
 		// get triangle indices
-		unsigned int index0 = meshData->m_indexBuffer.Is16Bit() ? (unsigned int)indices16[0] : indices32[0];
-		unsigned int index1 = meshData->m_indexBuffer.Is16Bit() ? (unsigned int)indices16[1] : indices32[1];
-		unsigned int index2 = meshData->m_indexBuffer.Is16Bit() ? (unsigned int)indices16[2] : indices32[2];
+		unsigned int index0 = meshData->m_indexBuffer.Is16Bit() ? indices16[0] : indices32[0];
+		unsigned int index1 = meshData->m_indexBuffer.Is16Bit() ? indices16[1] : indices32[1];
+		unsigned int index2 = meshData->m_indexBuffer.Is16Bit() ? indices16[2] : indices32[2];
 		// do real collision detection here
 		if( vertexPositionCompressed )
 		{
 			Vector3 pos[3];
-			D3DXFloat16To32Array( (float*)&pos[0], (const D3DXFLOAT16*)(originalVertices + index0 * meshData->m_bytesPerVertex), 3 );
-			D3DXFloat16To32Array( (float*)&pos[1], (const D3DXFLOAT16*)(originalVertices + index1 * meshData->m_bytesPerVertex), 3 );
-			D3DXFloat16To32Array( (float*)&pos[2], (const D3DXFLOAT16*)(originalVertices + index2 * meshData->m_bytesPerVertex), 3 );
+			D3DXFloat16To32Array( reinterpret_cast<float*>( &pos[0] ), reinterpret_cast<const D3DXFLOAT16*>( originalVertices + index0 * meshData->m_bytesPerVertex ), 3 );
+			D3DXFloat16To32Array( reinterpret_cast<float*>( &pos[1] ), reinterpret_cast<const D3DXFLOAT16*>( originalVertices + index1 * meshData->m_bytesPerVertex ), 3 );
+			D3DXFloat16To32Array( reinterpret_cast<float*>( &pos[2] ), reinterpret_cast<const D3DXFLOAT16*>( originalVertices + index2 * meshData->m_bytesPerVertex ), 3 );
 			if( IntersectTriangleAABB( pos, pos + 1, pos + 2, aabbMin, aabbMax ) )
 			{
 				if( IntersectTriangleOrientedBox( pos, pos + 1, pos + 2, m_invDecalMatrix ) )
@@ -583,16 +583,16 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffer( TriGeometryResPtr geomRes )
 	const void* decalIdxSrc = NULL;
 	if( meshData->m_indexBuffer.Is16Bit() )
 	{
-		m_decalPrimitiveCount = (unsigned int)decalIndices16.size() / 3;
-		decalIdxBufferSize = (unsigned int)decalIndices16.size() * sizeof(unsigned short);
-		decalIndexCount = (unsigned int)decalIndices16.size();
+		m_decalPrimitiveCount = unsigned( decalIndices16.size() / 3 );
+		decalIdxBufferSize = unsigned( decalIndices16.size() * sizeof( unsigned short ) );
+		decalIndexCount = unsigned( decalIndices16.size() );
 		decalIdxSrc = &decalIndices16[0];
 	}
 	else
 	{
-		m_decalPrimitiveCount = (unsigned int)decalIndices32.size() / 3;
-		decalIdxBufferSize = (unsigned int)decalIndices32.size() * sizeof(unsigned int);
-		decalIndexCount = (unsigned int)decalIndices32.size();
+		m_decalPrimitiveCount = unsigned( decalIndices32.size() / 3 );
+		decalIdxBufferSize = unsigned( decalIndices32.size() * sizeof(unsigned int) );
+		decalIndexCount = unsigned( decalIndices32.size() );
 		decalIdxSrc = &decalIndices32[0];
 	}
 

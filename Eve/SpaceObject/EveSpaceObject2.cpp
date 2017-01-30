@@ -518,7 +518,6 @@ void EveSpaceObject2::RenderDebugInfo( Tr2DebugRenderer& renderer )
 
 	if( renderer.HasOption( GetRawRoot(), "Children" ) )
 	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
 		for( IEveTransformVector::const_iterator it = m_children.begin(); it != m_children.end(); ++it )
 		{
 			if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( *it ) )
@@ -876,7 +875,7 @@ const Matrix* EveSpaceObject2::GetLocatorTransform( LocatorType lt, unsigned int
 				return NULL;
 			}
 
-			return (const Matrix*)GrannyGetWorldPose4x4( m_animationUpdater->m_worldPose, lix );
+			return reinterpret_cast<const Matrix*>( GrannyGetWorldPose4x4( m_animationUpdater->m_worldPose, lix ) );
 		}
 		break;
 
@@ -2093,7 +2092,7 @@ ITriVectorFunctionPtr EveSpaceObject2::GetPositionFunction()
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::SetBoundingSphereInformation( const Vector4* centerAndRadius )
 {
-	m_boundingSphereCenter = *(Vector3*)centerAndRadius;
+	m_boundingSphereCenter = *reinterpret_cast<const Vector3*>( centerAndRadius );
 	m_boundingSphereRadius = centerAndRadius->w;
 }
 

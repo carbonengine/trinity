@@ -134,17 +134,17 @@ void EveTacticalOverlay::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer
 {
 	if( m_connectorEffect )
 	{
-		m_connectorEffectHash = m_connectorEffect->GetHashValue() + (((uint64_t)(Tr2Effect*)m_connectorEffect) << 32);
+		m_connectorEffectHash = m_connectorEffect->GetHashValue() + ( reinterpret_cast<uint64_t>( m_connectorEffect.p ) << 32 );
 		quadRenderer.RegisterEffect( m_connectorEffectHash, TRIBATCHTYPE_ADDITIVE, sizeof( SphereConnectorVertex ), 1, SphereConnectorVertex::GetDefinition(), m_connectorEffect );
 	}
 	if( m_anchorEffect )
 	{
-		m_anchorEffectHash = m_anchorEffect->GetHashValue() + (((uint64_t)(Tr2Effect*)m_anchorEffect) << 32);
+		m_anchorEffectHash = m_anchorEffect->GetHashValue() + ( reinterpret_cast<uint64_t>( m_anchorEffect.p ) << 32 );
 		quadRenderer.RegisterEffect( m_anchorEffectHash, TRIBATCHTYPE_ADDITIVE, sizeof( AnchorVertex ), 1, AnchorVertex::GetDefinition(), m_anchorEffect );
 	}
 	if( m_velocityEffect )
 	{
-		m_velocityEffectHash = m_velocityEffect->GetHashValue() + (((uint64_t)(Tr2Effect*)m_velocityEffect) << 32);
+		m_velocityEffectHash = m_velocityEffect->GetHashValue() + ( reinterpret_cast<uint64_t>( m_velocityEffect.p ) << 32 );
 		quadRenderer.RegisterEffect( m_velocityEffectHash, TRIBATCHTYPE_ADDITIVE, sizeof( VelocityConnectorVertex ), 1, VelocityConnectorVertex::GetDefinition(), m_velocityEffect );
 	}
 }

@@ -493,8 +493,8 @@ void EveShip2Builder::Weld( granny_uint8* referenceVB, int referenceCount, grann
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	Vector3* referencePositions = (Vector3*)CCP_MALLOC( "Weld/referencePositions", referenceCount * sizeof( Vector3 ) );
-	Vector3* positions = (Vector3*)CCP_MALLOC( "Weld/referencePositions", count * sizeof( Vector3 ) );
+	Vector3* referencePositions = static_cast<Vector3*>( CCP_MALLOC( "Weld/referencePositions", referenceCount * sizeof( Vector3 ) ) );
+	Vector3* positions = static_cast<Vector3*>( CCP_MALLOC( "Weld/referencePositions", count * sizeof( Vector3 ) ) );
 
 	{
 		CCP_STATS_ZONE( "GrannyConvertVertexLayouts" );

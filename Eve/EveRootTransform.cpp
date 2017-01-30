@@ -4,9 +4,9 @@
 #include "Include/ITriFunction.h"
 
 EveRootTransform::EveRootTransform( IRoot* lockobj ):
-	m_boundingSphereRadius( -1.0f )
+	m_boundingSphereRadius( -1.0f ),
+	m_lastUpdateMatrix( Tr2Renderer::GetIdentityTransform() )
 {
-	m_lastUpdateMatrix = Tr2Renderer::GetIdentityTransform();
 }
 
 void EveRootTransform::UpdateSyncronous( EveUpdateContext& updateContext )

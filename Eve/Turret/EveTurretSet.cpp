@@ -863,7 +863,7 @@ Matrix EveTurretSet::GetFiringBoneWorldTransform( unsigned int muzzle ) const
 			// granny tells us firing-bone position in turret-space
 			granny_real32* boneTransform = GrannyGetWorldPose4x4( m_singleTurrets[closestTurret].grnWorldPose, boneID );
 			// create this pos in worldspace
-			D3DXMatrixMultiply( &m, (const Matrix*)boneTransform, &m );
+			D3DXMatrixMultiply( &m, reinterpret_cast<const Matrix*>( boneTransform ), &m );
 		}
 		else
 		{
@@ -1348,7 +1348,8 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 			{
 				boneIndex = turretIndex * boneCount;
 				// get animation matrices here, they are not the same for all turrets of the set
-				const Matrix* compositeMatrixArray = m_singleTurrets[i].grnWorldPose ? (Matrix*)GrannyGetWorldPoseComposite4x4Array( m_singleTurrets[i].grnWorldPose ) : NULL;
+				const Matrix* compositeMatrixArray = m_singleTurrets[i].grnWorldPose ? 
+					reinterpret_cast<const Matrix*>( GrannyGetWorldPoseComposite4x4Array( m_singleTurrets[i].grnWorldPose ) ) : nullptr;
 				
 				// Construct all turret bone translations and rotations
 				for( unsigned int j = 0; j < boneCount; ++j )
