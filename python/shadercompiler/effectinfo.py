@@ -449,6 +449,29 @@ class EffectInfo(object):
         return options
 
 
+def apply_to_shaders(path, callback):
+    """
+    Applies a callback to all shader permutations
+
+    :param path: effect path
+    :type path: basestring
+    :param callback: callback function that is called for each shader permutation
+    :type callback: (ShaderInfo)->None
+    :return:
+    """
+    for platform in PLATFORM_NAMES.iterkeys():
+        for sm in SHADER_MODEL_NAMES.iterkeys():
+            try:
+                effect = EffectInfo(paths.get_compiled_path(path, sm, platform))
+            except IOError:
+                continue
+            count = 1
+            for each in effect.permutations:
+                count *= len(each.options)
+            for each in xrange(count):
+                callback(effect.get_shader(each))
+
+
 def get_merged_parameters(path, shader_filter=None):
     """
     Returns all referenced parameters and resources from all effect permutations
