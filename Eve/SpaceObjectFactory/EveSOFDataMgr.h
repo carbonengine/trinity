@@ -40,6 +40,12 @@ public:
 		int boneIndex;
 	};
 
+	struct AreaMaterialData
+	{
+		BlueSharedString material[4];
+		std::map<std::string, Vector4> generalParameters;
+	};
+
 	// pattern data structs
 	struct PatternProjectionData
 	{
@@ -459,8 +465,8 @@ public:
 		// damage
 		GenericDamageData damage;
 		GenericHullDamageData hullDamage;
-		// hull area parameter overloads
-		std::map<BlueSharedString, FactionAreaData> hullAreaParameters;
+		// generic wreck material data
+		AreaMaterialData genericWreckMaterialData;
 		// variants
 		std::map<BlueSharedString, VariantData> variants;
 		// swarm behavior

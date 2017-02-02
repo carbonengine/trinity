@@ -22,7 +22,8 @@ EveSOFData::~EveSOFData()
 {}
 
 
-EveSOFDataAreaMaterial::EveSOFDataAreaMaterial( IRoot* lockobj )
+EveSOFDataAreaMaterial::EveSOFDataAreaMaterial( IRoot* lockobj ) :
+	m_generalGlowColor( 0.f, 0.f, 0.f, 0.f )
 {}
 
 

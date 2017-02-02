@@ -1330,19 +1330,15 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 		gd.decalShaderData[ shaderData->m_shader ] = gsd;
 	}
 
-	// hull area parameters
-	gd.hullAreaParameters.clear();
-	for( auto hait = srcData->m_hullAreas.begin(); hait != srcData->m_hullAreas.end(); ++hait )
+	// generic wreck material
+	if( srcData->m_genericWreckMaterial )
 	{
-		EveSOFDataFactionHullAreaPtr hullAreaData = (*hait);
-
-		FactionAreaData ad;
-		for( auto hapit = hullAreaData->m_parameters.begin(); hapit != hullAreaData->m_parameters.end(); ++hapit )
-		{
-			EveSOFDataParameterPtr parameterData = (*hapit);
-			ad.parameters[parameterData->m_name] = parameterData->m_value;
-		}
-		gd.hullAreaParameters[hullAreaData->m_name] = ad;
+		gd.genericWreckMaterialData.material[0] = BlueSharedString( srcData->m_genericWreckMaterial->m_material1 );
+		gd.genericWreckMaterialData.material[1] = BlueSharedString( srcData->m_genericWreckMaterial->m_material2 );
+		gd.genericWreckMaterialData.material[2] = BlueSharedString( srcData->m_genericWreckMaterial->m_material3 );
+		gd.genericWreckMaterialData.material[3] = BlueSharedString( srcData->m_genericWreckMaterial->m_material4 );
+		gd.genericWreckMaterialData.generalParameters.clear();
+		gd.genericWreckMaterialData.generalParameters["GeneralGlowColor"] = Vector4( srcData->m_genericWreckMaterial->m_generalGlowColor );
 	}
 
 	// variants

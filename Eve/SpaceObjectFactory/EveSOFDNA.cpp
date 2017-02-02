@@ -820,13 +820,32 @@ const std::vector<EveSOFDataMgr::HullAreas>* EveSOFDNA::GetHullMeshAreas( TriBat
 // Description:
 //   Search a material for parameter value
 // --------------------------------------------------------------------------------
-const Vector4* EveSOFDNA::SearchForParameterData( const EveSOFDataMgr::MaterialData* materialData, const EveSOFUtilsParameterName* parameterName ) const
+const Vector4* EveSOFDNA::SearchForParameterData( const char* materialName, const EveSOFUtilsParameterName* parameterName ) const
 {
+	const EveSOFDataMgr::MaterialData* materialData = m_dataMgr->GetMaterialData( materialName );
 	if( materialData )
 	{
 		BlueSharedString pn( parameterName->GetShortName() );
 		auto parameterIt = materialData->parameters.find( pn );
 		if( parameterIt != materialData->parameters.end() )
+		{
+			return &parameterIt->second;
+		}
+	}
+	return nullptr;
+}
+
+// --------------------------------------------------------------------------------
+const Vector4* EveSOFDNA::SearchForParameterData( const EveSOFDataMgr::AreaMaterialData* areaMaterialData, const EveSOFUtilsParameterName* parameterName ) const
+{
+	if( parameterName->IsMaterialIdxValid() )
+	{
+		return SearchForParameterData( areaMaterialData->material[parameterName->GetMaterialIdx()].c_str(), parameterName );
+	}
+	else
+	{
+		auto parameterIt = areaMaterialData->generalParameters.find( parameterName->GetFullName() );
+		if( parameterIt != areaMaterialData->generalParameters.end() )
 		{
 			return &parameterIt->second;
 		}
@@ -906,8 +925,7 @@ const Vector4* EveSOFDNA::GetMeshAreaParameter( EveSOFDataArea::AreaType areaTyp
 			if( !( blockededMaterials & ( 1 << param.GetMaterialIdx() ) ) )
 			{
 				// get the material from the lib
-				const EveSOFDataMgr::MaterialData* materialData = m_dataMgr->GetMaterialData( commandArgs[ param.GetMaterialIdx() ].c_str() );
-				const Vector4* res = SearchForParameterData( materialData, &param );
+				const Vector4* res = SearchForParameterData( commandArgs[param.GetMaterialIdx()].c_str(), &param );
 				if( res )
 				{
 					return res;
@@ -924,8 +942,7 @@ const Vector4* EveSOFDNA::GetMeshAreaParameter( EveSOFDataArea::AreaType areaTyp
 		if( param.IsMaterialIdxValid() && ( 1 + param.GetMaterialIdx() < (int32_t)commandArgs.size() ) )
 		{
 			// get the material from the lib
-			const EveSOFDataMgr::MaterialData* materialData = m_dataMgr->GetMaterialData( commandArgs[1 + param.GetMaterialIdx()].c_str() );
-			const Vector4* res = SearchForParameterData( materialData, &param );
+			const Vector4* res = SearchForParameterData( commandArgs[1 + param.GetMaterialIdx()].c_str(), &param );
 			if( res )
 			{
 				return res;
@@ -934,27 +951,28 @@ const Vector4* EveSOFDNA::GetMeshAreaParameter( EveSOFDataArea::AreaType areaTyp
 	}
 
 	// is this a pattern parameter?
-	EveSOFUtilsParameterName param( m_genericData->patternMaterialPrefixes, parameterName.c_str() );
-	if( param.IsMaterialIdxValid() )
 	{
-		// get the material from the lib using the racial name
-		const EveSOFDataMgr::MaterialData* materialData = m_dataMgr->GetMaterialData( m_factionData->defaultPatternLayer1MaterialName.c_str() );
-		const Vector4* res = SearchForParameterData( materialData, &param );
-		if( res )
+		EveSOFUtilsParameterName param( m_genericData->patternMaterialPrefixes, parameterName.c_str() );
+		if( param.IsMaterialIdxValid() )
 		{
-			return res;
+			// get the material from the lib using the racial name
+			const Vector4* res = SearchForParameterData( m_factionData->defaultPatternLayer1MaterialName.c_str(), &param );
+			if( res )
+			{
+				return res;
+			}
 		}
 	}
 
 	// do we have it in the generic data?
-	const Vector4* res = SearchForParameterData( m_genericData->hullAreaParameters, areaType, parameterName );
-	if( res )
+	if( areaType == EveSOFDataArea::TYPE_WRECK )
 	{
-		return res;
+		EveSOFUtilsParameterName param( m_genericData->materialPrefixes, parameterName.c_str() );
+		return SearchForParameterData( &m_genericData->genericWreckMaterialData, &param );
 	}
 
 	// do we have it in the race data?
-	res = SearchForParameterData( m_raceData->hullAreaParameters, areaType, parameterName );
+	const Vector4* res = SearchForParameterData( m_raceData->hullAreaParameters, areaType, parameterName );
 	if( res )
 	{
 		return res;

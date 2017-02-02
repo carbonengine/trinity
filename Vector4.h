@@ -51,6 +51,14 @@ struct Vector4 : public D3DXVECTOR4
 
 	// ----------------------------------------------------------------------------------
 	// Description
+	//   D3DVECTOR assignment constructor
+	// Arguments:
+	//   c - A D3DXCOLOR as a data source
+	// ----------------------------------------------------------------------------------
+	Vector4( const D3DXCOLOR& c ) : D3DXVECTOR4( c.r, c.g, c.b, c.a ) {}
+
+	// ----------------------------------------------------------------------------------
+	// Description
 	//   XMVECTOR assignment constructor
 	// Arguments:
 	//   other - The XMVECTOR to copy

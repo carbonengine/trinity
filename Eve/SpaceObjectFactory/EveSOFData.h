@@ -93,6 +93,7 @@ public:
 	std::string m_material2;
 	std::string m_material3;
 	std::string m_material4;
+	Color m_generalGlowColor;
 };
 TYPEDEF_BLUECLASS( EveSOFDataAreaMaterial );
 
@@ -118,7 +119,7 @@ public:
 		TYPE_NO_OVERWRITE = TYPE_MAX,
 	};
 
-	// data
+	// material data
 	EveSOFDataAreaMaterialPtr m_materials[TYPE_MAX];
 };
 TYPEDEF_BLUECLASS( EveSOFDataArea );
@@ -807,7 +808,7 @@ public:
 	int m_materialUsageMtl4;
 
 	// material lib names
-//	EveSOFDataAreaPtr m_areas2;
+	EveSOFDataAreaPtr m_areaTypes;
 
 	// default pattern
 	EveSOFDataPatternLayerPtr m_defaultPattern;
@@ -1124,8 +1125,9 @@ public:
 	// swarm data
 	EveSOFDataGenericSwarmPtr m_swarm;
 
-	// faction area data
+	// generic wreck data
 	PEveSOFDataFactionHullAreaVector m_hullAreas;
+	EveSOFDataAreaMaterialPtr m_genericWreckMaterial;
 
 	// effect data
 	PEveSOFDataGenericVariantVector m_variants;
