@@ -1126,7 +1126,6 @@ public:
 	EveSOFDataGenericSwarmPtr m_swarm;
 
 	// generic wreck data
-	PEveSOFDataFactionHullAreaVector m_hullAreas;
 	EveSOFDataAreaMaterialPtr m_genericWreckMaterial;
 
 	// effect data
