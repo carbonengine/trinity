@@ -303,6 +303,9 @@ class _Parameter(object):
         return self.annotation.annotations.get(name, default)
 
     def update(self, other):
+        if isinstance(self.constant, Resource):
+            if self.constant.type == 5: # typeless texture
+                self.constant = other.constant
         for k, v in other.annotation.annotations.iteritems():
             if k not in self.annotation.annotations:
                 self.annotation.annotations[k] = v
