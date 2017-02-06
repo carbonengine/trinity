@@ -816,7 +816,14 @@ Be::Result<std::string> TriGrannyRes::GetMeshAreaCount( unsigned int meshIx, int
 		return Be::Result<std::string>( "Mesh index out of range" );
 	}
 
-	count = fi->Meshes[meshIx]->MaterialBindingCount;
+	if( fi->Meshes[meshIx]->PrimaryTopology )
+	{
+		count = fi->Meshes[meshIx]->PrimaryTopology->GroupCount;
+	}
+	else
+	{
+		count = fi->Meshes[meshIx]->MaterialBindingCount;
+	}
 
 	return Be::Result<std::string>();
 }
