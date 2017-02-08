@@ -28,5 +28,10 @@ const Be::ClassInfo* EveSpaceObjectDecal::ExposeToBlue()
 
 		MAP_PROPERTY_READONLY( "hasStaticIndexBuffer", HasStaticIndexBuffer, "" )
 		MAP_ATTRIBUTE( "indexBuffer", m_indices, "", Be::PERSISTONLY )
+
+		MAP_METHOD_AND_WRAP( 
+			"GetStaticIndexBuffer", 
+			GetStaticIndexBuffer, 
+			"Returns the persisted index buffer. To be used by tools." )
 	EXPOSURE_END()
 }

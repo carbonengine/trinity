@@ -136,6 +136,7 @@ private:
 	void UpdateDecalMatrix();
 	void CreateStaticIndexBuffer();
 	bool HasStaticIndexBuffer() const;
+	std::vector<EveSpaceObjectDecalIndex> GetStaticIndexBuffer();
 
 	// name
 	std::string m_name;

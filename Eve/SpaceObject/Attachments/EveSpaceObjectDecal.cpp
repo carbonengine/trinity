@@ -653,6 +653,11 @@ void EveSpaceObjectDecal::GetPickingBatches( ITriRenderBatchAccumulator* batches
 	GetBatches( batches, TRIBATCHTYPE_DECAL, perObjectData );
 }
 
+// --------------------------------------------------------------------------------
+std::vector<EveSpaceObjectDecalIndex> EveSpaceObjectDecal::GetStaticIndexBuffer()
+{
+	return std::vector<EveSpaceObjectDecalIndex>( m_indices.begin(), m_indices.end() );
+}
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -664,9 +669,3 @@ void EveDecalPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buff
 	FillAndSetConstants( *buffers[VERTEX_SHADER], &m_worldMatrix, 5 * 64, VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
 	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_displayData, ( 4 + Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT ) * 16, PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
 }
-
-
-
-
-
-
