@@ -2,6 +2,7 @@
 
 class EveUpdateContext;
 class TriFrustum;
+class Tr2LightManager;
 BLUE_DECLARE_INTERFACE( ITr2Renderable );
 
 BLUE_INTERFACE( IEveFiringEffectElement ): public IRoot
@@ -21,6 +22,8 @@ BLUE_INTERFACE( IEveFiringEffectElement ): public IRoot
 
 	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) = 0;
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables ) = 0;
+
+	virtual void GetLights( Tr2LightManager& lightManager ) const = 0;
 };
 
 BLUE_DECLARE_IVECTOR( IEveFiringEffectElement );

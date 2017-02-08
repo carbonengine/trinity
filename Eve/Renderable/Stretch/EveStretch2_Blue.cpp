@@ -56,6 +56,20 @@ const Be::ClassInfo* EveStretch2::ExposeToBlue()
 			"Curve set to play when the effect stops",
 			Be::READWRITE | Be::PERSIST
 		)
+		MAP_ATTRIBUTE
+		(
+			"sourceLight",
+			m_sourceLight,
+			"Point light at the effect source",
+			Be::READWRITE | Be::PERSIST
+		)
+		MAP_ATTRIBUTE
+		(
+			"destinationLight",
+			m_destinationLight,
+			"Point light at the effect destination",
+			Be::READWRITE | Be::PERSIST
+		)
 
 	EXPOSURE_END()
 }

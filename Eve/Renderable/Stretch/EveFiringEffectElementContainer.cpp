@@ -58,7 +58,7 @@ void EveFiringEffectElementContainer::UpdateVisibility( const TriFrustum& frustu
 }
 void EveFiringEffectElementContainer::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors )
 {
-	if( m_element )
+	if( m_display && m_element )
 	{
 		m_element->GetRenderables( renderables );
 	}
@@ -123,4 +123,12 @@ void EveFiringEffectElementContainer::SetActive( bool active )
 bool EveFiringEffectElementContainer::GetActive() const
 {
 	return m_isActive;
+}
+
+void EveFiringEffectElementContainer::GetLights( Tr2LightManager& lightManager ) const
+{
+	if( m_element )
+	{
+		m_element->GetLights( lightManager );
+	}
 }

@@ -21,6 +21,7 @@ class TriFrustumOrtho;
 struct ITr2Renderable;
 struct ViewDistanceInfo;
 class EveUpdateContext;
+class Tr2LightManager;
 
 BLUE_DECLARE( Tr2Mesh );
 BLUE_DECLARE( Tr2Effect );
@@ -183,6 +184,8 @@ public:
 	double GetLastShotTime() const;
 	float GetShotTimeVariance() const { return EVE_TURRET_RANDOM_DELAY_MAX; }
 	size_t MissQueueSize() const;
+
+	void GetLights( Tr2LightManager& lightManager ) const;
 
 	// turret LOD
 	enum LOD

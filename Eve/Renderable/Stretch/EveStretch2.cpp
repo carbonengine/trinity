@@ -10,6 +10,7 @@
 #include "Eve/EveUpdateContext.h"
 #include "Tr2PerObjectData.h"
 #include "TriRenderBatch.h"
+#include "Tr2PointLight.h"
 #include "Shader/Tr2Effect.h"
 
 
@@ -268,4 +269,16 @@ bool EveStretch2::OnPrepareResources()
 		m_vb.Create( m_quadCount * 4 * sizeof( Vertex ), Tr2RenderContextEnum::USAGE_IMMUTABLE, &data[0], renderContext );
 	}
 	return true;
+}
+
+void EveStretch2::GetLights( Tr2LightManager& lightManager ) const
+{
+	if( m_sourceLight )
+	{
+		m_sourceLight->AddLight( lightManager, XMMatrixTranslation( m_source.x, m_source.y, m_source.z ), 1.0f );
+	}
+	if( m_destinationLight )
+	{
+		m_destinationLight->AddLight( lightManager, XMMatrixTranslation( m_destination.x, m_destination.y, m_destination.z ), m_currentDestinationScale );
+	}
 }

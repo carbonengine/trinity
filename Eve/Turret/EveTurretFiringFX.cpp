@@ -516,3 +516,11 @@ bool EveTurretFiringFX::IsLooping() const
 	return m_isLoopFiring;
 }
 
+// --------------------------------------------------------------------------------
+void EveTurretFiringFX::GetLights( Tr2LightManager& lightManager ) const
+{
+	for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
+	{
+		( *it )->GetLights( lightManager );
+	}
+}

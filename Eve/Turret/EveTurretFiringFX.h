@@ -14,6 +14,7 @@
 BLUE_DECLARE_INTERFACE( IEveFiringEffectElement );
 BLUE_DECLARE_IVECTOR( IEveFiringEffectElement );
 class EveUpdateContext;
+class Tr2LightManager;
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -94,6 +95,7 @@ public:
 	void SetDisplaySourceObject( bool display ) { m_displaySourceObject = display; }
 	bool GetDisplaySourceObject() const { return m_displaySourceObject; }
 
+	void GetLights( Tr2LightManager& lightManager ) const;
 private:
 	float GetCurveDuration();
 

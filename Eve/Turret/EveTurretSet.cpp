@@ -2301,6 +2301,15 @@ void EveTurretSet::SetTurretBonePose( EveTurretSetPerObjectData* perObjectData, 
 }
 
 // --------------------------------------------------------------------------------
+void EveTurretSet::GetLights( Tr2LightManager& lightManager ) const
+{
+	if( m_firingEffect )
+	{
+		m_firingEffect->GetLights( lightManager );
+	}
+}
+
+// --------------------------------------------------------------------------------
 // Description:
 //   Copy all the data to HW
 // --------------------------------------------------------------------------------
@@ -2320,9 +2329,3 @@ void EveTurretSetPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** 
 	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_shipData, ( 3 + Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT ) * 16, PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
 
 }
-
-
-
-
-
-

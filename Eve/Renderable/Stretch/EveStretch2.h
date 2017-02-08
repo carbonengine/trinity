@@ -14,6 +14,7 @@
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriCurveSet );
+BLUE_DECLARE( Tr2PointLight );
 
 
 // --------------------------------------------------------------------------------------
@@ -52,6 +53,7 @@ public:
 
 	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );
+	virtual void GetLights( Tr2LightManager& lightManager ) const;
 
 
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
@@ -68,6 +70,9 @@ private:
 	TriCurveSetPtr m_start;
 	TriCurveSetPtr m_loop;
 	TriCurveSetPtr m_end;
+
+	Tr2PointLightPtr m_sourceLight;
+	Tr2PointLightPtr m_destinationLight;
 
 	Vector3 m_source;
 	float m_currentDestinationScale;

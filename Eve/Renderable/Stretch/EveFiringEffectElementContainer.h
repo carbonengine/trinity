@@ -29,6 +29,7 @@ public:
 	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors );
 	virtual bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
+	virtual void GetLights( Tr2LightManager& lightManager ) const;
 
 	// This version of the function should perform an update on the model / ball position
 	virtual void UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t );
