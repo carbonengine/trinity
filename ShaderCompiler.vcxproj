@@ -160,6 +160,7 @@
     <ClInclude Include="StringTable.h" />
     <ClInclude Include="TextureFunctionConversionDX11.h" />
     <ClInclude Include="Type.h" />
+    <ClInclude Include="wglext.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.exe" />

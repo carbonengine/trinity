@@ -419,6 +419,7 @@ bool GetPermutationInfo( const std::string& pragma, Permutation& permutation )
 		"[[:space:]]*\\)"
 		"(?:[[:space:]]*,[[:space:]]*(?:default[[:space:]]*=[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*))?"
 		"(?:[[:space:]]*,[[:space:]]*(?:description[[:space:]]*=[[:space:]]*)?\"([^\"]*)\")?"
+		"(?:[[:space:]]*,[[:space:]]*(?:type[[:space:]]*=[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*))?"
 		"[[:space:]]*\\)[[:space:]]*"
 		);
 	const std::regex valueExpr( "[[:space:]]*(?:,[[:space:]]*)?([[:alpha:]_][[:alnum:]_]*)(?:[[:space:]]*=[[:space:]]*([[:digit:]]+))?" );
@@ -430,8 +431,26 @@ bool GetPermutationInfo( const std::string& pragma, Permutation& permutation )
 	}
 
 	permutation.name = match[1];
-	permutation.defaultOption = match[match.size() - 2];
-	permutation.description = match[match.size() - 1];
+	permutation.defaultOption = match[match.size() - 3];
+	permutation.description = match[match.size() - 2];
+
+	if( match[match.size() - 1] == "dynamic" )
+	{
+		permutation.type = 1;
+	}
+	else if( match[match.size() - 1] == "static" )
+	{
+		permutation.type = 0;
+	}
+	else if( !match[match.size() - 1].matched )
+	{
+		permutation.type = 0;
+	}
+	else
+	{
+		return false;
+	}
+
 	bool takenValues[256];
 	memset( takenValues, 0, sizeof( takenValues ) );
 

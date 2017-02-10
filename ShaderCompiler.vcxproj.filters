@@ -168,6 +168,9 @@
     <ClInclude Include="EffectCompilerGL3.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="wglext.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="HLSLScanner.re">

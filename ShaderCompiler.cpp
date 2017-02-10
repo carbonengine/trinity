@@ -1167,7 +1167,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	size_t permutationSize = 1;
 	for( auto it = permutations.begin(); it != permutations.end(); ++it )
 	{
-		permutationSize += 2 * sizeof( DWORD ) + 1 + 1 + it->options.size() * sizeof( DWORD );
+		permutationSize += 2 * sizeof( DWORD ) + 1 + 1 + 1 + it->options.size() * sizeof( DWORD );
 	}
 
 
@@ -1195,6 +1195,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 		*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.AddString( it->description.c_str() );
 		headerHead += sizeof( DWORD );
+
+		*reinterpret_cast<BYTE*>( headerHead ) = it->type;
+		headerHead += sizeof( BYTE );
 
 		*headerHead++ = BYTE( it->options.size() );
 		for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
@@ -1230,7 +1233,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		header[index++] = offsets[it->second].second;
 	}
 	DWORD bytesWritten;
-	DWORD version = 5;
+	DWORD version = 6;
 	WriteFile( file, &version, sizeof( DWORD ), &bytesWritten, NULL );
 	g_stringTable.Write( file );
 	WriteFile( file, fullHeader, headerSize, &bytesWritten, NULL );

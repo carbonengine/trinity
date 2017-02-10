@@ -173,6 +173,7 @@ struct Permutation
 	std::vector<PermutationOption> options;
 	std::string defaultOption;
 	std::string description;
+	unsigned char type;
 	FileLocation location;
 };
 
