@@ -354,6 +354,7 @@
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
 				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -462,6 +463,7 @@
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
 				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -633,6 +635,7 @@
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
 				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1002,6 +1005,7 @@
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
 				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1298,6 +1302,7 @@
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
 				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1432,6 +1437,7 @@
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
 				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -1771,6 +1777,7 @@
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
 				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -3088,6 +3095,7 @@
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
 				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
 				GCC_PREPROCESSOR_DEFINITIONS = (
