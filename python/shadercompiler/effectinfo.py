@@ -320,10 +320,17 @@ def _merge_parameters(destination, other):
 
 
 class Permutation(object):
-    def __init__(self, stream, string_table):
+    STATIC = 0
+    DYNAMIC = 1
+
+    def __init__(self, stream, string_table, version):
         self.name = string_table.get_string(stream.read_uint32())
         self.default_index = stream.read_uint8()
         self.description = string_table.get_string(stream.read_uint32())
+        if version > 5:
+            self.type = stream.read_uint8()
+        else:
+            self.type = Permutation.STATIC
         count = stream.read_uint8()
         self.options = []
         for i in xrange(count):
@@ -393,7 +400,7 @@ class EffectInfo(object):
         stream = self._stream
         version = stream.read_uint32()
         self._version = version
-        if version < 2 or version > 5:
+        if version < 2 or version > 6:
             raise RuntimeError('unsupported effect file version')
         if version < 5:
             header_size = stream.read_uint32()
@@ -411,7 +418,7 @@ class EffectInfo(object):
             permutation_count = stream.read_uint8()
             self.permutations = []
             for i in xrange(permutation_count):
-                self.permutations.append(Permutation(stream, self._string_table))
+                self.permutations.append(Permutation(stream, self._string_table, version))
             header_size = stream.read_uint32()
             if header_size == 0:
                 raise RuntimeError('effect file contains no compiled effects')
