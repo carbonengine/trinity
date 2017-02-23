@@ -42,7 +42,7 @@ void Tr2Sprite2dPolygon::GatherSprites( Tr2Sprite2dScene* renderer )
 			dest.texCoord[1] = source.texCoord[1];
 		}
 
-		auto maxTriangles = renderer->GetMaxIndexCountPerDrawCall() / 3;
+		auto maxTriangles = std::min( renderer->GetMaxIndexCountPerDrawCall() / 3, renderer->GetMaxVertexCountPerDrawCall() / 3 );
 		m_indices.resize( ( m_triangles.size() + maxTriangles - 1 ) / maxTriangles );
 		m_renderVertices.resize( m_indices.size() );
 
