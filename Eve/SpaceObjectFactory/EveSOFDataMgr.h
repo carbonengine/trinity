@@ -210,7 +210,6 @@ public:
 		BlueSharedString name;
 		Tr2Lod lowestLodVisible;
 		std::string geometryResPath;
-		std::string instanceGeometryResPath;
 		BlueSharedString shader;
 		std::map<BlueSharedString, TextureData> textures;
 		std::vector<HullMeshInstance> instances;

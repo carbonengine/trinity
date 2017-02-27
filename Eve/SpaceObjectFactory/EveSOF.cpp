@@ -1043,6 +1043,10 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 	for( auto instIt = hullInstanced.begin(); instIt != hullInstanced.end(); ++instIt )
 	{
 		const EveSOFDataMgr::HullInstancedMesh* him = &(*instIt);
+		if( him->instances.empty() )
+		{
+			continue;
+		}
 
 		Tr2InstancedMeshPtr mesh;
 		mesh.CreateInstance();
@@ -1053,20 +1057,14 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		instanceDef.Add( Tr2VertexDefinition::FLOAT32_4, Tr2VertexDefinition::TEXCOORD, 2 );
 		instanceDef.Add( Tr2VertexDefinition::INT32_1, Tr2VertexDefinition::TEXCOORD, 3 );
 
-		if( !him->instances.empty() )
-		{
-			Tr2RuntimeInstanceDataPtr instanceData;
-			instanceData.CreateInstance();
-			instanceData->SetLayout( instanceDef );
-			auto dest = instanceData->GetData( unsigned( him->instances.size() ) );
-			memcpy( dest, &him->instances[0], sizeof( him->instances[0] ) * him->instances.size() );
-			instanceData->UpdateData();
-			mesh->SetInstanceGeometryRes( instanceData );
-		}
-		else
-		{
-			mesh->SetInstanceMeshResPath( him->instanceGeometryResPath.c_str() );
-		}
+		Tr2RuntimeInstanceDataPtr instanceData;
+		instanceData.CreateInstance();
+		instanceData->SetLayout( instanceDef );
+		auto dest = instanceData->GetData( unsigned( him->instances.size() ) );
+		memcpy( dest, &him->instances[0], sizeof( him->instances[0] ) * him->instances.size() );
+		instanceData->UpdateData();
+		mesh->SetInstanceGeometryRes( instanceData );
+
 		mesh->SetMeshResPath( him->geometryResPath.c_str() );
 
 		Tr2MeshAreaVector* areas = mesh->GetAreas( TRIBATCHTYPE_OPAQUE );

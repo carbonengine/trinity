@@ -70,7 +70,6 @@ public:
 	Tr2Lod m_lowestLodVisible;
 	std::string m_geometryResPath;
 	PEveSofDataMeshInstanceStructureList m_instances;
-	std::string m_instanceGeometryResPath;
 	BlueSharedString m_shader;
 	PEveSOFDataTextureVector m_textures;
 };

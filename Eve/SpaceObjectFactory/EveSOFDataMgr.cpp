@@ -738,7 +738,6 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		him.name = instMesh->m_name;
 		him.lowestLodVisible = instMesh->m_lowestLodVisible;
 		him.geometryResPath = instMesh->m_geometryResPath;
-		him.instanceGeometryResPath = instMesh->m_instanceGeometryResPath;
 		him.instances.reserve( instMesh->m_instances.size() );
 		for( auto iit = instMesh->m_instances.begin(); iit != instMesh->m_instances.end(); ++iit )
 		{
