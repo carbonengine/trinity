@@ -24,7 +24,7 @@ BLUE_DECLARE( Tr2ParticleSystem );
 // See Also:
 //   Tr2InstancedMesh
 // --------------------------------------------------------------------------------------
-class Tr2RuntimeInstanceData: 
+BLUE_CLASS( Tr2RuntimeInstanceData ): 
 	public ITr2InstanceData,
 	public ITr2GenericEmitter,
 	public Tr2DeviceResource,
