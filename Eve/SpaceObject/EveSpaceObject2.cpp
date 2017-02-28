@@ -587,11 +587,12 @@ void EveSpaceObject2::RenderDebugInfo( Tr2DebugRenderer& renderer )
 		name += ( *it )->GetName();
 		if( renderer.HasOption( this, name.c_str() ) )
 		{
-			for( size_t i = 0; i < ( *it )->GetLocators()->size(); ++i )
+			const LocatorStructureList& locators = ( *( *it )->GetLocators() );
+			for( size_t i = 0; i < locators.size(); ++i )
 			{
-				auto& locator = ( *( *it )->GetLocators() )[i];
+				auto& locator = locators[i];
 				renderer.DrawSphereArrow( 
-					Tr2DebugObjectReference( *it, uint32_t( i ) ), 
+					Tr2DebugObjectReference( &locators, uint32_t( i ) ),
 					Vector3( XMVector3TransformCoord( locator.position, m_worldTransform ) ), 
 					Vector3( XMVector3TransformNormal( Vector3( 0, 1, 0 ), Matrix( XMMatrixRotationQuaternion( locator.direction ) ) * m_worldTransform ) ), 
 					m_boundingSphereRadius / 50.f,
