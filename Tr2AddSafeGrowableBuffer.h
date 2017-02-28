@@ -141,12 +141,14 @@ T* Tr2AddSafeGrowableBuffer<T>::begin()
 template<typename T>
 const T* Tr2AddSafeGrowableBuffer<T>::end() const
 {
+	// cppcheck-suppress arithOperationsOnVoidPointer
 	return this->GetData() + this->GetCount();
 }
 
 template<typename T>
 T* Tr2AddSafeGrowableBuffer<T>::end()
 {
+	// cppcheck-suppress arithOperationsOnVoidPointer
 	return this->GetData() + this->GetCount();
 }
 
