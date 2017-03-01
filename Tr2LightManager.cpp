@@ -13,6 +13,8 @@
 
 CCP_STATS_DECLARE( lightsGathered, "Trinity/Tr2LightManager/lightsGathered", true, CST_COUNTER_LOW, "How many lights were pushed to GPU" );
 
+extern float g_eveSpaceSceneLODFactor;
+
 namespace
 {
 
@@ -21,7 +23,9 @@ const uint32_t LIGHT_BUFFER_SIZE = 1024;
 // Size of the light index buffer (number of indices)
 const uint32_t INDEX_BUFFER_SIZE = 4 * 1024 * 1024;
 // Minimal size of a point light sphere in pixels before it is culled out
-const float CUTOFF_PIXEL_SIZE = 2.f;
+const float CUTOFF_PIXEL_SIZE = 7.f;
+// Size (in pixels) for the light to stat dimming out before disappeating
+const float FADE_SIZE = 5.f;
 
 // Tile sizes in pixels, should match thread count in a compute shader
 const uint32_t TILE_WIDTH = 16;
@@ -135,13 +139,25 @@ void Tr2LightManager::AddPointLight( const Vector3& position, float radius, cons
 	PerLightData data;
 	data.position = position;
 	data.radius = radius;
-	if( m_frustum.IsSphereVisible( reinterpret_cast<Vector4*>( &data.position ) ) && 
-		m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &data.position ) ) > CUTOFF_PIXEL_SIZE  )
+	float brightness = std::max( std::max( color.r, color.g ), color.b );
+	if( brightness <= 0 )
 	{
+		return;
+	}
+	if( !m_frustum.IsSphereVisible( reinterpret_cast<Vector4*>( &data.position ) ) )
+	{
+		return;
+	}
+
+	float size = m_frustum.GetPixelSizeAccross( reinterpret_cast<Vector4*>( &data.position ) );
+	float cutoff = CUTOFF_PIXEL_SIZE * g_eveSpaceSceneLODFactor;
+	if( size > cutoff )
+	{
+		float dimming = std::min( ( size - cutoff ) / FADE_SIZE, 1.f );
 		data.color = reinterpret_cast<const Vector3&>( color );
-		data.color.x *= radius;
-		data.color.y *= radius;
-		data.color.z *= radius;
+		data.color.x *= radius * dimming;
+		data.color.y *= radius * dimming;
+		data.color.z *= radius * dimming;
 		data._padding = 0;
 		m_lightData.Add( data, "Tr2LightManager::m_lightData" );
 	}
