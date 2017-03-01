@@ -472,7 +472,11 @@ def apply_to_shaders(path, callback):
     for platform in PLATFORM_NAMES.iterkeys():
         for sm in SHADER_MODEL_NAMES.iterkeys():
             try:
-                effect = EffectInfo(paths.get_compiled_path(path, sm, platform))
+                compiled = paths.get_compiled_path(path, sm, platform)
+            except ValueError:
+                continue
+            try:
+                effect = EffectInfo(compiled)
             except IOError:
                 continue
             count = 1
@@ -500,7 +504,11 @@ def get_merged_parameters(path, shader_filter=None):
     for platform in PLATFORM_NAMES.iterkeys():
         for sm in SHADER_MODEL_NAMES.iterkeys():
             try:
-                effect = EffectInfo(paths.get_compiled_path(path, sm, platform))
+                compiled = paths.get_compiled_path(path, sm, platform)
+            except ValueError:
+                continue
+            try:
+                effect = EffectInfo(compiled)
             except IOError:
                 continue
             has_compiled = True
