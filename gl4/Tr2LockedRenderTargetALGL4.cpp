@@ -2,7 +2,7 @@
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
-#include "Tr2LockedRenderTargetALGLES2.h"
+#include "Tr2LockedRenderTargetALGL4.h"
 
 Tr2LockedRenderTargetAL::Tr2LockedRenderTargetAL()
 	:m_pitch( 0 )

@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
-#include "Tr2CapsALGLES2.h"
+#include "Tr2CapsALGL4.h"
 
 Tr2CapsAL::Tr2CapsAL()
 {

@@ -2,7 +2,7 @@
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
-#include "Tr2SamplerStateALGLES2.h"
+#include "Tr2SamplerStateALGL4.h"
 
 #ifndef GL_TEXTURE_3D
 #define GL_TEXTURE_3D GL_TEXTURE_3D_OES

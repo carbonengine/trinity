@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "Tr2VertexLayoutALGLES2.h"
+#include "Tr2VertexLayoutALGL4.h"
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 

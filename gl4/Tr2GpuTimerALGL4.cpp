@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
-#include "Tr2GpuTimerALGLES2.h"
+#include "Tr2GpuTimerALGL4.h"
 
 
 Tr2GpuTimerAL::Tr2GpuTimerAL()

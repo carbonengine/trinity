@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "Tr2DepthStencilALGLES2.h"
+#include "Tr2DepthStencilALGL4.h"
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 

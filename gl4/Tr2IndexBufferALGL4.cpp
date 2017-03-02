@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "Tr2IndexBufferALGLES2.h"
+#include "Tr2IndexBufferALGL4.h"
 
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )

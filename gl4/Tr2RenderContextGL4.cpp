@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "Tr2RenderContextGLES2.h"
+#include "Tr2RenderContextGL4.h"
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 

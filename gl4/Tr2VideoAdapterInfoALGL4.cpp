@@ -2,7 +2,7 @@
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
-#include "Tr2VideoAdapterInfoALGLES2.h"
+#include "Tr2VideoAdapterInfoALGL4.h"
 
 #ifndef _WIN32
 

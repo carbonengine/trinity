@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "Tr2TextureALGLES2.h"
+#include "Tr2TextureALGL4.h"
 #include "BcDecompress.h"
 
 using namespace Tr2RenderContextEnum;

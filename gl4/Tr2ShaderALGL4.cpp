@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "Tr2ShaderALGLES2.h"
+#include "Tr2ShaderALGL4.h"
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
 #include "ALLog.h"

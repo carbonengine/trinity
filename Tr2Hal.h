@@ -100,28 +100,28 @@ const float AL_TEXEL_OFFSET = 0.5f;
 
 #include <D3D9.h>
 
-#include "Tr2VideoAdapterInfoALDx9.h"
+#include "dx9/Tr2VideoAdapterInfoALDx9.h"
 
-#include "Tr2ConstantBufferALDx9.h"
-#include "Tr2RenderContextDx9.h"
+#include "dx9/Tr2ConstantBufferALDx9.h"
+#include "dx9/Tr2RenderContextDx9.h"
 
-#include "Tr2VertexBufferALDx9.h"
-#include "Tr2IndexBufferALDx9.h"
-#include "Tr2VertexLayoutALDx9.h"
-#include "Tr2SamplerStateALDx9.h"
-#include "Tr2GpuBufferALDx9.h"
+#include "dx9/Tr2VertexBufferALDx9.h"
+#include "dx9/Tr2IndexBufferALDx9.h"
+#include "dx9/Tr2VertexLayoutALDx9.h"
+#include "dx9/Tr2SamplerStateALDx9.h"
+#include "dx9/Tr2GpuBufferALDx9.h"
 
-#include "Tr2DepthStencilALDx9.h"
-#include "Tr2RenderTargetALDx9.h"
-#include "Tr2SwapChainALDx9.h"
+#include "dx9/Tr2DepthStencilALDx9.h"
+#include "dx9/Tr2RenderTargetALDx9.h"
+#include "dx9/Tr2SwapChainALDx9.h"
 
-#include "Tr2ShaderALDx9.h"
-#include "Tr2TextureALDx9.h"
+#include "dx9/Tr2ShaderALDx9.h"
+#include "dx9/Tr2TextureALDx9.h"
 
-#include "Tr2OcclusionQueryALDx9.h"
-#include "Tr2FenceALDx9.h"
-#include "Tr2GpuTimerALDx9.h"
-#include "Tr2LockedRenderTargetALDx9.h"
+#include "dx9/Tr2OcclusionQueryALDx9.h"
+#include "dx9/Tr2FenceALDx9.h"
+#include "dx9/Tr2GpuTimerALDx9.h"
+#include "dx9/Tr2LockedRenderTargetALDx9.h"
 
 #elif( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
@@ -158,31 +158,31 @@ const float AL_TEXEL_OFFSET = 0.0f;
 //#	include <GLES2/gl2.h>
 #endif
 
-#include "Tr2VideoAdapterInfoALGLES2.h"
+#include "gles2/Tr2VideoAdapterInfoALGLES2.h"
 
-#include "Tr2VertexBufferALGLES2.h"
-#include "Tr2IndexBufferALGLES2.h"
-#include "Tr2ConstantBufferALGLES2.h"
-#include "Tr2VertexLayoutALGLES2.h"
-#include "Tr2SamplerStateALGLES2.h"
-#include "Tr2GpuBufferALGLES2.h"
+#include "gles2/Tr2VertexBufferALGLES2.h"
+#include "gles2/Tr2IndexBufferALGLES2.h"
+#include "gles2/Tr2ConstantBufferALGLES2.h"
+#include "gles2/Tr2VertexLayoutALGLES2.h"
+#include "gles2/Tr2SamplerStateALGLES2.h"
+#include "gles2/Tr2GpuBufferALGLES2.h"
 
-#include "Tr2DepthStencilALGLES2.h"
-#include "Tr2RenderTargetALGLES2.h"
+#include "gles2/Tr2DepthStencilALGLES2.h"
+#include "gles2/Tr2RenderTargetALGLES2.h"
 
-#include "Tr2SwapChainALGLES2.h"
+#include "gles2/Tr2SwapChainALGLES2.h"
 
-#include "Tr2ShaderALGLES2.h"
-#include "Tr2TextureALGLES2.h"
+#include "gles2/Tr2ShaderALGLES2.h"
+#include "gles2/Tr2TextureALGLES2.h"
 
-#include "Tr2OcclusionQueryALGLES2.h"
-#include "Tr2FenceALGLES2.h"
-#include "Tr2GpuTimerALGLES2.h"
-#include "Tr2LockedRenderTargetALGLES2.h"
+#include "gles2/Tr2OcclusionQueryALGLES2.h"
+#include "gles2/Tr2FenceALGLES2.h"
+#include "gles2/Tr2GpuTimerALGLES2.h"
+#include "gles2/Tr2LockedRenderTargetALGLES2.h"
 
 
 
-#include "Tr2RenderContextGLES2.h"
+#include "gles2/Tr2RenderContextGLES2.h"
 
 
 #elif( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
@@ -195,28 +195,28 @@ const float AL_TEXEL_OFFSET = 0.0f;
 #include <D3DX11async.h>
 #include <DXGI.h>
 
-#include "Tr2VideoAdapterInfoALDx11.h"
+#include "dx11/Tr2VideoAdapterInfoALDx11.h"
 
-#include "Tr2VertexBufferALDx11.h"
-#include "Tr2IndexBufferALDx11.h"
-#include "Tr2ConstantBufferALDx11.h"
-#include "Tr2VertexLayoutALDx11.h"
-#include "Tr2ShaderALDx11.h"
-#include "Tr2TextureALDx11.h"
-#include "Tr2SamplerStateALDx11.h"
-#include "Tr2GpuBufferALDx11.h"
+#include "dx11/Tr2VertexBufferALDx11.h"
+#include "dx11/Tr2IndexBufferALDx11.h"
+#include "dx11/Tr2ConstantBufferALDx11.h"
+#include "dx11/Tr2VertexLayoutALDx11.h"
+#include "dx11/Tr2ShaderALDx11.h"
+#include "dx11/Tr2TextureALDx11.h"
+#include "dx11/Tr2SamplerStateALDx11.h"
+#include "dx11/Tr2GpuBufferALDx11.h"
 
-#include "Tr2RenderTargetALDx11.h"
-#include "Tr2DepthStencilALDx11.h"
-#include "Tr2SwapChainALDx11.h"
+#include "dx11/Tr2RenderTargetALDx11.h"
+#include "dx11/Tr2DepthStencilALDx11.h"
+#include "dx11/Tr2SwapChainALDx11.h"
 
-#include "Tr2RenderContextDx11.h"
-#include "Tr2PrimaryRenderContextDx11.h"
+#include "dx11/Tr2RenderContextDx11.h"
+#include "dx11/Tr2PrimaryRenderContextDx11.h"
 
-#include "Tr2OcclusionQueryALDx11.h"
-#include "Tr2FenceALDx11.h"
-#include "Tr2GpuTimerALDx11.h"
-#include "Tr2LockedRenderTargetALDx11.h"
+#include "dx11/Tr2OcclusionQueryALDx11.h"
+#include "dx11/Tr2FenceALDx11.h"
+#include "dx11/Tr2GpuTimerALDx11.h"
+#include "dx11/Tr2LockedRenderTargetALDx11.h"
 
 #elif( TRINITY_PLATFORM==TRINITY_STUB )
 
@@ -224,27 +224,27 @@ const float AL_TEXEL_OFFSET = 0.0f;
 
 const float AL_TEXEL_OFFSET = 0.0f;
 
-#include "Tr2VideoAdapterInfoALStub.h"
+#include "stub/Tr2VideoAdapterInfoALStub.h"
 
-#include "Tr2VertexBufferALStub.h"
-#include "Tr2IndexBufferALStub.h"
-#include "Tr2ConstantBufferALStub.h"
-#include "Tr2VertexLayoutALStub.h"
-#include "Tr2ShaderALStub.h"
-#include "Tr2TextureALStub.h"
-#include "Tr2SamplerStateALStub.h"
-#include "Tr2GpuBufferALStub.h"
+#include "stub/Tr2VertexBufferALStub.h"
+#include "stub/Tr2IndexBufferALStub.h"
+#include "stub/Tr2ConstantBufferALStub.h"
+#include "stub/Tr2VertexLayoutALStub.h"
+#include "stub/Tr2ShaderALStub.h"
+#include "stub/Tr2TextureALStub.h"
+#include "stub/Tr2SamplerStateALStub.h"
+#include "stub/Tr2GpuBufferALStub.h"
 
-#include "Tr2RenderTargetALStub.h"
-#include "Tr2DepthStencilALStub.h"
-#include "Tr2SwapChainALStub.h"
+#include "stub/Tr2RenderTargetALStub.h"
+#include "stub/Tr2DepthStencilALStub.h"
+#include "stub/Tr2SwapChainALStub.h"
 
-#include "Tr2RenderContextStub.h"
+#include "stub/Tr2RenderContextStub.h"
 
-#include "Tr2OcclusionQueryALStub.h"
-#include "Tr2FenceALStub.h"
-#include "Tr2GpuTimerALStub.h"
-#include "Tr2LockedRenderTargetALStub.h"
+#include "stub/Tr2OcclusionQueryALStub.h"
+#include "stub/Tr2FenceALStub.h"
+#include "stub/Tr2GpuTimerALStub.h"
+#include "stub/Tr2LockedRenderTargetALStub.h"
 
 #elif( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
@@ -271,27 +271,27 @@ const float AL_TEXEL_OFFSET = 0.0f;
 
 const float AL_TEXEL_OFFSET = 0.0f;
 
-#include "Tr2VideoAdapterInfoALGL4.h"
+#include "gl4/Tr2VideoAdapterInfoALGL4.h"
 
-#include "Tr2VertexBufferALGL4.h"
-#include "Tr2IndexBufferALGL4.h"
-#include "Tr2ConstantBufferALGL4.h"
-#include "Tr2VertexLayoutALGL4.h"
-#include "Tr2ShaderALGL4.h"
-#include "Tr2SamplerStateALGL4.h"
-#include "Tr2TextureALGL4.h"
-#include "Tr2GpuBufferALGL4.h"
+#include "gl4/Tr2VertexBufferALGL4.h"
+#include "gl4/Tr2IndexBufferALGL4.h"
+#include "gl4/Tr2ConstantBufferALGL4.h"
+#include "gl4/Tr2VertexLayoutALGL4.h"
+#include "gl4/Tr2ShaderALGL4.h"
+#include "gl4/Tr2SamplerStateALGL4.h"
+#include "gl4/Tr2TextureALGL4.h"
+#include "gl4/Tr2GpuBufferALGL4.h"
 
-#include "Tr2RenderTargetALGL4.h"
-#include "Tr2DepthStencilALGL4.h"
-#include "Tr2SwapChainALGL4.h"
+#include "gl4/Tr2RenderTargetALGL4.h"
+#include "gl4/Tr2DepthStencilALGL4.h"
+#include "gl4/Tr2SwapChainALGL4.h"
 
-#include "Tr2RenderContextGL4.h"
+#include "gl4/Tr2RenderContextGL4.h"
 
-#include "Tr2OcclusionQueryALGL4.h"
-#include "Tr2FenceALGL4.h"
-#include "Tr2GpuTimerALGL4.h"
-#include "Tr2LockedRenderTargetALGL4.h"
+#include "gl4/Tr2OcclusionQueryALGL4.h"
+#include "gl4/Tr2FenceALGL4.h"
+#include "gl4/Tr2GpuTimerALGL4.h"
+#include "gl4/Tr2LockedRenderTargetALGL4.h"
 
 #endif
 

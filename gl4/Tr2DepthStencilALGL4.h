@@ -5,7 +5,7 @@
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
 #include "Tr2AutoResetObjectAL.h"
-#include "Tr2TextureALGLES2.h"
+#include "Tr2TextureALGL4.h"
 
 // -------------------------------------------------------------
 // Description:

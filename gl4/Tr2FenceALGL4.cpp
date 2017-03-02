@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
-#include "Tr2FenceALGLES2.h"
+#include "Tr2FenceALGL4.h"
 
 
 Tr2FenceAL::Tr2FenceAL()

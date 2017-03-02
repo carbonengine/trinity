@@ -8,7 +8,7 @@
 
 #if TRINITY_PLATFORM==TRINITY_OPENGL4
 
-#include "Tr2SwapChainALGLES2.h"
+#include "Tr2SwapChainALGL4.h"
 #if !defined(_WIN32) && !defined(TRINITY_AL_MOBILE)
 #include "GLFW/glfw3.h"
 #endif

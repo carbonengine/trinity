@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "Tr2RenderTargetALGLES2.h"
+#include "Tr2RenderTargetALGL4.h"
 
 using namespace Tr2RenderContextEnum;
 
