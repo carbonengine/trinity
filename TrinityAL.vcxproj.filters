@@ -2,7 +2,12 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Source Files"/>
+    <Filter Include="Source Files\dx11"/>
+    <Filter Include="Source Files\dx9"/>
+    <Filter Include="Source Files\gl4"/>
+    <Filter Include="Source Files\gles2"/>
     <Filter Include="Source Files\include"/>
+    <Filter Include="Source Files\stub"/>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ALLog.h">
@@ -29,91 +34,13 @@
     <ClInclude Include="Tr2AutoResetObjectAL.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2BufferImplALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2CapsALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2CapsALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2CapsALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2CapsALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2CapsALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2ConstantBufferALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2ConstantBufferALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2ConstantBufferALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2ConstantBufferALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2ConstantBufferALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2DepthStencilALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2DepthStencilALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2DepthStencilALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2DepthStencilALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2DepthStencilALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2DrawUPHelper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2DriverUtilities.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2FenceALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2FenceALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2FenceALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2FenceALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2FenceALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2FragmentOpSettings.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2GpuBufferALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2GpuBufferALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2GpuBufferALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2GpuBufferALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2GpuBufferALStub.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2GpuTelemetry.h">
@@ -122,172 +49,16 @@
     <ClInclude Include="Tr2GpuTimerALContext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2GpuTimerALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2GpuTimerALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2GpuTimerALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2GpuTimerALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2GpuTimerALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2Hal.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2HalHelperStructures.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2IndexBufferALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2IndexBufferALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2IndexBufferALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2IndexBufferALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2IndexBufferALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2LockedRenderTargetALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2LockedRenderTargetALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2LockedRenderTargetALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2LockedRenderTargetALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2LockedRenderTargetALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2LockGuard.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2OcclusionQueryALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2OcclusionQueryALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2OcclusionQueryALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2OcclusionQueryALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2OcclusionQueryALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2PrimaryRenderContextDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderContextDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderContextDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2RenderContextEnum.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderContextGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderContextGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderContextStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderStateEmulationDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderTargetALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderTargetALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderTargetALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderTargetALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2RenderTargetALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SamplerStateALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SamplerStateALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SamplerStateALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SamplerStateALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SamplerStateALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2ShaderALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2ShaderALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2ShaderALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2ShaderALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2ShaderALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SwapChainALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SwapChainALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SwapChainALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SwapChainALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SwapChainALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2TextureALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2TextureALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2TextureALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2TextureALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2TextureALStub.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2TrackedALObject.h">
@@ -296,56 +67,236 @@
     <ClInclude Include="Tr2TrackedALObjectImpl.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2VertexBufferALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VertexBufferALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VertexBufferALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VertexBufferALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VertexBufferALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2VertexDefinition.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VertexLayoutALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VertexLayoutALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VertexLayoutALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VertexLayoutALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VertexLayoutALStub.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VideoAdapterInfoALDx11.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VideoAdapterInfoALDx9.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VideoAdapterInfoALGL4.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VideoAdapterInfoALGLES2.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2VideoAdapterInfoALStub.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="wglext.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2BufferImplALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2CapsALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2ConstantBufferALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2DepthStencilALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2FenceALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2GpuBufferALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2GpuTimerALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2IndexBufferALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2LockedRenderTargetALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2OcclusionQueryALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2PrimaryRenderContextDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2RenderContextDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2RenderStateEmulationDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2RenderTargetALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2SamplerStateALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2ShaderALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2SwapChainALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2TextureALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2VertexBufferALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2VertexLayoutALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx11\Tr2VideoAdapterInfoALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2CapsALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2ConstantBufferALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2DepthStencilALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2FenceALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2GpuBufferALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2GpuTimerALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2IndexBufferALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2LockedRenderTargetALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2OcclusionQueryALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2RenderContextDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2RenderTargetALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2SamplerStateALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2ShaderALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2SwapChainALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2TextureALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2VertexBufferALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2VertexLayoutALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2VideoAdapterInfoALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2CapsALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2ConstantBufferALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2DepthStencilALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2FenceALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2GpuBufferALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2GpuTimerALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2IndexBufferALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2LockedRenderTargetALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2OcclusionQueryALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2RenderContextGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2RenderTargetALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2SamplerStateALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2ShaderALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2SwapChainALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2TextureALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2VertexBufferALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2VertexLayoutALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2VideoAdapterInfoALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2CapsALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2ConstantBufferALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2DepthStencilALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2FenceALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2GpuBufferALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2GpuTimerALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2IndexBufferALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2LockedRenderTargetALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2OcclusionQueryALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2RenderContextGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2RenderTargetALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2SamplerStateALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2ShaderALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2SwapChainALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2TextureALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2VertexBufferALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2VertexLayoutALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2VideoAdapterInfoALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2BitmapDimensions.h">
       <Filter>Source Files\include</Filter>
@@ -359,6 +310,60 @@
     <ClInclude Include="include\Tr2TextureType.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
+    <ClInclude Include="stub\Tr2CapsALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2ConstantBufferALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2DepthStencilALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2FenceALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2GpuBufferALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2GpuTimerALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2IndexBufferALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2LockedRenderTargetALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2OcclusionQueryALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2RenderContextStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2RenderTargetALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2SamplerStateALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2ShaderALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2SwapChainALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2TextureALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2VertexBufferALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2VertexLayoutALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2VideoAdapterInfoALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
     <ClCompile Include="ALResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -371,302 +376,302 @@
     <ClCompile Include="Tr2AutoResetObjectAL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2BufferImplALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2CapsALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2CapsALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2CapsALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2CapsALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2CapsALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ConstantBufferALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ConstantBufferALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ConstantBufferALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ConstantBufferALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ConstantBufferALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2DepthStencilALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2DepthStencilALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2DepthStencilALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2DepthStencilALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2DepthStencilALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Tr2DrawUPHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2DriverUtilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2FenceALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2FenceALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2FenceALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2FenceALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2FenceALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Tr2FragmentOpSettings.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2GpuBufferALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2GpuBufferALGL4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2GpuTelemetry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2GpuTimerALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2GpuTimerALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2GpuTimerALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2GpuTimerALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2GpuTimerALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Tr2HalHelperStructures.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2IndexBufferALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2IndexBufferALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2IndexBufferALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2IndexBufferALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2IndexBufferALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2LockedRenderTargetALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2LockedRenderTargetALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2LockedRenderTargetALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2LockedRenderTargetALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2LockedRenderTargetALStub.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2LockGuard.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2OcclusionQueryALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2OcclusionQueryALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2OcclusionQueryALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2OcclusionQueryALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2OcclusionQueryALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2PrimaryRenderContextDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderContextDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderContextDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Tr2RenderContextEnum.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderContextGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderContextGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderContextStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderStateEmulationDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderTargetALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderTargetALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderTargetALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderTargetALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2RenderTargetALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SamplerStateALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SamplerStateALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SamplerStateALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SamplerStateALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SamplerStateALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ShaderALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ShaderALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ShaderALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ShaderALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2ShaderALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SwapChainALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SwapChainALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SwapChainALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SwapChainALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SwapChainALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2TextureALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2TextureALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2TextureALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2TextureALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2TextureALStub.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2TrackedALObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VertexBufferALDx11.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2VertexBufferALDx9.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2VertexBufferALGL4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2VertexBufferALGLES2.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2VertexBufferALStub.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Tr2VertexDefinition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VertexLayoutALDx11.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="dx11\Tr2BufferImplALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VertexLayoutALDx9.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="dx11\Tr2CapsALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VertexLayoutALGL4.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="dx11\Tr2ConstantBufferALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VertexLayoutALGLES2.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="dx11\Tr2DepthStencilALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VertexLayoutALStub.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="dx11\Tr2FenceALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VideoAdapterInfoALDx11.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="dx11\Tr2GpuBufferALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VideoAdapterInfoALDx9.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="dx11\Tr2GpuTimerALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VideoAdapterInfoALGL4.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="dx11\Tr2IndexBufferALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VideoAdapterInfoALGLES2.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="dx11\Tr2LockedRenderTargetALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2VideoAdapterInfoALStub.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="dx11\Tr2OcclusionQueryALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2PrimaryRenderContextDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2RenderContextDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2RenderStateEmulationDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2RenderTargetALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2SamplerStateALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2ShaderALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2SwapChainALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2TextureALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2VertexBufferALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2VertexLayoutALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx11\Tr2VideoAdapterInfoALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2CapsALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2ConstantBufferALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2DepthStencilALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2FenceALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2GpuTimerALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2IndexBufferALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2LockedRenderTargetALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2OcclusionQueryALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2RenderContextDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2RenderTargetALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2SamplerStateALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2ShaderALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2SwapChainALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2TextureALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2VertexBufferALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2VertexLayoutALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2VideoAdapterInfoALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2CapsALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2ConstantBufferALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2DepthStencilALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2FenceALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2GpuBufferALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2GpuTimerALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2IndexBufferALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2LockedRenderTargetALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2OcclusionQueryALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2RenderContextGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2RenderTargetALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2SamplerStateALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2ShaderALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2SwapChainALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2TextureALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2VertexBufferALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2VertexLayoutALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2VideoAdapterInfoALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2CapsALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2ConstantBufferALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2DepthStencilALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2FenceALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2GpuTimerALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2IndexBufferALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2LockedRenderTargetALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2OcclusionQueryALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2RenderContextGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2RenderTargetALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2SamplerStateALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2ShaderALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2SwapChainALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2TextureALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2VertexBufferALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2VertexLayoutALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2VideoAdapterInfoALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2CapsALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2ConstantBufferALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2DepthStencilALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2FenceALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2GpuTimerALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2IndexBufferALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2LockedRenderTargetALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2OcclusionQueryALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2RenderContextStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2RenderTargetALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2SamplerStateALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2ShaderALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2SwapChainALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2TextureALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2VertexBufferALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2VertexLayoutALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2VideoAdapterInfoALStub.cpp">
+      <Filter>Source Files\stub</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
