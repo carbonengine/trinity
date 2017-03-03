@@ -4,7 +4,7 @@
 
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
-#include "Tr2RenderContextEnum.h"
+#include "../Tr2RenderContextEnum.h"
 #include "Tr2RenderTargetALStub.h"
 #include "Tr2CapsALStub.h"
 

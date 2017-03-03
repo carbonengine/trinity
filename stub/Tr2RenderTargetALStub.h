@@ -4,7 +4,7 @@
 
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
-#include "Tr2AutoResetObjectAL.h"
+#include "../Tr2AutoResetObjectAL.h"
 #include "Tr2TextureALStub.h"
 
 class Tr2RenderTargetAL : 
