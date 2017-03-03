@@ -10,7 +10,7 @@
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
-#include "Tr2AutoResetObjectAL.h"
+#include "../Tr2AutoResetObjectAL.h"
 
 class Tr2RenderContextAL;
 

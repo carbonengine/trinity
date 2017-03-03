@@ -4,7 +4,7 @@
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
-#include "Tr2VertexDefinition.h"
+#include "../Tr2VertexDefinition.h"
 
 class Tr2RenderContextAL;
 

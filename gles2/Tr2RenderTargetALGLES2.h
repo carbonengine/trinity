@@ -4,7 +4,7 @@
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
-#include "Tr2AutoResetObjectAL.h"
+#include "../Tr2AutoResetObjectAL.h"
 #include "Tr2TextureALGLES2.h"
 
 class Tr2RenderTargetAL : 

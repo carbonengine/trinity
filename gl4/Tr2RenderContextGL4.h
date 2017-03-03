@@ -4,7 +4,7 @@
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
-#include "Tr2RenderContextEnum.h"
+#include "../Tr2RenderContextEnum.h"
 
 class Tr2VertexBufferAL;
 class Tr2IndexBufferAL;
@@ -15,11 +15,11 @@ class Tr2SamplerStateAL;
 class Tr2TextureAL;
 struct ITr2RenderContextEvents;
 
-#include "Tr2VertexDefinition.h"
-#include "Tr2FragmentOpSettings.h"
+#include "../Tr2VertexDefinition.h"
+#include "../Tr2FragmentOpSettings.h"
 #include "Tr2RenderTargetALGL4.h"
 #include "Tr2CapsALGL4.h"
-#include "Tr2DrawUPHelper.h"
+#include "../Tr2DrawUPHelper.h"
 
 // -------------------------------------------------------------
 // Description:
