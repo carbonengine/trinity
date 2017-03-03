@@ -32,7 +32,8 @@ public:
 private:
 	void ReleaseALResource();
 	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
-	bool m_isValid;
+
+	Tr2WindowHandle m_windowHandle;
 };
 
 #endif // TRINITY_PLATFORM==TRINITY_STUB

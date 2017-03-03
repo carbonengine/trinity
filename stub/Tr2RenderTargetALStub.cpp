@@ -7,19 +7,20 @@ using namespace Tr2RenderContextEnum;
 
 #include "ALLog.h"
 
-#pragma warning( disable: 4189 )	// Scopeguard
-
 Tr2RenderTargetAL::Tr2RenderTargetAL()
-	:m_isValid(false)
 {
+	Destroy();
 	memset( &m_deviceLost, 0, sizeof( m_deviceLost ) );
-	m_format = PIXEL_FORMAT_UNKNOWN;
-	m_mipCount = 1;
 }
 
 void Tr2RenderTargetAL::Destroy()
 {
-	m_isValid = false;
+	Tr2BitmapDimensions::Destroy();
+
+	m_msaaType = 1;
+	m_msaaQuality = 0;
+
+	m_backingStore.Destroy();
 }
 
 void Tr2RenderTargetAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderContext )
@@ -40,7 +41,6 @@ void Tr2RenderTargetAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderCont
 			{
 				m_deviceLost.m_valid = false;
 			}
-			m_isValid = true;
 		}
 	}
 }
@@ -67,7 +67,7 @@ Tr2RenderTargetAL::~Tr2RenderTargetAL()
 
 bool Tr2RenderTargetAL::IsValid() const
 {
-	return m_isValid;
+	return m_backingStore.IsValid();
 }
 
 ALResult Tr2RenderTargetAL::Create(	
@@ -111,16 +111,14 @@ ALResult Tr2RenderTargetAL::CreateEx(
 	{
 		return E_INVALIDARG;
 	}
-	m_isValid = true;
-	m_width = width;
-	m_height = height;
-	m_mipCount = mipLevelCount;
-	m_format = format;
-	m_msaaType = msaaType;
-	m_msaaQuality = msaaQuality;
-	m_usage = usage;
-	m_backingStore.Create2D(width, height, mipLevelCount, format, usage, nullptr, renderContext);
-	return S_OK;
+	auto result = m_backingStore.Create2D( width, height, mipLevelCount, format, usage, nullptr, renderContext );
+	if( SUCCEEDED( result ) )
+	{ 
+		static_cast<Tr2BitmapDimensions&>( *this ) = m_backingStore;
+		m_msaaType = msaaType;
+		m_msaaQuality = msaaQuality;
+	}
+	return result;
 }
 
 
@@ -161,38 +159,18 @@ const Tr2TextureAL& Tr2RenderTargetAL::GetTexture() const
 
 ALResult Tr2RenderTargetAL::GetLockedRenderTarget( uint32_t mipLevel, uint32_t* ltrb, Tr2LockedRenderTargetAL& lockedRT, Tr2RenderContextAL& renderContext )
 {
-	if ( ltrb )
+	if( !IsValid() )
 	{
-		for ( int i = 0; i < 4; ++i )
-		{
-			lockedRT.m_lockedRect[i] = ltrb[i];
-		}
+		return E_INVALIDCALL;
 	}
-	else
-	{
-		
-		lockedRT.m_lockedRect[0] = 0;
-		lockedRT.m_lockedRect[1] = 0;
-		lockedRT.m_lockedRect[2] = m_width;
-		lockedRT.m_lockedRect[3] = m_height;
-	}
-	lockedRT.m_hasLockedRect = true;
-	uint32_t width = (lockedRT.m_lockedRect[2] - lockedRT.m_lockedRect[0]);
-	uint32_t height = (lockedRT.m_lockedRect[3] - lockedRT.m_lockedRect[1]);
-	uint32_t pitch;
-	if ( IsCompressed() )
-	{
-		pitch = m_width / 16;
-	}
-	else
-	{
-		pitch = m_width * GetBytesPerPixel( m_format );
-	}
-
-	lockedRT.m_pitch = pitch;
-	int bpp = Tr2RenderContextEnum::GetBytesPerPixel( GetFormat() );
-	size_t newSize = width * height * bpp;
+	uint32_t pitch = m_width * GetBytesPerPixel( m_format );
+	size_t newSize = pitch * m_height;
 	lockedRT.m_data.resize("Tr2LockedRenderTargetAL::m_buffer", newSize);
+	if( lockedRT.m_data.empty() )
+	{
+		return E_OUTOFMEMORY;
+	}
+	lockedRT.m_pitch = pitch;
 	return S_OK;
 }
 

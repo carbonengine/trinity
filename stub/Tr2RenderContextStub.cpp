@@ -32,7 +32,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	{
 		m_boundRenderTarget[i] = nullptr;
 	}
-	
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
@@ -64,11 +63,6 @@ void Tr2RenderContextAL::Destroy()
 	m_isValid = false;
 }
 
-ALResult Tr2RenderContextAL::ReportIfFailure( long hr, const char* message )
-{
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::SetStreamSource( 
 	uint32_t stream, 
 	const Tr2VertexBufferAL & buffer, 
@@ -92,7 +86,6 @@ ALResult Tr2RenderContextAL::Clear(
 	return S_OK;
 }
 
-// Version of SetIndices that accepts a nullpointer, in which case the currently bound index buffer is un-set.
 ALResult Tr2RenderContextAL::SetIndices( const Tr2IndexBufferAL& buffer )
 {
 	if( !buffer.IsValid() && ( &buffer != &nullIB ) )
@@ -222,15 +215,6 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 	return m_defaultBackBuffer.GetFormat();
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Checks if the current GPU is in AFR mode and returns the number of AFR groups. Works
-//   for nVidia and ATI GPUs.
-// Arguments:
-//   count - (out) Number of AFR groups
-// Return Value:
-//   HRESULT of the call.
-// --------------------------------------------------------------------------------------
 ALResult Tr2RenderContextAL::GetAFRGroupCount( uint32_t& count )
 {
 	count = 1;
@@ -322,7 +306,7 @@ ALResult Tr2RenderContextAL::SetShaderBuffer(
 	uint32_t /* slot */, 
 	const Tr2GpuBufferAL& /* buffer */ )
 {
-	return E_FAIL;
+	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetTexture(	

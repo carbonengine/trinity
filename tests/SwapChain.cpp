@@ -24,11 +24,13 @@ TEST_F( WithValidRenderContext, CanCreateSwapChain )
 		Tr2SwapChainAL sc;
 		ASSERT_HRESULT_SUCCEEDED( sc.Create( window, *renderContext ) );
 		EXPECT_TRUE( sc.IsValid() );
+		EXPECT_TRUE( sc.m_backBuffer.IsValid() );
+#if( TRINITY_PLATFORM != TRINITY_STUB )
 		EXPECT_EQ( window.GetClientWidth(), sc.GetWidth() );
 		EXPECT_EQ( window.GetClientHeight(), sc.GetHeight() );
-		EXPECT_TRUE( sc.m_backBuffer.IsValid() );
 		EXPECT_EQ( sc.GetWidth(), sc.m_backBuffer.GetWidth() );
 		EXPECT_EQ( sc.GetHeight(), sc.m_backBuffer.GetHeight() );
+#endif
 	}
 }
 

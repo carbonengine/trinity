@@ -52,11 +52,11 @@ ALResult Tr2VertexBufferAL::Create( uint32_t lengthInBytes,
 		return E_INVALIDARG;
 	}
 	m_buffer.resize("Tr2VertexBufferALStub::m_buffer", lengthInBytes);
-	m_usage = usage;
-	if ( initialData )
+	if( m_buffer.empty() )
 	{
-		memcpy(m_buffer.get(), initialData, lengthInBytes);
+		return E_OUTOFMEMORY;
 	}
+	m_usage = usage;
 	return S_OK;
 }
 
@@ -84,7 +84,7 @@ ALResult Tr2VertexBufferAL::Lock( uint32_t offset,
 	{
 		return E_INVALIDCALL;
 	}
-	*data = m_buffer.get() + offset;
+	*data = m_buffer.get();
 	return S_OK;
 }
 
@@ -103,8 +103,6 @@ ALResult Tr2VertexBufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const 
 	{
 		return E_INVALIDCALL;
 	}
-
-	memcpy( m_buffer.get() + offset, data, size );
 	return S_OK;
 }
 

@@ -8,9 +8,7 @@
 using namespace Tr2RenderContextEnum;
 
 Tr2ConstantBufferAL::Tr2ConstantBufferAL()
-	: m_debugUsingMirror( false ),
-	m_usage(0),
-	m_isLocked(false)
+	:m_usage( 0 )
 {
 }
 
@@ -42,10 +40,6 @@ ALResult Tr2ConstantBufferAL::Create( uint32_t size, Tr2RenderContextEnum::Buffe
 		return E_OUTOFMEMORY;
 	}
 
-	if( initialData )
-	{
-		memcpy( m_shadowCopy.get(), initialData, size );
-	}
 	m_usage = usage;
 	ChangeObjectId();
 	
@@ -59,26 +53,18 @@ ALResult Tr2ConstantBufferAL::Lock( void** data, Tr2RenderContextAL & /*renderCo
 		return E_INVALIDCALL;
 	}
 
-	CCP_ASSERT( !m_debugUsingMirror );
 	if( m_shadowCopy.empty() )
 	{
-		*data = 0;
+		*data = nullptr;
 		return E_FAIL;
 	}
 
 	*data = m_shadowCopy.get();
-	m_isLocked = true;
 	return S_OK;
 }
 
 ALResult Tr2ConstantBufferAL::Unlock( Tr2RenderContextAL & /*renderContext*/ )
 {
-	CCP_ASSERT( !m_debugUsingMirror );
-	
-	if( !m_isLocked )
-	{
-		return E_INVALIDCALL;
-	}
 	return S_OK;
 }
 
@@ -92,17 +78,6 @@ void Tr2ConstantBufferAL::Destroy()
 	m_shadowCopy.clear();
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Allocate and return a CPU-side memory buffer, that will persist its contents. Use this
-//   to make incremental changes to CPU-side data, and copy it over to the GPU buffer with
-//   UpdateFromMirror.
-//   You cannot mix-and-match use of Lock+memcpy+Unlock and GetBufferMirror+UpdateFromMirror.
-// Arguments:
-//   minimumSize - if not zero, the buffer will automatically recreate itself to guarantee at least this many bytes.
-// See Also:
-//   UpdateFromMirror
-// --------------------------------------------------------------------------------------
 void* Tr2ConstantBufferAL::GetBufferMirror( uint32_t minimumSize, Tr2RenderContextAL& renderContext )
 {
 	if( minimumSize > GetSize() )
@@ -118,15 +93,11 @@ void* Tr2ConstantBufferAL::GetBufferMirror( uint32_t minimumSize, Tr2RenderConte
 		return nullptr;
 	}
 
-	m_debugUsingMirror = true;
-
 	return m_shadowCopy.get();
 }
 
 ALResult Tr2ConstantBufferAL::UpdateFromMirror( Tr2RenderContextAL & /*renderContext*/ )
 {
-	CCP_ASSERT( m_debugUsingMirror );
-	m_debugUsingMirror = false;
 	return S_OK;
 }
 

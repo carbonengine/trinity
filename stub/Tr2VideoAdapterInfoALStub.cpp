@@ -21,24 +21,8 @@ ALResult Tr2VideoAdapterInfo::GetAdapterCount( unsigned& count )
 
 bool GetDeviceId( uint32_t& deviceId )
 {
-#ifdef WIN32
-	DISPLAY_DEVICE dd;
-	dd.cb = sizeof( DISPLAY_DEVICE );
-
-	EnumDisplayDevices( nullptr, 0, &dd, 0 );
-
-	const char* deviceIdPrefix = "DEV_";
-
-	auto found = strstr( dd.DeviceID, deviceIdPrefix );
-	if( !found )
-	{
-		return false;
-	}
-	return sscanf_s( found + strlen( deviceIdPrefix ), "%x", &deviceId ) == 1;
-#else
     deviceId = 0;
     return true;
-#endif
 }
 
 ALResult Tr2VideoAdapterInfo::GetAdapterInfo( unsigned adapterIndex,

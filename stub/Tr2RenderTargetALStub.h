@@ -44,7 +44,7 @@ public:
 		Tr2RenderContextAL& renderContext );
 
 	bool IsValid() const;
-	bool IsReadable() const { return !(m_msaaType & Tr2RenderContextEnum::USAGE_LOCK_FREQUENTLY) && m_isValid; }
+	bool IsReadable() const { return !(m_msaaType & Tr2RenderContextEnum::USAGE_LOCK_FREQUENTLY) && IsValid(); }
 	void Destroy();
 	ALResult GenerateMipMaps( Tr2RenderContextAL& renderContext );
 	ALResult Resolve( Tr2RenderTargetAL& destination, Tr2RenderContextAL& renderContext );
@@ -96,19 +96,18 @@ public:
 	TDeviceLost	m_deviceLost;
 
 private:
-	bool m_isValid;
-	uint32_t							m_msaaType;
-	uint32_t							m_msaaQuality;
-	void ReleaseALResource();
-	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
-	Tr2TextureAL m_backingStore;
-	Tr2RenderContextEnum::BufferUsage m_usage;
-
 	friend class Tr2RenderContextAL;
 	friend class Tr2RenderTarget;
 
 	Tr2RenderTargetAL( const Tr2RenderTargetAL& );
 	Tr2RenderTargetAL& operator=( const Tr2RenderTargetAL& );
+
+	void ReleaseALResource();
+	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
+
+	uint32_t m_msaaType;
+	uint32_t m_msaaQuality;
+	Tr2TextureAL m_backingStore;
 };
 
 #endif

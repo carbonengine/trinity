@@ -87,24 +87,22 @@ public:
 	void Destroy();
 
 	bool Is16Bit() const			{ return true; }
-	uint32_t BytesPerIndex() const	{ return (m_bitCount + 1) * 2; }
+	uint32_t BytesPerIndex() const	{ return ( m_bitCount + 1 ) * 2; }
 	uint32_t GetNumIndices() const	{ return m_numIndices; }
 	uint32_t GetTotalSizeInBytes() const { return m_numIndices * BytesPerIndex(); }
 
 	Tr2RenderContextEnum::IndexBufferBitcount	GetIBBitcount() const { return m_bitCount; }
 
 	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
-	
-	Tr2RenderContextEnum::BufferUsage	m_usage;
 
+	Tr2RenderContextEnum::BufferUsage m_usage;
 private:
+	Tr2IndexBufferAL( const Tr2IndexBufferAL& ) /* = delete */;
+	Tr2IndexBufferAL& operator=( const Tr2IndexBufferAL& ) /* = delete */;
+	
 	CcpMallocBuffer m_buffer;
 	uint32_t m_numIndices;
 	Tr2RenderContextEnum::IndexBufferBitcount m_bitCount;
-	Tr2IndexBufferAL( const Tr2IndexBufferAL& ) /* = delete */;
-	Tr2IndexBufferAL& operator=( const Tr2IndexBufferAL& ) /* = delete */;
-
-
 };
 
 #endif // #if( TRINITY_PLATFORM==TRINITY_STUB )
