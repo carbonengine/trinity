@@ -8,12 +8,10 @@
 
 using namespace Tr2RenderContextEnum;
 
-extern bool g_useManagedDX9Buffers;
-
 Tr2IndexBufferAL::Tr2IndexBufferAL()
 	: m_numIndices( 0 ),
 	m_usage( 0 ),
-	m_bitCount(IB_16BIT)
+	m_bitCount( IB_16BIT )
 {
 }
 
@@ -25,11 +23,10 @@ Tr2IndexBufferAL& Tr2IndexBufferAL::operator=( Tr2IndexBufferAL&& other )
 {
 	if( this != &other )
 	{
-		m_usage			= other.m_usage;
-		m_buffer.clear();
+		m_usage	 = other.m_usage;
 		m_buffer = std::move(other.m_buffer);
-
-		m_numIndices	= other.m_numIndices;
+		m_numIndices = other.m_numIndices;
+		m_bitCount = other.m_bitCount;
 		ChangeObjectId();
 	}
 
@@ -56,20 +53,15 @@ ALResult Tr2IndexBufferAL::Create(
 		return E_INVALIDARG;
 	}
 	
-	size_t lengthInBytes = (bitCount + 1) * 16;
-	m_numIndices = numberOfIndices;
-	m_bitCount = bitCount;
-	m_usage = usage;
-	m_buffer.resize("Tr2IndexBufferALStub::m_buffer", GetTotalSizeInBytes());
+	size_t lengthInBytes = ( bitCount + 1 ) * 2 * numberOfIndices;
+	m_buffer.resize( "Tr2IndexBufferALStub::m_buffer", lengthInBytes );
 	if( m_buffer.empty() )
 	{
 		return E_FAIL;
 	}
-	if( initialData )
-	{
-		memcpy(m_buffer.get(), initialData, GetTotalSizeInBytes() );
-	}
-
+	m_numIndices = numberOfIndices;
+	m_bitCount = bitCount;
+	m_usage = usage;
 	return S_OK;
 }
 
@@ -124,7 +116,7 @@ ALResult Tr2IndexBufferAL::Lock(
 	{
 		return E_FAIL;
 	}
-	*data = m_buffer.get() + offset;
+	*data = m_buffer.get();
 	return S_OK;
 }
 
@@ -149,8 +141,6 @@ ALResult Tr2IndexBufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const v
 	{
 		return E_FAIL;
 	}
-	memcpy(m_buffer.get() + offset, data, size);
-	
 	return S_OK;
 }
 

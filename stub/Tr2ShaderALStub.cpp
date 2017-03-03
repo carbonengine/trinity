@@ -21,6 +21,10 @@ ALResult Tr2ShaderAL::Create(
 	const Tr2ShaderInputDefinition& inputDefinition )
 {
 	m_bytecode.resize("Tr2ShaderALStub::m_bytecode", bytecodeSize);
+	if( m_bytecode.empty() )
+	{
+		return E_OUTOFMEMORY;
+	}
 	memcpy(m_bytecode.get(), bytecode, bytecodeSize);
 	m_type = type;
 
@@ -35,6 +39,7 @@ Tr2ShaderAL::~Tr2ShaderAL()
 void Tr2ShaderAL::Destroy()
 {
 	m_type = INVALID_SHADER;
+	m_bytecode.clear();
 }
 
 bool Tr2ShaderAL::IsValid() const
@@ -49,6 +54,10 @@ Tr2RenderContextEnum::ShaderType Tr2ShaderAL::GetType() const
 
 ALResult Tr2ShaderAL::GetBytecode( const void*& bytecode, uint32_t& size ) const
 {
+	if( m_bytecode.empty() )
+	{
+		return E_INVALIDCALL;
+	}
 	bytecode = m_bytecode.get();
 	size = uint32_t( m_bytecode.size() );
 	return S_OK;

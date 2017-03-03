@@ -10,8 +10,6 @@
 // >1 - force max anisotropy to specified number
 uint32_t g_forceAnisotropy = 0;
 
-using namespace Tr2RenderContextEnum;
-
 Tr2SamplerStateAL::Tr2SamplerStateAL()
 {
 	m_isValid = false;

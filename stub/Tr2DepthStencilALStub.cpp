@@ -8,12 +8,11 @@
 using namespace Tr2RenderContextEnum;
 
 Tr2DepthStencilAL::Tr2DepthStencilAL()
-	: m_width( 0 )
-	, m_height( 0 )
-	, m_format( static_cast<DepthStencilFormat>( 0 ) )
-	, m_msaaType( 0 )
-	, m_msaaQuality( 0 )
-	, m_isValid( false )
+	: m_format( static_cast<DepthStencilFormat>( 0 ) ),
+	m_msaaType( 0 ),
+	m_msaaQuality( 0 ),
+	m_width( 0 ),
+	m_height( 0 )
 {
 	memset( &m_deviceLost, 0, sizeof( m_deviceLost ) );
 }
@@ -42,42 +41,34 @@ ALResult Tr2DepthStencilAL::CreateEx(
 	uint32_t flags, 
 	Tr2RenderContextAL& renderContext )
 {
-	if( !renderContext.IsValid() )
+	auto result = m_backingStore.Create2D( width, height, 1, PIXEL_FORMAT_R32_FLOAT, USAGE_CPU_READ, nullptr, renderContext );
+	if( FAILED( result ) )
 	{
-		return E_INVALIDARG;
+		return result;
 	}
-	if( width == 0 || height == 0 )
-	{
-		return E_INVALIDARG;
-	}
-	m_width = width;
-	m_height = height;
 	m_format = dsFormat;
 	m_msaaQuality = msaaQuality;
 	m_msaaType = msaaType;
-	m_isValid = true;
-	
-	if( dsFormat == DSFMT_READABLE )
-	{
-		m_backingStore.Create2D(width, height, 1, PIXEL_FORMAT_A8_UNORM, 0, 0, renderContext);
-	}
-
+	m_width = width;
+	m_height = height;
 	return S_OK;
 }
 	
 bool Tr2DepthStencilAL::IsValid() const
 {
-	return m_isValid;
+	return m_backingStore.IsValid();
 }	
 
 void Tr2DepthStencilAL::Destroy()
 {
-	m_isValid = false;
+	m_backingStore.Destroy();
+	m_width = 0;
+	m_height = 0;
 }
 
 bool Tr2DepthStencilAL::IsReadable() const
 {
-	return m_format == DSFMT_READABLE && m_isValid;
+	return m_format == DSFMT_READABLE && IsValid();
 }
 
 Tr2TextureAL& Tr2DepthStencilAL::GetTexture()
@@ -95,8 +86,8 @@ void Tr2DepthStencilAL::ReleaseALResource()
 	if( !m_deviceLost.m_valid )
 	{
 		m_deviceLost.m_format		= m_format;
-		m_deviceLost.m_width		= m_width;
-		m_deviceLost.m_height		= m_height;
+		m_deviceLost.m_width		= GetWidth();
+		m_deviceLost.m_height		= GetHeight();
 		m_deviceLost.m_msaaType		= m_msaaType;
 		m_deviceLost.m_msaaQuality	= m_msaaQuality;
 
@@ -124,7 +115,6 @@ void Tr2DepthStencilAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderCont
 			{
 				m_deviceLost.m_valid = false;
 			}
-			m_isValid = true;
 		}
 	}
 }

@@ -36,8 +36,8 @@ public:
 	bool IsValid() const;
 	void Destroy();
 
-	uint32_t GetWidth() const { return m_width; }
-	uint32_t GetHeight() const { return m_height; }
+	uint32_t GetWidth() const { return m_backingStore.GetWidth(); }
+	uint32_t GetHeight() const { return m_backingStore.GetHeight(); }
 	uint32_t GetMsaaType() const { return m_msaaType; }
 	uint32_t GetMsaaQuality()const { return m_msaaQuality; }
 	Tr2RenderContextEnum::DepthStencilFormat GetFormat() const { return m_format; }
@@ -55,14 +55,11 @@ private:
 	void ReleaseALResource();
 	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
 	Tr2TextureAL m_backingStore;
-
-	bool m_isValid;
-
 	uint32_t m_width;
 	uint32_t m_height;
-	Tr2RenderContextEnum::DepthStencilFormat m_format;
 	uint32_t m_msaaType;
 	uint32_t m_msaaQuality;
+	Tr2RenderContextEnum::DepthStencilFormat m_format;
 
 	struct TDeviceLost
 	{

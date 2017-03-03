@@ -11,8 +11,6 @@ class Tr2GpuBufferAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_GPU_BU
 {
 public:
 	Tr2GpuBufferAL()
-		: m_numElements(0)
-		, m_format(Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN)
 	{
 	}
 	
@@ -110,9 +108,6 @@ public:
 	
 private:
 	friend class Tr2RenderContextAL;
-
-	uint32_t							m_numElements;
-	Tr2RenderContextEnum::PixelFormat	m_format;
 
 	Tr2GpuBufferAL( const Tr2GpuBufferAL& ) /* = delete */;
 	Tr2GpuBufferAL& operator=( const Tr2GpuBufferAL& ) /* = delete */;

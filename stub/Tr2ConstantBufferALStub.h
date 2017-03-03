@@ -52,9 +52,7 @@ private:
 	Tr2ConstantBufferAL& operator=( const Tr2ConstantBufferAL& ) /* = delete */;
 
 	CcpMallocBuffer	m_shadowCopy;
-	bool			m_debugUsingMirror;
 	Tr2RenderContextEnum::BufferUsage m_usage;
-	bool m_isLocked;
 
 	friend class Tr2RenderContextAL;
 };

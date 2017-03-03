@@ -9,8 +9,8 @@ struct Tr2SubresourceData;
 class Tr2RenderTargetAL;
 
 class Tr2TextureAL :
-public Tr2BitmapDimensions,
-public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
+	public Tr2BitmapDimensions,
+	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
 {
 public:
 	Tr2TextureAL();
@@ -117,18 +117,22 @@ public:
 	{
 		return E_FAIL;
 	}
-	std::shared_ptr<uint8_t> m_data;
 private:
-	bool m_isValid;
-	Tr2RenderContextEnum::LockType m_currentLock;
-	uint32_t m_lockedLevel;
-	uint32_t m_lockedRect[4];
+	size_t GetTextureSize() const;
+	ALResult Create( 
+		Tr2RenderContextEnum::TextureType type,
+		uint32_t width,
+		uint32_t height,
+		uint32_t depth,
+		uint32_t mipLevelCount,
+		uint32_t arrayCount,
+		Tr2RenderContextEnum::PixelFormat format,
+		Tr2RenderContextEnum::BufferUsage usage,
+		Tr2SubresourceData* initialData,
+		Tr2RenderContextAL& renderContext );
+
+	std::shared_ptr<uint8_t> m_data;
 	Tr2RenderContextEnum::BufferUsage m_usage;
-	size_t GetTextureSize();
-	ALResult LoadInitialData( Tr2SubresourceData* initialData );
-
-	uint32_t m_lockedFace;
-
 };
 
 #endif // #if( TRINITY_PLATFORM==TRINITY_STUB )

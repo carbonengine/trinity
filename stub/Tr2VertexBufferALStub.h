@@ -71,8 +71,6 @@ public:
 private:
 	CcpMallocBuffer m_buffer;
 	Tr2RenderContextEnum::BufferUsage m_usage;
-
-
 };
 
 #endif // TRINITY_PLATFORM==TRINITY_STUB

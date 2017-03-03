@@ -22,9 +22,6 @@ private:
 	friend class Tr2RenderTargetAL;
 	uint32_t m_pitch;
 	CcpMallocBuffer m_data;
-	bool m_hasLockedRect;
-	bool m_isLocked;
-	uint32_t m_lockedRect[4];
 };
 
 #endif

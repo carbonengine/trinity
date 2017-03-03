@@ -4,8 +4,8 @@
 #include "Tr2FenceALStub.h"
 
 Tr2FenceAL::Tr2FenceAL()
-:m_isValid(false),
-m_hasFence(false)
+	:m_isValid(false),
+	m_hasFence(false)
 {
 }
 

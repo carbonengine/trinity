@@ -230,8 +230,6 @@ public:
 
 	ITr2RenderContextEvents* m_events;
 	Tr2RenderTargetAL& GetDefaultBackBuffer() { return m_defaultBackBuffer; }
-
-	ALResult ReportIfFailure( long returnCode, const char * message );
 private:
 	enum { MAX_RENDER_TARGET = 8 };
 	const Tr2RenderTargetAL*				m_boundRenderTarget[MAX_RENDER_TARGET];
