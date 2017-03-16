@@ -24,7 +24,7 @@ static char s_dnaSeperatorList = ';';
 // dna commands
 static std::string s_dnaCommands[] = {
 	"invalid",				// CMD_INVALID
-	"mesh",					// CMD_MESH
+	"material",				// CMD_MATERIAL
 	"respathinsert",		// CMD_RESPATHINSERT
 	"variant",				// CMD_VARIANT
 	"class",				// CMD_CLASS
@@ -114,7 +114,7 @@ bool EveSOFDNA::ValidateContent()
 		// now validate the args for every command
 		switch( cmd )
 		{
-		case CMD_MESH:
+		case CMD_MATERIAL:
 			// number of arguments must number of materials
 			if( m_genericData->materialPrefixes.size() != cit->second.size() )
 			{
@@ -840,7 +840,7 @@ const Vector4* EveSOFDNA::GetMeshAreaParameter( EveSOFDataArea::AreaType areaTyp
 
 	// do we have a dna mesh command for this?
 	std::vector<std::string> commandArgs;
-	if( GetDnaCommandArgs( CMD_MESH, commandArgs ) )
+	if( GetDnaCommandArgs( CMD_MATERIAL, commandArgs ) )
 	{
 		// indentify material paramater and material index
 		EveSOFUtilsParameterName param( m_genericData->materialPrefixes, parameterName.c_str() );

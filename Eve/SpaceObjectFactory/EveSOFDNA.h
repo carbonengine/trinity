@@ -33,7 +33,7 @@ public:
 	enum DnaCommand
 	{
 		CMD_INVALID = 0,
-		CMD_MESH,
+		CMD_MATERIAL,
 		CMD_RESPATHINSERT,
 		CMD_VARIANT,
 		CMD_CLASS,
