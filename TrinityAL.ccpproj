@@ -120,14 +120,6 @@ BaseConfigurations:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_STUB
       
-  Android:
-    General:
-      AndroidTargetAPI: android-14
-      TargetExt: .a
-    ClCompile:
-      PreprocessorDefinitions:
-      - TRACK_AL_RESOURCES=0
-
 Configurations:
   Debug_D3D9|Win32,x64:
     BaseConfigurations:
@@ -284,22 +276,6 @@ Configurations:
     - GLES2
     General:
       TargetName: TrinityAL_gles2
-
-  Debug_GLES2|Tegra-Android:
-    BaseConfigurations:
-    - Debug
-    - GLES2
-    - Android
-    General:
-      TargetName: libTrinityAL_gles2_d
-
-  Release_GLES2|Tegra-Android:
-    BaseConfigurations:
-    - Release
-    - GLES2
-    - Android
-    General:
-      TargetName: libTrinityAL_gles2
 
   Debug_Stub|Win32,x64,Mac32,Mac64:
     BaseConfigurations:

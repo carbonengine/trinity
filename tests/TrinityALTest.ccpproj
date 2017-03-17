@@ -237,31 +237,6 @@ Configurations:
     General:
       TargetName: TrinityALTestGLES2_cc
 
-  Debug_GLES2|Tegra-Android:
-    BaseConfigurations:
-    - Debug
-    - GLES2
-    - Android
-    - WithGoogleTest
-    General: 
-      TargetName: libTrinityALTestGLES2_d
-    AntBuild:
-      AndroidManifestLocation: AndroidManifest_d.xml
-
-  Release_GLES2|Tegra-Android:
-    BaseConfigurations:
-    - Release
-    - GLES2
-    - Android
-    - WithGoogleTest
-    General: 
-      TargetName: libTrinityALTestGLES2
-    ClCompile:
-      GenerateDebugInformation: False
-      OptimizationLevel: O3
-    AntBuild:
-      AndroidManifestLocation: AndroidManifest.xml
-
   Dev_STUB|Win32,x64:
     BaseConfigurations:
     - Dev
