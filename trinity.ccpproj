@@ -209,20 +209,6 @@ Configurations:
       PreprocessorDefinitions:
       - TRINITYNAME=_trinity_dx9_internal
 
-  DebugLua|Win32,x64:
-    BaseConfigurations:
-    - Windows
-    - DebugBase
-    - DebugRuntime
-    - D3D9
-    Imports:
-    - ../blue/uses_blue_lua.yaml
-    General:
-      TargetName: _trinity_dx9_internal
-    ClCompile:
-      PreprocessorDefinitions:
-      - TRINITYNAME=_trinity_dx9_internal
-
   Debug11|Win32,x64:
     BaseConfigurations:
     - Windows    
@@ -502,32 +488,6 @@ Configurations:
       - IME_ENABLED=0
       - TBB_ENABLED=1
         
-  DebugGLES2_Lua|Tegra-Android:
-    BaseConfigurations:
-    - DebugBase
-    - GLES2
-    Imports:
-    - ../blue/uses_blue_lua.yaml
-    - ../lua/uses_lua.yaml
-    - ../../../../../../sdk/Granny/2.9.18.0/granny_2.9.18.0.yaml
-    General:
-      TargetName: lib_trinity_gles2_debug
-      AndroidTargetAPI: android-14
-    ClCompile:
-      PreprocessorDefinitions:
-      - PORTING_TO_LINUX
-      - PORTING_MP
-      - EVALUATION_SDKS_ENABLED=0
-      - IME_ENABLED=0
-      - TBB_ENABLED=0
-      - TRINITYNAME=_trinity_gles2_debug
-    Link:
-      AdditionalLibraryDirectories:
-      - ../../autobuild/lua/$(Platform)/$(PlatformToolset)/
-      AdditionalDependencies:
-      - log
-      
-
   Deploy|Win32,x64:
     BaseConfigurations:
     - Windows    
