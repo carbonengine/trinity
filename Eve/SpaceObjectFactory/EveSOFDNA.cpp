@@ -628,9 +628,9 @@ const std::vector<EveSOFDataMgr::LocatorDirectionData>* EveSOFDNA::GetHullLocato
 // Description:
 //   Return an array to all the children of this hull
 // --------------------------------------------------------------------------------
-const std::vector<EveSOFDataMgr::HullChild>& EveSOFDNA::GetHullChildren( size_t n ) const
+const std::vector<EveSOFDataMgr::HullChild>& EveSOFDNA::GetHullChildren() const
 {
-	return m_hullDatas[n]->children;
+	return m_hullDatas[0]->children;
 }
 
 // --------------------------------------------------------------------------------

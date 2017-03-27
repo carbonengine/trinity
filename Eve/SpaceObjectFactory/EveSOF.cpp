@@ -1514,97 +1514,111 @@ void EveSOF::SetupDecals( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	// create and setup all hull decals
-	const std::vector<EveSOFDataMgr::HullDecalData>& hullDecals = dna->GetHullDecals();
-	for( auto hdit = hullDecals.begin(); hdit != hullDecals.end(); ++hdit )
+	// cycle over all hulls in the multi-hull list
+	Vector3 hullOffset( 0.f, 0.f, 0.f );
+	for( size_t hullIdx = 0; hullIdx < dna->GetMultiHullCount(); ++hullIdx )
 	{
-		const EveSOFDataMgr::FactionDecalData* fdd = nullptr;
-
-		// do we have faction data for this decal? comes from groupIndex
-		if( hdit->groupIndex != -1 )
+		// create and setup all hull decals
+		const std::vector<EveSOFDataMgr::HullDecalData>& hullDecals = dna->GetHullDecals( hullIdx );
+		for( auto hdit = hullDecals.begin(); hdit != hullDecals.end(); ++hdit )
 		{
-			fdd = dna->GetFactionDecalData( hdit->groupIndex );
-			if( !( fdd && fdd->isVisible ) )
+			const EveSOFDataMgr::FactionDecalData* fdd = nullptr;
+
+			// do we have faction data for this decal? comes from groupIndex
+			if( hdit->groupIndex != -1 )
+			{
+				fdd = dna->GetFactionDecalData( hdit->groupIndex );
+				if( !( fdd && fdd->isVisible ) )
+				{
+					continue;
+				}
+			}
+
+			// create
+			EveSpaceObjectDecalPtr decal;
+			decal.CreateInstance();
+			// set general datas
+			decal->SetPosition( hdit->position + hullOffset );
+			decal->SetRotation( hdit->rotation );
+			decal->SetScaling( hdit->scaling );
+			decal->SetBoneIndex( hdit->boneIndex );
+
+			// pre-calculated index buffer is only valid for first multi-hull
+			if( hdit->indexBuffer.empty() || hullIdx != 0 )
+			{
+				decal->SetIndices( nullptr, 0 );
+			}
+			else
+			{
+				decal->SetIndices( &hdit->indexBuffer[0], hdit->indexBuffer.size() );
+			}
+
+			// the decal effect
+			Tr2EffectPtr shader;
+			shader.CreateInstance();
+			shader->StartUpdate();
+
+			// shader is hull-only and MUST exist!
+			if( hdit->shader.empty() )
 			{
 				continue;
 			}
-		}
 
-		// create
-		EveSpaceObjectDecalPtr decal;
-		decal.CreateInstance();
-		// set general datas
-		decal->SetPosition( hdit->position );
-		decal->SetRotation( hdit->rotation );
-		decal->SetScaling( hdit->scaling );
-		decal->SetBoneIndex( hdit->boneIndex );
-		if( hdit->indexBuffer.empty() )
-		{
-			decal->SetIndices( nullptr, 0 );
-		}
-		else
-		{
-			decal->SetIndices( &hdit->indexBuffer[0], hdit->indexBuffer.size() );
-		}
+			// construct shader path and set it on the Tr2Effect
+			std::string shaderPath = dna->GetDecalShaderLocationResPath() + std::string( "/" ) + dna->GetShaderPrefix( false ) + hdit->shader;
+			shader->SetEffectPathName( shaderPath.c_str() );
 
-		// the decal effect
-		Tr2EffectPtr shader;
-		shader.CreateInstance();
-		shader->StartUpdate();
-
-		// shader is hull-only and MUST exist!
-		if( hdit->shader.empty() )
-		{
-			continue;
-		}
-
-		// construct shader path and set it on the Tr2Effect
-		std::string shaderPath = dna->GetDecalShaderLocationResPath() + std::string("/") + dna->GetShaderPrefix( false ) + hdit->shader;
-		shader->SetEffectPathName( shaderPath.c_str() );
-
-		// always set hull parameters & textures for this decal
-		for( auto hdpit = hdit->parameters.begin(); hdpit != hdit->parameters.end(); ++hdpit )
-		{
-			shader->AddParameterVector4( hdpit->first, &hdpit->second );
-		}
-		for( auto hdtit = hdit->textures.begin(); hdtit != hdit->textures.end(); ++hdtit )
-		{
-			shader->AddResourceTexture2D( hdtit->first, hdtit->second.resFilePath.c_str() );
-		}
-
-		// then set the factional
-		if( fdd )
-		{
-			for( auto fdpit = fdd->parameters.begin(); fdpit != fdd->parameters.end(); ++fdpit )
+			// always set hull parameters & textures for this decal
+			for( auto hdpit = hdit->parameters.begin(); hdpit != hdit->parameters.end(); ++hdpit )
 			{
-				shader->AddParameterVector4( fdpit->first, &fdpit->second );
+				shader->AddParameterVector4( hdpit->first, &hdpit->second );
 			}
-			for( auto fdtit = fdd->textures.begin(); fdtit != fdd->textures.end(); ++fdtit )
+			for( auto hdtit = hdit->textures.begin(); hdtit != hdit->textures.end(); ++hdtit )
 			{
-				shader->AddResourceTexture2D( fdtit->first, fdtit->second.resFilePath.c_str() );
+				shader->AddResourceTexture2D( hdtit->first, hdtit->second.resFilePath.c_str() );
 			}
+
+			// then set the factional
+			if( fdd )
+			{
+				for( auto fdpit = fdd->parameters.begin(); fdpit != fdd->parameters.end(); ++fdpit )
+				{
+					shader->AddParameterVector4( fdpit->first, &fdpit->second );
+				}
+				for( auto fdtit = fdd->textures.begin(); fdtit != fdd->textures.end(); ++fdtit )
+				{
+					shader->AddResourceTexture2D( fdtit->first, fdtit->second.resFilePath.c_str() );
+				}
+			}
+
+			// find data on this shader from generics, we need it!
+			const EveSOFDataMgr::GenericShaderData* shaderData = dna->GetGenericDecalShaderData( BlueSharedString( hdit->shader ) );
+			if( shaderData )
+			{
+				// default shader textures from the generic data
+				for( auto gtit = shaderData->defaultTextures.begin(); gtit != shaderData->defaultTextures.end(); ++gtit )
+				{
+					shader->AddResourceTexture2D( gtit->first, gtit->second.resFilePath.c_str() );
+				}
+				for( auto gpit = shaderData->defaultParameters.begin(); gpit != shaderData->defaultParameters.end(); ++gpit )
+				{
+					shader->AddParameterVector4( gpit->first, &gpit->second );
+				}
+			}
+
+			// init and add
+			shader->EndUpdate();
+			decal->SetEffect( shader );
+			decal->Initialize();
+			obj->AddDecal( decal );
 		}
 
-		// find data on this shader from generics, we need it!
-		const EveSOFDataMgr::GenericShaderData* shaderData = dna->GetGenericDecalShaderData( BlueSharedString( hdit->shader ) );
-		if( shaderData )
+		// next hull needs offset update from hull's locator
+		const Vector3* nextSubsystemOffset = dna->GetHullNextSubsystemOffset( hullIdx );
+		if( nextSubsystemOffset )
 		{
-			// default shader textures from the generic data
-			for( auto gtit = shaderData->defaultTextures.begin(); gtit != shaderData->defaultTextures.end(); ++gtit )
-			{
-				shader->AddResourceTexture2D( gtit->first, gtit->second.resFilePath.c_str() );
-			}
-			for( auto gpit = shaderData->defaultParameters.begin(); gpit != shaderData->defaultParameters.end(); ++gpit )
-			{
-				shader->AddParameterVector4( gpit->first, &gpit->second );
-			}
+			hullOffset += *nextSubsystemOffset;
 		}
-
-		// init and add
-		shader->EndUpdate();
-		decal->SetEffect( shader );
-		decal->Initialize();
-		obj->AddDecal( decal );
 	}
 }
 

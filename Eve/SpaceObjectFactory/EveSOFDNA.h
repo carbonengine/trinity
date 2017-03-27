@@ -81,10 +81,10 @@ public:
 	const char* GetModelTranslationCurvePath() const;
 	EveSOFDataHull::ImpactEffectType GetImpactEffectType() const;
 	const std::vector<EveSOFDataMgr::HullAreas>* GetHullMeshAreas( TriBatchType type, size_t n ) const;
-	const std::vector<EveSOFDataMgr::HullChild>& GetHullChildren( size_t n = 0 ) const;
+	const std::vector<EveSOFDataMgr::HullChild>& GetHullChildren() const;
 	const std::vector<EveSOFDataMgr::HullInstancedMesh>& GetHullInstancedMeshes( size_t n = 0 ) const;
 	const std::vector<EveSOFDataMgr::HullAnimation>& GetHullAnimations( size_t n = 0 ) const;
-	const std::vector<EveSOFDataMgr::HullDecalData>& GetHullDecals( size_t n = 0 ) const;
+	const std::vector<EveSOFDataMgr::HullDecalData>& GetHullDecals( size_t n ) const;
 	const std::vector<EveSOFDataMgr::HullPlaneSetData>& GetHullPlaneSets( size_t n ) const;
 	const std::vector<EveSOFDataMgr::HullSpotlightSetData>& GetHullSpotlightSets( size_t n ) const;
 	const std::vector<EveSOFDataMgr::HullSpriteSetData>& GetHullSpriteSets( size_t n ) const;
