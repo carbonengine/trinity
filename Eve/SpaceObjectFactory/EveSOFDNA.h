@@ -75,7 +75,7 @@ public:
 	bool DynamicBoundingSphereEnabled() const;
 	const EveSOFDataMgr::HullBoosterData* GetHullBoosterData( size_t n ) const;
 	size_t GetHullBoosterCount() const;
-	const Vector3* GetHullAudioPosition( size_t n = 0 ) const;
+	const Vector3* GetHullAudioPosition( size_t n ) const;
 	std::string GetHullGeometryResPath() const;
 	const char* GetModelRotationCurvePath() const;
 	const char* GetModelTranslationCurvePath() const;
@@ -90,7 +90,7 @@ public:
 	const std::vector<EveSOFDataMgr::HullSpriteSetData>& GetHullSpriteSets( size_t n ) const;
 	const std::vector<EveSOFDataMgr::HullSpriteLineSetData>& GetHullSpriteLineSets( size_t n ) const;
 	const std::vector<EveSOFDataMgr::LocatorData>& GetHullTurretLocators( size_t n ) const;
-	const std::vector<EveSOFDataMgr::LocatorDirectionData>* GetHullLocators( const char* setName, size_t n = 0 ) const;
+	const std::vector<EveSOFDataMgr::LocatorDirectionData>* GetHullLocators( const char* setName, size_t n ) const;
 	const std::vector<BlueSharedString> GetHullLocatorSetNames( size_t n ) const;
 	const Vector3* GetHullNextSubsystemOffset( size_t n ) const;
 
