@@ -32,10 +32,10 @@ void ParserState::AddIntrinsics()
 	m_dx9Functions["AllMemoryBarrierWithGroupSync"] = AddFunction( table, "AllMemoryBarrierWithGroupSync", &FunctionDescription0<TypeIs<OP_VOID>, DimIs<1, 1>> );
 	m_dx9Functions["any"] = AddFunction( table, "any", &FunctionDescription1<TypeIs<OP_BOOL>, DimIs<1, 1>, TypeSameAsArg<0>, DimSameAsArg<0>> );
 	m_dx9Functions["asdouble"] = AddFunction( table, "asdouble", &FunctionDescription2<TypeIs<OP_DOUBLE>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>> );
-	m_dx9Functions["asfloat"] = AddFunction( table, "asfloat", &FunctionDescription1<TypeIs<OP_FLOAT>, DimIs<2, 1>, TypeIs<OP_DOUBLE>, DimIs<1, 1>> );
+	m_dx9Functions["asfloat"] = AddFunction( table, "asfloat", &FunctionDescription1<TypeIs<OP_FLOAT>, DimIs<2, 1>, TypeIs<OP_UINT>, DimIs<1, 1>> );
 	m_dx9Functions["asin"] = AddFunction( table, "asin", &FunctionDescription1<TypeIs<OP_FLOAT>, DimSameAsArg<0>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
 	m_dx9Functions["asint"] = AddFunction( table, "asint", &FunctionDescription1<TypeIs<OP_INT>, DimIs<2, 1>, TypeIs<OP_DOUBLE>, DimIs<1, 1>> );
-	m_dx9Functions["asuint"] = AddFunction( table, "asuint", &FunctionDescription3<TypeIs<OP_VOID>, DimIs<1, 1>, TypeIs<OP_DOUBLE>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>> );
+	m_dx9Functions["asuint"] = AddFunction( table, "asuint", &FunctionDescription3<TypeIs<OP_UINT>, DimIs<1, 1>, TypeIs<OP_DOUBLE>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>, TypeIs<OP_UINT>, DimIs<1, 1>> );
 	m_dx9Functions["atan"] = AddFunction( table, "atan", &FunctionDescription1<TypeIs<OP_FLOAT>, DimSameAsArg<0>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
 	m_dx9Functions["atan2"] = AddFunction( table, "atan2", &FunctionDescription2<TypeIs<OP_FLOAT>, CommonArgDim, TypeIs<OP_FLOAT>, CommonArgDim, TypeIs<OP_FLOAT>, CommonArgDim> );
 	m_dx9Functions["ceil"] = AddFunction( table, "ceil", &FunctionDescription1<TypeIs<OP_FLOAT>, DimSameAsArg<0>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
