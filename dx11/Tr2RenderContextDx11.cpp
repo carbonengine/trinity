@@ -771,12 +771,10 @@ __forceinline uint32_t Tr2RenderContextAL::ComputeVertexCount( uint32_t primitiv
 
 void Tr2RenderContextAL::ApplyReadOnlyDepth() throw()
 {
-	bool isDepthReadOnly = m_useReadOnlyDepthView && 
-		m_renderStateEmulation.m_currentDepthStencil.DepthWriteMask == 0;
 	bool isSrgbRenderTarget = m_allRenderStates[RS_SRGBWRITEENABLE] != 0;
-	if( isDepthReadOnly != m_isDepthReadOnly || isSrgbRenderTarget != m_isSrgbRenderTarget )
+	if( m_useReadOnlyDepthView != m_isDepthReadOnly || isSrgbRenderTarget != m_isSrgbRenderTarget )
 	{
-		m_isDepthReadOnly = isDepthReadOnly;
+		m_isDepthReadOnly = m_useReadOnlyDepthView;
 		m_isSrgbRenderTarget = isSrgbRenderTarget;
 		SetRtDsToDevice( MAX_RENDER_TARGET );
 	}
