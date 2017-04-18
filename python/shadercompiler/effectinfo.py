@@ -338,7 +338,7 @@ class Permutation(object):
 
 
 class ShaderInfo(object):
-    def __init__(self, stream, string_table, version):
+    def __init__(self, stream, string_table, version, options):
         pass_count = stream.read_uint8()
 
         self.passes = []
@@ -356,6 +356,7 @@ class ShaderInfo(object):
         self.uavs = self._extract_parameters('uavs')
         self.resources.update(self.uavs)
         self.samplers = self._extract_samplers()
+        self.options = options
 
     def _extract_parameters(self, stage_attr):
         result = {}
@@ -449,12 +450,12 @@ class EffectInfo(object):
                 multiplier *= len(each.options)
 
             self._stream.seek(self._offsets[index][0])
-        return ShaderInfo(self._stream, self._string_table, self._version)
+        return ShaderInfo(self._stream, self._string_table, self._version, self.index_to_options(permutation))
 
     def index_to_options(self, index):
         options = []
         for each in self.permutations:
-            options.append((each.name, each.options[index % len(each.options)]))
+            options.append((each, each.options[index % len(each.options)]))
             index /= len(each.options)
         return options
 
