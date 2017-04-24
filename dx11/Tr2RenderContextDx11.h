@@ -147,6 +147,7 @@ public:
 	// Set a depth stencil.  Ideally you'd set renderTarget and depthStencil at the same time.
 	ALResult SetDepthStencil( const Tr2DepthStencilAL& depthStencil ) throw();
 	void SetReadOnlyDepth( bool enable ) throw();
+	bool GetReadOnlyDepth() const;
 	ALResult SetRenderTarget( const Tr2RenderTargetAL& renderTarget, uint32_t slot = 0 ) throw();
 	//Tr2RenderTargetAL GetRenderTarget( unsigned slot = 0 );
 

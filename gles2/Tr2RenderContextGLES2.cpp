@@ -897,6 +897,10 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 
 void Tr2RenderContextAL::SetReadOnlyDepth( bool /*enable*/ ) {}
 
+bool Tr2RenderContextAL::GetReadOnlyDepth() const
+{
+	return false;
+}
 ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2DepthStencilAL& depthStencil )
 {
 	if( !IsValid() )

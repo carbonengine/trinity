@@ -191,6 +191,7 @@ public:
 
 	ALResult SetDepthStencil( const Tr2DepthStencilAL& depthStencil );
 	void SetReadOnlyDepth(			bool enable );
+	bool GetReadOnlyDepth() const;
 	ALResult SetRenderTarget( const Tr2RenderTargetAL& renderTarget, uint32_t slot = 0 );
 
 	ALResult SetNumberOfLights(			uint32_t numLights );

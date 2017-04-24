@@ -1273,6 +1273,11 @@ void Tr2RenderContextAL::SetReadOnlyDepth( bool enable )
 	SetRtDsToDevice( MAX_RENDER_TARGET );
 }
 
+bool Tr2RenderContextAL::GetReadOnlyDepth() const
+{
+	return m_useReadOnlyDepthView;
+}
+
 ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2DepthStencilAL& depthStencil )
 {
 	AL_UPDATE_RESOURCE_FRAME_USAGE( depthStencil );
