@@ -29,6 +29,9 @@ public:
 	bool GetDisplay() const;
 	void SetDisplay( bool display );
 
+	bool GetGenerateDepthArea() const;
+	void SetGenerateDepthArea( bool generate );
+
 	bool GetUseSHLighting() const;
 
 	void SetMaterial( ITr2ShaderMaterial* mat );
@@ -58,6 +61,8 @@ private:
 	bool m_reversed;
 	// Does this are require SH lighting instead of "normal" direct lighting
 	bool m_useSHLighting;
+	// in the near future of trinity the shader will know if we need to generate a depth area for it. for now, we have to keep this info
+	bool m_generateDepthArea;
 
 	unsigned int m_jointCount;
 	unsigned int* m_jointMappingAnimRig;

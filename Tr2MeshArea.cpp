@@ -7,10 +7,10 @@ Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
     m_count( 1 ),
 	m_reversed( false ),
 	m_useSHLighting( false ),
+	m_generateDepthArea( false ),
 	m_jointCount( 0 ),
 	m_jointMappingAnimRig( NULL )
 {
-
 }
 
 Tr2MeshArea::~Tr2MeshArea()
@@ -34,6 +34,7 @@ Tr2MeshArea& Tr2MeshArea::operator=( const Tr2MeshArea& other )
 	m_jointMappingAnimRig = NULL;
 	m_display = other.m_display;
 	m_useSHLighting = other.m_useSHLighting;
+	m_generateDepthArea = other.m_generateDepthArea;
 
 	return *this;
 }
@@ -78,6 +79,18 @@ bool Tr2MeshArea::GetDisplay() const
 void Tr2MeshArea::SetDisplay( bool display )
 {
 	m_display = display;
+}
+
+// --------------------------------------------------------------------------------
+bool Tr2MeshArea::GetGenerateDepthArea() const
+{
+	return m_generateDepthArea;
+}
+
+// --------------------------------------------------------------------------------
+void Tr2MeshArea::SetGenerateDepthArea( bool generate )
+{
+	m_generateDepthArea = generate;
 }
 
 // -------------------------------------------------------------

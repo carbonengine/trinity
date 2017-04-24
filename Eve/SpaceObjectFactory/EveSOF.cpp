@@ -326,13 +326,13 @@ void EveSOF::SetupMesh( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 		cntr += FillMeshAreaVector( lodResPerTexture, mesh->GetAreas( TRIBATCHTYPE_DECAL ), TRIBATCHTYPE_DECAL, dna, hullIdx, meshIndexOffset );
 		cntr += FillMeshAreaVector( lodResPerTexture, mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT ), TRIBATCHTYPE_TRANSPARENT, dna, hullIdx, meshIndexOffset );
 		cntr += FillMeshAreaVector( lodResPerTexture, mesh->GetAreas( TRIBATCHTYPE_ADDITIVE ), TRIBATCHTYPE_ADDITIVE, dna, hullIdx, meshIndexOffset );
-		cntr += FillMeshAreaVector( lodResPerTexture, mesh->GetAreas( TRIBATCHTYPE_DEPTH ), TRIBATCHTYPE_DEPTH, dna, hullIdx, meshIndexOffset );
 		cntr += FillMeshAreaVector( lodResPerTexture, mesh->GetAreas( TRIBATCHTYPE_DISTORTION ), TRIBATCHTYPE_DISTORTION, dna, hullIdx, meshIndexOffset );
 		meshIndexOffset += cntr;
 	}
 
-	// decal areas need an accompanying depth area
-	GenerateDepthFromDecalArea( mesh, dna );
+	// some areas need an accompanying depth area
+	GenerateDepthFromAreaVector( mesh, mesh->GetAreas( TRIBATCHTYPE_DECAL ), dna );
+	GenerateDepthFromAreaVector( mesh, mesh->GetAreas( TRIBATCHTYPE_TRANSPARENT ), dna );
 
 	// register all used lodresource objects with the new mesh
 	for( auto it = lodResPerTexture.begin(); it != lodResPerTexture.end(); ++it )
@@ -348,33 +348,36 @@ void EveSOF::SetupMesh( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 }
 
 // --------------------------------------------------------------------------------
-void EveSOF::GenerateDepthFromDecalArea( Tr2MeshLodPtr mesh, const EveSOFDNAPtr dna ) const
+void EveSOF::GenerateDepthFromAreaVector( Tr2MeshLodPtr mesh, const Tr2MeshAreaVector* meshAreaVector, const EveSOFDNAPtr dna ) const
 {
 	Tr2MeshAreaVector* depthAreas = mesh->GetAreas( TRIBATCHTYPE_DEPTH );
-	Tr2MeshAreaVector* decalAreas = mesh->GetAreas( TRIBATCHTYPE_DECAL );
-	for( auto da = decalAreas->begin(); da != decalAreas->end(); ++da )
+	if( depthAreas )
 	{
-		Tr2MeshAreaPtr ma;
-		BeClasses->CopyTo( *da, (IRoot**)&ma );
-
-		Tr2Effect* destShader = dynamic_cast<Tr2Effect*>( ma->GetMaterialInterface() );
-		Tr2Effect* srcShader = dynamic_cast<Tr2Effect*>( ( *da )->GetMaterialInterface() );
-		if( destShader && srcShader )
+		for( auto srcMeshArea = meshAreaVector->begin(); srcMeshArea != meshAreaVector->end(); ++srcMeshArea )
 		{
-			const EveSOFDataMgr::GenericShaderData* depthOnlyShaderData = dna->GetGenericAreaShaderData( m_depthOnlyEffectName );
-			if( depthOnlyShaderData )
+			if( ( *srcMeshArea )->GetGenerateDepthArea() )
 			{
-				destShader->SetEffectPathName( dna->GetCompleteShaderPath( m_depthOnlyEffectName.c_str() ).c_str() );
-				destShader->SetOption( BlueSharedString( "OPT_APLHA_CLIP" ), BlueSharedString( "ALPHA_CLIP_ENABLED" ) );
-				destShader->ClearAllParameters();
-				destShader->ClearAllResources();
+				Tr2MeshAreaPtr destMeshArea;
+				BeClasses->CopyTo( *srcMeshArea, (IRoot**)&destMeshArea );
 
-				ITriEffectParameter* p = srcShader->GetResourceByName( depthOnlyShaderData->transparencyTextureName.c_str() );
-				destShader->AddResource( p );
+				Tr2Effect* destShader = dynamic_cast<Tr2Effect*>( destMeshArea->GetMaterialInterface() );
+				Tr2Effect* srcShader = dynamic_cast<Tr2Effect*>( ( *srcMeshArea )->GetMaterialInterface() );
+				if( destShader && srcShader )
+				{
+					const EveSOFDataMgr::GenericShaderData* depthOnlyShaderData = dna->GetGenericAreaShaderData( m_depthOnlyEffectName );
+					if( depthOnlyShaderData )
+					{
+						destShader->SetEffectPathName( dna->GetCompleteShaderPath( m_depthOnlyEffectName.c_str() ).c_str() );
+						destShader->ClearAllParameters();
+						destShader->ClearAllResources();
+
+						ITriEffectParameter* p = srcShader->GetResourceByName( depthOnlyShaderData->transparencyTextureName.c_str() );
+						destShader->AddResource( p );
+					}
+				}
+				depthAreas->Append( destMeshArea );
 			}
 		}
-
-		depthAreas->Append( ma );
 	}
 }
 
@@ -489,6 +492,7 @@ size_t EveSOF::FillMeshAreaVector( std::map<std::string, Tr2LodResourcePtr>& lod
 		// new mesharea
 		Tr2MeshAreaPtr newMeshArea;
 		newMeshArea.CreateInstance();
+		newMeshArea->SetGenerateDepthArea( shaderData->doGenerateDepthArea );
 		newMeshArea->SetMaterial( newShader );
 		newMeshArea->SetIndex( area->index + (unsigned int)meshIndexOffset );
 		newMeshArea->SetCount( area->count );
