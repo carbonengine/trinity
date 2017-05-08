@@ -27,7 +27,7 @@ BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 	virtual void UpdateCurveSet( const std::string& name, Be::Time time ) {};
 	virtual float GetCurveSetDuration( const std::string& name ) const = 0;
 	
-	virtual bool IsAlwaysOn() { return false; };	
+	virtual bool IsAlwaysOn() const { return false; };	
 
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) = 0;
 
