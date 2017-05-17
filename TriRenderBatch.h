@@ -66,7 +66,14 @@ public:
 
 	virtual unsigned int GetPickingData() const { return 0; }
 
-	virtual bool RenderWithOverride( void ) const { return true; }
+	enum OverrideOptions
+	{
+		RENDER_WITH_OVERRIDE,
+		DO_NOT_RENDER_WITH_OVERRIDE,
+		DO_NOT_USE_OVERRIDE_SHADERS,
+	};
+
+	virtual OverrideOptions RenderWithOverride( void ) const { return RENDER_WITH_OVERRIDE; }
 
 	// Set rendering mode (expected render state) for batch
 	void SetRenderingMode( Tr2EffectStateManager::RenderingMode mode ) 

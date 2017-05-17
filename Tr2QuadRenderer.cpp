@@ -22,6 +22,11 @@ public:
 		m_pool->SubmitGeometry( m_key, renderContext );
 	}
 
+	OverrideOptions RenderWithOverride( void ) const 
+	{ 
+		return DO_NOT_USE_OVERRIDE_SHADERS;
+	}
+
 	Tr2QuadRenderer* m_pool;
 	Tr2QuadRenderer::EffectKey m_key;
 };

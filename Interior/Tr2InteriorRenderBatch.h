@@ -164,7 +164,7 @@ public:
 	// Draws the background cubemap using the specified effect
 	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 	// Don't render with override effects
-	virtual bool RenderWithOverride( void ) const { return false; }
+	virtual OverrideOptions RenderWithOverride( void ) const { return DO_NOT_RENDER_WITH_OVERRIDE; }
 
 	// For debugging in PIX
 	virtual const std::string& GetBatchTypeName( void ) const
