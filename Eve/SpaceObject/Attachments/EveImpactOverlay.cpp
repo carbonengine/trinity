@@ -553,7 +553,7 @@ void EveImpactOverlay::SetDamageState( float shield, float armor, float hull, bo
 	// do we forcefully have to create the amror impact holes?
 	if( doCreateArmorImpacts )
 	{
-		for( size_t i = m_shieldImpactData.size(); i < m_armorImpactGoalCount; ++i )
+		for( size_t i = m_armorImpactData.size(); i < m_armorImpactGoalCount; ++i )
 		{
 			CreateArmorImpact( (int)i, 0.2f + 0.8f * TriRand(), m_debugForceSpawnDebris );
 		}
