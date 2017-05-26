@@ -851,18 +851,20 @@ Vector4 EveSOFDNA::GetHullBoundingSphere() const
 // Description:
 //   Return a pointer to the center of this hull's shape ellipsoid
 // --------------------------------------------------------------------------------
-const Vector3* EveSOFDNA::GetHullShapeEllipsoidCenter( size_t n ) const
+const Vector3* EveSOFDNA::GetHullShapeEllipsoidCenter() const
 {
-	return &m_hullDatas[n]->shapeEllipsoidCenter;
+	// if multi-hull the ellipsoid is dynamically generated later
+	return ( m_hullDatas.size() == 1 ) ? &m_hullDatas[0]->shapeEllipsoidCenter : nullptr;
 }
 
 // --------------------------------------------------------------------------------
 // Description:
 //   Return a pointer to the radiuses of this hull's shape ellipsoid
 // --------------------------------------------------------------------------------
-const Vector3* EveSOFDNA::GetHullShapeEllipsoidRadius( size_t n ) const
+const Vector3* EveSOFDNA::GetHullShapeEllipsoidRadius() const
 {
-	return &m_hullDatas[n]->shapeEllipsoidRadius;
+	// if multi-hull the ellipsoid is dynamically generated later
+	return ( m_hullDatas.size() == 1 ) ? &m_hullDatas[0]->shapeEllipsoidRadius : nullptr;
 }
 
 // --------------------------------------------------------------------------------
@@ -889,7 +891,7 @@ bool EveSOFDNA::IsHullAnimated() const
 // --------------------------------------------------------------------------------
 bool EveSOFDNA::DynamicBoundingSphereEnabled() const
 {
-	return m_hullDatas[0]->enableDynamicBoundingSphere;
+	return ( m_hullDatas.size() > 1 ) || ( m_hullDatas[0]->enableDynamicBoundingSphere );
 }
 
 // --------------------------------------------------------------------------------

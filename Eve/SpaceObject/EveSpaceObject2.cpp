@@ -2554,12 +2554,12 @@ void EveSpaceObject2::GetShapeEllipsoid( Vector3& center, Vector3& radius )
 // --------------------------------------------------------------------------------
 // Description:
 //   Set the user-authored shape ellipsoid. This will be used instead of the
-//   dynamically generated
+//   dynamically generated. Can accept nullptr
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::SetShapeEllipsoid( const Vector3* center, const Vector3* radius )
 {
-	m_shapeEllipsoidCenter = *center;
-	m_shapeEllipsoidRadius = *radius;
+	m_shapeEllipsoidCenter = ( center != nullptr ) ? *center : Vector3( 0.f, 0.f, 0.f );
+	m_shapeEllipsoidRadius = ( radius != nullptr ) ? *radius : Vector3( 0.f, 0.f, 0.f );
 }
 
 // --------------------------------------------------------------------------------

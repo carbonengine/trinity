@@ -69,8 +69,8 @@ public:
 	size_t GetMultiHullCount() const;
 	EveSOFDataHull::BuildClass GetBuildClass() const;
 	Vector4 GetHullBoundingSphere() const;
-	const Vector3* GetHullShapeEllipsoidCenter( size_t n = 0 ) const;
-	const Vector3* GetHullShapeEllipsoidRadius( size_t n = 0 ) const;
+	const Vector3* GetHullShapeEllipsoidCenter() const;
+	const Vector3* GetHullShapeEllipsoidRadius() const;
 	bool IsHullAnimated() const;
 	bool DynamicBoundingSphereEnabled() const;
 	const EveSOFDataMgr::HullBoosterData* GetHullBoosterData( size_t n ) const;
