@@ -501,6 +501,9 @@
     <ClInclude Include="Curves\Tr2CurveScalar.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
+    <ClInclude Include="Curves\Tr2CurveScalarExpression.h">
+      <Filter>Source Files\Curves</Filter>
+    </ClInclude>
     <ClInclude Include="Curves\Tr2CurveVector3.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
@@ -2161,6 +2164,12 @@
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
     <ClCompile Include="Curves\Tr2CurveScalar.cpp">
+      <Filter>Source Files\Curves</Filter>
+    </ClCompile>
+    <ClCompile Include="Curves\Tr2CurveScalarExpression.cpp">
+      <Filter>Source Files\Curves</Filter>
+    </ClCompile>
+    <ClCompile Include="Curves\Tr2CurveScalarExpression_Blue.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
     <ClCompile Include="Curves\Tr2CurveScalar_Blue.cpp">
