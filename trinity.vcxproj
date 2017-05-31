@@ -2823,6 +2823,7 @@
     <ClInclude Include="Curves\Tr2CurveRandomAxisRotation.h"/>
     <ClInclude Include="Curves\Tr2CurveScalar.h"/>
     <ClInclude Include="Curves\Tr2CurveScalarExpression.h"/>
+    <ClInclude Include="Curves\Tr2CurveVector2.h"/>
     <ClInclude Include="Curves\Tr2CurveVector3.h"/>
     <ClInclude Include="Curves\Tr2DistanceTracker.h"/>
     <ClInclude Include="Curves\Tr2EulerRotation.h"/>
@@ -3388,6 +3389,8 @@
     <ClCompile Include="Curves\Tr2CurveScalarExpression.cpp"/>
     <ClCompile Include="Curves\Tr2CurveScalarExpression_Blue.cpp"/>
     <ClCompile Include="Curves\Tr2CurveScalar_Blue.cpp"/>
+    <ClCompile Include="Curves\Tr2CurveVector2.cpp"/>
+    <ClCompile Include="Curves\Tr2CurveVector2_Blue.cpp"/>
     <ClCompile Include="Curves\Tr2CurveVector3.cpp"/>
     <ClCompile Include="Curves\Tr2CurveVector3_Blue.cpp"/>
     <ClCompile Include="Curves\Tr2DistanceTracker.cpp"/>
