@@ -507,6 +507,9 @@
     <ClInclude Include="Curves\Tr2CurveEulerRotationExpression.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
+    <ClInclude Include="Curves\Tr2CurveQuaternion.h">
+      <Filter>Source Files\Curves</Filter>
+    </ClInclude>
     <ClInclude Include="Curves\Tr2CurveRandomAxisRotation.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
@@ -2203,6 +2206,12 @@
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
     <ClCompile Include="Curves\Tr2CurveEulerRotation_Blue.cpp">
+      <Filter>Source Files\Curves</Filter>
+    </ClCompile>
+    <ClCompile Include="Curves\Tr2CurveQuaternion.cpp">
+      <Filter>Source Files\Curves</Filter>
+    </ClCompile>
+    <ClCompile Include="Curves\Tr2CurveQuaternion_Blue.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
     <ClCompile Include="Curves\Tr2CurveRandomAxisRotation.cpp">

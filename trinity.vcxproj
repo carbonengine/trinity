@@ -2822,6 +2822,7 @@
     <ClInclude Include="Curves\Tr2CurveConstant.h"/>
     <ClInclude Include="Curves\Tr2CurveEulerRotation.h"/>
     <ClInclude Include="Curves\Tr2CurveEulerRotationExpression.h"/>
+    <ClInclude Include="Curves\Tr2CurveQuaternion.h"/>
     <ClInclude Include="Curves\Tr2CurveRandomAxisRotation.h"/>
     <ClInclude Include="Curves\Tr2CurveScalar.h"/>
     <ClInclude Include="Curves\Tr2CurveScalarExpression.h"/>
@@ -3392,6 +3393,8 @@
     <ClCompile Include="Curves\Tr2CurveEulerRotationExpression.cpp"/>
     <ClCompile Include="Curves\Tr2CurveEulerRotationExpression_Blue.cpp"/>
     <ClCompile Include="Curves\Tr2CurveEulerRotation_Blue.cpp"/>
+    <ClCompile Include="Curves\Tr2CurveQuaternion.cpp"/>
+    <ClCompile Include="Curves\Tr2CurveQuaternion_Blue.cpp"/>
     <ClCompile Include="Curves\Tr2CurveRandomAxisRotation.cpp"/>
     <ClCompile Include="Curves\Tr2CurveRandomAxisRotation_Blue.cpp"/>
     <ClCompile Include="Curves\Tr2CurveScalar.cpp"/>
