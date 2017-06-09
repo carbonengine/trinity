@@ -39,7 +39,7 @@ private:
 	PTr2CurveScalar m_x;
 	PTr2CurveScalar m_y;
 
-	Vector3 m_currentValue;
+	Vector2 m_currentValue;
 };
 
 TYPEDEF_BLUECLASS( Tr2CurveVector2 );
