@@ -13,7 +13,7 @@
 
 BLUE_CLASS( Tr2CurveVector3 ):
 	public ITriCurveLength,
-	public ITriFunction
+	public ITriVectorFunction
 {
 public:
 	Tr2CurveVector3( IRoot* lockobj = nullptr );
@@ -33,6 +33,17 @@ public:
 		Be::Optional<Vector3> leftTangent,
 		Be::Optional<Vector3> rightTangent,
 		Be::OptionalWithDefaultValue<Tr2CurveTangentType::Type, Tr2CurveTangentType::AUTO_CLAMP> tangentType );
+
+	virtual Vector3* Update( Vector3* in, Be::Time time );
+	virtual Vector3* Update( Vector3* in, double time );
+	virtual Vector3* GetValueAt( Vector3* in, Be::Time time );
+	virtual Vector3* GetValueAt( Vector3* in, double time );
+	virtual Vector3* GetValueDotAt( Vector3* in, Be::Time time );
+	virtual Vector3* GetValueDotAt( Vector3* in, double time );
+	virtual Vector3* GetValueDoubleDotAt( Vector3* in, Be::Time time );
+	virtual Vector3* GetValueDoubleDotAt( Vector3* in, double time );
+	virtual Vector3d* InterpolatedPosition( Vector3d* out, Be::Time time );
+
 private:
 	std::string m_name;
 

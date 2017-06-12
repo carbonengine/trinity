@@ -14,6 +14,7 @@ const Be::ClassInfo* Tr2CurveVector3::ExposeToBlue()
 	EXPOSURE_BEGIN( Tr2CurveVector3, ":jessica-icon: tree/trivectorcurve.png" )
 		MAP_INTERFACE( Tr2CurveVector3 )
 		MAP_INTERFACE( ITriFunction )
+		MAP_INTERFACE( ITriVectorFunction )
 		MAP_INTERFACE( ITriCurveLength )
 
 		MAP_ATTRIBUTE(

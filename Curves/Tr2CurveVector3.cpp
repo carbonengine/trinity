@@ -49,3 +49,63 @@ void Tr2CurveVector3::AddKey(
 	m_y.AddKey( time, value.y, interpolation, lt.y, rt.y, tangentType );
 	m_z.AddKey( time, value.z, interpolation, lt.z, rt.z, tangentType );
 }
+
+// --------------------------------------------------------------------------------
+Vector3* Tr2CurveVector3::Update( Vector3* in, Be::Time time )
+{
+	m_currentValue = GetValue( TimeAsDouble( time ) );
+	*in = m_currentValue;
+	return in;
+}
+
+// --------------------------------------------------------------------------------
+Vector3* Tr2CurveVector3::Update( Vector3* in, double time )
+{
+	m_currentValue = GetValue( time );
+	*in = m_currentValue;
+	return in;
+}
+
+// --------------------------------------------------------------------------------
+Vector3* Tr2CurveVector3::GetValueAt( Vector3* in, Be::Time time )
+{
+	*in = GetValue( TimeAsDouble( time ) );
+	return in;
+}
+
+// --------------------------------------------------------------------------------
+Vector3* Tr2CurveVector3::GetValueAt( Vector3* in, double time )
+{
+	*in = GetValue( time );
+	return in;
+}
+
+// --------------------------------------------------------------------------------
+Vector3* Tr2CurveVector3::GetValueDotAt( Vector3* in, Be::Time )
+{
+	return in;
+}
+
+// --------------------------------------------------------------------------------
+Vector3* Tr2CurveVector3::GetValueDotAt( Vector3* in, double )
+{
+	return in;
+}
+
+// --------------------------------------------------------------------------------
+Vector3* Tr2CurveVector3::GetValueDoubleDotAt( Vector3* in, Be::Time )
+{
+	return in;
+}
+
+// --------------------------------------------------------------------------------
+Vector3* Tr2CurveVector3::GetValueDoubleDotAt( Vector3* in, double )
+{
+	return in;
+}
+
+// --------------------------------------------------------------------------------
+Vector3d* Tr2CurveVector3::InterpolatedPosition( Vector3d* out, Be::Time )
+{
+	return out;
+}
