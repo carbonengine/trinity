@@ -890,14 +890,14 @@ bool Tr2GrannyAnimation::IsInitialized() const
 	return m_baseLayer.m_modelInstance != nullptr;
 }
 
-void Tr2GrannyAnimation::AddAnimationLayer( const char* layerName )
+void Tr2GrannyAnimation::AddAnimationLayer( const char* layerName, float layerWeight )
 {
 	if( GetAnimationLayer( layerName ) )
 	{
 		return;
 	}
 
-	Tr2GrannyAnimationLayer layer;
+	Tr2GrannyAnimationLayer layer( 0.f, layerWeight );
 	layer.m_name = layerName;
 	m_animationLayers[layerName] = layer;
 
@@ -911,6 +911,23 @@ void Tr2GrannyAnimation::AddAnimationLayer( const char* layerName )
 		m_compositePose = GrannyNewLocalPose( m_skeleton->BoneCount );
 	}
 	GetAnimationLayer( layerName )->InitializeAnimationLayer( this );
+}
+
+float Tr2GrannyAnimation::GetLayerWeight(const char* layerName)
+{
+	if ( GetAnimationLayer( layerName ) )
+	{
+		return GetAnimationLayer( layerName )->GetLayerWeight();
+	}
+	return 0.f;
+}
+
+void Tr2GrannyAnimation::SetLayerWeight( const char* layerName, float layerWeight )
+{
+	if ( GetAnimationLayer( layerName ) )
+	{
+		return GetAnimationLayer( layerName )->SetLayerWeight( layerWeight );
+	}
 }
 
 void Tr2GrannyAnimation::AddAnimationLayerWithTrackMask( const char* layerName, const char* trackMask )

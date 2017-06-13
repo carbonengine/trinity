@@ -112,9 +112,10 @@ const Be::ClassInfo* Tr2GrannyAnimation::ExposeToBlue()
 		(
 			"AddAnimationLayer",
 			AddAnimationLayer,
-			"AddAnimationLayer( layerName )\n\n"
+			"AddAnimationLayer( layerName[, layerWeight=1.0] )\n\n"
 			"Creates a new animation layer for this granny animation.\n"
 			":param layerName: layer name\n"
+			":param layerWeight: layer weight\n"
 		)
 		MAP_METHOD_AND_WRAP
 		(
@@ -124,6 +125,23 @@ const Be::ClassInfo* Tr2GrannyAnimation::ExposeToBlue()
 			"Add the specified bone to this animation layer.\n"
 			":param layerName: layer name\n"
 			":param boneName: bone name\n"
+		)
+		MAP_METHOD_AND_WRAP
+		(
+			"GetLayerWeight",
+			GetLayerWeight,
+			"GetLayerWeight( layerName )\n\n"
+			"Returns a scalar float weight for the named layer.\n"
+			":param layerName: layer name\n"
+		)
+		MAP_METHOD_AND_WRAP
+		(
+			"SetLayerWeight",
+			SetLayerWeight,
+			"SetLayerWeight( layerName, layerWeight )\n\n"
+			"Sets layer blend weight for an existing layer.\n"
+			":param layerName: layer name\n"
+			":param layerWeight: layer weight\n"
 		)
 		MAP_METHOD_AND_WRAP
 		(

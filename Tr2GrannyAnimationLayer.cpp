@@ -10,7 +10,8 @@ Tr2GrannyAnimationLayer::Tr2GrannyAnimationLayer() :
 	m_trackMask( nullptr ),
 	m_trackMaskName( nullptr ),
 	m_defaultBoneWeight( 0.f ),
-	m_boneCount( 0 )
+	m_boneCount( 0 ),
+	m_layerWeight( 1.f )
 {
 }
 
@@ -19,7 +20,18 @@ Tr2GrannyAnimationLayer::Tr2GrannyAnimationLayer( float defaultBoneWeight ) :
 	m_trackMask( nullptr ),
 	m_trackMaskName( nullptr ),
 	m_defaultBoneWeight( defaultBoneWeight ),
-	m_boneCount( 0 )
+	m_boneCount( 0 ),
+	m_layerWeight( 1.f )
+{
+}
+
+Tr2GrannyAnimationLayer::Tr2GrannyAnimationLayer( float defaultBoneWeight, float layerWeight ) :
+	m_modelInstance( nullptr ),
+	m_trackMask( nullptr ),
+	m_trackMaskName( nullptr ),
+	m_defaultBoneWeight( defaultBoneWeight ),
+	m_boneCount( 0 ),
+	m_layerWeight( layerWeight )
 {
 }
 
@@ -256,8 +268,9 @@ void Tr2GrannyAnimationLayer::SampleAnimation( float animationTime, granny_local
 	SampleTextTracks( listener );
 	FreeCompletedControls();
 	GrannySampleModelAnimations( m_modelInstance, 0, m_boneCount, compositePose );
-	GrannyModulationCompositeLocalPose( resultPose, 0, 1, m_trackMask, compositePose );
+	GrannyModulationCompositeLocalPose( resultPose, 0, m_layerWeight, m_trackMask, compositePose );
 }
+
 
 void Tr2GrannyAnimationLayer::FreeCompletedControls()
 {
@@ -382,4 +395,14 @@ void Tr2GrannyAnimationLayer::RemoveBone( const Tr2GrannyAnimation* grannyAnimat
 	}
 
 	GrannySetTrackMaskBoneWeight( m_trackMask, boneIndex, 0.0 );
+}
+
+float Tr2GrannyAnimationLayer::GetLayerWeight() const
+{
+	return m_layerWeight;
+}
+
+void Tr2GrannyAnimationLayer::SetLayerWeight(float layerWeight)
+{
+	m_layerWeight = layerWeight;
 }

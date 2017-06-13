@@ -48,11 +48,13 @@ public:
 	void	ClearAnimations();
 	float	GetAnimationChainCompleteTime();
 
-	void AddAnimationLayer( const char* layerName );
+	void AddAnimationLayer( const char* layerName, float layerWeight=1.0f );
 	void AddAnimationLayerBone( const char* layerName, const char* boneName );
 	void RemoveAnimationLayerBone( const char* layerName, const char* boneName );
 	void AddAnimationLayerWithTrackMask( const char* layerName, const char* trackMask );
 	float GetAnimationChainCompleteTimeForLayer( const char* layerName );
+	float GetLayerWeight( const char* layerName );
+	void SetLayerWeight (const char* layerName, float layerWeight );
 
 	void PlayAnimationOnce( const char* animName );
 	void PlayAnimationEx( const char* animName, int loopCount, float delay, float speed );
@@ -111,6 +113,7 @@ private:
 	granny_local_pose *m_localPose;
 	granny_local_pose *m_compositePose;
 	std::map<std::string, Tr2GrannyAnimationLayer> m_animationLayers;
+	std::map<std::string, float> m_animationLayerWeights;
 	Tr2GrannyAnimationLayer m_baseLayer;
 
 	typedef TrackableStdVector<std::string> BoneList_t;

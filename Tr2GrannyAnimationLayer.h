@@ -26,6 +26,7 @@ class Tr2GrannyAnimationLayer
 public:
 	Tr2GrannyAnimationLayer();
 	Tr2GrannyAnimationLayer( float defaultBoneWeight );
+	Tr2GrannyAnimationLayer( float defaultBoneWeight, float layerWeight );
 
 	bool PlayAnimation( const Tr2GrannyAnimation* grannyAnimation, const char* animName, bool replace, int loopCount, float delay, float speed, bool clearWhenDone );
 	void QueueAnimation( const char* animName, bool replace, int loopCount, float delay, float speed, bool clearWhenDone );
@@ -42,6 +43,9 @@ public:
 	void AddBone( const Tr2GrannyAnimation* grannyAnimation, const char* name );
 	void RemoveBone( const Tr2GrannyAnimation* grannyAnimation, const char* name );
 	void ExtractTrackMask( const Tr2GrannyAnimation* grannyAnimation, const char* name );
+
+	float GetLayerWeight() const;
+	void SetLayerWeight(float layerWeight);
 	
 	std::string m_name;
 	
@@ -69,6 +73,7 @@ private:
 
 	int m_boneCount;
 	float m_defaultBoneWeight;
+	float m_layerWeight;
 
 	const char* m_trackMaskName;
 };
