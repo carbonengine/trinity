@@ -74,6 +74,8 @@ private:
 	Tr2PointLightPtr m_sourceLight;
 	Tr2PointLightPtr m_destinationLight;
 
+	std::string m_name;
+
 	Vector3 m_source;
 	float m_currentDestinationScale;
 	Vector3 m_destination;

@@ -21,6 +21,14 @@ const Be::ClassInfo* EveStretch2::ExposeToBlue()
 
 		MAP_ATTRIBUTE
 		(
+			"name",
+			m_name,
+			"",
+			Be::READWRITE | Be::PERSIST
+		)
+
+		MAP_ATTRIBUTE
+		(
 			"effect",
 			m_effect,
 			"Effect to use for the stretch",
