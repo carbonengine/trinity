@@ -1482,7 +1482,6 @@
 			children = (
 				000009E0000044b827000cae,
 				000009CA000044b827000cae,
-				000009EE000044b827000cae,
 				000009E2000044b827000cae,
 				000009CC000044b827000cae,
 				000009E4000044b827000cae,
@@ -1497,12 +1496,12 @@
 				000009F8000044b827000cae,
 				000009DA000044b827000cae,
 				000009D0000044b827000cae,
-				000009DC000044b827000cae,
+				000009EE000044b827000cae,
 				000009D2000044b827000cae,
+				000009DC000044b827000cae,
 				000009DE000044b827000cae,
 				000009CA000044b827000cae,
 				000009D6000044b827000cae,
-				000009EE000044b827000cae,
 				000009E2000044b827000cae,
 				000009D4000044b827000cae,
 				000009E4000044b827000cae,
@@ -1516,14 +1515,14 @@
 				000009EA000044b827000cae,
 				000009EC000044b827000cae,
 				000009F8000044b827000cae,
-				000009DA000044b827000cae,
-				000009DC000044b827000cae,
-				000009D2000044b827000cae,
-				000009DE000044b827000cae,
 				000009CC000044b827000cae,
+				000009DA000044b827000cae,
+				000009EE000044b827000cae,
+				000009D2000044b827000cae,
+				000009DC000044b827000cae,
+				000009DE000044b827000cae,
 				000009E0000044b827000cae,
 				000009CA000044b827000cae,
-				000009EE000044b827000cae,
 				000009E2000044b827000cae,
 				000009D4000044b827000cae,
 				000009D6000044b827000cae,
@@ -1536,11 +1535,12 @@
 				000009EA000044b827000cae,
 				000009EC000044b827000cae,
 				000009F8000044b827000cae,
-				000009DA000044b827000cae,
-				000009DC000044b827000cae,
-				000009D2000044b827000cae,
-				000009DE000044b827000cae,
 				000009CC000044b827000cae,
+				000009DA000044b827000cae,
+				000009EE000044b827000cae,
+				000009D2000044b827000cae,
+				000009DC000044b827000cae,
+				000009DE000044b827000cae,
 				);
 			name = Dependencies;
 			};
@@ -6769,7 +6769,7 @@
 					"../../../../../../sdk/libpng/1.4.0/include",
 					"../../../../../../sdk/libjpg/jpeg-8c",
 					"../../../../../../sdk/squish/1.10/include",
-					"../../../../../../sdk/muparser/v1.30/include",
+					"../../../../../../sdk/muparser/v2.2.5/include",
 					"../../../../../../sdk/freetype/2.4.6/include",
 					.,
 					..,
@@ -6822,7 +6822,7 @@
 					"../../../../../../sdk/libjpg/jpeg-8c/lib/MacOsX$(ARCHS)",
 					"../../autobuild/ImageIO/MacOsX$(ARCHS)/clang4.2/",
 					"../../../carbon/autobuild/CcpMath/MacOsX$(ARCHS)/clang4.2/",
-					"../../../../../../sdk/muparser/v1.30/lib_vc10/MacOsX$(ARCHS)",
+					"../../../../../../sdk/muparser/v2.2.5/lib/MacOsX$(ARCHS)/clang4.2",
 					"../../../../../../sdk/freetype/2.4.6/lib/MacOsX$(ARCHS)/vc2010",
 					);
 				SYMROOT = "../../autobuild/trinity/exefile/MacOsX$(ARCHS)/clang4.2";
@@ -7521,7 +7521,7 @@
 					"../../../../../../sdk/libpng/1.4.0/include",
 					"../../../../../../sdk/libjpg/jpeg-8c",
 					"../../../../../../sdk/squish/1.10/include",
-					"../../../../../../sdk/muparser/v1.30/include",
+					"../../../../../../sdk/muparser/v2.2.5/include",
 					"../../../../../../sdk/freetype/2.4.6/include",
 					.,
 					..,
@@ -7574,7 +7574,7 @@
 					"../../../../../../sdk/libjpg/jpeg-8c/lib/MacOsX$(ARCHS)",
 					"../../autobuild/ImageIO/MacOsX$(ARCHS)/clang4.2/",
 					"../../../carbon/autobuild/CcpMath/MacOsX$(ARCHS)/clang4.2/",
-					"../../../../../../sdk/muparser/v1.30/lib_vc10/MacOsX$(ARCHS)",
+					"../../../../../../sdk/muparser/v2.2.5/lib/MacOsX$(ARCHS)/clang4.2",
 					"../../../../../../sdk/freetype/2.4.6/lib/MacOsX$(ARCHS)/vc2010",
 					);
 				SYMROOT = "../../autobuild/trinity/python_27/MacOsX$(ARCHS)/clang4.2";
@@ -8741,7 +8741,6 @@
 			files = (
 				000009DF000044b827000cae,
 				000009C9000044b827000cae,
-				000009ED000044b827000cae,
 				000009E1000044b827000cae,
 				000009D3000044b827000cae,
 				000009D5000044b827000cae,
@@ -8754,11 +8753,12 @@
 				000009E9000044b827000cae,
 				000009EB000044b827000cae,
 				000009F7000044b827000cae,
-				000009D9000044b827000cae,
-				000009DB000044b827000cae,
-				000009D1000044b827000cae,
-				000009DD000044b827000cae,
 				000009CB000044b827000cae,
+				000009D9000044b827000cae,
+				000009ED000044b827000cae,
+				000009D1000044b827000cae,
+				000009DB000044b827000cae,
+				000009DD000044b827000cae,
 				);
 			buildActionMask = 2147483647;
 			isa = PBXFrameworksBuildPhase;
@@ -9856,7 +9856,6 @@
 			files = (
 				000009C9000044b827000cae,
 				000009D5000044b827000cae,
-				000009ED000044b827000cae,
 				000009E1000044b827000cae,
 				000009D3000044b827000cae,
 				000009E3000044b827000cae,
@@ -9870,11 +9869,12 @@
 				000009E9000044b827000cae,
 				000009EB000044b827000cae,
 				000009F7000044b827000cae,
-				000009D9000044b827000cae,
-				000009DB000044b827000cae,
-				000009D1000044b827000cae,
-				000009DD000044b827000cae,
 				000009CB000044b827000cae,
+				000009D9000044b827000cae,
+				000009ED000044b827000cae,
+				000009D1000044b827000cae,
+				000009DB000044b827000cae,
+				000009DD000044b827000cae,
 				);
 			buildActionMask = 2147483647;
 			isa = PBXFrameworksBuildPhase;
@@ -10690,10 +10690,10 @@
 			fileRef = 000003B8000044b827000cae;
 			};
 		000009DC000044b827000cae = {
-			name = libmuparser.a;
+			name = libCcpMath.a;
 			fileEncoding = 4;
 			lastKnownFileType = archive.ar;
-			path = "../../../../../../sdk/muparser/v1.30/lib_vc10/MacOsXx86_64/libmuparser.a";
+			path = "../../autobuild/CcpMath/MacOsXx86_64/clang4.2/libCcpMath.a";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -12489,7 +12489,6 @@
 			files = (
 				000009DF000044b827000cae,
 				000009C9000044b827000cae,
-				000009ED000044b827000cae,
 				000009E1000044b827000cae,
 				000009CB000044b827000cae,
 				000009E3000044b827000cae,
@@ -12504,8 +12503,9 @@
 				000009F7000044b827000cae,
 				000009D9000044b827000cae,
 				000009CF000044b827000cae,
-				000009DB000044b827000cae,
+				000009ED000044b827000cae,
 				000009D1000044b827000cae,
+				000009DB000044b827000cae,
 				000009DD000044b827000cae,
 				);
 			buildActionMask = 2147483647;
@@ -14783,10 +14783,10 @@
 			sourceTree = "<group>";
 			};
 		000009DE000044b827000cae = {
-			name = libCcpMath.a;
+			name = libmuparser.a;
 			fileEncoding = 4;
 			lastKnownFileType = archive.ar;
-			path = "../../autobuild/CcpMath/MacOsXx86_64/clang4.2/libCcpMath.a";
+			path = "../../../../../../sdk/muparser/v2.2.5/lib/MacOsXx86_64/clang4.2/libmuparser.a";
 			isa = PBXFileReference;
 			sourceTree = "<group>";
 			};
@@ -17504,7 +17504,7 @@
 					"../../../../../../sdk/libpng/1.4.0/include",
 					"../../../../../../sdk/libjpg/jpeg-8c",
 					"../../../../../../sdk/squish/1.10/include",
-					"../../../../../../sdk/muparser/v1.30/include",
+					"../../../../../../sdk/muparser/v2.2.5/include",
 					"../../../../../../sdk/freetype/2.4.6/include",
 					.,
 					..,
@@ -17560,7 +17560,7 @@
 					"../../../../../../sdk/libjpg/jpeg-8c/lib/MacOsX$(ARCHS)",
 					"../../autobuild/ImageIO/MacOsX$(ARCHS)/clang4.2/",
 					"../../../carbon/autobuild/CcpMath/MacOsX$(ARCHS)/clang4.2/",
-					"../../../../../../sdk/muparser/v1.30/lib_vc10/MacOsX$(ARCHS)",
+					"../../../../../../sdk/muparser/v2.2.5/lib/MacOsX$(ARCHS)/clang4.2",
 					"../../../../../../sdk/freetype/2.4.6/lib/MacOsX$(ARCHS)/vc2010",
 					);
 				SYMROOT = "../../autobuild/trinity/exefile/MacOsX$(ARCHS)/clang4.2";
