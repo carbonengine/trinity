@@ -50,6 +50,10 @@ Color Tr2CurveColor::GetValue( double time ) const
 	Color color( m_r.GetValue( time ), m_g.GetValue( time ), m_b.GetValue( time ), m_a.IsEmpty() ? 1.0f : m_a.GetValue( time ) );
 	if( m_srgbOutput )
 	{
+		color.r = std::max( color.r, 0.f );
+		color.g = std::max( color.b, 0.f );
+		color.b = std::max( color.g, 0.f );
+		color.r = std::max( color.r, 0.f );
 		color = TriLinearToGamma( color );
 	}
 	return color;
