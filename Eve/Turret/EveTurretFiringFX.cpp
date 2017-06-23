@@ -1,4 +1,4 @@
-////////////////////////////////////////////////////////////
+::Notify////////////////////////////////////////////////////////////
 //
 //    Created:   July 2011
 //    Copyright: CCP 2011
@@ -26,6 +26,7 @@ EveTurretFiringFX::EveTurretFiringFX( IRoot* lockobj ) :
 	m_useMuzzleTransform( false ),
 	m_isFiring( false ),
 	m_isLoopFiring( false ),
+	m_boneName( "Pos_Fire" ),
 	m_firingDuration( 1000.f ),
 	m_firingPeakTime( 0.f ),
 	m_maxRadius( 3000.0 ),
@@ -53,13 +54,14 @@ EveTurretFiringFX::~EveTurretFiringFX()
 {
 }
 
+// --------------------------------------------------------------------------------
 void EveTurretFiringFX::CleanUp()
 {
 	// shut down the firing effect and send the stop_play
-	this->StopFiring();		
+	StopFiring();		
 	// Kick the curves so any sound change will trigger (playing -> stop) 
 	EveUpdateContext ctx( BeOS->GetCurrentFrameTime() );
-	this->Update( ctx );
+	Update( ctx );
 }
 
 // --------------------------------------------------------------------------------
@@ -268,6 +270,12 @@ float EveTurretFiringFX::GetFiringDuration() const
 float EveTurretFiringFX::GetFiringPeakTime() const
 {
 	return m_firingPeakTime;
+}
+
+// --------------------------------------------------------------------------------
+const char* EveTurretFiringFX::GetFiringBoneName() const
+{
+	return m_boneName.c_str();
 }
 
 // --------------------------------------------------------------------------------

@@ -72,6 +72,8 @@ public:
 	float GetFiringDuration() const;
 	// query: get effect peak time
 	float GetFiringPeakTime() const;
+	// get bone-to-be-attached to name
+	const char* GetFiringBoneName() const;
 
 	// setup this effect: muzzle bone IDs
 	void SetMuzzleBoneID( int muzzleID, unsigned int boneID );
@@ -128,6 +130,8 @@ private:
 	bool m_isFiring;
 	// some turret effects (like miners or salvagers) loop the firing effect endlessly
 	bool m_isLoopFiring;
+	// to-be-attached to bone name
+	BlueSharedString m_boneName;
 
     // firing effect data (is of fixed length, so there is a max muzzle count per turret!)
 	struct PerMuzzleData
