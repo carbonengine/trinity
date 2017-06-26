@@ -304,7 +304,7 @@ void EveTurretSet::InitializeFiringEffect()
 					}
 
 					// firing bones should always be on the format Pos_FireXX where XX can range form 01 to 99
-					char boneNameBuffer[11];
+					char boneNameBuffer[20];
 					int boneNameIndex = i + 1;
 					sprintf_s( boneNameBuffer, "%s%.2d", m_firingEffect->GetFiringBoneName(), boneNameIndex );
 					
