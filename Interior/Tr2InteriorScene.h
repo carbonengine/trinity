@@ -346,7 +346,7 @@ private:
 
 	// Mouse picking
 	Tr2PickBuffer m_pickBuffer;
-	Tr2ShaderMaterialPtr m_pickEffect;
+	Tr2EffectPtr m_pickEffect;
 
 	Be::Time m_lastUpdateTime;
 
@@ -366,7 +366,6 @@ private:
 
 	// visualization
 	VisualizeMethod m_visualizeMethod;
-	Tr2ShaderMaterialPtr m_visualizerEffects[VM_COUNT];
 
 	// SH scale factor
 	float m_shScale;

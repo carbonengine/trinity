@@ -48,7 +48,7 @@ const unsigned int INTERIOR_SHADOW_MAP_MAX_RESOLUTION = 1024;
 const unsigned int INTERIOR_SHADOW_ATLAS_RESOLUTION = 2048;
 
 // Name of the High-level shader used for picking
-static const char* s_pickingEffectName   = "Picking";
+static const char* s_pickingEffectName   = "res:/graphics/effect/managed/interior/system/picking.fx";
 
 namespace
 {
@@ -188,9 +188,7 @@ Tr2InteriorScene::Tr2InteriorScene( IRoot* lockobj /*= NULL */ ):
 	// picking
 	m_pickBuffer.PrepareResources();
 	m_pickEffect.CreateInstance();
-	m_pickEffect->SetHighLevelShaderName( s_pickingEffectName );
-	Tr2ShaderSituation situation;
-	m_pickEffect->BindLowLevelShader( situation );
+	m_pickEffect->SetEffectPathName( s_pickingEffectName );
 	m_pickBuffer.SetClearColor( 0x0 );
 
 	// Variable Handles
@@ -212,15 +210,6 @@ Tr2InteriorScene::Tr2InteriorScene( IRoot* lockobj /*= NULL */ ):
 	m_lights.SetNotify( this );
 	m_dynamics.SetNotify( this );
 	m_cells.SetNotify( this );
-
-	m_visualizerEffects[0] = NULL;
-	for( unsigned int i = 1; i < VM_COUNT; ++i )
-	{
-		m_visualizerEffects[i].CreateInstance();
-		m_visualizerEffects[i]->SetHighLevelShaderName( VISUALIZER_NAME[i] );
-		Tr2ShaderSituation situation;
-		m_visualizerEffects[i]->BindLowLevelShader( situation );
-	}
 
 	// Initialize SH scale factor
 	m_shScale = 1.0f;
@@ -932,14 +921,7 @@ void Tr2InteriorScene::RenderLightPass( Tr2RenderContext& renderContext )
 
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_LIGHT );
 	renderContext.SetReadOnlyDepth( true );
-	if( m_visualizeMethod == VM_LIGHT_PRE_PASS_LIGHT_OVERDRAW )
-	{
-		renderContext.RenderBatchesWithOverride( &lightBatches, m_visualizerEffects[VM_LIGHT_PRE_PASS_LIGHT_OVERDRAW], Tr2RenderContext::OM_DO_NOTHING );
-	}
-	else
-	{
-		renderContext.RenderLightBatches( &lightBatches );
-	}
+	renderContext.RenderLightBatches( &lightBatches );
 	renderContext.m_esm.UnsetAllTextures();
 	renderContext.SetReadOnlyDepth(	false );
 
@@ -996,7 +978,7 @@ void Tr2InteriorScene::RenderGatherPass( Tr2RenderContext& renderContext )
 
 	// Render geometry
 	renderContext.SetReadOnlyDepth( true );
-	RenderGeometry( m_visualizerEffects[m_visualizeMethod == VM_LIGHT_PRE_PASS_LIGHT_OVERDRAW ? VM_LIGHT_PRE_PASS_LIGHTING : m_visualizeMethod], renderContext );
+	RenderGeometry( nullptr, renderContext );
 	renderContext.m_esm.UnsetAllTextures();
 	renderContext.SetReadOnlyDepth( false );
 
@@ -1107,7 +1089,7 @@ void Tr2InteriorScene::RenderFullForward( Tr2RenderContext& renderContext )
 	}
 
 	// Render geometry
-	RenderGeometry( m_visualizerEffects[m_visualizeMethod], renderContext );
+	RenderGeometry( nullptr, renderContext );
 
 	// Clear batches
 	m_primaryRenderBatches->Clear();
