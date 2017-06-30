@@ -96,7 +96,7 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 	for( Tr2MeshAreaItemList::iterator it = meshAreasToSort.begin(); it != meshAreasToSort.end(); ++it )
 	{
 		Tr2MeshArea* area = it->m_meshArea;
-		ITr2ShaderMaterial* material = area->GetMaterialInterface();
+		auto material = area->GetMaterialInterface();
 		if( !area->GetDisplay() || !material )
 		{
 			continue;
@@ -757,7 +757,7 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 	for( Tr2MeshAreaVector::iterator it = areas->begin(); it != areas->end(); ++it )
 	{
 		Tr2MeshArea* area = *it;
-		ITr2ShaderMaterial* material = area->GetMaterialInterface();
+		auto material = area->GetMaterialInterface();
 
 		if( !area->GetDisplay() || !material )
 		{

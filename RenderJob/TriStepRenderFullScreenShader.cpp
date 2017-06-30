@@ -12,7 +12,7 @@ TriStepRenderFullScreenShader::~TriStepRenderFullScreenShader(void)
 {
 }
 
-void TriStepRenderFullScreenShader::py__init__( ITr2ShaderMaterial* shader )
+void TriStepRenderFullScreenShader::py__init__( Tr2Material* shader )
 {
 	m_shader = shader;
 }

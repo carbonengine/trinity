@@ -19,13 +19,7 @@ BLUE_DEFINE_INTERFACE( ITr2EffectValue );
 
 #define INVALID_PARAMETER_HASH (~0)
 
-static unsigned int s_effectId = 0;
-
 using namespace Tr2RenderContextEnum;
-
-CCP_STATS_DECLARE( effectCBLocks, "Trinity/effectCBLocks", true, CST_COUNTER_LOW, "number of CB locks for effect parameters" );
-CCP_STATS_DECLARE( effectCBSkippedLocks, "Trinity/effectCBSkippedLocks", true, CST_COUNTER_LOW, "number of CB locks for effect parameters skipped due to optimization" );
-CCP_STATS_DECLARE( effectCBSkippedEmptyLocks, "Trinity/effectCBSkippedEmptyLocks", true, CST_COUNTER_LOW, "number of CB locks for effect parameters skipped due to optimization with empty param list" );
 
 bool GetBool( const Tr2Shader* shaderState, const char* paramName, const char* annotationName, bool defaultValue = false );
 
@@ -101,41 +95,168 @@ Be::VarChooser SamplerStateChooser_MipFilterMode[] =
 	{ 0 }
 };
 
-static BlueStructureDefinition Tr2SamplerOverrideStructureDef[] =
-{ 
-	{ "name", Be::SHAREDSTRING_1, offsetof( Tr2SamplerOverride, name ) }, 
-	{ "addressU", Be::UINT32_1, offsetof( Tr2SamplerOverride, addressU ), SamplerStateChooser_AddressMode }, 
-	{ "addressV", Be::UINT32_1, offsetof( Tr2SamplerOverride, addressV ), SamplerStateChooser_AddressMode }, 
-	{ "addressW", Be::UINT32_1, offsetof( Tr2SamplerOverride, addressW ), SamplerStateChooser_AddressMode }, 
-	{ "filter", Be::UINT32_1, offsetof( Tr2SamplerOverride, filter ), SamplerStateChooser_FilterMode }, 
-	{ "mipFilter", Be::UINT32_1, offsetof( Tr2SamplerOverride, mipFilter ), SamplerStateChooser_MipFilterMode }, 
-	{ "lodBias", Be::FLOAT32_1, offsetof( Tr2SamplerOverride, lodBias ) }, 
-	{ "maxMipLevel", Be::UINT32_1, offsetof( Tr2SamplerOverride, maxMipLevel ) }, 
-	{ "maxAnisotropy", Be::UINT32_1, offsetof( Tr2SamplerOverride, maxAnisotropy ) }, 
-	{0} 
+namespace
+{
+
+BlueStructureDefinition Tr2SamplerOverrideStructureDef[] =
+{
+	{ "name", Be::SHAREDSTRING_1, offsetof( Tr2SamplerOverride, name ) },
+	{ "addressU", Be::UINT32_1, offsetof( Tr2SamplerOverride, addressU ), SamplerStateChooser_AddressMode },
+	{ "addressV", Be::UINT32_1, offsetof( Tr2SamplerOverride, addressV ), SamplerStateChooser_AddressMode },
+	{ "addressW", Be::UINT32_1, offsetof( Tr2SamplerOverride, addressW ), SamplerStateChooser_AddressMode },
+	{ "filter", Be::UINT32_1, offsetof( Tr2SamplerOverride, filter ), SamplerStateChooser_FilterMode },
+	{ "mipFilter", Be::UINT32_1, offsetof( Tr2SamplerOverride, mipFilter ), SamplerStateChooser_MipFilterMode },
+	{ "lodBias", Be::FLOAT32_1, offsetof( Tr2SamplerOverride, lodBias ) },
+	{ "maxMipLevel", Be::UINT32_1, offsetof( Tr2SamplerOverride, maxMipLevel ) },
+	{ "maxAnisotropy", Be::UINT32_1, offsetof( Tr2SamplerOverride, maxAnisotropy ) },
+	{0}
 };
 
-static Tr2SamplerOverride s_defaultValue = { 
-	BlueSharedString(), 
-	Tr2RenderContextEnum::TA_WRAP, 
-	Tr2RenderContextEnum::TA_WRAP, 
-	Tr2RenderContextEnum::TA_WRAP, 
+Tr2SamplerOverride s_defaultValue = {
+	BlueSharedString(),
+	Tr2RenderContextEnum::TA_WRAP,
+	Tr2RenderContextEnum::TA_WRAP,
+	Tr2RenderContextEnum::TA_WRAP,
 	Tr2RenderContextEnum::TF_LINEAR,
 	Tr2RenderContextEnum::TF_LINEAR,
 	0.0f,
 	0,
-	4 
+	4
 };
 
 
-static BlueStructureDefinition Tr2ShaderOptionStructureDef[] =
-{ 
-	{ "name", Be::SHAREDSTRING_1, offsetof( Tr2ShaderOption, name ) }, 
-	{ "value", Be::SHAREDSTRING_1, offsetof( Tr2ShaderOption, value ) }, 
-	{0} 
+BlueStructureDefinition Tr2ShaderOptionStructureDef[] =
+{
+	{ "name", Be::SHAREDSTRING_1, offsetof( Tr2ShaderOption, name ) },
+	{ "value", Be::SHAREDSTRING_1, offsetof( Tr2ShaderOption, value ) },
+	{0}
 };
 
 
+// --------------------------------------------------------------------------------------
+// Description:
+//   Look at the constant and build an ITriEffectParameter out of it
+// Arguments:
+//   constant - constant being analyzed
+//   constantValues - blob with the default value for the constant
+//   adder - callback function that's in charge of actually adding the newly created parameter
+// --------------------------------------------------------------------------------------
+void ConvertEffectConstant( const Tr2EffectConstant& constant,
+	const char* constantValues,
+	std::function<void( ITriEffectParameter* )> adder )
+{
+	if( constant.type != Tr2EffectConstant::FLOAT )
+	{
+		return;
+	}
+	if( constant.elements > 1 )
+	{
+		// create new paramater
+		OTriFloatArrayParameter* newFloatArray = new OTriFloatArrayParameter();  // Creates object with 1 lock
+		newFloatArray->m_name = BlueSharedString( constant.name );
+		// create an instance for each vector4
+		for( unsigned int e = 0; e < constant.elements; ++e )
+		{
+			TriVector4Ptr newVector4;
+			newVector4.CreateInstance();
+			newVector4->m_data = *reinterpret_cast<const Vector4*>( constantValues + constant.offset + e * sizeof( Vector4 ) );
+			newFloatArray->m_value.Insert( -1, newVector4 );
+		}
+		adder( newFloatArray );
+		newFloatArray->Unlock();
+	}
+	else if( constant.dimension == 16 )
+	{
+		if( strstr( constant.name.c_str(), "Reflection" ) )
+		{
+			OTriVariableParameter* p = new OTriVariableParameter();
+			p->m_name = BlueSharedString( constant.name );
+			p->m_variableName = BlueSharedString( "EnvMapTransform" );
+			p->Initialize();
+			adder( p );
+			p->Unlock(); // Remove the original lock created by 'new'.
+		}
+		else
+		{
+			OTr2Matrix4Parameter* p = new OTr2Matrix4Parameter();
+			p->m_name = BlueSharedString( constant.name );
+			p->m_value = *reinterpret_cast<const Matrix*>( constantValues + constant.offset );
+			adder( p );
+			p->Unlock();
+		}
+	}
+	else if( constant.dimension == 2 )
+	{
+		OTr2Vector2Parameter* newVector2 = new OTr2Vector2Parameter();  // Creates object with 1 lock
+		newVector2->m_name = BlueSharedString( constant.name );
+		newVector2->m_value = *reinterpret_cast<const Vector2*>( constantValues + constant.offset );
+		adder( newVector2 );
+		newVector2->Unlock();
+	}
+	else if( constant.dimension == 3 )
+	{
+		OTr2Vector3Parameter* newVector3 = new OTr2Vector3Parameter();  // Creates object with 1 lock
+		newVector3->m_name = BlueSharedString( constant.name );
+		newVector3->m_value = *reinterpret_cast<const Vector3*>( constantValues + constant.offset );
+		adder( newVector3 );
+		newVector3->Unlock();
+	}
+	else if( constant.dimension > 1 )
+	{
+		OTr2Vector4Parameter* newVector4 = new OTr2Vector4Parameter();  // Creates object with 1 lock
+		newVector4->m_name = BlueSharedString( constant.name );
+		newVector4->m_value = *reinterpret_cast<const Vector4*>( constantValues + constant.offset );
+		adder( newVector4 );
+		newVector4->Unlock();
+	}
+	else
+	{
+		OTr2FloatParameter* newFloat = new OTr2FloatParameter();
+		newFloat->m_name = BlueSharedString( constant.name );
+		newFloat->m_value = *reinterpret_cast<const float*>( static_cast<const void*>( constantValues + constant.offset ) );
+		adder( newFloat );
+		newFloat->Unlock(); // Remove the original lock created by 'new'.
+	}
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Look at the constant and build an ITriEffectParameter and/or ITriEffectResourceParameter out of it
+// Arguments:
+//   texture - texture being analyzed
+//   paramAdder - callback function that's in charge of actually adding any newly created parameters
+//   resourceAdder - callback function that's in charge of actually adding any newly created resources
+// --------------------------------------------------------------------------------------
+void ConvertEffectResource( const Tr2EffectResource& resource,
+	std::function<void( ITriEffectParameter* )> paramAdder,
+	std::function<void( ITriEffectResourceParameter* )> resourceAdder )
+{
+	switch( resource.type )
+	{
+	case Tr2EffectResource::TEXTURE_CUBE:
+	case Tr2EffectResource::TEXTURE_1D:
+	case Tr2EffectResource::TEXTURE_2D:
+	case Tr2EffectResource::TEXTURE_3D:
+	case Tr2EffectResource::TEXTURE_TYPELESS:
+	{
+		OTriTextureParameter* newTex2D = new OTriTextureParameter();
+		newTex2D->SetParameterName( BlueSharedString( resource.name ) );
+		resourceAdder( newTex2D );
+		newTex2D->Unlock(); // Remove the original lock created by 'new'.
+	}
+	break;
+	default:
+	{
+		OTr2GeometryBufferParameter* newBuffer = new OTr2GeometryBufferParameter();
+		newBuffer->m_name = resource.name;
+		resourceAdder( newBuffer );
+		newBuffer->Unlock(); // Remove the original lock created by 'new'.
+	}
+	break;
+	}
+}
+
+}
 
 // ---------------------------------------------------------------
 Tr2Effect::Tr2Effect(IRoot* lockobj) :
@@ -158,8 +279,6 @@ Tr2Effect::Tr2Effect(IRoot* lockobj) :
 	m_samplerOverrides.SetStructureDefinition( Tr2SamplerOverrideStructureDef );
 	m_samplerOverrides.SetDefaultValue( &s_defaultValue );
 	m_options.SetStructureDefinition( Tr2ShaderOptionStructureDef );
-
-	m_sortValue = s_effectId++;
 
 	Tr2Renderer::RegisterEffect( this );
 }
@@ -573,7 +692,48 @@ void Tr2Effect::RebuildCachedDataInternal()
 		m_shader = m_effectResource->GetShader( m_options.empty() ? nullptr : &m_options[0], m_options.size() );
 		if( m_shader )
 		{
-			RebuildCachedDataForEffect( *m_shader, *this, m_parametersForPasses );
+			CCP_STATS_ZONE( __FUNCTION__ );
+			USE_MAIN_THREAD_RENDER_CONTEXT();
+
+			m_parametersForPasses.clear();
+
+			auto& desc = m_shader->GetEffectDescription();
+			const unsigned passCount = unsigned( desc.passes.size() );
+
+			if( !passCount )
+			{
+				return;
+			}
+
+			m_parametersForPasses.resize( passCount );
+
+			for( unsigned passIx = 0; passIx != passCount; ++passIx )
+			{
+				m_parametersForPasses[passIx].reset( CCP_NEW( "Tr2EffectPassParameters" ) Tr2EffectPassParameters() );
+				Tr2EffectPassParameters& pp = *m_parametersForPasses[passIx];
+
+				for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++i )
+				{
+					auto& stage = desc.passes[passIx].stageInputs[i];
+					if( !stage.m_exists )
+					{
+						continue;
+					}
+
+					MapPassParameters( passIx, pp, Tr2RenderContextEnum::ShaderType( i ), stage.constants, desc, renderContext );
+
+					auto& input = pp.m_stageInput[i];
+					if( !stage.resources.empty() )
+					{
+						MapPassResources( stage.resources, input.m_textures, 0 );
+					}
+					if( !stage.uavs.empty() )
+					{
+						MapPassResources( stage.uavs, input.m_uavs, ITr2EffectValue::RESOURCE_FLAG_UAV );
+					}
+				}
+			}
+
 			RebuildSamplerOverrides();
 		}
 		else
@@ -936,18 +1096,6 @@ bool Tr2Effect::IsParameterUsedByTechnique( const std::string& parameterName )
 	return GetShaderStateInterface()->GetConstant( parameterName.c_str() ) != nullptr;
 }
 
-unsigned int Tr2Effect::GetSortValue() const
-{
-	if( m_shader )
-	{
-		return m_shader->GetSortValue();
-	}
-	else
-	{
-		return m_sortValue;
-	}
-}
-
 bool Tr2Effect::IsEqual( Tr2Effect* other )
 {
 	if( other == NULL )
@@ -1025,17 +1173,6 @@ ITriEffectParameter* Tr2Effect::GetParameterByName( const char* name ) const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Assigns a variable store to use when binding shader variables.
-// Arguments:
-//   variableStore - Variable store to use for binding shader variables.
-// --------------------------------------------------------------------------------------
-void Tr2Effect::SetVariableStore( Tr2VariableStore* variableStore )
-{
-	m_variableStore = variableStore;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
 //   Implements ITr2ShaderMaterial interface. Returns an array of constant effect 
 //   parameters.
 // Arguments:
@@ -1056,20 +1193,6 @@ const Tr2ConstantEffectParameter* Tr2Effect::GetConstParameters( size_t& count )
 	}
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns a variable store used by material to bind shader variables.
-// Return value:
-//   Variable store used by this material.
-// --------------------------------------------------------------------------------------
-Tr2VariableStore& Tr2Effect::GetVariableStore()
-{
-	if( m_variableStore )
-	{
-		return *m_variableStore;
-	}
-	return GlobalStore();
-}
 
 void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2EffectParamVector &pv, uint32_t resourceFlags )
 {
@@ -1125,25 +1248,6 @@ void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2Effe
 			pv.push_back( param );
 		}
 	}
-}
-
-
-void Tr2Effect::ApplyShaderInputs(	unsigned passIndex, 
-									Tr2RenderContextEnum::ShaderType shaderType, 
-									Tr2RenderContext& renderContext )
-{
-	bool samplersChanged;
-	::ApplyShaderInputs( *m_parametersForPasses[ passIndex ], shaderType, samplersChanged, renderContext );
-}
-
-Tr2Shader* Tr2Effect::GetShaderStateInterface() const
-{
-	return m_shader;
-}
-
-uint32_t Tr2Effect::ApplyMaterialDataForPass( unsigned int passIndex, Tr2RenderContext& renderContext )
-{
-	return ::ApplyMaterialDataForPass( m_parametersForPasses, GetShaderStateInterface(), passIndex, renderContext );
 }
 
 void Tr2Effect::Render( IRenderCallback* cb, Tr2RenderContext& renderContext )
@@ -1358,278 +1462,6 @@ bool GetBool( const Tr2Shader* shaderState, const char* paramName, const char* a
 			: defaultValue;
 }
 
-void RebuildCachedDataForEffect( Tr2Shader &effectResource,
-									ITr2ShaderMaterial &owner,
-									Tr2EffectPassParametersVector& parametersForPasses )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-
-	parametersForPasses.clear();
-
-	auto& desc = effectResource.GetEffectDescription();
-	const unsigned passCount = unsigned( desc.passes.size() );
-
-	if( !passCount )
-	{
-		return;
-	}
-
-	parametersForPasses.resize( passCount );
-
-	for( unsigned passIx = 0; passIx != passCount; ++passIx )
-	{
-		parametersForPasses[passIx].reset( CCP_NEW( "Tr2EffectPassParameters" ) Tr2EffectPassParameters() );
-		Tr2EffectPassParameters& pp = *parametersForPasses[passIx];
-
-		for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++i )
-		{
-			auto& stage = desc.passes[passIx].stageInputs[i];
-			if( !stage.m_exists )
-			{
-				continue;
-			}
-
-			MapPassParameters( 
-				passIx,
-				pp,
-				Tr2RenderContextEnum::ShaderType( i ),
-				stage.constants, 
-				effectResource,
-				desc,
-				owner,
-				renderContext );
-
-			auto& input = pp.m_stageInput[i];
-			if( !stage.resources.empty() )
-			{
-				owner.MapPassResources( stage.resources, input.m_textures, 0 );
-			}
-			if( !stage.uavs.empty() )
-			{
-				owner.MapPassResources( stage.uavs, input.m_uavs, ITr2EffectValue::RESOURCE_FLAG_UAV );
-			}
-		}
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Applies shader inputs for the given pass.  
-// Arguments:
-//   pp - parameters for the pass that's being applied
-//   shaderType - Stage input type (vertex shader, pixel shader, etc.)
-//   samplersChanged - (out) will be set to true if any of the bound texture parameters
-//     changed its sampler state
-//   context - Current render context
-// --------------------------------------------------------------------------------------
-void ApplyShaderInputs( Tr2EffectPassParameters& pp,
-						Tr2RenderContextEnum::ShaderType shaderType, 
-						bool& samplersChanged,
-						Tr2RenderContext& renderContext )
-{
-	auto& input = pp.m_stageInput[shaderType];
-
-	auto cb = input.m_constantBuffer.get();
-	if( cb && cb->GetSize() )
-	{
-		CCP_STATS_INC( effectCBLocks );
-		uint8_t* const mirror = reinterpret_cast<uint8_t*>( cb->GetBufferMirror( renderContext ) );
-		if( cb->IsValid() && mirror )
-		{
-			const auto endVS = input.m_shaderParameters.cend();
-			for( auto it = input.m_shaderParameters.cbegin(); it != endVS; ++it )
-			{
-				size_t size = it->m_registerCount;
-				uint8_t* const dst = mirror + it->m_registerIndex;
-				it->m_sourceValue->CopyValueToEffect( shaderType, dst, size, renderContext );
-			}
-			cb->UpdateFromMirror( renderContext );
-
-			renderContext.SetConstants( *cb, shaderType, CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS );
-		}
-	}
-
-	unsigned char destHandle[8] = { 0 };
-
-	samplersChanged = false;
-	for( auto it = input.m_textures.cbegin(); it != input.m_textures.cend(); ++it )
-	{
-		destHandle[0] = static_cast<unsigned char>( it->m_registerIndex );
-		it->m_sourceValue->CopyValueToEffect( shaderType, destHandle, it->m_registerCount, renderContext );
-		if( destHandle[1] )
-		{
-			samplersChanged = true;
-		}
-	}
-	samplersChanged |= !input.m_samplers.empty();
-	for( auto it = input.m_samplers.begin(); it != input.m_samplers.end(); ++it )
-	{
-		renderContext.m_esm.ApplySamplerSetup( shaderType, it->registerIndex, it->handle );
-	}
-
-	for( auto it = input.m_uavs.cbegin(); it != input.m_uavs.cend(); ++it )
-	{
-		destHandle[0] = static_cast<unsigned char>( it->m_registerIndex );
-		reinterpret_cast<uint32_t*>( destHandle )[1] = it->m_initialCount;
-		it->m_sourceValue->CopyValueToEffect( shaderType, destHandle, it->m_registerCount, renderContext );
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Look at the constant and build an ITriEffectParameter out of it
-// Arguments:
-//   constant - constant being analyzed
-//   constantValues - blob with the default value for the constant
-//   adder - callback function that's in charge of actually adding the newly created parameter
-// --------------------------------------------------------------------------------------
-void ConvertEffectConstant( const Tr2EffectConstant& constant, 
-							const char* constantValues,
-							std::function<void(ITriEffectParameter*)> adder )
-{
-	if( constant.type != Tr2EffectConstant::FLOAT )
-    {
-        return;
-    }
-    if( constant.elements > 1 )
-    {
-        // create new paramater
-        OTriFloatArrayParameter* newFloatArray = new OTriFloatArrayParameter();  // Creates object with 1 lock
-		newFloatArray->m_name = BlueSharedString( constant.name );
-        // create an instance for each vector4
-        for( unsigned int e = 0; e < constant.elements; ++e )
-        {
-            TriVector4Ptr newVector4;
-			newVector4.CreateInstance();
-            newVector4->m_data = *reinterpret_cast<const Vector4*>( constantValues + constant.offset + e * sizeof( Vector4 ) );
-            newFloatArray->m_value.Insert( -1, newVector4 );
-        }
-        adder( newFloatArray );
-        newFloatArray->Unlock();
-    }
-    else if( constant.dimension == 16 )
-    {
-		if( strstr( constant.name.c_str(), "Reflection" ) )
-        {
-            OTriVariableParameter* p = new OTriVariableParameter();
-            p->m_name = BlueSharedString( constant.name );
-            p->m_variableName = BlueSharedString( "EnvMapTransform" );
-            p->Initialize();
-            adder( p );
-            p->Unlock(); // Remove the original lock created by 'new'.
-        }
-        else
-        {
-            OTr2Matrix4Parameter* p = new OTr2Matrix4Parameter();
-            p->m_name = BlueSharedString( constant.name );
-            p->m_value = *reinterpret_cast<const Matrix*>( constantValues + constant.offset );
-            adder( p );
-            p->Unlock();
-        }
-    }
-    else if( constant.dimension == 2 )
-    {
-        OTr2Vector2Parameter* newVector2 = new OTr2Vector2Parameter();  // Creates object with 1 lock
-        newVector2->m_name = BlueSharedString( constant.name );
-        newVector2->m_value = *reinterpret_cast<const Vector2*>( constantValues + constant.offset );
-        adder( newVector2 );
-        newVector2->Unlock();
-    }
-    else if( constant.dimension == 3 )
-    {
-        OTr2Vector3Parameter* newVector3 = new OTr2Vector3Parameter();  // Creates object with 1 lock
-        newVector3->m_name = BlueSharedString( constant.name );
-        newVector3->m_value = *reinterpret_cast<const Vector3*>( constantValues + constant.offset );
-        adder( newVector3 );
-        newVector3->Unlock();
-    }
-    else if( constant.dimension > 1 )
-    {
-        OTr2Vector4Parameter* newVector4 = new OTr2Vector4Parameter();  // Creates object with 1 lock
-        newVector4->m_name = BlueSharedString( constant.name );
-        newVector4->m_value = *reinterpret_cast<const Vector4*>( constantValues + constant.offset );
-        adder( newVector4 );
-        newVector4->Unlock();
-    }
-    else
-    {
-        OTr2FloatParameter* newFloat = new OTr2FloatParameter();
-        newFloat->m_name = BlueSharedString( constant.name );
-        newFloat->m_value = *reinterpret_cast<const float*>( static_cast<const void*>( constantValues + constant.offset ) );
-        adder( newFloat );
-        newFloat->Unlock(); // Remove the original lock created by 'new'.
-    }
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Look at the constant and build an ITriEffectParameter and/or ITriEffectResourceParameter out of it
-// Arguments:
-//   texture - texture being analyzed
-//   paramAdder - callback function that's in charge of actually adding any newly created parameters
-//   resourceAdder - callback function that's in charge of actually adding any newly created resources
-// --------------------------------------------------------------------------------------
-void ConvertEffectResource(	const Tr2EffectResource& resource, 
-							std::function<void(ITriEffectParameter*)> paramAdder,
-							std::function<void(ITriEffectResourceParameter*)> resourceAdder )
-{
-	switch( resource.type )
-	{
-	case Tr2EffectResource::TEXTURE_CUBE:
-	case Tr2EffectResource::TEXTURE_1D:
-	case Tr2EffectResource::TEXTURE_2D:
-	case Tr2EffectResource::TEXTURE_3D:
-	case Tr2EffectResource::TEXTURE_TYPELESS:
-		{
-			OTriTextureParameter* newTex2D = new OTriTextureParameter();
-			newTex2D->SetParameterName( BlueSharedString( resource.name ) );
-			resourceAdder( newTex2D );
-			newTex2D->Unlock(); // Remove the original lock created by 'new'.
-		}
-		break;
-	default:
-		{
-			OTr2GeometryBufferParameter* newBuffer = new OTr2GeometryBufferParameter();
-			newBuffer->m_name = resource.name;
-			resourceAdder( newBuffer );
-			newBuffer->Unlock(); // Remove the original lock created by 'new'.
-		}
-		break;
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Applies vertex and pixel shader inputs for this given pass.
-// Arguments:
-//	 vec - all parameters for all passes
-//	 resource - effect resource from which the parameters are being applied
-//   passIndex - The index of the pass for which to apply vertex and pixel shader inputs
-//   context - Current render context
-// Return value:
-//   A mask containing bits for each stage that has modified sampler state
-// --------------------------------------------------------------------------------------
-uint32_t ApplyMaterialDataForPass( Tr2EffectPassParametersVector& vec, Tr2Shader* resource, unsigned passIndex, Tr2RenderContext& renderContext )
-{
-	unsigned mask = resource ? resource->GetShaderTypeMask() : 0xffFFffFFu;
-	uint32_t samplersChangedMask = 0;
-	for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT && mask; ++i )
-	{
-		if( mask & ( 1 << i ) )
-		{
-			bool samplersChanged = false;
-			ApplyShaderInputs( *vec[passIndex], Tr2RenderContextEnum::ShaderType( i ), samplersChanged, renderContext );
-			mask &= ~( 1 << i );
-			if( samplersChanged )
-			{
-				samplersChangedMask |= 1 << i;
-			}
-		}
-	}
-	return samplersChangedMask;
-}
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Maps the parameters for a pass to indices in the constant mirror.
@@ -1642,14 +1474,12 @@ uint32_t ApplyMaterialDataForPass( Tr2EffectPassParametersVector& vec, Tr2Shader
 //   owner - shaderState being mapped
 //	 renderContext - render context
 // --------------------------------------------------------------------------------------
-void MapPassParameters( 
+void Tr2Effect::MapPassParameters( 
 			unsigned passIx,
 			Tr2EffectPassParameters& pp,
 			Tr2RenderContextEnum::ShaderType stage,
 			const Tr2EffectConstantVector& constants, 
-	Tr2Shader& resource,
 			const Tr2EffectDescription& desc,
-			ITr2ShaderMaterial& owner,
 			Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -1657,8 +1487,8 @@ void MapPassParameters(
 	static const size_t MAX_PARAMS = 64;
 
 	Tr2EffectParamVector &pv = pp.m_stageInput[stage].m_shaderParameters;
-	ITriReroutableVector& reroutables = pp.m_reroutedParameters;
-	Tr2VariableStore& variableStore = owner.GetVariableStore();
+	auto& reroutables = pp.m_reroutedParameters;
+	Tr2VariableStore& variableStore = GetVariableStore();
 
 	unsigned int perObjectStart = 0xffffffff;
 
@@ -1683,7 +1513,7 @@ void MapPassParameters(
 	bool hasVariableParams = false;
 
 	size_t constParamCount;
-	auto constParams = owner.GetConstParameters( constParamCount );
+	auto constParams = GetConstParameters( constParamCount );
 	uint32_t constIndexes[MAX_PARAMS];
 
 	// Fist pass: determine the size of the constant buffer
@@ -1706,7 +1536,7 @@ void MapPassParameters(
 		{
 
 			// First search in effect parameter list and see if we have a match
-			if( ITriEffectParameter* p = owner.FindParameterByName( constantIx->name.c_str() ) )
+			if( ITriEffectParameter* p = FindParameterByName( constantIx->name.c_str() ) )
 			{
 				paramAsEffectValue = p;
 			}
@@ -1795,7 +1625,7 @@ void MapPassParameters(
 			{
 				// Notify a parameter of its future binding. Here
 				// the parameter might check for sRGB flags, etc.
-				param->RebuildEffectHandles( &resource );
+				param->RebuildEffectHandles( m_shader );
 
 				paramAsReroutable = ITriReroutablePtr( BlueCastPtr( param ) );
 				if( paramAsReroutable )
@@ -1889,4 +1719,18 @@ bool Tr2Effect::LoadResources()
 		}
 	}
 	return result;
+}
+
+void Tr2Effect::SetVariableStore( Tr2VariableStore* variableStore )
+{
+	m_variableStore = variableStore;
+}
+
+Tr2VariableStore& Tr2Effect::GetVariableStore()
+{
+	if( m_variableStore )
+	{
+		return *m_variableStore;
+	}
+	return GlobalStore();
 }

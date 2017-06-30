@@ -75,7 +75,7 @@ struct Tr2IntKeyGenerator
 		{
 			// Get the effect sort key
 			int64_t effectKey = 0x00000000FFFFFFFF;
-			ITr2ShaderMaterial* shaderMaterial = entry.m_batch->GetShaderMaterialInterface();
+			auto shaderMaterial = entry.m_batch->GetShaderMaterialInterface();
 			if( shaderMaterial )
 			{
 				effectKey = (int64_t)shaderMaterial->GetSortValue();

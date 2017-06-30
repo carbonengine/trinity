@@ -1,9 +1,9 @@
 #ifndef TR2EFFECT_H
 #define TR2EFFECT_H
 
-#include "ITr2ShaderMaterial.h"
 #include "Resources/Tr2EffectRes.h"
 #include "IRenderCallback.h"
+#include "Tr2Material.h"
 
 BLUE_DECLARE( TriTextureParameter );
 BLUE_DECLARE( Tr2VariableStore );
@@ -33,16 +33,24 @@ struct Tr2SamplerOverride
 
 BLUE_DECLARE_STRUCTURE_LIST( Tr2SamplerOverride );
 
+struct Tr2ConstantEffectParameter
+{
+	BlueSharedString name;
+	Vector4 value;
+};
+
+BLUE_DECLARE_STRUCTURE_LIST( Tr2ConstantEffectParameter );
+
 
 BLUE_DECLARE_STRUCTURE_LIST( Tr2ShaderOption );
 
 
 BLUE_CLASS( Tr2Effect ) :
+	public Tr2Material,
 	public IInitialize,
 	public INotify,
 	public IListNotify,
 	public IBlueAsyncResNotifyTarget,
-	public ITr2ShaderMaterial,
 	public Tr2DeviceResource
 {
 public:    		
@@ -65,7 +73,7 @@ public:
 	void EndUpdate();
 	
 	// gets
-	virtual Tr2EffectRes* GetEffectRes() const;
+	Tr2EffectRes* GetEffectRes() const;
 	const char* GetName() const;
 
 	// sets & adds & clears
@@ -91,26 +99,14 @@ public:
 	bool HasSamplerOverride( const char* name ) const;
 	bool HasParameter( const char* name ) const;
 
-    // This function is called by Tr2Renderer to update Tr2Materials
-    // with any changes to the parameters
-	virtual void UpdateMaterial() {};
-
 	void Render( IRenderCallback* cb, Tr2RenderContext& renderContext );
 	void RenderForPicking( IRenderCallback* cb, int objId, Tr2RenderContext& renderContext );
 
 	unsigned GetHashValue() const;
 
-	////////////////////////////////////////////
-	// IShaderMaterial
-	///////////////
-	uint32_t ApplyMaterialDataForPass( unsigned int passIndex, Tr2RenderContext& renderContext );
-	void ApplyShaderInputs( unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext );
-	unsigned int GetSortValue() const;
-	Tr2Shader* GetShaderStateInterface() const;
-	void SetVariableStore( Tr2VariableStore* variableStore );
 	const Tr2ConstantEffectParameter* GetConstParameters( size_t& count ) const;
-	void UnloadResources();
-	bool LoadResources();
+	virtual void UnloadResources();
+	virtual bool LoadResources();
 	ITriEffectParameter* GetParameterByName( const char* name ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +138,9 @@ public:
 
 	void RebuildCachedData();
 
+	void SetVariableStore( Tr2VariableStore* variableStore );
+	Tr2VariableStore& GetVariableStore();
+
 protected:
 	void RebuildCachedDataInternal();
 
@@ -151,8 +150,6 @@ protected:
 
 	unsigned int m_parameterHash;
 	bool m_display;
-
-	unsigned int m_sortValue;
 
 	Tr2EffectResPtr m_effectResource;
 
@@ -173,8 +170,8 @@ public: // TODO: make this private - need to change EveBoosterSet2...
 	PTr2SamplerOverrideStructureList m_samplerOverrides;
 
 private:
-	Tr2ShaderPtr m_shader;
 	PTr2ShaderOptionStructureList m_options;
+	Tr2VariableStorePtr m_variableStore;
 
 
 #if TRINITYDEV
@@ -185,63 +182,25 @@ private:
 	bool m_insideStartUpdate;
 
 protected:
-	Tr2EffectPassParametersVector m_parametersForPasses;
-
-	virtual void MapPassResources( 
+	void MapPassResources( 
 		const Tr2EffectResourceMap& resources, 
 		Tr2EffectParamVector &pv, 
 		uint32_t resourceFlags );
+	void MapPassParameters(
+		unsigned passIx,
+		Tr2EffectPassParameters& pp,
+		Tr2RenderContextEnum::ShaderType stage,
+		const Tr2EffectConstantVector& constants,
+		const Tr2EffectDescription& desc,
+		Tr2RenderContext& renderContext );
 
 	// Python
 	bool IsParameterUsedByTechnique( const std::string& parameterName );
 
 	// Utility
-	virtual ITriEffectParameter* FindParameterByName( const char* name ) const;
-
-	// Variable store to use for binding variables
-	Tr2VariableStorePtr m_variableStore;
-	Tr2VariableStore& GetVariableStore();
-
+	ITriEffectParameter* FindParameterByName( const char* name ) const;
 };
 TYPEDEF_BLUECLASS(Tr2Effect);
 BLUE_DECLARE_VECTOR( Tr2Effect );
-
-void HashSamplers( Tr2EffectPassParameters::StageInput& stageInput );
-
-void RebuildCachedDataForEffect(	
-	Tr2Shader &effectResource,
-						ITr2ShaderMaterial &owner,
-						Tr2EffectPassParametersVector& parametersForPasses );
-
-uint32_t ApplyMaterialDataForPass( 
-						Tr2EffectPassParametersVector& vec, 
-	Tr2Shader* resource,
-						unsigned passIndex, 
-						Tr2RenderContext& renderContext );
-
-void ApplyShaderInputs( Tr2EffectPassParameters& parametersForPass, 
-						Tr2RenderContextEnum::ShaderType shaderType,
-						bool& samplersChanged,
-						Tr2RenderContext& renderContext );
-
-void ConvertEffectConstant( 
-						const Tr2EffectConstant& constant, 
-						const char* constantValues,
-						std::function<void(ITriEffectParameter*)> adder );
-
-void ConvertEffectResource(	
-						const Tr2EffectResource& resource, 
-						std::function<void(ITriEffectParameter*)> paramAdder,
-						std::function<void(ITriEffectResourceParameter*)> resourceAdder );
-
-void MapPassParameters( 
-						unsigned passIx,
-						Tr2EffectPassParameters& pp,
-						Tr2RenderContextEnum::ShaderType stage,
-						const Tr2EffectConstantVector& constants, 
-	Tr2Shader& resource,
-						const Tr2EffectDescription& desc,
-						ITr2ShaderMaterial& owner,
-						Tr2RenderContext& renderContext );
 
 #endif

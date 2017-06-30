@@ -6,7 +6,7 @@
 
 BLUE_DECLARE( Tr2ClothingActor );
 BLUE_DECLARE( Tr2ClothingRes );
-BLUE_DECLARE_INTERFACE( ITr2ShaderMaterial );
+BLUE_DECLARE( Tr2Material );
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( Tr2ApexScene );
 
@@ -68,13 +68,13 @@ public:
 
 #if APEX_ENABLED
 
-	ITr2ShaderMaterial* GetEffect();
-	ITr2ShaderMaterial* GetDepthEffect();
-	ITr2ShaderMaterial* GetDepthNormalEffect();
+	Tr2Material* GetEffect();
+	Tr2Material* GetDepthEffect();
+	Tr2Material* GetDepthNormalEffect();
 
-	ITr2ShaderMaterial* GetEffectReversed();
-	ITr2ShaderMaterial* GetDepthEffectReversed();
-	ITr2ShaderMaterial* GetDepthNormalEffectReversed();
+	Tr2Material* GetEffectReversed();
+	Tr2Material* GetDepthEffectReversed();
+	Tr2Material* GetDepthNormalEffectReversed();
 
 	bool GetUseTransparentBatches() const;
 	bool GetUseSHLighting() const;
@@ -171,13 +171,13 @@ protected:
 	TrackableStdVector<unsigned int> m_boneMap;
 	const std::string* m_lastBoundBoneList;
 
-	ITr2ShaderMaterialPtr m_effect;
-	ITr2ShaderMaterialPtr m_depthEffect;
-	ITr2ShaderMaterialPtr m_depthNormalEffect;
+	Tr2MaterialPtr m_effect;
+	Tr2MaterialPtr m_depthEffect;
+	Tr2MaterialPtr m_depthNormalEffect;
 
-	ITr2ShaderMaterialPtr m_effectReversed;
-	ITr2ShaderMaterialPtr m_depthEffectReversed;
-	ITr2ShaderMaterialPtr m_depthNormalEffectReversed;
+	Tr2MaterialPtr m_effectReversed;
+	Tr2MaterialPtr m_depthEffectReversed;
+	Tr2MaterialPtr m_depthNormalEffectReversed;
 
 	Vector3 m_windDirection;
 	float m_windStrength;

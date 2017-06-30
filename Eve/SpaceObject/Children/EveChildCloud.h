@@ -92,7 +92,7 @@ private:
 	// bounding sphere
 	Vector4 m_boundingSphere;
 
-	ITr2ShaderMaterialPtr m_effect;
+	Tr2MaterialPtr m_effect;
 
 	Vector3 m_scaling;
 	Vector3 m_translation;

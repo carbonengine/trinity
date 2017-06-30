@@ -5,9 +5,8 @@
 #include "StdAfx.h"
 
 #include "TriRenderStep.h"
-#include "ITr2ShaderMaterial.h"
 
-//BLUE_DECLARE( ITr2ShaderMaterialPtr );
+BLUE_DECLARE( Tr2Material );
 
 BLUE_CLASS( TriStepRenderFullScreenShader ) : public TriRenderStep
 {
@@ -21,10 +20,10 @@ public:
 	TriStepResult Execute( Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext );
 
 	// Python __init__ constructor
-	void py__init__( ITr2ShaderMaterial* shader );
+	void py__init__( Tr2Material* shader );
 
 private:
-	ITr2ShaderMaterialPtr m_shader;
+	Tr2MaterialPtr m_shader;
 };
 
 TYPEDEF_BLUECLASS( TriStepRenderFullScreenShader );

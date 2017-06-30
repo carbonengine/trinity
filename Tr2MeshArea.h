@@ -3,7 +3,7 @@
 #define Tr2MeshArea_H
 
 
-BLUE_DECLARE_INTERFACE( ITr2ShaderMaterial );
+BLUE_DECLARE( Tr2Material );
 
 BLUE_CLASS ( Tr2MeshArea ) :
 	public IRoot
@@ -34,9 +34,9 @@ public:
 
 	bool GetUseSHLighting() const;
 
-	void SetMaterial( ITr2ShaderMaterial* mat );
+	void SetMaterial( Tr2Material* mat );
 
-	ITr2ShaderMaterial* GetMaterialInterface() const;
+	Tr2Material* GetMaterialInterface() const;
 
 	unsigned int GetJointCount() const;
 	void SetJointCount( unsigned int val );
@@ -52,7 +52,7 @@ public:
 
 
 private:
-	ITr2ShaderMaterialPtr m_material;
+	Tr2MaterialPtr m_material;
 	std::string m_name;
 	bool m_display;
 	int m_index;

@@ -14,7 +14,7 @@ class TriVariable;
 class Tr2VertexDefinition;
 struct Tr2ShaderInputDefinition;
 
-BLUE_DECLARE_INTERFACE( ITr2ShaderMaterial );
+BLUE_DECLARE( Tr2Material );
 
 //
 // See http://core/wiki/Tr2EffectStateManager

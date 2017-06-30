@@ -136,7 +136,7 @@ void Tr2RenderContextBase::RenderBatchesInOrder( ITriRenderBatchAccumulator* bat
 
 	for( TriRenderBatch* it = batches->GetFirstBatch(); it != nullptr; it = it->GetNext() )
 	{
-		ITr2ShaderMaterial * material = it->GetShaderMaterialInterface();
+		auto material = it->GetShaderMaterialInterface();
 
 		if( !material )
 		{
@@ -198,7 +198,7 @@ void Tr2RenderContextBase::RenderBatchesSortedByEffect( ITriRenderBatchAccumulat
 	TriRenderBatch* batch = batches->GetFirstBatch();
 	while( batch != nullptr )
 	{
-		ITr2ShaderMaterial * material = batch->GetShaderMaterialInterface();
+		auto material = batch->GetShaderMaterialInterface();
 
 
 		// If the batch doesn't have an effect, it is a view-modifier batch,
@@ -336,7 +336,7 @@ void Tr2RenderContextBase::RenderLightBatches( ITriRenderBatchAccumulator* batch
 	RenderBatchesSortedByEffect( batches, Tr2RenderContext::HINT_NO_PER_EFFECT_DATA );
 }
 
-void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator* batches, ITr2ShaderMaterial* overrideEffect, OverrideMode overrideMode )
+void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator* batches, Tr2Material* overrideEffect, OverrideMode overrideMode )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -360,7 +360,7 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 		perObjectConstantBuffers[i] = &m_perObjectConstantBuffers[i];
 	}
 
-	ITr2ShaderMaterial* overrideMaterial =  overrideEffect;
+	auto overrideMaterial =  overrideEffect;
 	for( TriRenderBatch* it = batches->GetFirstBatch(); it != nullptr; it = it->GetNext() )
 	{
 		auto mode = it->RenderWithOverride();
@@ -369,7 +369,7 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 			continue;
 		}
 
-		ITr2ShaderMaterial* materialForThisBatch = it->GetShaderMaterialInterface();
+		auto materialForThisBatch = it->GetShaderMaterialInterface();
 		auto shaderForThisBatch = it->GetShaderStateInterface();
 
 		if( !shaderForThisBatch || shaderForThisBatch->GetPassCount() == 0 )
@@ -454,7 +454,7 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 	}
 }
 
-void Tr2RenderContextBase::RenderBatchesForPicking( ITr2ShaderMaterial* effect, TriRenderBatch* &p, int &objectNum )
+void Tr2RenderContextBase::RenderBatchesForPicking( Tr2Material* effect, TriRenderBatch* &p, int &objectNum )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	CCP_ASSERT( effect );
@@ -512,7 +512,7 @@ void Tr2RenderContextBase::RenderBatchesForPicking( ITr2ShaderMaterial* effect, 
 
 			// Apply vertex shader inputs from the effect associated with the batch
 			auto originalShader = p->GetShaderStateInterface();
-			ITr2ShaderMaterial * originalMaterial = p->GetShaderMaterialInterface();
+			auto originalMaterial = p->GetShaderMaterialInterface();
 
 			// FIXME, allow for picking
 			if( originalShader == nullptr )
@@ -565,7 +565,7 @@ void Tr2RenderContextBase::RenderBatchesForPickingWithoutOverride( ITriRenderBat
 
 	for( TriRenderBatch* it = batches->GetFirstBatch(); it != nullptr; it = it->GetNext() )
 	{
-		ITr2ShaderMaterial* material = it->GetShaderMaterialInterface();
+		auto material = it->GetShaderMaterialInterface();
 
 		if( !material )
 		{

@@ -6,8 +6,8 @@
 #include "TriPoolAllocator.h"
 #include "Tr2Renderer.h"
 #include "ITr2GeometryProvider.h"
-#include "ITr2ShaderMaterial.h"
 #include "include/Rect.h"
+#include "Shader/Tr2Material.h"
 
 class Tr2PerObjectData;
 
@@ -50,9 +50,9 @@ public:
 	void SetPerObjectData( const Tr2PerObjectData* val ) { m_objectData = val; }
 
 
-	void SetShaderMaterial( ITr2ShaderMaterial* material );
+	void SetShaderMaterial( Tr2Material* material );
 
-    ITr2ShaderMaterial* GetShaderMaterialInterface() const;
+	Tr2Material* GetShaderMaterialInterface() const;
 	Tr2Shader* GetShaderStateInterface() const;
 
 	// Get the depth of the batch
@@ -110,7 +110,7 @@ protected:
 	const Tr2PerObjectData* m_objectData;
 
 private:
-	ITr2ShaderMaterialPtr m_shaderMaterial;
+	Tr2MaterialPtr m_shaderMaterial;
 
 	// User data, for generating arbitrary sort keys
 	int64_t m_userData;
@@ -366,7 +366,7 @@ struct EffectKeyGenerator
 	{
 		entry.m_sortKey = 0;
 		unsigned int effectKey = 0xFFFFFFFF;
-		ITr2ShaderMaterial* shaderMaterial = entry.m_batch->GetShaderMaterialInterface();
+		auto shaderMaterial = entry.m_batch->GetShaderMaterialInterface();
 		if( shaderMaterial )
 		{
 			effectKey = shaderMaterial->GetSortValue();

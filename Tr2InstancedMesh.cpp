@@ -441,7 +441,7 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 	for( auto it = areas->begin(); it != areas->end(); ++it )
 	{
 		Tr2MeshArea* area = *it;
-		ITr2ShaderMaterial* shadMat = area->GetMaterialInterface();
+		auto shadMat = area->GetMaterialInterface();
 
 		if( !area->GetDisplay())
 		{

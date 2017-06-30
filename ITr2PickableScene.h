@@ -12,7 +12,7 @@ class TriView;
 class TriViewport;
 class Tr2PickBuffer;
 BLUE_DECLARE_INTERFACE( ITr2Renderable );
-BLUE_DECLARE_INTERFACE( ITr2ShaderMaterial );
+BLUE_DECLARE( Tr2Material );
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -165,7 +165,7 @@ protected:
 	// Return Value:
 	//   Shader material to use for rendering.
 	// -------------------------------------------------------------
-	virtual ITr2ShaderMaterial* GetPickingEffect( PickComponents pass ) = 0;
+	virtual Tr2Material* GetPickingEffect( PickComponents pass ) = 0;
 
 	// -------------------------------------------------------------
 	// Description:

@@ -26,7 +26,7 @@ public:
 
 private:
 	ITr2RenderablePtr		m_renderable;
-	ITr2ShaderMaterialPtr	m_effectOverride;
+	Tr2MaterialPtr	m_effectOverride;
 	EveSpaceScene::BatchMap	m_batches;
 
 	bool					m_typeEnabled[4];

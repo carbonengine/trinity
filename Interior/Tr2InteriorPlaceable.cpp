@@ -319,7 +319,7 @@ void Tr2InteriorPlaceable::GetBatches( ITriRenderBatchAccumulator* batches,
 						for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
 						{
 							Tr2MeshArea* area = *it;
-							ITr2ShaderMaterial* shader = area->GetMaterialInterface();
+							auto shader = area->GetMaterialInterface();
 
 							// If the area isn't hidden & has an effect
 							if( !area->GetDisplay() || !shader )

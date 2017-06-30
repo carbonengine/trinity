@@ -73,7 +73,7 @@ void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, 
 	for( Tr2MeshAreaVector::iterator it = areas->begin(); it != areas->end(); ++it )
 	{
 		Tr2MeshArea* area = *it;
-		ITr2ShaderMaterial* material = area->GetMaterialInterface();
+		auto material = area->GetMaterialInterface();
 
 		if( !area->GetDisplay() || !material )
 		{

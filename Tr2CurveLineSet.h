@@ -14,7 +14,7 @@
 #include "Tr2DeviceResource.h"
 
 BLUE_DECLARE( Tr2CurveLineSet );
-BLUE_DECLARE_INTERFACE( ITr2ShaderMaterial );
+BLUE_DECLARE( Tr2Material );
 
 // -------------------------------------------------------------
 // Description:
@@ -87,12 +87,12 @@ public:
 	void ChangeLineAnimation( unsigned int id, const Vector4& color, float speed, float scale );
 	void ChangeLineSegmentation( unsigned int id, unsigned int numOfSegments );
 
-	void SetLineEffect( ITr2ShaderMaterialPtr shader )
+	void SetLineEffect( Tr2Material* shader )
 	{
 		m_lineEffect = shader;
 	}
 
-	void SetPickEffect( ITr2ShaderMaterialPtr shader )
+	void SetPickEffect( Tr2Material* shader )
 	{
 		m_pickEffect = shader;
 	}
@@ -127,10 +127,10 @@ protected:
 	};
 
 	// line draw shader
-	ITr2ShaderMaterialPtr m_lineEffect;
+	Tr2MaterialPtr m_lineEffect;
 
 	// line picking shader
-	ITr2ShaderMaterialPtr m_pickEffect;
+	Tr2MaterialPtr m_pickEffect;
 
 	// transforms of this set
 	Vector3 m_scaling;
@@ -172,7 +172,7 @@ private:
 	};
 
 	// Helper function to allocate batches and set the correct effect
-	void GetBatchImpl( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, ITr2ShaderMaterial* effect );
+	void GetBatchImpl( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect );
 
 	// check
 	bool isValidLineID( unsigned int id ) const;

@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "TriStepRunComputeShader.h"
-#include "ITr2ShaderMaterial.h"
+#include "Shader/Tr2Material.h"
 #include "include/ITr2GpuBuffer.h"
 
 BLUE_DEFINE( TriStepRunComputeShader );

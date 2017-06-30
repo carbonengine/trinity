@@ -610,7 +610,7 @@ void Tr2InteriorScene::PrepareBackgroundCubemapBatch( ITriRenderBatchAccumulator
 	}
 }
 
-void Tr2InteriorScene::RenderGeometry( ITr2ShaderMaterial* overrideEffect, Tr2RenderContext& renderContext )
+void Tr2InteriorScene::RenderGeometry( Tr2Material* overrideEffect, Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1068,7 +1068,7 @@ ITriRenderBatchAccumulator* Tr2InteriorScene::GetPickingBatchAccumulator( void )
 	return m_pickingBatches;
 }
 
-ITr2ShaderMaterial* Tr2InteriorScene::GetPickingEffect( PickComponents pass )
+Tr2Material* Tr2InteriorScene::GetPickingEffect( PickComponents pass )
 {
 	return m_pickEffect;
 }

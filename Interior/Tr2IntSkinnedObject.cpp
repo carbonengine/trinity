@@ -137,22 +137,6 @@ void Tr2IntSkinnedObject::RemoveReflectionMap( TriTextureRes* texture )
 	}
 }
 
-namespace {
-
-void SetVariableStore( ITr2ShaderMaterial* const effect, const std::vector<unsigned> & localFlags, Tr2VariableStorePtr store )
-{
-	if( effect )
-	{
-		effect->SetVariableStore( store );
-		if( Tr2Effect* fx = dynamic_cast<Tr2Effect*>( effect ) )
-		{
-			fx->RebuildCachedData();
-		}
-	}
-}
-
-}
-
 bool Tr2IntSkinnedObject::GetWorldBoundingBox( Vector3& min, Vector3& max ) const
 {
 	if( !GetLocalBoundingBox( min, max ) )
@@ -302,7 +286,7 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 				for( PTr2MeshAreaVector::iterator it = areas->begin(); it != areas->end(); ++it )
 				{
 					Tr2MeshArea* area = *it;
-					ITr2ShaderMaterial* shader = area->GetMaterialInterface();
+					auto shader = area->GetMaterialInterface();
 					if( !area->GetDisplay() || ( !shader ) )
 					{
 						continue;

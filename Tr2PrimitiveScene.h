@@ -76,7 +76,7 @@ private:
 	// If you need special behaviour for picking, these batches are rendered without a picking override
 	ITriRenderBatchAccumulator* GetPickingBatchAccumulator( void );
 
-	ITr2ShaderMaterial* GetPickingEffect( PickComponents pass );
+	Tr2Material* GetPickingEffect( PickComponents pass );
 	bool RenderPickingAreasForComponents( PickComponents pass ) const { return true; }
 	unsigned int GetRequiredPasses( PickComponents requestedComponents, PickComponents* passes );
 

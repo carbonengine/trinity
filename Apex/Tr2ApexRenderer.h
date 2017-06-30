@@ -11,7 +11,7 @@ class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 BLUE_DECLARE( Tr2Effect );
 
-BLUE_DECLARE_INTERFACE( ITr2ShaderMaterial );
+BLUE_DECLARE( Tr2Material );
 
 class Tr2ApexRenderer : public physx::apex::NxUserRenderer
 {
@@ -22,10 +22,10 @@ public:
 	void SetAccumulator( ITriRenderBatchAccumulator* val );
 	const Tr2PerObjectData* GetPerObjectData() const;
 	void SetPerObjectData(const Tr2PerObjectData* val);
-	void SetEffect( ITr2ShaderMaterial* effect );
-	void SetReversedEffect( ITr2ShaderMaterial* effect );
-	void SetEffectApexLod( ITr2ShaderMaterial* effect );
-	void SetReversedEffectApexLod( ITr2ShaderMaterial* effect );
+	void SetEffect( Tr2Material* effect );
+	void SetReversedEffect( Tr2Material* effect );
+	void SetEffectApexLod( Tr2Material* effect );
+	void SetReversedEffectApexLod( Tr2Material* effect );
 	void SetDepth( unsigned int depth );
 	unsigned int GetDepth() const;
 
@@ -38,12 +38,12 @@ public:
 private:
 	ITriRenderBatchAccumulator* m_accumulator;
 	const Tr2PerObjectData* m_perObjectData;
-	ITr2ShaderMaterialPtr m_effect;
+	Tr2MaterialPtr m_effect;
 	// An effect to use with reversed triangle order rendering
-	ITr2ShaderMaterialPtr m_reversedEffect;
+	Tr2MaterialPtr m_reversedEffect;
 
-	ITr2ShaderMaterialPtr m_effectApexLod;
-	ITr2ShaderMaterialPtr m_reversedEffectApexLod;
+	Tr2MaterialPtr m_effectApexLod;
+	Tr2MaterialPtr m_reversedEffectApexLod;
 
         // Depth value used for sorting batches
 	unsigned int m_depth;

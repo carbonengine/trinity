@@ -22,9 +22,6 @@ CCP_STATS_DECLARE( onionAvailable, "Trinity/OnionAvailable", false, CST_MEMORY, 
 
 using namespace Tr2RenderContextEnum;
 
-bool g_updateMaterialsEveryFrame = false;
-TRI_REGISTER_SETTING( "updateMaterialsEveryFrame", g_updateMaterialsEveryFrame );
-
 bool Tr2Renderer::m_disableGeometryLoad		= false;
 bool Tr2Renderer::m_disableTextureLoad		= false;
 bool Tr2Renderer::m_disableEffectLoad		= false;
@@ -848,7 +845,7 @@ void Tr2Renderer::Printf( TriDebugFont font, int fontStyle, const Vector3& pos, 
 	s_debugTextRenderer->Vprintf( font, rect, fontStyle, color, msg, args );
 }
 
-bool Tr2Renderer::DrawTexture( ITr2ShaderMaterial* effect, Tr2TextureAL& texture )
+bool Tr2Renderer::DrawTexture( Tr2Material* effect, Tr2TextureAL& texture )
 {
 	if( s_blitter )
 	{
@@ -866,7 +863,7 @@ bool Tr2Renderer::DrawTexture( ITr2ShaderMaterial* effect, Tr2TextureAL& texture
 //   true if success, false if no blitter available.
 // --------------------------------------------------------------------------------------
 
-bool Tr2Renderer::DrawFullScreenWithShader( ITr2ShaderMaterial * shader )
+bool Tr2Renderer::DrawFullScreenWithShader( Tr2Material * shader )
 {
 	if( s_blitter )
 	{
@@ -888,7 +885,7 @@ bool Tr2Renderer::DrawTexture( Tr2TextureAL& texture, const Vector2& tlTexCoord,
 	return false;
 }
 
-bool Tr2Renderer::DrawTexture( ITr2ShaderMaterial* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord )
+bool Tr2Renderer::DrawTexture( Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord )
 {
 	if( s_blitter )
 	{
@@ -901,7 +898,7 @@ bool Tr2Renderer::DrawTexture( ITr2ShaderMaterial* effect, Tr2TextureAL& texture
 	return false;
 }
 
-bool Tr2Renderer::DrawTexture( ITr2ShaderMaterial* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord )
+bool Tr2Renderer::DrawTexture( Tr2Material* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord )
 {
 	if( s_blitter )
 	{
@@ -914,7 +911,7 @@ bool Tr2Renderer::DrawTexture( ITr2ShaderMaterial* effect, const Vector2& tlTexC
 	return false;
 }
 
-bool Tr2Renderer::DrawTexture( ITr2ShaderMaterial* effect, Tr2TextureAL& texture, 
+bool Tr2Renderer::DrawTexture( Tr2Material* effect, Tr2TextureAL& texture,
                                const Vector2& tlTexCoord, const Vector2& brTexCoord,
                                const Vector2& tlVertexCoord, const Vector2& brVertexCoord )
 {
@@ -960,7 +957,7 @@ bool Tr2Renderer::DrawCubeTexture( Tr2TextureAL& texture, Tr2RenderContextEnum::
 //   true On success
 //   false On failure
 // --------------------------------------------------------------------------------------
-bool Tr2Renderer::RunComputeShader( ITr2ShaderMaterial* effect, 
+bool Tr2Renderer::RunComputeShader( Tr2Material* effect,
 									unsigned groupDimX, 
 									unsigned groupDimY, 
 									unsigned groupDimZ, 
@@ -1011,7 +1008,7 @@ bool Tr2Renderer::RunComputeShader( ITr2ShaderMaterial* effect,
 //   true On success
 //   false On failure
 // --------------------------------------------------------------------------------------
-bool Tr2Renderer::RunComputeShaderIndirect( ITr2ShaderMaterial* effect, Tr2GpuBufferAL& indirectParams, unsigned offset, Tr2RenderContext& renderContext )
+bool Tr2Renderer::RunComputeShaderIndirect( Tr2Material* effect, Tr2GpuBufferAL& indirectParams, unsigned offset, Tr2RenderContext& renderContext )
 {
 	if( !effect )
 	{
@@ -1173,7 +1170,7 @@ void Tr2Renderer::PopViewTransform()
 }
 
 
-void Tr2Renderer::DrawScreenQuad( ITr2ShaderMaterial* effect )
+void Tr2Renderer::DrawScreenQuad( Tr2Material* effect )
 {
 	if( s_blitter )
 	{
@@ -1189,7 +1186,7 @@ void Tr2Renderer::DrawScreenQuad( Tr2Effect* effect, const Vector2 &topLeft, con
 	}
 }
 
-void Tr2Renderer::DrawCameraSpaceScreenQuad( Tr2Shader* shader, ITr2ShaderMaterial* material )
+void Tr2Renderer::DrawCameraSpaceScreenQuad( Tr2Shader* shader, Tr2Material* material )
 {
 	if( s_blitter )
 	{
@@ -1218,11 +1215,6 @@ void Tr2Renderer::BeginFrame()
 	timeData.z = static_cast<float>(GetCurrentFrameCounter());
 	timeData.w = timeDataOld.x;
 	s_renderTimeVar = timeData;
-
-	if( g_updateMaterialsEveryFrame )
-	{
-		UpdateMaterials();
-	}
 }
 
 void Tr2Renderer::EndFrame()
@@ -1752,15 +1744,6 @@ TriSettings& Tr2Renderer::GetSettings()
 bool Tr2Renderer::IsRightHanded()
 {
 	return s_isRightHanded;
-}
-
-void Tr2Renderer::UpdateMaterials()
-{
-	EffectSet l;
-	for( EffectSet::iterator it = l.begin(); it != l.end(); ++it )
-	{
-		(*it)->UpdateMaterial();
-	}
 }
 
 bool Tr2Renderer::IsResourceCreationAllowed()

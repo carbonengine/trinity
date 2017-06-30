@@ -6,7 +6,7 @@
 #include "Tr2DeviceResource.h"
 #include "Tr2Variable.h"
 
-BLUE_DECLARE_INTERFACE( ITr2ShaderMaterial );
+BLUE_DECLARE( Tr2Material );
 BLUE_DECLARE( Tr2Shader );
 BLUE_DECLARE( Tr2Effect );
 
@@ -26,18 +26,18 @@ public:
 	};
 
 	// 2d blits unfiltered (point sampling)
-	bool DrawInCameraSpace( Tr2Shader* shader, ITr2ShaderMaterial* material );
+	bool DrawInCameraSpace( Tr2Shader* shader, Tr2Material* material );
 
 	bool Draw( Tr2TextureAL& texture, const Vector2& tlTexCoord = Vector2( 0.0f, 0.0f ), const Vector2& brTexCoord = Vector2( 1.0f, 1.0f ), Filtering filter = FILTER_POINT );
     bool Draw( Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
 		
-	bool Draw( ITr2ShaderMaterial* effect, Tr2TextureAL& texture );
-	bool Draw( ITr2ShaderMaterial* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord );
-    bool Draw( ITr2ShaderMaterial* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
+	bool Draw( Tr2Material* effect, Tr2TextureAL& texture );
+	bool Draw( Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord );
+    bool Draw( Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
 	
-	bool Draw( ITr2ShaderMaterial* effect );
-	bool Draw( ITr2ShaderMaterial* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord );
-	bool Draw( ITr2ShaderMaterial* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
+	bool Draw( Tr2Material* effect );
+	bool Draw( Tr2Material* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord );
+	bool Draw( Tr2Material* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
 
 	// cube blits
 	bool DrawCube( Tr2TextureAL& texture, Tr2RenderContextEnum::CubemapFace face, int mipLevel = 0 );
@@ -49,7 +49,7 @@ private:
 	bool OnPrepareResources();
 	
 private:
-	bool DrawHelper( Tr2Shader* shader, ITr2ShaderMaterial* material,
+	bool DrawHelper( Tr2Shader* shader, Tr2Material* material,
 		//TID3DTextureResource* rawTexture,
 		Tr2TextureAL* halTexture,
 		bool isCameraSpace,

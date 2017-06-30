@@ -189,7 +189,7 @@ private:
 
 	void SetBackgroundCubemapResPath();
 
-	void RenderGeometry( ITr2ShaderMaterial* overrideEffect, Tr2RenderContext& renderContext );
+	void RenderGeometry( Tr2Material* overrideEffect, Tr2RenderContext& renderContext );
 
 	void SetupTransformsForPicking( float fx, float fy, TriProjection* proj, TriView* view, TriViewport* viewport );
 	const std::vector<ITr2Renderable*>& GetPickingObjectsToRender( const Vector3& dirWorld );
@@ -200,7 +200,7 @@ private:
 	virtual ITriRenderBatchAccumulator* GetOpaquePickingBatchAccumulator();
 	virtual ITriRenderBatchAccumulator* GetPickingBatchAccumulator();
 
-	virtual ITr2ShaderMaterial* GetPickingEffect( PickComponents pass );
+	virtual Tr2Material* GetPickingEffect( PickComponents pass );
 	virtual bool RenderPickingAreasForComponents( PickComponents pass ) const { return true; }
 	virtual Tr2PickBuffer& GetPickBuffer( void ) { return m_pickBuffer; }
 	virtual unsigned int GetRequiredPasses( PickComponents requestedComponents, PickComponents* passes );

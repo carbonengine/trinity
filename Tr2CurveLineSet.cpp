@@ -1133,7 +1133,7 @@ void Tr2CurveLineSet::ClearLines()
 //   batchType - Type of batches to gather
 //   data - Per-object data
 // -------------------------------------------------------------
-void Tr2CurveLineSet::GetBatchImpl( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, ITr2ShaderMaterial* effect )
+void Tr2CurveLineSet::GetBatchImpl( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect )
 {
 	TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
 	if( batch )

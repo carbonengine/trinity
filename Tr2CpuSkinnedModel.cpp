@@ -169,7 +169,7 @@ void Tr2CpuSkinnedModel::GetBatchesForAreaDynamic( Tr2MeshAreaVector* areas, Tr2
 	for( PTr2MeshAreaVector::iterator it = areas->begin(); it != areas->end(); ++it )
 	{
 		Tr2MeshArea* area = *it;
-		ITr2ShaderMaterial* material = area->GetMaterialInterface();
+		auto material = area->GetMaterialInterface();
 
 		if( !area->GetDisplay() || !material )
 		{

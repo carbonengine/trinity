@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "TriStepRenderFullScreenShader.h"
-#include "ITr2ShaderMaterial.h"
+#include "Shader/Tr2Material.h"
 
 BLUE_DEFINE( TriStepRenderFullScreenShader );
 

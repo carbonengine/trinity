@@ -101,7 +101,7 @@ const Be::ClassInfo* Tr2Effect::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( Tr2Effect, "" )
 		MAP_INTERFACE( Tr2Effect )
-		MAP_INTERFACE( ITr2ShaderMaterial )
+		MAP_INTERFACE( Tr2Material )
 		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( IListNotify )

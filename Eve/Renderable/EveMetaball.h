@@ -132,9 +132,9 @@ private:
 	unsigned int m_triangleCount;
 
 	// shaders
-	ITr2ShaderMaterialPtr m_distortionEffect;
-	ITr2ShaderMaterialPtr m_additiveEffect;
-	ITr2ShaderMaterialPtr m_transparentEffect;
+	Tr2MaterialPtr m_distortionEffect;
+	Tr2MaterialPtr m_additiveEffect;
+	Tr2MaterialPtr m_transparentEffect;
 
 	// resulting transform
 	Matrix m_worldTransform;

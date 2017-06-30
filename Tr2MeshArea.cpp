@@ -133,12 +133,12 @@ bool Tr2MeshArea::GetUseSHLighting() const
 	return m_useSHLighting;
 }
 
-ITr2ShaderMaterial* Tr2MeshArea::GetMaterialInterface() const
+Tr2Material* Tr2MeshArea::GetMaterialInterface() const
 {
 	return m_material;
 }
 
-void Tr2MeshArea::SetMaterial( ITr2ShaderMaterial* mat )
+void Tr2MeshArea::SetMaterial( Tr2Material* mat )
 {
 	m_material = mat;
 }

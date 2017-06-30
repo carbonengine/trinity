@@ -38,7 +38,7 @@ Tr2Blitter::~Tr2Blitter()
 	GlobalStore().UnregisterVariable( "mipLevel" );
 }
 
-bool Tr2Blitter::Draw( ITr2ShaderMaterial* effect, 
+bool Tr2Blitter::Draw( Tr2Material* effect,
                        const Vector2& tlTexCoord, const Vector2& brTexCoord, 
                        const Vector2& tlVertexCoord, const Vector2& brVertexCoord )
 {
@@ -66,17 +66,17 @@ bool Tr2Blitter::Draw( Tr2TextureAL& texture,
                        tlTexCoord, brTexCoord, tlVertexCoord, brVertexCoord );
 }
 
-bool Tr2Blitter::Draw( ITr2ShaderMaterial* effect, Tr2TextureAL& texture )
+bool Tr2Blitter::Draw( Tr2Material* effect, Tr2TextureAL& texture )
 {
 	return DrawHelper( effect->GetShaderStateInterface(), effect, &texture, false );
 }
 
-bool Tr2Blitter::Draw( ITr2ShaderMaterial* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord )
+bool Tr2Blitter::Draw( Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord )
 {
 	return DrawHelper( effect->GetShaderStateInterface(), effect, &texture, false, tlTexCoord, brTexCoord );
 }
 
-bool Tr2Blitter::Draw( ITr2ShaderMaterial* effect, Tr2TextureAL& texture, 
+bool Tr2Blitter::Draw( Tr2Material* effect, Tr2TextureAL& texture,
                        const Vector2& tlTexCoord, const Vector2& brTexCoord, 
                        const Vector2& tlVertexCoord, const Vector2& brVertexCoord )
 {
@@ -92,21 +92,21 @@ bool Tr2Blitter::Draw( ITr2ShaderMaterial* effect, Tr2TextureAL& texture,
 //   true if success, false if there is an error.
 // See Also: Tr2Renderer::DrawFullScreenWithShader()
 // --------------------------------------------------------------------------------------
-bool Tr2Blitter::Draw( ITr2ShaderMaterial* material)
+bool Tr2Blitter::Draw( Tr2Material* material)
 {
 	auto shader = material->GetShaderStateInterface();
 
 	return DrawHelper( shader, material, NULL, false );
 }
 
-bool Tr2Blitter::Draw( ITr2ShaderMaterial* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord )
+bool Tr2Blitter::Draw( Tr2Material* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord )
 {
 	auto shader = effect->GetShaderStateInterface();
 
 	return DrawHelper( shader, effect, NULL, false, tlTexCoord, brTexCoord );
 }
 
-bool Tr2Blitter::DrawInCameraSpace( Tr2Shader* shader, ITr2ShaderMaterial* material )
+bool Tr2Blitter::DrawInCameraSpace( Tr2Shader* shader, Tr2Material* material )
 {
 	return DrawHelper( shader, material, NULL, true );
 }
@@ -120,7 +120,7 @@ bool Tr2Blitter::DrawCube( Tr2TextureAL& texture, Tr2RenderContextEnum::CubemapF
 	return DrawHelper( m_blitCubeEffect->GetShaderStateInterface(), m_blitCubeEffect, &texture, false );
 }
 
-bool Tr2Blitter::DrawHelper( Tr2Shader* shader, ITr2ShaderMaterial* material,
+bool Tr2Blitter::DrawHelper( Tr2Shader* shader, Tr2Material* material,
                              Tr2TextureAL* halTexture,
 							 bool isCameraSpace,
 							 const Vector2& tlTexCoord, const Vector2& brTexCoord,

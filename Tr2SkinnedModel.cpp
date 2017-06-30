@@ -48,7 +48,7 @@ void Tr2SkinnedModel::GetBatchesForArea( Tr2MeshAreaVector* areas, Tr2Mesh* mesh
 	for( PTr2MeshAreaVector::iterator it = areas->begin(); it != areas->end(); ++it )
 	{
 		Tr2MeshArea* area = *it;
-		ITr2ShaderMaterial* shader = area->GetMaterialInterface();
+		auto shader = area->GetMaterialInterface();
 		if( !area->GetDisplay() || ( !shader ) )
 		{
 			continue;

@@ -72,12 +72,12 @@ TriRenderBatch::~TriRenderBatch()
 {
 }
 
-void TriRenderBatch::SetShaderMaterial( ITr2ShaderMaterial* val )
+void TriRenderBatch::SetShaderMaterial( Tr2Material* val )
 {
 	m_shaderMaterial = val;
 }
 
-ITr2ShaderMaterial* TriRenderBatch::GetShaderMaterialInterface() const
+Tr2Material* TriRenderBatch::GetShaderMaterialInterface() const
 {
 	return m_shaderMaterial;
 }

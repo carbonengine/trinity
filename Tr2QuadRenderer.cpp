@@ -76,7 +76,7 @@ void Tr2QuadRenderer::RegisterEffect(
 	uint32_t instanceSize, 
 	uint32_t quadCount, 
 	const Tr2VertexDefinition& definition, 
-	ITr2ShaderMaterial* effect )
+	Tr2Material* effect )
 {
 	auto found = m_effects.find( key );
 	if( found != m_effects.end() )

@@ -399,7 +399,7 @@ Tr2PickBuffer& Tr2PrimitiveScene::GetPickBuffer( void )
 	return m_pickBuffer;
 }
 
-ITr2ShaderMaterial* Tr2PrimitiveScene::GetPickingEffect( PickComponents pass )
+Tr2Material* Tr2PrimitiveScene::GetPickingEffect( PickComponents pass )
 { 
 	return m_pickEffect; 
 }

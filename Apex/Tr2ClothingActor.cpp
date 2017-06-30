@@ -401,17 +401,17 @@ bool Tr2ClothingActor::GetVisualize()
 	return ret;
 }
 
-ITr2ShaderMaterial* Tr2ClothingActor::GetEffect()
+Tr2Material* Tr2ClothingActor::GetEffect()
 {
 	return m_effect;
 }
 
-ITr2ShaderMaterial* Tr2ClothingActor::GetDepthEffect()
+Tr2Material* Tr2ClothingActor::GetDepthEffect()
 {
 	return m_depthEffect;
 }
 
-ITr2ShaderMaterial* Tr2ClothingActor::GetDepthNormalEffect()
+Tr2Material* Tr2ClothingActor::GetDepthNormalEffect()
 {
 	return m_depthNormalEffect;
 }
@@ -423,7 +423,7 @@ ITr2ShaderMaterial* Tr2ClothingActor::GetDepthNormalEffect()
 // Return value:
 //   An effect to use with reversed triangle order for forward redering 
 // -------------------------------------------------------------
-ITr2ShaderMaterial* Tr2ClothingActor::GetEffectReversed()
+Tr2Material* Tr2ClothingActor::GetEffectReversed()
 {
 	return m_effectReversed;
 }
@@ -435,7 +435,7 @@ ITr2ShaderMaterial* Tr2ClothingActor::GetEffectReversed()
 // Return value:
 //   An effect to use with reversed triangle order for shadow redering 
 // -------------------------------------------------------------
-ITr2ShaderMaterial* Tr2ClothingActor::GetDepthEffectReversed()
+Tr2Material* Tr2ClothingActor::GetDepthEffectReversed()
 {
 	return m_depthEffectReversed;
 }
@@ -448,7 +448,7 @@ ITr2ShaderMaterial* Tr2ClothingActor::GetDepthEffectReversed()
 //   An effect to use with reversed triangle order for prepass 
 //   depth/normal redering 
 // -------------------------------------------------------------
-ITr2ShaderMaterial* Tr2ClothingActor::GetDepthNormalEffectReversed()
+Tr2Material* Tr2ClothingActor::GetDepthNormalEffectReversed()
 {
 	return m_depthNormalEffectReversed;
 }

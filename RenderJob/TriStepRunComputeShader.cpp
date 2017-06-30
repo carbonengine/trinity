@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "TriStepRunComputeShader.h"
-#include "ITr2ShaderMaterial.h"
+#include "Shader/Tr2Material.h"
 #include "include/ITr2GpuBuffer.h"
 #include "Tr2Renderer.h"
 
@@ -25,7 +25,7 @@ TriStepRunComputeShader::TriStepRunComputeShader( IRoot* lockobj )
 //   Blue-exposed initializer. 
 // --------------------------------------------------------------------------------------
 void TriStepRunComputeShader::py__init__( 
-	ITr2ShaderMaterial* effect, 
+	Tr2Material* effect,
 	Be::OptionalWithDefaultValue<unsigned, 1> groupDimX,
 	Be::OptionalWithDefaultValue<unsigned, 1> groupDimY,
 	Be::OptionalWithDefaultValue<unsigned, 1> groupDimZ )

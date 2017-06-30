@@ -259,7 +259,7 @@ void Tr2MeshBase::GetBatches( ITriRenderBatchAccumulator* batches,
 	for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
 	{
 		Tr2MeshArea* area = *it;
-		ITr2ShaderMaterial* shadMat = area->GetMaterialInterface();
+		auto shadMat = area->GetMaterialInterface();
 
 		if( !area->GetDisplay())
 		{

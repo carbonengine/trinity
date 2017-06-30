@@ -6,7 +6,7 @@
 #include "TbbStub.h"
 #include "ITr2Renderable.h"
 
-BLUE_DECLARE_INTERFACE( ITr2ShaderMaterial );
+BLUE_DECLARE( Tr2Material );
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -26,7 +26,7 @@ public:
 
 	typedef uint64_t EffectKey; 
 
-	void RegisterEffect( EffectKey key, TriBatchType batchType, uint32_t instanceSize, uint32_t quadCount, const Tr2VertexDefinition& definition, ITr2ShaderMaterial* effect );
+	void RegisterEffect( EffectKey key, TriBatchType batchType, uint32_t instanceSize, uint32_t quadCount, const Tr2VertexDefinition& definition, Tr2Material* effect );
 	void UnregisterEffect( EffectKey key );
 
 	void AddQuads( EffectKey effectKey, const void* sprites, size_t count );
@@ -60,7 +60,7 @@ private:
 	struct EffectRecord
 	{
 		// Effect to use
-		ITr2ShaderMaterialPtr effect;
+		Tr2MaterialPtr effect;
 		// Batch type
 		TriBatchType batchType;
 		// Size of instance vertex in bytes

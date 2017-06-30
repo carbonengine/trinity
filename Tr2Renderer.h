@@ -37,7 +37,7 @@ class TriShadowMap;
 class TriPoolAllocator;
 class TriViewport;
 
-BLUE_DECLARE_INTERFACE( ITr2ShaderMaterial );
+BLUE_DECLARE( Tr2Material );
 BLUE_DECLARE( Tr2Shader );
 
 // See http://core/wiki/Tr2Renderer
@@ -220,19 +220,19 @@ public:
 	static void RenderDebugInfo( Tr2RenderContext& renderContext );
 
 	static bool DrawTexture( Tr2TextureAL& texture, const Vector2& tlTexCoord = Vector2( 0.0f, 0.0f ), const Vector2& brTexCoord = Vector2( 1.0f, 1.0f ), Tr2Blitter::Filtering filter = Tr2Blitter::FILTER_POINT );
-	static bool DrawTexture( ITr2ShaderMaterial* effect, Tr2TextureAL& texture );
-	static bool DrawTexture( ITr2ShaderMaterial* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord );
-    static bool DrawTexture( ITr2ShaderMaterial* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
-	static bool DrawTexture( ITr2ShaderMaterial* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord );
+	static bool DrawTexture( Tr2Material* effect, Tr2TextureAL& texture );
+	static bool DrawTexture( Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord );
+    static bool DrawTexture( Tr2Material* effect, Tr2TextureAL& texture, const Vector2& tlTexCoord, const Vector2& brTexCoord, const Vector2& tlVertexCoord, const Vector2& brVertexCoord );
+	static bool DrawTexture( Tr2Material* effect, const Vector2& tlTexCoord, const Vector2& brTexCoord );
 
-	static void DrawScreenQuad( ITr2ShaderMaterial* effect );
+	static void DrawScreenQuad( Tr2Material* effect );
 	static void DrawScreenQuad( Tr2Effect* effect, const Vector2 &topLeft, const Vector2 &bottomRight );
 	static bool DrawCubeTexture( Tr2TextureAL& texture, Tr2RenderContextEnum::CubemapFace face, unsigned int mipLevel = 0 );
-	static void DrawCameraSpaceScreenQuad( Tr2Shader* shader, ITr2ShaderMaterial* material );
-	static bool DrawFullScreenWithShader( ITr2ShaderMaterial * material );
+	static void DrawCameraSpaceScreenQuad( Tr2Shader* shader, Tr2Material* material );
+	static bool DrawFullScreenWithShader( Tr2Material * material );
 
-	static bool RunComputeShader( ITr2ShaderMaterial* effect, unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ, Tr2RenderContext& renderContext );
-	static bool RunComputeShaderIndirect( ITr2ShaderMaterial* effect, Tr2GpuBufferAL& indirectParams, unsigned offset, Tr2RenderContext& renderContext );
+	static bool RunComputeShader( Tr2Material* effect, unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ, Tr2RenderContext& renderContext );
+	static bool RunComputeShaderIndirect( Tr2Material* effect, Tr2GpuBufferAL& indirectParams, unsigned offset, Tr2RenderContext& renderContext );
 
 	// ***** Note: consider Tr2PushPopRT instead *****
 	static void PushRenderTarget( Tr2RenderContext& renderContext );	// does not set any RT, just stores the current one so it can be safely changed later
@@ -259,9 +259,6 @@ public:
 	static void SetTbbWorkerThreadCount( int threads );
 
 	static TriSettings& GetSettings();
-
-	// Material Support
-	static void UpdateMaterials();
 
 	// Used to detect if the creation of resources is allowed
 	static bool IsResourceCreationAllowed();

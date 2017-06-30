@@ -728,7 +728,7 @@ public:
 	//   effect - Effect to use for normal order rendering
 	//   reversedEffect - Effect to use for reversed order rendering
 	// -------------------------------------------------------------
-	void Render( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, ITr2ShaderMaterial* effect, ITr2ShaderMaterial* reversedEffect, bool skinned )
+	void Render( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect, Tr2Material* reversedEffect, bool skinned )
 	{
 		if( !accumulator )
 		{
@@ -1126,7 +1126,7 @@ void Tr2ApexRenderer::SetPerObjectData( const Tr2PerObjectData* val )
 	m_perObjectData = val;
 }
 
-void Tr2ApexRenderer::SetEffect( ITr2ShaderMaterial* effect )
+void Tr2ApexRenderer::SetEffect( Tr2Material* effect )
 {
 	m_effect = effect;
 }
@@ -1137,17 +1137,17 @@ void Tr2ApexRenderer::SetEffect( ITr2ShaderMaterial* effect )
 // Arguments:
 //   effect - An effect to use with reversed triangle order rendering
 // -------------------------------------------------------------
-void Tr2ApexRenderer::SetReversedEffect( ITr2ShaderMaterial* effect )
+void Tr2ApexRenderer::SetReversedEffect( Tr2Material* effect )
 {
 	m_reversedEffect = effect;
 }
 
-void Tr2ApexRenderer::SetEffectApexLod( ITr2ShaderMaterial* effect )
+void Tr2ApexRenderer::SetEffectApexLod( Tr2Material* effect )
 {
 	m_effectApexLod = effect;
 }
 
-void Tr2ApexRenderer::SetReversedEffectApexLod( ITr2ShaderMaterial* effect )
+void Tr2ApexRenderer::SetReversedEffectApexLod( Tr2Material* effect )
 {
 	m_reversedEffectApexLod = effect;
 }
