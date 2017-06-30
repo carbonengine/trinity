@@ -219,12 +219,6 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 	return m_defaultBackBuffer.GetFormat();
 }
 
-ALResult Tr2RenderContextAL::GetAFRGroupCount( uint32_t& count )
-{
-	count = 1;
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& presentationParameters )
 {
 	CR_RETURN_HR( m_defaultBackBuffer.Create(	

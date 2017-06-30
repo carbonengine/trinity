@@ -22,16 +22,6 @@ TEST_F( WithValidRenderContext, CanSetViewport )
 	EXPECT_EQ( viewport.m_maxZ, gotViewport.m_maxZ );
 }
 
-#if TRINITY_PLATFORM != TRINITY_OPENGLES2
-TEST_F( WithValidRenderContext, CanGetAfrGroupCount )
-{
-	uint32_t count = 0xDeadBeef;
-	ASSERT_HRESULT_SUCCEEDED( renderContext->GetAFRGroupCount( count ) );
-	EXPECT_NE( 0xDeadBeef, count );
-	EXPECT_GT( count, 0u );
-}
-#endif
-
 TEST_F( WithValidRenderContext, CanGetBackbufferFormat )
 {
 	EXPECT_NE( Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN, renderContext->GetBackBufferFormat() );

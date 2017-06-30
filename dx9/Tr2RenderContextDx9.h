@@ -227,8 +227,6 @@ public:
 	void TrashQuery( IDirect3DQuery9* query );
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
-
-	ALResult GetAFRGroupCount( uint32_t& count );
 	
 	static const uint32_t SHADER_TYPE_MASK = 
 		( 1 << Tr2RenderContextEnum::VERTEX_SHADER ) |

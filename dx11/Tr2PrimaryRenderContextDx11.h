@@ -35,8 +35,6 @@ public:
 	
 	bool	IsSupportedRenderTargetFormat(	Tr2RenderContextEnum::PixelFormat format, 
 											bool withAutoGenMipmap = false );
-	ALResult GetAFRGroupCount( uint32_t& count );
-
 	static const uint32_t SHADER_TYPE_MASK = 
 		( 1 << Tr2RenderContextEnum::VERTEX_SHADER ) |
 		( 1 << Tr2RenderContextEnum::PIXEL_SHADER ) |

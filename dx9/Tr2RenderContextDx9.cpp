@@ -6,9 +6,6 @@
 
 #include "ALLog.h"
 
-#include "nvapi.h"
-#include "atimgpud.h"
-
 #include <ddraw.h>
 
 using namespace Tr2RenderContextEnum;
@@ -17,7 +14,6 @@ using namespace Tr2RenderContextEnum;
 CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
 CCP_STATS_DECLARE( vertexCount			, "Trinity/AL/vertexCount"			, true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
 CCP_STATS_DECLARE( sceneDrawcallCount	, "Trinity/AL/sceneDrawcallCount"	, true, CST_COUNTER_LOW,  "Number of DrawPrimitive calls." );
-CCP_STATS_DECLARE( numAFRGroups, "Trinity/AL/AFR/numAFRGroups", false, CST_COUNTER_LOW, "Number of active AFR (SLI or Crossfire) groups." );
 
 
 namespace
@@ -868,10 +864,6 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	{
 		m_events->OnContextCreated( *this );
 	}
-	
-	uint32_t numSLIGroups;
-	CR( GetAFRGroupCount(numSLIGroups) );
-	CCP_STATS_SET(numAFRGroups, numSLIGroups);
 
 	Tr2GpuTelemetryDeviceCreated();
 
@@ -898,40 +890,6 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 	CR_RETURN_VAL( rt->GetDesc( &desc ), PIXEL_FORMAT_UNKNOWN );
 
 	return ConvertD3DBackBufferFormat( desc.Format );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Checks if the current GPU is in AFR mode and returns the number of AFR groups. Works
-//   for nVidia and ATI GPUs.
-// Arguments:
-//   count - (out) Number of AFR groups
-// Return Value:
-//   HRESULT of the call.
-// --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::GetAFRGroupCount( uint32_t& count )
-{
-	if( !m_d3dDevice9 )
-	{
-		return E_FAIL;
-	}
-
-	NV_GET_CURRENT_SLI_STATE sliState;
-	sliState.version = NV_GET_CURRENT_SLI_STATE_VER;
-	if( NvAPI_D3D_GetCurrentSLIState( m_d3dDevice9, &sliState ) != NVAPI_OK )
-	{
-		// Not nVidia GPU - check CrossFire
-		count = AtiMultiGPUAdapters();
-	}
-	else if( sliState.numAFRGroups <= 1 )
-	{
-		count = 1;
-	}
-	else
-	{
-		count = sliState.numAFRGroups;
-	}
-	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& /*pPresentationParameters*/ )

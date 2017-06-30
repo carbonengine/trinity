@@ -7,9 +7,6 @@
 
 #include "ALLog.h"
 
-#include "nvapi.h"
-#include "atimgpud.h"
-
 using namespace Tr2RenderContextEnum;
 
 bool g_gatherDX11Statistics = false;
@@ -25,7 +22,6 @@ CCP_STATS_DECLARE( dx11CPrimitives, "Trinity/AL/dx11/CPrimitives", false, CST_CO
 CCP_STATS_DECLARE( dx11PSInvocations, "Trinity/AL/dx11/PSInvocations", false, CST_COUNTER_HIGH, "Number of times a pixel shader was invoked" );
 CCP_STATS_DECLARE( dx11HSInvocations, "Trinity/AL/dx11/HSInvocations", false, CST_COUNTER_HIGH, "Number of times a hull shader was invoked" );
 CCP_STATS_DECLARE( dx11DSInvocations, "Trinity/AL/dx11/DSInvocations", false, CST_COUNTER_HIGH, "Number of times a domain shader was invoked" );
-CCP_STATS_DECLARE( numAFRGroups, "Trinity/AL/AFR/numAFRGroups", false, CST_COUNTER_LOW, "Number of active AFR (SLI or Crossfire) groups." );
 
 namespace Tr2RenderContextImpl {
 	struct NullContext;
@@ -406,56 +402,12 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 
 	m_vsyncInterval = presentationParameters.presentInterval & 0xf;
 
-	uint32_t numSLIGroups;
-	CR( GetAFRGroupCount(numSLIGroups) );
-	CCP_STATS_SET(numAFRGroups, numSLIGroups);
 	return CreateBackBuffers( presentationParameters );
 }
 
 PixelFormat Tr2PrimaryRenderContextAL::GetBackBufferFormat() const
 {
 	return m_defaultBackBuffer ? m_defaultBackBuffer->GetFormat() : PIXEL_FORMAT_UNKNOWN;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Checks if the current GPU is in AFR mode and returns the number of AFR groups. Works
-//   for nVidia and ATI GPUs.
-// Arguments:
-//   count - (out) Number of AFR groups
-// Return Value:
-//   HRESULT of the call.
-// --------------------------------------------------------------------------------------
-ALResult Tr2PrimaryRenderContextAL::GetAFRGroupCount( uint32_t& count )
-{
-	if( !m_d3dDevice11 )
-	{
-		return E_FAIL;
-	}
-
-	if( m_adapterVendorId == 32902 )
-	{
-		// No AFR on intel "gpu"s
-		count = 1;
-		return S_OK;
-	}
-
-	NV_GET_CURRENT_SLI_STATE sliState;
-	sliState.version = NV_GET_CURRENT_SLI_STATE_VER;
-	if( NvAPI_D3D_GetCurrentSLIState( m_d3dDevice11, &sliState ) != NVAPI_OK )
-	{
-		// Not nVidia GPU - check CrossFire
-		count = AtiMultiGPUAdapters();
-	}
-	else if( sliState.numAFRGroups <= 1 )
-	{
-		count = 1;
-	}
-	else
-	{
-		count = sliState.numAFRGroups;
-	}
-	return S_OK;
 }
 
 ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParametersAL& presentationParameters )

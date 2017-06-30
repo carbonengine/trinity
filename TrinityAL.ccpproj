@@ -31,10 +31,6 @@ Link:
   ProgramDatabaseFile: $(TargetDir)$(TargetName).pdb
 
 BaseConfigurations:
-  Windows:
-    Imports:
-    - ../../../../../../sdk/ATI/CrossFire Detect/CrossFire.yaml
-
   Posix:
     Imports:
     - ../../../../../../sdk/glfw/3.0/glfw_3.0.yaml
@@ -87,7 +83,6 @@ BaseConfigurations:
   D3D9:
     Imports:
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
-    - ../../../../../../sdk/nvidia/NVAPI/R265/NVAPI_R265.yaml
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_DIRECTX9
@@ -95,7 +90,6 @@ BaseConfigurations:
   D3D11:
     Imports:
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
-    - ../../../../../../sdk/nvidia/NVAPI/R265/NVAPI_R265.yaml
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_DIRECTX11
@@ -123,7 +117,6 @@ BaseConfigurations:
 Configurations:
   Debug_D3D9|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Debug
     - D3D9
     General:
@@ -131,7 +124,6 @@ Configurations:
   
   Dev_D3D9|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Dev
     - D3D9
     General:
@@ -139,7 +131,6 @@ Configurations:
   
   Release_D3D9|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Release
     - D3D9
     General:
@@ -147,7 +138,6 @@ Configurations:
   
   Debug_D3D11|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Debug
     - D3D11
     General:
@@ -158,7 +148,6 @@ Configurations:
 
   Dev_D3D11|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Dev
     - D3D11
     General:
@@ -169,7 +158,6 @@ Configurations:
 
   Release_D3D11|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Release
     - D3D11
     General:
@@ -177,7 +165,6 @@ Configurations:
   
   Debug_GL4|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Debug
     - GL4
     General:
@@ -188,7 +175,6 @@ Configurations:
 
   Dev_GL4|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Dev
     - GL4
     General:
@@ -199,7 +185,6 @@ Configurations:
 
   Release_GL4|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Release
     - GL4
     General:
@@ -231,7 +216,6 @@ Configurations:
 
   Debug_GLES2|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Debug
     - GLES2
     General:
@@ -239,7 +223,6 @@ Configurations:
 
   Dev_GLES2|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Dev
     - GLES2
     General:
@@ -247,7 +230,6 @@ Configurations:
 
   Release_GLES2|Win32,x64:
     BaseConfigurations:
-    - Windows
     - Release
     - GLES2
     General:

@@ -1118,22 +1118,6 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 	return m_defaultBackBuffer.GetFormat();
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Checks if the current GPU is in AFR mode and returns the number of AFR groups. Works
-//   for nVidia and ATI GPUs.
-//   TODO: implement me
-// Arguments:
-//   count - (out) Number of AFR groups
-// Return Value:
-//   HRESULT of the call.
-// --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::GetAFRGroupCount( uint32_t& count )
-{
-	count = 1;
-	return S_OK;
-}
-
 #if defined(_WIN32) && ( defined( TRINITYDEV ) || !defined( NDEBUG ) )
 
 namespace

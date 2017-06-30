@@ -230,8 +230,6 @@ public:
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
 
-	ALResult GetAFRGroupCount( uint32_t& count );
-
 #ifdef _WIN32
 	bool	IsValid() { return m_hRC != (HGLRC)0xFFffFFff; }
 #else
