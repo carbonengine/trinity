@@ -1296,6 +1296,9 @@
     <ClInclude Include="Shader\Tr2EffectStateManager.h">
       <Filter>Source Files\Shader</Filter>
     </ClInclude>
+    <ClInclude Include="Shader\Tr2Material.h">
+      <Filter>Source Files\Shader</Filter>
+    </ClInclude>
     <ClInclude Include="Shader\Tr2Shader.h">
       <Filter>Source Files\Shader</Filter>
     </ClInclude>
@@ -3379,6 +3382,12 @@
       <Filter>Source Files\Shader</Filter>
     </ClCompile>
     <ClCompile Include="Shader\Tr2Effect_Blue.cpp">
+      <Filter>Source Files\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader\Tr2Material.cpp">
+      <Filter>Source Files\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader\Tr2Material_Blue.cpp">
       <Filter>Source Files\Shader</Filter>
     </ClCompile>
     <ClCompile Include="Shader\Tr2Shader.cpp">

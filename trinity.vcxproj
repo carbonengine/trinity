@@ -3085,6 +3085,7 @@
     <ClInclude Include="Shader\Tr2Effect.h"/>
     <ClInclude Include="Shader\Tr2EffectDescription.h"/>
     <ClInclude Include="Shader\Tr2EffectStateManager.h"/>
+    <ClInclude Include="Shader\Tr2Material.h"/>
     <ClInclude Include="Shader\Tr2Shader.h"/>
     <ClInclude Include="Shader\Tr2ShaderBuffer.h"/>
     <ClInclude Include="Shader\Parameter\Tr2FloatParameter.h"/>
@@ -3784,6 +3785,8 @@
     <ClCompile Include="Shader\Tr2EffectDescription.cpp"/>
     <ClCompile Include="Shader\Tr2EffectStateManager.cpp"/>
     <ClCompile Include="Shader\Tr2Effect_Blue.cpp"/>
+    <ClCompile Include="Shader\Tr2Material.cpp"/>
+    <ClCompile Include="Shader\Tr2Material_Blue.cpp"/>
     <ClCompile Include="Shader\Tr2Shader.cpp"/>
     <ClCompile Include="Shader\Tr2ShaderBuffer.cpp"/>
     <ClCompile Include="Shader\Tr2ShaderBuffer_Blue.cpp"/>
