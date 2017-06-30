@@ -12,10 +12,6 @@
 
 #include "Blue/Include/IBlueCallbackMan.h"
 
-#ifdef _WIN32
-#include "nvapi.h"
-#endif
-
 #if APEX_ENABLED
 #include "Apex/Apex.h"
 #endif
@@ -31,17 +27,6 @@ extern int g_windowResized;
 #endif
 
 namespace {
-
-	void SetupNVidia()
-	{
-#ifdef _WIN32
-		NvAPI_Status status = NvAPI_Initialize();
-		if (status != NVAPI_OK)
-		{
-			CCP_LOG( "Unable to initialize NVAPI - probably not on Nvidia hardware" );
-		}
-#endif
-	}
 
 	HRESULT CreateDeviceInt(
 		uint32_t Adapter,
@@ -209,8 +194,6 @@ bool TriDevice::CreateSimpleDevice(
 	// Clean out old resources and the old device (if exists)
 	Invalidate( TRISTORAGE_ALL );
 
-    SetupNVidia();
-
 	// Build a windowd device:
 	Tr2PresentParametersAL pp = mPresentParam;
 	
@@ -333,10 +316,6 @@ bool TriDevice::ChangeDevice(
 		ReleaseDeviceResources( TRISTORAGE_ALL );
 		Tr2RenderContext::DestroyMainThreadRenderContext();	
 	}
-
-
-	// Constructive phase.
-    SetupNVidia();
 
 	if( FAILED( CreateDeviceInt( adapter, hWnd, *pp ) ) )
 	{
