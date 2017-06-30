@@ -75,9 +75,6 @@
     <ClInclude Include="ITr2ShaderMaterial.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ITr2ShaderState.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="ITr2SkinnedObject.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -310,15 +307,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2SkinnedModel.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SkinnedModelBuilder.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SkinnedModelBuilderBlend.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2SkinnedModelBuilderSource.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2SkinnedObject.h">
@@ -1828,18 +1816,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2SkinnedModel.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SkinnedModelBuilder.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SkinnedModelBuilderBlend_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SkinnedModelBuilderSource.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2SkinnedModelBuilder_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2SkinnedModel_Blue.cpp">

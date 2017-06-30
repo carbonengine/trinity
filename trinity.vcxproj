@@ -2678,7 +2678,6 @@
     <ClInclude Include="ITr2PickableScene.h"/>
     <ClInclude Include="ITr2Renderable.h"/>
     <ClInclude Include="ITr2ShaderMaterial.h"/>
-    <ClInclude Include="ITr2ShaderState.h"/>
     <ClInclude Include="ITr2SkinnedObject.h"/>
     <ClInclude Include="ITr2TextureProvider.h"/>
     <ClInclude Include="ITr2VisibilityQueryable.h"/>
@@ -2757,9 +2756,6 @@
     <ClInclude Include="Tr2ShLightingManager.h"/>
     <ClInclude Include="Tr2SHProbeRes.h"/>
     <ClInclude Include="Tr2SkinnedModel.h"/>
-    <ClInclude Include="Tr2SkinnedModelBuilder.h"/>
-    <ClInclude Include="Tr2SkinnedModelBuilderBlend.h"/>
-    <ClInclude Include="Tr2SkinnedModelBuilderSource.h"/>
     <ClInclude Include="Tr2SkinnedObject.h"/>
     <ClInclude Include="Tr2SkinnedObjectLOD.h"/>
     <ClInclude Include="Tr2SolidSet.h"/>
@@ -3267,10 +3263,6 @@
     <ClCompile Include="Tr2SHProbeRes.cpp"/>
     <ClCompile Include="Tr2SHProbeRes_Blue.cpp"/>
     <ClCompile Include="Tr2SkinnedModel.cpp"/>
-    <ClCompile Include="Tr2SkinnedModelBuilder.cpp"/>
-    <ClCompile Include="Tr2SkinnedModelBuilderBlend_Blue.cpp"/>
-    <ClCompile Include="Tr2SkinnedModelBuilderSource.cpp"/>
-    <ClCompile Include="Tr2SkinnedModelBuilder_Blue.cpp"/>
     <ClCompile Include="Tr2SkinnedModel_Blue.cpp"/>
     <ClCompile Include="Tr2SkinnedObject.cpp"/>
     <ClCompile Include="Tr2SkinnedObjectLOD.cpp"/>
