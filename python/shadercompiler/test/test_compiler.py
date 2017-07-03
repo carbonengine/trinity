@@ -1,4 +1,3 @@
-import os
 import shutil
 import tempfile
 import unittest2
@@ -73,7 +72,7 @@ class TestCompiler(unittest2.TestCase):
         with open(src_path, 'w') as f:
             f.write(source)
         compiler.compile_shader(src_path, dest_path, *args, **kwargs)
-        return EffectInfo(dest_path)
+        return EffectInfo(dest_path).get_shader()
 
     def test_compiling_empty_shader_raises(self):
         with self.assertRaises(compiler.CompilerError):
@@ -85,7 +84,8 @@ class TestCompiler(unittest2.TestCase):
 
     def test_can_compile_shader(self):
         info = self._compile_and_parse(MINIMAL_SHADER, defines={'PLATFORM': 0})
-        self.assertEqual(len(info.passes), 1)
+        self.assertEqual(len(info.techniques), 1)
+        self.assertEqual(len(info.techniques[0].passes), 1)
 
     def test_can_access_parameters(self):
         info = self._compile_and_parse(SHADER_WITH_PARAMETER, defines={'PLATFORM': 0})

@@ -249,6 +249,18 @@ class Pass(object):
             self.states[state] = value
 
 
+class Technique(object):
+    def __init__(self, stream, string_table, version):
+        self.passes = []
+        """:type: list[Pass]"""
+        self.name = 'Main'
+        if version > 6:
+            self.name = string_table.get_string(stream.read_uint32())
+        pass_count = stream.read_uint8()
+        for i in xrange(pass_count):
+            self.passes.append(Pass(stream, string_table, version))
+
+
 class AnnotationType(object):
     BOOL = 0
     INT = 1
@@ -339,12 +351,15 @@ class Permutation(object):
 
 class ShaderInfo(object):
     def __init__(self, stream, string_table, version, options):
-        pass_count = stream.read_uint8()
+        self.techniques = []
+        """:type: list[Technique]"""
 
-        self.passes = []
-        """:type: list[Pass]"""
-        for pass_index in xrange(pass_count):
-            self.passes.append(Pass(stream, string_table, version))
+        if version > 6:
+            technique_count = stream.read_uint8()
+            for i in xrange(technique_count):
+                self.techniques.append(Technique(stream, string_table, version))
+        else:
+            self.techniques.append(Technique(stream, string_table, version))
 
         self.annotations = {}
         for i in xrange(stream.read_uint16()):
@@ -360,26 +375,28 @@ class ShaderInfo(object):
 
     def _extract_parameters(self, stage_attr):
         result = {}
-        for p in self.passes:
-            for stage in p.stages.itervalues():
-                for const in getattr(stage, stage_attr):
-                    annotation = self.annotations.get(const.name)
-                    if not annotation:
-                        continue
-                    try:
-                        if not annotation['SasUiVisible']:
+        for t in self.techniques:
+            for p in t.passes:
+                for stage in p.stages.itervalues():
+                    for const in getattr(stage, stage_attr):
+                        annotation = self.annotations.get(const.name)
+                        if not annotation:
                             continue
-                    except KeyError:
-                        continue
-                    result.setdefault(const.name, _Parameter(const, annotation))
+                        try:
+                            if not annotation['SasUiVisible']:
+                                continue
+                        except KeyError:
+                            continue
+                        result.setdefault(const.name, _Parameter(const, annotation))
         return result
 
     def _extract_samplers(self):
         result = {}
-        for p in self.passes:
-            for stage in p.stages.itervalues():
-                for sampler in stage.samplers:
-                    result[sampler.name] = sampler
+        for t in self.techniques:
+            for p in t.passes:
+                for stage in p.stages.itervalues():
+                    for sampler in stage.samplers:
+                        result[sampler.name] = sampler
         return result
 
 
