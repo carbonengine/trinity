@@ -201,7 +201,8 @@ struct Tr2Pass
 struct Tr2EffectTechnique
 {
 	Tr2EffectTechnique()
-		:passes( "Tr2EffectTechnique::passes" )
+		:passes( "Tr2EffectTechnique::passes" ),
+		shaderTypeMask( 0 )
 	{
 	}
 
