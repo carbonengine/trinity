@@ -134,6 +134,7 @@ public:
 
 
 	ASTNode* FindNode( ASTNodeType type );
+	void FindNodes( ASTNodeType type, std::vector<ASTNode*>& nodes );
 private:
 	ASTNodeType  m_nodeType;
 	ScannerToken m_token;

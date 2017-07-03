@@ -553,6 +553,37 @@ struct ParameterAnnotation
 	std::map<StringReference, Annotation> annotations;
 };
 
+
+struct Technique
+{
+	size_t GetPackedSize()
+	{
+		size_t size = sizeof( DWORD ) + sizeof( BYTE );
+		for( auto it = passes.begin(); it != passes.end(); ++it )
+		{
+			size += it->GetPackedSize();
+		}
+		return size;
+	}
+	void Save( BYTE*& buffer )
+	{
+		*reinterpret_cast<DWORD*>( buffer ) = name;
+		buffer += sizeof( DWORD );
+
+		*reinterpret_cast<BYTE*>( buffer ) = passes.size();
+		buffer += sizeof( BYTE );
+		for( auto it = passes.begin(); it != passes.end(); ++it )
+		{
+			BYTE* start = buffer;
+			it->Save( buffer );
+			assert( buffer - start == it->GetPackedSize() );
+		}
+	}
+
+	StringReference name;
+	std::vector<Pass> passes;
+};
+
 // Saved as:
 //	passCount: BYTE
 //	Pass x passCount
@@ -563,7 +594,7 @@ struct EffectData
 	size_t GetPackedSize()
 	{
 		size_t size = sizeof( BYTE );
-		for( auto it = passes.begin(); it != passes.end(); ++it )
+		for( auto it = techniques.begin(); it != techniques.end(); ++it )
 		{
 			size += it->GetPackedSize();
 		}
@@ -577,9 +608,9 @@ struct EffectData
 	}
 	void Save( BYTE*& buffer )
 	{
-		*reinterpret_cast<BYTE*>( buffer ) = passes.size();
+		*reinterpret_cast<BYTE*>( buffer ) = techniques.size();
 		buffer += sizeof( BYTE );
-		for( auto it = passes.begin(); it != passes.end(); ++it )
+		for( auto it = techniques.begin(); it != techniques.end(); ++it )
 		{
 			BYTE* start = buffer;
 			it->Save( buffer );
@@ -597,7 +628,7 @@ struct EffectData
 		}
 	}
 
-	std::vector<Pass> passes;
+	std::vector<Technique> techniques;
 	std::map<StringReference, ParameterAnnotation> annotations;
 };
 

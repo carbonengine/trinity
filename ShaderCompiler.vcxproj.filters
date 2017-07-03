@@ -74,9 +74,6 @@
     <ClCompile Include="EffectCompilerGL2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EffectCompilerOrbis.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="EffectCompilerGL4.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -158,9 +155,6 @@
     </ClInclude>
     <ClInclude Include="DX9AsmGrammar.h">
       <Filter>Source Files\Grammar</Filter>
-    </ClInclude>
-    <ClInclude Include="EffectCompilerOrbis.h">
-      <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="EffectCompilerGL4.h">
       <Filter>Source Files</Filter>

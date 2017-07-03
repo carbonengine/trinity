@@ -3060,76 +3060,79 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 	GLint vertexShader = 0;
 	GLint fragmentShader = 0;
 
-	for( auto pass = result.passes.begin(); pass != result.passes.end(); ++pass )
+	for( auto technique = result.techniques.begin(); technique != result.techniques.end(); ++technique )
 	{
-		if( g_generateListing )
+		for( auto pass = technique->passes.begin(); pass != technique->passes.end(); ++pass )
 		{
-			listing << "  -" << std::endl;
-		}
-		for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
-		{
-			if( stage->shaderData == nullptr )
+			if( g_generateListing )
 			{
+				listing << "  -" << std::endl;
+			}
+			for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
+			{
+				if( stage->shaderData == nullptr )
+				{
+					stage->shadowShaderSize = 0;
+					stage->shadowShaderData = nullptr;
+					stage->shadowShaderDataStr = -1;
+
+					continue;
+				}
+				// Disassemble shader and convert DX assembly to GLSL
+				CComPtr<ID3DBlob> disassembly;
+				if( FAILED( D3DDisassemble( stage->shaderData, stage->shaderSize, 0, nullptr, &disassembly ) ) )
+				{
+					g_messages.AddMessage( "\\memory(0): error X0000: could not disassemble shader" );
+					return false;
+				}
+				const char* src = (const char*)disassembly->GetBufferPointer();
+				std::string glesSource;
+
+				State state;
+				try
+				{
+					glesSource = state.parse( src, stage->type, stage->inputs );
+				}
+				catch( CompilerError e )
+				{
+					g_messages.AddMessage( "\\memory(0): error X0000: %s", e.what() );
+					return false;
+				}
+
+				if( g_generateListing )
+				{
+					listing << "    -" << std::endl;
+					listing << "        profile: " << ( stage->type == VERTEX_STAGE ? "vs" : "ps" ) << std::endl;
+					listing << "        original:" << std::endl;
+					listing << "          asm: |" << std::endl;
+					PrintPrettyCode( listing, glesSource.c_str(), "            " );
+					const char* approximately = "approximately ";
+					const char* found = strstr( src, approximately );
+					if( found )
+					{
+						unsigned instructionCount = -1;
+						sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
+						listing << "          instructionCount: " << instructionCount << std::endl;
+					}
+					PrintStageInfo( listing, *stage, result );
+				}
+
+				delete[] stage->shaderData;
+				stage->shaderSize = glesSource.length() + 1;
+				stage->shaderData = new char[stage->shaderSize];
+				strcpy_s( (char*)stage->shaderData, stage->shaderSize, glesSource.c_str() );
+				stage->shaderDataStr = g_stringTable.AddString( stage->shaderData, stage->shaderSize );
+
 				stage->shadowShaderSize = 0;
 				stage->shadowShaderData = nullptr;
 				stage->shadowShaderDataStr = -1;
 
-				continue;
-			}
-			// Disassemble shader and convert DX assembly to GLSL
-			CComPtr<ID3DBlob> disassembly;
-			if( FAILED( D3DDisassemble( stage->shaderData, stage->shaderSize, 0, nullptr, &disassembly ) ) )
-			{
-				g_messages.AddMessage( "\\memory(0): error X0000: could not disassemble shader" );
-				return false;
-			}
-			const char* src = (const char*)disassembly->GetBufferPointer();
-			std::string glesSource;
-
-			State state;
-			try
-			{
-				glesSource = state.parse( src, stage->type, stage->inputs );
-			}
-			catch( CompilerError e )
-			{
-				g_messages.AddMessage( "\\memory(0): error X0000: %s", e.what() );
-				return false;
-			}
-
-			if( g_generateListing )
-			{
-				listing << "    -" << std::endl;
-				listing << "        profile: " << ( stage->type == VERTEX_STAGE ? "vs" : "ps" ) << std::endl;
-				listing << "        original:" << std::endl;
-				listing << "          asm: |" << std::endl;
-				PrintPrettyCode( listing, glesSource.c_str(), "            " );
-				const char* approximately = "approximately ";
-				const char* found = strstr( src, approximately );
-				if( found )
+				if( useOpenGLValidation )
 				{
-					unsigned instructionCount = -1;
-					sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
-					listing << "          instructionCount: " << instructionCount << std::endl;
-				}
-				PrintStageInfo( listing, *stage, result );
-			}
-
-			delete[] stage->shaderData;
-			stage->shaderSize = glesSource.length() + 1;
-			stage->shaderData = new char[stage->shaderSize];
-			strcpy_s( (char*)stage->shaderData, stage->shaderSize, glesSource.c_str() );
-			stage->shaderDataStr = g_stringTable.AddString( stage->shaderData, stage->shaderSize );
-
-			stage->shadowShaderSize = 0;
-			stage->shadowShaderData = nullptr;
-			stage->shadowShaderDataStr = -1;
-
-			if( useOpenGLValidation )
-			{
-				if( !ValidateShader( glesSource.c_str(), stage->type, "" ) || !ValidateShader( glesSource.c_str(), stage->type, "#define PS\n" ) )
-				{
-					return false;
+					if( !ValidateShader( glesSource.c_str(), stage->type, "" ) || !ValidateShader( glesSource.c_str(), stage->type, "#define PS\n" ) )
+					{
+						return false;
+					}
 				}
 			}
 		}

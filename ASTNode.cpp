@@ -168,3 +168,20 @@ ASTNode* ASTNode::FindNode( ASTNodeType type )
 	}
 	return nullptr;
 }
+
+void ASTNode::FindNodes( ASTNodeType type, std::vector<ASTNode*>& nodes )
+{
+	if( this == nullptr )
+	{
+		return;
+	}
+	if( m_nodeType == type )
+	{
+		nodes.push_back( this );
+		return;
+	}
+	for( auto it = m_children.begin(); it != m_children.end(); ++it )
+	{
+		( *it )->FindNodes( type, nodes );
+	}
+}

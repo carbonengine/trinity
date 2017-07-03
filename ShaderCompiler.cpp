@@ -13,7 +13,6 @@
 #include "EffectCompilerGL2.h"
 #include "EffectCompilerGL3.h"
 #include "EffectCompilerGL4.h"
-#include "EffectCompilerOrbis.h"
 #include "EffectData.h"
 
 
@@ -221,7 +220,6 @@ StringTable g_stringTable;
 EffectCompilerDX9 g_compilerDX9;
 EffectCompilerDX11 g_compilerDX11;
 EffectCompilerGL2 g_compilerGL2;
-EffectCompilerOrbis g_compilerOrbis;
 EffectCompilerGL4 g_compilerGL4;
 EffectCompilerGL3 g_compilerGL3;
 
@@ -231,7 +229,6 @@ enum Platform
 	PLATFORM_DX9 = 1,
 	PLATFORM_DX11 = 2,
 	PLATFORM_GL2 = 3,
-	PLATFORM_ORBIS = 4,
 	PLATFORM_GL4 = 6,
 	PLATFORM_GL3 = 7,
 
@@ -612,13 +609,6 @@ DWORD WINAPI WorkerThread( LPVOID param )
 			break;
 		case PLATFORM_GL2:
 			if( !g_compilerGL2.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
-			{
-				InterlockedExchange( &g_error, 1 );
-				return 1;
-			}
-			break;
-		case PLATFORM_ORBIS:
-			if( !g_compilerOrbis.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
 			{
 				InterlockedExchange( &g_error, 1 );
 				return 1;
@@ -1233,7 +1223,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		header[index++] = offsets[it->second].second;
 	}
 	DWORD bytesWritten;
-	DWORD version = 6;
+	DWORD version = 7;
 	WriteFile( file, &version, sizeof( DWORD ), &bytesWritten, NULL );
 	g_stringTable.Write( file );
 	WriteFile( file, fullHeader, headerSize, &bytesWritten, NULL );

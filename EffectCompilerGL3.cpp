@@ -3307,13 +3307,16 @@ bool EffectCompilerGL3::CompileEffect( const char* source,
 	}
 
 	// Swap minLod and maxLod sampler states as they are recorded incorrectly in DX9.
-	for( auto pass = result.passes.begin(); pass != result.passes.end(); ++pass )
+	for( auto technique = result.techniques.begin(); technique != result.techniques.end(); ++technique )
 	{
-		for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
+		for( auto pass = technique->passes.begin(); pass != technique->passes.end(); ++pass )
 		{
-			for( auto sampler = stage->samplers.begin(); sampler != stage->samplers.end(); ++sampler )
+			for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
 			{
-				std::swap( sampler->second.minLOD, sampler->second.maxLOD );
+				for( auto sampler = stage->samplers.begin(); sampler != stage->samplers.end(); ++sampler )
+				{
+					std::swap( sampler->second.minLOD, sampler->second.maxLOD );
+				}
 			}
 		}
 	}
@@ -3362,156 +3365,159 @@ bool EffectCompilerGL3::CompileEffect( const char* source,
 	GLint vertexShader = 0;
 	GLint fragmentShader = 0;
 
-	for( auto pass = result.passes.begin(); pass != result.passes.end(); ++pass )
+	for( auto technique = result.techniques.begin(); technique != result.techniques.end(); ++technique )
 	{
-		if( g_generateListing )
+		for( auto pass = technique->passes.begin(); pass != technique->passes.end(); ++pass )
 		{
-			listing << "  -" << std::endl;
-		}
-		for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
-		{
-			if( stage->shaderData == nullptr )
+			if( g_generateListing )
 			{
+				listing << "  -" << std::endl;
+			}
+			for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
+			{
+				if( stage->shaderData == nullptr )
+				{
+					stage->shadowShaderSize = 0;
+					stage->shadowShaderData = nullptr;
+					stage->shadowShaderDataStr = -1;
+
+					continue;
+				}
+				// Disassemble shader and convert DX9 assembly to GLSL
+				CComPtr<ID3DXBuffer> disassembly;
+				if( FAILED( D3DXDisassembleShader( (DWORD*)stage->shaderData, FALSE, nullptr, &disassembly ) ) )
+				{
+					g_messages.AddMessage( "\\memory(0): error X0000: could not disassemble shader" );
+					return false;
+				}
+				const char* src = (const char*)disassembly->GetBufferPointer();
+				std::string glesSource;
+				if( !AsmToGLES3( src, glesSource, *stage ) )
+				{
+					return false;
+				}
+
+				if( g_generateListing )
+				{
+					listing << "    -" << std::endl;
+					listing << "        profile: " << ( stage->type == VERTEX_STAGE ? "vs" : "ps" ) << std::endl;
+					listing << "        original:" << std::endl;
+					listing << "          asm: |" << std::endl;
+					PrintPrettyCode( listing, glesSource.c_str(), "            " );
+					const char* approximately = "approximately ";
+					const char* found = strstr( src, approximately );
+					if( found )
+					{
+						unsigned instructionCount = -1;
+						sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
+						listing << "          instructionCount: " << instructionCount << std::endl;
+					}
+					PrintStageInfo( listing, *stage, result );
+				}
+
+				delete[] stage->shaderData;
+				stage->shaderSize = glesSource.length() + 1;
+				stage->shaderData = new char[stage->shaderSize];
+				strcpy_s( (char*)stage->shaderData, stage->shaderSize, glesSource.c_str() );
+				stage->shaderDataStr = g_stringTable.AddString( stage->shaderData, stage->shaderSize );
+
 				stage->shadowShaderSize = 0;
 				stage->shadowShaderData = nullptr;
 				stage->shadowShaderDataStr = -1;
 
-				continue;
-			}
-			// Disassemble shader and convert DX9 assembly to GLSL
-			CComPtr<ID3DXBuffer> disassembly;
-			if( FAILED( D3DXDisassembleShader( (DWORD*)stage->shaderData, FALSE, nullptr, &disassembly ) ) )
-			{
-				g_messages.AddMessage( "\\memory(0): error X0000: could not disassemble shader" );
-				return false;
-			}
-			const char* src = (const char*)disassembly->GetBufferPointer();
-			std::string glesSource;
-			if( !AsmToGLES3( src, glesSource, *stage ) )
-			{
-				return false;
-			}
-
-			if( g_generateListing )
-			{
-				listing << "    -" << std::endl;
-				listing << "        profile: " << ( stage->type == VERTEX_STAGE ? "vs" : "ps" ) << std::endl;
-				listing << "        original:" << std::endl;
-				listing << "          asm: |" << std::endl;
-				PrintPrettyCode( listing, glesSource.c_str(), "            " );
-				const char* approximately = "approximately ";
-				const char* found = strstr( src, approximately );
-				if( found )
+				// Validate resulting shader
+				GLuint shader = 0;
+				if( useOpenGLValidation )
 				{
-					unsigned instructionCount = -1;
-					sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
-					listing << "          instructionCount: " << instructionCount << std::endl;
+					shader = glCreateShader( stage->type == VERTEX_STAGE ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER );
+					if( !shader )
+					{
+						g_messages.AddMessage( "\\memory(0): error X0000: could not create OpenGL shader" );
+						return false;
+					}
+					const char* codeSource = glesSource.c_str();
+					const char* codes[] = { "#version 300 es\n", codeSource };
+					glShaderSource( shader, 2, codes, nullptr );
+					glCompileShader( shader );
+
+					GLint compiled;
+					glGetShaderiv( shader, GL_COMPILE_STATUS, &compiled );
+					if( !compiled )
+					{
+						GLint infoLen = 0;
+						glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &infoLen );
+						if( infoLen > 1 )
+						{
+							char* buffer = new char[infoLen];
+							glGetShaderInfoLog( shader, infoLen, nullptr, buffer );
+							g_messages.AddMessage( "%s", buffer );
+							delete[] buffer;
+						}
+						else
+						{
+							g_messages.AddMessage( "\\memory(0): error X0000: undefined error compiling OpenGL shader" );
+						}
+						glDeleteShader( shader );
+						return false;
+					}
 				}
-				PrintStageInfo( listing, *stage, result );
-			}
 
-			delete[] stage->shaderData;
-			stage->shaderSize = glesSource.length() + 1;
-			stage->shaderData = new char[stage->shaderSize];
-			strcpy_s( (char*)stage->shaderData, stage->shaderSize, glesSource.c_str() );
-			stage->shaderDataStr = g_stringTable.AddString( stage->shaderData, stage->shaderSize );
-
-			stage->shadowShaderSize = 0;
-			stage->shadowShaderData = nullptr;
-			stage->shadowShaderDataStr = -1;
-
-			// Validate resulting shader
-			GLuint shader = 0;
-			if( useOpenGLValidation )
-			{
-				shader = glCreateShader( stage->type == VERTEX_STAGE ? GL_VERTEX_SHADER : GL_FRAGMENT_SHADER );
-				if( !shader )
+				if( useOpenGLValidation )
 				{
-					g_messages.AddMessage( "\\memory(0): error X0000: could not create OpenGL shader" );
-					return false;
+					if( stage->type == VERTEX_STAGE )
+					{
+						if( vertexShader )
+						{
+							glDeleteShader( vertexShader );
+						}
+						vertexShader = shader;
+					}
+					else
+					{
+						if( fragmentShader )
+						{
+							glDeleteShader( fragmentShader );
+						}
+						fragmentShader = shader;
+					}
 				}
-				const char* codeSource = glesSource.c_str();
-				const char* codes[] = { "#version 300 es\n", codeSource };
-				glShaderSource( shader, 2, codes, nullptr );
-				glCompileShader( shader );
+			}
+		}
+		// Validate vertex/fragment shader combination (if the link correctly)
+		if( vertexShader && fragmentShader )
+		{
+			int program = glCreateProgram();
+			if( program )
+			{
+				glAttachShader( program, vertexShader );
+				glAttachShader( program, fragmentShader );
+				glLinkProgram( program );
 
 				GLint compiled;
-				glGetShaderiv( shader, GL_COMPILE_STATUS, &compiled );
+				glGetProgramiv( program, GL_LINK_STATUS, &compiled );
 				if( !compiled )
 				{
 					GLint infoLen = 0;
-					glGetShaderiv( shader, GL_INFO_LOG_LENGTH, &infoLen );
+					glGetProgramiv( program, GL_INFO_LOG_LENGTH, &infoLen );
 					if( infoLen > 1 )
 					{
 						char* buffer = new char[infoLen];
-						glGetShaderInfoLog( shader, infoLen, nullptr, buffer );
+						glGetProgramInfoLog( program, infoLen, nullptr, buffer );
 						g_messages.AddMessage( "%s", buffer );
 						delete[] buffer;
 					}
 					else
 					{
-						g_messages.AddMessage( "\\memory(0): error X0000: undefined error compiling OpenGL shader" );
+						g_messages.AddMessage( "\\memory(0): error X0000: undefined error linking OpenGL shader" );
 					}
-					glDeleteShader( shader );
+					glDeleteProgram( program );
 					return false;
 				}
-			}
-
-			if( useOpenGLValidation )
-			{
-				if( stage->type == VERTEX_STAGE )
-				{
-					if( vertexShader )
-					{
-						glDeleteShader( vertexShader );
-					}
-					vertexShader = shader;
-				}
-				else
-				{
-					if( fragmentShader )
-					{
-						glDeleteShader( fragmentShader );
-					}
-					fragmentShader = shader;
-				}
-			}
-		}
-	}
-	// Validate vertex/fragment shader combination (if the link correctly)
-	if( vertexShader && fragmentShader )
-	{
-		int program = glCreateProgram();
-		if( program )
-		{
-			glAttachShader( program, vertexShader );
-			glAttachShader( program, fragmentShader );
-			glLinkProgram( program );
-
-			GLint compiled;
-			glGetProgramiv( program, GL_LINK_STATUS, &compiled );
-			if( !compiled )
-			{
-				GLint infoLen = 0;
-				glGetProgramiv( program, GL_INFO_LOG_LENGTH, &infoLen );
-				if( infoLen > 1 )
-				{
-					char* buffer = new char[infoLen];
-					glGetProgramInfoLog( program, infoLen, nullptr, buffer );
-					g_messages.AddMessage( "%s", buffer );
-					delete[] buffer;
-				}
-				else
-				{
-					g_messages.AddMessage( "\\memory(0): error X0000: undefined error linking OpenGL shader" );
-				}
 				glDeleteProgram( program );
-				return false;
 			}
-			glDeleteProgram( program );
+			glDeleteShader( vertexShader );
+			glDeleteShader( fragmentShader );
 		}
-		glDeleteShader( vertexShader );
-		glDeleteShader( fragmentShader );
 	}
 	return true;
 }

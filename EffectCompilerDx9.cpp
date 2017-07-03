@@ -514,7 +514,17 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 	for (unsigned x = 0; x < effectDescription.Parameters; x++)
 	{
 		D3DXHANDLE effectParam = fx->GetParameter( NULL, x );
-		if( !fx->IsParameterUsed( effectParam, fx->GetCurrentTechnique() ) )
+
+		bool isUsed = false;
+		for( UINT t = 0; t < effectDesc.Techniques; ++t )
+		{
+			if( fx->IsParameterUsed( effectParam, fx->GetTechnique( t ) ) )
+			{
+				isUsed = true;
+				break;
+			}
+		}
+		if( !isUsed )
 		{
 			continue;
 		}
@@ -645,340 +655,352 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 
 	fx->SetStateManager( this );
 
-	UINT passCount;
-	if( SUCCEEDED( fx->Begin( &passCount, 0 ) ) )
+	effectData.techniques.clear();
+	effectData.techniques.resize( effectDesc.Techniques );
+
+	for( UINT t = 0; t < effectDesc.Techniques; ++t )
 	{
-		effectData.passes.clear();
-		effectData.passes.resize( passCount );
+		fx->SetTechnique( fx->GetTechnique( t ) );
 
-		for( unsigned int i = 0; i < passCount; ++i )
+		Technique& technique = effectData.techniques[t];
+		D3DXTECHNIQUE_DESC techniqueDesc;
+		fx->GetTechniqueDesc( fx->GetTechnique( t ), &techniqueDesc );
+		technique.name = g_stringTable.AddString( techniqueDesc.Name );
+
+		UINT passCount;
+		if( SUCCEEDED( fx->Begin( &passCount, 0 ) ) )
 		{
-			if( FAILED( fx->BeginPass( i ) ) )
+			technique.passes.resize( passCount );
+
+			for( unsigned int i = 0; i < passCount; ++i )
 			{
-				g_messages.AddMessage( "\\memory(0): error X0000: Failed to apply effect" );
-				return false;
-			}
-
-			fx->EndPass();
-
-			if( g_generateListing && !disableListing )
-			{
-				listing << "  -" << std::endl;
-			}
-
-			Pass& pass = effectData.passes[i];
-
-			pass.states = m_renderStates;
-			pass.stages.resize( 2 );
-			pass.stages[0].type = VERTEX_STAGE;
-			pass.stages[1].type = PIXEL_STAGE;
-			
-			// This is ONLY to ensure that SM2 hardware continues to work before releasing CQ.
-			// Some Incarna shaders get loaded by the login screen, and the default shader model has increased.
-			// Rather than fail loudly as we will after dropping SM2 support, simply log a warning and continue.
-
-			pass.stages[0].shadowShaderSize = 0;
-			pass.stages[0].shadowShaderData = nullptr;
-			pass.stages[0].shadowShaderDataStr = -1;
-			pass.stages[1].shadowShaderSize = 0;
-			pass.stages[1].shadowShaderData = nullptr;
-			pass.stages[1].shadowShaderDataStr = -1;
-			pass.stages[0].threadGroupSize[0] = 0;
-			pass.stages[0].threadGroupSize[1] = 0;
-			pass.stages[0].threadGroupSize[2] = 0;
-			pass.stages[1].threadGroupSize[0] = 0;
-			pass.stages[1].threadGroupSize[1] = 0;
-			pass.stages[1].threadGroupSize[2] = 0;
-
-			if( g_printShaderStats )
-			{
-				char buffer[64];
-				sprintf_s( buffer, "%4u", i );
-				shaderStatistics += "\n";
-				shaderStatistics += buffer;
-			}
-
-			if( m_vertexShader == NULL )
-			{
-				g_messages.AddMessage( "\\memory(0): warning X0000: Vertex shader NULL encountered when analyzing DX9 effect" );
-				pass.stages[0].shaderSize = 0;
-				pass.stages[0].shaderData = nullptr;
-				pass.stages[0].shaderDataStr = -1;
-				if( g_printShaderStats )
+				if( FAILED( fx->BeginPass( i ) ) )
 				{
-					shaderStatistics += "   -";
-				}
-			}
-			else
-			{
-
-				if( FAILED( m_vertexShader->GetFunction( nullptr, &pass.stages[0].shaderSize ) ) )
-				{
-					g_messages.AddMessage( "\\memory(0): error X0000: Getting vertex shader data when analyzing DX9 effect" );
+					g_messages.AddMessage( "\\memory(0): error X0000: Failed to apply effect" );
 					return false;
 				}
-				char* buffer = new char[pass.stages[0].shaderSize];
-				if( FAILED( m_vertexShader->GetFunction( buffer, &pass.stages[0].shaderSize ) ) )
+
+				fx->EndPass();
+
+				if( g_generateListing && !disableListing )
 				{
-					g_messages.AddMessage( "\\memory(0): error X0000: Getting vertex shader data when analyzing DX9 effect" );
-					return false;
+					listing << "  -" << std::endl;
 				}
+
+				Pass& pass = technique.passes[i];
+
+				pass.states = m_renderStates;
+				pass.stages.resize( 2 );
+				pass.stages[0].type = VERTEX_STAGE;
+				pass.stages[1].type = PIXEL_STAGE;
+
+				// This is ONLY to ensure that SM2 hardware continues to work before releasing CQ.
+				// Some Incarna shaders get loaded by the login screen, and the default shader model has increased.
+				// Rather than fail loudly as we will after dropping SM2 support, simply log a warning and continue.
+
+				pass.stages[0].shadowShaderSize = 0;
+				pass.stages[0].shadowShaderData = nullptr;
+				pass.stages[0].shadowShaderDataStr = -1;
+				pass.stages[1].shadowShaderSize = 0;
+				pass.stages[1].shadowShaderData = nullptr;
+				pass.stages[1].shadowShaderDataStr = -1;
+				pass.stages[0].threadGroupSize[0] = 0;
+				pass.stages[0].threadGroupSize[1] = 0;
+				pass.stages[0].threadGroupSize[2] = 0;
+				pass.stages[1].threadGroupSize[0] = 0;
+				pass.stages[1].threadGroupSize[1] = 0;
+				pass.stages[1].threadGroupSize[2] = 0;
+
 				if( g_printShaderStats )
 				{
-					unsigned count = GetInstructionCount( buffer );
-					if( count != -1 )
-					{
-						char buffer[64];
-						sprintf_s( buffer, "%4u", count );
-						shaderStatistics += buffer;
-					}
-					else
-					{
-						shaderStatistics += "   ?";
-					}
+					char buffer[64];
+					sprintf_s( buffer, "%4u", i );
+					shaderStatistics += "\n";
+					shaderStatistics += buffer;
 				}
-				StripComments( buffer, pass.stages[0].shaderSize, pass.stages[0].shaderData );
-				pass.stages[0].shaderDataStr = g_stringTable.AddString( pass.stages[0].shaderData, pass.stages[0].shaderSize );
-				delete[] buffer;
-			}
 
-			if( m_pixelShader == NULL )
-			{
-				g_messages.AddMessage( "\\memory(0): warning X0000: Pixel shader NULL encountered when analyzing DX9 effect" );
-				pass.stages[1].shaderSize = 0;
-				pass.stages[1].shaderData = nullptr;
-				pass.stages[1].shaderDataStr = -1;
-				if( g_printShaderStats )
+				if( m_vertexShader == NULL )
 				{
-					shaderStatistics += "   -";
-				}
-			}
-			else
-			{
-				if( FAILED( m_pixelShader->GetFunction( nullptr, &pass.stages[1].shaderSize ) ) )
-				{
-					g_messages.AddMessage( "\\memory(0): error X0000: Getting pixel shader data when analyzing DX9 effect" );
-					return false;
-				}
-				char* buffer = new char[pass.stages[1].shaderSize];
-				if( FAILED( m_pixelShader->GetFunction( buffer, &pass.stages[1].shaderSize ) ) )
-				{
-					g_messages.AddMessage( "\\memory(0): error X0000: Getting pixel shader data when analyzing DX9 effect" );
-					return false;
-				}
-				if( g_printShaderStats )
-				{
-					unsigned count = GetInstructionCount( buffer );
-					if( count != -1 )
+					g_messages.AddMessage( "\\memory(0): warning X0000: Vertex shader NULL encountered when analyzing DX9 effect" );
+					pass.stages[0].shaderSize = 0;
+					pass.stages[0].shaderData = nullptr;
+					pass.stages[0].shaderDataStr = -1;
+					if( g_printShaderStats )
 					{
-						char buffer[64];
-						sprintf_s( buffer, "%4u", count );
-						shaderStatistics += buffer;
-					}
-					else
-					{
-						shaderStatistics += "   ?";
+						shaderStatistics += "   -";
 					}
 				}
-				StripComments( buffer, pass.stages[1].shaderSize, pass.stages[1].shaderData );
-				delete[] buffer;
-				pass.stages[1].shaderDataStr = g_stringTable.AddString( pass.stages[1].shaderData, pass.stages[1].shaderSize );
-			}
-
-			static char buffer[64*1024];
-			UINT bufferSize = sizeof( buffer );
-
-			if( m_pixelShader )
-			{
-				m_pixelShader->GetFunction( buffer, &bufferSize );
-				ExtractConstantTable( buffer, pass.stages[1].constants, fx, 0 );
-				ExtractShaderInputs( (DWORD*)buffer, pass.stages[1] );
-			}
-			if( m_vertexShader )
-			{
-				bufferSize = sizeof( buffer );
-				m_vertexShader->GetFunction( buffer, &bufferSize );
-				ExtractConstantTable( buffer, pass.stages[0].constants, fx, D3DVERTEXTEXTURESAMPLER0 );
-				ExtractShaderInputs( (DWORD*)buffer, pass.stages[0] );
-			}
-
-			for( auto it = m_samplers.begin(); it != m_samplers.end(); ++it )
-			{
-				Sampler ss;
-				ss.name = g_stringTable.AddString( it->second.m_name.c_str() );
-				ss.comparison = 0;
-				ss.minLOD = FLT_MAX;
-				ss.maxLOD = float( it->second.GetState( D3DSAMP_MAXMIPLEVEL ) );
-
-				ss.minFilter = BYTE( it->second.GetState( D3DSAMP_MINFILTER ) );
-				ss.magFilter = BYTE( it->second.GetState( D3DSAMP_MAGFILTER ) );
-				ss.mipFilter = BYTE( it->second.GetState( D3DSAMP_MIPFILTER ) );
-				ss.addressU = BYTE( it->second.GetState( D3DSAMP_ADDRESSU ) );
-				ss.addressV = BYTE( it->second.GetState( D3DSAMP_ADDRESSV ) );
-				ss.addressW = BYTE( it->second.GetState( D3DSAMP_ADDRESSW ) );
-				DWORD lodBias = it->second.GetState( D3DSAMP_MIPMAPLODBIAS );
-				ss.mipLODBias = *(float*)&lodBias;
-				ss.maxAnisotropy = BYTE( it->second.GetState( D3DSAMP_MAXANISOTROPY ) );
-				ss.srgbTexture = it->second.GetState( D3DSAMP_SRGBTEXTURE ) ? 1 : 0;
-				ss.comparisonFunc = D3D11_COMPARISON_NEVER;
-				D3DXCOLOR borderColor = it->second.GetState( D3DSAMP_BORDERCOLOR );
-				ss.borderColor.x = borderColor.r;
-				ss.borderColor.y = borderColor.g;
-				ss.borderColor.z = borderColor.b;
-				ss.borderColor.w = borderColor.a;
-
-				Texture tex;
-				tex.name = g_stringTable.AddString( it->second.m_textureName.c_str() );
-				tex.type = TEX_TYPE_TYPELESS;
-				tex.isSRGB = it->second.GetState( D3DSAMP_SRGBTEXTURE ) != 0;
-				tex.isAutoregister = false;
-
-				D3DXHANDLE effectParam = fx->GetParameterByName( NULL, it->second.m_textureName.c_str() );
-				if( effectParam )
+				else
 				{
-					D3DXPARAMETER_DESC desc;
-					if( SUCCEEDED( fx->GetParameterDesc( effectParam, &desc ) ) )
+
+					if( FAILED( m_vertexShader->GetFunction( nullptr, &pass.stages[0].shaderSize ) ) )
 					{
-						switch( desc.Type )
+						g_messages.AddMessage( "\\memory(0): error X0000: Getting vertex shader data when analyzing DX9 effect" );
+						return false;
+					}
+					char* buffer = new char[pass.stages[0].shaderSize];
+					if( FAILED( m_vertexShader->GetFunction( buffer, &pass.stages[0].shaderSize ) ) )
+					{
+						g_messages.AddMessage( "\\memory(0): error X0000: Getting vertex shader data when analyzing DX9 effect" );
+						return false;
+					}
+					if( g_printShaderStats )
+					{
+						unsigned count = GetInstructionCount( buffer );
+						if( count != -1 )
 						{
-						case D3DXPT_TEXTURE1D:
-							tex.type = TEX_TYPE_1D;
-							break;
-						case D3DXPT_TEXTURE2D:
-							tex.type = TEX_TYPE_2D;
-							break;
-						case D3DXPT_TEXTURE3D:
-							tex.type = TEX_TYPE_3D;
-							break;
-						case D3DXPT_TEXTURECUBE:
-							tex.type = TEX_TYPE_CUBE;
-							break;
+							char buffer[64];
+							sprintf_s( buffer, "%4u", count );
+							shaderStatistics += buffer;
+						}
+						else
+						{
+							shaderStatistics += "   ?";
 						}
 					}
+					StripComments( buffer, pass.stages[0].shaderSize, pass.stages[0].shaderData );
+					pass.stages[0].shaderDataStr = g_stringTable.AddString( pass.stages[0].shaderData, pass.stages[0].shaderSize );
+					delete[] buffer;
 				}
 
-				D3DXPARAMETER_DESC paramDesc;
-				D3DXHANDLE paramHandle = fx->GetParameterByName( nullptr, it->second.m_textureName.c_str() );
-				if( paramHandle )
+				if( m_pixelShader == NULL )
 				{
-					if( SUCCEEDED( fx->GetParameterDesc( paramHandle, &paramDesc ) ) )
+					g_messages.AddMessage( "\\memory(0): warning X0000: Pixel shader NULL encountered when analyzing DX9 effect" );
+					pass.stages[1].shaderSize = 0;
+					pass.stages[1].shaderData = nullptr;
+					pass.stages[1].shaderDataStr = -1;
+					if( g_printShaderStats )
 					{
-						for( unsigned a = 0; a < paramDesc.Annotations; ++a )
+						shaderStatistics += "   -";
+					}
+				}
+				else
+				{
+					if( FAILED( m_pixelShader->GetFunction( nullptr, &pass.stages[1].shaderSize ) ) )
+					{
+						g_messages.AddMessage( "\\memory(0): error X0000: Getting pixel shader data when analyzing DX9 effect" );
+						return false;
+					}
+					char* buffer = new char[pass.stages[1].shaderSize];
+					if( FAILED( m_pixelShader->GetFunction( buffer, &pass.stages[1].shaderSize ) ) )
+					{
+						g_messages.AddMessage( "\\memory(0): error X0000: Getting pixel shader data when analyzing DX9 effect" );
+						return false;
+					}
+					if( g_printShaderStats )
+					{
+						unsigned count = GetInstructionCount( buffer );
+						if( count != -1 )
 						{
-							D3DXHANDLE annotation = fx->GetAnnotation( paramHandle, a );
-							D3DXPARAMETER_DESC annotationDescription;
-							if( annotation && SUCCEEDED( fx->GetParameterDesc( annotation, &annotationDescription ) ) )
+							char buffer[64];
+							sprintf_s( buffer, "%4u", count );
+							shaderStatistics += buffer;
+						}
+						else
+						{
+							shaderStatistics += "   ?";
+						}
+					}
+					StripComments( buffer, pass.stages[1].shaderSize, pass.stages[1].shaderData );
+					delete[] buffer;
+					pass.stages[1].shaderDataStr = g_stringTable.AddString( pass.stages[1].shaderData, pass.stages[1].shaderSize );
+				}
+
+				static char buffer[64 * 1024];
+				UINT bufferSize = sizeof( buffer );
+
+				if( m_pixelShader )
+				{
+					m_pixelShader->GetFunction( buffer, &bufferSize );
+					ExtractConstantTable( buffer, pass.stages[1].constants, fx, 0 );
+					ExtractShaderInputs( (DWORD*)buffer, pass.stages[1] );
+				}
+				if( m_vertexShader )
+				{
+					bufferSize = sizeof( buffer );
+					m_vertexShader->GetFunction( buffer, &bufferSize );
+					ExtractConstantTable( buffer, pass.stages[0].constants, fx, D3DVERTEXTEXTURESAMPLER0 );
+					ExtractShaderInputs( (DWORD*)buffer, pass.stages[0] );
+				}
+
+				for( auto it = m_samplers.begin(); it != m_samplers.end(); ++it )
+				{
+					Sampler ss;
+					ss.name = g_stringTable.AddString( it->second.m_name.c_str() );
+					ss.comparison = 0;
+					ss.minLOD = FLT_MAX;
+					ss.maxLOD = float( it->second.GetState( D3DSAMP_MAXMIPLEVEL ) );
+
+					ss.minFilter = BYTE( it->second.GetState( D3DSAMP_MINFILTER ) );
+					ss.magFilter = BYTE( it->second.GetState( D3DSAMP_MAGFILTER ) );
+					ss.mipFilter = BYTE( it->second.GetState( D3DSAMP_MIPFILTER ) );
+					ss.addressU = BYTE( it->second.GetState( D3DSAMP_ADDRESSU ) );
+					ss.addressV = BYTE( it->second.GetState( D3DSAMP_ADDRESSV ) );
+					ss.addressW = BYTE( it->second.GetState( D3DSAMP_ADDRESSW ) );
+					DWORD lodBias = it->second.GetState( D3DSAMP_MIPMAPLODBIAS );
+					ss.mipLODBias = *(float*)&lodBias;
+					ss.maxAnisotropy = BYTE( it->second.GetState( D3DSAMP_MAXANISOTROPY ) );
+					ss.srgbTexture = it->second.GetState( D3DSAMP_SRGBTEXTURE ) ? 1 : 0;
+					ss.comparisonFunc = D3D11_COMPARISON_NEVER;
+					D3DXCOLOR borderColor = it->second.GetState( D3DSAMP_BORDERCOLOR );
+					ss.borderColor.x = borderColor.r;
+					ss.borderColor.y = borderColor.g;
+					ss.borderColor.z = borderColor.b;
+					ss.borderColor.w = borderColor.a;
+
+					Texture tex;
+					tex.name = g_stringTable.AddString( it->second.m_textureName.c_str() );
+					tex.type = TEX_TYPE_TYPELESS;
+					tex.isSRGB = it->second.GetState( D3DSAMP_SRGBTEXTURE ) != 0;
+					tex.isAutoregister = false;
+
+					D3DXHANDLE effectParam = fx->GetParameterByName( NULL, it->second.m_textureName.c_str() );
+					if( effectParam )
+					{
+						D3DXPARAMETER_DESC desc;
+						if( SUCCEEDED( fx->GetParameterDesc( effectParam, &desc ) ) )
+						{
+							switch( desc.Type )
 							{
-								if( annotationDescription.Type == D3DXPT_BOOL )
+							case D3DXPT_TEXTURE1D:
+								tex.type = TEX_TYPE_1D;
+								break;
+							case D3DXPT_TEXTURE2D:
+								tex.type = TEX_TYPE_2D;
+								break;
+							case D3DXPT_TEXTURE3D:
+								tex.type = TEX_TYPE_3D;
+								break;
+							case D3DXPT_TEXTURECUBE:
+								tex.type = TEX_TYPE_CUBE;
+								break;
+							}
+						}
+					}
+
+					D3DXPARAMETER_DESC paramDesc;
+					D3DXHANDLE paramHandle = fx->GetParameterByName( nullptr, it->second.m_textureName.c_str() );
+					if( paramHandle )
+					{
+						if( SUCCEEDED( fx->GetParameterDesc( paramHandle, &paramDesc ) ) )
+						{
+							for( unsigned a = 0; a < paramDesc.Annotations; ++a )
+							{
+								D3DXHANDLE annotation = fx->GetAnnotation( paramHandle, a );
+								D3DXPARAMETER_DESC annotationDescription;
+								if( annotation && SUCCEEDED( fx->GetParameterDesc( annotation, &annotationDescription ) ) )
 								{
-									BOOL boolValue;
-									if( SUCCEEDED( fx->GetBool( annotation, &boolValue ) ) )
+									if( annotationDescription.Type == D3DXPT_BOOL )
 									{
-										if( strcmp( annotationDescription.Name, "Tr2sRGB" ) == 0 )
+										BOOL boolValue;
+										if( SUCCEEDED( fx->GetBool( annotation, &boolValue ) ) )
 										{
-											tex.isSRGB = boolValue != 0;
-										}
-										else if( strcmp( annotationDescription.Name, "AutoRegister" ) == 0 )
-										{
-											tex.isAutoregister = boolValue != 0;
+											if( strcmp( annotationDescription.Name, "Tr2sRGB" ) == 0 )
+											{
+												tex.isSRGB = boolValue != 0;
+											}
+											else if( strcmp( annotationDescription.Name, "AutoRegister" ) == 0 )
+											{
+												tex.isAutoregister = boolValue != 0;
+											}
 										}
 									}
 								}
 							}
 						}
 					}
+					if( it->first >= D3DVERTEXTEXTURESAMPLER0 )
+					{
+						pass.stages[0].samplers[it->first - D3DVERTEXTEXTURESAMPLER0] = ss;
+						pass.stages[0].textures[it->first - D3DVERTEXTEXTURESAMPLER0] = tex;
+					}
+					else
+					{
+						pass.stages[1].samplers[it->first] = ss;
+						pass.stages[1].textures[it->first] = tex;
+					}
 				}
-				if( it->first >= D3DVERTEXTEXTURESAMPLER0 )
+
+				if( g_generateListing && !disableListing )
 				{
-					pass.stages[0].samplers[it->first - D3DVERTEXTEXTURESAMPLER0] = ss;
-					pass.stages[0].textures[it->first - D3DVERTEXTEXTURESAMPLER0] = tex;
+					if( m_pixelShader )
+					{
+						m_pixelShader->GetFunction( buffer, &bufferSize );
+						listing << "    -" << std::endl;
+						unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );
+						listing << "        profile: ps_" << ( ( version >> 8 ) & 0xff ) << "_" << ( version & 0xff ) << std::endl;
+						listing << "        original:" << std::endl;
+						CComPtr<ID3DXBuffer> disassembly;
+						if( SUCCEEDED( D3DXDisassembleShader( (const DWORD*)buffer, FALSE, NULL, &disassembly ) ) )
+						{
+							char* asmCode = (char*)disassembly->GetBufferPointer();
+							listing << "          asm: |" << std::endl;
+							PrintPrettyCode( listing, asmCode, "            " );
+							const char* approximately = "approximately ";
+							char* found = strstr( asmCode, approximately );
+							if( found )
+							{
+								unsigned instructionCount = -1;
+								sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
+								listing << "          instructionCount: " << instructionCount << std::endl;
+							}
+						}
+						PrintStageInfo( listing, pass.stages[1], effectData );
+					}
+					if( m_vertexShader )
+					{
+						m_vertexShader->GetFunction( buffer, &bufferSize );
+						listing << "    -" << std::endl;
+						unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );
+						listing << "        profile: vs_" << ( ( version >> 8 ) & 0xff ) << "_" << ( version & 0xff ) << std::endl;
+						listing << "        original:" << std::endl;
+						CComPtr<ID3DXBuffer> disassembly;
+						if( SUCCEEDED( D3DXDisassembleShader( (const DWORD*)buffer, FALSE, NULL, &disassembly ) ) )
+						{
+							char* asmCode = (char*)disassembly->GetBufferPointer();
+							listing << "          asm: |" << std::endl;
+							PrintPrettyCode( listing, asmCode, "            " );
+							const char* approximately = "approximately ";
+							char* found = strstr( asmCode, approximately );
+							if( found )
+							{
+								unsigned instructionCount = -1;
+								sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
+								listing << "          instructionCount: " << instructionCount << std::endl;
+							}
+						}
+						PrintStageInfo( listing, pass.stages[0], effectData );
+					}
+				}
+
+				if( m_pixelConstantValueCount )
+				{
+					pass.stages[1].defaultValues.resize( m_pixelConstantValueCount * sizeof( Vector4 ) );
+					memcpy( &pass.stages[1].defaultValues[0], m_pixelConstantValues, m_pixelConstantValueCount * sizeof( Vector4 ) );
+					pass.stages[1].defaultValuesStr = g_stringTable.AddString( &pass.stages[1].defaultValues[0], pass.stages[1].defaultValues.size() );
 				}
 				else
 				{
-					pass.stages[1].samplers[it->first] = ss;
-					pass.stages[1].textures[it->first] = tex;
+					pass.stages[1].defaultValuesStr = -1;
 				}
-			}
-
-			if( g_generateListing && !disableListing )
-			{
-				if( m_pixelShader )
+				if( m_vertexConstantValueCount )
 				{
-					m_pixelShader->GetFunction( buffer, &bufferSize );
-					listing << "    -" << std::endl;
-					unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );
-					listing << "        profile: ps_" << ( ( version >> 8 ) & 0xff ) << "_" << ( version & 0xff ) << std::endl;
-					listing << "        original:" << std::endl;
-					CComPtr<ID3DXBuffer> disassembly;
-					if( SUCCEEDED( D3DXDisassembleShader( (const DWORD*)buffer, FALSE, NULL, &disassembly) ) )
-					{
-						char* asmCode = (char*)disassembly->GetBufferPointer();
-						listing << "          asm: |" << std::endl;
-						PrintPrettyCode( listing, asmCode, "            " );
-						const char* approximately = "approximately ";
-						char* found = strstr( asmCode, approximately );
-						if( found )
-						{
-							unsigned instructionCount = -1;
-							sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
-							listing << "          instructionCount: " << instructionCount << std::endl;
-						}
-					}
-					PrintStageInfo( listing, pass.stages[1], effectData );
+					pass.stages[0].defaultValues.resize( m_vertexConstantValueCount * sizeof( Vector4 ) );
+					memcpy( &pass.stages[0].defaultValues[0], m_vertexConstantValues, m_vertexConstantValueCount * sizeof( Vector4 ) );
+					pass.stages[0].defaultValuesStr = g_stringTable.AddString( &pass.stages[0].defaultValues[0], pass.stages[0].defaultValues.size() );
 				}
-				if( m_vertexShader )
+				else
 				{
-					m_vertexShader->GetFunction( buffer, &bufferSize );
-					listing << "    -" << std::endl;
-					unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );
-					listing << "        profile: vs_" << ( ( version >> 8 ) & 0xff ) << "_" << ( version & 0xff ) << std::endl;
-					listing << "        original:" << std::endl;
-					CComPtr<ID3DXBuffer> disassembly;
-					if( SUCCEEDED( D3DXDisassembleShader( (const DWORD*)buffer, FALSE, NULL, &disassembly) ) )
-					{
-						char* asmCode = (char*)disassembly->GetBufferPointer();
-						listing << "          asm: |" << std::endl;
-						PrintPrettyCode( listing, asmCode, "            " );
-						const char* approximately = "approximately ";
-						char* found = strstr( asmCode, approximately );
-						if( found )
-						{
-							unsigned instructionCount = -1;
-							sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
-							listing << "          instructionCount: " << instructionCount << std::endl;
-						}
-					}
-					PrintStageInfo( listing, pass.stages[0], effectData );
+					pass.stages[0].defaultValuesStr = -1;
 				}
-			}
 
-			if( m_pixelConstantValueCount )
-			{
-				pass.stages[1].defaultValues.resize( m_pixelConstantValueCount * sizeof( Vector4 ) );
-				memcpy( &pass.stages[1].defaultValues[0], m_pixelConstantValues, m_pixelConstantValueCount * sizeof( Vector4 ) );
-				pass.stages[1].defaultValuesStr = g_stringTable.AddString( &pass.stages[1].defaultValues[0], pass.stages[1].defaultValues.size() );
-			}
-			else
-			{
-				pass.stages[1].defaultValuesStr = -1;
-			}
-			if( m_vertexConstantValueCount )
-			{
-				pass.stages[0].defaultValues.resize( m_vertexConstantValueCount * sizeof( Vector4 ) );
-				memcpy( &pass.stages[0].defaultValues[0], m_vertexConstantValues, m_vertexConstantValueCount * sizeof( Vector4 ) );
-				pass.stages[0].defaultValuesStr = g_stringTable.AddString( &pass.stages[0].defaultValues[0], pass.stages[0].defaultValues.size() );
-			}
-			else
-			{
-				pass.stages[0].defaultValuesStr = -1;
-			}
-
-			Reset();
+				Reset();
 
 
+			}
+
+			fx->End();
 		}
-
-		fx->End();
 	}
 
 	fx->SetStateManager( NULL );

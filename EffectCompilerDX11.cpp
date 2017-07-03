@@ -2212,8 +2212,9 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 	TransferSRGBToTexturesDX11( state );
 	ConvertTextureFunctionsDX11( state );
 
-	ASTNode* techniqueNode = state.GetTree()->FindNode( NT_TECHNIQUE );
-	if( techniqueNode == nullptr )
+	std::vector<ASTNode*> techniqueNodes;
+	state.GetTree()->FindNodes( NT_TECHNIQUE, techniqueNodes );
+	if( techniqueNodes.empty() )
 	{
 		g_messages.AddMessage( "\\memory(0): error X0000: No technique found" );
 		return false;
@@ -2257,233 +2258,239 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 		shaderStatistics = "Compiled shader instructions (approximate):\nPass  VS  PS  CS  GS  HS  DS";
 	}
 
-	for( size_t passIx = 0; passIx < techniqueNode->GetChildrenCount(); ++passIx )
+	for( auto techniqueIt = techniqueNodes.begin(); techniqueIt != techniqueNodes.end(); ++techniqueIt )
 	{
-		if( g_generateListing )
+		auto techniqueNode = *techniqueIt;
+		Technique technique;
+		technique.name = g_stringTable.AddString( ToString( techniqueNode->GetToken()->stringValue ).c_str() );
+
+		for( size_t passIx = 0; passIx < techniqueNode->GetChildrenCount(); ++passIx )
 		{
-			listing << "  -" << std::endl;
-		}
-		Pass outPass;
-		ASTNode* passNode = techniqueNode->GetChild( passIx );
-		CComPtr<ID3D11ShaderReflection> reflections[6];
-		for( size_t stateIx = 0; stateIx < passNode->GetChildrenCount(); ++stateIx )
-		{
-			if( passNode->GetChild( stateIx )->GetNodeType() == NT_STATE_ASSIGNMENT )
-			{
-				DWORD stateCode = 0;
-				DWORD value = 0;
-				if( ParseStateAssignment( state, passNode->GetChild( stateIx ), g_renderStates, &value ) )
-				{
-					std::string name = ToString( passNode->GetChild( stateIx )->GetToken()->stringValue );
-					for( int i = 0; g_renderStateNames[i].name; ++i )
-					{
-						if( _stricmp( name.c_str(), g_renderStateNames[i].name ) == 0 )
-						{
-							stateCode = g_renderStateNames[i].value;
-						}
-					}
-					switch( stateCode )
-					{
-					case -1:
-					case -2:
-					case -3:
-					case -4:
-					case -5:
-					case -6:
-						if( value != 0 )
-						{
-							state.ShowMessage( passNode->GetChild( stateIx )->GetLocation(), EC_INVALID_STATE_VALUE, name.c_str() );
-						}
-						break;
-					case 0:
-						state.ShowMessage( passNode->GetChild( stateIx )->GetLocation(), EC_STATE_DEPRECATED, name.c_str() );
-						break;
-					default:
-						outPass.states[stateCode] = value;
-					}
-				}
-				continue;
-			}
-
-			if( passNode->GetChild( stateIx )->GetNodeType() != NT_SHADER_ASSIGNMENT )
-			{
-				continue;
-			}
-
-			ASTNode* shaderNode = passNode->GetChild( stateIx );
-
-			StageInput stage;
-			if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "vertexshader" ) == 0 )
-			{
-				stage.type = VERTEX_STAGE;
-			}
-			else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "pixelshader" ) == 0 )
-			{
-				stage.type = PIXEL_STAGE;
-			}
-			else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "computeshader" ) == 0 )
-			{
-				stage.type = COMPUTE_STAGE;
-			}
-			else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "geometryshader" ) == 0 )
-			{
-				stage.type = GEOMETRY_STAGE;
-			}
-			else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "hullshader" ) == 0 )
-			{
-				stage.type = HULL_STAGE;
-			}
-			else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "domainshader" ) == 0 )
-			{
-				stage.type = DOMAIN_STAGE;
-			}
-			else
-			{
-				state.ShowMessage( shaderNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( shaderNode->GetToken()->stringValue ).c_str() );
-				return false;
-			}
-
-			std::string profile = ToString( shaderNode->GetChild( 0 )->GetToken()->stringValue );
-			if( profile[0] == 'v' )
-			{
-				profile = "vs_5_0";
-			}
-			else if( profile[0] == 'p' )
-			{
-				profile = "ps_5_0";
-			}
-
-			effectData = nullptr;
-			errors = nullptr;
-
-
-			if( shaderNode->GetChild( 1 )->GetSymbol() == nullptr )
-			{
-				return false;
-			}
-
-			state.GetSymbolTable().ResetUsedFlag();
-			MarkUsedSymbols( shaderNode->GetChild( 1 ), state );
-			{
-				Symbol* symbol = state.GetSymbolTable().LookupGlobal( "DX11ShadowState" );
-				if( symbol )
-				{
-					symbol->used = true;
-					MarkUsedSymbols( symbol->definition, state );
-				}
-			}
-			CompilerInputStream os( state );
-			PrintHLSL11( os, state.GetTree(), 0 );
-			
-			std::string entryPoint = ToString( shaderNode->GetChild( 1 )->GetSymbol()->name );
-
-			std::string patchEntryPoint = entryPoint;
-			bool hasShadowState = false;
-			switch( PatchShader( stage.type, false, patchShaders, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
-			{
-			case PATCH_ERROR:
-				return false;
-			}
-			state.ResetPragmaUsage();
-			std::string code( os.str(), os.str() + os.pcount() );
-
 			if( g_generateListing )
 			{
-				listing << "    -" << std::endl;
-				listing << "        profile: " << profile << std::endl;
-				listing << "        original: " << std::endl;
-				listing << "          entryPoint: " << patchEntryPoint << std::endl;
-				listing << "          source: |" << std::endl;
-				PrintPrettyCode( listing, code.c_str(), "            " );
-				listing << std::endl;
+				listing << "  -" << std::endl;
 			}
-
-			HRESULT hr = D3DX11CompileFromMemory(
-				code.c_str(), 
-				code.length(), 
-				"\\memory", 
-				nullptr, 
-				nullptr, 
-				patchEntryPoint.c_str(), 
-				profile.c_str(),
-				D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY | optimizationLevel | D3D10_SHADER_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3D10_SHADER_AVOID_FLOW_CONTROL : 0 ), 
-				0,
-				nullptr,
-				&effectData,
-				&errors,
-				nullptr );
-			if( FAILED( hr ) )
+			Pass outPass;
+			ASTNode* passNode = techniqueNode->GetChild( passIx );
+			CComPtr<ID3D11ShaderReflection> reflections[6];
+			for( size_t stateIx = 0; stateIx < passNode->GetChildrenCount(); ++stateIx )
 			{
-				if( errors )
+				if( passNode->GetChild( stateIx )->GetNodeType() == NT_STATE_ASSIGNMENT )
 				{
-					g_messages.AddMessages( errors );
+					DWORD stateCode = 0;
+					DWORD value = 0;
+					if( ParseStateAssignment( state, passNode->GetChild( stateIx ), g_renderStates, &value ) )
+					{
+						std::string name = ToString( passNode->GetChild( stateIx )->GetToken()->stringValue );
+						for( int i = 0; g_renderStateNames[i].name; ++i )
+						{
+							if( _stricmp( name.c_str(), g_renderStateNames[i].name ) == 0 )
+							{
+								stateCode = g_renderStateNames[i].value;
+							}
+						}
+						switch( stateCode )
+						{
+						case -1:
+						case -2:
+						case -3:
+						case -4:
+						case -5:
+						case -6:
+							if( value != 0 )
+							{
+								state.ShowMessage( passNode->GetChild( stateIx )->GetLocation(), EC_INVALID_STATE_VALUE, name.c_str() );
+							}
+							break;
+						case 0:
+							state.ShowMessage( passNode->GetChild( stateIx )->GetLocation(), EC_STATE_DEPRECATED, name.c_str() );
+							break;
+						default:
+							outPass.states[stateCode] = value;
+						}
+					}
+					continue;
 				}
-				return false;
-			}
 
-			if( g_printWarnings && errors )
-			{
-				g_messages.AddMessages( errors );
-			}
+				if( passNode->GetChild( stateIx )->GetNodeType() != NT_SHADER_ASSIGNMENT )
+				{
+					continue;
+				}
 
-			CComPtr<ID3DBlob> strippedEffectData;
-			if( SUCCEEDED( D3DStripShader( 
-				effectData->GetBufferPointer(), 
-				effectData->GetBufferSize(), 
-				D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS, 
-				&strippedEffectData ) ) )
-			{
-				stage.shaderData = new char[strippedEffectData->GetBufferSize()];
-				memcpy( stage.shaderData, strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
-				stage.shaderSize = strippedEffectData->GetBufferSize();
-			}
-			else
-			{
-				stage.shaderData = new char[effectData->GetBufferSize()];
-				memcpy( stage.shaderData, effectData->GetBufferPointer(), effectData->GetBufferSize() );
-				stage.shaderSize = effectData->GetBufferSize();
-			}
-			stage.shaderDataStr = g_stringTable.AddString( stage.shaderData, stage.shaderSize );
-			stage.shadowShaderSize = 0;
-			stage.shadowShaderData = nullptr;
-			stage.shadowShaderDataStr = -1;
+				ASTNode* shaderNode = passNode->GetChild( stateIx );
 
-			CComPtr<ID3D11ShaderReflection> reflection;
-			if( FAILED( D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**) &reflection.p ) ) )
-			{
-				g_messages.AddMessage( "\\memory(0): error X0000: Could not get shader reflection" );
-				return false;
-			}
+				StageInput stage;
+				if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "vertexshader" ) == 0 )
+				{
+					stage.type = VERTEX_STAGE;
+				}
+				else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "pixelshader" ) == 0 )
+				{
+					stage.type = PIXEL_STAGE;
+				}
+				else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "computeshader" ) == 0 )
+				{
+					stage.type = COMPUTE_STAGE;
+				}
+				else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "geometryshader" ) == 0 )
+				{
+					stage.type = GEOMETRY_STAGE;
+				}
+				else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "hullshader" ) == 0 )
+				{
+					stage.type = HULL_STAGE;
+				}
+				else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "domainshader" ) == 0 )
+				{
+					stage.type = DOMAIN_STAGE;
+				}
+				else
+				{
+					state.ShowMessage( shaderNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( shaderNode->GetToken()->stringValue ).c_str() );
+					return false;
+				}
 
-			if( !GetStageData( state, reflection, stage, result.annotations ) )
-			{
-				return false;
-			}
-			if( !stage.defaultValues.empty() )
-			{
-				stage.defaultValuesStr = g_stringTable.AddString( &stage.defaultValues[0], stage.defaultValues.size() );
-			}
-			else
-			{
-				stage.defaultValuesStr = -1;
-			}
+				std::string profile = ToString( shaderNode->GetChild( 0 )->GetToken()->stringValue );
+				if( profile[0] == 'v' )
+				{
+					profile = "vs_5_0";
+				}
+				else if( profile[0] == 'p' )
+				{
+					profile = "ps_5_0";
+				}
 
-			if( g_generateListing )
-			{
-				PrintShaderOutListing( listing, effectData, reflection );
-			}
+				effectData = nullptr;
+				errors = nullptr;
 
-			reflections[stage.type] = reflection;
 
-			if( stage.type == PIXEL_STAGE || g_maxClipPlanes > 0 ) 
-			{
-				os.freeze( false );
-				patchEntryPoint = entryPoint;
-				switch( PatchShader( stage.type, true, true, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
+				if( shaderNode->GetChild( 1 )->GetSymbol() == nullptr )
+				{
+					return false;
+				}
+
+				state.GetSymbolTable().ResetUsedFlag();
+				MarkUsedSymbols( shaderNode->GetChild( 1 ), state );
+				{
+					Symbol* symbol = state.GetSymbolTable().LookupGlobal( "DX11ShadowState" );
+					if( symbol )
+					{
+						symbol->used = true;
+						MarkUsedSymbols( symbol->definition, state );
+					}
+				}
+				CompilerInputStream os( state );
+				PrintHLSL11( os, state.GetTree(), 0 );
+
+				std::string entryPoint = ToString( shaderNode->GetChild( 1 )->GetSymbol()->name );
+
+				std::string patchEntryPoint = entryPoint;
+				bool hasShadowState = false;
+				switch( PatchShader( stage.type, false, patchShaders, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
 				{
 				case PATCH_ERROR:
 					return false;
-				case PATCH_USE:
+				}
+				state.ResetPragmaUsage();
+				std::string code( os.str(), os.str() + os.pcount() );
+
+				if( g_generateListing )
+				{
+					listing << "    -" << std::endl;
+					listing << "        profile: " << profile << std::endl;
+					listing << "        original: " << std::endl;
+					listing << "          entryPoint: " << patchEntryPoint << std::endl;
+					listing << "          source: |" << std::endl;
+					PrintPrettyCode( listing, code.c_str(), "            " );
+					listing << std::endl;
+				}
+
+				HRESULT hr = D3DX11CompileFromMemory(
+					code.c_str(),
+					code.length(),
+					"\\memory",
+					nullptr,
+					nullptr,
+					patchEntryPoint.c_str(),
+					profile.c_str(),
+					D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY | optimizationLevel | D3D10_SHADER_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3D10_SHADER_AVOID_FLOW_CONTROL : 0 ),
+					0,
+					nullptr,
+					&effectData,
+					&errors,
+					nullptr );
+				if( FAILED( hr ) )
+				{
+					if( errors )
+					{
+						g_messages.AddMessages( errors );
+					}
+					return false;
+				}
+
+				if( g_printWarnings && errors )
+				{
+					g_messages.AddMessages( errors );
+				}
+
+				CComPtr<ID3DBlob> strippedEffectData;
+				if( SUCCEEDED( D3DStripShader(
+					effectData->GetBufferPointer(),
+					effectData->GetBufferSize(),
+					D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
+					&strippedEffectData ) ) )
+				{
+					stage.shaderData = new char[strippedEffectData->GetBufferSize()];
+					memcpy( stage.shaderData, strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
+					stage.shaderSize = strippedEffectData->GetBufferSize();
+				}
+				else
+				{
+					stage.shaderData = new char[effectData->GetBufferSize()];
+					memcpy( stage.shaderData, effectData->GetBufferPointer(), effectData->GetBufferSize() );
+					stage.shaderSize = effectData->GetBufferSize();
+				}
+				stage.shaderDataStr = g_stringTable.AddString( stage.shaderData, stage.shaderSize );
+				stage.shadowShaderSize = 0;
+				stage.shadowShaderData = nullptr;
+				stage.shadowShaderDataStr = -1;
+
+				CComPtr<ID3D11ShaderReflection> reflection;
+				if( FAILED( D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection.p ) ) )
+				{
+					g_messages.AddMessage( "\\memory(0): error X0000: Could not get shader reflection" );
+					return false;
+				}
+
+				if( !GetStageData( state, reflection, stage, result.annotations ) )
+				{
+					return false;
+				}
+				if( !stage.defaultValues.empty() )
+				{
+					stage.defaultValuesStr = g_stringTable.AddString( &stage.defaultValues[0], stage.defaultValues.size() );
+				}
+				else
+				{
+					stage.defaultValuesStr = -1;
+				}
+
+				if( g_generateListing )
+				{
+					PrintShaderOutListing( listing, effectData, reflection );
+				}
+
+				reflections[stage.type] = reflection;
+
+				if( stage.type == PIXEL_STAGE || g_maxClipPlanes > 0 )
+				{
+					os.freeze( false );
+					patchEntryPoint = entryPoint;
+					switch( PatchShader( stage.type, true, true, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
+					{
+					case PATCH_ERROR:
+						return false;
+					case PATCH_USE:
 					{
 						state.ResetPragmaUsage();
 						code = std::string( os.str(), os.str() + os.pcount() );
@@ -2500,14 +2507,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						}
 
 						HRESULT hr = D3DX11CompileFromMemory(
-							code.c_str(), 
-							code.length(), 
-							"\\memory", 
-							nullptr, 
-							nullptr, 
-							patchEntryPoint.c_str(), 
+							code.c_str(),
+							code.length(),
+							"\\memory",
+							nullptr,
+							nullptr,
+							patchEntryPoint.c_str(),
 							profile.c_str(),
-							D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY | optimizationLevel | D3D10_SHADER_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3D10_SHADER_AVOID_FLOW_CONTROL : 0 ), 
+							D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY | optimizationLevel | D3D10_SHADER_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3D10_SHADER_AVOID_FLOW_CONTROL : 0 ),
 							0,
 							nullptr,
 							&effectData,
@@ -2526,12 +2533,12 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						{
 							g_messages.AddMessages( errors );
 						}
-						
+
 						CComPtr<ID3DBlob> strippedEffectData;
-						if( SUCCEEDED( D3DStripShader( 
-							effectData->GetBufferPointer(), 
-							effectData->GetBufferSize(), 
-							D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS, 
+						if( SUCCEEDED( D3DStripShader(
+							effectData->GetBufferPointer(),
+							effectData->GetBufferSize(),
+							D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
 							&strippedEffectData ) ) )
 						{
 							stage.shadowShaderData = new char[strippedEffectData->GetBufferSize()];
@@ -2548,7 +2555,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 
 						CComPtr<ID3D11ShaderReflection> reflection;
-						D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**) &reflection.p );
+						D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection.p );
 
 						if( g_generateListing )
 						{
@@ -2556,76 +2563,78 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						}
 					}
 					break;
+					}
 				}
-			}
 
-			if( g_generateListing )
-			{
-				PrintStageInfo( listing, stage, result );
-			}
-
-			outPass.stages.push_back( stage );
-		}
-
-		if( g_printShaderStats )
-		{
-			char buffer[64];
-			sprintf_s( buffer, "\n%4u", passIx );
-			shaderStatistics += buffer;
-			for( int k = 0; k < 6; ++k )
-			{
-				if( reflections[k] )
+				if( g_generateListing )
 				{
-					D3D11_SHADER_DESC desc;
-					if( SUCCEEDED( reflections[k]->GetDesc( &desc ) ) )
+					PrintStageInfo( listing, stage, result );
+				}
+
+				outPass.stages.push_back( stage );
+			}
+
+			if( g_printShaderStats )
+			{
+				char buffer[64];
+				sprintf_s( buffer, "\n%4u", passIx );
+				shaderStatistics += buffer;
+				for( int k = 0; k < 6; ++k )
+				{
+					if( reflections[k] )
 					{
-						char buffer[64];
-						sprintf_s( buffer, "%4u", desc.InstructionCount );
-						shaderStatistics += buffer;
+						D3D11_SHADER_DESC desc;
+						if( SUCCEEDED( reflections[k]->GetDesc( &desc ) ) )
+						{
+							char buffer[64];
+							sprintf_s( buffer, "%4u", desc.InstructionCount );
+							shaderStatistics += buffer;
+						}
+						else
+						{
+							shaderStatistics += "   ?";
+						}
 					}
 					else
 					{
-						shaderStatistics += "   ?";
+						shaderStatistics += "   -";
 					}
 				}
-				else
-				{
-					shaderStatistics += "   -";
-				}
 			}
-		}
-		// Check if PS input matches VS output
-		InputStageType pipelineStages[] = {
-			VERTEX_STAGE,
-			HULL_STAGE,
-			DOMAIN_STAGE,
-			GEOMETRY_STAGE,
-			PIXEL_STAGE, };
-		for( int i = 0; i < 6; ++i )
-		{
-			if( reflections[i] )
+			// Check if PS input matches VS output
+			InputStageType pipelineStages[] = {
+				VERTEX_STAGE,
+				HULL_STAGE,
+				DOMAIN_STAGE,
+				GEOMETRY_STAGE,
+				PIXEL_STAGE, };
+			for( int i = 0; i < 6; ++i )
 			{
-				for( int j = 0; j < sizeof( pipelineStages ) / sizeof( InputStageType ); ++j )
+				if( reflections[i] )
 				{
-					if( i == pipelineStages[j] )
+					for( int j = 0; j < sizeof( pipelineStages ) / sizeof( InputStageType ); ++j )
 					{
-						for( int k = j - 1; k >= 0; --k )
+						if( i == pipelineStages[j] )
 						{
-							if( reflections[pipelineStages[k]] )
+							for( int k = j - 1; k >= 0; --k )
 							{
-								if( !MatchShaderInputOutput( reflections[pipelineStages[k]], reflections[i] ) )
+								if( reflections[pipelineStages[k]] )
 								{
-									return false;
+									if( !MatchShaderInputOutput( reflections[pipelineStages[k]], reflections[i] ) )
+									{
+										return false;
+									}
+									break;
 								}
-								break;
 							}
+							break;
 						}
-						break;
 					}
 				}
 			}
+			technique.passes.push_back( outPass );
 		}
-		result.passes.push_back( outPass );
+		result.techniques.push_back( technique );
 	}
 
 	if( g_printShaderStats )
