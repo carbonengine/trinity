@@ -381,12 +381,17 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 		auto materialForThisBatch = it->GetShaderMaterialInterface();
 		auto shaderForThisBatch = it->GetShaderStateInterface();
 
+		if( !shaderForThisBatch )
+		{
+			continue;
+		}
+
 		uint32_t technique;
 		if( !shaderForThisBatch->GetTechniqueIndex( techniqueName, technique ) )
 		{
 			continue;
 		}
-		if( !shaderForThisBatch || shaderForThisBatch->GetPassCount( technique ) == 0 )
+		if( shaderForThisBatch->GetPassCount( technique ) == 0 )
 		{
 			continue;
 		}
