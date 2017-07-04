@@ -390,8 +390,9 @@ PreprocessorScanResult ParserState::GetPreprocessorToken( PreprocessorToken& tok
 				concatToken.append( nextToken.string.start, nextToken.string.end );
 			}
 			while( FindConcatOperator( depth ) );
-			char* string = AllocateString( concatToken.length() );
+			char* string = AllocateString( concatToken.length() + 1 );
 			memcpy( string, concatToken.c_str(), concatToken.length() );
+			string[concatToken.length()] = 0;
 			token.string = MakeInlineString( string, string + concatToken.length() );
 		}
 	}
