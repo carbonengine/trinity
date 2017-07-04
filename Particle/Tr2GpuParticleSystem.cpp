@@ -830,7 +830,7 @@ void Tr2GpuParticleSystem::EmitParticles( Tr2RenderContext& renderContext )
 {
 	auto* effectResource = m_emit->GetShaderStateInterface();
 
-	if( !effectResource || !effectResource->GetPassCount() )
+	if( !effectResource || !effectResource->GetPassCount( 0 ) )
 	{
 		return;
 	}
@@ -867,8 +867,8 @@ void Tr2GpuParticleSystem::EmitParticles( Tr2RenderContext& renderContext )
 	renderContext.SetRenderTarget( *m_positions[m_targetIndex] );
 	renderContext.SetRenderTarget( *m_velocities[m_targetIndex], 1 );
 
-	effectResource->ApplyAllStateForPass( 0, renderContext );
-	m_emit->ApplyMaterialDataForPass( 0, renderContext );
+	effectResource->ApplyAllStateForPass( 0, 0, renderContext );
+	m_emit->ApplyMaterialDataForPass( 0, 0, renderContext );
 
 	for( size_t i = 0; i < m_emitRequests.GetCount(); i += TEXTURE_METHOD_EMITS_PER_DP )
 	{
