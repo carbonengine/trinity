@@ -2737,6 +2737,8 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 	FinalizeBatches( m_secondaryBatches );
 	{
 		CCP_STATS_GPU_ZONE( "RenderPlanets/RenderOpaqueBatches" );
+		renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DEPTH_ONLY );
+		renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
 		RenderOpaqueBatches( m_secondaryBatches, renderContext );
 	}
 	renderContext.m_esm.UnsetAllTextures();
