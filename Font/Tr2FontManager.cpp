@@ -304,7 +304,7 @@ int Tr2FontManager::LookupGlyphIndex( const FaceID& faceID, int charCode )
 
 	if( m_sbitCache )
 	{
-		FTC_ImageTypeRec imgType = { (FTC_FaceID)faceID, width, height, m_loadflag };
+		FTC_ImageTypeRec imgType = { (FTC_FaceID)faceID, (FT_UInt)width, (FT_UInt)height, m_loadflag };
 		FT_Error e = FTC_SBitCache_Lookup( m_sbitCache, &imgType, glyphIndex, &img->sbit, &img->node );
 		if( e )
 		{
