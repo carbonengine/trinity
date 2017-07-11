@@ -125,6 +125,10 @@ void Tr2GpuSharedEmitter::Update( const UpdateArguments& arguments )
 	const bool firstUpdate = m_previousTime == Be::Time( -1 );
 	float dt = firstUpdate ? 0 : TimeAsFloat( arguments.time - m_previousTime );
 	m_previousTime = arguments.time;
+	if( dt <= 0 )
+	{
+		return;
+	}
 
 	Vector3 position( XMVector3TransformCoord( m_position, arguments.parentTransform ) );
 	Vector3 velocity = Vector3( 0.f, 0.f, 0.f );
