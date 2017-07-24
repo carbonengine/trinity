@@ -471,9 +471,6 @@
     <ClInclude Include="Curves\Tr2BoneMatrixCurve.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
-    <ClInclude Include="Curves\Tr2ColorCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
     <ClInclude Include="Curves\Tr2CurveColor.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
@@ -510,9 +507,6 @@
     <ClInclude Include="Curves\Tr2DistanceTracker.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
-    <ClInclude Include="Curves\Tr2EulerRotation.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
     <ClInclude Include="Curves\Tr2GrannyEventTrack.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
@@ -528,52 +522,16 @@
     <ClInclude Include="Curves\Tr2GrannyVectorTrack.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
-    <ClInclude Include="Curves\Tr2MayaAnimationEngine.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\Tr2MayaEulerRotationCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\Tr2MayaScalarCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\Tr2MayaVector3Curve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\Tr2QuaternionCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
     <ClInclude Include="Curves\Tr2QuaternionLerpCurve.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
     <ClInclude Include="Curves\Tr2RotationAdapter.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
-    <ClInclude Include="Curves\Tr2ScalarBezierCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\Tr2ScalarCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\Tr2ScalarExprCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
     <ClInclude Include="Curves\Tr2ScalarExprKeyCurve.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
-    <ClInclude Include="Curves\Tr2ToggleCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
     <ClInclude Include="Curves\Tr2TranslationAdapter.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\Tr2Vector2Curve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\Tr2Vector3Curve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\TriColorCurve.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
     <ClInclude Include="Curves\TriCurveSet.h">
@@ -583,21 +541,6 @@
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
     <ClInclude Include="Curves\TriEventKey.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\TriRotationCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\TriScalarCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\TriScalarKey.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\TriVectorCurve.h">
-      <Filter>Source Files\Curves</Filter>
-    </ClInclude>
-    <ClInclude Include="Curves\TriVectorScaler.h">
       <Filter>Source Files\Curves</Filter>
     </ClInclude>
     <ClInclude Include="Curves\Fader\Tr2ScalarFader.h">
@@ -2094,12 +2037,6 @@
     <ClCompile Include="Curves\Tr2BoneMatrixCurve_Blue.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
-    <ClCompile Include="Curves\Tr2ColorCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2ColorCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
     <ClCompile Include="Curves\Tr2CurveColor.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
@@ -2172,12 +2109,6 @@
     <ClCompile Include="Curves\Tr2DistanceTracker_Blue.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
-    <ClCompile Include="Curves\Tr2EulerRotation.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2EulerRotation_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
     <ClCompile Include="Curves\Tr2GrannyEventTrack.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
@@ -2208,36 +2139,6 @@
     <ClCompile Include="Curves\Tr2GrannyVectorTrack_Blue.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
-    <ClCompile Include="Curves\Tr2MayaAnimationEngine.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2MayaAnimationEngine_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2MayaEulerRotationCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2MayaEulerRotationCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2MayaScalarCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2MayaScalarCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2MayaVector3Curve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2MayaVector3Curve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2QuaternionCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2QuaternionCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
     <ClCompile Include="Curves\Tr2QuaternionLerpCurve.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
@@ -2250,58 +2151,16 @@
     <ClCompile Include="Curves\Tr2RotationAdapter_Blue.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
-    <ClCompile Include="Curves\Tr2ScalarBezierCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2ScalarBezierCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2ScalarCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2ScalarCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2ScalarExprCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2ScalarExprCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
     <ClCompile Include="Curves\Tr2ScalarExprKeyCurve.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
     <ClCompile Include="Curves\Tr2ScalarExprKeyCurve_Blue.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
-    <ClCompile Include="Curves\Tr2ToggleCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2ToggleCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
     <ClCompile Include="Curves\Tr2TranslationAdapter.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
     <ClCompile Include="Curves\Tr2TranslationAdapter_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2Vector2Curve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2Vector2Curve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2Vector3Curve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\Tr2Vector3Curve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriColorCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriColorCurve_Blue.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
     <ClCompile Include="Curves\TriCurveSet.cpp">
@@ -2320,36 +2179,6 @@
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
     <ClCompile Include="Curves\TriEventKey_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriRotationCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriRotationCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriScalarCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriScalarCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriScalarKey.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriScalarKey_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriVectorCurve.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriVectorCurve_Blue.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriVectorScaler.cpp">
-      <Filter>Source Files\Curves</Filter>
-    </ClCompile>
-    <ClCompile Include="Curves\TriVectorScaler_Blue.cpp">
       <Filter>Source Files\Curves</Filter>
     </ClCompile>
     <ClCompile Include="Curves\Fader\Tr2ScalarFader.cpp">
