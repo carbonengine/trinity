@@ -162,9 +162,6 @@ ALResult Tr2VertexLayoutAL::SetLayout( const Tr2ShaderAL* vertexShader, Tr2Rende
 	uint32_t bytecodeSize;
 	CR_RETURN_HR( vertexShader->GetBytecode( bytecode, bytecodeSize ) );
 	
-	bool fixedupWarning = false;
-	bool fixedupError = false;
-
 	const Tr2ShaderInputDefinition& definition = vertexShader->GetInputDefinition();
 	auto patchedDefinition = m_definition;
 	for( auto it = definition.elements.begin(); it != definition.elements.end(); ++it )
@@ -181,23 +178,13 @@ ALResult Tr2VertexLayoutAL::SetLayout( const Tr2ShaderAL* vertexShader, Tr2Rende
 			if( it->usedMask == 0 )
 			{
 				fakeElement.InputSlot = 4;
-				fixedupWarning = true;
 			}
 			else
 			{
 				fakeElement.InputSlot = 4;
-				fixedupError = true;
 			}
 			patchedDefinition.push_back( fakeElement );
 		}
-	}
-	if( fixedupError )
-	{
-		CCP_AL_LOGWARN( "Fixed input vertex layout definition to include missing used shader inputs" );
-	}
-	else if( fixedupError )
-	{
-		CCP_AL_LOGWARN( "Fixed input vertex layout definition to include missing unused shader inputs" );
 	}
 
 	CComPtr<ID3D11InputLayout> layout;
