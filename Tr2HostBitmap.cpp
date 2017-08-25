@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 
+#include "Include/TriMath.h"
 #include "Tr2RenderTarget.h"
 #include "Resources/TriTextureRes.h"
 #include "Tr2HostBitmap.h"
@@ -755,5 +756,75 @@ PyObject *Tr2HostBitmap::PySetPixels( PyObject *args )
     }
 
     Py_RETURN_NONE;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Creates a height map by scaling up source data to fill the bitmap
+//   with bicubic interpolation.
+//   Imitates the result of contour layer from chartdirector used by planetary interaction.
+// Arguments:
+//   data - source data, values from 0 to 1
+//   width - width of the source data
+//   height - height of the source data
+// Return Value:
+//   true if successful
+//   false Otherwise
+// --------------------------------------------------------------------------------------
+bool Tr2HostBitmap::CreateFromHeightData( const std::vector<float>& data, size_t width, size_t height )
+{
+	float scaleX = float( width - 1) / float( m_width );
+	float scaleY = float( height - 1) / float( m_height );
+
+	int yIndex[4];
+	float yValues[4];
+
+	int components = GetBytesPerPixel( m_format );
+	if( !IsValid() || !( components == 4 || components == 1 )  || IsCompressed() )
+	{
+		return false;
+	}
+
+	for( size_t y = 0; y < m_height; y++ )
+	{
+		float sy = y * scaleY;
+		size_t dataY = size_t( sy );
+		sy = sy - dataY;
+
+		for( size_t yi = 0; yi < 4; yi++ )
+		{
+			// Clamp the y axis
+			yIndex[yi] = ClampInt(dataY + yi - 1, 0, width - 1) * width;
+		}
+
+		for( size_t x = 0; x < m_width; x++ )
+		{
+			float sx = x * scaleX;
+			size_t dataX = size_t( sx );
+			sx = sx - dataX;
+
+			for( size_t i = 0; i < 4; i++ )
+			{
+				uint32_t index = dataX + i - 1;
+				// Wrap the x axis
+				size_t xIdx = index < 0 ? width - index: index % width;
+				yValues[i] = CubicInterpolate( data[yIndex[0] + xIdx], data[yIndex[1] + xIdx], data[yIndex[2] + xIdx], data[yIndex[3] + xIdx], sy );
+			}
+			uint8_t value = uint8_t( CubicInterpolate( yValues[0], yValues[1], yValues[2], yValues[3], sx ) * 255 );
+
+			if( components == 4 )
+			{
+				uint32_t data = (value << 24) + (value << 16) + (value << 8) + value;
+				char *dest = m_data.get() + y * m_width * 4 + x * 4;
+				memcpy( dest, &data, 4 );
+			}
+			else
+			{
+				char* dest = m_data.get() + y * m_width + x;
+				*dest = value;
+			}
+		}
+	}
+	return true;
 }
 #endif

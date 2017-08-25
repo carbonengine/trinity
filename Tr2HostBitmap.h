@@ -30,6 +30,7 @@ public:
 	bool CopyFromRenderTarget( Tr2RenderTargetAL& rt, const int* srcRect, int offsetX, int offsetY, Tr2RenderContext& renderContext );
 	bool CopyFaceFromRenderTarget( Tr2RenderContextEnum::CubemapFace face, Tr2RenderTargetAL& rt, Tr2RenderContext& renderContext );
 	bool CopyFromTextureRes  ( TriTextureRes& res, Tr2RenderContext& renderContext );
+	bool CreateFromHeightData( const std::vector<float>& data, size_t width, size_t height );
 	bool PopulateMargin( unsigned margin );
 	bool Save( const wchar_t* destFile );
 	bool SaveAsync( const wchar_t* destFile );
@@ -70,7 +71,6 @@ private:
 #endif
 
 #if BLUE_WITH_PYTHON
-	PyObject* PyLoadFromPngInMemory( PyObject* args );
 	PyObject* PyCreateFromFile( PyObject* args );
 #endif
 

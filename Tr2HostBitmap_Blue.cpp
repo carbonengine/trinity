@@ -153,78 +153,6 @@ PyObject* Tr2HostBitmap::PySetMipRawData( PyObject* self, PyObject* args )
 	Py_RETURN_NONE;
 }
 
-PyObject* Tr2HostBitmap::PyLoadFromPngInMemory( PyObject* args )
-{
-	PyObject *buffer = nullptr;
-	if( !PyArg_ParseTuple(args, "O", &buffer ) )
-	{
-		PyErr_SetString( PyExc_TypeError, "Expected a buffer parameter" );
-		return nullptr;
-	}
-	
-	//get the data:
-	PyBufferProcs *bp = buffer->ob_type->tp_as_buffer;
-	if( !bp || !bp->bf_getreadbuffer )
-	{
-		PyErr_SetString( PyExc_TypeError, "Argument is not a buffer" );
-		return nullptr;
-	}
-
-	void *data = nullptr;
-	Py_ssize_t datalen = 0;
-
-	Py_ssize_t sc = (*bp->bf_getsegcount)( buffer, 0 );
-	if (sc > 1) 
-	{
-		PyErr_SetString(PyExc_TypeError, "data must have one segment only");
-		return nullptr;
-	}
-	else if( sc == 1 )
-	{
-		datalen = (*bp->bf_getreadbuffer)(buffer, 0, &data);
-	}
-	else 
-	{
-		data = (void*)&datalen;
-		datalen = 0; //no data
-	}
-
-	if( data && datalen )
-	{
-		Be::Clsid resFileClsid( "blue", "MemStream" );
-		IBlueMemStreamPtr memStream( resFileClsid );
-
-		memStream->SetBuffer( data, datalen );
-		
-		ImageIO::HostBitmap bmp;
-		if( !ImageIO::ReadImage( *memStream, ImageIO::LoadParameters( L"<from memory>.png" ), bmp ) )
-		{
-			PyErr_SetString( PyExc_TypeError, "Error reading PNG stream" );
-			return nullptr;
-		}
-
-		if( bmp.GetFormat() != GetFormat() ||
-			bmp.GetWidth()  != GetWidth()  ||
-			bmp.GetHeight() != GetHeight() )
-		{
-			PyErr_SetString( PyExc_TypeError, "Width/Height/PixelFormat don't match" );
-			return nullptr;
-		}
-		
-		if( bmp.GetMipSize(0) != m_data.size() )
-		{
-			PyErr_SetString( PyExc_TypeError, "Data mismatch" );
-			return nullptr;
-		}
-
-		if( const void* src = bmp.GetMipRawData( 0 ) )
-		{
-			memcpy( m_data.get(), src, m_data.size() );
-		}
-	}
-
-	Py_RETURN_NONE;
-}
 
 PyObject* Tr2HostBitmap::PyCreateFromFile( PyObject* args )
 {
@@ -554,14 +482,14 @@ const Be::ClassInfo* Tr2HostBitmap::ExposeToBlue()
 			":param source: TriTextureRes of the same pixelFormat, and correct width/height\n"
 		)
 		
-		MAP_METHOD_AS_METHOD
+		MAP_METHOD_AND_WRAP
 		(
-			"LoadFromPngInMemory",
-			PyLoadFromPngInMemory, 
-			"Loads a png from a memory buffer\n"
-			":param data: data buffer\n"
-			":type data: buffer\n"
-			":rtype: None"
+			"CreateFromHeightData",
+			CreateFromHeightData,
+			"Creates a height map by scaling up source data to fill the bitmap.\n"
+			":param data: source data, values from 0 to 1\n"
+			":param width: width of the source data\n"
+			":param height: height of the source data\n"
 		)
 
 
