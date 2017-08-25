@@ -2253,6 +2253,27 @@ void EveTurretSet::ForceStateDeactive()
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Exposed function to force this turret set into the targeting state. No nice
+//   animations are played, no smooth transitions, no nothing, just "Force"
+// --------------------------------------------------------------------------------
+void EveTurretSet::ForceStateTargeting()
+{
+	m_trackingInfluence = 1.f;
+	m_trackingInfluenceDelta = 0.f;
+	unsigned int closestTurret = INVALID_TURRET_INDEX;
+	int closestLocator = -1;
+	GetClosestTurretAndLocator(closestTurret, closestLocator);
+	m_activeTurret = closestTurret;
+
+	// finally, we can set state
+	m_state = STATE_TARGETING;
+
+	// now force-play the deactive anim for this state
+	PlayAnimation(m_activeTurret, "", "Active", 0.f);
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   This one forces an idle animation on a turret based on the current state.
 // --------------------------------------------------------------------------------
 void EveTurretSet::ForceIdleAnimation()

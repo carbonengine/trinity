@@ -171,6 +171,8 @@ public:
 
 	void ForceStateDeactive();
 	void ForceIdleAnimation();
+	void ForceStateTargeting();
+
 
 	// get locator names
 	const char* GetLocatorName() const;

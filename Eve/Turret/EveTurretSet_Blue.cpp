@@ -143,6 +143,11 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 			"Force into state deactive: no anim, no transition, just flip." )
 
 		MAP_METHOD_AND_WRAP(
+			"ForceStateTargeting",
+			ForceStateTargeting,
+			"Force into state targeting: no anim, no transition, just flip.")
+
+		MAP_METHOD_AND_WRAP(
 			"SetShotMissed",
 			SetShotMissed,
 			"Set whether the last turret shot missed.\n"
