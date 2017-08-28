@@ -28,6 +28,13 @@ const Be::ClassInfo* EveMobile::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "turretSets", m_turretSets, "a list of all the turret sets on this ship", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
+		MAP_METHOD_AND_WRAP(
+			"GetTurretLocatorIndex",
+			GetTurretLocatorIndex, 
+			"Get the index for the locator in the ship's locator-list used for a single turret\n"
+			":param turretSetIdx: index of the turretSet in the ship's turretset list\n"
+			":param slotIdx: index of the individual single turret in the turretset\n"
+		)
 		MAP_METHOD_AND_WRAP( "GetTurretLocatorCount", GetTurretLocatorCount, "Returns the turret locator count of locators and bones matching the correct naming scheme." )
         MAP_METHOD_AND_WRAP( "RebuildTurretPositions", RebuildTurretPositions, "Re-positions all the turrets on this ship" )
 		MAP_METHOD_AND_WRAP( "PlayActivationCurve", PlayActivationCurve, "Play the object's activation strength curve" )

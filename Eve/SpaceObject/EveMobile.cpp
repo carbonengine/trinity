@@ -337,6 +337,19 @@ bool EveMobile::ValidateTurretLocatorName( const char* locatorName, unsigned int
 }
 
 // --------------------------------------------------------------------------------
+size_t EveMobile::GetTurretLocatorIndex( size_t turretSetIdx, size_t slotIdx ) const
+{
+	if( m_turretSetsLocatorInfo.size() > turretSetIdx )
+	{
+		if( m_turretSetsLocatorInfo[ turretSetIdx ].locatorIndices.size() > slotIdx )
+		{
+			return m_turretSetsLocatorInfo[turretSetIdx].locatorIndices[slotIdx];
+		}
+	}
+	return 0;
+}
+
+// --------------------------------------------------------------------------------
 // Description:
 //   Override base ::RenderDebugInfo() function, so we can draw debuginfo of
 //   the turrets etc.

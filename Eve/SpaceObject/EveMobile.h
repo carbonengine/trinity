@@ -115,6 +115,7 @@ private:
 		std::vector<unsigned int> locatorIndices;
 	};
 	std::vector<TurretSetLocatorInfo> m_turretSetsLocatorInfo;
+	size_t GetTurretLocatorIndex( size_t turretSetIdx, size_t slotIdx ) const;
 
 	// turret locator counting
 	struct TurretLocatorCountingInfo
