@@ -8,7 +8,8 @@ Tr2GpuTimerAL::Tr2GpuTimerAL()
 	:m_begin( 0xffffffffffffffff ),
 	m_end( 0xffffffffffffffff ),
 	m_state( UNINITIALIZED ),
-	m_lastTime( -1.f )
+	m_lastTime( -1.f ),
+	m_recreateOnPrepare( false )
 {
 }
 
@@ -40,6 +41,7 @@ ALResult Tr2GpuTimerAL::Create( Tr2PrimaryRenderContextAL& renderContext )
 
 void Tr2GpuTimerAL::Destroy()
 {
+	m_recreateOnPrepare = false;
 	m_beginQuery = nullptr;
 	m_endQuery = nullptr;
 	m_disjointQuery = nullptr;
@@ -141,12 +143,18 @@ float Tr2GpuTimerAL::GetTime( Tr2RenderContextAL& renderContext )
 
 void Tr2GpuTimerAL::ReleaseALResource()
 {
+	auto recreateOnPrepare = IsValid();
 	Destroy();
+	m_recreateOnPrepare = recreateOnPrepare;
 }
 
 void Tr2GpuTimerAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderContext )
 {
-	Create( renderContext );
+	if( m_recreateOnPrepare )
+	{
+		Create( renderContext );
+		m_recreateOnPrepare = false;
+	}
 }
 
 

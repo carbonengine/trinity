@@ -46,6 +46,7 @@ private:
 		END_ISSUED,
 		BEGIN_RECEIVED,
 	} m_state;
+	bool m_recreateOnPrepare;
 };
 
 #endif
