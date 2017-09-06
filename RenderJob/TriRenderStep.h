@@ -37,6 +37,9 @@ protected:
 	mutable Tr2GpuTimerAL m_gpuTimer;
 	uint64_t m_beginTime;
 	float m_cpuTime;
+	std::string m_statName;
+	CcpStaticStatisticsEntry* m_statEntryCpu;
+	CcpStaticStatisticsEntry* m_statEntryGpu;
 
 	// Enabled/disabled flag: disabled steps are not executed
 	bool m_enabled;

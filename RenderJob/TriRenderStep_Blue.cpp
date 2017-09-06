@@ -67,5 +67,14 @@ const Be::ClassInfo* TriRenderStep::ExposeToBlue()
 			"Time it takes to execture the step on CPU in milliseconds (if debugCaptureGpuTime is on)"
 		)
 
+		MAP_ATTRIBUTE
+		(
+			"statName",
+			m_statName,
+			"Blue statistics stat name for CPU/GPU timers. When set to a non-empty string and capturing\n"
+			"timing is enabled, the step will post timings to a statistics entry with the same name",
+			Be::READWRITE
+		)
+
 	EXPOSURE_END()
 }
