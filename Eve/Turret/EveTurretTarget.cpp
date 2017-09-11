@@ -19,7 +19,8 @@ EveTurretTarget::EveTurretTarget( IRoot* lockobj ) :
 	m_impactLength( -1.f ),
 	m_impactDelay( -1.f ),
 	m_impactID( -1 ),
-	m_position( 0.f, 0.f, 0.f ),
+	m_targetPosition( 0.f, 0.f, 0.f ),
+	m_trackingPosition( 0.f, 0.f, 0.f ),
 	m_positionOld( 0.f, 0.f, 0.f ),
 	m_positionOldInfluence( -1.f ),
 	m_positionMiss( 0.f, 0.f, 0.f ),
@@ -71,7 +72,7 @@ bool EveTurretTarget::SetTargetable( IRoot* object )
 	{
 		m_object = newTarget;
 		// and trigger a fade
-		m_positionOld = m_position;
+		m_positionOld = m_trackingPosition;
 		m_positionOldInfluence = 1.f;
 	}
 	return true;
@@ -141,11 +142,11 @@ void EveTurretTarget::Update( float deltaT, const Vector3* source )
 	if( m_object )
 	{
 		// update the position & diretion
-		m_object->GetDamageLocatorPosition( &m_position, m_locator, true );
-		Vector3 dirToSource( *source - m_position );
+		m_object->GetDamageLocatorPosition( &m_targetPosition, m_locator, true );
+		Vector3 dirToSource( *source - m_targetPosition );
 
 		// update the miss position
-		m_object->GetMissPosition( &m_position, source, &m_positionMiss );
+		m_object->GetMissPosition( &m_targetPosition, source, &m_positionMiss );
 		m_positionMiss += m_randomMissPositionOffset;
 		Vector3 direction = m_positionMiss - *source;
 
@@ -164,7 +165,7 @@ void EveTurretTarget::Update( float deltaT, const Vector3* source )
 		// update the impacts
 		if( m_impactID != -1 )
 		{
-			m_object->UpdateImpact( m_position, dirToSource, m_impactID );
+			m_object->UpdateImpact( m_targetPosition, dirToSource, m_impactID );
 		}
 
 		// what about delayed impact creation?
@@ -178,12 +179,13 @@ void EveTurretTarget::Update( float deltaT, const Vector3* source )
 			}
 		}
 	}
-
+	
+	m_trackingPosition = m_targetPosition;
 	// are we still fading from an old position?
 	if( m_positionOldInfluence > 0.f )
 	{
 		// lerp the old position "in"
-		D3DXVec3Lerp( &m_position, &m_position, &m_positionOld, m_positionOldInfluence );
+		D3DXVec3Lerp( &m_trackingPosition, &m_targetPosition, &m_positionOld, m_positionOldInfluence );
 		// fadeout the influence
 		m_positionOldInfluence -= deltaT;
 	}
@@ -191,7 +193,23 @@ void EveTurretTarget::Update( float deltaT, const Vector3* source )
 
 // --------------------------------------------------------------------------------
 // Description:
-//   This is where we give out the position
+//   Position that turrets track
+// --------------------------------------------------------------------------------
+const Vector3* EveTurretTarget::GetTrackingPosition() const
+{
+	if( GetShotMissed() )
+	{
+		return &m_positionMiss;
+	}
+	else
+	{
+		return &m_trackingPosition;
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Destination position of target
 // --------------------------------------------------------------------------------
 const Vector3* EveTurretTarget::GetTargetPosition() const
 {
@@ -201,7 +219,7 @@ const Vector3* EveTurretTarget::GetTargetPosition() const
 	}
 	else
 	{
-		return &m_position;
+		return &m_targetPosition;
 	}
 }
 

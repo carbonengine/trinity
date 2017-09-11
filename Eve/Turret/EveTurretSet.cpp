@@ -955,7 +955,7 @@ void EveTurretSet::UpdateAsyncronous( EveUpdateContext& updateContext, const Par
 				{
 					// transform traget pos (which is in world space) into objectspace
 					Vector3 targetPosOS;
-					D3DXVec3TransformCoord( &targetPosOS, m_target->GetTargetPosition(), &it->invWorldMatrix );
+					D3DXVec3TransformCoord( &targetPosOS, m_target->GetTrackingPosition(), &it->invWorldMatrix );
 
 					// "do" all the system bones, we have found
 					for( unsigned int bone = 0; bone < SYSBONE_MAX; ++bone )
@@ -1118,7 +1118,7 @@ Matrix EveTurretSet::GetTurretBoneTransform( uint32_t closestTurret, uint32_t bo
 		if( m_sysBonePitchMin < 45.f )
 		{
 			// aiming directly at target, because target cone is large
-			Vector3 nrmToTarget = *m_target->GetTargetPosition() - m.GetTranslation();
+			Vector3 nrmToTarget = *m_target->GetTrackingPosition() - m.GetTranslation();
 			// get direct rotation quaternion
 			Quaternion directRotationQuaternion;
 			static const Vector3 zAxis( 0.f, 0.f, 1.f );

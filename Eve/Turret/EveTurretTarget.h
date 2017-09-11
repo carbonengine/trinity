@@ -28,6 +28,7 @@ public:
 	int GetLocator() const;
 	void StartFireAtLocator( int l, float delay, float length );
 	void StopFireAtLocator();
+	const Vector3* GetTrackingPosition() const;
 	const Vector3* GetTargetPosition() const;
 	int FindClosestLocator( const Vector3* source, Vector3* position ) const;
 	int FindRandomValidLocator( const Vector3& source, Vector3& position ) const;
@@ -59,7 +60,8 @@ private:
 	int m_impactID;
 
 	// actual target position and smoothing
-	Vector3 m_position;
+	Vector3 m_trackingPosition;
+	Vector3 m_targetPosition;
 	Vector3 m_positionOld;
 	float m_positionOldInfluence;
 
