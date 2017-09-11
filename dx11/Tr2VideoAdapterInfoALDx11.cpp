@@ -42,6 +42,26 @@ struct DeviceInfo
 std::vector<AdapterInfo> s_adapters;
 std::vector<DeviceInfo> s_deviceInfo;
 
+HRESULT GetFallbackMode( DXGI_MODE_DESC &desc )
+{
+	DEVMODE devMode;
+	memset(&devMode, 0, sizeof(devMode));
+	devMode.dmSize = sizeof(devMode);
+	if (!EnumDisplaySettings(0, ENUM_CURRENT_SETTINGS, &devMode))
+	{
+		return E_FAIL;
+	}
+
+	desc.Width = devMode.dmPelsWidth;
+	desc.Height = devMode.dmPelsHeight;
+	desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+	desc.RefreshRate.Numerator = 0;
+	desc.RefreshRate.Denominator = 1;
+	desc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+	desc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+	return S_OK;
+}
+
 ALResult PopulateDisplayModes( AdapterInfo& output, DXGI_FORMAT backBufferFormat )
 {
 	auto inserted = output.m_displayModes.insert( std::make_pair( backBufferFormat, std::vector<DXGI_MODE_DESC>() ) );
@@ -57,6 +77,12 @@ ALResult PopulateDisplayModes( AdapterInfo& output, DXGI_FORMAT backBufferFormat
 		0,
 		&count,
 		nullptr );
+	if( hr == E_FAIL && backBufferFormat == DXGI_FORMAT_B8G8R8A8_UNORM && output.m_deviceInfoIndex == 0 )
+	{
+		CCP_LOGWARN( "Failed to get available display modes. Consider updating video driver." );
+		displayModes.resize( 1 );
+		return GetFallbackMode( displayModes[0] );
+	}
 	if ( hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE && backBufferFormat == DXGI_FORMAT_B8G8R8A8_UNORM )
 	{
 		CCP_LOGWARN( "Tr2VideoAdapterInfo: failed to enumerate display modes (running in remote desktop?)" );
@@ -74,23 +100,9 @@ ALResult PopulateDisplayModes( AdapterInfo& output, DXGI_FORMAT backBufferFormat
 		0,
 		&count,
 		&displayModes[0] );
-	if ( hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE && backBufferFormat == DXGI_FORMAT_B8G8R8A8_UNORM )
+	if ( hr == DXGI_ERROR_NOT_CURRENTLY_AVAILABLE && backBufferFormat == DXGI_FORMAT_B8G8R8A8_UNORM && !displayModes.empty() )
 	{
-		DEVMODE devMode;
-		memset( &devMode, 0, sizeof( devMode ) );
-		devMode.dmSize = sizeof( devMode );
-		if ( !EnumDisplaySettings( 0, ENUM_CURRENT_SETTINGS, &devMode ) )
-		{
-			return E_FAIL;
-		}
-
-		displayModes[0].Width = devMode.dmPelsWidth;
-		displayModes[0].Height = devMode.dmPelsHeight;
-		displayModes[0].Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-		displayModes[0].RefreshRate.Numerator = 0;
-		displayModes[0].RefreshRate.Denominator = 1;
-		displayModes[0].ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-		displayModes[0].Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
+		return GetFallbackMode( displayModes[0] );
 	}
 	else if ( FAILED( hr ) )
 	{
