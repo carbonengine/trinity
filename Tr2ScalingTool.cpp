@@ -5,11 +5,34 @@
 #include "Shader/Tr2Effect.h"
 #include "Tr2Renderer.h"
 
+extern float g_primitiveDistanceScaleMultiplier;
+
+namespace
+{
+
+Vector3 TransformPoint( const Vector3& localCenter, Tr2SolidSet* solid, Matrix& viewMatrix )
+{
+	XMVECTOR det;
+	Matrix viewInv( XMMatrixInverse( &det, viewMatrix ) );
+	
+	Vector3 viewPos = viewInv.GetTranslation();
+	Vector3 lineSetPos = Vector3( solid->m_localTransform._41, solid->m_localTransform._42, solid->m_localTransform._43 );
+	Vector3 normal = Vector3( viewMatrix._13, viewMatrix._23, viewMatrix._33 );
+	Vector3 dir( viewPos - lineSetPos );
+	float scale = fabs( D3DXVec3Dot( &dir, &normal )*g_primitiveDistanceScaleMultiplier*Tr2Renderer::GetFieldOfView() );
+
+	Matrix scaleMat, finalTransform;
+	D3DXMatrixScaling( &scaleMat, scale, scale, scale );
+	D3DXMatrixMultiply( &finalTransform, &scaleMat, &solid->m_localTransform );
+
+	return Vector3( XMVector3TransformCoord( localCenter, finalTransform ) );
+}
+
+}
+
 Tr2ScalingTool::Tr2ScalingTool( IRoot* lockobj )
 	:m_initialLength( 1.0f ),
-	m_previousLength( 1.0f ),
 	m_scale( 1.0f, 1.0f, 1.0f ),
-	m_negateScale( false ),
 	m_initialScale( 1.0f, 1.0f, 1.0f )
 {
 	GenLineSets();
@@ -26,14 +49,6 @@ void Tr2ScalingTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYDe
 	Vector3 normal;
 	Vector3 ray;
 	Vector3 startPos;
-	if( mouseXDelta < 0 )
-	{
-		m_negateScale = true;
-	}
-	else
-	{
-		m_negateScale = false;
-	}
 	pos.x = m_localTransform._41;
 	pos.y = m_localTransform._42;
 	pos.z = m_localTransform._43;
@@ -42,7 +57,7 @@ void Tr2ScalingTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYDe
 	if( m_initialLength < 0.0 )
 	{
         Vector3 vecResult;
-        Vector3 vecCenterOfMass = m_xBox->GetCenterOfMass();
+        Vector3 vecCenterOfMass = TransformPoint( Vector3( 1, 0, 0 ), m_xBox, viewMatrix );
         float tmpInitialLength = D3DXVec3Length( D3DXVec3Subtract( &vecResult, &pos, &vecCenterOfMass ));
 		// the initiallength could not have been set up...
 		m_initialLength = tmpInitialLength;
@@ -67,7 +82,6 @@ void Tr2ScalingTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYDe
 	Vector3 delta = MovePointOnPlane(curMouseX, curMouseY, curMouseX+mouseXDelta, curMouseY+mouseYDelta, pos, normal, viewport, viewMatrix, projectionMatrix );
 
 	Vector3 translate;
-	m_moved = true;
 	if( m_selectedAxis == "w" )
 	{
 		translate = delta;
@@ -91,6 +105,148 @@ void Tr2ScalingTool::Move( int mouseX, int mouseY, int mouseXDelta, int mouseYDe
 	m_movement.x += translate.x;
 	m_movement.y += translate.y;
 	m_movement.z += translate.z;
+
+	{
+		Matrix temp;
+		// Get x y z vectors, ... scale them by the length and apply to each component
+		// We might be in world or local
+		Vector3 xAxis;
+		Vector3 yAxis;
+		Vector3 zAxis;
+		GetBaseVectors( xAxis, yAxis, zAxis );
+
+		if( m_selectedAxis == "w" )
+		{
+			//
+			Vector3 vecA, vecB, vecC;
+			vecA.x = m_worldTransform._41;
+			vecA.y = m_worldTransform._42;
+			vecA.z = m_worldTransform._43;
+
+			vecB = TransformPoint( Vector3( 1, 0, 0 ), m_xBox, viewMatrix );
+
+			D3DXVec3Subtract( &vecC, &vecA, &vecB );
+			float delta = D3DXVec3Length( &m_movement );
+			float length = D3DXVec3Length( &vecC );
+			float scale = length / m_initialLength;
+
+			if( mouseXDelta < 0 )
+			{
+				delta = -delta;
+			}
+
+			if( D3DXVec3Dot( &vecC, &xAxis ) >= 0.0f )
+			{
+				scale = -scale;
+			}
+
+			// x
+			Vector3 translate;
+			Matrix translation;
+			D3DXVec3Scale( &translate, &xAxis, delta );
+			D3DXMatrixTranslation( &translation, translate.x, translate.y, translate.z );
+			D3DXMatrixMultiply( &m_xBox->m_localTransform, &m_xBox->m_localTransform, &translation );
+
+			// y
+			D3DXVec3Scale( &translate, &yAxis, delta );
+			D3DXMatrixTranslation( &translation, translate.x, translate.y, translate.z );
+			D3DXMatrixMultiply( &m_yBox->m_localTransform, &m_yBox->m_localTransform, &translation );
+
+			// z
+			D3DXVec3Scale( &translate, &zAxis, delta );
+			D3DXMatrixTranslation( &translation, translate.x, translate.y, translate.z );
+			D3DXMatrixMultiply( &m_zBox->m_localTransform, &m_zBox->m_localTransform, &translation );
+
+			Matrix scaleA, scaleB;
+			D3DXMatrixScaling( &scaleA, m_scale.x, m_scale.y, m_scale.z );
+
+			Vector3 nextScale = m_scale;
+
+			nextScale.x = ( m_initialScale.x*scale );
+			nextScale.y = ( m_initialScale.y*scale );
+			nextScale.z = ( m_initialScale.z*scale );
+
+			D3DXMatrixScaling( &scaleB, nextScale.x, nextScale.y, nextScale.z );
+			// Check the move callback for if we should be moving or not
+			if( OnMoveCallback( scaleA, scaleB ) )
+			{
+				m_scale = nextScale;
+				m_movement.x = 0.0f;
+				m_movement.y = 0.0f;
+				m_movement.z = 0.0f;
+			}
+		}
+		else
+		{
+			Vector3 axis, center;
+			Tr2SolidSet* selectedPrimitive = NULL;
+			if( m_selectedAxis == "x" )
+			{
+				axis = xAxis;
+				selectedPrimitive = m_xBox;
+				center = Vector3( 1, 0, 0 );
+			}
+			else if( m_selectedAxis == "y" )
+			{
+				axis = yAxis;
+				selectedPrimitive = m_yBox;
+				center = Vector3( 0, 1, 0 );
+			}
+			else
+			{
+				axis = zAxis;
+				selectedPrimitive = m_zBox;
+				center = Vector3( 0, 0, 1 );
+			}
+
+			Vector3 vecA, vecB, vecC;
+			vecA.x = m_worldTransform._41;
+			vecA.y = m_worldTransform._42;
+			vecA.z = m_worldTransform._43;
+
+			vecB = TransformPoint( center, selectedPrimitive, viewMatrix );
+
+			D3DXVec3Subtract( &vecC, &vecA, &vecB );
+
+			float l1 = D3DXVec3Length( &vecC );
+			float scale = l1 / m_initialLength;
+
+			Matrix scaleA, scaleB;
+			D3DXMatrixScaling( &scaleA, m_scale.x, m_scale.y, m_scale.z );
+
+			if( D3DXVec3Dot( &vecC, &axis ) >= 0.0f )
+			{
+				scale = -scale;
+			}
+
+			Matrix translation;
+			Vector3 nextScale = m_scale;
+			if( m_selectedAxis == "x" )
+			{
+				nextScale.x = ( m_initialScale.x*scale );
+			}
+			else if( m_selectedAxis == "y" )
+			{
+				nextScale.y = ( m_initialScale.y*scale );
+			}
+			else if( m_selectedAxis == "z" )
+			{
+				nextScale.z = ( m_initialScale.z*scale );
+			}
+			D3DXMatrixScaling( &scaleB, nextScale.x, nextScale.y, nextScale.z );
+
+			D3DXMatrixTranslation( &translation, m_movement.x, m_movement.y, m_movement.z );
+			D3DXMatrixMultiply( &selectedPrimitive->m_localTransform, &selectedPrimitive->m_localTransform, &translation );
+			// Check the move callback for if we should be moving or not
+			if( OnMoveCallback( scaleA, scaleB ) )
+			{
+				m_scale = nextScale;
+				m_movement.x = 0.0f;
+				m_movement.y = 0.0f;
+				m_movement.z = 0.0f;
+			}
+		}
+	}
 }
 
 std::vector<ITr2Renderable*>& Tr2ScalingTool::GetPrimitivesToRender( )
@@ -274,148 +430,6 @@ void Tr2ScalingTool::Update()
 	}
 
 	UpdateLines();
-
-	if( m_moved )
-	{
-		Matrix temp;
-		// Get x y z vectors, ... scale them by the length and apply to each component
-		// We might be in world or local
-		Vector3 xAxis;
-		Vector3 yAxis;
-		Vector3 zAxis;
-		GetBaseVectors( xAxis, yAxis, zAxis );
-
-		if( m_selectedAxis == "w" )
-		{
-			//
-			Vector3 vecA, vecB, vecC;
-			vecA.x = m_worldTransform._41;
-			vecA.y = m_worldTransform._42;
-			vecA.z = m_worldTransform._43;
-
-			vecB = m_xBox->GetCenterOfMass();
-
-			D3DXVec3Subtract( &vecC, &vecA, &vecB );
-			float delta = D3DXVec3Length( &m_movement );
-			float length = D3DXVec3Length( &vecC );
-			float scale = length/m_initialLength;
-			
-			if( m_negateScale )
-			{
-				delta = -delta;
-			}
-
-			if( D3DXVec3Dot(&vecC, &xAxis) >= 0.0f )
-			{
-				scale = -scale;
-			}
-
-			// x
-			Vector3 translate;
-			Matrix translation; 
-			D3DXVec3Scale( &translate, &xAxis, delta );			
-			D3DXMatrixTranslation( &translation, translate.x, translate.y, translate.z );
-			D3DXMatrixMultiply( &m_xBox->m_localTransform, &m_xBox->m_localTransform, &translation );
-
-			// y
-			D3DXVec3Scale( &translate, &yAxis, delta );			
-			D3DXMatrixTranslation( &translation, translate.x, translate.y, translate.z );
-			D3DXMatrixMultiply( &m_yBox->m_localTransform, &m_yBox->m_localTransform, &translation );
-
-			// z
-			D3DXVec3Scale( &translate, &zAxis, delta );			
-			D3DXMatrixTranslation( &translation, translate.x, translate.y, translate.z );
-			D3DXMatrixMultiply( &m_zBox->m_localTransform, &m_zBox->m_localTransform, &translation);
-
-			Matrix scaleA, scaleB;
-			D3DXMatrixScaling( &scaleA, m_scale.x, m_scale.y, m_scale.z );
-
-			Vector3 nextScale = m_scale;
-
-			nextScale.x = (m_initialScale.x*scale);
-			nextScale.y = (m_initialScale.y*scale);
-			nextScale.z = (m_initialScale.z*scale);
-
-			D3DXMatrixScaling( &scaleB, nextScale.x, nextScale.y, nextScale.z );
-			// Check the move callback for if we should be moving or not
-			if( OnMoveCallback( scaleA, scaleB ))
-			{
-				m_scale = nextScale;
-				m_movement.x = 0.0f;
-				m_movement.y = 0.0f;
-				m_movement.z = 0.0f;
-			}
-			m_previousLength = length;
-		}
-		else
-		{
-			Vector3 axis;
-			Tr2SolidSet* selectedPrimitive = NULL;
-			if( m_selectedAxis == "x" )
-			{
-				axis = xAxis;
-				selectedPrimitive = m_xBox;
-			}
-			else if( m_selectedAxis == "y" )
-			{
-				axis = yAxis;
-				selectedPrimitive = m_yBox;
-			}
-			else
-			{
-				axis = zAxis;
-				selectedPrimitive = m_zBox;
-			}
-
-			Vector3 vecA, vecB, vecC;
-			vecA.x = m_worldTransform._41;
-			vecA.y = m_worldTransform._42;
-			vecA.z = m_worldTransform._43;
-
-			vecB = selectedPrimitive->GetCenterOfMass();
-
-			D3DXVec3Subtract( &vecC, &vecA, &vecB );
-			
-			float l1 = D3DXVec3Length( &vecC );
-			float scale = l1/m_initialLength;
-			
-			Matrix scaleA, scaleB;
-			D3DXMatrixScaling( &scaleA, m_scale.x, m_scale.y, m_scale.z );
-
-			if( D3DXVec3Dot(&vecC, &axis) >= 0.0f )
-			{
-				scale = -scale;
-			}
-
-			Matrix translation; 
-			Vector3 nextScale = m_scale;
-			if( m_selectedAxis == "x" )
-			{
-				nextScale.x = (m_initialScale.x*scale);
-			}
-			else if( m_selectedAxis == "y" )
-			{
-				nextScale.y = (m_initialScale.y*scale);
-			}
-			else if( m_selectedAxis == "z" )
-			{
-				nextScale.z = (m_initialScale.z*scale);
-			}
-			D3DXMatrixScaling( &scaleB, nextScale.x, nextScale.y, nextScale.z );
-
-			D3DXMatrixTranslation( &translation, m_movement.x, m_movement.y, m_movement.z );
-			D3DXMatrixMultiply( &selectedPrimitive->m_localTransform, &selectedPrimitive->m_localTransform, &translation );	
-			// Check the move callback for if we should be moving or not
-			if( OnMoveCallback( scaleA, scaleB ))
-			{
-				m_scale = nextScale;
-				m_movement.x = 0.0f;
-				m_movement.y = 0.0f;
-				m_movement.z = 0.0f;
-			}
-		}		
-		m_moved = false;
-	}
 }
 
 void Tr2ScalingTool::UpdateLines()

@@ -23,9 +23,7 @@ public:
 
 	Vector3 m_scale;
 	Vector3 m_initialScale;
-	bool	m_negateScale;
 	float	m_initialLength;
-	float	m_previousLength;
 	void Init( Matrix& initialTransform );
 
 	Tr2SolidSetPtr m_xBox;
