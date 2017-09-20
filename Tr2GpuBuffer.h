@@ -55,6 +55,8 @@ public:
 	bool IsValid() const;
 	uint32_t GetCount() const;
 
+	Tr2RenderContextEnum::PixelFormat GetFormat() const { return m_format; }
+
 	operator Tr2GpuBufferAL&() { return m_buffer; }
 	operator const Tr2GpuBufferAL&() const { return m_buffer; }
 
