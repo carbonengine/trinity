@@ -1123,17 +1123,27 @@ int _tmain(int argc, _TCHAR* argv[])
 		keys.push_back( it->first );
 	}
 
+	std::map<unsigned, unsigned> aliases;
+
 	for( size_t i = 0; i < keys.size(); ++i )
 	{
 		auto b0 = g_compiledEffects[keys[i]];
+		if( !b0 )
+		{
+			continue;
+		}
 		for( size_t j = i + 1; j < keys.size(); ++j )
 		{
 			auto b1 = g_compiledEffects[keys[j]];
+			if( !b1 )
+			{
+				continue;
+			}
 			if( b0->GetBufferSize() == b1->GetBufferSize() && memcmp( b0->GetBufferPointer(), b1->GetBufferPointer(), b0->GetBufferSize() ) == 0 )
 			{
-				g_aliases[keys[j]] = keys[i];
+				aliases[keys[j]] = keys[i];
 				b1->Release();
-				g_compiledEffects.erase( keys[j] );
+				g_compiledEffects[keys[j]] = nullptr;
 				keys.erase( keys.begin() + j );
 				--j;
 			}
@@ -1151,7 +1161,17 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	if( g_printWarnings )
 	{
-		printf( "Compiled %u permutations and %u aliases\n", g_compiledEffects.size(), g_aliases.size() );
+		unsigned count = 0;
+		for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
+		{
+			if( it->second )
+			{ 
+				++count;
+			}
+		}
+
+		printf( "Compiled %u permutations and %u aliases\n", count, g_aliases.size() + aliases.size() );
+		fflush( stdout );
 	}
 
 	size_t permutationSize = 1;
@@ -1211,10 +1231,19 @@ int _tmain(int argc, _TCHAR* argv[])
 	for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
 	{
 		header[index++] = it->first;
-		header[index++] = offset;
-		header[index++] = it->second->GetBufferSize();
-		offsets[it->first] = std::make_pair( offset, it->second->GetBufferSize() );
-		offset += it->second->GetBufferSize();
+		if( it->second )
+		{
+			header[index++] = offset;
+			header[index++] = it->second->GetBufferSize();
+			offsets[it->first] = std::make_pair( offset, it->second->GetBufferSize() );
+			offset += it->second->GetBufferSize();
+		}
+		else
+		{
+			auto offset = offsets[aliases[it->first]];
+			header[index++] = offset.first;
+			header[index++] = offset.second;
+		}
 	}
 	for( auto it = g_aliases.begin(); it != g_aliases.end(); ++it )
 	{
@@ -1231,7 +1260,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	// Write compiled code
 	for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
 	{
-		WriteFile( file, it->second->GetBufferPointer(), it->second->GetBufferSize(), &bytesWritten, NULL );
+		if( it->second )
+		{
+			WriteFile( file, it->second->GetBufferPointer(), it->second->GetBufferSize(), &bytesWritten, NULL );
+		}
 	}
 
 	delete[] fullHeader;
