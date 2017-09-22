@@ -114,9 +114,6 @@ const Be::ClassInfo* Tr2SkinnedObject::ExposeToBlue()
 		MAP_ATTRIBUTE( "worldTransformUpdater", m_worldTransformUpdater, "Object that implements ITr2WorldTransformUpdater to update this objects transform for rendering", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "visualModel", m_visualModel, "Model used to render object representation", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "transform", m_transform, "Model 4x4 transform matrix", Be::READWRITE | Be::PERSIST )
-#if APEX_ENABLED
-		MAP_ATTRIBUTE( "clothMeshes", m_clothMeshes, "Simulated cloth meshes attached to this object", Be::READWRITE | Be::PERSIST )
-#endif
 		MAP_PROPERTY( "translation", GetPosition, SetPosition, "Position of the model" )
 		MAP_PROPERTY( "rotation", GetRotation, SetRotation, "Rotation of the model" )
 		MAP_PROPERTY( "scaling", GetScaling, SetScaling, "Scale of the model" )

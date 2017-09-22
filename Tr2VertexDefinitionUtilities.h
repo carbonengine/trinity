@@ -12,11 +12,6 @@
 // Take a granny vertex definition and build a Tr2VertexDefinition out of it.
 Tr2VertexDefinition BuildFromGrannyVertexDecl( const granny_data_type_definition* grannyVertexDecl );
 
-#if APEX_ENABLED
-// Take an Apex vertex definition and build a Tr2VertexDefinition out of it.
-Tr2VertexDefinition BuildFromApex( const physx::apex::NxRenderDataFormat::Enum* src, int* offsets, int* sizes );
-#endif
-
 // Convert a vertex definition back to a granny layout
 // Arguments:
 // vd - input definition

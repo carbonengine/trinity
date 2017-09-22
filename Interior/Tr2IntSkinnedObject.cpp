@@ -4,11 +4,7 @@
 
 #include "Utilities/BoundingSphere.h"
 #include "TriSettingsRegistrar.h"
-#include "Apex/Tr2ClothingActor.h"
 #include "Tr2LitPerObjectData.h"
-#if APEX_ENABLED
-#include "Apex/Apex.h"
-#endif
 #include "Resources/TriGeometryRes.h"
 #include "Resources/TriTextureRes.h"
 #include "Shader/Tr2Effect.h"
@@ -159,15 +155,6 @@ void Tr2IntSkinnedObject::AddToApexScene( Tr2ApexScene* apexScene )
 {
 	if( !m_isInApexScene )
 	{
-#if APEX_ENABLED
-		for( Tr2ClothingActorVector::iterator it = m_clothMeshes.begin(); it != m_clothMeshes.end(); ++it )
-		{
-			if( Tr2ClothingActor* ca = *it )
-			{
-				ca->AddToApexScene( apexScene );
-			}
-		}
-#endif
 		m_isInApexScene = true;
 	}
 }
@@ -178,15 +165,6 @@ void Tr2IntSkinnedObject::RemoveFromApexScene( void )
 
 	if( m_isInApexScene )
 	{
-#if APEX_ENABLED
-		for( Tr2ClothingActorVector::iterator it = m_clothMeshes.begin(); it != m_clothMeshes.end(); ++it )
-		{
-			if( Tr2ClothingActor* ca = *it )
-			{
-				ca->RemoveFromApexScene();
-			}
-		}
-#endif
 	}
 }
 
@@ -233,19 +211,6 @@ void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 
 		depth = ( unsigned int )( ( float )0xFFFFFFF * ( 1.0f - z ) );
 	}
-
-#if APEX_ENABLED
-	if( m_lod.IsSimulatingCloth( g_maxClothLod ) &&
-			( batchType == TRIBATCHTYPE_DECAL		||
-			batchType == TRIBATCHTYPE_DECAL_PREPASS	||
-			 batchType == TRIBATCHTYPE_TRANSPARENT	||
-			 batchType == TRIBATCHTYPE_DEPTHNORMAL	||
-			 batchType == TRIBATCHTYPE_DEPTH )
-		)
-	{
-		g_Tr2Apex->ApexGatherBatches( m_clothMeshes, batches, batchType, perObjectData, depth );
-	}
-#endif
 	Matrix* pm = batches->Allocate<Matrix>();
 
 	CCP_ASSERT_M( pm, "No memory available for allocation of batches." );

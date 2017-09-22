@@ -12,10 +12,6 @@
 
 #include "Blue/Include/IBlueCallbackMan.h"
 
-#if APEX_ENABLED
-#include "Apex/Apex.h"
-#endif
-
 using namespace Tr2RenderContextEnum;
 
 #ifdef _WIN32
@@ -161,13 +157,6 @@ TriDevice::TriDevice(IRoot* lockobj) :
 	mPresentParam.presentInterval = PRESENT_INTERVAL_ONE;
 
 	mCreationTime = 0;
-		
-#if APEX_ENABLED
-	if( !g_Tr2Apex )
-	{
-		BeClasses->CreateInstance( GetTr2ApexClsid(), BlueInterfaceIID<Tr2Apex>(), (void**)&g_Tr2Apex );
-	}
-#endif
 
 	BeOS->RegisterForSimTimeRebase( this );
 

@@ -6,10 +6,6 @@
 #include "TriSettingsRegistrar.h"
 #include "TriView.h"
 #include "TriViewport.h"
-#if APEX_ENABLED
-#include "Apex/Apex.h"
-#include "Apex/Tr2ApexScene.h"
-#endif
 #include "Tr2VisibilityResults.h"
 #include "Tr2LitPerObjectData.h"
 #include "Tr2AtlasTexture.h"
@@ -168,25 +164,10 @@ Tr2InteriorScene::Tr2InteriorScene( IRoot* lockobj /*= NULL */ ):
 
 	BeResMan->GetResource( "res:/Texture/Global/NdotLLibrary.png", "", m_nDotLTexture );
 	m_nDotLTextureHandle = GlobalStore().RegisterVariable( "ColorNdotLLookupMap", static_cast<ITr2TextureProvider*>( nullptr ) );
-
-#if APEX_ENABLED
-    // only create apex scene if apex is initialised which at this point is denoted by having the sdk loaded and available
-    if( g_Tr2Apex && g_Tr2Apex->GetApexSDK() )
-	{
-		m_apexScene.CreateInstance();
-		m_apexScene->CreateScene();
-	}
-#endif
 }
 
 Tr2InteriorScene::~Tr2InteriorScene()
 {
-#if APEX_ENABLED
-	if( m_apexScene )
-	{
-		m_apexScene->DeleteScene();
-	}
-#endif
 	CCP_DELETE( m_primaryRenderBatches );
 	CCP_DELETE( m_pickingBatches );
 	CCP_DELETE( m_opaquePickingBatches );
@@ -294,21 +275,6 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 		// NB: Multiple calls on the same 'frame' should be ignored,
 		//     but are not strictly errors, according to Dan Speed.
 		return;
-
-#if APEX_ENABLED
-    // create the apex scene when it is intialised, should probably be done through the same python event that inits the sdk
-    // but that is incredibly byzantine at the moment
-    if( !m_apexScene && g_Tr2Apex && g_Tr2Apex->GetApexSDK() )
-    {
-        m_apexScene.CreateInstance();
-		m_apexScene->CreateScene();
-    }
-
-	if( m_apexScene )
-	{
-		m_apexScene->PreUpdate( simTime, m_apexLODResourceBudget, m_apexLODResourceBudgetConsumed );
-	}
-#endif
 	m_lastUpdateTime = simTime;
 
 	Vector3 dir( XMVectorMultiply(
@@ -391,12 +357,6 @@ void Tr2InteriorScene::Update( Be::Time realTime, Be::Time simTime )
 			( *it )->Update( simTime );
 		}
 	}
-#if APEX_ENABLED
-	if( m_apexScene )
-	{
-		m_apexScene->PostUpdate( simTime, m_apexLODResourceBudget, m_apexLODResourceBudgetConsumed );
-	}
-#endif
 }
 
 void Tr2InteriorScene::Render( Tr2RenderContext& renderContext )
@@ -411,12 +371,6 @@ void Tr2InteriorScene::Render( Tr2RenderContext& renderContext )
 	}
 
 	VisibilityQuery( m_visibilityResults );
-#if APEX_ENABLED
-	if( m_apexScene )
-	{
-		m_apexScene->PreRender( m_lastUpdateTime, m_apexLODResourceBudget, m_apexLODResourceBudgetConsumed );
-	}
-#endif
 
 	// Do the full-forward render
 	RenderFullForward( renderContext );
@@ -426,12 +380,6 @@ void Tr2InteriorScene::Render( Tr2RenderContext& renderContext )
 
 	// Clear lights
 	m_activeLightSet.Clear();
-#if APEX_ENABLED
-	if( m_apexScene )
-	{
-		m_apexScene->PostRender( m_lastUpdateTime, m_apexLODResourceBudget, m_apexLODResourceBudgetConsumed );
-	}
-#endif
 }
 
 // --------------------------------------------------------------------------------------
@@ -629,12 +577,6 @@ void Tr2InteriorScene::RenderGeometry( Tr2Material* overrideEffect, Tr2RenderCon
 
 void Tr2InteriorScene::RenderDebugInfo( Tr2RenderContext& renderContext )
 {
-#if APEX_ENABLED
-	if( m_apexScene )
-	{
-		m_apexScene->RenderDebugInfo( renderContext );
-	}
-#endif
 }
 
 ITr2MultiPassScene::RenderPassResult Tr2InteriorScene::RenderPass( PassType pass, Tr2RenderContext & renderContext )

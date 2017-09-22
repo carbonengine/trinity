@@ -12,24 +12,8 @@
 #include "Include/ITr2AnimationUpdater.h"
 #include "ITr2WorldTransformUpdater.h"
 
-#if APEX_ENABLED
-#include "Apex/Apex.h"
-#include "Apex/Tr2ClothingActor.h"
-
-int g_maxClothLod = 0;
-float g_clothTranslationResetThreshold = 0.5f;
-float g_clothTimeDeltaResetThreshold = 0.5f;
-
-TRI_REGISTER_SETTING( "maxClothLod", g_maxClothLod );
-TRI_REGISTER_SETTING( "clothTranslationResetThreshold", g_clothTranslationResetThreshold );
-TRI_REGISTER_SETTING( "clothTimeDeltaResetThreshold", g_clothTimeDeltaResetThreshold );
-#endif
-
 Tr2SkinnedObject::Tr2SkinnedObject(IRoot* lockobj) :
     PARENTLOCK( m_transform ),
-#if APEX_ENABLED
-	PARENTLOCK( m_clothMeshes ),
-#endif
 	PARENTLOCK( m_curveSets ),
 	m_skinningMatrixFrameDelay( 0 ),
 	m_skinningMatrixQueueIndex( 0 ),
@@ -53,11 +37,6 @@ Tr2SkinnedObject::Tr2SkinnedObject(IRoot* lockobj) :
 	m_debugFreezeSkeletonTrail( false ),
 	m_debugSkeletonTrailLength( 0 ),
 	m_debugRenderSkeletonJointIndices( false ),
-#if APEX_ENABLED
-	m_parallelPhysXMeshSkinning( false ),
-	m_parallelMeshMeshSkinning( false ),
-	m_clothFadeEndTime( 0 ),
-#endif
 	m_lastUpdateTime( 0 ),
 	m_lastTranslation( 0.0f, 0.0f, 0.0f ),
 	m_estimatedPixelDiameter( 0.0f ),
@@ -68,12 +47,6 @@ Tr2SkinnedObject::Tr2SkinnedObject(IRoot* lockobj) :
 	m_updatePeriod( 0.0f )
 {
 	m_lineSet.CreateInstance();
-
-#if APEX_ENABLED
-	m_clothMeshes.SetNotify( this );
-
-	m_isClothSimParallel = g_Tr2Apex != NULL && g_Tr2Apex->ApexSceneIsParallel();
-#endif
 }
 
 Tr2SkinnedObject::~Tr2SkinnedObject()
@@ -264,10 +237,6 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 		}
 	}
 
-#if APEX_ENABLED
-	SetSkinningMatrixFrameDelay( g_Tr2Apex ? g_Tr2Apex->ApexGetFrameDelay() : 0 );
-#endif
-
 	if( !m_debugFreezeSkeletonTrail && skel != NULL )
 	{
 		CCP_STATS_ZONE( "UpdateBones_MatrixUpdate" );
@@ -356,47 +325,6 @@ void Tr2SkinnedObject::UpdateBones( Be::Time time, Tr2ApexScene* apexScene )
 
 			m_skinningMatrixQueueNeedsPriming = false;
 		}
-
-#if APEX_ENABLED
-		if( (rebuildMapping || m_lod.IsSimulatingCloth( g_maxClothLod )) && !m_clothMeshes.empty() )
-		{
-			CCP_STATS_ZONE( "UpdateBones_ClothUpdate" );
-
-			Tr2ClothingActor::UpdateStateFlag continuousFlag = Tr2ClothingActor::IS_CONTINUOUS;
-
-			float td = TimeAsFloat( time - m_lastUpdateTime );
-
-			const Vector3& t = m_transform.GetTranslation();
-			Vector3 d = t - m_lastTranslation;
-			float len = D3DXVec3Length( &d );
-
-			m_lastTranslation = t;
-
-			if( td > g_clothTimeDeltaResetThreshold )
-			{
-				CCP_LOGWARN( "Tr2ClothingActor::UpdateState: Resetting cloth as time delta is above threshold" );
-				continuousFlag = Tr2ClothingActor::IS_NOT_CONTINUOUS;
-			}
-			else
-			{
-				if( len > g_clothTranslationResetThreshold )
-				{
-					CCP_LOGWARN( "Tr2ClothingActor::UpdateState: Resetting cloth as translation delta is above threshold" );
-					continuousFlag = Tr2ClothingActor::IS_NOT_CONTINUOUS;
-				}
-			}
-
-
-			for( Tr2ClothingActorVector::iterator it = m_clothMeshes.begin(); it != m_clothMeshes.end(); ++it )
-			{
-				if( Tr2ClothingActor* ca = *it )
-				{
-					ca->BindToRig( boneList, numBones, rebuildMapping );
-					ca->UpdateState( *m_transform.GetMatrix(), dst, m_skinningMatrixCount, continuousFlag, apexScene );
-				}
-			}
-		}
-#endif
 	}
 
 	// Render debug info
@@ -653,22 +581,6 @@ void Tr2SkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 								   TriBatchType batchType,
 								   const Tr2PerObjectData* perObjectData )
 {
-	#if APEX_ENABLED
-	// Warning: Tr2IntSkinnedObject overrides GetBatches to handle
-	// transparent batches a bit differently.
-	if( DoDisplay()									&& 
-		m_lod.IsSimulatingCloth( g_maxClothLod )	&& 
-		g_Tr2Apex != NULL							&&
-			(batchType == TRIBATCHTYPE_DECAL		||
-			 batchType == TRIBATCHTYPE_TRANSPARENT	||
-			 batchType == TRIBATCHTYPE_DEPTHNORMAL	||
-			 batchType == TRIBATCHTYPE_DEPTH )
-		)
-	{
-		g_Tr2Apex->ApexGatherBatches( m_clothMeshes, batches, batchType, perObjectData );
-	}
-	#endif
-
 	if( m_visualModel && perObjectData && DoDisplay() )
 	{
 		m_visualModel->GetBatches( batches, batchType, GetSkinningTransform(), perObjectData );
@@ -864,32 +776,6 @@ void Tr2SkinnedObject::SetSkinningMatrixFrameDelay( unsigned int val )
 
 void Tr2SkinnedObject::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList )
 {
-#if APEX_ENABLED
-	switch( event )
-	{
-		case BELIST_REMOVED:
-			{
-				Tr2ClothingActor* ca = dynamic_cast<Tr2ClothingActor*>( value );
-				if( ca )
-				{
-					ca->RemoveFromApexScene();
-				}
-			}
-			break;
-
-		case BELIST_UNLOADSTART:
-			{
-				for( Tr2ClothingActorVector::iterator it = m_clothMeshes.begin(); it != m_clothMeshes.end(); ++it )
-				{
-					if( Tr2ClothingActor* ca = *it )
-					{
-						ca->RemoveFromApexScene();
-					}
-				}
-			}
-			break;
-	}
-#endif
 }
 
 bool Tr2SkinnedObject::OnModified( Be::Var* value )
@@ -927,21 +813,6 @@ void Tr2SkinnedObject::SetLOD( const TriFrustum* frustum )
 		return;
 	}
 
-#if APEX_ENABLED
-	// are we waiting for a cloth transition to finish?  If so, stick with the current lod until that's done.
-	bool clothFadeFinishedThisFrame = false;
-	if( m_clothFadeEndTime )
-	{
-		if( BeOS->GetActualTime() < m_clothFadeEndTime )
-		{
-			return;
-		}
-
-		m_clothFadeEndTime = 0;
-		clothFadeFinishedThisFrame = true;	// allow a switch to the next lod, ie. don't accidentally retrigger a new blend in this update
-	}
-#endif
-
 	Vector4 boundingSphere;
 	if( GetBoundingSphere( boundingSphere ) 
 		&& frustum->IsSphereVisible( &boundingSphere, true ) )
@@ -954,49 +825,6 @@ void Tr2SkinnedObject::SetLOD( const TriFrustum* frustum )
 	}
 
 	Tr2SkinnedModel* model = m_lod.SetLOD( frustum, m_estimatedPixelDiameter );
-
-#if APEX_ENABLED
-	const int oldLod = m_lod.GetCurrentLod();
-
-	// trying to move to a lod without simulated cloth?  If so, delay that if there is a fade-out period.
-	if( !clothFadeFinishedThisFrame && oldLod <= g_maxClothLod && m_lod.GetCurrentLod() > g_maxClothLod )
-	{
-		float biggestBlendTime = 0.0f;
-		for( size_t i = 0; i != m_clothMeshes.size(); ++i)
-		{
-			CCP_ASSERT( m_clothMeshes[i] != NULL );
-			if( m_clothMeshes[i] != NULL )
-			{
-				biggestBlendTime = std::max( biggestBlendTime, m_clothMeshes[i]->GetMaxDistanceBlendTime() );
-				m_clothMeshes[i]->SetForcedLod( 0.0f );	// request skinned
-			}
-		}
-
-		// any piece of cloth wants to blend to skinned?
-		if( biggestBlendTime )
-		{
-			m_clothFadeEndTime = BeOS->GetActualTime() + TimeFromDouble( biggestBlendTime );
-			m_lod.SetCurrentLod( oldLod );	// undo the move away from old lod
-			return;
-		}
-	}
-	else
-	// check the opposite: we go from a no-(simulated)-cloth-lod to one that has (simulated) cloth.
-	// In this case, make sure we re-enable nvidia simulation.
-	// The reason we do this here, and not just nicely at the end of the fade out at the top of this function, 
-	// is that keeping it in a skinned state is cheaper, and also gives us the right fade-in again from skinned to simulated.
-	if( oldLod > g_maxClothLod && m_lod.GetCurrentLod() <= g_maxClothLod )
-	{
-		// end the fade
-		for( size_t i = 0; i != m_clothMeshes.size(); ++i)
-		{
-			if( m_clothMeshes[i] != NULL )
-			{
-				m_clothMeshes[i]->SetForcedLod( -1.0f );	// nvidia magic number for 'simulate'
-			}
-		}
-	}
-#endif
 
 	// lod change?
 	if( model && model != m_visualModel )	// don't just compare lod numbers, actual model of a given lod might change as well (dynamic builders)

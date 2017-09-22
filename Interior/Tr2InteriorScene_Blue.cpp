@@ -542,14 +542,6 @@ const Be::ClassInfo* Tr2InteriorScene::ExposeToBlue()
 			"Remove an interior dynamic (avatar, placeable, etc.) from the scene"
 			"\n:param object: The ITr2InteriorDynamic (Tr2InteriorPlaceable or Tr2InteriorAvatar) to remove")
 
-#if APEX_ENABLED
-		MAP_ATTRIBUTE(
-			"apexScene",
-			m_apexScene,
-			"Apex scene used",
-			Be::READWRITE
-		)
-#endif
 		MAP_ATTRIBUTE( "visibilityResults", m_visibilityResults, "Results of the visibility query", Be::READ )
 
 	EXPOSURE_END()

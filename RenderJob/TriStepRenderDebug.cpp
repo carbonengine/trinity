@@ -5,9 +5,7 @@
 #include "TriLineSet.h"
 #include "TriDebugTextRenderer.h"
 
-#if APEX_ENABLED
-#include "Apex/Apex.h"
-#endif
+
 
 const int NUM_POINTS_MAX = 32000;
 
@@ -80,10 +78,6 @@ TriStepResult TriStepRenderDebug::Execute( Be::Time realTime, Be::Time simTime, 
 			m_projectedTextRenderer->PrintfImmediate( TRI_DBG_FONT_SMALL, rect, TRI_DFS_LEFT, ColorToVec4( e.color ), e.msg.c_str() );
 		}
 	}
-
-#if APEX_ENABLED
-	g_Tr2Apex->RenderDebugInfo();
-#endif
 
 	// Render text
 	m_textRenderer->Render();

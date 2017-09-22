@@ -17,11 +17,6 @@ BLUE_DECLARE( TriLineSet );
 BLUE_DECLARE_INTERFACE( ITr2AnimationUpdater );
 BLUE_DECLARE_INTERFACE( ITr2WorldTransformUpdater );
 
-#if APEX_ENABLED
-BLUE_DECLARE( Tr2ClothingActor );
-BLUE_DECLARE_VECTOR( Tr2ClothingActor );
-#endif
-
 BLUE_DECLARE( Tr2ApexScene );
 
 class TriFrustum;
@@ -191,15 +186,6 @@ protected:
 	bool m_display;
 	bool m_displayMarker;
 	bool m_displayName;
-
-#if APEX_ENABLED
-	bool m_isClothSimParallel;
-
-	bool m_parallelPhysXMeshSkinning;
-	bool m_parallelMeshMeshSkinning;
-	PTr2ClothingActorVector m_clothMeshes;
-	Be::Time m_clothFadeEndTime;
-#endif
 
 	Vector3 m_lastTranslation;
 

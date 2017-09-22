@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Release_27|x64">
@@ -306,7 +306,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props"/>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
@@ -522,7 +522,7 @@
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.props"/>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.props" />
   <PropertyGroup Label="UserMacros">
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
@@ -800,135 +800,135 @@
       <Value>$(CcpConfigType)</Value>
     </BuildMacro>
   </ItemGroup>
-  <ImportGroup Label="ExtensionSettings"/>
+  <ImportGroup Label="ExtensionSettings" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGL4_27|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Deploy11|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev11|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGL4_27|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11_26|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DevGL4|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props"/>
+    <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <PropertyGroup>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">.pyd</TargetExt>
@@ -1178,10 +1178,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|Win32'">
     <ClCompile>
@@ -1214,10 +1214,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|x64'">
     <ClCompile>
@@ -1250,10 +1250,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'">
     <ClCompile>
@@ -1286,10 +1286,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">
     <ClCompile>
@@ -1320,10 +1320,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGL4_27|x64'">
     <ClCompile>
@@ -1356,10 +1356,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -1392,10 +1392,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|Win32'">
     <ClCompile>
@@ -1428,10 +1428,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Deploy11|Win32'">
     <ClCompile>
@@ -1464,10 +1464,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev11|Win32'">
     <ClCompile>
@@ -1498,10 +1498,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|x64'">
     <ClCompile>
@@ -1534,10 +1534,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'">
     <ClCompile>
@@ -1568,10 +1568,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">
     <ClCompile>
@@ -1602,10 +1602,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'">
     <ClCompile>
@@ -1638,10 +1638,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|Win32'">
     <ClCompile>
@@ -1674,10 +1674,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">
     <ClCompile>
@@ -1710,10 +1710,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">
     <ClCompile>
@@ -1744,10 +1744,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">
     <ClCompile>
@@ -1780,10 +1780,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">
     <ClCompile>
@@ -1816,10 +1816,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">
     <ClCompile>
@@ -1850,10 +1850,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -1884,10 +1884,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|x64'">
     <ClCompile>
@@ -1918,10 +1918,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'">
     <ClCompile>
@@ -1954,10 +1954,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -1990,10 +1990,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGL4_27|Win32'">
     <ClCompile>
@@ -2026,10 +2026,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">
     <ClCompile>
@@ -2062,10 +2062,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">
     <ClCompile>
@@ -2098,10 +2098,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'">
     <ClCompile>
@@ -2134,10 +2134,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">
     <ClCompile>
@@ -2170,10 +2170,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">
     <ClCompile>
@@ -2204,10 +2204,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'">
     <ClCompile>
@@ -2240,10 +2240,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">
     <ClCompile>
@@ -2276,10 +2276,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'">
     <ClCompile>
@@ -2310,10 +2310,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'">
     <ClCompile>
@@ -2346,10 +2346,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -2380,10 +2380,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'">
     <ClCompile>
@@ -2416,10 +2416,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">
     <ClCompile>
@@ -2450,10 +2450,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'">
     <ClCompile>
@@ -2486,10 +2486,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|Win32'">
     <ClCompile>
@@ -2520,10 +2520,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11_26|x64'">
     <ClCompile>
@@ -2556,10 +2556,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DevGL4|Win32'">
     <ClCompile>
@@ -2590,10 +2590,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">
     <ClCompile>
@@ -2624,10 +2624,10 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">
     <ClCompile>
@@ -2658,1165 +2658,1148 @@
       <PreprocessorDefinitions>TARGET_NAME=$(TargetName);TARGET_FILENAME=$(TargetFileName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ALResultBlue.h"/>
-    <ClInclude Include="autoversion.h"/>
-    <ClInclude Include="D3DFundamentalTypes.h"/>
-    <ClInclude Include="EveSprite2dBracket.h"/>
-    <ClInclude Include="EveSprite2dBracketRenderer.h"/>
-    <ClInclude Include="GrannyBoneOffset.h"/>
-    <ClInclude Include="IRenderCallback.h"/>
-    <ClInclude Include="ITr2AttributeGenerator.h"/>
-    <ClInclude Include="ITr2EffectValue.h"/>
-    <ClInclude Include="ITr2GeometryProvider.h"/>
-    <ClInclude Include="ITr2PhysicsUpdater.h"/>
-    <ClInclude Include="ITr2PickableScene.h"/>
-    <ClInclude Include="ITr2Renderable.h"/>
-    <ClInclude Include="ITr2SkinnedObject.h"/>
-    <ClInclude Include="ITr2TextureProvider.h"/>
-    <ClInclude Include="ITr2VisibilityQueryable.h"/>
-    <ClInclude Include="ITr2VisualizationModeRenderer.h"/>
-    <ClInclude Include="ITr2WorldTransformUpdater.h"/>
-    <ClInclude Include="ITriReroutable.h"/>
-    <ClInclude Include="IWorldPosition.h"/>
-    <ClInclude Include="resource.h"/>
-    <ClInclude Include="StdAfx.h"/>
-    <ClInclude Include="TbbStub.h"/>
-    <ClInclude Include="Tr2AddSafeGrowableBuffer.h"/>
-    <ClInclude Include="Tr2AtlasTexture.h"/>
-    <ClInclude Include="Tr2BindingVector3.h"/>
-    <ClInclude Include="Tr2Blitter.h"/>
-    <ClInclude Include="Tr2BoundingLineSet.h"/>
-    <ClInclude Include="Tr2CapturedBuffer.h"/>
-    <ClInclude Include="Tr2ConstantBufferFormats.h"/>
-    <ClInclude Include="Tr2ConstGeometry.h"/>
-    <ClInclude Include="Tr2CpuSkinnedModel.h"/>
-    <ClInclude Include="Tr2CurveLineSet.h"/>
-    <ClInclude Include="Tr2DebugRenderer.h"/>
-    <ClInclude Include="Tr2DepthStencil.h"/>
-    <ClInclude Include="Tr2DeviceResource.h"/>
-    <ClInclude Include="Tr2DxtCompressor.h"/>
-    <ClInclude Include="Tr2DynamicMesh.h"/>
-    <ClInclude Include="Tr2DynamicRingBuffer.h"/>
-    <ClInclude Include="Tr2ExternalParameter.h"/>
-    <ClInclude Include="Tr2FileExportInfo.h"/>
-    <ClInclude Include="Tr2GpuBuffer.h"/>
-    <ClInclude Include="Tr2GpuBufferAlias.h"/>
-    <ClInclude Include="Tr2GpuLight.h"/>
-    <ClInclude Include="Tr2GpuStructuredBuffer.h"/>
-    <ClInclude Include="Tr2GrannyAnimation.h"/>
-    <ClInclude Include="Tr2GrannyAnimationLayer.h"/>
-    <ClInclude Include="Tr2GrannyPrimitiveSet.h"/>
-    <ClInclude Include="Tr2GRNMemoryPersist.h"/>
-    <ClInclude Include="Tr2HostBitmap.h"/>
-    <ClInclude Include="Tr2ImageIOHelpers.h"/>
-    <ClInclude Include="Tr2ImpostorManager.h"/>
-    <ClInclude Include="Tr2InstancedMesh.h"/>
-    <ClInclude Include="Tr2KelvinColor.h"/>
-    <ClInclude Include="Tr2LightManager.h"/>
-    <ClInclude Include="Tr2LineGraph.h"/>
-    <ClInclude Include="Tr2LineSet.h"/>
-    <ClInclude Include="Tr2LitPerObjectData.h"/>
-    <ClInclude Include="Tr2ManipulationTool.h"/>
-    <ClInclude Include="Tr2MaterialParameterStore.h"/>
-    <ClInclude Include="Tr2Mesh.h"/>
-    <ClInclude Include="Tr2MeshArea.h"/>
-    <ClInclude Include="Tr2MeshBase.h"/>
-    <ClInclude Include="Tr2MeshLod.h"/>
-    <ClInclude Include="Tr2Model.h"/>
-    <ClInclude Include="Tr2NamedPipeListener.h"/>
-    <ClInclude Include="Tr2PerObjectData.h"/>
-    <ClInclude Include="Tr2PersistentPerObjectData.h"/>
-    <ClInclude Include="Tr2PickBuffer.h"/>
-    <ClInclude Include="Tr2PickingHelperBatch.h"/>
-    <ClInclude Include="Tr2PointLight.h"/>
-    <ClInclude Include="Tr2PostProcess.h"/>
-    <ClInclude Include="Tr2PrimitiveScene.h"/>
-    <ClInclude Include="Tr2PrimitiveSet.h"/>
-    <ClInclude Include="Tr2PrimitiveText.h"/>
-    <ClInclude Include="Tr2ProjectBoundingBoxBracket.h"/>
-    <ClInclude Include="Tr2PushPopDS.h"/>
-    <ClInclude Include="Tr2PushPopRT.h"/>
-    <ClInclude Include="Tr2PyValueBinding.h"/>
-    <ClInclude Include="Tr2QuadRenderer.h"/>
-    <ClInclude Include="Tr2RenderContext.h"/>
-    <ClInclude Include="Tr2Renderer.h"/>
-    <ClInclude Include="Tr2RenderTarget.h"/>
-    <ClInclude Include="Tr2RenderTargetGrabber.h"/>
-    <ClInclude Include="Tr2RenderUtils.h"/>
-    <ClInclude Include="Tr2RotationTool.h"/>
-    <ClInclude Include="Tr2RuntimeInstanceData.h"/>
-    <ClInclude Include="Tr2ScalingTool.h"/>
-    <ClInclude Include="Tr2ShLightingManager.h"/>
-    <ClInclude Include="Tr2SHProbeRes.h"/>
-    <ClInclude Include="Tr2SkinnedModel.h"/>
-    <ClInclude Include="Tr2SkinnedObject.h"/>
-    <ClInclude Include="Tr2SkinnedObjectLOD.h"/>
-    <ClInclude Include="Tr2SolidSet.h"/>
-    <ClInclude Include="Tr2StreamingBitmapSaver.h"/>
-    <ClInclude Include="Tr2SwapChain.h"/>
-    <ClInclude Include="Tr2TextureAtlas.h"/>
-    <ClInclude Include="Tr2TextureAtlasMan.h"/>
-    <ClInclude Include="Tr2TextureReference.h"/>
-    <ClInclude Include="Tr2Transform.h"/>
-    <ClInclude Include="Tr2TranslationTool.h"/>
-    <ClInclude Include="Tr2Variable.h"/>
-    <ClInclude Include="Tr2VariableStore.h"/>
-    <ClInclude Include="Tr2VertexDefinitionUtilities.h"/>
-    <ClInclude Include="Tr2VideoAdapters.h"/>
-    <ClInclude Include="Tr2VisibilityResults.h"/>
-    <ClInclude Include="TriConstants.h"/>
-    <ClInclude Include="TriDebugResourceHelper.h"/>
-    <ClInclude Include="TriDebugTextRenderer.h"/>
-    <ClInclude Include="TriDebugTextRendererBitmaps.h"/>
-    <ClInclude Include="TriDevice.h"/>
-    <ClInclude Include="TriDirect3D.h"/>
-    <ClInclude Include="TriError.h"/>
-    <ClInclude Include="TriFloat.h"/>
-    <ClInclude Include="TriFrustum.h"/>
-    <ClInclude Include="TriFrustumOrtho.h"/>
-    <ClInclude Include="TriLineSet.h"/>
-    <ClInclude Include="TriObserverLocal.h"/>
-    <ClInclude Include="TriPoolAllocator.h"/>
-    <ClInclude Include="TriProjection.h"/>
-    <ClInclude Include="TriPythonContext.h"/>
-    <ClInclude Include="TriPythonThunkers.h"/>
-    <ClInclude Include="TriRect.h"/>
-    <ClInclude Include="TriRenderBatch.h"/>
-    <ClInclude Include="TriRigidOrientation.h"/>
-    <ClInclude Include="TriSequencer.h"/>
-    <ClInclude Include="TriSettings.h"/>
-    <ClInclude Include="TriSettingsRegistrar.h"/>
-    <ClInclude Include="TriShadowMap.h"/>
-    <ClInclude Include="TriUtil.h"/>
-    <ClInclude Include="TriValueBinding.h"/>
-    <ClInclude Include="TriVariable.h"/>
-    <ClInclude Include="TriView.h"/>
-    <ClInclude Include="TriViewport.h"/>
-    <ClInclude Include="Vector2.h"/>
-    <ClInclude Include="Vector3.h"/>
-    <ClInclude Include="Vector3d.h"/>
-    <ClInclude Include="Vector4.h"/>
-    <ClInclude Include="version.h"/>
-    <ClInclude Include="Apex\Apex.h"/>
-    <ClInclude Include="Apex\Tr2ApexRenderer.h"/>
-    <ClInclude Include="Apex\Tr2ApexRes.h"/>
-    <ClInclude Include="Apex\Tr2ApexScene.h"/>
-    <ClInclude Include="Apex\Tr2ClothingActor.h"/>
-    <ClInclude Include="Apex\Tr2ClothingRes.h"/>
-    <ClInclude Include="Curves\Tr2BoneMatrixCurve.h"/>
-    <ClInclude Include="Curves\Tr2CurveColor.h"/>
-    <ClInclude Include="Curves\Tr2CurveConstant.h"/>
-    <ClInclude Include="Curves\Tr2CurveEulerRotation.h"/>
-    <ClInclude Include="Curves\Tr2CurveEulerRotationExpression.h"/>
-    <ClInclude Include="Curves\Tr2CurveQuaternion.h"/>
-    <ClInclude Include="Curves\Tr2CurveRandomAxisRotation.h"/>
-    <ClInclude Include="Curves\Tr2CurveScalar.h"/>
-    <ClInclude Include="Curves\Tr2CurveScalarExpression.h"/>
-    <ClInclude Include="Curves\Tr2CurveVector2.h"/>
-    <ClInclude Include="Curves\Tr2CurveVector3.h"/>
-    <ClInclude Include="Curves\Tr2CurveVector3Expression.h"/>
-    <ClInclude Include="Curves\Tr2DistanceTracker.h"/>
-    <ClInclude Include="Curves\Tr2GrannyEventTrack.h"/>
-    <ClInclude Include="Curves\Tr2GrannyTrack.h"/>
-    <ClInclude Include="Curves\Tr2GrannyTransformTrack.h"/>
-    <ClInclude Include="Curves\Tr2GrannyVector3Curve.h"/>
-    <ClInclude Include="Curves\Tr2GrannyVectorTrack.h"/>
-    <ClInclude Include="Curves\Tr2QuaternionLerpCurve.h"/>
-    <ClInclude Include="Curves\Tr2RotationAdapter.h"/>
-    <ClInclude Include="Curves\Tr2ScalarExprKeyCurve.h"/>
-    <ClInclude Include="Curves\Tr2TranslationAdapter.h"/>
-    <ClInclude Include="Curves\TriCurveSet.h"/>
-    <ClInclude Include="Curves\TriEventCurve.h"/>
-    <ClInclude Include="Curves\TriEventKey.h"/>
-    <ClInclude Include="Curves\Fader\Tr2ScalarFader.h"/>
-    <ClInclude Include="Eve\EveCamera.h"/>
-    <ClInclude Include="Eve\EveConstantBufferFormats.h"/>
-    <ClInclude Include="Eve\EveDistanceField.h"/>
-    <ClInclude Include="Eve\EveDustfieldConstraint.h"/>
-    <ClInclude Include="Eve\EveEffectRoot2.h"/>
-    <ClInclude Include="Eve\EveLensflare.h"/>
-    <ClInclude Include="Eve\EveLODHelper.h"/>
-    <ClInclude Include="Eve\EveOccluder.h"/>
-    <ClInclude Include="Eve\EveParticleDirectForce.h"/>
-    <ClInclude Include="Eve\EveParticleDragForce.h"/>
-    <ClInclude Include="Eve\EveParticleSpringAttractor.h"/>
-    <ClInclude Include="Eve\EvePlanet.h"/>
-    <ClInclude Include="Eve\EveRootTransform.h"/>
-    <ClInclude Include="Eve\EveShip2Builder.h"/>
-    <ClInclude Include="Eve\EveSpaceScene.h"/>
-    <ClInclude Include="Eve\EveStarfield.h"/>
-    <ClInclude Include="Eve\EveTransform.h"/>
-    <ClInclude Include="Eve\EveUpdateContext.h"/>
-    <ClInclude Include="Eve\IEveFiringEffectElement.h"/>
-    <ClInclude Include="Eve\IEveShadowCaster.h"/>
-    <ClInclude Include="Eve\IEveSpaceObject2.h"/>
-    <ClInclude Include="Eve\IEveTransform.h"/>
-    <ClInclude Include="Eve\Animation\EveAnimationData.h"/>
-    <ClInclude Include="Eve\Animation\EveAnimationSequencer.h"/>
-    <ClInclude Include="Eve\Animation\EveAnimationState.h"/>
-    <ClInclude Include="Eve\Renderable\EveMetaball.h"/>
-    <ClInclude Include="Eve\Renderable\EveMetaballItem.h"/>
-    <ClInclude Include="Eve\Renderable\EveMetaballTables.h"/>
-    <ClInclude Include="Eve\Renderable\EveSceneStaticParticles.h"/>
-    <ClInclude Include="Eve\Renderable\Stretch\EveFiringEffectElementContainer.h"/>
-    <ClInclude Include="Eve\Renderable\Stretch\EveLocalPositionCurve.h"/>
-    <ClInclude Include="Eve\Renderable\Stretch\EveRemotePositionCurve.h"/>
-    <ClInclude Include="Eve\Renderable\Stretch\EveStretch.h"/>
-    <ClInclude Include="Eve\Renderable\Stretch\EveStretch2.h"/>
-    <ClInclude Include="Eve\SpaceObject\EveMissile.h"/>
-    <ClInclude Include="Eve\SpaceObject\EveMissileWarhead.h"/>
-    <ClInclude Include="Eve\SpaceObject\EveMobile.h"/>
-    <ClInclude Include="Eve\SpaceObject\EveShip2.h"/>
-    <ClInclude Include="Eve\SpaceObject\EveSpaceObject2.h"/>
-    <ClInclude Include="Eve\SpaceObject\EveStation2.h"/>
-    <ClInclude Include="Eve\SpaceObject\EveSwarm.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\EveBoosterSet2.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\EveImpactOverlay.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\EveMeshOverlayEffect.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\EveSpaceObjectDecal.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\EveTrailsSet.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSet.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSetItem.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSet.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSetItem.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSet.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSetItem.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSet.h"/>
-    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSetItem.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveChildBillboard.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveChildBulletStorm.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveChildCloud.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveChildContainer.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveChildExplosion.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveChildLink.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveChildMesh.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveChildParticleSystem.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveChildQuad.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveChildTransform.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\EveCloudEditableVolume.h"/>
-    <ClInclude Include="Eve\SpaceObject\Children\IEveSpaceObjectChild.h"/>
-    <ClInclude Include="Eve\SpaceObject\Utils\EveCustomMask.h"/>
-    <ClInclude Include="Eve\SpaceObject\Utils\EveLocator2.h"/>
-    <ClInclude Include="Eve\SpaceObject\Utils\EveLocatorSets.h"/>
-    <ClInclude Include="Eve\SpaceObjectFactory\EveSOF.h"/>
-    <ClInclude Include="Eve\SpaceObjectFactory\EveSOFData.h"/>
-    <ClInclude Include="Eve\SpaceObjectFactory\EveSOFDataMgr.h"/>
-    <ClInclude Include="Eve\SpaceObjectFactory\EveSOFDNA.h"/>
-    <ClInclude Include="Eve\SpaceObjectFactory\EveSOFUtils.h"/>
-    <ClInclude Include="Eve\Turret\EveTurretFiringFX.h"/>
-    <ClInclude Include="Eve\Turret\EveTurretSet.h"/>
-    <ClInclude Include="Eve\Turret\EveTurretTarget.h"/>
-    <ClInclude Include="Eve\UI\EveConnector.h"/>
-    <ClInclude Include="Eve\UI\EveCurveLineSet.h"/>
-    <ClInclude Include="Eve\UI\EveLineContainer.h"/>
-    <ClInclude Include="Eve\UI\EveLineSet.h"/>
-    <ClInclude Include="Eve\UI\EveProjectBracket.h"/>
-    <ClInclude Include="Eve\UI\EveSpherePin.h"/>
-    <ClInclude Include="Eve\UI\EveSpherePinIndexTree.h"/>
-    <ClInclude Include="Eve\UI\EveTacticalOverlay.h"/>
-    <ClInclude Include="Eve\UI\EveUiObject.h"/>
-    <ClInclude Include="Font\Tr2FontManager.h"/>
-    <ClInclude Include="Font\Tr2FontMeasurer.h"/>
-    <ClInclude Include="Font\Tr2SBit.h"/>
-    <ClInclude Include="Include\IEveBallpark.h"/>
-    <ClInclude Include="Include\IEveReferencePoint.h"/>
-    <ClInclude Include="Include\IPhysXSdk.h"/>
-    <ClInclude Include="Include\ITr2AnimationUpdater.h"/>
-    <ClInclude Include="Include\ITr2BoundingBox.h"/>
-    <ClInclude Include="Include\ITr2CapturedBuffer.h"/>
-    <ClInclude Include="Include\ITr2DebugRenderer.h"/>
-    <ClInclude Include="Include\ITr2GpuBuffer.h"/>
-    <ClInclude Include="Include\ITr2InstanceData.h"/>
-    <ClInclude Include="Include\ITr2Interior.h"/>
-    <ClInclude Include="Include\ITr2MultiPassScene.h"/>
-    <ClInclude Include="Include\ITr2RenderTargetGrabber.h"/>
-    <ClInclude Include="Include\ITr2Scene.h"/>
-    <ClInclude Include="Include\ITr2Updateable.h"/>
-    <ClInclude Include="Include\ITr2ValueBinding.h"/>
-    <ClInclude Include="Include\ITriColor.h"/>
-    <ClInclude Include="Include\ITriColorCurve.h"/>
-    <ClInclude Include="Include\ITriConstants.h"/>
-    <ClInclude Include="Include\ITriCurveLength.h"/>
-    <ClInclude Include="Include\ITriDevice.h"/>
-    <ClInclude Include="Include\ITriDuration.h"/>
-    <ClInclude Include="Include\ITriEffectParameter.h"/>
-    <ClInclude Include="Include\ITriFunction.h"/>
-    <ClInclude Include="Include\ITriMatrix.h"/>
-    <ClInclude Include="Include\ITriObserverLocal.h"/>
-    <ClInclude Include="Include\ITriQuaternion.h"/>
-    <ClInclude Include="Include\ITriRotationCurve.h"/>
-    <ClInclude Include="Include\ITriScalarCurve.h"/>
-    <ClInclude Include="Include\ITriTargetable.h"/>
-    <ClInclude Include="Include\ITriTextureRes.h"/>
-    <ClInclude Include="Include\ITriVector.h"/>
-    <ClInclude Include="Include\ITriVectorCurve.h"/>
-    <ClInclude Include="Include\Point.h"/>
-    <ClInclude Include="Include\Rect.h"/>
-    <ClInclude Include="Include\Tr2Curve.h"/>
-    <ClInclude Include="Include\Tr2WindowHandle.h"/>
-    <ClInclude Include="Include\TriColor.h"/>
-    <ClInclude Include="Include\TriMath.h"/>
-    <ClInclude Include="Include\TriMatrix.h"/>
-    <ClInclude Include="Include\TriQuaternion.h"/>
-    <ClInclude Include="Include\TriVector.h"/>
-    <ClInclude Include="Interior\Tr2InteriorConstantBufferFormats.h"/>
-    <ClInclude Include="Interior\Tr2InteriorLightSet.h"/>
-    <ClInclude Include="Interior\Tr2InteriorLightSource.h"/>
-    <ClInclude Include="Interior\Tr2InteriorPlaceable.h"/>
-    <ClInclude Include="Interior\Tr2InteriorRenderBatch.h"/>
-    <ClInclude Include="Interior\Tr2InteriorScene.h"/>
-    <ClInclude Include="Interior\Tr2InteriorVisualization.h"/>
-    <ClInclude Include="Interior\Tr2IntSkinnedObject.h"/>
-    <ClInclude Include="Particle\ITr2GenericEmitter.h"/>
-    <ClInclude Include="Particle\ITr2GenericParticleConstraint.h"/>
-    <ClInclude Include="Particle\ITr2ParticleForce.h"/>
-    <ClInclude Include="Particle\Tr2CapsuleShapeAttributeGenerator.h"/>
-    <ClInclude Include="Particle\Tr2ConsecutiveIntegerAttributeGenerator.h"/>
-    <ClInclude Include="Particle\Tr2DynamicEmitter.h"/>
-    <ClInclude Include="Particle\Tr2ElementBlendConstraint.h"/>
-    <ClInclude Include="Particle\Tr2ForceSphereVolume.h"/>
-    <ClInclude Include="Particle\Tr2GpuParticleSystem.h"/>
-    <ClInclude Include="Particle\Tr2GpuSharedEmitter.h"/>
-    <ClInclude Include="Particle\Tr2GpuUniqueEmitter.h"/>
-    <ClInclude Include="Particle\Tr2ParticleAttractorForce.h"/>
-    <ClInclude Include="Particle\Tr2ParticleDirectForce.h"/>
-    <ClInclude Include="Particle\Tr2ParticleDragForce.h"/>
-    <ClInclude Include="Particle\Tr2ParticleElementDeclaration.h"/>
-    <ClInclude Include="Particle\Tr2ParticleFluidDragForce.h"/>
-    <ClInclude Include="Particle\Tr2ParticleSpring.h"/>
-    <ClInclude Include="Particle\Tr2ParticleSystem.h"/>
-    <ClInclude Include="Particle\Tr2ParticleTurbulenceForce.h"/>
-    <ClInclude Include="Particle\Tr2ParticleVortexForce.h"/>
-    <ClInclude Include="Particle\Tr2PlaneConstraint.h"/>
-    <ClInclude Include="Particle\Tr2RandomDirectionAttributeGenerator.h"/>
-    <ClInclude Include="Particle\Tr2RandomIntegerAttributeGenerator.h"/>
-    <ClInclude Include="Particle\Tr2RandomUniformAttributeGenerator.h"/>
-    <ClInclude Include="Particle\Tr2SphereConstraint.h"/>
-    <ClInclude Include="Particle\Tr2SphereShapeAttributeGenerator.h"/>
-    <ClInclude Include="Particle\Tr2StaticEmitter.h"/>
-    <ClInclude Include="RenderJob\ITriRenderStep.h"/>
-    <ClInclude Include="RenderJob\Tr2RenderJobs.h"/>
-    <ClInclude Include="RenderJob\TriRenderJob.h"/>
-    <ClInclude Include="RenderJob\TriRenderStep.h"/>
-    <ClInclude Include="RenderJob\TriStepClear.h"/>
-    <ClInclude Include="RenderJob\TriStepClearUav.h"/>
-    <ClInclude Include="RenderJob\TriStepCopyRenderTarget.h"/>
-    <ClInclude Include="RenderJob\TriStepEnableWireframeMode.h"/>
-    <ClInclude Include="RenderJob\TriStepFilterVisibilityResults.h"/>
-    <ClInclude Include="RenderJob\TriStepGenerateMipMaps.h"/>
-    <ClInclude Include="RenderJob\TriStepPopDepthStencil.h"/>
-    <ClInclude Include="RenderJob\TriStepPopProjection.h"/>
-    <ClInclude Include="RenderJob\TriStepPopRenderTarget.h"/>
-    <ClInclude Include="RenderJob\TriStepPopViewport.h"/>
-    <ClInclude Include="RenderJob\TriStepPopViewTransform.h"/>
-    <ClInclude Include="RenderJob\TriStepPresentSwapChain.h"/>
-    <ClInclude Include="RenderJob\TriStepPushDepthStencil.h"/>
-    <ClInclude Include="RenderJob\TriStepPushProjection.h"/>
-    <ClInclude Include="RenderJob\TriStepPushRenderTarget.h"/>
-    <ClInclude Include="RenderJob\TriStepPushViewport.h"/>
-    <ClInclude Include="RenderJob\TriStepPushViewTransform.h"/>
-    <ClInclude Include="RenderJob\TriStepPythonCB.h"/>
-    <ClInclude Include="RenderJob\TriStepRemoteSync.h"/>
-    <ClInclude Include="RenderJob\TriStepRemoteUpdate.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderAtlas.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderCubeMap.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderDebug.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderEffect.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderFps.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderFullScreenShader.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderLineGraph.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderObject.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderPass.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderScene.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderSceneDebug.h"/>
-    <ClInclude Include="RenderJob\TriStepRenderTexture.h"/>
-    <ClInclude Include="RenderJob\TriStepResolve.h"/>
-    <ClInclude Include="RenderJob\TriStepRunComputeShader.h"/>
-    <ClInclude Include="RenderJob\TriStepRunJob.h"/>
-    <ClInclude Include="RenderJob\TriStepSetDebugRenderer.h"/>
-    <ClInclude Include="RenderJob\TriStepSetDepthStencil.h"/>
-    <ClInclude Include="RenderJob\TriStepSetProjection.h"/>
-    <ClInclude Include="RenderJob\TriStepSetRenderState.h"/>
-    <ClInclude Include="RenderJob\TriStepSetRenderTarget.h"/>
-    <ClInclude Include="RenderJob\TriStepSetStandardRenderStates.h"/>
-    <ClInclude Include="RenderJob\TriStepSetVariableStore.h"/>
-    <ClInclude Include="RenderJob\TriStepSetView.h"/>
-    <ClInclude Include="RenderJob\TriStepSetViewport.h"/>
-    <ClInclude Include="RenderJob\TriStepSetVisibilityResults.h"/>
-    <ClInclude Include="RenderJob\TriStepSetVisualizationMode.h"/>
-    <ClInclude Include="RenderJob\TriStepTestBlocking.h"/>
-    <ClInclude Include="RenderJob\TriStepToggleCubemap.h"/>
-    <ClInclude Include="RenderJob\TriStepUpdate.h"/>
-    <ClInclude Include="RenderJob\TriStepVisibilityQuery.h"/>
-    <ClInclude Include="Resources\Tr2AsyncSave.h"/>
-    <ClInclude Include="Resources\Tr2EffectRes.h"/>
-    <ClInclude Include="Resources\Tr2ImageRes.h"/>
-    <ClInclude Include="Resources\Tr2LodResource.h"/>
-    <ClInclude Include="Resources\Tr2MaterialRes.h"/>
-    <ClInclude Include="Resources\TriGeometryRes.h"/>
-    <ClInclude Include="Resources\TriGrannyRes.h"/>
-    <ClInclude Include="Resources\TriTextureRes.h"/>
-    <ClInclude Include="Shader\Tr2Effect.h"/>
-    <ClInclude Include="Shader\Tr2EffectDescription.h"/>
-    <ClInclude Include="Shader\Tr2EffectStateManager.h"/>
-    <ClInclude Include="Shader\Tr2Material.h"/>
-    <ClInclude Include="Shader\Tr2Shader.h"/>
-    <ClInclude Include="Shader\Tr2ShaderBuffer.h"/>
-    <ClInclude Include="Shader\Parameter\Tr2FloatParameter.h"/>
-    <ClInclude Include="Shader\Parameter\Tr2GeometryBufferParameter.h"/>
-    <ClInclude Include="Shader\Parameter\Tr2Matrix4Parameter.h"/>
-    <ClInclude Include="Shader\Parameter\Tr2Texture2dLodParameter.h"/>
-    <ClInclude Include="Shader\Parameter\Tr2Vector2Parameter.h"/>
-    <ClInclude Include="Shader\Parameter\Tr2Vector3Parameter.h"/>
-    <ClInclude Include="Shader\Parameter\Tr2Vector4Parameter.h"/>
-    <ClInclude Include="Shader\Parameter\TriFloatArrayParameter.h"/>
-    <ClInclude Include="Shader\Parameter\TriTextureParameter.h"/>
-    <ClInclude Include="Shader\Parameter\TriTransformParameter.h"/>
-    <ClInclude Include="Shader\Parameter\TriVariableParameter.h"/>
-    <ClInclude Include="Shader\Utils\Tr2DataTextureManager.h"/>
-    <ClInclude Include="Sprite2d\ITr2Sprite2dRenderer.h"/>
-    <ClInclude Include="Sprite2d\ITr2Sprite2dTexture.h"/>
-    <ClInclude Include="Sprite2d\ITr2SpriteObject.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2d.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dArc.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dContainer.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dDisplayList.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dFrame.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dLayer.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dLine.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dLineTrace.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dPolygon.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dRenderJob.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dScene.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dStretch.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dStretchVertical.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dTextObject.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dTexture.h"/>
-    <ClInclude Include="Sprite2d\Tr2Sprite2dTransform.h"/>
-    <ClInclude Include="Sprite2d\Tr2SpriteObject.h"/>
-    <ClInclude Include="UI\App.h"/>
-    <ClInclude Include="UI\IUILib.h"/>
-    <ClInclude Include="UI\Scancodes.h"/>
-    <ClInclude Include="UI\Tr2MouseCursor.h"/>
-    <ClInclude Include="UI\Tr2PresentParameters.h"/>
-    <ClInclude Include="UI\Tr2SecondaryWindow.h"/>
-    <ClInclude Include="UI\UIChoosers.h"/>
-    <ClInclude Include="UI\WindowIcon.h"/>
-    <ClInclude Include="Utilities\BoundingBox.h"/>
-    <ClInclude Include="Utilities\BoundingSphere.h"/>
-    <ClInclude Include="Utilities\Color.h"/>
-    <ClInclude Include="Utilities\GeometryUtils.h"/>
-    <ClInclude Include="Utilities\GrannyCurveHelpers.h"/>
-    <ClInclude Include="Utilities\Matrix.h"/>
-    <ClInclude Include="Utilities\MatrixUtils.h"/>
-    <ClInclude Include="Utilities\Obb.h"/>
-    <ClInclude Include="Utilities\Quaternion.h"/>
-    <ClInclude Include="Utilities\StringUtils.h"/>
-    <ClInclude Include="Wod\WodBakingScene.h"/>
-    <ClInclude Include="Wod\WodPlaceableRes.h"/>
+    <ClInclude Include="ALResultBlue.h" />
+    <ClInclude Include="autoversion.h" />
+    <ClInclude Include="D3DFundamentalTypes.h" />
+    <ClInclude Include="EveSprite2dBracket.h" />
+    <ClInclude Include="EveSprite2dBracketRenderer.h" />
+    <ClInclude Include="GrannyBoneOffset.h" />
+    <ClInclude Include="IRenderCallback.h" />
+    <ClInclude Include="ITr2AttributeGenerator.h" />
+    <ClInclude Include="ITr2EffectValue.h" />
+    <ClInclude Include="ITr2GeometryProvider.h" />
+    <ClInclude Include="ITr2PhysicsUpdater.h" />
+    <ClInclude Include="ITr2PickableScene.h" />
+    <ClInclude Include="ITr2Renderable.h" />
+    <ClInclude Include="ITr2SkinnedObject.h" />
+    <ClInclude Include="ITr2TextureProvider.h" />
+    <ClInclude Include="ITr2VisibilityQueryable.h" />
+    <ClInclude Include="ITr2VisualizationModeRenderer.h" />
+    <ClInclude Include="ITr2WorldTransformUpdater.h" />
+    <ClInclude Include="ITriReroutable.h" />
+    <ClInclude Include="IWorldPosition.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="TbbStub.h" />
+    <ClInclude Include="Tr2AddSafeGrowableBuffer.h" />
+    <ClInclude Include="Tr2AtlasTexture.h" />
+    <ClInclude Include="Tr2BindingVector3.h" />
+    <ClInclude Include="Tr2Blitter.h" />
+    <ClInclude Include="Tr2BoundingLineSet.h" />
+    <ClInclude Include="Tr2CapturedBuffer.h" />
+    <ClInclude Include="Tr2ConstantBufferFormats.h" />
+    <ClInclude Include="Tr2ConstGeometry.h" />
+    <ClInclude Include="Tr2CpuSkinnedModel.h" />
+    <ClInclude Include="Tr2CurveLineSet.h" />
+    <ClInclude Include="Tr2DebugRenderer.h" />
+    <ClInclude Include="Tr2DepthStencil.h" />
+    <ClInclude Include="Tr2DeviceResource.h" />
+    <ClInclude Include="Tr2DxtCompressor.h" />
+    <ClInclude Include="Tr2DynamicMesh.h" />
+    <ClInclude Include="Tr2DynamicRingBuffer.h" />
+    <ClInclude Include="Tr2ExternalParameter.h" />
+    <ClInclude Include="Tr2FileExportInfo.h" />
+    <ClInclude Include="Tr2GpuBuffer.h" />
+    <ClInclude Include="Tr2GpuBufferAlias.h" />
+    <ClInclude Include="Tr2GpuLight.h" />
+    <ClInclude Include="Tr2GpuStructuredBuffer.h" />
+    <ClInclude Include="Tr2GrannyAnimation.h" />
+    <ClInclude Include="Tr2GrannyAnimationLayer.h" />
+    <ClInclude Include="Tr2GrannyPrimitiveSet.h" />
+    <ClInclude Include="Tr2GRNMemoryPersist.h" />
+    <ClInclude Include="Tr2HostBitmap.h" />
+    <ClInclude Include="Tr2ImageIOHelpers.h" />
+    <ClInclude Include="Tr2ImpostorManager.h" />
+    <ClInclude Include="Tr2InstancedMesh.h" />
+    <ClInclude Include="Tr2KelvinColor.h" />
+    <ClInclude Include="Tr2LightManager.h" />
+    <ClInclude Include="Tr2LineGraph.h" />
+    <ClInclude Include="Tr2LineSet.h" />
+    <ClInclude Include="Tr2LitPerObjectData.h" />
+    <ClInclude Include="Tr2ManipulationTool.h" />
+    <ClInclude Include="Tr2MaterialParameterStore.h" />
+    <ClInclude Include="Tr2Mesh.h" />
+    <ClInclude Include="Tr2MeshArea.h" />
+    <ClInclude Include="Tr2MeshBase.h" />
+    <ClInclude Include="Tr2MeshLod.h" />
+    <ClInclude Include="Tr2Model.h" />
+    <ClInclude Include="Tr2NamedPipeListener.h" />
+    <ClInclude Include="Tr2PerObjectData.h" />
+    <ClInclude Include="Tr2PersistentPerObjectData.h" />
+    <ClInclude Include="Tr2PickBuffer.h" />
+    <ClInclude Include="Tr2PickingHelperBatch.h" />
+    <ClInclude Include="Tr2PointLight.h" />
+    <ClInclude Include="Tr2PostProcess.h" />
+    <ClInclude Include="Tr2PrimitiveScene.h" />
+    <ClInclude Include="Tr2PrimitiveSet.h" />
+    <ClInclude Include="Tr2PrimitiveText.h" />
+    <ClInclude Include="Tr2ProjectBoundingBoxBracket.h" />
+    <ClInclude Include="Tr2PushPopDS.h" />
+    <ClInclude Include="Tr2PushPopRT.h" />
+    <ClInclude Include="Tr2PyValueBinding.h" />
+    <ClInclude Include="Tr2QuadRenderer.h" />
+    <ClInclude Include="Tr2RenderContext.h" />
+    <ClInclude Include="Tr2Renderer.h" />
+    <ClInclude Include="Tr2RenderTarget.h" />
+    <ClInclude Include="Tr2RenderTargetGrabber.h" />
+    <ClInclude Include="Tr2RenderUtils.h" />
+    <ClInclude Include="Tr2RotationTool.h" />
+    <ClInclude Include="Tr2RuntimeInstanceData.h" />
+    <ClInclude Include="Tr2ScalingTool.h" />
+    <ClInclude Include="Tr2ShLightingManager.h" />
+    <ClInclude Include="Tr2SHProbeRes.h" />
+    <ClInclude Include="Tr2SkinnedModel.h" />
+    <ClInclude Include="Tr2SkinnedObject.h" />
+    <ClInclude Include="Tr2SkinnedObjectLOD.h" />
+    <ClInclude Include="Tr2SolidSet.h" />
+    <ClInclude Include="Tr2StreamingBitmapSaver.h" />
+    <ClInclude Include="Tr2SwapChain.h" />
+    <ClInclude Include="Tr2TextureAtlas.h" />
+    <ClInclude Include="Tr2TextureAtlasMan.h" />
+    <ClInclude Include="Tr2TextureReference.h" />
+    <ClInclude Include="Tr2Transform.h" />
+    <ClInclude Include="Tr2TranslationTool.h" />
+    <ClInclude Include="Tr2Variable.h" />
+    <ClInclude Include="Tr2VariableStore.h" />
+    <ClInclude Include="Tr2VertexDefinitionUtilities.h" />
+    <ClInclude Include="Tr2VideoAdapters.h" />
+    <ClInclude Include="Tr2VisibilityResults.h" />
+    <ClInclude Include="TriConstants.h" />
+    <ClInclude Include="TriDebugResourceHelper.h" />
+    <ClInclude Include="TriDebugTextRenderer.h" />
+    <ClInclude Include="TriDebugTextRendererBitmaps.h" />
+    <ClInclude Include="TriDevice.h" />
+    <ClInclude Include="TriDirect3D.h" />
+    <ClInclude Include="TriError.h" />
+    <ClInclude Include="TriFloat.h" />
+    <ClInclude Include="TriFrustum.h" />
+    <ClInclude Include="TriFrustumOrtho.h" />
+    <ClInclude Include="TriLineSet.h" />
+    <ClInclude Include="TriObserverLocal.h" />
+    <ClInclude Include="TriPoolAllocator.h" />
+    <ClInclude Include="TriProjection.h" />
+    <ClInclude Include="TriPythonContext.h" />
+    <ClInclude Include="TriPythonThunkers.h" />
+    <ClInclude Include="TriRect.h" />
+    <ClInclude Include="TriRenderBatch.h" />
+    <ClInclude Include="TriRigidOrientation.h" />
+    <ClInclude Include="TriSequencer.h" />
+    <ClInclude Include="TriSettings.h" />
+    <ClInclude Include="TriSettingsRegistrar.h" />
+    <ClInclude Include="TriShadowMap.h" />
+    <ClInclude Include="TriUtil.h" />
+    <ClInclude Include="TriValueBinding.h" />
+    <ClInclude Include="TriVariable.h" />
+    <ClInclude Include="TriView.h" />
+    <ClInclude Include="TriViewport.h" />
+    <ClInclude Include="Vector2.h" />
+    <ClInclude Include="Vector3.h" />
+    <ClInclude Include="Vector3d.h" />
+    <ClInclude Include="Vector4.h" />
+    <ClInclude Include="version.h" />
+    <ClInclude Include="Curves\Tr2BoneMatrixCurve.h" />
+    <ClInclude Include="Curves\Tr2CurveColor.h" />
+    <ClInclude Include="Curves\Tr2CurveConstant.h" />
+    <ClInclude Include="Curves\Tr2CurveEulerRotation.h" />
+    <ClInclude Include="Curves\Tr2CurveEulerRotationExpression.h" />
+    <ClInclude Include="Curves\Tr2CurveQuaternion.h" />
+    <ClInclude Include="Curves\Tr2CurveRandomAxisRotation.h" />
+    <ClInclude Include="Curves\Tr2CurveScalar.h" />
+    <ClInclude Include="Curves\Tr2CurveScalarExpression.h" />
+    <ClInclude Include="Curves\Tr2CurveVector2.h" />
+    <ClInclude Include="Curves\Tr2CurveVector3.h" />
+    <ClInclude Include="Curves\Tr2CurveVector3Expression.h" />
+    <ClInclude Include="Curves\Tr2DistanceTracker.h" />
+    <ClInclude Include="Curves\Tr2GrannyEventTrack.h" />
+    <ClInclude Include="Curves\Tr2GrannyTrack.h" />
+    <ClInclude Include="Curves\Tr2GrannyTransformTrack.h" />
+    <ClInclude Include="Curves\Tr2GrannyVector3Curve.h" />
+    <ClInclude Include="Curves\Tr2GrannyVectorTrack.h" />
+    <ClInclude Include="Curves\Tr2QuaternionLerpCurve.h" />
+    <ClInclude Include="Curves\Tr2RotationAdapter.h" />
+    <ClInclude Include="Curves\Tr2ScalarExprKeyCurve.h" />
+    <ClInclude Include="Curves\Tr2TranslationAdapter.h" />
+    <ClInclude Include="Curves\TriCurveSet.h" />
+    <ClInclude Include="Curves\TriEventCurve.h" />
+    <ClInclude Include="Curves\TriEventKey.h" />
+    <ClInclude Include="Curves\Fader\Tr2ScalarFader.h" />
+    <ClInclude Include="Eve\EveCamera.h" />
+    <ClInclude Include="Eve\EveConstantBufferFormats.h" />
+    <ClInclude Include="Eve\EveDistanceField.h" />
+    <ClInclude Include="Eve\EveDustfieldConstraint.h" />
+    <ClInclude Include="Eve\EveEffectRoot2.h" />
+    <ClInclude Include="Eve\EveLensflare.h" />
+    <ClInclude Include="Eve\EveLODHelper.h" />
+    <ClInclude Include="Eve\EveOccluder.h" />
+    <ClInclude Include="Eve\EveParticleDirectForce.h" />
+    <ClInclude Include="Eve\EveParticleDragForce.h" />
+    <ClInclude Include="Eve\EveParticleSpringAttractor.h" />
+    <ClInclude Include="Eve\EvePlanet.h" />
+    <ClInclude Include="Eve\EveRootTransform.h" />
+    <ClInclude Include="Eve\EveShip2Builder.h" />
+    <ClInclude Include="Eve\EveSpaceScene.h" />
+    <ClInclude Include="Eve\EveStarfield.h" />
+    <ClInclude Include="Eve\EveTransform.h" />
+    <ClInclude Include="Eve\EveUpdateContext.h" />
+    <ClInclude Include="Eve\IEveFiringEffectElement.h" />
+    <ClInclude Include="Eve\IEveShadowCaster.h" />
+    <ClInclude Include="Eve\IEveSpaceObject2.h" />
+    <ClInclude Include="Eve\IEveTransform.h" />
+    <ClInclude Include="Eve\Animation\EveAnimationData.h" />
+    <ClInclude Include="Eve\Animation\EveAnimationSequencer.h" />
+    <ClInclude Include="Eve\Animation\EveAnimationState.h" />
+    <ClInclude Include="Eve\Renderable\EveMetaball.h" />
+    <ClInclude Include="Eve\Renderable\EveMetaballItem.h" />
+    <ClInclude Include="Eve\Renderable\EveMetaballTables.h" />
+    <ClInclude Include="Eve\Renderable\EveSceneStaticParticles.h" />
+    <ClInclude Include="Eve\Renderable\Stretch\EveFiringEffectElementContainer.h" />
+    <ClInclude Include="Eve\Renderable\Stretch\EveLocalPositionCurve.h" />
+    <ClInclude Include="Eve\Renderable\Stretch\EveRemotePositionCurve.h" />
+    <ClInclude Include="Eve\Renderable\Stretch\EveStretch.h" />
+    <ClInclude Include="Eve\Renderable\Stretch\EveStretch2.h" />
+    <ClInclude Include="Eve\SpaceObject\EveMissile.h" />
+    <ClInclude Include="Eve\SpaceObject\EveMissileWarhead.h" />
+    <ClInclude Include="Eve\SpaceObject\EveMobile.h" />
+    <ClInclude Include="Eve\SpaceObject\EveShip2.h" />
+    <ClInclude Include="Eve\SpaceObject\EveSpaceObject2.h" />
+    <ClInclude Include="Eve\SpaceObject\EveStation2.h" />
+    <ClInclude Include="Eve\SpaceObject\EveSwarm.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\EveBoosterSet2.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\EveImpactOverlay.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\EveMeshOverlayEffect.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\EveSpaceObjectDecal.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\EveTrailsSet.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSet.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSetItem.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSet.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSetItem.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSet.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSetItem.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSet.h" />
+    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSetItem.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildBillboard.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildBulletStorm.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildCloud.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildContainer.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildExplosion.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildLink.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildMesh.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildParticleSystem.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildQuad.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildTransform.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveCloudEditableVolume.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\IEveSpaceObjectChild.h" />
+    <ClInclude Include="Eve\SpaceObject\Utils\EveCustomMask.h" />
+    <ClInclude Include="Eve\SpaceObject\Utils\EveLocator2.h" />
+    <ClInclude Include="Eve\SpaceObject\Utils\EveLocatorSets.h" />
+    <ClInclude Include="Eve\SpaceObjectFactory\EveSOF.h" />
+    <ClInclude Include="Eve\SpaceObjectFactory\EveSOFData.h" />
+    <ClInclude Include="Eve\SpaceObjectFactory\EveSOFDataMgr.h" />
+    <ClInclude Include="Eve\SpaceObjectFactory\EveSOFDNA.h" />
+    <ClInclude Include="Eve\SpaceObjectFactory\EveSOFUtils.h" />
+    <ClInclude Include="Eve\Turret\EveTurretFiringFX.h" />
+    <ClInclude Include="Eve\Turret\EveTurretSet.h" />
+    <ClInclude Include="Eve\Turret\EveTurretTarget.h" />
+    <ClInclude Include="Eve\UI\EveConnector.h" />
+    <ClInclude Include="Eve\UI\EveCurveLineSet.h" />
+    <ClInclude Include="Eve\UI\EveLineContainer.h" />
+    <ClInclude Include="Eve\UI\EveLineSet.h" />
+    <ClInclude Include="Eve\UI\EveProjectBracket.h" />
+    <ClInclude Include="Eve\UI\EveSpherePin.h" />
+    <ClInclude Include="Eve\UI\EveSpherePinIndexTree.h" />
+    <ClInclude Include="Eve\UI\EveTacticalOverlay.h" />
+    <ClInclude Include="Eve\UI\EveUiObject.h" />
+    <ClInclude Include="Font\Tr2FontManager.h" />
+    <ClInclude Include="Font\Tr2FontMeasurer.h" />
+    <ClInclude Include="Font\Tr2SBit.h" />
+    <ClInclude Include="Include\IEveBallpark.h" />
+    <ClInclude Include="Include\IEveReferencePoint.h" />
+    <ClInclude Include="Include\IPhysXSdk.h" />
+    <ClInclude Include="Include\ITr2AnimationUpdater.h" />
+    <ClInclude Include="Include\ITr2BoundingBox.h" />
+    <ClInclude Include="Include\ITr2CapturedBuffer.h" />
+    <ClInclude Include="Include\ITr2DebugRenderer.h" />
+    <ClInclude Include="Include\ITr2GpuBuffer.h" />
+    <ClInclude Include="Include\ITr2InstanceData.h" />
+    <ClInclude Include="Include\ITr2Interior.h" />
+    <ClInclude Include="Include\ITr2MultiPassScene.h" />
+    <ClInclude Include="Include\ITr2RenderTargetGrabber.h" />
+    <ClInclude Include="Include\ITr2Scene.h" />
+    <ClInclude Include="Include\ITr2Updateable.h" />
+    <ClInclude Include="Include\ITr2ValueBinding.h" />
+    <ClInclude Include="Include\ITriColor.h" />
+    <ClInclude Include="Include\ITriColorCurve.h" />
+    <ClInclude Include="Include\ITriConstants.h" />
+    <ClInclude Include="Include\ITriCurveLength.h" />
+    <ClInclude Include="Include\ITriDevice.h" />
+    <ClInclude Include="Include\ITriDuration.h" />
+    <ClInclude Include="Include\ITriEffectParameter.h" />
+    <ClInclude Include="Include\ITriFunction.h" />
+    <ClInclude Include="Include\ITriMatrix.h" />
+    <ClInclude Include="Include\ITriObserverLocal.h" />
+    <ClInclude Include="Include\ITriQuaternion.h" />
+    <ClInclude Include="Include\ITriRotationCurve.h" />
+    <ClInclude Include="Include\ITriScalarCurve.h" />
+    <ClInclude Include="Include\ITriTargetable.h" />
+    <ClInclude Include="Include\ITriTextureRes.h" />
+    <ClInclude Include="Include\ITriVector.h" />
+    <ClInclude Include="Include\ITriVectorCurve.h" />
+    <ClInclude Include="Include\Point.h" />
+    <ClInclude Include="Include\Rect.h" />
+    <ClInclude Include="Include\Tr2Curve.h" />
+    <ClInclude Include="Include\Tr2WindowHandle.h" />
+    <ClInclude Include="Include\TriColor.h" />
+    <ClInclude Include="Include\TriMath.h" />
+    <ClInclude Include="Include\TriMatrix.h" />
+    <ClInclude Include="Include\TriQuaternion.h" />
+    <ClInclude Include="Include\TriVector.h" />
+    <ClInclude Include="Interior\Tr2InteriorConstantBufferFormats.h" />
+    <ClInclude Include="Interior\Tr2InteriorLightSet.h" />
+    <ClInclude Include="Interior\Tr2InteriorLightSource.h" />
+    <ClInclude Include="Interior\Tr2InteriorPlaceable.h" />
+    <ClInclude Include="Interior\Tr2InteriorRenderBatch.h" />
+    <ClInclude Include="Interior\Tr2InteriorScene.h" />
+    <ClInclude Include="Interior\Tr2InteriorVisualization.h" />
+    <ClInclude Include="Interior\Tr2IntSkinnedObject.h" />
+    <ClInclude Include="Particle\ITr2GenericEmitter.h" />
+    <ClInclude Include="Particle\ITr2GenericParticleConstraint.h" />
+    <ClInclude Include="Particle\ITr2ParticleForce.h" />
+    <ClInclude Include="Particle\Tr2CapsuleShapeAttributeGenerator.h" />
+    <ClInclude Include="Particle\Tr2ConsecutiveIntegerAttributeGenerator.h" />
+    <ClInclude Include="Particle\Tr2DynamicEmitter.h" />
+    <ClInclude Include="Particle\Tr2ElementBlendConstraint.h" />
+    <ClInclude Include="Particle\Tr2ForceSphereVolume.h" />
+    <ClInclude Include="Particle\Tr2GpuParticleSystem.h" />
+    <ClInclude Include="Particle\Tr2GpuSharedEmitter.h" />
+    <ClInclude Include="Particle\Tr2GpuUniqueEmitter.h" />
+    <ClInclude Include="Particle\Tr2ParticleAttractorForce.h" />
+    <ClInclude Include="Particle\Tr2ParticleDirectForce.h" />
+    <ClInclude Include="Particle\Tr2ParticleDragForce.h" />
+    <ClInclude Include="Particle\Tr2ParticleElementDeclaration.h" />
+    <ClInclude Include="Particle\Tr2ParticleFluidDragForce.h" />
+    <ClInclude Include="Particle\Tr2ParticleSpring.h" />
+    <ClInclude Include="Particle\Tr2ParticleSystem.h" />
+    <ClInclude Include="Particle\Tr2ParticleTurbulenceForce.h" />
+    <ClInclude Include="Particle\Tr2ParticleVortexForce.h" />
+    <ClInclude Include="Particle\Tr2PlaneConstraint.h" />
+    <ClInclude Include="Particle\Tr2RandomDirectionAttributeGenerator.h" />
+    <ClInclude Include="Particle\Tr2RandomIntegerAttributeGenerator.h" />
+    <ClInclude Include="Particle\Tr2RandomUniformAttributeGenerator.h" />
+    <ClInclude Include="Particle\Tr2SphereConstraint.h" />
+    <ClInclude Include="Particle\Tr2SphereShapeAttributeGenerator.h" />
+    <ClInclude Include="Particle\Tr2StaticEmitter.h" />
+    <ClInclude Include="RenderJob\ITriRenderStep.h" />
+    <ClInclude Include="RenderJob\Tr2RenderJobs.h" />
+    <ClInclude Include="RenderJob\TriRenderJob.h" />
+    <ClInclude Include="RenderJob\TriRenderStep.h" />
+    <ClInclude Include="RenderJob\TriStepClear.h" />
+    <ClInclude Include="RenderJob\TriStepClearUav.h" />
+    <ClInclude Include="RenderJob\TriStepCopyRenderTarget.h" />
+    <ClInclude Include="RenderJob\TriStepEnableWireframeMode.h" />
+    <ClInclude Include="RenderJob\TriStepFilterVisibilityResults.h" />
+    <ClInclude Include="RenderJob\TriStepGenerateMipMaps.h" />
+    <ClInclude Include="RenderJob\TriStepPopDepthStencil.h" />
+    <ClInclude Include="RenderJob\TriStepPopProjection.h" />
+    <ClInclude Include="RenderJob\TriStepPopRenderTarget.h" />
+    <ClInclude Include="RenderJob\TriStepPopViewport.h" />
+    <ClInclude Include="RenderJob\TriStepPopViewTransform.h" />
+    <ClInclude Include="RenderJob\TriStepPresentSwapChain.h" />
+    <ClInclude Include="RenderJob\TriStepPushDepthStencil.h" />
+    <ClInclude Include="RenderJob\TriStepPushProjection.h" />
+    <ClInclude Include="RenderJob\TriStepPushRenderTarget.h" />
+    <ClInclude Include="RenderJob\TriStepPushViewport.h" />
+    <ClInclude Include="RenderJob\TriStepPushViewTransform.h" />
+    <ClInclude Include="RenderJob\TriStepPythonCB.h" />
+    <ClInclude Include="RenderJob\TriStepRemoteSync.h" />
+    <ClInclude Include="RenderJob\TriStepRemoteUpdate.h" />
+    <ClInclude Include="RenderJob\TriStepRenderAtlas.h" />
+    <ClInclude Include="RenderJob\TriStepRenderCubeMap.h" />
+    <ClInclude Include="RenderJob\TriStepRenderDebug.h" />
+    <ClInclude Include="RenderJob\TriStepRenderEffect.h" />
+    <ClInclude Include="RenderJob\TriStepRenderFps.h" />
+    <ClInclude Include="RenderJob\TriStepRenderFullScreenShader.h" />
+    <ClInclude Include="RenderJob\TriStepRenderLineGraph.h" />
+    <ClInclude Include="RenderJob\TriStepRenderObject.h" />
+    <ClInclude Include="RenderJob\TriStepRenderPass.h" />
+    <ClInclude Include="RenderJob\TriStepRenderScene.h" />
+    <ClInclude Include="RenderJob\TriStepRenderSceneDebug.h" />
+    <ClInclude Include="RenderJob\TriStepRenderTexture.h" />
+    <ClInclude Include="RenderJob\TriStepResolve.h" />
+    <ClInclude Include="RenderJob\TriStepRunComputeShader.h" />
+    <ClInclude Include="RenderJob\TriStepRunJob.h" />
+    <ClInclude Include="RenderJob\TriStepSetDebugRenderer.h" />
+    <ClInclude Include="RenderJob\TriStepSetDepthStencil.h" />
+    <ClInclude Include="RenderJob\TriStepSetProjection.h" />
+    <ClInclude Include="RenderJob\TriStepSetRenderState.h" />
+    <ClInclude Include="RenderJob\TriStepSetRenderTarget.h" />
+    <ClInclude Include="RenderJob\TriStepSetStandardRenderStates.h" />
+    <ClInclude Include="RenderJob\TriStepSetVariableStore.h" />
+    <ClInclude Include="RenderJob\TriStepSetView.h" />
+    <ClInclude Include="RenderJob\TriStepSetViewport.h" />
+    <ClInclude Include="RenderJob\TriStepSetVisibilityResults.h" />
+    <ClInclude Include="RenderJob\TriStepSetVisualizationMode.h" />
+    <ClInclude Include="RenderJob\TriStepTestBlocking.h" />
+    <ClInclude Include="RenderJob\TriStepToggleCubemap.h" />
+    <ClInclude Include="RenderJob\TriStepUpdate.h" />
+    <ClInclude Include="RenderJob\TriStepVisibilityQuery.h" />
+    <ClInclude Include="Resources\Tr2AsyncSave.h" />
+    <ClInclude Include="Resources\Tr2EffectRes.h" />
+    <ClInclude Include="Resources\Tr2ImageRes.h" />
+    <ClInclude Include="Resources\Tr2LodResource.h" />
+    <ClInclude Include="Resources\Tr2MaterialRes.h" />
+    <ClInclude Include="Resources\TriGeometryRes.h" />
+    <ClInclude Include="Resources\TriGrannyRes.h" />
+    <ClInclude Include="Resources\TriTextureRes.h" />
+    <ClInclude Include="Shader\Tr2Effect.h" />
+    <ClInclude Include="Shader\Tr2EffectDescription.h" />
+    <ClInclude Include="Shader\Tr2EffectStateManager.h" />
+    <ClInclude Include="Shader\Tr2Material.h" />
+    <ClInclude Include="Shader\Tr2Shader.h" />
+    <ClInclude Include="Shader\Tr2ShaderBuffer.h" />
+    <ClInclude Include="Shader\Parameter\Tr2FloatParameter.h" />
+    <ClInclude Include="Shader\Parameter\Tr2GeometryBufferParameter.h" />
+    <ClInclude Include="Shader\Parameter\Tr2Matrix4Parameter.h" />
+    <ClInclude Include="Shader\Parameter\Tr2Texture2dLodParameter.h" />
+    <ClInclude Include="Shader\Parameter\Tr2Vector2Parameter.h" />
+    <ClInclude Include="Shader\Parameter\Tr2Vector3Parameter.h" />
+    <ClInclude Include="Shader\Parameter\Tr2Vector4Parameter.h" />
+    <ClInclude Include="Shader\Parameter\TriFloatArrayParameter.h" />
+    <ClInclude Include="Shader\Parameter\TriTextureParameter.h" />
+    <ClInclude Include="Shader\Parameter\TriTransformParameter.h" />
+    <ClInclude Include="Shader\Parameter\TriVariableParameter.h" />
+    <ClInclude Include="Shader\Utils\Tr2DataTextureManager.h" />
+    <ClInclude Include="Sprite2d\ITr2Sprite2dRenderer.h" />
+    <ClInclude Include="Sprite2d\ITr2Sprite2dTexture.h" />
+    <ClInclude Include="Sprite2d\ITr2SpriteObject.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2d.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dArc.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dContainer.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dDisplayList.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dFrame.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dLayer.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dLine.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dLineTrace.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dPolygon.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dRenderJob.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dScene.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dStretch.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dStretchVertical.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dTextObject.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dTexture.h" />
+    <ClInclude Include="Sprite2d\Tr2Sprite2dTransform.h" />
+    <ClInclude Include="Sprite2d\Tr2SpriteObject.h" />
+    <ClInclude Include="UI\App.h" />
+    <ClInclude Include="UI\IUILib.h" />
+    <ClInclude Include="UI\Scancodes.h" />
+    <ClInclude Include="UI\Tr2MouseCursor.h" />
+    <ClInclude Include="UI\Tr2PresentParameters.h" />
+    <ClInclude Include="UI\Tr2SecondaryWindow.h" />
+    <ClInclude Include="UI\UIChoosers.h" />
+    <ClInclude Include="UI\WindowIcon.h" />
+    <ClInclude Include="Utilities\BoundingBox.h" />
+    <ClInclude Include="Utilities\BoundingSphere.h" />
+    <ClInclude Include="Utilities\Color.h" />
+    <ClInclude Include="Utilities\GeometryUtils.h" />
+    <ClInclude Include="Utilities\GrannyCurveHelpers.h" />
+    <ClInclude Include="Utilities\Matrix.h" />
+    <ClInclude Include="Utilities\MatrixUtils.h" />
+    <ClInclude Include="Utilities\Obb.h" />
+    <ClInclude Include="Utilities\Quaternion.h" />
+    <ClInclude Include="Utilities\StringUtils.h" />
+    <ClInclude Include="Wod\WodBakingScene.h" />
+    <ClInclude Include="Wod\WodPlaceableRes.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ALResultBlue.cpp"/>
-    <ClCompile Include="EveSprite2dBracket.cpp"/>
-    <ClCompile Include="EveSprite2dBracketRenderer.cpp"/>
-    <ClCompile Include="EveSprite2dBracketRenderer_Blue.cpp"/>
-    <ClCompile Include="EveSprite2dBracket_Blue.cpp"/>
-    <ClCompile Include="GrannyBoneOffset.cpp"/>
-    <ClCompile Include="GrannyBoneOffset_Blue.cpp"/>
-    <ClCompile Include="ITr2PickableScene.cpp"/>
+    <ClCompile Include="ALResultBlue.cpp" />
+    <ClCompile Include="EveSprite2dBracket.cpp" />
+    <ClCompile Include="EveSprite2dBracketRenderer.cpp" />
+    <ClCompile Include="EveSprite2dBracketRenderer_Blue.cpp" />
+    <ClCompile Include="EveSprite2dBracket_Blue.cpp" />
+    <ClCompile Include="GrannyBoneOffset.cpp" />
+    <ClCompile Include="GrannyBoneOffset_Blue.cpp" />
+    <ClCompile Include="ITr2PickableScene.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Tr2AtlasTexture.cpp"/>
-    <ClCompile Include="Tr2AtlasTexture_Blue.cpp"/>
-    <ClCompile Include="Tr2BindingVector3_Blue.cpp"/>
-    <ClCompile Include="Tr2Blitter.cpp"/>
-    <ClCompile Include="Tr2BoundingLineSet.cpp"/>
-    <ClCompile Include="Tr2BoundingLineSet_Blue.cpp"/>
-    <ClCompile Include="Tr2CapturedBuffer.cpp"/>
-    <ClCompile Include="Tr2CapturedBuffer_Blue.cpp"/>
-    <ClCompile Include="Tr2ConstantBufferFormats.cpp"/>
-    <ClCompile Include="Tr2ConstGeometry.cpp"/>
-    <ClCompile Include="Tr2CpuSkinnedModel.cpp"/>
-    <ClCompile Include="Tr2CpuSkinnedModel_Blue.cpp"/>
-    <ClCompile Include="Tr2CurveLineSet.cpp"/>
-    <ClCompile Include="Tr2CurveLineSet_Blue.cpp"/>
-    <ClCompile Include="Tr2DebugRenderer.cpp"/>
-    <ClCompile Include="Tr2DebugRenderer_Blue.cpp"/>
-    <ClCompile Include="Tr2DepthStencil.cpp"/>
-    <ClCompile Include="Tr2DepthStencil_Blue.cpp"/>
-    <ClCompile Include="Tr2DeviceResource.cpp"/>
-    <ClCompile Include="Tr2DxtCompressor.cpp"/>
-    <ClCompile Include="Tr2DxtCompressor_Blue.cpp"/>
-    <ClCompile Include="Tr2DynamicMesh.cpp"/>
-    <ClCompile Include="Tr2DynamicMesh_Blue.cpp"/>
-    <ClCompile Include="Tr2DynamicRingBuffer.cpp"/>
-    <ClCompile Include="Tr2ExternalParameter.cpp"/>
-    <ClCompile Include="Tr2ExternalParameter_Blue.cpp"/>
-    <ClCompile Include="Tr2FileExportInfo.cpp"/>
-    <ClCompile Include="Tr2FileExportInfo_Blue.cpp"/>
-    <ClCompile Include="Tr2GpuBuffer.cpp"/>
-    <ClCompile Include="Tr2GpuBufferAlias.cpp"/>
-    <ClCompile Include="Tr2GpuBufferAlias_Blue.cpp"/>
-    <ClCompile Include="Tr2GpuBuffer_Blue.cpp"/>
-    <ClCompile Include="Tr2GpuStructuredBuffer.cpp"/>
-    <ClCompile Include="Tr2GpuStructuredBuffer_Blue.cpp"/>
-    <ClCompile Include="Tr2GrannyAnimation.cpp"/>
-    <ClCompile Include="Tr2GrannyAnimationLayer.cpp"/>
-    <ClCompile Include="Tr2GrannyAnimation_Blue.cpp"/>
-    <ClCompile Include="Tr2GrannyPrimitiveSet.cpp"/>
-    <ClCompile Include="Tr2GrannyPrimitiveSet_Blue.cpp"/>
-    <ClCompile Include="Tr2GRNMemoryPersist.cpp"/>
-    <ClCompile Include="Tr2HostBitmap.cpp"/>
-    <ClCompile Include="Tr2HostBitmap_Blue.cpp"/>
-    <ClCompile Include="Tr2ImageIOHelpers.cpp"/>
-    <ClCompile Include="Tr2ImpostorManager.cpp"/>
-    <ClCompile Include="Tr2ImpostorManager_Blue.cpp"/>
-    <ClCompile Include="Tr2InstancedMesh.cpp"/>
-    <ClCompile Include="Tr2InstancedMesh_Blue.cpp"/>
-    <ClCompile Include="Tr2KelvinColor.cpp"/>
-    <ClCompile Include="Tr2KelvinColor_Blue.cpp"/>
-    <ClCompile Include="Tr2LabelTextParser.cpp"/>
-    <ClCompile Include="Tr2LightManager.cpp"/>
-    <ClCompile Include="Tr2LineGraph.cpp"/>
-    <ClCompile Include="Tr2LineGraph_Blue.cpp"/>
-    <ClCompile Include="Tr2LineSet.cpp"/>
-    <ClCompile Include="Tr2LineSet_Blue.cpp"/>
-    <ClCompile Include="Tr2ManipulationTool.cpp"/>
-    <ClCompile Include="Tr2ManipulationTool_Blue.cpp"/>
-    <ClCompile Include="Tr2MaterialParameterStore.cpp"/>
-    <ClCompile Include="Tr2MaterialParameterStore_Blue.cpp"/>
-    <ClCompile Include="Tr2Mesh.cpp"/>
-    <ClCompile Include="Tr2MeshArea.cpp"/>
-    <ClCompile Include="Tr2MeshArea_Blue.cpp"/>
-    <ClCompile Include="Tr2MeshBase.cpp"/>
-    <ClCompile Include="Tr2MeshBase_Blue.cpp"/>
-    <ClCompile Include="Tr2MeshLod.cpp"/>
-    <ClCompile Include="Tr2MeshLod_Blue.cpp"/>
-    <ClCompile Include="Tr2Mesh_Blue.cpp"/>
-    <ClCompile Include="Tr2Model.cpp"/>
-    <ClCompile Include="Tr2Model_Blue.cpp"/>
-    <ClCompile Include="Tr2NamedPipeListener.cpp"/>
-    <ClCompile Include="Tr2NamedPipeListener_Blue.cpp"/>
-    <ClCompile Include="Tr2PerObjectData.cpp"/>
-    <ClCompile Include="Tr2PickBuffer.cpp"/>
-    <ClCompile Include="Tr2PointLight.cpp"/>
-    <ClCompile Include="Tr2PointLight_Blue.cpp"/>
-    <ClCompile Include="Tr2PostProcess.cpp"/>
-    <ClCompile Include="Tr2PostProcess_Blue.cpp"/>
-    <ClCompile Include="Tr2PrimitiveScene.cpp"/>
-    <ClCompile Include="Tr2PrimitiveScene_Blue.cpp"/>
-    <ClCompile Include="Tr2PrimitiveSet.cpp"/>
-    <ClCompile Include="Tr2PrimitiveSet_Blue.cpp"/>
-    <ClCompile Include="Tr2PrimitiveText.cpp"/>
-    <ClCompile Include="Tr2PrimitiveText_Blue.cpp"/>
-    <ClCompile Include="Tr2ProjectBoundingBoxBracket.cpp"/>
-    <ClCompile Include="Tr2ProjectBoundingBoxBracket_Blue.cpp"/>
-    <ClCompile Include="Tr2PushPopDS.cpp"/>
-    <ClCompile Include="Tr2PushPopRT.cpp"/>
-    <ClCompile Include="Tr2PyValueBinding.cpp"/>
-    <ClCompile Include="Tr2PyValueBinding_Blue.cpp"/>
-    <ClCompile Include="Tr2QuadRenderer.cpp"/>
-    <ClCompile Include="Tr2QuadRenderer_Blue.cpp"/>
-    <ClCompile Include="Tr2RenderContext.cpp"/>
-    <ClCompile Include="Tr2RenderContext_Blue.cpp"/>
-    <ClCompile Include="Tr2Renderer.cpp"/>
-    <ClCompile Include="Tr2Renderer_Blue.cpp"/>
-    <ClCompile Include="Tr2RenderTarget.cpp"/>
-    <ClCompile Include="Tr2RenderTargetGrabber.cpp"/>
-    <ClCompile Include="Tr2RenderTargetGrabber_Blue.cpp"/>
-    <ClCompile Include="Tr2RenderTarget_Blue.cpp"/>
-    <ClCompile Include="Tr2RenderUtils.cpp"/>
-    <ClCompile Include="Tr2RotationTool.cpp"/>
-    <ClCompile Include="Tr2RotationTool_Blue.cpp"/>
-    <ClCompile Include="Tr2RuntimeInstanceData.cpp"/>
-    <ClCompile Include="Tr2RuntimeInstanceData_Blue.cpp"/>
-    <ClCompile Include="Tr2ScalingTool.cpp"/>
-    <ClCompile Include="Tr2ScalingTool_Blue.cpp"/>
-    <ClCompile Include="Tr2ShLightingManager.cpp"/>
-    <ClCompile Include="Tr2ShLightingManager_Blue.cpp"/>
-    <ClCompile Include="Tr2SHProbeRes.cpp"/>
-    <ClCompile Include="Tr2SHProbeRes_Blue.cpp"/>
-    <ClCompile Include="Tr2SkinnedModel.cpp"/>
-    <ClCompile Include="Tr2SkinnedModel_Blue.cpp"/>
-    <ClCompile Include="Tr2SkinnedObject.cpp"/>
-    <ClCompile Include="Tr2SkinnedObjectLOD.cpp"/>
-    <ClCompile Include="Tr2SkinnedObject_Blue.cpp"/>
-    <ClCompile Include="Tr2SolidSet.cpp"/>
-    <ClCompile Include="Tr2SolidSet_Blue.cpp"/>
-    <ClCompile Include="Tr2StreamingBitmapSaver.cpp"/>
-    <ClCompile Include="Tr2StreamingBitmapSaver_Blue.cpp"/>
-    <ClCompile Include="Tr2SwapChain.cpp"/>
-    <ClCompile Include="Tr2SwapChain_Blue.cpp"/>
-    <ClCompile Include="Tr2TextureAtlas.cpp"/>
-    <ClCompile Include="Tr2TextureAtlasMan.cpp"/>
-    <ClCompile Include="Tr2TextureAtlasMan_Blue.cpp"/>
-    <ClCompile Include="Tr2TextureAtlas_Blue.cpp"/>
-    <ClCompile Include="Tr2TextureReference.cpp"/>
-    <ClCompile Include="Tr2TextureReference_Blue.cpp"/>
-    <ClCompile Include="Tr2Transform.cpp"/>
-    <ClCompile Include="Tr2Transform_Blue.cpp"/>
-    <ClCompile Include="Tr2TranslationTool.cpp"/>
-    <ClCompile Include="Tr2TranslationTool_Blue.cpp"/>
-    <ClCompile Include="Tr2VariableStore.cpp"/>
-    <ClCompile Include="Tr2VariableStore_Blue.cpp"/>
-    <ClCompile Include="Tr2VertexDefinitionUtilities.cpp"/>
-    <ClCompile Include="Tr2VideoAdapters.cpp"/>
-    <ClCompile Include="Tr2VideoAdapters_Blue.cpp"/>
-    <ClCompile Include="Tr2VisibilityResults.cpp"/>
-    <ClCompile Include="Tr2VisibilityResults_Blue.cpp"/>
-    <ClCompile Include="TriColor.cpp"/>
-    <ClCompile Include="TriColor_Blue.cpp"/>
-    <ClCompile Include="TriConstants.cpp"/>
-    <ClCompile Include="TriDebugResourceHelper.cpp"/>
-    <ClCompile Include="TriDebugTextRenderer.cpp"/>
-    <ClCompile Include="TriDevice.cpp"/>
-    <ClCompile Include="TriDevice11.cpp"/>
-    <ClCompile Include="TriDevice9.cpp"/>
-    <ClCompile Include="TriDeviceGLES2.cpp"/>
-    <ClCompile Include="TriDeviceOrbis.cpp"/>
-    <ClCompile Include="TriDeviceStub.cpp"/>
-    <ClCompile Include="TriDevice_Blue.cpp"/>
-    <ClCompile Include="TriDirect3D.cpp"/>
-    <ClCompile Include="TriError.cpp"/>
-    <ClCompile Include="TriFloat.cpp"/>
-    <ClCompile Include="TriFloat_Blue.cpp"/>
-    <ClCompile Include="TriFrustum.cpp"/>
-    <ClCompile Include="TriFrustumOrtho.cpp"/>
-    <ClCompile Include="TriLineSet.cpp"/>
-    <ClCompile Include="TriLineSet_Blue.cpp"/>
-    <ClCompile Include="TriMath.cpp"/>
-    <ClCompile Include="TriMatrix.cpp"/>
-    <ClCompile Include="TriMatrix_Blue.cpp"/>
-    <ClCompile Include="trinity.cpp"/>
-    <ClCompile Include="TriObserverLocal.cpp"/>
-    <ClCompile Include="TriObserverLocal_Blue.cpp"/>
-    <ClCompile Include="TriPoolAllocator.cpp"/>
-    <ClCompile Include="TriProjection.cpp"/>
-    <ClCompile Include="TriProjection_Blue.cpp"/>
-    <ClCompile Include="TriPythonContext.cpp"/>
-    <ClCompile Include="TriPythonThunkers.cpp"/>
-    <ClCompile Include="TriQuaternion.cpp"/>
-    <ClCompile Include="TriQuaternion_Blue.cpp"/>
-    <ClCompile Include="TriRect.cpp"/>
-    <ClCompile Include="TriRect_Blue.cpp"/>
-    <ClCompile Include="TriRenderBatch.cpp"/>
-    <ClCompile Include="TriRigidOrientation.cpp"/>
-    <ClCompile Include="TriRigidOrientation_Blue.cpp"/>
-    <ClCompile Include="TriSequencer.cpp"/>
-    <ClCompile Include="TriSequencer_Blue.cpp"/>
-    <ClCompile Include="TriSettings_Blue.cpp"/>
-    <ClCompile Include="TriShadowMap.cpp"/>
-    <ClCompile Include="TriShadowMap_Blue.cpp"/>
-    <ClCompile Include="TriUtil.cpp"/>
-    <ClCompile Include="TriValueBinding.cpp"/>
-    <ClCompile Include="TriValueBinding_Blue.cpp"/>
-    <ClCompile Include="TriVariable.cpp"/>
-    <ClCompile Include="TriVector.cpp"/>
-    <ClCompile Include="TriVector_Blue.cpp"/>
-    <ClCompile Include="TriView.cpp"/>
-    <ClCompile Include="TriViewport_Blue.cpp"/>
-    <ClCompile Include="TriView_Blue.cpp"/>
-    <ClCompile Include="Apex\Apex.cpp"/>
-    <ClCompile Include="Apex\Apex_Blue.cpp"/>
-    <ClCompile Include="Apex\Tr2ApexRenderer.cpp"/>
-    <ClCompile Include="Apex\Tr2ApexRes.cpp"/>
-    <ClCompile Include="Apex\Tr2ApexRes_Blue.cpp"/>
-    <ClCompile Include="Apex\Tr2ApexScene.cpp"/>
-    <ClCompile Include="Apex\Tr2ApexScene_Blue.cpp"/>
-    <ClCompile Include="Apex\Tr2ClothingActor.cpp"/>
-    <ClCompile Include="Apex\Tr2ClothingActor_Blue.cpp"/>
-    <ClCompile Include="Apex\Tr2ClothingRes.cpp"/>
-    <ClCompile Include="Apex\Tr2ClothingRes_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2BoneMatrixCurve.cpp"/>
-    <ClCompile Include="Curves\Tr2BoneMatrixCurve_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveColor.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveColor_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveConstant.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveConstant_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveEulerRotation.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveEulerRotationExpression.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveEulerRotationExpression_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveEulerRotation_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveQuaternion.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveQuaternion_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveRandomAxisRotation.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveRandomAxisRotation_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveScalar.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveScalarExpression.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveScalarExpression_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveScalar_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveVector2.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveVector2_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveVector3.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveVector3Expression.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveVector3Expression_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2CurveVector3_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2DistanceTracker.cpp"/>
-    <ClCompile Include="Curves\Tr2DistanceTracker_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2GrannyEventTrack.cpp"/>
-    <ClCompile Include="Curves\Tr2GrannyEventTrack_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2GrannyTrack.cpp"/>
-    <ClCompile Include="Curves\Tr2GrannyTrack_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2GrannyTransformTrack.cpp"/>
-    <ClCompile Include="Curves\Tr2GrannyTransformTrack_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2GrannyVector3Curve.cpp"/>
-    <ClCompile Include="Curves\Tr2GrannyVector3Curve_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2GrannyVectorTrack.cpp"/>
-    <ClCompile Include="Curves\Tr2GrannyVectorTrack_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2QuaternionLerpCurve.cpp"/>
-    <ClCompile Include="Curves\Tr2QuaternionLerpCurve_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2RotationAdapter.cpp"/>
-    <ClCompile Include="Curves\Tr2RotationAdapter_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2ScalarExprKeyCurve.cpp"/>
-    <ClCompile Include="Curves\Tr2ScalarExprKeyCurve_Blue.cpp"/>
-    <ClCompile Include="Curves\Tr2TranslationAdapter.cpp"/>
-    <ClCompile Include="Curves\Tr2TranslationAdapter_Blue.cpp"/>
-    <ClCompile Include="Curves\TriCurveSet.cpp"/>
-    <ClCompile Include="Curves\TriCurveSet_Blue.cpp"/>
-    <ClCompile Include="Curves\TriEventCurve.cpp"/>
-    <ClCompile Include="Curves\TriEventCurve_Blue.cpp"/>
-    <ClCompile Include="Curves\TriEventKey.cpp"/>
-    <ClCompile Include="Curves\TriEventKey_Blue.cpp"/>
-    <ClCompile Include="Curves\Fader\Tr2ScalarFader.cpp"/>
-    <ClCompile Include="Curves\Fader\Tr2ScalarFader_Blue.cpp"/>
-    <ClCompile Include="Eve\EveCamera.cpp"/>
-    <ClCompile Include="Eve\EveCamera_Blue.cpp"/>
-    <ClCompile Include="Eve\EveDistanceField.cpp"/>
-    <ClCompile Include="Eve\EveDistanceField_Blue.cpp"/>
-    <ClCompile Include="Eve\EveDustfieldConstraint.cpp"/>
-    <ClCompile Include="Eve\EveDustfieldConstraint_Blue.cpp"/>
-    <ClCompile Include="Eve\EveEffectRoot2.cpp"/>
-    <ClCompile Include="Eve\EveEffectRoot2_Blue.cpp"/>
-    <ClCompile Include="Eve\EveLensflare.cpp"/>
-    <ClCompile Include="Eve\EveLensflare_Blue.cpp"/>
-    <ClCompile Include="Eve\EveLODHelper.cpp"/>
-    <ClCompile Include="Eve\EveOccluder.cpp"/>
-    <ClCompile Include="Eve\EveOccluder_Blue.cpp"/>
-    <ClCompile Include="Eve\EveParticleDirectForce.cpp"/>
-    <ClCompile Include="Eve\EveParticleDirectForce_Blue.cpp"/>
-    <ClCompile Include="Eve\EveParticleDragForce.cpp"/>
-    <ClCompile Include="Eve\EveParticleDragForce_Blue.cpp"/>
-    <ClCompile Include="Eve\EveParticleSpringAttractor.cpp"/>
-    <ClCompile Include="Eve\EveParticleSpringAttractor_Blue.cpp"/>
-    <ClCompile Include="Eve\EvePlanet.cpp"/>
-    <ClCompile Include="Eve\EvePlanet_Blue.cpp"/>
-    <ClCompile Include="Eve\EveRootTransform.cpp"/>
-    <ClCompile Include="Eve\EveRootTransform_Blue.cpp"/>
-    <ClCompile Include="Eve\EveShip2Builder.cpp"/>
-    <ClCompile Include="Eve\EveShip2Builder_Blue.cpp"/>
-    <ClCompile Include="Eve\EveSpaceScene.cpp"/>
-    <ClCompile Include="Eve\EveSpaceScene_Blue.cpp"/>
-    <ClCompile Include="Eve\EveStarfield.cpp"/>
-    <ClCompile Include="Eve\EveStarfield_Blue.cpp"/>
-    <ClCompile Include="Eve\EveTransform.cpp"/>
-    <ClCompile Include="Eve\EveTransform_Blue.cpp"/>
-    <ClCompile Include="Eve\Animation\EveAnimationData.cpp"/>
-    <ClCompile Include="Eve\Animation\EveAnimationData_Blue.cpp"/>
-    <ClCompile Include="Eve\Animation\EveAnimationSequencer.cpp"/>
-    <ClCompile Include="Eve\Animation\EveAnimationSequencer_Blue.cpp"/>
-    <ClCompile Include="Eve\Animation\EveAnimationState.cpp"/>
-    <ClCompile Include="Eve\Animation\EveAnimationState_Blue.cpp"/>
-    <ClCompile Include="Eve\Renderable\EveMetaball.cpp"/>
-    <ClCompile Include="Eve\Renderable\EveMetaballItem.cpp"/>
-    <ClCompile Include="Eve\Renderable\EveMetaballItem_Blue.cpp"/>
-    <ClCompile Include="Eve\Renderable\EveMetaball_Blue.cpp"/>
-    <ClCompile Include="Eve\Renderable\EveSceneStaticParticles.cpp"/>
-    <ClCompile Include="Eve\Renderable\EveSceneStaticParticles_Blue.cpp"/>
-    <ClCompile Include="Eve\Renderable\Stretch\EveFiringEffectElementContainer.cpp"/>
-    <ClCompile Include="Eve\Renderable\Stretch\EveFiringEffectElementContainer_Blue.cpp"/>
-    <ClCompile Include="Eve\Renderable\Stretch\EveLocalPositionCurve.cpp"/>
-    <ClCompile Include="Eve\Renderable\Stretch\EveLocalPositionCurve_Blue.cpp"/>
-    <ClCompile Include="Eve\Renderable\Stretch\EveRemotePositionCurve.cpp"/>
-    <ClCompile Include="Eve\Renderable\Stretch\EveRemotePositionCurve_Blue.cpp"/>
-    <ClCompile Include="Eve\Renderable\Stretch\EveStretch.cpp"/>
-    <ClCompile Include="Eve\Renderable\Stretch\EveStretch2.cpp"/>
-    <ClCompile Include="Eve\Renderable\Stretch\EveStretch2_Blue.cpp"/>
-    <ClCompile Include="Eve\Renderable\Stretch\EveStretch_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveMissile.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveMissileWarhead.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveMissileWarhead_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveMissile_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveMobile.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveMobile_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveShip2.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveShip2_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveSpaceObject2.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveSpaceObject2_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveStation2.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveStation2_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveSwarm.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\EveSwarm_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\EveBoosterSet2.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\EveBoosterSet2_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\EveImpactOverlay.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\EveImpactOverlay_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\EveMeshOverlayEffect.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\EveMeshOverlayEffect_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\EveSpaceObjectDecal.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\EveSpaceObjectDecal_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\EveTrailsSet.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\EveTrailsSet_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSet.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSetItem.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSetItem_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSet_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSet.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSetItem.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSetItem_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSet_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSet.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSetItem.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSetItem_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSet_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSet.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSetItem.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSetItem_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSet_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildBillboard.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildBillboard_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildBulletStorm.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildBulletStorm_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildCloud.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildCloud_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildContainer.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildContainer_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildExplosion.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildExplosion_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildLink.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildLink_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildMesh.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildMesh_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildParticleSystem.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildParticleSystem_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildQuad.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildQuad_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveChildTransform.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveCloudEditableVolume.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Children\EveCloudEditableVolume_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Utils\EveCustomMask.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Utils\EveCustomMask_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Utils\EveLocator2.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Utils\EveLocator2_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Utils\EveLocatorSets.cpp"/>
-    <ClCompile Include="Eve\SpaceObject\Utils\EveLocatorSets_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObjectFactory\EveSOF.cpp"/>
-    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFData.cpp"/>
-    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFDataMgr.cpp"/>
-    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFDataMgr_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFData_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFDNA.cpp"/>
-    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFDNA_Blue.cpp"/>
-    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFUtils.cpp"/>
-    <ClCompile Include="Eve\SpaceObjectFactory\EveSOF_Blue.cpp"/>
-    <ClCompile Include="Eve\Turret\EveTurretFiringFX.cpp"/>
-    <ClCompile Include="Eve\Turret\EveTurretFiringFX_Blue.cpp"/>
-    <ClCompile Include="Eve\Turret\EveTurretSet.cpp"/>
-    <ClCompile Include="Eve\Turret\EveTurretSet_Blue.cpp"/>
-    <ClCompile Include="Eve\Turret\EveTurretTarget.cpp"/>
-    <ClCompile Include="Eve\Turret\EveTurretTarget_Blue.cpp"/>
-    <ClCompile Include="Eve\UI\EveConnector.cpp"/>
-    <ClCompile Include="Eve\UI\EveConnector_Blue.cpp"/>
-    <ClCompile Include="Eve\UI\EveCurveLineSet.cpp"/>
-    <ClCompile Include="Eve\UI\EveCurveLineSet_Blue.cpp"/>
-    <ClCompile Include="Eve\UI\EveLineContainer.cpp"/>
-    <ClCompile Include="Eve\UI\EveLineContainer_Blue.cpp"/>
-    <ClCompile Include="Eve\UI\EveLineSet.cpp"/>
-    <ClCompile Include="Eve\UI\EveLineSet_Blue.cpp"/>
-    <ClCompile Include="Eve\UI\EveProjectBracket.cpp"/>
-    <ClCompile Include="Eve\UI\EveProjectBracket_Blue.cpp"/>
-    <ClCompile Include="Eve\UI\EveSpherePin.cpp"/>
-    <ClCompile Include="Eve\UI\EveSpherePinIndexTree.cpp"/>
-    <ClCompile Include="Eve\UI\EveSpherePin_Blue.cpp"/>
-    <ClCompile Include="Eve\UI\EveTacticalOverlay.cpp"/>
-    <ClCompile Include="Eve\UI\EveTacticalOverlay_Blue.cpp"/>
-    <ClCompile Include="Eve\UI\EveUiObject.cpp"/>
-    <ClCompile Include="Eve\UI\EveUiObject_Blue.cpp"/>
-    <ClCompile Include="Font\Tr2FontManager.cpp"/>
-    <ClCompile Include="Font\Tr2FontManager_Blue.cpp"/>
-    <ClCompile Include="Font\Tr2FontMeasurer.cpp"/>
-    <ClCompile Include="Font\Tr2FontMeasurer_Blue.cpp"/>
-    <ClCompile Include="Font\Tr2SBit.cpp"/>
-    <ClCompile Include="Font\Tr2Sbit_Blue.cpp"/>
-    <ClCompile Include="Interior\Tr2InteriorLightSet.cpp"/>
-    <ClCompile Include="Interior\Tr2InteriorLightSource.cpp"/>
-    <ClCompile Include="Interior\Tr2InteriorLightSource_Blue.cpp"/>
-    <ClCompile Include="Interior\Tr2InteriorPlaceable.cpp"/>
-    <ClCompile Include="Interior\Tr2InteriorPlaceable_Blue.cpp"/>
-    <ClCompile Include="Interior\Tr2InteriorRenderBatch.cpp"/>
-    <ClCompile Include="Interior\Tr2InteriorScene.cpp"/>
-    <ClCompile Include="Interior\Tr2InteriorScene_Blue.cpp"/>
-    <ClCompile Include="Interior\Tr2IntSkinnedObject.cpp"/>
-    <ClCompile Include="Interior\Tr2IntSkinnedObject_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2CapsuleShapeAttributeGenerator.cpp"/>
-    <ClCompile Include="Particle\Tr2CapsuleShapeAttributeGenerator_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ConsecutiveIntegerAttributeGenerator.cpp"/>
-    <ClCompile Include="Particle\Tr2ConsecutiveIntegerAttributeGenerator_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2DynamicEmitter.cpp"/>
-    <ClCompile Include="Particle\Tr2DynamicEmitter_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ElementBlendConstraint.cpp"/>
-    <ClCompile Include="Particle\Tr2ElementBlendConstraint_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ForceSphereVolume.cpp"/>
-    <ClCompile Include="Particle\Tr2ForceSphereVolume_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2GpuParticleSystem.cpp"/>
-    <ClCompile Include="Particle\Tr2GpuParticleSystem_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2GpuSharedEmitter.cpp"/>
-    <ClCompile Include="Particle\Tr2GpuSharedEmitter_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2GpuUniqueEmitter.cpp"/>
-    <ClCompile Include="Particle\Tr2GpuUniqueEmitter_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleAttractorForce.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleAttractorForce_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleDirectForce.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleDirectForce_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleDragForce.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleDragForce_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleElementDeclaration.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleElementDeclaration_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleFluidDragForce.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleFluidDragForce_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleSpring.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleSpring_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleSystem.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleSystem_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleTurbulenceForce.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleTurbulenceForce_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleVortexForce.cpp"/>
-    <ClCompile Include="Particle\Tr2ParticleVortexForce_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2PlaneConstraint.cpp"/>
-    <ClCompile Include="Particle\Tr2PlaneConstraint_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2RandomDirectionAttributeGenerator.cpp"/>
-    <ClCompile Include="Particle\Tr2RandomDirectionAttributeGenerator_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2RandomIntegerAttributeGenerator.cpp"/>
-    <ClCompile Include="Particle\Tr2RandomIntegerAttributeGenerator_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2RandomUniformAttributeGenerator.cpp"/>
-    <ClCompile Include="Particle\Tr2RandomUniformAttributeGenerator_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2SphereConstraint.cpp"/>
-    <ClCompile Include="Particle\Tr2SphereConstraint_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2SphereShapeAttributeGenerator.cpp"/>
-    <ClCompile Include="Particle\Tr2SphereShapeAttributeGenerator_Blue.cpp"/>
-    <ClCompile Include="Particle\Tr2StaticEmitter.cpp"/>
-    <ClCompile Include="Particle\Tr2StaticEmitter_Blue.cpp"/>
-    <ClCompile Include="RenderJob\Tr2RenderJobs.cpp"/>
-    <ClCompile Include="RenderJob\Tr2RenderJobs_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriRenderJob.cpp"/>
-    <ClCompile Include="RenderJob\TriRenderJob_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriRenderStep.cpp"/>
-    <ClCompile Include="RenderJob\TriRenderStep_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepClear.cpp"/>
-    <ClCompile Include="RenderJob\TriStepClearUav.cpp"/>
-    <ClCompile Include="RenderJob\TriStepClearUav_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepClear_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepCopyRenderTarget.cpp"/>
-    <ClCompile Include="RenderJob\TriStepCopyRenderTarget_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepEnableWireframeMode.cpp"/>
-    <ClCompile Include="RenderJob\TriStepEnableWireframeMode_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepFilterVisibilityResults.cpp"/>
-    <ClCompile Include="RenderJob\TriStepFilterVisibilityResults_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepGenerateMipMaps.cpp"/>
-    <ClCompile Include="RenderJob\TriStepGenerateMipMaps_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPopDepthStencil.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPopDepthStencil_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPopProjection.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPopProjection_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPopRenderTarget.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPopRenderTarget_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPopViewport.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPopViewport_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPopViewTransform.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPopViewTransform_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPresentSwapChain.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPresentSwapChain_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPushDepthStencil.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPushDepthStencil_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPushProjection.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPushProjection_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPushRenderTarget.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPushRenderTarget_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPushViewport.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPushViewport_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPushViewTransform.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPushViewTransform_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPythonCB.cpp"/>
-    <ClCompile Include="RenderJob\TriStepPythonCB_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRemoteSync.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRemoteSync_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRemoteUpdate.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRemoteUpdate_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderAtlas.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderAtlas_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderCubeMap.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderCubeMap_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderDebug.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderDebug_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderEffect.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderEffect_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderFps.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderFps_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderFullScreenShader.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderFullScreenShader_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderLineGraph.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderLineGraph_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderObject.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderObject_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderPass.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderPass_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderScene.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderSceneDebug.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderSceneDebug_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderScene_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderTexture.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRenderTexture_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepResolve.cpp"/>
-    <ClCompile Include="RenderJob\TriStepResolve_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRunComputeShader.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRunComputeShader_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRunJob.cpp"/>
-    <ClCompile Include="RenderJob\TriStepRunJob_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetDebugRenderer.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetDebugRenderer_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetDepthStencil.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetDepthStencil_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetProjection.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetProjection_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetRenderState.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetRenderState_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetRenderTarget.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetRenderTarget_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetStandardRenderStates.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetStandardRenderStates_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetVariableStore.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetVariableStore_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetView.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetViewport.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetViewport_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetView_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetVisibilityResults.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetVisibilityResults_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetVisualizationMode.cpp"/>
-    <ClCompile Include="RenderJob\TriStepSetVisualizationMode_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepTestBlocking.cpp"/>
-    <ClCompile Include="RenderJob\TriStepTestBlocking_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepToggleCubemap.cpp"/>
-    <ClCompile Include="RenderJob\TriStepToggleCubemap_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepUpdate.cpp"/>
-    <ClCompile Include="RenderJob\TriStepUpdate_Blue.cpp"/>
-    <ClCompile Include="RenderJob\TriStepVisibilityQuery.cpp"/>
-    <ClCompile Include="RenderJob\TriStepVisibilityQuery_Blue.cpp"/>
-    <ClCompile Include="Resources\Tr2AsyncSave.cpp"/>
-    <ClCompile Include="Resources\Tr2EffectRes.cpp"/>
-    <ClCompile Include="Resources\Tr2EffectRes_Blue.cpp"/>
-    <ClCompile Include="Resources\Tr2ImageRes.cpp"/>
-    <ClCompile Include="Resources\Tr2ImageRes_Blue.cpp"/>
-    <ClCompile Include="Resources\Tr2LodResource.cpp"/>
-    <ClCompile Include="Resources\Tr2LodResource_Blue.cpp"/>
-    <ClCompile Include="Resources\Tr2MaterialRes.cpp"/>
-    <ClCompile Include="Resources\Tr2MaterialRes_Blue.cpp"/>
-    <ClCompile Include="Resources\TriGeometryRes.cpp"/>
-    <ClCompile Include="Resources\TriGeometryRes_Blue.cpp"/>
-    <ClCompile Include="Resources\TriGrannyRes.cpp"/>
-    <ClCompile Include="Resources\TriGrannyRes_Blue.cpp"/>
-    <ClCompile Include="Resources\TriTextureRes.cpp"/>
-    <ClCompile Include="Resources\TriTextureRes_Blue.cpp"/>
-    <ClCompile Include="Shader\Tr2Effect.cpp"/>
-    <ClCompile Include="Shader\Tr2EffectDescription.cpp"/>
-    <ClCompile Include="Shader\Tr2EffectStateManager.cpp"/>
-    <ClCompile Include="Shader\Tr2Effect_Blue.cpp"/>
-    <ClCompile Include="Shader\Tr2Material.cpp"/>
-    <ClCompile Include="Shader\Tr2Material_Blue.cpp"/>
-    <ClCompile Include="Shader\Tr2Shader.cpp"/>
-    <ClCompile Include="Shader\Tr2ShaderBuffer.cpp"/>
-    <ClCompile Include="Shader\Tr2ShaderBuffer_Blue.cpp"/>
-    <ClCompile Include="Shader\Tr2Shader_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2FloatParameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2FloatParameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2GeometryBufferParameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2GeometryBufferParameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2Matrix4Parameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2Matrix4Parameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2Texture2dLodParameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2Texture2dLodParameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2Vector2Parameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2Vector2Parameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2Vector3Parameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2Vector3Parameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2Vector4Parameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\Tr2Vector4Parameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\TriFloatArrayParameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\TriFloatArrayParameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\TriTextureParameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\TriTextureParameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\TriTransformParameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\TriTransformParameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Parameter\TriVariableParameter.cpp"/>
-    <ClCompile Include="Shader\Parameter\TriVariableParameter_Blue.cpp"/>
-    <ClCompile Include="Shader\Utils\Tr2DataTextureManager.cpp"/>
-    <ClCompile Include="Shader\Utils\Tr2DataTextureManager_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2d.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dArc.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dArc_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dContainer.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dContainer_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dDisplayList.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dFrame.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dFrame_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dLayer.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dLayer_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dLine.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dLineTrace.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dLineTrace_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dLine_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dPolygon.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dPolygon_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dRenderJob.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dRenderJob_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dScene.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dScene_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dStretch.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dStretchVertical.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dStretchVertical_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dStretch_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dTextObject.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dTextObject_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dTexture.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dTexture_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dTransform.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2dTransform_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2Sprite2d_Blue.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2SpriteObject.cpp"/>
-    <ClCompile Include="Sprite2d\Tr2SpriteObject_Blue.cpp"/>
-    <ClCompile Include="UI\App.cpp"/>
-    <ClCompile Include="UI\App9.cpp"/>
-    <ClCompile Include="UI\AppOrbis.cpp"/>
-    <ClCompile Include="UI\AppPosix.cpp"/>
-    <ClCompile Include="UI\App_Blue.cpp"/>
-    <ClCompile Include="UI\Scancodes.cpp"/>
-    <ClCompile Include="UI\Tr2MouseCursor.cpp"/>
-    <ClCompile Include="UI\Tr2MouseCursor_Blue.cpp"/>
-    <ClCompile Include="UI\Tr2PresentParameters.cpp"/>
-    <ClCompile Include="UI\Tr2PresentParameters_Blue.cpp"/>
-    <ClCompile Include="UI\Tr2SecondaryWindow.cpp"/>
-    <ClCompile Include="UI\Tr2SecondaryWindow_Blue.cpp"/>
-    <ClCompile Include="UI\UIChoosers.cpp"/>
-    <ClCompile Include="UI\WindowIcon.cpp"/>
-    <ClCompile Include="Utilities\BoundingBox.cpp"/>
-    <ClCompile Include="Utilities\BoundingSphere.cpp"/>
-    <ClCompile Include="Utilities\GeometryUtils.cpp"/>
-    <ClCompile Include="Utilities\MatrixUtils.cpp"/>
-    <ClCompile Include="Utilities\Obb.cpp"/>
-    <ClCompile Include="Wod\WodBakingScene.cpp"/>
-    <ClCompile Include="Wod\WodBakingScene_Blue.cpp"/>
-    <ClCompile Include="Wod\WodPlaceableRes.cpp"/>
-    <ClCompile Include="Wod\WodPlaceableRes_Blue.cpp"/>
+    <ClCompile Include="Tr2AtlasTexture.cpp" />
+    <ClCompile Include="Tr2AtlasTexture_Blue.cpp" />
+    <ClCompile Include="Tr2BindingVector3_Blue.cpp" />
+    <ClCompile Include="Tr2Blitter.cpp" />
+    <ClCompile Include="Tr2BoundingLineSet.cpp" />
+    <ClCompile Include="Tr2BoundingLineSet_Blue.cpp" />
+    <ClCompile Include="Tr2CapturedBuffer.cpp" />
+    <ClCompile Include="Tr2CapturedBuffer_Blue.cpp" />
+    <ClCompile Include="Tr2ConstantBufferFormats.cpp" />
+    <ClCompile Include="Tr2ConstGeometry.cpp" />
+    <ClCompile Include="Tr2CpuSkinnedModel.cpp" />
+    <ClCompile Include="Tr2CpuSkinnedModel_Blue.cpp" />
+    <ClCompile Include="Tr2CurveLineSet.cpp" />
+    <ClCompile Include="Tr2CurveLineSet_Blue.cpp" />
+    <ClCompile Include="Tr2DebugRenderer.cpp" />
+    <ClCompile Include="Tr2DebugRenderer_Blue.cpp" />
+    <ClCompile Include="Tr2DepthStencil.cpp" />
+    <ClCompile Include="Tr2DepthStencil_Blue.cpp" />
+    <ClCompile Include="Tr2DeviceResource.cpp" />
+    <ClCompile Include="Tr2DxtCompressor.cpp" />
+    <ClCompile Include="Tr2DxtCompressor_Blue.cpp" />
+    <ClCompile Include="Tr2DynamicMesh.cpp" />
+    <ClCompile Include="Tr2DynamicMesh_Blue.cpp" />
+    <ClCompile Include="Tr2DynamicRingBuffer.cpp" />
+    <ClCompile Include="Tr2ExternalParameter.cpp" />
+    <ClCompile Include="Tr2ExternalParameter_Blue.cpp" />
+    <ClCompile Include="Tr2FileExportInfo.cpp" />
+    <ClCompile Include="Tr2FileExportInfo_Blue.cpp" />
+    <ClCompile Include="Tr2GpuBuffer.cpp" />
+    <ClCompile Include="Tr2GpuBufferAlias.cpp" />
+    <ClCompile Include="Tr2GpuBufferAlias_Blue.cpp" />
+    <ClCompile Include="Tr2GpuBuffer_Blue.cpp" />
+    <ClCompile Include="Tr2GpuStructuredBuffer.cpp" />
+    <ClCompile Include="Tr2GpuStructuredBuffer_Blue.cpp" />
+    <ClCompile Include="Tr2GrannyAnimation.cpp" />
+    <ClCompile Include="Tr2GrannyAnimationLayer.cpp" />
+    <ClCompile Include="Tr2GrannyAnimation_Blue.cpp" />
+    <ClCompile Include="Tr2GrannyPrimitiveSet.cpp" />
+    <ClCompile Include="Tr2GrannyPrimitiveSet_Blue.cpp" />
+    <ClCompile Include="Tr2GRNMemoryPersist.cpp" />
+    <ClCompile Include="Tr2HostBitmap.cpp" />
+    <ClCompile Include="Tr2HostBitmap_Blue.cpp" />
+    <ClCompile Include="Tr2ImageIOHelpers.cpp" />
+    <ClCompile Include="Tr2ImpostorManager.cpp" />
+    <ClCompile Include="Tr2ImpostorManager_Blue.cpp" />
+    <ClCompile Include="Tr2InstancedMesh.cpp" />
+    <ClCompile Include="Tr2InstancedMesh_Blue.cpp" />
+    <ClCompile Include="Tr2KelvinColor.cpp" />
+    <ClCompile Include="Tr2KelvinColor_Blue.cpp" />
+    <ClCompile Include="Tr2LabelTextParser.cpp" />
+    <ClCompile Include="Tr2LightManager.cpp" />
+    <ClCompile Include="Tr2LineGraph.cpp" />
+    <ClCompile Include="Tr2LineGraph_Blue.cpp" />
+    <ClCompile Include="Tr2LineSet.cpp" />
+    <ClCompile Include="Tr2LineSet_Blue.cpp" />
+    <ClCompile Include="Tr2ManipulationTool.cpp" />
+    <ClCompile Include="Tr2ManipulationTool_Blue.cpp" />
+    <ClCompile Include="Tr2MaterialParameterStore.cpp" />
+    <ClCompile Include="Tr2MaterialParameterStore_Blue.cpp" />
+    <ClCompile Include="Tr2Mesh.cpp" />
+    <ClCompile Include="Tr2MeshArea.cpp" />
+    <ClCompile Include="Tr2MeshArea_Blue.cpp" />
+    <ClCompile Include="Tr2MeshBase.cpp" />
+    <ClCompile Include="Tr2MeshBase_Blue.cpp" />
+    <ClCompile Include="Tr2MeshLod.cpp" />
+    <ClCompile Include="Tr2MeshLod_Blue.cpp" />
+    <ClCompile Include="Tr2Mesh_Blue.cpp" />
+    <ClCompile Include="Tr2Model.cpp" />
+    <ClCompile Include="Tr2Model_Blue.cpp" />
+    <ClCompile Include="Tr2NamedPipeListener.cpp" />
+    <ClCompile Include="Tr2NamedPipeListener_Blue.cpp" />
+    <ClCompile Include="Tr2PerObjectData.cpp" />
+    <ClCompile Include="Tr2PickBuffer.cpp" />
+    <ClCompile Include="Tr2PointLight.cpp" />
+    <ClCompile Include="Tr2PointLight_Blue.cpp" />
+    <ClCompile Include="Tr2PostProcess.cpp" />
+    <ClCompile Include="Tr2PostProcess_Blue.cpp" />
+    <ClCompile Include="Tr2PrimitiveScene.cpp" />
+    <ClCompile Include="Tr2PrimitiveScene_Blue.cpp" />
+    <ClCompile Include="Tr2PrimitiveSet.cpp" />
+    <ClCompile Include="Tr2PrimitiveSet_Blue.cpp" />
+    <ClCompile Include="Tr2PrimitiveText.cpp" />
+    <ClCompile Include="Tr2PrimitiveText_Blue.cpp" />
+    <ClCompile Include="Tr2ProjectBoundingBoxBracket.cpp" />
+    <ClCompile Include="Tr2ProjectBoundingBoxBracket_Blue.cpp" />
+    <ClCompile Include="Tr2PushPopDS.cpp" />
+    <ClCompile Include="Tr2PushPopRT.cpp" />
+    <ClCompile Include="Tr2PyValueBinding.cpp" />
+    <ClCompile Include="Tr2PyValueBinding_Blue.cpp" />
+    <ClCompile Include="Tr2QuadRenderer.cpp" />
+    <ClCompile Include="Tr2QuadRenderer_Blue.cpp" />
+    <ClCompile Include="Tr2RenderContext.cpp" />
+    <ClCompile Include="Tr2RenderContext_Blue.cpp" />
+    <ClCompile Include="Tr2Renderer.cpp" />
+    <ClCompile Include="Tr2Renderer_Blue.cpp" />
+    <ClCompile Include="Tr2RenderTarget.cpp" />
+    <ClCompile Include="Tr2RenderTargetGrabber.cpp" />
+    <ClCompile Include="Tr2RenderTargetGrabber_Blue.cpp" />
+    <ClCompile Include="Tr2RenderTarget_Blue.cpp" />
+    <ClCompile Include="Tr2RenderUtils.cpp" />
+    <ClCompile Include="Tr2RotationTool.cpp" />
+    <ClCompile Include="Tr2RotationTool_Blue.cpp" />
+    <ClCompile Include="Tr2RuntimeInstanceData.cpp" />
+    <ClCompile Include="Tr2RuntimeInstanceData_Blue.cpp" />
+    <ClCompile Include="Tr2ScalingTool.cpp" />
+    <ClCompile Include="Tr2ScalingTool_Blue.cpp" />
+    <ClCompile Include="Tr2ShLightingManager.cpp" />
+    <ClCompile Include="Tr2ShLightingManager_Blue.cpp" />
+    <ClCompile Include="Tr2SHProbeRes.cpp" />
+    <ClCompile Include="Tr2SHProbeRes_Blue.cpp" />
+    <ClCompile Include="Tr2SkinnedModel.cpp" />
+    <ClCompile Include="Tr2SkinnedModel_Blue.cpp" />
+    <ClCompile Include="Tr2SkinnedObject.cpp" />
+    <ClCompile Include="Tr2SkinnedObjectLOD.cpp" />
+    <ClCompile Include="Tr2SkinnedObject_Blue.cpp" />
+    <ClCompile Include="Tr2SolidSet.cpp" />
+    <ClCompile Include="Tr2SolidSet_Blue.cpp" />
+    <ClCompile Include="Tr2StreamingBitmapSaver.cpp" />
+    <ClCompile Include="Tr2StreamingBitmapSaver_Blue.cpp" />
+    <ClCompile Include="Tr2SwapChain.cpp" />
+    <ClCompile Include="Tr2SwapChain_Blue.cpp" />
+    <ClCompile Include="Tr2TextureAtlas.cpp" />
+    <ClCompile Include="Tr2TextureAtlasMan.cpp" />
+    <ClCompile Include="Tr2TextureAtlasMan_Blue.cpp" />
+    <ClCompile Include="Tr2TextureAtlas_Blue.cpp" />
+    <ClCompile Include="Tr2TextureReference.cpp" />
+    <ClCompile Include="Tr2TextureReference_Blue.cpp" />
+    <ClCompile Include="Tr2Transform.cpp" />
+    <ClCompile Include="Tr2Transform_Blue.cpp" />
+    <ClCompile Include="Tr2TranslationTool.cpp" />
+    <ClCompile Include="Tr2TranslationTool_Blue.cpp" />
+    <ClCompile Include="Tr2VariableStore.cpp" />
+    <ClCompile Include="Tr2VariableStore_Blue.cpp" />
+    <ClCompile Include="Tr2VertexDefinitionUtilities.cpp" />
+    <ClCompile Include="Tr2VideoAdapters.cpp" />
+    <ClCompile Include="Tr2VideoAdapters_Blue.cpp" />
+    <ClCompile Include="Tr2VisibilityResults.cpp" />
+    <ClCompile Include="Tr2VisibilityResults_Blue.cpp" />
+    <ClCompile Include="TriColor.cpp" />
+    <ClCompile Include="TriColor_Blue.cpp" />
+    <ClCompile Include="TriConstants.cpp" />
+    <ClCompile Include="TriDebugResourceHelper.cpp" />
+    <ClCompile Include="TriDebugTextRenderer.cpp" />
+    <ClCompile Include="TriDevice.cpp" />
+    <ClCompile Include="TriDevice11.cpp" />
+    <ClCompile Include="TriDevice9.cpp" />
+    <ClCompile Include="TriDeviceGLES2.cpp" />
+    <ClCompile Include="TriDeviceOrbis.cpp" />
+    <ClCompile Include="TriDeviceStub.cpp" />
+    <ClCompile Include="TriDevice_Blue.cpp" />
+    <ClCompile Include="TriDirect3D.cpp" />
+    <ClCompile Include="TriError.cpp" />
+    <ClCompile Include="TriFloat.cpp" />
+    <ClCompile Include="TriFloat_Blue.cpp" />
+    <ClCompile Include="TriFrustum.cpp" />
+    <ClCompile Include="TriFrustumOrtho.cpp" />
+    <ClCompile Include="TriLineSet.cpp" />
+    <ClCompile Include="TriLineSet_Blue.cpp" />
+    <ClCompile Include="TriMath.cpp" />
+    <ClCompile Include="TriMatrix.cpp" />
+    <ClCompile Include="TriMatrix_Blue.cpp" />
+    <ClCompile Include="trinity.cpp" />
+    <ClCompile Include="TriObserverLocal.cpp" />
+    <ClCompile Include="TriObserverLocal_Blue.cpp" />
+    <ClCompile Include="TriPoolAllocator.cpp" />
+    <ClCompile Include="TriProjection.cpp" />
+    <ClCompile Include="TriProjection_Blue.cpp" />
+    <ClCompile Include="TriPythonContext.cpp" />
+    <ClCompile Include="TriPythonThunkers.cpp" />
+    <ClCompile Include="TriQuaternion.cpp" />
+    <ClCompile Include="TriQuaternion_Blue.cpp" />
+    <ClCompile Include="TriRect.cpp" />
+    <ClCompile Include="TriRect_Blue.cpp" />
+    <ClCompile Include="TriRenderBatch.cpp" />
+    <ClCompile Include="TriRigidOrientation.cpp" />
+    <ClCompile Include="TriRigidOrientation_Blue.cpp" />
+    <ClCompile Include="TriSequencer.cpp" />
+    <ClCompile Include="TriSequencer_Blue.cpp" />
+    <ClCompile Include="TriSettings_Blue.cpp" />
+    <ClCompile Include="TriShadowMap.cpp" />
+    <ClCompile Include="TriShadowMap_Blue.cpp" />
+    <ClCompile Include="TriUtil.cpp" />
+    <ClCompile Include="TriValueBinding.cpp" />
+    <ClCompile Include="TriValueBinding_Blue.cpp" />
+    <ClCompile Include="TriVariable.cpp" />
+    <ClCompile Include="TriVector.cpp" />
+    <ClCompile Include="TriVector_Blue.cpp" />
+    <ClCompile Include="TriView.cpp" />
+    <ClCompile Include="TriViewport_Blue.cpp" />
+    <ClCompile Include="TriView_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2BoneMatrixCurve.cpp" />
+    <ClCompile Include="Curves\Tr2BoneMatrixCurve_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveColor.cpp" />
+    <ClCompile Include="Curves\Tr2CurveColor_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveConstant.cpp" />
+    <ClCompile Include="Curves\Tr2CurveConstant_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveEulerRotation.cpp" />
+    <ClCompile Include="Curves\Tr2CurveEulerRotationExpression.cpp" />
+    <ClCompile Include="Curves\Tr2CurveEulerRotationExpression_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveEulerRotation_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveQuaternion.cpp" />
+    <ClCompile Include="Curves\Tr2CurveQuaternion_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveRandomAxisRotation.cpp" />
+    <ClCompile Include="Curves\Tr2CurveRandomAxisRotation_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveScalar.cpp" />
+    <ClCompile Include="Curves\Tr2CurveScalarExpression.cpp" />
+    <ClCompile Include="Curves\Tr2CurveScalarExpression_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveScalar_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveVector2.cpp" />
+    <ClCompile Include="Curves\Tr2CurveVector2_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveVector3.cpp" />
+    <ClCompile Include="Curves\Tr2CurveVector3Expression.cpp" />
+    <ClCompile Include="Curves\Tr2CurveVector3Expression_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2CurveVector3_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2DistanceTracker.cpp" />
+    <ClCompile Include="Curves\Tr2DistanceTracker_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2GrannyEventTrack.cpp" />
+    <ClCompile Include="Curves\Tr2GrannyEventTrack_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2GrannyTrack.cpp" />
+    <ClCompile Include="Curves\Tr2GrannyTrack_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2GrannyTransformTrack.cpp" />
+    <ClCompile Include="Curves\Tr2GrannyTransformTrack_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2GrannyVector3Curve.cpp" />
+    <ClCompile Include="Curves\Tr2GrannyVector3Curve_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2GrannyVectorTrack.cpp" />
+    <ClCompile Include="Curves\Tr2GrannyVectorTrack_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2QuaternionLerpCurve.cpp" />
+    <ClCompile Include="Curves\Tr2QuaternionLerpCurve_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2RotationAdapter.cpp" />
+    <ClCompile Include="Curves\Tr2RotationAdapter_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2ScalarExprKeyCurve.cpp" />
+    <ClCompile Include="Curves\Tr2ScalarExprKeyCurve_Blue.cpp" />
+    <ClCompile Include="Curves\Tr2TranslationAdapter.cpp" />
+    <ClCompile Include="Curves\Tr2TranslationAdapter_Blue.cpp" />
+    <ClCompile Include="Curves\TriCurveSet.cpp" />
+    <ClCompile Include="Curves\TriCurveSet_Blue.cpp" />
+    <ClCompile Include="Curves\TriEventCurve.cpp" />
+    <ClCompile Include="Curves\TriEventCurve_Blue.cpp" />
+    <ClCompile Include="Curves\TriEventKey.cpp" />
+    <ClCompile Include="Curves\TriEventKey_Blue.cpp" />
+    <ClCompile Include="Curves\Fader\Tr2ScalarFader.cpp" />
+    <ClCompile Include="Curves\Fader\Tr2ScalarFader_Blue.cpp" />
+    <ClCompile Include="Eve\EveCamera.cpp" />
+    <ClCompile Include="Eve\EveCamera_Blue.cpp" />
+    <ClCompile Include="Eve\EveDistanceField.cpp" />
+    <ClCompile Include="Eve\EveDistanceField_Blue.cpp" />
+    <ClCompile Include="Eve\EveDustfieldConstraint.cpp" />
+    <ClCompile Include="Eve\EveDustfieldConstraint_Blue.cpp" />
+    <ClCompile Include="Eve\EveEffectRoot2.cpp" />
+    <ClCompile Include="Eve\EveEffectRoot2_Blue.cpp" />
+    <ClCompile Include="Eve\EveLensflare.cpp" />
+    <ClCompile Include="Eve\EveLensflare_Blue.cpp" />
+    <ClCompile Include="Eve\EveLODHelper.cpp" />
+    <ClCompile Include="Eve\EveOccluder.cpp" />
+    <ClCompile Include="Eve\EveOccluder_Blue.cpp" />
+    <ClCompile Include="Eve\EveParticleDirectForce.cpp" />
+    <ClCompile Include="Eve\EveParticleDirectForce_Blue.cpp" />
+    <ClCompile Include="Eve\EveParticleDragForce.cpp" />
+    <ClCompile Include="Eve\EveParticleDragForce_Blue.cpp" />
+    <ClCompile Include="Eve\EveParticleSpringAttractor.cpp" />
+    <ClCompile Include="Eve\EveParticleSpringAttractor_Blue.cpp" />
+    <ClCompile Include="Eve\EvePlanet.cpp" />
+    <ClCompile Include="Eve\EvePlanet_Blue.cpp" />
+    <ClCompile Include="Eve\EveRootTransform.cpp" />
+    <ClCompile Include="Eve\EveRootTransform_Blue.cpp" />
+    <ClCompile Include="Eve\EveShip2Builder.cpp" />
+    <ClCompile Include="Eve\EveShip2Builder_Blue.cpp" />
+    <ClCompile Include="Eve\EveSpaceScene.cpp" />
+    <ClCompile Include="Eve\EveSpaceScene_Blue.cpp" />
+    <ClCompile Include="Eve\EveStarfield.cpp" />
+    <ClCompile Include="Eve\EveStarfield_Blue.cpp" />
+    <ClCompile Include="Eve\EveTransform.cpp" />
+    <ClCompile Include="Eve\EveTransform_Blue.cpp" />
+    <ClCompile Include="Eve\Animation\EveAnimationData.cpp" />
+    <ClCompile Include="Eve\Animation\EveAnimationData_Blue.cpp" />
+    <ClCompile Include="Eve\Animation\EveAnimationSequencer.cpp" />
+    <ClCompile Include="Eve\Animation\EveAnimationSequencer_Blue.cpp" />
+    <ClCompile Include="Eve\Animation\EveAnimationState.cpp" />
+    <ClCompile Include="Eve\Animation\EveAnimationState_Blue.cpp" />
+    <ClCompile Include="Eve\Renderable\EveMetaball.cpp" />
+    <ClCompile Include="Eve\Renderable\EveMetaballItem.cpp" />
+    <ClCompile Include="Eve\Renderable\EveMetaballItem_Blue.cpp" />
+    <ClCompile Include="Eve\Renderable\EveMetaball_Blue.cpp" />
+    <ClCompile Include="Eve\Renderable\EveSceneStaticParticles.cpp" />
+    <ClCompile Include="Eve\Renderable\EveSceneStaticParticles_Blue.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveFiringEffectElementContainer.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveFiringEffectElementContainer_Blue.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveLocalPositionCurve.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveLocalPositionCurve_Blue.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveRemotePositionCurve.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveRemotePositionCurve_Blue.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveStretch.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveStretch2.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveStretch2_Blue.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveStretch_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveMissile.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveMissileWarhead.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveMissileWarhead_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveMissile_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveMobile.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveMobile_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveShip2.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveShip2_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveSpaceObject2.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveSpaceObject2_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveStation2.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveStation2_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveSwarm.cpp" />
+    <ClCompile Include="Eve\SpaceObject\EveSwarm_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveBoosterSet2.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveBoosterSet2_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveImpactOverlay.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveImpactOverlay_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveMeshOverlayEffect.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveMeshOverlayEffect_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveSpaceObjectDecal.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveSpaceObjectDecal_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveTrailsSet.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\EveTrailsSet_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSet.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSetItem.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSetItem_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSet_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSet.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSetItem.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSetItem_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSet_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSet.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSetItem.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSetItem_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteLineSet_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSet.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSetItem.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSetItem_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSet_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildBillboard.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildBillboard_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildBulletStorm.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildBulletStorm_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildCloud.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildCloud_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildContainer.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildContainer_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildExplosion.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildExplosion_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildLink.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildLink_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildMesh.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildMesh_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildParticleSystem.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildParticleSystem_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildQuad.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildQuad_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildTransform.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveCloudEditableVolume.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveCloudEditableVolume_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Utils\EveCustomMask.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Utils\EveCustomMask_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Utils\EveLocator2.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Utils\EveLocator2_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Utils\EveLocatorSets.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Utils\EveLocatorSets_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObjectFactory\EveSOF.cpp" />
+    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFData.cpp" />
+    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFDataMgr.cpp" />
+    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFDataMgr_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFData_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFDNA.cpp" />
+    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFDNA_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObjectFactory\EveSOFUtils.cpp" />
+    <ClCompile Include="Eve\SpaceObjectFactory\EveSOF_Blue.cpp" />
+    <ClCompile Include="Eve\Turret\EveTurretFiringFX.cpp" />
+    <ClCompile Include="Eve\Turret\EveTurretFiringFX_Blue.cpp" />
+    <ClCompile Include="Eve\Turret\EveTurretSet.cpp" />
+    <ClCompile Include="Eve\Turret\EveTurretSet_Blue.cpp" />
+    <ClCompile Include="Eve\Turret\EveTurretTarget.cpp" />
+    <ClCompile Include="Eve\Turret\EveTurretTarget_Blue.cpp" />
+    <ClCompile Include="Eve\UI\EveConnector.cpp" />
+    <ClCompile Include="Eve\UI\EveConnector_Blue.cpp" />
+    <ClCompile Include="Eve\UI\EveCurveLineSet.cpp" />
+    <ClCompile Include="Eve\UI\EveCurveLineSet_Blue.cpp" />
+    <ClCompile Include="Eve\UI\EveLineContainer.cpp" />
+    <ClCompile Include="Eve\UI\EveLineContainer_Blue.cpp" />
+    <ClCompile Include="Eve\UI\EveLineSet.cpp" />
+    <ClCompile Include="Eve\UI\EveLineSet_Blue.cpp" />
+    <ClCompile Include="Eve\UI\EveProjectBracket.cpp" />
+    <ClCompile Include="Eve\UI\EveProjectBracket_Blue.cpp" />
+    <ClCompile Include="Eve\UI\EveSpherePin.cpp" />
+    <ClCompile Include="Eve\UI\EveSpherePinIndexTree.cpp" />
+    <ClCompile Include="Eve\UI\EveSpherePin_Blue.cpp" />
+    <ClCompile Include="Eve\UI\EveTacticalOverlay.cpp" />
+    <ClCompile Include="Eve\UI\EveTacticalOverlay_Blue.cpp" />
+    <ClCompile Include="Eve\UI\EveUiObject.cpp" />
+    <ClCompile Include="Eve\UI\EveUiObject_Blue.cpp" />
+    <ClCompile Include="Font\Tr2FontManager.cpp" />
+    <ClCompile Include="Font\Tr2FontManager_Blue.cpp" />
+    <ClCompile Include="Font\Tr2FontMeasurer.cpp" />
+    <ClCompile Include="Font\Tr2FontMeasurer_Blue.cpp" />
+    <ClCompile Include="Font\Tr2SBit.cpp" />
+    <ClCompile Include="Font\Tr2Sbit_Blue.cpp" />
+    <ClCompile Include="Interior\Tr2InteriorLightSet.cpp" />
+    <ClCompile Include="Interior\Tr2InteriorLightSource.cpp" />
+    <ClCompile Include="Interior\Tr2InteriorLightSource_Blue.cpp" />
+    <ClCompile Include="Interior\Tr2InteriorPlaceable.cpp" />
+    <ClCompile Include="Interior\Tr2InteriorPlaceable_Blue.cpp" />
+    <ClCompile Include="Interior\Tr2InteriorRenderBatch.cpp" />
+    <ClCompile Include="Interior\Tr2InteriorScene.cpp" />
+    <ClCompile Include="Interior\Tr2InteriorScene_Blue.cpp" />
+    <ClCompile Include="Interior\Tr2IntSkinnedObject.cpp" />
+    <ClCompile Include="Interior\Tr2IntSkinnedObject_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2CapsuleShapeAttributeGenerator.cpp" />
+    <ClCompile Include="Particle\Tr2CapsuleShapeAttributeGenerator_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ConsecutiveIntegerAttributeGenerator.cpp" />
+    <ClCompile Include="Particle\Tr2ConsecutiveIntegerAttributeGenerator_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2DynamicEmitter.cpp" />
+    <ClCompile Include="Particle\Tr2DynamicEmitter_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ElementBlendConstraint.cpp" />
+    <ClCompile Include="Particle\Tr2ElementBlendConstraint_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ForceSphereVolume.cpp" />
+    <ClCompile Include="Particle\Tr2ForceSphereVolume_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2GpuParticleSystem.cpp" />
+    <ClCompile Include="Particle\Tr2GpuParticleSystem_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2GpuSharedEmitter.cpp" />
+    <ClCompile Include="Particle\Tr2GpuSharedEmitter_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2GpuUniqueEmitter.cpp" />
+    <ClCompile Include="Particle\Tr2GpuUniqueEmitter_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleAttractorForce.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleAttractorForce_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleDirectForce.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleDirectForce_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleDragForce.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleDragForce_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleElementDeclaration.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleElementDeclaration_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleFluidDragForce.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleFluidDragForce_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleSpring.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleSpring_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleSystem.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleSystem_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleTurbulenceForce.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleTurbulenceForce_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleVortexForce.cpp" />
+    <ClCompile Include="Particle\Tr2ParticleVortexForce_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2PlaneConstraint.cpp" />
+    <ClCompile Include="Particle\Tr2PlaneConstraint_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2RandomDirectionAttributeGenerator.cpp" />
+    <ClCompile Include="Particle\Tr2RandomDirectionAttributeGenerator_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2RandomIntegerAttributeGenerator.cpp" />
+    <ClCompile Include="Particle\Tr2RandomIntegerAttributeGenerator_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2RandomUniformAttributeGenerator.cpp" />
+    <ClCompile Include="Particle\Tr2RandomUniformAttributeGenerator_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2SphereConstraint.cpp" />
+    <ClCompile Include="Particle\Tr2SphereConstraint_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2SphereShapeAttributeGenerator.cpp" />
+    <ClCompile Include="Particle\Tr2SphereShapeAttributeGenerator_Blue.cpp" />
+    <ClCompile Include="Particle\Tr2StaticEmitter.cpp" />
+    <ClCompile Include="Particle\Tr2StaticEmitter_Blue.cpp" />
+    <ClCompile Include="RenderJob\Tr2RenderJobs.cpp" />
+    <ClCompile Include="RenderJob\Tr2RenderJobs_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriRenderJob.cpp" />
+    <ClCompile Include="RenderJob\TriRenderJob_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriRenderStep.cpp" />
+    <ClCompile Include="RenderJob\TriRenderStep_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepClear.cpp" />
+    <ClCompile Include="RenderJob\TriStepClearUav.cpp" />
+    <ClCompile Include="RenderJob\TriStepClearUav_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepClear_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepCopyRenderTarget.cpp" />
+    <ClCompile Include="RenderJob\TriStepCopyRenderTarget_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepEnableWireframeMode.cpp" />
+    <ClCompile Include="RenderJob\TriStepEnableWireframeMode_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepFilterVisibilityResults.cpp" />
+    <ClCompile Include="RenderJob\TriStepFilterVisibilityResults_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepGenerateMipMaps.cpp" />
+    <ClCompile Include="RenderJob\TriStepGenerateMipMaps_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPopDepthStencil.cpp" />
+    <ClCompile Include="RenderJob\TriStepPopDepthStencil_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPopProjection.cpp" />
+    <ClCompile Include="RenderJob\TriStepPopProjection_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPopRenderTarget.cpp" />
+    <ClCompile Include="RenderJob\TriStepPopRenderTarget_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPopViewport.cpp" />
+    <ClCompile Include="RenderJob\TriStepPopViewport_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPopViewTransform.cpp" />
+    <ClCompile Include="RenderJob\TriStepPopViewTransform_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPresentSwapChain.cpp" />
+    <ClCompile Include="RenderJob\TriStepPresentSwapChain_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPushDepthStencil.cpp" />
+    <ClCompile Include="RenderJob\TriStepPushDepthStencil_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPushProjection.cpp" />
+    <ClCompile Include="RenderJob\TriStepPushProjection_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPushRenderTarget.cpp" />
+    <ClCompile Include="RenderJob\TriStepPushRenderTarget_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPushViewport.cpp" />
+    <ClCompile Include="RenderJob\TriStepPushViewport_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPushViewTransform.cpp" />
+    <ClCompile Include="RenderJob\TriStepPushViewTransform_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepPythonCB.cpp" />
+    <ClCompile Include="RenderJob\TriStepPythonCB_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRemoteSync.cpp" />
+    <ClCompile Include="RenderJob\TriStepRemoteSync_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRemoteUpdate.cpp" />
+    <ClCompile Include="RenderJob\TriStepRemoteUpdate_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderAtlas.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderAtlas_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderCubeMap.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderCubeMap_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderDebug.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderDebug_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderEffect.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderEffect_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderFps.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderFps_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderFullScreenShader.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderFullScreenShader_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderLineGraph.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderLineGraph_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderObject.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderObject_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderPass.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderPass_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderScene.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderSceneDebug.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderSceneDebug_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderScene_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderTexture.cpp" />
+    <ClCompile Include="RenderJob\TriStepRenderTexture_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepResolve.cpp" />
+    <ClCompile Include="RenderJob\TriStepResolve_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRunComputeShader.cpp" />
+    <ClCompile Include="RenderJob\TriStepRunComputeShader_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepRunJob.cpp" />
+    <ClCompile Include="RenderJob\TriStepRunJob_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetDebugRenderer.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetDebugRenderer_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetDepthStencil.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetDepthStencil_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetProjection.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetProjection_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetRenderState.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetRenderState_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetRenderTarget.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetRenderTarget_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetStandardRenderStates.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetStandardRenderStates_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetVariableStore.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetVariableStore_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetView.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetViewport.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetViewport_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetView_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetVisibilityResults.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetVisibilityResults_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetVisualizationMode.cpp" />
+    <ClCompile Include="RenderJob\TriStepSetVisualizationMode_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepTestBlocking.cpp" />
+    <ClCompile Include="RenderJob\TriStepTestBlocking_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepToggleCubemap.cpp" />
+    <ClCompile Include="RenderJob\TriStepToggleCubemap_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepUpdate.cpp" />
+    <ClCompile Include="RenderJob\TriStepUpdate_Blue.cpp" />
+    <ClCompile Include="RenderJob\TriStepVisibilityQuery.cpp" />
+    <ClCompile Include="RenderJob\TriStepVisibilityQuery_Blue.cpp" />
+    <ClCompile Include="Resources\Tr2AsyncSave.cpp" />
+    <ClCompile Include="Resources\Tr2EffectRes.cpp" />
+    <ClCompile Include="Resources\Tr2EffectRes_Blue.cpp" />
+    <ClCompile Include="Resources\Tr2ImageRes.cpp" />
+    <ClCompile Include="Resources\Tr2ImageRes_Blue.cpp" />
+    <ClCompile Include="Resources\Tr2LodResource.cpp" />
+    <ClCompile Include="Resources\Tr2LodResource_Blue.cpp" />
+    <ClCompile Include="Resources\Tr2MaterialRes.cpp" />
+    <ClCompile Include="Resources\Tr2MaterialRes_Blue.cpp" />
+    <ClCompile Include="Resources\TriGeometryRes.cpp" />
+    <ClCompile Include="Resources\TriGeometryRes_Blue.cpp" />
+    <ClCompile Include="Resources\TriGrannyRes.cpp" />
+    <ClCompile Include="Resources\TriGrannyRes_Blue.cpp" />
+    <ClCompile Include="Resources\TriTextureRes.cpp" />
+    <ClCompile Include="Resources\TriTextureRes_Blue.cpp" />
+    <ClCompile Include="Shader\Tr2Effect.cpp" />
+    <ClCompile Include="Shader\Tr2EffectDescription.cpp" />
+    <ClCompile Include="Shader\Tr2EffectStateManager.cpp" />
+    <ClCompile Include="Shader\Tr2Effect_Blue.cpp" />
+    <ClCompile Include="Shader\Tr2Material.cpp" />
+    <ClCompile Include="Shader\Tr2Material_Blue.cpp" />
+    <ClCompile Include="Shader\Tr2Shader.cpp" />
+    <ClCompile Include="Shader\Tr2ShaderBuffer.cpp" />
+    <ClCompile Include="Shader\Tr2ShaderBuffer_Blue.cpp" />
+    <ClCompile Include="Shader\Tr2Shader_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2FloatParameter.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2FloatParameter_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2GeometryBufferParameter.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2GeometryBufferParameter_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2Matrix4Parameter.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2Matrix4Parameter_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2Texture2dLodParameter.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2Texture2dLodParameter_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2Vector2Parameter.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2Vector2Parameter_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2Vector3Parameter.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2Vector3Parameter_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2Vector4Parameter.cpp" />
+    <ClCompile Include="Shader\Parameter\Tr2Vector4Parameter_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\TriFloatArrayParameter.cpp" />
+    <ClCompile Include="Shader\Parameter\TriFloatArrayParameter_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\TriTextureParameter.cpp" />
+    <ClCompile Include="Shader\Parameter\TriTextureParameter_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\TriTransformParameter.cpp" />
+    <ClCompile Include="Shader\Parameter\TriTransformParameter_Blue.cpp" />
+    <ClCompile Include="Shader\Parameter\TriVariableParameter.cpp" />
+    <ClCompile Include="Shader\Parameter\TriVariableParameter_Blue.cpp" />
+    <ClCompile Include="Shader\Utils\Tr2DataTextureManager.cpp" />
+    <ClCompile Include="Shader\Utils\Tr2DataTextureManager_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2d.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dArc.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dArc_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dContainer.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dContainer_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dDisplayList.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dFrame.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dFrame_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dLayer.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dLayer_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dLine.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dLineTrace.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dLineTrace_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dLine_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dPolygon.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dPolygon_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dRenderJob.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dRenderJob_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dScene.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dScene_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dStretch.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dStretchVertical.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dStretchVertical_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dStretch_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dTextObject.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dTextObject_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dTexture.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dTexture_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dTransform.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2dTransform_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2Sprite2d_Blue.cpp" />
+    <ClCompile Include="Sprite2d\Tr2SpriteObject.cpp" />
+    <ClCompile Include="Sprite2d\Tr2SpriteObject_Blue.cpp" />
+    <ClCompile Include="UI\App.cpp" />
+    <ClCompile Include="UI\App9.cpp" />
+    <ClCompile Include="UI\AppOrbis.cpp" />
+    <ClCompile Include="UI\AppPosix.cpp" />
+    <ClCompile Include="UI\App_Blue.cpp" />
+    <ClCompile Include="UI\Scancodes.cpp" />
+    <ClCompile Include="UI\Tr2MouseCursor.cpp" />
+    <ClCompile Include="UI\Tr2MouseCursor_Blue.cpp" />
+    <ClCompile Include="UI\Tr2PresentParameters.cpp" />
+    <ClCompile Include="UI\Tr2PresentParameters_Blue.cpp" />
+    <ClCompile Include="UI\Tr2SecondaryWindow.cpp" />
+    <ClCompile Include="UI\Tr2SecondaryWindow_Blue.cpp" />
+    <ClCompile Include="UI\UIChoosers.cpp" />
+    <ClCompile Include="UI\WindowIcon.cpp" />
+    <ClCompile Include="Utilities\BoundingBox.cpp" />
+    <ClCompile Include="Utilities\BoundingSphere.cpp" />
+    <ClCompile Include="Utilities\GeometryUtils.cpp" />
+    <ClCompile Include="Utilities\MatrixUtils.cpp" />
+    <ClCompile Include="Utilities\Obb.cpp" />
+    <ClCompile Include="Wod\WodBakingScene.cpp" />
+    <ClCompile Include="Wod\WodBakingScene_Blue.cpp" />
+    <ClCompile Include="Wod\WodPlaceableRes.cpp" />
+    <ClCompile Include="Wod\WodPlaceableRes_Blue.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="Trinity.rc"/>
+    <ResourceCompile Include="Trinity.rc" />
   </ItemGroup>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
-  <ImportGroup Label="ExtensionTargets"/>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

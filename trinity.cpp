@@ -15,10 +15,7 @@ BLUE_DEFINE_INTERFACE( IBlueObjectProxy );
 
 #include "Tr2Renderer.h"
 
-// creatable rendering types
-#if APEX_ENABLED
-#include "Apex/Apex.h"
-#endif
+
 
 // constants to add to Python
 #include "TriConstants.h"
@@ -286,25 +283,6 @@ static ITr2DebugRenderer* GetDebugRenderer()
 }
 
 MAP_FUNCTION_AND_WRAP( "GetDebugRenderer", GetDebugRenderer, "Returns the debug renderer for Trinity" );
-
-#if APEX_ENABLED
-
-extern Tr2Apex *g_Tr2Apex;
-
-static Tr2Apex* GetApex()
-{
-	if( !g_Tr2Apex )
-	{
-		BeClasses->CreateInstance( GetTr2ApexClsid(), BlueInterfaceIID<Tr2Apex>(), (void**)&g_Tr2Apex );
-	}
-
-	return g_Tr2Apex;
-}
-
-MAP_FUNCTION_AND_WRAP( "GetApex", GetApex, "Gets a global apex pointer" );
-
-#endif
-
 
 static const char* PyDXGetErrorString( int hr )
 {

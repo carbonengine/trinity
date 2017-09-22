@@ -72,18 +72,6 @@ using std::max;
 #define NVPERFHUD 1
 #endif
 
-#ifndef APEX_ENABLED
-    #ifdef _WIN32
-	   #define APEX_ENABLED 1
-    #else
-        #define APEX_ENABLED 0
-    #endif
-#endif
-
-#if APEX_ENABLED
-#include "NxApex.h"
-#endif
-
 #ifdef _WIN32
 #define FASTCALL __fastcall
 #else
@@ -147,31 +135,6 @@ using std::max;
 	#ifndef FALSE
 		#define FALSE 0
 	#endif
-
-#endif
-
-#if APEX_ENABLED
-
-#include "NxApex.h"
-#include "NxParameterized.h"
-#include "NxParamUtils.h"
-#include "NxClothingActor.h"
-#include "PxAllocatorCallback.h"
-#include "PxErrorCallback.h"
-#include "NxCooking.h"
-#include "NxPhysicsSDK.h"
-#include "NxScene.h"
-#include "NxPlaneShapeDesc.h"
-#include "NxPlane.h"
-#include "NxActor.h"
-#include "NxActorDesc.h"
-#include "PhysXLoader.h"
-#include "NxModuleClothing.h"
-#include "NxDebugRenderable.h"
-#include "NxUserRenderer.h"
-#include "NxApexAsset.h"
-#include "NxMat34.h"
-#include "NxClothingAsset.h"
 
 #endif
 
