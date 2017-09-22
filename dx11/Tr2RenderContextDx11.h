@@ -70,10 +70,13 @@ public:
 		uint32_t slot, 
 		Tr2TextureAL& texture ) throw();
 
-	ALResult ClearUav( Tr2GpuBufferAL& buffer, const float values[4] ) throw();
-	ALResult ClearUav( Tr2GpuBufferAL& buffer, const uint32_t values[4] ) throw();
+	ALResult ClearUav( Tr2GpuBufferAL& buffer, const float values[4] ) throw( );
+	ALResult ClearUav( Tr2GpuBufferAL& buffer, const uint32_t values[4] ) throw( );
 
-	ALResult SetTexture(				
+	ALResult ClearUav( Tr2RenderTargetAL& rt, const float values[4] ) throw( );
+	ALResult ClearUav( Tr2RenderTargetAL& rt, const uint32_t values[4] ) throw( );
+
+	ALResult SetTexture(
 		Tr2RenderContextEnum::ShaderType inputType, 
 		uint32_t slot, 
 		const Tr2TextureAL& texture, 

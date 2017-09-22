@@ -92,6 +92,16 @@ public:
 		return E_FAIL;
 	}
 
+	ALResult ClearUav( Tr2RenderTargetAL& rt, const float values[4] ) throw( )
+	{
+		return E_FAIL;
+	}
+
+	ALResult ClearUav( Tr2RenderTargetAL& rt, const uint32_t values[4] ) throw( )
+	{
+		return E_FAIL;
+	}
+
 	ALResult SetTexture(			
 		Tr2RenderContextEnum::ShaderType inputType, 
 		uint32_t slot, 

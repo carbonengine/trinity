@@ -82,12 +82,22 @@ public:
 		return E_FAIL; 
 	}
 
-	ALResult ClearUav( Tr2GpuBufferAL& buffer, const float values[4] ) throw()
+	ALResult ClearUav( Tr2GpuBufferAL& buffer, const float values[4] ) throw( )
 	{
 		return E_FAIL;
 	}
 
-	ALResult ClearUav( Tr2GpuBufferAL& buffer, const uint32_t values[4] ) throw()
+	ALResult ClearUav( Tr2GpuBufferAL& buffer, const uint32_t values[4] ) throw( )
+	{
+		return E_FAIL;
+	}
+
+	ALResult ClearUav( Tr2RenderTargetAL& rt, const float values[4] ) throw( )
+	{
+		return E_FAIL;
+	}
+
+	ALResult ClearUav( Tr2RenderTargetAL& rt, const uint32_t values[4] ) throw( )
 	{
 		return E_FAIL;
 	}
