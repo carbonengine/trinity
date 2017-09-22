@@ -951,7 +951,7 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 		[tT]"exture1D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE1D ); }
 		[tT]"exture2D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE2D ); }
 		[tT]"exture3D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE3D ); }
-		[tT]"extureCUBE" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURECUBE ); }
+		[tT]"extureCube" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURECUBE ); }
 		"Texture1DArray" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE1DARRAY ); }
 		"Texture2DArray" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE2DARRAY ); }
 		"Texture3DArray" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE3DARRAY ); }
