@@ -177,22 +177,21 @@ void EveChildExplosion::UpdateSyncronous(
 					}
 				}
 			}
-			m_nextLocalExplosionTime -= dt;
-			if( m_nextLocalExplosionTime < 0 )
+			
+			while( m_nextLocalExplosionTime < dt && m_nextLocalExplosion < m_localExplosionTransforms.size() )
 			{
+				XMVECTOR det;
+				Matrix transform = m_localExplosionTransforms[m_nextLocalExplosion];
+				transform.GetTranslation() = XMVector3TransformCoord( transform.GetTranslation(), XMMatrixInverse( &det, m_localTransform ) );
+				SpawnLocalExplosion( transform );
+				m_nextLocalExplosion++;
 				if( m_nextLocalExplosion < m_localExplosionTransforms.size() )
 				{
-					XMVECTOR det;
-					Matrix transform = m_localExplosionTransforms[m_nextLocalExplosion];
-					transform.GetTranslation() = XMVector3TransformCoord( transform.GetTranslation(), XMMatrixInverse( &det, m_localTransform ) );
-					SpawnLocalExplosion( transform );
-					m_nextLocalExplosion++;
-					if( m_nextLocalExplosion < m_localExplosionTransforms.size() )
-					{
-						m_nextLocalExplosionTime = m_localExplosionTimes[m_nextLocalExplosion];
-					}
+					m_nextLocalExplosionTime = m_localExplosionTimes[m_nextLocalExplosion];
 				}
 			}
+
+			m_nextLocalExplosionTime -= dt;
 		}
 		if( m_globalExplosion )
 		{
