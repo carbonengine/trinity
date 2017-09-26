@@ -2133,13 +2133,7 @@ ALResult Tr2RenderContextAL::SetUav(
 		}
 		else
 		{
-			auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-			CR_RETURN_HR( texture.CreateUAV( renderContext ) );
-			view = texture.m_uav;
-			if( texture.m_uav == nullptr )
-			{
-				return E_INVALIDARG;
-			}
+			return E_INVALIDARG;
 		}
 	}
 	else
@@ -2232,19 +2226,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2RenderTargetAL& rt, const float values
 	}
 	if( texture.m_uav == nullptr )
 	{
-		if( &texture == &nullTX )
-		{
-			return E_INVALIDARG;
-		}
-		else
-		{
-			auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-			CR_RETURN_HR( texture.CreateUAV( renderContext ) );
-			if( texture.m_uav == nullptr )
-			{
-				return E_INVALIDARG;
-			}
-		}
+		return E_INVALIDARG;
 	}
 
 	AL_UPDATE_RESOURCE_FRAME_USAGE( rt );
@@ -2263,19 +2245,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2RenderTargetAL& rt, const uint32_t val
 	}
 	if( texture.m_uav == nullptr )
 	{
-		if( &texture == &nullTX )
-		{
-			return E_INVALIDARG;
-		}
-		else
-		{
-			auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-			CR_RETURN_HR( texture.CreateUAV( renderContext ) );
-			if( texture.m_uav == nullptr )
-			{
-				return E_INVALIDARG;
-			}
-		}
+		return E_INVALIDARG;
 	}
 
 	AL_UPDATE_RESOURCE_FRAME_USAGE( rt );

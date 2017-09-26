@@ -179,6 +179,16 @@ ALResult Tr2RenderTargetAL::CreateEx(
 		CCP_AL_LOGERR( "Create: CreateRenderTargetView failed: 0x%x", HR );
 		return HR;
 	}
+
+	CComPtr<ID3D11UnorderedAccessView> uav;
+	if( msaaType <= 1 && msaaQuality <= 1 && ( usage & USAGE_UNORDERED_ACCESS ) )
+	{
+		D3D11_UNORDERED_ACCESS_VIEW_DESC descUAV;
+		descUAV.Format = static_cast<DXGI_FORMAT>( format );
+		descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+		descUAV.Texture2D.MipSlice = 0;
+		CR_RETURN_HR( renderContext.m_d3dDevice11->CreateUnorderedAccessView( m_texture, &descUAV, &uav ) );
+	}
 	
 	m_format		= format;
 	m_width			= width;
@@ -203,6 +213,7 @@ ALResult Tr2RenderTargetAL::CreateEx(
 		m_backingStore.m_isAlias	= true;
 		m_backingStore.m_view[0].Attach( view[0].Detach() );
 		m_backingStore.m_view[1].Attach( view[1].Detach() );
+		m_backingStore.m_uav = uav;
 	}
 	ChangeObjectId();
 	
@@ -492,23 +503,6 @@ void Tr2RenderTargetAL::ReleaseALResource()
 	}
 
 	Destroy();
-}
-
-ALResult Tr2RenderTargetAL::CreateUAV( Tr2PrimaryRenderContextAL &renderContext )
-{
-	if( !IsValid() || !renderContext.IsValid() /*|| GetBytesPerPixel( m_format ) != 4 */ )
-	{
-		return E_FAIL;
-	}
-
-	// Create a UAV on the backbuffer
-	D3D11_UNORDERED_ACCESS_VIEW_DESC descUAV;
-	//descUAV.Format				= DXGI_FORMAT_R32_FLOAT;	// has to be R32?
-	descUAV.Format				= static_cast<DXGI_FORMAT>( m_format );
-	descUAV.ViewDimension		= D3D11_UAV_DIMENSION_TEXTURE2D;
-	descUAV.Texture2D.MipSlice	= 0;
-	m_backingStore.m_uav = nullptr;
-	return renderContext.m_d3dDevice11->CreateUnorderedAccessView( m_texture, &descUAV, &m_backingStore.m_uav );
 }
 
 uint32_t Tr2RenderTargetAL::GetSharedHandle() const

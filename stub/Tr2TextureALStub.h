@@ -112,11 +112,6 @@ public:
 	{
 		return AL_MEMORY_MANAGED;
 	}
-
-	ALResult CreateUAV( Tr2PrimaryRenderContextAL& renderContext )
-	{
-		return E_FAIL;
-	}
 private:
 	size_t GetTextureSize() const;
 	ALResult Create( 

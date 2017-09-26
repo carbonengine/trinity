@@ -80,8 +80,6 @@ public:
 	ALResult Unlock( Tr2RenderContextAL& renderContext );
 	void SetHintLockOften();
 
-	ALResult CreateUAV( Tr2PrimaryRenderContextAL &renderContext );
-
 	uint32_t GetSharedHandle() const;
 	bool operator==( const Tr2RenderTargetAL& other ) const { return m_texture == other.m_texture; }
 

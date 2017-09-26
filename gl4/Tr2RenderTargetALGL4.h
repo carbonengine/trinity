@@ -77,8 +77,6 @@ public:
 	ALResult Unlock( Tr2RenderContextAL& renderContext );
 	void SetHintLockOften();
 
-	ALResult CreateUAV( Tr2RenderContextAL& renderContext )	{ return E_FAIL; }
-
 	uint32_t GetSharedHandle() const { return 0; }
 	bool operator==( const Tr2RenderTargetAL& other ) const;
 

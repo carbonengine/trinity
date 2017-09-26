@@ -75,8 +75,6 @@ public:
 	ALResult Unlock( Tr2RenderContextAL& renderContext );
 	void SetHintLockOften();
 
-	ALResult CreateUAV( Tr2RenderContextAL& renderContext ) { return E_FAIL; }
-
 	uint32_t GetSharedHandle() const;
 
 	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }

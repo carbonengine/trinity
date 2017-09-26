@@ -931,21 +931,4 @@ ALResult Tr2TextureAL::UnlockWriting( Tr2RenderContextAL & renderContext )
 	return S_OK;
 }
 
-ALResult Tr2TextureAL::CreateUAV( Tr2PrimaryRenderContextAL &renderContext )
-{
-	if( !IsValid() || !renderContext.IsValid() /*|| GetBytesPerPixel( m_format ) != 4 */ )
-	{
-		return E_FAIL;
-	}
-
-	// Create a UAV on the backbuffer
-	D3D11_UNORDERED_ACCESS_VIEW_DESC descUAV;
-	//descUAV.Format				= DXGI_FORMAT_R32_FLOAT;	// has to be R32?
-	descUAV.Format				= static_cast<DXGI_FORMAT>( m_format );
-	descUAV.ViewDimension		= D3D11_UAV_DIMENSION_TEXTURE2D;
-	descUAV.Texture2D.MipSlice	= 0;
-	m_uav = nullptr;
-	return renderContext.m_d3dDevice11->CreateUnorderedAccessView( m_texture, &descUAV, &m_uav );
-}
-
 #endif

@@ -122,11 +122,6 @@ public:
 		return AL_MEMORY_MANAGED;
 	}
 
-	ALResult CreateUAV( Tr2PrimaryRenderContextAL& renderContext )
-	{
-		return E_FAIL;
-	}
-
 private:
 	Tr2RenderContextEnum::BufferUsage m_usage;
 	// Texture is owned by other AL object (render target, depth stencil)
