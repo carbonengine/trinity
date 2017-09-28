@@ -2739,6 +2739,7 @@
     <ClInclude Include="Tr2PrimitiveScene.h"/>
     <ClInclude Include="Tr2PrimitiveSet.h"/>
     <ClInclude Include="Tr2PrimitiveText.h"/>
+    <ClInclude Include="Tr2ProfileTimer.h"/>
     <ClInclude Include="Tr2ProjectBoundingBoxBracket.h"/>
     <ClInclude Include="Tr2PushPopDS.h"/>
     <ClInclude Include="Tr2PushPopRT.h"/>
@@ -3210,6 +3211,7 @@
     <ClCompile Include="Tr2PrimitiveSet_Blue.cpp"/>
     <ClCompile Include="Tr2PrimitiveText.cpp"/>
     <ClCompile Include="Tr2PrimitiveText_Blue.cpp"/>
+    <ClCompile Include="Tr2ProfileTimer.cpp"/>
     <ClCompile Include="Tr2ProjectBoundingBoxBracket.cpp"/>
     <ClCompile Include="Tr2ProjectBoundingBoxBracket_Blue.cpp"/>
     <ClCompile Include="Tr2PushPopDS.cpp"/>

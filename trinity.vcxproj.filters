@@ -257,6 +257,9 @@
     <ClInclude Include="Tr2PrimitiveText.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tr2ProfileTimer.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="Tr2ProjectBoundingBoxBracket.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -1656,6 +1659,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2PrimitiveText_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2ProfileTimer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2ProjectBoundingBoxBracket.cpp">
