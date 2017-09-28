@@ -2,7 +2,7 @@
 #ifndef _TRIRENDERSTEP_H_
 #define _TRIRENDERSTEP_H_
 
-
+#include "Tr2ProfileTimer.h"
 
 enum TriStepResult
 {
@@ -30,21 +30,18 @@ public:
 protected:
 	bool GetCaptureGpuTime() const;
 	void SetCaptureGpuTime( bool capture );
+	bool GetCaptureCpuTime() const;
+	void SetCaptureCpuTime( bool capture );
 	float GpuTime() const;
 	float CpuTime() const;
+	const std::string& GetStatName() const;
+	void SetStatName( const char* name );
 
 	std::string m_name;
-	mutable Tr2GpuTimerAL m_gpuTimer;
-	uint64_t m_beginTime;
-	float m_cpuTime;
-	std::string m_statName;
-	CcpStaticStatisticsEntry* m_statEntryCpu;
-	CcpStaticStatisticsEntry* m_statEntryGpu;
+	Tr2ProfileTimer m_timer;
 
 	// Enabled/disabled flag: disabled steps are not executed
 	bool m_enabled;
-	bool m_captureGpuTime;
-	bool m_captureCpuTime;
 };
 
 BLUE_DECLARE_VECTOR( TriRenderStep );
