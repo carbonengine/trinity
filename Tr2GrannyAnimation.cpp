@@ -583,7 +583,7 @@ const std::string Tr2GrannyAnimation::GetSecondaryAnimationName( const std::stri
 		auto animName = fi->second->GetAnimationName(index);
 		return animName;
 	}
-	return nullptr;
+	return "";
 }
 
 bool Tr2GrannyAnimation::IsAnimationEnabled() const
