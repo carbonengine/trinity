@@ -572,12 +572,23 @@ void EveMissileWarhead::UpdateWarhead( float deltaT, float estimatedTotalAliveTi
 	{
 		if( m_startDataValid )
 		{
-			if( D3DXVec3LengthSq( &translation ) > 0.f )
+			Quaternion orientationNow;
+			const float distanceSq = D3DXVec3LengthSq( &translation );
+			if( distanceSq > 0.f )
 			{
 				// move/facing direction is in global world-space, we need it in "ball"-space
 				D3DXVec3TransformNormal( &translation, &translation, invBallRotation );
 				// turn facing vector into a rotation
-				TriQuaternionArcFromForward( &m_currentOrientation, &translation );
+				TriQuaternionArcFromForward( &orientationNow, &translation );
+				if( distanceSq < 1.f )
+				{
+					D3DXQuaternionSlerp( &m_currentOrientation, &m_currentOrientation, &orientationNow, distanceSq );
+					D3DXQuaternionNormalize( &m_currentOrientation, &m_currentOrientation );
+				}
+				else
+				{
+					m_currentOrientation = orientationNow;
+				}
 			}
 		}
 	}
