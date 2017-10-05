@@ -430,3 +430,11 @@ MAP_FUNCTION(
 	);
 
 #endif
+
+MAP_FUNCTION_AND_WRAP( 
+	"GetPixelFormatSize", 
+	GetBytesPerPixel, 
+	"Returns size of pixel (or block for compressed formats) in bytes of a given\n"
+	"pixel format.\n"
+	":param pixelFormat: pixel format (member of trinity.PIXEL_FORMAT)" 
+	);

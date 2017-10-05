@@ -3,6 +3,47 @@
 
 BLUE_DEFINE( Tr2GpuStructuredBuffer );
 
+#if BLUE_WITH_PYTHON
+
+using namespace Tr2RenderContextEnum;
+
+namespace
+{
+
+	PyObject* PyGetData( PyObject* self, PyObject* args )
+	{
+		if( !PyArg_ParseTuple( args, "" ) )
+		{
+			return nullptr;
+		}
+
+		Tr2GpuStructuredBuffer* pThis = BluePythonCast<Tr2GpuStructuredBuffer*>( self );
+		if( !pThis )
+		{
+			return nullptr;
+		}
+		if( !pThis->IsValid() )
+		{
+			return PyErr_SetString( PyExc_RuntimeError, "buffer is not valid" ), nullptr;
+		}
+
+		auto buffer = pThis->GetGpuBuffer( 0 );
+
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+
+		void* data = nullptr;
+		auto hr = buffer->Lock( 0, 0, &data, Tr2RenderContextEnum::LOCK_READONLY, renderContext );
+		if( FAILED( hr ) )
+		{
+			return PyErr_SetString( BeGetException( hr ), BeGetErrorMessage( hr ) ), nullptr;
+		}
+		ON_BLOCK_EXIT( [&]() { buffer->Unlock( renderContext ); } );
+
+		return PyString_FromStringAndSize( static_cast<const char*>( data ), buffer->GetTotalSizeInBytes() );
+	}
+}
+#endif
+
 const Be::ClassInfo* Tr2GpuStructuredBuffer::ExposeToBlue()
 {
     EXPOSURE_BEGIN( Tr2GpuStructuredBuffer, "" )
@@ -38,5 +79,14 @@ const Be::ClassInfo* Tr2GpuStructuredBuffer::ExposeToBlue()
 			"isValid",
 			IsValid,
 			"Is the underlying GPU object valid" )
-	EXPOSURE_END()
+
+#if BLUE_WITH_PYTHON
+		MAP_METHOD(
+			"DebugGetData",
+			PyGetData,
+			"Returns contents of the buffer as a string.\n"
+			"WARNING: the method is slow and should not be used for anything but debugging.\n"
+			":rtype: str" )
+#endif
+		EXPOSURE_END()
 }
