@@ -253,6 +253,9 @@ public:
 
 	ITr2RenderContextEvents* m_events;
 	Tr2RenderTargetAL& GetDefaultBackBuffer() { return m_defaultBackBuffer; }
+
+	void AddGpuMarker( const char* marker );
+	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
 private:
 	enum { MAX_RENDER_TARGET = 8 };
 	const Tr2RenderTargetAL*				m_boundRenderTarget[MAX_RENDER_TARGET];

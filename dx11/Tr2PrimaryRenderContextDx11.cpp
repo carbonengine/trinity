@@ -7,6 +7,8 @@
 
 #include "ALLog.h"
 
+#include <GFSDK_Aftermath.h>
+
 using namespace Tr2RenderContextEnum;
 
 bool g_gatherDX11Statistics = false;
@@ -64,6 +66,11 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	m_dxgiFactory		= nullptr;
 	m_dxgiOutput		= nullptr;
 	//m_context			= nullptr;
+	if( m_aftermathContext )
+	{
+		GFSDK_Aftermath_ReleaseContextHandle( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ) );
+		m_aftermathContext = nullptr;
+	}
 	m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
 	
 	m_defaultDepthStencil.Destroy();
@@ -122,7 +129,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	
 	uint32_t dwFlags = 0;
 
-	if( g_requestDeviceDebugLayer )
+	if( false )// g_requestDeviceDebugLayer )
 	{
 		dwFlags |= D3D11_CREATE_DEVICE_DEBUG;
 	}
@@ -146,6 +153,12 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 			CCP_AL_LOG( "DX11 creating device for adapter %s", (LPCTSTR)CW2A( desc1.Description ) );
 			m_adapterVendorId = uint32_t( desc1.VendorId );
 		}
+	}
+
+	if( m_aftermathContext )
+	{
+		GFSDK_Aftermath_ReleaseContextHandle( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ) );
+		m_aftermathContext = nullptr;
 	}
 	
 	m_context.Release();
@@ -261,6 +274,51 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 		m_dxgiOutput	= nullptr;
 		m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
 		return E_FAIL;
+	}
+
+	m_aftermathContext = nullptr;
+	if( ( dwFlags & D3D11_CREATE_DEVICE_DEBUG ) == 0 )
+	{
+		auto amResult = GFSDK_Aftermath_DX11_Initialize( GFSDK_Aftermath_Version_API, m_d3dDevice11 );
+		switch( amResult )
+		{
+		case GFSDK_Aftermath_Result_Success:
+			CCP_AL_LOG( "Initialized nVidia Aftermath" );
+			break;
+		case GFSDK_Aftermath_Result_FAIL_VersionMismatch:
+			CCP_AL_LOGERR( "Failed to initialize nVidia Aftermath: API/ABI version mismatch" );
+			break;
+		case GFSDK_Aftermath_Result_FAIL_InvalidAdapter:
+			CCP_AL_LOG( "Failed to initialize nVidia Aftermath: unsupported GPU" );
+			break;
+		case GFSDK_Aftermath_Result_FAIL_InvalidParameter:
+			CCP_AL_LOGERR( "Failed to initialize nVidia Aftermath: invalid parameter" );
+			break;
+		case GFSDK_Aftermath_Result_FAIL_NvApiIncompatible:
+			CCP_AL_LOGERR( "Failed to initialize nVidia Aftermath: incompatible NvAPI DLL" );
+			break;
+		case GFSDK_Aftermath_Result_FAIL_DriverInitFailed:
+			CCP_AL_LOG( "Failed to initialize nVidia Aftermath: failed to initialize in the driver" );
+			break;
+		case GFSDK_Aftermath_Result_FAIL_DriverVersionNotSupported:
+			CCP_AL_LOG( "Failed to initialize nVidia Aftermath: unsupported driver version" );
+			break;
+		default:
+			CCP_AL_LOG( "Failed to initialize nVidia Aftermath" );
+			break;
+		}
+		if( GFSDK_Aftermath_SUCCEED( amResult ) )
+		{
+			amResult = GFSDK_Aftermath_DX11_CreateContextHandle( m_context, reinterpret_cast<GFSDK_Aftermath_ContextHandle*>( &m_aftermathContext ) );
+			if( GFSDK_Aftermath_SUCCEED( amResult ) )
+			{
+				CCP_AL_LOG( "Initialized nVidia Aftermath for the primary context" );
+			}
+			else
+			{
+				CCP_AL_LOG( "Failed to initialize nVidia Aftermath for the primary context" );
+			}
+		}
 	}
 
 	// Disable Windows support for alt-enter fullscreen

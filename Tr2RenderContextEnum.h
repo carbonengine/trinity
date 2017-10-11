@@ -440,6 +440,14 @@ namespace Tr2RenderContextEnum
 // Check if shader type (Tr2RenderContextEnum::ShaderType) exists on the current platform
 #define SHADER_TYPE_EXISTS( shaderType ) ( Tr2RenderContextAL::SHADER_TYPE_MASK & ( 1 << ( shaderType ) ) )
 
+	enum RenderContextStatus
+	{
+		CONTEXT_STATUS_NOT_STARTED = 0,
+		CONTEXT_STATUS_EXECUTING,
+		CONTEXT_STATUS_FINISHED,
+
+		CONTEXT_STATUS_INVALID,
+	};
 }
 
 #endif // Tr2RenderContextEnum_h

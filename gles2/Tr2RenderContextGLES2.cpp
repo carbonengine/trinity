@@ -2829,4 +2829,15 @@ ALResult Tr2RenderContextAL::InternalResolveRT( Tr2RenderTargetAL& destination, 
 #endif
 }
 
+// --------------------------------------------------------------------------------------
+void Tr2RenderContextAL::AddGpuMarker( const char* )
+{
+}
+
+// --------------------------------------------------------------------------------------
+ALResult Tr2RenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus&, std::string& ) const
+{
+	return E_FAIL;
+}
+
 #endif

@@ -195,6 +195,9 @@ public:
 	// Set of variables that are the first thing we need in ApplyShadowState, keep them
 	// close for the cache -- don't put renderstates, renderStateEmulation or m_esm
 	// in between.
+
+	void AddGpuMarker( const char* marker );
+	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
 private:
 	uint32_t						m_dirtyFlag;
 public:
@@ -291,6 +294,8 @@ private:
 	bool m_previouslyHadHullShader;	
 
 	Tr2DrawUPHelper	m_drawUP;
+
+	void* m_aftermathContext;
 
 	ALResult SetRtDsToDevice( uint32_t changedSlot ) throw();
 

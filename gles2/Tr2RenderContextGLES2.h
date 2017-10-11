@@ -267,6 +267,9 @@ public:
 
 	ALResult InternalBlitToBackBuffer( Tr2TextureAL& source );
 	ALResult InternalResolveRT( Tr2RenderTargetAL& destination, const Tr2RenderTargetAL& source );
+
+	void AddGpuMarker( const char* marker );
+	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
 private:
 	enum { MAX_RENDER_TARGET = 8 };
 	const Tr2RenderTargetAL*					m_boundRenderTarget[MAX_RENDER_TARGET];

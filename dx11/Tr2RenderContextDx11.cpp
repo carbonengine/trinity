@@ -5,6 +5,7 @@
 #include "Tr2RenderContextDx11.h"
 #include "ITr2RenderContextEvents.h"
 #include "ALLog.h"
+#include <GFSDK_Aftermath.h>
 
 CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
 CCP_STATS_DECLARE( vertexCount			, "Trinity/AL/vertexCount"			, true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
@@ -534,6 +535,7 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_psUavsDirtyBegin( sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] ) )
 	, m_psUavsDirtyEnd( 0 )
 	, m_events( nullptr )
+	, m_aftermathContext( nullptr )
 {	
 	m_context.Attach( &Tr2RenderContextImpl::s_nullContext );
 
@@ -638,6 +640,11 @@ void Tr2RenderContextAL::Destroy()
 	m_secondaryDevice11 = nullptr;
 
 	m_secondaryDefaultBackBuffer = nullptr;	
+	if( m_aftermathContext )
+	{
+		GFSDK_Aftermath_ReleaseContextHandle( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ) );
+		m_aftermathContext = nullptr;
+	}
 	m_context.Attach( &Tr2RenderContextImpl::s_nullContext );
 
 	m_commandList		= nullptr;
@@ -2437,6 +2444,45 @@ ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topolog
 		return S_OK;
 	}
 	return E_FAIL;
+}
+
+// --------------------------------------------------------------------------------------
+void Tr2RenderContextAL::AddGpuMarker( const char* marker )
+{
+	if( !m_aftermathContext )
+	{
+		return;
+	}
+
+	size_t length = strlen( marker ) + 1;
+	if( length % 4 == 0)
+	{
+		GFSDK_Aftermath_SetEventMarker( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ), marker, unsigned( length ) );
+	}
+
+	size_t paddedLength = ( length / 4 + 1 ) * 4;
+	std::unique_ptr<char[]> buffer( new char[paddedLength] );
+	memcpy( buffer.get(), marker, length );
+	GFSDK_Aftermath_SetEventMarker( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ), buffer.get(), unsigned( paddedLength ) );
+}
+
+// --------------------------------------------------------------------------------------
+ALResult Tr2RenderContextAL::GetGpuStateMarker( RenderContextStatus& status, std::string& marker ) const
+{
+	status = CONTEXT_STATUS_INVALID;
+	if( !m_aftermathContext )
+	{
+		return E_FAIL;
+	}
+	GFSDK_Aftermath_ContextData data;
+	auto amResult = GFSDK_Aftermath_GetData( 1, reinterpret_cast<const GFSDK_Aftermath_ContextHandle*>( &m_aftermathContext ), &data );
+	if( !GFSDK_Aftermath_SUCCEED( amResult ) )
+	{
+		return E_FAIL;
+	}
+	status = static_cast<RenderContextStatus>( data.status );
+	marker = static_cast<const char*>( data.markerData );
+	return S_OK;
 }
 
 #endif	//DX11?

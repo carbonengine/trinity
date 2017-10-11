@@ -1476,5 +1476,15 @@ ALResult Tr2RenderContextAL::InternalBlit( IDirect3DSurface9* destination, IDire
 	return m_blitter->Blit( destination, source, width, height, m_d3dDevice9 );
 }
 
+// --------------------------------------------------------------------------------------
+void Tr2RenderContextAL::AddGpuMarker( const char* )
+{
+}
+
+// --------------------------------------------------------------------------------------
+ALResult Tr2RenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus&, std::string& ) const
+{
+	return E_FAIL;
+}
 
 #endif

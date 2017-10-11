@@ -2,6 +2,7 @@
 Imports:
 - ../core_project.yaml
 - ../CcpCore/uses_CcpCore.yaml
+- ../../../../../../sdk/nvidia/aftermath/1.26/aftermath.yaml
 
 # Settings from the General section, for all configurations
 General:
