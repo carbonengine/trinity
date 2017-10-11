@@ -129,7 +129,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	
 	uint32_t dwFlags = 0;
 
-	if( false )// g_requestDeviceDebugLayer )
+	if( g_requestDeviceDebugLayer )
 	{
 		dwFlags |= D3D11_CREATE_DEVICE_DEBUG;
 	}
