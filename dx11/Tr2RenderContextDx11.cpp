@@ -2458,6 +2458,7 @@ void Tr2RenderContextAL::AddGpuMarker( const char* marker )
 	if( length % 4 == 0)
 	{
 		GFSDK_Aftermath_SetEventMarker( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ), marker, unsigned( length ) );
+		return;
 	}
 
 	size_t paddedLength = ( length / 4 + 1 ) * 4;
