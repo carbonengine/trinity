@@ -118,6 +118,7 @@
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/3.0.1.1008/include",
+					"../../../../../../sdk/nvidia/aftermath/1.26/include",
 					..,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
@@ -733,6 +734,7 @@
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/3.0.1.1008/include",
+					"../../../../../../sdk/nvidia/aftermath/1.26/include",
 					..,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
@@ -890,6 +892,7 @@
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/3.0.1.1008/include",
+					"../../../../../../sdk/nvidia/aftermath/1.26/include",
 					..,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
@@ -1009,6 +1012,7 @@
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/3.0.1.1008/include",
+					"../../../../../../sdk/nvidia/aftermath/1.26/include",
 					..,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
@@ -2323,6 +2327,7 @@
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/3.0.1.1008/include",
+					"../../../../../../sdk/nvidia/aftermath/1.26/include",
 					..,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
@@ -2451,6 +2456,7 @@
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/3.0.1.1008/include",
+					"../../../../../../sdk/nvidia/aftermath/1.26/include",
 					..,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
@@ -2674,6 +2680,7 @@
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/3.0.1.1008/include",
+					"../../../../../../sdk/nvidia/aftermath/1.26/include",
 					..,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
@@ -3148,6 +3155,7 @@
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/telemetry/3.0.1.1008/include",
+					"../../../../../../sdk/nvidia/aftermath/1.26/include",
 					..,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
