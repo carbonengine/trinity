@@ -73,6 +73,7 @@ private:
 		unsigned length;
 		// Is the element in vertex buffer type FLOAT16 (needs convertion to 32 bit float)
 		bool isFloat16;
+		bool isEmpty;
 	};
 
 	void DoSpawn();

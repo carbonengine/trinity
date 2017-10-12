@@ -145,6 +145,7 @@ void Tr2StaticEmitter::DoSpawn()
 					mapping.buffer = i->second.m_bufferType;
 					mapping.offset = i->second.m_offset;
 					mapping.length = i->second.m_dimension;
+					mapping.isEmpty = false;
 					
 					if( ( elements.m_items[j].m_dataType & elements.DT_TYPE_MASK ) == elements.DT_FLOAT32 )
 					{
@@ -168,10 +169,17 @@ void Tr2StaticEmitter::DoSpawn()
 			}
 			if( !found )
 			{
-				CCP_LOGERR( "No data for particle elements \"%s\" in Tr2StaticEmitter geometry %s", 
-							i->first.GetName().c_str(), 
-							m_geometryResourcePath.c_str() );
-				return;
+				DeclarationMapping mapping;
+				mapping.inOffset = 0;
+				mapping.buffer = i->second.m_bufferType;
+				mapping.offset = i->second.m_offset;
+				mapping.length = i->second.m_dimension;
+				mapping.isEmpty = true;
+				mapping.isFloat16 = false;
+				geometryDeclarationMap.push_back( mapping );
+				CCP_LOG( "No data for particle elements \"%s\" in Tr2StaticEmitter geometry %s - filling with zeroes",
+					i->first.GetName().c_str(),
+					m_geometryResourcePath.c_str() );
 			}
 		}
 
@@ -187,7 +195,11 @@ void Tr2StaticEmitter::DoSpawn()
 			{
 				for( auto j = geometryDeclarationMap.begin(); j != geometryDeclarationMap.end(); ++j )
 				{
-					if( j->isFloat16 )
+					if( j->isEmpty )
+					{
+						std::fill_n( particle[j->buffer] + j->offset, j->length, 0.0f );
+					}
+					else if( j->isFloat16 )
 					{
 						std::copy( 
 							reinterpret_cast<D3DXFLOAT16*>( data + j->inOffset ), 
