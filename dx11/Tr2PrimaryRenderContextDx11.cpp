@@ -279,7 +279,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	m_aftermathContext = nullptr;
 	if( ( dwFlags & D3D11_CREATE_DEVICE_DEBUG ) == 0 )
 	{
-		auto amResult = GFSDK_Aftermath_DX11_Initialize( GFSDK_Aftermath_Version_API, m_d3dDevice11 );
+		auto amResult = GFSDK_Aftermath_DX11_Initialize( GFSDK_Aftermath_Version_API, GFSDK_Aftermath_FeatureFlags_Maximum, m_d3dDevice11 );
 		switch( amResult )
 		{
 		case GFSDK_Aftermath_Result_Success:
