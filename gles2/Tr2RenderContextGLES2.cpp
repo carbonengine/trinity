@@ -2840,4 +2840,16 @@ ALResult Tr2RenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::RenderCont
 	return E_FAIL;
 }
 
+// --------------------------------------------------------------------------------------
+ALResult Tr2RenderContextAL::GetGpuPageFaultResource(
+	Tr2RenderContextEnum::PixelFormat&,
+	uint64_t&,
+	uint32_t&,
+	uint32_t&,
+	uint32_t&,
+	uint32_t& ) const
+{
+	return E_FAIL;
+}
+
 #endif

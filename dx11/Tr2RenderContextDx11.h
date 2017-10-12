@@ -198,6 +198,13 @@ public:
 
 	void AddGpuMarker( const char* marker );
 	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
+	ALResult GetGpuPageFaultResource( 
+		Tr2RenderContextEnum::PixelFormat& format, 
+		uint64_t& size, 
+		uint32_t& width, 
+		uint32_t& height, 
+		uint32_t& depth, 
+		uint32_t& mips ) const;
 private:
 	uint32_t						m_dirtyFlag;
 public:

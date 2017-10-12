@@ -2486,4 +2486,35 @@ ALResult Tr2RenderContextAL::GetGpuStateMarker( RenderContextStatus& status, std
 	return S_OK;
 }
 
+// --------------------------------------------------------------------------------------
+ALResult Tr2RenderContextAL::GetGpuPageFaultResource(
+	Tr2RenderContextEnum::PixelFormat& format,
+	uint64_t& size,
+	uint32_t& width,
+	uint32_t& height,
+	uint32_t& depth,
+	uint32_t& mips ) const
+{
+	if( !m_aftermathContext )
+	{
+		return E_FAIL;
+	}
+	GFSDK_Aftermath_PageFaultInformation info;
+	auto amResult = GFSDK_Aftermath_GetPageFaultInformation( &info );
+	if( !GFSDK_Aftermath_SUCCEED( amResult ) )
+	{
+		return E_FAIL;
+	}
+	if( !info.bhasPageFaultOccured )
+	{
+		return E_FAIL;
+	}
+	format = static_cast<PixelFormat>( info.resourceDesc.format );
+	size = info.resourceDesc.size;
+	width = info.resourceDesc.width;
+	height = info.resourceDesc.height;
+	depth = info.resourceDesc.depth;
+	return S_OK;
+}
+
 #endif	//DX11?
