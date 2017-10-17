@@ -1024,7 +1024,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				os << "#line " << it->location.lineNumber << std::endl << "#define " << jt->name << ' ' << jt->value << std::endl;
 			}
 		}
-		os << "#line 0" << std::endl;
+		os << "#line 1" << std::endl;
 		auto prefix = os.str();
 
 		g_includeHandler.AddPrefix( shaderPath, prefix.c_str(), (LPCVOID*)&g_shaderSource, &g_shaderLength );
