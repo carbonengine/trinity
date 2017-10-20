@@ -5,7 +5,15 @@
 #include "Tr2RenderContextDx11.h"
 #include "ITr2RenderContextEvents.h"
 #include "ALLog.h"
-#include <GFSDK_Aftermath.h>
+
+#include "Tr2PrimaryRenderContextDx11.h"
+#include "Tr2GpuBufferALDx11.h"
+#include "Tr2RenderTargetALDx11.h"
+#include "Tr2VertexLayoutALDx11.h"
+#include "Tr2SamplerStateALDx11.h"
+#include "Tr2ShaderALDx11.h"
+#include "Tr2HalHelperStructures.h"
+
 
 CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
 CCP_STATS_DECLARE( vertexCount			, "Trinity/AL/vertexCount"			, true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
@@ -24,10 +32,6 @@ Tr2PrimaryRenderContextAL*& GetPrimaryRenderContextPointer()
 	static Tr2PrimaryRenderContextAL* primaryRenderContext = nullptr;
 	return primaryRenderContext;
 }
-
-	const uint32_t D3D9_MAPSAMPLER = 256;
-	const uint32_t D3D9_VERTEXTEXTURESAMPLER0 = D3DDMAPSAMPLER+1;
-
 
 	const D3D11_RENDER_TARGET_BLEND_DESC defaultBlend = 
 	{	
@@ -1139,7 +1143,14 @@ ALResult Tr2RenderContextAL::Clear(
 
 		if( rtView )
 		{
-			m_context->ClearRenderTargetView( rtView, D3DXCOLOR( color ) );
+			float f = 1.0f / 255.0f;
+			float colorComponents[] = {
+				f * (float)(uint8_t)( color >> 16 ),
+				f * (float)(uint8_t)( color >> 8 ),
+				f * (float)(uint8_t)( color >> 0 ),
+				f * (float)(uint8_t)( color >> 24 )
+			};
+			m_context->ClearRenderTargetView( rtView, colorComponents );
 		}
 		// else can happen if we get here in the middle of a reset/resize -- no valid RT nor backbuffer bound -- or
 		// trying to clear slot > 0 with nothing in it.
@@ -1678,8 +1689,8 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 
 		case RS_CULLMODE:
 			{
-				auto newValue = value == D3DCULL_NONE	? D3D11_CULL_NONE 
-														: ( value == D3DCULL_CCW	? D3D11_CULL_BACK 
+				auto newValue = value == 1 /* D3DCULL_NONE */	? D3D11_CULL_NONE 
+														: ( value == 3 /* D3DCULL_CCW */	? D3D11_CULL_BACK 
 																					: D3D11_CULL_FRONT );
 				if( rs.CullMode != newValue )
 				{

@@ -2,10 +2,16 @@
 #ifndef Tr2PrimaryRenderContextDx11_h_
 #define Tr2PrimaryRenderContextDx11_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
-#include "Tr2RenderContextDx11.h"
-#include "Tr2CapsALDx11.h"
+#include "../include/Tr2RenderContextAL.h"
+#include "../include/Tr2CapsAL.h"
+#include "../include/Tr2DepthStencilAL.h"
+
+
+struct Tr2PresentParametersAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 class Tr2PrimaryRenderContextAL : public Tr2RenderContextAL
 {

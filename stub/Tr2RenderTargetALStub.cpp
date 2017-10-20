@@ -1,9 +1,11 @@
 #include "StdAfx.h"
+#if( TRINITY_PLATFORM==TRINITY_STUB )
+
 #include "Tr2RenderTargetALStub.h"
+#include "Tr2RenderContextStub.h"
+#include "Tr2LockedRenderTargetALStub.h"
 
 using namespace Tr2RenderContextEnum;
-
-#if( TRINITY_PLATFORM==TRINITY_STUB )
 
 #include "ALLog.h"
 

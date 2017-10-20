@@ -2,10 +2,12 @@
 #ifndef Tr2DepthStencilALStub_h_
 #define Tr2DepthStencilALStub_h_
 
-#if( TRINITY_PLATFORM==TRINITY_STUB )
-
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
 #include "../Tr2AutoResetObjectAL.h"
-#include "Tr2TextureALStub.h"
+#include "../include/Tr2TextureAL.h"
+
+#if( TRINITY_PLATFORM==TRINITY_STUB )
 
 
 class Tr2DepthStencilAL : 

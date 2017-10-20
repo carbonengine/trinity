@@ -2,6 +2,16 @@
 #ifndef Tr2GpuTimerALDx11_H
 #define Tr2GpuTimerALDx11_H
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../Tr2AutoResetObjectAL.h"
+
+
+class Tr2PrimaryRenderContextAL;
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 class Tr2GpuTimerAL: 

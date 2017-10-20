@@ -5,6 +5,7 @@ bool g_wantsEXDevice = false;
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 #include "Tr2VideoAdapterInfoALStub.h"
+#include "Tr2AdapterStructures.h"
 
 #ifdef WIN32
 extern bool g_usingEXDevice;

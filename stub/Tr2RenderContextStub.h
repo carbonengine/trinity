@@ -5,8 +5,9 @@
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 #include "../Tr2RenderContextEnum.h"
-#include "Tr2RenderTargetALStub.h"
-#include "Tr2CapsALStub.h"
+#include "../include/Tr2RenderTargetAL.h"
+#include "../include/Tr2CapsAL.h"
+#include "../Tr2HalHelperStructures.h"
 
 class Tr2VertexBufferAL;
 class Tr2IndexBufferAL;
@@ -16,6 +17,8 @@ class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2TextureAL;
 struct ITr2RenderContextEvents;
+struct Tr2PresentParametersAL;
+
 
 // -------------------------------------------------------------
 // Description:

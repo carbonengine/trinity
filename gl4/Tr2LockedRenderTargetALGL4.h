@@ -2,6 +2,12 @@
 #ifndef Tr2LockedRenderTargetALGLES2_H
 #define Tr2LockedRenderTargetALGLES2_H
 
+#include "../ALResult.h"
+
+
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
 class Tr2LockedRenderTargetAL

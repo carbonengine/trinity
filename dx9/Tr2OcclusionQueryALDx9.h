@@ -2,6 +2,14 @@
 #ifndef Tr2OcclusionQueryALDx9_H
 #define Tr2OcclusionQueryALDx9_H
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
+
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 class Tr2OcclusionQueryAL : 

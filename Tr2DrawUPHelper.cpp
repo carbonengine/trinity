@@ -3,6 +3,8 @@
 #if TRINITY_PLATFORM==TRINITY_DIRECTX11 || TRINITY_PLATFORM==TRINITY_OPENGL4
 
 #include "Tr2DrawUPHelper.h"
+#include "include/Tr2RenderContextAL.h"
+
 
 using namespace Tr2RenderContextEnum;
 

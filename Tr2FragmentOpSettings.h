@@ -2,6 +2,9 @@
 #ifndef Tr2FragmentOpSettings_h_
 #define Tr2FragmentOpSettings_h_
 
+
+#include "Tr2RenderContextEnum.h"
+
 // -------------------------------------------------------------
 // Description:
 //	Keep track of states that are no longer natively supported in DX11/OpenGLES2.0, so we can emulate them

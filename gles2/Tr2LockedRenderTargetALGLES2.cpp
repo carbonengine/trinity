@@ -3,6 +3,8 @@
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
 #include "Tr2LockedRenderTargetALGLES2.h"
+#include "Tr2RenderContextGLES2.h"
+
 
 Tr2LockedRenderTargetAL::Tr2LockedRenderTargetAL()
 	:m_pitch( 0 )

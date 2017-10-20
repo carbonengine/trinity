@@ -3,6 +3,8 @@
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
 #include "Tr2SamplerStateALGLES2.h"
+#include "Tr2HalHelperStructures.h"
+
 
 #ifndef GL_TEXTURE_3D
 #define GL_TEXTURE_3D GL_TEXTURE_3D_OES

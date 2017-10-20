@@ -5,6 +5,7 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 #include "ALLog.h"
+#include "Tr2PrimaryRenderContextDx11.h"
 
 using namespace Tr2RenderContextEnum;
 

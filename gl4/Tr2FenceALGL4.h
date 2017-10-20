@@ -2,6 +2,13 @@
 #ifndef Tr2FenceALDx9_H
 #define Tr2FenceALDx9_H
 
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
+
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
 class Tr2FenceAL :

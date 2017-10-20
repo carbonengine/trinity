@@ -2,6 +2,15 @@
 #ifndef Tr2VideoAdapterInfo_H
 #define Tr2VideoAdapterInfo_H
 
+
+#include "../ALResult.h"
+#include "../Tr2RenderContextEnum.h"
+
+
+struct Tr2AdapterInfo;
+struct Tr2DisplayModeInfo;
+
+
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 class Tr2VideoAdapterInfo

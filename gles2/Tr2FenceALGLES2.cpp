@@ -2,6 +2,7 @@
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
 #include "Tr2FenceALGLES2.h"
+#include "Tr2RenderContextGLES2.h"
 
 #ifdef __ANDROID__
 namespace

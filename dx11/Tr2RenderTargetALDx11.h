@@ -1,10 +1,15 @@
 #ifndef Tr2RenderTargetALDx11_h_
 #define Tr2RenderTargetALDx11_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
-#include "Tr2AutoResetObjectAL.h"
-#include "Tr2TextureALDx11.h"
+#include "../Tr2AutoResetObjectAL.h"
+#include "../include/Tr2TextureAL.h"
+
+
+class Tr2LockedRenderTargetAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 // -------------------------------------------------------------
 // Description:

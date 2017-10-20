@@ -8,11 +8,17 @@
 #ifndef Tr2SwapChainALDx9_H
 #define Tr2SwapChainALDx9_H
 
-#if TRINITY_PLATFORM==TRINITY_DIRECTX9
 
-#include "Tr2AutoResetObjectAL.h"
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../Tr2AutoResetObjectAL.h"
+#include "../include/Tr2RenderTargetAL.h"
+
 
 class Tr2RenderContextAL;
+
+
+#if TRINITY_PLATFORM==TRINITY_DIRECTX9
 
 // --------------------------------------------------------------------------------------
 // Description:

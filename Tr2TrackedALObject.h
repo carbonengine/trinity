@@ -8,6 +8,8 @@
 #ifndef Tr2TrackedALObject_H
 #define Tr2TrackedALObject_H
 
+#include "Tr2RenderContextEnum.h"
+
 // Define TRACK_AL_RESOURCES as 0 to disable tracking
 #ifndef TRACK_AL_RESOURCES
 #define TRACK_AL_RESOURCES 1
@@ -182,5 +184,7 @@ private:
 };
 
 #endif
+
+#include "Tr2TrackedALObjectImpl.h"
 
 #endif // Tr2TrackedALObject_H

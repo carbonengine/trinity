@@ -3,6 +3,7 @@
 #if TRINITY_PLATFORM==TRINITY_STUB
 
 #include "Tr2SwapChainALStub.h"
+#include "Tr2RenderContextStub.h"
 #include "ALLog.h"
 
 

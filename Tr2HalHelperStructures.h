@@ -6,6 +6,16 @@
 #include "include/Tr2BitmapDimensions.h"
 #include "include/Tr2CubemapFace.h"
 
+class Tr2DepthStencilAL;
+class Tr2ShaderAL;
+class Tr2IndexBufferAL;
+class Tr2ConstantBufferAL;
+class Tr2VertexBufferAL;
+class Tr2TextureAL;
+class Tr2RenderTargetAL;
+class Tr2GpuBufferAL;
+class Tr2VertexLayoutAL;
+
 // -------------------------------------------------------------
 // Description:
 //	A simple structure to hold data used for initializing USAGE_IMMUTABLE textures

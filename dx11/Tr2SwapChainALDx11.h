@@ -8,9 +8,17 @@
 #ifndef Tr2SwapChainALDx11_H
 #define Tr2SwapChainALDx11_H
 
-#if TRINITY_PLATFORM==TRINITY_DIRECTX11
 
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../include/Tr2RenderTargetAL.h"
+
+
+class Tr2PrimaryRenderContextAL;
 class Tr2RenderContextAL;
+
+
+#if TRINITY_PLATFORM==TRINITY_DIRECTX11
 
 class Tr2SwapChainAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SWAP_CHAIN>
 {

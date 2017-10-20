@@ -6,7 +6,8 @@
 
 #include "StdAfx.h"
 #include "Tr2TrackedALObject.h"
-#include <string>
+
+#include "include/TrinityAL.h"
 
 #if TRACK_AL_RESOURCES
 

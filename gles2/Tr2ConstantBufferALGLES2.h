@@ -2,6 +2,14 @@
 #ifndef Tr2ConstantBufferALGLES2_h_
 #define Tr2ConstantBufferALGLES2_h_
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
+
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
 // -------------------------------------------------------------

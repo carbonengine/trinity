@@ -1,6 +1,8 @@
 #include "StdAfx.h"
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
+#include "Tr2CapsALStub.h"
+
 bool Tr2CapsAL::SupportsFloat16() const
 {
 	return true;

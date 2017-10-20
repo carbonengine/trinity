@@ -2,6 +2,12 @@
 #ifndef Tr2ConstantBufferALDx9_h_
 #define Tr2ConstantBufferALDx9_h_
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
+class Tr2RenderContextAL;
+
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 // -------------------------------------------------------------

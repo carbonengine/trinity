@@ -2,11 +2,18 @@
 #ifndef Tr2TextureALDx9_h_
 #define Tr2TextureALDx9_h_
 
+#include "../Tr2TrackedALObject.h"
+#include "../ALResult.h"
+#include "../include/Tr2BitmapDimensions.h"
+
+
 struct Tr2SubresourceData;
+class Tr2RenderTargetAL;
+class Tr2RenderContextAL;
+struct Tr2TextureSubresource;
+
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
-
-class Tr2RenderTargetAL;
 
 // -------------------------------------------------------------
 // Description:
@@ -16,8 +23,8 @@ class Tr2RenderTargetAL;
 //   Tr2SubresourceData
 // -------------------------------------------------------------
 class Tr2TextureAL :
-public Tr2BitmapDimensions,
-public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
+	public Tr2BitmapDimensions,
+	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
 {
 public:
 	Tr2TextureAL();

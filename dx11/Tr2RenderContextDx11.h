@@ -2,21 +2,30 @@
 #ifndef Tr2RenderContextDx11_h_
 #define Tr2RenderContextDx11_h_
 
-#include "Tr2RenderContextEnum.h"
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#include "../Tr2RenderContextEnum.h"
+#include "../Tr2DrawUPHelper.h"
+#include "../include/Tr2ConstantBufferAL.h"
 
-struct ID3D11DeviceContext;
+
 class Tr2VertexBufferAL;
 class Tr2IndexBufferAL;
 class Tr2ConstantBufferAL;
-class Tr2HalDevice;
 class Tr2VertexLayoutAL;
 class Tr2TextureAL;
 struct ITr2RenderContextEvents;
 
+class Tr2ShaderAL;
+class Tr2GpuBufferAL;
+class Tr2RenderTargetAL;
+class Tr2SamplerStateAL;
+class Tr2DepthStencilAL;
+struct Tr2Viewport;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+
 #include "Tr2RenderStateEmulationDx11.h"
-#include "Tr2DrawUPHelper.h"
 
 // -------------------------------------------------------------
 // Description:

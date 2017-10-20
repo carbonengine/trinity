@@ -7,6 +7,9 @@ bool g_preloadTextureToDeviceOnPrepare = true;
 #pragma warning( disable: 4189 )	// Scopeguard
 #include "Tr2TextureALDx11.h"
 #include "ALLog.h"
+#include "Tr2HalHelperStructures.h"
+#include "Tr2PrimaryRenderContextDx11.h"
+#include "Tr2RenderTargetALDx11.h"
 using namespace Tr2RenderContextEnum;
 
 

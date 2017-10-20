@@ -1,9 +1,10 @@
 #include "StdAfx.h"
-#include "Tr2GpuBufferALDx11.h"
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
+#include "Tr2GpuBufferALDx11.h"
 #include "ALLog.h"
+#include "Tr2PrimaryRenderContextDx11.h"
 
 using namespace Tr2RenderContextEnum;
 

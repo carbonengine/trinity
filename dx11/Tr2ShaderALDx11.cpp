@@ -4,6 +4,7 @@
 
 #include "Tr2ShaderALDx11.h"
 #include "ALLog.h"
+#include "Tr2PrimaryRenderContextDx11.h"
 
 using namespace Tr2RenderContextEnum;
 

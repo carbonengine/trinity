@@ -2,13 +2,20 @@
 #ifndef Tr2BufferImplALDx11_h_
 #define Tr2BufferImplALDx11_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
-class Tr2RenderContextAL;
+#include "../ALResult.h"
+#include "../Tr2RenderContextEnum.h"
 
 #ifdef TRINITY_AL_GUARD_LOCKS
-#include "Tr2LockGuard.h"
+#include "../Tr2LockGuard.h"
 #endif
+
+
+class Tr2PrimaryRenderContextAL;
+class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 // -------------------------------------------------------------
 // Description:

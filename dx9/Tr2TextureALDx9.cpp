@@ -1,12 +1,13 @@
 #include "StdAfx.h"
-#include "Tr2TextureALDx9.h"
-#include "BcDecompress.h"
-
-using namespace Tr2RenderContextEnum;
-
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
+#include "Tr2TextureALDx9.h"
+#include "BcDecompress.h"
 #include "ALLog.h"
+#include "Tr2RenderContextDx9.h"
+#include "Tr2LockedRenderTargetALDx9.h"
+
+using namespace Tr2RenderContextEnum;
 
 #pragma warning( disable: 4189 )	// Scopeguard
 

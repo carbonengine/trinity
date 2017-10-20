@@ -10,6 +10,7 @@
 
 #include "Tr2SwapChainALDx9.h"
 #include "ALLog.h"
+#include "Tr2RenderContextDx9.h"
 
 
 // --------------------------------------------------------------------------------------

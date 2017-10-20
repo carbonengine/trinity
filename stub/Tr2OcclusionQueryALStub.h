@@ -2,6 +2,14 @@
 #ifndef Tr2OcclusionQueryALStub_H
 #define Tr2OcclusionQueryALStub_H
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
+
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 class Tr2OcclusionQueryAL : 

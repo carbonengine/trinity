@@ -9,6 +9,8 @@
 #if TRINITY_PLATFORM==TRINITY_OPENGLES2
 
 #include "Tr2SwapChainALGLES2.h"
+#include "Tr2RenderContextGLES2.h"
+
 #if !defined(_WIN32) && !defined(TRINITY_AL_MOBILE)
 #include "GLFW/glfw3.h"
 #endif

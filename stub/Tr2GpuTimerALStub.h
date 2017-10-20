@@ -2,6 +2,16 @@
 #ifndef Tr2GpuTimerALStub_H
 #define Tr2GpuTimerALStub_H
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../Tr2AutoResetObjectAL.h"
+
+
+class Tr2PrimaryRenderContextAL;
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 class Tr2GpuTimerAL: 

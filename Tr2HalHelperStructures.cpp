@@ -1,6 +1,14 @@
-#include <StdAfx.h>
+#include "StdAfx.h"
 #include "Tr2HalHelperStructures.h"
-#include <math.h>
+
+#include "include/Tr2DepthStencilAL.h"
+#include "include/Tr2ShaderAL.h"
+#include "include/Tr2IndexBufferAL.h"
+#include "include/Tr2VertexBufferAL.h"
+#include "include/Tr2RenderTargetAL.h"
+#include "include/Tr2GpuBufferAL.h"
+#include "include/Tr2ConstantBufferAL.h"
+#include "include/Tr2VertexLayoutAL.h"
 
 using namespace Tr2RenderContextEnum;
 

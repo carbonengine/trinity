@@ -8,9 +8,14 @@
 #ifndef Tr2SwapChainALGLES2_H
 #define Tr2SwapChainALGLES2_H
 
-#if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
 #include "../Tr2AutoResetObjectAL.h"
+#include "../include/Tr2RenderTargetAL.h"
+
+
+#if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
 class Tr2RenderContextAL;
 

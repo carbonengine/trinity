@@ -2,9 +2,16 @@
 #ifndef Tr2VertexLayoutALStub_h_
 #define Tr2VertexLayoutALStub_h_
 
-#if( TRINITY_PLATFORM==TRINITY_STUB )
+
+#include "../Tr2TrackedALObject.h"
+#include "../ALResult.h"
+
 
 class Tr2VertexDefinition;
+class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_STUB )
 
 class Tr2VertexLayoutAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_VERTEX_LAYOUT>
 {

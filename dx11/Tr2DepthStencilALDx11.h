@@ -2,9 +2,14 @@
 #ifndef Tr2DepthStencilALDx11_h_
 #define Tr2DepthStencilALDx11_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
-#include "Tr2AutoResetObjectAL.h"
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../Tr2AutoResetObjectAL.h"
+#include "../include/Tr2TextureAL.h"
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 // -------------------------------------------------------------
 // Description:

@@ -2,11 +2,15 @@
 #ifndef Tr2ShaderALDx9_H
 #define Tr2ShaderALDx9_H
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../Tr2VertexDefinition.h"
 
-#include "Tr2VertexDefinition.h"
 
 class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 // -------------------------------------------------------------
 // Description:

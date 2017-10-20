@@ -1,9 +1,11 @@
 #include "StdAfx.h"
-#include "Tr2RenderTargetALGLES2.h"
-
-using namespace Tr2RenderContextEnum;
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
+#include "Tr2RenderTargetALGLES2.h"
+#include "Tr2RenderContextGLES2.h"
+#include "Tr2LockedRenderTargetALGLES2.h"
+
+using namespace Tr2RenderContextEnum;
 
 #include "ALLog.h"
 

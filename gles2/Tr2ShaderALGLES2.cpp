@@ -1,7 +1,8 @@
 #include "StdAfx.h"
-#include "Tr2ShaderALGLES2.h"
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
+#include "Tr2ShaderALGLES2.h"
+#include "Tr2RenderContextGLES2.h"
 #include "ALLog.h"
 
 using namespace Tr2RenderContextEnum;

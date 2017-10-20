@@ -6,10 +6,10 @@
 // http://www.khronos.org/registry/gles/extensions/EXT/EXT_occlusion_query_boolean.txt
 
 #include "Tr2OcclusionQueryALGLES2.h"
+#include "Tr2RenderContextGLES2.h"
 #include "ALLog.h"
 
 #ifdef TRINITY_AL_MOBILE
-#include <EGL/egl.h>
 
 namespace
 {

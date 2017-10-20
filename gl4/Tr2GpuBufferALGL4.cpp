@@ -1,7 +1,9 @@
 #include "StdAfx.h"
-#include "Tr2GpuBufferALGL4.h"
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
+
+#include "Tr2GpuBufferALGL4.h"
+#include "Tr2RenderContextGL4.h"
 
 using namespace Tr2RenderContextEnum;
 

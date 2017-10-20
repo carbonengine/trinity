@@ -2,10 +2,18 @@
 #ifndef Tr2RenderTargetALGLES2_h_
 #define Tr2RenderTargetALGLES2_h_
 
-#if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
 #include "../Tr2AutoResetObjectAL.h"
-#include "Tr2TextureALGL4.h"
+#include "../include/Tr2TextureAL.h"
+
+
+class Tr2RenderContextAL;
+class Tr2LockedRenderTargetAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
 class Tr2RenderTargetAL : 
 	public Tr2AutoResetObjectAL, 

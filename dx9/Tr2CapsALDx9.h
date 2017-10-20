@@ -2,6 +2,10 @@
 #ifndef Tr2CapsALDx9_H
 #define Tr2CapsALDx9_H
 
+
+#include "../ALResult.h"
+
+
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 class Tr2CapsAL

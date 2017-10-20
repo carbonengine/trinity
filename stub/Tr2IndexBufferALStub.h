@@ -2,9 +2,14 @@
 #ifndef Tr2IndexBufferALStub_h_
 #define Tr2IndexBufferALStub_h_
 
-#if( TRINITY_PLATFORM==TRINITY_STUB )
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
 
 class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_STUB )
 
 // -------------------------------------------------------------
 // Description:

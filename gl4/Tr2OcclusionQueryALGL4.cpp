@@ -3,6 +3,7 @@
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
 #include "Tr2OcclusionQueryALGL4.h"
+#include "Tr2RenderContextGL4.h"
 
 Tr2OcclusionQueryAL::Tr2OcclusionQueryAL()
 :   m_query( 0 )

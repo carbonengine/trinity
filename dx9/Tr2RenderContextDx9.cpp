@@ -1,12 +1,21 @@
 #include "StdAfx.h"
-#include "Tr2RenderContextDx9.h"
-#include "ITr2RenderContextEvents.h"
-
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
+#include "Tr2RenderContextDx9.h"
+#include "ITr2RenderContextEvents.h"
 #include "ALLog.h"
-
-#include <ddraw.h>
+#include "Tr2GpuTelemetry.h"
+#include "Tr2HalHelperStructures.h"
+#include "Tr2VertexBufferALDx9.h"
+#include "Tr2IndexBufferALDx9.h"
+#include "Tr2ConstantBufferALDx9.h"
+#include "Tr2SamplerStateALDx9.h"
+#include "Tr2DepthStencilALDx9.h"
+#include "Tr2RenderTargetALDx9.h"
+#include "Tr2VideoAdapterInfoALDx9.h"
+#include "Tr2VertexLayoutALDx9.h"
+#include "Tr2ShaderALDx9.h"
+#include "Tr2AdapterStructures.h"
 
 using namespace Tr2RenderContextEnum;
 #pragma warning( disable: 4189 )	// Scopeguard
@@ -1168,9 +1177,6 @@ bool Tr2RenderContextAL::IsSupportedRenderTargetFormat( PixelFormat format, bool
 															withAutoGenMipmap );
 }
 
-typedef HRESULT ( WINAPI* LPDIRECTDRAWCREATE )(		GUID FAR *lpGUID, 
-													LPDIRECTDRAW FAR *lplpDD, 
-													IUnknown FAR *pUnkOuter );
 ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot )
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );

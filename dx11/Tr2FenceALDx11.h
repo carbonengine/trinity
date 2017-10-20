@@ -2,6 +2,15 @@
 #ifndef Tr2FenceALDx11_H
 #define Tr2FenceALDx11_H
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
+
+class Tr2PrimaryRenderContextAL;
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 class Tr2FenceAL : 
@@ -27,8 +36,8 @@ public:
 
 	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
 private:
-	Tr2FenceAL( const Tr2OcclusionQueryAL& ) /* = delete */;
-	Tr2FenceAL& operator=( const Tr2OcclusionQueryAL& ) /* = delete */;
+	Tr2FenceAL( const Tr2FenceAL& ) /* = delete */;
+	Tr2FenceAL& operator=( const Tr2FenceAL& ) /* = delete */;
 
 	CComPtr<ID3D11Query> m_query;
 };

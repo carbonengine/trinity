@@ -2,24 +2,30 @@
 #ifndef Tr2RenderContextGLES2_h_
 #define Tr2RenderContextGLES2_h_
 
-#if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
+#include "../ALResult.h"
+#include "../include/Tr2CapsAL.h"
+#include "../include/Tr2RenderTargetAL.h"
+#include "../include/Tr2DepthStencilAL.h"
 #include "../Tr2RenderContextEnum.h"
+#include "../Tr2HalHelperStructures.h"
+#include "../Tr2DrawUPHelper.h"
+#include "../Tr2FragmentOpSettings.h"
 
+
+struct Tr2PresentParametersAL;
 class Tr2VertexBufferAL;
 class Tr2IndexBufferAL;
-class Tr2ConstantBufferAL;
-class Tr2VertexLayoutAL;
 class Tr2ShaderAL;
-class Tr2SamplerStateAL;
+class Tr2GpuBufferAL;
 class Tr2TextureAL;
+class Tr2VertexDefinition;
+
 struct ITr2RenderContextEvents;
 
-#include "../Tr2VertexDefinition.h"
-#include "../Tr2FragmentOpSettings.h"
-#include "Tr2RenderTargetALGL4.h"
-#include "Tr2CapsALGL4.h"
-#include "../Tr2DrawUPHelper.h"
+
+#if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
+
 
 // -------------------------------------------------------------
 // Description:

@@ -3,6 +3,7 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 #include "Tr2OcclusionQueryALDx11.h"
+#include "Tr2PrimaryRenderContextDx11.h"
 
 ALResult Tr2OcclusionQueryAL::Create( Tr2PrimaryRenderContextAL& renderContext )
 {

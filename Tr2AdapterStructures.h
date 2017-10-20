@@ -2,6 +2,8 @@
 #ifndef Tr2AdapterStructures_H
 #define Tr2AdapterStructures_H
 
+#include "Tr2RenderContextEnum.h"
+
 struct AdapterGuid
 {
     uint32_t data1;

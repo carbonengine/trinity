@@ -2,9 +2,15 @@
 #ifndef Tr2IndexBufferALGLES2_h_
 #define Tr2IndexBufferALGLES2_h_
 
-#if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
 
 class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
 // -------------------------------------------------------------
 // Description:

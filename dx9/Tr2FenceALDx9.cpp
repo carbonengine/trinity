@@ -2,6 +2,8 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 #include "Tr2FenceALDx9.h"
+#include "Tr2RenderContextDx9.h"
+
 
 Tr2FenceAL::Tr2FenceAL()
 {

@@ -14,6 +14,7 @@
 #include <cmath>
 #include <cstdlib>
 #include <cstdint>
+#include <memory>
 
 #ifdef _WIN32
 typedef HWND Tr2WindowHandle;
@@ -25,6 +26,27 @@ typedef uintptr_t Tr2WindowHandle;
 #pragma warning(pop)
 #endif
 
-#include "Tr2Hal.h"
+#include "include/TrinityALForward.h"
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#include <GFSDK_Aftermath.h>
+#elif( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
+
+#if !defined(_WIN32) && !defined(TRINITY_AL_MOBILE)
+#include "GLFW/glfw3.h"
+#endif
+
+#if defined(TRINITY_AL_MOBILE)
+#include <android/native_window.h>
+#endif
+
+#elif( TRINITY_PLATFORM==TRINITY_OPENGL4 )
+#if !defined(_WIN32)
+#include <GLFW/glfw3.h>
+#else
+#include <wglext.h>
+#endif
+
+#endif
 
 #endif

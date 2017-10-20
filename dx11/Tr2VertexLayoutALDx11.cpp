@@ -5,6 +5,8 @@
 #include "Tr2VertexLayoutALDx11.h"
 #include "Tr2VertexDefinition.h"
 #include "ALLog.h"
+#include "Tr2RenderContextDx11.h"
+#include "Tr2ShaderALDx11.h"
 
 using namespace Tr2RenderContextEnum;
 

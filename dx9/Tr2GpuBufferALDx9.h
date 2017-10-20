@@ -3,6 +3,12 @@
 #ifndef Tr2GpuBufferALDx9_h_
 #define Tr2GpuBufferALDx9_h_
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../Tr2RenderContextEnum.h"
+
+
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 class Tr2RenderContextAL;

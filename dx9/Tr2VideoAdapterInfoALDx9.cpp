@@ -5,6 +5,8 @@
 extern bool g_wantsEXDevice;
 
 #include "Tr2VideoAdapterInfoALDx9.h"
+#include "Tr2AdapterStructures.h"
+#include "Tr2RenderContextDx9.h"
 
 extern bool g_usingEXDevice;
 extern std::vector<HANDLE> g_D3DCreatedHeaps;
@@ -108,11 +110,11 @@ ALResult InitializeDirect3D()
 	{
 		return E_FAIL;
 	}
-	if ( !D3DXCheckVersion( D3D_SDK_VERSION, D3DX_SDK_VERSION ) )
-	{
-		s_direct3D.Release();
-		return E_FAIL;
-	}
+	//if ( !D3DXCheckVersion( D3D_SDK_VERSION, D3DX_SDK_VERSION ) )
+	//{
+	//	s_direct3D.Release();
+	//	return E_FAIL;
+	//}
 	return S_OK;
 }
 

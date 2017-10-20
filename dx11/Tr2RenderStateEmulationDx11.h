@@ -4,7 +4,8 @@
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
-#include "Tr2FragmentOpSettings.h"
+#include "../ALResult.h"
+#include "../Tr2FragmentOpSettings.h"
 
 // -------------------------------------------------------------
 // Description:

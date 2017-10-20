@@ -2,7 +2,17 @@
 #ifndef Tr2TextureALGLES2_h_
 #define Tr2TextureALGLES2_h_
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../include/Tr2BitmapDimensions.h"
+#include "../include/Tr2SamplerStateAL.h"
+
+
 struct Tr2SubresourceData;
+class Tr2RenderContextAL;
+struct Tr2TextureSubresource;
+
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
@@ -14,8 +24,8 @@ struct Tr2SubresourceData;
 //   Tr2SubresourceData
 // -------------------------------------------------------------
 class Tr2TextureAL :
-public Tr2BitmapDimensions,
-public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
+	public Tr2BitmapDimensions,
+	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
 {
 public:
 	Tr2TextureAL();

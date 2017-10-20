@@ -1,8 +1,8 @@
 #include "StdAfx.h"
-#include "Tr2DepthStencilALStub.h"
 
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
+#include "Tr2DepthStencilALStub.h"
 #include "ALLog.h"
 
 using namespace Tr2RenderContextEnum;

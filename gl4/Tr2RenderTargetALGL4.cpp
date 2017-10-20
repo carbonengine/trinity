@@ -1,9 +1,11 @@
 #include "StdAfx.h"
+#if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
+
 #include "Tr2RenderTargetALGL4.h"
+#include "Tr2RenderContextGL4.h"
+#include "Tr2LockedRenderTargetALGL4.h"
 
 using namespace Tr2RenderContextEnum;
-
-#if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
 #include "ALLog.h"
 

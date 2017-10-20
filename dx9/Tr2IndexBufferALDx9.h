@@ -2,9 +2,14 @@
 #ifndef Tr2IndexBufferALDx9_h_
 #define Tr2IndexBufferALDx9_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
+#include "../Tr2TrackedALObject.h"
+#include "../ALResult.h"
+
 
 class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 // -------------------------------------------------------------
 // Description:

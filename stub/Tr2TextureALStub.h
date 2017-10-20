@@ -2,7 +2,16 @@
 #ifndef Tr2TextureALStub_h_
 #define Tr2TextureALStub_h_
 
+
+#include "../include/Tr2BitmapDimensions.h"
+#include "../Tr2TrackedALObject.h"
+#include "../ALResult.h"
+
+
 struct Tr2SubresourceData;
+struct Tr2TextureSubresource;
+class Tr2RenderContextAL;
+
 
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 

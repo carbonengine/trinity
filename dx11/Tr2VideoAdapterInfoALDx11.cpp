@@ -3,6 +3,8 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 #include "Tr2VideoAdapterInfoALDx11.h"
+#include "Tr2AdapterStructures.h"
+#include "Tr2DepthStencilALDx11.h"
 
 extern bool g_usingEXDevice;
 extern std::vector<HANDLE> g_D3DCreatedHeaps;

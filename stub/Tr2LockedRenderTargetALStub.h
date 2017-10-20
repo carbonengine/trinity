@@ -2,6 +2,13 @@
 #ifndef Tr2LockedRenderTargetALStub_H
 #define Tr2LockedRenderTargetALStub_H
 
+
+#include "../ALResult.h"
+
+
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 class Tr2LockedRenderTargetAL

@@ -3,6 +3,8 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 #include "Tr2SamplerStateALDx11.h"
+#include "Tr2PrimaryRenderContextDx11.h"
+#include "Tr2HalHelperStructures.h"
 
 // Force anisotropic filtering switch:
 // 0 means use whatever is specified in the effect (default)

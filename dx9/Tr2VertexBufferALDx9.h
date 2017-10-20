@@ -2,9 +2,15 @@
 #ifndef Tr2VertexBufferALDx9_h_
 #define Tr2VertexBufferALDx9_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
 
 class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 // -------------------------------------------------------------
 // Description:

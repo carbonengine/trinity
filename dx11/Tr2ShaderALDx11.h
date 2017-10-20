@@ -2,11 +2,17 @@
 #ifndef Tr2ShaderALDx11_H
 #define Tr2ShaderALDx11_H
 
-#include "Tr2VertexDefinition.h"
+
+#include "../Tr2VertexDefinition.h"
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
+
+class Tr2PrimaryRenderContextAL;
+class Tr2RenderContextAL;
+
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
-
-class Tr2RenderContextAL;
 
 // -------------------------------------------------------------
 // Description:

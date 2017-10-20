@@ -1,11 +1,15 @@
-
 #ifndef Tr2RenderTargetALDx9_h_
 #define Tr2RenderTargetALDx9_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
-#include "Tr2AutoResetObjectAL.h"
-#include "Tr2TextureALDx9.h"
+#include "../Tr2AutoResetObjectAL.h"
+#include "../include/Tr2TextureAL.h"
+
+
+class Tr2LockedRenderTargetAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 class Tr2RenderTargetAL : 
 	public Tr2AutoResetObjectAL, 

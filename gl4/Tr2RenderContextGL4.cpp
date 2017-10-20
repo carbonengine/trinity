@@ -1,15 +1,17 @@
 #include "StdAfx.h"
-#include "Tr2RenderContextGL4.h"
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
+#include "Tr2RenderContextGL4.h"
 #include "ITr2RenderContextEvents.h"
+#include "Tr2SamplerStateALGL4.h"
+#include "Tr2ShaderALGL4.h"
+#include "Tr2ConstantBufferALGL4.h"
+#include "Tr2GpuBufferALGL4.h"
+#include "Tr2VertexLayoutALGL4.h"
+#include "Tr2AdapterStructures.h"
 #include "ALLog.h"
-#if !defined(_WIN32)
-#include "GLFW/glfw3.h"
-#else
-#include "wglext.h"
-#endif
+
 
 using namespace Tr2RenderContextEnum;
 #pragma warning( disable: 4189 )	// Scopeguard

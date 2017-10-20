@@ -7,12 +7,6 @@
 #include "StdAfx.h"
 #include "ALResult.h"
 #include "ALLog.h"
-#if TRINITY_PLATFORM == TRINITY_DIRECTX9 || TRINITY_PLATFORM == TRINITY_DIRECTX11
-#define HAS_DXERR
-#endif
-#ifdef HAS_DXERR
-#include <dxerr.h>
-#endif
 
 #if( TRINITYDEV == 1 )
 bool g_requestDeviceDebugLayer = true;
@@ -162,7 +156,7 @@ Be::Result<HRESULT>::Category Be::Result<HRESULT>::GetCategory() const
 	switch( GetResult() )
 	{
 	case E_OUTOFMEMORY:
-#if TRINITY_PLATFORM == TRINITY_DIRECTX9 || TRINITY_PLATFORM == TRINITY_DIRECTX11
+#if TRINITY_PLATFORM == TRINITY_DIRECTX9
 	case D3DERR_OUTOFVIDEOMEMORY:
 #endif
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11

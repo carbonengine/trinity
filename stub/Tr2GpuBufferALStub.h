@@ -3,9 +3,15 @@
 #ifndef Tr2GpuBufferALStub_h_
 #define Tr2GpuBufferALStub_h_
 
-#if( TRINITY_PLATFORM==TRINITY_STUB )
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../Tr2RenderContextEnum.h"
 
 class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_STUB )
 
 class Tr2GpuBufferAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_GPU_BUFFER>
 {

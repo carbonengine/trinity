@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "Tr2VertexDefinition.h"
-#include <algorithm>
 
 Tr2VertexDefinition::Tr2VertexDefinition()
 {

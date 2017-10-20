@@ -58,6 +58,21 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_CONTEX
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
 };
 
+class Tr2ConstantBufferAL;
+class Tr2DepthStencilAL;
+class Tr2IndexBufferAL;
+class Tr2RenderTargetAL;
+class Tr2ShaderAL;
+class Tr2SamplerStateAL;
+class Tr2TextureAL;
+class Tr2VertexBufferAL;
+class Tr2VertexLayoutAL;
+class Tr2OcclusionQueryAL;
+class Tr2SwapChainAL;
+class Tr2GpuBufferAL;
+class Tr2FenceAL;
+class Tr2GpuTimerAL;
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Description structure for Tr2ConstantBufferAL. 

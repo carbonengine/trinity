@@ -3,6 +3,7 @@
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
 #include "Tr2VideoAdapterInfoALGLES2.h"
+#include "Tr2AdapterStructures.h"
 
 #ifndef _WIN32
 

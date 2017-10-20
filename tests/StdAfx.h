@@ -11,7 +11,7 @@ typedef HWND Tr2WindowHandle;
 typedef uintptr_t Tr2WindowHandle;
 #endif
 
-#include "TrinityAL/Tr2Hal.h"
+#include "TrinityAL/include/TrinityAL.h"
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 #define SHADER_PATH Shaders.dx9

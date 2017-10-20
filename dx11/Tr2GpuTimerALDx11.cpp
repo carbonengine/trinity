@@ -2,6 +2,7 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 #include "Tr2GpuTimerALDx11.h"
+#include "Tr2PrimaryRenderContextDx11.h"
 
 
 Tr2GpuTimerAL::Tr2GpuTimerAL()

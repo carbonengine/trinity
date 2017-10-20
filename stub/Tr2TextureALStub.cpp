@@ -1,9 +1,10 @@
 #include "StdAfx.h"
+#if( TRINITY_PLATFORM==TRINITY_STUB )
+
 #include "Tr2TextureALStub.h"
+#include "Tr2RenderContextStub.h"
 
 using namespace Tr2RenderContextEnum;
-
-#if( TRINITY_PLATFORM==TRINITY_STUB )
 
 #include "ALLog.h"
 

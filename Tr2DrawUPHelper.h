@@ -2,6 +2,12 @@
 #ifndef Tr2DrawUPHelper_h_
 #define Tr2DrawUPHelper_h_
 
+#include "ALResult.h"
+#include "include/Tr2VertexBufferAL.h"
+#include "include/Tr2IndexBufferAL.h"
+
+class Tr2RenderContextAL;
+
 class Tr2DrawUPHelper
 {
 public:

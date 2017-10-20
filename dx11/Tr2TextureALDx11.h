@@ -2,13 +2,24 @@
 #ifndef Tr2TextureALDx11_h_
 #define Tr2TextureALDx11_h_
 
-struct Tr2SubresourceData;
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../include/Tr2BitmapDimensions.h"
 
 #ifdef TRINITY_AL_GUARD_LOCKS
-#include "Tr2LockGuard.h"
+#include "../Tr2LockGuard.h"
 #endif
+
+
+class Tr2PrimaryRenderContextAL;
+struct Tr2TextureSubresource;
+class Tr2RenderContextAL;
+class Tr2RenderTargetAL;
+struct Tr2SubresourceData;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 // -------------------------------------------------------------
 // Description:

@@ -2,6 +2,9 @@
 #ifndef Tr2DriverUtilities_H
 #define Tr2DriverUtilities_H
 
+#include "ALResult.h"
+#include "Tr2AdapterStructures.h"
+
 namespace Tr2DriverUtilities
 {
 

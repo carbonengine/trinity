@@ -1,10 +1,14 @@
 #include "StdAfx.h"
-#include "Tr2RenderContextStub.h"
-#include "ITr2RenderContextEvents.h"
 
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
+#include "Tr2RenderContextStub.h"
+#include "ITr2RenderContextEvents.h"
 #include "ALLog.h"
+#include "Tr2VertexBufferALStub.h"
+#include "Tr2IndexBufferALStub.h"
+#include "Tr2LockedRenderTargetALStub.h"
+#include "Tr2AdapterStructures.h"
 
 
 using namespace Tr2RenderContextEnum;

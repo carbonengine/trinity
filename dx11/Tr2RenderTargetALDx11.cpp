@@ -4,6 +4,9 @@
 
 #include "Tr2RenderTargetALDx11.h"
 #include "ALLog.h"
+#include "Tr2PrimaryRenderContextDx11.h"
+#include "Tr2HalHelperStructures.h"
+#include "Tr2LockedRenderTargetALDx11.h"
 
 using namespace Tr2RenderContextEnum;
 

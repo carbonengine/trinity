@@ -1,9 +1,12 @@
 #include "StdAfx.h"
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
+
 #include "Tr2RenderTargetALDx9.h"
+#include "Tr2RenderContextDx9.h"
+#include "Tr2HalHelperStructures.h"
+#include "Tr2LockedRenderTargetALDx9.h"
 
 using namespace Tr2RenderContextEnum;
-
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 #include "ALLog.h"
 

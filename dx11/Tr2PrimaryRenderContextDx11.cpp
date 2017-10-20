@@ -4,10 +4,13 @@
 
 #include "Tr2PrimaryRenderContextDx11.h"
 #include "ITr2RenderContextEvents.h"
+#include "Tr2RenderTargetALDx11.h"
+#include "Tr2GpuTelemetry.h"
+#include "Tr2AdapterStructures.h"
+#include "Tr2VideoAdapterInfoALDx11.h"
 
 #include "ALLog.h"
 
-#include <GFSDK_Aftermath.h>
 
 using namespace Tr2RenderContextEnum;
 

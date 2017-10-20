@@ -2,6 +2,13 @@
 #ifndef Tr2LockedRenderTargetALDx11_H
 #define Tr2LockedRenderTargetALDx11_H
 
+
+#include "../ALResult.h"
+
+
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 class Tr2LockedRenderTargetAL

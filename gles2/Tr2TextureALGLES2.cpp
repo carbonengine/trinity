@@ -1,12 +1,15 @@
 #include "StdAfx.h"
-#include "Tr2TextureALGLES2.h"
-#include "BcDecompress.h"
-
-using namespace Tr2RenderContextEnum;
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
+#include "Tr2TextureALGLES2.h"
+#include "BcDecompress.h"
 #include "ALLog.h"
+#include "Tr2RenderContextGLES2.h"
+
+
+using namespace Tr2RenderContextEnum;
+
 
 bool g_preloadTextureToDeviceOnPrepare = true;
 

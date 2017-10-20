@@ -2,6 +2,14 @@
 #ifndef Tr2SamplerStateALDx9_H
 #define Tr2SamplerStateALDx9_H
 
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
+
+class Tr2RenderContextAL;
+struct Tr2SamplerDescription;
+
+
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
 class Tr2SamplerStateAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>

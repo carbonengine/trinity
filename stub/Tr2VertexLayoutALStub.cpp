@@ -1,9 +1,11 @@
 #include "StdAfx.h"
-#include "Tr2VertexLayoutALStub.h"
-
-#include "Tr2VertexDefinition.h"
 
 #if( TRINITY_PLATFORM==TRINITY_STUB )
+
+#include "Tr2VertexLayoutALStub.h"
+#include "Tr2VertexDefinition.h"
+#include "Tr2RenderContextStub.h"
+
 
 using namespace Tr2RenderContextEnum;
 

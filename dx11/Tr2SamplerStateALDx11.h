@@ -2,6 +2,15 @@
 #ifndef Tr2SamplerStateALDx11_H
 #define Tr2SamplerStateALDx11_H
 
+
+#include "../Tr2TrackedALObject.h"
+#include "../ALResult.h"
+
+
+class Tr2PrimaryRenderContextAL;
+struct Tr2SamplerDescription;
+
+
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 // -------------------------------------------------------------

@@ -3,6 +3,14 @@
 #ifndef Tr2GpuBufferALGL4_h_
 #define Tr2GpuBufferALGL4_h_
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
+
+class Tr2RenderContextAL;
+
+
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
 class Tr2RenderContextAL;

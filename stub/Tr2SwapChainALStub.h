@@ -2,12 +2,16 @@
 #ifndef Tr2SwapChainALStub_H
 #define Tr2SwapChainALStub_H
 
-#if TRINITY_PLATFORM==TRINITY_STUB
-
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
 #include "../Tr2AutoResetObjectAL.h"
+#include "../include/Tr2RenderTargetAL.h"
+
 
 class Tr2RenderContextAL;
 
+
+#if TRINITY_PLATFORM==TRINITY_STUB
 
 class Tr2SwapChainAL: 
 	public Tr2AutoResetObjectAL, 

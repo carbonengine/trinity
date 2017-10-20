@@ -2,11 +2,17 @@
 #ifndef Tr2VertexLayoutALDx11_h_
 #define Tr2VertexLayoutALDx11_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
+
+class Tr2RenderContextAL;
 class Tr2VertexDefinition;
 class Tr2ShaderAL;
 
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 // -------------------------------------------------------------
 // Description
 //   Class to convert a platform agnostic Tr2VertexDeclaration to a DX11 specific

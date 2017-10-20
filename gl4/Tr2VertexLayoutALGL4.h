@@ -2,11 +2,16 @@
 #ifndef Tr2VertexLayoutALGLES2_h_
 #define Tr2VertexLayoutALGLES2_h_
 
-#if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
 #include "../Tr2VertexDefinition.h"
 
-#include <memory>
+
+class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
 // -------------------------------------------------------------
 // Description

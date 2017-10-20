@@ -2,10 +2,15 @@
 #ifndef Tr2DepthStencilALGLES2_h_
 #define Tr2DepthStencilALGLES2_h_
 
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../Tr2AutoResetObjectAL.h"
+#include "../include/Tr2TextureAL.h"
+
+
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
-#include "../Tr2AutoResetObjectAL.h"
-#include "Tr2TextureALGLES2.h"
 
 // -------------------------------------------------------------
 // Description:

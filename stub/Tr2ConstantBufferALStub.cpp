@@ -1,9 +1,10 @@
 #include "StdAfx.h"
-#include "Tr2ConstantBufferALStub.h"
 
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
+#include "Tr2ConstantBufferALStub.h"
 #include "ALLog.h"
+#include "Tr2RenderContextStub.h"
 
 using namespace Tr2RenderContextEnum;
 

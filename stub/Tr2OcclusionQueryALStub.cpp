@@ -3,6 +3,8 @@
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 #include "Tr2OcclusionQueryALStub.h"
+#include "Tr2RenderContextStub.h"
+
 
 Tr2OcclusionQueryAL::Tr2OcclusionQueryAL()
 	: m_isValid(false),

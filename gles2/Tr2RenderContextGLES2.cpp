@@ -1,16 +1,17 @@
 #include "StdAfx.h"
-#include "Tr2RenderContextGLES2.h"
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
+#include "Tr2RenderContextGLES2.h"
 #include "ITr2RenderContextEvents.h"
+#include "Tr2VertexBufferALGLES2.h"
+#include "Tr2IndexBufferALGLES2.h"
+#include "Tr2ConstantBufferALGLES2.h"
+#include "Tr2ShaderALGLES2.h"
+#include "Tr2VertexLayoutALGLES2.h"
+#include "Tr2AdapterStructures.h"
+
 #include "ALLog.h"
-#if !defined(_WIN32) && !defined(TRINITY_AL_MOBILE)
-#include "GLFW/glfw3.h"
-#endif
-#if defined(TRINITY_AL_MOBILE)
-#include <android/native_window.h>
-#endif
 
 using namespace Tr2RenderContextEnum;
 #pragma warning( disable: 4189 )	// Scopeguard

@@ -2,9 +2,16 @@
 #ifndef Tr2VertexLayoutALDx9_h_
 #define Tr2VertexLayoutALDx9_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
+
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+
 
 class Tr2VertexDefinition;
+class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 // -------------------------------------------------------------
 // Description

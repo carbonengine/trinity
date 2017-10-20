@@ -1,8 +1,9 @@
 #include "StdAfx.h"
-#include "Tr2ShaderALDx9.h"
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
+#include "Tr2ShaderALDx9.h"
 #include "ALLog.h"
+#include "Tr2RenderContextDx9.h"
 
 using namespace Tr2RenderContextEnum;
 

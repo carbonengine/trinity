@@ -10,7 +10,7 @@
 
 #include "Tr2SwapChainALDx11.h"
 #include "ALLog.h"
-
+#include "Tr2PrimaryRenderContextDx11.h"
 
 // --------------------------------------------------------------------------------------
 // Description:

@@ -3,6 +3,7 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 #include "Tr2LockedRenderTargetALDx11.h"
+#include "Tr2RenderContextDx11.h"
 
 Tr2LockedRenderTargetAL::Tr2LockedRenderTargetAL()
 {

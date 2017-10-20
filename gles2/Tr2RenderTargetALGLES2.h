@@ -5,7 +5,14 @@
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
 #include "../Tr2AutoResetObjectAL.h"
-#include "Tr2TextureALGLES2.h"
+#include "../ALResult.h"
+#include "../Tr2TrackedALObject.h"
+#include "../include/Tr2TextureAL.h"
+
+
+class Tr2RenderContextAL;
+class Tr2LockedRenderTargetAL;
+
 
 class Tr2RenderTargetAL : 
 	public Tr2AutoResetObjectAL, 

@@ -2,6 +2,7 @@
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 #include "Tr2FenceALStub.h"
+#include "Tr2RenderContextStub.h"
 
 Tr2FenceAL::Tr2FenceAL()
 	:m_isValid(false),

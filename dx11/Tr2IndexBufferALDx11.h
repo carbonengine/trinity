@@ -2,11 +2,15 @@
 #ifndef Tr2IndexBufferALDx11_h_
 #define Tr2IndexBufferALDx11_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
+#include "../Tr2TrackedALObject.h"
 #include "Tr2BufferImplALDx11.h"
 
+
 class Tr2RenderContextAL;
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 // -------------------------------------------------------------
 // Description:

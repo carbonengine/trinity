@@ -2,11 +2,13 @@
 #ifndef Tr2RenderContextDx9_h_
 #define Tr2RenderContextDx9_h_
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
-#include "Tr2RenderContextEnum.h"
-#include "Tr2RenderTargetALDx9.h"
-#include "Tr2CapsALDx9.h"
+#include "../Tr2RenderContextEnum.h"
+#include "../include/Tr2RenderTargetAL.h"
+#include "../include/Tr2CapsAL.h"
+
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 class Tr2VertexBufferAL;
 class Tr2IndexBufferAL;
@@ -16,6 +18,8 @@ class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2TextureAL;
 struct ITr2RenderContextEvents;
+struct Tr2PresentParametersAL;
+struct Tr2Viewport;
 
 // -------------------------------------------------------------
 // Description:
