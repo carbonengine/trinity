@@ -49,9 +49,6 @@
     <ClInclude Include="Tr2GpuTimerALContext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2Hal.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2HalHelperStructures.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -163,6 +160,9 @@
     <ClInclude Include="dx9\Tr2OcclusionQueryALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
+    <ClInclude Include="dx9\Tr2PrimaryRenderContextDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
     <ClInclude Include="dx9\Tr2RenderContextDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
@@ -215,6 +215,9 @@
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
     <ClInclude Include="gl4\Tr2OcclusionQueryALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2PrimaryRenderContextGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
     <ClInclude Include="gl4\Tr2RenderContextGL4.h">
@@ -271,6 +274,9 @@
     <ClInclude Include="gles2\Tr2OcclusionQueryALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
+    <ClInclude Include="gles2\Tr2PrimaryRenderContextGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
     <ClInclude Include="gles2\Tr2RenderContextGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
@@ -301,13 +307,76 @@
     <ClInclude Include="include\Tr2BitmapDimensions.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Tr2CapsAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2ConstantBufferAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Tr2CubemapFace.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2DepthStencilAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2FenceAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2GpuBufferAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2GpuTimerAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2IndexBufferAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2LockedRenderTargetAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2OcclusionQueryAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2PixelFormat.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Tr2PrimaryRenderContextAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2RenderContextAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2RenderTargetAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2SamplerStateAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2ShaderAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2SwapChainAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2TextureAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Tr2TextureType.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2VertexBufferAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2VertexLayoutAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2VideoAdapterInfoAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TrinityAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TrinityALForward.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2CapsALStub.h">
@@ -335,6 +404,9 @@
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2OcclusionQueryALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2PrimaryRenderContextStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2RenderContextStub.h">
