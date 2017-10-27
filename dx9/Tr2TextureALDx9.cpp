@@ -62,52 +62,6 @@ Tr2TextureAL::~Tr2TextureAL()
 {
 }
 
-Tr2TextureAL& Tr2TextureAL::operator=( Tr2TextureAL& other )
-{
-	if ( this != &other )
-	{
-		m_texture = other.m_texture;
-
-		m_format		= other.m_format;
-		m_usage			= other.m_usage;
-		m_type			= other.m_type;
-		m_width			= other.m_width;
-		m_height		= other.m_height;
-		m_volumeDepth	= other.m_volumeDepth;
-		m_mipCount		= other.m_mipCount;
-		m_format9		= other.m_format9;
-		m_pool9			= other.m_pool9;
-		m_isAlias		= other.m_isAlias;
-		m_arraySize = other.m_arraySize;
-		ChangeObjectId();
-	}
-
-	return *this;
-}
-
-Tr2TextureAL& Tr2TextureAL::operator=( Tr2TextureAL&& other )
-{
-	if ( this != &other )
-	{
-		m_texture.Attach( other.m_texture.Detach() );
-
-		m_format		= other.m_format;
-		m_usage			= other.m_usage;
-		m_type			= other.m_type;
-		m_width			= other.m_width;
-		m_height		= other.m_height;
-		m_volumeDepth	= other.m_volumeDepth;
-		m_mipCount		= other.m_mipCount;
-		m_format9		= other.m_format9;
-		m_pool9			= other.m_pool9;
-		m_isAlias		= other.m_isAlias;
-		m_arraySize = other.m_arraySize;
-		ChangeObjectId();
-	}
-
-	return *this;
-}
-
 ALResult Tr2TextureAL::Create2D( uint32_t width,
 								 uint32_t height,
 								 uint32_t mipLevelCount,

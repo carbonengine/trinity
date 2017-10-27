@@ -29,48 +29,6 @@ Tr2TextureAL::~Tr2TextureAL()
 {
 }
 
-Tr2TextureAL& Tr2TextureAL::operator=( Tr2TextureAL&& other )
-{
-	if( this != &other )
-	{
-		m_data = std::move( other.m_data );
-		m_usage = other.m_usage;
-
-		m_format = other.m_format;
-		m_usage = other.m_usage;
-		m_type = other.m_type;
-		m_width = other.m_width;
-		m_height = other.m_height;
-		m_volumeDepth = other.m_volumeDepth;
-		m_mipCount = other.m_mipCount;
-		m_arraySize = other.m_arraySize;
-		ChangeObjectId();
-	}
-
-	return *this;
-}
-
-Tr2TextureAL& Tr2TextureAL::operator=( Tr2TextureAL& other )
-{
-	if( this != &other )
-	{
-		m_data = other.m_data;
-		m_usage = other.m_usage;
-
-		m_format = other.m_format;
-		m_usage = other.m_usage;
-		m_type = other.m_type;
-		m_width = other.m_width;
-		m_height = other.m_height;
-		m_volumeDepth = other.m_volumeDepth;
-		m_mipCount = other.m_mipCount;
-		m_arraySize = other.m_arraySize;
-		ChangeObjectId();
-	}
-
-	return *this;
-}
-
 size_t Tr2TextureAL::GetTextureSize() const
 {
 	uint32_t mipLevelCount = GetTrueMipCount();

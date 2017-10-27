@@ -65,63 +65,6 @@ Tr2TextureAL::~Tr2TextureAL()
 	Destroy();
 }
 
-Tr2TextureAL& Tr2TextureAL::operator=( const Tr2TextureAL& other )
-{
-	if ( this != &other )
-	{
-		m_texture = other.m_texture;
-		m_format		= other.m_format;
-		m_usage			= other.m_usage;
-		m_type			= other.m_type;
-		m_width			= other.m_width;
-		m_height		= other.m_height;
-		m_volumeDepth	= other.m_volumeDepth;
-		m_mipCount		= other.m_mipCount;
-		m_isAlias		= other.m_isAlias;
-		m_arraySize = other.m_arraySize;
-
-		m_internalFormat = other.m_internalFormat;
-		m_targetFormat	= other.m_targetFormat;
-		m_targetType	= other.m_targetType;
-
-		m_clObject = other.m_clObject;
-		if( m_clObject )
-		{
-			clRetainMemObject( m_clObject );
-		}
-		ChangeObjectId();
-	}
-
-	return *this;
-}
-
-Tr2TextureAL& Tr2TextureAL::operator=( Tr2TextureAL&& other )
-{
-	if ( this != &other )
-	{
-		m_texture = other.m_texture;
-		other.m_texture = 0;
-
-		m_format		= other.m_format;
-		m_usage			= other.m_usage;
-		m_type			= other.m_type;
-		m_width			= other.m_width;
-		m_height		= other.m_height;
-		m_volumeDepth	= other.m_volumeDepth;
-		m_mipCount		= other.m_mipCount;
-		m_isAlias		= other.m_isAlias;
-		m_arraySize = other.m_arraySize;
-
-		m_internalFormat = other.m_internalFormat;
-		m_targetFormat	= other.m_targetFormat;
-		m_targetType	= other.m_targetType;
-		m_clObject = other.m_clObject;
-		other.m_clObject = nullptr;
-		ChangeObjectId();
-	}
-
-	return *this;
-}
 
 ALResult Tr2TextureAL::Create2D( uint32_t width,
 								 uint32_t height,

@@ -25,9 +25,6 @@ public:
 	Tr2TextureAL();
 	~Tr2TextureAL();
 
-	Tr2TextureAL& operator=( Tr2TextureAL&& );
-	Tr2TextureAL& operator=( Tr2TextureAL& );
-
 	ALResult Create2D( uint32_t width,
 					   uint32_t height,
 					   uint32_t mipLevelCount,
@@ -122,6 +119,9 @@ public:
 		return AL_MEMORY_MANAGED;
 	}
 private:
+	Tr2TextureAL( const Tr2TextureAL& ) /* = delete */;
+	Tr2TextureAL& operator=( const Tr2TextureAL& ) /* = delete */;
+
 	size_t GetTextureSize() const;
 	ALResult Create( 
 		Tr2RenderContextEnum::TextureType type,

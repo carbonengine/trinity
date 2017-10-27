@@ -44,67 +44,6 @@ Tr2TextureAL::~Tr2TextureAL()
 {
 }
 
-Tr2TextureAL& Tr2TextureAL::operator=( Tr2TextureAL&& other )
-{
-	CCP_ASSERT( m_currentLock == LOCK_INVALID );
-	CCP_ASSERT( other.m_currentLock == LOCK_INVALID );
-	if( m_currentLock != LOCK_INVALID || other.m_currentLock != LOCK_INVALID )
-	{
-		return *this;
-	}
-
-	if( this != &other )
-	{
-		m_texture.Attach( other.m_texture.Detach() );
-		m_view[0].Attach( other.m_view[0].Detach() );
-		m_view[1].Attach( other.m_view[1].Detach() );
-		m_uav.Attach( other.m_uav.Detach() );
-		
-		m_format		= other.m_format;
-		m_usage			= other.m_usage;
-		m_type			= other.m_type;
-		m_width			= other.m_width;
-		m_height		= other.m_height;
-		m_volumeDepth	= other.m_volumeDepth;
-		m_mipCount		= other.m_mipCount;
-		m_isAlias		= other.m_isAlias;
-		m_arraySize = other.m_arraySize;
-		ChangeObjectId();
-	}
-	return *this;
-}
-
-Tr2TextureAL& Tr2TextureAL::operator=( Tr2TextureAL& other )
-{
-	CCP_ASSERT( m_currentLock == LOCK_INVALID );
-	CCP_ASSERT( other.m_currentLock == LOCK_INVALID );
-	if( m_currentLock != LOCK_INVALID || other.m_currentLock != LOCK_INVALID )
-	{
-		return *this;
-	}
-
-	if( this != &other )
-	{
-		m_format		= other.m_format;
-		m_usage			= other.m_usage;
-		m_type			= other.m_type;
-		m_width			= other.m_width;
-		m_height		= other.m_height;
-		m_volumeDepth	= other.m_volumeDepth;
-		m_mipCount		= other.m_mipCount;
-		m_isAlias		= other.m_isAlias;
-		m_arraySize = other.m_arraySize;
-
-		m_texture		= other.m_texture;
-		m_view[0]		= other.m_view[0];
-		m_view[1]		= other.m_view[1];
-		m_uav			= other.m_uav;
-		ChangeObjectId();
-	}
-
-	return *this;
-}
-
 namespace {
 
 	void ConvertUsage( BufferUsage usage, D3D11_USAGE& d3dUsage, uint32_t& CPUAccessFlags )

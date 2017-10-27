@@ -30,8 +30,6 @@ public:
 	Tr2TextureAL();
 	~Tr2TextureAL();
 
-	Tr2TextureAL& operator=( Tr2TextureAL& ) throw();
-	Tr2TextureAL& operator=( Tr2TextureAL&& );
 
 	ALResult Create2D( uint32_t width,
 					   uint32_t height,
@@ -140,6 +138,9 @@ public:	//DEBUG
 	D3DPOOL m_pool9;
 
 private:
+	Tr2TextureAL( const Tr2TextureAL& ) /* = delete */;
+	Tr2TextureAL& operator=( const Tr2TextureAL& ) /* = delete */;
+
 	ALResult LockReading( uint32_t face,
 						  uint32_t mipLevel,
 						  uint32_t* ltrb,

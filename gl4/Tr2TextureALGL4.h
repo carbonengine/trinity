@@ -31,9 +31,6 @@ public:
 
 	~Tr2TextureAL();
 
-	Tr2TextureAL& operator=( Tr2TextureAL&& );
-	Tr2TextureAL& operator=( const Tr2TextureAL& other );
-
 	ALResult Create2D( uint32_t width,
 					   uint32_t height,
 					   uint32_t mipLevelCount,
@@ -138,6 +135,7 @@ private:
 
 private:
 	Tr2TextureAL( const Tr2TextureAL& other ) /* = delete */;
+	Tr2TextureAL& operator=( const Tr2TextureAL& other ) /* = delete */;
 
 	ALResult CreateDepthTexture( uint32_t width,
 								 uint32_t height,

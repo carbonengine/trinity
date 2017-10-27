@@ -40,9 +40,6 @@ public:
     Tr2TextureAL();
 	~Tr2TextureAL();
 
-	Tr2TextureAL& operator=( Tr2TextureAL&& );
-	Tr2TextureAL& operator=( Tr2TextureAL& ) throw();
-
 	ALResult Create2D(	
 		uint32_t width, 
 		uint32_t height, 
@@ -154,6 +151,9 @@ private:
 	CComPtr<ID3D11UnorderedAccessView>	m_uav;
 
 private:
+	Tr2TextureAL( const Tr2TextureAL& ) /* = delete */;
+	Tr2TextureAL& operator=( const Tr2TextureAL& ) /* = delete */;
+
 	friend class Tr2RenderContextAL;
 
 	// hokey pokey
@@ -208,8 +208,6 @@ private:
 #if TRINITY_AL_GUARD_LOCKS
 	Tr2LockGuard m_lockGuard;
 #endif
-private:
-	Tr2TextureAL( const Tr2TextureAL& );
 };
 
 #endif // #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
