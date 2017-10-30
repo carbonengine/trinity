@@ -889,7 +889,7 @@ bool Tr2HostBitmap::CreateFromHeightData( const std::vector<float>& data, int32_
 				int32_t xIdx = index < 0 ? width - index: index % width;
 				yValues[i] = CubicInterpolate( data[yIndex[0] + xIdx], data[yIndex[1] + xIdx], data[yIndex[2] + xIdx], data[yIndex[3] + xIdx], sy );
 			}
-			uint8_t value = uint8_t( CubicInterpolate( yValues[0], yValues[1], yValues[2], yValues[3], sx ) * 255 );
+			uint8_t value = uint8_t( Clamp( CubicInterpolate( yValues[0], yValues[1], yValues[2], yValues[3], sx ), 0.f, 1.f ) * 255 );
 
 			if( components == 4 )
 			{
