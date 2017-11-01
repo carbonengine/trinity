@@ -4,7 +4,6 @@
 #include "Tr2RenderContextDx9.h"
 #include "ITr2RenderContextEvents.h"
 #include "ALLog.h"
-#include "Tr2GpuTelemetry.h"
 #include "Tr2HalHelperStructures.h"
 #include "Tr2VertexBufferALDx9.h"
 #include "Tr2IndexBufferALDx9.h"
@@ -321,7 +320,6 @@ Tr2PrimaryRenderContextAL* Tr2RenderContextAL::GetPrimaryRenderContextPointer()
 
 void Tr2RenderContextAL::Destroy()
 {
-	Tr2GpuTelemetryDeviceReset();
 	ReleaseDeviceResources();
 
 	m_topology = D3DPT_TRIANGLELIST;
@@ -874,8 +872,6 @@ ALResult Tr2RenderContextAL::CreateDevice(
 		m_events->OnContextCreated( *this );
 	}
 
-	Tr2GpuTelemetryDeviceCreated();
-
 	return hr;
 }
 
@@ -958,7 +954,6 @@ ALResult Tr2RenderContextAL::Present()
 		if( chain )
 		{
 			hr = chain->Present( nullptr, nullptr, nullptr, nullptr, 0 );
-			Tr2GpuTelemetryTick();
 	
 			if( FAILED( hr ) )
 			{

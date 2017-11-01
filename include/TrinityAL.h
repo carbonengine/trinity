@@ -29,5 +29,4 @@
 #include "Tr2GpuTimerAL.h"
 #include "Tr2LockedRenderTargetAL.h"
 
-#include "../Tr2GpuTelemetry.h"
 #include "../Tr2GpuTimerALContext.h"
