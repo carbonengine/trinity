@@ -28,6 +28,41 @@ uint64_t g_trackCurrentFrame = 0;
 
 CcpAtomic<uint32_t> Tr2TrackedALObjectBase::s_nextObjectId( 1 );
 
+
+Tr2TrackedALObjectBase::Tr2TrackedALObjectBase()
+	:m_objectId( 0 )
+#if AL_TACK_RESOURCE_USAGE
+	, m_trackFrameUsed( 0 )
+#endif
+{
+}
+
+Tr2TrackedALObjectBase::Tr2TrackedALObjectBase( Tr2TrackedALObjectBase&& )
+	:m_objectId( 0 )
+#if AL_TACK_RESOURCE_USAGE
+	, m_trackFrameUsed( 0 )
+#endif
+{
+}
+
+Tr2ObjectIdAL Tr2TrackedALObjectBase::GetObjectId() const
+{
+	return m_objectId;
+}
+
+void Tr2TrackedALObjectBase::UpdateFrameUsed() const
+{
+#if AL_TACK_RESOURCE_USAGE && TRACK_AL_RESOURCES
+	extern uint64_t g_trackCurrentFrame; 
+	m_trackFrameUsed = g_trackCurrentFrame;
+#endif
+}
+
+void Tr2TrackedALObjectBase::ChangeObjectId()
+{
+	m_objectId = s_nextObjectId++;
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Fallback comparison operator for AL objects. Individual AL classes provide more
@@ -44,39 +79,7 @@ bool Tr2TrackedALObjectBase::operator==( const Tr2TrackedALObjectBase& other ) c
 }
 
 
-#if TRACK_AL_RESOURCES == 0
-
-void Tr2TrackedALObjectBase::LogAllLiveResources( Tr2ALMemoryTypes flags )
-{
-}
-
-#else
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Logs all live AL resources.
-// Arguments:
-//   flags - Resource memory class filter
-// --------------------------------------------------------------------------------------
-void Tr2TrackedALObjectBase::LogAllLiveResources( Tr2ALMemoryTypes flags )
-{
-	auto logObject = [&]( Tr2RenderContextEnum::ObjectType /*type*/, const char* typeName, const void* address, const std::map<std::string, uint32_t>& description )
-	{
-		char buffer[64];
-		std::string message = typeName;
-		sprintf_s( buffer, " 0x%X: ", address );
-		message += buffer;
-		for( auto it = description.begin(); it != description.end(); ++it )
-		{
-			message += it->first;
-			sprintf_s( buffer, ": %u", it->second );
-			message += buffer;
-		}
-				
-		CCP_AL_LOGERR( "%s", message.c_str() );
-	};
-	GetAllObjectDescriptions( flags, logObject );
-}
+#if TRACK_AL_RESOURCES
 
 // --------------------------------------------------------------------------------------
 // Description:

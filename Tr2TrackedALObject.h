@@ -25,7 +25,7 @@ typedef int Tr2ALMemoryTypes;
 
 #if AL_TACK_RESOURCE_USAGE && TRACK_AL_RESOURCES
 #define AL_UPDATE_RESOURCE_FRAME_USAGE( resource )	\
-	{ if( ( resource ).IsValid() ) { extern uint64_t g_trackCurrentFrame; ( resource ).m_trackFrameUsed = g_trackCurrentFrame; } };
+	{ if( ( resource ).IsValid() ) ( resource ).UpdateFrameUsed(); };
 #else
 #define AL_UPDATE_RESOURCE_FRAME_USAGE( resource ) ((void)(resource));
 #endif
@@ -45,48 +45,19 @@ typedef uint32_t Tr2ObjectIdAL;
 class Tr2TrackedALObjectBase
 {
 public:
-	Tr2TrackedALObjectBase()
-		:m_objectId( 0 ) 
-#if AL_TACK_RESOURCE_USAGE
-		, m_trackFrameUsed( 0 ) 
-#endif
-	{
-	}
-
-	Tr2TrackedALObjectBase( const Tr2TrackedALObjectBase& )
-		:m_objectId( 0 )
-#if AL_TACK_RESOURCE_USAGE
-		, m_trackFrameUsed( 0 ) 
-#endif
-	{
-	}
-
-	Tr2TrackedALObjectBase( Tr2TrackedALObjectBase&& )
-		:m_objectId( 0 )
-#if AL_TACK_RESOURCE_USAGE
-		, m_trackFrameUsed( 0 ) 
-#endif
-	{
-	}
+	Tr2TrackedALObjectBase();
+	Tr2TrackedALObjectBase( Tr2TrackedALObjectBase&& );
 
 	bool operator==( const Tr2TrackedALObjectBase& ) const;
 
-	Tr2ObjectIdAL GetObjectId() const
-	{
-		return m_objectId;
-	}
+	Tr2ObjectIdAL GetObjectId() const;
 
-	static void LogAllLiveResources( Tr2ALMemoryTypes flags = AL_MEMORY_VIDEO | AL_MEMORY_MANAGED );
+	void UpdateFrameUsed() const;
 
 	template<typename Operation> static void GetAllObjectDescriptions( Tr2ALMemoryTypes flags, Operation& operation );
-
-#if TRACK_AL_RESOURCES
-#if TRACK_AL_RESOURCES && AL_TACK_RESOURCE_USAGE
-	mutable uint64_t m_trackFrameUsed;
-#endif
-#endif
-
 protected:
+	void ChangeObjectId();
+
 #if TRACK_AL_RESOURCES
 	static CcpMutex& GetLiveObjectMutex();
 	static std::set<Tr2TrackedALObjectBase*>& GetLiveObjects( Tr2RenderContextEnum::ObjectType type );
@@ -96,11 +67,14 @@ protected:
 	template<Tr2RenderContextEnum::ObjectType Type, typename Operation> class GetAllObjectDescriptionsHelper;
 #endif
 
-	void ChangeObjectId()
-	{
-		m_objectId = s_nextObjectId++;
-	}
 private:
+	Tr2TrackedALObjectBase( const Tr2TrackedALObjectBase& ) /* = delete */;
+	Tr2TrackedALObjectBase& operator=( const Tr2TrackedALObjectBase& ) /* = delete */;
+
+#if TRACK_AL_RESOURCES && AL_TACK_RESOURCE_USAGE
+	mutable uint64_t m_trackFrameUsed;
+#endif
+
 	Tr2ObjectIdAL m_objectId;
 	static CcpAtomic<uint32_t> s_nextObjectId;
 };
@@ -174,13 +148,8 @@ public:
 	template<typename Operation> static void EnumerateResources( Operation& operation );
 protected:
 	Tr2TrackedALObject();
-	Tr2TrackedALObject( const Tr2TrackedALObject<Type>& other );
 	Tr2TrackedALObject( Tr2TrackedALObject<Type>&& other );
-	Tr2TrackedALObject& operator=( const Tr2TrackedALObject& other );
 	~Tr2TrackedALObject();
-private:
-	template<typename Operation> static void EnumerateResources( Operation& operation, std::true_type isCopiable );
-	template<typename Operation> static void EnumerateResources( Operation& operation, std::false_type isCopiable );
 };
 
 #endif

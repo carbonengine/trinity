@@ -212,22 +212,5 @@ TYPED_TEST( TrackedObjectTest, ValidObjectCountsAsLive )
 	EXPECT_LT( initialCount, newCount );
 }
 
-TYPED_TEST( TrackedObjectTest, ValidObjectIsLoggedAsLive ) 
-{
-	if( !IsObjectTypeAvailable<TypeParam>( *this->renderContext ) )
-	{
-		return;
-	}
-
-	s_logMessages.clear();
-	CCP::RegisterLogEcho( &CustomLogEcho );
-	ON_BLOCK_EXIT( [&] { CCP::UnregisterLogEcho( &CustomLogEcho ); } );
-
-	TypeParam object;
-	ASSERT_HRESULT_SUCCEEDED( CreateSampleObject( object, *this->renderContext ) );
-	Tr2TrackedALObjectBase::LogAllLiveResources();
-	EXPECT_TRUE( LogContainsLiveResourceAddress( &object ) );
-}
-
 
 #endif

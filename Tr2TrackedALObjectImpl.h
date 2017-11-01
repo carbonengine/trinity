@@ -468,17 +468,6 @@ Tr2TrackedALObject<Type>::Tr2TrackedALObject()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Tr2TrackedALObject copy constructor
-// --------------------------------------------------------------------------------------
-template<Tr2RenderContextEnum::ObjectType Type>
-Tr2TrackedALObject<Type>::Tr2TrackedALObject( const Tr2TrackedALObject<Type>& other )
-{
-	CcpAutoMutex autoMutex( Tr2TrackedALObjectBase::GetLiveObjectMutex() );
-	GetLiveObjects( Type ).insert( this );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
 //   Tr2TrackedALObject move constructor
 // --------------------------------------------------------------------------------------
 template<Tr2RenderContextEnum::ObjectType Type>
@@ -499,52 +488,12 @@ Tr2TrackedALObject<Type>::~Tr2TrackedALObject()
 	GetLiveObjects( Type ).erase( this );
 }
 
-
-template<Tr2RenderContextEnum::ObjectType Type>
-Tr2TrackedALObject<Type>& Tr2TrackedALObject<Type>::operator=( const Tr2TrackedALObject& other )
-{
-	CcpAutoMutex autoMutex( Tr2TrackedALObjectBase::GetLiveObjectMutex() );
-	GetLiveObjects( Type ).insert( this );
-	return *this;
-}
-
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Helper function that appies given operator to all live objects of the given type.
-//   This function assumes that objects of the given type are copyable.
 // --------------------------------------------------------------------------------------
 template<Tr2RenderContextEnum::ObjectType Type> template<typename Operation> 
-void Tr2TrackedALObject<Type>::EnumerateResources( Operation& operation, std::true_type isCopiable )
-{
-	CcpAutoMutex autoMutex( Tr2TrackedALObjectBase::GetLiveObjectMutex() );
-	for( auto it = GetLiveObjects( Type ).begin(); it != GetLiveObjects( Type ).end(); ++it )
-	{
-		typename ObjectInfo<Type>::ObjectType* object = static_cast<typename ObjectInfo<Type>::ObjectType*>( *it );
-		bool seen = false;
-		for( auto jt = GetLiveObjects( Type ).begin(); jt != it; ++jt )
-		{
-			typename ObjectInfo<Type>::ObjectType* other = static_cast<typename ObjectInfo<Type>::ObjectType*>( *jt );
-			if( *other == *object )
-			{
-				seen = true;
-				break;
-			}
-		}
-		if( !seen )
-		{
-			operation( object );
-		}
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Helper function that appies given operator to all live objects of the given type.
-//   This function assumes that objects of the given type are non-copyable.
-// --------------------------------------------------------------------------------------
-template<Tr2RenderContextEnum::ObjectType Type> template<typename Operation> 
-void Tr2TrackedALObject<Type>::EnumerateResources( Operation& operation, std::false_type isCopiable )
+void Tr2TrackedALObject<Type>::EnumerateResources( Operation& operation )
 {
 	CcpAutoMutex autoMutex( Tr2TrackedALObjectBase::GetLiveObjectMutex() );
 	for( auto it = Tr2TrackedALObject<Type>::GetLiveObjects( Type ).begin(); 
@@ -554,24 +503,6 @@ void Tr2TrackedALObject<Type>::EnumerateResources( Operation& operation, std::fa
 		typename ObjectInfo<Type>::ObjectType* object = static_cast<typename ObjectInfo<Type>::ObjectType*>( *it );
 		operation( object );
 	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Helper function that appies given operator to all live objects of the given type.
-// --------------------------------------------------------------------------------------
-template<Tr2RenderContextEnum::ObjectType Type> template<typename Operation> 
-void Tr2TrackedALObject<Type>::EnumerateResources( Operation& operation )
-{
-#if defined(_MSC_VER)
-	Tr2TrackedALObject<Type>::EnumerateResources<Operation>( operation, std::integral_constant<bool, std::has_nothrow_assign<ObjectInfo<Type>::ObjectType>::value || std::has_nothrow_copy<ObjectInfo<Type>::ObjectType>::value>::type() );
-#elif defined(__ANDROID__) && defined(__GLIBCXX__) && __GLIBCXX__ <= 20120106
-    typedef typename ObjectInfo<Type>::ObjectType ObjectType;
-	Tr2TrackedALObject<Type>::EnumerateResources<Operation>( operation, typename std::integral_constant<bool, std::has_nothrow_copy_assign<ObjectType>::value || std::has_nothrow_copy_constructor<ObjectType>::value>::type() );
-#else
-    typedef typename ObjectInfo<Type>::ObjectType ObjectType;
-	Tr2TrackedALObject<Type>::EnumerateResources<Operation>( operation, typename std::integral_constant<bool, std::is_nothrow_assignable<ObjectType, ObjectType>::value || std::is_nothrow_copy_assignable<ObjectType>::value>::type() );
-#endif
 }
 
 #else
