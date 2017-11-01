@@ -1438,7 +1438,6 @@
     <ClInclude Include="Tr2DrawUPHelper.h"/>
     <ClInclude Include="Tr2DriverUtilities.h"/>
     <ClInclude Include="Tr2FragmentOpSettings.h"/>
-    <ClInclude Include="Tr2GpuTelemetry.h"/>
     <ClInclude Include="Tr2GpuTimerALContext.h"/>
     <ClInclude Include="Tr2HalHelperStructures.h"/>
     <ClInclude Include="Tr2LockGuard.h"/>
@@ -1580,7 +1579,6 @@
     <ClCompile Include="Tr2DrawUPHelper.cpp"/>
     <ClCompile Include="Tr2DriverUtilities.cpp"/>
     <ClCompile Include="Tr2FragmentOpSettings.cpp"/>
-    <ClCompile Include="Tr2GpuTelemetry.cpp"/>
     <ClCompile Include="Tr2HalHelperStructures.cpp"/>
     <ClCompile Include="Tr2LockGuard.cpp"/>
     <ClCompile Include="Tr2RenderContextEnum.cpp"/>

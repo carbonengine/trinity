@@ -43,9 +43,6 @@
     <ClInclude Include="Tr2FragmentOpSettings.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2GpuTelemetry.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2GpuTimerALContext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -455,9 +452,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2FragmentOpSettings.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2GpuTelemetry.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2HalHelperStructures.cpp">
