@@ -91,9 +91,6 @@
     <ClInclude Include="dx11\Tr2IndexBufferALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
-    <ClInclude Include="dx11\Tr2LockedRenderTargetALDx11.h">
-      <Filter>Source Files\dx11</Filter>
-    </ClInclude>
     <ClInclude Include="dx11\Tr2OcclusionQueryALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
@@ -151,9 +148,6 @@
     <ClInclude Include="dx9\Tr2IndexBufferALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
-    <ClInclude Include="dx9\Tr2LockedRenderTargetALDx9.h">
-      <Filter>Source Files\dx9</Filter>
-    </ClInclude>
     <ClInclude Include="dx9\Tr2OcclusionQueryALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
@@ -208,9 +202,6 @@
     <ClInclude Include="gl4\Tr2IndexBufferALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
-    <ClInclude Include="gl4\Tr2LockedRenderTargetALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
     <ClInclude Include="gl4\Tr2OcclusionQueryALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
@@ -263,9 +254,6 @@
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2IndexBufferALGLES2.h">
-      <Filter>Source Files\gles2</Filter>
-    </ClInclude>
-    <ClInclude Include="gles2\Tr2LockedRenderTargetALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2OcclusionQueryALGLES2.h">
@@ -326,9 +314,6 @@
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2IndexBufferAL.h">
-      <Filter>Source Files\include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Tr2LockedRenderTargetAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2OcclusionQueryAL.h">
@@ -395,9 +380,6 @@
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2IndexBufferALStub.h">
-      <Filter>Source Files\stub</Filter>
-    </ClInclude>
-    <ClInclude Include="stub\Tr2LockedRenderTargetALStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2OcclusionQueryALStub.h">
@@ -493,9 +475,6 @@
     <ClCompile Include="dx11\Tr2IndexBufferALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="dx11\Tr2LockedRenderTargetALDx11.cpp">
-      <Filter>Source Files\dx11</Filter>
-    </ClCompile>
     <ClCompile Include="dx11\Tr2OcclusionQueryALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
@@ -550,9 +529,6 @@
     <ClCompile Include="dx9\Tr2IndexBufferALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
-    <ClCompile Include="dx9\Tr2LockedRenderTargetALDx9.cpp">
-      <Filter>Source Files\dx9</Filter>
-    </ClCompile>
     <ClCompile Include="dx9\Tr2OcclusionQueryALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
@@ -604,9 +580,6 @@
     <ClCompile Include="gl4\Tr2IndexBufferALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
-    <ClCompile Include="gl4\Tr2LockedRenderTargetALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
     <ClCompile Include="gl4\Tr2OcclusionQueryALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
@@ -655,9 +628,6 @@
     <ClCompile Include="gles2\Tr2IndexBufferALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
-    <ClCompile Include="gles2\Tr2LockedRenderTargetALGLES2.cpp">
-      <Filter>Source Files\gles2</Filter>
-    </ClCompile>
     <ClCompile Include="gles2\Tr2OcclusionQueryALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
@@ -704,9 +674,6 @@
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2IndexBufferALStub.cpp">
-      <Filter>Source Files\stub</Filter>
-    </ClCompile>
-    <ClCompile Include="stub\Tr2LockedRenderTargetALStub.cpp">
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2OcclusionQueryALStub.cpp">
