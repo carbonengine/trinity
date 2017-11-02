@@ -226,12 +226,19 @@ namespace Tr2RenderContextEnum
 	// Magical flags for CreateEx and friends
 	enum ExFlag
 	{
+		EX_NONE						= 0,
 		EX_CREATE_SHARED			= 1 << 0,		
 		EX_BIND_UNORDERED_ACCESS	= 1 << 1,
 		EX_WRITABLE_UAV				= 1 << 2,
 		EX_DRAW_INDIRECT			= 1 << 3,
 		EX_PICKING_BUFFER_WORKAROUND= 1 << 4,
 	};
+
+	inline ExFlag operator|( ExFlag a, ExFlag b )
+	{
+		return ExFlag( a | b );
+	}
+
 
 	// Texture color space
 	enum ColorSpace

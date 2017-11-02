@@ -13,14 +13,18 @@ Tr2DepthStencilAL::Tr2DepthStencilAL()
 	: m_width( 0 )
 	, m_height( 0 )
 	, m_format( static_cast<DepthStencilFormat>( 0 ) )
-	, m_msaaType( 0 )
-	, m_msaaQuality( 0 )
+	, m_exFlag( EX_NONE )
 {
 	memset( &m_deviceLost, 0, sizeof( m_deviceLost ) );
 }
 
 Tr2DepthStencilAL::~Tr2DepthStencilAL()
 {
+}
+
+bool Tr2DepthStencilAL::IsValid() const 
+{ 
+	return m_depthStencil != nullptr && m_depthStencilView != nullptr; 
 }
 
 DXGI_FORMAT	Tr2DepthStencilAL::ConvertDepthStencilFormatToDxgi( 
@@ -52,20 +56,8 @@ ALResult Tr2DepthStencilAL::Create(
 	uint32_t width, 
 	uint32_t height, 
 	DepthStencilFormat dsFormat, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality, 
-	Tr2PrimaryRenderContextAL& renderContext )
-{
-	return CreateEx(width, height, dsFormat, msaaType, msaaQuality, 0, renderContext);
-}
-
-ALResult Tr2DepthStencilAL::CreateEx( 
-	uint32_t width, 
-	uint32_t height, 
-	DepthStencilFormat dsFormat, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality, 
-	uint32_t flags, 
+	const Tr2MsaaDesc& msaa,
+	Tr2RenderContextEnum::ExFlag flags,
 	Tr2PrimaryRenderContextAL& renderContext )
 {
 	Destroy();
@@ -80,8 +72,8 @@ ALResult Tr2DepthStencilAL::CreateEx(
 	m_width = width;
 	m_height = height;
 	m_format = dsFormat;
-	m_msaaType = msaaType;
-	m_msaaQuality = msaaQuality;
+	m_msaa = msaa;
+	m_exFlag = flags;
 
 	D3D11_TEXTURE2D_DESC descDepth;
 	memset( &descDepth, 0, sizeof( descDepth ) );
@@ -140,8 +132,8 @@ ALResult Tr2DepthStencilAL::CreateEx(
 
 	bool enableShaderResourceView = true;
 	
-	descDepth.SampleDesc.Count = m_msaaType > 1 ? m_msaaType : 1;
-	descDepth.SampleDesc.Quality = m_msaaQuality;
+	descDepth.SampleDesc.Count = m_msaa.samples > 1 ? m_msaa.samples : 1;
+	descDepth.SampleDesc.Quality = m_msaa.quality;
 	descDepth.Usage = D3D11_USAGE_DEFAULT;
 	descDepth.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
 
@@ -160,7 +152,7 @@ ALResult Tr2DepthStencilAL::CreateEx(
 		CR_RETURN_HR( renderContext.m_d3dDevice11->CreateTexture2D( &descDepth, nullptr, &m_depthStencil ) );		
 	}
 
-	descDSV.ViewDimension = m_msaaType <= 1 ? D3D11_DSV_DIMENSION_TEXTURE2D : D3D11_DSV_DIMENSION_TEXTURE2DMS;
+	descDSV.ViewDimension = m_msaa.samples <= 1 ? D3D11_DSV_DIMENSION_TEXTURE2D : D3D11_DSV_DIMENSION_TEXTURE2DMS;
 	
 	CR_RETURN_HR( renderContext.m_d3dDevice11->CreateDepthStencilView( m_depthStencil, &descDSV, &m_depthStencilView ) );
 	
@@ -173,7 +165,7 @@ ALResult Tr2DepthStencilAL::CreateEx(
 
 	// Always try to create an SRV, if it works then great we're texturable, if it doesn't then too bad.
 	
-	srvDesc.ViewDimension = msaaType > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DMS : D3D11_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.ViewDimension = msaa.samples > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DMS : D3D11_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = 1;
 	
 	if( enableShaderResourceView )
@@ -209,18 +201,9 @@ void Tr2DepthStencilAL::Destroy()
 	m_backingStore.Destroy();
 	m_width = 0;
 	m_height = 0;
-	m_msaaType = 0;
-	m_msaaQuality = 0;	
-}
-
-// -------------------------------------------------------------
-// Description:
-//   Returns true if the depthstencil can be bound as a texture.
-// -------------------------------------------------------------
-
-bool Tr2DepthStencilAL::IsReadable() const
-{
-	return m_backingStore.IsValid() && m_msaaType <= 1;
+	m_msaa.samples = 0;
+	m_msaa.quality = 0;	
+	m_exFlag = EX_NONE;
 }
 
 Tr2TextureAL& Tr2DepthStencilAL::GetTexture()
@@ -240,8 +223,8 @@ void Tr2DepthStencilAL::ReleaseALResource()
 		m_deviceLost.m_format		= m_format;
 		m_deviceLost.m_width		= m_width;
 		m_deviceLost.m_height		= m_height;
-		m_deviceLost.m_msaaType		= m_msaaType;
-		m_deviceLost.m_msaaQuality	= m_msaaQuality;
+		m_deviceLost.m_msaa = m_msaa;
+		m_deviceLost.m_exFlag = m_exFlag;
 
 		m_deviceLost.m_valid = true;
 	}
@@ -266,8 +249,8 @@ void Tr2DepthStencilAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderCont
 				SUCCEEDED( Create(	d.m_width, 
 									d.m_height, 
 									d.m_format, 
-									d.m_msaaType, 
-									d.m_msaaQuality, 
+									d.m_msaa, 
+									d.m_exFlag,
 									renderContext ) ) && 
 				IsValid() )
 			{
@@ -277,7 +260,7 @@ void Tr2DepthStencilAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderCont
 	}
 }
 
-uint32_t Tr2DepthStencilAL::GetSharedHandle() const
+uintptr_t Tr2DepthStencilAL::GetSharedHandle() const
 {
 	IDXGIResource* pOtherResource( NULL );
 	if( m_depthStencil == NULL )
@@ -302,10 +285,38 @@ uint32_t Tr2DepthStencilAL::GetSharedHandle() const
 			return 0;
 		}
 		pOtherResource->Release();
-		// TODO: 64bit
-		// static_assert( sizeof( HANDLE ) == sizeof( unsigned ), "fix me for 64 bit" );
-		return reinterpret_cast<uint32_t>( sharedHandle );
+		return reinterpret_cast<uintptr_t>( sharedHandle );
 	}
+}
+
+uint32_t Tr2DepthStencilAL::GetWidth()  const
+{
+	return m_width;
+}
+
+uint32_t Tr2DepthStencilAL::GetHeight() const
+{
+	return m_height;
+}
+
+const Tr2MsaaDesc& Tr2DepthStencilAL::GetMsaaDesc() const
+{
+	return m_msaa;
+}
+
+Tr2RenderContextEnum::DepthStencilFormat Tr2DepthStencilAL::GetFormat() const
+{
+	return m_format;
+}
+
+bool Tr2DepthStencilAL::operator==( const Tr2DepthStencilAL& other ) const 
+{ 
+	return m_depthStencil == other.m_depthStencil; 
+}
+
+Tr2ALMemoryType Tr2DepthStencilAL::GetMemoryClass() const 
+{ 
+	return AL_MEMORY_MANAGED; 
 }
 
 #endif

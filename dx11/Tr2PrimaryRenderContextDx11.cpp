@@ -506,7 +506,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 
 	CR_RETURN_HR( m_defaultDepthStencil.Create(		presentationParameters.mode.width, 
 													presentationParameters.mode.height, 
-													DSFMT_D24S8, 0, 0, *this ) );
+													DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, *this ) );
 
 	m_context->OMSetRenderTargets(	1, 
 									&m_defaultBackBuffer->m_RTV.p, 

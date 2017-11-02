@@ -212,8 +212,8 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENCIL>:
 		description["width"] = object->GetWidth();
 		description["height"] = object->GetHeight();
 		description["format"] = uint32_t( object->GetFormat() );
-		description["msaaType"] = object->GetMsaaType();
-		description["msaaQuality"] = object->GetMsaaQuality();
+		description["msaaType"] = object->GetMsaaDesc().samples;
+		description["msaaQuality"] = object->GetMsaaDesc().quality;
 		return true;
 	}
 	return false;

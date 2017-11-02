@@ -6,6 +6,7 @@
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
 #include "../Tr2AutoResetObjectAL.h"
+#include "../Tr2HalHelperStructures.h"
 #include "../include/Tr2TextureAL.h"
 
 
@@ -30,60 +31,50 @@ public:
 		uint32_t width, 
 		uint32_t height, 
 		Tr2RenderContextEnum::DepthStencilFormat format, 
-		uint32_t msaaType, 
-		uint32_t msaaQuality, 
+		const Tr2MsaaDesc& msaa,
+		Tr2RenderContextEnum::ExFlag flags,
 		Tr2PrimaryRenderContextAL& renderContext );
 
-	ALResult CreateEx(	
-		uint32_t width, 
-		uint32_t height, 
-		Tr2RenderContextEnum::DepthStencilFormat format, 
-		uint32_t msaaType, 
-		uint32_t msaaQuality, 
-		uint32_t flags, 
-		Tr2PrimaryRenderContextAL& renderContext );
-
-	bool IsValid() const { return m_depthStencil != nullptr && m_depthStencilView != nullptr; }
+	bool IsValid() const;
 	void Destroy();
+
+	bool operator==( const Tr2DepthStencilAL& other ) const;
+
+	uint32_t GetWidth()  const;
+	uint32_t GetHeight() const;
+	const Tr2MsaaDesc& GetMsaaDesc() const;
+	Tr2RenderContextEnum::DepthStencilFormat GetFormat() const;
+
+	Tr2TextureAL& GetTexture();
+	const Tr2TextureAL& GetTexture() const;
+
+	uintptr_t GetSharedHandle() const;
+
+	Tr2ALMemoryType GetMemoryClass() const;
+
+	static DXGI_FORMAT ConvertDepthStencilFormatToDxgi( Tr2RenderContextEnum::DepthStencilFormat format );
+
+private:
 
 	CComPtr<ID3D11Texture2D>		m_depthStencil;
 	CComPtr<ID3D11DepthStencilView>	m_depthStencilView;
 	CComPtr<ID3D11DepthStencilView>	m_depthStencilViewReadOnly;
 
-	uint32_t	GetWidth()  const		{ return m_width; }
-	uint32_t	GetHeight() const		{ return m_height; }
-	uint32_t	GetMsaaType()	const	{ return m_msaaType; }
-	uint32_t	GetMsaaQuality()const	{ return m_msaaQuality; }
-	Tr2RenderContextEnum::DepthStencilFormat GetFormat() const { return m_format; }
-
-	bool IsReadable() const;
-	Tr2TextureAL& GetTexture();
-	const Tr2TextureAL& GetTexture() const;
-
-	uint32_t	GetSharedHandle() const;
-	bool operator==( const Tr2DepthStencilAL& other ) const { return m_depthStencil == other.m_depthStencil; }
-
-	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
-
-	static DXGI_FORMAT	ConvertDepthStencilFormatToDxgi( 
-					Tr2RenderContextEnum::DepthStencilFormat format );
-
-private:
 	uint32_t	m_width;
 	uint32_t	m_height;
-	Tr2RenderContextEnum::DepthStencilFormat	m_format;
-	uint32_t	m_msaaType;
-	uint32_t	m_msaaQuality;
+	Tr2RenderContextEnum::DepthStencilFormat m_format;
+	Tr2MsaaDesc m_msaa;
+	Tr2RenderContextEnum::ExFlag m_exFlag;
 
 	Tr2TextureAL	m_backingStore;
 
 	struct TDeviceLost
 	{
-		uint32_t	m_width;
-		uint32_t	m_height;
-		Tr2RenderContextEnum::DepthStencilFormat	m_format;
-		uint32_t	m_msaaType;
-		uint32_t	m_msaaQuality;
+		uint32_t m_width;
+		uint32_t m_height;
+		Tr2RenderContextEnum::DepthStencilFormat m_format;
+		Tr2MsaaDesc m_msaa;
+		Tr2RenderContextEnum::ExFlag m_exFlag;
 
 		bool		m_valid;
 	};
@@ -92,10 +83,8 @@ private:
 	void ReleaseALResource();
 	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
 
-	friend class Tr2DepthStencil;	// Blue
-
-	Tr2DepthStencilAL( const Tr2DepthStencilAL& ) /* = delete */;
-	Tr2DepthStencilAL& operator=( const Tr2DepthStencilAL& ) /* = delete */;
+	friend class Tr2RenderContextAL;
+	friend class Tr2PrimaryRenderContextAL;
 };
 
 #endif // #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )

@@ -44,7 +44,7 @@ ALResult CreateSampleObject( Tr2ConstantBufferAL& cb, Tr2PrimaryRenderContextAL&
 
 ALResult CreateSampleObject( Tr2DepthStencilAL& ds, Tr2PrimaryRenderContextAL& renderContext )
 {
-	return ds.Create( 128, 64, DSFMT_D24S8, 1, 0, renderContext );
+	return ds.Create( 128, 64, DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, renderContext );
 }
 
 ALResult CreateSampleObject( Tr2IndexBufferAL& ib, Tr2PrimaryRenderContextAL& renderContext )

@@ -234,4 +234,17 @@ bool Crop(	Tr2TextureSubresource& sourceSR,
 
 void AdvanceMip( Tr2TextureSubresource& sub, const Tr2BitmapDimensions& bd, uint32_t mip );
 
+
+struct Tr2MsaaDesc
+{
+	uint32_t samples;
+	uint32_t quality;
+
+	Tr2MsaaDesc( uint32_t samples_ = 1, uint32_t quality_ = 0 )
+		:samples( samples_ ),
+		quality( quality_ )
+	{
+	}
+};
+
 #endif //Tr2HalHelperStructures_h_

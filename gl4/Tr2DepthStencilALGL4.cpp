@@ -36,8 +36,6 @@ Tr2DepthStencilAL::Tr2DepthStencilAL()
 	, m_width( 0 )
 	, m_height( 0 )
 	, m_format( static_cast<DepthStencilFormat>( 0 ) )
-	, m_msaaType( 0 )
-	, m_msaaQuality( 0 )
 {
 	memset( &m_deviceLost, 0, sizeof( m_deviceLost ) );
 }
@@ -51,8 +49,8 @@ ALResult Tr2DepthStencilAL::Create(
 	uint32_t width, 
 	uint32_t height, 
 	DepthStencilFormat dsFormat, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality, 
+	const Tr2MsaaDesc& msaa,
+	Tr2RenderContextEnum::ExFlag flag,
 	Tr2RenderContextAL& renderContext )
 {
 	Destroy();
@@ -60,6 +58,11 @@ ALResult Tr2DepthStencilAL::Create(
 	if( !renderContext.IsValid() )
 	{
 		return E_FAIL;
+	}
+
+	if( flag != EX_NONE )
+	{
+		return E_INVALIDARG;
 	}
     
 	if( dsFormat == DSFMT_READABLE )
@@ -70,8 +73,7 @@ ALResult Tr2DepthStencilAL::Create(
 		m_width  = width;
 		m_height = height;
 		m_format = dsFormat;
-		m_msaaType = msaaType;
-		m_msaaQuality = msaaQuality;
+		m_msaa = msaa;
 		ChangeObjectId();
 
 		return S_OK;
@@ -121,8 +123,7 @@ ALResult Tr2DepthStencilAL::Create(
 	m_width  = width;
 	m_height = height;
 	m_format = dsFormat;
-	m_msaaType = msaaType;
-	m_msaaQuality = msaaQuality;
+	m_msaa = msaa;
 	ChangeObjectId();
 
 	return S_OK;
@@ -144,15 +145,10 @@ void Tr2DepthStencilAL::Destroy()
 	m_width			= 0;
 	m_height		= 0;
 	m_format		= DSFMT_UNKNOWN;
-	m_msaaType		= 0;
-	m_msaaQuality	= 0;
+	m_msaa.samples = 0;
+	m_msaa.quality	= 0;
 	
 	m_readableDepth.Destroy();
-}
-
-bool Tr2DepthStencilAL::IsReadable() const
-{
-	return m_readableDepth.IsValid();
 }
 
 Tr2TextureAL& Tr2DepthStencilAL::GetTexture()
@@ -172,8 +168,7 @@ void Tr2DepthStencilAL::ReleaseALResource()
 		m_deviceLost.m_format		= m_format;
 		m_deviceLost.m_width		= m_width;
 		m_deviceLost.m_height		= m_height;
-		m_deviceLost.m_msaaType		= m_msaaType;
-		m_deviceLost.m_msaaQuality	= m_msaaQuality;
+		m_deviceLost.m_msaa = m_msaa;
 
 		m_deviceLost.m_valid = true;
 	}
@@ -194,7 +189,7 @@ void Tr2DepthStencilAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderCont
 			const auto &d = m_deviceLost;
 
 			if( d.m_width > 0 && d.m_height > 0 &&
-				SUCCEEDED( Create(	d.m_width, d.m_height, d.m_format, d.m_msaaType, d.m_msaaQuality, renderContext ) ) && 
+				SUCCEEDED( Create(	d.m_width, d.m_height, d.m_format, d.m_msaa, EX_NONE, renderContext ) ) && 
 				IsValid() )
 			{
 				m_deviceLost.m_valid = false;
@@ -207,6 +202,36 @@ bool Tr2DepthStencilAL::operator==( const Tr2DepthStencilAL& other ) const
 { 
 	return	m_depthRenderBuffer   == other.m_depthRenderBuffer && 
 			m_readableDepth.m_texture == other.m_readableDepth.m_texture;
+}
+
+uint32_t Tr2DepthStencilAL::GetWidth() const 
+{ 
+	return m_width; 
+}
+
+uint32_t Tr2DepthStencilAL::GetHeight() const 
+{ 
+	return m_height; 
+}
+
+const Tr2MsaaDesc& Tr2DepthStencilAL::GetMsaaDesc() const
+{
+	return m_msaa;
+}
+
+Tr2RenderContextEnum::DepthStencilFormat Tr2DepthStencilAL::GetFormat() const 
+{ 
+	return m_format; 
+}
+
+uintptr_t Tr2DepthStencilAL::GetSharedHandle() const 
+{
+	return 0; 
+}
+
+Tr2ALMemoryType Tr2DepthStencilAL::GetMemoryClass() const 
+{ 
+	return AL_MEMORY_VIDEO; 
 }
 
 #endif

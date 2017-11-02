@@ -1289,9 +1289,9 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned /*adapter*/, const T
 	CR_RETURN_HR( m_defaultDepthStencil.Create(
 		presentationParameters.mode.width,
 		presentationParameters.mode.height,
-		DSFMT_D24S8,									// <- ?
-		1,
-		0,
+		DSFMT_D24S8,
+		Tr2MsaaDesc(),
+		EX_NONE,
 		*this ) );
 
 	SetRenderTarget( m_defaultBackBuffer );
@@ -2699,7 +2699,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 	const Tr2RenderTargetAL& bb = m_boundRenderTarget[0] ? *m_boundRenderTarget[0] : m_defaultBackBuffer;
 
 	// Msaa zero is the same as one, so does need to show up as 'compatible'
-	const uint32_t dsMsaaType = m_boundDepthStencil ? std::max( m_boundDepthStencil->GetMsaaType(), 1u ) : 1;
+	const uint32_t dsMsaaType = m_boundDepthStencil ? std::max( m_boundDepthStencil->GetMsaaDesc().samples, 1u ) : 1;
 	const uint32_t bbMsaaType = std::max( bb.GetMsaaType(), 1u );
 
 	// dont't even bother setting it when the dimensions don't match, it's not gonna work.
@@ -2708,7 +2708,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 	if( !m_boundDepthStencil	||
 		( m_boundDepthStencil->GetWidth()		== bb.GetWidth()		&&
 		  m_boundDepthStencil->GetHeight()		== bb.GetHeight()		&&
-		  m_boundDepthStencil->GetMsaaQuality() == bb.GetMsaaQuality()	&&
+		  m_boundDepthStencil->GetMsaaDesc().quality == bb.GetMsaaQuality()	&&
 		  dsMsaaType							== bbMsaaType
 		) )
 	{		
@@ -2727,7 +2727,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 		if( m_boundDepthStencil && m_boundDepthStencil->IsValid() )
 		{
 			AL_UPDATE_RESOURCE_FRAME_USAGE( *m_boundDepthStencil );
-			if( m_boundDepthStencil->IsReadable() )
+			if( m_boundDepthStencil->GetTexture().IsValid() )
 			{
 				GL_FAIL( glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, *m_boundDepthStencil->m_readableDepth.m_texture, 0 ) );
 				GL_FAIL( glFramebufferTexture2D( GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, *m_boundDepthStencil->m_readableDepth.m_texture, 0 ) );

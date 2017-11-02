@@ -12,8 +12,7 @@ Tr2DepthStencilAL::Tr2DepthStencilAL()
 	: m_width( 0 )
 	, m_height( 0 )
 	, m_format( static_cast<DepthStencilFormat>( 0 ) )
-	, m_msaaType( 0 )
-	, m_msaaQuality( 0 )
+	, m_exFlags( EX_NONE )
 	, m_sharedHandle( nullptr )
 {
 	memset( &m_deviceLost, 0, sizeof( m_deviceLost ) );
@@ -23,24 +22,12 @@ Tr2DepthStencilAL::~Tr2DepthStencilAL()
 {
 }
 
-ALResult Tr2DepthStencilAL::Create( 
-	uint32_t width, 
-	uint32_t height, 
-	Tr2RenderContextEnum::DepthStencilFormat format, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality, 
-	Tr2RenderContextAL& renderContext )
-{
-	return CreateEx( width, height, format, msaaType, msaaQuality, 0, renderContext );
-}
-
-ALResult Tr2DepthStencilAL::CreateEx(	
+ALResult Tr2DepthStencilAL::Create(	
 	uint32_t width, 
 	uint32_t height, 
 	DepthStencilFormat dsFormat, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality, 
-	uint32_t flags, 
+	const Tr2MsaaDesc& msaa,
+	Tr2RenderContextEnum::ExFlag flags,
 	Tr2RenderContextAL& renderContext )
 {
 	Destroy();
@@ -53,8 +40,8 @@ ALResult Tr2DepthStencilAL::CreateEx(
 	m_width  = width;
 	m_height = height;
 	m_format = dsFormat;
-	m_msaaType = msaaType;
-	m_msaaQuality = msaaQuality;
+	m_msaa = msaa;
+	m_exFlags = flags;
 
 	if( dsFormat == DSFMT_READABLE )
 	{
@@ -96,22 +83,22 @@ ALResult Tr2DepthStencilAL::CreateEx(
 	HRESULT hr;
 
 	const bool shared = flags & EX_CREATE_SHARED;
-	const auto sample = static_cast<D3DMULTISAMPLE_TYPE>( m_msaaType > 1 ? m_msaaType : 0 );
+	const auto sample = static_cast<D3DMULTISAMPLE_TYPE>( m_msaa.samples > 1 ? m_msaa.samples : 0 );
 	
 	if( !shared )
 	{
-		hr = renderContext.m_d3dDevice9->CreateDepthStencilSurface( width, height, format, sample, m_msaaQuality, /*Discard*/ TRUE, &m_depthStencil, nullptr );
+		hr = renderContext.m_d3dDevice9->CreateDepthStencilSurface( width, height, format, sample, m_msaa.quality, /*Discard*/ TRUE, &m_depthStencil, nullptr );
 	}
 	else
 	{
 		CComQIPtr<IDirect3DDevice9Ex> exDevice( renderContext.m_d3dDevice9 );
 		if( exDevice )
 		{
-			hr = exDevice->CreateDepthStencilSurfaceEx( width, height, format, sample, m_msaaQuality, /*Discard*/ TRUE, &m_depthStencil, &m_sharedHandle, D3DUSAGE_NONSECURE );			
+			hr = exDevice->CreateDepthStencilSurfaceEx( width, height, format, sample, m_msaa.quality, /*Discard*/ TRUE, &m_depthStencil, &m_sharedHandle, D3DUSAGE_NONSECURE );			
 		}
 		else
 		{
-			hr = renderContext.m_d3dDevice9->CreateDepthStencilSurface( width, height, format, sample, m_msaaQuality, /*Discard*/ TRUE, &m_depthStencil, &m_sharedHandle );
+			hr = renderContext.m_d3dDevice9->CreateDepthStencilSurface( width, height, format, sample, m_msaa.quality, /*Discard*/ TRUE, &m_depthStencil, &m_sharedHandle );
 		}
 	}
 	if( SUCCEEDED( hr ) )
@@ -158,18 +145,14 @@ void Tr2DepthStencilAL::Destroy()
 
 	m_width = 0;
 	m_height = 0;
-	m_msaaType = 0;
-	m_msaaQuality = 0;
+	m_msaa.samples = 0;
+	m_msaa.quality = 0;
+	m_exFlags = EX_NONE;
 	if( m_sharedHandle )
 	{
 		::CloseHandle( m_sharedHandle );
 		m_sharedHandle = nullptr;
 	}
-}
-
-bool Tr2DepthStencilAL::IsReadable() const
-{
-	return m_format == DSFMT_READABLE && m_msaaType <= 1;
 }
 
 Tr2TextureAL& Tr2DepthStencilAL::GetTexture()
@@ -192,8 +175,8 @@ void Tr2DepthStencilAL::ReleaseALResource()
 		m_deviceLost.m_format		= m_format;
 		m_deviceLost.m_width		= m_width;
 		m_deviceLost.m_height		= m_height;
-		m_deviceLost.m_msaaType		= m_msaaType;
-		m_deviceLost.m_msaaQuality	= m_msaaQuality;
+		m_deviceLost.m_msaa = m_msaa;
+		m_deviceLost.m_exFlags = m_exFlags;
 
 		m_deviceLost.m_valid = true;
 	}
@@ -214,7 +197,7 @@ void Tr2DepthStencilAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderCont
 			const auto &d = m_deviceLost;
 
 			if( d.m_width > 0 && d.m_height > 0 &&
-				SUCCEEDED( Create(	d.m_width, d.m_height, d.m_format, d.m_msaaType, d.m_msaaQuality, renderContext ) ) && 
+				SUCCEEDED( Create(	d.m_width, d.m_height, d.m_format, d.m_msaa, d.m_exFlags, renderContext ) ) && 
 				IsValid() )
 			{
 				m_deviceLost.m_valid = false;
@@ -223,11 +206,39 @@ void Tr2DepthStencilAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderCont
 	}
 }
 
-uint32_t Tr2DepthStencilAL::GetSharedHandle() const
+uintptr_t Tr2DepthStencilAL::GetSharedHandle() const
 {
-	// TODO: 64bit
-	// static_assert( sizeof( HANDLE ) == sizeof( unsigned ), "fix me for 64 bit" );
-	return reinterpret_cast<uint32_t>( m_sharedHandle );
+	return reinterpret_cast<uintptr_t>( m_sharedHandle );
+}
+
+uint32_t Tr2DepthStencilAL::GetWidth() const
+{
+	return m_width;
+}
+
+uint32_t Tr2DepthStencilAL::GetHeight() const
+{
+	return m_height;
+}
+
+const Tr2MsaaDesc& Tr2DepthStencilAL::GetMsaaDesc() const
+{
+	return m_msaa;
+}
+
+Tr2RenderContextEnum::DepthStencilFormat Tr2DepthStencilAL::GetFormat() const
+{
+	return m_format;
+}
+
+bool Tr2DepthStencilAL::operator==( const Tr2DepthStencilAL& other ) const
+{
+	return m_depthStencil == other.m_depthStencil && m_depthStencilREADABLE == other.m_depthStencilREADABLE;
+}
+
+Tr2ALMemoryType Tr2DepthStencilAL::GetMemoryClass() const 
+{ 
+	return AL_MEMORY_VIDEO; 
 }
 
 #endif
