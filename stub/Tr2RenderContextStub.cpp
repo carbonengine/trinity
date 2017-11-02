@@ -7,7 +7,6 @@
 #include "ALLog.h"
 #include "Tr2VertexBufferALStub.h"
 #include "Tr2IndexBufferALStub.h"
-#include "Tr2LockedRenderTargetALStub.h"
 #include "Tr2AdapterStructures.h"
 
 

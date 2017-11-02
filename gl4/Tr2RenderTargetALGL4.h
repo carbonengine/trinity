@@ -10,7 +10,6 @@
 
 
 class Tr2RenderContextAL;
-class Tr2LockedRenderTargetAL;
 
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
@@ -72,8 +71,6 @@ public:
 	// This is not necessarily valid -- for example MSAA RTs cannot be directly textured from.
 	Tr2TextureAL& GetTexture();
 	const Tr2TextureAL& GetTexture() const;
-
-	ALResult GetLockedRenderTarget( uint32_t mipLevel, uint32_t* ltrb, Tr2LockedRenderTargetAL& lockedRT, Tr2RenderContextAL& renderContext );
 
 	// The lock is always read only
 	ALResult Lock(	

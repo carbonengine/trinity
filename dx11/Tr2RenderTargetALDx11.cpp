@@ -6,7 +6,6 @@
 #include "ALLog.h"
 #include "Tr2PrimaryRenderContextDx11.h"
 #include "Tr2HalHelperStructures.h"
-#include "Tr2LockedRenderTargetALDx11.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -361,74 +360,6 @@ Tr2TextureAL& Tr2RenderTargetAL::GetTexture()
 const Tr2TextureAL& Tr2RenderTargetAL::GetTexture() const
 { 
 	return m_backingStore; 
-}
-
-ALResult Tr2RenderTargetAL::GetLockedRenderTarget( uint32_t mipLevel, uint32_t* ltrb, Tr2LockedRenderTargetAL& lockedRT, Tr2RenderContextAL& renderContext )
-{
-	if( !m_backingStore.m_texture || !renderContext.IsValid() || ( m_mipCount > 0 && mipLevel >= m_mipCount ) )
-	{
-		return E_FAIL;
-	}
-		
-	if( !renderContext.m_secondaryDevice11 )
-	{
-		return E_FAIL;
-	}
-	
-	const uint32_t width  = ltrb ? ltrb[2] - ltrb[0] : m_width;
-	const uint32_t height = ltrb ? ltrb[3] - ltrb[1] : m_height;
-
-	D3D11_TEXTURE2D_DESC desc;
-	memset( &desc, 0, sizeof (desc) );
-	desc.Width		= width >> mipLevel;
-	desc.Height		= height >> mipLevel;
-	if( IsCompressedFormat( GetFormat() ) )
-	{
-		desc.Width  = std::max( desc.Width , 4u );
-		desc.Height = std::max( desc.Height, 4u );
-	}
-	else
-	{
-		desc.Width  = std::max( desc.Width , 1u );
-		desc.Height = std::max( desc.Height, 1u );
-	}
-	desc.MipLevels	= 1;
-	desc.ArraySize  = 1;
-	desc.Format     = static_cast<DXGI_FORMAT>( MakeTypeless( m_format ) );
-		
-	desc.Usage			= D3D11_USAGE_STAGING;
-	desc.CPUAccessFlags	= D3D11_CPU_ACCESS_READ;
-	
-	desc.SampleDesc.Count = 1;
-
-	if( lockedRT.m_staging )
-	{
-		D3D11_TEXTURE2D_DESC desc2;
-		lockedRT.m_staging->GetDesc( &desc2 );
-		if( desc2.Width != desc.Width || desc2.Height != desc.Height || desc2.Format != desc.Format )
-		{
-			lockedRT.m_staging = nullptr;
-		}
-	}
-
-	if( !lockedRT.m_staging )
-	{
-		CR_RETURN_HR( renderContext.m_secondaryDevice11->CreateTexture2D( &desc, nullptr, &lockedRT.m_staging ) );
-		if( !lockedRT.m_staging )
-		{
-			return E_FAIL;
-		}
-	}
-	if( ltrb )
-	{
-		D3D11_BOX box = { ltrb[0], ltrb[1], 0, ltrb[2], ltrb[3], 1 };
-		renderContext.m_context->CopySubresourceRegion( lockedRT.m_staging, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( mipLevel, 0, GetTrueMipCount() ), &box );
-	}
-	else
-	{
-		renderContext.m_context->CopySubresourceRegion( lockedRT.m_staging, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( mipLevel, 0, GetTrueMipCount() ), nullptr );
-	}
-	return S_OK;
 }
 
 // -------------------------------------------------------------

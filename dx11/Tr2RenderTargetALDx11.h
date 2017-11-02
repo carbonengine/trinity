@@ -6,9 +6,6 @@
 #include "../include/Tr2TextureAL.h"
 
 
-class Tr2LockedRenderTargetAL;
-
-
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 // -------------------------------------------------------------
@@ -73,8 +70,6 @@ public:
 	// This is not necessarily valid -- for example MSAA RTs cannot be directly textured from.
 	Tr2TextureAL& GetTexture();
 	const Tr2TextureAL&	GetTexture() const;
-
-	ALResult GetLockedRenderTarget( uint32_t mipLevel, uint32_t* ltrb, Tr2LockedRenderTargetAL& lockedRT, Tr2RenderContextAL& renderContext );
 
 	ALResult Lock(	
 		uint32_t mipLevel, 
