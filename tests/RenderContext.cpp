@@ -42,7 +42,7 @@ TEST_F( WithValidRenderContext, CanGetRenderTargetSize )
 	uint32_t height = 0xDeadBeef;
 
 	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 0, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, EX_NONE, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt ) );
@@ -60,7 +60,7 @@ TEST_F( WithValidRenderContext, CanGetRenderTargetSizeForNonZeroSlot )
 	const uint32_t slot = 2;
 
 	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 0, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, EX_NONE, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget( slot ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt, slot ) );

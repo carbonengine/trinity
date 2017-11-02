@@ -886,7 +886,7 @@ TEST_F( Rendering, CanClearRenderTarget )
 			0.0f ) ) );
 
 	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 0, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 
 	uint32_t g = 127;
@@ -1023,7 +1023,7 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 			0.0f ) ) );
 
 	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 0, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 
 	uint32_t g = 127;
@@ -1171,10 +1171,10 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 			0.0f ) ) );
 
 	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 4, 0, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc( 4 ), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 	Tr2RenderTargetAL readableRt;
-	ASSERT_HRESULT_SUCCEEDED( readableRt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 0, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( readableRt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 
 	uint32_t g = 127;
@@ -2524,7 +2524,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 	};
 
 	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 0, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 0, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 0, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 	Tr2ShaderAL psFill;
 	ASSERT_HRESULT_SUCCEEDED( psFill.Create( 
@@ -2747,10 +2747,10 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 			0.0f ) ) );
 
 	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 0, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 	Tr2RenderTargetAL rt2;
-	ASSERT_HRESULT_SUCCEEDED( rt2.Create( 256, 256, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 0, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt2.Create( 256, 256, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 
 	uint32_t g = 127;

@@ -157,9 +157,6 @@ void Tr2DepthStencilAL::Destroy()
 
 Tr2TextureAL& Tr2DepthStencilAL::GetTexture()
 {
-	//CCP_ASSERT( IsReadable() );
-	// Doesn't work, might be accessed before it's created to set up a variable store.
-
 	return m_backingStore;
 }
 

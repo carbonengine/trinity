@@ -27,7 +27,15 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextA
 		return E_INVALIDARG;
 	}
 	Destroy();
-	return m_backBuffer.Create( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM, renderContext );
+	return m_backBuffer.Create( 
+		4, 
+		4, 
+		1, 
+		Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM, 
+		Tr2MsaaDesc(),
+		0,
+		Tr2RenderContextEnum::EX_NONE,
+		renderContext );
 }
 
 void Tr2SwapChainAL::Destroy()

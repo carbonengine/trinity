@@ -3,6 +3,7 @@
 
 
 #include "../Tr2AutoResetObjectAL.h"
+#include "../Tr2HalHelperStructures.h"
 #include "../include/Tr2TextureAL.h"
 
 
@@ -22,36 +23,18 @@ public:
 		uint32_t height, 
 		uint32_t mipLevelCount,
 		Tr2RenderContextEnum::PixelFormat format, 
-		Tr2RenderContextAL& renderContext );
-
-	ALResult Create(	
-		uint32_t width, 
-		uint32_t height, 
-		uint32_t mipLevelCount,
-		Tr2RenderContextEnum::PixelFormat format, 
-		uint32_t msaaType, 
-		uint32_t msaaQuality,
-		Tr2RenderContextAL& renderContext );
-
-	ALResult CreateEx(	
-		uint32_t width, 
-		uint32_t height, 
-		uint32_t mipLevelCount,
-		Tr2RenderContextEnum::PixelFormat format, 
-		uint32_t msaaType, 
-		uint32_t msaaQuality,
+		const Tr2MsaaDesc& msaa,
 		Tr2RenderContextEnum::BufferUsage usage,
-		uint32_t flags,
+		Tr2RenderContextEnum::ExFlag flags,
 		Tr2RenderContextAL& renderContext );
-
-	ALResult Attach( IDirect3DSurface9* surface, Tr2RenderContextAL& renderContext );
 
 	bool IsValid() const;
-	bool IsReadable() const { return GetTexture().IsValid(); }
 	void Destroy();
+
+	bool operator==( const Tr2RenderTargetAL& other ) const;
+
 	ALResult GenerateMipMaps( Tr2RenderContextAL& renderContext );
 	ALResult Resolve( Tr2RenderTargetAL& destination, Tr2RenderContextAL& renderContext );
-
 	ALResult CopySubresourceRegion( 
 		uint32_t destX, 
 		uint32_t destY, 
@@ -59,31 +42,39 @@ public:
 		uint32_t* ltrb, 
 		Tr2RenderContextAL& renderContext );
 
-	uint32_t GetMsaaType() const { return m_msaaType; }
-	uint32_t GetMsaaQuality() const { return m_msaaQuality; }
-	
-	// This is not necessarily valid -- for example MSAA RTs cannot be directly textured from.
-	Tr2TextureAL&						GetTexture();
-	const Tr2TextureAL&					GetTexture() const;
-
 	// The lock is always read only
-	ALResult Lock(	
-		uint32_t mipLevel, 
-		uint32_t* ltrb, 
-		void*& data, 
-		uint32_t& pitch, 
+	ALResult Lock(
+		uint32_t mipLevel,
+		uint32_t* ltrb,
+		void*& data,
+		uint32_t& pitch,
 		Tr2RenderContextAL& renderContext );
 	ALResult Unlock( Tr2RenderContextAL& renderContext );
 	void SetHintLockOften();
 
-	uint32_t GetSharedHandle() const;
-	bool operator==( const Tr2RenderTargetAL& other ) const { return m_mainRT == other.m_mainRT && m_msaaRT == other.m_msaaRT; }
+	Tr2MsaaDesc GetMsaaDesc() const;
 
-	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
+	// This is not necessarily valid -- for example MSAA RTs cannot be directly textured from.
+	Tr2TextureAL&						GetTexture();
+	const Tr2TextureAL&					GetTexture() const;
+
+	uintptr_t GetSharedHandle() const;
+
+	Tr2ALMemoryType GetMemoryClass() const;
 
 private:
-	uint32_t							m_msaaType;
-	uint32_t							m_msaaQuality;
+	ALResult Attach( IDirect3DSurface9* surface, Tr2RenderContextAL& renderContext );
+
+	bool	GetSurfaceForRT( CComPtr<IDirect3DSurface9>	&surf );
+	ALResult GetRenderTargetData( uint32_t mipLevel, CComPtr<IDirect3DSurface9> &sysMem, Tr2RenderContextAL& renderContext );
+
+	ALResult Bind( uint32_t slot, Tr2RenderContextAL& renderContext ) const;
+
+	void ReleaseALResource();
+	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
+
+	Tr2MsaaDesc m_msaa;
+	Tr2RenderContextEnum::ExFlag m_flags;
 
 	Tr2TextureAL						m_backingStore;
 	
@@ -98,37 +89,25 @@ private:
 	
 	bool								m_clearSysMemLockable;
 
-	bool	GetSurfaceForRT( CComPtr<IDirect3DSurface9>	&surf );
-	ALResult GetRenderTargetData( uint32_t mipLevel, CComPtr<IDirect3DSurface9> &sysMem, Tr2RenderContextAL& renderContext );
-
 	// For auto-recreate after a device lost
 	struct TDeviceLost
 	{
-		Tr2RenderContextEnum::PixelFormat	m_format;
-		uint32_t							m_width;
-		uint32_t							m_height;
-		uint32_t							m_mipCount;
-		uint32_t							m_msaaType;
-		uint32_t							m_msaaQuality;
+		Tr2RenderContextEnum::PixelFormat m_format;
+		uint32_t m_width;
+		uint32_t m_height;
+		uint32_t m_mipCount;
+		Tr2MsaaDesc m_msaa;
+		Tr2RenderContextEnum::ExFlag m_flags;
 
-		bool								m_valid;
+		bool m_valid;
 	};
 	TDeviceLost	m_deviceLost;
 	bool		m_isAttached;
 	
 	HANDLE		m_sharedHandle;
 	
-private:	
-	ALResult Bind( uint32_t slot, Tr2RenderContextAL& renderContext ) const;
-
-	void ReleaseALResource();
-	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
-
 	friend class Tr2RenderContextAL;
-	friend class Tr2RenderTarget;
-
-	Tr2RenderTargetAL( const Tr2RenderTargetAL& );
-	Tr2RenderTargetAL& operator=( const Tr2RenderTargetAL& );
+	friend class Tr2SwapChainAL;
 };
 
 #endif

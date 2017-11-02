@@ -104,8 +104,9 @@ ALResult Tr2SwapChainAL::CreateFramebuffer( Tr2RenderContextAL& renderContext )
 		m_height,
 		1,
 		PIXEL_FORMAT_B8G8R8A8_UNORM,
-		1,
+		Tr2MsaaDesc(),
 		0,
+		EX_NONE,
 		renderContext ) );
 
 	return S_OK;

@@ -18,8 +18,8 @@ void Tr2RenderTargetAL::Destroy()
 {
 	Tr2BitmapDimensions::Destroy();
 
-	m_msaaType = 1;
-	m_msaaQuality = 0;
+	m_msaa.samples = 1;
+	m_msaa.quality = 0;
 
 	m_backingStore.Destroy();
 }
@@ -37,7 +37,7 @@ void Tr2RenderTargetAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderCont
 			const auto &d = m_deviceLost;
 
 			if( d.m_width > 0 && d.m_height > 0 &&
-				SUCCEEDED( Create(	d.m_width, d.m_height, d.m_mipCount, d.m_format, d.m_msaaType, d.m_msaaQuality, renderContext ) ) && 
+				SUCCEEDED( Create(	d.m_width, d.m_height, d.m_mipCount, d.m_format, d.m_msaa, 0, EX_NONE, renderContext ) ) && 
 				IsValid() )
 			{
 				m_deviceLost.m_valid = false;
@@ -50,12 +50,11 @@ void Tr2RenderTargetAL::ReleaseALResource()
 {
 	if( !m_deviceLost.m_valid )
 	{
-		m_deviceLost.m_format		= m_format;
-		m_deviceLost.m_width		= m_width;
-		m_deviceLost.m_height		= m_height;
-		m_deviceLost.m_mipCount		= m_mipCount;
-		m_deviceLost.m_msaaType		= m_msaaType;
-		m_deviceLost.m_msaaQuality	= m_msaaQuality;
+		m_deviceLost.m_format = m_format;
+		m_deviceLost.m_width = m_width;
+		m_deviceLost.m_height = m_height;
+		m_deviceLost.m_mipCount = m_mipCount;
+		m_deviceLost.m_msaa = m_msaa;
 
 		m_deviceLost.m_valid = true;
 	}
@@ -76,32 +75,9 @@ ALResult Tr2RenderTargetAL::Create(
 	uint32_t height, 
 	uint32_t mipLevelCount,
 	Tr2RenderContextEnum::PixelFormat format, 
-	Tr2RenderContextAL& renderContext )
-{
-	return Create( width, height, mipLevelCount, format, 1, 0, renderContext );
-}
-
-ALResult Tr2RenderTargetAL::Create(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t mipLevelCount,
-	Tr2RenderContextEnum::PixelFormat format, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality,
-	Tr2RenderContextAL& renderContext )
-{
-	return CreateEx( width, height, mipLevelCount, format, msaaType, msaaQuality, 0, 0, renderContext );
-}
-
-ALResult Tr2RenderTargetAL::CreateEx(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t mipLevelCount,
-	Tr2RenderContextEnum::PixelFormat format, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality,
+	const Tr2MsaaDesc& msaa,
 	Tr2RenderContextEnum::BufferUsage usage,
-	uint32_t flags,
+	Tr2RenderContextEnum::ExFlag,
 	Tr2RenderContextAL& renderContext )
 {
 	if( !renderContext.IsValid() )
@@ -116,8 +92,7 @@ ALResult Tr2RenderTargetAL::CreateEx(
 	if( SUCCEEDED( result ) )
 	{ 
 		static_cast<Tr2BitmapDimensions&>( *this ) = m_backingStore;
-		m_msaaType = msaaType;
-		m_msaaQuality = msaaQuality;
+		m_msaa = msaa;
 	}
 	return result;
 }
@@ -178,9 +153,19 @@ void Tr2RenderTargetAL::SetHintLockOften()
 {
 }
 
-uint32_t Tr2RenderTargetAL::GetSharedHandle() const
+uintptr_t Tr2RenderTargetAL::GetSharedHandle() const
 {
 	return 0;
+}
+
+Tr2MsaaDesc Tr2RenderTargetAL::GetMsaaDesc() const
+{
+	return m_msaa;
+}
+
+Tr2ALMemoryType Tr2RenderTargetAL::GetMemoryClass() const 
+{ 
+	return AL_MEMORY_VIDEO; 
 }
 
 #endif // ( TRINITY_PLATFORM==TRINITY_STUB )

@@ -3,7 +3,6 @@
 
 #include "Tr2RenderTargetALDx9.h"
 #include "Tr2RenderContextDx9.h"
-#include "Tr2HalHelperStructures.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -24,17 +23,18 @@ void Tr2RenderTargetAL::Destroy()
 {
 	Tr2BitmapDimensions::Destroy();
 
-	m_format9		= D3DFMT_UNKNOWN;
-	m_msaaType		= 0;
-	m_msaaQuality	= 0;
+	m_format9 = D3DFMT_UNKNOWN;
+	m_msaa.samples = 0;
+	m_msaa.quality = 0;
+	m_flags = EX_NONE;
 	
-	m_mainRT			= nullptr;
-	m_mipGeneratedRT= nullptr;
-	m_sysMemLocked		= nullptr;
-	m_msaaRT			= nullptr;
+	m_mainRT = nullptr;
+	m_mipGeneratedRT = nullptr;
+	m_sysMemLocked = nullptr;
+	m_msaaRT = nullptr;
 	
-	m_clearSysMemLockable	= true;
-	m_isAttached			= false;
+	m_clearSysMemLockable = true;
+	m_isAttached = false;
 	
 	if( m_sharedHandle )
 	{
@@ -58,7 +58,7 @@ void Tr2RenderTargetAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderCont
 			const auto &d = m_deviceLost;
 
 			if( d.m_width > 0 && d.m_height > 0 &&
-				SUCCEEDED( Create(	d.m_width, d.m_height, d.m_mipCount, d.m_format, d.m_msaaType, d.m_msaaQuality, renderContext ) ) && 
+				SUCCEEDED( Create(	d.m_width, d.m_height, d.m_mipCount, d.m_format, d.m_msaa, 0, d.m_flags, renderContext ) ) && 
 				IsValid() )
 			{
 				m_deviceLost.m_valid = false;
@@ -71,12 +71,12 @@ void Tr2RenderTargetAL::ReleaseALResource()
 {
 	if( !m_isAttached && !m_deviceLost.m_valid )
 	{
-		m_deviceLost.m_format		= m_format;
-		m_deviceLost.m_width		= m_width;
-		m_deviceLost.m_height		= m_height;
-		m_deviceLost.m_mipCount		= m_mipCount;
-		m_deviceLost.m_msaaType		= m_msaaType;
-		m_deviceLost.m_msaaQuality	= m_msaaQuality;
+		m_deviceLost.m_format = m_format;
+		m_deviceLost.m_width = m_width;
+		m_deviceLost.m_height = m_height;
+		m_deviceLost.m_mipCount = m_mipCount;
+		m_deviceLost.m_msaa = m_msaa;
+		m_deviceLost.m_flags = m_flags;
 
 		m_deviceLost.m_valid = true;
 	}
@@ -103,32 +103,9 @@ ALResult Tr2RenderTargetAL::Create(
 	uint32_t height, 
 	uint32_t mipLevelCount,
 	Tr2RenderContextEnum::PixelFormat format, 
-	Tr2RenderContextAL& renderContext )
-{
-	return Create( width, height, mipLevelCount, format, 1, 0, renderContext );
-}
-
-ALResult Tr2RenderTargetAL::Create(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t mipLevelCount,
-	Tr2RenderContextEnum::PixelFormat format, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality,
-	Tr2RenderContextAL& renderContext )
-{
-	return CreateEx( width, height, mipLevelCount, format, msaaType, msaaQuality, 0, 0, renderContext );
-}
-
-ALResult Tr2RenderTargetAL::CreateEx(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t mipLevelCount,
-	Tr2RenderContextEnum::PixelFormat format, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality,
-	Tr2RenderContextEnum::BufferUsage /* usage */,
-	uint32_t flags,
+	const Tr2MsaaDesc& msaa,
+	Tr2RenderContextEnum::BufferUsage,
+	Tr2RenderContextEnum::ExFlag flags,
 	Tr2RenderContextAL& renderContext )
 {
 	Destroy();
@@ -146,72 +123,54 @@ ALResult Tr2RenderTargetAL::CreateEx(
 	}
 
 	const bool shared = flags & EX_CREATE_SHARED;
-	const auto msaa = static_cast<D3DMULTISAMPLE_TYPE>( msaaType > 1 ? msaaType : 0 );
+	const auto msaaType = static_cast<D3DMULTISAMPLE_TYPE>( msaa.samples > 1 ? msaa.samples : 0 );
 	
-	if( ( flags & EX_PICKING_BUFFER_WORKAROUND ) && IsTransgaming() )
-	{
-		// Workaround for Mac+Transgaming+ATI GPU: textures as render targets and GetRenderTargetData doesn't seem
-		// to work correctly for this combo, so instead of creating a texture here we create a DX9 render target and
-		// then use GetRenderTargetData with it. This seems to make Mac+ATI happy.
-		CCP_ASSERT( mipLevelCount <= 1 );
-		CR_RETURN_HR( renderContext.m_d3dDevice9->CreateRenderTarget( 
-										width, 
-										height, 
-										m_format9, 
-										D3DMULTISAMPLE_NONE, 
-										0, 
-										false, 
-										&m_msaaRT, 
-										nullptr ) );			
-		
-		m_mipCount = 1;
-	}
-	else if( shared )	// from the looks of it, shared previewer was always using an actual RT.  Still supporting shared textures too just in case we change our mind later (below)
+	if( shared )	// from the looks of it, shared previewer was always using an actual RT.  Still supporting shared textures too just in case we change our mind later (below)
 	{		
 		CComQIPtr<IDirect3DDevice9Ex> exDevice( renderContext.m_d3dDevice9 );
 		if( exDevice )
 		{
 			CR_RETURN_HR( exDevice->CreateRenderTargetEx( 
-										width, 
-										height, 
-										m_format9, 
-										msaa, 
-										msaaQuality, 
-										true, 
-										&m_msaaRT, 
-										&m_sharedHandle, 
-										D3DUSAGE_NONSECURE ) );
+				width, 
+				height, 
+				m_format9, 
+				msaaType,
+				msaa.quality, 
+				true, 
+				&m_msaaRT, 
+				&m_sharedHandle, 
+				D3DUSAGE_NONSECURE ) );
 		}
 		else
 		{
 			CR_RETURN_HR( renderContext.m_d3dDevice9->CreateRenderTarget( 
-										width, 
-										height, 
-										m_format9, 
-										msaa, 
-										msaaQuality, 
-										true, 
-										&m_msaaRT, 
-										&m_sharedHandle ) );				
+				width, 
+				height, 
+				m_format9, 
+				msaaType, 
+				msaa.quality, 
+				true, 
+				&m_msaaRT, 
+				&m_sharedHandle ) );				
 		}	
 	}
 	else if( msaaType > 1 )
 	{
 		CCP_ASSERT( mipLevelCount <= 1 );
 		HRESULT hr = renderContext.m_d3dDevice9->CreateRenderTarget( 
-										width, 
-										height, 
-										m_format9, 
-										msaa, 
-										msaaQuality, 
-										false, 
-										&m_msaaRT, 
-										nullptr );
+			width, 
+			height, 
+			m_format9, 
+			msaaType, 
+			msaa.quality, 
+			false, 
+			&m_msaaRT, 
+			nullptr );
 		if( FAILED( hr ) )
 		{
 			CCP_AL_LOGWARN( 
-					"Tr2RenderTargetAL::CreateEx: CreateRenderTarget fails %d x %d, fmt %d, msaa %d %d, HR 0x%x", 
-					width, height, m_format9, msaa, msaaQuality, hr );
+					"Tr2RenderTargetAL::Create: CreateRenderTarget fails %d x %d, fmt %d, msaa %d %d, HR 0x%x", 
+					width, height, m_format9, msaa.samples, msaa.quality, hr );
 			return hr;
 		}
 		
@@ -232,14 +191,14 @@ ALResult Tr2RenderTargetAL::CreateEx(
         //trinity.TRIPOOL_DEFAULT if trinity.device.UsingEXDevice() else trinity.TRIPOOL_MANAGED )
 
 		HRESULT hr = renderContext.m_d3dDevice9->CreateTexture(	
-										width, 
-										height, 
-										mipCount, 
-										usage, 
-										m_format9, 
-										D3DPOOL_DEFAULT, 
-										&m_mainRT, 
-										shared ? &m_sharedHandle : nullptr );
+			width, 
+			height, 
+			mipCount, 
+			usage, 
+			m_format9, 
+			D3DPOOL_DEFAULT, 
+			&m_mainRT, 
+			shared ? &m_sharedHandle : nullptr );
 		if( FAILED( hr ) )
 		{
 			CCP_AL_LOGWARN( 
@@ -279,11 +238,11 @@ ALResult Tr2RenderTargetAL::CreateEx(
 		m_mipCount		= mipCount;
 	}
 
-	m_format		= format;
-	m_width			= width;
-	m_height		= height;
-	m_msaaType		= msaaType;
-	m_msaaQuality	= msaaQuality;
+	m_format = format;
+	m_width = width;
+	m_height = height;
+	m_msaa = msaa;
+	m_flags = flags;
 
 	if( !m_msaaRT )
 	{
@@ -329,8 +288,9 @@ ALResult Tr2RenderTargetAL::Attach( IDirect3DSurface9* surface, Tr2RenderContext
 	m_width = desc.Width;
 	m_height = desc.Height;
 	m_mipCount = 1;
-	m_msaaType = desc.MultiSampleType;
-	m_msaaQuality = desc.MultiSampleQuality;
+	m_msaa.samples = desc.MultiSampleType;
+	m_msaa.quality = desc.MultiSampleQuality;
+	m_flags = EX_NONE;
 	m_format9 = desc.Format;
 
 	m_msaaRT = surface;
@@ -748,7 +708,7 @@ ALResult Tr2RenderTargetAL::Lock(
 	Tr2RenderContextAL& renderContext )
 {
 	CCP_ASSERT( !m_sysMemLocked );	// already locked?
-	if( !renderContext.m_d3dDevice9 || m_sysMemLocked || ( m_msaaRT && m_msaaType >= 2 ) )
+	if( !renderContext.m_d3dDevice9 || m_sysMemLocked || ( m_msaaRT && m_msaa.samples >= 2 ) )
 	{
 		return E_FAIL;
 	}
@@ -796,11 +756,24 @@ void Tr2RenderTargetAL::SetHintLockOften()
 	m_clearSysMemLockable = false;
 }
 
-uint32_t Tr2RenderTargetAL::GetSharedHandle() const
+uintptr_t Tr2RenderTargetAL::GetSharedHandle() const
 {
-	// TODO: 64bit
-	// static_assert( sizeof( HANDLE ) == sizeof( unsigned ), "fix me for 64 bit" );
-	return reinterpret_cast<uint32_t>( m_sharedHandle );
+	return reinterpret_cast<uintptr_t>( m_sharedHandle );
+}
+
+bool Tr2RenderTargetAL::operator==( const Tr2RenderTargetAL& other ) const
+{ 
+	return m_mainRT == other.m_mainRT && m_msaaRT == other.m_msaaRT; 
+}
+
+Tr2ALMemoryType Tr2RenderTargetAL::GetMemoryClass() const 
+{ 
+	return AL_MEMORY_VIDEO; 
+}
+
+Tr2MsaaDesc Tr2RenderTargetAL::GetMsaaDesc() const
+{
+	return m_msaa;
 }
 
 #endif // ( TRINITY_PLATFORM==TRINITY_DIRECTX9 )

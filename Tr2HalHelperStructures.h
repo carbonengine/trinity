@@ -241,9 +241,14 @@ struct Tr2MsaaDesc
 	uint32_t quality;
 
 	Tr2MsaaDesc( uint32_t samples_ = 1, uint32_t quality_ = 0 )
-		:samples( samples_ ),
+		:samples( std::max( samples_, 1u ) ),
 		quality( quality_ )
 	{
+	}
+
+	bool operator == ( const Tr2MsaaDesc& other ) const
+	{
+		return std::max( samples, 1u ) == std::max( other.samples, 1u ) && quality == other.quality;
 	}
 };
 

@@ -148,10 +148,10 @@ void WithValidRenderContext::MakeScreenShot( const char* outFilePath )
 {
 	Tr2RenderTargetAL& rt = renderContext->GetDefaultBackBuffer();
 	ASSERT_TRUE( rt.IsValid() );
-	if( !rt.IsReadable() )
+	if( rt.GetMsaaDesc().samples > 1 )
 	{
 		Tr2RenderTargetAL readable;
-		ASSERT_HRESULT_SUCCEEDED( readable.Create( rt.GetWidth(), rt.GetHeight(), 1, rt.GetFormat(), *renderContext ) );
+		ASSERT_HRESULT_SUCCEEDED( readable.Create( rt.GetWidth(), rt.GetHeight(), 1, rt.GetFormat(), Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 		ASSERT_HRESULT_SUCCEEDED( rt.Resolve( readable, *renderContext ) );
 		SaveReadableRenderTarget( readable, outFilePath, *renderContext );
 	}

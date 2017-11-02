@@ -19,14 +19,16 @@ void Tr2RenderTargetAL::Destroy()
 {
 	Tr2BitmapDimensions::Destroy();
 	
-	m_msaaType		= 1;
-	m_msaaQuality	= 0;
+	m_msaa.samples = 1;
+	m_msaa.quality = 0;
 	
 	m_texture		= nullptr;
 	m_RTV			= nullptr;
 	m_RTVsRgb = nullptr;
 
 	m_isAttached	= false;
+	m_usage = 0;
+	m_flags = EX_NONE;
 
 	m_backingStore.Destroy();
 }
@@ -35,48 +37,14 @@ Tr2RenderTargetAL::~Tr2RenderTargetAL()
 {
 }
 
-// -------------------------------------------------------------
-// Description:
-//	Create a non-MSAA renderTarget. It will not need a Resolve step; but if it can be bound as a texture
-//  or not will depende on the format.
-// -------------------------------------------------------------
-ALResult Tr2RenderTargetAL::Create(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t mipLevelCount,
-	Tr2RenderContextEnum::PixelFormat format,					
-	Tr2PrimaryRenderContextAL &renderContext )
-{
-	return Create( width, height, mipLevelCount, format, 1, 0, renderContext );
-}
-
-// -------------------------------------------------------------
-// Description:
-//  Create a renderTarget that may have MSAA enabled (msaaType > 1).
-//  MipLevelCount should always be zero or one at the current time.
-//  Zero will one day generate mipmaps, but is not yet implemented.
-// -------------------------------------------------------------
 ALResult Tr2RenderTargetAL::Create(	
 	uint32_t width, 
 	uint32_t height, 
 	uint32_t mipLevelCount,
 	Tr2RenderContextEnum::PixelFormat format, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality,
-	Tr2PrimaryRenderContextAL &renderContext )
-{
-	return CreateEx( width, height, mipLevelCount, format, msaaType, msaaQuality, 0, 0, renderContext );
-}
-
-ALResult Tr2RenderTargetAL::CreateEx(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t mipLevelCount,
-	Tr2RenderContextEnum::PixelFormat format, 
-	uint32_t msaaType, 
-	uint32_t msaaQuality,
+	const Tr2MsaaDesc& msaa,
 	Tr2RenderContextEnum::BufferUsage usage,
-	uint32_t flags,
+	Tr2RenderContextEnum::ExFlag flags,
 	Tr2PrimaryRenderContextAL &renderContext )
 {
 	Destroy();
@@ -88,7 +56,7 @@ ALResult Tr2RenderTargetAL::CreateEx(
 
 	const bool shared = flags & EX_CREATE_SHARED;
 
-	if( msaaType > 1 )
+	if( msaa.samples > 1 )
 	{
 		mipLevelCount = 1;
 	}
@@ -100,8 +68,8 @@ ALResult Tr2RenderTargetAL::CreateEx(
 	desc.MipLevels	= mipLevelCount;
 	desc.ArraySize  = 1;
 	desc.Format     = static_cast<DXGI_FORMAT>( MakeTypeless( format ) );
-	desc.BindFlags  = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;	//TODO test if this actualyl works with msaa.. else drop the SRV bit
-	if( msaaType <= 1 && msaaQuality <= 1 && ( usage & USAGE_UNORDERED_ACCESS ) )
+	desc.BindFlags  = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	if( msaa.samples <= 1 && msaa.quality <= 1 && ( usage & USAGE_UNORDERED_ACCESS ) )
 	{
 		desc.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
 	}
@@ -109,8 +77,8 @@ ALResult Tr2RenderTargetAL::CreateEx(
 	{
 		desc.MiscFlags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
 	}
-	desc.SampleDesc.Count   = msaaType;
-	desc.SampleDesc.Quality = msaaQuality;
+	desc.SampleDesc.Count   = msaa.samples;
+	desc.SampleDesc.Quality = msaa.quality;
 	if( shared )
 	{
 		desc.SampleDesc.Count = 1;
@@ -125,7 +93,7 @@ ALResult Tr2RenderTargetAL::CreateEx(
 	}
 
 
-	const bool isTexturable = true;//msaaType <= 1;	// else not texturable yet.. may change later when we allow subsample access in shaders.
+	const bool isTexturable = true;
 
 	CComPtr<ID3D11ShaderResourceView>	view[2];
 
@@ -135,7 +103,7 @@ ALResult Tr2RenderTargetAL::CreateEx(
 		memset( &srvDesc, 0, sizeof( srvDesc ) );
 
 		srvDesc.Format				= static_cast<DXGI_FORMAT>( format );
-		srvDesc.ViewDimension		= msaaType > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DMS : D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.ViewDimension		= msaa.samples > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DMS : D3D11_SRV_DIMENSION_TEXTURE2D;
 
 		/*
 		ID3D11Device::CreateShaderResourceView: The Dimensions of the View are invalid due to at least one of
@@ -164,7 +132,7 @@ ALResult Tr2RenderTargetAL::CreateEx(
 	memset( &rtvDesc, 0, sizeof( rtvDesc ) );
 
 	rtvDesc.Format	= static_cast<DXGI_FORMAT>( format );
-	rtvDesc.ViewDimension = msaaType > 1 ? D3D11_RTV_DIMENSION_TEXTURE2DMS : D3D11_RTV_DIMENSION_TEXTURE2D;
+	rtvDesc.ViewDimension = msaa.samples > 1 ? D3D11_RTV_DIMENSION_TEXTURE2DMS : D3D11_RTV_DIMENSION_TEXTURE2D;
 	rtvDesc.Texture2D.MipSlice = 0;
 	
 	HR = renderContext.m_d3dDevice11->CreateRenderTargetView( m_texture, &rtvDesc, &m_RTV );
@@ -183,7 +151,7 @@ ALResult Tr2RenderTargetAL::CreateEx(
 	}
 
 	CComPtr<ID3D11UnorderedAccessView> uav;
-	if( msaaType <= 1 && msaaQuality <= 1 && ( usage & USAGE_UNORDERED_ACCESS ) )
+	if( msaa.samples <= 1 && msaa.quality <= 1 && ( usage & USAGE_UNORDERED_ACCESS ) )
 	{
 		D3D11_UNORDERED_ACCESS_VIEW_DESC descUAV;
 		descUAV.Format = static_cast<DXGI_FORMAT>( format );
@@ -199,8 +167,9 @@ ALResult Tr2RenderTargetAL::CreateEx(
 	m_type			= TEX_TYPE_2D;
 	m_mipCount		= mipLevelCount;
 
-	m_msaaType		= msaaType;
-	m_msaaQuality	= msaaQuality;
+	m_msaa = msaa;
+	m_usage = usage;
+	m_flags = flags;
 	
 	if( isTexturable )
 	{
@@ -249,8 +218,8 @@ ALResult Tr2RenderTargetAL::Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderCo
 	m_width			= desc.Width;
 	m_height		= desc.Height;
 	m_mipCount		= desc.MipLevels;
-	m_msaaType		= desc.SampleDesc.Count;
-	m_msaaQuality	= desc.SampleDesc.Quality;
+	m_msaa.samples = desc.SampleDesc.Count;
+	m_msaa.quality	= desc.SampleDesc.Quality;
 	m_texture		= texture;
 
 	D3D11_RENDER_TARGET_VIEW_DESC rtvd;
@@ -291,12 +260,12 @@ ALResult Tr2RenderTargetAL::Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderCo
 // -------------------------------------------------------------
 ALResult Tr2RenderTargetAL::Resolve( Tr2RenderTargetAL& destination, Tr2RenderContextAL& renderContext )
 {
-	if( m_msaaType <= 1 )
+	if( m_msaa.samples <= 1 )
 	{
 		return destination.GetTexture().CopySubresourceRegion( Tr2TextureSubresource(), GetTexture(), Tr2TextureSubresource(), renderContext );
 	}
 
-	CCP_ASSERT( destination.m_msaaType <= 1 );
+	CCP_ASSERT( destination.m_msaa.samples <= 1 );
 	CCP_ASSERT( GetWidth() == destination.GetWidth() );
 	CCP_ASSERT( GetHeight() == destination.GetHeight() );
 	CCP_ASSERT( GetFormat() == destination.GetFormat() );
@@ -322,9 +291,9 @@ ALResult Tr2RenderTargetAL::CopySubresourceRegion(
 	Tr2RenderContextAL& renderContext )
 {
 	CCP_ASSERT( IsValid() && source.IsValid() );
-	CCP_ASSERT( std::max( m_msaaType, 1u ) == std::max( source.m_msaaType, 1u ) );
+	CCP_ASSERT( std::max( m_msaa.samples, 1u ) == std::max( source.m_msaa.samples, 1u ) );
 	CCP_ASSERT( GetFormat() == source.GetFormat() );
-	CCP_ASSERT( m_msaaQuality == source.m_msaaQuality );
+	CCP_ASSERT( m_msaa.quality == source.m_msaa.quality );
 	return Tr2TextureAL::CopySubresourceRegion( m_texture, destX, destY, source.m_texture, ltrb, renderContext );
 }
 
@@ -411,8 +380,9 @@ void Tr2RenderTargetAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderCont
 									d.m_height, 
 									d.m_mipCount, 
 									d.m_format, 
-									d.m_msaaType, 
-									d.m_msaaQuality, 
+									d.m_msaa,
+									d.m_usage,
+									d.m_flags,
 									renderContext ) ) && 
 				IsValid() )
 			{
@@ -430,8 +400,9 @@ void Tr2RenderTargetAL::ReleaseALResource()
 		m_deviceLost.m_width		= m_width;
 		m_deviceLost.m_height		= m_height;
 		m_deviceLost.m_mipCount		= m_mipCount;
-		m_deviceLost.m_msaaType		= m_msaaType;
-		m_deviceLost.m_msaaQuality	= m_msaaQuality;
+		m_deviceLost.m_msaa = m_msaa;
+		m_deviceLost.m_usage = m_usage;
+		m_deviceLost.m_flags = m_flags;
 
 		m_deviceLost.m_valid = true;
 	}
@@ -439,7 +410,7 @@ void Tr2RenderTargetAL::ReleaseALResource()
 	Destroy();
 }
 
-uint32_t Tr2RenderTargetAL::GetSharedHandle() const
+uintptr_t Tr2RenderTargetAL::GetSharedHandle() const
 {
 	IDXGIResource* pOtherResource( NULL );
 	if( m_texture == NULL )
@@ -464,10 +435,28 @@ uint32_t Tr2RenderTargetAL::GetSharedHandle() const
 			return 0;
 		}
 		pOtherResource->Release();
-		// TODO: 64bit
-		// static_assert( sizeof( HANDLE ) == sizeof( unsigned ), "fix me for 64 bit" );
-		return reinterpret_cast<uint32_t>( sharedHandle );
+		return reinterpret_cast<uintptr_t>( sharedHandle );
 	}
+}
+
+bool Tr2RenderTargetAL::IsValid() const 
+{ 
+	return m_RTV != nullptr; 
+}
+
+bool Tr2RenderTargetAL::operator==( const Tr2RenderTargetAL& other ) const 
+{ 
+	return m_texture == other.m_texture; 
+}
+
+Tr2MsaaDesc Tr2RenderTargetAL::GetMsaaDesc() const 
+{ 
+	return m_msaa; 
+}
+
+Tr2ALMemoryType Tr2RenderTargetAL::GetMemoryClass() const 
+{ 
+	return AL_MEMORY_MANAGED; 
 }
 
 #endif // ( TRINITY_PLATFORM==TRINITY_DIRECTX9 )

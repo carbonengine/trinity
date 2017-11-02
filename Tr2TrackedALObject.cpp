@@ -327,8 +327,8 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_TARGET>:
 		description["mipLevels"] = object->GetMipCount();
 		description["trueMipLevels"] = object->GetTrueMipCount();
 		description["format"] = uint32_t( object->GetFormat() );
-		description["msaaType"] = object->GetMsaaType();
-		description["msaaQuality"] = object->GetMsaaQuality();
+		description["msaaType"] = object->GetMsaaDesc().samples;
+		description["msaaQuality"] = object->GetMsaaDesc().quality;
 		return true;
 	}
 	return false;

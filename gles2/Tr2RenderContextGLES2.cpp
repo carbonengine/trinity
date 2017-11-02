@@ -1140,8 +1140,9 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned /*adapter*/, const T
 		presentationParameters.mode.height,
 		1,
 		PIXEL_FORMAT_B8G8R8A8_UNORM,
-		1,
+		Tr2MsaaDesc(),
 		0,
+		EX_NONE,
 		*this ) );
 	CR_RETURN_HR( m_defaultDepthStencil.Create(
 		presentationParameters.mode.width,
@@ -2629,7 +2630,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 
 	// Msaa zero is the same as one, so does need to show up as 'compatible'
 	const uint32_t dsMsaaType = m_boundDepthStencil ? std::max( m_boundDepthStencil->GetMsaaDesc().samples, 1u ) : 1;
-	const uint32_t bbMsaaType = std::max( bb.GetMsaaType(), 1u );
+	const uint32_t bbMsaaType = std::max( bb.GetMsaaDesc().samples, 1u );
 
 	// dont't even bother setting it when the dimensions don't match, it's not gonna work.
 	// This happens when we set/push/pop an RT and DS in two separate calls -- there's a point between
@@ -2637,7 +2638,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 	if( !m_boundDepthStencil	||
 		( m_boundDepthStencil->GetWidth()		== bb.GetWidth()		&&
 		  m_boundDepthStencil->GetHeight()		== bb.GetHeight()		&&
-		  m_boundDepthStencil->GetMsaaDesc().samples == bb.GetMsaaQuality()	&&
+		  m_boundDepthStencil->GetMsaaDesc().samples == bb.GetMsaaDesc().quality	&&
 		  dsMsaaType							== bbMsaaType
 		) )
 	{		

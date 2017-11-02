@@ -54,7 +54,7 @@ ALResult CreateSampleObject( Tr2IndexBufferAL& ib, Tr2PrimaryRenderContextAL& re
 
 ALResult CreateSampleObject( Tr2RenderTargetAL& rt, Tr2PrimaryRenderContextAL& renderContext )
 {
-	return rt.Create( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, 1, 0, renderContext );
+	return rt.Create( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, EX_NONE, renderContext );
 }
 
 ALResult CreateSampleObject( Tr2SamplerStateAL& ss, Tr2PrimaryRenderContextAL& renderContext )
