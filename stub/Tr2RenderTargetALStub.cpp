@@ -3,7 +3,6 @@
 
 #include "Tr2RenderTargetALStub.h"
 #include "Tr2RenderContextStub.h"
-#include "Tr2LockedRenderTargetALStub.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -157,23 +156,6 @@ Tr2TextureAL& Tr2RenderTargetAL::GetTexture()
 const Tr2TextureAL& Tr2RenderTargetAL::GetTexture() const
 { 
 	return m_backingStore; 
-}
-
-ALResult Tr2RenderTargetAL::GetLockedRenderTarget( uint32_t mipLevel, uint32_t* ltrb, Tr2LockedRenderTargetAL& lockedRT, Tr2RenderContextAL& renderContext )
-{
-	if( !IsValid() )
-	{
-		return E_INVALIDCALL;
-	}
-	uint32_t pitch = m_width * GetBytesPerPixel( m_format );
-	size_t newSize = pitch * m_height;
-	lockedRT.m_data.resize("Tr2LockedRenderTargetAL::m_buffer", newSize);
-	if( lockedRT.m_data.empty() )
-	{
-		return E_OUTOFMEMORY;
-	}
-	lockedRT.m_pitch = pitch;
-	return S_OK;
 }
 
 ALResult Tr2RenderTargetAL::Lock(	

@@ -4,7 +4,6 @@
 #include "Tr2RenderTargetALDx9.h"
 #include "Tr2RenderContextDx9.h"
 #include "Tr2HalHelperStructures.h"
-#include "Tr2LockedRenderTargetALDx9.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -737,28 +736,6 @@ ALResult Tr2RenderTargetAL::GetRenderTargetData( uint32_t mipLevel, CComPtr<IDir
 		CComPtr<IDirect3DSurface9> RT;
 		CR_RETURN_HR( m_mainRT->GetSurfaceLevel( mipLevel, &RT ) );
 		CR_RETURN_HR( dev->GetRenderTargetData( RT, sysMem ) );
-	}
-	return S_OK;
-}
-
-ALResult Tr2RenderTargetAL::GetLockedRenderTarget( uint32_t mipLevel, uint32_t* ltrb, Tr2LockedRenderTargetAL& lockedRT, Tr2RenderContextAL& renderContext )
-{
-	if( !renderContext.m_d3dDevice9 || ( m_msaaRT && m_msaaType >= 2 ) )
-	{
-		return E_FAIL;
-	}
-
-	CComPtr<IDirect3DSurface9> sysMem = lockedRT.m_sysMemLocked;
-	CR_RETURN_HR( GetRenderTargetData( mipLevel, sysMem, renderContext ) );
-
-	lockedRT.m_sysMemLocked = sysMem;
-	lockedRT.m_hasLockedRect = ltrb != nullptr;
-	if( ltrb )
-	{
-		lockedRT.m_lockedRect[0] = ltrb[0];
-		lockedRT.m_lockedRect[1] = ltrb[1];
-		lockedRT.m_lockedRect[2] = ltrb[2];
-		lockedRT.m_lockedRect[3] = ltrb[3];
 	}
 	return S_OK;
 }

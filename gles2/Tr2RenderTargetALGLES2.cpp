@@ -3,7 +3,6 @@
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 #include "Tr2RenderTargetALGLES2.h"
 #include "Tr2RenderContextGLES2.h"
-#include "Tr2LockedRenderTargetALGLES2.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -303,15 +302,6 @@ ALResult Tr2RenderTargetAL::GetRenderTargetData( uint32_t* ltrb, CcpMallocBuffer
 	GL_FAIL( glReadPixels( x, y, width, height, format, type, buffer.get() ) );
 	pitch = width * bpp;
 	return S_OK;
-}
-
-ALResult Tr2RenderTargetAL::GetLockedRenderTarget( uint32_t /*mipLevel*/, uint32_t* ltrb, Tr2LockedRenderTargetAL& lockedRT, Tr2RenderContextAL& renderContext )
-{
-	if( !IsValid() || !renderContext.IsValid() )
-	{
-		return E_FAIL;
-	}
-	return GetRenderTargetData( ltrb, lockedRT.m_lockedData, lockedRT.m_pitch, renderContext );
 }
 
 ALResult Tr2RenderTargetAL::Lock(	
