@@ -38,10 +38,6 @@ public:
 		unsigned msaaQuality = 0,
 		Tr2RenderContextEnum::ExFlag flags = Tr2RenderContextEnum::EX_NONE );
 
-	long CreateMsaa(	unsigned width, unsigned height,
-						Tr2RenderContextEnum::PixelFormat format, 
-						unsigned msaaType, unsigned msaaQuality );
-
 	virtual Tr2TextureAL* GetTexture();
 
 	void Attach( Tr2RenderTargetAL* renderTarget, IRoot* owner );

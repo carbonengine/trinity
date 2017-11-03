@@ -45,42 +45,6 @@ const Be::ClassInfo* Tr2RenderTarget::ExposeToBlue()
 			":param flags: trinity.EX_FLAG"
 		)
 
-		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS
-		(
-			"CreateMsaa",
-			CreateMsaa,
-			1,
-			"Creates a new MSAA render target\n"
-			":jessica-deprecated:\n"
-			":param width: render target width\n"
-			":param height: render target height\n"
-			":param format: pixel format (trinity.PIXEL_FORMAT)"
-			":param msaaType: number of samples\n"
-			":param msaaQuality: MSAA quality\n"
-			":param flags: trinity.EX_FLAG"
-		)
-
-		MAP_METHOD_AND_WRAP
-		(
-			"CreateEx",
-			Create,
-			"Creates a new render target\n"
-			":jessica-deprecated:\n"
-			":param width: render target width\n"
-			":param height: render target height\n"
-			":param mipCount: number of mip levels (0 = full pyramid)\n"
-			":param format: pixel format (trinity.PIXEL_FORMAT)"
-			":param msaaType: number of samples\n"
-			":param msaaQuality: MSAA quality"
-			":param flags: trinity.EX_FLAG"
-		)
-
-		MAP_METHOD_AND_WRAP
-		(
-			"IsValid",
-			IsValid,
-			"No arguments"
-		)
 		MAP_METHOD_AND_WRAP
 		(
 			"GenerateMipMaps",

@@ -58,27 +58,6 @@ long Tr2RenderTarget::Create(
 		renderContext ).GetResult();
 }
 
-long Tr2RenderTarget::CreateMsaa(	unsigned width, unsigned height, 
-									Tr2RenderContextEnum::PixelFormat format, 
-									unsigned msaaType, unsigned msaaQuality )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	if( IsAttached() )
-	{
-		return E_INVALIDARG;
-	}
-	return m_renderTarget.Create(	
-		width, 
-		height, 
-		1, 
-		format, 
-		Tr2MsaaDesc( msaaType, msaaQuality ),
-		0,
-		EX_NONE,
-		renderContext ).GetResult();
-}
-
 Tr2TextureAL* Tr2RenderTarget::GetTexture()
 {
 	auto& rt = GetRenderTarget();
