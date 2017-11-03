@@ -12,6 +12,7 @@
 #include "ALLog.h"
 #include "Tr2PrimaryRenderContextDx11.h"
 
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Tr2SwapChainAL default constructor
@@ -70,6 +71,9 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderC
 		CR_RETURN_HR( m_swapChain->GetBuffer( 0, __uuidof (ID3D11Texture2D), (LPVOID*)&pBackBuffer ) );
 
 		CR_RETURN_HR( m_backBuffer.Attach( pBackBuffer, renderContext ) );
+
+		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_backBuffer, m_backBuffer.GetMsaaDesc() );
+
 		ChangeObjectId();
 
 		return S_OK;
@@ -86,6 +90,7 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderC
 // --------------------------------------------------------------------------------------
 void Tr2SwapChainAL::Destroy()
 {
+	m_memory.Reset();
 	m_swapChain = nullptr;
 	m_backBuffer.Destroy();
 }

@@ -28,6 +28,7 @@ Tr2BufferImplAL& Tr2BufferImplAL::operator=( Tr2BufferImplAL&& other )
 		m_buffer.Attach( other.m_buffer.Detach() );
 		m_lengthInBytes = other.m_lengthInBytes;
 		m_usage = other.m_usage;
+		m_memory = std::move( other.m_memory );
 	}
 
 	return *this;
@@ -116,6 +117,11 @@ ALResult Tr2BufferImplAL::Create(
 			hr = renderContext.m_d3dDevice11->CreateBuffer( &bd, initialData ? &initialData11 : nullptr, &m_buffer );
 			--retries;
 		}
+	}
+
+	if( SUCCEEDED( hr ) )
+	{
+		m_memory.Set( Tr2MemoryCounterAL::BUFFER, lengthInBytes );
 	}
 
 	return hr;
@@ -347,6 +353,7 @@ void Tr2BufferImplAL::Destroy()
 		CCP_AL_LOGERR( "Attempting to destroy a locked buffer" );
 	}
 
+	m_memory.Reset();
 	m_currentLock = LOCK_INVALID;
 	m_buffer = nullptr;
 	m_staging = nullptr;

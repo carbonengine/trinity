@@ -49,6 +49,7 @@ Tr2TextureAL::Tr2TextureAL()
 void Tr2TextureAL::Destroy()
 {
 	Tr2BitmapDimensions::Destroy();
+	m_memory.Reset();
 	m_usage = 0;
 	m_format9 = D3DFMT_UNKNOWN;
 	m_pool9 = D3DPOOL_DEFAULT;
@@ -240,6 +241,7 @@ ALResult Tr2TextureAL::Create2D( uint32_t width,
 	}
 
 	m_texture.Attach( tex.Detach() );
+	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this );
 	ChangeObjectId();
 	return S_OK;
 }
@@ -381,6 +383,7 @@ ALResult Tr2TextureAL::CreateCube( uint32_t width,
 	m_mipCount = mipLevelCount;
 	m_isAlias = false;
 	m_arraySize = 6;
+	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this );
 	ChangeObjectId();
 
 	return S_OK;
@@ -521,6 +524,7 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 	m_arraySize = 1;
 
 	m_texture.Attach( tex.Detach() );
+	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this );
 	ChangeObjectId();
 	return S_OK;
 }

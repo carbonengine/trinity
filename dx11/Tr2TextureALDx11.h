@@ -5,6 +5,7 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2BitmapDimensions.h"
 
 #ifdef TRINITY_AL_GUARD_LOCKS
@@ -187,12 +188,14 @@ private:
 		Tr2RenderContextAL & renderContext );
 	ALResult UnlockWriting( Tr2RenderContextAL & renderContext );
 
-	Tr2RenderContextEnum::LockType	m_currentLock;
-	uint32_t						m_currentLockMipLevel;
-	CComPtr<ID3D11Texture2D>		m_staging;
+	Tr2RenderContextEnum::LockType m_currentLock;
+	uint32_t m_currentLockMipLevel;
+	CComPtr<ID3D11Texture2D> m_staging;
 
-	CcpMallocBuffer					m_writeStaging;
-	uint32_t						m_writeLtrb[4];
+	CcpMallocBuffer m_writeStaging;
+	uint32_t m_writeLtrb[4];
+
+	Tr2MemoryCounterAL m_memory;
 	
 	friend class Tr2RenderTargetAL;
 	friend class Tr2DepthStencilAL;

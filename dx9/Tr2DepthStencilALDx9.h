@@ -5,6 +5,7 @@
 
 #include "../Tr2AutoResetObjectAL.h"
 #include "../Tr2HalHelperStructures.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2TextureAL.h"
 
 
@@ -65,6 +66,7 @@ private:
 	Tr2RenderContextEnum::DepthStencilFormat m_format;
 	Tr2MsaaDesc m_msaa;
 	Tr2RenderContextEnum::ExFlag m_exFlags;
+	Tr2MemoryCounterAL m_memory;
 
 	struct TDeviceLost
 	{

@@ -30,6 +30,7 @@ Tr2VertexBufferAL& Tr2VertexBufferAL::operator=( Tr2VertexBufferAL&& other )
 		m_usage = other.m_usage;
 		m_pool = other.m_pool;
 		m_buffer.Attach( other.m_buffer.Detach() );
+		m_memory = std::move( other.m_memory );
 		ChangeObjectId();
 	}
 
@@ -100,6 +101,7 @@ ALResult Tr2VertexBufferAL::Create( uint32_t lengthInBytes,
 	}
 
 	m_buffer = buffer;
+	m_memory.Set( Tr2MemoryCounterAL::BUFFER, lengthInBytes );
 	ChangeObjectId();
 	return S_OK;
 }
@@ -208,6 +210,7 @@ bool Tr2VertexBufferAL::IsValid() const
 
 void Tr2VertexBufferAL::Destroy()
 {
+	m_memory.Reset();
 	m_buffer = nullptr;
 }
 

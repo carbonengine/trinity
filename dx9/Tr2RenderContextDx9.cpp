@@ -322,6 +322,8 @@ void Tr2RenderContextAL::Destroy()
 {
 	ReleaseDeviceResources();
 
+	m_memory.Reset();
+
 	m_topology = D3DPT_TRIANGLELIST;
 
 	m_usingEXDevice = false;
@@ -909,6 +911,8 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2Pr
 	CComPtr<IDirect3DSurface9> backBuffer;
 	CR_RETURN_HR( m_d3dDevice9->GetRenderTarget( 0, &backBuffer ) );
 	CR_RETURN_HR( m_defaultBackBuffer.Attach( backBuffer, *this ) );
+
+	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_defaultBackBuffer, m_defaultBackBuffer.GetMsaaDesc() );
 
 	m_nullRT = nullptr;
 	CR_RETURN_HR( m_d3dDevice9->CreateRenderTarget(		1, 1, 

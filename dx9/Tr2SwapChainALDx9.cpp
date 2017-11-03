@@ -93,6 +93,7 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextA
 		CComPtr<IDirect3DSurface9> backBuffer;
 		CR_RETURN_HR( m_swapChain->GetBackBuffer( 0, D3DBACKBUFFER_TYPE_MONO, &backBuffer ) );
 		m_backBuffer.Attach( backBuffer, renderContext );
+		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_backBuffer );
 		ChangeObjectId();
 	}
 	return S_OK;
@@ -104,6 +105,7 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextA
 // --------------------------------------------------------------------------------------
 void Tr2SwapChainAL::Destroy()
 {
+	m_memory.Reset();
 	m_swapChain = NULL;
 	m_backBuffer.Destroy();
 }

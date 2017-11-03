@@ -4,6 +4,7 @@
 
 #include "../Tr2AutoResetObjectAL.h"
 #include "../Tr2HalHelperStructures.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2TextureAL.h"
 
 
@@ -86,6 +87,8 @@ private:
 	CComPtr<IDirect3DSurface9>			m_sysMemLocked;
 
 	CComPtr<IDirect3DSurface9>			m_msaaRT;
+
+	Tr2MemoryCounterAL m_memory;
 	
 	bool								m_clearSysMemLockable;
 

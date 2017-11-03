@@ -54,6 +54,8 @@ void Tr2PrimaryRenderContextAL::Destroy()
 		m_swapChain->SetFullscreenState( FALSE, nullptr );
 	}
 
+	m_memory.Reset();
+
 	if( m_defaultBackBuffer )
 	{
 		m_defaultBackBuffer->Destroy();
@@ -472,6 +474,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 {
 	if( m_defaultBackBuffer )
 	{
+		m_memory.Reset();
 		m_defaultBackBuffer->Destroy();
 	}
 	m_defaultDepthStencil.Destroy();
@@ -490,6 +493,10 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 	{
 		CCP_AL_LOGERR( "Failed to attach to device back buffer, %d", HR );
 		return HR;
+	}
+	if( m_defaultBackBuffer )
+	{
+		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *m_defaultBackBuffer, m_defaultBackBuffer->GetMsaaDesc() );
 	}
 	
 	D3D11_VIEWPORT viewport;

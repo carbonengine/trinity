@@ -103,6 +103,8 @@ ALResult Tr2DepthStencilAL::Create(
 	}
 	if( SUCCEEDED( hr ) )
 	{
+		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, width, height, dsFormat, msaa );
+
 		ChangeObjectId();
 	}
 
@@ -126,6 +128,9 @@ ALResult Tr2DepthStencilAL::CreateReadableDepth( Tr2RenderContextAL& renderConte
 		m_backingStore.m_mipCount	= 1;
 		m_backingStore.m_texture	= m_depthStencilREADABLE;
 		m_backingStore.m_isAlias	= true;
+
+		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_width, m_height, m_format );
+
 		ChangeObjectId();
 	}
 
@@ -139,6 +144,8 @@ bool Tr2DepthStencilAL::IsValid() const
 
 void Tr2DepthStencilAL::Destroy()
 {
+	m_memory.Reset();
+
 	m_depthStencil		= nullptr;
 	m_depthStencilREADABLE	= nullptr;
 	m_backingStore		.Destroy();

@@ -11,6 +11,7 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2RenderTargetAL.h"
 
 
@@ -46,6 +47,7 @@ private:
 
 	DXGI_SWAP_CHAIN_DESC m_description;
 	CComPtr<IDXGISwapChain> m_swapChain;
+	Tr2MemoryCounterAL m_memory;
 };
 
 #endif // TRINITY_PLATFORM==TRINITY_DIRECTX11

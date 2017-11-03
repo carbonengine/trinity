@@ -4,6 +4,7 @@
 
 
 #include "../Tr2RenderContextEnum.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2RenderTargetAL.h"
 #include "../include/Tr2CapsAL.h"
 
@@ -281,6 +282,7 @@ private:
 	Tr2RenderTargetAL m_defaultBackBuffer;
 	CComPtr<IDirect3DSurface9> m_nullRT;
 	uint32_t m_adapter;
+	Tr2MemoryCounterAL m_memory;
 
 	Tr2RenderContextAL( const Tr2RenderContextAL& ) /* = delete */;
 	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;

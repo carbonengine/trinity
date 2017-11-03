@@ -164,6 +164,8 @@ ALResult Tr2GpuBufferAL::CreateImpl(
 	}
 
 	m_usage = usage;
+
+	m_memory.Set( Tr2MemoryCounterAL::BUFFER, GetTotalSizeInBytes() );
 	ChangeObjectId();
 
 	return S_OK;

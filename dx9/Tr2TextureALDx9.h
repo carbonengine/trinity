@@ -4,6 +4,7 @@
 
 #include "../Tr2TrackedALObject.h"
 #include "../ALResult.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2BitmapDimensions.h"
 
 
@@ -172,6 +173,7 @@ private:
 
 public:	//DEBUG
 	CComPtr<IDirect3DBaseTexture9> m_texture;
+	Tr2MemoryCounterAL m_memory;
 
 	friend class Tr2RenderContextAL;
 	friend class Tr2RenderTargetAL;

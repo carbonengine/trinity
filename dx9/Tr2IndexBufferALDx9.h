@@ -3,6 +3,7 @@
 #define Tr2IndexBufferALDx9_h_
 
 #include "../Tr2TrackedALObject.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "../ALResult.h"
 
 
@@ -94,6 +95,7 @@ private:
 	uint32_t m_numIndices;	
 	bool	 m_is16Bit;
 	D3DPOOL	 m_pool;
+	Tr2MemoryCounterAL m_memory;
 
 	Tr2IndexBufferAL( const Tr2IndexBufferAL& ) /* = delete */;
 	Tr2IndexBufferAL& operator=( const Tr2IndexBufferAL& ) /* = delete */;

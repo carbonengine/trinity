@@ -4,6 +4,7 @@
 
 #include "../Tr2AutoResetObjectAL.h"
 #include "../Tr2HalHelperStructures.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2TextureAL.h"
 
 
@@ -81,6 +82,8 @@ private:
 	CComPtr<ID3D11Texture2D> m_texture;
 	CComPtr<ID3D11RenderTargetView> m_RTV;
 	CComPtr<ID3D11RenderTargetView> m_RTVsRgb;
+
+	Tr2MemoryCounterAL m_memory;
 
 	// For auto-recreate after a device lost
 	struct TDeviceLost

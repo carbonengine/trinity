@@ -3,6 +3,7 @@
 #define Tr2PrimaryRenderContextDx11_h_
 
 
+#include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2RenderContextAL.h"
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2DepthStencilAL.h"
@@ -79,6 +80,8 @@ private:
 	uint32_t m_adapterVendorId;
 
 	Tr2CapsAL m_caps;
+
+	Tr2MemoryCounterAL m_memory;
 
 private:
 	Tr2PrimaryRenderContextAL( const Tr2PrimaryRenderContextAL& ) /* = delete */;

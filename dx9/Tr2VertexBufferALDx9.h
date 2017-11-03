@@ -4,6 +4,7 @@
 
 
 #include "../ALResult.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "../Tr2TrackedALObject.h"
 
 
@@ -88,6 +89,7 @@ private:
 	uint32_t m_lengthInBytes;
 	Tr2RenderContextEnum::BufferUsage m_usage;
 	D3DPOOL m_pool;
+	Tr2MemoryCounterAL m_memory;
 
 	Tr2VertexBufferAL( const Tr2VertexBufferAL& )/* = delete */;
 	Tr2VertexBufferAL& operator=( const Tr2VertexBufferAL& )/* = delete */;

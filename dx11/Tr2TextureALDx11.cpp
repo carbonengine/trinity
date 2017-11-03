@@ -10,6 +10,7 @@ bool g_preloadTextureToDeviceOnPrepare = true;
 #include "Tr2HalHelperStructures.h"
 #include "Tr2PrimaryRenderContextDx11.h"
 #include "Tr2RenderTargetALDx11.h"
+
 using namespace Tr2RenderContextEnum;
 
 
@@ -21,6 +22,8 @@ Tr2TextureAL::Tr2TextureAL()
 
 void Tr2TextureAL::Destroy()
 {
+	m_memory.Reset();
+
 	m_usage			= 0;
 	
 	Tr2BitmapDimensions::Destroy();
@@ -250,6 +253,9 @@ ALResult Tr2TextureAL::Create2DImpl(
 	m_mipCount		= mipLevelCount;
 	m_isAlias		= false;
 	m_arraySize = arraySize;
+
+	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this );
+
 	ChangeObjectId();
 
 	return S_OK;
@@ -337,6 +343,9 @@ ALResult Tr2TextureAL::CreateVolume(
 	m_arraySize = 1;
 
 	m_type			= TEX_TYPE_3D;
+
+	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this );
+
 	ChangeObjectId();
 	
 	return S_OK;

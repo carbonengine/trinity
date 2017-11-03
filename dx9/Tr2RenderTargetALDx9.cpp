@@ -3,12 +3,9 @@
 
 #include "Tr2RenderTargetALDx9.h"
 #include "Tr2RenderContextDx9.h"
-
-using namespace Tr2RenderContextEnum;
-
 #include "ALLog.h"
 
-#include "blue/include/TransGaming.h"
+using namespace Tr2RenderContextEnum;
 
 #pragma warning( disable: 4189 )	// Scopeguard
 
@@ -23,6 +20,7 @@ void Tr2RenderTargetAL::Destroy()
 {
 	Tr2BitmapDimensions::Destroy();
 
+	m_memory.Reset();
 	m_format9 = D3DFMT_UNKNOWN;
 	m_msaa.samples = 0;
 	m_msaa.quality = 0;
@@ -256,6 +254,8 @@ ALResult Tr2RenderTargetAL::Create(
 		m_backingStore.m_texture	= m_mainRT;
 		m_backingStore.m_isAlias	= true;
 	}
+
+	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this, m_msaa );
 	ChangeObjectId();
 	
 	return S_OK;

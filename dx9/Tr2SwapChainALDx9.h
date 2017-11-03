@@ -12,6 +12,7 @@
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
 #include "../Tr2AutoResetObjectAL.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2RenderTargetAL.h"
 
 
@@ -58,6 +59,7 @@ private:
 
 	D3DPRESENT_PARAMETERS m_presentParam;
 	CComPtr<IDirect3DSwapChain9> m_swapChain;
+	Tr2MemoryCounterAL m_memory;
 };
 
 #endif // TRINITY_PLATFORM==TRINITY_DIRECTX9

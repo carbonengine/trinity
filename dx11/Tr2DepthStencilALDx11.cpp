@@ -172,19 +172,22 @@ ALResult Tr2DepthStencilAL::Create(
 	{
 		if( SUCCEEDED( renderContext.m_d3dDevice11->CreateShaderResourceView( m_depthStencil, &srvDesc, &m_backingStore.m_view[0] ) ) )
 		{
-			m_backingStore.m_format		= pixelFormat;
-			m_backingStore.m_usage		= USAGE_IMMUTABLE;	// prevent locking
-			m_backingStore.m_type		= TEX_TYPE_2D;
-			m_backingStore.m_width		= m_width;
-			m_backingStore.m_height		= m_height;
+			m_backingStore.m_format = pixelFormat;
+			m_backingStore.m_usage = USAGE_IMMUTABLE;	// prevent locking
+			m_backingStore.m_type = TEX_TYPE_2D;
+			m_backingStore.m_width = m_width;
+			m_backingStore.m_height = m_height;
 			m_backingStore.m_volumeDepth= 1;
-			m_backingStore.m_mipCount	= 1;
-			m_backingStore.m_texture	= m_depthStencil;
-			m_backingStore.m_isAlias	= true;
+			m_backingStore.m_mipCount = 1;
+			m_backingStore.m_texture = m_depthStencil;
+			m_backingStore.m_isAlias = true;
 
-			m_backingStore.m_view[1]	= m_backingStore.m_view[0];
+			m_backingStore.m_view[1] = m_backingStore.m_view[0];
 		}
 	}
+
+	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, width, height, dsFormat, msaa );
+
 	ChangeObjectId();
 	
 	return S_OK;
@@ -192,6 +195,7 @@ ALResult Tr2DepthStencilAL::Create(
 	
 void Tr2DepthStencilAL::Destroy()
 {
+	m_memory.Reset();
 	m_depthStencil = nullptr;
 	m_depthStencilView = nullptr;
 	m_depthStencilViewReadOnly = nullptr;

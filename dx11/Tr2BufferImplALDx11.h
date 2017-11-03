@@ -5,6 +5,7 @@
 
 #include "../ALResult.h"
 #include "../Tr2RenderContextEnum.h"
+#include "../Tr2MemoryCounterAL.h"
 
 #ifdef TRINITY_AL_GUARD_LOCKS
 #include "../Tr2LockGuard.h"
@@ -75,6 +76,7 @@ protected:
 	Tr2RenderContextEnum::LockType	m_currentLock;
 	CComPtr<ID3D11Buffer>			m_staging;
 	CcpMallocBuffer m_writeLockMemory;
+	Tr2MemoryCounterAL m_memory;
 
 	Tr2BufferImplAL( const Tr2BufferImplAL& ) /* = delete */;
 };

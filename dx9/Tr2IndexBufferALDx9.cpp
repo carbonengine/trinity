@@ -33,7 +33,8 @@ Tr2IndexBufferAL& Tr2IndexBufferAL::operator=( Tr2IndexBufferAL&& other )
 		m_pool			= other.m_pool;
 
 		m_numIndices	= other.m_numIndices;
-		m_is16Bit		= other.m_is16Bit;		
+		m_is16Bit		= other.m_is16Bit;	
+		m_memory = std::move( other.m_memory );
 		ChangeObjectId();
 	}
 
@@ -98,6 +99,8 @@ ALResult Tr2IndexBufferAL::Create(
 	}
 
 	m_buffer = buffer;
+
+	m_memory.Set( Tr2MemoryCounterAL::BUFFER, GetTotalSizeInBytes() );
 	ChangeObjectId();
 	return S_OK;
 }
@@ -230,6 +233,7 @@ bool Tr2IndexBufferAL::IsValid() const
 
 void Tr2IndexBufferAL::Destroy()
 {
+	m_memory.Reset();
 	m_buffer = nullptr;
 }
 

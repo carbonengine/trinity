@@ -19,6 +19,8 @@ void Tr2RenderTargetAL::Destroy()
 {
 	Tr2BitmapDimensions::Destroy();
 	
+	m_memory.Reset();
+
 	m_msaa.samples = 1;
 	m_msaa.quality = 0;
 	
@@ -186,6 +188,9 @@ ALResult Tr2RenderTargetAL::Create(
 		m_backingStore.m_view[1].Attach( view[1].Detach() );
 		m_backingStore.m_uav = uav;
 	}
+
+	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this, m_msaa );
+
 	ChangeObjectId();
 	
 	return HR;
