@@ -52,6 +52,9 @@
     <ClInclude Include="Tr2LockGuard.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tr2MemoryCounterAL.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="Tr2RenderContextEnum.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -440,6 +443,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2LockGuard.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2MemoryCounterAL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2RenderContextEnum.cpp">

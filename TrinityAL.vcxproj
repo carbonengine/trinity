@@ -1441,6 +1441,7 @@
     <ClInclude Include="Tr2GpuTimerALContext.h"/>
     <ClInclude Include="Tr2HalHelperStructures.h"/>
     <ClInclude Include="Tr2LockGuard.h"/>
+    <ClInclude Include="Tr2MemoryCounterAL.h"/>
     <ClInclude Include="Tr2RenderContextEnum.h"/>
     <ClInclude Include="Tr2TrackedALObject.h"/>
     <ClInclude Include="Tr2TrackedALObjectImpl.h"/>
@@ -1575,6 +1576,7 @@
     <ClCompile Include="Tr2FragmentOpSettings.cpp"/>
     <ClCompile Include="Tr2HalHelperStructures.cpp"/>
     <ClCompile Include="Tr2LockGuard.cpp"/>
+    <ClCompile Include="Tr2MemoryCounterAL.cpp"/>
     <ClCompile Include="Tr2RenderContextEnum.cpp"/>
     <ClCompile Include="Tr2TrackedALObject.cpp"/>
     <ClCompile Include="Tr2VertexDefinition.cpp"/>
