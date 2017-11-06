@@ -155,9 +155,6 @@
     <ClInclude Include="Tr2GpuBuffer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2GpuBufferAlias.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2GpuLight.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -1485,12 +1482,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2GpuBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2GpuBufferAlias.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2GpuBufferAlias_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2GpuBuffer_Blue.cpp">

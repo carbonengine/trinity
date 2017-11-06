@@ -2705,7 +2705,6 @@
     <ClInclude Include="Tr2ExternalParameter.h"/>
     <ClInclude Include="Tr2FileExportInfo.h"/>
     <ClInclude Include="Tr2GpuBuffer.h"/>
-    <ClInclude Include="Tr2GpuBufferAlias.h"/>
     <ClInclude Include="Tr2GpuLight.h"/>
     <ClInclude Include="Tr2GpuStructuredBuffer.h"/>
     <ClInclude Include="Tr2GrannyAnimation.h"/>
@@ -3153,8 +3152,6 @@
     <ClCompile Include="Tr2FileExportInfo.cpp"/>
     <ClCompile Include="Tr2FileExportInfo_Blue.cpp"/>
     <ClCompile Include="Tr2GpuBuffer.cpp"/>
-    <ClCompile Include="Tr2GpuBufferAlias.cpp"/>
-    <ClCompile Include="Tr2GpuBufferAlias_Blue.cpp"/>
     <ClCompile Include="Tr2GpuBuffer_Blue.cpp"/>
     <ClCompile Include="Tr2GpuStructuredBuffer.cpp"/>
     <ClCompile Include="Tr2GpuStructuredBuffer_Blue.cpp"/>
