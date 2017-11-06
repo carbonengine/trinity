@@ -33,89 +33,35 @@ public:
 		uint32_t numberOfElements, 
 		Tr2RenderContextEnum::PixelFormat format, 
 		Tr2RenderContextEnum::BufferUsage usage,
+		Tr2RenderContextEnum::ExFlag flags,
 		const void* initialData, 
 		Tr2PrimaryRenderContextAL & renderContext );
 
-	ALResult CreateEx(			
-		uint32_t numberOfElements, 
-		Tr2RenderContextEnum::PixelFormat format, 
-		Tr2RenderContextEnum::BufferUsage usage,
-		const void* initialData, 
-		uint32_t flags,
-		Tr2PrimaryRenderContextAL & renderContext );
-
-	ALResult CreateStructured(	
+	ALResult Create(	
 		uint32_t numberOfElements, 
 		uint32_t elementSize, 
 		Tr2RenderContextEnum::BufferUsage usage,
 		Tr2RenderContextEnum::GpuBufferUsage gpuBufferUsage,
-		const void* initialData, 
-		Tr2PrimaryRenderContextAL & renderContext );
-
-	ALResult CreateAlias(		
-		Tr2GpuBufferAL& other, 
-		Tr2RenderContextEnum::PixelFormat format, 
+		Tr2RenderContextEnum::ExFlag flags,
+		const void* initialData,
 		Tr2PrimaryRenderContextAL & renderContext );
 
 	ALResult CreateVbView(		
 		Tr2VertexBufferAL& vb,
 		bool gpuWritable,
 		Tr2PrimaryRenderContextAL & renderContext );
-	
-	ALResult Lock(	
-		uint32_t offset, 
-		uint32_t sizeInBytes, 
-		void** data, 
-		Tr2RenderContextEnum::LockType lockType, 
-		Tr2RenderContextAL & renderContext )
-	{
-		return Tr2BufferImplAL::Lock( offset, sizeInBytes, data, lockType, renderContext );
-	}
 
-	ALResult Unlock( Tr2RenderContextAL & renderContext )
-	{
-		return Tr2BufferImplAL::Unlock( renderContext );
-	}
-
-	bool IsValid() const;
 	void Destroy();
+	bool IsValid() const;
 
-	using Tr2BufferImplAL::IsValid;
-	using Tr2BufferImplAL::Destroy;
+	bool operator==( const Tr2GpuBufferAL& other ) const;
 
-	CComPtr<ID3D11ShaderResourceView>	m_srv;
-	CComPtr<ID3D11UnorderedAccessView>	m_uav;
-
-	unsigned BytesPerElement() const
-	{ 
-		return m_elementSize ? m_elementSize : GetBytesPerPixel( m_format ); 
-	}
-	unsigned GetNumElements() const
-	{ 
-		return m_numElements; 
-	}
-	unsigned GetTotalSizeInBytes() const
-	{ 
-		return GetNumElements() * BytesPerElement(); 
-	}
-	Tr2RenderContextEnum::PixelFormat GetFormat() const 
-	{ 
-		return m_format; 
-	}
-	Tr2RenderContextEnum::GpuBufferUsage GetGpuBufferUsage() const
-	{
-		return m_gpuBufferUsage;
-	}
-
-	bool operator==( const Tr2GpuBufferAL& other ) const
-	{ 
-		return m_buffer == other.m_buffer; 
-	}
-
-	Tr2ALMemoryType GetMemoryClass() const
-	{ 
-		return AL_MEMORY_MANAGED; 
-	}
+	uint32_t BytesPerElement() const;
+	uint32_t GetNumElements() const;
+	uint32_t GetTotalSizeInBytes() const;
+	Tr2RenderContextEnum::PixelFormat GetFormat() const;
+	Tr2RenderContextEnum::GpuBufferUsage GetGpuBufferUsage() const;
+	Tr2ALMemoryType GetMemoryClass() const;
 
 	ALResult CopySubBuffer( 
 		uint32_t offset, 
@@ -134,12 +80,13 @@ private:
 
 	friend class Tr2RenderContextAL;
 
+	CComPtr<ID3D11ShaderResourceView>	m_srv;
+	CComPtr<ID3D11UnorderedAccessView>	m_uav;
+
 	uint32_t m_numElements;
 	uint32_t m_elementSize;
 	Tr2RenderContextEnum::PixelFormat	m_format;
 	Tr2RenderContextEnum::GpuBufferUsage m_gpuBufferUsage;
-	Tr2GpuBufferAL( const Tr2GpuBufferAL& ) /* = delete */;
-	Tr2GpuBufferAL& operator=( const Tr2GpuBufferAL& ) /* = delete */;
 };
 
 #endif // #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )

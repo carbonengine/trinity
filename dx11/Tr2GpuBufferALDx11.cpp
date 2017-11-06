@@ -13,24 +13,15 @@ Tr2GpuBufferAL::Tr2GpuBufferAL()
 	, m_elementSize( 0 )
 	, m_format( PIXEL_FORMAT_UNKNOWN )
 	, m_gpuBufferUsage( 0 )
-{}
+{
+}
 
 ALResult Tr2GpuBufferAL::Create(	
 	uint32_t numberOfElements, 
-	PixelFormat format, 
-	Tr2RenderContextEnum::BufferUsage usage,
-	const void* initialData, 
-	Tr2PrimaryRenderContextAL & renderContext )
-{
-	return CreateEx( numberOfElements, format, usage, initialData, 0, renderContext );
-}
-
-ALResult Tr2GpuBufferAL::CreateEx(	
-	uint32_t numberOfElements, 
 	Tr2RenderContextEnum::PixelFormat format, 
 	Tr2RenderContextEnum::BufferUsage usage,
-	const void* initialData, 
-	uint32_t flags,
+	Tr2RenderContextEnum::ExFlag flags,
+	const void* initialData,
 	Tr2PrimaryRenderContextAL & renderContext )
 {
 	Destroy();
@@ -44,12 +35,13 @@ ALResult Tr2GpuBufferAL::CreateEx(
 	return CreateImpl( usage, 0, initialData, flags, renderContext );
 }
 	
-ALResult Tr2GpuBufferAL::CreateStructured(	
+ALResult Tr2GpuBufferAL::Create(	
 	uint32_t numberOfElements, 
 	uint32_t elementSize, 
 	Tr2RenderContextEnum::BufferUsage usage,
 	Tr2RenderContextEnum::GpuBufferUsage gpuBufferUsage,
-	const void* initialData, 
+	Tr2RenderContextEnum::ExFlag flags,
+	const void* initialData,
 	Tr2PrimaryRenderContextAL & renderContext )
 {
 	Destroy();
@@ -60,7 +52,7 @@ ALResult Tr2GpuBufferAL::CreateStructured(
 	m_lengthInBytes = GetTotalSizeInBytes();
 	m_gpuBufferUsage = gpuBufferUsage;
 
-	return CreateImpl( usage, gpuBufferUsage, initialData, 0, renderContext );
+	return CreateImpl( usage, gpuBufferUsage, initialData, flags, renderContext );
 }
 	
 ALResult Tr2GpuBufferAL::CreateImpl( 
@@ -171,59 +163,6 @@ ALResult Tr2GpuBufferAL::CreateImpl(
 	return S_OK;
 }
 
-void Tr2GpuBufferAL::Destroy()
-{
-	Tr2BufferImplAL::Destroy();
-	m_srv = nullptr;
-	m_uav = nullptr;
-	m_numElements = 0;
-	m_elementSize = 0;
-	m_lengthInBytes = 0;
-	m_format = PIXEL_FORMAT_UNKNOWN;
-	m_gpuBufferUsage = 0;
-}
-
-// Make a new SRV around an existing buffer, eg to bind a buffer that's R32_UINT with a view
-// that pretends it's a R32G32B32A32_UINT (with 4 times fewer elements)
-ALResult Tr2GpuBufferAL::CreateAlias(		
-	Tr2GpuBufferAL& other, 
-	Tr2RenderContextEnum::PixelFormat format, 
-	Tr2PrimaryRenderContextAL & renderContext )
-{
-	Destroy();
-	if( !other.IsValid() || other.m_elementSize != 0 )
-	{
-		return E_INVALIDARG;
-	}
-
-	m_format			= format;
-
-
-	m_uav				= other.m_uav;
-	m_buffer			= other.m_buffer;
-	m_usage				= other.m_usage;
-	m_lengthInBytes		= other.m_lengthInBytes;
-	m_gpuBufferUsage = 0;
-
-	m_numElements		= 
-		( other.m_numElements * GetBytesPerPixel( other.GetFormat() ) + GetBytesPerPixel( format ) - 1 )
-		/ GetBytesPerPixel( format );
-	
-	
-
-	
-	D3D11_SHADER_RESOURCE_VIEW_DESC descSRV;
-	memset( &descSRV, 0, sizeof( descSRV ) );
-	descSRV.Format = static_cast<DXGI_FORMAT>( m_format );
-	descSRV.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-	descSRV.Buffer.ElementWidth = m_elementSize;
-	descSRV.Buffer.NumElements = m_numElements;
-	CR_RETURN_HR( renderContext.m_d3dDevice11->CreateShaderResourceView( m_buffer, &descSRV, &m_srv ) );
-	ChangeObjectId();
-
-	return S_OK;
-}
-
 ALResult Tr2GpuBufferAL::CreateVbView(	
 	Tr2VertexBufferAL& vb,
 	bool gpuWritable,
@@ -265,12 +204,26 @@ ALResult Tr2GpuBufferAL::CreateVbView(
 	return S_OK;
 }
 
+void Tr2GpuBufferAL::Destroy()
+{
+	Tr2BufferImplAL::Destroy();
+	m_srv = nullptr;
+	m_uav = nullptr;
+	m_numElements = 0;
+	m_elementSize = 0;
+	m_lengthInBytes = 0;
+	m_format = PIXEL_FORMAT_UNKNOWN;
+	m_gpuBufferUsage = 0;
+}
+
 Tr2GpuBufferAL& Tr2GpuBufferAL::operator=( Tr2GpuBufferAL&& other )
 {
 	m_numElements	= other.m_numElements;
 	m_format		= other.m_format;
+	m_elementSize = other.m_elementSize;
 	Tr2BufferImplAL::operator=( std::move( other ) );
 	m_uav = std::move( other.m_uav );
+	m_srv = std::move( other.m_srv );
 	m_gpuBufferUsage = m_gpuBufferUsage;
 	return *this;
 }
@@ -323,5 +276,41 @@ ALResult Tr2GpuBufferAL::CopySubBuffer(
 													&srcBox );
 	return S_OK;
 }
+
+uint32_t Tr2GpuBufferAL::BytesPerElement() const
+{
+	return m_elementSize ? m_elementSize : GetBytesPerPixel( m_format );
+}
+
+uint32_t Tr2GpuBufferAL::GetNumElements() const
+{
+	return m_numElements;
+}
+
+uint32_t Tr2GpuBufferAL::GetTotalSizeInBytes() const
+{
+	return GetNumElements() * BytesPerElement();
+}
+
+Tr2RenderContextEnum::PixelFormat Tr2GpuBufferAL::GetFormat() const
+{
+	return m_format;
+}
+
+Tr2RenderContextEnum::GpuBufferUsage Tr2GpuBufferAL::GetGpuBufferUsage() const
+{
+	return m_gpuBufferUsage;
+}
+
+bool Tr2GpuBufferAL::operator==( const Tr2GpuBufferAL& other ) const
+{
+	return m_buffer == other.m_buffer;
+}
+
+Tr2ALMemoryType Tr2GpuBufferAL::GetMemoryClass() const
+{
+	return AL_MEMORY_MANAGED;
+}
+
 
 #endif

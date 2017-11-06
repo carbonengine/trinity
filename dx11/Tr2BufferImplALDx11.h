@@ -35,14 +35,6 @@ public:
 
 	Tr2BufferImplAL& operator=( Tr2BufferImplAL&& );
 
-	ALResult Create( 
-		uint32_t lengthInBytes, 
-		Tr2RenderContextEnum::BufferUsage usage, 
-		/*D3D11_BIND_FLAG*/				uint32_t bindFlags,
-		/*D3D11_RESOURCE_MISC_FLAG*/	uint32_t miscFlags,
-		const void* initialData, 
-		Tr2PrimaryRenderContextAL &renderContext );
-
 	// Lock the index buffer. sizeInBytes is in bytes, not indices.
 	ALResult Lock(
 		uint32_t offset, 
@@ -58,16 +50,16 @@ public:
 
 	ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
 
-	CComPtr<ID3D11Buffer>	m_buffer;
-
-	uint32_t							m_lengthInBytes;
-	Tr2RenderContextEnum::BufferUsage	m_usage;
-
-#if TRINITY_AL_GUARD_LOCKS
-	Tr2LockGuard m_lockGuard;
-#endif
-
+	Tr2RenderContextEnum::BufferUsage m_usage;
 protected:
+	ALResult Create(
+		uint32_t lengthInBytes,
+		Tr2RenderContextEnum::BufferUsage usage,
+		/*D3D11_BIND_FLAG*/				uint32_t bindFlags,
+		/*D3D11_RESOURCE_MISC_FLAG*/	uint32_t miscFlags,
+		const void* initialData,
+		Tr2PrimaryRenderContextAL &renderContext );
+
 	ALResult LockReading( uint32_t offset, uint32_t size, void** data, Tr2RenderContextAL & renderContext );
 	ALResult UnlockReading( Tr2RenderContextAL & renderContext );
 	ALResult LockWriting( uint32_t offset, uint32_t size, void** data, Tr2RenderContextEnum::LockType lockType, Tr2RenderContextAL & renderContext );
@@ -77,6 +69,18 @@ protected:
 	CComPtr<ID3D11Buffer>			m_staging;
 	CcpMallocBuffer m_writeLockMemory;
 	Tr2MemoryCounterAL m_memory;
+
+	CComPtr<ID3D11Buffer>	m_buffer;
+
+	uint32_t m_lengthInBytes;
+
+#if TRINITY_AL_GUARD_LOCKS
+	Tr2LockGuard m_lockGuard;
+#endif
+
+	friend class Tr2RenderContextAL;
+	friend class Tr2PrimaryRenderContextAL;
+	friend class Tr2GpuBufferAL;
 
 	Tr2BufferImplAL( const Tr2BufferImplAL& ) /* = delete */;
 };

@@ -112,7 +112,7 @@ ALResult CreateSampleObject( Tr2SwapChainAL& sc, Tr2PrimaryRenderContextAL& rend
     
 ALResult CreateSampleObject( Tr2GpuBufferAL& buffer, Tr2PrimaryRenderContextAL& renderContext )
 {
-	return buffer.Create( 128, PIXEL_FORMAT_R32_FLOAT, 0, nullptr, renderContext );
+	return buffer.Create( 128, PIXEL_FORMAT_R32_FLOAT, 0, EX_NONE, nullptr, renderContext );
 }
     
 ALResult CreateSampleObject( Tr2FenceAL& fence, Tr2PrimaryRenderContextAL& renderContext )

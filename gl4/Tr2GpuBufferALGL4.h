@@ -24,23 +24,17 @@ public:
 		uint32_t numberOfElements, 
 		Tr2RenderContextEnum::PixelFormat format, 
 		Tr2RenderContextEnum::BufferUsage usage,
-		const void* initialData, 
+		Tr2RenderContextEnum::ExFlag flags,
+		const void* initialData,
 		Tr2RenderContextAL & renderContext );
 
-	ALResult CreateEx(			
-		uint32_t numberOfElements, 
-		Tr2RenderContextEnum::PixelFormat format, 
-		Tr2RenderContextEnum::BufferUsage usage,
-		const void* initialData, 
-		uint32_t exFlags,
-		Tr2RenderContextAL & renderContext );
-
-	ALResult CreateStructured(	
+	ALResult Create(	
 		uint32_t numberOfElements, 
 		uint32_t elementSize, 
 		Tr2RenderContextEnum::BufferUsage usage,
 		Tr2RenderContextEnum::GpuBufferUsage gpuBufferUsage,
-		const void* initialData, 
+		Tr2RenderContextEnum::ExFlag flags,
+		const void* initialData,
 		Tr2RenderContextAL & renderContext );
 
 	ALResult CreateVbView(		
@@ -48,10 +42,8 @@ public:
 		bool gpuWritable,
 		Tr2PrimaryRenderContextAL & renderContext );
 
-	ALResult CreateAlias(		
-		Tr2GpuBufferAL& other, 
-		Tr2RenderContextEnum::PixelFormat format, 
-		Tr2RenderContextAL & renderContext );
+	void Destroy();
+	bool IsValid() const;
 
 	ALResult Lock(				
 		uint32_t offset, 
@@ -62,8 +54,6 @@ public:
 
 	ALResult Unlock( Tr2RenderContextAL & renderContext );
 
-	bool IsValid() const;
-	void Destroy();
 
 	unsigned BytesPerElement() const;
 	unsigned GetNumElements() const;

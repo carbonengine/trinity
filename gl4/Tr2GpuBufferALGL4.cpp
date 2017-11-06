@@ -47,40 +47,31 @@ ALResult Tr2GpuBufferAL::Create(
 	uint32_t numberOfElements, 
 	Tr2RenderContextEnum::PixelFormat format, 
 	Tr2RenderContextEnum::BufferUsage usage,
-	const void* initialData, 
-	Tr2RenderContextAL & renderContext ) 
-{ 
-	return CreateEx( numberOfElements, format, usage, initialData, 0, renderContext );
-}	
-
-ALResult Tr2GpuBufferAL::CreateEx(			
-	uint32_t numberOfElements, 
-	Tr2RenderContextEnum::PixelFormat format, 
-	Tr2RenderContextEnum::BufferUsage usage,
-	const void* initialData, 
-	uint32_t exFlags,
+	Tr2RenderContextEnum::ExFlag flags,
+	const void* initialData,
 	Tr2RenderContextAL & renderContext ) 
 { 
 	Destroy();
 	GLenum internalFormat;
 	GLenum targetFormat;
 	GLenum targetType;
-	if ( !Tr2RenderContextAL::ConvertToGLPixelFormat( format, internalFormat, targetFormat, targetType ) )
+	if( !Tr2RenderContextAL::ConvertToGLPixelFormat( format, internalFormat, targetFormat, targetType ) )
 	{
 		return E_INVALIDARG;
 	}
 
-	CR_RETURN_HR( Create( numberOfElements, GetBytesPerPixel( format ), internalFormat, format, usage, initialData, exFlags, renderContext ) );
+	CR_RETURN_HR( Create( numberOfElements, GetBytesPerPixel( format ), internalFormat, format, usage, initialData, flags, renderContext ) );
 	m_elementSize = 0;
 	return S_OK;
-}	
+}
 
-ALResult Tr2GpuBufferAL::CreateStructured(	
+ALResult Tr2GpuBufferAL::Create(	
 	uint32_t numberOfElements, 
 	uint32_t elementSize, 
 	Tr2RenderContextEnum::BufferUsage usage,
 	Tr2RenderContextEnum::GpuBufferUsage gpuBufferUsage,
-	const void* initialData, 
+	Tr2RenderContextEnum::ExFlag flags,
+	const void* initialData,
 	Tr2RenderContextAL & renderContext )
 { 
 	Destroy();
@@ -98,7 +89,7 @@ ALResult Tr2GpuBufferAL::CreateStructured(
 		return E_INVALIDARG;
 	}
 
-	return Create( numberOfElements, elementSize, internalFormat, PIXEL_FORMAT_UNKNOWN, usage, initialData, 0, renderContext );
+	return Create( numberOfElements, elementSize, internalFormat, PIXEL_FORMAT_UNKNOWN, usage, initialData, flags, renderContext );
 }
 
 ALResult Tr2GpuBufferAL::Create(			
@@ -160,51 +151,6 @@ ALResult Tr2GpuBufferAL::CreateVbView(
 	Tr2PrimaryRenderContextAL & renderContext )
 { 
 	return E_FAIL; 
-}
-
-ALResult Tr2GpuBufferAL::CreateAlias(		
-	Tr2GpuBufferAL& other, 
-	Tr2RenderContextEnum::PixelFormat format, 
-	Tr2RenderContextAL & renderContext )
-{ 
-	Destroy();
-	if( !other.IsValid() || other.m_elementSize != 0 )
-	{
-		return E_INVALIDARG;
-	}
-
-	GLenum internalFormat;
-	GLenum targetFormat;
-	GLenum targetType;
-	if ( !Tr2RenderContextAL::ConvertToGLPixelFormat( format, internalFormat, targetFormat, targetType ) )
-	{
-		return E_INVALIDARG;
-	}
-
-	if( GetBytesPerPixel( format ) != GetBytesPerPixel( other.GetFormat() ) )
-	{
-		return E_INVALIDARG;
-	}
-
-	GLuint texture = 0;
-	GL_FAIL( glGenTextures( 1, &texture ) );
-	if( !texture )
-	{
-		return E_FAIL;
-	}
-
-	GL_FAIL( glBindTexture( GL_TEXTURE_BUFFER, texture ) );
-	GL_VALIDATE( glTexBuffer( GL_TEXTURE_BUFFER, internalFormat, *other.m_buffer ) );
-	GL_FAIL( glBindTexture( GL_TEXTURE_BUFFER, 0 ) );
-
-	m_buffer = other.m_buffer;
-	m_texture = std::shared_ptr<GLuint>( new GLuint( texture ), OnDeleteTexture() );
-	m_format = format;
-	m_numElements = other.m_numElements;
-	m_elementSize = other.m_elementSize;
-	m_usage = other.m_usage;
-	
-	return S_OK; 
 }
 
 ALResult Tr2GpuBufferAL::Lock(				

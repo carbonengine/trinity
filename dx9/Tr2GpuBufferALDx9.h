@@ -17,57 +17,46 @@ class Tr2GpuBufferAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_GPU_BU
 {
 public:
 	Tr2GpuBufferAL()
-		: m_numElements(0)
-		, m_format(Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN)
 	{
 	}
 	
-	ALResult Create(			
-		uint32_t numberOfElements, 
-		Tr2RenderContextEnum::PixelFormat format, 
+	ALResult Create(
+		uint32_t numberOfElements,
+		Tr2RenderContextEnum::PixelFormat format,
 		Tr2RenderContextEnum::BufferUsage usage,
-		const void* initialData, 
-		Tr2RenderContextAL & renderContext ) 
-	{ 
-		return E_FAIL; 
-	}	
-
-	ALResult CreateEx(			
-		uint32_t numberOfElements, 
-		Tr2RenderContextEnum::PixelFormat format, 
-		Tr2RenderContextEnum::BufferUsage usage,
-		const void* initialData, 
-		uint32_t exFlags,
-		Tr2RenderContextAL & renderContext ) 
-	{ 
-		return E_FAIL; 
-	}	
-
-	ALResult CreateStructured(	
-		uint32_t numberOfElements, 
-		uint32_t elementSize, 
-		Tr2RenderContextEnum::BufferUsage usage,
-		Tr2RenderContextEnum::GpuBufferUsage gpuBufferUsage,
-		const void* initialData, 
-		Tr2RenderContextAL & renderContext )
-	{ 
-		return E_FAIL; 
+		Tr2RenderContextEnum::ExFlag flags,
+		const void* initialData,
+		Tr2PrimaryRenderContextAL & renderContext )
+	{
+		return E_FAIL;
 	}
 
-	ALResult CreateVbView(		
+	ALResult Create(
+		uint32_t numberOfElements,
+		uint32_t elementSize,
+		Tr2RenderContextEnum::BufferUsage usage,
+		Tr2RenderContextEnum::GpuBufferUsage gpuBufferUsage,
+		Tr2RenderContextEnum::ExFlag flags,
+		const void* initialData,
+		Tr2PrimaryRenderContextAL & renderContext )
+	{
+		return E_FAIL;
+	}
+
+	ALResult CreateVbView(
 		Tr2VertexBufferAL& vb,
 		bool gpuWritable,
 		Tr2PrimaryRenderContextAL & renderContext )
-	{ 
-		return E_FAIL; 
+	{
+		return E_FAIL;
 	}
 
-	ALResult CreateAlias(		
-		Tr2GpuBufferAL& other, 
-		Tr2RenderContextEnum::PixelFormat format, 
-		Tr2RenderContextAL & renderContext )
-	{ 
-		return E_FAIL; 
+	void Destroy()
+	{
+	}
+	bool IsValid() const
+	{
+		return false;
 	}
 
 	ALResult Lock(				
@@ -84,25 +73,36 @@ public:
 	{ 
 		return E_FAIL; 
 	}
-	bool IsValid() const 
-	{ 
-		return false; 
-	}
-	void Destroy() 
-	{
-	}
 
-	unsigned BytesPerElement() const		{ return 0; }
-	unsigned GetNumElements() const			{ return 0; }
-	unsigned GetTotalSizeInBytes() const	{ return 0; }
+	unsigned BytesPerElement() const		
+	{ 
+		return 0; 
+	}
+	
+	unsigned GetNumElements() const			
+	{ 
+		return 0; 
+	}
+	
+	unsigned GetTotalSizeInBytes() const	
+	{ 
+		return 0; 
+	}
+	
 	Tr2RenderContextEnum::PixelFormat GetFormat() const 
-	{ return Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN; }
+	{ 
+		return Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN; 
+	}
+	
 	Tr2RenderContextEnum::GpuBufferUsage GetGpuBufferUsage() const
 	{
 		return 0;
 	}
 
-	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
+	Tr2ALMemoryType GetMemoryClass() const 
+	{ 
+		return AL_MEMORY_MANAGED; 
+	}
 
 	ALResult CopySubBuffer( 
 		uint32_t offset, 
@@ -113,15 +113,6 @@ public:
 	{
 		return E_FAIL;
 	}
-	
-private:
-	friend class Tr2RenderContextAL;
-
-	uint32_t							m_numElements;
-	Tr2RenderContextEnum::PixelFormat	m_format;
-
-	Tr2GpuBufferAL( const Tr2GpuBufferAL& ) /* = delete */;
-	Tr2GpuBufferAL& operator=( const Tr2GpuBufferAL& ) /* = delete */;
 };
 
 #endif // #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
