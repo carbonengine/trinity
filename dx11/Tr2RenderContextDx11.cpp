@@ -598,32 +598,6 @@ Tr2PrimaryRenderContextAL* Tr2RenderContextAL::GetPrimaryRenderContextPointer()
 	return ::GetPrimaryRenderContextPointer();
 }
 
-ALResult Tr2RenderContextAL::CreateSecondaryContext()
-{
-	auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-
-	CComPtr<ID3D11DeviceContext>	newContext;
-	CR_RETURN_HR( renderContext.m_d3dDevice11->CreateDeferredContext( 0, &newContext ) );
-
-	if( !newContext )
-	{
-		return E_FAIL;
-	}
-	
-	m_context = newContext;
-
-	m_secondaryDevice11				= renderContext.m_d3dDevice11;
-	m_secondarySwapChain			= renderContext.m_swapChain;
-	m_secondaryDefaultBackBuffer	= renderContext.m_defaultBackBuffer;
-
-	if( m_events )
-	{
-		m_events->OnContextCreated( *this );
-	}
-	
-	return S_OK;
-}
-
 void Tr2RenderContextAL::Destroy()
 {
 	for( unsigned i = 0; i < std::extent<decltype( m_sharedConstantBuffers )>::value; ++i )
@@ -722,30 +696,6 @@ ALResult Tr2RenderContextAL::BeginScene()
 	m_pixelShader  = nullptr;
 
 	return S_OK; 
-}
-
-ALResult Tr2RenderContextAL::FinishCommandList()
-{
-	if( !IsValid() )
-	{
-		return E_FAIL;
-	}
-
-	m_commandList = nullptr;
-	return m_context->FinishCommandList( FALSE, &m_commandList );
-}
-
-ALResult Tr2RenderContextAL::ExecuteCommandList()
-{
-	if( !IsValid() || !m_commandList )
-	{
-		return E_FAIL;
-	}
-
-	auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-	renderContext.m_context->ExecuteCommandList( m_commandList, FALSE );
-
-	return S_OK;
 }
 
 bool Tr2RenderContextAL::IsValid() const

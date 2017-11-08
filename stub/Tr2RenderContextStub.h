@@ -30,7 +30,6 @@ public:
     Tr2RenderContextAL();
 	~Tr2RenderContextAL();
 	void Destroy();
-	ALResult CreateSecondaryContext() { return E_FAIL; }
 
 	static void SetPrimaryRenderContext( Tr2PrimaryRenderContextAL* );
 	static Tr2PrimaryRenderContextAL& GetPrimaryRenderContext();
@@ -46,8 +45,6 @@ public:
 
 	ALResult BeginScene();
 	ALResult EndScene();
-	ALResult FinishCommandList()	 { return E_FAIL; }
-	ALResult ExecuteCommandList() { return E_FAIL; }
 	ALResult Present();
 
 	bool IsValid();

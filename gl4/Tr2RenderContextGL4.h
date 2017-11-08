@@ -37,7 +37,6 @@ public:
     Tr2RenderContextAL();
 	~Tr2RenderContextAL();
 	void Destroy();
-	ALResult CreateSecondaryContext() { return E_FAIL; }
 
 	static void SetPrimaryRenderContext( Tr2PrimaryRenderContextAL* );
 	static Tr2PrimaryRenderContextAL& GetPrimaryRenderContext();
@@ -53,8 +52,6 @@ public:
 
 	ALResult BeginScene()			{ return S_OK; }
 	ALResult EndScene()				{ return S_OK; }
-	ALResult FinishCommandList()	{ return E_FAIL; }
-	ALResult ExecuteCommandList()	{ return E_FAIL; }
 	ALResult Present();
 
 	void	ReleaseDeviceResources();
