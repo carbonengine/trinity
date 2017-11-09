@@ -132,7 +132,6 @@ public:
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw();
 
 	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw();
-	ALResult GetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t* value ) throw();
 
 	ALResult SetClipPlane( uint32_t planeIndex, const float* planeEq ) throw();
 
@@ -288,19 +287,7 @@ private:
 
 	Tr2ConstantBufferAL	m_fragmentOpBuffer;
 
-#if 1
-	uint32_t			m_allRenderStates[ Tr2RenderContextEnum::RS_MAX_STATE ];	// for GetRenderState
-#else
-	struct TQueryableRenderState
-	{
-		uint32_t	m_colorWriteEnable;
-		uint32_t	m_zEnable;
-		uint32_t	m_zWriteEnable;
-		uint32_t	m_cullMode;
-	};
-	TQueryableRenderState	m_queryableRenderState;
-#endif
-
+	uint32_t m_allRenderStates[ Tr2RenderContextEnum::RS_MAX_STATE ];
 	
 	bool m_hasHullShader;
 	// Has active hull shader (requires changing topology)

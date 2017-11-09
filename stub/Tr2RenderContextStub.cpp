@@ -284,11 +284,6 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, u
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::GetRenderState( RenderState state, uint32_t* value )
-{
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::SetClipPlane( uint32_t planeIndex, const float* planeEq )
 {
 	return S_OK;

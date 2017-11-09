@@ -1399,29 +1399,6 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 	}
 }
 
-ALResult Tr2RenderContextAL::GetRenderState( RenderState state, uint32_t* value )
-{
-#if 1
-	if( state < RS_MAX_STATE )
-	{
-		*value = m_allRenderStates[ state ];
-		return S_OK;
-	}
-#else
-	switch( state )
-	{
-	case RS_COLORWRITEENABLE	: *value = m_queryableRenderState.m_colorWriteEnable;	return S_OK;
-	case RS_ZENABLE				: *value = m_queryableRenderState.m_zEnable;			return S_OK;
-	case RS_ZWRITEENABLE		: *value = m_queryableRenderState.m_zWriteEnable;		return S_OK;
-	case RS_CULLMODE			: *value = m_queryableRenderState.m_cullMode;			return S_OK;
-	}
-#endif
-
-	CCP_ASSERT( "Invalid GetRenderState call, not supported" );
-
-	return E_INVALIDARG;
-}
-
 ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 {
 	uint32_t sv[2] = { state, value };

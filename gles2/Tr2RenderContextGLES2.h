@@ -173,7 +173,6 @@ public:
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value );
 	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count );
-	ALResult GetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t* value );
 	ALResult SetClipPlane( uint32_t planeIndex, const float* planeEq );
 	ALResult SetScissorRect(			
 		uint32_t left, 
@@ -398,6 +397,7 @@ private:
 
 	bool ApplyShadowRenderStates( ShadowStateRestoreInfo& info );
 	bool ApplyVertexDeclaration( ShadowStateRestoreInfo& info, const void* data = nullptr, size_t stride = 0 );
+	ALResult GetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t* value );
 
 	void    RestoreState( const ShadowStateRestoreInfo& info );
 public:

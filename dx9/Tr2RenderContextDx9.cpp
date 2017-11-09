@@ -1025,22 +1025,6 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, u
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::GetRenderState( RenderState state, uint32_t* value )
-{
-	static_assert( sizeof( uint32_t ) == sizeof( uint32_t ), "Incorrect size, cast won't work" );
-
-#if !defined( NDEBUG )
-	return m_d3dDevice9 ? m_d3dDevice9->GetRenderState( 
-							static_cast<D3DRENDERSTATETYPE>( state ),
-							reinterpret_cast<DWORD*>( value ) ) 
-						: E_FAIL;
-#else
-	return m_d3dDevice9->GetRenderState( 
-							static_cast<D3DRENDERSTATETYPE>( state ),
-							reinterpret_cast<DWORD*>( value ) );
-#endif
-}
-
 ALResult Tr2RenderContextAL::SetClipPlane( uint32_t planeIndex, const float* planeEq )
 {
 #if !defined( NDEBUG )
