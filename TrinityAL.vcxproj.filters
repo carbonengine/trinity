@@ -16,9 +16,6 @@
     <ClInclude Include="ALResult.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="autoversion.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="BcDecompress.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -41,9 +38,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2FragmentOpSettings.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2GpuTimerALContext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2HalHelperStructures.h">

@@ -1429,7 +1429,6 @@
   <ItemGroup>
     <ClInclude Include="ALLog.h"/>
     <ClInclude Include="ALResult.h"/>
-    <ClInclude Include="autoversion.h"/>
     <ClInclude Include="BcDecompress.h"/>
     <ClInclude Include="ITr2RenderContextEvents.h"/>
     <ClInclude Include="StdAfx.h"/>
@@ -1438,7 +1437,6 @@
     <ClInclude Include="Tr2DrawUPHelper.h"/>
     <ClInclude Include="Tr2DriverUtilities.h"/>
     <ClInclude Include="Tr2FragmentOpSettings.h"/>
-    <ClInclude Include="Tr2GpuTimerALContext.h"/>
     <ClInclude Include="Tr2HalHelperStructures.h"/>
     <ClInclude Include="Tr2LockGuard.h"/>
     <ClInclude Include="Tr2MemoryCounterAL.h"/>
