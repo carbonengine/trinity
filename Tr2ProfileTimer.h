@@ -5,7 +5,9 @@
 //
 #pragma once
 
-class Tr2ProfileTimer
+#include "Tr2DeviceResource.h"
+
+class Tr2ProfileTimer: public Tr2DeviceResource
 {
 public:
 	Tr2ProfileTimer();
@@ -25,6 +27,9 @@ public:
 	const std::string& GetStatName() const;
 	void SetStatName( const char* name );
 private:
+	virtual void ReleaseResources( TriStorage );
+	virtual bool OnPrepareResources();
+
 	mutable Tr2GpuTimerAL m_gpuTimer;
 	uint64_t m_beginTime;
 	CcpStaticStatisticsEntry* m_statEntryCpu;

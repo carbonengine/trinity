@@ -130,10 +130,10 @@ Tr2GpuParticleSystem::Tr2GpuParticleSystem( IRoot* )
 	RegisterVariables();
 	SetMaxParticles( m_maxParticles );
 
-	m_emitTimer.Create( renderContext );
-	m_updateTimer.Create( renderContext );
-	m_sortTimer.Create( renderContext );
-	m_renderTimer.Create( renderContext );
+	m_emitTimer.SetCaptureGpuTime( true );
+	m_updateTimer.SetCaptureGpuTime( true );
+	m_sortTimer.SetCaptureGpuTime( true );
+	m_renderTimer.SetCaptureGpuTime( true );
 }
 
 Tr2GpuParticleSystem::~Tr2GpuParticleSystem()
@@ -569,7 +569,8 @@ bool Tr2GpuParticleSystem::DoClear( Tr2RenderContext& renderContext )
 // --------------------------------------------------------------------------------------
 void Tr2GpuParticleSystem::RunSimulation( float dt, const Vector3& originShift, Tr2RenderContext& renderContext )
 {
-	Tr2GpuTimerALContext ctx( m_updateTimer, renderContext );
+	m_updateTimer.Begin( renderContext );
+	ON_BLOCK_EXIT( [&] { m_updateTimer.End( renderContext ); } );
 
 	struct
 	{
@@ -614,7 +615,8 @@ void Tr2GpuParticleSystem::RunSimulation( float dt, const Vector3& originShift, 
 // --------------------------------------------------------------------------------------
 void Tr2GpuParticleSystem::RunSimulation( float dt, const Vector3& originShift, Tr2RenderContext& renderContext )
 {
-	Tr2GpuTimerALContext ctx( m_updateTimer, renderContext );
+	m_updateTimer.Begin( renderContext );
+	ON_BLOCK_EXIT( [&] { m_updateTimer.End( renderContext ); } );
 
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 	m_variableStore->RegisterVariable( "Positions", m_positions[m_targetIndex] );
@@ -812,7 +814,9 @@ void Tr2GpuParticleSystem::EmitParticles( Tr2RenderContext& renderContext )
 		EmitterGpu emitters[emitsPerDispatch];
 	} cb;
 
-	Tr2GpuTimerALContext ctx( m_emitTimer, renderContext );
+	m_emitTimer.Begin( renderContext );
+	ON_BLOCK_EXIT( [&] { m_emitTimer.End( renderContext ); } );
+
 	for( size_t i = 0; i < m_emitRequests.GetCount(); i += emitsPerDispatch )
 	{
 		cb.prefix.count = uint32_t( std::min( m_emitRequests.GetCount() - i, emitsPerDispatch ) );
@@ -868,7 +872,8 @@ void Tr2GpuParticleSystem::EmitParticles( Tr2RenderContext& renderContext )
 		Vector4 offsetCount[TEXTURE_METHOD_EMITS_PER_DP];
 	} perObjectVS;
 
-	Tr2GpuTimerALContext ctx( m_emitTimer, renderContext );
+	m_emitTimer.Begin( renderContext );
+	ON_BLOCK_EXIT( [&] { m_emitTimer.End( renderContext ); } );
 
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
@@ -927,7 +932,8 @@ void Tr2GpuParticleSystem::Sort( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	Tr2GpuTimerALContext ctx( m_sortTimer, renderContext );
+	m_sortTimer.Begin( renderContext );
+	ON_BLOCK_EXIT( [&] { m_sortTimer.End( renderContext ); } );
 
 	renderContext.m_esm.UnsetAllTextures();
 	renderContext.CopyBufferCounter( *m_sortParameters, 0, *m_visibleList );
@@ -1005,7 +1011,8 @@ void Tr2GpuParticleSystem::Render( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	Tr2GpuTimerALContext ctx( m_renderTimer, renderContext );
+	m_renderTimer.Begin( renderContext );
+	ON_BLOCK_EXIT( [&] { m_renderTimer.End( renderContext ); } );
 
 #if GPU_PARTICLES_METHOD == GPU_PARTICLES_TEXTURE_METHOD
 	m_variableStore->RegisterVariable( "Positions", m_positions[m_targetIndex] );
@@ -1074,26 +1081,22 @@ void Tr2GpuParticleSystem::Emit( const Emitter& emitter, uintptr_t id, uintptr_t
 
 float Tr2GpuParticleSystem::GetEmitTime()
 {
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return m_emitTimer.GetTime( renderContext ) * 1000.f;
+	return m_emitTimer.GpuTime();
 }
 
 float Tr2GpuParticleSystem::GetUpdateTime()
 {
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return m_updateTimer.GetTime( renderContext ) * 1000.f;
+	return m_updateTimer.GpuTime();
 }
 
 float Tr2GpuParticleSystem::GetSortTime()
 {
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return m_sortTimer.GetTime( renderContext ) * 1000.f;
+	return m_sortTimer.GpuTime();
 }
 
 float Tr2GpuParticleSystem::GetRenderTime()
 {
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return m_renderTimer.GetTime( renderContext ) * 1000.f;
+	return m_renderTimer.GpuTime();
 }
 
 bool Tr2GpuParticleSystem::HasParticles() const

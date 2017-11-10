@@ -10,6 +10,7 @@
 
 #include "IRenderCallback.h"
 #include "Tr2AddSafeGrowableBuffer.h"
+#include "Tr2ProfileTimer.h"
 
 BLUE_DECLARE( Tr2GpuBuffer );
 BLUE_DECLARE( Tr2GpuStructuredBuffer );
@@ -341,10 +342,10 @@ private:
 	// local variable store for passing parameters to effects
 	Tr2VariableStorePtr m_variableStore;
 
-	Tr2GpuTimerAL m_emitTimer;
-	Tr2GpuTimerAL m_updateTimer;
-	Tr2GpuTimerAL m_sortTimer;
-	Tr2GpuTimerAL m_renderTimer;
+	Tr2ProfileTimer m_emitTimer;
+	Tr2ProfileTimer m_updateTimer;
+	Tr2ProfileTimer m_sortTimer;
+	Tr2ProfileTimer m_renderTimer;
 	bool m_updateVisibleCount;
 	uint32_t m_visibleCount;
 };

@@ -36,6 +36,27 @@ Tr2ProfileTimer::Tr2ProfileTimer()
 }
 
 // -------------------------------------------------------------
+void Tr2ProfileTimer::ReleaseResources( TriStorage s )
+{
+	if( m_gpuTimer.GetMemoryClass() & s )
+	{
+		m_gpuTimer.Destroy();
+	}
+	m_gpuTimer.Destroy();
+}
+
+// -------------------------------------------------------------
+bool Tr2ProfileTimer::OnPrepareResources()
+{
+	if( m_captureGpuTime && !m_gpuTimer.IsValid() )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		m_gpuTimer.Create( renderContext );
+	}
+	return true;
+}
+
+// -------------------------------------------------------------
 void Tr2ProfileTimer::Begin( Tr2RenderContext& renderContext )
 {
 	if( m_gpuTimer.IsValid() )
