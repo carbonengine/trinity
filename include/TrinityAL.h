@@ -27,5 +27,3 @@
 #include "Tr2OcclusionQueryAL.h"
 #include "Tr2FenceAL.h"
 #include "Tr2GpuTimerAL.h"
-
-#include "../Tr2GpuTimerALContext.h"
