@@ -12,7 +12,6 @@ Tr2DepthStencilAL::Tr2DepthStencilAL()
 	m_width( 0 ),
 	m_height( 0 )
 {
-	memset( &m_deviceLost, 0, sizeof( m_deviceLost ) );
 }
 
 Tr2DepthStencilAL::~Tr2DepthStencilAL()
@@ -59,43 +58,6 @@ Tr2TextureAL& Tr2DepthStencilAL::GetTexture()
 const Tr2TextureAL& Tr2DepthStencilAL::GetTexture() const
 {
 	return m_backingStore;
-}
-
-void Tr2DepthStencilAL::ReleaseALResource()
-{
-	if( !m_deviceLost.m_valid )
-	{
-		m_deviceLost.m_format		= m_format;
-		m_deviceLost.m_width		= GetWidth();
-		m_deviceLost.m_height		= GetHeight();
-		m_deviceLost.m_msaa = m_msaa;
-
-		m_deviceLost.m_valid = true;
-	}
-
-	Destroy();
-}
-
-void Tr2DepthStencilAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderContext )
-{
-	if( m_deviceLost.m_valid )
-	{
-		if( IsValid() )
-		{
-			m_deviceLost.m_valid = false;
-		}
-		else
-		{
-			const auto &d = m_deviceLost;
-
-			if( d.m_width > 0 && d.m_height > 0 &&
-				SUCCEEDED( Create(	d.m_width, d.m_height, d.m_format, d.m_msaa, EX_NONE, renderContext ) ) && 
-				IsValid() )
-			{
-				m_deviceLost.m_valid = false;
-			}
-		}
-	}
 }
 
 uint32_t Tr2DepthStencilAL::GetSharedHandle() const

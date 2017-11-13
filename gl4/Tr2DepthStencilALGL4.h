@@ -4,7 +4,6 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
-#include "../Tr2AutoResetObjectAL.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../include/Tr2TextureAL.h"
 
@@ -16,7 +15,6 @@ class Tr2RenderContextAL;
 
 
 class Tr2DepthStencilAL : 
-	public Tr2AutoResetObjectAL, 
 	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_DEPTH_STENCIL>
 {
 public:
@@ -56,20 +54,6 @@ private:
 	uint32_t m_height;
 	Tr2RenderContextEnum::DepthStencilFormat m_format;
 	Tr2MsaaDesc m_msaa;
-
-	struct TDeviceLost
-	{
-		uint32_t m_width;
-		uint32_t m_height;
-		Tr2RenderContextEnum::DepthStencilFormat m_format;
-		Tr2MsaaDesc m_msaa;
-
-		bool m_valid;
-	};
-	TDeviceLost	m_deviceLost;
-
-	void ReleaseALResource();
-	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
 
 	friend class Tr2RenderContextAL;
 };

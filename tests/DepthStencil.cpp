@@ -92,21 +92,3 @@ TEST_F( WithValidRenderContext, DepthStencilHasMemoryClass )
 	auto memoryClass = ds.GetMemoryClass();
 	EXPECT_TRUE( memoryClass == AL_MEMORY_VIDEO || memoryClass == AL_MEMORY_MANAGED );
 }
-
-TEST_F( WithValidRenderContext, DepthStencilSurvivesDeviceReset )
-{
-	Tr2DepthStencilAL ds;
-	ASSERT_HRESULT_SUCCEEDED( ds.Create( 128, 64, DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, *renderContext ) );
-
-	Tr2AutoResetObjectAL::ReleaseALResources();
-	renderContext->ReleaseDeviceResources();
-
-	EXPECT_FALSE( ds.IsValid() );
-
-	Tr2AutoResetObjectAL::PrepareALResources( *renderContext );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetPresentParameters( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, presentParameters ) );
-
-	EXPECT_TRUE( ds.IsValid() );
-	EXPECT_EQ( 128, ds.GetWidth() );
-	EXPECT_EQ( 64, ds.GetHeight() );
-}

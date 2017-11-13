@@ -3,7 +3,6 @@
 #define Tr2DepthStencilALDx9_h_
 
 
-#include "../Tr2AutoResetObjectAL.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2TextureAL.h"
@@ -19,7 +18,6 @@
 //   surface was just a depth stencil surface.
 // -------------------------------------------------------------
 class Tr2DepthStencilAL : 
-	public Tr2AutoResetObjectAL, 
 	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_DEPTH_STENCIL>
 {
 public:
@@ -67,21 +65,6 @@ private:
 	Tr2MsaaDesc m_msaa;
 	Tr2RenderContextEnum::ExFlag m_exFlags;
 	Tr2MemoryCounterAL m_memory;
-
-	struct TDeviceLost
-	{
-		uint32_t m_width;
-		uint32_t m_height;
-		Tr2RenderContextEnum::DepthStencilFormat m_format;
-		Tr2MsaaDesc m_msaa;
-		Tr2RenderContextEnum::ExFlag m_exFlags;
-
-		bool		m_valid;
-	};
-	TDeviceLost	m_deviceLost;
-
-	void ReleaseALResource();
-	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
 
 	friend class Tr2RenderContextAL;
 
