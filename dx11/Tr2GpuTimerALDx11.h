@@ -5,7 +5,6 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
-#include "../Tr2AutoResetObjectAL.h"
 
 
 class Tr2PrimaryRenderContextAL;
@@ -15,8 +14,7 @@ class Tr2RenderContextAL;
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 class Tr2GpuTimerAL: 
-	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TIMER>,
-	public Tr2AutoResetObjectAL
+	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TIMER>
 {
 public:
 	Tr2GpuTimerAL();
@@ -37,9 +35,6 @@ public:
 	}
 
 	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
-
-	virtual void ReleaseALResource();
-	virtual void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
 private:
 	CComPtr<ID3D11Query> m_beginQuery;
 	CComPtr<ID3D11Query> m_endQuery;
@@ -55,7 +50,6 @@ private:
 		END_ISSUED,
 		BEGIN_RECEIVED,
 	} m_state;
-	bool m_recreateOnPrepare;
 };
 
 #endif

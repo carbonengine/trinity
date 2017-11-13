@@ -36,13 +36,4 @@ float Tr2GpuTimerAL::GetTime( Tr2RenderContextAL& )
 	return -1.f;
 }
 
-void Tr2GpuTimerAL::ReleaseALResource()
-{
-}
-
-void Tr2GpuTimerAL::PrepareALResource( Tr2PrimaryRenderContextAL& )
-{
-}
-
-
 #endif
