@@ -24,31 +24,6 @@ Tr2SwapChainAL::Tr2SwapChainAL()
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Implements ITriDeviceResource interface. Destroys device resources (swap chain, 
-//   buffers).
-// Arguments:
-//   s - Resource types to destroy
-// --------------------------------------------------------------------------------------
-void Tr2SwapChainAL::ReleaseALResource()
-{
-	Destroy();
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Implements ITriDeviceResource interface. Re-creates swap chain and associated 
-//   buffers.
-// Return value:
-//   true If swap chain and buffers were successfully created
-//   false On error
-// --------------------------------------------------------------------------------------
-void Tr2SwapChainAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderContext )
-{
-	CR( Create( m_presentParam.hDeviceWindow, renderContext ) );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
 //   Creates swap chain and associated buffers.
 // Arguments:
 //   windowHandle - Handle to window object (Tr2WindowHandle) for which the swap chain is created

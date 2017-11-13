@@ -12,14 +12,6 @@ Tr2SwapChainAL::Tr2SwapChainAL()
 {
 }
 
-void Tr2SwapChainAL::ReleaseALResource()
-{
-}
-
-void Tr2SwapChainAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderContext )
-{
-}
-
 ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextAL& renderContext )
 {
 	if ( !renderContext.IsValid() )

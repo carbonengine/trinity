@@ -37,35 +37,6 @@ Tr2SwapChainAL::~Tr2SwapChainAL()
 	Destroy();
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Implements ITriDeviceResource interface. Destroys device resources (swap chain, 
-//   buffers).
-// Arguments:
-//   s - Resource types to destroy
-// --------------------------------------------------------------------------------------
-void Tr2SwapChainAL::ReleaseALResource()
-{
-	m_backBuffer.Destroy();
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Implements ITriDeviceResource interface. Re-creates swap chain and associated 
-//   buffers.
-// Return value:
-//   true If swap chain and buffers were successfully created
-//   false On error
-// --------------------------------------------------------------------------------------
-void Tr2SwapChainAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderContext )
-{
-	if( !m_hWnd || m_backBuffer.IsValid() )
-	{
-		return;
-	}
-	CR( CreateFramebuffer( renderContext ) );
-}
-
 ALResult Tr2SwapChainAL::CreateFramebuffer( Tr2RenderContextAL& renderContext )
 {
 #ifdef _WIN32

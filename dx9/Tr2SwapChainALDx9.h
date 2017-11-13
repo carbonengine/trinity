@@ -11,7 +11,6 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
-#include "../Tr2AutoResetObjectAL.h"
 #include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2RenderTargetAL.h"
 
@@ -29,7 +28,6 @@ class Tr2RenderContextAL;
 //   Tr2DepthStencilAL, Tr2RenderTargetAL
 // --------------------------------------------------------------------------------------
 class Tr2SwapChainAL: 
-	public Tr2AutoResetObjectAL, 
 	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SWAP_CHAIN>
 {
 public:
@@ -53,9 +51,6 @@ public:
 private:
 	Tr2SwapChainAL( const Tr2SwapChainAL& ) /* = delete */;
 	Tr2SwapChainAL& operator=( const Tr2SwapChainAL& ) /* = delete */;
-
-	void ReleaseALResource();
-	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
 
 	D3DPRESENT_PARAMETERS m_presentParam;
 	CComPtr<IDirect3DSwapChain9> m_swapChain;

@@ -4,7 +4,6 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
-#include "../Tr2AutoResetObjectAL.h"
 #include "../include/Tr2RenderTargetAL.h"
 
 
@@ -14,7 +13,6 @@ class Tr2RenderContextAL;
 #if TRINITY_PLATFORM==TRINITY_STUB
 
 class Tr2SwapChainAL: 
-	public Tr2AutoResetObjectAL, 
 	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SWAP_CHAIN>
 {
 public:
@@ -34,9 +32,6 @@ public:
 
 	Tr2RenderTargetAL m_backBuffer;
 private:
-	void ReleaseALResource();
-	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
-
 	Tr2WindowHandle m_windowHandle;
 };
 
