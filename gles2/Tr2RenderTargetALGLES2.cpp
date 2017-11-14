@@ -14,7 +14,6 @@ Tr2RenderTargetAL::Tr2RenderTargetAL()
 	m_msaaTarget( 0 )
 {
 	Destroy();
-	memset( &m_deviceLost, 0, sizeof( m_deviceLost ) );
 }
 
 void Tr2RenderTargetAL::Destroy()
@@ -35,44 +34,6 @@ void Tr2RenderTargetAL::Destroy()
 	CcpMallocBuffer empty;
 	m_lockedData.swap( empty );
 	m_isLocked = false;
-}
-
-void Tr2RenderTargetAL::PrepareALResource( Tr2PrimaryRenderContextAL& renderContext )
-{
-	if( m_deviceLost.m_valid )
-	{
-		if( IsValid() )
-		{
-			m_deviceLost.m_valid = false;
-		}
-		else
-		{
-			const auto &d = m_deviceLost;
-
-			if( d.m_width > 0 && d.m_height > 0 &&
-				SUCCEEDED( Create(	d.m_width, d.m_height, d.m_mipCount, d.m_format, d.m_msaa, 0, EX_NONE, renderContext ) ) && 
-				IsValid() )
-			{
-				m_deviceLost.m_valid = false;
-			}
-		}
-	}
-}
-
-void Tr2RenderTargetAL::ReleaseALResource()
-{
-	if( !m_deviceLost.m_valid )
-	{
-		m_deviceLost.m_format = m_format;
-		m_deviceLost.m_width = m_width;
-		m_deviceLost.m_height = m_height;
-		m_deviceLost.m_mipCount = m_mipCount;
-		m_deviceLost.m_msaa = m_msaa;
-
-		m_deviceLost.m_valid = true;
-	}
-
-	Destroy();
 }
 
 Tr2RenderTargetAL::~Tr2RenderTargetAL()

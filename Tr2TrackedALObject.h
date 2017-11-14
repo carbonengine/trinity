@@ -10,11 +10,6 @@
 
 #include "Tr2RenderContextEnum.h"
 
-// Define TRACK_AL_RESOURCES as 0 to disable tracking
-#ifndef TRACK_AL_RESOURCES
-#define TRACK_AL_RESOURCES 1
-#endif
-
 enum Tr2ALMemoryType
 {
 	AL_MEMORY_VIDEO = 1 << 0,  // resources created on video card memory
@@ -23,7 +18,7 @@ enum Tr2ALMemoryType
 
 typedef int Tr2ALMemoryTypes;
 
-#if AL_TACK_RESOURCE_USAGE && TRACK_AL_RESOURCES
+#if AL_TACK_RESOURCE_USAGE
 #define AL_UPDATE_RESOURCE_FRAME_USAGE( resource )	\
 	{ if( ( resource ).IsValid() ) ( resource ).UpdateFrameUsed(); };
 #else
@@ -55,23 +50,23 @@ public:
 	void UpdateFrameUsed() const;
 
 	template<typename Operation> static void GetAllObjectDescriptions( Tr2ALMemoryTypes flags, Operation& operation );
+	static void DestroyObjects( Tr2ALMemoryTypes flags );
 protected:
 	void ChangeObjectId();
 
-#if TRACK_AL_RESOURCES
 	static CcpMutex& GetLiveObjectMutex();
 	static std::set<Tr2TrackedALObjectBase*>& GetLiveObjects( Tr2RenderContextEnum::ObjectType type );
 
 	template<Tr2RenderContextEnum::ObjectType Type> struct ObjectInfo;
 
 	template<Tr2RenderContextEnum::ObjectType Type, typename Operation> class GetAllObjectDescriptionsHelper;
-#endif
+	template<Tr2RenderContextEnum::ObjectType Type> class DestroyObjectsHelper;
 
 private:
 	Tr2TrackedALObjectBase( const Tr2TrackedALObjectBase& ) /* = delete */;
 	Tr2TrackedALObjectBase& operator=( const Tr2TrackedALObjectBase& ) /* = delete */;
 
-#if TRACK_AL_RESOURCES && AL_TACK_RESOURCE_USAGE
+#if AL_TACK_RESOURCE_USAGE
 	mutable uint64_t m_trackFrameUsed;
 #endif
 
@@ -121,19 +116,6 @@ inline bool operator==( const Tr2TrackedALObjectBase* object, const Tr2ObjectALO
 	return pointer == object;
 }
 
-#if( TRACK_AL_RESOURCES == 0 )
-
-template<Tr2RenderContextEnum::ObjectType Type> 
-class Tr2TrackedALObject: public Tr2TrackedALObjectBase
-{
-public:
-	template<typename Operation> static void EnumerateResources( Operation& operation )
-	{
-	}
-};
-
-#else
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Template object used for tracking live AL objects. Registers/unregisters itself
@@ -152,7 +134,6 @@ protected:
 	~Tr2TrackedALObject();
 };
 
-#endif
 
 #include "Tr2TrackedALObjectImpl.h"
 

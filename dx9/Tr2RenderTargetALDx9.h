@@ -2,7 +2,6 @@
 #define Tr2RenderTargetALDx9_h_
 
 
-#include "../Tr2AutoResetObjectAL.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2TextureAL.h"
@@ -11,7 +10,6 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
 class Tr2RenderTargetAL : 
-	public Tr2AutoResetObjectAL, 
 	public Tr2BitmapDimensions,
 	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_RENDER_TARGET>
 {
@@ -71,9 +69,6 @@ private:
 
 	ALResult Bind( uint32_t slot, Tr2RenderContextAL& renderContext ) const;
 
-	void ReleaseALResource();
-	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
-
 	Tr2MsaaDesc m_msaa;
 	Tr2RenderContextEnum::ExFlag m_flags;
 
@@ -91,20 +86,6 @@ private:
 	Tr2MemoryCounterAL m_memory;
 	
 	bool								m_clearSysMemLockable;
-
-	// For auto-recreate after a device lost
-	struct TDeviceLost
-	{
-		Tr2RenderContextEnum::PixelFormat m_format;
-		uint32_t m_width;
-		uint32_t m_height;
-		uint32_t m_mipCount;
-		Tr2MsaaDesc m_msaa;
-		Tr2RenderContextEnum::ExFlag m_flags;
-
-		bool m_valid;
-	};
-	TDeviceLost	m_deviceLost;
 	bool		m_isAttached;
 	
 	HANDLE		m_sharedHandle;

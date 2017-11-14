@@ -3,8 +3,6 @@
 #include "WithRenderContextFixture.h"
 #include "RenderWindow.h"
 
-#if TRACK_AL_RESOURCES
-
 using namespace Tr2RenderContextEnum;
 
 namespace
@@ -211,6 +209,3 @@ TYPED_TEST( TrackedObjectTest, ValidObjectCountsAsLive )
     
 	EXPECT_LT( initialCount, newCount );
 }
-
-
-#endif

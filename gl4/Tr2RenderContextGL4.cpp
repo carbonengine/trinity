@@ -1370,7 +1370,7 @@ ALResult Tr2RenderContextAL::Present()
 	{
 		return E_FAIL;
 	}
-#if AL_TACK_RESOURCE_USAGE && TRACK_AL_RESOURCES
+#if AL_TACK_RESOURCE_USAGE
 	extern uint64_t g_trackCurrentFrame;
 	++g_trackCurrentFrame;
 #endif

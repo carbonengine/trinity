@@ -2,7 +2,6 @@
 #define Tr2RenderTargetALDx11_h_
 
 
-#include "../Tr2AutoResetObjectAL.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2TextureAL.h"
@@ -17,7 +16,6 @@
 //  from the renderTarget.
 // -------------------------------------------------------------
 class Tr2RenderTargetAL : 
-	public Tr2AutoResetObjectAL, 
 	public Tr2BitmapDimensions,
 	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_RENDER_TARGET>
 {
@@ -70,9 +68,6 @@ public:
 private:
 	ALResult Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderContextAL& renderContext );
 
-	void ReleaseALResource();
-	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
-
 	Tr2MsaaDesc m_msaa;
 	Tr2RenderContextEnum::BufferUsage m_usage;
 	Tr2RenderContextEnum::ExFlag m_flags;
@@ -85,20 +80,6 @@ private:
 
 	Tr2MemoryCounterAL m_memory;
 
-	// For auto-recreate after a device lost
-	struct TDeviceLost
-	{
-		Tr2RenderContextEnum::PixelFormat	m_format;
-		uint32_t							m_width;
-		uint32_t							m_height;
-		uint32_t							m_mipCount;
-		Tr2MsaaDesc							m_msaa;
-		Tr2RenderContextEnum::BufferUsage m_usage;
-		Tr2RenderContextEnum::ExFlag m_flags;
-
-		bool								m_valid;
-	};
-	TDeviceLost	m_deviceLost;
 	bool		m_isAttached;
 
 	friend class Tr2RenderContextAL;

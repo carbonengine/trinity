@@ -8,9 +8,6 @@
 #include "Tr2TrackedALObject.h"
 
 #include "include/TrinityAL.h"
-
-#if TRACK_AL_RESOURCES
-
 #include "ALLog.h"
 
 #if AL_TACK_RESOURCE_USAGE
@@ -21,8 +18,6 @@ uint64_t g_trackCurrentFrame = 0;
 #else
 
 #define REPORT_LAST_FRAME_USED
-
-#endif
 
 #endif
 
@@ -52,7 +47,7 @@ Tr2ObjectIdAL Tr2TrackedALObjectBase::GetObjectId() const
 
 void Tr2TrackedALObjectBase::UpdateFrameUsed() const
 {
-#if AL_TACK_RESOURCE_USAGE && TRACK_AL_RESOURCES
+#if AL_TACK_RESOURCE_USAGE
 	extern uint64_t g_trackCurrentFrame; 
 	m_trackFrameUsed = g_trackCurrentFrame;
 #endif
@@ -78,9 +73,6 @@ bool Tr2TrackedALObjectBase::operator==( const Tr2TrackedALObjectBase& other ) c
 	return this == &other;
 }
 
-
-#if TRACK_AL_RESOURCES
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Returns a static set of live AL objects of given type.
@@ -93,6 +85,51 @@ std::set<Tr2TrackedALObjectBase*>& Tr2TrackedALObjectBase::GetLiveObjects( Tr2Re
 {
 	static std::set<Tr2TrackedALObjectBase*> s_liveObjects[Tr2RenderContextEnum::OBJECT_TYPE_COUNT];
 	return s_liveObjects[type];
+}
+
+
+template<Tr2RenderContextEnum::ObjectType Type>
+class Tr2TrackedALObjectBase::DestroyObjectsHelper
+{
+public:
+	DestroyObjectsHelper( Tr2ALMemoryTypes flags )
+		:m_flags( flags )
+	{
+		DestroyObjectsHelper<Tr2RenderContextEnum::ObjectType( Type - 1 )> helper( m_flags );
+		Tr2TrackedALObject<Type>::EnumerateResources( *this );
+	}
+
+	void operator()( typename Tr2TrackedALObjectBase::ObjectInfo<Type>::ObjectType* object )
+	{
+		Tr2TrackedALObjectBase::ObjectInfo<Type>::DestroyObject( m_flags, object );
+	}
+private:
+	Tr2ALMemoryTypes m_flags;
+};
+
+template<>
+class Tr2TrackedALObjectBase::DestroyObjectsHelper<Tr2RenderContextEnum::ObjectType( 0 )>
+{
+public:
+	static const Tr2RenderContextEnum::ObjectType Type = Tr2RenderContextEnum::ObjectType( 0 );
+
+	DestroyObjectsHelper( Tr2ALMemoryTypes flags )
+		:m_flags( flags )
+	{
+		Tr2TrackedALObject<Type>::EnumerateResources( *this );
+	}
+
+	void operator()( Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::ObjectType( 0 )>::ObjectType* object )
+	{
+		Tr2TrackedALObjectBase::ObjectInfo<Type>::DestroyObject( m_flags, object );
+	}
+private:
+	Tr2ALMemoryTypes m_flags;
+};
+
+void Tr2TrackedALObjectBase::DestroyObjects( Tr2ALMemoryTypes flags )
+{
+	DestroyObjectsHelper<Tr2RenderContextEnum::ObjectType( Tr2RenderContextEnum::OBJECT_TYPE_COUNT - 1 )> helper( flags );
 }
 
 // --------------------------------------------------------------------------------------
@@ -138,6 +175,11 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_CONTEXT>
 	return false;
 }
 
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_CONTEXT>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+
+}
+
 
 // ----------------------------------------------------------------------------------
 // Description:
@@ -174,6 +216,14 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_CONSTANT_BUFFER
 		return true;
 	}
 	return false;
+}
+
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_CONSTANT_BUFFER>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
 }
 
 
@@ -257,6 +307,14 @@ unsigned Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENC
 	return object->GetWidth() * object->GetHeight() * bpp;
 }
 
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENCIL>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
+}
+
 
 const char* Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_INDEX_BUFFER>::GetName()
 {
@@ -287,6 +345,14 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_INDEX_BUFFER>::
 		return true;
 	}
 	return false;
+}
+
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_INDEX_BUFFER>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
 }
 
 
@@ -352,6 +418,14 @@ unsigned Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_TARG
 	return size;
 }
 
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_TARGET>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
+}
+
 
 // ----------------------------------------------------------------------------------
 // Description:
@@ -393,6 +467,14 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER>::GetDes
 	return false;
 }
 
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
+}
+
 
 // ----------------------------------------------------------------------------------
 // Description:
@@ -427,6 +509,14 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SAMPLER_STATE>:
 		return true;
 	}
 	return false;
+}
+
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SAMPLER_STATE>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		// object->Destroy();  TODO: why don't we have it?
+	}
 }
 
 
@@ -490,6 +580,14 @@ unsigned Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TEXTURE>::G
 	return size;
 }
 
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TEXTURE>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
+}
+
 
 // ----------------------------------------------------------------------------------
 // Description:
@@ -528,6 +626,14 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_BUFFER>:
 	return false;
 }
 
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_BUFFER>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
+}
+
 
 // ----------------------------------------------------------------------------------
 // Description:
@@ -562,6 +668,14 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_LAYOUT>:
 		return true;
 	}
 	return false;
+}
+
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_LAYOUT>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
 }
 
 
@@ -599,6 +713,14 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_OCCLUSION_QUERY
 		return true;
 	}
 	return false;
+}
+
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_OCCLUSION_QUERY>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
 }
 
 
@@ -640,6 +762,14 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SWAP_CHAIN>::Ge
 	return false;
 }
 
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SWAP_CHAIN>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
+}
+
 
 // ----------------------------------------------------------------------------------
 // Description:
@@ -679,6 +809,14 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_GPU_BUFFER>::Ge
 	return false;
 }
 
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_GPU_BUFFER>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
+}
+
 
 // ----------------------------------------------------------------------------------
 // Description:
@@ -714,6 +852,14 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_FENCE>::GetDesc
 		return true;
 	}
 	return false;
+}
+
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_FENCE>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
 }
 
 
@@ -753,5 +899,10 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TIMER>::GetDesc
 	return false;
 }
 
-
-#endif
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TIMER>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
+}

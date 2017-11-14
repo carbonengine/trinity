@@ -113,24 +113,6 @@ TEST_F( WithValidRenderContext, RenderTargetHasMemoryClass )
 	EXPECT_TRUE( memoryClass == AL_MEMORY_VIDEO || memoryClass == AL_MEMORY_MANAGED );
 }
 
-TEST_F( WithValidRenderContext, RenderTargetSurvivesDeviceReset )
-{
-	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, EX_NONE, *renderContext ) );
-
-	Tr2AutoResetObjectAL::ReleaseALResources();
-	renderContext->ReleaseDeviceResources();
-
-	EXPECT_FALSE( rt.IsValid() );
-
-	Tr2AutoResetObjectAL::PrepareALResources( *renderContext );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetPresentParameters( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, presentParameters ) );
-
-	EXPECT_TRUE( rt.IsValid() );
-	EXPECT_EQ( 128, rt.GetWidth() );
-	EXPECT_EQ( 64, rt.GetHeight() );
-}
-
 TEST_F( WithValidRenderContext, CanLockRenderTarget )
 {
 	Tr2RenderTargetAL rt;

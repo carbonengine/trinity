@@ -7,8 +7,6 @@
 // This is a template implementation file for Tr2TrackedALObject.h
 // header.
 
-#if( TRACK_AL_RESOURCES == 1 )
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Description structure of AL object type. This is a generic fallback structure, 
@@ -56,6 +54,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_CONTEX
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 class Tr2ConstantBufferAL;
@@ -90,6 +89,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_CONSTANT_BUFF
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -109,6 +109,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENCIL
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 private:
 	static unsigned GetSizeEstimate( ObjectType* object );
 };
@@ -130,6 +131,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_INDEX_BUFFER>
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -149,6 +151,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_TARGET
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 private:
 	static unsigned GetSizeEstimate( ObjectType* object );
 };
@@ -170,6 +173,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER>
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -189,6 +193,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SAMPLER_STATE
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -208,6 +213,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TEXTURE>
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 private:
 	static unsigned GetSizeEstimate( ObjectType* object );
 };
@@ -229,6 +235,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_BUFFER
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -248,6 +255,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_LAYOUT
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -267,6 +275,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_OCCLUSION_QUE
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -286,6 +295,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SWAP_CHAIN>
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -305,6 +315,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_GPU_BUFFER>
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -324,6 +335,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_FENCE>
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -343,6 +355,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TIMER>
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 
@@ -455,6 +468,7 @@ private:
 };
 
 
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Tr2TrackedALObject default constructor
@@ -505,11 +519,3 @@ void Tr2TrackedALObject<Type>::EnumerateResources( Operation& operation )
 	}
 }
 
-#else
-
-template<typename Operation> 
-void Tr2TrackedALObjectBase::GetAllObjectDescriptions( Tr2ALMemoryTypes flags, Operation& operation )
-{
-}
-
-#endif // ( TRACK_AL_RESOURCES == 1 )

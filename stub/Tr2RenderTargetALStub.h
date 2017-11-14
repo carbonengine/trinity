@@ -4,7 +4,6 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
-#include "../Tr2AutoResetObjectAL.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../include/Tr2TextureAL.h"
 
@@ -12,7 +11,6 @@
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 class Tr2RenderTargetAL : 
-	public Tr2AutoResetObjectAL, 
 	public Tr2BitmapDimensions,
 	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_RENDER_TARGET>
 {
@@ -60,24 +58,8 @@ public:
 
 	Tr2ALMemoryType GetMemoryClass() const;
 private:
-	void ReleaseALResource();
-	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
-
 	Tr2MsaaDesc m_msaa;
 	Tr2TextureAL m_backingStore;
-
-	// For auto-recreate after a device lost
-	struct TDeviceLost
-	{
-		Tr2RenderContextEnum::PixelFormat m_format;
-		uint32_t m_width;
-		uint32_t m_height;
-		uint32_t m_mipCount;
-		Tr2MsaaDesc m_msaa;
-
-		bool m_valid;
-	};
-	TDeviceLost	m_deviceLost;
 
 	friend class Tr2RenderContextAL;
 };

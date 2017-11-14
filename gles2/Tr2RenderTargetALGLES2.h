@@ -4,7 +4,6 @@
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
-#include "../Tr2AutoResetObjectAL.h"
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
 #include "../Tr2HalHelperStructures.h"
@@ -15,7 +14,6 @@ class Tr2RenderContextAL;
 
 
 class Tr2RenderTargetAL : 
-	public Tr2AutoResetObjectAL, 
 	public Tr2BitmapDimensions,
 	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_RENDER_TARGET>
 {
@@ -70,26 +68,11 @@ private:
 	ALResult Bind( uint32_t slot, Tr2RenderContextAL& renderContext ) const;
 	ALResult GetRenderTargetData( uint32_t* ltrb, CcpMallocBuffer& buffer, uint32_t& pitch, Tr2RenderContextAL& renderContext );
 
-	void ReleaseALResource();
-	void PrepareALResource( Tr2PrimaryRenderContextAL& renderContext );
-
 	Tr2MsaaDesc m_msaa;
 
 	Tr2TextureAL m_backingStore;
 	GLuint m_msaaTarget;
 	CcpMallocBuffer m_lockedData;
-
-	struct TDeviceLost
-	{
-		Tr2RenderContextEnum::PixelFormat m_format;
-		uint32_t m_width;
-		uint32_t m_height;
-		uint32_t m_mipCount;
-		Tr2MsaaDesc m_msaa;
-
-		bool m_valid;
-	};
-	TDeviceLost	m_deviceLost;
 
 	bool m_lockedOften;
 	bool m_isLocked;
