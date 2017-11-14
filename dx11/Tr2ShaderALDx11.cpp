@@ -146,6 +146,13 @@ Tr2ShaderAL::~Tr2ShaderAL()
 
 void Tr2ShaderAL::Destroy()
 {
+	for( auto it = std::begin( nullShader ); it != std::end( nullShader ); ++it )
+	{
+		if( &( *it ) == this )
+		{
+			return;
+		}
+	}
 	ReleaseShader();
 }
 
