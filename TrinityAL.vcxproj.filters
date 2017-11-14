@@ -16,9 +16,6 @@
     <ClInclude Include="ALResult.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="autoversion.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="BcDecompress.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -29,9 +26,6 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2AdapterStructures.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Tr2AutoResetObjectAL.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2DrawUPHelper.h">
@@ -422,9 +416,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StdAfx.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Tr2AutoResetObjectAL.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2DrawUPHelper.cpp">

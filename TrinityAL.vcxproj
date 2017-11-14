@@ -1429,12 +1429,10 @@
   <ItemGroup>
     <ClInclude Include="ALLog.h"/>
     <ClInclude Include="ALResult.h"/>
-    <ClInclude Include="autoversion.h"/>
     <ClInclude Include="BcDecompress.h"/>
     <ClInclude Include="ITr2RenderContextEvents.h"/>
     <ClInclude Include="StdAfx.h"/>
     <ClInclude Include="Tr2AdapterStructures.h"/>
-    <ClInclude Include="Tr2AutoResetObjectAL.h"/>
     <ClInclude Include="Tr2DrawUPHelper.h"/>
     <ClInclude Include="Tr2DriverUtilities.h"/>
     <ClInclude Include="Tr2FragmentOpSettings.h"/>
@@ -1569,7 +1567,6 @@
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Tr2AutoResetObjectAL.cpp"/>
     <ClCompile Include="Tr2DrawUPHelper.cpp"/>
     <ClCompile Include="Tr2DriverUtilities.cpp"/>
     <ClCompile Include="Tr2FragmentOpSettings.cpp"/>
