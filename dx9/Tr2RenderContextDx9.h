@@ -51,6 +51,10 @@ public:
 
 	bool IsValid();
 
+	// DX9 only method to handle lost devices
+	bool IsLost() const;
+	ALResult TestCooperativeLevel();
+
 	void ReleaseDeviceResources();
 
 	ALResult SetStreamSource(		uint32_t stream, 
@@ -279,6 +283,7 @@ private:
 	CComPtr<IDirect3DSurface9> m_nullRT;
 	uint32_t m_adapter;
 	Tr2MemoryCounterAL m_memory;
+	bool m_isLost;
 
 	Tr2RenderContextAL( const Tr2RenderContextAL& ) /* = delete */;
 	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;

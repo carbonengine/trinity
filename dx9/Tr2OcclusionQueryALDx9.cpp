@@ -17,7 +17,7 @@ ALResult Tr2OcclusionQueryAL::Create( Tr2RenderContextAL& renderContext )
 {
 	Destroy();
 
-	if( !renderContext.m_d3dDevice9 )
+	if( !renderContext.IsValid() )
 	{
 		return E_FAIL;
 	}

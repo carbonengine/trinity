@@ -285,7 +285,8 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_depthStencilFormat( DSFMT_UNKNOWN )
 	, m_blitter( nullptr )
 	, m_events( nullptr )
-	, m_adapter( 0 )
+	, m_adapter( 0 ),
+	m_isLost( false )
 {
 	CCP_ASSERT( GetPrimaryRenderContextPointer() == nullptr );
 	::GetPrimaryRenderContextPointer() = this;
@@ -330,6 +331,7 @@ void Tr2RenderContextAL::Destroy()
 	
 	m_d3dDevice9 = nullptr;
 	m_depthStencilFormat = DSFMT_UNKNOWN;
+	m_isLost = false;
 }
 
 ALResult Tr2RenderContextAL::ReportIfFailure( long hr, const char* message )
@@ -778,27 +780,6 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	D3DDEVTYPE deviceType = D3DDEVTYPE_HAL; 
 	const uint32_t behaviorFlags = D3DCREATE_FPU_PRESERVE | D3DCREATE_HARDWARE_VERTEXPROCESSING;
 
-#if NVPERFHUD
-	// If it is present, override default settings
-	uint32_t ac = 0;
-	if( SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterCount( ac ) ) )
-	{
-		for( uint32_t search=0;search<ac; search++ )
-		{
-			Tr2AdapterInfo info;
-			if( SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterInfo( search, info ) ) )
-			{
-				if( info.description == L"NVIDIA PerfHUD" )
-				{
-					Adapter=search;
-					deviceType=D3DDEVTYPE_REF;
-					break;
-				}
-			} 
-		}
-	}
-#endif
-
 	extern bool g_usingEXDevice;
 	extern bool g_useManagedDX9Buffers;
 	extern bool g_preloadTextureToDeviceOnPrepare;
@@ -868,7 +849,8 @@ ALResult Tr2RenderContextAL::CreateDevice(
 		m_adapter = Adapter;
 	}
 
-	SetPresentParameters( Adapter, presentationParameters );
+	m_isLost = false;
+
 	if( m_events )
 	{
 		m_events->OnContextCreated( *this );
@@ -899,14 +881,50 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 	return ConvertD3DBackBufferFormat( desc.Format );
 }
 
-ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& /*pPresentationParameters*/ )
+ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& presentationParameters )
 {
 	if( !m_d3dDevice9 )
 	{
 		return E_FAIL;
 	}
 
-	//TODO reset device here.
+	D3DPRESENT_PARAMETERS pp;
+	pp.BackBufferWidth = presentationParameters.mode.width;
+	pp.BackBufferHeight = presentationParameters.mode.height;
+	pp.BackBufferFormat = ConvertToD3D9Format( presentationParameters.mode.format );
+	pp.BackBufferCount = presentationParameters.backBufferCount;
+	pp.MultiSampleType = D3DMULTISAMPLE_TYPE( presentationParameters.msaaType );
+	pp.MultiSampleQuality = presentationParameters.msaaQuality;
+	pp.SwapEffect = presentationParameters.swapEffect == SWAP_EFFECT_DISCARD ? D3DSWAPEFFECT_DISCARD : D3DSWAPEFFECT_COPY;
+	pp.hDeviceWindow = HWND( presentationParameters.outputWindow );
+	pp.Windowed = presentationParameters.windowed ? TRUE : FALSE;
+	pp.EnableAutoDepthStencil = presentationParameters.depthStencilFormat != DSFMT_UNKNOWN;
+	pp.AutoDepthStencilFormat = ConvertToD3D9DepthStencilFormat( presentationParameters.depthStencilFormat );
+	pp.Flags = 0;
+	pp.FullScreen_RefreshRateInHz = presentationParameters.windowed ? 0 : presentationParameters.mode.refreshRateDenominator;
+	switch( presentationParameters.presentInterval )
+	{
+	case PRESENT_INTERVAL_IMMEDIATE:
+		pp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+		break;
+	case PRESENT_INTERVAL_TWO:
+		pp.PresentationInterval = D3DPRESENT_INTERVAL_TWO;
+		break;
+	case PRESENT_INTERVAL_THREE:
+		pp.PresentationInterval = D3DPRESENT_INTERVAL_THREE;
+		break;
+	case PRESENT_INTERVAL_FOUR:
+		pp.PresentationInterval = D3DPRESENT_INTERVAL_FOUR;
+		break;
+	default:
+		pp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+	}
+	auto hr = m_d3dDevice9->Reset( &pp );
+	if( FAILED( hr ) )
+	{
+		CR_RETURN_HR( m_d3dDevice9->Reset( &pp ) );
+	}
+	m_isLost = false;
 
 	CComPtr<IDirect3DSurface9> backBuffer;
 	CR_RETURN_HR( m_d3dDevice9->GetRenderTarget( 0, &backBuffer ) );
@@ -921,6 +939,13 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2Pr
 														FALSE, &m_nullRT, nullptr ) );
 
 	m_adapter = adapter;
+
+	m_d3dDevice9->SetRenderState( D3DRS_INDEXEDVERTEXBLENDENABLE, FALSE );
+	m_d3dDevice9->SetRenderState( D3DRS_LOCALVIEWER, TRUE );
+	m_d3dDevice9->SetRenderState( D3DRS_NORMALIZENORMALS, TRUE );
+	m_d3dDevice9->SetRenderState( D3DRS_DITHERENABLE, FALSE );
+	m_d3dDevice9->SetRenderState( D3DRS_SPECULARENABLE, FALSE );
+	m_d3dDevice9->SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );
 
 	return S_OK;
 }
@@ -949,7 +974,7 @@ ALResult Tr2RenderContextAL::Present()
 	if( m_d3dDevice9 )
 	{
 		CComPtr<IDirect3DSwapChain9> chain;
-		HRESULT hr = m_d3dDevice9->GetSwapChain( 0, &chain );
+		auto hr = m_d3dDevice9->GetSwapChain( 0, &chain );
 		if( FAILED( hr ) )
 		{
 			CCP_AL_LOGERR( "Tr2RenderContext::Present: GetSwapChain failed");
@@ -958,6 +983,10 @@ ALResult Tr2RenderContextAL::Present()
 		if( chain )
 		{
 			hr = chain->Present( nullptr, nullptr, nullptr, nullptr, 0 );
+			if( hr == D3DERR_DEVICELOST )
+			{
+				m_isLost = true;
+			}
 	
 			if( FAILED( hr ) )
 			{
@@ -975,7 +1004,7 @@ ALResult Tr2RenderContextAL::Present()
 
 bool Tr2RenderContextAL::IsValid()
 {
-	return m_d3dDevice9 != nullptr;
+	return m_d3dDevice9 != nullptr && !m_isLost;
 }
 
 ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
@@ -1486,6 +1515,32 @@ ALResult Tr2RenderContextAL::GetGpuPageFaultResource(
 	uint32_t& ) const
 {
 	return E_FAIL;
+}
+
+// --------------------------------------------------------------------------------------
+bool Tr2RenderContextAL::IsLost() const
+{
+	return m_isLost;
+}
+
+// --------------------------------------------------------------------------------------
+ALResult Tr2RenderContextAL::TestCooperativeLevel()
+{
+	if( !m_d3dDevice9 )
+	{
+		return E_INVALIDCALL;
+	}
+	auto hr = m_d3dDevice9->TestCooperativeLevel();
+	switch( hr )
+	{
+	case E_DEVICELOST:
+	case D3DERR_DEVICENOTRESET:
+		m_isLost = true;
+		break;
+	default:
+		break;
+	}
+	return hr;
 }
 
 #endif

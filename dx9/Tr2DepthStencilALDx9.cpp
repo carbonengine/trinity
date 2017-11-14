@@ -31,7 +31,7 @@ ALResult Tr2DepthStencilAL::Create(
 {
 	Destroy();
 
-	if( !renderContext.m_d3dDevice9 )
+	if( !renderContext.IsValid() )
 	{
 		return E_FAIL;
 	}

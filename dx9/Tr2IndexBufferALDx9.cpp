@@ -60,7 +60,7 @@ ALResult Tr2IndexBufferAL::Create(
 		return E_INVALIDARG;
 	}
 
-	if( !renderContext.m_d3dDevice9 )
+	if( !renderContext.IsValid() )
 	{
 		return E_FAIL;
 	}

@@ -55,7 +55,7 @@ namespace {
 
 ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2RenderContextAL& renderContext )
 {
-	if( !renderContext.m_d3dDevice9 || definition.m_items.empty() )
+	if( !renderContext.IsValid() || definition.m_items.empty() )
 	{
 		return E_FAIL;
 	}

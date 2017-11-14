@@ -62,7 +62,7 @@ ALResult Tr2VertexBufferAL::Create( uint32_t lengthInBytes,
 		return E_INVALIDARG;
 	}
 
-	if ( !renderContext.m_d3dDevice9 )
+	if ( !renderContext.IsValid() )
 	{
 		return E_FAIL;
 	}
