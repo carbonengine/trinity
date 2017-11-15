@@ -50,7 +50,6 @@ extern bool g_usingEXDevice;
 
 BLUE_CLASS( TriDevice ):
 	public ITriDevice,
-	public INotify,
 	public IBlueEvents,
 	public ISimTimeRebaseNotify
 {
@@ -68,7 +67,6 @@ public:
 	//device creation parameters
 	Tr2RenderContextEnum::SwapEffect mSwapEffect;
 	int mBackBufferCount;
-	Be::Time mCreationTime;
 
 	// device information parameters
 	Tr2DisplayModeInfo mDisplayMode;
@@ -88,7 +86,6 @@ public:
 	float AspectRatio();
 
 	// Window handling	
-	void GetPresentation( int& adapter, Tr2PresentParametersAL& d3dpp );
 	bool SetPresentation( int adapter, const Tr2PresentParametersAL* d3dpp );
 	Tr2WindowHandle GetWindow();
 
@@ -151,11 +148,6 @@ public:
 	static void RegisterResource(Tr2DeviceResource *resource);
 	static void UnregisterResource(Tr2DeviceResource *resource);
 
-	static void RegisterForUpdates(ITr2Updateable *item);
-	static void UnregisterForUpdates(ITr2Updateable *item);
-
-	void QueueForReload(Tr2DeviceResource *resource);
-
 	// Temporary function created during re-factoring. This method contains common code
 	// that is now re-used in a couple of places through this method. Yay! Now, the difference
 	// between this method and 'Shutdown' is subtle and until we determine exactly what is 
@@ -167,23 +159,8 @@ public:
 	float GetAnimationTime() { return m_animationTime; }
 	float GetAnimationTimeElapsed( float startTime );
 
-	virtual bool GetWidth( uint32_t& width ) const;
-	virtual bool GetHeight( uint32_t& height ) const;
-
 	virtual void SetTickInterval( int value );
 
-	/////////////////////////////////////////////////////////////////////////////////////
-	// TD3DDevice - Device States
-	/////////////////////////////////////////////////////////////////////////////////////
-
-	const Matrix* GetProjectionMatrix();
-	const Matrix* GetInvViewMatrix();
-	const Matrix* GetViewMatrix();
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	// INotify
-	/////////////////////////////////////////////////////////////////////////////////////
-	bool OnModified( Be::Var* val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IBlueEvents
@@ -200,8 +177,6 @@ public:
 
 	Be::Time m_realTime;
 	Be::Time m_simTime;
-
-	unsigned int CreateScreenVertexDecl();
 
 	void SetRenderJobs( Tr2RenderJobs* renderJobs );
 
@@ -220,20 +195,9 @@ public:
 	bool GetEffectLoadDisabled();
 	bool GetAsyncLoadDisabled();
 
-	//////////////////////////////////
-	// Mip level management methods
-	/////////////////////////////////
-	// Set number of mip levels allowed in a mip map chain. This can be used to 
-	// decrease memory used by textures by forcing them be of a lower resolution. 
-	// Note that textures that don't have mip-levels in the file are not scaled
-	// down.  Default for this value is 2^31+1.
-	void SetMipLevelMaxCount( int n );
-	unsigned int GetMipLevelMaxCount() const { return m_mipLevelMaxChainLength; }
-
 	// Set the number of mip levels that are chopped of the front of the mip 
 	// chain.  I.e. the number of high detail mip levels that are skipped
 	// while loading the file.  Default is 0.
-	void SetMipLevelSkipCount( int n ) { m_mipLevelSkipCount = (unsigned int)std::max( n, 0 ); }
 	unsigned int GetMipLevelSkipCount() const { return m_mipLevelSkipCount; }
 
 	bool IsDeviceLost() const { return mDeviceLost; }
@@ -283,13 +247,6 @@ private:
 	static ResourceSet	s_resourcesToBeRemoved;
 	static bool			s_iteratingForRelease;
 	
-	// This is a list of items that needs to be updated each frame, after the updates have been called on the 'scene'
-	typedef std::list<ITr2Updateable *> UpdateList;
-	static UpdateList& GetUpdateList();
-
-	// This set of resources should be forcibly reloaded before the next render pass
-	static ResourceSet& GetResourcesToReload();
-
 	//A dict of blue devices, that will get 
 #if BLUE_WITH_PYTHON
 	BluePy m_pyResourceSet;  //weakkeydict
@@ -305,7 +262,6 @@ private:
 	float m_animationTime;
 	float m_animationTimeScale;
 
-	unsigned int m_mipLevelMaxChainLength;
 	unsigned int m_mipLevelSkipCount;
 
 	//////////////////////////////////////////////////////////////////////////

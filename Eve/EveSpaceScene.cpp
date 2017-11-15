@@ -2200,7 +2200,7 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData &data )
 	// column_major for shaders
 	D3DXMatrixTranspose( &data.ViewMat, &Tr2Renderer::GetViewTransform() );
 	// attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
-	data.ViewInverseTransposeMat = *gTriDev->GetInvViewMatrix();
+	data.ViewInverseTransposeMat = Tr2Renderer::GetInverseViewTransform();
 	
 	// each scene has a nebula and that can be rotated
 	D3DXMatrixRotationQuaternion( &data.EnvMapRotationMat, &m_envMapRotation );

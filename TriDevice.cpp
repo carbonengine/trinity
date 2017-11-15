@@ -108,7 +108,6 @@ TriDevice::TriDevice(IRoot* lockobj) :
 	PARENTLOCK( mViewport ),
 	m_animationTime( 0.0f ),
 	m_animationTimeScale( 1.0f ),
-	m_mipLevelMaxChainLength( 0x7fffffff ),
 	m_mipLevelSkipCount( 0U ),
 	PARENTLOCK( m_curveSets )
 {	
@@ -149,8 +148,6 @@ TriDevice::TriDevice(IRoot* lockobj) :
 #endif
 
 	mPresentParam.presentInterval = PRESENT_INTERVAL_ONE;
-
-	mCreationTime = 0;
 
 	BeOS->RegisterForSimTimeRebase( this );
 
@@ -349,12 +346,6 @@ void TriDevice::Update( Be::Time realTime, Be::Time simTime )
 
 	UpdateCursor();
 
-	UpdateList &updateArray = GetUpdateList();
-	for( UpdateList::iterator i = updateArray.begin(); i!= updateArray.end(); ++i )
-	{
-		(*i)->Update( realTime, simTime );
-	}
-
 	// Callbacks to Python when curve sets finish may add curve sets to the device curve sets
 	// list. This will mess up the iterator unless we iterate over a copy.
 	CTriCurveSetVector curveSets;
@@ -495,10 +486,6 @@ void TriDevice::RebuildDeviceResourcesInPython()
 #endif
 }
 
-const Matrix* TriDevice::GetProjectionMatrix()		{ return &Tr2Renderer::GetProjectionTransform(); }
-const Matrix* TriDevice::GetViewMatrix()			{ return &Tr2Renderer::GetViewTransform(); }
-const Matrix* TriDevice::GetInvViewMatrix()			{ return &Tr2Renderer::GetInverseViewTransform(); }
-
 
 float TriDevice::AspectRatio()
 {
@@ -509,12 +496,6 @@ float TriDevice::AspectRatio()
 	}
 	
 	return (float)mViewport.width / (float)mViewport.height;
-}
-
-void TriDevice::GetPresentation( int& adapter, Tr2PresentParametersAL& d3dpp )
-{
-	adapter = mAdapter;
-	d3dpp = mPresentParam;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
@@ -552,14 +533,8 @@ Tr2WindowHandle TriDevice::GetWindow()
 	return mHwnd;
 }
 
-
-#if BLUE_WITH_PYTHON
-BluePyStr UPDATE("Trinity::TriDevice::Update");
-BluePyStr RENDER("Trinity::TriDevice::Render");
-#endif
-
 static const float ANIMATION_TIME_MAX = 3600.0f; // One hour
-#include <cwchar>
+
 void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 {
 	CCP_STATS_SCOPED_TIME( deviceOnTick );
@@ -677,31 +652,6 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 	BeOS->NextScheduledEvent( mTickInterval );
 	m_simTime = simTime;
 	m_realTime = realTime;
-
-	if( mCreationTime == 0 )
-	{
-		mCreationTime = realTime;
-	}
-
-	// Check if the artist has asked for any resources to be reloaded
-	// If they have, we currently invalidate as much as possible. This may not work for Granny etc.
-	ResourceSet& reloadSet = GetResourcesToReload();
-	if( !reloadSet.empty() )
-	{
-		// First, throw out as much as possible
-		for ( auto i = reloadSet.begin(); i != reloadSet.end(); i++)
-		{
-			(*i)->ReleaseResources(TRISTORAGE_ALL);
-		}
-
-		// Then reload stuff (so you're not invalidating dependent resources as you reload them)
-		for ( auto i = reloadSet.begin(); i != reloadSet.end(); i++)
-		{
-			(*i)->PrepareResources();
-		}
-
-		reloadSet.clear();
-	}
    
 	Update( realTime, simTime );
 	HandleRenderTick( realTime, simTime );
@@ -788,24 +738,6 @@ bool TriDevice::ResetDevice( unsigned adapter, const Tr2PresentParametersAL* pp 
 	PrepareDeviceResources();
 
 	CCP_LOGNOTICE( "Device Reset: Completed Successfully" );
-	return true;
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////
-// INotify Impl
-/////////////////////////////////////////////////////////////////////////////////////////
-
-bool TriDevice::OnModified( Be::Var* value )
-{
-	if( IsMatch( value, m_mipLevelMaxChainLength ) )
-	{
-		SetMipLevelMaxCount( m_mipLevelMaxChainLength );
-	}
-	else if( IsMatch( value, m_mipLevelSkipCount ) )
-	{
-		SetMipLevelSkipCount( m_mipLevelSkipCount );
-	}
-
 	return true;
 }
 
@@ -946,18 +878,6 @@ TriDevice::ResourceSet& TriDevice::GetResourcesRegistered()
 	return registered.GetInstance();
 }
 
-TriDevice::UpdateList& TriDevice::GetUpdateList()
-{
-	static NeverEndingSingleton<TriDevice::UpdateList> updateList;
-	return updateList.GetInstance();
-}
-
-TriDevice::ResourceSet& TriDevice::GetResourcesToReload()
-{	
-	static NeverEndingSingleton<TriDevice::ResourceSet> reloadSet;
-	return reloadSet.GetInstance();
-}
-
 #if BLUE_WITH_PYTHON
 void TriDevice::PyRender()
 {	
@@ -965,11 +885,6 @@ void TriDevice::PyRender()
 	Render();	
 }
 #endif
-
-void TriDevice::SetMipLevelMaxCount( int n )
-{
-	m_mipLevelMaxChainLength = (unsigned int)std::max( n, 3 ); 
-}
 
 // We need to guard access to the resource set. As an example, the EveShip2Builder
 // copies sprite sets on a background thread - these sprite sets are registered
@@ -1002,40 +917,6 @@ void TriDevice::UnregisterResource( Tr2DeviceResource* resource )
 	{
 		s_resourcesToBeRemoved.insert( resource) ;
 	}
-	
-	GetResourcesToReload().erase( resource );
-}
-
-void TriDevice::RegisterForUpdates( ITr2Updateable* item )
-{
-	UpdateList &updateArray = GetUpdateList();
-	
-	if( std::find( updateArray.begin(), updateArray.end(), item ) == updateArray.end() )
-	{
-		updateArray.insert( updateArray.end(), item );
-	}
-}
-
-void TriDevice::UnregisterForUpdates( ITr2Updateable* item )
-{
-	UpdateList &updateArray = GetUpdateList();
-	auto findResult = std::find( updateArray.begin(), updateArray.end(), item );
-	if( findResult != updateArray.end() )
-	{
-		// We have the item that we were looking for registered
-		ITr2Updateable* backItem = updateArray.back();
-		if ( *findResult != backItem )
-		{
-			*findResult = backItem;
-		}
-
-		updateArray.pop_back();
-	}
-}
-
-void TriDevice::QueueForReload( Tr2DeviceResource* resource )
-{
-	GetResourcesToReload().insert(resource);
 }
 
 Tr2RenderContext* TriDevice::GetRenderContext()
@@ -1052,15 +933,6 @@ unsigned TriDevice::GetRenderingPlatformID()
 void TriDevice::SetRenderJobs( Tr2RenderJobs* renderJobs )
 {
 	m_renderJobs = renderJobs;
-}
-
-unsigned TriDevice::CreateScreenVertexDecl()
-{
-	Tr2VertexDefinition vd;
-	vd.Add( vd.FLOAT32_4, vd.POSITION );
-	vd.Add( vd.FLOAT32_2, vd.TEXCOORD );
-	
-	return Tr2EffectStateManager::GetVertexDeclarationHandle( vd );
 }
 
 void TriDevice::GetPickRayFromViewport( int x, int y, TriViewport* viewport, const Matrix& view, const Matrix& proj, Vector3& rayWorld, Vector3& startWorld )
@@ -1126,22 +998,6 @@ bool TriDevice::Render()
 	Tr2Renderer::EndRenderContext();
 	Tr2Renderer::EndFrame();
 
-	return true;
-}
-
-bool TriDevice::GetWidth( uint32_t& width ) const
-{
-	unsigned w, h;
-	Tr2Renderer::GetBackBufferDimensions( w, h );
-	width = w;
-	return true;
-}
-
-bool TriDevice::GetHeight( uint32_t& height ) const
-{
-	unsigned w, h;
-	Tr2Renderer::GetBackBufferDimensions( w, h );
-	height = h;
 	return true;
 }
 

@@ -37,7 +37,7 @@ void Tr2PopulatePerFramePSDataTransformations( Tr2PerFramePSData &data )
         Tr2Renderer::GetViewTransform(),
         Tr2Renderer::GetProjectionTransform() ) );
     // attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
-    data.ViewInverseTransposeMat = *gTriDev->GetInvViewMatrix();
+    data.ViewInverseTransposeMat = Tr2Renderer::GetInverseViewTransform();
 
     unsigned int width = Tr2Renderer::GetRenderTargetWidth();
     unsigned int height = Tr2Renderer::GetRenderTargetHeight();

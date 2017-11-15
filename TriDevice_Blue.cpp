@@ -92,7 +92,6 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
     EXPOSURE_BEGIN( TriDevice, "" )
 
 		MAP_INTERFACE(ITriDevice)
-		MAP_INTERFACE(INotify)
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "depthStencilFormat", mPresentParam.depthStencilFormat, "na", Be::READ | Be::ENUM, Tr2RenderContextEnum_DepthStencilFormat_Chooser )	
 		MAP_ATTRIBUTE_WITH_CHOOSER( "swapEffect", mSwapEffect, "na", Be::READWRITE | Be::NOTIFY | Be::PERSIST | Be::ENUM, Tr2RenderContextEnum_SwapEffect_Chooser )	

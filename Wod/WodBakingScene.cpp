@@ -37,7 +37,7 @@ static void PopulatePerFramePSData( Tr2PerFramePSData &data )
     Matrix viewProj = Tr2Renderer::GetViewTransform() * Tr2Renderer::GetProjectionTransform();
 	D3DXMatrixTranspose( &data.ViewProjectionMat, &viewProj );
 	// attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
-	data.ViewInverseTransposeMat = *gTriDev->GetInvViewMatrix();
+	data.ViewInverseTransposeMat = Tr2Renderer::GetInverseViewTransform();
 
 	// Hard code diffuse
 	data.sunDiffuseColor.r = 0.0f;

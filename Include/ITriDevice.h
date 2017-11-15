@@ -71,27 +71,13 @@ BLUE_INTERFACE(ITriDevice) : public IRoot
 		float* fy
 		) = 0;
 
-	virtual void GetPresentation (
-		int& adapter,
-		Tr2PresentParametersAL& d3dpp
-		) = 0;
-
 	virtual bool SetPresentation (
 		int adapter,
 		const Tr2PresentParametersAL* d3dpp
 		) = 0;
 
-	virtual const Matrix* GetProjectionMatrix(
-		) = 0;
-
-	virtual const Matrix* GetInvViewMatrix( 
-		) = 0;
-
 	virtual bool ChangeDevice(
 		uint32_t adapter, Tr2WindowHandle hWnd, const Tr2PresentParametersAL *pp) = 0;
-
-	virtual bool GetWidth( uint32_t& width ) const = 0;
-	virtual bool GetHeight( uint32_t& height ) const = 0;
 
 	virtual void SetTickInterval( int value ) = 0;
 };

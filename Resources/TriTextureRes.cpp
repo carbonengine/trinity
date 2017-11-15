@@ -94,7 +94,7 @@ void TriTextureRes::Initialize( const wchar_t* name, const wchar_t* ext )
 	CancelPendingLoad();
 	CleanupAsyncSave(false);
 
-	m_mipLevelMaxCount = gTriDev ? gTriDev->GetMipLevelMaxCount() : 255;
+	m_mipLevelMaxCount = 255;
 
 	m_isTextureResizable = Tr2Renderer::IsTextureToResize( CW2A( name ) );
 
@@ -190,13 +190,6 @@ bool TriTextureRes::IsMemoryUsageKnown()
 size_t TriTextureRes::GetMemoryUsage()
 {
 	return m_memoryUse;
-}
-
-void TriTextureRes::ReloadResources() 
-{
-	CancelPendingLoad();
-
-	gTriDev->QueueForReload( this );
 }
 
 void TriTextureRes::OnCloseStream()

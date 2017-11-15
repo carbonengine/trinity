@@ -57,7 +57,6 @@ public:
 
 	unsigned m_resourceRebuiltCounter;
 
-	void ReloadResources();
 	void RebuildCachedData();
 
 	/////////////////////////////////////////////////////////////////////////////////////

@@ -194,7 +194,11 @@ bool Tr2Blitter::OnPrepareResources()
 {
 	if( m_screenVertexDecl == -1 )
 	{
-		m_screenVertexDecl = gTriDev->CreateScreenVertexDecl();
+		Tr2VertexDefinition vd;
+		vd.Add( vd.FLOAT32_4, vd.POSITION );
+		vd.Add( vd.FLOAT32_2, vd.TEXCOORD );
+
+		m_screenVertexDecl = Tr2EffectStateManager::GetVertexDeclarationHandle( vd );
 	}
 
 	if( !m_vertexBuffer.IsValid() )
