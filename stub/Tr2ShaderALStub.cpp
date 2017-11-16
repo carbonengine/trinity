@@ -3,6 +3,7 @@
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 #include "ALLog.h"
+#include "Tr2HalHelperStructures.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -44,7 +45,7 @@ void Tr2ShaderAL::Destroy()
 
 bool Tr2ShaderAL::IsValid() const
 {
-	return m_type != INVALID_SHADER;
+	return m_type != INVALID_SHADER && this != &nullShader[m_type];
 }
 
 Tr2RenderContextEnum::ShaderType Tr2ShaderAL::GetType() const

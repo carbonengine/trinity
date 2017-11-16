@@ -209,6 +209,7 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	const Tr2PresentParametersAL& presentationParameters )
 {
 	m_isValid = true;
+	SetPresentParameters( Adapter, presentationParameters );
 	if( m_events )
 	{
 		m_events->OnContextCreated( *this );
