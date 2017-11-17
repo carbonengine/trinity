@@ -837,6 +837,11 @@ PyObject *TriDevice::PyRegisterResource( PyObject *args )
 
 bool TriDevice::SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& pp )
 {
+	if( mHwnd == 0 && pp.software )
+	{
+		return true;
+	}
+
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	auto hr = renderContext.SetPresentParameters( adapter, pp );
