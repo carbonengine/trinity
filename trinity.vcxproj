@@ -2873,6 +2873,8 @@
     <ClInclude Include="Eve\SpaceObject\Attachments\EveMeshOverlayEffect.h"/>
     <ClInclude Include="Eve\SpaceObject\Attachments\EveSpaceObjectDecal.h"/>
     <ClInclude Include="Eve\SpaceObject\Attachments\EveTrailsSet.h"/>
+    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveHazeSet.h"/>
+    <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveHazeSetItem.h"/>
     <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSet.h"/>
     <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSetItem.h"/>
     <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpotlightSet.h"/>
@@ -3442,6 +3444,10 @@
     <ClCompile Include="Eve\SpaceObject\Attachments\EveSpaceObjectDecal_Blue.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Attachments\EveTrailsSet.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Attachments\EveTrailsSet_Blue.cpp"/>
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveHazeSet.cpp"/>
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveHazeSetItem.cpp"/>
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveHazeSetItem_Blue.cpp"/>
+    <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveHazeSet_Blue.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSet.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSetItem.cpp"/>
     <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EvePlaneSetItem_Blue.cpp"/>
