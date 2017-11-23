@@ -16,9 +16,6 @@
     <ClInclude Include="ALResult.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="autoversion.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="BcDecompress.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -109,6 +106,9 @@
     <ClInclude Include="dx11\Tr2ShaderALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
+    <ClInclude Include="dx11\Tr2ShaderProgramALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
     <ClInclude Include="dx11\Tr2SwapChainALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
@@ -161,6 +161,9 @@
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2ShaderALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2ShaderProgramALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2SwapChainALDx9.h">
@@ -217,6 +220,9 @@
     <ClInclude Include="gl4\Tr2ShaderALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
+    <ClInclude Include="gl4\Tr2ShaderProgramALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
     <ClInclude Include="gl4\Tr2SwapChainALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
@@ -269,6 +275,9 @@
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2ShaderALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2ShaderProgramALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2SwapChainALGLES2.h">
@@ -334,6 +343,9 @@
     <ClInclude Include="include\Tr2ShaderAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Tr2ShaderProgramAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Tr2SwapChainAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
@@ -395,6 +407,9 @@
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2ShaderALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2ShaderProgramALStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2SwapChainALStub.h">
@@ -493,6 +508,9 @@
     <ClCompile Include="dx11\Tr2ShaderALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
+    <ClCompile Include="dx11\Tr2ShaderProgramALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
     <ClCompile Include="dx11\Tr2SwapChainALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
@@ -539,6 +557,9 @@
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2ShaderALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2ShaderProgramALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2SwapChainALDx9.cpp">
@@ -592,6 +613,9 @@
     <ClCompile Include="gl4\Tr2ShaderALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
+    <ClCompile Include="gl4\Tr2ShaderProgramALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
     <ClCompile Include="gl4\Tr2SwapChainALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
@@ -640,6 +664,9 @@
     <ClCompile Include="gles2\Tr2ShaderALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
+    <ClCompile Include="gles2\Tr2ShaderProgramALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
     <ClCompile Include="gles2\Tr2SwapChainALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
@@ -686,6 +713,9 @@
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2ShaderALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2ShaderProgramALStub.cpp">
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2SwapChainALStub.cpp">

@@ -1429,7 +1429,6 @@
   <ItemGroup>
     <ClInclude Include="ALLog.h"/>
     <ClInclude Include="ALResult.h"/>
-    <ClInclude Include="autoversion.h"/>
     <ClInclude Include="BcDecompress.h"/>
     <ClInclude Include="ITr2RenderContextEvents.h"/>
     <ClInclude Include="StdAfx.h"/>
@@ -1460,6 +1459,7 @@
     <ClInclude Include="dx11\Tr2RenderTargetALDx11.h"/>
     <ClInclude Include="dx11\Tr2SamplerStateALDx11.h"/>
     <ClInclude Include="dx11\Tr2ShaderALDx11.h"/>
+    <ClInclude Include="dx11\Tr2ShaderProgramALDx11.h"/>
     <ClInclude Include="dx11\Tr2SwapChainALDx11.h"/>
     <ClInclude Include="dx11\Tr2TextureALDx11.h"/>
     <ClInclude Include="dx11\Tr2VertexBufferALDx11.h"/>
@@ -1478,6 +1478,7 @@
     <ClInclude Include="dx9\Tr2RenderTargetALDx9.h"/>
     <ClInclude Include="dx9\Tr2SamplerStateALDx9.h"/>
     <ClInclude Include="dx9\Tr2ShaderALDx9.h"/>
+    <ClInclude Include="dx9\Tr2ShaderProgramALDx9.h"/>
     <ClInclude Include="dx9\Tr2SwapChainALDx9.h"/>
     <ClInclude Include="dx9\Tr2TextureALDx9.h"/>
     <ClInclude Include="dx9\Tr2VertexBufferALDx9.h"/>
@@ -1496,6 +1497,7 @@
     <ClInclude Include="gl4\Tr2RenderTargetALGL4.h"/>
     <ClInclude Include="gl4\Tr2SamplerStateALGL4.h"/>
     <ClInclude Include="gl4\Tr2ShaderALGL4.h"/>
+    <ClInclude Include="gl4\Tr2ShaderProgramALGL4.h"/>
     <ClInclude Include="gl4\Tr2SwapChainALGL4.h"/>
     <ClInclude Include="gl4\Tr2TextureALGL4.h"/>
     <ClInclude Include="gl4\Tr2VertexBufferALGL4.h"/>
@@ -1514,6 +1516,7 @@
     <ClInclude Include="gles2\Tr2RenderTargetALGLES2.h"/>
     <ClInclude Include="gles2\Tr2SamplerStateALGLES2.h"/>
     <ClInclude Include="gles2\Tr2ShaderALGLES2.h"/>
+    <ClInclude Include="gles2\Tr2ShaderProgramALGLES2.h"/>
     <ClInclude Include="gles2\Tr2SwapChainALGLES2.h"/>
     <ClInclude Include="gles2\Tr2TextureALGLES2.h"/>
     <ClInclude Include="gles2\Tr2VertexBufferALGLES2.h"/>
@@ -1535,6 +1538,7 @@
     <ClInclude Include="include\Tr2RenderTargetAL.h"/>
     <ClInclude Include="include\Tr2SamplerStateAL.h"/>
     <ClInclude Include="include\Tr2ShaderAL.h"/>
+    <ClInclude Include="include\Tr2ShaderProgramAL.h"/>
     <ClInclude Include="include\Tr2SwapChainAL.h"/>
     <ClInclude Include="include\Tr2TextureAL.h"/>
     <ClInclude Include="include\Tr2TextureType.h"/>
@@ -1556,6 +1560,7 @@
     <ClInclude Include="stub\Tr2RenderTargetALStub.h"/>
     <ClInclude Include="stub\Tr2SamplerStateALStub.h"/>
     <ClInclude Include="stub\Tr2ShaderALStub.h"/>
+    <ClInclude Include="stub\Tr2ShaderProgramALStub.h"/>
     <ClInclude Include="stub\Tr2SwapChainALStub.h"/>
     <ClInclude Include="stub\Tr2TextureALStub.h"/>
     <ClInclude Include="stub\Tr2VertexBufferALStub.h"/>
@@ -1592,6 +1597,7 @@
     <ClCompile Include="dx11\Tr2RenderTargetALDx11.cpp"/>
     <ClCompile Include="dx11\Tr2SamplerStateALDx11.cpp"/>
     <ClCompile Include="dx11\Tr2ShaderALDx11.cpp"/>
+    <ClCompile Include="dx11\Tr2ShaderProgramALDx11.cpp"/>
     <ClCompile Include="dx11\Tr2SwapChainALDx11.cpp"/>
     <ClCompile Include="dx11\Tr2TextureALDx11.cpp"/>
     <ClCompile Include="dx11\Tr2VertexBufferALDx11.cpp"/>
@@ -1608,6 +1614,7 @@
     <ClCompile Include="dx9\Tr2RenderTargetALDx9.cpp"/>
     <ClCompile Include="dx9\Tr2SamplerStateALDx9.cpp"/>
     <ClCompile Include="dx9\Tr2ShaderALDx9.cpp"/>
+    <ClCompile Include="dx9\Tr2ShaderProgramALDx9.cpp"/>
     <ClCompile Include="dx9\Tr2SwapChainALDx9.cpp"/>
     <ClCompile Include="dx9\Tr2TextureALDx9.cpp"/>
     <ClCompile Include="dx9\Tr2VertexBufferALDx9.cpp"/>
@@ -1625,6 +1632,7 @@
     <ClCompile Include="gl4\Tr2RenderTargetALGL4.cpp"/>
     <ClCompile Include="gl4\Tr2SamplerStateALGL4.cpp"/>
     <ClCompile Include="gl4\Tr2ShaderALGL4.cpp"/>
+    <ClCompile Include="gl4\Tr2ShaderProgramALGL4.cpp"/>
     <ClCompile Include="gl4\Tr2SwapChainALGL4.cpp"/>
     <ClCompile Include="gl4\Tr2TextureALGL4.cpp"/>
     <ClCompile Include="gl4\Tr2VertexBufferALGL4.cpp"/>
@@ -1641,6 +1649,7 @@
     <ClCompile Include="gles2\Tr2RenderTargetALGLES2.cpp"/>
     <ClCompile Include="gles2\Tr2SamplerStateALGLES2.cpp"/>
     <ClCompile Include="gles2\Tr2ShaderALGLES2.cpp"/>
+    <ClCompile Include="gles2\Tr2ShaderProgramALGLES2.cpp"/>
     <ClCompile Include="gles2\Tr2SwapChainALGLES2.cpp"/>
     <ClCompile Include="gles2\Tr2TextureALGLES2.cpp"/>
     <ClCompile Include="gles2\Tr2VertexBufferALGLES2.cpp"/>
@@ -1657,6 +1666,7 @@
     <ClCompile Include="stub\Tr2RenderTargetALStub.cpp"/>
     <ClCompile Include="stub\Tr2SamplerStateALStub.cpp"/>
     <ClCompile Include="stub\Tr2ShaderALStub.cpp"/>
+    <ClCompile Include="stub\Tr2ShaderProgramALStub.cpp"/>
     <ClCompile Include="stub\Tr2SwapChainALStub.cpp"/>
     <ClCompile Include="stub\Tr2TextureALStub.cpp"/>
     <ClCompile Include="stub\Tr2VertexBufferALStub.cpp"/>
