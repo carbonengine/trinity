@@ -270,7 +270,7 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetShader( const Tr2ShaderAL& shader )
+ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& )
 {
 	return S_OK;
 }

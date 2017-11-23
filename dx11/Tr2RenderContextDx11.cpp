@@ -13,6 +13,7 @@
 #include "Tr2SamplerStateALDx11.h"
 #include "Tr2ShaderALDx11.h"
 #include "Tr2HalHelperStructures.h"
+#include "Tr2ShaderProgramALDx11.h"
 
 
 CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
@@ -534,14 +535,13 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_isSrgbRenderTarget( false )
 	, m_hasHullShader( false )
 	, m_previouslyHadHullShader( false )
-	, m_vertexShader( nullptr )
-	, m_pixelShader( nullptr )
 	, m_psUavsDirtyBegin( sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] ) )
 	, m_psUavsDirtyEnd( 0 )
 	, m_events( nullptr )
 	, m_aftermathContext( nullptr )
 {	
 	m_context.Attach( &Tr2RenderContextImpl::s_nullContext );
+	std::fill_n( m_shaders, int(SHADER_TYPE_COUNT), nullptr );
 
 	static_assert(	D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT >= MAX_RENDER_TARGET, 
 					"Bad define" );
@@ -675,8 +675,7 @@ void Tr2RenderContextAL::Destroy()
 	m_hasHullShader = false;
 	m_previouslyHadHullShader = false;
 
-	m_pixelShader = nullptr;
-	m_vertexShader = nullptr;
+	std::fill_n( m_shaders, int( SHADER_TYPE_COUNT ), nullptr );
 	m_psUavsDirtyBegin = sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] );
 	m_psUavsDirtyEnd = 0;
 
@@ -692,8 +691,7 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 
 ALResult Tr2RenderContextAL::BeginScene()
 { 
-	m_vertexShader = nullptr;
-	m_pixelShader  = nullptr;
+	std::fill_n( m_shaders, int( SHADER_TYPE_COUNT ), nullptr );
 
 	return S_OK; 
 }
@@ -1340,32 +1338,44 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetShader( const Tr2ShaderAL& shader )
+ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& program )
 {
-	AL_UPDATE_RESOURCE_FRAME_USAGE( shader );
-	if( shader.GetType() == VERTEX_SHADER )
+	AL_UPDATE_RESOURCE_FRAME_USAGE( program );
+
+	if( m_shaders[VERTEX_SHADER] != program.m_shaders[VERTEX_SHADER] )
 	{
-		if( !m_vertexShader || !( *m_vertexShader == shader ) )
-		{
-			m_dirtyFlag |= Tr2FragmentOpSettings::DIRTY_PATCH_VS;
-		}
-		m_vertexShader = &shader;
-		return S_OK;
+		m_context->VSSetShader( program.m_shaders[VERTEX_SHADER]->m_shader.vertexShader, nullptr, 0 );
+		m_shaders[VERTEX_SHADER] = program.m_shaders[VERTEX_SHADER];
 	}
-	else if( shader.GetType() == PIXEL_SHADER )
+	if( m_shaders[COMPUTE_SHADER] != program.m_shaders[COMPUTE_SHADER] )
 	{
-		if( !m_pixelShader || !( *m_pixelShader == shader ) )
-		{
-			m_dirtyFlag |= Tr2FragmentOpSettings::DIRTY_PATCH_PS;
-		}		
-		m_pixelShader = &shader;
-		return S_OK;
+		m_context->CSSetShader( program.m_shaders[COMPUTE_SHADER]->m_shader.computeShader, nullptr, 0 );
+		m_shaders[COMPUTE_SHADER] = program.m_shaders[COMPUTE_SHADER];
 	}
-	else if( shader.GetType() == HULL_SHADER )
+	if( m_shaders[GEOMETRY_SHADER] != program.m_shaders[GEOMETRY_SHADER] )
 	{
-		m_hasHullShader = &shader != &nullShader[HULL_SHADER];
+		m_context->GSSetShader( program.m_shaders[GEOMETRY_SHADER]->m_shader.geometryShader, nullptr, 0 );
+		m_shaders[GEOMETRY_SHADER] = program.m_shaders[GEOMETRY_SHADER];
 	}
-	return shader.Apply( *this );
+	if( m_shaders[HULL_SHADER] != program.m_shaders[HULL_SHADER] )
+	{
+		m_context->HSSetShader( program.m_shaders[HULL_SHADER]->m_shader.hullShader, nullptr, 0 );
+		m_shaders[HULL_SHADER] = program.m_shaders[HULL_SHADER];
+	}
+	if( m_shaders[DOMAIN_SHADER] != program.m_shaders[DOMAIN_SHADER] )
+	{
+		m_context->DSSetShader( program.m_shaders[DOMAIN_SHADER]->m_shader.domainShader, nullptr, 0 );
+		m_shaders[DOMAIN_SHADER] = program.m_shaders[DOMAIN_SHADER];
+	}
+	if( m_shaders[PIXEL_SHADER] != program.m_shaders[PIXEL_SHADER] )
+	{
+		m_dirtyFlag |= Tr2FragmentOpSettings::DIRTY_PATCH_PS;
+		m_shaders[PIXEL_SHADER] = program.m_shaders[PIXEL_SHADER];
+	}
+
+	m_hasHullShader = program.m_shaders[HULL_SHADER]->m_shader.hullShader != nullptr;
+
+	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetSamplerState( 
@@ -1714,18 +1724,18 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates()
 
 	if( m_vertexLayout )
 	{
-		if( !m_vertexShader || m_vertexShader->GetType() == INVALID_SHADER )
+		if( !m_shaders[VERTEX_SHADER] || m_shaders[VERTEX_SHADER]->GetType() == INVALID_SHADER )
 		{
 			return false;
 		}
 		if( m_vertexLayout != m_lastSetVertexLayout || 
-			m_vertexShader->GetInputDefinition().hash != m_lastSetVertexLayoutVSHash )
+			m_shaders[VERTEX_SHADER]->GetInputDefinition().hash != m_lastSetVertexLayoutVSHash )
 		{
-			CR_RETURN_VAL(	m_vertexLayout->SetLayout( m_vertexShader, *this )
+			CR_RETURN_VAL(	m_vertexLayout->SetLayout( m_shaders[VERTEX_SHADER], *this )
 						, false );
 
 			m_lastSetVertexLayout = m_vertexLayout;
-			m_lastSetVertexLayoutVSHash = m_vertexShader->GetInputDefinition().hash;
+			m_lastSetVertexLayoutVSHash = m_shaders[VERTEX_SHADER]->GetInputDefinition().hash;
 		}
 	}
 	else
@@ -1773,34 +1783,18 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates()
 
 		if( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_PATCH_PS )
 		{
-			if( !m_pixelShader )
+			if( !m_shaders[PIXEL_SHADER] )
 			{
 				return false;
 			}
 			if( m_renderStateEmulation.m_alphaTestParameters.m_alphaTestEnabled && 
 				m_renderStateEmulation.m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS )
 			{
-				CR_RETURN_VAL( m_pixelShader->ApplyPatchedShader( *this ), false );
+				CR_RETURN_VAL( m_shaders[PIXEL_SHADER]->ApplyPatchedShader( *this ), false );
 			}
 			else
 			{
-				CR_RETURN_VAL( m_pixelShader->Apply( *this ), false );
-			}
-		}
-
-		if( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_PATCH_VS )
-		{
-			if( m_vertexShader == nullptr )
-			{
-				return false;
-			}
-			if( m_renderStateEmulation.m_fragmentOpSettings.m_clipPlaneEnable )
-			{
-				CR_RETURN_VAL( m_vertexShader->ApplyPatchedShader( *this ), false );
-			}
-			else
-			{
-				CR_RETURN_VAL( m_vertexShader->Apply( *this ), false );
+				CR_RETURN_VAL( m_shaders[PIXEL_SHADER]->Apply( *this ), false );
 			}
 		}
 
@@ -2313,8 +2307,7 @@ Tr2RenderTargetAL& Tr2RenderContextAL::GetDefaultBackBuffer()
 
 void Tr2RenderContextAL::ReleaseDeviceResources()
 {
-	m_vertexShader = nullptr;
-	m_pixelShader = nullptr;
+	std::fill_n( m_shaders, int( SHADER_TYPE_COUNT ), nullptr );
 }
 
 void Tr2RenderContextAL::ResetCapturePlayback()

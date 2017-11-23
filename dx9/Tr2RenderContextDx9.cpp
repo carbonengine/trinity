@@ -14,6 +14,7 @@
 #include "Tr2VideoAdapterInfoALDx9.h"
 #include "Tr2VertexLayoutALDx9.h"
 #include "Tr2ShaderALDx9.h"
+#include "Tr2ShaderProgramALDx9.h"
 #include "Tr2AdapterStructures.h"
 
 using namespace Tr2RenderContextEnum;
@@ -851,6 +852,27 @@ ALResult Tr2RenderContextAL::CreateDevice(
 
 	m_isLost = false;
 
+	CComPtr<IDirect3DSurface9> backBuffer;
+	CR_RETURN_HR( m_d3dDevice9->GetRenderTarget( 0, &backBuffer ) );
+	CR_RETURN_HR( m_defaultBackBuffer.Attach( backBuffer, *this ) );
+
+	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_defaultBackBuffer, m_defaultBackBuffer.GetMsaaDesc() );
+
+	m_nullRT = nullptr;
+	CR_RETURN_HR( m_d3dDevice9->CreateRenderTarget( 1, 1,
+		D3DFMT_A8R8G8B8,
+		D3DMULTISAMPLE_NONE, 0,
+		FALSE, &m_nullRT, nullptr ) );
+
+	m_adapter = Adapter;
+
+	m_d3dDevice9->SetRenderState( D3DRS_INDEXEDVERTEXBLENDENABLE, FALSE );
+	m_d3dDevice9->SetRenderState( D3DRS_LOCALVIEWER, TRUE );
+	m_d3dDevice9->SetRenderState( D3DRS_NORMALIZENORMALS, TRUE );
+	m_d3dDevice9->SetRenderState( D3DRS_DITHERENABLE, FALSE );
+	m_d3dDevice9->SetRenderState( D3DRS_SPECULARENABLE, FALSE );
+	m_d3dDevice9->SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );
+
 	if( m_events )
 	{
 		m_events->OnContextCreated( *this );
@@ -887,6 +909,9 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2Pr
 	{
 		return E_FAIL;
 	}
+
+	m_nullRT = nullptr;
+	m_defaultBackBuffer.Destroy();
 
 	D3DPRESENT_PARAMETERS pp;
 	pp.BackBufferWidth = presentationParameters.mode.width;
@@ -1018,10 +1043,11 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 	return layout.SetLayout( nullptr, *this );
 }
 
-ALResult Tr2RenderContextAL::SetShader( const Tr2ShaderAL& shader )
+ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram )
 {
-	AL_UPDATE_RESOURCE_FRAME_USAGE( shader );
-	return shader.Apply( *this );
+	AL_UPDATE_RESOURCE_FRAME_USAGE( shaderProgram );
+	CR_RETURN_HR( m_d3dDevice9->SetVertexShader( shaderProgram.m_vertexShader ? shaderProgram.m_vertexShader->m_vertexShader : nullptr ) );
+	return m_d3dDevice9->SetPixelShader( shaderProgram.m_pixelShader ? shaderProgram.m_pixelShader->m_pixelShader : nullptr );
 }
 
 ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )

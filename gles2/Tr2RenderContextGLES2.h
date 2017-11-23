@@ -61,7 +61,7 @@ public:
 		uint32_t stride );
 	ALResult SetIndices( const Tr2IndexBufferAL & buffer );
 	ALResult SetTopology( long topology );
-	ALResult SetShader( const Tr2ShaderAL& shader );
+	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram );
 
 	ALResult SetShaderBuffer(		
 		Tr2RenderContextEnum::ShaderType inputType, 
@@ -183,8 +183,6 @@ public:
 	
 	static void DestroyMainThreadRenderContext();
 
-	static void ShaderDeleted( int shader );
-
 	long m_topology;	// in DX9, that's part of the DrawXyz calls, so remember this.
 
 	ALResult SetConstants(			
@@ -296,26 +294,10 @@ private:
 	Tr2RenderTargetAL m_defaultBackBuffer;
 	Tr2DepthStencilAL m_defaultDepthStencil;
 
-	struct ProgramObject
-	{
-		int program;
-		int constantBuffers[16];
-		int intConstant;
-		int shadowStateInt;
-		int shadowStateFloat;
-		int shadowStateOffsets;
-		std::map<	std::pair<	Tr2VertexDefinition::UsageCode, 
-								uint32_t>, 
-					int> 
-			attributes;
-	};
-
 	struct Blitter;
 	Blitter* m_blitter;
 
-	const Tr2ShaderAL*	m_vertexShader;
-	const Tr2ShaderAL*	m_pixelShader;
-	ProgramObject* m_boundProgramObject;
+	const Tr2ShaderProgramAL* m_program;
 	Tr2ConstantBufferAL* m_boundBuffers[16];
 	int m_numberOfLights;
 	const Tr2VertexDefinition* m_boundLayout;
@@ -379,9 +361,6 @@ private:
 
 	Tr2FragmentOpSettings::TAlphaTestParameters	m_alphaTestParameters;
 	Tr2FragmentOpSettings						m_fragmentOpSettings;
-
-	// Map from vertex+fragment shader to program
-	static std::map<std::pair<int, std::pair<int, bool> >, ProgramObject*> s_programs;
 
 	uint32_t m_renderStates[Tr2RenderContextEnum::RS_MAX_STATE];
 

@@ -10,6 +10,7 @@
 #include "Tr2ShaderALGLES2.h"
 #include "Tr2VertexLayoutALGLES2.h"
 #include "Tr2AdapterStructures.h"
+#include "Tr2ShaderProgramALGLES2.h"
 
 #include "ALLog.h"
 
@@ -22,8 +23,6 @@ CCP_STATS_DECLARE( sceneDrawcallCount	, "Trinity/AL/sceneDrawcallCount"	, true, 
 
 #define	INVALID_WIN32	0xFFFFFFFF
 #define	INVALID_HRC  	(HGLRC)0xFFFFFFFF
-
-std::map<std::pair<int, std::pair<int, bool> >, Tr2RenderContextAL::ProgramObject*> Tr2RenderContextAL::s_programs;
 
 struct Tr2RenderContextAL::ShadowStateRestoreInfo
 {
@@ -291,8 +290,7 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_boundIndexBufferIs16Bit( false )
 	, m_boundLayout( nullptr )
 	, m_boundDepthStencil( nullptr )
-	, m_vertexShader( nullptr )
-	, m_pixelShader( nullptr )
+	, m_program( nullptr )
 #ifdef _WIN32
 	, m_hRC( INVALID_HRC )
 	, m_hDC( 0 )
@@ -314,8 +312,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 {
 	CCP_ASSERT( GetPrimaryRenderContextPointer() == nullptr );
 	::GetPrimaryRenderContextPointer() = this;
-
-	m_boundProgramObject = nullptr;
 
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
@@ -455,8 +451,7 @@ void Tr2RenderContextAL::Destroy()
 	m_topology = TOP_TRIANGLES;
 
 	m_boundLayout = nullptr;
-	m_vertexShader = nullptr;
-	m_pixelShader = nullptr;
+	m_program = nullptr;
 
 	for( unsigned i = 0; i < 8; ++i )
 	{
@@ -1191,7 +1186,7 @@ ALResult Tr2RenderContextAL::InternalBlitToBackBuffer( Tr2TextureAL& source )
 	}
 	ALResult result = m_blitter->Blit( source );
 
-	m_boundProgramObject = nullptr;
+	m_program = nullptr;
 	m_currentActiveTexture = 0;
 	if( m_renderStates[RS_ZENABLE] )
 	{
@@ -1261,166 +1256,31 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetShader( const Tr2ShaderAL& shader )
+ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram )
 {
-	AL_UPDATE_RESOURCE_FRAME_USAGE( shader );
-	switch( shader.GetType() )
-	{
-	case VERTEX_SHADER:
-		m_vertexShader = &shader;
-		return S_OK;
-	case PIXEL_SHADER:
-		m_pixelShader = &shader;
-		return S_OK;
-
-	default:
-		return E_INVALIDARG;
-	}
+	AL_UPDATE_RESOURCE_FRAME_USAGE( shaderProgram );
+	
+	m_program = &shaderProgram;
+	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetProgram()
 {
-	if( !m_vertexShader || !m_vertexShader->IsValid() || 
-		!m_pixelShader || !m_pixelShader->IsValid() )
+	if( !m_program )
 	{
-		m_boundProgramObject = nullptr;
 		return E_FAIL;
 	}
 
 	bool patchedPS = (m_alphaTestParameters.m_alphaTestEnabled && 
 		m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS) ||
 		m_fragmentOpSettings.m_clipPlaneEnable;
-
-	auto key = std::make_pair(	m_vertexShader->m_shader, 
-								std::make_pair( m_pixelShader->m_shader, patchedPS ) );
-	auto found = s_programs.find( key );
-	if( found != s_programs.end() )
-	{
-		if( m_boundProgramObject == found->second )
-		{
-			return S_OK;
-		}
-		m_boundProgramObject = found->second;
-		if( m_boundProgramObject->program )
-		{
-			glUseProgram( m_boundProgramObject->program );
-			return S_OK;
-		}
-		return E_FAIL;
-	}
-	m_boundProgramObject = CCP_NEW( "Tr2RenderContextAL::ProgramObject" ) ProgramObject;
-	m_boundProgramObject->program = glCreateProgram();
-	if( m_boundProgramObject->program == 0 )
+	auto programData = patchedPS && m_program->m_patchedProgram.program ? &m_program->m_patchedProgram : &m_program->m_program;
+	if( !programData->program )
 	{
 		return E_FAIL;
 	}
-	glAttachShader( 
-		m_boundProgramObject->program, 
-		patchedPS && m_vertexShader->m_patchedShader	? m_vertexShader->m_patchedShader 
-														: m_vertexShader->m_shader );
-	glAttachShader( 
-		m_boundProgramObject->program, 
-		patchedPS && m_pixelShader->m_patchedShader		? m_pixelShader->m_patchedShader 
-														: m_pixelShader->m_shader );
-
-	glLinkProgram( m_boundProgramObject->program );
-	GLint status = 0;
-	glGetProgramiv( m_boundProgramObject->program, GL_LINK_STATUS, &status );
-	if( !status )
-	{
-		GLint length = 0;
-		glGetProgramiv( m_boundProgramObject->program, GL_INFO_LOG_LENGTH, &length );
-		char* buffer = new char[length];
-		glGetProgramInfoLog( m_boundProgramObject->program, length, nullptr, buffer );
-		CCP_AL_LOGERR( "Error linking vertex and pixel shader: %s", buffer );
-		delete[] buffer;
-		glDeleteProgram( m_boundProgramObject->program );
-		m_boundProgramObject->program = 0;
-		s_programs[key] = m_boundProgramObject;
-		return E_FAIL;
-	}
-
-	glUseProgram( m_boundProgramObject->program );
-
-	static const char* attributeNames[] = {
-		"attr0",  "attr1",  "attr2",  "attr3",
-		"attr4",  "attr5",  "attr6",  "attr7",
-		"attr8",  "attr9",  "attr10", "attr11",
-		"attr12", "attr13", "attr14", "attr15",		
-	};
-
-	m_boundProgramObject->attributes.clear();
-	for( size_t i = 0; i < m_vertexShader->GetInputDefinition().elements.size(); ++i )
-	{
-		auto& element = m_vertexShader->GetInputDefinition().elements[i];
-		int index = glGetAttribLocation( m_boundProgramObject->program, attributeNames[i] );
-		if( index != -1 )
-		{
-			m_boundProgramObject->attributes[std::make_pair( element.usage, element.usageIndex )] = index;
-		}
-	}
-
-	static const char* cbNames[] = {
-		"cb0",  "cb1",  "cb2",  "cb3",
-		"cb4",  "cb5",  "cb6",  "cb7",
-		"cb8",  "cb9",  "cb10", "cb11",
-		"cb12", "cb13", "cb14", "cb15",		
-	};
-
-	for( unsigned i = 0; i < 16; ++i )
-	{
-		m_boundProgramObject->constantBuffers[i] = glGetUniformLocation( m_boundProgramObject->program, cbNames[i] );
-	}
-	m_boundProgramObject->intConstant = glGetUniformLocation( m_boundProgramObject->program, "i15" );
-
-	if( patchedPS )
-	{
-		m_boundProgramObject->shadowStateInt = glGetUniformLocation( m_boundProgramObject->program, "ssi" );
-		m_boundProgramObject->shadowStateFloat = glGetUniformLocation( m_boundProgramObject->program, "ssf" );
-	}
-	else
-	{
-		m_boundProgramObject->shadowStateInt = -1;
-		m_boundProgramObject->shadowStateFloat = -1;
-	}
-
-	static const char* samplerNames[] = {
-		"s0",  "s1",  "s2",  "s3",
-		"s4",  "s5",  "s6",  "s7",
-		"s8",  "s9",  "s10", "s11",
-		"s12", "s13", "s14", "s15",		
-	};
-
-	m_boundProgramObject->shadowStateOffsets = glGetUniformLocation( m_boundProgramObject->program, "ssyf" );
-
-	s_programs[key] = m_boundProgramObject;
-
-	for( unsigned i = 0; i < 16; ++i )
-	{
-		GLint location = glGetUniformLocation( m_boundProgramObject->program, samplerNames[i] );
-		if( location != -1 )
-		{
-			glUniform1i( location, i );
-		}
-	}
-
+	GL_FAIL( glUseProgram( programData->program ) );
 	return S_OK;
-}
-
-void Tr2RenderContextAL::ShaderDeleted( int shader )
-{
-	for( auto it = s_programs.begin(); it != s_programs.end(); )
-	{
-		if( it->first.first == shader || it->first.second.first == shader )
-		{
-			glDeleteProgram( it->second->program );
-			it = s_programs.erase( it );
-		}
-		else
-		{
-			++it;
-		}
-	}
 }
 
 ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, uint32_t count )
@@ -2325,10 +2185,15 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 		0, 0, 0,		
 	};
 
-	if( m_boundLayout == nullptr || m_boundProgramObject == nullptr )
+	if( m_boundLayout == nullptr || m_program == nullptr )
 	{
 		return false;
 	}
+
+	bool patchedPS = ( m_alphaTestParameters.m_alphaTestEnabled &&
+		m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS ) ||
+		m_fragmentOpSettings.m_clipPlaneEnable;
+	auto programData = patchedPS && m_program->m_patchedProgram.program ? &m_program->m_patchedProgram : &m_program->m_program;
 
 	unsigned currentArray = 8;
 	auto& definition = *m_boundLayout;
@@ -2353,8 +2218,8 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 				return false;
 			}
 		}
-		auto it = m_boundProgramObject->attributes.find( std::make_pair( src.m_usage, src.m_usageIndex ) );
-		if( it != m_boundProgramObject->attributes.end() )
+		auto it = programData->attributes.find( std::make_pair( src.m_usage, src.m_usageIndex ) );
+		if( it != programData->attributes.end() )
 		{
 			if( !data )
 			{
@@ -2393,25 +2258,30 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 	m_fragmentOpSettings.UpdateContents( m_alphaTestParameters );
 	CR_RETURN_VAL( SetProgram(), false );
 
+	bool patchedPS = ( m_alphaTestParameters.m_alphaTestEnabled &&
+		m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS ) ||
+		m_fragmentOpSettings.m_clipPlaneEnable;
+	auto programData = patchedPS && m_program->m_patchedProgram.program ? &m_program->m_patchedProgram : &m_program->m_program;
+
 	for( unsigned i = 0; i != 16; ++i )
 	{
-		if( m_boundBuffers[i] && m_boundProgramObject->constantBuffers[i] >= 0 )
+		if( m_boundBuffers[i] && programData->constantBuffers[i] >= 0 )
 		{
 			glUniform4fv( 
-				m_boundProgramObject->constantBuffers[i], 
+				programData->constantBuffers[i],
 				m_boundBuffers[i]->GetSize() / 4 / sizeof( float ), 
 				(float*)m_boundBuffers[i]->m_shadowCopy.get() );
 		}
 	}
-	if( m_boundProgramObject->intConstant >= 0 )
+	if( programData->intConstant >= 0 )
 	{
-		glUniform4i( m_boundProgramObject->intConstant, m_numberOfLights, 0, 0, 0 );
+		glUniform4i( programData->intConstant, m_numberOfLights, 0, 0, 0 );
 	}
 
-	if( m_boundProgramObject->shadowStateInt >= 0 )
+	if( programData->shadowStateInt >= 0 )
 	{
 		glUniform4f( 
-			m_boundProgramObject->shadowStateInt, 
+			programData->shadowStateInt,
 			float( m_fragmentOpSettings.m_invertedAlphaTest ),
 			float( m_fragmentOpSettings.m_alphaTestRef ),
 			float( m_fragmentOpSettings.m_alphaTestFunc ),
@@ -2433,14 +2303,14 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 			}
 		}
 		glUniform4fv( 
-			m_boundProgramObject->shadowStateFloat,
+			programData->shadowStateFloat,
 			m_fragmentOpSettings.MAX_CLIP_PLANES,
 			(GLfloat*)clipPlane );
 	}
-	if( m_boundProgramObject->shadowStateOffsets >= 0 )
+	if( programData->shadowStateOffsets >= 0 )
 	{
 		glUniform3f( 
-			m_boundProgramObject->shadowStateOffsets,
+			programData->shadowStateOffsets,
 			1.0f / float( m_currentViewport.m_width ),
 			-1.0f / float( m_currentViewport.m_height ),
 			-1.f );
@@ -2636,7 +2506,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 	// This happens when we set/push/pop an RT and DS in two separate calls -- there's a point between
 	// those two where it's in a bad state.  Silently "works" in DX9, complains in DX11. Fix the spam:
 	if( !m_boundDepthStencil	||
-		( m_boundDepthStencil->GetWidth()		== bb.GetWidth()		&&
+		!( m_boundDepthStencil->GetWidth()		== bb.GetWidth()		&&
 		  m_boundDepthStencil->GetHeight()		== bb.GetHeight()		&&
 		  m_boundDepthStencil->GetMsaaDesc().samples == bb.GetMsaaDesc().quality	&&
 		  dsMsaaType							== bbMsaaType

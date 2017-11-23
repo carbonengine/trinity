@@ -906,3 +906,33 @@ void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TIMER>::Destroy
 		object->Destroy();
 	}
 }
+
+
+// ----------------------------------------------------------------------------------
+const char* Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER_PROGRAM>::GetName()
+{
+	return "Tr2ShaderProgramAL";
+}
+
+// ----------------------------------------------------------------------------------
+bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER_PROGRAM>::GetDescription(
+	Tr2ALMemoryTypes flags,
+	ObjectType* object,
+	std::map<std::string, uint32_t>& description )
+{
+	if( object->IsValid() && ( object->GetMemoryClass() & flags ) != 0 )
+	{
+		REPORT_LAST_FRAME_USED;
+		description["memory"] = object->GetMemoryClass();
+		return true;
+	}
+	return false;
+}
+
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER_PROGRAM>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
+}

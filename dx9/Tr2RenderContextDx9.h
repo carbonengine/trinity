@@ -64,7 +64,7 @@ public:
 
 	ALResult SetIndices( const Tr2IndexBufferAL & buffer );
 	ALResult SetTopology( long topology );
-	ALResult SetShader( const Tr2ShaderAL& shader );
+	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram );
 
 	ALResult SetShaderBuffer(		
 		Tr2RenderContextEnum::ShaderType inputType, 

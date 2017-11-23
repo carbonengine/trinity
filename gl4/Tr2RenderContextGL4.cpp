@@ -9,6 +9,7 @@
 #include "Tr2ConstantBufferALGL4.h"
 #include "Tr2GpuBufferALGL4.h"
 #include "Tr2VertexLayoutALGL4.h"
+#include "Tr2ShaderProgramALGL4.h"
 #include "Tr2AdapterStructures.h"
 #include "ALLog.h"
 
@@ -1403,23 +1404,13 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetShader( const Tr2ShaderAL& shader )
+ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram )
 {
-	AL_UPDATE_RESOURCE_FRAME_USAGE( shader );
-	switch( shader.GetType() )
-	{
-	case VERTEX_SHADER:
-		m_vertexShader = &shader;
-		return S_OK;
-	case PIXEL_SHADER:
-		m_pixelShader = &shader;
-		return S_OK;
-	case COMPUTE_SHADER:
-		m_computeShader = &shader;
-		return S_OK;
-	default:
-		return E_INVALIDARG;
-	}
+	AL_UPDATE_RESOURCE_FRAME_USAGE( shaderProgram );
+	m_vertexShader = shaderProgram.m_vertexShader;
+	m_pixelShader = shaderProgram.m_pixelShader;
+	m_computeShader = shaderProgram.m_computeShader;
+	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetProgram()

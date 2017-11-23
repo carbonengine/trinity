@@ -58,6 +58,7 @@ private:
 	int32_t m_patchedShader;
 
 	friend class Tr2RenderContextAL;
+	friend class Tr2ShaderProgramAL;
 };
 
 #endif // TRINITY_PLATFORM==TRINITY_DIRECTX11

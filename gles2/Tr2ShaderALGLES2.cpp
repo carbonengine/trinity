@@ -116,12 +116,10 @@ void Tr2ShaderAL::Destroy()
 	if( m_shader )
 	{
 		glDeleteShader( m_shader );
-		Tr2RenderContextAL::ShaderDeleted( m_shader );
 	}
 	if( m_patchedShader )
 	{
 		glDeleteShader( m_patchedShader );
-		Tr2RenderContextAL::ShaderDeleted( m_patchedShader );
 	}
 	m_type = INVALID_SHADER;
 }

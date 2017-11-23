@@ -72,6 +72,10 @@ TEST_F( Rendering, CanRenderASingleTriangle )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -94,8 +98,7 @@ TEST_F( Rendering, CanRenderASingleTriangle )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -109,8 +112,7 @@ TEST_F( Rendering, CanRenderASingleTriangle )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
 TEST_F( Rendering, CanRenderTriangleStrip )
@@ -150,6 +152,10 @@ TEST_F( Rendering, CanRenderTriangleStrip )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -173,8 +179,7 @@ TEST_F( Rendering, CanRenderTriangleStrip )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xffff0000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -188,8 +193,7 @@ TEST_F( Rendering, CanRenderTriangleStrip )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
 TEST_F( Rendering, CanRenderIndexedTriangles )
@@ -229,6 +233,10 @@ TEST_F( Rendering, CanRenderIndexedTriangles )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -256,8 +264,7 @@ TEST_F( Rendering, CanRenderIndexedTriangles )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff550000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetIndices( ib ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
@@ -272,8 +279,7 @@ TEST_F( Rendering, CanRenderIndexedTriangles )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetIndices( nullIB ) );
 }
 
@@ -322,6 +328,10 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
 		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
@@ -345,8 +355,7 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -360,8 +369,7 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
 TEST_F( Rendering, CanSampleTexture )
@@ -403,6 +411,10 @@ TEST_F( Rendering, CanSampleTexture )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
@@ -460,8 +472,7 @@ TEST_F( Rendering, CanSampleTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -478,8 +489,7 @@ TEST_F( Rendering, CanSampleTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 }
 
@@ -523,6 +533,10 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
@@ -595,8 +609,7 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -613,8 +626,7 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 }
 
@@ -655,6 +667,10 @@ TEST_F( Rendering, CanPassConstantBufferToRendering )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -688,8 +704,7 @@ TEST_F( Rendering, CanPassConstantBufferToRendering )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -703,8 +718,7 @@ TEST_F( Rendering, CanPassConstantBufferToRendering )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( const_cast<Tr2ConstantBufferAL&>( nullCB ), Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 }
 
@@ -748,6 +762,10 @@ TEST_F( Rendering, CanDoInstancedRendering )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.25f, -0.25f, 0.0f,
 		-0.25f, 0.25f, 0.0f,
@@ -786,8 +804,7 @@ TEST_F( Rendering, CanDoInstancedRendering )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 1, instanceVb, 0, instanceVbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetIndices( ib ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -802,8 +819,7 @@ TEST_F( Rendering, CanDoInstancedRendering )
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 1, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
 TEST_F( Rendering, CanClearRenderTarget )
@@ -845,6 +861,10 @@ TEST_F( Rendering, CanClearRenderTarget )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
@@ -905,8 +925,7 @@ TEST_F( Rendering, CanClearRenderTarget )
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -924,8 +943,7 @@ TEST_F( Rendering, CanClearRenderTarget )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 }
 
@@ -969,6 +987,10 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	uint32_t psFillBytecode[] = {
 #include INCLUDE_SHADER_CODE( ConstantColor.ps )
 	};
@@ -982,6 +1004,10 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shadersFill[] = { &vs, &psFill };
+	Tr2ShaderProgramAL spFill;
+	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
@@ -1040,8 +1066,7 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( psFill ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( spFill ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -1053,8 +1078,7 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -1072,8 +1096,7 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 }
 
@@ -1117,6 +1140,10 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	uint32_t psFillBytecode[] = {
 #include INCLUDE_SHADER_CODE( ConstantColor.ps )
 	};
@@ -1130,6 +1157,10 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shadersFill[] = { &vs, &psFill };
+	Tr2ShaderProgramAL spFill;
+	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
@@ -1191,8 +1222,7 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( psFill ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( spFill ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -1206,8 +1236,7 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -1224,8 +1253,7 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 }
 
@@ -1267,6 +1295,10 @@ TEST_F( Rendering, CanClearDepthBuffer )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -1290,8 +1322,7 @@ TEST_F( Rendering, CanClearDepthBuffer )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xff000000 | ( g & 0xff ), depth ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 1 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZFUNC, Tr2RenderContextEnum::CMP_LESSEQUAL ) );
@@ -1306,8 +1337,7 @@ TEST_F( Rendering, CanClearDepthBuffer )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
 TEST_F( Rendering, CanRenderIntoDepthBuffer )
@@ -1350,6 +1380,10 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
 		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
@@ -1377,8 +1411,7 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 1 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZWRITEENABLE, 1 ) );
@@ -1394,8 +1427,7 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
 TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
@@ -1435,6 +1467,10 @@ TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -1453,8 +1489,7 @@ TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -1468,8 +1503,7 @@ TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
 TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
@@ -1509,6 +1543,10 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -1529,8 +1567,7 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff550000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -1544,8 +1581,7 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetIndices( nullIB ) );
 }
 
@@ -1586,6 +1622,10 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith32BitDrawIndexedPrimitiveUP )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -1606,8 +1646,7 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith32BitDrawIndexedPrimitiveUP )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff550000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -1621,8 +1660,7 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith32BitDrawIndexedPrimitiveUP )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetIndices( nullIB ) );
 }
 
@@ -1667,6 +1705,10 @@ TEST_F( Rendering, CanUseClippingPlaneAndScissor )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -1687,8 +1729,7 @@ TEST_F( Rendering, CanUseClippingPlaneAndScissor )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff00ff00 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -1709,8 +1750,7 @@ TEST_F( Rendering, CanUseClippingPlaneAndScissor )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetScissorRect( 0, 0, presentParameters.mode.width, presentParameters.mode.height ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_SCISSORTESTENABLE, 0 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CLIPPLANEENABLE, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
 TEST_F( Rendering, CanUseOcclusionQueries )
@@ -1749,6 +1789,10 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
@@ -1800,8 +1844,7 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 1 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZWRITEENABLE, 1 ) );
@@ -1856,8 +1899,7 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( const_cast<Tr2ConstantBufferAL&>( nullCB ), Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 }
 
@@ -1898,6 +1940,10 @@ TEST_F( Rendering, CanUseViewport )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -1926,8 +1972,7 @@ TEST_F( Rendering, CanUseViewport )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff00ff00 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderStates( renderStates, 2 ) );
 		viewport.m_x = float( g );
@@ -1941,8 +1986,7 @@ TEST_F( Rendering, CanUseViewport )
 
 	RunLoop( frame );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetViewport( bkViewport ) );
 }
 
@@ -1993,6 +2037,10 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 		psBytecodePatched,
 		sizeof( psBytecodePatched ),
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
@@ -2050,8 +2098,7 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -2071,8 +2118,7 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHATESTENABLE, 0 ) );
 }
@@ -2125,6 +2171,10 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 		sizeof( psBytecodePatched ),
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
 		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
@@ -2181,8 +2231,7 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -2202,8 +2251,7 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHATESTENABLE, 0 ) );
 }
@@ -2255,6 +2303,10 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 		psBytecodePatched,
 		sizeof( psBytecodePatched ),
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
@@ -2312,8 +2364,7 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -2333,8 +2384,7 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHATESTENABLE, 0 ) );
 }
@@ -2386,6 +2436,10 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 		psBytecodePatched,
 		sizeof( psBytecodePatched ),
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
@@ -2453,8 +2507,7 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 1 ) );
@@ -2473,8 +2526,7 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 }
@@ -2519,6 +2571,10 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	uint32_t psFillBytecode[] = {
 #include INCLUDE_SHADER_CODE( ConstantColor.ps )
 	};
@@ -2535,6 +2591,10 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shadersFill[] = { &vs, &psFill };
+	Tr2ShaderProgramAL spFill;
+	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
@@ -2607,8 +2667,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( psFill ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( spFill ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -2621,8 +2680,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 		ASSERT_HRESULT_SUCCEEDED( rt.GenerateMipMaps( *renderContext ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -2648,8 +2706,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 }
 
@@ -2693,6 +2750,10 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	uint32_t psFillBytecode[] = {
 #include INCLUDE_SHADER_CODE( ConstantColor.ps )
 	};
@@ -2706,6 +2767,10 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shadersFill[] = { &vs, &psFill };
+	Tr2ShaderProgramAL spFill;
+	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
@@ -2767,8 +2832,7 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( psFill ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( spFill ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -2786,8 +2850,7 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -2805,8 +2868,7 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 }
 
@@ -2850,6 +2912,10 @@ TEST_F( Rendering, CanSampleBc1Texture )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
@@ -2908,8 +2974,7 @@ TEST_F( Rendering, CanSampleBc1Texture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -2927,8 +2992,7 @@ TEST_F( Rendering, CanSampleBc1Texture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
@@ -2970,6 +3034,10 @@ TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		-0.5f, 0.5f, 0.0f,
@@ -3003,8 +3071,7 @@ TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
@@ -3018,8 +3085,7 @@ TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( const_cast<Tr2ConstantBufferAL&>( nullCB ), Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 }
 
@@ -3062,6 +3128,10 @@ TEST_F( Rendering, CanSampleBc2Texture )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
@@ -3120,8 +3190,7 @@ TEST_F( Rendering, CanSampleBc2Texture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -3139,8 +3208,7 @@ TEST_F( Rendering, CanSampleBc2Texture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
@@ -3185,6 +3253,10 @@ TEST_F( Rendering, CanSampleBc3Texture )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
@@ -3243,8 +3315,7 @@ TEST_F( Rendering, CanSampleBc3Texture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -3262,8 +3333,7 @@ TEST_F( Rendering, CanSampleBc3Texture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
@@ -3308,6 +3378,10 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
@@ -3377,8 +3451,7 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -3397,8 +3470,7 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
@@ -3443,6 +3515,10 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
@@ -3512,8 +3588,7 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -3532,8 +3607,7 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
@@ -3579,6 +3653,10 @@ TEST_F( Rendering, CanSampleUnassignedTexture )
 		0,
 		Tr2ShaderInputDefinition() ) );
 
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
 		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
@@ -3603,8 +3681,7 @@ TEST_F( Rendering, CanSampleUnassignedTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -3620,8 +3697,7 @@ TEST_F( Rendering, CanSampleUnassignedTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
@@ -3665,6 +3741,10 @@ TEST_F( Rendering, CanLockTextureTwice )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices1[] = {
 		-0.75f, -0.25f, 0.0f, 1.0f, 1.0f, 
@@ -3731,8 +3811,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -3767,8 +3846,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 }
 
@@ -3811,6 +3889,10 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
@@ -3869,8 +3951,7 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
@@ -3887,8 +3968,7 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 }
 
@@ -3931,6 +4011,10 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 		nullptr,
 		0,
 		Tr2ShaderInputDefinition() ) );
+
+	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f, 
@@ -3989,8 +4073,7 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( vs ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( ps ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_SRGBWRITEENABLE, 1 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
@@ -4009,7 +4092,6 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_SRGBWRITEENABLE, 0 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, nullVB, 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::VERTEX_SHADER] ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( nullShader[Tr2RenderContextEnum::PIXEL_SHADER] ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( Tr2RenderContextEnum::PIXEL_SHADER, 0, nullTX ) );
 }

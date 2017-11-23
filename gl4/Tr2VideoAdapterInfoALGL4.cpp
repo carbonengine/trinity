@@ -482,6 +482,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned adapterIndex,
 				mode.refreshRateNumerator = 1;
 				mode.refreshRateDenominator = devmode.dmDisplayFrequency;
 				mode.format = Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM;
+				break;
 			}
 		}
 	}

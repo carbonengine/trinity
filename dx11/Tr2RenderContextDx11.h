@@ -58,7 +58,7 @@ public:
 	ALResult SetIndices( const Tr2IndexBufferAL & buffer ) throw();
 	ALResult SetTopology( Tr2RenderContextEnum::Topology topology ) throw();
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw();
-	ALResult SetShader( const Tr2ShaderAL& shader ) throw();
+	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( );
 
 	ALResult SetShaderBuffer( 
 		Tr2RenderContextEnum::ShaderType inputType, 
@@ -220,11 +220,8 @@ private:
 	const Tr2VertexLayoutAL* m_lastSetVertexLayout;
 	uint32_t m_lastSetVertexLayoutVSHash;
 
-	// Current vertex shader (for creating vertex layout)
-	const Tr2ShaderAL* m_vertexShader;
-	// Current pixel shader (for alpha test patching)
-	const Tr2ShaderAL* m_pixelShader;
-	// Has active hull shader (requires changing topology)
+	// Current shaders
+	const Tr2ShaderAL* m_shaders[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 
 	// UAVs for pixel shader (need to be set all at once)
 	CComPtr<ID3D11UnorderedAccessView> m_pixelShaderUavs[16];

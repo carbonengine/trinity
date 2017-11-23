@@ -71,6 +71,7 @@ class Tr2SwapChainAL;
 class Tr2GpuBufferAL;
 class Tr2FenceAL;
 class Tr2GpuTimerAL;
+class Tr2ShaderProgramAL;
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -352,6 +353,22 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TIMER>
 	//   AL object type this information structure is applied to.
 	// ----------------------------------------------------------------------------------
 	typedef Tr2GpuTimerAL ObjectType;
+
+	static const char* GetName();
+	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
+};
+
+
+// --------------------------------------------------------------------------------------
+template<>
+struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER_PROGRAM>
+{
+	// ----------------------------------------------------------------------------------
+	// Description:
+	//   AL object type this information structure is applied to.
+	// ----------------------------------------------------------------------------------
+	typedef Tr2ShaderProgramAL ObjectType;
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );

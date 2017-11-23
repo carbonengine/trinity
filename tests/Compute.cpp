@@ -29,11 +29,15 @@ TEST_F( Compute, CanReadCSResult )
 		0,
 		def ) );
 
+	Tr2ShaderAL* shaders[] = { &cs };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
+
 	Tr2GpuBufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( cs ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
@@ -74,6 +78,10 @@ TEST_F( Compute, CanAddInCS )
 		0,
 		def ) );
 
+	Tr2ShaderAL* shaders[] = { &cs };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
+
 	float data1[] = { 1.f, 2.f, 3.f, 4.f };
 	float data2[] = { 100.f, 200.f, 300.f, 400.f };
 
@@ -88,7 +96,7 @@ TEST_F( Compute, CanAddInCS )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderBuffer( COMPUTE_SHADER, 0, arg1 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderBuffer( COMPUTE_SHADER, 1, arg2 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( cs ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
@@ -129,6 +137,10 @@ TEST_F( Compute, CanAddConstantInCS )
 		0,
 		def ) );
 
+	Tr2ShaderAL* shaders[] = { &cs };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
+
 	float data1[] = { 1.f, 2.f, 3.f, 4.f };
 	float data2[] = { 100.f, 200.f, 300.f, 400.f };
 
@@ -147,7 +159,7 @@ TEST_F( Compute, CanAddConstantInCS )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderBuffer( COMPUTE_SHADER, 0, arg1 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( arg2, COMPUTE_SHADER, 0 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( cs ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
@@ -186,6 +198,9 @@ TEST_F( Compute, CanRead2DTextureInCS )
 		nullptr,
 		0,
 		def ) );
+	Tr2ShaderAL* shaders[] = { &cs };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
 
 	float data1[] = { 1.f, 2.f, 3.f, 4.f };
 	float data2[] = { 100.f };
@@ -228,7 +243,7 @@ TEST_F( Compute, CanRead2DTextureInCS )
 	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( cs ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
@@ -262,12 +277,15 @@ TEST_F( Compute, CanDispatchCSGroups )
 		nullptr,
 		0,
 		def ) );
+	Tr2ShaderAL* shaders[] = { &cs };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
 
 	Tr2GpuBufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32_UINT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShader( cs ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 2, 2, 2 ) );
 

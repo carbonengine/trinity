@@ -25,6 +25,8 @@ namespace Tr2RenderContextEnum
 		OT_FENCE,
 		OT_TIMER,
 
+		OT_SHADER_PROGRAM,
+
 		OBJECT_TYPE_COUNT
 	};
 

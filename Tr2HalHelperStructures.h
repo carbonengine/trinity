@@ -15,6 +15,7 @@ class Tr2TextureAL;
 class Tr2RenderTargetAL;
 class Tr2GpuBufferAL;
 class Tr2VertexLayoutAL;
+class Tr2ShaderProgramAL;
 
 // -------------------------------------------------------------
 // Description:
@@ -226,6 +227,8 @@ extern const Tr2GpuBufferAL		nullGB;
 // -------------------------------------------------------------
 extern const Tr2VertexLayoutAL	nullVL;
 
+
+extern const Tr2ShaderProgramAL nullSP;
 
 bool Crop(	Tr2TextureSubresource& sourceSR,
 			const Tr2BitmapDimensions& sourceBD, 

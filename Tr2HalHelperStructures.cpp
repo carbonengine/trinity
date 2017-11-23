@@ -9,6 +9,7 @@
 #include "include/Tr2GpuBufferAL.h"
 #include "include/Tr2ConstantBufferAL.h"
 #include "include/Tr2VertexLayoutAL.h"
+#include "include/Tr2ShaderProgramAL.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -38,6 +39,7 @@ const Tr2RenderTargetAL	nullRT;
 const Tr2GpuBufferAL	nullGB;
 const Tr2ConstantBufferAL	nullCB;
 const Tr2VertexLayoutAL	nullVL;
+const Tr2ShaderProgramAL nullSP;
 
 // --------------------------------------------------------------------------------------
 // Description:
