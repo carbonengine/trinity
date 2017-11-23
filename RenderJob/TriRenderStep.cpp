@@ -36,6 +36,17 @@ bool TriRenderStep::IsEnabled() const
 
 void TriRenderStep::BeginExecute( Tr2RenderContext& renderContext )
 {
+	if( m_name.empty() )
+	{
+		if( ClassType() && ClassType()->mClassId )
+		{
+			renderContext.AddGpuMarker( ClassType()->mClassId->GetName() );
+		}
+	}
+	else
+	{
+		renderContext.AddGpuMarker( m_name.c_str() );
+	}
 	m_timer.Begin( renderContext );
 }
 
