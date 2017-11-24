@@ -330,7 +330,8 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 
 	PrepareShaderData( updateContext );
 	m_psData.shipData = m_spaceObjectShipData;
-	D3DXMatrixTranspose( &m_vsData.worldTransform, &m_worldTransform );
+	m_vsData.worldTransform = Transpose( m_worldTransform );
+	m_vsData.invWorldTransform = Transpose( m_invWorldTransform );
 	m_vsData.shipData = m_spaceObjectShipData;
 
 	Vector3 shapeCenter( 0.f, 0.f, 0.f ), shapeRadius( 0.f, 0.f, 0.f );

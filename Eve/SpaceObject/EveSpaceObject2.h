@@ -88,6 +88,7 @@ struct EveSpaceObjectVSData
 {
 	Matrix worldTransform;
 	Matrix worldTransformLast;
+	Matrix invWorldTransform;
 	Vector4 shipData;
 	Vector4 clipData;
 	Vector4 ellpsoidRadii;

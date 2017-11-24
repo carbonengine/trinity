@@ -159,7 +159,8 @@ void EveSwarmRenderable::SetWorldTransform( const Matrix& transform )
 {
 	m_worldTransform = transform;
 	m_vsData.worldTransformLast = m_vsData.worldTransform;
-	D3DXMatrixTranspose( &m_vsData.worldTransform, &m_worldTransform );
+	m_vsData.worldTransform = Transpose( m_worldTransform );
+	m_vsData.invWorldTransform = Inverse( m_worldTransform );
 	
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
