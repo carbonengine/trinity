@@ -1,7 +1,7 @@
 # This file defines settings for all modules that link against TrinityAL built with DX9
 
 Imports:
-- ../core_project.yaml
+- ../core_project/core_project.yaml
 - ../CcpCore/uses_CcpCore.yaml
 
 ClCompile:

@@ -1,6 +1,6 @@
 # These are the SDKs that are used by all configurations
 Imports:
-- ../core_project.yaml
+- ../core_project/core_project.yaml
 - ../CcpCore/uses_CcpCore.yaml
 - ../../../../../../sdk/nvidia/aftermath/1.3/aftermath.yaml
 

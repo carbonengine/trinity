@@ -1,6 +1,6 @@
 ProjectGuid: 504BC561-AF34-424A-82B7-D381566FA473
 Imports:
-- ../core_project.yaml
+- ../core_project/core_project.yaml
 
 General:
   ConfigurationType: Application
