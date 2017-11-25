@@ -36,13 +36,13 @@
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\core_project.props" />
+    <Import Project="..\core_project\core_project.props" />
     <Import Project="..\..\..\..\..\..\sdk\directx\june2010\DirectX11June2010.props" />
     <Import Project="..\..\..\..\..\..\sdk\glew\1.7.0\glew_mx_1_7_0.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="..\core_project.props" />
+    <Import Project="..\core_project\core_project.props" />
     <Import Project="..\..\..\..\..\..\sdk\directx\june2010\DirectX11June2010.props" />
     <Import Project="..\..\..\..\..\..\sdk\glew\1.7.0\glew_mx_1_7_0.props" />
   </ImportGroup>
