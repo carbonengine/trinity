@@ -1,6 +1,6 @@
 # These are the SDKs that are used by all configurations
 Imports:
-- ../core_project.yaml
+- ../core_project/core_project.yaml
 - ../ImageIO/uses_ImageIO.yaml
 - ../../../../../../sdk/squish/1.10/squish_1.10.yaml
 - ../CcpMath/uses_CcpMath.yaml

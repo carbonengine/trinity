@@ -2,7 +2,7 @@ SourceFolder: .
 
 # These are the SDKs that are used by all configurations
 Imports:
-- ../core_project.yaml
+- ../core_project/core_project.yaml
 - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
 - ../../../../../../sdk/muparser/v1.30/muparser_v1.30.yaml
 - ../../../../../../sdk/umbra/1.5.3/umbra_1.5.3.yaml
