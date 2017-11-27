@@ -52,7 +52,7 @@ TEST_F( Compute, CanReadCSResult )
 }
 
 
-TEST_F( Compute, CanAddInCS )
+TEST_F( Compute, DISABLED_CanAddInCS )
 {
 	uint32_t vsBytecode[] = {
 #include INCLUDE_SHADER_CODE( AddVectors.cs )
