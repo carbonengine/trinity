@@ -7,6 +7,7 @@
     <Filter Include="Source Files\gl4"/>
     <Filter Include="Source Files\gles2"/>
     <Filter Include="Source Files\include"/>
+    <Filter Include="Source Files\src"/>
     <Filter Include="Source Files\stub"/>
   </ItemGroup>
   <ItemGroup>
@@ -47,6 +48,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2MemoryCounterAL.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tr2ObjectFactory.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2RenderContextEnum.h">
@@ -684,6 +688,9 @@
     </ClCompile>
     <ClCompile Include="gles2\Tr2VideoAdapterInfoALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tr2SamplerStateAL.cpp">
+      <Filter>Source Files\src</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2CapsALStub.cpp">
       <Filter>Source Files\stub</Filter>

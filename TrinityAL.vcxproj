@@ -1440,6 +1440,7 @@
     <ClInclude Include="Tr2HalHelperStructures.h"/>
     <ClInclude Include="Tr2LockGuard.h"/>
     <ClInclude Include="Tr2MemoryCounterAL.h"/>
+    <ClInclude Include="Tr2ObjectFactory.h"/>
     <ClInclude Include="Tr2RenderContextEnum.h"/>
     <ClInclude Include="Tr2TrackedALObject.h"/>
     <ClInclude Include="Tr2TrackedALObjectImpl.h"/>
@@ -1656,6 +1657,7 @@
     <ClCompile Include="gles2\Tr2VertexBufferALGLES2.cpp"/>
     <ClCompile Include="gles2\Tr2VertexLayoutALGLES2.cpp"/>
     <ClCompile Include="gles2\Tr2VideoAdapterInfoALGLES2.cpp"/>
+    <ClCompile Include="src\Tr2SamplerStateAL.cpp"/>
     <ClCompile Include="stub\Tr2CapsALStub.cpp"/>
     <ClCompile Include="stub\Tr2ConstantBufferALStub.cpp"/>
     <ClCompile Include="stub\Tr2DepthStencilALStub.cpp"/>
