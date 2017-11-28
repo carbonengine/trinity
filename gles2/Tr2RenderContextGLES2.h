@@ -9,6 +9,7 @@
 #include "../include/Tr2DepthStencilAL.h"
 #include "../include/Tr2CapsAL.h"
 #include "../Tr2HalHelperStructures.h"
+#include "../include/Tr2SamplerStateAL.h"
 
 
 class Tr2VertexBufferAL;
@@ -289,7 +290,8 @@ private:
 
 	bool	m_boundIndexBufferIs16Bit;
 	uint32_t ComputeVertexCount( uint32_t primitiveCount );
-
+public:
+	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 private:
 	Tr2RenderTargetAL m_defaultBackBuffer;
 	Tr2DepthStencilAL m_defaultDepthStencil;
@@ -312,7 +314,7 @@ private:
 	Tr2Viewport m_currentViewport;
 
 	Tr2TextureAL*		m_boundTextures[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
-	Tr2SamplerStateAL::StateData m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
+	TrinityALImpl::Tr2SamplerStateAL::StateData m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
 
 	unsigned m_currentActiveTexture;
 

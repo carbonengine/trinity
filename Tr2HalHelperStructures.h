@@ -102,7 +102,27 @@ struct Tr2TextureSubresource
 // --------------------------------------------------------------------------------------
 struct Tr2SamplerDescription
 {
-	Tr2SamplerDescription( 
+	Tr2SamplerDescription()
+		: m_minFilter( Tr2RenderContextEnum::TF_POINT ),
+		m_magFilter( Tr2RenderContextEnum::TF_POINT ),
+		m_mipFilter( Tr2RenderContextEnum::TF_POINT ),
+		m_isComparisonFilter( false ),
+		m_addressU( Tr2RenderContextEnum::TA_WRAP ),
+		m_addressV( Tr2RenderContextEnum::TA_WRAP ),
+		m_addressW( Tr2RenderContextEnum::TA_WRAP ),
+		m_mipLODBias( 0 ),
+		m_maxAnisotropy( 1 ),
+		m_comparisonFunc( Tr2RenderContextEnum::CMP_ALWAYS ),
+		m_minLOD( 0.f ),
+		m_maxLOD( std::numeric_limits<float>::max() )
+	{
+		m_borderColor[0] = 0;
+		m_borderColor[1] = 0;
+		m_borderColor[2] = 0;
+		m_borderColor[3] = 0;
+	}
+
+	Tr2SamplerDescription(
 		Tr2RenderContextEnum::TextureFilter minFilter,
 		Tr2RenderContextEnum::TextureFilter magFilter,
 		Tr2RenderContextEnum::TextureFilter mipFilter,
@@ -133,6 +153,31 @@ struct Tr2SamplerDescription
 		m_borderColor[1] = borderColor[1];
 		m_borderColor[2] = borderColor[2];
 		m_borderColor[3] = borderColor[3];
+	}
+
+	Tr2SamplerDescription(
+		Tr2RenderContextEnum::TextureFilter filter,
+		Tr2RenderContextEnum::TextureAddressMode address,
+		uint32_t maxAnisotropy = 1,
+		float minLOD = 0.0f,
+		float maxLOD = std::numeric_limits<float>::max() )
+		: m_minFilter( filter ),
+		m_magFilter( filter ),
+		m_mipFilter( filter ),
+		m_isComparisonFilter( false ),
+		m_addressU( address ),
+		m_addressV( address ),
+		m_addressW( address ),
+		m_mipLODBias( 0 ),
+		m_maxAnisotropy( maxAnisotropy ),
+		m_comparisonFunc( Tr2RenderContextEnum::CMP_ALWAYS ),
+		m_minLOD( minLOD ),
+		m_maxLOD( maxLOD )
+	{
+		m_borderColor[0] = 0;
+		m_borderColor[1] = 0;
+		m_borderColor[2] = 0;
+		m_borderColor[3] = 0;
 	}
 
 	bool operator==( const Tr2SamplerDescription& other ) const
@@ -169,6 +214,23 @@ struct Tr2SamplerDescription
 	float m_minLOD;
 	float m_maxLOD;
 };
+
+namespace std
+{
+	template<> struct hash<Tr2SamplerDescription>
+	{
+		std::size_t operator()( const Tr2SamplerDescription& desc ) const
+		{
+			return
+				std::hash<decltype( desc.m_minFilter )>()( desc.m_minFilter ) ^
+				( std::hash<decltype( desc.m_mipFilter )>()( desc.m_mipFilter ) << 1 ) ^
+				( std::hash<decltype( desc.m_magFilter )>()( desc.m_magFilter ) << 2 ) ^
+				( std::hash<decltype( desc.m_addressU )>()( desc.m_addressU ) << 3 ) ^
+				( std::hash<decltype( desc.m_addressV )>()( desc.m_addressV ) << 4 ) ^
+				( std::hash<decltype( desc.m_addressW )>()( desc.m_addressW ) << 5 );
+		}
+	};
+}
 
 // -------------------------------------------------------------
 // Description:

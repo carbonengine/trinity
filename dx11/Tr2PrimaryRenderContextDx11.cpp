@@ -48,6 +48,8 @@ Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
 
 void Tr2PrimaryRenderContextAL::Destroy()
 {
+	m_samplerStateFactory.Clear();
+
 	// People say we need to switch to windowed mode before destroying a device
 	if( m_swapChain )
 	{

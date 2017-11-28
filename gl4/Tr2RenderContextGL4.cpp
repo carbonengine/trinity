@@ -148,23 +148,9 @@ struct Tr2RenderContextAL::Blitter
 		GLint location = glGetUniformLocation( m_pixelShader, "tex" );
 		GL_FAIL( glProgramUniform1i( m_pixelShader, location, 0 ) );
 
-		float border[4] = { 0 };
-		Tr2SamplerDescription desc( 
-			TF_POINT, 
-			TF_POINT, 
-			TF_POINT, 
-			false, 
-			TA_CLAMP, 
-			TA_CLAMP, 
-			TA_CLAMP, 
-			0.0f, 
-			1, 
-			CMP_ALWAYS, 
-			border, 
-			0, 
-			std::numeric_limits<float>::max() );
-		CR_RETURN_HR( m_sampler.Create( renderContext, desc ) );
-		GL_IGNORE_ERROR( glSamplerParameteri( m_sampler.m_sampler, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
+		Tr2SamplerDescription desc( TF_POINT, TA_CLAMP );
+		CR_RETURN_HR( m_sampler.Create( desc, renderContext ) );
+		GL_IGNORE_ERROR( glSamplerParameteri( m_sampler.m_sampler->m_sampler, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
 
 		float vb[] = {
 			-1.0f, -1.0f, 0.0f, 1.0f,
@@ -186,14 +172,14 @@ struct Tr2RenderContextAL::Blitter
 	// --------------------------------------------------------------------------------------
 	ALResult Blit( Tr2TextureAL& source )
 	{
-		AL_UPDATE_RESOURCE_FRAME_USAGE( m_sampler );
+		AL_UPDATE_RESOURCE_FRAME_USAGE( *m_sampler.m_sampler );
 		AL_UPDATE_RESOURCE_FRAME_USAGE( m_buffer );
 
 		glBindProgramPipeline( m_pipeline );
 
 		GL_FAIL( glActiveTexture( GL_TEXTURE0 ) );
 		GL_FAIL( glBindTexture( GL_TEXTURE_2D, *source.m_texture ) );
-		GL_FAIL( glBindSampler( 0, m_sampler.m_sampler ) );
+		GL_FAIL( glBindSampler( 0, m_sampler.m_sampler->m_sampler ) );
 
 		GL_FAIL( glBindBuffer( GL_ARRAY_BUFFER, m_buffer.m_buffer ) );
 		GL_FAIL( glEnableVertexAttribArray( 0 ) );
@@ -877,19 +863,19 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 		cl_sampler mem = nullptr;
 		if( samplerState.IsValid() )
 		{
-			AL_UPDATE_RESOURCE_FRAME_USAGE( samplerState );
-			if( !samplerState.m_clObject )
+			AL_UPDATE_RESOURCE_FRAME_USAGE( *samplerState.m_sampler );
+			if( !samplerState.m_sampler->m_clObject )
 			{
-				samplerState.m_clObject = clCreateSampler( m_clContext, CL_TRUE, 
-					samplerState.m_stateData.m_wrapT == GL_TEXTURE_WRAP_S ? CL_ADDRESS_REPEAT : CL_ADDRESS_CLAMP, 
-					samplerState.m_stateData.m_magFilter == GL_NEAREST ? CL_FILTER_NEAREST : CL_FILTER_LINEAR, 
+				samplerState.m_sampler->m_clObject = clCreateSampler( m_clContext, CL_TRUE,
+					samplerState.m_sampler->m_stateData.m_wrapT == GL_TEXTURE_WRAP_S ? CL_ADDRESS_REPEAT : CL_ADDRESS_CLAMP,
+					samplerState.m_sampler->m_stateData.m_magFilter == GL_NEAREST ? CL_FILTER_NEAREST : CL_FILTER_LINEAR,
 					nullptr );
-				if( !samplerState.m_clObject )
+				if( !samplerState.m_sampler->m_clObject )
 				{
 					return E_FAIL;
 				}
 			}
-			mem = samplerState.m_clObject;
+			mem = samplerState.m_sampler->m_clObject;
 		}
 		if( m_boundClSamplers[registerNumber] )
 		{
@@ -903,16 +889,16 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 		return S_OK;
 	}
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( samplerState );
+	AL_UPDATE_RESOURCE_FRAME_USAGE( *samplerState.m_sampler );
 
-	GL_FAIL( glBindSampler( registerNumber, samplerState.m_sampler ) );
-	if( samplerState.m_sampler )
+	GL_FAIL( glBindSampler( registerNumber, samplerState.m_sampler->m_sampler ) );
+	if( samplerState.m_sampler->m_sampler )
 	{
-		GL_FAIL( glSamplerParameteri( samplerState.m_sampler,
+		GL_FAIL( glSamplerParameteri( samplerState.m_sampler->m_sampler,
 									GL_TEXTURE_SRGB_DECODE_EXT, 
 									m_srgbDecode[inputType][registerNumber] ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT  ) );
 	}
-	m_boundSamplers[inputType][registerNumber] = samplerState.m_sampler;
+	m_boundSamplers[inputType][registerNumber] = samplerState.m_sampler->m_sampler;
 	return S_OK;
 }
 

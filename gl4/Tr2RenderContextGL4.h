@@ -7,6 +7,7 @@
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2RenderTargetAL.h"
 #include "../include/Tr2DepthStencilAL.h"
+#include "../include/Tr2SamplerStateAL.h"
 #include "../Tr2RenderContextEnum.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2DrawUPHelper.h"
@@ -391,6 +392,8 @@ private:
 
 	void    RestoreState( const ShadowStateRestoreInfo& info );
 public:
+	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
+
 	cl_context m_clContext;
 	cl_command_queue m_clQueue;
 	cl_device_id m_clDevice;

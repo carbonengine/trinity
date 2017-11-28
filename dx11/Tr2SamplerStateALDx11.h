@@ -13,31 +13,25 @@ struct Tr2SamplerDescription;
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
-// -------------------------------------------------------------
-// Description:
-//	Setting shader sampler state in a platform neutral way.
-// -------------------------------------------------------------
-class Tr2SamplerStateAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>
+namespace TrinityALImpl
 {
-public:
-	Tr2SamplerStateAL();
-	ALResult Create( 
-		Tr2PrimaryRenderContextAL &renderContext, 
-		const Tr2SamplerDescription& description );
+	class Tr2SamplerStateAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>
+	{
+	public:
+		Tr2SamplerStateAL();
 
-	bool IsValid() const 
-	{ 
-		return m_samplerState != nullptr; 
-	}
+		ALResult Create( const Tr2SamplerDescription& description, Tr2PrimaryRenderContextAL &renderContext );
 
-	bool operator==( const Tr2SamplerStateAL& ) const;
+		bool IsValid() const;
 
-	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
+		Tr2ALMemoryType GetMemoryClass();
+	private:
+		CComPtr<ID3D11SamplerState> m_samplerState;
+		friend class Tr2RenderContextAL;
+	};
 
-	CComPtr<ID3D11SamplerState> m_samplerState;
-	D3D11_SAMPLER_DESC m_samplerDesc;
-};
+}
 
-#endif // TRINITY_PLATFORM==TRINITY_DIRECTX11
+#endif
 
-#endif // Tr2SamplerStateALDx11_H
+#endif

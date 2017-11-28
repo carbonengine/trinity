@@ -159,7 +159,7 @@ private:
 	GLenum m_targetFormat;
 	GLenum m_targetType;
 
-	Tr2SamplerStateAL::StateData m_currentSampler;
+	TrinityALImpl::Tr2SamplerStateAL::StateData m_currentSampler;
 
 public:	//DEBUG
 #ifdef __ANDROID__

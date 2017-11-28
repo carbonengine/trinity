@@ -446,24 +446,15 @@ TEST_F( Rendering, CanSampleTexture )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -585,24 +576,15 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 
 	auto frame = [&] {
 
-		float border[4] = { 0 };
 		Tr2SamplerStateAL sampl;
 		ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-			*renderContext,
 			Tr2SamplerDescription( 
 				Tr2RenderContextEnum::TF_LINEAR,
-				Tr2RenderContextEnum::TF_LINEAR,
-				Tr2RenderContextEnum::TF_LINEAR,
-				false,
 				Tr2RenderContextEnum::TA_WRAP,
-				Tr2RenderContextEnum::TA_WRAP,
-				Tr2RenderContextEnum::TA_WRAP,
-				0.0f,
 				1,
-				Tr2RenderContextEnum::CMP_ALWAYS,
-				border,
 				float( ( g & 0xff ) / 128 ),
-				std::numeric_limits<float>::max() ) ) );
+				std::numeric_limits<float>::max() ),
+			*renderContext ) );
 
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
@@ -886,24 +868,15 @@ TEST_F( Rendering, CanClearRenderTarget )
 	Tr2VertexLayoutAL vertexLayout;
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	Tr2RenderTargetAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
@@ -1029,24 +1002,15 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 	Tr2VertexLayoutAL vertexLayout;
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	Tr2RenderTargetAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
@@ -1182,24 +1146,15 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 	Tr2VertexLayoutAL vertexLayout;
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	Tr2RenderTargetAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc( 4 ), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
@@ -2072,24 +2027,15 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2205,24 +2151,15 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2338,24 +2275,15 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2484,7 +2412,6 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_LINEAR,
 			Tr2RenderContextEnum::TF_LINEAR,
@@ -2498,7 +2425,8 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 			Tr2RenderContextEnum::CMP_ALWAYS,
 			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2651,7 +2579,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 		border,
 		0.0f,
 		std::numeric_limits<float>::max() );
-	ASSERT_HRESULT_SUCCEEDED( sampler.Create( *renderContext, samplerDesc ) );
+	ASSERT_HRESULT_SUCCEEDED( sampler.Create( samplerDesc, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2792,24 +2720,15 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 	Tr2VertexLayoutAL vertexLayout;
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	Tr2RenderTargetAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
@@ -2948,24 +2867,15 @@ TEST_F( Rendering, CanSampleBc1Texture )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC1_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3164,24 +3074,15 @@ TEST_F( Rendering, CanSampleBc2Texture )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC2_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3289,24 +3190,15 @@ TEST_F( Rendering, CanSampleBc3Texture )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC3_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3415,24 +3307,15 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.CreateVolume( width, height, depth, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_LINEAR,
-			Tr2RenderContextEnum::TF_LINEAR,
-			Tr2RenderContextEnum::TF_LINEAR,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3552,24 +3435,15 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.CreateVolume( width, height, depth, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC3_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_LINEAR,
-			Tr2RenderContextEnum::TF_LINEAR,
-			Tr2RenderContextEnum::TF_LINEAR,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3786,24 +3660,15 @@ TEST_F( Rendering, CanLockTextureTwice )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 1, 1, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3925,24 +3790,15 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127; 
 
@@ -4047,24 +3903,15 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
 
-	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			Tr2RenderContextEnum::TF_POINT,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			0.0f ) ) );
+			0.0f ),
+		*renderContext ) );
 
 	uint32_t g = 127; 
 

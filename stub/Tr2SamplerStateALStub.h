@@ -13,23 +13,24 @@ struct Tr2SamplerDescription;
 
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
-class Tr2SamplerStateAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>
+namespace TrinityALImpl
 {
-public:
-	Tr2SamplerStateAL();
+	class Tr2SamplerStateAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>
+	{
+	public:
+		Tr2SamplerStateAL();
 
-	ALResult Create( 
-		Tr2RenderContextAL& renderContext,
-		const Tr2SamplerDescription& description );
-	bool IsValid() const;
+		ALResult Create( const Tr2SamplerDescription& description, Tr2RenderContextAL& renderContext );
+		bool IsValid() const;
 
 
-	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
+		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 
-private:
-	bool m_isValid;
-};
+	private:
+		bool m_isValid;
+	};
+}
 
-#endif // TRINITY_PLATFORM==TRINITY_STUB
+#endif
 
-#endif // Tr2SamplerStateALStub_H
+#endif

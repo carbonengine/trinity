@@ -1,3 +1,29 @@
 #pragma once
 
+#include "../ALResult.h"
+#include "../Tr2ObjectFactory.h"
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2SamplerStateAL )
+
+class Tr2PrimaryRenderContextAL;
+struct Tr2SamplerDescription;
+
+class Tr2SamplerStateAL
+{
+public:
+	Tr2SamplerStateAL();
+	ALResult Create( const Tr2SamplerDescription& description, Tr2PrimaryRenderContextAL &renderContext );
+
+	bool IsValid() const;
+
+	Tr2ALMemoryType GetMemoryClass() const;
+
+	bool operator==( const Tr2SamplerStateAL& other ) const;
+private:
+	std::shared_ptr<TrinityALImpl::Tr2SamplerStateAL> m_sampler;
+	friend class Tr2RenderContextAL;
+};
+
+namespace TrinityALImpl
+{
+	typedef Tr2ObjectFactory<Tr2SamplerStateAL, Tr2SamplerDescription> Tr2SamplerStateALFactory;
+}

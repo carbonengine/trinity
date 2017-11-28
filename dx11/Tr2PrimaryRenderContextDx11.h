@@ -7,6 +7,7 @@
 #include "../include/Tr2RenderContextAL.h"
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2DepthStencilAL.h"
+#include "../include/Tr2SamplerStateAL.h"
 
 
 struct Tr2PresentParametersAL;
@@ -82,6 +83,8 @@ private:
 	Tr2CapsAL m_caps;
 
 	Tr2MemoryCounterAL m_memory;
+public:
+	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 
 private:
 	Tr2PrimaryRenderContextAL( const Tr2PrimaryRenderContextAL& ) /* = delete */;

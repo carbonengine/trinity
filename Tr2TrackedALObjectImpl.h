@@ -72,6 +72,10 @@ class Tr2GpuBufferAL;
 class Tr2FenceAL;
 class Tr2GpuTimerAL;
 class Tr2ShaderProgramAL;
+namespace TrinityALImpl
+{
+	class Tr2SamplerStateAL;
+}
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -190,7 +194,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SAMPLER_STATE
 	// Description:
 	//   AL object type this information structure is applied to.
 	// ----------------------------------------------------------------------------------
-	typedef Tr2SamplerStateAL ObjectType;
+	typedef TrinityALImpl::Tr2SamplerStateAL ObjectType;
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );

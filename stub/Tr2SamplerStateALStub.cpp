@@ -4,30 +4,23 @@
 
 #include "Tr2SamplerStateALStub.h"
 
-// Force anisotropic filtering switch:
-// 0 means use whatever is specified in the effect (default)
-// 1 means turn off anisotropic filtering (fallback to linear)
-// >1 - force max anisotropy to specified number
-uint32_t g_forceAnisotropy = 0;
-
-Tr2SamplerStateAL::Tr2SamplerStateAL()
+namespace TrinityALImpl
 {
-	m_isValid = false;
+	Tr2SamplerStateAL::Tr2SamplerStateAL()
+	{
+		m_isValid = false;
+	}
+
+	ALResult Tr2SamplerStateAL::Create( const Tr2SamplerDescription&, Tr2RenderContextAL& )
+	{
+		m_isValid = true;
+		return S_OK;
+	}
+
+	bool Tr2SamplerStateAL::IsValid() const
+	{
+		return m_isValid;
+	}
 }
 
-ALResult Tr2SamplerStateAL::Create( 
-	Tr2RenderContextAL& /*renderContext*/,
-	const Tr2SamplerDescription& description )
-{
-	m_isValid = true;
-	return S_OK;
-}
-
-bool Tr2SamplerStateAL::IsValid() const
-{
-	return m_isValid;
-}
-
-
-
-#endif // TRINITY_PLATFORM==TRINITY_STUB
+#endif

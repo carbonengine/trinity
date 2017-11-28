@@ -206,7 +206,7 @@ ALResult Tr2TextureAL::Create2D( uint32_t width,
 	m_isAlias = false;
 	ChangeObjectId();
 	float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-	Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
+	TrinityALImpl::Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
 													TF_POINT,
 													TF_POINT,
 													false,
@@ -219,7 +219,7 @@ ALResult Tr2TextureAL::Create2D( uint32_t width,
 													borderColor,
 													0,
 													1 ), m_currentSampler );
-	Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, false, m_currentSampler );
+	TrinityALImpl::Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, false, m_currentSampler );
 
 	return S_OK;
 }
@@ -354,7 +354,7 @@ ALResult Tr2TextureAL::CreateCube( uint32_t width,
 	m_isAlias = false;
 	ChangeObjectId();
 	float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-	Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
+	TrinityALImpl::Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
 													TF_POINT,
 													TF_POINT,
 													false,
@@ -367,7 +367,7 @@ ALResult Tr2TextureAL::CreateCube( uint32_t width,
 													borderColor,
 													0,
 													1 ), m_currentSampler );
-	Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, false, m_currentSampler );
+	TrinityALImpl::Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, false, m_currentSampler );
 
 	return S_OK;
 }
@@ -516,7 +516,7 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 	m_isAlias = false;
 	ChangeObjectId();
 	float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-	Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
+	TrinityALImpl::Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
 													TF_POINT,
 													TF_POINT,
 													false,
@@ -529,7 +529,7 @@ ALResult Tr2TextureAL::CreateVolume( uint32_t width,
 													borderColor,
 													0,
 													1 ), m_currentSampler );
-	Tr2SamplerStateAL::Apply( GL_TEXTURE_3D, false, m_currentSampler );
+	TrinityALImpl::Tr2SamplerStateAL::Apply( GL_TEXTURE_3D, false, m_currentSampler );
 
 	return S_OK;
 }
@@ -628,7 +628,7 @@ ALResult Tr2TextureAL::CreateDepthTexture( uint32_t width,
 	m_format = PIXEL_FORMAT_D32_FLOAT;
 	m_type = TEX_TYPE_2D;
 	float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
-	Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
+	TrinityALImpl::Tr2SamplerStateAL::CreateStateData( Tr2SamplerDescription( TF_POINT,
 													TF_POINT,
 													TF_POINT,
 													false,
@@ -641,7 +641,7 @@ ALResult Tr2TextureAL::CreateDepthTexture( uint32_t width,
 													borderColor,
 													0,
 													1 ), m_currentSampler );
-	Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, false, m_currentSampler );
+	TrinityALImpl::Tr2SamplerStateAL::Apply( GL_TEXTURE_2D, false, m_currentSampler );
 	return S_OK;
 }
 

@@ -7,6 +7,7 @@
 #include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2RenderTargetAL.h"
 #include "../include/Tr2CapsAL.h"
+#include "../include/Tr2SamplerStateAL.h"
 
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
@@ -278,6 +279,8 @@ private:
 	Blitter* m_blitter;
 	//dustbin for orphaned queries
 	TrackableStdVector<CComPtr<IDirect3DQuery9>> m_queryDustbin;
+public:
+	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 private:	
 	Tr2RenderTargetAL m_defaultBackBuffer;
 	CComPtr<IDirect3DSurface9> m_nullRT;

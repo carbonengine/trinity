@@ -322,6 +322,7 @@ Tr2PrimaryRenderContextAL* Tr2RenderContextAL::GetPrimaryRenderContextPointer()
 
 void Tr2RenderContextAL::Destroy()
 {
+	m_samplerStateFactory.Clear();
 	ReleaseDeviceResources();
 
 	m_memory.Reset();
@@ -678,16 +679,12 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 		return E_FAIL;
 	}
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( samplerState );
-	for( int i = Tr2SamplerStateAL::SAMPLER_STATE_MIN; i < Tr2SamplerStateAL::SAMPLER_STATE_COUNT; ++i )
+	auto& ss = *samplerState.m_sampler;
+
+	AL_UPDATE_RESOURCE_FRAME_USAGE( ss );
+	for( int i = TrinityALImpl::Tr2SamplerStateAL::SAMPLER_STATE_MIN; i < TrinityALImpl::Tr2SamplerStateAL::SAMPLER_STATE_COUNT; ++i )
 	{
-		HRESULT hr = m_d3dDevice9->SetSamplerState(		registerNumber, 
-														D3DSAMPLERSTATETYPE( i ), 
-														samplerState.m_states[i] );
-		if( FAILED( hr ) )
-		{
-			return hr;
-		}
+		m_d3dDevice9->SetSamplerState(	registerNumber, D3DSAMPLERSTATETYPE( i ), ss.m_states[i] );
 	}
 	return S_OK;
 }

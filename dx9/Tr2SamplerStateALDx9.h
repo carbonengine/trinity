@@ -13,31 +13,29 @@ struct Tr2SamplerDescription;
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
-class Tr2SamplerStateAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>
+namespace TrinityALImpl
 {
-public:
-	Tr2SamplerStateAL();
+	class Tr2SamplerStateAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>
+	{
+	public:
+		Tr2SamplerStateAL();
 
-	ALResult Create( 
-		Tr2RenderContextAL& renderContext,
-		const Tr2SamplerDescription& description );
-	bool IsValid() const;
+		ALResult Create( const Tr2SamplerDescription& description, Tr2RenderContextAL& renderContext );
+		bool IsValid() const;
 
-	bool operator==( const Tr2SamplerStateAL& ) const;
+		Tr2ALMemoryType GetMemoryClass() const;
+	private:
+		static const uint32_t SAMPLER_STATE_MIN = 1;
+		static const uint32_t SAMPLER_STATE_COUNT = 11;
 
-	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
+		uint32_t m_states[SAMPLER_STATE_COUNT];
 
-	static const uint32_t SAMPLER_STATE_MIN = 1;
-	static const uint32_t SAMPLER_STATE_COUNT = 11;
+		bool m_isValid;
 
-	uint32_t m_states[SAMPLER_STATE_COUNT];
-private:
-	Tr2SamplerStateAL( const Tr2SamplerStateAL& ) /* = delete */;
-	Tr2SamplerStateAL& operator=( const Tr2SamplerStateAL& ) /* = delete */;
+		friend class Tr2RenderContextAL;
+	};
+}
 
-	bool m_isValid;
-};
+#endif
 
-#endif // TRINITY_PLATFORM==TRINITY_DIRECTX9
-
-#endif // Tr2SamplerStateALDx9_H
+#endif

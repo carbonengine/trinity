@@ -72,7 +72,7 @@ ALResult CreateSampleObject( Tr2SamplerStateAL& ss, Tr2PrimaryRenderContextAL& r
 								borderColor,
 								0.1f,
 								3.2f );
-	return ss.Create( renderContext, desc );
+	return ss.Create( desc, renderContext );
 }
 
 ALResult CreateSampleObject( Tr2TextureAL& texture, Tr2PrimaryRenderContextAL& renderContext )

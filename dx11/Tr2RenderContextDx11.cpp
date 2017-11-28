@@ -1383,26 +1383,27 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 	ShaderType inputType, 
 	uint32_t registerNumber )
 {
-	AL_UPDATE_RESOURCE_FRAME_USAGE( samplerState );
+	AL_UPDATE_RESOURCE_FRAME_USAGE( *samplerState.m_sampler );
+	auto ss = samplerState.m_sampler->m_samplerState.p;
 	switch( inputType )
 	{
 	case VERTEX_SHADER:
-		m_context->VSSetSamplers( registerNumber, 1, &samplerState.m_samplerState.p );
+		m_context->VSSetSamplers( registerNumber, 1, &ss );
 		return S_OK;
 	case PIXEL_SHADER:
-		m_context->PSSetSamplers( registerNumber, 1, &samplerState.m_samplerState.p );
+		m_context->PSSetSamplers( registerNumber, 1, &ss );
 		return S_OK;
 	case COMPUTE_SHADER:
-		m_context->CSSetSamplers( registerNumber, 1, &samplerState.m_samplerState.p );
+		m_context->CSSetSamplers( registerNumber, 1, &ss );
 		return S_OK;
 	case GEOMETRY_SHADER:
-		m_context->GSSetSamplers( registerNumber, 1, &samplerState.m_samplerState.p );
+		m_context->GSSetSamplers( registerNumber, 1, &ss );
 		return S_OK;
 	case HULL_SHADER:
-		m_context->HSSetSamplers( registerNumber, 1, &samplerState.m_samplerState.p );
+		m_context->HSSetSamplers( registerNumber, 1, &ss );
 		return S_OK;
 	case DOMAIN_SHADER:
-		m_context->DSSetSamplers( registerNumber, 1, &samplerState.m_samplerState.p );
+		m_context->DSSetSamplers( registerNumber, 1, &ss );
 		return S_OK;
 	default:
 		return E_INVALIDARG;

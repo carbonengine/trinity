@@ -206,22 +206,8 @@ struct Tr2RenderContextAL::Blitter
 		glDeleteShader( vertexShader );
 		glDeleteShader( fragmentShader );
 
-		float border[4] = { 0 };
-		Tr2SamplerDescription desc( 
-			TF_POINT, 
-			TF_POINT, 
-			TF_POINT, 
-			false, 
-			TA_CLAMP, 
-			TA_CLAMP, 
-			TA_CLAMP, 
-			0.0f, 
-			1, 
-			CMP_ALWAYS, 
-			border, 
-			0, 
-			std::numeric_limits<float>::max() );
-		CR_RETURN_HR( m_sampler.Create( renderContext, desc ) );
+		Tr2SamplerDescription desc( TF_POINT, TA_CLAMP );
+		CR_RETURN_HR( m_sampler.Create( desc, renderContext ) );
 
 		float vb[] = {
 			-1.0f, -1.0f, 0.0f, 1.0f,
@@ -243,16 +229,16 @@ struct Tr2RenderContextAL::Blitter
 	// --------------------------------------------------------------------------------------
 	ALResult Blit( Tr2TextureAL& source )
 	{
-		AL_UPDATE_RESOURCE_FRAME_USAGE( m_sampler );
+		AL_UPDATE_RESOURCE_FRAME_USAGE( *m_sampler.m_sampler );
 		AL_UPDATE_RESOURCE_FRAME_USAGE( m_buffer );
 
 		GL_FAIL( glActiveTexture( GL_TEXTURE0 ) );
 		GL_FAIL( glBindTexture( GL_TEXTURE_2D, *source.m_texture ) );
 		GL_IGNORE_ERROR( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
-		if( !( source.m_currentSampler.m_hash == m_sampler.m_stateData.m_hash ) )
+		if( !( source.m_currentSampler.m_hash == m_sampler.m_sampler->m_stateData.m_hash ) )
 		{
-			CR_RETURN_HR( (HRESULT)m_sampler.Apply( GL_TEXTURE_2D, source.GetTrueMipCount() > 1, m_sampler.m_stateData ) );
-			source.m_currentSampler = m_sampler.m_stateData;
+			CR_RETURN_HR( (HRESULT)m_sampler.m_sampler->Apply( GL_TEXTURE_2D, source.GetTrueMipCount() > 1, m_sampler.m_sampler->m_stateData ) );
+			source.m_currentSampler = m_sampler.m_sampler->m_stateData;
 		}
 		GL_FAIL( glUseProgram( m_program ) );
 
@@ -445,6 +431,7 @@ Tr2PrimaryRenderContextAL* Tr2RenderContextAL::GetPrimaryRenderContextPointer()
 void Tr2RenderContextAL::Destroy()
 {
 	ReleaseDeviceResources();
+	m_samplerStateFactory.Clear();
 
 	ReleaseOpenGLContext();
 
@@ -886,8 +873,8 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 	{
 		return E_INVALIDARG;
 	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( samplerState );
-	m_boundSamplers[inputType][registerNumber] = samplerState.m_stateData;
+	AL_UPDATE_RESOURCE_FRAME_USAGE( *samplerState.m_sampler );
+	m_boundSamplers[inputType][registerNumber] = samplerState.m_sampler->m_stateData;
 	return S_OK;
 }
 
@@ -2336,7 +2323,7 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 				glBindTexture( 
 					textureType, 
 					m_boundTextures[PIXEL_SHADER][j]->m_texture ? *m_boundTextures[PIXEL_SHADER][j]->m_texture : 0 );
-				Tr2SamplerStateAL::Apply( 
+				TrinityALImpl::Tr2SamplerStateAL::Apply( 
 					textureType, 
 					m_boundTextures[PIXEL_SHADER][j]->GetTrueMipCount() > 1,
 					m_boundSamplers[PIXEL_SHADER][j] );

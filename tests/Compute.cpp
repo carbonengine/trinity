@@ -222,21 +222,13 @@ TEST_F( Compute, CanRead2DTextureInCS )
 	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
-		*renderContext,
 		Tr2SamplerDescription( 
 			Tr2RenderContextEnum::TF_LINEAR,
-			Tr2RenderContextEnum::TF_LINEAR,
-			Tr2RenderContextEnum::TF_LINEAR,
-			false,
 			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			Tr2RenderContextEnum::TA_WRAP,
-			0.0f,
 			1,
-			Tr2RenderContextEnum::CMP_ALWAYS,
-			border,
 			0.0f,
-			100.f ) ) );
+			100.f ),
+		*renderContext ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetSamplerState( sampl, COMPUTE_SHADER, 0 ) );
 
 	Tr2GpuBufferAL output;

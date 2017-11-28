@@ -7,6 +7,7 @@
 #include "../Tr2RenderContextEnum.h"
 #include "../include/Tr2RenderTargetAL.h"
 #include "../include/Tr2CapsAL.h"
+#include "../include/Tr2SamplerStateAL.h"
 #include "../Tr2HalHelperStructures.h"
 
 class Tr2VertexBufferAL;
@@ -255,7 +256,8 @@ private:
 	Tr2RenderTargetAL m_defaultBackBuffer;
 	Tr2Viewport m_viewport;
 	TrackableStdStack<const Tr2RenderTargetAL*>	m_stackRT[MAX_RENDER_TARGET];
-
+public:
+	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 };
 
 #endif	// #if( TRINITY_PLATFORM==TRINITY_STUB )
