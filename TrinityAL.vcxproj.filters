@@ -107,6 +107,9 @@
     <ClInclude Include="dx11\Tr2RenderTargetALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
+    <ClInclude Include="dx11\Tr2ResourceSetALDx11.h">
+      <Filter>Source Files\dx11</Filter>
+    </ClInclude>
     <ClInclude Include="dx11\Tr2SamplerStateALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
@@ -162,6 +165,9 @@
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2RenderTargetALDx9.h">
+      <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2ResourceSetALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2SamplerStateALDx9.h">
@@ -221,6 +227,9 @@
     <ClInclude Include="gl4\Tr2RenderTargetALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
+    <ClInclude Include="gl4\Tr2ResourceSetALGL4.h">
+      <Filter>Source Files\gl4</Filter>
+    </ClInclude>
     <ClInclude Include="gl4\Tr2SamplerStateALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
@@ -276,6 +285,9 @@
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2RenderTargetALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2ResourceSetALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2SamplerStateALGLES2.h">
@@ -344,6 +356,9 @@
     <ClInclude Include="include\Tr2RenderTargetAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
+    <ClInclude Include="include\Tr2ResourceSetAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
     <ClInclude Include="include\Tr2SamplerStateAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
@@ -408,6 +423,9 @@
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2RenderTargetALStub.h">
+      <Filter>Source Files\stub</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2ResourceSetALStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2SamplerStateALStub.h">
@@ -509,6 +527,9 @@
     <ClCompile Include="dx11\Tr2RenderTargetALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
+    <ClCompile Include="dx11\Tr2ResourceSetALDx11.cpp">
+      <Filter>Source Files\dx11</Filter>
+    </ClCompile>
     <ClCompile Include="dx11\Tr2SamplerStateALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
@@ -558,6 +579,9 @@
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2RenderTargetALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2ResourceSetALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2SamplerStateALDx9.cpp">
@@ -614,6 +638,9 @@
     <ClCompile Include="gl4\Tr2RenderTargetALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
+    <ClCompile Include="gl4\Tr2ResourceSetALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
+    </ClCompile>
     <ClCompile Include="gl4\Tr2SamplerStateALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
@@ -665,6 +692,9 @@
     <ClCompile Include="gles2\Tr2RenderTargetALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
+    <ClCompile Include="gles2\Tr2ResourceSetALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
+    </ClCompile>
     <ClCompile Include="gles2\Tr2SamplerStateALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
@@ -688,6 +718,9 @@
     </ClCompile>
     <ClCompile Include="gles2\Tr2VideoAdapterInfoALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Tr2ResourceSetAL.cpp">
+      <Filter>Source Files\src</Filter>
     </ClCompile>
     <ClCompile Include="src\Tr2SamplerStateAL.cpp">
       <Filter>Source Files\src</Filter>
@@ -717,6 +750,9 @@
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2RenderTargetALStub.cpp">
+      <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2ResourceSetALStub.cpp">
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2SamplerStateALStub.cpp">
