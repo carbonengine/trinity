@@ -15,6 +15,11 @@ struct Tr2TextureSubresource;
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGL4 )
 
+namespace TrinityALImpl
+{
+	class Tr2ResourceSetAL;
+}
+
 // -------------------------------------------------------------
 // Description:
 //   A low level wrapper around the calls needed to set up a GPU
@@ -165,6 +170,7 @@ public:	//DEBUG
 	friend class Tr2RenderContextAL;
 	friend class Tr2RenderTargetAL;
 	friend class Tr2DepthStencilAL;
+	friend class TrinityALImpl::Tr2ResourceSetAL;
 };
 
 #endif // #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )

@@ -11,6 +11,7 @@
 #include "Tr2VertexLayoutALGL4.h"
 #include "Tr2ShaderProgramALGL4.h"
 #include "Tr2AdapterStructures.h"
+#include "Tr2ResourceSetALGL4.h"
 #include "ALLog.h"
 
 
@@ -854,52 +855,7 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 	ShaderType inputType, 
 	uint32_t registerNumber )
 {
-	if( registerNumber >= 16 )
-	{
-		return E_INVALIDARG;
-	}
-	if( inputType == COMPUTE_SHADER )
-	{
-		cl_sampler mem = nullptr;
-		if( samplerState.IsValid() )
-		{
-			AL_UPDATE_RESOURCE_FRAME_USAGE( *samplerState.m_sampler );
-			if( !samplerState.m_sampler->m_clObject )
-			{
-				samplerState.m_sampler->m_clObject = clCreateSampler( m_clContext, CL_TRUE,
-					samplerState.m_sampler->m_stateData.m_wrapT == GL_TEXTURE_WRAP_S ? CL_ADDRESS_REPEAT : CL_ADDRESS_CLAMP,
-					samplerState.m_sampler->m_stateData.m_magFilter == GL_NEAREST ? CL_FILTER_NEAREST : CL_FILTER_LINEAR,
-					nullptr );
-				if( !samplerState.m_sampler->m_clObject )
-				{
-					return E_FAIL;
-				}
-			}
-			mem = samplerState.m_sampler->m_clObject;
-		}
-		if( m_boundClSamplers[registerNumber] )
-		{
-			clReleaseSampler( m_boundClSamplers[registerNumber] );
-		}
-		m_boundClSamplers[registerNumber] = mem;
-		if( mem )
-		{
-			clRetainSampler( mem );
-		}
-		return S_OK;
-	}
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *samplerState.m_sampler );
-
-	GL_FAIL( glBindSampler( registerNumber, samplerState.m_sampler->m_sampler ) );
-	if( samplerState.m_sampler->m_sampler )
-	{
-		GL_FAIL( glSamplerParameteri( samplerState.m_sampler->m_sampler,
-									GL_TEXTURE_SRGB_DECODE_EXT, 
-									m_srgbDecode[inputType][registerNumber] ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT  ) );
-	}
-	m_boundSamplers[inputType][registerNumber] = samplerState.m_sampler->m_sampler;
-	return S_OK;
+	return E_FAIL;
 }
 
 void Tr2RenderContextAL::SetReadOnlyDepth( bool /*enable*/ ) {}
@@ -1027,9 +983,6 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	{
 		m_events->OnContextCreated( *this );
 	}
-
-	memset( m_boundSamplers, 0, sizeof( m_boundSamplers ) );
-	memset( m_srgbDecode, 0, sizeof( m_srgbDecode ) );
 
 #ifdef _WIN32
 
@@ -1775,41 +1728,6 @@ ALResult Tr2RenderContextAL::SetShaderBuffer(
 	uint32_t slot, 
 	const Tr2GpuBufferAL& buffer )
 {
-	if( inputType == COMPUTE_SHADER )
-	{
-		cl_mem mem = nullptr;
-		if( !buffer.IsValid() )
-		{
-			if( &buffer != &nullGB )
-			{
-				return E_INVALIDARG;
-			}
-		}
-		else
-		{
-			AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-			if( !buffer.m_clObject )
-			{
-				int error;
-				buffer.m_clObject = clCreateFromGLBuffer( m_clContext, CL_MEM_READ_WRITE, *buffer.m_buffer, &error );
-				if( !buffer.m_clObject )
-				{
-					return E_FAIL;
-				}
-			}
-			mem = buffer.m_clObject;
-		}
-		if( m_boundTextures[slot] )
-		{
-			clReleaseMemObject( m_boundTextures[slot] );
-		}
-		m_boundTextures[slot] = mem;
-		if( mem )
-		{
-			clRetainMemObject( mem );
-		}
-		return S_OK;
-	}
 	return E_FAIL;
 }
 
@@ -1857,6 +1775,54 @@ ALResult Tr2RenderContextAL::SetUav(
 	return S_OK;
 }
 
+ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
+{
+	if( !resourceSet.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
+	auto& rs = *resourceSet.m_resourceSet;
+	for( auto it = rs.m_textures.begin(); it != rs.m_textures.end(); ++it )
+	{
+		if( !it->texture )
+		{
+			continue;
+		}
+		GL_FAIL( glActiveTexture( GL_TEXTURE0 + it->registerIndex ) );
+		GL_FAIL( glBindTexture( it->type, *it->texture ) );
+		GL_FAIL( glSamplerParameteri( it->sampler, GL_TEXTURE_SRGB_DECODE_EXT, it->srgbDecode ) );
+		GL_FAIL( glBindSampler( it->registerIndex, it->sampler ) );
+	}
+
+	for( auto it = rs.m_clResources.begin(); it != rs.m_clResources.end(); ++it )
+	{
+		if( it->isSampler )
+		{
+			if( m_boundClSamplers[it->registerIndex] )
+			{
+				clReleaseSampler( m_boundClSamplers[it->registerIndex] );
+			}
+			m_boundClSamplers[it->registerIndex] = it->sampler;
+			if( it->sampler )
+			{
+				clRetainSampler( it->sampler );
+			}
+		}
+		else
+		{
+			if( m_boundTextures[it->registerIndex] )
+			{
+				clReleaseMemObject( m_boundTextures[it->registerIndex] );
+			}
+			m_boundTextures[it->registerIndex] = it->resource;
+			if( it->resource )
+			{
+				clRetainMemObject( it->resource );
+			}
+		}
+	}
+	return S_OK;
+}
 
 ALResult Tr2RenderContextAL::SetTexture(	
 	ShaderType inputType, 
@@ -1864,85 +1830,7 @@ ALResult Tr2RenderContextAL::SetTexture(
 	const Tr2TextureAL& texture, 
 	Tr2RenderContextEnum::ColorSpace colorSpace )
 {
-	if( slot >= 16 )
-	{
-		return E_INVALIDARG;
-	}
-	if( inputType == COMPUTE_SHADER )
-	{
-		cl_mem mem = nullptr;
-		if( !texture.IsValid() )
-		{
-			if( &texture != &nullTX )
-			{
-				return E_INVALIDARG;
-			}
-		}
-		else
-		{
-			AL_UPDATE_RESOURCE_FRAME_USAGE( texture );
-			if( !texture.m_clObject )
-			{
-				switch( texture.GetType() )
-				{
-				case TEX_TYPE_1D:
-				case TEX_TYPE_2D:
-#ifdef _WIN32
-					texture.m_clObject = clCreateFromGLTexture2D( m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, *texture.m_texture, nullptr );
-#else
-					texture.m_clObject = clCreateFromGLTexture( m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, *texture.m_texture, nullptr );
-#endif
-					break;
-				case TEX_TYPE_3D:
-#ifdef _WIN32
-					texture.m_clObject = clCreateFromGLTexture3D( m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, *texture.m_texture, nullptr );
-#else
-					texture.m_clObject = clCreateFromGLTexture( m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, *texture.m_texture, nullptr );
-#endif
-					break;
-				default:
-					return E_FAIL;
-				}
-				if( !texture.m_clObject )
-				{
-					return E_FAIL;
-				}
-			}
-			mem = texture.m_clObject;
-		}
-		if( m_boundTextures[slot] )
-		{
-			clReleaseMemObject( m_boundTextures[slot] );
-		}
-		m_boundTextures[slot] = mem;
-		if( mem )
-		{
-			clRetainMemObject( mem );
-		}
-		return S_OK;
-	}
-
-
-	if( !texture.IsValid() )
-	{
-		return &texture == &nullTX ? S_OK : E_INVALIDARG;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( texture );
-	// TODO: handle sRGB: like in DX11 with texture.m_texture[2]?
-	if( m_currentActiveTexture != slot )
-	{
-		GL_FAIL( glActiveTexture( GL_TEXTURE0 + slot ) );	//TODO vertex shader textures
-		m_currentActiveTexture = slot;
-	}
-	GL_FAIL( glBindTexture( ConvertTextureType( texture.GetType() ), *texture.m_texture ) );
-	m_srgbDecode[inputType][slot] = colorSpace == COLOR_SPACE_SRGB;
-	if( m_boundSamplers[inputType][slot] )
-	{
-		GL_FAIL( glSamplerParameteri( m_boundSamplers[inputType][slot],
-									GL_TEXTURE_SRGB_DECODE_EXT, 
-									m_srgbDecode[inputType][slot] ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT  ) );
-	}
-	return S_OK;
+	return E_FAIL;
 }
 
 ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights )

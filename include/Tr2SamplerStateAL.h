@@ -21,6 +21,7 @@ public:
 private:
 	std::shared_ptr<TrinityALImpl::Tr2SamplerStateAL> m_sampler;
 	friend class Tr2RenderContextAL;
+	friend class TrinityALImpl::Tr2ResourceSetAL;
 };
 
 namespace TrinityALImpl

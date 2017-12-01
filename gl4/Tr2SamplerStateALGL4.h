@@ -27,6 +27,7 @@ namespace TrinityALImpl
 
 	private:
 		friend class Tr2RenderContextAL;
+		friend class Tr2ResourceSetAL;
 
 		GLuint m_sampler;
 

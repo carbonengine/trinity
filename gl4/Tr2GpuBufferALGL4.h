@@ -15,6 +15,11 @@ class Tr2RenderContextAL;
 
 class Tr2RenderContextAL;
 
+namespace TrinityALImpl
+{
+	class Tr2ResourceSetAL;
+}
+
 class Tr2GpuBufferAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_GPU_BUFFER>
 {
 public:
@@ -82,6 +87,7 @@ private:
 
 
 	friend class Tr2RenderContextAL;
+	friend class TrinityALImpl::Tr2ResourceSetAL;
 
 	uint32_t m_numElements;
 	uint32_t m_elementSize;

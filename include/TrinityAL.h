@@ -28,3 +28,7 @@
 #include "Tr2FenceAL.h"
 #include "Tr2GpuTimerAL.h"
 #include "Tr2ShaderProgramAL.h"
+#include "Tr2ResourceSetAL.h"
+// for now... this private include should go away, but for that
+// we need to clean up Tr2TrackedALObject stuff
+#include TRINITY_AL_PLATFORM_INCLUDE( Tr2ResourceSetAL )

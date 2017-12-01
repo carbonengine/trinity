@@ -22,6 +22,7 @@ class Tr2TextureAL;
 struct ITr2RenderContextEvents;
 struct Tr2PresentParametersAL;
 struct Tr2Viewport;
+class Tr2ResourceSetAL;
 
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
@@ -113,6 +114,8 @@ public:
 		uint32_t slot, 
 		const Tr2TextureAL& texture, 
 		Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
+
+	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet );
 	
 	ALResult DrawIndexedPrimitive(	
 		uint32_t numVertices, 
@@ -312,11 +315,6 @@ private:
 	VertexStream m_boundStreams[8];
 
 	Tr2Viewport m_currentViewport;
-
-	Tr2TextureAL*		m_boundTextures[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
-	TrinityALImpl::Tr2SamplerStateAL::StateData m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
-
-	unsigned m_currentActiveTexture;
 
 	struct BlendState
 	{

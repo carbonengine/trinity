@@ -16,6 +16,7 @@
 #include "Tr2ShaderALDx9.h"
 #include "Tr2ShaderProgramALDx9.h"
 #include "Tr2AdapterStructures.h"
+#include "Tr2ResourceSetALDx9.h"
 
 using namespace Tr2RenderContextEnum;
 #pragma warning( disable: 4189 )	// Scopeguard
@@ -287,7 +288,8 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_blitter( nullptr )
 	, m_events( nullptr )
 	, m_adapter( 0 ),
-	m_isLost( false )
+	m_isLost( false ),
+	m_samplerHash( 0 )
 {
 	CCP_ASSERT( GetPrimaryRenderContextPointer() == nullptr );
 	::GetPrimaryRenderContextPointer() = this;
@@ -334,6 +336,7 @@ void Tr2RenderContextAL::Destroy()
 	m_d3dDevice9 = nullptr;
 	m_depthStencilFormat = DSFMT_UNKNOWN;
 	m_isLost = false;
+	m_samplerHash = 0;
 }
 
 ALResult Tr2RenderContextAL::ReportIfFailure( long hr, const char* message )
@@ -730,6 +733,11 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2RenderTargetAL& renderTar
 		return E_INVALIDARG;
 	}
 
+	for( uint32_t i = 0; i < 20; ++i )
+	{
+		m_d3dDevice9->SetTexture( i, nullptr );
+	}
+
 	if( &renderTarget == &nullRT && slot == 0 )
 	{
 		m_boundRenderTarget[slot] = nullptr;
@@ -979,6 +987,7 @@ const Tr2CapsAL& Tr2RenderContextAL::GetCaps() const
 
 ALResult Tr2RenderContextAL::BeginScene()
 {
+	m_samplerHash = 0;
 	return m_d3dDevice9 ? m_d3dDevice9->BeginScene() : S_OK;
 }
 
@@ -1142,6 +1151,29 @@ ALResult Tr2RenderContextAL::SetTexture(
 	AL_UPDATE_RESOURCE_FRAME_USAGE( texture );
 	CR_RETURN_HR( m_d3dDevice9->SetSamplerState( slot, D3DSAMP_SRGBTEXTURE, colorSpace == COLOR_SPACE_SRGB ? TRUE : FALSE ) );
 	return m_d3dDevice9->SetTexture( slot, texture.m_texture );
+}
+
+ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
+{
+	if( !resourceSet.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
+	auto& rs = *resourceSet.m_resourceSet;
+
+	for( auto it = rs.m_textures.begin(); it != rs.m_textures.end(); ++it )
+	{
+		m_d3dDevice9->SetTexture( it->registerIndex, it->texture );
+	}
+	if( rs.m_samplerHash != m_samplerHash )
+	{
+		for( auto it = rs.m_samplerStates.begin(); it != rs.m_samplerStates.end(); ++it )
+		{
+			m_d3dDevice9->SetSamplerState( it->registerIndex, it->state, it->value );
+		}
+		m_samplerHash = rs.m_samplerHash;
+	}
+	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights )

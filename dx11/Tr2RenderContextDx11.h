@@ -20,6 +20,7 @@ class Tr2GpuBufferAL;
 class Tr2RenderTargetAL;
 class Tr2SamplerStateAL;
 class Tr2DepthStencilAL;
+class Tr2ResourceSetAL;
 struct Tr2Viewport;
 
 
@@ -87,6 +88,8 @@ public:
 		uint32_t slot, 
 		const Tr2TextureAL& texture, 
 		Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) throw();
+
+	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
 	
 	ALResult DrawIndexedPrimitive(	
 		uint32_t numVertices, 
@@ -297,6 +300,7 @@ private:
 	ALResult SetRtDsToDevice( uint32_t changedSlot ) throw();
 
 private:
+	uint32_t m_samplerHashes[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 
 	friend class Tr2PrimaryRenderContextAL;
 

@@ -11,6 +11,7 @@
 #include "Tr2VertexLayoutALGLES2.h"
 #include "Tr2AdapterStructures.h"
 #include "Tr2ShaderProgramALGLES2.h"
+#include "Tr2ResourceSetALGLES2.h"
 
 #include "ALLog.h"
 
@@ -287,7 +288,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_offscreenFrameBuffer1( 0 )
 	, m_numberOfLights( 0 )
 	, m_currentViewport( 0, 0 )
-	, m_currentActiveTexture( 0 )
 	, m_blitter( nullptr )
 	, m_events( nullptr )
 #if defined(TRINITY_AL_MOBILE)
@@ -308,14 +308,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	for( unsigned i = 0; i < 16; ++i )
 	{
 		m_boundBuffers[i] = nullptr;
-	}
-
-	for( int i = SHADER_TYPE_FIRST; i != SHADER_TYPE_COUNT; ++i )
-	{
-		for( int j = 0; j < 16; ++j )
-		{
-			m_boundTextures[i][j] = nullptr;
-		}
 	}
 
 	m_blendState.separateAlphaBlend = false;
@@ -449,8 +441,6 @@ void Tr2RenderContextAL::Destroy()
 	m_alphaTestParameters.m_alphaTestRef = 0;
 	m_alphaTestParameters.m_alphaTestFunc = CMP_ALWAYS;
 	m_fragmentOpSettings.m_clipPlaneEnable = 0;
-
-	m_currentActiveTexture = 0;
 
 	m_hWnd = 0;
 }
@@ -869,13 +859,7 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 	ShaderType inputType, 
 	uint32_t registerNumber )
 {
-	if( registerNumber >= 16 )
-	{
-		return E_INVALIDARG;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *samplerState.m_sampler );
-	m_boundSamplers[inputType][registerNumber] = samplerState.m_sampler->m_stateData;
-	return S_OK;
+	return E_FAIL;
 }
 
 void Tr2RenderContextAL::SetReadOnlyDepth( bool /*enable*/ ) {}
@@ -974,14 +958,6 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	if( m_events )
 	{
 		m_events->OnContextCreated( *this );
-	}
-
-	for( int j = 0; j < Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++j )
-	{
-		for( int i = 0; i < 16; ++i )
-		{
-			m_boundSamplers[j][i].m_hash = 0;
-		}
 	}
 
 	return S_OK;
@@ -1174,7 +1150,6 @@ ALResult Tr2RenderContextAL::InternalBlitToBackBuffer( Tr2TextureAL& source )
 	ALResult result = m_blitter->Blit( source );
 
 	m_program = nullptr;
-	m_currentActiveTexture = 0;
 	if( m_renderStates[RS_ZENABLE] )
 	{
 		glEnable( GL_DEPTH_TEST );
@@ -1619,28 +1594,27 @@ ALResult Tr2RenderContextAL::SetTexture(
 	const Tr2TextureAL& texture, 
 	Tr2RenderContextEnum::ColorSpace colorSpace )
 {
-	if( slot >= 16 )
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
+{
+	if( !resourceSet.IsValid() )
 	{
 		return E_INVALIDARG;
 	}
-	if( !texture.IsValid() )
-	{
-		m_boundTextures[inputType][slot] = nullptr;
-		return S_OK;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( texture );
-	// TODO: handle sRGB: like in DX11 with texture.m_texture[2]?
-	if( m_currentActiveTexture != slot )
-	{
-		GL_FAIL( glActiveTexture( GL_TEXTURE0 + slot ) );	//TODO vertex shader textures
-		m_currentActiveTexture = slot;
-	}
-	GL_FAIL( glBindTexture( ConvertTextureType( texture.GetType() ), *texture.m_texture ) );
-	GL_IGNORE_ERROR( glTexParameteri(	ConvertTextureType( texture.GetType() ),
-								GL_TEXTURE_SRGB_DECODE_EXT, 
-								colorSpace == COLOR_SPACE_SRGB ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT  ) );
 
-	m_boundTextures[inputType][slot] = const_cast<Tr2TextureAL*>( &texture );
+	for( auto it = resourceSet.m_resourceSet->m_textures.begin(); it != resourceSet.m_resourceSet->m_textures.end(); ++it )
+	{
+		if( !it->texture )
+		{
+			continue;
+		}
+		GL_FAIL( glActiveTexture( GL_TEXTURE0 + it->registerIndex ) );
+		GL_FAIL( glBindTexture( it->type, *it->texture ) );
+		GL_IGNORE_ERROR( glTexParameteri( it->type, GL_TEXTURE_SRGB_DECODE_EXT, it->srgbDecode ) );
+		TrinityALImpl::Tr2SamplerStateAL::Apply( it->type, it->hasMips, it->sampler );
+	}
 	return S_OK;
 }
 
@@ -2301,43 +2275,6 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 			1.0f / float( m_currentViewport.m_width ),
 			-1.0f / float( m_currentViewport.m_height ),
 			-1.f );
-	}
-
-	bool rebindTexture = false;
-	for( int j = 0; j < 16; ++j )
-	{
-		if( m_boundTextures[PIXEL_SHADER][j] )
-		{
-			if( !( m_boundTextures[PIXEL_SHADER][j]->m_currentSampler.m_hash == m_boundSamplers[PIXEL_SHADER][j].m_hash ) )
-			{
-				if( !rebindTexture )
-				{
-					rebindTexture = true;
-					if( m_currentActiveTexture != 0 )
-					{
-						glActiveTexture( GL_TEXTURE0 );
-                        m_currentActiveTexture = 0;
-					}
-				}
-				GLenum textureType = ConvertTextureType( m_boundTextures[PIXEL_SHADER][j]->GetType() );
-				glBindTexture( 
-					textureType, 
-					m_boundTextures[PIXEL_SHADER][j]->m_texture ? *m_boundTextures[PIXEL_SHADER][j]->m_texture : 0 );
-				TrinityALImpl::Tr2SamplerStateAL::Apply( 
-					textureType, 
-					m_boundTextures[PIXEL_SHADER][j]->GetTrueMipCount() > 1,
-					m_boundSamplers[PIXEL_SHADER][j] );
-				m_boundTextures[PIXEL_SHADER][j]->m_currentSampler = m_boundSamplers[PIXEL_SHADER][j];
-			}
-		}
-	}
-
-	// Restore whatever was in slot 0
-	if( rebindTexture && m_boundTextures[PIXEL_SHADER][0] )
-	{
-		glBindTexture( 
-			ConvertTextureType( m_boundTextures[PIXEL_SHADER][0]->GetType() ), 
-			m_boundTextures[PIXEL_SHADER][0]->m_texture ? *m_boundTextures[PIXEL_SHADER][0]->m_texture : 0 );
 	}
 
 	if( m_blendState.dirty )

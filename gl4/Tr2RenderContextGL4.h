@@ -21,6 +21,7 @@ class Tr2ShaderAL;
 class Tr2GpuBufferAL;
 class Tr2TextureAL;
 class Tr2VertexDefinition;
+class Tr2ResourceSetAL;
 
 struct ITr2RenderContextEvents;
 
@@ -112,6 +113,8 @@ public:
 		uint32_t slot, 
 		const Tr2TextureAL& texture, 
 		Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
+
+	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet );
 	
 	ALResult DrawIndexedPrimitive(	
 		uint32_t numVertices, 
@@ -317,9 +320,6 @@ private:
 	VertexStream m_boundStreams[8];
 
 	Tr2Viewport m_currentViewport;
-
-	bool m_srgbDecode[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
-	GLuint m_boundSamplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][16];
 
 	cl_mem m_boundUavs[16];
 	cl_mem m_boundTextures[16];

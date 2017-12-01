@@ -75,6 +75,7 @@ class Tr2ShaderProgramAL;
 namespace TrinityALImpl
 {
 	class Tr2SamplerStateAL;
+	class Tr2ResourceSetAL;
 }
 
 // --------------------------------------------------------------------------------------
@@ -373,6 +374,22 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER_PROGRA
 	//   AL object type this information structure is applied to.
 	// ----------------------------------------------------------------------------------
 	typedef Tr2ShaderProgramAL ObjectType;
+
+	static const char* GetName();
+	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
+};
+
+
+// --------------------------------------------------------------------------------------
+template<>
+struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RESOURCE_SET>
+{
+	// ----------------------------------------------------------------------------------
+	// Description:
+	//   AL object type this information structure is applied to.
+	// ----------------------------------------------------------------------------------
+	typedef TrinityALImpl::Tr2ResourceSetAL ObjectType;
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );

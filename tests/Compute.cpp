@@ -93,8 +93,15 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 	Tr2GpuBufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderBuffer( COMPUTE_SHADER, 0, arg1 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderBuffer( COMPUTE_SHADER, 1, arg2 ) );
+	Tr2ResourceSetDescriptionAL desc;
+	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
+	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 1, arg2 );
+
+	Tr2ResourceSetAL resourceSet;
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
@@ -156,7 +163,16 @@ TEST_F( Compute, CanAddConstantInCS )
 	Tr2GpuBufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderBuffer( COMPUTE_SHADER, 0, arg1 ) );
+	Tr2ResourceSetDescriptionAL desc;
+	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
+
+	Tr2ResourceSetAL resourceSet;
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+
+
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( arg2, COMPUTE_SHADER, 0 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
@@ -217,8 +233,6 @@ TEST_F( Compute, CanRead2DTextureInCS )
 	Tr2TextureAL input;
 	ASSERT_HRESULT_SUCCEEDED( input.Create2D( 2, 2, 2, PIXEL_FORMAT_R32_FLOAT, USAGE_IMMUTABLE, texData, *renderContext ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTexture( COMPUTE_SHADER, 0, input ) );
-
 	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -229,7 +243,17 @@ TEST_F( Compute, CanRead2DTextureInCS )
 			0.0f,
 			100.f ),
 		*renderContext ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetSamplerState( sampl, COMPUTE_SHADER, 0 ) );
+
+	Tr2ResourceSetDescriptionAL desc;
+	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 0, input );
+	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 0, sampl );
+
+	Tr2ResourceSetAL resourceSet;
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+
 
 	Tr2GpuBufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );

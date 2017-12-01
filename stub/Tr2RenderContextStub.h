@@ -17,6 +17,7 @@ class Tr2VertexLayoutAL;
 class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2TextureAL;
+class Tr2ResourceSetAL;
 struct ITr2RenderContextEvents;
 struct Tr2PresentParametersAL;
 
@@ -108,6 +109,8 @@ public:
 		uint32_t slot, 
 		const Tr2TextureAL& texture, 
 		Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
+
+	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet );
 	
 	ALResult DrawIndexedPrimitive(	
 		uint32_t numVertices, 

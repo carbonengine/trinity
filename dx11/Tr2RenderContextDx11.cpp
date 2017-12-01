@@ -14,6 +14,7 @@
 #include "Tr2ShaderALDx11.h"
 #include "Tr2HalHelperStructures.h"
 #include "Tr2ShaderProgramALDx11.h"
+#include "Tr2ResourceSetALDx11.h"
 
 
 CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
@@ -574,6 +575,8 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestRef = 0;
 	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestFunc = CMP_ALWAYS;
 
+	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
+
 	m_allRenderStates[RS_SRGBWRITEENABLE] = 0;
 }
 
@@ -681,6 +684,7 @@ void Tr2RenderContextAL::Destroy()
 
 	memset( m_allRenderStates, 0xff, sizeof( m_allRenderStates ) );
 	m_allRenderStates[RS_SRGBWRITEENABLE] = 0;
+	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
 }
 
 PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
@@ -692,6 +696,7 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 ALResult Tr2RenderContextAL::BeginScene()
 { 
 	std::fill_n( m_shaders, int( SHADER_TYPE_COUNT ), nullptr );
+	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
 
 	return S_OK; 
 }
@@ -1893,6 +1898,109 @@ bool Tr2RenderContextAL::ApplyRasterizerState()
 
 	m_context->RSSetState( rasterizerState );
 	return true;
+}
+
+ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
+{
+	if( !resourceSet.IsValid() )
+	{
+		return E_INVALIDARG;
+	}
+
+	auto& rs = *resourceSet.m_resourceSet;
+	if( rs.m_stages[VERTEX_SHADER].resourceCount )
+	{
+		m_context->VSSetShaderResources(
+			rs.m_stages[VERTEX_SHADER].resourceOffset,
+			rs.m_stages[VERTEX_SHADER].resourceCount,
+			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[VERTEX_SHADER].resources + rs.m_stages[VERTEX_SHADER].resourceOffset ) );
+	}
+	if( rs.m_stages[PIXEL_SHADER].resourceCount )
+	{
+		m_context->PSSetShaderResources(
+			rs.m_stages[PIXEL_SHADER].resourceOffset,
+			rs.m_stages[PIXEL_SHADER].resourceCount,
+			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[PIXEL_SHADER].resources + rs.m_stages[PIXEL_SHADER].resourceOffset ) );
+	}
+	if( rs.m_stages[COMPUTE_SHADER].resourceCount )
+	{
+		m_context->CSSetShaderResources(
+			rs.m_stages[COMPUTE_SHADER].resourceOffset,
+			rs.m_stages[COMPUTE_SHADER].resourceCount,
+			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[COMPUTE_SHADER].resources + rs.m_stages[COMPUTE_SHADER].resourceOffset ) );
+	}
+	if( rs.m_stages[GEOMETRY_SHADER].resourceCount )
+	{
+		m_context->GSSetShaderResources(
+			rs.m_stages[GEOMETRY_SHADER].resourceOffset,
+			rs.m_stages[GEOMETRY_SHADER].resourceCount,
+			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[GEOMETRY_SHADER].resources + rs.m_stages[GEOMETRY_SHADER].resourceOffset ) );
+	}
+	if( rs.m_stages[HULL_SHADER].resourceCount )
+	{
+		m_context->HSSetShaderResources(
+			rs.m_stages[HULL_SHADER].resourceOffset,
+			rs.m_stages[HULL_SHADER].resourceCount,
+			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[HULL_SHADER].resources + rs.m_stages[HULL_SHADER].resourceOffset ) );
+	}
+	if( rs.m_stages[DOMAIN_SHADER].resourceCount )
+	{
+		m_context->DSSetShaderResources(
+			rs.m_stages[DOMAIN_SHADER].resourceOffset,
+			rs.m_stages[DOMAIN_SHADER].resourceCount,
+			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[DOMAIN_SHADER].resources + rs.m_stages[DOMAIN_SHADER].resourceOffset ) );
+	}
+
+	if( rs.m_stages[VERTEX_SHADER].samplerCount && rs.m_stages[VERTEX_SHADER].samplerHash != m_samplerHashes[VERTEX_SHADER] )
+	{
+		m_context->VSSetSamplers(
+			rs.m_stages[VERTEX_SHADER].samplerOffset,
+			rs.m_stages[VERTEX_SHADER].samplerCount,
+			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[VERTEX_SHADER].samplers + rs.m_stages[VERTEX_SHADER].samplerOffset ) );
+		m_samplerHashes[VERTEX_SHADER] = rs.m_stages[VERTEX_SHADER].samplerHash;
+	}
+	if( rs.m_stages[PIXEL_SHADER].samplerCount && rs.m_stages[PIXEL_SHADER].samplerHash != m_samplerHashes[PIXEL_SHADER] )
+	{
+		m_context->PSSetSamplers(
+			rs.m_stages[PIXEL_SHADER].samplerOffset,
+			rs.m_stages[PIXEL_SHADER].samplerCount,
+			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[PIXEL_SHADER].samplers + rs.m_stages[PIXEL_SHADER].samplerOffset ) );
+		m_samplerHashes[PIXEL_SHADER] = rs.m_stages[PIXEL_SHADER].samplerHash;
+	}
+	if( rs.m_stages[COMPUTE_SHADER].samplerCount && rs.m_stages[COMPUTE_SHADER].samplerHash != m_samplerHashes[COMPUTE_SHADER] )
+	{
+		m_context->CSSetSamplers(
+			rs.m_stages[COMPUTE_SHADER].samplerOffset,
+			rs.m_stages[COMPUTE_SHADER].samplerCount,
+			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[COMPUTE_SHADER].samplers + rs.m_stages[COMPUTE_SHADER].samplerOffset ) );
+		m_samplerHashes[COMPUTE_SHADER] = rs.m_stages[COMPUTE_SHADER].samplerHash;
+	}
+	if( rs.m_stages[GEOMETRY_SHADER].samplerCount && rs.m_stages[GEOMETRY_SHADER].samplerHash != m_samplerHashes[GEOMETRY_SHADER] )
+	{
+		m_context->GSSetSamplers(
+			rs.m_stages[GEOMETRY_SHADER].samplerOffset,
+			rs.m_stages[GEOMETRY_SHADER].samplerCount,
+			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[GEOMETRY_SHADER].samplers + rs.m_stages[GEOMETRY_SHADER].samplerOffset ) );
+		m_samplerHashes[GEOMETRY_SHADER] = rs.m_stages[GEOMETRY_SHADER].samplerHash;
+	}
+	if( rs.m_stages[HULL_SHADER].samplerCount && rs.m_stages[HULL_SHADER].samplerHash != m_samplerHashes[HULL_SHADER] )
+	{
+		m_context->HSSetSamplers(
+			rs.m_stages[HULL_SHADER].samplerOffset,
+			rs.m_stages[HULL_SHADER].samplerCount,
+			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[HULL_SHADER].samplers + rs.m_stages[HULL_SHADER].samplerOffset ) );
+		m_samplerHashes[HULL_SHADER] = rs.m_stages[HULL_SHADER].samplerHash;
+	}
+	if( rs.m_stages[DOMAIN_SHADER].samplerCount && rs.m_stages[DOMAIN_SHADER].samplerHash != m_samplerHashes[DOMAIN_SHADER] )
+	{
+		m_context->DSSetSamplers(
+			rs.m_stages[DOMAIN_SHADER].samplerOffset,
+			rs.m_stages[DOMAIN_SHADER].samplerCount,
+			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[DOMAIN_SHADER].samplers + rs.m_stages[DOMAIN_SHADER].samplerOffset ) );
+		m_samplerHashes[DOMAIN_SHADER] = rs.m_stages[DOMAIN_SHADER].samplerHash;
+	}
+
+	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetTexture(	

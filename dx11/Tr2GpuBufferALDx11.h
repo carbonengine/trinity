@@ -11,6 +11,11 @@
 class Tr2RenderContextAL;
 class Tr2VertexBufferAL;
 
+namespace TrinityALImpl
+{
+	class Tr2ResourceSetAL;
+}
+
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
@@ -79,6 +84,7 @@ private:
 		Tr2PrimaryRenderContextAL & renderContext );
 
 	friend class Tr2RenderContextAL;
+	friend class TrinityALImpl::Tr2ResourceSetAL;
 
 	CComPtr<ID3D11ShaderResourceView>	m_srv;
 	CComPtr<ID3D11UnorderedAccessView>	m_uav;

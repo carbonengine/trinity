@@ -28,6 +28,7 @@ namespace TrinityALImpl
 	private:
 		CComPtr<ID3D11SamplerState> m_samplerState;
 		friend class Tr2RenderContextAL;
+		friend class Tr2ResourceSetAL;
 	};
 
 }

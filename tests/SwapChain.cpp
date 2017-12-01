@@ -98,9 +98,7 @@ TEST_F( WithValidRenderContext, CanPresentSwapChain )
 		uint32_t g = 127;
 
 		auto frame = [&] {
-            ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 16 ), 1.0f ) );
-            MakeTestScreenShot();
-            ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
@@ -110,6 +108,11 @@ TEST_F( WithValidRenderContext, CanPresentSwapChain )
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PopRenderTarget() );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );
 			ASSERT_HRESULT_SUCCEEDED( sc.Present( *renderContext ) );
+
+			ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 16 ), 1.0f ) );
+            MakeTestScreenShot();
+			ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
 			g++;
 		};
 

@@ -316,6 +316,11 @@ ALResult Tr2RenderContextAL::SetTexture(
 	return S_OK;
 }
 
+ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
+{
+	return S_OK;
+}
+
 ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights )
 {
 	return S_OK;
