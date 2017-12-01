@@ -189,7 +189,7 @@ TEST_F( Compute, CanAddConstantInCS )
 }
 
 
-TEST_F( Compute, CanRead2DTextureInCS )
+TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 {
 	uint32_t vsBytecode[] = {
 #include INCLUDE_SHADER_CODE( SampleTexture.cs )
