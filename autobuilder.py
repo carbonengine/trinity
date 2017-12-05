@@ -102,7 +102,7 @@ def main():
     sys.stdout.flush()
     try:
         for each in args.project:
-            build_project(each, toolset=args.toolset)
+            build_project(each, toolset=args.toolset, target=args.target)
         submit_with_description(p4, args.cl_desc or DEFAULT_CL_DESCRIPTION)
     except:
         run_p4(p4, 'revert', '-c', 'default', *COMPILED_FILE_PATHS)
