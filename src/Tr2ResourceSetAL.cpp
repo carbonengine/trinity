@@ -4,34 +4,48 @@
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2ResourceSetAL )
 
 
-void Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2GpuBufferAL& buffer )
+bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2GpuBufferAL& buffer )
 {
-	auto key = Key( stage, registerIndex );
 	auto resource = Resource();
 	resource.type = BUFFER;
 	resource.buffer = &buffer;
 	resource.colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-	m_resources[key] = resource;
+
+	if( m_resources[stage][registerIndex] == resource )
+	{
+		return false;
+	}
+	m_resources[stage][registerIndex] = resource;
+	return true;
 }
 
-void Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace )
+bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace )
 {
-	auto key = Key( stage, registerIndex );
 	auto resource = Resource();
 	resource.type = TEXTURE;
 	resource.texture = &texture;
 	resource.colorSpace = colorSpace;
-	m_resources[key] = resource;
+
+	if( m_resources[stage][registerIndex] == resource )
+	{
+		return false;
+	}
+	m_resources[stage][registerIndex] = resource;
+	return true;
 }
 
-void Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
+bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
 {
-	auto key = Key( stage, registerIndex );
-	auto resource = Resource();
-	resource.type = SAMPLER;
-	resource.sampler = &sampler;
-	resource.colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-	m_samplers[key] = resource;
+	auto resource = Sampler();
+	resource.sampler = sampler;
+	resource.assigned = true;
+
+	if( m_samplers[stage][registerIndex] == resource )
+	{
+		return false;
+	}
+	m_samplers[stage][registerIndex] = resource;
+	return true;
 }
 
 bool Tr2ResourceSetDescriptionAL::operator==( const Tr2ResourceSetDescriptionAL& other ) const
@@ -39,33 +53,27 @@ bool Tr2ResourceSetDescriptionAL::operator==( const Tr2ResourceSetDescriptionAL&
 	return m_resources == other.m_resources && m_samplers == other.m_samplers;
 }
 
-Tr2ResourceSetDescriptionAL::Key::Key( Tr2RenderContextEnum::ShaderType stage_, uint32_t registerIndex_ )
-	:stage( stage_ ),
-	registerIndex( registerIndex_ )
-{
-}
 
-bool Tr2ResourceSetDescriptionAL::Key::operator==( const Key& other ) const
+Tr2ResourceSetDescriptionAL::Resource::Resource()
+	:buffer( nullptr ),
+	type( NONE ),
+	colorSpace( Tr2RenderContextEnum::COLOR_SPACE_LINEAR )
 {
-	return stage == other.stage && registerIndex == other.registerIndex;
-}
-
-bool Tr2ResourceSetDescriptionAL::Key::operator<( const Key& other ) const
-{
-	if( stage < other.stage )
-	{
-		return true;
-	}
-	if( stage > other.stage )
-	{
-		return false;
-	}
-	return registerIndex < other.registerIndex;
 }
 
 bool Tr2ResourceSetDescriptionAL::Resource::operator==( const Resource& other ) const
 {
 	return type == other.type && buffer == other.buffer;
+}
+
+Tr2ResourceSetDescriptionAL::Sampler::Sampler()
+	:assigned( false )
+{
+}
+
+bool Tr2ResourceSetDescriptionAL::Sampler::operator==( const Sampler& other ) const
+{
+	return sampler == other.sampler && assigned == other.assigned;
 }
 
 

@@ -31,10 +31,12 @@ namespace TrinityALImpl
 			uint32_t resourceOffset;
 			uint32_t samplerCount;
 			uint32_t samplerOffset;
+			uint32_t resourceHash;
 			uint32_t samplerHash;
 		};
 
 		StageInput m_stages[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
+		bool m_empty;
 		bool m_isValid;
 
 		friend class Tr2RenderContextAL;

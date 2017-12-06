@@ -12,7 +12,8 @@ using namespace Tr2RenderContextEnum;
 namespace TrinityALImpl
 {
 	Tr2ResourceSetAL::Tr2ResourceSetAL()
-		:m_isValid( false )
+		:m_isValid( false ),
+		m_empty( true )
 	{
 	}
 
@@ -26,56 +27,66 @@ namespace TrinityALImpl
 			it->resourceOffset = MAX_RESOURCES;
 			it->samplerOffset = MAX_RESOURCES;
 		}
-		for( auto it = std::begin( description.m_resources ); it != std::end( description.m_resources ); ++it )
+		for( uint32_t stageIndex = 0; stageIndex < SHADER_TYPE_COUNT; ++stageIndex )
 		{
-			if( it->first.stage < SHADER_TYPE_FIRST || it->first.stage >= SHADER_TYPE_COUNT )
+			auto& stage = m_stages[stageIndex];
+			for( uint32_t registerIndex = 0; registerIndex < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++registerIndex )
 			{
-				return E_INVALIDARG;
+				auto& desc = description.m_resources[stageIndex][registerIndex];
+				if( desc.type != Tr2ResourceSetDescriptionAL::NONE && registerIndex >= MAX_RESOURCES )
+				{
+					return E_INVALIDARG;
+				}
+				switch( desc.type )
+				{
+				case Tr2ResourceSetDescriptionAL::BUFFER:
+					stage.resources[registerIndex] = desc.buffer->m_srv;
+					break;
+				case Tr2ResourceSetDescriptionAL::TEXTURE:
+					stage.resources[registerIndex] = desc.texture->m_view[desc.colorSpace];
+					break;
+				case Tr2ResourceSetDescriptionAL::NONE:
+					continue;
+				default:
+					return E_INVALIDARG;
+				}
+				stage.resourceOffset = std::min( stage.resourceOffset, registerIndex );
+				stage.resourceCount = std::max( stage.resourceCount, registerIndex + 1 );
 			}
-			if( it->first.registerIndex >= MAX_RESOURCES )
+			for( uint32_t registerIndex = 0; registerIndex < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++registerIndex )
 			{
-				return E_INVALIDARG;
+				auto& desc = description.m_samplers[stageIndex][registerIndex];
+				if( desc.assigned && registerIndex >= MAX_RESOURCES )
+				{
+					return E_INVALIDARG;
+				}
+				if( desc.assigned )
+				{
+					stage.samplers[registerIndex] = desc.sampler.m_sampler->m_samplerState;
+					stage.samplerOffset = std::min( stage.samplerOffset, registerIndex );
+					stage.samplerCount = std::max( stage.samplerCount, registerIndex + 1 );
+				}
 			}
-			auto& stage = m_stages[it->first.stage];
-			switch( it->second.type )
-			{
-			case Tr2ResourceSetDescriptionAL::BUFFER:
-				stage.resources[it->first.registerIndex] = it->second.buffer->m_srv;
-				break;
-			case Tr2ResourceSetDescriptionAL::TEXTURE:
-				stage.resources[it->first.registerIndex] = it->second.texture->m_view[it->second.colorSpace];
-				break;
-			default:
-				return E_INVALIDARG;
-			}
-			stage.resourceOffset = std::min( stage.resourceOffset, it->first.registerIndex );
-			stage.resourceCount = std::max( stage.resourceCount, it->first.registerIndex + 1 );
 		}
 
-		for( auto it = std::begin( description.m_samplers ); it != std::end( description.m_samplers ); ++it )
-		{
-			if( it->first.stage < SHADER_TYPE_FIRST || it->first.stage >= SHADER_TYPE_COUNT )
-			{
-				return E_INVALIDARG;
-			}
-			if( it->first.registerIndex >= MAX_RESOURCES )
-			{
-				return E_INVALIDARG;
-			}
-			auto& stage = m_stages[it->first.stage];
-			stage.samplers[it->first.registerIndex] = it->second.sampler->m_sampler->m_samplerState;
-			stage.samplerOffset = std::min( stage.samplerOffset, it->first.registerIndex );
-			stage.samplerCount = std::max( stage.samplerCount, it->first.registerIndex + 1 );
-		}
+		m_empty = true;
+
 		for( auto it = std::begin( m_stages ); it != std::end( m_stages ); ++it )
 		{
 			if( it->resourceCount > it->resourceOffset )
 			{
+				it->resourceHash = 0;
+				for( uint32_t i = it->resourceOffset; i != it->resourceCount; ++i )
+				{
+					it->resourceHash ^= uint32_t( reinterpret_cast<uintptr_t>( it->resources[i].p ) & 0xffffffff ) << i;
+				}
 				it->resourceCount -= it->resourceOffset;
+				m_empty = false;
 			}
 			else
 			{
 				it->resourceCount = 0;
+				it->resourceHash = 0;
 			}
 			if( it->samplerCount > it->samplerOffset )
 			{
@@ -85,6 +96,7 @@ namespace TrinityALImpl
 					it->samplerHash ^= uint32_t( reinterpret_cast<uintptr_t>( it->samplers[i].p ) & 0xffffffff ) << i;
 				}
 				it->samplerCount -= it->samplerOffset;
+				m_empty = false;
 			}
 			else
 			{
@@ -108,6 +120,7 @@ namespace TrinityALImpl
 			it->Destroy();
 		}
 		m_isValid = false;
+		m_empty = true;
 	}
 
 	Tr2ALMemoryType Tr2ResourceSetAL::GetMemoryClass() const
@@ -120,7 +133,9 @@ namespace TrinityALImpl
 		:resourceCount( 0 ),
 		resourceOffset( 0 ),
 		samplerCount( 0 ),
-		samplerOffset( 0 )
+		samplerOffset( 0 ),
+		resourceHash( 0 ),
+		samplerHash( 0 )
 	{
 	}
 
@@ -129,7 +144,9 @@ namespace TrinityALImpl
 		std::fill_n( resources, MAX_RESOURCES, nullptr );
 		std::fill_n( samplers, MAX_RESOURCES, nullptr );
 		resourceCount = 0;
-		samplerOffset = 0;
+		samplerCount = 0;
+		resourceHash = 0;
+		samplerHash = 0;
 	}
 
 }

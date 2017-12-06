@@ -39,152 +39,153 @@ namespace TrinityALImpl
 		Destroy();
 		ON_BLOCK_EXIT( [&] { if( !IsValid() ) Destroy(); } );
 
-		for( auto it = std::begin( description.m_samplers ); it != std::end( description.m_samplers ); ++it )
+		for( uint32_t stage = VERTEX_SHADER; stage < SHADER_TYPE_COUNT; ++stage )
 		{
-			if( it->first.stage == COMPUTE_SHADER )
+			if( stage == COMPUTE_SHADER || stage == PIXEL_SHADER )
 			{
 				continue;
 			}
-			auto found = description.m_resources.find( it->first );
-			if( found == description.m_resources.end() )
+			for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
 			{
-				return E_INVALIDARG;
-			}
-		}
-
-		for( auto it = std::begin( description.m_resources ); it != std::end( description.m_resources ); ++it )
-		{
-			if( it->first.stage != PIXEL_SHADER && it->first.stage != COMPUTE_SHADER )
-			{
-				return E_INVALIDARG;
-			}
-			if( it->first.registerIndex >= 16 )
-			{
-				return E_INVALIDARG;
-			}
-			if( it->first.stage == PIXEL_SHADER && it->second.type != Tr2ResourceSetDescriptionAL::TEXTURE )
-			{
-				return E_INVALIDARG;
-			}
-
-			if( it->first.stage == PIXEL_SHADER )
-			{
-				auto sampler = description.m_samplers.find( it->first );
-				if( sampler == description.m_samplers.end() )
+				if( description.m_resources[stage][i].buffer )
 				{
 					return E_INVALIDARG;
 				}
-
-				Texture tex;
-				tex.registerIndex = it->first.registerIndex;
-				tex.texture = it->second.texture->m_texture;
-				tex.type = ConvertTextureType( it->second.texture->GetType() );
-				tex.srgbDecode = it->second.colorSpace == COLOR_SPACE_SRGB ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT;
-				tex.sampler = sampler->second.sampler->m_sampler->m_sampler;
-				m_textures.push_back( tex );
+				if( description.m_samplers[stage][i].assigned )
+				{
+					return E_INVALIDARG;
+				}
 			}
-			else
-			{
-				CLResource clResource;
-				clResource.registerIndex = it->first.registerIndex;
-				clResource.isSampler = false;
+		}
 
-				switch( it->second.type )
+		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
+		{
+			auto& desc = description.m_resources[PIXEL_SHADER][i];
+			if( desc.type == Tr2ResourceSetDescriptionAL::NONE )
+			{
+				continue;
+			}
+			if( desc.type != Tr2ResourceSetDescriptionAL::TEXTURE )
+			{
+				return E_INVALIDARG;
+			}
+
+			auto& sampler = description.m_samplers[PIXEL_SHADER][i];
+			if( !sampler.assigned )
+			{
+				return E_INVALIDARG;
+			}
+
+			Texture tex;
+			tex.registerIndex = i;
+			tex.texture = desc.texture->m_texture;
+			tex.type = ConvertTextureType( desc.texture->GetType() );
+			tex.srgbDecode = desc.colorSpace == COLOR_SPACE_SRGB ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT;
+			tex.sampler = sampler.sampler.m_sampler->m_sampler;
+			m_textures.push_back( tex );
+		}
+
+		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
+		{
+			if( description.m_samplers[PIXEL_SHADER][i].assigned )
+			{
+				if( description.m_resources[PIXEL_SHADER][i].type == Tr2ResourceSetDescriptionAL::NONE )
 				{
-				case Tr2ResourceSetDescriptionAL::TEXTURE:
+					return E_INVALIDARG;
+				}
+			}
+		}
+
+		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
+		{
+			auto& desc = description.m_resources[COMPUTE_SHADER][i];
+			if( desc.type == Tr2ResourceSetDescriptionAL::NONE )
+			{
+				continue;
+			}
+
+			CLResource clResource;
+			clResource.registerIndex = i;
+			clResource.isSampler = false;
+
+			switch( desc.type )
+			{
+			case Tr2ResourceSetDescriptionAL::TEXTURE:
+			{
+				auto& texture = *desc.texture;
+				if( !texture.m_clObject )
 				{
-					auto& texture = *it->second.texture;
+					switch( desc.texture->GetType() )
+					{
+					case TEX_TYPE_1D:
+					case TEX_TYPE_2D:
+#ifdef _WIN32
+						texture.m_clObject = clCreateFromGLTexture2D( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, *texture.m_texture, nullptr );
+#else
+						texture.m_clObject = clCreateFromGLTexture( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, *texture.m_texture, nullptr );
+#endif
+						break;
+					case TEX_TYPE_3D:
+#ifdef _WIN32
+						texture.m_clObject = clCreateFromGLTexture3D( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, *texture.m_texture, nullptr );
+#else
+						texture.m_clObject = clCreateFromGLTexture( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, *texture.m_texture, nullptr );
+#endif
+						break;
+					default:
+						return E_FAIL;
+					}
 					if( !texture.m_clObject )
-					{
-						switch( it->second.texture->GetType() )
-						{
-						case TEX_TYPE_1D:
-						case TEX_TYPE_2D:
-#ifdef _WIN32
-							texture.m_clObject = clCreateFromGLTexture2D( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, *texture.m_texture, nullptr );
-#else
-							texture.m_clObject = clCreateFromGLTexture( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, *texture.m_texture, nullptr );
-#endif
-							break;
-						case TEX_TYPE_3D:
-#ifdef _WIN32
-							texture.m_clObject = clCreateFromGLTexture3D( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, *it->second.texture->m_texture, nullptr );
-#else
-							texture.m_clObject = clCreateFromGLTexture( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, *texture.m_texture, nullptr );
-#endif
-							break;
-						default:
-							return E_FAIL;
-						}
-						if( !texture.m_clObject )
-						{
-							return E_FAIL;
-						}
-					}
-					clResource.resource = texture.m_clObject;
-					clRetainMemObject( texture.m_clObject );
-					break;
-				}
-				case Tr2ResourceSetDescriptionAL::BUFFER:
-				{
-					auto& buffer = *it->second.buffer;
-					if( !buffer.m_clObject )
-					{
-						int error;
-						buffer.m_clObject = clCreateFromGLBuffer( renderContext.m_clContext, CL_MEM_READ_WRITE, *buffer.m_buffer, &error );
-						if( !buffer.m_clObject )
-						{
-							return E_FAIL;
-						}
-					}
-					clResource.resource = buffer.m_clObject;
-					clRetainMemObject( buffer.m_clObject );
-					break;
-				}
-				default:
-					return E_INVALIDARG;
-				}
-				m_clResources.push_back( clResource );
-			}
-		}
-		for( auto it = std::begin( description.m_samplers ); it != std::end( description.m_samplers ); ++it )
-		{
-			if( it->first.stage != PIXEL_SHADER && it->first.stage != COMPUTE_SHADER )
-			{
-				return E_INVALIDARG;
-			}
-			if( it->first.registerIndex >= 16 )
-			{
-				return E_INVALIDARG;
-			}
-			if( it->first.stage == PIXEL_SHADER )
-			{
-				if( description.m_resources.find( it->first ) == description.m_resources.end() )
-				{
-					return E_INVALIDARG;
-				}
-			}
-			else
-			{
-				auto& sampler = *it->second.sampler->m_sampler;
-				if( !sampler.m_clObject )
-				{
-					sampler.m_clObject = clCreateSampler( renderContext.m_clContext, CL_TRUE,
-						sampler.m_stateData.m_wrapT == GL_TEXTURE_WRAP_S ? CL_ADDRESS_REPEAT : CL_ADDRESS_CLAMP,
-						sampler.m_stateData.m_magFilter == GL_NEAREST ? CL_FILTER_NEAREST : CL_FILTER_LINEAR,
-						nullptr );
-					if( !sampler.m_clObject )
 					{
 						return E_FAIL;
 					}
 				}
-				CLResource clResource;
-				clResource.registerIndex = it->first.registerIndex;
-				clResource.isSampler = true;
-				clResource.sampler = sampler.m_clObject;
-				clRetainSampler( sampler.m_clObject );
-				m_clResources.push_back( clResource );
+				clResource.resource = texture.m_clObject;
+				clRetainMemObject( texture.m_clObject );
+				break;
 			}
+			case Tr2ResourceSetDescriptionAL::BUFFER:
+			{
+				auto& buffer = *desc.buffer;
+				if( !buffer.m_clObject )
+				{
+					int error;
+					buffer.m_clObject = clCreateFromGLBuffer( renderContext.m_clContext, CL_MEM_READ_WRITE, *buffer.m_buffer, &error );
+					if( !buffer.m_clObject )
+					{
+						return E_FAIL;
+					}
+				}
+				clResource.resource = buffer.m_clObject;
+				clRetainMemObject( buffer.m_clObject );
+				break;
+			}
+			default:
+				return E_INVALIDARG;
+			}
+			m_clResources.push_back( clResource );
+		}
+
+		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
+		{
+			auto& sampler = *description.m_samplers[COMPUTE_SHADER][i].sampler.m_sampler;
+			if( !sampler.m_clObject )
+			{
+				sampler.m_clObject = clCreateSampler( renderContext.m_clContext, CL_TRUE,
+					sampler.m_stateData.m_wrapT == GL_TEXTURE_WRAP_S ? CL_ADDRESS_REPEAT : CL_ADDRESS_CLAMP,
+					sampler.m_stateData.m_magFilter == GL_NEAREST ? CL_FILTER_NEAREST : CL_FILTER_LINEAR,
+					nullptr );
+				if( !sampler.m_clObject )
+				{
+					return E_FAIL;
+				}
+			}
+			CLResource clResource;
+			clResource.registerIndex = i;
+			clResource.isSampler = true;
+			clResource.sampler = sampler.m_clObject;
+			clRetainSampler( sampler.m_clObject );
+			m_clResources.push_back( clResource );
 		}
 		m_isValid = true;
 		return S_OK;

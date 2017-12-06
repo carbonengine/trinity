@@ -40,47 +40,58 @@ namespace TrinityALImpl
 		Destroy();
 		ON_BLOCK_EXIT( [&] { if( !IsValid() ) Destroy(); } );
 
-		for( auto it = std::begin( description.m_samplers ); it != std::end( description.m_samplers ); ++it )
+		for( uint32_t stage = 0; stage < SHADER_TYPE_COUNT; ++stage )
 		{
-			auto found = description.m_resources.find( it->first );
-			if( found == description.m_resources.end() )
+			if( stage == PIXEL_SHADER )
+			{
+				continue;
+			}
+			for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
+			{
+				if( description.m_resources[stage][i].buffer )
+				{
+					return E_INVALIDARG;
+				}
+				if( description.m_samplers[stage][i].assigned )
+				{
+					return E_INVALIDARG;
+				}
+			}
+		}
+
+		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
+		{
+			if( description.m_samplers[PIXEL_SHADER][i].assigned && description.m_resources[PIXEL_SHADER][i].type == Tr2ResourceSetDescriptionAL::NONE )
 			{
 				return E_INVALIDARG;
 			}
 		}
 
-		for( auto it = std::begin( description.m_resources ); it != std::end( description.m_resources ); ++it )
+		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
 		{
-			if( it->first.stage != PIXEL_SHADER )
+			auto& resource = description.m_resources[PIXEL_SHADER][i];
+			if( resource.type == Tr2ResourceSetDescriptionAL::NONE )
 			{
-				return E_INVALIDARG;
+				continue;
 			}
-			if( it->first.registerIndex >= 16 )
-			{
-				return E_INVALIDARG;
-			}
-			if( it->second.type != Tr2ResourceSetDescriptionAL::TEXTURE )
-			{
-				return E_INVALIDARG;
-			}
-			if( description.m_samplers.find( it->first ) == description.m_samplers.end() )
+			if( resource.type != Tr2ResourceSetDescriptionAL::TEXTURE )
 			{
 				return E_INVALIDARG;
 			}
 
-			auto sampler = description.m_samplers.find( it->first );
-			if( sampler == description.m_samplers.end() )
+			auto& sampler = description.m_samplers[PIXEL_SHADER][i];
+			if( !sampler.assigned )
 			{
 				return E_INVALIDARG;
 			}
 
 			Texture tex;
-			tex.registerIndex = it->first.registerIndex;
-			tex.texture = it->second.texture->m_texture;
-			tex.type = ConvertTextureType( it->second.texture->GetType() );
-			tex.srgbDecode = it->second.colorSpace == COLOR_SPACE_SRGB ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT;
-			tex.sampler = sampler->second.sampler->m_sampler->m_stateData;
-			tex.hasMips = it->second.texture->GetTrueMipCount() > 1;
+			tex.registerIndex = i;
+			tex.texture = resource.texture->m_texture;
+			tex.type = ConvertTextureType( resource.texture->GetType() );
+			tex.srgbDecode = resource.colorSpace == COLOR_SPACE_SRGB ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT;
+			tex.sampler = sampler.sampler.m_sampler->m_stateData;
+			tex.hasMips = resource.texture->GetTrueMipCount() > 1;
 			m_textures.push_back( tex );
 		}
 		m_isValid = true;

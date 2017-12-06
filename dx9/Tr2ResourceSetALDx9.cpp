@@ -22,62 +22,70 @@ namespace TrinityALImpl
 		Destroy();
 		ON_BLOCK_EXIT( [&] { if( !IsValid() ) Destroy(); } );
 
-		for( auto it = std::begin( description.m_resources ); it != std::end( description.m_resources ); ++it )
+		for( uint32_t stage = PIXEL_SHADER + 1; stage < SHADER_TYPE_COUNT; ++stage )
 		{
-			if( it->first.stage != VERTEX_SHADER && it->first.stage != PIXEL_SHADER )
+			for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
 			{
-				return E_INVALIDARG;
+				if( description.m_resources[stage][i].buffer )
+				{
+					return E_INVALIDARG;
+				}
+				if( description.m_samplers[stage][i].assigned )
+				{
+					return E_INVALIDARG;
+				}
 			}
-			const uint32_t maxResources = it->first.stage == PIXEL_SHADER ? 16 : 4;
-			if( it->first.registerIndex >= maxResources )
-			{
-				return E_INVALIDARG;
-			}
-			if( it->second.type != Tr2ResourceSetDescriptionAL::TEXTURE )
-			{
-				return E_INVALIDARG;
-			}
-			if( description.m_samplers.find( it->first ) == description.m_samplers.end() )
-			{
-				return E_INVALIDARG;
-			}
-			Texture tex;
-			tex.registerIndex = it->first.registerIndex + ( it->first.stage == VERTEX_SHADER ? D3DVERTEXTEXTURESAMPLER0 : 0 );
-			tex.texture = it->second.texture->m_texture;
-			m_textures.push_back( tex );
-			
-			SamplerState ss;
-			ss.registerIndex = tex.registerIndex;
-			ss.state = D3DSAMP_SRGBTEXTURE;
-			ss.value = it->second.colorSpace == COLOR_SPACE_SRGB ? TRUE : FALSE;
-			m_samplerStates.push_back( ss );
 		}
 
-		for( auto it = std::begin( description.m_samplers ); it != std::end( description.m_samplers ); ++it )
+		for( uint32_t stage = VERTEX_SHADER; stage <= PIXEL_SHADER; ++stage )
 		{
-			if( it->first.stage != VERTEX_SHADER && it->first.stage != PIXEL_SHADER )
+			auto& desc = description.m_resources[stage];
+			const uint32_t maxResources = stage == PIXEL_SHADER ? 16 : 4;
+			for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
 			{
-				return E_INVALIDARG;
-			}
-			const uint32_t maxResources = it->first.stage == PIXEL_SHADER ? 16 : 4;
-			if( it->first.registerIndex >= maxResources )
-			{
-				return E_INVALIDARG;
-			}
-			if( description.m_resources.find( it->first ) == description.m_resources.end() )
-			{
-				return E_INVALIDARG;
-			}
+				if( desc[i].type == Tr2ResourceSetDescriptionAL::NONE )
+				{
+					continue;
+				}
+				if( desc[i].type != Tr2ResourceSetDescriptionAL::TEXTURE )
+				{
+					return E_INVALIDARG;
+				}
+				if( i >= maxResources )
+				{
+					return E_INVALIDARG;
+				}
 
-			auto registerIndex = it->first.registerIndex + ( it->first.stage == VERTEX_SHADER ? D3DVERTEXTEXTURESAMPLER0 : 0 );
+				Texture tex;
+				tex.registerIndex = i + ( stage == VERTEX_SHADER ? D3DVERTEXTEXTURESAMPLER0 : 0 );
+				tex.texture = desc[i].texture->m_texture;
+				m_textures.push_back( tex );
 
-			for( uint32_t i = Tr2SamplerStateAL::SAMPLER_STATE_MIN; i < Tr2SamplerStateAL::SAMPLER_STATE_COUNT; ++i )
-			{
 				SamplerState ss;
-				ss.registerIndex = registerIndex;
-				ss.state = D3DSAMPLERSTATETYPE( i );
-				ss.value = it->second.sampler->m_sampler->m_states[i];
+				ss.registerIndex = tex.registerIndex;
+				ss.state = D3DSAMP_SRGBTEXTURE;
+				ss.value = desc[i].colorSpace == COLOR_SPACE_SRGB ? TRUE : FALSE;
 				m_samplerStates.push_back( ss );
+			}
+			for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
+			{
+				if( !description.m_samplers[stage][i].assigned )
+				{
+					continue;
+				}
+				if( i >= maxResources )
+				{
+					return E_INVALIDARG;
+				}
+
+				for( uint32_t j = Tr2SamplerStateAL::SAMPLER_STATE_MIN; j < Tr2SamplerStateAL::SAMPLER_STATE_COUNT; ++j )
+				{
+					SamplerState ss;
+					ss.registerIndex = i;
+					ss.state = D3DSAMPLERSTATETYPE( j );
+					ss.value = description.m_samplers[stage][i].sampler.m_sampler->m_states[j];
+					m_samplerStates.push_back( ss );
+				}
 			}
 		}
 
