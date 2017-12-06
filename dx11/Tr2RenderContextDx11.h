@@ -6,6 +6,7 @@
 #include "../Tr2RenderContextEnum.h"
 #include "../Tr2DrawUPHelper.h"
 #include "../include/Tr2ConstantBufferAL.h"
+#include "../include/Tr2ResourceSetAL.h"
 
 
 class Tr2VertexBufferAL;
@@ -20,7 +21,6 @@ class Tr2GpuBufferAL;
 class Tr2RenderTargetAL;
 class Tr2SamplerStateAL;
 class Tr2DepthStencilAL;
-class Tr2ResourceSetAL;
 struct Tr2Viewport;
 
 
@@ -300,7 +300,9 @@ private:
 	ALResult SetRtDsToDevice( uint32_t changedSlot ) throw();
 
 private:
+	uint32_t m_resourceHashes[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 	uint32_t m_samplerHashes[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
+	Tr2ResourceSetAL m_currentResourceSet;
 
 	friend class Tr2PrimaryRenderContextAL;
 
