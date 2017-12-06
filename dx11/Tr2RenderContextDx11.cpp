@@ -576,6 +576,7 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestFunc = CMP_ALWAYS;
 
 	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
+	std::fill( std::begin( m_resourceHashes ), std::end( m_resourceHashes ), 0 );
 
 	m_allRenderStates[RS_SRGBWRITEENABLE] = 0;
 }
@@ -685,6 +686,7 @@ void Tr2RenderContextAL::Destroy()
 	memset( m_allRenderStates, 0xff, sizeof( m_allRenderStates ) );
 	m_allRenderStates[RS_SRGBWRITEENABLE] = 0;
 	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
+	std::fill( std::begin( m_resourceHashes ), std::end( m_resourceHashes ), 0 );
 }
 
 PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
@@ -697,6 +699,7 @@ ALResult Tr2RenderContextAL::BeginScene()
 { 
 	std::fill_n( m_shaders, int( SHADER_TYPE_COUNT ), nullptr );
 	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
+	std::fill( std::begin( m_resourceHashes ), std::end( m_resourceHashes ), 0 );
 
 	return S_OK; 
 }
@@ -1135,6 +1138,25 @@ ALResult Tr2RenderContextAL::Clear(
 
 ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 {
+	m_currentResourceSet = Tr2ResourceSetAL();
+	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
+	std::fill( std::begin( m_resourceHashes ), std::end( m_resourceHashes ), 0 );
+	decltype( &ID3D11DeviceContext::VSSetShaderResources ) setResources[] = {
+		&ID3D11DeviceContext::VSSetShaderResources,
+		&ID3D11DeviceContext::PSSetShaderResources,
+		&ID3D11DeviceContext::CSSetShaderResources,
+		&ID3D11DeviceContext::GSSetShaderResources,
+		&ID3D11DeviceContext::HSSetShaderResources,
+		&ID3D11DeviceContext::DSSetShaderResources,
+	};
+
+	ID3D11ShaderResourceView* nullViews[16] = { nullptr };
+
+	for( uint32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
+	{
+		( m_context->*( setResources[i] ) )( 0, 16, nullViews );
+	}
+
 	ID3D11RenderTargetView*	rtViews[MAX_RENDER_TARGET];
 	// Follow the DX9 behavior: null means 'default backbuffer' for slot 0, and 'nothing' for everything else.
 	for( uint32_t i = 0; i != m_renderTargetHighWaterMark; ++i )
@@ -1907,98 +1929,156 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 		return E_INVALIDARG;
 	}
 
-	auto& rs = *resourceSet.m_resourceSet;
-	if( rs.m_stages[VERTEX_SHADER].resourceCount )
+	if( m_currentResourceSet.m_resourceSet == resourceSet.m_resourceSet )
 	{
-		m_context->VSSetShaderResources(
-			rs.m_stages[VERTEX_SHADER].resourceOffset,
-			rs.m_stages[VERTEX_SHADER].resourceCount,
-			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[VERTEX_SHADER].resources + rs.m_stages[VERTEX_SHADER].resourceOffset ) );
-	}
-	if( rs.m_stages[PIXEL_SHADER].resourceCount )
-	{
-		m_context->PSSetShaderResources(
-			rs.m_stages[PIXEL_SHADER].resourceOffset,
-			rs.m_stages[PIXEL_SHADER].resourceCount,
-			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[PIXEL_SHADER].resources + rs.m_stages[PIXEL_SHADER].resourceOffset ) );
-	}
-	if( rs.m_stages[COMPUTE_SHADER].resourceCount )
-	{
-		m_context->CSSetShaderResources(
-			rs.m_stages[COMPUTE_SHADER].resourceOffset,
-			rs.m_stages[COMPUTE_SHADER].resourceCount,
-			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[COMPUTE_SHADER].resources + rs.m_stages[COMPUTE_SHADER].resourceOffset ) );
-	}
-	if( rs.m_stages[GEOMETRY_SHADER].resourceCount )
-	{
-		m_context->GSSetShaderResources(
-			rs.m_stages[GEOMETRY_SHADER].resourceOffset,
-			rs.m_stages[GEOMETRY_SHADER].resourceCount,
-			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[GEOMETRY_SHADER].resources + rs.m_stages[GEOMETRY_SHADER].resourceOffset ) );
-	}
-	if( rs.m_stages[HULL_SHADER].resourceCount )
-	{
-		m_context->HSSetShaderResources(
-			rs.m_stages[HULL_SHADER].resourceOffset,
-			rs.m_stages[HULL_SHADER].resourceCount,
-			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[HULL_SHADER].resources + rs.m_stages[HULL_SHADER].resourceOffset ) );
-	}
-	if( rs.m_stages[DOMAIN_SHADER].resourceCount )
-	{
-		m_context->DSSetShaderResources(
-			rs.m_stages[DOMAIN_SHADER].resourceOffset,
-			rs.m_stages[DOMAIN_SHADER].resourceCount,
-			reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[DOMAIN_SHADER].resources + rs.m_stages[DOMAIN_SHADER].resourceOffset ) );
+		return S_OK; 
 	}
 
-	if( rs.m_stages[VERTEX_SHADER].samplerCount && rs.m_stages[VERTEX_SHADER].samplerHash != m_samplerHashes[VERTEX_SHADER] )
+	m_currentResourceSet = resourceSet;
+
+	auto& rs = *resourceSet.m_resourceSet;
+
+	if( rs.m_empty )
 	{
-		m_context->VSSetSamplers(
-			rs.m_stages[VERTEX_SHADER].samplerOffset,
-			rs.m_stages[VERTEX_SHADER].samplerCount,
-			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[VERTEX_SHADER].samplers + rs.m_stages[VERTEX_SHADER].samplerOffset ) );
-		m_samplerHashes[VERTEX_SHADER] = rs.m_stages[VERTEX_SHADER].samplerHash;
+		return S_OK;
 	}
-	if( rs.m_stages[PIXEL_SHADER].samplerCount && rs.m_stages[PIXEL_SHADER].samplerHash != m_samplerHashes[PIXEL_SHADER] )
+
+	decltype( &ID3D11DeviceContext::VSSetShaderResources ) setResources[] = {
+		&ID3D11DeviceContext::VSSetShaderResources,
+		&ID3D11DeviceContext::PSSetShaderResources,
+		&ID3D11DeviceContext::CSSetShaderResources,
+		&ID3D11DeviceContext::GSSetShaderResources,
+		&ID3D11DeviceContext::HSSetShaderResources,
+		&ID3D11DeviceContext::DSSetShaderResources,
+	};
+
+	decltype( &ID3D11DeviceContext::VSSetSamplers ) setSamplers[] = {
+		&ID3D11DeviceContext::VSSetSamplers,
+		&ID3D11DeviceContext::PSSetSamplers,
+		&ID3D11DeviceContext::CSSetSamplers,
+		&ID3D11DeviceContext::GSSetSamplers,
+		&ID3D11DeviceContext::HSSetSamplers,
+		&ID3D11DeviceContext::DSSetSamplers,
+	};
+
+	for( uint32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
 	{
-		m_context->PSSetSamplers(
-			rs.m_stages[PIXEL_SHADER].samplerOffset,
-			rs.m_stages[PIXEL_SHADER].samplerCount,
-			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[PIXEL_SHADER].samplers + rs.m_stages[PIXEL_SHADER].samplerOffset ) );
-		m_samplerHashes[PIXEL_SHADER] = rs.m_stages[PIXEL_SHADER].samplerHash;
+		auto& stage = rs.m_stages[i];
+		if( stage.resourceCount && stage.resourceHash != m_resourceHashes[i] )
+		{
+			( m_context->*( setResources[i] ) )(
+				stage.resourceOffset,
+				stage.resourceCount,
+				reinterpret_cast<ID3D11ShaderResourceView**>( stage.resources + stage.resourceOffset ) );
+			m_resourceHashes[i] = stage.resourceHash;
+		}
+		if( stage.samplerCount && stage.samplerHash != m_samplerHashes[i] )
+		{
+			( m_context->*( setSamplers[i] ) )(
+				stage.samplerOffset,
+				stage.samplerCount,
+				reinterpret_cast<ID3D11SamplerState**>( stage.samplers + stage.samplerOffset ) );
+			m_samplerHashes[i] = stage.samplerHash;
+		}
 	}
-	if( rs.m_stages[COMPUTE_SHADER].samplerCount && rs.m_stages[COMPUTE_SHADER].samplerHash != m_samplerHashes[COMPUTE_SHADER] )
-	{
-		m_context->CSSetSamplers(
-			rs.m_stages[COMPUTE_SHADER].samplerOffset,
-			rs.m_stages[COMPUTE_SHADER].samplerCount,
-			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[COMPUTE_SHADER].samplers + rs.m_stages[COMPUTE_SHADER].samplerOffset ) );
-		m_samplerHashes[COMPUTE_SHADER] = rs.m_stages[COMPUTE_SHADER].samplerHash;
-	}
-	if( rs.m_stages[GEOMETRY_SHADER].samplerCount && rs.m_stages[GEOMETRY_SHADER].samplerHash != m_samplerHashes[GEOMETRY_SHADER] )
-	{
-		m_context->GSSetSamplers(
-			rs.m_stages[GEOMETRY_SHADER].samplerOffset,
-			rs.m_stages[GEOMETRY_SHADER].samplerCount,
-			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[GEOMETRY_SHADER].samplers + rs.m_stages[GEOMETRY_SHADER].samplerOffset ) );
-		m_samplerHashes[GEOMETRY_SHADER] = rs.m_stages[GEOMETRY_SHADER].samplerHash;
-	}
-	if( rs.m_stages[HULL_SHADER].samplerCount && rs.m_stages[HULL_SHADER].samplerHash != m_samplerHashes[HULL_SHADER] )
-	{
-		m_context->HSSetSamplers(
-			rs.m_stages[HULL_SHADER].samplerOffset,
-			rs.m_stages[HULL_SHADER].samplerCount,
-			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[HULL_SHADER].samplers + rs.m_stages[HULL_SHADER].samplerOffset ) );
-		m_samplerHashes[HULL_SHADER] = rs.m_stages[HULL_SHADER].samplerHash;
-	}
-	if( rs.m_stages[DOMAIN_SHADER].samplerCount && rs.m_stages[DOMAIN_SHADER].samplerHash != m_samplerHashes[DOMAIN_SHADER] )
-	{
-		m_context->DSSetSamplers(
-			rs.m_stages[DOMAIN_SHADER].samplerOffset,
-			rs.m_stages[DOMAIN_SHADER].samplerCount,
-			reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[DOMAIN_SHADER].samplers + rs.m_stages[DOMAIN_SHADER].samplerOffset ) );
-		m_samplerHashes[DOMAIN_SHADER] = rs.m_stages[DOMAIN_SHADER].samplerHash;
-	}
+
+	//if( rs.m_stages[VERTEX_SHADER].resourceCount && rs.m_stages[VERTEX_SHADER].resourceHash != m_resourceHashes[VERTEX_SHADER] )
+	//{
+	//	m_context->VSSetShaderResources(
+	//		rs.m_stages[VERTEX_SHADER].resourceOffset,
+	//		rs.m_stages[VERTEX_SHADER].resourceCount,
+	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[VERTEX_SHADER].resources + rs.m_stages[VERTEX_SHADER].resourceOffset ) );
+	//	m_resourceHashes[VERTEX_SHADER] = rs.m_stages[VERTEX_SHADER].resourceHash;
+	//}
+	//if( rs.m_stages[PIXEL_SHADER].resourceCount && rs.m_stages[PIXEL_SHADER].resourceHash != m_resourceHashes[PIXEL_SHADER] )
+	//{
+	//	m_context->PSSetShaderResources(
+	//		rs.m_stages[PIXEL_SHADER].resourceOffset,
+	//		rs.m_stages[PIXEL_SHADER].resourceCount,
+	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[PIXEL_SHADER].resources + rs.m_stages[PIXEL_SHADER].resourceOffset ) );
+	//	m_resourceHashes[PIXEL_SHADER] = rs.m_stages[PIXEL_SHADER].resourceHash;
+	//}
+	//if( rs.m_stages[COMPUTE_SHADER].resourceCount && rs.m_stages[COMPUTE_SHADER].resourceHash != m_resourceHashes[COMPUTE_SHADER] )
+	//{
+	//	m_context->CSSetShaderResources(
+	//		rs.m_stages[COMPUTE_SHADER].resourceOffset,
+	//		rs.m_stages[COMPUTE_SHADER].resourceCount,
+	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[COMPUTE_SHADER].resources + rs.m_stages[COMPUTE_SHADER].resourceOffset ) );
+	//	m_resourceHashes[COMPUTE_SHADER] = rs.m_stages[COMPUTE_SHADER].resourceHash;
+	//}
+	//if( rs.m_stages[GEOMETRY_SHADER].resourceCount && rs.m_stages[GEOMETRY_SHADER].resourceHash != m_resourceHashes[GEOMETRY_SHADER] )
+	//{
+	//	m_context->GSSetShaderResources(
+	//		rs.m_stages[GEOMETRY_SHADER].resourceOffset,
+	//		rs.m_stages[GEOMETRY_SHADER].resourceCount,
+	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[GEOMETRY_SHADER].resources + rs.m_stages[GEOMETRY_SHADER].resourceOffset ) );
+	//	m_resourceHashes[GEOMETRY_SHADER] = rs.m_stages[GEOMETRY_SHADER].resourceHash;
+	//}
+	//if( rs.m_stages[HULL_SHADER].resourceCount && rs.m_stages[HULL_SHADER].resourceHash != m_resourceHashes[HULL_SHADER] )
+	//{
+	//	m_context->HSSetShaderResources(
+	//		rs.m_stages[HULL_SHADER].resourceOffset,
+	//		rs.m_stages[HULL_SHADER].resourceCount,
+	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[HULL_SHADER].resources + rs.m_stages[HULL_SHADER].resourceOffset ) );
+	//	m_resourceHashes[HULL_SHADER] = rs.m_stages[HULL_SHADER].resourceHash;
+	//}
+	//if( rs.m_stages[DOMAIN_SHADER].resourceCount && rs.m_stages[DOMAIN_SHADER].resourceHash != m_resourceHashes[DOMAIN_SHADER] )
+	//{
+	//	m_context->DSSetShaderResources(
+	//		rs.m_stages[DOMAIN_SHADER].resourceOffset,
+	//		rs.m_stages[DOMAIN_SHADER].resourceCount,
+	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[DOMAIN_SHADER].resources + rs.m_stages[DOMAIN_SHADER].resourceOffset ) );
+	//	m_resourceHashes[DOMAIN_SHADER] = rs.m_stages[DOMAIN_SHADER].resourceHash;
+	//}
+
+	//if( rs.m_stages[VERTEX_SHADER].samplerCount && rs.m_stages[VERTEX_SHADER].samplerHash != m_samplerHashes[VERTEX_SHADER] )
+	//{
+	//	m_context->VSSetSamplers(
+	//		rs.m_stages[VERTEX_SHADER].samplerOffset,
+	//		rs.m_stages[VERTEX_SHADER].samplerCount,
+	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[VERTEX_SHADER].samplers + rs.m_stages[VERTEX_SHADER].samplerOffset ) );
+	//	m_samplerHashes[VERTEX_SHADER] = rs.m_stages[VERTEX_SHADER].samplerHash;
+	//}
+	//if( rs.m_stages[PIXEL_SHADER].samplerCount && rs.m_stages[PIXEL_SHADER].samplerHash != m_samplerHashes[PIXEL_SHADER] )
+	//{
+	//	m_context->PSSetSamplers(
+	//		rs.m_stages[PIXEL_SHADER].samplerOffset,
+	//		rs.m_stages[PIXEL_SHADER].samplerCount,
+	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[PIXEL_SHADER].samplers + rs.m_stages[PIXEL_SHADER].samplerOffset ) );
+	//	m_samplerHashes[PIXEL_SHADER] = rs.m_stages[PIXEL_SHADER].samplerHash;
+	//}
+	//if( rs.m_stages[COMPUTE_SHADER].samplerCount && rs.m_stages[COMPUTE_SHADER].samplerHash != m_samplerHashes[COMPUTE_SHADER] )
+	//{
+	//	m_context->CSSetSamplers(
+	//		rs.m_stages[COMPUTE_SHADER].samplerOffset,
+	//		rs.m_stages[COMPUTE_SHADER].samplerCount,
+	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[COMPUTE_SHADER].samplers + rs.m_stages[COMPUTE_SHADER].samplerOffset ) );
+	//	m_samplerHashes[COMPUTE_SHADER] = rs.m_stages[COMPUTE_SHADER].samplerHash;
+	//}
+	//if( rs.m_stages[GEOMETRY_SHADER].samplerCount && rs.m_stages[GEOMETRY_SHADER].samplerHash != m_samplerHashes[GEOMETRY_SHADER] )
+	//{
+	//	m_context->GSSetSamplers(
+	//		rs.m_stages[GEOMETRY_SHADER].samplerOffset,
+	//		rs.m_stages[GEOMETRY_SHADER].samplerCount,
+	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[GEOMETRY_SHADER].samplers + rs.m_stages[GEOMETRY_SHADER].samplerOffset ) );
+	//	m_samplerHashes[GEOMETRY_SHADER] = rs.m_stages[GEOMETRY_SHADER].samplerHash;
+	//}
+	//if( rs.m_stages[HULL_SHADER].samplerCount && rs.m_stages[HULL_SHADER].samplerHash != m_samplerHashes[HULL_SHADER] )
+	//{
+	//	m_context->HSSetSamplers(
+	//		rs.m_stages[HULL_SHADER].samplerOffset,
+	//		rs.m_stages[HULL_SHADER].samplerCount,
+	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[HULL_SHADER].samplers + rs.m_stages[HULL_SHADER].samplerOffset ) );
+	//	m_samplerHashes[HULL_SHADER] = rs.m_stages[HULL_SHADER].samplerHash;
+	//}
+	//if( rs.m_stages[DOMAIN_SHADER].samplerCount && rs.m_stages[DOMAIN_SHADER].samplerHash != m_samplerHashes[DOMAIN_SHADER] )
+	//{
+	//	m_context->DSSetSamplers(
+	//		rs.m_stages[DOMAIN_SHADER].samplerOffset,
+	//		rs.m_stages[DOMAIN_SHADER].samplerCount,
+	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[DOMAIN_SHADER].samplers + rs.m_stages[DOMAIN_SHADER].samplerOffset ) );
+	//	m_samplerHashes[DOMAIN_SHADER] = rs.m_stages[DOMAIN_SHADER].samplerHash;
+	//}
 
 	return S_OK;
 }
