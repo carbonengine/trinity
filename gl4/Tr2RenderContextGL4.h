@@ -67,11 +67,6 @@ public:
 	ALResult SetTopology( long topology );
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram );
 
-	ALResult SetShaderBuffer(		
-		Tr2RenderContextEnum::ShaderType inputType, 
-		uint32_t slot, 
-		const Tr2GpuBufferAL& buffer );
-
 	ALResult SetUav(
 		Tr2RenderContextEnum::ShaderType inputType, 
 		uint32_t slot, 
@@ -107,12 +102,6 @@ public:
 	{
 		return E_FAIL;
 	}
-
-	ALResult SetTexture(				
-		Tr2RenderContextEnum::ShaderType inputType, 
-		uint32_t slot, 
-		const Tr2TextureAL& texture, 
-		Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
 
 	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet );
 	

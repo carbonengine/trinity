@@ -1580,23 +1580,6 @@ ALResult Tr2RenderContextAL::SetScissorRect(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetShaderBuffer(		
-	ShaderType /* inputType */, 
-	uint32_t /* slot */, 
-	const Tr2GpuBufferAL& /* buffer */ )
-{
-	return E_FAIL;
-}
-
-ALResult Tr2RenderContextAL::SetTexture(	
-	ShaderType inputType, 
-	uint32_t slot, 
-	const Tr2TextureAL& texture, 
-	Tr2RenderContextEnum::ColorSpace colorSpace )
-{
-	return E_FAIL;
-}
-
 ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
 {
 	if( !resourceSet.IsValid() )

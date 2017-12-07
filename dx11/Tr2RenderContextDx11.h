@@ -61,11 +61,6 @@ public:
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw();
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( );
 
-	ALResult SetShaderBuffer( 
-		Tr2RenderContextEnum::ShaderType inputType, 
-		uint32_t slot, 
-		const Tr2GpuBufferAL& buffer ) throw();
-
 	ALResult SetUav(
 		Tr2RenderContextEnum::ShaderType inputType, 
 		uint32_t slot, 
@@ -82,12 +77,6 @@ public:
 
 	ALResult ClearUav( Tr2RenderTargetAL& rt, const float values[4] ) throw( );
 	ALResult ClearUav( Tr2RenderTargetAL& rt, const uint32_t values[4] ) throw( );
-
-	ALResult SetTexture(
-		Tr2RenderContextEnum::ShaderType inputType, 
-		uint32_t slot, 
-		const Tr2TextureAL& texture, 
-		Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) throw();
 
 	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
 	

@@ -21,8 +21,9 @@ namespace TrinityALImpl
 		Tr2SamplerStateAL();
 
 		ALResult Create( const Tr2SamplerDescription& description, Tr2RenderContextAL& renderContext );
-		bool IsValid() const;
+		void Destroy();
 
+		bool IsValid() const;
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 

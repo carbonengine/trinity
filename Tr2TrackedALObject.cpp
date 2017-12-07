@@ -517,7 +517,7 @@ void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SAMPLER_STATE>:
 {
 	if( object->GetMemoryClass() & flags )
 	{
-		// object->Destroy();  TODO: why don't we have it?
+		object->Destroy();
 	}
 }
 

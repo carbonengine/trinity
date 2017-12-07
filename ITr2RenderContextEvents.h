@@ -18,7 +18,6 @@ class Tr2TextureAL;
 struct ITr2RenderContextEvents
 {
 	virtual void OnContextCreated( Tr2RenderContextAL& renderContext ) = 0;
-	virtual void OnTextureUnset( const Tr2TextureAL& texture, Tr2RenderContextAL& renderContext ) = 0;
 };
 
 #endif

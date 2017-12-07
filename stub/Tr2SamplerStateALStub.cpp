@@ -17,6 +17,11 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	void Tr2SamplerStateAL::Destroy()
+	{
+		m_isValid = false;
+	}
+
 	bool Tr2SamplerStateAL::IsValid() const
 	{
 		return m_isValid;

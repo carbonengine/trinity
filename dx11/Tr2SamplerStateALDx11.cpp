@@ -58,6 +58,11 @@ namespace TrinityALImpl
 		return hr;
 	}
 
+	void Tr2SamplerStateAL::Destroy()
+	{
+		m_samplerState = nullptr;
+	}
+
 	bool Tr2SamplerStateAL::IsValid() const
 	{
 		return m_samplerState != nullptr;

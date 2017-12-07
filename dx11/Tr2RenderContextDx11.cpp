@@ -1205,12 +1205,6 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 			{
 				dsView = m_boundDepthStencil->m_depthStencilView;
 			}
-
-			//DX11 automatically unsets a DT that's bound to a PS. Make sure managed rendering knows that :(
-			if( m_boundDepthStencil->GetTexture().IsValid() && m_events )
-			{
-				m_events->OnTextureUnset( m_boundDepthStencil->GetTexture(), *this );
-			}
 		}
 		if( m_psUavsDirtyBegin < m_psUavsDirtyEnd )
 		{
@@ -1294,12 +1288,6 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2RenderTargetAL& renderTar
 	m_boundRenderTarget[slot] = renderTarget.IsValid() ? &renderTarget : nullptr;
 	m_renderTargetHighWaterMark = std::max( m_renderTargetHighWaterMark, slot+1 );
 
-	//DX11 automatically unsets an RT that's bound to a PS. Make sure managed rendering knows that :(
-	if( renderTarget.IsValid() && m_events )
-	{
-		m_events->OnTextureUnset( renderTarget.GetTexture(), *this );
-	}
-	
 	SetRtDsToDevice( slot );
 	return S_OK;
 }
@@ -2080,113 +2068,6 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 	//	m_samplerHashes[DOMAIN_SHADER] = rs.m_stages[DOMAIN_SHADER].samplerHash;
 	//}
 
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetTexture(	
-	ShaderType inputType, 
-	uint32_t slot, 
-	const Tr2TextureAL& texture, 
-	Tr2RenderContextEnum::ColorSpace colorSpace )
-{
-	ID3D11ShaderResourceView* view;
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( texture );
-	if( !texture.IsValid() )
-	{
-		if( &texture == &nullTX )
-		{
-			view = nullptr;
-		}
-		else
-		{
-			return E_INVALIDARG;
-		}
-		}
-	else
-	{
-		view = texture.m_view[colorSpace].p;
-		if( m_boundDepthStencil && texture == m_boundDepthStencil->GetTexture() )
-		{
-			ApplyReadOnlyDepth();
-		}
-	}
-
-	switch( inputType )
-	{
-	case VERTEX_SHADER:
-		m_context->VSSetShaderResources( slot, 1, &view );
-		break;
-	case PIXEL_SHADER:
-		m_context->PSSetShaderResources( slot, 1, &view );
-		break;
-	case COMPUTE_SHADER:
-		m_context->CSSetShaderResources( slot, 1, &view );
-		break;
-	case GEOMETRY_SHADER:
-		m_context->GSSetShaderResources( slot, 1, &view );
-		break;
-	case HULL_SHADER:
-		m_context->HSSetShaderResources( slot, 1, &view );
-		break;
-	case DOMAIN_SHADER:
-		m_context->DSSetShaderResources( slot, 1, &view );
-		break;
-	default:
-		return E_INVALIDARG;
-	}
-	
-	return S_OK;
-}
-
-ALResult  Tr2RenderContextAL::SetShaderBuffer(		
-	ShaderType inputType, 
-	uint32_t slot, 
-	const Tr2GpuBufferAL& buffer )
-{
-	ID3D11ShaderResourceView* view;
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	if( buffer.m_srv == nullptr )
-	{
-		if( &buffer == &nullGB )
-		{
-			view = nullptr;
-		}
-		else
-		{
-			return E_INVALIDARG;
-		}
-	}
-	else
-	{
-		view = buffer.m_srv;
-	}
-
-	switch( inputType )
-	{
-	case VERTEX_SHADER:
-		m_context->VSSetShaderResources( slot, 1, &view );
-		break;
-	case PIXEL_SHADER:
-		m_context->PSSetShaderResources( slot, 1, &view );
-		break;
-	case COMPUTE_SHADER:
-		m_context->CSSetShaderResources( slot, 1, &view );
-		break;
-	case GEOMETRY_SHADER:
-		m_context->GSSetShaderResources( slot, 1, &view );
-		break;
-	case HULL_SHADER:
-		m_context->HSSetShaderResources( slot, 1, &view );
-		break;
-	case DOMAIN_SHADER:
-		m_context->DSSetShaderResources( slot, 1, &view );
-		break;
-	default:
-		return E_INVALIDARG;
-	}
-	
 	return S_OK;
 }
 

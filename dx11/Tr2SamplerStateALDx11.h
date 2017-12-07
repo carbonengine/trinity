@@ -21,6 +21,7 @@ namespace TrinityALImpl
 		Tr2SamplerStateAL();
 
 		ALResult Create( const Tr2SamplerDescription& description, Tr2PrimaryRenderContextAL &renderContext );
+		void Destroy();
 
 		bool IsValid() const;
 

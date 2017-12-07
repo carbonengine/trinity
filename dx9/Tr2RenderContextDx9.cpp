@@ -707,6 +707,14 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2DepthStencilAL& depthSten
 	{
 		return E_FAIL;
 	}
+	for( uint32_t i = 0; i < 16; ++i )
+	{
+		m_d3dDevice9->SetTexture( i, nullptr );
+	}
+	for( uint32_t i = 0; i < 4; ++i )
+	{
+		m_d3dDevice9->SetTexture( D3DVERTEXTEXTURESAMPLER0 + i, nullptr );
+	}
 	if( !depthStencil.IsValid() )
 	{
 		return m_d3dDevice9->SetDepthStencilSurface( nullptr );
@@ -733,9 +741,13 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2RenderTargetAL& renderTar
 		return E_INVALIDARG;
 	}
 
-	for( uint32_t i = 0; i < 20; ++i )
+	for( uint32_t i = 0; i < 16; ++i )
 	{
 		m_d3dDevice9->SetTexture( i, nullptr );
+	}
+	for( uint32_t i = 0; i < 4; ++i )
+	{
+		m_d3dDevice9->SetTexture( D3DVERTEXTEXTURESAMPLER0 + i, nullptr );
 	}
 
 	if( &renderTarget == &nullRT && slot == 0 )
@@ -1114,45 +1126,6 @@ ALResult Tr2RenderContextAL::SetScissorRect(
 #endif
 }
 
-ALResult Tr2RenderContextAL::SetShaderBuffer(		
-	ShaderType /* inputType */, 
-	uint32_t /* slot */, 
-	const Tr2GpuBufferAL& /* buffer */ )
-{
-	return E_FAIL;
-}
-
-ALResult Tr2RenderContextAL::SetTexture(	
-	ShaderType inputType, 
-	uint32_t slot, 
-	const Tr2TextureAL& texture, 
-	Tr2RenderContextEnum::ColorSpace colorSpace )
-{
-#if !defined( NDEBUG )
-	if( !m_d3dDevice9 )
-	{
-		return E_FAIL;
-	}
-#endif
-	switch( inputType )
-	{
-	case VERTEX_SHADER:
-		if( slot > 3 )
-		{
-			return E_FAIL;
-		}
-		slot += D3DVERTEXTEXTURESAMPLER0;
-		break;
-	case PIXEL_SHADER:
-		break;
-	default:
-		return E_INVALIDARG;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( texture );
-	CR_RETURN_HR( m_d3dDevice9->SetSamplerState( slot, D3DSAMP_SRGBTEXTURE, colorSpace == COLOR_SPACE_SRGB ? TRUE : FALSE ) );
-	return m_d3dDevice9->SetTexture( slot, texture.m_texture );
-}
-
 ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
 {
 	if( !resourceSet.IsValid() )
@@ -1282,6 +1255,15 @@ ALResult Tr2RenderContextAL::PopRenderTarget( uint32_t slot )
 		return E_FAIL;
 	}
 
+	for( uint32_t i = 0; i < 16; ++i )
+	{
+		m_d3dDevice9->SetTexture( i, nullptr );
+	}
+	for( uint32_t i = 0; i < 4; ++i )
+	{
+		m_d3dDevice9->SetTexture( D3DVERTEXTEXTURESAMPLER0 + i, nullptr );
+	}
+
 	HRESULT hr = m_d3dDevice9->SetRenderTarget( slot, m_stackRT[slot].top() );
 	if( m_stackRT[slot].top() )
 	{
@@ -1323,6 +1305,16 @@ ALResult Tr2RenderContextAL::PopDepthStencil()
 	{
 		return E_FAIL;
 	}
+
+	for( uint32_t i = 0; i < 16; ++i )
+	{
+		m_d3dDevice9->SetTexture( i, nullptr );
+	}
+	for( uint32_t i = 0; i < 4; ++i )
+	{
+		m_d3dDevice9->SetTexture( D3DVERTEXTEXTURESAMPLER0 + i, nullptr );
+	}
+
 	HRESULT hr = m_d3dDevice9->SetDepthStencilSurface( m_stackDS.top() );
 	if( !SUCCEEDED( hr ) )
 	{

@@ -1723,14 +1723,6 @@ ALResult Tr2RenderContextAL::SetScissorRect(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetShaderBuffer(		
-	ShaderType inputType, 
-	uint32_t slot, 
-	const Tr2GpuBufferAL& buffer )
-{
-	return E_FAIL;
-}
-
 ALResult Tr2RenderContextAL::SetUav(
 	Tr2RenderContextEnum::ShaderType inputType, 
 	uint32_t slot, 
@@ -1822,15 +1814,6 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 		}
 	}
 	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetTexture(	
-	ShaderType inputType, 
-	uint32_t slot, 
-	const Tr2TextureAL& texture, 
-	Tr2RenderContextEnum::ColorSpace colorSpace )
-{
-	return E_FAIL;
 }
 
 ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights )

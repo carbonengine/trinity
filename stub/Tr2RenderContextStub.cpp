@@ -299,23 +299,6 @@ ALResult Tr2RenderContextAL::SetScissorRect(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetShaderBuffer(		
-	ShaderType /* inputType */, 
-	uint32_t /* slot */, 
-	const Tr2GpuBufferAL& /* buffer */ )
-{
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetTexture(	
-	ShaderType inputType, 
-	uint32_t slot, 
-	const Tr2TextureAL& texture, 
-	Tr2RenderContextEnum::ColorSpace colorSpace )
-{
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
 {
 	return S_OK;
