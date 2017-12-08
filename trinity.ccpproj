@@ -43,158 +43,156 @@ ResourceCompile:
   AdditionalIncludeDirectories:
   - ..
 
-BaseConfigurations:
-  Windows:
-    Imports:
-    - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
-    - ../../../../../../sdk/Granny/2.11.3.1/granny_2.11.3.1.yaml
-    - ../../../../../../sdk/zlib/1.2.11/zlib_1.2.11.yaml
-    - ../../../../../../sdk/tbb/tbb2017_20160916oss/tbb.yaml
-    - ../manifests/manifests.props
+Windows: &Windows
+  Imports:
+  - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
+  - ../../../../../../sdk/Granny/2.11.3.1/granny_2.11.3.1.yaml
+  - ../../../../../../sdk/zlib/1.2.11/zlib_1.2.11.yaml
+  - ../../../../../../sdk/tbb/tbb2017_20160916oss/tbb.yaml
+  - ../manifests/manifests.props
 
-    ClCompile:
-      EnableEnhancedInstructionSet: StreamingSIMDExtensions2
-      PreprocessorDefinitions: 
-      - _CRT_RAND_S
-      - NO_SHLWAPI_ISOS
-      # This is to prevent warnings from std::copy
-      - _SCL_SECURE_NO_WARNINGS
-      - DEPRECATED_ENABLED=1
-      - INTERIORS_ENABLED=1
-      - TBB_ENABLED=1
+  ClCompile:
+    EnableEnhancedInstructionSet: StreamingSIMDExtensions2
+    PreprocessorDefinitions:
+    - _CRT_RAND_S
+    - NO_SHLWAPI_ISOS
+    # This is to prevent warnings from std::copy
+    - _SCL_SECURE_NO_WARNINGS
+    - DEPRECATED_ENABLED=1
+    - INTERIORS_ENABLED=1
+    - TBB_ENABLED=1
 
-    Link:
-      IgnoreAllDefaultLibraries: true
-      AdditionalDependencies: 
-      - dbghelp.lib
-      - oldnames.lib
+  Link:
+    IgnoreAllDefaultLibraries: true
+    AdditionalDependencies:
+    - dbghelp.lib
+    - oldnames.lib
 
-  DebugBase:
-    UserMacros:
-      CcpConfigType: Debug
-    General:
-      LinkIncremental: true
-    ClCompile:
-      PreprocessorDefinitions:
-      - _DEBUG
-      Optimization: Disabled
-      RuntimeLibrary: MultiThreadedDebugDLL
-      DebugInformationFormat: EditAndContinue
+DebugBase: &DebugBase
+  UserMacros:
+    CcpConfigType: Debug
+  General:
+    LinkIncremental: true
+  ClCompile:
+    PreprocessorDefinitions:
+    - _DEBUG
+    Optimization: Disabled
+    RuntimeLibrary: MultiThreadedDebugDLL
+    DebugInformationFormat: EditAndContinue
 
-  ReleaseBase:
-    UserMacros:
-      CcpConfigType: Release
-    General:
-      LinkIncremental: false
-    ClCompile:
-      PreprocessorDefinitions:
-      - NDEBUG
-      - CCP_ASSERT_ENABLED=1
-      # TRINITYNAME is used for the name of the Python module initialization function
-      - TRINITYNAME=$(TargetName)
-      Optimization: MaxSpeed
-      RuntimeLibrary: MultiThreadedDLL
-      DebugInformationFormat: ProgramDatabase
-      WholeProgramOptimization: true
-    Link:
-      LinkTimeCodeGeneration: UseLinkTimeCodeGeneration
-  
-  DevBase:
-    # These settings apply to all Dev variants of Trinity
-    UserMacros:
-      CcpConfigType: Dev
-    General:
-      LinkIncremental: true
-    ClCompile:
-      PreprocessorDefinitions:
-      - NDEBUG
-      - CCP_ASSERT_ENABLED=1
-      - TRINITYDEV
-      # TRINITYNAME is used for the name of the Python module initialization function
-      - TRINITYNAME=$(TargetName)
-      Optimization: Disabled
-      RuntimeLibrary: MultiThreadedDLL
-      DebugInformationFormat: EditAndContinue
+ReleaseBase: &ReleaseBase
+  UserMacros:
+    CcpConfigType: Release
+  General:
+    LinkIncremental: false
+  ClCompile:
+    PreprocessorDefinitions:
+    - NDEBUG
+    - CCP_ASSERT_ENABLED=1
+    # TRINITYNAME is used for the name of the Python module initialization function
+    - TRINITYNAME=$(TargetName)
+    Optimization: MaxSpeed
+    RuntimeLibrary: MultiThreadedDLL
+    DebugInformationFormat: ProgramDatabase
+    WholeProgramOptimization: true
+  Link:
+    LinkTimeCodeGeneration: UseLinkTimeCodeGeneration
 
-  DeployBase:
-    # These settings apply to all Deploy variants of Trinity
-    UserMacros:
-      CcpConfigType: Deploy
-    General:
-      LinkIncremental: false
-    ClCompile:
-      PreprocessorDefinitions:
-      - NDEBUG
-      - CCP_DEPLOY=1
-      - EVALUATION_SDKS_ENABLED=0
-      # TRINITYNAME is used for the name of the Python module initialization function
-      - TRINITYNAME=$(TargetName)
-      Optimization: MaxSpeed
-      RuntimeLibrary: MultiThreadedDLL
-      DebugInformationFormat: ProgramDatabase
-      WholeProgramOptimization: true
-    Link:
-      LinkTimeCodeGeneration: UseLinkTimeCodeGeneration
+DevBase: &DevBase
+  # These settings apply to all Dev variants of Trinity
+  UserMacros:
+    CcpConfigType: Dev
+  General:
+    LinkIncremental: true
+  ClCompile:
+    PreprocessorDefinitions:
+    - NDEBUG
+    - CCP_ASSERT_ENABLED=1
+    - TRINITYDEV
+    # TRINITYNAME is used for the name of the Python module initialization function
+    - TRINITYNAME=$(TargetName)
+    Optimization: Disabled
+    RuntimeLibrary: MultiThreadedDLL
+    DebugInformationFormat: EditAndContinue
 
-  DebugRuntime:
-    # Due to the ignore all default libraries, we need to add in the c runtime libs
-    Link:
-      AdditionalDependencies:
-      - msvcrtD.lib
-      - msvcprtD.lib
-      - atlsD.lib
+DeployBase: &DeployBase
+  # These settings apply to all Deploy variants of Trinity
+  UserMacros:
+    CcpConfigType: Deploy
+  General:
+    LinkIncremental: false
+  ClCompile:
+    PreprocessorDefinitions:
+    - NDEBUG
+    - CCP_DEPLOY=1
+    - EVALUATION_SDKS_ENABLED=0
+    # TRINITYNAME is used for the name of the Python module initialization function
+    - TRINITYNAME=$(TargetName)
+    Optimization: MaxSpeed
+    RuntimeLibrary: MultiThreadedDLL
+    DebugInformationFormat: ProgramDatabase
+    WholeProgramOptimization: true
+  Link:
+    LinkTimeCodeGeneration: UseLinkTimeCodeGeneration
 
-  ReleaseRuntime:
-    # Due to the ignore all default libraries, we need to add in the c runtime libs
-    Link:
-      AdditionalDependencies:
-      - msvcrt.lib
-      - msvcprt.lib
-      - atls.lib
+DebugRuntime: &DebugRuntime
+  # Due to the ignore all default libraries, we need to add in the c runtime libs
+  Link:
+    AdditionalDependencies:
+    - msvcrtD.lib
+    - msvcprtD.lib
+    - atlsD.lib
 
-  D3D9:
-    # These are settings that apply to all variants of Trinity that use D3D9
-    Imports:
-    - ../TrinityAL/uses_TrinityALDX9.yaml
-    ClCompile:
-      PreprocessorDefinitions:
-      - D3DTARGET=9
+ReleaseRuntime: &ReleaseRuntime
+  # Due to the ignore all default libraries, we need to add in the c runtime libs
+  Link:
+    AdditionalDependencies:
+    - msvcrt.lib
+    - msvcprt.lib
+    - atls.lib
 
-  D3D11:
-    # These are settings that apply to all variants of Trinity that use D3D11
-    Imports:
-    - ../TrinityAL/uses_TrinityALDX11.yaml
-    ClCompile:
-      PreprocessorDefinitions:
-      - D3DTARGET=9
+D3D9: &D3D9
+  # These are settings that apply to all variants of Trinity that use D3D9
+  Imports:
+  - ../TrinityAL/uses_TrinityALDX9.yaml
+  ClCompile:
+    PreprocessorDefinitions:
+    - D3DTARGET=9
 
-  GLES2:
-    # These are settings that apply to all variants of Trinity that use OpenGL ES 2
-    Imports:
-    - ../TrinityAL/uses_TrinityALGLES2.yaml
-    ClCompile:
-      PreprocessorDefinitions:
-      - D3DTARGET=9
+D3D11: &D3D11
+  # These are settings that apply to all variants of Trinity that use D3D11
+  Imports:
+  - ../TrinityAL/uses_TrinityALDX11.yaml
+  ClCompile:
+    PreprocessorDefinitions:
+    - D3DTARGET=9
 
-  GL4:
-    # These are settings that apply to all variants of Trinity that use OpenGL 4
-    Imports:
-    - ../TrinityAL/uses_TrinityALGL4.yaml
+GLES2: &GLES2
+  # These are settings that apply to all variants of Trinity that use OpenGL ES 2
+  Imports:
+  - ../TrinityAL/uses_TrinityALGLES2.yaml
+  ClCompile:
+    PreprocessorDefinitions:
+    - D3DTARGET=9
 
-  STUB:
-    # These are settings that apply to all variants of Trinity that use the stub
-    Imports:
-    - ../TrinityAL/uses_TrinityALSTUB.yaml
+GL4: &GL4
+  # These are settings that apply to all variants of Trinity that use OpenGL 4
+  Imports:
+  - ../TrinityAL/uses_TrinityALGL4.yaml
+
+STUB: &STUB
+  # These are settings that apply to all variants of Trinity that use the stub
+  Imports:
+  - ../TrinityAL/uses_TrinityALSTUB.yaml
 
 
 # Here come the different configurations
 Configurations:
   Debug|Win32,x64:
-    BaseConfigurations:
-    - Windows
-    - DebugBase
-    - DebugRuntime
-    - D3D9
+    << : *Windows
+    << : *DebugBase
+    << : *DebugRuntime
+    << : *D3D9
     Imports:
     - ../blue/Include/uses_blue.yaml
     General:
@@ -204,11 +202,10 @@ Configurations:
       - TRINITYNAME=_trinity_dx9_internal
 
   Debug11|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - DebugBase
-    - DebugRuntime
-    - D3D11
+    << : *Windows
+    << : *DebugBase
+    << : *DebugRuntime
+    << : *D3D11
     Imports:
     - ../blue/Include/uses_blue.yaml
     General:
@@ -218,22 +215,20 @@ Configurations:
       - TRINITYNAME=_trinity_dx11_internal
 
   Dev9|Win32,x64:
-    BaseConfigurations:
-    - Windows
-    - DevBase
-    - ReleaseRuntime
-    - D3D9
+    << : *Windows
+    << : *DevBase
+    << : *ReleaseRuntime
+    << : *D3D9
     Imports:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx9_dev
 
   Dev11|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - DevBase
-    - ReleaseRuntime
-    - D3D11
+    << : *Windows
+    << : *DevBase
+    << : *ReleaseRuntime
+    << : *D3D11
     Imports:
     - ../blue/Include/uses_blue.yaml
     General:
@@ -241,100 +236,70 @@ Configurations:
 
   DevGLES2|Win32:
     # Note that we only have a 32bit version here - don't have glew in 64 bit
-    BaseConfigurations:
-    - Windows    
-    - DevBase
-    - ReleaseRuntime
-    - GLES2
+    << : *Windows
+    << : *DevBase
+    << : *ReleaseRuntime
+    << : *GLES2
     Imports:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_gles2_dev
 
   DevGL4|Win32:
-    BaseConfigurations:
-    - Windows    
-    - DevBase
-    - ReleaseRuntime
-    - GL4
+    << : *Windows
+    << : *DevBase
+    << : *ReleaseRuntime
+    << : *GL4
     Imports:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_gl4_dev
 
   DevStub|Win32,x64:
-    BaseConfigurations:
-    - Windows
-    - DevBase
-    - ReleaseRuntime
-    - STUB
-    Imports:
-    - ../blue/Include/uses_blue.yaml
-    - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
-    General:
-      TargetName: _trinity_stub_dev
-
-  Dev9_26|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - DevBase
-    - ReleaseRuntime
-    - D3D9
-    Imports:
-    - ../blue/Include/uses_blue_26.yaml
-    General:
-      TargetName: _trinity_dx9_dev
-
-  Release|Win32,x64:
-    BaseConfigurations:
-    - Windows
-    - ReleaseBase
-    - ReleaseRuntime
-    - D3D9
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *D3D9
     Imports:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx9_internal
 
   Release_26|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - ReleaseBase
-    - ReleaseRuntime
-    - D3D9
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *D3D9
     Imports:
     - ../blue/Include/uses_blue_26.yaml
     General:
       TargetName: _trinity_dx9_internal
 
   Release_27|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - ReleaseBase
-    - ReleaseRuntime
-    - D3D9
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *D3D9
     Imports:
     - ../blue/Include/uses_blue_27.yaml
     General:
       TargetName: _trinity_dx9_internal
 
   Release11|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - ReleaseBase
-    - ReleaseRuntime
-    - D3D11
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *D3D11
     Imports:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx11_internal
 
   ReleaseGLES2|Win32:
-    BaseConfigurations:
-    - Windows    
-    - ReleaseBase
-    - ReleaseRuntime
-    - GLES2
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *GLES2
     # Note that we only have a 32bit version here - don't have glew in 64 bit
     Imports:
     - ../blue/Include/uses_blue.yaml
@@ -342,42 +307,38 @@ Configurations:
       TargetName: _trinity_gles2_internal
 
   Release11_26|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - ReleaseBase
-    - ReleaseRuntime
-    - D3D11
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *D3D11
     Imports:
     - ../blue/Include/uses_blue_26.yaml
     General:
       TargetName: _trinity_dx11_internal
 
   Release11_27|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - ReleaseBase
-    - ReleaseRuntime
-    - D3D11
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *D3D11
     Imports:
     - ../blue/Include/uses_blue_27.yaml
     General:
       TargetName: _trinity_dx11_internal
 
   ReleaseGLES2_27|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - ReleaseBase
-    - ReleaseRuntime
-    - GLES2
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *GLES2
     Imports:
     - ../blue/Include/uses_blue_27.yaml
     General:
       TargetName: _trinity_gles2_internal
         
   ReleaseGLES2_27|Linux64:
-    BaseConfigurations:
-    - ReleaseBase
-    - GLES2
+    << : *ReleaseBase
+    << : *GLES2
     Imports:
     - ../blue/Include/uses_blue_27.yaml
     General:
@@ -414,9 +375,8 @@ Configurations:
       - -pthread
 
   ReleaseGLES2_27|Mac64:
-    BaseConfigurations:
-    - ReleaseBase
-    - GLES2
+    << : *ReleaseBase
+    << : *GLES2
     Imports:
     - ../blue/Include/uses_blue_27.yaml
     - ../../../../../../sdk/python/Python_2.7.yaml
@@ -434,9 +394,8 @@ Configurations:
       - TBB_ENABLED=1
 
   ReleaseGLES2|Mac64:
-    BaseConfigurations:
-    - ReleaseBase
-    - GLES2
+    << : *ReleaseBase
+    << : *GLES2
     Imports:
     - ../blue/Include/uses_blue.yaml
     - ../../../../../../sdk/tbb/tbb2017_20160916oss/tbb.yaml
@@ -453,20 +412,18 @@ Configurations:
       - TBB_ENABLED=1
 
   ReleaseGL4_27|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - ReleaseBase
-    - ReleaseRuntime
-    - GL4
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *GL4
     Imports:
     - ../blue/Include/uses_blue_27.yaml
     General:
       TargetName: _trinity_gl4_internal
 
   ReleaseGL4|Mac64:
-    BaseConfigurations:
-    - ReleaseBase
-    - GL4
+    << : *ReleaseBase
+    << : *GL4
     Imports:
     - ../blue/Include/uses_blue.yaml
     - ../../../../../../sdk/tbb/tbb2017_20160916oss/tbb.yaml
@@ -483,33 +440,30 @@ Configurations:
       - TBB_ENABLED=1
         
   Deploy|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - DeployBase
-    - ReleaseRuntime
-    - D3D9
+    << : *Windows
+    << : *DeployBase
+    << : *ReleaseRuntime
+    << : *D3D9
     Imports:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx9_deploy
 
   Deploy11|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - DeployBase
-    - ReleaseRuntime
-    - D3D11
+    << : *Windows
+    << : *DeployBase
+    << : *ReleaseRuntime
+    << : *D3D11
     Imports:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx11_deploy
 
   DebugStub|Win32,x64:
-    BaseConfigurations:
-    - Windows
-    - DebugBase
-    - DebugRuntime
-    - STUB
+    << : *Windows
+    << : *DebugBase
+    << : *DebugRuntime
+    << : *STUB
     Imports:
     - ../blue/Include/uses_blue.yaml
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
@@ -520,11 +474,10 @@ Configurations:
       - TRINITYNAME=_trinity_stub_internal
 
   ReleaseStub|Win32,x64:
-    BaseConfigurations:
-    - Windows
-    - ReleaseBase
-    - ReleaseRuntime
-    - STUB
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *STUB
     Imports:
     - ../blue/Include/uses_blue.yaml
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
@@ -535,11 +488,10 @@ Configurations:
       - TRINITYNAME=_trinity_stub_internal
 
   ReleaseStub_26|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - ReleaseBase
-    - ReleaseRuntime
-    - STUB
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *STUB
     Imports:
     - ../blue/Include/uses_blue_26.yaml
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
@@ -547,11 +499,10 @@ Configurations:
       TargetName: _trinity_stub_internal
 
   ReleaseStub_27|Win32,x64:
-    BaseConfigurations:
-    - Windows    
-    - ReleaseBase
-    - ReleaseRuntime
-    - STUB
+    << : *Windows
+    << : *ReleaseBase
+    << : *ReleaseRuntime
+    << : *STUB
     Imports:
     - ../blue/Include/uses_blue_27.yaml
     - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
