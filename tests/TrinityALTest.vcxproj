@@ -492,9 +492,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;NDEBUG;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\directx\february2010\Include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -509,9 +509,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\directx\february2010\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>GFSDK_Aftermath_Lib.x64.lib;d3dx10.lib;psapi.lib;gtest.lib;d3d9.lib;rad_tm_win64.lib;d3d11.lib;TrinityAL_dx11_dev.lib;dxerr.lib;atimgpud_s_x64.lib;nvapi.lib;dxgi.lib;dxguid.lib;d3dx11.lib;d3dx9.lib;CcpCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;TrinityAL_dx11_dev.lib;atimgpud_s_x64.lib;d3d11.lib;d3d9.lib;d3dx10.lib;d3dx11.lib;d3dx9.lib;dxerr.lib;dxgi.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -522,9 +522,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_DIRECTX11;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\directx\february2010\Include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -539,9 +539,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\directx\february2010\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>GFSDK_Aftermath_Lib.x64.lib;d3dx10.lib;psapi.lib;gtest.lib;d3d9.lib;rad_tm_win64.lib;d3d11.lib;dxerr.lib;atimgpud_s_x64.lib;nvapi.lib;dxgi.lib;TrinityAL_dx11.lib;dxguid.lib;d3dx11.lib;d3dx9.lib;CcpCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;TrinityAL_dx11.lib;atimgpud_s_x64.lib;d3d11.lib;d3d9.lib;d3dx10.lib;d3dx11.lib;d3dx9.lib;dxerr.lib;dxgi.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -552,9 +552,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_DIRECTX11;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\directx\february2010\Include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -569,9 +569,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>d3dx10.lib;atimgpud_s_x86.lib;psapi.lib;d3d9.lib;rad_tm_win32.lib;gtest.lib;d3d11.lib;dxerr.lib;nvapi.lib;GFSDK_Aftermath_Lib.x86.lib;dxgi.lib;TrinityAL_dx11.lib;dxguid.lib;d3dx11.lib;d3dx9.lib;CcpCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;TrinityAL_dx11.lib;atimgpud_s_x86.lib;d3d11.lib;d3d9.lib;d3dx10.lib;d3dx11.lib;d3dx9.lib;dxerr.lib;dxgi.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -582,9 +582,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_DIRECTX9;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\directx\february2010\Include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -599,9 +599,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\directx\february2010\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>TrinityAL_dx9.lib;gtest.lib;psapi.lib;d3d9.lib;rad_tm_win64.lib;dxerr.lib;nvapi.lib;atimgpud_s_x64.lib;dxguid.lib;d3dx9.lib;CcpCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_dx9.lib;atimgpud_s_x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -612,9 +612,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;NDEBUG;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\directx\february2010\Include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -629,9 +629,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>d3dx10.lib;atimgpud_s_x86.lib;psapi.lib;d3d9.lib;rad_tm_win32.lib;gtest.lib;d3d11.lib;TrinityAL_dx11_dev.lib;dxerr.lib;nvapi.lib;GFSDK_Aftermath_Lib.x86.lib;dxgi.lib;dxguid.lib;d3dx11.lib;d3dx9.lib;CcpCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;TrinityAL_dx11_dev.lib;atimgpud_s_x86.lib;d3d11.lib;d3d9.lib;d3dx10.lib;d3dx11.lib;d3dx9.lib;dxerr.lib;dxgi.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -642,7 +642,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITYDEV;NDEBUG;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;TRINITY_PLATFORM=TRINITY_STUB;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -659,9 +659,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>gtest.lib;CcpCore.lib;TrinityAL_stub_dev.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_stub_dev.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -672,9 +672,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITYDEV;NDEBUG;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;TRINITY_PLATFORM=TRINITY_OPENGLES2;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -689,9 +689,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>gtest.lib;TrinityAL_gles2_dev.lib;CcpCore.lib;rad_tm_win64.lib;psapi.lib;atimgpud_s_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_gles2_dev.lib;atimgpud_s_x64.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -702,9 +702,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_DIRECTX9;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\directx\february2010\Include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -719,9 +719,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>TrinityAL_dx9.lib;gtest.lib;psapi.lib;d3d9.lib;rad_tm_win32.lib;dxerr.lib;nvapi.lib;atimgpud_s_x86.lib;dxguid.lib;d3dx9.lib;CcpCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_dx9.lib;atimgpud_s_x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -732,9 +732,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_OPENGL4;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\cuda\3.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -749,9 +749,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>gtest.lib;psapi.lib;rad_tm_win64.lib;OpenCL.lib;atimgpud_s_x64.lib;CcpCore.lib;TrinityAL_gl4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4.lib;atimgpud_s_x64.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -762,9 +762,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>TRINITY_PLATFORM=TRINITY_OPENGL4;CCP_ASSERT_ENABLED=1;TRINITYDEV;NDEBUG;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\cuda\3.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -779,9 +779,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>gtest.lib;psapi.lib;rad_tm_win64.lib;OpenCL.lib;atimgpud_s_x64.lib;CcpCore.lib;TrinityAL_gl4_dev.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4_dev.lib;atimgpud_s_x64.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -792,7 +792,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITYDEV;NDEBUG;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;TRINITY_PLATFORM=TRINITY_STUB;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -809,9 +809,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>gtest.lib;CcpCore.lib;TrinityAL_stub_dev.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_stub_dev.lib;gtest.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -822,9 +822,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_OPENGL4;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\cuda\3.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -839,9 +839,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>glew32.lib;psapi.lib;rad_tm_win32.lib;gtest.lib;OpenCL.lib;opengl32.lib;atimgpud_s_x86.lib;CcpCore.lib;TrinityAL_gl4.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4.lib;atimgpud_s_x86.lib;glew32.lib;gtest.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -852,7 +852,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -869,9 +869,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>TrinityAL_stub.lib;gtest.lib;CcpCore.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_stub.lib;gtest.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -882,9 +882,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>TRINITY_PLATFORM=TRINITY_OPENGL4;CCP_ASSERT_ENABLED=1;TRINITYDEV;NDEBUG;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\cuda\3.0\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -899,9 +899,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>glew32.lib;psapi.lib;rad_tm_win32.lib;gtest.lib;OpenCL.lib;opengl32.lib;atimgpud_s_x86.lib;CcpCore.lib;TrinityAL_gl4_dev.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4_dev.lib;atimgpud_s_x86.lib;glew32.lib;gtest.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -912,9 +912,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;NDEBUG;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\directx\february2010\Include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -929,9 +929,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\directx\february2010\Lib\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>gtest.lib;psapi.lib;d3d9.lib;rad_tm_win64.lib;TrinityAL_dx9_dev.lib;dxerr.lib;nvapi.lib;atimgpud_s_x64.lib;dxguid.lib;d3dx9.lib;CcpCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_dx9_dev.lib;atimgpud_s_x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -942,9 +942,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITYDEV;NDEBUG;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;TRINITY_PLATFORM=TRINITY_OPENGLES2;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -959,9 +959,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>glew32.lib;TrinityAL_gles2_dev.lib;atimgpud_s_x86.lib;rad_tm_win32.lib;gtest.lib;opengl32.lib;psapi.lib;CcpCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_gles2_dev.lib;atimgpud_s_x86.lib;glew32.lib;gtest.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -972,7 +972,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -989,9 +989,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>TrinityAL_stub.lib;gtest.lib;CcpCore.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_stub.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -1002,9 +1002,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_OPENGLES2;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -1019,9 +1019,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>glew32.lib;atimgpud_s_x86.lib;rad_tm_win32.lib;gtest.lib;TrinityAL_gles2.lib;opengl32.lib;psapi.lib;CcpCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_gles2.lib;atimgpud_s_x86.lib;glew32.lib;gtest.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -1032,9 +1032,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;D3DTARGET=9;TRINITY_PLATFORM=TRINITY_OPENGLES2;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -1049,9 +1049,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>gtest.lib;CcpCore.lib;rad_tm_win64.lib;TrinityAL_gles2.lib;psapi.lib;atimgpud_s_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_gles2.lib;atimgpud_s_x64.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
@@ -1062,9 +1062,9 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;NDEBUG;D3DTARGET=9;AL_TACK_RESOURCE_USAGE=1;NOMINMAX;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;BLUEBUILD;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\directx\february2010\Include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -1079,9 +1079,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\ATI\CrossFire Detect;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>gtest.lib;psapi.lib;d3d9.lib;rad_tm_win32.lib;TrinityAL_dx9_dev.lib;dxerr.lib;nvapi.lib;atimgpud_s_x86.lib;dxguid.lib;d3dx9.lib;CcpCore.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_dx9_dev.lib;atimgpud_s_x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile/>
     <Manifest/>
