@@ -83,14 +83,14 @@ BaseConfigurations:
   
   D3D9:
     Imports:
-    - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
+    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_DIRECTX9
 
   D3D11:
     Imports:
-    - ../../../../../../sdk/directx/february2010/directx_february2010.yaml
+    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_DIRECTX11
