@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2TextureAL.h"
 
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2ResourceSetAL )
 
@@ -11,6 +12,7 @@ bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, u
 	resource.buffer = buffer;
 	resource.texture = nullptr;
 	resource.colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+	resource.id = 0;
 
 	if( m_resources[stage][registerIndex] == resource )
 	{
@@ -26,6 +28,7 @@ bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, u
 	resource.type = TEXTURE;
 	resource.texture = &texture;
 	resource.colorSpace = colorSpace;
+	resource.id = texture.GetObjectId();
 
 	if( m_resources[stage][registerIndex] == resource )
 	{
@@ -64,7 +67,7 @@ Tr2ResourceSetDescriptionAL::Resource::Resource()
 
 bool Tr2ResourceSetDescriptionAL::Resource::operator==( const Resource& other ) const
 {
-	return type == other.type && buffer == other.buffer && texture == other.texture;
+	return type == other.type && buffer == other.buffer && texture == other.texture && ( !other.texture || id == other.texture->GetObjectId() );
 }
 
 Tr2ResourceSetDescriptionAL::Sampler::Sampler()

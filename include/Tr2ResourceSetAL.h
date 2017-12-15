@@ -39,6 +39,7 @@ private:
 		const Tr2TextureAL* texture;
 		Tr2BufferAL buffer;
 		ResourceType type;
+		Tr2ObjectIdAL id;
 		Tr2RenderContextEnum::ColorSpace colorSpace;
 	};
 
