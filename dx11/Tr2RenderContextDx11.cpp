@@ -7,7 +7,6 @@
 #include "ALLog.h"
 
 #include "Tr2PrimaryRenderContextDx11.h"
-#include "Tr2GpuBufferALDx11.h"
 #include "Tr2RenderTargetALDx11.h"
 #include "Tr2VertexLayoutALDx11.h"
 #include "Tr2SamplerStateALDx11.h"
@@ -16,8 +15,6 @@
 #include "Tr2ShaderProgramALDx11.h"
 #include "Tr2ResourceSetALDx11.h"
 #include "Tr2BufferALDx11.h"
-#include "Tr2VertexBufferALDx11.h"
-#include "Tr2IndexBufferALDx11.h"
 
 
 CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
@@ -796,41 +793,6 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	return S_OK;
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Renders instanced geometry with index buffer using parameters stored in the 
-//   "indirect" buffer. The buffer must contain the following block of data as UINTs:
-//    - indexCount - number of indices for each instance
-//    - numInstances - number of instances
-//    - startIndex - index of the first index in IB
-//    - baseVertex - (signed) index of the first vertex
-//    - startInstance - index of the first instance
-// Arguments:
-//   params - "Indirect" buffer with parameters
-//   offset - Byte offset into params buffer where the block of indirect parameters 
-//		reside
-// Return Value:
-//   HRESULT of operation
-// --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2GpuBufferAL& params, uint32_t offset )
-{
-	if( !params.IsValid() )
-	{
-		return E_FAIL;
-	}
-	if( !ApplyShadowRenderStates() )
-	{
-		return E_FAIL;
-	}
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( params );
-
-	ApplyReadOnlyDepth();
-	m_context->DrawIndexedInstancedIndirect( params.m_buffer, offset );
-
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
 {
 	if( !params.IsValid() )
@@ -845,25 +807,6 @@ ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, 
 	ApplyReadOnlyDepth();
 	m_context->DrawIndexedInstancedIndirect( params.m_buffer->m_buffer, offset );
 
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2GpuBufferAL& params, uint32_t offset )
-{
-	if( !params.IsValid() )
-	{
-		return E_FAIL;
-	}
-	if( !ApplyShadowRenderStates() )
-	{
-		return E_FAIL;
-	}
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( params );
-
-	ApplyReadOnlyDepth();
-	m_context->DrawInstancedIndirect( params.m_buffer, offset );
-	
 	return S_OK;
 }
 
@@ -963,30 +906,6 @@ ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned grou
 	return S_OK;
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Executes currently bound compute shader. Group grid sizes are taken from
-//   indirectParams GPU buffer.
-// Arguments:
-//   indirectParams - GPU buffer containing group dimensions (X, Y, Z) as 3 consecutive
-//		UINTs.
-//    offset - byte offset into the indirectParams where the parameters are located
-// Return Value:
-//   HRESULT of operation
-// --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2GpuBufferAL& indirectParams, unsigned offset ) throw( )
-{
-	if( !indirectParams.IsValid() )
-	{
-		return E_FAIL;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( indirectParams );
-	ApplyUavs();
-
-	m_context->DispatchIndirect( indirectParams.m_buffer, offset );
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( )
 {
 	if( !indirectParams.IsValid() )
@@ -996,20 +915,6 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectPara
 	ApplyUavs();
 
 	m_context->DispatchIndirect( indirectParams.m_buffer->m_buffer, offset );
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::CopyBufferCounter( Tr2GpuBufferAL& dest, uint32_t destOffset, Tr2GpuBufferAL& src ) throw( )
-{
-	if( !m_context )
-	{
-		return E_INVALIDCALL;
-	}
-	if( !dest.m_buffer || !src.m_uav )
-	{
-		return E_INVALIDARG;
-	}
-	m_context->CopyStructureCount( dest.m_buffer, destOffset, src.m_uav );
 	return S_OK;
 }
 
@@ -1447,56 +1352,6 @@ ALResult Tr2RenderContextAL::CopySubBuffer(
 		src.m_buffer->m_buffer,
 		0,
 		&srcBox );
-	return S_OK;
-}
-
-
-
-ALResult Tr2RenderContextAL::SetStreamSource( 
-	uint32_t stream, 
-	const Tr2VertexBufferAL & buffer, 
-	uint32_t offset, 
-	uint32_t stride )
-{
-	if( stream == VERTEX_BUFFER_ZERO_STREAM_RESERVED )
-	{
-		CCP_AL_LOGWARN( "Changing stream %d, which is reserved by Trinity. Undefined behavior.", stream );
-	}
-	if( !buffer.IsValid() )
-	{
-		if( &buffer == &nullVB )
-		{
-			ID3D11Buffer* bufArray[1] = { nullptr };
-			uint32_t zero[1] = { 0 };
-			m_context->IASetVertexBuffers( stream, 1, bufArray, zero, zero );
-			return S_OK;
-		}
-		return E_FAIL;
-	}
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	ID3D11Buffer* bufArray[1] = { buffer.m_buffer };
-	m_context->IASetVertexBuffers( stream, 1, bufArray, &stride, &offset );
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetIndices( const Tr2IndexBufferAL & buffer )
-{
-	if( !buffer.IsValid() )
-	{
-		if( &buffer == &nullIB )
-		{
-			m_context->IASetIndexBuffer( nullptr, DXGI_FORMAT_UNKNOWN, 0 );
-			return S_OK;
-		}
-		return E_INVALIDARG;
-	}
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	m_context->IASetIndexBuffer(	buffer.m_buffer, 
-									buffer.Is16Bit() ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT, 
-									0 );
-
 	return S_OK;
 }
 
@@ -2231,60 +2086,6 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetUav(	
-	Tr2RenderContextEnum::ShaderType inputType, 
-	uint32_t slot, 
-	const Tr2GpuBufferAL& buffer,
-	uint32_t initialCount )
-{
-	ID3D11UnorderedAccessView* view;
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	if( buffer.m_uav == nullptr )
-	{
-		if( &buffer == &nullGB )
-		{
-			view = nullptr;
-		}
-		else
-		{
-			return E_INVALIDARG;
-		}
-	}
-	else
-	{
-		view = buffer.m_uav;
-	}
-
-	switch( inputType )
-	{
-	case PIXEL_SHADER:
-		if( slot >= sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] ) )
-		{
-			return E_INVALIDARG;
-		}
-		m_pixelShaderUavs[slot] = view;
-		if( m_psUavsDirtyBegin > slot )
-		{
-			m_psUavsDirtyBegin = slot;
-		}
-		if( m_psUavsDirtyEnd < slot + 1 )
-		{
-			m_psUavsDirtyEnd = slot + 1;
-		}
-		m_pixelShaderUavInitialCounts[slot] = initialCount;
-		break;
-	case COMPUTE_SHADER:
-		m_context->CSSetUnorderedAccessViews( slot, 1, &view, &initialCount );
-		break;
-	default:
-		return E_INVALIDARG;
-	}
-	
-	
-	return S_OK;
-}
-
 
 ALResult Tr2RenderContextAL::SetUav(	
 	Tr2RenderContextEnum::ShaderType inputType, 
@@ -2335,53 +2136,6 @@ ALResult Tr2RenderContextAL::SetUav(
 		return E_INVALIDARG;
 	}
 	
-	return S_OK;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Clears writable buffer with a floating point values. The buffer needs to have a 
-//   floating point pixel format and be GPU-writable.
-// Arguments:
-//   buffer - Buffer to clear
-//   values - 4 floating point values to use for filling the buffer; the number of values
-//		used depends on the buffer format (for example R32_FLOAT will only use values[0])
-// Return Value:
-//   HRESULT of operation
-// --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::ClearUav( Tr2GpuBufferAL& buffer, const float values[4] ) throw()
-{
-	if( !m_context || !buffer.m_uav )
-	{
-		return E_FAIL;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	// TODO: more check? (buffer format)
-	m_context->ClearUnorderedAccessViewFloat( buffer.m_uav, values );
-	return S_OK;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Clears writable buffer with a provided point values. The buffer needs to have a 
-//   pixel format (any type) and be GPU-writable.
-// Arguments:
-//   buffer - Buffer to clear
-//   values - 4 uint32_t values to use for filling the buffer; the number of values used 
-//		depends on the buffer format (for example R32_FLOAT will only use values[0]);
-//		also smaller that 32-bit channels will only use corresponding lower bits from
-//		values
-// Return Value:
-//   HRESULT of operation
-// --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::ClearUav( Tr2GpuBufferAL& buffer, const uint32_t values[4] ) throw()
-{
-	if( !m_context || !buffer.m_uav )
-	{
-		return E_FAIL;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	m_context->ClearUnorderedAccessViewUint( buffer.m_uav, values );
 	return S_OK;
 }
 

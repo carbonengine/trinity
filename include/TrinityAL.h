@@ -11,14 +11,11 @@
 
 
 #include "Tr2VideoAdapterInfoAL.h"
-#include "Tr2VertexBufferAL.h"
-#include "Tr2IndexBufferAL.h"
 #include "Tr2ConstantBufferAL.h"
 #include "Tr2VertexLayoutAL.h"
 #include "Tr2ShaderAL.h"
 #include "Tr2TextureAL.h"
 #include "Tr2SamplerStateAL.h"
-#include "Tr2GpuBufferAL.h"
 #include "Tr2RenderTargetAL.h"
 #include "Tr2DepthStencilAL.h"
 #include "Tr2SwapChainAL.h"

@@ -13,6 +13,23 @@ namespace
 		return ( value & flag ) == flag;
 	}
 
+	GLenum GetTarget( const Tr2BufferDescriptionAL& desc )
+	{
+		GLenum target;
+		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) )
+		{
+			target = GL_ARRAY_BUFFER;
+		}
+		else if( HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) )
+		{
+			target = GL_ELEMENT_ARRAY_BUFFER;
+		}
+		else
+		{
+			target = GL_TEXTURE_BUFFER;
+		}
+		return target;
+	}
 }
 
 namespace TrinityALImpl
@@ -61,19 +78,7 @@ namespace TrinityALImpl
 			return E_INVALIDCALL;
 		}
 
-		GLenum target;
-		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) )
-		{
-			target = GL_ARRAY_BUFFER;
-		}
-		else if( HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) )
-		{
-			target = GL_ELEMENT_ARRAY_BUFFER;
-		}
-		else
-		{
-			target = GL_TEXTURE_BUFFER;
-		}
+		GLenum target = GetTarget( desc );
 
 		GL_FAIL( glGenBuffers( 1, &m_buffer ) );
 		GL_FAIL( glBindBuffer( target, m_buffer ) );
@@ -166,7 +171,7 @@ namespace TrinityALImpl
 			return E_INVALIDCALL;
 		}
 
-		auto target = HasFlag( m_desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
+		auto target = GetTarget( m_desc );
 
 		GL_FAIL( glBindBuffer( target, m_buffer ) );
 		GL_FAIL( data = glMapBuffer( target, GL_READ_ONLY ) );
@@ -188,7 +193,7 @@ namespace TrinityALImpl
 			return;
 		}
 
-		auto target = HasFlag( m_desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
+		auto target = GetTarget( m_desc );
 
 		CR_GL_RETURN( glBindBuffer( target, m_buffer ) );
 		CR_GL_RETURN( glUnmapBuffer( target ) );
@@ -206,7 +211,7 @@ namespace TrinityALImpl
 			return E_INVALIDCALL;
 		}
 
-		auto target = HasFlag( m_desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
+		auto target = GetTarget( m_desc );
 
 		GL_FAIL( glBindBuffer( target, m_buffer ) );
 		if( lockType == Tr2LockType::NON_SYNCHRONIZED )
@@ -236,7 +241,7 @@ namespace TrinityALImpl
 			return;
 		}
 
-		auto target = HasFlag( m_desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;
+		auto target = GetTarget( m_desc );
 
 		CR_GL_RETURN( glBindBuffer( target, m_buffer ) );
 		CR_GL_RETURN( glUnmapBuffer( target ) );
@@ -261,10 +266,13 @@ namespace TrinityALImpl
 			return S_OK;
 		}
 
-		GL_FAIL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_buffer ) );
-		GL_FAIL( glBufferSubData( GL_ARRAY_BUFFER, offset, size, data ) );
+		auto target = GetTarget( m_desc );
+
+		GL_FAIL( glBindBuffer( target, m_buffer ) );
+		GL_FAIL( glBufferSubData( target, offset, size, data ) );
 		return S_OK;
 	}
+
 }
 
 #endif

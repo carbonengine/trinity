@@ -5,8 +5,6 @@
 #include "ITr2RenderContextEvents.h"
 #include "ALLog.h"
 #include "Tr2HalHelperStructures.h"
-#include "Tr2VertexBufferALDx9.h"
-#include "Tr2IndexBufferALDx9.h"
 #include "Tr2ConstantBufferALDx9.h"
 #include "Tr2SamplerStateALDx9.h"
 #include "Tr2DepthStencilALDx9.h"
@@ -392,35 +390,6 @@ ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&
 	return E_FAIL;
 }
 
-
-
-ALResult Tr2RenderContextAL::SetStreamSource( 
-	uint32_t stream, 
-	const Tr2VertexBufferAL & buffer, 
-	uint32_t offset, 
-	uint32_t stride )
-{
-	if( !m_d3dDevice9 )
-	{
-		return E_FAIL;
-	}
-	if( !buffer.IsValid() )
-	{
-		if( &buffer == &nullVB )
-		{
-			return ReportIfFailure( 
-							m_d3dDevice9->SetStreamSource( stream, nullptr, 0, 0 )
-							, "SetStreamSource" );
-		}
-		return E_INVALIDARG;
-	}
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	return ReportIfFailure( 
-							m_d3dDevice9->SetStreamSource( stream, buffer.m_buffer, offset, stride )
-							, "SetStreamSource" );
-}
-
 ALResult Tr2RenderContextAL::Clear(	
 	uint32_t clearFlags, 
 	uint32_t color, 
@@ -451,26 +420,6 @@ ALResult Tr2RenderContextAL::Clear(
 	}
 
 	return ReportIfFailure( m_d3dDevice9->Clear(0, NULL, d3dFlags, color, depth, stencil ), "Clear" );
-}
-
-// Version of SetIndices that accepts a nullpointer, in which case the currently bound index buffer is un-set.
-ALResult Tr2RenderContextAL::SetIndices( const Tr2IndexBufferAL& buffer )
-{
-	if( !m_d3dDevice9 )
-	{
-		return E_FAIL;
-	}
-	if( !buffer.IsValid() )
-	{
-		if( &buffer == &nullIB )
-		{
-			return ReportIfFailure( m_d3dDevice9->SetIndices( nullptr ), "SetIndices" );
-		}
-		return E_INVALIDARG;
-	}
-	
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	return ReportIfFailure( m_d3dDevice9->SetIndices( buffer.m_buffer ), "SetIndices" );
 }
 
 ALResult Tr2RenderContextAL::SetTopology( long topology )

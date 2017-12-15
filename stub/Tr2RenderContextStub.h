@@ -10,8 +10,6 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../Tr2HalHelperStructures.h"
 
-class Tr2VertexBufferAL;
-class Tr2IndexBufferAL;
 class Tr2ConstantBufferAL;
 class Tr2VertexLayoutAL;
 class Tr2ShaderAL;
@@ -78,26 +76,9 @@ public:
 		uint32_t offset,
 		uint32_t length );
 
-
-
-
-	ALResult SetStreamSource(		uint32_t stream, 
-									const Tr2VertexBufferAL & buffer, 
-									uint32_t offset, 
-									uint32_t stride );
-
-	ALResult SetIndices( const Tr2IndexBufferAL & buffer );
 	ALResult SetTopology( long topology );
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram );
 
-	ALResult SetUav(
-		Tr2RenderContextEnum::ShaderType inputType, 
-		uint32_t slot, 
-		const Tr2GpuBufferAL& buffer,
-		uint32_t initialCount = -1 ) throw()
-	{ 
-		return E_FAIL; 
-	}
 
 	ALResult SetUav(				
 		Tr2RenderContextEnum::ShaderType inputType, 
@@ -105,16 +86,6 @@ public:
 		Tr2TextureAL& texture ) throw()
 	{ 
 		return E_FAIL; 
-	}
-
-	ALResult ClearUav( Tr2GpuBufferAL& buffer, const float values[4] ) throw()
-	{
-		return E_FAIL;
-	}
-
-	ALResult ClearUav( Tr2GpuBufferAL& buffer, const uint32_t values[4] ) throw()
-	{
-		return E_FAIL;
 	}
 
 	ALResult ClearUav( Tr2RenderTargetAL& rt, const float values[4] ) throw( )
@@ -162,17 +133,7 @@ public:
 		const void* vertexStreamZeroData, 
 		uint32_t vertexStreamZeroStride );
 
-	ALResult DrawIndexedInstancedIndirect( Tr2GpuBufferAL& params, uint32_t offset )
-	{
-		return E_FAIL;
-	}
-
 	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
-	{
-		return E_FAIL;
-	}
-
-	ALResult DrawInstancedIndirect( Tr2GpuBufferAL& params, uint32_t offset )
 	{
 		return E_FAIL;
 	}
@@ -186,16 +147,7 @@ public:
 	{
 		return E_FAIL;
 	}
-	ALResult RunComputeShaderIndirect( Tr2GpuBufferAL& indirectParams, unsigned offset )
-	{
-		return E_FAIL;
-	}
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset )
-	{
-		return E_FAIL;
-	}
-
-	ALResult CopyBufferCounter( Tr2GpuBufferAL& dest, uint32_t destOffset, Tr2GpuBufferAL& src )
 	{
 		return E_FAIL;
 	}

@@ -8,12 +8,9 @@
 
 class Tr2DepthStencilAL;
 class Tr2ShaderAL;
-class Tr2IndexBufferAL;
 class Tr2ConstantBufferAL;
-class Tr2VertexBufferAL;
 class Tr2TextureAL;
 class Tr2RenderTargetAL;
-class Tr2GpuBufferAL;
 class Tr2VertexLayoutAL;
 class Tr2ShaderProgramAL;
 
@@ -222,12 +219,12 @@ namespace std
 		std::size_t operator()( const Tr2SamplerDescription& desc ) const
 		{
 			return
-				std::hash<decltype( desc.m_minFilter )>()( desc.m_minFilter ) ^
-				( std::hash<decltype( desc.m_mipFilter )>()( desc.m_mipFilter ) << 1 ) ^
-				( std::hash<decltype( desc.m_magFilter )>()( desc.m_magFilter ) << 2 ) ^
-				( std::hash<decltype( desc.m_addressU )>()( desc.m_addressU ) << 3 ) ^
-				( std::hash<decltype( desc.m_addressV )>()( desc.m_addressV ) << 4 ) ^
-				( std::hash<decltype( desc.m_addressW )>()( desc.m_addressW ) << 5 );
+				std::hash<int32_t>()( desc.m_minFilter ) ^
+				( std::hash<int32_t>()( desc.m_mipFilter ) << 1 ) ^
+				( std::hash<int32_t>()( desc.m_magFilter ) << 2 ) ^
+				( std::hash<int32_t>()( desc.m_addressU ) << 3 ) ^
+				( std::hash<int32_t>()( desc.m_addressV ) << 4 ) ^
+				( std::hash<int32_t>()( desc.m_addressW ) << 5 );
 		}
 	};
 }
@@ -246,21 +243,9 @@ extern const Tr2ShaderAL		nullShader[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 
 // -------------------------------------------------------------
 // Description:
-// This is a null index buffer. If you want to unbind any currently bound index buffers, set this one.
-// -------------------------------------------------------------
-extern const Tr2IndexBufferAL	nullIB;
-
-// -------------------------------------------------------------
-// Description:
 // This is a null constant buffer. If you want to unbind any currently bound constant buffers, set this one.
 // -------------------------------------------------------------
 extern const Tr2ConstantBufferAL	nullCB;
-
-// -------------------------------------------------------------
-// Description:
-// This is a null vertex buffer. If you want to unbind any currently bound vertex buffers, set this one.
-// -------------------------------------------------------------
-extern const Tr2VertexBufferAL	nullVB;
 
 // -------------------------------------------------------------
 // Description:
@@ -276,12 +261,6 @@ extern const Tr2TextureAL		nullTX;
 // that slot.
 // -------------------------------------------------------------
 extern const Tr2RenderTargetAL	nullRT;
-
-// -------------------------------------------------------------
-// Description:
-// This is a null UAV buffer. If you want to unbind any currently bound buffer, set this one.
-// -------------------------------------------------------------
-extern const Tr2GpuBufferAL		nullGB;
 
 // -------------------------------------------------------------
 // Description:

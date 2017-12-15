@@ -5,8 +5,6 @@
 #include "Tr2RenderContextStub.h"
 #include "ITr2RenderContextEvents.h"
 #include "ALLog.h"
-#include "Tr2VertexBufferALStub.h"
-#include "Tr2IndexBufferALStub.h"
 #include "Tr2AdapterStructures.h"
 
 
@@ -98,21 +96,6 @@ ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&
 	return E_FAIL;
 }
 
-
-
-ALResult Tr2RenderContextAL::SetStreamSource( 
-	uint32_t stream, 
-	const Tr2VertexBufferAL & buffer, 
-	uint32_t offset, 
-	uint32_t stride )
-{
-	if( !buffer.IsValid() && &buffer != &nullVB )
-	{
-		return E_INVALIDARG;
-	}
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::Clear(	
 	uint32_t clearFlags, 
 	uint32_t color, 
@@ -120,15 +103,6 @@ ALResult Tr2RenderContextAL::Clear(
 	uint32_t stencil,
 	uint32_t slot )
 {
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetIndices( const Tr2IndexBufferAL& buffer )
-{
-	if( !buffer.IsValid() && ( &buffer != &nullIB ) )
-	{
-		return E_INVALIDARG;
-	}
 	return S_OK;
 }
 

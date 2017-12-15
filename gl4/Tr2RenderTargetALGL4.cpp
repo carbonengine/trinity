@@ -84,7 +84,11 @@ ALResult Tr2RenderTargetAL::Create(
 		m_mipCount = mipLevelCount;
 		m_format = format;
 		m_type = TEX_TYPE_2D;
-		CR_RETURN_HR( m_backingStore.Create2D( width, height, GetTrueMipCount(), format, 0, nullptr, renderContext ) );
+		auto hr = m_backingStore.Create2D( width, height, GetTrueMipCount(), format, 0, nullptr, renderContext );
+		if( FAILED( hr ) )
+		{
+			return hr;
+		}
 		static_cast<Tr2BitmapDimensions&>(*this) = static_cast<Tr2BitmapDimensions&>( m_backingStore );
 	}
 

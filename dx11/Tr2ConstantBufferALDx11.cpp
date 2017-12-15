@@ -109,7 +109,11 @@ ALResult Tr2ConstantBufferAL::Create( uint32_t size, Tr2RenderContextEnum::Buffe
 			data.SysMemPitch = 0;
 			data.SysMemSlicePitch = 0;
 		}
-		CR_RETURN_HR( renderContext.m_d3dDevice11->CreateBuffer( &bd, initialData ? &data : nullptr, &m_buffer ) );
+		auto hr = renderContext.m_d3dDevice11->CreateBuffer( &bd, initialData ? &data : nullptr, &m_buffer );
+		if( FAILED( hr ) )
+		{
+			return hr;
+		}
 
 		m_size = size;
 		m_frameUse = FRAME_USE_NOT_USED_YET;

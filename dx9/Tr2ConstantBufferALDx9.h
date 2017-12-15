@@ -17,8 +17,6 @@ class Tr2RenderContextAL;
 //   handled one level up, this is only to avoid ifdef soup when
 //   creating and locking buffers.
 //	 32bit: no support for 64bit-sized buffers.
-// SeeAlso:
-//   Tr2VertexBufferAL
 // -------------------------------------------------------------
 class Tr2ConstantBufferAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_CONSTANT_BUFFER>
 {

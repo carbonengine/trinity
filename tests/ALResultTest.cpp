@@ -25,15 +25,15 @@ TEST( ALResult, CanCopyResult )
 
 TEST( ALResult, CanAssignResult )
 {
-	ALResult result1;
-	ALResult result2( E_INVALIDARG );
+	ALResult result1( E_INVALIDARG );
+	ALResult result2( S_OK );
 	result2 = result1;
 	EXPECT_EQ( result1.GetResult(), result2.GetResult() );
 
 	ALResult result3( E_INVALIDARG );
 	ALResult result4;
 	result4 = result3;
-	EXPECT_EQ( result1.GetResult(), result2.GetResult() );
+	EXPECT_EQ( result3.GetResult(), result4.GetResult() );
 }
 
 TEST( ALResult, CanCastALResultToHRESULT )

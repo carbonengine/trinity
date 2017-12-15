@@ -84,7 +84,11 @@ ALResult Tr2RenderTargetAL::Create(
 	}
 	else
 	{
-		CR_RETURN_HR( m_backingStore.Create2D( width, height, mipLevelCount, format, 0, nullptr, renderContext ) );
+		auto hr = m_backingStore.Create2D( width, height, mipLevelCount, format, 0, nullptr, renderContext );
+		if( FAILED( hr ) )
+		{
+			return hr;
+		}
 		float borderColor[4] = { 0.f, 0.f, 0.f, 0.f };
 		TrinityALImpl::Tr2SamplerStateAL::CreateStateData(
 			Tr2SamplerDescription( TF_LINEAR,

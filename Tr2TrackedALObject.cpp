@@ -319,46 +319,6 @@ void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENCIL>:
 }
 
 
-const char* Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_INDEX_BUFFER>::GetName()
-{
-	return "Tr2IndexBufferAL";
-}
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns information about the AL object (as string -> int values).
-// Arguments:
-//   flags - Resource memory class filter
-//   object - AL object
-//   description - (out) information on AL object (as string -> int values)
-// Return value:
-//   true If object is alive and matches memory filter
-//   false Otherwise
-// ----------------------------------------------------------------------------------
-bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_INDEX_BUFFER>::GetDescription( 
-	Tr2ALMemoryTypes flags, 
-	ObjectType* object, 
-	std::map<std::string, uint32_t>& description )
-{
-	if( object->IsValid() && ( object->GetMemoryClass() & flags ) != 0 )
-	{
-		REPORT_LAST_FRAME_USED;
-		description["memory"] = object->GetMemoryClass();
-		description["size"] = object->GetTotalSizeInBytes();
-		return true;
-	}
-	return false;
-}
-
-void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_INDEX_BUFFER>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
-{
-	if( object->GetMemoryClass() & flags )
-	{
-		object->Destroy();
-	}
-}
-
-
 // ----------------------------------------------------------------------------------
 // Description:
 //   Returns name of AL type this structure applies to.
@@ -598,52 +558,6 @@ void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TEXTURE>::Destr
 // Return Value:
 //   AL type name
 // ----------------------------------------------------------------------------------
-const char* Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_BUFFER>::GetName()
-{
-	return "Tr2VertexBufferAL";
-}
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns information about the AL object (as string -> int values).
-// Arguments:
-//   flags - Resource memory class filter
-//   object - AL object
-//   description - (out) information on AL object (as string -> int values)
-// Return value:
-//   true If object is alive and matches memory filter
-//   false Otherwise
-// ----------------------------------------------------------------------------------
-bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_BUFFER>::GetDescription( 
-	Tr2ALMemoryTypes flags, 
-	ObjectType* object, 
-	std::map<std::string, uint32_t>& description )
-{
-	if( object->IsValid() && ( object->GetMemoryClass() & flags ) != 0 )
-	{
-		REPORT_LAST_FRAME_USED;
-		description["memory"] = object->GetMemoryClass();
-		description["size"] = object->GetTotalSizeInBytes();
-		return true;
-	}
-	return false;
-}
-
-void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_BUFFER>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
-{
-	if( object->GetMemoryClass() & flags )
-	{
-		object->Destroy();
-	}
-}
-
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns name of AL type this structure applies to.
-// Return Value:
-//   AL type name
-// ----------------------------------------------------------------------------------
 const char* Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_LAYOUT>::GetName()
 {
 	return "Tr2VertexLayoutAL";
@@ -766,53 +680,6 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SWAP_CHAIN>::Ge
 }
 
 void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SWAP_CHAIN>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
-{
-	if( object->GetMemoryClass() & flags )
-	{
-		object->Destroy();
-	}
-}
-
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns name of AL type this structure applies to.
-// Return Value:
-//   AL type name
-// ----------------------------------------------------------------------------------
-const char* Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_GPU_BUFFER>::GetName()
-{
-	return "Tr2GpuBufferAL";
-}
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns information about the AL object (as string -> int values).
-// Arguments:
-//   flags - Resource memory class filter
-//   object - AL object
-//   description - (out) information on AL object (as string -> int values)
-// Return value:
-//   true If object is alive and matches memory filter
-//   false Otherwise
-// ----------------------------------------------------------------------------------
-bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_GPU_BUFFER>::GetDescription( 
-	Tr2ALMemoryTypes flags, 
-	ObjectType* object, 
-	std::map<std::string, uint32_t>& description )
-{
-	if( object->IsValid() && ( object->GetMemoryClass() & flags ) != 0 )
-	{
-		REPORT_LAST_FRAME_USED;
-		description["memory"] = object->GetMemoryClass();
-		description["format"] = object->GetFormat();
-		description["size"] = object->GetTotalSizeInBytes();
-		return true;
-	}
-	return false;
-}
-
-void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_GPU_BUFFER>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
 {
 	if( object->GetMemoryClass() & flags )
 	{

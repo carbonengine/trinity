@@ -33,22 +33,22 @@ TEST_F( Compute, CanReadCSResult )
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
 
-	Tr2GpuBufferAL output;
-	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );
+	Tr2BufferAL output;
+	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
-	float* data;
-	ASSERT_HRESULT_SUCCEEDED( output.Lock( 0, 0, (void**)&data, LOCK_READONLY, *renderContext ) );
+	const float* data;
+	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
 
 	EXPECT_EQ( 1.0f, data[0] );
 	EXPECT_EQ( 2.0f, data[1] );
 	EXPECT_EQ( 3.0f, data[2] );
 	EXPECT_EQ( 4.0f, data[3] );
-	ASSERT_HRESULT_SUCCEEDED( output.Unlock( *renderContext ) );
+	output.UnmapForReading( *renderContext );
 }
 
 
@@ -256,20 +256,20 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
 
 
-	Tr2GpuBufferAL output;
-	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );
+	Tr2BufferAL output;
+	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
-	float* data;
-	ASSERT_HRESULT_SUCCEEDED( output.Lock( 0, 0, (void**)&data, LOCK_READONLY, *renderContext ) );
+	const float* data;
+	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
 
 	EXPECT_EQ( 10.0f, data[0] );
 	EXPECT_EQ( 2.5f, data[1] );
-	ASSERT_HRESULT_SUCCEEDED( output.Unlock( *renderContext ) );
+	output.UnmapForReading( *renderContext );
 }
 
 
@@ -298,20 +298,20 @@ TEST_F( Compute, CanDispatchCSGroups )
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
 
-	Tr2GpuBufferAL output;
-	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32_UINT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );
+	Tr2BufferAL output;
+	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32_UINT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 2, 2, 2 ) );
 
-	uint32_t* data;
-	ASSERT_HRESULT_SUCCEEDED( output.Lock( 0, 0, (void**)&data, LOCK_READONLY, *renderContext ) );
+	const uint32_t* data;
+	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
 
 	EXPECT_EQ( 1900, data[0] );
 
-	ASSERT_HRESULT_SUCCEEDED( output.Unlock( *renderContext ) );
+	output.UnmapForReading( *renderContext );
 }
 
 #endif

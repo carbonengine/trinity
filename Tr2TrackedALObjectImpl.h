@@ -59,16 +59,13 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_CONTEX
 
 class Tr2ConstantBufferAL;
 class Tr2DepthStencilAL;
-class Tr2IndexBufferAL;
 class Tr2RenderTargetAL;
 class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2TextureAL;
-class Tr2VertexBufferAL;
 class Tr2VertexLayoutAL;
 class Tr2OcclusionQueryAL;
 class Tr2SwapChainAL;
-class Tr2GpuBufferAL;
 class Tr2FenceAL;
 class Tr2GpuTimerAL;
 class Tr2ShaderProgramAL;
@@ -119,26 +116,6 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENCIL
 	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 private:
 	static unsigned GetSizeEstimate( ObjectType* object );
-};
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Description structure for Tr2IndexBufferAL. 
-// See Also:
-//   Tr2TrackedALObjectBase
-// --------------------------------------------------------------------------------------
-template<>
-struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_INDEX_BUFFER>
-{
-	// ----------------------------------------------------------------------------------
-	// Description:
-	//   AL object type this information structure is applied to.
-	// ----------------------------------------------------------------------------------
-	typedef Tr2IndexBufferAL ObjectType;
-
-	static const char* GetName();
-	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
-	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -227,26 +204,6 @@ private:
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Description structure for Tr2VertexBufferAL. 
-// See Also:
-//   Tr2TrackedALObjectBase
-// --------------------------------------------------------------------------------------
-template<>
-struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_BUFFER>
-{
-	// ----------------------------------------------------------------------------------
-	// Description:
-	//   AL object type this information structure is applied to.
-	// ----------------------------------------------------------------------------------
-	typedef Tr2VertexBufferAL ObjectType;
-
-	static const char* GetName();
-	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
-	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
-};
-
-// --------------------------------------------------------------------------------------
-// Description:
 //   Description structure for Tr2VertexLayoutAL. 
 // See Also:
 //   Tr2TrackedALObjectBase
@@ -299,26 +256,6 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SWAP_CHAIN>
 	//   AL object type this information structure is applied to.
 	// ----------------------------------------------------------------------------------
 	typedef Tr2SwapChainAL ObjectType;
-
-	static const char* GetName();
-	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
-	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
-};
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Description structure for Tr2GpuBufferAL. 
-// See Also:
-//   Tr2TrackedALObjectBase
-// --------------------------------------------------------------------------------------
-template<>
-struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_GPU_BUFFER>
-{
-	// ----------------------------------------------------------------------------------
-	// Description:
-	//   AL object type this information structure is applied to.
-	// ----------------------------------------------------------------------------------
-	typedef Tr2GpuBufferAL ObjectType;
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );

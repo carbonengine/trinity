@@ -49,11 +49,13 @@ void Tr2LockGuard::Unlock()
 	if( !m_memory )
 	{
 		CCP_LOGWARN( "TrinityAL: guarded lock buffer memory is NULL when unlocking" );
+		return;
 	}
 	CCP_ASSERT( m_originalMemory );
 	if( !m_originalMemory )
 	{
 		CCP_LOGWARN( "TrinityAL: guarded lock original buffer memory is NULL when unlocking" );
+		return;
 	}
 	memcpy( m_originalMemory, m_memory, m_size );
 	CCPFreeWithGuard( m_memory );

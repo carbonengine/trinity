@@ -4,8 +4,6 @@
 
 #include "Tr2RenderContextGLES2.h"
 #include "ITr2RenderContextEvents.h"
-#include "Tr2VertexBufferALGLES2.h"
-#include "Tr2IndexBufferALGLES2.h"
 #include "Tr2ConstantBufferALGLES2.h"
 #include "Tr2ShaderALGLES2.h"
 #include "Tr2VertexLayoutALGLES2.h"
@@ -217,7 +215,7 @@ struct Tr2RenderContextAL::Blitter
 			-1.0f, 1.0f, 0.0f, 0.0f,
 			1.0f, 1.0f, 1.0f, 0.0f,
 		};
-		CR_RETURN_HR( m_buffer.Create( sizeof( float ) * 16, USAGE_IMMUTABLE, vb, renderContext ) );
+		CR_RETURN_HR( m_buffer.Create( sizeof( float ), 16, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vb, renderContext ) );
 		return S_OK;
 	}
 	// --------------------------------------------------------------------------------------
@@ -232,7 +230,6 @@ struct Tr2RenderContextAL::Blitter
 	ALResult Blit( Tr2TextureAL& source )
 	{
 		AL_UPDATE_RESOURCE_FRAME_USAGE( *m_sampler.m_sampler );
-		AL_UPDATE_RESOURCE_FRAME_USAGE( m_buffer );
 
 		GL_FAIL( glActiveTexture( GL_TEXTURE0 ) );
 		GL_FAIL( glBindTexture( GL_TEXTURE_2D, *source.m_texture ) );
@@ -244,7 +241,7 @@ struct Tr2RenderContextAL::Blitter
 		}
 		GL_FAIL( glUseProgram( m_program ) );
 
-		GL_FAIL( glBindBuffer( GL_ARRAY_BUFFER, m_buffer.m_buffer ) );
+		GL_FAIL( glBindBuffer( GL_ARRAY_BUFFER, m_buffer.m_buffer->m_buffer ) );
 		GL_FAIL( glEnableVertexAttribArray( m_position ) );
 		GL_FAIL( glVertexAttribPointer( m_position,
 								4,
@@ -267,8 +264,8 @@ struct Tr2RenderContextAL::Blitter
 
 	Tr2SamplerStateAL m_sampler;
 	GLuint m_program;
-	Tr2VertexBufferAL m_buffer;
 	GLint m_position;
+	Tr2BufferAL m_buffer;
 };
 
 Tr2RenderContextAL::Tr2RenderContextAL()
@@ -501,39 +498,6 @@ ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&
 	return E_FAIL;
 }
 
-
-ALResult Tr2RenderContextAL::SetStreamSource( 
-	uint32_t stream, 
-	const Tr2VertexBufferAL & buffer, 
-	uint32_t offset, 
-	uint32_t stride )
-{
-	if( !IsValid() )
-	{
-		return E_FAIL;
-	}
-	if( stream >= 8 )
-	{
-		return E_INVALIDARG;
-	}
-	if( !buffer.IsValid() )
-	{
-		m_boundStreams[stream].buffer = 0;
-		m_boundStreams[stream].stride = 0;
-		m_boundStreams[stream].offset = 0;
-		if( &buffer == &nullVB )
-		{
-			return S_OK;
-		}
-		return E_INVALIDARG;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	m_boundStreams[stream].buffer = buffer.m_buffer;
-	m_boundStreams[stream].stride = stride;
-	m_boundStreams[stream].offset = offset;
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::Clear(	
 	uint32_t clearFlags, 
 	uint32_t color, 
@@ -582,25 +546,6 @@ ALResult Tr2RenderContextAL::Clear(
 		SetRenderState( RS_ZWRITEENABLE, zWriteEnable );
 	}
 
-	return S_OK;
-}
-
-// Version of SetIndices that accepts a nullpointer, in which case the currently bound index buffer is un-set.
-ALResult Tr2RenderContextAL::SetIndices( const Tr2IndexBufferAL& buffer )
-{
-	if( !IsValid() )
-	{
-		return E_FAIL;
-	}
-	if( !buffer.IsValid() )
-	{
-		GL_FAIL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 ) );
-		return S_OK;
-	}
-	
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	m_boundIndexBufferIs16Bit = buffer.Is16Bit();
-	GL_FAIL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, buffer.m_buffer ) );
 	return S_OK;
 }
 

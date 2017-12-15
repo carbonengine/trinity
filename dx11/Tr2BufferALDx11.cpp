@@ -85,7 +85,10 @@ namespace TrinityALImpl
 			bd.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
 			if( desc.format == PIXEL_FORMAT_UNKNOWN )
 			{
-				bd.MiscFlags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+				if( !HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) && !HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) )
+				{
+					bd.MiscFlags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+				}
 			}
 		}
 
@@ -128,7 +131,14 @@ namespace TrinityALImpl
 		{
 			D3D11_SHADER_RESOURCE_VIEW_DESC descSRV;
 			memset( &descSRV, 0, sizeof( descSRV ) );
-			descSRV.Format = static_cast<DXGI_FORMAT>( desc.format );
+			if( desc.format == PIXEL_FORMAT_UNKNOWN && ( bd.MiscFlags & D3D11_RESOURCE_MISC_BUFFER_STRUCTURED ) == 0 )
+			{
+				descSRV.Format = DXGI_FORMAT_R32_UINT;
+			}
+			else
+			{
+				descSRV.Format = static_cast<DXGI_FORMAT>( desc.format );
+			}
 			descSRV.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
 			descSRV.Buffer.ElementWidth = stride;
 			descSRV.Buffer.NumElements = desc.count;
@@ -352,6 +362,10 @@ namespace TrinityALImpl
 		}
 		else
 		{
+			if( !m_staging )
+			{
+				return;
+			}
 #if TRINITY_AL_GUARD_LOCKS
 			m_lockGuard.Unlock();
 #endif

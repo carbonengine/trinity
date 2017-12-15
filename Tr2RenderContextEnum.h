@@ -11,17 +11,14 @@ namespace Tr2RenderContextEnum
 	{
 		OT_CONSTANT_BUFFER,
 		OT_DEPTH_STENCIL,
-		OT_INDEX_BUFFER,
 		OT_RENDER_CONTEXT,
 		OT_RENDER_TARGET,
 		OT_SHADER,
 		OT_SAMPLER_STATE,
 		OT_TEXTURE,
-		OT_VERTEX_BUFFER,
 		OT_VERTEX_LAYOUT,
 		OT_OCCLUSION_QUERY,
 		OT_SWAP_CHAIN,
-		OT_GPU_BUFFER,
 		OT_FENCE,
 		OT_TIMER,
 
@@ -131,17 +128,6 @@ namespace Tr2RenderContextEnum
 	// Combination of BufferUsageFlags
 	typedef int BufferUsage;
 
-	enum GpuBufferUsageFlags
-	{
-		// Buffer with append/consume GPU access
-		GPU_BUFFER_APPEND			= 1 << 0,
-		// Add a counter to the buffer
-		GPU_BUFFER_COUNTER			= 1 << 1,
-	};
-
-	// Combination of GpuBufferUsageFlags
-	typedef int GpuBufferUsage;
-
 	bool ValidateUsage( BufferUsage );
 
 	// Topology
@@ -157,13 +143,6 @@ namespace Tr2RenderContextEnum
 		TOP_POINTS,
 
 		TOP_MAX_TOPOLOGY
-	};
-
-	// Index buffer element types.. 16 or 32 bit
-	enum IndexBufferBitcount
-	{
-		IB_16BIT,
-		IB_32BIT
 	};
 
 	// Comparison functions
@@ -219,13 +198,6 @@ namespace Tr2RenderContextEnum
         BO_MAX                  = 5,
         BO_FORCE_DWORD          = 0xffffffff
     };
-
-	// Texture locking
-	enum TextureLockSupport
-	{
-		TEX_LOCK_NONE,
-		TEX_LOCK_CPU_LOCKABLE
-	};
 
 	// Magical flags for CreateEx and friends
 	enum ExFlag

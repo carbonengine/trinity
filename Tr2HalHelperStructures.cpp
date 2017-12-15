@@ -3,10 +3,7 @@
 
 #include "include/Tr2DepthStencilAL.h"
 #include "include/Tr2ShaderAL.h"
-#include "include/Tr2IndexBufferAL.h"
-#include "include/Tr2VertexBufferAL.h"
 #include "include/Tr2RenderTargetAL.h"
-#include "include/Tr2GpuBufferAL.h"
 #include "include/Tr2ConstantBufferAL.h"
 #include "include/Tr2VertexLayoutAL.h"
 #include "include/Tr2ShaderProgramAL.h"
@@ -32,11 +29,8 @@ namespace
 	NullShaderInitializer	s_nullShaderInitializer;
 }
 
-const Tr2IndexBufferAL	nullIB;
-const Tr2VertexBufferAL	nullVB;
 const Tr2TextureAL		nullTX;
 const Tr2RenderTargetAL	nullRT;
-const Tr2GpuBufferAL	nullGB;
 const Tr2ConstantBufferAL	nullCB;
 const Tr2VertexLayoutAL	nullVL;
 const Tr2ShaderProgramAL nullSP;

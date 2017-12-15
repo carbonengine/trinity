@@ -4,7 +4,6 @@
 
 #include "Tr2ResourceSetALDx11.h"
 #include "Tr2BufferALDx11.h"
-#include "../include/Tr2GpuBufferAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2SamplerStateAL.h"
 

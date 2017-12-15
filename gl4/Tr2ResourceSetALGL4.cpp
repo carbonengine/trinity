@@ -169,6 +169,10 @@ namespace TrinityALImpl
 		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
 		{
 			auto& sampler = *description.m_samplers[COMPUTE_SHADER][i].sampler.m_sampler;
+			if( !sampler.IsValid() )
+			{
+				continue;
+			}
 			if( !sampler.m_clObject )
 			{
 				sampler.m_clObject = clCreateSampler( renderContext.m_clContext, CL_TRUE,

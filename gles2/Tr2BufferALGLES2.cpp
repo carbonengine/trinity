@@ -180,7 +180,7 @@ namespace TrinityALImpl
 		}
 
 #ifdef TRINITY_AL_MOBILE
-		m_lockedData.resize( "Tr2VertexBufferAL::Lock", m_desc.count * m_desc.stride );
+		m_lockedData.resize( "Tr2BufferAL::MapForWriting", m_desc.count * m_desc.stride );
 		data = m_lockedData.get();
 #else
 		auto target = HasFlag( m_desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) ? GL_ARRAY_BUFFER : GL_ELEMENT_ARRAY_BUFFER;

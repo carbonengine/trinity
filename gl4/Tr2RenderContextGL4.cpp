@@ -7,14 +7,11 @@
 #include "Tr2SamplerStateALGL4.h"
 #include "Tr2ShaderALGL4.h"
 #include "Tr2ConstantBufferALGL4.h"
-#include "Tr2GpuBufferALGL4.h"
 #include "Tr2VertexLayoutALGL4.h"
 #include "Tr2ShaderProgramALGL4.h"
 #include "Tr2AdapterStructures.h"
 #include "Tr2ResourceSetALGL4.h"
 #include "Tr2BufferALGL4.h"
-#include "Tr2VertexBufferALGL4.h"
-#include "Tr2IndexBufferALGL4.h"
 #include "ALLog.h"
 
 
@@ -162,7 +159,7 @@ struct Tr2RenderContextAL::Blitter
 			-1.0f, 1.0f, 0.0f, 0.0f,
 			1.0f, 1.0f, 1.0f, 0.0f,
 		};
-		CR_RETURN_HR( m_buffer.Create( sizeof( float ) * 16, USAGE_IMMUTABLE, vb, renderContext ) );
+		CR_RETURN_HR( m_buffer.Create( sizeof( float ), 16, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vb, renderContext ) );
 		return S_OK;
 	}
 	// --------------------------------------------------------------------------------------
@@ -177,7 +174,6 @@ struct Tr2RenderContextAL::Blitter
 	ALResult Blit( Tr2TextureAL& source )
 	{
 		AL_UPDATE_RESOURCE_FRAME_USAGE( *m_sampler.m_sampler );
-		AL_UPDATE_RESOURCE_FRAME_USAGE( m_buffer );
 
 		glBindProgramPipeline( m_pipeline );
 
@@ -185,7 +181,7 @@ struct Tr2RenderContextAL::Blitter
 		GL_FAIL( glBindTexture( GL_TEXTURE_2D, *source.m_texture ) );
 		GL_FAIL( glBindSampler( 0, m_sampler.m_sampler->m_sampler ) );
 
-		GL_FAIL( glBindBuffer( GL_ARRAY_BUFFER, m_buffer.m_buffer ) );
+		GL_FAIL( glBindBuffer( GL_ARRAY_BUFFER, m_buffer.m_buffer->m_buffer ) );
 		GL_FAIL( glEnableVertexAttribArray( 0 ) );
 		GL_FAIL( glVertexAttribPointer( 0,
 								4,
@@ -210,7 +206,7 @@ struct Tr2RenderContextAL::Blitter
 	GLuint m_vertexShader;
 	GLuint m_pixelShader;
 	GLuint m_pipeline;
-	Tr2VertexBufferAL m_buffer;
+	Tr2BufferAL m_buffer;
 };
 
 Tr2RenderContextAL::Tr2RenderContextAL()
@@ -513,40 +509,6 @@ ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&
 	return E_FAIL;
 }
 
-
-
-ALResult Tr2RenderContextAL::SetStreamSource( 
-	uint32_t stream, 
-	const Tr2VertexBufferAL & buffer, 
-	uint32_t offset, 
-	uint32_t stride )
-{
-	if( !IsValid() )
-	{
-		return E_FAIL;
-	}
-	if( stream >= 8 )
-	{
-		return E_INVALIDARG;
-	}
-	if( !buffer.IsValid() )
-	{
-		m_boundStreams[stream].buffer = 0;
-		m_boundStreams[stream].stride = 0;
-		m_boundStreams[stream].offset = 0;
-		if( &buffer == &nullVB )
-		{
-			return S_OK;
-		}
-		return E_INVALIDARG;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	m_boundStreams[stream].buffer = buffer.m_buffer;
-	m_boundStreams[stream].stride = stride;
-	m_boundStreams[stream].offset = offset;
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::Clear(	
 	uint32_t clearFlags, 
 	uint32_t color, 
@@ -591,25 +553,6 @@ ALResult Tr2RenderContextAL::Clear(
 		SetRenderState( RS_ZWRITEENABLE, zWriteEnable );
 	}
 
-	return S_OK;
-}
-
-// Version of SetIndices that accepts a nullpointer, in which case the currently bound index buffer is un-set.
-ALResult Tr2RenderContextAL::SetIndices( const Tr2IndexBufferAL& buffer )
-{
-	if( !IsValid() )
-	{
-		return E_FAIL;
-	}
-	if( !buffer.IsValid() )
-	{
-		GL_FAIL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 ) );
-		return S_OK;
-	}
-	
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	m_boundIndexBufferIs16Bit = buffer.Is16Bit();
-	GL_FAIL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, buffer.m_buffer ) );
 	return S_OK;
 }
 
@@ -1816,50 +1759,6 @@ ALResult Tr2RenderContextAL::SetScissorRect(
 	uint32_t bottom )
 {
 	GL_FAIL( glScissor( left, top, int( right ) - int( left ), int( bottom ) - int( top ) ) );
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetUav(
-	Tr2RenderContextEnum::ShaderType inputType, 
-	uint32_t slot, 
-	const Tr2GpuBufferAL& buffer,
-	uint32_t initialCount ) throw()
-{
-	if( inputType != COMPUTE_SHADER || slot > 16 )
-	{
-		return E_INVALIDARG;
-	}
-	cl_mem mem = nullptr;
-	if( !buffer.IsValid() )
-	{
-		if( &buffer != &nullGB )
-		{
-			return E_INVALIDARG;
-		}
-	}
-	else
-	{
-		AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-		if( !buffer.m_clObject )
-		{
-			int error;
-			buffer.m_clObject = clCreateFromGLBuffer( m_clContext, CL_MEM_READ_WRITE, *buffer.m_buffer, &error );
-			if( !buffer.m_clObject )
-			{
-				return E_FAIL;
-			}
-		}
-		mem = buffer.m_clObject;
-	}
-	if( m_boundUavs[slot] )
-	{
-		clReleaseMemObject( m_boundUavs[slot] );
-	}
-	m_boundUavs[slot] = mem;
-	if( mem )
-	{
-		clRetainMemObject( mem );
-	}
 	return S_OK;
 }
 

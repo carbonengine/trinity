@@ -45,11 +45,6 @@ ALResult CreateSampleObject( Tr2DepthStencilAL& ds, Tr2PrimaryRenderContextAL& r
 	return ds.Create( 128, 64, DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, renderContext );
 }
 
-ALResult CreateSampleObject( Tr2IndexBufferAL& ib, Tr2PrimaryRenderContextAL& renderContext )
-{
-	return ib.Create( 128, 0, IB_16BIT, nullptr, renderContext );
-}
-
 ALResult CreateSampleObject( Tr2RenderTargetAL& rt, Tr2PrimaryRenderContextAL& renderContext )
 {
 	return rt.Create( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, EX_NONE, renderContext );
@@ -80,11 +75,6 @@ ALResult CreateSampleObject( Tr2TextureAL& texture, Tr2PrimaryRenderContextAL& r
 	return texture.Create2D( 128, 128, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, 0, nullptr, renderContext );
 }
 
-ALResult CreateSampleObject( Tr2VertexBufferAL& vb, Tr2PrimaryRenderContextAL& renderContext )
-{
-	return vb.Create( 128, renderContext );
-}
-
 ALResult CreateSampleObject( Tr2VertexLayoutAL& layout, Tr2PrimaryRenderContextAL& renderContext )
 {
 	Tr2VertexDefinition def;
@@ -108,11 +98,6 @@ ALResult CreateSampleObject( Tr2SwapChainAL& sc, Tr2PrimaryRenderContextAL& rend
 	return sc.Create( window, renderContext );
 }
     
-ALResult CreateSampleObject( Tr2GpuBufferAL& buffer, Tr2PrimaryRenderContextAL& renderContext )
-{
-	return buffer.Create( 128, PIXEL_FORMAT_R32_FLOAT, 0, EX_NONE, nullptr, renderContext );
-}
-    
 ALResult CreateSampleObject( Tr2FenceAL& fence, Tr2PrimaryRenderContextAL& renderContext )
 {
 	return fence.Create( renderContext );
@@ -128,12 +113,6 @@ template <>
 bool IsObjectTypeAvailable<Tr2SwapChainAL>( Tr2PrimaryRenderContextAL& renderContext )
 {
 	return renderContext.GetCaps().SupportsStandaloneSwapChain();
-}
-
-template <>
-bool IsObjectTypeAvailable<Tr2GpuBufferAL>( Tr2PrimaryRenderContextAL& renderContext )
-{
-	return renderContext.GetCaps().SupportsGpuBuffer();
 }
 
 
@@ -174,15 +153,12 @@ class TrackedObjectTest : public WithValidRenderContext
 typedef ::testing::Types<
 	Tr2ConstantBufferAL, 
 	Tr2DepthStencilAL,
-	Tr2IndexBufferAL,
 	Tr2RenderTargetAL,
 	Tr2SamplerStateAL,
 	Tr2TextureAL,
-	Tr2VertexBufferAL,
 	Tr2VertexLayoutAL,
 	Tr2OcclusionQueryAL,
 	Tr2SwapChainAL,
-	Tr2GpuBufferAL,
 	Tr2FenceAL
 	> TrackedObjectTypes;
 TYPED_TEST_CASE( TrackedObjectTest, TrackedObjectTypes );
