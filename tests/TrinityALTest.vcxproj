@@ -1192,12 +1192,11 @@
   <ItemGroup>
     <ClCompile Include="ALResultTest.cpp"/>
     <ClCompile Include="BitmapDimensions.cpp"/>
+    <ClCompile Include="Buffer.cpp"/>
     <ClCompile Include="Compute.cpp"/>
     <ClCompile Include="ConstantBuffer.cpp"/>
     <ClCompile Include="DepthStencil.cpp"/>
     <ClCompile Include="Fence.cpp"/>
-    <ClCompile Include="GpuBuffer.cpp"/>
-    <ClCompile Include="IndexBuffer.cpp"/>
     <ClCompile Include="OcclusionQuery.cpp"/>
     <ClCompile Include="RenderContext.cpp"/>
     <ClCompile Include="RenderContextCreation.cpp"/>
@@ -1217,7 +1216,6 @@
     <ClCompile Include="TextureSubresource.cpp"/>
     <ClCompile Include="TrackedObjects.cpp"/>
     <ClCompile Include="TrinityALTest.cpp"/>
-    <ClCompile Include="VertexBuffer.cpp"/>
     <ClCompile Include="VertexDefinition.cpp"/>
     <ClCompile Include="VertexLayout.cpp"/>
     <ClCompile Include="VideoAdapterInfo.cpp"/>

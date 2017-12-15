@@ -308,6 +308,9 @@
     <ClCompile Include="BitmapDimensions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Buffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Compute.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -318,12 +321,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Fence.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GpuBuffer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="IndexBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="OcclusionQuery.cpp">
@@ -375,9 +372,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TrinityALTest.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VertexBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="VertexDefinition.cpp">
