@@ -72,7 +72,7 @@ private:
 	//CComPtr<ID3D11Query> m_deviceStatistics;
 	//bool m_deviceStatisticsQueryEmpty;
 
-	Tr2VertexBufferAL m_zeroVertexBuffer;
+	Tr2BufferAL m_zeroVertexBuffer;
 
 	// Device statistics
 	CComPtr<ID3D11Query> m_deviceStatistics;

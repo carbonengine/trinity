@@ -3,6 +3,7 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
 
 #include "Tr2ResourceSetALDx11.h"
+#include "Tr2BufferALDx11.h"
 #include "../include/Tr2GpuBufferAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2SamplerStateAL.h"
@@ -40,7 +41,7 @@ namespace TrinityALImpl
 				switch( desc.type )
 				{
 				case Tr2ResourceSetDescriptionAL::BUFFER:
-					stage.resources[registerIndex] = desc.buffer->m_srv;
+					stage.resources[registerIndex] = desc.buffer.m_buffer->m_srv;
 					break;
 				case Tr2ResourceSetDescriptionAL::TEXTURE:
 					stage.resources[registerIndex] = desc.texture->m_view[desc.colorSpace];

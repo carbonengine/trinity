@@ -2,6 +2,7 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
+#include "Tr2BufferAL.h"
 #include "Tr2SamplerStateAL.h"
 
 class Tr2PrimaryRenderContextAL;
@@ -14,9 +15,9 @@ namespace TrinityALImpl
 class Tr2ResourceSetDescriptionAL
 {
 public:
-	static const uint32_t MAX_RESOURCES_IN_STAGE = 16;
+	static const uint32_t MAX_RESOURCES_IN_STAGE = 32;
 
-	bool Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2GpuBufferAL& buffer );
+	bool Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer );
 	bool Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
 	bool Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler );
 
@@ -35,11 +36,8 @@ private:
 
 		bool operator==( const Resource& other ) const;
 
-		union
-		{
-			const Tr2GpuBufferAL* buffer;
-			const Tr2TextureAL* texture;
-		};
+		const Tr2TextureAL* texture;
+		Tr2BufferAL buffer;
 		ResourceType type;
 		Tr2RenderContextEnum::ColorSpace colorSpace;
 	};

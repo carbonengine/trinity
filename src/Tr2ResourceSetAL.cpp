@@ -4,11 +4,12 @@
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2ResourceSetAL )
 
 
-bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2GpuBufferAL& buffer )
+bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer )
 {
 	auto resource = Resource();
 	resource.type = BUFFER;
-	resource.buffer = &buffer;
+	resource.buffer = buffer;
+	resource.texture = nullptr;
 	resource.colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
 
 	if( m_resources[stage][registerIndex] == resource )
@@ -55,7 +56,7 @@ bool Tr2ResourceSetDescriptionAL::operator==( const Tr2ResourceSetDescriptionAL&
 
 
 Tr2ResourceSetDescriptionAL::Resource::Resource()
-	:buffer( nullptr ),
+	:texture( nullptr ),
 	type( NONE ),
 	colorSpace( Tr2RenderContextEnum::COLOR_SPACE_LINEAR )
 {
@@ -63,7 +64,7 @@ Tr2ResourceSetDescriptionAL::Resource::Resource()
 
 bool Tr2ResourceSetDescriptionAL::Resource::operator==( const Resource& other ) const
 {
-	return type == other.type && buffer == other.buffer;
+	return type == other.type && buffer == other.buffer && texture == other.texture;
 }
 
 Tr2ResourceSetDescriptionAL::Sampler::Sampler()

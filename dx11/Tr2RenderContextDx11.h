@@ -21,6 +21,7 @@ class Tr2GpuBufferAL;
 class Tr2RenderTargetAL;
 class Tr2SamplerStateAL;
 class Tr2DepthStencilAL;
+class Tr2BufferAL;
 struct Tr2Viewport;
 
 
@@ -50,13 +51,37 @@ public:
 
 	void ReleaseDeviceResources() throw();
 
+
+	ALResult SetStreamSource(
+		uint32_t stream,
+		const Tr2BufferAL & buffer,
+		uint32_t offset,
+		uint32_t stride ) throw( );
+	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( );
+	ALResult SetUav(
+		Tr2RenderContextEnum::ShaderType inputType,
+		uint32_t slot,
+		const Tr2BufferAL& buffer,
+		uint32_t initialCount = -1 ) throw( );
+	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
+	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
+
+	ALResult CopySubBuffer(
+		Tr2BufferAL& dest,
+		uint32_t destOffset,
+		Tr2BufferAL& src,
+		uint32_t offset,
+		uint32_t length );
+
+
 	ALResult SetStreamSource(
 		uint32_t stream, 
 		const Tr2VertexBufferAL & buffer, 
 		uint32_t offset, 
 		uint32_t stride ) throw();
 
-	ALResult SetIndices( const Tr2IndexBufferAL & buffer ) throw();
+
+	ALResult SetIndices( const Tr2IndexBufferAL & buffer ) throw( );
 	ALResult SetTopology( Tr2RenderContextEnum::Topology topology ) throw();
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw();
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( );
@@ -94,10 +119,13 @@ public:
 		uint32_t primitiveCount, 
 		uint32_t numInstances ) throw();
 	
-	ALResult DrawIndexedInstancedIndirect( Tr2GpuBufferAL& params, uint32_t offset ) throw();
-	ALResult DrawInstancedIndirect( Tr2GpuBufferAL& params, uint32_t offset ) throw();
-	
-	ALResult DrawIndexedPrimitiveUP( 
+	ALResult DrawIndexedInstancedIndirect( Tr2GpuBufferAL& params, uint32_t offset ) throw( );
+	ALResult DrawInstancedIndirect( Tr2GpuBufferAL& params, uint32_t offset ) throw( );
+
+	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( );
+	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( );
+
+	ALResult DrawIndexedPrimitiveUP(
 		uint32_t numVertices, 
 		uint32_t primitiveCount, 
 		const uint32_t* indexData, 
@@ -117,9 +145,11 @@ public:
 		uint32_t VertexStreamZeroStride ) throw();
 
 	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw();
-	ALResult RunComputeShaderIndirect( Tr2GpuBufferAL& indirectParams, unsigned offset ) throw();
+	ALResult RunComputeShaderIndirect( Tr2GpuBufferAL& indirectParams, unsigned offset ) throw( );
+	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( );
 
-	ALResult CopyBufferCounter( Tr2GpuBufferAL& dest, uint32_t destOffset, Tr2GpuBufferAL& src ) throw();
+	ALResult CopyBufferCounter( Tr2GpuBufferAL& dest, uint32_t destOffset, Tr2GpuBufferAL& src ) throw( );
+	ALResult CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src ) throw( );
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw();
 

@@ -15,6 +15,9 @@
 #include "Tr2HalHelperStructures.h"
 #include "Tr2ShaderProgramALDx11.h"
 #include "Tr2ResourceSetALDx11.h"
+#include "Tr2BufferALDx11.h"
+#include "Tr2VertexBufferALDx11.h"
+#include "Tr2IndexBufferALDx11.h"
 
 
 CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
@@ -824,7 +827,24 @@ ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2GpuBufferAL& param
 
 	ApplyReadOnlyDepth();
 	m_context->DrawIndexedInstancedIndirect( params.m_buffer, offset );
-	
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+{
+	if( !params.IsValid() )
+	{
+		return E_FAIL;
+	}
+	if( !ApplyShadowRenderStates() )
+	{
+		return E_FAIL;
+	}
+
+	ApplyReadOnlyDepth();
+	m_context->DrawIndexedInstancedIndirect( params.m_buffer->m_buffer, offset );
+
 	return S_OK;
 }
 
@@ -844,6 +864,23 @@ ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2GpuBufferAL& params, uint
 	ApplyReadOnlyDepth();
 	m_context->DrawInstancedIndirect( params.m_buffer, offset );
 	
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+{
+	if( !params.IsValid() )
+	{
+		return E_FAIL;
+	}
+	if( !ApplyShadowRenderStates() )
+	{
+		return E_FAIL;
+	}
+
+	ApplyReadOnlyDepth();
+	m_context->DrawInstancedIndirect( params.m_buffer->m_buffer, offset );
+
 	return S_OK;
 }
 
@@ -937,7 +974,7 @@ ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned grou
 // Return Value:
 //   HRESULT of operation
 // --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2GpuBufferAL& indirectParams, unsigned offset ) throw()
+ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2GpuBufferAL& indirectParams, unsigned offset ) throw( )
 {
 	if( !indirectParams.IsValid() )
 	{
@@ -950,7 +987,19 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2GpuBufferAL& indirectP
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::CopyBufferCounter( Tr2GpuBufferAL& dest, uint32_t destOffset, Tr2GpuBufferAL& src ) throw()
+ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( )
+{
+	if( !indirectParams.IsValid() )
+	{
+		return E_FAIL;
+	}
+	ApplyUavs();
+
+	m_context->DispatchIndirect( indirectParams.m_buffer->m_buffer, offset );
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::CopyBufferCounter( Tr2GpuBufferAL& dest, uint32_t destOffset, Tr2GpuBufferAL& src ) throw( )
 {
 	if( !m_context )
 	{
@@ -964,7 +1013,21 @@ ALResult Tr2RenderContextAL::CopyBufferCounter( Tr2GpuBufferAL& dest, uint32_t d
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetConstants( 
+ALResult Tr2RenderContextAL::CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src ) throw( )
+{
+	if( !m_context )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !dest.m_buffer->m_buffer || !src.m_buffer->m_uav )
+	{
+		return E_INVALIDARG;
+	}
+	m_context->CopyStructureCount( dest.m_buffer->m_buffer, destOffset, src.m_buffer->m_uav );
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetConstants(
 									const Tr2ConstantBufferAL& buffer, 
 									Tr2RenderContextEnum::ShaderType constantType, 
 									uint32_t registerIndex, 
@@ -1291,6 +1354,103 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2RenderTargetAL& renderTar
 	SetRtDsToDevice( slot );
 	return S_OK;
 }
+
+ALResult Tr2RenderContextAL::SetStreamSource(
+	uint32_t stream,
+	const Tr2BufferAL & buffer,
+	uint32_t offset,
+	uint32_t stride )
+{
+	if( stream == VERTEX_BUFFER_ZERO_STREAM_RESERVED )
+	{
+		CCP_AL_LOGWARN( "Changing stream %d, which is reserved by Trinity. Undefined behavior.", stream );
+	}
+	ID3D11Buffer* bufArray[1] = { buffer.m_buffer->m_buffer };
+	m_context->IASetVertexBuffers( stream, 1, bufArray, &stride, &offset );
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer )
+{
+	m_context->IASetIndexBuffer( buffer.m_buffer->m_buffer,
+		buffer.GetDesc().stride == 2  ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT,
+		0 );
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetUav(
+	Tr2RenderContextEnum::ShaderType inputType,
+	uint32_t slot,
+	const Tr2BufferAL& buffer,
+	uint32_t initialCount )
+{
+	ID3D11UnorderedAccessView* view = buffer.m_buffer->m_uav;
+
+	switch( inputType )
+	{
+	case PIXEL_SHADER:
+		if( slot >= sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] ) )
+		{
+			return E_INVALIDARG;
+		}
+		m_pixelShaderUavs[slot] = view;
+		if( m_psUavsDirtyBegin > slot )
+		{
+			m_psUavsDirtyBegin = slot;
+		}
+		if( m_psUavsDirtyEnd < slot + 1 )
+		{
+			m_psUavsDirtyEnd = slot + 1;
+		}
+		m_pixelShaderUavInitialCounts[slot] = initialCount;
+		break;
+	case COMPUTE_SHADER:
+		m_context->CSSetUnorderedAccessViews( slot, 1, &view, &initialCount );
+		break;
+	default:
+		return E_INVALIDARG;
+	}
+
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4] )
+{
+	m_context->ClearUnorderedAccessViewFloat( buffer.m_buffer->m_uav, values );
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] )
+{
+	m_context->ClearUnorderedAccessViewUint( buffer.m_buffer->m_uav, values );
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::CopySubBuffer(
+	Tr2BufferAL& dest,
+	uint32_t destOffset,
+	Tr2BufferAL& src,
+	uint32_t offset,
+	uint32_t length )
+{
+	if( !IsValid() || !dest.IsValid() || !src.IsValid() )
+	{
+		return E_FAIL;
+	}
+	D3D11_BOX srcBox = { offset, 0, 0, offset + length, 1, 1, };
+	m_context->CopySubresourceRegion( dest.m_buffer->m_buffer,
+		0,
+		destOffset,
+		0,
+		0,
+		src.m_buffer->m_buffer,
+		0,
+		&srcBox );
+	return S_OK;
+}
+
+
 
 ALResult Tr2RenderContextAL::SetStreamSource( 
 	uint32_t stream, 

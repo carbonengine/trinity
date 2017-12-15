@@ -85,13 +85,13 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 	float data1[] = { 1.f, 2.f, 3.f, 4.f };
 	float data2[] = { 100.f, 200.f, 300.f, 400.f };
 
-	Tr2GpuBufferAL arg1;
-	ASSERT_HRESULT_SUCCEEDED( arg1.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, data1, *renderContext ) );
-	Tr2GpuBufferAL arg2;
-	ASSERT_HRESULT_SUCCEEDED( arg2.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, data2, *renderContext ) );
+	Tr2BufferAL arg1;
+	ASSERT_HRESULT_SUCCEEDED( arg1.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, data1, *renderContext ) );
+	Tr2BufferAL arg2;
+	ASSERT_HRESULT_SUCCEEDED( arg2.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, data2, *renderContext ) );
 
-	Tr2GpuBufferAL output;
-	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );
+	Tr2BufferAL output;
+	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
 	Tr2ResourceSetDescriptionAL desc;
 	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
@@ -107,14 +107,14 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
-	float* data;
-	ASSERT_HRESULT_SUCCEEDED( output.Lock( 0, 0, (void**)&data, LOCK_READONLY, *renderContext ) );
+	const float* data;
+	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
 
 	EXPECT_EQ( 101.0f, data[0] );
 	EXPECT_EQ( 202.0f, data[1] );
 	EXPECT_EQ( 303.0f, data[2] );
 	EXPECT_EQ( 404.0f, data[3] );
-	ASSERT_HRESULT_SUCCEEDED( output.Unlock( *renderContext ) );
+	output.UnmapForReading( *renderContext );
 }
 
 
@@ -151,8 +151,8 @@ TEST_F( Compute, CanAddConstantInCS )
 	float data1[] = { 1.f, 2.f, 3.f, 4.f };
 	float data2[] = { 100.f, 200.f, 300.f, 400.f };
 
-	Tr2GpuBufferAL arg1;
-	ASSERT_HRESULT_SUCCEEDED( arg1.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, data1, *renderContext ) );
+	Tr2BufferAL arg1;
+	ASSERT_HRESULT_SUCCEEDED( arg1.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, data1, *renderContext ) );
 	Tr2ConstantBufferAL arg2;
 	ASSERT_HRESULT_SUCCEEDED( arg2.Create( sizeof( data2 ), *renderContext ) );
 	float* data;
@@ -160,8 +160,8 @@ TEST_F( Compute, CanAddConstantInCS )
 	memcpy( data, data2, sizeof( data2 ) );
 	ASSERT_HRESULT_SUCCEEDED( arg2.Unlock( *renderContext ) );
 
-	Tr2GpuBufferAL output;
-	ASSERT_HRESULT_SUCCEEDED( output.Create( 1, PIXEL_FORMAT_R32G32B32A32_FLOAT, USAGE_CPU_READ, EX_NONE, nullptr, *renderContext ) );
+	Tr2BufferAL output;
+	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
 	Tr2ResourceSetDescriptionAL desc;
 	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
@@ -179,13 +179,14 @@ TEST_F( Compute, CanAddConstantInCS )
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
-	ASSERT_HRESULT_SUCCEEDED( output.Lock( 0, 0, (void**)&data, LOCK_READONLY, *renderContext ) );
+	const float* readData = nullptr;
+	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( readData, *renderContext ) );
 
-	EXPECT_EQ( 101.0f, data[0] );
-	EXPECT_EQ( 202.0f, data[1] );
-	EXPECT_EQ( 303.0f, data[2] );
-	EXPECT_EQ( 404.0f, data[3] );
-	ASSERT_HRESULT_SUCCEEDED( output.Unlock( *renderContext ) );
+	EXPECT_EQ( 101.0f, readData[0] );
+	EXPECT_EQ( 202.0f, readData[1] );
+	EXPECT_EQ( 303.0f, readData[2] );
+	EXPECT_EQ( 404.0f, readData[3] );
+	output.UnmapForReading( *renderContext );
 }
 
 

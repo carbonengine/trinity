@@ -76,6 +76,7 @@ namespace TrinityALImpl
 {
 	class Tr2SamplerStateAL;
 	class Tr2ResourceSetAL;
+	class Tr2BufferAL;
 }
 
 // --------------------------------------------------------------------------------------
@@ -390,6 +391,22 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RESOURCE_SET>
 	//   AL object type this information structure is applied to.
 	// ----------------------------------------------------------------------------------
 	typedef TrinityALImpl::Tr2ResourceSetAL ObjectType;
+
+	static const char* GetName();
+	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
+	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
+};
+
+
+// --------------------------------------------------------------------------------------
+template<>
+struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_BUFFER>
+{
+	// ----------------------------------------------------------------------------------
+	// Description:
+	//   AL object type this information structure is applied to.
+	// ----------------------------------------------------------------------------------
+	typedef TrinityALImpl::Tr2BufferAL ObjectType;
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );

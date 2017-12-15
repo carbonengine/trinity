@@ -3,10 +3,10 @@
 #if TRINITY_PLATFORM == TRINITY_OPENGL4
 
 #include "Tr2ResourceSetALGL4.h"
+#include "Tr2BufferALGL4.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2RenderContextAL.h"
-#include "../include/Tr2GpuBufferAL.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -47,7 +47,7 @@ namespace TrinityALImpl
 			}
 			for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
 			{
-				if( description.m_resources[stage][i].buffer )
+				if( description.m_resources[stage][i].type != Tr2ResourceSetDescriptionAL::NONE )
 				{
 					return E_INVALIDARG;
 				}
@@ -146,18 +146,18 @@ namespace TrinityALImpl
 			}
 			case Tr2ResourceSetDescriptionAL::BUFFER:
 			{
-				auto& buffer = *desc.buffer;
-				if( !buffer.m_clObject )
+				auto& buffer = desc.buffer;
+				if( !buffer.m_buffer->m_clObject )
 				{
 					int error;
-					buffer.m_clObject = clCreateFromGLBuffer( renderContext.m_clContext, CL_MEM_READ_WRITE, *buffer.m_buffer, &error );
-					if( !buffer.m_clObject )
+					buffer.m_buffer->m_clObject = clCreateFromGLBuffer( renderContext.m_clContext, CL_MEM_READ_WRITE, buffer.m_buffer->m_buffer, &error );
+					if( !buffer.m_buffer->m_clObject )
 					{
 						return E_FAIL;
 					}
 				}
-				clResource.resource = buffer.m_clObject;
-				clRetainMemObject( buffer.m_clObject );
+				clResource.resource = buffer.m_buffer->m_clObject;
+				clRetainMemObject( buffer.m_buffer->m_clObject );
 				break;
 			}
 			default:

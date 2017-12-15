@@ -5,6 +5,7 @@
 #include "Tr2GpuBufferALDx11.h"
 #include "ALLog.h"
 #include "Tr2PrimaryRenderContextDx11.h"
+#include "include/Tr2VertexBufferAL.h"
 
 using namespace Tr2RenderContextEnum;
 

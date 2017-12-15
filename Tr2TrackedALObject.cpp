@@ -11,6 +11,7 @@
 #include "ALLog.h"
 
 #include TRINITY_AL_PLATFORM_INCLUDE_INT( Tr2ResourceSetAL )
+#include TRINITY_AL_PLATFORM_INCLUDE_INT( Tr2BufferAL )
 
 #if AL_TACK_RESOURCE_USAGE
 uint64_t g_trackCurrentFrame = 0;
@@ -962,6 +963,37 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RESOURCE_SET>::
 }
 
 void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RESOURCE_SET>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
+{
+	if( object->GetMemoryClass() & flags )
+	{
+		object->Destroy();
+	}
+}
+
+
+// ----------------------------------------------------------------------------------
+const char* Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_BUFFER>::GetName()
+{
+	return "Tr2BufferAL";
+}
+
+// ----------------------------------------------------------------------------------
+bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_BUFFER>::GetDescription(
+	Tr2ALMemoryTypes flags,
+	ObjectType* object,
+	std::map<std::string, uint32_t>& description )
+{
+	if( object->IsValid() && ( object->GetMemoryClass() & flags ) != 0 )
+	{
+		REPORT_LAST_FRAME_USED;
+		description["memory"] = object->GetMemoryClass();
+		description["size"] = object->GetDesc().count * object->GetDesc().stride;
+		return true;
+	}
+	return false;
+}
+
+void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_BUFFER>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
 {
 	if( object->GetMemoryClass() & flags )
 	{

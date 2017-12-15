@@ -66,6 +66,40 @@ void Tr2RenderContextAL::Destroy()
 	m_isValid = false;
 }
 
+
+
+ALResult Tr2RenderContextAL::SetStreamSource( uint32_t, const Tr2BufferAL&, uint32_t, uint32_t )
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& )
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL&, uint32_t )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const uint32_t[4] )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&, uint32_t, uint32_t )
+{
+	return E_FAIL;
+}
+
+
+
 ALResult Tr2RenderContextAL::SetStreamSource( 
 	uint32_t stream, 
 	const Tr2VertexBufferAL & buffer, 

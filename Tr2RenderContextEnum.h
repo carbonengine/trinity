@@ -27,6 +27,7 @@ namespace Tr2RenderContextEnum
 
 		OT_SHADER_PROGRAM,
 		OT_RESOURCE_SET,
+		OT_BUFFER,
 
 		OBJECT_TYPE_COUNT
 	};

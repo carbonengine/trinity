@@ -23,9 +23,9 @@ void Tr2DrawUPHelper::Destroy()
 {
 	for( unsigned i = 0; i != DRAW_UP_RING_SIZE; ++i )
 	{
-		m_vertexUP[i].Destroy();
-		m_indexUP16[i].Destroy();
-		m_indexUP32[i].Destroy();
+		m_vertexUP[i] = Tr2BufferAL();
+		m_indexUP16[i] = Tr2BufferAL();
+		m_indexUP32[i] = Tr2BufferAL();
 	}
 
 	m_nextRingVB = m_nextRingIB16 = m_nextRingIB32 = 0;
@@ -35,7 +35,7 @@ ALResult Tr2DrawUPHelper::FillUPVertexBuffer(
 	uint32_t vertexCount, 
 	const void* vertexStreamZeroData, 
 	uint32_t vertexStreamZeroStride, 
-	Tr2VertexBufferAL& buffer,
+	Tr2BufferAL& buffer,
 	Tr2RenderContextAL& renderContext )
 {
 	const uint32_t totalSize = vertexCount * vertexStreamZeroStride;
@@ -45,20 +45,20 @@ ALResult Tr2DrawUPHelper::FillUPVertexBuffer(
 		return S_OK;
 	}
 
-	if( totalSize > buffer.GetTotalSizeInBytes() )
+	if( totalSize > buffer.GetDesc().count * buffer.GetDesc().stride )
 	{
-		CR_RETURN_HR( buffer.Create( totalSize, Tr2RenderContextAL::GetPrimaryRenderContext() ) );
+		CR_RETURN_HR( buffer.Create( 4, ( totalSize + 3 ) / 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE_OFTEN, nullptr, Tr2RenderContextAL::GetPrimaryRenderContext() ) );
 	}
 
 	void* mapped = nullptr;
-	CR_RETURN_HR( buffer.Lock( 0, 0, &mapped, LOCK_WRITEONLY, renderContext ) );
-
+	CR_RETURN_HR( buffer.MapForWriting( mapped, renderContext ) );
 	if( !mapped )
 	{
+		buffer.UnmapForWriting( renderContext );
 		return E_FAIL;
 	}
 	memcpy( mapped, vertexStreamZeroData, totalSize );
-	CR_RETURN_HR( buffer.Unlock( renderContext ) );
+	buffer.UnmapForWriting( renderContext );
 
 	return S_OK;
 }
@@ -94,14 +94,9 @@ ALResult Tr2DrawUPHelper::DrawPrimitiveUP(
 ALResult Tr2DrawUPHelper::FillUPIndexBuffer(	
 	uint32_t primitiveCount, 
 	const uint16_t* indices, 
-	Tr2IndexBufferAL& buffer,
+	Tr2BufferAL& buffer,
 	Tr2RenderContextAL& renderContext )
 {
-	CCP_ASSERT( buffer.Is16Bit() );
-	if( !buffer.Is16Bit() )
-	{
-		return E_FAIL;
-	}
 	return FillUPIndexBuffer(	primitiveCount, 
 								(const void*)indices, 
 								2, 
@@ -112,14 +107,9 @@ ALResult Tr2DrawUPHelper::FillUPIndexBuffer(
 ALResult Tr2DrawUPHelper::FillUPIndexBuffer(	
 	uint32_t primitiveCount, 
 	const uint32_t* indices, 
-	Tr2IndexBufferAL& buffer,
+	Tr2BufferAL& buffer,
 	Tr2RenderContextAL& renderContext )
 {
-	CCP_ASSERT( !buffer.Is16Bit() );
-	if( buffer.Is16Bit() )
-	{
-		return E_FAIL;
-	}
 	return FillUPIndexBuffer(	primitiveCount, 
 								(const void*)indices, 
 								4, 
@@ -131,46 +121,26 @@ ALResult Tr2DrawUPHelper::FillUPIndexBuffer(
 	uint32_t primitiveCount, 
 	const void* indices, 
 	uint32_t bytesPerIndex, 
-	Tr2IndexBufferAL& buffer,
+	Tr2BufferAL& buffer,
 	Tr2RenderContextAL& renderContext )
 {
 	const uint32_t indexCount = renderContext.ComputeVertexCount( primitiveCount );
 	const uint32_t totalSize = indexCount * bytesPerIndex;
 
-	if( totalSize > buffer.GetTotalSizeInBytes() )
+	if( indexCount > buffer.GetDesc().count )
 	{
-		CR_RETURN_HR( buffer.Create(	indexCount, 
-										USAGE_CPU_WRITE | USAGE_LOCK_FREQUENTLY, 
-										bytesPerIndex == 2 ? IB_16BIT : IB_32BIT, 
-										nullptr, 
-										Tr2RenderContextAL::GetPrimaryRenderContext() ) );
+		CR_RETURN_HR( buffer.Create( bytesPerIndex, indexCount, Tr2GpuUsage::INDEX_BUFFER, Tr2CpuUsage::WRITE_OFTEN, nullptr, Tr2RenderContextAL::GetPrimaryRenderContext() ) );
 	}
 
-	uint16_t* mappedUS = nullptr;
-	uint32_t* mappedUI = nullptr;
-	if( buffer.Is16Bit() )
+	void* mapped = nullptr;
+	CR_RETURN_HR( buffer.MapForWriting( mapped, renderContext ) );
+	if( !mapped )
 	{
-		CR_RETURN_HR( buffer.Lock(		0, 
-										0, 
-										mappedUS, 
-										LOCK_WRITEONLY, 
-										renderContext ) );
-	}
-	else
-	{
-		CR_RETURN_HR( buffer.Lock(		0, 
-										0, 
-										mappedUI, 
-										LOCK_WRITEONLY, 
-										renderContext ) );
-	}
-	if( !mappedUS && !mappedUI )
-	{
+		buffer.UnmapForWriting( renderContext );
 		return E_FAIL;
 	}
-	memcpy( mappedUS ? (void*)mappedUS : (void*)mappedUI, indices, totalSize );
-
-	CR_RETURN_HR( buffer.Unlock( renderContext ) );
+	memcpy( mapped, indices, totalSize );
+	buffer.UnmapForWriting( renderContext );
 
 	return S_OK;
 }

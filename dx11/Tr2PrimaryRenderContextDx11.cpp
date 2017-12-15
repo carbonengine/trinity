@@ -7,6 +7,7 @@
 #include "Tr2RenderTargetALDx11.h"
 #include "Tr2AdapterStructures.h"
 #include "Tr2VideoAdapterInfoALDx11.h"
+#include "Tr2BufferALDx11.h"
 
 #include "ALLog.h"
 
@@ -79,7 +80,7 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
 	
 	m_defaultDepthStencil.Destroy();
-	m_zeroVertexBuffer.Destroy();
+	m_zeroVertexBuffer = Tr2BufferAL();
 
 	m_adapterVendorId = 0;
 }
@@ -351,7 +352,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	}
 
 	float zeroData[4] = { 0.f, 0.f, 0.f, 0.f };
-	HR = m_zeroVertexBuffer.Create( sizeof( zeroData ), USAGE_IMMUTABLE, zeroData, *this );
+	HR = m_zeroVertexBuffer.Create( 4 * sizeof( float ), 1, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, zeroData, *this );
 	if( FAILED( HR ) )
 	{
 		CCP_AL_LOGERR( "Failed to create zero vertex buffer, %d", HR );
@@ -360,7 +361,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 
 	uint32_t zero = 0;
 	m_context->IASetVertexBuffers(	VERTEX_BUFFER_ZERO_STREAM_RESERVED, 
-									1, &m_zeroVertexBuffer.m_buffer.p, 
+									1, &m_zeroVertexBuffer.m_buffer->m_buffer, 
 									&zero, &zero );
 
 	if( !isWindowless ) 

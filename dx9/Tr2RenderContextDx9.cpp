@@ -17,6 +17,7 @@
 #include "Tr2ShaderProgramALDx9.h"
 #include "Tr2AdapterStructures.h"
 #include "Tr2ResourceSetALDx9.h"
+#include "Tr2BufferALDx9.h"
 
 using namespace Tr2RenderContextEnum;
 #pragma warning( disable: 4189 )	// Scopeguard
@@ -352,6 +353,46 @@ ALResult Tr2RenderContextAL::ReportIfFailure( long hr, const char* message )
 #endif
 	return hr;
 }
+
+ALResult Tr2RenderContextAL::SetStreamSource(
+	uint32_t stream,
+	const Tr2BufferAL & buffer,
+	uint32_t offset,
+	uint32_t stride )
+{
+	return ReportIfFailure(
+		m_d3dDevice9->SetStreamSource( stream, buffer.m_buffer->m_vertexBuffer, offset, stride )
+		, "SetStreamSource" );
+}
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer )
+{
+	return ReportIfFailure(
+		m_d3dDevice9->SetIndices( buffer.m_buffer->m_indexBuffer )
+		, "SetStreamSource" );
+}
+
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL&, uint32_t )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const uint32_t[4] )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&, uint32_t, uint32_t )
+{
+	return E_FAIL;
+}
+
+
 
 ALResult Tr2RenderContextAL::SetStreamSource( 
 	uint32_t stream, 

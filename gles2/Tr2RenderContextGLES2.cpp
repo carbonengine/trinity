@@ -12,6 +12,7 @@
 #include "Tr2AdapterStructures.h"
 #include "Tr2ShaderProgramALGLES2.h"
 #include "Tr2ResourceSetALGLES2.h"
+#include "Tr2BufferALGLES2.h"
 
 #include "ALLog.h"
 
@@ -444,6 +445,62 @@ void Tr2RenderContextAL::Destroy()
 
 	m_hWnd = 0;
 }
+
+ALResult Tr2RenderContextAL::SetStreamSource(
+	uint32_t stream,
+	const Tr2BufferAL & buffer,
+	uint32_t offset,
+	uint32_t stride ) throw( )
+{
+	if( !IsValid() )
+	{
+		return E_FAIL;
+	}
+
+	if( stream >= 8 )
+	{
+		return E_INVALIDARG;
+	}
+	if( !buffer.IsValid() )
+	{
+		m_boundStreams[stream].buffer = 0;
+		m_boundStreams[stream].stride = 0;
+		m_boundStreams[stream].offset = 0;
+		return S_OK;
+	}
+	m_boundStreams[stream].buffer = buffer.m_buffer->m_buffer;
+	m_boundStreams[stream].stride = stride;
+	m_boundStreams[stream].offset = offset;
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw( )
+{
+	m_boundIndexBufferIs16Bit = buffer.GetDesc().stride == 2;
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, buffer.m_buffer->m_buffer );
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL&, uint32_t )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const uint32_t[4] )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&, uint32_t, uint32_t )
+{
+	return E_FAIL;
+}
+
 
 ALResult Tr2RenderContextAL::SetStreamSource( 
 	uint32_t stream, 

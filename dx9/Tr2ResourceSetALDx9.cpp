@@ -26,7 +26,7 @@ namespace TrinityALImpl
 		{
 			for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
 			{
-				if( description.m_resources[stage][i].buffer )
+				if( description.m_resources[stage][i].type != Tr2ResourceSetDescriptionAL::NONE )
 				{
 					return E_INVALIDARG;
 				}

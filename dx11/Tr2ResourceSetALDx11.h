@@ -17,7 +17,7 @@ namespace TrinityALImpl
 		void Destroy();
 		Tr2ALMemoryType GetMemoryClass() const;
 	private:
-		static const uint32_t MAX_RESOURCES = 16;
+		static const uint32_t MAX_RESOURCES = 32;
 
 		struct StageInput
 		{

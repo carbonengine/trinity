@@ -12,6 +12,9 @@
 #include "Tr2ShaderProgramALGL4.h"
 #include "Tr2AdapterStructures.h"
 #include "Tr2ResourceSetALGL4.h"
+#include "Tr2BufferALGL4.h"
+#include "Tr2VertexBufferALGL4.h"
+#include "Tr2IndexBufferALGL4.h"
 #include "ALLog.h"
 
 
@@ -418,6 +421,99 @@ void Tr2RenderContextAL::Destroy()
 
 	m_hWnd = 0;
 }
+
+
+
+ALResult Tr2RenderContextAL::SetStreamSource(
+	uint32_t stream,
+	const Tr2BufferAL & buffer,
+	uint32_t offset,
+	uint32_t stride )
+{
+	if( !IsValid() )
+	{
+		return E_FAIL;
+	}
+	if( stream >= 8 )
+	{
+		return E_INVALIDARG;
+	}
+	if( !buffer.IsValid() )
+	{
+		m_boundStreams[stream].buffer = 0;
+		m_boundStreams[stream].stride = 0;
+		m_boundStreams[stream].offset = 0;
+		return S_OK;
+	}
+	m_boundStreams[stream].buffer = buffer.m_buffer->m_buffer;
+	m_boundStreams[stream].stride = stride;
+	m_boundStreams[stream].offset = offset;
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer )
+{
+	if( !IsValid() )
+	{
+		return E_FAIL;
+	}
+	m_boundIndexBufferIs16Bit = buffer.GetDesc().stride == 2;
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, buffer.m_buffer->m_buffer );
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetUav(
+	Tr2RenderContextEnum::ShaderType inputType,
+	uint32_t slot,
+	const Tr2BufferAL& buffer,
+	uint32_t initialCount )
+{
+	if( inputType != COMPUTE_SHADER || slot > 16 )
+	{
+		return E_INVALIDARG;
+	}
+	cl_mem mem = nullptr;
+	if( buffer.IsValid() )
+	{
+		if( !buffer.m_buffer->m_clObject )
+		{
+			int error;
+			buffer.m_buffer->m_clObject = clCreateFromGLBuffer( m_clContext, CL_MEM_READ_WRITE, buffer.m_buffer->m_buffer, &error );
+			if( !buffer.m_buffer->m_clObject )
+			{
+				return E_FAIL;
+			}
+		}
+		mem = buffer.m_buffer->m_clObject;
+	}
+	if( m_boundUavs[slot] )
+	{
+		clReleaseMemObject( m_boundUavs[slot] );
+	}
+	m_boundUavs[slot] = mem;
+	if( mem )
+	{
+		clRetainMemObject( mem );
+	}
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t[4] )
+{
+	return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&, uint32_t, uint32_t )
+{
+	return E_FAIL;
+}
+
+
 
 ALResult Tr2RenderContextAL::SetStreamSource( 
 	uint32_t stream, 

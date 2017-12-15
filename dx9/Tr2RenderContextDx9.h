@@ -19,6 +19,7 @@ class Tr2VertexLayoutAL;
 class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2TextureAL;
+class Tr2BufferAL;
 struct ITr2RenderContextEvents;
 struct Tr2PresentParametersAL;
 struct Tr2Viewport;
@@ -58,6 +59,29 @@ public:
 	ALResult TestCooperativeLevel();
 
 	void ReleaseDeviceResources();
+
+
+	ALResult SetStreamSource(
+		uint32_t stream,
+		const Tr2BufferAL & buffer,
+		uint32_t offset,
+		uint32_t stride ) throw( );
+	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( );
+	ALResult SetUav(
+		Tr2RenderContextEnum::ShaderType inputType,
+		uint32_t slot,
+		const Tr2BufferAL& buffer,
+		uint32_t initialCount = -1 ) throw( );
+	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
+	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
+
+	ALResult CopySubBuffer(
+		Tr2BufferAL& dest,
+		uint32_t destOffset,
+		Tr2BufferAL& src,
+		uint32_t offset,
+		uint32_t length );
+
 
 	ALResult SetStreamSource(		uint32_t stream, 
 									const Tr2VertexBufferAL & buffer, 
@@ -145,11 +169,21 @@ public:
 		return E_FAIL;
 	}
 
+	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+	{
+		return E_FAIL;
+	}
+
 	ALResult DrawInstancedIndirect( Tr2GpuBufferAL& params, uint32_t offset )
 	{
 		return E_FAIL;
 	}
-	
+
+	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+	{
+		return E_FAIL;
+	}
+
 	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ )
 	{
 		return E_FAIL;
@@ -158,8 +192,16 @@ public:
 	{
 		return E_FAIL;
 	}
+	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset )
+	{
+		return E_FAIL;
+	}
 
 	ALResult CopyBufferCounter( Tr2GpuBufferAL& dest, uint32_t destOffset, Tr2GpuBufferAL& src )
+	{
+		return E_FAIL;
+	}
+	ALResult CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src )
 	{
 		return E_FAIL;
 	}

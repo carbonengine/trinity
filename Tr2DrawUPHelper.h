@@ -3,8 +3,7 @@
 #define Tr2DrawUPHelper_h_
 
 #include "ALResult.h"
-#include "include/Tr2VertexBufferAL.h"
-#include "include/Tr2IndexBufferAL.h"
+#include "include/Tr2BufferAL.h"
 
 class Tr2RenderContextAL;
 
@@ -42,34 +41,34 @@ private:
 	// Vertex and index buffer to emulate the Draw...UP calls from DX9
 	enum { DRAW_UP_RING_SIZE = 4 };
 	uint32_t m_nextRingVB, m_nextRingIB16, m_nextRingIB32;
-	Tr2VertexBufferAL m_vertexUP[DRAW_UP_RING_SIZE];
-	Tr2IndexBufferAL m_indexUP16[DRAW_UP_RING_SIZE];
-	Tr2IndexBufferAL m_indexUP32[DRAW_UP_RING_SIZE];
+	Tr2BufferAL m_vertexUP[DRAW_UP_RING_SIZE];
+	Tr2BufferAL m_indexUP16[DRAW_UP_RING_SIZE];
+	Tr2BufferAL m_indexUP32[DRAW_UP_RING_SIZE];
 
 	ALResult FillUPVertexBuffer(
 		uint32_t vertexCount, 
 		const void* vertexStreamZeroData, 
 		uint32_t vertexStreamZeroStride, 
-		Tr2VertexBufferAL& buffer,
+		Tr2BufferAL& buffer,
 		Tr2RenderContextAL& renderContext );
 
 	ALResult FillUPIndexBuffer(		
 		uint32_t primitiveCount, 
 		const uint16_t* indices, 
-		Tr2IndexBufferAL& buffer,
+		Tr2BufferAL& buffer,
 		Tr2RenderContextAL& renderContext );
 
 	ALResult FillUPIndexBuffer(		
 		uint32_t primitiveCount, 
 		const uint32_t* indices, 
-		Tr2IndexBufferAL& buffer,
+		Tr2BufferAL& buffer,
 		Tr2RenderContextAL& renderContext );
 
 	ALResult FillUPIndexBuffer(		
 		uint32_t primitiveCount, 
 		const void* indices, 
 		uint32_t bytesPerIndex, 
-		Tr2IndexBufferAL& buffer,
+		Tr2BufferAL& buffer,
 		Tr2RenderContextAL& renderContext );
 
 	Tr2DrawUPHelper( const Tr2DrawUPHelper& ) /* = delete */;

@@ -82,8 +82,8 @@ TEST_F( Rendering, CanRenderASingleTriangle )
 		0.5f, -0.5f, 0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -163,8 +163,8 @@ TEST_F( Rendering, CanRenderTriangleStrip )
 		0.5f, 0.5f, 0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -244,12 +244,12 @@ TEST_F( Rendering, CanRenderIndexedTriangles )
 		0.5f, 0.5f, 0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	uint16_t indices[] = { 0, 1, 2, 1, 2, 3 };
-	Tr2IndexBufferAL ib;
-	ASSERT_HRESULT_SUCCEEDED( ib.Create( sizeof( indices ) / sizeof( indices[0] ), 0, Tr2RenderContextEnum::IB_16BIT, indices, *renderContext ) );
+	Tr2BufferAL ib;
+	ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( indices ) / sizeof( indices[0] ), Tr2GpuUsage::INDEX_BUFFER, Tr2CpuUsage::NONE, indices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -338,8 +338,8 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -422,8 +422,8 @@ TEST_F( Rendering, CanSampleTexture )
 		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -540,8 +540,8 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -669,8 +669,8 @@ TEST_F( Rendering, CanPassConstantBufferToRendering )
 		0.5f, -0.5f, 0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -765,20 +765,20 @@ TEST_F( Rendering, CanDoInstancedRendering )
 		0.25f, 0.25f, 0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	uint16_t indices[] = { 0, 1, 2, 1, 2, 3 };
-	Tr2IndexBufferAL ib;
-	ASSERT_HRESULT_SUCCEEDED( ib.Create( sizeof( indices ) / sizeof( indices[0] ), 0, Tr2RenderContextEnum::IB_16BIT, indices, *renderContext ) );
+	Tr2BufferAL ib;
+	ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( indices ) / sizeof( indices[0] ), Tr2GpuUsage::INDEX_BUFFER, Tr2CpuUsage::NONE, indices, *renderContext ) );
 
 	float instances[] = {
 		-0.5f, 0.2f,
 		0.5f, -0.2f,
 	};
 	const uint32_t instanceVbStride = 2 * sizeof( float );
-	Tr2VertexBufferAL instanceVb;
-	ASSERT_HRESULT_SUCCEEDED( instanceVb.Create( sizeof( instances ), Tr2RenderContextEnum::USAGE_IMMUTABLE, instances, *renderContext ) );
+	Tr2BufferAL instanceVb;
+	ASSERT_HRESULT_SUCCEEDED( instanceVb.Create( instanceVbStride, sizeof( instances ) / instanceVbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, instances, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -868,8 +868,8 @@ TEST_F( Rendering, CanClearRenderTarget )
 		0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -1006,8 +1006,8 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -1154,8 +1154,8 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -1283,8 +1283,8 @@ TEST_F( Rendering, CanClearDepthBuffer )
 		0.5f, -0.5f, 1.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -1372,8 +1372,8 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 		-0.5f, -0.5f, 0.5f, 1.0f, 1.0f,
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -1784,11 +1784,11 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
 
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
-	Tr2VertexBufferAL vbBg;
-	ASSERT_HRESULT_SUCCEEDED( vbBg.Create( sizeof( verticesBg ), Tr2RenderContextEnum::USAGE_IMMUTABLE, verticesBg, *renderContext ) );
+	Tr2BufferAL vbBg;
+	ASSERT_HRESULT_SUCCEEDED( vbBg.Create( vbStride, sizeof( verticesBg ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, verticesBg, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -2026,8 +2026,8 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -2155,8 +2155,8 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -2284,8 +2284,8 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -2415,8 +2415,8 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -2579,10 +2579,10 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
-	Tr2VertexBufferAL quads[8];
+	Tr2BufferAL quads[8];
 	float quadVertices[] = {
 		-0.85f, -0.1f, 0.0f, 0.0f, 1.0f, 
 		-0.85f, 0.1f, 0.0f, 0.0f, 0.0f, 
@@ -2591,7 +2591,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 
 	for( uint32_t i = 0; i < 8; ++i )
 	{
-		ASSERT_HRESULT_SUCCEEDED( quads[i].Create( sizeof( quadVertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, quadVertices, *renderContext ) );
+		ASSERT_HRESULT_SUCCEEDED( quads[i].Create( vbStride, sizeof( quadVertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, quadVertices, *renderContext ) );
 		for( uint32_t j = 0; j < 4; ++j )
 		{
 			quadVertices[j * 5] += 0.21f;
@@ -2761,8 +2761,8 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -2898,8 +2898,8 @@ TEST_F( Rendering, CanSampleBc1Texture )
 		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -3015,8 +3015,8 @@ TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 		0.5f, -0.5f, 0.0f,
 	};
 	const uint32_t vbStride = 3 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -3111,8 +3111,8 @@ TEST_F( Rendering, CanSampleBc2Texture )
 		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -3233,8 +3233,8 @@ TEST_F( Rendering, CanSampleBc3Texture )
 		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -3355,8 +3355,8 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -3489,8 +3489,8 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -3623,8 +3623,8 @@ TEST_F( Rendering, CanSampleUnassignedTexture )
 		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -3711,8 +3711,8 @@ TEST_F( Rendering, CanLockTextureTwice )
 		-0.25f, 0.25f, 0.0f, 0.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb1;
-	ASSERT_HRESULT_SUCCEEDED( vb1.Create( sizeof( vertices1 ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices1, *renderContext ) );
+	Tr2BufferAL vb1;
+	ASSERT_HRESULT_SUCCEEDED( vb1.Create( vbStride, sizeof( vertices1 ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices1, *renderContext ) );
 
 
 	float vertices2[] = {
@@ -3721,8 +3721,8 @@ TEST_F( Rendering, CanLockTextureTwice )
 		0.75f, -0.25f, 0.0f, 0.0f, 1.0f, 
 		0.75f, 0.25f, 0.0f, 0.0f, 0.0f, 
 	};
-	Tr2VertexBufferAL vb2;
-	ASSERT_HRESULT_SUCCEEDED( vb2.Create( sizeof( vertices2 ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices2, *renderContext ) );
+	Tr2BufferAL vb2;
+	ASSERT_HRESULT_SUCCEEDED( vb2.Create( vbStride, sizeof( vertices2 ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices2, *renderContext ) );
 
 
 
@@ -3856,8 +3856,8 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -3975,8 +3975,8 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 		0.5f, 0.5f, 0.0f, 0.0f, 0.0f, 
 	};
 	const uint32_t vbStride = 5 * sizeof( float );
-	Tr2VertexBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( vertices ), Tr2RenderContextEnum::USAGE_IMMUTABLE, vertices, *renderContext ) );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
