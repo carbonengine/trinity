@@ -424,7 +424,7 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 	uint32_t stream,
 	const Tr2BufferAL & buffer,
 	uint32_t offset,
-	uint32_t stride )
+	uint32_t stride ) throw( )
 {
 	if( !IsValid() )
 	{
@@ -447,7 +447,7 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer )
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw( )
 {
 	if( !IsValid() )
 	{
@@ -462,7 +462,7 @@ ALResult Tr2RenderContextAL::SetUav(
 	Tr2RenderContextEnum::ShaderType inputType,
 	uint32_t slot,
 	const Tr2BufferAL& buffer,
-	uint32_t initialCount )
+	uint32_t initialCount ) throw( )
 {
 	if( inputType != COMPUTE_SHADER || slot > 16 )
 	{
@@ -494,12 +494,12 @@ ALResult Tr2RenderContextAL::SetUav(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] )
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] ) throw( )
 {
 	return E_FAIL;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t[4] )
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t[4] ) throw( )
 {
 	return E_FAIL;
 }

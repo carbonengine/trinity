@@ -478,17 +478,17 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw( )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL&, uint32_t )
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL&, uint32_t ) throw( )
 {
 	return E_FAIL;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] )
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] ) throw( )
 {
 	return E_FAIL;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const uint32_t[4] )
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const uint32_t[4] ) throw( )
 {
 	return E_FAIL;
 }
