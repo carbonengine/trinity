@@ -22,6 +22,7 @@ struct HazeVertex
 	Vector4 invTransform1;
 	Vector4 invTransform2;
 	Vector4 invTransform3;
+	Vector4 hazeData;
 	Vector4 color;
 	uint8_t index;
 	uint8_t boneIndex;
@@ -115,8 +116,9 @@ bool EveHazeSet::OnPrepareResources()
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 3 );
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 4 );
 		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 5 );
+		vd.Add( vd.FLOAT32_4, vd.TEXCOORD, 6 );
 		vd.Add( vd.FLOAT32_4, vd.COLOR );
-		vd.Add( vd.UBYTE_4, vd.TEXCOORD, 6 );
+		vd.Add( vd.UBYTE_4, vd.TEXCOORD, 7 );
 	}
 	m_vertexDeclHandle = Tr2EffectStateManager::GetVertexDeclarationHandle( s_hazeVertexDecl );
 	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
@@ -156,6 +158,7 @@ bool EveHazeSet::OnPrepareResources()
 				vertex.invTransform1 = Vector4( invItemTransform._11, invItemTransform._21, invItemTransform._31, invItemTransform._41 );
 				vertex.invTransform2 = Vector4( invItemTransform._12, invItemTransform._22, invItemTransform._32, invItemTransform._42 );
 				vertex.invTransform3 = Vector4( invItemTransform._13, invItemTransform._23, invItemTransform._33, invItemTransform._43 );
+				vertex.hazeData = m_hazes[i]->m_hazeData;
 				vertex.color = Vector4( m_hazes[i]->m_color.r, m_hazes[i]->m_color.g, m_hazes[i]->m_color.b, m_hazes[i]->m_color.a );
 				vertex.index = s_boxInds[s][j];
 				vertex.boneIndex = m_hazes[i]->m_boneIndex;

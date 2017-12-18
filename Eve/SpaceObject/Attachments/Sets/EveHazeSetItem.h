@@ -32,6 +32,7 @@ public:
 	Vector3 m_scaling;
 	Quaternion m_rotation;
 	// appearance
+	Vector4 m_hazeData;
 	Color m_color;
 	// animation granny parent bone index
 	int m_boneIndex;
