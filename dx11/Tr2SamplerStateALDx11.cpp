@@ -8,6 +8,8 @@
 
 using namespace Tr2RenderContextEnum;
 
+extern uint32_t g_forceAnisotropy;
+
 namespace TrinityALImpl
 {
 	Tr2SamplerStateAL::Tr2SamplerStateAL()
@@ -16,8 +18,6 @@ namespace TrinityALImpl
 
 	ALResult Tr2SamplerStateAL::Create( const Tr2SamplerDescription& description, Tr2PrimaryRenderContextAL &renderContext )
 	{
-		extern uint32_t g_forceAnisotropy;
-
 		if( !renderContext.m_d3dDevice11 )
 		{
 			return E_FAIL;

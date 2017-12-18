@@ -8,6 +8,8 @@
 
 using namespace Tr2RenderContextEnum;
 
+extern uint32_t g_forceAnisotropy;
+
 namespace TrinityALImpl
 {
 
@@ -28,8 +30,6 @@ namespace TrinityALImpl
 
 	ALResult Tr2SamplerStateAL::Create( const Tr2SamplerDescription& description,  Tr2RenderContextAL& /*renderContext*/ )
 	{
-		extern uint32_t g_forceAnisotropy;
-
 		m_states[D3DSAMP_MINFILTER] = g_forceAnisotropy == 1 ? TF_LINEAR : description.m_minFilter;
 		m_states[D3DSAMP_MAGFILTER] = g_forceAnisotropy == 1 ? TF_LINEAR : description.m_magFilter;
 		m_states[D3DSAMP_MIPFILTER] = description.m_mipFilter;
