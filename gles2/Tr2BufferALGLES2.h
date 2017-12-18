@@ -39,8 +39,8 @@ namespace TrinityALImpl
 		CcpMallocBuffer m_lockedData;
 #endif
 
-		friend class Tr2RenderContextAL;
-		friend class Tr2PrimaryRenderContextAL;
+		friend class ::Tr2RenderContextAL;
+		friend class ::Tr2PrimaryRenderContextAL;
 	};
 }
 

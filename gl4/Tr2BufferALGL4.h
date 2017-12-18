@@ -37,8 +37,8 @@ namespace TrinityALImpl
 		Tr2MemoryCounterAL m_memory;
 		Tr2BufferDescriptionAL m_desc;
 
-		friend class Tr2RenderContextAL;
-		friend class Tr2PrimaryRenderContextAL;
+		friend class ::Tr2RenderContextAL;
+		friend class ::Tr2PrimaryRenderContextAL;
 		friend class Tr2ResourceSetAL;
 	};
 }

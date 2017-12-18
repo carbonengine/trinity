@@ -27,10 +27,10 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const;
 
 	private:
-		friend class Tr2RenderContextAL;
-		friend class Tr2TextureAL;
-		friend class Tr2RenderTargetAL;
-		friend class Tr2DepthStencilAL;
+		friend class ::Tr2RenderContextAL;
+		friend class ::Tr2TextureAL;
+		friend class ::Tr2RenderTargetAL;
+		friend class ::Tr2DepthStencilAL;
 		friend class Tr2ResourceSetAL;
 
 		struct StateData

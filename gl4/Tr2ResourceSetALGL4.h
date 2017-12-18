@@ -41,7 +41,7 @@ namespace TrinityALImpl
 		std::vector<CLResource> m_clResources;
 		bool m_isValid;
 
-		friend class Tr2RenderContextAL;
+		friend class ::Tr2RenderContextAL;
 	};
 }
 

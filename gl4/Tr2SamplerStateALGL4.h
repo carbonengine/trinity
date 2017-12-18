@@ -28,7 +28,7 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const;
 
 	private:
-		friend class Tr2RenderContextAL;
+		friend class ::Tr2RenderContextAL;
 		friend class Tr2ResourceSetAL;
 
 		GLuint m_sampler;
