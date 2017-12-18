@@ -17,9 +17,6 @@
     <ClInclude Include="ALResult.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="autoversion.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="BcDecompress.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -68,7 +65,7 @@
     <ClInclude Include="wglext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="dx11\Tr2BufferImplALDx11.h">
+    <ClInclude Include="dx11\Tr2BufferALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
     <ClInclude Include="dx11\Tr2CapsALDx11.h">
@@ -83,13 +80,7 @@
     <ClInclude Include="dx11\Tr2FenceALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
-    <ClInclude Include="dx11\Tr2GpuBufferALDx11.h">
-      <Filter>Source Files\dx11</Filter>
-    </ClInclude>
     <ClInclude Include="dx11\Tr2GpuTimerALDx11.h">
-      <Filter>Source Files\dx11</Filter>
-    </ClInclude>
-    <ClInclude Include="dx11\Tr2IndexBufferALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
     <ClInclude Include="dx11\Tr2OcclusionQueryALDx11.h">
@@ -125,14 +116,14 @@
     <ClInclude Include="dx11\Tr2TextureALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
-    <ClInclude Include="dx11\Tr2VertexBufferALDx11.h">
-      <Filter>Source Files\dx11</Filter>
-    </ClInclude>
     <ClInclude Include="dx11\Tr2VertexLayoutALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
     <ClInclude Include="dx11\Tr2VideoAdapterInfoALDx11.h">
       <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx9\Tr2BufferALDx9.h">
+      <Filter>Source Files\dx9</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2CapsALDx9.h">
       <Filter>Source Files\dx9</Filter>
@@ -146,13 +137,7 @@
     <ClInclude Include="dx9\Tr2FenceALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
-    <ClInclude Include="dx9\Tr2GpuBufferALDx9.h">
-      <Filter>Source Files\dx9</Filter>
-    </ClInclude>
     <ClInclude Include="dx9\Tr2GpuTimerALDx9.h">
-      <Filter>Source Files\dx9</Filter>
-    </ClInclude>
-    <ClInclude Include="dx9\Tr2IndexBufferALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2OcclusionQueryALDx9.h">
@@ -185,14 +170,14 @@
     <ClInclude Include="dx9\Tr2TextureALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
-    <ClInclude Include="dx9\Tr2VertexBufferALDx9.h">
-      <Filter>Source Files\dx9</Filter>
-    </ClInclude>
     <ClInclude Include="dx9\Tr2VertexLayoutALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2VideoAdapterInfoALDx9.h">
       <Filter>Source Files\dx9</Filter>
+    </ClInclude>
+    <ClInclude Include="gl4\Tr2BufferALGL4.h">
+      <Filter>Source Files\gl4</Filter>
     </ClInclude>
     <ClInclude Include="gl4\Tr2CapsALGL4.h">
       <Filter>Source Files\gl4</Filter>
@@ -206,13 +191,7 @@
     <ClInclude Include="gl4\Tr2FenceALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
-    <ClInclude Include="gl4\Tr2GpuBufferALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
     <ClInclude Include="gl4\Tr2GpuTimerALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2IndexBufferALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
     <ClInclude Include="gl4\Tr2OcclusionQueryALGL4.h">
@@ -245,14 +224,14 @@
     <ClInclude Include="gl4\Tr2TextureALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
-    <ClInclude Include="gl4\Tr2VertexBufferALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
     <ClInclude Include="gl4\Tr2VertexLayoutALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
     <ClInclude Include="gl4\Tr2VideoAdapterInfoALGL4.h">
       <Filter>Source Files\gl4</Filter>
+    </ClInclude>
+    <ClInclude Include="gles2\Tr2BufferALGLES2.h">
+      <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2CapsALGLES2.h">
       <Filter>Source Files\gles2</Filter>
@@ -266,13 +245,7 @@
     <ClInclude Include="gles2\Tr2FenceALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
-    <ClInclude Include="gles2\Tr2GpuBufferALGLES2.h">
-      <Filter>Source Files\gles2</Filter>
-    </ClInclude>
     <ClInclude Include="gles2\Tr2GpuTimerALGLES2.h">
-      <Filter>Source Files\gles2</Filter>
-    </ClInclude>
-    <ClInclude Include="gles2\Tr2IndexBufferALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2OcclusionQueryALGLES2.h">
@@ -305,9 +278,6 @@
     <ClInclude Include="gles2\Tr2TextureALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
-    <ClInclude Include="gles2\Tr2VertexBufferALGLES2.h">
-      <Filter>Source Files\gles2</Filter>
-    </ClInclude>
     <ClInclude Include="gles2\Tr2VertexLayoutALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
@@ -315,6 +285,9 @@
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2BitmapDimensions.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2BufferAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2CapsAL.h">
@@ -336,9 +309,6 @@
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2GpuTimerAL.h">
-      <Filter>Source Files\include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Tr2IndexBufferAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2OcclusionQueryAL.h">
@@ -377,9 +347,6 @@
     <ClInclude Include="include\Tr2TextureType.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Tr2VertexBufferAL.h">
-      <Filter>Source Files\include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Tr2VertexLayoutAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
@@ -391,6 +358,9 @@
     </ClInclude>
     <ClInclude Include="include\TrinityALForward.h">
       <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="stub\Tr2BufferALStub.h">
+      <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2CapsALStub.h">
       <Filter>Source Files\stub</Filter>
@@ -404,13 +374,7 @@
     <ClInclude Include="stub\Tr2FenceALStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
-    <ClInclude Include="stub\Tr2GpuBufferALStub.h">
-      <Filter>Source Files\stub</Filter>
-    </ClInclude>
     <ClInclude Include="stub\Tr2GpuTimerALStub.h">
-      <Filter>Source Files\stub</Filter>
-    </ClInclude>
-    <ClInclude Include="stub\Tr2IndexBufferALStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2OcclusionQueryALStub.h">
@@ -441,9 +405,6 @@
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2TextureALStub.h">
-      <Filter>Source Files\stub</Filter>
-    </ClInclude>
-    <ClInclude Include="stub\Tr2VertexBufferALStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2VertexLayoutALStub.h">
@@ -488,7 +449,7 @@
     <ClCompile Include="Tr2VertexDefinition.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dx11\Tr2BufferImplALDx11.cpp">
+    <ClCompile Include="dx11\Tr2BufferALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
     <ClCompile Include="dx11\Tr2CapsALDx11.cpp">
@@ -503,13 +464,7 @@
     <ClCompile Include="dx11\Tr2FenceALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="dx11\Tr2GpuBufferALDx11.cpp">
-      <Filter>Source Files\dx11</Filter>
-    </ClCompile>
     <ClCompile Include="dx11\Tr2GpuTimerALDx11.cpp">
-      <Filter>Source Files\dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="dx11\Tr2IndexBufferALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
     <ClCompile Include="dx11\Tr2OcclusionQueryALDx11.cpp">
@@ -545,14 +500,14 @@
     <ClCompile Include="dx11\Tr2TextureALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="dx11\Tr2VertexBufferALDx11.cpp">
-      <Filter>Source Files\dx11</Filter>
-    </ClCompile>
     <ClCompile Include="dx11\Tr2VertexLayoutALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
     <ClCompile Include="dx11\Tr2VideoAdapterInfoALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx9\Tr2BufferALDx9.cpp">
+      <Filter>Source Files\dx9</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2CapsALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
@@ -567,9 +522,6 @@
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2GpuTimerALDx9.cpp">
-      <Filter>Source Files\dx9</Filter>
-    </ClCompile>
-    <ClCompile Include="dx9\Tr2IndexBufferALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2OcclusionQueryALDx9.cpp">
@@ -599,14 +551,14 @@
     <ClCompile Include="dx9\Tr2TextureALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
-    <ClCompile Include="dx9\Tr2VertexBufferALDx9.cpp">
-      <Filter>Source Files\dx9</Filter>
-    </ClCompile>
     <ClCompile Include="dx9\Tr2VertexLayoutALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2VideoAdapterInfoALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
+    </ClCompile>
+    <ClCompile Include="gl4\Tr2BufferALGL4.cpp">
+      <Filter>Source Files\gl4</Filter>
     </ClCompile>
     <ClCompile Include="gl4\Tr2CapsALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
@@ -620,13 +572,7 @@
     <ClCompile Include="gl4\Tr2FenceALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
-    <ClCompile Include="gl4\Tr2GpuBufferALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
     <ClCompile Include="gl4\Tr2GpuTimerALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2IndexBufferALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
     <ClCompile Include="gl4\Tr2OcclusionQueryALGL4.cpp">
@@ -656,14 +602,14 @@
     <ClCompile Include="gl4\Tr2TextureALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
-    <ClCompile Include="gl4\Tr2VertexBufferALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
     <ClCompile Include="gl4\Tr2VertexLayoutALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
     <ClCompile Include="gl4\Tr2VideoAdapterInfoALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
+    </ClCompile>
+    <ClCompile Include="gles2\Tr2BufferALGLES2.cpp">
+      <Filter>Source Files\gles2</Filter>
     </ClCompile>
     <ClCompile Include="gles2\Tr2CapsALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
@@ -678,9 +624,6 @@
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
     <ClCompile Include="gles2\Tr2GpuTimerALGLES2.cpp">
-      <Filter>Source Files\gles2</Filter>
-    </ClCompile>
-    <ClCompile Include="gles2\Tr2IndexBufferALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
     <ClCompile Include="gles2\Tr2OcclusionQueryALGLES2.cpp">
@@ -710,20 +653,23 @@
     <ClCompile Include="gles2\Tr2TextureALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
-    <ClCompile Include="gles2\Tr2VertexBufferALGLES2.cpp">
-      <Filter>Source Files\gles2</Filter>
-    </ClCompile>
     <ClCompile Include="gles2\Tr2VertexLayoutALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
     <ClCompile Include="gles2\Tr2VideoAdapterInfoALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
+    <ClCompile Include="src\Tr2BufferAL.cpp">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
     <ClCompile Include="src\Tr2ResourceSetAL.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
     <ClCompile Include="src\Tr2SamplerStateAL.cpp">
       <Filter>Source Files\src</Filter>
+    </ClCompile>
+    <ClCompile Include="stub\Tr2BufferALStub.cpp">
+      <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2CapsALStub.cpp">
       <Filter>Source Files\stub</Filter>
@@ -738,9 +684,6 @@
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2GpuTimerALStub.cpp">
-      <Filter>Source Files\stub</Filter>
-    </ClCompile>
-    <ClCompile Include="stub\Tr2IndexBufferALStub.cpp">
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2OcclusionQueryALStub.cpp">
@@ -768,9 +711,6 @@
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2TextureALStub.cpp">
-      <Filter>Source Files\stub</Filter>
-    </ClCompile>
-    <ClCompile Include="stub\Tr2VertexBufferALStub.cpp">
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2VertexLayoutALStub.cpp">
