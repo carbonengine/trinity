@@ -204,6 +204,32 @@ namespace TrinityALImpl
 		return m_desc;
 	}
 
+	ALResult Tr2BufferAL::CreateStagingBuffer( Tr2RenderContextAL& renderContext )
+	{
+		if( m_staging )
+		{
+			return S_OK;
+		}
+		D3D11_BUFFER_DESC bd;
+		memset( &bd, 0, sizeof( bd ) );
+
+		bd.Usage = D3D11_USAGE_STAGING;
+		bd.ByteWidth = m_desc.stride * m_desc.count;
+		bd.BindFlags = 0;
+		bd.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+
+		CR_RETURN_HR(
+			renderContext.m_secondaryDevice11->CreateBuffer(
+				&bd,
+				nullptr,
+				&m_staging ) );
+		if( !m_staging )
+		{
+			return E_FAIL;
+		}
+		return S_OK;
+	}
+
 	ALResult Tr2BufferAL::MapForReading( const void*& data, Tr2RenderContextAL& renderContext )
 	{
 		if( !renderContext.IsValid() || !IsValid() )
@@ -215,27 +241,7 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDCALL;
 		}
-		if( !m_staging )
-		{
-			D3D11_BUFFER_DESC bd;
-			memset( &bd, 0, sizeof( bd ) );
-
-			bd.Usage = D3D11_USAGE_STAGING;
-			bd.ByteWidth = m_desc.stride * m_desc.count;
-			bd.BindFlags = 0;
-			bd.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
-
-			CR_RETURN_HR(
-				renderContext.m_secondaryDevice11->CreateBuffer(
-					&bd,
-					nullptr,
-					&m_staging ) );
-
-			if( !m_staging )
-			{
-				return E_FAIL;
-			}
-		}
+		CR_RETURN_HR( CreateStagingBuffer( renderContext ) );
 
 		renderContext.m_context->CopyResource( m_staging, m_buffer );
 
@@ -309,24 +315,7 @@ namespace TrinityALImpl
 		}
 		else
 		{
-			D3D11_BUFFER_DESC bd;
-			memset( &bd, 0, sizeof( bd ) );
-
-			bd.Usage = D3D11_USAGE_STAGING;
-			bd.ByteWidth = m_desc.stride * m_desc.count;
-			bd.BindFlags = 0;
-			bd.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
-
-			CR_RETURN_HR(
-				renderContext.m_secondaryDevice11->CreateBuffer(
-					&bd,
-					nullptr,
-					&m_staging ) );
-
-			if( !m_staging )
-			{
-				return E_FAIL;
-			}
+			CR_RETURN_HR( CreateStagingBuffer( renderContext ) );
 
 			D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
 			auto hr = renderContext.m_context->Map( m_staging, 0, D3D11_MAP_WRITE, 0, &ms );
@@ -371,6 +360,10 @@ namespace TrinityALImpl
 #endif
 			renderContext.m_context->Unmap( m_staging, 0 );
 			renderContext.m_context->CopyResource( m_buffer, m_staging );
+			if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::READ_OFTEN ) )
+			{
+				m_staging = nullptr;
+			}
 		}
 	}
 

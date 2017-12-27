@@ -28,6 +28,8 @@ namespace TrinityALImpl
 
 		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
 	private:
+		ALResult CreateStagingBuffer( Tr2RenderContextAL& renderContext );
+
 		CComPtr<ID3D11Buffer> m_buffer;
 		CComPtr<ID3D11Buffer> m_staging;
 		CComPtr<ID3D11ShaderResourceView> m_srv;
