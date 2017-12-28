@@ -165,8 +165,7 @@ void EveStretch::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 		{
 			Quaternion rotation( 0.0f, 0.0f, 0.0f, 1.0f );
 			Quaternion tmpResult;
-			D3DXQuaternionMultiply( &rotation,
-				TriQuaternionRotationArc( &tmpResult, &Y_AXIS, &directionVec ), &rotation );
+			rotation = *TriQuaternionRotationArc( &tmpResult, &Y_AXIS, &directionVec ) * rotation;
 
 			m = TransformationMatrix( Vector3( 1, 1, 1 ), rotation, m_sourcePosition );
 		}
@@ -179,8 +178,7 @@ void EveStretch::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 	{
 		Quaternion rotation( 0.0f, 0.0f, 0.0f, 1.0f );
 		Quaternion tmpResult;
-		D3DXQuaternionMultiply(&rotation,				
-			TriQuaternionRotationArc(&tmpResult, &Y_AXIS, &directionVec), &rotation);
+		rotation = *TriQuaternionRotationArc( &tmpResult, &Y_AXIS, &directionVec ) * rotation;
 
 		Vector3 scaling = Vector3( m_destObjectScale, m_destObjectScale, m_destObjectScale );
 		Matrix m = TransformationMatrix( scaling, rotation, m_destinationPosition );
@@ -496,9 +494,7 @@ void EveStretch::GetLights( Tr2LightManager& lightManager ) const
 		{
 			Quaternion rotation( 0.0f, 0.0f, 0.0f, 1.0f );
 			Quaternion tmpResult;
-			D3DXQuaternionMultiply( &rotation,
-				TriQuaternionRotationArc( &tmpResult, &Y_AXIS, &directionVec ), &rotation );
-
+			rotation = *TriQuaternionRotationArc( &tmpResult, &Y_AXIS, &directionVec ) * rotation;
 			m = TransformationMatrix( Vector3( 1, 1, 1 ), rotation, m_sourcePosition );
 		}
 
@@ -511,8 +507,7 @@ void EveStretch::GetLights( Tr2LightManager& lightManager ) const
 	{
 		Quaternion rotation( 0.0f, 0.0f, 0.0f, 1.0f );
 		Quaternion tmpResult;
-		D3DXQuaternionMultiply( &rotation,
-			TriQuaternionRotationArc( &tmpResult, &Y_AXIS, &directionVec ), &rotation );
+		rotation = *TriQuaternionRotationArc( &tmpResult, &Y_AXIS, &directionVec ) * rotation;
 
 		Vector3 scaling = Vector3( m_destObjectScale, m_destObjectScale, m_destObjectScale );
 		Matrix m = TransformationMatrix( scaling, rotation, m_destinationPosition );

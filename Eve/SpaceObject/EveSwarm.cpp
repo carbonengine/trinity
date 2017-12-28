@@ -327,9 +327,8 @@ void EveSwarm::UpdateOrientation( SwarmVehicle* vehicle, float timeDiff )
 		// Roll is based on how large acceleration is in the direction of the side vector
 		roll = 0.8f * Dot( vehicle->acceleration, side ) * TRI_PI / speed;
 	}
-	Quaternion rotation;
-	D3DXQuaternionRotationYawPitchRoll( &rotation, yaw, pitch, roll );
-	D3DXQuaternionSlerp( &vehicle->rotation, &vehicle->rotation, &rotation, timeDiff * m_behavior.m_agility );
+	Quaternion rotation = RotationQuaternion( yaw, pitch, roll );
+	vehicle->rotation = Slerp( vehicle->rotation, rotation, timeDiff * m_behavior.m_agility );
 }
 
 

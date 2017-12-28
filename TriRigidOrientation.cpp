@@ -84,8 +84,9 @@ Quaternion* TriRigidOrientation::GetValueAt(
 	mTauConverter.y = mTauVector.y;
 	mTauConverter.z = mTauVector.z;
 	mTauConverter.w = 0.0f;
-	D3DXQuaternionExp(&mTauConverter, &mTauConverter);
-	return static_cast<Quaternion*>( D3DXQuaternionMultiply(in, &mStates[mCurrKey]->mRot0 ,&mTauConverter) );
+	mTauConverter = Exp( mTauConverter );
+	*in = mStates[mCurrKey]->mRot0 * mTauConverter;
+	return in;
 }
 
 Vector3* TriRigidOrientation::GetValueDotAt(
@@ -214,8 +215,8 @@ void TriRigidOrientation::Sort(
 		mTauConverter.y = mTauVector.y;
 		mTauConverter.z = mTauVector.z;
 		mTauConverter.w = 0.0f;
-		D3DXQuaternionExp(&mTauConverter, &mTauConverter);
-		D3DXQuaternionMultiply(&cs->mRot0, &cs_1->mRot0 ,&mTauConverter);
+		mTauConverter = Exp( mTauConverter );
+		cs->mRot0 = cs_1->mRot0 * mTauConverter;
 	}
 	if (mStates.GetSize() > 0)
 	{

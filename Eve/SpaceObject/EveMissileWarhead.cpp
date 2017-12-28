@@ -308,7 +308,7 @@ void EveMissileWarhead::PrepareLaunch()
 void EveMissileWarhead::Launch( const Matrix& startTransform )
 {
 	// warhead data: which way is the warhead pointing?
-	D3DXQuaternionRotationMatrix( &m_startOrientation, &startTransform );
+	m_startOrientation = RotationQuaternion( startTransform );
 	// warhead data: translation offset
 	m_currentStartOffset = Vector3( startTransform._41, startTransform._42, startTransform._43 );
 
@@ -578,8 +578,8 @@ void EveMissileWarhead::UpdateWarhead( float deltaT, float estimatedTotalAliveTi
 				TriQuaternionArcFromForward( &orientationNow, &translation );
 				if( distanceSq < 1.f )
 				{
-					D3DXQuaternionSlerp( &m_currentOrientation, &m_currentOrientation, &orientationNow, distanceSq );
-					D3DXQuaternionNormalize( &m_currentOrientation, &m_currentOrientation );
+					m_currentOrientation = Slerp( m_currentOrientation, orientationNow, distanceSq );
+					m_currentOrientation = Normalize( m_currentOrientation );
 				}
 				else
 				{

@@ -120,7 +120,7 @@ const ::Quaternion* TriQuaternion::GetQuaternion(
 
 void TriQuaternion::SetIdentity()
 {
-	D3DXQuaternionIdentity(this);
+	*static_cast<::Quaternion*>( this ) = IdentityQuaternion();
 }	
 
 
@@ -129,8 +129,7 @@ void TriQuaternion::SetRotationAxis(
 	float angle
 	)
 {
-	
-	D3DXQuaternionRotationAxis(this, axis, angle);
+	*static_cast<::Quaternion*>( this ) = RotationQuaternion( *axis, angle );
 }
 
 
@@ -139,12 +138,9 @@ void TriQuaternion::GetRotationAxis(
 	float* angle
 	) const
 {
-	D3DXQuaternionToAxisAngle(this, axis, angle);
-
-	// this would more safe but too many lines :-(
-	//Vector3* t; 
-	//D3DXQuaternionToAxisAngle(this, &t, angle);
-	//(Vector3*)axis->Data();
+	auto result = GetAxisAngle( *this );
+	*axis = result.first;
+	*angle = result.second;
 }
 
 
@@ -154,7 +150,7 @@ void TriQuaternion::SetYawPitchRoll(
 	float roll
 	)
 {
-	D3DXQuaternionRotationYawPitchRoll(this, yaw, pitch, roll);
+	*static_cast<::Quaternion*>( this ) = RotationQuaternion( yaw, pitch, roll );
 }
 
 
@@ -188,7 +184,7 @@ void TriQuaternion::IncreaseYawPitchRoll(
 		pitchCurr = 1.5f;
 	rollCurr += roll;
 	
-	D3DXQuaternionRotationYawPitchRoll(this, yawCurr, pitchCurr, rollCurr);
+	*static_cast<::Quaternion*>( this ) = RotationQuaternion( yawCurr, pitchCurr, rollCurr );
 	return;
 
 }
@@ -200,10 +196,8 @@ void TriQuaternion::IncreaseLocalYawPitchRoll(
 	float roll
 	)
 {
-	::Quaternion diff;
-	D3DXQuaternionRotationYawPitchRoll(&diff, yaw, pitch, roll);
-
-	D3DXQuaternionMultiply(this, &diff, this);
+	::Quaternion diff = RotationQuaternion( yaw, pitch, roll );
+	*static_cast<::Quaternion*>( this ) = diff * *this;
 }
 
 
@@ -220,7 +214,7 @@ void TriQuaternion::MultiplyQuaternion(
 	const ::Quaternion* in
 	)
 {
-	D3DXQuaternionMultiply(this, in, this);
+	*static_cast<::Quaternion*>( this ) = *in * *this;
 }
 
 void TriQuaternion::SetSLERP(
@@ -229,17 +223,17 @@ void TriQuaternion::SetSLERP(
 	const float t
 	)
 {
-	D3DXQuaternionSlerp(this, q1, q2, t);
+	*static_cast<::Quaternion*>( this ) = Slerp( *q1, *q2, t );
 }
 
 void TriQuaternion::Normalize()
 {
-	D3DXQuaternionNormalize(this, this);
+	*static_cast<::Quaternion*>( this ) = ::Normalize( *this );
 }
 
 float TriQuaternion::Length() const
 {
-	return D3DXQuaternionLength(this);
+	return ::Length( *this );
 }
 
 
@@ -256,139 +250,42 @@ void TriQuaternion::Py__init__( float _x, float _y, float _z, Be::Optional<float
 	w = _w.IsAssigned() ? float( _w ) : 1.0f;
 }
 
-void TriQuaternion::PyConjugate()
-{	
-	D3DXQuaternionConjugate(this, this);	
-}
-
-float TriQuaternion::PyDot( ITriQuaternion* other )
-{
-	return D3DXQuaternionDot( this, other->GetQuaternion() );
-}
-
-
-void TriQuaternion::PyExp()
-{
-	D3DXQuaternionExp(this, this);	
-}
-
-
 void TriQuaternion::PyIdentity()
 {
-	D3DXQuaternionIdentity( this );	
+	*static_cast<::Quaternion*>( this ) = IdentityQuaternion();
 }
 
 void TriQuaternion::PyInverse()
 {
-	D3DXQuaternionInverse( this, this );	
-}
-
-
-int TriQuaternion::PyIsIdentity()
-{
-	return int( D3DXQuaternionIsIdentity( this ) );	
+	*static_cast<::Quaternion*>( this ) = Inverse( *this );
 }
 
 
 float TriQuaternion::PyLength()
 {
-	return D3DXQuaternionLength( this );	
-}
-
-
-float TriQuaternion::PyLengthSq()
-{
-	return D3DXQuaternionLengthSq( this );	
-}
-
-
-void TriQuaternion::PyLn()
-{
-	D3DXQuaternionLn( this, this );	
+	return ::Length( *this );	
 }
 
 
 void TriQuaternion::PyMultiply( ITriQuaternion* other )
 {
-	D3DXQuaternionMultiply( this, this, other->GetQuaternion() );
+	*static_cast<::Quaternion*>( this ) = *this * *other->GetQuaternion();
 }
 
 
 void TriQuaternion::PyNormalize()
 {
-	D3DXQuaternionNormalize( this, this );	
+	*static_cast<::Quaternion*>( this ) = ::Normalize( *this );
 }
 
 void TriQuaternion::PyRotationAxis( ITriVector* axis, float angle )
 {		
-	D3DXQuaternionRotationAxis( this, axis->GetVector(), angle );
-}
-
-void TriQuaternion::PyRotationMatrix( ITriMatrix* matrix )
-{		
-	D3DXQuaternionRotationMatrix( this, matrix->GetMatrix() );
-}
-
-void TriQuaternion::PyYawPitchRoll( float yaw, float pitch, float roll )
-{		
-	D3DXQuaternionRotationYawPitchRoll( this, yaw, pitch, roll );
-}
-
-void TriQuaternion::PySlerp( ITriQuaternion* other, float t )
-{		
-	D3DXQuaternionSlerp( this, this, other->GetQuaternion(), t );
-}
-
-
-PyObject* TriQuaternion::PyToAxisAngle(
-	PyObject* args
-	)
-{		
-
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;
-
-	float angle;
-	ITriVectorPtr v;
-	v.Attach(new OTriVector);
-
-	Vector3 dv;
-	D3DXQuaternionToAxisAngle(this, &dv, &angle);
-	v->SetVector(&dv);
-
-	PyObject* v1 = PyOS->WrapBlueObject(v);
-	PyObject* ret = Py_BuildValue("Of",v1,angle);
-	Py_DECREF(v1);
-
-	return ret;
+	*static_cast<::Quaternion*>( this ) = RotationQuaternion( *axis->GetVector(), angle );
 }
 
 void TriQuaternion::PySetRotationAxis( ITriVector* axis, float angle )
 {		
 	SetRotationAxis( axis->GetVector(), angle );
-}
-
-
-PyObject* TriQuaternion::PyGetRotationAxis(
-	PyObject* args
-	)
-{		
-	float angle;
-	ITriVectorPtr v;
-	v.Attach(new OTriVector);
-	
-	if (!PyArg_ParseTuple(args, ""))
-		return NULL;
-
-	Vector3 dv;
-	GetRotationAxis(&dv, &angle);
-	v->SetVector(&dv);
-
-	PyObject* v1 = PyOS->WrapBlueObject(v);
-	PyObject* ret = Py_BuildValue("Of",v1,angle);
-	Py_DECREF(v1);
-
-	return ret;
 }
 
 Vector3 TriQuaternion::PyGetYawPitchRoll()
@@ -399,39 +296,9 @@ Vector3 TriQuaternion::PyGetYawPitchRoll()
 	
 }
 
-void TriQuaternion::PySetRotationArc( ITriVector* v1, ITriVector* v2 )
-{		
-	SetRotationArc( v1->GetVector(), v2->GetVector() );
-}
-
-void TriQuaternion::PyMultiplyQuaternion( ITriQuaternion* other )
-{	
-	MultiplyQuaternion( other->GetQuaternion() );
-}
-
-void TriQuaternion::PySetSLERP( ITriQuaternion* q1, ITriQuaternion* q2, float t )
-{
-	SetSLERP( q1->GetQuaternion(), q2->GetQuaternion(), t );
-}
-
 void TriQuaternion::PyScale( float factor )
 {	
 	TriQuaternionScale( this, this, factor );
-}
-
-void TriQuaternion::PySetExp( ITriQuaternion* other )
-{
-	D3DXQuaternionExp( this, other->GetQuaternion() );
-}
-
-void TriQuaternion::PySetLn( ITriQuaternion* other )
-{
-	D3DXQuaternionLn( this, other->GetQuaternion() );
-}
-
-void TriQuaternion::PyPow( float power )
-{
-	TriQuaternionPow( this, this, power );
 }
 
 

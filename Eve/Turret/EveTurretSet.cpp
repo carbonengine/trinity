@@ -1157,10 +1157,9 @@ void EveTurretSet::ModifySystemBoneTransform( SystemBones bone, const Vector3* t
 			// never forget do apply influence!
 			alpha *= m_trackingInfluence;
 			// 1st: make quaternion
-			Quaternion quat;
-			D3DXQuaternionRotationYawPitchRoll( &quat, alpha, 0.f, 0.f );
+			Quaternion quat = RotationQuaternion( alpha, 0.f, 0.f );
 			// 2nd: apply this quat after the original one
-			D3DXQuaternionMultiply( &quat, (Quaternion*)&transform->Orientation, &quat );
+			quat = *reinterpret_cast<Quaternion*>( transform->Orientation ) * quat;
 			// 3rd: make granny_transform from quat
 			GrannySetTransform( transform, transform->Position, (float*)&quat, (float*)transform->ScaleShear );
 		}
@@ -1173,10 +1172,9 @@ void EveTurretSet::ModifySystemBoneTransform( SystemBones bone, const Vector3* t
 			// never forget do apply influence!
 			alpha *= m_trackingInfluence;
 			// 1st: make quaternion
-			Quaternion quat;
-			D3DXQuaternionRotationYawPitchRoll( &quat, alpha, 0.f, 0.f );
+			Quaternion quat = RotationQuaternion( alpha, 0.f, 0.f );
 			// 2nd: apply this quat after the original one
-			D3DXQuaternionMultiply( &quat, (Quaternion*)&transform->Orientation, &quat );
+			quat = *reinterpret_cast<Quaternion*>( transform->Orientation ) * quat;
 			// 3rd: make granny_transform from quat
 			GrannySetTransform( transform, transform->Position, (float*)&quat, (float*)transform->ScaleShear );
 		}
@@ -2553,10 +2551,9 @@ void EveTurretSet::CalcTransformForPitchBone( const Vector3* target, granny_tran
 	// never forget do apply influence!
 	alpha *= m_trackingInfluence;
 	// 1st: make quaternion
-	Quaternion quat;
-	D3DXQuaternionRotationYawPitchRoll( &quat, 0.f, -alpha, 0.f );
+	Quaternion quat = RotationQuaternion( 0.f, -alpha, 0.f );
 	// 2nd: apply this quat after the original one
-	D3DXQuaternionMultiply( &quat, (Quaternion*)&transform->Orientation, &quat );
+	quat = *reinterpret_cast<Quaternion*>( transform->Orientation ) * quat;
 	// 2nd: make granny_transform from quat
 	GrannySetTransform( transform, transform->Position, (float*)&quat, (float*)transform->ScaleShear );
 }

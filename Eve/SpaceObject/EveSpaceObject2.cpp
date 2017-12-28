@@ -1983,8 +1983,7 @@ void EveSpaceObject2::UpdateWorldTransform( Be::Time time )
 	{
 		Quaternion modelRotation;
 		m_modelRotation->Update( &modelRotation, time );
-		Quaternion rotation;
-		D3DXQuaternionMultiply( &rotation, &modelRotation, &m_worldRotation);
+		Quaternion rotation = modelRotation * m_worldRotation;
 		m_worldTransform = RotationMatrix( rotation );
 	}
 	else

@@ -152,33 +152,16 @@ public:
 
 public:
 	void Py__init__( float _x, float _y, float _z, Be::Optional<float> _w );
-	void PyConjugate();
-	float PyDot( ITriQuaternion* other );
-	void PyExp();
 	void PyIdentity();
 	void PyInverse();
-	int PyIsIdentity();
 	float PyLength();
-	float PyLengthSq();
-	void PyLn();
 	void PyMultiply( ITriQuaternion* other );
 	void PyNormalize();
 	void PyRotationAxis( ITriVector* axis, float angle );
-	void PyRotationMatrix( ITriMatrix* matrix );
-	void PyYawPitchRoll( float yaw, float pitch, float roll );
-	void PySlerp( ITriQuaternion* other, float t );
-	PyObject* PyToAxisAngle( PyObject* args );
 
 	void PySetRotationAxis( ITriVector* axis, float angle );
-	PyObject* PyGetRotationAxis( PyObject* args );
 	Vector3 PyGetYawPitchRoll();		
-	void PySetRotationArc( ITriVector* v1, ITriVector* v2 );
-	void PyMultiplyQuaternion( ITriQuaternion* other );
-	void PySetSLERP( ITriQuaternion* q1, ITriQuaternion* q2, float t );
 	void PyScale( float factor );
-	void PySetExp( ITriQuaternion* other );
-	void PySetLn( ITriQuaternion* other );
-	void PyPow( float power );
 };
 TYPEDEF_BLUECLASS(TriQuaternion);
 

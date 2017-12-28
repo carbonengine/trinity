@@ -147,7 +147,7 @@ void EveCamera::SetRotationOnOrbit(float yaw, float pitch)
 	m_yawIntSpeed = yaw;
 	m_pitchIntSpeed = pitch;
 
-	D3DXQuaternionRotationYawPitchRoll(&m_rotationOfInterest, m_yawInt, m_pitchInt, 0.0f);
+	m_rotationOfInterest = RotationQuaternion( m_yawInt, m_pitchInt, 0.0f );
 }
 
 void EveCamera::RotateOnOrbit(float horizontal, float vertical)
@@ -175,7 +175,7 @@ void EveCamera::RotateOnOrbit(float horizontal, float vertical)
 			m_yawIntSpeed = m_minYaw;
 	}
 	
-	D3DXQuaternionRotationYawPitchRoll(&m_rotationOfInterest, m_yawInt, m_pitchInt, 0.0f);
+	m_rotationOfInterest = RotationQuaternion( m_yawInt, m_pitchInt, 0.0f );
 }
 
 
@@ -289,7 +289,7 @@ void EveCamera::Update( Be::Time t )
 	CapPitchAndYaw();
 
 	// Find absolute camera position
-	D3DXQuaternionRotationYawPitchRoll(&m_rotationAroundParent, m_yaw, m_pitch, 0.0f);
+	m_rotationAroundParent = RotationQuaternion( m_yaw, m_pitch, 0.0f );
 	Vector3 vecCamPos;
 	TriVectorRotateQuaternion(&vecCamPos, &m_translationFromParent, &m_rotationAroundParent);
 
@@ -432,7 +432,7 @@ void EveCamera::Update( Be::Time t )
 			m_yawInt = m_minYaw;
 	}
 
-	D3DXQuaternionRotationYawPitchRoll(&m_rotationOfInterest, m_yawInt, m_pitchInt, 0.0f);
+	m_rotationOfInterest = RotationQuaternion( m_yawInt, m_pitchInt, 0.0f );
 
 	////////////////////////////////////////////////////////////////////////
 	// Set up the camera at the calculated position and with the calculated interest
@@ -483,8 +483,8 @@ void EveCamera::Update( Be::Time t )
 	Matrix viewTransform, viewTransformInt;
 	viewTransform = LookAtMatrix( vecCamPos, vecCamIntr, realUpDir );
 	// now rotate toward other interest
-	Quaternion tmpResult;
-	TriMatrixRotate( &viewTransformInt, &viewTransform, static_cast<Quaternion*>( D3DXQuaternionInverse(&tmpResult, &m_rotationOfInterest) ) );
+	Quaternion tmpResult = Inverse( m_rotationOfInterest );
+	TriMatrixRotate( &viewTransformInt, &viewTransform, &tmpResult );
 
 	CalculateProjectionMatrix( &m_projectionTransform, gTriDev->AspectRatio(), m_fieldOfView, 
 		                       m_projectionCenterOffset, 0, m_frontClip, m_backClip, m_projectionMatrix );

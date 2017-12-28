@@ -588,7 +588,7 @@ void Tr2IntSkinnedObject::UpdatePlacement( const Vector3& front, const Vector3& 
 
 	Quaternion q;
 	Vector3 up = Vector3(0, 1, 0);
-	D3DXQuaternionRotationYawPitchRoll( &q, yaw, 0, 0 );
+	q = RotationQuaternion( yaw, 0, 0 );
 
 	SetRotation(q);
 	SetPosition(pos);

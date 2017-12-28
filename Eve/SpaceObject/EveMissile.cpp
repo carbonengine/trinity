@@ -131,7 +131,7 @@ void EveMissile::UpdateSyncronous( EveUpdateContext& updateContext )
 		m_ballRotation->Update( &quat, time );
 		// we may need the ball rotation matrix
 		// inverse it to get inverse!
-		D3DXQuaternionInverse( &quat, &quat );
+		quat = Inverse( quat );
 		// turn it into the matrix we need
 		invBallRotationMatrix = RotationMatrix( quat );
 	}

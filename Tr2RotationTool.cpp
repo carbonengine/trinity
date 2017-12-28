@@ -13,7 +13,7 @@ Tr2RotationTool::Tr2RotationTool( IRoot* lockobj )
 	m_wLine = NULL;
 	m_wwLine = NULL;
 
-	D3DXQuaternionIdentity( &m_rotation );
+	m_rotation = IdentityQuaternion();
 	m_angle = 0.0f;
 	GenLineSets();
 	SelectAxis("w");
@@ -381,7 +381,7 @@ void Tr2RotationTool::Update()
 		if( OnMoveCallback( m_localTransform, temp  ))
 		{
 			m_localTransform = temp;
-			D3DXQuaternionRotationMatrix( &m_rotation, &temp );
+			m_rotation = RotationQuaternion( temp );
 			m_movement.x = 0.0f;
 			m_movement.y = 0.0f;
 			m_movement.z = 0.0f;

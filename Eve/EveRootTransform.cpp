@@ -38,7 +38,7 @@ void EveRootTransform::UpdateSyncronous( EveUpdateContext& updateContext )
 	{
 		Quaternion modelRotation;
 		m_modelRotation->Update( &modelRotation, time );
-		D3DXQuaternionMultiply( &rotation, &modelRotation, &rotation);
+		rotation = modelRotation * rotation;
 	}
 
 	m_lastUpdateMatrix = RotationMatrix( rotation ) * TranslationMatrix( translation );

@@ -173,7 +173,7 @@ void EveEffectRoot2::UpdateWorldTransform( Be::Time time )
 	{
 		Quaternion modelRotation;
 		m_modelRotation->Update( &modelRotation, time );
-		D3DXQuaternionMultiply( &rotation, &modelRotation, &rotation);
+		rotation = modelRotation * rotation;
 	}
 
 	m_worldTransform = RotationMatrix( rotation ) * TranslationMatrix( translation );

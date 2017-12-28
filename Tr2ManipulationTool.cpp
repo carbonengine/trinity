@@ -243,15 +243,14 @@ Vector3* Tr2ManipulationTool::GetTrianglesAroundLine( const Vector3 &start, cons
 
 	Vector3 dirOfLine;
 	Vector3 zDir(0.0f, 0.0f, 1.0f);
-	Quaternion rotation;
-	D3DXQuaternionIdentity(&rotation);
+	Quaternion rotation = IdentityQuaternion();
 	Vector3 temp;
 	dirOfLine = Normalize( start - end );
 	float dot = Dot( zDir, dirOfLine );
 	if( fabs( dot ) != 1.0f )
 	{
 		temp = Cross( zDir, dirOfLine );
-		D3DXQuaternionRotationAxis( &rotation, &temp, acos( dot ) );
+		rotation = RotationQuaternion( temp, acos( dot ) );
 	}
 
 	Matrix rot, t1, t2, compA, compB;
