@@ -110,11 +110,6 @@ ALResult InitializeDirect3D()
 	{
 		return E_FAIL;
 	}
-	//if ( !D3DXCheckVersion( D3D_SDK_VERSION, D3DX_SDK_VERSION ) )
-	//{
-	//	s_direct3D.Release();
-	//	return E_FAIL;
-	//}
 	return S_OK;
 }
 

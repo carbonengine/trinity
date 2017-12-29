@@ -57,7 +57,6 @@
 #define TRINITY_PLATFORM_NAME "dx11"
 
 #include <D3D11.h>
-#include <D3DX11async.h>
 #include <DXGI.h>
 
 #elif TRINITY_PLATFORM==TRINITY_OPENGLES2 
