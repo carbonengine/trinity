@@ -1347,6 +1347,9 @@
     <ClInclude Include="Utilities\Color.h">
       <Filter>Source Files\Utilities</Filter>
     </ClInclude>
+    <ClInclude Include="Utilities\Float16.h">
+      <Filter>Source Files\Utilities</Filter>
+    </ClInclude>
     <ClInclude Include="Utilities\GeometryUtils.h">
       <Filter>Source Files\Utilities</Filter>
     </ClInclude>

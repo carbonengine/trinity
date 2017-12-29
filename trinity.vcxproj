@@ -3102,6 +3102,7 @@
     <ClInclude Include="Utilities\BoundingBox.h"/>
     <ClInclude Include="Utilities\BoundingSphere.h"/>
     <ClInclude Include="Utilities\Color.h"/>
+    <ClInclude Include="Utilities\Float16.h"/>
     <ClInclude Include="Utilities\GeometryUtils.h"/>
     <ClInclude Include="Utilities\GrannyCurveHelpers.h"/>
     <ClInclude Include="Utilities\Matrix.h"/>
