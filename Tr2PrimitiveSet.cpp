@@ -30,10 +30,10 @@ Tr2PrimitiveSet::Tr2PrimitiveSet( IRoot* lockobj ):
 	m_isDrawingForPicking( false ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_localTransform( IdentityMatrix() ),
-	m_worldTransform( IdentityMatrix() )
-{	
-	m_boundingSphere = Vector4( 0.0f, 0.0f, 0.0f, 0.0f );
-	m_color = Color( 0.5f, 0.5f, 0.5f, 1.0f );
+	m_worldTransform( IdentityMatrix() ),
+	m_boundingSphere( Vector4( 0.0f, 0.0f, 0.0f, 0.0f ) ),
+	m_color( Color( 0.5f, 0.5f, 0.5f, 1.0f ) )
+{
 }
 
 Tr2PrimitiveSet::~Tr2PrimitiveSet()

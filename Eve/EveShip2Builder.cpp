@@ -76,7 +76,7 @@ void EveShip2Builder::Weld( granny_uint8* referenceVB, int referenceCount, grann
 	{
 		CCP_STATS_ZONE( "FloatToHalf" );
 
-		Float_16* halfPositions = (Float_16*)CCP_MALLOC( "Weld/halfPositions", count * sizeof( granny_uint16 ) );
+		Float_16* halfPositions = static_cast<Float_16*>( CCP_MALLOC( "Weld/halfPositions", count * sizeof( Float_16 ) ) );
 		std::transform( 
 			reinterpret_cast<float*>( positions ), 
 			reinterpret_cast<float*>( positions ) + count, 

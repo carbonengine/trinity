@@ -297,15 +297,6 @@ namespace
 		s_projectionMatrixVar = s_projectionTransform;
 		s_projectionMatrixInvVar = s_inverseProjectionTransform;
 		UpdateViewProjectionTransform();
-
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		// Ensure fixed-function pipeline is aware of the projection transform
-		if( renderContext.m_d3dDevice9 )
-		{
-			renderContext.m_d3dDevice9->SetTransform( D3DTS_PROJECTION, &s_projectionTransform );
-		}
-#endif
 	}
 
 	void CreateFallbackTexturesWithColor( uint32_t color, Tr2TextureAL* outputTextures, Tr2PrimaryRenderContext& renderContext )
@@ -585,13 +576,6 @@ void Tr2Renderer::SetWorldTransform( const Matrix& m )
 {
     s_worldTransform = m;
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	// Ensure fixed-function pipeline is aware of the change
-	CCP_ASSERT( renderContext.m_d3dDevice9 );
-    renderContext.m_d3dDevice9->SetTransform( D3DTS_WORLD, &s_worldTransform );
-#endif
-
 	// Ensure variable store is aware of the change
 	s_worldMatrixVar = s_worldTransform;
 }
@@ -602,14 +586,6 @@ void Tr2Renderer::SetViewTransform( const Matrix& m )
 	s_inverseViewTransform = Inverse( s_viewTransform );
 
 	UpdateViewProjectionTransform();
-
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	if( renderContext.m_d3dDevice9 )
-	{
-		renderContext.m_d3dDevice9->SetTransform( D3DTS_VIEW, &m );
-	}
-#endif
 
 	// Ensure variable store is aware of the change
 	s_viewMatrixVar = s_viewTransform;

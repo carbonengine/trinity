@@ -5,18 +5,12 @@
 #include "Shader/Tr2Effect.h"
 
 Tr2RotationTool::Tr2RotationTool( IRoot* lockobj )
-	:m_precision( 1 )
+	:m_precision( 1 ),
+	m_rotation( IdentityQuaternion() ),
+	m_angle( 0.0f )
 {
-	m_xLine = NULL;
-	m_yLine = NULL;
-	m_zLine = NULL;
-	m_wLine = NULL;
-	m_wwLine = NULL;
-
-	m_rotation = IdentityQuaternion();
-	m_angle = 0.0f;
 	GenLineSets();
-	SelectAxis("w");
+	SelectAxis( "w" );
 }
 
 

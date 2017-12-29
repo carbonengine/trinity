@@ -47,6 +47,7 @@ inline Plane& Plane::operator *= ( float scale )
 	b *= scale;
 	c *= scale;
 	d *= scale;
+	return *this;
 }
 
 // --------------------------------------------------------------------------------------
@@ -57,6 +58,7 @@ inline Plane& Plane::operator /= ( float div )
 	b *= scale;
 	c *= scale;
 	d *= scale;
+	return *this;
 }
 
 // --------------------------------------------------------------------------------------
