@@ -492,7 +492,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -522,7 +522,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -552,7 +552,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -582,7 +582,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -612,7 +612,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -642,7 +642,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -672,7 +672,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -702,7 +702,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -732,7 +732,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -762,7 +762,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -792,7 +792,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -822,7 +822,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -852,7 +852,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -882,7 +882,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -912,7 +912,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -942,7 +942,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -972,7 +972,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -1002,7 +1002,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -1032,7 +1032,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
@@ -1062,7 +1062,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
