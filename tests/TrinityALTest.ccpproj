@@ -22,7 +22,6 @@ ClCompile:
   AdditionalIncludeDirectories:
   - .
   PreprocessorDefinitions:
-  - CCPMATH_IMPLEMENT_D3DX_FUNCTIONS=1
   - TRINITY_AL_WITH_BLUE_EXPOSURE=0
   - NOMINMAX
   - BLUEBUILD
