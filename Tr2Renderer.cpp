@@ -37,6 +37,9 @@ Tr2Variable s_renderTimeVar;
 
 namespace
 {
+	// This flag is used to prevent code from inadvertently creating device resources in the middle of a device reset/invalidate attempt
+	bool s_isResourceCreationAllowed = true;
+
 	TR2SHADERMODEL s_shaderModel = TR2SM_3_0_HI;
 	TR2SHADERMODEL s_prevShaderModel = TR2SM_3_0_HI;
 
@@ -1721,7 +1724,12 @@ TriSettings& Tr2Renderer::GetSettings()
 bool Tr2Renderer::IsResourceCreationAllowed()
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return renderContext.IsValid();
+	return renderContext.IsValid() && s_isResourceCreationAllowed;
+}
+
+void Tr2Renderer::SetResourceCreationAllowed( bool isAllowed )
+{
+	s_isResourceCreationAllowed = isAllowed;
 }
 
 void Tr2Renderer::EnableFallbackTextureDebugging()

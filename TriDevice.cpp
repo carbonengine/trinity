@@ -302,6 +302,8 @@ bool TriDevice::ChangeDevice(
 		return false;
 	}
 
+	Tr2Renderer::SetResourceCreationAllowed( true );
+
 	mAdapter = adapter;
 	mHwnd = hWnd;
 	mWidth = pp->mode.width;
@@ -695,6 +697,8 @@ bool TriDevice::ResetDevice( unsigned adapter, const Tr2PresentParametersAL* pp 
 	inReset = true;
 	ON_BLOCK_EXIT( [&] { inReset = false; } );
 
+	Tr2Renderer::SetResourceCreationAllowed( false );
+
 	ReleaseDeviceResources( TRISTORAGE_VIDEOMEMORY );
 
 	if( !DeviceExists() )
@@ -723,7 +727,8 @@ bool TriDevice::ResetDevice( unsigned adapter, const Tr2PresentParametersAL* pp 
 		&& FAILED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( mAdapter, mDisplayMode ) ) )
 	{
 		CCP_LOGNOTICE( "Device Reset: Adapter Display Mode Changed" );
-		return false;	
+		Tr2Renderer::SetResourceCreationAllowed( true );
+		return false;
 	}
 
 	if( !InitD3DDevice() )
@@ -733,6 +738,8 @@ bool TriDevice::ResetDevice( unsigned adapter, const Tr2PresentParametersAL* pp 
 	}
 
 	mAdapter = adapter;
+
+	Tr2Renderer::SetResourceCreationAllowed( true );
 
 	CCP_LOGNOTICE( "Device Reset: Re-Preparing Resources" );
 	PrepareDeviceResources();

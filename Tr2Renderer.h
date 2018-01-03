@@ -261,6 +261,12 @@ public:
 	static void EnableFallbackTextureDebugging();
 	static void DisableFallbackTextureDebugging();
 	static const Tr2TextureAL& GetFallbackTexture( Tr2EffectResource::Type textureType, const char* debugContext );
+private:
+
+	static void SetResourceCreationAllowed( bool isAllowed );
+
+	friend class TriDevice;
+
 };
 
 #endif // Tr2Renderer_H
