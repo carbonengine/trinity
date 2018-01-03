@@ -848,6 +848,12 @@ ALResult Tr2RenderContextAL::CreateDevice(
 									&m_d3dDevice9 );
 	}
 
+	if( FAILED( hr ) )
+	{
+		CCP_AL_LOGERR( "Failed to create DX9 device: %s", BeGetErrorMessage( ALResult( hr ) ) );
+		return hr;
+	}
+
 	if( SUCCEEDED( hr ) && m_d3dDevice9 )
 	{
 		m_caps.QueryCaps( m_d3dDevice9 );
@@ -1037,7 +1043,7 @@ ALResult Tr2RenderContextAL::Present()
 
 bool Tr2RenderContextAL::IsValid()
 {
-	return m_d3dDevice9 != nullptr && !m_isLost;
+	return m_d3dDevice9 != nullptr;
 }
 
 ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
