@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files"/>
-    <Filter Include="Source Files\dx11"/>
-    <Filter Include="Source Files\dx9"/>
-    <Filter Include="Source Files\gl4"/>
-    <Filter Include="Source Files\gles2"/>
-    <Filter Include="Source Files\include"/>
-    <Filter Include="Source Files\src"/>
-    <Filter Include="Source Files\stub"/>
+    <Filter Include="Source Files" />
+    <Filter Include="Source Files\dx11" />
+    <Filter Include="Source Files\dx9" />
+    <Filter Include="Source Files\gl4" />
+    <Filter Include="Source Files\gles2" />
+    <Filter Include="Source Files\include" />
+    <Filter Include="Source Files\src" />
+    <Filter Include="Source Files\stub" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ALLog.h">

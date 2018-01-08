@@ -118,7 +118,9 @@
       <Platform>Win32</Platform>
     </ProjectConfiguration>
   </ItemGroup>
-  <PropertyGroup Label="Globals"/>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{1c728c1d-a7d7-57a5-96cf-15e85fb8eadb}</ProjectGuid>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
@@ -206,7 +208,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props"/>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'">
     <TargetExt>.lib</TargetExt>
     <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
@@ -410,7 +412,7 @@
     <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.props"/>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.props" />
   <PropertyGroup Label="UserMacros">
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
@@ -427,36 +429,36 @@
       <Value>$(CcpBranchPath)</Value>
     </BuildMacro>
   </ItemGroup>
-  <ImportGroup Label="ExtensionSettings"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GL4|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GL4|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'" Label="PropertySheets"/>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GL4|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GL4|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'" Label="PropertySheets" />
   <PropertyGroup>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'">TrinityAL_dx9</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_GL4|x64'">TrinityAL_gl4_d</TargetName>
@@ -534,11 +536,11 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GL4|x64'">
     <ClCompile>
@@ -565,11 +567,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|Win32'">
     <ClCompile>
@@ -596,11 +598,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|Win32'">
     <ClCompile>
@@ -627,11 +629,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;glew32.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|x64'">
     <ClCompile>
@@ -658,11 +660,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'">
     <ClCompile>
@@ -689,11 +691,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;glew32.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">
     <ClCompile>
@@ -720,11 +722,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;glew32.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|Win32'">
     <ClCompile>
@@ -751,11 +753,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|Win32'">
     <ClCompile>
@@ -784,11 +786,11 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|Win32'">
     <ClCompile>
@@ -815,11 +817,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|x64'">
     <ClCompile>
@@ -846,11 +848,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'">
     <ClCompile>
@@ -877,11 +879,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|Win32'">
     <ClCompile>
@@ -908,11 +910,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|x64'">
     <ClCompile>
@@ -939,11 +941,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'">
     <ClCompile>
@@ -972,11 +974,11 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|x64'">
     <ClCompile>
@@ -1005,11 +1007,11 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">
     <ClCompile>
@@ -1036,11 +1038,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'">
     <ClCompile>
@@ -1067,11 +1069,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|x64'">
     <ClCompile>
@@ -1098,11 +1100,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'">
     <ClCompile>
@@ -1131,11 +1133,11 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|x64'">
     <ClCompile>
@@ -1164,11 +1166,11 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|Win32'">
     <ClCompile>
@@ -1195,11 +1197,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|x64'">
     <ClCompile>
@@ -1228,11 +1230,11 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|Win32'">
     <ClCompile>
@@ -1259,11 +1261,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|x64'">
     <ClCompile>
@@ -1290,11 +1292,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GL4|Win32'">
     <ClCompile>
@@ -1321,11 +1323,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;glew32.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'">
     <ClCompile>
@@ -1354,11 +1356,11 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;glew32.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|Win32'">
     <ClCompile>
@@ -1387,11 +1389,11 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'">
     <ClCompile>
@@ -1420,255 +1422,255 @@
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;glew32.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="ALLog.h"/>
-    <ClInclude Include="ALResult.h"/>
-    <ClInclude Include="BcDecompress.h"/>
-    <ClInclude Include="ITr2RenderContextEvents.h"/>
-    <ClInclude Include="StdAfx.h"/>
-    <ClInclude Include="Tr2AdapterStructures.h"/>
-    <ClInclude Include="Tr2DrawUPHelper.h"/>
-    <ClInclude Include="Tr2DriverUtilities.h"/>
-    <ClInclude Include="Tr2FragmentOpSettings.h"/>
-    <ClInclude Include="Tr2HalHelperStructures.h"/>
-    <ClInclude Include="Tr2LockGuard.h"/>
-    <ClInclude Include="Tr2MemoryCounterAL.h"/>
-    <ClInclude Include="Tr2ObjectFactory.h"/>
-    <ClInclude Include="Tr2RenderContextEnum.h"/>
-    <ClInclude Include="Tr2TrackedALObject.h"/>
-    <ClInclude Include="Tr2TrackedALObjectImpl.h"/>
-    <ClInclude Include="Tr2VertexDefinition.h"/>
-    <ClInclude Include="wglext.h"/>
-    <ClInclude Include="dx11\Tr2BufferALDx11.h"/>
-    <ClInclude Include="dx11\Tr2CapsALDx11.h"/>
-    <ClInclude Include="dx11\Tr2ConstantBufferALDx11.h"/>
-    <ClInclude Include="dx11\Tr2DepthStencilALDx11.h"/>
-    <ClInclude Include="dx11\Tr2FenceALDx11.h"/>
-    <ClInclude Include="dx11\Tr2GpuTimerALDx11.h"/>
-    <ClInclude Include="dx11\Tr2OcclusionQueryALDx11.h"/>
-    <ClInclude Include="dx11\Tr2PrimaryRenderContextDx11.h"/>
-    <ClInclude Include="dx11\Tr2RenderContextDx11.h"/>
-    <ClInclude Include="dx11\Tr2RenderStateEmulationDx11.h"/>
-    <ClInclude Include="dx11\Tr2RenderTargetALDx11.h"/>
-    <ClInclude Include="dx11\Tr2ResourceSetALDx11.h"/>
-    <ClInclude Include="dx11\Tr2SamplerStateALDx11.h"/>
-    <ClInclude Include="dx11\Tr2ShaderALDx11.h"/>
-    <ClInclude Include="dx11\Tr2ShaderProgramALDx11.h"/>
-    <ClInclude Include="dx11\Tr2SwapChainALDx11.h"/>
-    <ClInclude Include="dx11\Tr2TextureALDx11.h"/>
-    <ClInclude Include="dx11\Tr2VertexLayoutALDx11.h"/>
-    <ClInclude Include="dx11\Tr2VideoAdapterInfoALDx11.h"/>
-    <ClInclude Include="dx9\Tr2BufferALDx9.h"/>
-    <ClInclude Include="dx9\Tr2CapsALDx9.h"/>
-    <ClInclude Include="dx9\Tr2ConstantBufferALDx9.h"/>
-    <ClInclude Include="dx9\Tr2DepthStencilALDx9.h"/>
-    <ClInclude Include="dx9\Tr2FenceALDx9.h"/>
-    <ClInclude Include="dx9\Tr2GpuTimerALDx9.h"/>
-    <ClInclude Include="dx9\Tr2OcclusionQueryALDx9.h"/>
-    <ClInclude Include="dx9\Tr2PrimaryRenderContextDx9.h"/>
-    <ClInclude Include="dx9\Tr2RenderContextDx9.h"/>
-    <ClInclude Include="dx9\Tr2RenderTargetALDx9.h"/>
-    <ClInclude Include="dx9\Tr2ResourceSetALDx9.h"/>
-    <ClInclude Include="dx9\Tr2SamplerStateALDx9.h"/>
-    <ClInclude Include="dx9\Tr2ShaderALDx9.h"/>
-    <ClInclude Include="dx9\Tr2ShaderProgramALDx9.h"/>
-    <ClInclude Include="dx9\Tr2SwapChainALDx9.h"/>
-    <ClInclude Include="dx9\Tr2TextureALDx9.h"/>
-    <ClInclude Include="dx9\Tr2VertexLayoutALDx9.h"/>
-    <ClInclude Include="dx9\Tr2VideoAdapterInfoALDx9.h"/>
-    <ClInclude Include="gl4\Tr2BufferALGL4.h"/>
-    <ClInclude Include="gl4\Tr2CapsALGL4.h"/>
-    <ClInclude Include="gl4\Tr2ConstantBufferALGL4.h"/>
-    <ClInclude Include="gl4\Tr2DepthStencilALGL4.h"/>
-    <ClInclude Include="gl4\Tr2FenceALGL4.h"/>
-    <ClInclude Include="gl4\Tr2GpuTimerALGL4.h"/>
-    <ClInclude Include="gl4\Tr2OcclusionQueryALGL4.h"/>
-    <ClInclude Include="gl4\Tr2PrimaryRenderContextGL4.h"/>
-    <ClInclude Include="gl4\Tr2RenderContextGL4.h"/>
-    <ClInclude Include="gl4\Tr2RenderTargetALGL4.h"/>
-    <ClInclude Include="gl4\Tr2ResourceSetALGL4.h"/>
-    <ClInclude Include="gl4\Tr2SamplerStateALGL4.h"/>
-    <ClInclude Include="gl4\Tr2ShaderALGL4.h"/>
-    <ClInclude Include="gl4\Tr2ShaderProgramALGL4.h"/>
-    <ClInclude Include="gl4\Tr2SwapChainALGL4.h"/>
-    <ClInclude Include="gl4\Tr2TextureALGL4.h"/>
-    <ClInclude Include="gl4\Tr2VertexLayoutALGL4.h"/>
-    <ClInclude Include="gl4\Tr2VideoAdapterInfoALGL4.h"/>
-    <ClInclude Include="gles2\Tr2BufferALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2CapsALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2ConstantBufferALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2DepthStencilALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2FenceALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2GpuTimerALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2OcclusionQueryALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2PrimaryRenderContextGLES2.h"/>
-    <ClInclude Include="gles2\Tr2RenderContextGLES2.h"/>
-    <ClInclude Include="gles2\Tr2RenderTargetALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2ResourceSetALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2SamplerStateALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2ShaderALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2ShaderProgramALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2SwapChainALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2TextureALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2VertexLayoutALGLES2.h"/>
-    <ClInclude Include="gles2\Tr2VideoAdapterInfoALGLES2.h"/>
-    <ClInclude Include="include\Tr2BitmapDimensions.h"/>
-    <ClInclude Include="include\Tr2BufferAL.h"/>
-    <ClInclude Include="include\Tr2CapsAL.h"/>
-    <ClInclude Include="include\Tr2ConstantBufferAL.h"/>
-    <ClInclude Include="include\Tr2CubemapFace.h"/>
-    <ClInclude Include="include\Tr2DepthStencilAL.h"/>
-    <ClInclude Include="include\Tr2FenceAL.h"/>
-    <ClInclude Include="include\Tr2GpuBufferAL.h"/>
-    <ClInclude Include="include\Tr2GpuTimerAL.h"/>
-    <ClInclude Include="include\Tr2OcclusionQueryAL.h"/>
-    <ClInclude Include="include\Tr2PixelFormat.h"/>
-    <ClInclude Include="include\Tr2PrimaryRenderContextAL.h"/>
-    <ClInclude Include="include\Tr2RenderContextAL.h"/>
-    <ClInclude Include="include\Tr2RenderTargetAL.h"/>
-    <ClInclude Include="include\Tr2ResourceSetAL.h"/>
-    <ClInclude Include="include\Tr2SamplerStateAL.h"/>
-    <ClInclude Include="include\Tr2ShaderAL.h"/>
-    <ClInclude Include="include\Tr2ShaderProgramAL.h"/>
-    <ClInclude Include="include\Tr2SwapChainAL.h"/>
-    <ClInclude Include="include\Tr2TextureAL.h"/>
-    <ClInclude Include="include\Tr2TextureType.h"/>
-    <ClInclude Include="include\Tr2VertexLayoutAL.h"/>
-    <ClInclude Include="include\Tr2VideoAdapterInfoAL.h"/>
-    <ClInclude Include="include\TrinityAL.h"/>
-    <ClInclude Include="include\TrinityALForward.h"/>
-    <ClInclude Include="stub\Tr2BufferALStub.h"/>
-    <ClInclude Include="stub\Tr2CapsALStub.h"/>
-    <ClInclude Include="stub\Tr2ConstantBufferALStub.h"/>
-    <ClInclude Include="stub\Tr2DepthStencilALStub.h"/>
-    <ClInclude Include="stub\Tr2FenceALStub.h"/>
-    <ClInclude Include="stub\Tr2GpuTimerALStub.h"/>
-    <ClInclude Include="stub\Tr2OcclusionQueryALStub.h"/>
-    <ClInclude Include="stub\Tr2PrimaryRenderContextStub.h"/>
-    <ClInclude Include="stub\Tr2RenderContextStub.h"/>
-    <ClInclude Include="stub\Tr2RenderTargetALStub.h"/>
-    <ClInclude Include="stub\Tr2ResourceSetALStub.h"/>
-    <ClInclude Include="stub\Tr2SamplerStateALStub.h"/>
-    <ClInclude Include="stub\Tr2ShaderALStub.h"/>
-    <ClInclude Include="stub\Tr2ShaderProgramALStub.h"/>
-    <ClInclude Include="stub\Tr2SwapChainALStub.h"/>
-    <ClInclude Include="stub\Tr2TextureALStub.h"/>
-    <ClInclude Include="stub\Tr2VertexLayoutALStub.h"/>
-    <ClInclude Include="stub\Tr2VideoAdapterInfoALStub.h"/>
+    <ClInclude Include="ALLog.h" />
+    <ClInclude Include="ALResult.h" />
+    <ClInclude Include="BcDecompress.h" />
+    <ClInclude Include="ITr2RenderContextEvents.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="Tr2AdapterStructures.h" />
+    <ClInclude Include="Tr2DrawUPHelper.h" />
+    <ClInclude Include="Tr2DriverUtilities.h" />
+    <ClInclude Include="Tr2FragmentOpSettings.h" />
+    <ClInclude Include="Tr2HalHelperStructures.h" />
+    <ClInclude Include="Tr2LockGuard.h" />
+    <ClInclude Include="Tr2MemoryCounterAL.h" />
+    <ClInclude Include="Tr2ObjectFactory.h" />
+    <ClInclude Include="Tr2RenderContextEnum.h" />
+    <ClInclude Include="Tr2TrackedALObject.h" />
+    <ClInclude Include="Tr2TrackedALObjectImpl.h" />
+    <ClInclude Include="Tr2VertexDefinition.h" />
+    <ClInclude Include="wglext.h" />
+    <ClInclude Include="dx11\Tr2BufferALDx11.h" />
+    <ClInclude Include="dx11\Tr2CapsALDx11.h" />
+    <ClInclude Include="dx11\Tr2ConstantBufferALDx11.h" />
+    <ClInclude Include="dx11\Tr2DepthStencilALDx11.h" />
+    <ClInclude Include="dx11\Tr2FenceALDx11.h" />
+    <ClInclude Include="dx11\Tr2GpuTimerALDx11.h" />
+    <ClInclude Include="dx11\Tr2OcclusionQueryALDx11.h" />
+    <ClInclude Include="dx11\Tr2PrimaryRenderContextDx11.h" />
+    <ClInclude Include="dx11\Tr2RenderContextDx11.h" />
+    <ClInclude Include="dx11\Tr2RenderStateEmulationDx11.h" />
+    <ClInclude Include="dx11\Tr2RenderTargetALDx11.h" />
+    <ClInclude Include="dx11\Tr2ResourceSetALDx11.h" />
+    <ClInclude Include="dx11\Tr2SamplerStateALDx11.h" />
+    <ClInclude Include="dx11\Tr2ShaderALDx11.h" />
+    <ClInclude Include="dx11\Tr2ShaderProgramALDx11.h" />
+    <ClInclude Include="dx11\Tr2SwapChainALDx11.h" />
+    <ClInclude Include="dx11\Tr2TextureALDx11.h" />
+    <ClInclude Include="dx11\Tr2VertexLayoutALDx11.h" />
+    <ClInclude Include="dx11\Tr2VideoAdapterInfoALDx11.h" />
+    <ClInclude Include="dx9\Tr2BufferALDx9.h" />
+    <ClInclude Include="dx9\Tr2CapsALDx9.h" />
+    <ClInclude Include="dx9\Tr2ConstantBufferALDx9.h" />
+    <ClInclude Include="dx9\Tr2DepthStencilALDx9.h" />
+    <ClInclude Include="dx9\Tr2FenceALDx9.h" />
+    <ClInclude Include="dx9\Tr2GpuTimerALDx9.h" />
+    <ClInclude Include="dx9\Tr2OcclusionQueryALDx9.h" />
+    <ClInclude Include="dx9\Tr2PrimaryRenderContextDx9.h" />
+    <ClInclude Include="dx9\Tr2RenderContextDx9.h" />
+    <ClInclude Include="dx9\Tr2RenderTargetALDx9.h" />
+    <ClInclude Include="dx9\Tr2ResourceSetALDx9.h" />
+    <ClInclude Include="dx9\Tr2SamplerStateALDx9.h" />
+    <ClInclude Include="dx9\Tr2ShaderALDx9.h" />
+    <ClInclude Include="dx9\Tr2ShaderProgramALDx9.h" />
+    <ClInclude Include="dx9\Tr2SwapChainALDx9.h" />
+    <ClInclude Include="dx9\Tr2TextureALDx9.h" />
+    <ClInclude Include="dx9\Tr2VertexLayoutALDx9.h" />
+    <ClInclude Include="dx9\Tr2VideoAdapterInfoALDx9.h" />
+    <ClInclude Include="gl4\Tr2BufferALGL4.h" />
+    <ClInclude Include="gl4\Tr2CapsALGL4.h" />
+    <ClInclude Include="gl4\Tr2ConstantBufferALGL4.h" />
+    <ClInclude Include="gl4\Tr2DepthStencilALGL4.h" />
+    <ClInclude Include="gl4\Tr2FenceALGL4.h" />
+    <ClInclude Include="gl4\Tr2GpuTimerALGL4.h" />
+    <ClInclude Include="gl4\Tr2OcclusionQueryALGL4.h" />
+    <ClInclude Include="gl4\Tr2PrimaryRenderContextGL4.h" />
+    <ClInclude Include="gl4\Tr2RenderContextGL4.h" />
+    <ClInclude Include="gl4\Tr2RenderTargetALGL4.h" />
+    <ClInclude Include="gl4\Tr2ResourceSetALGL4.h" />
+    <ClInclude Include="gl4\Tr2SamplerStateALGL4.h" />
+    <ClInclude Include="gl4\Tr2ShaderALGL4.h" />
+    <ClInclude Include="gl4\Tr2ShaderProgramALGL4.h" />
+    <ClInclude Include="gl4\Tr2SwapChainALGL4.h" />
+    <ClInclude Include="gl4\Tr2TextureALGL4.h" />
+    <ClInclude Include="gl4\Tr2VertexLayoutALGL4.h" />
+    <ClInclude Include="gl4\Tr2VideoAdapterInfoALGL4.h" />
+    <ClInclude Include="gles2\Tr2BufferALGLES2.h" />
+    <ClInclude Include="gles2\Tr2CapsALGLES2.h" />
+    <ClInclude Include="gles2\Tr2ConstantBufferALGLES2.h" />
+    <ClInclude Include="gles2\Tr2DepthStencilALGLES2.h" />
+    <ClInclude Include="gles2\Tr2FenceALGLES2.h" />
+    <ClInclude Include="gles2\Tr2GpuTimerALGLES2.h" />
+    <ClInclude Include="gles2\Tr2OcclusionQueryALGLES2.h" />
+    <ClInclude Include="gles2\Tr2PrimaryRenderContextGLES2.h" />
+    <ClInclude Include="gles2\Tr2RenderContextGLES2.h" />
+    <ClInclude Include="gles2\Tr2RenderTargetALGLES2.h" />
+    <ClInclude Include="gles2\Tr2ResourceSetALGLES2.h" />
+    <ClInclude Include="gles2\Tr2SamplerStateALGLES2.h" />
+    <ClInclude Include="gles2\Tr2ShaderALGLES2.h" />
+    <ClInclude Include="gles2\Tr2ShaderProgramALGLES2.h" />
+    <ClInclude Include="gles2\Tr2SwapChainALGLES2.h" />
+    <ClInclude Include="gles2\Tr2TextureALGLES2.h" />
+    <ClInclude Include="gles2\Tr2VertexLayoutALGLES2.h" />
+    <ClInclude Include="gles2\Tr2VideoAdapterInfoALGLES2.h" />
+    <ClInclude Include="include\Tr2BitmapDimensions.h" />
+    <ClInclude Include="include\Tr2BufferAL.h" />
+    <ClInclude Include="include\Tr2CapsAL.h" />
+    <ClInclude Include="include\Tr2ConstantBufferAL.h" />
+    <ClInclude Include="include\Tr2CubemapFace.h" />
+    <ClInclude Include="include\Tr2DepthStencilAL.h" />
+    <ClInclude Include="include\Tr2FenceAL.h" />
+    <ClInclude Include="include\Tr2GpuBufferAL.h" />
+    <ClInclude Include="include\Tr2GpuTimerAL.h" />
+    <ClInclude Include="include\Tr2OcclusionQueryAL.h" />
+    <ClInclude Include="include\Tr2PixelFormat.h" />
+    <ClInclude Include="include\Tr2PrimaryRenderContextAL.h" />
+    <ClInclude Include="include\Tr2RenderContextAL.h" />
+    <ClInclude Include="include\Tr2RenderTargetAL.h" />
+    <ClInclude Include="include\Tr2ResourceSetAL.h" />
+    <ClInclude Include="include\Tr2SamplerStateAL.h" />
+    <ClInclude Include="include\Tr2ShaderAL.h" />
+    <ClInclude Include="include\Tr2ShaderProgramAL.h" />
+    <ClInclude Include="include\Tr2SwapChainAL.h" />
+    <ClInclude Include="include\Tr2TextureAL.h" />
+    <ClInclude Include="include\Tr2TextureType.h" />
+    <ClInclude Include="include\Tr2VertexLayoutAL.h" />
+    <ClInclude Include="include\Tr2VideoAdapterInfoAL.h" />
+    <ClInclude Include="include\TrinityAL.h" />
+    <ClInclude Include="include\TrinityALForward.h" />
+    <ClInclude Include="stub\Tr2BufferALStub.h" />
+    <ClInclude Include="stub\Tr2CapsALStub.h" />
+    <ClInclude Include="stub\Tr2ConstantBufferALStub.h" />
+    <ClInclude Include="stub\Tr2DepthStencilALStub.h" />
+    <ClInclude Include="stub\Tr2FenceALStub.h" />
+    <ClInclude Include="stub\Tr2GpuTimerALStub.h" />
+    <ClInclude Include="stub\Tr2OcclusionQueryALStub.h" />
+    <ClInclude Include="stub\Tr2PrimaryRenderContextStub.h" />
+    <ClInclude Include="stub\Tr2RenderContextStub.h" />
+    <ClInclude Include="stub\Tr2RenderTargetALStub.h" />
+    <ClInclude Include="stub\Tr2ResourceSetALStub.h" />
+    <ClInclude Include="stub\Tr2SamplerStateALStub.h" />
+    <ClInclude Include="stub\Tr2ShaderALStub.h" />
+    <ClInclude Include="stub\Tr2ShaderProgramALStub.h" />
+    <ClInclude Include="stub\Tr2SwapChainALStub.h" />
+    <ClInclude Include="stub\Tr2TextureALStub.h" />
+    <ClInclude Include="stub\Tr2VertexLayoutALStub.h" />
+    <ClInclude Include="stub\Tr2VideoAdapterInfoALStub.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ALResult.cpp"/>
-    <ClCompile Include="BcDecompress.cpp"/>
+    <ClCompile Include="ALResult.cpp" />
+    <ClCompile Include="BcDecompress.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Tr2DrawUPHelper.cpp"/>
-    <ClCompile Include="Tr2DriverUtilities.cpp"/>
-    <ClCompile Include="Tr2FragmentOpSettings.cpp"/>
-    <ClCompile Include="Tr2HalHelperStructures.cpp"/>
-    <ClCompile Include="Tr2LockGuard.cpp"/>
-    <ClCompile Include="Tr2MemoryCounterAL.cpp"/>
-    <ClCompile Include="Tr2RenderContextEnum.cpp"/>
-    <ClCompile Include="Tr2TrackedALObject.cpp"/>
-    <ClCompile Include="Tr2VertexDefinition.cpp"/>
-    <ClCompile Include="dx11\Tr2BufferALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2CapsALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2ConstantBufferALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2DepthStencilALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2FenceALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2GpuTimerALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2OcclusionQueryALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2PrimaryRenderContextDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2RenderContextDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2RenderStateEmulationDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2RenderTargetALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2ResourceSetALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2SamplerStateALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2ShaderALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2ShaderProgramALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2SwapChainALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2TextureALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2VertexLayoutALDx11.cpp"/>
-    <ClCompile Include="dx11\Tr2VideoAdapterInfoALDx11.cpp"/>
-    <ClCompile Include="dx9\Tr2BufferALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2CapsALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2ConstantBufferALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2DepthStencilALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2FenceALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2GpuTimerALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2OcclusionQueryALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2RenderContextDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2RenderTargetALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2ResourceSetALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2SamplerStateALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2ShaderALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2ShaderProgramALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2SwapChainALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2TextureALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2VertexLayoutALDx9.cpp"/>
-    <ClCompile Include="dx9\Tr2VideoAdapterInfoALDx9.cpp"/>
-    <ClCompile Include="gl4\Tr2BufferALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2CapsALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2ConstantBufferALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2DepthStencilALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2FenceALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2GpuTimerALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2OcclusionQueryALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2RenderContextGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2RenderTargetALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2ResourceSetALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2SamplerStateALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2ShaderALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2ShaderProgramALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2SwapChainALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2TextureALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2VertexLayoutALGL4.cpp"/>
-    <ClCompile Include="gl4\Tr2VideoAdapterInfoALGL4.cpp"/>
-    <ClCompile Include="gles2\Tr2BufferALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2CapsALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2ConstantBufferALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2DepthStencilALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2FenceALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2GpuTimerALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2OcclusionQueryALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2RenderContextGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2RenderTargetALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2ResourceSetALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2SamplerStateALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2ShaderALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2ShaderProgramALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2SwapChainALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2TextureALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2VertexLayoutALGLES2.cpp"/>
-    <ClCompile Include="gles2\Tr2VideoAdapterInfoALGLES2.cpp"/>
-    <ClCompile Include="src\Tr2BufferAL.cpp"/>
-    <ClCompile Include="src\Tr2ResourceSetAL.cpp"/>
-    <ClCompile Include="src\Tr2SamplerStateAL.cpp"/>
-    <ClCompile Include="stub\Tr2BufferALStub.cpp"/>
-    <ClCompile Include="stub\Tr2CapsALStub.cpp"/>
-    <ClCompile Include="stub\Tr2ConstantBufferALStub.cpp"/>
-    <ClCompile Include="stub\Tr2DepthStencilALStub.cpp"/>
-    <ClCompile Include="stub\Tr2FenceALStub.cpp"/>
-    <ClCompile Include="stub\Tr2GpuTimerALStub.cpp"/>
-    <ClCompile Include="stub\Tr2OcclusionQueryALStub.cpp"/>
-    <ClCompile Include="stub\Tr2RenderContextStub.cpp"/>
-    <ClCompile Include="stub\Tr2RenderTargetALStub.cpp"/>
-    <ClCompile Include="stub\Tr2ResourceSetALStub.cpp"/>
-    <ClCompile Include="stub\Tr2SamplerStateALStub.cpp"/>
-    <ClCompile Include="stub\Tr2ShaderALStub.cpp"/>
-    <ClCompile Include="stub\Tr2ShaderProgramALStub.cpp"/>
-    <ClCompile Include="stub\Tr2SwapChainALStub.cpp"/>
-    <ClCompile Include="stub\Tr2TextureALStub.cpp"/>
-    <ClCompile Include="stub\Tr2VertexLayoutALStub.cpp"/>
-    <ClCompile Include="stub\Tr2VideoAdapterInfoALStub.cpp"/>
+    <ClCompile Include="Tr2DrawUPHelper.cpp" />
+    <ClCompile Include="Tr2DriverUtilities.cpp" />
+    <ClCompile Include="Tr2FragmentOpSettings.cpp" />
+    <ClCompile Include="Tr2HalHelperStructures.cpp" />
+    <ClCompile Include="Tr2LockGuard.cpp" />
+    <ClCompile Include="Tr2MemoryCounterAL.cpp" />
+    <ClCompile Include="Tr2RenderContextEnum.cpp" />
+    <ClCompile Include="Tr2TrackedALObject.cpp" />
+    <ClCompile Include="Tr2VertexDefinition.cpp" />
+    <ClCompile Include="dx11\Tr2BufferALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2CapsALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2ConstantBufferALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2DepthStencilALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2FenceALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2GpuTimerALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2OcclusionQueryALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2PrimaryRenderContextDx11.cpp" />
+    <ClCompile Include="dx11\Tr2RenderContextDx11.cpp" />
+    <ClCompile Include="dx11\Tr2RenderStateEmulationDx11.cpp" />
+    <ClCompile Include="dx11\Tr2RenderTargetALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2ResourceSetALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2SamplerStateALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2ShaderALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2ShaderProgramALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2SwapChainALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2TextureALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2VertexLayoutALDx11.cpp" />
+    <ClCompile Include="dx11\Tr2VideoAdapterInfoALDx11.cpp" />
+    <ClCompile Include="dx9\Tr2BufferALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2CapsALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2ConstantBufferALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2DepthStencilALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2FenceALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2GpuTimerALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2OcclusionQueryALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2RenderContextDx9.cpp" />
+    <ClCompile Include="dx9\Tr2RenderTargetALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2ResourceSetALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2SamplerStateALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2ShaderALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2ShaderProgramALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2SwapChainALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2TextureALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2VertexLayoutALDx9.cpp" />
+    <ClCompile Include="dx9\Tr2VideoAdapterInfoALDx9.cpp" />
+    <ClCompile Include="gl4\Tr2BufferALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2CapsALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2ConstantBufferALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2DepthStencilALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2FenceALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2GpuTimerALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2OcclusionQueryALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2RenderContextGL4.cpp" />
+    <ClCompile Include="gl4\Tr2RenderTargetALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2ResourceSetALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2SamplerStateALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2ShaderALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2ShaderProgramALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2SwapChainALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2TextureALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2VertexLayoutALGL4.cpp" />
+    <ClCompile Include="gl4\Tr2VideoAdapterInfoALGL4.cpp" />
+    <ClCompile Include="gles2\Tr2BufferALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2CapsALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2ConstantBufferALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2DepthStencilALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2FenceALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2GpuTimerALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2OcclusionQueryALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2RenderContextGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2RenderTargetALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2ResourceSetALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2SamplerStateALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2ShaderALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2ShaderProgramALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2SwapChainALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2TextureALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2VertexLayoutALGLES2.cpp" />
+    <ClCompile Include="gles2\Tr2VideoAdapterInfoALGLES2.cpp" />
+    <ClCompile Include="src\Tr2BufferAL.cpp" />
+    <ClCompile Include="src\Tr2ResourceSetAL.cpp" />
+    <ClCompile Include="src\Tr2SamplerStateAL.cpp" />
+    <ClCompile Include="stub\Tr2BufferALStub.cpp" />
+    <ClCompile Include="stub\Tr2CapsALStub.cpp" />
+    <ClCompile Include="stub\Tr2ConstantBufferALStub.cpp" />
+    <ClCompile Include="stub\Tr2DepthStencilALStub.cpp" />
+    <ClCompile Include="stub\Tr2FenceALStub.cpp" />
+    <ClCompile Include="stub\Tr2GpuTimerALStub.cpp" />
+    <ClCompile Include="stub\Tr2OcclusionQueryALStub.cpp" />
+    <ClCompile Include="stub\Tr2RenderContextStub.cpp" />
+    <ClCompile Include="stub\Tr2RenderTargetALStub.cpp" />
+    <ClCompile Include="stub\Tr2ResourceSetALStub.cpp" />
+    <ClCompile Include="stub\Tr2SamplerStateALStub.cpp" />
+    <ClCompile Include="stub\Tr2ShaderALStub.cpp" />
+    <ClCompile Include="stub\Tr2ShaderProgramALStub.cpp" />
+    <ClCompile Include="stub\Tr2SwapChainALStub.cpp" />
+    <ClCompile Include="stub\Tr2TextureALStub.cpp" />
+    <ClCompile Include="stub\Tr2VertexLayoutALStub.cpp" />
+    <ClCompile Include="stub\Tr2VideoAdapterInfoALStub.cpp" />
   </ItemGroup>
-  <ItemGroup/>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
-  <ImportGroup Label="ExtensionTargets"/>
+  <ItemGroup />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

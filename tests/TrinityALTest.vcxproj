@@ -145,7 +145,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props"/>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'">
     <TargetExt>.exe</TargetExt>
     <OutDir>../../autobuild/TrinityALTest/$(Platform)/$(PlatformToolset)/</OutDir>
@@ -286,7 +286,7 @@
     <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
-  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.props"/>
+  <Import Project="$(VCTargetsPath)/Microsoft.Cpp.props" />
   <PropertyGroup Label="UserMacros">
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
@@ -416,27 +416,27 @@
       <Value>$(CcpConfigType)</Value>
     </BuildMacro>
   </ItemGroup>
-  <ImportGroup Label="ExtensionSettings"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'" Label="PropertySheets"/>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'" Label="PropertySheets"/>
+  <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'" Label="PropertySheets" />
   <PropertyGroup>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'">TrinityALTestDX11_dev</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
@@ -513,11 +513,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;TrinityAL_dx11_dev.lib;atimgpud_s_x64.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxgi.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|x64'">
     <ClCompile>
@@ -543,11 +543,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;TrinityAL_dx11.lib;atimgpud_s_x64.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxgi.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'">
     <ClCompile>
@@ -573,11 +573,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;TrinityAL_dx11.lib;atimgpud_s_x86.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxgi.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">
     <ClCompile>
@@ -603,11 +603,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_dx9.lib;atimgpud_s_x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">
     <ClCompile>
@@ -633,11 +633,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;TrinityAL_dx11_dev.lib;atimgpud_s_x86.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxgi.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|x64'">
     <ClCompile>
@@ -663,11 +663,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_stub_dev.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">
     <ClCompile>
@@ -693,11 +693,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_gles2_dev.lib;atimgpud_s_x64.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'">
     <ClCompile>
@@ -723,11 +723,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_dx9.lib;atimgpud_s_x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'">
     <ClCompile>
@@ -753,11 +753,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4.lib;atimgpud_s_x64.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'">
     <ClCompile>
@@ -783,11 +783,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4_dev.lib;atimgpud_s_x64.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'">
     <ClCompile>
@@ -813,11 +813,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_stub_dev.lib;gtest.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'">
     <ClCompile>
@@ -843,11 +843,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4.lib;atimgpud_s_x86.lib;glew32.lib;gtest.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'">
     <ClCompile>
@@ -873,11 +873,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_stub.lib;gtest.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'">
     <ClCompile>
@@ -903,11 +903,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4_dev.lib;atimgpud_s_x86.lib;glew32.lib;gtest.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'">
     <ClCompile>
@@ -933,11 +933,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_dx9_dev.lib;atimgpud_s_x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">
     <ClCompile>
@@ -963,11 +963,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_gles2_dev.lib;atimgpud_s_x86.lib;glew32.lib;gtest.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|x64'">
     <ClCompile>
@@ -993,11 +993,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_stub.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'">
     <ClCompile>
@@ -1023,11 +1023,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_gles2.lib;atimgpud_s_x86.lib;glew32.lib;gtest.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'">
     <ClCompile>
@@ -1053,11 +1053,11 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_gles2.lib;atimgpud_s_x64.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'">
     <ClCompile>
@@ -1083,150 +1083,150 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_dx9_dev.lib;atimgpud_s_x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <ResourceCompile/>
-    <Manifest/>
-    <PreBuildEvent/>
-    <PreLinkEvent/>
-    <PostBuildEvent/>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Dxt1Image.h"/>
-    <ClInclude Include="Dxt3Image.h"/>
-    <ClInclude Include="Dxt5Image.h"/>
-    <ClInclude Include="Dxt5Volume.h"/>
-    <ClInclude Include="FakeGoogleTest.h"/>
-    <ClInclude Include="RenderWindow.h"/>
-    <ClInclude Include="StdAfx.h"/>
-    <ClInclude Include="WithRenderContextFixture.h"/>
-    <ClInclude Include="WithValidRenderContextFixture.h"/>
-    <ClInclude Include="WithWindowFixture.h"/>
-    <ClInclude Include="XrgbVolume.h"/>
-    <ClInclude Include="Shaders.DX11\AddConstantToBuffer.cs.h"/>
-    <ClInclude Include="Shaders.DX11\AddVectors.cs.h"/>
-    <ClInclude Include="Shaders.DX11\ConstantColor.ps.h"/>
-    <ClInclude Include="Shaders.DX11\ConstantColor.ps.patched.h"/>
-    <ClInclude Include="Shaders.DX11\GroupShared.cs.h"/>
-    <ClInclude Include="Shaders.DX11\InstancedRendering.vs.h"/>
-    <ClInclude Include="Shaders.DX11\InstancedRendering.vs.patched.h"/>
-    <ClInclude Include="Shaders.DX11\OutputTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.DX11\OutputTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.DX11\OutputVector.cs.h"/>
-    <ClInclude Include="Shaders.DX11\PositionOnly.vs.h"/>
-    <ClInclude Include="Shaders.DX11\PositionOnly.vs.patched.h"/>
-    <ClInclude Include="Shaders.DX11\PositionOnlyWithPerObjectData.vs.h"/>
-    <ClInclude Include="Shaders.DX11\PositionOnlyWithPerObjectData.vs.patched.h"/>
-    <ClInclude Include="Shaders.DX11\SampleTexture.cs.h"/>
-    <ClInclude Include="Shaders.DX11\SampleTextureFromTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.DX11\SampleTextureFromTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.DX11\SampleTextureMipFromTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.DX11\SampleTextureMipFromTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.DX11\SampleVolumeTexture.ps.h"/>
-    <ClInclude Include="Shaders.DX11\SampleVolumeTexture.ps.patched.h"/>
-    <ClInclude Include="Shaders.DX11\TexCoordAndPosition.vs.h"/>
-    <ClInclude Include="Shaders.DX11\TexCoordAndPosition.vs.patched.h"/>
-    <ClInclude Include="Shaders.DX9\ConstantColor.ps.h"/>
-    <ClInclude Include="Shaders.DX9\ConstantColor.ps.patched.h"/>
-    <ClInclude Include="Shaders.DX9\InstancedRendering.vs.h"/>
-    <ClInclude Include="Shaders.DX9\InstancedRendering.vs.patched.h"/>
-    <ClInclude Include="Shaders.DX9\OutputTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.DX9\OutputTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.DX9\PositionOnly.vs.h"/>
-    <ClInclude Include="Shaders.DX9\PositionOnly.vs.patched.h"/>
-    <ClInclude Include="Shaders.DX9\PositionOnlyWithPerObjectData.vs.h"/>
-    <ClInclude Include="Shaders.DX9\PositionOnlyWithPerObjectData.vs.patched.h"/>
-    <ClInclude Include="Shaders.DX9\SampleTextureFromTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.DX9\SampleTextureFromTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.DX9\SampleTextureMipFromTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.DX9\SampleTextureMipFromTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.DX9\SampleVolumeTexture.ps.h"/>
-    <ClInclude Include="Shaders.DX9\SampleVolumeTexture.ps.patched.h"/>
-    <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.h"/>
-    <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.patched.h"/>
-    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.h"/>
-    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.patched.h"/>
-    <ClInclude Include="Shaders.GL4\AddVectors.cs.h"/>
-    <ClInclude Include="Shaders.GL4\AddVectors.cs.patched.h"/>
-    <ClInclude Include="Shaders.GL4\ConstantColor.ps.h"/>
-    <ClInclude Include="Shaders.GL4\ConstantColor.ps.patched.h"/>
-    <ClInclude Include="Shaders.GL4\GroupShared.cs.h"/>
-    <ClInclude Include="Shaders.GL4\GroupShared.cs.patched.h"/>
-    <ClInclude Include="Shaders.GL4\InstancedRendering.vs.h"/>
-    <ClInclude Include="Shaders.GL4\InstancedRendering.vs.patched.h"/>
-    <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.GL4\OutputVector.cs.h"/>
-    <ClInclude Include="Shaders.GL4\OutputVector.cs.patched.h"/>
-    <ClInclude Include="Shaders.GL4\PositionOnly.vs.h"/>
-    <ClInclude Include="Shaders.GL4\PositionOnly.vs.patched.h"/>
-    <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.h"/>
-    <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.patched.h"/>
-    <ClInclude Include="Shaders.GL4\SampleTexture.cs.h"/>
-    <ClInclude Include="Shaders.GL4\SampleTexture.cs.patched.h"/>
-    <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.h"/>
-    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.patched.h"/>
-    <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.h"/>
-    <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.patched.h"/>
-    <ClInclude Include="Shaders.GLES2\ConstantColor.ps.h"/>
-    <ClInclude Include="Shaders.GLES2\ConstantColor.ps.patched.h"/>
-    <ClInclude Include="Shaders.GLES2\InstancedRendering.vs.h"/>
-    <ClInclude Include="Shaders.GLES2\InstancedRendering.vs.patched.h"/>
-    <ClInclude Include="Shaders.GLES2\OutputTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.GLES2\OutputTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.GLES2\PositionOnly.vs.h"/>
-    <ClInclude Include="Shaders.GLES2\PositionOnly.vs.patched.h"/>
-    <ClInclude Include="Shaders.GLES2\PositionOnlyWithPerObjectData.vs.h"/>
-    <ClInclude Include="Shaders.GLES2\PositionOnlyWithPerObjectData.vs.patched.h"/>
-    <ClInclude Include="Shaders.GLES2\SampleTextureFromTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.GLES2\SampleTextureFromTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.GLES2\SampleTextureMipFromTexCoord.ps.h"/>
-    <ClInclude Include="Shaders.GLES2\SampleTextureMipFromTexCoord.ps.patched.h"/>
-    <ClInclude Include="Shaders.GLES2\SampleVolumeTexture.ps.h"/>
-    <ClInclude Include="Shaders.GLES2\SampleVolumeTexture.ps.patched.h"/>
-    <ClInclude Include="Shaders.GLES2\TexCoordAndPosition.vs.h"/>
-    <ClInclude Include="Shaders.GLES2\TexCoordAndPosition.vs.patched.h"/>
+    <ClInclude Include="Dxt1Image.h" />
+    <ClInclude Include="Dxt3Image.h" />
+    <ClInclude Include="Dxt5Image.h" />
+    <ClInclude Include="Dxt5Volume.h" />
+    <ClInclude Include="FakeGoogleTest.h" />
+    <ClInclude Include="RenderWindow.h" />
+    <ClInclude Include="StdAfx.h" />
+    <ClInclude Include="WithRenderContextFixture.h" />
+    <ClInclude Include="WithValidRenderContextFixture.h" />
+    <ClInclude Include="WithWindowFixture.h" />
+    <ClInclude Include="XrgbVolume.h" />
+    <ClInclude Include="Shaders.DX11\AddConstantToBuffer.cs.h" />
+    <ClInclude Include="Shaders.DX11\AddVectors.cs.h" />
+    <ClInclude Include="Shaders.DX11\ConstantColor.ps.h" />
+    <ClInclude Include="Shaders.DX11\ConstantColor.ps.patched.h" />
+    <ClInclude Include="Shaders.DX11\GroupShared.cs.h" />
+    <ClInclude Include="Shaders.DX11\InstancedRendering.vs.h" />
+    <ClInclude Include="Shaders.DX11\InstancedRendering.vs.patched.h" />
+    <ClInclude Include="Shaders.DX11\OutputTexCoord.ps.h" />
+    <ClInclude Include="Shaders.DX11\OutputTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.DX11\OutputVector.cs.h" />
+    <ClInclude Include="Shaders.DX11\PositionOnly.vs.h" />
+    <ClInclude Include="Shaders.DX11\PositionOnly.vs.patched.h" />
+    <ClInclude Include="Shaders.DX11\PositionOnlyWithPerObjectData.vs.h" />
+    <ClInclude Include="Shaders.DX11\PositionOnlyWithPerObjectData.vs.patched.h" />
+    <ClInclude Include="Shaders.DX11\SampleTexture.cs.h" />
+    <ClInclude Include="Shaders.DX11\SampleTextureFromTexCoord.ps.h" />
+    <ClInclude Include="Shaders.DX11\SampleTextureFromTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.DX11\SampleTextureMipFromTexCoord.ps.h" />
+    <ClInclude Include="Shaders.DX11\SampleTextureMipFromTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.DX11\SampleVolumeTexture.ps.h" />
+    <ClInclude Include="Shaders.DX11\SampleVolumeTexture.ps.patched.h" />
+    <ClInclude Include="Shaders.DX11\TexCoordAndPosition.vs.h" />
+    <ClInclude Include="Shaders.DX11\TexCoordAndPosition.vs.patched.h" />
+    <ClInclude Include="Shaders.DX9\ConstantColor.ps.h" />
+    <ClInclude Include="Shaders.DX9\ConstantColor.ps.patched.h" />
+    <ClInclude Include="Shaders.DX9\InstancedRendering.vs.h" />
+    <ClInclude Include="Shaders.DX9\InstancedRendering.vs.patched.h" />
+    <ClInclude Include="Shaders.DX9\OutputTexCoord.ps.h" />
+    <ClInclude Include="Shaders.DX9\OutputTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.DX9\PositionOnly.vs.h" />
+    <ClInclude Include="Shaders.DX9\PositionOnly.vs.patched.h" />
+    <ClInclude Include="Shaders.DX9\PositionOnlyWithPerObjectData.vs.h" />
+    <ClInclude Include="Shaders.DX9\PositionOnlyWithPerObjectData.vs.patched.h" />
+    <ClInclude Include="Shaders.DX9\SampleTextureFromTexCoord.ps.h" />
+    <ClInclude Include="Shaders.DX9\SampleTextureFromTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.DX9\SampleTextureMipFromTexCoord.ps.h" />
+    <ClInclude Include="Shaders.DX9\SampleTextureMipFromTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.DX9\SampleVolumeTexture.ps.h" />
+    <ClInclude Include="Shaders.DX9\SampleVolumeTexture.ps.patched.h" />
+    <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.h" />
+    <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.patched.h" />
+    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.h" />
+    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.patched.h" />
+    <ClInclude Include="Shaders.GL4\AddVectors.cs.h" />
+    <ClInclude Include="Shaders.GL4\AddVectors.cs.patched.h" />
+    <ClInclude Include="Shaders.GL4\ConstantColor.ps.h" />
+    <ClInclude Include="Shaders.GL4\ConstantColor.ps.patched.h" />
+    <ClInclude Include="Shaders.GL4\GroupShared.cs.h" />
+    <ClInclude Include="Shaders.GL4\GroupShared.cs.patched.h" />
+    <ClInclude Include="Shaders.GL4\InstancedRendering.vs.h" />
+    <ClInclude Include="Shaders.GL4\InstancedRendering.vs.patched.h" />
+    <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.h" />
+    <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.GL4\OutputVector.cs.h" />
+    <ClInclude Include="Shaders.GL4\OutputVector.cs.patched.h" />
+    <ClInclude Include="Shaders.GL4\PositionOnly.vs.h" />
+    <ClInclude Include="Shaders.GL4\PositionOnly.vs.patched.h" />
+    <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.h" />
+    <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.patched.h" />
+    <ClInclude Include="Shaders.GL4\SampleTexture.cs.h" />
+    <ClInclude Include="Shaders.GL4\SampleTexture.cs.patched.h" />
+    <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.h" />
+    <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.h" />
+    <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.h" />
+    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.patched.h" />
+    <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.h" />
+    <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.patched.h" />
+    <ClInclude Include="Shaders.GLES2\ConstantColor.ps.h" />
+    <ClInclude Include="Shaders.GLES2\ConstantColor.ps.patched.h" />
+    <ClInclude Include="Shaders.GLES2\InstancedRendering.vs.h" />
+    <ClInclude Include="Shaders.GLES2\InstancedRendering.vs.patched.h" />
+    <ClInclude Include="Shaders.GLES2\OutputTexCoord.ps.h" />
+    <ClInclude Include="Shaders.GLES2\OutputTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.GLES2\PositionOnly.vs.h" />
+    <ClInclude Include="Shaders.GLES2\PositionOnly.vs.patched.h" />
+    <ClInclude Include="Shaders.GLES2\PositionOnlyWithPerObjectData.vs.h" />
+    <ClInclude Include="Shaders.GLES2\PositionOnlyWithPerObjectData.vs.patched.h" />
+    <ClInclude Include="Shaders.GLES2\SampleTextureFromTexCoord.ps.h" />
+    <ClInclude Include="Shaders.GLES2\SampleTextureFromTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.GLES2\SampleTextureMipFromTexCoord.ps.h" />
+    <ClInclude Include="Shaders.GLES2\SampleTextureMipFromTexCoord.ps.patched.h" />
+    <ClInclude Include="Shaders.GLES2\SampleVolumeTexture.ps.h" />
+    <ClInclude Include="Shaders.GLES2\SampleVolumeTexture.ps.patched.h" />
+    <ClInclude Include="Shaders.GLES2\TexCoordAndPosition.vs.h" />
+    <ClInclude Include="Shaders.GLES2\TexCoordAndPosition.vs.patched.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="ALResultTest.cpp"/>
-    <ClCompile Include="BitmapDimensions.cpp"/>
-    <ClCompile Include="Buffer.cpp"/>
-    <ClCompile Include="Compute.cpp"/>
-    <ClCompile Include="ConstantBuffer.cpp"/>
-    <ClCompile Include="DepthStencil.cpp"/>
-    <ClCompile Include="Fence.cpp"/>
-    <ClCompile Include="OcclusionQuery.cpp"/>
-    <ClCompile Include="RenderContext.cpp"/>
-    <ClCompile Include="RenderContextCreation.cpp"/>
-    <ClCompile Include="Rendering.cpp"/>
-    <ClCompile Include="RenderTarget.cpp"/>
-    <ClCompile Include="RenderWindow_Egl.cpp"/>
-    <ClCompile Include="RenderWindow_Glfw.cpp"/>
-    <ClCompile Include="RenderWindow_Stub.cpp"/>
-    <ClCompile Include="RenderWindow_Win32.cpp"/>
-    <ClCompile Include="SamplerState.cpp"/>
-    <ClCompile Include="Shader.cpp"/>
+    <ClCompile Include="ALResultTest.cpp" />
+    <ClCompile Include="BitmapDimensions.cpp" />
+    <ClCompile Include="Buffer.cpp" />
+    <ClCompile Include="Compute.cpp" />
+    <ClCompile Include="ConstantBuffer.cpp" />
+    <ClCompile Include="DepthStencil.cpp" />
+    <ClCompile Include="Fence.cpp" />
+    <ClCompile Include="OcclusionQuery.cpp" />
+    <ClCompile Include="RenderContext.cpp" />
+    <ClCompile Include="RenderContextCreation.cpp" />
+    <ClCompile Include="Rendering.cpp" />
+    <ClCompile Include="RenderTarget.cpp" />
+    <ClCompile Include="RenderWindow_Egl.cpp" />
+    <ClCompile Include="RenderWindow_Glfw.cpp" />
+    <ClCompile Include="RenderWindow_Stub.cpp" />
+    <ClCompile Include="RenderWindow_Win32.cpp" />
+    <ClCompile Include="SamplerState.cpp" />
+    <ClCompile Include="Shader.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="SwapChain.cpp"/>
-    <ClCompile Include="Texture.cpp"/>
-    <ClCompile Include="TextureSubresource.cpp"/>
-    <ClCompile Include="TrackedObjects.cpp"/>
-    <ClCompile Include="TrinityALTest.cpp"/>
-    <ClCompile Include="VertexDefinition.cpp"/>
-    <ClCompile Include="VertexLayout.cpp"/>
-    <ClCompile Include="VideoAdapterInfo.cpp"/>
-    <ClCompile Include="WithRenderContextFixture.cpp"/>
-    <ClCompile Include="WithValidRenderContextFixture.cpp"/>
-    <ClCompile Include="WithWindowFixture_Egl.cpp"/>
-    <ClCompile Include="WithWindowFixture_Glfw.cpp"/>
-    <ClCompile Include="WithWindowFixture_Stub.cpp"/>
-    <ClCompile Include="WithWindowFixture_Win32.cpp"/>
+    <ClCompile Include="SwapChain.cpp" />
+    <ClCompile Include="Texture.cpp" />
+    <ClCompile Include="TextureSubresource.cpp" />
+    <ClCompile Include="TrackedObjects.cpp" />
+    <ClCompile Include="TrinityALTest.cpp" />
+    <ClCompile Include="VertexDefinition.cpp" />
+    <ClCompile Include="VertexLayout.cpp" />
+    <ClCompile Include="VideoAdapterInfo.cpp" />
+    <ClCompile Include="WithRenderContextFixture.cpp" />
+    <ClCompile Include="WithValidRenderContextFixture.cpp" />
+    <ClCompile Include="WithWindowFixture_Egl.cpp" />
+    <ClCompile Include="WithWindowFixture_Glfw.cpp" />
+    <ClCompile Include="WithWindowFixture_Stub.cpp" />
+    <ClCompile Include="WithWindowFixture_Win32.cpp" />
   </ItemGroup>
-  <ItemGroup/>
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets"/>
-  <ImportGroup Label="ExtensionTargets"/>
+  <ItemGroup />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets" />
 </Project>
