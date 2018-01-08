@@ -5,17 +5,6 @@
 BLUE_DEFINE( TriGrannyRes );
 
 #if BLUE_WITH_PYTHON
-static bool CheckGrannyFile( TriGrannyRes *grannyRes )
-{
-	if( grannyRes->GetGrannyFile() == NULL )
-	{
-		PyErr_SetString( PyExc_AssertionError, "Tried to get file info on invalid granny file" );
-		return false;
-	}
-
-	return true;
-}
-
 
 PyObject * TriGrannyRes:: GetMaterialDictionaryForArea( int mesh, int area )
 {
@@ -147,13 +136,6 @@ const Be::ClassInfo* TriGrannyRes::ExposeToBlue()
 			"Gets the duration of the animation with index 'ix'\n"
 			":param ix: index of the animation\n"
 		)
-		MAP_METHOD_AND_WRAP( 
-			"GetMeshSurfaceArea", 
-			GetMeshSurfaceArea,
-			"Gets the surface area for a particular meshID"
-			"\n"
-			"\n:param meshID: the mesh to calculate the surface area for"
-		)
 		MAP_METHOD_AND_WRAP
 		( 
 			"CollectGrannyMaterials", 
@@ -176,12 +158,6 @@ const Be::ClassInfo* TriGrannyRes::ExposeToBlue()
 			"returns all strings for the model"
 		)
 #endif
-		MAP_METHOD_AND_WRAP
-		(
-			"SaveToGr2", SaveToGr2, 
-			"Save the granny data to a file"
-			"\n:param filename: the output file to write to"
-		)
 		MAP_METHOD_AND_WRAP( "GetTrackGroupCount", GetTrackGroupCount, "Get the number of track groups" )
 		MAP_METHOD_AND_WRAP( 
 			"GetTrackGroupName", 

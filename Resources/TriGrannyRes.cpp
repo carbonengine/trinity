@@ -4,15 +4,6 @@
 
 #include "Utilities/GeometryUtils.h"
 
-extern float g_grannyWarnLoadTime;
-
-granny_data_type_definition TriPackedGeometryDataType[] = {
-	{ GrannyReferenceToArrayMember, "m_buffer", GrannyUInt8Type },
-	{ GrannyReal32Member, "m_pixelSize", GrannyReal32Type },
-	{ GrannyUInt32Member, "m_geometryHash1", GrannyUInt32Type },
-	{ GrannyUInt32Member, "m_geometryHash2", GrannyUInt32Type },
-	{ GrannyEndMember }
-};
 
 IBlueResource* CreateGrannyResource( const wchar_t* name )
 {
@@ -200,51 +191,6 @@ int TriGrannyRes::GetVertexComponentOffset( int meshIx, const char* componentNam
 	return -1;
 }
 
-granny_member_type TriGrannyRes::GetVertexComponentType( int meshIx, const char* componentName ) const
-{
-	const granny_mesh* mesh = GetGrannyMesh( meshIx );
-	if( !mesh )
-	{
-		CCP_LOGERR( "TriGrannyRes::GetVertexComponentType: Invalid mesh index" );
-		return GrannyEndMember;
-	}
-
-	// now scan granny's vertex-declaration for the bone index part and count the offsets
-	granny_data_type_definition* vertexFormat = mesh->PrimaryVertexData->VertexType;
-	int componentIx = 0;
-	while( vertexFormat[componentIx].Type != GrannyEndMember )
-	{
-		granny_data_type_definition& src = vertexFormat[componentIx];
-		if( strcmp( src.Name, componentName ) == 0 )
-		{
-			// found it!
-			return src.Type;
-		}
-		// next
-		++componentIx;
-	}
-	return GrannyEndMember;
-}
-
-const granny_morph_target* TriGrannyRes::GetBlendshape( int meshIx, const char* blendshapeName ) const
-{
-	const granny_mesh* mesh = GetGrannyMesh( meshIx );
-	if( !mesh )
-	{
-		CCP_LOGERR( "TriGrannyRes::GetBlendshape: Invalid mesh index" );
-		return NULL;
-	}
-
-	for( int i = 0; i < mesh->MorphTargetCount; ++i )
-	{
-		if( strcmp( blendshapeName, mesh->MorphTargets[i].ScalarName ) == 0 )
-		{
-			return &mesh->MorphTargets[i];
-		}
-	}
-	return NULL;
-}
-
 bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights  , void* pVertexData, unsigned int vertexDataSize )
 {
 	return BakeBlendshape( meshIx, weights, pVertexData, vertexDataSize, NULL, false );
@@ -254,26 +200,6 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const NameToWeightMap& n
 {
 	std::vector<float> dummyWeights;
 	return BakeBlendshape( meshIx, dummyWeights, pVertexData, vertexDataSize, &nameToWeight, false );
-}
-
-bool TriGrannyRes::GetBlendDeltas( unsigned meshIx, const std::vector<float>& weights, std::vector<float>& deltaXyz )
-{
-	const granny_mesh* mesh = GetGrannyMesh( meshIx );
-	if( !mesh )
-	{
-		CCP_LOGERR( "TriGrannyRes::GetBlendDeltas: Invalid mesh index" );
-		return false;
-	}
-
-	unsigned vertexCount = (unsigned)mesh->PrimaryVertexData->VertexCount;
-	if( !vertexCount )
-	{
-		return false;
-	}
-
-	deltaXyz.resize( vertexCount * 3 );
-
-	return BakeBlendshape( meshIx, weights, &deltaXyz[0], (unsigned int)deltaXyz.size() * sizeof( deltaXyz[0] ), NULL, true );
 }
 
 bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights, void* pVertexData, unsigned int vertexDataSize, const NameToWeightMap* const nameToWeight, bool deltaOnly )
@@ -660,96 +586,6 @@ bool TriGrannyRes::BakeBlendshape( unsigned int meshIx, const std::vector<float>
 	if( !localVertexData.empty() )
 	{
 		memcpy( pVertexData, &localVertexData[0], localVertexData.size() );
-	}
-
-	return true;
-}
-
-bool TriGrannyRes::GetVertexPositions( unsigned meshIx, std::vector<float>& xyz )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	const granny_mesh* mesh = GetGrannyMesh( meshIx );
-	if( !mesh )
-	{
-		CCP_LOGERR( "TriGrannyRes::GetVertexPositions: Invalid mesh index" );
-		return false;
-	}
-
-	unsigned vertexCount = (unsigned)mesh->PrimaryVertexData->VertexCount;
-	granny_data_type_definition* vertexFormat = mesh->PrimaryVertexData->VertexType;
-	const unsigned bytesPerVertex = GrannyGetTotalObjectSize( vertexFormat );
-	
-	void* pSrc = GrannyGetMeshVertices( mesh );
-
-	xyz.resize( vertexCount * 3 );
-
-	struct DatatypeInfo
-	{
-		DatatypeInfo() : offset( 0xffffffff ), isHalfPrecision( false ) {}
-
-		unsigned int offset;
-		bool isHalfPrecision;
-	};
-
-	enum DatatypesOfInterest
-	{
-		DOI_POS, DOI_COUNT
-	};
-
-	DatatypeInfo typeInfos[DOI_COUNT];
-	const char* typeInfoNames[DOI_COUNT] = { GrannyVertexPositionName };
-
-	// Find offsets for base vert
-	int componentIx = 0;
-	int offset = 0;
-	while( vertexFormat[componentIx].Type != GrannyEndMember )
-	{
-		granny_data_type_definition& src = vertexFormat[componentIx];
-		for( unsigned int ti = 0; ti < DOI_COUNT; ++ti )
-		{
-			if( strcmp( src.Name, typeInfoNames[ti] ) == 0 )
-			{
-				typeInfos[ti].offset = offset;
-				if( src.Type == GrannyReal16Member )
-				{
-					typeInfos[ti].isHalfPrecision = true;
-				}
-			}
-		}
-
-		offset += GrannyGetMemberTypeSize( &src );
-		++componentIx;
-	}
-
-	if( typeInfos[DOI_POS].offset == 0xffffffff )
-	{
-		return false;
-	}
-
-	const uint8_t* __restrict pComponentBase = (uint8_t*)pSrc + typeInfos[ DOI_POS ].offset;
-
-	if( typeInfos[ DOI_POS ].isHalfPrecision )
-	{
-		float* out = &xyz[0];
-		for( unsigned i = 0; i < vertexCount; ++i, pComponentBase += bytesPerVertex )
-		{
-			Vector3 base = *reinterpret_cast<const Vector3_16*>( pComponentBase );
-			*out++ = base.x;
-			*out++ = base.y;
-			*out++ = base.z;
-		}
-	}
-	else
-	{
-		float* out = &xyz[0];
-		for( unsigned i = 0; i < vertexCount; ++i, pComponentBase += bytesPerVertex )
-		{
-			float* in = (float*)pComponentBase;
-			*out++ = *in++;
-			*out++ = *in++;
-			*out++ = *in++;
-		}
 	}
 
 	return true;
@@ -1156,136 +992,6 @@ std::string TriGrannyRes::GetModelName( unsigned int ix )
 	return fi->Models[ix]->Name;
 }
 
-bool TriGrannyRes::SaveToGr2( const std::string& path )
-{
-	// Verify that we have a granny file
-	if( !m_grannyFile )
-	{
-		CCP_LOGERR( "TriGrannyRes::SaveToGr2: Object has no Granny file" );
-		return false;
-	}
-
-	// Verify that the file has file-info
-	granny_file_info* info = GrannyGetFileInfo( m_grannyFile );
-	if( info == NULL )
-	{
-		CCP_LOGERR( "TriGrannyRes::SaveToGr2: Granny file has no file info" );
-		return false;
-	}
-
-	// Write the info out to the file
-	granny_file_builder *builder = GrannyBeginFile( 1, GrannyCurrentGRNStandardTag,
-		GrannyGRNFileMV_32Bit_LittleEndian,
-		GrannyGetTemporaryDirectory(),
-		"GRNFileTemp" );
-	granny_file_data_tree_writer *writer =
-		GrannyBeginFileDataTreeWriting( GrannyFileInfoType, info, 0, 0 );
-	GrannyWriteDataTreeToFileBuilder( writer, builder );
-	GrannyEndFileDataTreeWriting( writer );
-
-	std::wstring pathW = (const wchar_t*)CA2W( path.c_str() );
-	std::wstring fullPath = BePaths->ResolvePathForWritingW( pathW );
-	bool result = GrannyEndFile( builder, CW2A( fullPath.c_str() ) );
-
-	return result;
-}
-
-void GetPosition( granny_uint8* pVerts, int vIx, bool isPositionHalfPrecision, int bytesPerVertex, Vector3& pos )
-{
-	if( isPositionHalfPrecision )
-	{
-		for( int i = 0; i < 3; ++i )
-		{
-			GrannyReal16ToReal32( ((granny_real16*)(pVerts + bytesPerVertex * vIx))[i], &pos[i] );
-		}
-	}
-	else
-	{
-		for( int i = 0; i < 3; ++i )
-		{
-			pos[i] = ((granny_real32*)(pVerts + bytesPerVertex * vIx))[i];
-		}
-	}
-}
-
-void GetTexCoord( granny_uint8* pVerts, int vIx, bool isPositionHalfPrecision, int bytesPerVertex, granny_real32* uv )
-{
-	if( isPositionHalfPrecision )
-	{
-		GrannyReal16ToReal32( ((granny_real16*)(pVerts + bytesPerVertex * vIx))[0], &uv[0] );
-		GrannyReal16ToReal32( ((granny_real16*)(pVerts + bytesPerVertex * vIx))[1], &uv[1] );
-	}
-	else
-	{
-		uv[0] = ((granny_real32*)(pVerts + bytesPerVertex * vIx))[0];
-		uv[1] = ((granny_real32*)(pVerts + bytesPerVertex * vIx))[1];
-	}
-}
-
-float TriGrannyRes::GetMeshSurfaceArea( int meshIx ) const
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	if( !m_grannyFile )
-	{
-		CCP_LOGERR( "TriGrannyRes::GetMeshSurfaceArea: Object has no Granny file" );
-		return 0.0f;
-	}
-
-	granny_file_info* fi = GrannyGetFileInfo( m_grannyFile );
-	if( fi == NULL )
-	{
-		CCP_LOGERR( "TriGrannyRes::GetMeshSurfaceArea: Granny file has no file info" );
-		return 0.0f;
-	}
-	granny_mesh* mesh = fi->Meshes[meshIx];
-	if( mesh == NULL )
-	{
-		CCP_LOGERR( "TriGrannyRes::GetMeshSurfaceArea: Failed to get mesh" );
-		return 0.0f;
-	}
-
-	granny_int32x const meshTriangleCount = GrannyGetMeshTriangleCount( mesh );
-	granny_uint8* vertices = mesh->PrimaryVertexData->Vertices;
-	granny_tri_topology* topology = mesh->PrimaryTopology;
-	int bytesPerVertex = GrannyGetTotalObjectSize( mesh->PrimaryVertexData->VertexType );
-	float result = 0.0f;
-
-	for( int i = 0; i < meshTriangleCount; ++i)
-	{	
-		Vector3 p1;
-		Vector3 p2;
-		Vector3 p3;
-		int idx1, idx2, idx3;
-		bool halfPrecision = false;
-		if ( topology->Indices )
-		{
-			idx1 = topology->Indices[3*i+0];
-			idx2 = topology->Indices[3*i+1];
-			idx3 = topology->Indices[3*i+2];
-		}
-		else
-		{
-			halfPrecision = true;
-			idx1 = topology->Indices16[3*i+0];
-			idx2 = topology->Indices16[3*i+1];
-			idx3 = topology->Indices16[3*i+2];
-		}
-		GetPosition( vertices, idx1, halfPrecision, bytesPerVertex, p1 );
-		GetPosition( vertices, idx2, halfPrecision, bytesPerVertex, p2 );
-		GetPosition( vertices, idx3, halfPrecision, bytesPerVertex, p3 );
-
-		Vector3 v1 = p2 - p1;
-		Vector3 v2 = p3 - p1;
-
-		Vector3 t = Cross( v1, v2 );
-
-		result += 0.5f * Length( t );
-	}
-	
-	return result;
-}
-
 bool TriGrannyRes::IsMemoryUsageKnown()
 {
 	return !IsLoading();
@@ -1452,48 +1158,6 @@ void TriGrannyRes::CollectGrannyMaterials()
 
 #endif
 }
-
-#if BLUE_WITH_PYTHON
-// Description:
-//	Helper function for Python thunkers that work on a mesh identified
-//	either by its name or index.
-// Arguments:
-//	meshId - Should be either a PyString or a PyInt
-// Return value:
-//	The granny mesh associated with meshId. If meshId was a string, this will
-//	the first mesh with a matching name, or NULL of no matching names was found.
-//	If meshId was an integer, this will be the mesh with that index, or NULL
-//	if the index is out of range.
-granny_mesh* TriGrannyRes::GetMeshFromNameOrIndex( PyObject* meshId )
-{
-	granny_file_info* fi = GrannyGetFileInfo( m_grannyFile );
-
-	int ix = int( PyInt_AsLong( meshId ) );
-	if( ix >= fi->MeshCount )
-	{
-		return NULL;
-	}
-	if( ix < 0 )
-	{
-		const char* name = PyString_AsString( meshId );
-		for( int meshIx = 0; meshIx < fi->MeshCount; ++meshIx )
-		{
-			if( strcmp( name, fi->Meshes[meshIx]->Name ) == 0 )
-			{
-				ix = meshIx;
-				break;
-			}
-		}
-	}
-
-	if( ix < 0 )
-	{
-		return NULL;
-	}
-
-	return fi->Meshes[ix];
-}
-#endif
 
 Be::Result<std::string> TriGrannyRes::CreateGeometryRes( TriGeometryRes** result )
 {

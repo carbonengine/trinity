@@ -50,27 +50,13 @@ public:
 	granny_data_type_definition* GetGrannyVertexType( int meshIx ) const;
 	int GetVertexSize( int meshIx ) const;
 	int GetVertexComponentOffset( int meshIx, const char* componentName ) const;
-	granny_member_type GetVertexComponentType( int meshIx, const char* componentName ) const;
 
-	// access the blendshape-data "delta"-vertices
-	const granny_morph_target* GetBlendshape( int meshIx, const char* blendshapeName ) const;
-	
 	// Bake by mapping every morphtarget name to a mesh
 	typedef std::map<std::string, float> NameToWeightMap;
 	bool BakeBlendshape( unsigned int meshIx, const NameToWeightMap& nameToWeight, void* pVertexData, unsigned int vertexDataSize );
 
 	// Bake by providing a vector of weights that exactly matches the layout of morph targets
 	bool BakeBlendshape( unsigned int meshIx, const std::vector<float>& weights  , void* pVertexData, unsigned int vertexDataSize );
-
-	// Return a copy of all granny vertices for the given mesh index.
-	bool GetVertexPositions( unsigned meshIx, std::vector<float>& xyz );
-	// Weigh and sum the blend shapes for the given mesh index and with the given weights, but instead of applying the delta
-	// to the stored granny vertices, return the deltas explicitly in deltaXyz.
-	bool GetBlendDeltas( unsigned meshIx, const std::vector<float>& weights, std::vector<float>& deltaXyz );
-	
-	bool SaveToGr2( const std::string& path );
-
-	float GetMeshSurfaceArea( int meshIx ) const;
 
 	int GetModelCount();
 	std::string GetModelName( unsigned int ix );
@@ -101,11 +87,6 @@ public:
 #if BLUE_WITH_PYTHON
 	PyObject * GetMaterialDictionaryForArea( int mesh, int area );
 	PyObject * GetMaterialDictionaryStringsForAllAreas();
-#endif
-
-	// Helper function for Python thunkers that accept a name or an index for a mesh
-#if BLUE_WITH_PYTHON
-	granny_mesh* GetMeshFromNameOrIndex( PyObject* meshId );
 #endif
 
 	Be::Result<std::string> CreateGeometryRes( TriGeometryRes** result );
