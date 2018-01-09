@@ -119,7 +119,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1c728c1d-a7d7-57a5-96cf-15e85fb8eadb}</ProjectGuid>
+    <ProjectGuid>{0556322D-6639-4545-5650-F93498443165}</ProjectGuid>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
