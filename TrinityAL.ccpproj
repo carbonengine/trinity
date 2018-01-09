@@ -1,3 +1,4 @@
+ProjectGuid: 0556322D-6639-4545-5650-F93498443165
 # These are the SDKs that are used by all configurations
 Imports:
 - ../core_project/core_project.yaml
