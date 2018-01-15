@@ -186,6 +186,7 @@ ALResult Tr2RenderTargetAL::Create(
 		m_backingStore.m_view[0].Attach( view[0].Detach() );
 		m_backingStore.m_view[1].Attach( view[1].Detach() );
 		m_backingStore.m_uav = uav;
+		m_backingStore.ChangeObjectId();
 	}
 
 	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this, m_msaa );
@@ -244,6 +245,7 @@ ALResult Tr2RenderTargetAL::Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderCo
 	bb.m_volumeDepth= 1;
 	bb.m_mipCount	= m_mipCount;
 	bb.m_isAlias	= true;
+	bb.ChangeObjectId();
 
 	bb.m_texture = texture;
 

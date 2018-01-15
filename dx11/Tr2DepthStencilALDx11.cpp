@@ -182,6 +182,7 @@ ALResult Tr2DepthStencilAL::Create(
 			m_backingStore.m_isAlias = true;
 
 			m_backingStore.m_view[1] = m_backingStore.m_view[0];
+			m_backingStore.ChangeObjectId();
 		}
 	}
 

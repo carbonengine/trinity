@@ -213,6 +213,7 @@ ALResult Tr2RenderTargetAL::Create(
 		m_backingStore.m_mipCount	= m_mipCount;
 		m_backingStore.m_texture	= m_mainRT;
 		m_backingStore.m_isAlias	= true;
+		m_backingStore.ChangeObjectId();
 	}
 
 	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this, m_msaa );
