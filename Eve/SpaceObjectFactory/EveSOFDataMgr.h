@@ -171,6 +171,7 @@ public:
 		Quaternion rotation;
 		EveSOFDataFactionColorSet::ColorType colorType;
 		float hazeBrightness, hazeFalloff, sourceSize, sourceBrightness;
+		bool boosterGainInfluence;
 	};
 
 	struct HullHazeSetData

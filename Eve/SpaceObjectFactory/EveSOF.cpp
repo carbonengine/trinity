@@ -955,7 +955,7 @@ void EveSOF::SetupHazeSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) con
 					hazeSetItem->m_rotation = itemData->rotation;
 					hazeSetItem->m_scaling = itemData->scaling;
 					hazeSetItem->m_boneIndex = -1;
-					hazeSetItem->m_hazeData = Vector4( itemData->hazeFalloff, itemData->sourceSize, itemData->sourceBrightness, 0.f );
+					hazeSetItem->m_hazeData = Vector4( itemData->hazeFalloff, itemData->sourceSize, itemData->sourceBrightness, itemData->boosterGainInfluence ? 1.f : 0.f );
 
 					// put it into hazeset
 					hazeSet->AddHazeItem( hazeSetItem );

@@ -490,6 +490,7 @@ public:
 	Quaternion m_rotation;
 	EveSOFDataFactionColorSet::ColorType m_colorType;
 	float m_hazeBrightness, m_hazeFalloff, m_sourceSize, m_sourceBrightness;
+	bool m_boosterGainInfluence;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullHazeSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullHazeSetItem );

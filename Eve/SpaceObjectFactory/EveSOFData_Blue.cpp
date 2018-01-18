@@ -411,6 +411,7 @@ const Be::ClassInfo* EveSOFDataHullHazeSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "hazeFalloff", m_hazeFalloff, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sourceBrightness", m_sourceBrightness, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sourceSize", m_sourceSize, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "boosterGainInfluence", m_boosterGainInfluence, "", Be::READWRITE | Be::PERSIST )
 		EXPOSURE_END()
 }
 

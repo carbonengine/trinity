@@ -639,6 +639,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hhsid.hazeFalloff = hazeSetItemData->m_hazeFalloff;
 			hhsid.sourceBrightness = hazeSetItemData->m_sourceBrightness;
 			hhsid.sourceSize = hazeSetItemData->m_sourceSize;
+			hhsid.boosterGainInfluence = hazeSetItemData->m_boosterGainInfluence;
 			hhsd.items.push_back( hhsid );
 		}
 		hd.hazeSets.push_back( hhsd );
