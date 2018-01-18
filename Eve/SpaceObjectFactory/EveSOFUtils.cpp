@@ -187,14 +187,6 @@ const Vector4* EveSOFUtils::SearchForParameterData( const EveSOFDataMgr* dataMgr
 			EveSOFDataFactionColorSet::ColorType glowColorType = finder->second;
 			return (const Vector4*)&colorSet[glowColorType];
 		}
-		else
-		{
-			auto finder = areaMaterialData->generalParameters.find( k );
-			if( finder != areaMaterialData->generalParameters.end() )
-			{
-				return &finder->second;
-			}
-		}
 	}
 
 	// if we can't find it, always try the PRIMARY

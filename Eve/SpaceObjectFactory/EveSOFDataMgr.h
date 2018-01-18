@@ -43,7 +43,6 @@ public:
 	struct AreaMaterialData
 	{
 		std::map<std::pair<uint32_t, uint32_t>, BlueSharedString> materialNames;
-		std::map<std::pair<uint32_t, std::string>, Vector4> generalParameters;
 		std::map<std::pair<uint32_t, std::string>, EveSOFDataFactionColorSet::ColorType> glowColor;
 	};
 

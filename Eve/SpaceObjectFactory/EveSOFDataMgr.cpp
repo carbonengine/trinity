@@ -961,7 +961,7 @@ void EveSOFDataMgr::GenerateFactionData( FactionData& fd, EveSOFDataFactionPtr s
 
 	// area parameters
 	fd.areaMaterials.materialNames.clear();
-	fd.areaMaterials.generalParameters.clear();
+	fd.areaMaterials.glowColor.clear();
 	if( srcData->m_areaTypes )
 	{
 		for( uint32_t i = 0; i < EveSOFDataArea::TYPE_MAX; ++i )
@@ -978,8 +978,7 @@ void EveSOFDataMgr::GenerateFactionData( FactionData& fd, EveSOFDataFactionPtr s
 					}
 				}
 
-				// general parameters
-//				fd.areaMaterials.generalParameters[std::make_pair( i, "GeneralGlowColor" )] = Vector4( areaMaterial->m_generalGlowColor );
+				// glow colortype
 				fd.areaMaterials.glowColor[std::make_pair( i, "GeneralGlowColor" )] = areaMaterial->m_glowColorType;
 			}
 		}
@@ -1071,11 +1070,9 @@ void EveSOFDataMgr::GenerateRaceData( RaceData& rd, EveSOFDataRacePtr srcData ) 
 	}
 
 	// shader data
-	rd.areaMaterials.generalParameters.clear();
+	rd.areaMaterials.glowColor.clear();
 	rd.areaMaterials.materialNames.clear();
-	rd.areaMaterials.generalParameters[std::make_pair( EveSOFDataArea::TYPE_PRIMARY, "GeneralHeatGlowColor" )] = Vector4( srcData->m_hullPrimaryHeatColor );
 	rd.areaMaterials.glowColor[std::make_pair( EveSOFDataArea::TYPE_PRIMARY, "GeneralHeatGlowColor" )] = srcData->m_hullPrimaryHeatColorType;
-	rd.areaMaterials.generalParameters[std::make_pair( EveSOFDataArea::TYPE_REACTOR, "GeneralHeatGlowColor" )] = Vector4( srcData->m_hullReactorHeatColor );
 	rd.areaMaterials.glowColor[std::make_pair( EveSOFDataArea::TYPE_REACTOR, "GeneralHeatGlowColor" )] = srcData->m_hullReactorHeatColorType;
 
 	// damage data
@@ -1410,8 +1407,8 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 			gd.genericWreckMaterialData.materialNames[std::make_pair( EveSOFDataArea::TYPE_WRECK, i )] = BlueSharedString( srcData->m_genericWreckMaterial->m_material[i] );
 		}
 
-		gd.genericWreckMaterialData.generalParameters.clear();
-		gd.genericWreckMaterialData.generalParameters[std::make_pair( EveSOFDataArea::TYPE_WRECK, "GeneralGlowColor" )] = Vector4( srcData->m_genericWreckMaterial->m_generalGlowColor );
+		gd.genericWreckMaterialData.glowColor.clear();
+		gd.genericWreckMaterialData.glowColor[std::make_pair( EveSOFDataArea::TYPE_WRECK, "GeneralGlowColor" )] = srcData->m_genericWreckMaterial->m_glowColorType;
 	}
 
 	// variants

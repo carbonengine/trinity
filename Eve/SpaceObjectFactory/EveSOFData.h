@@ -161,7 +161,6 @@ public:
 
 	// data
 	std::string m_material[MATERIAL_MAX];
-	Color m_generalGlowColor;
 	EveSOFDataFactionColorSet::ColorType m_glowColorType;
 };
 TYPEDEF_BLUECLASS( EveSOFDataAreaMaterial );

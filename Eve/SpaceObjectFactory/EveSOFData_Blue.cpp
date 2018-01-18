@@ -41,7 +41,6 @@ const Be::ClassInfo* EveSOFDataAreaMaterial::ExposeToBlue()
 		MAP_ATTRIBUTE( "material2", m_material[MATERIAL2], "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "material3", m_material[MATERIAL3], "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "material4", m_material[MATERIAL4], "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "generalGlowColor", m_generalGlowColor, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_glowColorType, "", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFDataFactionColorSetTypeChooser )
 		EXPOSURE_END()
 }
