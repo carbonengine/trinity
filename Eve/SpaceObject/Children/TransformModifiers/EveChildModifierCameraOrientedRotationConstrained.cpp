@@ -19,10 +19,11 @@ Matrix EveChildModifierCameraOrientedRotationConstrained::ApplyTransform( const 
 {
 	Vector3 forward = Vector3( 0, 0, 1 );
 	Vector4 forward4 = Vector4( forward, 0 );
+	Matrix forwardToUp = RotationMatrix( Vector3( 1, 0, 0 ), -XM_PIDIV2 );
 
 	Vector4 res = Tr2Renderer::GetViewTransform() * forward4;
 	float rot = atan2f( res.y, res.x );
-	Matrix mat = RotationMatrix( forward, rot );
+	Matrix mat = RotationMatrix( forward, rot - XM_PIDIV2 );
 
-	return transform * mat;
+	return transform * forwardToUp * mat;
 }
