@@ -97,6 +97,7 @@ typedef int32_t HRESULT;
 	#define CR_RETURN( x ) { if( FAILED( x ) ) return; }
 	#define CR_RETURN_HR( x ) { HRESULT _hr = x; if( FAILED( _hr ) ) return _hr; }
 	#define CR_RETURN_VAL( x, failValue ) { if( FAILED( x ) ) return failValue; }
+	#define FORWARD_HR( x ) { HRESULT _hr = x; if( FAILED( _hr ) ) return _hr; }
 #endif
 
 #if TRINITY_PLATFORM==TRINITY_OPENGLES2 || TRINITY_PLATFORM==TRINITY_OPENGL4
