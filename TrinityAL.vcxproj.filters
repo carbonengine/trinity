@@ -74,9 +74,6 @@
     <ClInclude Include="dx11\Tr2ConstantBufferALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
-    <ClInclude Include="dx11\Tr2DepthStencilALDx11.h">
-      <Filter>Source Files\dx11</Filter>
-    </ClInclude>
     <ClInclude Include="dx11\Tr2FenceALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
@@ -93,9 +90,6 @@
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
     <ClInclude Include="dx11\Tr2RenderStateEmulationDx11.h">
-      <Filter>Source Files\dx11</Filter>
-    </ClInclude>
-    <ClInclude Include="dx11\Tr2RenderTargetALDx11.h">
       <Filter>Source Files\dx11</Filter>
     </ClInclude>
     <ClInclude Include="dx11\Tr2ResourceSetALDx11.h">
@@ -131,9 +125,6 @@
     <ClInclude Include="dx9\Tr2ConstantBufferALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
-    <ClInclude Include="dx9\Tr2DepthStencilALDx9.h">
-      <Filter>Source Files\dx9</Filter>
-    </ClInclude>
     <ClInclude Include="dx9\Tr2FenceALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
@@ -147,9 +138,6 @@
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2RenderContextDx9.h">
-      <Filter>Source Files\dx9</Filter>
-    </ClInclude>
-    <ClInclude Include="dx9\Tr2RenderTargetALDx9.h">
       <Filter>Source Files\dx9</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2ResourceSetALDx9.h">
@@ -185,9 +173,6 @@
     <ClInclude Include="gl4\Tr2ConstantBufferALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
-    <ClInclude Include="gl4\Tr2DepthStencilALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
     <ClInclude Include="gl4\Tr2FenceALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
@@ -201,9 +186,6 @@
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
     <ClInclude Include="gl4\Tr2RenderContextGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2RenderTargetALGL4.h">
       <Filter>Source Files\gl4</Filter>
     </ClInclude>
     <ClInclude Include="gl4\Tr2ResourceSetALGL4.h">
@@ -239,9 +221,6 @@
     <ClInclude Include="gles2\Tr2ConstantBufferALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
-    <ClInclude Include="gles2\Tr2DepthStencilALGLES2.h">
-      <Filter>Source Files\gles2</Filter>
-    </ClInclude>
     <ClInclude Include="gles2\Tr2FenceALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
@@ -255,9 +234,6 @@
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2RenderContextGLES2.h">
-      <Filter>Source Files\gles2</Filter>
-    </ClInclude>
-    <ClInclude Include="gles2\Tr2RenderTargetALGLES2.h">
       <Filter>Source Files\gles2</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2ResourceSetALGLES2.h">
@@ -299,9 +275,6 @@
     <ClInclude Include="include\Tr2CubemapFace.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
-    <ClInclude Include="include\Tr2DepthStencilAL.h">
-      <Filter>Source Files\include</Filter>
-    </ClInclude>
     <ClInclude Include="include\Tr2FenceAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
@@ -321,9 +294,6 @@
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2RenderContextAL.h">
-      <Filter>Source Files\include</Filter>
-    </ClInclude>
-    <ClInclude Include="include\Tr2RenderTargetAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2ResourceSetAL.h">
@@ -368,9 +338,6 @@
     <ClInclude Include="stub\Tr2ConstantBufferALStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
-    <ClInclude Include="stub\Tr2DepthStencilALStub.h">
-      <Filter>Source Files\stub</Filter>
-    </ClInclude>
     <ClInclude Include="stub\Tr2FenceALStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
@@ -384,9 +351,6 @@
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2RenderContextStub.h">
-      <Filter>Source Files\stub</Filter>
-    </ClInclude>
-    <ClInclude Include="stub\Tr2RenderTargetALStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
     <ClInclude Include="stub\Tr2ResourceSetALStub.h">
@@ -458,9 +422,6 @@
     <ClCompile Include="dx11\Tr2ConstantBufferALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
-    <ClCompile Include="dx11\Tr2DepthStencilALDx11.cpp">
-      <Filter>Source Files\dx11</Filter>
-    </ClCompile>
     <ClCompile Include="dx11\Tr2FenceALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
@@ -477,9 +438,6 @@
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
     <ClCompile Include="dx11\Tr2RenderStateEmulationDx11.cpp">
-      <Filter>Source Files\dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="dx11\Tr2RenderTargetALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
     </ClCompile>
     <ClCompile Include="dx11\Tr2ResourceSetALDx11.cpp">
@@ -515,9 +473,6 @@
     <ClCompile Include="dx9\Tr2ConstantBufferALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
-    <ClCompile Include="dx9\Tr2DepthStencilALDx9.cpp">
-      <Filter>Source Files\dx9</Filter>
-    </ClCompile>
     <ClCompile Include="dx9\Tr2FenceALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
@@ -528,9 +483,6 @@
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2RenderContextDx9.cpp">
-      <Filter>Source Files\dx9</Filter>
-    </ClCompile>
-    <ClCompile Include="dx9\Tr2RenderTargetALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2ResourceSetALDx9.cpp">
@@ -566,9 +518,6 @@
     <ClCompile Include="gl4\Tr2ConstantBufferALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
-    <ClCompile Include="gl4\Tr2DepthStencilALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
     <ClCompile Include="gl4\Tr2FenceALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
@@ -579,9 +528,6 @@
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
     <ClCompile Include="gl4\Tr2RenderContextGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2RenderTargetALGL4.cpp">
       <Filter>Source Files\gl4</Filter>
     </ClCompile>
     <ClCompile Include="gl4\Tr2ResourceSetALGL4.cpp">
@@ -617,9 +563,6 @@
     <ClCompile Include="gles2\Tr2ConstantBufferALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
-    <ClCompile Include="gles2\Tr2DepthStencilALGLES2.cpp">
-      <Filter>Source Files\gles2</Filter>
-    </ClCompile>
     <ClCompile Include="gles2\Tr2FenceALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
@@ -630,9 +573,6 @@
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
     <ClCompile Include="gles2\Tr2RenderContextGLES2.cpp">
-      <Filter>Source Files\gles2</Filter>
-    </ClCompile>
-    <ClCompile Include="gles2\Tr2RenderTargetALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
     </ClCompile>
     <ClCompile Include="gles2\Tr2ResourceSetALGLES2.cpp">
@@ -668,6 +608,9 @@
     <ClCompile Include="src\Tr2SamplerStateAL.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Tr2TextureAL.cpp">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
     <ClCompile Include="stub\Tr2BufferALStub.cpp">
       <Filter>Source Files\stub</Filter>
     </ClCompile>
@@ -675,9 +618,6 @@
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2ConstantBufferALStub.cpp">
-      <Filter>Source Files\stub</Filter>
-    </ClCompile>
-    <ClCompile Include="stub\Tr2DepthStencilALStub.cpp">
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2FenceALStub.cpp">
@@ -690,9 +630,6 @@
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2RenderContextStub.cpp">
-      <Filter>Source Files\stub</Filter>
-    </ClCompile>
-    <ClCompile Include="stub\Tr2RenderTargetALStub.cpp">
       <Filter>Source Files\stub</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2ResourceSetALStub.cpp">
