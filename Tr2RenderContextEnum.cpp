@@ -107,6 +107,10 @@ Tr2RenderContextEnum::PixelFormat Tr2RenderContextEnum::MakeTypeless( Tr2RenderC
 	case PIXEL_FORMAT_BC7_UNORM_SRGB:
 	case PIXEL_FORMAT_BC7_UNORM:
 		return PIXEL_FORMAT_BC7_TYPELESS;
+	case PIXEL_FORMAT_D24_UNORM_S8_UINT:
+		return PIXEL_FORMAT_R24G8_TYPELESS;
+	case PIXEL_FORMAT_D32_FLOAT:
+		return PIXEL_FORMAT_R32_TYPELESS;
 	default:
 		return format;
 	}
@@ -150,6 +154,28 @@ Tr2RenderContextEnum::PixelFormat Tr2RenderContextEnum::MakeSrgb( Tr2RenderConte
 
 }
 
+Tr2RenderContextEnum::PixelFormat Tr2RenderContextEnum::ConvertDepthStencilFormat( DepthStencilFormat format )
+{
+	switch( format )
+	{
+	case DSFMT_D24S8:
+	case DSFMT_D24X8:
+	case DSFMT_AUTO:
+	case DSFMT_READABLE:
+		return PIXEL_FORMAT_D24_UNORM_S8_UINT;
+	case DSFMT_D24FS8:
+		return PIXEL_FORMAT_D24_UNORM_S8_UINT;
+	case DSFMT_D16:
+	case DSFMT_D16_LOCKABLE:
+		return PIXEL_FORMAT_D16_UNORM;
+	case DSFMT_D32:
+	case DSFMT_D32F:
+	case DSFMT_D32F_LOCKABLE:
+		return PIXEL_FORMAT_D32_FLOAT;
+	default:
+		return PIXEL_FORMAT_UNKNOWN;
+	}
+}
 
 bool Tr2RenderContextEnum::ValidateUsage( BufferUsage usage )
 {

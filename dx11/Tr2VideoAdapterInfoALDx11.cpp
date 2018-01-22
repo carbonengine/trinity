@@ -4,7 +4,6 @@
 
 #include "Tr2VideoAdapterInfoALDx11.h"
 #include "Tr2AdapterStructures.h"
-#include "Tr2DepthStencilALDx11.h"
 
 extern bool g_usingEXDevice;
 extern std::vector<HANDLE> g_D3DCreatedHeaps;
@@ -433,7 +432,7 @@ bool Tr2VideoAdapterInfo::SupportsDepthStencilFormat( unsigned adapterIndex,
 	CHECK_INIT_BOOL;
 	CHECK_VALID_ADAPTER_BOOL;
 
-	DXGI_FORMAT format = Tr2DepthStencilAL::ConvertDepthStencilFormatToDxgi( formatDS );
+	DXGI_FORMAT format = DXGI_FORMAT( ConvertDepthStencilFormat( formatDS ) );
 
 	if ( format >= DeviceInfo::FORMAT_COUNT )
 	{
@@ -515,7 +514,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
 	CHECK_INIT;
 	CHECK_VALID_ADAPTER;
 
-	DXGI_FORMAT format = Tr2DepthStencilAL::ConvertDepthStencilFormatToDxgi( formatDS );
+	DXGI_FORMAT format = DXGI_FORMAT( ConvertDepthStencilFormat( formatDS ) );
 
 	uint32_t flags = s_deviceInfo[s_adapters[adapterIndex].m_deviceInfoIndex].m_formatSupport[format];
 

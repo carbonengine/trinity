@@ -19,7 +19,7 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextA
 		return E_INVALIDARG;
 	}
 	Destroy();
-	return m_backBuffer.Create( 
+	return m_backBuffer.CreateRenderTarget( 
 		4, 
 		4, 
 		1, 

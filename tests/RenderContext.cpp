@@ -41,8 +41,8 @@ TEST_F( WithValidRenderContext, CanGetRenderTargetSize )
 	uint32_t width = 0xDeadBeef;
 	uint32_t height = 0xDeadBeef;
 
-	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, EX_NONE, *renderContext ) );
+	Tr2TextureAL rt;
+	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, EX_NONE, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt ) );
@@ -59,8 +59,8 @@ TEST_F( WithValidRenderContext, CanGetRenderTargetSizeForNonZeroSlot )
 	uint32_t height = 0xDeadBeef;
 	const uint32_t slot = 2;
 
-	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, EX_NONE, *renderContext ) );
+	Tr2TextureAL rt;
+	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, EX_NONE, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget( slot ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt, slot ) );
@@ -153,12 +153,12 @@ TEST_F( WithValidRenderContext, CanConvertPixelFormatToTypeless )
 		PIXEL_FORMAT_R16G16_SNORM                , PIXEL_FORMAT_R16G16_TYPELESS                ,
 		PIXEL_FORMAT_R16G16_SINT                 , PIXEL_FORMAT_R16G16_TYPELESS                 ,
 		PIXEL_FORMAT_R32_TYPELESS                , PIXEL_FORMAT_R32_TYPELESS                ,
-		PIXEL_FORMAT_D32_FLOAT                   , PIXEL_FORMAT_D32_FLOAT                   ,
+		PIXEL_FORMAT_D32_FLOAT                   , PIXEL_FORMAT_R32_TYPELESS                   ,
 		PIXEL_FORMAT_R32_FLOAT                   , PIXEL_FORMAT_R32_TYPELESS                   ,
 		PIXEL_FORMAT_R32_UINT                    , PIXEL_FORMAT_R32_TYPELESS                    ,
 		PIXEL_FORMAT_R32_SINT                    , PIXEL_FORMAT_R32_TYPELESS                    ,
 		PIXEL_FORMAT_R24G8_TYPELESS              , PIXEL_FORMAT_R24G8_TYPELESS              ,
-		PIXEL_FORMAT_D24_UNORM_S8_UINT           , PIXEL_FORMAT_D24_UNORM_S8_UINT           ,
+		PIXEL_FORMAT_D24_UNORM_S8_UINT           , PIXEL_FORMAT_R24G8_TYPELESS           ,
 		PIXEL_FORMAT_R24_UNORM_X8_TYPELESS       , PIXEL_FORMAT_R24_UNORM_X8_TYPELESS       ,
 		PIXEL_FORMAT_X24_TYPELESS_G8_UINT        , PIXEL_FORMAT_X24_TYPELESS_G8_UINT        ,
 		PIXEL_FORMAT_R8G8_TYPELESS               , PIXEL_FORMAT_R8G8_TYPELESS               ,

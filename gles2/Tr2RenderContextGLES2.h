@@ -5,9 +5,8 @@
 
 #include "../Tr2VertexDefinition.h"
 #include "../Tr2FragmentOpSettings.h"
-#include "../include/Tr2RenderTargetAL.h"
-#include "../include/Tr2DepthStencilAL.h"
 #include "../include/Tr2CapsAL.h"
+#include "../include/Tr2TextureAL.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../include/Tr2SamplerStateAL.h"
 
@@ -90,12 +89,12 @@ public:
 		return E_FAIL; 
 	}
 
-	ALResult ClearUav( Tr2RenderTargetAL& rt, const float values[4] ) throw( )
+	ALResult ClearUav( Tr2TextureAL& rt, const float values[4] ) throw( )
 	{
 		return E_FAIL;
 	}
 
-	ALResult ClearUav( Tr2RenderTargetAL& rt, const uint32_t values[4] ) throw( )
+	ALResult ClearUav( Tr2TextureAL& rt, const uint32_t values[4] ) throw( )
 	{
 		return E_FAIL;
 	}
@@ -195,10 +194,10 @@ public:
 		uint32_t stencil = 0,
 		uint32_t slot = 0 );
 
-	ALResult SetDepthStencil( const Tr2DepthStencilAL& depthStencil );
+	ALResult SetDepthStencil( const Tr2TextureAL& depthStencil );
 	void SetReadOnlyDepth( bool enable );
 	bool GetReadOnlyDepth() const;
-	ALResult SetRenderTarget( const Tr2RenderTargetAL& renderTarget, uint32_t slot = 0 );
+	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 );
 
 	ALResult SetNumberOfLights(	uint32_t numLights );
 
@@ -242,17 +241,17 @@ public:
 	size_t GetStackSizeDS()						const { return m_stackDS    .size(); }
 
 	ALResult  CopySubresourceRegion(		
-		Tr2TextureAL& destination,
+		TrinityALImpl::Tr2TextureAL& destination,
 		const Tr2TextureSubresource& destSubresource,
-		Tr2TextureAL& source, 
+		TrinityALImpl::Tr2TextureAL& source,
 		const Tr2TextureSubresource& sourceSubresource );
 
-	Tr2RenderTargetAL& GetDefaultBackBuffer()	{ return m_defaultBackBuffer; }
+	Tr2TextureAL& GetDefaultBackBuffer()	{ return m_defaultBackBuffer; }
 
 	ITr2RenderContextEvents* m_events;
 
 	ALResult InternalBlitToBackBuffer( Tr2TextureAL& source );
-	ALResult InternalResolveRT( Tr2RenderTargetAL& destination, const Tr2RenderTargetAL& source );
+	ALResult InternalResolveRT( TrinityALImpl::Tr2TextureAL& destination, const TrinityALImpl::Tr2TextureAL& source );
 
 	void AddGpuMarker( const char* marker );
 	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
@@ -265,11 +264,11 @@ public:
 		uint32_t& mips ) const;
 private:
 	enum { MAX_RENDER_TARGET = 8 };
-	const Tr2RenderTargetAL*					m_boundRenderTarget[MAX_RENDER_TARGET];
-	uint32_t									m_renderTargetHighWaterMark;
-	const Tr2DepthStencilAL*					m_boundDepthStencil;
-	TrackableStdStack<const Tr2RenderTargetAL*>	m_stackRT[MAX_RENDER_TARGET];
-	TrackableStdStack<const Tr2DepthStencilAL*>	m_stackDS;
+	Tr2TextureAL m_boundRenderTarget[MAX_RENDER_TARGET];
+	uint32_t m_renderTargetHighWaterMark;
+	Tr2TextureAL m_boundDepthStencil;
+	TrackableStdStack<Tr2TextureAL>	m_stackRT[MAX_RENDER_TARGET];
+	TrackableStdStack<Tr2TextureAL>	m_stackDS;
 
 	ALResult SetRtDsToDevice( uint32_t changedSlot );
 	uint32_t	m_defaultFrameBufferObject;
@@ -282,8 +281,8 @@ private:
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 private:
-	Tr2RenderTargetAL m_defaultBackBuffer;
-	Tr2DepthStencilAL m_defaultDepthStencil;
+	Tr2TextureAL m_defaultBackBuffer;
+	Tr2TextureAL m_defaultDepthStencil;
 
 	struct Blitter;
 	Blitter* m_blitter;

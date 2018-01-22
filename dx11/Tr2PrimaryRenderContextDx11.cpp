@@ -4,7 +4,6 @@
 
 #include "Tr2PrimaryRenderContextDx11.h"
 #include "ITr2RenderContextEvents.h"
-#include "Tr2RenderTargetALDx11.h"
 #include "Tr2AdapterStructures.h"
 #include "Tr2VideoAdapterInfoALDx11.h"
 #include "Tr2BufferALDx11.h"
@@ -36,10 +35,10 @@ namespace Tr2RenderContextImpl {
 Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 	: m_usingEXDevice( false )
 	, m_vsyncInterval( 0 ),
-	m_adapterVendorId( 0 ),
-	m_defaultBackBuffer( new Tr2RenderTargetAL() )
+	m_adapterVendorId( 0 )
 {
 	m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
+	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 }
 
 Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
@@ -59,10 +58,8 @@ void Tr2PrimaryRenderContextAL::Destroy()
 
 	m_memory.Reset();
 
-	if( m_defaultBackBuffer )
-	{
-		m_defaultBackBuffer->Destroy();
-	}
+	m_defaultBackBuffer.m_texture->Destroy();
+	m_defaultDepthStencil.m_texture->Destroy();
 
 	m_usingEXDevice		= false;
 	m_deviceStatistics	= nullptr;
@@ -79,7 +76,6 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	}
 	m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
 	
-	m_defaultDepthStencil.Destroy();
 	m_zeroVertexBuffer = Tr2BufferAL();
 
 	m_adapterVendorId = 0;
@@ -395,7 +391,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	Tr2RenderContextAL::m_secondaryDevice11 = m_d3dDevice11;
 	Tr2RenderContextAL::m_context = m_context;
 	Tr2RenderContextAL::m_secondaryDefaultBackBuffer = m_defaultBackBuffer;
-	Tr2RenderContextAL::m_boundDepthStencil = &m_defaultDepthStencil;
+	Tr2RenderContextAL::m_boundDepthStencil = m_defaultDepthStencil;
 
 	if( m_events )
 	{
@@ -440,11 +436,8 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 
 	CR( m_swapChain->ResizeTarget( &modeDesc ) );
 
-	if( m_defaultBackBuffer )
-	{
-		m_defaultBackBuffer->Destroy();
-	}
-	m_defaultDepthStencil.Destroy();
+	m_defaultBackBuffer.m_texture->Destroy();
+	m_defaultDepthStencil.m_texture->Destroy();
 
 	CR( m_swapChain->ResizeBuffers(	presentationParameters.backBufferCount, 
 												presentationParameters.mode.width,
@@ -470,17 +463,13 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 
 PixelFormat Tr2PrimaryRenderContextAL::GetBackBufferFormat() const
 {
-	return m_defaultBackBuffer ? m_defaultBackBuffer->GetFormat() : PIXEL_FORMAT_UNKNOWN;
+	return m_defaultBackBuffer.GetDesc().GetFormat();
 }
 
 ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParametersAL& presentationParameters )
 {
-	if( m_defaultBackBuffer )
-	{
-		m_memory.Reset();
-		m_defaultBackBuffer->Destroy();
-	}
-	m_defaultDepthStencil.Destroy();
+	m_defaultBackBuffer.m_texture->Destroy();
+	m_defaultDepthStencil.m_texture->Destroy();
 
 	CComPtr<ID3D11Texture2D> pBackBuffer;
 	HRESULT HR = m_swapChain	? m_swapChain->GetBuffer( 0, __uuidof (ID3D11Texture2D), (LPVOID*)&pBackBuffer ) 
@@ -491,15 +480,15 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 		return HR;
 	}
 
-	HR = m_defaultBackBuffer ? m_defaultBackBuffer->Attach( pBackBuffer, *this ) : E_FAIL;
+	HR = m_defaultBackBuffer.m_texture->Attach( pBackBuffer, *this );
 	if( FAILED( HR ) )
 	{
 		CCP_AL_LOGERR( "Failed to attach to device back buffer, %d", HR );
 		return HR;
 	}
-	if( m_defaultBackBuffer )
+	if( m_defaultBackBuffer.IsValid() )
 	{
-		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *m_defaultBackBuffer, m_defaultBackBuffer->GetMsaaDesc() );
+		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_defaultBackBuffer.GetDesc(), m_defaultBackBuffer.GetMsaaDesc() );
 	}
 	
 	D3D11_VIEWPORT viewport;
@@ -514,13 +503,14 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 
 	m_context->RSSetViewports( 1, &viewport );
 
-	CR_RETURN_HR( m_defaultDepthStencil.Create(		presentationParameters.mode.width, 
-													presentationParameters.mode.height, 
-													DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, *this ) );
+	CR_RETURN_HR( m_defaultDepthStencil.Create(	
+		Tr2BitmapDimensions( presentationParameters.mode.width, presentationParameters.mode.height, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), 
+		Tr2GpuUsage::DEPTH_STENCIL, *this ) );
+	Tr2RenderContextAL::m_boundDepthStencil = m_defaultDepthStencil;
 
 	m_context->OMSetRenderTargets(	1, 
-									&m_defaultBackBuffer->m_RTV.p, 
-									m_defaultDepthStencil.m_depthStencilView );
+									&m_defaultBackBuffer.m_texture->m_renderTarget[COLOR_SPACE_LINEAR], 
+									m_defaultDepthStencil.m_texture->m_depthStencil[TrinityALImpl::Tr2TextureAL::DepthOption::READ_WRITE] );
 	m_renderStateEmulation.m_fragmentOpSettings.m_renderTargetSize[0] = viewport.Width ? 1.f / viewport.Width : 0.f;
 	m_renderStateEmulation.m_fragmentOpSettings.m_renderTargetSize[1] = viewport.Height ? -1.f / viewport.Height : 0.f;
 	m_dirtyFlag = 0xffffffff;

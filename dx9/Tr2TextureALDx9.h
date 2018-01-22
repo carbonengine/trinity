@@ -2,6 +2,9 @@
 #ifndef Tr2TextureALDx9_h_
 #define Tr2TextureALDx9_h_
 
+
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
+
 #include "../Tr2TrackedALObject.h"
 #include "../ALResult.h"
 #include "../Tr2MemoryCounterAL.h"
@@ -9,177 +12,71 @@
 
 
 struct Tr2SubresourceData;
-class Tr2RenderTargetAL;
 class Tr2RenderContextAL;
 struct Tr2TextureSubresource;
 
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
-// -------------------------------------------------------------
-// Description:
-//   A low level wrapper around the calls needed to set up a GPU
-// texture.
-// SeeAlso:
-//   Tr2SubresourceData
-// -------------------------------------------------------------
-class Tr2TextureAL :
-	public Tr2BitmapDimensions,
-	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
+namespace TrinityALImpl
 {
-public:
-	Tr2TextureAL();
-	~Tr2TextureAL();
-
-
-	ALResult Create2D( uint32_t width,
-					   uint32_t height,
-					   uint32_t mipLevelCount,
-					   Tr2RenderContextEnum::PixelFormat format,
-					   Tr2RenderContextEnum::BufferUsage usage,
-					   Tr2SubresourceData* initialData,
-					   Tr2RenderContextAL& renderContext );
-
-	ALResult Create2DArray(	
-		uint32_t width, 
-		uint32_t height, 
-		uint32_t mipLevelCount,
-		uint32_t arrayCount,
-		Tr2RenderContextEnum::PixelFormat format,
-		Tr2RenderContextEnum::BufferUsage usage,
-		Tr2SubresourceData* initialData,
-		Tr2PrimaryRenderContextAL &renderContext )
+	class Tr2TextureAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
 	{
-		return E_FAIL;
-	}
+	public:
+		Tr2TextureAL();
 
-	ALResult CreateCube( uint32_t width,
-						 uint32_t height,
-						 uint32_t mipLevelCount,
-						 Tr2RenderContextEnum::PixelFormat format,
-						 Tr2RenderContextEnum::BufferUsage usage,
-						 Tr2SubresourceData* initialData,
-						 Tr2RenderContextAL& renderContext );
+		ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext );
+		void Destroy();
 
-	ALResult CreateVolume( uint32_t width,
-						   uint32_t height,
-						   uint32_t depth,
-						   uint32_t mipLevelCount,
-						   Tr2RenderContextEnum::PixelFormat format,
-						   Tr2RenderContextEnum::BufferUsage usage,
-						   Tr2SubresourceData* initialData,
-						   Tr2RenderContextAL& renderContext );
+		bool IsValid() const;
+		Tr2ALMemoryType GetMemoryClass();
+		const Tr2BitmapDimensions& GetDesc() const;
+		const Tr2MsaaDesc& GetMsaaDesc() const;
+		Tr2GpuUsage::Type GetGpuUsage() const;
+		Tr2CpuUsage::Type GetCpuUsage() const;
 
-	bool IsValid() const;
-	bool IsAlias() const
-	{
-		return m_isAlias;
-	}
-	void Destroy();
 
-	Tr2RenderContextEnum::BufferUsage GetUsage() const
-	{
-		return m_usage;
-	}
+		ALResult MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
+		void UnmapForReading( Tr2RenderContextAL& renderContext );
+		ALResult MapForWriting( const Tr2TextureSubresource& region, void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
+		void UnmapForWriting( Tr2RenderContextAL& renderContext );
 
-	ALResult UpdateSubresource( uint32_t left,
-								uint32_t top,
-								uint32_t right,
-								uint32_t bottom,
-								const void* source,
-								uint32_t sourcePitch,
-								Tr2RenderContextAL& renderContext );
-	ALResult CopySubresourceRegion( const Tr2TextureSubresource& destSubresource,
-									Tr2TextureAL& source,
-									const Tr2TextureSubresource& sourceSubresource,
-									Tr2RenderContextAL& renderContext );
+		ALResult UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t slicePitch, Tr2RenderContextAL& renderContext );
+		ALResult CopySubresourceRegion( const Tr2TextureSubresource& destSubresource, Tr2TextureAL& source, const Tr2TextureSubresource& sourceSubresource, Tr2RenderContextAL& renderContext );
+		ALResult GenerateMipMaps( Tr2RenderContextAL& renderContext );
+		ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
+		uintptr_t GetSharedHandle() const;
 
-	ALResult CopySubresourceRegion( const Tr2TextureSubresource& destSubresource,
-									Tr2RenderTargetAL& source,
-									const Tr2TextureSubresource& sourceSubresource,
-									Tr2RenderContextAL& renderContext );
+		ALResult Attach( IDirect3DSurface9* surface, Tr2PrimaryRenderContextAL& renderContext );
+	private:
+		ALResult GetSurfaceLevel( CComPtr<IDirect3DSurface9>& surface, uint32_t face, uint32_t mip, Tr2RenderContextAL& renderContext );
+		ALResult Lock( const Tr2TextureSubresource& region, uint32_t lockType, void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
+		void Unlock();
 
-	ALResult Lock( uint32_t mipLevel,
-				   void*& data,
-				   uint32_t& pitch,
-				   Tr2RenderContextEnum::LockType,
-				   Tr2RenderContextAL& renderContext );
-	ALResult Lock( uint32_t mipLevel,
-				   uint32_t* ltrb,
-				   void*& data,
-				   uint32_t& pitch,
-				   Tr2RenderContextEnum::LockType,
-				   Tr2RenderContextAL& renderContext );
-	ALResult Lock( uint32_t face,
-				   uint32_t mipLevel,
-				   uint32_t* ltrb,
-				   void*& data,
-				   uint32_t& pitch,
-				   Tr2RenderContextEnum::LockType,
-				   Tr2RenderContextAL& renderContext );
-	ALResult Unlock( Tr2RenderContextAL& renderContext );
 
-	bool operator==( const Tr2TextureAL& other ) const
-	{
-		return m_texture == other.m_texture;
-	}
+		CComPtr<IDirect3DBaseTexture9> m_texture;
+		CComPtr<IDirect3DTexture9> m_mipGeneratedRT;
+		CComPtr<IDirect3DSurface9> m_surface;
+		HANDLE m_sharedHandle;
+		D3DPOOL m_pool;
+		D3DFORMAT m_format;
+		CComPtr<IDirect3DSurface9> m_lockedSurface;
 
-	Tr2ALMemoryType GetMemoryClass() const
-	{
-		return m_pool9 == D3DPOOL_DEFAULT ? AL_MEMORY_VIDEO : AL_MEMORY_MANAGED;
-	}
+		Tr2BitmapDimensions m_desc;
+		Tr2MsaaDesc m_msaa;
+		Tr2GpuUsage::Type m_gpuUsage;
+		Tr2CpuUsage::Type m_cpuUsage;
+		Tr2MemoryCounterAL m_memory;
+#if TRINITY_AL_GUARD_LOCKS
+		Tr2LockGuard m_lockGuard;
+#endif
+		uint32_t m_lockedSubresource;
 
-private:
-	Tr2RenderContextEnum::BufferUsage m_usage;
-	// Texture is owned by other AL object (render target, depth stencil)
-	bool m_isAlias;
+		friend class Tr2PrimaryRenderContextAL;
+		friend class Tr2RenderContextAL;
+		friend class Tr2ResourceSetAL;
+	};
+}
 
-public:	//DEBUG
-	D3DFORMAT m_format9;
-	D3DPOOL m_pool9;
+#endif
 
-private:
-	Tr2TextureAL( const Tr2TextureAL& ) /* = delete */;
-	Tr2TextureAL& operator=( const Tr2TextureAL& ) /* = delete */;
-
-	ALResult LockReading( uint32_t face,
-						  uint32_t mipLevel,
-						  uint32_t* ltrb,
-						  void*& data,
-						  uint32_t& pitch,
-						  Tr2RenderContextAL& renderContext );
-	ALResult UnlockReading( Tr2RenderContextAL& renderContext );
-	ALResult LockWriting( uint32_t face,
-						  uint32_t mipLevel,
-						  uint32_t* ltrb,
-						  void*& data,
-						  uint32_t& pitch,
-						  Tr2RenderContextAL& renderContext );
-	ALResult UnlockWriting( Tr2RenderContextAL& renderContext );
-
-	ALResult LockImpl( uint32_t face,
-					   uint32_t mipLevel,
-					   uint32_t* ltrb,
-					   void*& data,
-					   uint32_t& pitch,
-					   Tr2RenderContextAL& renderContext,
-					   uint32_t d3dLockType );
-
-	Tr2RenderContextEnum::LockType m_currentLock;
-	uint32_t m_lockedMipLevel;
-	CComPtr<IDirect3DSurface9> m_lockedMipLevelSurf;
-	ALResult GetSurfaceLevel( uint32_t face,
-							  uint32_t mipLevel );
-
-public:	//DEBUG
-	CComPtr<IDirect3DBaseTexture9> m_texture;
-	Tr2MemoryCounterAL m_memory;
-
-	friend class Tr2RenderContextAL;
-	friend class Tr2RenderTargetAL;
-	friend class Tr2DepthStencilAL;
-};
-
-#endif // #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
-
-#endif //Tr2TextureALDx9_h_
+#endif

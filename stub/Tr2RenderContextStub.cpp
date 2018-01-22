@@ -29,10 +29,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	m_events( nullptr )
 {
 	::GetPrimaryRenderContextPointer() = this;
-	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
-	{
-		m_boundRenderTarget[i] = nullptr;
-	}
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
@@ -59,7 +55,7 @@ void Tr2RenderContextAL::Destroy()
 {
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
-		m_boundRenderTarget[i] = nullptr;
+		m_boundRenderTarget[i] = Tr2TextureAL();
 	}
 	m_isValid = false;
 }
@@ -200,14 +196,14 @@ bool Tr2RenderContextAL::GetReadOnlyDepth() const
 {
 	return false;
 }
-ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2DepthStencilAL& depthStencil )
+ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 {
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2RenderTargetAL& renderTarget, uint32_t slot )
+ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot )
 {
-	m_boundRenderTarget[slot] = &renderTarget;
+	m_boundRenderTarget[slot] = renderTarget;
 	return S_OK;
 }
 
@@ -233,7 +229,7 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 
 ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& presentationParameters )
 {
-	CR_RETURN_HR( m_defaultBackBuffer.Create(	
+	CR_RETURN_HR( m_defaultBackBuffer.CreateRenderTarget(	
 		presentationParameters.mode.width,
 		presentationParameters.mode.height,
 		1,
@@ -385,18 +381,14 @@ ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& hei
 	{
 		return E_FAIL;
 	}
-	if( m_boundRenderTarget[slot] == &nullRT )
+	if( !m_boundRenderTarget[slot].IsValid() )
 	{
 		return E_INVALIDCALL;
 	}
-	else if(m_boundRenderTarget[slot] == nullptr)
-	{
-		width = height = 0;
-	}
 	else
 	{
-		width = m_boundRenderTarget[slot]->GetWidth();
-		height = m_boundRenderTarget[slot]->GetHeight();
+		width = m_boundRenderTarget[slot].GetWidth();
+		height = m_boundRenderTarget[slot].GetHeight();
 	}
 	return S_OK;
 }
@@ -405,10 +397,7 @@ void Tr2RenderContextAL::ReleaseDeviceResources()
 {
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
-		if( m_boundRenderTarget[i] )
-		{
-			m_boundRenderTarget[i] = nullptr;
-		}
+		m_boundRenderTarget[i] = Tr2TextureAL();
 	}
 	
 

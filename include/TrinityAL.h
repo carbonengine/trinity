@@ -16,8 +16,6 @@
 #include "Tr2ShaderAL.h"
 #include "Tr2TextureAL.h"
 #include "Tr2SamplerStateAL.h"
-#include "Tr2RenderTargetAL.h"
-#include "Tr2DepthStencilAL.h"
 #include "Tr2SwapChainAL.h"
 #include "Tr2RenderContextAL.h"
 #include "Tr2PrimaryRenderContextAL.h"

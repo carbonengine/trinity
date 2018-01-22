@@ -7,17 +7,15 @@
 #include "../Tr2DrawUPHelper.h"
 #include "../include/Tr2ConstantBufferAL.h"
 #include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2TextureAL.h"
 
 
 class Tr2ConstantBufferAL;
 class Tr2VertexLayoutAL;
-class Tr2TextureAL;
 struct ITr2RenderContextEvents;
 
 class Tr2ShaderAL;
-class Tr2RenderTargetAL;
 class Tr2SamplerStateAL;
-class Tr2DepthStencilAL;
 class Tr2BufferAL;
 struct Tr2Viewport;
 
@@ -79,8 +77,8 @@ public:
 		uint32_t slot, 
 		Tr2TextureAL& texture ) throw();
 
-	ALResult ClearUav( Tr2RenderTargetAL& rt, const float values[4] ) throw( );
-	ALResult ClearUav( Tr2RenderTargetAL& rt, const uint32_t values[4] ) throw( );
+	ALResult ClearUav( Tr2TextureAL& rt, const float values[4] ) throw( );
+	ALResult ClearUav( Tr2TextureAL& rt, const uint32_t values[4] ) throw( );
 
 	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
 	
@@ -149,11 +147,10 @@ public:
 		uint32_t registerNumber ) throw();
 
 	// Set a depth stencil.  Ideally you'd set renderTarget and depthStencil at the same time.
-	ALResult SetDepthStencil( const Tr2DepthStencilAL& depthStencil ) throw();
+	ALResult SetDepthStencil( const Tr2TextureAL& depthStencil ) throw();
 	void SetReadOnlyDepth( bool enable ) throw();
 	bool GetReadOnlyDepth() const;
-	ALResult SetRenderTarget( const Tr2RenderTargetAL& renderTarget, uint32_t slot = 0 ) throw();
-	//Tr2RenderTargetAL GetRenderTarget( unsigned slot = 0 );
+	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 ) throw();
 
 	static void DestroyMainThreadRenderContext();
 
@@ -253,21 +250,21 @@ public:
 	CComPtr<ID3D11Device>			m_secondaryDevice11;
 	CComPtr<IDXGISwapChain>			m_secondarySwapChain;
 	
-	std::shared_ptr<Tr2RenderTargetAL> m_secondaryDefaultBackBuffer;		
+	Tr2TextureAL m_secondaryDefaultBackBuffer;		
 
-	bool						IsBackBuffer( const Tr2RenderTargetAL& rt ) const throw();
+	bool						IsBackBuffer( const Tr2TextureAL& rt ) const throw();
 
 	// If you need this, you're probably doing something wrong :P
-	Tr2RenderTargetAL&			GetDefaultBackBuffer();
+	Tr2TextureAL&			GetDefaultBackBuffer();
 
 private:	
 	// We can only set renderTarget and depthStencil together, so remember what's set in case code asks
 	// to update only one.
 	enum { MAX_RENDER_TARGET = 8 };
-	const Tr2RenderTargetAL*	m_boundRenderTarget[MAX_RENDER_TARGET];
+	Tr2TextureAL m_boundRenderTarget[MAX_RENDER_TARGET];
 	uint32_t					m_renderTargetHighWaterMark;
 
-	const Tr2DepthStencilAL*	m_boundDepthStencil;
+	Tr2TextureAL m_boundDepthStencil;
 
 	Tr2RenderStateEmulation		m_renderStateEmulation;
 		
@@ -299,8 +296,8 @@ private:
 
 	friend class Tr2PrimaryRenderContextAL;
 
-	TrackableStdStack<const Tr2RenderTargetAL*>	m_stackRT[MAX_RENDER_TARGET];
-	TrackableStdStack<const Tr2DepthStencilAL*>	m_stackDS;
+	TrackableStdStack<Tr2TextureAL>	m_stackRT[MAX_RENDER_TARGET];
+	TrackableStdStack<Tr2TextureAL>	m_stackDS;
 
 	Tr2RenderContextAL( const Tr2RenderContextAL& ) /* = delete */;
 	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;

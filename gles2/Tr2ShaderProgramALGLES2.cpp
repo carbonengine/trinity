@@ -71,7 +71,7 @@ ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2Pri
 	if( m_vertexShader->m_patchedShader || m_pixelShader->m_patchedShader )
 	{
 		if( FAILED( CreateProgram( 
-			m_program, 
+			m_patchedProgram,
 			m_vertexShader->m_patchedShader ? m_vertexShader->m_patchedShader : m_vertexShader->m_shader, 
 			m_pixelShader->m_patchedShader ? m_pixelShader->m_patchedShader : m_pixelShader->m_shader,
 			true ) ) )

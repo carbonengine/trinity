@@ -87,11 +87,11 @@ namespace TrinityALImpl
 
 			Texture tex;
 			tex.registerIndex = i;
-			tex.texture = resource.texture->m_texture;
-			tex.type = ConvertTextureType( resource.texture->GetType() );
+			tex.texture = resource.texture.m_texture->m_texture;
+			tex.type = ConvertTextureType( resource.texture.GetType() );
 			tex.srgbDecode = resource.colorSpace == COLOR_SPACE_SRGB ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT;
 			tex.sampler = sampler.sampler.m_sampler->m_stateData;
-			tex.hasMips = resource.texture->GetTrueMipCount() > 1;
+			tex.hasMips = resource.texture.GetTrueMipCount() > 1;
 			m_textures.push_back( tex );
 		}
 		m_isValid = true;

@@ -2,72 +2,12 @@
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
-bool g_preloadTextureToDeviceOnPrepare = true;
-
-#pragma warning( disable: 4189 )	// Scopeguard
 #include "Tr2TextureALDx11.h"
-#include "ALLog.h"
-#include "Tr2HalHelperStructures.h"
 #include "Tr2PrimaryRenderContextDx11.h"
-#include "Tr2RenderTargetALDx11.h"
+#include "../ALLog.h"
 
-using namespace Tr2RenderContextEnum;
-
-
-Tr2TextureAL::Tr2TextureAL()	
-	: m_isAlias( false )
+namespace
 {
-	Destroy();
-}
-
-void Tr2TextureAL::Destroy()
-{
-	m_memory.Reset();
-
-	m_usage			= 0;
-	
-	Tr2BitmapDimensions::Destroy();
-	//m_overrideSrgb  = false;
-
-	m_texture		= nullptr;
-	m_view[0]		= nullptr;
-	m_view[1]		= nullptr;
-	m_staging		= nullptr;
-	m_arraySize = 0;
-	m_uav = nullptr;
-
-	//m_writeStaging.swap( TrackableStdVector<char>() );
-	m_writeStaging.clear();
-
-	m_currentLock	= LOCK_INVALID;
-	m_currentLockMipLevel = 0;
-}
-
-Tr2TextureAL::~Tr2TextureAL()
-{
-}
-
-namespace {
-
-	void ConvertUsage( BufferUsage usage, D3D11_USAGE& d3dUsage, uint32_t& CPUAccessFlags )
-	{
-		if( usage & USAGE_IMMUTABLE )
-		{
-			d3dUsage		= D3D11_USAGE_IMMUTABLE;
-			CPUAccessFlags	= 0u;
-		}
-		else if( usage & USAGE_CPU_WRITE )
-		{
-			d3dUsage		= D3D11_USAGE_DYNAMIC;
-			CPUAccessFlags	= D3D11_CPU_ACCESS_WRITE;
-		}
-		else
-		{
-			d3dUsage		= D3D11_USAGE_DEFAULT;
-			CPUAccessFlags	= 0u;
-		}
-	}
-
 	std::vector<D3D11_SUBRESOURCE_DATA> ConvertInitialData( uint32_t numInit, Tr2SubresourceData* initialData )
 	{
 		std::vector<D3D11_SUBRESOURCE_DATA> init( numInit );
@@ -75,8 +15,8 @@ namespace {
 		{
 			for( size_t i = 0; i != init.size(); ++i )
 			{
-				init[i].pSysMem			 = initialData[i].m_sysMem;
-				init[i].SysMemPitch		 = initialData[i].m_sysMemPitch;
+				init[i].pSysMem = initialData[i].m_sysMem;
+				init[i].SysMemPitch = initialData[i].m_sysMemPitch;
 				init[i].SysMemSlicePitch = initialData[i].m_sysMemSlicePitch;
 			}
 		}
@@ -84,802 +24,952 @@ namespace {
 		return init;
 	}
 
-}
-
-// -------------------------------------------
-// Arguments:
-//   initialData - array of at least mipLevelCount entries, 1 entry if mipLevelCount is zero.
-// -------------------------------------------
-ALResult Tr2TextureAL::Create2D(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t mipLevelCount,
-	PixelFormat format,
-	BufferUsage usage,
-	Tr2SubresourceData* initialData,
-	Tr2PrimaryRenderContextAL &renderContext )
-{
-	HRESULT hr = Create2DImpl( width, height, mipLevelCount, 1, 0, format, usage, initialData, renderContext );
-	if( SUCCEEDED( hr ) )
+	DXGI_FORMAT GetSrvFormat( Tr2RenderContextEnum::PixelFormat format )
 	{
-		m_type = TEX_TYPE_2D;
-	}
-	return hr;
-}
-
-ALResult Tr2TextureAL::Create2DArray(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t mipLevelCount,
-	uint32_t arrayCount,
-	Tr2RenderContextEnum::PixelFormat format,
-	Tr2RenderContextEnum::BufferUsage usage,
-	Tr2SubresourceData* initialData,
-	Tr2PrimaryRenderContextAL &renderContext )
-{
-	HRESULT hr = Create2DImpl( width, height, mipLevelCount, arrayCount, 0, format, usage, initialData, renderContext );
-	if( SUCCEEDED( hr ) )
-	{
-		m_type = TEX_TYPE_2D;
-	}
-	return hr;
-}
-
-// -------------------------------------------
-// Arguments:
-//   initialData - array of at least 6 * mipLevelCount entries, 6 entries if mipLevelCount is zero. All miplevels
-//				   for a given face need to be in order, highest resolution to lowest resolution, then the next
-//				   face all mips high to low, etc repeated six times.
-// -------------------------------------------
-ALResult Tr2TextureAL::CreateCube(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t mipLevelCount,
-	PixelFormat format,
-	BufferUsage usage,
-	Tr2SubresourceData* initialData,
-	Tr2PrimaryRenderContextAL &renderContext )
-{
-	HRESULT hr = Create2DImpl( width, height, mipLevelCount, 6, D3D11_RESOURCE_MISC_TEXTURECUBE, format, usage, initialData, renderContext );
-	if( SUCCEEDED( hr ) )
-	{
-		m_type = TEX_TYPE_CUBE;
-	}
-	return hr;
-}
-
-// shared implementation for Create2D and CreateCube. Sets everything except m_type.
-ALResult Tr2TextureAL::Create2DImpl(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t mipLevelCount,
-	uint32_t arraySize,
-	uint32_t miscFlags,
-	PixelFormat format,
-	BufferUsage usage,
-	Tr2SubresourceData* initialData,
-	Tr2PrimaryRenderContextAL &renderContext )
-{
-	Destroy();
-
-	if( !ValidateUsage( usage ) )
-	{
-		CCP_AL_LOGERR( "Invalid combination of USAGE flags passed to Tr2TextureAL Create function" );
-		return E_INVALIDARG;
-	}
-
-	if( ( usage & USAGE_IMMUTABLE ) && !initialData )
-	{
-		CCP_AL_LOGERR( "Create2DImpl: Trying to create an immutable texture without providing data" );
-		return E_INVALIDARG;
-	}
-
-	if( !renderContext.m_d3dDevice11 )
-	{
-		return E_FAIL;
-	}
-
-	const uint32_t trueMipLevelCount = mipLevelCount ? mipLevelCount : 1;
-
-	D3D11_TEXTURE2D_DESC desc;
-	memset( &desc, 0, sizeof (desc) );
-	desc.Width		= width;
-	desc.Height		= height;
-	desc.MipLevels	= /*mipLevelCount*/ trueMipLevelCount;	// see below, no auto-gen yet
-	desc.ArraySize  = arraySize;
-	desc.Format     = static_cast<DXGI_FORMAT>( MakeTypeless( format ) );
-	desc.BindFlags  = D3D11_BIND_SHADER_RESOURCE;
-	// this only works with rendertargets, and calling GenerateMips. Probably not what we want
-	//desc.MiscFlags  = mipLevelCount ? 0 : D3D11_RESOURCE_MISC_GENERATE_MIPS;
-
-	ConvertUsage( usage, desc.Usage, desc.CPUAccessFlags );
-	
-	desc.SampleDesc.Count = 1;
-	desc.MiscFlags  = miscFlags;
-	if( usage & USAGE_UNORDERED_ACCESS )
-	{
-		desc.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
-	}
-
-	auto init = ConvertInitialData( trueMipLevelCount * arraySize, initialData );
-
-	ID3D11Texture2D* texture2D;
-	HRESULT HR = renderContext.m_d3dDevice11->CreateTexture2D( &desc, initialData ? &init[0] : nullptr, &texture2D );
-
-	if( FAILED( HR ) )
-	{
-		return HR;
-	}
-
-	m_texture.Attach( texture2D );
-
-	
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	memset( &srvDesc, 0, sizeof( srvDesc ) );
-
-	srvDesc.Format	= static_cast<DXGI_FORMAT>( format );
-
-	if( miscFlags == D3D11_RESOURCE_MISC_TEXTURECUBE )
-	{
-		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-
-		srvDesc.TextureCube.MipLevels = desc.MipLevels;
-	}
-	else
-	{
-		srvDesc.ViewDimension = arraySize > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DARRAY : D3D11_SRV_DIMENSION_TEXTURE2D;
-		srvDesc.Texture2D.MipLevels		 = desc.MipLevels;
-		srvDesc.Texture2DArray.ArraySize = desc.ArraySize;
-	}
-	
-	for( unsigned loop = 0; loop != 2; ++loop )
-	{
-		HR = renderContext.m_d3dDevice11->CreateShaderResourceView( m_texture, &srvDesc, &m_view[loop] );
-		if( FAILED( HR ) )
+		switch( format )
 		{
-			CCP_AL_LOGERR( "Create2DImpl: CreateShaderResourceView/%d failed: 0x%x", loop, HR );
-			m_texture = nullptr;
-			return HR;
-		}
-
-		srvDesc.Format = static_cast<DXGI_FORMAT>( MakeSrgb( format ) );
-	}
-
-	m_format		= format;
-	m_usage			= usage;	
-	m_width			= width;
-	m_height		= height;
-	m_volumeDepth	= 1;
-	m_mipCount		= mipLevelCount;
-	m_isAlias		= false;
-	m_arraySize = arraySize;
-
-	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this );
-
-	ChangeObjectId();
-
-	return S_OK;
-}
-
-ALResult Tr2TextureAL::CreateVolume(	
-	uint32_t width, 
-	uint32_t height, 
-	uint32_t depth, 
-	uint32_t mipLevelCount,
-	PixelFormat format,
-	BufferUsage usage,
-	Tr2SubresourceData* initialData,
-	Tr2PrimaryRenderContextAL &renderContext )
-{
-	Destroy();
-
-	if( !ValidateUsage( usage ) )
-	{
-		CCP_AL_LOGERR( "Invalid combination of USAGE flags passed to Tr2TextureAL Create function" );
-		return E_INVALIDARG;
-	}
-
-	if( !initialData )
-	{
-		CCP_AL_LOGERR( "CreateVolume: Trying to create volume texture without providing data" );
-		return E_INVALIDARG;
-	}
-
-	if( !renderContext.m_d3dDevice11 )
-	{
-		return E_FAIL;
-	}
-
-	const uint32_t trueMipLevelCount = mipLevelCount ? mipLevelCount : 1;
-
-	D3D11_TEXTURE3D_DESC desc;
-	memset( &desc, 0, sizeof (desc) );
-	desc.Width		= width;
-	desc.Height		= height;
-	desc.Depth		= depth;
-	desc.MipLevels	= trueMipLevelCount;
-	desc.Format     = static_cast<DXGI_FORMAT>( MakeTypeless( format ) );
-	desc.BindFlags  = D3D11_BIND_SHADER_RESOURCE;
-	
-	ConvertUsage( usage, desc.Usage, desc.CPUAccessFlags );
-	
-	auto init = ConvertInitialData( trueMipLevelCount, initialData );
-
-	ID3D11Texture3D* texture3D = nullptr;
-	CR_RETURN_HR( renderContext.m_d3dDevice11->CreateTexture3D( &desc, init.empty() ? nullptr : &init[0], &texture3D ) );
-
-	m_texture.Attach( texture3D );
-
-	
-	D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-	memset( &srvDesc, 0, sizeof( srvDesc ) );
-
-	srvDesc.Format	= static_cast<DXGI_FORMAT>( format );
-
-	srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-
-	srvDesc.Texture3D.MipLevels = desc.MipLevels;
-	
-	for( unsigned loop = 0; loop != 2; ++loop )
-	{
-		HRESULT HR = renderContext.m_d3dDevice11->CreateShaderResourceView( m_texture, &srvDesc, &m_view[loop] );
-		if( FAILED( HR ) )
-		{
-			CCP_AL_LOGERR( "CreateVolume: CreateShaderResourceView/%d failed: 0x%x", loop, HR );
-			m_texture = nullptr;
-			return HR;
-		}
-
-		srvDesc.Format = static_cast<DXGI_FORMAT>( MakeSrgb( format ) );
-	}
-
-	m_format		= format;
-	m_usage			= usage;	
-	m_width			= width;
-	m_height		= height;
-	m_volumeDepth	= depth;
-	m_mipCount		= trueMipLevelCount;
-	m_isAlias		= false;
-	m_arraySize = 1;
-
-	m_type			= TEX_TYPE_3D;
-
-	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, *this );
-
-	ChangeObjectId();
-	
-	return S_OK;
-}
-
-// -------------------------------------------------------------
-// Description:
-// For updating subrectangles in a texture, the fastest way across platforms is to use this UpdateSubresource function.
-// It requires that the texture was created with USAGE_DEFAULT. In exchange it actually works without the need for staging
-// resources or other inefficient access flags.  Source must be in exactly the same format as this texture; however the
-// dimensions can be smaller, so sourcePitch must be set up accordingly to be right-left times the byteCount, taking BC
-// formats into account.
-// -------------------------------------------------------------
-ALResult Tr2TextureAL::UpdateSubresource(	
-	uint32_t left, 
-	uint32_t top, 
-	uint32_t right, 
-	uint32_t bottom, 
-	const void* source, 
-	uint32_t sourcePitch, 
-	Tr2RenderContextAL& renderContext )
-{
-	if( !m_texture || !renderContext.m_context || m_type != TEX_TYPE_2D ) 
-	{
-		return E_FAIL;
-	}
-
-	if( ( m_usage & USAGE_CPU_WRITE || m_usage & USAGE_IMMUTABLE ) )
-	{
-		CCP_AL_LOGWARN( "UpdateSubResource only works with no USAGE_CPU_WRITE and no USAGE_IMMUTABLE flags" );
-		return E_INVALIDARG;
-	}
-
-	D3D11_BOX box;
-	box.left	= std::min( left, m_width );
-	box.top		= std::min( top, m_height );
-	box.right	= std::min( right, m_width );
-	box.bottom	= std::min( bottom, m_height );
-	box.front	= 0;
-	box.back	= 1;
-
-	if( box.right <= box.left || box.bottom <= box.top )
-	{
-		return S_OK;
-	}
-	renderContext.m_context->UpdateSubresource( m_texture, 0, &box, source, sourcePitch, 0 );
-
-	return S_OK;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Copies part of the source texture into this texture. Textures must have the same 
-//   format, they can't be immutable (safest is probably to use USAGE_DEFAULT on
-//   both), subresources must have the same dimensions, 3D textures are not supported.  
-//   There's no clipping so destination position must be able to fit the source texture, 
-//   or its subrectangle. The subrectangle can't exceed the source's bounds.
-//   The call may be asynchronous
-// Arguments:
-//   destSubresource - Desription of destination texture area
-//   source - Source texture
-//   sourceSubresource - Description of source texture area
-//   renderContext - Current render context
-// Return Value:
-//   HRESULT of operation
-// --------------------------------------------------------------------------------------
-ALResult Tr2TextureAL::CopySubresourceRegion( 
-	const Tr2TextureSubresource& destSubresource,
-	Tr2TextureAL& source, 
-	const Tr2TextureSubresource& sourceSubresource,
-	Tr2RenderContextAL& renderContext )
-{
-	CCP_ASSERT( m_texture );
-	CCP_ASSERT( source.m_texture );
-
-	if( !m_texture || !source.m_texture || !renderContext.m_context )
-	{
-		return E_FAIL;
-	}
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
-	AL_UPDATE_RESOURCE_FRAME_USAGE( source );
-
-	if( destSubresource.IsSubresourceFull( *this ) && sourceSubresource.IsSubresourceFull( source ) )
-	{
-		renderContext.m_context->CopyResource( m_texture, source.m_texture );
-		return S_OK;
-	}
-
-	Tr2TextureSubresource src = sourceSubresource;
-	Tr2TextureSubresource dst = destSubresource;	
-	
-	if( !Crop( src, source, dst, *this ) )
-	{
-		return E_FAIL;
-	}
-
-	D3D11_BOX box = { src.m_left, src.m_top, src.m_front, src.m_right, src.m_bottom, src.m_back };
-
-	const uint32_t srcMipCount = source.GetTrueMipCount();
-	const uint32_t dstMipCount = GetTrueMipCount();
-
-	const uint32_t mipCount = std::min( src.GetMipCount(), dst.GetMipCount() );
-
-	for( uint32_t mip = 0; mip != mipCount; ++mip )
-	{
-		for( uint32_t face = 0; face != src.GetFaceCount(); ++face )
-		{
-			renderContext.m_context->CopySubresourceRegion( 
-				m_texture,
-				D3D10CalcSubresource( dst.m_startMipLevel + mip, dst.m_startFace + face, dstMipCount ),
-				dst.m_left,
-				dst.m_top,
-				dst.m_front,
-				source.m_texture,
-				D3D10CalcSubresource( src.m_startMipLevel + mip, src.m_startFace + face, srcMipCount ),
-				&box );
-		}
-
-		if( mip + 1 != src.GetMipCount() )
-		{
-			AdvanceMip( src, source, mip );
-			AdvanceMip( dst, *this,  mip );
-		}
-
-		box.left = box.left >> 1;
-		box.right = std::max( box.right >> 1, box.left + 1 );
-		box.top = box.top >> 1;
-		box.bottom = std::max( box.bottom >> 1, box.top + 1 );
-		box.front = box.front >> 1;
-		box.back = std::max( box.back >> 1, box.front + 1 );
-	}
-
-	return S_OK;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Copies part of the source renderTarget into this texture. They both must have the same 
-//   format, they can't be immutable (safest is probably to use USAGE_DEFAULT on
-//   both), subresources must have the same dimensions, 3D textures are not supported.  
-//   There's no clipping so destination position must be able to fit the source texture, 
-//   or its subrectangle. The subrectangle can't exceed the source's bounds.
-//   The call may be asynchronous
-// Arguments:
-//   destSubresource - Desription of destination texture area
-//   source - Source renderTarget
-//   sourceSubresource - Description of source renderTarget area
-//   renderContext - Current render context
-// Return Value:
-//   HRESULT of operation
-// --------------------------------------------------------------------------------------
-ALResult Tr2TextureAL::CopySubresourceRegion(	
-	const Tr2TextureSubresource& destSubresource,
-	Tr2RenderTargetAL& source, 
-	const Tr2TextureSubresource& sourceSubresource,
-	Tr2RenderContextAL& renderContext )
-{
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
-	AL_UPDATE_RESOURCE_FRAME_USAGE( source );
-
-	// Looks like DX11 has no issues with treating the RT as a regular texture, so just use that one.
-	return CopySubresourceRegion( destSubresource, source.GetTexture(), sourceSubresource, renderContext );
-}
-
-ALResult Tr2TextureAL::CopySubresourceRegion( 
-	CComPtr<ID3D11Texture2D> dest, 
-	uint32_t destX, 
-	uint32_t destY, 
-	CComPtr<ID3D11Texture2D> source, 
-	uint32_t* ltrb, 
-	Tr2RenderContextAL& renderContext )
-{
-	CCP_ASSERT( source );
-	
-	if( !renderContext.m_context || !dest || !source )
-	{
-		return E_FAIL;
-	}
-
-	if( destX == 0 && destY == 0 && ltrb == nullptr )
-	{
-		renderContext.m_context->CopyResource( dest, source );
-		return S_OK;
-	}
-
-	D3D11_BOX box;
-	if( ltrb )
-	{
-		box.left	= ltrb[0];
-		box.top		= ltrb[1];
-		box.right	= ltrb[2];
-		box.bottom	= ltrb[3];
-		box.front	= 0;
-		box.back	= 1;
-	}
-
-	renderContext.m_context->CopySubresourceRegion( dest, 0, destX, destY, 0, source, 0, ltrb ? &box : nullptr );
-	return S_OK;
-}
-
-// -------------------------------------------------------------
-// Description:
-//  Lock a texture. This may be extremely expensive and involve a copy of the texture from the GPU to the CPU, each and every time you
-//  lock.
-// -------------------------------------------------------------
-ALResult Tr2TextureAL::Lock(	
-	uint32_t mipLevel, 
-	void*& data, 
-	uint32_t& pitch, 
-	LockType lockType, 
-	Tr2RenderContextAL& renderContext )
-{
-	return Lock( mipLevel, nullptr, data, pitch, lockType, renderContext );
-}
-
-ALResult Tr2TextureAL::Lock(	
-	uint32_t mipLevel, 
-	uint32_t* ltrb, 
-	void*& data, 
-	uint32_t& pitch, 
-	LockType lockType, 
-	Tr2RenderContextAL& renderContext )
-{
-	return Lock( 0, mipLevel, ltrb, data, pitch, lockType, renderContext );
-}
-
-ALResult Tr2TextureAL::Lock(	
-	uint32_t face, 
-	uint32_t mipLevel, 
-	uint32_t* ltrb, 
-	void*& data, 
-	uint32_t& pitch, 
-	LockType lockType, 
-	Tr2RenderContextAL& renderContext )
-{
-	CCP_ASSERT( m_currentLock == LOCK_INVALID );
-	if( m_currentLock != LOCK_INVALID )
-	{
-		CCP_AL_LOGERR( "Tr2TextureAL - Attempting to lock already locked texture" );
-		return E_FAIL;
-	}
-
-	// cancel out requests for a rectangle where it turns out that the rectangle is the full texture.
-	// there is a fast path for that case (map/unmap instead of staging resources)
-	if( ltrb					&&
-		ltrb[0] == 0			&&
-		ltrb[1] == 0			&&
-		ltrb[2] == GetWidth()	&&
-		ltrb[3] == GetHeight()	)
-	{
-		ltrb = nullptr;
-	}
-
-	switch( lockType )
-	{
-	case LOCK_READONLY:
-		return LockReading( face, mipLevel, ltrb, data, pitch, renderContext );
-	case LOCK_WRITEONLY:
-		return LockWriting( face, mipLevel, ltrb, data, pitch, renderContext );
-	default:
-		return E_INVALIDARG;
-	}
-}
-
-ALResult Tr2TextureAL::Unlock( Tr2RenderContextAL & renderContext )
-{
-	switch( m_currentLock )
-	{
-	case LOCK_READONLY:
-		{
-			return UnlockReading( renderContext );
-		}
-	case LOCK_WRITEONLY:
-		{
-			return UnlockWriting( renderContext );
+		case Tr2RenderContextEnum::PIXEL_FORMAT_D24_UNORM_S8_UINT:
+			return DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+		case Tr2RenderContextEnum::PIXEL_FORMAT_D32_FLOAT:
+			return DXGI_FORMAT_R32_FLOAT;
+		default:
+			return DXGI_FORMAT( format );
 		}
 	}
 
-	CCP_AL_LOGERR( "Trying to Unlock buffer that's not locked" );
-	return E_FAIL;
-}
-
-ALResult Tr2TextureAL::LockReading( 
-	uint32_t face, 
-	uint32_t mipLevel, 
-	uint32_t* ltrb, 
-	void*& data, 
-	uint32_t& pitch, 
-	Tr2RenderContextAL & renderContext )
-{
-	data = nullptr;
-
-	if( ( m_usage & USAGE_CPU_READ ) == 0 && ( m_usage & USAGE_IMMUTABLE ) == 0 )
+	ALResult Create2D( CComPtr<ID3D11Resource>& texture, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
 	{
-		return E_INVALIDARG;
-	}
+		D3D11_TEXTURE2D_DESC desc2D;
+		memset( &desc2D, 0, sizeof( desc2D ) );
+		desc2D.Width = desc.GetWidth();
+		desc2D.Height = desc.GetHeight();
+		desc2D.MipLevels = desc.GetTrueMipCount();	// see below, no auto-gen yet
+		desc2D.ArraySize = desc.GetArraySize();
+		desc2D.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeTypeless( desc.GetFormat() ) );
 
-	if( !m_texture || !renderContext.m_context || ( m_type != TEX_TYPE_2D && m_type != TEX_TYPE_CUBE ) || ( m_mipCount > 0 && mipLevel >= m_mipCount ) )
-	{
-		return E_FAIL;
-	}
-
-	if( !m_writeStaging.empty() )		// Currently locked for writing?
-	{
-		return E_FAIL;
-	}
-
-	if( !m_staging )
-	{
-		const uint32_t width  = ltrb ? ltrb[2] - ltrb[0] : m_width;
-		const uint32_t height = ltrb ? ltrb[3] - ltrb[1] : m_height;
-
-		D3D11_TEXTURE2D_DESC desc;
-		memset( &desc, 0, sizeof (desc) );
-		desc.Width		= width >> mipLevel;
-		desc.Height		= height >> mipLevel;
-		if( IsCompressedFormat( GetFormat() ) )
+		if( HasFlag( cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
-			desc.Width  = std::max( desc.Width , 4u );
-			desc.Height = std::max( desc.Height, 4u );
+			desc2D.Usage = D3D11_USAGE_DYNAMIC;
+			desc2D.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		}
+		else if( HasFlag( cpuUsage, Tr2CpuUsage::WRITE ) )
+		{
+			desc2D.Usage = D3D11_USAGE_DEFAULT;
+			desc2D.CPUAccessFlags = 0;
+		}
+		else if( IsWritable( gpuUsage ) )
+		{
+			desc2D.Usage = D3D11_USAGE_DEFAULT;
 		}
 		else
 		{
-			desc.Width  = std::max( desc.Width , 1u );
-			desc.Height = std::max( desc.Height, 1u );
+			desc2D.Usage = D3D11_USAGE_IMMUTABLE;
 		}
-		desc.MipLevels	= 1;
-		desc.ArraySize  = 1;
-		desc.Format     = static_cast<DXGI_FORMAT>( MakeTypeless( m_format ) );
-		
-		desc.Usage			= D3D11_USAGE_STAGING;
-		desc.CPUAccessFlags	= D3D11_CPU_ACCESS_READ;
-	
-		desc.SampleDesc.Count = 1;
-		
-		if( !renderContext.m_secondaryDevice11 )
+
+		if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 		{
-			return E_FAIL;
+			desc2D.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
 		}
-		CR_RETURN_HR( renderContext.m_secondaryDevice11->CreateTexture2D( &desc, nullptr, &m_staging ) );
-		if( !m_staging )
+		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) )
 		{
-			return E_FAIL;
+			desc2D.BindFlags |= D3D11_BIND_RENDER_TARGET;
+			if( desc.GetTrueMipCount() > 1 && HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+			{
+				desc2D.MiscFlags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
+			}
 		}
-	}
-
-	//renderContext.m_context->CopyResource( m_staging, m_texture );
-	if( ltrb )
-	{
-		D3D11_BOX box = { ltrb[0], ltrb[1], 0, ltrb[2], ltrb[3], 1 };
-		renderContext.m_context->CopySubresourceRegion( m_staging, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( mipLevel, face, GetTrueMipCount() ), &box );
-	}
-	else
-	{
-		renderContext.m_context->CopySubresourceRegion( m_staging, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( mipLevel, face, GetTrueMipCount() ), nullptr );
-	}
-	
-	D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
-	HRESULT hr = renderContext.m_context->Map( m_staging, 0, D3D11_MAP_READ, 0, &ms );
-	data = ms.pData;
-	pitch = ms.RowPitch;
-	if( !ms.pData )
-	{
-		return E_FAIL;
-	}
-	if( SUCCEEDED( hr ) )
-	{
-		m_currentLock = LOCK_READONLY;
-		m_currentLockMipLevel = mipLevel;
-	}
-    return hr;
-}
-
-ALResult Tr2TextureAL::UnlockReading( Tr2RenderContextAL & renderContext )
-{
-	renderContext.m_context->Unmap( m_staging, 0 );
-	m_currentLock = LOCK_INVALID;
-	m_currentLockMipLevel = 0;
-	m_staging = nullptr;	//TODO keep a cache?
-	return S_OK;
-}
-
-ALResult Tr2TextureAL::LockWriting( 
-	uint32_t face, 
-	uint32_t mipLevel, 
-	uint32_t* ltrb, 
-	void*& data, 
-	uint32_t& pitch, 
-	Tr2RenderContextAL & renderContext )
-{
-	// Note -- not sure if there is any way to lock the texture in a way that preserves what is already there.
-	// The documentation suggests that usage_dynamic + map_write should do the trick, but at runtime this gives:
-	//
-	// D3D11: ERROR: ID3D11DeviceContext::Map: Map cannot be called with MAP_WRITE access, because the Resource
-	// was created as D3D11_USAGE_DYNAMIC. D3D11_USAGE_DYNAMIC Resources must use either MAP_WRITE_DISCARD or 
-	// MAP_WRITE_NO_OVERWRITE with Map. [ RESOURCE_MANIPULATION ERROR #2097210: RESOURCE_MAP_INVALIDMAPTYPE ]
-	//
-	// So when you lock the texture, you need to re-write the whole thing?... If the user is trying to lock a subrectangle,
-	// use CPU hosted memory and UpdateSubresource instead.
-
-	if( !m_texture )
-	{
-		data = nullptr;
-		return E_FAIL;
-	}
-
-	if( ltrb || !( m_usage & USAGE_CPU_WRITE ) )
-	{
-		if( !m_writeStaging.empty() )
+		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
 		{
-			return E_FAIL;	// already locked for writing
+			desc2D.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
 		}
-
-		if( IsCompressedFormat( GetFormat() ) )
+		if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
 		{
-			return E_FAIL;
+			desc2D.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
 		}
-		if( ltrb && ( ltrb[2] <= ltrb[0] || ltrb[3] <= ltrb[1] ) )
+		if( HasFlag( gpuUsage, Tr2GpuUsage::SHARED ) )
 		{
-			return E_FAIL;
+			desc2D.MiscFlags |= D3D11_RESOURCE_MISC_SHARED;
 		}
-		const uint32_t w = ltrb ? ltrb[2] - ltrb[0] : m_width;
-		const uint32_t h = ltrb ? ltrb[3] - ltrb[1] : m_height;
-		pitch = w * GetBytesPerPixel( GetFormat() );
 
-		m_writeStaging.resize( "Tr2TextureAL::m_writeStaging", pitch * h );
-
-		if( ltrb )
+		desc2D.SampleDesc.Count = msaa.samples;
+		desc2D.SampleDesc.Quality = msaa.quality;
+		if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
 		{
-			m_writeLtrb[0] = ltrb[0];
-			m_writeLtrb[1] = ltrb[1];
-			m_writeLtrb[2] = ltrb[2];
-			m_writeLtrb[3] = ltrb[3];
-		}
-		else
-		{
-			m_writeLtrb[0] = 0;
-			m_writeLtrb[1] = 0;
-			m_writeLtrb[2] = m_width;
-			m_writeLtrb[3] = m_height;
+			desc2D.MiscFlags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
 		}
 
-		CCP_ASSERT( m_writeLtrb[2] <= GetMipWidth( mipLevel ) && m_writeLtrb[3] <= GetMipHeight( mipLevel ) );
-		if( m_writeLtrb[2] > GetMipWidth( mipLevel ) && m_writeLtrb[3] > GetMipHeight( mipLevel ) )
-		{
-			CCP_LOGERR( "TrinityAL: invalid rectangle in Tr2TextureAL::LockWriting" );
-			m_writeStaging.clear();
-			return E_FAIL;
-		}
+		auto init = ConvertInitialData( desc2D.MipLevels * desc2D.ArraySize, initialData );
 
-		CCP_ASSERT( !m_writeStaging.empty() );
-		data = m_writeStaging.get();
+		CComPtr<ID3D11Texture2D> texture2D;
 
-		m_currentLock = LOCK_WRITEONLY;
-		m_currentLockMipLevel = mipLevel;
+		FORWARD_HR( renderContext.m_d3dDevice11->CreateTexture2D( &desc2D, initialData ? &init[0] : nullptr, &texture2D ) );
+		texture = texture2D;
 		return S_OK;
 	}
 
-	D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
-	HRESULT hr = renderContext.m_context->Map( m_texture, D3D10CalcSubresource( mipLevel, face, GetTrueMipCount() ), D3D11_MAP_WRITE_DISCARD, 0, &ms );
-	if( FAILED( hr ) )
+	ALResult Create3D( CComPtr<ID3D11Resource>& texture, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		D3D11_TEXTURE3D_DESC desc3D;
+		memset( &desc3D, 0, sizeof( desc3D ) );
+		desc3D.Width = desc.GetWidth();
+		desc3D.Height = desc.GetHeight();
+		desc3D.Depth = desc.GetDepth();
+		desc3D.MipLevels = desc.GetTrueMipCount();
+		desc3D.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeTypeless( desc.GetFormat() ) );
+
+		if( HasFlag( cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+		{
+			desc3D.Usage = D3D11_USAGE_DYNAMIC;
+			desc3D.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		}
+		else if( HasFlag( cpuUsage, Tr2CpuUsage::WRITE ) )
+		{
+			desc3D.Usage = D3D11_USAGE_DEFAULT; // or D3D11_USAGE_DYNAMIC?
+			desc3D.CPUAccessFlags = 0;
+		}
+		else if( IsWritable( gpuUsage ) )
+		{
+			desc3D.Usage = D3D11_USAGE_DEFAULT;
+		}
+		else
+		{
+			desc3D.Usage = D3D11_USAGE_IMMUTABLE;
+		}
+
+		if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+		{
+			desc3D.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) )
+		{
+			desc3D.BindFlags |= D3D11_BIND_RENDER_TARGET;
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) )
+		{
+			desc3D.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+		{
+			desc3D.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::SHARED ) )
+		{
+			desc3D.MiscFlags |= D3D11_RESOURCE_MISC_SHARED;
+		}
+
+		if( !desc.GetMipCount() )
+		{
+			desc3D.MiscFlags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
+		}
+
+		auto init = ConvertInitialData( desc3D.MipLevels, initialData );
+
+		CComPtr<ID3D11Texture3D> texture3D;
+
+		FORWARD_HR( renderContext.m_d3dDevice11->CreateTexture3D( &desc3D, initialData ? &init[0] : nullptr, &texture3D ) );
+		texture = texture3D;
+		return S_OK;
+	}
+
+}
+
+namespace TrinityALImpl
+{
+	Tr2TextureAL::Tr2TextureAL()
+		:m_gpuUsage( Tr2GpuUsage::NONE ),
+		m_cpuUsage( Tr2CpuUsage::NONE ),
+		m_lockedSubresource( 0 )
+	{
+		m_writeLtrb[0] = m_writeLtrb[1] = m_writeLtrb[2] = m_writeLtrb[3] = 0;
+	}
+
+	ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		Destroy();
+
+		if( HasBufferFlags( gpuUsage ) )
+		{
+			return E_INVALIDARG;
+		}
+
+		if( !renderContext.IsValid() )
+		{
+			return E_FAIL;
+		}
+		if( msaa.samples > 1 )
+		{
+			if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+			{
+				return E_INVALIDARG;
+			}
+			if( cpuUsage != Tr2CpuUsage::NONE )
+			{
+				return E_INVALIDARG;
+			}
+			if( desc.GetType() != Tr2RenderContextEnum::TEX_TYPE_2D )
+			{
+				return E_INVALIDARG;
+			}
+		}
+		if( desc.GetType() != Tr2RenderContextEnum::TEX_TYPE_2D )
+		{
+			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
+			{
+				if( desc.GetArraySize() != 6 )
+				{
+					return E_INVALIDARG;
+				}
+			}
+			else if( desc.GetArraySize() > 1 )
+			{
+				return E_INVALIDARG;
+			}
+		}
+		if( desc.GetType() != Tr2RenderContextEnum::TEX_TYPE_2D && HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
+		{
+			return E_INVALIDARG;
+		}
+		if( msaa.samples > 1 && desc.GetTrueMipCount() > 1 )
+		{
+			return E_INVALIDARG;
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) && HasFlag( cpuUsage, Tr2CpuUsage::WRITE ) )
+		{
+			return E_INVALIDARG;
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) && cpuUsage != Tr2CpuUsage::NONE )
+		{
+			return E_INVALIDARG;
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) && desc.GetTrueMipCount() > 1 )
+		{
+			return E_INVALIDARG;
+		}
+		if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D && cpuUsage != Tr2CpuUsage::NONE )
+		{
+			return E_INVALIDARG;
+		}
+
+		CComPtr<ID3D11Resource> texture;
+		if( desc.GetType() != Tr2RenderContextEnum::TEX_TYPE_3D )
+		{
+			FORWARD_HR( Create2D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
+		}
+		else
+		{
+			FORWARD_HR( Create3D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
+		}
+
+		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, renderContext ) );
+
+		m_desc = desc;
+		m_gpuUsage = gpuUsage;
+		m_cpuUsage = cpuUsage;
+		m_msaa = msaa;
+
+		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_desc, msaa );
+
+		return S_OK;
+	}
+
+	ALResult Tr2TextureAL::CreateViews( 
+		ID3D11Resource* texture, 
+		const Tr2BitmapDimensions& desc, 
+		const Tr2MsaaDesc& msaa, 
+		Tr2GpuUsage::Type gpuUsage, 
+		Tr2CpuUsage::Type cpuUsage, 
+		Tr2PrimaryRenderContextAL& renderContext )
+	{
+		CComPtr<ID3D11ShaderResourceView> view[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
+		CComPtr<ID3D11RenderTargetView> renderTarget[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
+		CComPtr<ID3D11DepthStencilView> depthStencil[DepthOption::COUNT];
+		CComPtr<ID3D11UnorderedAccessView> uav;
+
+		if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+		{
+			D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+			memset( &srvDesc, 0, sizeof( srvDesc ) );
+
+			srvDesc.Format = GetSrvFormat( desc.GetFormat() );
+
+			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+			{
+				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+				srvDesc.Texture3D.MipLevels = desc.GetTrueMipCount();
+			}
+			else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
+			{
+				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+				srvDesc.TextureCube.MipLevels = desc.GetTrueMipCount();
+			}
+			else if( msaa.samples > 1 )
+			{
+				srvDesc.ViewDimension = desc.GetArraySize() > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY : D3D11_SRV_DIMENSION_TEXTURE2DMS;
+				srvDesc.Texture2DMSArray.ArraySize = desc.GetArraySize();
+			}
+			else
+			{
+				srvDesc.ViewDimension = desc.GetArraySize() > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DARRAY : D3D11_SRV_DIMENSION_TEXTURE2D;
+				srvDesc.Texture2D.MipLevels = desc.GetTrueMipCount();
+				srvDesc.Texture2DArray.ArraySize = desc.GetArraySize();
+			}
+			FORWARD_HR( renderContext.m_d3dDevice11->CreateShaderResourceView( texture, &srvDesc, &view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] ) );
+			srvDesc.Format = GetSrvFormat( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+			FORWARD_HR( renderContext.m_d3dDevice11->CreateShaderResourceView( texture, &srvDesc, &view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
+		}
+
+		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) )
+		{
+			D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+			memset( &rtvDesc, 0, sizeof( rtvDesc ) );
+
+			rtvDesc.Format = static_cast<DXGI_FORMAT>( desc.GetFormat() );
+			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+			{
+				rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE3D;
+				rtvDesc.Texture3D.WSize = -1;
+			}
+			else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
+			{
+				rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
+				rtvDesc.Texture2DArray.ArraySize = 6;
+			}
+			else if( msaa.samples > 1 )
+			{
+				rtvDesc.ViewDimension = desc.GetArraySize() > 1 ? D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY : D3D11_RTV_DIMENSION_TEXTURE2DMS;
+				rtvDesc.Texture2DMSArray.ArraySize = desc.GetArraySize();
+			}
+			else
+			{
+				rtvDesc.ViewDimension = desc.GetArraySize() > 1 ? D3D11_RTV_DIMENSION_TEXTURE2DARRAY : D3D11_RTV_DIMENSION_TEXTURE2D;
+				rtvDesc.Texture2DArray.ArraySize = desc.GetArraySize();
+			}
+
+			FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] ) );
+			rtvDesc.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+			FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
+		}
+
+		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
+		{
+			D3D11_DEPTH_STENCIL_VIEW_DESC descDSV;
+			memset( &descDSV, 0, sizeof( descDSV ) );
+			descDSV.Format = static_cast<DXGI_FORMAT>( desc.GetFormat() );
+			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
+			{
+				descDSV.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DARRAY;
+				descDSV.Texture2DArray.ArraySize = 6;
+			}
+			else if( msaa.samples > 1 )
+			{
+				descDSV.ViewDimension = desc.GetArraySize() > 1 ? D3D11_DSV_DIMENSION_TEXTURE2DMSARRAY : D3D11_DSV_DIMENSION_TEXTURE2DMS;
+				descDSV.Texture2DMSArray.ArraySize = desc.GetArraySize();
+			}
+			else
+			{
+				descDSV.ViewDimension = desc.GetArraySize() > 1 ? D3D11_DSV_DIMENSION_TEXTURE2DARRAY : D3D11_DSV_DIMENSION_TEXTURE2D;
+				descDSV.Texture2DArray.ArraySize = desc.GetArraySize();
+			}
+
+			FORWARD_HR( renderContext.m_d3dDevice11->CreateDepthStencilView( texture, &descDSV, &depthStencil[DepthOption::READ_WRITE] ) );
+			descDSV.Flags |= D3D11_DSV_READ_ONLY_DEPTH;
+			FORWARD_HR( renderContext.m_d3dDevice11->CreateDepthStencilView( texture, &descDSV, &depthStencil[DepthOption::READ_ONLY] ) );
+		}
+
+		if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+		{
+			D3D11_UNORDERED_ACCESS_VIEW_DESC descUAV;
+			descUAV.Format = static_cast<DXGI_FORMAT>( desc.GetFormat() );
+			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+			{
+				descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+				descUAV.Texture3D.WSize = -1;
+			}
+			else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
+			{
+				descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
+				descUAV.Texture2DArray.ArraySize = 6;
+			}
+			else
+			{
+				descUAV.ViewDimension = desc.GetArraySize() > 1 ? D3D11_UAV_DIMENSION_TEXTURE2DARRAY : D3D11_UAV_DIMENSION_TEXTURE2D;
+				descUAV.Texture2DArray.ArraySize = desc.GetArraySize();
+			}
+			FORWARD_HR( renderContext.m_d3dDevice11->CreateUnorderedAccessView( texture, &descUAV, &uav ) );
+		}
+
+		m_texture = texture;
+		m_view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] = view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR];
+		m_view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = view[Tr2RenderContextEnum::COLOR_SPACE_SRGB];
+		m_renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] = renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR];
+		m_renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB];
+		m_depthStencil[DepthOption::READ_WRITE] = depthStencil[DepthOption::READ_WRITE];
+		m_depthStencil[DepthOption::READ_ONLY] = depthStencil[DepthOption::READ_ONLY];
+		m_uav = uav;
+		return S_OK;
+	}
+
+	void Tr2TextureAL::Destroy()
+	{
+		m_texture = nullptr;
+		m_view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] = nullptr;
+		m_view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = nullptr;
+		m_renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] = nullptr;
+		m_renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = nullptr;
+		m_depthStencil[DepthOption::READ_WRITE] = nullptr;
+		m_depthStencil[DepthOption::READ_ONLY] = nullptr;
+		m_stagingTexture = nullptr;
+		m_memory.Reset();
+		memset( &m_desc, 0, sizeof( m_desc ) );
+		m_msaa = Tr2MsaaDesc();
+		m_gpuUsage = Tr2GpuUsage::NONE;
+		m_cpuUsage = Tr2CpuUsage::NONE;
+		m_writeStaging.clear();
+		m_lockedSubresource = 0;
+		m_writeLtrb[0] = m_writeLtrb[1] = m_writeLtrb[2] = m_writeLtrb[3] = 0;
+	}
+
+	bool Tr2TextureAL::IsValid() const
+	{
+		return m_texture != nullptr;
+	}
+
+	Tr2ALMemoryType Tr2TextureAL::GetMemoryClass()
+	{
+		return AL_MEMORY_MANAGED;
+	}
+
+	const Tr2BitmapDimensions& Tr2TextureAL::GetDesc() const
+	{
+		return m_desc;
+	}
+
+	const Tr2MsaaDesc& Tr2TextureAL::GetMsaaDesc() const
+	{
+		return m_msaa;
+	}
+
+	Tr2GpuUsage::Type Tr2TextureAL::GetGpuUsage() const
+	{
+		return m_gpuUsage;
+	}
+
+	Tr2CpuUsage::Type Tr2TextureAL::GetCpuUsage() const
+	{
+		return m_cpuUsage;
+	}
+
+	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 	{
 		data = nullptr;
-		pitch = 0;
+		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ ) )
+		{
+			return E_INVALIDCALL;
+		}
+
+		if( !IsValid() || !renderContext.IsValid() )
+		{
+			return E_FAIL;
+		}
+		if( m_desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+		{
+			return E_FAIL;
+		}
+
+		if( !region.IsValidForBitmap( m_desc ) )
+		{
+			return E_INVALIDARG;
+		}
+		if( !region.IsSingleSubresource() )
+		{
+			return E_INVALIDARG;
+		}
+
+		if( !m_stagingTexture )
+		{
+			D3D11_TEXTURE2D_DESC desc;
+			memset( &desc, 0, sizeof( desc ) );
+			desc.Width = m_desc.GetWidth();
+			desc.Height = m_desc.GetHeight();
+			desc.MipLevels = 1;
+			desc.ArraySize = 1;
+			desc.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeTypeless( m_desc.GetFormat() ) );
+
+			desc.Usage = D3D11_USAGE_STAGING;
+			desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE;
+
+			desc.SampleDesc.Count = 1;
+
+			if( !renderContext.m_secondaryDevice11 )
+			{
+				return E_FAIL;
+			}
+			FORWARD_HR( renderContext.m_secondaryDevice11->CreateTexture2D( &desc, nullptr, &m_stagingTexture ) );
+			if( !m_stagingTexture )
+			{
+				return E_FAIL;
+			}
+		}
+
+		//renderContext.m_context->CopyResource( m_staging, m_texture );
+		if( region.HasBox() )
+		{
+			D3D11_BOX box = { region.m_left, region.m_top, 0, region.m_right, region.m_bottom, 1 };
+			renderContext.m_context->CopySubresourceRegion( m_stagingTexture, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() ), &box );
+		}
+		else
+		{
+			renderContext.m_context->CopySubresourceRegion( m_stagingTexture, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() ), nullptr );
+		}
+
+		D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
+		HRESULT hr = renderContext.m_context->Map( m_stagingTexture, 0, D3D11_MAP_READ, 0, &ms );
+		data = ms.pData;
+		pitch = ms.RowPitch;
+		if( !ms.pData )
+		{
+			return E_FAIL;
+		}
 		return hr;
 	}
-	if( !ms.pData )
+
+	void Tr2TextureAL::UnmapForReading( Tr2RenderContextAL& renderContext )
+	{
+		if( !m_stagingTexture || !renderContext.IsValid() )
+		{
+			return;
+		}
+		renderContext.m_context->Unmap( m_stagingTexture, 0 );
+		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ_OFTEN ) )
+		{
+			m_stagingTexture = nullptr;
+		}
+	}
+
+	ALResult Tr2TextureAL::MapForWriting( const Tr2TextureSubresource& region, void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 	{
 		data = nullptr;
-		pitch = 0;
-		return E_FAIL;
-	}
-#if TRINITY_AL_GUARD_LOCKS
-	m_lockGuard.Lock( ms.RowPitch * GetMipHeight( mipLevel ), ms.pData );
-	data = m_lockGuard.GetMemory();
-	pitch = ms.RowPitch;
-#else
-	data = ms.pData;
-	pitch = ms.RowPitch;
-#endif
-	m_currentLock = LOCK_WRITEONLY;
-	m_currentLockMipLevel = mipLevel;
-    return hr;
-}
 
-ALResult Tr2TextureAL::UnlockWriting( Tr2RenderContextAL & renderContext )
-{
-	if( !m_texture )
-	{
-		return E_FAIL;
-	}
-
-	ON_BLOCK_EXIT( [&]{ 
-		m_currentLock = LOCK_INVALID;
-		m_currentLockMipLevel = 0;
-	} );
-
-	if( !m_writeStaging.empty() )
-	{
-		const uint32_t w = m_writeLtrb[2] - m_writeLtrb[0];
-		const uint32_t pitch = w * GetBytesPerPixel( GetFormat() );
-
-		if( renderContext.m_context ) 
+		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE ) )
 		{
-			D3D11_BOX box;
-			box.left	= m_writeLtrb[0];
-			box.top		= m_writeLtrb[1];
-			box.right	= m_writeLtrb[2];
-			box.bottom	= m_writeLtrb[3];
-			box.front	= 0;
-			box.back	= 1;
+			return E_INVALIDCALL;
+		}
+		if( !IsValid() || !renderContext.IsValid() )
+		{
+			return E_FAIL;
+		}
+		if( !region.IsValidForBitmap( m_desc ) )
+		{
+			return E_INVALIDARG;
+		}
+		if( !region.IsSingleSubresource() )
+		{
+			return E_INVALIDARG;
+		}
+		if( region.HasBox() && Tr2RenderContextEnum::IsCompressedFormat( m_desc.GetFormat() ) )
+		{
+			return E_INVALIDARG;
+		}
 
-			CCP_ASSERT( m_writeLtrb[2] <= GetMipWidth( m_currentLockMipLevel ) && m_writeLtrb[3] <= GetMipHeight( m_currentLockMipLevel ) );
-			if( m_writeLtrb[2] > GetMipWidth( m_currentLockMipLevel ) && m_writeLtrb[3] > GetMipHeight( m_currentLockMipLevel ) )
+		if( HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+		{
+			D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
+			HRESULT hr = renderContext.m_context->Map( m_texture, D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() ), D3D11_MAP_WRITE_DISCARD, 0, &ms );
+			if( FAILED( hr ) )
 			{
-				CCP_LOGERR( "TrinityAL: invalid rectangle in Tr2TextureAL::UnlockWriting" );
+				pitch = 0;
+				return hr;
+			}
+			if( !ms.pData )
+			{
+				pitch = 0;
+				return E_FAIL;
+			}
+			if( region.HasBox() )
+			{
+				ms.pData = static_cast<uint8_t*>( ms.pData ) + region.m_left * Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() ) + region.m_top * ms.RowPitch;
+			}
+#if TRINITY_AL_GUARD_LOCKS
+			size_t size;
+			if( region.HasBox() )
+			{
+				size = ms.RowPitch * ( region.m_bottom - region.m_top );
+			}
+			else
+			{
+				size = ms.RowPitch * m_desc.GetMipHeight( region.m_startMipLevel );
+			}
+
+			m_lockGuard.Lock( size, ms.pData );
+			data = m_lockGuard.GetMemory();
+			pitch = ms.RowPitch;
+#else
+			data = ms.pData;
+			pitch = ms.RowPitch;
+#endif
+			m_lockedSubresource = D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() );
+			return hr;
+		}
+		else
+		{
+			const uint32_t w = region.HasBox() ? region.m_right - region.m_left : m_desc.GetMipWidth( region.m_startMipLevel );
+			const uint32_t h = region.HasBox() ? region.m_bottom - region.m_top : m_desc.GetMipHeight( region.m_startMipLevel );
+			pitch = w * Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() );
+
+			CcpAlignedMallocBuffer buf( "Tr2TextureAL::MapForWriting", pitch * h, 32 );
+			m_writeStaging.swap( buf );
+
+			if( region.HasBox() )
+			{
+				m_writeLtrb[0] = region.m_left;
+				m_writeLtrb[1] = region.m_top;
+				m_writeLtrb[2] = region.m_right;
+				m_writeLtrb[3] = region.m_bottom;
+			}
+			else
+			{
+				m_writeLtrb[0] = 0;
+				m_writeLtrb[1] = 0;
+				m_writeLtrb[2] = w;
+				m_writeLtrb[3] = h;
+			}
+
+			CCP_ASSERT( m_writeLtrb[2] <= m_desc.GetMipWidth( region.m_startMipLevel ) && m_writeLtrb[3] <= m_desc.GetMipHeight( region.m_startMipLevel ) );
+			if( m_writeLtrb[2] > m_desc.GetMipWidth( region.m_startMipLevel ) && m_writeLtrb[3] > m_desc.GetMipHeight( region.m_startMipLevel ) )
+			{
+				CCP_LOGERR( "TrinityAL: invalid rectangle in Tr2TextureAL::LockWriting" );
+				m_writeStaging.clear();
 				return E_FAIL;
 			}
 
-			renderContext.m_context->UpdateSubresource( m_texture, m_currentLockMipLevel, &box, m_writeStaging.get(), pitch, 0 );
+			if( m_writeStaging.empty() )
+			{
+				return E_OUTOFMEMORY;
+			}
+#if TRINITY_AL_GUARD_LOCKS
+			size_t size;
+			if( region.HasBox() )
+			{
+				size = pitch * ( region.m_bottom - region.m_top );
+			}
+			else
+			{
+				size = pitch * m_desc.GetMipHeight( region.m_startMipLevel );
+			}
+
+			m_lockGuard.Lock( size, m_writeStaging.get() );
+			data = m_lockGuard.GetMemory();
+#else
+			data = m_writeStaging.get();
+#endif
+
+			m_lockedSubresource = D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() );
+			return S_OK;
+		}
+	}
+
+	void Tr2TextureAL::UnmapForWriting( Tr2RenderContextAL& renderContext )
+	{
+		if( !renderContext.IsValid() )
+		{
+			return;
+		}
+#if TRINITY_AL_GUARD_LOCKS
+		m_lockGuard.Unlock();
+#endif
+		if( HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+		{
+			renderContext.m_context->Unmap( m_texture, m_lockedSubresource );
+		}
+		else
+		{
+			const uint32_t w = m_writeLtrb[2] - m_writeLtrb[0];
+			const uint32_t pitch = w * Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() );
+
+			if( renderContext.m_context )
+			{
+				D3D11_BOX box;
+				box.left = m_writeLtrb[0];
+				box.top = m_writeLtrb[1];
+				box.right = m_writeLtrb[2];
+				box.bottom = m_writeLtrb[3];
+				box.front = 0;
+				box.back = 1;
+
+				auto mip = m_lockedSubresource % m_desc.GetTrueMipCount();
+
+				if( m_writeLtrb[2] > m_desc.GetMipWidth( mip ) && m_writeLtrb[3] > m_desc.GetMipHeight( mip ) )
+				{
+					CCP_LOGERR( "TrinityAL: invalid rectangle in Tr2TextureAL::UnlockWriting" );
+					return;
+				}
+
+				renderContext.m_context->UpdateSubresource( m_texture, m_lockedSubresource, &box, m_writeStaging.get(), pitch, 0 );
+			}
+
+			m_writeStaging.clear();
+			m_writeLtrb[0] = m_writeLtrb[1] = m_writeLtrb[2] = m_writeLtrb[3] = 0;
+		}
+	}
+
+	ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t slicePitch, Tr2RenderContextAL& renderContext )
+	{
+		if( HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+		{
+			return E_INVALIDCALL;
+		}
+		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE ) && !IsWritable( m_gpuUsage ) )
+		{
+			return E_INVALIDCALL;
 		}
 
-		m_writeStaging.clear();
-		m_writeLtrb[0] = m_writeLtrb[1] = m_writeLtrb[2] = m_writeLtrb[3] = 0;
+		if( !IsValid() || !renderContext.IsValid() )
+		{
+			return E_INVALIDCALL;
+		}
+
+		if( !region.IsValidForBitmap( m_desc ) )
+		{
+			return E_INVALIDARG;
+		}
+		if( !region.IsSingleSubresource() )
+		{
+			return E_INVALIDARG;
+		}
+
+		auto subResource = D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() );
+
+		if( region.HasBox() )
+		{
+			D3D11_BOX box;
+			box.left = region.m_left;
+			box.top = region.m_top;
+			box.front = region.m_front;
+			box.right = region.m_right;
+			box.bottom = region.m_bottom;
+			box.back = region.m_back;
+
+			renderContext.m_context->UpdateSubresource( m_texture, subResource, &box, source, pitch, slicePitch );
+		}
+		else
+		{
+			renderContext.m_context->UpdateSubresource( m_texture, subResource, nullptr, source, pitch, slicePitch );
+		}
 
 		return S_OK;
 	}
 
-#if TRINITY_AL_GUARD_LOCKS
-	m_lockGuard.Unlock();
-#endif
-	renderContext.m_context->Unmap( m_texture, m_currentLockMipLevel );
-	return S_OK;
+	ALResult Tr2TextureAL::CopySubresourceRegion( const Tr2TextureSubresource& destSubresource, Tr2TextureAL& source, const Tr2TextureSubresource& sourceSubresource, Tr2RenderContextAL& renderContext )
+	{
+		if( !IsValid() || !renderContext.IsValid() )
+		{
+			return E_INVALIDCALL;
+		}
+		if( !source.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE ) && !IsWritable( m_gpuUsage ) )
+		{
+			return E_INVALIDCALL;
+		}
+
+		if( destSubresource.IsSubresourceFull( m_desc ) && sourceSubresource.IsSubresourceFull( source.m_desc ) )
+		{
+			renderContext.m_context->CopyResource( m_texture, source.m_texture );
+			return S_OK;
+		}
+
+		Tr2TextureSubresource src = sourceSubresource;
+		Tr2TextureSubresource dst = destSubresource;
+
+		if( !Crop( src, source.m_desc, dst, m_desc ) )
+		{
+			return E_FAIL;
+		}
+
+		D3D11_BOX box = { src.m_left, src.m_top, src.m_front, src.m_right, src.m_bottom, src.m_back };
+
+		const uint32_t srcMipCount = source.m_desc.GetTrueMipCount();
+		const uint32_t dstMipCount = m_desc.GetTrueMipCount();
+
+		const uint32_t mipCount = std::min( src.GetMipCount(), dst.GetMipCount() );
+
+		for( uint32_t mip = 0; mip != mipCount; ++mip )
+		{
+			for( uint32_t face = 0; face != src.GetFaceCount(); ++face )
+			{
+				renderContext.m_context->CopySubresourceRegion(
+					m_texture,
+					D3D10CalcSubresource( dst.m_startMipLevel + mip, dst.m_startFace + face, dstMipCount ),
+					dst.m_left,
+					dst.m_top,
+					dst.m_front,
+					source.m_texture,
+					D3D10CalcSubresource( src.m_startMipLevel + mip, src.m_startFace + face, srcMipCount ),
+					&box );
+			}
+
+			if( mip + 1 != src.GetMipCount() )
+			{
+				AdvanceMip( src, source.m_desc, mip );
+				AdvanceMip( dst, m_desc, mip );
+			}
+
+			box.left = box.left >> 1;
+			box.right = std::max( box.right >> 1, box.left + 1 );
+			box.top = box.top >> 1;
+			box.bottom = std::max( box.bottom >> 1, box.top + 1 );
+			box.front = box.front >> 1;
+			box.back = std::max( box.back >> 1, box.front + 1 );
+		}
+
+		return S_OK;
+	}
+
+	ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& renderContext )
+	{
+		if( !HasFlag( m_gpuUsage, Tr2GpuUsage::RENDER_TARGET ) || !HasFlag( m_gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+		{
+			return E_INVALIDCALL;
+		}
+		if( m_desc.GetTrueMipCount() <= 1 )
+		{
+			return S_OK;
+		}
+		renderContext.m_context->GenerateMips( m_view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] );
+		return S_OK;
+	}
+
+	ALResult Tr2TextureAL::Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext )
+	{
+		if( m_msaa.samples <= 1 )
+		{
+			return destination.CopySubresourceRegion( Tr2TextureSubresource(), *this, Tr2TextureSubresource(), renderContext );
+		}
+
+		if( !IsValid() || !renderContext.IsValid() )
+		{
+			return E_INVALIDCALL;
+		}
+		if( !destination.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+		if( !HasFlag( destination.m_cpuUsage, Tr2CpuUsage::WRITE ) && !IsWritable( destination.m_gpuUsage ) )
+		{
+			return E_INVALIDARG;
+		}
+		if( m_desc.GetWidth() != destination.m_desc.GetWidth() || m_desc.GetHeight() != destination.m_desc.GetHeight() )
+		{
+			return E_INVALIDARG;
+		}
+		if( m_desc.GetFormat() != destination.m_desc.GetFormat() )
+		{
+			return E_INVALIDARG;
+		}
+		if( destination.m_msaa.samples > 1 )
+		{
+			return E_INVALIDARG;
+		}
+
+		renderContext.m_context->ResolveSubresource( destination.m_texture, 0, m_texture, 0, static_cast<DXGI_FORMAT>( m_desc.GetFormat() ) );
+
+		return S_OK;
+	}
+
+	uintptr_t Tr2TextureAL::GetSharedHandle() const
+	{
+		IDXGIResource* pOtherResource( NULL );
+		if( m_texture == NULL )
+		{
+			CCP_AL_LOGERR( "GetSharedHandle: texture is NULL" );
+			return 0;
+		}
+		HRESULT HR = m_texture->QueryInterface( __uuidof( IDXGIResource ), (void**)&pOtherResource );
+		if( FAILED( HR ) )
+		{
+			CCP_AL_LOGERR( "GetSharedHandle: QueryInterface failed: 0x%x", HR );
+			return 0;
+		}
+		else
+		{
+			HANDLE sharedHandle;
+			HR = pOtherResource->GetSharedHandle( &sharedHandle );
+			if( FAILED( HR ) )
+			{
+				CCP_AL_LOGERR( "GetSharedHandle: GetSharedHandle failed: 0x%x", HR );
+				pOtherResource->Release();
+				return 0;
+			}
+			pOtherResource->Release();
+			return reinterpret_cast<uintptr_t>( sharedHandle );
+		}
+	}
+
+	ALResult Tr2TextureAL::Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		Destroy();
+
+		if( texture == nullptr || !renderContext.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+
+		D3D11_TEXTURE2D_DESC dx11Desc;
+		texture->GetDesc( &dx11Desc );
+
+		Tr2BitmapDimensions desc( dx11Desc.Width, dx11Desc.Height, dx11Desc.MipLevels, static_cast<Tr2RenderContextEnum::PixelFormat>( dx11Desc.Format ) );
+		Tr2MsaaDesc msaa( dx11Desc.SampleDesc.Count, dx11Desc.SampleDesc.Quality );
+		Tr2GpuUsage::Type gpuUsage = Tr2GpuUsage::NONE;
+		Tr2CpuUsage::Type cpuUsage = Tr2CpuUsage::NONE;
+
+		cpuUsage = dx11Desc.SampleDesc.Count > 1 ? Tr2CpuUsage::NONE : Tr2CpuUsage::READ;
+		if( dx11Desc.CPUAccessFlags & D3D11_CPU_ACCESS_READ )
+		{
+			cpuUsage = cpuUsage | Tr2CpuUsage::READ;
+		}
+		if( dx11Desc.CPUAccessFlags & D3D11_CPU_ACCESS_WRITE )
+		{
+			if( dx11Desc.Usage == D3D11_USAGE_DYNAMIC )
+			{
+				cpuUsage = cpuUsage | Tr2CpuUsage::WRITE_OFTEN;
+			}
+			else
+			{
+				cpuUsage = cpuUsage | Tr2CpuUsage::WRITE;
+			}
+		}
+		gpuUsage = Tr2GpuUsage::NONE;
+		if( dx11Desc.BindFlags & D3D11_BIND_SHADER_RESOURCE )
+		{
+			gpuUsage = gpuUsage | Tr2GpuUsage::SHADER_RESOURCE;
+		}
+		if( dx11Desc.BindFlags & D3D11_BIND_RENDER_TARGET )
+		{
+			gpuUsage = gpuUsage | Tr2GpuUsage::RENDER_TARGET;
+		}
+		if( dx11Desc.BindFlags & D3D11_BIND_DEPTH_STENCIL )
+		{
+			gpuUsage = gpuUsage | Tr2GpuUsage::DEPTH_STENCIL;
+		}
+		if( dx11Desc.BindFlags & D3D11_BIND_UNORDERED_ACCESS )
+		{
+			gpuUsage = gpuUsage | Tr2GpuUsage::UNORDERED_ACCESS;
+		}
+
+		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, renderContext ) );
+
+		m_texture = texture;
+		m_desc = desc;
+		m_msaa = msaa;
+		m_gpuUsage = gpuUsage;
+		m_cpuUsage = cpuUsage;
+
+		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_desc, m_msaa );
+
+		return S_OK;
+	}
 }
 
 #endif

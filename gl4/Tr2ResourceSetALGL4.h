@@ -20,7 +20,7 @@ namespace TrinityALImpl
 	private:
 		struct Texture
 		{
-			std::shared_ptr<GLuint> texture;
+			GLuint texture;
 			uint32_t registerIndex;
 			GLenum type;
 			GLint srgbDecode;

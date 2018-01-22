@@ -58,7 +58,7 @@ namespace TrinityALImpl
 
 				Texture tex;
 				tex.registerIndex = i + ( stage == VERTEX_SHADER ? D3DVERTEXTEXTURESAMPLER0 : 0 );
-				tex.texture = desc[i].texture->m_texture;
+				tex.texture = desc[i].texture.m_texture->m_texture;
 				m_textures.push_back( tex );
 
 				SamplerState ss;

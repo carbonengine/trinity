@@ -22,7 +22,6 @@ public:
 
 	void Set( MemoryType memoryType, size_t size );
 	void Set( MemoryType memoryType, const Tr2BitmapDimensions& bitmap, const Tr2MsaaDesc& msaa = Tr2MsaaDesc() );
-	void Set( MemoryType memoryType, uint32_t width, uint32_t height, Tr2RenderContextEnum::DepthStencilFormat dsf, const Tr2MsaaDesc& msaa = Tr2MsaaDesc() );
 	void Reset();
 private:
 	Tr2MemoryCounterAL( const Tr2MemoryCounterAL& ) /* = delete */;

@@ -10,9 +10,7 @@ namespace Tr2RenderContextEnum
 	enum ObjectType
 	{
 		OT_CONSTANT_BUFFER,
-		OT_DEPTH_STENCIL,
 		OT_RENDER_CONTEXT,
-		OT_RENDER_TARGET,
 		OT_SHADER,
 		OT_SAMPLER_STATE,
 		OT_TEXTURE,
@@ -219,6 +217,7 @@ namespace Tr2RenderContextEnum
 	{
 		COLOR_SPACE_LINEAR,
 		COLOR_SPACE_SRGB,
+		_COLOR_SPACE_COUNT,
 	};
     
     enum StencilOperation {
@@ -403,6 +402,8 @@ namespace Tr2RenderContextEnum
 	PixelFormat	MakeTypeless( PixelFormat fmt );
 	PixelFormat MakeSrgb( PixelFormat format );
 
+	PixelFormat ConvertDepthStencilFormat( DepthStencilFormat format );
+
 #if defined(_WIN32) && TRINITY_PLATFORM==TRINITY_DIRECTX9
 	// Debug helper while texture work is WIP
 	D3DFORMAT ConvertToD3D9Format( Tr2RenderContextEnum::PixelFormat format );
@@ -428,6 +429,93 @@ namespace Tr2RenderContextEnum
 		CONTEXT_STATUS_FINISHED,
 
 		CONTEXT_STATUS_INVALID,
+	};
+}
+
+
+namespace Tr2CpuUsage
+{
+	enum Type
+	{
+		NONE = 0,
+		READ = 1 << 0,
+		WRITE = 1 << 1,
+		READ_OFTEN = READ | ( 1 << 2 ),
+		WRITE_OFTEN = WRITE | ( 1 << 3 ),
+	};
+
+	inline Type operator|( Type a, Type b )
+	{
+		return Type( int( a ) | int( b ) );
+	}
+
+	inline bool HasFlag( Type value, Type flag )
+	{
+		return ( value & flag ) == flag;
+	}
+}
+
+namespace Tr2GpuUsage
+{
+	enum Type
+	{
+		NONE = 0,
+		VERTEX_BUFFER = 1 << 0,
+		INDEX_BUFFER = 1 << 1,
+
+		RENDER_TARGET = 1 << 2,
+		DEPTH_STENCIL = 1 << 3,
+
+		SHADER_RESOURCE = 1 << 4,
+		UNORDERED_ACCESS = 1 << 5,
+		COPY_DESTINATION = 1 << 6,
+
+		DRAW_INDIRECT_ARGS = 1 << 6,
+		APPEND_CONSUME = UNORDERED_ACCESS | ( 1 << 7 ),
+		BUFFER_COUNTER = UNORDERED_ACCESS | ( 1 << 8 ),
+
+		SHARED = 1 << 9,
+	};
+
+	inline Type operator|( Type a, Type b )
+	{
+		return Type( int( a ) | int( b ) );
+	}
+
+	inline Type& operator|=( Type& a, Type b )
+	{
+		a = Type( a | b );
+		return a;
+	}
+
+	inline bool HasFlag( Type value, Type flag )
+	{
+		return ( value & flag ) == flag;
+	}
+
+	inline bool IsWritable( Type value )
+	{
+		return ( value & ( RENDER_TARGET | DEPTH_STENCIL | UNORDERED_ACCESS | COPY_DESTINATION ) ) != 0;
+	}
+
+	inline bool HasBufferFlags( Type value )
+	{
+		return ( value & ( VERTEX_BUFFER | INDEX_BUFFER | DRAW_INDIRECT_ARGS | ( APPEND_CONSUME & BUFFER_COUNTER ) ) ) != 0;
+	}
+
+	inline bool HasTextureFlags( Type value )
+	{
+		return ( value & ( RENDER_TARGET | DEPTH_STENCIL ) ) != 0;
+	}
+
+}
+
+namespace Tr2LockType
+{
+	enum Type
+	{
+		SYNCHRONIZED,
+		NON_SYNCHRONIZED,
 	};
 }
 

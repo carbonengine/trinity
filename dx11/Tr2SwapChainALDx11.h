@@ -12,7 +12,7 @@
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
 #include "../Tr2MemoryCounterAL.h"
-#include "../include/Tr2RenderTargetAL.h"
+#include "../include/Tr2TextureAL.h"
 
 
 class Tr2PrimaryRenderContextAL;
@@ -36,7 +36,7 @@ public:
 	int GetWidth() const;
 	int GetHeight() const;
 
-	Tr2RenderTargetAL m_backBuffer;
+	Tr2TextureAL m_backBuffer;
 
 	bool operator==( const Tr2SwapChainAL& other ) const { return m_swapChain == other.m_swapChain; }
 
@@ -47,7 +47,8 @@ private:
 
 	DXGI_SWAP_CHAIN_DESC m_description;
 	CComPtr<IDXGISwapChain> m_swapChain;
-	Tr2MemoryCounterAL m_memory;
+	uint32_t m_width;
+	uint32_t m_height;
 };
 
 #endif // TRINITY_PLATFORM==TRINITY_DIRECTX11

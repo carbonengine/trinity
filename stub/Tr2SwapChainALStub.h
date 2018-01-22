@@ -4,7 +4,7 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
-#include "../include/Tr2RenderTargetAL.h"
+#include "../include/Tr2TextureAL.h"
 
 
 class Tr2RenderContextAL;
@@ -30,7 +30,7 @@ public:
 
 	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
 
-	Tr2RenderTargetAL m_backBuffer;
+	Tr2TextureAL m_backBuffer;
 private:
 	Tr2WindowHandle m_windowHandle;
 };

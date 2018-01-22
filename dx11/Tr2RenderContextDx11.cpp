@@ -7,7 +7,6 @@
 #include "ALLog.h"
 
 #include "Tr2PrimaryRenderContextDx11.h"
-#include "Tr2RenderTargetALDx11.h"
 #include "Tr2VertexLayoutALDx11.h"
 #include "Tr2SamplerStateALDx11.h"
 #include "Tr2ShaderALDx11.h"
@@ -525,7 +524,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	: m_topology( TOP_INVALID )
 	, m_lastSetTopology( TOP_INVALID )	
 	, m_dirtyFlag( 0 )
-	, m_boundDepthStencil( nullptr )
 	, m_renderTargetHighWaterMark( 1 )
 	, m_vertexLayout( nullptr )
 	, m_lastSetVertexLayout( nullptr )
@@ -550,7 +548,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
 		m_stackRT[i].SetName( "Tr2RenderContextAL::m_stackRT" );
-		m_boundRenderTarget[i] = nullptr;
 	}
 
 	for( unsigned i = 0; i < std::extent<decltype( m_sharedConstantBuffers )>::value; ++i )
@@ -621,7 +618,7 @@ void Tr2RenderContextAL::Destroy()
 
 	m_secondaryDevice11 = nullptr;
 
-	m_secondaryDefaultBackBuffer = nullptr;	
+	m_secondaryDefaultBackBuffer = Tr2TextureAL();	
 	if( m_aftermathContext )
 	{
 		GFSDK_Aftermath_ReleaseContextHandle( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ) );
@@ -631,7 +628,7 @@ void Tr2RenderContextAL::Destroy()
 
 	m_commandList		= nullptr;
 		
-	m_boundDepthStencil	= nullptr;
+	m_boundDepthStencil	= Tr2TextureAL();
 
 	m_topology = TOP_INVALID;
 	m_lastSetTopology = TOP_INVALID;
@@ -672,9 +669,9 @@ void Tr2RenderContextAL::Destroy()
 	
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
-		m_stackRT[i].swap( TrackableStdStack<const Tr2RenderTargetAL*>() );
+		m_stackRT[i].swap( TrackableStdStack<Tr2TextureAL>() );
 	}
-	m_stackDS.swap( TrackableStdStack<const Tr2DepthStencilAL*>() );
+	m_stackDS.swap( TrackableStdStack<Tr2TextureAL>() );
 
 	m_hasHullShader = false;
 	m_previouslyHadHullShader = false;
@@ -1061,8 +1058,8 @@ ALResult Tr2RenderContextAL::Clear(
 	if( clearFlags & CLEARFLAGS_TARGET )
 	{
 		ID3D11RenderTargetView*	rtView = 
-			m_boundRenderTarget[slot]	?	m_boundRenderTarget[slot]->m_RTV 
-										:	slot == 0	? m_secondaryDefaultBackBuffer->m_RTV 
+			m_boundRenderTarget[slot].IsValid()	?	m_boundRenderTarget[slot].m_texture->m_renderTarget[COLOR_SPACE_LINEAR]
+										:	slot == 0	? m_secondaryDefaultBackBuffer.m_texture->m_renderTarget[COLOR_SPACE_LINEAR]
 														: nullptr;
 
 		if( rtView )
@@ -1090,15 +1087,11 @@ ALResult Tr2RenderContextAL::Clear(
 		d3dFlags |= D3D11_CLEAR_STENCIL;
 	}
 
-	if( d3dFlags && m_boundDepthStencil )
+	if( d3dFlags && m_boundDepthStencil.IsValid() )
 	{
-		const Tr2DepthStencilAL& target = *m_boundDepthStencil;
-		if( target.IsValid() && target.m_depthStencilView )
-		{
-			m_context->ClearDepthStencilView(	target.m_depthStencilView, 
-												d3dFlags, depth, 
-												static_cast<UINT8>(stencil) );
-		}
+		m_context->ClearDepthStencilView( m_boundDepthStencil.m_texture->m_depthStencil[TrinityALImpl::Tr2TextureAL::DepthOption::READ_WRITE],
+											d3dFlags, depth, 
+											static_cast<UINT8>(stencil) );
 	}
 
 	return S_OK;
@@ -1129,14 +1122,14 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 	// Follow the DX9 behavior: null means 'default backbuffer' for slot 0, and 'nothing' for everything else.
 	for( uint32_t i = 0; i != m_renderTargetHighWaterMark; ++i )
 	{
-		if( m_boundRenderTarget[i] )
+		auto srgb = m_isSrgbRenderTarget ? COLOR_SPACE_SRGB : COLOR_SPACE_LINEAR;
+		if( m_boundRenderTarget[i].IsValid() )
 		{
-			AL_UPDATE_RESOURCE_FRAME_USAGE( *m_boundRenderTarget[i] );
-			rtViews[i] = m_isSrgbRenderTarget ? m_boundRenderTarget[i]->m_RTVsRgb : m_boundRenderTarget[i]->m_RTV;
+			rtViews[i] = m_boundRenderTarget[i].m_texture->m_renderTarget[srgb];
 		}
 		else if( i == 0 )
 		{
-			rtViews[i] = m_isSrgbRenderTarget ? m_secondaryDefaultBackBuffer->m_RTVsRgb : m_secondaryDefaultBackBuffer->m_RTV;
+			rtViews[i] = m_secondaryDefaultBackBuffer.m_texture->m_renderTarget[srgb];
 		}
 		else
 		{
@@ -1144,34 +1137,32 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 		}
 	}
 
-	const Tr2RenderTargetAL& bb = m_boundRenderTarget[0]	? *m_boundRenderTarget[0] 
-															: *m_secondaryDefaultBackBuffer;
+	auto& bb = m_boundRenderTarget[0].IsValid() ? m_boundRenderTarget[0] : m_secondaryDefaultBackBuffer;
 
 	// Msaa zero is the same as one, so does need to show up as 'compatible'
-	const uint32_t dsMsaaType = m_boundDepthStencil ? std::max( m_boundDepthStencil->GetMsaaDesc().samples, 1u ) : 1;
+	const uint32_t dsMsaaType = m_boundDepthStencil.IsValid() ? std::max( m_boundDepthStencil.GetMsaaDesc().samples, 1u ) : 1;
 	const uint32_t bbMsaaType = std::max( bb.GetMsaaDesc().samples, 1u );
 
 	// dont't even bother setting it when the dimensions don't match, it's not gonna work.
 	// This happens when we set/push/pop an RT and DS in two separate calls -- there's a point between
 	// those two where it's in a bad state.  Silently "works" in DX9, complains in DX11. Fix the spam:
-	if( !m_boundDepthStencil	||
-		( m_boundDepthStencil->GetWidth()		== bb.GetWidth()		&&
-		  m_boundDepthStencil->GetHeight()		== bb.GetHeight()		&&
-		  m_boundDepthStencil->GetMsaaDesc().quality == bb.GetMsaaDesc().quality	&&
+	if( !m_boundDepthStencil.IsValid()	||
+		( m_boundDepthStencil.GetDesc().GetWidth()		== bb.GetDesc().GetWidth()		&&
+		  m_boundDepthStencil.GetDesc().GetHeight()		== bb.GetDesc().GetHeight()		&&
+		  m_boundDepthStencil.GetMsaaDesc().quality == bb.GetMsaaDesc().quality	&&
 		  dsMsaaType							== bbMsaaType
 		) )
 	{		
 		ID3D11DepthStencilView* dsView = nullptr;
-		if( m_boundDepthStencil )
+		if( m_boundDepthStencil.IsValid() )
 		{
-			AL_UPDATE_RESOURCE_FRAME_USAGE( *m_boundDepthStencil );
 			if( m_isDepthReadOnly )
 			{
-				dsView = m_boundDepthStencil->m_depthStencilViewReadOnly;
+				dsView = m_boundDepthStencil.m_texture->m_depthStencil[TrinityALImpl::Tr2TextureAL::DepthOption::READ_ONLY];
 			}
 			else
 			{
-				dsView = m_boundDepthStencil->m_depthStencilView;
+				dsView = m_boundDepthStencil.m_texture->m_depthStencil[TrinityALImpl::Tr2TextureAL::DepthOption::READ_WRITE];
 			}
 		}
 		if( m_psUavsDirtyBegin < m_psUavsDirtyEnd )
@@ -1209,8 +1200,8 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 	//
 	if( changedSlot == 0 )
 	{
-		SetViewport( Tr2Viewport ( bb.GetWidth(), bb.GetHeight() ) );
-		SetScissorRect( 0, 0, bb.GetWidth(), bb.GetHeight() );
+		SetViewport( Tr2Viewport ( bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() ) );
+		SetScissorRect( 0, 0, bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() );
 	}
 
 	return S_OK;
@@ -1233,28 +1224,52 @@ bool Tr2RenderContextAL::GetReadOnlyDepth() const
 	return m_useReadOnlyDepthView;
 }
 
-ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2DepthStencilAL& depthStencil )
+ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 {
-	AL_UPDATE_RESOURCE_FRAME_USAGE( depthStencil );
-
-	m_boundDepthStencil = depthStencil.IsValid() ? &depthStencil : nullptr;
+	if( depthStencil.IsValid() )
+	{
+		if( Tr2GpuUsage::HasFlag( depthStencil.GetGpuUsage(), Tr2GpuUsage::DEPTH_STENCIL ) )
+		{
+			m_boundDepthStencil = depthStencil;
+		}
+		else
+		{
+			return E_INVALIDARG;
+		}
+	}
+	else
+	{
+		m_boundDepthStencil = Tr2TextureAL();
+	}
 	
 	SetRtDsToDevice( MAX_RENDER_TARGET );
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2RenderTargetAL& renderTarget, uint32_t slot )
+ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot )
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );
 	if( slot >= MAX_RENDER_TARGET )
 	{
-		return E_FAIL;
+		return E_INVALIDARG;
+	}
+	if( renderTarget.IsValid() )
+	{
+		if( Tr2GpuUsage::HasFlag( renderTarget.GetGpuUsage(), Tr2GpuUsage::RENDER_TARGET ) )
+		{
+			m_boundRenderTarget[slot] = renderTarget;
+		}
+		else
+		{
+			return E_INVALIDARG;
+		}
+	}
+	else
+	{
+		m_boundRenderTarget[slot] = Tr2TextureAL();
 	}
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( renderTarget );
-
-	m_boundRenderTarget[slot] = renderTarget.IsValid() ? &renderTarget : nullptr;
-	m_renderTargetHighWaterMark = std::max( m_renderTargetHighWaterMark, slot+1 );
+	m_renderTargetHighWaterMark = std::max( m_renderTargetHighWaterMark, slot + 1 );
 
 	SetRtDsToDevice( slot );
 	return S_OK;
@@ -2092,23 +2107,15 @@ ALResult Tr2RenderContextAL::SetUav(
 	uint32_t slot, 
 	Tr2TextureAL& texture ) 
 {
-	ID3D11UnorderedAccessView* view;
+	ID3D11UnorderedAccessView* view = nullptr;
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( texture );
-	if( texture.m_uav == nullptr )
+	if( texture.IsValid() )
 	{
-		if( &texture == &nullTX )
-		{
-			view = nullptr;
-		}
-		else
+		view = texture.m_texture->m_uav;
+		if( !view )
 		{
 			return E_INVALIDARG;
 		}
-	}
-	else
-	{
-		view = texture.m_uav;
 	}
 
 	switch( inputType )
@@ -2140,40 +2147,26 @@ ALResult Tr2RenderContextAL::SetUav(
 }
 
 // --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::ClearUav( Tr2RenderTargetAL& rt, const float values[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& rt, const float values[4] ) throw( )
 {
-	auto& texture = rt.GetTexture();
-	if( !m_context || !texture.IsValid() )
-	{
-		return E_FAIL;
-	}
-	if( texture.m_uav == nullptr )
+	if( rt.m_texture->m_uav == nullptr )
 	{
 		return E_INVALIDARG;
 	}
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( rt );
-	// TODO: more check? (buffer format)
-	m_context->ClearUnorderedAccessViewFloat( rt.GetTexture().m_uav, values );
+	m_context->ClearUnorderedAccessViewFloat( rt.m_texture->m_uav, values );
 	return S_OK;
 }
 
 // --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::ClearUav( Tr2RenderTargetAL& rt, const uint32_t values[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& rt, const uint32_t values[4] ) throw( )
 {
-	auto& texture = rt.GetTexture();
-	if( !m_context || !texture.IsValid() )
-	{
-		return E_FAIL;
-	}
-	if( texture.m_uav == nullptr )
+	if( rt.m_texture->m_uav == nullptr )
 	{
 		return E_INVALIDARG;
 	}
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( rt );
-	// TODO: more check? (buffer format)
-	m_context->ClearUnorderedAccessViewUint( rt.GetTexture().m_uav, values );
+	m_context->ClearUnorderedAccessViewUint( rt.m_texture->m_uav, values );
 	return S_OK;
 }
 
@@ -2258,10 +2251,10 @@ ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& hei
 		return E_INVALIDARG;
 	}
 
-	if( m_boundRenderTarget[slot] )
+	if( m_boundRenderTarget[slot].IsValid() )
 	{
-		width = m_boundRenderTarget[slot]->GetWidth();
-		height = m_boundRenderTarget[slot]->GetHeight();
+		width = m_boundRenderTarget[slot].GetDesc().GetWidth();
+		height = m_boundRenderTarget[slot].GetDesc().GetHeight();
 		return S_OK;
 	}
 	
@@ -2277,16 +2270,14 @@ ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& hei
 	return E_FAIL;
 }
 
-bool Tr2RenderContextAL::IsBackBuffer( const Tr2RenderTargetAL& rt ) const throw()
+bool Tr2RenderContextAL::IsBackBuffer( const Tr2TextureAL& rt ) const throw()
 {
-	return	m_secondaryDefaultBackBuffer && 
-		&rt == m_secondaryDefaultBackBuffer.get();
+	return	m_secondaryDefaultBackBuffer == rt;
 }
 
-Tr2RenderTargetAL& Tr2RenderContextAL::GetDefaultBackBuffer()
+Tr2TextureAL& Tr2RenderContextAL::GetDefaultBackBuffer()
 {
-	static Tr2RenderTargetAL noRT;
-	return m_secondaryDefaultBackBuffer ? *m_secondaryDefaultBackBuffer : noRT;
+	return m_secondaryDefaultBackBuffer;
 }
 
 void Tr2RenderContextAL::ReleaseDeviceResources()

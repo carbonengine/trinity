@@ -6,11 +6,9 @@
 #include "include/Tr2BitmapDimensions.h"
 #include "include/Tr2CubemapFace.h"
 
-class Tr2DepthStencilAL;
 class Tr2ShaderAL;
 class Tr2ConstantBufferAL;
 class Tr2TextureAL;
-class Tr2RenderTargetAL;
 class Tr2VertexLayoutAL;
 class Tr2ShaderProgramAL;
 
@@ -21,7 +19,7 @@ class Tr2ShaderProgramAL;
 // -------------------------------------------------------------
 struct Tr2SubresourceData
 {
-	void*		m_sysMem;			// pointer to pixels for this mip
+	const void*	m_sysMem;			// pointer to pixels for this mip
 	uint32_t	m_sysMemPitch;		// size in bytes of one line of pixels
 	uint32_t	m_sysMemSlicePitch;	// size in bytes of entire mip level. cannot be zero!
 };
@@ -60,10 +58,18 @@ struct Tr2BitmapDimensions;
 struct Tr2TextureSubresource
 {
 	Tr2TextureSubresource();
+	explicit Tr2TextureSubresource( uint32_t mipLevel );
 	Tr2TextureSubresource( uint32_t face, uint32_t mipLevel );
 
 	void ClampToTexture( const Tr2BitmapDimensions& texture );
 	bool IsSubresourceFull( const Tr2BitmapDimensions& texture ) const;
+	bool IsValidForBitmap( const Tr2BitmapDimensions& bitmap ) const;
+	bool HasBox() const;
+	bool IsSingleSubresource() const;
+
+	Tr2TextureSubresource& SetBox( const uint32_t* ltfrbb );
+	Tr2TextureSubresource& SetRect( const uint32_t* ltrb );
+	Tr2TextureSubresource& SetRect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom );
 
 	bool operator==( const Tr2TextureSubresource& other ) const;
 	bool IsValid() const;
@@ -231,12 +237,6 @@ namespace std
 
 // -------------------------------------------------------------
 // Description:
-// This is a null depth stencil. If you want to disable depth testing, push or set this one.
-// -------------------------------------------------------------
-extern const Tr2DepthStencilAL	nullDS;
-
-// -------------------------------------------------------------
-// Description:
 // These are null shaders. If you want to disable a shader stage, set any of these.
 // -------------------------------------------------------------
 extern const Tr2ShaderAL		nullShader[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
@@ -246,21 +246,6 @@ extern const Tr2ShaderAL		nullShader[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 // This is a null constant buffer. If you want to unbind any currently bound constant buffers, set this one.
 // -------------------------------------------------------------
 extern const Tr2ConstantBufferAL	nullCB;
-
-// -------------------------------------------------------------
-// Description:
-// This is a null texture. If you want to unbind any currently bound texture, set this one.
-// -------------------------------------------------------------
-extern const Tr2TextureAL		nullTX;
-
-// -------------------------------------------------------------
-// Description:
-// This is a null renderTarget. When bound to slot 0, this will bind the swapChain's main backbuffer,
-// since not having a renderTarget bound is not allowed.
-// For slots 1 and up, this will unbind any currently bound renderTarget and therefor disable PS out for
-// that slot.
-// -------------------------------------------------------------
-extern const Tr2RenderTargetAL	nullRT;
 
 // -------------------------------------------------------------
 // Description:

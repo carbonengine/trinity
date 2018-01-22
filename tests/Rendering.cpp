@@ -888,11 +888,11 @@ TEST_F( Rendering, CanClearRenderTarget )
 			0.0f ),
 		*renderContext ) );
 
-	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	Tr2TextureAL rt;
+	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt.GetTexture() );
+	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
 	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
@@ -1026,12 +1026,12 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 			0.0f ),
 		*renderContext ) );
 
-	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	Tr2TextureAL rt;
+	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt.GetTexture() );
+	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
 	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
@@ -1174,15 +1174,15 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 			0.0f ),
 		*renderContext ) );
 
-	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc( 4 ), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	Tr2TextureAL rt;
+	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc( 4 ), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
-	Tr2RenderTargetAL readableRt;
-	ASSERT_HRESULT_SUCCEEDED( readableRt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	Tr2TextureAL readableRt;
+	ASSERT_HRESULT_SUCCEEDED( readableRt.CreateRenderTarget( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, readableRt.GetTexture() );
+	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, readableRt );
 	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
@@ -2552,8 +2552,8 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 #include INCLUDE_SHADER_CODE( ConstantColor.ps )
 	};
 
-	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 0, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	Tr2TextureAL rt;
+	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 0, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 	Tr2ShaderAL psFill;
 	ASSERT_HRESULT_SUCCEEDED( psFill.Create( 
@@ -2628,7 +2628,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt.GetTexture() );
+	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
 	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampler );
 
 	Tr2ResourceSetAL resourceSet;
@@ -2781,15 +2781,15 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 			0.0f ),
 		*renderContext ) );
 
-	Tr2RenderTargetAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	Tr2TextureAL rt;
+	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
-	Tr2RenderTargetAL rt2;
-	ASSERT_HRESULT_SUCCEEDED( rt2.Create( 256, 256, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	Tr2TextureAL rt2;
+	ASSERT_HRESULT_SUCCEEDED( rt2.CreateRenderTarget( 256, 256, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt2.GetTexture() );
+	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt2 );
 	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
@@ -3778,7 +3778,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 		uint32_t pitch;
 		ASSERT_HRESULT_SUCCEEDED( tex.Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_WRITEONLY, *renderContext ) );
 		*reinterpret_cast<uint32_t*>( data ) = 0xffff0000;
-		ASSERT_HRESULT_SUCCEEDED( tex.Unlock( *renderContext ) );
+		tex.UnmapForWriting( *renderContext );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
 
@@ -3787,7 +3787,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 
 		ASSERT_HRESULT_SUCCEEDED( tex.Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_WRITEONLY, *renderContext ) );
 		*reinterpret_cast<uint32_t*>( data ) = 0xff00ff00;
-		ASSERT_HRESULT_SUCCEEDED( tex.Unlock( *renderContext ) );
+		tex.UnmapForWriting( *renderContext );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb2, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );

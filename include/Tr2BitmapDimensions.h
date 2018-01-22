@@ -59,6 +59,8 @@ struct Tr2BitmapDimensions
 
 	Tr2RenderContextEnum::TextureType GetType() const;
 
+	bool operator==( const Tr2BitmapDimensions& other ) const;
+
 protected:
 	uint32_t m_width;
 	uint32_t m_height;
@@ -271,6 +273,19 @@ inline uint32_t Tr2BitmapDimensions::GetMipNumRows( uint32_t level ) const
 inline Tr2RenderContextEnum::TextureType Tr2BitmapDimensions::GetType() const 
 { 
 	return m_type; 
+}
+
+inline bool Tr2BitmapDimensions::operator==( const Tr2BitmapDimensions& other ) const
+{
+	return
+		m_width == other.m_width &&
+		m_height == other.m_height &&
+		m_volumeDepth == other.m_volumeDepth &&
+		m_mipCount == other.m_mipCount &&
+		m_arraySize == other.m_arraySize &&
+		m_type == other.m_type &&
+		m_format == other.m_format;
+
 }
 
 #endif

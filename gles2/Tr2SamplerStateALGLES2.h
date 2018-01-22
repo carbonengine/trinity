@@ -15,6 +15,8 @@ struct Tr2SamplerDescription;
 
 namespace TrinityALImpl
 {
+	class Tr2TextureAL;
+
 	class Tr2SamplerStateAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>
 	{
 	public:
@@ -28,9 +30,7 @@ namespace TrinityALImpl
 
 	private:
 		friend class ::Tr2RenderContextAL;
-		friend class ::Tr2TextureAL;
-		friend class ::Tr2RenderTargetAL;
-		friend class ::Tr2DepthStencilAL;
+		friend class Tr2TextureAL;
 		friend class Tr2ResourceSetAL;
 
 		struct StateData

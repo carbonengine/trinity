@@ -3,6 +3,7 @@
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
 #include "Tr2BufferAL.h"
+#include "Tr2TextureAL.h"
 #include "Tr2SamplerStateAL.h"
 
 class Tr2PrimaryRenderContextAL;
@@ -36,10 +37,9 @@ private:
 
 		bool operator==( const Resource& other ) const;
 
-		const Tr2TextureAL* texture;
+		Tr2TextureAL texture;
 		Tr2BufferAL buffer;
 		ResourceType type;
-		Tr2ObjectIdAL id;
 		Tr2RenderContextEnum::ColorSpace colorSpace;
 	};
 

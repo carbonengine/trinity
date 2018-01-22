@@ -58,8 +58,6 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_CONTEX
 };
 
 class Tr2ConstantBufferAL;
-class Tr2DepthStencilAL;
-class Tr2RenderTargetAL;
 class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2TextureAL;
@@ -74,6 +72,7 @@ namespace TrinityALImpl
 	class Tr2SamplerStateAL;
 	class Tr2ResourceSetAL;
 	class Tr2BufferAL;
+	class Tr2TextureAL;
 }
 
 // --------------------------------------------------------------------------------------
@@ -94,50 +93,6 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_CONSTANT_BUFF
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
 	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
-};
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Description structure for Tr2DepthStencilAL. 
-// See Also:
-//   Tr2TrackedALObjectBase
-// --------------------------------------------------------------------------------------
-template<>
-struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENCIL>
-{
-	// ----------------------------------------------------------------------------------
-	// Description:
-	//   AL object type this information structure is applied to.
-	// ----------------------------------------------------------------------------------
-	typedef Tr2DepthStencilAL ObjectType;
-
-	static const char* GetName();
-	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
-	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
-private:
-	static unsigned GetSizeEstimate( ObjectType* object );
-};
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Description structure for Tr2RenderTargetAL. 
-// See Also:
-//   Tr2TrackedALObjectBase
-// --------------------------------------------------------------------------------------
-template<>
-struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_TARGET>
-{
-	// ----------------------------------------------------------------------------------
-	// Description:
-	//   AL object type this information structure is applied to.
-	// ----------------------------------------------------------------------------------
-	typedef Tr2RenderTargetAL ObjectType;
-
-	static const char* GetName();
-	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
-	static void DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object );
-private:
-	static unsigned GetSizeEstimate( ObjectType* object );
 };
 
 // --------------------------------------------------------------------------------------
@@ -193,7 +148,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TEXTURE>
 	// Description:
 	//   AL object type this information structure is applied to.
 	// ----------------------------------------------------------------------------------
-	typedef Tr2TextureAL ObjectType;
+	typedef TrinityALImpl::Tr2TextureAL ObjectType;
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );

@@ -7,8 +7,6 @@
 #include "Tr2HalHelperStructures.h"
 #include "Tr2ConstantBufferALDx9.h"
 #include "Tr2SamplerStateALDx9.h"
-#include "Tr2DepthStencilALDx9.h"
-#include "Tr2RenderTargetALDx9.h"
 #include "Tr2VideoAdapterInfoALDx9.h"
 #include "Tr2VertexLayoutALDx9.h"
 #include "Tr2ShaderALDx9.h"
@@ -295,9 +293,11 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
-		m_boundRenderTarget[i] = nullptr;
+		m_boundRenderTarget[i] = Tr2TextureAL();
 		m_stackRT[i].SetName( "Tr2RenderContextAL::m_stackRT" );
 	}
+
+	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
@@ -691,7 +691,7 @@ bool Tr2RenderContextAL::GetReadOnlyDepth() const
 	return false;
 }
 
-ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2DepthStencilAL& depthStencil )
+ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 {
 	if( !m_d3dDevice9 )
 	{
@@ -709,26 +709,21 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2DepthStencilAL& depthSten
 	{
 		return m_d3dDevice9->SetDepthStencilSurface( nullptr );
 	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( depthStencil );
-	if( depthStencil.m_depthStencil )
-	{
-		return m_d3dDevice9->SetDepthStencilSurface( depthStencil.m_depthStencil );
-	}
-	if( depthStencil.m_depthStencilREADABLE )
-	{
-		CComPtr<IDirect3DSurface9> surf;
-		CR_RETURN_HR( depthStencil.m_depthStencilREADABLE->GetSurfaceLevel( 0, &surf ) );
-		return m_d3dDevice9->SetDepthStencilSurface( surf );
-	}
-	return E_FAIL;
+	auto& ds = *depthStencil.m_texture;
+
+	return m_d3dDevice9->SetDepthStencilSurface( ds.m_surface );
 }
 
-ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2RenderTargetAL& renderTarget, uint32_t slot )
+ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot )
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );
 	if( slot >= MAX_RENDER_TARGET )
 	{
 		return E_INVALIDARG;
+	}
+	if( !m_d3dDevice9 )
+	{
+		return E_FAIL;
 	}
 
 	for( uint32_t i = 0; i < 16; ++i )
@@ -740,23 +735,26 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2RenderTargetAL& renderTar
 		m_d3dDevice9->SetTexture( D3DVERTEXTEXTURESAMPLER0 + i, nullptr );
 	}
 
-	if( &renderTarget == &nullRT && slot == 0 )
+
+	if( !renderTarget.IsValid() )
 	{
-		m_boundRenderTarget[slot] = nullptr;
-		if( !m_d3dDevice9 )
+		m_boundRenderTarget[slot] = Tr2TextureAL();
+		if( slot == 0 )
 		{
-			return E_FAIL;
+			return m_d3dDevice9->SetRenderTarget( slot, m_nullRT );
 		}
-		return m_d3dDevice9->SetRenderTarget( slot, m_nullRT );
+		else
+		{
+			return m_d3dDevice9->SetRenderTarget( slot, nullptr );
+		}
 	}
 	else
 	{
-		AL_UPDATE_RESOURCE_FRAME_USAGE( renderTarget );
-		// This can get complicated enough that we just go and ask the RT to do it.
-		HRESULT hr = renderTarget.Bind( slot, *this );
+		auto& rt = *renderTarget.m_texture;
+		auto hr = m_d3dDevice9->SetRenderTarget( slot, rt.m_surface );
 		if( SUCCEEDED( hr ) )
 		{
-			m_boundRenderTarget[slot] = &renderTarget;
+			m_boundRenderTarget[slot] = renderTarget;
 		}
 		return hr;
 	}
@@ -867,9 +865,7 @@ ALResult Tr2RenderContextAL::CreateDevice(
 
 	CComPtr<IDirect3DSurface9> backBuffer;
 	CR_RETURN_HR( m_d3dDevice9->GetRenderTarget( 0, &backBuffer ) );
-	CR_RETURN_HR( m_defaultBackBuffer.Attach( backBuffer, *this ) );
-
-	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_defaultBackBuffer, m_defaultBackBuffer.GetMsaaDesc() );
+	CR_RETURN_HR( m_defaultBackBuffer.m_texture->Attach( backBuffer, *this ) );
 
 	m_nullRT = nullptr;
 	CR_RETURN_HR( m_d3dDevice9->CreateRenderTarget( 1, 1,
@@ -924,7 +920,7 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2Pr
 	}
 
 	m_nullRT = nullptr;
-	m_defaultBackBuffer.Destroy();
+	m_defaultBackBuffer.m_texture->Destroy();
 
 	D3DPRESENT_PARAMETERS pp;
 	pp.BackBufferWidth = presentationParameters.mode.width;
@@ -966,9 +962,7 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2Pr
 
 	CComPtr<IDirect3DSurface9> backBuffer;
 	CR_RETURN_HR( m_d3dDevice9->GetRenderTarget( 0, &backBuffer ) );
-	CR_RETURN_HR( m_defaultBackBuffer.Attach( backBuffer, *this ) );
-
-	m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_defaultBackBuffer, m_defaultBackBuffer.GetMsaaDesc() );
+	CR_RETURN_HR( m_defaultBackBuffer.m_texture->Attach( backBuffer, *this ) );
 
 	m_nullRT = nullptr;
 	CR_RETURN_HR( m_d3dDevice9->CreateRenderTarget(		1, 1, 
@@ -1448,10 +1442,7 @@ void Tr2RenderContextAL::ReleaseDeviceResources()
 			m_stackRT[i].pop();
 		}
 
-		if( m_boundRenderTarget[i] )
-		{
-			m_boundRenderTarget[i] = nullptr;
-		}
+		m_boundRenderTarget[i] = Tr2TextureAL();
 	}
 	while( !m_stackDS.empty() )
 	{
@@ -1462,7 +1453,7 @@ void Tr2RenderContextAL::ReleaseDeviceResources()
 		m_stackDS.pop();
 	}
 
-	m_defaultBackBuffer.Destroy();
+	m_defaultBackBuffer.m_texture->Destroy();
 	m_nullRT = nullptr;
 }
 

@@ -6,8 +6,8 @@
 #include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2RenderContextAL.h"
 #include "../include/Tr2CapsAL.h"
-#include "../include/Tr2DepthStencilAL.h"
 #include "../include/Tr2SamplerStateAL.h"
+#include "../include/Tr2TextureAL.h"
 
 
 struct Tr2PresentParametersAL;
@@ -59,12 +59,12 @@ public:
 	CComPtr<IDXGIFactory>			m_dxgiFactory;
 	CComPtr<IDXGIOutput>			m_dxgiOutput;
 		
-	std::shared_ptr<Tr2RenderTargetAL> m_defaultBackBuffer;
+	Tr2TextureAL m_defaultBackBuffer;
 		
 private:
 	ALResult CreateBackBuffers( const Tr2PresentParametersAL& presentationParameters );
 
-	Tr2DepthStencilAL				m_defaultDepthStencil;	// default depthstencil for the backbuffer
+	Tr2TextureAL m_defaultDepthStencil;	// default depthstencil for the backbuffer
 
 	uint32_t			m_vsyncInterval;
 

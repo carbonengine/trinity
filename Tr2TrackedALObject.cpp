@@ -236,166 +236,6 @@ void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_CONSTANT_BUFFER
 // Return Value:
 //   AL type name
 // ----------------------------------------------------------------------------------
-const char* Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENCIL>::GetName()
-{
-	return "Tr2DepthStencilAL";
-}
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns information about the AL object (as string -> int values).
-// Arguments:
-//   flags - Resource memory class filter
-//   object - AL object
-//   description - (out) information on AL object (as string -> int values)
-// Return value:
-//   true If object is alive and matches memory filter
-//   false Otherwise
-// ----------------------------------------------------------------------------------
-bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENCIL>::GetDescription( 
-	Tr2ALMemoryTypes flags, 
-	ObjectType* object, 
-	std::map<std::string, uint32_t>& description )
-{
-	if( object->IsValid() && ( object->GetMemoryClass() & flags ) != 0 )
-	{
-		REPORT_LAST_FRAME_USED;
-		description["memory"] = object->GetMemoryClass();
-		description["size"] = GetSizeEstimate( object );
-		description["width"] = object->GetWidth();
-		description["height"] = object->GetHeight();
-		description["format"] = uint32_t( object->GetFormat() );
-		description["msaaType"] = object->GetMsaaDesc().samples;
-		description["msaaQuality"] = object->GetMsaaDesc().quality;
-		return true;
-	}
-	return false;
-}
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns estimated size of depth buffer.
-// Arguments:
-//   object - AL object
-// Return value:
-//   estimated size of depth buffer
-// ----------------------------------------------------------------------------------
-unsigned Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENCIL>::GetSizeEstimate( ObjectType* object )
-{
-	unsigned bpp = 0;
-	switch( object->GetFormat() )
-	{
-	case Tr2RenderContextEnum::DSFMT_D24S8:
-	case Tr2RenderContextEnum::DSFMT_D24X8:
-	case Tr2RenderContextEnum::DSFMT_D24FS8:
-	case Tr2RenderContextEnum::DSFMT_D32F:
-	case Tr2RenderContextEnum::DSFMT_D32:
-	case Tr2RenderContextEnum::DSFMT_READABLE:
-	case Tr2RenderContextEnum::DSFMT_AUTO:
-	case Tr2RenderContextEnum::DSFMT_D24X4S4:
-	case Tr2RenderContextEnum::DSFMT_D32F_LOCKABLE:
-		bpp = 4;
-		break;
-		
-	case Tr2RenderContextEnum::DSFMT_D16_LOCKABLE:
-	case Tr2RenderContextEnum::DSFMT_D15S1:	
-	case Tr2RenderContextEnum::DSFMT_D16:
-		bpp = 2;
-		break;
-
-	default:
-		bpp = 0;
-		break;
-	}
-	return object->GetWidth() * object->GetHeight() * bpp;
-}
-
-void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_DEPTH_STENCIL>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
-{
-	if( object->GetMemoryClass() & flags )
-	{
-		object->Destroy();
-	}
-}
-
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns name of AL type this structure applies to.
-// Return Value:
-//   AL type name
-// ----------------------------------------------------------------------------------
-const char* Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_TARGET>::GetName()
-{
-	return "Tr2RenderTargetAL";
-}
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns information about the AL object (as string -> int values).
-// Arguments:
-//   flags - Resource memory class filter
-//   object - AL object
-//   description - (out) information on AL object (as string -> int values)
-// Return value:
-//   true If object is alive and matches memory filter
-//   false Otherwise
-// ----------------------------------------------------------------------------------
-bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_TARGET>::GetDescription( 
-	Tr2ALMemoryTypes flags, 
-	ObjectType* object, 
-	std::map<std::string, uint32_t>& description )
-{
-	if( object->IsValid() && ( object->GetMemoryClass() & flags ) != 0 )
-	{
-		REPORT_LAST_FRAME_USED;
-		description["memory"] = object->GetMemoryClass();
-		description["size"] = GetSizeEstimate( object );
-		description["width"] = object->GetWidth();
-		description["height"] = object->GetHeight();
-		description["mipLevels"] = object->GetMipCount();
-		description["trueMipLevels"] = object->GetTrueMipCount();
-		description["format"] = uint32_t( object->GetFormat() );
-		description["msaaType"] = object->GetMsaaDesc().samples;
-		description["msaaQuality"] = object->GetMsaaDesc().quality;
-		return true;
-	}
-	return false;
-}
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns estimated size of render target.
-// Arguments:
-//   object - AL object
-// Return value:
-//   estimated size of render target
-// ----------------------------------------------------------------------------------
-unsigned Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_TARGET>::GetSizeEstimate( ObjectType* object )
-{
-	unsigned size = 0;
-	for( unsigned i = 0; i < object->GetTrueMipCount(); ++i )
-	{
-		size += object->GetMipSize( i );
-	}
-	return size;
-}
-
-void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_TARGET>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
-{
-	if( object->GetMemoryClass() & flags )
-	{
-		object->Destroy();
-	}
-}
-
-
-// ----------------------------------------------------------------------------------
-// Description:
-//   Returns name of AL type this structure applies to.
-// Return Value:
-//   AL type name
-// ----------------------------------------------------------------------------------
 const char* Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER>::GetName()
 {
 	return "Tr2ShaderAL";
@@ -512,14 +352,13 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TEXTURE>::GetDe
 {
 	if( object->IsValid() && ( object->GetMemoryClass() & flags ) != 0 )
 	{
-		REPORT_LAST_FRAME_USED;
 		description["memory"] = object->GetMemoryClass();
 		description["size"] = GetSizeEstimate( object );
-		description["width"] = object->GetWidth();
-		description["height"] = object->GetHeight();
-		description["mipLevels"] = object->GetMipCount();
-		description["trueMipLevels"] = object->GetTrueMipCount();
-		description["format"] = uint32_t( object->GetFormat() );
+		description["width"] = object->GetDesc().GetWidth();
+		description["height"] = object->GetDesc().GetHeight();
+		description["mipLevels"] = object->GetDesc().GetMipCount();
+		description["trueMipLevels"] = object->GetDesc().GetTrueMipCount();
+		description["format"] = uint32_t( object->GetDesc().GetFormat() );
 		return true;
 	}
 	return false;
@@ -536,9 +375,9 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TEXTURE>::GetDe
 unsigned Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TEXTURE>::GetSizeEstimate( ObjectType* object )
 {
 	unsigned size = 0;
-	for( unsigned i = 0; i < object->GetTrueMipCount(); ++i )
+	for( unsigned i = 0; i < object->GetDesc().GetTrueMipCount(); ++i )
 	{
-		size += object->GetMipSize( i );
+		size += object->GetDesc().GetMipSize( i );
 	}
 	return size;
 }

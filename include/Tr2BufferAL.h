@@ -4,52 +4,6 @@
 #include "../ALResult.h"
 #include "../Tr2RenderContextEnum.h"
 
-namespace Tr2CpuUsage
-{
-	enum Type
-	{
-		NONE = 0,
-		READ = 1 << 0,
-		WRITE = 1 << 1,
-		READ_OFTEN = READ | ( 1 << 2 ),
-		WRITE_OFTEN = WRITE | ( 1 << 3 ),
-	};
-
-	inline Type operator|( Type a, Type b )
-	{
-		return Type( int( a ) | int( b ) );
-	}
-}
-
-namespace Tr2GpuUsage
-{
-	enum Type
-	{
-		NONE = 0,
-		VERTEX_BUFFER = 1 << 0,
-		INDEX_BUFFER = 1 << 1,
-		SHADER_RESOURCE = 1 << 2,
-		UNORDERED_ACCESS = 1 << 3,
-		DRAW_INDIRECT_ARGS = 1 << 4,
-		APPEND_CONSUME = UNORDERED_ACCESS | ( 1 << 5 ),
-		BUFFER_COUNTER = UNORDERED_ACCESS | ( 1 << 6 ),
-	};
-
-	inline Type operator|( Type a, Type b )
-	{
-		return Type( int( a ) | int( b ) );
-	}
-}
-
-namespace Tr2LockType
-{
-	enum Type
-	{
-		SYNCHRONIZED,
-		NON_SYNCHRONIZED,
-	};
-}
-
 class Tr2PrimaryRenderContextAL;
 class Tr2RenderContextAL;
 

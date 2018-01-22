@@ -5,9 +5,9 @@
 
 #include "../Tr2RenderContextEnum.h"
 #include "../Tr2MemoryCounterAL.h"
-#include "../include/Tr2RenderTargetAL.h"
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2SamplerStateAL.h"
+#include "../include/Tr2TextureAL.h"
 
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
@@ -91,12 +91,12 @@ public:
 		return E_FAIL; 
 	}
 
-	ALResult ClearUav( Tr2RenderTargetAL& rt, const float values[4] ) throw( )
+	ALResult ClearUav( Tr2TextureAL& rt, const float values[4] ) throw( )
 	{
 		return E_FAIL;
 	}
 
-	ALResult ClearUav( Tr2RenderTargetAL& rt, const uint32_t values[4] ) throw( )
+	ALResult ClearUav( Tr2TextureAL& rt, const uint32_t values[4] ) throw( )
 	{
 		return E_FAIL;
 	}
@@ -201,10 +201,10 @@ public:
 		uint32_t stencil = 0,
 		uint32_t slot = 0 );
 
-	ALResult SetDepthStencil( const Tr2DepthStencilAL& depthStencil );
+	ALResult SetDepthStencil( const Tr2TextureAL& depthStencil );
 	void SetReadOnlyDepth(			bool enable );
 	bool GetReadOnlyDepth() const;
-	ALResult SetRenderTarget( const Tr2RenderTargetAL& renderTarget, uint32_t slot = 0 );
+	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 );
 
 	ALResult SetNumberOfLights(			uint32_t numLights );
 
@@ -246,7 +246,7 @@ public:
 	ALResult InternalBlit( IDirect3DSurface9* destination, IDirect3DBaseTexture9* source, uint32_t width, uint32_t height );
 
 	ITr2RenderContextEvents* m_events;
-	Tr2RenderTargetAL& GetDefaultBackBuffer() { return m_defaultBackBuffer; }
+	Tr2TextureAL& GetDefaultBackBuffer() { return m_defaultBackBuffer; }
 
 	void AddGpuMarker( const char* marker );
 	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
@@ -259,7 +259,7 @@ public:
 		uint32_t& mips ) const;
 private:
 	enum { MAX_RENDER_TARGET = 8 };
-	const Tr2RenderTargetAL*				m_boundRenderTarget[MAX_RENDER_TARGET];
+	Tr2TextureAL m_boundRenderTarget[MAX_RENDER_TARGET];
 	TrackableStdStack<IDirect3DSurface9*>	m_stackRT[MAX_RENDER_TARGET];
 	TrackableStdStack<IDirect3DSurface9*>	m_stackDS;
 
@@ -271,7 +271,7 @@ public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 private:	
 	uint32_t m_samplerHash;
-	Tr2RenderTargetAL m_defaultBackBuffer;
+	Tr2TextureAL m_defaultBackBuffer;
 	CComPtr<IDirect3DSurface9> m_nullRT;
 	uint32_t m_adapter;
 	Tr2MemoryCounterAL m_memory;

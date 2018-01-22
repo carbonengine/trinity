@@ -70,7 +70,7 @@ ALResult Tr2SwapChainAL::CreateFramebuffer( Tr2RenderContextAL& renderContext )
     m_width = width;
     m_height = height;
 #endif
-	CR_RETURN_HR( m_backBuffer.Create(
+	CR_RETURN_HR( m_backBuffer.CreateRenderTarget(
 		m_width,
 		m_height,
 		1,
@@ -170,7 +170,7 @@ ALResult Tr2SwapChainAL::Present( Tr2RenderContextAL& renderContext )
 #endif
 
 	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
-	renderContext.InternalBlitToBackBuffer( m_backBuffer.GetTexture() );
+	renderContext.InternalBlitToBackBuffer( m_backBuffer );
 
 #ifdef _WIN32
 	SwapBuffers( m_hDC );

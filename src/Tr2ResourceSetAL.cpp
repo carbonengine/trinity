@@ -10,9 +10,7 @@ bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, u
 	auto resource = Resource();
 	resource.type = BUFFER;
 	resource.buffer = buffer;
-	resource.texture = nullptr;
 	resource.colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-	resource.id = 0;
 
 	if( m_resources[stage][registerIndex] == resource )
 	{
@@ -26,9 +24,8 @@ bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, u
 {
 	auto resource = Resource();
 	resource.type = TEXTURE;
-	resource.texture = &texture;
+	resource.texture = texture;
 	resource.colorSpace = colorSpace;
-	resource.id = texture.GetObjectId();
 
 	if( m_resources[stage][registerIndex] == resource )
 	{
@@ -59,15 +56,14 @@ bool Tr2ResourceSetDescriptionAL::operator==( const Tr2ResourceSetDescriptionAL&
 
 
 Tr2ResourceSetDescriptionAL::Resource::Resource()
-	:texture( nullptr ),
-	type( NONE ),
+	:type( NONE ),
 	colorSpace( Tr2RenderContextEnum::COLOR_SPACE_LINEAR )
 {
 }
 
 bool Tr2ResourceSetDescriptionAL::Resource::operator==( const Resource& other ) const
 {
-	return type == other.type && buffer == other.buffer && texture == other.texture && ( !other.texture || id == other.texture->GetObjectId() );
+	return type == other.type && buffer == other.buffer && texture == other.texture;
 }
 
 Tr2ResourceSetDescriptionAL::Sampler::Sampler()

@@ -40,16 +40,6 @@ ALResult CreateSampleObject( Tr2ConstantBufferAL& cb, Tr2PrimaryRenderContextAL&
 	return cb.Create( 128, renderContext );
 }
 
-ALResult CreateSampleObject( Tr2DepthStencilAL& ds, Tr2PrimaryRenderContextAL& renderContext )
-{
-	return ds.Create( 128, 64, DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, renderContext );
-}
-
-ALResult CreateSampleObject( Tr2RenderTargetAL& rt, Tr2PrimaryRenderContextAL& renderContext )
-{
-	return rt.Create( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, EX_NONE, renderContext );
-}
-
 ALResult CreateSampleObject( Tr2SamplerStateAL& ss, Tr2PrimaryRenderContextAL& renderContext )
 {
 	float borderColor[] = { 0.1f, 0.2f, 0.3f, 0.4f };
@@ -152,8 +142,6 @@ class TrackedObjectTest : public WithValidRenderContext
 
 typedef ::testing::Types<
 	Tr2ConstantBufferAL, 
-	Tr2DepthStencilAL,
-	Tr2RenderTargetAL,
 	Tr2SamplerStateAL,
 	Tr2TextureAL,
 	Tr2VertexLayoutAL,

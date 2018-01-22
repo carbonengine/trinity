@@ -66,28 +66,6 @@ void Tr2MemoryCounterAL::Set( MemoryType memoryType, const Tr2BitmapDimensions& 
 	UpdateCounters( int32_t( m_size ) );
 }
 
-void Tr2MemoryCounterAL::Set( MemoryType memoryType, uint32_t width, uint32_t height, Tr2RenderContextEnum::DepthStencilFormat dsf, const Tr2MsaaDesc& msaa )
-{
-	Reset();
-
-	m_memoryType = memoryType;
-
-	uint32_t bpp;
-	switch( dsf )
-	{
-	case Tr2RenderContextEnum::DSFMT_D16:
-	case Tr2RenderContextEnum::DSFMT_D16_LOCKABLE:
-	case Tr2RenderContextEnum::DSFMT_D15S1:
-		bpp = 2;
-		break;
-	default:
-		bpp = 4;
-	}
-	m_size = width * height * bpp  * std::max( msaa.samples, 1u );
-
-	UpdateCounters( int32_t( m_size ) );
-}
-
 void Tr2MemoryCounterAL::Reset()
 {
 	if( !m_size )

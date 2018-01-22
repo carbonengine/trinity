@@ -101,13 +101,13 @@ struct DDS_HEADER
 #define DDS_RGB     0x00000040 // DDPF_RGB
 #define DDS_SURFACE_FLAGS_TEXTURE 0x00001000 // DDSCAPS_TEXTURE
 
-void SaveReadableRenderTarget( Tr2RenderTargetAL& rt, const char* outFilePath, Tr2RenderContextAL& renderContext )
+void SaveReadableRenderTarget( Tr2TextureAL& rt, const char* outFilePath, Tr2RenderContextAL& renderContext )
 {
 	ASSERT_FALSE( Tr2RenderContextEnum::IsCompressedFormat( rt.GetFormat() ) );
 
-	void* data = nullptr;
+	const void* data = nullptr;
 	uint32_t pitch = 0;
-	ASSERT_HRESULT_SUCCEEDED( rt.Lock( 0, nullptr, data, pitch, renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.MapForReading( Tr2TextureSubresource( 0 ), data, pitch, renderContext ) );
 
 	DDS_HEADER header;
 	memset( &header, 0, sizeof( header ) );
@@ -132,26 +132,26 @@ void SaveReadableRenderTarget( Tr2RenderTargetAL& rt, const char* outFilePath, T
 	FILE* f;
 	if( fopen_s( &f, outFilePath, "wb" ) )
 	{
-		rt.Unlock( renderContext );
+		rt.UnmapForReading( renderContext );
 		return;
 	}
 	EXPECT_EQ( 1, fwrite( &header, sizeof( header ), 1, f ) );
 	EXPECT_EQ( 1, fwrite( data, pitch * rt.GetHeight(), 1, f ) );
 	fclose( f );
 
-	rt.Unlock( renderContext );
+	rt.UnmapForReading( renderContext );
 }
 
 }
 
 void WithValidRenderContext::MakeScreenShot( const char* outFilePath )
 {
-	Tr2RenderTargetAL& rt = renderContext->GetDefaultBackBuffer();
+	auto& rt = renderContext->GetDefaultBackBuffer();
 	ASSERT_TRUE( rt.IsValid() );
 	if( rt.GetMsaaDesc().samples > 1 )
 	{
-		Tr2RenderTargetAL readable;
-		ASSERT_HRESULT_SUCCEEDED( readable.Create( rt.GetWidth(), rt.GetHeight(), 1, rt.GetFormat(), Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+		Tr2TextureAL readable;
+		ASSERT_HRESULT_SUCCEEDED( readable.CreateRenderTarget( rt.GetWidth(), rt.GetHeight(), 1, rt.GetFormat(), Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
 		ASSERT_HRESULT_SUCCEEDED( rt.Resolve( readable, *renderContext ) );
 		SaveReadableRenderTarget( readable, outFilePath, *renderContext );
 	}

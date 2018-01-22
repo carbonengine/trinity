@@ -18,8 +18,11 @@
 //   Tr2SwapChainAL default constructor
 // --------------------------------------------------------------------------------------
 Tr2SwapChainAL::Tr2SwapChainAL()
+	:m_width( 0 ),
+	m_height( 0 )
 {
 	memset( &m_description, 0, sizeof( m_description ) );
+	m_backBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 }
 
 // --------------------------------------------------------------------------------------
@@ -44,6 +47,9 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderC
 
 	if( windowHandle )
 	{
+		m_width = 0;
+		m_height = 0;
+
 		m_description.BufferCount = 1;
 		m_description.Windowed = true;
 		m_description.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
@@ -70,9 +76,9 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderC
 		CComPtr<ID3D11Texture2D> pBackBuffer;
 		CR_RETURN_HR( m_swapChain->GetBuffer( 0, __uuidof (ID3D11Texture2D), (LPVOID*)&pBackBuffer ) );
 
-		CR_RETURN_HR( m_backBuffer.Attach( pBackBuffer, renderContext ) );
-
-		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_backBuffer, m_backBuffer.GetMsaaDesc() );
+		CR_RETURN_HR( m_backBuffer.m_texture->Attach( pBackBuffer, renderContext ) );
+		m_width = m_backBuffer.GetWidth();
+		m_height = m_backBuffer.GetHeight();
 
 		ChangeObjectId();
 
@@ -90,9 +96,8 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderC
 // --------------------------------------------------------------------------------------
 void Tr2SwapChainAL::Destroy()
 {
-	m_memory.Reset();
 	m_swapChain = nullptr;
-	m_backBuffer.Destroy();
+	m_backBuffer.m_texture->Destroy();
 }
 
 // --------------------------------------------------------------------------------------
@@ -139,7 +144,7 @@ ALResult Tr2SwapChainAL::Present( Tr2RenderContextAL& /* renderContext */ )
 // --------------------------------------------------------------------------------------
 int Tr2SwapChainAL::GetWidth() const
 {
-	return m_backBuffer.GetWidth();
+	return m_width;
 }
 
 // --------------------------------------------------------------------------------------
@@ -151,7 +156,7 @@ int Tr2SwapChainAL::GetWidth() const
 // --------------------------------------------------------------------------------------
 int Tr2SwapChainAL::GetHeight() const
 {
-	return m_backBuffer.GetHeight();
+	return m_height;
 }
 
 #endif // TRINITY_PLATFORM==TRINITY_DIRECTX9

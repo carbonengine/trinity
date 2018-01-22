@@ -232,12 +232,12 @@ struct Tr2RenderContextAL::Blitter
 		AL_UPDATE_RESOURCE_FRAME_USAGE( *m_sampler.m_sampler );
 
 		GL_FAIL( glActiveTexture( GL_TEXTURE0 ) );
-		GL_FAIL( glBindTexture( GL_TEXTURE_2D, *source.m_texture ) );
+		GL_FAIL( glBindTexture( GL_TEXTURE_2D, source.m_texture->m_texture ) );
 		GL_IGNORE_ERROR( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
-		if( !( source.m_currentSampler.m_hash == m_sampler.m_sampler->m_stateData.m_hash ) )
+		if( !( source.m_texture->m_currentSampler.m_hash == m_sampler.m_sampler->m_stateData.m_hash ) )
 		{
 			CR_RETURN_HR( (HRESULT)m_sampler.m_sampler->Apply( GL_TEXTURE_2D, source.GetTrueMipCount() > 1, m_sampler.m_sampler->m_stateData ) );
-			source.m_currentSampler = m_sampler.m_sampler->m_stateData;
+			source.m_texture->m_currentSampler = m_sampler.m_sampler->m_stateData;
 		}
 		GL_FAIL( glUseProgram( m_program ) );
 
@@ -274,7 +274,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_stackDS( "Tr2RenderContextAL::m_stackDS" )
 	, m_boundIndexBufferIs16Bit( false )
 	, m_boundLayout( nullptr )
-	, m_boundDepthStencil( nullptr )
 	, m_program( nullptr )
 #ifdef _WIN32
 	, m_hRC( INVALID_HRC )
@@ -299,7 +298,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
-		m_boundRenderTarget[i] = nullptr;
 		m_stackRT[i].SetName( "Tr2RenderContextAL::m_stackRT" );
 	}
 
@@ -870,20 +868,19 @@ bool Tr2RenderContextAL::GetReadOnlyDepth() const
 {
 	return false;
 }
-ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2DepthStencilAL& depthStencil )
+ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 {
 	if( !IsValid() )
 	{
 		return E_FAIL;
 	}
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( depthStencil );
-	m_boundDepthStencil = depthStencil.IsValid() ? &depthStencil : nullptr;
+	m_boundDepthStencil = depthStencil;
 	
 	return SetRtDsToDevice( MAX_RENDER_TARGET );
 }
 
-ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2RenderTargetAL& renderTarget, uint32_t slot )
+ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot )
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );
 	if( slot >= MAX_RENDER_TARGET )
@@ -891,8 +888,7 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2RenderTargetAL& renderTar
 		return E_INVALIDARG;
 	}
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( renderTarget );
-	m_boundRenderTarget[slot] = renderTarget.IsValid() ? &renderTarget : nullptr;
+	m_boundRenderTarget[slot] = renderTarget;
 	m_renderTargetHighWaterMark = std::max( m_renderTargetHighWaterMark, slot+1 );
 
 	return SetRtDsToDevice( slot );
@@ -1095,7 +1091,7 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned /*adapter*/, const T
 #endif
 #endif
 
-	CR_RETURN_HR( m_defaultBackBuffer.Create(	
+	CR_RETURN_HR( m_defaultBackBuffer.CreateRenderTarget(	
 		presentationParameters.mode.width,
 		presentationParameters.mode.height,
 		1,
@@ -1104,7 +1100,7 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned /*adapter*/, const T
 		0,
 		EX_NONE,
 		*this ) );
-	CR_RETURN_HR( m_defaultDepthStencil.Create(
+	CR_RETURN_HR( m_defaultDepthStencil.CreateDepthStencil(
 		presentationParameters.mode.width,
 		presentationParameters.mode.height,
 		DSFMT_D24S8,
@@ -1139,7 +1135,6 @@ ALResult Tr2RenderContextAL::InternalBlitToBackBuffer( Tr2TextureAL& source )
 		return E_INVALIDARG;
 	}
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( source );
 	GL_FAIL( glBindFramebuffer( GL_FRAMEBUFFER, 0 ) );
 	ON_BLOCK_EXIT( [&] { SetRtDsToDevice( 0 ); } );
 	GL_FAIL( glViewport( 0, 0, source.GetWidth(), source.GetHeight() ) );
@@ -1190,7 +1185,7 @@ ALResult Tr2RenderContextAL::Present()
 	++g_trackCurrentFrame;
 #endif
 
-	InternalBlitToBackBuffer( m_defaultBackBuffer.GetTexture() );
+	InternalBlitToBackBuffer( m_defaultBackBuffer );
 
 #ifdef _WIN32
 	if( !SwapBuffers( m_hDC ) )
@@ -1596,7 +1591,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 			continue;
 		}
 		GL_FAIL( glActiveTexture( GL_TEXTURE0 + it->registerIndex ) );
-		GL_FAIL( glBindTexture( it->type, *it->texture ) );
+		GL_FAIL( glBindTexture( it->type, it->texture ) );
 		GL_IGNORE_ERROR( glTexParameteri( it->type, GL_TEXTURE_SRGB_DECODE_EXT, it->srgbDecode ) );
 		TrinityALImpl::Tr2SamplerStateAL::Apply( it->type, it->hasMips, it->sampler );
 	}
@@ -1693,10 +1688,10 @@ ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& hei
 	{
 		return E_INVALIDARG;
 	}
-	if( m_boundRenderTarget[slot] )
+	if( m_boundRenderTarget[slot].IsValid() )
 	{
-		width = m_boundRenderTarget[slot]->GetWidth();
-		height = m_boundRenderTarget[slot]->GetHeight();
+		width = m_boundRenderTarget[slot].GetWidth();
+		height = m_boundRenderTarget[slot].GetHeight();
 	}
 	else if( slot >= 1 )
 	{
@@ -2368,17 +2363,16 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 	
 	for( uint32_t i = 0; i != m_renderTargetHighWaterMark; ++i )
 	{
-		if( m_boundRenderTarget[i] )
+		if( m_boundRenderTarget[i].IsValid() )
 		{
-			AL_UPDATE_RESOURCE_FRAME_USAGE( *m_boundRenderTarget[i] );
-			if( m_boundRenderTarget[i]->m_msaaTarget )
+			if( m_boundRenderTarget[i].m_texture->m_msaaBuffer )
 			{
-				colorBuffer[i] = m_boundRenderTarget[i]->m_msaaTarget;
+				colorBuffer[i] = m_boundRenderTarget[i].m_texture->m_msaaBuffer;
 				colorBufferType[i] = GL_RENDERBUFFER;
 			}
 			else
 			{
-				colorBuffer[i] = *m_boundRenderTarget[i]->m_backingStore.m_texture;
+				colorBuffer[i] = m_boundRenderTarget[i].m_texture->m_texture;
 				colorBufferType[i] = GL_TEXTURE_2D;
 			}
 		}
@@ -2396,7 +2390,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 		return E_FAIL;
 	}
 
-	if( m_boundDepthStencil && m_renderStates[RS_ZENABLE] )
+	if( m_boundDepthStencil.IsValid() && m_renderStates[RS_ZENABLE] )
 	{
 		glEnable( GL_DEPTH_TEST );
 	}
@@ -2405,19 +2399,19 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 		glDisable( GL_DEPTH_TEST );
 	}
 
-	const Tr2RenderTargetAL& bb = m_boundRenderTarget[0] ? *m_boundRenderTarget[0] : m_defaultBackBuffer;
+	const Tr2TextureAL& bb = m_boundRenderTarget[0].IsValid() ? m_boundRenderTarget[0] : m_defaultBackBuffer;
 
 	// Msaa zero is the same as one, so does need to show up as 'compatible'
-	const uint32_t dsMsaaType = m_boundDepthStencil ? std::max( m_boundDepthStencil->GetMsaaDesc().samples, 1u ) : 1;
+	const uint32_t dsMsaaType = m_boundDepthStencil.IsValid() ? std::max( m_boundDepthStencil.GetMsaaDesc().samples, 1u ) : 1;
 	const uint32_t bbMsaaType = std::max( bb.GetMsaaDesc().samples, 1u );
 
 	// dont't even bother setting it when the dimensions don't match, it's not gonna work.
 	// This happens when we set/push/pop an RT and DS in two separate calls -- there's a point between
 	// those two where it's in a bad state.  Silently "works" in DX9, complains in DX11. Fix the spam:
-	if( !m_boundDepthStencil	||
-		!( m_boundDepthStencil->GetWidth()		== bb.GetWidth()		&&
-		  m_boundDepthStencil->GetHeight()		== bb.GetHeight()		&&
-		  m_boundDepthStencil->GetMsaaDesc().samples == bb.GetMsaaDesc().quality	&&
+	if( !m_boundDepthStencil.IsValid()	||
+		!( m_boundDepthStencil.GetWidth()		== bb.GetWidth()		&&
+		  m_boundDepthStencil.GetHeight()		== bb.GetHeight()		&&
+		  m_boundDepthStencil.GetMsaaDesc().samples == bb.GetMsaaDesc().quality	&&
 		  dsMsaaType							== bbMsaaType
 		) )
 	{		
@@ -2433,25 +2427,24 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 				GL_FAIL( glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, colorBufferType[i], colorBuffer[i], 0 ) );
 			}
 		}
-		if( m_boundDepthStencil && m_boundDepthStencil->IsValid() )
+		if( m_boundDepthStencil.IsValid() )
 		{
-			AL_UPDATE_RESOURCE_FRAME_USAGE( *m_boundDepthStencil );
-			if( m_boundDepthStencil->GetTexture().IsValid() )
+			if( m_boundDepthStencil.m_texture->m_texture )
 			{
-				GL_FAIL( glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, *m_boundDepthStencil->m_readableDepth.m_texture, 0 ) );
-				if( m_boundDepthStencil->m_stencilRenderBuffer )
+				GL_FAIL( glFramebufferTexture2D( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_boundDepthStencil.m_texture->m_texture, 0 ) );
+				if( m_boundDepthStencil.m_texture->m_stencilBuffer )
 				{
-					GL_FAIL( glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_boundDepthStencil->m_stencilRenderBuffer ) );
+					GL_FAIL( glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_boundDepthStencil.m_texture->m_stencilBuffer ) );
 				}
 				else
 				{
-					GL_FAIL( glFramebufferTexture2D( GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, *m_boundDepthStencil->m_readableDepth.m_texture, 0 ) );
+					GL_FAIL( glFramebufferTexture2D( GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_boundDepthStencil.m_texture->m_texture, 0 ) );
 				}
 			}
 			else
 			{
-				GL_FAIL( glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_boundDepthStencil->m_depthRenderBuffer ) );
-				GL_FAIL( glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_boundDepthStencil->m_stencilRenderBuffer ) );
+				GL_FAIL( glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_boundDepthStencil.m_texture->m_msaaBuffer ) );
+				GL_FAIL( glFramebufferRenderbuffer( GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, m_boundDepthStencil.m_texture->m_stencilBuffer ) );
 			}
 		}
 		else
@@ -2500,9 +2493,9 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 }
 
 ALResult Tr2RenderContextAL::CopySubresourceRegion( 
-	Tr2TextureAL& destination,
+	TrinityALImpl::Tr2TextureAL& destination,
 	const Tr2TextureSubresource& destSubresource,
-	Tr2TextureAL& source, 
+	TrinityALImpl::Tr2TextureAL& source,
 	const Tr2TextureSubresource& sourceSubresource )
 {
 	if( !destination.IsValid() || !source.IsValid() || !IsValid() )
@@ -2514,7 +2507,7 @@ ALResult Tr2RenderContextAL::CopySubresourceRegion(
 	Tr2TextureSubresource src = sourceSubresource;
 	Tr2TextureSubresource dst = destSubresource;	
 	
-	if( !Crop( src, source, dst, destination ) )
+	if( !Crop( src, source.GetDesc(), dst, destination.GetDesc() ) )
 	{
 		return E_INVALIDARG;
 	}
@@ -2523,8 +2516,8 @@ ALResult Tr2RenderContextAL::CopySubresourceRegion(
 	AL_UPDATE_RESOURCE_FRAME_USAGE( destination );
 	uint32_t box[6] = { src.m_left, src.m_top, src.m_front, src.m_right, src.m_bottom, src.m_back };
 
-	const uint32_t srcMipCount = source.GetTrueMipCount();
-	const uint32_t dstMipCount = destination.GetTrueMipCount();
+	const uint32_t srcMipCount = source.GetDesc().GetTrueMipCount();
+	const uint32_t dstMipCount = destination.GetDesc().GetTrueMipCount();
 
 	const uint32_t mipCount = std::min( src.GetMipCount(), dst.GetMipCount() );
 
@@ -2539,22 +2532,22 @@ ALResult Tr2RenderContextAL::CopySubresourceRegion(
 	{
 		for( uint32_t face = 0; face != src.GetFaceCount(); ++face )
 		{
-			GLenum srcTexType = source.GetType() == TEX_TYPE_CUBE ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + face : GL_TEXTURE_2D;
-			GL_FAIL( glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, srcTexType, *source.m_texture, src.m_startMipLevel + mip ) );
+			GLenum srcTexType = source.GetDesc().GetType() == TEX_TYPE_CUBE ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + face : GL_TEXTURE_2D;
+			GL_FAIL( glFramebufferTexture2D( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, srcTexType, source.m_texture, src.m_startMipLevel + mip ) );
 
 			//SetViewport( Tr2Viewport ( source.GetMipWidth( src.m_startMipLevel + mip ), source.GetMipHeight( src.m_startMipLevel + mip ) ) );
 			//SetScissorRect( 0, 0, source.GetMipWidth( src.m_startMipLevel + mip ), source.GetMipHeight( src.m_startMipLevel + mip ) );
 
-			GLenum texType = destination.GetType() == TEX_TYPE_CUBE ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + face : GL_TEXTURE_2D;
-			uint32_t height = destination.GetMipHeight( dst.m_startMipLevel + mip );
-			GL_FAIL( glBindTexture( texType, *destination.m_texture ) );
+			GLenum texType = destination.GetDesc().GetType() == TEX_TYPE_CUBE ? GL_TEXTURE_CUBE_MAP_POSITIVE_X + face : GL_TEXTURE_2D;
+			uint32_t height = destination.GetDesc().GetMipHeight( dst.m_startMipLevel + mip );
+			GL_FAIL( glBindTexture( texType, destination.m_texture ) );
 			GL_FAIL( glCopyTexSubImage2D( texType, dst.m_startMipLevel + mip, dst.m_left, dst.m_top, box[0], height - box[4], box[3] - box[0], box[4] - box[1] ) );
 		}
 
 		if( mip + 1 != src.GetMipCount() )
 		{
-			AdvanceMip( src, source, mip );
-			AdvanceMip( dst, destination,  mip );
+			AdvanceMip( src, source.GetDesc(), mip );
+			AdvanceMip( dst, destination.GetDesc(),  mip );
 		}
 
 		for( uint32_t k = 0; k < 6; ++k )
@@ -2565,12 +2558,12 @@ ALResult Tr2RenderContextAL::CopySubresourceRegion(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::InternalResolveRT( Tr2RenderTargetAL& destination, const Tr2RenderTargetAL& source )
+ALResult Tr2RenderContextAL::InternalResolveRT( TrinityALImpl::Tr2TextureAL& destination, const TrinityALImpl::Tr2TextureAL& source )
 {
 #if defined(TRINITY_AL_MOBILE)
     return E_FAIL;
 #else
-	if( !IsValid() || !destination.IsValid() || !source.IsValid() || !destination.m_backingStore.IsValid() )
+	if( !IsValid() || !destination.IsValid() || !source.IsValid() || !destination.m_texture )
 	{
 		return E_INVALIDARG;
 	}
@@ -2578,13 +2571,13 @@ ALResult Tr2RenderContextAL::InternalResolveRT( Tr2RenderTargetAL& destination, 
 	AL_UPDATE_RESOURCE_FRAME_USAGE( destination );
 	CR_GL( glBindFramebuffer( GL_FRAMEBUFFER_EXT, 0 ) );
 	CR_GL( glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, m_offscreenFrameBuffer0 ) );
-	if( source.m_msaaTarget )
+	if( source.m_msaaBuffer )
 	{
-		CR_GL( glFramebufferRenderbuffer( GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, source.m_msaaTarget ) );
+		CR_GL( glFramebufferRenderbuffer( GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, source.m_msaaBuffer ) );
 	}
 	else
 	{
-		CR_GL( glFramebufferTexture2D( GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *source.m_backingStore.m_texture, 0 ) );
+		CR_GL( glFramebufferTexture2D( GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, source.m_texture, 0 ) );
 	}
 #if defined(TRINITYDEV) || defined(_DEBUG)
 	if( glCheckFramebufferStatus( GL_READ_FRAMEBUFFER_EXT ) != GL_FRAMEBUFFER_COMPLETE )
@@ -2594,7 +2587,7 @@ ALResult Tr2RenderContextAL::InternalResolveRT( Tr2RenderTargetAL& destination, 
 	}
 #endif
 	CR_GL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, m_offscreenFrameBuffer1 ) );
-	CR_GL( glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *destination.m_backingStore.m_texture, 0 ) );
+	CR_GL( glFramebufferTexture2D( GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, destination.m_texture, 0 ) );
 #if defined(TRINITYDEV) || defined(_DEBUG)
 	if( glCheckFramebufferStatus( GL_DRAW_FRAMEBUFFER_EXT ) != GL_FRAMEBUFFER_COMPLETE )
 	{
@@ -2602,7 +2595,7 @@ ALResult Tr2RenderContextAL::InternalResolveRT( Tr2RenderTargetAL& destination, 
 		return E_FAIL;
 	}
 #endif
-	CR_GL( glBlitFramebuffer( 0, 0, source.GetWidth(), source.GetHeight(), 0, 0, destination.GetWidth(), destination.GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST ) );
+	CR_GL( glBlitFramebuffer( 0, 0, source.GetDesc().GetWidth(), source.GetDesc().GetHeight(), 0, 0, destination.GetDesc().GetWidth(), destination.GetDesc().GetHeight(), GL_COLOR_BUFFER_BIT, GL_NEAREST ) );
 	CR_GL( glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, 0 ) );
 	CR_GL( glBindFramebuffer( GL_DRAW_FRAMEBUFFER_EXT, 0 ) );
 	CR_GL( glBindFramebuffer( GL_FRAMEBUFFER, m_defaultFrameBufferObject ) ); 

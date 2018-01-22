@@ -5,7 +5,7 @@
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 #include "../Tr2RenderContextEnum.h"
-#include "../include/Tr2RenderTargetAL.h"
+#include "../include/Tr2TextureAL.h"
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2SamplerStateAL.h"
 #include "../Tr2HalHelperStructures.h"
@@ -88,12 +88,12 @@ public:
 		return E_FAIL; 
 	}
 
-	ALResult ClearUav( Tr2RenderTargetAL& rt, const float values[4] ) throw( )
+	ALResult ClearUav( Tr2TextureAL& rt, const float values[4] ) throw( )
 	{
 		return E_FAIL;
 	}
 
-	ALResult ClearUav( Tr2RenderTargetAL& rt, const uint32_t values[4] ) throw( )
+	ALResult ClearUav( Tr2TextureAL& rt, const uint32_t values[4] ) throw( )
 	{
 		return E_FAIL;
 	}
@@ -190,10 +190,10 @@ public:
 		uint32_t stencil = 0,
 		uint32_t slot = 0 );
 
-	ALResult SetDepthStencil( const Tr2DepthStencilAL& depthStencil );
+	ALResult SetDepthStencil( const Tr2TextureAL& depthStencil );
 	void SetReadOnlyDepth(			bool enable );
 	bool GetReadOnlyDepth() const;
-	ALResult SetRenderTarget( const Tr2RenderTargetAL& renderTarget, uint32_t slot = 0 );
+	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 );
 
 	ALResult SetNumberOfLights(			uint32_t numLights );
 
@@ -229,7 +229,7 @@ public:
 	Tr2RenderContextEnum::DepthStencilFormat m_depthStencilFormat;
 
 	ITr2RenderContextEvents* m_events;
-	Tr2RenderTargetAL& GetDefaultBackBuffer() { return m_defaultBackBuffer; }
+	Tr2TextureAL& GetDefaultBackBuffer() { return m_defaultBackBuffer; }
 
 	void AddGpuMarker( const char* marker );
 	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
@@ -242,11 +242,11 @@ public:
 		uint32_t& mips ) const;
 private:
 	enum { MAX_RENDER_TARGET = 8 };
-	const Tr2RenderTargetAL*				m_boundRenderTarget[MAX_RENDER_TARGET];
+	Tr2TextureAL m_boundRenderTarget[MAX_RENDER_TARGET];
 	bool m_isValid;
-	Tr2RenderTargetAL m_defaultBackBuffer;
+	Tr2TextureAL m_defaultBackBuffer;
 	Tr2Viewport m_viewport;
-	TrackableStdStack<const Tr2RenderTargetAL*>	m_stackRT[MAX_RENDER_TARGET];
+	TrackableStdStack<Tr2TextureAL>	m_stackRT[MAX_RENDER_TARGET];
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 };

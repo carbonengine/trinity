@@ -43,7 +43,7 @@ namespace TrinityALImpl
 					stage.resources[registerIndex] = desc.buffer.m_buffer->m_srv;
 					break;
 				case Tr2ResourceSetDescriptionAL::TEXTURE:
-					stage.resources[registerIndex] = desc.texture->m_view[desc.colorSpace];
+					stage.resources[registerIndex] = desc.texture.m_texture->m_view[desc.colorSpace];
 					break;
 				case Tr2ResourceSetDescriptionAL::NONE:
 					continue;

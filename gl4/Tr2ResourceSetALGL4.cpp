@@ -78,8 +78,8 @@ namespace TrinityALImpl
 
 			Texture tex;
 			tex.registerIndex = i;
-			tex.texture = desc.texture->m_texture;
-			tex.type = ConvertTextureType( desc.texture->GetType() );
+			tex.texture = desc.texture.m_texture->m_texture;
+			tex.type = ConvertTextureType( desc.texture.GetDesc().GetType() );
 			tex.srgbDecode = desc.colorSpace == COLOR_SPACE_SRGB ? GL_DECODE_EXT : GL_SKIP_DECODE_EXT;
 			tex.sampler = sampler.sampler.m_sampler->m_sampler;
 			m_textures.push_back( tex );
@@ -112,24 +112,24 @@ namespace TrinityALImpl
 			{
 			case Tr2ResourceSetDescriptionAL::TEXTURE:
 			{
-				auto& texture = *desc.texture;
+				auto& texture = *desc.texture.m_texture;
 				if( !texture.m_clObject )
 				{
-					switch( desc.texture->GetType() )
+					switch( desc.texture.GetDesc().GetType() )
 					{
 					case TEX_TYPE_1D:
 					case TEX_TYPE_2D:
 #ifdef _WIN32
-						texture.m_clObject = clCreateFromGLTexture2D( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, *texture.m_texture, nullptr );
+						texture.m_clObject = clCreateFromGLTexture2D( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, texture.m_texture, nullptr );
 #else
-						texture.m_clObject = clCreateFromGLTexture( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, *texture.m_texture, nullptr );
+						texture.m_clObject = clCreateFromGLTexture( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_2D, 0, texture.m_texture, nullptr );
 #endif
 						break;
 					case TEX_TYPE_3D:
 #ifdef _WIN32
-						texture.m_clObject = clCreateFromGLTexture3D( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, *texture.m_texture, nullptr );
+						texture.m_clObject = clCreateFromGLTexture3D( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, texture.m_texture, nullptr );
 #else
-						texture.m_clObject = clCreateFromGLTexture( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, *texture.m_texture, nullptr );
+						texture.m_clObject = clCreateFromGLTexture( renderContext.m_clContext, CL_MEM_READ_WRITE, GL_TEXTURE_3D, 0, texture.m_texture, nullptr );
 #endif
 						break;
 					default:

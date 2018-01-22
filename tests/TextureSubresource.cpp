@@ -44,9 +44,10 @@ TEST( TextureSubresource, TextureSubresourceDefaultConstructorCreatesFullResourc
 	EXPECT_LE( std::numeric_limits<uint32_t>::max(), ts.m_endFace );
 	EXPECT_EQ( 0, ts.m_startMipLevel );
 	EXPECT_EQ( uint32_t( -1 ), ts.m_endMipLevel );
-	EXPECT_EQ( 0, ts.m_left );
-	EXPECT_EQ( 0, ts.m_top );
-	EXPECT_EQ( 0, ts.m_front );
+	EXPECT_FALSE( ts.HasBox() );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_left );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_top );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_front );
 	EXPECT_EQ( uint32_t( -1 ), ts.m_right );
 	EXPECT_EQ( uint32_t( -1 ), ts.m_bottom );
 	EXPECT_EQ( uint32_t( -1 ), ts.m_back );
@@ -62,9 +63,9 @@ TEST( TextureSubresource, TextureSubresourceFaceAndMipLevelConstructorCreatesFul
 	EXPECT_LE( uint32_t( face + 1 ), ts.m_endFace );
 	EXPECT_EQ( mipLevel, ts.m_startMipLevel );
 	EXPECT_EQ( mipLevel + 1, ts.m_endMipLevel );
-	EXPECT_EQ( 0, ts.m_left );
-	EXPECT_EQ( 0, ts.m_top );
-	EXPECT_EQ( 0, ts.m_front );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_left );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_top );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_front );
 	EXPECT_EQ( uint32_t( -1 ), ts.m_right );
 	EXPECT_EQ( uint32_t( -1 ), ts.m_bottom );
 	EXPECT_EQ( uint32_t( -1 ), ts.m_back );

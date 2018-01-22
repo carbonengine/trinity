@@ -73,6 +73,15 @@ typedef int32_t HRESULT;
 		} \
 	}
 
+	#define FORWARD_HR( x ) \
+	{ \
+		HRESULT _hr = x; \
+		if( FAILED( _hr ) ) \
+		{ \
+			return _hr; \
+		} \
+	}
+
 	#define CR_RETURN_VAL( x, failValue ) \
 	{ \
 		HRESULT _hr = x; \
