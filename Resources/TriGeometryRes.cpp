@@ -1223,7 +1223,7 @@ bool TriGeometryRes::GetIntersectionPoints( const Vector3* pos, const Vector3*di
 				if ( maxDist < dist )
 				{
 					*hitpointFar = p1*v1 + p2*pu + p3*pv;
-					*hitpointNearNormal = Normalize( Cross( avec, bvec ) );
+					*hitpointFarNormal = Normalize( Cross( avec, bvec ) );
 					maxDist = dist;
 					if( blendIndices && GetBoneIndex( blendIndices->m_dataType, pVertices + index1 * vertSize + blendIndices->m_offset, boneIndex ) )
 					{
