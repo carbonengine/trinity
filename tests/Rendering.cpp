@@ -444,7 +444,7 @@ TEST_F( Rendering, CanSampleTexture )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -575,7 +575,7 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 	textureData[2].m_sysMemSlicePitch = sizeof( texturePixels2 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 3, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 4, 4, 3, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -889,7 +889,7 @@ TEST_F( Rendering, CanClearRenderTarget )
 		*renderContext ) );
 
 	Tr2TextureAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 	Tr2ResourceSetDescriptionAL desc;
 	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
@@ -1027,7 +1027,7 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 		*renderContext ) );
 
 	Tr2TextureAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 
 	Tr2ResourceSetDescriptionAL desc;
@@ -1175,10 +1175,10 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 		*renderContext ) );
 
 	Tr2TextureAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc( 4 ), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 
 	Tr2TextureAL readableRt;
-	ASSERT_HRESULT_SUCCEEDED( readableRt.CreateRenderTarget( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( readableRt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 
 	Tr2ResourceSetDescriptionAL desc;
@@ -2048,7 +2048,7 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -2177,7 +2177,7 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -2306,7 +2306,7 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -2446,7 +2446,7 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( textureSize, textureSize, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( textureSize, textureSize, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;
@@ -2553,7 +2553,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 	};
 
 	Tr2TextureAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 0, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 	Tr2ShaderAL psFill;
 	ASSERT_HRESULT_SUCCEEDED( psFill.Create( 
@@ -2782,10 +2782,10 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 		*renderContext ) );
 
 	Tr2TextureAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.CreateRenderTarget( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 
 	Tr2TextureAL rt2;
-	ASSERT_HRESULT_SUCCEEDED( rt2.CreateRenderTarget( 256, 256, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt2.Create( Tr2BitmapDimensions( 256, 256, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 
 	Tr2ResourceSetDescriptionAL desc;
@@ -2920,7 +2920,7 @@ TEST_F( Rendering, CanSampleBc1Texture )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC1_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC1_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -3133,7 +3133,7 @@ TEST_F( Rendering, CanSampleBc2Texture )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC2_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC2_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -3255,7 +3255,7 @@ TEST_F( Rendering, CanSampleBc3Texture )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC3_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC3_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -3378,7 +3378,7 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 ) / depth;
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.CreateVolume( width, height, depth, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM, width, height, depth, 1 ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -3512,7 +3512,7 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 ) / depth;
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.CreateVolume( width, height, depth, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC3_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( Tr2RenderContextEnum::TEX_TYPE_3D, Tr2RenderContextEnum::PIXEL_FORMAT_BC3_UNORM, width, height, depth, 1 ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -3742,7 +3742,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 1, 1, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 1, 1, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -3878,7 +3878,7 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 
@@ -3997,7 +3997,7 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 	textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
 
 	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create2D( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 0, textureData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
 
 	Tr2SamplerStateAL sampl;
 	ASSERT_HRESULT_SUCCEEDED( sampl.Create( 

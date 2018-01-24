@@ -62,7 +62,7 @@ ALResult CreateSampleObject( Tr2SamplerStateAL& ss, Tr2PrimaryRenderContextAL& r
 
 ALResult CreateSampleObject( Tr2TextureAL& texture, Tr2PrimaryRenderContextAL& renderContext )
 {
-	return texture.Create2D( 128, 128, 1, PIXEL_FORMAT_B8G8R8A8_UNORM, 0, nullptr, renderContext );
+	return texture.Create( Tr2BitmapDimensions( 128, 128, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, renderContext );
 }
 
 ALResult CreateSampleObject( Tr2VertexLayoutAL& layout, Tr2PrimaryRenderContextAL& renderContext )

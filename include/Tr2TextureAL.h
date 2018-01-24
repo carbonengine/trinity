@@ -63,61 +63,6 @@ public:
 
 
 
-	ALResult Create2D(
-		uint32_t width,
-		uint32_t height,
-		uint32_t mipLevelCount,
-		Tr2RenderContextEnum::PixelFormat format,
-		Tr2RenderContextEnum::BufferUsage usage,
-		Tr2SubresourceData* initialData,
-		Tr2PrimaryRenderContextAL &renderContext );
-
-	ALResult Create2DArray(
-		uint32_t width,
-		uint32_t height,
-		uint32_t mipLevelCount,
-		uint32_t arrayCount,
-		Tr2RenderContextEnum::PixelFormat format,
-		Tr2RenderContextEnum::BufferUsage usage,
-		Tr2SubresourceData* initialData,
-		Tr2PrimaryRenderContextAL &renderContext );
-
-	ALResult CreateCube(
-		uint32_t width,
-		uint32_t height,
-		uint32_t mipLevelCount,
-		Tr2RenderContextEnum::PixelFormat format,
-		Tr2RenderContextEnum::BufferUsage usage,
-		Tr2SubresourceData* initialData,
-		Tr2PrimaryRenderContextAL &renderContext );
-
-	ALResult CreateVolume(
-		uint32_t width,
-		uint32_t height,
-		uint32_t depth,
-		uint32_t mipLevelCount,
-		Tr2RenderContextEnum::PixelFormat format,
-		Tr2RenderContextEnum::BufferUsage usage,
-		Tr2SubresourceData* initialData,
-		Tr2PrimaryRenderContextAL &renderContext );
-
-	ALResult CreateRenderTarget(
-		uint32_t width,
-		uint32_t height,
-		uint32_t mipLevelCount,
-		Tr2RenderContextEnum::PixelFormat format,
-		const Tr2MsaaDesc& msaa,
-		Tr2RenderContextEnum::BufferUsage usage,
-		Tr2RenderContextEnum::ExFlag flags,
-		Tr2PrimaryRenderContextAL &renderContext );
-
-	ALResult CreateDepthStencil(
-		uint32_t width,
-		uint32_t height,
-		Tr2RenderContextEnum::DepthStencilFormat format,
-		const Tr2MsaaDesc& msaa,
-		Tr2RenderContextEnum::ExFlag flags,
-		Tr2PrimaryRenderContextAL& renderContext );
 
 	void Destroy();
 

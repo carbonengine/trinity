@@ -151,7 +151,7 @@ void WithValidRenderContext::MakeScreenShot( const char* outFilePath )
 	if( rt.GetMsaaDesc().samples > 1 )
 	{
 		Tr2TextureAL readable;
-		ASSERT_HRESULT_SUCCEEDED( readable.CreateRenderTarget( rt.GetWidth(), rt.GetHeight(), 1, rt.GetFormat(), Tr2MsaaDesc(), 0, Tr2RenderContextEnum::EX_NONE, *renderContext ) );
+		ASSERT_HRESULT_SUCCEEDED( readable.Create( Tr2BitmapDimensions( rt.GetWidth(), rt.GetHeight(), 1, rt.GetFormat() ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ, *renderContext ) );
 		ASSERT_HRESULT_SUCCEEDED( rt.Resolve( readable, *renderContext ) );
 		SaveReadableRenderTarget( readable, outFilePath, *renderContext );
 	}

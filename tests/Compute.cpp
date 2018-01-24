@@ -232,7 +232,7 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 
 
 	Tr2TextureAL input;
-	ASSERT_HRESULT_SUCCEEDED( input.Create2D( 2, 2, 2, PIXEL_FORMAT_R32_FLOAT, USAGE_IMMUTABLE, texData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( input.Create( Tr2BitmapDimensions( 2, 2, 2, PIXEL_FORMAT_R32_FLOAT ), Tr2GpuUsage::SHADER_RESOURCE, texData, *renderContext ) );
 
 	float border[4] = { 0 };
 	Tr2SamplerStateAL sampl;

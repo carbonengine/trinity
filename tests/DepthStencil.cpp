@@ -13,14 +13,14 @@ TEST_F( WithValidRenderContext, DepthStencilIsInvalidBeforeCreation )
 TEST_F( WithRenderContext, CreatingDepthStencilWithoutRenderContextFails )
 {
 	Tr2TextureAL ds;
-	ASSERT_HRESULT_FAILED( ds.CreateDepthStencil( 128, 128, DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_FAILED( ds.Create( Tr2BitmapDimensions( 128, 128, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	EXPECT_FALSE( ds.IsValid() );
 }
 
 TEST_F( WithValidRenderContext, DepthStencilIsValidAfterCreation )
 {
 	Tr2TextureAL ds;
-	ASSERT_HRESULT_SUCCEEDED( ds.CreateDepthStencil( 128, 64, DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	EXPECT_TRUE( ds.IsValid() );
 	EXPECT_EQ( 128, ds.GetWidth() );
 	EXPECT_EQ( 64, ds.GetHeight() );
@@ -32,7 +32,7 @@ TEST_F( WithValidRenderContext, DepthStencilIsValidAfterCreation )
 TEST_F( WithValidRenderContext, MsaaDepthStencilIsValidAfterCreation )
 {
 	Tr2TextureAL ds;
-	ASSERT_HRESULT_SUCCEEDED( ds.CreateDepthStencil( 128, 64, DSFMT_D24S8, Tr2MsaaDesc( 4 ), EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	EXPECT_TRUE( ds.IsValid() );
 	EXPECT_EQ( 128, ds.GetWidth() );
 	EXPECT_EQ( 64, ds.GetHeight() );
@@ -44,7 +44,7 @@ TEST_F( WithValidRenderContext, MsaaDepthStencilIsValidAfterCreation )
 TEST_F( WithValidRenderContext, DepthStencilIsInvalidAfterDestruction )
 {
 	Tr2TextureAL ds;
-	ASSERT_HRESULT_SUCCEEDED( ds.CreateDepthStencil( 128, 64, DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	EXPECT_TRUE( ds.IsValid() );
 	ds.Destroy();
 	EXPECT_FALSE( ds.IsValid() );
@@ -53,23 +53,23 @@ TEST_F( WithValidRenderContext, DepthStencilIsInvalidAfterDestruction )
 TEST_F( WithValidRenderContext, DepthStencilEqualsItself )
 {
 	Tr2TextureAL ds;
-	ASSERT_HRESULT_SUCCEEDED( ds.CreateDepthStencil( 128, 64, DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	EXPECT_TRUE( ds == ds );
 }
 
 TEST_F( WithValidRenderContext, DifferentDepthStencilsAreNotEqual )
 {
 	Tr2TextureAL ds1;
-	ASSERT_HRESULT_SUCCEEDED( ds1.CreateDepthStencil( 128, 64, DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( ds1.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	Tr2TextureAL ds2;
-	ASSERT_HRESULT_SUCCEEDED( ds2.CreateDepthStencil( 128, 64, DSFMT_D24S8, Tr2MsaaDesc(), EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( ds2.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	EXPECT_FALSE( ds1 == ds2 );
 }
 
 TEST_F( WithValidRenderContext, CanCreateReadableDepthStencil )
 {
 	Tr2TextureAL ds;
-	ASSERT_HRESULT_SUCCEEDED( ds.CreateDepthStencil( 128, 64, DSFMT_READABLE, Tr2MsaaDesc(), EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 	EXPECT_TRUE( ds.IsValid() );
 	EXPECT_EQ( 128, ds.GetWidth() );
 	EXPECT_EQ( 64, ds.GetHeight() );
@@ -83,7 +83,7 @@ TEST_F( WithValidRenderContext, CanCreateReadableDepthStencil )
 TEST_F( WithValidRenderContext, DepthStencilHasMemoryClass )
 {
 	Tr2TextureAL ds;
-	ASSERT_HRESULT_SUCCEEDED( ds.CreateDepthStencil( 128, 64, DSFMT_READABLE, Tr2MsaaDesc(), EX_NONE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 	auto memoryClass = ds.GetMemoryClass();
 	EXPECT_TRUE( memoryClass == AL_MEMORY_VIDEO || memoryClass == AL_MEMORY_MANAGED );
 }

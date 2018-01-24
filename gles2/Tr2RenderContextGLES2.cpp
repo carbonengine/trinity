@@ -1091,21 +1091,13 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned /*adapter*/, const T
 #endif
 #endif
 
-	CR_RETURN_HR( m_defaultBackBuffer.CreateRenderTarget(	
-		presentationParameters.mode.width,
-		presentationParameters.mode.height,
-		1,
-		PIXEL_FORMAT_B8G8R8A8_UNORM,
-		Tr2MsaaDesc(),
-		0,
-		EX_NONE,
+	CR_RETURN_HR( m_defaultBackBuffer.Create(	
+		Tr2BitmapDimensions( presentationParameters.mode.width, presentationParameters.mode.height, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ),
+		Tr2GpuUsage::RENDER_TARGET,
 		*this ) );
-	CR_RETURN_HR( m_defaultDepthStencil.CreateDepthStencil(
-		presentationParameters.mode.width,
-		presentationParameters.mode.height,
-		DSFMT_D24S8,
-		Tr2MsaaDesc(),
-		EX_NONE,
+	CR_RETURN_HR( m_defaultDepthStencil.Create(
+		Tr2BitmapDimensions( presentationParameters.mode.width, presentationParameters.mode.height, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ),
+		Tr2GpuUsage::DEPTH_STENCIL,
 		*this ) );
 
 	SetRenderTarget( m_defaultBackBuffer );

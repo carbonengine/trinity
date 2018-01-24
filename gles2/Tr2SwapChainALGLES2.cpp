@@ -70,14 +70,9 @@ ALResult Tr2SwapChainAL::CreateFramebuffer( Tr2RenderContextAL& renderContext )
     m_width = width;
     m_height = height;
 #endif
-	CR_RETURN_HR( m_backBuffer.CreateRenderTarget(
-		m_width,
-		m_height,
-		1,
-		PIXEL_FORMAT_B8G8R8A8_UNORM,
-		Tr2MsaaDesc(),
-		0,
-		EX_NONE,
+	CR_RETURN_HR( m_backBuffer.Create(
+		Tr2BitmapDimensions( m_width, m_height, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ),
+		Tr2GpuUsage::RENDER_TARGET,
 		renderContext ) );
 
 	return S_OK;
