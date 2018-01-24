@@ -229,14 +229,9 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 
 ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& presentationParameters )
 {
-	CR_RETURN_HR( m_defaultBackBuffer.CreateRenderTarget(	
-		presentationParameters.mode.width,
-		presentationParameters.mode.height,
-		1,
-		PIXEL_FORMAT_B8G8R8A8_UNORM,
-		Tr2MsaaDesc(),
-		0,
-		EX_NONE,
+	CR_RETURN_HR( m_defaultBackBuffer.Create(	
+		Tr2BitmapDimensions( presentationParameters.mode.width, presentationParameters.mode.height, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ),
+		Tr2GpuUsage::RENDER_TARGET,
 		*this ) );
 
 	SetRenderTarget( m_defaultBackBuffer );
