@@ -57,14 +57,6 @@ TEST_F( WithValidRenderContext, CanCreateMsaaRenderTarget )
 	EXPECT_EQ( 0, rt.GetMsaaDesc().quality );
 }
 
-TEST_F( WithValidRenderContext, RenderTargetIsInvalidAfterDestruction )
-{
-	Tr2TextureAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 128, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
-	rt.Destroy();
-	EXPECT_FALSE( rt.IsValid() );
-}
-
 TEST_F( WithValidRenderContext, CanResolveMsaaRenderTarget )
 {
 	Tr2TextureAL rtMsaa;

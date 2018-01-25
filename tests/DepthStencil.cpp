@@ -41,15 +41,6 @@ TEST_F( WithValidRenderContext, MsaaDepthStencilIsValidAfterCreation )
 	EXPECT_EQ( 0, ds.GetMsaaDesc().quality );
 }
 
-TEST_F( WithValidRenderContext, DepthStencilIsInvalidAfterDestruction )
-{
-	Tr2TextureAL ds;
-	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
-	EXPECT_TRUE( ds.IsValid() );
-	ds.Destroy();
-	EXPECT_FALSE( ds.IsValid() );
-}
-
 TEST_F( WithValidRenderContext, DepthStencilEqualsItself )
 {
 	Tr2TextureAL ds;

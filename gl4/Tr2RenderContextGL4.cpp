@@ -319,8 +319,8 @@ void Tr2RenderContextAL::ReleaseOpenGLContext()
 		m_offscreenFrameBuffer1 = 0;
 	}
 
-	m_defaultBackBuffer.Destroy();
-	m_defaultDepthStencil.Destroy();
+	m_defaultBackBuffer = Tr2TextureAL();
+	m_defaultDepthStencil = Tr2TextureAL();
 
 #ifdef _WIN32
 	if( m_hDC )

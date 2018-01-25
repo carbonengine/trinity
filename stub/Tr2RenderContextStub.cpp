@@ -396,7 +396,7 @@ void Tr2RenderContextAL::ReleaseDeviceResources()
 	}
 	
 
-	m_defaultBackBuffer.Destroy();
+	m_defaultBackBuffer = Tr2TextureAL();
 }
 
 // --------------------------------------------------------------------------------------

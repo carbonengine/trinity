@@ -125,7 +125,7 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextA
 // --------------------------------------------------------------------------------------
 void Tr2SwapChainAL::Destroy()
 {
-	m_backBuffer.Destroy();
+	m_backBuffer = Tr2TextureAL();
 #ifdef _WIN32
 	::ReleaseDC( (Tr2WindowHandle)m_hWnd, m_hDC );
 	m_hDC = 0;
