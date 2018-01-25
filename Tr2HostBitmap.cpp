@@ -212,10 +212,10 @@ bool Tr2HostBitmap::CopyFromTexture( Tr2TextureAL& texture, Tr2RenderContext& re
 	{
 		for( uint32_t mipLevel = 0; mipLevel != mipCount; ++mipLevel )
 		{
-			void* srcData = nullptr;
+			const void* srcData = nullptr;
 			uint32_t srcPitch = 0;
 
-			HRESULT hr = texture.Lock( face, mipLevel, nullptr, srcData, srcPitch, LOCK_READONLY, renderContext );
+			HRESULT hr = texture.MapForReading( Tr2TextureSubresource( face, mipLevel ), srcData, srcPitch, renderContext );
 			if( FAILED( hr ) || srcData == nullptr )
 			{
 				CCP_LOGERR( "Tr2HostBitmap::CopyFromTextureRes, error locking surface" );

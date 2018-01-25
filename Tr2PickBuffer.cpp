@@ -28,8 +28,8 @@ void Tr2PickBuffer::SetSize( int size )
 // ------------------------------------------------------------------------------------------------------
 void Tr2PickBuffer::ReleaseResources( TriStorage s )
 {
-	m_pickTarget.Destroy();
-	m_depthBuffer.Destroy();
+	m_pickTarget = Tr2TextureAL();
+	m_depthBuffer = Tr2TextureAL();
 }
 
 // ------------------------------------------------------------------------------------------------------

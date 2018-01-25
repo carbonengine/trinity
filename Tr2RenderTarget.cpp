@@ -189,7 +189,7 @@ bool Tr2RenderTarget::IsValid() const
 
 void Tr2RenderTarget::Destroy()
 {
-	m_renderTarget.Destroy();
+	m_renderTarget = Tr2TextureAL();
 	m_width = 0;
 	m_height = 0;
 	m_mipCount = 0;
@@ -319,7 +319,7 @@ void Tr2RenderTarget::ReleaseResources( TriStorage s )
 {
 	if( m_renderTarget.IsValid() && ( m_renderTarget.GetMemoryClass() & s ) )
 	{
-		m_renderTarget.Destroy();
+		m_renderTarget = Tr2TextureAL();
 	}
 }
 

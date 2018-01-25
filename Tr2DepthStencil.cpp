@@ -86,7 +86,7 @@ bool Tr2DepthStencil::IsValid() const
 
 void Tr2DepthStencil::Destroy()
 {
-	m_depthStencil.Destroy();
+	m_depthStencil = Tr2TextureAL();
 
 	m_width = 0;
 	m_height = 0;
@@ -157,7 +157,7 @@ void Tr2DepthStencil::ReleaseResources( TriStorage s )
 {
 	if( m_depthStencil.IsValid() && ( s & m_depthStencil.GetMemoryClass() ) )
 	{
-		m_depthStencil.Destroy();
+		m_depthStencil = Tr2TextureAL();
 	}
 }
 

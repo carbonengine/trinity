@@ -172,7 +172,7 @@ void Tr2AtlasTexture::ReleaseResources( TriStorage s )
 		// ones resident in an atlas are purged.		
 		CancelPendingLoad();
 
-		m_texture.Destroy();
+		m_texture = Tr2TextureAL();
 		CCP_DELETE m_atlasArea;
 		m_atlasArea = NULL;
 
@@ -216,7 +216,7 @@ bool Tr2AtlasTexture::DoPrepare()
 		m_textureAtlas->RemoveFromAtlas( this );
 	}
 
-	m_texture.Destroy();
+	m_texture = Tr2TextureAL();
 
 	if( !Tr2Renderer::IsResourceCreationAllowed() )
 	{
@@ -329,8 +329,11 @@ bool Tr2AtlasTexture::LockBuffer( void*& pData, unsigned int& pitch )
 		return false;
 	}
 
-	unsigned ltrb[4] = { m_x, m_y, m_x + m_width, m_y + m_height };
-	long hr = texture->Lock( 0, ltrb, pData, pitch, LOCK_WRITEONLY, renderContext ).GetResult();
+	long hr = texture->MapForWriting( 
+		Tr2TextureSubresource( 0 ).SetRect( uint32_t( m_x ), uint32_t( m_y ), uint32_t( m_x + m_width ), uint32_t( m_y + m_height ) ), 
+		pData, 
+		pitch, 
+		renderContext ).GetResult();
 
 	if( FAILED( hr ) )
 	{
@@ -364,8 +367,11 @@ bool Tr2AtlasTexture::LockBufferAndMargin( void *&data, unsigned &pitch, unsigne
 	}
 
 	margin = m_textureAtlas->GetMargin();
-	unsigned ltrb[4] = { m_x - margin, m_y - margin, m_x + m_width + margin, m_y + m_height + margin };
-	long hr = texture->Lock( 0, ltrb, data, pitch, LOCK_WRITEONLY, renderContext ).GetResult();
+	long hr = texture->MapForWriting( 
+		Tr2TextureSubresource( 0 ).SetRect( uint32_t( m_x - margin ), uint32_t( m_y - margin ), uint32_t( m_x + m_width + margin ), uint32_t( m_y + m_height + margin ) ), 
+		data, 
+		pitch, 
+		renderContext ).GetResult();
 
 	if( FAILED( hr ) )
 	{

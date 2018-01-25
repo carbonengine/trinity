@@ -204,7 +204,7 @@ bool CopyToTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& texture, unsigned
 
 	if( !margin )
 	{
-		const auto result = texture.UpdateSubresource( x, y, x + bitmap.GetWidth(), y + bitmap.GetHeight(), bitmap.GetRawData(), bitmap.GetPitch(), renderContext );
+		const auto result = texture.UpdateSubresource( Tr2TextureSubresource( 0 ).SetRect( x, y, x + bitmap.GetWidth(), y + bitmap.GetHeight() ), bitmap.GetRawData(), bitmap.GetPitch(), 0, renderContext );
 		if( FAILED( result ) )
 		{
 			CCP_LOGERR( "Tr2ImageHandler::CopyToTexture - UpdateSubresource failed [no margin]: %08x", result );
@@ -219,7 +219,7 @@ bool CopyToTexture( ImageIO::HostBitmap& bitmap, Tr2TextureAL& texture, unsigned
 	unsigned pitch = 0;
 	AddMargin( bitmap.GetFormat(), reinterpret_cast<const uint8_t*>( bitmap.GetRawData() ), bitmap.GetWidth(), bitmap.GetHeight(), margin, pixels, pitch );
 
-	const auto result = texture.UpdateSubresource( x, y, x + bitmap.GetWidth() + 2 * margin, y + bitmap.GetHeight() + 2 * margin, &pixels[0], pitch, renderContext );
+	const auto result = texture.UpdateSubresource( Tr2TextureSubresource( 0 ).SetRect( x, y, x + bitmap.GetWidth() + 2 * margin, y + bitmap.GetHeight() + 2 * margin ), &pixels[0], pitch, 0, renderContext );
 	if( FAILED( result ) )
 	{
 		CCP_LOGERR( "Tr2ImageHandler::CopyToTexture - UpdateSubresource failed [margin]: %08x", result );

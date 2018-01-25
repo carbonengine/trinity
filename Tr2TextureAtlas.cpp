@@ -52,7 +52,7 @@ void Tr2TextureAtlas::ReleaseResources( TriStorage s )
 {
 	if( s & TRISTORAGE_MANAGEDMEMORY ) 
 	{
-		m_texture.Destroy();
+		m_texture = Tr2TextureAL();
 
 		for( AreaList_t::iterator it = m_freeAreas.begin(); it != m_freeAreas.end(); ++it )
 		{
@@ -904,7 +904,7 @@ void Tr2TextureAtlas::PaintEmptyArea( Tr2TextureAtlasArea* area )
 
 	void* rgba = nullptr;
 	uint32_t pitch = 0;
-	CR_RETURN( m_texture.Lock( 0, rgba, pitch, LOCK_WRITEONLY, renderContext ) );
+	CR_RETURN( m_texture.MapForWriting( Tr2TextureSubresource( 0 ), rgba, pitch, renderContext ) );
 	ON_BLOCK_EXIT( [&]{ m_texture.UnmapForWriting( renderContext ); } );
 
 	uint8_t *dst = (uint8_t*)rgba;
@@ -1012,7 +1012,7 @@ void Tr2TextureAtlas::PullInOutsiders( bool optimiseInsertion )
 			if( CopyTextureIntoAtlas( tex ) )
 			{
 				// Set up the texture window into the atlas
-				tex->m_texture.Destroy();
+				tex->m_texture = Tr2TextureAL();
 				tex->m_renderTarget = nullptr;
 				tex->m_x = area->rect.left + m_margin;
 				tex->m_y = area->rect.top + m_margin;
@@ -1062,9 +1062,9 @@ bool Tr2TextureAtlas::CopyTextureIntoAtlas( Tr2AtlasTexture* tex )
 		m_dirtyMipRegions.push_back( r );
 	}
 
-	void* srcData = nullptr;
+	const void* srcData = nullptr;
 	unsigned srcPitch = 0;
-	CR_RETURN_VAL( tex->GetTexture()->Lock( 0, srcData, srcPitch, LOCK_READONLY, renderContext ), false );
+	CR_RETURN_VAL( tex->GetTexture()->MapForReading( Tr2TextureSubresource( 0 ), srcData, srcPitch, renderContext ), false );
 	ON_BLOCK_EXIT( [&]{ tex->GetTexture()->UnmapForReading( renderContext ); } );
 
 	std::vector<unsigned char> pixels;
@@ -1074,7 +1074,7 @@ bool Tr2TextureAtlas::CopyTextureIntoAtlas( Tr2AtlasTexture* tex )
 	// Area may be larger than texture due to alignment
 	uint32_t right = r.left + tex->GetWidth() + 2*m_margin;
 	uint32_t bottom = r.top + tex->GetHeight() + 2*m_margin;
-	return SUCCEEDED( m_texture.UpdateSubresource( r.left, r.top, right, bottom, &pixels[0], pitch, renderContext ) );
+	return SUCCEEDED( m_texture.UpdateSubresource( Tr2TextureSubresource( 0 ).SetRect( r.left, r.top, right, bottom ), &pixels[0], pitch, 0, renderContext ) );
 }
 
 ALResult Tr2TextureAtlas::CreateTexture( unsigned int width, unsigned int height, AtlasTextureType type, Tr2AtlasTexture** result )
@@ -1341,7 +1341,7 @@ bool Tr2TextureAtlas::EjectTextureHelper( Tr2AtlasTexture *tex )
 	}
 	else
 	{
-		tex->m_texture.Destroy();
+		tex->m_texture = Tr2TextureAL();
 	}
 	
 	return false;	
@@ -1437,8 +1437,8 @@ void Tr2TextureAtlas::UpdateMipMaps( Tr2RenderContext& renderContext )
 
 	// Get a copy of the first mip level into system memory
 	uint32_t sourcePitch;
-	void* sourceData;
-	if( FAILED( m_texture.Lock( 0, sourceData, sourcePitch, LOCK_READONLY, renderContext ) ) )
+	const void* sourceData;
+	if( FAILED( m_texture.MapForReading( Tr2TextureSubresource( 0 ), sourceData, sourcePitch, renderContext ) ) )
 	{
 		CCP_LOGERR( "Tr2TextureAtlas::UpdateMipMaps: Failed to read texture" );
 		return;
@@ -1483,7 +1483,7 @@ void Tr2TextureAtlas::UpdateMipMaps( Tr2RenderContext& renderContext )
 
 			uint32_t sysDestPitch;
 			void* destData;
-			if( SUCCEEDED( m_texture.Lock( i, reinterpret_cast<uint32_t*>( &dest ), destData, sysDestPitch, LOCK_WRITEONLY, renderContext ) ) )
+			if( SUCCEEDED( m_texture.MapForWriting( Tr2TextureSubresource( i ).SetRect( reinterpret_cast<uint32_t*>( &dest ) ), destData, sysDestPitch, renderContext ) ) )
 			{
 				unsigned char *dstRow = reinterpret_cast<unsigned char*>( destData );
 

@@ -768,7 +768,7 @@ void Tr2GpuParticleSystem::UpdateGpuEmitterParams( Tr2RenderContext& renderConte
 	}
 	void* data = nullptr;
 	uint32_t pitch;
-	CR_RETURN( texture->Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_WRITEONLY, renderContext ) );
+	CR_RETURN( texture->MapForWriting( Tr2TextureSubresource( 0 ), data, pitch, renderContext ) );
 	for( size_t i = 0; i < m_emitterParams.size(); ++i )
 	{
 		*reinterpret_cast<EmitterParamsGpu*>( reinterpret_cast<uint8_t*>( data ) + i * pitch ) = m_emitterParams[i];

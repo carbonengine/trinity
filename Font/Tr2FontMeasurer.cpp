@@ -533,7 +533,7 @@ void Tr2FontMeasurer::DrawToTexture( TriTextureRes* texture )
 
 	void* pBits;
 	uint32_t Pitch;
-	CR_RETURN( tex->Lock( 0, pBits, Pitch, LOCK_WRITEONLY, renderContext ) );
+	CR_RETURN( tex->MapForWriting( Tr2TextureSubresource( 0 ), pBits, Pitch, renderContext ) );
 	ON_BLOCK_EXIT( [&]{ tex->UnmapForWriting( renderContext ); } );
 
 	DrawToBuffer(	texture->GetWidth(), 

@@ -318,9 +318,9 @@ namespace
 
 	void DestroyFallbackTextures( Tr2TextureAL* fallbackTextures )
 	{
-		fallbackTextures[0].Destroy();
-		fallbackTextures[1].Destroy();
-		fallbackTextures[2].Destroy();
+		fallbackTextures[0] = Tr2TextureAL();
+		fallbackTextures[1] = Tr2TextureAL();
+		fallbackTextures[2] = Tr2TextureAL();
 	}
 
 	void CreateFallbackTextures( Tr2PrimaryRenderContext& renderContext )

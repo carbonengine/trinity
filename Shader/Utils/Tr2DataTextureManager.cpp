@@ -44,7 +44,7 @@ bool Tr2DataTextureManager::Initialize()
 void Tr2DataTextureManager::ReleaseResources( TriStorage s )
 {
 	// get rid of data texture
-	m_dataTexture->GetTexture()->Destroy();
+	*m_dataTexture->GetTexture() = Tr2TextureAL();
 }
 
 // --------------------------------------------------------------------------------
@@ -109,7 +109,7 @@ void Tr2DataTextureManager::Update( EveUpdateContext& updateContext )
 	uint32_t pitch = 0;
 	int32_t pixelOffset = 0;
 	m_dataTextureOffsets.clear();
-	if( SUCCEEDED( m_dataTexture->GetTexture()->Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_WRITEONLY, renderContext ) ) )
+	if( SUCCEEDED( m_dataTexture->GetTexture()->MapForWriting( Tr2TextureSubresource( 0 ), data, pitch, renderContext ) ) )
 	{
 		uint8_t* mem = (uint8_t*)data;
 

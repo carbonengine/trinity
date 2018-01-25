@@ -130,7 +130,7 @@ void Tr2Sprite2dLayer::FreeRenderTarget()
 {
 	CCP_STATS_ADD( spriteSceneLayerMemoryUse, -(double)( m_renderTarget.GetWidth() * m_renderTarget.GetHeight() * 4 ) );
 
-	m_renderTarget.Destroy();
+	m_renderTarget = Tr2TextureAL();
 }
 
 unsigned int Tr2Sprite2dLayer::GetVertexCount()

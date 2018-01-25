@@ -107,7 +107,7 @@ void TriTextureRes::ReleaseResources( TriStorage s )
 {
 	if( ( m_ownTexture.GetMemoryClass() & s ) != 0 )
 	{
-		m_ownTexture.Destroy();
+		m_ownTexture = Tr2TextureAL();
 	}
 
 	if( !m_texture )
@@ -128,7 +128,7 @@ void TriTextureRes::ReleaseResources( TriStorage s )
 		CancelPendingLoad();
 		CleanupAsyncSave(false);
 
-		m_ownTexture.Destroy();
+		m_ownTexture = Tr2TextureAL();
 		m_texture = nullptr;
 		m_wrappedRenderTarget = nullptr;
 		m_wrappedDepthStencil = nullptr;
@@ -372,7 +372,7 @@ bool TriTextureRes::DoPrepare()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	m_ownTexture.Destroy();
+	m_ownTexture = Tr2TextureAL();
 	SetTexture( m_ownTexture );
 
 	// No need to check for texture load disabled - we wouldn't have gotten here
@@ -412,7 +412,8 @@ long TriTextureRes::UpdateSubresource( unsigned left, unsigned top, unsigned rig
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	if( Tr2TextureAL* texture = GetTexture() )
 	{
-		return (HRESULT)texture->UpdateSubresource( left, top, right, bottom, source, sourcePitch, renderContext );
+		uint32_t slicePitch = 0;
+		return (HRESULT)texture->UpdateSubresource( Tr2TextureSubresource( 0 ).SetRect( left, top, right, bottom ), source, sourcePitch, slicePitch, renderContext );
 	}
 	return E_FAIL;
 }
@@ -422,7 +423,7 @@ long TriTextureRes::UpdateSubresource( unsigned left, unsigned top, unsigned rig
 
 bool TriTextureRes::SetTextureFromRT( Tr2RenderTarget* renderTarget )
 {
-	m_ownTexture.Destroy();
+	m_ownTexture = Tr2TextureAL();
 	SetTexture( m_ownTexture );
 	m_wrappedRenderTarget = renderTarget;
 
@@ -439,7 +440,7 @@ bool TriTextureRes::CreateFromRT( Tr2RenderTarget* renderTarget, unsigned width,
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	m_ownTexture.Destroy();
+	m_ownTexture = Tr2TextureAL();
 	ON_BLOCK_EXIT( [&]{ SetTexture( m_ownTexture ); } );
 
 	if( !renderTarget || !renderTarget->IsValid() )
@@ -476,7 +477,7 @@ bool TriTextureRes::CreateFromRT( Tr2RenderTarget* renderTarget, unsigned width,
 		dst.SetRect( 0, 0, width, height );
 		if( FAILED( m_ownTexture.CopySubresourceRegion( Tr2TextureSubresource(), *renderTarget, dst, renderContext ) ) )
 		{
-			m_ownTexture.Destroy();
+			m_ownTexture = Tr2TextureAL();
 			return false;
 		}
 	}
@@ -508,7 +509,7 @@ bool TriTextureRes::CreateFromHostBitmap( Tr2HostBitmap* bitmap )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	m_ownTexture.Destroy();
+	m_ownTexture = Tr2TextureAL();
 	SetTexture( m_ownTexture );
 
 	if( !bitmap || !bitmap->IsValid() || !Tr2Renderer::IsResourceCreationAllowed() )
@@ -543,7 +544,7 @@ BlueStdResult TriTextureRes::CreateFromTexture( TriTextureRes* texture )
 
 	auto& other = *texture->GetTexture();
 
-	m_ownTexture.Destroy();
+	m_ownTexture = Tr2TextureAL();
 	ON_BLOCK_EXIT( [&]{ SetTexture( m_ownTexture ); } );
 
 	auto width = other.GetWidth();
@@ -573,7 +574,7 @@ BlueStdResult TriTextureRes::CreateFromTexture( TriTextureRes* texture )
 bool TriTextureRes::SetTextureFromDS( Tr2DepthStencil* depthStencil )
 {
 	m_wrappedDepthStencil = depthStencil;
-	m_ownTexture.Destroy();
+	m_ownTexture = Tr2TextureAL();
 	SetTexture( m_ownTexture );
 
 	if( depthStencil && depthStencil->IsValid() )
@@ -592,7 +593,7 @@ bool TriTextureRes::Create(	uint32_t width,
 							BufferUsageFlags usage,
 							Tr2PrimaryRenderContext& renderContext )
 {
-	m_ownTexture.Destroy();
+	m_ownTexture = Tr2TextureAL();
 	SetTexture( m_ownTexture );
 
 

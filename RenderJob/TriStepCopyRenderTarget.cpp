@@ -25,13 +25,19 @@ TriStepResult TriStepCopyRenderTarget::Execute( Be::Time realTime, Be::Time simT
 	{
 		if( !m_sourceViewport )
 		{
-			hr = m_destinationRT->GetRenderTarget().CopySubresourceRegion( destX, destY, *m_sourceRT, nullptr, renderContext );
+			Tr2TextureSubresource dest( 0 );
+			dest.SetRect( destX, destY, destX + m_sourceRT->GetWidth(), destY + m_sourceRT->GetHeight() );
+			hr = m_destinationRT->GetRenderTarget().CopySubresourceRegion( dest, *m_sourceRT, Tr2TextureSubresource( 0 ), renderContext );
 		}
 		else
 		{
 			const auto& vp = *m_sourceViewport;
-			uint32_t ltrb[4] = { (uint32_t)vp.x, (uint32_t)vp.y, (uint32_t)(vp.x + vp.width), (uint32_t)(vp.y + vp.height) };
-			hr = m_destinationRT->GetRenderTarget().CopySubresourceRegion( destX, destY, *m_sourceRT, ltrb, renderContext );
+			Tr2TextureSubresource src( 0 );
+			src.SetRect( (uint32_t)vp.x, (uint32_t)vp.y, (uint32_t)(vp.x + vp.width), (uint32_t)(vp.y + vp.height) );
+			Tr2TextureSubresource dest( 0 );
+			dest.SetRect( destX, destY, destX + src.m_right - src.m_left, destY + src.m_bottom - src.m_top );
+
+			hr = m_destinationRT->GetRenderTarget().CopySubresourceRegion( dest, *m_sourceRT, src, renderContext );
 		}
 	}
 	else

@@ -444,10 +444,12 @@ void Tr2ImpostorManager::EndImpostorUpdate( size_t index, Tr2RenderContext& rend
 	
 	impostor->second.oldHash = impostor->second.hash;
 
-	m_rt->GetRenderTarget().CopySubresourceRegion( 
-		uint32_t( float( impostor->second.texcoord.x ) * m_width ), 
-		uint32_t( float( impostor->second.texcoord.y ) * m_height ), 
-		*m_itemRt, nullptr, renderContext );
+	auto x = uint32_t( float( impostor->second.texcoord.x ) * m_width );
+	auto y = uint32_t( float( impostor->second.texcoord.y ) * m_height );
+	Tr2TextureSubresource dst( 0 );
+	dst.SetRect( x, y, x + m_itemRt->GetWidth(), y + m_itemRt->GetHeight() );
+
+	m_rt->GetRenderTarget().CopySubresourceRegion( dst, *m_itemRt, Tr2TextureSubresource( 0 ), renderContext );
 }
 
 // --------------------------------------------------------------------------------------

@@ -138,9 +138,9 @@ void TriShadowMap::ReleaseResources( TriStorage s )
 		m_shadowMapHandle->Clear();
 	}
 	// textures
-	m_noShadowTexture->GetTexture()->Destroy();
-	m_shadowMapDS.Destroy();
-	m_filterBlurRT.Destroy();
+	*m_noShadowTexture->GetTexture() = Tr2TextureAL();
+	m_shadowMapDS = Tr2TextureAL();
+	m_filterBlurRT = Tr2TextureAL();
 }
 
 #ifdef TRINITYDEV

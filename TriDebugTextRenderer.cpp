@@ -123,7 +123,7 @@ void TriDebugTextRenderer::Clear()
 
 void TriDebugTextRenderer::ReleaseResources( TriStorage s )
 {
-	m_texture.Destroy();
+	m_texture = Tr2TextureAL();
 }
 
 bool TriDebugTextRenderer::OnPrepareResources()
@@ -239,7 +239,7 @@ void TriDebugTextRenderer::DrawText( TriDebugFont font, const char* string, cons
 	uint32_t r = ( color >> 16 ) & 0xff;
 	void* textureData;
 	unsigned pitch;
-	CR_RETURN( m_texture.Lock( 0, textureData, pitch, Tr2RenderContextEnum::LOCK_WRITEONLY, renderContext ) );
+	CR_RETURN( m_texture.MapForWriting( Tr2TextureSubresource( 0 ), textureData, pitch, renderContext ) );
 	for( int j = 0; j < size.bottom; ++j )
 	{
 		uint32_t* outRow = reinterpret_cast<uint32_t*>( reinterpret_cast<char*>( textureData ) + j * pitch );
@@ -298,7 +298,7 @@ void TriDebugTextRenderer::DrawText( TriDebugFont font, const char* string, cons
 	uint32_t r = ( color >> 16 ) & 0xff;
 	void* textureData;
 	unsigned pitch;
-	CR_RETURN( m_texture.Lock( 0, textureData, pitch, Tr2RenderContextEnum::LOCK_WRITEONLY, renderContext ) );
+	CR_RETURN( m_texture.MapForWriting( Tr2TextureSubresource( 0 ), textureData, pitch, renderContext ) );
 	int offsetX = 0;
 	int offsetY = 0;
 	int pixelWidths = int( s_charPixelsArraySizes[font] / s_charHeight[font] );
