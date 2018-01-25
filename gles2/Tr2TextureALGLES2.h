@@ -76,8 +76,8 @@ namespace TrinityALImpl
 		Tr2LockGuard m_lockGuard;
 #endif
 
-		friend class Tr2PrimaryRenderContextAL;
-		friend class Tr2RenderContextAL;
+		friend class ::Tr2PrimaryRenderContextAL;
+		friend class ::Tr2RenderContextAL;
 		friend class Tr2ResourceSetAL;
 	};
 }
