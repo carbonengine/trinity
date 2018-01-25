@@ -27,7 +27,7 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextA
 
 void Tr2SwapChainAL::Destroy()
 {
-	m_backBuffer.Destroy();
+	m_backBuffer = Tr2TextureAL();
 }
 
 bool Tr2SwapChainAL::IsValid() const

@@ -59,49 +59,6 @@ public:
 	ALResult GenerateMipMaps( Tr2RenderContextAL& renderContext );
 	ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
 	uintptr_t GetSharedHandle() const;
-
-
-
-
-
-	void Destroy();
-
-	ALResult UpdateSubresource(
-		uint32_t left,
-		uint32_t top,
-		uint32_t right,
-		uint32_t bottom,
-		const void* source,
-		uint32_t sourcePitch,
-		Tr2RenderContextAL& renderContext );
-
-	ALResult Lock(
-		uint32_t mipLevel,
-		void*& data,
-		uint32_t& pitch,
-		Tr2RenderContextEnum::LockType,
-		Tr2RenderContextAL& renderContext );
-	ALResult Lock(
-		uint32_t mipLevel,
-		uint32_t* ltrb,
-		void*& data,
-		uint32_t& pitch,
-		Tr2RenderContextEnum::LockType,
-		Tr2RenderContextAL& renderContext );
-	ALResult Lock(
-		uint32_t face,
-		uint32_t mipLevel,
-		uint32_t* ltrb,
-		void*& data,
-		uint32_t& pitch,
-		Tr2RenderContextEnum::LockType,
-		Tr2RenderContextAL& renderContext );
-	ALResult CopySubresourceRegion(
-		uint32_t destX,
-		uint32_t destY,
-		Tr2TextureAL& source,
-		uint32_t* ltrb,
-		Tr2RenderContextAL& renderContext );
 private:
 	std::shared_ptr<TrinityALImpl::Tr2TextureAL> m_texture;
 
@@ -112,9 +69,9 @@ private:
 	friend class TrinityALImpl::Tr2TextureAL;
 };
 
-extern Tr2TextureAL nullRT;
-extern Tr2TextureAL nullDS;
-extern Tr2TextureAL nullTX;
+extern const Tr2TextureAL nullRT;
+extern const Tr2TextureAL nullDS;
+extern const Tr2TextureAL nullTX;
 
 
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2TextureAL )

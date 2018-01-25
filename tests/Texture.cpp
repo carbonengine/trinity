@@ -115,14 +115,6 @@ TEST_F( WithValidRenderContext, CanCreateMipMappedCubeTexture )
 	EXPECT_EQ( 8, tex.GetTrueMipCount() );
 }
 
-TEST_F( WithValidRenderContext, TextureIsInvalidAfterDestruction )
-{
-	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 128, 128, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
-	tex.Destroy();
-	EXPECT_FALSE( tex.IsValid() );
-}
-
 TEST_F( WithValidRenderContext, TextureEqualsItself )
 {
 	Tr2TextureAL tex;
@@ -142,10 +134,11 @@ TEST_F( WithValidRenderContext, DifferentTexturesAreNotEqual )
 TEST_F( WithValidRenderContext, LockingInvalidTextureFails )
 {
 	Tr2TextureAL tex;
+	const void* constData;
 	void* data;
 	uint32_t pitch;
-	ASSERT_HRESULT_FAILED( tex.Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_READONLY, *renderContext ) );
-	ASSERT_HRESULT_FAILED( tex.Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_WRITEONLY, *renderContext ) );
+	ASSERT_HRESULT_FAILED( tex.MapForReading( Tr2TextureSubresource( 0 ), constData, pitch, *renderContext ) );
+	ASSERT_HRESULT_FAILED( tex.MapForWriting( Tr2TextureSubresource( 0 ), data, pitch, *renderContext ) );
 }
 
 TEST_F( WithValidRenderContext, TextureHasMemoryClass )
@@ -172,13 +165,4 @@ TEST_F( WithValidRenderContext, CanCreateCompressedCubeTexture )
 	EXPECT_TRUE( tex.IsValid() );
 	EXPECT_EQ( TEX_TYPE_CUBE, tex.GetType() );
 	EXPECT_EQ( PIXEL_FORMAT_BC1_UNORM, tex.GetFormat() );
-}
-
-TEST_F( WithValidRenderContext, Locking2DTextureWithNoOverwriteFails )
-{
-	Tr2TextureAL tex;
-	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 128, 128, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
-	void* data;
-	uint32_t pitch;
-	ASSERT_HRESULT_FAILED( tex.Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_NO_OVERWRITE, *renderContext ) );
 }

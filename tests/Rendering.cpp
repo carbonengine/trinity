@@ -2822,8 +2822,11 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PopRenderTarget() );
 
-		uint32_t ltrb[] = { 20, 15, 64, 64 };
-		ASSERT_HRESULT_SUCCEEDED( rt2.CopySubresourceRegion( 64, 32, rt, ltrb, *renderContext ) );
+		Tr2TextureSubresource src( 0 );
+		src.SetRect( 20, 15, 64, 64 );
+		Tr2TextureSubresource dst( 0 );
+		dst.SetRect( 64, 32, 64 + src.m_right - src.m_left, 32 + src.m_bottom - src.m_top );
+		ASSERT_HRESULT_SUCCEEDED( rt2.CopySubresourceRegion( dst, rt, src, *renderContext ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
@@ -3776,7 +3779,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 
 		void* data;
 		uint32_t pitch;
-		ASSERT_HRESULT_SUCCEEDED( tex.Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_WRITEONLY, *renderContext ) );
+		ASSERT_HRESULT_SUCCEEDED( tex.MapForWriting( Tr2TextureSubresource( 0 ), data, pitch, *renderContext ) );
 		*reinterpret_cast<uint32_t*>( data ) = 0xffff0000;
 		tex.UnmapForWriting( *renderContext );
 
@@ -3785,7 +3788,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb1, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
 
-		ASSERT_HRESULT_SUCCEEDED( tex.Lock( 0, data, pitch, Tr2RenderContextEnum::LOCK_WRITEONLY, *renderContext ) );
+		ASSERT_HRESULT_SUCCEEDED( tex.MapForWriting( Tr2TextureSubresource( 0 ), data, pitch, *renderContext ) );
 		*reinterpret_cast<uint32_t*>( data ) = 0xff00ff00;
 		tex.UnmapForWriting( *renderContext );
 

@@ -11,9 +11,9 @@ namespace
 	std::shared_ptr<TrinityALImpl::Tr2TextureAL> nullTexture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 }
 
-Tr2TextureAL nullRT;
-Tr2TextureAL nullDS;
-Tr2TextureAL nullTX;
+const Tr2TextureAL nullRT;
+const Tr2TextureAL nullDS;
+const Tr2TextureAL nullTX;
 
 
 Tr2TextureAL::Tr2TextureAL()
@@ -210,112 +210,4 @@ namespace
 			gpuUsage = gpuUsage | Tr2GpuUsage::SHARED;
 		}
 	}
-}
-
-
-void Tr2TextureAL::Destroy()
-{
-	m_texture = nullTexture;
-}
-
-ALResult Tr2TextureAL::UpdateSubresource(
-	uint32_t left,
-	uint32_t top,
-	uint32_t right,
-	uint32_t bottom,
-	const void* source,
-	uint32_t sourcePitch,
-	Tr2RenderContextAL& renderContext )
-{
-	return UpdateSubresource( Tr2TextureSubresource( 0 ).SetRect( left, top, right, bottom ), source, sourcePitch, 0, renderContext );
-}
-
-ALResult Tr2TextureAL::Lock(
-	uint32_t mipLevel,
-	void*& data,
-	uint32_t& pitch,
-	Tr2RenderContextEnum::LockType lockType,
-	Tr2RenderContextAL& renderContext )
-{
-	if( lockType == Tr2RenderContextEnum::LOCK_NO_OVERWRITE )
-	{
-		return E_INVALIDARG;
-	}
-	if( lockType == Tr2RenderContextEnum::LOCK_READONLY )
-	{
-		return MapForReading( Tr2TextureSubresource( mipLevel ), *(const void**)&data, pitch, renderContext );
-	}
-	else
-	{
-		return MapForWriting( Tr2TextureSubresource( mipLevel ), data, pitch, renderContext );
-	}
-}
-
-ALResult Tr2TextureAL::Lock(
-	uint32_t mipLevel,
-	uint32_t* ltrb,
-	void*& data,
-	uint32_t& pitch,
-	Tr2RenderContextEnum::LockType lockType,
-	Tr2RenderContextAL& renderContext )
-{
-	if( lockType == Tr2RenderContextEnum::LOCK_NO_OVERWRITE )
-	{
-		return E_INVALIDARG;
-	}
-	if( lockType == Tr2RenderContextEnum::LOCK_READONLY )
-	{
-		return MapForReading( Tr2TextureSubresource( mipLevel ).SetRect( ltrb ), *(const void**)&data, pitch, renderContext );
-	}
-	else
-	{
-		return MapForWriting( Tr2TextureSubresource( mipLevel ).SetRect( ltrb ), data, pitch, renderContext );
-	}
-}
-
-ALResult Tr2TextureAL::Lock(
-	uint32_t face,
-	uint32_t mipLevel,
-	uint32_t* ltrb,
-	void*& data,
-	uint32_t& pitch,
-	Tr2RenderContextEnum::LockType lockType,
-	Tr2RenderContextAL& renderContext )
-{
-	if( lockType == Tr2RenderContextEnum::LOCK_NO_OVERWRITE )
-	{
-		return E_INVALIDARG;
-	}
-	if( lockType == Tr2RenderContextEnum::LOCK_READONLY )
-	{
-		return MapForReading( Tr2TextureSubresource( face, mipLevel ).SetRect( ltrb ), *(const void**)&data, pitch, renderContext );
-	}
-	else
-	{
-		return MapForWriting( Tr2TextureSubresource( face, mipLevel ).SetRect( ltrb ), data, pitch, renderContext );
-	}
-}
-
-ALResult Tr2TextureAL::CopySubresourceRegion(
-	uint32_t destX,
-	uint32_t destY,
-	Tr2TextureAL& source,
-	uint32_t* ltrb,
-	Tr2RenderContextAL& renderContext )
-{
-	Tr2TextureSubresource src;
-	if( ltrb )
-	{
-		src.SetRect( ltrb );
-	}
-	Tr2TextureSubresource dst;
-	if( ltrb )
-	{
-		dst.SetRect( destX, destY, destX + ( src.m_right - src.m_left ), destY + ( src.m_bottom - src.m_top ) );
-	}
-	else
-	{
-		dst.SetRect( destX, destY, destX + source.GetWidth(), destY + source.GetHeight() );
-	}
-	return CopySubresourceRegion( dst, source, src, renderContext );
 }
