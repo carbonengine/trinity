@@ -241,16 +241,7 @@ namespace
 		{
 			GL_FAIL( glGenTextures( 1, &texture ) );
 			GL_FAIL( glBindTexture( GL_TEXTURE_2D, texture ) );
-			GL_FAIL( glTexImage2D(
-				GL_TEXTURE_2D,
-				0,
-				GL_DEPTH24_STENCIL8_EXT,
-				desc.GetWidth(),
-				desc.GetHeight(),
-				0,
-				GL_DEPTH_STENCIL_EXT,
-				GL_UNSIGNED_INT_24_8_EXT,
-				nullptr ) );
+			GL_VALIDATE( glTexStorage2D( GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, desc.GetWidth(), desc.GetHeight() ) );
 		}
 		else
 		{
