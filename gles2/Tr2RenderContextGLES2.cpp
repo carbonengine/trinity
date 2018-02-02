@@ -1094,6 +1094,7 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned /*adapter*/, const T
 	CR_RETURN_HR( m_defaultBackBuffer.Create(	
 		Tr2BitmapDimensions( presentationParameters.mode.width, presentationParameters.mode.height, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ),
 		Tr2GpuUsage::RENDER_TARGET,
+		Tr2CpuUsage::READ,
 		*this ) );
 	CR_RETURN_HR( m_defaultDepthStencil.Create(
 		Tr2BitmapDimensions( presentationParameters.mode.width, presentationParameters.mode.height, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ),

@@ -142,23 +142,106 @@ void SaveReadableRenderTarget( Tr2TextureAL& rt, const char* outFilePath, Tr2Ren
 	rt.UnmapForReading( renderContext );
 }
 
+::testing::AssertionResult LoadDDS( const char* filePath, uint32_t& width, uint32_t& height, std::unique_ptr<uint8_t[]>& data )
+{
+	FILE* f;
+	if( fopen_s( &f, filePath, "rb" ) )
+	{
+		return ::testing::AssertionFailure() << "failed to open file " << filePath;
+	}
+	ON_BLOCK_EXIT( [=] { fclose( f ); } );
+
+	DDS_HEADER header;
+	if( 1 != fread( &header, sizeof( header ), 1, f ) )
+	{
+		return ::testing::AssertionFailure() << "failed to read DDS header from " << filePath;
+	}
+
+	width = header.dwWidth;
+	height = header.dwHeight;
+
+	if( width * height * 4 != header.dwPitchOrLinearSize )
+	{
+		return ::testing::AssertionFailure() << "unexpected DDS file pixel format or pitch " << filePath;
+	}
+
+	data.reset( new uint8_t[header.dwPitchOrLinearSize] );
+
+	if( header.dwPitchOrLinearSize != fread( data.get(), 1, header.dwPitchOrLinearSize, f ) )
+	{
+		return ::testing::AssertionFailure() << "failed to read DDS pixel values " << filePath;
+	}
+	return ::testing::AssertionSuccess();
 }
 
-void WithValidRenderContext::MakeScreenShot( const char* outFilePath )
+::testing::AssertionResult CompareWithBitmap( const char* filePath, Tr2TextureAL& rt, Tr2RenderContextAL& renderContext )
 {
-	auto& rt = renderContext->GetDefaultBackBuffer();
-	ASSERT_TRUE( rt.IsValid() );
+	uint32_t width, height;
+	std::unique_ptr<uint8_t[]> data;
+	auto loaded = LoadDDS( filePath, width, height, data );
+	if( !loaded )
+	{
+		return loaded;
+	}
+
+	if( width != rt.GetWidth() )
+	{
+		return ::testing::AssertionFailure() << "width or DDS image " << width << " is not equal to back buffer width " << rt.GetWidth();
+	}
+	if( height != rt.GetHeight() )
+	{
+		return ::testing::AssertionFailure() << "height or DDS image " << height << " is not equal to back buffer height " << rt.GetHeight();
+	}
+
+	const void* rtData;
+	uint32_t rtPitch;
+	auto hr = rt.MapForReading( Tr2TextureSubresource( 0 ), rtData, rtPitch, renderContext );
+	if( FAILED( hr ) )
+	{
+		return ::testing::AssertionFailure() << "failed to map render target, HR=" << hr.GetResult();
+	}
+	ON_BLOCK_EXIT( [&] { rt.UnmapForReading( renderContext ); } );
+
+	const uint8_t* rtRow = static_cast<const uint8_t*>( rtData );
+	const uint8_t* flRow = data.get();
+	for( uint32_t i = 0; i < rt.GetHeight(); ++i )
+	{
+		if( memcmp( rtRow, flRow, 4 * width ) )
+		{
+			return ::testing::AssertionFailure() << "pixel values in expected DDS and back buffer are different at row " << i;
+		}
+		rtRow += rtPitch;
+		flRow += 4 * width;
+	}
+	return ::testing::AssertionSuccess();
+}
+
+Tr2TextureAL GetReadableBackBuffer( Tr2PrimaryRenderContextAL& renderContext )
+{
+	auto& rt = renderContext.GetDefaultBackBuffer();
 	if( rt.GetMsaaDesc().samples > 1 )
 	{
 		Tr2TextureAL readable;
-		ASSERT_HRESULT_SUCCEEDED( readable.Create( Tr2BitmapDimensions( rt.GetWidth(), rt.GetHeight(), 1, rt.GetFormat() ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ, *renderContext ) );
-		ASSERT_HRESULT_SUCCEEDED( rt.Resolve( readable, *renderContext ) );
-		SaveReadableRenderTarget( readable, outFilePath, *renderContext );
+		CR_RETURN_VAL( readable.Create( Tr2BitmapDimensions( rt.GetWidth(), rt.GetHeight(), 1, rt.GetFormat() ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ, renderContext ), readable );
+		CR_RETURN_VAL( rt.Resolve( readable, renderContext ), Tr2TextureAL() );
+		return readable;
 	}
-	else
+	return rt;
+}
+
+size_t FindSlash( const std::string& path, size_t offset )
+{
+	auto pos1 = path.find( '/', offset );
+	auto pos2 = path.find( '\\', offset );
+	if( pos1 != std::string::npos )
 	{
-		SaveReadableRenderTarget( rt, outFilePath, *renderContext );
+		if( pos2 != std::string::npos )
+		{
+			return std::min( pos1, pos2 );
+		}
+		return pos1;
 	}
+	return pos2;
 }
 
 #ifdef _MSC_VER
@@ -170,18 +253,42 @@ void WithValidRenderContext::MakeScreenShot( const char* outFilePath )
 #define mkdir( path ) mkdir( path, S_IRWXU|S_IRGRP|S_IXGRP )
 #endif
 
-
-namespace
+void MkDirs( const std::string& path )
 {
-std::map<std::string, std::string> s_madeScreenshots;
+	size_t start = 0;
+	size_t pos = 0;
+	std::string part;
+	pos = FindSlash( path, start );
+	while( pos != std::string::npos )
+	{
+		mkdir( path.substr( 0, pos ).c_str() );
+		start = pos + 1;
+		pos = FindSlash( path, start );
+	}
+	mkdir( path.c_str() );
 }
+
+}
+
+void WithValidRenderContext::MakeScreenShot( const char* outFilePath )
+{
+	auto rt = GetReadableBackBuffer( *renderContext );
+	ASSERT_TRUE( rt.IsValid() );
+	SaveReadableRenderTarget( rt, outFilePath, *renderContext );
+}
+
 
 void WithValidRenderContext::MakeTestScreenShot()
 {
-	extern bool g_makeScreenShots;
-	extern const char* g_screenshotFolder;
+#if TRINITY_PLATFORM == TRINITY_STUB 
+	return;
+#endif
 
-	if( !g_makeScreenShots || m_madeScreenshot )
+	extern bool g_makeScreenShots;
+	extern bool g_compareScreenShots;
+	extern std::string g_screenshotFolder;
+
+	if( ( !g_makeScreenShots && !g_compareScreenShots ) || m_madeScreenshot )
 	{
 		return;
 	}
@@ -190,16 +297,20 @@ void WithValidRenderContext::MakeTestScreenShot()
 	const ::testing::TestInfo* const test_info = ::testing::UnitTest::GetInstance()->current_test_info();
 	
 	std::string path = g_screenshotFolder;
-	mkdir( path.c_str() );
 	path += std::string( "/" ) + test_info->test_case_name();
-	mkdir( path.c_str() );
+	MkDirs( path.c_str() );
 	path += std::string( "/" ) + test_info->name() + ".dds";
 
-	MakeScreenShot( path.c_str() );
-
-	std::string relPath = test_info->test_case_name();
-	relPath += std::string( "/" ) + test_info->name() + ".dds";
-	s_madeScreenshots[std::string( test_info->test_case_name() ) + std::string( "." ) + test_info->name()] = relPath;
+	if( g_makeScreenShots )
+	{
+		MakeScreenShot( path.c_str() );
+	}
+	else
+	{
+		auto rt = GetReadableBackBuffer( *renderContext );
+		ASSERT_TRUE( rt.IsValid() );
+		ASSERT_TRUE( CompareWithBitmap( path.c_str(), rt, *renderContext ) );
+	}
 }
 
 Tr2PresentParametersAL WithValidRenderContext::presentParameters;

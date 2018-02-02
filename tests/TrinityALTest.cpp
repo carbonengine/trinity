@@ -17,8 +17,10 @@ bool IsTransgaming() { return false; }
 bool g_interactive = false;
 // Make screenshots for the first frame of interactive tests (set by --screenshots option)
 bool g_makeScreenShots = false;
+// Compare with existing screenshots
+bool g_compareScreenShots = false;
 // Folder to save screenshots (set by --screenshotdir option)
-const char* g_screenshotFolder = ".";
+std::string g_screenshotFolder = "screenshots/" TRINITY_PLATFORM_NAME;
 
 void PrintAdapterInfo( unsigned index )
 {
@@ -79,6 +81,10 @@ int main( int argc, char **argv )
 		{
 			g_makeScreenShots = true;
 		}
+		else if( strcmp( argv[i], "--compare" ) == 0 )
+		{
+			g_compareScreenShots = true;
+		}
 		else if( strcmp( argv[i], "--screenshotdir" ) == 0 )
 		{
 			if( i + 1 >= argc )
@@ -87,6 +93,7 @@ int main( int argc, char **argv )
 				return 1;
 			}
 			g_screenshotFolder = argv[++i];
+			g_screenshotFolder += "/" TRINITY_PLATFORM_NAME;
 		}
 		else if( strcmp( argv[i], "--adapterinfo" ) == 0 )
 		{
