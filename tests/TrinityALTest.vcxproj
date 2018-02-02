@@ -13,10 +13,6 @@
       <Configuration>Release_DX11</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release_DX9|x64">
-      <Configuration>Release_DX9</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Dev_DX11|Win32">
       <Configuration>Dev_DX11</Configuration>
       <Platform>Win32</Platform>
@@ -33,28 +29,16 @@
       <Configuration>Release_DX9</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release_GL4|x64">
-      <Configuration>Release_GL4</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Dev_GL4|x64">
-      <Configuration>Dev_GL4</Configuration>
+    <ProjectConfiguration Include="Release_DX9|x64">
+      <Configuration>Release_DX9</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Dev_STUB|Win32">
       <Configuration>Dev_STUB</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Release_GL4|Win32">
-      <Configuration>Release_GL4</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release_STUB|Win32">
       <Configuration>Release_STUB</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Dev_GL4|Win32">
-      <Configuration>Dev_GL4</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Dev_DX9|x64">
@@ -94,9 +78,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'" Label="Configuration">
-    <PlatformToolset>v100</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
@@ -109,22 +90,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'" Label="Configuration">
-    <PlatformToolset>v100</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'" Label="Configuration">
-    <PlatformToolset>v100</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'" Label="Configuration">
-    <PlatformToolset>v100</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'" Label="Configuration">
@@ -167,13 +139,6 @@
     <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">
-    <TargetExt>.exe</TargetExt>
-    <OutDir>../../autobuild/TrinityALTest/$(Platform)/$(PlatformToolset)/</OutDir>
-    <UseOfMfc>False</UseOfMfc>
-    <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <ConfigurationType>Application</ConfigurationType>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">
     <TargetExt>.exe</TargetExt>
     <OutDir>../../autobuild/TrinityALTest/$(Platform)/$(PlatformToolset)/</OutDir>
@@ -202,14 +167,7 @@
     <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'">
-    <TargetExt>.exe</TargetExt>
-    <OutDir>../../autobuild/TrinityALTest/$(Platform)/$(PlatformToolset)/</OutDir>
-    <UseOfMfc>False</UseOfMfc>
-    <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <ConfigurationType>Application</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">
     <TargetExt>.exe</TargetExt>
     <OutDir>../../autobuild/TrinityALTest/$(Platform)/$(PlatformToolset)/</OutDir>
     <UseOfMfc>False</UseOfMfc>
@@ -223,21 +181,7 @@
     <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>Application</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'">
-    <TargetExt>.exe</TargetExt>
-    <OutDir>../../autobuild/TrinityALTest/$(Platform)/$(PlatformToolset)/</OutDir>
-    <UseOfMfc>False</UseOfMfc>
-    <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <ConfigurationType>Application</ConfigurationType>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'">
-    <TargetExt>.exe</TargetExt>
-    <OutDir>../../autobuild/TrinityALTest/$(Platform)/$(PlatformToolset)/</OutDir>
-    <UseOfMfc>False</UseOfMfc>
-    <IntDir>../temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <ConfigurationType>Application</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'">
     <TargetExt>.exe</TargetExt>
     <OutDir>../../autobuild/TrinityALTest/$(Platform)/$(PlatformToolset)/</OutDir>
     <UseOfMfc>False</UseOfMfc>
@@ -308,11 +252,6 @@
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'" Label="UserMacros">
-    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
-    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
-    <CcpBranchPath>../../..</CcpBranchPath>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'" Label="UserMacros">
     <CcpConfigType>Dev</CcpConfigType>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
@@ -336,16 +275,10 @@
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'" Label="UserMacros">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'" Label="UserMacros">
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'" Label="UserMacros">
-    <CcpConfigType>Dev</CcpConfigType>
-    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
-    <CcpBranchPath>../../..</CcpBranchPath>
-    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'" Label="UserMacros">
     <CcpConfigType>Dev</CcpConfigType>
@@ -353,21 +286,10 @@
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'" Label="UserMacros">
-    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
-    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
-    <CcpBranchPath>../../..</CcpBranchPath>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'" Label="UserMacros">
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'" Label="UserMacros">
-    <CcpConfigType>Dev</CcpConfigType>
-    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
-    <CcpBranchPath>../../..</CcpBranchPath>
-    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'" Label="UserMacros">
     <CcpConfigType>Dev</CcpConfigType>
@@ -420,17 +342,13 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'" Label="PropertySheets" />
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'" Label="PropertySheets" />
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'" Label="PropertySheets" />
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'" Label="PropertySheets" />
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'" Label="PropertySheets" />
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|x64'" Label="PropertySheets" />
@@ -445,8 +363,6 @@
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'">TrinityALTestDX11</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">TrinityALTestDX9</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">TrinityALTestDX11_dev</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">True</LinkIncremental>
@@ -458,21 +374,13 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'">TrinityALTestDX9</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'">TrinityALTestGL4</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'">TrinityALTestGL4_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'">True</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">TrinityALTestDX9</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'">TrinityALTestSTUB_dev</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'">True</LinkIncremental>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'">TrinityALTestGL4</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'">TrinityALTestSTUB</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'">TrinityALTestGL4_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'">TrinityALTestDX9_dev</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'">True</LinkIncremental>
@@ -572,36 +480,6 @@
       <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;TrinityAL_dx11.lib;atimgpud_s_x86.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxgi.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ResourceCompile />
-    <Manifest />
-    <PreBuildEvent />
-    <PreLinkEvent />
-    <PostBuildEvent />
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>True</MultiProcessorCompilation>
-      <DebugInformationFormat>OldStyle</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
-      <Optimization>MaxSpeed</Optimization>
-      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
-      <BufferSecurityCheck>False</BufferSecurityCheck>
-      <WarningLevel>Level3</WarningLevel>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <CppExceptions>True</CppExceptions>
-      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>True</GenerateDebugInformation>
-      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>CcpCore.lib;TrinityAL_dx9.lib;atimgpud_s_x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile />
     <Manifest />
@@ -729,12 +607,12 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>OldStyle</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -748,40 +626,10 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
-      <AdditionalAppleFrameworks>CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4.lib;atimgpud_s_x64.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ResourceCompile />
-    <Manifest />
-    <PreBuildEvent />
-    <PreLinkEvent />
-    <PostBuildEvent />
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|x64'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>True</MultiProcessorCompilation>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
-      <Optimization>Disabled</Optimization>
-      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
-      <BufferSecurityCheck>False</BufferSecurityCheck>
-      <WarningLevel>Level3</WarningLevel>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <CppExceptions>True</CppExceptions>
-      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>True</GenerateDebugInformation>
-      <AdditionalAppleFrameworks>CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4_dev.lib;atimgpud_s_x64.lib;gtest.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;TrinityAL_dx9.lib;atimgpud_s_x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;gtest.lib;nvapi.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile />
     <Manifest />
@@ -819,36 +667,6 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GL4|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>D3DTARGET=9;NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>True</MultiProcessorCompilation>
-      <DebugInformationFormat>OldStyle</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
-      <Optimization>MaxSpeed</Optimization>
-      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
-      <BufferSecurityCheck>False</BufferSecurityCheck>
-      <WarningLevel>Level3</WarningLevel>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <CppExceptions>True</CppExceptions>
-      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>True</GenerateDebugInformation>
-      <AdditionalAppleFrameworks>CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4.lib;atimgpud_s_x86.lib;glew32.lib;gtest.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ResourceCompile />
-    <Manifest />
-    <PreBuildEvent />
-    <PreLinkEvent />
-    <PostBuildEvent />
-  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -872,36 +690,6 @@
       <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;TrinityAL_stub.lib;gtest.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ResourceCompile />
-    <Manifest />
-    <PreBuildEvent />
-    <PreLinkEvent />
-    <PostBuildEvent />
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GL4|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;D3DTARGET=9;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGL4;BLUEBUILD;NOMINMAX;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/googletest/1.6.0/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\nvidia\cuda\3.0\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>True</MultiProcessorCompilation>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
-      <Optimization>Disabled</Optimization>
-      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
-      <BufferSecurityCheck>False</BufferSecurityCheck>
-      <WarningLevel>Level3</WarningLevel>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <CppExceptions>True</CppExceptions>
-      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-    </ClCompile>
-    <Link>
-      <GenerateDebugInformation>True</GenerateDebugInformation>
-      <AdditionalAppleFrameworks>CoreFoundation;OpenCL;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/googletest/1.6.0/lib/VC100.SP1/$(Platform);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\nvidia\cuda\3.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>CcpCore.lib;OpenCL.lib;TrinityAL_gl4_dev.lib;atimgpud_s_x86.lib;glew32.lib;gtest.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile />
     <Manifest />
@@ -1142,34 +930,6 @@
     <ClInclude Include="Shaders.DX9\SampleVolumeTexture.ps.patched.h" />
     <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.h" />
     <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.patched.h" />
-    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.h" />
-    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.patched.h" />
-    <ClInclude Include="Shaders.GL4\AddVectors.cs.h" />
-    <ClInclude Include="Shaders.GL4\AddVectors.cs.patched.h" />
-    <ClInclude Include="Shaders.GL4\ConstantColor.ps.h" />
-    <ClInclude Include="Shaders.GL4\ConstantColor.ps.patched.h" />
-    <ClInclude Include="Shaders.GL4\GroupShared.cs.h" />
-    <ClInclude Include="Shaders.GL4\GroupShared.cs.patched.h" />
-    <ClInclude Include="Shaders.GL4\InstancedRendering.vs.h" />
-    <ClInclude Include="Shaders.GL4\InstancedRendering.vs.patched.h" />
-    <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.h" />
-    <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.patched.h" />
-    <ClInclude Include="Shaders.GL4\OutputVector.cs.h" />
-    <ClInclude Include="Shaders.GL4\OutputVector.cs.patched.h" />
-    <ClInclude Include="Shaders.GL4\PositionOnly.vs.h" />
-    <ClInclude Include="Shaders.GL4\PositionOnly.vs.patched.h" />
-    <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.h" />
-    <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.patched.h" />
-    <ClInclude Include="Shaders.GL4\SampleTexture.cs.h" />
-    <ClInclude Include="Shaders.GL4\SampleTexture.cs.patched.h" />
-    <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.h" />
-    <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.patched.h" />
-    <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.h" />
-    <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.patched.h" />
-    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.h" />
-    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.patched.h" />
-    <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.h" />
-    <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.patched.h" />
     <ClInclude Include="Shaders.GLES2\ConstantColor.ps.h" />
     <ClInclude Include="Shaders.GLES2\ConstantColor.ps.patched.h" />
     <ClInclude Include="Shaders.GLES2\InstancedRendering.vs.h" />

@@ -4,7 +4,6 @@
     <Filter Include="Source Files" />
     <Filter Include="Source Files\Shaders.DX11" />
     <Filter Include="Source Files\Shaders.DX9" />
-    <Filter Include="Source Files\Shaders.GL4" />
     <Filter Include="Source Files\Shaders.GLES2" />
   </ItemGroup>
   <ItemGroup>
@@ -163,90 +162,6 @@
     </ClInclude>
     <ClInclude Include="Shaders.DX9\TexCoordAndPosition.vs.patched.h">
       <Filter>Source Files\Shaders.DX9</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\AddConstantToBuffer.cs.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\AddVectors.cs.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\AddVectors.cs.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\ConstantColor.ps.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\ConstantColor.ps.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\GroupShared.cs.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\GroupShared.cs.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\InstancedRendering.vs.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\InstancedRendering.vs.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\OutputTexCoord.ps.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\OutputVector.cs.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\OutputVector.cs.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\PositionOnly.vs.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\PositionOnly.vs.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\PositionOnlyWithPerObjectData.vs.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\SampleTexture.cs.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\SampleTexture.cs.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\SampleTextureFromTexCoord.ps.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\SampleTextureMipFromTexCoord.ps.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\SampleVolumeTexture.ps.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
-    </ClInclude>
-    <ClInclude Include="Shaders.GL4\TexCoordAndPosition.vs.patched.h">
-      <Filter>Source Files\Shaders.GL4</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.GLES2\ConstantColor.ps.h">
       <Filter>Source Files\Shaders.GLES2</Filter>

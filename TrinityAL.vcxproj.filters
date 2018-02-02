@@ -4,7 +4,6 @@
     <Filter Include="Source Files" />
     <Filter Include="Source Files\dx11" />
     <Filter Include="Source Files\dx9" />
-    <Filter Include="Source Files\gl4" />
     <Filter Include="Source Files\gles2" />
     <Filter Include="Source Files\include" />
     <Filter Include="Source Files\src" />
@@ -163,54 +162,6 @@
     </ClInclude>
     <ClInclude Include="dx9\Tr2VideoAdapterInfoALDx9.h">
       <Filter>Source Files\dx9</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2BufferALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2CapsALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2ConstantBufferALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2FenceALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2GpuTimerALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2OcclusionQueryALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2PrimaryRenderContextGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2RenderContextGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2ResourceSetALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2SamplerStateALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2ShaderALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2ShaderProgramALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2SwapChainALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2TextureALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2VertexLayoutALGL4.h">
-      <Filter>Source Files\gl4</Filter>
-    </ClInclude>
-    <ClInclude Include="gl4\Tr2VideoAdapterInfoALGL4.h">
-      <Filter>Source Files\gl4</Filter>
     </ClInclude>
     <ClInclude Include="gles2\Tr2BufferALGLES2.h">
       <Filter>Source Files\gles2</Filter>
@@ -508,51 +459,6 @@
     </ClCompile>
     <ClCompile Include="dx9\Tr2VideoAdapterInfoALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2BufferALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2CapsALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2ConstantBufferALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2FenceALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2GpuTimerALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2OcclusionQueryALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2RenderContextGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2ResourceSetALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2SamplerStateALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2ShaderALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2ShaderProgramALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2SwapChainALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2TextureALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2VertexLayoutALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
-    </ClCompile>
-    <ClCompile Include="gl4\Tr2VideoAdapterInfoALGL4.cpp">
-      <Filter>Source Files\gl4</Filter>
     </ClCompile>
     <ClCompile Include="gles2\Tr2BufferALGLES2.cpp">
       <Filter>Source Files\gles2</Filter>
