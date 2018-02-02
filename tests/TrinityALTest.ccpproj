@@ -65,36 +65,6 @@ BaseConfigurations:
       Optimization: MaxSpeed
       RuntimeLibrary: MultiThreadedDLL
 
-  CodeCoverage:
-    Imports:
-    - ../TrinityAL/uses_TrinityALGLES2Coverage.yaml
-    General: 
-      GenerateCodeCoverage: true
-    ClCompile:
-      PreprocessorDefinitions:
-      - NDEBUG
-      Optimization: Disabled
-      RuntimeLibrary: MultiThreadedDLL
-      DebugInformationFormat: ProgramDatabase
-    Link:
-      AdditionalDependencies:
-      - TrinityAL_gles2_cc.lib
-
-  CodeCoverageGL4:
-    Imports:
-    - ../TrinityAL/uses_TrinityALGL4Coverage.yaml
-    General: 
-      GenerateCodeCoverage: true
-    ClCompile:
-      PreprocessorDefinitions:
-      - NDEBUG
-      Optimization: Disabled
-      RuntimeLibrary: MultiThreadedDLL
-      DebugInformationFormat: ProgramDatabase
-    Link:
-      AdditionalDependencies:
-      - TrinityAL_gl4_cc.lib
-
   D3D9:
     # These are settings that apply to all variants of Trinity that use D3D9
     Imports:
@@ -115,14 +85,6 @@ BaseConfigurations:
     # These are settings that apply to all variants of Trinity that use OpenGL ES 2
     Imports:
     - ../TrinityAL/uses_TrinityALGLES2.yaml
-    ClCompile:
-      PreprocessorDefinitions:
-      - D3DTARGET=9
-
-  GL4:
-    # These are settings that apply to all variants of Trinity that use OpenGL ES 2
-    Imports:
-    - ../TrinityAL/uses_TrinityALGL4.yaml
     ClCompile:
       PreprocessorDefinitions:
       - D3DTARGET=9
@@ -196,45 +158,6 @@ Configurations:
     General:
       TargetName: TrinityALTestGLES2
 
-
-  Debug_GL4|Mac64:
-    BaseConfigurations:
-    - Debug
-    - GL4
-    - WithGoogleTest
-    General: 
-      TargetName: TrinityALTestGL4_d
-
-  Dev_GL4|Win32,x64:
-    BaseConfigurations:
-    - Dev
-    - GL4
-    - WithGoogleTest
-    General: 
-      TargetName: TrinityALTestGL4_dev
-
-  Release_GL4|Win32,x64,Mac64:
-    BaseConfigurations:
-    - Release
-    - GL4
-    - WithGoogleTest
-    General:
-      TargetName: TrinityALTestGL4
-
-  Release_GL4_Coverage|Mac64:
-    BaseConfigurations:
-    - CodeCoverageGL4
-    - WithGoogleTest
-    General:
-      TargetName: TrinityALTestGL4_cc
-
-
-  Release_GLES2_Coverage|Mac64:
-    BaseConfigurations:
-    - CodeCoverage
-    - WithGoogleTest
-    General:
-      TargetName: TrinityALTestGLES2_cc
 
   Dev_STUB|Win32,x64:
     BaseConfigurations:

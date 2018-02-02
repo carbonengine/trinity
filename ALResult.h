@@ -100,7 +100,7 @@ typedef int32_t HRESULT;
 	#define FORWARD_HR( x ) { HRESULT _hr = x; if( FAILED( _hr ) ) return _hr; }
 #endif
 
-#if TRINITY_PLATFORM==TRINITY_OPENGLES2 || TRINITY_PLATFORM==TRINITY_OPENGL4
+#if TRINITY_PLATFORM==TRINITY_OPENGLES2
 
 void ReportGLError( const char* fileName, int lineNumber, const char* statement, unsigned errorCode );
 

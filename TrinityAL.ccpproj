@@ -71,16 +71,6 @@ BaseConfigurations:
       WholeProgramOptimization: true
     Link:
       LinkTimeCodeGeneration: UseLinkTimeCodeGeneration
-
-  CodeCoverage:
-    General: 
-      GenerateCodeCoverage: true
-    ClCompile:
-      PreprocessorDefinitions:
-      - NDEBUG
-      Optimization: Disabled
-      RuntimeLibrary: MultiThreadedDLL
-      DebugInformationFormat: ProgramDatabase
   
   D3D9:
     Imports:
@@ -95,14 +85,6 @@ BaseConfigurations:
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_DIRECTX11
-
-  GL4:
-    Imports:
-    - ../../../../../../sdk/glew/1.7.0/glew_1.7.0.yaml
-    - ../../../../../../sdk/nvidia/cuda/3.0/CUDA_3.0.yaml
-    ClCompile:
-      PreprocessorDefinitions:
-      - TRINITY_PLATFORM=TRINITY_OPENGL4
 
   GLES2:
     Imports:
@@ -164,57 +146,6 @@ Configurations:
     - D3D11
     General:
       TargetName: TrinityAL_dx11
-  
-  Debug_GL4|Win32,x64:
-    BaseConfigurations:
-    - Debug
-    - GL4
-    General:
-      TargetName: TrinityAL_gl4_d
-    ClCompile:
-      PreprocessorDefinitions:
-      - TRINITY_AL_GUARD_LOCKS=1
-
-  Dev_GL4|Win32,x64:
-    BaseConfigurations:
-    - Dev
-    - GL4
-    General:
-      TargetName: TrinityAL_gl4_dev
-    ClCompile:
-      PreprocessorDefinitions:
-      - TRINITY_AL_GUARD_LOCKS=1
-
-  Release_GL4|Win32,x64:
-    BaseConfigurations:
-    - Release
-    - GL4
-    General:
-      TargetName: TrinityAL_gl4
-
-  Debug_GL4|Linux32,Linux64,Mac32,Mac64:
-    BaseConfigurations:
-    - Posix
-    - Debug
-    - GL4
-    General:
-      TargetName: TrinityAL_gl4_d
-  
-  Release_GL4_Coverage|Mac32,Mac64:
-    BaseConfigurations:
-    - Posix
-    - CodeCoverage
-    - GL4
-    General:
-      TargetName: TrinityAL_gl4_cc
-  
-  Release_GL4|Linux32,Linux64,Mac32,Mac64:
-    BaseConfigurations:
-    - Posix
-    - Release
-    - GL4
-    General:
-      TargetName: TrinityAL_gl4
 
   Debug_GLES2|Win32,x64:
     BaseConfigurations:
@@ -244,14 +175,6 @@ Configurations:
     - GLES2
     General:
       TargetName: TrinityAL_gles2_d
-  
-  Release_GLES2_Coverage|Mac32,Mac64:
-    BaseConfigurations:
-    - Posix
-    - CodeCoverage
-    - GLES2
-    General:
-      TargetName: TrinityAL_gles2_cc
   
   Release_GLES2|Linux32,Linux64,Mac32,Mac64:
     BaseConfigurations:

@@ -8,7 +8,6 @@
 #define TRINITY_DIRECTX11	2
 #define TRINITY_OPENGLES2	3
 #define TRINITY_STUB		5
-#define TRINITY_OPENGL4		6
 
 #ifndef TRINITY_PLATFORM
 #	error TRINITY_PLATFORM must be set
@@ -93,30 +92,6 @@
 
 #define TRINITY_PLATFORM_SYMBOL stub
 #define TRINITY_PLATFORM_NAME "dx11" // In order to use the dx11 platform specific res files as our own
-
-#elif( TRINITY_PLATFORM==TRINITY_OPENGL4 )
-
-#define GLFW_INCLUDE_GLCOREARB
-
-#if defined(_WIN32)
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include "CL/cl.h"
-#include "CL/cl_gl.h"
-
-#elif defined(__APPLE__)
-#include <OpenGL/gl3.h>
-#include <OpenGL/OpenGL.h>
-#include <OpenGL/gl3ext.h>
-#include <OpenCL/cl.h>
-#include <OpenCL/cl_gl.h>
-#include <OpenCL/opencl.h>
-#else
-#include <GL/glew.h>
-#endif
-
-#define TRINITY_PLATFORM_SYMBOL gl4
-#define TRINITY_PLATFORM_NAME "gl4"
 
 #endif
 

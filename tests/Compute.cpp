@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "WithValidRenderContextFixture.h"
 
-#if TRINITY_PLATFORM==TRINITY_OPENGL4 || TRINITY_PLATFORM==TRINITY_DIRECTX11
+#if TRINITY_PLATFORM==TRINITY_DIRECTX11
 
 struct Compute: public WithValidRenderContext {};
 

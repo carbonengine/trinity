@@ -40,13 +40,6 @@ typedef uintptr_t Tr2WindowHandle;
 #include <android/native_window.h>
 #endif
 
-#elif( TRINITY_PLATFORM==TRINITY_OPENGL4 )
-#if !defined(_WIN32)
-#include <GLFW/glfw3.h>
-#else
-#include <wglext.h>
-#endif
-
 #endif
 
 #endif

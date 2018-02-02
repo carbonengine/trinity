@@ -73,7 +73,7 @@ void BreakInDebugger()
 
 #endif
 
-#if TRINITY_PLATFORM==TRINITY_OPENGLES2 ||  TRINITY_PLATFORM==TRINITY_OPENGL4
+#if TRINITY_PLATFORM==TRINITY_OPENGLES2
 
 void ReportGLError( const char* fileName, int lineNumber, const char* statement, unsigned errorCode )
 {
