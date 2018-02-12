@@ -78,6 +78,7 @@ bool EveStretch2::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_quadCount ) )
 	{
+		m_vb = Tr2BufferAL();
 		ReleaseResources( TRISTORAGE_ALL );
 		PrepareResources();
 	}
