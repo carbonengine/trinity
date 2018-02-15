@@ -187,6 +187,7 @@ namespace TrinityALImpl
 		m_srv = nullptr;
 		m_uav = nullptr;
 		m_desc.count = 0;
+		m_writeLockMemory.clear();
 	}
 
 	bool Tr2BufferAL::IsValid() const
@@ -315,21 +316,18 @@ namespace TrinityALImpl
 		}
 		else
 		{
-			CR_RETURN_HR( CreateStagingBuffer( renderContext ) );
-
-			D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
-			auto hr = renderContext.m_context->Map( m_staging, 0, D3D11_MAP_WRITE, 0, &ms );
-			if( !ms.pData )
+			if( m_writeLockMemory.empty() )
 			{
-				return E_FAIL;
+				CcpAlignedMallocBuffer buffer( "Tr2BufferAL::m_writeLockMemory", m_desc.stride * m_desc.count, 16 );
+				m_writeLockMemory.swap( buffer );
 			}
-#if TRINITY_AL_GUARD_LOCKS
-			m_lockGuard.Lock( m_desc.count * m_desc.stride, ms.pData );
-			data = m_lockGuard.GetMemory();
-#else
-			data = ms.pData;
-#endif
-			return hr;
+			if( m_writeLockMemory.empty() )
+			{
+				return E_OUTOFMEMORY;
+			}
+
+			data = m_writeLockMemory.get();
+			return S_OK;
 		}
 	}
 
@@ -351,19 +349,11 @@ namespace TrinityALImpl
 		}
 		else
 		{
-			if( !m_staging )
+			if( m_writeLockMemory.empty() )
 			{
 				return;
 			}
-#if TRINITY_AL_GUARD_LOCKS
-			m_lockGuard.Unlock();
-#endif
-			renderContext.m_context->Unmap( m_staging, 0 );
-			renderContext.m_context->CopyResource( m_buffer, m_staging );
-			if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::READ_OFTEN ) )
-			{
-				m_staging = nullptr;
-			}
+			renderContext.m_context->UpdateSubresource( m_buffer, 0, nullptr, m_writeLockMemory.get(), 0, 0 );
 		}
 	}
 

@@ -36,6 +36,8 @@ namespace TrinityALImpl
 		CComPtr<ID3D11UnorderedAccessView> m_uav;
 		Tr2MemoryCounterAL m_memory;
 		Tr2BufferDescriptionAL m_desc;
+		CcpAlignedMallocBuffer m_writeLockMemory;
+
 #if TRINITY_AL_GUARD_LOCKS
 		Tr2LockGuard m_lockGuard;
 #endif
