@@ -507,9 +507,6 @@
     <ClInclude Include="Eve\EveDistanceField.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
-    <ClInclude Include="Eve\EveDustfieldConstraint.h">
-      <Filter>Source Files\Eve</Filter>
-    </ClInclude>
     <ClInclude Include="Eve\EveEffectRoot2.h">
       <Filter>Source Files\Eve</Filter>
     </ClInclude>
@@ -2116,12 +2113,6 @@
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
     <ClCompile Include="Eve\EveDistanceField_Blue.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveDustfieldConstraint.cpp">
-      <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\EveDustfieldConstraint_Blue.cpp">
       <Filter>Source Files\Eve</Filter>
     </ClCompile>
     <ClCompile Include="Eve\EveEffectRoot2.cpp">

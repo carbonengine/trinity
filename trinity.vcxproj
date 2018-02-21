@@ -2638,7 +2638,6 @@
     <ClInclude Include="Eve\EveCamera.h" />
     <ClInclude Include="Eve\EveConstantBufferFormats.h" />
     <ClInclude Include="Eve\EveDistanceField.h" />
-    <ClInclude Include="Eve\EveDustfieldConstraint.h" />
     <ClInclude Include="Eve\EveEffectRoot2.h" />
     <ClInclude Include="Eve\EveLensflare.h" />
     <ClInclude Include="Eve\EveLODHelper.h" />
@@ -3179,8 +3178,6 @@
     <ClCompile Include="Eve\EveCamera_Blue.cpp" />
     <ClCompile Include="Eve\EveDistanceField.cpp" />
     <ClCompile Include="Eve\EveDistanceField_Blue.cpp" />
-    <ClCompile Include="Eve\EveDustfieldConstraint.cpp" />
-    <ClCompile Include="Eve\EveDustfieldConstraint_Blue.cpp" />
     <ClCompile Include="Eve\EveEffectRoot2.cpp" />
     <ClCompile Include="Eve\EveEffectRoot2_Blue.cpp" />
     <ClCompile Include="Eve\EveLensflare.cpp" />
