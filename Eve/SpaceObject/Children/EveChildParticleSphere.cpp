@@ -25,7 +25,13 @@ namespace
 		virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 		{
 			static const unsigned mask = ( 1 << Tr2RenderContextEnum::VERTEX_SHADER );
-			FillAndSetConstants( *buffers[m_register], &m_data, sizeof( m_data ), mask, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
+			FillAndSetConstants( 
+				*buffers[Tr2RenderContextEnum::VERTEX_SHADER], 
+				&m_data, 
+				sizeof( m_data ), 
+				mask, 
+				m_register,
+				renderContext );
 		}
 
 		struct Data
@@ -182,7 +188,7 @@ Tr2PerObjectData* EveChildParticleSphere::GetPerObjectData( ITriRenderBatchAccum
 		return NULL;
 	}
 
-	data->m_register = m_useSpaceObjectData ? Tr2RenderContextEnum::VERTEX_SHADER : Tr2RenderContextEnum::CBUFFER_FFE;
+	data->m_register = m_useSpaceObjectData ? Tr2Renderer::GetPerObjectVSStartRegister() : Tr2Renderer::GetPerObjectVSFFEStartRegister();
 	data->m_data.m_world = Transpose( m_worldTransform );
 	data->m_data.m_worldInverseTranspose = Inverse( m_worldTransform );
 	return data;
