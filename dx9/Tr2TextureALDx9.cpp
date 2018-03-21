@@ -402,7 +402,7 @@ namespace
 				return E_INVALIDARG;
 			}
 			format = D3DFORMAT( MAKEFOURCC( 'I', 'N', 'T', 'Z' ) );
-			renderContext.m_d3dDevice9->CreateTexture(
+			CR_RETURN_HR( renderContext.m_d3dDevice9->CreateTexture(
 				desc.GetWidth(),
 				desc.GetHeight(),
 				1,
@@ -410,7 +410,7 @@ namespace
 				format,
 				D3DPOOL_DEFAULT,
 				&tex,
-				nullptr );
+				nullptr ) );
 		}
 		else
 		{
