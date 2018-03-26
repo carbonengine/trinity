@@ -436,6 +436,8 @@ void EveEffectRoot2::SetTransform( const Matrix& transform )
 // -----------------------------------------------------------------------------
 void EveEffectRoot2::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
+	options.insert( "Bounding Sphere" );
+
 	for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
 	{
 		if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( *it ) )
@@ -448,6 +450,11 @@ void EveEffectRoot2::GetDebugOptions( Tr2DebugRendererOptions& options )
 // -----------------------------------------------------------------------------
 void EveEffectRoot2::RenderDebugInfo( Tr2DebugRenderer& renderer )
 {
+	if (renderer.HasOption( GetRawRoot(), "Bounding Sphere" ))
+	{
+		renderer.DrawSphere( this, m_boundingSphere.GetXYZ(), GetBoundingSphereRadius(), 8, Tr2DebugRenderer::Wireframe, 0xffff00ff );
+	}
+
 	for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
 	{
 		if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( *it ) )
