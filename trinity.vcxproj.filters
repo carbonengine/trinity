@@ -3,6 +3,9 @@
   <ItemGroup>
     <Filter Include="Resource Files" />
     <Filter Include="Source Files" />
+    <Filter Include="Source Files\Controllers" />
+    <Filter Include="Source Files\Controllers\Actions" />
+    <Filter Include="Source Files\Controllers\Finalizers" />
     <Filter Include="Source Files\Curves" />
     <Filter Include="Source Files\Curves\Fader" />
     <Filter Include="Source Files\Eve" />
@@ -419,6 +422,54 @@
     </ClInclude>
     <ClInclude Include="version.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\ITr2Controller.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Tr2BindingPoint.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Tr2Controller.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Tr2ControllerExpression.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Tr2ControllerFloatVariable.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Tr2StateMachine.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Tr2StateMachineState.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Tr2StateMachineTransition.h">
+      <Filter>Source Files\Controllers</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Actions\ITr2ControllerAction.h">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Actions\Tr2ActionAnimateValue.h">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Actions\Tr2ActionOverlay.h">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Actions\Tr2ActionPlayCurveSet.h">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Actions\Tr2ActionPlayMeshAnimation.h">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Actions\Tr2ActionSetValue.h">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Finalizers\ITr2StateMachineStateFinalizer.h">
+      <Filter>Source Files\Controllers\Finalizers</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Finalizers\Tr2SyncToAnimation.h">
+      <Filter>Source Files\Controllers\Finalizers</Filter>
     </ClInclude>
     <ClInclude Include="Curves\Tr2BoneMatrixCurve.h">
       <Filter>Source Files\Curves</Filter>
@@ -1937,6 +1988,78 @@
     </ClCompile>
     <ClCompile Include="TriView_Blue.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2BindingPoint.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2Controller.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2ControllerExpression.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2ControllerFloatVariable.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2ControllerFloatVariable_Blue.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2Controller_Blue.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2StateMachine.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2StateMachineState.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2StateMachineState_Blue.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2StateMachineTransition.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2StateMachineTransition_Blue.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Tr2StateMachine_Blue.cpp">
+      <Filter>Source Files\Controllers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionAnimateValue.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionAnimateValue_Blue.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionOverlay.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionOverlay_Blue.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionPlayCurveSet.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionPlayCurveSet_Blue.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionPlayMeshAnimation.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionPlayMeshAnimation_Blue.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionSetValue.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionSetValue_Blue.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Finalizers\Tr2SyncToAnimation.cpp">
+      <Filter>Source Files\Controllers\Finalizers</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Finalizers\Tr2SyncToAnimation_Blue.cpp">
+      <Filter>Source Files\Controllers\Finalizers</Filter>
     </ClCompile>
     <ClCompile Include="Curves\Tr2BoneMatrixCurve.cpp">
       <Filter>Source Files\Curves</Filter>
