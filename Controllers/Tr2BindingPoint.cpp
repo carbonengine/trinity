@@ -221,6 +221,8 @@ void Tr2BindingPoint::SetValue( float value ) const
 	case Be::BOOL:
 		*reinterpret_cast<bool*>( m_destination ) = value != 0;
 		break;
+	default:
+		return;
 	}
 }
 
