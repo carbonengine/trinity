@@ -22,7 +22,7 @@ const Be::ClassInfo* EveChildCloud::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "name", m_name, "The name of the cloud", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "Toggle display", Be::READWRITE )
-		MAP_ATTRIBUTE( "sortingModifier", m_sortingModifier, "Affects the transparency sorting", Be::READWRITE )
+		MAP_ATTRIBUTE( "sortingModifier", m_sortingModifier, "Affects the transparency sorting", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "effect", m_effect, "Shader used for the rendering", Be::READWRITE | Be::PERSIST )
 
