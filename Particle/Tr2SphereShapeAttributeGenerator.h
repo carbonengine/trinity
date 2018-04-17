@@ -44,6 +44,8 @@ private:
 	float m_minTheta, m_maxTheta;
 	float m_minRadius, m_maxRadius;
 
+	float m_distributionExponent;
+
 	// Does the generator generate positions
 	bool m_controlPosition;
 	// Does the generator generate velocities

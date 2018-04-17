@@ -25,7 +25,8 @@ const Be::ClassInfo* Tr2SphereShapeAttributeGenerator::ExposeToBlue()
 		MAP_ATTRIBUTE( "maxPhi", m_maxPhi, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "minTheta", m_minTheta, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "maxTheta", m_maxTheta, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( 
+		MAP_ATTRIBUTE( "distributionExponent", m_distributionExponent, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
 			"controlPosition", 
 			m_controlPosition, 
 			"Does the generator affect particle position", 

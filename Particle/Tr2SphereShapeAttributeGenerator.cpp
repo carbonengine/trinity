@@ -22,6 +22,11 @@ inline float frand( float a, float b )
 	return a + ( b - a ) * Tr2ParticleSystem::RandFloat();
 }
 
+inline float frand( float a, float b, float exponent )
+{
+	return a + ( b - a ) * pow( Tr2ParticleSystem::RandFloat(), exponent );
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Tr2SphereShapeAttributeGenerator default constructor
@@ -35,6 +40,7 @@ Tr2SphereShapeAttributeGenerator::Tr2SphereShapeAttributeGenerator()
 	m_maxTheta( 360.0f ),
 	m_minRadius( 0.0f ),
 	m_maxRadius( 00.0f ),
+	m_distributionExponent( 1 ),
 	m_controlPosition( true ),
 	m_controlVelocity( true ),
 	m_minSpeed( 0.0f ),
@@ -102,7 +108,8 @@ void Tr2SphereShapeAttributeGenerator::Generate( const Vector3* position,
 	}
 	if( m_controlPosition && m_positionElement.m_offset != -1 )
 	{
-		randomVector = XMVectorScale( randomVector, frand( m_minRadius, m_maxRadius ) );
+		auto radius = frand( m_minRadius, m_maxRadius, m_distributionExponent );
+		randomVector = XMVectorScale( randomVector, radius );
 		if( position )
 		{
 			randomVector = XMVectorAdd( 
