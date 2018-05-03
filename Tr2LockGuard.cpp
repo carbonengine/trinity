@@ -38,7 +38,10 @@ void Tr2LockGuard::Lock( size_t size, void* originalMemory )
 	{
 		CCP_LOGERR(" TrinityAL: guarded lock out of memory (size: %zu)", size );
 	}
-	memset( m_memory, 0xde, size );
+	else
+	{
+		memset( m_memory, 0xde, size );
+	}
 	m_originalMemory = originalMemory;
 	m_size = size;
 }

@@ -2509,9 +2509,6 @@ ALResult Tr2RenderContextAL::CopySubresourceRegion(
 	AL_UPDATE_RESOURCE_FRAME_USAGE( destination );
 	uint32_t box[6] = { src.m_left, src.m_top, src.m_front, src.m_right, src.m_bottom, src.m_back };
 
-	const uint32_t srcMipCount = source.GetDesc().GetTrueMipCount();
-	const uint32_t dstMipCount = destination.GetDesc().GetTrueMipCount();
-
 	const uint32_t mipCount = std::min( src.GetMipCount(), dst.GetMipCount() );
 
 	GL_FAIL( glBindFramebuffer( GL_FRAMEBUFFER, m_defaultFrameBufferObject ) );

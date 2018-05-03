@@ -210,7 +210,6 @@ void DecompressBc3( uint32_t width, uint32_t height, uint32_t depth, const Tr2Su
 							alphaValue = alpha[( alphaMask1 >> ( x + ( y - 2 ) * 4 ) * 3 ) & 0x7];
 						}
 						alphaValue <<= 24;
-						uint32_t destY = j + y;
 						uint32_t* destPixel = reinterpret_cast<uint32_t*>( decompressed + k * slice + ( y + j ) * pitch + ( x + i ) * sizeof( uint32_t ) );
 						switch( ( bits >> 2 * ( 4 * y + x ) ) & 3 )
 						{
