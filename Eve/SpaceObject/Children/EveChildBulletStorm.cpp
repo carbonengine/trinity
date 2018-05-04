@@ -38,6 +38,8 @@ EveChildBulletStorm::EveChildBulletStorm( IRoot* lockobj ) :
 	m_display( true ),
 	m_objectCount( 0 ),
 	m_multiplier( 1 ),
+	m_clipShereMul( 0 ),
+	m_clipSphereStart( 0 ),
 	m_range( 1000.f ),
 	m_sourceRadius( 0.f ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
@@ -236,6 +238,18 @@ void EveChildBulletStorm::UpdateSyncronous( EveUpdateContext& updateContext, IEv
 {
 }
 
+void EveChildBulletStorm::StartEffect()
+{
+	m_clipShereMul = 1.0f;
+	m_clipSphereStart = BeOS->GetCurrentFrameTime();
+}
+
+void EveChildBulletStorm::StopEffect() 
+{
+	m_clipShereMul = -1.0f;
+	m_clipSphereStart = BeOS->GetCurrentFrameTime();
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Assyncronous updates happen here
@@ -391,7 +405,8 @@ Tr2PerObjectData* EveChildBulletStorm::GetPerObjectData( ITriRenderBatchAccumula
 	}
 
 	perObjectData->m_worldTransform = XMMatrixTranspose( m_worldTransform );
-	perObjectData->m_effectInfo = Vector4( float(m_targetObjects.size()), m_sourceRadius + m_range, 0.f, 0.f );
+	float clipSphereDeltaTime = TimeAsFloat( BeOS->GetCurrentFrameTime() - m_clipSphereStart );
+	perObjectData->m_effectInfo = Vector4( float(m_targetObjects.size()), m_sourceRadius + m_range, clipSphereDeltaTime, m_clipShereMul );
 	for( size_t i = 0; i < m_targetBlobs.size(); ++i )
 	{
 		perObjectData->m_targetPositionsWS[i] = m_targetBlobs[i];

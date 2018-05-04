@@ -33,6 +33,9 @@ const Be::ClassInfo* EveChildBulletStorm::ExposeToBlue()
 		MAP_ATTRIBUTE( "effect", m_effect, "The shader", Be::READWRITE | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP( "Rebuild", Rebuild, "Rebuild internal buffers" )
+		MAP_METHOD_AND_WRAP( "StartEffect", StartEffect, "Start Effect" )
+		MAP_METHOD_AND_WRAP( "StopEffect", StopEffect, "Stop Effect" )
+
 
 	EXPOSURE_END()
 }

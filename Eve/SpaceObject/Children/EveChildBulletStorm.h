@@ -94,6 +94,8 @@ private:
 public:
 	// rebuild the internal data
 	void Rebuild();
+	void StartEffect();
+	void StopEffect();
 
 
 private:
@@ -106,6 +108,8 @@ private:
 	unsigned int m_multiplier;
 	std::string m_sourceLocatorSet;
 	float m_range;
+	float m_clipShereMul;
+	Be::Time m_clipSphereStart;
 
 	// source
 	EveSpaceObject2Ptr m_sourceObject;
