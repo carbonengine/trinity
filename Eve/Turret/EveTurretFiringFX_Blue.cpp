@@ -25,6 +25,7 @@ const Be::ClassInfo* EveTurretFiringFX::ExposeToBlue()
 		MAP_ATTRIBUTE( "isFiring", m_isFiring, "Is this effect rendering (because it is firing)", Be::READ )
 		MAP_ATTRIBUTE( "firingDuration", m_firingDuration, "How long is the firing animation", Be::READ )
 
+		MAP_ATTRIBUTE( "firingDurationOverride", m_firingDurationOverride, "Override default firing duration", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "firingPeakTime", m_firingPeakTime, "After how many seconds is this effect peaking?", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "isLoopFiring", m_isLoopFiring, "some turrets (like miners or salvagers) loop the firing effect endlessly", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boneName", m_boneName, "This is the prefix name for the bone this will get attached to", Be::READWRITE | Be::PERSIST )

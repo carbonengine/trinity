@@ -105,6 +105,8 @@ private:
 	float m_firingDuration;
 	// peak time of effect
 	float m_firingPeakTime;
+	// for our very special case...
+	float m_firingDurationOverride;
 
 	// per-muzzle effects
 	void StartMuzzleEffect( int muzzleID );

@@ -29,6 +29,7 @@ EveTurretFiringFX::EveTurretFiringFX( IRoot* lockobj ) :
 	m_boneName( "Pos_Fire" ),
 	m_firingDuration( 1000.f ),
 	m_firingPeakTime( 0.f ),
+	m_firingDurationOverride( -1 ),
 	m_maxRadius( 3000.0 ),
 	m_minRadius( 30.0 ),
 	m_maxScale( 10.0 ),
@@ -262,6 +263,10 @@ bool EveTurretFiringFX::GetStartPosition( Vector3& pos ) const
 // --------------------------------------------------------------------------------
 float EveTurretFiringFX::GetFiringDuration() const
 {
+	if( m_firingDurationOverride >= 0 )
+	{
+		return m_firingDurationOverride;
+	}
 	return m_firingDuration;
 }
 
