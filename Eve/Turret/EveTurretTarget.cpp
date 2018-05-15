@@ -91,7 +91,7 @@ int EveTurretTarget::GetLocator() const
 // Description:
 //   Start the firing procedure at a given locator
 // --------------------------------------------------------------------------------
-void EveTurretTarget::StartFireAtLocator( int l, float delay, float length )
+void EveTurretTarget::StartFireAtLocator( int l, float delay, float length, const Vector3* source )
 {
 	// remember this locator
 	m_locator = l;
@@ -112,7 +112,18 @@ void EveTurretTarget::StartFireAtLocator( int l, float delay, float length )
 		if( m_object )
 		{
 			m_impactLength = std::max( length, 0.f );
-			m_impactDelay = delay;
+			m_impactDelay = delay;		
+
+			// If we have a laser that has no buildup, we need to create an impact straigt away
+			// Otherwise we have the chance of the laser ending on the hull, intead of the shield where it should be
+			// https://jira.ccpgames.com/browse/EVEDEV-4947
+			if( m_impactDelay == 0 )
+			{
+				m_object->GetDamageLocatorPosition( &m_targetPosition, m_locator, true );
+				Vector3 dirToSource( *source - m_targetPosition );
+				m_impactID = m_object->CreateImpact( m_locator, dirToSource, m_impactLength, m_impactSize );
+				m_impactDelay = -1.f;
+			}			
 		}
 	}
 }

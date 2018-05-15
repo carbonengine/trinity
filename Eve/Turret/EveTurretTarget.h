@@ -26,7 +26,7 @@ public:
 
 	// access locator
 	int GetLocator() const;
-	void StartFireAtLocator( int l, float delay, float length );
+	void StartFireAtLocator( int l, float delay, float length, const Vector3* source );
 	void StopFireAtLocator();
 	const Vector3* GetTrackingPosition() const;
 	const Vector3* GetTargetPosition() const;
