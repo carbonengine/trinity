@@ -460,6 +460,9 @@
     <ClInclude Include="Controllers\Actions\Tr2ActionAnimateValue.h">
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClInclude>
+    <ClInclude Include="Controllers\Actions\Tr2ActionChildEffect.h">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClInclude>
     <ClInclude Include="Controllers\Actions\Tr2ActionOverlay.h">
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClInclude>
@@ -743,6 +746,9 @@
       <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Children\EveCloudEditableVolume.h">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\IEveEffectChildrenOwner.h">
       <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Children\IEveSpaceObjectChild.h">
@@ -2063,6 +2069,12 @@
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClCompile>
     <ClCompile Include="Controllers\Actions\Tr2ActionAnimateValue_Blue.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionChildEffect.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionChildEffect_Blue.cpp">
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClCompile>
     <ClCompile Include="Controllers\Actions\Tr2ActionOverlay.cpp">

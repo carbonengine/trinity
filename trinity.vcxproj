@@ -2621,6 +2621,7 @@
     <ClInclude Include="Controllers\Tr2StateMachineTransition.h" />
     <ClInclude Include="Controllers\Actions\ITr2ControllerAction.h" />
     <ClInclude Include="Controllers\Actions\Tr2ActionAnimateValue.h" />
+    <ClInclude Include="Controllers\Actions\Tr2ActionChildEffect.h" />
     <ClInclude Include="Controllers\Actions\Tr2ActionOverlay.h" />
     <ClInclude Include="Controllers\Actions\Tr2ActionPlayCurveSet.h" />
     <ClInclude Include="Controllers\Actions\Tr2ActionPlayMeshAnimation.h" />
@@ -2716,6 +2717,7 @@
     <ClInclude Include="Eve\SpaceObject\Children\EveChildQuad.h" />
     <ClInclude Include="Eve\SpaceObject\Children\EveChildTransform.h" />
     <ClInclude Include="Eve\SpaceObject\Children\EveCloudEditableVolume.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\IEveEffectChildrenOwner.h" />
     <ClInclude Include="Eve\SpaceObject\Children\IEveSpaceObjectChild.h" />
     <ClInclude Include="Eve\SpaceObject\Children\TransformModifiers\EveChildModifierBillboard2D.h" />
     <ClInclude Include="Eve\SpaceObject\Children\TransformModifiers\EveChildModifierBillboard3D.h" />
@@ -3160,6 +3162,8 @@
     <ClCompile Include="Controllers\Tr2StateMachine_Blue.cpp" />
     <ClCompile Include="Controllers\Actions\Tr2ActionAnimateValue.cpp" />
     <ClCompile Include="Controllers\Actions\Tr2ActionAnimateValue_Blue.cpp" />
+    <ClCompile Include="Controllers\Actions\Tr2ActionChildEffect.cpp" />
+    <ClCompile Include="Controllers\Actions\Tr2ActionChildEffect_Blue.cpp" />
     <ClCompile Include="Controllers\Actions\Tr2ActionOverlay.cpp" />
     <ClCompile Include="Controllers\Actions\Tr2ActionOverlay_Blue.cpp" />
     <ClCompile Include="Controllers\Actions\Tr2ActionPlayCurveSet.cpp" />
