@@ -28,7 +28,7 @@ const Be::ClassInfo* Tr2ControllerFloatVariable::ExposeToBlue()
 		MAP_INTERFACE( IInitialize )
 
 		MAP_ATTRIBUTE( "name", m_name, "Variable name", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "type", m_type, "Variable type", Be::READWRITE | Be::PERSIST | Be::ENUM, TypeChooser )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "variableType", m_type, "Variable type", Be::READWRITE | Be::PERSIST | Be::ENUM, TypeChooser )
 		MAP_ATTRIBUTE( "value", m_value, "Current value", Be::READWRITE )
 		MAP_ATTRIBUTE( "defaultValue", m_defaultValue, "Default variable value", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_END()
