@@ -24,6 +24,7 @@ private:
 	std::vector<std::wstring> GetResourceDependenciesFromScript() const;
 	Be::Result<std::string> ExecuteFromScript( uint32_t maxWidth, uint32_t maxHeight, Tr2HostBitmapPtr& result ) const;
 
+	std::string m_pipelineType;
 	PITr2TexturePipelineStepVector m_steps;
 
 	TrackableStdHashMap<std::wstring, TriTextureResPtr> m_inputs;

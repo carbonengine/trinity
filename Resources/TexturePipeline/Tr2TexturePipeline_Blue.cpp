@@ -19,6 +19,7 @@ const Be::ClassInfo* Tr2TexturePipeline::ExposeToBlue()
 	EXPOSURE_BEGIN( Tr2TexturePipeline, "" )
 		MAP_INTERFACE( Tr2TexturePipeline )
 
+		MAP_ATTRIBUTE( "pipelineType", m_pipelineType, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "steps", m_steps, "Pipeline steps", Be::READ | Be::PERSIST )
 		MAP_METHOD_AND_WRAP(
 			"GetResourceDependencies",
