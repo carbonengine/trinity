@@ -597,6 +597,12 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			"Start all controllers"
 		)
 
+		MAP_METHOD_AND_WRAP(
+			"GetControllerVariables",
+			GetControllerVariables,
+			"Returns all previously set contrller variables"
+		)
+
 #if BLUE_WITH_PYTHON
 		MAP_METHOD( 
 			"TransformLocators",

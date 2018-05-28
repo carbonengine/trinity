@@ -383,6 +383,7 @@ public:
 
 	void SetControllerVariable( const char* name, float value );
 	void StartControllers();
+	std::map<std::string, float> GetControllerVariables() const;
 
 protected:
 	// LODing

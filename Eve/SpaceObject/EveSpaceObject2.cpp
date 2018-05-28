@@ -3051,3 +3051,10 @@ void EveSpaceObject2::StartControllers()
 		( *it )->Start();
 	}
 }
+
+std::map<std::string, float> EveSpaceObject2::GetControllerVariables() const
+{
+	std::map<std::string, float> result;
+	result.insert( begin( m_controllerVariables ), end( m_controllerVariables ) );
+	return result;
+}
