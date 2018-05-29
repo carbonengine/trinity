@@ -276,22 +276,27 @@ bool Tr2GpuParticleSystem::OnPrepareResources()
 	if( !m_drawParameters->IsValid() )
 	{
 		m_drawParameters->Create( 4, Tr2RenderContextEnum::PIXEL_FORMAT_R32_UINT, Tr2GpuBuffer::GPU_WRITABLE | Tr2GpuBuffer::DRAW_INDIRECT );
+		m_clearRequested = true;
 	}
 	if( !m_sortParameters->IsValid() )
 	{
 		m_sortParameters->Create( 4, Tr2RenderContextEnum::PIXEL_FORMAT_R32_UINT, Tr2GpuBuffer::GPU_WRITABLE | Tr2GpuBuffer::DRAW_INDIRECT );
+		m_clearRequested = true;
 	}
 	if( !m_particleData->IsValid() )
 	{
 		m_particleData->Create( m_maxParticles, sizeof( ParticleData ), Tr2GpuStructuredBuffer::GPU_WRITABLE );
+		m_clearRequested = true;
 	}
 	if( !m_deadList->IsValid() )
 	{
 		m_deadList->Create( m_maxParticles, sizeof( uint32_t ), Tr2GpuStructuredBuffer::COUNTER | Tr2GpuStructuredBuffer::GPU_WRITABLE );
+		m_clearRequested = true;
 	}
 	if( !m_visibleList->IsValid() )
 	{
 		m_visibleList->Create( m_maxParticles, sizeof( uint32_t ) * 2, Tr2GpuStructuredBuffer::COUNTER | Tr2GpuStructuredBuffer::GPU_WRITABLE );
+		m_clearRequested = true;
 	}
 	UpdateGpuEmitterParams( renderContext );
 	return true;
