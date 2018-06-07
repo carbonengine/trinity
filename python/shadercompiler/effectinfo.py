@@ -227,6 +227,12 @@ class Stage(object):
             for i in xrange(stream.read_uint8()):
                 self.uavs.append(UAV(stream, string_table))
 
+        self.annotations = {}
+        if version >= 8:
+            for j in xrange(stream.read_uint8()):
+                annotation = Annotation(stream, string_table)
+                self.annotations[annotation.name] = annotation
+
 
 class Pass(object):
     def __init__(self, stream, string_table, version):
@@ -418,7 +424,7 @@ class EffectInfo(object):
         stream = self._stream
         version = stream.read_uint32()
         self._version = version
-        if version < 2 or version > 7:
+        if version < 2 or version > 8:
             raise RuntimeError('unsupported effect file version')
         if version < 5:
             header_size = stream.read_uint32()
