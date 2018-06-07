@@ -2644,6 +2644,17 @@ function_atrribute_value_list(A) ::= function_atrribute_value_list(B) OP_COMA li
 }
 
 
+function_definition(A) ::= function_attribute_list(L) function_prototype(B) annotation_declaration(N) compount_statement_no_new_scope(C).
+{
+	A = new ASTNode( NT_FUNCTION_DEFINITION, B->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
+	A->AddChild( B );
+	A->AddChild( C );
+	A->AddChild( L );
+	B->GetSymbol()->definition = A;
+	B->GetSymbol()->annotations = N;
+	parserState->GetSymbolTable().LeaveScope(); 
+}
+
 function_definition(A) ::= function_attribute_list(L) function_prototype(B) compount_statement_no_new_scope(C).
 {
 	A = new ASTNode( NT_FUNCTION_DEFINITION, B->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
@@ -2651,6 +2662,16 @@ function_definition(A) ::= function_attribute_list(L) function_prototype(B) comp
 	A->AddChild( C );
 	A->AddChild( L );
 	B->GetSymbol()->definition = A;
+	parserState->GetSymbolTable().LeaveScope(); 
+}
+
+function_definition(A) ::= function_prototype(B) annotation_declaration(N) compount_statement_no_new_scope(C).
+{
+	A = new ASTNode( NT_FUNCTION_DEFINITION, B->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
+	A->AddChild( B );
+	A->AddChild( C );
+	B->GetSymbol()->definition = A;
+	B->GetSymbol()->annotations = N;
 	parserState->GetSymbolTable().LeaveScope(); 
 }
 

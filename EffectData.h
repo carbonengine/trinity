@@ -320,6 +320,65 @@ struct InputDescription
 
 // Saved as:
 //	type: BYTE
+//	value: DWORD
+struct Annotation
+{
+	size_t GetPackedSize()
+	{
+		return sizeof( BYTE ) + sizeof( DWORD );
+	}
+	void Save( BYTE*& buffer )
+	{
+		*reinterpret_cast<BYTE*>( buffer ) = type;
+		buffer += sizeof( BYTE );
+		*reinterpret_cast<DWORD*>( buffer ) = intValue;
+		buffer += sizeof( DWORD );
+	}
+
+	AnnotationType type;
+	union
+	{
+		float floatValue;
+		int intValue;
+		StringReference stringValue;
+	};
+};
+
+// Saved as:
+//	annotationCount: BYTE
+//	(annotationName:StringReference Annotation) x annotationCount
+struct ParameterAnnotation
+{
+	size_t GetPackedSize()
+	{
+		size_t size = sizeof( BYTE );
+		for( auto it = annotations.begin(); it != annotations.end(); ++it )
+		{
+			size += sizeof( DWORD );
+			size += it->second.GetPackedSize();
+		}
+		return size;
+	}
+	void Save( BYTE*& buffer )
+	{
+		*reinterpret_cast<BYTE*>( buffer ) = annotations.size();
+		buffer += sizeof( BYTE );
+		for( auto it = annotations.begin(); it != annotations.end(); ++it )
+		{
+			*reinterpret_cast<DWORD*>( buffer ) = it->first;
+			buffer += sizeof( DWORD );
+
+			BYTE* start = buffer;
+			it->second.Save( buffer );
+			assert( buffer - start == it->second.GetPackedSize() );
+		}
+	}
+
+	std::map<StringReference, Annotation> annotations;
+};
+
+// Saved as:
+//	type: BYTE
 //  shaderSize: DWORD
 //  shaderData: BYTE x shaderSize
 //  constantCount: DWORD
@@ -359,6 +418,7 @@ struct StageInput
 			size += sizeof( BYTE );
 			size += it->second.GetPackedSize();
 		}
+		size += annotations.GetPackedSize();
 		return size;
 	}
 	void Save( BYTE*& buffer )
@@ -429,6 +489,7 @@ struct StageInput
 			it->second.Save( buffer );
 			assert( buffer - start == it->second.GetPackedSize() );
 		}
+		annotations.Save( buffer );
 	}
 
 	InputStageType type;
@@ -446,6 +507,7 @@ struct StageInput
 	std::map<unsigned, Texture> textures;
 	std::map<unsigned, Sampler> samplers;
 	std::map<unsigned, Uav> uavs;
+	ParameterAnnotation annotations;
 };
 
 typedef std::map<unsigned, unsigned> RenderStates;
@@ -492,65 +554,6 @@ struct Pass
 
 	std::vector<StageInput> stages;
 	RenderStates states;
-};
-
-// Saved as:
-//	type: BYTE
-//	value: DWORD
-struct Annotation
-{
-	size_t GetPackedSize()
-	{
-		return sizeof( BYTE ) + sizeof( DWORD );
-	}
-	void Save( BYTE*& buffer )
-	{
-		*reinterpret_cast<BYTE*>( buffer ) = type;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<DWORD*>( buffer ) = intValue;
-		buffer += sizeof( DWORD );
-	}
-
-	AnnotationType type;
-	union
-	{
-		float floatValue;
-		int intValue;
-		StringReference stringValue;
-	};
-};
-
-// Saved as:
-//	annotationCount: BYTE
-//	(annotationName:StringReference Annotation) x annotationCount
-struct ParameterAnnotation
-{
-	size_t GetPackedSize()
-	{
-		size_t size = sizeof( BYTE );
-		for( auto it = annotations.begin(); it != annotations.end(); ++it )
-		{
-			size += sizeof( DWORD );
-			size += it->second.GetPackedSize();
-		}
-		return size;
-	}
-	void Save( BYTE*& buffer )
-	{
-		*reinterpret_cast<BYTE*>( buffer ) = annotations.size();
-		buffer += sizeof( BYTE );
-		for( auto it = annotations.begin(); it != annotations.end(); ++it )
-		{
-			*reinterpret_cast<DWORD*>( buffer ) = it->first;
-			buffer += sizeof( DWORD );
-
-			BYTE* start = buffer;
-			it->second.Save( buffer );
-			assert( buffer - start == it->second.GetPackedSize() );
-		}
-	}
-
-	std::map<StringReference, Annotation> annotations;
 };
 
 

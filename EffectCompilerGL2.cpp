@@ -3916,13 +3916,15 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 						glGetProgramInfoLog( program, infoLen, nullptr, buffer );
 						g_messages.AddMessage( "%s", buffer );
 						delete[] buffer;
+						glDeleteProgram( program );
+						return false;
 					}
-					else
-					{
-						g_messages.AddMessage( "\\memory(0): error X0000: undefined error linking OpenGL shader" );
-					}
-					glDeleteProgram( program );
-					return false;
+					//else
+					//{
+					//	g_messages.AddMessage( "\\memory(0): error X0000: undefined error linking OpenGL shader" );
+					//}
+					//glDeleteProgram( program );
+					//return false;
 				}
 				glDeleteProgram( program );
 			}

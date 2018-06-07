@@ -2466,6 +2466,23 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				{
 					return false;
 				}
+				{
+					stage.annotations.annotations.clear();
+					Symbol* symbol = shaderNode->GetChild( 1 )->GetSymbol();
+					if( symbol && symbol->annotations )
+					{
+						for( auto a = symbol->annotations->begin(); a != symbol->annotations->end(); ++a )
+						{
+							Annotation result;
+							bool isSrgb, isAutoregister;
+							if( MakeEffectAnnotationFromSymbolAnnotation( *a, result, isSrgb, isAutoregister ) )
+							{
+								stage.annotations.annotations[g_stringTable.AddString( ToString( a->name ).c_str() )] = result;
+							}
+						}
+					}
+				}
+
 				if( !stage.defaultValues.empty() )
 				{
 					stage.defaultValuesStr = g_stringTable.AddString( &stage.defaultValues[0], stage.defaultValues.size() );

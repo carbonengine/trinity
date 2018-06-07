@@ -1252,7 +1252,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		header[index++] = offsets[it->second].second;
 	}
 	DWORD bytesWritten;
-	DWORD version = 7;
+	DWORD version = 8;
 	WriteFile( file, &version, sizeof( DWORD ), &bytesWritten, NULL );
 	g_stringTable.Write( file );
 	WriteFile( file, fullHeader, headerSize, &bytesWritten, NULL );

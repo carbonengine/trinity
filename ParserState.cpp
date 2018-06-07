@@ -334,41 +334,66 @@ PreprocessorScanResult ParserState::GetPreprocessorToken( PreprocessorToken& tok
 		{
 			return code;
 		}
-	}
-	while( InSkipMode() );
+	} while( InSkipMode() );
 
 	FileContents& curFile = m_fileStack.back();
 
 	if( token.type == PPT_ID && m_expandMacros )
 	{
-		PreprocessorDefine* found = FindDefine( token.string );
-		if( found )
+		if( ToString( token.string ) == "__LINE__" )
 		{
-			std::vector<InlineString> arguments;
-			if( !found->parameters.empty() )
+			token.type = PPT_INT_CONST;
+			bool found = false;
+			for( auto it = m_fileStack.rbegin(); it != m_fileStack.rend(); ++it )
 			{
-				PreprocessorToken paren;
-				const char* backup = GetStreamPosition();
-				if( GetPreprocessorToken( paren ) != PPSR_OK || paren.type != PPT_OPERATOR || paren.string.end - paren.string.start != 1 || *paren.string.start != '(' )
+				if( !it->isMacro )
 				{
-					GetStreamPosition() = backup;
-					return PPSR_OK;
-				}
-				if( !ParseMacroArguments( arguments ) )
-				{
-					return PPSR_ERROR;
-				}
-				if( arguments.size() != found->parameters.size() )
-				{
-					ShowMessage( EC_INCORRECT_MACRO_PARAMETER_COUNT, ToString( token.string ).c_str() );
-					return PPSR_ERROR;
+					found = true;
+					char buffer[64];
+					sprintf_s( buffer, "%u", it->location.lineNumber );
+					auto len = strlen( buffer );
+					char* str = AllocateString( len + 1 );
+					strcpy_s( str, len + 1, buffer );
+					token.string = MakeInlineString( str );
+					break;
 				}
 			}
-			ParseDefine( *found, token.fileLocation, arguments );
-			PreprocessorScanResult code = GetPreprocessorToken( token );
-			if( code != PPSR_OK )
+			if( !found )
 			{
-				return code;
+				token.string = MakeInlineString( "0" );
+			}
+		}
+		else
+		{
+			PreprocessorDefine* found = FindDefine( token.string );
+			if( found )
+			{
+				std::vector<InlineString> arguments;
+				if( !found->parameters.empty() )
+				{
+					PreprocessorToken paren;
+					const char* backup = GetStreamPosition();
+					if( GetPreprocessorToken( paren ) != PPSR_OK || paren.type != PPT_OPERATOR || paren.string.end - paren.string.start != 1 || *paren.string.start != '(' )
+					{
+						GetStreamPosition() = backup;
+						return PPSR_OK;
+					}
+					if( !ParseMacroArguments( arguments ) )
+					{
+						return PPSR_ERROR;
+					}
+					if( arguments.size() != found->parameters.size() )
+					{
+						ShowMessage( EC_INCORRECT_MACRO_PARAMETER_COUNT, ToString( token.string ).c_str() );
+						return PPSR_ERROR;
+					}
+				}
+				ParseDefine( *found, token.fileLocation, arguments );
+				PreprocessorScanResult code = GetPreprocessorToken( token );
+				if( code != PPSR_OK )
+				{
+					return code;
+				}
 			}
 		}
 	}
