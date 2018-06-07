@@ -95,6 +95,7 @@ public:
 	void Rebuild();
 	void StartEffect();
 	void StopEffect();
+	bool CanChangeState();
 
 
 private:
@@ -107,8 +108,10 @@ private:
 	unsigned int m_multiplier;
 	std::string m_sourceLocatorSet;
 	float m_range;
+	float m_speed;
+	float m_clipSphere;
 	float m_clipShereMul;
-	Be::Time m_clipSphereStart;
+	bool m_changingClipSphere;
 
 	// source
 	EveSpaceObject2Ptr m_sourceObject;

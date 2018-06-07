@@ -38,10 +38,12 @@ EveChildBulletStorm::EveChildBulletStorm( IRoot* lockobj ) :
 	m_display( true ),
 	m_objectCount( 0 ),
 	m_multiplier( 1 ),
+	m_speed( 1000.f ),
 	m_clipShereMul( 0 ),
-	m_clipSphereStart( 0 ),
+	m_changingClipSphere( false ),
 	m_range( 1000.f ),
 	m_sourceRadius( 0.f ),
+	m_clipSphere( 1.f ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 {
 	PrepareResources();
@@ -253,13 +255,31 @@ void EveChildBulletStorm::UpdateSyncronous( EveUpdateContext& updateContext, boo
 void EveChildBulletStorm::StartEffect()
 {
 	m_clipShereMul = 1.0f;
-	m_clipSphereStart = BeOS->GetCurrentFrameTime();
+	m_clipSphere = 0.0f;
+	m_changingClipSphere = true;
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   This stops bullets appearing, but keeps the bullets that have been generated, 
+//   so the effects seems to be stopping
+// --------------------------------------------------------------------------------
 void EveChildBulletStorm::StopEffect() 
 {
 	m_clipShereMul = -1.0f;
-	m_clipSphereStart = BeOS->GetCurrentFrameTime();
+	m_clipSphere = 0.0f;
+	m_changingClipSphere = true;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Helper method that is exposed to python, to see if we can start/stop the effect
+//   We don't want the effect to stop when it is in the progress of starting and
+//   vice versa
+// --------------------------------------------------------------------------------
+bool EveChildBulletStorm::CanChangeState()
+{
+	return !m_changingClipSphere;
 }
 
 // --------------------------------------------------------------------------------
@@ -288,7 +308,7 @@ void EveChildBulletStorm::UpdateAsyncronous( EveUpdateContext& updateContext, bo
 		m_targetBlobs[i] = Vector4( targetPosWS, max( targetSize.w, BULLETSTORM_MIN_TARGETSIZE ) );
 	}
 
-
+	
 	// keep the radius of the soutrceobject here
 	if( m_sourceObject )
 	{
@@ -297,6 +317,14 @@ void EveChildBulletStorm::UpdateAsyncronous( EveUpdateContext& updateContext, bo
 		{
 			m_sourceRadius = sphere.w;
 		}
+	}
+
+	// update the start/stop mechanic
+	if( m_changingClipSphere )
+	{
+		m_clipSphere += m_clipShereMul * m_speed * updateContext.GetDeltaT() / (m_sourceRadius + m_range);
+		m_clipSphere = std::max( -1.0f, std::min( 1.0f, m_clipSphere ) );
+		m_changingClipSphere = std::abs( m_clipSphere ) != 1;
 	}
 }
 
@@ -392,8 +420,8 @@ Tr2PerObjectData* EveChildBulletStorm::GetPerObjectData( ITriRenderBatchAccumula
 	}
 
 	perObjectData->m_worldTransform = XMMatrixTranspose( m_worldTransform );
-	float clipSphereDeltaTime = TimeAsFloat( BeOS->GetCurrentFrameTime() - m_clipSphereStart );
-	perObjectData->m_effectInfo = Vector4( float(m_targetObjects.size()), m_sourceRadius + m_range, clipSphereDeltaTime, m_clipShereMul );
+	perObjectData->m_effectInfo = Vector4( float(m_targetObjects.size()), m_sourceRadius + m_range, m_clipSphere, m_speed );
+
 	for( size_t i = 0; i < m_targetBlobs.size(); ++i )
 	{
 		perObjectData->m_targetPositionsWS[i] = m_targetBlobs[i];
@@ -409,7 +437,6 @@ Tr2PerObjectData* EveChildBulletStorm::GetPerObjectData( ITriRenderBatchAccumula
 void EveChildBulletStormPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 {
 	FillAndSetConstants( *buffers[Tr2RenderContextEnum::VERTEX_SHADER], &m_worldTransform, 64 + 16 + 10 * 16, Tr2RenderContextEnum::VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
-//	FillAndSetConstants( *buffers[Tr2RenderContextEnum::PIXEL_SHADER], &m_displayData, ( 4 + Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT ) * 16, PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
 }
 
 
