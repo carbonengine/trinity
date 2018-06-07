@@ -9,7 +9,6 @@
     <Filter Include="Source Files\Curves" />
     <Filter Include="Source Files\Curves\Fader" />
     <Filter Include="Source Files\Eve" />
-    <Filter Include="Source Files\Eve\Animation" />
     <Filter Include="Source Files\Eve\Renderable" />
     <Filter Include="Source Files\Eve\Renderable\Stretch" />
     <Filter Include="Source Files\Eve\SpaceObject" />
@@ -630,15 +629,6 @@
     </ClInclude>
     <ClInclude Include="Eve\IEveTransform.h">
       <Filter>Source Files\Eve</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\Animation\EveAnimationData.h">
-      <Filter>Source Files\Eve\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\Animation\EveAnimationSequencer.h">
-      <Filter>Source Files\Eve\Animation</Filter>
-    </ClInclude>
-    <ClInclude Include="Eve\Animation\EveAnimationState.h">
-      <Filter>Source Files\Eve\Animation</Filter>
     </ClInclude>
     <ClInclude Include="Eve\Renderable\EveSceneStaticParticles.h">
       <Filter>Source Files\Eve\Renderable</Filter>
@@ -2376,24 +2366,6 @@
     </ClCompile>
     <ClCompile Include="Eve\EveTransform_Blue.cpp">
       <Filter>Source Files\Eve</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\Animation\EveAnimationData.cpp">
-      <Filter>Source Files\Eve\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\Animation\EveAnimationData_Blue.cpp">
-      <Filter>Source Files\Eve\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\Animation\EveAnimationSequencer.cpp">
-      <Filter>Source Files\Eve\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\Animation\EveAnimationSequencer_Blue.cpp">
-      <Filter>Source Files\Eve\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\Animation\EveAnimationState.cpp">
-      <Filter>Source Files\Eve\Animation</Filter>
-    </ClCompile>
-    <ClCompile Include="Eve\Animation\EveAnimationState_Blue.cpp">
-      <Filter>Source Files\Eve\Animation</Filter>
     </ClCompile>
     <ClCompile Include="Eve\Renderable\EveSceneStaticParticles.cpp">
       <Filter>Source Files\Eve\Renderable</Filter>

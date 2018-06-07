@@ -2678,9 +2678,6 @@
     <ClInclude Include="Eve\IEveShadowCaster.h" />
     <ClInclude Include="Eve\IEveSpaceObject2.h" />
     <ClInclude Include="Eve\IEveTransform.h" />
-    <ClInclude Include="Eve\Animation\EveAnimationData.h" />
-    <ClInclude Include="Eve\Animation\EveAnimationSequencer.h" />
-    <ClInclude Include="Eve\Animation\EveAnimationState.h" />
     <ClInclude Include="Eve\Renderable\EveSceneStaticParticles.h" />
     <ClInclude Include="Eve\Renderable\Stretch\EveFiringEffectElementContainer.h" />
     <ClInclude Include="Eve\Renderable\Stretch\EveLocalPositionCurve.h" />
@@ -3264,12 +3261,6 @@
     <ClCompile Include="Eve\EveStarfield_Blue.cpp" />
     <ClCompile Include="Eve\EveTransform.cpp" />
     <ClCompile Include="Eve\EveTransform_Blue.cpp" />
-    <ClCompile Include="Eve\Animation\EveAnimationData.cpp" />
-    <ClCompile Include="Eve\Animation\EveAnimationData_Blue.cpp" />
-    <ClCompile Include="Eve\Animation\EveAnimationSequencer.cpp" />
-    <ClCompile Include="Eve\Animation\EveAnimationSequencer_Blue.cpp" />
-    <ClCompile Include="Eve\Animation\EveAnimationState.cpp" />
-    <ClCompile Include="Eve\Animation\EveAnimationState_Blue.cpp" />
     <ClCompile Include="Eve\Renderable\EveSceneStaticParticles.cpp" />
     <ClCompile Include="Eve\Renderable\EveSceneStaticParticles_Blue.cpp" />
     <ClCompile Include="Eve\Renderable\Stretch\EveFiringEffectElementContainer.cpp" />
