@@ -11,6 +11,7 @@ Tr2EffectStageInput::Tr2EffectStageInput()
 	, resources ( "Tr2EffectStageInput::resources" )
 	, uavs ( "Tr2EffectStageInput::uavs" )
 	, constants( "Tr2EffectStageInput::constants" )
+	, annotation( "Tr2EffectStageInput::annotation" )
 	, m_shader ( INVALID )
 	, m_constantValueSize( 0 )
 {
@@ -80,6 +81,30 @@ bool Tr2EffectDescription::Read( const void* data,
 		}																					\
 		value = stringTable + offset;														\
 	}
+
+	auto ReadAnnotations = [&]( Tr2EffectParameterAnnotationMap& annotationMap ) -> bool
+	{
+		uint8_t annotationCount;
+		READ( uint8_t, uint8_t, annotationCount );
+		annotationMap.resize( annotationCount );
+
+		for( int annotationIx = 0; annotationIx < annotationCount; ++annotationIx )
+		{
+			Tr2EffectParameterAnnotation& annotation = annotationMap[annotationIx];
+			READ_STRING( annotation.name );
+			READ( uint8_t, Tr2EffectParameterAnnotation::Type, annotation.type );
+
+			if( annotation.type == Tr2EffectParameterAnnotation::STRING )
+			{
+				READ_STRING( annotation.stringValue );
+			}
+			else
+			{
+				READ( uint32_t, int, annotation.intValue );
+			}
+		}
+		return true;
+	};
 
 	uint8_t techniqueCount = 1;
 	if( version > 6 )
@@ -444,6 +469,13 @@ bool Tr2EffectDescription::Read( const void* data,
 
 						pass.stageInputs[type].uavs[registerIndex] = resource;
 					}
+					if( version >= 8 )
+					{
+						if( !ReadAnnotations( pass.stageInputs[type].annotation ) )
+						{
+							return false;
+						}
+					}
 				}
 			}
 
@@ -493,24 +525,9 @@ bool Tr2EffectDescription::Read( const void* data,
 		auto map = annotations.insert( std::make_pair( name, Tr2EffectParameterAnnotationMap( "Tr2EffectParameterAnnotationMap" ) ) );
 		Tr2EffectParameterAnnotationMap& annotationMap = map.first->second;
 
-		uint8_t annotationCount;
-		READ( uint8_t, uint8_t, annotationCount );
-		annotationMap.resize( annotationCount );
-
-		for( int annotationIx = 0; annotationIx < annotationCount; ++annotationIx )
+		if( !ReadAnnotations( annotationMap ) )
 		{
-			Tr2EffectParameterAnnotation& annotation = annotationMap[annotationIx];
-			READ_STRING( annotation.name );
-			READ( uint8_t, Tr2EffectParameterAnnotation::Type, annotation.type );
-
-			if( annotation.type == Tr2EffectParameterAnnotation::STRING )
-			{
-				READ_STRING( annotation.stringValue );
-			}
-			else
-			{
-				READ( uint32_t, int, annotation.intValue );
-			}
+			return false;
 		}
 	}
 
