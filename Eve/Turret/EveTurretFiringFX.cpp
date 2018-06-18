@@ -465,7 +465,6 @@ void EveTurretFiringFX::UpdateVisibility( const TriFrustum& frustum )
 		}
 	}
 
-	float totalIntensity = 1.f;
 	bool canMerge = true;
 	Vector3 center( 0, 0, 0 );
 	int count = 0;
@@ -488,7 +487,7 @@ void EveTurretFiringFX::UpdateVisibility( const TriFrustum& frustum )
 
 	if( canMerge && count > 1 )
 	{
-		totalIntensity = float( count );
+		float totalIntensity = float( count );
 		center /= float( count );
 		float radius = 0;
 		for( unsigned int i = 0; i < m_stretch.size(); ++i )
