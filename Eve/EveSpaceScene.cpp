@@ -1734,7 +1734,6 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	std::vector<ITr2Renderable*> visible;
 
 	// Render to depth map
-	if( Tr2Renderer::GetShaderModel() == TR2SM_3_0_DEPTH )
 	{
 		renderContext.AddGpuMarker( __FUNCTION__ );
 
