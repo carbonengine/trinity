@@ -105,7 +105,7 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 
 	uint64_t counter = Tr2Renderer::GetCurrentFrameCounter();
 	int dpCount = m_dpCount ? int( m_dpCount->GetValue() ) : 0;
-	sprintf_s( fpsBuffer, "%s\n%10.0lld\nfps: %8.2f\nms:  %8.2f\ndp:  %8.0d", TRINITY_PLATFORM_NAME, counter, m_averageFPS, m_averageMSPerFrame, dpCount );
+	sprintf_s( fpsBuffer, "%s_x%d\n%10.0lld\nfps: %8.2f\nms:  %8.2f\ndp:  %8.0d", TRINITY_PLATFORM_NAME, PROCESS_BIT_COUNT, counter, m_averageFPS, m_averageMSPerFrame, dpCount );
 
 	uint32_t flags = 0;
 	if( m_alignRight )
