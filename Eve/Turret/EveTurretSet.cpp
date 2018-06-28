@@ -1363,8 +1363,7 @@ void EveTurretSet::RenderDebugInfo( Tr2DebugRenderer& renderer )
 // --------------------------------------------------------------------------------
 void EveTurretSet::GetRenderablesCastingShadow( const TriFrustumOrtho& frustum, std::vector<ITr2Renderable*>& renderables )
 {
-	// display?
-	if( !m_display )
+	if( !m_display || !m_geometryResource )
 	{
 		return;
 	}
@@ -1455,7 +1454,7 @@ void EveTurretSet::GetRenderables( std::vector<ITr2Renderable*>& renderables, co
 	}
 
 	// add this object (which is a renderable), if it is visible
-	if( m_visibleCount && m_turretEffect )
+	if( m_geometryResource && m_visibleCount && m_turretEffect )
 	{
 		m_parentShLighting = shLighting;
 		renderables.push_back( this );
