@@ -860,6 +860,9 @@ void Tr2DebugRenderer::EndRender( Tr2RenderContext& renderContext )
 	{
 		return;
 	}
+
+	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_ALPHA );
+
 	auto handle = GetVertexDeclarationHandle( renderContext );
 	if( !m_lines.empty() )
 	{
