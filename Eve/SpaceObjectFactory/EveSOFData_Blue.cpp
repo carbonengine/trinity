@@ -36,7 +36,7 @@ Be::VarChooser EveSOFDataLogoSetTypeChooser[] =
 {
 	{ "Primary", BeCast( EveSOFDataLogoSet::TYPE_PRIMARY ), "Primary Logo" },
 	{ "Secondary", BeCast( EveSOFDataLogoSet::TYPE_SECONDARY ), "Secondary Logo" },
-	{ "Teritary", BeCast( EveSOFDataLogoSet::TYPE_TERTIARY), "Teritiary Logo" },
+	{ "Tertiary", BeCast( EveSOFDataLogoSet::TYPE_TERTIARY), "Tertiary Logo" },
 	{ "Marking_01", BeCast( EveSOFDataLogoSet::TYPE_MARKING_01 ), "Marking 01 Logo" },
 	{ "Marking_02", BeCast( EveSOFDataLogoSet::TYPE_MARKING_02 ), "Marking 02 Logo" },
 	{ 0 }
