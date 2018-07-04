@@ -10,6 +10,7 @@
 #include "EffectData.h"
 #include "CompileMessageQueue.h"
 #include "InlineString.h"
+#include "YamlOutput.h"
 #include <strstream>
 #include <regex>
 #include <iomanip>
@@ -20,9 +21,6 @@ extern StringTable g_stringTable;
 extern int g_maxClipPlanes;
 extern bool g_glesEmulateSampler;
 extern GlesExtensionInfo g_glesExtensions;
-extern bool g_generateListing;
-extern std::string g_listing;
-extern CRITICAL_SECTION g_listingCS;
 extern bool g_printWarnings;
 extern bool g_validateOpenGL;
 
@@ -3457,8 +3455,7 @@ static GLEWContext* glewGetContext()
 	return ctx;
 }
 
-extern void PrintPrettyCode( std::ostream& listing, const char* code, const char* indent );
-extern void PrintStageInfo( std::ostream& listing, const StageInput& stage, const EffectData& result );
+extern void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectData& result );
 
 static const std::regex s_summary( "[[:digit:]]+ error\\(s\\), [[:digit:]]+ warning\\(s\\)\\r\\n" );
 
@@ -3617,58 +3614,31 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 		}
 	}
 
-	std::stringstream listing;
-	struct OutputListing
+	YamlListing listing;
+	listing.dict()
+		.literal( "permutation" ).dict();
+	listing
+		.literal( "platform" ).literal( "GLES2" )
+		.literal( "id" ).literal( "000" )
+		.literal( "defines" ).dict();
+	for( int i = 0; defines[i].Name; ++i )
 	{
-		OutputListing( std::stringstream* listing )
-			:m_listing( listing )
-		{
-		}
-		~OutputListing()
-		{
-			if( m_listing )
-			{
-				EnterCriticalSection( &g_listingCS );
-				g_listing += m_listing->str();
-				LeaveCriticalSection( &g_listingCS );
-			}
-		}
-
-		std::stringstream* m_listing;
-	} outputListing( g_generateListing ? &listing : nullptr );
-
-
-	std::string effectSource;
-	if( g_generateListing )
-	{
-		listing << "permutation:" << std::endl;
-		listing << "  platform: GLES2" << std::endl;
-		listing << "  id: 000" << std::endl;
-		listing << "  defines:" << std::endl;
-		for( int i = 0; defines[i].Name; ++i )
-		{
-			listing << "    " << defines[i].Name << ": " << defines[i].Definition << std::endl;
-		}
-		CComPtr<ID3DXBuffer> shaderText;
-		if( SUCCEEDED( D3DXPreprocessShader( source, sourceLength, defines, include, &shaderText, nullptr ) ) )
-		{
-			listing << "  source: |" << std::endl;
-			PrintPrettyCode( listing, reinterpret_cast<const char*>( shaderText->GetBufferPointer() ), "    " );
-		}
-		listing << "  passes:" << std::endl;
+		listing.literal( defines[i].Name ).literal( defines[i].Definition );
 	}
+	listing.literal( "techniques" ).list();
 
 	GLint vertexShader = 0;
 	GLint fragmentShader = 0;
 
 	for( auto technique = result.techniques.begin(); technique != result.techniques.end(); ++technique )
 	{
+		listing.dict()
+			.literal( "name" ).literal( g_stringTable.GetString( technique->name ) )
+			.literal( "passes" ).list();
+
 		for( auto pass = technique->passes.begin(); pass != technique->passes.end(); ++pass )
 		{
-			if( g_generateListing )
-			{
-				listing << "  -" << std::endl;
-			}
+			listing.list();
 			for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
 			{
 				if( stage->shaderData == nullptr )
@@ -3694,34 +3664,41 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					return false;
 				}
 
-				if( g_generateListing )
+				if( listing.enabled() )
 				{
-					listing << "    -" << std::endl;
-					listing << "        profile: " << ( stage->type == VERTEX_STAGE ? "vs" : "ps" ) << std::endl;
-					listing << "        original:" << std::endl;
-					listing << "          asm: |" << std::endl;
-					PrintPrettyCode( listing, glesSource.c_str(), "            " );
+					listing.dict()
+						.literal( "profile" ).literal( stage->type == VERTEX_STAGE ? "vs" : "ps" )
+						.literal( "original" ).dict();
+					listing.literal( "asm" ).literal( glesSource );
+
 					const char* approximately = "approximately ";
 					const char* found = strstr( src, approximately );
 					if( found )
 					{
 						unsigned instructionCount = -1;
 						sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
-						listing << "          instructionCount: " << instructionCount << std::endl;
+						listing.literal( "stats" ).dict().literal( "instructionCount" ).literal( instructionCount ).end();
 					}
-					for( auto it = usedExtensions.begin(); it != usedExtensions.end(); ++it )
+					if( !usedExtensions.empty() )
 					{
-						listing << "          " << it->first << ": ";
-						if( it->second == GlesExtensionInfo::ENABLE )
+						listing.literal( "extensions" ).dict();
+
+						for( auto it = usedExtensions.begin(); it != usedExtensions.end(); ++it )
 						{
-							listing << "required" << std::endl;
+							listing.literal( it->first );
+							if( it->second == GlesExtensionInfo::ENABLE )
+							{
+								listing.literal( "required" );
+							}
+							else
+							{
+								listing.literal( "optional" );
+							}
 						}
-						else
-						{
-							listing << "optional" << std::endl;
-						}
+						listing.end();
 					}
 					PrintStageInfo( listing, *stage, result );
+					listing.end();
 				}
 
 				delete[] stage->shaderData;
@@ -3893,6 +3870,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					}
 				}
 			}
+			listing.end();
 		}
 		// Validate vertex/fragment shader combination (if the link correctly)
 		if( vertexShader && fragmentShader )
@@ -3931,6 +3909,11 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 			glDeleteShader( vertexShader );
 			glDeleteShader( fragmentShader );
 		}
+		listing.end();
+		listing.end();
 	}
+	listing.end();
+	listing.end();
+	listing.end();
 	return true;
 }

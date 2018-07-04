@@ -15,9 +15,9 @@
 
 #include "TextureFunctionConversionDX11.h"
 
-extern bool g_generateListing;
-extern std::string g_listing;
-extern CRITICAL_SECTION g_listingCS;
+#include "YamlOutput.h"
+#include <regex>
+
 extern int g_maxClipPlanes;
 
 extern CompileMessageQueue g_messages;
@@ -521,6 +521,7 @@ void PrintHLSL11( CodeStream& os, ASTNode* node, int level )
 		{
 			break;
 		}
+		os.Endl();
 		PrintTypeHLSL11( os, node->GetType() );
 		os << " " << node->GetSymbol()->name << "( ";
 		PrintChildrenHLSL11( os, node, ", ", level + 1 );
@@ -673,6 +674,7 @@ void PrintHLSL11( CodeStream& os, ASTNode* node, int level )
 			os << "{";
 			os.Endl();
 			PrintChildrenHLSL11( os, node, "", level + 1 );
+			os.Endl();
 			os << "};";
 			os.Endl();
 		}
@@ -1863,8 +1865,9 @@ bool MatchShaderInputOutput( ID3D11ShaderReflection* output, ID3D11ShaderReflect
 	return true;
 }
 
-void PrintPrettyCode( std::ostream& listing, const char* code, const char* indent )
+std::string PrintPrettyCode( const char* code, const char* indent )
 {
+	std::strstream os;
 	while( *code )
 	{
 		const char* end = code;
@@ -1874,9 +1877,9 @@ void PrintPrettyCode( std::ostream& listing, const char* code, const char* inden
 		}
 		if( strncmp( code, "#line", 5 ) && code != end )
 		{
-			listing << indent;
-			listing.write( code, end - code );
-			listing << std::endl;
+			os << indent;
+			os.write( code, end - code );
+			os << std::endl;
 		}
 		code = end + 1;
 		if( *end == 0 )
@@ -1884,293 +1887,295 @@ void PrintPrettyCode( std::ostream& listing, const char* code, const char* inden
 			break;
 		}
 	}
+	return os.str();
 }
 
-void PrintShaderOutListing( std::ostream& listing, ID3DBlob* effectData, ID3D11ShaderReflection* reflection )
+void PrintShaderOutListing( YamlOutput& listing, ID3DBlob* effectData, ID3D11ShaderReflection* reflection )
 {
+	if( !listing.enabled() )
+	{
+		return;
+	}
+
 	CComPtr<ID3DBlob> disassembly;
 	if( SUCCEEDED( D3DDisassemble( effectData->GetBufferPointer(), effectData->GetBufferSize(), D3D_DISASM_ENABLE_DEFAULT_VALUE_PRINTS, nullptr, &disassembly ) ) )
 	{
-		listing << "          asm: |" << std::endl;
-		PrintPrettyCode( listing, reinterpret_cast<char*>( disassembly->GetBufferPointer() ), "            " );
-		listing << std::endl;
+		listing.literal( "asm" ).literal( reinterpret_cast<const char*>( disassembly->GetBufferPointer() ) );
 	}
 	D3D11_SHADER_DESC desc;
 	if( reflection && SUCCEEDED( reflection->GetDesc( &desc ) ) )
 	{
-		listing << "          constantBuffers: " << desc.ConstantBuffers << std::endl;
-		listing << "          boundResources: " << desc.BoundResources << std::endl;
-		listing << "          inputParameters: " << desc.InputParameters << std::endl;
-		listing << "          outputParameters: " << desc.OutputParameters << std::endl;
-		listing << "          instructionCount: " << desc.InstructionCount << std::endl;
-		listing << "          tempRegisterCount: " << desc.TempRegisterCount << std::endl;
-		listing << "          tempArrayCount: " << desc.TempArrayCount << std::endl;
-		listing << "          defCount: " << desc.DefCount << std::endl;
-		listing << "          dclCount: " << desc.DclCount << std::endl;
-		listing << "          textureNormalInstructions: " << desc.TextureNormalInstructions << std::endl;
-		listing << "          textureLoadInstructions: " << desc.TextureLoadInstructions << std::endl;
-		listing << "          textureCompInstructions: " << desc.TextureCompInstructions << std::endl;
-		listing << "          textureBiasInstructions: " << desc.TextureBiasInstructions << std::endl;
-		listing << "          textureGradientInstructions: " << desc.TextureGradientInstructions << std::endl;
-		listing << "          floatInstructionCount: " << desc.FloatInstructionCount << std::endl;
-		listing << "          intInstructionCount: " << desc.IntInstructionCount << std::endl;
-		listing << "          uintInstructionCount: " << desc.UintInstructionCount << std::endl;
-		listing << "          staticFlowControlCount: " << desc.StaticFlowControlCount << std::endl;
-		listing << "          dynamicFlowControlCount: " << desc.DynamicFlowControlCount << std::endl;
-		listing << "          macroInstructionCount: " << desc.MacroInstructionCount << std::endl;
-		listing << "          arrayInstructionCount: " << desc.ArrayInstructionCount << std::endl;
-		listing << "          cutInstructionCount: " << desc.CutInstructionCount << std::endl;
-		listing << "          emitInstructionCount: " << desc.EmitInstructionCount << std::endl;
-		listing << "          GSOutputTopology: " << desc.GSOutputTopology << std::endl;
-		listing << "          inputPrimitive: " << desc.InputPrimitive << std::endl;
-		listing << "          GSMaxOutputVertexCount: " << desc.GSMaxOutputVertexCount << std::endl; // gs | hs
-		listing << "          patchConstantParameters: " << desc.PatchConstantParameters << std::endl;
-		listing << "          cGSInstanceCount: " << desc.cGSInstanceCount << std::endl;
-		listing << "          HSOutputPrimitive: " << desc.HSOutputPrimitive << std::endl; // hs | ds
-		listing << "          HSPartitioning: " << desc.HSPartitioning << std::endl;
-		listing << "          tessellatorDomain: " << desc.TessellatorDomain << std::endl; // ds
-		listing << "          cBarrierInstructions: " << desc.cBarrierInstructions << std::endl; // cs
-		listing << "          cInterlockedInstructions: " << desc.cInterlockedInstructions << std::endl; // cs
-		listing << "          cTextureStoreInstructions: " << desc.cTextureStoreInstructions << std::endl; // cs
+		listing.literal( "stats" ).dict()
+			.literal( "Resources" ).dict()
+			.literal( "constantBuffers" ).literal( desc.ConstantBuffers )
+			.literal( "boundResources" ).literal( desc.BoundResources )
+			.literal( "inputParameters" ).literal( desc.InputParameters )
+			.literal( "outputParameters" ).literal( desc.OutputParameters )
+			.literal( "tempRegisterCount" ).literal( desc.TempRegisterCount )
+			.literal( "tempArrayCount" ).literal( desc.TempArrayCount )
+			.end()
+			.literal( "Instructions" ).dict()
+			.literal( "instructionCount" ).literal( desc.InstructionCount )
+			.literal( "defCount" ).literal( desc.DefCount )
+			.literal( "textureNormalInstructions" ).literal( desc.TextureNormalInstructions )
+			.literal( "textureLoadInstructions" ).literal( desc.TextureLoadInstructions )
+			.literal( "textureCompInstructions" ).literal( desc.TextureCompInstructions )
+			.literal( "textureBiasInstructions" ).literal( desc.TextureBiasInstructions )
+			.literal( "textureGradientInstructions" ).literal( desc.TextureGradientInstructions )
+			.literal( "floatInstructionCount" ).literal( desc.FloatInstructionCount )
+			.literal( "intInstructionCount" ).literal( desc.IntInstructionCount )
+			.literal( "uintInstructionCount" ).literal( desc.UintInstructionCount )
+			.literal( "staticFlowControlCount" ).literal( desc.StaticFlowControlCount )
+			.literal( "dynamicFlowControlCount" ).literal( desc.DynamicFlowControlCount )
+			.literal( "macroInstructionCount" ).literal( desc.MacroInstructionCount )
+			.literal( "arrayInstructionCount" ).literal( desc.ArrayInstructionCount )
+			.literal( "cutInstructionCount" ).literal( desc.CutInstructionCount )
+			.literal( "emitInstructionCount" ).literal( desc.EmitInstructionCount )
+			.literal( "cBarrierInstructions" ).literal( desc.cBarrierInstructions )
+			.literal( "cInterlockedInstructions" ).literal( desc.cInterlockedInstructions )
+			.literal( "cTextureStoreInstructions" ).literal( desc.cTextureStoreInstructions )
+			.end()
+			.literal( "Misc" ).dict()
+			.literal( "GSOutputTopology" ).literal( desc.GSOutputTopology )
+			.literal( "inputPrimitive" ).literal( desc.InputPrimitive )
+			.literal( "GSMaxOutputVertexCount" ).literal( desc.GSMaxOutputVertexCount )
+			.literal( "patchConstantParameters" ).literal( desc.PatchConstantParameters )
+			.literal( "cGSInstanceCount" ).literal( desc.cGSInstanceCount )
+			.literal( "HSOutputPrimitive" ).literal( desc.HSOutputPrimitive )
+			.literal( "HSPartitioning" ).literal( desc.HSPartitioning )
+			.literal( "tessellatorDomain" ).literal( desc.TessellatorDomain )
+			.end()
+			.end();
 	}
 }
 
-void PrintAnnotations( std::ostream& listing, const std::map<StringReference, Annotation>& annotations )
+void PrintAnnotations( YamlOutput& listing, const std::map<StringReference, Annotation>& annotations )
 {
-	listing << "          annotations:" << std::endl;
+	if( !listing.enabled() )
+	{
+		return;
+	}
+	listing.literal( "annotations" ).list();
 	for( auto a = annotations.begin(); a != annotations.end(); ++a )
 	{
-		listing << "          -" << std::endl;
-		listing << "              name: " << g_stringTable.GetString( a->first ) << std::endl;
-		listing << "              annotationType: ";
+		listing.dict()
+			.literal( "name" ).literal( g_stringTable.GetString( a->first ) )
+			.literal( "annotationType" );
 		switch( a->second.type )
 		{
 		case ANNOTATION_TYPE_BOOL:
-			listing << "bool" << std::endl;
-			listing << "              value: " << ( a->second.intValue ? "true" : "false" ) << std::endl;
+			listing
+				.literal( "bool" )
+				.literal( "value" ).literal( a->second.intValue != 0 );
 			break;
 		case ANNOTATION_TYPE_INT:
-			listing << "int" << std::endl;
-			listing << "              value: " << a->second.intValue << std::endl;
+			listing
+				.literal( "int" )
+				.literal( "value" ).literal( a->second.intValue );
 			break;
 		case ANNOTATION_TYPE_FLOAT:
-			listing << "float" << std::endl;
-			listing << "              value: " << a->second.floatValue << std::endl;
+			listing
+				.literal( "float" )
+				.literal( "value" ).literal( a->second.floatValue );
 			break;
 		default:
-			listing << "string" << std::endl;
-			listing << "              value: \'"; 
-			{
-				const char* value = g_stringTable.GetString( a->second.stringValue );
-				while( *value )
-				{
-					if( *value == '\'' )
-					{
-						listing.put( '\'' );
-					}
-					if( *value != '\r' && *value != '\n' )
-					{
-						listing.put( *value );
-					}
-					++value;
-				}
-			}
-			listing << "\'" << std::endl;
+			listing
+				.literal( "string" )
+				.literal( "value" ).literal( g_stringTable.GetString( a->second.stringValue ) );
 			break;
 		}
+		listing.end();
+	}
+	listing.end();
+}
+
+
+YamlOutput& YamlTextureType( YamlOutput& listing, TextureType type )
+{
+	switch( type )
+	{
+	case TEX_TYPE_1D:
+		listing.literal( "1D texture" );
+		return listing;
+	case TEX_TYPE_2D:
+		listing.literal( "2D texture" );
+		return listing;
+	case TEX_TYPE_3D:
+		listing.literal( "3D texture" );
+		return listing;
+	case TEX_TYPE_CUBE:
+		listing.literal( "CUBE texture" );
+		return listing;
+	case TEX_TYPE_TYPELESS:
+		listing.literal( "typeless texture" );
+		return listing;
+	case TEX_TYPE_BUFFER:
+		listing.literal( "buffer" );
+		return listing;
+	case TEX_TYPE_STRUCTURED_BUFFER:
+		listing.literal( "structured buffer" );
+		return listing;
+	case TEX_TYPE_TBUFFER:
+		listing.literal( "TBuffer" );
+		return listing;
+	case TEX_TYPE_BYTEADDRESS_BUFFER:
+		listing.literal( "byte address buffer" );
+		return listing;
+
+	case TEX_TYPE_UAV_RWTYPED:
+		listing.literal( "UAV typed" );
+		return listing;
+	case TEX_TYPE_UAV_RWSTRUCTURED:
+		listing.literal( "UAV structured" );
+		return listing;
+	case TEX_TYPE_UAV_RWBYTEADDRESS:
+		listing.literal( "UAV RW byte address" );
+		return listing;
+	case TEX_TYPE_UAV_APPEND_STRUCTURED:
+		listing.literal( "UAV append structured" );
+		return listing;
+	case TEX_TYPE_UAV_CONSUME_STRUCTURED:
+		listing.literal( "UAV consume structured" );
+		return listing;
+	case TEX_TYPE_UAV_RWSTRUCTURED_WITH_COUNTER:
+		listing.literal( "UAV structured with counter" );
+		return listing;
+	default:
+		listing.literal( "other" );
+		return listing;
 	}
 }
 
-void PrintStageInfo( std::ostream& listing, const StageInput& stage, const EffectData& result )
+
+void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectData& result )
 {
+	if( !listing.enabled() )
+	{
+		return;
+	}
 	if( !stage.constants.empty() )
 	{
-		listing << "        constants: " << std::endl;
+		listing.literal( "constants" ).list();
 		for( auto it = stage.constants.begin(); it != stage.constants.end(); ++it )
 		{
-			listing << "        -" << std::endl;
-			listing << "          name: " << g_stringTable.GetString( it->name ) << std::endl;
-			listing << "          constantType: ";
+			listing.dict()
+				.literal( "name" ).literal( g_stringTable.GetString( it->name ) )
+				.literal( "constantType" );
 			switch( it->type )
 			{
 			case CONSTANT_TYPE_FLOAT:
-				listing << "float";
+				listing.literal( "float" );
 				break;
 			case CONSTANT_TYPE_INT:
-				listing << "int";
+				listing.literal( "int" );
 				break;
 			case CONSTANT_TYPE_BOOL:
-				listing << "bool";
+				listing.literal( "bool" );
 				break;
 			default:
-				listing << "other (struct, etc.)";
+				listing.literal( "other (struct, etc.)" );
 				break;
 			}
-			listing << std::endl;
-			listing << "          dimension: " << it->dimension << std::endl;
-			listing << "          arrayElements: " << it->elements << std::endl;
-			listing << "          autoregister: " << ( it->isAutoregister ? "true" : "false" ) << std::endl;
-			listing << "          sRGB: " << ( it->isSRGB ? "true" : "false" ) << std::endl;
+			listing
+				.literal( "dimension" ).literal( it->dimension )
+				.literal( "arrayElements" ).literal( it->elements )
+				.literal( "autoregister" ).literal( it->isAutoregister )
+				.literal( "sRGB" ).literal( it->isSRGB );
 			auto annotations = result.annotations.find( it->name );
 			if( annotations != result.annotations.end() )
 			{
 				PrintAnnotations( listing, annotations->second.annotations );
 			}
+			listing.end();
 		}
+		listing.end();
 	}
 	if( !stage.samplers.empty() )
 	{
-		listing << "        samplers:" << std::endl;
+		listing.literal( "samplers" ).list();
 		for( auto it = stage.samplers.begin(); it != stage.samplers.end(); ++it )
 		{
-			listing << "        -" << std::endl;
-			listing << "          register: " << it->first << std::endl;
-			listing << "          name: " << g_stringTable.GetString( it->second.name ) << std::endl;
-			listing << "          filter: " << int( it->second.filter ) << std::endl;
-			listing << "          comparison: " << int( it->second.comparison ) << std::endl;
-			listing << "          minFilter: " << int( it->second.minFilter ) << std::endl;
-			listing << "          magFilter: " << int( it->second.magFilter ) << std::endl;
-			listing << "          mipFilter: " << int( it->second.mipFilter ) << std::endl;
-			listing << "          addressU: " << int( it->second.addressU ) << std::endl;
-			listing << "          addressV: " << int( it->second.addressV ) << std::endl;
-			listing << "          addressW: " << int( it->second.addressW ) << std::endl;
-			listing << "          mipLODBias: " << it->second.mipLODBias << std::endl;
-			listing << "          maxAnisotropy: " << int( it->second.maxAnisotropy ) << std::endl;
-			listing << "          comparisonFunc: " << int( it->second.comparisonFunc ) << std::endl;
-			listing << "          borderColor: [" << it->second.borderColor.x << ", " << it->second.borderColor.y << ", " << it->second.borderColor.z << ", " << it->second.borderColor.w << "]" << std::endl;
-			listing << "          minLOD: " << it->second.minLOD << std::endl;
-			listing << "          maxLOD: " << it->second.maxLOD << std::endl;
-			listing << "          srgbTexture: " << ( it->second.srgbTexture ? "true" : "false" ) << std::endl;
+			listing.dict()
+				.literal( "register" ).literal( it->first )
+				.literal( "name" ).literal( g_stringTable.GetString( it->second.name ) )
+				.literal( "filter" ).literal( int( it->second.filter ) )
+				.literal( "comparison" ).literal( int( it->second.comparison ) )
+				.literal( "minFilter" ).literal( int( it->second.minFilter ) )
+				.literal( "magFilter" ).literal( int( it->second.magFilter ) )
+				.literal( "mipFilter" ).literal( int( it->second.mipFilter ) )
+				.literal( "addressU" ).literal( int( it->second.addressU ) )
+				.literal( "addressV" ).literal( int( it->second.addressV ) )
+				.literal( "addressW" ).literal( int( it->second.addressW ) )
+				.literal( "mipLODBias" ).literal( it->second.mipLODBias )
+				.literal( "maxAnisotropy" ).literal( int( it->second.maxAnisotropy ) )
+				.literal( "comparisonFunc" ).literal( int( it->second.comparisonFunc ) )
+				.literal( "borderColor" ).list().literal( it->second.borderColor.x ).literal( it->second.borderColor.y ).literal( it->second.borderColor.z ).literal( it->second.borderColor.w ).end()
+				.literal( "minLOD" ).literal( it->second.minLOD )
+				.literal( "maxLOD" ).literal( it->second.maxLOD )
+				.literal( "srgbTexture" ).literal( it->second.srgbTexture != 0 )
+				.end();
 		}
+		listing.end();
 	}
 	if( !stage.textures.empty() )
 	{
-		listing << "        textures:" << std::endl;
+		listing.literal( "textures" ).list();
 		for( auto it = stage.textures.begin(); it != stage.textures.end(); ++it )
 		{
-			listing << "        -" << std::endl;
-			listing << "          register: " << it->first << std::endl;
-			listing << "          name: " << g_stringTable.GetString( it->second.name ) << std::endl;
-			listing << "          textureType: ";
-			switch( it->second.type )
-			{
-			case TEX_TYPE_1D:
-				listing << "1D texture";
-				break;
-			case TEX_TYPE_2D:
-				listing << "2D texture";
-				break;
-			case TEX_TYPE_3D:
-				listing << "3D texture";
-				break;
-			case TEX_TYPE_CUBE:
-				listing << "CUBE texture";
-				break;
-			case TEX_TYPE_TYPELESS:
-				listing << "typeless texture";
-				break;
-			case TEX_TYPE_BUFFER:
-				listing << "buffer";
-				break;
-			case TEX_TYPE_STRUCTURED_BUFFER:
-				listing << "structured buffer";
-				break;
-			case TEX_TYPE_TBUFFER:
-				listing << "TBuffer";
-				break;
-			case TEX_TYPE_BYTEADDRESS_BUFFER:
-				listing << "byte address buffer";
-				break;
-			}
-			listing << std::endl;
-			listing << "          autoregister: " << ( it->second.isAutoregister ? "true" : "false" ) << std::endl;
-			listing << "          sRGB: " << ( it->second.isSRGB ? "true" : "false" ) << std::endl;
+			listing.dict()
+				.literal( "register" ).literal( it->first )
+				.literal( "name" ).literal( g_stringTable.GetString( it->second.name ) )
+				.literal( "textureType" ).literal( it->second.type )
+				.literal( "autoregister" ).literal( it->second.isAutoregister )
+				.literal( "sRGB" ).literal( it->second.isSRGB );
 			auto annotations = result.annotations.find( it->second.name );
 			if( annotations != result.annotations.end() )
 			{
 				PrintAnnotations( listing, annotations->second.annotations );
 			}
+			listing.end();
 		}
+		listing.end();
 	}
 	if( !stage.uavs.empty() )
 	{
-		listing << "        uavs:" << std::endl;
+		listing.literal( "uavs" ).list();
 		for( auto it = stage.uavs.begin(); it != stage.uavs.end(); ++it )
 		{
-			listing << "        -" << std::endl;
-			listing << "          register: " << it->first << std::endl;
-			listing << "          name: " << g_stringTable.GetString( it->second.name ) << std::endl;
-			listing << "          resourceType: ";
-			switch( it->second.type )
-			{
-			case TEX_TYPE_1D:
-				listing << "1D texture";
-				break;
-			case TEX_TYPE_2D:
-				listing << "2D texture";
-				break;
-			case TEX_TYPE_3D:
-				listing << "3D texture";
-				break;
-			case TEX_TYPE_CUBE:
-				listing << "CUBE texture";
-				break;
-			case TEX_TYPE_TYPELESS:
-				listing << "typeless texture";
-				break;
-			case TEX_TYPE_BUFFER:
-				listing << "buffer";
-				break;
-			case TEX_TYPE_STRUCTURED_BUFFER:
-				listing << "structured buffer";
-				break;
-			case TEX_TYPE_TBUFFER:
-				listing << "TBuffer";
-				break;
-			case TEX_TYPE_BYTEADDRESS_BUFFER:
-				listing << "byte address buffer";
-				break;
-
-			case TEX_TYPE_UAV_RWTYPED:
-				listing << "UAV typed";
-				break;
-			case TEX_TYPE_UAV_RWSTRUCTURED:
-				listing << "UAV structured";
-				break;
-			case TEX_TYPE_UAV_RWBYTEADDRESS:
-				listing << "UAV RW byte address";
-				break;
-			case TEX_TYPE_UAV_APPEND_STRUCTURED:
-				listing << "UAV append structured";
-				break;
-			case TEX_TYPE_UAV_CONSUME_STRUCTURED:
-				listing << "UAV consume structured";
-				break;
-			case TEX_TYPE_UAV_RWSTRUCTURED_WITH_COUNTER:
-				listing << "UAV structured with counter";
-				break;
-			}
-			listing << std::endl;
-			listing << "          autoregister: " << ( it->second.isAutoregister ? "true" : "false" ) << std::endl;
+			listing.dict()
+				.literal( "register" ).literal( it->first )
+				.literal( "name" ).literal( g_stringTable.GetString( it->second.name ) )
+				.literal( "resourceType" ).literal( it->second.type )
+				.literal( "autoregister" ).literal( it->second.isAutoregister );
 			auto annotations = result.annotations.find( it->second.name );
 			if( annotations != result.annotations.end() )
 			{
 				PrintAnnotations( listing, annotations->second.annotations );
 			}
+			listing.end();
 		}
+		listing.end();
 	}
 	if( !stage.inputs.empty() )
 	{
-		listing << "        inputs:" << std::endl;
+		listing.literal( "inputs" ).list();
 		for( auto it = stage.inputs.begin(); it != stage.inputs.end(); ++it )
 		{
-			listing << "        -" << std::endl;
-			listing << "          register: " << int( it->registerIndex ) << std::endl;
-			listing << "          name: " << int( it->name ) << std::endl;
-			listing << "          index: " << int( it->index ) << std::endl;
-			listing << "          usedMask: " << int( it->usedMask ) << std::endl;
+			listing.dict()
+				.literal( "register" ).literal( it->registerIndex )
+				.literal( "name" ).literal( it->name )
+				.literal( "index" ).literal( it->index )
+				.literal( "usedMask" ).literal( it->usedMask )
+				.end();
 		}
+		listing.end();
 	}
+}
+
+std::string SanitizeCode( const std::string& src )
+{
+	std::regex line( "#line[^\\n]*\\n?\\n" );
+	return std::regex_replace( src, line, std::string( "" ) );
 }
 
 bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const D3DXMACRO* defines, ID3DXInclude* include, EffectData& result, bool patchShaders )
@@ -2220,37 +2225,18 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 		return false;
 	}
 
-	std::stringstream listing;
-	if( g_generateListing )
+	YamlListing listing;
+	listing.dict();
+	listing.literal( "permutation" ).dict()
+		.literal( "platform" ).literal( "DX11" )
+		.literal( "id" ).literal( "000" )
+		.literal( "defines" ).dict();
+	for( int i = 0; defines[i].Name; ++i )
 	{
-		listing << "permutation:" << std::endl;
-		listing << "  platform: DX11" << std::endl;
-		listing << "  id: 000" << std::endl;
-		listing << "  defines:" << std::endl;
-		for( int i = 0; defines[i].Name; ++i )
-		{
-			listing << "    " << defines[i].Name << ": " << defines[i].Definition << std::endl;
-		}
-		listing << "  passes:" << std::endl;
+		listing.literal( defines[i].Name ).literal( defines[i].Definition );
 	}
-	struct OutputListing
-	{
-		OutputListing( std::stringstream* listing )
-			:m_listing( listing )
-		{
-		}
-		~OutputListing()
-		{
-			if( m_listing )
-			{
-				EnterCriticalSection( &g_listingCS );
-				g_listing += m_listing->str();
-				LeaveCriticalSection( &g_listingCS );
-			}
-		}
-
-		std::stringstream* m_listing;
-	} outputListing( g_generateListing ? &listing : nullptr );
+	listing.end();
+	listing.literal( "techniques" ).list();
 
 	std::string shaderStatistics;
 	if( g_printShaderStats )
@@ -2264,12 +2250,13 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 		Technique technique;
 		technique.name = g_stringTable.AddString( ToString( techniqueNode->GetToken()->stringValue ).c_str() );
 
+		listing.dict()
+			.literal( "name" ).literal( techniqueNode->GetToken()->stringValue )
+			.literal( "passes" ).list();
+
 		for( size_t passIx = 0; passIx < techniqueNode->GetChildrenCount(); ++passIx )
 		{
-			if( g_generateListing )
-			{
-				listing << "  -" << std::endl;
-			}
+			listing.list();
 			Pass outPass;
 			ASTNode* passNode = techniqueNode->GetChild( passIx );
 			CComPtr<ID3D11ShaderReflection> reflections[6];
@@ -2394,17 +2381,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				state.ResetPragmaUsage();
 				std::string code( os.str(), os.str() + os.pcount() );
 
-				if( g_generateListing )
-				{
-					listing << "    -" << std::endl;
-					listing << "        profile: " << profile << std::endl;
-					listing << "        original: " << std::endl;
-					listing << "          entryPoint: " << patchEntryPoint << std::endl;
-					listing << "          source: |" << std::endl;
-					PrintPrettyCode( listing, code.c_str(), "            " );
-					listing << std::endl;
-				}
-
 				HRESULT hr = D3DX11CompileFromMemory(
 					code.c_str(),
 					code.length(),
@@ -2492,10 +2468,13 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					stage.defaultValuesStr = -1;
 				}
 
-				if( g_generateListing )
-				{
-					PrintShaderOutListing( listing, effectData, reflection );
-				}
+				listing.dict()
+					.literal( "profile" ).literal( profile )
+					.literal( "original" ).dict()
+					.literal( "entryPoint" ).literal( patchEntryPoint )
+					.literal( "source" ).literal( SanitizeCode( code ) );
+				PrintShaderOutListing( listing, effectData, reflection );
+				listing.end();
 
 				reflections[stage.type] = reflection;
 
@@ -2513,15 +2492,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						code = std::string( os.str(), os.str() + os.pcount() );
 						effectData = nullptr;
 						errors = nullptr;
-
-						if( g_generateListing )
-						{
-							listing << "        patched:" << std::endl;
-							listing << "          entryPoint: " << patchEntryPoint << std::endl;
-							listing << "          source: |" << std::endl;
-							PrintPrettyCode( listing, code.c_str(), "            " );
-							listing << std::endl;
-						}
 
 						HRESULT hr = D3DX11CompileFromMemory(
 							code.c_str(),
@@ -2574,19 +2544,18 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						CComPtr<ID3D11ShaderReflection> reflection;
 						D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection.p );
 
-						if( g_generateListing )
-						{
-							PrintShaderOutListing( listing, effectData, reflection );
-						}
+						listing.literal( "patched" ).dict()
+							.literal( "entryPoint" ).literal( patchEntryPoint )
+							.literal( "source" ).literal( SanitizeCode( code ) );
+						PrintShaderOutListing( listing, effectData, reflection );
+						listing.end();
+						break;
 					}
-					break;
 					}
 				}
 
-				if( g_generateListing )
-				{
-					PrintStageInfo( listing, stage, result );
-				}
+				PrintStageInfo( listing, stage, result );
+				listing.end();
 
 				outPass.stages.push_back( stage );
 			}
@@ -2650,9 +2619,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 			}
 			technique.passes.push_back( outPass );
+
+			listing.end(); // stages list
+			listing.end(); // pases list
+			listing.end(); // technique dict
 		}
 		result.techniques.push_back( technique );
 	}
+	listing.end(); // technique list
 
 	if( g_printShaderStats )
 	{

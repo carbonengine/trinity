@@ -2,6 +2,7 @@
 #include "EffectCompilerDx9.h"
 #include "EffectData.h"
 #include "CompileMessageQueue.h"
+#include "YamlOutput.h"
 #include <regex>
 
 extern CompileMessageQueue g_messages;
@@ -9,17 +10,14 @@ extern StringTable g_stringTable;
 extern bool g_printWarnings;
 extern unsigned g_optimizationLevel;
 extern bool g_printShaderStats;
-extern bool g_generateListing;
-extern std::string g_listing;
 extern bool g_avoidFlowControl;
-extern CRITICAL_SECTION g_listingCS;
 
 IDirect3DDevice9Ex* g_device9 = nullptr;
 CRITICAL_SECTION g_analyzeEffectDx9CS;
 
 
-extern void PrintPrettyCode( std::ostream& listing, const char* code, const char* indent );
-extern void PrintStageInfo( std::ostream& listing, const StageInput& stage, const EffectData& result );
+extern void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectData& result );
+
 
 class SamplerSetupFullDx9
 {
@@ -71,7 +69,7 @@ public:
 	{
 	}
 
-	bool AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, std::ostream& listing, bool disableListing );
+	bool AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, YamlOutput& listing, ID3DXBuffer* shaderText );
 	void Reset();
 
 	// IUnknown
@@ -473,7 +471,7 @@ static unsigned GetInstructionCount( const void* shaderCode )
 	return instructionCount;
 }
 
-bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, std::ostream& listing, bool disableListing )
+bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, YamlOutput& listing, ID3DXBuffer* shaderText )
 {
 	// Need to set the FFP to default values in texture stage mapping to
 	// coordindices.  This is some peculiar Direct3D interference with the
@@ -667,6 +665,10 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 		fx->GetTechniqueDesc( fx->GetTechnique( t ), &techniqueDesc );
 		technique.name = g_stringTable.AddString( techniqueDesc.Name );
 
+		listing.dict()
+			.literal( "name" ).literal( techniqueDesc.Name )
+			.literal( "passes" ).list();
+
 		UINT passCount;
 		if( SUCCEEDED( fx->Begin( &passCount, 0 ) ) )
 		{
@@ -681,11 +683,6 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				}
 
 				fx->EndPass();
-
-				if( g_generateListing && !disableListing )
-				{
-					listing << "  -" << std::endl;
-				}
 
 				Pass& pass = technique.passes[i];
 
@@ -921,56 +918,82 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 					}
 				}
 
-				if( g_generateListing && !disableListing )
+				if( listing.enabled() )
 				{
-					if( m_pixelShader )
-					{
-						m_pixelShader->GetFunction( buffer, &bufferSize );
-						listing << "    -" << std::endl;
-						unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );
-						listing << "        profile: ps_" << ( ( version >> 8 ) & 0xff ) << "_" << ( version & 0xff ) << std::endl;
-						listing << "        original:" << std::endl;
-						CComPtr<ID3DXBuffer> disassembly;
-						if( SUCCEEDED( D3DXDisassembleShader( (const DWORD*)buffer, FALSE, NULL, &disassembly ) ) )
-						{
-							char* asmCode = (char*)disassembly->GetBufferPointer();
-							listing << "          asm: |" << std::endl;
-							PrintPrettyCode( listing, asmCode, "            " );
-							const char* approximately = "approximately ";
-							char* found = strstr( asmCode, approximately );
-							if( found )
-							{
-								unsigned instructionCount = -1;
-								sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
-								listing << "          instructionCount: " << instructionCount << std::endl;
-							}
-						}
-						PrintStageInfo( listing, pass.stages[1], effectData );
-					}
+					listing.list();
+
 					if( m_vertexShader )
 					{
 						m_vertexShader->GetFunction( buffer, &bufferSize );
-						listing << "    -" << std::endl;
 						unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );
-						listing << "        profile: vs_" << ( ( version >> 8 ) & 0xff ) << "_" << ( version & 0xff ) << std::endl;
-						listing << "        original:" << std::endl;
+
+						char profileStr[64];
+						sprintf_s( profileStr, "vs_%i_%i", ( version >> 8 ) & 0xff, version & 0xff );
+
+						listing.dict()
+							.literal( "profile" ).literal( profileStr )
+							.literal( "original" ).dict();
+
+						if( shaderText )
+						{
+							listing.literal( "source" ).literal( shaderText );
+						}
+
 						CComPtr<ID3DXBuffer> disassembly;
 						if( SUCCEEDED( D3DXDisassembleShader( (const DWORD*)buffer, FALSE, NULL, &disassembly ) ) )
 						{
 							char* asmCode = (char*)disassembly->GetBufferPointer();
-							listing << "          asm: |" << std::endl;
-							PrintPrettyCode( listing, asmCode, "            " );
+							listing.literal( "asm" ).literal( asmCode );
 							const char* approximately = "approximately ";
 							char* found = strstr( asmCode, approximately );
 							if( found )
 							{
 								unsigned instructionCount = -1;
 								sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
-								listing << "          instructionCount: " << instructionCount << std::endl;
+								listing.literal( "stats" ).dict().literal( "instructionCount" ).literal( instructionCount ).end();
 							}
 						}
+
+						listing.end();
 						PrintStageInfo( listing, pass.stages[0], effectData );
+						listing.end();
 					}
+					if( m_pixelShader )
+					{
+						m_pixelShader->GetFunction( buffer, &bufferSize );
+						unsigned version = D3DXGetShaderVersion( (const DWORD*)buffer );
+
+						char profileStr[64];
+						sprintf_s( profileStr, "ps_%i_%i", ( version >> 8 ) & 0xff, version & 0xff );
+
+						listing.dict()
+							.literal( "profile" ).literal( profileStr )
+							.literal( "original" ).dict();
+						CComPtr<ID3DXBuffer> disassembly;
+
+						if( shaderText )
+						{
+							listing.literal( "source" ).literal( shaderText );
+						}
+
+						if( SUCCEEDED( D3DXDisassembleShader( (const DWORD*)buffer, FALSE, NULL, &disassembly ) ) )
+						{
+							char* asmCode = (char*)disassembly->GetBufferPointer();
+							listing.literal( "asm" ).literal( asmCode );
+							const char* approximately = "approximately ";
+							char* found = strstr( asmCode, approximately );
+							if( found )
+							{
+								unsigned instructionCount = -1;
+								sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
+								listing.literal( "stats" ).dict().literal( "instructionCount" ).literal( instructionCount ).end();
+							}
+						}
+						listing.end();
+						PrintStageInfo( listing, pass.stages[1], effectData );
+						listing.end();
+					}
+					listing.end();
 				}
 
 				if( m_pixelConstantValueCount )
@@ -1001,6 +1024,9 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 
 			fx->End();
 		}
+
+		listing.end();
+		listing.end();
 	}
 
 	fx->SetStateManager( NULL );
@@ -1326,45 +1352,25 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	}
 	errors = nullptr;
 
-	std::stringstream listing;
-	struct OutputListing
+	YamlListing listing( !disableListing );
+	listing.dict()
+		.literal( "permutation" ).dict();
+	listing
+		.literal( "platform" ).literal( "DX9" )
+		.literal( "id" ).literal( "000" )
+		.literal( "defines" ).dict();
+	for( int i = 0; defines[i].Name; ++i )
 	{
-		OutputListing( std::stringstream* listing )
-			:m_listing( listing )
-		{
-		}
-		~OutputListing()
-		{
-			if( m_listing )
-			{
-				EnterCriticalSection( &g_listingCS );
-				g_listing += m_listing->str();
-				LeaveCriticalSection( &g_listingCS );
-			}
-		}
-
-		std::stringstream* m_listing;
-	} outputListing( g_generateListing && !disableListing ? &listing : nullptr );
+		listing.literal( defines[i].Name ).literal( defines[i].Definition );
+	}
+	listing.end();
+	listing.literal( "techniques" ).list();
 
 
-	std::string effectSource;
-	if( g_generateListing && !disableListing )
+	CComPtr<ID3DXBuffer> shaderText;
+	if( listing.enabled() )
 	{
-		listing << "permutation:" << std::endl;
-		listing << "  platform: DX9" << std::endl;
-		listing << "  id: 000" << std::endl;
-		listing << "  defines:" << std::endl;
-		for( int i = 0; defines[i].Name; ++i )
-		{
-			listing << "    " << defines[i].Name << ": " << defines[i].Definition << std::endl;
-		}
-		CComPtr<ID3DXBuffer> shaderText;
-		if( SUCCEEDED( D3DXPreprocessShader( source, sourceLength, defines, include, &shaderText, nullptr ) ) )
-		{
-			listing << "  source: |" << std::endl;
-			PrintPrettyCode( listing, reinterpret_cast<const char*>( shaderText->GetBufferPointer() ), "    " );
-		}
-		listing << "  passes:" << std::endl;
+		D3DXPreprocessShader( source, sourceLength, defines, include, &shaderText, nullptr );
 	}
 
 	EnterCriticalSection( &g_analyzeEffectDx9CS );
@@ -1394,8 +1400,11 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	bool success = false;
 	{
 		EffectAnalyzerDx9 analyzer;
-		success = analyzer.AnalyzeEffect( result, effect, listing, disableListing );
+		success = analyzer.AnalyzeEffect( result, effect, listing, shaderText );
 	}
+	listing.end();
+	listing.end();
+	listing.end();
 	effect = nullptr;
 	LeaveCriticalSection( &g_analyzeEffectDx9CS );
 	return success;

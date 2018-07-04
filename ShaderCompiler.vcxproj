@@ -159,6 +159,7 @@
     <ClInclude Include="TextureFunctionConversionDX11.h" />
     <ClInclude Include="Type.h" />
     <ClInclude Include="wglext.h" />
+    <ClInclude Include="YamlOutput.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.exe" />

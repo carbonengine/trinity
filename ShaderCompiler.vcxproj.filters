@@ -165,6 +165,9 @@
     <ClInclude Include="wglext.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="YamlOutput.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="HLSLScanner.re">
