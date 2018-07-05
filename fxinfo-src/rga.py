@@ -28,7 +28,8 @@ def _GetRgaStats(stageInfo, onComplete, onFail, rgaPath, targetPlatforms):
         inPath = os.path.join(dirPath, 'sh.txt')
         with open(inPath, 'w') as f:
             f.write(stageInfo['original']['source'])
-        args = [rgaPath, '-s', 'hlsl', '-f', stageInfo['original']['entryPoint'], '-p', stageInfo['profile']]
+        args = [rgaPath, '-s', 'hlsl', '-f', stageInfo['original']['entryPoint'], '-p', stageInfo['profile'],
+                '--DXFlags', str((1 << 12) | (1 << 15))]
         for each in targetPlatforms:
             args.extend(['-c', each])
         args.extend(['--set-adapter', '0', '-a', os.path.join(dirPath, 'rga.txt'), inPath])
