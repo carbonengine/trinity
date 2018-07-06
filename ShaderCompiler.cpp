@@ -1159,13 +1159,13 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	}
 
-	if( g_printWarnings )
+	if( g_printShaderStats )
 	{
 		unsigned count = 0;
 		for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
 		{
 			if( it->second )
-			{ 
+			{
 				++count;
 			}
 		}
