@@ -10,7 +10,6 @@
       <OptimizationLevel>3</OptimizationLevel>
       <PlatformDX9>true</PlatformDX9>
       <PlatformDX11>true</PlatformDX11>
-      <PlatformGLES2>true</PlatformGLES2>
     </BuildFX>
   </ItemDefinitionGroup>
   <PropertyGroup>

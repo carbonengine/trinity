@@ -75,7 +75,7 @@ def prepare_compile_batch(path, sm, platform, optimization=3, check_mode_dir=Non
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
     
-    cmd_line = ("%s /novalidate /shaderStats /single /define SHADERMODEL %s /define PLATFORM %s /O%s %s %s" %
+    cmd_line = ("%s /novalidate /single /define SHADERMODEL %s /define PLATFORM %s /O%s %s %s" %
                 (SHADER_COMPILER, SHADER_MODELS[sm], PLATFORMS[platform], optimization, path, out_name))
 
     compile_command = (cmd_line, path, platform, sm, out_name)
@@ -166,7 +166,12 @@ def _worker(queue, has_errors):
         try:
             p = subprocess.Popen(cmd_line, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             std_out, std_err = p.communicate()
-            print '%s for %s, %s\n%s\n%s' % (os.path.split(path)[1], platform, sm, std_out, std_err)
+            output = '%s for %s, %s' % (os.path.split(path)[1], platform, sm)
+            if std_out:
+                output += '\n' + std_out
+            if std_err:
+                output += '\n' + std_err
+            print output
             sys.stdout.flush()
             if p.returncode != 0:
                 has_errors[0] = True

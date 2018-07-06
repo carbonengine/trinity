@@ -50,19 +50,7 @@
       Category="Platforms"
       DisplayName="DirectX 11"
       Description="Compile effect for DirectX 11."/>
-    <BoolProperty 
-      Name="PlatformGLES2" 
-      Category="Platforms"
-      DisplayName="OpenGL ES 2"
-      Description="Compile effect for OpenGL ES 2."/>
-    
-    <!--
-    <BoolProperty 
-      Name="PlatformGLES2" 
-      Category="Platforms"
-      DisplayName="OpenGL ES 2"
-      Description="Compile effect for OpenGL ES 2."/>
-      -->
+
     <StringListProperty
       Name="Inputs"
       Category="Command Line"
