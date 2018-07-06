@@ -1624,7 +1624,7 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>True</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalDependencies>CcpCore_d.lib;CcpMath_d.lib;FreeType26_D.lib;ImageIO_d.lib;TrinityAL_stub_d.lib;atlsD.lib;blue_d.lib;d3d9.lib;d3dx9d.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;jpeg_d.lib;libpng_d.lib;msvcprtD.lib;msvcrtD.lib;muparserd.lib;oldnames.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;squish_x64.lib;tbb_debug.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore_d.lib;CcpMath_d.lib;FreeType26_D.lib;ImageIO_d.lib;TrinityAL_stub_d.lib;atlsD.lib;blue_d.lib;d3d9.lib;d3dx9d.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;jpeg_d.lib;libpng_d.lib;msvcprtD.lib;msvcrtD.lib;muparserd.lib;oldnames.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;squish_x64d.lib;tbb_debug.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2224,7 +2224,7 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>True</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalDependencies>CcpCore_d.lib;CcpMath_d.lib;FreeType26_D.lib;ImageIO_d.lib;TrinityAL_dx9_d.lib;atimgpud_s_x64.lib;atlsD.lib;blue_d.lib;d3d9.lib;d3dx9d.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;jpeg_d.lib;libpng_d.lib;msvcprtD.lib;msvcrtD.lib;muparserd.lib;nvapi.lib;oldnames.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;squish_x64.lib;tbb_debug.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore_d.lib;CcpMath_d.lib;FreeType26_D.lib;ImageIO_d.lib;TrinityAL_dx9_d.lib;atimgpud_s_x64.lib;atlsD.lib;blue_d.lib;d3d9.lib;d3dx9d.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;jpeg_d.lib;libpng_d.lib;msvcprtD.lib;msvcrtD.lib;muparserd.lib;nvapi.lib;oldnames.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;squish_x64d.lib;tbb_debug.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2434,7 +2434,7 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>True</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalDependencies>CcpCore_d.lib;CcpMath_d.lib;FreeType26_D.lib;GFSDK_Aftermath_Lib.x64.lib;ImageIO_d.lib;TrinityAL_dx11_d.lib;atimgpud_s_x64.lib;atlsD.lib;blue_d.lib;d3d11.lib;d3d9.lib;d3dx9d.lib;dbghelp.lib;dxerr.lib;dxgi.lib;dxguid.lib;granny2_static_x64.lib;jpeg_d.lib;libpng_d.lib;msvcprtD.lib;msvcrtD.lib;muparserd.lib;nvapi.lib;oldnames.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;squish_x64.lib;tbb_debug.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore_d.lib;CcpMath_d.lib;FreeType26_D.lib;GFSDK_Aftermath_Lib.x64.lib;ImageIO_d.lib;TrinityAL_dx11_d.lib;atimgpud_s_x64.lib;atlsD.lib;blue_d.lib;d3d11.lib;d3d9.lib;d3dx9d.lib;dbghelp.lib;dxerr.lib;dxgi.lib;dxguid.lib;granny2_static_x64.lib;jpeg_d.lib;libpng_d.lib;msvcprtD.lib;msvcrtD.lib;muparserd.lib;nvapi.lib;oldnames.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;squish_x64d.lib;tbb_debug.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
