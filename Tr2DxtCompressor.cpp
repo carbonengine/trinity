@@ -552,10 +552,6 @@ void CompressImageSquish(	const uint8_t*			inBuf,
 							int						squish_flags, 
 							volatile const bool&	cancel ) 
 {
-#ifndef _WIN64
-
-	// TODO: compile a 64bit squish lib!
-
 	uint8_t block[64];	
 	const unsigned outDx = ( squish_flags & squish::kDxt1 )  ? 8 : 16;
 	for( unsigned j = 0; j < height; j += 4, inBuf += width * 4 * 4 ) 
@@ -580,7 +576,6 @@ void CompressImageSquish(	const uint8_t*			inBuf,
 			outData += outDx;
 		}
 	}
-#endif
 }
 
 void CompressImageDXT5( const uint8_t *inBuf, uint8_t *outBuf, int width, int height, ptrdiff_t &outputBytes, volatile const bool& cancel ) {
