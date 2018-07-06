@@ -328,6 +328,8 @@ class MainPanel(wx.Panel):
 
         self._tree.AddRoot('root')
 
+        self.SetMinSize((800, 400))
+
     def AddFile(self, path):
         fn = self._tree.AppendItem(self._tree.GetRootItem(), os.path.basename(path))
         fd = _FileData(path, fn)
@@ -473,7 +475,7 @@ class ExeFileValidator(wx.PyValidator):
             ctrl.Refresh()
             return False
         else:
-            ctrl.SetBackgroundColour(wx.SystemSettings_GetColour(wx.SYS_COLOUR_WINDOW))
+            ctrl.SetBackgroundColour(wx.SystemSettings.GetColour(wx.SYS_COLOUR_WINDOW))
             ctrl.Refresh()
             return True
 
@@ -542,8 +544,10 @@ if __name__ == '__main__':
 
     try:
         f = wx.Frame(None, title='FXInfo')
-
+        s = wx.BoxSizer(wx.VERTICAL)
         p = MainPanel(f)
+        s.Add(p, 1, wx.EXPAND)
+        f.SetSizerAndFit(s)
 
         for each in sys.argv[1:]:
             p.AddFile(each)

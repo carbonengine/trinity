@@ -18,6 +18,16 @@ def _TableToTree(lines):
     statNames = lines[0].strip().split(',')[1:]
     for each in lines[1:]:
         tokens = each.strip().split(',')
+        if len(tokens) == len(statNames) - 1:
+            # work around a bug in RGA: https://github.com/GPUOpen-Tools/RGA/issues/23
+            try:
+                tokens.insert(statNames.index('SGPR_SPILLS') + 1, '0')
+            except IndexError:
+                pass
+            try:
+                tokens.insert(statNames.index('VGPR_SPILLS') + 1, '0')
+            except IndexError:
+                pass
         result[tokens[0]] = dict(zip(statNames, tokens[1:]))
     return result
 
