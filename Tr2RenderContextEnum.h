@@ -44,7 +44,8 @@ namespace Tr2RenderContextEnum
 	// Special case constant buffers added to handle trinity
 	enum
 	{
-		CBUFFER_GUI = SHADER_TYPE_COUNT,
+		CBUFFER_FFE		= SHADER_TYPE_COUNT,
+		CBUFFER_GUI,
 		CBUFFER_COUNT	// total number of cbuffers passed to SetPerObjectToDevice
 	};
 
