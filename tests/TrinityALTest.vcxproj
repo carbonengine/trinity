@@ -957,6 +957,7 @@
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="DepthStencil.cpp" />
     <ClCompile Include="Fence.cpp" />
+    <ClCompile Include="GPUTimer.cpp" />
     <ClCompile Include="OcclusionQuery.cpp" />
     <ClCompile Include="RenderContext.cpp" />
     <ClCompile Include="RenderContextCreation.cpp" />

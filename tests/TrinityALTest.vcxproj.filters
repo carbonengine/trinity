@@ -238,6 +238,9 @@
     <ClCompile Include="Fence.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="GPUTimer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="OcclusionQuery.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
