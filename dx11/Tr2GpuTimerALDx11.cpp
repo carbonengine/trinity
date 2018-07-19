@@ -4,136 +4,137 @@
 #include "Tr2GpuTimerALDx11.h"
 #include "Tr2PrimaryRenderContextDx11.h"
 
-
-Tr2GpuTimerAL::Tr2GpuTimerAL()
-	:m_begin( 0xffffffffffffffff ),
-	m_end( 0xffffffffffffffff ),
-	m_state( UNINITIALIZED ),
-	m_lastTime( -1.f )
+namespace TrinityALImpl
 {
-}
-
-ALResult Tr2GpuTimerAL::Create( Tr2PrimaryRenderContextAL& renderContext )
-{
-	Destroy();
-	if( !renderContext.IsValid() )
+	Tr2GpuTimerAL::Tr2GpuTimerAL()
+		:m_begin(0xffffffffffffffff),
+		m_end(0xffffffffffffffff),
+		m_lastTime(-1.f),
+		m_state(UNINITIALIZED)
 	{
-		return E_INVALIDCALL;
 	}
 
-	CComPtr<ID3D11Query> beginQuery;
-	CComPtr<ID3D11Query> endQuery;
-	CComPtr<ID3D11Query> disjointQuery;
-
-	D3D11_QUERY_DESC desc;
-	desc.Query = D3D11_QUERY_TIMESTAMP;
-	desc.MiscFlags = 0;
-
-	CR_RETURN_HR( renderContext.m_d3dDevice11->CreateQuery( &desc, &beginQuery.p ) );
-	CR_RETURN_HR( renderContext.m_d3dDevice11->CreateQuery( &desc, &endQuery.p ) );
-
-	desc.Query = D3D11_QUERY_TIMESTAMP_DISJOINT;
-	desc.MiscFlags = 0;
-	CR_RETURN_HR( renderContext.m_d3dDevice11->CreateQuery( &desc, &disjointQuery.p ) );
-
-	m_beginQuery = beginQuery;
-	m_endQuery = endQuery;
-	m_disjointQuery = disjointQuery;
-	m_state = READY;
-	return S_OK;
-}
-
-void Tr2GpuTimerAL::Destroy()
-{
-	m_beginQuery = nullptr;
-	m_endQuery = nullptr;
-	m_disjointQuery = nullptr;
-	m_state = UNINITIALIZED;
-	m_lastTime = -1.f;
-}
-
-bool Tr2GpuTimerAL::IsValid() const
-{
-	return m_state != UNINITIALIZED;
-}
-
-bool Tr2GpuTimerAL::Begin( Tr2RenderContextAL& renderContext )
-{
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
-	if( !m_beginQuery || !m_endQuery || m_state != READY )
+	ALResult Tr2GpuTimerAL::Create(Tr2PrimaryRenderContextAL& renderContext)
 	{
-		return false;
-	}
-	renderContext.m_context->Begin( m_disjointQuery );
-	renderContext.m_context->End( m_beginQuery );
-	m_state = BEGIN_ISSUED;
-	return true;
-}
-
-void Tr2GpuTimerAL::End( Tr2RenderContextAL& renderContext )
-{
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
-	if( !m_beginQuery || !m_endQuery || m_state != BEGIN_ISSUED )
-	{
-		return;
-	}
-	renderContext.m_context->End( m_endQuery );
-	renderContext.m_context->End( m_disjointQuery );
-	m_state = END_ISSUED;
-}
-
-float Tr2GpuTimerAL::GetTime( Tr2RenderContextAL& renderContext )
-{
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
-	if( !m_beginQuery || !m_endQuery )
-	{
-		return m_lastTime;
-	}
-	if( m_state == END_ISSUED )
-	{
-		switch( renderContext.m_context->GetData( m_beginQuery, &m_begin, sizeof( m_begin ), D3D11_ASYNC_GETDATA_DONOTFLUSH ) )
+		Destroy();
+		if (!renderContext.IsValid())
 		{
-		case S_OK:
-			m_state = BEGIN_RECEIVED;
-			break;
-		case S_FALSE:
-			break;
-		default:
-			m_state = READY;
-			m_lastTime = -1.f;
+			return E_INVALIDCALL;
 		}
+
+		CComPtr<ID3D11Query> beginQuery;
+		CComPtr<ID3D11Query> endQuery;
+		CComPtr<ID3D11Query> disjointQuery;
+
+		D3D11_QUERY_DESC desc;
+		desc.Query = D3D11_QUERY_TIMESTAMP;
+		desc.MiscFlags = 0;
+
+		CR_RETURN_HR(renderContext.m_d3dDevice11->CreateQuery(&desc, &beginQuery.p));
+		CR_RETURN_HR(renderContext.m_d3dDevice11->CreateQuery(&desc, &endQuery.p));
+
+		desc.Query = D3D11_QUERY_TIMESTAMP_DISJOINT;
+		desc.MiscFlags = 0;
+		CR_RETURN_HR(renderContext.m_d3dDevice11->CreateQuery(&desc, &disjointQuery.p));
+
+		m_beginQuery = beginQuery;
+		m_endQuery = endQuery;
+		m_disjointQuery = disjointQuery;
+		m_state = READY;
+		return S_OK;
 	}
-	if( m_state == BEGIN_RECEIVED )
+
+	void Tr2GpuTimerAL::Destroy()
 	{
-		switch( renderContext.m_context->GetData( m_endQuery, &m_end, sizeof( m_end ), D3D11_ASYNC_GETDATA_DONOTFLUSH ) )
+		m_beginQuery = nullptr;
+		m_endQuery = nullptr;
+		m_disjointQuery = nullptr;
+		m_state = UNINITIALIZED;
+		m_lastTime = -1.f;
+	}
+
+	bool Tr2GpuTimerAL::IsValid() const
+	{
+		return m_state != UNINITIALIZED;
+	}
+
+	bool Tr2GpuTimerAL::Begin(Tr2RenderContextAL& renderContext)
+	{
+		AL_UPDATE_RESOURCE_FRAME_USAGE(*this);
+		if (!m_beginQuery || !m_endQuery || m_state != READY)
 		{
-		case S_OK:
+			return false;
+		}
+		renderContext.m_context->Begin(m_disjointQuery);
+		renderContext.m_context->End(m_beginQuery);
+		m_state = BEGIN_ISSUED;
+		return true;
+	}
+
+	void Tr2GpuTimerAL::End(Tr2RenderContextAL& renderContext)
+	{
+		AL_UPDATE_RESOURCE_FRAME_USAGE(*this);
+		if (!m_beginQuery || !m_endQuery || m_state != BEGIN_ISSUED)
+		{
+			return;
+		}
+		renderContext.m_context->End(m_endQuery);
+		renderContext.m_context->End(m_disjointQuery);
+		m_state = END_ISSUED;
+	}
+
+	float Tr2GpuTimerAL::GetTime(Tr2RenderContextAL& renderContext)
+	{
+		AL_UPDATE_RESOURCE_FRAME_USAGE(*this);
+		if (!m_beginQuery || !m_endQuery)
+		{
+			return m_lastTime;
+		}
+		if (m_state == END_ISSUED)
+		{
+			switch (renderContext.m_context->GetData(m_beginQuery, &m_begin, sizeof(m_begin), D3D11_ASYNC_GETDATA_DONOTFLUSH))
+			{
+			case S_OK:
+				m_state = BEGIN_RECEIVED;
+				break;
+			case S_FALSE:
+				break;
+			default:
+				m_state = READY;
+				m_lastTime = -1.f;
+			}
+		}
+		if (m_state == BEGIN_RECEIVED)
+		{
+			switch (renderContext.m_context->GetData(m_endQuery, &m_end, sizeof(m_end), D3D11_ASYNC_GETDATA_DONOTFLUSH))
+			{
+			case S_OK:
 			{
 				D3D11_QUERY_DATA_TIMESTAMP_DISJOINT disjoint;
-				if( FAILED( renderContext.m_context->GetData( m_disjointQuery, &disjoint, sizeof( disjoint ), 0 ) ) )
+				if (FAILED(renderContext.m_context->GetData(m_disjointQuery, &disjoint, sizeof(disjoint), 0)))
 				{
 					m_state = READY;
 					m_lastTime = -1.f;
 				}
 				else
 				{
-					if( !disjoint.Disjoint )
+					if (!disjoint.Disjoint)
 					{
-						m_lastTime = float( double( m_end - m_begin ) / double( disjoint.Frequency ) );
+						m_lastTime = float(double(m_end - m_begin) / double(disjoint.Frequency));
 					}
 					m_state = READY;
 				}
 			}
 			break;
-		case S_FALSE:
-			break;
-		default:
-			m_state = READY;
-			m_lastTime = -1.f;
+			case S_FALSE:
+				break;
+			default:
+				m_state = READY;
+				m_lastTime = -1.f;
+			}
 		}
+		return m_lastTime;
 	}
-	return m_lastTime;
 }
-
 
 #endif

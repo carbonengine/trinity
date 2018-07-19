@@ -65,7 +65,6 @@ class Tr2VertexLayoutAL;
 class Tr2OcclusionQueryAL;
 class Tr2SwapChainAL;
 class Tr2FenceAL;
-class Tr2GpuTimerAL;
 class Tr2ShaderProgramAL;
 namespace TrinityALImpl
 {
@@ -73,6 +72,7 @@ namespace TrinityALImpl
 	class Tr2ResourceSetAL;
 	class Tr2BufferAL;
 	class Tr2TextureAL;
+	class Tr2GpuTimerAL;
 }
 
 // --------------------------------------------------------------------------------------
@@ -250,7 +250,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_TIMER>
 	// Description:
 	//   AL object type this information structure is applied to.
 	// ----------------------------------------------------------------------------------
-	typedef Tr2GpuTimerAL ObjectType;
+	typedef TrinityALImpl::Tr2GpuTimerAL ObjectType;
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );
