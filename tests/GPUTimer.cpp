@@ -3,6 +3,8 @@
 #include "WithRenderContextFixture.h"
 #include <Windows.h>
 
+#if TRINITY_PLATFORM != TRINITY_STUB 
+
 using namespace Tr2RenderContextEnum;
 
 TEST_F( WithValidRenderContext, TimerIsInvalidBeforeCreation )
@@ -44,3 +46,5 @@ TEST_F( WithValidRenderContext, ValidAfterStopping )
 	timer.End(*renderContext);
 	EXPECT_TRUE(timer.IsValid());
 }
+
+#endif
