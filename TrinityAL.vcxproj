@@ -1309,6 +1309,7 @@
     <ClCompile Include="gles2\Tr2VertexLayoutALGLES2.cpp" />
     <ClCompile Include="gles2\Tr2VideoAdapterInfoALGLES2.cpp" />
     <ClCompile Include="src\Tr2BufferAL.cpp" />
+    <ClCompile Include="src\Tr2GpuTimerAl.cpp" />
     <ClCompile Include="src\Tr2ResourceSetAL.cpp" />
     <ClCompile Include="src\Tr2SamplerStateAL.cpp" />
     <ClCompile Include="src\Tr2TextureAL.cpp" />
