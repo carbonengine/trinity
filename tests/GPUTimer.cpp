@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include "WithValidRenderContextFixture.h"
 #include "WithRenderContextFixture.h"
-#include <Windows.h>
 
 #if TRINITY_PLATFORM != TRINITY_STUB 
 
