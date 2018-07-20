@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "TriTextureParameter.h"
-#include "Resources/TriTextureRes.h"
+#include "ITr2TextureProvider.h"
 #include "Shader/Tr2Shader.h"
 #include "Tr2Renderer.h"
 
@@ -27,9 +27,9 @@ void TriTextureParameter::SetParameterName( const BlueSharedString& name )
 
 unsigned TriTextureParameter::GetHashValue( unsigned startingHash ) const
 {
-	if( m_resource )
+	if( IBlueResourcePtr currentRes = BlueCastPtr( m_resource ) )
 	{
-		startingHash = CcpHashFNV1( m_resource->GetPath(), wcslen( m_resource->GetPath() ) * sizeof( wchar_t ), startingHash );
+		startingHash = CcpHashFNV1( currentRes->GetPath(), wcslen( currentRes->GetPath() ) * sizeof( wchar_t ), startingHash );
 	}
 	auto name = m_name.c_str();
 	return CcpHashFNV1( &name, sizeof( name ), startingHash );
@@ -42,7 +42,7 @@ unsigned TriTextureParameter::GetHashValue( unsigned startingHash ) const
 // -------------------------------------------------------------
 const wchar_t* TriTextureParameter::GetResourcePath() const
 {
-	const TriTextureRes* currentRes = GetResource();
+	IBlueResourcePtr currentRes = BlueCastPtr( GetResource() );
 	if( !currentRes )
 	{
 		return L"";
@@ -74,7 +74,7 @@ bool TriTextureParameter::CopyToResourceSet(
 	uint32_t registerIndex,
 	ResourceFlags flags ) const
 {
-	const TriTextureRes* resource = GetResource();
+	auto resource = GetResource();
 	bool isSrgb = ( flags & RESOURCE_FLAG_SRGB ) != 0;
 	auto colorSpace = isSrgb ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
 	if( const Tr2TextureAL* tex = ( resource ? resource->GetTexture() : nullptr ) )
@@ -94,7 +94,7 @@ void TriTextureParameter::ApplyUav(
 	uint32_t initialCount,
 	Tr2RenderContext &renderContext ) const
 {
-	TriTextureRes* resource = GetResource();
+	auto resource = GetResource();
 	if( Tr2TextureAL* tex = ( resource ? resource->GetTexture() : nullptr ) )
 	{
 		renderContext.SetUav( stage, registerIndex, *tex );
@@ -112,7 +112,7 @@ bool TriTextureParameter::Initialize()
 	if( !m_resourcePath.empty() )
 	{
 		m_resource = nullptr;
-		BeResMan->GetResource( m_resourcePath.c_str(), "", BlueInterfaceIID<TriTextureRes>(), (void**)&m_resource );
+		BeResMan->GetResource( m_resourcePath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_resource );
 	}
 	else
 	{
@@ -125,13 +125,13 @@ bool TriTextureParameter::Initialize()
 // Description:
 //   Let go of our current resource, and take ownership of newRes instead.
 // --------------------------------------------------------------------------------------
-void TriTextureParameter::SetResource( TriTextureRes* newRes )
+void TriTextureParameter::SetResource( ITr2TextureProvider* newRes )
 {
 	m_resource = newRes;
 	RebuildEffectHandles( m_cachedEffect );
 }
 
-TriTextureRes* TriTextureParameter::GetResource() const
+ITr2TextureProvider* TriTextureParameter::GetResource() const
 {
 	return m_resource;
 }

@@ -31,7 +31,7 @@
 #include "Shader/Tr2EffectDescription.h"
 
 BLUE_DECLARE( Tr2Shader );
-BLUE_DECLARE( TriTextureRes );
+BLUE_DECLARE_INTERFACE( ITr2TextureProvider );
 BLUE_DECLARE( TriTextureParameter );
 BLUE_CLASS_ALLOW_DELAYED_DELETE( TriTextureParameter );
 
@@ -85,9 +85,9 @@ public:
 		);
 
 	// access resource
-	void SetResource( TriTextureRes* newRes );
+	void SetResource( ITr2TextureProvider* newRes );
 	
-	virtual TriTextureRes* GetResource() const;
+	virtual ITr2TextureProvider* GetResource() const;
 	
 	// access strings
 	void SetParameterName( const BlueSharedString& name );
@@ -99,7 +99,7 @@ private:
 	BlueSharedString m_name;
 	std::string m_resourcePath;
 
-	TriTextureResPtr m_resource;
+	ITr2TextureProviderPtr m_resource;
 	Tr2EffectResource::Type m_resourceType;
 
 	bool m_isUsedByEffect;

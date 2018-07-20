@@ -21,7 +21,7 @@ public:
 	void SetLodResource( Tr2LodResource* newLodResource );
 
 	Tr2Texture2dLodParameter( IRoot* lockobj = nullptr );
-	virtual TriTextureRes* GetResource() const;
+	virtual ITr2TextureProvider* GetResource() const;
 
 protected:
 	Tr2LodResourcePtr m_lodResource;
