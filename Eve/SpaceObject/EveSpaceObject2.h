@@ -332,7 +332,7 @@ public:
 	void AddSpotlightSet( EveSpotlightSetPtr newSpotlightSet );
 	void AddPlaneSet( EvePlaneSetPtr newPlaneSet );
 	void AddSpriteLineSet( EveSpriteLineSetPtr newSpriteLineSet );
-	void AddHazeSet( EveHazeSetPtr newHazeSet );
+	void AddAttachment( IEveSpaceObjectAttachment* attachment );
 	void AddDecal( EveSpaceObjectDecalPtr newDecal );
 	void AddCurveSet( TriCurveSetPtr newCurveSet );
 	void AddLocator( EveLocator2* newLocator );
@@ -543,7 +543,6 @@ protected:
 	PEveSpotlightSetVector m_spotlightSets;
 	PEvePlaneSetVector m_planeSets;
 	PEveSpriteLineSetVector m_spriteLineSets;
-	PEveHazeSetVector m_hazeSets;
 	PIEveSpaceObjectAttachmentVector m_attachments;
 
 	/////////////////////////////////////////////////////////////////////////////////////

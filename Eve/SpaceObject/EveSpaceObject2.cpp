@@ -145,7 +145,6 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	PARENTLOCK( m_planeSets ),
 	PARENTLOCK( m_spriteLineSets ),
 	PARENTLOCK( m_attachments ),
-	PARENTLOCK( m_hazeSets ),
 	PARENTLOCK( m_children ),
 	PARENTLOCK( m_curveSets ),
 	PARENTLOCK( m_overlayEffects ),
@@ -527,7 +526,6 @@ void EveSpaceObject2::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Sprite Sets" );
 	options.insert( "Spotlight Sets" );
 	options.insert( "Plane Sets" );
-	options.insert( "Haze Sets" );
 	options.insert( "Lights" );
 	options.insert( "Locators" );
 	options.insert( "Shield" );
@@ -669,14 +667,6 @@ void EveSpaceObject2::RenderDebugInfo( Tr2DebugRenderer& renderer )
 	if( renderer.HasOption( this, "Spotlight Sets" ) )
 	{
 		for( auto it = m_spotlightSets.begin(); it != m_spotlightSets.end(); ++it )
-		{
-			( *it )->RenderDebugInfo( m_worldTransform, renderer );
-		}
-	}
-
-	if( renderer.HasOption( this, "Haze Sets" ) )
-	{
-		for( auto it = m_hazeSets.begin(); it != m_hazeSets.end(); ++it )
 		{
 			( *it )->RenderDebugInfo( m_worldTransform, renderer );
 		}
@@ -836,10 +826,6 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 		for( auto it = m_planeSets.begin(); it != m_planeSets.end(); ++it )
 		{
 			(*it)->GetBatches( batches, batchType, perObjectData );
-		}
-		for( auto it = m_hazeSets.begin(); it != m_hazeSets.end(); ++it )
-		{
-			( *it )->GetBatches( batches, batchType, perObjectData );
 		}
 	}
 
@@ -2371,12 +2357,9 @@ void EveSpaceObject2::AddSpriteLineSet( EveSpriteLineSetPtr newSpriteLineSet )
 }
 
 // --------------------------------------------------------------------------------
-// Description:
-//   Add a new hazeset to this object from the outside
-// --------------------------------------------------------------------------------
-void EveSpaceObject2::AddHazeSet( EveHazeSetPtr newHazeSet )
+void EveSpaceObject2::AddAttachment( IEveSpaceObjectAttachment* attachment )
 {
-	m_hazeSets.Append( newHazeSet->GetRawRoot() );
+	m_attachments.Append( attachment );
 }
 
 // --------------------------------------------------------------------------------

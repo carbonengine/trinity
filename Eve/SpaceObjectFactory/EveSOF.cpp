@@ -990,7 +990,7 @@ void EveSOF::SetupHazeSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) con
 				// spriteset needs internal rebuild
 				hazeSet->Rebuild();
 				// put set onto ship
-				obj->AddHazeSet( hazeSet );
+				obj->AddAttachment( hazeSet );
 			}
 		}
 

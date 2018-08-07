@@ -13,6 +13,7 @@ const Be::ClassInfo* EveHazeSet::ExposeToBlue()
     EXPOSURE_BEGIN( EveHazeSet, "" )
         MAP_INTERFACE( EveHazeSet )
 		MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( IEveSpaceObjectAttachment )
 
 		MAP_ATTRIBUTE( "display", m_display, "Specifies whether to render this set or not", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "name", m_name, "Standard name", Be::READWRITE | Be::PERSIST )

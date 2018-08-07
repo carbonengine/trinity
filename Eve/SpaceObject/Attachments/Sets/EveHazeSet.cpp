@@ -200,7 +200,7 @@ void EveHazeSet::SubmitGeometry( Tr2RenderContext& renderContext )
 // --------------------------------------------------------------------------------
 void EveHazeSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
 {
-	if( !m_vertexBuffer.IsValid() )
+	if( batchType != TRIBATCHTYPE_ADDITIVE || !m_vertexBuffer.IsValid() )
 	{
 		return;
 	}
@@ -274,12 +274,21 @@ void EveHazeSet::GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_
 }
 
 // --------------------------------------------------------------------------------
-void EveHazeSet::RenderDebugInfo( const Matrix& worldTransform, Tr2DebugRenderer& renderer )
+void EveHazeSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	for( auto it = m_hazes.begin(); it != m_hazes.end(); ++it )
+	options.insert( "Haze Sets" );
+}
+
+// --------------------------------------------------------------------------------
+void EveHazeSet::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& parentTransform, const granny_matrix_3x4*, size_t )
+{
+	if( renderer.HasOption( GetRawRoot(), "Haze Sets" ) )
 	{
-		Matrix t( XMMatrixTransformation( Vector3( 0, 0, 0 ), Quaternion( 0, 0, 0, 1 ), ( *it )->m_scaling, Vector3( 0, 0, 0 ), ( *it )->m_rotation, ( *it )->m_position ) );
-		renderer.DrawBox( *it, t * worldTransform, Vector3( -0.5f, -0.5f, -0.5f ), Vector3( 0.5f, 0.5f, 0.5f ), Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xff00ffff, 0x2200ffff ) );
-		renderer.DrawBox( *it, t * worldTransform, Vector3( -0.5f, -0.5f, -0.5f ), Vector3( 0.5f, 0.5f, 0.5f ), Tr2DebugRenderer::Solid, 0 );
+		for( auto it = m_hazes.begin(); it != m_hazes.end(); ++it )
+		{
+			Matrix t( XMMatrixTransformation( Vector3( 0, 0, 0 ), Quaternion( 0, 0, 0, 1 ), ( *it )->m_scaling, Vector3( 0, 0, 0 ), ( *it )->m_rotation, ( *it )->m_position ) );
+			renderer.DrawBox( *it, t * parentTransform, Vector3( -0.5f, -0.5f, -0.5f ), Vector3( 0.5f, 0.5f, 0.5f ), Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xff00ffff, 0x2200ffff ) );
+			renderer.DrawBox( *it, t * parentTransform, Vector3( -0.5f, -0.5f, -0.5f ), Vector3( 0.5f, 0.5f, 0.5f ), Tr2DebugRenderer::Solid, 0 );
+		}
 	}
 }

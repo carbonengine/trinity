@@ -7,6 +7,7 @@
 #ifndef EveHazeSet_H
 #define EveHazeSet_H
 
+#include "IEveSpaceObjectAttachment.h"
 #include "ITr2GeometryProvider.h"
 #include "ITr2Renderable.h"
 
@@ -27,6 +28,7 @@ class Tr2PerObjectData;
 //   EveHazeSetItem
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveHazeSet ):
+	public IEveSpaceObjectAttachment,
 	public IInitialize,
 	public ITr2GeometryProvider,
 	public Tr2DeviceResource
@@ -55,8 +57,11 @@ private:
 	bool OnPrepareResources();
 
 public:
-	// hand out batches
-	void GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
+	//////////////////////////////////////////////////////////////////////////////////////
+	// IEveSpaceObjectAttachment
+	virtual void GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
+	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
+	virtual void RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
 
 	// setup
 	void Setup( Tr2EffectPtr effect );
@@ -70,8 +75,6 @@ public:
 	// picking
 	void GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData );
 
-	// debug
-	void RenderDebugInfo( const Matrix& worldTransform, Tr2DebugRenderer& renderer );
 
 private:
 	// toggle visibility

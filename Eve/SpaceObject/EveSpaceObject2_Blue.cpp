@@ -290,14 +290,6 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 
 		MAP_ATTRIBUTE
 		(
-			"hazeSets",
-			m_hazeSets,
-			"Haze sets attached to the object",
-			Be::READ | Be::PERSIST
-		)
-
-		MAP_ATTRIBUTE
-		(
 			"attachments",
 			m_attachments,
 			"Item sets attached to the object",
