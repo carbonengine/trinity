@@ -9,6 +9,22 @@
 
 using namespace Tr2RenderContextEnum;
 
+namespace
+{
+	uint32_t SwapRedBlue( uint8_t channel )
+	{
+		switch( channel )
+		{
+		case 0:
+			return 2;
+		case 2:
+			return 0;
+		default:
+			return channel;
+		}
+	}
+}
+
 
 Tr2TexturePackChannel::Tr2TexturePackChannel( IRoot* )
 	:m_channel( 0 ),
@@ -143,7 +159,7 @@ bool Tr2TexturePipelineStepPack::Execute( ImageIO::HostBitmap& bitmap, const std
 			{
 				source.pixelStride = GetBytesPerPixel( channelInput->GetFormat() );
 				source.rowStride = channelInput->GetMipPitch( mip );
-				source.data = reinterpret_cast<const uint8_t*>( channelInput->GetMipRawData( mip ) ) + std::min( source.pixelStride - 1, uint32_t( channel.m_channel ) );
+				source.data = reinterpret_cast<const uint8_t*>( channelInput->GetMipRawData( mip ) ) + std::min( source.pixelStride - 1, SwapRedBlue( channel.m_channel ) );
 			}
 			else
 			{
