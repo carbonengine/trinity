@@ -841,7 +841,7 @@ void EveSOF::SetupPlaneSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) co
 			// rebuild it internally
 			planeSet->Rebuild();
 			// add to ship
-			obj->AddPlaneSet( planeSet );
+			obj->AddAttachment( planeSet );
 		}
 
 		// next hull needs offset update from hull's locator

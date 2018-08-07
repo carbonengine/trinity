@@ -210,6 +210,11 @@ void EvePlaneSet::SubmitGeometry( Tr2RenderContext& renderContext )
 // --------------------------------------------------------------------------------
 void EvePlaneSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
 {
+	if( batchType != TRIBATCHTYPE_ADDITIVE && batchType != TRIBATCHTYPE_PICKING )
+	{
+		return;
+	}
+
 	if( m_hideOnLowQuality && Tr2Renderer::IsLowQuality() )
 	{
 		return;
@@ -309,42 +314,45 @@ EvePlaneSetItemVector* EvePlaneSet::GetPlanes()
 	return &m_planes;
 }
 
-void EvePlaneSet::RenderDebugInfo( const Matrix& worldTransform, Tr2DebugRenderer& renderer, Tr2GrannyAnimationPtr animationUpdater )
+void EvePlaneSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	for( auto it = m_planes.begin(); it != m_planes.end(); ++it )
-	{
-		Quaternion rotation( ( *it )->m_rotation );
-		Vector3 position( ( *it )->m_position );
-		int boneIndex = (*it)->m_boneIndex;
+	options.insert( "Plane Sets" );
+}
 
-		if (boneIndex > 0 && animationUpdater && animationUpdater->IsInitialized())
+void EvePlaneSet::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+{
+	if( renderer.HasOption( GetRawRoot(), "Plane Sets" ) )
+	{
+		for( auto it = m_planes.begin(); it != m_planes.end(); ++it )
 		{
-			size_t boneCount = size_t( animationUpdater->GetMeshBoneCount() );
-			if (boneCount)
+			Quaternion rotation( ( *it )->m_rotation );
+			Vector3 position( ( *it )->m_position );
+			int boneIndex = ( *it )->m_boneIndex;
+
+			if( boneIndex > 0 && boneIndex < int( boneCount ) )
 			{
-				const granny_matrix_3x4* bones = animationUpdater->GetMeshBoneMatrixList();
 				Matrix boneTF = IdentityMatrix();
 				TriMatrixCopyFrom3x4( &boneTF, &bones[boneIndex] );
 				position = XMVector3TransformCoord( position, boneTF );
 
 				rotation = XMQuaternionMultiply( rotation, XMQuaternionRotationMatrix( boneTF ) );
 			}
-		}
 
-		Matrix t( XMMatrixTransformation( Vector3( 0, 0, 0 ), Quaternion( 0, 0, 0, 1 ), ( *it )->m_scaling, Vector3( 0, 0, 0 ), rotation, position ) );
-		renderer.DrawBox( 
-			*it, 
-			t * worldTransform, 
-			Vector3( -0.5f, -0.5f, -0.005f ), 
-			Vector3( 0.5f, 0.5f, 0.005f ), 
-			Tr2DebugRenderer::Wireframe, 
-			Tr2DebugColor( Color( 0.0f, 0.7f, 0.9f, 0.5f ), Color( 0.0f, 0.7f, 0.9f, 0.1f ) ) );
-		renderer.DrawBox( 
-			*it, 
-			t * worldTransform, 
-			Vector3( -0.5f, -0.5f, -0.005f ), 
-			Vector3( 0.5f, 0.5f, 0.005f ), 
-			Tr2DebugRenderer::Solid, 
-			0 );
+			Matrix t( XMMatrixTransformation( Vector3( 0, 0, 0 ), Quaternion( 0, 0, 0, 1 ), ( *it )->m_scaling, Vector3( 0, 0, 0 ), rotation, position ) );
+			renderer.DrawBox(
+				*it,
+				t * parentTransform,
+				Vector3( -0.5f, -0.5f, -0.005f ),
+				Vector3( 0.5f, 0.5f, 0.005f ),
+				Tr2DebugRenderer::Wireframe,
+				Tr2DebugColor( Color( 0.0f, 0.7f, 0.9f, 0.5f ), Color( 0.0f, 0.7f, 0.9f, 0.1f ) ) );
+			renderer.DrawBox(
+				*it,
+				t * parentTransform,
+				Vector3( -0.5f, -0.5f, -0.005f ),
+				Vector3( 0.5f, 0.5f, 0.005f ),
+				Tr2DebugRenderer::Solid,
+				0 );
+		}
 	}
 }

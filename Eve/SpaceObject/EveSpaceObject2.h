@@ -45,8 +45,6 @@ BLUE_DECLARE( EveSpriteSet );
 BLUE_DECLARE_VECTOR( EveSpriteSet );
 BLUE_DECLARE( EveSpotlightSet );
 BLUE_DECLARE_VECTOR( EveSpotlightSet );
-BLUE_DECLARE( EvePlaneSet );
-BLUE_DECLARE_VECTOR( EvePlaneSet );
 BLUE_DECLARE( Tr2GrannyAnimation );
 BLUE_DECLARE( EveTransform );
 BLUE_DECLARE( EveCustomMask );
@@ -326,7 +324,6 @@ public:
 	// access spritesets & co
 	void AddSpriteSet( EveSpriteSetPtr newSpriteSet );
 	void AddSpotlightSet( EveSpotlightSetPtr newSpotlightSet );
-	void AddPlaneSet( EvePlaneSetPtr newPlaneSet );
 	void AddAttachment( IEveSpaceObjectAttachment* attachment );
 	void AddDecal( EveSpaceObjectDecalPtr newDecal );
 	void AddCurveSet( TriCurveSetPtr newCurveSet );
@@ -532,11 +529,8 @@ protected:
 	Tr2EffectPtr m_shadowEffect;
 	bool m_enableShadow;
 
-	/////////////////////////////////////////////////////////////////////////////////////
-	// Sprites and spotlights and planes and spritelines
 	PEveSpriteSetVector m_spriteSets;
 	PEveSpotlightSetVector m_spotlightSets;
-	PEvePlaneSetVector m_planeSets;
 	PIEveSpaceObjectAttachmentVector m_attachments;
 
 	/////////////////////////////////////////////////////////////////////////////////////

@@ -17,7 +17,6 @@
 #include "Eve/SpaceObject/Attachments/Sets/IEveSpaceObjectAttachment.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveSpriteSet.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveSpotlightSet.h"
-#include "Eve/SpaceObject/Attachments/Sets/EvePlaneSet.h"
 #include "Attachments/EveImpactOverlay.h"
 #include "Tr2MeshLod.h"
 #include "Tr2GrannyAnimation.h"
@@ -140,7 +139,6 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	PARENTLOCK( m_locatorSets ),
 	PARENTLOCK( m_spriteSets ),
 	PARENTLOCK( m_spotlightSets ),
-	PARENTLOCK( m_planeSets ),
 	PARENTLOCK( m_attachments ),
 	PARENTLOCK( m_children ),
 	PARENTLOCK( m_curveSets ),
@@ -522,7 +520,6 @@ void EveSpaceObject2::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Decals" );
 	options.insert( "Sprite Sets" );
 	options.insert( "Spotlight Sets" );
-	options.insert( "Plane Sets" );
 	options.insert( "Lights" );
 	options.insert( "Locators" );
 	options.insert( "Shield" );
@@ -669,14 +666,6 @@ void EveSpaceObject2::RenderDebugInfo( Tr2DebugRenderer& renderer )
 		}
 	}
 
-	if( renderer.HasOption( this, "Plane Sets" ) )
-	{
-		for( auto it = m_planeSets.begin(); it != m_planeSets.end(); ++it )
-		{
-			( *it )->RenderDebugInfo( m_worldTransform, renderer, m_animationUpdater );
-		}
-	}
-
 	if( renderer.HasOption( this, "Lights" ) )
 	{
 		for( auto it = m_lights.begin(); it != m_lights.end(); ++it )
@@ -817,26 +806,9 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 		return;
 	}
 
-	// Implement special behavior for specific batch types on a spaceobject
-	if( batchType == TRIBATCHTYPE_ADDITIVE )
-	{
-		for( auto it = m_planeSets.begin(); it != m_planeSets.end(); ++it )
-		{
-			(*it)->GetBatches( batches, batchType, perObjectData );
-		}
-	}
-
 	for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 	{
 		( *it )->GetBatches( batches, batchType, perObjectData );
-	}
-
-	if( batchType == TRIBATCHTYPE_PICKING )
-	{
-		for( auto it = m_planeSets.begin(); it != m_planeSets.end(); ++it )
-		{
-			( *it )->GetBatches( batches, batchType, perObjectData );
-		}
 	}
 
 	if( m_impactOverlay )
@@ -2328,15 +2300,6 @@ void EveSpaceObject2::AddSpotlightSet( EveSpotlightSetPtr newSpotlightSet )
 }
 
 // --------------------------------------------------------------------------------
-// Description:
-//   Add a new planeset to this object from the outside
-// --------------------------------------------------------------------------------
-void EveSpaceObject2::AddPlaneSet( EvePlaneSetPtr newPlaneSet )
-{
-	m_planeSets.Append( newPlaneSet->GetRawRoot() );
-}
-
-// --------------------------------------------------------------------------------
 void EveSpaceObject2::AddAttachment( IEveSpaceObjectAttachment* attachment )
 {
 	m_attachments.Append( attachment );
@@ -2962,17 +2925,6 @@ IRoot* EveSpaceObject2::GetID( uint16_t areaID )
 			areaIndex -= int( items->size() );
 		}
 		return GetRawRoot();
-	case ATTACHMENT_TYPE_PLANE_SET:
-		for( auto it = std::begin( m_planeSets ); it != std::end( m_planeSets ); ++it )
-		{
-			auto items = ( *it )->GetPlanes();
-			if( items->size() > size_t( areaIndex ) )
-			{
-				return items->GetAt( areaIndex );
-			}
-			areaIndex -= int( items->size() );
-		}
-		return GetRawRoot();
 	default:
 		return GetRawRoot();
 	}
@@ -3016,11 +2968,6 @@ void EveSpaceObject2::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr
 		}
 		areaIDOffset = ATTACHMENT_TYPE_SPOTLIGHT_SET << ATTACHMENT_TYPE_OFFSET;
 		for( auto it = m_spotlightSets.begin(); it != m_spotlightSets.end(); ++it )
-		{
-			(*it)->GetPickingBatches( batches, areaIDOffset, perObjectData );
-		}
-		areaIDOffset = ATTACHMENT_TYPE_PLANE_SET << ATTACHMENT_TYPE_OFFSET;
-		for( auto it = m_planeSets.begin(); it != m_planeSets.end(); ++it )
 		{
 			(*it)->GetPickingBatches( batches, areaIDOffset, perObjectData );
 		}
