@@ -3,6 +3,7 @@
 #define EveSpriteSet_H
 
 
+#include "IEveSpaceObjectAttachment.h"
 #include "EveSpriteSetItem.h"
 #include "ITr2Renderable.h"
 
@@ -17,6 +18,7 @@ class Tr2PerObjectData;
 class Tr2QuadRenderer;
 
 BLUE_CLASS( EveSpriteSet ):
+	public IEveSpaceObjectAttachment,
 	public IInitialize
 {
 public:
@@ -59,9 +61,13 @@ public:
 	// Rebuild resources
 	void Rebuild();
 
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	//////////////////////////////////////////////////////////////////////////////////////
+	// IEveSpaceObjectAttachment
+	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount );
+	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
+	virtual void RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
 
-	void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& world, float activation, const granny_matrix_3x4* bones, size_t boneCount );
 	void AddBoosterGlowToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& world, float boosterGain, float warpIntensity );
 
 	EveSpriteSetItemVector* GetSprites();
@@ -73,7 +79,6 @@ public:
 
 	void SetSkinned( bool skinned );
 
-	void RenderDebugInfo( const Matrix& worldTransform, Tr2DebugRenderer& renderer );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize

@@ -108,7 +108,7 @@ void EveMissileWarhead::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Qu
 
 	if( m_spriteSet )
 	{
-		m_spriteSet->AddToQuadRenderer( quadRenderer, m_worldTransform, 1.0f, nullptr, 0 );
+		m_spriteSet->AddToQuadRenderer( quadRenderer, m_worldTransform, 1.0f, 1.0f, nullptr, 0 );
 	}
 }
 

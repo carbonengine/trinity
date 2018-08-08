@@ -103,17 +103,7 @@ void EveSpriteSet::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 }
 
 // --------------------------------------------------------------------------------
-// Description:
-//   Adds sprites to render with quad renderer if quad rendering was enabled with 
-//   UseQuadRenderer call.
-// Arguments:
-//   quadRenderer - quad renderer
-//   world - parent local to world transform
-//   activation - parent "activation" state
-//   bones - array of bone transforms
-//   boneCount - number of bones
-// --------------------------------------------------------------------------------
-void EveSpriteSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& world, float activation, const granny_matrix_3x4* bones, size_t boneCount )
+void EveSpriteSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	if( !m_display || m_spriteData.empty() )
 	{
@@ -129,7 +119,7 @@ void EveSpriteSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matri
 			reinterpret_cast<XMFLOAT3*>( &m_spriteData[0] ), 
 			sizeof( SpriteData ), 
 			uint32_t( n ), 
-			world );
+			parentTransform );
 	}
 	else
 	{
@@ -142,13 +132,13 @@ void EveSpriteSet::AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matri
 				XMVECTOR position = XMVector3TransformCoord( XMLoadFloat3( reinterpret_cast<XMFLOAT3*>( &m_spriteData[i] ) ), m );
 				XMStoreFloat3A( 
 					reinterpret_cast<XMFLOAT3*>( &m_buffer[i].position ), 
-					XMVector3TransformCoord( position, world ) );
+					XMVector3TransformCoord( position, parentTransform ) );
 			}
 			else
 			{
 				XMStoreFloat3A( 
 					reinterpret_cast<XMFLOAT3*>( &m_buffer[i].position ), 
-					XMVector3TransformCoord( XMLoadFloat3( reinterpret_cast<XMFLOAT3*>( &m_spriteData[i] ) ), world ) );
+					XMVector3TransformCoord( XMLoadFloat3( reinterpret_cast<XMFLOAT3*>( &m_spriteData[i] ) ), parentTransform ) );
 			}
 		}
 	}
@@ -297,17 +287,25 @@ void EveSpriteSet::GetPickingBatches( ITriRenderBatchAccumulator* batches, uint1
 	}
 }
 
-void EveSpriteSet::RenderDebugInfo( const Matrix& worldTransform, Tr2DebugRenderer& renderer )
+void EveSpriteSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	for( auto it = m_sprites.begin(); it != m_sprites.end(); ++it )
+	options.insert( "Sprite Sets" );
+}
+
+void EveSpriteSet::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+{
+	if( renderer.HasOption( GetRawRoot(), "Sprite Sets" ) )
 	{
-		renderer.DrawSphere( 
-			*it, 
-			worldTransform, 
-			( *it )->m_position, 
-			( *it )->m_maxScale, 
-			6, 
-			Tr2DebugRenderer::Lit, 
-			Tr2DebugColor( Color( 0.0f, 0.7f, 0.9f, 0.5f ), Color( 0.0f, 0.7f, 0.9f, 0.1f ) ) );
+		for( auto it = m_sprites.begin(); it != m_sprites.end(); ++it )
+		{
+			renderer.DrawSphere(
+				*it,
+				parentTransform,
+				( *it )->m_position,
+				( *it )->m_maxScale,
+				6,
+				Tr2DebugRenderer::Lit,
+				Tr2DebugColor( Color( 0.0f, 0.7f, 0.9f, 0.5f ), Color( 0.0f, 0.7f, 0.9f, 0.1f ) ) );
+		}
 	}
 }

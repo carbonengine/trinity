@@ -553,10 +553,6 @@ void EveSwarm::UpdateSwarm( Be::Time t )
 // --------------------------------------------------------------------------------
 void EveSwarm::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 {
-	for( auto it = m_spriteSets.begin(); it != m_spriteSets.end(); ++it )
-	{
-		(*it)->RegisterWithQuadRenderer( quadRenderer );
-	}
 	for( auto it = m_attachments.begin(); it != m_attachments.end(); ++it )
 	{
 		(*it)->RegisterWithQuadRenderer( quadRenderer );
@@ -582,10 +578,6 @@ void EveSwarm::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRendere
 
 	for( auto rit = m_renderables.begin(); rit != m_renderables.end(); ++rit )
 	{
-		for( auto it = m_spriteSets.begin(); it != m_spriteSets.end(); ++it )
-		{
-			(*it)->AddToQuadRenderer( quadRenderer, *(*rit)->GetWorldTransform(), 1, nullptr, 0 );
-		}
 		for( auto it = m_attachments.begin(); it != m_attachments.end(); ++it )
 		{
 			(*it)->AddToQuadRenderer( quadRenderer, *(*rit)->GetWorldTransform(), 1, 1, nullptr, 0 );

@@ -41,8 +41,6 @@ BLUE_DECLARE( Tr2MeshArea );
 BLUE_DECLARE_VECTOR( Tr2MeshArea );
 BLUE_DECLARE( EveLocator2 );
 BLUE_DECLARE_VECTOR( EveLocator2 );
-BLUE_DECLARE( EveSpriteSet );
-BLUE_DECLARE_VECTOR( EveSpriteSet );
 BLUE_DECLARE( Tr2GrannyAnimation );
 BLUE_DECLARE( EveTransform );
 BLUE_DECLARE( EveCustomMask );
@@ -320,7 +318,6 @@ public:
 	float GetRangeDuration( const std::string& name, const std::string& rangeName ) const;
 
 	// access spritesets & co
-	void AddSpriteSet( EveSpriteSetPtr newSpriteSet );
 	void AddAttachment( IEveSpaceObjectAttachment* attachment );
 	void AddDecal( EveSpaceObjectDecalPtr newDecal );
 	void AddCurveSet( TriCurveSetPtr newCurveSet );
@@ -526,7 +523,6 @@ protected:
 	Tr2EffectPtr m_shadowEffect;
 	bool m_enableShadow;
 
-	PEveSpriteSetVector m_spriteSets;
 	PIEveSpaceObjectAttachmentVector m_attachments;
 
 	/////////////////////////////////////////////////////////////////////////////////////

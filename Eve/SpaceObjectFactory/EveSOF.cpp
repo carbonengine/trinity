@@ -610,7 +610,7 @@ void EveSOF::SetupSpriteSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) c
 				// spriteset needs internal rebuild
 				spriteSet->Rebuild();
 				// put set onto ship
-				obj->AddSpriteSet( spriteSet );
+				obj->AddAttachment( spriteSet );
 			}
 		}
 
