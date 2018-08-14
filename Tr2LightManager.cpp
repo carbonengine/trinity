@@ -33,7 +33,8 @@ const uint32_t TILE_HEIGHT = 16;
 
 struct PerFrameData
 {
-	Matrix viewProjInverse;
+	Matrix viewInverse;
+	Matrix projInverse;
 	Vector3 cameraPos;
 	// cppcheck-suppress unusedStructMember 
 	float _padding0;
@@ -204,8 +205,8 @@ ALResult Tr2LightManager::DoUpdateLists( uint32_t msaaType, Tr2RenderContext& re
 	CR_RETURN_HR( UpdateLightBuffer( renderContext ) );
 
 	PerFrameData perFrameData;
-	Matrix viewProj = Tr2Renderer::GetViewTransform() * Tr2Renderer::GetProjectionTransform();
-	perFrameData.viewProjInverse = Transpose( Inverse( viewProj ) );
+	perFrameData.projInverse = Transpose( Tr2Renderer::GetInverseProjectionTransform() );
+	perFrameData.viewInverse = Transpose( Tr2Renderer::GetInverseViewTransform() );
 	perFrameData.cameraPos = Tr2Renderer::GetViewPosition();
 	perFrameData.width = uint32_t( Tr2Renderer::GetDeviceViewport().m_width );
 	perFrameData.height = uint32_t( Tr2Renderer::GetDeviceViewport().m_height );
