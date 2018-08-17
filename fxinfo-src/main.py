@@ -46,9 +46,6 @@ def _GetShaderInfo(path, defines):
         yamlStr = tempFile.read()
         tempFile.close()
 
-        with open('x:\\temp\\listing.txt', 'w') as f:
-            f.write(yamlStr)
-
         return yaml.load(yamlStr, Loader=yaml.CLoader)
     finally:
         os.unlink(tempFile.name)
