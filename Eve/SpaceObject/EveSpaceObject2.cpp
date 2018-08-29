@@ -1581,7 +1581,18 @@ void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
 		CCP_LOGWARN( "Bounding sphere not set for '%s' - calculating from '%s'", m_name.c_str(), m_geometryResFromMesh->GetPath() );
 		m_geometryResFromMesh->RecalculateBoundingSphere();
 		Vector4 sphere;
-		m_geometryResFromMesh->GetBoundingSphere( m_mesh->GetMeshIndex(), sphere );
+		if( m_mesh )
+		{
+			m_geometryResFromMesh->GetBoundingSphere( m_mesh->GetMeshIndex(), sphere );
+		}
+		else if( m_meshLod )
+		{
+			m_geometryResFromMesh->GetBoundingSphere( m_meshLod->GetMeshIndex(), sphere );
+		}
+		else
+		{
+			return;
+		}
 		m_boundingSphereCenter = Vector3( sphere.x, sphere.y, sphere.z );
 		m_boundingSphereRadius = sphere.w;
 	}
