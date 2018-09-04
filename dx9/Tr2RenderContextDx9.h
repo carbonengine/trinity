@@ -241,7 +241,7 @@ public:
 	size_t GetStackSizeDS()						const { return m_stackDS    .size(); }
 
 	Tr2CapsAL m_caps;
-	Tr2RenderContextEnum::DepthStencilFormat m_depthStencilFormat;
+	//Tr2RenderContextEnum::DepthStencilFormat m_depthStencilFormat;
 
 	ALResult InternalBlit( IDirect3DSurface9* destination, IDirect3DBaseTexture9* source, uint32_t width, uint32_t height );
 

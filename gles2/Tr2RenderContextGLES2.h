@@ -282,7 +282,6 @@ public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 private:
 	Tr2TextureAL m_defaultBackBuffer;
-	Tr2TextureAL m_defaultDepthStencil;
 
 	struct Blitter;
 	Blitter* m_blitter;

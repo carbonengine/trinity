@@ -281,7 +281,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_topology( D3DPT_TRIANGLELIST )	
 	, m_stackDS( "Tr2RenderContextAL::m_stackDS" )
 	, m_queryDustbin( "Tr2RenderContextAL::m_queryDustbin" )
-	, m_depthStencilFormat( DSFMT_UNKNOWN )
 	, m_blitter( nullptr )
 	, m_events( nullptr )
 	, m_adapter( 0 ),
@@ -333,7 +332,6 @@ void Tr2RenderContextAL::Destroy()
 	m_usingEXDevice = false;
 	
 	m_d3dDevice9 = nullptr;
-	m_depthStencilFormat = DSFMT_UNKNOWN;
 	m_isLost = false;
 	m_samplerHash = 0;
 }
@@ -800,8 +798,8 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	pp.SwapEffect = presentationParameters.swapEffect == SWAP_EFFECT_DISCARD ? D3DSWAPEFFECT_DISCARD : D3DSWAPEFFECT_COPY;
 	pp.hDeviceWindow = Tr2WindowHandle( presentationParameters.outputWindow );
     pp.Windowed = presentationParameters.windowed ? TRUE : FALSE;
-	pp.EnableAutoDepthStencil = presentationParameters.depthStencilFormat != DSFMT_UNKNOWN;
-	pp.AutoDepthStencilFormat = ConvertToD3D9DepthStencilFormat( presentationParameters.depthStencilFormat );
+	pp.EnableAutoDepthStencil = FALSE;
+	pp.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
     pp.Flags = 0;
 	pp.FullScreen_RefreshRateInHz = presentationParameters.windowed ? 0 : presentationParameters.mode.refreshRateDenominator;
 	switch( presentationParameters.presentInterval )
@@ -856,7 +854,7 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	{
 		m_caps.QueryCaps( m_d3dDevice9 );
 
-		m_depthStencilFormat = presentationParameters.depthStencilFormat;
+		//m_depthStencilFormat = presentationParameters.depthStencilFormat;
 
 		m_adapter = Adapter;
 	}
@@ -932,8 +930,8 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2Pr
 	pp.SwapEffect = presentationParameters.swapEffect == SWAP_EFFECT_DISCARD ? D3DSWAPEFFECT_DISCARD : D3DSWAPEFFECT_COPY;
 	pp.hDeviceWindow = HWND( presentationParameters.outputWindow );
 	pp.Windowed = presentationParameters.windowed ? TRUE : FALSE;
-	pp.EnableAutoDepthStencil = presentationParameters.depthStencilFormat != DSFMT_UNKNOWN;
-	pp.AutoDepthStencilFormat = ConvertToD3D9DepthStencilFormat( presentationParameters.depthStencilFormat );
+	pp.EnableAutoDepthStencil = FALSE;
+	pp.AutoDepthStencilFormat = D3DFMT_UNKNOWN;
 	pp.Flags = 0;
 	pp.FullScreen_RefreshRateInHz = presentationParameters.windowed ? 0 : presentationParameters.mode.refreshRateDenominator;
 	switch( presentationParameters.presentInterval )

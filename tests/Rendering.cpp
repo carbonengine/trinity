@@ -1292,10 +1292,17 @@ TEST_F( Rendering, CanClearDepthBuffer )
 	Tr2VertexLayoutAL vertexLayout;
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
+	auto backBuffer = renderContext->GetDefaultBackBuffer();
+
+	Tr2TextureAL depthBuffer;
+	ASSERT_HRESULT_SUCCEEDED( depthBuffer.Create( Tr2BitmapDimensions( backBuffer.GetWidth(), backBuffer.GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
+
 	uint32_t g = 127;
 
 	auto frame = [&] {
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( depthBuffer ) );
 		float depth = float( g & 0xff ) / 255.f;
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xff000000 | ( g & 0xff ), depth ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
@@ -1306,6 +1313,7 @@ TEST_F( Rendering, CanClearDepthBuffer )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZFUNC, Tr2RenderContextEnum::CMP_LESSEQUAL ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 1 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
@@ -1382,10 +1390,17 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 	Tr2VertexLayoutAL vertexLayout;
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
+	auto backBuffer = renderContext->GetDefaultBackBuffer();
+
+	Tr2TextureAL depthBuffer;
+	ASSERT_HRESULT_SUCCEEDED( depthBuffer.Create( Tr2BitmapDimensions( backBuffer.GetWidth(), backBuffer.GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
+
 	uint32_t g = 127;
 
 	auto frame = [&] {
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( depthBuffer ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xff000000 | ( g & 0xff ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
@@ -1396,6 +1411,7 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZFUNC, Tr2RenderContextEnum::CMP_LESSEQUAL ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
@@ -1810,6 +1826,11 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 
 	bool issueQueries = true;
 
+	auto backBuffer = renderContext->GetDefaultBackBuffer();
+
+	Tr2TextureAL depthBuffer;
+	ASSERT_HRESULT_SUCCEEDED( depthBuffer.Create( Tr2BitmapDimensions( backBuffer.GetWidth(), backBuffer.GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
+
 	auto frame = [&] {
 		PerObjectData* data;
 		ASSERT_HRESULT_SUCCEEDED( cb.Lock( (void**)&data, *renderContext ) );
@@ -1818,6 +1839,8 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 		ASSERT_HRESULT_SUCCEEDED( cb.Unlock( *renderContext ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( depthBuffer ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xff00ff00 | ( g & 0xff ) << 16, 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
@@ -1867,6 +1890,7 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 		ASSERT_HRESULT_SUCCEEDED( cb.Unlock( *renderContext ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 1 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 		MakeTestScreenShot();

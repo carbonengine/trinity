@@ -64,8 +64,6 @@ public:
 private:
 	ALResult CreateBackBuffers( const Tr2PresentParametersAL& presentationParameters );
 
-	Tr2TextureAL m_defaultDepthStencil;	// default depthstencil for the backbuffer
-
 	uint32_t			m_vsyncInterval;
 
 	// Device statistics

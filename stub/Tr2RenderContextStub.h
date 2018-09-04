@@ -226,7 +226,6 @@ public:
 	size_t GetStackSizeDS()						const { return 0; }
 
 	Tr2CapsAL m_caps;
-	Tr2RenderContextEnum::DepthStencilFormat m_depthStencilFormat;
 
 	ITr2RenderContextEvents* m_events;
 	Tr2TextureAL& GetDefaultBackBuffer() { return m_defaultBackBuffer; }

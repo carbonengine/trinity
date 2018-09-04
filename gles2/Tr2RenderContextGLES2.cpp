@@ -367,7 +367,6 @@ void Tr2RenderContextAL::ReleaseOpenGLContext()
 	}
 
 	m_defaultBackBuffer = Tr2TextureAL();
-	m_defaultDepthStencil = Tr2TextureAL();
 
 #ifdef _WIN32
 	if( m_hDC )
@@ -1096,13 +1095,9 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned /*adapter*/, const T
 		Tr2GpuUsage::RENDER_TARGET,
 		Tr2CpuUsage::READ,
 		*this ) );
-	CR_RETURN_HR( m_defaultDepthStencil.Create(
-		Tr2BitmapDimensions( presentationParameters.mode.width, presentationParameters.mode.height, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ),
-		Tr2GpuUsage::DEPTH_STENCIL,
-		*this ) );
 
 	SetRenderTarget( m_defaultBackBuffer );
-	SetDepthStencil( m_defaultDepthStencil );
+	SetDepthStencil( Tr2TextureAL() );
 	
 	return S_OK;
 }
