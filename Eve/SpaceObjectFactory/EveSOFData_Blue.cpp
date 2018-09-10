@@ -895,12 +895,7 @@ const Be::ClassInfo* EveSOFDataLogo::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveSOFDataLogo, "" )
 		MAP_INTERFACE( EveSOFDataLogo )
-
-		MAP_ATTRIBUTE( "albedoMapResPath", m_albedoMapResPath, "Respath for the albedo map for a logo.", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "fresnelMapResPath", m_fresnelMapResPath, "Respath for the fresnel map for a logo.", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "normalMapResPath", m_normalMapResPath, "Respath for the normal map for a logo.", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "roughnessMapResPath", m_roughnessMapResPath, "Respath for the roughness map for a logo.", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "transparencyMapResPath", m_transparencyMapResPath, "Respath for the transparency map for a logo.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "textures", m_textures, "", Be::READWRITE | Be::PERSIST )
 		EXPOSURE_END()
 }
 

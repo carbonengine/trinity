@@ -1998,21 +1998,12 @@ void EveSOF::SetupDecalSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) co
 				if( hdsiit->usage == EveSOFDataHullDecal::USAGE_LOGO )
 				{
 					const EveSOFDataMgr::LogoData* logo = dna->GetLogo( hdsiit->logoType );
-
-					shader->AddResourceTexture2D( BlueSharedString( "DecalAlbedoMap" ), logo ? logo->albedoMapResPath.c_str() : "" );
-					shader->AddResourceTexture2D( BlueSharedString( "DecalFresnelMap" ), logo ? logo->fresnelMapResPath.c_str() : "" );
-					shader->AddResourceTexture2D( BlueSharedString( "DecalNormalMap" ), logo ? logo->normalMapResPath.c_str() : "" );
-					shader->AddResourceTexture2D( BlueSharedString( "DecalRoughnessMap" ), logo ? logo->roughnessMapResPath.c_str() : "" );
-					shader->AddResourceTexture2D( BlueSharedString( "DecalTransparencyMap" ), logo ? logo->transparencyMapResPath.c_str() : "" );
-				}
-				else
-				{
-					// add these as fallback (they won't get overridden if they exist on the decal)
-					shader->AddResourceTexture2D( BlueSharedString( "DecalAlbedoMap" ), "res:/dx9/model/Decal/Notification_Invalid_A.tga" );
-					shader->AddResourceTexture2D( BlueSharedString( "DecalFresnelMap" ), "res:/dx9/model/Decal/Notification_Invalid_F.tga" );
-					shader->AddResourceTexture2D( BlueSharedString( "DecalNormalMap" ), "res:/dx9/model/Decal/Notification_Invalid_N.tga" );
-					shader->AddResourceTexture2D( BlueSharedString( "DecalRoughnessMap" ), "res:/dx9/model/Decal/Notification_Invalid_R.tga" );
-					shader->AddResourceTexture2D( BlueSharedString( "DecalTransparencyMap" ), "res:/dx9/model/Decal/Notification_Invalid_T.tga" );
+					if( logo ) {
+						for( auto textureit = logo->textures.begin(); textureit != logo->textures.end(); ++textureit )
+						{
+							shader->AddResourceTexture2D( (*textureit).first, (*textureit).second.resFilePath.c_str() );
+						}
+					}
 				}
 
 

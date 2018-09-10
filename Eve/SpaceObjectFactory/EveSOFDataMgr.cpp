@@ -1001,13 +1001,16 @@ void EveSOFDataMgr::GenerateFactionData( FactionData& fd, EveSOFDataFactionPtr s
 
 			if( srcLogo )
 			{
-				LogoData destLogo = LogoData();
-				destLogo.albedoMapResPath = srcLogo->m_albedoMapResPath;
-				destLogo.fresnelMapResPath = srcLogo->m_fresnelMapResPath;
-				destLogo.normalMapResPath = srcLogo->m_normalMapResPath;
-				destLogo.roughnessMapResPath = srcLogo->m_roughnessMapResPath;
-				destLogo.transparencyMapResPath = srcLogo->m_transparencyMapResPath;
+				LogoData destLogo = LogoData(); 
+				destLogo.textures.clear();
 
+				for( auto srcTexture = srcLogo->m_textures.begin(); srcTexture != srcLogo->m_textures.end(); ++srcTexture )
+				{
+					auto tex = (*srcTexture);
+					TextureData td;
+					td.resFilePath = tex->m_resFilePath;
+					destLogo.textures[tex->m_name] = td;
+				}
 				fd.logoSetData.logos[i] = destLogo;
 			}
 		}

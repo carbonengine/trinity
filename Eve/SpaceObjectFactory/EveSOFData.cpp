@@ -38,11 +38,7 @@ EveSOFDataFactionColorSet::EveSOFDataFactionColorSet( IRoot* lockobj )
 }
 
 EveSOFDataLogo::EveSOFDataLogo( IRoot* lockobj ):
-	m_albedoMapResPath(""),
-	m_fresnelMapResPath( "" ),
-	m_normalMapResPath( "" ),
-	m_roughnessMapResPath( "" ),
-	m_transparencyMapResPath( "" )
+	PARENTLOCK( m_textures )
 {
 }
 

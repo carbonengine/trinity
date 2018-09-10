@@ -343,11 +343,7 @@ public:
 	// Logo data structs
 	struct LogoData
 	{
-		std::string transparencyMapResPath;
-		std::string normalMapResPath;
-		std::string fresnelMapResPath;
-		std::string albedoMapResPath;
-		std::string roughnessMapResPath;
+		std::map<BlueSharedString, TextureData> textures;
 	};
 
 	struct LogoSetData

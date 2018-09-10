@@ -150,11 +150,7 @@ public:
 	EveSOFDataLogo( IRoot* lockobj = NULL );
 	~EveSOFDataLogo() {}
 
-	std::string m_transparencyMapResPath;
-	std::string m_normalMapResPath;
-	std::string m_fresnelMapResPath;
-	std::string m_albedoMapResPath;
-	std::string m_roughnessMapResPath;
+	PEveSOFDataTextureVector m_textures;
 };
 TYPEDEF_BLUECLASS( EveSOFDataLogo );
 
