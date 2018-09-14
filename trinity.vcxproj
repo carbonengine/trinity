@@ -2890,6 +2890,7 @@
     <ClInclude Include="Resources\Tr2EffectRes.h" />
     <ClInclude Include="Resources\Tr2ImageRes.h" />
     <ClInclude Include="Resources\Tr2LodResource.h" />
+    <ClInclude Include="Resources\Tr2LodResourceCache.h" />
     <ClInclude Include="Resources\Tr2MaterialRes.h" />
     <ClInclude Include="Resources\TriGeometryRes.h" />
     <ClInclude Include="Resources\TriGrannyRes.h" />

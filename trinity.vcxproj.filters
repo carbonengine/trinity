@@ -1266,6 +1266,9 @@
     <ClInclude Include="Resources\Tr2LodResource.h">
       <Filter>Source Files\Resources</Filter>
     </ClInclude>
+    <ClInclude Include="Resources\Tr2LodResourceCache.h">
+      <Filter>Source Files\Resources</Filter>
+    </ClInclude>
     <ClInclude Include="Resources\Tr2MaterialRes.h">
       <Filter>Source Files\Resources</Filter>
     </ClInclude>
