@@ -404,9 +404,9 @@ PyObject* PyGetLiveResources( PyObject* /*self*/, PyObject* /*args*/ )
 
 			for( auto it = description.begin(); it != description.end(); ++it )
 			{
-				PyObject* val = PyInt_FromSize_t( it->second );
-				PyDict_SetItemString( item, it->first.c_str(), val );
-				Py_DECREF( val );
+				PyObject* value = PyInt_FromSize_t( it->second );
+				PyDict_SetItemString( item, it->first.c_str(), value );
+				Py_DECREF( value );
 			}
 			PyList_Append( list, item );
 			Py_DECREF( item );

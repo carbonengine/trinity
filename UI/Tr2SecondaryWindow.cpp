@@ -80,7 +80,7 @@ void Tr2SecondaryWindow::Create()
 		gInstance,
 		0L);
 
-	SetWindowLongPtr( m_handle, GWLP_USERDATA, reinterpret_cast<LONG>( this ) );
+	SetWindowLongPtr( m_handle, GWLP_USERDATA, reinterpret_cast<LONG_PTR>( this ) );
 }
 
 LRESULT CALLBACK Tr2SecondaryWindow::WndProc( HWND hwnd, UINT msg, WPARAM w, LPARAM l )

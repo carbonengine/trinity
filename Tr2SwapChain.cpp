@@ -8,7 +8,7 @@ Tr2SwapChain::Tr2SwapChain( IRoot* lockobj )
 {
 }
 
-bool Tr2SwapChain::CreateForWindow( int windowHandle )
+bool Tr2SwapChain::CreateForWindow( size_t windowHandle )
 {
 	m_windowHandle = (Tr2WindowHandle)windowHandle;
 	return PrepareResources();

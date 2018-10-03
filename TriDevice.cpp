@@ -794,9 +794,9 @@ PyObject* TriDevice::PyCreateWindowlessDevice( PyObject* args )
 	return PythonCreateDeviceHelper( args, NO_ADAPTER );	
 }
 
-long TriDevice::PyGetWindow()
+size_t TriDevice::PyGetWindow()
 {
-	return (long)GetWindow();
+	return (size_t)GetWindow();
 }
 
 PyObject *TriDevice::PyGetPresentParameters( PyObject *args)
@@ -1032,7 +1032,7 @@ void TriDevice::LogAllLiveResources( Tr2ALMemoryTypes flags )
 	{
 		char buffer[64];
 		std::string message = typeName;
-		sprintf_s( buffer, " 0x%X: ", address );
+		sprintf_s( buffer, " 0x%p: ", address );
 		message += buffer;
 		for( auto it = description.begin(); it != description.end(); ++it )
 		{

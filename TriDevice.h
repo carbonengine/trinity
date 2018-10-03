@@ -297,7 +297,7 @@ public:
 	PyObject* PyCreateFullScreenDevice ( PyObject* args );
 	PyObject* PyCreateWindowlessDevice ( PyObject* args );
 	
-	long PyGetWindow();
+	size_t PyGetWindow();
 	void PyRender();
 
 	PyObject* PyGetPresentParameters ( PyObject* args );

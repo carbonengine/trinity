@@ -20,7 +20,7 @@ public:
 
 	Tr2SwapChain( IRoot* lockobj = NULL );
 
-	bool CreateForWindow( int windowHandle );
+	bool CreateForWindow( size_t windowHandle );
 	bool Present( Tr2RenderContext& renderContext );
 
 	int GetWidth() const;

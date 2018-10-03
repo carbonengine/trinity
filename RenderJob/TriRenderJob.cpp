@@ -18,7 +18,7 @@ TriRenderJob::~TriRenderJob(void)
 
 TriRenderJobStatus TriRenderJob::Run( Be::Time realTime, Be::Time simTime, Tr2RenderContext *renderContextPtr )
 {
-	D3DPERF_EVENT1( L"TriRenderJob::%S", CA2W(m_name.c_str()) );
+	D3DPERF_EVENT1( L"TriRenderJob::%S", (const wchar_t *)CA2W(m_name.c_str()) );
 
 	if( !m_enabled )
 	{

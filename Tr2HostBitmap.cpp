@@ -878,9 +878,9 @@ bool Tr2HostBitmap::CreateFromHeightData( const std::vector<float>& data, int32_
 
 			if( components == 4 )
 			{
-				uint32_t data = (value << 24) + (value << 16) + (value << 8) + value;
+				uint32_t d = (value << 24) + (value << 16) + (value << 8) + value;
 				char *dest = m_data.get() + y * m_width * 4 + x * 4;
-				memcpy( dest, &data, 4 );
+				memcpy( dest, &d, 4 );
 			}
 			else
 			{

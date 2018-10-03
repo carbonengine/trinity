@@ -312,7 +312,7 @@ void EveDistanceField::RenderDebugInfo( Tr2DebugRenderer& renderer )
 	renderer.DrawSphere( this, m_middle, 1000.f, 3, Tr2DebugRenderer::Wireframe, 0xff00ff00 );
 	renderer.DrawBox( this, aabbMin, aabbMax, Tr2DebugRenderer::Wireframe, 0xff00ff00 );
 	char str[128];
-	sprintf_s( str, "Object Count: %i", m_objects.GetSize() );
+	sprintf_s( str, "Object Count: %zd", m_objects.GetSize() );
 	renderer.DrawText( TRI_DBG_FONT_LARGE, m_middle, 0xff00ff00, str );
 
 	for( auto it = m_debugPositions.begin(); it != m_debugPositions.end(); ++it )
