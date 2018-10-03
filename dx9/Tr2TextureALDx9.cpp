@@ -968,10 +968,10 @@ namespace TrinityALImpl
 
 					RECT destLtrb =
 					{
-						dst.m_left,
-						dst.m_top,
-						dst.m_right,
-						dst.m_bottom
+						(LONG)dst.m_left,
+						(LONG)dst.m_top,
+						(LONG)dst.m_right,
+						(LONG)dst.m_bottom
 					};
 
 					D3DLOCKED_RECT lockedRect;
@@ -1075,8 +1075,8 @@ namespace TrinityALImpl
 		CComPtr<IDirect3DSurface9> dstLevel;
 		CComPtr<IDirect3DSurface9> scratch;
 
-		RECT srcRect = { 0, 0, m_desc.GetWidth(), m_desc.GetHeight() };
-		RECT dstRect = { 0, 0, std::max( m_desc.GetWidth() / 2, 1u ), std::max( m_desc.GetHeight() / 2, 1u ) };
+		RECT srcRect = { 0, 0, (LONG)m_desc.GetWidth(), (LONG)m_desc.GetHeight() };
+		RECT dstRect = { 0, 0, (LONG)std::max( m_desc.GetWidth() / 2, 1u ), (LONG)std::max( m_desc.GetHeight() / 2, 1u ) };
 
 
 		CR_RETURN_HR( m_mipGeneratedRT->GetSurfaceLevel( 0, &scratch ) );
@@ -1330,10 +1330,10 @@ namespace TrinityALImpl
 		{
 			const RECT r =
 			{
-				region.m_left,
-				region.m_top,
-				region.m_right,
-				region.m_bottom
+				(LONG)region.m_left,
+				(LONG)region.m_top,
+				(LONG)region.m_right,
+				(LONG)region.m_bottom
 			};
 			hr = surface->LockRect( &lr, &r, lockType );
 		}

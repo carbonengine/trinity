@@ -128,7 +128,7 @@ bool LogContainsMessage( const char* message )
 bool LogContainsLiveResourceAddress( const void* address )
 {
 	char buffer[64];
-	sprintf_s( buffer, "0x%X", address );
+	sprintf_s( buffer, "0x%zX", (size_t)address );
 	return LogContainsMessage( buffer );
 }
 

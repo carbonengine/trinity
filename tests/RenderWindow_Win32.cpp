@@ -23,7 +23,7 @@ RenderWindow::RenderWindow( uint32_t width, uint32_t height )
 		wndClassInitialized = true;
 	}
 	DWORD style = WS_OVERLAPPEDWINDOW;
-	RECT rect = { 0, 0, width, height };
+	RECT rect = { 0, 0, (LONG)width, (LONG)height };
 	::AdjustWindowRect( &rect, style, FALSE );
 	m_handle = ::CreateWindow(
 		wndClass.lpszClassName,
