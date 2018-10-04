@@ -191,7 +191,7 @@ Configurations:
     General:
       TargetName: TrinityAL_stub_d
 
-  Dev_Stub|Win32, x64:
+  Dev_Stub|Win32,x64:
     BaseConfigurations:
     - Dev
     - Stub
