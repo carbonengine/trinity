@@ -12,7 +12,7 @@ const Be::ClassInfo* TriObserverLocal::ExposeToBlue()
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "position", m_position, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "front", m_front, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "observer", m_observer, "", Be::READWRITE )
+		MAP_ATTRIBUTE( "observer", m_observer, "", Be::READWRITE | Be::PERSIST )
 
 	EXPOSURE_END()
 }

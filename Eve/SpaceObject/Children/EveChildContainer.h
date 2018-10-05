@@ -14,6 +14,8 @@
 #include "TransformModifiers/IEveChildTransformModifier.h"
 #include "ITr2CurveSetOwner.h"
 #include "EveChildInheritProperties.h"
+#include "ITr2SoundEmitterOwner.h"
+
 
 BLUE_DECLARE( TriCurveSet );
 BLUE_DECLARE_VECTOR( TriCurveSet );
@@ -33,7 +35,8 @@ BLUE_CLASS( EveChildContainer ) :
 	public IListNotify,
 	public IEveEffectChildrenOwner,
 	public ITr2DebugRenderable,
-	public IShaderConfigurer
+	public IShaderConfigurer,
+	public ITr2SoundEmitterOwner
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -93,6 +96,8 @@ public:
 	void StartControllers();
 	void GetWorldVelocity( Vector3& velocity ) const;
 	void SetInheritProperties( const Color* colorSet );
+
+	ITr2SoundEmitter* FindSoundEmitter( const char* name ) override;
 
 	PIEveSpaceObjectChildVector m_objects;
 protected:

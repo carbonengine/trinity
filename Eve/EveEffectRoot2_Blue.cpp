@@ -13,6 +13,7 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 		MAP_INTERFACE( ITr2CurveSetOwner )
 		MAP_INTERFACE( IEveEffectChildrenOwner )
 		MAP_INTERFACE ( IShaderConfigurer )
+		MAP_INTERFACE( ITr2SoundEmitterOwner )
 
 		MAP_ATTRIBUTE
 		(

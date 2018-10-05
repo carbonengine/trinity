@@ -18,6 +18,7 @@ const Be::ClassInfo* EveChildContainer::ExposeToBlue()
 		MAP_INTERFACE( IListNotify )
 		MAP_INTERFACE( IEveEffectChildrenOwner )
 		MAP_INTERFACE ( IShaderConfigurer )
+		MAP_INTERFACE( ITr2SoundEmitterOwner )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )

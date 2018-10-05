@@ -15,6 +15,8 @@
 #include "Tr2DebugRenderer.h"
 #include "ITr2CurveSetOwner.h"
 #include "Shader/IShaderConfigurer.h"
+#include "ITr2SoundEmitterOwner.h"
+
 
 BLUE_DECLARE( Tr2PointLight );
 BLUE_DECLARE_VECTOR( Tr2PointLight );
@@ -33,7 +35,8 @@ BLUE_CLASS( EveEffectRoot2 ):
 	public ITr2CurveSetOwner,
 	public IListNotify,
 	public IEveEffectChildrenOwner,
-	public IShaderConfigurer
+	public IShaderConfigurer,
+	public ITr2SoundEmitterOwner
 
 {
 public:
@@ -105,6 +108,8 @@ public:
 	// ITr2DebugRenderable
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo( Tr2DebugRenderer& renderer );
+
+	ITr2SoundEmitter* FindSoundEmitter( const char* name ) override;
 
 	void Start();
 	void Stop();

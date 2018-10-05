@@ -513,3 +513,17 @@ void EveChildContainer::SetInheritProperties( const Color* colorSet )
 	}
 	m_inheritProperties->SetProperties( colorSet );
 }
+
+ITr2SoundEmitter* EveChildContainer::FindSoundEmitter( const char* name )
+{
+	for( auto it = begin( m_observers ); it != end( m_observers ); ++it )
+	{
+		auto observer = *it;
+		if( observer->m_name == name )
+		{
+			ITr2SoundEmitterPtr listener = BlueCastPtr( observer->GetObserver() );
+			return listener;
+		}
+	}
+	return nullptr;
+}

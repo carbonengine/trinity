@@ -716,3 +716,17 @@ void EveEffectRoot2::SetShaderOption( const BlueSharedString& name, const BlueSh
 		child->SetShaderOption( name, value );
 	}
 }
+
+ITr2SoundEmitter* EveEffectRoot2::FindSoundEmitter( const char* name )
+{
+	for( auto it = begin( m_observers ); it != end( m_observers ); ++it )
+	{
+		auto observer = *it;
+		if( observer->m_name == name )
+		{
+			ITr2SoundEmitterPtr listener = BlueCastPtr( observer->GetObserver() );
+			return listener;
+		}
+	}
+	return nullptr;
+}
