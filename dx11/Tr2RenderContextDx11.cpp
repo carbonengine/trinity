@@ -520,7 +520,7 @@ namespace Tr2RenderContextImpl {
 }
 #pragma warning( default: 4100 )
 
-Tr2RenderContextAL::Tr2RenderContextAL()
+Tr2RenderContextAL::Tr2RenderContextAL() throw()
 	: m_topology( TOP_INVALID )
 	, m_lastSetTopology( TOP_INVALID )	
 	, m_dirtyFlag( 0 )
@@ -599,7 +599,7 @@ Tr2PrimaryRenderContextAL* Tr2RenderContextAL::GetPrimaryRenderContextPointer()
 	return ::GetPrimaryRenderContextPointer();
 }
 
-void Tr2RenderContextAL::Destroy()
+void Tr2RenderContextAL::Destroy() throw()
 {
 	for( unsigned i = 0; i < std::extent<decltype( m_sharedConstantBuffers )>::value; ++i )
 	{
@@ -690,13 +690,13 @@ void Tr2RenderContextAL::Destroy()
 	std::fill( std::begin( m_resourceHashes ), std::end( m_resourceHashes ), 0 );
 }
 
-PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
+PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const throw()
 {
 	auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
 	return renderContext.GetBackBufferFormat();	
 }
 
-ALResult Tr2RenderContextAL::BeginScene()
+ALResult Tr2RenderContextAL::BeginScene() throw()
 { 
 	std::fill_n( m_shaders, int( SHADER_TYPE_COUNT ), nullptr );
 	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
@@ -705,12 +705,12 @@ ALResult Tr2RenderContextAL::BeginScene()
 	return S_OK; 
 }
 
-bool Tr2RenderContextAL::IsValid() const
+bool Tr2RenderContextAL::IsValid() const throw()
 {
 	return m_context.p != &Tr2RenderContextImpl::s_nullContext;
 }
 
-__forceinline uint32_t Tr2RenderContextAL::ComputeVertexCount( uint32_t primitiveCount ) const
+__forceinline uint32_t Tr2RenderContextAL::ComputeVertexCount( uint32_t primitiveCount ) const throw()
 {
 	switch( m_topology )
 	{
@@ -752,7 +752,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
 	uint32_t,
 	uint32_t startIndex, 
 	uint32_t primitiveCount, 
-	uint32_t )
+	uint32_t ) throw()
 {
 	auto vc = ComputeVertexCount( primitiveCount );
 	
@@ -775,7 +775,7 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	uint32_t, 
 	uint32_t startIndex,	
 	uint32_t primitiveCount, 
-	uint32_t numInstances )
+	uint32_t numInstances ) throw()
 {
 	auto vc = ComputeVertexCount( primitiveCount );
 
@@ -794,7 +794,7 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw()
 {
 	if( !params.IsValid() )
 	{
@@ -811,7 +811,7 @@ ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw()
 {
 	if( !params.IsValid() )
 	{
@@ -828,7 +828,7 @@ ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount )
+ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount ) throw()
 {
 	auto vc = ComputeVertexCount( primitiveCount );
 
@@ -850,7 +850,7 @@ ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primi
 ALResult Tr2RenderContextAL::DrawPrimitiveUP(	
 	uint32_t primitiveCount, 
 	const void* vertexStreamZeroData, 
-	uint32_t vertexStreamZeroStride )
+	uint32_t vertexStreamZeroStride ) throw()
 {
 	return m_drawUP.DrawPrimitiveUP(	primitiveCount,
 										vertexStreamZeroData,
@@ -863,7 +863,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 	uint32_t primitiveCount, 
 	const uint32_t* indexData, 
 	const void* vertexStreamZeroData,
-	uint32_t vertexStreamZeroStride)
+	uint32_t vertexStreamZeroStride) throw()
 {
 	return m_drawUP.DrawIndexedPrimitiveUP(	numVertices,
 											primitiveCount,
@@ -878,7 +878,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 	uint32_t primitiveCount, 
 	const uint16_t* indexData, 
 	const void* vertexStreamZeroData,
-	uint32_t vertexStreamZeroStride)
+	uint32_t vertexStreamZeroStride) throw()
 {
 	return m_drawUP.DrawIndexedPrimitiveUP(	numVertices,
 											primitiveCount,
@@ -937,7 +937,7 @@ ALResult Tr2RenderContextAL::SetConstants(
 									const Tr2ConstantBufferAL& buffer, 
 									Tr2RenderContextEnum::ShaderType constantType, 
 									uint32_t registerIndex, 
-									uint32_t )
+									uint32_t ) throw()
 {
 	using namespace Tr2RenderContextEnum;
 
@@ -1057,7 +1057,7 @@ ALResult Tr2RenderContextAL::Clear(
 	uint32_t color, 
 	float depth, 
 	uint32_t stencil,
-	uint32_t slot )
+	uint32_t slot ) throw()
 {
 	if( clearFlags & CLEARFLAGS_TARGET )
 	{
@@ -1101,7 +1101,7 @@ ALResult Tr2RenderContextAL::Clear(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
+ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 {
 	m_currentResourceSet = Tr2ResourceSetAL();
 	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
@@ -1211,7 +1211,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 	return S_OK;
 }
 
-void Tr2RenderContextAL::SetReadOnlyDepth( bool enable )
+void Tr2RenderContextAL::SetReadOnlyDepth( bool enable ) throw()
 {
 	if( m_useReadOnlyDepthView == enable )
 	{
@@ -1228,7 +1228,7 @@ bool Tr2RenderContextAL::GetReadOnlyDepth() const
 	return m_useReadOnlyDepthView;
 }
 
-ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
+ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil ) throw()
 {
 	if( depthStencil.IsValid() )
 	{
@@ -1250,7 +1250,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot )
+ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot ) throw()
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );
 	if( slot >= MAX_RENDER_TARGET )
@@ -1283,7 +1283,7 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 	uint32_t stream,
 	const Tr2BufferAL & buffer,
 	uint32_t offset,
-	uint32_t stride )
+	uint32_t stride ) throw()
 {
 	if( stream == VERTEX_BUFFER_ZERO_STREAM_RESERVED )
 	{
@@ -1294,7 +1294,7 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer )
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw()
 {
 	m_context->IASetIndexBuffer( buffer.m_buffer->m_buffer,
 		buffer.GetDesc().stride == 2  ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT,
@@ -1306,7 +1306,7 @@ ALResult Tr2RenderContextAL::SetUav(
 	Tr2RenderContextEnum::ShaderType inputType,
 	uint32_t slot,
 	const Tr2BufferAL& buffer,
-	uint32_t initialCount )
+	uint32_t initialCount ) throw()
 {
 	ID3D11UnorderedAccessView* view = buffer.m_buffer->m_uav;
 
@@ -1339,13 +1339,13 @@ ALResult Tr2RenderContextAL::SetUav(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4] )
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw()
 {
 	m_context->ClearUnorderedAccessViewFloat( buffer.m_buffer->m_uav, values );
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] )
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw()
 {
 	m_context->ClearUnorderedAccessViewUint( buffer.m_buffer->m_uav, values );
 	return S_OK;
@@ -1374,7 +1374,7 @@ ALResult Tr2RenderContextAL::CopySubBuffer(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
+ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw()
 {
 	if( !layout.IsValid() && &layout != &nullVL )
 	{
@@ -1387,7 +1387,7 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& program )
+ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& program ) throw()
 {
 	AL_UPDATE_RESOURCE_FRAME_USAGE( program );
 
@@ -1430,7 +1430,7 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& program
 ALResult Tr2RenderContextAL::SetSamplerState( 
 	const Tr2SamplerStateAL& samplerState, 
 	ShaderType inputType, 
-	uint32_t registerNumber )
+	uint32_t registerNumber ) throw()
 {
 	AL_UPDATE_RESOURCE_FRAME_USAGE( *samplerState.m_sampler );
 	auto ss = samplerState.m_sampler->m_samplerState.p;
@@ -1459,13 +1459,13 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 	}
 }
 
-ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
+ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value ) throw()
 {
 	uint32_t sv[2] = { (uint32_t)state, value };
 	return SetRenderStatesImpl( sv, 1 );
 }
 
-ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t *stateValuePairs, uint32_t count )
+ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t *stateValuePairs, uint32_t count ) throw()
 {
 	if( !stateValuePairs )
 	{
@@ -1475,7 +1475,7 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t *stateValuePairs, u
 	return SetRenderStatesImpl( stateValuePairs, count );
 }
 
-ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePairs, uint32_t count )
+ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePairs, uint32_t count ) throw()
 {
 	auto& rt0 = m_renderStateEmulation.m_currentBlend.RenderTarget[0];
 	auto& ds  = m_renderStateEmulation.m_currentDepthStencil;
@@ -1740,13 +1740,13 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetClipPlane( uint32_t planeIndex, const float* planeEq )
+ALResult Tr2RenderContextAL::SetClipPlane( uint32_t planeIndex, const float* planeEq ) throw()
 {
 	m_dirtyFlag |= m_renderStateEmulation.m_fragmentOpSettings.SetClipPlane( planeIndex, planeEq );
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetScissorRect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom )
+ALResult Tr2RenderContextAL::SetScissorRect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom ) throw()
 {
 	D3D11_RECT rect;
 	rect.left = left;
@@ -1757,13 +1757,13 @@ ALResult Tr2RenderContextAL::SetScissorRect( uint32_t left, uint32_t top, uint32
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights )
+ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights ) throw()
 {
 	m_dirtyFlag |= m_renderStateEmulation.m_fragmentOpSettings.SetNumberOfLights( numLights );	
 	return S_OK;
 }
 
-bool Tr2RenderContextAL::ApplyShadowRenderStates()
+bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 {
 	if( !m_secondaryDevice11 )
 	{
@@ -1891,7 +1891,7 @@ void Tr2RenderContextAL::ApplyUavs() throw()
 	}
 }
 
-bool Tr2RenderContextAL::ApplyBlendState()
+bool Tr2RenderContextAL::ApplyBlendState() throw()
 {	
 	if( !( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_BLEND ) )
 	{
@@ -1907,7 +1907,7 @@ bool Tr2RenderContextAL::ApplyBlendState()
 	return true;
 }
 
-bool Tr2RenderContextAL::ApplyDepthStencilState()
+bool Tr2RenderContextAL::ApplyDepthStencilState() throw()
 {	
 	if( !( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_DEPTHSTENCIL ) )
 	{
@@ -1924,7 +1924,7 @@ bool Tr2RenderContextAL::ApplyDepthStencilState()
 	return true;
 }
 
-bool Tr2RenderContextAL::ApplyRasterizerState()
+bool Tr2RenderContextAL::ApplyRasterizerState() throw()
 {	
 	if( !( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_RASTERIZER ) )
 	{
@@ -1944,7 +1944,7 @@ bool Tr2RenderContextAL::ApplyRasterizerState()
 	return true;
 }
 
-ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
+ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw()
 {
 	if( !resourceSet.IsValid() )
 	{
@@ -2109,7 +2109,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 ALResult Tr2RenderContextAL::SetUav(	
 	Tr2RenderContextEnum::ShaderType inputType, 
 	uint32_t slot, 
-	Tr2TextureAL& texture ) 
+	Tr2TextureAL& texture ) throw()
 {
 	ID3D11UnorderedAccessView* view = nullptr;
 
@@ -2174,7 +2174,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& rt, const uint32_t values[4
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport )
+ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport ) throw()
 {
 	static_assert( sizeof( viewport ) == sizeof( D3D11_VIEWPORT ), "viewport size mismatch" );
 	m_context->RSSetViewports( 1, reinterpret_cast<const D3D11_VIEWPORT*>(&viewport) );
@@ -2190,7 +2190,7 @@ ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport )
+ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport ) throw()
 {
 	static_assert( sizeof( viewport ) == sizeof( D3D11_VIEWPORT ), "viewport size mismatch" );
 	uint32_t count = 1;
@@ -2198,7 +2198,7 @@ ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot )
+ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot ) throw()
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );
 	if( slot >= MAX_RENDER_TARGET )
@@ -2210,7 +2210,7 @@ ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::PopRenderTarget( uint32_t slot )
+ALResult Tr2RenderContextAL::PopRenderTarget( uint32_t slot ) throw()
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );
 	if( slot >= MAX_RENDER_TARGET )
@@ -2228,13 +2228,13 @@ ALResult Tr2RenderContextAL::PopRenderTarget( uint32_t slot )
 	return SetRtDsToDevice( slot );
 }
 
-ALResult Tr2RenderContextAL::PushDepthStencil()
+ALResult Tr2RenderContextAL::PushDepthStencil() throw()
 {
 	m_stackDS.push( m_boundDepthStencil );
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::PopDepthStencil()
+ALResult Tr2RenderContextAL::PopDepthStencil() throw()
 {
 	CCP_ASSERT( !m_stackDS.empty() );
 	if( m_stackDS.empty() )
@@ -2247,7 +2247,7 @@ ALResult Tr2RenderContextAL::PopDepthStencil()
 	return SetRtDsToDevice( MAX_RENDER_TARGET );
 }
 
-ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& height, uint32_t slot )
+ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& height, uint32_t slot ) throw()
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );
 	if( slot >= MAX_RENDER_TARGET )
@@ -2284,7 +2284,7 @@ Tr2TextureAL& Tr2RenderContextAL::GetDefaultBackBuffer()
 	return m_secondaryDefaultBackBuffer;
 }
 
-void Tr2RenderContextAL::ReleaseDeviceResources()
+void Tr2RenderContextAL::ReleaseDeviceResources() throw()
 {
 	std::fill_n( m_shaders, int( SHADER_TYPE_COUNT ), nullptr );
 }
@@ -2315,7 +2315,7 @@ void Tr2RenderContextAL::ResetCapturePlayback()
 	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestFunc = CMP_ALWAYS;
 }
 
-ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topology )
+ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topology ) throw()
 {
 	using namespace Tr2RenderContextEnum;
 	static D3D11_PRIMITIVE_TOPOLOGY lookup[TOP_MAX_TOPOLOGY] = 

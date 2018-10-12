@@ -354,31 +354,31 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 	uint32_t stream,
 	const Tr2BufferAL & buffer,
 	uint32_t offset,
-	uint32_t stride )
+	uint32_t stride ) throw()
 {
 	return ReportIfFailure(
 		m_d3dDevice9->SetStreamSource( stream, buffer.m_buffer->m_vertexBuffer, offset, stride )
 		, "SetStreamSource" );
 }
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer )
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw()
 {
 	return ReportIfFailure(
 		m_d3dDevice9->SetIndices( buffer.m_buffer->m_indexBuffer )
 		, "SetStreamSource" );
 }
 
-ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL&, uint32_t )
+ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL&, uint32_t ) throw()
 {
 	return E_FAIL;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] )
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] ) throw()
 {
 	return E_FAIL;
 }
 
-ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const uint32_t[4] )
+ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const uint32_t[4] ) throw()
 {
 	return E_FAIL;
 }
