@@ -128,7 +128,7 @@ bool Tr2CurveBase<Key, KeyList, KeyValue>::Initialize(  )
 }
 
 template <class Key, class KeyList, class KeyValue>
-Tr2CurveBase<Key, KeyList, KeyValue>::Tr2CurveBase( IRoot* lockobj ):
+Tr2CurveBase<Key, KeyList, KeyValue>::Tr2CurveBase( ::IRoot* lockobj ):
 	PARENTLOCK2( m_keys, IInitialize )
 {
 	m_lastKey = NULL;

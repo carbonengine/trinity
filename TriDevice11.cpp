@@ -98,7 +98,7 @@ void TriDevice::HandleRenderTick(  Be::Time realTime, Be::Time simTime )
 				BeCrashes->SetCrashKeyValueW( (wchar_t*)L"gpuRemovedReason", buffer );
 				if( !marker.empty() )
 				{
-					BeCrashes->SetCrashKeyValueW( L"gpuRemovedMarker", (wchar_t*)CA2W( marker.c_str() ) );
+					BeCrashes->SetCrashKeyValueW( (wchar_t*)L"gpuRemovedMarker", (wchar_t*)CA2W( marker.c_str() ) );
 				}
 				if( hasPageFault )
 				{
