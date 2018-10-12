@@ -295,9 +295,9 @@ private:
 	Tr2ResourceSetAL m_currentResourceSet;
 
 	friend class Tr2PrimaryRenderContextAL;
-
-	TrackableStdStack<Tr2TextureAL>	m_stackRT[MAX_RENDER_TARGET];
-	TrackableStdStack<Tr2TextureAL>	m_stackDS;
+	typedef	TrackableStdStack<Tr2TextureAL>	TextureStack;
+	TextureStack m_stackRT[MAX_RENDER_TARGET];
+	TextureStack m_stackDS;
 
 	Tr2RenderContextAL( const Tr2RenderContextAL& ) /* = delete */;
 	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;

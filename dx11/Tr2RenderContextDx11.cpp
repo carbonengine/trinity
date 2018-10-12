@@ -613,7 +613,7 @@ void Tr2RenderContextAL::Destroy()
 
 	for( size_t i = 0; i < sizeof( m_pixelShaderUavInitialCounts ) / sizeof( m_pixelShaderUavInitialCounts[0] ); ++i )
 	{
-		m_pixelShaderUavInitialCounts[i] = -1;
+		m_pixelShaderUavInitialCounts[i] = (uint32_t)-1;
 	}
 
 	m_secondaryDevice11 = nullptr;
@@ -669,9 +669,13 @@ void Tr2RenderContextAL::Destroy()
 	
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
-		m_stackRT[i].swap( TrackableStdStack<Tr2TextureAL>() );
+		TextureStack stack;
+		m_stackRT[i].swap( stack );
 	}
-	m_stackDS.swap( TrackableStdStack<Tr2TextureAL>() );
+	{
+		TextureStack stack;
+		m_stackDS.swap( stack );
+	}
 
 	m_hasHullShader = false;
 	m_previouslyHadHullShader = false;
@@ -1457,7 +1461,7 @@ ALResult Tr2RenderContextAL::SetSamplerState(
 
 ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 {
-	uint32_t sv[2] = { state, value };
+	uint32_t sv[2] = { (uint32_t)state, value };
 	return SetRenderStatesImpl( sv, 1 );
 }
 
@@ -1787,7 +1791,7 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates()
 	else
 	{
 		m_lastSetVertexLayout = nullptr;
-		m_lastSetVertexLayoutVSHash = -1;
+		m_lastSetVertexLayoutVSHash = (uint32_t)-1;
 		m_context->IASetInputLayout( nullptr );
 	}
 
@@ -2134,7 +2138,7 @@ ALResult Tr2RenderContextAL::SetUav(
 		{
 			m_psUavsDirtyEnd = slot + 1;
 		}
-		m_pixelShaderUavInitialCounts[slot] = -1;
+		m_pixelShaderUavInitialCounts[slot] = (uint32_t)-1;
 		break;
 	case COMPUTE_SHADER:
 		m_context->CSSetUnorderedAccessViews( slot, 1, &view, nullptr );
@@ -2401,6 +2405,8 @@ ALResult Tr2RenderContextAL::GetGpuPageFaultResource(
 	uint32_t& depth,
 	uint32_t& mips ) const
 {
+	CCP_UNUSED( mips );
+
 	if( !m_aftermathContext )
 	{
 		return E_FAIL;

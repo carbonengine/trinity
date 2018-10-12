@@ -327,7 +327,7 @@ namespace TrinityALImpl
 			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
 			{
 				rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE3D;
-				rtvDesc.Texture3D.WSize = -1;
+				rtvDesc.Texture3D.WSize = (UINT)-1;
 			}
 			else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
 			{
@@ -383,7 +383,7 @@ namespace TrinityALImpl
 			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
 			{
 				descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-				descUAV.Texture3D.WSize = -1;
+				descUAV.Texture3D.WSize = (UINT)-1;
 			}
 			else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
 			{

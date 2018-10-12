@@ -381,7 +381,7 @@ bool Tr2VideoAdapterInfo::SupportsBackBufferFormat( unsigned adapterIndex,
 	CHECK_INIT_BOOL;
 	CHECK_VALID_ADAPTER_BOOL;
 
-	if ( backBufferFormat >= DeviceInfo::FORMAT_COUNT )
+	if ( backBufferFormat >= (unsigned)DeviceInfo::FORMAT_COUNT )
 	{
 		return false;
 	}
@@ -405,7 +405,7 @@ bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex,
 	CHECK_INIT_BOOL;
 	CHECK_VALID_ADAPTER_BOOL;
 
-	if ( format >= DeviceInfo::FORMAT_COUNT )
+	if ( format >= (unsigned)DeviceInfo::FORMAT_COUNT )
 	{
 		return false;
 	}
@@ -434,7 +434,7 @@ bool Tr2VideoAdapterInfo::SupportsDepthStencilFormat( unsigned adapterIndex,
 
 	DXGI_FORMAT format = DXGI_FORMAT( ConvertDepthStencilFormat( formatDS ) );
 
-	if ( format >= DeviceInfo::FORMAT_COUNT )
+	if ( format >= (unsigned)DeviceInfo::FORMAT_COUNT )
 	{
 		return false;
 	}
@@ -456,7 +456,7 @@ bool Tr2VideoAdapterInfo::SupportsVertexTextureFormat( unsigned adapterIndex,
 	CHECK_INIT_BOOL;
 	CHECK_VALID_ADAPTER_BOOL;
 
-	if ( format >= DeviceInfo::FORMAT_COUNT )
+	if ( format >= (unsigned)DeviceInfo::FORMAT_COUNT )
 	{
 		return false;
 	}
@@ -496,7 +496,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
 		return S_OK;
 	}
 
-	if ( format >= DeviceInfo::FORMAT_COUNT || msaaType >= DeviceInfo::MAX_SAMPLE_COUNT )
+	if ( format >= (unsigned)DeviceInfo::FORMAT_COUNT || msaaType >= (unsigned)DeviceInfo::MAX_SAMPLE_COUNT )
 	{
 		return E_INVALIDARG;
 	}
@@ -529,7 +529,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
 		return S_OK;
 	}
 
-	if ( format >= DeviceInfo::FORMAT_COUNT || msaaType >= DeviceInfo::MAX_SAMPLE_COUNT )
+	if ( format >= (unsigned)DeviceInfo::FORMAT_COUNT || msaaType >= (unsigned)DeviceInfo::MAX_SAMPLE_COUNT )
 	{
 		return E_INVALIDARG;
 	}
