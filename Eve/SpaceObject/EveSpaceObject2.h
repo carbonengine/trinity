@@ -361,6 +361,8 @@ public:
 	void SetImpactAnimation( const std::string& name, bool enable, float duration );
 	void ClearImpactDamage();
 
+	int GetLastDamageLocatorHit();
+
 	// dynamic bounding sphere
 	void EnableDynamicBoundingSphere( bool enable );
 
@@ -383,6 +385,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// clip sphere modification
 	void ResetClipSphereCenter();
+	void ResetClipSphereCenterToPos( Vector3 center );
 protected:
 	// LODing
 	void UnloadLodIfNeeded( Be::Time time );

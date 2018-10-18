@@ -2544,6 +2544,10 @@ unsigned int EveSpaceObject2::GetDamageLocatorCount() const
 	return 0;
 }
 
+int EveSpaceObject2::GetLastDamageLocatorHit() {
+	return m_lastDamageLocatorHit;
+}
+
 Vector3 EveSpaceObject2::GetDamageLocator( uint32_t index ) const
 {
 	auto damageLocators = GetLocatorsForSet( DAMAGE_LOCATOR_SET_NAME );
@@ -3078,4 +3082,10 @@ ITr2SoundEmitter* EveSpaceObject2::FindSoundEmitter( const char* name )
 void EveSpaceObject2::ResetClipSphereCenter()
 {
 	m_clipSphereCenter = -1.0f * GetBoundingSphereCenter();
+}
+
+
+void EveSpaceObject2::ResetClipSphereCenterToPos( Vector3 center )
+{
+	m_clipSphereCenter = center;
 }
