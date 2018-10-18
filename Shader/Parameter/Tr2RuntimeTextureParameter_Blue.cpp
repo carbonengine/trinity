@@ -16,9 +16,10 @@ const Be::ClassInfo* Tr2RuntimeTextureParameter::ExposeToBlue()
 
 		MAP_INTERFACE( Tr2RuntimeTextureParameter )
 		MAP_INTERFACE( ITriEffectResourceParameter )
+		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "texture", m_texture, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "texture", m_texture, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
 			"__init__",
