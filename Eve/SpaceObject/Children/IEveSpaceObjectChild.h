@@ -22,6 +22,11 @@ struct EveChildUpdateParams
 
 BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 {
+	enum Origin {
+		SPACE,
+		SOF,
+	};
+
 	virtual const char* GetName() const = 0;
 	virtual void SetName( const char* name ) = 0;
 
@@ -49,6 +54,8 @@ BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 	virtual void SetInheritProperties( const Color* colorSet ) {};
 
 	virtual void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) {};
+
+	virtual void SetOrigin( Origin origin ) {};
 };
 
 BLUE_DECLARE_IVECTOR( IEveSpaceObjectChild );

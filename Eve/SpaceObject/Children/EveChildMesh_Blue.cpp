@@ -33,6 +33,7 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 		MAP_ATTRIBUTE( "sortValueOffset", m_sortValueOffset, "Offset for camera distance used for transparent sort", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "transformModifiers", m_transformModifiers, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "origin", m_origin, "Where did this effect originate from", Be::READ )
 
 		MAP_METHOD_AND_WRAP( "RebuildLocalTransform", RebuildLocalTransform, "Rebuilds local transform if useSRT is set." )
 

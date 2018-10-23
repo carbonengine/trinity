@@ -238,6 +238,12 @@ void EveChildMesh::SetMesh( Tr2MeshBase* mesh )
 	m_mesh = mesh;
 }
 
+
+void EveChildMesh::SetOrigin( Origin origin )
+{
+	m_origin = origin;
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Setup function to set data from outside, in this case just pass it to

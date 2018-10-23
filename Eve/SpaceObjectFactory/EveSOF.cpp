@@ -145,7 +145,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	SetupCustomMask( newObj, dna );
 
 	// decals
-		SetupDecalSets( newObj, dna );
+	SetupDecalSets( newObj, dna );
 
 	// effects on ships
 	SetupSpriteSets( newObj, dna );
@@ -1250,6 +1250,7 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, const EveSOFDNA
 		{
 			effectChild->Setup( &childIt->scaling, &childIt->rotation, &childIt->translation, childIt->lowestLodVisible );
 			effectChild->SetInheritProperties( dna->GetColorSet() );
+			effectChild->SetOrigin( IEveSpaceObjectChild::SOF );
 			obj->AddToEffectChildrenList( effectChild );
 			if( childIt->id != -1 )
 			{

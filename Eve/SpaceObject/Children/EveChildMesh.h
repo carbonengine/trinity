@@ -68,6 +68,7 @@ public:
 
 	// access
 	void SetMesh( Tr2MeshBase* mesh );
+	void SetOrigin( Origin origin );
 
 protected:
 	// general data
@@ -95,6 +96,8 @@ protected:
 	bool m_display;
 	bool m_isVisible;
 	bool m_useSpaceObjectData;
+
+	Origin m_origin;
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );

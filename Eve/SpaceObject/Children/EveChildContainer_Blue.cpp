@@ -6,6 +6,16 @@
 #include "StdAfx.h"
 #include "EveChildContainer.h"
 
+
+Be::VarChooser EveSpaceObjectChildOriginChooser[] =
+{
+	{ "SPACE", BeCast( IEveSpaceObjectChild::SPACE ), "Origin in Space" },
+	{ "SOF", BeCast( IEveSpaceObjectChild::SOF ), "Origin in SOF" },
+	{ 0 }
+};
+BLUE_REGISTER_ENUM_EX( "EveSpaceObjectChildOrigin", IEveSpaceObjectChild::Origin, EveSpaceObjectChildOriginChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
+
 BLUE_DEFINE( EveChildContainer );
 
 const Be::ClassInfo* EveChildContainer::ExposeToBlue()
@@ -38,6 +48,7 @@ const Be::ClassInfo* EveChildContainer::ExposeToBlue()
 		MAP_ATTRIBUTE( "lights", m_lights, "List of dynamic lights", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "controllers", m_controllers, "List of object controllers", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "inheritProperties", m_inheritProperties, "Properties inherited from the parent ship when loaded through SOF", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "origin", m_origin, "Where did this effect originate from", Be::READ )
 
 		MAP_METHOD_AND_WRAP( "RebuildLocalTransform", RebuildLocalTransform, "Rebuilds local transform." )
 

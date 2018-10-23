@@ -78,6 +78,8 @@ public:
 	void ChangeLOD( Tr2Lod lod );
 	void GetLights( Tr2LightManager& lightManager ) const;
 
+	void SetOrigin( Origin origin );
+
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 
 	void PlayCurveSet( const std::string& name, const std::string& rangeName );
@@ -113,6 +115,7 @@ protected:
 	bool m_display;
 	bool m_hideOnLowQuality;
 	EveChildInheritPropertiesPtr m_inheritProperties;
+	Origin m_origin;
 };
 
 TYPEDEF_BLUECLASS( EveChildContainer );

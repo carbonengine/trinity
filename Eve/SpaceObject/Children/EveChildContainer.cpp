@@ -285,6 +285,11 @@ void EveChildContainer::GetLights( Tr2LightManager& lightManager ) const
 	}
 }
 
+void EveChildContainer::SetOrigin( Origin origin ) 
+{
+	m_origin = origin;
+}
+
 void EveChildContainer::PlayCurveSet( const std::string& name, const std::string& rangeName )
 {
 	if( m_hideOnLowQuality && Tr2Renderer::IsLowQuality() )
