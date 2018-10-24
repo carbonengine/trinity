@@ -54,6 +54,19 @@ bool Tr2ResourceSetDescriptionAL::operator==( const Tr2ResourceSetDescriptionAL&
 	return m_resources == other.m_resources && m_samplers == other.m_samplers;
 }
 
+void Tr2ResourceSetDescriptionAL::ClearResources()
+{
+	for( auto sit = std::begin( m_resources ); sit != std::end( m_resources ); ++sit )
+	{
+		for( auto rit = std::begin( *sit ); rit != std::end( *sit ); ++rit )
+		{
+			rit->type = NONE;
+			rit->texture = Tr2TextureAL();
+			rit->buffer = Tr2BufferAL();
+		}
+	}
+}
+
 
 Tr2ResourceSetDescriptionAL::Resource::Resource()
 	:type( NONE ),
