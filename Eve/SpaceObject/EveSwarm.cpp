@@ -656,7 +656,7 @@ void EveSwarm::PushRenderables( std::vector<ITr2Renderable*>& renderables )
 		renderables.push_back( *it );
 	}
 
-	// decals? children? boosters?
+	PushChildrenAndDecalRenderables( renderables );
 }
 
 

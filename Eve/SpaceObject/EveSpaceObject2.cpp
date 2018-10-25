@@ -1193,6 +1193,11 @@ void EveSpaceObject2::PushRenderables( std::vector<ITr2Renderable*>& renderables
 		}
 	}
 
+	PushChildrenAndDecalRenderables( renderables );
+}
+
+void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderable*>& renderables )
+{
 	if( DisplayChildren() )
 	{
 		for( IEveTransformVector::const_iterator it = m_children.begin(); it != m_children.end(); ++it )
@@ -1209,9 +1214,7 @@ void EveSpaceObject2::PushRenderables( std::vector<ITr2Renderable*>& renderables
 			(*ecIt)->GetRenderables( renderables );
 		}
 	}
-	
-	
-	
+
 	// are decals visible?
 	if( DisplayDecals() && m_mesh && m_isMeshVisible )
 	{

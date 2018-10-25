@@ -403,6 +403,9 @@ protected:
 
 	bool GetBoneList( const granny_matrix_3x4*& bones, size_t& boneCount ) const;
 
+	// Consideration for child classes
+	void PushChildrenAndDecalRenderables( std::vector<ITr2Renderable*>& renderables );
+
 	virtual void UpdateWorldTransform( Be::Time time );
 	friend class EveShip2Builder;
 
