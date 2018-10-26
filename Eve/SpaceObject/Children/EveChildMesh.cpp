@@ -24,6 +24,7 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_sortValueOffset( 0 ),
 	m_sortValueScale( 1 ),
 	m_useSpaceObjectData( true ),
+	m_origin( SPACE ),
 	EveChildTransform()
 {
 	// init per-object data with default values

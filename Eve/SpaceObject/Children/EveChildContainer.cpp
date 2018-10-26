@@ -27,7 +27,8 @@ EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 	m_controllerVariables( "EveChildContainer::m_controllerVariables" ),
 	m_worldVelocity( 0, 0, 0 ),
 	m_display( true ),
-	m_hideOnLowQuality( false )
+	m_hideOnLowQuality( false ),
+	m_origin( SPACE )
 {
 	m_controllers.SetNotify( this );
 }
