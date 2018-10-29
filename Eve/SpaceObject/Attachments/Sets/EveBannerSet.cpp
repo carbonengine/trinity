@@ -138,7 +138,7 @@ bool EveBannerSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 		Vector4 elementSphere( closest, m_maxBannerRadius );
 
 		auto size = frustum.GetPixelSizeAccrossEst( &elementSphere );
-		if( size > g_eveSpaceSceneVisibilityThreshold )
+		if( size > g_eveSpaceSceneVisibilityThreshold * 0.5f )
 		{
 			m_lod = TR2_LOD_HIGH;
 		}
