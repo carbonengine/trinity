@@ -70,9 +70,15 @@ private:
 		{
 			return hullIndex | ( meshIndex << 4 ) | reinterpret_cast<size_t>( name.c_str() );
 		}
+
+		// Use the object as its own hasher (needs to be explicit for non fundamental types in >VS2015)
+		size_t operator() ( const InheritableTextureKey &key ) const
+		{
+			return key;
+		}
 	};
 
-	typedef std::unordered_map<InheritableTextureKey, Tr2LodResource*> InheritableTextures;
+	typedef std::unordered_map<InheritableTextureKey, Tr2LodResource*, InheritableTextureKey> InheritableTextures;
 
 	// all setup functions for the to-be-created space object
 	void SetupConsts( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
