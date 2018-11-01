@@ -107,6 +107,7 @@ struct EveSpaceObjectPSData
 	Vector4 shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
 	Vector4 customMaskMaterialIDs[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskTargets[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
+	Vector4 customMaskClamps;
 };
 
 // ---------------------------------------------------------------------------------------

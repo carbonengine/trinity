@@ -19,7 +19,9 @@ EveCustomMask::EveCustomMask( IRoot* lockobj ) :
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
 	m_materialIndex( 0 ),
 	m_targetMaterials( 1.f, 1.f, 1.f, 1.f ),
-	m_isMirrored( false )
+	m_isMirrored( false ),
+	m_clampU( false ),
+	m_clampV( false )
 {
 }
 
@@ -35,12 +37,14 @@ EveCustomMask::~EveCustomMask()
 // Description:
 //   Set values
 // --------------------------------------------------------------------------------
-void EveCustomMask::Setup( const Vector3& position, const Vector3& scaling, const Quaternion& rotation, bool isMirrored, uint8_t srcID, const Vector4& targets )
+void EveCustomMask::Setup( const Vector3& position, const Vector3& scaling, const Quaternion& rotation, bool isMirrored, bool clampU, bool clampV, uint8_t srcID, const Vector4& targets )
 {
 	m_position = position;
 	m_scaling = scaling;
 	m_rotation = rotation;
 	m_isMirrored = isMirrored;
+	m_clampU = clampU;
+	m_clampV = clampV;
 	m_materialIndex = srcID;
 	m_targetMaterials = targets;
 }
@@ -75,6 +79,9 @@ void EveCustomMask::FillPerObjectData( size_t n, EveSpaceObjectVSData* vsData, E
 	psData->customMaskMaterialIDs[n] = Vector4( (float)m_materialIndex, 0.f, 0.f, 0.f );
 	// pattern targets go into PS data
 	psData->customMaskTargets[n] = m_targetMaterials;
+
+	psData->customMaskClamps[n * 2] = m_clampU ? 1.f : 0.f;
+	psData->customMaskClamps[n * 2 + 1] = m_clampV ? 1.f : 0.f;
 }
 
 // --------------------------------------------------------------------------------

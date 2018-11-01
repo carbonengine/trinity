@@ -1497,7 +1497,15 @@ void EveSOF::SetupCustomMask( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) c
 				{
 					EveCustomMaskPtr customMask;
 					customMask.CreateInstance();
-					customMask->Setup( patternProjectionData->position, patternProjectionData->scaling, patternProjectionData->rotation, patternProjectionData->isMirrored, patternLayerData->materialSourceID, patternLayerData->materialTargets );
+					customMask->Setup( 
+						patternProjectionData->position, 
+						patternProjectionData->scaling, 
+						patternProjectionData->rotation, 
+						patternProjectionData->isMirrored, 
+						patternLayerData->projectionAddressModeU == Tr2RenderContextEnum::TA_CLAMP,
+						patternLayerData->projectionAddressModeV == Tr2RenderContextEnum::TA_CLAMP,
+						patternLayerData->materialSourceID,
+						patternLayerData->materialTargets );
 					obj->AddCustomMask( customMask );
 				}
 			}
