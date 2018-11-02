@@ -20,7 +20,7 @@ namespace TrinityALImpl
 	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, Tr2PrimaryRenderContextAL& /*renderContext*/ )
 	{
 		Destroy();
-		ON_BLOCK_EXIT( [&] { if( !IsValid() ) Destroy(); } );
+		ON_BLOCK_EXIT_WITH_UNUSED( [&] { if( !IsValid() ) Destroy(); } );
 
 		for( uint32_t stage = PIXEL_SHADER + 1; stage < SHADER_TYPE_COUNT; ++stage )
 		{

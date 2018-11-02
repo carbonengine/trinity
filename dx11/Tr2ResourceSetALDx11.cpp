@@ -20,7 +20,7 @@ namespace TrinityALImpl
 	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, Tr2PrimaryRenderContextAL& /*renderContext*/ )
 	{
 		Destroy();
-		ON_BLOCK_EXIT( [&] { if( !IsValid() ) Destroy(); } );
+		ON_BLOCK_EXIT_WITH_UNUSED( [&] { if( !IsValid() ) Destroy(); } );
 
 		for( auto it = std::begin( m_stages ); it != std::end( m_stages ); ++it )
 		{
