@@ -180,7 +180,8 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_CONTEXT>
 
 void Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_CONTEXT>::DestroyObject( Tr2ALMemoryTypes flags, ObjectType* object )
 {
-
+	CCP_UNUSED( flags );
+	CCP_UNUSED( object);
 }
 
 
@@ -306,6 +307,8 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SAMPLER_STATE>:
 	ObjectType* object, 
 	std::map<std::string, uint32_t>& description )
 {
+	CCP_UNUSED( description );
+
 	if( object->IsValid() && ( object->GetMemoryClass() & flags ) )
 	{
 		REPORT_LAST_FRAME_USED;
@@ -418,6 +421,8 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_VERTEX_LAYOUT>:
 	ObjectType* object, 
 	std::map<std::string, uint32_t>& description )
 {
+	CCP_UNUSED( description );
+
 	if( object->IsValid() && ( object->GetMemoryClass() & flags ) )
 	{
 		REPORT_LAST_FRAME_USED;
