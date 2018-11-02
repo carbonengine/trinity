@@ -246,7 +246,6 @@ private:
 	// Previous sorting reference point (only used during sorting)
 	XMVECTOR* m_sortingReferencePoint;
 
-	bool m_updateBoundingBox;
 	// Bounding box for the system
 	Vector3 m_AabbMin;
 	Vector3 m_AabbMax;

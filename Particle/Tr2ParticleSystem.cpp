@@ -55,7 +55,6 @@ Tr2ParticleSystem::Tr2ParticleSystem( IRoot* lockobj )
 	m_sortingAllowed( true ),
 	m_isGlobal( false ),
 	m_isValid( false ),
-	m_updateBoundingBox( false ),
 	m_AabbMin( 0.0f, 0.0f, 0.0f ), 
 	m_AabbMax( 0.0f, 0.0f, 0.0f ),
 	m_updatePeriod( 1 ),

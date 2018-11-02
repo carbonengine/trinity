@@ -95,11 +95,6 @@ const Be::ClassInfo* Tr2ParticleSystem::ExposeToBlue()
 			"A list of constraints to be applied to the particles", 
 			Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE( 
-			"updateBoundingBox", 
-			m_updateBoundingBox, 
-			"Does the system need to update aabbMin and aabbMax attributes", 
-			Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "aabbMin", m_AabbMin, "Minimum of the AABB", Be::READ );
 		MAP_ATTRIBUTE( "aabbMax", m_AabbMax, "Maximum of the AABB", Be::READ );
 
