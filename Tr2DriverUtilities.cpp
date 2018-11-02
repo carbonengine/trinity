@@ -108,7 +108,7 @@ ALResult DoGetDriverVersion( uint32_t deviceId, Tr2VideoDriverInfo& info )
 	{
 		return E_FAIL;
 	}
-	ON_BLOCK_EXIT( [&] { RegCloseKey( key ); } );
+	ON_BLOCK_EXIT_WITH_UNUSED( [&] { RegCloseKey( key ); } );
 
 	if( GetRegistryValue( key, "DriverVersion", info.driverVersionString ) )
 	{
