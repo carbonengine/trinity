@@ -196,7 +196,7 @@ ALResult Tr2ConstantBufferAL::Unlock( Tr2RenderContextAL & renderContext )
 	{
 		if( !m_bufferMirror )
 		{
-			CCP_ASSERT( false && "Unlocking a null buffer" );
+			CCP_ASSERT_M( false, "Unlocking a null buffer" );
 			return E_FAIL;
 		}
 
@@ -206,7 +206,7 @@ ALResult Tr2ConstantBufferAL::Unlock( Tr2RenderContextAL & renderContext )
 	{
 		if( !m_buffer )
 		{
-			CCP_ASSERT( false && "Unlocking a null buffer" );
+			CCP_ASSERT_M( false, "Unlocking a null buffer" );
 			return E_FAIL;
 		}
 

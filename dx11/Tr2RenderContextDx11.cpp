@@ -732,7 +732,7 @@ __forceinline uint32_t Tr2RenderContextAL::ComputeVertexCount( uint32_t primitiv
 			
 	
 	default:
-		CCP_ASSERT( false && "Unsupported topology" );
+		CCP_ASSERT_M( false, "Unsupported topology" );
 		return 0;
 	}
 }

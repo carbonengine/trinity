@@ -798,6 +798,8 @@ namespace TrinityALImpl
 
 	void Tr2TextureAL::UnmapForReading( Tr2RenderContextAL& renderContext )
 	{
+		CCP_UNUSED( renderContext );
+
 		Unlock();
 	}
 
@@ -816,11 +818,15 @@ namespace TrinityALImpl
 
 	void Tr2TextureAL::UnmapForWriting( Tr2RenderContextAL& renderContext )
 	{
+		CCP_UNUSED( renderContext );
+
 		Unlock();
 	}
 
 	ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t slicePitch, Tr2RenderContextAL& renderContext )
 	{
+		CCP_UNUSED( slicePitch );
+
 		if( HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
 			return E_INVALIDCALL;
@@ -926,9 +932,6 @@ namespace TrinityALImpl
 			srcRect.top = src.m_top;
 			srcRect.right = std::min( src.m_right, source.m_desc.GetWidth() );
 			srcRect.bottom = std::min( src.m_bottom, source.m_desc.GetHeight() );
-
-			auto srcWidth = srcRect.right - srcRect.left;
-			auto srcHeight = srcRect.bottom - srcRect.top;
 
 			RECT destRect;
 			destRect.left = dst.m_left + srcRect.left;
@@ -1175,6 +1178,8 @@ namespace TrinityALImpl
 
 	ALResult Tr2TextureAL::Attach( IDirect3DSurface9* surface, Tr2PrimaryRenderContextAL& renderContext )
 	{
+		CCP_UNUSED( renderContext );
+
 		Destroy();
 		if( !surface )
 		{

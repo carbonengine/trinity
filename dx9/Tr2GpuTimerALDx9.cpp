@@ -58,6 +58,8 @@ namespace TrinityALImpl
 
 	bool Tr2GpuTimerAL::Begin( Tr2RenderContextAL& renderContext )
 	{
+		CCP_UNUSED( renderContext );
+
 		AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
 		if( !m_beginQuery || !m_endQuery || m_state != READY )
 		{
@@ -72,6 +74,8 @@ namespace TrinityALImpl
 
 	void Tr2GpuTimerAL::End( Tr2RenderContextAL& renderContext )
 	{
+		CCP_UNUSED( renderContext );
+
 		AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
 		if( !m_beginQuery || !m_endQuery || m_state != BEGIN_ISSUED )
 		{
@@ -84,6 +88,8 @@ namespace TrinityALImpl
 
 	float Tr2GpuTimerAL::GetTime( Tr2RenderContextAL& renderContext )
 	{
+		CCP_UNUSED( renderContext );
+
 		AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
 		if( !m_beginQuery || !m_endQuery )
 		{

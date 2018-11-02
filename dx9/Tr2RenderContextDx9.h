@@ -87,17 +87,27 @@ public:
 		Tr2RenderContextEnum::ShaderType inputType, 
 		uint32_t slot, 
 		Tr2TextureAL& texture ) throw()
-	{ 
+	{
+		CCP_UNUSED( inputType );
+		CCP_UNUSED( slot );
+		CCP_UNUSED( texture );
+
 		return E_FAIL; 
 	}
 
 	ALResult ClearUav( Tr2TextureAL& rt, const float values[4] ) throw( )
 	{
+		CCP_UNUSED( rt );
+		CCP_UNUSED( values );
+
 		return E_FAIL;
 	}
 
 	ALResult ClearUav( Tr2TextureAL& rt, const uint32_t values[4] ) throw( )
 	{
+		CCP_UNUSED( rt );
+		CCP_UNUSED( values );
+
 		return E_FAIL;
 	}
 	
@@ -138,25 +148,42 @@ public:
 
 	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
 	{
+		CCP_UNUSED( params );
+		CCP_UNUSED( offset );
+
 		return E_FAIL;
 	}
 
 	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
 	{
+		CCP_UNUSED( params );
+		CCP_UNUSED( offset );
+
 		return E_FAIL;
 	}
 
 	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ )
 	{
+		CCP_UNUSED( groupDimX );
+		CCP_UNUSED( groupDimY );
+		CCP_UNUSED( groupDimZ );
+
 		return E_FAIL;
 	}
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset )
 	{
+		CCP_UNUSED( indirectParams );
+		CCP_UNUSED( offset );
+
 		return E_FAIL;
 	}
 
 	ALResult CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src )
 	{
+		CCP_UNUSED( dest );
+		CCP_UNUSED( destOffset );
+		CCP_UNUSED( src );
+
 		return E_FAIL;
 	}
 

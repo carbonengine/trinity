@@ -395,6 +395,8 @@ ALResult Tr2RenderContextAL::Clear(
 	uint32_t stencil,
 	uint32_t slot )
 {
+	CCP_UNUSED( slot );
+
 	if( !m_d3dDevice9 )
 	{
 		return E_FAIL;
