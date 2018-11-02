@@ -109,6 +109,8 @@ namespace
 
 	ALResult Create3D( CComPtr<ID3D11Resource>& texture, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
 	{
+		CCP_UNUSED( msaa );
+
 		D3D11_TEXTURE3D_DESC desc3D;
 		memset( &desc3D, 0, sizeof( desc3D ) );
 		desc3D.Width = desc.GetWidth();
@@ -280,6 +282,8 @@ namespace TrinityALImpl
 		Tr2CpuUsage::Type cpuUsage, 
 		Tr2PrimaryRenderContextAL& renderContext )
 	{
+		CCP_UNUSED( cpuUsage );
+
 		CComPtr<ID3D11ShaderResourceView> view[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
 		CComPtr<ID3D11RenderTargetView> renderTarget[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
 		CComPtr<ID3D11DepthStencilView> depthStencil[DepthOption::COUNT];
