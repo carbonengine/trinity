@@ -50,6 +50,10 @@ namespace
 Tr2BufferAL::Tr2BufferAL()
 	:m_buffer( nullBuffer )
 {
+	if( m_buffer == nullptr )
+	{
+		m_buffer = std::make_shared<TrinityALImpl::Tr2BufferAL>();
+	}
 }
 
 ALResult Tr2BufferAL::Create(
