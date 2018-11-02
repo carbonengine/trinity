@@ -146,17 +146,15 @@ public:
 		const void* vertexStreamZeroData, 
 		uint32_t vertexStreamZeroStride );
 
-	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& /*params*/, uint32_t offset )
 	{
-		CCP_UNUSED( params );
 		CCP_UNUSED( offset );
 
 		return E_FAIL;
 	}
 
-	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+	ALResult DrawInstancedIndirect( Tr2BufferAL& /*params*/, uint32_t offset )
 	{
-		CCP_UNUSED( params );
 		CCP_UNUSED( offset );
 
 		return E_FAIL;
@@ -170,19 +168,16 @@ public:
 
 		return E_FAIL;
 	}
-	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset )
+	ALResult RunComputeShaderIndirect( Tr2BufferAL& /*indirectParams*/, unsigned offset )
 	{
-		CCP_UNUSED( indirectParams );
 		CCP_UNUSED( offset );
 
 		return E_FAIL;
 	}
 
-	ALResult CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src )
+	ALResult CopyBufferCounter( Tr2BufferAL& /*dest*/, uint32_t destOffset, Tr2BufferAL& /*src*/ )
 	{
-		CCP_UNUSED( dest );
 		CCP_UNUSED( destOffset );
-		CCP_UNUSED( src );
 
 		return E_FAIL;
 	}
