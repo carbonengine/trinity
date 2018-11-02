@@ -17,10 +17,8 @@ namespace TrinityALImpl
 	{
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, Tr2PrimaryRenderContextAL& /*renderContext*/ )
 	{
-		CCP_UNUSED( renderContext );
-
 		Destroy();
 		ON_BLOCK_EXIT( [&] { if( !IsValid() ) Destroy(); } );
 
