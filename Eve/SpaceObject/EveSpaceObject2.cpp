@@ -703,7 +703,7 @@ void EveSpaceObject2::RenderDebugInfo( Tr2DebugRenderer& renderer )
 			{
 				name += prefixLength;
 			}
-			renderer.DrawText( TRI_DBG_FONT_SMALL, Vector3( XMVector3TransformCoord( ( *it )->GetTransform().GetTranslation(), m_worldTransform ) ), 0x88ffffff, name );
+			renderer.DrawText( TRI_DBG_FONT_SMALL, Vector3( XMVector3TransformCoord( transform.GetTranslation(), m_worldTransform ) ), 0x88ffffff, name );
 		}
 	}
 
