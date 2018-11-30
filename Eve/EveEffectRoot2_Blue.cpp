@@ -85,8 +85,6 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 			"Used to add rotations to the basic rotation curve",
 			Be::READWRITE | Be::PERSIST
 		)
-		
-		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curvesets for animating things", Be::READWRITE | Be::PERSIST )
 
 #if BLUE_WITH_PYTHON
 		// expose bounding sphere as two variables: center pos and radius
@@ -99,6 +97,14 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "duration", m_effectDuration, "", Be::READWRITE | Be::PERSIST )
+	
+		MAP_ATTRIBUTE
+		(
+			"effectChildren",
+			m_effectChildren,
+			"",
+			Be::READWRITE | Be::PERSIST
+		)
 		
 		MAP_ATTRIBUTE
 		( 
@@ -112,14 +118,8 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "lights", m_lights, "List of dynamic lights", Be::READ | Be::PERSIST );
 
-	
-		MAP_ATTRIBUTE
-		(
-			"effectChildren",
-			m_effectChildren,
-			"",
-			Be::READWRITE | Be::PERSIST
-		)
+		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curvesets for animating things", Be::READWRITE | Be::PERSIST )
+
 		MAP_ATTRIBUTE( "controllers", m_controllers, "List of object controllers", Be::READ | Be::PERSIST )
 
 		MAP_ATTRIBUTE( 
