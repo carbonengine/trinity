@@ -57,6 +57,17 @@ ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDes
 	return hr;
 }
 
+ALResult Tr2TextureAL::OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext )
+{
+	m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
+	auto hr = m_texture->OpenShared( handle, gpuUsage, renderContext );
+	if( FAILED( hr ) )
+	{
+		m_texture = nullTexture;
+	}
+	return hr;
+}
+
 bool Tr2TextureAL::IsValid() const
 {
 	return m_texture->IsValid();

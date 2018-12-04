@@ -173,6 +173,68 @@ namespace
 		return S_OK;
 	}
 
+
+	Tr2RenderContextEnum::PixelFormat FromTypeless( Tr2RenderContextEnum::PixelFormat format )
+	{
+		using namespace Tr2RenderContextEnum;
+		switch( format )
+		{
+		case PIXEL_FORMAT_R32G32B32A32_TYPELESS:
+			return PIXEL_FORMAT_R32G32B32A32_FLOAT;
+		case PIXEL_FORMAT_R32G32B32_TYPELESS:
+			return PIXEL_FORMAT_R32G32B32_FLOAT;
+
+		case PIXEL_FORMAT_R16G16B16A16_TYPELESS:
+			return PIXEL_FORMAT_R16G16B16A16_FLOAT;
+
+		case PIXEL_FORMAT_R32G32_TYPELESS:
+			return PIXEL_FORMAT_R32G32_FLOAT;
+
+		case PIXEL_FORMAT_R10G10B10A2_TYPELESS:
+			return PIXEL_FORMAT_R10G10B10A2_UNORM;
+
+		case PIXEL_FORMAT_R8G8B8A8_TYPELESS:
+			return PIXEL_FORMAT_R8G8B8A8_UNORM;
+
+		case PIXEL_FORMAT_R16G16_TYPELESS:
+			return PIXEL_FORMAT_R16G16_FLOAT;
+
+		case PIXEL_FORMAT_R32_TYPELESS:
+			return PIXEL_FORMAT_R32_FLOAT;
+
+		case PIXEL_FORMAT_R8G8_TYPELESS:
+			return PIXEL_FORMAT_R8G8_UNORM;
+
+		case PIXEL_FORMAT_R16_TYPELESS:
+			return PIXEL_FORMAT_R16_FLOAT;
+
+		case PIXEL_FORMAT_R8_TYPELESS:
+			return PIXEL_FORMAT_R8_UNORM;
+
+		case PIXEL_FORMAT_BC1_TYPELESS:
+			return PIXEL_FORMAT_BC1_UNORM;
+		case PIXEL_FORMAT_BC2_TYPELESS:
+			return PIXEL_FORMAT_BC2_UNORM;
+		case PIXEL_FORMAT_BC3_TYPELESS:
+			return PIXEL_FORMAT_BC3_UNORM;
+		case PIXEL_FORMAT_BC4_TYPELESS:
+			return PIXEL_FORMAT_BC4_UNORM;
+		case PIXEL_FORMAT_BC5_TYPELESS:
+			return PIXEL_FORMAT_BC5_UNORM;
+		case PIXEL_FORMAT_BC6H_TYPELESS:
+			return PIXEL_FORMAT_BC6H_SF16;
+		case PIXEL_FORMAT_BC7_TYPELESS:
+			return PIXEL_FORMAT_BC7_UNORM;
+
+		case PIXEL_FORMAT_B8G8R8A8_TYPELESS:
+			return PIXEL_FORMAT_B8G8R8A8_UNORM;
+		case PIXEL_FORMAT_B8G8R8X8_TYPELESS:
+			return PIXEL_FORMAT_B8G8R8X8_UNORM;
+
+		default:
+			return format;
+		}
+	}
 }
 
 namespace TrinityALImpl
@@ -271,6 +333,37 @@ namespace TrinityALImpl
 
 		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_desc, msaa );
 
+		return S_OK;
+	}
+
+	ALResult Tr2TextureAL::OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		Destroy();
+
+		if( !renderContext.IsValid() )
+		{
+			return E_FAIL;
+		}
+		CComPtr<ID3D11Texture2D> resource;
+		auto hr = renderContext.m_d3dDevice11->OpenSharedResource( reinterpret_cast<HANDLE>( handle ), __uuidof( ID3D11Texture2D ), reinterpret_cast<void**>( &resource.p ) );
+		FORWARD_HR( hr );
+
+		if( !resource )
+		{
+			return E_FAIL;
+		}
+
+		D3D11_TEXTURE2D_DESC dxDesc;
+		resource->GetDesc( &dxDesc );
+		Tr2BitmapDimensions desc( Tr2RenderContextEnum::TEX_TYPE_2D, FromTypeless( Tr2RenderContextEnum::PixelFormat( dxDesc.Format ) ), dxDesc.Width, dxDesc.Height, 1, dxDesc.MipLevels );
+
+		FORWARD_HR( CreateViews( resource, desc, Tr2MsaaDesc(), gpuUsage, Tr2CpuUsage::NONE, renderContext ) );
+
+		m_desc = desc;
+		m_msaa = Tr2MsaaDesc();
+		m_gpuUsage = gpuUsage;
+		m_cpuUsage = Tr2CpuUsage::NONE;
+		m_texture = resource;
 		return S_OK;
 	}
 

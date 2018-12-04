@@ -733,6 +733,12 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	ALResult Tr2TextureAL::OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		return E_FAIL;
+	}
+
+
 	void Tr2TextureAL::Destroy()
 	{
 		m_texture = nullptr;
