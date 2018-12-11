@@ -174,6 +174,31 @@ namespace
 	}
 
 
+	bool IsTypeless( Tr2RenderContextEnum::PixelFormat format )
+	{
+		using namespace Tr2RenderContextEnum;
+		return format == PIXEL_FORMAT_R32G32B32A32_TYPELESS ||
+			format == PIXEL_FORMAT_R32G32B32_TYPELESS ||
+			format == PIXEL_FORMAT_R16G16B16A16_TYPELESS ||
+			format == PIXEL_FORMAT_R32G32_TYPELESS ||
+			format == PIXEL_FORMAT_R10G10B10A2_TYPELESS ||
+			format == PIXEL_FORMAT_R8G8B8A8_TYPELESS ||
+			format == PIXEL_FORMAT_R16G16_TYPELESS ||
+			format == PIXEL_FORMAT_R32_TYPELESS ||
+			format == PIXEL_FORMAT_R8G8_TYPELESS ||
+			format == PIXEL_FORMAT_R16_TYPELESS ||
+			format == PIXEL_FORMAT_R8_TYPELESS ||
+			format == PIXEL_FORMAT_BC1_TYPELESS ||
+			format == PIXEL_FORMAT_BC2_TYPELESS ||
+			format == PIXEL_FORMAT_BC3_TYPELESS ||
+			format == PIXEL_FORMAT_BC4_TYPELESS ||
+			format == PIXEL_FORMAT_BC5_TYPELESS ||
+			format == PIXEL_FORMAT_BC6H_TYPELESS ||
+			format == PIXEL_FORMAT_BC7_TYPELESS ||
+			format == PIXEL_FORMAT_B8G8R8A8_TYPELESS ||
+			format == PIXEL_FORMAT_B8G8R8X8_TYPELESS;
+	}
+
 	Tr2RenderContextEnum::PixelFormat FromTypeless( Tr2RenderContextEnum::PixelFormat format )
 	{
 		using namespace Tr2RenderContextEnum;
@@ -324,7 +349,7 @@ namespace TrinityALImpl
 			FORWARD_HR( Create3D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
 		}
 
-		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, renderContext ) );
+		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, true, renderContext ) );
 
 		m_desc = desc;
 		m_gpuUsage = gpuUsage;
@@ -363,11 +388,22 @@ namespace TrinityALImpl
 
 		D3D11_TEXTURE2D_DESC dxDesc;
 		resource->GetDesc( &dxDesc );
-		Tr2BitmapDimensions desc( Tr2RenderContextEnum::TEX_TYPE_2D, FromTypeless( Tr2RenderContextEnum::PixelFormat( dxDesc.Format ) ), dxDesc.Width, dxDesc.Height, 1, dxDesc.MipLevels );
+		Tr2RenderContextEnum::PixelFormat fmt;
+		bool createSrgb = true;
+		if( IsTypeless( Tr2RenderContextEnum::PixelFormat( dxDesc.Format ) ) )
+		{
+			fmt = FromTypeless( Tr2RenderContextEnum::PixelFormat( dxDesc.Format ) );
+		}
+		else
+		{
+			fmt = Tr2RenderContextEnum::PixelFormat( dxDesc.Format );
+			createSrgb = false;
+		}
+		Tr2BitmapDimensions desc( Tr2RenderContextEnum::TEX_TYPE_2D, fmt, dxDesc.Width, dxDesc.Height, 1, dxDesc.MipLevels );
 
 		CCP_AL_LOG( "Creating views for the shared texture %lld, GPU usage is %d", uint64_t( handle ), int( gpuUsage ) );
 
-		hr = CreateViews( resource, desc, Tr2MsaaDesc(), gpuUsage, Tr2CpuUsage::NONE, renderContext );
+		hr = CreateViews( resource, desc, Tr2MsaaDesc(), gpuUsage, Tr2CpuUsage::NONE, createSrgb, renderContext );
 		if( FAILED( hr ) )
 		{
 			CCP_AL_LOG( "Failed to create views for the shared texture %lld, GPU usage is %d", uint64_t( handle ), int( gpuUsage ) );
@@ -388,6 +424,7 @@ namespace TrinityALImpl
 		const Tr2MsaaDesc& msaa, 
 		Tr2GpuUsage::Type gpuUsage, 
 		Tr2CpuUsage::Type cpuUsage, 
+		bool createSrgb,
 		Tr2PrimaryRenderContextAL& renderContext )
 	{
 		CCP_UNUSED( cpuUsage );
@@ -426,8 +463,15 @@ namespace TrinityALImpl
 				srvDesc.Texture2DArray.ArraySize = desc.GetArraySize();
 			}
 			FORWARD_HR( renderContext.m_d3dDevice11->CreateShaderResourceView( texture, &srvDesc, &view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] ) );
-			srvDesc.Format = GetSrvFormat( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
-			FORWARD_HR( renderContext.m_d3dDevice11->CreateShaderResourceView( texture, &srvDesc, &view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
+			if( createSrgb )
+			{
+				srvDesc.Format = GetSrvFormat( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+				FORWARD_HR( renderContext.m_d3dDevice11->CreateShaderResourceView( texture, &srvDesc, &view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
+			}
+			else
+			{
+				view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR];
+			}
 		}
 
 		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) )
@@ -458,8 +502,15 @@ namespace TrinityALImpl
 			}
 
 			FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] ) );
-			rtvDesc.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
-			FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
+			if( createSrgb )
+			{
+				rtvDesc.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+				FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
+			}
+			else
+			{
+				renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR];
+			}
 		}
 
 		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
@@ -1070,7 +1121,7 @@ namespace TrinityALImpl
 			gpuUsage = gpuUsage | Tr2GpuUsage::UNORDERED_ACCESS;
 		}
 
-		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, renderContext ) );
+		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, true, renderContext ) );
 
 		m_texture = texture;
 		m_desc = desc;
