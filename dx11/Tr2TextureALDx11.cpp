@@ -344,8 +344,16 @@ namespace TrinityALImpl
 		{
 			return E_FAIL;
 		}
+
+		CCP_AL_LOG( "Opening shared texture %lld", uint64_t( handle ) );
+
 		CComPtr<ID3D11Texture2D> resource;
 		auto hr = renderContext.m_d3dDevice11->OpenSharedResource( reinterpret_cast<HANDLE>( handle ), __uuidof( ID3D11Texture2D ), reinterpret_cast<void**>( &resource.p ) );
+		if( FAILED( hr ) )
+		{
+			CCP_AL_LOG( "Failed to open shared texture %lld", uint64_t( handle ) );
+		}
+
 		FORWARD_HR( hr );
 
 		if( !resource )
@@ -357,7 +365,14 @@ namespace TrinityALImpl
 		resource->GetDesc( &dxDesc );
 		Tr2BitmapDimensions desc( Tr2RenderContextEnum::TEX_TYPE_2D, FromTypeless( Tr2RenderContextEnum::PixelFormat( dxDesc.Format ) ), dxDesc.Width, dxDesc.Height, 1, dxDesc.MipLevels );
 
-		FORWARD_HR( CreateViews( resource, desc, Tr2MsaaDesc(), gpuUsage, Tr2CpuUsage::NONE, renderContext ) );
+		CCP_AL_LOG( "Creating views for the shared texture %lld, GPU usage is %d", uint64_t( handle ), int( gpuUsage ) );
+
+		hr = CreateViews( resource, desc, Tr2MsaaDesc(), gpuUsage, Tr2CpuUsage::NONE, renderContext );
+		if( FAILED( hr ) )
+		{
+			CCP_AL_LOG( "Failed to create views for the shared texture %lld, GPU usage is %d", uint64_t( handle ), int( gpuUsage ) );
+		}
+		FORWARD_HR( hr );
 
 		m_desc = desc;
 		m_msaa = Tr2MsaaDesc();
