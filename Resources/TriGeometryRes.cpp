@@ -1720,6 +1720,24 @@ bool TriGeometryRes::CreateD3DVertexBuffer(
 	return true;
 }
 
+Be::Result<std::string> TriGeometryRes::SaveMesh( const char* filename, uint32_t meshIndex ) const
+{
+	if( !IsGood() )
+	{
+		return Be::Result<std::string>( "Geometry is not prepared" );
+	}
+	auto meshData = GetMeshData( meshIndex );
+	if( !meshData )
+	{
+		return Be::Result<std::string>( "Invalid mesh index" );
+	}
+	if( !SaveMeshToGrannyFile( meshData, filename ) )
+	{
+		return Be::Result<std::string>( "Failed to save the mesh" );
+	}
+	return Be::Result<std::string>();
+}
+
 bool TriGeometryRes::SaveMeshToGrannyFile( TriGeometryResMeshData* pMesh, const char* filename )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();

@@ -255,6 +255,8 @@ public:
 
 	TriGrannyResPtr m_sourceGranny;
 
+	Be::Result<std::string> SaveMesh( const char* filename, uint32_t meshIndex ) const;
+
 private:
 	void* m_data;
 	uint32_t m_dataSize;

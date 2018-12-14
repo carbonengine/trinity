@@ -163,53 +163,17 @@ const Be::ClassInfo* TriGeometryRes::ExposeToBlue()
 			"Returns a list of (usage, usage index) tuples for vertex layout of the specified mesh.\n"
 			":param idx: mesh index"
 		)
+
+		MAP_METHOD_AND_WRAP(
+			"SaveMesh",
+			SaveMesh,
+			"Save mesh data to a granny file\n"
+			":param path: desctination file path\n"
+			":param mesh: index of the mesh to save"
+		)
     EXPOSURE_CHAINTO( BlueAsyncRes )
 }
 
-void SaveMeshDataToGrannyFile(	Tr2Mesh* mesh,
-								char const* resPath,
-								char const* rawPath )
-{
-	TriGeometryRes* geometryRes = mesh->GetGeometryResource();
-	TriGeometryResMeshData* meshData = geometryRes->GetMeshData( mesh->GetMeshIndex() );
-	TriGeometryRes::SaveMeshToGrannyFile( meshData, rawPath );
-	mesh->DeferGeometryLoad( true );
-	mesh->SetMeshResPath( resPath );
-	mesh->DeferGeometryLoad( false );
-}
-
-#if BLUE_WITH_PYTHON
-static PyObject* PySaveMeshDataToGrannyFile( PyObject* self, PyObject* args )
-{
-	PyObject* pyMesh = NULL;
-	char const* resPath = NULL;
-	char const* rawPath = NULL;
-
-	if( PyArg_ParseTuple( args, "Oss", &pyMesh, &resPath, &rawPath ) )
-	{
-		if( Tr2Mesh* mesh = BluePythonCast<Tr2Mesh*>( pyMesh ) )
-		{
-			SaveMeshDataToGrannyFile( mesh, resPath, rawPath );
-			return PyBool_FromLong( true );
-		}
-	}
-
-	return PyBool_FromLong( false );
-}
-
-MAP_FUNCTION( "SaveMeshDataToGrannyFile",
-              PySaveMeshDataToGrannyFile,
-              "Saves mesh data to a Granny file.\n"
-			  ":param mesh: mesh\n"
-			  ":type mesh: Tr2Mesh\n"
-			  ":param resPath: res path\n"
-			  ":type resPath: str\n"
-			  ":param rawPath: raw path\n"
-			  ":type rawPath: str\n"
-			  ":rtype: bool"
-			  );
-
-#endif
 
 namespace
 {
