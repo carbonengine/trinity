@@ -2575,6 +2575,7 @@
     <ClInclude Include="Tr2SwapChain.h" />
     <ClInclude Include="Tr2TextureAtlas.h" />
     <ClInclude Include="Tr2TextureAtlasMan.h" />
+    <ClInclude Include="Tr2TexturedPointLight.h" />
     <ClInclude Include="Tr2TextureReference.h" />
     <ClInclude Include="Tr2Transform.h" />
     <ClInclude Include="Tr2TranslationTool.h" />
@@ -3097,6 +3098,8 @@
     <ClCompile Include="Tr2TextureAtlasMan.cpp" />
     <ClCompile Include="Tr2TextureAtlasMan_Blue.cpp" />
     <ClCompile Include="Tr2TextureAtlas_Blue.cpp" />
+    <ClCompile Include="Tr2TexturedPointLight.cpp" />
+    <ClCompile Include="Tr2TexturedPointLight_Blue.cpp" />
     <ClCompile Include="Tr2TextureReference.cpp" />
     <ClCompile Include="Tr2TextureReference_Blue.cpp" />
     <ClCompile Include="Tr2Transform.cpp" />

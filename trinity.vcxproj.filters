@@ -321,6 +321,9 @@
     <ClInclude Include="Tr2TextureAtlasMan.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tr2TexturedPointLight.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="Tr2TextureReference.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -1873,6 +1876,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2TextureAtlas_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2TexturedPointLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2TexturedPointLight_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2TextureReference.cpp">
