@@ -92,30 +92,6 @@ const Be::ClassInfo* EvePlanet::ExposeToBlue()
 			Be::READWRITE | Be::PERSIST
 		)
 
-		MAP_ATTRIBUTE 
-		(
-			"ready",
-			m_resourcesReady,
-			"Set by python weather required resources have been generated",
-			Be::READWRITE | Be::PERSIST
-		)
-
-		MAP_ATTRIBUTE 
-		(
-			"resourceActionPending",
-			m_resourceActionPending,
-			"Set to false by python when required resources have been generated and no further actions have to be taken",
-			Be::READWRITE | Be::PERSIST
-		)
-
-		MAP_ATTRIBUTE 
-		(
-			"forceResourceLoading",
-			m_forceResourceLoading,
-			"Tell the planet that it has to load it's resources",
-			Be::READWRITE | Be::PERSIST
-		)
-
 #if BLUE_WITH_PYTHON
 		MAP_ATTRIBUTE
 		(

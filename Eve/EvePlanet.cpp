@@ -19,10 +19,7 @@ EvePlanet::EvePlanet( IRoot* lockobj ) :
 	PARENTLOCK( m_observers ),
 	m_display( true ),
 	m_update( true ),
-	m_resourcesReady( false ),
 	m_needResources( false ),
-	m_resourceActionPending( false ),
-	m_forceResourceLoading( false ),
 	m_renderScale( SCALE ),
 	m_scaling( 1.0f ),
 	m_radius( 1.0f ),
@@ -39,30 +36,6 @@ EvePlanet::EvePlanet( IRoot* lockobj ) :
 
 EvePlanet::~EvePlanet()
 {
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   This function decides if we call the python callback to re-create all the
-//   textures that need baking. How the decision is made is rather complex.
-// Return value:
-//   Returns true if we need freshly updated resources
-// --------------------------------------------------------------------------------
-bool EvePlanet::RequiresResourceProcessing() const
-{
-	bool sizeReqChanged = ( m_requiredTextureSize > m_currentTextureSize ) || ( m_requiredTextureSize < m_currentTextureSize / 2 );
-
-	// On warp
-	if( m_warpMode )
-	{
-		if( m_forceResourceLoading )
-		{
-			return !m_resourcesReady || m_requiredTextureSize > m_currentTextureSize;
-		}
-		return false;
-	}
-	
-	return m_needResources && ( sizeReqChanged || !m_resourcesReady );
 }
 
 void EvePlanet::RegisterSecondaryLightSource( Tr2ShLightingManager& manager )
@@ -90,28 +63,23 @@ void EvePlanet::Update( EveUpdateContext& updateContext )
 		return;
 	}
 	
-	if ( m_pythonResourceCallback && !m_resourceActionPending )
+	if ( m_pythonResourceCallback )
 	{
-		if( RequiresResourceProcessing() )
+		if(m_needResources)
 		{
-			m_resourceActionPending = true;
-
 			m_currentTextureSize = m_requiredTextureSize;
 			if( !m_pythonResourceCallback.CallVoid( 1, m_requiredTextureSize ) )
 			{
-				m_resourceActionPending = false;
 #if BLUE_WITH_PYTHON
 				PyOS->PyFlushError("EvePlanet resource preparation(allocate) callback failed");
 #endif
 			}
 		}
-		else if(!(m_needResources || m_forceResourceLoading) && m_resourcesReady/* && !m_warpMode*/)
+		else if(!m_needResources/* && !m_warpMode*/)
 		{
-			m_resourceActionPending = true;
 			m_currentTextureSize = 0;
 			if( !m_pythonResourceCallback.CallVoid( 0 ) )
 			{
-				m_resourceActionPending = false;
 #if BLUE_WITH_PYTHON
 				PyOS->PyFlushError("EvePlanet resource preparation(free) callback failed");
 #endif
@@ -192,7 +160,6 @@ void EvePlanet::ReleaseResources( TriStorage s )
 	if( s & TRISTORAGE_VIDEOMEMORY )
 	{
 		// Textures should be created in default memory, so we need to mark them as not ready at this point.
-		m_resourcesReady = false;
 		m_needResources = false;
 	}
 }
@@ -309,15 +276,12 @@ void EvePlanet::PrepareForWarp(float minDist, const Vector3& dest)
 		{
 			m_requiredTextureSize = 64 >> s_evePlanetTextureQuality; // probably need better decision making here
 		}
-		
-		m_forceResourceLoading = true;
 	}
 }
 
 void EvePlanet::WarpStopped()
 {
 	m_warpMode = false;
-	m_forceResourceLoading = false;
 }
 
 void EvePlanet::GetZOnlyRenderables( std::vector<ITr2Renderable*>& renderables )
@@ -358,11 +322,7 @@ void EvePlanet::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 		// use EveTransform's/Tr2Mesh's inbuild low-detail mechanism
 		if( m_highDetail )
 		{
-			// now we can get the renderables, finally
-			if ( m_resourcesReady )
-			{
-				m_highDetail->GetRenderables( renderables );
-			}
+			m_highDetail->GetRenderables( renderables );
 		}
 	}
 }

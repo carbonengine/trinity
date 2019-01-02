@@ -87,16 +87,12 @@ private:
 	// resource updates
 	bool RequiresResourceProcessing() const;
 
-private:
 	std::string m_name;
 
 	bool m_display;
 	bool m_update;
 
-	bool m_resourcesReady;			// Set when resources are ready for the planet
 	bool m_needResources;			
-	bool m_resourceActionPending;	// Set when resources are being modified by python
-	bool m_forceResourceLoading;	// Indicates that resources should be loaded/created
 
 	bool m_warpMode;
 
