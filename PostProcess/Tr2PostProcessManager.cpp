@@ -126,12 +126,18 @@ void Tr2PostProcessManager::Update()
 }
 
 
-void Tr2PostProcessManager::Render( Tr2ShaderBufferPtr m_psData, Tr2RenderContext& renderContext )
+void Tr2PostProcessManager::Render( Tr2ShaderBufferPtr psData, Tr2RenderContext& renderContext )
 {
 	Tr2Renderer::PushRenderTarget( *m_sourceBuffer, renderContext);
 	Tr2Renderer::PushDepthStencilBuffer( nullDS, renderContext );
 
 	auto signalLoss = m_finalPostProcess->GetSignalLoss();
+	auto godRays = m_finalPostProcess->GetGodRays();
+
+	if( godRays )
+	{
+		godRays->Render( renderContext, m_rt1, m_rt2, m_sourceBuffer, psData );
+	}
 
 	if( signalLoss )
 	{

@@ -16,6 +16,7 @@ const Be::ClassInfo* Tr2PostProcess2::ExposeToBlue()
 		MAP_INTERFACE( Tr2PostProcess2 )
 
 		MAP_ATTRIBUTE( "signalLoss", m_signalLoss, "Accesses the Signal loss", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "godRays", m_godRays, "Accesses the God Rays effect", Be::READWRITE | Be::PERSIST )
 
     EXPOSURE_END()
 }
