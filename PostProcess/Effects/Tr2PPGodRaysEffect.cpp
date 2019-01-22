@@ -42,7 +42,7 @@ bool Tr2PPGodRaysEffect::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_noiseTexturePath ) )
 	{
-		TriTextureParameter* resource = ( TriTextureParameter* ) m_effect->GetResourceByName( "NoiseTexMap" );
+		TriTextureParameter* resource = dynamic_cast< TriTextureParameter* >( m_effect->GetResourceByName( "NoiseTexMap" ) );
 		resource->SetResourcePath( m_noiseTexturePath.c_str() );
 	}
 	else if( IsMatch( value, m_intensity ) )
