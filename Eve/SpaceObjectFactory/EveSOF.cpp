@@ -46,6 +46,8 @@
 #include "Particle/Tr2GpuUniqueEmitter.h"
 #include "TriSequencer.h"
 #include "Include/ITr2SoundEmitter.h"
+#include "Tr2PointLight.h"
+#include "Tr2TexturedPointLight.h"
 
 
 // --------------------------------------------------------------------------------
@@ -157,6 +159,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	SetupHazeSets( newObj, dna );
 	SetupBannerSets( newObj, dna );
 	SetupEffects( newObj, dna );
+	SetupLights( newObj, dna );
 
 	// attachments to ship
 	SetupLocators( newObj, dna );
@@ -1667,6 +1670,71 @@ void EveSOF::SetupEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) cons
 		}
 	}
 }
+
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Sets up lights for the new space object
+// --------------------------------------------------------------------------------
+void EveSOF::SetupLights( EveSpaceObject2Ptr spaceObject, const EveSOFDNAPtr dna ) const
+{
+	// cycle over all hulls in the multi-hull list
+	Vector3 hullOffset( 0.f, 0.f, 0.f );
+	for( size_t hullIdx = 0; hullIdx < dna->GetMultiHullCount(); ++hullIdx )
+	{
+		const std::vector<EveSOFDataMgr::HullLightSetData>& hullLightSets = dna->GetHullLightSets( hullIdx );
+
+		for( auto hls = hullLightSets.begin(); hls != hullLightSets.end(); ++hls )
+		{
+			if( !dna->IsInVisibilityData( hls->visibilityGroup ) )
+			{
+				continue;
+			}
+
+			for( auto hlsi = hls->items.begin(); hlsi != hls->items.end(); ++hlsi )
+			{
+				auto lightSet = *hlsi;
+				
+				if( lightSet.texturePath.length() != 0 )
+				{
+					Tr2TexturedPointLightPtr pointLight;
+					pointLight.CreateInstance();
+					pointLight->m_position = lightSet.position;
+					pointLight->m_radius = lightSet.radius;
+					pointLight->m_innerRadius = lightSet.innerRadius;
+					pointLight->m_brightness = lightSet.brightness;
+					pointLight->m_noiseAmplitude = lightSet.noiseAmplitude;
+					pointLight->m_noiseFrequency = lightSet.noiseFrequency;
+					pointLight->m_noiseOctaves = lightSet.noiseOctaves;
+					pointLight->SetTexturePath( lightSet.texturePath );
+					spaceObject->AddLight( pointLight );
+				}
+				else
+				{
+					Tr2PointLightPtr pointLight;
+					pointLight.CreateInstance();
+					pointLight->m_position = lightSet.position;
+					pointLight->m_radius = lightSet.radius;
+					pointLight->m_innerRadius = lightSet.innerRadius;
+					pointLight->m_color = dna->GetColorSet()[lightSet.lightColor];
+					pointLight->m_brightness = lightSet.brightness;
+					pointLight->m_noiseAmplitude = lightSet.noiseAmplitude;
+					pointLight->m_noiseFrequency = lightSet.noiseFrequency;
+					pointLight->m_noiseOctaves = lightSet.noiseOctaves;
+					spaceObject->AddLight( pointLight );
+				}
+			}
+		}
+
+		// next hull needs offset update from hull's locator
+		const Vector3* nextSubsystemOffset = dna->GetHullNextSubsystemOffset( hullIdx );
+		if( nextSubsystemOffset )
+		{
+			hullOffset += *nextSubsystemOffset;
+		}
+	}
+}
+
 
 // --------------------------------------------------------------------------------
 // Description:

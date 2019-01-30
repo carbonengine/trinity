@@ -95,6 +95,8 @@ private:
 	void SetupModelCurves( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupLocators( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupEffects( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
+	void SetupLights( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
+
 	void SetupCustomMask( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 
 	// all setup functions for ships only

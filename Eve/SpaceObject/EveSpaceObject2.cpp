@@ -2334,6 +2334,15 @@ void EveSpaceObject2::AddDecal( EveSpaceObjectDecalPtr newDecal )
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Add a new decal to this object from the outside
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::AddLight( Tr2PointLight* newLight )
+{
+	m_lights.Append( newLight->GetRawRoot() );
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Add a new curveSet to this object from the outside
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::AddCurveSet( TriCurveSetPtr newCurveSet )

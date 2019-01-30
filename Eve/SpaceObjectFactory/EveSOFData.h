@@ -831,6 +831,49 @@ TYPEDEF_BLUECLASS( EveSOFDataHullDecalSet );
 BLUE_DECLARE_VECTOR( EveSOFDataHullDecalSet );
 
 
+BLUE_CLASS( EveSOFDataHullLightSetItem ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataHullLightSetItem( IRoot* lockobj = NULL );
+	~EveSOFDataHullLightSetItem() {}
+
+	std::string m_name;
+	Vector3 m_position;
+	float m_radius;
+	float m_innerRadius;
+	float m_brightness;
+	float m_noiseAmplitude;
+	float m_noiseFrequency;
+	int m_noiseOctaves;
+	EveSOFDataFactionColorSet::ColorType m_lightColor;
+	std::wstring m_texturePath;		
+
+};
+TYPEDEF_BLUECLASS( EveSOFDataHullLightSetItem );
+BLUE_DECLARE_VECTOR( EveSOFDataHullLightSetItem );
+
+
+BLUE_CLASS( EveSOFDataHullLightSet ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataHullLightSet( IRoot* lockobj = NULL );
+	~EveSOFDataHullLightSet() {}
+
+	// general
+	std::string m_name;
+	// visibility group name
+	BlueSharedString m_visibilityGroup;
+	// items
+	PEveSOFDataHullLightSetItemVector m_items;
+};
+
+TYPEDEF_BLUECLASS( EveSOFDataHullLightSet );
+BLUE_DECLARE_VECTOR( EveSOFDataHullLightSet );
+
 
 BLUE_CLASS( EveSOFDataHullController ) :
 	public IRoot
@@ -924,6 +967,7 @@ public:
 	PEveSOFDataHullHazeSetVector m_hazeSets;
 	PEveSOFDataHullBannerVector m_banners;
 	PEveSOFDataHullDecalSetVector m_decalSets;
+	PEveSOFDataHullLightSetVector m_lightSets;
 	ImpactEffectType m_impactEffectType;
 
 	// boosters

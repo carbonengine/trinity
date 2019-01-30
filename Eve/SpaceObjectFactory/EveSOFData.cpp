@@ -249,6 +249,7 @@ EveSOFDataHull::EveSOFDataHull( IRoot* lockobj ) :
 	PARENTLOCK( m_hazeSets ),
 	PARENTLOCK( m_banners ),
 	PARENTLOCK( m_decalSets ),
+	PARENTLOCK( m_lightSets ),
 	PARENTLOCK( m_opaqueAreas ),
 	PARENTLOCK( m_decalAreas ),
 	PARENTLOCK( m_transparentAreas ),
@@ -584,6 +585,26 @@ EveSOFDataHullDecalSetItem::EveSOFDataHullDecalSetItem( IRoot* lockobj ) :
 {
 	m_indexBuffer.SetStructureDefinition( s_eveSOFDecalIndexDef );
 }
+
+
+EveSOFDataHullLightSet::EveSOFDataHullLightSet( IRoot* lockobj ) :
+	PARENTLOCK( m_items ),
+	m_visibilityGroup( "primary" )
+{}
+
+
+EveSOFDataHullLightSetItem::EveSOFDataHullLightSetItem( IRoot* lockobj ) :
+	m_position( 0.f, 0.f, 0.f ),
+	m_radius( 0.0f ),
+	m_innerRadius( 0.0f ),
+	m_brightness( 0.0f ),
+	m_noiseAmplitude( 0.0f ),
+	m_noiseFrequency( 1.0f ),
+	m_noiseOctaves( 1 ),
+	m_lightColor( EveSOFDataFactionColorSet::TYPE_PRIMARY ),
+	m_texturePath( L"" )
+{}
+
 
 EveSOFDataFactionVisibilityGroupSet::EveSOFDataFactionVisibilityGroupSet( IRoot* lockobj ) :
 	PARENTLOCK( m_visibilityGroups )

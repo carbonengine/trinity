@@ -750,6 +750,7 @@ const Be::ClassInfo* EveSOFDataHull::ExposeToBlue()
 		MAP_ATTRIBUTE( "hazeSets", m_hazeSets, "The hazesets", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "banners", m_banners, "", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "decalSets", m_decalSets, "The decalsets", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lightSets", m_lightSets, "The lightSets", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "impactEffectType", m_impactEffectType, "Type of impact effect on this hull", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFImpactEffectTypeChooser )
 
 		MAP_ATTRIBUTE( "booster", m_booster, "The booster", Be::READWRITE | Be::PERSIST )
@@ -853,6 +854,36 @@ const Be::ClassInfo* EveSOFDataHullDecalSet::ExposeToBlue()
 	EXPOSURE_BEGIN( EveSOFDataHullDecalSet, "" )
 		MAP_INTERFACE( EveSOFDataHullDecalSet )
 
+		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "visibilityGroup", m_visibilityGroup, "Name for visibility group to toggle visibility for the whole set.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "items", m_items, "The items in this decalset", Be::READWRITE | Be::PERSIST )
+		EXPOSURE_END()
+}
+
+BLUE_DEFINE( EveSOFDataHullLightSetItem );
+const Be::ClassInfo* EveSOFDataHullLightSetItem::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( EveSOFDataHullLightSetItem, "" )
+		MAP_INTERFACE( EveSOFDataHullLightSetItem )
+		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "position", m_position, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "lightColor", m_lightColor, "", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFDataFactionColorSetTypeChooser )
+		MAP_ATTRIBUTE( "radius", m_radius, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "innerRadius", m_innerRadius, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "brightness", m_brightness, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseAmplitude", m_noiseAmplitude, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseFrequency", m_noiseFrequency, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseOctaves", m_noiseOctaves, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "texturePath", m_texturePath, "", Be::READWRITE | Be::PERSIST )
+
+	EXPOSURE_END()
+}
+
+BLUE_DEFINE( EveSOFDataHullLightSet );
+const Be::ClassInfo* EveSOFDataHullLightSet::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( EveSOFDataHullLightSet, "" )
+		MAP_INTERFACE( EveSOFDataHullLightSet )
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "visibilityGroup", m_visibilityGroup, "Name for visibility group to toggle visibility for the whole set.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "items", m_items, "The items in this decalset", Be::READWRITE | Be::PERSIST )

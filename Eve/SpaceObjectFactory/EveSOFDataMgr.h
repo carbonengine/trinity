@@ -227,6 +227,26 @@ public:
 		std::vector<HullDecalSetItemData> items;
 	};
 
+
+	struct HullLightSetItemData
+	{
+		Vector3 position;
+		float radius;
+		float innerRadius;
+		float brightness;
+		float noiseAmplitude;
+		float noiseFrequency;
+		int noiseOctaves;
+		uint32_t lightColor;
+		std::wstring texturePath;
+	};
+
+	struct HullLightSetData
+	{
+		uint32_t visibilityGroup;
+		std::vector<HullLightSetItemData> items;
+	};
+
 	struct HullChild
 	{
 		std::string redFilePath;
@@ -300,6 +320,7 @@ public:
 		std::vector<HullHazeSetData> hazeSets;
 		std::vector<HullBannerSetData> bannerSets;
 		std::vector<HullDecalSetData> hullDecalSets;
+		std::vector<HullLightSetData> hullLightSets;
 		PatternProjectionData defaultPattern;
 		EveSOFDataHull::ImpactEffectType impactEffectType;
 		std::vector<HullAreas> opaqueAreas;

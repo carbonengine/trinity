@@ -326,6 +326,7 @@ public:
 	// access spritesets & co
 	void AddAttachment( IEveSpaceObjectAttachment* attachment );
 	void AddDecal( EveSpaceObjectDecalPtr newDecal );
+	void AddLight( Tr2PointLight* newLight );
 	void AddCurveSet( TriCurveSetPtr newCurveSet );
 	void AddLocator( EveLocator2* newLocator );
 	void AddOverlayEffect( EveMeshOverlayEffect* newOverlayEffect );

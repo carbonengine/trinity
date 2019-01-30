@@ -711,6 +711,16 @@ const std::vector<EveSOFDataMgr::HullDecalSetData>& EveSOFDNA::GetHullDecalSets(
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Returns an array of all the light sets for this hull
+// --------------------------------------------------------------------------------
+const std::vector<EveSOFDataMgr::HullLightSetData>& EveSOFDNA::GetHullLightSets( size_t n ) const
+{
+	return m_hullDatas[n]->hullLightSets;
+}
+
+
+// --------------------------------------------------------------------------------
+// Description:
 //   Changes the provided texture resource path, maybe modified depending on dna
 // --------------------------------------------------------------------------------
 void EveSOFDNA::ModifyTextureResPath( std::string& resPath, const char* resName ) const

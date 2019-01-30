@@ -18,12 +18,18 @@ bool Tr2TexturedPointLight::Initialize()
 	return true;
 }
 
+void Tr2TexturedPointLight::SetTexturePath( std::wstring path )
+{
+	m_texturePath = path;
+	m_texture = nullptr;
+	BeResMan->GetResource( m_texturePath, L"", m_texture );
+}
+
 bool Tr2TexturedPointLight::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_texturePath ) )
 	{
-		m_texture = nullptr;
-		BeResMan->GetResource( m_texturePath, L"", m_texture );
+		SetTexturePath( m_texturePath );
 	}
 	return true;
 }

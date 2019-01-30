@@ -743,6 +743,35 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		hd.hullDecalSets.push_back( decalSetData );
 	}
 
+	// hull light sets
+	hd.hullLightSets.clear();
+	for( auto ls = srcData->m_lightSets.begin(); ls != srcData->m_lightSets.end(); ++ls )
+	{
+		EveSOFDataHullLightSetPtr lightSet = ( *ls );
+		HullLightSetData lightSetData;
+		lightSetData.visibilityGroup = GetVisibilityGroupHash( lightSet->m_visibilityGroup );
+		lightSetData.items.clear();
+
+		for( auto lsi = lightSet->m_items.begin(); lsi != lightSet->m_items.end(); ++lsi )
+		{
+			EveSOFDataHullLightSetItemPtr itemPtr = ( *lsi );
+			HullLightSetItemData itemData;
+
+			itemData.position = itemPtr->m_position;
+			itemData.radius = itemPtr->m_radius;
+			itemData.innerRadius = itemPtr->m_innerRadius;
+			itemData.brightness = itemPtr->m_brightness;
+			itemData.noiseAmplitude = itemPtr->m_noiseAmplitude;
+			itemData.noiseFrequency = itemPtr->m_noiseFrequency;
+			itemData.noiseOctaves = itemPtr->m_noiseOctaves;
+			itemData.lightColor = itemPtr->m_lightColor;
+			itemData.texturePath = itemPtr->m_texturePath;
+
+			lightSetData.items.push_back( itemData );
+		}
+		hd.hullLightSets.push_back( lightSetData );
+	}
+
 	// meshareas
 	hd.opaqueAreas.clear();
 	for( auto mait = srcData->m_opaqueAreas.begin(); mait != srcData->m_opaqueAreas.end(); ++mait )

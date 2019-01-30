@@ -91,6 +91,7 @@ public:
 	const std::vector<EveSOFDataMgr::HullSoundEmitter>& GetHullSoundEmitters() const;
 	const std::vector<BlueSharedString>& GetHullControllers() const;
 	const std::vector<EveSOFDataMgr::HullDecalSetData>& GetHullDecalSets( size_t n ) const;
+	const std::vector<EveSOFDataMgr::HullLightSetData>& GetHullLightSets( size_t n ) const;
 	const std::vector<EveSOFDataMgr::HullPlaneSetData>& GetHullPlaneSets( size_t n ) const;
 	const std::vector<EveSOFDataMgr::HullSpotlightSetData>& GetHullSpotlightSets( size_t n ) const;
 	const std::vector<EveSOFDataMgr::HullSpriteSetData>& GetHullSpriteSets( size_t n ) const;

@@ -17,6 +17,8 @@ public:
 
 	bool Initialize() override;
 	bool OnModified( Be::Var* value ) override;
+
+	void SetTexturePath( std::wstring path );
 protected:
 	void UpdateLight() override;
 private:
