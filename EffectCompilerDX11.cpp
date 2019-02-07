@@ -2621,10 +2621,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			technique.passes.push_back( outPass );
 
 			listing.end(); // stages list
-			listing.end(); // pases list
-			listing.end(); // technique dict
 		}
 		result.techniques.push_back( technique );
+		listing.end(); // pases list
+		listing.end(); // technique dict
 	}
 	listing.end(); // technique list
 
