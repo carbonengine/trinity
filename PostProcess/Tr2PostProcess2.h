@@ -17,6 +17,7 @@
 #include "Effects/Tr2PPFilmGrainEffect.h"
 #include "Effects/Tr2PPDesaturateEffect.h"
 #include "Effects/Tr2PPFadeEffect.h"
+#include "Effects/Tr2PPLutEffect.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2PPSignalLossEffect );
@@ -26,6 +27,7 @@ BLUE_DECLARE( Tr2PPDynamicExposureEffect );
 BLUE_DECLARE( Tr2PPFilmGrainEffect );
 BLUE_DECLARE( Tr2PPDesaturateEffect );
 BLUE_DECLARE( Tr2PPFadeEffect );
+BLUE_DECLARE( Tr2PPLutEffect );
 
 BLUE_CLASS( Tr2PostProcess2 ) :
 	public IRoot
@@ -43,6 +45,7 @@ public:
 	Tr2PPFilmGrainEffectPtr GetFilmGrain() { return m_filmGrain; }
 	Tr2PPDesaturateEffectPtr GetDesaturate() { return m_desaturate; }
 	Tr2PPFadeEffectPtr GetFade() { return m_fade; }
+	Tr2PPLutEffectPtr GetLut() { return m_lut; }
 
 private:
 	Tr2PPSignalLossEffectPtr m_signalLoss;
@@ -52,8 +55,10 @@ private:
 	Tr2PPFilmGrainEffectPtr m_filmGrain;
 	Tr2PPDesaturateEffectPtr m_desaturate;
 	Tr2PPFadeEffectPtr m_fade;
+	Tr2PPLutEffectPtr m_lut;
 };
 TYPEDEF_BLUECLASS( Tr2PostProcess2 );
 
 #endif // Tr2PostProcess_H
+
 

@@ -115,6 +115,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	Tr2PPFilmGrainEffectPtr filmGrain = nullptr;
 	Tr2PPDesaturateEffectPtr desaturate = nullptr;
 	Tr2PPFadeEffectPtr fade = nullptr;
+	Tr2PPLutEffectPtr lut= nullptr;
 
 	if( postProcess != nullptr )
 	{
@@ -130,6 +131,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		case MEDIUM:
 			bloom = postProcess->GetBloom();
 			desaturate = postProcess->GetDesaturate();
+			lut = postProcess->GetLut();
 		case LOW:
 			signalLoss = postProcess->GetSignalLoss();
 			fade = postProcess->GetFade();
@@ -168,6 +170,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	ProcessFilmGrain( filmGrain );
 	ProcessDesaturate( desaturate );
 	ProcessFade( fade );
+	ProcessLut( lut );
 
 	Tr2Renderer::DrawTexture( m_tonemappingEffect, Vector2( 0, 0 ), Vector2( 1, 1 ) );
 	
@@ -633,6 +636,39 @@ void TriStepRenderPostProcess::ProcessFade( Tr2PPFadeEffect* fade )
 		// TODO replace with an option
 		m_tonemappingEffect->StartUpdate();
 		m_tonemappingEffect->SetParameter( BlueSharedString( "FadeAmount" ), 0.0f );
+		m_tonemappingEffect->EndUpdate();
+	}
+}
+
+void TriStepRenderPostProcess::ProcessLut( Tr2PPLutEffect* lut )
+{
+	if( lut && lut->IsActive() )
+	{
+		if( lut->IsDirty() )
+		{
+			// we only need to update the tonemapping buffer
+			m_tonemappingEffect->StartUpdate();
+			m_tonemappingEffect->SetParameter( BlueSharedString( "LUTInfluence" ), lut->m_influence );
+			auto resource = m_tonemappingEffect->GetResourceByName( "TexLUT" );
+			if( !resource )
+			{
+				m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( "TexLUT" ), lut->m_path.c_str() );
+			}
+			else 
+			{
+				dynamic_cast< TriTextureParameter* >( resource )->SetResourcePath( lut->m_path.c_str() );
+			}
+			// TODO replace with an option
+			m_tonemappingEffect->SetParameter( BlueSharedString( "LUTEnabled" ), 1.0f );
+			m_tonemappingEffect->EndUpdate();
+
+			lut->SetDirty( false );
+		}
+	}
+	else {
+		// TODO replace with an option
+		m_tonemappingEffect->StartUpdate();
+		m_tonemappingEffect->SetParameter( BlueSharedString( "LUTEnabled" ), 0.0f );
 		m_tonemappingEffect->EndUpdate();
 	}
 }

@@ -83,6 +83,9 @@ private:
 	// fade
 	void ProcessFade( Tr2PPFadeEffect* fade );
 
+	// LUT
+	void ProcessLut( Tr2PPLutEffect* lut );
+
 	// tonemapping
 	Tr2EffectPtr m_tonemappingEffect;
 	EveSpaceScenePtr m_scene;

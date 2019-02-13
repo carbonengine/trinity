@@ -22,6 +22,7 @@ const Be::ClassInfo* Tr2PostProcess2::ExposeToBlue()
 		MAP_ATTRIBUTE( "filmGrain", m_filmGrain, "Accesses the film grain effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "desaturate", m_desaturate, "Accesses the desaturate effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fade", m_fade, "Accesses the fade effect", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lut", m_lut, "Accesses the LUT effect", Be::READWRITE | Be::PERSIST )
 
     EXPOSURE_END()
 }
