@@ -199,9 +199,6 @@ CRITICAL_SECTION g_listingCS;
 // Optimization level
 unsigned g_optimizationLevel = 3;
 
-// Print compiled shader statistics
-bool g_printShaderStats = false;
-
 // Number of clip planes for DX11 patched vertex shaders
 int g_maxClipPlanes = 1;
 
@@ -680,118 +677,114 @@ bool DiscoverPermutations( Permutations& permutations )
 	return state.DiscoverPermutations( permutations );
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Shader compiler entry point.
-// Arguments:
-//   argc - number of program arguments
-//   argv - array of program arguments
-// Return value:
-//   0 on success
-//   non-zero on error
-// --------------------------------------------------------------------------------------
-int _tmain(int argc, _TCHAR* argv[])
+
+struct ProgramArguments
 {
-	char* shaderPath = nullptr;
-	char* outputPath = nullptr;
-	unsigned coreCount = GetNumberOfCores() * 2;
+	ProgramArguments()
+		:shaderPath( nullptr ),
+		outputPath( nullptr ),
+		coreCount( GetNumberOfCores() * 2 ),
+		listingFile( nullptr ),
+		checkMTime( false ),
+		printPermutations( false ),
+		ignorePermutations( false )
+	{
 
-	bool singlePermutation = false;
+	}
+
+	char* shaderPath;
+	char* outputPath;
+	unsigned coreCount;
 	char singleDefines[BUFFER_SIZE];
-	char* singleDefineStart = singleDefines;
-	strcpy_s( singleDefines, "0 -1 " );
+	char* listingFile;
+	bool checkMTime;
+	bool printPermutations;
+	bool ignorePermutations;
+};
+
+
+bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv[] )
+{
+	char* singleDefineStart = args.singleDefines;
+	strcpy_s( args.singleDefines, "0 -1 " );
 	singleDefineStart += strlen( singleDefineStart );
-
-	char* listingFile = nullptr;
-
-	// The /mtime option
-	bool checkMTime = false;
-	bool printPermutations = false;
-	bool ignorePermutations = false;
 
 	g_glesExtensions.m_all = GlesExtensionInfo::WARN;
 
-	// Parse command line
 	for( int i = 1; i < argc; ++i )
 	{
-		if( strcmp(argv[i], "/threads" ) == 0 )
+		if( strcmp( argv[i], "/threads" ) == 0 )
 		{
 			++i;
 			if( i < argc )
 			{
-				coreCount = max( atoi( argv[i] ), 1 );
+				args.coreCount = max( atoi( argv[i] ), 1 );
 			}
 			else
 			{
-				PrintUsage();
-				return 1;
+				return false;
 			}
 		}
-		else if( strcmp(argv[i], "/no_warnings" ) == 0 )
+		else if( strcmp( argv[i], "/no_warnings" ) == 0 )
 		{
 			g_printWarnings = false;
 		}
-		else if( strcmp(argv[i], "/shaderStats" ) == 0 )
+		else if( strcmp( argv[i], "/shaderStats" ) == 0 )
 		{
-			g_printShaderStats = true;
 		}
-		else if( strcmp(argv[i], "/single" ) == 0 )
+		else if( strcmp( argv[i], "/single" ) == 0 )
 		{
-			singlePermutation = true;
 		}
-		else if( strcmp(argv[i], "/novalidate" ) == 0 )
+		else if( strcmp( argv[i], "/novalidate" ) == 0 )
 		{
 			g_validateOpenGL = false;
 		}
 		else if( strcmp( argv[i], "/permutations" ) == 0 )
 		{
-			printPermutations = true;
+			args.printPermutations = true;
 		}
 		else if( strcmp( argv[i], "/no_permutations" ) == 0 )
 		{
-			ignorePermutations = true;
+			args.ignorePermutations = true;
 		}
-		else if( strcmp(argv[i], "/define" ) == 0 )
+		else if( strcmp( argv[i], "/define" ) == 0 )
 		{
 			++i;
 			if( i < argc )
 			{
-				strcpy_s( singleDefineStart, BUFFER_SIZE - ( singleDefineStart - singleDefines ), argv[i] );
+				strcpy_s( singleDefineStart, BUFFER_SIZE - ( singleDefineStart - args.singleDefines ), argv[i] );
 				size_t len = strlen( argv[i] );
 				singleDefineStart[len] = ' ';
 				singleDefineStart += len + 1;
 			}
 			else
 			{
-				PrintUsage();
-				return 1;
+				return false;
 			}
 			++i;
 			if( i < argc )
 			{
-				strcpy_s( singleDefineStart, BUFFER_SIZE - ( singleDefineStart - singleDefines ), argv[i] );
+				strcpy_s( singleDefineStart, BUFFER_SIZE - ( singleDefineStart - args.singleDefines ), argv[i] );
 				size_t len = strlen( argv[i] );
 				singleDefineStart[len] = ' ';
 				singleDefineStart += len + 1;
 			}
 			else
 			{
-				PrintUsage();
-				return 1;
+				return false;
 			}
 		}
-		else if( strcmp(argv[i], "/listing" ) == 0 )
+		else if( strcmp( argv[i], "/listing" ) == 0 )
 		{
 			g_generateListing = true;
 			++i;
 			if( i < argc )
 			{
-				listingFile = argv[i];
+				args.listingFile = argv[i];
 			}
 			else
 			{
-				PrintUsage();
-				return 1;
+				return false;
 			}
 		}
 		else if( strcmp( argv[i], "/clipPlanes" ) == 0 )
@@ -803,8 +796,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			}
 			else
 			{
-				PrintUsage();
-				return 1;
+				return false;
 			}
 		}
 		else if( strncmp( argv[i], "/O", 2 ) == 0 && strlen( argv[i] ) == 3 && argv[i][2] >= '0' && argv[i][2] <= '3' )
@@ -813,7 +805,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		}
 		else if( strcmp( argv[i], "/mtime" ) == 0 )
 		{
-			checkMTime = true;
+			args.checkMTime = true;
 		}
 		else if( strcmp( argv[i], "/GS" ) == 0 )
 		{
@@ -823,8 +815,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		{
 			g_avoidFlowControl = true;
 		}
-		else if( argv[i][0] == '/' && argv[i][1] == 'E' &&
-			( argv[i][2] == 'e' || argv[i][2] == 'w' || argv[i][2] == 'd' ) )
+		else if( argv[i][0] == '/' && argv[i][1] == 'E' && ( argv[i][2] == 'e' || argv[i][2] == 'w' || argv[i][2] == 'd' ) )
 		{
 			GlesExtensionInfo::Support support;
 			switch( argv[i][2] )
@@ -853,81 +844,78 @@ int _tmain(int argc, _TCHAR* argv[])
 			g_glExternalCompilerSwitch = argv[++i];
 			g_glExternalCompilerPath = argv[++i];
 		}
-		else if( shaderPath == nullptr )
+		else if( args.shaderPath == nullptr )
 		{
-			shaderPath = argv[i];
+			args.shaderPath = argv[i];
 		}
-		else if( outputPath == nullptr )
+		else if( args.outputPath == nullptr )
 		{
-			outputPath = argv[i];
-		}
-		else
-		{
-			PrintUsage();
-			return 1;
-		}
-	}
-
-	if( outputPath == nullptr && ( !checkMTime || singlePermutation ) )
-	{
-		if( !printPermutations )
-		{
-			PrintUsage();
-			return 1;
-		}
-	}
-
-	if( checkMTime )
-	{
-		InitializeCriticalSection( &s_modifiedOutputsCS );
-
-		HANDLE *workerThreads = new HANDLE[coreCount];
-		for( unsigned i = 0; i < coreCount; ++i )
-		{
-			workerThreads[i] = CreateThread( NULL, 0, &CheckMTimeThread, NULL, 0, NULL );
-		}
-
-		if( singlePermutation )
-		{
-			*singleDefineStart = 0;
-			size_t length = strlen( singleDefines ) + 1;
-			length += strlen( shaderPath ) + strlen( outputPath ) + 2;
-			char* inputLine = new char[length];
-			strcpy_s( inputLine, length, shaderPath );
-			strcat_s( inputLine, length, " " );
-			strcat_s( inputLine, length, outputPath );
-			strcat_s( inputLine, length, " " );
-			strcat_s( inputLine, length, singleDefines );
-			g_workQueue.Put( inputLine );
+			args.outputPath = argv[i];
 		}
 		else
 		{
-			char buffer[BUFFER_SIZE];
-			while( !feof( stdin ) )
-			{
-				if( !gets_s( buffer ) )
-				{
-					break;
-				}
-				size_t length = strlen( buffer ) + 1;
-				char* inputLine = new char[length];
-				strcpy_s( inputLine, length, buffer );
-				g_workQueue.Put( inputLine );
-			}
+			return false;
 		}
-		for( unsigned i = 0; i < coreCount; ++i )
-		{
-			g_workQueue.Put( nullptr );
-		}
-		WaitForMultipleObjects( coreCount, workerThreads, TRUE, INFINITE );
+	}
+	*singleDefineStart = 0;
+	if( args.outputPath == nullptr && !args.printPermutations )
+	{
+		return false;
+	}
+	return true;
+}
 
-		DeleteCriticalSection( &s_modifiedOutputsCS );
+void PrintModificationTime( const ProgramArguments& args )
+{
+	InitializeCriticalSection( &s_modifiedOutputsCS );
 
-		for( auto it = s_modifiedOutputs.begin(); it != s_modifiedOutputs.end(); ++it )
-		{
-			puts( it->c_str() );
-			puts( "\n" );
-		}
+	HANDLE *workerThreads = new HANDLE[args.coreCount];
+	for( unsigned i = 0; i < args.coreCount; ++i )
+	{
+		workerThreads[i] = CreateThread( NULL, 0, &CheckMTimeThread, NULL, 0, NULL );
+	}
+
+	{
+		size_t length = strlen( args.singleDefines ) + 1;
+		length += strlen( args.shaderPath ) + strlen( args.outputPath ) + 2;
+		char* inputLine = new char[length];
+		strcpy_s( inputLine, length, args.shaderPath );
+		strcat_s( inputLine, length, " " );
+		strcat_s( inputLine, length, args.outputPath );
+		strcat_s( inputLine, length, " " );
+		strcat_s( inputLine, length, args.singleDefines );
+		g_workQueue.Put( inputLine );
+	}
+
+	for( unsigned i = 0; i < args.coreCount; ++i )
+	{
+		g_workQueue.Put( nullptr );
+	}
+
+	WaitForMultipleObjects( args.coreCount, workerThreads, TRUE, INFINITE );
+
+	DeleteCriticalSection( &s_modifiedOutputsCS );
+
+	for( auto it = s_modifiedOutputs.begin(); it != s_modifiedOutputs.end(); ++it )
+	{
+		puts( it->c_str() );
+		puts( "\n" );
+	}
+}
+
+
+int _tmain(int argc, _TCHAR* argv[])
+{
+	ProgramArguments args;
+	if( !ExtractCommandLineArguments( args, argc, argv ) )
+	{
+		PrintUsage();
+		return 1;
+	}
+
+	if( args.checkMTime )
+	{
+		PrintModificationTime( args );
 		return 0;
 	}
 
@@ -937,21 +925,21 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	// Preload shader file
-	if( FAILED( g_includeHandler.Open( D3DXINC_LOCAL, shaderPath, NULL, (LPCVOID*)&g_shaderSource, &g_shaderLength ) ) )
+	if( FAILED( g_includeHandler.Open( D3DXINC_LOCAL, args.shaderPath, NULL, (LPCVOID*)&g_shaderSource, &g_shaderLength ) ) )
 	{
-		printf( "%s: error X0000: Could not open input file \"%s\"\n", shaderPath, shaderPath );
+		printf( "%s: error X0000: Could not open input file \"%s\"\n", args.shaderPath, args.shaderPath );
 		return 1;
 	}
 	
-	g_includeHandler.SetRootPath( shaderPath );
-	g_messages.SetEntryFileName( shaderPath );
+	g_includeHandler.SetRootPath( args.shaderPath );
+	g_messages.SetEntryFileName( args.shaderPath );
 
 	// Initialize mutexes and threads
 	InitializeCriticalSectionAndSpinCount( &g_compiledEffectsCS, 1000 );
 	InitializeCriticalSectionAndSpinCount( &g_aliasesCS, 100 );
 
-	HANDLE *workerThreads = new HANDLE[coreCount];
-	for( unsigned i = 0; i < coreCount; ++i )
+	HANDLE *workerThreads = new HANDLE[args.coreCount];
+	for( unsigned i = 0; i < args.coreCount; ++i )
 	{
 		workerThreads[i] = CreateThread( NULL, 0, &WorkerThread, NULL, 0, NULL );
 	}
@@ -986,11 +974,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		return 1;
 	}
 
-	// Read permutation strings
-	char buffer[BUFFER_SIZE];
-
 	Permutations permutations;
-	if( singlePermutation )
 	{
 		if( !DiscoverPermutations( permutations ) )
 		{
@@ -998,7 +982,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			return 1;
 		}
 
-		if( printPermutations )
+		if( args.printPermutations )
 		{
 			for( auto it = permutations.begin(); it != permutations.end(); ++it )
 			{
@@ -1027,9 +1011,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		os << "#line 1" << std::endl;
 		auto prefix = os.str();
 
-		g_includeHandler.AddPrefix( shaderPath, prefix.c_str(), (LPCVOID*)&g_shaderSource, &g_shaderLength );
-
-		*singleDefineStart = 0;
+		g_includeHandler.AddPrefix( args.shaderPath, prefix.c_str(), (LPCVOID*)&g_shaderSource, &g_shaderLength );
 
 		std::vector<size_t> indexes;
 		indexes.resize( permutations.size() );
@@ -1038,8 +1020,8 @@ int _tmain(int argc, _TCHAR* argv[])
 		while( !done )
 		{
 			std::ostringstream os;
-			os << permutation << " -1 " << ( singleDefines + 5 );
-			if( !ignorePermutations )
+			os << permutation << " -1 " << ( args.singleDefines + 5 );
+			if( !args.ignorePermutations )
 			{
 				for( size_t i = 0; i < permutations.size(); ++i )
 				{
@@ -1069,35 +1051,21 @@ int _tmain(int argc, _TCHAR* argv[])
 					break;
 				}
 			}
-			if( ignorePermutations || permutations.empty() )
+			if( args.ignorePermutations || permutations.empty() )
 			{
 				break;
 			}
 			++permutation;
 		}
 	}
-	else
-	{
-		while( !feof( stdin ) )
-		{
-			if( !gets_s( buffer ) )
-			{
-				break;
-			}
-			size_t length = strlen( buffer ) + 1;
-			char* inputLine = new char[length];
-			strcpy_s( inputLine, length, buffer );
-			g_workQueue.Put( inputLine );
-		}
-	}
 
-	for( unsigned i = 0; i < coreCount; ++i )
+	for( unsigned i = 0; i < args.coreCount; ++i )
 	{
 		g_workQueue.Put( nullptr );
 	}
 	
 	// Wait for worker threads to finish compiling
-	WaitForMultipleObjects( coreCount, workerThreads, TRUE, INFINITE );
+	WaitForMultipleObjects( args.coreCount, workerThreads, TRUE, INFINITE );
 	if( InterlockedCompareExchange( &g_error, 0, 0 ) )
 	{
 		g_messages.Flush();
@@ -1111,7 +1079,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		if( g_compiledEffects.find( it->second ) == g_compiledEffects.end() )
 		{
-			printf( "%s: error X0000: Invalid alias from permutation %u to permutation %u\n", shaderPath, it->first, it->second );
+			printf( "%s: error X0000: Invalid alias from permutation %u to permutation %u\n", args.shaderPath, it->first, it->second );
 			return 1;
 		}
 	}
@@ -1151,27 +1119,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	// Open the output file
-	HANDLE file = CreateFile( outputPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
+	HANDLE file = CreateFile( args.outputPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
 	if( file == INVALID_HANDLE_VALUE )
 	{
-		printf( "%s: error X0000: Could not open output file \"%s\" for writing\n", shaderPath, outputPath );
+		printf( "%s: error X0000: Could not open output file \"%s\" for writing\n", args.shaderPath, args.outputPath );
 		fflush( stdout );
 		return 1;
-	}
-
-	if( g_printShaderStats )
-	{
-		unsigned count = 0;
-		for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
-		{
-			if( it->second )
-			{
-				++count;
-			}
-		}
-
-		printf( "Compiled %u permutations and %u aliases\n", count, g_aliases.size() + aliases.size() );
-		fflush( stdout );
 	}
 
 	size_t permutationSize = 1;
@@ -1179,9 +1132,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		permutationSize += 2 * sizeof( DWORD ) + 1 + 1 + 1 + it->options.size() * sizeof( DWORD );
 	}
-
-
-
 
 	// Write file header
 	unsigned totalSize = unsigned( g_compiledEffects.size() + g_aliases.size() );
@@ -1273,17 +1223,17 @@ int _tmain(int argc, _TCHAR* argv[])
 	DeleteCriticalSection( &g_compiledEffectsCS );
 	DeleteCriticalSection( &g_aliasesCS );
 
-	for( unsigned i = 0; i < coreCount; ++i )
+	for( unsigned i = 0; i < args.coreCount; ++i )
 	{
 		CloseHandle( workerThreads[i] );
 	}
 	 
 	if( g_generateListing )
 	{
-		HANDLE file = CreateFile( listingFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
+		HANDLE file = CreateFile( args.listingFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
 		if( file == INVALID_HANDLE_VALUE )
 		{
-			printf( "%s: error X0000: Could not open listing file \"%s\" for writing\n", shaderPath, listingFile );
+			printf( "%s: error X0000: Could not open listing file \"%s\" for writing\n", args.shaderPath, args.listingFile );
 			fflush( stdout );
 			return 1;
 		}

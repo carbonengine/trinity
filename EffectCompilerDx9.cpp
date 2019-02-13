@@ -9,7 +9,6 @@ extern CompileMessageQueue g_messages;
 extern StringTable g_stringTable;
 extern bool g_printWarnings;
 extern unsigned g_optimizationLevel;
-extern bool g_printShaderStats;
 extern bool g_avoidFlowControl;
 
 IDirect3DDevice9Ex* g_device9 = nullptr;
@@ -17,6 +16,51 @@ CRITICAL_SECTION g_analyzeEffectDx9CS;
 
 
 extern void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectData& result );
+
+
+template<class BidirIt, class Traits, class CharT, class UnaryFunction>
+std::basic_string<CharT> regex_replacecb( BidirIt first, BidirIt last,
+	const std::basic_regex<CharT, Traits>& re, UnaryFunction f )
+{
+	std::basic_string<CharT> s;
+
+	typename std::match_results<BidirIt>::difference_type
+		positionOfLastMatch = 0;
+	auto endOfLastMatch = first;
+
+	auto callback = [&]( const std::match_results<BidirIt>& match )
+	{
+		auto positionOfThisMatch = match.position( 0 );
+		auto diff = positionOfThisMatch - positionOfLastMatch;
+
+		auto startOfThisMatch = endOfLastMatch;
+		std::advance( startOfThisMatch, diff );
+
+		s.append( endOfLastMatch, startOfThisMatch );
+		s.append( f( match ) );
+
+		auto lengthOfMatch = match.length( 0 );
+
+		positionOfLastMatch = positionOfThisMatch + lengthOfMatch;
+
+		endOfLastMatch = startOfThisMatch;
+		std::advance( endOfLastMatch, lengthOfMatch );
+	};
+
+	std::regex_iterator<BidirIt> begin( first, last, re ), end;
+	std::for_each( begin, end, callback );
+
+	s.append( endOfLastMatch, last );
+
+	return s;
+}
+
+template<class Traits, class CharT, class UnaryFunction>
+std::string regex_replacecb( const std::string& s,
+	const std::basic_regex<CharT, Traits>& re, UnaryFunction f )
+{
+	return regex_replacecb( s.cbegin(), s.cend(), re, f );
+}
 
 
 class SamplerSetupFullDx9
@@ -185,7 +229,10 @@ HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetRenderState( D3DRENDERSTATETYPE 
 		// consistent with the rest of the world.
 		//m_renderStates.SetState( D3DRS_CULLMODE, D3DCULL_CW );
 		break;
-
+	case D3DRS_VERTEXBLEND:
+		// This realy is BlendOpAlpha
+		m_renderStates[D3DRS_BLENDOPALPHA] = value;
+		break;
 	case D3DRS_ALPHATESTENABLE:
 	case D3DRS_SRCBLEND:
 	case D3DRS_DESTBLEND:
@@ -493,12 +540,6 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 	fx->GetDesc( &effectDesc );
 	int n = effectDesc.Parameters;
 
-	std::string shaderStatistics;
-	if( g_printShaderStats )
-	{
-		shaderStatistics = "Compiled shader instructions (approximate):\nPass  VS  PS";
-	}
-
 	D3DXEFFECT_DESC	effectDescription;
 	D3DXPARAMETER_DESC parameterDescription;
 	D3DXPARAMETER_DESC annotationDescription;
@@ -708,24 +749,12 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				pass.stages[1].threadGroupSize[1] = 0;
 				pass.stages[1].threadGroupSize[2] = 0;
 
-				if( g_printShaderStats )
-				{
-					char buffer[64];
-					sprintf_s( buffer, "%4u", i );
-					shaderStatistics += "\n";
-					shaderStatistics += buffer;
-				}
-
 				if( m_vertexShader == NULL )
 				{
 					g_messages.AddMessage( "\\memory(0): warning X0000: Vertex shader NULL encountered when analyzing DX9 effect" );
 					pass.stages[0].shaderSize = 0;
 					pass.stages[0].shaderData = nullptr;
 					pass.stages[0].shaderDataStr = -1;
-					if( g_printShaderStats )
-					{
-						shaderStatistics += "   -";
-					}
 				}
 				else
 				{
@@ -741,20 +770,6 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 						g_messages.AddMessage( "\\memory(0): error X0000: Getting vertex shader data when analyzing DX9 effect" );
 						return false;
 					}
-					if( g_printShaderStats )
-					{
-						unsigned count = GetInstructionCount( buffer );
-						if( count != -1 )
-						{
-							char buffer[64];
-							sprintf_s( buffer, "%4u", count );
-							shaderStatistics += buffer;
-						}
-						else
-						{
-							shaderStatistics += "   ?";
-						}
-					}
 					StripComments( buffer, pass.stages[0].shaderSize, pass.stages[0].shaderData );
 					pass.stages[0].shaderDataStr = g_stringTable.AddString( pass.stages[0].shaderData, pass.stages[0].shaderSize );
 					delete[] buffer;
@@ -766,10 +781,6 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 					pass.stages[1].shaderSize = 0;
 					pass.stages[1].shaderData = nullptr;
 					pass.stages[1].shaderDataStr = -1;
-					if( g_printShaderStats )
-					{
-						shaderStatistics += "   -";
-					}
 				}
 				else
 				{
@@ -783,20 +794,6 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 					{
 						g_messages.AddMessage( "\\memory(0): error X0000: Getting pixel shader data when analyzing DX9 effect" );
 						return false;
-					}
-					if( g_printShaderStats )
-					{
-						unsigned count = GetInstructionCount( buffer );
-						if( count != -1 )
-						{
-							char buffer[64];
-							sprintf_s( buffer, "%4u", count );
-							shaderStatistics += buffer;
-						}
-						else
-						{
-							shaderStatistics += "   ?";
-						}
 					}
 					StripComments( buffer, pass.stages[1].shaderSize, pass.stages[1].shaderData );
 					delete[] buffer;
@@ -1034,12 +1031,6 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 	for( std::vector<D3DXHANDLE>::const_iterator it = texturesSet.begin(); it != texturesSet.end(); ++it )
 	{
 		fx->SetTexture( *it, NULL );
-	}
-
-
-	if( g_printShaderStats )
-	{
-		g_messages.AddMessage( shaderStatistics.c_str() );
 	}
 
 	return true;
@@ -1280,12 +1271,44 @@ CompileStatus SafeCompileEffect( ID3DXEffectCompiler* effectCompiler, DWORD flag
 }
 
 const std::regex s_premutationPragma( "^[[:space:]]*#[[:space:]]*pragma[[:space:]]*permutation.*" );
+const std::regex s_blendOpAlpha( "[^[:alnum:]]BlendOpAlpha[[:space:]]*=[[:space:]]*([[:alnum:]]+)[[:space:]]*;" );
 
 }
 
 bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, const D3DXMACRO* defines, ID3DXInclude* include, EffectData& result, bool disableListing )
 {
 	auto src = std::regex_replace( std::string( source, sourceLength ), s_premutationPragma, std::string( "" ) );
+
+	// We need to replace BlendOpAlpha render state assignment because FXC bug will
+	// replace BlendOpAlpha with BendOp. We highjack VertexBlend state for that.
+	src = regex_replacecb( src, s_blendOpAlpha, []( const std::smatch& m ) -> std::string {
+		auto value = m.str( 1 );
+		if( _stricmp( value.c_str(), "add" ) == 0 )
+		{
+			return " VERTEXBLEND=1;";
+		}
+		else if( _stricmp( value.c_str(), "subtract" ) == 0 )
+		{
+			return " VERTEXBLEND=2;";
+		}
+		else if( _stricmp( value.c_str(), "revsubtract" ) == 0 )
+		{
+			return " VERTEXBLEND=3;";
+		}
+		else if( _stricmp( value.c_str(), "min" ) == 0 )
+		{
+			return " VERTEXBLEND=4;";
+		}
+		else if( _stricmp( value.c_str(), "max" ) == 0 )
+		{
+			return " VERTEXBLEND=5;";
+		}
+		else
+		{
+			return m.str( 0 ).c_str();
+		}
+	} );
+
 	source = src.c_str();
 	sourceLength = src.length();
 

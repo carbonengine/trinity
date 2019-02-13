@@ -24,7 +24,6 @@ extern CompileMessageQueue g_messages;
 extern StringTable g_stringTable;
 extern bool g_printWarnings;
 extern unsigned g_optimizationLevel;
-extern bool g_printShaderStats;
 extern bool g_avoidFlowControl;
 
 void PrintHLSL11( CodeStream& os, ASTNode* node, int level );
@@ -2238,12 +2237,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 	listing.end();
 	listing.literal( "techniques" ).list();
 
-	std::string shaderStatistics;
-	if( g_printShaderStats )
-	{
-		shaderStatistics = "Compiled shader instructions (approximate):\nPass  VS  PS  CS  GS  HS  DS";
-	}
-
 	for( auto techniqueIt = techniqueNodes.begin(); techniqueIt != techniqueNodes.end(); ++techniqueIt )
 	{
 		auto techniqueNode = *techniqueIt;
@@ -2560,33 +2553,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				outPass.stages.push_back( stage );
 			}
 
-			if( g_printShaderStats )
-			{
-				char buffer[64];
-				sprintf_s( buffer, "\n%4u", passIx );
-				shaderStatistics += buffer;
-				for( int k = 0; k < 6; ++k )
-				{
-					if( reflections[k] )
-					{
-						D3D11_SHADER_DESC desc;
-						if( SUCCEEDED( reflections[k]->GetDesc( &desc ) ) )
-						{
-							char buffer[64];
-							sprintf_s( buffer, "%4u", desc.InstructionCount );
-							shaderStatistics += buffer;
-						}
-						else
-						{
-							shaderStatistics += "   ?";
-						}
-					}
-					else
-					{
-						shaderStatistics += "   -";
-					}
-				}
-			}
 			// Check if PS input matches VS output
 			InputStageType pipelineStages[] = {
 				VERTEX_STAGE,
@@ -2627,11 +2593,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 		listing.end(); // technique dict
 	}
 	listing.end(); // technique list
-
-	if( g_printShaderStats )
-	{
-		g_messages.AddMessage( shaderStatistics.c_str() );
-	}
 
 	return true;
 }

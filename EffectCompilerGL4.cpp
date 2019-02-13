@@ -21,8 +21,6 @@ extern CompileMessageQueue g_messages;
 extern StringTable g_stringTable;
 extern int g_maxClipPlanes;
 extern bool g_glesEmulateSampler;
-extern bool g_generateListing;
-extern std::string g_listing;
 extern CRITICAL_SECTION g_listingCS;
 extern bool g_printWarnings;
 extern bool g_validateOpenGL;
