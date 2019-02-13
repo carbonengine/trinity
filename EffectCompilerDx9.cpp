@@ -1285,23 +1285,23 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 		auto value = m.str( 1 );
 		if( _stricmp( value.c_str(), "add" ) == 0 )
 		{
-			return " VERTEXBLEND=1;";
+			return m.str( 0 ).substr( 0, 1 ) + " VERTEXBLEND=1;";
 		}
 		else if( _stricmp( value.c_str(), "subtract" ) == 0 )
 		{
-			return " VERTEXBLEND=2;";
+			return m.str( 0 ).substr( 0, 1 ) + " VERTEXBLEND=2;";
 		}
 		else if( _stricmp( value.c_str(), "revsubtract" ) == 0 )
 		{
-			return " VERTEXBLEND=3;";
+			return m.str( 0 ).substr( 0, 1 ) + " VERTEXBLEND=3;";
 		}
 		else if( _stricmp( value.c_str(), "min" ) == 0 )
 		{
-			return " VERTEXBLEND=4;";
+			return m.str( 0 ).substr( 0, 1 ) + " VERTEXBLEND=4;";
 		}
 		else if( _stricmp( value.c_str(), "max" ) == 0 )
 		{
-			return " VERTEXBLEND=5;";
+			return m.str( 0 ).substr( 0, 1 ) + " VERTEXBLEND=5;";
 		}
 		else
 		{
