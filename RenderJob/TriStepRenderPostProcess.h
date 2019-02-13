@@ -80,6 +80,9 @@ private:
 	// desaturate
 	void ProcessDesaturate( Tr2PPDesaturateEffect* desaturate );
 
+	// fade
+	void ProcessFade( Tr2PPFadeEffect* fade );
+
 	// tonemapping
 	Tr2EffectPtr m_tonemappingEffect;
 	EveSpaceScenePtr m_scene;
