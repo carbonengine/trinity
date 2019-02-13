@@ -2843,6 +2843,7 @@
     <ClInclude Include="PostProcess\Effects\Tr2PPBloomEffect.h" />
     <ClInclude Include="PostProcess\Effects\Tr2PPDynamicExposureEffect.h" />
     <ClInclude Include="PostProcess\Effects\Tr2PPEffect.h" />
+    <ClInclude Include="PostProcess\Effects\Tr2PPFilmGrainEffect.h" />
     <ClInclude Include="PostProcess\Effects\Tr2PPGodRaysEffect.h" />
     <ClInclude Include="PostProcess\Effects\Tr2PPSignalLossEffect.h" />
     <ClInclude Include="RenderJob\ITriRenderStep.h" />
@@ -3508,6 +3509,8 @@
     <ClCompile Include="PostProcess\Effects\Tr2PPDynamicExposureEffect_Blue.cpp" />
     <ClCompile Include="PostProcess\Effects\Tr2PPEffect.cpp" />
     <ClCompile Include="PostProcess\Effects\Tr2PPEffect_Blue.cpp" />
+    <ClCompile Include="PostProcess\Effects\Tr2PPFilmGrainEffect.cpp" />
+    <ClCompile Include="PostProcess\Effects\Tr2PPFilmGrainEffect_Blue.cpp" />
     <ClCompile Include="PostProcess\Effects\Tr2PPGodRaysEffect.cpp" />
     <ClCompile Include="PostProcess\Effects\Tr2PPGodRaysEffect_Blue.cpp" />
     <ClCompile Include="PostProcess\Effects\Tr2PPSignalLossEffect.cpp" />
