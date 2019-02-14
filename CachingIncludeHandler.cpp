@@ -13,7 +13,6 @@
 // --------------------------------------------------------------------------------------
 CachingIncludeHandler::CachingIncludeHandler()
 {
-	InitializeCriticalSection( &m_CS );
 }
 
 // --------------------------------------------------------------------------------------
@@ -26,7 +25,6 @@ CachingIncludeHandler::~CachingIncludeHandler()
 	{
 		free( it->second.data );
 	}
-	DeleteCriticalSection( &m_CS );
 }
 
 // --------------------------------------------------------------------------------------
@@ -80,7 +78,8 @@ HRESULT CachingIncludeHandler::Open( D3DXINCLUDE_TYPE includeType,
 									 LPCSTR rootPath,
 									 FILETIME& mtime )
 {
-	EnterCriticalSection( &m_CS );
+	MutexScope scope( m_CS );
+
 	char fullPath[MAX_PATH];
 	if( PathIsRelative( fileName ) )
 	{
@@ -103,12 +102,10 @@ HRESULT CachingIncludeHandler::Open( D3DXINCLUDE_TYPE includeType,
 		}
 		if( !PathAppend( parentPath, fileName ) )
 		{
-			LeaveCriticalSection( &m_CS );
 			return E_FAIL;
 		}
 		if( !PathCanonicalize( fullPath, parentPath ) )
 		{
-			LeaveCriticalSection( &m_CS );
 			return E_FAIL;
 		}
 	}
@@ -122,13 +119,11 @@ HRESULT CachingIncludeHandler::Open( D3DXINCLUDE_TYPE includeType,
 		*bytes = fileFromPath->second.size;
 		*data = reinterpret_cast<char*>( fileFromPath->second.data ) + 1;
 		mtime = fileFromPath->second.modifiedTime;
-		LeaveCriticalSection( &m_CS );
 		return S_OK;
 	}
 	HANDLE file = CreateFile( fullPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN, NULL );
 	if( file == INVALID_HANDLE_VALUE )
 	{
-		LeaveCriticalSection( &m_CS );
 		return E_FAIL;
 	}
 
@@ -148,7 +143,6 @@ HRESULT CachingIncludeHandler::Open( D3DXINCLUDE_TYPE includeType,
 	if( info.data == NULL )
 	{
 		CloseHandle( file );
-		LeaveCriticalSection( &m_CS );
 		return E_FAIL;
 	}
 	*reinterpret_cast<char*>( info.data ) = '\n';
@@ -157,7 +151,6 @@ HRESULT CachingIncludeHandler::Open( D3DXINCLUDE_TYPE includeType,
 	{
 		CloseHandle( file );
 		free( info.data );
-		LeaveCriticalSection( &m_CS );
 		return E_FAIL;
 	}
 	*( reinterpret_cast<char*>( info.data ) + fileSize + 1 ) = 0;
@@ -167,13 +160,13 @@ HRESULT CachingIncludeHandler::Open( D3DXINCLUDE_TYPE includeType,
 	m_pathFromFile[info.data] = std::string( fullPath, filename - fullPath );
 	*bytes = info.size;
 	*data = reinterpret_cast<char*>( info.data ) + 1;
-	LeaveCriticalSection( &m_CS );
 	return S_OK;
 }
 
 HRESULT CachingIncludeHandler::AddPrefix( const char* fileName, const char* prefix, LPCVOID *outData, UINT *bytes )
 {
-	EnterCriticalSection( &m_CS );
+	MutexScope scope( m_CS );
+
 	char fullPath[MAX_PATH];
 	if( PathIsRelative( fileName ) )
 	{
@@ -181,12 +174,10 @@ HRESULT CachingIncludeHandler::AddPrefix( const char* fileName, const char* pref
 		parentPath[0] = 0;
 		if( !PathAppend( parentPath, fileName ) )
 		{
-			LeaveCriticalSection( &m_CS );
 			return E_FAIL;
 		}
 		if( !PathCanonicalize( fullPath, parentPath ) )
 		{
-			LeaveCriticalSection( &m_CS );
 			return E_FAIL;
 		}
 	}
@@ -197,7 +188,6 @@ HRESULT CachingIncludeHandler::AddPrefix( const char* fileName, const char* pref
 	FileFromPath::iterator fileFromPath = m_fileFromPath.find( fullPath );
 	if( fileFromPath == m_fileFromPath.end() )
 	{
-		LeaveCriticalSection( &m_CS );
 		return E_FAIL;
 	}
 
@@ -206,7 +196,6 @@ HRESULT CachingIncludeHandler::AddPrefix( const char* fileName, const char* pref
 	auto data = malloc( info.size + length + 2 );
 	if( data == NULL )
 	{
-		LeaveCriticalSection( &m_CS );
 		return E_FAIL;
 	}
 	*reinterpret_cast<char*>( data ) = '\n';
@@ -218,8 +207,6 @@ HRESULT CachingIncludeHandler::AddPrefix( const char* fileName, const char* pref
 	m_pathFromFile.erase( info.data );
 	free( info.data );
 	info.data = data;
-
-	LeaveCriticalSection( &m_CS );
 
 	if( outData )
 	{
@@ -259,7 +246,8 @@ HRESULT CachingIncludeHandler::Close( LPCVOID data )
 // --------------------------------------------------------------------------------------
 HRESULT CachingIncludeHandler::GetFullPathName( LPCSTR fileName, LPCVOID parentData, LPSTR fullPath )
 {
-	EnterCriticalSection( &m_CS );
+	MutexScope scope( m_CS );
+
 	if( PathIsRelative( fileName ) )
 	{
 		char parentPath[MAX_PATH];
@@ -281,12 +269,10 @@ HRESULT CachingIncludeHandler::GetFullPathName( LPCSTR fileName, LPCVOID parentD
 		}
 		if( !PathAppend( parentPath, fileName ) )
 		{
-			LeaveCriticalSection( &m_CS );
 			return E_FAIL;
 		}
 		if( !PathCanonicalize( fullPath, parentPath ) )
 		{
-			LeaveCriticalSection( &m_CS );
 			return E_FAIL;
 		}
 	}
@@ -294,7 +280,6 @@ HRESULT CachingIncludeHandler::GetFullPathName( LPCSTR fileName, LPCVOID parentD
 	{
 		strcpy_s( fullPath, MAX_PATH, fileName );
 	}
-	LeaveCriticalSection( &m_CS );
 	return S_OK;
 }
 

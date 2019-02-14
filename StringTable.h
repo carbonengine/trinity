@@ -3,6 +3,7 @@
 #define StringTable_H
 
 #include <unordered_map>
+#include "Mutex.h"
 
 typedef unsigned StringReference;
 
@@ -18,7 +19,7 @@ public:
 	bool Write( HANDLE file ) const;
 	size_t GetSize() const;
 private:
-	CRITICAL_SECTION m_CS;
+	Mutex m_CS;
 
 	struct Blob
 	{

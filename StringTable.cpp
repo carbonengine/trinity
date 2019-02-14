@@ -3,12 +3,10 @@
 
 StringTable::StringTable()
 {
-	InitializeCriticalSection( &m_CS );
 }
 
 StringTable::~StringTable()
 {
-	DeleteCriticalSection( &m_CS );
 }
 
 StringReference StringTable::AddString( const char* string )
@@ -19,23 +17,22 @@ StringReference StringTable::AddString( const char* string )
 StringReference StringTable::AddString( const void* string, size_t length )
 {
 	Blob blob( string, length );
-	EnterCriticalSection( &m_CS );
+	MutexScope scope( m_CS );
 	auto it = m_table.find( blob );
 	if( it != m_table.end() )
 	{
 		StringReference result = it->second;
-		LeaveCriticalSection( &m_CS );
 		return result;
 	}
 	StringReference index = StringReference( m_size );
 	m_size += blob.m_size;
 	m_table[blob] = index;
-	LeaveCriticalSection( &m_CS );
 	return index;
 }
 
 const char* StringTable::GetString( StringReference ref )
 {
+	MutexScope scope( m_CS );
 	for( auto it = m_table.begin(); it != m_table.end(); ++it )
 	{
 		if( it->second == ref )

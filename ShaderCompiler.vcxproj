@@ -150,12 +150,14 @@
     <ClInclude Include="HLSLParser.h" />
     <ClInclude Include="InlineString.h" />
     <ClInclude Include="IntrinsicTypes.h" />
+    <ClInclude Include="Mutex.h" />
     <ClInclude Include="ParserState.h" />
     <ClInclude Include="ParserUtils.h" />
     <ClInclude Include="Preprocessor.h" />
     <ClInclude Include="SymbolTable.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="StringTable.h" />
+    <ClInclude Include="WorkQueue.h" />
     <ClInclude Include="TextureFunctionConversionDX11.h" />
     <ClInclude Include="Type.h" />
     <ClInclude Include="wglext.h" />
@@ -164,8 +166,6 @@
   <ItemGroup>
     <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.exe" />
     <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.pdb" />
-    <None Include="..\..\tools\ShaderCompiler\ShaderCompilerd.exe" />
-    <None Include="..\..\tools\ShaderCompiler\ShaderCompilerd.pdb" />
     <CustomBuild Include="HLSLScanner.re">
       <FileType>Document</FileType>
       <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.\re2c -o %(RelativeDir)HLSLScanner.cpp HLSLScanner.re</Command>

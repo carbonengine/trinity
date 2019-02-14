@@ -14,6 +14,8 @@
 #include "EffectCompilerGL3.h"
 #include "EffectCompilerGL4.h"
 #include "EffectData.h"
+#include "Mutex.h"
+#include "WorkQueue.h"
 
 
 typedef BOOL (WINAPI *LPFN_GLPI)(
@@ -92,78 +94,10 @@ unsigned GetNumberOfCores()
     return procCoreCount;
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Maintains a queue of situation permutations to be compiled. Can be accessed from
-//   different threads.
-// --------------------------------------------------------------------------------------
-class WorkQueue
-{
-public:
-	WorkQueue()
-		:m_head( 0 )
-	{
-		InitializeCriticalSectionAndSpinCount( &m_cs, 1000 );
-		m_added = CreateSemaphore( NULL, 0, LONG_MAX, NULL );
-	}
-
-	~WorkQueue()
-	{
-		DeleteCriticalSection( &m_cs );
-		for( auto it = m_queue.begin(); it != m_queue.end(); ++it )
-		{
-			delete []*it;
-		}
-	}
-
-	bool Empty()
-	{
-		EnterCriticalSection( &m_cs );
-		bool isEmpty = m_queue.size() <= m_head;
-		LeaveCriticalSection( &m_cs );
-		return isEmpty;
-	}
-
-	char* Get()
-	{
-		for( ;; )
-		{
-			EnterCriticalSection( &m_cs );
-			if( m_queue.size() > m_head )
-			{
-				char* item = m_queue[m_head++];
-				LeaveCriticalSection( &m_cs );
-				return item;
-			}
-			LeaveCriticalSection( &m_cs );
-
-			WaitForSingleObject( m_added, INFINITE );
-		}
-	}
-
-	void Put( char* item )
-	{
-		EnterCriticalSection( &m_cs );
-		m_queue.push_back( item );
-		ReleaseSemaphore( m_added, 1, NULL );
-		LeaveCriticalSection( &m_cs );
-	}
-private:
-	// Queue of situation permutations
-	std::vector<char*> m_queue;
-	// Head element index
-	unsigned m_head;
-	// Critical section for shared data
-	CRITICAL_SECTION m_cs;
-	// Semaphore for blocking Get
-	HANDLE m_added;
-};
 
 // Maximum length of defines string
 const unsigned BUFFER_SIZE = 4096;
 
-// Queue of situation permutations to be compiled
-WorkQueue g_workQueue;
 // Flag indicating a compile error (in some worker thread) causes all worker threads to exit
 LONG g_error = 0;
 // Include file handler
@@ -171,7 +105,7 @@ CachingIncludeHandler g_includeHandler;
 // Compiled effect code (indexed by permutaitons IDs)
 std::map<unsigned, ID3DXBuffer*> g_compiledEffects;
 // Critical section for g_compiledEffects
-CRITICAL_SECTION g_compiledEffectsCS;
+Mutex g_compiledEffectsCS( 1000 );
 // Queue of compiler output messages
 CompileMessageQueue g_messages;
 // Entry point shader file contents
@@ -190,7 +124,7 @@ bool g_generateListing = false;
 // Listing text
 std::string g_listing;
 // CS for listing access
-CRITICAL_SECTION g_listingCS;
+Mutex g_listingCS;
 
 // Optimization level
 unsigned g_optimizationLevel = 3;
@@ -424,99 +358,78 @@ private:
 	std::string m_newestFile;
 };
 
-CRITICAL_SECTION s_modifiedOutputsCS;
+Mutex s_modifiedOutputsCS;
 std::set<std::string> s_modifiedOutputs;
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Worker thread for determining which output files are out of date. The result of a
-//   function is stored in s_modifiedOutputs as a list of output files that are out of 
-//   date.
-// Arguments:
-//   param - Unused
-// Return value:
-//   0 always
-// --------------------------------------------------------------------------------------
-DWORD WINAPI CheckMTimeThread( LPVOID param )
+
+bool CheckMTime( char* inputLine )
 {
 	D3DXMACRO defines[BUFFER_SIZE];
-	for(;;)
-	{
-		char* inputLine = g_workQueue.Get();
-		char* line = inputLine;
-		if( line == nullptr )
-		{
-			// End of input marker
-			return 0;
-		}
-		size_t lineLength = strlen( line );
-		char* shaderPath = line;
-		line = GetNextWord( line );
-		char* outputPath = line;
-		line = GetNextWord( line );
 
-		EnterCriticalSection( &s_modifiedOutputsCS );
+	char* line = inputLine;
+	size_t lineLength = strlen( line );
+	char* shaderPath = line;
+	line = GetNextWord( line );
+	char* outputPath = line;
+	line = GetNextWord( line );
+
+	{
+		MutexScope scope( s_modifiedOutputsCS );
 		if( s_modifiedOutputs.find( outputPath ) != s_modifiedOutputs.end() )
 		{
-			LeaveCriticalSection( &s_modifiedOutputsCS );
-			continue;
-		}
-		LeaveCriticalSection( &s_modifiedOutputsCS );
-
-		Platform platform;
-		unsigned permutation;
-		if( !ParseLine( line, permutation, platform, defines ) )
-		{
-			InterlockedExchange( &g_error, 1 );
-			return 1;
-		}
-
-		CComPtr<ID3DXBuffer> buffer;
-		CComPtr<ID3DXBuffer> errors;
-
-		const char* shaderSource;
-		UINT shaderLength;
-		MTimeIncludeHandler includeHandler;
-
-		FILETIME outputTime;
-		if( !GetPathTime( outputPath, outputTime ) )
-		{
-			EnterCriticalSection( &s_modifiedOutputsCS );
-			s_modifiedOutputs.insert( outputPath );
-			LeaveCriticalSection( &s_modifiedOutputsCS );
-		}
-		if( FAILED( includeHandler.Open( D3DXINC_LOCAL, shaderPath, NULL, (LPCVOID*)&shaderSource, &shaderLength ) ) )
-		{
-			EnterCriticalSection( &s_modifiedOutputsCS );
-			s_modifiedOutputs.insert( outputPath );
-			LeaveCriticalSection( &s_modifiedOutputsCS );
-			continue;
-		}
-		if( FileTimeLess( outputTime, includeHandler.GetLastModifiedTime() ) )
-		{
-			EnterCriticalSection( &s_modifiedOutputsCS );
-			s_modifiedOutputs.insert( outputPath );
-			LeaveCriticalSection( &s_modifiedOutputsCS );
-			continue;
-		}
-
-		includeHandler.SetRootPath( shaderPath );
-
-		// Preprocess the file using MS preprocessor
-		if( FAILED( D3DXPreprocessShader( shaderSource, shaderLength, defines, &includeHandler, &buffer, &errors ) ) )
-		{
-			EnterCriticalSection( &s_modifiedOutputsCS );
-			s_modifiedOutputs.insert( outputPath );
-			LeaveCriticalSection( &s_modifiedOutputsCS );
-		}
-		else if( FileTimeLess( outputTime, includeHandler.GetLastModifiedTime() ) )
-		{
-			EnterCriticalSection( &s_modifiedOutputsCS );
-			s_modifiedOutputs.insert( outputPath );
-			LeaveCriticalSection( &s_modifiedOutputsCS );
+			return true;
 		}
 	}
-	return 0;
+
+	Platform platform;
+	unsigned permutation;
+	if( !ParseLine( line, permutation, platform, defines ) )
+	{
+		InterlockedExchange( &g_error, 1 );
+		return false;
+	}
+
+	CComPtr<ID3DXBuffer> buffer;
+	CComPtr<ID3DXBuffer> errors;
+
+	const char* shaderSource;
+	UINT shaderLength;
+	MTimeIncludeHandler includeHandler;
+
+	FILETIME outputTime;
+	if( !GetPathTime( outputPath, outputTime ) )
+	{
+		MutexScope scope( s_modifiedOutputsCS );
+		s_modifiedOutputs.insert( outputPath );
+	}
+	if( FAILED( includeHandler.Open( D3DXINC_LOCAL, shaderPath, NULL, (LPCVOID*)&shaderSource, &shaderLength ) ) )
+	{
+		MutexScope scope( s_modifiedOutputsCS );
+		s_modifiedOutputs.insert( outputPath );
+		return true;
+	}
+	if( FileTimeLess( outputTime, includeHandler.GetLastModifiedTime() ) )
+	{
+		MutexScope scope( s_modifiedOutputsCS );
+		s_modifiedOutputs.insert( outputPath );
+		return true;
+	}
+
+	includeHandler.SetRootPath( shaderPath );
+
+	// Preprocess the file using MS preprocessor
+	if( FAILED( D3DXPreprocessShader( shaderSource, shaderLength, defines, &includeHandler, &buffer, &errors ) ) )
+	{
+		MutexScope scope( s_modifiedOutputsCS );
+		s_modifiedOutputs.insert( outputPath );
+	}
+	else if( FileTimeLess( outputTime, includeHandler.GetLastModifiedTime() ) )
+	{
+		MutexScope scope( s_modifiedOutputsCS );
+		s_modifiedOutputs.insert( outputPath );
+	}
+
+	return true;
 }
 
 // --------------------------------------------------------------------------------------
@@ -528,93 +441,88 @@ DWORD WINAPI CheckMTimeThread( LPVOID param )
 // Return value:
 //   0 always
 // --------------------------------------------------------------------------------------
-DWORD WINAPI WorkerThread( LPVOID param )
+bool CompileShader( char* line )
 {
 	D3DXMACRO defines[BUFFER_SIZE];
-	for(;;)
+
+	if( InterlockedCompareExchange( &g_error, 0, 0 ) )
 	{
-		if( InterlockedCompareExchange( &g_error, 0, 0 ) )
-		{
-			return 0;
-		}
-		char* line = g_workQueue.Get();
-		if( line == nullptr )
-		{
-			// End of input marker
-			return 0;
-		}
-		Platform platform;
-		unsigned permutation;
+		return false;
+	}
 
-		if( !ParseLine( line, permutation, platform, defines ) )
-		{
-			InterlockedExchange( &g_error, 1 );
-			return 1;
-		}
+	Platform platform;
+	unsigned permutation;
 
-		EnterCriticalSection( &g_compiledEffectsCS );
+	if( !ParseLine( line, permutation, platform, defines ) )
+	{
+		InterlockedExchange( &g_error, 1 );
+		return false;
+	}
+
+	{
+		MutexScope scope( g_compiledEffectsCS );
 		if( g_compiledEffects.find( permutation ) != g_compiledEffects.end() )
 		{
-			LeaveCriticalSection( &g_compiledEffectsCS );
-			continue;
+			return true;
 		}
-		LeaveCriticalSection( &g_compiledEffectsCS );
-
-		EffectData outputData;
-
-		switch( platform )
-		{
-		case PLATFORM_DX9:
-			if( !g_compilerDX9.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
-			{
-				InterlockedExchange( &g_error, 1 );
-				return 1;
-			}
-			break;
-		case PLATFORM_DX11:
-			if( !g_compilerDX11.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
-			{
-				InterlockedExchange( &g_error, 1 );
-				return 1;
-			}
-			break;
-		case PLATFORM_GL2:
-			if( !g_compilerGL2.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
-			{
-				InterlockedExchange( &g_error, 1 );
-				return 1;
-			}
-			break;
-		case PLATFORM_GL3:
-			if( !g_compilerGL3.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
-			{
-				InterlockedExchange( &g_error, 1 );
-				return 1;
-			}
-			break;
-		case PLATFORM_GL4:
-			if( !g_compilerGL4.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
-			{
-				InterlockedExchange( &g_error, 1 );
-				return 1;
-			}
-			break;
-		}
-
-
-		CComPtr<ID3DXBuffer> outputBuffer;
-		if( !SaveEffectData( outputData, &outputBuffer ) )
-		{
-			g_messages.AddMessage( "\\memory(0): error X000: Error packing effect data" );
-			InterlockedExchange( &g_error, 1 );
-			return 1;
-		}
-
-		EnterCriticalSection( &g_compiledEffectsCS );
-		g_compiledEffects[permutation] = outputBuffer.Detach();
-		LeaveCriticalSection( &g_compiledEffectsCS );
 	}
-	return 0;
+
+	EffectData outputData;
+
+	switch( platform )
+	{
+	case PLATFORM_DX9:
+		if( !g_compilerDX9.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+		{
+			InterlockedExchange( &g_error, 1 );
+			return false;
+		}
+		break;
+	case PLATFORM_DX11:
+		if( !g_compilerDX11.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+		{
+			InterlockedExchange( &g_error, 1 );
+			return false;
+		}
+		break;
+	case PLATFORM_GL2:
+		if( !g_compilerGL2.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+		{
+			InterlockedExchange( &g_error, 1 );
+			return false;
+		}
+		break;
+	case PLATFORM_GL3:
+		if( !g_compilerGL3.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+		{
+			InterlockedExchange( &g_error, 1 );
+			return false;
+		}
+		break;
+	case PLATFORM_GL4:
+		if( !g_compilerGL4.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+		{
+			InterlockedExchange( &g_error, 1 );
+			return false;
+		}
+		break;
+	}
+
+
+	CComPtr<ID3DXBuffer> outputBuffer;
+	if( !SaveEffectData( outputData, &outputBuffer ) )
+	{
+		g_messages.AddMessage( "\\memory(0): error X000: Error packing effect data" );
+		InterlockedExchange( &g_error, 1 );
+		return false;
+	}
+
+	{
+		MutexScope scope( g_compiledEffectsCS );
+		g_compiledEffects[permutation] = outputBuffer.Detach();
+	}
+
+	return true;
 }
 
 void PrintUsage()
@@ -845,50 +753,22 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 
 void PrintModificationTime( const ProgramArguments& args )
 {
-	InitializeCriticalSection( &s_modifiedOutputsCS );
+	WorkQueue<char*, decltype( &CheckMTime )> workQueue( args.coreCount, &CheckMTime );
 
-	HANDLE *workerThreads = new HANDLE[args.coreCount];
-	for( unsigned i = 0; i < args.coreCount; ++i )
+	char buffer[BUFFER_SIZE];
+	while( !feof( stdin ) )
 	{
-		workerThreads[i] = CreateThread( NULL, 0, &CheckMTimeThread, NULL, 0, NULL );
-	}
-
-	if( false )
-	{
-		size_t length = strlen( args.singleDefines ) + 1;
-		length += strlen( args.shaderPath ) + strlen( args.outputPath ) + 2;
-		char* inputLine = new char[length];
-		strcpy_s( inputLine, length, args.shaderPath );
-		strcat_s( inputLine, length, " " );
-		strcat_s( inputLine, length, args.outputPath );
-		strcat_s( inputLine, length, " " );
-		strcat_s( inputLine, length, args.singleDefines );
-		g_workQueue.Put( inputLine );
-	}
-	else
-	{
-		char buffer[BUFFER_SIZE];
-		while( !feof( stdin ) )
+		if( !gets_s( buffer ) )
 		{
-			if( !gets_s( buffer ) )
-			{
-				break;
-			}
-			size_t length = strlen( buffer ) + 1;
-			char* inputLine = new char[length];
-			strcpy_s( inputLine, length, buffer );
-			g_workQueue.Put( inputLine );
+			break;
 		}
+		size_t length = strlen( buffer ) + 1;
+		char* inputLine = new char[length];
+		strcpy_s( inputLine, length, buffer );
+		workQueue.Put( inputLine );
 	}
 
-	for( unsigned i = 0; i < args.coreCount; ++i )
-	{
-		g_workQueue.Put( nullptr );
-	}
-
-	WaitForMultipleObjects( args.coreCount, workerThreads, TRUE, INFINITE );
-
-	DeleteCriticalSection( &s_modifiedOutputsCS );
+	workQueue.Join();
 
 	for( auto it = s_modifiedOutputs.begin(); it != s_modifiedOutputs.end(); ++it )
 	{
@@ -932,7 +812,9 @@ bool PrintPermutations( const char* shaderPath )
 	return true;
 }
 
-void AddPermutationsToWorkQueue( const Permutations& permutations, bool ignorePermutations, const char* defines )
+typedef WorkQueue<char*, decltype( &CompileShader )> CompileQueue;
+
+void AddPermutationsToWorkQueue( CompileQueue& queue, const Permutations& permutations, bool ignorePermutations, const char* defines )
 {
 	std::vector<size_t> indexes;
 	indexes.resize( permutations.size() );
@@ -954,7 +836,7 @@ void AddPermutationsToWorkQueue( const Permutations& permutations, bool ignorePe
 		size_t length = line.length() + 1;
 		char* inputLine = new char[length];
 		strcpy_s( inputLine, length, line.c_str() );
-		g_workQueue.Put( inputLine );
+		queue.Put( inputLine );
 
 		for( size_t i = 0; i < permutations.size(); ++i )
 		{
@@ -1000,11 +882,6 @@ int _tmain(int argc, _TCHAR* argv[])
 		return PrintPermutations( args.shaderPath ) ? 0 : 1;
 	}
 
-	if( g_generateListing )
-	{
-		InitializeCriticalSection( &g_listingCS );
-	}
-
 	// Preload shader file
 	if( FAILED( g_includeHandler.Open( D3DXINC_LOCAL, args.shaderPath, NULL, (LPCVOID*)&g_shaderSource, &g_shaderLength ) ) )
 	{
@@ -1015,14 +892,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	g_includeHandler.SetRootPath( args.shaderPath );
 	g_messages.SetEntryFileName( args.shaderPath );
 
-	// Initialize mutexes and threads
-	InitializeCriticalSectionAndSpinCount( &g_compiledEffectsCS, 1000 );
-
-	HANDLE *workerThreads = new HANDLE[args.coreCount];
-	for( unsigned i = 0; i < args.coreCount; ++i )
-	{
-		workerThreads[i] = CreateThread( NULL, 0, &WorkerThread, NULL, 0, NULL );
-	}
+	CompileQueue compileQueue( args.coreCount, &CompileShader );
 
 	if( !g_compilerDX9.Create() )
 	{
@@ -1076,16 +946,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		g_includeHandler.AddPrefix( args.shaderPath, prefix.c_str(), (LPCVOID*)&g_shaderSource, &g_shaderLength );
 
-		AddPermutationsToWorkQueue( permutations, args.ignorePermutations, args.singleDefines + 1 );
+		AddPermutationsToWorkQueue( compileQueue, permutations, args.ignorePermutations, args.singleDefines + 1 );
 	}
 
-	for( unsigned i = 0; i < args.coreCount; ++i )
-	{
-		g_workQueue.Put( nullptr );
-	}
-	
-	// Wait for worker threads to finish compiling
-	WaitForMultipleObjects( args.coreCount, workerThreads, TRUE, INFINITE );
+	compileQueue.Join();
+
 	if( InterlockedCompareExchange( &g_error, 0, 0 ) )
 	{
 		g_messages.Flush();
@@ -1223,13 +1088,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	delete[] fullHeader;
 
 	CloseHandle( file );
-
-	DeleteCriticalSection( &g_compiledEffectsCS );
-
-	for( unsigned i = 0; i < args.coreCount; ++i )
-	{
-		CloseHandle( workerThreads[i] );
-	}
 	 
 	if( g_generateListing )
 	{

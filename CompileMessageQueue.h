@@ -8,6 +8,8 @@
 #ifndef CompileMessageQueue_H
 #define CompileMessageQueue_H
 
+#include "Mutex.h"
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Maintains a queue of output compile error/warning messages and outputs unique messages
@@ -32,7 +34,7 @@ private:
 	// Message queue
 	std::queue<CComPtr<ID3DXBuffer>> m_messages;
 	// Critical section for message queue
-	CRITICAL_SECTION m_messagesCS;
+	Mutex m_messagesCS;
 	// Events for new messages in a queue and for exiting
 	HANDLE m_queueEvents[2];
 	// Handle to the output thread

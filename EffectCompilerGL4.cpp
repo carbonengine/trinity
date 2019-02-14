@@ -11,6 +11,8 @@
 #include "CompileMessageQueue.h"
 #include "InlineString.h"
 #include "YamlOutput.h"
+#include "Mutex.h"
+
 #include <strstream>
 #include <regex>
 #include <iomanip>
@@ -21,14 +23,13 @@ extern CompileMessageQueue g_messages;
 extern StringTable g_stringTable;
 extern int g_maxClipPlanes;
 extern bool g_glesEmulateSampler;
-extern CRITICAL_SECTION g_listingCS;
 extern bool g_printWarnings;
 extern bool g_validateOpenGL;
 
 namespace
 {
 // Critical section for GL contexts
-CRITICAL_SECTION s_glCS;
+Mutex s_glCS;
 // Owner window for GL contexts
 HWND s_glWnd;
 
@@ -2670,8 +2671,9 @@ static std::map<DWORD, GLEWContext*> s_contexts;
 
 static GLEWContext* glewGetContext()
 {
+	MutexScope scope( s_glCS );
+
 	DWORD id = GetCurrentThreadId();
-	EnterCriticalSection( &s_glCS );
 	auto it = s_contexts.find( id );
 	if( it == s_contexts.end() )
 	{
@@ -2693,14 +2695,12 @@ static GLEWContext* glewGetContext()
 			g_messages.AddMessage( "Error initializing OpenGL: %s\n", lpMsgBuf );
 			LocalFree(lpMsgBuf);
 
-			LeaveCriticalSection( &s_glCS );
 			return false;
 		}
 
 		if( !wglMakeCurrent( dc, rc ) )
 		{
 			g_messages.AddMessage( "Error initializing OpenGL: wglMakeCurrent returned FALSE\n" );
-			LeaveCriticalSection( &s_glCS );
 			return false;
 		}
 
@@ -2710,15 +2710,12 @@ static GLEWContext* glewGetContext()
 		if( ret != GLEW_OK )
 		{
 			g_messages.AddMessage( "Errorr initializing OpenGL: %s\n", glewGetErrorString( ret ) );
-			LeaveCriticalSection( &s_glCS );
 			return 0;
 		}
 		s_contexts[id] = ctx;
-		LeaveCriticalSection( &s_glCS );
 		return ctx;
 	}
 	GLEWContext* ctx = it->second;
-	LeaveCriticalSection( &s_glCS );
 	return ctx;
 }
 
@@ -2731,8 +2728,6 @@ static GLEWContext* glewGetContext()
 // --------------------------------------------------------------------------------------
 bool EffectCompilerGL4::Create()
 {
-	InitializeCriticalSection( &s_glCS );
-
 	// We need to create a separate hidden window for OpenGL context.
 	// Using console window for it doesn't work well with using the
 	// compiler from visual studio.

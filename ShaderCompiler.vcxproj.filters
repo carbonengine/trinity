@@ -88,12 +88,6 @@
     <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.pdb">
       <Filter>Output</Filter>
     </None>
-    <None Include="..\..\tools\ShaderCompiler\ShaderCompilerd.exe">
-      <Filter>Output</Filter>
-    </None>
-    <None Include="..\..\tools\ShaderCompiler\ShaderCompilerd.pdb">
-      <Filter>Output</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -166,6 +160,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="YamlOutput.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="WorkQueue.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Mutex.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

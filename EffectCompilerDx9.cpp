@@ -3,6 +3,7 @@
 #include "EffectData.h"
 #include "CompileMessageQueue.h"
 #include "YamlOutput.h"
+#include "Mutex.h"
 #include <regex>
 
 extern CompileMessageQueue g_messages;
@@ -12,7 +13,7 @@ extern unsigned g_optimizationLevel;
 extern bool g_avoidFlowControl;
 
 IDirect3DDevice9Ex* g_device9 = nullptr;
-CRITICAL_SECTION g_analyzeEffectDx9CS;
+Mutex g_analyzeEffectDx9CS;
 
 
 extern void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectData& result );
@@ -1244,7 +1245,6 @@ bool EffectCompilerDX9::Create()
 		printf_s( "ShaderCompiler: error X0000: Could not create DX9 device (code 0x%x)\n", hr );
 		return false;
 	}
-	InitializeCriticalSection( &g_analyzeEffectDx9CS );
 	return true;
 }
 
@@ -1396,7 +1396,7 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 		D3DXPreprocessShader( source, sourceLength, defines, include, &shaderText, nullptr );
 	}
 
-	EnterCriticalSection( &g_analyzeEffectDx9CS );
+	MutexScope scope( g_analyzeEffectDx9CS );
 
 	CComPtr<ID3DXEffect> effect;
 
@@ -1417,7 +1417,6 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 		{
 			g_messages.AddMessages( errors );
 		}
-		LeaveCriticalSection( &g_analyzeEffectDx9CS );
 		return false;
 	}
 	bool success = false;
@@ -1429,6 +1428,5 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	listing.end();
 	listing.end();
 	effect = nullptr;
-	LeaveCriticalSection( &g_analyzeEffectDx9CS );
 	return success;
 }

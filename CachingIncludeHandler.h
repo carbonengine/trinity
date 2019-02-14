@@ -8,6 +8,8 @@
 #ifndef CachingIncludeHandler_h
 #define CachingIncludeHandler_h
 
+#include "Mutex.h"
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   CachingIncludeHandler is an include handler for D3D effect compiler. It caches 
@@ -59,7 +61,7 @@ private:
 	// Path of the entry point file
 	std::string m_rootPath;
 	// Critical section for shared data
-	CRITICAL_SECTION m_CS;
+	Mutex m_CS;
 };
 
 #endif // CachingIncludeHandler_h
