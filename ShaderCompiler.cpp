@@ -172,10 +172,6 @@ CachingIncludeHandler g_includeHandler;
 std::map<unsigned, ID3DXBuffer*> g_compiledEffects;
 // Critical section for g_compiledEffects
 CRITICAL_SECTION g_compiledEffectsCS;
-// Permutation aliases (permutation ID -> permutation ID)
-std::map<unsigned, unsigned> g_aliases;
-// Critical section for permutation aliases
-CRITICAL_SECTION g_aliasesCS;
 // Queue of compiler output messages
 CompileMessageQueue g_messages;
 // Entry point shader file contents
@@ -276,11 +272,9 @@ static bool FileTimeLess( const FILETIME& t0, const FILETIME& t1 )
 // --------------------------------------------------------------------------------------
 // Description:
 //   Utility function for parsing input string containing permutation info. The string
-//   needs to be in a format: permutation alias [defineName1 defineValue1 [...]]
-//   If alias part of the line is not equal to -1, the rest of the string is ignored.
+//   needs to be in a format: permutation [defineName1 defineValue1 [...]]
 // Arguments:
 //   line - Input line
-//   alias - (out) Alias part of the line
 //   permutation - (out) Permutation part of the line
 //   platform - (out) Platform ID (from PLATFORM define)
 //   defines - (out) Array of macro defines
@@ -288,7 +282,7 @@ static bool FileTimeLess( const FILETIME& t0, const FILETIME& t1 )
 //   true If line was parsed successfully
 //   false Otherwise
 // --------------------------------------------------------------------------------------
-static bool ParseLine( char* line, unsigned& alias, unsigned& permutation, Platform& platform, D3DXMACRO* defines )
+static bool ParseLine( char* line, unsigned& permutation, Platform& platform, D3DXMACRO* defines )
 {
 	// Parse the input line. The format is: permutation alias name0 definition0 name1 definition1...
 	// Where permutation - is shader permute index
@@ -296,15 +290,7 @@ static bool ParseLine( char* line, unsigned& alias, unsigned& permutation, Platf
 	// 
 	char* permutationString = line;
 	line = GetNextWord( line );
-	char* aliasString = line;
-	line = GetNextWord( line );
 	permutation = atol( permutationString );
-	alias = atol( aliasString );
-
-	if( alias != -1 )
-	{
-		return true;
-	}
 
 	unsigned defineCount = 0;
 	while( *line )
@@ -478,16 +464,11 @@ DWORD WINAPI CheckMTimeThread( LPVOID param )
 		LeaveCriticalSection( &s_modifiedOutputsCS );
 
 		Platform platform;
-		unsigned alias, permutation;
-		if( !ParseLine( line, alias, permutation, platform, defines ) )
+		unsigned permutation;
+		if( !ParseLine( line, permutation, platform, defines ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return 1;
-		}
-
-		if( alias != -1 )
-		{
-			continue;
 		}
 
 		CComPtr<ID3DXBuffer> buffer;
@@ -563,19 +544,12 @@ DWORD WINAPI WorkerThread( LPVOID param )
 			return 0;
 		}
 		Platform platform;
-		unsigned alias, permutation;
+		unsigned permutation;
 
-		if( !ParseLine( line, alias, permutation, platform, defines ) )
+		if( !ParseLine( line, permutation, platform, defines ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return 1;
-		}
-		if( alias != -1 )
-		{
-			EnterCriticalSection( &g_aliasesCS );
-			g_aliases[alias] = permutation;
-			LeaveCriticalSection( &g_aliasesCS );
-			continue;
 		}
 
 		EnterCriticalSection( &g_compiledEffectsCS );
@@ -671,9 +645,9 @@ void PrintUsage()
 #include "HLSLParser.h"
 #include "ParserState.h"
 
-bool DiscoverPermutations( Permutations& permutations )
+bool DiscoverPermutations( Permutations& permutations, const char* shaderSource, size_t shaderLength )
 {
-	ParserState state( MakeInlineString( g_shaderSource, g_shaderSource + g_shaderLength ) );
+	ParserState state( MakeInlineString( shaderSource, shaderSource + shaderLength ) );
 	return state.DiscoverPermutations( permutations );
 }
 
@@ -706,7 +680,7 @@ struct ProgramArguments
 bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv[] )
 {
 	char* singleDefineStart = args.singleDefines;
-	strcpy_s( args.singleDefines, "0 -1 " );
+	strcpy_s( args.singleDefines, "0 " );
 	singleDefineStart += strlen( singleDefineStart );
 
 	g_glesExtensions.m_all = GlesExtensionInfo::WARN;
@@ -858,6 +832,10 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 		}
 	}
 	*singleDefineStart = 0;
+	if( args.checkMTime )
+	{
+		return true;
+	}
 	if( args.outputPath == nullptr && !args.printPermutations )
 	{
 		return false;
@@ -875,6 +853,7 @@ void PrintModificationTime( const ProgramArguments& args )
 		workerThreads[i] = CreateThread( NULL, 0, &CheckMTimeThread, NULL, 0, NULL );
 	}
 
+	if( false )
 	{
 		size_t length = strlen( args.singleDefines ) + 1;
 		length += strlen( args.shaderPath ) + strlen( args.outputPath ) + 2;
@@ -885,6 +864,21 @@ void PrintModificationTime( const ProgramArguments& args )
 		strcat_s( inputLine, length, " " );
 		strcat_s( inputLine, length, args.singleDefines );
 		g_workQueue.Put( inputLine );
+	}
+	else
+	{
+		char buffer[BUFFER_SIZE];
+		while( !feof( stdin ) )
+		{
+			if( !gets_s( buffer ) )
+			{
+				break;
+			}
+			size_t length = strlen( buffer ) + 1;
+			char* inputLine = new char[length];
+			strcpy_s( inputLine, length, buffer );
+			g_workQueue.Put( inputLine );
+		}
 	}
 
 	for( unsigned i = 0; i < args.coreCount; ++i )
@@ -903,6 +897,89 @@ void PrintModificationTime( const ProgramArguments& args )
 	}
 }
 
+bool PrintPermutations( const char* shaderPath )
+{
+	char* shaderSource;
+	unsigned shaderLength;
+
+	if( FAILED( g_includeHandler.Open( D3DXINC_LOCAL, shaderPath, NULL, (LPCVOID*)&shaderSource, &shaderLength ) ) )
+	{
+		printf( "%s: error X0000: Could not open input file \"%s\"\n", shaderPath, shaderPath );
+		return false;
+	}
+	g_includeHandler.SetRootPath( shaderPath );
+	g_messages.SetEntryFileName( shaderPath );
+
+	Permutations permutations;
+	if( !DiscoverPermutations( permutations, shaderSource, shaderLength ) )
+	{
+		g_messages.Flush();
+		return false;
+	}
+
+	for( auto it = permutations.begin(); it != permutations.end(); ++it )
+	{
+		printf( "%s:\n", it->name.c_str() );
+		printf( "  options:\n" );
+		for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
+		{
+			printf( "  - name: %s\n", jt->name.c_str() );
+			printf( "    value: %i\n", jt->value );
+		}
+		printf( "  default: %s\n", it->defaultOption.c_str() );
+		printf( "  description: %s\n", it->description.c_str() );
+	}
+	return true;
+}
+
+void AddPermutationsToWorkQueue( const Permutations& permutations, bool ignorePermutations, const char* defines )
+{
+	std::vector<size_t> indexes;
+	indexes.resize( permutations.size() );
+	unsigned permutation = 0;
+	bool done = false;
+	while( !done )
+	{
+		std::ostringstream os;
+		os << permutation << defines;
+		if( !ignorePermutations )
+		{
+			for( size_t i = 0; i < permutations.size(); ++i )
+			{
+				os << permutations[i].name << ' ' << permutations[i].options[indexes[i]].value << ' ';
+			}
+		}
+		auto line = os.str();
+
+		size_t length = line.length() + 1;
+		char* inputLine = new char[length];
+		strcpy_s( inputLine, length, line.c_str() );
+		g_workQueue.Put( inputLine );
+
+		for( size_t i = 0; i < permutations.size(); ++i )
+		{
+			++indexes[i];
+			if( indexes[i] >= permutations[i].options.size() )
+			{
+				if( i + 1 == permutations.size() )
+				{
+					done = true;
+				}
+				indexes[i] = 0;
+			}
+			else
+			{
+				break;
+			}
+		}
+		if( ignorePermutations || permutations.empty() )
+		{
+			break;
+		}
+		++permutation;
+	}
+}
+
 
 int _tmain(int argc, _TCHAR* argv[])
 {
@@ -917,6 +994,10 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		PrintModificationTime( args );
 		return 0;
+	}
+	if( args.printPermutations )
+	{
+		return PrintPermutations( args.shaderPath ) ? 0 : 1;
 	}
 
 	if( g_generateListing )
@@ -936,7 +1017,6 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	// Initialize mutexes and threads
 	InitializeCriticalSectionAndSpinCount( &g_compiledEffectsCS, 1000 );
-	InitializeCriticalSectionAndSpinCount( &g_aliasesCS, 100 );
 
 	HANDLE *workerThreads = new HANDLE[args.coreCount];
 	for( unsigned i = 0; i < args.coreCount; ++i )
@@ -976,27 +1056,10 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	Permutations permutations;
 	{
-		if( !DiscoverPermutations( permutations ) )
+		if( !DiscoverPermutations( permutations, g_shaderSource, g_shaderLength ) )
 		{
 			g_messages.Flush();
 			return 1;
-		}
-
-		if( args.printPermutations )
-		{
-			for( auto it = permutations.begin(); it != permutations.end(); ++it )
-			{
-				printf( "%s:\n", it->name.c_str() );
-				printf( "  options:\n" );
-				for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
-				{
-					printf( "  - name: %s\n", jt->name.c_str() );
-					printf( "    value: %i\n", jt->value );
-				}
-				printf( "  default: %s\n", it->defaultOption.c_str() );
-				printf( "  description: %s\n", it->description.c_str() );
-			}
-			return 0;
 		}
 
 		std::ostringstream os;
@@ -1013,50 +1076,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		g_includeHandler.AddPrefix( args.shaderPath, prefix.c_str(), (LPCVOID*)&g_shaderSource, &g_shaderLength );
 
-		std::vector<size_t> indexes;
-		indexes.resize( permutations.size() );
-		unsigned permutation = 0;
-		bool done = false;
-		while( !done )
-		{
-			std::ostringstream os;
-			os << permutation << " -1 " << ( args.singleDefines + 5 );
-			if( !args.ignorePermutations )
-			{
-				for( size_t i = 0; i < permutations.size(); ++i )
-				{
-					os << permutations[i].name << ' ' << permutations[i].options[indexes[i]].value << ' ';
-				}
-			}
-			auto line = os.str();
-
-			size_t length = line.length() + 1;
-			char* inputLine = new char[length];
-			strcpy_s( inputLine, length, line.c_str() );
-			g_workQueue.Put( inputLine );
-
-			for( size_t i = 0; i < permutations.size(); ++i )
-			{
-				++indexes[i];
-				if( indexes[i] >= permutations[i].options.size() )
-				{
-					if( i + 1 == permutations.size() )
-					{
-						done = true;
-					}
-					indexes[i] = 0;
-				}
-				else
-				{
-					break;
-				}
-			}
-			if( args.ignorePermutations || permutations.empty() )
-			{
-				break;
-			}
-			++permutation;
-		}
+		AddPermutationsToWorkQueue( permutations, args.ignorePermutations, args.singleDefines + 1 );
 	}
 
 	for( unsigned i = 0; i < args.coreCount; ++i )
@@ -1073,16 +1093,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	g_messages.Flush();
-
-	// Check if permutations are valid
-	for( auto it = g_aliases.begin(); it != g_aliases.end(); ++it )
-	{
-		if( g_compiledEffects.find( it->second ) == g_compiledEffects.end() )
-		{
-			printf( "%s: error X0000: Invalid alias from permutation %u to permutation %u\n", args.shaderPath, it->first, it->second );
-			return 1;
-		}
-	}
 
 	std::vector<unsigned> keys;
 
@@ -1134,7 +1144,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	// Write file header
-	unsigned totalSize = unsigned( g_compiledEffects.size() + g_aliases.size() );
+	unsigned totalSize = unsigned( g_compiledEffects.size() );
 	unsigned headerSize = ( totalSize * 3 + 1 ) * sizeof( unsigned ) + permutationSize;
 	BYTE* fullHeader = new BYTE[headerSize];
 	BYTE* headerHead = fullHeader;
@@ -1195,12 +1205,6 @@ int _tmain(int argc, _TCHAR* argv[])
 			header[index++] = offset.second;
 		}
 	}
-	for( auto it = g_aliases.begin(); it != g_aliases.end(); ++it )
-	{
-		header[index++] = it->first;
-		header[index++] = offsets[it->second].first;
-		header[index++] = offsets[it->second].second;
-	}
 	DWORD bytesWritten;
 	DWORD version = 8;
 	WriteFile( file, &version, sizeof( DWORD ), &bytesWritten, NULL );
@@ -1221,7 +1225,6 @@ int _tmain(int argc, _TCHAR* argv[])
 	CloseHandle( file );
 
 	DeleteCriticalSection( &g_compiledEffectsCS );
-	DeleteCriticalSection( &g_aliasesCS );
 
 	for( unsigned i = 0; i < args.coreCount; ++i )
 	{
