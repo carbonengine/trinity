@@ -2846,6 +2846,7 @@
     <ClInclude Include="PostProcess\Effects\Tr2PPEffect.h" />
     <ClInclude Include="PostProcess\Effects\Tr2PPFadeEffect.h" />
     <ClInclude Include="PostProcess\Effects\Tr2PPFilmGrainEffect.h" />
+    <ClInclude Include="PostProcess\Effects\Tr2PPFogEffect.h" />
     <ClInclude Include="PostProcess\Effects\Tr2PPGodRaysEffect.h" />
     <ClInclude Include="PostProcess\Effects\Tr2PPLutEffect.h" />
     <ClInclude Include="PostProcess\Effects\Tr2PPSignalLossEffect.h" />
@@ -3519,6 +3520,8 @@
     <ClCompile Include="PostProcess\Effects\Tr2PPFadeEffect_Blue.cpp" />
     <ClCompile Include="PostProcess\Effects\Tr2PPFilmGrainEffect.cpp" />
     <ClCompile Include="PostProcess\Effects\Tr2PPFilmGrainEffect_Blue.cpp" />
+    <ClCompile Include="PostProcess\Effects\Tr2PPFogEffect.cpp" />
+    <ClCompile Include="PostProcess\Effects\Tr2PPFogEffect_Blue.cpp" />
     <ClCompile Include="PostProcess\Effects\Tr2PPGodRaysEffect.cpp" />
     <ClCompile Include="PostProcess\Effects\Tr2PPGodRaysEffect_Blue.cpp" />
     <ClCompile Include="PostProcess\Effects\Tr2PPLutEffect.cpp" />
