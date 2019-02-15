@@ -59,7 +59,7 @@ def get_modified_files(mtime_queue, mtime_commands, queue, out_files, print_skip
 
 
 def get_incremental_command(compile_command):
-    return ('%s %s 0 SHADERMODEL %s PLATFORM %s' %
+    return ('%s %s SHADERMODEL %s PLATFORM %s' %
             (compile_command[1], compile_command[4], SHADER_MODELS[compile_command[3]],
              PLATFORMS[compile_command[2]]))
 
