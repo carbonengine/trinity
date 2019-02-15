@@ -172,11 +172,9 @@ const EveSOFDataMgr::GenericData* EveSOFDataMgr::GetGenericData() const
 // --------------------------------------------------------------------------------
 bool EveSOFDataMgr::UpdateHull( const char* hullName, EveSOFDataHull* hullData )
 {
-	// must exist
 	if( !HasHullData( hullName ) )
 	{
-		CCP_LOGWARN( "Trying to update a hull which does not exist: %s", hullName );
-		return false;
+		CCP_LOGWARN( "Hull '%s' does not exist, by doing this you will not add it to the sof data just to this instance of EveSOFDataMgr", hullName);
 	}
 
 	// fill the non-trinity struct with the provided data
@@ -195,11 +193,9 @@ bool EveSOFDataMgr::UpdateHull( const char* hullName, EveSOFDataHull* hullData )
 // --------------------------------------------------------------------------------
 bool EveSOFDataMgr::UpdateFaction( const char* factionName, EveSOFDataFaction* factionData )
 {
-	// must exist
 	if( !HasFactionData( factionName ) )
 	{
-		CCP_LOGWARN( "Trying to update a faction which does not exist: %s", factionName );
-		return false;
+		CCP_LOGWARN( "Faction '%s' does not exist, by doing this you will not add it to the sof data just to this instance of EveSOFDataMgr", factionName );
 	}
 
 	// fill the non-trinity struct with the provided data
@@ -218,11 +214,9 @@ bool EveSOFDataMgr::UpdateFaction( const char* factionName, EveSOFDataFaction* f
 // --------------------------------------------------------------------------------
 bool EveSOFDataMgr::UpdateRace( const char* raceName, EveSOFDataRace* raceData )
 {
-	// must exist
 	if( !HasRaceData( raceName ) )
 	{
-		CCP_LOGWARN( "Trying to update a faction which does not exist: %s", raceName );
-		return false;
+		CCP_LOGWARN( "Race '%s' does not exist, by doing this you will not add it to the sof data just to this instance of EveSOFDataMgr", raceName );
 	}
 
 	// fill the non-trinity struct with the provided data
@@ -241,11 +235,9 @@ bool EveSOFDataMgr::UpdateRace( const char* raceName, EveSOFDataRace* raceData )
 // --------------------------------------------------------------------------------
 bool EveSOFDataMgr::UpdateMaterial( const char* materialName, EveSOFDataMaterial* materialData )
 {
-	// must exist
 	if( !HasMaterialData( materialName ) )
 	{
-		CCP_LOGWARN( "Trying to update a material which does not exist: %s", materialName );
-		return false;
+		CCP_LOGWARN( "Material '%s' does not exist, by doing this you will not add it to the sof data just to this instance of EveSOFDataMgr", materialName );
 	}
 
 	// fill the non-trinity struct with the provided data
@@ -269,11 +261,9 @@ bool EveSOFDataMgr::UpdatePattern( const char* patternName, EveSOFDataPattern* p
 		return false;
 	}
 
-	// must exist
 	if( !HasPatternData( patternName ) )
 	{
-		CCP_LOGWARN( "Trying to update a pattern which does not exist: %s", patternName );
-		return false;
+		CCP_LOGWARN( "Pattern '%s' does not exist, by doing this you will not add it to the sof data just to this instance of EveSOFDataMgr", patternName );
 	}
 
 	// fill the non-trinity struct with the provided data
