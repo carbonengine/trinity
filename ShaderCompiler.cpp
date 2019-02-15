@@ -205,62 +205,6 @@ static bool FileTimeLess( const FILETIME& t0, const FILETIME& t1 )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Utility function for parsing input string containing permutation info. The string
-//   needs to be in a format: permutation [defineName1 defineValue1 [...]]
-// Arguments:
-//   line - Input line
-//   permutation - (out) Permutation part of the line
-//   platform - (out) Platform ID (from PLATFORM define)
-//   defines - (out) Array of macro defines
-// Return value:
-//   true If line was parsed successfully
-//   false Otherwise
-// --------------------------------------------------------------------------------------
-static bool ParseLine( char* line, unsigned& permutation, Platform& platform, D3DXMACRO* defines )
-{
-	// Parse the input line. The format is: permutation alias name0 definition0 name1 definition1...
-	// Where permutation - is shader permute index
-	// alias - if unsigned(-1) then shader needs compiling, otherwise permutation is should be 
-	// 
-	char* permutationString = line;
-	line = GetNextWord( line );
-	permutation = atol( permutationString );
-
-	unsigned defineCount = 0;
-	while( *line )
-	{
-		defines[defineCount].Name = line;
-		line = GetNextWord( line );
-		if( *line == 0 )
-		{
-			printf( "Invalid input string near %s\n", defines[defineCount].Name );
-			fflush( stdout );
-			return false;
-		}
-		defines[defineCount].Definition = line;
-		if( strcmp( defines[defineCount].Name, "PLATFORM" ) == 0 )
-		{
-			int p = atoi( defines[defineCount].Definition );
-			if( p >= _PLATFORM_BEGIN && p < _PLATFORM_END )
-			{
-				platform = Platform( p );
-			}
-			else
-			{
-				printf( "Unrecognized platform define \"%s\". Reverting to DX9\n", defines[defineCount].Definition );
-				fflush( stdout );
-				platform = PLATFORM_DX9;
-			}
-		}
-		line = GetNextWord( line );
-		defineCount++;
-	}
-	defines[defineCount].Name = defines[defineCount].Definition = NULL;
-	return true;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
 //   Function returns file modification time.
 // Arguments:
 //   path - Path to existing file
@@ -362,32 +306,66 @@ Mutex s_modifiedOutputsCS;
 std::set<std::string> s_modifiedOutputs;
 
 
-bool CheckMTime( char* inputLine )
+struct Macro
 {
-	D3DXMACRO defines[BUFFER_SIZE];
+	std::string name;
+	std::string value;
+};
 
-	char* line = inputLine;
-	size_t lineLength = strlen( line );
-	char* shaderPath = line;
-	line = GetNextWord( line );
-	char* outputPath = line;
-	line = GetNextWord( line );
+struct MTimeArguments
+{
+	std::string sourcePath;
+	std::string outputPath;
+	std::vector<Macro> defines;
+};
 
+void FillMacros( D3DXMACRO* macros, const std::vector<Macro>& defines )
+{
+	for( auto it = begin( defines ); it != end( defines ); ++it )
+	{
+		macros->Name = it->name.c_str();
+		macros->Definition = it->value.c_str();
+		++macros;
+	}
+	macros->Name = macros->Definition = nullptr;
+}
+
+Platform GetPlatform( const std::vector<Macro>& defines )
+{
+	for( auto it = begin( defines ); it != end( defines ); ++it )
+	{
+		if( it->name == "PLATFORM" )
+		{
+			int p = atoi( it->value.c_str() );
+			if( p >= _PLATFORM_BEGIN && p < _PLATFORM_END )
+			{
+				return Platform( p );
+			}
+			else
+			{
+				printf( "Unrecognized platform define \"%s\". Reverting to DX9\n", it->value.c_str() );
+				fflush( stdout );
+				return PLATFORM_DX9;
+			}
+		}
+	}
+	return PLATFORM_DX9; 
+}
+
+bool CheckMTime( const MTimeArguments& query )
+{
 	{
 		MutexScope scope( s_modifiedOutputsCS );
-		if( s_modifiedOutputs.find( outputPath ) != s_modifiedOutputs.end() )
+		if( s_modifiedOutputs.find( query.outputPath ) != s_modifiedOutputs.end() )
 		{
 			return true;
 		}
 	}
 
-	Platform platform;
-	unsigned permutation;
-	if( !ParseLine( line, permutation, platform, defines ) )
-	{
-		InterlockedExchange( &g_error, 1 );
-		return false;
-	}
+	D3DXMACRO defines[BUFFER_SIZE];
+	FillMacros( defines, query.defines );
+
+	Platform platform = GetPlatform( query.defines );
 
 	CComPtr<ID3DXBuffer> buffer;
 	CComPtr<ID3DXBuffer> errors;
@@ -397,40 +375,47 @@ bool CheckMTime( char* inputLine )
 	MTimeIncludeHandler includeHandler;
 
 	FILETIME outputTime;
-	if( !GetPathTime( outputPath, outputTime ) )
+	if( !GetPathTime( query.outputPath.c_str(), outputTime ) )
 	{
 		MutexScope scope( s_modifiedOutputsCS );
-		s_modifiedOutputs.insert( outputPath );
+		s_modifiedOutputs.insert( query.outputPath );
 	}
-	if( FAILED( includeHandler.Open( D3DXINC_LOCAL, shaderPath, NULL, (LPCVOID*)&shaderSource, &shaderLength ) ) )
+	if( FAILED( includeHandler.Open( D3DXINC_LOCAL, query.sourcePath.c_str(), NULL, (LPCVOID*)&shaderSource, &shaderLength ) ) )
 	{
 		MutexScope scope( s_modifiedOutputsCS );
-		s_modifiedOutputs.insert( outputPath );
+		s_modifiedOutputs.insert( query.outputPath );
 		return true;
 	}
 	if( FileTimeLess( outputTime, includeHandler.GetLastModifiedTime() ) )
 	{
 		MutexScope scope( s_modifiedOutputsCS );
-		s_modifiedOutputs.insert( outputPath );
+		s_modifiedOutputs.insert( query.outputPath );
 		return true;
 	}
 
-	includeHandler.SetRootPath( shaderPath );
+	includeHandler.SetRootPath( query.sourcePath.c_str() );
 
 	// Preprocess the file using MS preprocessor
 	if( FAILED( D3DXPreprocessShader( shaderSource, shaderLength, defines, &includeHandler, &buffer, &errors ) ) )
 	{
 		MutexScope scope( s_modifiedOutputsCS );
-		s_modifiedOutputs.insert( outputPath );
+		s_modifiedOutputs.insert( query.outputPath );
 	}
 	else if( FileTimeLess( outputTime, includeHandler.GetLastModifiedTime() ) )
 	{
 		MutexScope scope( s_modifiedOutputsCS );
-		s_modifiedOutputs.insert( outputPath );
+		s_modifiedOutputs.insert( query.outputPath );
 	}
 
 	return true;
 }
+
+
+struct CompileShaderArguments
+{
+	uint32_t permutation;
+	std::vector<Macro> defines;
+};
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -441,27 +426,20 @@ bool CheckMTime( char* inputLine )
 // Return value:
 //   0 always
 // --------------------------------------------------------------------------------------
-bool CompileShader( char* line )
+bool CompileShader( const CompileShaderArguments& arguments )
 {
-	D3DXMACRO defines[BUFFER_SIZE];
-
 	if( InterlockedCompareExchange( &g_error, 0, 0 ) )
 	{
 		return false;
 	}
 
-	Platform platform;
-	unsigned permutation;
-
-	if( !ParseLine( line, permutation, platform, defines ) )
-	{
-		InterlockedExchange( &g_error, 1 );
-		return false;
-	}
+	D3DXMACRO defines[BUFFER_SIZE];
+	FillMacros( defines, arguments.defines );
+	Platform platform = GetPlatform( arguments.defines );
 
 	{
 		MutexScope scope( g_compiledEffectsCS );
-		if( g_compiledEffects.find( permutation ) != g_compiledEffects.end() )
+		if( g_compiledEffects.find( arguments.permutation ) != g_compiledEffects.end() )
 		{
 			return true;
 		}
@@ -519,7 +497,7 @@ bool CompileShader( char* line )
 
 	{
 		MutexScope scope( g_compiledEffectsCS );
-		g_compiledEffects[permutation] = outputBuffer.Detach();
+		g_compiledEffects[arguments.permutation] = outputBuffer.Detach();
 	}
 
 	return true;
@@ -577,7 +555,7 @@ struct ProgramArguments
 	char* shaderPath;
 	char* outputPath;
 	unsigned coreCount;
-	char singleDefines[BUFFER_SIZE];
+	std::vector<Macro> defines;
 	char* listingFile;
 	bool checkMTime;
 	bool printPermutations;
@@ -587,10 +565,6 @@ struct ProgramArguments
 
 bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv[] )
 {
-	char* singleDefineStart = args.singleDefines;
-	strcpy_s( args.singleDefines, "0 " );
-	singleDefineStart += strlen( singleDefineStart );
-
 	g_glesExtensions.m_all = GlesExtensionInfo::WARN;
 
 	for( int i = 1; i < argc; ++i )
@@ -631,13 +605,11 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 		}
 		else if( strcmp( argv[i], "/define" ) == 0 )
 		{
+			Macro define;
 			++i;
 			if( i < argc )
 			{
-				strcpy_s( singleDefineStart, BUFFER_SIZE - ( singleDefineStart - args.singleDefines ), argv[i] );
-				size_t len = strlen( argv[i] );
-				singleDefineStart[len] = ' ';
-				singleDefineStart += len + 1;
+				define.name = argv[i];
 			}
 			else
 			{
@@ -646,15 +618,13 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 			++i;
 			if( i < argc )
 			{
-				strcpy_s( singleDefineStart, BUFFER_SIZE - ( singleDefineStart - args.singleDefines ), argv[i] );
-				size_t len = strlen( argv[i] );
-				singleDefineStart[len] = ' ';
-				singleDefineStart += len + 1;
+				define.value = argv[i];
 			}
 			else
 			{
 				return false;
 			}
+			args.defines.push_back( define );
 		}
 		else if( strcmp( argv[i], "/listing" ) == 0 )
 		{
@@ -739,7 +709,6 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 			return false;
 		}
 	}
-	*singleDefineStart = 0;
 	if( args.checkMTime )
 	{
 		return true;
@@ -753,7 +722,7 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 
 void PrintModificationTime( const ProgramArguments& args )
 {
-	WorkQueue<char*, decltype( &CheckMTime )> workQueue( args.coreCount, &CheckMTime );
+	WorkQueue<MTimeArguments, decltype( &CheckMTime )> workQueue( args.coreCount, &CheckMTime );
 
 	char buffer[BUFFER_SIZE];
 	while( !feof( stdin ) )
@@ -765,7 +734,36 @@ void PrintModificationTime( const ProgramArguments& args )
 		size_t length = strlen( buffer ) + 1;
 		char* inputLine = new char[length];
 		strcpy_s( inputLine, length, buffer );
-		workQueue.Put( inputLine );
+
+		MTimeArguments query;
+
+		char* line = buffer;
+		auto next = GetNextWord( line );
+		query.sourcePath = line;
+		line = next;
+		next = GetNextWord( line );
+		query.outputPath = line;
+		line = next;
+
+		while( *line )
+		{
+			Macro macro;
+			next = GetNextWord( line );
+			if( *next == 0 )
+			{
+				printf( "Invalid input string near %s\n", line );
+				fflush( stdout );
+				return;
+			}
+			macro.name = line;
+			line = next;
+			next = GetNextWord( line );
+			macro.value = line;
+			query.defines.push_back( macro );
+			line = next;
+		}
+
+		workQueue.Put( query );
 	}
 
 	workQueue.Join();
@@ -812,9 +810,9 @@ bool PrintPermutations( const char* shaderPath )
 	return true;
 }
 
-typedef WorkQueue<char*, decltype( &CompileShader )> CompileQueue;
+typedef WorkQueue<CompileShaderArguments, decltype( &CompileShader )> CompileQueue;
 
-void AddPermutationsToWorkQueue( CompileQueue& queue, const Permutations& permutations, bool ignorePermutations, const char* defines )
+void AddPermutationsToWorkQueue( CompileQueue& queue, const Permutations& permutations, bool ignorePermutations, const std::vector<Macro>& defines )
 {
 	std::vector<size_t> indexes;
 	indexes.resize( permutations.size() );
@@ -822,21 +820,25 @@ void AddPermutationsToWorkQueue( CompileQueue& queue, const Permutations& permut
 	bool done = false;
 	while( !done )
 	{
-		std::ostringstream os;
-		os << permutation << defines;
+		CompileShaderArguments args;
+		args.permutation = uint32_t( permutation );
+		if( !defines.empty() )
+		{
+			args.defines.insert( args.defines.end(), defines.begin(), defines.end() );
+		}
+
 		if( !ignorePermutations )
 		{
 			for( size_t i = 0; i < permutations.size(); ++i )
 			{
-				os << permutations[i].name << ' ' << permutations[i].options[indexes[i]].value << ' ';
+				Macro define;
+				define.name = permutations[i].name;
+				define.value = std::to_string( int64_t( permutations[i].options[indexes[i]].value ) );
+				args.defines.push_back( define );
 			}
 		}
-		auto line = os.str();
 
-		size_t length = line.length() + 1;
-		char* inputLine = new char[length];
-		strcpy_s( inputLine, length, line.c_str() );
-		queue.Put( inputLine );
+		queue.Put( args );
 
 		for( size_t i = 0; i < permutations.size(); ++i )
 		{
@@ -946,7 +948,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 		g_includeHandler.AddPrefix( args.shaderPath, prefix.c_str(), (LPCVOID*)&g_shaderSource, &g_shaderLength );
 
-		AddPermutationsToWorkQueue( compileQueue, permutations, args.ignorePermutations, args.singleDefines + 1 );
+		AddPermutationsToWorkQueue( compileQueue, permutations, args.ignorePermutations, args.defines );
 	}
 
 	compileQueue.Join();
