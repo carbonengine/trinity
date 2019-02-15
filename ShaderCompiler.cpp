@@ -16,6 +16,8 @@
 #include "EffectData.h"
 #include "Mutex.h"
 #include "WorkQueue.h"
+#include "Macro.h"
+#include "ModifiedTime.h"
 
 
 typedef BOOL (WINAPI *LPFN_GLPI)(
@@ -163,172 +165,6 @@ enum Platform
 	_PLATFORM_BEGIN = 1,
 };
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Get next word (space-delimed) from an input string.
-// Arguments:
-//   string - a string containing space-delimed words
-// Return value:
-//   pointer to the next character after space in an input string (or to the trailing 0)
-// --------------------------------------------------------------------------------------
-char* GetNextWord( char* string )
-{
-
-	char* end = string;
-	while( *end && *end != 32 )
-	{
-		++end;
-	}
-	if( *end )
-	{
-		*end = 0;
-		return end + 1;
-	}
-	return end;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Utility function for comparing file times.
-// Arguments:
-//   t0 - File time
-//   t1 - Another file time
-// Return value:
-//   true If t0 is less (before) t1
-//   false Otherwise
-// --------------------------------------------------------------------------------------
-static bool FileTimeLess( const FILETIME& t0, const FILETIME& t1 )
-{
-	return t0.dwHighDateTime < t1.dwHighDateTime ||
-		t0.dwHighDateTime == t1.dwHighDateTime && t0.dwLowDateTime < t1.dwLowDateTime;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Function returns file modification time.
-// Arguments:
-//   path - Path to existing file
-//   time - (out) File modification time
-// Return value:
-//   true If modification time was retrieved successfully
-//   false Otherwise
-// --------------------------------------------------------------------------------------
-static bool GetPathTime( const char* path, FILETIME& time )
-{
-	HANDLE file = CreateFile( 
-		path, 
-		GENERIC_READ, 
-		FILE_SHARE_READ | FILE_SHARE_WRITE, 
-		nullptr, 
-		OPEN_EXISTING, 
-		0, 
-		nullptr );
-	if( file == INVALID_HANDLE_VALUE )
-	{
-		return false;
-	}
-	if( !GetFileTime( file, nullptr, nullptr, &time ) )
-	{
-		CloseHandle( file );
-		return false;
-	}
-	CloseHandle( file );
-	return true;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   A custom include handler for getting last modification time for effect and all its
-//   dependencies.
-// --------------------------------------------------------------------------------------
-class MTimeIncludeHandler: public ID3DXInclude
-{
-public:
-	MTimeIncludeHandler()
-	{
-		m_lastMTime.dwHighDateTime = 0;
-		m_lastMTime.dwLowDateTime = 0;
-	}
-
-    HRESULT __stdcall Open( D3DXINCLUDE_TYPE includeType, 
-							LPCSTR fileName, 
-							LPCVOID parentData, 
-							LPCVOID *data, 
-							UINT *bytes )
-	{
-		FILETIME t;
-		HRESULT hr = g_includeHandler.Open( 
-			includeType, 
-			fileName, 
-			parentData, 
-			data, 
-			bytes, 
-			m_rootPath.c_str(), 
-			t );
-		if( SUCCEEDED( hr ) )
-		{
-			if( m_lastMTime.dwHighDateTime < t.dwHighDateTime || 
-				m_lastMTime.dwHighDateTime == t.dwHighDateTime && 
-				m_lastMTime.dwLowDateTime < t.dwLowDateTime )
-			{
-				m_lastMTime = t;
-				m_newestFile = fileName;
-			}
-		}
-		return hr;
-	}
-
-    HRESULT __stdcall Close( LPCVOID data )
-	{
-		return g_includeHandler.Close( data );
-	}
-
-	const FILETIME& GetLastModifiedTime()
-	{
-		return m_lastMTime;
-	}
-
-	void SetRootPath( const char* rootPath )
-	{
-		const char* filename = PathFindFileName( rootPath );
-		m_rootPath = std::string( rootPath, filename - rootPath );
-	}
-private:
-	// Last modification time
-	FILETIME m_lastMTime;
-	// Path to original effect (for resolving relative paths)
-	std::string m_rootPath;
-	// Path to the newest file for debugging
-	std::string m_newestFile;
-};
-
-Mutex s_modifiedOutputsCS;
-std::set<std::string> s_modifiedOutputs;
-
-
-struct Macro
-{
-	std::string name;
-	std::string value;
-};
-
-struct MTimeArguments
-{
-	std::string sourcePath;
-	std::string outputPath;
-	std::vector<Macro> defines;
-};
-
-void FillMacros( D3DXMACRO* macros, const std::vector<Macro>& defines )
-{
-	for( auto it = begin( defines ); it != end( defines ); ++it )
-	{
-		macros->Name = it->name.c_str();
-		macros->Definition = it->value.c_str();
-		++macros;
-	}
-	macros->Name = macros->Definition = nullptr;
-}
 
 Platform GetPlatform( const std::vector<Macro>& defines )
 {
@@ -350,64 +186,6 @@ Platform GetPlatform( const std::vector<Macro>& defines )
 		}
 	}
 	return PLATFORM_DX9; 
-}
-
-bool CheckMTime( const MTimeArguments& query )
-{
-	{
-		MutexScope scope( s_modifiedOutputsCS );
-		if( s_modifiedOutputs.find( query.outputPath ) != s_modifiedOutputs.end() )
-		{
-			return true;
-		}
-	}
-
-	D3DXMACRO defines[BUFFER_SIZE];
-	FillMacros( defines, query.defines );
-
-	Platform platform = GetPlatform( query.defines );
-
-	CComPtr<ID3DXBuffer> buffer;
-	CComPtr<ID3DXBuffer> errors;
-
-	const char* shaderSource;
-	UINT shaderLength;
-	MTimeIncludeHandler includeHandler;
-
-	FILETIME outputTime;
-	if( !GetPathTime( query.outputPath.c_str(), outputTime ) )
-	{
-		MutexScope scope( s_modifiedOutputsCS );
-		s_modifiedOutputs.insert( query.outputPath );
-	}
-	if( FAILED( includeHandler.Open( D3DXINC_LOCAL, query.sourcePath.c_str(), NULL, (LPCVOID*)&shaderSource, &shaderLength ) ) )
-	{
-		MutexScope scope( s_modifiedOutputsCS );
-		s_modifiedOutputs.insert( query.outputPath );
-		return true;
-	}
-	if( FileTimeLess( outputTime, includeHandler.GetLastModifiedTime() ) )
-	{
-		MutexScope scope( s_modifiedOutputsCS );
-		s_modifiedOutputs.insert( query.outputPath );
-		return true;
-	}
-
-	includeHandler.SetRootPath( query.sourcePath.c_str() );
-
-	// Preprocess the file using MS preprocessor
-	if( FAILED( D3DXPreprocessShader( shaderSource, shaderLength, defines, &includeHandler, &buffer, &errors ) ) )
-	{
-		MutexScope scope( s_modifiedOutputsCS );
-		s_modifiedOutputs.insert( query.outputPath );
-	}
-	else if( FileTimeLess( outputTime, includeHandler.GetLastModifiedTime() ) )
-	{
-		MutexScope scope( s_modifiedOutputsCS );
-		s_modifiedOutputs.insert( query.outputPath );
-	}
-
-	return true;
 }
 
 
@@ -434,7 +212,7 @@ bool CompileShader( const CompileShaderArguments& arguments )
 	}
 
 	D3DXMACRO defines[BUFFER_SIZE];
-	FillMacros( defines, arguments.defines );
+	Macro::FillDxMacros( defines, arguments.defines.begin(), arguments.defines.end() );
 	Platform platform = GetPlatform( arguments.defines );
 
 	{
@@ -720,61 +498,6 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 	return true;
 }
 
-void PrintModificationTime( const ProgramArguments& args )
-{
-	WorkQueue<MTimeArguments, decltype( &CheckMTime )> workQueue( args.coreCount, &CheckMTime );
-
-	char buffer[BUFFER_SIZE];
-	while( !feof( stdin ) )
-	{
-		if( !gets_s( buffer ) )
-		{
-			break;
-		}
-		size_t length = strlen( buffer ) + 1;
-		char* inputLine = new char[length];
-		strcpy_s( inputLine, length, buffer );
-
-		MTimeArguments query;
-
-		char* line = buffer;
-		auto next = GetNextWord( line );
-		query.sourcePath = line;
-		line = next;
-		next = GetNextWord( line );
-		query.outputPath = line;
-		line = next;
-
-		while( *line )
-		{
-			Macro macro;
-			next = GetNextWord( line );
-			if( *next == 0 )
-			{
-				printf( "Invalid input string near %s\n", line );
-				fflush( stdout );
-				return;
-			}
-			macro.name = line;
-			line = next;
-			next = GetNextWord( line );
-			macro.value = line;
-			query.defines.push_back( macro );
-			line = next;
-		}
-
-		workQueue.Put( query );
-	}
-
-	workQueue.Join();
-
-	for( auto it = s_modifiedOutputs.begin(); it != s_modifiedOutputs.end(); ++it )
-	{
-		puts( it->c_str() );
-		puts( "\n" );
-	}
-}
-
 bool PrintPermutations( const char* shaderPath )
 {
 	char* shaderSource;
@@ -876,7 +599,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	if( args.checkMTime )
 	{
-		PrintModificationTime( args );
+		PrintModificationTime( args.coreCount );
 		return 0;
 	}
 	if( args.printPermutations )
