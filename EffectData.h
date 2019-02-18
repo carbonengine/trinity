@@ -582,6 +582,4 @@ struct EffectData
 	std::map<StringReference, ParameterAnnotation> annotations;
 };
 
-extern bool SaveEffectData( EffectData& data, ID3DXBuffer** buffer );
-
 #endif // EffectData_H

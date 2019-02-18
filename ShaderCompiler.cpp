@@ -100,12 +100,20 @@ unsigned GetNumberOfCores()
 // Maximum length of defines string
 const unsigned BUFFER_SIZE = 4096;
 
+
+struct CompiledData
+{
+	EffectData data;
+	size_t packedSize;
+	std::unique_ptr<uint8_t[]> packed;
+};
+
 // Flag indicating a compile error (in some worker thread) causes all worker threads to exit
 LONG g_error = 0;
 // Include file handler
 CachingIncludeHandler g_includeHandler;
 // Compiled effect code (indexed by permutaitons IDs)
-std::map<unsigned, ID3DXBuffer*> g_compiledEffects;
+std::map<unsigned, std::unique_ptr<CompiledData>> g_compiledEffects;
 // Critical section for g_compiledEffects
 Mutex g_compiledEffectsCS( 1000 );
 // Queue of compiler output messages
@@ -221,40 +229,43 @@ bool CompileShader( const CompileShaderArguments& arguments )
 		}
 	}
 
-	EffectData outputData;
+	std::unique_ptr<CompiledData> compiledData( new CompiledData );
+
+
+	//EffectData outputData;
 
 	switch( platform )
 	{
 	case PLATFORM_DX9:
-		if( !g_compilerDX9.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, outputData ) )
+		if( !g_compilerDX9.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return false;
 		}
 		break;
 	case PLATFORM_DX11:
-		if( !g_compilerDX11.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, outputData ) )
+		if( !g_compilerDX11.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return false;
 		}
 		break;
 	case PLATFORM_GL2:
-		if( !g_compilerGL2.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, outputData ) )
+		if( !g_compilerGL2.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return false;
 		}
 		break;
 	case PLATFORM_GL3:
-		if( !g_compilerGL3.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, outputData ) )
+		if( !g_compilerGL3.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return false;
 		}
 		break;
 	case PLATFORM_GL4:
-		if( !g_compilerGL4.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, outputData ) )
+		if( !g_compilerGL4.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return false;
@@ -262,18 +273,9 @@ bool CompileShader( const CompileShaderArguments& arguments )
 		break;
 	}
 
-
-	CComPtr<ID3DXBuffer> outputBuffer;
-	if( !SaveEffectData( outputData, &outputBuffer ) )
-	{
-		g_messages.AddMessage( "\\memory(0): error X000: Error packing effect data" );
-		InterlockedExchange( &g_error, 1 );
-		return false;
-	}
-
 	{
 		MutexScope scope( g_compiledEffectsCS );
-		g_compiledEffects[arguments.permutation] = outputBuffer.Detach();
+		g_compiledEffects[arguments.permutation] = std::move( compiledData );
 	}
 
 	return true;
@@ -687,28 +689,37 @@ int _tmain(int argc, _TCHAR* argv[])
 	for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
 	{
 		keys.push_back( it->first );
+
+		auto& compiledData = *it->second;
+
+		SizeCountStream size;
+		compiledData.data.Save( size );
+		compiledData.packedSize = size.GetSize();
+		compiledData.packed.reset( new uint8_t[compiledData.packedSize] );
+
+		PackedStream stream( compiledData.packed.get(), compiledData.packedSize );
+		compiledData.data.Save( stream );
 	}
 
 	std::map<unsigned, unsigned> aliases;
 
 	for( size_t i = 0; i < keys.size(); ++i )
 	{
-		auto b0 = g_compiledEffects[keys[i]];
+		auto& b0 = g_compiledEffects[keys[i]];
 		if( !b0 )
 		{
 			continue;
 		}
 		for( size_t j = i + 1; j < keys.size(); ++j )
 		{
-			auto b1 = g_compiledEffects[keys[j]];
+			auto& b1 = g_compiledEffects[keys[j]];
 			if( !b1 )
 			{
 				continue;
 			}
-			if( b0->GetBufferSize() == b1->GetBufferSize() && memcmp( b0->GetBufferPointer(), b1->GetBufferPointer(), b0->GetBufferSize() ) == 0 )
+			if( b0->packedSize == b1->packedSize && memcmp( b0->packed.get(), b1->packed.get(), b0->packedSize ) == 0 )
 			{
 				aliases[keys[j]] = keys[i];
-				b1->Release();
 				g_compiledEffects[keys[j]] = nullptr;
 				keys.erase( keys.begin() + j );
 				--j;
@@ -782,9 +793,9 @@ int _tmain(int argc, _TCHAR* argv[])
 		if( it->second )
 		{
 			header[index++] = offset;
-			header[index++] = it->second->GetBufferSize();
-			offsets[it->first] = std::make_pair( offset, it->second->GetBufferSize() );
-			offset += it->second->GetBufferSize();
+			header[index++] = it->second->packedSize;
+			offsets[it->first] = std::make_pair( offset, it->second->packedSize );
+			offset += it->second->packedSize;
 		}
 		else
 		{
@@ -804,7 +815,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	{
 		if( it->second )
 		{
-			WriteFile( file, it->second->GetBufferPointer(), it->second->GetBufferSize(), &bytesWritten, NULL );
+			WriteFile( file, it->second->packed.get(), it->second->packedSize, &bytesWritten, NULL );
 		}
 	}
 
