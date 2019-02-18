@@ -12,6 +12,7 @@
 #include "InlineString.h"
 #include "YamlOutput.h"
 #include "Mutex.h"
+#include "Macro.h"
 
 #include <strstream>
 #include <regex>
@@ -715,18 +716,19 @@ public:
 				{
 					if( each->registerIndex == regIndex )
 					{
-						switch( each->componentType )
-						{
-						case 1:
-							m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
-							break;
-						case 2:
-							m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
-							break;
-						default:
-							m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
-							break;
-						}
+						m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
+						//switch( each->componentType )
+						//{
+						//case 1:
+						//	m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
+						//	break;
+						//case 2:
+						//	m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
+						//	break;
+						//default:
+						//	m_declOs << "layout(location=" << MakeInlineString( reg.name.start + 1, reg.name.end ) << ") in vec4 " << reg.name << ';' << endl;
+						//	break;
+						//}
 						break;
 					}
 				}
@@ -2967,7 +2969,7 @@ static bool ValidateShader( const char* source, InputStageType stage, const char
 // --------------------------------------------------------------------------------------
 bool EffectCompilerGL4::CompileEffect( const char* source, 
 										size_t sourceLength, 
-										const D3DXMACRO* defines, 
+										const std::vector<Macro>& defines,
 										ID3DXInclude* include, 
 										EffectData& result )
 {
@@ -2989,17 +2991,12 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 		}
 	}
 
-	D3DXMACRO newDefines[256] = { 0 };
-	for( int i = 0; defines[i].Name; ++i )
+	std::vector<Macro> newDefines = defines;
+	for( auto it = begin( newDefines ); it != end( newDefines ); ++it )
 	{
-		newDefines[i].Name = defines[i].Name;
-		if( strcmp( newDefines[i].Name, "PLATFORM" ) == 0 )
+		if( it->name == "PLATFORM" )
 		{
-			newDefines[i].Definition = "2";
-		}
-		else
-		{
-			newDefines[i].Definition = defines[i].Definition;
+			it->value = "2";
 		}
 	}
 
@@ -3016,9 +3013,9 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 		.literal( "platform" ).literal( "GL4" )
 		.literal( "id" ).literal( "000" )
 		.literal( "defines" ).dict();
-	for( int i = 0; defines[i].Name; ++i )
+	for( auto it = begin( defines ); it != end( defines ); ++it )
 	{
-		listing.literal( defines[i].Name ).literal( defines[i].Definition );
+		listing.literal( it->name ).literal( it->value );
 	}
 	listing.literal( "techniques" ).list();
 
@@ -3035,17 +3032,16 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 			listing.list();
 			for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
 			{
-				if( stage->shaderData == nullptr )
+				if( stage->shaderSize == 0 )
 				{
 					stage->shadowShaderSize = 0;
-					stage->shadowShaderData = nullptr;
 					stage->shadowShaderDataStr = -1;
 
 					continue;
 				}
 				// Disassemble shader and convert DX assembly to GLSL
 				CComPtr<ID3DBlob> disassembly;
-				if( FAILED( D3DDisassemble( stage->shaderData, stage->shaderSize, 0, nullptr, &disassembly ) ) )
+				if( FAILED( D3DDisassemble( g_stringTable.GetString( stage->shaderDataStr ), stage->shaderSize, 0, nullptr, &disassembly ) ) )
 				{
 					g_messages.AddMessage( "\\memory(0): error X0000: could not disassemble shader" );
 					return false;
@@ -3083,14 +3079,10 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 					listing.end();
 				}
 
-				delete[] stage->shaderData;
 				stage->shaderSize = glesSource.length() + 1;
-				stage->shaderData = new char[stage->shaderSize];
-				strcpy_s( (char*)stage->shaderData, stage->shaderSize, glesSource.c_str() );
-				stage->shaderDataStr = g_stringTable.AddString( stage->shaderData, stage->shaderSize );
+				stage->shaderDataStr = g_stringTable.AddString( glesSource.c_str(), stage->shaderSize );
 
 				stage->shadowShaderSize = 0;
-				stage->shadowShaderData = nullptr;
 				stage->shadowShaderDataStr = -1;
 
 				if( useOpenGLValidation )

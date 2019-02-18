@@ -16,6 +16,7 @@
 #include "TextureFunctionConversionDX11.h"
 
 #include "YamlOutput.h"
+#include "Macro.h"
 #include <regex>
 
 extern int g_maxClipPlanes;
@@ -1310,7 +1311,7 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 					input.registerIndex = desc.Register;
 					input.index = desc.SemanticIndex;
 					input.usedMask = desc.ReadWriteMask;
-					input.componentType = desc.ComponentType;
+					//input.componentType = desc.ComponentType;
 					stage.inputs.push_back( input );
 					found = true;
 				}
@@ -2177,7 +2178,7 @@ std::string SanitizeCode( const std::string& src )
 	return std::regex_replace( src, line, std::string( "" ) );
 }
 
-bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const D3DXMACRO* defines, ID3DXInclude* include, EffectData& result, bool patchShaders )
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result, bool patchShaders )
 {
 	CComPtr<ID3D10Blob> effectData;
 	CComPtr<ID3D10Blob> errors;
@@ -2199,13 +2200,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 	}
 
 	ParserState state( MakeInlineString( source, source + sourceLength ) );
-	for( const D3DXMACRO* define = defines; define->Name; ++define )
+	for( auto it = begin( defines ); it != end( defines ); ++it )
 	{
 		PreprocessorDefine d;
 		d.location.fileName = MakeInlineString( "" );
 		d.location.lineNumber = 0;
-		d.value = MakeInlineString( define->Definition );
-		state.m_defines[MakeInlineString( define->Name )] = d;
+		d.value = MakeInlineString( it->value.c_str() );
+		state.m_defines[MakeInlineString( it->name.c_str() )] = d;
+
 	}
 
 	if( !state.Parse() )
@@ -2230,9 +2232,9 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 		.literal( "platform" ).literal( "DX11" )
 		.literal( "id" ).literal( "000" )
 		.literal( "defines" ).dict();
-	for( int i = 0; defines[i].Name; ++i )
+	for( auto it = begin( defines ); it != end( defines ); ++it )
 	{
-		listing.literal( defines[i].Name ).literal( defines[i].Definition );
+		listing.literal( it->name ).literal( it->value );
 	}
 	listing.end();
 	listing.literal( "techniques" ).list();
@@ -2403,25 +2405,17 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 
 				CComPtr<ID3DBlob> strippedEffectData;
-				if( SUCCEEDED( D3DStripShader(
+				if( FAILED( D3DStripShader(
 					effectData->GetBufferPointer(),
 					effectData->GetBufferSize(),
 					D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
 					&strippedEffectData ) ) )
 				{
-					stage.shaderData = new char[strippedEffectData->GetBufferSize()];
-					memcpy( stage.shaderData, strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
-					stage.shaderSize = strippedEffectData->GetBufferSize();
+					strippedEffectData = effectData;
 				}
-				else
-				{
-					stage.shaderData = new char[effectData->GetBufferSize()];
-					memcpy( stage.shaderData, effectData->GetBufferPointer(), effectData->GetBufferSize() );
-					stage.shaderSize = effectData->GetBufferSize();
-				}
-				stage.shaderDataStr = g_stringTable.AddString( stage.shaderData, stage.shaderSize );
+				stage.shaderSize = strippedEffectData->GetBufferSize();
+				stage.shaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
 				stage.shadowShaderSize = 0;
-				stage.shadowShaderData = nullptr;
 				stage.shadowShaderDataStr = -1;
 
 				CComPtr<ID3D11ShaderReflection> reflection;
@@ -2515,23 +2509,16 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						}
 
 						CComPtr<ID3DBlob> strippedEffectData;
-						if( SUCCEEDED( D3DStripShader(
+						if( FAILED( D3DStripShader(
 							effectData->GetBufferPointer(),
 							effectData->GetBufferSize(),
 							D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
 							&strippedEffectData ) ) )
 						{
-							stage.shadowShaderData = new char[strippedEffectData->GetBufferSize()];
-							memcpy( stage.shadowShaderData, strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
-							stage.shadowShaderSize = strippedEffectData->GetBufferSize();
+							strippedEffectData = effectData;
 						}
-						else
-						{
-							stage.shadowShaderData = new char[effectData->GetBufferSize()];
-							memcpy( stage.shadowShaderData, effectData->GetBufferPointer(), effectData->GetBufferSize() );
-							stage.shadowShaderSize = effectData->GetBufferSize();
-						}
-						stage.shadowShaderDataStr = g_stringTable.AddString( stage.shadowShaderData, stage.shadowShaderSize );
+						stage.shadowShaderSize = strippedEffectData->GetBufferSize();
+						stage.shadowShaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
 
 
 						CComPtr<ID3D11ShaderReflection> reflection;

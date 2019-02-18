@@ -12,6 +12,7 @@
 #include "InlineString.h"
 #include "YamlOutput.h"
 #include "Mutex.h"
+#include "Macro.h"
 
 #include <strstream>
 #include <regex>
@@ -3567,7 +3568,7 @@ static bool TryOpenGLCall()
 // --------------------------------------------------------------------------------------
 bool EffectCompilerGL2::CompileEffect( const char* source, 
 										size_t sourceLength, 
-										const D3DXMACRO* defines, 
+										const std::vector<Macro>& defines,
 										ID3DXInclude* include, 
 										EffectData& result )
 {
@@ -3617,9 +3618,9 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 		.literal( "platform" ).literal( "GLES2" )
 		.literal( "id" ).literal( "000" )
 		.literal( "defines" ).dict();
-	for( int i = 0; defines[i].Name; ++i )
+	for( auto it = begin( defines ); it != end( defines ); ++it )
 	{
-		listing.literal( defines[i].Name ).literal( defines[i].Definition );
+		listing.literal( it->name ).literal( it->value );
 	}
 	listing.literal( "techniques" ).list();
 
@@ -3637,17 +3638,16 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 			listing.list();
 			for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
 			{
-				if( stage->shaderData == nullptr )
+				if( stage->shaderSize == 0 )
 				{
 					stage->shadowShaderSize = 0;
-					stage->shadowShaderData = nullptr;
 					stage->shadowShaderDataStr = -1;
 
 					continue;
 				}
 				// Disassemble shader and convert DX9 assembly to GLSL
 				CComPtr<ID3DXBuffer> disassembly;
-				if( FAILED( D3DXDisassembleShader( (DWORD*)stage->shaderData, FALSE, nullptr, &disassembly ) ) )
+				if( FAILED( D3DXDisassembleShader( (DWORD*)g_stringTable.GetString( stage->shaderDataStr ), FALSE, nullptr, &disassembly ) ) )
 				{
 					g_messages.AddMessage( "\\memory(0): error X0000: could not disassemble shader" );
 					return false;
@@ -3697,14 +3697,10 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					listing.end();
 				}
 
-				delete[] stage->shaderData;
 				stage->shaderSize = glesSource.length() + 1;
-				stage->shaderData = new char[stage->shaderSize];
-				strcpy_s( (char*)stage->shaderData, stage->shaderSize, glesSource.c_str() );
-				stage->shaderDataStr = g_stringTable.AddString( stage->shaderData, stage->shaderSize );
+				stage->shaderDataStr = g_stringTable.AddString( glesSource.c_str(), stage->shaderSize );
 
 				stage->shadowShaderSize = 0;
-				stage->shadowShaderData = nullptr;
 				stage->shadowShaderDataStr = -1;
 
 				// Validate resulting shader
@@ -3785,7 +3781,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 						g_messages.AddMessage( "\\memory(0): error G0101: could not create temporary files for external GL compiler" );
 						return false;
 					}
-					fwrite( stage->shaderData, stage->shaderSize, 1, f );
+					fwrite( g_stringTable.GetString( stage->shaderDataStr ), stage->shaderSize, 1, f );
 					fclose( f );
 
 
@@ -3813,12 +3809,12 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					size_t sz = size_t( ftell( f ) );
 					fseek( f, 0, SEEK_SET );
 
-					delete[] stage->shaderData;
 					stage->shaderSize = sz;
-					stage->shaderData = new char[stage->shaderSize];
-					fread( stage->shaderData, sz, 1, f );
+					char* shaderData = new char[stage->shaderSize];
+					fread( shaderData, sz, 1, f );
 					fclose( f );
-					stage->shaderDataStr = g_stringTable.AddString( stage->shaderData, stage->shaderSize );
+					stage->shaderDataStr = g_stringTable.AddString( shaderData, stage->shaderSize );
+					delete[] shaderData;
 
 					if( !RunProcess( ( cmdLinePrefix + " -DPS=1 " + inFile ).c_str() ) )
 					{
@@ -3835,12 +3831,12 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					sz = size_t( ftell( f ) );
 					fseek( f, 0, SEEK_SET );
 
-					delete[] stage->shadowShaderData;
 					stage->shadowShaderSize = sz;
-					stage->shadowShaderData = new char[stage->shadowShaderSize];
-					fread( stage->shadowShaderData, sz, 1, f );
+					char* shadowShaderData = new char[stage->shadowShaderSize];
+					fread( shadowShaderData, sz, 1, f );
 					fclose( f );
-					stage->shadowShaderDataStr = g_stringTable.AddString( stage->shadowShaderData, stage->shadowShaderSize );
+					stage->shadowShaderDataStr = g_stringTable.AddString( shadowShaderData, stage->shadowShaderSize );
+					delete[] shadowShaderData;
 
 					DeleteFile( inFile );
 					DeleteFile( outFile );

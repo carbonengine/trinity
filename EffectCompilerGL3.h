@@ -3,12 +3,13 @@
 #define EffectCompilerGL3_H
 
 struct EffectData;
+struct Macro;
 
 class EffectCompilerGL3
 {
 public:
 	bool Create();
-	bool CompileEffect( const char* source, size_t sourceLength, const D3DXMACRO* defines, ID3DXInclude* include, EffectData& result );
+	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result );
 private:
 };
 

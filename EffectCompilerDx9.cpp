@@ -4,6 +4,7 @@
 #include "CompileMessageQueue.h"
 #include "YamlOutput.h"
 #include "Mutex.h"
+#include "Macro.h"
 #include <regex>
 
 extern CompileMessageQueue g_messages;
@@ -452,7 +453,7 @@ static void ExtractShaderInputs( DWORD* shaderCode, StageInput& stage )
 	}
 }
 
-static void StripComments( void* code, unsigned& codeSize, void*& strippedCode )
+static StringReference StripComments( void* code, unsigned& codeSize )
 {
     // Calculates the new size (without comments)
     int* codeData = static_cast<int*>( code );
@@ -474,9 +475,9 @@ static void StripComments( void* code, unsigned& codeSize, void*& strippedCode )
     }
  
     // Creates a new buffer with the original code but omitting the comments
-	strippedCode = new char[strippedSizeInWords * 4];
+	char* strippedCode = new char[strippedSizeInWords * 4];
  
-    int* strippedCodeData = static_cast<int*>( strippedCode );
+    int* strippedCodeData = reinterpret_cast<int*>( strippedCode );
     size_t offset = 0;
  
     for( unsigned int i = 0; i < sizeInWords; i++ )
@@ -502,6 +503,10 @@ static void StripComments( void* code, unsigned& codeSize, void*& strippedCode )
     }
  
     codeSize = strippedSizeInWords * 4;
+
+	auto result = g_stringTable.AddString( strippedCode, codeSize );
+	delete[] strippedCode;
+	return result;
 }
 
 static unsigned GetInstructionCount( const void* shaderCode )
@@ -738,10 +743,8 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				// Rather than fail loudly as we will after dropping SM2 support, simply log a warning and continue.
 
 				pass.stages[0].shadowShaderSize = 0;
-				pass.stages[0].shadowShaderData = nullptr;
 				pass.stages[0].shadowShaderDataStr = -1;
 				pass.stages[1].shadowShaderSize = 0;
-				pass.stages[1].shadowShaderData = nullptr;
 				pass.stages[1].shadowShaderDataStr = -1;
 				pass.stages[0].threadGroupSize[0] = 0;
 				pass.stages[0].threadGroupSize[1] = 0;
@@ -754,7 +757,6 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				{
 					g_messages.AddMessage( "\\memory(0): warning X0000: Vertex shader NULL encountered when analyzing DX9 effect" );
 					pass.stages[0].shaderSize = 0;
-					pass.stages[0].shaderData = nullptr;
 					pass.stages[0].shaderDataStr = -1;
 				}
 				else
@@ -771,8 +773,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 						g_messages.AddMessage( "\\memory(0): error X0000: Getting vertex shader data when analyzing DX9 effect" );
 						return false;
 					}
-					StripComments( buffer, pass.stages[0].shaderSize, pass.stages[0].shaderData );
-					pass.stages[0].shaderDataStr = g_stringTable.AddString( pass.stages[0].shaderData, pass.stages[0].shaderSize );
+					pass.stages[0].shaderDataStr = StripComments( buffer, pass.stages[0].shaderSize );
 					delete[] buffer;
 				}
 
@@ -780,7 +781,6 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				{
 					g_messages.AddMessage( "\\memory(0): warning X0000: Pixel shader NULL encountered when analyzing DX9 effect" );
 					pass.stages[1].shaderSize = 0;
-					pass.stages[1].shaderData = nullptr;
 					pass.stages[1].shaderDataStr = -1;
 				}
 				else
@@ -796,9 +796,8 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 						g_messages.AddMessage( "\\memory(0): error X0000: Getting pixel shader data when analyzing DX9 effect" );
 						return false;
 					}
-					StripComments( buffer, pass.stages[1].shaderSize, pass.stages[1].shaderData );
+					pass.stages[1].shaderDataStr = StripComments( buffer, pass.stages[1].shaderSize );
 					delete[] buffer;
-					pass.stages[1].shaderDataStr = g_stringTable.AddString( pass.stages[1].shaderData, pass.stages[1].shaderSize );
 				}
 
 				static char buffer[64 * 1024];
@@ -1275,7 +1274,7 @@ const std::regex s_blendOpAlpha( "[^[:alnum:]]BlendOpAlpha[[:space:]]*=[[:space:
 
 }
 
-bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, const D3DXMACRO* defines, ID3DXInclude* include, EffectData& result, bool disableListing )
+bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result, bool disableListing )
 {
 	auto src = std::regex_replace( std::string( source, sourceLength ), s_premutationPragma, std::string( "" ) );
 
@@ -1333,10 +1332,14 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 		optimizationLevel = D3DXSHADER_OPTIMIZATION_LEVEL3;
 	}
 
+	D3DXMACRO dx9Defines[256];
+	Macro::FillDxMacros( dx9Defines, defines.begin(), defines.end() );
+
+
 	if( FAILED( D3DXCreateEffectCompiler( 
 		source, 
 		sourceLength, 
-		defines, 
+		dx9Defines,
 		include, 
 		D3DXSHADER_PACKMATRIX_COLUMNMAJOR | D3DXSHADER_NO_PRESHADER | optimizationLevel | ( g_avoidFlowControl ? D3DXSHADER_AVOID_FLOW_CONTROL : 0 ), 
 		&effectCompiler, 
@@ -1382,9 +1385,9 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 		.literal( "platform" ).literal( "DX9" )
 		.literal( "id" ).literal( "000" )
 		.literal( "defines" ).dict();
-	for( int i = 0; defines[i].Name; ++i )
+	for( auto it = begin( defines ); it != end( defines ); ++it )
 	{
-		listing.literal( defines[i].Name ).literal( defines[i].Definition );
+		listing.literal( it->name ).literal( it->value );
 	}
 	listing.end();
 	listing.literal( "techniques" ).list();
@@ -1393,7 +1396,7 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	CComPtr<ID3DXBuffer> shaderText;
 	if( listing.enabled() )
 	{
-		D3DXPreprocessShader( source, sourceLength, defines, include, &shaderText, nullptr );
+		D3DXPreprocessShader( source, sourceLength, dx9Defines, include, &shaderText, nullptr );
 	}
 
 	MutexScope scope( g_analyzeEffectDx9CS );

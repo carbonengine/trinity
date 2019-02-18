@@ -12,6 +12,7 @@
 #include "InlineString.h"
 #include "YamlOutput.h"
 #include "Mutex.h"
+#include "Macro.h"
 
 #include <strstream>
 #include <regex>
@@ -3271,7 +3272,7 @@ static bool TryOpenGLCall()
 // --------------------------------------------------------------------------------------
 bool EffectCompilerGL3::CompileEffect( const char* source, 
 										size_t sourceLength, 
-										const D3DXMACRO* defines, 
+										const std::vector<Macro>& defines,
 										ID3DXInclude* include, 
 										EffectData& result )
 {
@@ -3321,9 +3322,9 @@ bool EffectCompilerGL3::CompileEffect( const char* source,
 		.literal( "platform" ).literal( "GL3" )
 		.literal( "id" ).literal( "000" )
 		.literal( "defines" ).dict();
-	for( int i = 0; defines[i].Name; ++i )
+	for( auto it = begin( defines ); it != end( defines ); ++it )
 	{
-		listing.literal( defines[i].Name ).literal( defines[i].Definition );
+		listing.literal( it->name ).literal( it->value );
 	}
 	listing.literal( "techniques" ).list();
 
@@ -3340,17 +3341,16 @@ bool EffectCompilerGL3::CompileEffect( const char* source,
 			listing.list();
 			for( auto stage = pass->stages.begin(); stage != pass->stages.end(); ++stage )
 			{
-				if( stage->shaderData == nullptr )
+				if( stage->shaderSize == 0 )
 				{
 					stage->shadowShaderSize = 0;
-					stage->shadowShaderData = nullptr;
 					stage->shadowShaderDataStr = -1;
 
 					continue;
 				}
 				// Disassemble shader and convert DX9 assembly to GLSL
 				CComPtr<ID3DXBuffer> disassembly;
-				if( FAILED( D3DXDisassembleShader( (DWORD*)stage->shaderData, FALSE, nullptr, &disassembly ) ) )
+				if( FAILED( D3DXDisassembleShader( (DWORD*)g_stringTable.GetString( stage->shaderDataStr ), FALSE, nullptr, &disassembly ) ) )
 				{
 					g_messages.AddMessage( "\\memory(0): error X0000: could not disassemble shader" );
 					return false;
@@ -3381,14 +3381,10 @@ bool EffectCompilerGL3::CompileEffect( const char* source,
 					listing.end();
 				}
 
-				delete[] stage->shaderData;
 				stage->shaderSize = glesSource.length() + 1;
-				stage->shaderData = new char[stage->shaderSize];
-				strcpy_s( (char*)stage->shaderData, stage->shaderSize, glesSource.c_str() );
-				stage->shaderDataStr = g_stringTable.AddString( stage->shaderData, stage->shaderSize );
+				stage->shaderDataStr = g_stringTable.AddString( glesSource.c_str(), stage->shaderSize );
 
 				stage->shadowShaderSize = 0;
-				stage->shadowShaderData = nullptr;
 				stage->shadowShaderDataStr = -1;
 
 				// Validate resulting shader

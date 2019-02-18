@@ -76,46 +76,175 @@ enum UsageCode
 };
 
 
-// Saved as:
-//	name: StringReference
-//	cbIndex: BYTE
-//  index: DWORD
-//  size: DWORD
-//  constantType: BYTE
-//  dimension: BYTE
-//  elements: DWORD
+template <typename T, typename P>
+class PackAs
+{
+public:
+	operator T() const
+	{
+		return t;
+	}
+	operator T&( )
+	{
+		return t;
+	}
+	PackAs& operator=( T o )
+	{
+		t = o;
+		return *this;
+	}
+	P Packed() const
+	{
+		return static_cast<P>( t );
+	}
+private:
+	T t;
+};
+
+
+
+
+class PackedStream
+{
+public:
+	explicit PackedStream( void* data, size_t size )
+		:m_size( size )
+	{
+		m_data = static_cast<uint8_t*>( data );
+		m_start = m_data;
+	}
+
+	~PackedStream()
+	{
+	}
+
+	size_t GetSize() const
+	{
+		return m_size;
+	}
+
+	const void* GetData() const
+	{
+		return m_start;
+	}
+
+	//void Save( StringReference value )
+	//{
+	//	*reinterpret_cast<uint32_t*>( m_data ) = value;
+	//	m_data += sizeof( uint32_t );
+	//}
+	void Save( float value )
+	{
+		*reinterpret_cast<float*>( m_data ) = value;
+		m_data += sizeof( float );
+	}
+	void Save( uint32_t value )
+	{
+		*reinterpret_cast<uint32_t*>( m_data ) = value;
+		m_data += sizeof( uint32_t );
+	}
+	void Save( uint16_t value )
+	{
+		*reinterpret_cast<uint16_t*>( m_data ) = value;
+		m_data += sizeof( uint16_t );
+	}
+	void Save( uint8_t value )
+	{
+		*reinterpret_cast<uint8_t*>( m_data ) = value;
+		m_data += sizeof( uint8_t );
+	}
+	void Save( bool value )
+	{
+		*reinterpret_cast<uint8_t*>( m_data ) = value ? 1 : 0;
+		m_data += sizeof( uint8_t );
+	}
+	template <typename T, typename P>
+	void Save( PackAs<T, P> value )
+	{
+		*reinterpret_cast<P*>( m_data ) = value.Packed();
+		m_data += sizeof( P );
+	}
+private:
+	uint8_t* m_data;
+	void* m_start;
+	size_t m_size;
+};
+
+
+class SizeCountStream
+{
+public:
+	SizeCountStream()
+		:m_size( 0 )
+	{
+	}
+
+	size_t GetSize() const
+	{
+		return m_size;
+	}
+
+	//void Save( StringReference )
+	//{
+	//	m_size += sizeof( uint32_t );
+	//}
+	void Save( float )
+	{
+		m_size += sizeof( float );
+	}
+	void Save( uint32_t )
+	{
+		m_size += sizeof( uint32_t );
+	}
+	void Save( uint16_t )
+	{
+		m_size += sizeof( uint16_t );
+	}
+	void Save( uint8_t )
+	{
+		m_size += sizeof( uint8_t );
+	}
+	void Save( bool )
+	{
+		m_size += sizeof( uint8_t );
+	}
+	template <typename T, typename P>
+	void Save( PackAs<T, P> )
+	{
+		m_size += sizeof( P );
+	}
+private:
+	size_t m_size;
+};
+
 struct Constant
 {
-	size_t GetPackedSize()
+
+	template <typename T>
+	void Save( T& stream )
 	{
-		return sizeof( DWORD ) + sizeof( DWORD ) + sizeof( DWORD ) + sizeof( BYTE ) + sizeof( BYTE ) + sizeof( DWORD ) + sizeof( BYTE ) + sizeof( BYTE );
+		stream.Save( name );
+		stream.Save( offset );
+		stream.Save( size );
+		stream.Save( type );
+		stream.Save( dimension );
+		stream.Save( elements );
+		stream.Save( isSRGB );
+		stream.Save( isAutoregister );
 	}
-	void Save( BYTE*& buffer )
+
+	bool operator==( const Constant& other ) const
 	{
-		*reinterpret_cast<DWORD*>( buffer ) = name;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<DWORD*>( buffer ) = offset;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<DWORD*>( buffer ) = size;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<BYTE*>( buffer ) = type;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = dimension;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<DWORD*>( buffer ) = elements;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<BYTE*>( buffer ) = isSRGB ? 1 : 0;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = isAutoregister ? 1 : 0;
-		buffer += sizeof( BYTE );
+		return name == other.name && offset == other.offset && size == other.size && type == other.type && 
+			dimension == other.dimension && elements == other.elements && isSRGB == other.isSRGB && isAutoregister == other.isAutoregister;
 	}
 
 	StringReference name;
-	unsigned offset;
-	unsigned size;
-	ConstantType type;
-	unsigned dimension;
-	unsigned elements;
+	uint32_t offset;
+	uint32_t size;
+	PackAs<ConstantType, uint8_t> type;
+	uint8_t dimension;
+	uint32_t elements;
 	bool isSRGB;
 	bool isAutoregister;
 };
@@ -125,106 +254,74 @@ struct Vector4
 	float x, y, z, w;
 };
 
-// Saved as:
-//	textureName: StringReference
-//  textureType: BYTE
-//  isSRG: BYTE
-//  isAutoregister: BYTE
+
 struct Texture
 {
-	size_t GetPackedSize()
+	template <typename T>
+	void Save( T& stream )
 	{
-		return sizeof( DWORD ) + sizeof( BYTE ) + sizeof( BYTE ) + sizeof( BYTE );
+		stream.Save( name );
+		stream.Save( type );
+		stream.Save( isSRGB );
+		stream.Save( isAutoregister );
 	}
-	void Save( BYTE*& buffer )
+
+	bool operator==( const Texture& other ) const
 	{
-		*reinterpret_cast<DWORD*>( buffer ) = name;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<BYTE*>( buffer ) = type;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = isSRGB ? 1 : 0;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = isAutoregister ? 1 : 0;
-		buffer += sizeof( BYTE );
+		return name == other.name && type == other.type && isSRGB == other.isSRGB && isAutoregister == other.isAutoregister;
 	}
 
 	StringReference name;
-	TextureType type;
+	PackAs<TextureType, uint8_t> type;
 	bool isSRGB;
 	bool isAutoregister;
 };
 
-// Saved as:
-//	name: StringReference
-//  type: BYTE
-//  isAutoregister: BYTE
+
 struct Uav
 {
-	size_t GetPackedSize()
+	template <typename T>
+	void Save( T& stream )
 	{
-		return sizeof( DWORD ) + sizeof( BYTE ) + sizeof( BYTE );
+		stream.Save( name );
+		stream.Save( type );
+		stream.Save( isAutoregister );
 	}
-	void Save( BYTE*& buffer )
+
+	bool operator==( const Texture& other ) const
 	{
-		*reinterpret_cast<DWORD*>( buffer ) = name;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<BYTE*>( buffer ) = type;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = isAutoregister ? 1 : 0;
-		buffer += sizeof( BYTE );
+		return name == other.name && type == other.type && isAutoregister == other.isAutoregister;
 	}
 
 	StringReference name;
-	TextureType type;
+	PackAs<TextureType, uint8_t> type;
 	bool isAutoregister;
 };
 
-// Saved as:
-//	name: StringReference
-//  samplerStateCount: BYTE
-//  (samplerState: BYTE samplerStateValue: BYTE) x samplerStateCount
+
 struct Sampler
 {
-	size_t GetPackedSize()
+	template <typename T>
+	void Save( T& stream )
 	{
-		return sizeof( DWORD ) + sizeof( BYTE ) * 9 + sizeof( FLOAT ) * 7;
-	}
-	void Save( BYTE*& buffer )
-	{
-		*reinterpret_cast<DWORD*>( buffer ) = name;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<BYTE*>( buffer ) = comparison;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = minFilter;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = magFilter;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = mipFilter;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = addressU;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = addressV;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = addressW;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<float*>( buffer ) = mipLODBias;
-		buffer += sizeof( float );
-		*reinterpret_cast<BYTE*>( buffer ) = maxAnisotropy;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = comparisonFunc;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<float*>( buffer ) = borderColor.x;
-		buffer += sizeof( float );
-		*reinterpret_cast<float*>( buffer ) = borderColor.y;
-		buffer += sizeof( float );
-		*reinterpret_cast<float*>( buffer ) = borderColor.z;
-		buffer += sizeof( float );
-		*reinterpret_cast<float*>( buffer ) = borderColor.w;
-		buffer += sizeof( float );
-		*reinterpret_cast<float*>( buffer ) = minLOD;
-		buffer += sizeof( float );
-		*reinterpret_cast<float*>( buffer ) = maxLOD;
-		buffer += sizeof( float );
+		stream.Save( name );
+		stream.Save( comparison );
+		stream.Save( minFilter );
+		stream.Save( magFilter );
+		stream.Save( mipFilter );
+		stream.Save( addressU );
+		stream.Save( addressV );
+		stream.Save( addressW );
+		stream.Save( mipLODBias );
+		stream.Save( maxAnisotropy );
+		stream.Save( comparisonFunc );
+
+		stream.Save( borderColor.x );
+		stream.Save( borderColor.y );
+		stream.Save( borderColor.z );
+		stream.Save( borderColor.w );
+		stream.Save( minLOD );
+		stream.Save( maxLOD );
 	}
 
 	bool operator==( const Sampler& sampler ) const
@@ -272,70 +369,57 @@ struct Sampler
 	}
 
 	StringReference name;
-	BYTE filter;
-	BYTE comparison;
-	BYTE minFilter;
-	BYTE magFilter;
-	BYTE mipFilter;
-	BYTE addressU;
-	BYTE addressV;
-	BYTE addressW;
+	uint8_t filter; // unsaved ?
+	uint8_t comparison;
+	uint8_t minFilter;
+	uint8_t magFilter;
+	uint8_t mipFilter;
+	uint8_t addressU;
+	uint8_t addressV;
+	uint8_t addressW;
 	float mipLODBias;
-	BYTE maxAnisotropy;
-	BYTE comparisonFunc;
+	uint8_t maxAnisotropy;
+	uint8_t comparisonFunc;
 	Vector4 borderColor;
 	float minLOD;
 	float maxLOD;
-	BYTE srgbTexture;
+	uint8_t srgbTexture; // unsaved ?
 };
 
-// Saved as:
-//	name: StringReference
-//  index: BYTE
-//  usedMask: BYTE
+
 struct InputDescription
 {
-	size_t GetPackedSize()
+	template <typename T>
+	void Save( T& stream )
 	{
-		return sizeof( BYTE ) + sizeof( BYTE ) + sizeof( BYTE ) + sizeof( BYTE );
-	}
-	void Save( BYTE*& buffer )
-	{
-		*reinterpret_cast<BYTE*>( buffer ) = name;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = registerIndex;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = index;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = usedMask;
-		buffer += sizeof( BYTE );
+		stream.Save( name );
+		stream.Save( registerIndex );
+		stream.Save( index );
+		stream.Save( usedMask );
 	}
 
-	BYTE name;
-	BYTE registerIndex;
-	BYTE index;
-	BYTE usedMask;
-	BYTE componentType;
+	bool operator==( const InputDescription& other ) const
+	{
+		return name == other.name && registerIndex == other.registerIndex && index == other.index && usedMask == other.usedMask;
+	}
+
+	uint8_t name;
+	uint8_t registerIndex;
+	uint8_t index;
+	uint8_t usedMask;
 };
 
-// Saved as:
-//	type: BYTE
-//	value: DWORD
+
 struct Annotation
 {
-	size_t GetPackedSize()
+	template <typename T>
+	void Save( T& stream )
 	{
-		return sizeof( BYTE ) + sizeof( DWORD );
-	}
-	void Save( BYTE*& buffer )
-	{
-		*reinterpret_cast<BYTE*>( buffer ) = type;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<DWORD*>( buffer ) = intValue;
-		buffer += sizeof( DWORD );
+		stream.Save( type );
+		stream.Save( stringValue );
 	}
 
-	AnnotationType type;
+	PackAs<AnnotationType, uint8_t> type;
 	union
 	{
 		float floatValue;
@@ -344,211 +428,112 @@ struct Annotation
 	};
 };
 
-// Saved as:
-//	annotationCount: BYTE
-//	(annotationName:StringReference Annotation) x annotationCount
+
 struct ParameterAnnotation
 {
-	size_t GetPackedSize()
+	template <typename T>
+	void Save( T& stream )
 	{
-		size_t size = sizeof( BYTE );
+		stream.Save( uint8_t( annotations.size() ) );
 		for( auto it = annotations.begin(); it != annotations.end(); ++it )
 		{
-			size += sizeof( DWORD );
-			size += it->second.GetPackedSize();
-		}
-		return size;
-	}
-	void Save( BYTE*& buffer )
-	{
-		*reinterpret_cast<BYTE*>( buffer ) = annotations.size();
-		buffer += sizeof( BYTE );
-		for( auto it = annotations.begin(); it != annotations.end(); ++it )
-		{
-			*reinterpret_cast<DWORD*>( buffer ) = it->first;
-			buffer += sizeof( DWORD );
-
-			BYTE* start = buffer;
-			it->second.Save( buffer );
-			assert( buffer - start == it->second.GetPackedSize() );
+			stream.Save( it->first );
+			it->second.Save( stream );
 		}
 	}
 
 	std::map<StringReference, Annotation> annotations;
 };
 
-// Saved as:
-//	type: BYTE
-//  shaderSize: DWORD
-//  shaderData: BYTE x shaderSize
-//  constantCount: DWORD
-//  Constant x constantCount
-//  defaultValueCount: DWORD
-//  Vector4 x defaultValueCount
-//  samplerCount: BYTE
-//  (stage: BYTE Sampler) x samplerCount
+
 struct StageInput
 {
-	size_t GetPackedSize()
+	template <typename T>
+	void Save( T& stream )
 	{
-		size_t size = sizeof( BYTE ) + sizeof( DWORD ) + sizeof( DWORD ) + sizeof( DWORD ) + sizeof( DWORD ) + sizeof( DWORD ) + 3 * sizeof( DWORD );
-		for( auto it = constants.begin(); it != constants.end(); ++it )
-		{
-			size += it->GetPackedSize();
-		}
-		size += sizeof( DWORD ) + sizeof( DWORD ) + sizeof( BYTE ) + sizeof( BYTE );
-		for( auto it = textures.begin(); it != textures.end(); ++it )
-		{
-			size += sizeof( BYTE );
-			size += it->second.GetPackedSize();
-		}
-		for( auto it = samplers.begin(); it != samplers.end(); ++it )
-		{
-			size += sizeof( BYTE );
-			size += it->second.GetPackedSize();
-		}
-		size += sizeof( BYTE );
+		stream.Save( type );
+
+		stream.Save( uint8_t( inputs.size() ) );
 		for( auto it = inputs.begin(); it != inputs.end(); ++it )
 		{
-			size += it->GetPackedSize();
+			it->Save( stream );
 		}
-		size += sizeof( BYTE );
-		for( auto it = uavs.begin(); it != uavs.end(); ++it )
-		{
-			size += sizeof( BYTE );
-			size += it->second.GetPackedSize();
-		}
-		size += annotations.GetPackedSize();
-		return size;
-	}
-	void Save( BYTE*& buffer )
-	{
-		*reinterpret_cast<BYTE*>( buffer ) = type;
-		buffer += sizeof( BYTE );
-		*reinterpret_cast<BYTE*>( buffer ) = inputs.size();
-		buffer += sizeof( BYTE );
-		for( auto it = inputs.begin(); it != inputs.end(); ++it )
-		{
-			BYTE* start = buffer;
-			it->Save( buffer );
-			assert( buffer - start == it->GetPackedSize() );
-		}
-		*reinterpret_cast<DWORD*>( buffer ) = shaderSize;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<DWORD*>( buffer ) = shaderDataStr;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<DWORD*>( buffer ) = shadowShaderSize;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<DWORD*>( buffer ) = shadowShaderDataStr;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<DWORD*>( buffer ) = threadGroupSize[0];
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<DWORD*>( buffer ) = threadGroupSize[1];
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<DWORD*>( buffer ) = threadGroupSize[2];
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<DWORD*>( buffer ) = constants.size();
-		buffer += sizeof( DWORD );
+
+		stream.Save( shaderSize );
+		stream.Save( shaderDataStr );
+		stream.Save( shadowShaderSize );
+		stream.Save( shadowShaderDataStr );
+		stream.Save( threadGroupSize[0] );
+		stream.Save( threadGroupSize[1] );
+		stream.Save( threadGroupSize[2] );
+
+		stream.Save( uint32_t( constants.size() ) );
 		for( auto it = constants.begin(); it != constants.end(); ++it )
 		{
-			BYTE* start = buffer;
-			it->Save( buffer );
-			assert( buffer - start == it->GetPackedSize() );
+			it->Save( stream );
 		}
-		*reinterpret_cast<DWORD*>( buffer ) = defaultValues.size();
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<DWORD*>( buffer ) = defaultValuesStr;
-		buffer += sizeof( DWORD );
-		*reinterpret_cast<BYTE*>( buffer ) = textures.size();
-		buffer += sizeof( BYTE );
+
+		stream.Save( uint32_t( defaultValues.size() ) );
+		stream.Save( defaultValuesStr );
+
+		stream.Save( uint8_t( textures.size() ) );
 		for( auto it = textures.begin(); it != textures.end(); ++it )
 		{
-			*reinterpret_cast<BYTE*>( buffer ) = it->first;
-			buffer += sizeof( BYTE );
-			BYTE* start = buffer;
-			it->second.Save( buffer );
-			assert( buffer - start == it->second.GetPackedSize() );
+			stream.Save( it->first );
+			it->second.Save( stream );
 		}
-		*reinterpret_cast<BYTE*>( buffer ) = samplers.size();
-		buffer += sizeof( BYTE );
+
+		stream.Save( uint8_t( samplers.size() ) );
 		for( auto it = samplers.begin(); it != samplers.end(); ++it )
 		{
-			*reinterpret_cast<BYTE*>( buffer ) = it->first;
-			buffer += sizeof( BYTE );
-			BYTE* start = buffer;
-			it->second.Save( buffer );
-			assert( buffer - start == it->second.GetPackedSize() );
+			stream.Save( it->first );
+			it->second.Save( stream );
 		}
-		*reinterpret_cast<BYTE*>( buffer ) = uavs.size();
-		buffer += sizeof( BYTE );
+
+		stream.Save( uint8_t( uavs.size() ) );
 		for( auto it = uavs.begin(); it != uavs.end(); ++it )
 		{
-			*reinterpret_cast<BYTE*>( buffer ) = it->first;
-			buffer += sizeof( BYTE );
-			BYTE* start = buffer;
-			it->second.Save( buffer );
-			assert( buffer - start == it->second.GetPackedSize() );
+			stream.Save( it->first );
+			it->second.Save( stream );
 		}
-		annotations.Save( buffer );
+		annotations.Save( stream );
 	}
 
-	InputStageType type;
+	PackAs<InputStageType, uint8_t> type;
 	std::vector<InputDescription> inputs;
-	unsigned shaderSize;
-	void* shaderData;
+	uint32_t shaderSize;
 	StringReference shaderDataStr;
-	unsigned shadowShaderSize;
-	void* shadowShaderData;
+	uint32_t shadowShaderSize;
 	StringReference shadowShaderDataStr;
-	unsigned threadGroupSize[3];
+	uint32_t threadGroupSize[3];
 	std::vector<Constant> constants;
 	std::vector<BYTE> defaultValues;
 	StringReference defaultValuesStr;
-	std::map<unsigned, Texture> textures;
-	std::map<unsigned, Sampler> samplers;
-	std::map<unsigned, Uav> uavs;
+	std::map<uint8_t, Texture> textures;
+	std::map<uint8_t, Sampler> samplers;
+	std::map<uint8_t, Uav> uavs;
 	ParameterAnnotation annotations;
 };
 
-typedef std::map<unsigned, unsigned> RenderStates;
 
-// Saved as:
-//	stageCount: BYTE
-//  InputStage x stageCount
-//	inputCount: BYTE
-//  InputDescription x inputCount
-//	stateCount: BYTE
-//  (state: DWORD value: DWORD) x stateCount
+typedef std::map<uint32_t, uint32_t> RenderStates;
+
+
 struct Pass
 {
-	size_t GetPackedSize()
+	template <typename T>
+	void Save( T& stream )
 	{
-		size_t size = sizeof( BYTE );
+		stream.Save( uint8_t( stages.size() ) );
 		for( auto it = stages.begin(); it != stages.end(); ++it )
 		{
-			size += it->GetPackedSize();
+			it->Save( stream );
 		}
-		size += sizeof( BYTE ) + states.size() * 2 * sizeof( DWORD );
-		return size;
-	}
-	void Save( BYTE*& buffer )
-	{
-		*reinterpret_cast<BYTE*>( buffer ) = stages.size();
-		buffer += sizeof( BYTE );
-		for( auto it = stages.begin(); it != stages.end(); ++it )
-		{
-			BYTE* start = buffer;
-			it->Save( buffer );
-			assert( buffer - start == it->GetPackedSize() );
-		}
-		*reinterpret_cast<BYTE*>( buffer ) = states.size();
-		buffer += sizeof( BYTE );
+		stream.Save( uint8_t( states.size() ) );
 		for( auto it = states.begin(); it != states.end(); ++it )
 		{
-			*reinterpret_cast<DWORD*>( buffer ) = it->first;
-			buffer += sizeof( DWORD );
-			*reinterpret_cast<DWORD*>( buffer ) = it->second;
-			buffer += sizeof( DWORD );
+			stream.Save( it->first );
+			stream.Save( it->second );
 		}
 	}
 
@@ -559,27 +544,14 @@ struct Pass
 
 struct Technique
 {
-	size_t GetPackedSize()
+	template <typename T>
+	void Save( T& stream )
 	{
-		size_t size = sizeof( DWORD ) + sizeof( BYTE );
+		stream.Save( name );
+		stream.Save( uint8_t( passes.size() ) );
 		for( auto it = passes.begin(); it != passes.end(); ++it )
 		{
-			size += it->GetPackedSize();
-		}
-		return size;
-	}
-	void Save( BYTE*& buffer )
-	{
-		*reinterpret_cast<DWORD*>( buffer ) = name;
-		buffer += sizeof( DWORD );
-
-		*reinterpret_cast<BYTE*>( buffer ) = passes.size();
-		buffer += sizeof( BYTE );
-		for( auto it = passes.begin(); it != passes.end(); ++it )
-		{
-			BYTE* start = buffer;
-			it->Save( buffer );
-			assert( buffer - start == it->GetPackedSize() );
+			it->Save( stream );
 		}
 	}
 
@@ -587,47 +559,22 @@ struct Technique
 	std::vector<Pass> passes;
 };
 
-// Saved as:
-//	passCount: BYTE
-//	Pass x passCount
-//	parameterAnnotationCount: WORD
-//	(paramName:StringReference ParameterAnnotation) x parameterAnnotationCount
+
 struct EffectData
 {
-	size_t GetPackedSize()
+	template <typename T>
+	void Save( T& stream )
 	{
-		size_t size = sizeof( BYTE );
+		stream.Save( uint8_t( techniques.size() ) );
 		for( auto it = techniques.begin(); it != techniques.end(); ++it )
 		{
-			size += it->GetPackedSize();
+			it->Save( stream );
 		}
-		size += sizeof( WORD );
+		stream.Save( uint16_t( annotations.size() ) );
 		for( auto it = annotations.begin(); it != annotations.end(); ++it )
 		{
-			size += sizeof( DWORD );
-			size += it->second.GetPackedSize();
-		}
-		return size;
-	}
-	void Save( BYTE*& buffer )
-	{
-		*reinterpret_cast<BYTE*>( buffer ) = techniques.size();
-		buffer += sizeof( BYTE );
-		for( auto it = techniques.begin(); it != techniques.end(); ++it )
-		{
-			BYTE* start = buffer;
-			it->Save( buffer );
-			assert( buffer - start == it->GetPackedSize() );
-		}
-		*reinterpret_cast<WORD*>( buffer ) = annotations.size();
-		buffer += sizeof( WORD );
-		for( auto it = annotations.begin(); it != annotations.end(); ++it )
-		{
-			*reinterpret_cast<DWORD*>( buffer ) = it->first;
-			buffer += sizeof( DWORD );
-			BYTE* start = buffer;
-			it->second.Save( buffer );
-			assert( buffer - start == it->second.GetPackedSize() );
+			stream.Save( it->first );
+			it->second.Save( stream );
 		}
 	}
 

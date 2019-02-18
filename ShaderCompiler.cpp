@@ -211,8 +211,6 @@ bool CompileShader( const CompileShaderArguments& arguments )
 		return false;
 	}
 
-	D3DXMACRO defines[BUFFER_SIZE];
-	Macro::FillDxMacros( defines, arguments.defines.begin(), arguments.defines.end() );
 	Platform platform = GetPlatform( arguments.defines );
 
 	{
@@ -228,35 +226,35 @@ bool CompileShader( const CompileShaderArguments& arguments )
 	switch( platform )
 	{
 	case PLATFORM_DX9:
-		if( !g_compilerDX9.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+		if( !g_compilerDX9.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, outputData ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return false;
 		}
 		break;
 	case PLATFORM_DX11:
-		if( !g_compilerDX11.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+		if( !g_compilerDX11.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, outputData ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return false;
 		}
 		break;
 	case PLATFORM_GL2:
-		if( !g_compilerGL2.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+		if( !g_compilerGL2.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, outputData ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return false;
 		}
 		break;
 	case PLATFORM_GL3:
-		if( !g_compilerGL3.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+		if( !g_compilerGL3.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, outputData ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return false;
 		}
 		break;
 	case PLATFORM_GL4:
-		if( !g_compilerGL4.CompileEffect( g_shaderSource, g_shaderLength, defines, &g_includeHandler, outputData ) )
+		if( !g_compilerGL4.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, outputData ) )
 		{
 			InterlockedExchange( &g_error, 1 );
 			return false;
