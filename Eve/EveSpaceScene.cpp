@@ -270,6 +270,13 @@ Tr2ShaderBufferPtr EveSpaceScene::GetPostProcessPSBuffer( )
 	return m_postProcessPSBuffer;
 }
 
+void EveSpaceScene::SetupTAA( Tr2RenderTargetPtr velocityMap, float pixelOffsetScale, TAASampling sampling )
+{
+	m_velocityMap = velocityMap;
+	m_taaPixelOffsetScale = pixelOffsetScale;
+	m_taaPattern = sampling;
+}
+
 bool EveSpaceScene::OnPrepareResources()
 {
 	return true;

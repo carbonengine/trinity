@@ -36,6 +36,9 @@ const Be::ClassInfo* TriStepRenderPostProcess::ExposeToBlue()
 		MAP_ATTRIBUTE( "fogHorizontalBlurEffect", m_fogHorizontalBlurEffect, "The fog horizontal blur effect", Be::READWRITE )
 		MAP_ATTRIBUTE( "fogVerticalBlurEffect", m_fogVerticalBlurEffect, "The fog vertical blur effect", Be::READWRITE )
 		MAP_ATTRIBUTE( "fogCompositeEffect", m_fogCompositeEffect, "The fog composite effect", Be::READWRITE )
+		MAP_ATTRIBUTE( "taaEffect", m_taaEffect, "The taa effect", Be::READWRITE )
+		MAP_ATTRIBUTE( "accumulationBuffer", m_accumulationBuffer, "The accumulation buffer", Be::READWRITE )
+		MAP_ATTRIBUTE( "velocityBuffer", m_velocityBuffer, "The velocity buffer", Be::READWRITE )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER( "quality", m_quality, "The quality of the post process", Be::READWRITE | Be::ENUM, PostProcessQualityChooser )
 

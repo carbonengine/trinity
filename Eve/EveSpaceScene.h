@@ -64,7 +64,6 @@ BLUE_DECLARE_VECTOR( Tr2ExternalParameter );
 BLUE_DECLARE( Tr2ImpostorManager );
 BLUE_DECLARE( Tr2DebugRenderer );
 BLUE_DECLARE( EveEffectRoot2 );
-BLUE_DECLARE( Tr2PostProcessManager );
 
 enum TAASampling { TAA_NONE=0, TAA_RANDOM=1, TAA_2X=2, TAA_3X=3, TAA_4X=4 };
 
@@ -149,7 +148,8 @@ public:
 
 	IEveSpaceObject2Vector& Objects() { return m_objects; }
 	Tr2PostProcess2Ptr GetPostProcess() { return m_postProcess; }
-
+	Tr2ShaderBufferPtr GetPostProcessPSBuffer();
+	void SetupTAA( Tr2RenderTargetPtr velocityMap, float pixelOffsetScale, TAASampling sampling );
 
 protected:
 	// Data shared between the different rendering method chunks
@@ -260,7 +260,6 @@ protected:
 	};
 	PostProcessPSData m_postProcessPSData;
 	Tr2ShaderBufferPtr m_postProcessPSBuffer;
-	Tr2ShaderBufferPtr GetPostProcessPSBuffer();
 	void UpdatePostProcessPSData();
 
 	void PopulatePerFrameVSData( PerFrameVSData &data );

@@ -82,6 +82,13 @@ private:
 	Tr2EffectPtr m_fogVerticalBlurEffect;
 	Tr2EffectPtr m_fogCompositeEffect;
 
+	// TAA
+	bool ProcessTaa( Tr2PPTaaEffect* taa );
+	void RenderTaa( Tr2RenderContext& renderContext, Tr2PPTaaEffect* taa );
+	Tr2EffectPtr m_taaEffect;
+	Tr2RenderTargetPtr m_accumulationBuffer;
+	Tr2RenderTargetPtr m_velocityBuffer;
+
 	// film grain
 	void ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain );
 

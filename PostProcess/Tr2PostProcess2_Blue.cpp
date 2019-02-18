@@ -25,6 +25,7 @@ const Be::ClassInfo* Tr2PostProcess2::ExposeToBlue()
 		MAP_ATTRIBUTE( "lut", m_lut, "Accesses the LUT effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "vignette", m_vignette, "Accesses the vignette effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fog", m_fog, "Accesses the fog effect", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "taa", m_taa, "Accesses the temporal antialiasing effect", Be::READWRITE | Be::PERSIST )
 
     EXPOSURE_END()
 }

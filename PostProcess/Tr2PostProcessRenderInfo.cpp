@@ -95,9 +95,6 @@ void Tr2PostProcessRenderInfo::SetSourceBuffer( Tr2RenderTarget* sourceBuffer )
 		m_sourceBuffer->GetFormat(),
 		1,
 		0 );
-
-	CreateBuffers( m_sourceBuffer->GetWidth(), m_sourceBuffer->GetHeight() );
-
 }
 
 
@@ -118,27 +115,5 @@ void Tr2PostProcessRenderInfo::CopySourceTo( Tr2RenderTarget* renderTarget, floa
 			m_sourceBuffer->GetMsaaType(),
 			m_sourceBuffer->GetMsaaQuality() );
 	}
-}
-
-
-void Tr2PostProcessRenderInfo::CreateBuffers( uint32_t width, uint32_t height )
-{
-	if( m_accumulationBuffer->IsValid() )
-	{
-		m_accumulationBuffer->Destroy();
-	}
-	if( m_velocityBuffer->IsValid() )
-	{
-		m_velocityBuffer->Destroy();
-	}
-	if( m_distortionBuffer->IsValid() )
-	{
-		m_distortionBuffer->Destroy();
-	}
-
-	// TODO - this could break in dx9
-	m_accumulationBuffer->Create( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R11G11B10_FLOAT );
-	m_velocityBuffer->Create( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16_FLOAT, 8U, 0U );
-	m_distortionBuffer->Create( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1 );
 }
 

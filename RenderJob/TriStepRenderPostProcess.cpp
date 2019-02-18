@@ -107,17 +107,18 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	}
 
 	Tr2PostProcess2Ptr postProcess = m_scene->GetPostProcess();
-	
+
 	Tr2PPGodRaysEffect* godrays = nullptr;
 	Tr2PPBloomEffect* bloom = nullptr;
-	Tr2PPSignalLossEffect* signalLoss= nullptr;
+	Tr2PPSignalLossEffect* signalLoss = nullptr;
 	Tr2PPDynamicExposureEffectPtr dynamicExposure = nullptr;
 	Tr2PPFilmGrainEffectPtr filmGrain = nullptr;
 	Tr2PPDesaturateEffectPtr desaturate = nullptr;
 	Tr2PPFadeEffectPtr fade = nullptr;
-	Tr2PPLutEffectPtr lut= nullptr;
+	Tr2PPLutEffectPtr lut = nullptr;
 	Tr2PPVignetteEffectPtr vignette = nullptr;
 	Tr2PPFogEffectPtr fog = nullptr;
+	Tr2PPTaaEffectPtr taa = nullptr;
 
 	if( postProcess != nullptr )
 	{
@@ -142,9 +143,15 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		default:
 			break;
 		}
+#if TRINITY_PLATFORM == TRINITY_DIRECTX11
+		if( Tr2Renderer::GetShaderModel() == TR2SM_3_0_DEPTH )
+		{
+			taa = postProcess->GetTaa();
+		}
+#endif
 	}
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-	
+
 	PushRenderTarget( renderContext );
 	Tr2Renderer::PushDepthStencilBuffer( nullDS, renderContext );
 
@@ -157,13 +164,18 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	{
 		RenderGodRays( renderContext, godrays );
 	}
-	
+
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
 	// copy the source to the source copy buffer
 	if( sourceBuffer->GetMsaaType() > 1 )
 	{
 		sourceBuffer->GetRenderTarget().Resolve( *m_renderInfo->GetSourceBufferCopy(), renderContext );
+	}
+
+	if( ProcessTaa( taa ) )
+	{
+		RenderTaa( renderContext, taa );
 	}
 
 	if( ProcessDynamicExposure( dynamicExposure ) )
@@ -842,4 +854,81 @@ void TriStepRenderPostProcess::RenderFog( Tr2RenderContext& renderContext, Tr2PP
 	Tr2Renderer::PushRenderTarget( *m_renderInfo->GetSourceBuffer(), renderContext );
 	Tr2Renderer::DrawScreenQuad( m_fogCompositeEffect );
 	Tr2Renderer::PopRenderTarget( renderContext );
+}
+
+bool TriStepRenderPostProcess::ProcessTaa( Tr2PPTaaEffect* taa )
+{
+	if( taa && taa->IsActive() )
+	{
+		if( m_taaEffect == nullptr || m_accumulationBuffer == nullptr || m_velocityBuffer == nullptr )
+		{
+			auto source = m_renderInfo->GetSourceBuffer();
+
+			m_accumulationBuffer.CreateInstance();
+			m_accumulationBuffer->Create( source->GetWidth(), source->GetHeight(), 1, source->GetFormat() );
+			m_accumulationBuffer->m_name = "AccumulationBuffer";
+
+			m_taaEffect.CreateInstance();
+			m_taaEffect->StartUpdate();
+			m_taaEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/TAA.fx" );
+			m_taaEffect->SetParameter( BlueSharedString( "BlitCurrent" ), m_renderInfo->GetSourceBufferCopyDirectly() );
+			m_taaEffect->SetParameter( BlueSharedString( "LastFrame" ), m_accumulationBuffer );
+
+			m_velocityBuffer.CreateInstance();
+			m_velocityBuffer->m_name = "VelocityMap";
+			m_velocityBuffer->Create( source->GetWidth(), source->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16_FLOAT, source->GetMsaaType(), 0 );
+
+			if( source->GetMsaaQuality() > 1 )
+			{
+				m_taaEffect->SetParameter( BlueSharedString( "VelocityMapMSAA" ), m_velocityBuffer );
+				m_taaEffect->SetParameter( BlueSharedString( "VelocityMap" ), m_renderInfo->GetBlackBuffer() );
+			}
+			else
+			{
+				m_taaEffect->SetParameter( BlueSharedString( "VelocityMap" ), m_velocityBuffer );
+				m_taaEffect->SetParameter( BlueSharedString( "VelocityMapMSAA" ), m_renderInfo->GetBlackBuffer() );
+			}
+
+			m_taaEffect->SetParameter( BlueSharedString( "BlendingParams0" ), taa->m_blendParams0 );
+			m_taaEffect->SetParameter( BlueSharedString( "BlendingParams1" ), taa->m_blendParams1 );
+			m_taaEffect->SetParameter( BlueSharedString( "BlendingParams2" ), taa->m_blendParams2 );
+			m_taaEffect->SetParameter( BlueSharedString( "DistanceParams" ), taa->m_distanceParams );
+			m_taaEffect->SetParameter( BlueSharedString( "EnhancementParams" ), taa->m_enhancementParams );
+			m_taaEffect->EndUpdate();
+
+			m_scene->SetupTAA( m_velocityBuffer, 0.5f, TAA_3X );
+			taa->SetDirty( false );
+		}
+	} 
+	else
+	{	
+		if( m_taaEffect != nullptr || m_accumulationBuffer != nullptr || m_velocityBuffer != nullptr )
+		{
+			m_taaEffect = nullptr;
+			m_accumulationBuffer = nullptr;
+			m_velocityBuffer = nullptr;
+			m_scene->SetupTAA( m_velocityBuffer, 0, TAA_NONE );
+			taa->SetDirty( false );
+		}
+	}
+	return taa && taa->IsActive();
+}
+
+void TriStepRenderPostProcess::RenderTaa( Tr2RenderContext& renderContext, Tr2PPTaaEffect* taa )
+{
+	auto source = m_renderInfo->GetSourceBuffer();
+
+	m_scene->GetPostProcessPSBuffer()->ApplyBuffer( renderContext );
+
+	PushRenderTarget( renderContext, source );
+	Tr2Renderer::DrawScreenQuad( m_taaEffect );
+	Tr2Renderer::PopRenderTarget( renderContext );
+
+	if( source->GetMsaaType() > 1 )
+	{
+		source->GetRenderTarget().Resolve( *m_renderInfo->GetSourceBufferCopy(), renderContext );
+	}
+
+	m_renderInfo->GetSourceBufferCopy()->GetRenderTarget().Resolve( *m_accumulationBuffer, renderContext );
+
 }

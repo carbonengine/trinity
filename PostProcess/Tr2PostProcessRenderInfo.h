@@ -43,6 +43,11 @@ public:
 		return m_sourceBuffer;		
 	};
 
+	Tr2RenderTarget* GetSourceBufferCopyDirectly()
+	{
+		return m_sourceBufferCopy;		
+	};
+
 	Tr2RenderTarget* GetDestBuffer() { return m_destBuffer; };
 	Tr2RenderTarget* GetVelocityBuffer() { return m_velocityBuffer; };
 	Tr2RenderTarget* GetDistortionBuffer() { return m_distortionBuffer; };
@@ -54,7 +59,6 @@ public:
 
 private:
 	void CopySourceTo( Tr2RenderTarget* buffer, float sizeScale );
-	void CreateBuffers( uint32_t width, uint32_t height );
 
 	// Buffers
 	Tr2RenderTargetPtr m_sourceBuffer;
