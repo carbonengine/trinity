@@ -743,9 +743,9 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				// Rather than fail loudly as we will after dropping SM2 support, simply log a warning and continue.
 
 				pass.stages[0].shadowShaderSize = 0;
-				pass.stages[0].shadowShaderDataStr = -1;
+				pass.stages[0].shadowShaderDataStr = INVALID_REFERENCE;
 				pass.stages[1].shadowShaderSize = 0;
-				pass.stages[1].shadowShaderDataStr = -1;
+				pass.stages[1].shadowShaderDataStr = INVALID_REFERENCE;
 				pass.stages[0].threadGroupSize[0] = 0;
 				pass.stages[0].threadGroupSize[1] = 0;
 				pass.stages[0].threadGroupSize[2] = 0;
@@ -757,7 +757,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				{
 					g_messages.AddMessage( "\\memory(0): warning X0000: Vertex shader NULL encountered when analyzing DX9 effect" );
 					pass.stages[0].shaderSize = 0;
-					pass.stages[0].shaderDataStr = -1;
+					pass.stages[0].shaderDataStr = INVALID_REFERENCE;
 				}
 				else
 				{
@@ -781,7 +781,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				{
 					g_messages.AddMessage( "\\memory(0): warning X0000: Pixel shader NULL encountered when analyzing DX9 effect" );
 					pass.stages[1].shaderSize = 0;
-					pass.stages[1].shaderDataStr = -1;
+					pass.stages[1].shaderDataStr = INVALID_REFERENCE;
 				}
 				else
 				{
@@ -1001,7 +1001,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				}
 				else
 				{
-					pass.stages[1].defaultValuesStr = -1;
+					pass.stages[1].defaultValuesStr = INVALID_REFERENCE;
 				}
 				if( m_vertexConstantValueCount )
 				{
@@ -1011,7 +1011,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				}
 				else
 				{
-					pass.stages[0].defaultValuesStr = -1;
+					pass.stages[0].defaultValuesStr = INVALID_REFERENCE;
 				}
 
 				Reset();

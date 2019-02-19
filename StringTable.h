@@ -5,7 +5,23 @@
 #include <unordered_map>
 #include "Mutex.h"
 
-typedef unsigned StringReference;
+class StringReference
+{
+public:
+	bool operator==( const StringReference& other ) const
+	{
+		return reference == other.reference;
+	}
+	bool operator<( const StringReference& other ) const
+	{
+		return reference < other.reference;
+	}
+private:
+	uint32_t reference;
+	friend class StringTable;
+};
+
+extern const StringReference INVALID_REFERENCE;
 
 class StringTable
 {
@@ -15,11 +31,13 @@ public:
 
 	StringReference AddString( const char* string );
 	StringReference AddString( const void* string, size_t length );
+	uint32_t GetOffset( StringReference ref );
 	const char* GetString( StringReference ref );
-	bool Write( HANDLE file ) const;
+	bool Write( HANDLE file );
 	size_t GetSize() const;
+
+	static StringReference GetInvalidReference();
 private:
-	Mutex m_CS;
 
 	struct Blob
 	{
@@ -87,6 +105,21 @@ private:
 			return m_size == other.m_size && memcmp( m_data, other.m_data, m_size ) == 0;
 		}
 
+		bool operator<( const Blob& other ) const
+		{
+			auto length = min( m_size, other.m_size );
+			auto cmp = memcmp( m_data, other.m_data, length );
+			if( cmp < 0 )
+			{
+				return true;
+			}
+			if( cmp > 0 )
+			{
+				return false;
+			}
+			return m_size < other.m_size;
+		}
+
 		operator size_t() const
 		{
 			size_t result = 2166136261U;
@@ -103,8 +136,38 @@ private:
 		size_t m_size;
 	};
 
-	std::unordered_map<Blob, StringReference> m_table;
+	struct BlobPtrHash
+	{
+		size_t operator ()( const Blob* ptr ) const
+		{
+			return size_t( *ptr );
+		}
+	};
+
+	struct BlobPtrEqual
+	{
+		bool operator()( const Blob* a, const Blob* b ) const
+		{
+			return *a == *b;
+		}
+	};
+
+	struct StringReferenceHash
+	{
+		size_t operator()( StringReference ref ) const
+		{
+			return size_t( ref.reference );
+		}
+	};
+
+	void Sort();
+	static bool ValueCompare( std::pair<Blob*, size_t>* a, std::pair<Blob*, size_t>* b );
+
+	Mutex m_CS;
+	std::unordered_map<Blob*, StringReference, BlobPtrHash, BlobPtrEqual> m_table;
+	std::unordered_map<StringReference, std::pair<Blob*, size_t>, StringReferenceHash> m_revTable;
 	size_t m_size;
+	bool m_sorted;
 };
 
 #endif // StringTable_H

@@ -128,11 +128,13 @@ public:
 		return m_start;
 	}
 
-	//void Save( StringReference value )
-	//{
-	//	*reinterpret_cast<uint32_t*>( m_data ) = value;
-	//	m_data += sizeof( uint32_t );
-	//}
+	void Save( StringReference value )
+	{
+		extern StringTable g_stringTable;
+
+		*reinterpret_cast<uint32_t*>( m_data ) = g_stringTable.GetOffset( value );
+		m_data += sizeof( uint32_t );
+	}
 	void Save( float value )
 	{
 		*reinterpret_cast<float*>( m_data ) = value;
@@ -184,10 +186,10 @@ public:
 		return m_size;
 	}
 
-	//void Save( StringReference )
-	//{
-	//	m_size += sizeof( uint32_t );
-	//}
+	void Save( StringReference )
+	{
+		m_size += sizeof( uint32_t );
+	}
 	void Save( float )
 	{
 		m_size += sizeof( float );
@@ -416,16 +418,23 @@ struct Annotation
 	void Save( T& stream )
 	{
 		stream.Save( type );
-		stream.Save( stringValue );
+		if( type == ANNOTATION_TYPE_STRING )
+		{
+			stream.Save( stringValue );
+		}
+		else
+		{
+			stream.Save( floatValue );
+		}
 	}
 
 	PackAs<AnnotationType, uint8_t> type;
 	union
 	{
 		float floatValue;
-		int intValue;
-		StringReference stringValue;
+		int32_t intValue;
 	};
+	StringReference stringValue;
 };
 
 

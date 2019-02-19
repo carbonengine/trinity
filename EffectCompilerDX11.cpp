@@ -2416,7 +2416,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				stage.shaderSize = strippedEffectData->GetBufferSize();
 				stage.shaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
 				stage.shadowShaderSize = 0;
-				stage.shadowShaderDataStr = -1;
+				stage.shadowShaderDataStr = INVALID_REFERENCE;
 
 				CComPtr<ID3D11ShaderReflection> reflection;
 				if( FAILED( D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection.p ) ) )
@@ -2452,7 +2452,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 				else
 				{
-					stage.defaultValuesStr = -1;
+					stage.defaultValuesStr = INVALID_REFERENCE;
 				}
 
 				listing.dict()

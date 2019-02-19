@@ -3641,7 +3641,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 				if( stage->shaderSize == 0 )
 				{
 					stage->shadowShaderSize = 0;
-					stage->shadowShaderDataStr = -1;
+					stage->shadowShaderDataStr = INVALID_REFERENCE;
 
 					continue;
 				}
@@ -3701,7 +3701,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 				stage->shaderDataStr = g_stringTable.AddString( glesSource.c_str(), stage->shaderSize );
 
 				stage->shadowShaderSize = 0;
-				stage->shadowShaderDataStr = -1;
+				stage->shadowShaderDataStr = INVALID_REFERENCE;
 
 				// Validate resulting shader
 				GLuint shader = 0;

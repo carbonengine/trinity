@@ -312,7 +312,20 @@ void PrintUsage()
 bool DiscoverPermutations( Permutations& permutations, const char* shaderSource, size_t shaderLength )
 {
 	ParserState state( MakeInlineString( shaderSource, shaderSource + shaderLength ) );
-	return state.DiscoverPermutations( permutations );
+	if( !state.DiscoverPermutations( permutations ) )
+	{
+		return false;
+	}
+	for( auto it = begin( permutations ); it != end( permutations ); ++it )
+	{
+		g_stringTable.AddString( it->name.c_str() );
+		g_stringTable.AddString( it->description.c_str() );
+		for( auto jt = begin( it->options ); jt != end( it->options ); ++jt )
+		{
+			g_stringTable.AddString( jt->name.c_str() );
+		}
+	}
+	return true;
 }
 
 
@@ -751,7 +764,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	*headerHead++ = BYTE( permutations.size() );
 	for( auto it = permutations.begin(); it != permutations.end(); ++it )
 	{
-		*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.AddString( it->name.c_str() );
+		*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( it->name.c_str() ) );
 		headerHead += sizeof( DWORD );
 		for( size_t j = 0; j < it->options.size(); ++j )
 		{
@@ -762,7 +775,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				break;
 			}
 		}
-		*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.AddString( it->description.c_str() );
+		*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( it->description.c_str() ) );
 		headerHead += sizeof( DWORD );
 
 		*reinterpret_cast<BYTE*>( headerHead ) = it->type;
@@ -771,7 +784,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		*headerHead++ = BYTE( it->options.size() );
 		for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
 		{
-			*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.AddString( jt->name.c_str() );
+			*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( jt->name.c_str() ) );
 			headerHead += sizeof( DWORD );
 		}
 	}
