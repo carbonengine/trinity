@@ -13,93 +13,10 @@
 #include "EveChildTransform.h"
 #include "ITr2Renderable.h"
 #include "Tr2DebugRenderer.h"
+#include "Eve/Volume/IEveVolume.h"
 
-
-BLUE_INTERFACE( IEveVolume ) : 
-	public IRoot
-{
-	virtual float GetIntensity( Vector3 cameraPosition ) = 0;
-	virtual void RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& parentTransform ) = 0;
-	virtual Vector4 GetBoundingSphere() const = 0;
-	virtual void RegisterForChanges( std::function<void()> NotifyParent );
-};
+BLUE_DECLARE_INTERFACE( IEveVolume );
 BLUE_DECLARE_IVECTOR( IEveVolume );
-
-
-BLUE_CLASS( EveSphereVolume ) : 
-	public IEveVolume,
-	public INotify
-{
-public:
-	EXPOSE_TO_BLUE();
-
-	EveSphereVolume( IRoot* lockobj = NULL );
-	~EveSphereVolume();
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	// IEveVolume
-	void RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& parentTransform ) override;
-	float GetIntensity( Vector3 cameraPosition ) override;
-	Vector4 GetBoundingSphere() const override;
-	void RegisterForChanges( std::function<void()> NotifyParent ) override;
-
-	//////////////////////////////////////////////////////////////////////////
-	// INotify
-	bool OnModified( Be::Var* val );
-
-private:
-	BlueSharedString m_name;
-
-	Vector3 m_position;
-	Vector3 m_centerOffset;
-	float m_radius;
-	float m_innerRadius;
-	
-	std::function<void()> m_notifyParentFunc;
-	bool m_notifyParent;
-
-};
-
-BLUE_CLASS( EveBoxVolume ) : 
-	public IEveVolume,
-	public INotify
-{
-public:
-	EXPOSE_TO_BLUE();
-
-	EveBoxVolume( IRoot* lockobj = NULL );
-	~EveBoxVolume();
-
-	/////////////////////////////////////////////////////////////////////////////////////
-	// IEveVolume
-	void RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& parentTransform ) override;
-	float GetIntensity( Vector3 cameraPosition ) override;
-	Vector4 GetBoundingSphere() const override;
-	void RegisterForChanges( std::function<void()> NotifyParent ) override;
-
-	//////////////////////////////////////////////////////////////////////////
-	// INotify
-	bool OnModified( Be::Var* val );
-
-private:
-
-	BlueSharedString m_name;
-
-	Vector3 m_position;
-	Vector3 m_centerOffset;
-	Vector3 m_scaling;
-	Vector3 m_innerScaling;
-	Quaternion m_rotation;
-	
-	Matrix m_boxTransform;
-	Matrix m_centerTransform;
-	Matrix m_inverseBoxTransform;
-	Matrix m_inverseCenterTransform;
-
-	std::function<void()> m_notifyParentFunc;
-	bool m_notifyParent;
-};
-
 
 BLUE_CLASS( EveChildEnvironment ) :
 	public IEveSpaceObjectChild,
@@ -169,8 +86,6 @@ private:
 	float m_environmentIntensity;
 };
 
-TYPEDEF_BLUECLASS( EveSphereVolume );
-TYPEDEF_BLUECLASS( EveBoxVolume );
 TYPEDEF_BLUECLASS( EveChildEnvironment );
 
 #endif
