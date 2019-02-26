@@ -25,7 +25,7 @@ const Be::ClassInfo* Tr2RuntimeTextureParameter::ExposeToBlue()
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS( 
 			"__init__",
 			Create,
-			2,
+			3,
 			":param name: parameter name\n"
 			":param texture: texture associated with the parameter" )
 
