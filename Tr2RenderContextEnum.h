@@ -499,7 +499,7 @@ namespace Tr2GpuUsage
 
 	inline bool HasBufferFlags( Type value )
 	{
-		return ( value & ( VERTEX_BUFFER | INDEX_BUFFER | DRAW_INDIRECT_ARGS | ( APPEND_CONSUME & BUFFER_COUNTER ) ) ) != 0;
+		return ( value & ( VERTEX_BUFFER | INDEX_BUFFER | DRAW_INDIRECT_ARGS | ( ( APPEND_CONSUME | BUFFER_COUNTER ) & ~UNORDERED_ACCESS ) ) ) != 0;
 	}
 
 	inline bool HasTextureFlags( Type value )

@@ -432,7 +432,7 @@ namespace TrinityALImpl
 		CComPtr<ID3D11ShaderResourceView> view[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
 		CComPtr<ID3D11RenderTargetView> renderTarget[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
 		CComPtr<ID3D11DepthStencilView> depthStencil[DepthOption::COUNT];
-		CComPtr<ID3D11UnorderedAccessView> uav;
+		std::vector<CComPtr<ID3D11UnorderedAccessView>> uav;
 
 		if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 		{
@@ -543,22 +543,34 @@ namespace TrinityALImpl
 		{
 			D3D11_UNORDERED_ACCESS_VIEW_DESC descUAV;
 			descUAV.Format = static_cast<DXGI_FORMAT>( desc.GetFormat() );
-			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+			uav.resize( desc.GetTrueMipCount() );
+			for( uint32_t mip = 0; mip < desc.GetTrueMipCount(); ++mip )
 			{
-				descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
-				descUAV.Texture3D.WSize = (UINT)-1;
+				if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+				{
+					descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
+					descUAV.Texture3D.WSize = (UINT)-1;
+					descUAV.Texture3D.MipSlice = mip;
+				}
+				else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
+				{
+					descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
+					descUAV.Texture2DArray.ArraySize = 6;
+					descUAV.Texture2DArray.MipSlice = mip;
+				}
+				else if( desc.GetArraySize() > 1 )
+				{
+					descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
+					descUAV.Texture2DArray.ArraySize = desc.GetArraySize();
+					descUAV.Texture2DArray.MipSlice = mip;
+				}
+				else
+				{
+					descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+					descUAV.Texture2D.MipSlice = mip;
+				}
+				FORWARD_HR( renderContext.m_d3dDevice11->CreateUnorderedAccessView( texture, &descUAV, &uav[mip] ) );
 			}
-			else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
-			{
-				descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2DARRAY;
-				descUAV.Texture2DArray.ArraySize = 6;
-			}
-			else
-			{
-				descUAV.ViewDimension = desc.GetArraySize() > 1 ? D3D11_UAV_DIMENSION_TEXTURE2DARRAY : D3D11_UAV_DIMENSION_TEXTURE2D;
-				descUAV.Texture2DArray.ArraySize = desc.GetArraySize();
-			}
-			FORWARD_HR( renderContext.m_d3dDevice11->CreateUnorderedAccessView( texture, &descUAV, &uav ) );
 		}
 
 		m_texture = texture;
@@ -581,6 +593,7 @@ namespace TrinityALImpl
 		m_renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = nullptr;
 		m_depthStencil[DepthOption::READ_WRITE] = nullptr;
 		m_depthStencil[DepthOption::READ_ONLY] = nullptr;
+		m_uav.clear();
 		m_stagingTexture = nullptr;
 		m_memory.Reset();
 		memset( &m_desc, 0, sizeof( m_desc ) );

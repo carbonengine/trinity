@@ -82,7 +82,7 @@ namespace TrinityALImpl
 		CComPtr<ID3D11ShaderResourceView> m_view[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
 		CComPtr<ID3D11RenderTargetView> m_renderTarget[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
 		CComPtr<ID3D11DepthStencilView> m_depthStencil[DepthOption::COUNT];
-		CComPtr<ID3D11UnorderedAccessView> m_uav;
+		std::vector<CComPtr<ID3D11UnorderedAccessView>> m_uav;
 		CComPtr<ID3D11Texture2D> m_stagingTexture;
 		CcpAlignedMallocBuffer m_writeStaging;
 		uint32_t m_writeLtrb[4];

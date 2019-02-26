@@ -2109,13 +2109,18 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 ALResult Tr2RenderContextAL::SetUav(	
 	Tr2RenderContextEnum::ShaderType inputType, 
 	uint32_t slot, 
-	Tr2TextureAL& texture ) throw()
+	Tr2TextureAL& texture,
+	uint32_t mipLevel ) throw()
 {
 	ID3D11UnorderedAccessView* view = nullptr;
 
 	if( texture.IsValid() )
 	{
-		view = texture.m_texture->m_uav;
+		if( mipLevel >= texture.m_texture->m_uav.size() )
+		{
+			return E_INVALIDARG;
+		}
+		view = texture.m_texture->m_uav[mipLevel];
 		if( !view )
 		{
 			return E_INVALIDARG;
@@ -2151,26 +2156,26 @@ ALResult Tr2RenderContextAL::SetUav(
 }
 
 // --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& rt, const float values[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( )
 {
-	if( rt.m_texture->m_uav == nullptr )
+	if( rt.m_texture->m_uav.size() <= mipLevel )
 	{
 		return E_INVALIDARG;
 	}
 
-	m_context->ClearUnorderedAccessViewFloat( rt.m_texture->m_uav, values );
+	m_context->ClearUnorderedAccessViewFloat( rt.m_texture->m_uav[mipLevel], values );
 	return S_OK;
 }
 
 // --------------------------------------------------------------------------------------
-ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& rt, const uint32_t values[4] ) throw( )
+ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw( )
 {
-	if( rt.m_texture->m_uav == nullptr )
+	if( rt.m_texture->m_uav.size() <= mipLevel )
 	{
 		return E_INVALIDARG;
 	}
 
-	m_context->ClearUnorderedAccessViewUint( rt.m_texture->m_uav, values );
+	m_context->ClearUnorderedAccessViewUint( rt.m_texture->m_uav[mipLevel], values );
 	return S_OK;
 }
 

@@ -75,10 +75,11 @@ public:
 	ALResult SetUav(
 		Tr2RenderContextEnum::ShaderType inputType, 
 		uint32_t slot, 
-		Tr2TextureAL& texture ) throw();
+		Tr2TextureAL& texture,
+		uint32_t mipLevel = 0 ) throw();
 
-	ALResult ClearUav( Tr2TextureAL& rt, const float values[4] ) throw( );
-	ALResult ClearUav( Tr2TextureAL& rt, const uint32_t values[4] ) throw( );
+	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( );
+	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw( );
 
 	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
 	
