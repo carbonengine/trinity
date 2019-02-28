@@ -36,7 +36,7 @@ def get_msbuild_path(version='4.0'):
 def build_project(project, target='build', msbuild_version='4.0', toolset=None):
     toolset_args = ['/p:PlatformToolset=%s' % toolset] if toolset else []
     subprocess.check_call([get_msbuild_path(msbuild_version), '/t:' + target, '/property:BuildCores=2',
-                           '/p:Platform=Win32', '/verbosity:n', '/nologo'] + toolset_args + [project])
+                           '/p:Platform=Win32', '/verbosity:m', '/nologo'] + toolset_args + [project])
 
 
 def run_p4(p4, command, *args):
