@@ -80,6 +80,9 @@
     <ClCompile Include="EffectCompilerGL3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ModifiedTime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\tools\ShaderCompiler\ShaderCompiler.exe">
@@ -166,6 +169,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Mutex.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Macro.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ModifiedTime.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

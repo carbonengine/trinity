@@ -154,10 +154,15 @@ GlesExtensionInfo g_glesExtensions;
 
 StringTable g_stringTable;
 
+bool g_hasDx9 = true;
 EffectCompilerDX9 g_compilerDX9;
+bool g_hasDx11 = true;
 EffectCompilerDX11 g_compilerDX11;
+bool g_hasGl2 = true;
 EffectCompilerGL2 g_compilerGL2;
+bool g_hasGl4 = true;
 EffectCompilerGL4 g_compilerGL4;
+bool g_hasGl3 = true;
 EffectCompilerGL3 g_compilerGL3;
 
 
@@ -237,6 +242,12 @@ bool CompileShader( const CompileShaderArguments& arguments )
 	switch( platform )
 	{
 	case PLATFORM_DX9:
+		if( !g_hasDx9 )
+		{
+			g_messages.AddMessage( "\\memory(0): error C0000: trying to compile dx9 effect when dx9 compiler failed to initialize" );
+			InterlockedExchange( &g_error, 1 );
+			return false;
+		}
 		if( !g_compilerDX9.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 		{
 			InterlockedExchange( &g_error, 1 );
@@ -244,6 +255,12 @@ bool CompileShader( const CompileShaderArguments& arguments )
 		}
 		break;
 	case PLATFORM_DX11:
+		if( !g_hasDx11 )
+		{
+			g_messages.AddMessage( "\\memory(0): error C0000: trying to compile dx11 effect when dx11 compiler failed to initialize" );
+			InterlockedExchange( &g_error, 1 );
+			return false;
+		}
 		if( !g_compilerDX11.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 		{
 			InterlockedExchange( &g_error, 1 );
@@ -251,6 +268,12 @@ bool CompileShader( const CompileShaderArguments& arguments )
 		}
 		break;
 	case PLATFORM_GL2:
+		if( !g_hasGl2 )
+		{
+			g_messages.AddMessage( "\\memory(0): error C0000: trying to compile gl2 effect when gl2 compiler failed to initialize" );
+			InterlockedExchange( &g_error, 1 );
+			return false;
+		}
 		if( !g_compilerGL2.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 		{
 			InterlockedExchange( &g_error, 1 );
@@ -258,6 +281,12 @@ bool CompileShader( const CompileShaderArguments& arguments )
 		}
 		break;
 	case PLATFORM_GL3:
+		if( !g_hasGl3 )
+		{
+			g_messages.AddMessage( "\\memory(0): error C0000: trying to compile gl3 effect when gl3 compiler failed to initialize" );
+			InterlockedExchange( &g_error, 1 );
+			return false;
+		}
 		if( !g_compilerGL3.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 		{
 			InterlockedExchange( &g_error, 1 );
@@ -265,6 +294,12 @@ bool CompileShader( const CompileShaderArguments& arguments )
 		}
 		break;
 	case PLATFORM_GL4:
+		if( !g_hasGl4 )
+		{
+			g_messages.AddMessage( "\\memory(0): error C0000: trying to compile gl4 effect when gl4 compiler failed to initialize" );
+			InterlockedExchange( &g_error, 1 );
+			return false;
+		}
 		if( !g_compilerGL4.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 		{
 			InterlockedExchange( &g_error, 1 );
@@ -634,32 +669,37 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	if( !g_compilerDX9.Create() )
 	{
+		printf( "%s: warning X0000: Failed to create dx9 compiler\n", args.shaderPath );
 		fflush( stdout );
-		return 1;
+		g_hasDx9 = false;
 	}
 
 	if( !g_compilerDX11.Create() )
 	{
+		printf( "%s: warning X0000: Failed to create dx11 compiler\n", args.shaderPath );
 		fflush( stdout );
-		return 1;
+		g_hasDx11 = false;
 	}
 	
 	if( !g_compilerGL2.Create() )
 	{
+		printf( "%s: warning X0000: Failed to create gl2 compiler\n", args.shaderPath );
 		fflush( stdout );
-		return 1;
+		g_hasGl2 = false;
 	}
 	
 	if( !g_compilerGL3.Create() )
 	{
+		printf( "%s: warning X0000: Failed to create gl3 compiler\n", args.shaderPath );
 		fflush( stdout );
-		return 1;
+		g_hasGl3 = false;
 	}
 	
 	if( !g_compilerGL4.Create() )
 	{
+		printf( "%s: warning X0000: Failed to create gl4 compiler\n", args.shaderPath );
 		fflush( stdout );
-		return 1;
+		g_hasGl4 = false;
 	}
 
 	Permutations permutations;
