@@ -13,7 +13,7 @@
     </BuildFX>
   </ItemDefinitionGroup>
   <PropertyGroup>
-      <DisplaySkipped>true</DisplaySkipped>
+      <DisplaySkipped>false</DisplaySkipped>
       <BuildCores>Auto</BuildCores>
   </PropertyGroup>
 </Project>
