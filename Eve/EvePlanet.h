@@ -83,6 +83,7 @@ private:
 
 	// calc current texture size
 	int CalcRequiredTextureSize( float maxDiameter );
+	void SetLod( Tr2Lod lod );
 
 	std::string m_name;
 

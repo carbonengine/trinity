@@ -50,21 +50,25 @@ void EvePlanet::UnregisterSecondaryLightSource( Tr2ShLightingManager& manager )
 
 void EvePlanet::UpdateEffectChildren( EveUpdateContext& updateContext, Matrix &worldTransform )
 {
-	if (!m_effectChildren.empty())
+	EveChildUpdateParams params;
+	params.spaceObjectParent = nullptr;
+	params.childParent = nullptr;
+	params.boneCount = 0;
+	params.bones = nullptr;
+	params.isVisible = m_display && m_currentLod > TR2_LOD_LOW;
+	params.localToWorldTransform = CalculatePlanetScaleTransform( worldTransform );
+	if( !m_effectChildren.empty() )
 	{
-		EveChildUpdateParams params;
-		params.spaceObjectParent = nullptr;
-		params.childParent = nullptr;
-		params.boneCount = 0;
-		params.bones = nullptr;
-		params.isVisible = m_display && m_currentLod > TR2_LOD_LOW;
-		params.localToWorldTransform = CalculatePlanetScaleTransform( worldTransform );
-
-		for ( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
+		for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
 		{
-			(*it)->UpdateAsyncronous( updateContext, params );
-			(*it)->UpdateSyncronous( updateContext, params );
+			( *it )->UpdateAsyncronous( updateContext, params );
+			( *it )->UpdateSyncronous( updateContext, params );
 		}
+	}
+	if( nullptr != m_zOnlyModel )
+	{
+		m_zOnlyModel->UpdateAsyncronous( updateContext, params );
+		m_zOnlyModel->UpdateSyncronous( updateContext, params );
 	}
 }
 
@@ -127,6 +131,7 @@ void EvePlanet::UpdateVisibility( const TriFrustum& frustum, const Matrix& paren
 	{
 		(*it)->UpdateVisibility( frustum, scaledTransform, m_currentLod );
 	}
+	UpdateZOnlyVisibility( frustum );
 }
 
 void EvePlanet::UpdateZOnlyVisibility( const TriFrustum& frustum )
@@ -223,32 +228,41 @@ void EvePlanet::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 	}
 
 	// visible at all?
-	if ( m_estimatedPixelDiameter > GetVisibilityThreshold() )
+	if( m_estimatedPixelDiameter > GetVisibilityThreshold() )
 	{
-		if( m_currentLod != TR2_LOD_HIGH)
+		if( m_currentLod != TR2_LOD_HIGH )
 		{
-			m_currentLod = TR2_LOD_HIGH;
-			for (auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it)
-			{
-				(*it)->ChangeLOD( m_currentLod );
-			}
+			SetLod( TR2_LOD_HIGH );
 		}
-		
-		for (auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt)
+
+		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
-			if ( (*ecIt) != m_zOnlyModel)
+			if( ( *ecIt ) != m_zOnlyModel )
 			{
-				(*ecIt)->GetRenderables( renderables );
+				( *ecIt )->GetRenderables( renderables );
+			}
+			if( nullptr != m_zOnlyModel )
+			{
+				m_zOnlyModel->GetRenderables( renderables );
 			}
 		}
 	}
-	else if ( m_currentLod != TR2_LOD_LOW )
+	else if( m_currentLod != TR2_LOD_LOW )
 	{
-		m_currentLod = TR2_LOD_LOW;
-		for (auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it)
-		{
-			(*it)->ChangeLOD( m_currentLod );
-		}
+		SetLod( m_currentLod );
+	}
+}
+
+void EvePlanet::SetLod( Tr2Lod lod )
+{
+	m_currentLod = lod;
+	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
+	{
+		( *it )->ChangeLOD( lod );
+	}
+	if( nullptr != m_zOnlyModel )
+	{
+		m_zOnlyModel->ChangeLOD( lod );
 	}
 }
 
