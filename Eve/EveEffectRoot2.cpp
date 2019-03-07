@@ -31,7 +31,7 @@ EveEffectRoot2::EveEffectRoot2( IRoot* lockobj ) :
 	m_display( true ),
 	m_startTime( 0 ),
 	m_effectDuration( -1 ),
-	m_lodLevel( TR2_LOD_HIGH ),
+	m_lodLevel( TR2_LOD_UNSPECIFIED ),
 	m_dynamicLODSelection( false ),
 	m_changeLOD( false ),
 	m_secondaryLightingSphereRadiusLocal( 0.5f ),
