@@ -542,6 +542,7 @@ namespace TrinityALImpl
 		if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
 		{
 			D3D11_UNORDERED_ACCESS_VIEW_DESC descUAV;
+			memset( &descUAV, 0, sizeof( descUAV ) );
 			descUAV.Format = static_cast<DXGI_FORMAT>( desc.GetFormat() );
 			uav.resize( desc.GetTrueMipCount() );
 			for( uint32_t mip = 0; mip < desc.GetTrueMipCount(); ++mip )
