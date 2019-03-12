@@ -53,11 +53,11 @@ Vector3* EveRemotePositionCurve::Update( Vector3* in, Be::Time t )
 		// loop or not to loop!
 		if( m_cycle )
 		{
-			s = Clamp( fmod( ( timeSinceStart - m_delayTime ), m_sweepTime ) / m_sweepTime, 0.f, 1.f );
+			s = TriClamp( fmod( ( timeSinceStart - m_delayTime ), m_sweepTime ) / m_sweepTime, 0.f, 1.f );
 		}
 		else
 		{
-			s = Clamp( ( timeSinceStart - m_delayTime ) / m_sweepTime, 0.f, 1.f );
+			s = TriClamp( ( timeSinceStart - m_delayTime ) / m_sweepTime, 0.f, 1.f );
 		}
 	}
 

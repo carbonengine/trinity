@@ -374,7 +374,7 @@ EveMissileWarhead::StateChangeEvent EveMissileWarhead::UpdateState( float deltaT
 	const float estimatedTotalFlyingTime = (estimatedTotalAliveTime + 0.1f) * m_speedModifier;
 
 	// calc a value from 0 to 1 across the whole (estimated) flying time, (excluding eject-phase time and delay time)
-	const float flight01 = Clamp( m_flyingTime / estimatedTotalFlyingTime, 0.f, 1.f );
+	const float flight01 = TriClamp( m_flyingTime / estimatedTotalFlyingTime, 0.f, 1.f );
 	switch( m_state )
 	{
 	case STATE_DELAYED:
@@ -440,7 +440,7 @@ EveMissileWarhead::StateChangeEvent EveMissileWarhead::CheckImpact( float deltaT
 	}
 	const float estimatedTotalFlyingTime = (estimatedTotalAliveTime + 0.1f) * m_speedModifier;
 	// calc a value from 0 to 1 across the whole (estimated) flying time, (excluding eject-phase time and delay time)
-	const float flight01 = Clamp( ( m_flyingTime - deltaT ) / estimatedTotalFlyingTime, 0.f, 1.f );
+	const float flight01 = TriClamp( ( m_flyingTime - deltaT ) / estimatedTotalFlyingTime, 0.f, 1.f );
 
 	if( !target )
 	{
@@ -528,9 +528,9 @@ void EveMissileWarhead::UpdateWarhead( float deltaT, float estimatedTotalAliveTi
 
 
 	// calc a value from 0 to 1 across the whole (estimated) flying time, (excluding eject-phase time and delay time)
-	const float flight01 = Clamp( m_flyingTime / estimatedTotalFlyingTime, 0.f, 1.f );
+	const float flight01 = TriClamp( m_flyingTime / estimatedTotalFlyingTime, 0.f, 1.f );
 	// another value from 0 to 1 that reaches 1 faster
-	const float quickFlight01 = Clamp( 3.f * flight01, 0.f, 1.f );
+	const float quickFlight01 = TriClamp( 3.f * flight01, 0.f, 1.f );
 
 	// apply the eject velocity to the "virtual" start position
 	if( m_state >= STATE_EJECTING )
@@ -544,8 +544,8 @@ void EveMissileWarhead::UpdateWarhead( float deltaT, float estimatedTotalAliveTi
 	// is the final destination data valid?
 	Vector3 endOffset( 0.f, 0.f, 0.f );
 	// find current bias toward the target locator
-	float t = Clamp( ( m_flyingTime - m_finalDestinationTimer ) / ( estimatedTotalFlyingTime - m_finalDestinationTimer ), 0.f, 1.f );
-	Vector3 modifiedOldOffset = m_oldEndOffset * ( 1.f - Clamp( t * 2.f, 0.0f, 1.0f ) );
+	float t = TriClamp( ( m_flyingTime - m_finalDestinationTimer ) / ( estimatedTotalFlyingTime - m_finalDestinationTimer ), 0.f, 1.f );
+	Vector3 modifiedOldOffset = m_oldEndOffset * ( 1.f - TriClamp( t * 2.f, 0.0f, 1.0f ) );
 	m_currentEndOffset = Lerp( modifiedOldOffset, m_endOffset, t );
 
 	// reduce all our influences and move the warhead closer to zero

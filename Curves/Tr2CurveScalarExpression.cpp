@@ -80,7 +80,7 @@ Tr2CurveScalarExpression::Tr2CurveScalarExpression( IRoot* lockobj )
 	m_expressionParser.DefineFun( "random", &Random, false );
 	m_expressionParser.DefineFun( "input", &Input, false );
 	m_expressionParser.DefineFun( "inputAt", &InputAt, false );
-	m_expressionParser.DefineFun( "clamp", &Clamp, false );
+	m_expressionParser.DefineFun( "clamp", &TriClamp, false );
 
 	m_expressionParser.DefineVar( "input1", &m_input1 );
 	m_expressionParser.DefineVar( "input2", &m_input2 );

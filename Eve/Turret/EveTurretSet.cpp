@@ -1195,7 +1195,7 @@ void EveTurretSet::ModifySystemBoneTransform( SystemBones bone, const Vector3* t
 		{
 			// pitch of barrel 90 degrees
 			Vector3 dirNrm = Normalize( *target );
-			float height = Clamp( dirNrm.y, 0.f, 1.f );
+			float height = TriClamp( dirNrm.y, 0.f, 1.f );
 			// never forget do apply influence!
 			height *= m_trackingInfluence;
 			// it's a pos extension with a scale
@@ -2549,7 +2549,7 @@ void EveTurretSet::CalcTransformForPitchBone( const Vector3* target, granny_tran
 		}
 	}
 
-	float alpha = Clamp( radians, minPitch, maxPitch );
+	float alpha = TriClamp( radians, minPitch, maxPitch );
 	// modify!
 	alpha = pitchFactor * alpha + XMConvertToRadians( pitchOffset );
 	// never forget do apply influence!

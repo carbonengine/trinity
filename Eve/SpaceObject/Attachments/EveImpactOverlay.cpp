@@ -140,7 +140,7 @@ void EveImpactOverlay::UpdateSyncronous( EveUpdateContext& updateContext, EveSpa
 						// scaling?
 						float scale = aidit->second.size * m_armorImpactParentSize / ( IMPACT_ARMOR_SIZE_MAX / IMPACT_ARMOR_SIZE_FACTOR );
 						// loding for emit rate?
-						float rateModifier = Clamp( m_renderPriority / IMPACT_ARMOR_PARTICLE_LOD_FACTOR, 0.f, 1.f );
+						float rateModifier = TriClamp( m_renderPriority / IMPACT_ARMOR_PARTICLE_LOD_FACTOR, 0.f, 1.f );
 						// put together particle update info
 						ITr2GenericEmitter::UpdateArguments args( updateContext.GetTime(), updateContext.GetGpuParticleSystem(), IdentityMatrix(), updateContext.GetOriginShift() );
 						// do the spawn here once!
@@ -259,7 +259,7 @@ void EveImpactOverlay::UpdateAsyncronous( EveUpdateContext& updateContext, EveSp
 	parent->GetBoundingSphere( parentBoundingSphere );
 	// cut off the parent size at some hard-coded size, so shield and armor impacts on giant ships get smaller
 	m_armorImpactParentSize = std::min( parentBoundingSphere.w, IMPACT_ARMOR_SIZE_MAX / IMPACT_ARMOR_SIZE_FACTOR );
-	m_shieldImpactParentSize = Clamp( parentBoundingSphere.w, IMPACT_SHIELD_SIZE_MIN, IMPACT_SHIELD_SIZE_MAX );
+	m_shieldImpactParentSize = TriClamp( parentBoundingSphere.w, IMPACT_SHIELD_SIZE_MIN, IMPACT_SHIELD_SIZE_MAX );
 
 	if( !m_shieldImpactData.empty() )
 	{
@@ -461,7 +461,7 @@ float EveImpactOverlay::GetActivationStrength( EveUpdateContext& updateContext )
 		if( m_hullDamageFlickerCurve )
 		{
 			// Clamp the flicker curve so we don't get a zero value from the curve
-			float result = Clamp( m_hullDamageFlickerCurve->Update( updateContext.GetTime() ), 0.3f, 1.0f );
+			float result = TriClamp( m_hullDamageFlickerCurve->Update( updateContext.GetTime() ), 0.3f, 1.0f );
 			return result / std::exp( m_hullDamageFactor );
 		}
 	}
@@ -531,7 +531,7 @@ void EveImpactOverlay::SetDamageState( float shield, float armor, float hull, bo
 	}
 
 	// always calculate the expected/desired number of impact effects
-	m_armorImpactGoalCount = (size_t)( IMPACT_HOLE_TO_ARMOR_DAMAGE_RATIO * Clamp( 1.f - armor, 0.f, 1.f ) + IMPACT_HOLE_TO_HULL_DAMAGE_RATIO * Clamp( 1.f - hull, 0.f, 1.f ) );
+	m_armorImpactGoalCount = (size_t)( IMPACT_HOLE_TO_ARMOR_DAMAGE_RATIO * TriClamp( 1.f - armor, 0.f, 1.f ) + IMPACT_HOLE_TO_HULL_DAMAGE_RATIO * TriClamp( 1.f - hull, 0.f, 1.f ) );
 
 	// hull factor
 	m_hullDamageFactor = TriLinearize( 0.9f, 0.1f, hull );
@@ -544,7 +544,7 @@ void EveImpactOverlay::SetDamageState( float shield, float armor, float hull, bo
 	}
 
 	// have a color fade between full shield and zero shield
-	m_shieldImpactColorFade = Clamp( pow( 1.f - shield, 2.f ), 0.f, 1.f );
+	m_shieldImpactColorFade = TriClamp( pow( 1.f - shield, 2.f ), 0.f, 1.f );
 
 	// do we forcefully have to create the amror impact holes?
 	if( doCreateArmorImpacts )

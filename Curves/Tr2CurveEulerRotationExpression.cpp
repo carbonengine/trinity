@@ -81,7 +81,7 @@ Tr2CurveEulerRotationExpression::Tr2CurveEulerRotationExpression( IRoot* lockobj
 		parser.DefineFun( "random", &Random, false );
 		parser.DefineFun( "input", &Input, false );
 		parser.DefineFun( "inputAt", &InputAt, false );
-		parser.DefineFun( "clamp", &Clamp, false );
+		parser.DefineFun( "clamp", &TriClamp, false );
 		parser.DefineFun( "radians", &XMConvertToRadians, true );
 
 		parser.DefineVar( "input1", &m_input1 );

@@ -350,10 +350,10 @@ void EveCamera::Update( Be::Time t )
 		}
 		float ran = TriRand() - 0.5f;
 		m_NoisexN = (m_NoisexN + m_noiseDamp*ran)/(1.0f + m_noiseDamp*dT);
-		m_NoisexN = Clamp( m_NoisexN, -m_maxNoise, m_maxNoise );
+		m_NoisexN = TriClamp( m_NoisexN, -m_maxNoise, m_maxNoise );
 		ran = TriRand()-0.5f;
 		m_NoiseyN = (m_NoiseyN + m_noiseDamp*ran)/(1.0f + m_noiseDamp*dT);
-		m_NoiseyN = Clamp( m_NoiseyN, -m_maxNoise, m_maxNoise );
+		m_NoiseyN = TriClamp( m_NoiseyN, -m_maxNoise, m_maxNoise );
 
 		idleYaw += m_noiseScale * m_NoisexN;
 		idlePitch += m_noiseScale * m_NoiseyN;

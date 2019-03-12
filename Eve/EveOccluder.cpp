@@ -144,7 +144,7 @@ void EveOccluder::RunQuery( Tr2RenderContext& renderContext, const TriFrustum& f
 		if( m_totalNumOfPixels )
 		{
 			m_value = (float)m_actualNumOfPixels / (float)m_totalNumOfPixels;
-			m_value = Clamp( m_value, 0.0f, 1.0f );
+			m_value = TriClamp( m_value, 0.0f, 1.0f );
 		}
 	}
 

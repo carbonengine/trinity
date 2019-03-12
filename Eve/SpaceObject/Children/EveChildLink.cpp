@@ -122,7 +122,7 @@ void EveChildLink::UpdateAsyncronous( EveUpdateContext& updateContext, const Eve
 	{
 		// link strength comes from distance vs. barrier 
 		float div = abs(m_linkBarrier - m_targetRadius ) ;
-		m_linkStrength = Clamp( 1.0f - ( m_currentDistance - m_targetRadius ) / div, 0.f, 1.f );
+		m_linkStrength = TriClamp( 1.0f - ( m_currentDistance - m_targetRadius ) / div, 0.f, 1.f );
 	}
 	
 	// need inverse rotation-only from worldmatrix

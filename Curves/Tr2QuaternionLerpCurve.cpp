@@ -52,7 +52,7 @@ Quaternion* Tr2QuaternionLerpCurve::GetValueAt(
     Quaternion end;
 
     float delta = TimeAsFloat( now - m_start );
-    float ratio = Clamp( delta / m_length, 0.0f, 1.0f );
+    float ratio = TriClamp( delta / m_length, 0.0f, 1.0f );
 
     *in = Slerp( *m_startCurve->GetValueAt( &start, now ), *m_endCurve->GetValueAt( &end, now ), ratio );
 
@@ -74,7 +74,7 @@ Quaternion* Tr2QuaternionLerpCurve::GetValueAt(
     Quaternion end;
 
     float delta = float( pos - TimeAsDouble( m_start ) );
-	float ratio = Clamp( delta / m_length, 0.0f, 1.0f );
+	float ratio = TriClamp( delta / m_length, 0.0f, 1.0f );
 
     *in = Slerp( *m_startCurve->GetValueAt( &start, pos ), *m_endCurve->GetValueAt( &end, pos ), ratio );
 
