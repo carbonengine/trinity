@@ -1944,6 +1944,7 @@ Tr2Sprite2dDisplayList* Tr2Sprite2dScene::EndCapture( Tr2Sprite2dDisplayList* pr
 			if( SUCCEEDED( previousDisplayList->vertexBuffer.UpdateBuffer( 0, vbSize, m_captureVertexData.get(), renderContext ) ) )
 				{
 					m_captureDisplayList->vertexBuffer = previousDisplayList->vertexBuffer;
+					previousDisplayList->vertexBuffer = Tr2BufferAL();
 					reusedVb = true;
 				}
 
@@ -1974,6 +1975,7 @@ Tr2Sprite2dDisplayList* Tr2Sprite2dScene::EndCapture( Tr2Sprite2dDisplayList* pr
 			if( SUCCEEDED( previousDisplayList->indexBuffer.UpdateBuffer( 0, ibSize, m_captureIndexData.get(), renderContext ) ) )
 				{
 					m_captureDisplayList->indexBuffer = previousDisplayList->indexBuffer;
+					previousDisplayList->indexBuffer = Tr2BufferAL();
 					reusedIb = true;
 				}
 
