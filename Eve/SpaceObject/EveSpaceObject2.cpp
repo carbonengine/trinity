@@ -363,12 +363,13 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 		params.spaceObjectParent = this;
 		params.childParent = nullptr;
 		params.localToWorldTransform = worldTransform;
-		params.isVisible = m_display && DisplayChildren();
 
 		GetBoneList( params.bones, params.boneCount );
 
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
+			params.isVisible = m_display && ( DisplayChildren() || (*ecIt)->IsAlwaysOn() );
+
 			( *ecIt )->UpdateSyncronous( updateContext, params );
 		}
 	}
@@ -480,12 +481,12 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 		params.spaceObjectParent = this;
 		params.childParent = nullptr;
 		params.localToWorldTransform = worldTransform;
-		params.isVisible = m_display && DisplayChildren();
 
 		GetBoneList( params.bones, params.boneCount );
 
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
+			params.isVisible = m_display && ( DisplayChildren() || ( *ecIt )->IsAlwaysOn() );
 			(*ecIt)->UpdateAsyncronous( updateContext, params );
 		}
 	}
