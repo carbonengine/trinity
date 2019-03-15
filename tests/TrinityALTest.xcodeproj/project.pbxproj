@@ -633,7 +633,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override";
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register";
 				};
 			name = Release;
 			};
@@ -1322,7 +1322,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override";
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register";
 				};
 			name = Release;
 			};
@@ -1466,7 +1466,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override";
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register";
 				};
 			name = Release;
 			};
@@ -1617,7 +1617,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override";
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register";
 				};
 			name = Release;
 			};
