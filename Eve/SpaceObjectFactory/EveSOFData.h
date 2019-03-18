@@ -859,7 +859,8 @@ public:
 		int noiseOctaves;
 		EveSOFDataFactionColorSet::ColorType lightColor;
 		std::wstring texturePath;
-		float length;
+		float innerAngle;
+		float outerAngle;
 		LIGHT_TYPE type;
 	} m_data;
 

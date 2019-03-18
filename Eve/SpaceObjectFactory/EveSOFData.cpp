@@ -600,7 +600,8 @@ EveSOFDataHullLightSetItem::EveSOFDataHullLightSetItem( IRoot* lockobj ) :
 {
 	m_data.brightness = 0.0f;
 	m_data.innerRadius = 0.0f;
-	m_data.length = 0.0f;
+	m_data.innerAngle = 0.0f;
+	m_data.outerAngle = 0.0f;
 	m_data.lightColor = EveSOFDataFactionColorSet::TYPE_PRIMARY;
 	m_data.noiseAmplitude = 0.0f;
 	m_data.noiseFrequency = 1.0f;

@@ -17,8 +17,8 @@ Tr2PointLight::Tr2PointLight( IRoot* lockobj ):
 void Tr2PointLight::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldMatrix ) 
 {
 	auto baseColor = m_lightData.color * m_lightData.brightness;
-	baseColor.a = 0.2;
-	auto selectedColor = baseColor + Color( 0.0, 0.0, 0.0, 0.4 );
+	baseColor.a = 0.1;
+	auto selectedColor = baseColor + Color( 0.0, 0.0, 0.0, 0.2 );
 	
 	renderer.DrawSphere( this, worldMatrix, m_lightData.position, m_lightData.radius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor ) );
 	renderer.DrawSphere( this, worldMatrix, m_lightData.position, m_lightData.innerRadius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor) );

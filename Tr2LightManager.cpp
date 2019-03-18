@@ -162,8 +162,8 @@ void Tr2LightManager::AddPointLight( const Vector3& position, float radius, cons
 		data.color.y *= radius * dimming;
 		data.color.z *= radius * dimming;
 		data.innerRadius = innerRadius;
-		data.direction = Vector3();	
-		data.angle = 0;
+		data.direction = Vector3( 0.f, 0.f, 0.f );
+		data.innerAngle = 0.f;
 		m_lightData.Add( data, "Tr2LightManager::m_lightData" );
 	}
 }
@@ -171,7 +171,7 @@ void Tr2LightManager::AddPointLight( const Vector3& position, float radius, cons
 void Tr2LightManager::AddLight( PerLightData& data )
 {
 	float brightness = std::max( std::max( data.color.x, data.color.y), data.color.z );
-	if( brightness <= 0 || data.radius <= 0 )
+	if( brightness <= 0 || data.radius <= 0 || ( LengthSq(data.direction) != 0.0 && data.innerAngle == 0.0f ) )
 	{
 		return;
 	}

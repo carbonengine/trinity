@@ -24,8 +24,8 @@ struct LightData {
 
 	// Spotlight specifics
 	Quaternion rotation;
-	float length;
-	float angle;
+	float outerAngle;
+	float innerAngle;
 
 	// Textured light specifics
 	std::wstring texturePath;

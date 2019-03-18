@@ -18,8 +18,8 @@ LightData::LightData() :
 	radius( 0.0f ),
 	innerRadius( 0.0f ),
 	rotation( 0.0f, 0.0f, 0.0f, 1.0f ),
-	length( 0.0f ),
-	angle( 0.0f ),
+	innerAngle( 0.0f ),
+	outerAngle( 0.0f ),
 	texturePath( L"" )
 {
 }
@@ -58,15 +58,17 @@ void Tr2Light::AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, flo
 	data.radius = m_lightData.radius;
 	data.innerRadius = m_lightData.innerRadius;
 	data.position = Vector3( XMVector3TransformCoord( m_lightData.position, transform ) );
-	data.angle = 0.0f;
+	float outerAngle = 2.0f + cos(TRI_2PI * m_lightData.outerAngle / 360.0f); // we do this so we always have a direction, if we have a spotlight
 
 	switch( m_type )
 	{
 	case SPOT_LIGHT:
-		data.direction = Transform( Vector3( 0.0, 0.0, m_lightData.length ), RotationMatrix( m_lightData.rotation ) ).GetXYZ();
-		data.angle = m_lightData.angle;
+		data.direction = Transform( Vector3( 0.0, 0.0, -outerAngle ), RotationMatrix( m_lightData.rotation ) ).GetXYZ();
+		data.innerAngle = cos(TRI_2PI * m_lightData.innerAngle / 360.0f);
 		break;
 	default:
+		data.direction = Vector3( 0.f, 0.f, 0.f );
+		data.innerAngle = 0.0f;
 		break;
 	}
 

@@ -20,19 +20,14 @@ Tr2SpotLight::Tr2SpotLight( IRoot* lockobj ):
 void Tr2SpotLight::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldMatrix )
 {
 	auto baseColor = m_lightData.color * m_lightData.brightness;
-	baseColor.a = 0.2;
-	auto selectedColor = baseColor + Color( 0.0, 0.0, 0.0, 0.4 );
+	baseColor.a = 0.1;
+	auto selectedColor = baseColor + Color( 0.0, 0.0, 0.0, 0.1 );
 
-	Vector3 end = Transform( Vector3( 0.0, 0.0, m_lightData.length ), RotationMatrix( m_lightData.rotation ) ).GetXYZ();
-	renderer.DrawCone( this, m_lightData.position + end, m_lightData.position, m_lightData.radius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor ) );
-	renderer.DrawCone( this, m_lightData.position + end, m_lightData.position, m_lightData.innerRadius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor + Color( 0.0, 0.0, 0.0, 0.2 ), baseColor + Color( 0.0, 0.0, 0.0, 0.2 ) ) );
-}
-
-bool Tr2SpotLight::OnModified( Be::Var* value )
-{
-	if( IsMatch( value, m_lightData.length ) || IsMatch( value, m_lightData.radius ) )
-	{
-		m_lightData.angle = atan( m_lightData.radius / max( m_lightData.length, 1.0f ) );
-	}
-	return Tr2Light::OnModified( value );
+	Vector3 end = Transform( Vector3( 0.0, 0.0, m_lightData.radius ), RotationMatrix( m_lightData.rotation ) ).GetXYZ();
+	end = Transform( end + m_lightData.position, worldMatrix ).GetXYZ();
+	Vector3 start = Transform( m_lightData.position, worldMatrix );
+	float outerConeRadius = tan( TRI_2PI * m_lightData.outerAngle / 360.f ) * m_lightData.radius;
+	float innerConeRadius = tan( TRI_2PI * m_lightData.innerAngle / 360.f ) * m_lightData.radius;
+	renderer.DrawCone( this, end, start, outerConeRadius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor ) );
+	renderer.DrawCone( this, end, start, innerConeRadius, 10, Tr2DebugRenderer::Solid, Tr2DebugColor( selectedColor, baseColor ) );
 }

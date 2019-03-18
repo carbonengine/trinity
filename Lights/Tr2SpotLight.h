@@ -19,7 +19,6 @@ public:
 	Tr2SpotLight( IRoot* lockobj = nullptr );
 
 	void RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldMatrix ) override;
-	bool OnModified( Be::Var* value ) override;
 };
 
 TYPEDEF_BLUECLASS( Tr2SpotLight );

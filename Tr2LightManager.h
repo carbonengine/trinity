@@ -46,7 +46,7 @@ public:
 		Vector3 color;
 		float innerRadius;
 		Vector3 direction;
-		float angle;
+		float innerAngle;
 	};
 
 	void Clear();

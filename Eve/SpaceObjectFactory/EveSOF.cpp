@@ -1766,7 +1766,8 @@ void EveSOF::SetupLights( EveSpaceObject2Ptr spaceObject, const EveSOFDNAPtr dna
 				data.noiseFrequency = lightSet.noiseFrequency;
 				data.noiseOctaves = lightSet.noiseOctaves;
 				data.rotation = lightSet.rotation;
-				data.length = lightSet.length;
+				data.innerAngle = lightSet.innerAngle;
+				data.outerAngle = lightSet.outerAngle;
 				data.texturePath = lightSet.texturePath;
 				light->SetLightData( data );
 
