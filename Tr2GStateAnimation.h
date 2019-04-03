@@ -59,6 +59,8 @@ public:
 
 	gstate::tokenized* GetActiveMachineElement();
 	const std::string GetActiveMachineElementName();
+	int GetStartStateIdx();
+	void SetStartStateIdx(int StartState);
 	bool RequestChangeToState( const std::string& name );
 	bool StartTransitionByName( const std::string& name );
 	float GetParameter( const std::string& param_node_name, granny_int32x param_idx );

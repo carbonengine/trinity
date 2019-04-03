@@ -84,6 +84,23 @@ const Be::ClassInfo* Tr2GStateAnimation::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP
 		(
+			"GetStartStateIdx",
+			GetStartStateIdx,
+			"GetStartStateIdx()\n\n"
+			"Returns the index of the starting state."
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"SetStartStateIdx",
+			SetStartStateIdx,
+			"SetStartStateIdx( index )\n\n"
+			"Returns the index of the starting state."
+			":param int: index for starting state"
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
 			"RequestChangeToState",
 			RequestChangeToState,
 			"RequestChangeToState( state_name )\n\n"

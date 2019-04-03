@@ -103,18 +103,38 @@ granny_file_info* GStateAnimationBindingCallback(gstate_character_info *BindingI
 
 	// Animation granny files are relative to the parent directory of the .gsf file
 	std::string SourceFilenameString = SourceFilename;
+	std::string dir_path = callbackData.gsf_path;
 
-	size_t last_delimiter_pos = SourceFilenameString.find_last_of( "/\\" );
-	std::string file_name = SourceFilenameString.substr( last_delimiter_pos + 1, SourceFilenameString.length() );
+	auto last_delimiter_pos = dir_path.find_last_of( "/\\" );
+	dir_path.erase( last_delimiter_pos, dir_path.length() - last_delimiter_pos);
+
+	while (SourceFilenameString.substr(0, 2) == "..")
+	{
+		SourceFilenameString.erase(0, 3);
+		last_delimiter_pos = dir_path.find_last_of("/\\");
+		dir_path.erase(last_delimiter_pos, dir_path.length() - last_delimiter_pos);
+	}
+
+	if (SourceFilenameString.substr(0, 1) == ".")
+	{
+		SourceFilenameString.erase(0, 2);
+	}
+
+	dir_path += "/";
+	dir_path += SourceFilenameString;
+	SourceFilenameString = dir_path;
+
+	std::replace(SourceFilenameString.begin(), SourceFilenameString.end(), '\\', '/');
 
 	TriGrannyResPtr result_granny_res = nullptr;
 
 	for ( auto it = gStateAnimFilesPtr->begin(); it != gStateAnimFilesPtr->end(); it++ )
 	{
-		last_delimiter_pos = it->first.find_last_of( "/\\" );
-		std::string iter_file_name = it->first.substr( last_delimiter_pos + 1, it->first.length() );
+		
+		std::string iter_file_name = it->first;
+		std::replace(iter_file_name.begin(), iter_file_name.end(), '\\', '/');
 
-		if ( iter_file_name == file_name )
+		if ( iter_file_name == SourceFilenameString )
 		{
 			result_granny_res = it->second;
 		}
@@ -124,6 +144,8 @@ granny_file_info* GStateAnimationBindingCallback(gstate_character_info *BindingI
 	{
 		return result_granny_res->ValidateFileInfo();
 	}
+
+	CCP_LOGERR("GState Binding Step: '%s' is required by the GState file and is not loaded", SourceFilenameString.c_str());
 
 	return nullptr;
 }
@@ -435,6 +457,16 @@ const std::string Tr2GStateAnimation::GetActiveMachineElementName()
 	}
 
 	return "";
+}
+
+int Tr2GStateAnimation::GetStartStateIdx()
+{
+	return m_state_machine->GetStartStateIdx();
+}
+
+void Tr2GStateAnimation::SetStartStateIdx(int StartState)
+{
+	m_state_machine->SetStartStateIdx(StartState);
 }
 
 bool Tr2GStateAnimation::RequestChangeToState( const std::string& name )
@@ -831,22 +863,24 @@ void Tr2GStateAnimation::PrePhysicsAnimation( Be::Time time, const Matrix &model
 
 		// TODO: Should this be done here? Seems wasteful to sample animations and build the pose
 		// for objects that are off-screen.
-		if ( m_gStateRes )
+
+		granny_real32 timeDelta = animationTime - m_last_gstate_time;
+		m_last_gstate_time = animationTime;
+		GStateAdvanceTime(m_gStateCharacterInstance, timeDelta);
+
+		auto framenum = static_cast<int>(animationTime);
+		if (!(framenum % 100))
 		{
-			granny_real32 timeDelta = animationTime - m_last_gstate_time;
-			m_last_gstate_time = animationTime;
-			GStateAdvanceTime(m_gStateCharacterInstance, timeDelta);
-
-			auto framenum = static_cast<int>(animationTime);
-			if (!(framenum % 100))
-			{
-				CCP_LOGNOTICE("m_gstate_pose_cache size: %d", sizeof(m_gstate_pose_cache));
-			}
-
-			granny_local_pose *Pose = GStateSampleAnimation(m_gStateCharacterInstance, m_gstate_pose_cache);
-			m_localPose = Pose;
-			assert(m_localPose);
+			CCP_LOGNOTICE("m_gstate_pose_cache size: %d", sizeof(m_gstate_pose_cache));
 		}
+
+		granny_local_pose *Pose = GStateSampleAnimation(m_gStateCharacterInstance, m_gstate_pose_cache);
+		if ( !Pose )
+		{
+			return;
+		}
+
+		m_localPose = Pose;
 
 
 		if( m_boneOffset.NeedRebind( m_skeleton->BoneCount ) && m_skeleton->BoneCount )
@@ -1046,7 +1080,7 @@ float Tr2GStateAnimation::GetAnimationTime()
 
 bool Tr2GStateAnimation::IsInitialized() const
 {
-	return ( m_modelInstance != nullptr ) && ( m_gStateRes != nullptr ) && m_gStateRes->IsGood();
+	return ( m_modelInstance != nullptr ) && ( m_gStateRes != nullptr ) && m_gStateRes->IsGood() && m_gStateCharacterInstance && m_gstate_pose_cache;
 }
 
 
