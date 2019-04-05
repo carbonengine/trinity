@@ -68,6 +68,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{504BC561-AF34-424A-82B7-D381566FA473}</ProjectGuid>
+    <ProjectName>TrinityALTest</ProjectName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>

@@ -100,6 +100,7 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{0556322D-6639-4545-5650-F93498443165}</ProjectGuid>
+    <ProjectName>TrinityAL</ProjectName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'" Label="Configuration">
     <PlatformToolset>v100</PlatformToolset>
