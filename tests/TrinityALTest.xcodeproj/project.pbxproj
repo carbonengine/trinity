@@ -612,10 +612,10 @@
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"CCP_ASSERT_ENABLED=1",
 					_DEBUG,
@@ -633,7 +633,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register";
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register -Wno-pragma-pack";
 				};
 			name = Release;
 			};
@@ -1302,10 +1302,10 @@
 					"../../../../../../sdk/googletest/1.6.0/lib/MacOsX$(ARCHS)",
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
 					NDEBUG,
@@ -1322,7 +1322,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register";
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register -Wno-pragma-pack";
 				};
 			name = Release;
 			};
@@ -1445,10 +1445,10 @@
 					"../../../../../../sdk/googletest/1.6.0/lib/MacOsX$(ARCHS)",
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"CCP_ASSERT_ENABLED=1",
 					_DEBUG,
@@ -1466,7 +1466,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register";
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register -Wno-pragma-pack";
 				};
 			name = Release;
 			};
@@ -1597,10 +1597,10 @@
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
 					);
 				SYMROOT = "../../autobuild/TrinityALTest/MacOsX$(ARCHS)/clang4.2";
-				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				OBJROOT = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
-				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)";
+				CONFIGURATION_TEMP_DIR = "../../autobuild/temp/TrinityALTest/MacOsX$(ARCHS)/$(CONFIGURATION)/clang4.2";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"TRINITY_AL_WITH_BLUE_EXPOSURE=0",
 					NDEBUG,
@@ -1617,7 +1617,7 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				SDKROOT = macosx;
-				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register";
+				WARNING_CFLAGS = "-Wno-nonportable-include-path -Wno-inconsistent-missing-override -Wno-deprecated-register -Wno-pragma-pack";
 				};
 			name = Release;
 			};
