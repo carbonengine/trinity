@@ -872,202 +872,202 @@
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">_trinity_dx9_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Deploy|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Deploy|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Deploy|Win32'">_trinity_dx9_deploy</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Deploy|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|x64'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|x64'">_trinity_gles2_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'">../../autobuild/$(ProjectName)/python_26/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'">_trinity_dx9_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release_26|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">../../autobuild/$(ProjectName)/python_26/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">_trinity_dx9_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_trinity_dx9_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|Win32'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|Win32'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|Win32'">_trinity_gles2_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2_27|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Deploy11|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Deploy11|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Deploy11|Win32'">_trinity_dx11_deploy</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Deploy11|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev11|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev11|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev11|Win32'">_trinity_dx11_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev11|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|x64'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|x64'">_trinity_stub_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'">../../autobuild/$(ProjectName)/python_26/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'">_trinity_dx9_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">_trinity_gles2_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'">../../autobuild/$(ProjectName)/python_26/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'">_trinity_stub_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|Win32'">_trinity_stub_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">_trinity_dx9_deploy</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">_trinity_stub_internal_d</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">_trinity_dx11_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">_trinity_dx11_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">_trinity_stub_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_trinity_dx9_internal_d</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev9|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev9|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev9|x64'">_trinity_dx9_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev9|x64'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'">_trinity_dx11_deploy</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_trinity_dx9_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">../../autobuild/$(ProjectName)/python_26/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">_trinity_stub_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">_trinity_stub_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'">_trinity_dx11_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">../../autobuild/$(ProjectName)/python_26/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">_trinity_dx9_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release_26|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">_trinity_dx11_internal_d</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug11|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'">_trinity_stub_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">_trinity_gles2_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'">_trinity_dx11_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'">_trinity_dx9_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release_27|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">_trinity_dx9_internal_d</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'">../../autobuild/$(ProjectName)/python_26/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'">_trinity_dx11_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">_trinity_stub_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'">_trinity_dx11_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='DebugStub|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugStub|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='DebugStub|Win32'">_trinity_stub_internal_d</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugStub|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugStub|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugStub|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11_26|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11_26|x64'">../../autobuild/$(ProjectName)/python_26/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11_26|x64'">_trinity_dx11_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11_26|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11_26|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release11_26|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">_trinity_dx11_internal_d</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">_trinity_dx9_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">True</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">
