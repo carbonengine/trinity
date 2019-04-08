@@ -358,44 +358,44 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'" Label="PropertySheets" />
   <PropertyGroup>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'">TrinityALTestDX11_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_DX11|x64'">TrinityALTestDX11</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'">TrinityALTestDX11</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">TrinityALTestDX11_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|x64'">TrinityALTestSTUB_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|x64'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">TrinityALTestGLES2_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'">TrinityALTestDX9</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX9|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">TrinityALTestDX9</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_DX9|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'">TrinityALTestSTUB_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_STUB|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'">TrinityALTestSTUB</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_STUB|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'">TrinityALTestDX9_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|x64'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">TrinityALTestGLES2_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_STUB|x64'">TrinityALTestSTUB</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_STUB|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_STUB|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'">TrinityALTestGLES2</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'">TrinityALTestGLES2</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'">TrinityALTestDX9_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_DX9|Win32'">True</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX11|x64'">
