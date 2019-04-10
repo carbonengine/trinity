@@ -693,6 +693,27 @@ void Tr2GStateAnimation::RequestParameter( const std::string& param_node_name, g
 }
 
 
+void Tr2GStateAnimation::RequestParameterByName( const std::string& param_node_name, const std::string& param_name, float value )
+{
+	node *curr_param = m_state_machine->FindChildByName(param_node_name.c_str());
+	parameters* param_set = GSTATE_DYNCAST(curr_param, parameters);
+	assert(param_set);
+
+	granny_int32x param_idx = -1;
+
+	int num_params = param_set->GetNumOutputs();
+	for ( auto count = 0; count < num_params; count++ )
+	{
+		if ( !param_name.compare( param_set->GetOutputName( count )) )
+		{
+			param_idx = count;
+		}
+	}
+
+	if ( param_idx != -1 )
+		param_set->RequestParameter( param_idx, value );
+}
+
 granny_int32x Tr2GStateAnimation::GetParameterIndexByName( const std::string& param_node_name, const std::string& param_name )
 {
 	node *curr_param = m_state_machine->FindChildByName(param_node_name.c_str());

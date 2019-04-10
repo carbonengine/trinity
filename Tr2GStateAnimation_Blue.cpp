@@ -232,6 +232,17 @@ const Be::ClassInfo* Tr2GStateAnimation::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP
 		(
+			"RequestParameterByName",
+			RequestParameterByName,
+			"RequestParameter( parameter_node_name, param_name, value )\n\n"
+			"Sets a parameter by index on a named parameter node, to a float value, allowing a smooth transition."
+			":param string: name for parameter node to request."
+			":param string: name for parameter to request."
+			":param float: value to set."
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
 			"GetParameterIndexByName",
 			GetParameterIndexByName,
 			"GetParameterIndexByName( parameter_node_name, param_name )\n\n"

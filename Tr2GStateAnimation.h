@@ -77,6 +77,7 @@ public:
 	float GetParameter( const std::string& param_node_name, granny_int32x param_idx );
 	void SetParameter( const std::string& param_node_name, granny_int32x param_idx, float value );
 	void RequestParameter( const std::string& param_node_name, granny_int32x param_idx, float value );
+	void RequestParameterByName( const std::string& param_node_name, const std::string& param_name, float value );
 	granny_int32x GetParameterIndexByName( const std::string& param_node_name, const std::string& param_name );
 
 	bool GetDynamicBounds( Vector4& boundingSphere, Vector3 &aabbMin, Vector3 &aabbMax );
