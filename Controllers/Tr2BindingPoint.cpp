@@ -357,14 +357,14 @@ bool Tr2BindingPoint::SetDestination( IRoot* object, const std::string& attribut
 		}
 		break;
 	case Be::FLOATARRAY:
-		arraySize = entry.first->GetFloatArraySize();
+		arraySize = int32_t( entry.first->GetFloatArraySize() );
 		if( entryOffset >= arraySize )
 		{
 			return false;
 		}
 		break;
 	case Be::DOUBLEARRAY:
-		arraySize = entry.first->GetDoubleArraySize();
+		arraySize = int32_t( entry.first->GetDoubleArraySize() );
 		if( entryOffset >= arraySize )
 		{
 			return false;
