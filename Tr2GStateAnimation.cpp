@@ -169,6 +169,17 @@ bool Tr2GStateAnimation::Initialize()
 	{
 		m_gStateRes->RemoveNotifyTarget( this );
 		m_gStateRes.Unlock();
+
+			
+		if ( !m_gStateAnimFiles.empty() )
+		{
+			for ( auto it = m_gStateAnimFiles.begin(); it != m_gStateAnimFiles.end(); it++ )
+			{
+				it->second->RemoveNotifyTarget(this);
+				it->second.Unlock();
+			}
+		}
+		m_gStateAnimFiles.clear();
 	}
 
 	BeResMan->GetResource( m_gStateResPath.c_str(), "raw", BlueInterfaceIID<Tr2GrannyStateRes>(), (void**)&m_gStateRes );
@@ -238,7 +249,7 @@ void Tr2GStateAnimation::RebuildCachedData( BlueAsyncRes* p )
 		for ( auto it = m_gStateAnimFiles.begin(); it != m_gStateAnimFiles.end(); it++ )
 		{
 			if ( p == it->second )
-			{
+			{					
 				if ( it->second && !it->second->GetGrannyFile() )
 				{
 					CCP_LOGERR("'%s' not found or not a valid Granny file", it->first.c_str());
@@ -655,6 +666,11 @@ void Tr2GStateAnimation::SetStartStateByName( const std::string& name)
 #else
 	CCP_LOGERR( "SetStartStateByName: outdated Granny version" );
 #endif
+}
+
+bool Tr2GStateAnimation::ForceChangeToState( const std::string& name )
+{
+	return m_state_machine->ForceChangeToState(GStateInstanceTime(m_gStateCharacterInstance), name.c_str());
 }
 
 bool Tr2GStateAnimation::RequestChangeToState( const std::string& name )
@@ -1097,10 +1113,6 @@ void Tr2GStateAnimation::PrePhysicsAnimation( Be::Time time, const Matrix &model
 		GStateAdvanceTime(m_gStateCharacterInstance, timeDelta);
 
 		auto framenum = static_cast<int>(animationTime);
-		if (!(framenum % 100))
-		{
-			CCP_LOGNOTICE("m_gstate_pose_cache size: %d", sizeof(m_gstate_pose_cache));
-		}
 
 		granny_local_pose *Pose = GStateSampleAnimation(m_gStateCharacterInstance, m_gstate_pose_cache);
 		if ( !Pose )
@@ -1193,7 +1205,6 @@ const Matrix* Tr2GStateAnimation::GetAnimationTransforms()
 
 void Tr2GStateAnimation::Cleanup()
 {
-
 	if ( m_gStateCharacterInstance )
 	{
 		GStateFreeCharacterInstance(m_gStateCharacterInstance);
@@ -1290,7 +1301,12 @@ float Tr2GStateAnimation::GetAnimationTime()
 
 bool Tr2GStateAnimation::IsInitialized() const
 {
-	return ( m_modelInstance != nullptr ) && ( m_gStateRes != nullptr ) && m_gStateRes->IsGood() 
+	bool all_anim_good = true;
+	for ( auto it = m_gStateAnimFiles.begin() ; it != m_gStateAnimFiles.end(); it++ )
+	{
+		all_anim_good = all_anim_good && it->second->IsGood();
+	}
+	return ( m_modelInstance != nullptr ) && ( m_gStateRes != nullptr ) && m_gStateRes->IsGood() && all_anim_good
 	                                      && m_gStateCharacterInstance && m_gstate_pose_cache && m_animationBound;
 }
 

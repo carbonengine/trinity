@@ -72,6 +72,7 @@ public:
 	void SetStartStateIdx(int StartState);
 	void SetStartStateByName( const std::string& name);
 	bool RequestChangeToState( const std::string& name );
+	bool ForceChangeToState( const std::string& name );
 	bool StartTransitionByName( const std::string& name );
 	float GetParameter( const std::string& param_node_name, granny_int32x param_idx );
 	void SetParameter( const std::string& param_node_name, granny_int32x param_idx, float value );

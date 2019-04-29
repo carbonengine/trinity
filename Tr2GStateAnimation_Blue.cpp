@@ -189,6 +189,15 @@ const Be::ClassInfo* Tr2GStateAnimation::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP
 		(
+			"ForceChangeToState",
+			ForceChangeToState,
+			"ForceChangeToState( state_name )\n\n"
+			"Forces a change to a particular state, through any intermediate transitions. Returns boolean that indicates whether the change will take place."
+			":param string: name for destination state"
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
 			"StartTransitionByName",
 			StartTransitionByName,
 			"StartTransitionByName( transition_name )\n\n"
