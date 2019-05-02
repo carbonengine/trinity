@@ -616,9 +616,4 @@ const Tr2CapsAL& Tr2PrimaryRenderContextAL::GetCaps() const
 	return m_caps;
 }
 
-bool Tr2PrimaryRenderContextAL::IsSupportedRenderTargetFormat( PixelFormat /*format*/, bool /*withAutoGenMipmap*/ )
-{
-	return true;	//TODO? 
-}
-
 #endif	//DX11?

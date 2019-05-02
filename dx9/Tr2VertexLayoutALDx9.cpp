@@ -94,7 +94,7 @@ void Tr2VertexLayoutAL::Destroy()
 	m_layout = nullptr;
 }
 
-ALResult Tr2VertexLayoutAL::SetLayout( const Tr2ShaderAL* /*vertexShader*/, Tr2RenderContextAL& renderContext ) const
+ALResult Tr2VertexLayoutAL::SetLayout( const TrinityALImpl::Tr2ShaderAL* /*vertexShader*/, Tr2RenderContextAL& renderContext ) const
 {
 	if( m_layout == nullptr || renderContext.m_d3dDevice9 == nullptr )
 	{

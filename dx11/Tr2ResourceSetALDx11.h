@@ -11,7 +11,7 @@ namespace TrinityALImpl
 	public:
 		Tr2ResourceSetAL();
 
-		ALResult Create( const Tr2ResourceSetDescriptionAL& description, Tr2PrimaryRenderContextAL& renderContext );
+		ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
 		bool IsValid() const;
 
 		void Destroy();
@@ -36,6 +36,13 @@ namespace TrinityALImpl
 		};
 
 		StageInput m_stages[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
+
+		CComPtr<ID3D11UnorderedAccessView> m_uavs[MAX_RESOURCES];
+		uint32_t m_uavInitialCounts[MAX_RESOURCES];
+		uint32_t m_uavOffset;
+		uint32_t m_uavCount;
+		bool m_csUavs;
+
 		bool m_empty;
 		bool m_isValid;
 

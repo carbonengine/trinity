@@ -3,7 +3,11 @@
 #include "WithRenderContextFixture.h"
 #include "RenderWindow.h"
 
-TEST_F( WithValidRenderContext, SwapChainIsInvalidBeforeCreation )
+struct SwapChain : public WithValidRenderContext
+{
+};
+
+TEST_F( SwapChain, SwapChainIsInvalidBeforeCreation )
 {
 	Tr2SwapChainAL sc;
 	EXPECT_FALSE( sc.IsValid() );
@@ -16,7 +20,7 @@ TEST_F( WithRenderContext, CreatingSwapChainWithoutRenderContextFails )
 	ASSERT_HRESULT_FAILED( sc.Create( window, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CanCreateSwapChain )
+TEST_F( SwapChain, CanCreateSwapChain )
 {
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
@@ -34,7 +38,7 @@ TEST_F( WithValidRenderContext, CanCreateSwapChain )
 	}
 }
 
-TEST_F( WithValidRenderContext, CanDestroySwapChain )
+TEST_F( SwapChain, CanDestroySwapChain )
 {
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
@@ -47,7 +51,7 @@ TEST_F( WithValidRenderContext, CanDestroySwapChain )
 	}
 }
 
-TEST_F( WithValidRenderContext, SwapChainEqualsItself )
+TEST_F( SwapChain, SwapChainEqualsItself )
 {
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
@@ -58,7 +62,7 @@ TEST_F( WithValidRenderContext, SwapChainEqualsItself )
 	}
 }
 
-TEST_F( WithValidRenderContext, DifferentSwapChainsAreNotEqual )
+TEST_F( SwapChain, DifferentSwapChainsAreNotEqual )
 {
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
@@ -74,7 +78,7 @@ TEST_F( WithValidRenderContext, DifferentSwapChainsAreNotEqual )
 	}
 }
 
-TEST_F( WithValidRenderContext, SwapChainHasMemoryClass )
+TEST_F( SwapChain, SwapChainHasMemoryClass )
 {
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
@@ -87,7 +91,7 @@ TEST_F( WithValidRenderContext, SwapChainHasMemoryClass )
 	}
 }
 
-TEST_F( WithValidRenderContext, CanPresentSwapChain )
+TEST_F( SwapChain, CanPresentSwapChain )
 {
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{

@@ -368,11 +368,6 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw()
 		, "SetStreamSource" );
 }
 
-ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL&, uint32_t ) throw()
-{
-	return E_FAIL;
-}
-
 ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] ) throw()
 {
 	return E_FAIL;
@@ -660,26 +655,6 @@ ALResult Tr2RenderContextAL::SetConstants(
 
 	CCP_AL_LOGERR( "Trying to use something other than pixel or vertex shader constants with DirectX9" );
 	return E_INVALIDARG;
-}
-
-ALResult Tr2RenderContextAL::SetSamplerState( 
-	const Tr2SamplerStateAL& samplerState, 
-	ShaderType /*inputType*/, 
-	uint32_t registerNumber )
-{
-	if( !m_d3dDevice9 )
-	{
-		return E_FAIL;
-	}
-
-	auto& ss = *samplerState.m_sampler;
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( ss );
-	for( int i = TrinityALImpl::Tr2SamplerStateAL::SAMPLER_STATE_MIN; i < TrinityALImpl::Tr2SamplerStateAL::SAMPLER_STATE_COUNT; ++i )
-	{
-		m_d3dDevice9->SetSamplerState(	registerNumber, D3DSAMPLERSTATETYPE( i ), ss.m_states[i] );
-	}
-	return S_OK;
 }
 
 void Tr2RenderContextAL::SetReadOnlyDepth( bool /*enable*/ ) 
@@ -1054,8 +1029,8 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram )
 {
 	AL_UPDATE_RESOURCE_FRAME_USAGE( shaderProgram );
-	CR_RETURN_HR( m_d3dDevice9->SetVertexShader( shaderProgram.m_vertexShader ? shaderProgram.m_vertexShader->m_vertexShader : nullptr ) );
-	return m_d3dDevice9->SetPixelShader( shaderProgram.m_pixelShader ? shaderProgram.m_pixelShader->m_pixelShader : nullptr );
+	CR_RETURN_HR( m_d3dDevice9->SetVertexShader( shaderProgram.m_vertexShader.IsValid() ? shaderProgram.m_vertexShader.m_shader->m_vertexShader : nullptr ) );
+	return m_d3dDevice9->SetPixelShader( shaderProgram.m_pixelShader.IsValid() ? shaderProgram.m_pixelShader.m_shader->m_pixelShader : nullptr );
 }
 
 ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
@@ -1086,34 +1061,6 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, u
 							stateValuePairs[1] );
 	}
 	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetClipPlane( uint32_t planeIndex, const float* planeEq )
-{
-#if !defined( NDEBUG )
-	return m_d3dDevice9 ? m_d3dDevice9->SetClipPlane( planeIndex, planeEq ) : E_FAIL;
-#else
-	return m_d3dDevice9->SetClipPlane( planeIndex, planeEq );
-#endif
-}
-
-ALResult Tr2RenderContextAL::SetScissorRect(	
-	uint32_t left, 
-	uint32_t top, 
-	uint32_t right, 
-	uint32_t bottom )
-{
-	RECT rect;
-	rect.left = left;
-	rect.top = top;
-	rect.right = right;
-	rect.bottom = bottom;
-
-#if !defined( NDEBUG )
-	return m_d3dDevice9 ? m_d3dDevice9->SetScissorRect( &rect ) : E_FAIL;
-#else
-	return m_d3dDevice9->SetScissorRect( &rect );
-#endif
 }
 
 ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
@@ -1185,26 +1132,6 @@ ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport )
 		viewport.m_maxZ		= vp.MaxZ;
 	}
 	return hr;
-}
-
-bool Tr2RenderContextAL::IsSupportedRenderTargetFormat( PixelFormat format, bool withAutoGenMipmap )
-{
-	const D3DFORMAT format9 = ConvertToD3D9Format( format );
-	if( format9 == D3DFMT_UNKNOWN )
-	{
-		return false;
-	}
-	
-	Tr2DisplayModeInfo displayMode;
-	if( FAILED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( m_adapter, displayMode ) ) )
-	{
-		return false;
-	}
-	
-	return Tr2VideoAdapterInfo::SupportsRenderTargetFormat( m_adapter, 
-															displayMode.format, 
-															format, 
-															withAutoGenMipmap );
 }
 
 ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot )

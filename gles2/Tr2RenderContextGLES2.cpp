@@ -475,11 +475,6 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw( )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL&, uint32_t ) throw( )
-{
-	return E_FAIL;
-}
-
 ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] ) throw( )
 {
 	return E_FAIL;
@@ -853,14 +848,6 @@ ALResult Tr2RenderContextAL::SetConstants(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetSamplerState( 
-	const Tr2SamplerStateAL& samplerState, 
-	ShaderType inputType, 
-	uint32_t registerNumber )
-{
-	return E_FAIL;
-}
-
 void Tr2RenderContextAL::SetReadOnlyDepth( bool /*enable*/ ) {}
 
 bool Tr2RenderContextAL::GetReadOnlyDepth() const
@@ -933,20 +920,6 @@ ALResult Tr2RenderContextAL::CreateDevice(
     {
         pp.outputWindow = hFocusWindow;
     }
-	if( pp.windowed )
-	{
-#ifdef _WIN32
-		RECT rect;
-		GetClientRect( pp.outputWindow, &rect );
-		pp.mode.width = std::max( rect.right - rect.left, 8l );
-		pp.mode.height = std::max( rect.bottom - rect.top, 8l );
-#elif !defined(TRINITY_AL_MOBILE)
-		int w, h;
-		glfwGetWindowSize( reinterpret_cast<GLFWwindow*>( pp.outputWindow ), &w, &h );
-		pp.mode.width = uint32_t( w );
-		pp.mode.height = uint32_t( h );
-#endif
-	}
 	CR_RETURN_HR( SetPresentParameters( adapter, pp ) );
 
 	glEnable( GL_CULL_FACE );
@@ -1440,16 +1413,6 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 		m_blendState.dirty |= m_blendState.blendMode != blendFuncs[value];
 		m_blendState.blendMode = blendFuncs[value];
 		return S_OK;
-	case RS_SCISSORTESTENABLE:
-		if( value )
-		{
-			GL_FAIL( glEnable( GL_SCISSOR_TEST ) );
-		}
-		else
-		{
-			GL_FAIL( glDisable( GL_SCISSOR_TEST ) );
-		}
-		return S_OK;
 	case RS_SLOPESCALEDEPTHBIAS:
 		m_depthOffsetState.dirty |= m_depthOffsetState.slopeScaleOffset != *(float*)&value;
 		m_depthOffsetState.slopeScaleOffset = *(float*)&value;
@@ -1549,22 +1512,6 @@ ALResult Tr2RenderContextAL::GetRenderState( RenderState state, uint32_t* value 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetClipPlane( uint32_t planeIndex, const float* planeEq )
-{
-	m_fragmentOpSettings.SetClipPlane( planeIndex, planeEq );
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetScissorRect(	
-	uint32_t left, 
-	uint32_t top, 
-	uint32_t right, 
-	uint32_t bottom )
-{
-	GL_FAIL( glScissor( left, top, int( right ) - int( left ), int( bottom ) - int( top ) ) );
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
 {
 	if( !resourceSet.IsValid() )
@@ -1611,13 +1558,6 @@ ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport )
 {
 	viewport = m_currentViewport;
 	return S_OK;
-}
-
-bool Tr2RenderContextAL::IsSupportedRenderTargetFormat(	PixelFormat /*format*/, 
-														bool /*withAutoGenMipmap*/ )
-{
-	// TODO:
-	return true;
 }
 
 ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot )
@@ -2474,7 +2414,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot )
 	if( changedSlot == 0 )
 	{
 		SetViewport( Tr2Viewport ( bb.GetWidth(), bb.GetHeight() ) );
-		SetScissorRect( 0, 0, bb.GetWidth(), bb.GetHeight() );
+		glScissor( 0, 0, bb.GetWidth(), bb.GetHeight() );
 	}
 
 	return S_OK;

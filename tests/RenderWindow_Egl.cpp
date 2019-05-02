@@ -20,4 +20,9 @@ uint32_t RenderWindow::GetClientHeight() const
 {
 	return 0;
 }
+
+bool RenderWindow::Resize( uint32_t width, uint32_t height )
+{
+	return false;
+}
 #endif

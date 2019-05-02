@@ -3,11 +3,13 @@
   <ItemGroup>
     <Filter Include="Source Files" />
     <Filter Include="Source Files\dx11" />
+    <Filter Include="Source Files\dx12" />
     <Filter Include="Source Files\dx9" />
     <Filter Include="Source Files\gles2" />
     <Filter Include="Source Files\include" />
     <Filter Include="Source Files\src" />
     <Filter Include="Source Files\stub" />
+    <Filter Include="Source Files\vulkan" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ALLog.h">
@@ -114,6 +116,60 @@
     </ClInclude>
     <ClInclude Include="dx11\Tr2VideoAdapterInfoALDx11.h">
       <Filter>Source Files\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2BufferALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2CapsALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2ConstantBufferALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2FenceALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2GpuTimerALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2OcclusionQueryALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2PrimaryRenderContextDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2RenderContextDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2ResourceHelper.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2ResourceSetALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2SamplerStateALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2ShaderALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2ShaderProgramALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2SwapChainALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2TextureALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2VertexLayoutALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Tr2VideoAdapterInfoALDx12.h">
+      <Filter>Source Files\dx12</Filter>
+    </ClInclude>
+    <ClInclude Include="dx12\Utilities.h">
+      <Filter>Source Files\dx12</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2BufferALDx9.h">
       <Filter>Source Files\dx9</Filter>
@@ -328,6 +384,60 @@
     <ClInclude Include="stub\Tr2VideoAdapterInfoALStub.h">
       <Filter>Source Files\stub</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan\Tr2BufferALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2CapsALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2ConstantBufferALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2FenceALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2GpuTimerALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2OcclusionQueryALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2PrimaryRenderContextVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2RenderContextVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2ResourceSetALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2SamplerStateALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2ShaderALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2ShaderProgramALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2SwapChainALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2TextureALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2VertexLayoutALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\Tr2VideoAdapterInfoALVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\UtilitiesVulkan.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="vulkan\VkResult.h">
+      <Filter>Source Files\vulkan</Filter>
+    </ClInclude>
     <ClCompile Include="ALResult.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -414,6 +524,57 @@
     </ClCompile>
     <ClCompile Include="dx11\Tr2VideoAdapterInfoALDx11.cpp">
       <Filter>Source Files\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2BufferALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2ConstantBufferALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2FenceALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2GpuTimerALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2OcclusionQueryALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2PrimaryRenderContextDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2RenderContextDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2ResourceHelper.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2ResourceSetALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2SamplerStateALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2ShaderALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2ShaderProgramALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2SwapChainALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2TextureALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2VertexLayoutALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Tr2VideoAdapterInfoALDx12.cpp">
+      <Filter>Source Files\dx12</Filter>
+    </ClCompile>
+    <ClCompile Include="dx12\Utilities.cpp">
+      <Filter>Source Files\dx12</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2BufferALDx9.cpp">
       <Filter>Source Files\dx9</Filter>
@@ -517,6 +678,9 @@
     <ClCompile Include="src\Tr2SamplerStateAL.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
+    <ClCompile Include="src\Tr2ShaderAL.cpp">
+      <Filter>Source Files\src</Filter>
+    </ClCompile>
     <ClCompile Include="src\Tr2TextureAL.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
@@ -564,6 +728,18 @@
     </ClCompile>
     <ClCompile Include="stub\Tr2VideoAdapterInfoALStub.cpp">
       <Filter>Source Files\stub</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\Tr2PrimaryRenderContextVulkan.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\Tr2RenderContextVulkan.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\Tr2TextureALVulkan.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="vulkan\Tr2VideoAdapterInfoALVulkan.cpp">
+      <Filter>Source Files\vulkan</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -41,4 +41,10 @@ uint32_t RenderWindow::GetClientHeight() const
 	glfwGetWindowSize( reinterpret_cast<GLFWwindow*>( m_handle ), &width, &height );
 	return uint32_t( height );
 }
+
+bool RenderWindow::Resize( uint32_t width, uint32_t height )
+{
+	return false;
+}
+
 #endif

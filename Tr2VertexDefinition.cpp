@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2VertexDefinition.h"
 
+
 Tr2VertexDefinition::Tr2VertexDefinition()
 {
 	for( unsigned i = 0; i != OFFSET_COUNT; ++i )
@@ -94,17 +95,4 @@ Tr2VertexDefinition::Item* Tr2VertexDefinition::Find( UsageCode usage, unsigned 
 							{ return v.m_usage == usage && v.m_usageIndex == usageIndex; } );
 
 	return it == m_items.end() ? nullptr : &*it;
-}
-
-
-void Tr2ShaderInputDefinition::ComputeHash()
-{
-	if( elements.empty() )
-	{
-		hash = 0;
-	}
-	else
-	{
-		hash = CcpHashFNV1( &elements[0], sizeof( Tr2ShaderInputDefinitionElement ) * elements.size() );
-	}
 }

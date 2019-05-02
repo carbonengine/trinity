@@ -27,7 +27,7 @@ ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2Re
 	return S_OK;
 }
 
-ALResult Tr2VertexLayoutAL::SetLayout( const Tr2ShaderAL* /*vertexShader*/, Tr2RenderContextAL& /*renderContext*/ ) const
+ALResult Tr2VertexLayoutAL::SetLayout( const TrinityALImpl::Tr2ShaderAL* /*vertexShader*/, Tr2RenderContextAL& /*renderContext*/ ) const
 {
 	// We set the actual layout in Tr2RenderContextAL::ApplyShadowRenderStates
 	return E_FAIL;

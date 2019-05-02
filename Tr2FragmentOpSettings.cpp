@@ -51,18 +51,6 @@ uint32_t Tr2FragmentOpSettings::SetRenderState( RenderState state, uint32_t valu
 	}
 }
 
-uint32_t Tr2FragmentOpSettings::SetClipPlane( uint32_t planeIndex, const float* planeEq )
-{
-	if( planeIndex >= MAX_CLIP_PLANES )
-	{
-		CCP_AL_LOGWARN( "Using too many clip planes (%d >= %d)", planeIndex, MAX_CLIP_PLANES );
-		return 0;
-	}
-
-	std::copy( planeEq, planeEq + 4, m_clipPlane[planeIndex] );
-	return DIRTY_FRAGMENTOP;
-}
-
 uint32_t Tr2FragmentOpSettings::SetNumberOfLights( uint32_t numLights )
 {
 	if( numLights == m_numLights )

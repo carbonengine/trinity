@@ -1,0 +1,245 @@
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2019
+//    Copyright: CCP 2019
+//
+
+#pragma once
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+
+#include "../Tr2RenderContextEnum.h"
+#include "../Tr2DrawUPHelper.h"
+#include "../include/Tr2ConstantBufferAL.h"
+#include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2TextureAL.h"
+
+
+class Tr2ConstantBufferAL;
+class Tr2VertexLayoutAL;
+struct ITr2RenderContextEvents;
+
+class Tr2ShaderAL;
+class Tr2SamplerStateAL;
+class Tr2BufferAL;
+struct Tr2Viewport;
+
+
+
+class Tr2RenderContextAL
+{
+public:
+	Tr2RenderContextAL() throw( );
+	~Tr2RenderContextAL() throw( );
+
+	void Destroy() throw( );
+
+	bool IsValid() const throw( );
+
+	static void SetPrimaryRenderContext( Tr2PrimaryRenderContextAL* )
+	{
+
+	}
+	Tr2PrimaryRenderContextAL& GetPrimaryRenderContext();
+	Tr2PrimaryRenderContextAL* GetPrimaryRenderContextPointer();
+
+	ALResult BeginScene() throw( );
+	ALResult EndScene();
+
+	void ReleaseDeviceResources() throw( )
+	{
+
+	}
+
+
+	ALResult SetStreamSource( uint32_t stream, const Tr2BufferAL& buffer, uint32_t offset, uint32_t stride ) throw( );
+
+	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( );
+
+	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
+	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
+	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mip, const float values[4] ) throw( );
+	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mip, const uint32_t values[4] ) throw( );
+
+	ALResult CopySubBuffer(
+		Tr2BufferAL& dest,
+		uint32_t destOffset,
+		Tr2BufferAL& src,
+		uint32_t offset,
+		uint32_t length );
+
+	ALResult SetTopology( Tr2RenderContextEnum::Topology topology ) throw( );
+	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw( );
+	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( );
+
+	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
+	
+	ALResult DrawIndexedPrimitive(
+		uint32_t numVertices,
+		uint32_t startIndex,
+		uint32_t primitiveCount,
+		uint32_t minimumIndex = 0 ) throw( );
+
+	ALResult DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount ) throw( );
+
+	ALResult DrawIndexedInstanced(
+		uint32_t numVertices,
+		uint32_t startIndex,
+		uint32_t primitiveCount,
+		uint32_t numInstances ) throw( );
+	
+	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( );
+	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( );
+
+	ALResult DrawIndexedPrimitiveUP(
+		uint32_t numVertices,
+		uint32_t primitiveCount,
+		const uint32_t* indexData,
+		const void* vertexStreamZeroData,
+		uint32_t vertexStreamZeroStride ) throw( );
+	ALResult DrawIndexedPrimitiveUP(
+		uint32_t numVertices,
+		uint32_t primitiveCount,
+		const uint16_t* indexData,
+		const void* vertexStreamZeroData,
+		uint32_t vertexStreamZeroStride ) throw( );
+	ALResult DrawPrimitiveUP(
+		uint32_t primitiveCount,
+		const void* vertexStreamZeroData,
+		uint32_t VertexStreamZeroStride ) throw( );
+
+	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw( );
+	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( );
+
+	ALResult CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src ) throw( );
+
+	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw( );
+	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw( );
+
+	ALResult SetConstants(
+		const Tr2ConstantBufferAL& buffer,
+		Tr2RenderContextEnum::ShaderType constantType,
+		uint32_t registerIndex,
+		uint32_t unusedArgument = 0 ) throw( );
+
+
+	static void DestroyMainThreadRenderContext()
+	{
+
+	}
+
+	ALResult Clear(
+		uint32_t clearFlags,
+		uint32_t color,
+		float depth,
+		uint32_t stencil = 0,
+		uint32_t slot = 0 ) throw( );
+
+	// rather hacky call to make integer loops work across DX9 and DX11.
+	ALResult SetNumberOfLights( uint32_t numLights ) throw( );
+
+	ALResult SetViewport( const Tr2Viewport& viewport ) throw( );
+	ALResult GetViewport( Tr2Viewport& viewport ) throw( );
+
+	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 ) throw( );
+	ALResult PushRenderTarget( uint32_t slot = 0 ) throw( );
+	ALResult PopRenderTarget( uint32_t slot = 0 ) throw( );
+
+	ALResult SetDepthStencil( const Tr2TextureAL& depthStencil ) throw( );
+	ALResult PushDepthStencil() throw( );
+	ALResult PopDepthStencil() throw( );
+	void SetReadOnlyDepth( bool enable ) throw( );
+	bool GetReadOnlyDepth() const;
+
+	ALResult GetRenderTargetSize( uint32_t& width, uint32_t& height, uint32_t slot = 0 ) throw( );
+	
+	static const uint32_t SHADER_TYPE_MASK = 
+		( 1 << Tr2RenderContextEnum::VERTEX_SHADER ) |
+		( 1 << Tr2RenderContextEnum::PIXEL_SHADER ) |
+		( 1 << Tr2RenderContextEnum::COMPUTE_SHADER ) |
+		( 1 << Tr2RenderContextEnum::GEOMETRY_SHADER ) |
+		( 1 << Tr2RenderContextEnum::HULL_SHADER ) |
+		( 1 << Tr2RenderContextEnum::DOMAIN_SHADER );
+
+	// Debug helpers
+	size_t GetStackSizeRT( uint32_t RT = 0 )	const { return 0; }
+	size_t GetStackSizeDS()						const { return 0; }
+
+	void AddGpuMarker( const char* marker )
+	{
+
+	}
+	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const
+	{
+		return E_NOTIMPL;
+	}
+	ALResult GetGpuPageFaultResource(
+		Tr2RenderContextEnum::PixelFormat& format,
+		uint64_t& size,
+		uint32_t& width,
+		uint32_t& height,
+		uint32_t& depth,
+		uint32_t& mips ) const
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult FlushDx12();
+	ALResult FlushAndSyncDx12();
+protected:
+	ID3D12PipelineState* GetPipelineState();
+	void SetAllState();
+
+
+	const Tr2VertexLayoutAL* m_vertexLayout;
+	const Tr2ShaderProgramAL* m_shaderProgram;
+	D3D12_PRIMITIVE_TOPOLOGY_TYPE m_topologyType;
+	D3D12_BLEND_DESC m_blendDesc;
+	D3D12_RASTERIZER_DESC m_rasterizerDesc;
+	D3D12_DEPTH_STENCIL_DESC m_depthStencilDesc;
+	uint32_t m_renderTargetCount;
+	Tr2RenderContextEnum::PixelFormat m_renderTargetFormats[8];
+	Tr2RenderContextEnum::PixelFormat m_depthStencilFormat;
+	Tr2MsaaDesc m_sampleDesc;
+
+
+	bool m_separateAlphaBlendEnabled;
+	bool m_srgbWriteEnable;
+
+	std::pair<uint32_t, uint32_t> m_primitiveToVertexCount;
+
+	Tr2ResourceSetAL m_resourceSet;
+
+	D3D12_GPU_VIRTUAL_ADDRESS m_cbMap[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+
+	void GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* handles, uint32_t& count );
+public:
+	// If you need this, you're probably doing something wrong :P
+	//Tr2TextureAL&			GetDefaultBackBuffer()
+	CComPtr<ID3D12GraphicsCommandList> m_commandList;
+	Tr2PrimaryRenderContextAL* m_ownerDevice;
+	bool m_dirtyPso;
+protected:
+
+
+	static const uint32_t RENDER_TARGET_COUNT = 4;
+
+	Tr2TextureAL m_boundRenderTargets[RENDER_TARGET_COUNT];
+	std::vector<Tr2TextureAL> m_rtStack[RENDER_TARGET_COUNT];
+
+	Tr2TextureAL m_boundDepthStencil;
+	std::vector<Tr2TextureAL> m_dsStack;
+	bool m_readOnlyDepth;
+
+	Tr2Viewport m_viewport;
+
+	Tr2RenderContextEnum::Topology m_topology;
+	TrinityALImpl::Tr2DrawUPHelper m_drawUPHelper;
+private:
+
+	Tr2RenderContextAL( const Tr2RenderContextAL& ) /* = delete */;
+	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;
+
+};
+
+#endif

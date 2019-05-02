@@ -48,4 +48,9 @@ Tr2WindowHandle WithWindow::GetWindowHandle()
 	return *s_wnd;
 }
 
+RenderWindow* WithWindow::GetWindow()
+{
+	return s_wnd;
+}
+
 #endif

@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "WithValidRenderContextFixture.h"
 
-#if TRINITY_PLATFORM==TRINITY_DIRECTX11
+#if TR2_SUPPORTS_COMPUTE
 
 struct Compute: public WithValidRenderContext {};
 
@@ -13,30 +13,23 @@ TEST_F( Compute, CanReadCSResult )
 #include INCLUDE_SHADER_CODE( OutputVector.cs )
 	};
 
-	Tr2ShaderInputDefinition def;
-	def.elements.resize( 1 );
-	def.elements[0].usageIndex = 0;
-	def.elements[0].registerIndex = 0;
-	def.ComputeHash();
-
+	auto signature = Tr2ShaderSignatureAL().Add( Tr2ShaderRegisterAL::UAV, 0 );
 	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( 
-		*renderContext, 
-		COMPUTE_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		def ) );
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &cs };
+	Tr2ShaderAL shaders[] = { cs };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
 
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
+	Tr2ResourceSetDescriptionAL desc;
+	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
+	Tr2ResourceSetAL resourceSet;
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
@@ -58,27 +51,15 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 #include INCLUDE_SHADER_CODE( AddVectors.cs )
 	};
 
-	Tr2ShaderInputDefinition def;
-	def.elements.resize( 3 );
-	def.elements[0].usageIndex = 1;
-	def.elements[0].registerIndex = 0;
-	def.elements[1].usageIndex = 1;
-	def.elements[1].registerIndex = 1;
-	def.elements[2].usageIndex = 0;
-	def.elements[2].registerIndex = 0;
-	def.ComputeHash();
+	auto signature = Tr2ShaderSignatureAL()
+		.Add( Tr2ShaderRegisterAL::UAV, 0 )
+		.Add( Tr2ShaderRegisterAL::RESOURCE, 0 )
+		.Add( Tr2ShaderRegisterAL::RESOURCE, 1 );
 
 	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( 
-		*renderContext, 
-		COMPUTE_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		def ) );
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &cs };
+	Tr2ShaderAL shaders[] = { cs };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
 
@@ -94,15 +75,15 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
-	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 1, arg2 );
+	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
+	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 1, arg2 );
+	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
@@ -124,27 +105,15 @@ TEST_F( Compute, CanAddConstantInCS )
 #include INCLUDE_SHADER_CODE( AddConstantToBuffer.cs )
 	};
 
-	Tr2ShaderInputDefinition def;
-	def.elements.resize( 3 );
-	def.elements[0].usageIndex = 2;
-	def.elements[0].registerIndex = 0;
-	def.elements[1].usageIndex = 1;
-	def.elements[1].registerIndex = 0;
-	def.elements[2].usageIndex = 0;
-	def.elements[2].registerIndex = 0;
-	def.ComputeHash();
+	auto signature = Tr2ShaderSignatureAL()
+		.Add( Tr2ShaderRegisterAL::UAV, 0 )
+		.Add( Tr2ShaderRegisterAL::RESOURCE, 0 )
+		.Add( Tr2ShaderRegisterAL::CONSTANTS, 0 );
 
 	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( 
-		*renderContext, 
-		COMPUTE_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		def ) );
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &cs };
+	Tr2ShaderAL shaders[] = { cs };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
 
@@ -164,17 +133,17 @@ TEST_F( Compute, CanAddConstantInCS )
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
+	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
+	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
 
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( arg2, COMPUTE_SHADER, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
@@ -196,26 +165,14 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 #include INCLUDE_SHADER_CODE( SampleTexture.cs )
 	};
 
-	Tr2ShaderInputDefinition def;
-	def.elements.resize( 3 );
-	def.elements[0].usageIndex = 1;
-	def.elements[0].registerIndex = 0;
-	def.elements[1].usageIndex = 3;
-	def.elements[1].registerIndex = 0;
-	def.elements[2].usageIndex = 0;
-	def.elements[2].registerIndex = 0;
-	def.ComputeHash();
+	auto signature = Tr2ShaderSignatureAL()
+		.Add( Tr2ShaderRegisterAL::UAV, 0 )
+		.Add( Tr2ShaderRegisterAL::RESOURCE, 0 )
+		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
 
 	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( 
-		*renderContext, 
-		COMPUTE_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		def ) );
-	Tr2ShaderAL* shaders[] = { &cs };
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
+	Tr2ShaderAL shaders[] = { cs };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
 
@@ -245,21 +202,19 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 			100.f ),
 		*renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 0, input );
-	desc.Set( Tr2RenderContextEnum::COMPUTE_SHADER, 0, sampl );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
-
-
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
-
-
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
+	Tr2ResourceSetDescriptionAL desc;
+	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, input );
+	desc.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, sampl );
+	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
+
+	Tr2ResourceSetAL resourceSet;
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
+
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
@@ -279,29 +234,26 @@ TEST_F( Compute, CanDispatchCSGroups )
 #include INCLUDE_SHADER_CODE( GroupShared.cs )
 	};
 
-	Tr2ShaderInputDefinition def;
-	def.elements.resize( 1 );
-	def.elements[0].usageIndex = 0;
-	def.elements[0].registerIndex = 0;
-	def.ComputeHash();
+	auto signature = Tr2ShaderSignatureAL()
+		.Add( Tr2ShaderRegisterAL::UAV, 0 );
 
 	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( 
-		*renderContext, 
-		COMPUTE_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		def ) );
-	Tr2ShaderAL* shaders[] = { &cs };
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
+	Tr2ShaderAL shaders[] = { cs };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
 
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32_UINT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetUav( COMPUTE_SHADER, 0, output ) );
+	Tr2ResourceSetDescriptionAL desc;
+	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
+
+	Tr2ResourceSetAL resourceSet;
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
+
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 2, 2, 2 ) );
@@ -310,6 +262,56 @@ TEST_F( Compute, CanDispatchCSGroups )
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
 
 	EXPECT_EQ( 1900, data[0] );
+
+	output.UnmapForReading( *renderContext );
+}
+
+TEST_F( Compute, CanUseBufferCounter )
+{
+	uint32_t vsBytecode[] = {
+#include INCLUDE_SHADER_CODE( UseBufferCounter.cs )
+	};
+
+	auto signature = Tr2ShaderSignatureAL()
+		.Add( Tr2ShaderRegisterAL::UAV, 0 );
+
+	Tr2ShaderAL cs;
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
+	Tr2ShaderAL shaders[] = { cs };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
+
+	Tr2BufferAL output;
+	ASSERT_HRESULT_SUCCEEDED( output.Create( 4, 4, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::BUFFER_COUNTER, Tr2CpuUsage::READ, nullptr, *renderContext ) );
+
+	const uint32_t initialValue = 5;
+
+	Tr2ResourceSetDescriptionAL desc;
+	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output, initialValue );
+
+	Tr2ResourceSetAL resourceSet;
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
+
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
+
+	const uint32_t* data;
+	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
+
+	EXPECT_LE( initialValue, data[0] );
+	EXPECT_GT( initialValue + 4, data[0] );
+
+	EXPECT_LE( initialValue, data[1] );
+	EXPECT_GT( initialValue + 4, data[1] );
+
+	EXPECT_LE( initialValue, data[2] );
+	EXPECT_GT( initialValue + 4, data[2] );
+
+	EXPECT_LE( initialValue, data[3] );
+	EXPECT_GT( initialValue + 4, data[3] );
 
 	output.UnmapForReading( *renderContext );
 }

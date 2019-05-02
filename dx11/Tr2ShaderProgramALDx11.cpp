@@ -10,13 +10,9 @@ using namespace Tr2RenderContextEnum;
 Tr2ShaderProgramAL::Tr2ShaderProgramAL()
 	:m_isValid( false )
 {
-	for( int32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
-	{
-		m_shaders[i] = &nullShader[i];
-	}
 }
 
-ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext )
+ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext )
 {
 	Destroy();
 
@@ -30,23 +26,61 @@ ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2Pri
 		return E_INVALIDARG;
 	}
 
-	uint32_t mask = 0;
 	for( size_t i = 0; i < count; ++i )
 	{
-		if( !shaders[i]->IsValid() )
+		if( !shaders[i].IsValid() )
 		{
 			return E_INVALIDARG;
 		}
-		uint32_t bit = 1 << shaders[i]->GetType();
-		if( ( mask & bit ) != 0 )
+		switch( shaders[i].GetType() )
 		{
+		case VERTEX_SHADER:
+			if( m_shaders.vertexShader )
+			{
+				return E_INVALIDARG;
+			}
+			m_shaders.vertexShader = shaders[i].m_shader->m_shader.vertexShader;
+			m_vertexShader = shaders[i];
+			break;
+		case PIXEL_SHADER:
+			if( m_shaders.pixelShader )
+			{
+				return E_INVALIDARG;
+			}
+			m_shaders.pixelShader = shaders[i].m_shader->m_shader.pixelShader;
+			m_shaders.patchedPixelShader = shaders[i].m_shader->m_patchedShader.pixelShader;
+			break;
+		case COMPUTE_SHADER:
+			if( m_shaders.computeShader )
+			{
+				return E_INVALIDARG;
+			}
+			m_shaders.computeShader = shaders[i].m_shader->m_shader.computeShader;
+			break;
+		case GEOMETRY_SHADER:
+			if( m_shaders.geometryShader )
+			{
+				return E_INVALIDARG;
+			}
+			m_shaders.geometryShader = shaders[i].m_shader->m_shader.geometryShader;
+			break;
+		case HULL_SHADER:
+			if( m_shaders.hullShader )
+			{
+				return E_INVALIDARG;
+			}
+			m_shaders.hullShader = shaders[i].m_shader->m_shader.hullShader;
+			break;
+		case DOMAIN_SHADER:
+			if( m_shaders.domainShader )
+			{
+				return E_INVALIDARG;
+			}
+			m_shaders.domainShader = shaders[i].m_shader->m_shader.domainShader;
+			break;
+		default:
 			return E_INVALIDARG;
 		}
-		mask |= bit;
-	}
-	for( size_t i = 0; i < count; ++i )
-	{
-		m_shaders[shaders[i]->GetType()] = shaders[i];
 	}
 	m_isValid = true;
 	return S_OK;
@@ -54,11 +88,15 @@ ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2Pri
 
 void Tr2ShaderProgramAL::Destroy()
 {
-	for( int32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
-	{
-		m_shaders[i] = &nullShader[i];
-	}
+	m_shaders.vertexShader = nullptr;
+	m_shaders.pixelShader = nullptr;
+	m_shaders.computeShader = nullptr;
+	m_shaders.geometryShader = nullptr;
+	m_shaders.hullShader = nullptr;
+	m_shaders.domainShader = nullptr;
+	m_shaders.patchedPixelShader = nullptr;
 	m_isValid = false;
+	m_vertexShader = Tr2ShaderAL();
 }
 
 bool Tr2ShaderProgramAL::IsValid() const

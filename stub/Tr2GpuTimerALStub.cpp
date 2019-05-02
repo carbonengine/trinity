@@ -2,30 +2,39 @@
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 #include "Tr2GpuTimerALStub.h"
+#include "Tr2PrimaryRenderContextStub.h"
 
 namespace TrinityALImpl
 {
 	Tr2GpuTimerAL::Tr2GpuTimerAL()
+		:m_isValid( false )
 	{
 	}
 
-	ALResult Tr2GpuTimerAL::Create( Tr2PrimaryRenderContextAL& )
+	ALResult Tr2GpuTimerAL::Create( Tr2PrimaryRenderContextAL& renderContext )
 	{
-		return E_FAIL;
+		Destroy();
+		if( !renderContext.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+		m_isValid = true;
+		return S_OK;
 	}
 
 	void Tr2GpuTimerAL::Destroy()
 	{
+		m_isValid = false;
 	}
 
 	bool Tr2GpuTimerAL::IsValid() const
 	{
-		return false;
+		return m_isValid;
 	}
 
 	bool Tr2GpuTimerAL::Begin( Tr2RenderContextAL& )
 	{
-		return false;
+		return true;
 	}
 
 	void Tr2GpuTimerAL::End( Tr2RenderContextAL& )
@@ -34,7 +43,7 @@ namespace TrinityALImpl
 
 	float Tr2GpuTimerAL::GetTime( Tr2RenderContextAL& )
 	{
-		return -1.f;
+		return m_isValid ? 0.0001f : -1.f;
 	}
 }
 

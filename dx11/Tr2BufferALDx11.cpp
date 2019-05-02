@@ -95,6 +95,13 @@ namespace TrinityALImpl
 		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
 		{
 			bd.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+			if( desc.format == PIXEL_FORMAT_UNKNOWN )
+			{
+				if( !HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) && !HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) )
+				{
+					bd.MiscFlags |= D3D11_RESOURCE_MISC_BUFFER_STRUCTURED;
+				}
+			}
 		}
 		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::DRAW_INDIRECT_ARGS ) )
 		{
@@ -142,7 +149,7 @@ namespace TrinityALImpl
 			descSRV.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
 			descSRV.Buffer.ElementWidth = stride;
 			descSRV.Buffer.NumElements = desc.count;
-			if( FAILED( renderContext.m_d3dDevice11->CreateShaderResourceView( m_buffer, &descSRV, &m_srv ) ) )
+			if( FAILED( hr = renderContext.m_d3dDevice11->CreateShaderResourceView( m_buffer, &descSRV, &m_srv ) ) )
 			{
 				Destroy();
 				return hr;
@@ -165,7 +172,7 @@ namespace TrinityALImpl
 			{
 				descUAV.Buffer.Flags |= D3D11_BUFFER_UAV_FLAG_COUNTER;
 			}
-			if( FAILED( renderContext.m_d3dDevice11->CreateUnorderedAccessView( m_buffer, &descUAV, &m_uav ) ) )
+			if( FAILED( hr = renderContext.m_d3dDevice11->CreateUnorderedAccessView( m_buffer, &descUAV, &m_uav ) ) )
 			{
 				Destroy();
 				return hr;

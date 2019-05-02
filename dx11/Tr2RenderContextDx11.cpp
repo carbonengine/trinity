@@ -534,13 +534,13 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw()
 	, m_isSrgbRenderTarget( false )
 	, m_hasHullShader( false )
 	, m_previouslyHadHullShader( false )
-	, m_psUavsDirtyBegin( sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] ) )
-	, m_psUavsDirtyEnd( 0 )
 	, m_events( nullptr )
-	, m_aftermathContext( nullptr )
+	, m_aftermathContext( nullptr ),
+	m_assignedUavCount( 0 ),
+	m_assignedUavOffset( 0 ),
+	m_assignedPsUavs( false )
 {	
 	m_context.Attach( &Tr2RenderContextImpl::s_nullContext );
-	std::fill_n( m_shaders, int(SHADER_TYPE_COUNT), nullptr );
 
 	static_assert(	D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT >= MAX_RENDER_TARGET, 
 					"Bad define" );
@@ -606,17 +606,10 @@ void Tr2RenderContextAL::Destroy() throw()
 		m_sharedConstantBuffers[i].size = 0;
 	}
 
-	for( size_t i = 0; i < sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] ); ++i )
-	{
-		m_pixelShaderUavs[i] = nullptr;
-	}
-
-	for( size_t i = 0; i < sizeof( m_pixelShaderUavInitialCounts ) / sizeof( m_pixelShaderUavInitialCounts[0] ); ++i )
-	{
-		m_pixelShaderUavInitialCounts[i] = (uint32_t)-1;
-	}
-
 	m_secondaryDevice11 = nullptr;
+	m_assignedUavCount = 0;
+	m_assignedUavOffset = 0;
+	m_assignedPsUavs = false;
 
 	m_secondaryDefaultBackBuffer = Tr2TextureAL();	
 	if( m_aftermathContext )
@@ -680,9 +673,8 @@ void Tr2RenderContextAL::Destroy() throw()
 	m_hasHullShader = false;
 	m_previouslyHadHullShader = false;
 
-	std::fill_n( m_shaders, int( SHADER_TYPE_COUNT ), nullptr );
-	m_psUavsDirtyBegin = sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] );
-	m_psUavsDirtyEnd = 0;
+	m_shaders = Tr2ShaderProgramAL::Shaders();
+	m_vertexShader = Tr2ShaderAL();
 
 	memset( m_allRenderStates, 0xff, sizeof( m_allRenderStates ) );
 	m_allRenderStates[RS_SRGBWRITEENABLE] = 0;
@@ -698,9 +690,32 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const throw()
 
 ALResult Tr2RenderContextAL::BeginScene() throw()
 { 
-	std::fill_n( m_shaders, int( SHADER_TYPE_COUNT ), nullptr );
+	m_shaders = Tr2ShaderProgramAL::Shaders();
+	m_vertexShader = Tr2ShaderAL();
 	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
-	std::fill( std::begin( m_resourceHashes ), std::end( m_resourceHashes ), 0 );
+
+	decltype( &ID3D11DeviceContext::VSSetShaderResources ) setResources[] = {
+		&ID3D11DeviceContext::VSSetShaderResources,
+		&ID3D11DeviceContext::PSSetShaderResources,
+		&ID3D11DeviceContext::CSSetShaderResources,
+		&ID3D11DeviceContext::GSSetShaderResources,
+		&ID3D11DeviceContext::HSSetShaderResources,
+		&ID3D11DeviceContext::DSSetShaderResources,
+	};
+	for( uint32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
+	{
+		ID3D11ShaderResourceView* nullSrv[TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES] = {};
+		if( m_resourceHashes[i] )
+		{
+			m_resourceHashes[i] = 0;
+			( m_context->*( setResources[i] ) )(
+				0,
+				TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES,
+				nullSrv );
+
+		}
+	}
+
 
 	return S_OK; 
 }
@@ -852,10 +867,7 @@ ALResult Tr2RenderContextAL::DrawPrimitiveUP(
 	const void* vertexStreamZeroData, 
 	uint32_t vertexStreamZeroStride ) throw()
 {
-	return m_drawUP.DrawPrimitiveUP(	primitiveCount,
-										vertexStreamZeroData,
-										vertexStreamZeroStride,
-										*this );
+	return m_drawUP.DrawPrimitiveUP( m_topology, primitiveCount, vertexStreamZeroData, vertexStreamZeroStride, *this, GetPrimaryRenderContext() );
 }
 
 ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(	
@@ -865,12 +877,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 	const void* vertexStreamZeroData,
 	uint32_t vertexStreamZeroStride) throw()
 {
-	return m_drawUP.DrawIndexedPrimitiveUP(	numVertices,
-											primitiveCount,
-											indexData,
-											vertexStreamZeroData,
-											vertexStreamZeroStride,
-											*this );
+	return m_drawUP.DrawIndexedPrimitiveUP( m_topology, numVertices, primitiveCount, indexData, vertexStreamZeroData, vertexStreamZeroStride, *this, GetPrimaryRenderContext() );
 }
 
 ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(	
@@ -880,12 +887,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 	const void* vertexStreamZeroData,
 	uint32_t vertexStreamZeroStride) throw()
 {
-	return m_drawUP.DrawIndexedPrimitiveUP(	numVertices,
-											primitiveCount,
-											indexData,
-											vertexStreamZeroData,
-											vertexStreamZeroStride,
-											*this );
+	return m_drawUP.DrawIndexedPrimitiveUP( m_topology, numVertices, primitiveCount, indexData, vertexStreamZeroData, vertexStreamZeroStride, *this, GetPrimaryRenderContext() );
 }
 
 // --------------------------------------------------------------------------------------
@@ -902,7 +904,6 @@ ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned grou
 	{
 		return E_FAIL;
 	}
-	ApplyUavs();
 	m_context->Dispatch( groupDimX, groupDimY, groupDimZ );
 	return S_OK;
 }
@@ -913,7 +914,6 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectPara
 	{
 		return E_FAIL;
 	}
-	ApplyUavs();
 
 	m_context->DispatchIndirect( indirectParams.m_buffer->m_buffer, offset );
 	return S_OK;
@@ -1169,27 +1169,14 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 				dsView = m_boundDepthStencil.m_texture->m_depthStencil[TrinityALImpl::Tr2TextureAL::DepthOption::READ_WRITE];
 			}
 		}
-		if( m_psUavsDirtyBegin < m_psUavsDirtyEnd )
-		{
-			m_context->OMSetRenderTargetsAndUnorderedAccessViews(	
-							m_renderTargetHighWaterMark, 
-							rtViews,
-							dsView,
-							m_psUavsDirtyBegin, 
-							m_psUavsDirtyEnd - m_psUavsDirtyBegin,
-							reinterpret_cast<ID3D11UnorderedAccessView**>( m_pixelShaderUavs + m_psUavsDirtyBegin ), 
-							m_pixelShaderUavInitialCounts + m_psUavsDirtyBegin );
-			m_psUavsDirtyBegin = sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] );
-			m_psUavsDirtyEnd = 0;
-		}
-		else
-		{
-			m_context->OMSetRenderTargetsAndUnorderedAccessViews(	
-							m_renderTargetHighWaterMark, 
-							rtViews,
-							dsView,
-							0, D3D11_KEEP_UNORDERED_ACCESS_VIEWS, nullptr, nullptr );
-		}
+		m_context->OMSetRenderTargetsAndUnorderedAccessViews(	
+			m_renderTargetHighWaterMark, 
+			rtViews,
+			dsView,
+			0, 
+			D3D11_KEEP_UNORDERED_ACCESS_VIEWS, 
+			nullptr, 
+			nullptr );
 	}
 
 	// emulate DX9 -- setting RT sets the VP, trinity relies on this
@@ -1205,7 +1192,8 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 	if( changedSlot == 0 )
 	{
 		SetViewport( Tr2Viewport ( bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() ) );
-		SetScissorRect( 0, 0, bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() );
+		D3D11_RECT rect = { 0, 0, bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() };
+		m_context->RSSetScissorRects( 1, &rect );
 	}
 
 	return S_OK;
@@ -1302,43 +1290,6 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw()
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetUav(
-	Tr2RenderContextEnum::ShaderType inputType,
-	uint32_t slot,
-	const Tr2BufferAL& buffer,
-	uint32_t initialCount ) throw()
-{
-	ID3D11UnorderedAccessView* view = buffer.m_buffer->m_uav;
-
-	switch( inputType )
-	{
-	case PIXEL_SHADER:
-		if( slot >= sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] ) )
-		{
-			return E_INVALIDARG;
-		}
-		m_pixelShaderUavs[slot] = view;
-		if( m_psUavsDirtyBegin > slot )
-		{
-			m_psUavsDirtyBegin = slot;
-		}
-		if( m_psUavsDirtyEnd < slot + 1 )
-		{
-			m_psUavsDirtyEnd = slot + 1;
-		}
-		m_pixelShaderUavInitialCounts[slot] = initialCount;
-		break;
-	case COMPUTE_SHADER:
-		m_context->CSSetUnorderedAccessViews( slot, 1, &view, &initialCount );
-		break;
-	default:
-		return E_INVALIDARG;
-	}
-
-
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw()
 {
 	m_context->ClearUnorderedAccessViewFloat( buffer.m_buffer->m_uav, values );
@@ -1391,72 +1342,37 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& program
 {
 	AL_UPDATE_RESOURCE_FRAME_USAGE( program );
 
-	if( m_shaders[VERTEX_SHADER] != program.m_shaders[VERTEX_SHADER] )
+	if( m_shaders.vertexShader != program.m_shaders.vertexShader )
 	{
-		m_context->VSSetShader( program.m_shaders[VERTEX_SHADER]->m_shader.vertexShader, nullptr, 0 );
-		m_shaders[VERTEX_SHADER] = program.m_shaders[VERTEX_SHADER];
+		m_context->VSSetShader( program.m_shaders.vertexShader, nullptr, 0 );
 	}
-	if( m_shaders[COMPUTE_SHADER] != program.m_shaders[COMPUTE_SHADER] )
+	if( m_shaders.computeShader != program.m_shaders.computeShader )
 	{
-		m_context->CSSetShader( program.m_shaders[COMPUTE_SHADER]->m_shader.computeShader, nullptr, 0 );
-		m_shaders[COMPUTE_SHADER] = program.m_shaders[COMPUTE_SHADER];
+		m_context->CSSetShader( program.m_shaders.computeShader, nullptr, 0 );
 	}
-	if( m_shaders[GEOMETRY_SHADER] != program.m_shaders[GEOMETRY_SHADER] )
+	if( m_shaders.geometryShader != program.m_shaders.geometryShader )
 	{
-		m_context->GSSetShader( program.m_shaders[GEOMETRY_SHADER]->m_shader.geometryShader, nullptr, 0 );
-		m_shaders[GEOMETRY_SHADER] = program.m_shaders[GEOMETRY_SHADER];
+		m_context->GSSetShader( program.m_shaders.geometryShader, nullptr, 0 );
 	}
-	if( m_shaders[HULL_SHADER] != program.m_shaders[HULL_SHADER] )
+	if( m_shaders.hullShader != program.m_shaders.hullShader )
 	{
-		m_context->HSSetShader( program.m_shaders[HULL_SHADER]->m_shader.hullShader, nullptr, 0 );
-		m_shaders[HULL_SHADER] = program.m_shaders[HULL_SHADER];
+		m_context->HSSetShader( program.m_shaders.hullShader, nullptr, 0 );
 	}
-	if( m_shaders[DOMAIN_SHADER] != program.m_shaders[DOMAIN_SHADER] )
+	if( m_shaders.domainShader != program.m_shaders.domainShader )
 	{
-		m_context->DSSetShader( program.m_shaders[DOMAIN_SHADER]->m_shader.domainShader, nullptr, 0 );
-		m_shaders[DOMAIN_SHADER] = program.m_shaders[DOMAIN_SHADER];
+		m_context->DSSetShader( program.m_shaders.domainShader, nullptr, 0 );
 	}
-	if( m_shaders[PIXEL_SHADER] != program.m_shaders[PIXEL_SHADER] )
+	if( m_shaders.pixelShader != program.m_shaders.pixelShader  )
 	{
 		m_dirtyFlag |= Tr2FragmentOpSettings::DIRTY_PATCH_PS;
-		m_shaders[PIXEL_SHADER] = program.m_shaders[PIXEL_SHADER];
 	}
 
-	m_hasHullShader = program.m_shaders[HULL_SHADER]->m_shader.hullShader != nullptr;
+	m_shaders = program.m_shaders;
+	m_vertexShader = program.m_vertexShader;
+
+	m_hasHullShader = program.m_shaders.hullShader != nullptr;
 
 	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetSamplerState( 
-	const Tr2SamplerStateAL& samplerState, 
-	ShaderType inputType, 
-	uint32_t registerNumber ) throw()
-{
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *samplerState.m_sampler );
-	auto ss = samplerState.m_sampler->m_samplerState.p;
-	switch( inputType )
-	{
-	case VERTEX_SHADER:
-		m_context->VSSetSamplers( registerNumber, 1, &ss );
-		return S_OK;
-	case PIXEL_SHADER:
-		m_context->PSSetSamplers( registerNumber, 1, &ss );
-		return S_OK;
-	case COMPUTE_SHADER:
-		m_context->CSSetSamplers( registerNumber, 1, &ss );
-		return S_OK;
-	case GEOMETRY_SHADER:
-		m_context->GSSetSamplers( registerNumber, 1, &ss );
-		return S_OK;
-	case HULL_SHADER:
-		m_context->HSSetSamplers( registerNumber, 1, &ss );
-		return S_OK;
-	case DOMAIN_SHADER:
-		m_context->DSSetSamplers( registerNumber, 1, &ss );
-		return S_OK;
-	default:
-		return E_INVALIDARG;
-	}
 }
 
 ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value ) throw()
@@ -1708,14 +1624,6 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			}
 			continue;	//return S_OK;
 
-		case RS_SCISSORTESTENABLE:
-			if( ( rs.ScissorEnable == 0 ) != ( value == 0 ) )
-			{
-				rs.ScissorEnable = value ? 1 : 0;
-				m_dirtyFlag |= fos.DIRTY_RASTERIZER;
-			}
-			continue;	//return S_OK;
-
 		// explicit warning about fixed function requirements
 	#define CASE_WARN(x)	\
 		case x:				\
@@ -1740,23 +1648,6 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetClipPlane( uint32_t planeIndex, const float* planeEq ) throw()
-{
-	m_dirtyFlag |= m_renderStateEmulation.m_fragmentOpSettings.SetClipPlane( planeIndex, planeEq );
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetScissorRect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom ) throw()
-{
-	D3D11_RECT rect;
-	rect.left = left;
-	rect.top = top;
-	rect.right = right;
-	rect.bottom = bottom;
-	m_context->RSSetScissorRects( 1, &rect );
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights ) throw()
 {
 	m_dirtyFlag |= m_renderStateEmulation.m_fragmentOpSettings.SetNumberOfLights( numLights );	
@@ -1774,18 +1665,18 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 
 	if( m_vertexLayout )
 	{
-		if( !m_shaders[VERTEX_SHADER] || m_shaders[VERTEX_SHADER]->GetType() == INVALID_SHADER )
+		if( !m_shaders.vertexShader )
 		{
 			return false;
 		}
 		if( m_vertexLayout != m_lastSetVertexLayout || 
-			m_shaders[VERTEX_SHADER]->GetInputDefinition().hash != m_lastSetVertexLayoutVSHash )
+			m_vertexShader.m_shader->m_pipelineInputHash != m_lastSetVertexLayoutVSHash )
 		{
-			CR_RETURN_VAL(	m_vertexLayout->SetLayout( m_shaders[VERTEX_SHADER], *this )
+			CR_RETURN_VAL(	m_vertexLayout->SetLayout( m_vertexShader.m_shader.get(), *this )
 						, false );
 
 			m_lastSetVertexLayout = m_vertexLayout;
-			m_lastSetVertexLayoutVSHash = m_shaders[VERTEX_SHADER]->GetInputDefinition().hash;
+			m_lastSetVertexLayoutVSHash = m_vertexShader.m_shader->m_pipelineInputHash;
 		}
 	}
 	else
@@ -1833,18 +1724,18 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 
 		if( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_PATCH_PS )
 		{
-			if( !m_shaders[PIXEL_SHADER] )
+			if( !m_shaders.pixelShader )
 			{
 				return false;
 			}
 			if( m_renderStateEmulation.m_alphaTestParameters.m_alphaTestEnabled && 
 				m_renderStateEmulation.m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS )
 			{
-				CR_RETURN_VAL( m_shaders[PIXEL_SHADER]->ApplyPatchedShader( *this ), false );
+				m_context->PSSetShader( m_shaders.patchedPixelShader, nullptr, 0 );
 			}
 			else
 			{
-				CR_RETURN_VAL( m_shaders[PIXEL_SHADER]->Apply( *this ), false );
+				m_context->PSSetShader( m_shaders.pixelShader, nullptr, 0 );
 			}
 		}
 
@@ -1868,27 +1759,8 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 		m_previouslyHadHullShader = m_hasHullShader;
 		m_lastSetTopology = m_topology;
 	}
-
-	ApplyUavs();
 	
 	return OK;
-}
-
-void Tr2RenderContextAL::ApplyUavs() throw()
-{
-	if( m_psUavsDirtyBegin < m_psUavsDirtyEnd )
-	{
-		m_context->OMSetRenderTargetsAndUnorderedAccessViews( 
-			D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
-			nullptr,
-			nullptr,
-			m_psUavsDirtyBegin, 
-			m_psUavsDirtyEnd - m_psUavsDirtyBegin,
-			reinterpret_cast<ID3D11UnorderedAccessView**>( m_pixelShaderUavs + m_psUavsDirtyBegin ), 
-			m_pixelShaderUavInitialCounts + m_psUavsDirtyBegin );
-		m_psUavsDirtyBegin = sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] );
-		m_psUavsDirtyEnd = 0;
-	}
 }
 
 bool Tr2RenderContextAL::ApplyBlendState() throw()
@@ -1960,6 +1832,27 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 
 	auto& rs = *resourceSet.m_resourceSet;
 
+	if( ( rs.m_empty || !rs.m_uavCount ) && m_assignedUavCount )
+	{
+		ID3D11UnorderedAccessView* nullUAVs[TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES] = {};
+		if( m_assignedPsUavs )
+		{
+			m_context->OMSetRenderTargetsAndUnorderedAccessViews(
+				D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
+				nullptr,
+				nullptr,
+				m_assignedUavOffset,
+				m_assignedUavCount,
+				nullUAVs,
+				rs.m_uavInitialCounts );
+		}
+		else
+		{
+			m_context->CSSetUnorderedAccessViews( m_assignedUavOffset, m_assignedUavCount, nullUAVs, nullptr );
+		}
+		m_assignedUavCount = 0;
+	}
+
 	if( rs.m_empty )
 	{
 		return S_OK;
@@ -1983,6 +1876,91 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 		&ID3D11DeviceContext::DSSetSamplers,
 	};
 
+	if( rs.m_uavCount )
+	{
+		for( uint32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
+		{
+			ID3D11ShaderResourceView* nullSrv[TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES] = {};
+			if( m_resourceHashes[i] )
+			{
+				m_resourceHashes[i] = 0;
+				( m_context->*( setResources[i] ) )(
+					0,
+					TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES,
+					nullSrv );
+
+			}
+		}
+
+		if( rs.m_csUavs )
+		{
+			if( m_assignedUavCount && m_assignedPsUavs )
+			{
+				ID3D11UnorderedAccessView* nullUAVs[TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES] = {};
+				m_context->OMSetRenderTargetsAndUnorderedAccessViews(
+					D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
+					nullptr,
+					nullptr,
+					m_assignedUavOffset,
+					m_assignedUavCount,
+					nullUAVs,
+					nullptr );
+				m_assignedUavCount = 0;
+			}
+			uint32_t begin, end;
+			if( m_assignedUavCount )
+			{
+				begin = std::min( rs.m_uavOffset, m_assignedUavOffset );
+				end = std::max( rs.m_uavOffset + rs.m_uavCount, m_assignedUavOffset + m_assignedUavCount );
+			}
+			else
+			{
+				begin = rs.m_uavOffset;
+				end = rs.m_uavOffset + rs.m_uavCount;
+			}
+			m_context->CSSetUnorderedAccessViews( 
+				begin,
+				end - begin, 
+				reinterpret_cast<ID3D11UnorderedAccessView**>( rs.m_uavs + begin ), 
+				rs.m_uavInitialCounts );
+			m_assignedUavCount = rs.m_uavCount;
+			m_assignedUavOffset = rs.m_uavOffset;
+			m_assignedPsUavs = false;
+		}
+		else
+		{
+			if( m_assignedUavCount && !m_assignedPsUavs )
+			{
+				ID3D11UnorderedAccessView* nullUAVs[TrinityALImpl::Tr2ResourceSetAL::MAX_RESOURCES] = {};
+				m_context->CSSetUnorderedAccessViews( m_assignedUavOffset, m_assignedUavCount, nullUAVs, nullptr );
+				m_assignedUavCount = 0;
+			}
+			uint32_t begin, end;
+			if( m_assignedUavCount )
+			{
+				begin = std::min( rs.m_uavOffset, m_assignedUavOffset );
+				end = std::max( rs.m_uavOffset + rs.m_uavCount, m_assignedUavOffset + m_assignedUavCount );
+			}
+			else
+			{
+				begin = rs.m_uavOffset;
+				end = rs.m_uavOffset + rs.m_uavCount;
+			}
+
+			m_context->OMSetRenderTargetsAndUnorderedAccessViews(
+				D3D11_KEEP_RENDER_TARGETS_AND_DEPTH_STENCIL,
+				nullptr,
+				nullptr,
+				begin,
+				end - begin,
+				reinterpret_cast<ID3D11UnorderedAccessView**>( rs.m_uavs + begin ),
+				rs.m_uavInitialCounts );
+			m_assignedUavCount = rs.m_uavCount;
+			m_assignedUavOffset = rs.m_uavOffset;
+			m_assignedPsUavs = true;
+		}
+	}
+
 	for( uint32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
 	{
 		auto& stage = rs.m_stages[i];
@@ -2004,154 +1982,6 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 		}
 	}
 
-	//if( rs.m_stages[VERTEX_SHADER].resourceCount && rs.m_stages[VERTEX_SHADER].resourceHash != m_resourceHashes[VERTEX_SHADER] )
-	//{
-	//	m_context->VSSetShaderResources(
-	//		rs.m_stages[VERTEX_SHADER].resourceOffset,
-	//		rs.m_stages[VERTEX_SHADER].resourceCount,
-	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[VERTEX_SHADER].resources + rs.m_stages[VERTEX_SHADER].resourceOffset ) );
-	//	m_resourceHashes[VERTEX_SHADER] = rs.m_stages[VERTEX_SHADER].resourceHash;
-	//}
-	//if( rs.m_stages[PIXEL_SHADER].resourceCount && rs.m_stages[PIXEL_SHADER].resourceHash != m_resourceHashes[PIXEL_SHADER] )
-	//{
-	//	m_context->PSSetShaderResources(
-	//		rs.m_stages[PIXEL_SHADER].resourceOffset,
-	//		rs.m_stages[PIXEL_SHADER].resourceCount,
-	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[PIXEL_SHADER].resources + rs.m_stages[PIXEL_SHADER].resourceOffset ) );
-	//	m_resourceHashes[PIXEL_SHADER] = rs.m_stages[PIXEL_SHADER].resourceHash;
-	//}
-	//if( rs.m_stages[COMPUTE_SHADER].resourceCount && rs.m_stages[COMPUTE_SHADER].resourceHash != m_resourceHashes[COMPUTE_SHADER] )
-	//{
-	//	m_context->CSSetShaderResources(
-	//		rs.m_stages[COMPUTE_SHADER].resourceOffset,
-	//		rs.m_stages[COMPUTE_SHADER].resourceCount,
-	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[COMPUTE_SHADER].resources + rs.m_stages[COMPUTE_SHADER].resourceOffset ) );
-	//	m_resourceHashes[COMPUTE_SHADER] = rs.m_stages[COMPUTE_SHADER].resourceHash;
-	//}
-	//if( rs.m_stages[GEOMETRY_SHADER].resourceCount && rs.m_stages[GEOMETRY_SHADER].resourceHash != m_resourceHashes[GEOMETRY_SHADER] )
-	//{
-	//	m_context->GSSetShaderResources(
-	//		rs.m_stages[GEOMETRY_SHADER].resourceOffset,
-	//		rs.m_stages[GEOMETRY_SHADER].resourceCount,
-	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[GEOMETRY_SHADER].resources + rs.m_stages[GEOMETRY_SHADER].resourceOffset ) );
-	//	m_resourceHashes[GEOMETRY_SHADER] = rs.m_stages[GEOMETRY_SHADER].resourceHash;
-	//}
-	//if( rs.m_stages[HULL_SHADER].resourceCount && rs.m_stages[HULL_SHADER].resourceHash != m_resourceHashes[HULL_SHADER] )
-	//{
-	//	m_context->HSSetShaderResources(
-	//		rs.m_stages[HULL_SHADER].resourceOffset,
-	//		rs.m_stages[HULL_SHADER].resourceCount,
-	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[HULL_SHADER].resources + rs.m_stages[HULL_SHADER].resourceOffset ) );
-	//	m_resourceHashes[HULL_SHADER] = rs.m_stages[HULL_SHADER].resourceHash;
-	//}
-	//if( rs.m_stages[DOMAIN_SHADER].resourceCount && rs.m_stages[DOMAIN_SHADER].resourceHash != m_resourceHashes[DOMAIN_SHADER] )
-	//{
-	//	m_context->DSSetShaderResources(
-	//		rs.m_stages[DOMAIN_SHADER].resourceOffset,
-	//		rs.m_stages[DOMAIN_SHADER].resourceCount,
-	//		reinterpret_cast<ID3D11ShaderResourceView**>( rs.m_stages[DOMAIN_SHADER].resources + rs.m_stages[DOMAIN_SHADER].resourceOffset ) );
-	//	m_resourceHashes[DOMAIN_SHADER] = rs.m_stages[DOMAIN_SHADER].resourceHash;
-	//}
-
-	//if( rs.m_stages[VERTEX_SHADER].samplerCount && rs.m_stages[VERTEX_SHADER].samplerHash != m_samplerHashes[VERTEX_SHADER] )
-	//{
-	//	m_context->VSSetSamplers(
-	//		rs.m_stages[VERTEX_SHADER].samplerOffset,
-	//		rs.m_stages[VERTEX_SHADER].samplerCount,
-	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[VERTEX_SHADER].samplers + rs.m_stages[VERTEX_SHADER].samplerOffset ) );
-	//	m_samplerHashes[VERTEX_SHADER] = rs.m_stages[VERTEX_SHADER].samplerHash;
-	//}
-	//if( rs.m_stages[PIXEL_SHADER].samplerCount && rs.m_stages[PIXEL_SHADER].samplerHash != m_samplerHashes[PIXEL_SHADER] )
-	//{
-	//	m_context->PSSetSamplers(
-	//		rs.m_stages[PIXEL_SHADER].samplerOffset,
-	//		rs.m_stages[PIXEL_SHADER].samplerCount,
-	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[PIXEL_SHADER].samplers + rs.m_stages[PIXEL_SHADER].samplerOffset ) );
-	//	m_samplerHashes[PIXEL_SHADER] = rs.m_stages[PIXEL_SHADER].samplerHash;
-	//}
-	//if( rs.m_stages[COMPUTE_SHADER].samplerCount && rs.m_stages[COMPUTE_SHADER].samplerHash != m_samplerHashes[COMPUTE_SHADER] )
-	//{
-	//	m_context->CSSetSamplers(
-	//		rs.m_stages[COMPUTE_SHADER].samplerOffset,
-	//		rs.m_stages[COMPUTE_SHADER].samplerCount,
-	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[COMPUTE_SHADER].samplers + rs.m_stages[COMPUTE_SHADER].samplerOffset ) );
-	//	m_samplerHashes[COMPUTE_SHADER] = rs.m_stages[COMPUTE_SHADER].samplerHash;
-	//}
-	//if( rs.m_stages[GEOMETRY_SHADER].samplerCount && rs.m_stages[GEOMETRY_SHADER].samplerHash != m_samplerHashes[GEOMETRY_SHADER] )
-	//{
-	//	m_context->GSSetSamplers(
-	//		rs.m_stages[GEOMETRY_SHADER].samplerOffset,
-	//		rs.m_stages[GEOMETRY_SHADER].samplerCount,
-	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[GEOMETRY_SHADER].samplers + rs.m_stages[GEOMETRY_SHADER].samplerOffset ) );
-	//	m_samplerHashes[GEOMETRY_SHADER] = rs.m_stages[GEOMETRY_SHADER].samplerHash;
-	//}
-	//if( rs.m_stages[HULL_SHADER].samplerCount && rs.m_stages[HULL_SHADER].samplerHash != m_samplerHashes[HULL_SHADER] )
-	//{
-	//	m_context->HSSetSamplers(
-	//		rs.m_stages[HULL_SHADER].samplerOffset,
-	//		rs.m_stages[HULL_SHADER].samplerCount,
-	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[HULL_SHADER].samplers + rs.m_stages[HULL_SHADER].samplerOffset ) );
-	//	m_samplerHashes[HULL_SHADER] = rs.m_stages[HULL_SHADER].samplerHash;
-	//}
-	//if( rs.m_stages[DOMAIN_SHADER].samplerCount && rs.m_stages[DOMAIN_SHADER].samplerHash != m_samplerHashes[DOMAIN_SHADER] )
-	//{
-	//	m_context->DSSetSamplers(
-	//		rs.m_stages[DOMAIN_SHADER].samplerOffset,
-	//		rs.m_stages[DOMAIN_SHADER].samplerCount,
-	//		reinterpret_cast<ID3D11SamplerState**>( rs.m_stages[DOMAIN_SHADER].samplers + rs.m_stages[DOMAIN_SHADER].samplerOffset ) );
-	//	m_samplerHashes[DOMAIN_SHADER] = rs.m_stages[DOMAIN_SHADER].samplerHash;
-	//}
-
-	return S_OK;
-}
-
-
-ALResult Tr2RenderContextAL::SetUav(	
-	Tr2RenderContextEnum::ShaderType inputType, 
-	uint32_t slot, 
-	Tr2TextureAL& texture,
-	uint32_t mipLevel ) throw()
-{
-	ID3D11UnorderedAccessView* view = nullptr;
-
-	if( texture.IsValid() )
-	{
-		if( mipLevel >= texture.m_texture->m_uav.size() )
-		{
-			return E_INVALIDARG;
-		}
-		view = texture.m_texture->m_uav[mipLevel];
-		if( !view )
-		{
-			return E_INVALIDARG;
-		}
-	}
-
-	switch( inputType )
-	{
-	case PIXEL_SHADER:
-		if( slot >= sizeof( m_pixelShaderUavs ) / sizeof( m_pixelShaderUavs[0] ) )
-		{
-			return E_INVALIDARG;
-		}
-		m_pixelShaderUavs[slot] = view;
-		if( m_psUavsDirtyBegin > slot )
-		{
-			m_psUavsDirtyBegin = slot;
-		}
-		if( m_psUavsDirtyEnd < slot + 1 )
-		{
-			m_psUavsDirtyEnd = slot + 1;
-		}
-		m_pixelShaderUavInitialCounts[slot] = (uint32_t)-1;
-		break;
-	case COMPUTE_SHADER:
-		m_context->CSSetUnorderedAccessViews( slot, 1, &view, nullptr );
-		break;
-	default:
-		return E_INVALIDARG;
-	}
-	
 	return S_OK;
 }
 
@@ -2291,7 +2121,8 @@ Tr2TextureAL& Tr2RenderContextAL::GetDefaultBackBuffer()
 
 void Tr2RenderContextAL::ReleaseDeviceResources() throw()
 {
-	std::fill_n( m_shaders, int( SHADER_TYPE_COUNT ), nullptr );
+	m_shaders = Tr2ShaderProgramAL::Shaders();
+	m_vertexShader = Tr2ShaderAL();
 }
 
 void Tr2RenderContextAL::ResetCapturePlayback()

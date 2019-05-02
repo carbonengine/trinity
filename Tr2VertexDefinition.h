@@ -191,20 +191,4 @@ public:
 };
 
 
-struct Tr2ShaderInputDefinitionElement
-{
-	Tr2VertexDefinition::UsageCode usage;
-	unsigned registerIndex;
-	unsigned usageIndex;
-	unsigned usedMask;
-};
-
-struct Tr2ShaderInputDefinition
-{
-	void ComputeHash();
-
-	std::vector<Tr2ShaderInputDefinitionElement> elements;
-	unsigned hash;
-};
-
 #endif // Tr2VertexDefinition_h_

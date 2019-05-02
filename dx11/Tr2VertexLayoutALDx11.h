@@ -37,7 +37,7 @@ public:
 	}
 	void Destroy();
 
-	ALResult SetLayout( const Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const;
+	ALResult SetLayout( const TrinityALImpl::Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const;
 
 	Tr2ALMemoryType GetMemoryClass() const
 	{

@@ -97,6 +97,22 @@ BaseConfigurations:
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_STUB
+
+  D3D12:
+    ClCompile:
+      PreprocessorDefinitions:
+      - TRINITY_PLATFORM=TRINITY_DIRECTX12
+      AdditionalIncludeDirectories:
+      - $(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um
+      - $(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared
+
+  Vulkan:
+    Imports:
+    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
+    - ../../../../../../sdk/vulkan/1.1.97.0/vulkan.yaml
+    ClCompile:
+      PreprocessorDefinitions:
+      - TRINITY_PLATFORM=TRINITY_VULKAN
       
 Configurations:
   Debug_D3D9|Win32,x64:
@@ -204,3 +220,61 @@ Configurations:
     - Stub
     General:
       TargetName: TrinityAL_stub
+
+  Debug_D3D12|Win32,x64:
+    BaseConfigurations:
+    - Debug
+    - D3D12
+    General:
+      TargetName: TrinityAL_dx12_d
+    ClCompile:
+      PreprocessorDefinitions:
+      - TRINITY_AL_GUARD_LOCKS=1
+
+  Dev_D3D12|Win32,x64:
+    BaseConfigurations:
+    - Dev
+    - D3D12
+    General:
+      TargetName: TrinityAL_dx12_dev
+    ClCompile:
+      PreprocessorDefinitions:
+      - TRINITY_AL_GUARD_LOCKS=1
+
+  Release_D3D12|Win32,x64:
+    BaseConfigurations:
+    - Release
+    - D3D12
+    General:
+      TargetName: TrinityAL_dx12
+
+  Debug_Vulkan|Win32,x64:
+    BaseConfigurations:
+    - Debug
+    - Vulkan
+    General:
+      TargetName: TrinityAL_vulkan_d
+    ClCompile:
+      PreprocessorDefinitions:
+      - TRINITY_AL_GUARD_LOCKS=1
+
+  Dev_Vulkan|Win32,x64:
+    BaseConfigurations:
+    - Dev
+    - Vulkan
+    General:
+      TargetName: TrinityAL_vulkan_dev
+    ClCompile:
+      PreprocessorDefinitions:
+      - TRINITY_AL_GUARD_LOCKS=1
+      - VK_USE_PLATFORM_WIN32_KHR=1
+
+  Release_Vulkan|Win32,x64:
+    BaseConfigurations:
+    - Release
+    - Vulkan
+    General:
+      TargetName: TrinityAL_vulkan
+    ClCompile:
+      PreprocessorDefinitions:
+      - VK_USE_PLATFORM_WIN32_KHR=1

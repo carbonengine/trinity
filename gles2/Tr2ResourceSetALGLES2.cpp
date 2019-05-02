@@ -35,7 +35,7 @@ namespace TrinityALImpl
 	{
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, Tr2PrimaryRenderContextAL& )
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& )
 	{
 		Destroy();
 		ON_BLOCK_EXIT( [&] { if( !IsValid() ) Destroy(); } );
@@ -48,7 +48,7 @@ namespace TrinityALImpl
 			}
 			for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
 			{
-				if( description.m_resources[stage][i].type != Tr2ResourceSetDescriptionAL::NONE )
+				if( description.m_srv[stage][i].type != Tr2ResourceSetDescriptionAL::NONE )
 				{
 					return E_INVALIDARG;
 				}
@@ -61,7 +61,7 @@ namespace TrinityALImpl
 
 		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
 		{
-			if( description.m_samplers[PIXEL_SHADER][i].assigned && description.m_resources[PIXEL_SHADER][i].type == Tr2ResourceSetDescriptionAL::NONE )
+			if( description.m_samplers[PIXEL_SHADER][i].assigned && description.m_srv[PIXEL_SHADER][i].type == Tr2ResourceSetDescriptionAL::NONE )
 			{
 				return E_INVALIDARG;
 			}
@@ -69,7 +69,7 @@ namespace TrinityALImpl
 
 		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
 		{
-			auto& resource = description.m_resources[PIXEL_SHADER][i];
+			auto& resource = description.m_srv[PIXEL_SHADER][i];
 			if( resource.type == Tr2ResourceSetDescriptionAL::NONE )
 			{
 				continue;

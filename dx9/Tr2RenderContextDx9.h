@@ -65,11 +65,6 @@ public:
 		uint32_t offset,
 		uint32_t stride ) throw( );
 	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( );
-	ALResult SetUav(
-		Tr2RenderContextEnum::ShaderType inputType,
-		uint32_t slot,
-		const Tr2BufferAL& buffer,
-		uint32_t initialCount = -1 ) throw( );
 	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
 	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
 
@@ -82,20 +77,6 @@ public:
 
 	ALResult SetTopology( long topology );
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram );
-
-	ALResult SetUav(				
-		Tr2RenderContextEnum::ShaderType inputType, 
-		uint32_t slot, 
-		Tr2TextureAL& texture,
-		uint32_t mipLevel = 0 ) throw()
-	{
-		CCP_UNUSED( inputType );
-		CCP_UNUSED( slot );
-		CCP_UNUSED( texture );
-		CCP_UNUSED( mipLevel );
-
-		return E_FAIL; 
-	}
 
 	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( )
 	{
@@ -191,14 +172,6 @@ public:
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value );
 	ALResult SetRenderStates( const uint32_t * stateValuePairs, uint32_t count );
 
-	ALResult SetClipPlane( uint32_t planeIndex, const float* planeEq );
-
-	ALResult SetScissorRect(
-		uint32_t left, 
-		uint32_t top, 
-		uint32_t right, 
-		uint32_t bottom );
-
 
 	CComPtr<IDirect3DDevice9>	m_d3dDevice9;
 	bool	m_usingEXDevice;
@@ -212,12 +185,6 @@ public:
 		Tr2RenderContextEnum::ShaderType constantType, 
 		uint32_t registerIndex, 
 		uint32_t maxRegisterCount = 0 );
-
-	ALResult SetSamplerState(		
-		const Tr2SamplerStateAL& samplerState, 
-		Tr2RenderContextEnum::ShaderType inputType, 
-		uint32_t registerNumber );
-
 
 	// Helper function to clear the current primary backbuffer, depth and/or stencil.
 	ALResult Clear(						
@@ -249,10 +216,6 @@ public:
 		uint32_t& width, 
 		uint32_t& height, 
 		uint32_t slot = 0 );
-
-	bool IsSupportedRenderTargetFormat( 
-		Tr2RenderContextEnum::PixelFormat format, 
-		bool withAutoGenMipmap = false );
 
 	void TrashQuery( IDirect3DQuery9* query );
 

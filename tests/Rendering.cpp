@@ -1,6 +1,8 @@
 #include "StdAfx.h"
 #include "WithValidRenderContextFixture.h"
 
+using namespace Tr2RenderContextEnum;
+
 struct Rendering: public WithValidRenderContext {};
 
 namespace
@@ -12,6 +14,133 @@ struct PerObjectData
 	float y;
 	float padding[2];
 };
+
+
+ALResult CreatePositionOnlyVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( PositionOnly.vs )
+	};
+
+	auto input = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0 );
+
+	return shader.Create( VERTEX_SHADER, bytecode, input, renderContext );
+}
+
+ALResult CreateConstantColorPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( ConstantColor.ps )
+	};
+
+	return shader.Create( PIXEL_SHADER, bytecode, Tr2ShaderSignatureAL(), renderContext );
+}
+
+ALResult CreateTexCoordAndPositionVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
+	};
+
+	auto input = Tr2ShaderSignatureAL()
+		.Add( Tr2VertexDefinition::TEXCOORD, 0, 0 )
+		.Add( Tr2VertexDefinition::POSITION, 0, 1 );
+
+	return shader.Create( VERTEX_SHADER, bytecode, input, renderContext );
+}
+
+ALResult CreateSampleTextureFromTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
+	};
+
+	auto input = Tr2ShaderSignatureAL()
+		.Add( Tr2ShaderRegisterAL::RESOURCE, 0 )
+		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
+
+	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
+}
+
+ALResult CreatePositionOnlyWithPerObjectDataVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( PositionOnlyWithPerObjectData.vs )
+	};
+
+	auto input = Tr2ShaderSignatureAL()
+		.Add( Tr2VertexDefinition::TEXCOORD, 0, 0 )
+		.Add( Tr2VertexDefinition::POSITION, 0, 1 )
+		.Add( Tr2ShaderRegisterAL::CONSTANTS, 0 );
+
+	return shader.Create( VERTEX_SHADER, bytecode, input, renderContext );
+}
+
+ALResult CreateInstancedRenderingVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( InstancedRendering.vs )
+	};
+
+	auto input = Tr2ShaderSignatureAL()
+		.Add( Tr2VertexDefinition::POSITION, 0, 0 )
+		.Add( Tr2VertexDefinition::POSITION, 8, 1 );
+
+	return shader.Create( VERTEX_SHADER, bytecode, input, renderContext );
+}
+
+ALResult CreateOutputTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( OutputTexCoord.ps )
+	};
+
+	return shader.Create( PIXEL_SHADER, bytecode, Tr2ShaderSignatureAL(), renderContext );
+}
+
+ALResult CreateSampleTextureMipFromTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( SampleTextureMipFromTexCoord.ps )
+	};
+
+	auto input = Tr2ShaderSignatureAL()
+		.Add( Tr2ShaderRegisterAL::CONSTANTS, 0 )
+		.Add( Tr2ShaderRegisterAL::RESOURCE, 0 )
+		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
+
+	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
+}
+
+ALResult CreateSampleVolumeTexturePS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( SampleVolumeTexture.ps )
+	};
+
+	auto input = Tr2ShaderSignatureAL()
+		.Add( Tr2ShaderRegisterAL::CONSTANTS, 0 )
+		.Add( Tr2ShaderRegisterAL::RESOURCE, 0 )
+		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
+
+	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
+}
+
+#if TR2_SUPPORTS_UNORDERED_ACCESS
+
+ALResult CreateWriteToUavPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( WriteToUav.ps )
+	};
+
+	auto input = Tr2ShaderSignatureAL()
+		.Add( Tr2ShaderRegisterAL::UAV, 1 );
+
+	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
+}
+
+#endif
 
 }
 
@@ -29,50 +158,15 @@ TEST_F( Rendering, CanClearBackBuffer )
 	RunLoop( frame );
 }
 
-TEST_F( Rendering, CanBeginAndEndScene )
-{
-	ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
-}
-
 TEST_F( Rendering, CanRenderASingleTriangle )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnly.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -117,42 +211,13 @@ TEST_F( Rendering, CanRenderASingleTriangle )
 
 TEST_F( Rendering, CanRenderTriangleStrip )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnly.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -198,42 +263,13 @@ TEST_F( Rendering, CanRenderTriangleStrip )
 
 TEST_F( Rendering, CanRenderIndexedTriangles )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnly.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -294,41 +330,17 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 #include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
 	};
 
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
+	auto vsInput = Tr2ShaderSignatureAL()
+		.Add( Tr2VertexDefinition::TEXCOORD, 0, 0 )
+		.Add( Tr2VertexDefinition::POSITION, 0, 1 );
 
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( OutputTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( vs.Create( VERTEX_SHADER, vsBytecode, vsInput, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -374,45 +386,13 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 
 TEST_F( Rendering, CanSampleTexture )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -459,11 +439,11 @@ TEST_F( Rendering, CanSampleTexture )
 	uint32_t g = 127;
 
 	Tr2ResourceSetDescriptionAL resourceSetDescription;
-	resourceSetDescription.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	resourceSetDescription.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	resourceSetDescription.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	resourceSetDescription.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( resourceSetDescription, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( resourceSetDescription, sp, *renderContext ) );
 
 	auto frame = [&] {
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
@@ -492,45 +472,13 @@ TEST_F( Rendering, CanSampleTexture )
 
 TEST_F( Rendering, CanSampleMipMappedTexture )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -592,11 +540,11 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 			*renderContext ) );
 
 		Tr2ResourceSetDescriptionAL desc;
-		desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-		desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+		desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+		desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 		Tr2ResourceSetAL resourceSet;
-		ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+		ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
@@ -624,42 +572,13 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 
 TEST_F( Rendering, CanPassConstantBufferToRendering )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnlyWithPerObjectData.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyWithPerObjectDataVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -716,45 +635,13 @@ TEST_F( Rendering, CanPassConstantBufferToRendering )
 
 TEST_F( Rendering, CanDoInstancedRendering )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( InstancedRendering.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 8;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateInstancedRenderingVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -816,45 +703,13 @@ TEST_F( Rendering, CanDoInstancedRendering )
 
 TEST_F( Rendering, CanClearRenderTarget )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -892,11 +747,11 @@ TEST_F( Rendering, CanClearRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 
 	uint32_t g = 127;
@@ -936,63 +791,20 @@ TEST_F( Rendering, CanClearRenderTarget )
 
 TEST_F( Rendering, CanRenderToRenderTarget )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
-	uint32_t psFillBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
-
 	Tr2ShaderAL psFill;
-	ASSERT_HRESULT_SUCCEEDED( psFill.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psFillBytecode,
-		sizeof( psFillBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( psFill, *renderContext ) );
 
-	Tr2ShaderAL* shadersFill[] = { &vs, &psFill };
+	Tr2ShaderAL shadersFill[] = { vs, psFill };
 	Tr2ShaderProgramAL spFill;
 	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
@@ -1031,11 +843,11 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -1084,63 +896,20 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 
 TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
-	uint32_t psFillBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
-
 	Tr2ShaderAL psFill;
-	ASSERT_HRESULT_SUCCEEDED( psFill.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psFillBytecode,
-		sizeof( psFillBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( psFill, *renderContext ) );
 
-	Tr2ShaderAL* shadersFill[] = { &vs, &psFill };
+	Tr2ShaderAL shadersFill[] = { vs, psFill };
 	Tr2ShaderProgramAL spFill;
 	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
@@ -1182,11 +951,11 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, readableRt );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, readableRt );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -1238,42 +1007,13 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 
 TEST_F( Rendering, CanClearDepthBuffer )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnly.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -1328,45 +1068,13 @@ TEST_F( Rendering, CanClearDepthBuffer )
 
 TEST_F( Rendering, CanRenderIntoDepthBuffer )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( OutputTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateOutputTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -1424,44 +1132,136 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
-TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
+TEST_F( Rendering, CanSampleDepthBuffer )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnly.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateOutputTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL ps2;
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps2, *renderContext ) );
+
+	Tr2ShaderAL shaders[] = { vs, ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
+	Tr2ShaderAL shaders2[] = { vs, ps2 };
+	Tr2ShaderProgramAL sp2;
+	ASSERT_HRESULT_SUCCEEDED( sp2.Create( shaders2, 2, *renderContext ) );
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+		0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
+
+		0.5f, -0.5f, 0.5f, 1.0f, 1.0f,
+		0.5f, 0.5f, 0.5f, 1.0f, 1.0f,
+		-0.5f, -0.5f, 0.5f, 1.0f, 1.0f,
+	};
+	const uint32_t vbStride = 5 * sizeof( float );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
+
+	float quad[] = {
+		0, 0, 0, 0, 1,
+		0, 1, 0, 0, 0,
+		1, 0, 0, 1, 1,
+
+		1, 0, 0, 1, 1,
+		0, 1, 0, 0, 0,
+		1, 1, 0, 1, 0,
+	};
+	Tr2BufferAL quadVb;
+	ASSERT_HRESULT_SUCCEEDED( quadVb.Create( vbStride, sizeof( quad ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, quad, *renderContext ) );
+
+	Tr2SamplerStateAL sampl;
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
+			Tr2RenderContextEnum::TF_POINT,
+			Tr2RenderContextEnum::TA_WRAP,
+			1,
+			0.0f,
+			0.0f ),
+		*renderContext ) );
+
+	Tr2VertexDefinition definition;
+	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+	definition.Add( Tr2VertexDefinition::FLOAT32_2, Tr2VertexDefinition::TEXCOORD );
+
+	Tr2VertexLayoutAL vertexLayout;
+	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
+
+	auto backBuffer = renderContext->GetDefaultBackBuffer();
+
+	Tr2TextureAL depthBuffer;
+	ASSERT_HRESULT_SUCCEEDED( depthBuffer.Create( 
+		Tr2BitmapDimensions( backBuffer.GetWidth(), backBuffer.GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_D24_UNORM_S8_UINT ), 
+		Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, 
+		*renderContext ) );
+
+	Tr2ResourceSetDescriptionAL resourceSetDescription;
+	resourceSetDescription.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, depthBuffer );
+	resourceSetDescription.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+
+	Tr2ResourceSetAL resourceSet;
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( resourceSetDescription, sp2, *renderContext ) );
+
+
+	uint32_t g = 127;
+
+	auto frame = [&] {
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( depthBuffer ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET | Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER, 0xff000000 | ( g & 0xff ), 1.0f ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 1 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZWRITEENABLE, 1 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZFUNC, Tr2RenderContextEnum::CMP_LESSEQUAL ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
+
+		renderContext->SetReadOnlyDepth( true );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZWRITEENABLE, 0 ) );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, quadVb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp2 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
+
+		renderContext->SetReadOnlyDepth( false );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+	};
+
+	RunLoop( frame );
+
+	renderContext->SetReadOnlyDepth( false );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+}
+
+TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
+{
+	Tr2ShaderAL vs;
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
+
+	Tr2ShaderAL ps;
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
+
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -1502,42 +1302,13 @@ TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
 
 TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnly.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -1581,42 +1352,13 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
 
 TEST_F( Rendering, CanRenderIndexedTrianglesWith32BitDrawIndexedPrimitiveUP )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnly.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -1658,133 +1400,15 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith32BitDrawIndexedPrimitiveUP )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetIndices( Tr2BufferAL() ) );
 }
 
-TEST_F( Rendering, CanUseClippingPlaneAndScissor )
-{
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnly.vs )
-	};
-
-	uint32_t vsBytecodePatched[] = {
-#include INCLUDE_SHADER_CODE( PositionOnly.vs.patched )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
-	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		vsBytecodePatched,
-		sizeof( vsBytecodePatched ),
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
-
-	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
-
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
-	Tr2ShaderProgramAL sp;
-	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
-
-	float vertices[] = {
-		-0.5f, -0.5f, 0.0f,
-		-0.5f, 0.5f, 0.0f,
-		0.5f, -0.5f, 0.0f,
-	};
-
-	Tr2VertexDefinition definition;
-	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
-
-	Tr2VertexLayoutAL vertexLayout;
-	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
-
-	uint32_t g = 127;
-
-	float clipPlane[] = { 0, 1, 0, 0 };
-
-	auto frame = [&] {
-		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff00ff00 | ( g & 0xff ), 1.0f ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetClipPlane( 0, clipPlane ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CLIPPLANEENABLE, 1 ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_SCISSORTESTENABLE, 1 ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetScissorRect( 0, 0, presentParameters.mode.width / 2, presentParameters.mode.height ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitiveUP( 1, vertices, sizeof( float ) * 3 ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_SCISSORTESTENABLE, 0 ) );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
-		MakeTestScreenShot();
-		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
-		g++;
-	};
-
-	RunLoop( frame );
-
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetScissorRect( 0, 0, presentParameters.mode.width, presentParameters.mode.height ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_SCISSORTESTENABLE, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CLIPPLANEENABLE, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
-}
-
 TEST_F( Rendering, CanUseOcclusionQueries )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnlyWithPerObjectData.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyWithPerObjectDataVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -1907,42 +1531,13 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 
 TEST_F( Rendering, CanUseViewport )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnly.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -2002,25 +1597,17 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 #include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs.patched )
 	};
 
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
+	auto vsInput = Tr2ShaderSignatureAL()
+		.Add( Tr2VertexDefinition::TEXCOORD, 0, 0 )
+		.Add( Tr2VertexDefinition::POSITION, 0, 1 );
 
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
+		VERTEX_SHADER,
 		vsBytecode,
-		sizeof( vsBytecode ),
 		vsBytecodePatched,
-		sizeof( vsBytecodePatched ),
-		vsInput ) );
+		vsInput,
+		*renderContext ) );
 
 	uint32_t psBytecode[] = {
 #include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
@@ -2032,15 +1619,13 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 
 	Tr2ShaderAL ps;
 	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
+		PIXEL_SHADER,
 		psBytecode,
-		sizeof( psBytecode ),
 		psBytecodePatched,
-		sizeof( psBytecodePatched ),
-		Tr2ShaderInputDefinition() ) );
+		Tr2ShaderSignatureAL().Add( Tr2ShaderRegisterAL::RESOURCE, 0 ).Add( Tr2ShaderRegisterAL::SAMPLER, 0 ),
+		*renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -2085,11 +1670,11 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 		*renderContext ) );
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2131,25 +1716,17 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 #include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs.patched )
 	};
 
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
+	auto vsInput = Tr2ShaderSignatureAL()
+		.Add( Tr2VertexDefinition::TEXCOORD, 0, 0 )
+		.Add( Tr2VertexDefinition::POSITION, 0, 1 );
 
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
+	ASSERT_HRESULT_SUCCEEDED( vs.Create(
+		VERTEX_SHADER,
 		vsBytecode,
-		sizeof( vsBytecode ),
 		vsBytecodePatched,
-		sizeof( vsBytecodePatched ),
-		vsInput ) );
+		vsInput,
+		*renderContext ) );
 
 	uint32_t psBytecode[] = {
 #include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
@@ -2161,15 +1738,13 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 
 	Tr2ShaderAL ps;
 	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
+		PIXEL_SHADER,
 		psBytecode,
-		sizeof( psBytecode ),
 		psBytecodePatched,
-		sizeof( psBytecodePatched ),
-		Tr2ShaderInputDefinition() ) );
+		Tr2ShaderSignatureAL().Add( Tr2ShaderRegisterAL::RESOURCE, 0 ).Add( Tr2ShaderRegisterAL::SAMPLER, 0 ),
+		*renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -2214,11 +1789,11 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 		*renderContext ) );
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2260,25 +1835,17 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 #include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs.patched )
 	};
 
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
+	auto vsInput = Tr2ShaderSignatureAL()
+		.Add( Tr2VertexDefinition::TEXCOORD, 0, 0 )
+		.Add( Tr2VertexDefinition::POSITION, 0, 1 );
 
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
+	ASSERT_HRESULT_SUCCEEDED( vs.Create(
+		VERTEX_SHADER,
 		vsBytecode,
-		sizeof( vsBytecode ),
 		vsBytecodePatched,
-		sizeof( vsBytecodePatched ),
-		vsInput ) );
+		vsInput,
+		*renderContext ) );
 
 	uint32_t psBytecode[] = {
 #include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
@@ -2289,16 +1856,14 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 	};
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
+	ASSERT_HRESULT_SUCCEEDED( ps.Create(
+		PIXEL_SHADER,
 		psBytecode,
-		sizeof( psBytecode ),
 		psBytecodePatched,
-		sizeof( psBytecodePatched ),
-		Tr2ShaderInputDefinition() ) );
+		Tr2ShaderSignatureAL().Add( Tr2ShaderRegisterAL::RESOURCE, 0 ).Add( Tr2ShaderRegisterAL::SAMPLER, 0 ),
+		*renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -2344,11 +1909,11 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2382,53 +1947,13 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 
 TEST_F( Rendering, CanPerformAlphaBlend )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	uint32_t vsBytecodePatched[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs.patched )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		vsBytecodePatched,
-		sizeof( vsBytecodePatched ),
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
-
-	uint32_t psBytecodePatched[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps.patched )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		psBytecodePatched,
-		sizeof( psBytecodePatched ),
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -2493,11 +2018,11 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2530,66 +2055,23 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 
 TEST_F( Rendering, CanGenerateRenderTargetMips )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureMipFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureMipFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
-
-	uint32_t psFillBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
 
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 	Tr2ShaderAL psFill;
-	ASSERT_HRESULT_SUCCEEDED( psFill.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psFillBytecode,
-		sizeof( psFillBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( psFill, *renderContext ) );
 
-	Tr2ShaderAL* shadersFill[] = { &vs, &psFill };
+	Tr2ShaderAL shadersFill[] = { vs, psFill };
 	Tr2ShaderProgramAL spFill;
 	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
@@ -2652,11 +2134,11 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampler );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampler );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2715,63 +2197,20 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 
 TEST_F( Rendering, CanCopyRenderTargetRegion )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
-	uint32_t psFillBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
-
 	Tr2ShaderAL psFill;
-	ASSERT_HRESULT_SUCCEEDED( psFill.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psFillBytecode,
-		sizeof( psFillBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( psFill, *renderContext ) );
 
-	Tr2ShaderAL* shadersFill[] = { &vs, &psFill };
+	Tr2ShaderAL shadersFill[] = { vs, psFill };
 	Tr2ShaderProgramAL spFill;
 	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
 
@@ -2813,11 +2252,11 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt2 );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt2 );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2876,45 +2315,13 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 
 TEST_F( Rendering, CanSampleBc1Texture )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -2961,11 +2368,11 @@ TEST_F( Rendering, CanSampleBc1Texture )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -2997,42 +2404,13 @@ TEST_F( Rendering, CanSampleBc1Texture )
 
 TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( PositionOnlyWithPerObjectData.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 1 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( ConstantColor.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyWithPerObjectDataVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -3089,45 +2467,13 @@ TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 
 TEST_F( Rendering, CanSampleBc2Texture )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -3174,11 +2520,11 @@ TEST_F( Rendering, CanSampleBc2Texture )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3211,45 +2557,13 @@ TEST_F( Rendering, CanSampleBc2Texture )
 
 TEST_F( Rendering, CanSampleBc3Texture )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -3296,11 +2610,11 @@ TEST_F( Rendering, CanSampleBc3Texture )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3333,45 +2647,13 @@ TEST_F( Rendering, CanSampleBc3Texture )
 
 TEST_F( Rendering, CanSampleVolumeTexture )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleVolumeTexture.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleVolumeTexturePS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -3419,11 +2701,11 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3467,45 +2749,13 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 
 TEST_F( Rendering, CanSampleBc3VolumeTexture )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleVolumeTexture.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleVolumeTexturePS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -3553,11 +2803,11 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3601,45 +2851,13 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 
 TEST_F( Rendering, CanSampleUnassignedTexture )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -3689,45 +2907,13 @@ TEST_F( Rendering, CanSampleUnassignedTexture )
 
 TEST_F( Rendering, CanLockTextureTwice )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -3783,11 +2969,11 @@ TEST_F( Rendering, CanLockTextureTwice )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3834,45 +3020,13 @@ TEST_F( Rendering, CanLockTextureTwice )
 
 TEST_F( Rendering, CanSampleSrgbTexture )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -3919,11 +3073,11 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex, Tr2RenderContextEnum::COLOR_SPACE_SRGB );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex, Tr2RenderContextEnum::COLOR_SPACE_SRGB );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -3953,45 +3107,13 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 
 TEST_F( Rendering, CanOutputToSrgbTarget )
 {
-	uint32_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( TexCoordAndPosition.vs )
-	};
-
-	Tr2ShaderInputDefinition vsInput;
-	vsInput.elements.resize( 2 );
-	vsInput.elements[0].usage = Tr2VertexDefinition::TEXCOORD;
-	vsInput.elements[0].usageIndex = 0;
-	vsInput.elements[0].registerIndex = 0;
-	vsInput.elements[1].usage = Tr2VertexDefinition::POSITION;
-	vsInput.elements[1].usageIndex = 0;
-	vsInput.elements[1].registerIndex = 1;
-	vsInput.ComputeHash();
-
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
-		*renderContext, 
-		Tr2RenderContextEnum::VERTEX_SHADER,
-		vsBytecode,
-		sizeof( vsBytecode ),
-		nullptr,
-		0,
-		vsInput ) );
-
-	uint32_t psBytecode[] = {
-#include INCLUDE_SHADER_CODE( SampleTextureFromTexCoord.ps )
-	};
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( ps.Create( 
-		*renderContext,  
-		Tr2RenderContextEnum::PIXEL_SHADER,
-		psBytecode,
-		sizeof( psBytecode ),
-		nullptr,
-		0,
-		Tr2ShaderInputDefinition() ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps, *renderContext ) );
 
-	Tr2ShaderAL* shaders[] = { &vs, &ps };
+	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
@@ -4038,11 +3160,11 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 
 
 	Tr2ResourceSetDescriptionAL desc;
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex, Tr2RenderContextEnum::COLOR_SPACE_SRGB );
-	desc.Set( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex, Tr2RenderContextEnum::COLOR_SPACE_SRGB );
+	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
 	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
 
 	uint32_t g = 127;
 
@@ -4071,3 +3193,381 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
+
+#if TR2_SUPPORTS_UNORDERED_ACCESS
+
+TEST_F( Rendering, CanUsePsUavs )
+{
+	Tr2ShaderAL vs;
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
+
+	Tr2ShaderAL ps;
+	ASSERT_HRESULT_SUCCEEDED( CreateWriteToUavPS( ps, *renderContext ) );
+
+	Tr2ShaderAL shaders[] = { vs, ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
+	};
+	const uint32_t vbStride = 5 * sizeof( float );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
+
+	Tr2VertexDefinition definition;
+	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+	definition.Add( Tr2VertexDefinition::FLOAT32_2, Tr2VertexDefinition::TEXCOORD );
+
+	Tr2VertexLayoutAL vertexLayout;
+	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
+
+	Tr2TextureAL rwTexture;
+	ASSERT_HRESULT_SUCCEEDED( rwTexture.Create( Tr2BitmapDimensions( 64, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, *renderContext ) );
+
+	Tr2ResourceSetAL uavResourceSet;
+	{
+		Tr2ResourceSetDescriptionAL resourceSetDescription;
+		resourceSetDescription.SetUav( Tr2RenderContextEnum::PIXEL_SHADER, 1, rwTexture );
+		ASSERT_HRESULT_SUCCEEDED( uavResourceSet.Create( resourceSetDescription, sp, *renderContext ) );
+	}
+
+
+	float quad[] = {
+		0, 0, 0, 0, 1,
+		0, 1, 0, 0, 0,
+		1, 0, 0, 1, 1,
+
+		1, 0, 0, 1, 1,
+		0, 1, 0, 0, 0,
+		1, 1, 0, 1, 0,
+	};
+	Tr2BufferAL quadVb;
+	ASSERT_HRESULT_SUCCEEDED( quadVb.Create( vbStride, sizeof( quad ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, quad, *renderContext ) );
+
+	Tr2SamplerStateAL sampl;
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
+			Tr2RenderContextEnum::TF_POINT,
+			Tr2RenderContextEnum::TA_WRAP,
+			1,
+			0.0f,
+			0.0f ),
+		*renderContext ) );
+
+
+	Tr2ShaderAL ps2;
+	ASSERT_HRESULT_SUCCEEDED( CreateSampleTextureFromTexCoordPS( ps2, *renderContext ) );
+
+	Tr2ShaderAL shaders2[] = { vs, ps2 };
+	Tr2ShaderProgramAL sp2;
+	ASSERT_HRESULT_SUCCEEDED( sp2.Create( shaders2, 2, *renderContext ) );
+
+
+	Tr2ResourceSetDescriptionAL resourceSetDescription;
+	resourceSetDescription.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rwTexture );
+	resourceSetDescription.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
+
+	Tr2ResourceSetAL resourceSet;
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( resourceSetDescription, sp2, *renderContext ) );
+
+
+	uint32_t g = 127;
+
+	auto frame = [&] {
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
+
+		float clearColor[] = { 0, float( g & 0xff ) / 255.f, 0, 0 };
+		ASSERT_HRESULT_SUCCEEDED( renderContext->ClearUav( rwTexture, 0, clearColor ) );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( uavResourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 1 ) );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, quadVb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp2 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+	};
+
+	RunLoop( frame );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+
+}
+
+
+TEST_F( Rendering, CanDrawIndirect )
+{
+	Tr2ShaderAL vs;
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
+
+	Tr2ShaderAL ps;
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
+
+	Tr2ShaderAL shaders[] = { vs, ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f,
+		-0.5f, 0.5f, 0.0f,
+		0.5f, -0.5f, 0.0f,
+	};
+	const uint32_t vbStride = 3 * sizeof( float );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
+
+	Tr2VertexDefinition definition;
+	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+
+	Tr2VertexLayoutAL vertexLayout;
+	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
+
+	struct 
+	{
+		uint32_t vertexCountPerInstance;
+		uint32_t instanceCount;
+		uint32_t startVertexLocation;
+		uint32_t startInstanceLocation;
+	} indirectArgs = { 3, 1, 0, 0 };
+
+	Tr2BufferAL indirectArgsBuffer;
+	ASSERT_HRESULT_SUCCEEDED( indirectArgsBuffer.Create( Tr2BufferDescriptionAL( PIXEL_FORMAT_R32_UINT, sizeof( indirectArgs ) / 4, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::DRAW_INDIRECT_ARGS, Tr2CpuUsage::NONE ), &indirectArgs, *renderContext ) );
+
+	uint32_t g = 127;
+
+	auto frame = [&] {
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawInstancedIndirect( indirectArgsBuffer, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+	};
+
+	RunLoop( frame );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+}
+
+#endif
+
+
+TEST_F( Rendering, CanWriteToVB )
+{
+	Tr2ShaderAL vs;
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
+
+	Tr2ShaderAL ps;
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
+
+	Tr2ShaderAL shaders[] = { vs, ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f,
+		-0.5f, 0.5f, 0.0f,
+		0.5f, -0.5f, 0.0f,
+	};
+	const uint32_t vbStride = 3 * sizeof( float );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE, vertices, *renderContext ) );
+
+	Tr2VertexDefinition definition;
+	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+
+	Tr2VertexLayoutAL vertexLayout;
+	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
+
+	uint32_t g = 127;
+
+	auto frame = [&] {
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+
+		void* vbData;
+		ASSERT_HRESULT_SUCCEEDED( vb.MapForWriting( vbData, *renderContext ) );
+		vertices[3] = -0.5f + float( g & 0xff ) / 255;
+		memcpy( vbData, vertices, sizeof( vertices ) );
+		vb.UnmapForWriting( *renderContext );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 1 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+	};
+
+	RunLoop( frame );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+}
+
+TEST_F( Rendering, CanWriteToDynamicVB )
+{
+	Tr2ShaderAL vs;
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
+
+	Tr2ShaderAL ps;
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
+
+	Tr2ShaderAL shaders[] = { vs, ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f,
+		-0.5f, 0.5f, 0.0f,
+		0.5f, -0.5f, 0.0f,
+	};
+	const uint32_t vbStride = 3 * sizeof( float );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE_OFTEN, vertices, *renderContext ) );
+
+	Tr2VertexDefinition definition;
+	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+
+	Tr2VertexLayoutAL vertexLayout;
+	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
+
+	uint32_t g = 127;
+
+	auto frame = [&] {
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+
+		void* vbData;
+		ASSERT_HRESULT_SUCCEEDED( vb.MapForWriting( vbData, *renderContext ) );
+		vertices[3] = -0.5f + float( g & 0xff ) / 255;
+		memcpy( vbData, vertices, sizeof( vertices ) );
+		vb.UnmapForWriting( *renderContext );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 1 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+	};
+
+	RunLoop( frame );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+}
+
+TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
+{
+	Tr2ShaderAL vs;
+	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
+
+	Tr2ShaderAL ps;
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
+
+	Tr2ShaderAL shaders[] = { vs, ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f,
+		-0.5f, 0.5f, 0.0f,
+		0.5f, -0.5f, 0.0f,
+	};
+
+	const uint32_t vbStride = 3 * sizeof( float );
+	Tr2BufferAL vb;
+
+	uint32_t capacity = 30;
+
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride * capacity, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE_OFTEN, nullptr, *renderContext ) );
+
+	Tr2VertexDefinition definition;
+	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+
+	Tr2VertexLayoutAL vertexLayout;
+	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
+
+	uint32_t g = 127;
+
+	uint32_t offset = 0;
+
+	auto frame = [&] {
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+
+		offset += uint32_t( sizeof( vertices ) );
+		if( offset >= vb.GetSize() )
+		{
+			offset = 0;
+		}
+
+		void* vbData;
+		if( g % 5 == 0 )
+		{
+			// just to make it harder
+			ASSERT_HRESULT_SUCCEEDED( vb.MapForWriting( vbData, Tr2LockType::SYNCHRONIZED, *renderContext ) );
+		}
+		else
+		{
+			ASSERT_HRESULT_SUCCEEDED( vb.MapForWriting( vbData, Tr2LockType::NON_SYNCHRONIZED, *renderContext ) );
+		}
+		vertices[3] = -0.5f + float( g & 0xff ) / 255;
+		memcpy( static_cast<uint8_t*>( vbData ) + offset, vertices, sizeof( vertices ) );
+		vb.UnmapForWriting( *renderContext );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, offset, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 1 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+	};
+
+	RunLoop( frame );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+}
+

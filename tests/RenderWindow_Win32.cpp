@@ -58,4 +58,14 @@ uint32_t RenderWindow::GetClientHeight() const
 	::GetClientRect( m_handle, &rect );
 	return rect.bottom - rect.top;
 }
+
+bool RenderWindow::Resize( uint32_t width, uint32_t height )
+{
+	DWORD style = WS_OVERLAPPEDWINDOW;
+	RECT rect = { 0, 0, (LONG)width, (LONG)height };
+	::AdjustWindowRect( &rect, style, FALSE );
+	::SetWindowPos( m_handle, HWND_BOTTOM, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
+	return true;
+}
+
 #endif

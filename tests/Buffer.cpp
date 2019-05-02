@@ -76,11 +76,17 @@ TEST_F( Buffer, UpdatingInvalidBufferFails )
 TEST_F( Buffer, CanLockReadableBufferForReading )
 {
 	Tr2BufferAL buffer;
-	float data[4] = { 0 };
+	float data[4] = { 1, 2, 3, 4 };
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::READ, data, *renderContext ) );
 
 	const float* locked;
 	ASSERT_HRESULT_SUCCEEDED( buffer.MapForReading( locked, *renderContext ) );
+#if TRINITY_PLATFORM != TRINITY_STUB
+	EXPECT_EQ( 1, locked[0] );
+	EXPECT_EQ( 2, locked[1] );
+	EXPECT_EQ( 3, locked[2] );
+	EXPECT_EQ( 4, locked[3] );
+#endif
 	buffer.UnmapForReading( *renderContext );
 }
 
@@ -189,6 +195,18 @@ TEST_F( Buffer, CanCreateWritableShaderResourceBuffer )
 {
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 4, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::NONE, nullptr, *renderContext ) );
+}
+
+TEST_F( Buffer, CanCreateAppendConsumeBuffer )
+{
+	Tr2BufferAL buffer;
+	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 4, 4, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::APPEND_CONSUME, Tr2CpuUsage::NONE, nullptr, *renderContext ) );
+}
+
+TEST_F( Buffer, CanCreateBufferWithCounter )
+{
+	Tr2BufferAL buffer;
+	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 4, 4, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::BUFFER_COUNTER, Tr2CpuUsage::NONE, nullptr, *renderContext ) );
 }
 
 #endif

@@ -4,7 +4,12 @@
 
 using namespace Tr2RenderContextEnum;
 
-TEST_F( WithValidRenderContext, RenderTargetIsInvalidBeforeCreation )
+struct RenderTarget : public WithValidRenderContext
+{
+};
+
+
+TEST_F( RenderTarget, RenderTargetIsInvalidBeforeCreation )
 {
 	Tr2TextureAL rt;
 	EXPECT_FALSE( rt.IsValid() );
@@ -17,7 +22,7 @@ TEST_F( WithRenderContext, CreatingRenderTargetWithoutRenderContextFails )
 	EXPECT_FALSE( rt.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, RenderTargetIsValidAfterCreation )
+TEST_F( RenderTarget, RenderTargetIsValidAfterCreation )
 {
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
@@ -30,7 +35,7 @@ TEST_F( WithValidRenderContext, RenderTargetIsValidAfterCreation )
 	EXPECT_EQ( 0, rt.GetMsaaDesc().quality );
 }
 
-TEST_F( WithValidRenderContext, CanCreateMipMappedRenderTarget )
+TEST_F( RenderTarget, CanCreateMipMappedRenderTarget )
 {
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
@@ -44,7 +49,7 @@ TEST_F( WithValidRenderContext, CanCreateMipMappedRenderTarget )
 	EXPECT_EQ( 0, rt.GetMsaaDesc().quality );
 }
 
-TEST_F( WithValidRenderContext, CanCreateMsaaRenderTarget )
+TEST_F( RenderTarget, CanCreateMsaaRenderTarget )
 {
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
@@ -57,7 +62,7 @@ TEST_F( WithValidRenderContext, CanCreateMsaaRenderTarget )
 	EXPECT_EQ( 0, rt.GetMsaaDesc().quality );
 }
 
-TEST_F( WithValidRenderContext, CanResolveMsaaRenderTarget )
+TEST_F( RenderTarget, CanResolveMsaaRenderTarget )
 {
 	Tr2TextureAL rtMsaa;
 	ASSERT_HRESULT_SUCCEEDED( rtMsaa.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
@@ -70,14 +75,14 @@ TEST_F( WithValidRenderContext, CanResolveMsaaRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 }
 
-TEST_F( WithValidRenderContext, RenderTargetEqualsItself )
+TEST_F( RenderTarget, RenderTargetEqualsItself )
 {
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 	EXPECT_TRUE( rt == rt );
 }
 
-TEST_F( WithValidRenderContext, DifferentRenderTargetsAreNotEqual )
+TEST_F( RenderTarget, DifferentRenderTargetsAreNotEqual )
 {
 	Tr2TextureAL rt1;
 	ASSERT_HRESULT_SUCCEEDED( rt1.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
@@ -86,7 +91,7 @@ TEST_F( WithValidRenderContext, DifferentRenderTargetsAreNotEqual )
 	EXPECT_FALSE( rt1 == rt2 );
 }
 
-TEST_F( WithValidRenderContext, RenderTargetHasMemoryClass )
+TEST_F( RenderTarget, RenderTargetHasMemoryClass )
 {
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
@@ -94,7 +99,7 @@ TEST_F( WithValidRenderContext, RenderTargetHasMemoryClass )
 	EXPECT_TRUE( memoryClass == AL_MEMORY_VIDEO || memoryClass == AL_MEMORY_MANAGED );
 }
 
-TEST_F( WithValidRenderContext, CanLockRenderTarget )
+TEST_F( RenderTarget, CanLockRenderTarget )
 {
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ, *renderContext ) );
@@ -107,7 +112,7 @@ TEST_F( WithValidRenderContext, CanLockRenderTarget )
 	rt.UnmapForReading( *renderContext );
 }
 
-TEST_F( WithValidRenderContext, CanLockPartOfRenderTarget )
+TEST_F( RenderTarget, CanLockPartOfRenderTarget )
 {
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ, *renderContext ) );
@@ -121,7 +126,7 @@ TEST_F( WithValidRenderContext, CanLockPartOfRenderTarget )
 	rt.UnmapForReading( *renderContext );
 }
 
-TEST_F( WithValidRenderContext, CanLockRenderTargetMipLevel )
+TEST_F( RenderTarget, CanLockRenderTargetMipLevel )
 {
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ, *renderContext ) );
@@ -136,19 +141,19 @@ TEST_F( WithValidRenderContext, CanLockRenderTargetMipLevel )
 
 
 
-TEST_F( WithValidRenderContext, CannotCreateCpuReadableMsaaRenderTarget )
+TEST_F( RenderTarget, CannotCreateCpuReadableMsaaRenderTarget )
 {
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_FAILED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CannotCreateCpuWriteableRenderTarget )
+TEST_F( RenderTarget, CannotCreateCpuWriteableRenderTarget )
 {
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_FAILED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::WRITE, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CannotCreateReadable3DTexture )
+TEST_F( RenderTarget, CannotCreateReadable3DTexture )
 {
 	uint32_t pixels[4 * 4 * 4 * 4] = { 0 };
 	Tr2SubresourceData initialData;
@@ -160,7 +165,7 @@ TEST_F( WithValidRenderContext, CannotCreateReadable3DTexture )
 	ASSERT_HRESULT_FAILED( tex.Create( Tr2BitmapDimensions( TEX_TYPE_3D, PIXEL_FORMAT_B8G8R8A8_UNORM, 4, 4, 4, 1 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, &initialData, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CannotCreateWritable3DTexture )
+TEST_F( RenderTarget, CannotCreateWritable3DTexture )
 {
 	uint32_t pixels[4 * 4 * 4 * 4] = { 0 };
 	Tr2SubresourceData initialData;
@@ -172,19 +177,19 @@ TEST_F( WithValidRenderContext, CannotCreateWritable3DTexture )
 	ASSERT_HRESULT_FAILED( tex.Create( Tr2BitmapDimensions( TEX_TYPE_3D, PIXEL_FORMAT_B8G8R8A8_UNORM, 4, 4, 4, 1 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, &initialData, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CannotCreateCpuReadableDepthStencil )
+TEST_F( RenderTarget, CannotCreateCpuReadableDepthStencil )
 {
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_FAILED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, Tr2CpuUsage::READ, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CannotCreateCpuWritableDepthStencil )
+TEST_F( RenderTarget, CannotCreateCpuWritableDepthStencil )
 {
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_FAILED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, Tr2CpuUsage::WRITE, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CannotCreateDepthStencilWithMips )
+TEST_F( RenderTarget, CannotCreateDepthStencilWithMips )
 {
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_FAILED( ds.Create( Tr2BitmapDimensions( 128, 64, 2, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );

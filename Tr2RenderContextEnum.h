@@ -303,7 +303,6 @@ namespace Tr2RenderContextEnum
 		RS_BLENDOP                   = 171,   // D3DBLENDOP setting
 		RS_POSITIONDEGREE            = 172,   // NPatch position interpolation degree. D3DDEGREE_LINEAR or D3DDEGREE_CUBIC (default)
 		RS_NORMALDEGREE              = 173,   // NPatch normal interpolation degree. D3DDEGREE_LINEAR (default) or D3DDEGREE_QUADRATIC
-		RS_SCISSORTESTENABLE         = 174,
 		RS_SLOPESCALEDEPTHBIAS       = 175,
 		RS_ANTIALIASEDLINEENABLE     = 176,
 		RS_MINTESSELLATIONLEVEL      = 178,

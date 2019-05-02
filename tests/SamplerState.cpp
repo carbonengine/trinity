@@ -4,7 +4,12 @@
 
 using namespace Tr2RenderContextEnum;
 
-TEST_F( WithValidRenderContext, CanCreateSamplerState )
+struct SamplerState : public WithValidRenderContext
+{
+};
+
+
+TEST_F( SamplerState, CanCreateSamplerState )
 {
 	Tr2SamplerStateAL ss;
 	float borderColor[] = { 0.1f, 0.2f, 0.3f, 0.4f };
@@ -27,7 +32,7 @@ TEST_F( WithValidRenderContext, CanCreateSamplerState )
 	EXPECT_TRUE( ss.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, SamplerStateEqualsItself )
+TEST_F( SamplerState, SamplerStateEqualsItself )
 {
 	Tr2SamplerStateAL ss;
 	float borderColor[] = { 0.1f, 0.2f, 0.3f, 0.4f };
@@ -50,7 +55,7 @@ TEST_F( WithValidRenderContext, SamplerStateEqualsItself )
 	EXPECT_TRUE( ss == ss );
 }
 
-TEST_F( WithValidRenderContext, DifferentSamplerStatesAreNotEqual )
+TEST_F( SamplerState, DifferentSamplerStatesAreNotEqual )
 {
 	float borderColor[] = { 0.1f, 0.2f, 0.3f, 0.4f };
 	Tr2SamplerDescription desc1(
@@ -90,7 +95,7 @@ TEST_F( WithValidRenderContext, DifferentSamplerStatesAreNotEqual )
 	EXPECT_FALSE( ss1 == ss2 );
 }
 
-TEST_F( WithValidRenderContext, SamplerStateHasMemoryClass )
+TEST_F( SamplerState, SamplerStateHasMemoryClass )
 {
 	Tr2SamplerStateAL ss;
 	float borderColor[] = { 0.1f, 0.2f, 0.3f, 0.4f };

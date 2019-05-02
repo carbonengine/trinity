@@ -72,11 +72,6 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& ) throw( )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetUav( Tr2RenderContextEnum::ShaderType, uint32_t, const Tr2BufferAL&, uint32_t ) throw( )
-{
-	return E_FAIL;
-}
-
 ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL&, const float[4] ) throw( )
 {
 	return E_FAIL;
@@ -180,14 +175,6 @@ ALResult Tr2RenderContextAL::SetConstants(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetSamplerState( 
-	const Tr2SamplerStateAL& samplerState, 
-	ShaderType /*inputType*/, 
-	uint32_t registerNumber )
-{
-	return S_OK;
-}
-
 void Tr2RenderContextAL::SetReadOnlyDepth( bool /*enable*/ ) 
 {
 }
@@ -284,20 +271,6 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, u
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetClipPlane( uint32_t planeIndex, const float* planeEq )
-{
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetScissorRect(	
-	uint32_t left, 
-	uint32_t top, 
-	uint32_t right, 
-	uint32_t bottom )
-{
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
 {
 	return S_OK;
@@ -318,11 +291,6 @@ ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport )
 {
 	viewport = m_viewport;
 	return S_OK;
-}
-
-bool Tr2RenderContextAL::IsSupportedRenderTargetFormat( PixelFormat format, bool withAutoGenMipmap )
-{
-	return true;
 }
 
 long Tr2RenderContextAL::GetTotalVideoMemory()
