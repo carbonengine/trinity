@@ -4,7 +4,12 @@
 
 using namespace Tr2RenderContextEnum;
 
-TEST_F( WithValidRenderContext, DepthStencilIsInvalidBeforeCreation )
+struct DepthStencil : public WithValidRenderContext
+{
+};
+
+
+TEST_F( DepthStencil, DepthStencilIsInvalidBeforeCreation )
 {
 	Tr2TextureAL ds;
 	EXPECT_FALSE( ds.IsValid() );
@@ -17,7 +22,7 @@ TEST_F( WithRenderContext, CreatingDepthStencilWithoutRenderContextFails )
 	EXPECT_FALSE( ds.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, DepthStencilIsValidAfterCreation )
+TEST_F( DepthStencil, DepthStencilIsValidAfterCreation )
 {
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
@@ -29,7 +34,7 @@ TEST_F( WithValidRenderContext, DepthStencilIsValidAfterCreation )
 	EXPECT_EQ( 0, ds.GetMsaaDesc().quality );
 }
 
-TEST_F( WithValidRenderContext, MsaaDepthStencilIsValidAfterCreation )
+TEST_F( DepthStencil, MsaaDepthStencilIsValidAfterCreation )
 {
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
@@ -41,14 +46,14 @@ TEST_F( WithValidRenderContext, MsaaDepthStencilIsValidAfterCreation )
 	EXPECT_EQ( 0, ds.GetMsaaDesc().quality );
 }
 
-TEST_F( WithValidRenderContext, DepthStencilEqualsItself )
+TEST_F( DepthStencil, DepthStencilEqualsItself )
 {
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	EXPECT_TRUE( ds == ds );
 }
 
-TEST_F( WithValidRenderContext, DifferentDepthStencilsAreNotEqual )
+TEST_F( DepthStencil, DifferentDepthStencilsAreNotEqual )
 {
 	Tr2TextureAL ds1;
 	ASSERT_HRESULT_SUCCEEDED( ds1.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
@@ -57,7 +62,7 @@ TEST_F( WithValidRenderContext, DifferentDepthStencilsAreNotEqual )
 	EXPECT_FALSE( ds1 == ds2 );
 }
 
-TEST_F( WithValidRenderContext, CanCreateReadableDepthStencil )
+TEST_F( DepthStencil, CanCreateReadableDepthStencil )
 {
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
@@ -71,7 +76,7 @@ TEST_F( WithValidRenderContext, CanCreateReadableDepthStencil )
 	EXPECT_EQ( 1, ds.GetMipCount() );
 }
 
-TEST_F( WithValidRenderContext, DepthStencilHasMemoryClass )
+TEST_F( DepthStencil, DepthStencilHasMemoryClass )
 {
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );

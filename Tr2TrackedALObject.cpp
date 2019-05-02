@@ -12,6 +12,7 @@
 
 #include TRINITY_AL_PLATFORM_INCLUDE_INT( Tr2ResourceSetAL )
 #include TRINITY_AL_PLATFORM_INCLUDE_INT( Tr2BufferAL )
+#include TRINITY_AL_PLATFORM_INCLUDE_INT( Tr2ShaderAL )
 
 #if AL_TACK_RESOURCE_USAGE
 uint64_t g_trackCurrentFrame = 0;
@@ -262,10 +263,9 @@ bool Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER>::GetDes
 	{
 		REPORT_LAST_FRAME_USED;
 		description["type"] = object->GetType();
-		const void* bytecode;
-		unsigned size;
-		object->GetBytecode( bytecode, size );
-		description["size"] = size;
+		Tr2ShaderBytecodeAL bytecode;
+		object->GetBytecode( bytecode );
+		description["size"] = uint32_t( bytecode.size );
 		return true;
 	}
 	return false;

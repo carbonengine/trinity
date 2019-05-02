@@ -174,10 +174,6 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDCALL;
 		}
-		if( lockType == Tr2LockType::NON_SYNCHRONIZED )
-		{
-			return E_INVALIDARG;
-		}
 
 #ifdef TRINITY_AL_MOBILE
 		m_lockedData.resize( "Tr2BufferAL::MapForWriting", m_desc.count * m_desc.stride );

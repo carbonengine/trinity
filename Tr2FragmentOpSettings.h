@@ -53,8 +53,6 @@ struct Tr2FragmentOpSettings
 	// returns zero if not a state we care about, else returns a flag of what's dirty
 	uint32_t SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value, TAlphaTestParameters& alphaTestParameters );
 
-	uint32_t SetClipPlane( uint32_t planeIndex, const float* planeEq );
-
 	uint32_t SetNumberOfLights( uint32_t numLights );
 
 	void	UpdateContents( const TAlphaTestParameters& alphaTestParameters );

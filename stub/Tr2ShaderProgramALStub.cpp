@@ -12,7 +12,7 @@ Tr2ShaderProgramAL::Tr2ShaderProgramAL()
 {
 }
 
-ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext )
+ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext )
 {
 	Destroy();
 
@@ -29,11 +29,11 @@ ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2Pri
 	uint32_t mask = 0;
 	for( size_t i = 0; i < count; ++i )
 	{
-		if( !shaders[i]->IsValid() )
+		if( !shaders[i].IsValid() )
 		{
 			return E_INVALIDARG;
 		}
-		uint32_t bit = 1 << shaders[i]->GetType();
+		uint32_t bit = 1 << shaders[i].GetType();
 		if( ( mask & bit ) != 0 )
 		{
 			return E_INVALIDARG;

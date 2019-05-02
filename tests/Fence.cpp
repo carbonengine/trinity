@@ -4,7 +4,12 @@
 
 using namespace Tr2RenderContextEnum;
 
-TEST_F( WithValidRenderContext, FenceIsInvalidBeforeCreation )
+struct Fence : public WithValidRenderContext
+{
+};
+
+
+TEST_F( Fence, FenceIsInvalidBeforeCreation )
 {
 	Tr2FenceAL fence;
 	EXPECT_FALSE( fence.IsValid() );
@@ -17,14 +22,14 @@ TEST_F( WithRenderContext, CreatingFenceWithoutRenderContextFails )
 	EXPECT_FALSE( fence.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, FenceIsValidAfterCreation )
+TEST_F( Fence, FenceIsValidAfterCreation )
 {
 	Tr2FenceAL fence;
 	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
 	EXPECT_TRUE( fence.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, FenceIsInvalidAfterDestruction )
+TEST_F( Fence, FenceIsInvalidAfterDestruction )
 {
 	Tr2FenceAL fence;
 	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
@@ -33,7 +38,7 @@ TEST_F( WithValidRenderContext, FenceIsInvalidAfterDestruction )
 	EXPECT_FALSE( fence.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, UsingInvalidFenceFails )
+TEST_F( Fence, UsingInvalidFenceFails )
 {
 	Tr2FenceAL fence;
 
@@ -43,7 +48,7 @@ TEST_F( WithValidRenderContext, UsingInvalidFenceFails )
 	ASSERT_HRESULT_FAILED( fence.IsReached( reached, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CanUseFence )
+TEST_F( Fence, CanUseFence )
 {
 	Tr2FenceAL fence;
 	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
@@ -54,14 +59,14 @@ TEST_F( WithValidRenderContext, CanUseFence )
 	ASSERT_HRESULT_SUCCEEDED( fence.IsReached( reached, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, FenceEqualsItself )
+TEST_F( Fence, FenceEqualsItself )
 {
 	Tr2FenceAL fence;
 	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
 	EXPECT_TRUE( fence == fence );
 }
 
-TEST_F( WithValidRenderContext, DifferentFencesAreNotEqual )
+TEST_F( Fence, DifferentFencesAreNotEqual )
 {
 	Tr2FenceAL fence1;
 	ASSERT_HRESULT_SUCCEEDED( fence1.Create( *renderContext ) );
@@ -70,10 +75,22 @@ TEST_F( WithValidRenderContext, DifferentFencesAreNotEqual )
 	EXPECT_FALSE( fence1 == fence2 );
 }
 
-TEST_F( WithValidRenderContext, FenceHasMemoryClass )
+TEST_F( Fence, FenceHasMemoryClass )
 {
 	Tr2FenceAL fence;
 	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
 	auto memoryClass = fence.GetMemoryClass();
 	EXPECT_TRUE( memoryClass == AL_MEMORY_VIDEO || memoryClass == AL_MEMORY_MANAGED );
+}
+
+TEST_F( Fence, CanWaitForFence )
+{
+	Tr2FenceAL fence;
+	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
+
+	ASSERT_HRESULT_SUCCEEDED( fence.PutFence( *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( fence.Wait( *renderContext ) );
+	bool reached = false;
+	ASSERT_HRESULT_SUCCEEDED( fence.IsReached( reached, *renderContext ) );
+	ASSERT_TRUE( reached );
 }

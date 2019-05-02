@@ -1,0 +1,360 @@
+////////////////////////////////////////////////////////////
+//
+//    Created:   February 2019
+//    Copyright: CCP 2019
+//
+
+#pragma once
+
+
+#if TRINITY_PLATFORM == TRINITY_VULKAN
+
+#include "../Tr2RenderContextEnum.h"
+#include "../Tr2DrawUPHelper.h"
+#include "../include/Tr2ConstantBufferAL.h"
+#include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2TextureAL.h"
+
+
+class Tr2ConstantBufferAL;
+class Tr2VertexLayoutAL;
+struct ITr2RenderContextEvents;
+
+class Tr2ShaderAL;
+class Tr2SamplerStateAL;
+class Tr2BufferAL;
+struct Tr2Viewport;
+
+
+// -------------------------------------------------------------
+// Description:
+//   See http://carbon/wiki/Tr2RenderContext
+// -------------------------------------------------------------
+class Tr2RenderContextAL
+{
+public:
+	Tr2RenderContextAL() throw( )
+	{
+
+	}
+	~Tr2RenderContextAL() throw( )
+	{
+
+	}
+	void Destroy() throw( )
+	{
+
+	}
+
+	static void SetPrimaryRenderContext( Tr2PrimaryRenderContextAL* )
+	{
+
+	}
+	static Tr2PrimaryRenderContextAL& GetPrimaryRenderContext()
+	{
+		return *static_cast<Tr2PrimaryRenderContextAL*>( nullptr );
+	}
+	static Tr2PrimaryRenderContextAL* GetPrimaryRenderContextPointer()
+	{
+		return nullptr;
+	}
+
+	ALResult BeginScene() throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult EndScene()
+	{
+		return E_NOTIMPL;
+	}
+
+	bool IsValid() const throw( )
+	{
+		return false;
+	}
+
+	void ReleaseDeviceResources() throw( )
+	{
+
+	}
+
+
+	ALResult SetStreamSource(
+		uint32_t stream,
+		const Tr2BufferAL & buffer,
+		uint32_t offset,
+		uint32_t stride ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult CopySubBuffer(
+		Tr2BufferAL& dest,
+		uint32_t destOffset,
+		Tr2BufferAL& src,
+		uint32_t offset,
+		uint32_t length )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult SetTopology( Tr2RenderContextEnum::Topology topology ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mip, const float values[4] ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mip, const uint32_t values[4] ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	
+	ALResult DrawIndexedPrimitive(
+		uint32_t numVertices,
+		uint32_t startIndex,
+		uint32_t primitiveCount,
+		uint32_t minimumIndex = 0 ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult DrawIndexedInstanced(
+		uint32_t numVertices,
+		uint32_t startIndex,
+		uint32_t primitiveCount,
+		uint32_t numInstances ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	
+	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult DrawIndexedPrimitiveUP(
+		uint32_t numVertices,
+		uint32_t primitiveCount,
+		const uint32_t* indexData,
+		const void* vertexStreamZeroData,
+		uint32_t vertexStreamZeroStride ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult DrawIndexedPrimitiveUP(
+		uint32_t numVertices,
+		uint32_t primitiveCount,
+		const uint16_t* indexData,
+		const void* vertexStreamZeroData,
+		uint32_t vertexStreamZeroStride ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult DrawPrimitiveUP(
+		uint32_t primitiveCount,
+		const void* vertexStreamZeroData,
+		uint32_t VertexStreamZeroStride ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult SetConstants(
+		const Tr2ConstantBufferAL& buffer,
+		Tr2RenderContextEnum::ShaderType constantType,
+		uint32_t registerIndex,
+		uint32_t unusedArgument = 0 ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult SetDepthStencil( const Tr2TextureAL& depthStencil ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	void SetReadOnlyDepth( bool enable ) throw( )
+	{
+
+	}
+	bool GetReadOnlyDepth() const
+	{
+		return false;
+	}
+	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	static void DestroyMainThreadRenderContext()
+	{
+
+	}
+
+	// Helper function to clear the current primary backbuffer, depth and/or stencil.
+	ALResult Clear(
+		uint32_t clearFlags,
+		uint32_t color,
+		float depth,
+		uint32_t stencil = 0,
+		uint32_t slot = 0 ) throw( );
+
+	// rather hacky call to make integer loops work across DX9 and DX11.
+	ALResult SetNumberOfLights( uint32_t numLights ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult SetViewport( const Tr2Viewport& viewport ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult GetViewport( Tr2Viewport& viewport ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	ALResult PushRenderTarget( uint32_t slot = 0 ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult PopRenderTarget( uint32_t slot = 0 ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult PushDepthStencil() throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult PopDepthStencil() throw( )
+	{
+		return E_NOTIMPL;
+	}
+	ALResult GetRenderTargetSize( uint32_t& width, uint32_t& height, uint32_t slot = 0 ) throw( )
+	{
+		return E_NOTIMPL;
+	}
+
+	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const throw( )
+	{
+		return Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN;
+	}
+	
+	static const uint32_t SHADER_TYPE_MASK = 
+		( 1 << Tr2RenderContextEnum::VERTEX_SHADER ) |
+		( 1 << Tr2RenderContextEnum::PIXEL_SHADER ) |
+		( 1 << Tr2RenderContextEnum::COMPUTE_SHADER ) |
+		( 1 << Tr2RenderContextEnum::GEOMETRY_SHADER ) |
+		( 1 << Tr2RenderContextEnum::HULL_SHADER ) |
+		( 1 << Tr2RenderContextEnum::DOMAIN_SHADER );
+
+	// Debug helpers
+	size_t GetStackSizeRT( uint32_t RT = 0 )	const { return 0; }
+	size_t GetStackSizeDS()						const { return 0; }
+
+	void	ResetCapturePlayback()
+	{
+
+	}
+
+	// Set of variables that are the first thing we need in ApplyShadowState, keep them
+	// close for the cache -- don't put renderstates, renderStateEmulation or m_esm
+	// in between.
+
+	void AddGpuMarker( const char* marker )
+	{
+
+	}
+	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const
+	{
+		return E_NOTIMPL;
+	}
+	ALResult GetGpuPageFaultResource(
+		Tr2RenderContextEnum::PixelFormat& format,
+		uint64_t& size,
+		uint32_t& width,
+		uint32_t& height,
+		uint32_t& depth,
+		uint32_t& mips ) const
+	{
+		return E_NOTIMPL;
+	}
+private:
+
+public:
+	// If you need this, you're probably doing something wrong :P
+	//Tr2TextureAL&			GetDefaultBackBuffer()
+protected:
+	static const uint32_t RENDER_TARGET_COUNT = 4;
+	Tr2TextureAL m_boundRenderTargets[RENDER_TARGET_COUNT];
+	VkCommandBuffer m_commandBuffer;
+
+private:	
+
+	Tr2RenderContextAL( const Tr2RenderContextAL& ) /* = delete */;
+	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;
+
+};
+
+#endif

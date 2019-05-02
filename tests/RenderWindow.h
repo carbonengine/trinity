@@ -20,6 +20,8 @@ public:
 
 	uint32_t GetClientWidth() const;
 	uint32_t GetClientHeight() const;
+
+	bool Resize( uint32_t width, uint32_t height );
 private:
 	Tr2WindowHandle m_handle;
 };

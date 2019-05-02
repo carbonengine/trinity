@@ -8,6 +8,8 @@
 #define TRINITY_DIRECTX11	2
 #define TRINITY_OPENGLES2	3
 #define TRINITY_STUB		5
+#define TRINITY_DIRECTX12	6
+#define TRINITY_VULKAN		7
 
 #ifndef TRINITY_PLATFORM
 #	error TRINITY_PLATFORM must be set
@@ -39,7 +41,7 @@
 #pragma warning(pop)
 #endif
 
-#if TRINITY_PLATFORM != TRINITY_DIRECTX11 
+#if TRINITY_PLATFORM != TRINITY_DIRECTX11 && TRINITY_PLATFORM != TRINITY_DIRECTX12 && TRINITY_PLATFORM != TRINITY_VULKAN
 
 #define	Tr2PrimaryRenderContextAL Tr2RenderContextAL
 #endif
@@ -92,6 +94,29 @@
 
 #define TRINITY_PLATFORM_SYMBOL stub
 #define TRINITY_PLATFORM_NAME "dx11" // In order to use the dx11 platform specific res files as our own
+
+#elif TRINITY_PLATFORM == TRINITY_DIRECTX12
+
+#define TRINITY_PLATFORM_SYMBOL dx12
+#define TRINITY_PLATFORM_NAME "dx12"
+
+#include <d3d12.h>
+#include <dxgi1_4.h>
+
+#elif TRINITY_PLATFORM == TRINITY_VULKAN
+
+#define TRINITY_PLATFORM_SYMBOL vulkan
+#define TRINITY_PLATFORM_NAME "vulkan"
+
+#pragma warning( push )
+#pragma warning( disable: 4005 )
+#include <vulkan/vulkan.h>
+#include <vulkan/vk_sdk_platform.h>
+#pragma warning( pop )
+
+#else
+
+#error Missing TrinityAL platform description
 
 #endif
 

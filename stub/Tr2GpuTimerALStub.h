@@ -35,6 +35,8 @@ namespace TrinityALImpl
 		}
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
+	private:
+		bool m_isValid;
 	};
 }
 

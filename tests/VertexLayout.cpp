@@ -2,13 +2,15 @@
 #include "WithValidRenderContextFixture.h"
 #include "WithRenderContextFixture.h"
 
+struct VertexLayout : public WithValidRenderContext {};
+
 void InitializeSampleVertexDefinition( Tr2VertexDefinition& def )
 {
 	def.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
 	def.Add( Tr2VertexDefinition::FLOAT32_2, Tr2VertexDefinition::TEXCOORD );
 }
 
-TEST_F( WithValidRenderContext, VertexLayoutIsInvalidBeforeCreation )
+TEST_F( VertexLayout, VertexLayoutIsInvalidBeforeCreation )
 {
 	Tr2VertexLayoutAL layout;
 	EXPECT_FALSE( layout.IsValid() );
@@ -22,7 +24,7 @@ TEST_F( WithRenderContext, CreatingVertexLayoutWithoutRenderContextFails )
 	ASSERT_HRESULT_FAILED( layout.Create( def, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, VertexLayoutIsValidAfterCreation )
+TEST_F( VertexLayout, VertexLayoutIsValidAfterCreation )
 {
 	Tr2VertexLayoutAL layout;
 	Tr2VertexDefinition def;
@@ -31,7 +33,7 @@ TEST_F( WithValidRenderContext, VertexLayoutIsValidAfterCreation )
 	EXPECT_TRUE( layout.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, VertexLayoutIsInvalidAfterDestruction )
+TEST_F( VertexLayout, VertexLayoutIsInvalidAfterDestruction )
 {
 	Tr2VertexLayoutAL layout;
 	Tr2VertexDefinition def;
@@ -41,7 +43,7 @@ TEST_F( WithValidRenderContext, VertexLayoutIsInvalidAfterDestruction )
 	EXPECT_FALSE( layout.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, VertexLayoutEqualsItself )
+TEST_F( VertexLayout, VertexLayoutEqualsItself )
 {
 	Tr2VertexLayoutAL layout;
 	Tr2VertexDefinition def;
@@ -50,7 +52,7 @@ TEST_F( WithValidRenderContext, VertexLayoutEqualsItself )
 	EXPECT_TRUE( layout == layout );
 }
 
-TEST_F( WithValidRenderContext, DifferentVertexLayoutsAreNotEqual )
+TEST_F( VertexLayout, DifferentVertexLayoutsAreNotEqual )
 {
 	Tr2VertexLayoutAL layout1;
 	Tr2VertexDefinition def;
@@ -63,7 +65,7 @@ TEST_F( WithValidRenderContext, DifferentVertexLayoutsAreNotEqual )
 	EXPECT_FALSE( layout1 == layout2 );
 }
 
-TEST_F( WithValidRenderContext, VertexLayoutMemoryClass )
+TEST_F( VertexLayout, VertexLayoutMemoryClass )
 {
 	Tr2VertexLayoutAL layout;
 	Tr2VertexDefinition def;

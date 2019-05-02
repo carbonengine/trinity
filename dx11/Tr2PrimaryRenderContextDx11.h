@@ -35,14 +35,8 @@ public:
 
 	bool IsValid();
 
-	//void	ReleaseDeviceResources();
-
-	static void DestroyPrimaryRenderContext();
-
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
-	
-	bool	IsSupportedRenderTargetFormat(	Tr2RenderContextEnum::PixelFormat format, 
-											bool withAutoGenMipmap = false );
+
 	static const uint32_t SHADER_TYPE_MASK = 
 		( 1 << Tr2RenderContextEnum::VERTEX_SHADER ) |
 		( 1 << Tr2RenderContextEnum::PIXEL_SHADER ) |

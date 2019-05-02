@@ -9,23 +9,16 @@
 
 using namespace Tr2RenderContextEnum;
 
-const Tr2ShaderAL		nullShader[SHADER_TYPE_COUNT];
+const Tr2ShaderAL		nullShader[] = {
+	TrinityALImpl::GetNullShader( VERTEX_SHADER ),
+	TrinityALImpl::GetNullShader( PIXEL_SHADER ),
+	TrinityALImpl::GetNullShader( COMPUTE_SHADER ),
+	TrinityALImpl::GetNullShader( GEOMETRY_SHADER ),
+	TrinityALImpl::GetNullShader( HULL_SHADER ),
+	TrinityALImpl::GetNullShader( DOMAIN_SHADER ),
+};
 
-namespace
-{
-	struct NullShaderInitializer
-	{
-		NullShaderInitializer()
-		{
-			for( int i = SHADER_TYPE_FIRST; i < SHADER_TYPE_COUNT; ++i )
-			{
-				const_cast<Tr2ShaderAL&>( nullShader[i] ).SetNullShaderType( ShaderType( i ) );
-			}
-		}
-	};
-
-	NullShaderInitializer	s_nullShaderInitializer;
-}
+static_assert( sizeof( nullShader ) / sizeof( Tr2ShaderAL ) == SHADER_TYPE_COUNT, "nullShader count incorrect" );
 
 const Tr2ConstantBufferAL	nullCB;
 const Tr2VertexLayoutAL	nullVL;

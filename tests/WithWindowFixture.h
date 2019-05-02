@@ -2,6 +2,8 @@
 #ifndef WithWindowFixture_H
 #define WithWindowFixture_H
 
+class RenderWindow;
+
 class WithWindow: public ::testing::Test 
 {
 public:
@@ -31,6 +33,7 @@ public:
 	}
 
 	static Tr2WindowHandle GetWindowHandle();
+	static RenderWindow* GetWindow();
 private:
 	static void BeginLoopProcessing();
 	static bool DoLoopProcessing();

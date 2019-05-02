@@ -2,11 +2,14 @@
 #include "WithValidRenderContextFixture.h"
 #include "WithRenderContextFixture.h"
 
-#if TRINITY_PLATFORM != TRINITY_STUB 
-
 using namespace Tr2RenderContextEnum;
 
-TEST_F( WithValidRenderContext, TimerIsInvalidBeforeCreation )
+struct GpuTimer : public WithValidRenderContext
+{
+};
+
+
+TEST_F( GpuTimer, TimerIsInvalidBeforeCreation )
 {
 	Tr2GpuTimerAL timer;
 	EXPECT_FALSE(timer.IsValid());
@@ -19,7 +22,7 @@ TEST_F( WithRenderContext, CreatingWithoutRenderContext )
 	ASSERT_HRESULT_FAILED(hrResult);
 }
 
-TEST_F( WithValidRenderContext, IsValidAfterCreation )
+TEST_F( GpuTimer, IsValidAfterCreation )
 {
 	Tr2GpuTimerAL timer;
 	auto hrResult = timer.Create(*renderContext);
@@ -27,7 +30,7 @@ TEST_F( WithValidRenderContext, IsValidAfterCreation )
 	EXPECT_TRUE(timer.IsValid());
 }
 
-TEST_F( WithValidRenderContext, Begins )
+TEST_F( GpuTimer, Begins )
 {
 	Tr2GpuTimerAL timer;
 	const auto hrResult = timer.Create(*renderContext);
@@ -36,7 +39,7 @@ TEST_F( WithValidRenderContext, Begins )
 	EXPECT_TRUE(begins);
 }
 
-TEST_F( WithValidRenderContext, ValidAfterStopping )
+TEST_F( GpuTimer, ValidAfterStopping )
 {
 	Tr2GpuTimerAL timer;
 	const auto hrResult = timer.Create(*renderContext);
@@ -45,5 +48,3 @@ TEST_F( WithValidRenderContext, ValidAfterStopping )
 	timer.End(*renderContext);
 	EXPECT_TRUE(timer.IsValid());
 }
-
-#endif

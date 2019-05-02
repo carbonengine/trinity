@@ -11,7 +11,7 @@ class Tr2ShaderProgramAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SH
 public:
 	Tr2ShaderProgramAL();
 
-	ALResult Create( Tr2ShaderAL** shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Create( Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
 	void Destroy();
 
 	bool IsValid() const;
@@ -32,8 +32,8 @@ private:
 
 	ALResult CreateProgram( ProgramData& program, GLuint vertexShader, GLuint pixelShader, bool useShadowStates );
 
-	const Tr2ShaderAL* m_vertexShader;
-	const Tr2ShaderAL* m_pixelShader;
+	Tr2ShaderAL m_vertexShader;
+	Tr2ShaderAL m_pixelShader;
 
 	ProgramData m_program;
 	ProgramData m_patchedProgram;

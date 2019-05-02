@@ -4,7 +4,12 @@
 
 using namespace Tr2RenderContextEnum;
 
-TEST_F( WithValidRenderContext, OcclusionQueryIsInvalidBeforeCreation )
+struct OcclusionQuery : public WithValidRenderContext
+{
+};
+
+
+TEST_F( OcclusionQuery, OcclusionQueryIsInvalidBeforeCreation )
 {
 	Tr2OcclusionQueryAL query;
 	EXPECT_FALSE( query.IsValid() );
@@ -17,14 +22,14 @@ TEST_F( WithRenderContext, CreatingOcclusionQueryWithoutRenderContextFails )
 	EXPECT_FALSE( query.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, OcclusionQueryIsValidAfterCreation )
+TEST_F( OcclusionQuery, OcclusionQueryIsValidAfterCreation )
 {
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
 	EXPECT_TRUE( query.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, OcclusionQueryIsInvalidAfterDestruction )
+TEST_F( OcclusionQuery, OcclusionQueryIsInvalidAfterDestruction )
 {
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
@@ -33,7 +38,7 @@ TEST_F( WithValidRenderContext, OcclusionQueryIsInvalidAfterDestruction )
 	EXPECT_FALSE( query.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, RuningInvalidOcclusionQueryFails )
+TEST_F( OcclusionQuery, RuningInvalidOcclusionQueryFails )
 {
 	Tr2OcclusionQueryAL query;
 
@@ -43,7 +48,7 @@ TEST_F( WithValidRenderContext, RuningInvalidOcclusionQueryFails )
 	ASSERT_HRESULT_FAILED( query.GetPixelCount( *renderContext, count, Tr2OcclusionQueryAL::WAIT ) );
 }
 
-TEST_F( WithValidRenderContext, CanRunOcclusionQuery )
+TEST_F( OcclusionQuery, CanRunOcclusionQuery )
 {
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
@@ -52,8 +57,8 @@ TEST_F( WithValidRenderContext, CanRunOcclusionQuery )
 	ASSERT_HRESULT_SUCCEEDED( query.Begin( *renderContext ) );
 	ASSERT_HRESULT_SUCCEEDED( query.End( *renderContext ) );
 }
-/*
-TEST_F( WithValidRenderContext, CanGetOcclusionQueryResultSynchronously )
+
+TEST_F( OcclusionQuery, CanGetOcclusionQueryResultSynchronously )
 {
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
@@ -66,15 +71,15 @@ TEST_F( WithValidRenderContext, CanGetOcclusionQueryResultSynchronously )
 	ASSERT_HRESULT_SUCCEEDED( query.GetPixelCount( *renderContext, count, Tr2OcclusionQueryAL::WAIT ) );
 	EXPECT_EQ( 0, count );
 }
-*/
-TEST_F( WithValidRenderContext, OcclusionQueryEqualsItself )
+
+TEST_F( OcclusionQuery, OcclusionQueryEqualsItself )
 {
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
 	EXPECT_TRUE( query == query );
 }
 
-TEST_F( WithValidRenderContext, DifferentOcclusionQueriesAreNotEqual )
+TEST_F( OcclusionQuery, DifferentOcclusionQueriesAreNotEqual )
 {
 	Tr2OcclusionQueryAL query1;
 	ASSERT_HRESULT_SUCCEEDED( query1.Create( *renderContext ) );
@@ -83,7 +88,7 @@ TEST_F( WithValidRenderContext, DifferentOcclusionQueriesAreNotEqual )
 	EXPECT_FALSE( query1 == query2 );
 }
 
-TEST_F( WithValidRenderContext, OcclusionQueryHasMemoryClass )
+TEST_F( OcclusionQuery, OcclusionQueryHasMemoryClass )
 {
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );

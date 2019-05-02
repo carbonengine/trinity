@@ -18,9 +18,11 @@ class Tr2ResourceSetDescriptionAL
 public:
 	static const uint32_t MAX_RESOURCES_IN_STAGE = 32;
 
-	bool Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer );
-	bool Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
-	bool Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler );
+	bool SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer );
+	bool SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
+	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer, uint32_t initialCount = -1 );
+	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 );
+	bool SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler );
 	void ClearResources();
 
 	bool operator==( const Tr2ResourceSetDescriptionAL& other ) const;
@@ -41,7 +43,12 @@ private:
 		Tr2TextureAL texture;
 		Tr2BufferAL buffer;
 		ResourceType type;
-		Tr2RenderContextEnum::ColorSpace colorSpace;
+		union
+		{
+			Tr2RenderContextEnum::ColorSpace colorSpace;
+			uint32_t mip;
+			uint32_t initialCount;
+		};
 	};
 
 	struct Sampler
@@ -54,7 +61,8 @@ private:
 		bool assigned;
 	};
 
-	Resource m_resources[Tr2RenderContextEnum::SHADER_TYPE_COUNT][MAX_RESOURCES_IN_STAGE];
+	Resource m_srv[Tr2RenderContextEnum::SHADER_TYPE_COUNT][MAX_RESOURCES_IN_STAGE];
+	Resource m_uav[Tr2RenderContextEnum::SHADER_TYPE_COUNT][MAX_RESOURCES_IN_STAGE];
 	Sampler m_samplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][MAX_RESOURCES_IN_STAGE];
 
 	friend class TrinityALImpl::Tr2ResourceSetAL;
@@ -65,7 +73,7 @@ class Tr2ResourceSetAL
 public:
 	Tr2ResourceSetAL();
 
-	ALResult Create( const Tr2ResourceSetDescriptionAL& description, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
 	bool IsValid() const;
 
 	Tr2ALMemoryType GetMemoryClass() const;

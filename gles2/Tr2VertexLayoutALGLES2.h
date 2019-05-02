@@ -29,7 +29,7 @@ public:
 	bool IsValid() const;
 	void Destroy();
 
-	ALResult SetLayout( const Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const;
+	ALResult SetLayout( const TrinityALImpl::Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const;
 
 	bool operator==( const Tr2VertexLayoutAL& other ) const
 	{

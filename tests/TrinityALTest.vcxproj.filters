@@ -3,8 +3,10 @@
   <ItemGroup>
     <Filter Include="Source Files" />
     <Filter Include="Source Files\Shaders.DX11" />
+    <Filter Include="Source Files\Shaders.DX12" />
     <Filter Include="Source Files\Shaders.DX9" />
     <Filter Include="Source Files\Shaders.GLES2" />
+    <Filter Include="Source Files\Shaders.vulkan" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dxt1Image.h">
@@ -108,6 +110,93 @@
     </ClInclude>
     <ClInclude Include="Shaders.DX11\TexCoordAndPosition.vs.patched.h">
       <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX11\UseBufferCounter.cs.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX11\WriteToUav.ps.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX11\WriteToUav.ps.patched.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\AddConstantToBuffer.cs.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\AddVectors.cs.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\ConstantColor.ps.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\ConstantColor.ps.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\GroupShared.cs.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\InstancedRendering.vs.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\InstancedRendering.vs.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\OutputTexCoord.ps.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\OutputTexCoord.ps.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\OutputVector.cs.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\PositionOnly.vs.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\PositionOnly.vs.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\PositionOnlyWithPerObjectData.vs.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\PositionOnlyWithPerObjectData.vs.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\SampleTexture.cs.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\SampleTextureFromTexCoord.ps.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\SampleTextureFromTexCoord.ps.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\SampleTextureMipFromTexCoord.ps.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\SampleTextureMipFromTexCoord.ps.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\SampleVolumeTexture.ps.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\SampleVolumeTexture.ps.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\TexCoordAndPosition.vs.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\TexCoordAndPosition.vs.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\UseBufferCounter.cs.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\WriteToUav.ps.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\WriteToUav.ps.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.DX9\ConstantColor.ps.h">
       <Filter>Source Files\Shaders.DX9</Filter>
@@ -217,6 +306,84 @@
     <ClInclude Include="Shaders.GLES2\TexCoordAndPosition.vs.patched.h">
       <Filter>Source Files\Shaders.GLES2</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders.vulkan\AddConstantToBuffer.cs.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\AddVectors.cs.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\ConstantColor.ps.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\ConstantColor.ps.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\GroupShared.cs.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\InstancedRendering.vs.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\InstancedRendering.vs.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\OutputTexCoord.ps.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\OutputTexCoord.ps.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\OutputVector.cs.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\PositionOnly.vs.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\PositionOnly.vs.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\PositionOnlyWithPerObjectData.vs.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\PositionOnlyWithPerObjectData.vs.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\SampleTexture.cs.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\SampleTextureFromTexCoord.ps.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\SampleTextureFromTexCoord.ps.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\SampleTextureMipFromTexCoord.ps.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\SampleTextureMipFromTexCoord.ps.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\SampleVolumeTexture.ps.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\SampleVolumeTexture.ps.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\TexCoordAndPosition.vs.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\TexCoordAndPosition.vs.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\UseBufferCounter.cs.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\WriteToUav.ps.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\WriteToUav.ps.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
     <ClCompile Include="ALResultTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -278,6 +445,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SwapChain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SwapChainResizing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Texture.cpp">

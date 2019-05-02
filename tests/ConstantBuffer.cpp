@@ -18,7 +18,12 @@
 #endif
 #endif
 
-TEST_F( WithValidRenderContext, ConstantBufferIsInvalidBeforeCreation )
+struct ConstantBuffer : public WithValidRenderContext
+{
+};
+
+
+TEST_F( ConstantBuffer, ConstantBufferIsInvalidBeforeCreation )
 {
 	Tr2ConstantBufferAL vb;
 	EXPECT_FALSE( vb.IsValid() );
@@ -30,20 +35,20 @@ TEST_F( WithRenderContext, CreatingConstantBufferWithoutRenderContextFails )
 	ASSERT_HRESULT_FAILED( vb.Create( 128, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CreatingImmutableConstantBufferWithoutInitialDataFails )
+TEST_F( ConstantBuffer, CreatingImmutableConstantBufferWithoutInitialDataFails )
 {
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_FAILED( vb.Create( 128, Tr2RenderContextEnum::USAGE_IMMUTABLE, nullptr, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, ConstantBufferIsValidAfterCreation )
+TEST_F( ConstantBuffer, ConstantBufferIsValidAfterCreation )
 {
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
 	EXPECT_TRUE( vb.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, ConstantBufferIsInvalidAfterDestruction )
+TEST_F( ConstantBuffer, ConstantBufferIsInvalidAfterDestruction )
 {
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
@@ -51,21 +56,21 @@ TEST_F( WithValidRenderContext, ConstantBufferIsInvalidAfterDestruction )
 	EXPECT_FALSE( vb.IsValid() );
 }
 
-TEST_F( WithValidRenderContext, ConstantBufferReportsCorrectSize )
+TEST_F( ConstantBuffer, ConstantBufferReportsCorrectSize )
 {
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
 	EXPECT_EQ( 128, vb.GetSize() );
 }
 
-TEST_F( WithValidRenderContext, ConstantBufferEqualsItself )
+TEST_F( ConstantBuffer, ConstantBufferEqualsItself )
 {
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
 	EXPECT_TRUE( vb == vb );
 }
 
-TEST_F( WithValidRenderContext, DifferentConstantBuffersAreNotEqual )
+TEST_F( ConstantBuffer, DifferentConstantBuffersAreNotEqual )
 {
 	Tr2ConstantBufferAL vb1;
 	ASSERT_HRESULT_SUCCEEDED( vb1.Create( 128, *renderContext ) );
@@ -74,14 +79,14 @@ TEST_F( WithValidRenderContext, DifferentConstantBuffersAreNotEqual )
 	EXPECT_FALSE( vb1 == vb2 );
 }
 
-TEST_F( WithValidRenderContext, LockingInvalidConstantBufferFails )
+TEST_F( ConstantBuffer, LockingInvalidConstantBufferFails )
 {
 	Tr2ConstantBufferAL vb;
 	void* data;
 	ASSERT_HRESULT_FAILED( vb.Lock( &data, *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CanLockConstantBuffer )
+TEST_F( ConstantBuffer, CanLockConstantBuffer )
 {
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
@@ -91,7 +96,7 @@ TEST_F( WithValidRenderContext, CanLockConstantBuffer )
 }
 
 #if( TRINITYPLATFORM == TRINITY_STUB )
-TEST_F( WithValidRenderContext, UnlockingConstantBufferThatHasNotBeenLockedFails )
+TEST_F( ConstantBuffer, UnlockingConstantBufferThatHasNotBeenLockedFails )
 {
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
@@ -99,7 +104,7 @@ TEST_F( WithValidRenderContext, UnlockingConstantBufferThatHasNotBeenLockedFails
 }
 
 
-TEST_F( WithValidRenderContext, LockingImmutableConstantBufferFails )
+TEST_F( ConstantBuffer, LockingImmutableConstantBufferFails )
 {
 	Tr2ConstantBufferAL vb;
 	char initialData[128];
@@ -109,7 +114,7 @@ TEST_F( WithValidRenderContext, LockingImmutableConstantBufferFails )
 }
 #endif
 
-TEST_F( WithValidRenderContext, CanUpdateFromMirror )
+TEST_F( ConstantBuffer, CanUpdateFromMirror )
 {
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
@@ -118,7 +123,7 @@ TEST_F( WithValidRenderContext, CanUpdateFromMirror )
 	ASSERT_HRESULT_SUCCEEDED( vb.UpdateFromMirror( *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, CanUpdateFromMirrorWithDifferentLength )
+TEST_F( ConstantBuffer, CanUpdateFromMirrorWithDifferentLength )
 {
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
@@ -128,7 +133,7 @@ TEST_F( WithValidRenderContext, CanUpdateFromMirrorWithDifferentLength )
 	ASSERT_HRESULT_SUCCEEDED( vb.UpdateFromMirror( *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, ConstantBufferHasMemoryClass )
+TEST_F( ConstantBuffer, ConstantBufferHasMemoryClass )
 {
 	Tr2ConstantBufferAL cb;
 	ASSERT_HRESULT_SUCCEEDED( cb.Create( 128, *renderContext ) );
@@ -136,7 +141,7 @@ TEST_F( WithValidRenderContext, ConstantBufferHasMemoryClass )
 	EXPECT_TRUE( memoryClass == AL_MEMORY_VIDEO || memoryClass == AL_MEMORY_MANAGED );
 }
 
-TEST_F( WithValidRenderContext, CanCreateConstantBufferWithInitialData )
+TEST_F( ConstantBuffer, CanCreateConstantBufferWithInitialData )
 {
 	float initialData[] = { 0.5f, 1.5f, 2.5f, 3.5f };
 	Tr2ConstantBufferAL cb;
@@ -145,13 +150,13 @@ TEST_F( WithValidRenderContext, CanCreateConstantBufferWithInitialData )
 }
 
 #ifndef PLATFORM_64BIT
-TEST_F( WithValidRenderContext, CreatingTooLargeConstantBufferFails )
+TEST_F( ConstantBuffer, CreatingTooLargeConstantBufferFails )
 {
 	Tr2ConstantBufferAL cb;
 	ASSERT_HRESULT_FAILED( cb.Create( uint32_t( -1 ), *renderContext ) );
 }
 
-TEST_F( WithValidRenderContext, UpdateConstantBufferFromMirrorWithTooLargeSizeFails )
+TEST_F( ConstantBuffer, UpdateConstantBufferFromMirrorWithTooLargeSizeFails )
 {
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );

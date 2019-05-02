@@ -135,7 +135,7 @@ void Tr2VertexLayoutAL::Destroy()
 }
 
 static bool FindInputElement( const TrackableStdVector<D3D11_INPUT_ELEMENT_DESC>& elements, 
-							  Tr2ShaderInputDefinitionElement element )
+							  const Tr2ShaderPipelineInputAL& element )
 {
 	for( auto it = elements.begin(); it != elements.end(); ++it )
 	{
@@ -147,26 +147,25 @@ static bool FindInputElement( const TrackableStdVector<D3D11_INPUT_ELEMENT_DESC>
 	return false;
 }
 
-ALResult Tr2VertexLayoutAL::SetLayout( const Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const
+ALResult Tr2VertexLayoutAL::SetLayout( const TrinityALImpl::Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const
 {
 	if( !renderContext.m_secondaryDevice11 || !vertexShader || m_definition.empty() )
 	{
 		return E_FAIL;
 	}
-	auto found = m_layout.find( vertexShader->GetInputDefinition().hash );
+	auto found = m_layout.find( vertexShader->m_pipelineInputHash );
 	if( found != m_layout.end() )
 	{
 		renderContext.m_context->IASetInputLayout( found->second );
 		return S_OK;
 	}
 
-	const void* bytecode;
-	uint32_t bytecodeSize;
-	CR_RETURN_HR( vertexShader->GetBytecode( bytecode, bytecodeSize ) );
+	Tr2ShaderBytecodeAL bytecode;
+	CR_RETURN_HR( vertexShader->GetBytecode( bytecode ) );
 	
-	const Tr2ShaderInputDefinition& definition = vertexShader->GetInputDefinition();
+	const auto& definition = vertexShader->m_signature;
 	auto patchedDefinition = m_definition;
-	for( auto it = definition.elements.begin(); it != definition.elements.end(); ++it )
+	for( auto it = definition.pipelineInputs.begin(); it != definition.pipelineInputs.end(); ++it )
 	{
 		if( !FindInputElement( m_definition, *it ) )
 		{
@@ -193,13 +192,13 @@ ALResult Tr2VertexLayoutAL::SetLayout( const Tr2ShaderAL* vertexShader, Tr2Rende
 	long result = renderContext.m_secondaryDevice11->CreateInputLayout(
 						patchedDefinition.data(), 
 						(uint32_t)patchedDefinition.size(), 
-						bytecode, 
-						bytecodeSize, 
+						bytecode.bytecode, 
+						bytecode.size, 
 						&layout );
 
 	if( result == S_OK )
 	{
-		m_layout[definition.hash] = layout;
+		m_layout[vertexShader->m_pipelineInputHash] = layout;
 		renderContext.m_context->IASetInputLayout( layout );
 	}
 	return result;

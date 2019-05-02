@@ -58,7 +58,6 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_RENDER_CONTEX
 };
 
 class Tr2ConstantBufferAL;
-class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2TextureAL;
 class Tr2VertexLayoutAL;
@@ -73,6 +72,7 @@ namespace TrinityALImpl
 	class Tr2BufferAL;
 	class Tr2TextureAL;
 	class Tr2GpuTimerAL;
+	class Tr2ShaderAL;
 }
 
 // --------------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ struct Tr2TrackedALObjectBase::ObjectInfo<Tr2RenderContextEnum::OT_SHADER>
 	// Description:
 	//   AL object type this information structure is applied to.
 	// ----------------------------------------------------------------------------------
-	typedef Tr2ShaderAL ObjectType;
+	typedef TrinityALImpl::Tr2ShaderAL ObjectType;
 
 	static const char* GetName();
 	static bool GetDescription( Tr2ALMemoryTypes flags, ObjectType* object, std::map<std::string, uint32_t>& description );

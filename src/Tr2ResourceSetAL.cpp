@@ -5,37 +5,67 @@
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2ResourceSetAL )
 
 
-bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer )
+bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer )
 {
 	auto resource = Resource();
 	resource.type = BUFFER;
 	resource.buffer = buffer;
 	resource.colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
 
-	if( m_resources[stage][registerIndex] == resource )
+	if( m_srv[stage][registerIndex] == resource )
 	{
 		return false;
 	}
-	m_resources[stage][registerIndex] = resource;
+	m_srv[stage][registerIndex] = resource;
 	return true;
 }
 
-bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace )
+bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace )
 {
 	auto resource = Resource();
 	resource.type = TEXTURE;
 	resource.texture = texture;
 	resource.colorSpace = colorSpace;
 
-	if( m_resources[stage][registerIndex] == resource )
+	if( m_srv[stage][registerIndex] == resource )
 	{
 		return false;
 	}
-	m_resources[stage][registerIndex] = resource;
+	m_srv[stage][registerIndex] = resource;
 	return true;
 }
 
-bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
+bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer, uint32_t initialCount )
+{
+	auto resource = Resource();
+	resource.type = BUFFER;
+	resource.buffer = buffer;
+	resource.initialCount = initialCount;
+
+	if( m_uav[stage][registerIndex] == resource )
+	{
+		return false;
+	}
+	m_uav[stage][registerIndex] = resource;
+	return true;
+}
+
+bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip )
+{
+	auto resource = Resource();
+	resource.type = TEXTURE;
+	resource.texture = texture;
+	resource.mip = mip;
+
+	if( m_uav[stage][registerIndex] == resource )
+	{
+		return false;
+	}
+	m_uav[stage][registerIndex] = resource;
+	return true;
+}
+
+bool Tr2ResourceSetDescriptionAL::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
 {
 	auto resource = Sampler();
 	resource.sampler = sampler;
@@ -51,12 +81,21 @@ bool Tr2ResourceSetDescriptionAL::Set( Tr2RenderContextEnum::ShaderType stage, u
 
 bool Tr2ResourceSetDescriptionAL::operator==( const Tr2ResourceSetDescriptionAL& other ) const
 {
-	return m_resources == other.m_resources && m_samplers == other.m_samplers;
+	return m_srv == other.m_srv && m_uav == other.m_uav && m_samplers == other.m_samplers;
 }
 
 void Tr2ResourceSetDescriptionAL::ClearResources()
 {
-	for( auto sit = std::begin( m_resources ); sit != std::end( m_resources ); ++sit )
+	for( auto sit = std::begin( m_srv ); sit != std::end( m_srv ); ++sit )
+	{
+		for( auto rit = std::begin( *sit ); rit != std::end( *sit ); ++rit )
+		{
+			rit->type = NONE;
+			rit->texture = Tr2TextureAL();
+			rit->buffer = Tr2BufferAL();
+		}
+	}
+	for( auto sit = std::begin( m_uav ); sit != std::end( m_uav ); ++sit )
 	{
 		for( auto rit = std::begin( *sit ); rit != std::end( *sit ); ++rit )
 		{
@@ -76,7 +115,7 @@ Tr2ResourceSetDescriptionAL::Resource::Resource()
 
 bool Tr2ResourceSetDescriptionAL::Resource::operator==( const Resource& other ) const
 {
-	return type == other.type && buffer == other.buffer && texture == other.texture;
+	return type == other.type && buffer == other.buffer && texture == other.texture && initialCount == other.initialCount;
 }
 
 Tr2ResourceSetDescriptionAL::Sampler::Sampler()
@@ -101,10 +140,10 @@ Tr2ResourceSetAL::Tr2ResourceSetAL()
 {
 }
 
-ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, Tr2PrimaryRenderContextAL& renderContext )
+ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext )
 {
 	m_resourceSet = std::make_shared<TrinityALImpl::Tr2ResourceSetAL>();
-	auto result = m_resourceSet->Create( description, renderContext );
+	auto result = m_resourceSet->Create( description, program, renderContext );
 	if( FAILED( result ) )
 	{
 		m_resourceSet = nullRS;

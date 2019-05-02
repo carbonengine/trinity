@@ -81,6 +81,16 @@ BaseConfigurations:
       PreprocessorDefinitions:
       - D3DTARGET=9
 
+  D3D12:
+    # These are settings that apply to all variants of Trinity that use D3D11
+    Imports:
+    - ../TrinityAL/uses_TrinityALDX12.yaml
+
+  Vulkan:
+    # These are settings that apply to all variants of Trinity that use D3D11
+    Imports:
+    - ../TrinityAL/uses_TrinityALVulkan.yaml
+
   GLES2:
     # These are settings that apply to all variants of Trinity that use OpenGL ES 2
     Imports:
@@ -182,3 +192,35 @@ Configurations:
     - WithGoogleTest
     General:
       TargetName: TrinityALTestSTUB
+
+  Dev_DX12|Win32,x64:
+    BaseConfigurations:
+    - Dev
+    - D3D12
+    - WithGoogleTest
+    General: 
+      TargetName: TrinityALTestDX12_dev
+
+  Release_DX12|Win32,x64:
+    BaseConfigurations:
+    - Release
+    - D3D12
+    - WithGoogleTest
+    General:
+      TargetName: TrinityALTestDX12
+
+  Dev_Vulkan|Win32,x64:
+    BaseConfigurations:
+    - Dev
+    - Vulkan
+    - WithGoogleTest
+    General: 
+      TargetName: TrinityALTestVulkan_dev
+
+  Release_Vulkan|Win32,x64:
+    BaseConfigurations:
+    - Release
+    - Vulkan
+    - WithGoogleTest
+    General:
+      TargetName: TrinityALTestVulkan

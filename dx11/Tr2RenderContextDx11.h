@@ -8,13 +8,14 @@
 #include "../include/Tr2ConstantBufferAL.h"
 #include "../include/Tr2ResourceSetAL.h"
 #include "../include/Tr2TextureAL.h"
+#include "../include/Tr2ShaderAL.h"
+#include "../include/Tr2ShaderProgramAL.h"
 
 
 class Tr2ConstantBufferAL;
 class Tr2VertexLayoutAL;
 struct ITr2RenderContextEvents;
 
-class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2BufferAL;
 struct Tr2Viewport;
@@ -53,11 +54,6 @@ public:
 		uint32_t offset,
 		uint32_t stride ) throw( );
 	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( );
-	ALResult SetUav(
-		Tr2RenderContextEnum::ShaderType inputType,
-		uint32_t slot,
-		const Tr2BufferAL& buffer,
-		uint32_t initialCount = -1 ) throw( );
 	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
 	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
 
@@ -71,12 +67,6 @@ public:
 	ALResult SetTopology( Tr2RenderContextEnum::Topology topology ) throw();
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw();
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( );
-
-	ALResult SetUav(
-		Tr2RenderContextEnum::ShaderType inputType, 
-		uint32_t slot, 
-		Tr2TextureAL& texture,
-		uint32_t mipLevel = 0 ) throw();
 
 	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( );
 	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw( );
@@ -128,24 +118,11 @@ public:
 
 	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw();
 
-	ALResult SetClipPlane( uint32_t planeIndex, const float* planeEq ) throw();
-
-	ALResult SetScissorRect(			
-		uint32_t left, 
-		uint32_t top, 
-		uint32_t right, 
-		uint32_t bottom ) throw();
-
 	ALResult SetConstants(			
 		const Tr2ConstantBufferAL& buffer, 
 		Tr2RenderContextEnum::ShaderType constantType, 
 		uint32_t registerIndex, 
 		uint32_t unusedArgument = 0 ) throw();
-
-	ALResult SetSamplerState(		
-		const Tr2SamplerStateAL& samplerState, 
-		Tr2RenderContextEnum::ShaderType inputType, 
-		uint32_t registerNumber ) throw();
 
 	// Set a depth stencil.  Ideally you'd set renderTarget and depthStencil at the same time.
 	ALResult SetDepthStencil( const Tr2TextureAL& depthStencil ) throw();
@@ -215,15 +192,8 @@ private:
 	uint32_t m_lastSetVertexLayoutVSHash;
 
 	// Current shaders
-	const Tr2ShaderAL* m_shaders[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
-
-	// UAVs for pixel shader (need to be set all at once)
-	CComPtr<ID3D11UnorderedAccessView> m_pixelShaderUavs[16];
-	uint32_t m_pixelShaderUavInitialCounts[16];
-
-	// Indexes of dirty pixel shader UAVs
-	uint32_t m_psUavsDirtyBegin;
-	uint32_t m_psUavsDirtyEnd;
+	Tr2ShaderAL m_vertexShader;
+	Tr2ShaderProgramAL::Shaders m_shaders;
 
 	Tr2RenderContextEnum::Topology	m_topology;
 	Tr2RenderContextEnum::Topology	m_lastSetTopology;
@@ -274,7 +244,6 @@ private:
 	bool	ApplyDepthStencilState() throw();
 	bool	ApplyRasterizerState() throw();
 	void ApplyReadOnlyDepth() throw();
-	void ApplyUavs() throw();
 
 	Tr2ConstantBufferAL	m_fragmentOpBuffer;
 
@@ -284,7 +253,7 @@ private:
 	// Has active hull shader (requires changing topology)
 	bool m_previouslyHadHullShader;	
 
-	Tr2DrawUPHelper	m_drawUP;
+	TrinityALImpl::Tr2DrawUPHelper m_drawUP;
 
 	void* m_aftermathContext;
 
@@ -299,6 +268,10 @@ private:
 	typedef	TrackableStdStack<Tr2TextureAL>	TextureStack;
 	TextureStack m_stackRT[MAX_RENDER_TARGET];
 	TextureStack m_stackDS;
+
+	uint32_t m_assignedUavOffset;
+	uint32_t m_assignedUavCount;
+	bool m_assignedPsUavs;
 
 	Tr2RenderContextAL( const Tr2RenderContextAL& ) /* = delete */;
 	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;

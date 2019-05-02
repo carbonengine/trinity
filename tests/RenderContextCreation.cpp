@@ -104,3 +104,28 @@ TEST_F( RenderContextCreation, CreateDeviceCallsEventsOnContextCreated )
 	EXPECT_EQ( 1, events.m_timesOnContextCreatedCalled ); 
 	renderContext->m_events = nullptr;
 }
+
+TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfterCreation )
+{
+	Tr2PresentParametersAL presentParameters;
+	SetUpPresentParameters( presentParameters );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) );
+	EXPECT_TRUE( renderContext->GetDefaultBackBuffer().IsValid() );
+	EXPECT_EQ( presentParameters.mode.width, renderContext->GetDefaultBackBuffer().GetWidth() );
+	EXPECT_EQ( presentParameters.mode.height, renderContext->GetDefaultBackBuffer().GetHeight() );
+}
+
+TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfterReset )
+{
+	Tr2PresentParametersAL presentParameters;
+	SetUpPresentParameters( presentParameters );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, WithWindow::GetWindowHandle(), presentParameters ) );
+	presentParameters.mode.width += 50;
+	presentParameters.mode.height += 50;
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetPresentParameters( 0, presentParameters ) );
+	EXPECT_TRUE( renderContext->GetDefaultBackBuffer().IsValid() );
+	EXPECT_EQ( presentParameters.mode.width, renderContext->GetDefaultBackBuffer().GetWidth() );
+	EXPECT_EQ( presentParameters.mode.height, renderContext->GetDefaultBackBuffer().GetHeight() );
+}

@@ -13,11 +13,14 @@ namespace TrinityALImpl
 {
 	Tr2ResourceSetAL::Tr2ResourceSetAL()
 		:m_isValid( false ),
-		m_empty( true )
+		m_empty( true ),
+		m_uavCount( 0 ),
+		m_csUavs( false )
 	{
+		std::fill_n( m_uavInitialCounts, MAX_RESOURCES, -1 );
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, Tr2PrimaryRenderContextAL& /*renderContext*/ )
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& /*renderContext*/ )
 	{
 		Destroy();
 		ON_BLOCK_EXIT_WITH_UNUSED( [&] { if( !IsValid() ) Destroy(); } );
@@ -27,12 +30,14 @@ namespace TrinityALImpl
 			it->resourceOffset = MAX_RESOURCES;
 			it->samplerOffset = MAX_RESOURCES;
 		}
+		bool hasPsUavs = false;
+		m_uavOffset = MAX_RESOURCES;
 		for( uint32_t stageIndex = 0; stageIndex < SHADER_TYPE_COUNT; ++stageIndex )
 		{
 			auto& stage = m_stages[stageIndex];
 			for( uint32_t registerIndex = 0; registerIndex < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++registerIndex )
 			{
-				auto& desc = description.m_resources[stageIndex][registerIndex];
+				auto& desc = description.m_srv[stageIndex][registerIndex];
 				if( desc.type != Tr2ResourceSetDescriptionAL::NONE && registerIndex >= MAX_RESOURCES )
 				{
 					return E_INVALIDARG;
@@ -67,9 +72,56 @@ namespace TrinityALImpl
 					stage.samplerCount = std::max( stage.samplerCount, registerIndex + 1 );
 				}
 			}
+			for( uint32_t registerIndex = 0; registerIndex < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++registerIndex )
+			{
+				auto& desc = description.m_uav[stageIndex][registerIndex];
+				if( desc.type == Tr2ResourceSetDescriptionAL::NONE )
+				{
+					continue;
+				}
+				if( stageIndex != PIXEL_SHADER && stageIndex != COMPUTE_SHADER )
+				{
+					return E_INVALIDARG;
+				}
+				if( stageIndex == PIXEL_SHADER )
+				{
+					hasPsUavs = true;
+				}
+				else if( hasPsUavs )
+				{
+					return E_INVALIDARG;
+				}
+				switch( desc.type )
+				{
+				case Tr2ResourceSetDescriptionAL::BUFFER:
+					m_uavs[registerIndex] = desc.buffer.m_buffer->m_uav;
+					m_uavInitialCounts[registerIndex] = desc.initialCount;
+					m_uavCount = registerIndex + 1;
+					m_uavOffset = std::min( m_uavOffset, registerIndex );
+					break;
+				case Tr2ResourceSetDescriptionAL::TEXTURE:
+					m_uavs[registerIndex] = desc.texture.m_texture->m_uav[desc.mip];
+					m_uavInitialCounts[registerIndex] = -1;
+					m_uavCount = registerIndex + 1;
+					m_uavOffset = std::min( m_uavOffset, registerIndex );
+					break;
+				default:
+					return E_INVALIDARG;
+				}
+				m_csUavs = stageIndex == COMPUTE_SHADER;
+			}
 		}
 
-		m_empty = true;
+		if( m_uavCount )
+		{
+			m_empty = false;
+			m_uavCount -= m_uavOffset;
+		}
+		else
+		{
+			m_empty = true;
+			m_uavOffset = 0;
+		}
 
 		for( auto it = std::begin( m_stages ); it != std::end( m_stages ); ++it )
 		{
@@ -119,8 +171,13 @@ namespace TrinityALImpl
 		{
 			it->Destroy();
 		}
+		std::fill_n( m_uavs, MAX_RESOURCES, nullptr );
+		std::fill_n( m_uavInitialCounts, MAX_RESOURCES, -1 );
+		m_uavCount = 0;
+		m_uavOffset = 0;
 		m_isValid = false;
 		m_empty = true;
+		m_csUavs = false;
 	}
 
 	Tr2ALMemoryType Tr2ResourceSetAL::GetMemoryClass() const

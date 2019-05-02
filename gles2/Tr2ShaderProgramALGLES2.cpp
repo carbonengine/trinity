@@ -10,15 +10,13 @@ using namespace Tr2RenderContextEnum;
 
 
 Tr2ShaderProgramAL::Tr2ShaderProgramAL()
-	:m_vertexShader( nullptr ),
-	m_pixelShader( nullptr ),
-	m_isValid( false )
+	:m_isValid( false )
 {
 	m_program.program = 0;
 	m_patchedProgram.program = 0;
 }
 
-ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext )
+ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext )
 {
 	Destroy();
 
@@ -35,11 +33,11 @@ ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2Pri
 	uint32_t mask = 0;
 	for( size_t i = 0; i < count; ++i )
 	{
-		if( !shaders[i]->IsValid() )
+		if( !shaders[i].IsValid() )
 		{
 			return E_INVALIDARG;
 		}
-		uint32_t bit = 1 << shaders[i]->GetType();
+		uint32_t bit = 1 << shaders[i].GetType();
 		if( ( mask & bit ) != 0 )
 		{
 			return E_INVALIDARG;
@@ -51,7 +49,7 @@ ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2Pri
 		return E_INVALIDARG;
 	}
 
-	if( shaders[0]->GetType() == VERTEX_SHADER )
+	if( shaders[0].GetType() == VERTEX_SHADER )
 	{
 		m_vertexShader = shaders[0];
 		m_pixelShader = shaders[1];
@@ -62,18 +60,18 @@ ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2Pri
 		m_pixelShader = shaders[0];
 	}
 
-	if( FAILED( CreateProgram( m_program, m_vertexShader->m_shader, m_pixelShader->m_shader, false ) ) )
+	if( FAILED( CreateProgram( m_program, m_vertexShader.m_shader->m_shader, m_pixelShader.m_shader->m_shader, false ) ) )
 	{
 		Destroy();
 		return E_FAIL;
 	}
 
-	if( m_vertexShader->m_patchedShader || m_pixelShader->m_patchedShader )
+	if( m_vertexShader.m_shader->m_patchedShader || m_pixelShader.m_shader->m_patchedShader )
 	{
 		if( FAILED( CreateProgram( 
 			m_patchedProgram,
-			m_vertexShader->m_patchedShader ? m_vertexShader->m_patchedShader : m_vertexShader->m_shader, 
-			m_pixelShader->m_patchedShader ? m_pixelShader->m_patchedShader : m_pixelShader->m_shader,
+			m_vertexShader.m_shader->m_patchedShader ? m_vertexShader.m_shader->m_patchedShader : m_vertexShader.m_shader->m_shader,
+			m_pixelShader.m_shader->m_patchedShader ? m_pixelShader.m_shader->m_patchedShader : m_pixelShader.m_shader->m_shader,
 			true ) ) )
 		{
 			Destroy();
@@ -87,8 +85,8 @@ ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL** shaders, size_t count, Tr2Pri
 
 void Tr2ShaderProgramAL::Destroy()
 {
-	m_vertexShader = nullptr;
-	m_pixelShader = nullptr;
+	m_vertexShader = Tr2ShaderAL();
+	m_pixelShader = Tr2ShaderAL();
 	if( m_program.program )
 	{
 		glDeleteProgram( m_program.program );
@@ -146,9 +144,9 @@ ALResult Tr2ShaderProgramAL::CreateProgram( ProgramData& program, GLuint vertexS
 	};
 
 	program.attributes.clear();
-	for( size_t i = 0; i < m_vertexShader->GetInputDefinition().elements.size(); ++i )
+	for( size_t i = 0; i < m_vertexShader.m_shader->m_signature.pipelineInputs.size(); ++i )
 	{
-		auto& element = m_vertexShader->GetInputDefinition().elements[i];
+		auto& element = m_vertexShader.m_shader->m_signature.pipelineInputs[i];
 		int index = glGetAttribLocation( program.program, attributeNames[i] );
 		if( index != -1 )
 		{

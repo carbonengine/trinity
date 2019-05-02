@@ -4,7 +4,16 @@
 
 using namespace Tr2RenderContextEnum;
 
-TEST_F( WithValidRenderContext, CanSetViewport )
+struct RenderContext : public WithValidRenderContext
+{
+};
+
+struct PrimaryRenderContext : public WithValidRenderContext
+{
+};
+
+
+TEST_F( RenderContext, CanSetViewport )
 {
 	Tr2Viewport viewport( 123, 67 );
 	viewport.m_x = 30;
@@ -22,12 +31,12 @@ TEST_F( WithValidRenderContext, CanSetViewport )
 	EXPECT_EQ( viewport.m_maxZ, gotViewport.m_maxZ );
 }
 
-TEST_F( WithValidRenderContext, CanGetBackbufferFormat )
+TEST_F( PrimaryRenderContext, CanGetBackbufferFormat )
 {
 	EXPECT_NE( Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN, renderContext->GetBackBufferFormat() );
 }
 
-TEST_F( WithValidRenderContext, CanGetBackbufferSize )
+TEST_F( PrimaryRenderContext, CanGetBackbufferSize )
 {
 	uint32_t width = 0xDeadBeef;
 	uint32_t height = 0xDeadBeef;
@@ -36,7 +45,7 @@ TEST_F( WithValidRenderContext, CanGetBackbufferSize )
 	EXPECT_NE( 0xDeadBeef, height );
 }
 
-TEST_F( WithValidRenderContext, CanGetRenderTargetSize )
+TEST_F( RenderContext, CanGetRenderTargetSize )
 {
 	uint32_t width = 0xDeadBeef;
 	uint32_t height = 0xDeadBeef;
@@ -53,7 +62,7 @@ TEST_F( WithValidRenderContext, CanGetRenderTargetSize )
 	EXPECT_EQ( rt.GetHeight(), height );
 }
 
-TEST_F( WithValidRenderContext, CanGetRenderTargetSizeForNonZeroSlot )
+TEST_F( RenderContext, CanGetRenderTargetSizeForNonZeroSlot )
 {
 	uint32_t width = 0xDeadBeef;
 	uint32_t height = 0xDeadBeef;
@@ -62,16 +71,19 @@ TEST_F( WithValidRenderContext, CanGetRenderTargetSizeForNonZeroSlot )
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 
+	ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget( 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( nullRT ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget( slot ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt, slot ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->GetRenderTargetSize( width, height, slot ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->PopRenderTarget( slot ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->PopRenderTarget( 0 ) );
 
 	EXPECT_EQ( rt.GetWidth(), width );
 	EXPECT_EQ( rt.GetHeight(), height );
 }
 
-TEST_F( WithValidRenderContext, GetRenderTargetSizeFailsWithNoRenderTarget )
+TEST_F( RenderContext, GetRenderTargetSizeFailsWithNoRenderTarget )
 {
 	uint32_t width = 0xDeadBeef;
 	uint32_t height = 0xDeadBeef;
@@ -91,26 +103,19 @@ TEST_F( WithRenderContext, InvalidRenderContextHasInvalidBackBuffer )
 	EXPECT_FALSE( renderContext->GetDefaultBackBuffer().IsValid() );
 }
 
-TEST_F( WithValidRenderContext, ValidRenderContextHasValidBackBuffer )
+TEST_F( PrimaryRenderContext, ValidRenderContextHasValidBackBuffer )
 {
 	EXPECT_TRUE( renderContext->GetDefaultBackBuffer().IsValid() );
 	EXPECT_EQ( 1, renderContext->GetDefaultBackBuffer().GetMipCount() );
 	EXPECT_EQ( renderContext->GetBackBufferFormat(), renderContext->GetDefaultBackBuffer().GetFormat() );
 }
 
-TEST_F( WithValidRenderContext, SettingInvalidClipPlaneSucceeds )
-{
-	// Setting clip plane with invalid index shuold be ignored silently
-	float plane[] = { 1.0f, 2.0f, 3.0f, 4.0f };
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetClipPlane( 128, plane ) );
-}
-
-TEST_F( WithValidRenderContext, CanSetNumberOfLights )
+TEST_F( RenderContext, CanSetNumberOfLights )
 {
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetNumberOfLights( 13 ) );
 }
 
-TEST_F( WithValidRenderContext, CanConvertPixelFormatToTypeless )
+TEST( RenderContextEnum, CanConvertPixelFormatToTypeless )
 {
 	Tr2RenderContextEnum::PixelFormat formats[] = {
 		PIXEL_FORMAT_UNKNOWN	                 , PIXEL_FORMAT_UNKNOWN	                 ,
@@ -220,7 +225,7 @@ TEST_F( WithValidRenderContext, CanConvertPixelFormatToTypeless )
 	}
 }
 
-TEST_F( WithValidRenderContext, CanConvertPixelFormatTosRgb )
+TEST( RenderContextEnum, CanConvertPixelFormatTosRgb )
 {
 	Tr2RenderContextEnum::PixelFormat formats[] = {
 		PIXEL_FORMAT_UNKNOWN	                 , PIXEL_FORMAT_UNKNOWN	                 ,
@@ -330,7 +335,13 @@ TEST_F( WithValidRenderContext, CanConvertPixelFormatTosRgb )
 	}
 }
 
-TEST_F( WithValidRenderContext, PrimaryRenderContextIsSetCorrectly )
+TEST_F( RenderContext, PrimaryRenderContextIsSetCorrectly )
 {
 	EXPECT_EQ( renderContext, &renderContext->GetPrimaryRenderContext() );
+}
+
+TEST_F( RenderContext, CanBeginAndEndScene )
+{
+	ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
 }

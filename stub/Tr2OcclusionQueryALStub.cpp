@@ -66,7 +66,7 @@ ALResult Tr2OcclusionQueryAL::GetPixelCount( Tr2RenderContextAL& /*renderContext
 	{
 		return E_INVALIDCALL;
 	}
-	count = 4;
+	count = 0;
 	return S_OK;
 }
 
