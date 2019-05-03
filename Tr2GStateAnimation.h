@@ -20,12 +20,6 @@ struct GrannyBoneBindingBounds
 	Vector3 m_corners[8];
 };
 
-struct GStateBindingCallbackData
-{
-	std::string gsf_path;
-	std::map<std::string, TriGrannyResPtr> *anim_map_pointer;
-};
-
 BLUE_CLASS( Tr2GStateAnimation ):
      public IInitialize,
 	 public ITr2AnimationUpdater,
@@ -42,11 +36,9 @@ public:
 	const std::string& GetGStateResPath() const;
 	void SetGStateResPath( const std::string& val );
 	const std::vector<std::string> GetGStateAnimFileRefPaths() const;
-	void BindAnimation();
 
-	void LoadAnimResPath( const std::string& val );
 	void LoadModelFromGstate();
-	void LoadAnimResources();
+	bool IsFullyLoaded();
 
 
 	bool IsAnimationEnabled() const;
@@ -92,6 +84,7 @@ public:
 	const granny_matrix_3x4* GetMeshBoneMatrixList() const;
 
 	void TogglePauseAnimations( bool pause );
+	void InstantiateCharacter();
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -108,11 +101,10 @@ public:
 	// IAsyncLoadedResNotifyTarget
 	void	ReleaseCachedData( BlueAsyncRes* p );
 	void	RebuildCachedData( BlueAsyncRes* p );
+	void	Cleanup();
+
 
 	bool	FindBoneByName( const char* name, unsigned int& ix ) const;
-
-	void	Cleanup();
-	
 	granny_skeleton *m_skeleton;
 	granny_world_pose *m_worldPose;
 	granny_mesh_binding *m_meshBinding;
@@ -128,7 +120,6 @@ private:
 	Tr2GrannyStateResPtr m_gStateRes;
 	granny_pose_cache *m_gstate_pose_cache;
 	granny_real32		m_last_gstate_time;
-	std::map<std::string, TriGrannyResPtr>	m_gStateAnimFiles;
 	TriGeometryResPtr	m_geometryRes;
 
 	bool m_animationBound;
@@ -164,8 +155,6 @@ private:
 
 	granny_file_info* GetFileInfo() const;
 	void LoadGrannyRes();
-
-	GStateBindingCallbackData m_callbackData;
 
 	
 	IBlueEventListenerPtr m_eventListener;

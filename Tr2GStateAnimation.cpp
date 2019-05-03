@@ -43,8 +43,6 @@ Tr2GStateAnimation::Tr2GStateAnimation(IRoot* lockobj) :
 	m_pauseTime( 0.0 ),
 	m_totalPauseOffset( 0.0 )
 {
-	m_callbackData.gsf_path = "";
-	m_callbackData.anim_map_pointer = nullptr;
 }
 
 Tr2GStateAnimation::~Tr2GStateAnimation()
@@ -94,72 +92,11 @@ void Tr2GStateAnimation::LoadGrannyRes()
 }
 
 
-std::string GetFullAnimPath(std::string SourceFilenameString, std::string dir_path)
+bool Tr2GStateAnimation::IsFullyLoaded()
 {
-	auto last_delimiter_pos = dir_path.find_last_of("/\\");
-	dir_path.erase(last_delimiter_pos, dir_path.length() - last_delimiter_pos);
-
-	while (SourceFilenameString.substr(0, 2) == "..")
-	{
-		SourceFilenameString.erase(0, 3);
-		last_delimiter_pos = dir_path.find_last_of("/\\");
-		dir_path.erase(last_delimiter_pos, dir_path.length() - last_delimiter_pos);
-	}
-
-	if (SourceFilenameString.substr(0, 1) == ".")
-	{
-		SourceFilenameString.erase(0, 2);
-	}
-
-	dir_path += "/";
-	dir_path += SourceFilenameString;
-	SourceFilenameString = dir_path;
-
-	std::replace(SourceFilenameString.begin(), SourceFilenameString.end(), '\\', '/');
-	return SourceFilenameString;
+	return m_gStateRes->IsFullyLoaded() && m_grannyRes->IsGood() && m_modelInstance != nullptr;
 }
 
-
-
-
-
-granny_file_info* GStateAnimationBindingCallback(gstate_character_info *BindingInfo,
-															char const* SourceFilename,
-															void* UserData)
-{
-	auto callbackData = *(static_cast<GStateBindingCallbackData *>(UserData));
-	std::map<std::string, TriGrannyResPtr> *gStateAnimFilesPtr = callbackData.anim_map_pointer;
-
-
-	// Animation granny files are relative to the parent directory of the .gsf file
-	std::string SourceFilenameString = SourceFilename;
-	std::string dir_path = callbackData.gsf_path;
-
-	SourceFilenameString = GetFullAnimPath(SourceFilenameString, dir_path);
-
-	TriGrannyResPtr result_granny_res = nullptr;
-
-	for ( auto it = gStateAnimFilesPtr->begin(); it != gStateAnimFilesPtr->end(); it++ )
-	{
-		
-		std::string iter_file_name = it->first;
-		std::replace(iter_file_name.begin(), iter_file_name.end(), '\\', '/');
-
-		if ( iter_file_name == SourceFilenameString )
-		{
-			result_granny_res = it->second;
-		}
-	}
-
-	if ( result_granny_res != nullptr )
-	{
-		return result_granny_res->ValidateFileInfo();
-	}
-
-	CCP_LOGERR("GState Binding Step: '%s' is required by the GState file and is not loaded", SourceFilenameString.c_str());
-
-	return nullptr;
-}
 
 bool Tr2GStateAnimation::Initialize()
 {
@@ -169,17 +106,6 @@ bool Tr2GStateAnimation::Initialize()
 	{
 		m_gStateRes->RemoveNotifyTarget( this );
 		m_gStateRes.Unlock();
-
-			
-		if ( !m_gStateAnimFiles.empty() )
-		{
-			for ( auto it = m_gStateAnimFiles.begin(); it != m_gStateAnimFiles.end(); it++ )
-			{
-				it->second->RemoveNotifyTarget(this);
-				it->second.Unlock();
-			}
-		}
-		m_gStateAnimFiles.clear();
 	}
 
 	BeResMan->GetResource( m_gStateResPath.c_str(), "raw", BlueInterfaceIID<Tr2GrannyStateRes>(), (void**)&m_gStateRes );
@@ -190,26 +116,6 @@ bool Tr2GStateAnimation::Initialize()
 	}
 
 	return true;
-}
-
-void Tr2GStateAnimation::LoadAnimResPath( const std::string& val )
-{
-	auto it = m_gStateAnimFiles.find(val);
-	if ( it != m_gStateAnimFiles.end() )
-	{
-		it->second->RemoveNotifyTarget(this);
-		it->second.Unlock();
-	}
-
-	TriGrannyResPtr granny_res;
-	BeResMan->GetResource( val.c_str(), "raw", BlueInterfaceIID<TriGrannyRes>(), (void**)&granny_res );
-
-	m_gStateAnimFiles[ val ] = granny_res;
-
-	if ( granny_res )
-	{
-		granny_res->AddNotifyTarget(this);
-	}
 }
 
 void Tr2GStateAnimation::ReleaseCachedData( BlueAsyncRes* p )
@@ -246,18 +152,6 @@ void Tr2GStateAnimation::RebuildCachedData( BlueAsyncRes* p )
 {
 	if ( p != m_grannyRes && p != m_geometryRes )
 	{
-		for ( auto it = m_gStateAnimFiles.begin(); it != m_gStateAnimFiles.end(); it++ )
-		{
-			if ( p == it->second )
-			{					
-				if ( it->second && !it->second->GetGrannyFile() )
-				{
-					CCP_LOGERR("'%s' not found or not a valid Granny file", it->first.c_str());
-				}
-				return;
-			}
-		}
-
 		if ( p == m_gStateRes )
 		{
 			if ( m_gStateRes && !m_gStateRes->GetCharacterInfo() )
@@ -267,7 +161,6 @@ void Tr2GStateAnimation::RebuildCachedData( BlueAsyncRes* p )
 			}
 
 			LoadModelFromGstate();
-			LoadAnimResources();
 
 			return;
 		}
@@ -292,7 +185,7 @@ void Tr2GStateAnimation::RebuildCachedData( BlueAsyncRes* p )
 	}
 
 
-	if( fi->ModelCount > 0 )
+	if ( fi->ModelCount > 0 )
 	{
 		// By default we take the first model in the file
 		m_modelIndex = 0;
@@ -410,30 +303,9 @@ void Tr2GStateAnimation::LoadModelFromGstate()
 }
 
 
-void Tr2GStateAnimation::LoadAnimResources()
+void Tr2GStateAnimation::InstantiateCharacter()
 {
-	auto file_list = GetGStateAnimFileRefPaths();
-	for ( auto it = file_list.begin(); it != file_list.end(); ++it )
-	{
-		std::string anim_res_path = GetFullAnimPath(*it, m_gStateResPath);
-		LoadAnimResPath(anim_res_path);
-	}
-}
-
-
-
-
-void Tr2GStateAnimation::BindAnimation()
-{
-	m_callbackData.gsf_path = m_gStateResPath;
-	m_callbackData.anim_map_pointer = &m_gStateAnimFiles;
-	gstate_character_info *character_info = m_gStateRes->GetCharacterInfo();
-
-	if (!GStateBindCharacterFileReferences(character_info, static_cast<gstate_file_ref_callback*>(GStateAnimationBindingCallback), static_cast<void*>(&m_callbackData)))
-	{
-		CCP_LOGERR("'%s' Granny State file refers to invalid or unavailable animation.", m_gStateResPath.c_str());
-	}
-
+	auto character_info = m_gStateRes->GetCharacterInfo();
 	m_gStateCharacterInstance = GStateInstantiateCharacter(character_info, GetAnimationTime(), 0, GetGrannyModel());
 	m_state_machine = GStateGetStateMachine(m_gStateCharacterInstance);
 
@@ -444,31 +316,9 @@ void Tr2GStateAnimation::BindAnimation()
 	m_animationBound = true;
 }
 
-
-// WARNING:  The following method uses undocumented GState internals that may change.  Keep an eye out for
-//  changes that break it.
 const std::vector<std::string> Tr2GStateAnimation::GetGStateAnimFileRefPaths() const
 {
-	std::vector<std::string> path_list;
-
-	if ( !m_gStateRes->IsPrepared() )
-	{
-		return path_list;
-	}
-
-	gstate_character_info *character_info = m_gStateRes->GetCharacterInfo();
-
-	for (int Idx = 0; Idx < character_info->AnimationSetCount; Idx++)
-	{
-		animation_set *CurrSet = character_info->AnimationSets[Idx];
-		for (	int Idx2 = 0; Idx2 < CurrSet->SourceFileReferenceCount; Idx2++ )
-		{
-			source_file_ref *ref = CurrSet->SourceFileReferences[Idx2];
-			path_list.push_back(ref->SourceFilename);
-		}
-	}
-
-	return path_list;
+	return m_gStateRes->GetGStateAnimFileRefPaths();
 }
 
 
@@ -1301,12 +1151,7 @@ float Tr2GStateAnimation::GetAnimationTime()
 
 bool Tr2GStateAnimation::IsInitialized() const
 {
-	bool all_anim_good = true;
-	for ( auto it = m_gStateAnimFiles.begin() ; it != m_gStateAnimFiles.end(); it++ )
-	{
-		all_anim_good = all_anim_good && it->second->IsGood();
-	}
-	return ( m_modelInstance != nullptr ) && ( m_gStateRes != nullptr ) && m_gStateRes->IsGood() && all_anim_good
+	return ( m_modelInstance != nullptr ) && ( m_gStateRes != nullptr ) && m_gStateRes->IsFullyLoaded()
 	                                      && m_gStateCharacterInstance && m_gstate_pose_cache && m_animationBound;
 }
 

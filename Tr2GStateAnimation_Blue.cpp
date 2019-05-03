@@ -65,15 +65,6 @@ const Be::ClassInfo* Tr2GStateAnimation::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP
 		(
-			"LoadAnimResPath",
-			LoadAnimResPath,
-			"LoadAnimResPath( path )\n\n"
-			"Preloads animation .gr2 resource file."
-			":param string: resource path for animation file"
-		)
-
-		MAP_METHOD_AND_WRAP
-		(
 			"LoadModelFromGstate",
 			LoadModelFromGstate,
 			"LoadModelFromGstate()\n\n"
@@ -82,26 +73,10 @@ const Be::ClassInfo* Tr2GStateAnimation::ExposeToBlue()
 
 		MAP_METHOD_AND_WRAP
 		(
-			"LoadAnimResources",
-			LoadAnimResources,
-			"LoadAnimResPath()\n\n"
-			"Preloads all animation .gr2 resource files."
-		)
-
-		MAP_METHOD_AND_WRAP
-		(
 			"GetGStateAnimFileRefPaths",
 			GetGStateAnimFileRefPaths,
 			"GetGStateAnimFileRefPaths( )\n\n"
 			"Returns list of GState anim file ref paths"
-		)
-	
-		MAP_METHOD_AND_WRAP
-		(
-			"BindAnimation",
-			BindAnimation,
-			"BindAnimation( )\n\n"
-			"Binds animation for GState file (call after all resources have loaded.)"
 		)
 
 		MAP_METHOD_AND_WRAP
@@ -266,6 +241,22 @@ const Be::ClassInfo* Tr2GStateAnimation::ExposeToBlue()
 			"Returns the integer index of a parameter name on a param node"
 			":param string: name for parameter node"
 			":param string: name for parameter"
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"IsFullyLoaded",
+			IsFullyLoaded,
+			"IsFullyLoaded()\n\n"
+			"Returns boolean indicating whether the gState instance and all dependent data is fully loaded."
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"InstantiateCharacter",
+			InstantiateCharacter,
+			"InstantiateCharacter()\n\n"
+			"Used to bind animation once it is fully loaded."
 		)
 
 	EXPOSURE_END()

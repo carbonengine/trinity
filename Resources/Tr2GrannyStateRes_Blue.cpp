@@ -21,5 +21,6 @@ const Be::ClassInfo* Tr2GrannyStateRes::ExposeToBlue()
 		MAP_INTERFACE(ICacheable)
 		MAP_ICACHEABLE_METHODS()
 
+
 	EXPOSURE_CHAINTO(BlueAsyncRes)
 }
