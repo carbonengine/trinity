@@ -1,4 +1,6 @@
 #include "StdAfx.h"
+#if GSTATE_ENABLED
+
 #include "Tr2GrannyStateRes.h"
 #include "Resources/TriGrannyRes.h"
 #include "Utilities/GeometryUtils.h"
@@ -288,3 +290,4 @@ void Tr2GrannyStateRes::LoadAnimResPath( const std::string& val )
 	}
 }
 
+#endif

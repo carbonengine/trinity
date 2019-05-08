@@ -2,6 +2,8 @@
 #ifndef Tr2GStateAnimation_h
 #define Tr2GStateAnimation_h
 
+#if GSTATE_ENABLED
+
 #include "Include/ITr2AnimationUpdater.h"
 #include "Resources/Tr2GrannyStateRes.h"
 #include "gstate.h"
@@ -161,5 +163,7 @@ private:
 };
 
 TYPEDEF_BLUECLASS( Tr2GStateAnimation );
+
+#endif
 
 #endif //Tr2GStateAnimation_h

@@ -3,6 +3,8 @@
 #ifndef Tr2GrannyStateRes_h
 #define Tr2GrannyStateRes_h
 
+#if GSTATE_ENABLED
+
 #include "gstate.h"
 
 BLUE_DECLARE( TriGrannyRes );
@@ -65,4 +67,7 @@ private:
 };
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2GrannyStateRes );
+
+#endif
+
 #endif

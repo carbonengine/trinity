@@ -1,4 +1,7 @@
 #include "StdAfx.h"
+
+#if GSTATE_ENABLED
+
 #include "Tr2GStateAnimation.h"
 #include "Resources/TriGeometryRes.h"
 #include "Resources/TriGrannyRes.h"
@@ -261,3 +264,5 @@ const Be::ClassInfo* Tr2GStateAnimation::ExposeToBlue()
 
 	EXPOSURE_END()
 }
+
+#endif

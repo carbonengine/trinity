@@ -110,6 +110,10 @@ using std::max;
 	#define EVALUATION_SDKS_ENABLED 1
 #endif
 
+#ifndef GSTATE_ENABLED
+#define GSTATE_ENABLED 1
+#endif
+
 #ifndef _WIN32
 	#ifndef TRUE
 		#define TRUE 1

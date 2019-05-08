@@ -419,6 +419,7 @@ Configurations:
       - EVALUATION_SDKS_ENABLED=0
       - IME_ENABLED=0
       - TBB_ENABLED=1
+      - GSTATE_ENABLED=0
 
   ReleaseGLES2|Mac64:
     BaseConfigurations:
@@ -439,6 +440,7 @@ Configurations:
       - EVALUATION_SDKS_ENABLED=0
       - IME_ENABLED=0
       - TBB_ENABLED=1
+      - GSTATE_ENABLED=0
 
   Deploy|Win32,x64:
     BaseConfigurations:

@@ -1,4 +1,7 @@
 #include "StdAfx.h"
+
+#if GSTATE_ENABLED
+
 #include "Tr2GrannyStateRes.h"
 
 BLUE_DEFINE( Tr2GrannyStateRes );
@@ -24,3 +27,5 @@ const Be::ClassInfo* Tr2GrannyStateRes::ExposeToBlue()
 
 	EXPOSURE_CHAINTO(BlueAsyncRes)
 }
+
+#endif

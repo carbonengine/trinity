@@ -1,4 +1,7 @@
 #include "StdAfx.h"
+
+#if GSTATE_ENABLED
+
 #include "Tr2GStateAnimation.h"
 #include "Resources/TriGrannyRes.h"
 #include "Resources/Tr2GrannyStateRes.h"
@@ -1171,3 +1174,5 @@ void Tr2GStateAnimation::TogglePauseAnimations(bool pause)
 		m_pauseTime = Tr2Renderer::GetAnimationTime() - m_totalPauseOffset;
 	}
 }
+
+#endif
