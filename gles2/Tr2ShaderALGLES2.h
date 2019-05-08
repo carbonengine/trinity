@@ -47,7 +47,7 @@ namespace TrinityALImpl
 		int32_t m_patchedShader;
 
 		friend class Tr2RenderContextAL;
-		friend class Tr2ShaderProgramAL;
+		friend class ::Tr2ShaderProgramAL;
 	};
 
 }
