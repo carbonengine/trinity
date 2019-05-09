@@ -24,7 +24,8 @@ Tr2ReflectionProbe::Tr2ReflectionProbe( IRoot* lockobj )
 	: m_initialized( false ),
 	m_position( 0, 0, 0 ),
 	m_intermediateSize( FILTER_SIZE * 4 ),
-	m_prevCullInversion( false )
+	m_prevCullInversion( false ),
+	m_customSourceTexture()
 {
 	m_renderTarget.CreateInstance();
 	m_renderTargetCube.CreateInstance();
@@ -152,7 +153,8 @@ bool Tr2ReflectionProbe::OnPrepareResources()
 
 	if( !m_stencilMap.IsValid() )
 	{
-		CR_RETURN_VAL( m_stencilMap.Create( Tr2BitmapDimensions( m_intermediateSize, m_intermediateSize, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, renderContext ), false );
+		int stencilSize = ( m_customSourceTexture && m_customSourceTexture->IsValid() ) ? m_customSourceTexture->GetWidth() : m_intermediateSize;
+		CR_RETURN_VAL( m_stencilMap.Create( Tr2BitmapDimensions( stencilSize, stencilSize, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, renderContext ), false );
 	}
 
 	if( !m_preFilterTarget->IsValid() )
@@ -169,7 +171,8 @@ bool Tr2ReflectionProbe::OnPrepareResources()
 	{
 		m_filterEffect->SetEffectPathName( "res:/graphics/effect/managed/space/System/Reflection/ReflectionFilterActivision128.fx" );
 		m_preFilterEffect->SetEffectPathName( "res:/graphics/effect/managed/space/System/Reflection/ReflectionFilterActivisionPre.fx" );
-		m_preFilterEffect->SetParameter( BlueSharedString( "tex_hi_res" ), m_renderTargetCube );
+		auto source = dynamic_cast< ITr2TextureProvider* >( m_customSourceTexture.p );
+		m_preFilterEffect->SetParameter( BlueSharedString( "tex_hi_res" ), source ? source : static_cast<ITr2TextureProvider*>( m_renderTargetCube ) );
 		m_preFilterEffect->SetParameter( BlueSharedString( "tex_lo_res" ), m_preFilterTarget );
 
 		for( int i = 0; i < MIP_COUNT; i++ )
@@ -204,4 +207,10 @@ void Tr2ReflectionProbe::Filter( Tr2RenderContext &renderContext )
 {
 	Tr2Renderer::RunComputeShader( m_preFilterEffect, FILTER_SIZE, FILTER_SIZE, 6, renderContext );
 	Tr2Renderer::RunComputeShader( m_filterEffect, FILTER_GROUP_DIM, 6, 1, renderContext );
+}
+
+void Tr2ReflectionProbe::RunFilter()
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	Filter( renderContext );
 }

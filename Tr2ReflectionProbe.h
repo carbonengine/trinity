@@ -11,7 +11,7 @@
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
 BLUE_DECLARE( Tr2RenderTarget );
-BLUE_DECLARE( TriTextureRes );
+BLUE_DECLARE_INTERFACE( ITriTextureRes );
 
 BLUE_CLASS( Tr2ReflectionProbe ) :
 	public INotify,
@@ -38,6 +38,7 @@ public:
 	bool OnModified( Be::Var* value );
 
 private:
+	void RunFilter();
 	void Filter( Tr2RenderContext &renderContext );
 
 	bool m_initialized;
@@ -52,6 +53,8 @@ private:
 	Tr2EffectPtr m_filterEffect;
 	Tr2RenderTargetPtr m_preFilterTarget;
 	Tr2RenderTargetPtr m_postFilterTarget;
+
+	ITriTextureResPtr m_customSourceTexture;
 
 	bool m_prevCullInversion;
 };

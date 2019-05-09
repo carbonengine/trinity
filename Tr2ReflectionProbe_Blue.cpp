@@ -19,5 +19,8 @@ const Be::ClassInfo* Tr2ReflectionProbe::ExposeToBlue()
 		MAP_ATTRIBUTE( "reflectionTexture", m_postFilterTarget, "Filtered reflection texture, with different roughness levels in mips", Be::READ )
 		MAP_ATTRIBUTE( "position", m_position, "Origin for the reflection", Be::READWRITE )
 		MAP_ATTRIBUTE( "reflectionSize", m_intermediateSize, "Size for the unfiltered reflection map", Be::READWRITE | Be::NOTIFY )
+		MAP_ATTRIBUTE( "customSourceTexture", m_customSourceTexture, "A custom texture for filtering", Be::READWRITE | Be::NOTIFY)
+
+		MAP_METHOD_AND_WRAP( "RunFilter", RunFilter, "Filters the currently set texture" )
 	EXPOSURE_END()
 }
