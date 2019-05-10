@@ -630,12 +630,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -661,13 +661,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -694,13 +694,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -727,12 +727,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -758,12 +758,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_OPENGLES2;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_OPENGLES2;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -789,12 +789,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -820,12 +820,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -851,12 +851,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -882,12 +882,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -913,12 +913,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -944,13 +944,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -977,12 +977,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1008,12 +1008,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_OPENGLES2;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_OPENGLES2;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1039,12 +1039,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1070,12 +1070,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_STUB;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_STUB;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1101,13 +1101,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1134,12 +1134,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1165,13 +1165,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1198,12 +1198,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1229,12 +1229,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1260,12 +1260,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1291,12 +1291,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1322,12 +1322,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1353,12 +1353,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1384,13 +1384,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1417,12 +1417,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_DIRECTX9;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_DIRECTX9;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1448,13 +1448,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1481,12 +1481,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_STUB;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_STUB;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1512,12 +1512,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_DIRECTX9;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_DIRECTX9;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1543,12 +1543,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1574,13 +1574,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1607,12 +1607,12 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>Disabled</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1638,13 +1638,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1671,13 +1671,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1704,13 +1704,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
@@ -1737,13 +1737,13 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
+      <TreatWarningAsError>False</TreatWarningAsError>
       <Optimization>MaxSpeed</Optimization>
       <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
       <BufferSecurityCheck>False</BufferSecurityCheck>
