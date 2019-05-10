@@ -338,7 +338,12 @@ bool TriTextureRes::Save( const wchar_t* filename )
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	// Only permit saving of 2d and cube textures
-	if( m_type != TEX_TYPE_2D && m_type != TEX_TYPE_CUBE )
+	if( m_type == TEX_TYPE_INVALID )
+	{
+		CCP_LOGERR( "Texture save failed - texture is invalid" );
+		return false;
+	}
+	else if( m_type != TEX_TYPE_2D && m_type != TEX_TYPE_CUBE )
 	{
 		CCP_LOGERR( "Texture save failed - only 2d and cubemap textures can be saved" );
 		return false;
@@ -365,7 +370,12 @@ bool TriTextureRes::Save( const wchar_t* filename )
 bool TriTextureRes::SaveAsync( const wchar_t* filename )
 {
 	// Only permit saving of 2d and cube textures
-	if( m_type != TEX_TYPE_2D && m_type != TEX_TYPE_CUBE )
+	if( m_type == TEX_TYPE_INVALID )
+	{
+		CCP_LOGERR( "Texture save failed - texture is invalid" );
+		return false;
+	}
+	else if( m_type != TEX_TYPE_2D && m_type != TEX_TYPE_CUBE )
 	{
 		CCP_LOGERR( "Texture save failed - only 2d and cubemap textures can be saved" );
 		return false;
