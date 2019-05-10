@@ -17,7 +17,7 @@ ClCompile:
   CppExceptions: true
   RuntimeTypeInfo: true
   WarningLevel: Level4
-  TreatWarningAsError: true
+  TreatWarningAsError: false
   BufferSecurityCheck: false
   EnableEnhancedInstructionSet: StreamingSIMDExtensions2
   PrecompiledHeader: Use
@@ -27,6 +27,7 @@ ClCompile:
   - ..
   PreprocessorDefinitions:
   - TRINITY_AL_WITH_BLUE_EXPOSURE=0
+  - _MSC_PLATFORM_TOOLSET_$(PlatformToolset)
 
 Link:
   GenerateDebugInformation: true
