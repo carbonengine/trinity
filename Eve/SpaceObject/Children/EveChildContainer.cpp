@@ -14,6 +14,7 @@
 #include "Tr2LightManager.h"
 #include "Lights/Tr2PointLight.h"
 #include "Controllers/ITr2Controller.h"
+#include "ITr2SoundEmitterOwner.h"
 
 
 EveChildContainer::EveChildContainer( IRoot* lockobj ) :
@@ -552,6 +553,18 @@ ITr2SoundEmitter* EveChildContainer::FindSoundEmitter( const char* name )
 		{
 			ITr2SoundEmitterPtr listener = BlueCastPtr( observer->GetObserver() );
 			return listener;
+		}
+	}
+
+	for( auto it = m_objects.begin(); it != m_objects.end(); it++ )
+	{
+		if( auto owner = dynamic_cast<ITr2SoundEmitterOwner*>( *it ) )
+		{
+			auto emitter = owner->FindSoundEmitter( name );
+			if ( emitter != nullptr )
+			{
+				return emitter;
+			}
 		}
 	}
 	return nullptr;

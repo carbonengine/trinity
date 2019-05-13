@@ -3162,6 +3162,18 @@ ITr2SoundEmitter* EveSpaceObject2::FindSoundEmitter( const char* name )
 			return listener;
 		}
 	}
+
+	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); it++ )
+	{
+		if( auto owner = dynamic_cast<ITr2SoundEmitterOwner*>( *it ) )
+		{
+			auto emitter = owner->FindSoundEmitter( name );
+			if ( emitter != nullptr )
+			{
+				return emitter;
+			}
+		}
+	}
 	return nullptr;
 }
 
