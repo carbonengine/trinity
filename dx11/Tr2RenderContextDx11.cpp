@@ -1922,7 +1922,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 				begin,
 				end - begin, 
 				reinterpret_cast<ID3D11UnorderedAccessView**>( rs.m_uavs + begin ), 
-				rs.m_uavInitialCounts );
+				rs.m_uavInitialCounts + begin );
 			m_assignedUavCount = rs.m_uavCount;
 			m_assignedUavOffset = rs.m_uavOffset;
 			m_assignedPsUavs = false;
@@ -1954,7 +1954,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 				begin,
 				end - begin,
 				reinterpret_cast<ID3D11UnorderedAccessView**>( rs.m_uavs + begin ),
-				rs.m_uavInitialCounts );
+				rs.m_uavInitialCounts + begin );
 			m_assignedUavCount = rs.m_uavCount;
 			m_assignedUavOffset = rs.m_uavOffset;
 			m_assignedPsUavs = true;
