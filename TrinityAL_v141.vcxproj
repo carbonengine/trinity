@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug_Vulkan|Win32">
+      <Configuration>Debug_Vulkan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release_D3D9|Win32">
       <Configuration>Release_D3D9</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_Vulkan|x64">
+      <Configuration>Release_Vulkan</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Dev_Stub|Win32">
       <Configuration>Dev_Stub</Configuration>
@@ -17,9 +25,17 @@
       <Configuration>Debug_D3D11</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Dev_D3D11|x64">
+      <Configuration>Dev_D3D11</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Dev_GLES2|Win32">
       <Configuration>Dev_GLES2</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_D3D12|x64">
+      <Configuration>Debug_D3D12</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Dev_D3D11|Win32">
       <Configuration>Dev_D3D11</Configuration>
@@ -49,6 +65,10 @@
       <Configuration>Release_GLES2</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Dev_D3D12|Win32">
+      <Configuration>Dev_D3D12</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release_D3D11|x64">
       <Configuration>Release_D3D11</Configuration>
       <Platform>x64</Platform>
@@ -57,9 +77,9 @@
       <Configuration>Dev_GLES2</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Dev_D3D11|x64">
-      <Configuration>Dev_D3D11</Configuration>
-      <Platform>x64</Platform>
+    <ProjectConfiguration Include="Debug_D3D12|Win32">
+      <Configuration>Debug_D3D12</Configuration>
+      <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Dev_Stub|x64">
       <Configuration>Dev_Stub</Configuration>
@@ -67,6 +87,14 @@
     </ProjectConfiguration>
     <ProjectConfiguration Include="Dev_D3D9|x64">
       <Configuration>Dev_D3D9</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Dev_Vulkan|Win32">
+      <Configuration>Dev_Vulkan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Dev_D3D12|x64">
+      <Configuration>Dev_D3D12</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release_D3D9|x64">
@@ -89,6 +117,26 @@
       <Configuration>Debug_D3D9</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Dev_Vulkan|x64">
+      <Configuration>Dev_Vulkan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_D3D12|x64">
+      <Configuration>Release_D3D12</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug_Vulkan|x64">
+      <Configuration>Debug_Vulkan</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_D3D12|Win32">
+      <Configuration>Release_D3D12</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release_Vulkan|Win32">
+      <Configuration>Release_Vulkan</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release_Stub|Win32">
       <Configuration>Release_Stub</Configuration>
       <Platform>Win32</Platform>
@@ -103,7 +151,13 @@
     <ProjectName>TrinityAL</ProjectName>
     <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|Win32'" Label="Configuration">
@@ -115,7 +169,13 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|Win32'" Label="Configuration">
@@ -139,19 +199,28 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|x64'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|x64'" Label="Configuration">
@@ -169,6 +238,21 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|x64'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|x64'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
@@ -176,7 +260,21 @@
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|Win32'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">
     <TargetExt>.lib</TargetExt>
     <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
     <UseOfMfc>False</UseOfMfc>
@@ -204,7 +302,21 @@
     <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|x64'">
     <TargetExt>.lib</TargetExt>
     <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
     <UseOfMfc>False</UseOfMfc>
@@ -260,6 +372,13 @@
     <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|Win32'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|x64'">
     <TargetExt>.lib</TargetExt>
     <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
@@ -274,7 +393,7 @@
     <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|Win32'">
     <TargetExt>.lib</TargetExt>
     <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
     <UseOfMfc>False</UseOfMfc>
@@ -289,6 +408,20 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|x64'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|Win32'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|x64'">
     <TargetExt>.lib</TargetExt>
     <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
     <UseOfMfc>False</UseOfMfc>
@@ -330,6 +463,41 @@
     <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>StaticLibrary</ConfigurationType>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|x64'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|x64'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|Win32'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|Win32'">
+    <TargetExt>.lib</TargetExt>
+    <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/TrinityAL/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|Win32'">
     <TargetExt>.lib</TargetExt>
     <OutDir>../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/</OutDir>
@@ -362,11 +530,15 @@
     </BuildMacro>
   </ItemGroup>
   <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|Win32'" Label="PropertySheets" />
@@ -374,28 +546,43 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'" Label="PropertySheets" />
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|x64'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|Win32'" Label="PropertySheets" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|Win32'" Label="PropertySheets" />
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'" Label="PropertySheets" />
   <PropertyGroup>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|Win32'">TrinityAL_vulkan_d</TargetName>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'">TrinityAL_dx9</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">TrinityAL_vulkan</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|Win32'">TrinityAL_stub_dev</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|Win32'">TrinityAL_gles2_d</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_GLES2|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|x64'">TrinityAL_dx11_d</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_D3D11|x64'">True</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'">TrinityAL_dx11_dev</TargetName>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">TrinityAL_gles2_dev</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">True</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|x64'">TrinityAL_dx12_d</TargetName>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|x64'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|Win32'">TrinityAL_dx11_dev</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|Win32'">TrinityAL_dx11</TargetName>
@@ -408,15 +595,21 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|x64'">TrinityAL_stub_d</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|x64'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|x64'">TrinityAL_gles2</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|Win32'">TrinityAL_dx12_dev</TargetName>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|x64'">TrinityAL_dx11</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">TrinityAL_gles2_dev</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|x64'">True</LinkIncremental>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'">TrinityAL_dx11_dev</TargetName>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'">True</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|Win32'">TrinityAL_dx12_d</TargetName>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|x64'">TrinityAL_stub_dev</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_Stub|x64'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|x64'">TrinityAL_dx9_dev</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_D3D9|x64'">True</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|Win32'">TrinityAL_vulkan_dev</TargetName>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|Win32'">True</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|x64'">TrinityAL_dx12_dev</TargetName>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|x64'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|x64'">TrinityAL_dx9</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|Win32'">TrinityAL_dx9_d</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|Win32'">True</LinkIncremental>
@@ -425,9 +618,47 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_Stub|Win32'">True</LinkIncremental>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|x64'">TrinityAL_dx9_d</TargetName>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_D3D9|x64'">True</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|x64'">TrinityAL_vulkan_dev</TargetName>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|x64'">True</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|x64'">TrinityAL_dx12</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">TrinityAL_vulkan_d</TargetName>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">True</LinkIncremental>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|Win32'">TrinityAL_dx12</TargetName>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|Win32'">TrinityAL_vulkan</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_Stub|Win32'">TrinityAL_stub</TargetName>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_GLES2|Win32'">TrinityAL_gles2</TargetName>
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D9|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -454,6 +685,39 @@
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WholeProgramOptimization>True</WholeProgramOptimization>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile />
     <Manifest />
@@ -554,6 +818,37 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_GLES2|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -578,6 +873,37 @@
       <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;glew32.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile />
     <Manifest />
@@ -806,6 +1132,37 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D11|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -870,12 +1227,12 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D11|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_D3D12|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -891,9 +1248,9 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile />
     <Manifest />
@@ -956,6 +1313,68 @@
       <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_D3D12|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile />
     <Manifest />
@@ -1122,6 +1541,167 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev_Vulkan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WholeProgramOptimization>True</WholeProgramOptimization>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug_Vulkan|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_D3D12|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WholeProgramOptimization>True</WholeProgramOptimization>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Vulkan|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WholeProgramOptimization>True</WholeProgramOptimization>
+      <TreatWarningAsError>False</TreatWarningAsError>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinityal.pch</PrecompiledHeaderOutputFile>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <WarningLevel>Level4</WarningLevel>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <CppExceptions>True</CppExceptions>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <RuntimeTypeInfo>True</RuntimeTypeInfo>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile />
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_Stub|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -1224,6 +1804,24 @@
     <ClInclude Include="dx11\Tr2TextureALDx11.h" />
     <ClInclude Include="dx11\Tr2VertexLayoutALDx11.h" />
     <ClInclude Include="dx11\Tr2VideoAdapterInfoALDx11.h" />
+    <ClInclude Include="dx12\Tr2BufferALDx12.h" />
+    <ClInclude Include="dx12\Tr2CapsALDx12.h" />
+    <ClInclude Include="dx12\Tr2ConstantBufferALDx12.h" />
+    <ClInclude Include="dx12\Tr2FenceALDx12.h" />
+    <ClInclude Include="dx12\Tr2GpuTimerALDx12.h" />
+    <ClInclude Include="dx12\Tr2OcclusionQueryALDx12.h" />
+    <ClInclude Include="dx12\Tr2PrimaryRenderContextDx12.h" />
+    <ClInclude Include="dx12\Tr2RenderContextDx12.h" />
+    <ClInclude Include="dx12\Tr2ResourceHelper.h" />
+    <ClInclude Include="dx12\Tr2ResourceSetALDx12.h" />
+    <ClInclude Include="dx12\Tr2SamplerStateALDx12.h" />
+    <ClInclude Include="dx12\Tr2ShaderALDx12.h" />
+    <ClInclude Include="dx12\Tr2ShaderProgramALDx12.h" />
+    <ClInclude Include="dx12\Tr2SwapChainALDx12.h" />
+    <ClInclude Include="dx12\Tr2TextureALDx12.h" />
+    <ClInclude Include="dx12\Tr2VertexLayoutALDx12.h" />
+    <ClInclude Include="dx12\Tr2VideoAdapterInfoALDx12.h" />
+    <ClInclude Include="dx12\Utilities.h" />
     <ClInclude Include="dx9\Tr2BufferALDx9.h" />
     <ClInclude Include="dx9\Tr2CapsALDx9.h" />
     <ClInclude Include="dx9\Tr2ConstantBufferALDx9.h" />
@@ -1295,6 +1893,24 @@
     <ClInclude Include="stub\Tr2TextureALStub.h" />
     <ClInclude Include="stub\Tr2VertexLayoutALStub.h" />
     <ClInclude Include="stub\Tr2VideoAdapterInfoALStub.h" />
+    <ClInclude Include="vulkan\Tr2BufferALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2CapsALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2ConstantBufferALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2FenceALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2GpuTimerALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2OcclusionQueryALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2PrimaryRenderContextVulkan.h" />
+    <ClInclude Include="vulkan\Tr2RenderContextVulkan.h" />
+    <ClInclude Include="vulkan\Tr2ResourceSetALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2SamplerStateALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2ShaderALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2ShaderProgramALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2SwapChainALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2TextureALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2VertexLayoutALVulkan.h" />
+    <ClInclude Include="vulkan\Tr2VideoAdapterInfoALVulkan.h" />
+    <ClInclude Include="vulkan\UtilitiesVulkan.h" />
+    <ClInclude Include="vulkan\VkResult.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ALResult.cpp" />
@@ -1328,6 +1944,23 @@
     <ClCompile Include="dx11\Tr2TextureALDx11.cpp" />
     <ClCompile Include="dx11\Tr2VertexLayoutALDx11.cpp" />
     <ClCompile Include="dx11\Tr2VideoAdapterInfoALDx11.cpp" />
+    <ClCompile Include="dx12\Tr2BufferALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2ConstantBufferALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2FenceALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2GpuTimerALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2OcclusionQueryALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2PrimaryRenderContextDx12.cpp" />
+    <ClCompile Include="dx12\Tr2RenderContextDx12.cpp" />
+    <ClCompile Include="dx12\Tr2ResourceHelper.cpp" />
+    <ClCompile Include="dx12\Tr2ResourceSetALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2SamplerStateALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2ShaderALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2ShaderProgramALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2SwapChainALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2TextureALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2VertexLayoutALDx12.cpp" />
+    <ClCompile Include="dx12\Tr2VideoAdapterInfoALDx12.cpp" />
+    <ClCompile Include="dx12\Utilities.cpp" />
     <ClCompile Include="dx9\Tr2BufferALDx9.cpp" />
     <ClCompile Include="dx9\Tr2CapsALDx9.cpp" />
     <ClCompile Include="dx9\Tr2ConstantBufferALDx9.cpp" />
@@ -1362,6 +1995,7 @@
     <ClCompile Include="src\Tr2GpuTimerAl.cpp" />
     <ClCompile Include="src\Tr2ResourceSetAL.cpp" />
     <ClCompile Include="src\Tr2SamplerStateAL.cpp" />
+    <ClCompile Include="src\Tr2ShaderAL.cpp" />
     <ClCompile Include="src\Tr2TextureAL.cpp" />
     <ClCompile Include="stub\Tr2BufferALStub.cpp" />
     <ClCompile Include="stub\Tr2CapsALStub.cpp" />
@@ -1378,6 +2012,10 @@
     <ClCompile Include="stub\Tr2TextureALStub.cpp" />
     <ClCompile Include="stub\Tr2VertexLayoutALStub.cpp" />
     <ClCompile Include="stub\Tr2VideoAdapterInfoALStub.cpp" />
+    <ClCompile Include="vulkan\Tr2PrimaryRenderContextVulkan.cpp" />
+    <ClCompile Include="vulkan\Tr2RenderContextVulkan.cpp" />
+    <ClCompile Include="vulkan\Tr2TextureALVulkan.cpp" />
+    <ClCompile Include="vulkan\Tr2VideoAdapterInfoALVulkan.cpp" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
