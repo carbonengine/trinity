@@ -217,7 +217,8 @@ protected:
 
 		// MiscData
 		float Time;
-		Vector2 Unused;
+		float UseNebulaIntensity;
+		float Unused;
 		float GammaBrightness;
 	};
 	double m_viewProjectLastD[16];
