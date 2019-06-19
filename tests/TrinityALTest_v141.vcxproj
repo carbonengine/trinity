@@ -101,7 +101,7 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{504BC561-AF34-424A-82B7-D381566FA473}</ProjectGuid>
     <ProjectName>TrinityALTest</ProjectName>
-    <WindowsTargetPlatformVersion>10.0.14393.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev_DX12|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
