@@ -36,7 +36,6 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 {
 	// these values are static for this implementation, but it should be considered 
 	// to change this in a follwing sprint
-	const int bufferSize = 128;
 	const float fpsCalculationTime = 0.25f;
 	
 	// position of the fps, left top corner
@@ -49,8 +48,6 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 	
 	// this enables access to the fps
 	BeInfo* beOSInfo = BeOS->GetInfo();
-
-	char fpsBuffer[bufferSize];
 
 	uint32_t textColor;
 	// TimeAsDouble is formating the time from a int64 in nanoseconds to
@@ -103,9 +100,24 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 		textColor = 0xffff0000;
 	}
 
+	auto bitcount = CCP_STRINGIZE( CCP_CONCATENATE( x, PROCESS_BIT_COUNT ) );
+	auto toolset = GetPlatformToolset();
 	uint64_t counter = Tr2Renderer::GetCurrentFrameCounter();
 	int dpCount = m_dpCount ? int( m_dpCount->GetValue() ) : 0;
-	sprintf_s( fpsBuffer, "%s_x%d\n%10.0lld\nfps: %8.2f\nms:  %8.2f\ndp:  %8.0d", TRINITY_PLATFORM_NAME, PROCESS_BIT_COUNT, counter, m_averageFPS, m_averageMSPerFrame, dpCount );
+	auto str = "\
+trinity: %10s\n\
+bitness: %10s\n\
+toolset: %10s\n\
+frame:   %10.0lld\n\
+fps:     %10.2f\n\
+ms:      %10.2f\n\
+dp:      %10.0d\
+";
+
+	const int bufferSize = 256; // Make sure to increase this as necessary
+	char fpsBuffer[bufferSize];
+
+	sprintf_s( fpsBuffer, str, TRINITY_PLATFORM_NAME, bitcount, toolset, counter, m_averageFPS, m_averageMSPerFrame, dpCount );
 
 	uint32_t flags = 0;
 	if( m_alignRight )
