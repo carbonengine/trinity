@@ -1,8 +1,8 @@
 #include "StdAfx.h"
 #include "EveChildBehaviorSystem.h"
 #include "Eve/EveUpdateContext.h"
-#include "Behaviors/Wander.h"
 #include "include/TriMath.h"
+#include "Behaviors/IBehavior.h"
 
 
 EveChildBehaviorSystem::EveChildBehaviorSystem( IRoot* lockobj ) :
