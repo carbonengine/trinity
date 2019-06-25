@@ -3,6 +3,7 @@
 #include "Behaviors/IBehavior.h"
 
 BLUE_DEFINE( EveChildBehaviorSystem );
+BLUE_DEFINE_INTERFACE( IBehavior );
 const Be::ClassInfo* EveChildBehaviorSystem::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveChildBehaviorSystem, "" )
