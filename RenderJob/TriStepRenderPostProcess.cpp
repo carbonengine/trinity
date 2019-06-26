@@ -26,22 +26,22 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 	m_tonemappingEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/ToneMapping.fx" );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteDetailScroll" ), Vector4( 0.0, 0.0, 0.0, 0.0 ) );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "GrainColorAmount" ), 0.600000023842 );
-	m_tonemappingEffect->SetOption( BlueSharedString( "TONE_MAPPING_TOGGLE" ), BlueSharedString( "TONE_MAPPING_ENABLED" ) );
-	m_tonemappingEffect->SetOption( BlueSharedString( "DESATURATE_TOGGLE" ), BlueSharedString( "DESATURATE_TOGGLE_DISABLED" ) );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "Tonemapping" ), 1.0 );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "Desaturate" ), 0.0 );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteColor" ), Vector4( 1.0, 1.0, 1.0, 1.0 ) );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteSineRange" ), Vector4( 0.0, 1.0, 0.0, 0.0 ) );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "GrainIntensity" ), 0.00300000002608 );
-	m_tonemappingEffect->SetOption( BlueSharedString( "COLORED_GRAIN_TOGGLE" ), BlueSharedString( "COLORED_GRAIN_DISABLED" ) );
-	m_tonemappingEffect->SetOption( BlueSharedString( "LUT_TOGGLE" ), BlueSharedString( "LUT_TOGGLE_DISABLED" ) );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "ColoredGrain" ), 1.0 );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "LUTEnabled" ), 0.0 );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "FadeAmount" ), 0.0 );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "GrimeWeight" ), 0.0 );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "ExposureAdjust" ), 2.0 );
-	m_tonemappingEffect->SetOption( BlueSharedString( "DYNAMIC_EXPOSURE_TOGGLE" ), BlueSharedString( "DYNAMIC_EXPOSURE_TOGGLE_DISABLED" ) );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "DynamicExposure" ), 0.0 );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "GrainSize" ), 2.0 );
-	m_tonemappingEffect->SetOption( BlueSharedString( "VIGNETTE_TOGGLE" ), BlueSharedString( "VIGNETTE_TOGGLE_DISABLED" ) );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteEnabled" ), 0.0 );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "GrainLuminanceExponent" ), 0.20000000298 );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "FadeColor" ), Vector4( 0.0, 0.0, 0.0, 0.0 ) );
-	m_tonemappingEffect->SetOption( BlueSharedString( "FILM_GRAIN_TOGGLE" ), BlueSharedString( "FILM_GRAIN_TOGGLE_DISABLED" ) );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "FilmGrain" ), 1.0 );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "ExposureMiddleValue" ), 0.5 );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteDetailSize" ), Vector4( 16.0, 16.0, 16.0, 16.0 ) );
 	m_tonemappingEffect->SetParameter( BlueSharedString( "LUTInfluence" ), 0.0 );
@@ -62,7 +62,6 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 
 TriStepRenderPostProcess::~TriStepRenderPostProcess( void )
 {
-	m_scene = nullptr;
 }
 
 void TriStepRenderPostProcess::py__init__( EveSpaceScene* scene, Tr2RenderTarget* source  )
@@ -488,7 +487,8 @@ bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2PPDynamicExposureEffec
 			m_tonemappingEffect->SetParameter( BlueSharedString( "MinExposure" ), dynamicExposure->m_minExposure );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "MaxExposure" ), dynamicExposure->m_maxExposure );
 
-			m_tonemappingEffect->SetOption( BlueSharedString( "DYNAMIC_EXPOSURE_TOGGLE" ), BlueSharedString( "DYNAMIC_EXPOSURE_TOGGLE_ENABLED" ) );
+			// TODO replace with an option
+			m_tonemappingEffect->SetParameter( BlueSharedString( "DynamicExposure" ), 1.0f );
 
 			m_tonemappingEffect->EndUpdate();
 
@@ -529,7 +529,8 @@ bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2PPDynamicExposureEffec
 			m_tonemappingEffect->SetParameter( BlueSharedString( "ExposureInfluence" ), dynamicExposure->m_influence );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "MinExposure" ), dynamicExposure->m_minExposure );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "MaxExposure" ), dynamicExposure->m_maxExposure );
-			m_tonemappingEffect->SetOption( BlueSharedString( "DYNAMIC_EXPOSURE_TOGGLE" ), BlueSharedString( "DYNAMIC_EXPOSURE_TOGGLE_DISABLED" ) );
+			// TODO replace with an option
+			m_tonemappingEffect->SetParameter( BlueSharedString( "DynamicExposure" ), 1.0f );
 			m_tonemappingEffect->EndUpdate();
 
 			dynamicExposure->SetDirty( false );
@@ -547,8 +548,9 @@ bool TriStepRenderPostProcess::ProcessDynamicExposure( Tr2PPDynamicExposureEffec
 			m_histogram = nullptr;
 			m_exposure = nullptr;
 
+			// TODO replace with an option
 			m_tonemappingEffect->StartUpdate();
-			m_tonemappingEffect->SetOption( BlueSharedString( "DYNAMIC_EXPOSURE_TOGGLE" ), BlueSharedString( "DYNAMIC_EXPOSURE_TOGGLE_DISABLED" ) );
+			m_tonemappingEffect->SetParameter( BlueSharedString( "DynamicExposure" ), 0.0f );
 			m_tonemappingEffect->EndUpdate();
 		}
 		
@@ -589,13 +591,12 @@ void TriStepRenderPostProcess::ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain
 			// we only need to update the tonemapping buffer
 			m_tonemappingEffect->StartUpdate();
 			m_tonemappingEffect->SetParameter( BlueSharedString( "GrainIntensity" ),filmGrain->m_intensity );
-			m_tonemappingEffect->SetOption( BlueSharedString( "COLORED_GRAIN_TOGGLE" ),
-				BlueSharedString( filmGrain->m_colored ? "COLORED_GRAIN_ENABLED" : "COLORED_GRAIN_DISABLED" ) );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "ColoredGrain" ), filmGrain->m_colored );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "GrainColorAmount" ), filmGrain->m_colorAmount );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "GrainSize" ), filmGrain->m_grainSize );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "GrainLuminanceExponent" ), filmGrain->m_luminanceExponent );
-			m_tonemappingEffect->SetOption( BlueSharedString( "FILM_GRAIN_TOGGLE" ), BlueSharedString( "FILM_GRAIN_TOGGLE_ENABLED" ) );
+			// TODO replace with an option
+			m_tonemappingEffect->SetParameter( BlueSharedString( "FilmGrain" ), 1.0f );
 			m_tonemappingEffect->EndUpdate();
 
 			filmGrain->SetDirty( false );
@@ -604,9 +605,9 @@ void TriStepRenderPostProcess::ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain
 	}
 	else if( m_filmGrainEnabled )
 	{
+		// TODO replace with an option
 		m_tonemappingEffect->StartUpdate();
-		m_tonemappingEffect->SetOption( BlueSharedString( "FILM_GRAIN_TOGGLE" ), BlueSharedString( "FILM_GRAIN_TOGGLE_DISABLED" ) );
-		m_tonemappingEffect->SetOption( BlueSharedString( "COLORED_GRAIN_TOGGLE" ), BlueSharedString( "COLORED_GRAIN_DISABLED" ) );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "FilmGrain" ), 0.0f );
 		m_tonemappingEffect->EndUpdate();
 		m_filmGrainEnabled = false;
 	}
@@ -621,7 +622,8 @@ void TriStepRenderPostProcess::ProcessDesaturate( Tr2PPDesaturateEffect* desatur
 			// we only need to update the tonemapping buffer
 			m_tonemappingEffect->StartUpdate();
 			m_tonemappingEffect->SetParameter( BlueSharedString( "SaturationFactor" ), desaturate->m_intensity );
-			m_tonemappingEffect->SetOption( BlueSharedString( "DESATURATE_TOGGLE" ), BlueSharedString( "DESATURATE_TOGGLE_ENABLED" ) );
+			// TODO replace with an option
+			m_tonemappingEffect->SetParameter( BlueSharedString( "Desaturate" ), 1.0f );
 			m_tonemappingEffect->EndUpdate();
 
 			desaturate->SetDirty( false );
@@ -630,8 +632,9 @@ void TriStepRenderPostProcess::ProcessDesaturate( Tr2PPDesaturateEffect* desatur
 	}
 	else if( m_desaturateEnabled )
 	{
+		// TODO replace with an option
 		m_tonemappingEffect->StartUpdate();
-		m_tonemappingEffect->SetOption( BlueSharedString( "DESATURATE_TOGGLE" ), BlueSharedString( "DESATURATE_TOGGLE_DISABLED" ) );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "Desaturate" ), 0.0f );
 		m_tonemappingEffect->EndUpdate();
 		m_desaturateEnabled = false;
 	}
@@ -646,7 +649,7 @@ void TriStepRenderPostProcess::ProcessFade( Tr2PPFadeEffect* fade )
 			// we only need to update the tonemapping buffer
 			m_tonemappingEffect->StartUpdate();
 			m_tonemappingEffect->SetParameter( BlueSharedString( "FadeColor" ), Vector4( fade->m_color ) );
-			// A shader option can be placed here, although the complexity of checking when to toggle it may outweigh the benefits of the optimization
+			// TODO replace with an option
 			m_tonemappingEffect->SetParameter( BlueSharedString( "FadeAmount" ), fade->m_intensity );
 			m_tonemappingEffect->EndUpdate();
 
@@ -656,6 +659,7 @@ void TriStepRenderPostProcess::ProcessFade( Tr2PPFadeEffect* fade )
 	}
 	else if( m_fadeEnabled )
 	{
+		// TODO replace with an option
 		m_tonemappingEffect->StartUpdate();
 		m_tonemappingEffect->SetParameter( BlueSharedString( "FadeAmount" ), 0.0f );
 		m_tonemappingEffect->EndUpdate();
@@ -681,7 +685,8 @@ void TriStepRenderPostProcess::ProcessLut( Tr2PPLutEffect* lut )
 			{
 				dynamic_cast< TriTextureParameter* >( resource )->SetResourcePath( lut->m_path.c_str() );
 			}
-			m_tonemappingEffect->SetOption( BlueSharedString( "LUT_TOGGLE" ), BlueSharedString( "LUT_TOGGLE_ENABLED" ) );
+			// TODO replace with an option
+			m_tonemappingEffect->SetParameter( BlueSharedString( "LUTEnabled" ), 1.0f );
 			m_tonemappingEffect->EndUpdate();
 
 			lut->SetDirty( false );
@@ -690,8 +695,9 @@ void TriStepRenderPostProcess::ProcessLut( Tr2PPLutEffect* lut )
 	}
 	else if( m_lutEnabled )
 	{
+		// TODO replace with an option
 		m_tonemappingEffect->StartUpdate();
-		m_tonemappingEffect->SetOption( BlueSharedString( "LUT_TOGGLE" ), BlueSharedString( "LUT_TOGGLE_DISABLED" ) );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "LUTEnabled" ), 0.0f );
 		m_tonemappingEffect->EndUpdate();
 		m_lutEnabled = false;
 	}
@@ -733,7 +739,8 @@ void TriStepRenderPostProcess::ProcessVignette( Tr2PPVignetteEffect* vignette )
 			m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteSineFrequency" ), vignette->m_sineFrequency );
 			m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteSineRange" ), Vector2( vignette->m_sineMinimum, vignette->m_sineMaximum) );
 
-			m_tonemappingEffect->SetOption( BlueSharedString( "VIGNETTE_TOGGLE" ), BlueSharedString( "VIGNETTE_TOGGLE_ENABLED" ) );
+			// TODO replace with an option
+			m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteEnabled" ), 1.0f );
 			m_tonemappingEffect->EndUpdate();
 
 			vignette->SetDirty( false );
@@ -742,8 +749,9 @@ void TriStepRenderPostProcess::ProcessVignette( Tr2PPVignetteEffect* vignette )
 	}
 	else if( m_vignetteEnabled )
 	{
+		// TODO replace with an option
 		m_tonemappingEffect->StartUpdate();
-		m_tonemappingEffect->SetOption( BlueSharedString( "VIGNETTE_TOGGLE" ), BlueSharedString( "VIGNETTE_TOGGLE_DISABLED" ) );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "VignetteEnabled" ), 0.0f );
 		m_tonemappingEffect->EndUpdate();
 		m_vignetteEnabled = false;
 	}
