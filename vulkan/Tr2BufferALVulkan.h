@@ -17,55 +17,31 @@ namespace TrinityALImpl
 	class Tr2BufferAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_BUFFER>
 	{
 	public:
+		Tr2BufferAL();
+		~Tr2BufferAL();
+
 		ALResult Create(
 			const Tr2BufferDescriptionAL& desc,
 			const void* initialData,
-			Tr2PrimaryRenderContextAL& renderContext )
-		{
-			return E_NOTIMPL;
-		}
-		void Destroy()
-		{
+			Tr2PrimaryRenderContextAL& renderContext );
+		void Destroy();
+		bool IsValid() const;
 
-		}
+		Tr2ALMemoryType GetMemoryClass() const;
+		const Tr2BufferDescriptionAL& GetDesc() const;
 
-		bool IsValid() const
-		{
-			return false;
-		}
-
-		Tr2ALMemoryType GetMemoryClass()
-		{
-			return AL_MEMORY_VIDEO;
-		}
-
-		const Tr2BufferDescriptionAL& GetDesc() const
-		{
-			return m_desc;
-		}
-
-		ALResult MapForReading( const void*& data, Tr2RenderContextAL& renderContext )
-		{
-			return E_NOTIMPL;
-		}
-		void UnmapForReading( Tr2RenderContextAL& renderContext )
-		{
-		}
-		ALResult MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
-		{
-			return E_NOTIMPL;
-		}
-		void UnmapForWriting( Tr2RenderContextAL& renderContext )
-		{
-		}
-
-		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext )
-		{
-			return E_NOTIMPL;;
-		}
+		ALResult MapForReading( const void*& data, Tr2RenderContextAL& renderContext );
+		void UnmapForReading( Tr2RenderContextAL& renderContext );
+		ALResult MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext );
+		void UnmapForWriting( Tr2RenderContextAL& renderContext );
+		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
 	private:
-		Tr2MemoryCounterAL m_memory;
+		VkBuffer m_buffer;
+		VkDeviceMemory m_memory;
+		Tr2PrimaryRenderContextAL* m_owner;
 		Tr2BufferDescriptionAL m_desc;
+
+		friend class Tr2RenderContextAL;
 	};
 }
 

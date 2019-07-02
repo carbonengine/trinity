@@ -715,6 +715,7 @@ ALResult Tr2RenderContextAL::BeginScene() throw()
 
 		}
 	}
+	m_currentResourceSet = Tr2ResourceSetAL();
 
 
 	return S_OK; 
@@ -1818,11 +1819,6 @@ bool Tr2RenderContextAL::ApplyRasterizerState() throw()
 
 ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw()
 {
-	if( !resourceSet.IsValid() )
-	{
-		return E_INVALIDARG;
-	}
-
 	if( m_currentResourceSet.m_resourceSet == resourceSet.m_resourceSet )
 	{
 		return S_OK; 

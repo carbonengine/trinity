@@ -63,6 +63,12 @@
     <ClInclude Include="Shaders.DX11\InstancedRendering.vs.patched.h">
       <Filter>Source Files\Shaders.DX11</Filter>
     </ClInclude>
+    <ClInclude Include="Shaders.DX11\LoadMsaaTexture.ps.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX11\LoadMsaaTexture.ps.patched.h">
+      <Filter>Source Files\Shaders.DX11</Filter>
+    </ClInclude>
     <ClInclude Include="Shaders.DX11\OutputTexCoord.ps.h">
       <Filter>Source Files\Shaders.DX11</Filter>
     </ClInclude>
@@ -139,6 +145,12 @@
       <Filter>Source Files\Shaders.DX12</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.DX12\InstancedRendering.vs.patched.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\LoadMsaaTexture.ps.h">
+      <Filter>Source Files\Shaders.DX12</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.DX12\LoadMsaaTexture.ps.patched.h">
       <Filter>Source Files\Shaders.DX12</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.DX12\OutputTexCoord.ps.h">
@@ -325,6 +337,12 @@
       <Filter>Source Files\Shaders.vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.vulkan\InstancedRendering.vs.patched.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\LoadMsaaTexture.ps.h">
+      <Filter>Source Files\Shaders.vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="Shaders.vulkan\LoadMsaaTexture.ps.patched.h">
       <Filter>Source Files\Shaders.vulkan</Filter>
     </ClInclude>
     <ClInclude Include="Shaders.vulkan\OutputTexCoord.ps.h">

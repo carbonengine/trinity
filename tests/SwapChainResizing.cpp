@@ -8,7 +8,7 @@ struct SwapChainResizing : public WithValidRenderContext
 	static ALResult ResizeWindow( uint32_t width, uint32_t height, bool windowed = true )
 	{
 		auto window = GetWindow();
-		window->Resize( 640, 480 );
+		window->Resize( width, height );
 		presentParameters.windowed = windowed;
 		presentParameters.mode.width = window->GetClientWidth();
 		presentParameters.mode.height = window->GetClientHeight();

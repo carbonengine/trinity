@@ -43,6 +43,13 @@ namespace TrinityALImpl
 		uint64_t m_frameIndex;
 		Tr2PrimaryRenderContextAL* m_owner;
 		float m_lastTime;
+		enum
+		{
+			UNINITIALIZED,
+			READY,
+			BEGIN_ISSUED,
+			END_ISSUED,
+		} m_state;
 	};
 }
 

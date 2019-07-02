@@ -21,28 +21,17 @@ namespace TrinityALImpl
 	class Tr2SamplerStateAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>
 	{
 	public:
-		Tr2SamplerStateAL()
-		{
-		}
+		Tr2SamplerStateAL();
+		~Tr2SamplerStateAL();
 
-		ALResult Create( const Tr2SamplerDescription& description, Tr2PrimaryRenderContextAL &renderContext )
-		{
-			return E_NOTIMPL;
-		}
+		ALResult Create( const Tr2SamplerDescription& description, Tr2PrimaryRenderContextAL &renderContext );
+		void Destroy();
 
-		void Destroy()
-		{
-		}
-
-		bool IsValid() const
-		{
-			return false;
-		}
-
-		Tr2ALMemoryType GetMemoryClass()
-		{
-			return AL_MEMORY_VIDEO;
-		}
+		bool IsValid() const;
+		Tr2ALMemoryType GetMemoryClass() const;
+	private:
+		VkSampler m_sampler;
+		Tr2PrimaryRenderContextAL* m_owner;
 	};
 
 }

@@ -53,9 +53,6 @@ Tr2ShaderProgramAL::Tr2ShaderProgramAL()
 	m_GS = none;
 	m_CS = none;
 
-	memset( m_srvMap, 0xff, sizeof( m_srvMap ) );
-	memset( m_uavMap, 0xff, sizeof( m_srvMap ) );
-	memset( m_samplerMap, 0xff, sizeof( m_srvMap ) );
 }
 
 Tr2ShaderProgramAL::~Tr2ShaderProgramAL()
@@ -117,6 +114,7 @@ ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL* shaders, size_t count, Tr2Prim
 			{
 				signatureDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 			}
+			m_iaInputs = shaders[i].m_shader->m_signature.pipelineInputs;
 			break;
 		case PIXEL_SHADER:
 			m_PS = MakeShaderBytecode( shaders[i] );
@@ -209,7 +207,7 @@ void Tr2ShaderProgramAL::Destroy()
 {
 	if( m_rootSignature && m_owner )
 	{
-		m_owner->ReleaseLater( m_rootSignature );
+		RELEASE_LATER( m_owner, m_rootSignature );
 		m_rootSignature = nullptr;
 	}
 	if( m_owner )
@@ -225,11 +223,12 @@ void Tr2ShaderProgramAL::Destroy()
 	m_GS = none;
 	m_CS = none;
 
-	m_cbRegisters.clear();
+	m_iaInputs.clear();
 
-	memset( m_srvMap, 0xff, sizeof( m_srvMap ) );
-	memset( m_uavMap, 0xff, sizeof( m_srvMap ) );
-	memset( m_samplerMap, 0xff, sizeof( m_srvMap ) );
+	m_cbRegisters.clear();
+	m_srvRegisters.clear();
+	m_uavRegisters.clear();
+	m_samplerRegisters.clear();
 
 	m_srvUavTableSize = 0;
 	m_srvUavParameter = 0xffffffff;
@@ -293,18 +292,25 @@ void Tr2ShaderProgramAL::ParseRegisterSignature(
 		}
 		case Tr2ShaderRegisterAL::SAMPLER:
 		{
-			m_samplerMap[shaderType][it->registerIndex] = uint32_t( samplerRanges.size() );
+			CbRegister cbr = { shaderType, it->registerIndex, uint32_t( samplerRanges.size() ) };
+			m_samplerRegisters.push_back( cbr );
 			samplerRanges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER ) );
 			break;
 		}
 		case Tr2ShaderRegisterAL::RESOURCE:
-			m_srvMap[shaderType][it->registerIndex] = uint32_t( ranges.size() );
+		{
+			CbRegister cbr = { shaderType, it->registerIndex, uint32_t( ranges.size() ) };
+			m_srvRegisters.push_back( cbr );
 			ranges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SRV ) );
 			break;
+		}
 		case Tr2ShaderRegisterAL::UAV:
-			m_uavMap[shaderType][it->registerIndex] = uint32_t( ranges.size() );
+		{
+			CbRegister cbr = { shaderType, it->registerIndex, uint32_t( ranges.size() ) };
+			m_uavRegisters.push_back( cbr );
 			ranges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_UAV ) );
 			break;
+		}
 		default:
 			continue;
 		}

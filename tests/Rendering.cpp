@@ -126,7 +126,7 @@ ALResult CreateSampleVolumeTexturePS( Tr2ShaderAL& shader, Tr2PrimaryRenderConte
 	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
 }
 
-#if TR2_SUPPORTS_UNORDERED_ACCESS
+#if TRINITY_PLATFORM_SUPPORTS_UNORDERED_ACCESS
 
 ALResult CreateWriteToUavPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
 {
@@ -136,6 +136,22 @@ ALResult CreateWriteToUavPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& ren
 
 	auto input = Tr2ShaderSignatureAL()
 		.Add( Tr2ShaderRegisterAL::UAV, 1 );
+
+	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
+}
+
+#endif
+
+#if TRINITY_PLATFORM_SUPPORTS_MSAA_SAMPLE
+
+ALResult CreateLoadMsaaTexturePS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
+{
+	uint32_t bytecode[] = {
+#include INCLUDE_SHADER_CODE( LoadMsaaTexture.ps )
+	};
+
+	auto input = Tr2ShaderSignatureAL()
+		.Add( Tr2ShaderRegisterAL::RESOURCE, 0 );
 
 	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
 }
@@ -338,7 +354,7 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 	ASSERT_HRESULT_SUCCEEDED( vs.Create( VERTEX_SHADER, vsBytecode, vsInput, *renderContext ) );
 
 	Tr2ShaderAL ps;
-	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( ps, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( CreateOutputTexCoordPS( ps, *renderContext ) );
 
 	Tr2ShaderAL shaders[] = { vs, ps };
 	Tr2ShaderProgramAL sp;
@@ -3194,7 +3210,7 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
-#if TR2_SUPPORTS_UNORDERED_ACCESS
+#if TRINITY_PLATFORM_SUPPORTS_UNORDERED_ACCESS
 
 TEST_F( Rendering, CanUsePsUavs )
 {
@@ -3571,3 +3587,162 @@ TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
 }
 
+
+TEST_F( Rendering, CanHaveMissingIAElements )
+{
+	Tr2ShaderAL vs;
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
+
+	Tr2ShaderAL ps;
+	ASSERT_HRESULT_SUCCEEDED( CreateOutputTexCoordPS( ps, *renderContext ) );
+
+	Tr2ShaderAL shaders[] = { vs, ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f,
+		-0.5f, 0.5f, 0.0f,
+		0.5f, -0.5f, 0.0f,
+	};
+	const uint32_t vbStride = 3 * sizeof( float );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
+
+	Tr2VertexDefinition definition;
+	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+
+	Tr2VertexLayoutAL vertexLayout;
+	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
+
+	uint32_t g = 127;
+
+	auto frame = [&] {
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( g & 0xff ), 1.0f ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 1 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+	};
+
+	RunLoop( frame );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+}
+
+#if TRINITY_PLATFORM_SUPPORTS_MSAA_SAMPLE
+
+TEST_F( Rendering, CanLoadMsaaRenderTarget )
+{
+	Tr2ShaderAL vs;
+	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
+
+	Tr2ShaderAL ps;
+	ASSERT_HRESULT_SUCCEEDED( CreateLoadMsaaTexturePS( ps, *renderContext ) );
+
+	Tr2ShaderAL shaders[] = { vs, ps };
+	Tr2ShaderProgramAL sp;
+	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
+
+	Tr2ShaderAL psFill;
+	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( psFill, *renderContext ) );
+
+	Tr2ShaderAL shadersFill[] = { vs, psFill };
+	Tr2ShaderProgramAL spFill;
+	ASSERT_HRESULT_SUCCEEDED( spFill.Create( shadersFill, 2, *renderContext ) );
+
+	float vertices[] = {
+		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f,
+		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f,
+		0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+
+		0.5f, -0.5f, 0.0f, 1.0f, 1.0f,
+		-0.5f, 0.5f, 0.0f, 0.0f, 0.0f,
+		0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
+	};
+	const uint32_t vbStride = 5 * sizeof( float );
+	Tr2BufferAL vb;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, vertices, *renderContext ) );
+
+	Tr2VertexDefinition definition;
+	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
+	definition.Add( Tr2VertexDefinition::FLOAT32_2, Tr2VertexDefinition::TEXCOORD );
+
+	Tr2VertexLayoutAL vertexLayout;
+	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
+
+	Tr2SamplerStateAL sampl;
+	ASSERT_HRESULT_SUCCEEDED( sampl.Create(
+		Tr2SamplerDescription(
+			Tr2RenderContextEnum::TF_POINT,
+			Tr2RenderContextEnum::TA_WRAP,
+			1,
+			0.0f,
+			0.0f ),
+		*renderContext ) );
+
+	Tr2TextureAL rt;
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
+
+
+	Tr2ResourceSetDescriptionAL desc;
+	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
+
+	Tr2ResourceSetAL resourceSet;
+	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
+
+	uint32_t g = 127;
+
+	auto frame = [&] {
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 0 ), 1.0f ) );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( spFill ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 1 ) );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->PopRenderTarget() );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetVertexLayout( vertexLayout ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ZENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_CULLMODE, Tr2RenderContextEnum::CULLMODE_NONE ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+	};
+
+	RunLoop( frame );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+}
+
+#endif

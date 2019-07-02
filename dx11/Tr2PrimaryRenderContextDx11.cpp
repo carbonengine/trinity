@@ -13,19 +13,19 @@
 
 using namespace Tr2RenderContextEnum;
 
-bool g_gatherDX11Statistics = false;
+bool g_gatherPipelineStatistics = false;
 extern bool g_requestDeviceDebugLayer;
 
-CCP_STATS_DECLARE( dx11IAVertices, "Trinity/AL/dx11/IAVertices", false, CST_COUNTER_HIGH, "Number of vertices read by input assembler" );
-CCP_STATS_DECLARE( dx11IAPrimitives, "Trinity/AL/dx11/IAPrimitives", false, CST_COUNTER_HIGH, "Number of primitives read by input assembler" );
-CCP_STATS_DECLARE( dx11VSInvocations, "Trinity/AL/dx11/VSInvocations", false, CST_COUNTER_HIGH, "Number of times a vertex shader was invoked" );
-CCP_STATS_DECLARE( dx11GSInvocations, "Trinity/AL/dx11/GSInvocations", false, CST_COUNTER_HIGH, "Number of times a geometry shader was invoked" );
-CCP_STATS_DECLARE( dx11GSPrimitives, "Trinity/AL/dx11/GSPrimitives", false, CST_COUNTER_HIGH, "Number of primitives output by a geometry shader" );
-CCP_STATS_DECLARE( dx11CInvocations, "Trinity/AL/dx11/CInvocations", false, CST_COUNTER_HIGH, "Number of primitives that were sent to the rasterizer" );
-CCP_STATS_DECLARE( dx11CPrimitives, "Trinity/AL/dx11/CPrimitives", false, CST_COUNTER_HIGH, "Number of primitives that were rendered" );
-CCP_STATS_DECLARE( dx11PSInvocations, "Trinity/AL/dx11/PSInvocations", false, CST_COUNTER_HIGH, "Number of times a pixel shader was invoked" );
-CCP_STATS_DECLARE( dx11HSInvocations, "Trinity/AL/dx11/HSInvocations", false, CST_COUNTER_HIGH, "Number of times a hull shader was invoked" );
-CCP_STATS_DECLARE( dx11DSInvocations, "Trinity/AL/dx11/DSInvocations", false, CST_COUNTER_HIGH, "Number of times a domain shader was invoked" );
+CCP_STATS_DECLARE( dx11IAVertices, "Trinity/AL/Pipeline/IAVertices", false, CST_COUNTER_HIGH, "Number of vertices read by input assembler" );
+CCP_STATS_DECLARE( dx11IAPrimitives, "Trinity/AL/Pipeline/IAPrimitives", false, CST_COUNTER_HIGH, "Number of primitives read by input assembler" );
+CCP_STATS_DECLARE( dx11VSInvocations, "Trinity/AL/Pipeline/VSInvocations", false, CST_COUNTER_HIGH, "Number of times a vertex shader was invoked" );
+CCP_STATS_DECLARE( dx11GSInvocations, "Trinity/AL/Pipeline/GSInvocations", false, CST_COUNTER_HIGH, "Number of times a geometry shader was invoked" );
+CCP_STATS_DECLARE( dx11GSPrimitives, "Trinity/AL/Pipeline/GSPrimitives", false, CST_COUNTER_HIGH, "Number of primitives output by a geometry shader" );
+CCP_STATS_DECLARE( dx11CInvocations, "Trinity/AL/Pipeline/CInvocations", false, CST_COUNTER_HIGH, "Number of primitives that were sent to the rasterizer" );
+CCP_STATS_DECLARE( dx11CPrimitives, "Trinity/AL/Pipeline/CPrimitives", false, CST_COUNTER_HIGH, "Number of primitives that were rendered" );
+CCP_STATS_DECLARE( dx11PSInvocations, "Trinity/AL/Pipeline/PSInvocations", false, CST_COUNTER_HIGH, "Number of times a pixel shader was invoked" );
+CCP_STATS_DECLARE( dx11HSInvocations, "Trinity/AL/Pipeline/HSInvocations", false, CST_COUNTER_HIGH, "Number of times a hull shader was invoked" );
+CCP_STATS_DECLARE( dx11DSInvocations, "Trinity/AL/Pipeline/DSInvocations", false, CST_COUNTER_HIGH, "Number of times a domain shader was invoked" );
 
 namespace Tr2RenderContextImpl {
 	struct NullContext;
@@ -519,7 +519,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	++g_trackCurrentFrame;
 #endif
 
-	if( g_gatherDX11Statistics )
+	if( g_gatherPipelineStatistics )
 	{
 		if( !m_deviceStatistics )
 		{

@@ -11,6 +11,7 @@
 #include "../Tr2TrackedALObject.h"
 #include "../ALResult.h"
 
+#include "./util/DescriptorHeapViewDx12.h"
 
 class Tr2PrimaryRenderContextAL;
 struct Tr2SamplerDescription;
@@ -30,6 +31,7 @@ namespace TrinityALImpl
 		bool IsValid() const;
 		Tr2ALMemoryType GetMemoryClass() const;
 	private:
+		std::shared_ptr<SamplerStateDx12> m_samplerState;
 		D3D12_SAMPLER_DESC m_sampler;
 		bool m_isValid;
 

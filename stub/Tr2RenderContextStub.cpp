@@ -11,6 +11,8 @@
 using namespace Tr2RenderContextEnum;
 #pragma warning( disable: 4189 )	// Scopeguard
 
+bool g_gatherPipelineStatistics = false;
+
 namespace
 {
 

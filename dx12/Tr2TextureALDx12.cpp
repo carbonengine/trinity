@@ -77,7 +77,7 @@ namespace
 		{
 			return E_INVALIDARG;
 		}
-		if( HasFlag( cpuUsage, Tr2CpuUsage::READ ) && HasFlag( cpuUsage, Tr2CpuUsage::WRITE ) )
+		if( HasFlag( cpuUsage, Tr2CpuUsage::READ ) && HasFlag( cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
 			return E_INVALIDARG;
 		}
@@ -258,7 +258,7 @@ namespace
 			// Resource is already a UAV so we can do this in-place
 			staging = resource;
 		}
-		ON_BLOCK_EXIT( [&] { if( staging != resource ) device.ReleaseLater( staging ); } );
+		ON_BLOCK_EXIT( [&] { if( staging != resource ) RELEASE_LATER( &device, staging ); } );
 
 		// Create a descriptor heap that holds our resource descriptors
 		CComPtr<ID3D12DescriptorHeap> descriptorHeap;
@@ -267,7 +267,7 @@ namespace
 		descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 		descriptorHeapDesc.NumDescriptors = desc.MipLevels;
 		CR_RETURN_HR( device.m_device->CreateDescriptorHeap( &descriptorHeapDesc, IID_PPV_ARGS( &descriptorHeap ) ) );
-		ON_BLOCK_EXIT( [&] { device.ReleaseLater( descriptorHeap ); } );
+		ON_BLOCK_EXIT( [&] { RELEASE_LATER( &device, descriptorHeap ); } );
 
 		uint32_t descriptorSize = device.m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 
@@ -383,6 +383,9 @@ namespace
 			auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
 			commandList->ResourceBarrier( 1, &barrier );
 		}
+
+		device.DirtyDescriptorCache();
+
 		return S_OK;
 	}
 
@@ -409,7 +412,7 @@ namespace
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
 			IID_PPV_ARGS( &resourceCopy ) ) );
-		ON_BLOCK_EXIT( [&] { device.ReleaseLater( resourceCopy ); } );
+		ON_BLOCK_EXIT( [&] { RELEASE_LATER( &device, resourceCopy ); } );
 
 		// Copy the resource data
 		auto barrier = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
@@ -455,7 +458,7 @@ namespace
 
 		CComPtr<ID3D12Heap> heap;
 		CR_RETURN_HR( device.m_device->CreateHeap( &heapDesc, IID_PPV_ARGS( &heap ) ) );
-		ON_BLOCK_EXIT( [&] { device.ReleaseLater( heap ); } );
+		ON_BLOCK_EXIT( [&] { RELEASE_LATER( &device, heap ); } );
 
 		CComPtr<ID3D12Resource> resourceCopy;
 		CR_RETURN_HR( device.m_device->CreatePlacedResource(
@@ -465,7 +468,7 @@ namespace
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
 			IID_PPV_ARGS( &resourceCopy ) ) );
-		ON_BLOCK_EXIT( [&] { device.ReleaseLater( resourceCopy ); } );
+		ON_BLOCK_EXIT( [&] { RELEASE_LATER( &device, resourceCopy ); } );
 
 		// Create a BGRA alias
 		auto aliasDesc = resourceDesc;
@@ -480,7 +483,7 @@ namespace
 			D3D12_RESOURCE_STATE_COPY_DEST,
 			nullptr,
 			IID_PPV_ARGS( &aliasCopy ) ) );
-		ON_BLOCK_EXIT( [&] { device.ReleaseLater( aliasCopy ); } );
+		ON_BLOCK_EXIT( [&] { RELEASE_LATER( &device, aliasCopy ); } );
 
 		// Copy the resource data
 		auto barrier = TrinityALImpl::AliasBarrier( nullptr, aliasCopy );
@@ -516,7 +519,6 @@ namespace TrinityALImpl
 {
 	Tr2TextureAL::Tr2TextureAL()
 		:m_owner( nullptr ),
-		m_rtvDescriptorSize( 0 ),
 		m_currentTextureIndex( 0 ),
 		m_defaultState( D3D12_RESOURCE_STATE_COMMON ),
 		m_gpuUsage( Tr2GpuUsage::NONE ),
@@ -576,6 +578,10 @@ namespace TrinityALImpl
 		{
 			defaultState = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 		}
+		else if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+		{
+			defaultState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		}
 		else
 		{
 			defaultState = D3D12_RESOURCE_STATE_COPY_DEST;
@@ -614,7 +620,7 @@ namespace TrinityALImpl
 				nullptr,
 				IID_PPV_ARGS( &scratch ) ) );
 
-			std::vector<D3D12_SUBRESOURCE_DATA> dx12InitialData( resourceDesc.DepthOrArraySize * resourceDesc.MipLevels );
+			std::vector<D3D12_SUBRESOURCE_DATA> dx12InitialData( desc.GetArraySize() * resourceDesc.MipLevels );
 			for( size_t i = 0; i < dx12InitialData.size(); ++i )
 			{
 				dx12InitialData[i].pData = initialData[i].m_sysMem;
@@ -639,13 +645,8 @@ namespace TrinityALImpl
 				auto barrier = Transition( texture, creationState, defaultState );
 				renderContext.m_commandList->ResourceBarrier( 1, &barrier );
 			}
-			renderContext.ReleaseLater( scratch );
+			RELEASE_LATER( &renderContext, scratch );
 		}
-
-		CComPtr<ID3D12DescriptorHeap> rtvDescriptors;
-		CComPtr<ID3D12DescriptorHeap> dsDescriptors;
-		std::vector<D3D12_UNORDERED_ACCESS_VIEW_DESC> uavDesc;
-		CComPtr<ID3D12DescriptorHeap> uavDescriptors;
 
 		if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 		{
@@ -677,22 +678,41 @@ namespace TrinityALImpl
 				srvDesc.TextureCube.MipLevels = resourceDesc.MipLevels;
 				break;
 			default:
-				if( resourceDesc.DepthOrArraySize > 1 )
+				if( msaa.samples > 1 )
 				{
-					srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-					srvDesc.Texture2DArray.MipLevels = resourceDesc.MipLevels;
-					srvDesc.Texture2DArray.ArraySize = resourceDesc.DepthOrArraySize;
+					if( resourceDesc.DepthOrArraySize > 1 )
+					{
+						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+						srvDesc.Texture2DMSArray.FirstArraySlice = 0;
+						srvDesc.Texture2DMSArray.ArraySize = resourceDesc.DepthOrArraySize;
+					}
+					else
+					{
+						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+					}
 				}
 				else
 				{
-					srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-					srvDesc.Texture2D.MipLevels = resourceDesc.MipLevels;
+					if( resourceDesc.DepthOrArraySize > 1 )
+					{
+						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+						srvDesc.Texture2DArray.MipLevels = resourceDesc.MipLevels;
+						srvDesc.Texture2DArray.ArraySize = resourceDesc.DepthOrArraySize;
+					}
+					else
+					{
+						srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+						srvDesc.Texture2D.MipLevels = resourceDesc.MipLevels;
+					}
 				}
 			}
 
 			m_srvDesc[0] = srvDesc;
 			m_srvDesc[1] = srvDesc;
 			m_srvDesc[1].Format = GetSrvFormat( MakeSrgb( desc.GetFormat() ) );
+
+			renderContext.CreateShaderResourceView(texture, m_srvDesc[0], m_view[0]);
+			renderContext.CreateShaderResourceView(texture, m_srvDesc[1], m_view[1]);
 		}
 		if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
 		{
@@ -700,9 +720,6 @@ namespace TrinityALImpl
 			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 			heapDesc.NumDescriptors = resourceDesc.MipLevels;
 			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			CR_RETURN_HR( renderContext.m_device->CreateDescriptorHeap( &heapDesc, IID_PPV_ARGS( &uavDescriptors ) ) );
-			auto handle = uavDescriptors->GetCPUDescriptorHandleForHeapStart();
-			auto inc = renderContext.m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
 
 			D3D12_UNORDERED_ACCESS_VIEW_DESC uav;
 			uav.Format = GetSrvFormat( desc.GetFormat() );
@@ -753,14 +770,10 @@ namespace TrinityALImpl
 						uav.Texture2D.MipSlice = i;
 					}
 				}
-				
-				renderContext.m_device->CreateUnorderedAccessView(
-					texture,
-					nullptr,
-					&uav,
-					handle );
-				handle.ptr += inc;
-				uavDesc.push_back( uav );
+
+				std::shared_ptr<UnorderedAccessViewDx12> uavView;
+				renderContext.CreateUnorderedAccessView(texture, nullptr, uav, uavView);
+				m_uav.push_back(uavView);
 			}
 		}
 		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) )
@@ -769,7 +782,6 @@ namespace TrinityALImpl
 			heapDesc.NumDescriptors = 2;
 			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-			CR_RETURN_HR( renderContext.m_device->CreateDescriptorHeap( &heapDesc, IID_PPV_ARGS( &rtvDescriptors ) ) );
 
 			D3D12_RENDER_TARGET_VIEW_DESC rtv;
 			rtv.Format = resourceDesc.Format;
@@ -783,11 +795,11 @@ namespace TrinityALImpl
 				rtv.Texture2D.MipSlice = 0;
 				rtv.Texture2D.PlaneSlice = 0;
 			}
-			auto ptr = rtvDescriptors->GetCPUDescriptorHandleForHeapStart();
-			renderContext.m_device->CreateRenderTargetView( texture, &rtv, ptr );
-			ptr.ptr += renderContext.m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
+			m_rtv.resize(2);
+			renderContext.CreateRenderTargetView(texture, &rtv, m_rtv[0]);
+
 			rtv.Format = DXGI_FORMAT( Tr2RenderContextEnum::MakeSrgb( Tr2RenderContextEnum::PixelFormat( resourceDesc.Format ) ) );
-			renderContext.m_device->CreateRenderTargetView( texture, &rtv, ptr );
+			renderContext.CreateRenderTargetView(texture, &rtv, m_rtv[1]);
 		}
 		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
 		{
@@ -795,7 +807,6 @@ namespace TrinityALImpl
 			heapDesc.NumDescriptors = 1;
 			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-			CR_RETURN_HR( renderContext.m_device->CreateDescriptorHeap( &heapDesc, IID_PPV_ARGS( &dsDescriptors ) ) );
 
 			D3D12_DEPTH_STENCIL_VIEW_DESC dsv;
 			dsv.Format = resourceDesc.Format;
@@ -810,21 +821,16 @@ namespace TrinityALImpl
 				dsv.Texture2D.MipSlice = 0;
 			}
 
-			renderContext.m_device->CreateDepthStencilView( texture, &dsv, dsDescriptors->GetCPUDescriptorHandleForHeapStart() );
+			renderContext.CreateDepthStencilView(texture, dsv, m_dsv);
 		}
 
 		m_textures.push_back( texture );
 		m_desc = desc;
 		m_msaa = msaa;
 		m_owner = &renderContext;
-		m_rtvDescriptors = rtvDescriptors;
-		m_rtvDescriptorSize = renderContext.m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
-		m_dsDescriptors = dsDescriptors;
 		m_defaultState = defaultState;
 		m_gpuUsage = gpuUsage;
 		m_cpuUsage = cpuUsage;
-		m_uavDesc = uavDesc;
-		m_uavDescriptors = uavDescriptors;
 
 		return S_OK;
 	}
@@ -833,31 +839,15 @@ namespace TrinityALImpl
 	{
 		for( auto it = begin( m_textures ); it != end( m_textures ); ++it )
 		{
-			m_owner->ReleaseLater( *it );
+			RELEASE_LATER( m_owner, *it );
 		}
 		m_textures.clear();
-		if( m_rtvDescriptors )
-		{
-			m_owner->ReleaseLater( m_rtvDescriptors );
-			m_rtvDescriptors = nullptr;
-		}
-		if( m_dsDescriptors )
-		{
-			m_owner->ReleaseLater( m_dsDescriptors );
-			m_dsDescriptors = nullptr;
-		}
-		if( m_uavDescriptors )
-		{
-			m_owner->ReleaseLater( m_uavDescriptors );
-			m_uavDescriptors = nullptr;
-		}
 		if( m_writeScratch )
 		{
-			m_owner->ReleaseLater( m_writeScratch );
+			RELEASE_LATER( m_owner, m_writeScratch );
 			m_writeScratch = nullptr;
 		}
 		m_readScratch = nullptr;
-		m_rtvDescriptorSize = 0;
 		m_currentTextureIndex = 0;
 		memset( &m_desc, 0, sizeof( m_desc ) );
 		m_msaa = Tr2MsaaDesc();
@@ -865,7 +855,14 @@ namespace TrinityALImpl
 		m_defaultState = D3D12_RESOURCE_STATE_COMMON;
 		m_gpuUsage = Tr2GpuUsage::NONE;
 		m_cpuUsage = Tr2CpuUsage::NONE;
-		m_uavDesc.clear();
+
+		// JB: Don't need to ReleaseLater() because views aren't actually GPU visible
+		m_view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] = nullptr;
+		m_view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = nullptr;
+		m_rtv.clear();
+		m_dsv = nullptr;
+		m_uav.clear();
+		
 	}
 
 	bool Tr2TextureAL::IsValid() const
@@ -905,11 +902,14 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
+		auto srcState = m_defaultState;
+		renderContext.IsBoundDx12( *this, srcState );
+
 		D3D12_RESOURCE_BARRIER barriers[2];
 		uint32_t barrierCount = 0;
-		if( m_defaultState != D3D12_RESOURCE_STATE_RESOLVE_SOURCE )
+		if( srcState != D3D12_RESOURCE_STATE_RESOLVE_SOURCE )
 		{
-			barriers[barrierCount++] = Transition( GetResourceDx12(), m_defaultState, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, 0 );
+			barriers[barrierCount++] = Transition( GetResourceDx12(), srcState, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, 0 );
 		}
 		if( destination.m_defaultState != D3D12_RESOURCE_STATE_RESOLVE_DEST )
 		{
@@ -984,11 +984,14 @@ namespace TrinityALImpl
 		auto dstResource = GetResourceDx12();
 		auto srcResource = source.GetResourceDx12();
 
+		auto srcState = source.m_defaultState;
+		renderContext.IsBoundDx12( source, srcState );
+
 		if( destSubresource.IsSubresourceFull( m_desc ) && sourceSubresource.IsSubresourceFull( source.m_desc ) )
 		{
 			{
 				D3D12_RESOURCE_BARRIER barriers[2] = {
-					TrinityALImpl::Transition( srcResource, source.m_defaultState, D3D12_RESOURCE_STATE_COPY_SOURCE ),
+					TrinityALImpl::Transition( srcResource, srcState, D3D12_RESOURCE_STATE_COPY_SOURCE ),
 					TrinityALImpl::Transition( dstResource, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST ),
 				};
 				renderContext.m_commandList->ResourceBarrier( 2, barriers );
@@ -996,7 +999,7 @@ namespace TrinityALImpl
 			renderContext.m_commandList->CopyResource( dstResource, srcResource );
 			{
 				D3D12_RESOURCE_BARRIER barriers[2] = {
-					TrinityALImpl::Transition( srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE, source.m_defaultState ),
+					TrinityALImpl::Transition( srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE, srcState ),
 					TrinityALImpl::Transition( dstResource, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState ),
 				};
 				renderContext.m_commandList->ResourceBarrier( 2, barriers );
@@ -1022,7 +1025,7 @@ namespace TrinityALImpl
 
 		{
 			D3D12_RESOURCE_BARRIER barriers[2] = {
-				TrinityALImpl::Transition( srcResource, source.m_defaultState, D3D12_RESOURCE_STATE_COPY_SOURCE ),
+				TrinityALImpl::Transition( srcResource, srcState, D3D12_RESOURCE_STATE_COPY_SOURCE ),
 				TrinityALImpl::Transition( dstResource, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST ),
 			};
 			renderContext.m_commandList->ResourceBarrier( 2, barriers );
@@ -1053,7 +1056,7 @@ namespace TrinityALImpl
 
 		{
 			D3D12_RESOURCE_BARRIER barriers[2] = {
-				TrinityALImpl::Transition( srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE, source.m_defaultState ),
+				TrinityALImpl::Transition( srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE, srcState ),
 				TrinityALImpl::Transition( dstResource, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState ),
 			};
 			renderContext.m_commandList->ResourceBarrier( 2, barriers );
@@ -1160,7 +1163,21 @@ namespace TrinityALImpl
 			auto barrier = TrinityALImpl::Transition( texture, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST );
 			renderContext.m_commandList->ResourceBarrier( 1, &barrier );
 		}
-		renderContext.m_commandList->CopyTextureRegion( &Dst, 0, 0, 0, &Src, nullptr );
+		if( m_mappedRegion.HasBox() )
+		{
+			D3D12_BOX box = { 0, 0, 0, m_mappedRegion.m_right - m_mappedRegion.m_left, m_mappedRegion.m_bottom - m_mappedRegion.m_top, m_mappedRegion.m_back - m_mappedRegion.m_front };
+			renderContext.m_commandList->CopyTextureRegion( 
+				&Dst, 
+				m_mappedRegion.m_left, 
+				m_mappedRegion.m_top, 
+				m_mappedRegion.m_front, 
+				&Src, 
+				&box );
+		}
+		else
+		{
+			renderContext.m_commandList->CopyTextureRegion( &Dst, 0, 0, 0, &Src, nullptr );
+		}
 		{
 			auto barrier = TrinityALImpl::Transition( texture, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState );
 			renderContext.m_commandList->ResourceBarrier( 1, &barrier );
@@ -1168,7 +1185,7 @@ namespace TrinityALImpl
 
 		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
-			m_owner->ReleaseLater( m_writeScratch );
+			RELEASE_LATER( m_owner, m_writeScratch );
 			m_writeScratch = nullptr;
 		}
 
@@ -1230,7 +1247,7 @@ namespace TrinityALImpl
 		auto hr = renderContext.FlushAndSyncDx12();
 		if( FAILED( hr ) )
 		{
-			m_owner->ReleaseLater( scratch );
+			RELEASE_LATER( m_owner, scratch );
 			scratch = nullptr;
 			return hr;
 		}
@@ -1290,7 +1307,6 @@ namespace TrinityALImpl
 		uint32_t destPitch;
 		FORWARD_HR( MapForWriting( region, dest, destPitch, renderContext ) );
 		auto bpp = Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() );
-		dest = static_cast<uint8_t*>( dest ) + destPitch * region.m_top + bpp * region.m_left;
 		auto width = region.m_right - region.m_left;
 		width *= bpp;
 		for( uint32_t i = region.m_top; i != region.m_bottom; ++i )
@@ -1315,14 +1331,12 @@ namespace TrinityALImpl
 		return nullptr;
 	}
 
-	D3D12_CPU_DESCRIPTOR_HANDLE Tr2TextureAL::GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace ) const
+	const std::shared_ptr<RenderTargetViewDx12>& Tr2TextureAL::GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace ) const
 	{
-		auto handle = m_rtvDescriptors->GetCPUDescriptorHandleForHeapStart();
-		handle.ptr = SIZE_T( handle.ptr + ( m_currentTextureIndex * 2 + colorSpace ) * m_rtvDescriptorSize );
-		return handle;
+		return m_rtv[m_currentTextureIndex * 2 + colorSpace];
 	}
 
-	void Tr2TextureAL::AssignFromSwapChainDx12( const std::vector<CComPtr<ID3D12Resource>>& backBuffers, const CComPtr<ID3D12DescriptorHeap>& descriptors, uint32_t descriptorSize, Tr2PrimaryRenderContextAL& renderContext )
+	void Tr2TextureAL::AssignFromSwapChainDx12( const std::vector<CComPtr<ID3D12Resource>>& backBuffers, const std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		Destroy();
 		if( !backBuffers.empty() )
@@ -1339,8 +1353,7 @@ namespace TrinityALImpl
 				1
 			);
 			m_textures = backBuffers;
-			m_rtvDescriptors = descriptors;
-			m_rtvDescriptorSize = descriptorSize;
+			m_rtv = rtvs;
 			m_owner = &renderContext;
 			m_cpuUsage = Tr2CpuUsage::READ;
 			m_gpuUsage = Tr2GpuUsage::RENDER_TARGET;

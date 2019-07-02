@@ -13,6 +13,8 @@
 #include "../Tr2LockGuard.h"
 #include "Tr2ResourceHelper.h"
 
+#include "./util/DescriptorHeapViewDx12.h"
+
 namespace TrinityALImpl
 {
 	class Tr2BufferAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_BUFFER>
@@ -53,9 +55,9 @@ namespace TrinityALImpl
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC m_srvDesc;
 		D3D12_UNORDERED_ACCESS_VIEW_DESC m_uavDesc;
-
-		// TODO: this does not belong here
-		CComPtr<ID3D12DescriptorHeap> m_uavDescriptors;
+		std::shared_ptr<ShaderResourceViewDx12> m_srv;
+		std::shared_ptr<UnorderedAccessViewDx12> m_uav;
+		std::shared_ptr<UnorderedAccessViewDx12> m_clearUav;
 
 		friend class Tr2RenderContextAL;
 		friend class TrinityALImpl::Tr2ResourceSetAL;

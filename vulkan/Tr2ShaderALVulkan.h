@@ -26,49 +26,37 @@ namespace TrinityALImpl
 		public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SHADER>
 	{
 	public:
-		Tr2ShaderAL()
-		{
+		Tr2ShaderAL();
+		~Tr2ShaderAL();
 
-		}
 		ALResult Create(
 			Tr2RenderContextEnum::ShaderType type,
 			const Tr2ShaderBytecodeAL& bytecode,
 			const Tr2ShaderBytecodeAL& patchedBytecode,
 			const Tr2ShaderSignatureAL& signature,
-			Tr2PrimaryRenderContextAL &renderContext )
-		{
-			return E_NOTIMPL;
-		}
+			Tr2PrimaryRenderContextAL &renderContext );
+		void Destroy();
+		bool IsValid() const;
 
-		void Destroy()
-		{
+		bool operator==( const Tr2ShaderAL& shader ) const;
 
-		}
+		Tr2RenderContextEnum::ShaderType GetType() const;
+		ALResult GetBytecode( Tr2ShaderBytecodeAL& bytecode ) const;
 
-		bool IsValid() const
-		{
-			return false;
-		}
-		bool operator==( const Tr2ShaderAL& shader ) const
-		{
-			return false;
-		}
-		Tr2RenderContextEnum::ShaderType GetType() const { return Tr2RenderContextEnum::INVALID_SHADER; }
-		ALResult GetBytecode( Tr2ShaderBytecodeAL& bytecode ) const
-		{
-			return E_NOTIMPL;
-		}
+		Tr2ALMemoryType GetMemoryClass() const;
 
-		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
-
-		void SetNullShaderType( Tr2RenderContextEnum::ShaderType type )
-		{
-
-		}
-
+		void SetNullShaderType( Tr2RenderContextEnum::ShaderType type );
 	private:
 		Tr2ShaderAL( const Tr2ShaderAL& shader );
 		Tr2ShaderAL& operator=( const Tr2ShaderAL& shader );
+
+		VkShaderModule m_shader;
+		Tr2PrimaryRenderContextAL* m_owner;
+		Tr2ShaderSignatureAL m_signature;
+		CcpMallocBuffer m_bytecode;
+		Tr2RenderContextEnum::ShaderType m_type;
+
+		friend class ::Tr2ShaderProgramAL;
 	};
 }
 

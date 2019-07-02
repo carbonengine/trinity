@@ -17,47 +17,34 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
+#include "../Tr2VertexDefinition.h"
+#include "../include/Tr2ShaderAL.h"
 
 
-class Tr2RenderContextAL;
-class Tr2VertexDefinition;
+class Tr2PrimaryRenderContextAL;
 class Tr2ShaderAL;
 
 
 class Tr2VertexLayoutAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_VERTEX_LAYOUT>
 {
 public:
-	Tr2VertexLayoutAL()
-	{
+	Tr2VertexLayoutAL();
 
-	}
-	ALResult Create( const Tr2VertexDefinition& definition,
-		Tr2RenderContextAL& renderContext )
-	{
-		return E_NOTIMPL;
-	}
-	bool IsValid() const
-	{
-		return false;
-	}
-	void Destroy()
-	{
+	ALResult Create( const Tr2VertexDefinition& definition, Tr2PrimaryRenderContextAL& renderContext );
+	bool IsValid() const;
+	void Destroy();
 
-	}
+	Tr2ALMemoryType GetMemoryClass() const;
 
-	ALResult SetLayout( const Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const
-	{
-		return E_NOTIMPL;
-	}
-
-	Tr2ALMemoryType GetMemoryClass() const
-	{
-		return AL_MEMORY_MANAGED;
-	}
-
+	void PopulateInputLayoutVulkan( std::vector<VkVertexInputAttributeDescription>& layout, const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const;
 private:
-	Tr2VertexLayoutAL( const Tr2VertexLayoutAL& )/* = delete */;
-	Tr2VertexLayoutAL& operator=( const Tr2VertexLayoutAL& )/* = delete */;
+	Tr2VertexDefinition m_definition;
+	std::vector<VkVertexInputAttributeDescription> m_attributes;
+	VkVertexInputRate m_streamRates[4];
+	uint32_t m_streamCount;
+	bool m_isValid;
+
+	friend class Tr2RenderContextAL;
 };
 
 #endif

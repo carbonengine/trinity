@@ -279,6 +279,11 @@ struct Tr2MsaaDesc
 	{
 		return std::max( samples, 1u ) == std::max( other.samples, 1u ) && quality == other.quality;
 	}
+
+	bool operator != ( const Tr2MsaaDesc& other ) const
+	{
+		return std::max( samples, 1u ) != std::max( other.samples, 1u ) || quality != other.quality;
+	}
 };
 
 #endif //Tr2HalHelperStructures_h_

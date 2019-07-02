@@ -42,17 +42,21 @@ public:
 	Tr2ALMemoryType GetMemoryClass() const;
 
 	ALResult CreateDx12( const Tr2PresentParametersAL& presentationParameters, ID3D12Device* device, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext );
+
+	static ALResult GetBackBuffers(
+		Tr2PrimaryRenderContextAL* primaryContext,
+		std::vector<CComPtr<ID3D12Resource>>& backBuffers,
+		std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs,
+		ID3D12Device* device,
+		IDXGISwapChain1* swapChain);
+
 private:
 	Tr2SwapChainAL( const Tr2SwapChainAL& ) /* = delete */;
 	Tr2SwapChainAL& operator=( const Tr2SwapChainAL& ) /* = delete */;
 
 	CComPtr<IDXGISwapChain3> m_swapChain;
-	std::vector<CComPtr<ID3D12Resource>> m_backBuffers;
-	CComPtr<ID3D12DescriptorHeap> m_backBufferDescriptors;
 	Tr2PrimaryRenderContextAL* m_owner;
 	Tr2PresentParametersAL m_presentParameters;
-	uint32_t m_currentBackBufferIndex;
-	std::vector<uint64_t> m_frameFenceValues;
 
 	friend class Tr2PrimaryRenderContextAL;
 };

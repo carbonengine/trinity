@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "WithValidRenderContextFixture.h"
 
-#if TR2_SUPPORTS_COMPUTE
+#if TRINITY_PLATFORM_SUPPORTS_COMPUTE
 
 struct Compute: public WithValidRenderContext {};
 
@@ -33,6 +33,8 @@ TEST_F( Compute, CanReadCSResult )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
 
 	const float* data;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
@@ -87,6 +89,8 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
 
 	const float* data;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
@@ -147,6 +151,8 @@ TEST_F( Compute, CanAddConstantInCS )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
 
 	const float* readData = nullptr;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( readData, *renderContext ) );
@@ -219,6 +225,8 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
 
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
+
 	const float* data;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
 
@@ -257,6 +265,8 @@ TEST_F( Compute, CanDispatchCSGroups )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 2, 2, 2 ) );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
 
 	const uint32_t* data;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
@@ -297,6 +307,8 @@ TEST_F( Compute, CanUseBufferCounter )
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
 
 	const uint32_t* data;
 	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );

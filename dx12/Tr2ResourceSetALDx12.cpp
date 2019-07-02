@@ -13,9 +13,18 @@
 #include "Tr2ShaderProgramALDx12.h"
 #include "Tr2BufferALDx12.h"
 #include "Utilities.h"
+#include "ALLog.h"
 
 using namespace Tr2RenderContextEnum;
 
+namespace
+{
+	D3D12_CPU_DESCRIPTOR_HANDLE operator+( const D3D12_CPU_DESCRIPTOR_HANDLE& handle, uint32_t offset )
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE result = { handle.ptr + offset };
+		return result;
+	}
+}
 
 namespace TrinityALImpl
 {
@@ -33,6 +42,7 @@ namespace TrinityALImpl
 	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		Destroy();
+
 		if( !renderContext.IsValid() )
 		{
 			return E_INVALIDARG;
@@ -42,108 +52,123 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
-		CComPtr<ID3D12DescriptorHeap> srvDescriptors;
-		CComPtr<ID3D12DescriptorHeap> samplerDescriptors;
 
+		std::map<ID3D12Resource*, D3D12_RESOURCE_STATES> transitioned;
+		uint32_t bufferIndex = renderContext.GetCurrentBackBufferIndex();
 
-		if( program.m_srvUavTableSize )
+		for (auto it = begin(program.m_srvRegisters); it != end(program.m_srvRegisters); ++it)
 		{
-			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-			heapDesc.NumDescriptors = program.m_srvUavTableSize;
-			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			FORWARD_HR( renderContext.m_device->CreateDescriptorHeap( &heapDesc, IID_PPV_ARGS( &srvDescriptors ) ) );
-
-			auto start = srvDescriptors->GetCPUDescriptorHandleForHeapStart();
-			auto inc = renderContext.m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
-
-			for( uint32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
+			auto& reg = *it;
+			auto& resource = description.m_srv[reg.stage][reg.index];
+			auto stateFlag = reg.stage == PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+			switch (resource.type)
 			{
-				for( uint32_t j = 0; j < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++j )
+			case Tr2ResourceSetDescriptionAL::TEXTURE:
+				if (resource.texture.IsValid())
 				{
-					auto& resource = description.m_srv[i][j];
-					switch( resource.type )
+					m_srv[reg.parameter] = resource.texture.m_texture->m_view[resource.colorSpace];
+					m_srvUav[reg.parameter] = m_srv[reg.parameter];
+
+					auto texture = resource.texture.m_texture.get();
+					auto res = texture->GetResourceDx12();
+					auto found = transitioned.find(res);
+					// TODO: verify state
+					if ((texture->m_defaultState & stateFlag) == 0 && found == transitioned.end())
 					{
-					case Tr2ResourceSetDescriptionAL::TEXTURE:
-					{
-						auto index = program.m_srvMap[i][j];
-						if( index == 0xffffffff )
-						{
-							continue;
-						}
-						auto handle = start;
-						handle.ptr += index * inc;
-						renderContext.m_device->CreateShaderResourceView(
-							resource.texture.m_texture->GetResourceDx12(),
-							&resource.texture.m_texture->m_srvDesc[resource.colorSpace],
-							handle );
-						break;
-					}
-					case Tr2ResourceSetDescriptionAL::BUFFER:
-					{
-						auto index = program.m_srvMap[i][j];
-						if( index == 0xffffffff )
-						{
-							continue;
-						}
-						auto handle = start;
-						handle.ptr += index * inc;
-						renderContext.m_device->CreateShaderResourceView(
-							resource.buffer.m_buffer->GetGpuResource(),
-							&resource.buffer.m_buffer->m_srvDesc,
-							handle );
-						break;
-					}
-					default:
-						break;
+						m_inTransitions.push_back(Transition(res, texture->m_defaultState, stateFlag));
+						m_outTransitions.push_back(Transition(res, stateFlag, texture->m_defaultState));
+						transitioned[res] = stateFlag;
 					}
 				}
-				for( uint32_t j = 0; j < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++j )
+				break;
+			case Tr2ResourceSetDescriptionAL::BUFFER:
+				if (resource.buffer.IsValid())
 				{
-					auto& resource = description.m_uav[i][j];
-					switch( resource.type )
+					auto buffer = resource.buffer.m_buffer.get();
+					m_srv[reg.parameter] = buffer->m_srv;
+					m_srvUav[reg.parameter] = m_srv[reg.parameter];
+
+					auto res = buffer->GetGpuResource();
+
+					auto found = transitioned.find(res);
+					// TODO: verify state
+					if ((buffer->m_defaultState & stateFlag) == 0 && found == transitioned.end())
 					{
-					case Tr2ResourceSetDescriptionAL::TEXTURE:
-					{
-						auto index = program.m_uavMap[i][j];
-						if( index == 0xffffffff )
-						{
-							continue;
-						}
-						auto handle = start;
-						handle.ptr += index * inc;
-						renderContext.m_device->CreateUnorderedAccessView(
-							resource.texture.m_texture->GetResourceDx12(),
-							nullptr,
-							&resource.texture.m_texture->m_uavDesc[resource.mip],
-							handle );
-						break;
-					}
-					case Tr2ResourceSetDescriptionAL::BUFFER:
-					{
-						auto index = program.m_uavMap[i][j];
-						if( index == 0xffffffff )
-						{
-							continue;
-						}
-						auto handle = start;
-						handle.ptr += index * inc;
-						renderContext.m_device->CreateUnorderedAccessView(
-							resource.buffer.m_buffer->GetGpuResource(),
-							resource.buffer.m_buffer->m_counter,
-							&resource.buffer.m_buffer->m_uavDesc,
-							handle );
-						if( resource.initialCount != -1 && resource.buffer.m_buffer->m_counter )
-						{
-							InitialCount cnt = { resource.buffer, resource.initialCount };
-							m_initialCounts.push_back( cnt );
-						}
-						break;
-					}
-					default:
-						break;
+						m_inTransitions.push_back(Transition(res, buffer->m_defaultState, stateFlag));
+						m_outTransitions.push_back(Transition(res, stateFlag, buffer->m_defaultState));
+						transitioned[res] = stateFlag;
 					}
 				}
+				break;
+			default:
+				break;
+			}
+		}
+
+		for (auto it = begin(program.m_uavRegisters); it != end(program.m_uavRegisters); ++it)
+		{
+			auto& reg = *it;
+			auto& resource = description.m_uav[reg.stage][reg.index];
+			auto stateFlag = reg.stage == PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+			switch (resource.type)
+			{
+			case Tr2ResourceSetDescriptionAL::TEXTURE:
+				if (resource.texture.IsValid())
+				{
+					auto texture = resource.texture.m_texture.get();
+					auto res = texture->GetResourceDx12();
+
+					m_uav[reg.parameter] = texture->m_uav[resource.mip];
+					m_srvUav[reg.parameter] = m_uav[reg.parameter];
+
+					auto found = transitioned.find(res);
+					// TODO: verify state
+					if ((texture->m_defaultState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) == 0 && found == transitioned.end())
+					{
+						m_inTransitions.push_back(Transition(res, texture->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+						m_outTransitions.push_back(Transition(res, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, texture->m_defaultState));
+						transitioned[res] = stateFlag;
+					}
+				}
+				break;
+			case Tr2ResourceSetDescriptionAL::BUFFER:
+				if (resource.buffer.IsValid())
+				{
+					auto buffer = resource.buffer.m_buffer.get();
+					auto res = buffer->GetGpuResource();
+
+					m_uav[reg.parameter] = buffer->m_uav;
+					m_srvUav[reg.parameter] = m_uav[reg.parameter];
+
+					if (resource.initialCount != -1 && resource.buffer.m_buffer->m_counter)
+					{
+						InitialCount cnt = { resource.buffer, resource.initialCount };
+						m_initialCounts.push_back(cnt);
+					}
+					auto found = transitioned.find(res);
+					// TODO: verify state
+					if ((buffer->m_defaultState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) == 0 && found == transitioned.end())
+					{
+						m_inTransitions.push_back(Transition(res, buffer->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
+						m_outTransitions.push_back(Transition(res, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, buffer->m_defaultState));
+						transitioned[res] = stateFlag;
+					}
+				}
+				break;
+			default:
+				CCP_AL_LOGWARN("Missing UAV resource in resource set for register %u, stage %u", reg.index, reg.stage);
+				break;
+			}
+
+		}
+
+		for (auto it = begin(program.m_samplerRegisters); it != end(program.m_samplerRegisters); ++it)
+		{
+			auto& reg = *it;
+			auto& sampler = description.m_samplers[reg.stage][reg.index];
+			if (sampler.assigned)
+			{
+				m_sampler[reg.parameter] = sampler.sampler.m_sampler->m_samplerState;
 			}
 		}
 
@@ -169,45 +194,6 @@ namespace TrinityALImpl
 			initialCountBuffer->Unmap( 0, nullptr );
 		}
 
-
-		if( program.m_samplerTableSize )
-		{
-			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-			heapDesc.NumDescriptors = program.m_samplerTableSize;
-			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-			FORWARD_HR( renderContext.m_device->CreateDescriptorHeap( &heapDesc, IID_PPV_ARGS( &samplerDescriptors ) ) );
-
-			auto start = samplerDescriptors->GetCPUDescriptorHandleForHeapStart();
-			auto inc = renderContext.m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER );
-
-			for( uint32_t i = 0; i < SHADER_TYPE_COUNT; ++i )
-			{
-				for( uint32_t j = 0; j < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++j )
-				{
-					auto& sampler = description.m_samplers[i][j];
-					if( !sampler.assigned )
-					{
-						continue;
-					}
-
-					auto index = program.m_samplerMap[i][j];
-					if( index == 0xffffffff )
-					{
-						continue;
-					}
-					auto handle = start;
-					handle.ptr += index * inc;
-					renderContext.m_device->CreateSampler(
-						&sampler.sampler.m_sampler->m_sampler,
-						handle );
-				}
-			}
-		}
-
-		m_description = description;
-		m_srvUavDescriptors = srvDescriptors;
-		m_samplerDescriptors = samplerDescriptors;
 		m_owner = &renderContext;
 		m_initialCountBuffer = initialCountBuffer;
 
@@ -216,24 +202,23 @@ namespace TrinityALImpl
 
 	void Tr2ResourceSetAL::Destroy()
 	{
-		if( m_owner && m_srvUavDescriptors )
-		{
-			m_owner->ReleaseLater( m_srvUavDescriptors );
-			m_srvUavDescriptors = nullptr;
-		}
-		if( m_owner && m_samplerDescriptors )
-		{
-			m_owner->ReleaseLater( m_samplerDescriptors );
-			m_samplerDescriptors = nullptr;
-		}
 		if( m_owner && m_initialCountBuffer )
 		{
-			m_owner->ReleaseLater( m_initialCountBuffer );
+			RELEASE_LATER( m_owner, m_initialCountBuffer );
 			m_initialCountBuffer = nullptr;
 		}
-		m_description = Tr2ResourceSetDescriptionAL();
+		for( uint32_t idx = 0; idx < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++idx )
+		{
+			m_srv[idx] = nullptr;
+			m_uav[idx] = nullptr;
+			m_srvUav[idx] = nullptr;
+			m_sampler[idx] = nullptr;
+		}
+
 		m_owner = nullptr;
 		m_initialCounts.clear();
+		m_inTransitions.clear();
+		m_outTransitions.clear();
 	}
 
 	bool Tr2ResourceSetAL::IsValid() const
