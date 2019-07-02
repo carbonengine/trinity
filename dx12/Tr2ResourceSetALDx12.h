@@ -26,9 +26,10 @@ namespace TrinityALImpl
 
 		void UploadInitialCounts( Tr2RenderContextAL& renderContext );
 	private:
-		Tr2ResourceSetDescriptionAL m_description;
-		CComPtr<ID3D12DescriptorHeap> m_srvUavDescriptors;
-		CComPtr<ID3D12DescriptorHeap> m_samplerDescriptors;
+		std::shared_ptr<ShaderResourceViewDx12> m_srv[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+		std::shared_ptr<UnorderedAccessViewDx12> m_uav[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+		std::shared_ptr<DescriptorHeapViewDx12> m_srvUav[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+		std::shared_ptr<SamplerStateDx12> m_sampler[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 		Tr2PrimaryRenderContextAL* m_owner;
 
 		struct InitialCount
@@ -39,6 +40,9 @@ namespace TrinityALImpl
 
 		std::vector<InitialCount> m_initialCounts;
 		CComPtr<ID3D12Resource> m_initialCountBuffer;
+
+		std::vector<D3D12_RESOURCE_BARRIER> m_inTransitions;
+		std::vector<D3D12_RESOURCE_BARRIER> m_outTransitions;
 
 		friend class ::Tr2RenderContextAL;
 	};

@@ -132,47 +132,10 @@ namespace
 		presentationParameters = pp;
 		return S_OK;
 	}
-
-	ALResult GetBackBuffers(
-		std::vector<CComPtr<ID3D12Resource>>& backBuffers,
-		CComPtr<ID3D12DescriptorHeap>& descriptorHeap,
-		ID3D12Device* device,
-		IDXGISwapChain1* swapChain )
-	{
-		D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
-		descriptorHeapDesc.NumDescriptors = BACK_BUFFER_COUNT * 2;
-		descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-
-		CR_RETURN_HR( device->CreateDescriptorHeap( &descriptorHeapDesc, IID_PPV_ARGS( &descriptorHeap ) ) );
-
-		auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV );
-		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle( descriptorHeap->GetCPUDescriptorHandleForHeapStart() );
-
-		DXGI_SWAP_CHAIN_DESC scDesc;
-		swapChain->GetDesc( &scDesc );
-
-		for( uint32_t i = 0; i < BACK_BUFFER_COUNT; ++i )
-		{
-			CComPtr<ID3D12Resource> backBuffer;
-			CR_RETURN_HR( swapChain->GetBuffer( i, IID_PPV_ARGS( &backBuffer ) ) );
-			backBuffers.push_back( backBuffer );
-
-			device->CreateRenderTargetView( backBuffer, nullptr, rtvHandle );
-			rtvHandle.ptr += rtvDescriptorSize;
-
-			D3D12_RENDER_TARGET_VIEW_DESC rtv = { DXGI_FORMAT( Tr2RenderContextEnum::MakeSrgb( Tr2RenderContextEnum::PixelFormat( scDesc.BufferDesc.Format ) ) ), D3D12_RTV_DIMENSION_TEXTURE2D };
-			rtv.Texture2D.MipSlice = rtv.Texture2D.PlaneSlice = 0;
-
-			device->CreateRenderTargetView( backBuffer, &rtv, rtvHandle );
-			rtvHandle.ptr += rtvDescriptorSize;
-		}
-		return S_OK;
-	}
 }
 
 Tr2SwapChainAL::Tr2SwapChainAL()
-	:m_owner( nullptr ),
-	m_currentBackBufferIndex( 0 )
+	:m_owner( nullptr )
 {
 	m_backBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 }
@@ -190,6 +153,8 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderC
 		return E_INVALIDCALL;
 	}
 
+	FORWARD_HR( renderContext.FlushAndSyncDx12( renderContext ) );
+
 	Tr2PresentParametersAL presentationParameters;
 	CR_RETURN_HR( FillPresentationParameters( presentationParameters, windowHandle ) );
 
@@ -202,27 +167,21 @@ ALResult Tr2SwapChainAL::CreateDx12( const Tr2PresentParametersAL& presentationP
 	auto backBufferCount = BACK_BUFFER_COUNT;
 	FORWARD_HR( CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output ) );
 
-	CComPtr<ID3D12DescriptorHeap> descriptorHeap;
+	std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 	std::vector<CComPtr<ID3D12Resource>> backBuffers;
-	FORWARD_HR( GetBackBuffers( backBuffers, descriptorHeap, device, swapChain ) );
+	FORWARD_HR( GetBackBuffers( &renderContext, backBuffers, rtvs, device, swapChain ) );
 
 	m_swapChain = swapChain;
-	m_currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
-	m_backBufferDescriptors = descriptorHeap;
-	m_backBuffers = backBuffers;
 	m_presentParameters = presentationParameters;
 	m_owner = &renderContext;
 
-	m_backBuffer.m_texture->AssignFromSwapChainDx12( m_backBuffers, m_backBufferDescriptors, device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_RTV ), renderContext );
-	m_backBuffer.m_texture->SetSwapChainBufferIndexDx12( m_currentBackBufferIndex );
+	m_backBuffer.m_texture->AssignFromSwapChainDx12( backBuffers, rtvs, renderContext );
+	m_backBuffer.m_texture->SetSwapChainBufferIndexDx12( swapChain->GetCurrentBackBufferIndex() );
 
 	{
 		auto barrier = TrinityALImpl::Transition( m_backBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET );
 		renderContext.m_commandList->ResourceBarrier( 1, &barrier );
 	}
-
-	m_frameFenceValues.clear();
-	m_frameFenceValues.resize( backBufferCount, 0 );
 
 	return S_OK;
 }
@@ -233,21 +192,11 @@ void Tr2SwapChainAL::Destroy()
 	{
 		m_backBuffer.m_texture->Destroy();
 
-		for( auto it = begin( m_backBuffers ); it != end( m_backBuffers ); ++it )
-		{
-			m_owner->ReleaseLater( *it );
-		}
-		m_backBuffers.clear();
-
-		m_owner->ReleaseLater( m_backBufferDescriptors );
-		m_backBufferDescriptors = nullptr;
-
 		m_owner = nullptr;
 		m_swapChain = nullptr;
 
 		m_presentParameters = Tr2PresentParametersAL();
 	}
-	m_frameFenceValues.clear();
 }
 
 bool Tr2SwapChainAL::IsValid() const
@@ -266,27 +215,7 @@ ALResult Tr2SwapChainAL::Present( Tr2RenderContextAL& renderContext )
 		return E_INVALIDARG;
 	}
 
-	{
-		auto barrier = TrinityALImpl::Transition( m_backBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT );
-		renderContext.m_commandList->ResourceBarrier( 1, &barrier );
-	}
-
-	renderContext.FlushAndSyncDx12();
-
-	m_frameFenceValues[m_currentBackBufferIndex] = m_owner->SignalDx12();
-
-	CR( m_swapChain->Present( m_presentParameters.presentInterval & 0xf, 0 ) );
-
-	m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
-	m_owner->WaitForFenceDx12( m_frameFenceValues[m_currentBackBufferIndex] );
-
-	m_backBuffer.m_texture->SetSwapChainBufferIndexDx12( m_currentBackBufferIndex );
-
-	{
-		auto barrier = TrinityALImpl::Transition( m_backBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET );
-		renderContext.m_commandList->ResourceBarrier( 1, &barrier );
-	}
-
+	m_owner->ScheduleSwapchainPresentDx12( m_swapChain, m_backBuffer, m_presentParameters.presentInterval & 0xf );
 	return S_OK;
 }
 
@@ -308,6 +237,37 @@ bool Tr2SwapChainAL::operator==( const Tr2SwapChainAL& other ) const
 Tr2ALMemoryType Tr2SwapChainAL::GetMemoryClass() const 
 { 
 	return AL_MEMORY_MANAGED; 
+}
+
+/** Gather backbuffer textures and RTVs (JB: Make this public-static since it was duplicated) */
+ALResult Tr2SwapChainAL::GetBackBuffers(
+	Tr2PrimaryRenderContextAL* primaryContext,
+	std::vector<CComPtr<ID3D12Resource>>& backBuffers,
+	std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs,
+	ID3D12Device* device,
+	IDXGISwapChain1* swapChain)
+{
+	DXGI_SWAP_CHAIN_DESC scDesc;
+	swapChain->GetDesc(&scDesc);
+
+	for (uint32_t i = 0; i < BACK_BUFFER_COUNT; ++i)
+	{
+		CComPtr<ID3D12Resource> backBuffer;
+		CR_RETURN_HR(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
+		backBuffers.push_back(backBuffer);
+
+		std::shared_ptr<RenderTargetViewDx12> view;
+		primaryContext->CreateRenderTargetView(backBuffer, nullptr, view);
+		rtvs.push_back(view);
+
+
+		D3D12_RENDER_TARGET_VIEW_DESC rtv = { DXGI_FORMAT(Tr2RenderContextEnum::MakeSrgb(Tr2RenderContextEnum::PixelFormat(scDesc.BufferDesc.Format))), D3D12_RTV_DIMENSION_TEXTURE2D };
+		rtv.Texture2D.MipSlice = rtv.Texture2D.PlaneSlice = 0;
+
+		primaryContext->CreateRenderTargetView(backBuffer, &rtv, view);
+		rtvs.push_back(view);
+	}
+	return S_OK;
 }
 
 #endif

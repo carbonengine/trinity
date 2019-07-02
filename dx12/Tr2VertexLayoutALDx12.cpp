@@ -19,10 +19,10 @@ namespace
 		"COLOR",
 		"NORMAL",
 		"TANGENT",
-		"BITANGENT",
+		"BINORMAL",
 		"TEXCOORD",
 		"BLENDINDICES",
-		"BLENDWEIGHTS",
+		"BLENDWEIGHT",
 	};
 	static_assert( sizeof( s_usageNames ) / sizeof( s_usageNames[0] ) == Tr2VertexDefinition::NUM_USAGE_CODE, "Usage name count mismatch" );
 
@@ -157,5 +157,29 @@ Tr2ALMemoryType Tr2VertexLayoutAL::GetMemoryClass() const
 	return AL_MEMORY_MANAGED;
 }
 
+void Tr2VertexLayoutAL::PopulateInputLayout( std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const
+{
+	layout.reserve( shaderInputs.size() );
+	for( auto it = begin( shaderInputs ); it != end( shaderInputs ); ++it )
+	{
+		auto& in = *it;
+		bool found = false;
+		for( auto jt = begin( m_elements ); jt != end( m_elements ); ++jt )
+		{
+			auto out =  *jt;
+			if( in.usageIndex == out.SemanticIndex && s_usageNames[in.usage] == out.SemanticName )
+			{
+				layout.push_back( *jt );
+				found = true;
+				break;
+			}
+		}
+		if( !found )
+		{
+			D3D12_INPUT_ELEMENT_DESC desc = { s_usageNames[in.usage], in.usageIndex, DXGI_FORMAT_R32G32B32A32_FLOAT, 4, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+			layout.push_back( desc );
+		}
+	}
+}
 
 #endif

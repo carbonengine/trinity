@@ -132,7 +132,7 @@ TEST_F( Buffer, CanLockDynamicBufferForWriting )
 	buffer.UnmapForWriting( *renderContext );
 }
 
-#if TR2_SUPPORTS_NON_SYNCHRONIZED_LOCKS
+#if TRINITY_PLATFORM_SUPPORTS_NON_SYNCHRONIZED_LOCKS
 
 TEST_F( Buffer, CanLockDynamicBufferForWritingWithoutSynchronization )
 {
@@ -167,7 +167,7 @@ TEST_F( Buffer, CanCreate32BitIndexBuffer )
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 2, 4, Tr2GpuUsage::INDEX_BUFFER, Tr2CpuUsage::WRITE, nullptr, *renderContext ) );
 }
 
-#if TR2_SUPPORTS_BUFFER_SHADER_RESOURCES
+#if TRINITY_PLATFORM_SUPPORTS_BUFFER_SHADER_RESOURCES
 
 TEST_F( Buffer, CanCreateStructuredShaderResourceBuffer )
 {
@@ -188,7 +188,7 @@ TEST_F( Buffer, CanCreateVertexBufferWithShaderResource )
 }
 
 
-#if TR2_SUPPORTS_UNORDERED_ACCESS
+#if TRINITY_PLATFORM_SUPPORTS_UNORDERED_ACCESS
 
 
 TEST_F( Buffer, CanCreateWritableShaderResourceBuffer )

@@ -54,6 +54,18 @@ public:
 		( 1 << Tr2RenderContextEnum::HULL_SHADER ) |
 		( 1 << Tr2RenderContextEnum::DOMAIN_SHADER );
 
+	template <typename T>
+	void DestroyLaterVulkan( T object, void( VKAPI_CALL *destroyFunction )( VkDevice, T, const VkAllocationCallbacks* ) )
+	{
+		if( !object )
+		{
+			return;
+		}
+		PendingDestroy pd = { (VkBuffer)object, (DestroyFunction)destroyFunction };
+		m_frameData[m_frameIndex].pendingDestroys.push_back( pd );
+	}
+
+	VkBuffer GetZeroBufferVulkan() const;
 public:
 	Tr2TextureAL m_defaultBackBuffer;
 		
@@ -70,6 +82,14 @@ private:
 	Tr2PrimaryRenderContextAL( const Tr2PrimaryRenderContextAL& ) /* = delete */;
 	Tr2PrimaryRenderContextAL& operator=( const Tr2PrimaryRenderContextAL& ) /* = delete */;
 
+	typedef void( VKAPI_CALL *DestroyFunction )( VkDevice, VkBuffer, const VkAllocationCallbacks* );
+
+	struct PendingDestroy
+	{
+		VkBuffer object;
+		DestroyFunction destroyFunction;
+	};
+
 	struct FrameData 
 	{
 		//VkFramebuffer framebuffer;
@@ -77,6 +97,7 @@ private:
 		VkSemaphore imageAvailableSemaphore;
 		VkSemaphore finishedRenderingSemaphore;
 		VkFence fence;
+		std::vector<PendingDestroy> pendingDestroys;
 
 		FrameData();
 	};
@@ -88,7 +109,6 @@ private:
 	ALResult BeginFrame();
 
 	Tr2CapsAL m_caps;
-	VkDevice m_device;
 	VkQueue m_graphicsQueue;
 	VkQueue m_presentQueue;
 
@@ -97,6 +117,16 @@ private:
 	uint32_t m_currentImage;
 
 	VkCommandPool m_commandPool;
+
+	VkBuffer m_zeroBuffer;
+	VkDeviceMemory m_zeroBufferMemory;
+public:
+	VkDevice m_device;
+	VkPhysicalDevice m_physicalDevice;
+	VkPhysicalDeviceProperties m_physicalDeviceProperties;
+
+	std::map<unsigned, VkRenderPass> m_renderPasses;
+	std::map<unsigned, VkPipeline> m_pipelines;
 };
 
 #endif

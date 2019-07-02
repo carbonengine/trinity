@@ -57,11 +57,19 @@ namespace TrinityALImpl
 
 		m_isValid = true;
 
-		return S_OK;
+		m_samplerState = nullptr;
+		HRESULT hr = renderContext.CreateSamplerState(m_sampler, m_samplerState);
+		if ( SUCCEEDED(hr) )
+		{
+			// JB: Is this legit? What does it do?
+			ChangeObjectId();
+		}
+		return hr;
 	}
 
 	void Tr2SamplerStateAL::Destroy()
 	{
+		m_samplerState = nullptr;
 		m_isValid = false;
 	}
 

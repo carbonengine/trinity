@@ -61,7 +61,7 @@ namespace TrinityALImpl
 			}
 			if( strategy == STATIC )
 			{
-				renderContext.ReleaseLater( scratch );
+				RELEASE_LATER( &renderContext, scratch );
 			}
 			else
 			{
@@ -108,12 +108,12 @@ namespace TrinityALImpl
 	{
 		if( m_gpuResource.resource )
 		{
-			renderContext.ReleaseLater( m_gpuResource.resource );
+			RELEASE_LATER( &renderContext, m_gpuResource.resource );
 			m_gpuResource = Resource();
 		}
 		for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
 		{
-			renderContext.ReleaseLater( it->resource );
+			RELEASE_LATER( &renderContext, it->resource );
 		}
 		m_resources.clear();
 	}
@@ -143,6 +143,14 @@ namespace TrinityALImpl
 	{
 		if( lockType == Tr2LockType::NON_SYNCHRONIZED && m_strategy == DYNAMIC )
 		{
+			for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
+			{
+				if( it->resource == m_gpuResource.resource )
+				{
+					it->frameIndex = renderContext.GetCurrentFrameIndexDx12();
+					break;
+				}
+			}
 			m_mapped = m_gpuResource;
 			data = m_mapped.cpuAddress;
 			return S_OK;
@@ -155,14 +163,13 @@ namespace TrinityALImpl
 		}
 		else
 		{
-			auto index = renderContext.GetCurrentFrameIndexDx12();
-			auto count = renderContext.GetBackBufferCountDx12();
+			auto completed = renderContext.GetCompletedFrameIndexDx12();
 
 			for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
 			{
-				if( it->frameIndex + count < index )
+				if( completed >= it->frameIndex )
 				{
-					it->frameIndex = index;
+					it->frameIndex = renderContext.GetCurrentFrameIndexDx12();
 					m_mapped = *it;
 					data = m_mapped.cpuAddress;
 					return S_OK;
@@ -198,7 +205,7 @@ namespace TrinityALImpl
 
 			if( m_strategy == STATIC )
 			{
-				renderContext.m_ownerDevice->ReleaseLater( m_mapped.resource );
+				RELEASE_LATER( renderContext.m_ownerDevice, m_mapped.resource );
 			}
 		}
 		m_mapped = Resource();
@@ -225,7 +232,7 @@ namespace TrinityALImpl
 
 		if( m_strategy == STATIC )
 		{
-			renderContext.m_ownerDevice->ReleaseLater( m_mapped.resource );
+			RELEASE_LATER( renderContext.m_ownerDevice, m_mapped.resource );
 		}
 		m_mapped = Resource();
 		return S_OK;

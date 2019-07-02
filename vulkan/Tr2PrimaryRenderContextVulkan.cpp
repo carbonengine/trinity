@@ -188,12 +188,15 @@ Tr2PrimaryRenderContextAL::FrameData::FrameData()
 Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 	:m_events( nullptr ),
 	m_device( VK_NULL_HANDLE ),
+	m_physicalDevice( VK_NULL_HANDLE ),
 	m_graphicsQueue( VK_NULL_HANDLE ),
 	m_presentQueue( VK_NULL_HANDLE ),
 	m_surface( VK_NULL_HANDLE ),
 	m_swapChain( VK_NULL_HANDLE ),
 	m_commandPool( VK_NULL_HANDLE ),
-	m_currentImage( 0 )
+	m_currentImage( 0 ),
+	m_zeroBuffer( VK_NULL_HANDLE ),
+	m_zeroBufferMemory( VK_NULL_HANDLE )
 {
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 }
@@ -215,8 +218,6 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	TrinityALImpl::VulkanDeviceInfo physicalDevice;
 	FORWARD_HR( TrinityALImpl::GetPhysicalDevice( adapter, physicalDevice ) );
 
-
-
 	const bool isWindowless = ( focusWindow == 0 ) && presentationParameters.software;
 
 	VkDevice device = VK_NULL_HANDLE;
@@ -225,10 +226,6 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	ON_BLOCK_EXIT( [=] { if( surface != VK_NULL_HANDLE ) vkDestroySurfaceKHR( instance, surface, nullptr ); } );
 	VkSwapchainKHR swapChain = VK_NULL_HANDLE;
 	ON_BLOCK_EXIT( [=] { if( swapChain != VK_NULL_HANDLE ) vkDestroySwapchainKHR( device, swapChain, nullptr ); } );
-	VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
-	ON_BLOCK_EXIT( [=] { if( imageAvailableSemaphore != VK_NULL_HANDLE ) vkDestroySemaphore( device, imageAvailableSemaphore, nullptr ); } );
-	VkSemaphore renderingFinishedSemaphore = VK_NULL_HANDLE;
-	ON_BLOCK_EXIT( [=] { if( renderingFinishedSemaphore != VK_NULL_HANDLE ) vkDestroySemaphore( device, renderingFinishedSemaphore, nullptr ); } );
 	std::vector<VkImage> backBuffers;
 
 	uint32_t graphicsQueue = physicalDevice.graphicsQueue;
@@ -284,7 +281,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	}
 
 	const char* extensions[] = {
-		VK_KHR_SWAPCHAIN_EXTENSION_NAME
+		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+		VK_KHR_MAINTENANCE1_EXTENSION_NAME
 	};
 
 	VkDeviceCreateInfo device_create_info = {
@@ -356,9 +354,6 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 			0
 		};
 
-		CR_RETURN_HR( Vk2Al( vkCreateSemaphore( device, &semaphoreInfo, nullptr, &imageAvailableSemaphore ) ) );
-		CR_RETURN_HR( Vk2Al( vkCreateSemaphore( device, &semaphoreInfo, nullptr, &renderingFinishedSemaphore ) ) );
-
 		CR_RETURN_HR( TrinityALImpl::QueryArray( &vkGetSwapchainImagesKHR, device, swapChain, backBuffers ) );
 	}
 
@@ -416,6 +411,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	vkGetDeviceQueue( device, presentQueue, 0, &m_presentQueue );
 
 	m_device = device;
+	m_physicalDevice = physicalDevice.device;
+	m_physicalDeviceProperties = physicalDevice.properties;
 	m_surface = surface;
 	m_swapChain = swapChain;
 	for( size_t i = 0; i < VIRTUAL_FRAMES; ++i )
@@ -434,7 +431,13 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	backBuffers.clear();
 	commandPool = VK_NULL_HANDLE;
 
+	m_owner = this;
+
 	BeginFrame();
+
+	{
+		TrinityALImpl::CreateBuffer( m_zeroBuffer, m_zeroBufferMemory, 4, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, *this );
+	}
 
 	if( m_events )
 	{
@@ -446,13 +449,36 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 void Tr2PrimaryRenderContextAL::Destroy()
 {
+	Tr2RenderContextAL::Destroy();
+
+	m_samplerStateFactory.Clear();
+
 	if( m_device != VK_NULL_HANDLE )
 	{
 		vkDeviceWaitIdle( m_device );
 	}
 
+	for( auto it = begin( m_pipelines ); it != end( m_pipelines ); ++it )
+	{
+		vkDestroyPipeline( m_device, it->second, nullptr );
+	}
+	m_pipelines.clear();
+
+	for( auto it = begin( m_renderPasses ); it != end( m_renderPasses ); ++it )
+	{
+		vkDestroyRenderPass( m_device, it->second, nullptr );
+	}
+	m_renderPasses.clear();
+
 	m_defaultBackBuffer.m_texture->Destroy();
 
+	if( m_zeroBuffer )
+	{
+		vkDestroyBuffer( m_device, m_zeroBuffer, nullptr );
+		m_zeroBuffer = VK_NULL_HANDLE;
+		vkFreeMemory( m_device, m_zeroBufferMemory, nullptr );
+		m_zeroBufferMemory = VK_NULL_HANDLE;
+	}
 	for( size_t i = 0; i < VIRTUAL_FRAMES; ++i )
 	{
 		if( m_frameData[i].commandBuffer != VK_NULL_HANDLE )
@@ -475,6 +501,12 @@ void Tr2PrimaryRenderContextAL::Destroy()
 			vkDestroySemaphore( m_device, m_frameData[i].imageAvailableSemaphore, nullptr );
 			m_frameData[i].imageAvailableSemaphore = VK_NULL_HANDLE;
 		}
+
+		for( auto it = begin( m_frameData[i].pendingDestroys ); it != end( m_frameData[i].pendingDestroys ); ++it )
+		{
+			( *it->destroyFunction )( m_device, it->object, nullptr );
+		}
+		m_frameData[i].pendingDestroys.clear();
 	}
 
 	if( m_commandPool != VK_NULL_HANDLE )
@@ -483,17 +515,17 @@ void Tr2PrimaryRenderContextAL::Destroy()
 		m_commandPool = VK_NULL_HANDLE;
 	}
 
+	if( m_swapChain != VK_NULL_HANDLE )
+	{
+		vkDestroySwapchainKHR( m_device, m_swapChain, nullptr );
+		m_swapChain = VK_NULL_HANDLE;
+	}
 	if( m_surface != VK_NULL_HANDLE )
 	{
 		VkInstance instance;
 		TrinityALImpl::GetVulkanInstance( instance );
 		vkDestroySurfaceKHR( instance, m_surface, nullptr );
 		m_surface = VK_NULL_HANDLE;
-	}
-	if( m_swapChain != VK_NULL_HANDLE )
-	{
-		vkDestroySwapchainKHR( m_device, m_swapChain, nullptr );
-		m_swapChain = VK_NULL_HANDLE;
 	}
 	if( m_device != VK_NULL_HANDLE )
 	{
@@ -502,6 +534,7 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	}
 	m_graphicsQueue = VK_NULL_HANDLE;
 	m_presentQueue = VK_NULL_HANDLE;
+	m_physicalDevice = VK_NULL_HANDLE;
 }
 
 bool Tr2PrimaryRenderContextAL::IsValid() const
@@ -514,6 +547,12 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	if( !IsValid() )
 	{
 		return E_INVALIDCALL;
+	}
+
+	if( m_renderPass )
+	{
+		vkCmdEndRenderPass( m_commandBuffer );
+		m_renderPass = VK_NULL_HANDLE;
 	}
 
 	VkImageSubresourceRange subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 };
@@ -571,6 +610,13 @@ ALResult Tr2PrimaryRenderContextAL::BeginFrame()
 	CR( Vk2Al( vkWaitForFences( m_device, 1, &m_frameData[m_frameIndex].fence, VK_FALSE, 1000000000 ) ) );
 	vkResetFences( m_device, 1, &m_frameData[m_frameIndex].fence );
 
+	for( auto it = begin( m_frameData[m_frameIndex].pendingDestroys ); it != end( m_frameData[m_frameIndex].pendingDestroys ); ++it )
+	{
+		( *it->destroyFunction )( m_device, it->object, nullptr );
+	}
+	m_frameData[m_frameIndex].pendingDestroys.clear();
+
+
 	CR_RETURN_HR( Vk2Al( vkAcquireNextImageKHR( m_device, m_swapChain, UINT64_MAX, m_frameData[m_frameIndex].imageAvailableSemaphore, VK_NULL_HANDLE, &m_currentImage ) ) );
 	m_defaultBackBuffer.m_texture->SetCurrentImageVulkan( m_currentImage );
 	m_commandBuffer = m_frameData[m_frameIndex].commandBuffer;
@@ -598,8 +644,14 @@ ALResult Tr2PrimaryRenderContextAL::BeginFrame()
 		subresourceRange
 	};
 	vkCmdPipelineBarrier( m_commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier );
-	m_boundRenderTargets[0] = m_defaultBackBuffer;
+
+	SetRenderTarget( m_defaultBackBuffer );
+
 	return S_OK;
 }
 
+VkBuffer Tr2PrimaryRenderContextAL::GetZeroBufferVulkan() const
+{
+	return m_zeroBuffer;
+}
 #endif

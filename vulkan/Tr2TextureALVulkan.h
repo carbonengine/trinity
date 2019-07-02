@@ -40,10 +40,8 @@ namespace TrinityALImpl
 		Tr2TextureAL();
 		~Tr2TextureAL();
 
-		ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
-		{
-			return E_NOTIMPL;
-		}
+		ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext );
+
 		ALResult OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext )
 		{
 			return E_NOTIMPL;
@@ -95,17 +93,24 @@ namespace TrinityALImpl
 			return 0;
 		}
 
-		void AssignFromSwapChainVulkan( const std::vector<VkImage>& backBuffers, const Tr2DisplayModeInfo& mode, Tr2PrimaryRenderContextAL& renderContext );
+		ALResult AssignFromSwapChainVulkan( const std::vector<VkImage>& backBuffers, const Tr2DisplayModeInfo& mode, Tr2PrimaryRenderContextAL& renderContext );
 		void SetCurrentImageVulkan( uint32_t index );
 		VkImage GetImageVulkan() const;
+		VkImageView GetImageView() const;
 	private:
 		std::vector<VkImage> m_images;
+		std::vector<VkImageView> m_imageViews;
+		VkDeviceMemory m_memory;
+		Tr2PrimaryRenderContextAL* m_owner;
 		uint32_t m_currentIndex;
+		VkFormat m_format;
 
 		Tr2BitmapDimensions m_desc;
 		Tr2MsaaDesc m_msaa;
 		Tr2CpuUsage::Type m_cpuUsage;
 		Tr2GpuUsage::Type m_gpuUsage;
+
+		friend class Tr2RenderContextAL;
 	};
 }
 

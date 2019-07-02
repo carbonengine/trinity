@@ -52,7 +52,7 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
-		if( HasFlag( desc.cpuUsage, Tr2CpuUsage::READ ) && HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE ) )
+		if( HasFlag( desc.cpuUsage, Tr2CpuUsage::READ ) && HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
 			return E_INVALIDARG;
 		}
@@ -97,6 +97,10 @@ namespace TrinityALImpl
 		{
 			defaultState = D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT;
 		}
+		else if( HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+		{
+			defaultState = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		}
 		else
 		{
 			defaultState = D3D12_RESOURCE_STATE_COPY_DEST;
@@ -119,17 +123,7 @@ namespace TrinityALImpl
 			defaultState = D3D12_RESOURCE_STATE_GENERIC_READ;
 		}
 		FORWARD_HR( m_buffer.Create( strategy, size, resourceFlags, defaultState, initialData ? 1 : 0, initialData ? &subresourceData : nullptr, renderContext ) );
-
-		CComPtr<ID3D12DescriptorHeap> uavDescriptors;
-		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
-		{
-			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-			heapDesc.NumDescriptors = 1;
-			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			CR_RETURN_HR( renderContext.m_device->CreateDescriptorHeap( &heapDesc, IID_PPV_ARGS( &uavDescriptors ) ) );
-		}
-
+		
 		CComPtr<ID3D12Resource> counter;
 		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::APPEND_CONSUME ) || HasFlag( desc.gpuUsage, Tr2GpuUsage::BUFFER_COUNTER ) )
 		{
@@ -148,7 +142,6 @@ namespace TrinityALImpl
 		m_desc = desc;
 		m_owner = &renderContext;
 		m_defaultState = defaultState;
-		m_uavDescriptors = uavDescriptors;
 
 		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 		{
@@ -159,6 +152,13 @@ namespace TrinityALImpl
 			m_srvDesc.Buffer.NumElements = desc.count;
 			m_srvDesc.Buffer.StructureByteStride = m_srvDesc.Format == DXGI_FORMAT_UNKNOWN ? stride : 0;
 			m_srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+
+			HRESULT hr;
+			if (FAILED(hr = renderContext.CreateShaderResourceView(m_buffer.GetResource(), m_srvDesc, m_srv)))
+			{
+				Destroy();
+				return hr;
+			}
 		}
 		else
 		{
@@ -167,6 +167,31 @@ namespace TrinityALImpl
 
 		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
 		{
+			D3D12_UNORDERED_ACCESS_VIEW_DESC clearUav;
+			if( desc.format != Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN )
+			{
+				clearUav.Format = DXGI_FORMAT( desc.format );
+				clearUav.Buffer.NumElements = desc.count;
+			}
+			else
+			{
+				clearUav.Format = DXGI_FORMAT_R32_UINT;
+				clearUav.Buffer.NumElements = ( desc.count * desc.stride ) / 4;
+			}
+			clearUav.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+			clearUav.Buffer.FirstElement = 0;
+			clearUav.Buffer.StructureByteStride = 0;
+			clearUav.Buffer.CounterOffsetInBytes = 0;
+			clearUav.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+
+			HRESULT hr;
+			if (FAILED(hr = renderContext.CreateUnorderedAccessView(m_buffer.GetResource(), nullptr, clearUav, m_clearUav)))
+			{
+				Destroy();
+				return hr;
+			}
+
+
 			m_uavDesc.Format = DXGI_FORMAT( desc.format );
 			m_uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
 			m_uavDesc.Buffer.FirstElement = 0;
@@ -175,11 +200,11 @@ namespace TrinityALImpl
 			m_uavDesc.Buffer.CounterOffsetInBytes = 0;
 			m_uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-			renderContext.m_device->CreateUnorderedAccessView(
-				m_buffer.GetResource(),
-				counter,
-				&m_uavDesc,
-				m_uavDescriptors->GetCPUDescriptorHandleForHeapStart() );
+			if (FAILED(hr = renderContext.CreateUnorderedAccessView(m_buffer.GetResource(), m_counter, m_uavDesc, m_uav)))
+			{
+				Destroy();
+				return hr;
+			}
 		}
 		else
 		{
@@ -195,20 +220,17 @@ namespace TrinityALImpl
 		{
 			m_buffer.Destroy( *m_owner );
 		}
-		if( m_uavDescriptors )
-		{
-			m_owner->ReleaseLater( m_uavDescriptors );
-			m_uavDescriptors = nullptr;
-		}
-
 		if( m_lockedScratch )
 		{
-			m_owner->ReleaseLater( m_lockedScratch );
+			RELEASE_LATER( m_owner, m_lockedScratch );
 			m_lockedScratch = nullptr;
 		}
 
 		memset( &m_srvDesc, 0, sizeof( m_srvDesc ) );
 		memset( &m_uavDesc, 0, sizeof( m_uavDesc ) );
+		m_srv = nullptr;
+		m_uav = nullptr;
+		m_clearUav = nullptr;
 		m_desc.count = 0;
 		m_owner = nullptr;
 		m_defaultState = D3D12_RESOURCE_STATE_COMMON;
@@ -321,7 +343,7 @@ namespace TrinityALImpl
 		auto hr = renderContext.FlushAndSyncDx12();
 		if( FAILED( hr ) )
 		{
-			m_owner->ReleaseLater( scratch );
+			RELEASE_LATER( m_owner, scratch );
 			scratch = nullptr;
 			return hr;
 		}
@@ -340,7 +362,7 @@ namespace TrinityALImpl
 		}
 		D3D12_RANGE range = { 0, 0 };
 		m_lockedScratch->Unmap( 0, &range );
-		m_owner->ReleaseLater( m_lockedScratch );
+		RELEASE_LATER( m_owner, m_lockedScratch );
 		m_lockedScratch = nullptr;
 	}
 

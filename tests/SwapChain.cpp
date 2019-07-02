@@ -123,3 +123,37 @@ TEST_F( SwapChain, CanPresentSwapChain )
 		RunLoop( frame );
 	}
 }
+
+TEST_F( SwapChain, CanRecreateSwapChain )
+{
+	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
+	{
+		RenderWindow window;
+
+		uint32_t g = 127;
+
+		auto frame = [&] {
+			Tr2SwapChainAL sc;
+			ASSERT_HRESULT_SUCCEEDED( sc.Create( window, *renderContext ) );
+
+			ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+
+			ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( sc.m_backBuffer ) );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->PopRenderTarget() );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );
+			ASSERT_HRESULT_SUCCEEDED( sc.Present( *renderContext ) );
+
+			ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 16 ), 1.0f ) );
+			MakeTestScreenShot();
+			ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+			g++;
+		};
+
+		RunLoop( frame );
+	}
+}

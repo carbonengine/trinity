@@ -121,7 +121,7 @@ ALResult Tr2ConstantBufferAL::UpdateFromMirror( Tr2RenderContextAL& renderContex
 	{
 		auto owner = m_owner;
 		Destroy();
-		CR_RETURN_HR( Create( m_mirror.size(), *owner ) );
+		CR_RETURN_HR( Create( uint32_t( m_mirror.size() ), *owner ) );
 	}
 	void* data;
 	CR_RETURN_HR( Lock( &data, renderContext ) );

@@ -1821,6 +1821,11 @@
     <ClInclude Include="dx12\Tr2VertexLayoutALDx12.h" />
     <ClInclude Include="dx12\Tr2VideoAdapterInfoALDx12.h" />
     <ClInclude Include="dx12\Utilities.h" />
+    <ClInclude Include="dx12\util\DescriptorHeapViewDx12.h" />
+    <ClInclude Include="dx12\util\DescriptorStateCacheDx12.h" />
+    <ClInclude Include="dx12\util\FrameLocalDescriptorHeapAllocatorDx12.h" />
+    <ClInclude Include="dx12\util\FreeList.h" />
+    <ClInclude Include="dx12\util\GlobalDescriptorHeapAllocatorDx12.h" />
     <ClInclude Include="dx9\Tr2BufferALDx9.h" />
     <ClInclude Include="dx9\Tr2CapsALDx9.h" />
     <ClInclude Include="dx9\Tr2ConstantBufferALDx9.h" />
@@ -1960,6 +1965,10 @@
     <ClCompile Include="dx12\Tr2VertexLayoutALDx12.cpp" />
     <ClCompile Include="dx12\Tr2VideoAdapterInfoALDx12.cpp" />
     <ClCompile Include="dx12\Utilities.cpp" />
+    <ClCompile Include="dx12\util\DescriptorHeapViewDx12.cpp" />
+    <ClCompile Include="dx12\util\DescriptorStateCacheDx12.cpp" />
+    <ClCompile Include="dx12\util\FrameLocalDescriptorHeapAllocatorDx12.cpp" />
+    <ClCompile Include="dx12\util\GlobalDescriptorHeapAllocatorDx12.cpp" />
     <ClCompile Include="dx9\Tr2BufferALDx9.cpp" />
     <ClCompile Include="dx9\Tr2CapsALDx9.cpp" />
     <ClCompile Include="dx9\Tr2ConstantBufferALDx9.cpp" />
@@ -2011,10 +2020,16 @@
     <ClCompile Include="stub\Tr2TextureALStub.cpp" />
     <ClCompile Include="stub\Tr2VertexLayoutALStub.cpp" />
     <ClCompile Include="stub\Tr2VideoAdapterInfoALStub.cpp" />
+    <ClCompile Include="vulkan\Tr2BufferALVulkan.cpp" />
     <ClCompile Include="vulkan\Tr2PrimaryRenderContextVulkan.cpp" />
     <ClCompile Include="vulkan\Tr2RenderContextVulkan.cpp" />
+    <ClCompile Include="vulkan\Tr2SamplerStateALVulkan.cpp" />
+    <ClCompile Include="vulkan\Tr2ShaderALVulkan.cpp" />
+    <ClCompile Include="vulkan\Tr2ShaderProgramALVulkan.cpp" />
     <ClCompile Include="vulkan\Tr2TextureALVulkan.cpp" />
+    <ClCompile Include="vulkan\Tr2VertexLayoutALVulkan.cpp" />
     <ClCompile Include="vulkan\Tr2VideoAdapterInfoALVulkan.cpp" />
+    <ClCompile Include="vulkan\UtilitiesVulkan.cpp" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

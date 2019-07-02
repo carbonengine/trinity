@@ -17,6 +17,11 @@
 #include "Utilities.h"
 #include "Tr2FragmentOpSettings.h"
 
+
+CCP_STATS_DECLARE( primitiveCount, "Trinity/AL/primitiveCount", true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
+CCP_STATS_DECLARE( vertexCount, "Trinity/AL/vertexCount", true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
+CCP_STATS_DECLARE( sceneDrawcallCount, "Trinity/AL/sceneDrawcallCount", true, CST_COUNTER_LOW, "Number of DrawPrimitive calls." );
+
 namespace
 {
 	const D3D12_RASTERIZER_DESC defaultRasterizer =
@@ -118,34 +123,13 @@ Tr2RenderContextAL::~Tr2RenderContextAL() throw( )
 
 void Tr2RenderContextAL::Destroy() throw( )
 {
-	m_resourceSet = Tr2ResourceSetAL();
-	m_vertexLayout = &nullVL;
-	m_shaderProgram = &nullSP;
-	m_topologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
-	m_topology = Tr2RenderContextEnum::TOP_INVALID;
-	m_rasterizerDesc = defaultRasterizer;
-	m_depthStencilDesc = defaultDepthStencil;
-	m_blendDesc = s_defaultBlend;
-	m_primitiveToVertexCount = std::make_pair( 0, 0 );
-	m_ownerDevice = nullptr;
-	m_dirtyPso = true;
-	std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), nullTX );
-	for( auto it = begin( m_rtStack ); it != end( m_rtStack ); ++it )
-	{
-		it->clear();
-	}
-	m_boundDepthStencil = nullTX;
-	m_dsStack.clear();
+	ResetDx12();
 
-	m_renderTargetCount = 0;
-	std::fill( std::begin( m_renderTargetFormats ), std::end( m_renderTargetFormats ), Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
-	m_depthStencilFormat = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN;
-	m_sampleDesc = Tr2MsaaDesc();
+	m_descriptorCache.clear();
+
+
+	m_ownerDevice = nullptr;
 	m_drawUPHelper.Destroy();
-	m_readOnlyDepth = false;
-	m_viewport = Tr2Viewport();
-	m_separateAlphaBlendEnabled = false;
-	m_srgbWriteEnable = false;
 }
 
 bool Tr2RenderContextAL::IsValid() const throw( )
@@ -188,8 +172,8 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 				f * (float)(uint8_t)( color >> 24 )
 			};
 
-			auto handle = m_boundRenderTargets[slot].m_texture->GetRtvDescriptorHandleDx12();
-			m_commandList->ClearRenderTargetView( handle, colorComponents, 0, nullptr );
+			const std::shared_ptr<RenderTargetViewDx12>& rtv = m_boundRenderTargets[slot].m_texture->GetRtvDescriptorHandleDx12();
+			m_commandList->ClearRenderTargetView( rtv->GetHandleCPU(), colorComponents, 0, nullptr );
 		}
 		else
 		{
@@ -209,7 +193,7 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 			{
 				flags |= D3D12_CLEAR_FLAG_STENCIL;
 			}
-			m_commandList->ClearDepthStencilView( m_boundDepthStencil.m_texture->m_dsDescriptors->GetCPUDescriptorHandleForHeapStart(), flags, depth, stencil, 0, nullptr );
+			m_commandList->ClearDepthStencilView( m_boundDepthStencil.m_texture->m_dsv->GetHandleCPU(), flags, depth, stencil, 0, nullptr );
 		}
 		else
 		{
@@ -226,15 +210,23 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 	uint32_t offset,
 	uint32_t stride ) throw( )
 {
-	D3D12_VERTEX_BUFFER_VIEW vb = { buffer.m_buffer->GetGpuView() + offset, buffer.GetSize() - offset, stride };
-	m_commandList->IASetVertexBuffers( index, 1, &vb );
+	if( index > 3 )
+	{
+		return E_INVALIDARG;
+	}
+	m_vertexBuffers[index].buffer = buffer;
+	m_vertexBuffers[index].offset = offset;
+	m_vertexBuffers[index].stride = stride;
+
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer ) throw( )
 {
-	D3D12_INDEX_BUFFER_VIEW ib = { buffer.m_buffer->GetGpuView(), buffer.GetSize(), buffer.GetDesc().stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT };
-	m_commandList->IASetIndexBuffer( &ib );
+	m_indexBuffer = buffer;
+
+	//D3D12_INDEX_BUFFER_VIEW ib = { buffer.m_buffer->GetGpuView(), buffer.GetSize(), buffer.GetDesc().stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT };
+	//m_commandList->IASetIndexBuffer( &ib );
 	return S_OK;
 }
 
@@ -323,7 +315,6 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 
 	HANDLE_STATE( Tr2RenderContextEnum::RS_ZENABLE, m_depthStencilDesc.DepthEnable );
 	HANDLE_STATE( Tr2RenderContextEnum::RS_ZFUNC, m_depthStencilDesc.DepthFunc );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_ZWRITEENABLE, m_depthStencilDesc.DepthEnable );
 	HANDLE_STATE( Tr2RenderContextEnum::RS_STENCILENABLE, m_depthStencilDesc.StencilEnable );
 	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILMASK, m_depthStencilDesc.StencilReadMask, m_depthStencilDesc.StencilWriteMask );
 	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILFAIL, m_depthStencilDesc.FrontFace.StencilFailOp, m_depthStencilDesc.BackFace.StencilFailOp );
@@ -331,6 +322,16 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILPASS, m_depthStencilDesc.FrontFace.StencilPassOp, m_depthStencilDesc.BackFace.StencilPassOp );
 	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILFUNC, m_depthStencilDesc.FrontFace.StencilFunc, m_depthStencilDesc.BackFace.StencilFunc );
 
+	case Tr2RenderContextEnum::RS_ZWRITEENABLE:
+	{
+		auto mask = ( value != 0 && !m_readOnlyDepth ) ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
+		if( m_depthStencilDesc.DepthWriteMask != mask )
+		{
+			m_depthStencilDesc.DepthWriteMask = mask;
+			m_dirtyPso = true;
+		}
+		break;
+	}
 	case Tr2RenderContextEnum::RS_STENCILREF:
 		m_commandList->OMSetStencilRef( value );
 		break;
@@ -349,16 +350,34 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 			
 			D3D12_CPU_DESCRIPTOR_HANDLE handles[RENDER_TARGET_COUNT];
 			uint32_t count = 0;
-			GetRenderTargetHandles( handles, count );
-			D3D12_CPU_DESCRIPTOR_HANDLE dsHandle;
-			if( m_boundDepthStencil.IsValid() )
+			if( GetRenderTargetHandles( handles, count ) )
 			{
-				dsHandle = m_boundDepthStencil.m_texture->m_dsDescriptors->GetCPUDescriptorHandleForHeapStart();
+				D3D12_CPU_DESCRIPTOR_HANDLE dsHandle;
+				if( m_boundDepthStencil.IsValid() )
+				{
+					dsHandle = m_boundDepthStencil.m_texture->m_dsv->GetHandleCPU();
+				}
+				m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
+				for( uint32_t i = 0; i < RENDER_TARGET_COUNT; ++i )
+				{
+					if( m_boundRenderTargets[i].IsValid() )
+					{
+						m_renderTargetFormats[i] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( m_boundRenderTargets[i].GetFormat() ) : m_boundRenderTargets[i].GetFormat();
+					}
+				}
+				m_dirtyPso = true;
 			}
-			m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
-			m_dirtyPso = true;
 		}
 		break;
+	case Tr2RenderContextEnum::RS_ALPHATESTENABLE:
+		if( value == 0 )
+		{
+			break;
+		}
+		return S_OK; // TODO: this is not ok
+	case Tr2RenderContextEnum::RS_ALPHAFUNC:
+	case Tr2RenderContextEnum::RS_ALPHAREF:
+		return S_OK;
 	default:
 		return E_NOTIMPL;
 	}
@@ -379,15 +398,50 @@ ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, u
 
 ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( )
 {
+	if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_outTransitions.empty() )
+	{
+		m_commandList->ResourceBarrier( UINT( m_resourceSet.m_resourceSet->m_outTransitions.size() ), m_resourceSet.m_resourceSet->m_outTransitions.data() );
+	}
 	m_resourceSet = resourceSet;
 
+	if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_inTransitions.empty() )
+	{
+		m_commandList->ResourceBarrier( UINT( m_resourceSet.m_resourceSet->m_inTransitions.size() ), m_resourceSet.m_resourceSet->m_inTransitions.data() );
+	}
 	resourceSet.m_resourceSet->UploadInitialCounts( *this );
+
+	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
+	m_descriptorCache[bufferIndex]->SetSamplers(0, Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE, resourceSet.m_resourceSet->m_sampler);
+
+	// Because SRVs and UAVs are stacked in the resource slots, this will filter them out into the correct heap setup calls
+	// It's not great, but if the system is changed in the future to separate SRVs and UAVs then this is an easy change
+	for (uint32_t idx = 0; idx < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++idx)
+	{
+		if(resourceSet.m_resourceSet->m_srvUav[idx] == nullptr)
+			continue;
+
+		if (resourceSet.m_resourceSet->m_srv[idx] != nullptr)
+		{
+			CCP_ASSERT(resourceSet.m_resourceSet->m_uav[idx] == nullptr);
+
+			m_descriptorCache[bufferIndex]->SetShaderResources(idx, 1, &resourceSet.m_resourceSet->m_srv[idx]);
+		}
+
+		if (resourceSet.m_resourceSet->m_uav[idx] != nullptr)
+		{
+			CCP_ASSERT(resourceSet.m_resourceSet->m_srv[idx] == nullptr);
+
+			m_descriptorCache[bufferIndex]->SetUnorderedAccessViews(idx, 1, &resourceSet.m_resourceSet->m_uav[idx]);
+		}
+	}
+
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer, Tr2RenderContextEnum::ShaderType constantType, uint32_t registerIndex, uint32_t ) throw( )
 {
-	m_cbMap[constantType][registerIndex] = buffer.m_buffer.GetGpuView();
+	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
+	m_descriptorCache[bufferIndex]->SetConstantBuffers(constantType, registerIndex, buffer);
 	return S_OK;
 }
 
@@ -395,12 +449,13 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive( uint32_t numVertices, uint32_
 {
 	SetAllState();
 
-	m_commandList->DrawIndexedInstanced(
-		m_primitiveToVertexCount.first * primitiveCount + m_primitiveToVertexCount.second, 
-		1, 
-		startIndex, 
-		minimumIndex, 
-		0 );
+	auto vc = m_primitiveToVertexCount.first * primitiveCount + m_primitiveToVertexCount.second;
+
+	CCP_STATS_ADD( primitiveCount, primitiveCount );
+	CCP_STATS_ADD( vertexCount, vc );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	m_commandList->DrawIndexedInstanced( vc, 1, startIndex, minimumIndex, 0 );
 	return S_OK;
 }
 
@@ -408,7 +463,13 @@ ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primi
 {
 	SetAllState();
 
-	m_commandList->DrawInstanced( m_primitiveToVertexCount.first * primitiveCount + m_primitiveToVertexCount.second, 1, startVertex, 0 );
+	auto vc = m_primitiveToVertexCount.first * primitiveCount + m_primitiveToVertexCount.second;
+
+	CCP_STATS_ADD( primitiveCount, primitiveCount );
+	CCP_STATS_ADD( vertexCount, vc );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	m_commandList->DrawInstanced( vc, 1, startVertex, 0 );
 
 	return S_OK;
 }
@@ -421,12 +482,13 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 {
 	SetAllState();
 
-	m_commandList->DrawIndexedInstanced(
-		m_primitiveToVertexCount.first * primitiveCount + m_primitiveToVertexCount.second,
-		numInstances,
-		startIndex,
-		0,
-		0 );
+	auto vc = m_primitiveToVertexCount.first * primitiveCount + m_primitiveToVertexCount.second;
+
+	CCP_STATS_ADD( primitiveCount, primitiveCount * numInstances );
+	CCP_STATS_ADD( vertexCount, vc * numInstances );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	m_commandList->DrawIndexedInstanced( vc, numInstances, startIndex, 0, 0 );
 
 	return S_OK;
 }
@@ -435,7 +497,19 @@ ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, 
 {
 	SetAllState();
 
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	{
+		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT );
+		m_commandList->ResourceBarrier( 1, &transition );
+	}
 	m_commandList->ExecuteIndirect( m_ownerDevice->m_drawIndexedInstancedIndirect, 1, params.m_buffer->GetGpuResource(), offset, nullptr, 0 );
+	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	{
+		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState );
+		m_commandList->ResourceBarrier( 1, &transition );
+	}
 
 	return S_OK;
 }
@@ -444,7 +518,17 @@ ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_
 {
 	SetAllState();
 
+	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	{
+		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT );
+		m_commandList->ResourceBarrier( 1, &transition );
+	}
 	m_commandList->ExecuteIndirect( m_ownerDevice->m_drawInstancedIndirect, 1, params.m_buffer->GetGpuResource(), offset, nullptr, 0 );
+	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	{
+		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState );
+		m_commandList->ResourceBarrier( 1, &transition );
+	}
 
 	return S_OK;
 }
@@ -457,11 +541,21 @@ ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned grou
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( )
+ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& params, unsigned offset ) throw( )
 {
 	SetAllState();
 
-	m_commandList->ExecuteIndirect( m_ownerDevice->m_dispatchIndirect, 1, indirectParams.m_buffer->GetGpuResource(), offset, nullptr, 0 );
+	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	{
+		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT );
+		m_commandList->ResourceBarrier( 1, &transition );
+	}
+	m_commandList->ExecuteIndirect( m_ownerDevice->m_dispatchIndirect, 1, params.m_buffer->GetGpuResource(), offset, nullptr, 0 );
+	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	{
+		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState );
+		m_commandList->ResourceBarrier( 1, &transition );
+	}
 
 	return S_OK;
 }
@@ -569,10 +663,15 @@ ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 		desc.SampleMask = 0xff;
 		desc.SampleDesc.Count = 1;
 
+		std::vector<D3D12_INPUT_ELEMENT_DESC> layout;
 		if( m_vertexLayout && !m_vertexLayout->m_elements.empty() )
 		{
-			desc.InputLayout.NumElements = UINT( m_vertexLayout->m_elements.size() );
-			desc.InputLayout.pInputElementDescs = &m_vertexLayout->m_elements[0];
+			m_vertexLayout->PopulateInputLayout( layout, m_shaderProgram->m_iaInputs );
+			if( !layout.empty() )
+			{
+				desc.InputLayout.NumElements = UINT( layout.size() );
+				desc.InputLayout.pInputElementDescs = &layout[0];
+			}
 		}
 		desc.PrimitiveTopologyType = m_topologyType;
 
@@ -595,6 +694,27 @@ ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 
 void Tr2RenderContextAL::SetAllState()
 {
+	D3D12_VERTEX_BUFFER_VIEW vb[4];
+	for( uint32_t i = 0; i < 4; ++i )
+	{
+		if( m_vertexBuffers[i].buffer.IsValid() )
+		{
+			vb[i].BufferLocation = m_vertexBuffers[i].buffer.m_buffer->GetGpuView() + m_vertexBuffers[i].offset;
+			vb[i].SizeInBytes = m_vertexBuffers[i].buffer.GetSize() - m_vertexBuffers[i].offset;
+			vb[i].StrideInBytes = m_vertexBuffers[i].stride;
+		}
+		else
+		{
+			vb[i].BufferLocation = 0;
+			vb[i].SizeInBytes = 0;
+			vb[i].StrideInBytes = 0;
+		}
+	}
+	m_commandList->IASetVertexBuffers( 0, 4, vb );
+	D3D12_INDEX_BUFFER_VIEW ib = { m_indexBuffer.m_buffer->GetGpuView(), m_indexBuffer.GetSize(), m_indexBuffer.GetDesc().stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT };
+	m_commandList->IASetIndexBuffer( &ib );
+
+
 	if( m_dirtyPso )
 	{
 		auto pso = GetPipelineState();
@@ -620,58 +740,10 @@ void Tr2RenderContextAL::SetAllState()
 
 	if( m_shaderProgram )
 	{
-		ID3D12DescriptorHeap* heaps[2];
-		uint32_t count = 0;
-		if( m_resourceSet.m_resourceSet->m_srvUavDescriptors )
-		{
-			heaps[count++] = m_resourceSet.m_resourceSet->m_srvUavDescriptors;
-		}
-		if( m_resourceSet.m_resourceSet->m_samplerDescriptors )
-		{
-			heaps[count++] = m_resourceSet.m_resourceSet->m_samplerDescriptors;
-		}
-		m_commandList->SetDescriptorHeaps( count, heaps );
-		if( m_shaderProgram->IsComputeProgramDx12() )
-		{
-			if( m_resourceSet.m_resourceSet->m_srvUavDescriptors && m_shaderProgram->m_srvUavParameter != 0xffffffff )
-			{
-				m_commandList->SetComputeRootDescriptorTable( 
-					m_shaderProgram->m_srvUavParameter, 
-					m_resourceSet.m_resourceSet->m_srvUavDescriptors->GetGPUDescriptorHandleForHeapStart() );
-			}
-			if( m_resourceSet.m_resourceSet->m_samplerDescriptors && m_shaderProgram->m_samplerParameter != 0xffffffff )
-			{
-				m_commandList->SetComputeRootDescriptorTable( 
-					m_shaderProgram->m_samplerParameter, 
-					m_resourceSet.m_resourceSet->m_samplerDescriptors->GetGPUDescriptorHandleForHeapStart() );
-			}
-
-			for( auto it = begin( m_shaderProgram->m_cbRegisters ); it != end( m_shaderProgram->m_cbRegisters ); ++it )
-			{
-				m_commandList->SetComputeRootConstantBufferView( it->parameter, m_cbMap[it->stage][it->index] );
-			}
-		}
-		else
-		{
-			if( m_resourceSet.m_resourceSet->m_srvUavDescriptors && m_shaderProgram->m_srvUavParameter != 0xffffffff )
-			{
-				m_commandList->SetGraphicsRootDescriptorTable( 
-					m_shaderProgram->m_srvUavParameter, 
-					m_resourceSet.m_resourceSet->m_srvUavDescriptors->GetGPUDescriptorHandleForHeapStart() );
-			}
-			if( m_resourceSet.m_resourceSet->m_samplerDescriptors && m_shaderProgram->m_samplerParameter != 0xffffffff )
-			{
-				m_commandList->SetGraphicsRootDescriptorTable( 
-					m_shaderProgram->m_samplerParameter, 
-					m_resourceSet.m_resourceSet->m_samplerDescriptors->GetGPUDescriptorHandleForHeapStart() );
-			}
-
-			for( auto it = begin( m_shaderProgram->m_cbRegisters ); it != end( m_shaderProgram->m_cbRegisters ); ++it )
-			{
-				m_commandList->SetGraphicsRootConstantBufferView( it->parameter, m_cbMap[it->stage][it->index] );
-			}
-		}
+		uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
+		m_descriptorCache[bufferIndex]->Commit(GetPrimaryRenderContextPointer(), m_commandList, m_shaderProgram);
 	}
+
 }
 
 ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot ) throw()
@@ -698,7 +770,7 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 	{
 		return S_OK;
 	}
-	if( renderTarget.IsValid() && !renderTarget.m_texture->m_rtvDescriptors )
+	if( renderTarget.IsValid() && renderTarget.m_texture->GetRtvDescriptorHandleDx12(m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR) == nullptr )
 	{
 		return E_INVALIDARG;
 	}
@@ -728,22 +800,24 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handles[RENDER_TARGET_COUNT];
 	uint32_t count = 0;
-	GetRenderTargetHandles( handles, count );
-	D3D12_CPU_DESCRIPTOR_HANDLE dsHandle;
-	if( m_boundDepthStencil.IsValid() )
+	if( GetRenderTargetHandles( handles, count ) )
 	{
-		dsHandle = m_boundDepthStencil.m_texture->m_dsDescriptors->GetCPUDescriptorHandleForHeapStart();
-	}
-	m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
+		D3D12_CPU_DESCRIPTOR_HANDLE dsHandle;
+		if( m_boundDepthStencil.IsValid() )
+		{
+			dsHandle = m_boundDepthStencil.m_texture->m_dsv->GetHandleCPU();
+		}
+		m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
 
-	if( m_boundRenderTargets[0].IsValid() )
-	{
-		SetViewport( Tr2Viewport( m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() ) );
-		D3D12_RECT rect = { 0, 0, m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() };
-		m_commandList->RSSetScissorRects( 1, &rect );
+		if( m_boundRenderTargets[0].IsValid() )
+		{
+			SetViewport( Tr2Viewport( m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() ) );
+			D3D12_RECT rect = { 0, 0, m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() };
+			m_commandList->RSSetScissorRects( 1, &rect );
+		}
+		m_renderTargetCount = count;
 	}
 
-	m_renderTargetCount = count;
 	m_renderTargetFormats[slot] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( renderTarget.GetFormat() ) : renderTarget.GetFormat();
 	if( slot == 0 )
 	{
@@ -778,7 +852,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 	{
 		return S_OK;
 	}
-	if( depthStencil.IsValid() && !depthStencil.m_texture->m_dsDescriptors )
+	if( depthStencil.IsValid() && depthStencil.m_texture->m_dsv == nullptr )
 	{
 		return E_INVALIDARG;
 	}
@@ -810,15 +884,17 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handles[RENDER_TARGET_COUNT];
 	uint32_t count = 0;
-	GetRenderTargetHandles( handles, count );
-	D3D12_CPU_DESCRIPTOR_HANDLE dsHandle;
-	if( m_boundDepthStencil.IsValid() )
+	if( GetRenderTargetHandles( handles, count ) )
 	{
-		dsHandle = m_boundDepthStencil.m_texture->m_dsDescriptors->GetCPUDescriptorHandleForHeapStart();
+		D3D12_CPU_DESCRIPTOR_HANDLE dsHandle;
+		if( m_boundDepthStencil.IsValid() )
+		{
+			dsHandle = m_boundDepthStencil.m_texture->m_dsv->GetHandleCPU();
+		}
+		m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
 	}
-	m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
 	m_depthStencilFormat = depthStencil.GetFormat();
-	
+
 	return S_OK;
 }
 
@@ -837,6 +913,11 @@ void Tr2RenderContextAL::SetReadOnlyDepth( bool enable ) throw( )
 	D3D12_RESOURCE_STATES toState = m_readOnlyDepth ? D3D12_RESOURCE_STATE_DEPTH_READ : D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	auto barrier = TrinityALImpl::Transition( m_boundDepthStencil.m_texture->GetResourceDx12(), fromState, toState );
 	m_commandList->ResourceBarrier( 1, &barrier );
+
+	if( m_readOnlyDepth )
+	{
+		SetRenderState( Tr2RenderContextEnum::RS_ZWRITEENABLE, 0 );
+	}
 }
 
 bool Tr2RenderContextAL::GetReadOnlyDepth() const
@@ -902,7 +983,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4
 {
 	auto obj = buffer.m_buffer.get();
 
-	if( !obj->m_uavDescriptors )
+	if( !obj->m_clearUav )
 	{
 		return E_INVALIDARG;
 	}
@@ -913,9 +994,9 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4
 		m_commandList->ResourceBarrier( 1, &barrier );
 	}
 
-	m_commandList->ClearUnorderedAccessViewFloat( 
-		obj->m_uavDescriptors->GetGPUDescriptorHandleForHeapStart(),
-		obj->m_uavDescriptors->GetCPUDescriptorHandleForHeapStart(),
+	m_commandList->ClearUnorderedAccessViewFloat(
+		obj->m_clearUav->GetHandleGPU(),
+		obj->m_clearUav->GetHandleCPU(),
 		obj->GetGpuResource(),
 		values,
 		0,
@@ -934,7 +1015,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t value
 {
 	auto obj = buffer.m_buffer.get();
 
-	if( !obj->m_uavDescriptors )
+	if( !obj->m_clearUav )
 	{
 		return E_INVALIDARG;
 	}
@@ -946,8 +1027,8 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t value
 	}
 
 	m_commandList->ClearUnorderedAccessViewUint(
-		obj->m_uavDescriptors->GetGPUDescriptorHandleForHeapStart(),
-		obj->m_uavDescriptors->GetCPUDescriptorHandleForHeapStart(),
+		obj->m_clearUav->GetHandleGPU(),
+		obj->m_clearUav->GetHandleCPU(),
 		obj->GetGpuResource(),
 		values,
 		0,
@@ -966,15 +1047,12 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 {
 	auto obj = texture.m_texture.get();
 
-	if( !obj->m_uavDescriptors )
+	if( obj->m_uav.size() <= mip )
 	{
 		return E_INVALIDARG;
 	}
-	auto offset = mip * m_ownerDevice->m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
-	auto gpuDesc = obj->m_uavDescriptors->GetGPUDescriptorHandleForHeapStart();
-	auto cpuDesc = obj->m_uavDescriptors->GetCPUDescriptorHandleForHeapStart();
-	gpuDesc.ptr += offset;
-	cpuDesc.ptr += offset;
+	auto gpuDesc = obj->m_uav[mip]->GetHandleGPU();
+	auto cpuDesc = obj->m_uav[mip]->GetHandleCPU();
 	auto resource = obj->GetResourceDx12();
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
@@ -1004,15 +1082,12 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 {
 	auto obj = texture.m_texture.get();
 
-	if( !obj->m_uavDescriptors )
+	if( obj->m_uav.size() <= mip )
 	{
 		return E_INVALIDARG;
 	}
-	auto offset = mip * m_ownerDevice->m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
-	auto gpuDesc = obj->m_uavDescriptors->GetGPUDescriptorHandleForHeapStart();
-	auto cpuDesc = obj->m_uavDescriptors->GetCPUDescriptorHandleForHeapStart();
-	gpuDesc.ptr += offset;
-	cpuDesc.ptr += offset;
+	auto gpuDesc = obj->m_uav[mip]->GetHandleGPU();
+	auto cpuDesc = obj->m_uav[mip]->GetHandleCPU();
 	auto resource = obj->GetResourceDx12();
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
@@ -1088,15 +1163,6 @@ ALResult Tr2RenderContextAL::CopySubBuffer(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::FlushDx12()
-{
-	if( !IsValid() )
-	{
-		return E_INVALIDCALL;
-	}
-	return m_ownerDevice->FlushDx12( *this );
-}
-
 ALResult Tr2RenderContextAL::FlushAndSyncDx12()
 {
 	if( !IsValid() )
@@ -1106,8 +1172,37 @@ ALResult Tr2RenderContextAL::FlushAndSyncDx12()
 	return m_ownerDevice->FlushAndSyncDx12( *this );
 }
 
-void Tr2RenderContextAL::GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* handles, uint32_t& count )
+bool Tr2RenderContextAL::GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* handles, uint32_t& count )
 {
+	uint32_t width = -1;
+	uint32_t height = -1;
+	Tr2MsaaDesc msaa;
+	if( m_boundDepthStencil.IsValid() )
+	{
+		width = m_boundDepthStencil.GetWidth();
+		height = m_boundDepthStencil.GetHeight();
+		msaa = m_boundDepthStencil.GetMsaaDesc();
+	}
+	for( uint32_t i = 0; i < RENDER_TARGET_COUNT; ++i )
+	{
+		if( m_boundRenderTargets[i].IsValid() )
+		{
+			if( width != -1 )
+			{
+				if( m_boundRenderTargets[i].GetWidth() != width || m_boundRenderTargets[i].GetHeight() != height || m_boundRenderTargets[i].GetMsaaDesc() != msaa )
+				{
+					return false;
+				}
+			}
+			else
+			{
+				width = m_boundRenderTargets[i].GetWidth();
+				height = m_boundRenderTargets[i].GetHeight();
+				msaa = m_boundRenderTargets[i].GetMsaaDesc();
+			}
+		}
+	}
+
 	count = 0;
 	bool hasNullRts = false;
 	bool hasNullRtsInside = false;
@@ -1116,8 +1211,9 @@ void Tr2RenderContextAL::GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* ha
 	{
 		if( m_boundRenderTargets[i].IsValid() )
 		{
-			handles[i] = m_boundRenderTargets[i].m_texture->GetRtvDescriptorHandleDx12( m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
-			m_renderTargetFormats[i] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( m_boundRenderTargets[i].GetFormat() ) : m_boundRenderTargets[i].GetFormat();
+			const std::shared_ptr<RenderTargetViewDx12>& rtv = m_boundRenderTargets[i].m_texture->GetRtvDescriptorHandleDx12( m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
+			CCP_ASSERT(rtv != nullptr);
+			handles[i] = rtv->GetHandleCPU();
 			count = i + 1;
 			hasNullRtsInside = hasNullRts;
 			boundRtExample = m_boundRenderTargets + i;
@@ -1138,7 +1234,127 @@ void Tr2RenderContextAL::GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* ha
 			}
 		}
 	}
+	return true;
+}
 
+bool Tr2RenderContextAL::IsBoundDx12( const TrinityALImpl::Tr2TextureAL& texture, D3D12_RESOURCE_STATES& boundState )
+{
+	for( uint32_t i = 0; i < RENDER_TARGET_COUNT; ++i )
+	{
+		if( *m_boundRenderTargets[i].m_texture == texture )
+		{
+			boundState = D3D12_RESOURCE_STATE_RENDER_TARGET;
+			return true;
+		}
+	}
+	if( *m_boundDepthStencil.m_texture == texture )
+	{
+		boundState = m_readOnlyDepth ? D3D12_RESOURCE_STATE_DEPTH_READ : D3D12_RESOURCE_STATE_DEPTH_WRITE;
+		return true;
+	}
+	return false;
+}
+
+void Tr2RenderContextAL::ResetDx12()
+{
+	if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_outTransitions.empty() )
+	{
+		m_commandList->ResourceBarrier( UINT( m_resourceSet.m_resourceSet->m_outTransitions.size() ), m_resourceSet.m_resourceSet->m_outTransitions.data() );
+	}
+
+	for( uint32_t i = 0; i < 4; ++i )
+	{
+		m_vertexBuffers[i].buffer = Tr2BufferAL();
+	}
+	m_indexBuffer = Tr2BufferAL();
+
+	m_resourceSet = Tr2ResourceSetAL();
+	m_vertexLayout = &nullVL;
+	m_shaderProgram = &nullSP;
+	m_topologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+	m_topology = Tr2RenderContextEnum::TOP_INVALID;
+	m_rasterizerDesc = defaultRasterizer;
+	m_depthStencilDesc = defaultDepthStencil;
+	m_blendDesc = s_defaultBlend;
+	m_primitiveToVertexCount = std::make_pair( 0, 0 );
+
+	m_dirtyPso = true;
+	std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), nullTX );
+	for( auto it = begin( m_rtStack ); it != end( m_rtStack ); ++it )
+	{
+		it->clear();
+	}
+	m_boundDepthStencil = nullTX;
+	m_dsStack.clear();
+
+	m_renderTargetCount = 0;
+	std::fill( std::begin( m_renderTargetFormats ), std::end( m_renderTargetFormats ), Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
+	m_depthStencilFormat = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN;
+	m_sampleDesc = Tr2MsaaDesc();
+	m_readOnlyDepth = false;
+	m_viewport = Tr2Viewport();
+	m_separateAlphaBlendEnabled = false;
+	m_srgbWriteEnable = false;
+}
+
+void Tr2RenderContextAL::AddGpuMarker( const char* marker )
+{
+	if( m_commandList2 )
+	{
+		auto length = std::min( strlen( marker ) + 1, size_t( 256 ) );
+		D3D12_WRITEBUFFERIMMEDIATE_PARAMETER params[256 / 4];
+		D3D12_WRITEBUFFERIMMEDIATE_MODE modes[256 / 4];
+		auto addr = m_ownerDevice->GetImmediateBufferAddressDx12();
+		uint32_t count = 0;
+		for( size_t i = 0; i < 256 / 4 && length > 0; ++i )
+		{
+			params[i].Value = 0;
+			params[i].Dest = addr;
+			addr += 4;
+			auto l = std::min( length, sizeof( params[i].Value ) );
+			memcpy( &params[i].Value, marker, l );
+			marker += l;
+			length -= l;
+			modes[i] = D3D12_WRITEBUFFERIMMEDIATE_MODE_MARKER_OUT;
+			++count;
+		}
+		m_commandList2->WriteBufferImmediate( count, params, modes );
+	}
+}
+
+/** Forcibly reset and dirty all descriptor caches (used for explicit synchronization) */
+void Tr2RenderContextAL::ResetDescriptorCaches()
+{
+	for (size_t idx = 0; idx < m_descriptorCache.size(); ++idx)
+	{
+		m_descriptorCache[idx]->Reset();
+	}
+}
+
+/** Force the current descriptor cache to dirty if something has modified active heaps */
+void Tr2RenderContextAL::DirtyDescriptorCache()
+{
+	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
+	m_descriptorCache[bufferIndex]->Dirty();
+}
+
+void Tr2RenderContextAL::ReApplyStateDx12()
+{
+	m_dirtyPso = true;
+	D3D12_CPU_DESCRIPTOR_HANDLE handles[RENDER_TARGET_COUNT];
+	uint32_t count = 0;
+	if( GetRenderTargetHandles( handles, count ) )
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE dsHandle;
+		if( m_boundDepthStencil.IsValid() )
+		{
+			dsHandle = m_boundDepthStencil.m_texture->m_dsv->GetHandleCPU();
+		}
+		m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
+	}
+	m_commandList->IASetPrimitiveTopology( s_topologies[m_topology] );
+	SetViewport( m_viewport );
+	ResetDescriptorCaches();
 }
 
 #endif

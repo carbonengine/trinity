@@ -10,6 +10,7 @@
 
 #include "../ALResult.h"
 #include "../Tr2TrackedALObject.h"
+#include "../include/Tr2ShaderAL.h"
 
 
 class Tr2PrimaryRenderContextAL;
@@ -30,6 +31,8 @@ public:
 private:
 	Tr2VertexLayoutAL( const Tr2VertexLayoutAL& )/* = delete */;
 	Tr2VertexLayoutAL& operator=( const Tr2VertexLayoutAL& )/* = delete */;
+
+	void PopulateInputLayout( std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const;
 
 	std::vector<D3D12_INPUT_ELEMENT_DESC> m_elements;
 	Tr2PrimaryRenderContextAL* m_owner;

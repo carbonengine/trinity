@@ -1,6 +1,11 @@
 #pragma once
 
 #include "VkResult.h"
+#include "include/Tr2PixelFormat.h"
+
+class Tr2PrimaryRenderContextAL;
+struct Tr2BitmapDimensions;
+struct Tr2MsaaDesc;
 
 namespace TrinityALImpl
 {
@@ -67,4 +72,11 @@ namespace TrinityALImpl
 		}
 		return S_OK;
 	}
+
+	VkFormat GetVulkanFormat( Tr2RenderContextEnum::PixelFormat format );
+
+	ALResult AllocateMemory( VkDeviceMemory& memory, const VkMemoryRequirements& memoryRequirements, VkMemoryPropertyFlagBits memoryProperty, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult CreateBuffer( VkBuffer& buffer, VkDeviceMemory& memory, size_t size, VkBufferUsageFlags usage, VkMemoryPropertyFlagBits memoryProperty, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult CreateImage( VkImage& image, VkDeviceMemory& memory, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, VkImageUsageFlags usage, VkMemoryPropertyFlagBits memoryProperty, Tr2PrimaryRenderContextAL& renderContext );
+
 }

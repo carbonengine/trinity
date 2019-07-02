@@ -12,7 +12,8 @@ namespace TrinityALImpl
 	Tr2GpuTimerAL::Tr2GpuTimerAL()
 		:m_frameIndex( 0 ),
 		m_owner( nullptr ),
-		m_lastTime( -1 )
+		m_lastTime( -1 ),
+		m_state( UNINITIALIZED )
 	{
 	}
 
@@ -52,6 +53,7 @@ namespace TrinityALImpl
 		m_query = query;
 		m_result = result;
 		m_owner = &renderContext;
+		m_state = READY;
 
 		return S_OK;
 	}
@@ -60,16 +62,17 @@ namespace TrinityALImpl
 	{
 		if( m_query )
 		{
-			m_owner->ReleaseLater( m_query );
+			RELEASE_LATER(m_owner, m_query );
 			m_query = nullptr;
 		}
 		if( m_result )
 		{
-			m_owner->ReleaseLater( m_result );
+			RELEASE_LATER( m_owner, m_result );
 			m_result = nullptr;
 		}
 		m_owner = nullptr;
 		m_lastTime = -1;
+		m_state = UNINITIALIZED;
 	}
 
 	bool Tr2GpuTimerAL::IsValid() const
@@ -79,7 +82,7 @@ namespace TrinityALImpl
 
 	bool Tr2GpuTimerAL::Begin( Tr2RenderContextAL& renderContext )
 	{
-		if( !m_query )
+		if( !m_query || m_state != READY )
 		{
 			return false;
 		}
@@ -88,12 +91,13 @@ namespace TrinityALImpl
 			return false;
 		}
 		renderContext.m_commandList->EndQuery( m_query, D3D12_QUERY_TYPE_TIMESTAMP, 0 );
+		m_state = BEGIN_ISSUED;
 		return true;
 	}
 
 	void Tr2GpuTimerAL::End( Tr2RenderContextAL& renderContext )
 	{
-		if( !m_query )
+		if( !m_query || m_state != BEGIN_ISSUED )
 		{
 			return;
 		}
@@ -104,6 +108,7 @@ namespace TrinityALImpl
 		renderContext.m_commandList->EndQuery( m_query, D3D12_QUERY_TYPE_TIMESTAMP, 1 );
 		renderContext.m_commandList->ResolveQueryData( m_query, D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, m_result, 0 );
 		m_frameIndex = m_owner->GetCurrentFrameIndexDx12();
+		m_state = END_ISSUED;
 	}
 
 	float Tr2GpuTimerAL::GetTime( Tr2RenderContextAL& renderContext )
@@ -112,7 +117,11 @@ namespace TrinityALImpl
 		{
 			return m_lastTime;
 		}
-		if( !m_owner->IsFrameCompletedDx12( m_frameIndex ) )
+		if( m_state != END_ISSUED )
+		{
+			return m_lastTime;
+		}
+		if( m_owner->GetCompletedFrameIndexDx12() < m_frameIndex )
 		{
 			return m_lastTime;
 		}
@@ -133,6 +142,7 @@ namespace TrinityALImpl
 			return m_lastTime;
 		}
 		m_lastTime = float( double( t1 - t0 ) / double( freq ) );
+		m_state = READY;
 
 		return m_lastTime;
 	}

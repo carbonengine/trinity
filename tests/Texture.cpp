@@ -62,7 +62,7 @@ TEST_F( Texture, Texture2DIsValidAfterCreation )
 	EXPECT_EQ( TEX_TYPE_2D, tex.GetType() );
 }
 
-#if TR2_SUPPORTS_TEXTURE_ARRAYS 
+#if TRINITY_PLATFORM_SUPPORTS_TEXTURE_ARRAYS 
 TEST_F( Texture, Texture2DArrayIsValidAfterCreation )
 {
 	Tr2TextureAL tex;

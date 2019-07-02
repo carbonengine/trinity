@@ -14,6 +14,21 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
 
+#include "./util/GlobalDescriptorHeapAllocatorDx12.h"
+#include "./util/DescriptorHeapViewDx12.h"
+
+
+// JB: Enable this to get some more details on stuff being released
+#define ENABLE_RELEASE_LATER_TAG 0
+#define DUMP_RELEASE_LATER_TAGS 1
+#if ENABLE_RELEASE_LATER_TAG
+	#define _RT_STRINGIFY__(s) #s
+	#define RT_STRINGIFY(s) _RT_STRINGIFY__(s)
+	#define RELEASE_LATER(ownerDevice, comObject) (ownerDevice)->ReleaseLater(comObject, __FILE__ ":" RT_STRINGIFY(__LINE__) " " #comObject);
+#else
+	#define RELEASE_LATER(ownerDevice, comObject) (ownerDevice)->ReleaseLater(comObject);
+#endif
+
 
 struct Tr2PresentParametersAL;
 namespace TrinityALImpl
@@ -63,18 +78,51 @@ public:
 		return m_defaultBackBuffer;
 	}
 
-	void ReleaseLater( IUnknown* resource );
+	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
+	ALResult GetGpuPageFaultResource(
+		Tr2RenderContextEnum::PixelFormat& format,
+		uint64_t& size,
+		uint32_t& width,
+		uint32_t& height,
+		uint32_t& depth,
+		uint32_t& mips ) const;
+
+#if ENABLE_RELEASE_LATER_TAG
+	void ReleaseLater(IUnknown* resource, const std::string& name);
+#else
+	void ReleaseLater(IUnknown* resource);
+#endif
 	uint64_t GetCurrentFrameIndexDx12() const;
-	uint32_t GetBackBufferCountDx12() const;
-	bool IsFrameCompletedDx12( uint64_t frameIndex ) const;
+	uint64_t GetCompletedFrameIndexDx12() const;
 
 	void OnShaderProgramDestroyedDx12( Tr2ShaderProgramAL* sp );
 	void OnVertexLayoutDestroyedDx12( Tr2VertexLayoutAL* vl );
-	ALResult FlushDx12( Tr2RenderContextAL& renderContext );
 	ALResult FlushAndSyncDx12( Tr2RenderContextAL& renderContext );
 	D3D12_CPU_DESCRIPTOR_HANDLE GetNullRtHandle( const Tr2TextureAL& compatibleWith );
 	uint64_t SignalDx12();
 	ALResult WaitForFenceDx12( uint64_t value );
+	D3D12_GPU_VIRTUAL_ADDRESS GetImmediateBufferAddressDx12() const;
+	void ScheduleSwapchainPresentDx12( IDXGISwapChain3* swapChain, const Tr2TextureAL& backbuffer, uint32_t presentInterval );
+
+
+	/** Create a ShaderResourceView */
+	HRESULT CreateShaderResourceView(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, std::shared_ptr<ShaderResourceViewDx12>& srvView);
+
+	/** Create an UnorderedAccessView */
+	HRESULT CreateUnorderedAccessView(ID3D12Resource* resource, ID3D12Resource* counterResource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc, std::shared_ptr<UnorderedAccessViewDx12>& uavView);
+
+	/** Create a SamplerState */
+	HRESULT CreateSamplerState(const D3D12_SAMPLER_DESC& desc, std::shared_ptr<SamplerStateDx12>& samplerState);
+
+	/** Create a RenderTargetView */
+	HRESULT CreateRenderTargetView(ID3D12Resource* resource, const D3D12_RENDER_TARGET_VIEW_DESC* desc, std::shared_ptr<RenderTargetViewDx12>& rtvView);
+
+	/** Create a DepthStencilView */
+	HRESULT CreateDepthStencilView(ID3D12Resource* resource, const D3D12_DEPTH_STENCIL_VIEW_DESC& desc, std::shared_ptr<DepthStencilViewDx12>& dsvView);
+
+	/** Get the current buffer index */
+	uint32_t GetCurrentBackBufferIndex() const { return m_currentBackBufferIndex; }
+
 private:
 	Tr2PrimaryRenderContextAL( const Tr2PrimaryRenderContextAL& ) /* = delete */;
 	Tr2PrimaryRenderContextAL& operator=( const Tr2PrimaryRenderContextAL& ) /* = delete */;
@@ -85,7 +133,6 @@ private:
 
 
 	Tr2CapsAL m_caps;
-	CComPtr<IDXGISwapChain3> m_swapChain;
 	CComPtr<IDXGIOutput> m_output;
 
 	uint32_t m_currentBackBufferIndex;
@@ -93,9 +140,20 @@ private:
 	CComPtr<ID3D12Fence> m_presentFence;
 	HANDLE m_presentFenceEvent;
 
+#if ENABLE_RELEASE_LATER_TAG
+	struct ReleasePair
+	{
+		CComPtr<IUnknown> m_object;
+		std::string m_name;
+	};
+	std::vector<std::vector<ReleasePair>> m_pendingRelease;
+#else
+	std::vector<std::vector<CComPtr<IUnknown>>> m_pendingRelease;
+#endif
+
 	uint64_t m_fenceValue;
 	std::vector<uint64_t> m_frameFenceValues;
-	std::vector<std::vector<CComPtr<IUnknown>>> m_pendingRelease;
+	
 
 	uint32_t m_syncInterval;
 
@@ -122,8 +180,62 @@ private:
 		}
 	};
 	std::unordered_map<NullRtDesc, D3D12_CPU_DESCRIPTOR_HANDLE> m_nullRts;
+
+	CComPtr<ID3D12Resource> m_immediateBuffer;
+	D3D12_GPU_VIRTUAL_ADDRESS m_immediateBufferGpuAddress;
+	const void* m_immediateBufferCpuAddress;
+
+	CComPtr<ID3D12QueryHeap> m_statsQuery;
+	CComPtr<ID3D12Resource> m_statsResult;
+	uint64_t m_statsQueryFrameIndex;
+	enum
+	{
+		STAT_READY,
+		STAT_BEGIN_ISSUED,
+		STAT_END_ISSUED,
+	} m_statsStatus;
+
+	struct PendingPresent
+	{
+		CComPtr<IDXGISwapChain3> swapChain;
+		Tr2TextureAL backBuffer;
+		uint32_t presentInterval;
+	};
+	std::vector<PendingPresent> m_pendingPresents;
+
+	
+	/** Descriptor heap specific content */
+	enum
+	{
+		/*
+		* NOTE: Total number of available descriptors will be PAGE_SIZE * NUM_PAGES
+		* A page is backed by a descriptor heap when existing pages are full, so we should never hit the 'peak' amount
+		*/
+
+		CRVSRVUAV_PAGE_SIZE = 2048,
+		CRVSRVUAV_NUM_PAGES = 1024,
+		SAMPLER_PAGE_SIZE = 256,
+		SAMPLER_NUM_PAGES = 32,
+		RTV_PAGE_SIZE = 256,
+		RTV_NUM_PAGES = 32,
+		DSV_PAGE_SIZE = 256,
+		DSV_NUM_PAGES = 32,
+
+		/*
+		* NOTE: Cache heaps store descriptors for batches in flight, so they typically consume less total memory
+		*		but can benefit from having a larger page size to reduce the chance of having to hit the allocator
+		*		mid frame
+		*/
+
+		DESCRIPTOR_CACHE_CRVSRVUAV_PAGE_SIZE = 4096,
+		DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE = 1024
+	};
+
+	std::shared_ptr<GlobalDescriptorHeapAllocator> m_allocators[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
+
 public:
 	CComPtr<ID3D12Device> m_device;
+	CComPtr<IDXGISwapChain3> m_swapChain;
 	CComPtr<ID3D12CommandQueue> m_commandQueue;
 
 	D3D_ROOT_SIGNATURE_VERSION m_rootSignatureVersion;
@@ -143,6 +255,9 @@ public:
 	CComPtr<ID3D12CommandSignature> m_drawInstancedIndirect;
 	CComPtr<ID3D12CommandSignature> m_drawIndexedInstancedIndirect;
 	CComPtr<ID3D12CommandSignature> m_dispatchIndirect;
+
+	TrinityALImpl::Tr2ResourceHelper m_nullCB;
+
 };
 
 #endif

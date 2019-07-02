@@ -17,6 +17,7 @@
 #include "../Tr2LockGuard.h"
 #endif
 
+#include "./util/DescriptorHeapViewDx12.h"
 
 class Tr2PrimaryRenderContextAL;
 struct Tr2TextureSubresource;
@@ -70,8 +71,8 @@ namespace TrinityALImpl
 		}
 
 		ID3D12Resource* GetResourceDx12() const;
-		D3D12_CPU_DESCRIPTOR_HANDLE GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
-		void AssignFromSwapChainDx12( const std::vector<CComPtr<ID3D12Resource>>& backBuffers, const CComPtr<ID3D12DescriptorHeap>& descriptors, uint32_t descriptorSize, Tr2PrimaryRenderContextAL& renderContext );
+		const std::shared_ptr<RenderTargetViewDx12>& GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
+		void AssignFromSwapChainDx12( const std::vector<CComPtr<ID3D12Resource>>& backBuffers, const std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs, Tr2PrimaryRenderContextAL& renderContext );
 		void SetSwapChainBufferIndexDx12( uint32_t index );
 	private:
 		Tr2BitmapDimensions m_desc;
@@ -80,24 +81,20 @@ namespace TrinityALImpl
 		Tr2GpuUsage::Type m_gpuUsage;
 
 		std::vector<CComPtr<ID3D12Resource>> m_textures;
-		CComPtr<ID3D12DescriptorHeap> m_rtvDescriptors;
-		CComPtr<ID3D12DescriptorHeap> m_dsDescriptors;
 
 		CComPtr<ID3D12Resource> m_writeScratch;
 		CComPtr<ID3D12Resource> m_readScratch;
 		Tr2TextureSubresource m_mappedRegion;
 
 		Tr2PrimaryRenderContextAL* m_owner;
-		uint32_t m_rtvDescriptorSize;
-		uint32_t m_srvDescriptorSize;
 		uint32_t m_currentTextureIndex;
 		D3D12_RESOURCE_STATES m_defaultState;
 
 		D3D12_SHADER_RESOURCE_VIEW_DESC m_srvDesc[2];
-		std::vector<D3D12_UNORDERED_ACCESS_VIEW_DESC> m_uavDesc;
-
-		// TODO: this does not belong here
-		CComPtr<ID3D12DescriptorHeap> m_uavDescriptors;
+		std::vector<std::shared_ptr<UnorderedAccessViewDx12>> m_uav;
+		std::shared_ptr<ShaderResourceViewDx12> m_view[2];
+		std::vector<std::shared_ptr<RenderTargetViewDx12>> m_rtv;
+		std::shared_ptr<DepthStencilViewDx12> m_dsv;
 
 		friend class Tr2ResourceSetAL;
 		friend class Tr2RenderContextAL;

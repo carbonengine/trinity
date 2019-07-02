@@ -62,12 +62,12 @@ void Tr2OcclusionQueryAL::Destroy()
 {
 	if( m_query )
 	{
-		m_owner->ReleaseLater( m_query );
+		RELEASE_LATER( m_owner, m_query );
 		m_query = nullptr;
 	}
 	if( m_result )
 	{
-		m_owner->ReleaseLater( m_result );
+		RELEASE_LATER( m_owner, m_result );
 		m_result = nullptr;
 	}
 	m_owner = nullptr;
@@ -113,7 +113,7 @@ ALResult Tr2OcclusionQueryAL::GetPixelCount( Tr2RenderContextAL& renderContext, 
 	{
 		renderContext.FlushAndSyncDx12();
 	}
-	if( !m_owner->IsFrameCompletedDx12( m_frameIndex ) )
+	if( m_owner->GetCompletedFrameIndexDx12() < m_frameIndex )
 	{
 		return S_FALSE;
 	}

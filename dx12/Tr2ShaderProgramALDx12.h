@@ -43,6 +43,8 @@ private:
 	D3D12_SHADER_BYTECODE m_GS;
 	D3D12_SHADER_BYTECODE m_CS;
 	std::vector<Tr2ShaderAL> m_shaders;
+	std::vector<Tr2ShaderPipelineInputAL> m_iaInputs;
+
 
 	CComPtr<ID3D12RootSignature> m_rootSignature;
 	Tr2PrimaryRenderContextAL* m_owner;
@@ -54,10 +56,9 @@ private:
 		uint32_t parameter;
 	};
 	std::vector<CbRegister> m_cbRegisters;
-
-	uint32_t m_srvMap[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-	uint32_t m_uavMap[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
-	uint32_t m_samplerMap[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	std::vector<CbRegister> m_srvRegisters;
+	std::vector<CbRegister> m_uavRegisters;
+	std::vector<CbRegister> m_samplerRegisters;
 
 	uint32_t m_srvUavTableSize;
 	uint32_t m_srvUavParameter;
@@ -66,6 +67,7 @@ private:
 
 	friend class Tr2RenderContextAL;
 	friend class TrinityALImpl::Tr2ResourceSetAL;
+	friend class DescriptorStateCache;
 };
 
 #endif

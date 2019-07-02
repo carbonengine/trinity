@@ -53,7 +53,7 @@ ALResult Tr2FenceAL::IsReached( bool& isReached, Tr2RenderContextAL& )
 	{
 		return E_INVALIDCALL;
 	}
-	isReached = m_owner->IsFrameCompletedDx12( m_frameIndex );
+	isReached = m_owner->GetCompletedFrameIndexDx12() >= m_frameIndex;
 	return S_OK;
 }
 

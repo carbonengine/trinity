@@ -14,6 +14,7 @@
 #include "../include/Tr2ConstantBufferAL.h"
 #include "../include/Tr2ResourceSetAL.h"
 #include "../include/Tr2TextureAL.h"
+#include "../include/Tr2VertexLayoutAL.h"
 
 
 class Tr2ConstantBufferAL;
@@ -33,18 +34,11 @@ struct Tr2Viewport;
 class Tr2RenderContextAL
 {
 public:
-	Tr2RenderContextAL() throw( )
-	{
+	Tr2RenderContextAL() throw( );
+	~Tr2RenderContextAL() throw( );
 
-	}
-	~Tr2RenderContextAL() throw( )
-	{
-
-	}
-	void Destroy() throw( )
-	{
-
-	}
+	void Destroy() throw( );
+	bool IsValid() const throw( );
 
 	static void SetPrimaryRenderContext( Tr2PrimaryRenderContextAL* )
 	{
@@ -59,19 +53,9 @@ public:
 		return nullptr;
 	}
 
-	ALResult BeginScene() throw( )
-	{
-		return E_NOTIMPL;
-	}
-	ALResult EndScene()
-	{
-		return E_NOTIMPL;
-	}
+	ALResult BeginScene() throw( );
+	ALResult EndScene();
 
-	bool IsValid() const throw( )
-	{
-		return false;
-	}
 
 	void ReleaseDeviceResources() throw( )
 	{
@@ -79,18 +63,9 @@ public:
 	}
 
 
-	ALResult SetStreamSource(
-		uint32_t stream,
-		const Tr2BufferAL & buffer,
-		uint32_t offset,
-		uint32_t stride ) throw( )
-	{
-		return E_NOTIMPL;
-	}
-	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( )
-	{
-		return E_NOTIMPL;
-	}
+	ALResult SetStreamSource( uint32_t stream, const Tr2BufferAL & buffer, uint32_t offset, uint32_t stride ) throw( );
+	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( );
+
 	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( )
 	{
 		return E_NOTIMPL;
@@ -110,18 +85,9 @@ public:
 		return E_NOTIMPL;
 	}
 
-	ALResult SetTopology( Tr2RenderContextEnum::Topology topology ) throw( )
-	{
-		return E_NOTIMPL;
-	}
-	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw( )
-	{
-		return E_NOTIMPL;
-	}
-	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( )
-	{
-		return E_NOTIMPL;
-	}
+	ALResult SetTopology( Tr2RenderContextEnum::Topology topology ) throw( );
+	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw( );
+	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( );
 
 	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mip, const float values[4] ) throw( )
 	{
@@ -141,15 +107,8 @@ public:
 		uint32_t numVertices,
 		uint32_t startIndex,
 		uint32_t primitiveCount,
-		uint32_t minimumIndex = 0 ) throw( )
-	{
-		return E_NOTIMPL;
-	}
-
-	ALResult DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount ) throw( )
-	{
-		return E_NOTIMPL;
-	}
+		uint32_t minimumIndex = 0 ) throw( );
+	ALResult DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount ) throw( );
 
 	ALResult DrawIndexedInstanced(
 		uint32_t numVertices,
@@ -211,15 +170,8 @@ public:
 		return E_NOTIMPL;
 	}
 
-	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw( )
-	{
-		return E_NOTIMPL;
-	}
-
-	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw( )
-	{
-		return E_NOTIMPL;
-	}
+	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw( );
+	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw( );
 
 	ALResult SetConstants(
 		const Tr2ConstantBufferAL& buffer,
@@ -242,10 +194,7 @@ public:
 	{
 		return false;
 	}
-	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 ) throw( )
-	{
-		return E_NOTIMPL;
-	}
+	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 ) throw( );
 
 	static void DestroyMainThreadRenderContext()
 	{
@@ -341,13 +290,46 @@ public:
 		return E_NOTIMPL;
 	}
 private:
+	ALResult SetPass();
+	ALResult CreateRenderPass( VkRenderPass& renderPass );
+	void UpdateFramebuffer();
 
+	ALResult SetPipeline();
+	ALResult CreatePipeline( VkPipeline& pipeline );
+
+	struct PipelineSource
+	{
+		const Tr2VertexLayoutAL* m_layout;
+		VkPrimitiveTopology m_topology;
+		const Tr2ShaderProgramAL* m_shaderProgram;
+		VkPipelineDepthStencilStateCreateInfo m_depthStencilState;
+		VkPipelineRasterizationStateCreateInfo m_rasterizationState;
+		VkVertexInputBindingDescription m_streams[4];
+
+		size_t GetHash() const;
+	} m_pipelineSource;
+
+	struct RenderPassSource
+	{
+		VkAttachmentDescription m_rt[5]; //  0 - ds
+
+		size_t GetHash() const;
+	} m_renderPassSource;
+	bool m_dirtyPso;
+	bool m_dirtyPass;
+	std::pair<uint32_t, uint32_t> m_primitiveToVertexCount;
+
+	VkFramebuffer m_framebuffer;
 public:
 	// If you need this, you're probably doing something wrong :P
 	//Tr2TextureAL&			GetDefaultBackBuffer()
 protected:
 	static const uint32_t RENDER_TARGET_COUNT = 4;
 	Tr2TextureAL m_boundRenderTargets[RENDER_TARGET_COUNT];
+	Tr2PrimaryRenderContextAL* m_owner;
+	VkRenderPass m_renderPass;
+
+public:
 	VkCommandBuffer m_commandBuffer;
 
 private:	

@@ -10,6 +10,8 @@
 
 #include <dxgi.h>
 
+extern bool g_requestDeviceDebugLayer;
+
 namespace
 {
 	static const char* s_requiredInstanceExtensions[] = {
@@ -21,6 +23,7 @@ namespace
 #elif defined(VK_USE_PLATFORM_XLIB_KHR)
 		VK_KHR_XLIB_SURFACE_EXTENSION_NAME,
 #endif
+		VK_EXT_DEBUG_REPORT_EXTENSION_NAME,
 	};
 	static const char* s_requiredDeviceExtensions[] = {
 		VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -50,6 +53,59 @@ namespace
 		return nullptr;
 	}
 
+	const char* s_validationLayers[] = {
+		"VK_LAYER_KHRONOS_validation",
+		"VK_LAYER_LUNARG_core_validation",
+		"VK_LAYER_LUNARG_standard_validation",
+		"VK_LAYER_LUNARG_parameter_validation",
+	};
+
+	void GetValidationLayers( std::vector<const char*>& validationLayers )
+	{
+		validationLayers.clear();
+
+		if( !g_requestDeviceDebugLayer )
+		{
+			return;
+		}
+
+		uint32_t layerCount;
+		vkEnumerateInstanceLayerProperties( &layerCount, nullptr );
+
+		std::vector<VkLayerProperties> availableLayers( layerCount );
+		vkEnumerateInstanceLayerProperties( &layerCount, availableLayers.data() );
+
+		for( auto it = std::begin( s_validationLayers ); it != std::end( s_validationLayers ); ++it )
+		{
+			auto found = std::find_if( begin( availableLayers ), end( availableLayers ), [&]( const VkLayerProperties& prop ) { return strcmp( prop.layerName, *it ) == 0; } );
+			if( found != end( availableLayers ) )
+			{
+				validationLayers.push_back( *it );
+			}
+		}
+	}
+
+	VKAPI_ATTR VkBool32 VKAPI_CALL ReportVulkanMessage(
+		VkDebugReportFlagsEXT flags,
+		VkDebugReportObjectTypeEXT objectType,
+		uint64_t object,
+		size_t location,
+		int32_t messageCode,
+		const char* pLayerPrefix,
+		const char* pMessage,
+		void* pUserData )
+	{
+#ifdef _WIN32
+		OutputDebugString( pMessage );
+		OutputDebugString( "\n" );
+#endif
+		if( ( flags & VK_DEBUG_REPORT_ERROR_BIT_EXT ) != 0 )
+		{
+			CCP_AL_LOGERR( "Vulkan validation error: %s", pMessage );
+		}
+		return VK_FALSE;
+	}
+
 	ALResult PopulateDeviceInfo( std::vector<TrinityALImpl::VulkanDeviceInfo>& s_devices )
 	{
 		if( !s_instance )
@@ -73,19 +129,39 @@ namespace
 				VK_MAKE_VERSION( 1,0,0 )
 			};
 
+			std::vector<const char*> validationLayers;
+			GetValidationLayers( validationLayers );
+
 			VkInstanceCreateInfo instanceCreateInfo = {
 				VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 				nullptr,
 				0,
 				&applicationInfo,
-				0,
-				nullptr,
+				uint32_t( validationLayers.size() ),
+				validationLayers.empty() ? nullptr : validationLayers.data(),
 				_countof( s_requiredInstanceExtensions ),
 				s_requiredInstanceExtensions
 			};
 
 
 			CR_RETURN_HR( Vk2Al( vkCreateInstance( &instanceCreateInfo, nullptr, &s_instance ) ) );
+
+			if( g_requestDeviceDebugLayer )
+			{
+				PFN_vkCreateDebugReportCallbackEXT vkCreateDebugReportCallbackEXT =
+					reinterpret_cast<PFN_vkCreateDebugReportCallbackEXT>( vkGetInstanceProcAddr( s_instance, "vkCreateDebugReportCallbackEXT" ) );
+
+				VkDebugReportCallbackCreateInfoEXT callbackCreateInfo = {
+					VK_STRUCTURE_TYPE_DEBUG_REPORT_CREATE_INFO_EXT,
+					nullptr,
+					VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT,
+					&ReportVulkanMessage,
+					nullptr
+				};
+
+				VkDebugReportCallbackEXT callback;
+				Vk2Al( vkCreateDebugReportCallbackEXT( s_instance, &callbackCreateInfo, nullptr, &callback ) );
+			}
 		}
 
 		std::vector<VkPhysicalDevice> physicalDevices;

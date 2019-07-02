@@ -14,6 +14,7 @@
 #include "../include/Tr2ResourceSetAL.h"
 #include "../include/Tr2TextureAL.h"
 
+#include "./util/DescriptorStateCacheDx12.h"
 
 class Tr2ConstantBufferAL;
 class Tr2VertexLayoutAL;
@@ -165,30 +166,33 @@ public:
 	size_t GetStackSizeRT( uint32_t RT = 0 )	const { return 0; }
 	size_t GetStackSizeDS()						const { return 0; }
 
-	void AddGpuMarker( const char* marker )
-	{
+	void AddGpuMarker( const char* marker );
 
-	}
-	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const
-	{
-		return E_NOTIMPL;
-	}
-	ALResult GetGpuPageFaultResource(
-		Tr2RenderContextEnum::PixelFormat& format,
-		uint64_t& size,
-		uint32_t& width,
-		uint32_t& height,
-		uint32_t& depth,
-		uint32_t& mips ) const
-	{
-		return E_NOTIMPL;
-	}
-
-	ALResult FlushDx12();
 	ALResult FlushAndSyncDx12();
+
+	bool IsBoundDx12( const TrinityALImpl::Tr2TextureAL& texture, D3D12_RESOURCE_STATES& boundState );
+	void ResetDx12();
+
+	/** Force the current descriptor cache to dirty if something has modified active heaps */
+	void DirtyDescriptorCache();
+	void ReApplyStateDx12();
+
 protected:
 	ID3D12PipelineState* GetPipelineState();
 	void SetAllState();
+
+	/** Forcibly reset and dirty all descriptor caches (used for explicit synchronization) */
+	void ResetDescriptorCaches();
+
+	struct VB
+	{
+		Tr2BufferAL buffer;
+		uint32_t offset;
+		uint32_t stride;
+	};
+
+	VB m_vertexBuffers[4];
+	Tr2BufferAL m_indexBuffer;
 
 
 	const Tr2VertexLayoutAL* m_vertexLayout;
@@ -210,13 +214,15 @@ protected:
 
 	Tr2ResourceSetAL m_resourceSet;
 
-	D3D12_GPU_VIRTUAL_ADDRESS m_cbMap[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+	std::vector<std::shared_ptr<DescriptorStateCache>> m_descriptorCache;
 
-	void GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* handles, uint32_t& count );
+	bool GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* handles, uint32_t& count );
 public:
 	// If you need this, you're probably doing something wrong :P
 	//Tr2TextureAL&			GetDefaultBackBuffer()
 	CComPtr<ID3D12GraphicsCommandList> m_commandList;
+	CComPtr<ID3D12GraphicsCommandList2> m_commandList2;
+
 	Tr2PrimaryRenderContextAL* m_ownerDevice;
 	bool m_dirtyPso;
 protected:

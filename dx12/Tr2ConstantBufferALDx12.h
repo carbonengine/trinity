@@ -61,6 +61,7 @@ private:
 	uint32_t m_size;
 
 	friend class Tr2RenderContextAL;
+	friend class DescriptorStateCache;
 };
 
 #endif
