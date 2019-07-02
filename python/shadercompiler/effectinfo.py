@@ -81,6 +81,12 @@ class ShaderInput(object):
         self.used_mask = stream.read_uint8()
 
 
+class ShaderRegister(object):
+    def __init__(self, stream):
+        self.register_type = stream.read_uint8()
+        self.register_index = stream.read_uint32()
+
+
 _TRINITY_FLOAT_PARAMETERS = {1: 'Tr2FloatParameter', 2: 'Tr2Vector2Parameter', 3: 'Tr2Vector3Parameter',
                              4: 'Tr2Vector4Parameter', 16: 'Tr2Matrix4Parameter'}
 
@@ -184,6 +190,11 @@ class Stage(object):
         self.inputs = []
         for input_index in xrange(stream.read_uint8()):
             self.inputs.append(ShaderInput(stream))
+
+        self.registers = []
+        if version > 8:
+            for input_index in xrange(stream.read_uint8()):
+                self.registers.append(ShaderRegister(stream))
 
         if version < 5:
             stream.seek(stream.read_uint32() + stream.offset())
