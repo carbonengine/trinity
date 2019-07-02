@@ -162,7 +162,15 @@ class _StageData(object):
         return self.passData.GetRootData()
 
 
-_PLATFORMS = {'name': 'DX11', 'value': 2}, {'name': 'DX9', 'value': 1}
+_PLATFORMS = (
+    {'name': 'DirectX 11', 'value': 2},
+    {'name': 'DirectX 9', 'value': 1},
+    {'name': 'GLES 2', 'value': 3},
+    {'name': 'DirectX 12', 'value': 6},
+    {'name': 'Vulkan', 'value': 7},
+    {'name': 'OpenGL 3', 'value': 8},
+    {'name': 'OpenGL 4', 'value': 9},
+)
 _SHADER_MODELS = {'name': 'DEPTH', 'value': 5}, {'name': 'HIGH', 'value': 4}, {'name': 'LOW', 'value': 3}
 
 

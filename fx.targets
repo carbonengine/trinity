@@ -37,6 +37,8 @@
         <PlatformDx9Arg Condition="'%(BuildFX.PlatformDX9)'!='true'"></PlatformDx9Arg>
         <PlatformDx11Arg Condition="'%(BuildFX.PlatformDX11)'=='true'">/platform=dx11</PlatformDx11Arg>
         <PlatformDx11Arg Condition="'%(BuildFX.PlatformDX11)'!='true'"></PlatformDx11Arg>
+        <PlatformDx12Arg Condition="'%(BuildFX.PlatformDX12)'=='true'">/platform=dx12</PlatformDx12Arg>
+        <PlatformDx12Arg Condition="'%(BuildFX.PlatformDX12)'!='true'"></PlatformDx12Arg>
 
         <Optimize Condition="'%(BuildFX.OptimizationLevel)'=='/O0'">/optimize=0</Optimize>
         <Optimize Condition="'%(BuildFX.OptimizationLevel)'=='/O1'">/optimize=1</Optimize>
@@ -61,7 +63,7 @@
       <FXOutputDirSwitch Condition="'$(FXOutputDir)'!=''">/output=$(FXOutputDir)</FXOutputDirSwitch>
     </PropertyGroup>
     <PropertyGroup>
-      <CommandLineFull>$(MPSwitch) $(PSSwitch) $(IncrementalBuild) $(FXOutputDirSwitch) @(BuildFX->'%(PlatformDx9Arg) %(PlatformDx11Arg) %(Optimize) %(AdditionalOptions) %(Identity)', ' ')</CommandLineFull>
+      <CommandLineFull>$(MPSwitch) $(PSSwitch) $(IncrementalBuild) $(FXOutputDirSwitch) @(BuildFX->'%(PlatformDx9Arg) %(PlatformDx11Arg) %(PlatformDx12Arg) %(Optimize) %(AdditionalOptions) %(Identity)', ' ')</CommandLineFull>
     </PropertyGroup>
     <WriteLinesToFile File="$(MSBuildProjectFile).compileargs" Lines="$(CommandLineFull)" Overwrite="True"/>
     <Exec 

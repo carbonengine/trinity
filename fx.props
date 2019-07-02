@@ -10,7 +10,8 @@
       <OptimizationLevel>3</OptimizationLevel>
       <PlatformDX9>true</PlatformDX9>
       <PlatformDX11>true</PlatformDX11>
-    </BuildFX>
+      <PlatformDX12>true</PlatformDX12>
+  </BuildFX>
   </ItemDefinitionGroup>
   <PropertyGroup>
       <DisplaySkipped>false</DisplaySkipped>

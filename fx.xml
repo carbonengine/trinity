@@ -50,6 +50,11 @@
       Category="Platforms"
       DisplayName="DirectX 11"
       Description="Compile effect for DirectX 11."/>
+    <BoolProperty
+      Name="PlatformDX12"
+      Category="Platforms"
+      DisplayName="DirectX 12"
+      Description="Compile effect for DirectX 12."/>
 
     <StringListProperty
       Name="Inputs"

@@ -9,7 +9,7 @@ import Queue
 
 SHADER_COMPILER = os.path.dirname(__file__) + "\\ShaderCompiler.exe"
 SHADER_MODELS = {'lo': 3, 'hi': 4, 'depth': 5}
-PLATFORMS = {'dx9': 1, 'dx11': 2, 'gles2': 3}
+PLATFORMS = {'dx9': 1, 'dx11': 2, 'gles2': 3, 'dx12': 6}
 OPTION_PREFIX = '/'
 ARG_FILE_PREFIX = '@'
 
@@ -23,7 +23,7 @@ def print_usage():
     print "  %soutput=dir   Override output directory (used for testing)"
     print "Path Options:"
     print "  %ssm=sm        Compile shader model (sm is lo, hi or depth)" % OPTION_PREFIX
-    print "  %splatform=p   Compile for platform (p is dx9, dx11 or gles2)" % OPTION_PREFIX
+    print "  %splatform=p   Compile for platform (p is dx9, dx11, dx12 or gles2)" % OPTION_PREFIX
     print "  %soptimize=o   Optimization level 0..3.  3 is default" % OPTION_PREFIX
     print "If no shader model is specified, all supported shader models are built"
 
@@ -84,7 +84,7 @@ def prepare_compile_batch(path, sm, platform, optimization=3, check_mode_dir=Non
 
 GLOBAL_OPTIONS = {'incremental': lambda x: x is None, 'skipped': lambda x: x is None, 'cores': lambda x: int(x) > 0,
                   'output': lambda x: x is not None}
-FILE_OPTIONS = {'sm': lambda x: x in ('lo', 'hi', 'depth'), 'platform': lambda x: x in ('dx9', 'dx11', 'gles2'),
+FILE_OPTIONS = {'sm': lambda x: x in ('lo', 'hi', 'depth'), 'platform': lambda x: x in PLATFORMS.keys(),
                 'optimize': lambda x: 0 <= int(x) <= 3}
 
 
@@ -99,7 +99,7 @@ def _get_option_name_value(option):
 
 def _normalize_file_options(options):
     options['sm'] = list(set(options.get('sm', ['lo', 'hi', 'depth'])))
-    options['platform'] = list(set(options.get('platform', ['dx9', 'dx11', 'gles2'])))
+    options['platform'] = list(set(options.get('platform', PLATFORMS.keys())))
     options['optimize'] = int(options.get('optimize', ['3'])[-1])
     return options
 
