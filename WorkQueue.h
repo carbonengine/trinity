@@ -46,7 +46,7 @@ public:
 			PutPtr( nullptr );
 		}
 
-		WaitForMultipleObjects( m_workerCount, m_workerThreads, TRUE, INFINITE );
+		WaitForMultipleObjects( DWORD( m_workerCount ), m_workerThreads, TRUE, INFINITE );
 	}
 private:
 

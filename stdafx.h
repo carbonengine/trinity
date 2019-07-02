@@ -15,11 +15,11 @@
 #include <windows.h>
 #include <atlbase.h>
 #include <WinGDI.h>
+
+#include <D3Dcompiler.h>
+#include <d3d11.h>
 #include <D3D9.h>
 #include <D3DX9Effect.h>
-
-#include <D3DX11async.h>
-#include <D3Dcompiler.h>
 
 #include <GL/glew.h>
 
@@ -33,5 +33,4 @@
 
 #include <cassert>
 #include <cstdint>
-
-// TODO: reference additional headers your program requires here
+#include <strstream>

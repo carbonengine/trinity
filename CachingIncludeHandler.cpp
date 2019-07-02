@@ -116,7 +116,7 @@ HRESULT CachingIncludeHandler::Open( D3DXINCLUDE_TYPE includeType,
 	FileFromPath::iterator fileFromPath = m_fileFromPath.find( fullPath );
 	if( fileFromPath != m_fileFromPath.end() )
 	{
-		*bytes = fileFromPath->second.size;
+		*bytes = UINT( fileFromPath->second.size );
 		*data = reinterpret_cast<char*>( fileFromPath->second.data ) + 1;
 		mtime = fileFromPath->second.modifiedTime;
 		return S_OK;
@@ -158,7 +158,7 @@ HRESULT CachingIncludeHandler::Open( D3DXINCLUDE_TYPE includeType,
 	m_fileFromPath[fullPath] = info;
 	const char* filename = PathFindFileName( fullPath );
 	m_pathFromFile[info.data] = std::string( fullPath, filename - fullPath );
-	*bytes = info.size;
+	*bytes = UINT( info.size );
 	*data = reinterpret_cast<char*>( info.data ) + 1;
 	return S_OK;
 }
@@ -214,7 +214,7 @@ HRESULT CachingIncludeHandler::AddPrefix( const char* fileName, const char* pref
 	}
 	if( bytes )
 	{
-		*bytes = info.size;
+		*bytes = UINT( info.size );
 	}
 	return S_OK;
 }

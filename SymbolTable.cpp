@@ -160,8 +160,8 @@ Symbol* ScopeSymbolTable::LookupFunctionDeclaration( const InlineString& name, A
 	for( auto it = overrides.begin(); it != overrides.end(); ++it )
 	{
 		ASTNode* node = it->first->definition;
-		unsigned parameterCount = node->GetChildrenCount();
-		unsigned argumentCount = header->GetChildrenCount();
+		auto parameterCount = node->GetChildrenCount();
+		auto argumentCount = header->GetChildrenCount();
 
 		if( argumentCount != parameterCount )
 		{
@@ -172,7 +172,7 @@ Symbol* ScopeSymbolTable::LookupFunctionDeclaration( const InlineString& name, A
 			continue;
 		}
 		bool match = true;
-		for( unsigned i = 0; i < argumentCount; ++i )
+		for( size_t i = 0; i < argumentCount; ++i )
 		{
 			if( node->GetChild( i )->GetType() != header->GetChild( i )->GetType() )
 			{
@@ -234,8 +234,8 @@ Symbol* ScopeSymbolTable::LookupFunction( const InlineString& name, ASTNode* cal
 		{
 			continue;
 		}
-		unsigned parameterCount = node->GetChildrenCount();
-		unsigned argumentCount = callNode->GetChildrenCount();
+		auto parameterCount = node->GetChildrenCount();
+		auto argumentCount = callNode->GetChildrenCount();
 
 		if( argumentCount > parameterCount )
 		{
@@ -257,7 +257,7 @@ Symbol* ScopeSymbolTable::LookupFunction( const InlineString& name, ASTNode* cal
 		}
 		it->second = 0;
 		bool match = true;
-		for( unsigned i = 0; i < argumentCount; ++i )
+		for( size_t i = 0; i < argumentCount; ++i )
 		{
 			if( !MatchParameter( node->GetChild( i ), callNode->GetChild( i ), it->second ) )
 			{

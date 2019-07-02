@@ -13,11 +13,13 @@
 #include "EffectCompilerGL2.h"
 #include "EffectCompilerGL3.h"
 #include "EffectCompilerGL4.h"
+#include "EffectCompilerDX12.h"
 #include "EffectData.h"
 #include "Mutex.h"
 #include "WorkQueue.h"
 #include "Macro.h"
 #include "ModifiedTime.h"
+#include "Platforms.h"
 
 
 typedef BOOL (WINAPI *LPFN_GLPI)(
@@ -113,7 +115,7 @@ LONG g_error = 0;
 // Include file handler
 CachingIncludeHandler g_includeHandler;
 // Compiled effect code (indexed by permutaitons IDs)
-std::map<unsigned, std::unique_ptr<CompiledData>> g_compiledEffects;
+std::map<uint32_t, std::unique_ptr<CompiledData>> g_compiledEffects;
 // Critical section for g_compiledEffects
 Mutex g_compiledEffectsCS( 1000 );
 // Queue of compiler output messages
@@ -121,7 +123,7 @@ CompileMessageQueue g_messages;
 // Entry point shader file contents
 char* g_shaderSource = NULL;
 // Entry point shader file length
-unsigned g_shaderLength = 0;
+uint32_t g_shaderLength = 0;
 // Print warning messages?
 bool g_printWarnings = true;
 
@@ -154,51 +156,26 @@ GlesExtensionInfo g_glesExtensions;
 
 StringTable g_stringTable;
 
-bool g_hasDx9 = true;
-EffectCompilerDX9 g_compilerDX9;
-bool g_hasDx11 = true;
-EffectCompilerDX11 g_compilerDX11;
-bool g_hasGl2 = true;
-EffectCompilerGL2 g_compilerGL2;
-bool g_hasGl4 = true;
-EffectCompilerGL4 g_compilerGL4;
-bool g_hasGl3 = true;
-EffectCompilerGL3 g_compilerGL3;
-
-
-enum Platform
-{
-	PLATFORM_DX9 = 1,
-	PLATFORM_DX11 = 2,
-	PLATFORM_GL2 = 3,
-	PLATFORM_GL4 = 6,
-	PLATFORM_GL3 = 7,
-
-	_PLATFORM_END,
-	_PLATFORM_BEGIN = 1,
-};
+std::map<Platform, std::unique_ptr<EffectCompilerBase>> g_compilers;
 
 
 Platform GetPlatform( const std::vector<Macro>& defines )
 {
-	for( auto it = begin( defines ); it != end( defines ); ++it )
+	if( auto macro = FindMacro( defines, "PLATFORM" ) )
 	{
-		if( it->name == "PLATFORM" )
+		auto platform = ParsePlatform( macro->value.c_str() );
+		if( platform == PLATFORM_INVALID )
 		{
-			int p = atoi( it->value.c_str() );
-			if( p >= _PLATFORM_BEGIN && p < _PLATFORM_END )
-			{
-				return Platform( p );
-			}
-			else
-			{
-				printf( "Unrecognized platform define \"%s\". Reverting to DX9\n", it->value.c_str() );
-				fflush( stdout );
-				return PLATFORM_DX9;
-			}
+			printf( "Unrecognized platform define \"%s\". Reverting to dx11\n", macro->value.c_str() );
+			fflush( stdout );
+			return PLATFORM_DX11;
+		}
+		else
+		{
+			return platform;
 		}
 	}
-	return PLATFORM_DX9; 
+	return PLATFORM_DX11; 
 }
 
 
@@ -239,73 +216,17 @@ bool CompileShader( const CompileShaderArguments& arguments )
 
 	//EffectData outputData;
 
-	switch( platform )
+	auto compiler = g_compilers.find( platform );
+	if( compiler == end( g_compilers ) )
 	{
-	case PLATFORM_DX9:
-		if( !g_hasDx9 )
-		{
-			g_messages.AddMessage( "\\memory(0): error C0000: trying to compile dx9 effect when dx9 compiler failed to initialize" );
-			InterlockedExchange( &g_error, 1 );
-			return false;
-		}
-		if( !g_compilerDX9.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
-		{
-			InterlockedExchange( &g_error, 1 );
-			return false;
-		}
-		break;
-	case PLATFORM_DX11:
-		if( !g_hasDx11 )
-		{
-			g_messages.AddMessage( "\\memory(0): error C0000: trying to compile dx11 effect when dx11 compiler failed to initialize" );
-			InterlockedExchange( &g_error, 1 );
-			return false;
-		}
-		if( !g_compilerDX11.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
-		{
-			InterlockedExchange( &g_error, 1 );
-			return false;
-		}
-		break;
-	case PLATFORM_GL2:
-		if( !g_hasGl2 )
-		{
-			g_messages.AddMessage( "\\memory(0): error C0000: trying to compile gl2 effect when gl2 compiler failed to initialize" );
-			InterlockedExchange( &g_error, 1 );
-			return false;
-		}
-		if( !g_compilerGL2.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
-		{
-			InterlockedExchange( &g_error, 1 );
-			return false;
-		}
-		break;
-	case PLATFORM_GL3:
-		if( !g_hasGl3 )
-		{
-			g_messages.AddMessage( "\\memory(0): error C0000: trying to compile gl3 effect when gl3 compiler failed to initialize" );
-			InterlockedExchange( &g_error, 1 );
-			return false;
-		}
-		if( !g_compilerGL3.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
-		{
-			InterlockedExchange( &g_error, 1 );
-			return false;
-		}
-		break;
-	case PLATFORM_GL4:
-		if( !g_hasGl4 )
-		{
-			g_messages.AddMessage( "\\memory(0): error C0000: trying to compile gl4 effect when gl4 compiler failed to initialize" );
-			InterlockedExchange( &g_error, 1 );
-			return false;
-		}
-		if( !g_compilerGL4.CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
-		{
-			InterlockedExchange( &g_error, 1 );
-			return false;
-		}
-		break;
+		g_messages.AddMessage( "\\memory(0): error C0000: trying to compile %s effect when %s compiler failed to initialize", GetPlatformShortName( platform ), GetPlatformShortName( platform ) );
+		InterlockedExchange( &g_error, 1 );
+		return false;
+	}
+	if( !compiler->second->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
+	{
+		InterlockedExchange( &g_error, 1 );
+		return false;
 	}
 
 	{
@@ -549,7 +470,7 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 bool PrintPermutations( const char* shaderPath )
 {
 	char* shaderSource;
-	unsigned shaderLength;
+	uint32_t shaderLength;
 
 	if( FAILED( g_includeHandler.Open( D3DXINC_LOCAL, shaderPath, NULL, (LPCVOID*)&shaderSource, &shaderLength ) ) )
 	{
@@ -587,12 +508,12 @@ void AddPermutationsToWorkQueue( CompileQueue& queue, const Permutations& permut
 {
 	std::vector<size_t> indexes;
 	indexes.resize( permutations.size() );
-	unsigned permutation = 0;
+	uint32_t permutation = 0;
 	bool done = false;
 	while( !done )
 	{
 		CompileShaderArguments args;
-		args.permutation = uint32_t( permutation );
+		args.permutation = permutation;
 		if( !defines.empty() )
 		{
 			args.defines.insert( args.defines.end(), defines.begin(), defines.end() );
@@ -667,39 +588,38 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	CompileQueue compileQueue( args.coreCount, &CompileShader );
 
-	if( !g_compilerDX9.Create() )
+	for( int32_t i = 0; i < _PLATFORM_END; ++i )
 	{
-		printf( "%s: warning X0000: Failed to create dx9 compiler\n", args.shaderPath );
-		fflush( stdout );
-		g_hasDx9 = false;
-	}
-
-	if( !g_compilerDX11.Create() )
-	{
-		printf( "%s: warning X0000: Failed to create dx11 compiler\n", args.shaderPath );
-		fflush( stdout );
-		g_hasDx11 = false;
-	}
-	
-	if( !g_compilerGL2.Create() )
-	{
-		printf( "%s: warning X0000: Failed to create gl2 compiler\n", args.shaderPath );
-		fflush( stdout );
-		g_hasGl2 = false;
-	}
-	
-	if( !g_compilerGL3.Create() )
-	{
-		printf( "%s: warning X0000: Failed to create gl3 compiler\n", args.shaderPath );
-		fflush( stdout );
-		g_hasGl3 = false;
-	}
-	
-	if( !g_compilerGL4.Create() )
-	{
-		printf( "%s: warning X0000: Failed to create gl4 compiler\n", args.shaderPath );
-		fflush( stdout );
-		g_hasGl4 = false;
+		std::unique_ptr<EffectCompilerBase> compiler;
+		switch( i )
+		{
+		case PLATFORM_DX9:
+			compiler.reset( new EffectCompilerDX9() );
+			break;
+		case PLATFORM_DX11:
+			compiler.reset( new EffectCompilerDX11() );
+			break;
+		case PLATFORM_GL2:
+			compiler.reset( new EffectCompilerGL2() );
+			break;
+		case PLATFORM_DX12:
+			compiler.reset( new EffectCompilerDX12() );
+			break;
+		case PLATFORM_GL3:
+			compiler.reset( new EffectCompilerGL3() );
+			break;
+		case PLATFORM_GL4:
+			compiler.reset( new EffectCompilerGL4() );
+			break;
+		default:
+			continue;
+		}
+		if( !compiler->Create() )
+		{
+			printf( "%s: warning X0000: Failed to create %s compiler\n", args.shaderPath, GetPlatformLongName( Platform( i ) ) );
+			fflush( stdout );
+		}
+		g_compilers[Platform( i )] = std::move( compiler );
 	}
 
 	Permutations permutations;
@@ -796,79 +716,79 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 
 	// Write file header
-	unsigned totalSize = unsigned( g_compiledEffects.size() );
-	unsigned headerSize = ( totalSize * 3 + 1 ) * sizeof( unsigned ) + permutationSize;
-	BYTE* fullHeader = new BYTE[headerSize];
-	BYTE* headerHead = fullHeader;
+	size_t totalSize = g_compiledEffects.size();
+	size_t headerSize = ( totalSize * 3 + 1 ) * sizeof( uint32_t ) + permutationSize;
+	uint8_t* fullHeader = new uint8_t[headerSize];
+	uint8_t* headerHead = fullHeader;
 
-	*headerHead++ = BYTE( permutations.size() );
+	*headerHead++ = uint8_t( permutations.size() );
 	for( auto it = permutations.begin(); it != permutations.end(); ++it )
 	{
-		*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( it->name.c_str() ) );
-		headerHead += sizeof( DWORD );
+		*reinterpret_cast<uint32_t*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( it->name.c_str() ) );
+		headerHead += sizeof( uint32_t );
 		for( size_t j = 0; j < it->options.size(); ++j )
 		{
 			if( it->options[j].name == it->defaultOption )
 			{
-				*reinterpret_cast<BYTE*>( headerHead ) = BYTE( j );
+				*reinterpret_cast<uint8_t*>( headerHead ) = uint8_t( j );
 				++headerHead;
 				break;
 			}
 		}
-		*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( it->description.c_str() ) );
-		headerHead += sizeof( DWORD );
+		*reinterpret_cast<uint32_t*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( it->description.c_str() ) );
+		headerHead += sizeof( uint32_t );
 
-		*reinterpret_cast<BYTE*>( headerHead ) = it->type;
-		headerHead += sizeof( BYTE );
+		*reinterpret_cast<uint8_t*>( headerHead ) = it->type;
+		headerHead += sizeof( uint8_t );
 
-		*headerHead++ = BYTE( it->options.size() );
+		*headerHead++ = uint8_t( it->options.size() );
 		for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
 		{
-			*reinterpret_cast<DWORD*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( jt->name.c_str() ) );
-			headerHead += sizeof( DWORD );
+			*reinterpret_cast<uint32_t*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( jt->name.c_str() ) );
+			headerHead += sizeof( uint32_t );
 		}
 	}
 
 
-	DWORD *header = reinterpret_cast<DWORD*>( headerHead );
+	uint32_t *header = reinterpret_cast<uint32_t*>( headerHead );
 	unsigned index = 0;
 	
 
 
 
-	header[index++] = totalSize;
-	unsigned offset = sizeof( DWORD ) + headerSize + g_stringTable.GetSize();
+	header[index++] = uint32_t( totalSize );
+	size_t offset = sizeof( uint32_t ) + headerSize + g_stringTable.GetSize();
 
-	std::map<unsigned, std::pair<unsigned, unsigned> > offsets;
+	std::map<uint32_t, std::pair<size_t, size_t> > offsets;
 	for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
 	{
 		header[index++] = it->first;
 		if( it->second )
 		{
-			header[index++] = offset;
-			header[index++] = it->second->packedSize;
+			header[index++] = uint32_t( offset );
+			header[index++] = uint32_t( it->second->packedSize );
 			offsets[it->first] = std::make_pair( offset, it->second->packedSize );
 			offset += it->second->packedSize;
 		}
 		else
 		{
 			auto offset = offsets[aliases[it->first]];
-			header[index++] = offset.first;
-			header[index++] = offset.second;
+			header[index++] = uint32_t( offset.first );
+			header[index++] = uint32_t( offset.second );
 		}
 	}
 	DWORD bytesWritten;
-	DWORD version = 8;
-	WriteFile( file, &version, sizeof( DWORD ), &bytesWritten, NULL );
+	uint32_t version = 9;
+	WriteFile( file, &version, sizeof( uint32_t ), &bytesWritten, NULL );
 	g_stringTable.Write( file );
-	WriteFile( file, fullHeader, headerSize, &bytesWritten, NULL );
+	WriteFile( file, fullHeader, DWORD( headerSize ), &bytesWritten, NULL );
 
 	// Write compiled code
 	for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
 	{
 		if( it->second )
 		{
-			WriteFile( file, it->second->packed.get(), it->second->packedSize, &bytesWritten, NULL );
+			WriteFile( file, it->second->packed.get(), DWORD( it->second->packedSize ), &bytesWritten, NULL );
 		}
 	}
 
@@ -885,7 +805,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			fflush( stdout );
 			return 1;
 		}
-		WriteFile( file, g_listing.c_str(), g_listing.length(), &bytesWritten, NULL );
+		WriteFile( file, g_listing.c_str(), DWORD( g_listing.length() ), &bytesWritten, NULL );
 		CloseHandle( file );
 	}
 

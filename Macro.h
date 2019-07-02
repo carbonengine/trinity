@@ -29,3 +29,27 @@ struct Macro
 		return result;
 	}
 };
+
+inline const Macro* FindMacro( const std::vector<Macro>& macros, const char* name )
+{
+	for( auto& macro : macros )
+	{
+		if( macro.name == name )
+		{
+			return &macro;
+		}
+	}
+	return nullptr;
+}
+
+inline Macro* FindMacro( std::vector<Macro>& macros, const char* name )
+{
+	for( auto& macro : macros )
+	{
+		if( macro.name == name )
+		{
+			return &macro;
+		}
+	}
+	return nullptr;
+}

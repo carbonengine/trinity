@@ -147,12 +147,12 @@ StateValue g_renderStateNames[] = {
 	DEFINE_VALUE( D3DRS, COLORWRITEENABLE2 ),
 	DEFINE_VALUE( D3DRS, COLORWRITEENABLE3 ),
 	DEFINE_VALUE( D3DRS, CULLMODE ),
-	{ "vertexshader", -1 },
-	{ "pixelshader", -2 },
-	{ "computeshader", -3 },
-	{ "geometryshader", -4 },
-	{ "hullshader", -5 },
-	{ "domainshader", -6 },
+	{ "vertexshader", 0xffffffff - 1 },
+	{ "pixelshader", 0xffffffff - 2 },
+	{ "computeshader", 0xffffffff - 3 },
+	{ "geometryshader", 0xffffffff - 4 },
+	{ "hullshader", 0xffffffff - 5 },
+	{ "domainshader", 0xffffffff - 6 },
 	{ nullptr,			0 },
 };
 
@@ -288,7 +288,7 @@ static bool GetElementType( const Type& type, unsigned index, Type& elementType 
 				elementType = type.symbol->definition->GetChild( i )->GetType();
 				return true;
 			}
-			index -= type.symbol->definition->GetChild( i )->GetChildrenCount();
+			index -= unsigned( type.symbol->definition->GetChild( i )->GetChildrenCount() );
 		}
 		return false;
 	}
@@ -1116,7 +1116,7 @@ bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, Expressi
 									state.ShowMessage( node->GetToken()->fileLocation, EC_INVALID_SWIZZLE, ToString( node->GetToken()->stringValue ).c_str() );
 									return false;
 								}
-								int index = s - swizzle[swizzleIndex];
+								int index = int( s - swizzle[swizzleIndex] );
 								if( index > leftType.width )
 								{
 									state.ShowMessage( node->GetToken()->fileLocation, EC_INVALID_SWIZZLE, ToString( node->GetToken()->stringValue ).c_str() );
@@ -1124,7 +1124,7 @@ bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, Expressi
 								}
 								value.push_back( left[index] );
 							}
-							type.width = node->GetToken()->stringValue.end - node->GetToken()->stringValue.start;
+							type.width = int( node->GetToken()->stringValue.end - node->GetToken()->stringValue.start );
 							type.height = 1;
 							return true;
 						}

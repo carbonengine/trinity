@@ -114,6 +114,7 @@ public:
 	size_t GetChildrenCount() const;
 	ASTNode* GetChild( size_t index ) const;
 	ASTNode* GetChildOrNull( size_t index ) const;
+	std::vector<ASTNode*>& GetChildren();
 
 	void MoveChildren( ASTNode* to );
 
@@ -129,9 +130,6 @@ public:
 
 	void SetType( Type type );
 	Type GetType() const;
-
-	//void PrintHLSL11( std::ostream& os, int level = 0 ) const;
-
 
 	ASTNode* FindNode( ASTNodeType type );
 	void FindNodes( ASTNodeType type, std::vector<ASTNode*>& nodes );

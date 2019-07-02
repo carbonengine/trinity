@@ -150,9 +150,6 @@
     <ClInclude Include="IntrinsicTypes.h">
       <Filter>Source Files\Grammar</Filter>
     </ClInclude>
-    <ClInclude Include="DX9AsmGrammar.h">
-      <Filter>Source Files\Grammar</Filter>
-    </ClInclude>
     <ClInclude Include="EffectCompilerGL4.h">
       <Filter>Source Files</Filter>
     </ClInclude>

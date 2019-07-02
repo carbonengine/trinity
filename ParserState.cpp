@@ -517,7 +517,7 @@ bool GetPermutationInfo( const std::string& pragma, Permutation& permutation )
 			{
 				++next;
 			}
-			it->value = next;
+			it->value = int( next );
 			takenValues[next] = true;
 		}
 	}

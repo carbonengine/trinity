@@ -52,7 +52,7 @@ inline bool operator<( const InlineString& str0, const InlineString& str1 )
 {
 	size_t len0 = str0.end - str0.start;
 	size_t len1 = str1.end - str1.start;
-	int cmp = strncmp( str0.start, str1.start, __min( len0, len1 ) );
+	auto cmp = strncmp( str0.start, str1.start, __min( len0, len1 ) );
 	if( cmp < 0 )
 	{
 		return true;

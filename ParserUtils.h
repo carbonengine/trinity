@@ -1,57 +1,11 @@
 #pragma once
 
-#include <strstream>
 #include "SymbolTable.h"
 
 class ParserState;
 
 
-class CodeStream: public std::ostrstream
-{
-public:
-	virtual void Endl() = 0;
-	virtual void ChangeLocation( const FileLocation& location ) = 0;
-};
 
-class CompilerInputStream: public CodeStream
-{
-public:
-	CompilerInputStream( ParserState& state );
-
-	void Endl();
-	void ChangeLocation( const FileLocation& location );
-private:
-	ParserState& m_state;
-	FileLocation m_location;
-};
-
-class ListingStream: public CodeStream
-{
-	void Endl() { put( '\n' ); flush(); }
-	void ChangeLocation( const FileLocation& location ) {}
-};
-
-class LineMapInputStream: public CodeStream
-{
-public:
-	LineMapInputStream( ParserState& state );
-
-	void Endl();
-	void ChangeLocation( const FileLocation& location );
-	bool GetLocation( unsigned lineNumber, FileLocation& location );
-private:
-	ParserState& m_state;
-	FileLocation m_location;
-	unsigned m_lineNumber;
-	std::vector<std::pair<unsigned, FileLocation>> m_locations;
-};
-
-template<typename T>
-T& operator<<( T& os, const FileLocation& location )
-{
-	os.ChangeLocation( location );
-	return os;
-}
 
 enum PatchAction
 {
@@ -79,3 +33,9 @@ extern void PatchCBuffers( ParserState& state );
 extern bool HasRegisterBinding( Symbol* symbol, const char* shaderProfile, char registerType, int registerNumber );
 
 extern bool IsUniformInputArgument( ASTNode* argument );
+
+extern void AssignRegisters( ASTNode* root, int32_t stage );
+
+extern void SortProgramNodes( ASTNode* root );
+
+extern void CreateGlobalsCB( ParserState& state, int32_t stage );

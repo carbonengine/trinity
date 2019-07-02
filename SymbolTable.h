@@ -25,6 +25,9 @@ struct RegisterSpecifier
 	char registerType;
 	int registerNumber;
 	int subComponent;
+	int space;
+	bool explicitRegister;
+	bool explicitSpace;
 };
 
 struct SymbolAnnotation

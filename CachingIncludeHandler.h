@@ -48,7 +48,7 @@ private:
 	struct FileInfo
 	{
 		void* data;
-		unsigned size;
+		size_t size;
 		FILETIME modifiedTime;
 	};
 	typedef std::map<LPCVOID, std::string> PathFromFile;

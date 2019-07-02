@@ -17,6 +17,7 @@
 
 #include "YamlOutput.h"
 #include "Macro.h"
+#include "OutputHLSL.h"
 #include <regex>
 
 extern int g_maxClipPlanes;
@@ -27,884 +28,7 @@ extern bool g_printWarnings;
 extern unsigned g_optimizationLevel;
 extern bool g_avoidFlowControl;
 
-void PrintHLSL11( CodeStream& os, ASTNode* node, int level );
 
-void PrintChildrenHLSL11( CodeStream& os, ASTNode* node, const char* glue, int level, unsigned start = 0 )
-{
-	for( unsigned i = start; i < node->GetChildrenCount(); ++i )
-	{
-		if( i )
-		{
-			os << glue;
-		}
-		PrintHLSL11( os, node->GetChild( i ), level );
-	}
-}
-
-void PrintTypeHLSL11( std::ostream& os, Type type )
-{
-	switch( type.storageClass )
-	{
-	case OP_EXTERN:
-		os << "extern ";
-		break;
-	case OP_NOINTERPOLATION:
-		os << "nointerpolation ";
-		break;
-	case OP_PRECISE:
-		os << "precise ";
-		break;
-	case OP_SHARED:
-		os << "shared ";
-		break;
-	case OP_GROUPSHARED:
-		os << "groupshared ";
-		break;
-	case OP_STATIC:
-		os << "static ";
-		break;
-	case OP_UNIFORM:
-		os << "uniform ";
-		break;
-	case OP_VOLATILE:
-		os << "volatile ";
-		break;
-	}
-	switch( type.modifier )
-	{
-	case OP_CONST:
-		os << "const ";
-		break;
-	case OP_ROW_MAJOR:
-		os << "row_major ";
-		break;
-	case OP_COLUMN_MAJOR:
-		os << "column_major ";
-		break;
-	}
-	if( type.symbol )
-	{
-		os << type.symbol->name;
-	}
-	else
-	{
-		switch( type.builtInType )
-		{
-		case OP_FLOAT:
-			os << "float";
-			break;
-		case OP_INT:
-			os << "int";
-			break;
-		case OP_UINT:
-			os << "uint";
-			break;
-		case OP_HALF:
-			os << "half";
-			break;
-		case OP_DOUBLE:
-			os << "double";
-			break;
-		case OP_BOOL:
-			os << "bool";
-			break;
-		case OP_STRING:
-			os << "string";
-			break;
-		case OP_VOID:
-			os << "void";
-			return;
-		case OP_SAMPLER2D:
-		case OP_SAMPLER3D:
-		case OP_SAMPLERCUBE:
-		case OP_SAMPLER:
-			os << "sampler";
-			return;
-		case OP_SAMPLERCOMPARISON:
-			os << "SamplerComparisonState";
-			return;
-		case OP_TEXTURE1D:
-			os << "Texture1D";
-			if( type.templateParameter )
-			{
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-			}
-			return;
-		case OP_TEXTURE2D:
-			os << "Texture2D";
-			if( type.templateParameter )
-			{
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-			}
-			return;
-		case OP_TEXTURE3D:
-			os << "Texture3D";
-			if( type.templateParameter )
-			{
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-			}
-			return;
-		case OP_TEXTURECUBE:
-			os << "TextureCube";
-			if( type.templateParameter )
-			{
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-			}
-			return;
-		case OP_TEXTURE1DARRAY:
-			os << "Texture1DArray";
-			if( type.templateParameter )
-			{
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-			}
-			return;
-		case OP_TEXTURE2DARRAY:
-			os << "Texture2DArray";
-			if( type.templateParameter )
-			{
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-			}
-			return;
-		case OP_TEXTURE3DARRAY:
-			os << "Texture3DArray";
-			if( type.templateParameter )
-			{
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-			}
-			return;
-		case OP_TEXTURECUBEARRAY:
-			os << "TextureCubeArray";
-			if( type.templateParameter )
-			{
-				os << '<';
-				PrintTypeHLSL11( os, *type.templateParameter );
-				os << '>';
-			}
-			return;
-		case OP_TEXTURE2DMS:
-			os << "Texture2DMS";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			if( type.templateSamples > 0 )
-			{
-				os << ", " << type.templateSamples;
-			}
-			os << '>';
-			return;
-		case OP_TEXTURE2DMSARRAY:
-			os << "Texture2DMSArray";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			if( type.templateSamples > 0 )
-			{
-				os << ", " << type.templateSamples;
-			}
-			os << '>';
-			return;
-		case OP_TEXTURE:
-			os << "Texture2D";
-			return;
-		case OP_BUFFER:
-			os << "Buffer";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_APPENDSTRUCTUREDBUFFER:
-			os << "AppendStructuredBuffer";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_BYTEADDRESSBUFFER:
-			os << "ByteAddressBuffer";
-			return;
-		case OP_CONSUMESTRUCTUREDBUFFER:
-			os << "ConsumeStructuredBuffer";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_INPUTPATCH:
-			os << "InputPatch";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << ", " << type.templateSamples << '>';
-			return;
-		case OP_OUTPUTPATCH:
-			os << "OutputPatch";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << ", " << type.templateSamples << '>';
-			return;
-		case OP_RWBUFFER:
-			os << "RWBuffer";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_RWBYTEADDRESSBUFFER:
-			os << "RWByteAddressBuffer";
-			return;
-		case OP_RWSTRUCTUREDBUFFER:
-			os << "RWStructuredBuffer";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_RWTEXTURE1D:
-			os << "RWTexture1D";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_RWTEXTURE1DARRAY:
-			os << "RWTexture1DArray";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_RWTEXTURE2D:
-			os << "RWTexture2D";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_RWTEXTURE2DARRAY:
-			os << "RWTexture2DArray";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_RWTEXTURE3D:
-			os << "RWTexture3D";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_RWTEXTURE3DARRAY:
-			os << "RWTexture3DArray";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_STRUCTUREDBUFFER:
-			os << "StructuredBuffer";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_POINTSTREAM:
-			os << "PointStream";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_LINESTREAM:
-			os << "LineStream";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		case OP_TRIANGLESTREAM:
-			os << "TriangleStream";
-			os << '<';
-			PrintTypeHLSL11( os, *type.templateParameter );
-			os << '>';
-			return;
-		default:
-			os << "!!error_type!!";
-			return;
-		}
-		if( type.width > 1 || type.height > 1 )
-		{
-			os << type.width;
-			if( type.height > 1 )
-			{
-				os << 'x' << type.height;
-			}
-		}
-	}
-}
-
-static const char* GetOperatorSymbol( int operatorID )
-{
-	static std::map<int, std::string> operators;
-	if( operators.empty() )
-	{
-		operators[OP_MUL_ASSIGN] = "*=";
-		operators[OP_DIV_ASSIGN] = "/=";
-		operators[OP_MOD_ASSIGN] = "%=";
-		operators[OP_ADD_ASSIGN] = "+=";
-		operators[OP_SUB_ASSIGN] = "-=";
-		operators[OP_LEFT_ASSIGN] = "<<=";
-		operators[OP_RIGHT_ASSIGN] = ">>=";
-		operators[OP_AND_ASSIGN] = "&=";
-		operators[OP_XOR_ASSIGN] = "^=";
-		operators[OP_OR_ASSIGN] = "|=";
-
-		operators[OP_INC_OP] = "++";
-		operators[OP_DEC_OP] = "--";
-		operators[OP_LEFT_OP] = "<<";
-		operators[OP_RIGHT_OP] = ">>";
-
-		operators[OP_LE_OP] = "<=";
-		operators[OP_GE_OP] = ">=";
-		operators[OP_EQ_OP] = "==";
-		operators[OP_NE_OP] = "!=";
-
-		operators[OP_AND_OP] = "&&";
-		operators[OP_OR_OP] = "||";
-
-		operators[OP_PLUS] = "+";
-		operators[OP_DASH] = "-";
-		operators[OP_BANG] = "!";
-		operators[OP_TILDE] = "~";
-		operators[OP_STAR] = "*";
-		operators[OP_SLASH] = "/";
-		operators[OP_PERCENT] = "%";
-		operators[OP_COMA] = ",";
-		operators[OP_LESS] = "<";
-		operators[OP_MORE] = ">";
-		operators[OP_AMPERSAND] = "&";
-		operators[OP_CARET] = "^";
-		operators[OP_VERTICAL_BAR] = "|";
-		operators[OP_EQUAL] = "=";
-	}
-	auto it = operators.find( operatorID );
-	if( it == operators.end() )
-	{
-		return "";
-	}
-	return it->second.c_str();
-}
-
-bool HasUsedDeclarations( ASTNode* node )
-{
-	for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
-	{
-		if( node->GetChild( i ) )
-		{
-			if( node->GetChild( i )->GetNodeType() == NT_VAR_DECLARATION_LIST )
-			{
-				if( HasUsedDeclarations( node->GetChild( i ) ) )
-				{
-					return true;
-				}
-			}
-			else if( node->GetChild( i )->GetNodeType() == NT_NAME_DECLARATION )
-			{
-				if( node->GetChild( i )->GetSymbol() && node->GetChild( i )->GetSymbol()->used )
-				{
-					return true;
-				}
-			}
-		}
-	}
-	return false;
-}
-
-void PrintHLSL11( CodeStream& os, ASTNode* node, int level )
-{
-	os << node->GetLocation();
-
-	switch( node->GetNodeType() )
-	{
-	case NT_VAR_IDENTIFIER:
-		os << node->GetSymbol()->name;
-		break;
-	case NT_CONSTANT:
-		os << node->GetToken()->stringValue;
-		break;
-	case NT_INLINE_CONSTRUCTOR:
-		os << "{ ";
-		PrintChildrenHLSL11( os, node, ", ", level + 1 );
-		os << " }";
-		break;
-	case NT_PREFIX_EXPRESSION:
-		os << GetOperatorSymbol( node->GetToken()->type ) << "( ";
-		PrintHLSL11( os, node->GetChild( 0 ), level );
-		os << " )";
-		break;
-	case NT_POSTFIX_EXPRESSION:
-		os << "( ";
-		PrintHLSL11( os, node->GetChild( 0 ), level );
-		os << " )";
-		switch( node->GetToken()->type )
-		{
-		case OP_LEFT_BRACKET:
-			os << "[";
-			PrintHLSL11( os, node->GetChild( 1 ), level );
-			os << "]";
-			break;
-		case OP_DOT:
-			os << ".";
-			PrintHLSL11( os, node->GetChild( 1 ), level );
-			break;
-		case OP_ID:
-			os << "." << node->GetToken()->stringValue;
-			break;
-		default:
-			os << GetOperatorSymbol( node->GetToken()->type );
-			break;
-		}
-		break;
-	case NT_EXPRESSION:
-		os << "( ";
-		PrintHLSL11( os, node->GetChild( 0 ), level );
-		os << " )";
-		switch( node->GetToken()->type )
-		{
-		case OP_LEFT_PAREN:
-			break;
-		default:
-			os << " " << GetOperatorSymbol( node->GetToken()->type ) << " ( ";
-			PrintHLSL11( os, node->GetChild( 1 ), level );
-			os << " )";
-			break;
-		}
-		break;
-	case NT_CONDITIONAL_EXPRESSION:
-		os << "( ";
-		PrintHLSL11( os, node->GetChild( 0 ), level );
-		os << " ) ? ( ";
-		PrintHLSL11( os, node->GetChild( 1 ), level );
-		os << " ) : ( ";
-		PrintHLSL11( os, node->GetChild( 2 ), level );
-		os << " )";
-		break;
-	case NT_CAST_EXPRESSION:
-		os << "(";
-		PrintTypeHLSL11( os, node->GetType() );
-		os << ")( ";
-		PrintHLSL11( os, node->GetChild( 0 ), level );
-		os << " )";
-		break;
-	case NT_FUNCTION_CALL:
-		if( node->GetSymbol() == nullptr )
-		{
-			if( node->GetToken()->type == OP_ID )
-			{
-				os << node->GetToken()->stringValue;
-			}
-			else
-			{
-				Type t;
-				t.FromToken( *node->GetToken() );
-				PrintTypeHLSL11( os, t );
-			}
-		}
-		else
-		{
-			os << node->GetSymbol()->name;
-		}
-		os << "( ";
-		PrintChildrenHLSL11( os, node, ", ", level + 1 );
-		os << " )";
-		break;
-	case NT_FUNCTION_HEADER:
-		if( !node->GetSymbol()->used )
-		{
-			break;
-		}
-		os.Endl();
-		PrintTypeHLSL11( os, node->GetType() );
-		os << " " << node->GetSymbol()->name << "( ";
-		PrintChildrenHLSL11( os, node, ", ", level + 1 );
-		os << " )";
-		if( node->GetSymbol()->semantic.start )
-		{
-			os << " : " << node->GetSymbol()->semantic;
-		}
-		os.Endl();
-		break;
-	case NT_FUNCTION_PARAMETER:
-		if( node->GetToken() )
-		{
-			switch( node->GetToken()->type )
-			{
-			case OP_OUT:
-				os << "out ";
-				break;
-			case OP_INOUT:
-				os << "inout ";
-				break;
-			}
-		}
-		if( node->GetSymbol() )
-		{
-			switch( node->GetSymbol()->interpolationModifier )
-			{
-			case OP_LINEAR:
-				os << "linear ";
-				break;
-			case OP_CENTROID:
-				os << "centroid ";
-				break;
-			case OP_NOINTERPOLATION:
-				os << "nointerpolation ";
-				break;
-			case OP_NOPERSPECTIVE:
-				os << "noperspective ";
-				break;
-			}
-		}
-		if( node->GetChildOrNull( 2 ) )
-		{
-			PrintHLSL11( os, node->GetChild( 2 ), level + 1 );
-			os << ' ';
-		}
-		PrintTypeHLSL11( os, node->GetType() );
-		if( node->GetSymbol() )
-		{
-			os << " " << node->GetSymbol()->name;
-		}
-		if( node->GetChildOrNull( 0 ) )
-		{
-			os << "[";
-			PrintHLSL11( os, node->GetChild( 0 ), level );
-			os << "]";
-		}
-		if( node->GetSymbol() )
-		{
-			if( node->GetSymbol()->semantic.start )
-			{
-				os << " : " << node->GetSymbol()->semantic;
-			}
-		}
-		if( node->GetChildOrNull( 1 ) )
-		{
-			os << " = ";
-			PrintHLSL11( os, node->GetChild( 1 ), level );
-		}
-		break;
-	case NT_NAME_DECLARATION:
-		{
-			if( !node->GetSymbol()->used )
-			{
-				break;
-			}
-			switch( node->GetSymbol()->interpolationModifier )
-			{
-			case OP_LINEAR:
-				os << "linear ";
-				break;
-			case OP_CENTROID:
-				os << "centroid ";
-				break;
-			case OP_NOINTERPOLATION:
-				os << "nointerpolation ";
-				break;
-			case OP_NOPERSPECTIVE:
-				os << "noperspective ";
-				break;
-			}
-			PrintTypeHLSL11( os, node->GetSymbol()->type );
-			os << " " << node->GetSymbol()->name;
-			if( node->GetChildOrNull( 0 ) )
-			{
-				os << "[";
-				PrintHLSL11( os, node->GetChild( 0 ), level );
-				os << "]";
-			}
-			if( node->GetSymbol()->semantic.start )
-			{
-				os << " : " << node->GetSymbol()->semantic;
-			}
-			if( node->GetSymbol()->packOffset.subComponent >= 0 )
-			{
-				os << " : packoffset( c" << node->GetSymbol()->packOffset.subComponent;
-				if( node->GetSymbol()->packOffset.component.start )
-				{
-					os << "." << node->GetSymbol()->packOffset.component;
-				}
-				os << " )";
-			}
-			for( auto it = node->GetSymbol()->registerSpecifier.begin(); it != node->GetSymbol()->registerSpecifier.end(); ++it )
-			{
-				const RegisterSpecifier& reg = it->second;
-				if( reg.registerType == 't' || reg.registerType == 'T' ||
-					reg.registerType == 'b' || reg.registerType == 'B' ||
-					reg.registerType == 'u' || reg.registerType == 'U' )
-				{
-					os << " : register( ";
-					if( reg.shaderProfile.start != reg.shaderProfile.end )
-					{
-						os << reg.shaderProfile << ", ";
-					}
-					os << reg.registerType << reg.registerNumber;
-					if( reg.subComponent >= 0 )
-					{
-						os << "[" << reg.subComponent << "]";
-					}
-					os << " )";
-				}
-			}
-			if( node->GetChildOrNull( 1 ) )
-			{
-				os << " = ";
-				PrintHLSL11( os, node->GetChild( 1 ), level );
-			}
-			os << ";";
-			os.Endl();
-		}
-		break;
-	case NT_VAR_DECLARATION_LIST:
-		PrintChildrenHLSL11( os, node, "", level + 1 );
-		break;
-	case NT_STRUCT:
-		if( node->GetSymbol()->used )
-		{
-			os << "struct " << " " << node->GetSymbol()->name;
-			os.Endl();
-			os << "{";
-			os.Endl();
-			PrintChildrenHLSL11( os, node, "", level + 1 );
-			os.Endl();
-			os << "};";
-			os.Endl();
-		}
-		break;
-	case NT_STRUCT_MEMBER:
-		PrintChildrenHLSL11( os, node, "", level + 1 );
-		break;
-	case NT_PROGRAM:
-		for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
-		{
-			PrintHLSL11( os, node->GetChild( i ), level + 1 );
-			if( node->GetChild( i ) && node->GetChild( i )->GetNodeType() == NT_FUNCTION_HEADER )
-			{
-				os << ';';
-			}
-		}
-		break;
-	case NT_BLOCK:
-		os << "{";
-		os.Endl();
-		PrintChildrenHLSL11( os, node, "", level + 1 );
-		os << "}";
-		os.Endl();
-		break;
-	case NT_EXPRESSION_STATEMENT:
-		if( node->GetChildrenCount() )
-		{
-			PrintHLSL11( os, node->GetChild( 0 ), level );
-		}
-		os << ";";
-		os.Endl();
-		break;
-	case NT_IF:
-		if( node->GetToken() )
-		{
-			os << "[" << node->GetToken()->stringValue << "] ";
-		}
-		os << "if( ";
-		PrintHLSL11( os, node->GetChild( 0 ), level );
-		os << " )";
-		os.Endl();
-		PrintHLSL11( os, node->GetChild( 1 ), level + 1 );
-		if( node->GetChildrenCount() > 2 )
-		{
-			os << "else";
-			os.Endl();
-			PrintHLSL11( os, node->GetChild( 2 ), level );
-		}
-		break;
-	case NT_WHILE:
-		if( node->GetToken() )
-		{
-			os << "[" << node->GetToken()->stringValue << "] ";
-		}
-		os << "while( ";
-		PrintHLSL11( os, node->GetChild( 0 ), level );
-		os << " )";
-		os.Endl();
-		PrintHLSL11( os, node->GetChild( 1 ), level + 1 );
-		break;
-	case NT_DO:
-		os << "do";
-		os.Endl();
-		PrintHLSL11( os, node->GetChild( 1 ), level + 1 );
-		os << "while( ";
-		PrintHLSL11( os, node->GetChild( 0 ), level );
-		os << " );";
-		os.Endl();
-		break;
-	case NT_FOR:
-		if( node->GetToken() )
-		{
-			os << "[" << node->GetToken()->stringValue << "] ";
-		}
-		os << "for( ";
-		PrintHLSL11( os, node->GetChild( 0 ), level );
-		if( node->GetChild( 1 ) )
-		{
-			PrintHLSL11( os, node->GetChild( 1 ), level );
-		}
-		os << "; ";
-		if( node->GetChild( 2 ) )
-		{
-			PrintHLSL11( os, node->GetChild( 2 ), level );
-		}
-		os << " )";
-		os.Endl();
-		PrintHLSL11( os, node->GetChild( 3 ), level + 1 );
-		break;
-	case NT_SWITCH:
-		if( node->GetToken() )
-		{
-			os << "[" << node->GetToken()->stringValue << "] ";
-		}
-		os << "switch( ";
-		PrintHLSL11( os, node->GetChild( 0 ), level + 1 );
-		os << " )";
-		os.Endl();
-		os << "{";
-		os.Endl();
-		PrintChildrenHLSL11( os, node, "", level + 1, 1 );
-		os << "}";
-		os.Endl();
-		break;
-	case NT_CASE:
-		if( node->GetChildOrNull( 0 ) == nullptr )
-		{
-			os << "default:";
-			os.Endl();
-		}
-		else
-		{
-			os << "case ";
-			PrintHLSL11( os, node->GetChild( 0 ), level + 1 );
-			os << ":";
-			os.Endl();
-		}
-		PrintHLSL11( os, node->GetChild( 1 ), level + 1 );
-		break;
-	case NT_JUMP:
-		switch( node->GetToken()->type )
-		{
-		case OP_CONTINUE:
-			os << "continue;";
-			break;
-		case OP_BREAK:
-			os << "break;";
-			break;
-		case OP_RETURN:
-			if( node->GetChildrenCount() == 0 )
-			{
-				os << "return;";
-			}
-			else
-			{
-				os << "return ";
-				PrintHLSL11( os, node->GetChild( 0 ), level + 1 );
-				os << ";";
-			}
-			break;
-		case OP_DISCARD:
-			os << "discard;";
-			break;
-		}
-		os.Endl();
-		break;
-	case NT_FUNCTION_DEFINITION:
-		if( node->GetChild( 0 )->GetSymbol()->used )
-		{
-			if( node->GetChildOrNull( 2 ) )
-			{
-				PrintHLSL11( os, node->GetChild( 2 ), level + 1 );
-			}
-			PrintHLSL11( os, node->GetChild( 0 ), level + 1 );
-			PrintHLSL11( os, node->GetChild( 1 ), level + 1 );
-		}
-		break;
-	case NT_SAMPLER_STATE_LIST:
-		os << "sampler_state";
-		os.Endl();
-		os << "{";
-		os.Endl();
-		os << "}";
-		os.Endl();
-		break;
-	case NT_STATE_ASSIGNMENT:
-		os << node->GetToken()->stringValue << " = ";
-		if( node->GetSymbol() )
-		{
-			os << '<' << node->GetSymbol()->name << '>';
-		}
-		else
-		{
-			PrintHLSL11( os, node->GetChild( 0 ), level + 1 );
-		}
-		os << ";";
-		os.Endl();
-		break;
-	case NT_CBUFFER:
-		{
-			if( !HasUsedDeclarations( node ) )
-			{
-				break;
-			}
-			if( node->GetToken()->type == OP_TBUFFER )
-			{
-				os << "tbuffer ";
-			}
-			else
-			{
-				os << "cbuffer ";
-			}
-			os << node->GetSymbol()->name;
-			for( auto it = node->GetSymbol()->registerSpecifier.begin(); it != node->GetSymbol()->registerSpecifier.end(); ++it )
-			{
-				os << " : register( " << it->second.registerType << it->second.registerNumber << " )";
-			}
-			os.Endl();
-			os << "{";
-			os.Endl();
-			PrintChildrenHLSL11( os, node, "", level + 1 );
-			os << "}";
-			os.Endl();
-		}
-		break;
-	case NT_STATE_VALUE:
-		os << node->GetToken()->stringValue;
-		break;
-	case NT_FUNCTION_ATTRIBUTE_LIST:
-		PrintChildrenHLSL11( os, node, "", level + 1 );
-		break;
-	case NT_FUNCTION_ATTRIBUTE:
-		os << '[' << node->GetToken()->stringValue;
-		if( node->GetChildrenCount() )
-		{
-			os << '(';
-			PrintChildrenHLSL11( os, node, ", ", level + 1 );
-			os << ')';
-		}
-		os << ']';
-		os.Endl();
-		break;
-	case NT_FUNCTION_ATTRIBUTE_VALUE:
-		os << node->GetToken()->stringValue;
-		break;
-	case NT_PRIMITIVE_TYPE:
-		os << node->GetToken()->stringValue;
-		break;
-	}
-}
 
 bool MakeEffectAnnotationFromSymbolAnnotation( const SymbolAnnotation& annotation, Annotation& result, bool& isSRGB, bool& isAutoregister )
 {
@@ -1017,12 +141,21 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 	for( unsigned cbIndex = 0; cbIndex < reflDesc.ConstantBuffers; ++cbIndex )
 	{
 		ID3D11ShaderReflectionConstantBuffer* cb = reflection->GetConstantBufferByIndex( cbIndex );
-		// TODO: identify buffer by register
+
 		D3D11_SHADER_BUFFER_DESC cbDesc;
 		cb->GetDesc( &cbDesc );
+
 		if( strcmp( cbDesc.Name, "$Globals" ) )
 		{
-			continue;
+			D3D11_SHADER_INPUT_BIND_DESC resDesc;
+			if( FAILED( reflection->GetResourceBindingDescByName( cbDesc.Name, &resDesc ) ) )
+			{
+				continue;
+			}
+			if( resDesc.BindPoint != 0 )
+			{
+				continue;
+			}
 		}
 
 		for( unsigned i = 0; i < cbDesc.Variables ; ++i )
@@ -1139,6 +272,8 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 		{
 		case D3D_SIT_SAMPLER:
 			{
+				stage.registerInputs.push_back( { RT_SAMPLER, desc.BindPoint } );
+			
 				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( desc.Name );
 				if( symbol == nullptr || symbol->definition == nullptr )
 				{
@@ -1164,6 +299,8 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 		case D3D_SIT_UAV_CONSUME_STRUCTURED:
 		case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
 			{
+				stage.registerInputs.push_back( { RT_UAV, desc.BindPoint } );
+
 				Uav uav;
 				uav.isAutoregister = false;
 				std::string textureName = desc.Name;
@@ -1204,8 +341,15 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 				stage.uavs[desc.BindPoint] = uav;
 			}
 			break;
+		case D3D_SIT_CBUFFER:
+		{
+			stage.registerInputs.push_back( { RT_CONSTANTS, desc.BindPoint } );
+			break;
+		}
 		default:
 			{
+				stage.registerInputs.push_back( { RT_RESOURCE, desc.BindPoint } );
+
 				Texture texture;
 				texture.isSRGB = false;
 				texture.isAutoregister = false;
@@ -1302,7 +446,7 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 				"BLENDWEIGHT"
 				};
 			bool found = false;
-			InputDescription input;
+			PipelineInputDescription input;
 			for( int n = 0; n < UC_NUM_USAGE_CODE; ++n )
 			{
 				if( _stricmp( desc.SemanticName, usageNames[n] ) == 0 )
@@ -1312,7 +456,7 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 					input.index = desc.SemanticIndex;
 					input.usedMask = desc.ReadWriteMask;
 					//input.componentType = desc.ComponentType;
-					stage.inputs.push_back( input );
+					stage.pipelineInputs.push_back( input );
 					found = true;
 				}
 			}
@@ -1439,9 +583,74 @@ void PrintValuePath( std::ostream& os, const std::vector<Symbol*>& path, const c
 	}
 }
 
+static void PatchSemantics( InputStageType shaderStage, ASTNode* callNode )
+{
+	Symbol* entryPointSymbol = callNode->GetSymbol();
+	if( !entryPointSymbol )
+	{
+		return;
+	}
+	ASTNode* functionHeader = entryPointSymbol->definition->GetChildOrNull( 0 );
+	if( functionHeader == nullptr )
+	{
+		return;
+	}
+	std::vector<std::pair<const char*, const char>> semantics;
+	std::vector<Symbol*> targetPath;
+	switch( shaderStage )
+	{
+	case VERTEX_STAGE:
+	{
+		const char* semantics[] = { "position", nullptr };
+		if( FindOutputBySemantics( functionHeader, semantics, &targetPath ) )
+		{
+			if( targetPath.back() )
+			{
+				targetPath.back()->semantic = MakeInlineString( "SV_Position" );
+			}
+			else
+			{
+				entryPointSymbol->semantic = MakeInlineString( "SV_Position" );
+			}
+		}
+		break;
+	}
+	case PIXEL_STAGE:
+	{
+		{
+			const char* semantics[] = { "color", "color0", nullptr };
+			if( FindOutputBySemantics( functionHeader, semantics, &targetPath ) )
+			{
+				if( targetPath.back() )
+				{
+					targetPath.back()->semantic = MakeInlineString( "SV_Target0" );
+				}
+				else
+				{
+					entryPointSymbol->semantic = MakeInlineString( "SV_Target0" );
+				}
+			}
+		}
+		{
+			const char* semantics[] = { "color1", nullptr };
+			if( FindOutputBySemantics( functionHeader, semantics, &targetPath ) )
+			{
+				if( targetPath.back() )
+				{
+					targetPath.back()->semantic = MakeInlineString( "SV_Target1" );
+				}
+				else
+				{
+					entryPointSymbol->semantic = MakeInlineString( "SV_Target1" );
+				}
+			}
+		}
+		break;
+	}
+	}
+}
 
-
-static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixelOffset, ASTNode* callNode, ParserState& state, CodeStream& os, std::string& entryPointName, bool& hasShadowState )
+static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bool pixelOffset, ASTNode* callNode, ParserState& state, CodeStream& os, std::string& entryPointName, bool& hasShadowState )
 {
 	// 1. wrap uniforms
 	// 2. fix VPOS
@@ -1473,7 +682,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 
 	if( patchOutput )
 	{
-		if( type == PIXEL_STAGE )
+		if( shaderStage == PIXEL_STAGE )
 		{
 			const char* target[] = { "color", "color0", "sv_target", "sv_target0", nullptr };
 			// check "out" parameters
@@ -1482,7 +691,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 				return PATCH_SKIP;
 			}
 		}
-		else if( type == VERTEX_STAGE )
+		else if( shaderStage == VERTEX_STAGE )
 		{
 			const char* target[] = { "sv_clipdistance", "sv_clipdistance0", nullptr };
 			if( FindOutputBySemantics( functionHeader, target, nullptr ) )
@@ -1502,7 +711,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 			return PATCH_SKIP;
 		}
 	}
-	else if( type == VERTEX_STAGE )
+	else if( shaderStage == VERTEX_STAGE )
 	{
 		const char* position[] = { "position", "sv_position", nullptr };
 		FindOutputBySemantics( functionHeader, position, &outPositionPath );
@@ -1533,7 +742,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 	std::vector<Symbol*> vposPath;
 	const char* vpos[] = { "vpos", nullptr };
 	fixVPOSType = fixVPOS = FindParameterBySemantics( functionHeader, vpos, &vposPath );
-	if( fixVPOS || patchOutput && type == VERTEX_STAGE )
+	if( fixVPOS || patchOutput && shaderStage == VERTEX_STAGE )
 	{
 		const char* position[] = { "position", "sv_position", nullptr };
 		bool foundPosition = FindParameterBySemantics( functionHeader, position, &positionPath );
@@ -1555,7 +764,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 	const char* vface[] = { "vface", nullptr };
 	fixVFACE = FindParameterBySemantics( functionHeader, vface, &vfacePath );
 
-	if( !wrapUniforms && !fixVPOS && !patchOutput && !fixVFACE && !fixVPOSType && ( type != VERTEX_STAGE || outPositionPath.empty() ) )
+	if( !wrapUniforms && !fixVPOS && !patchOutput && !fixVFACE && !fixVPOSType && ( shaderStage != VERTEX_STAGE || outPositionPath.empty() ) )
 	{
 		entryPointName = ToString( entryPointSymbol->name );
 		return PATCH_USE;
@@ -1579,10 +788,10 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 
 	if( entryPointSymbol->definition->GetChildOrNull( 2 ) )
 	{
-		PrintHLSL11( os, entryPointSymbol->definition->GetChildOrNull( 2 ), 0 );
+		os << HLSL{ entryPointSymbol->definition->GetChildOrNull( 2 ), nullptr };
 	}
 	// return type
-	PrintTypeHLSL11( os, functionHeader->GetType() );
+	os << functionHeader->GetType();
 	// name
 	InlineString name = state.AllocateName();
 	os << ' ' << name << "( ";
@@ -1624,11 +833,11 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 			}
 			else
 			{
-				PrintHLSL11( os, functionHeader->GetChild( i ), 1 );
+				os << HLSL{ functionHeader->GetChild( i ), nullptr };
 			}
 		}
 	}
-	if( patchOutput && type == VERTEX_STAGE )
+	if( patchOutput && shaderStage == VERTEX_STAGE )
 	{
 		if( !first )
 		{
@@ -1658,9 +867,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 				InlineString name = state.AllocateName();
 				Type type = functionHeader->GetChild( i )->GetType();
 				type.storageClass = 0;
-				PrintTypeHLSL11( os, type );
-				os << ' ' << name << " = ";
-				PrintHLSL11( os, functionHeader->GetChild( i )->GetChildOrNull( 1 ), 1 );
+				os << type << ' ' << name << " = " << HLSL{ functionHeader->GetChild( i )->GetChildOrNull( 1 ), nullptr };
 				os << ";\n";
 				defaultUniformArguments[i] = name;
 			}
@@ -1670,8 +877,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 
 	if( functionHeader->GetSymbol()->type.symbol || functionHeader->GetSymbol()->type.builtInType != OP_VOID )
 	{
-		PrintTypeHLSL11( os, functionHeader->GetType() );
-		os << " __returnValue = ";
+		os << functionHeader->GetType() << " __returnValue = ";
 	}
 	// call original function
 	uniformIndex = 0;
@@ -1686,7 +892,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 		{
 			if( callNode->GetChildrenCount() > uniformIndex )
 			{
-				PrintHLSL11( os, callNode->GetChild( uniformIndex ), 1 );
+				os << HLSL{ callNode->GetChild( uniformIndex ), nullptr };
 			}
 			else if( functionHeader->GetChild( i )->GetChildOrNull( 1 ) != nullptr )
 			{
@@ -1715,14 +921,16 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 					{
 						os << swizzle[min( k, positionPath.back()->type.width - 1 ) ];
 					}
-					os << " - 0.5";
+					if( pixelOffset )
+					{
+						os << " - 0.5";
+					}
 				}
 			}
 			else if( fixVPOSType && symbol->semantic.start && _stricmp( ToString( symbol->semantic ).c_str(), "vpos" ) == 0 )
 			{
 				Type type = symbol->type;
-				PrintTypeHLSL11( os, type );
-				os << "( " << symbol->name;
+				os << type << "( " << symbol->name;
 				if( type.width != 4 )
 				{
 					const char* swizzle = "xyzw";
@@ -1745,7 +953,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 		}
 	}
 	os << ");\n";
-	if( type == VERTEX_STAGE && pixelOffset)
+	if( shaderStage == VERTEX_STAGE && pixelOffset)
 	{
 		PrintValuePath( os, outPositionPath, "__returnValue" );
 		os << ".xy += DX11ShadowState.renderTargetSize.xy * ";
@@ -1754,7 +962,7 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 	}
 	if( patchOutput )
 	{
-		if( type == PIXEL_STAGE )
+		if( shaderStage == PIXEL_STAGE )
 		{
 			os << "int __alphaValue = int( saturate( ";
 			PrintValuePath( os, targetPath, "__returnValue" );
@@ -1805,7 +1013,6 @@ static PatchAction PatchShader( InputStageType type, bool patchOutput, bool pixe
 
 bool EffectCompilerDX11::Create()
 {
-	GetOperatorSymbol( 0 );
 	return true;
 }
 
@@ -2156,16 +1363,28 @@ void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectD
 		}
 		listing.end();
 	}
-	if( !stage.inputs.empty() )
+	if( !stage.pipelineInputs.empty() )
 	{
 		listing.literal( "inputs" ).list();
-		for( auto it = stage.inputs.begin(); it != stage.inputs.end(); ++it )
+		for( auto it = stage.pipelineInputs.begin(); it != stage.pipelineInputs.end(); ++it )
 		{
 			listing.dict()
 				.literal( "register" ).literal( it->registerIndex )
 				.literal( "name" ).literal( it->name )
 				.literal( "index" ).literal( it->index )
 				.literal( "usedMask" ).literal( it->usedMask )
+				.end();
+		}
+		listing.end();
+	}
+	if( !stage.registerInputs.empty() )
+	{
+		listing.literal( "registers" ).list();
+		for( auto it = stage.registerInputs.begin(); it != stage.registerInputs.end(); ++it )
+		{
+			listing.dict()
+				.literal( "registerType" ).literal( it->registerType )
+				.literal( "register" ).literal( it->registerIndex )
 				.end();
 		}
 		listing.end();
@@ -2178,26 +1397,65 @@ std::string SanitizeCode( const std::string& src )
 	return std::regex_replace( src, line, std::string( "" ) );
 }
 
-bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result, bool patchShaders )
-{
-	CComPtr<ID3D10Blob> effectData;
-	CComPtr<ID3D10Blob> errors;
 
-	DWORD optimizationLevel;
+bool ParseShaderName( const InlineString& name, InputStageType& type )
+{
+	if( _stricmp( ToString( name ).c_str(), "vertexshader" ) == 0 )
+	{
+		type = VERTEX_STAGE;
+	}
+	else if( _stricmp( ToString( name ).c_str(), "pixelshader" ) == 0 )
+	{
+		type = PIXEL_STAGE;
+	}
+	else if( _stricmp( ToString( name ).c_str(), "computeshader" ) == 0 )
+	{
+		type = COMPUTE_STAGE;
+	}
+	else if( _stricmp( ToString( name ).c_str(), "geometryshader" ) == 0 )
+	{
+		type = GEOMETRY_STAGE;
+	}
+	else if( _stricmp( ToString( name ).c_str(), "hullshader" ) == 0 )
+	{
+		type = HULL_STAGE;
+	}
+	else if( _stricmp( ToString( name ).c_str(), "domainshader" ) == 0 )
+	{
+		type = DOMAIN_STAGE;
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
+
+
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result )
+{
+	return CompileEffect( source, sourceLength, defines, include, result, { nullptr, true, true } );
+}
+
+DWORD GetOptimizationLevel()
+{
 	switch( g_optimizationLevel )
 	{
 	case 0:
-		optimizationLevel = D3DXSHADER_OPTIMIZATION_LEVEL0;
-		break;
+		return D3DXSHADER_OPTIMIZATION_LEVEL0;
 	case 1:
-		optimizationLevel = D3DXSHADER_OPTIMIZATION_LEVEL1;
-		break;
+		return D3DXSHADER_OPTIMIZATION_LEVEL1;
 	case 2:
-		optimizationLevel = D3DXSHADER_OPTIMIZATION_LEVEL2;
-		break;
+		return D3DXSHADER_OPTIMIZATION_LEVEL2;
 	default:
-		optimizationLevel = D3DXSHADER_OPTIMIZATION_LEVEL3;
+		return D3DXSHADER_OPTIMIZATION_LEVEL3;
 	}
+}
+
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result, const CompileOptions& compileOptions )
+{
+	CComPtr<ID3D10Blob> effectData;
+	CComPtr<ID3D10Blob> errors;
 
 	ParserState state( MakeInlineString( source, source + sourceLength ) );
 	for( auto it = begin( defines ); it != end( defines ); ++it )
@@ -2214,6 +1472,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 	{
 		return false;
 	}
+
 	PatchCBuffers( state );
 	TransferSRGBToTexturesDX11( state );
 	ConvertTextureFunctionsDX11( state );
@@ -2302,46 +1561,28 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				ASTNode* shaderNode = passNode->GetChild( stateIx );
 
 				StageInput stage;
-				if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "vertexshader" ) == 0 )
-				{
-					stage.type = VERTEX_STAGE;
-				}
-				else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "pixelshader" ) == 0 )
-				{
-					stage.type = PIXEL_STAGE;
-				}
-				else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "computeshader" ) == 0 )
-				{
-					stage.type = COMPUTE_STAGE;
-				}
-				else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "geometryshader" ) == 0 )
-				{
-					stage.type = GEOMETRY_STAGE;
-				}
-				else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "hullshader" ) == 0 )
-				{
-					stage.type = HULL_STAGE;
-				}
-				else if( _stricmp( ToString( shaderNode->GetToken()->stringValue ).c_str(), "domainshader" ) == 0 )
-				{
-					stage.type = DOMAIN_STAGE;
-				}
-				else
+				if( !ParseShaderName( shaderNode->GetToken()->stringValue, stage.type ) )
 				{
 					state.ShowMessage( shaderNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( shaderNode->GetToken()->stringValue ).c_str() );
 					return false;
 				}
 
 				std::string profile = ToString( shaderNode->GetChild( 0 )->GetToken()->stringValue );
-				if( profile[0] == 'v' )
+				if( compileOptions.minShaderVersion )
 				{
-					profile = "vs_5_0";
+					profile = profile.substr( 0, 3 ) + compileOptions.minShaderVersion;
 				}
-				else if( profile[0] == 'p' )
+				else
 				{
-					profile = "ps_5_0";
+					if( profile[0] == 'v' )
+					{
+						profile = "vs_5_0";
+					}
+					else if( profile[0] == 'p' )
+					{
+						profile = "ps_5_0";
+					}
 				}
-
 				effectData = nullptr;
 				errors = nullptr;
 
@@ -2349,6 +1590,11 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				if( shaderNode->GetChild( 1 )->GetSymbol() == nullptr )
 				{
 					return false;
+				}
+
+				if( compileOptions.minShaderVersion )
+				{
+					PatchSemantics( stage.type, shaderNode->GetChild( 1 ) );
 				}
 
 				state.GetSymbolTable().ResetUsedFlag();
@@ -2361,14 +1607,20 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						MarkUsedSymbols( symbol->definition, state );
 					}
 				}
+				if( compileOptions.addSpaces )
+				{
+					CreateGlobalsCB( state, stage.type );
+					AssignRegisters( state.GetTree(), stage.type );
+				}
+
 				CompilerInputStream os( state );
-				PrintHLSL11( os, state.GetTree(), 0 );
+				os << HLSL{ state.GetTree(), &state.GetSymbolTable() };
 
 				std::string entryPoint = ToString( shaderNode->GetChild( 1 )->GetSymbol()->name );
 
 				std::string patchEntryPoint = entryPoint;
 				bool hasShadowState = false;
-				switch( PatchShader( stage.type, false, patchShaders, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
+				switch( PatchShader( stage.type, false, compileOptions.addPixelOffset, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
 				{
 				case PATCH_ERROR:
 					return false;
@@ -2376,7 +1628,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				state.ResetPragmaUsage();
 				std::string code( os.str(), os.str() + os.pcount() );
 
-				HRESULT hr = D3DX11CompileFromMemory(
+				HRESULT hr = D3DCompile(
 					code.c_str(),
 					code.length(),
 					"\\memory",
@@ -2384,12 +1636,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					nullptr,
 					patchEntryPoint.c_str(),
 					profile.c_str(),
-					D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY | optimizationLevel | D3D10_SHADER_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3D10_SHADER_AVOID_FLOW_CONTROL : 0 ),
+					( compileOptions.minShaderVersion ? 0 : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
 					0,
-					nullptr,
 					&effectData,
-					&errors,
-					nullptr );
+					&errors );
 				if( FAILED( hr ) )
 				{
 					if( errors )
@@ -2413,7 +1663,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				{
 					strippedEffectData = effectData;
 				}
-				stage.shaderSize = strippedEffectData->GetBufferSize();
+				stage.shaderSize = uint32_t( strippedEffectData->GetBufferSize() );
 				stage.shaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
 				stage.shadowShaderSize = 0;
 				stage.shadowShaderDataStr = INVALID_REFERENCE;
@@ -2465,11 +1715,11 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 				reflections[stage.type] = reflection;
 
-				if( stage.type == PIXEL_STAGE || g_maxClipPlanes > 0 )
+				if( compileOptions.compileShadowShaders && ( stage.type == PIXEL_STAGE || g_maxClipPlanes > 0 ) )
 				{
 					os.freeze( false );
 					patchEntryPoint = entryPoint;
-					switch( PatchShader( stage.type, true, true, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
+					switch( PatchShader( stage.type, true, compileOptions.addPixelOffset, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
 					{
 					case PATCH_ERROR:
 						return false;
@@ -2480,7 +1730,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						effectData = nullptr;
 						errors = nullptr;
 
-						HRESULT hr = D3DX11CompileFromMemory(
+						HRESULT hr = D3DCompile(
 							code.c_str(),
 							code.length(),
 							"\\memory",
@@ -2488,12 +1738,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							nullptr,
 							patchEntryPoint.c_str(),
 							profile.c_str(),
-							D3D10_SHADER_ENABLE_BACKWARDS_COMPATIBILITY | optimizationLevel | D3D10_SHADER_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3D10_SHADER_AVOID_FLOW_CONTROL : 0 ),
+							( compileOptions.minShaderVersion ? 0 : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
 							0,
-							nullptr,
 							&effectData,
-							&errors,
-							nullptr );
+							&errors );
 						if( FAILED( hr ) )
 						{
 							if( errors )
@@ -2517,7 +1765,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						{
 							strippedEffectData = effectData;
 						}
-						stage.shadowShaderSize = strippedEffectData->GetBufferSize();
+						stage.shadowShaderSize = uint32_t( strippedEffectData->GetBufferSize() );
 						stage.shadowShaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
 
 

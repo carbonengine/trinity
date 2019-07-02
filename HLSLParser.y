@@ -1260,6 +1260,8 @@ register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_RIGHT_P
 {
 	A.shaderProfile = MakeInlineString( "" );
 	A.subComponent = -1;
+	A.space = -1;
+	A.explicitRegister = true;
 	if( !ParseRegisterID( B.stringValue.start, B.stringValue.end, A.registerType, A.registerNumber ) )
 	{
 		parserState->ShowMessage( B, EC_INVALID_REGISTER );
@@ -1270,6 +1272,9 @@ register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_LEFT_BR
 {
 	A.shaderProfile = MakeInlineString( "" );
 	A.subComponent = -1;
+	A.space = -1;
+	A.explicitSpace = false;
+	A.explicitRegister = true;
 	if( !ParseRegisterID( B.stringValue.start, B.stringValue.end, A.registerType, A.registerNumber ) )
 	{
 		parserState->ShowMessage( B, EC_INVALID_REGISTER );
@@ -1279,19 +1284,38 @@ register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_LEFT_BR
 
 register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_COMA OP_ID(T) OP_RIGHT_PAREN.
 {
-	A.shaderProfile = MakeInlineString( "" );
+	A.explicitRegister = true;
 	A.subComponent = -1;
-	if( !ParseRegisterID( T.stringValue.start, T.stringValue.end, A.registerType, A.registerNumber ) )
+	auto space = ToString( T.stringValue );
+	if( space.substr( 0, 5 ) == "space" )
 	{
-		parserState->ShowMessage( T, EC_INVALID_REGISTER );
+		A.shaderProfile = MakeInlineString( "" );
+		A.space = atoi( space.substr( 5 ).c_str() );
+		A.explicitSpace = true;
+		if( !ParseRegisterID( B.stringValue.start, B.stringValue.end, A.registerType, A.registerNumber ) )
+		{
+			parserState->ShowMessage( B, EC_INVALID_REGISTER );
+		}
 	}
-	A.shaderProfile = B.stringValue;
+	else
+	{
+		A.shaderProfile = B.stringValue;
+		A.space = -1;
+		A.explicitSpace = false;
+		if( !ParseRegisterID( T.stringValue.start, T.stringValue.end, A.registerType, A.registerNumber ) )
+		{
+			parserState->ShowMessage( T, EC_INVALID_REGISTER );
+		}
+	}
 }
 
 register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_COMA OP_ID(T) OP_LEFT_BRACKET OP_INT_CONST(D) OP_RIGHT_BRACKET OP_RIGHT_PAREN.
 {
+	A.explicitRegister = true;
 	A.shaderProfile = MakeInlineString( "" );
 	A.subComponent = -1;
+	A.space = -1;
+	A.explicitSpace = false;
 	if( !ParseRegisterID( T.stringValue.start, T.stringValue.end, A.registerType, A.registerNumber ) )
 	{
 		parserState->ShowMessage( T, EC_INVALID_REGISTER );

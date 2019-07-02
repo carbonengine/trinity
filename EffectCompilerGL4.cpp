@@ -6,7 +6,6 @@
 
 #include "stdafx.h"
 #include "EffectCompilerGL4.h"
-#include "EffectCompilerDx11.h"
 #include "EffectData.h"
 #include "CompileMessageQueue.h"
 #include "InlineString.h"
@@ -19,7 +18,6 @@
 #include <iomanip>
 #include "wglext.h"
 
-extern EffectCompilerDX11 g_compilerDX11;
 extern CompileMessageQueue g_messages;
 extern StringTable g_stringTable;
 extern int g_maxClipPlanes;
@@ -385,7 +383,7 @@ public:
 		ADD_HANDLER( vs );
 	}
 
-	std::string parse( const char* source, InputStageType stage, const std::vector<InputDescription>& inputs )
+	std::string parse( const char* source, InputStageType stage, const std::vector<PipelineInputDescription>& inputs )
 	{
 		m_stage = stage;
 		m_inputs = inputs;
@@ -966,7 +964,7 @@ public:
 		else if( command.modifier == MakeInlineString( "rtx_coarse_sat" ) || command.modifier == MakeInlineString( "rtx_fine_sat" ) )
 		{
 			m_codeOs << Dest( dst ) << "=clamp(dFdx(" << Src( src0, dst.swizzle ) << "),";
-			int length = dst.swizzle.end - dst.swizzle.start;
+			int length = int( dst.swizzle.end - dst.swizzle.start );
 			if( length == 1 )
 			{
 				m_codeOs << "0.0,1.0);" << endl;
@@ -983,7 +981,7 @@ public:
 		else if( command.modifier == MakeInlineString( "rty_coarse_sat" ) || command.modifier == MakeInlineString( "rty_fine_sat" ) )
 		{
 			m_codeOs << Dest( dst ) << "=clamp(dFdy(" << Src( src0, dst.swizzle ) << "),";
-			int length = dst.swizzle.end - dst.swizzle.start;
+			int length = int( dst.swizzle.end - dst.swizzle.start );
 			if( length == 1 )
 			{
 				m_codeOs << "0.0,1.0);" << endl;
@@ -2364,7 +2362,7 @@ private:
 				{
 					os << '.';
 					int offset = 0;
-					int srcMax = m_reg.swizzle.end - m_reg.swizzle.start - 1;
+					int srcMax = int( m_reg.swizzle.end - m_reg.swizzle.start - 1 );
 					for( auto it = m_destSwizzle.start; it != m_destSwizzle.end; ++it )
 					{
 						switch( *it )
@@ -2414,7 +2412,7 @@ private:
 			}
 			if( destSwizzle.start )
 			{
-				length = destSwizzle.end - destSwizzle.start;
+				length = int( destSwizzle.end - destSwizzle.start );
 			}
 			else
 			{
@@ -2637,7 +2635,7 @@ private:
 	std::set<InlineString> m_usedInputs;
 	std::set<InlineString> m_usedOutputs;
 
-	std::vector<InputDescription> m_inputs;
+	std::vector<PipelineInputDescription> m_inputs;
 };
 
 std::ostream& operator<<( std::ostream& os, const State::_Dest& dest )
@@ -2730,6 +2728,10 @@ static GLEWContext* glewGetContext()
 // --------------------------------------------------------------------------------------
 bool EffectCompilerGL4::Create()
 {
+	if( !m_compilerDX11.Create() )
+	{
+		return false;
+	}
 	// We need to create a separate hidden window for OpenGL context.
 	// Using console window for it doesn't work well with using the
 	// compiler from visual studio.
@@ -3001,7 +3003,7 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 	}
 
 	// Fist compile effect as DX11
-	if( !g_compilerDX11.CompileEffect( source, sourceLength, newDefines, include, result, false ) )
+	if( !m_compilerDX11.CompileEffect( source, sourceLength, newDefines, include, result, { nullptr, false, true } ) )
 	{
 		return false;
 	}
@@ -3052,7 +3054,7 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 				State state;
 				try
 				{
-					glesSource = state.parse( src, stage->type, stage->inputs );
+					glesSource = state.parse( src, stage->type, stage->pipelineInputs );
 				}
 				catch( CompilerError e )
 				{
@@ -3079,7 +3081,7 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 					listing.end();
 				}
 
-				stage->shaderSize = glesSource.length() + 1;
+				stage->shaderSize = uint32_t( glesSource.length() + 1 );
 				stage->shaderDataStr = g_stringTable.AddString( glesSource.c_str(), stage->shaderSize );
 
 				stage->shadowShaderSize = 0;

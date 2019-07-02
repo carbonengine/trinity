@@ -3,119 +3,14 @@
 #include "SymbolTable.h"
 #include "ASTNode.h"
 #include "HLSLParser.h"
-
-CompilerInputStream::CompilerInputStream( ParserState& state )
-	:m_state( state )
-{
-	m_location.fileName = MakeInlineString( "" );
-	m_location.lineNumber = -1;
-}
-
-void CompilerInputStream::Endl() 
-{ 
-}
-
-void CompilerInputStream::ChangeLocation( const FileLocation& location ) 
-{
-	if( m_location.lineNumber != location.lineNumber || 
-		m_location.fileName != location.fileName )
-	{
-		if( m_location.fileName == location.fileName && 
-			m_location.lineNumber + 1 == location.lineNumber )
-		{
-			*this << "\n";
-		}
-		else
-		{
-			std::string fileName = ToString( location.fileName );
-			for( size_t i = 0; i < fileName.length(); ++i )
-			{
-				if( fileName[i] == '\\' )
-				{
-					fileName[i] = '/';
-				}
-			}
-			
-			*this << "\n#line " << location.lineNumber << " \"" << fileName << "\"\n";
-		}
-		flush();
-		m_location = location;
-		InlineString pragma;
-		while( m_state.GetPragma( m_location, pragma ) )
-		{
-			*this << "#pragma " << pragma << "\n";
-			m_location.lineNumber++;
-		}
-	}
-}
-
-LineMapInputStream::LineMapInputStream( ParserState& state )
-	:m_state( state ),
-	m_lineNumber( 1 )
-{
-	m_location.fileName = MakeInlineString( "" );
-	m_location.lineNumber = -1;
-}
-
-void LineMapInputStream::Endl() 
-{
-	*this << "\n";
-	++m_lineNumber;
-	++m_location.lineNumber;
-}
-
-void LineMapInputStream::ChangeLocation( const FileLocation& location ) 
-{
-	if( m_location.lineNumber != location.lineNumber || 
-		m_location.fileName != location.fileName )
-	{
-		if( m_location.fileName == location.fileName && 
-			m_location.lineNumber + 1 == location.lineNumber )
-		{
-			*this << "\n";
-			++m_lineNumber;
-		}
-		else
-		{
-			m_locations.push_back( std::make_pair( m_lineNumber, location ) );
-		}
-		flush();
-		m_location = location;
-		//InlineString pragma;
-		//while( m_state.GetPragma( m_location, pragma ) )
-		//{
-		//	*this << "#pragma " << pragma << "\n";
-		//	m_location.lineNumber++;
-		//}
-	}
-}
-
-bool LineMapInputStream::GetLocation( unsigned lineNumber, FileLocation& location )
-{
-	for( size_t i = 1; i < m_locations.size(); ++i )
-	{
-		if( m_locations[i].first > lineNumber )
-		{
-			location = m_locations[i - 1].second;
-			location.lineNumber += lineNumber - m_locations[i - 1].first;
-			return true;
-		}
-	}
-	if( !m_locations.empty() )
-	{
-		location = m_locations.back().second;
-		location.lineNumber += lineNumber - m_locations.back().first;
-		return true;
-	}
-	return false;
-}
+#include "EffectData.h"
 
 
 bool ParseRegisterID( const char* start, const char* end, char& registerType, int& registerNumber )
 {
 	char rType;
 	int rNumber;
-	bool result = sscanf_s( start, "%c%i", &rType, sizeof( char ), &rNumber ) == 2;
+	bool result = sscanf_s( start, "%c%i", &rType, 1, &rNumber ) == 2;
 	if( result )
 	{
 		registerType = tolower( rType );
@@ -524,7 +419,7 @@ bool ComputeMemberType( const Type& leftType, const InlineString& member, Type& 
 				}
 			}
 			type.height = 1;
-			type.width = member.end - member.start;
+			type.width = int( member.end - member.start );
 			return true;
 		}
 	}
@@ -549,7 +444,10 @@ static ASTNode* AddCBuffer( ParserState& state, ASTNode* node, int cbufferIndex,
 	reg.shaderProfile.start = nullptr;
 	reg.shaderProfile.end = nullptr;
 	reg.subComponent = -1;
+	reg.space = -1;
 	reg.shaderProfile = MakeInlineString( "" );
+	reg.explicitRegister = true;
+	reg.explicitSpace = false;
 	cbufferName->registerSpecifier[reg.shaderProfile] = reg;
 	cbuffer->SetSymbol( cbufferName );
 
@@ -725,5 +623,373 @@ bool IsUniformInputArgument( ASTNode* argument )
 	else
 	{
 		return argument->GetType().storageClass == OP_UNIFORM;
+	}
+}
+
+namespace
+{
+	struct Registers
+	{
+		std::set<int> b;
+		std::set<int> t;
+		std::set<int> s;
+		std::set<int> u;
+	};
+
+	std::set<int>* GetRegisterSet( Registers& registers, char specifier )
+	{
+		switch( specifier )
+		{
+		case 'b':
+			return &registers.b;
+		case 't':
+			return &registers.t;
+		case 's':
+			return &registers.s;
+		case 'u':
+			return &registers.u;
+		default:
+			return nullptr;
+		}
+	}
+
+	bool DoesProfileMatchStage( const InlineString& profile, InputStageType stage )
+	{
+		if( profile == MakeInlineString( "" ) )
+		{
+			return true;
+		}
+		switch( stage )
+		{
+		case VERTEX_STAGE:
+			return profile == MakeInlineString( "vs" );
+		case PIXEL_STAGE:
+			return profile == MakeInlineString( "ps" );
+		case COMPUTE_STAGE:
+			return profile == MakeInlineString( "cs" );
+		case GEOMETRY_STAGE:
+			return profile == MakeInlineString( "gs" );
+		case HULL_STAGE:
+			return profile == MakeInlineString( "hs" );
+		case DOMAIN_STAGE:
+			return profile == MakeInlineString( "ds" );
+		default:
+			return false;
+		}
+	}
+
+
+	void FindExplicitRegisters( ASTNode* root, InputStageType stage, Registers& registers )
+	{
+		if( !root )
+		{
+			return;
+		}
+		switch( root->GetNodeType() )
+		{
+		case NT_CBUFFER:
+			for( auto& r : root->GetSymbol()->registerSpecifier )
+			{
+				if( r.second.explicitRegister && DoesProfileMatchStage( r.first, stage ) )
+				{
+					registers.b.insert( r.second.registerNumber );
+					if( !r.second.explicitSpace )
+					{
+						r.second.space = int( stage );
+					}
+				}
+			}
+			break;
+		case NT_NAME_DECLARATION:
+			for( auto& r : root->GetSymbol()->registerSpecifier )
+			{
+				if( r.second.explicitRegister && DoesProfileMatchStage( r.first, stage ) )
+				{
+					auto set = GetRegisterSet( registers, r.second.registerType );
+					if( set )
+					{
+						set->insert( r.second.registerNumber );
+						if( !r.second.explicitSpace )
+						{
+							r.second.space = int( stage );
+						}
+					}
+				}
+			}
+			break;
+		case NT_PROGRAM:
+		case NT_VAR_DECLARATION_LIST:
+			for( size_t i = 0; i < root->GetChildrenCount(); ++i )
+			{
+				FindExplicitRegisters( root->GetChild( i ), stage, registers );
+			}
+			break;
+		}
+	}
+
+	int AllocateRegister( std::set<int>& set )
+	{
+		for( int i = 0; ; ++i )
+		{
+			auto inserted = set.insert( i );
+			if( inserted.second )
+			{
+				return i;
+			}
+		}
+	}
+
+	char GetRegisterType( const Type& type )
+	{
+		if( type.symbol )
+		{
+			return 0;
+		}
+		switch( type.builtInType )
+		{
+		case OP_SAMPLER2D:
+		case OP_SAMPLER3D:
+		case OP_SAMPLERCUBE:
+		case OP_SAMPLER:
+		case OP_SAMPLERCOMPARISON:
+			return 's';
+		case OP_TEXTURE1D:
+		case OP_TEXTURE2D:
+		case OP_TEXTURE3D:
+		case OP_TEXTURECUBE:
+		case OP_TEXTURE1DARRAY:
+		case OP_TEXTURE2DARRAY:
+		case OP_TEXTURE3DARRAY:
+		case OP_TEXTURECUBEARRAY:
+		case OP_TEXTURE2DMS:
+		case OP_TEXTURE2DMSARRAY:
+		case OP_TEXTURE:
+		case OP_BUFFER:
+		case OP_STRUCTUREDBUFFER:
+			return 't';
+		case OP_APPENDSTRUCTUREDBUFFER:
+		case OP_BYTEADDRESSBUFFER:
+		case OP_CONSUMESTRUCTUREDBUFFER:
+		case OP_RWBUFFER:
+		case OP_RWBYTEADDRESSBUFFER:
+		case OP_RWSTRUCTUREDBUFFER:
+		case OP_RWTEXTURE1D:
+		case OP_RWTEXTURE1DARRAY:
+		case OP_RWTEXTURE2D:
+		case OP_RWTEXTURE2DARRAY:
+		case OP_RWTEXTURE3D:
+		case OP_RWTEXTURE3DARRAY:
+			return 'u';
+		default:
+			return 0;
+		}
+	}
+
+	void AssignRegisters( ASTNode* root, InputStageType stage, Registers& registers )
+	{
+		if( !root )
+		{
+			return;
+		}
+		switch( root->GetNodeType() )
+		{
+		case NT_CBUFFER:
+			if( root->GetSymbol()->used )
+			{
+				bool assigned = false;
+				for( auto& r : root->GetSymbol()->registerSpecifier )
+				{
+					if( r.second.explicitRegister && DoesProfileMatchStage( r.first, stage ) )
+					{
+						assigned = true;
+						break;
+					}
+				}
+				if( !assigned )
+				{
+					RegisterSpecifier r;
+					r.shaderProfile = MakeInlineString( "" );
+					r.registerType = 'b';
+					r.registerNumber = AllocateRegister( registers.b );
+					r.subComponent = -1;
+					r.space = int( stage );
+					r.explicitRegister = false;
+					r.explicitSpace = false;
+					root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
+				}
+			}
+			break;
+		case NT_NAME_DECLARATION:
+			if( !root->GetSymbol()->used )
+			{
+				return;
+			}
+			if( auto registerType = GetRegisterType( root->GetSymbol()->type ) )
+			{
+				bool assigned = false;
+				for( auto& r : root->GetSymbol()->registerSpecifier )
+				{
+					if( r.second.explicitRegister && DoesProfileMatchStage( r.first, stage ) )
+					{
+						assigned = true;
+						break;
+					}
+				}
+				if( !assigned )
+				{
+					RegisterSpecifier r;
+					r.shaderProfile = MakeInlineString( "" );
+					r.registerType = registerType;
+					r.registerNumber = AllocateRegister( *GetRegisterSet( registers, registerType ) );
+					r.subComponent = -1;
+					r.space = int( stage );
+					r.explicitRegister = false;
+					r.explicitSpace = false;
+					root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
+				}
+			}
+			break;
+		case NT_PROGRAM:
+		case NT_VAR_DECLARATION_LIST:
+			for( size_t i = 0; i < root->GetChildrenCount(); ++i )
+			{
+				AssignRegisters( root->GetChild( i ), stage, registers );
+			}
+			break;
+		}
+	}
+}
+
+void AssignRegisters( ASTNode* root, int32_t stage )
+{
+	Registers registers;
+	FindExplicitRegisters( root, InputStageType( stage ), registers );
+	AssignRegisters( root, InputStageType( stage ), registers );
+}
+
+int GetNodeOrder( ASTNode* t )
+{
+	switch( t->GetNodeType() )
+	{
+	case NT_VAR_DECLARATION_LIST:
+		if( auto child = t->GetChildOrNull( 0 ) )
+		{
+			if( child->GetNodeType() == NT_CBUFFER )
+			{
+				return 2;
+			}
+		}
+		if( auto child = t->GetChildOrNull( 1 ) )
+		{
+			if( child->GetNodeType() == NT_CBUFFER )
+			{
+				return 2;
+			}
+		}
+		if( GetRegisterType( t->GetType() ) )
+		{
+			return 2;
+		}
+		else
+		{
+			return 1;
+		}
+	case NT_TECHNIQUE:
+		return 12;
+	case NT_FUNCTION_DEFINITION:
+		return 11;
+	case NT_STRUCT:
+		return 0;
+	default:
+		return 0;
+	}
+}
+
+void SortProgramNodes( ASTNode* root )
+{
+	if( !root )
+	{
+		return;
+	}
+	std::stable_sort(
+		root->GetChildren().begin(),
+		root->GetChildren().end(),
+		[]( ASTNode* a, ASTNode* b ) -> bool
+	{
+		auto pA = GetNodeOrder( a );
+		auto pB = GetNodeOrder( b );
+		return pA < pB;
+	} );
+}
+
+void CreateGlobalsCB( ParserState& state, int32_t stage )
+{
+	auto root = state.GetTree();
+	if( !root )
+	{
+		return;
+	}
+	SortProgramNodes( root );
+	size_t varStart = root->GetChildrenCount();
+	size_t varEnd = 0;
+	for( size_t i = 0; i < root->GetChildrenCount(); ++i )
+	{
+		auto child = root->GetChild( i );
+		if( !child )
+		{
+			continue;
+		}
+		if( child->GetNodeType() == NT_VAR_DECLARATION_LIST )
+		{
+			if( auto name = child->GetChildOrNull( 0 ) )
+			{
+				if( name->GetNodeType() == NT_CBUFFER )
+				{
+					continue;
+				}
+			}
+			if( auto name = child->GetChildOrNull( 1 ) )
+			{
+				if( name->GetNodeType() == NT_CBUFFER )
+				{
+					continue;
+				}
+			}
+			if( !GetRegisterType( child->GetType() ) )
+			{
+				varStart = min( varStart, i );
+				varEnd = max( varEnd, i );
+			}
+		}
+	}
+	if( varStart <= varEnd )
+	{
+		ScannerToken token;
+		token.fileLocation = root->GetLocation();
+		token.intValue = 0;
+		token.stringValue = MakeInlineString( "cbuffer" );
+		token.type = OP_CBUFFER;
+		ASTNode* cbuffer = new ASTNode( NT_CBUFFER, root->GetLocation(), root->GetScope(), &token );
+
+		Symbol* cbufferName = state.GetSymbolTable().AddBufferSymbol( MakeInlineString( "Globals" ) );
+		RegisterSpecifier reg;
+		reg.registerNumber = 0;
+		reg.registerType = 'b';
+		reg.shaderProfile.start = nullptr;
+		reg.shaderProfile.end = nullptr;
+		reg.subComponent = -1;
+		reg.space = -1;
+		reg.shaderProfile = MakeInlineString( "" );
+		reg.explicitRegister = true;
+		reg.explicitSpace = false;
+		cbufferName->registerSpecifier[reg.shaderProfile] = reg;
+		cbuffer->SetSymbol( cbufferName );
+
+		for( size_t i = 0; i <= varEnd - varStart; ++i )
+		{
+			cbuffer->AddChild( root->GetChild( varStart ) );
+			root->RemoveChild( unsigned( varStart ) );
+		}
+		root->InsertChild( unsigned( varStart ), cbuffer );
 	}
 }

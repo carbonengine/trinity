@@ -1,17 +1,13 @@
 #pragma once
-#ifndef EffectCompilerGL4_H
-#define EffectCompilerGL4_H
 
-struct EffectData;
-struct Macro;
+#include "EffectCompilerDx11.h"
 
 
-class EffectCompilerGL4
+class EffectCompilerGL4 : public EffectCompilerBase
 {
 public:
-	bool Create();
-	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result );
+	bool Create() override;
+	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result ) override;
 private:
+	EffectCompilerDX11 m_compilerDX11;
 };
-
-#endif 

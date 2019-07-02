@@ -1,15 +1,13 @@
 #pragma once
-#ifndef EffectCompilerDx9_H
-#define EffectCompilerDx9_H
 
-struct EffectData;
-struct Macro;
+#include "EffectCompilerBase.h"
 
-class EffectCompilerDX9
+
+class EffectCompilerDX9: public EffectCompilerBase
 {
 public:
-	bool Create();
-	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result, bool disableListing = false );
-};
+	bool Create() override;
+	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result ) override;
 
-#endif // EffectCompilerDx9_H
+	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result, bool disableListing );
+};

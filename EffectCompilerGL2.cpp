@@ -6,7 +6,6 @@
 
 #include "stdafx.h"
 #include "EffectCompilerGL2.h"
-#include "EffectCompilerDx9.h"
 #include "EffectData.h"
 #include "CompileMessageQueue.h"
 #include "InlineString.h"
@@ -18,7 +17,6 @@
 #include <regex>
 #include <iomanip>
 
-extern EffectCompilerDX9 g_compilerDX9;
 extern CompileMessageQueue g_messages;
 extern StringTable g_stringTable;
 extern int g_maxClipPlanes;
@@ -209,7 +207,7 @@ unsigned GetRegisterSwizzleDimension( const DX9AsmToken& token )
 	}
 	if( token.swizzle )
 	{
-		length = token.swizzle.end - token.swizzle.start;
+		length = unsigned( token.swizzle.end - token.swizzle.start );
 	}
 	return length;
 }
@@ -535,7 +533,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			else
 			{
 				os << token.swizzle;
-				for( int i = token.swizzle.end - token.swizzle.start; i < int( dimension ); ++i )
+				for( int i = int( token.swizzle.end - token.swizzle.start ); i < int( dimension ); ++i )
 				{
 					os << token.swizzle.end[-1];
 				}
@@ -737,11 +735,11 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 		int length1 = 4;
 		if( src0.swizzle )
 		{
-			length0 = src0.swizzle.end - src0.swizzle.start;
+			length0 = int( src0.swizzle.end - src0.swizzle.start );
 		}
 		if( src1.swizzle )
 		{
-			length1 = src1.swizzle.end - src1.swizzle.start;
+			length1 = int( src1.swizzle.end - src1.swizzle.start );
 		}
 		int length = min( length0, length1 );
 		if( length == 1 )
@@ -1134,7 +1132,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 				int length = 4;
 				if( dst.swizzle )
 				{
-					length = dst.swizzle.end - dst.swizzle.start;
+					length = int( dst.swizzle.end - dst.swizzle.start );
 				}
 				PrintRegister( os, dst, 0 );
 				os << '=';
@@ -3271,6 +3269,11 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 // --------------------------------------------------------------------------------------
 bool EffectCompilerGL2::Create()
 {
+	if( !m_compilerDX9.Create() )
+	{
+		return false;
+	}
+
 	// We need to create a separate hidden window for OpenGL context.
 	// Using console window for it doesn't work well with using the
 	// compiler from visual studio.
@@ -3401,6 +3404,7 @@ bool EffectCompilerGL2::Create()
 }
 
 static std::map<DWORD, GLEWContext*> s_contexts;
+
 
 static GLEWContext* glewGetContext()
 {
@@ -3591,7 +3595,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 	}
 
 	// Fist compile effect as DX9
-	if( !g_compilerDX9.CompileEffect( source, sourceLength, defines, include, result, true ) )
+	if( !m_compilerDX9.CompileEffect( source, sourceLength, defines, include, result, true ) )
 	{
 		return false;
 	}
@@ -3697,7 +3701,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					listing.end();
 				}
 
-				stage->shaderSize = glesSource.length() + 1;
+				stage->shaderSize = uint32_t( glesSource.length() + 1 );
 				stage->shaderDataStr = g_stringTable.AddString( glesSource.c_str(), stage->shaderSize );
 
 				stage->shadowShaderSize = 0;
@@ -3809,7 +3813,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					size_t sz = size_t( ftell( f ) );
 					fseek( f, 0, SEEK_SET );
 
-					stage->shaderSize = sz;
+					stage->shaderSize = uint32_t( sz );
 					char* shaderData = new char[stage->shaderSize];
 					fread( shaderData, sz, 1, f );
 					fclose( f );
@@ -3831,7 +3835,7 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					sz = size_t( ftell( f ) );
 					fseek( f, 0, SEEK_SET );
 
-					stage->shadowShaderSize = sz;
+					stage->shadowShaderSize = uint32_t( sz );
 					char* shadowShaderData = new char[stage->shadowShaderSize];
 					fread( shadowShaderData, sz, 1, f );
 					fclose( f );

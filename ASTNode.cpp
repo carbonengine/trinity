@@ -80,6 +80,11 @@ ASTNode* ASTNode::GetChildOrNull( size_t index ) const
 	return index < m_children.size() ? m_children[index] : nullptr;
 }
 
+std::vector<ASTNode*>& ASTNode::GetChildren()
+{
+	return m_children;
+}
+
 void ASTNode::MoveChildren( ASTNode* to )
 {
 	for( auto it = m_children.begin(); it != m_children.end(); ++it )

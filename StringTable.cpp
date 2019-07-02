@@ -54,7 +54,7 @@ uint32_t StringTable::GetOffset( StringReference ref )
 	{
 		return -1;
 	}
-	return it->second.second;
+	return uint32_t( it->second.second );
 }
 
 const char* StringTable::GetString( StringReference ref )
@@ -106,7 +106,7 @@ bool StringTable::Write( HANDLE file )
 	}
 
 	DWORD bytesWritten = 0;
-	DWORD size = m_size;
+	uint32_t size = uint32_t( m_size );
 	if( !WriteFile( file, &size, sizeof( size ), &bytesWritten, nullptr ) || bytesWritten != sizeof( size ) )
 	{
 		return false;
@@ -124,7 +124,7 @@ bool StringTable::Write( HANDLE file )
 		memcpy( buffer + it->second.second, it->second.first->m_data, it->second.first->m_size );
 	}
 
-	if( !WriteFile( file, buffer, m_size, &bytesWritten, nullptr ) || bytesWritten != m_size )
+	if( !WriteFile( file, buffer, DWORD( m_size ), &bytesWritten, nullptr ) || bytesWritten != m_size )
 	{
 		delete[] buffer;
 		return false;

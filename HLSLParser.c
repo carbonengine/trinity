@@ -3228,44 +3228,68 @@ static void yy_reduce(
 {
 	yygotominor.yy386.shaderProfile = MakeInlineString( "" );
 	yygotominor.yy386.subComponent = -1;
+	yygotominor.yy386.space = -1;
+	yygotominor.yy386.explicitRegister = true;
 	if( !ParseRegisterID( yymsp[-1].minor.yy0.stringValue.start, yymsp[-1].minor.yy0.stringValue.end, yygotominor.yy386.registerType, yygotominor.yy386.registerNumber ) )
 	{
 		parserState->ShowMessage( yymsp[-1].minor.yy0, EC_INVALID_REGISTER );
 	}
 }
-#line 3237 "HLSLParser.c"
+#line 3239 "HLSLParser.c"
         break;
       case 136: /* register_specifier ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID OP_LEFT_BRACKET OP_INT_CONST OP_RIGHT_BRACKET OP_RIGHT_PAREN */
-#line 1270 "HLSLParser.y"
+#line 1272 "HLSLParser.y"
 {
 	yygotominor.yy386.shaderProfile = MakeInlineString( "" );
 	yygotominor.yy386.subComponent = -1;
+	yygotominor.yy386.space = -1;
+	yygotominor.yy386.explicitSpace = false;
+	yygotominor.yy386.explicitRegister = true;
 	if( !ParseRegisterID( yymsp[-4].minor.yy0.stringValue.start, yymsp[-4].minor.yy0.stringValue.end, yygotominor.yy386.registerType, yygotominor.yy386.registerNumber ) )
 	{
 		parserState->ShowMessage( yymsp[-4].minor.yy0, EC_INVALID_REGISTER );
 	}
 	yygotominor.yy386.subComponent = ParseNumber( yymsp[-2].minor.yy0.stringValue.start, yymsp[-2].minor.yy0.stringValue.end );
 }
-#line 3250 "HLSLParser.c"
+#line 3255 "HLSLParser.c"
         break;
       case 137: /* register_specifier ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID OP_COMA OP_ID OP_RIGHT_PAREN */
-#line 1281 "HLSLParser.y"
+#line 1286 "HLSLParser.y"
 {
-	yygotominor.yy386.shaderProfile = MakeInlineString( "" );
+	yygotominor.yy386.explicitRegister = true;
 	yygotominor.yy386.subComponent = -1;
-	if( !ParseRegisterID( yymsp[-1].minor.yy0.stringValue.start, yymsp[-1].minor.yy0.stringValue.end, yygotominor.yy386.registerType, yygotominor.yy386.registerNumber ) )
+	auto space = ToString( yymsp[-1].minor.yy0.stringValue );
+	if( space.substr( 0, 5 ) == "space" )
 	{
-		parserState->ShowMessage( yymsp[-1].minor.yy0, EC_INVALID_REGISTER );
+		yygotominor.yy386.shaderProfile = MakeInlineString( "" );
+		yygotominor.yy386.space = atoi( space.substr( 5 ).c_str() );
+		yygotominor.yy386.explicitSpace = true;
+		if( !ParseRegisterID( yymsp[-3].minor.yy0.stringValue.start, yymsp[-3].minor.yy0.stringValue.end, yygotominor.yy386.registerType, yygotominor.yy386.registerNumber ) )
+		{
+			parserState->ShowMessage( yymsp[-3].minor.yy0, EC_INVALID_REGISTER );
+		}
 	}
-	yygotominor.yy386.shaderProfile = yymsp[-3].minor.yy0.stringValue;
+	else
+	{
+		yygotominor.yy386.shaderProfile = yymsp[-3].minor.yy0.stringValue;
+		yygotominor.yy386.space = -1;
+		yygotominor.yy386.explicitSpace = false;
+		if( !ParseRegisterID( yymsp[-1].minor.yy0.stringValue.start, yymsp[-1].minor.yy0.stringValue.end, yygotominor.yy386.registerType, yygotominor.yy386.registerNumber ) )
+		{
+			parserState->ShowMessage( yymsp[-1].minor.yy0, EC_INVALID_REGISTER );
+		}
+	}
 }
-#line 3263 "HLSLParser.c"
+#line 3284 "HLSLParser.c"
         break;
       case 138: /* register_specifier ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID OP_COMA OP_ID OP_LEFT_BRACKET OP_INT_CONST OP_RIGHT_BRACKET OP_RIGHT_PAREN */
-#line 1292 "HLSLParser.y"
+#line 1313 "HLSLParser.y"
 {
+	yygotominor.yy386.explicitRegister = true;
 	yygotominor.yy386.shaderProfile = MakeInlineString( "" );
 	yygotominor.yy386.subComponent = -1;
+	yygotominor.yy386.space = -1;
+	yygotominor.yy386.explicitSpace = false;
 	if( !ParseRegisterID( yymsp[-4].minor.yy0.stringValue.start, yymsp[-4].minor.yy0.stringValue.end, yygotominor.yy386.registerType, yygotominor.yy386.registerNumber ) )
 	{
 		parserState->ShowMessage( yymsp[-4].minor.yy0, EC_INVALID_REGISTER );
@@ -3273,40 +3297,40 @@ static void yy_reduce(
 	yygotominor.yy386.shaderProfile = yymsp[-6].minor.yy0.stringValue;
 	yygotominor.yy386.subComponent = ParseNumber( yymsp[-2].minor.yy0.stringValue.start, yymsp[-2].minor.yy0.stringValue.end );
 }
-#line 3277 "HLSLParser.c"
+#line 3301 "HLSLParser.c"
         break;
       case 139: /* annotation_declaration ::= OP_LESS annotation_list OP_MORE */
-#line 1307 "HLSLParser.y"
+#line 1331 "HLSLParser.y"
 {
 	yygotominor.yy173 = yymsp[-1].minor.yy173;
 }
-#line 3284 "HLSLParser.c"
+#line 3308 "HLSLParser.c"
         break;
       case 140: /* annotation_declaration ::= OP_LESS OP_MORE */
-#line 1312 "HLSLParser.y"
+#line 1336 "HLSLParser.y"
 {
 	yygotominor.yy173 = nullptr;
 }
-#line 3291 "HLSLParser.c"
+#line 3315 "HLSLParser.c"
         break;
       case 141: /* annotation_list ::= single_annotation */
-#line 1320 "HLSLParser.y"
+#line 1344 "HLSLParser.y"
 {
 	yygotominor.yy173 = new SymbolAnnotations;
 	yygotominor.yy173->push_back( yymsp[0].minor.yy362 );
 }
-#line 3299 "HLSLParser.c"
+#line 3323 "HLSLParser.c"
         break;
       case 142: /* annotation_list ::= annotation_list single_annotation */
-#line 1326 "HLSLParser.y"
+#line 1350 "HLSLParser.y"
 {
 	yymsp[-1].minor.yy173->push_back( yymsp[0].minor.yy362 );
 	yygotominor.yy173 = yymsp[-1].minor.yy173;
 }
-#line 3307 "HLSLParser.c"
+#line 3331 "HLSLParser.c"
         break;
       case 143: /* single_annotation ::= constructor_identifier OP_ID OP_EQUAL literal_constant OP_SEMICOLON */
-#line 1335 "HLSLParser.y"
+#line 1359 "HLSLParser.y"
 {
 	switch( yymsp[-4].minor.yy0.type )
 	{
@@ -3342,42 +3366,42 @@ static void yy_reduce(
 	yygotominor.yy362.name = yymsp[-3].minor.yy0.stringValue;
 	yygotominor.yy362.value = yymsp[-1].minor.yy0;
 }
-#line 3346 "HLSLParser.c"
+#line 3370 "HLSLParser.c"
         break;
       case 144: /* name_decoration ::= semantics */
-#line 1375 "HLSLParser.y"
+#line 1399 "HLSLParser.y"
 {
 	yygotominor.yy391 = new Symbol;
 	yygotominor.yy391->semantic = yymsp[0].minor.yy457;
 }
-#line 3354 "HLSLParser.c"
+#line 3378 "HLSLParser.c"
         break;
       case 145: /* name_decoration ::= pack_offset */
-#line 1381 "HLSLParser.y"
+#line 1405 "HLSLParser.y"
 {
 	yygotominor.yy391 = new Symbol;
 	yygotominor.yy391->packOffset = yymsp[0].minor.yy99;
 }
-#line 3362 "HLSLParser.c"
+#line 3386 "HLSLParser.c"
         break;
       case 146: /* name_decoration ::= register_specifier */
-#line 1387 "HLSLParser.y"
+#line 1411 "HLSLParser.y"
 {
 	yygotominor.yy391 = new Symbol;
 	yygotominor.yy391->registerSpecifier[yymsp[0].minor.yy386.shaderProfile] = yymsp[0].minor.yy386;
 }
-#line 3370 "HLSLParser.c"
+#line 3394 "HLSLParser.c"
         break;
       case 147: /* name_decoration_list ::= name_decoration */
       case 150: /* name_post_declaration ::= name_decoration_list */ yytestcase(yyruleno==150);
-#line 1396 "HLSLParser.y"
+#line 1420 "HLSLParser.y"
 {
 	yygotominor.yy391 = yymsp[0].minor.yy391;
 }
-#line 3378 "HLSLParser.c"
+#line 3402 "HLSLParser.c"
         break;
       case 148: /* name_decoration_list ::= name_decoration_list name_decoration */
-#line 1401 "HLSLParser.y"
+#line 1425 "HLSLParser.y"
 {
 	if( yymsp[0].minor.yy391->semantic.start )
 	{
@@ -3407,33 +3431,33 @@ static void yy_reduce(
 	delete yymsp[0].minor.yy391;
 	yygotominor.yy391 = yymsp[-1].minor.yy391;
 }
-#line 3411 "HLSLParser.c"
+#line 3435 "HLSLParser.c"
         break;
       case 149: /* name_post_declaration ::= */
-#line 1435 "HLSLParser.y"
+#line 1459 "HLSLParser.y"
 {
 	yygotominor.yy391 = nullptr;
 }
-#line 3418 "HLSLParser.c"
+#line 3442 "HLSLParser.c"
         break;
       case 151: /* name_post_declaration ::= annotation_declaration */
-#line 1445 "HLSLParser.y"
+#line 1469 "HLSLParser.y"
 {
 	yygotominor.yy391 = new Symbol;
 	yygotominor.yy391->annotations = yymsp[0].minor.yy173;
 }
-#line 3426 "HLSLParser.c"
+#line 3450 "HLSLParser.c"
         break;
       case 152: /* name_post_declaration ::= name_decoration_list annotation_declaration */
-#line 1451 "HLSLParser.y"
+#line 1475 "HLSLParser.y"
 {
 	yygotominor.yy391 = yymsp[-1].minor.yy391;
 	yygotominor.yy391->annotations = yymsp[0].minor.yy173;
 }
-#line 3434 "HLSLParser.c"
+#line 3458 "HLSLParser.c"
         break;
       case 153: /* name_declaration ::= OP_ID name_post_declaration */
-#line 1458 "HLSLParser.y"
+#line 1482 "HLSLParser.y"
 {
 	Symbol* symbol = nullptr;
 	if( yymsp[0].minor.yy391 )
@@ -3453,10 +3477,10 @@ static void yy_reduce(
 	yygotominor.yy193 = new ASTNode( NT_NAME_DECLARATION, yymsp[-1].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), &yymsp[-1].minor.yy0 );
 	yygotominor.yy193->SetSymbol( symbol );
 }
-#line 3457 "HLSLParser.c"
+#line 3481 "HLSLParser.c"
         break;
       case 154: /* name_declaration ::= OP_ID OP_LEFT_BRACKET constant_expression OP_RIGHT_BRACKET name_post_declaration */
-#line 1479 "HLSLParser.y"
+#line 1503 "HLSLParser.y"
 {
 	Symbol* symbol = nullptr;
 	if( yymsp[0].minor.yy391 )
@@ -3478,10 +3502,10 @@ static void yy_reduce(
 	yygotominor.yy193->AddChild( nullptr );
 	yygotominor.yy193->SetSymbol( symbol );
 }
-#line 3482 "HLSLParser.c"
+#line 3506 "HLSLParser.c"
         break;
       case 155: /* name_declaration ::= OP_ID OP_LEFT_BRACKET constant_expression OP_RIGHT_BRACKET name_post_declaration OP_EQUAL initializer */
-#line 1502 "HLSLParser.y"
+#line 1526 "HLSLParser.y"
 {
 	Symbol* symbol = nullptr;
 	if( yymsp[-2].minor.yy391 )
@@ -3503,10 +3527,10 @@ static void yy_reduce(
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 	yygotominor.yy193->SetSymbol( symbol );
 }
-#line 3507 "HLSLParser.c"
+#line 3531 "HLSLParser.c"
         break;
       case 156: /* name_declaration ::= OP_ID name_post_declaration OP_EQUAL initializer */
-#line 1525 "HLSLParser.y"
+#line 1549 "HLSLParser.y"
 {
 	Symbol* symbol = nullptr;
 	if( yymsp[-2].minor.yy391 )
@@ -3528,10 +3552,10 @@ static void yy_reduce(
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 	yygotominor.yy193->SetSymbol( symbol );
 }
-#line 3532 "HLSLParser.c"
+#line 3556 "HLSLParser.c"
         break;
       case 157: /* name_declaration ::= OP_ID name_post_declaration sampler_initializer_10 */
-#line 1548 "HLSLParser.y"
+#line 1572 "HLSLParser.y"
 {
 	Symbol* symbol = nullptr;
 	if( yymsp[-1].minor.yy391 )
@@ -3553,10 +3577,10 @@ static void yy_reduce(
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 	yygotominor.yy193->SetSymbol( symbol );
 }
-#line 3557 "HLSLParser.c"
+#line 3581 "HLSLParser.c"
         break;
       case 159: /* init_declarator_list ::= init_declarator_list OP_COMA name_declaration */
-#line 1577 "HLSLParser.y"
+#line 1601 "HLSLParser.y"
 {
 	Type type = yymsp[-2].minor.yy193->GetType();
 	if( yymsp[0].minor.yy193->GetChildOrNull( 0 ) )
@@ -3575,10 +3599,10 @@ static void yy_reduce(
 	yymsp[-2].minor.yy193->AddChild( yymsp[0].minor.yy193 );
 	yygotominor.yy193 = yymsp[-2].minor.yy193;
 }
-#line 3579 "HLSLParser.c"
+#line 3603 "HLSLParser.c"
         break;
       case 160: /* single_declaration ::= fully_specified_type name_declaration */
-#line 1598 "HLSLParser.y"
+#line 1622 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_VAR_DECLARATION_LIST, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
@@ -3598,39 +3622,39 @@ static void yy_reduce(
 	}
 	yygotominor.yy193->SetType( yymsp[-1].minor.yy365 );
 }
-#line 3602 "HLSLParser.c"
+#line 3626 "HLSLParser.c"
         break;
       case 161: /* fully_specified_type ::= type_specifier */
-#line 1621 "HLSLParser.y"
+#line 1645 "HLSLParser.y"
 {
 	yygotominor.yy365 = yymsp[0].minor.yy365;
 }
-#line 3609 "HLSLParser.c"
+#line 3633 "HLSLParser.c"
         break;
       case 162: /* fully_specified_type ::= type_modifier type_specifier */
-#line 1626 "HLSLParser.y"
+#line 1650 "HLSLParser.y"
 {
 	yymsp[0].minor.yy365.modifier = yymsp[-1].minor.yy0.type;
 	yygotominor.yy365 = yymsp[0].minor.yy365;
 }
-#line 3617 "HLSLParser.c"
+#line 3641 "HLSLParser.c"
         break;
       case 163: /* fully_specified_type ::= storage_class type_specifier */
-#line 1632 "HLSLParser.y"
+#line 1656 "HLSLParser.y"
 {
 	yymsp[0].minor.yy365.storageClass = yymsp[-1].minor.yy0.type;
 	yygotominor.yy365 = yymsp[0].minor.yy365;
 }
-#line 3625 "HLSLParser.c"
+#line 3649 "HLSLParser.c"
         break;
       case 164: /* fully_specified_type ::= storage_class type_modifier type_specifier */
-#line 1638 "HLSLParser.y"
+#line 1662 "HLSLParser.y"
 {
 	yymsp[0].minor.yy365.storageClass = yymsp[-2].minor.yy0.type;
 	yymsp[0].minor.yy365.modifier = yymsp[-1].minor.yy0.type;
 	yygotominor.yy365 = yymsp[0].minor.yy365;
 }
-#line 3634 "HLSLParser.c"
+#line 3658 "HLSLParser.c"
         break;
       case 176: /* type_specifier ::= OP_VOID */
       case 177: /* type_specifier ::= constructor_identifier */ yytestcase(yyruleno==177);
@@ -3651,11 +3675,11 @@ static void yy_reduce(
       case 200: /* type_specifier ::= OP_TEXTURECUBEARRAY */ yytestcase(yyruleno==200);
       case 207: /* type_specifier ::= OP_BYTEADDRESSBUFFER */ yytestcase(yyruleno==207);
       case 212: /* type_specifier ::= OP_RWBYTEADDRESSBUFFER */ yytestcase(yyruleno==212);
-#line 1709 "HLSLParser.y"
+#line 1733 "HLSLParser.y"
 {
 	yygotominor.yy365.FromToken( yymsp[0].minor.yy0 );
 }
-#line 3659 "HLSLParser.c"
+#line 3683 "HLSLParser.c"
         break;
       case 185: /* type_specifier ::= OP_TEXTURE1D OP_LESS type_specifier OP_MORE */
       case 187: /* type_specifier ::= OP_TEXTURE1DARRAY OP_LESS type_specifier OP_MORE */ yytestcase(yyruleno==187);
@@ -3680,54 +3704,54 @@ static void yy_reduce(
       case 221: /* type_specifier ::= OP_POINTSTREAM OP_LESS type_specifier OP_MORE */ yytestcase(yyruleno==221);
       case 222: /* type_specifier ::= OP_LINESTREAM OP_LESS type_specifier OP_MORE */ yytestcase(yyruleno==222);
       case 223: /* type_specifier ::= OP_TRIANGLESTREAM OP_LESS type_specifier OP_MORE */ yytestcase(yyruleno==223);
-#line 1754 "HLSLParser.y"
+#line 1778 "HLSLParser.y"
 {
 	yygotominor.yy365.FromToken( yymsp[-3].minor.yy0 );
 	yygotominor.yy365.templateParameter = new Type( yymsp[-1].minor.yy365 );
 }
-#line 3689 "HLSLParser.c"
+#line 3713 "HLSLParser.c"
         break;
       case 201: /* type_specifier ::= OP_TEXTURE2DMS OP_LESS type_specifier OP_COMA OP_INT_CONST OP_MORE */
       case 203: /* type_specifier ::= OP_TEXTURE2DMSARRAY OP_LESS type_specifier OP_COMA OP_INT_CONST OP_MORE */ yytestcase(yyruleno==203);
       case 209: /* type_specifier ::= OP_INPUTPATCH OP_LESS type_specifier OP_COMA OP_INT_CONST OP_MORE */ yytestcase(yyruleno==209);
       case 210: /* type_specifier ::= OP_OUTPUTPATCH OP_LESS type_specifier OP_COMA OP_INT_CONST OP_MORE */ yytestcase(yyruleno==210);
-#line 1842 "HLSLParser.y"
+#line 1866 "HLSLParser.y"
 {
 	yygotominor.yy365.FromToken( yymsp[-5].minor.yy0 );
 	yygotominor.yy365.templateParameter = new Type( yymsp[-3].minor.yy365 );
 	yygotominor.yy365.templateSamples = ParseNumber( yymsp[-1].minor.yy0.stringValue.start, yymsp[-1].minor.yy0.stringValue.end );
 }
-#line 3701 "HLSLParser.c"
+#line 3725 "HLSLParser.c"
         break;
       case 202: /* type_specifier ::= OP_TEXTURE2DMS OP_LESS type_specifier OP_MORE */
       case 204: /* type_specifier ::= OP_TEXTURE2DMSARRAY OP_LESS type_specifier OP_MORE */ yytestcase(yyruleno==204);
-#line 1849 "HLSLParser.y"
+#line 1873 "HLSLParser.y"
 {
 	yygotominor.yy365.FromToken( yymsp[-3].minor.yy0 );
 	yygotominor.yy365.templateParameter = new Type( yymsp[-1].minor.yy365 );
 	yygotominor.yy365.templateSamples = -1;
 }
-#line 3711 "HLSLParser.c"
+#line 3735 "HLSLParser.c"
         break;
       case 224: /* type_specifier ::= OP_TYPE_NAME */
-#line 1984 "HLSLParser.y"
+#line 2008 "HLSLParser.y"
 {
 	const Symbol* symbol = parserState->GetSymbolTable().LookupType( yymsp[0].minor.yy0.stringValue ); 
 	yygotominor.yy365.FromSymbol( symbol );
 }
-#line 3719 "HLSLParser.c"
+#line 3743 "HLSLParser.c"
         break;
       case 225: /* type_specifier ::= struct_specifier */
       case 226: /* type_specifier ::= struct_named_specifier */ yytestcase(yyruleno==226);
-#line 1990 "HLSLParser.y"
+#line 2014 "HLSLParser.y"
 {
 	parserState->AddOfflineStatement( yymsp[0].minor.yy193 );
 	yygotominor.yy365 = yymsp[0].minor.yy193->GetType();
 }
-#line 3728 "HLSLParser.c"
+#line 3752 "HLSLParser.c"
         break;
       case 227: /* struct_named_specifier ::= OP_STRUCT enter_block OP_ID OP_LEFT_BRACE struct_declaration_list OP_RIGHT_BRACE */
-#line 2003 "HLSLParser.y"
+#line 2027 "HLSLParser.y"
 {
 	parserState->GetSymbolTable().LeaveScope();
 
@@ -3750,10 +3774,10 @@ static void yy_reduce(
 		yygotominor.yy193->SetType( type );
 	}
 }
-#line 3754 "HLSLParser.c"
+#line 3778 "HLSLParser.c"
         break;
       case 228: /* struct_specifier ::= OP_STRUCT enter_block OP_LEFT_BRACE struct_declaration_list OP_RIGHT_BRACE */
-#line 2028 "HLSLParser.y"
+#line 2052 "HLSLParser.y"
 {
 	parserState->GetSymbolTable().LeaveScope();
 
@@ -3769,52 +3793,28 @@ static void yy_reduce(
 	yygotominor.yy193->SetSymbol( symbol );
 	yygotominor.yy193->SetType( type );
 }
-#line 3773 "HLSLParser.c"
+#line 3797 "HLSLParser.c"
         break;
       case 229: /* struct_declaration_list ::= struct_declaration */
-#line 2046 "HLSLParser.y"
+#line 2070 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_STRUCT, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 3781 "HLSLParser.c"
+#line 3805 "HLSLParser.c"
         break;
       case 230: /* struct_declaration_list ::= struct_declaration_list struct_declaration */
       case 248: /* sampler_state_list ::= sampler_state_list state_assignment */ yytestcase(yyruleno==248);
-#line 2052 "HLSLParser.y"
+#line 2076 "HLSLParser.y"
 {
 	yymsp[-1].minor.yy193->AddChild(yymsp[0].minor.yy193);
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 }
-#line 3790 "HLSLParser.c"
+#line 3814 "HLSLParser.c"
         break;
       case 231: /* struct_declaration ::= type_specifier struct_declarator_list OP_SEMICOLON */
-#line 2058 "HLSLParser.y"
+#line 2082 "HLSLParser.y"
 {
-	for( unsigned i = 0; i < yymsp[-1].minor.yy193->GetChildrenCount(); ++i )
-	{
-		Type type = yymsp[-2].minor.yy365;
-		if( yymsp[-1].minor.yy193->GetChild( i )->GetChildOrNull( 0 ) )
-		{
-			type.arraySizes[0] = EvaluateIntegerExpression( *parserState, yymsp[-1].minor.yy193->GetChild( i )->GetChild( 0 ), 0 );
-			type.arrayDimensions = 1;
-		}
-		yymsp[-1].minor.yy193->GetChild( i )->SetType( type );
-		Symbol* symbol = yymsp[-1].minor.yy193->GetChild( i )->GetSymbol();
-		if( symbol )
-		{
-			symbol->type = type;
-		}
-	}
-	yygotominor.yy193 = yymsp[-1].minor.yy193;
-	yygotominor.yy193->SetType( yymsp[-2].minor.yy365 );
-}
-#line 3813 "HLSLParser.c"
-        break;
-      case 232: /* struct_declaration ::= type_modifier type_specifier struct_declarator_list OP_SEMICOLON */
-#line 2079 "HLSLParser.y"
-{
-	yymsp[-2].minor.yy365.modifier = yymsp[-3].minor.yy0.type;
 	for( unsigned i = 0; i < yymsp[-1].minor.yy193->GetChildrenCount(); ++i )
 	{
 		Type type = yymsp[-2].minor.yy365;
@@ -3835,8 +3835,32 @@ static void yy_reduce(
 }
 #line 3837 "HLSLParser.c"
         break;
+      case 232: /* struct_declaration ::= type_modifier type_specifier struct_declarator_list OP_SEMICOLON */
+#line 2103 "HLSLParser.y"
+{
+	yymsp[-2].minor.yy365.modifier = yymsp[-3].minor.yy0.type;
+	for( unsigned i = 0; i < yymsp[-1].minor.yy193->GetChildrenCount(); ++i )
+	{
+		Type type = yymsp[-2].minor.yy365;
+		if( yymsp[-1].minor.yy193->GetChild( i )->GetChildOrNull( 0 ) )
+		{
+			type.arraySizes[0] = EvaluateIntegerExpression( *parserState, yymsp[-1].minor.yy193->GetChild( i )->GetChild( 0 ), 0 );
+			type.arrayDimensions = 1;
+		}
+		yymsp[-1].minor.yy193->GetChild( i )->SetType( type );
+		Symbol* symbol = yymsp[-1].minor.yy193->GetChild( i )->GetSymbol();
+		if( symbol )
+		{
+			symbol->type = type;
+		}
+	}
+	yygotominor.yy193 = yymsp[-1].minor.yy193;
+	yygotominor.yy193->SetType( yymsp[-2].minor.yy365 );
+}
+#line 3861 "HLSLParser.c"
+        break;
       case 233: /* struct_declaration ::= interpolation_modifier2 type_modifier type_specifier struct_declarator_list OP_SEMICOLON */
-#line 2101 "HLSLParser.y"
+#line 2125 "HLSLParser.y"
 {
 	yymsp[-2].minor.yy365.modifier = yymsp[-3].minor.yy0.type;
 	for( unsigned i = 0; i < yymsp[-1].minor.yy193->GetChildrenCount(); ++i )
@@ -3858,10 +3882,10 @@ static void yy_reduce(
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	yygotominor.yy193->SetType( yymsp[-2].minor.yy365 );
 }
-#line 3862 "HLSLParser.c"
+#line 3886 "HLSLParser.c"
         break;
       case 234: /* struct_declaration ::= interpolation_modifier2 type_specifier struct_declarator_list OP_SEMICOLON */
-#line 2124 "HLSLParser.y"
+#line 2148 "HLSLParser.y"
 {
 	for( unsigned i = 0; i < yymsp[-1].minor.yy193->GetChildrenCount(); ++i )
 	{
@@ -3882,18 +3906,18 @@ static void yy_reduce(
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	yygotominor.yy193->SetType( yymsp[-2].minor.yy365 );
 }
-#line 3886 "HLSLParser.c"
+#line 3910 "HLSLParser.c"
         break;
       case 235: /* struct_declarator_list ::= struct_declarator */
-#line 2146 "HLSLParser.y"
+#line 2170 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_STRUCT_MEMBER, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 3894 "HLSLParser.c"
+#line 3918 "HLSLParser.c"
         break;
       case 237: /* struct_declarator ::= OP_ID */
-#line 2158 "HLSLParser.y"
+#line 2182 "HLSLParser.y"
 {
 	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( yymsp[0].minor.yy0.stringValue ); 
 	if( !symbol ) 
@@ -3905,10 +3929,10 @@ static void yy_reduce(
 	symbol->definition = yygotominor.yy193;
 	yygotominor.yy193->SetSymbol( symbol );
 }
-#line 3909 "HLSLParser.c"
+#line 3933 "HLSLParser.c"
         break;
       case 238: /* struct_declarator ::= OP_ID semantics */
-#line 2171 "HLSLParser.y"
+#line 2195 "HLSLParser.y"
 {
 	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( yymsp[-1].minor.yy0.stringValue ); 
 	if( !symbol ) 
@@ -3921,10 +3945,10 @@ static void yy_reduce(
 	symbol->definition = yygotominor.yy193;
 	yygotominor.yy193->SetSymbol( symbol );
 }
-#line 3925 "HLSLParser.c"
+#line 3949 "HLSLParser.c"
         break;
       case 239: /* struct_declarator ::= OP_ID OP_LEFT_BRACKET constant_expression OP_RIGHT_BRACKET */
-#line 2185 "HLSLParser.y"
+#line 2209 "HLSLParser.y"
 {
 	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( yymsp[-3].minor.yy0.stringValue ); 
 	if( !symbol ) 
@@ -3937,10 +3961,10 @@ static void yy_reduce(
 	yygotominor.yy193->AddChild( yymsp[-1].minor.yy193 );
 	yygotominor.yy193->SetSymbol( symbol );
 }
-#line 3941 "HLSLParser.c"
+#line 3965 "HLSLParser.c"
         break;
       case 240: /* struct_declarator ::= OP_ID OP_LEFT_BRACKET constant_expression OP_RIGHT_BRACKET semantics */
-#line 2199 "HLSLParser.y"
+#line 2223 "HLSLParser.y"
 {
 	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( yymsp[-4].minor.yy0.stringValue ); 
 	if( !symbol ) 
@@ -3956,43 +3980,43 @@ static void yy_reduce(
 	yygotominor.yy193->AddChild( yymsp[-2].minor.yy193 );
 	yygotominor.yy193->SetSymbol( symbol );
 }
-#line 3960 "HLSLParser.c"
+#line 3984 "HLSLParser.c"
         break;
       case 244: /* enter_fx_mode ::= */
-#line 2232 "HLSLParser.y"
+#line 2256 "HLSLParser.y"
 {
 	parserState->m_mode = ParserState::FX;
 }
-#line 3967 "HLSLParser.c"
+#line 3991 "HLSLParser.c"
         break;
       case 245: /* sampler_initializer ::= OP_SAMPLER_STATE enter_fx_mode OP_LEFT_BRACE sampler_state_list OP_RIGHT_BRACE */
       case 246: /* sampler_initializer_10 ::= enter_fx_mode OP_LEFT_BRACE sampler_state_list OP_RIGHT_BRACE */ yytestcase(yyruleno==246);
-#line 2237 "HLSLParser.y"
+#line 2261 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	parserState->m_mode = ParserState::HLSL;
 }
-#line 3976 "HLSLParser.c"
+#line 4000 "HLSLParser.c"
         break;
       case 247: /* sampler_state_list ::= state_assignment */
-#line 2251 "HLSLParser.y"
+#line 2275 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_SAMPLER_STATE_LIST, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 3984 "HLSLParser.c"
+#line 4008 "HLSLParser.c"
         break;
       case 249: /* state_assignment ::= OP_ID OP_EQUAL constant_expression OP_SEMICOLON */
       case 250: /* state_assignment ::= OP_ID OP_EQUAL inline_constructor OP_SEMICOLON */ yytestcase(yyruleno==250);
-#line 2263 "HLSLParser.y"
+#line 2287 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_STATE_ASSIGNMENT, yymsp[-3].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), &yymsp[-3].minor.yy0 );
 	yygotominor.yy193->AddChild( yymsp[-1].minor.yy193 );
 }
-#line 3993 "HLSLParser.c"
+#line 4017 "HLSLParser.c"
         break;
       case 251: /* state_assignment ::= OP_ID OP_EQUAL OP_LESS OP_ID OP_MORE OP_SEMICOLON */
-#line 2275 "HLSLParser.y"
+#line 2299 "HLSLParser.y"
 {
 	Symbol* symbol = parserState->GetSymbolTable().Lookup( yymsp[-2].minor.yy0.stringValue ); 
 	if( !symbol ) 
@@ -4004,136 +4028,136 @@ static void yy_reduce(
 	yygotominor.yy193 = new ASTNode( NT_STATE_ASSIGNMENT, yymsp[-5].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), &yymsp[-5].minor.yy0 );
 	yygotominor.yy193->AddChild( child );
 }
-#line 4008 "HLSLParser.c"
+#line 4032 "HLSLParser.c"
         break;
       case 260: /* compount_statement_with_scope ::= OP_LEFT_BRACE OP_RIGHT_BRACE */
       case 263: /* compount_statement_no_new_scope ::= OP_LEFT_BRACE OP_RIGHT_BRACE */ yytestcase(yyruleno==263);
-#line 2331 "HLSLParser.y"
+#line 2355 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_BLOCK, yymsp[-1].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 }
-#line 4016 "HLSLParser.c"
+#line 4040 "HLSLParser.c"
         break;
       case 261: /* compount_statement_with_scope ::= OP_LEFT_BRACE enter_block statement_list OP_RIGHT_BRACE */
-#line 2336 "HLSLParser.y"
+#line 2360 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	parserState->GetSymbolTable().LeaveScope(); 
 }
-#line 4024 "HLSLParser.c"
+#line 4048 "HLSLParser.c"
         break;
       case 262: /* enter_block ::= */
-#line 2343 "HLSLParser.y"
+#line 2367 "HLSLParser.y"
 {
 	parserState->GetSymbolTable().EnterScope(); 
 }
-#line 4031 "HLSLParser.c"
+#line 4055 "HLSLParser.c"
         break;
       case 265: /* statement_list ::= statement_no_new_scope */
-#line 2360 "HLSLParser.y"
+#line 2384 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_BLOCK, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	parserState->MoveOfflineStatements( yygotominor.yy193 );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4040 "HLSLParser.c"
+#line 4064 "HLSLParser.c"
         break;
       case 266: /* statement_list ::= statement_list statement_no_new_scope */
-#line 2367 "HLSLParser.y"
+#line 2391 "HLSLParser.y"
 {
 	parserState->MoveOfflineStatements( yymsp[-1].minor.yy193 );
 	yymsp[-1].minor.yy193->AddChild(yymsp[0].minor.yy193);
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 }
-#line 4049 "HLSLParser.c"
+#line 4073 "HLSLParser.c"
         break;
       case 267: /* expression_statement ::= OP_SEMICOLON */
-#line 2375 "HLSLParser.y"
+#line 2399 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_EXPRESSION_STATEMENT, yymsp[0].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 }
-#line 4056 "HLSLParser.c"
+#line 4080 "HLSLParser.c"
         break;
       case 268: /* expression_statement ::= expression OP_SEMICOLON */
-#line 2380 "HLSLParser.y"
+#line 2404 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_EXPRESSION_STATEMENT, yymsp[0].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-1].minor.yy193 );
 }
-#line 4064 "HLSLParser.c"
+#line 4088 "HLSLParser.c"
         break;
       case 269: /* statement_attribute ::= OP_LEFT_BRACKET OP_ID OP_RIGHT_BRACKET */
-#line 2388 "HLSLParser.y"
+#line 2412 "HLSLParser.y"
 {
 	yygotominor.yy0 = yymsp[-1].minor.yy0;
 }
-#line 4071 "HLSLParser.c"
+#line 4095 "HLSLParser.c"
         break;
       case 270: /* selection_statement ::= statement_attribute OP_IF OP_LEFT_PAREN expression OP_RIGHT_PAREN selection_rest_statement */
-#line 2394 "HLSLParser.y"
+#line 2418 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[0].minor.yy193;
 	yygotominor.yy193->SetLocation( yymsp[-4].minor.yy0.fileLocation );
 	yygotominor.yy193->SetToken( &yymsp[-5].minor.yy0 );
 	yygotominor.yy193->InsertChild( 0, yymsp[-2].minor.yy193 );
 }
-#line 4081 "HLSLParser.c"
+#line 4105 "HLSLParser.c"
         break;
       case 271: /* selection_statement ::= OP_IF OP_LEFT_PAREN expression OP_RIGHT_PAREN selection_rest_statement */
-#line 2402 "HLSLParser.y"
+#line 2426 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[0].minor.yy193;
 	yygotominor.yy193->SetLocation( yymsp[-4].minor.yy0.fileLocation );
 	yygotominor.yy193->InsertChild( 0, yymsp[-2].minor.yy193 );
 }
-#line 4090 "HLSLParser.c"
+#line 4114 "HLSLParser.c"
         break;
       case 272: /* selection_rest_statement ::= statement_no_new_scope OP_ELSE statement_no_new_scope */
-#line 2410 "HLSLParser.y"
+#line 2434 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_IF, yymsp[-1].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-2].minor.yy193 );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4099 "HLSLParser.c"
+#line 4123 "HLSLParser.c"
         break;
       case 273: /* selection_rest_statement ::= statement_no_new_scope */
-#line 2417 "HLSLParser.y"
+#line 2441 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_IF, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4107 "HLSLParser.c"
+#line 4131 "HLSLParser.c"
         break;
       case 274: /* iteration_statement ::= statement_attribute OP_WHILE OP_LEFT_PAREN expression OP_RIGHT_PAREN statement_no_new_scope */
-#line 2424 "HLSLParser.y"
+#line 2448 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_WHILE, yymsp[-4].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), &yymsp[-5].minor.yy0 );
 	yygotominor.yy193->AddChild( yymsp[-2].minor.yy193 );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4116 "HLSLParser.c"
+#line 4140 "HLSLParser.c"
         break;
       case 275: /* iteration_statement ::= OP_WHILE OP_LEFT_PAREN expression OP_RIGHT_PAREN statement_no_new_scope */
-#line 2431 "HLSLParser.y"
+#line 2455 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_WHILE, yymsp[-4].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-2].minor.yy193 );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4125 "HLSLParser.c"
+#line 4149 "HLSLParser.c"
         break;
       case 276: /* iteration_statement ::= OP_DO statement_no_new_scope OP_WHILE OP_LEFT_PAREN expression OP_RIGHT_PAREN */
-#line 2438 "HLSLParser.y"
+#line 2462 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_DO, yymsp[-5].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-1].minor.yy193 );
 	yygotominor.yy193->AddChild( yymsp[-4].minor.yy193 );
 }
-#line 4134 "HLSLParser.c"
+#line 4158 "HLSLParser.c"
         break;
       case 277: /* iteration_statement ::= OP_FOR enter_block OP_LEFT_PAREN for_init_statement for_rest_statement OP_RIGHT_PAREN statement_no_new_scope */
-#line 2445 "HLSLParser.y"
+#line 2469 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-2].minor.yy193;
 	yygotominor.yy193->InsertChild( 0, yymsp[-3].minor.yy193 );
@@ -4141,10 +4165,10 @@ static void yy_reduce(
 	yygotominor.yy193->SetLocation( yymsp[-6].minor.yy0.fileLocation );
 	parserState->GetSymbolTable().LeaveScope(); 
 }
-#line 4145 "HLSLParser.c"
+#line 4169 "HLSLParser.c"
         break;
       case 278: /* iteration_statement ::= statement_attribute OP_FOR enter_block OP_LEFT_PAREN for_init_statement for_rest_statement OP_RIGHT_PAREN statement_no_new_scope */
-#line 2454 "HLSLParser.y"
+#line 2478 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-2].minor.yy193;
 	yygotominor.yy193->SetToken( &yymsp[-7].minor.yy0 );
@@ -4153,139 +4177,139 @@ static void yy_reduce(
 	yygotominor.yy193->SetLocation( yymsp[-6].minor.yy0.fileLocation );
 	parserState->GetSymbolTable().LeaveScope(); 
 }
-#line 4157 "HLSLParser.c"
+#line 4181 "HLSLParser.c"
         break;
       case 283: /* for_rest_statement ::= conditionopt OP_SEMICOLON */
-#line 2487 "HLSLParser.y"
+#line 2511 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_FOR, yymsp[-1].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-1].minor.yy193 );
 	yygotominor.yy193->AddChild( nullptr );
 }
-#line 4166 "HLSLParser.c"
+#line 4190 "HLSLParser.c"
         break;
       case 284: /* for_rest_statement ::= conditionopt OP_SEMICOLON expression */
-#line 2494 "HLSLParser.y"
+#line 2518 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_FOR, yymsp[-2].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-2].minor.yy193 );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4175 "HLSLParser.c"
+#line 4199 "HLSLParser.c"
         break;
       case 285: /* switch_statement ::= statement_attribute OP_SWITCH OP_LEFT_PAREN expression OP_RIGHT_PAREN OP_LEFT_BRACE case_statements OP_RIGHT_BRACE */
-#line 2502 "HLSLParser.y"
+#line 2526 "HLSLParser.y"
 {
 	yymsp[-1].minor.yy193->InsertChild( 0, yymsp[-4].minor.yy193 );
 	yymsp[-1].minor.yy193->SetToken( &yymsp[-7].minor.yy0 );
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	yygotominor.yy193->SetLocation( yymsp[-6].minor.yy0.fileLocation );
 }
-#line 4185 "HLSLParser.c"
+#line 4209 "HLSLParser.c"
         break;
       case 286: /* switch_statement ::= OP_SWITCH OP_LEFT_PAREN expression OP_RIGHT_PAREN OP_LEFT_BRACE case_statements OP_RIGHT_BRACE */
-#line 2510 "HLSLParser.y"
+#line 2534 "HLSLParser.y"
 {
 	yymsp[-1].minor.yy193->InsertChild( 0, yymsp[-4].minor.yy193 );
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	yygotominor.yy193->SetLocation( yymsp[-6].minor.yy0.fileLocation );
 }
-#line 4194 "HLSLParser.c"
+#line 4218 "HLSLParser.c"
         break;
       case 287: /* case_statements ::= case_statement */
-#line 2518 "HLSLParser.y"
+#line 2542 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_SWITCH, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4202 "HLSLParser.c"
+#line 4226 "HLSLParser.c"
         break;
       case 289: /* case_statement ::= case_label statement_list */
       case 316: /* pass_list ::= pass_list pass_declaration */ yytestcase(yyruleno==316);
       case 321: /* state_list ::= state_list state_assignment */ yytestcase(yyruleno==321);
       case 322: /* state_list ::= state_list shader_assignment */ yytestcase(yyruleno==322);
-#line 2531 "HLSLParser.y"
+#line 2555 "HLSLParser.y"
 {
 	yymsp[-1].minor.yy193->AddChild( yymsp[0].minor.yy193 );
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 }
-#line 4213 "HLSLParser.c"
+#line 4237 "HLSLParser.c"
         break;
       case 291: /* case_label ::= OP_CASE constant_expression OP_COLON */
-#line 2543 "HLSLParser.y"
+#line 2567 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_CASE, yymsp[-2].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-1].minor.yy193 );
 }
-#line 4221 "HLSLParser.c"
+#line 4245 "HLSLParser.c"
         break;
       case 292: /* case_label ::= OP_DEFAULT OP_COLON */
-#line 2549 "HLSLParser.y"
+#line 2573 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_CASE, yymsp[-1].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( nullptr );
 }
-#line 4229 "HLSLParser.c"
+#line 4253 "HLSLParser.c"
         break;
       case 293: /* jump_statement ::= OP_CONTINUE OP_SEMICOLON */
       case 294: /* jump_statement ::= OP_BREAK OP_SEMICOLON */ yytestcase(yyruleno==294);
       case 295: /* jump_statement ::= OP_RETURN OP_SEMICOLON */ yytestcase(yyruleno==295);
       case 296: /* jump_statement ::= OP_DISCARD OP_SEMICOLON */ yytestcase(yyruleno==296);
-#line 2557 "HLSLParser.y"
+#line 2581 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_JUMP, yymsp[-1].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), &yymsp[-1].minor.yy0 );
 }
-#line 4239 "HLSLParser.c"
+#line 4263 "HLSLParser.c"
         break;
       case 297: /* jump_statement ::= OP_RETURN expression OP_SEMICOLON */
-#line 2577 "HLSLParser.y"
+#line 2601 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_JUMP, yymsp[-2].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), &yymsp[-2].minor.yy0 );
 	yygotominor.yy193->AddChild( yymsp[-1].minor.yy193 );
 }
-#line 4247 "HLSLParser.c"
+#line 4271 "HLSLParser.c"
         break;
       case 303: /* function_attribute_list ::= function_attribute */
-#line 2610 "HLSLParser.y"
+#line 2634 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_FUNCTION_ATTRIBUTE_LIST, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4255 "HLSLParser.c"
+#line 4279 "HLSLParser.c"
         break;
       case 305: /* function_attribute ::= OP_LEFT_BRACKET OP_ID OP_LEFT_PAREN function_atrribute_value_list OP_RIGHT_PAREN OP_RIGHT_BRACKET */
-#line 2623 "HLSLParser.y"
+#line 2647 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-2].minor.yy193;
 	yygotominor.yy193->SetToken( &yymsp[-4].minor.yy0 );
 }
-#line 4263 "HLSLParser.c"
+#line 4287 "HLSLParser.c"
         break;
       case 306: /* function_attribute ::= OP_LEFT_BRACKET OP_ID OP_RIGHT_BRACKET */
-#line 2629 "HLSLParser.y"
+#line 2653 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_FUNCTION_ATTRIBUTE, yymsp[-1].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), &yymsp[-1].minor.yy0 );
 }
-#line 4270 "HLSLParser.c"
+#line 4294 "HLSLParser.c"
         break;
       case 307: /* function_atrribute_value_list ::= literal_constant */
-#line 2635 "HLSLParser.y"
+#line 2659 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_FUNCTION_ATTRIBUTE, yymsp[0].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( new ASTNode( NT_FUNCTION_ATTRIBUTE_VALUE, yymsp[0].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), &yymsp[0].minor.yy0 ) );
 }
-#line 4278 "HLSLParser.c"
+#line 4302 "HLSLParser.c"
         break;
       case 308: /* function_atrribute_value_list ::= function_atrribute_value_list OP_COMA literal_constant */
-#line 2641 "HLSLParser.y"
+#line 2665 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-2].minor.yy193;
 	yygotominor.yy193->AddChild( new ASTNode( NT_FUNCTION_ATTRIBUTE_VALUE, yymsp[0].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), &yymsp[0].minor.yy0 ) );
 }
-#line 4286 "HLSLParser.c"
+#line 4310 "HLSLParser.c"
         break;
       case 309: /* function_definition ::= function_attribute_list function_prototype annotation_declaration compount_statement_no_new_scope */
-#line 2648 "HLSLParser.y"
+#line 2672 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_FUNCTION_DEFINITION, yymsp[-2].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-2].minor.yy193 );
@@ -4295,10 +4319,10 @@ static void yy_reduce(
 	yymsp[-2].minor.yy193->GetSymbol()->annotations = yymsp[-1].minor.yy173;
 	parserState->GetSymbolTable().LeaveScope(); 
 }
-#line 4299 "HLSLParser.c"
+#line 4323 "HLSLParser.c"
         break;
       case 310: /* function_definition ::= function_attribute_list function_prototype compount_statement_no_new_scope */
-#line 2659 "HLSLParser.y"
+#line 2683 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_FUNCTION_DEFINITION, yymsp[-1].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-1].minor.yy193 );
@@ -4307,10 +4331,10 @@ static void yy_reduce(
 	yymsp[-1].minor.yy193->GetSymbol()->definition = yygotominor.yy193;
 	parserState->GetSymbolTable().LeaveScope(); 
 }
-#line 4311 "HLSLParser.c"
+#line 4335 "HLSLParser.c"
         break;
       case 311: /* function_definition ::= function_prototype annotation_declaration compount_statement_no_new_scope */
-#line 2669 "HLSLParser.y"
+#line 2693 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_FUNCTION_DEFINITION, yymsp[-2].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-2].minor.yy193 );
@@ -4319,10 +4343,10 @@ static void yy_reduce(
 	yymsp[-2].minor.yy193->GetSymbol()->annotations = yymsp[-1].minor.yy173;
 	parserState->GetSymbolTable().LeaveScope(); 
 }
-#line 4323 "HLSLParser.c"
+#line 4347 "HLSLParser.c"
         break;
       case 312: /* function_definition ::= function_prototype compount_statement_no_new_scope */
-#line 2679 "HLSLParser.y"
+#line 2703 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_FUNCTION_DEFINITION, yymsp[-1].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[-1].minor.yy193 );
@@ -4330,70 +4354,70 @@ static void yy_reduce(
 	yymsp[-1].minor.yy193->GetSymbol()->definition = yygotominor.yy193;
 	parserState->GetSymbolTable().LeaveScope(); 
 }
-#line 4334 "HLSLParser.c"
+#line 4358 "HLSLParser.c"
         break;
       case 313: /* technique ::= OP_TECHNIQUE OP_ID OP_LEFT_BRACE OP_RIGHT_BRACE */
-#line 2689 "HLSLParser.y"
+#line 2713 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_TECHNIQUE, yymsp[-3].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), &yymsp[-2].minor.yy0 );
 }
-#line 4341 "HLSLParser.c"
+#line 4365 "HLSLParser.c"
         break;
       case 314: /* technique ::= OP_TECHNIQUE OP_ID OP_LEFT_BRACE pass_list OP_RIGHT_BRACE */
-#line 2694 "HLSLParser.y"
+#line 2718 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	yygotominor.yy193->SetToken( &yymsp[-3].minor.yy0 );
 	yygotominor.yy193->SetLocation( yymsp[-4].minor.yy0.fileLocation );
 }
-#line 4350 "HLSLParser.c"
+#line 4374 "HLSLParser.c"
         break;
       case 315: /* pass_list ::= pass_declaration */
-#line 2702 "HLSLParser.y"
+#line 2726 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_TECHNIQUE, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4358 "HLSLParser.c"
+#line 4382 "HLSLParser.c"
         break;
       case 317: /* pass_declaration ::= OP_PASS OP_ID enter_fx_mode OP_LEFT_BRACE state_list OP_RIGHT_BRACE */
-#line 2715 "HLSLParser.y"
+#line 2739 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	yygotominor.yy193->SetToken( &yymsp[-4].minor.yy0 );
 	yygotominor.yy193->SetLocation( yymsp[-5].minor.yy0.fileLocation );
 	parserState->m_mode = ParserState::HLSL;
 }
-#line 4368 "HLSLParser.c"
+#line 4392 "HLSLParser.c"
         break;
       case 318: /* pass_declaration ::= OP_PASS OP_ID enter_fx_mode OP_LEFT_BRACE OP_RIGHT_BRACE */
-#line 2724 "HLSLParser.y"
+#line 2748 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_PASS, yymsp[-3].minor.yy0.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->SetToken( &yymsp[-3].minor.yy0 );
 	yygotominor.yy193->SetLocation( yymsp[-4].minor.yy0.fileLocation );
 	parserState->m_mode = ParserState::HLSL;
 }
-#line 4378 "HLSLParser.c"
+#line 4402 "HLSLParser.c"
         break;
       case 319: /* state_list ::= state_assignment */
       case 320: /* state_list ::= shader_assignment */ yytestcase(yyruleno==320);
-#line 2733 "HLSLParser.y"
+#line 2757 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_PASS, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4387 "HLSLParser.c"
+#line 4411 "HLSLParser.c"
         break;
       case 323: /* leave_fx_mode ::= */
-#line 2758 "HLSLParser.y"
+#line 2782 "HLSLParser.y"
 {
 	parserState->m_mode = ParserState::HLSL;
 }
-#line 4394 "HLSLParser.c"
+#line 4418 "HLSLParser.c"
         break;
       case 324: /* shader_assignment ::= OP_ID OP_EQUAL OP_COMPILE leave_fx_mode OP_ID function_call OP_SEMICOLON */
-#line 2763 "HLSLParser.y"
+#line 2787 "HLSLParser.y"
 {
 	if( yymsp[-1].minor.yy193->GetToken()->type == OP_ID )
 	{
@@ -4410,10 +4434,10 @@ static void yy_reduce(
 	yygotominor.yy193->AddChild( yymsp[-1].minor.yy193 );
 	parserState->m_mode = ParserState::FX;
 }
-#line 4414 "HLSLParser.c"
+#line 4438 "HLSLParser.c"
         break;
       case 329: /* cbuffer_declaration ::= buffer_type OP_ID register_specifier OP_LEFT_BRACE cbuffer_members OP_RIGHT_BRACE */
-#line 2805 "HLSLParser.y"
+#line 2829 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	yygotominor.yy193->SetToken( &yymsp[-5].minor.yy0 );
@@ -4422,20 +4446,20 @@ static void yy_reduce(
 	yygotominor.yy193->SetSymbol( symbol );
 	yygotominor.yy193->SetLocation( yymsp[-4].minor.yy0.fileLocation );
 }
-#line 4426 "HLSLParser.c"
+#line 4450 "HLSLParser.c"
         break;
       case 330: /* cbuffer_declaration ::= buffer_type OP_ID OP_LEFT_BRACE cbuffer_members OP_RIGHT_BRACE */
-#line 2815 "HLSLParser.y"
+#line 2839 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	yygotominor.yy193->SetToken( &yymsp[-4].minor.yy0 );
 	yygotominor.yy193->SetSymbol( parserState->GetSymbolTable().AddBufferSymbol( yymsp[-3].minor.yy0.stringValue ) );
 	yygotominor.yy193->SetLocation( yymsp[-3].minor.yy0.fileLocation );
 }
-#line 4436 "HLSLParser.c"
+#line 4460 "HLSLParser.c"
         break;
       case 331: /* cbuffer_declaration ::= buffer_type register_specifier OP_LEFT_BRACE cbuffer_members OP_RIGHT_BRACE */
-#line 2823 "HLSLParser.y"
+#line 2847 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	yygotominor.yy193->SetToken( &yymsp[-4].minor.yy0 );
@@ -4444,28 +4468,28 @@ static void yy_reduce(
 	yygotominor.yy193->SetSymbol( symbol );
 	yygotominor.yy193->SetLocation( yymsp[-4].minor.yy0.fileLocation );
 }
-#line 4448 "HLSLParser.c"
+#line 4472 "HLSLParser.c"
         break;
       case 332: /* cbuffer_declaration ::= buffer_type OP_LEFT_BRACE cbuffer_members OP_RIGHT_BRACE */
-#line 2833 "HLSLParser.y"
+#line 2857 "HLSLParser.y"
 {
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 	yygotominor.yy193->SetToken( &yymsp[-3].minor.yy0 );
 	yygotominor.yy193->SetSymbol( parserState->GetSymbolTable().AddBufferSymbol( parserState->AllocateName() ) );
 	yygotominor.yy193->SetLocation( yymsp[-3].minor.yy0.fileLocation );
 }
-#line 4458 "HLSLParser.c"
+#line 4482 "HLSLParser.c"
         break;
       case 333: /* cbuffer_members ::= declaration */
-#line 2842 "HLSLParser.y"
+#line 2866 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_CBUFFER, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 }
-#line 4466 "HLSLParser.c"
+#line 4490 "HLSLParser.c"
         break;
       case 335: /* translation_unit ::= external_declaration */
-#line 2855 "HLSLParser.y"
+#line 2879 "HLSLParser.y"
 {
 	yygotominor.yy193 = new ASTNode( NT_PROGRAM, yymsp[0].minor.yy193->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	parserState->MoveOfflineStatements( yygotominor.yy193 );
@@ -4474,10 +4498,10 @@ static void yy_reduce(
 		yygotominor.yy193->AddChild( yymsp[0].minor.yy193 );
 	}
 }
-#line 4478 "HLSLParser.c"
+#line 4502 "HLSLParser.c"
         break;
       case 336: /* translation_unit ::= translation_unit external_declaration */
-#line 2865 "HLSLParser.y"
+#line 2889 "HLSLParser.y"
 {
 	parserState->MoveOfflineStatements( yymsp[-1].minor.yy193 );
 	if( yymsp[0].minor.yy193 )
@@ -4486,7 +4510,7 @@ static void yy_reduce(
 	}
 	yygotominor.yy193 = yymsp[-1].minor.yy193;
 }
-#line 4490 "HLSLParser.c"
+#line 4514 "HLSLParser.c"
         break;
       default:
         break;
@@ -4558,7 +4582,7 @@ static void yy_syntax_error(
 	{
 		parserState->ShowMessage( TOKEN, EC_SYNTAX_ERROR, ToString( TOKEN.stringValue ).c_str() ); 
 	}
-#line 4562 "HLSLParser.c"
+#line 4586 "HLSLParser.c"
   ParseARG_STORE; /* Suppress warning about unused %extra_argument variable */
 }
 

@@ -75,11 +75,26 @@ enum UsageCode
 	UC_NUM_USAGE_CODE
 };
 
+enum RegisterInputType
+{
+	RT_CONSTANTS,
+	RT_RESOURCE,
+	RT_UAV,
+	RT_SAMPLER,
+};
+
 
 template <typename T, typename P>
 class PackAs
 {
 public:
+	PackAs() = default;
+
+	PackAs( T v )
+		:t( v )
+	{
+	}
+
 	operator T() const
 	{
 		return t;
@@ -389,7 +404,7 @@ struct Sampler
 };
 
 
-struct InputDescription
+struct PipelineInputDescription
 {
 	template <typename T>
 	void Save( T& stream )
@@ -400,7 +415,7 @@ struct InputDescription
 		stream.Save( usedMask );
 	}
 
-	bool operator==( const InputDescription& other ) const
+	bool operator==( const PipelineInputDescription& other ) const
 	{
 		return name == other.name && registerIndex == other.registerIndex && index == other.index && usedMask == other.usedMask;
 	}
@@ -410,6 +425,26 @@ struct InputDescription
 	uint8_t index;
 	uint8_t usedMask;
 };
+
+
+struct RegisterInputDescription
+{
+	template <typename T>
+	void Save( T& stream )
+	{
+		stream.Save( registerType );
+		stream.Save( registerIndex );
+	}
+
+	bool operator==( const RegisterInputDescription& other ) const
+	{
+		return registerType == other.registerType && registerIndex == other.registerIndex;
+	}
+
+	PackAs<RegisterInputType, uint8_t> registerType;
+	uint32_t registerIndex;
+};
+
 
 
 struct Annotation
@@ -462,8 +497,14 @@ struct StageInput
 	{
 		stream.Save( type );
 
-		stream.Save( uint8_t( inputs.size() ) );
-		for( auto it = inputs.begin(); it != inputs.end(); ++it )
+		stream.Save( uint8_t( pipelineInputs.size() ) );
+		for( auto it = pipelineInputs.begin(); it != pipelineInputs.end(); ++it )
+		{
+			it->Save( stream );
+		}
+
+		stream.Save( uint8_t( registerInputs.size() ) );
+		for( auto it = registerInputs.begin(); it != registerInputs.end(); ++it )
 		{
 			it->Save( stream );
 		}
@@ -509,7 +550,8 @@ struct StageInput
 	}
 
 	PackAs<InputStageType, uint8_t> type;
-	std::vector<InputDescription> inputs;
+	std::vector<PipelineInputDescription> pipelineInputs;
+	std::vector<RegisterInputDescription> registerInputs;
 	uint32_t shaderSize;
 	StringReference shaderDataStr;
 	uint32_t shadowShaderSize;

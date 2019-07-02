@@ -169,17 +169,20 @@ public:
 	TextureVector m_textures;
 	SamplerSetupFullDx9Map m_samplers;
 
-	void ExtractConstantTable( void* func, std::vector<Constant>& constants, ID3DXEffect* fx, int samplerOffset );
+	void ExtractConstantTable( void* func, std::vector<Constant>& constants, ID3DXEffect* fx, int samplerOffset, StageInput& stage );
 };
 
 
-
+namespace
+{
+	const GUID s_IID_ID3DXEffectStateManager = { 0x79aab587, 0x6dbc, 0x4fa7, 0x82, 0xde, 0x37, 0xfa, 0x17, 0x81, 0xc5, 0xce };
+}
 
 
 
 HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::QueryInterface( REFIID iid, LPVOID *ppv )
 {
-	if( iid == IID_ID3DXEffectStateManager )
+	if( iid == s_IID_ID3DXEffectStateManager )
 	{
 		*ppv = (void*)(ID3DXEffectStateManager*)this;
 	}
@@ -415,7 +418,7 @@ static void ExtractShaderInputs( DWORD* shaderCode, StageInput& stage )
 	}
 	for( unsigned k = 0; k < count; ++k )
 	{
-		InputDescription input;
+		PipelineInputDescription input;
 		switch( inputs[k].Usage )
 		{
 		case D3DDECLUSAGE_POSITION:
@@ -449,7 +452,7 @@ static void ExtractShaderInputs( DWORD* shaderCode, StageInput& stage )
 		input.index = inputs[k].UsageIndex;
 		input.usedMask = 0xff;
 		input.registerIndex = 0;
-		stage.inputs.push_back( input );
+		stage.pipelineInputs.push_back( input );
 	}
 }
 
@@ -806,14 +809,14 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 				if( m_pixelShader )
 				{
 					m_pixelShader->GetFunction( buffer, &bufferSize );
-					ExtractConstantTable( buffer, pass.stages[1].constants, fx, 0 );
+					ExtractConstantTable( buffer, pass.stages[1].constants, fx, 0, pass.stages[1] );
 					ExtractShaderInputs( (DWORD*)buffer, pass.stages[1] );
 				}
 				if( m_vertexShader )
 				{
 					bufferSize = sizeof( buffer );
 					m_vertexShader->GetFunction( buffer, &bufferSize );
-					ExtractConstantTable( buffer, pass.stages[0].constants, fx, D3DVERTEXTEXTURESAMPLER0 );
+					ExtractConstantTable( buffer, pass.stages[0].constants, fx, D3DVERTEXTEXTURESAMPLER0, pass.stages[0] );
 					ExtractShaderInputs( (DWORD*)buffer, pass.stages[0] );
 				}
 
@@ -1036,11 +1039,20 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 	return true;
 }
 
-void EffectAnalyzerDx9::ExtractConstantTable( void* func, std::vector<Constant>& constants, ID3DXEffect* fx, int samplerOffset )
+void EffectAnalyzerDx9::ExtractConstantTable( void* func, std::vector<Constant>& constants, ID3DXEffect* fx, int samplerOffset, StageInput& stage )
 {
 	static const char* registerSet[] = { "B", "I", "c", "s" };
 	ID3DXConstantTable* dxConstants;
 	D3DXGetShaderConstantTable( (DWORD*)func, &dxConstants );
+
+	std::map<std::string, std::pair<uint32_t, uint32_t>> bufferSizes = {
+		{ "", { 0, 0 } } ,
+		{ "PerFramePS", { 200, 0 } },
+		{ "PerObjectPS", { 40, 0 } },
+		{ "PerFrameVS", { 220, 0 } },
+		{ "PerObjectVS", { 16, 0 } } 
+	};
+
 
 	constants.clear();
 
@@ -1064,9 +1076,23 @@ void EffectAnalyzerDx9::ExtractConstantTable( void* func, std::vector<Constant>&
 			if( desc.RegisterSet == D3DXRS_SAMPLER )
 			{
 				m_samplers[desc.RegisterIndex + samplerOffset].m_name = desc.Name;
+
+				stage.registerInputs.push_back( RegisterInputDescription{ RT_SAMPLER, desc.RegisterIndex } );
 			}
 			else
 			{
+				if( desc.RegisterSet == D3DXRS_FLOAT4 )
+				{
+					auto found = bufferSizes.find( desc.Name );
+					if( found == end( bufferSizes ) )
+					{
+						found = bufferSizes.find( "" );
+					}
+					if( desc.RegisterIndex >= found->second.first )
+					{
+						found->second.second = max( found->second.second, desc.RegisterIndex - found->second.first + desc.RegisterCount );
+					}
+				}
 				if( samplerOffset && desc.RegisterIndex + desc.RegisterCount == m_vertexConstantValueCount && strcmp( desc.Name, "g_uiTransforms" ) == 0 )
 				{
 					m_vertexConstantValueCount = desc.RegisterIndex;
@@ -1153,11 +1179,38 @@ void EffectAnalyzerDx9::ExtractConstantTable( void* func, std::vector<Constant>&
 		{
 			m_vertexConstantValueCount = defaultValueCount;
 		}
+
+		for( auto& buffer : bufferSizes )
+		{
+			if( buffer.second.second )
+			{
+				stage.registerInputs.push_back( { RT_CONSTANTS, buffer.second.first } );
+			}
+		}
 	}
 }
 
-
-
+static bool RegisterWindowClass()
+{
+	static ATOM classAtom = 0;
+	if( classAtom )
+	{
+		return true;
+	}
+	WNDCLASS wc;
+	wc.style = CS_OWNDC;
+	wc.lpfnWndProc = (WNDPROC)&DefWindowProc;
+	wc.cbClsExtra = 0;
+	wc.cbWndExtra = 0;
+	wc.hInstance = GetModuleHandle( nullptr );
+	wc.hIcon = nullptr;
+	wc.hCursor = nullptr;
+	wc.hbrBackground = nullptr;
+	wc.lpszMenuName = nullptr;
+	wc.lpszClassName = "dx9";
+	classAtom = RegisterClass( &wc );
+	return classAtom != 0;
+}
 
 
 
@@ -1171,18 +1224,7 @@ bool EffectCompilerDX9::Create()
 		return false;
 	}
 
-	WNDCLASS wc; 
-    wc.style = CS_OWNDC; 
-    wc.lpfnWndProc = (WNDPROC)&DefWindowProc; 
-    wc.cbClsExtra = 0; 
-    wc.cbWndExtra = 0; 
-	wc.hInstance = GetModuleHandle( nullptr ); 
-    wc.hIcon = nullptr; 
-    wc.hCursor = nullptr; 
-    wc.hbrBackground = nullptr; 
-    wc.lpszMenuName =  nullptr; 
-    wc.lpszClassName = "dx9"; 
-    if (!RegisterClass(&wc)) 
+    if (!RegisterWindowClass())
 	{
 		DWORD error = GetLastError();
 		char* lpMsgBuf = nullptr;
@@ -1206,7 +1248,7 @@ bool EffectCompilerDX9::Create()
 		}
 		return false; 
 	}
-	HWND dx9Wnd = CreateWindow( "dx9", "dx9", WS_OVERLAPPED, 0, 0, 16, 16, nullptr, nullptr, GetModuleHandle( nullptr ), 0 );
+	HWND dx9Wnd = CreateWindow( "dx9", "dx9", WS_OVERLAPPED, 0, 0, 256, 256, nullptr, nullptr, GetModuleHandle( nullptr ), 0 );
 	if( dx9Wnd == nullptr )
 	{
 		DWORD error = GetLastError();
@@ -1236,9 +1278,9 @@ bool EffectCompilerDX9::Create()
 	D3DPRESENT_PARAMETERS d3dpp; 
 	ZeroMemory( &d3dpp, sizeof(d3dpp) );
 	d3dpp.Windowed   = TRUE;
-	d3dpp.SwapEffect = D3DSWAPEFFECT_COPY;
+	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 	if( FAILED( hr = direct3D9->CreateDeviceEx( D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, dx9Wnd,
-										D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+										D3DCREATE_HARDWARE_VERTEXPROCESSING,
 										&d3dpp, nullptr, &g_device9 ) ) )
 	{
 		printf_s( "ShaderCompiler: error X0000: Could not create DX9 device (code 0x%x)\n", hr );
@@ -1272,6 +1314,11 @@ CompileStatus SafeCompileEffect( ID3DXEffectCompiler* effectCompiler, DWORD flag
 const std::regex s_premutationPragma( "^[[:space:]]*#[[:space:]]*pragma[[:space:]]*permutation.*" );
 const std::regex s_blendOpAlpha( "[^[:alnum:]]BlendOpAlpha[[:space:]]*=[[:space:]]*([[:alnum:]]+)[[:space:]]*;" );
 
+}
+
+bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result )
+{
+	return CompileEffect( source, sourceLength, defines, include, result, false );
 }
 
 bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result, bool disableListing )
@@ -1338,7 +1385,7 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 
 	if( FAILED( D3DXCreateEffectCompiler( 
 		source, 
-		sourceLength, 
+		UINT( sourceLength ), 
 		dx9Defines,
 		include, 
 		D3DXSHADER_PACKMATRIX_COLUMNMAJOR | D3DXSHADER_NO_PRESHADER | optimizationLevel | ( g_avoidFlowControl ? D3DXSHADER_AVOID_FLOW_CONTROL : 0 ), 
@@ -1396,7 +1443,7 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	CComPtr<ID3DXBuffer> shaderText;
 	if( listing.enabled() )
 	{
-		D3DXPreprocessShader( source, sourceLength, dx9Defines, include, &shaderText, nullptr );
+		D3DXPreprocessShader( source, UINT( sourceLength ), dx9Defines, include, &shaderText, nullptr );
 	}
 
 	MutexScope scope( g_analyzeEffectDx9CS );
