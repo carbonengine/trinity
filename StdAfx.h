@@ -127,4 +127,10 @@ using std::max;
 #include "ImageIO/Tr2ImageHandler.h"
 #include "ImageIO/HostBitmap.h"
 
+
+// Application caps
+
+#define TRINITY_SUPPORTS_TAA TRINITY_PLATFORM_SUPPORTS_MSAA_SAMPLE
+
+
 #endif

@@ -15,7 +15,6 @@ TriStepRunComputeShader::TriStepRunComputeShader( IRoot* lockobj )
 	: m_groupDimX( 1 )
 	, m_groupDimY( 1 )
 	, m_groupDimZ( 1 )
-	, m_logDispatchTime( false )
 	, m_offsetForArgs( 0 )
 {
 }
@@ -41,26 +40,6 @@ TriStepResult TriStepRunComputeShader::Execute( Be::Time realTime, Be::Time simT
 	CCP_STATS_ZONE( __FUNCTION__ );
 	CCP_STATS_INC( rsRunComputeShaderCount );
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
-	static ID3D11Query	*timingQuery = nullptr;
-	if( m_logDispatchTime && !timingQuery )
-	{
-		D3D11_QUERY_DESC pQueryDesc;
-		pQueryDesc.Query = D3D11_QUERY_EVENT;
-		pQueryDesc.MiscFlags = 0;
-		renderContext.m_secondaryDevice11->CreateQuery( &pQueryDesc, &timingQuery );
-	}
-
-	if( m_logDispatchTime )
-	{
-		renderContext.m_context->End( timingQuery );
-		while( renderContext.m_context->GetData( timingQuery, NULL, 0, 0 ) == S_FALSE ) 
-		{
-		}
-	}
-	Be::Time start = BeOS->GetActualTime();
-#endif
-
 	if( m_indirectionBuffer )
 	{
 		auto buffer = m_indirectionBuffer->GetGpuBuffer( 0 );
@@ -73,19 +52,6 @@ TriStepResult TriStepRunComputeShader::Execute( Be::Time realTime, Be::Time simT
 	{
 		Tr2Renderer::RunComputeShader( m_effect, m_groupDimX, m_groupDimY, m_groupDimZ, renderContext );
 	}
-
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
-	if( m_logDispatchTime )
-	{
-		renderContext.m_context->End( timingQuery );
-		while( renderContext.m_context->GetData( timingQuery, NULL, 0, 0 ) == S_FALSE ) 
-		{
-		}
-		Be::Time stop = BeOS->GetActualTime();
-
-		CCP_LOG( "Dispatch call took %f sec", TimeAsFloat(stop-start) );
-	}
-#endif
 
 	return RS_OK;
 }

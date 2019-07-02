@@ -141,7 +141,7 @@ TriDevice::TriDevice(IRoot* lockobj) :
 	mPresentParam.outputWindow	   = 0;
 	mPresentParam.windowed		   = true;
 	
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if( TRINITY_PLATFORM!=TRINITY_DIRECTX9 && TRINITY_PLATFORM!=TRINITY_OPENGLES2 )
 	mPresentParam.depthStencilFormat = DSFMT_D32F;
 #else
 	mPresentParam.depthStencilFormat = DSFMT_D24S8;
@@ -1044,4 +1044,24 @@ void TriDevice::LogAllLiveResources( Tr2ALMemoryTypes flags )
 		CCP_LOGERR( "%s", message.c_str() );
 	};
 	Tr2TrackedALObjectBase::GetAllObjectDescriptions( flags, logObject );
+}
+
+bool TriDevice::SupportsRenderTargetFormat( Tr2RenderContextEnum::PixelFormat format ) const
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	if( renderContext.IsValid() )
+	{
+		return Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned( mAdapter ), renderContext.GetBackBufferFormat(), format, false );
+	}
+	return Tr2VideoAdapterInfo::SupportsRenderTargetFormat( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, PIXEL_FORMAT_B8G8R8X8_UNORM, format, false );
+}
+
+bool TriDevice::SupportsDepthStencilFormat( Tr2RenderContextEnum::DepthStencilFormat format ) const
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	if( renderContext.IsValid() )
+	{
+		return Tr2VideoAdapterInfo::SupportsDepthStencilFormat( unsigned( mAdapter ), renderContext.GetBackBufferFormat(), format );
+	}
+	return Tr2VideoAdapterInfo::SupportsDepthStencilFormat( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, PIXEL_FORMAT_B8G8R8X8_UNORM, format );
 }

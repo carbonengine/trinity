@@ -487,8 +487,6 @@ void Tr2EffectStateManager::BeginManagedRendering()
 		m_renderContext.m_d3dDevice9->SetTextureStageState(i, D3DTSS_TEXCOORDINDEX, i);
 	}
 #endif
-
-	m_renderContext.SetRenderState( RS_CLIPPLANEENABLE, 0x0 );
 }
 
 void Tr2EffectStateManager::EndManagedRendering()
@@ -673,7 +671,7 @@ uint32_t Tr2EffectStateManager::GetVertexDeclarationHandle( const Tr2VertexDefin
 
 void Tr2EffectStateManager::ApplyVertexDeclaration( uint32_t declaration )
 {
-	if( declaration == m_currentValues.m_vertexDeclaration )
+	if( m_isManagedRendering && declaration == m_currentValues.m_vertexDeclaration )
 	{
 		return;
 	}
@@ -694,7 +692,9 @@ void Tr2EffectStateManager::ApplyVertexDeclaration( uint32_t declaration )
 			Tr2VertexLayoutAL& hvl = *s_vertexLayoutMap[declaration].second;
 			if( !hvl.IsValid() )
 			{
-				hvl.Create( s_vertexLayoutMap[declaration].first, m_renderContext );	
+				USE_MAIN_THREAD_RENDER_CONTEXT();
+
+				hvl.Create( s_vertexLayoutMap[declaration].first, renderContext );	
 			}
 			m_renderContext.SetVertexLayout( hvl );
 		}

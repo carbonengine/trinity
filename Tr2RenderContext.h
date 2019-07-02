@@ -31,7 +31,9 @@ struct Tr2RenderContextBase: public IRoot, public ITr2RenderContextEvents
 
 	void OnContextCreated( Tr2RenderContextAL& renderContext );
 
+#if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	Tr2RenderTargetPtr GetBackBuffer();
+#endif
 
 	Tr2EffectStateManager m_esm;
 
@@ -56,8 +58,9 @@ struct Tr2RenderContextBase: public IRoot, public ITr2RenderContextEvents
 protected:
 	Tr2ConstantBufferAL		m_perObjectConstantBuffers[ Tr2RenderContextEnum::CBUFFER_COUNT ];
 private:
+#if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	Tr2RenderTargetPtr m_backBuffer;
-
+#endif
 	TriVariable		*m_objectIdVariable;
 	TriVariable		*m_areaIdVariable;
 };
@@ -85,7 +88,7 @@ private:
 
 TYPEDEF_BLUECLASS( Tr2RenderContext );
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -105,7 +108,12 @@ public:
 
 	EXPOSE_TO_BLUE();
 
+	void OnContextCreated( Tr2RenderContextAL& renderContext );
 	operator Tr2RenderContext&();
+
+	Tr2RenderTargetPtr GetBackBuffer();
+private:
+	Tr2RenderTargetPtr m_backBuffer;
 };
 TYPEDEF_BLUECLASS( Tr2PrimaryRenderContext );
 

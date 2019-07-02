@@ -17,9 +17,7 @@
 #include "include/ITr2DebugRenderer.h"
 #include "Include/TriMath.h"
 
-#ifdef _WIN32
-#include "dxerr.h"
-#elif !defined(__ORBIS__) && !defined(__ANDROID__)
+#if !defined(_WIN32) && !defined(__ORBIS__) && !defined(__ANDROID__)
 #include "GLFW/glfw3.h"
 #endif
 
@@ -1646,7 +1644,7 @@ bool Tr2Sprite2dScene::SelectEffect()
 
 		if( newEffect && newEffect->GetShaderStateInterface() )
 		{
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 || TRINITY_PLATFORM == TRINITY_ORBIS || TRINITY_PLATFORM == TRINITY_STUB )
+#if TRINITY_PLATFORM!=TRINITY_DIRECTX9
 			// In DX11 g_uiTransforms is in a separate constant buffer and is not exposed
 			// in constant table, so we just believe we have UI shader.
 			m_effect = newEffect;

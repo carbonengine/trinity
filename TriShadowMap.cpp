@@ -40,10 +40,6 @@ TriShadowMap::TriShadowMap( IRoot* lockobj ) :
 	m_shadowMapHandle    = GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 	m_shadowSizeHandle   = GlobalStore().RegisterVariable( "EveSpaceSceneShadowMapSettings", Vector4( 1.0f / m_size, 1.0f / m_size, m_depthBias, m_lightLeakStep ) );
 	m_invInputSizeHandle = GlobalStore().RegisterVariable( "invTexelSize", Vector2( 0, 0 ) );
-
-	// when adding this variable to the global store, we must re-init all already active shaders
-	// so they get the shadowmap texture slot binding
-	Tr2Renderer::ReinitializeRegisteredEffects();
 }
 
 TriShadowMap::~TriShadowMap()

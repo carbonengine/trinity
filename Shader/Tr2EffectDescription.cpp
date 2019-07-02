@@ -183,6 +183,18 @@ bool Tr2EffectDescription::Read( const void* data,
 					READ( uint8_t, unsigned, element.usedMask );
 				}
 
+				if( version > 8 )
+				{
+					READ( uint8_t, uint8_t, inputCount );
+					pass.stageInputs[type].signature.registers.resize( inputCount );
+					for( int inputIx = 0; inputIx < inputCount; ++inputIx )
+					{
+						auto& element = pass.stageInputs[type].signature.registers[inputIx];
+						READ( uint8_t, Tr2VertexDefinition::UsageCode, element.registerType );
+						READ( uint32_t, unsigned, element.registerIndex );
+					}
+				}
+
 				uint32_t shaderSize;
 				const void* shaderCode;
 				uint32_t shadowShaderSize;
@@ -271,11 +283,6 @@ bool Tr2EffectDescription::Read( const void* data,
 				unsigned constantValueSize;
 				READ( uint32_t, unsigned, constantValueSize );
 
-				if( constantValueSize )
-				{
-					pass.stageInputs[type].signature.Add( Tr2ShaderRegisterAL::CONSTANTS, Tr2RenderContextEnum::CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS );
-				}
-
 				if( version < 5 )
 				{
 					if( buffer + constantValueSize > bufferEnd )
@@ -341,8 +348,6 @@ bool Tr2EffectDescription::Read( const void* data,
 					READ( uint8_t, bool, resource.isAutoregister );
 
 					pass.stageInputs[type].resources[registerIndex] = resource;
-
-					pass.stageInputs[type].signature.Add( Tr2ShaderRegisterAL::RESOURCE, registerIndex );
 				}
 
 
@@ -432,8 +437,6 @@ bool Tr2EffectDescription::Read( const void* data,
 
 					pass.stageInputs[type].samplers[registerIndex] = samplerSetup;
 					pass.resourceSetDesc.SetSampler( type, registerIndex, samplerSetup.sampler );
-
-					pass.stageInputs[type].signature.Add( Tr2ShaderRegisterAL::SAMPLER, registerIndex );
 				}
 
 				if( version >= 3 )
@@ -460,8 +463,6 @@ bool Tr2EffectDescription::Read( const void* data,
 						READ( uint8_t, bool, resource.isAutoregister );
 
 						pass.stageInputs[type].uavs[registerIndex] = resource;
-
-						pass.stageInputs[type].signature.Add( Tr2ShaderRegisterAL::UAV, registerIndex );
 					}
 					if( version >= 8 )
 					{

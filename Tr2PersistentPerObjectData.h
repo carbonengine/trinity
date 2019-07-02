@@ -23,13 +23,13 @@
 // --------------------------------------------------------------------------------------
 template <typename Owner>
 class Tr2PersistentPerObjectData
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
+#if TRINITY_PLATFORM != TRINITY_DIRECTX9
 	: public Tr2DeviceResource
 #endif
 {
 public:
 	Tr2PersistentPerObjectData()
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
+#if TRINITY_PLATFORM != TRINITY_DIRECTX9
 		:m_bufferDirty( true )
 #endif
 	{
@@ -42,7 +42,7 @@ public:
 	// ----------------------------------------------------------------------------------
 	void InvalidateBufferData()
 	{
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
+#if TRINITY_PLATFORM != TRINITY_DIRECTX9
 		m_bufferDirty = true;
 #endif
 	}
@@ -62,7 +62,7 @@ public:
 		Tr2ConstantBufferAL** buffers,
 		Tr2RenderContext& renderContext )
 	{
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
+#if TRINITY_PLATFORM != TRINITY_DIRECTX9
 		if( !m_bufferDirty )
 		{
 			renderContext.SetConstants( m_constantBuffer,
@@ -74,7 +74,7 @@ public:
 		uint32_t size = owner.GetPerObjectDataSize( shaderType );
 		if( size > 0 )
 		{
-#if TRINITY_PLATFORM != TRINITY_DIRECTX11
+#if TRINITY_PLATFORM == TRINITY_DIRECTX9
 			auto& buffer = *buffers[shaderType];
 #else
 			auto& buffer = m_constantBuffer;
@@ -90,12 +90,12 @@ public:
 				renderContext.SetConstants( buffer, shaderType, Tr2Renderer::GetPerObjectStartRegister( shaderType ) );
 			}
 		}
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
+#if TRINITY_PLATFORM != TRINITY_DIRECTX9
 		m_bufferDirty = false;
 #endif
 	}
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
+#if TRINITY_PLATFORM != TRINITY_DIRECTX9
 	virtual void ReleaseResources( TriStorage s )
 	{
 		if( s & TRISTORAGE_ALL )

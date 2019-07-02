@@ -3184,7 +3184,6 @@
     <ClCompile Include="TriSettings_Blue.cpp" />
     <ClCompile Include="TriShadowMap.cpp" />
     <ClCompile Include="TriShadowMap_Blue.cpp" />
-    <ClCompile Include="TriUtil.cpp" />
     <ClCompile Include="TriValueBinding.cpp" />
     <ClCompile Include="TriValueBinding_Blue.cpp" />
     <ClCompile Include="TriVariable.cpp" />

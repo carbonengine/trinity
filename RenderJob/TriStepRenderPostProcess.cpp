@@ -117,7 +117,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			godrays = postProcess->GetGodRays();
 			filmGrain = postProcess->GetFilmGrain();
 			fog = postProcess->GetFog();
-#if TRINITY_PLATFORM != TRINITY_DIRECTX9
+#if TRINITY_PLATFORM_SUPPORTS_COMPUTE
 			dynamicExposure = postProcess->GetDynamicExposure();
 #endif
 		case MEDIUM:
@@ -131,7 +131,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		default:
 			break;
 		}
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
+#if TRINITY_SUPPORTS_TAA
 		if( Tr2Renderer::GetShaderModel() == TR2SM_3_0_DEPTH )
 		{
 			taa = postProcess->GetTaa();

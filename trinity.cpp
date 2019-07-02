@@ -32,9 +32,6 @@ BLUE_DEFINE_INTERFACE( IBlueObjectProxy );
 #include "Tr2TextureAtlasMan.h"
 #include "Font/Tr2FontManager.h"
 
-#ifdef _WIN32
-#include "dxerr.h"
-#endif
 #include "TriError.h"
 #include "TriSettingsRegistrar.h"
 
@@ -136,7 +133,7 @@ void InitializeTrinity()
 #else
 	g_isR10G10B10FormatInverted = false;
 #endif
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 || TRINITY_PLATFORM==TRINITY_DIRECTX12 )
 	g_convertA8L8FormatToB8G8R8A8 = true;
 #else
 	g_convertA8L8FormatToB8G8R8A8 = false;
@@ -286,28 +283,6 @@ static ITr2DebugRenderer* GetDebugRenderer()
 }
 
 MAP_FUNCTION_AND_WRAP( "GetDebugRenderer", GetDebugRenderer, "Returns the debug renderer for Trinity" );
-
-static const char* PyDXGetErrorString( int hr )
-{
-#ifdef _WIN32
-	return DXGetErrorString( hr );
-#else
-	return "";
-#endif
-}
-
-MAP_FUNCTION_AND_WRAP( "DXGetErrorString", PyDXGetErrorString, "Convert an D3D hr code to string\n:param hr: DX HRESULT" );
-
-static const char* PyDXGetErrorDescription( int hr )
-{
-#ifdef _WIN32
-	return DXGetErrorDescription( hr );
-#else
-	return "";
-#endif
-}
-
-MAP_FUNCTION_AND_WRAP( "DXGetErrorDescription", PyDXGetErrorDescription, "Convert an D3D hr code to an error description\n:param hr: DX HRESULT" );
 
 static const char* GetGrannyProductVersion()
 {

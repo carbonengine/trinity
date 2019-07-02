@@ -47,7 +47,6 @@ ResourceCompile:
 BaseConfigurations:
   Windows:
     Imports:
-    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
     - ../../../../../../sdk/Granny/2.11.9.1/granny_2.11.9.1.yaml
     - ../../../../../../sdk/Granny/2.11.9.1/gstate_2.11.9.1.yaml
     - ../../../../../../sdk/zlib/1.2.11/zlib_1.2.11.yaml
@@ -154,6 +153,14 @@ BaseConfigurations:
       PreprocessorDefinitions:
       - D3DTARGET=9
 
+  D3D12:
+    # These are settings that apply to all variants of Trinity that use D3D12
+    Imports:
+    - ../TrinityAL/uses_TrinityALDX12.yaml
+    ClCompile:
+      PreprocessorDefinitions:
+      - D3DTARGET=9
+
   GLES2:
     # These are settings that apply to all variants of Trinity that use OpenGL ES 2
     Imports:
@@ -215,6 +222,20 @@ Configurations:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx11_dev
+
+  Dev12|Win32,x64:
+    BaseConfigurations:
+    - Windows    
+    - DevBase
+    - D3D12
+    Imports:
+    - ../blue/Include/uses_blue.yaml
+    ClCompile:
+      AdditionalIncludeDirectories:
+      # HACK: this is needed to force including freetype before Windows SDK. Should be dropped after upgrading to VS2017
+      - " ../../../../../../sdk/freetype/2.6.0/include"
+    General:
+      TargetName: _trinity_dx12_dev
 
   DevGLES2|Win32:
     # Note that we only have a 32bit version here - don't have glew in 64 bit
@@ -287,6 +308,20 @@ Configurations:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx11_internal
+
+  Release12|Win32,x64:
+    BaseConfigurations:
+    - Windows    
+    - ReleaseBase
+    - D3D12
+    Imports:
+    - ../blue/Include/uses_blue.yaml
+    ClCompile:
+      AdditionalIncludeDirectories:
+      # HACK: this is needed to force including freetype before Windows SDK. Should be dropped after upgrading to VS2017
+      - " ../../../../../../sdk/freetype/2.6.0/include"
+    General:
+      TargetName: _trinity_dx12_internal
 
   ReleaseGLES2|Win32:
     BaseConfigurations:
@@ -430,6 +465,20 @@ Configurations:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx11_deploy
+
+  Deploy12|Win32,x64:
+    BaseConfigurations:
+    - Windows    
+    - DeployBase
+    - D3D12
+    Imports:
+    - ../blue/Include/uses_blue.yaml
+    ClCompile:
+      AdditionalIncludeDirectories:
+      # HACK: this is needed to force including freetype before Windows SDK. Should be dropped after upgrading to VS2017
+      - " ../../../../../../sdk/freetype/2.6.0/include"
+    General:
+      TargetName: _trinity_dx12_deploy
 
   DebugStub|Win32,x64:
     BaseConfigurations:

@@ -32,8 +32,6 @@ public:
 private:
 	ITr2GpuBufferPtr m_indirectionBuffer;
 	uint32_t m_offsetForArgs;
-
-	bool m_logDispatchTime;	// if set, makes it synchronous
 };
 
 TYPEDEF_BLUECLASS( TriStepRunComputeShader );

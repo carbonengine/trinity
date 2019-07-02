@@ -1012,6 +1012,7 @@ void EveSpaceScene::RenderObjectsReceivingShadows(	std::vector<ShadowReceiver>& 
 		
 		if( m_shadowMap && m_shadowMap->GetTexture().IsValid() )
 		{
+
 			Tr2ParallelFor( 
 				Tr2BlockedRange<size_t>( 0, objectsReceivingShadows.size() ), 
 				[&]( const Tr2BlockedRange<size_t>& range ) -> void
@@ -1036,7 +1037,15 @@ void EveSpaceScene::RenderObjectsReceivingShadows(	std::vector<ShadowReceiver>& 
 				shadowStrength = 1.0f - ( objectsReceivingShadows[i].estimatedSize - m_shadowThreshold ) / ( m_shadowFadeThreshold - m_shadowThreshold );
 			}
 			m_shadowLightnessVar = shadowStrength;
+			if( m_hasDepthPass )
+			{
+				renderContext.SetReadOnlyDepth( false );
+			}
 			PrepareShadowMap( obj, shadowRenderables[i], debugCasters[i], renderContext );
+			if( m_hasDepthPass )
+			{
+				renderContext.SetReadOnlyDepth( true );
+			}
 			if( m_shadowMap )
 			{
 				m_perFramePS.ShadowMapSettings = m_shadowMap->GetShadowMapSettings();
@@ -1793,7 +1802,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	{
 		renderContext.AddGpuMarker( __FUNCTION__ );
 
-#if TRINITY_PLATFORM != TRINITY_DIRECTX9
+#if TRINITY_PLATFORM_SUPPORTS_MSAA_SAMPLE
 		m_hasDepthPass = true;
 #endif
 
@@ -2221,7 +2230,7 @@ void EveSpaceScene::PopulatePerFrameVSData( PerFrameVSData &data )
 	// attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
 	data.ViewInverseTransposeMat = Tr2Renderer::GetInverseViewTransform();
 	
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 || TRINITY_PLATFORM==TRINITY_OPENGL4 )
+#if TRINITY_SUPPORTS_TAA
 	data.ViewProjectionLast = Transpose( m_viewProjectLast );
 #endif
 

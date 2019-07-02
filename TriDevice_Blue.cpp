@@ -291,6 +291,22 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			"Set the Tr2RenderJobs objects on the device -- debug helper until we sort this out.\n"
 			":param renderJobs: render jobs object"
 		)
-			
+
+		MAP_METHOD_AND_WRAP
+		(
+			"SupportsRenderTargetFormat",
+			SupportsRenderTargetFormat,
+			"Returns True if the device support render targets with the given pixel format\n"
+			":param format: render target pixel format"
+		)
+
+		MAP_METHOD_AND_WRAP
+		(
+			"SupportsDepthStencilFormat",
+			SupportsDepthStencilFormat,
+			"Returns True if the device support depth stencil buffers with the given format\n"
+			":param format: depth stencil format"
+		)
+
     EXPOSURE_END()
 }

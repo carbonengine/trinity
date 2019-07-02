@@ -41,7 +41,7 @@ long Tr2DepthStencil::Create( unsigned width, unsigned height, DepthStencilForma
 	{
 		gpuUsage |= Tr2GpuUsage::SHADER_RESOURCE;
 	}
-#if TRINITY_PLATFORM==TRINITY_DIRECTX11
+#if TRINITY_PLATFORM_SUPPORTS_MSAA_SAMPLE
 	gpuUsage = gpuUsage | Tr2GpuUsage::SHADER_RESOURCE;
 #endif
 	if( ( flags & Tr2RenderContextEnum::EX_CREATE_SHARED ) != 0 )
@@ -173,7 +173,7 @@ bool Tr2DepthStencil::OnPrepareResources()
 		{
 			gpuUsage |= Tr2GpuUsage::SHADER_RESOURCE;
 		}
-#if TRINITY_PLATFORM==TRINITY_DIRECTX11
+#if TRINITY_PLATFORM_SUPPORTS_MSAA_SAMPLE
 		gpuUsage = gpuUsage | Tr2GpuUsage::SHADER_RESOURCE;
 #endif
 		if( ( m_flags & Tr2RenderContextEnum::EX_CREATE_SHARED ) != 0 )

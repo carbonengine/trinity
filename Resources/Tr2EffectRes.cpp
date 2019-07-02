@@ -179,7 +179,7 @@ BlueAsyncRes::LoadingResult Tr2EffectRes::DoLoad()
 
 	READ( uint32_t, uint32_t, m_version );
 
-	if( m_version < 2 || m_version > 8 )
+	if( m_version < 2 || m_version > 9 )
 	{
 		CCP_LOGERR( "Invalid version of effect file \"%S\" (version %i)", GetPath(), m_version );
 		return LR_FAILED;

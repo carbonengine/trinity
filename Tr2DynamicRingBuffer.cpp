@@ -294,7 +294,7 @@ void Tr2DynamicRingBuffer::RemoveRegions( RegionVector::iterator begin, RegionVe
 // --------------------------------------------------------------------------------------
 bool Tr2DynamicRingBuffer::UseNoOverwriteRegions() const
 {
-#if TRINITY_PLATFORM == TRINITY_DIRECTX9
+#if !TRINITY_PLATFORM_SUPPORTS_NON_SYNCHRONIZED_LOCKS
 	return false;
 #else
 	USE_MAIN_THREAD_RENDER_CONTEXT();

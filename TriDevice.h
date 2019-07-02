@@ -218,6 +218,9 @@ public:
 	// Python at some well defined point.
 	void AddPostUpdateCallback( IBlueCallbackMan::CallbackFunc cb, void* context );
 
+	bool SupportsRenderTargetFormat( Tr2RenderContextEnum::PixelFormat format ) const;
+	bool SupportsDepthStencilFormat( Tr2RenderContextEnum::DepthStencilFormat format ) const;
+
 private:
 	bool InitD3DDevice();  //call when a new device has been set
 	void DestroyRenderContext();

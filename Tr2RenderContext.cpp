@@ -17,8 +17,11 @@ CCP_STATS_DECLARE( batchCount, "Trinity/batchCount", true, CST_COUNTER_HIGH, "Ba
 Tr2RenderContextBase::Tr2RenderContextBase( Tr2RenderContext& renderContext )
 	:m_esm( renderContext )
 {
+	m_esm.Initialize();
+#if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	m_backBuffer.CreateInstance();
 	m_backBuffer->m_name = "backbuffer";
+#endif
 	m_objectIdVariable		= GlobalStore().RegisterVariable( "objectId",	0.0f );
 	m_areaIdVariable		= GlobalStore().RegisterVariable( "areaId",		0.0f );
 }
@@ -34,10 +37,12 @@ using namespace Tr2RenderContextEnum;
 // --------------------------------------------------------------------------------------
 void Tr2RenderContextBase::OnContextCreated( Tr2RenderContextAL& renderContext )
 {
+#if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	m_backBuffer->Attach( &renderContext.GetDefaultBackBuffer(), this );
-	m_esm.Initialize();
+#endif
 }
 
+#if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 // --------------------------------------------------------------------------------------
 // Description:
 //   Returns back buffer render target as Blue-exposed Tr2RenderTarget. Exposed to 
@@ -49,30 +54,48 @@ Tr2RenderTargetPtr Tr2RenderContextBase::GetBackBuffer()
 {
 	return m_backBuffer;
 }
+#endif
 
 
 Tr2RenderContext::Tr2RenderContext()
 	:Tr2RenderContextBase( *this )
 {
+#if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	m_events = this;
+#endif
 }
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX11
+#if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 Tr2PrimaryRenderContext::Tr2PrimaryRenderContext()
 	:Tr2RenderContextBase( *reinterpret_cast<Tr2RenderContext*>( this ) )
 {
+	m_backBuffer.CreateInstance();
+	m_backBuffer->m_name = "backbuffer";
+
 	m_events = this;
+}
+
+void Tr2PrimaryRenderContext::OnContextCreated( Tr2RenderContextAL& renderContext )
+{
+	m_backBuffer->Attach( &GetDefaultBackBuffer(), this );
+	Tr2RenderContextBase::OnContextCreated( renderContext );
 }
 
 Tr2PrimaryRenderContext::operator Tr2RenderContext&()
 {
 	return *reinterpret_cast<Tr2RenderContext*>( this );
 }
+
+Tr2RenderTargetPtr Tr2PrimaryRenderContext::GetBackBuffer()
+{
+	return m_backBuffer;
+}
+
 #endif
 
 
 namespace {
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	Tr2PrimaryRenderContextPtr	s_mainThreadRenderContext;
 #else
 	Tr2RenderContextPtr s_mainThreadRenderContext;

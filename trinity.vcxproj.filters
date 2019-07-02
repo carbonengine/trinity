@@ -245,6 +245,9 @@
     <ClInclude Include="Tr2PickingHelperBatch.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="Tr2PlatformInfo.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
     <ClInclude Include="Tr2PostProcess.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -1820,6 +1823,12 @@
     <ClCompile Include="Tr2PickBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Tr2PlatformInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2PlatformInfo_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="Tr2PostProcess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2033,6 +2042,9 @@
     <ClCompile Include="TriDevice11.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TriDevice12.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="TriDevice9.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -2139,9 +2151,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TriShadowMap_Blue.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TriUtil.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TriValueBinding.cpp">

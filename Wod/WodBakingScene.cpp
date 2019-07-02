@@ -96,7 +96,6 @@ void WodBakingScene::Render( Tr2RenderContext& renderContext )
 	renderContext.m_esm.BeginManagedRendering();
 	renderContext.m_esm.SetInvertedCullMode( false );
 	using namespace Tr2RenderContextEnum;
-	renderContext.SetRenderState( RS_CLIPPLANEENABLE, 0x0 );
 
 	// Actual rendering code goes in here
 	Tr2PerFrameVSData vsData;

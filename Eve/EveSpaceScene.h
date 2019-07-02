@@ -234,7 +234,7 @@ protected:
 		Matrix ShadowViewMat;
 		Matrix ShadowViewProjectionMat;
 		Matrix EnvMapRotationMat;
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 || TRINITY_PLATFORM==TRINITY_OPENGL4 )
+#if TRINITY_SUPPORTS_TAA
 		Matrix ViewProjectionLast;
 #endif
 

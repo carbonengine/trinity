@@ -16,8 +16,6 @@ const Be::ClassInfo* TriStepRunComputeShader::ExposeToBlue()
 		MAP_ATTRIBUTE( "groupDimX", m_groupDimX, "Dispatch group dimension.X", Be::READWRITE )
 		MAP_ATTRIBUTE( "groupDimY", m_groupDimY, "Dispatch group dimension.Y", Be::READWRITE )
 		MAP_ATTRIBUTE( "groupDimZ", m_groupDimZ, "Dispatch group dimension.Z", Be::READWRITE )
-
-		MAP_ATTRIBUTE( "logDispatchTime", m_logDispatchTime, "Make the dispatch call synchronous and log the running time", Be::READWRITE )
 		
 		MAP_ATTRIBUTE( "indirectionBuffer", m_indirectionBuffer, "If set, use DispatchIndirect with this buffer holding the arguments", Be::READWRITE )
 		MAP_ATTRIBUTE( "offsetForArgs", m_offsetForArgs, "The argument offset in indirectionBuffer for an indirect dispatch.", Be::READWRITE )

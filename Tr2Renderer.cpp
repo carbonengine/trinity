@@ -49,7 +49,7 @@ namespace
 	unsigned int s_perObjectVSStartRegister = 16;
 	unsigned int s_perObjectPSStartRegister = 40;
 	unsigned int s_perObjectVSGUIStartRegister = 5;
-#elif( TRINITY_PLATFORM == TRINITY_DIRECTX11 )
+#elif( TRINITY_PLATFORM == TRINITY_DIRECTX11 || TRINITY_PLATFORM == TRINITY_DIRECTX12 )
 	// these are actually constant buffer indices
 	unsigned int s_perFrameVSStartRegister  = 1;
 	unsigned int s_perFramePSStartRegister  = 2;

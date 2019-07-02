@@ -312,7 +312,7 @@ BLUE_REGISTER_ENUM_EX(
 
 BLUE_DEFINE( Tr2RenderContext );
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 BLUE_DEFINE( Tr2PrimaryRenderContext );
 #endif
 
@@ -323,10 +323,9 @@ extern bool g_preloadTextureToDeviceOnPrepare;
 TRI_REGISTER_SETTING( "preloadTextureToDeviceOnPrepare", g_preloadTextureToDeviceOnPrepare );
 
 
-#if TRINITY_PLATFORM==TRINITY_DIRECTX11
-extern bool g_gatherDX11Statistics;
-TRI_REGISTER_SETTING( "gatherDX11Statistics", g_gatherDX11Statistics );
-#endif
+extern bool g_gatherPipelineStatistics;
+TRI_REGISTER_SETTING( "gatherPipelineStatistics", g_gatherPipelineStatistics );
+
 
 const Be::ClassInfo* Tr2RenderContext::ExposeToBlue()
 {
@@ -337,7 +336,7 @@ const Be::ClassInfo* Tr2RenderContext::ExposeToBlue()
 		MAP_INTERFACE( IRoot )
 		MAP_INTERFACE( Tr2RenderContext )		
 
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+#if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	EXPOSURE_END()
 }
 

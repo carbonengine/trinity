@@ -5,9 +5,6 @@
 #include "TriError.h"
 #include "Tr2ImageIOHelpers.h"
 
-#if( TRINITY_PLATFORM != TRINITY_DIRECTX9 )
-#define g_usingEXDevice	false
-#endif
 
 using namespace Tr2RenderContextEnum;
 
