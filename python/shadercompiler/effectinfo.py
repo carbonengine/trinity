@@ -435,7 +435,7 @@ class EffectInfo(object):
         stream = self._stream
         version = stream.read_uint32()
         self._version = version
-        if version < 2 or version > 8:
+        if version < 2 or version > 9:
             raise RuntimeError('unsupported effect file version')
         if version < 5:
             header_size = stream.read_uint32()
