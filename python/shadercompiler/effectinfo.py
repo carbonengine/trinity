@@ -12,6 +12,17 @@ class Stages(object):
     COUNT = 6
 
 
+class Usage(object):
+    POSITION = 0
+    COLOR = 1
+    NORMAL = 2
+    TANGENT = 3
+    BITANGENT = 4
+    TEXCOORD = 5
+    BLENDINDICES = 6
+    BLENDWEIGHTS = 7
+
+
 class _StructStream(object):
     def __init__(self, data):
         self._data = data
@@ -561,3 +572,59 @@ def get_merged_parameters(path, shader_filter=None):
     if not has_compiled:
         raise IOError('could not find any compiled effect for %s' % path)
     return parameters, resources, samplers
+
+
+def _uses_compressed_tanget(inputs):
+    """
+    :param inputs:
+    :type inputs: list[ShaderInput]
+    """
+    has_tangent = False
+    has_normal = False
+    for each in inputs:
+        if each.usage == Usage.TANGENT:
+            has_tangent = True
+        elif each.usage == Usage.NORMAL:
+            has_normal = True
+    return has_tangent and not has_normal
+
+
+def is_using_compressed_tangents(path, shader_filter=None):
+    """
+    Check if the specified effect uses compressed tangents, i.e. if any vertex shader used by the effect requires
+    TANGENT vertex element, but not NORMAL.
+    :param path: effect path
+    :type path: basestring
+    :param shader_filter: optional filter for permutations, called with platform, shader model
+    :type shader_filter: (int, int, list[(str, Permutation)])->bool
+    :return: True if any vertex shader is using compressed tangents, False otherwise
+    :rtype: bool
+    """
+    has_compiled = False
+    for platform in PLATFORM_NAMES.iterkeys():
+        for sm in SHADER_MODEL_NAMES.iterkeys():
+            try:
+                compiled = paths.get_compiled_path(path, sm, platform)
+            except ValueError:
+                continue
+            try:
+                effect = EffectInfo(compiled)
+            except IOError:
+                continue
+            has_compiled = True
+            count = 1
+            for each in effect.permutations:
+                count *= len(each.options)
+            for each in xrange(count):
+                if shader_filter:
+                    if not shader_filter(platform, sm, effect.index_to_options(each)):
+                        continue
+                shader = effect.get_shader(each)
+                for technique in shader.techniques:
+                    for p in technique.passes:
+                        if Stages.VERTEX_SHADER in p.stages:
+                            if _uses_compressed_tanget(p.stages[Stages.VERTEX_SHADER]):
+                                return True
+    if not has_compiled:
+        raise IOError('could not find any compiled effect for %s' % path)
+    return False
