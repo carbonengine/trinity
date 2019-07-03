@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Release12|Win32">
+      <Configuration>Release12</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release_27|x64">
       <Configuration>Release_27</Configuration>
       <Platform>x64</Platform>
@@ -20,6 +24,10 @@
     <ProjectConfiguration Include="Dev9_26|x64">
       <Configuration>Dev9_26</Configuration>
       <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DevGLES2|Win32">
+      <Configuration>DevGLES2</Configuration>
+      <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release|Win32">
       <Configuration>Release</Configuration>
@@ -45,9 +53,13 @@
       <Configuration>Dev9_26</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="DevGLES2|Win32">
-      <Configuration>DevGLES2</Configuration>
+    <ProjectConfiguration Include="DevStub|Win32">
+      <Configuration>DevStub</Configuration>
       <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugStub|x64">
+      <Configuration>DebugStub</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="ReleaseStub_26|x64">
       <Configuration>ReleaseStub_26</Configuration>
@@ -61,21 +73,21 @@
       <Configuration>Deploy</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="DebugStub|x64">
-      <Configuration>DebugStub</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release11|Win32">
-      <Configuration>Release11</Configuration>
-      <Platform>Win32</Platform>
-    </ProjectConfiguration>
     <ProjectConfiguration Include="Release11|x64">
       <Configuration>Release11</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="ReleaseGLES2|Win32">
+      <Configuration>ReleaseGLES2</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="DevStub|x64">
       <Configuration>DevStub</Configuration>
       <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Dev12|Win32">
+      <Configuration>Dev12</Configuration>
+      <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -89,17 +101,25 @@
       <Configuration>Deploy11</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="Release12|x64">
+      <Configuration>Release12</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Release|x64">
       <Configuration>Release</Configuration>
       <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Deploy12|Win32">
+      <Configuration>Deploy12</Configuration>
+      <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="ReleaseStub_26|Win32">
       <Configuration>ReleaseStub_26</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseStub_27|Win32">
-      <Configuration>ReleaseStub_27</Configuration>
-      <Platform>Win32</Platform>
+    <ProjectConfiguration Include="Deploy12|x64">
+      <Configuration>Deploy12</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release11_27|Win32">
       <Configuration>Release11_27</Configuration>
@@ -117,8 +137,8 @@
       <Configuration>ReleaseStub</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="ReleaseGLES2|Win32">
-      <Configuration>ReleaseGLES2</Configuration>
+    <ProjectConfiguration Include="Release11|Win32">
+      <Configuration>Release11</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Dev11|x64">
@@ -137,8 +157,12 @@
       <Configuration>Release11_26</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="DevStub|Win32">
-      <Configuration>DevStub</Configuration>
+    <ProjectConfiguration Include="ReleaseStub_27|Win32">
+      <Configuration>ReleaseStub_27</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Dev9|Win32">
+      <Configuration>Dev9</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Release11_27|x64">
@@ -157,15 +181,18 @@
       <Configuration>Debug11</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Dev9|Win32">
-      <Configuration>Dev9</Configuration>
-      <Platform>Win32</Platform>
+    <ProjectConfiguration Include="Dev12|x64">
+      <Configuration>Dev12</Configuration>
+      <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{BEB47D8C-1734-4A73-91CE-D405F5468B08}</ProjectGuid>
     <ProjectName>trinity</ProjectName>
     <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
@@ -180,6 +207,9 @@
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -200,7 +230,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'" Label="Configuration">
@@ -212,16 +245,16 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'" Label="Configuration">
-    <PlatformToolset>v141</PlatformToolset>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'" Label="Configuration">
-    <PlatformToolset>v141</PlatformToolset>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev12|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -233,13 +266,19 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release12|x64'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy12|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy12|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'" Label="Configuration">
@@ -254,7 +293,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'" Label="Configuration">
@@ -269,7 +308,10 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'" Label="Configuration">
+    <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'" Label="Configuration">
@@ -284,10 +326,15 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev12|x64'" Label="Configuration">
     <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)/Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
@@ -309,6 +356,11 @@
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -343,7 +395,12 @@
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -363,22 +420,22 @@
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">
-    <UseOfMfc>False</UseOfMfc>
-    <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">
-    <UseOfMfc>False</UseOfMfc>
-    <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <ConfigurationType>DynamicLibrary</ConfigurationType>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev12|Win32'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -398,7 +455,17 @@
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy12|Win32'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -408,7 +475,7 @@
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy12|x64'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -433,7 +500,7 @@
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -458,7 +525,12 @@
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">
+    <UseOfMfc>False</UseOfMfc>
+    <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -483,7 +555,7 @@
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev12|x64'">
     <UseOfMfc>False</UseOfMfc>
     <IntDir>../temp/trinity/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -493,6 +565,12 @@
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'" Label="UserMacros">
+    <CcpConfigType>Release</CcpConfigType>
+    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
+    <CcpBranchPath>../../..</CcpBranchPath>
+    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'" Label="UserMacros">
     <CcpConfigType>Release</CcpConfigType>
@@ -519,6 +597,12 @@
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'" Label="UserMacros">
+    <CcpConfigType>Dev</CcpConfigType>
+    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
+    <CcpBranchPath>../../..</CcpBranchPath>
+    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'" Label="UserMacros">
     <CcpConfigType>Dev</CcpConfigType>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
@@ -560,8 +644,14 @@
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'" Label="UserMacros">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'" Label="UserMacros">
     <CcpConfigType>Dev</CcpConfigType>
+    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
+    <CcpBranchPath>../../..</CcpBranchPath>
+    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'" Label="UserMacros">
+    <CcpConfigType>Debug</CcpConfigType>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
@@ -584,25 +674,25 @@
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'" Label="UserMacros">
-    <CcpConfigType>Debug</CcpConfigType>
-    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
-    <CcpBranchPath>../../..</CcpBranchPath>
-    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'" Label="UserMacros">
-    <CcpConfigType>Release</CcpConfigType>
-    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
-    <CcpBranchPath>../../..</CcpBranchPath>
-    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
-  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|x64'" Label="UserMacros">
     <CcpConfigType>Release</CcpConfigType>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'" Label="UserMacros">
+    <CcpConfigType>Release</CcpConfigType>
+    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
+    <CcpBranchPath>../../..</CcpBranchPath>
+    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'" Label="UserMacros">
+    <CcpConfigType>Dev</CcpConfigType>
+    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
+    <CcpBranchPath>../../..</CcpBranchPath>
+    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev12|Win32'" Label="UserMacros">
     <CcpConfigType>Dev</CcpConfigType>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
@@ -626,8 +716,20 @@
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release12|x64'" Label="UserMacros">
+    <CcpConfigType>Release</CcpConfigType>
+    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
+    <CcpBranchPath>../../..</CcpBranchPath>
+    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="UserMacros">
     <CcpConfigType>Release</CcpConfigType>
+    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
+    <CcpBranchPath>../../..</CcpBranchPath>
+    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy12|Win32'" Label="UserMacros">
+    <CcpConfigType>Deploy</CcpConfigType>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
@@ -638,8 +740,8 @@
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'" Label="UserMacros">
-    <CcpConfigType>Release</CcpConfigType>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Deploy12|x64'" Label="UserMacros">
+    <CcpConfigType>Deploy</CcpConfigType>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
@@ -668,7 +770,7 @@
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'" Label="UserMacros">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'" Label="UserMacros">
     <CcpConfigType>Release</CcpConfigType>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
@@ -698,7 +800,13 @@
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'" Label="UserMacros">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'" Label="UserMacros">
+    <CcpConfigType>Release</CcpConfigType>
+    <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
+    <CcpBranchPath>../../..</CcpBranchPath>
+    <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'" Label="UserMacros">
     <CcpConfigType>Dev</CcpConfigType>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
@@ -728,7 +836,7 @@
     <CcpBranchPath>../../..</CcpBranchPath>
     <CcpSdkPath>../../../../../../sdk</CcpSdkPath>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'" Label="UserMacros">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Dev12|x64'" Label="UserMacros">
     <CcpConfigType>Dev</CcpConfigType>
     <CcpSharedToolsPath>../../../../../../shared_tools</CcpSharedToolsPath>
     <CcpBranchPath>../../..</CcpBranchPath>
@@ -749,6 +857,9 @@
     </BuildMacro>
   </ItemGroup>
   <ImportGroup Label="ExtensionSettings" />
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'" Label="PropertySheets">
+    <Import Project="../manifests/manifests.props" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
@@ -762,6 +873,9 @@
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'" Label="PropertySheets">
+    <Import Project="../manifests/manifests.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
@@ -782,7 +896,10 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'" Label="PropertySheets">
+    <Import Project="../manifests/manifests.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'" Label="PropertySheets">
@@ -794,16 +911,16 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props" />
-  </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'" Label="PropertySheets">
-    <Import Project="../manifests/manifests.props" />
-  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11|x64'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'" Label="PropertySheets">
+    <Import Project="../manifests/manifests.props" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'" Label="PropertySheets">
+    <Import Project="../manifests/manifests.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev12|Win32'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
@@ -815,13 +932,19 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release12|x64'" Label="PropertySheets">
+    <Import Project="../manifests/manifests.props" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="../manifests/manifests.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Deploy12|Win32'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Deploy12|x64'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'" Label="PropertySheets">
@@ -836,7 +959,7 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'" Label="PropertySheets">
@@ -851,7 +974,10 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'" Label="PropertySheets">
+    <Import Project="../manifests/manifests.props" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'" Label="PropertySheets">
@@ -866,10 +992,15 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Dev12|x64'" Label="PropertySheets">
     <Import Project="../manifests/manifests.props" />
   </ImportGroup>
   <PropertyGroup>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">_trinity_dx12_internal</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">_trinity_dx9_internal</TargetName>
@@ -895,6 +1026,11 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">_trinity_dx9_dev</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev9_26|x64'">True</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">_trinity_gles2_dev</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">_trinity_dx9_internal</TargetName>
@@ -925,11 +1061,16 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'">_trinity_dx9_dev</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev9_26|Win32'">True</LinkIncremental>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">.dll</TargetExt>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">_trinity_gles2_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">True</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">_trinity_stub_dev</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">True</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">_trinity_stub_internal_d</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'">../../autobuild/$(ProjectName)/python_26/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|x64'">_trinity_stub_internal</TargetName>
@@ -945,26 +1086,26 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">_trinity_dx9_deploy</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Deploy|x64'">False</LinkIncremental>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">.dll</TargetExt>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">_trinity_stub_internal_d</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">True</LinkIncremental>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">.dll</TargetExt>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">_trinity_dx11_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">_trinity_dx11_internal</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release11|x64'">False</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">_trinity_gles2_internal</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">_trinity_stub_dev</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DevStub|x64'">True</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev12|Win32'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev12|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev12|Win32'">_trinity_dx12_dev</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev12|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev12|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">_trinity_dx9_internal_d</TargetName>
@@ -980,21 +1121,31 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'">_trinity_dx11_deploy</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Deploy11|x64'">False</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">_trinity_dx12_internal</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">_trinity_dx9_internal</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">False</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Deploy12|Win32'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Deploy12|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Deploy12|Win32'">_trinity_dx12_deploy</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy12|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Deploy12|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">../../autobuild/$(ProjectName)/python_26/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">_trinity_stub_internal</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_26|Win32'">False</LinkIncremental>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">.pyd</TargetExt>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">_trinity_stub_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">False</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Deploy12|x64'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Deploy12|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Deploy12|x64'">_trinity_dx12_deploy</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Deploy12|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Deploy12|x64'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11_27|Win32'">_trinity_dx11_internal</TargetName>
@@ -1015,11 +1166,11 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'">_trinity_stub_internal</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseStub|x64'">False</LinkIncremental>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">.dll</TargetExt>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">_trinity_gles2_internal</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">False</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">_trinity_dx11_internal</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">False</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'">.dll</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev11|x64'">_trinity_dx11_dev</TargetName>
@@ -1040,11 +1191,16 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'">_trinity_dx11_internal</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release11_26|Win32'">False</LinkIncremental>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">.dll</TargetExt>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">_trinity_stub_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">True</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">.pyd</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">_trinity_stub_internal</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">False</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">_trinity_dx9_dev</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">True</LinkIncremental>
     <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'">.pyd</TargetExt>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'">../../autobuild/$(ProjectName)/python_27/$(Platform)/$(PlatformToolset)/</OutDir>
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Release11_27|x64'">_trinity_dx11_internal</TargetName>
@@ -1065,12 +1221,48 @@
     <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">_trinity_dx11_internal_d</TargetName>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug11|x64'">True</LinkIncremental>
-    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">.dll</TargetExt>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
-    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">_trinity_dx9_dev</TargetName>
-    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
-    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">True</LinkIncremental>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Dev12|x64'">.dll</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Dev12|x64'">../../autobuild/$(ProjectName)/exefile/$(Platform)/$(PlatformToolset)/</OutDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Dev12|x64'">_trinity_dx12_dev</TargetName>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Dev12|x64'">../../autobuild/temp/$(ProjectName)/$(Platform)/$(Configuration)/$(PlatformToolset)/</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Dev12|x64'">True</LinkIncremental>
   </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release12|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_DIRECTX12;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories> ../../../../../../sdk/freetype/2.6.0/include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/shared;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/um;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WholeProgramOptimization>True</WholeProgramOptimization>
+      <TreatWarningAsError>True</TreatWarningAsError>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <Optimization>MaxSpeed</Optimization>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(ProgramFiles)/Windows Kits/10/Lib/10.0.17763.0/um/$(PlatformTarget);../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
+      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x86.lib;ImageIO.lib;TrinityAL_dx12.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;d3d12.lib;dbghelp.lib;dxgi.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release_27|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -1148,7 +1340,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_OPENGLES2;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\Python\27_64\include;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\Python\27_64\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1162,13 +1354,13 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win64;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\Python\27_64\libs;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\granny\2.11.9.1\lib\win64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win64;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\Python\27_64\libs;$(CcpSdkPath)\granny\2.11.9.1\lib\win64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_gles2.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_gles2.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;dbghelp.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1249,6 +1441,40 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYDEV;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_OPENGLES2;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>True</TreatWarningAsError>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <Optimization>Disabled</Optimization>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
+      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO_dev.lib;TrinityAL_gles2_dev.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;dbghelp.lib;glew32.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;opengl32.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -1290,7 +1516,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_OPENGLES2;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\Python\27\include;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\Python\27\include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1304,13 +1530,13 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\Python\27\libs;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\Python\27\libs;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_gles2.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;glew32.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;opengl32.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_gles2.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;dbghelp.lib;glew32.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;opengl32.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1461,12 +1687,12 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DevGLES2|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYDEV;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_OPENGLES2;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYDEV;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_STUB;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -1479,12 +1705,46 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO_dev.lib;TrinityAL_gles2_dev.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;glew32.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;opengl32.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO_dev.lib;TrinityAL_stub_dev.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_STACKLESS=1;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=_trinity_stub_internal;TRINITY_PLATFORM=TRINITY_STUB;_CRT_RAND_S;_DEBUG;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>True</TreatWarningAsError>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <Optimization>Disabled</Optimization>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win64;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\granny\2.11.9.1\lib\win64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
+      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalDependencies>CcpCore_d.lib;CcpMath_d.lib;FreeType26_D.lib;ImageIO_d.lib;TrinityAL_stub_d.lib;blue_d.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9d.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg_d.lib;libpng_d.lib;muparserd.lib;oldnames.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;squish_d.lib;tbb_debug.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1592,77 +1852,7 @@
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_dx9.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ResourceCompile>
-      <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
-    <Manifest />
-    <PreBuildEvent />
-    <PreLinkEvent />
-    <PostBuildEvent />
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugStub|x64'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_STACKLESS=1;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=_trinity_stub_internal;TRINITY_PLATFORM=TRINITY_STUB;_CRT_RAND_S;_DEBUG;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>True</MultiProcessorCompilation>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWarningAsError>True</TreatWarningAsError>
-      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
-      <FloatingPointModel>Fast</FloatingPointModel>
-      <BufferSecurityCheck>False</BufferSecurityCheck>
-      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <Optimization>Disabled</Optimization>
-      <WarningLevel>Level3</WarningLevel>
-    </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win64;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\granny\2.11.9.1\lib\win64;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>True</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
-      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalDependencies>CcpCore_d.lib;CcpMath_d.lib;FreeType26_D.lib;ImageIO_d.lib;TrinityAL_stub_d.lib;blue_d.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9d.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg_d.lib;libpng_d.lib;muparserd.lib;oldnames.lib;psapi.lib;python27_d.lib;rad_tm_win64.lib;squish_d.lib;tbb_debug.lib;zlib_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
-    </Link>
-    <ResourceCompile>
-      <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-    </ResourceCompile>
-    <Manifest />
-    <PreBuildEvent />
-    <PreLinkEvent />
-    <PostBuildEvent />
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">
-    <ClCompile>
-      <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_DIRECTX11;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <MultiProcessorCompilation>True</MultiProcessorCompilation>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <WholeProgramOptimization>True</WholeProgramOptimization>
-      <TreatWarningAsError>True</TreatWarningAsError>
-      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
-      <FloatingPointModel>Fast</FloatingPointModel>
-      <BufferSecurityCheck>False</BufferSecurityCheck>
-      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
-      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
-      <Optimization>MaxSpeed</Optimization>
-      <WarningLevel>Level3</WarningLevel>
-    </ClCompile>
-    <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <GenerateDebugInformation>True</GenerateDebugInformation>
-      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
-      <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
-      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x86.lib;ImageIO.lib;TrinityAL_dx11.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxgi.lib;dxguid.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_dx9.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1698,7 +1888,43 @@
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x64.lib;ImageIO.lib;TrinityAL_dx11.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxgi.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x64.lib;ImageIO.lib;TrinityAL_dx11.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxgi.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_OPENGLES2;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WholeProgramOptimization>True</WholeProgramOptimization>
+      <TreatWarningAsError>True</TreatWarningAsError>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <Optimization>MaxSpeed</Optimization>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
+      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_gles2.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;dbghelp.lib;glew32.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;opengl32.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1733,6 +1959,40 @@
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO_dev.lib;TrinityAL_stub_dev.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev12|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYDEV;TRINITYNAME=$(TargetName);TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories> ../../../../../../sdk/freetype/2.6.0/include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/shared;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/um;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWarningAsError>True</TreatWarningAsError>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <Optimization>Disabled</Optimization>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(ProgramFiles)/Windows Kits/10/Lib/10.0.17763.0/um/$(PlatformTarget);../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
+      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x86.lib;ImageIO_dev.lib;TrinityAL_dx12_dev.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;d3d12.lib;dbghelp.lib;dxgi.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1847,6 +2107,42 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release12|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_DIRECTX12;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories> ../../../../../../sdk/freetype/2.6.0/include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/shared;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/um;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WholeProgramOptimization>True</WholeProgramOptimization>
+      <TreatWarningAsError>True</TreatWarningAsError>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <Optimization>MaxSpeed</Optimization>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win64;$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\lib\win64;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(ProgramFiles)/Windows Kits/10/Lib/10.0.17763.0/um/$(PlatformTarget);../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
+      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x64.lib;ImageIO.lib;TrinityAL_dx12.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d12.lib;dbghelp.lib;dxgi.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
@@ -1873,6 +2169,42 @@
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_dx9.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Deploy12|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_DEPLOY=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;EVALUATION_SDKS_ENABLED=0;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_DIRECTX12;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories> ../../../../../../sdk/freetype/2.6.0/include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/shared;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/um;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WholeProgramOptimization>True</WholeProgramOptimization>
+      <TreatWarningAsError>True</TreatWarningAsError>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <Optimization>MaxSpeed</Optimization>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(ProgramFiles)/Windows Kits/10/Lib/10.0.17763.0/um/$(PlatformTarget);../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
+      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x86.lib;ImageIO.lib;TrinityAL_dx12.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;d3d12.lib;dbghelp.lib;dxgi.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -1919,12 +2251,12 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Deploy12|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_STUB;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_DEPLOY=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;EVALUATION_SDKS_ENABLED=0;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_DIRECTX12;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\Python\27\include;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories> ../../../../../../sdk/freetype/2.6.0/include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/shared;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/um;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1938,13 +2270,13 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\Python\27\libs;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win64;$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\lib\win64;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(ProgramFiles)/Windows Kits/10/Lib/10.0.17763.0/um/$(PlatformTarget);../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_stub.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x64.lib;ImageIO.lib;TrinityAL_dx12.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d12.lib;dbghelp.lib;dxgi.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2097,12 +2429,12 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseGLES2|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release11|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_OPENGLES2;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_DIRECTX11;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\glew\1.7.0\include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -2116,13 +2448,13 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
-      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_gles2.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;glew32.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;opengl32.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x86.lib;ImageIO.lib;TrinityAL_dx11.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxgi.lib;dxguid.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2156,7 +2488,7 @@
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalDependencies>legacy_stdio_definitions.lib;CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x64.lib;ImageIO_dev.lib;TrinityAL_dx11_dev.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxgi.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x64.lib;ImageIO_dev.lib;TrinityAL_dx11_dev.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d11.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxgi.lib;dxguid.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2273,12 +2605,48 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DevStub|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseStub_27|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYDEV;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_STUB;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_STUB;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\Python\27\include;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>True</MultiProcessorCompilation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WholeProgramOptimization>True</WholeProgramOptimization>
+      <TreatWarningAsError>True</TreatWarningAsError>
+      <PrecompiledHeaderOutputFile>$(IntDir)trinity.pch</PrecompiledHeaderOutputFile>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <BufferSecurityCheck>False</BufferSecurityCheck>
+      <PrecompiledHeaderFile>StdAfx.h</PrecompiledHeaderFile>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <Optimization>MaxSpeed</Optimization>
+      <WarningLevel>Level3</WarningLevel>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\Python\27\libs;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/python_27/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <GenerateDebugInformation>True</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
+      <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
+      <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO.lib;TrinityAL_stub.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Manifest />
+    <PreBuildEvent />
+    <PreLinkEvent />
+    <PostBuildEvent />
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYDEV;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_DIRECTX9;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -2291,12 +2659,12 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO_dev.lib;TrinityAL_stub_dev.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO_dev.lib;TrinityAL_dx9_dev.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2447,12 +2815,12 @@
     <PreLinkEvent />
     <PostBuildEvent />
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev9|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dev12|x64'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYDEV;TRINITYNAME=$(TargetName);TRINITY_PLATFORM=TRINITY_DIRECTX9;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;BLUE_WITH_PYTHON=1;BUILDING_GRANNY_STATIC;CCP_ASSERT_ENABLED=1;CCP_STACKLESS=1;D3DTARGET=9;DEPRECATED_ENABLED=1;INTERIORS_ENABLED=1;NDEBUG;NO_SHLWAPI_ISOS;TBB_ENABLED=1;TRINITYDEV;TRINITYNAME=$(TargetName);TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;_CRT_RAND_S;_SCL_SECURE_NO_WARNINGS;BLUE_OVERRIDE_VECTOR_TYPES=1;TRINITYBUILD;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Include;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories> ../../../../../../sdk/freetype/2.6.0/include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/Granny/2.11.9.1/include;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)/tbb/tbb2017_20160916oss/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\gstate;$(CcpSdkPath)\nvidia\NVAPI\R265\include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/shared;$(ProgramFiles)/Windows Kits/10/Include/10.0.17763.0/um;.;..\..\..\carbon\src\stackless\include;..\..\..\carbon\src\stackless\pc;..\..\..\carbon\src\stackless\stackless;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/cairo/1.15.12/include;$(CcpSdkPath)/freetype/2.6.0/include;$(CcpSdkPath)/libjpg/jpeg-9b;$(CcpSdkPath)/libpng/1.6.29/include;$(CcpSdkPath)/muparser/v2.2.5/include;$(CcpSdkPath)/squish/1.10/include;$(CcpSdkPath)/zlib/1.2.11/include;$(CcpSdkPath)\telemetry\3.0.1.1008\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>True</TreatWarningAsError>
@@ -2465,12 +2833,12 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win32;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\granny\2.11.9.1\lib\win32;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/granny/2.11.9.1/lib/win64;$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/tbb/tbb2017_20160916oss/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/zlib/1.2.11/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\ATI\CrossFire Detect;$(CcpSdkPath)\granny\2.11.9.1\lib\win64;$(CcpSdkPath)\nvidia\NVAPI\R265\Lib\$(Platform);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;$(ProgramFiles)/Windows Kits/10/Lib/10.0.17763.0/um/$(PlatformTarget);../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/blue/exefile/$(Platform)/$(PlatformToolset)/;../../autobuild/TrinityAL/$(Platform)/$(PlatformToolset)/;..\..\..\carbon\autobuild\stackless\$(Platform)\$(PlatformToolset);$(CcpSdkPath)/cairo/1.15.12/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libjpg/jpeg-9b/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/libpng/1.6.29/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/muparser/v2.2.5/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)/squish/1.10/lib/$(Platform)/$(PlatformToolset);$(CcpSdkPath)\freetype\2.6.0\lib\$(Platform)\$(PlatformToolset);$(CcpSdkPath)\telemetry\3.0.1.1008\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;../../../carbon/autobuild/CcpMath/$(Platform)/$(PlatformToolset)/;../../autobuild/ImageIO/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <IgnoreAllDefaultLibraries>False</IgnoreAllDefaultLibraries>
       <AdditionalAppleFrameworks>CoreFoundation;CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;ImageIO_dev.lib;TrinityAL_dx9_dev.lib;atimgpud_s_x86.lib;blue.lib;cairo-script.lib;cairo.lib;d3d9.lib;d3dx9.lib;dbghelp.lib;dxerr.lib;dxguid.lib;granny2_static.lib;gstate.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win32.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>CcpCore.lib;CcpMath.lib;FreeType26.lib;GFSDK_Aftermath_Lib.x64.lib;ImageIO_dev.lib;TrinityAL_dx12_dev.lib;atimgpud_s_x64.lib;blue.lib;cairo-script.lib;cairo.lib;d3d12.lib;dbghelp.lib;dxgi.lib;granny2_static_x64.lib;gstate_x64.lib;jpeg.lib;libpng.lib;muparser.lib;nvapi.lib;oldnames.lib;psapi.lib;python27.lib;rad_tm_win64.lib;squish.lib;tbb.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <ResourceCompile>
       <PreprocessorDefinitions>TARGET_FILENAME=$(TargetFileName);TARGET_NAME=$(TargetName);%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -2550,6 +2918,7 @@
     <ClInclude Include="Tr2PersistentPerObjectData.h" />
     <ClInclude Include="Tr2PickBuffer.h" />
     <ClInclude Include="Tr2PickingHelperBatch.h" />
+    <ClInclude Include="Tr2PlatformInfo.h" />
     <ClInclude Include="Tr2PostProcess.h" />
     <ClInclude Include="Tr2PrimitiveScene.h" />
     <ClInclude Include="Tr2PrimitiveSet.h" />
@@ -2716,6 +3085,7 @@
     <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSet.h" />
     <ClInclude Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSetItem.h" />
     <ClInclude Include="Eve\SpaceObject\Attachments\Sets\IEveSpaceObjectAttachment.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildBehaviorSystem.h" />
     <ClInclude Include="Eve\SpaceObject\Children\EveChildBulletStorm.h" />
     <ClInclude Include="Eve\SpaceObject\Children\EveChildCloud.h" />
     <ClInclude Include="Eve\SpaceObject\Children\EveChildContainer.h" />
@@ -2732,6 +3102,7 @@
     <ClInclude Include="Eve\SpaceObject\Children\EveCloudEditableVolume.h" />
     <ClInclude Include="Eve\SpaceObject\Children\IEveEffectChildrenOwner.h" />
     <ClInclude Include="Eve\SpaceObject\Children\IEveSpaceObjectChild.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\Behaviors\IBehavior.h" />
     <ClInclude Include="Eve\SpaceObject\Children\TransformModifiers\EveChildModifierAttachToBone.h" />
     <ClInclude Include="Eve\SpaceObject\Children\TransformModifiers\EveChildModifierBillboard2D.h" />
     <ClInclude Include="Eve\SpaceObject\Children\TransformModifiers\EveChildModifierBillboard3D.h" />
@@ -3077,6 +3448,8 @@
     <ClCompile Include="Tr2NamedPipeListener_Blue.cpp" />
     <ClCompile Include="Tr2PerObjectData.cpp" />
     <ClCompile Include="Tr2PickBuffer.cpp" />
+    <ClCompile Include="Tr2PlatformInfo.cpp" />
+    <ClCompile Include="Tr2PlatformInfo_Blue.cpp" />
     <ClCompile Include="Tr2PostProcess.cpp" />
     <ClCompile Include="Tr2PostProcess_Blue.cpp" />
     <ClCompile Include="Tr2PrimitiveScene.cpp" />
@@ -3148,6 +3521,7 @@
     <ClCompile Include="TriDebugTextRenderer.cpp" />
     <ClCompile Include="TriDevice.cpp" />
     <ClCompile Include="TriDevice11.cpp" />
+    <ClCompile Include="TriDevice12.cpp" />
     <ClCompile Include="TriDevice9.cpp" />
     <ClCompile Include="TriDeviceGLES2.cpp" />
     <ClCompile Include="TriDeviceOrbis.cpp" />
@@ -3371,6 +3745,8 @@
     <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSetItem.cpp" />
     <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSetItem_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Attachments\Sets\EveSpriteSet_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildBehaviorSystem.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildBehaviorSystem_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\EveChildBulletStorm.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\EveChildBulletStorm_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\EveChildCloud.cpp" />
