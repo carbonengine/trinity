@@ -414,12 +414,6 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 		return E_FAIL;
 	}
 
-	if( !presentationParameters.windowed && dxgiOutput != m_dxgiOutput )
-	{
-		// If we are switching between two monitors in fullscreen mode it seems we first should
-		// go windowed and then fullscreen on another monitor, otherwise DXGI behaves funny.
-		CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
-	}
 	m_dxgiOutput = dxgiOutput;
 
 	DXGI_FORMAT fmt = SafeConvertD3DBackBufferFormat( presentationParameters.mode.format );
