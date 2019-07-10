@@ -1761,7 +1761,7 @@ bool Tr2Renderer::GetSystemShaderOptions( Tr2ShaderOption** options, size_t* cou
 		s_shaderOptionsInitialized = true;
 	}
 
-	*options = &s_shaderOptions[0];
+	*options = s_shaderOptions;
 	*count = s_shaderOptionCount;
 
 	return true;
