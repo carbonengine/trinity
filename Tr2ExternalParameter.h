@@ -40,8 +40,9 @@ public:
 	void SetDestinationAttribute( const std::string& attributeName );
 
 	BlueStdResult SetValue( BlueScriptValue value );
-	BlueStdResult GetValue( BlueScriptValue& value );
+	BlueStdResult GetValue( BlueScriptValue& value ) const;
 	Be::Var* GetDestination() const;
+	const Be::VarEntry* GetDestinationEntry() const;
 
 	bool IsValid() const;
 

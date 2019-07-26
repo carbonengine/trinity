@@ -18,9 +18,9 @@ const Be::ClassInfo* EveChildSocket::ExposeToBlue()
 		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "resPath", m_plugResPath, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "resPath", m_plugResPath, "Path to the plug (must be a red file with just an EveChildPlug).", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "plug", m_plug, "", Be::READ )
+		MAP_ATTRIBUTE( "plug", m_plug, "Reference to the loaded plus.\n:jessica-hidden: True\n", Be::READ )
 
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
@@ -32,12 +32,13 @@ const Be::ClassInfo* EveChildSocket::ExposeToBlue()
 		
 		MAP_ATTRIBUTE( "parameters", m_parameters, "List of specialized parameters.", Be::READ | Be::PERSIST | Be::NOTIFY )
 
-		MAP_METHOD_AND_WRAP( "RebuildLocalTransform", RebuildLocalTransform, "Rebuilds local transform." )
+		MAP_METHOD_AND_WRAP( "RebuildLocalTransform", RebuildLocalTransform, "Rebuilds local transform.\n:jessica-hidden: True\n" )
 
 		MAP_METHOD_AND_WRAP(
 			"SetControllerVariable",
 			SetControllerVariable,
 			"Set variable for all applicable controllers\n"
+			":jessica-hidden: True\n"
 			":param name: variable name\n"
 			":param value: new variable value\n"
 		)
@@ -46,6 +47,7 @@ const Be::ClassInfo* EveChildSocket::ExposeToBlue()
 			"HandleControllerEvent",
 			HandleControllerEvent,
 			"Pass an event to controllers\n"
+			":jessica-hidden: True\n"
 			":param name: event name"
 		)
 
@@ -53,18 +55,21 @@ const Be::ClassInfo* EveChildSocket::ExposeToBlue()
 			"StartControllers",
 			StartControllers,
 			"Start all controllers"
+			":jessica-hidden: True\n"
 		)
 
 		MAP_METHOD_AND_WRAP(
 			"Reload",
 			Reload,
-			"Reload the effect child.\n:jessica-placement:\n:jessica-icon: far-sync\n"
+			"Reload the effect child.\n"
 		)
 
 		MAP_METHOD_AND_WRAP(
 			"Rebind",
 			BindParameters,
 			"Rebind parameters."
+			":jessica-placement:\n"
+			":jessica-icon: far-sync\n"
 		)
 
 		EXPOSURE_END()

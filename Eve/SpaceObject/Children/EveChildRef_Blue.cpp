@@ -18,9 +18,9 @@ const Be::ClassInfo* EveChildRef::ExposeToBlue()
 		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "resPath", m_resPath, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "resPath", m_resPath, "Path to a red file.", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "child", m_child, "", Be::READ )
+		MAP_ATTRIBUTE( "child", m_child, "Reference to the loaded child.\n:jessica-hidden: True\n", Be::READ )
 
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
@@ -36,6 +36,7 @@ const Be::ClassInfo* EveChildRef::ExposeToBlue()
 			"SetControllerVariable",
 			SetControllerVariable,
 			"Set variable for all applicable controllers\n"
+			":jessica-hidden: True\n"
 			":param name: variable name\n"
 			":param value: new variable value\n"
 		)
@@ -43,20 +44,21 @@ const Be::ClassInfo* EveChildRef::ExposeToBlue()
 		MAP_METHOD_AND_WRAP(
 			"HandleControllerEvent",
 			HandleControllerEvent,
-			"Pass an event to controllers\n"
+			"Pass an event to controllers\n:jessica-hidden: True\n"
 			":param name: event name"
 		)
 
 		MAP_METHOD_AND_WRAP(
 			"StartControllers",
 			StartControllers,
-			"Start all controllers"
+			"Start all controllers\n"
+			":jessica-hidden: True\n"
 		)
 
 		MAP_METHOD_AND_WRAP(
 			"Reload",
 			Reload,
-			"Reload the effect child.\n:jessica-placement:\n:jessica-icon: far-sync\n"
+			"Reload the effect child.\n"
 		)
 
 		EXPOSURE_END()

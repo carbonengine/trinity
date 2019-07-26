@@ -10,15 +10,18 @@
 
 BLUE_DECLARE( Tr2ExternalParameter );
 
-BLUE_INTERFACE( IEveSocketParameter ) : public IRoot
+BLUE_INTERFACE( IEveSocketParameter ) : 
+	public IInitialize
 {
 	virtual const char* GetName() const { return ""; };
 	virtual void SetName( const char* name ) {};
 
-	virtual void ClearBindings() {}
-	virtual bool BindToExternalParameter( const Tr2ExternalParameter& externalParameter ) { return true; };
+	virtual bool Initialize() { return true; };
+
+	virtual void ClearBindings() {};
+	virtual bool BindToExternalParameter( Tr2ExternalParameter& externalParameter ) { return true; };
 	virtual void Reset() {};
-	
+	virtual void SetValueToDefault() {};
 	virtual void Propagate() {};
 };
 

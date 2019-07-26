@@ -172,7 +172,7 @@ BlueStdResult Tr2ExternalParameter::SetValue( BlueScriptValue value )
 #endif
 }
 
-BlueStdResult Tr2ExternalParameter::GetValue( BlueScriptValue& value )
+BlueStdResult Tr2ExternalParameter::GetValue( BlueScriptValue& value ) const
 {
 #if BLUE_WITH_PYTHON
 	if( m_valid )
@@ -199,6 +199,11 @@ BlueStdResult Tr2ExternalParameter::GetValue( BlueScriptValue& value )
 Be::Var* Tr2ExternalParameter::GetDestination() const
 {
 	return m_destination;
+}
+
+const Be::VarEntry* Tr2ExternalParameter::GetDestinationEntry() const
+{
+	return m_destinationEntry;
 }
 
 bool Tr2ExternalParameter::IsValid() const

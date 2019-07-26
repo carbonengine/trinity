@@ -6,9 +6,13 @@
 #include "StdAfx.h"
 #include "EveChildSocket.h"
 
+#include <algorithm>
+
 #include "EveChildPlug.h"
 #include "Utilities/BoundingSphere.h"
 #include "Eve/EveUpdateContext.h"
+#include "Tr2ExternalParameter.h"
+#include "SocketParameters/EveSocketParameter.h"
 
 
 EveChildSocket::EveChildSocket( IRoot* lockobj ) 
@@ -43,6 +47,94 @@ void EveChildSocket::Reload()
 	Initialize();
 }
 
+bool Contains( std::string str, const char* term )
+{
+	transform( str.begin(), str.end(), str.begin(), ::tolower );
+	return str.find( term ) != std::string::npos;
+}
+
+bool EveChildSocket::AddParameterForExternal( Tr2ExternalParameter& externalParam )
+{
+	auto destination = externalParam.GetDestinationEntry();
+	EveSocketParameterBindingBasePtr ptr;
+	switch ( destination->mType )
+	{
+	case Be::BYTE:
+	case Be::BOOL:
+		ptr.CreateInstance( BlueClassTypeTraits<EveSocketParameterBool>::Class() );
+		break;
+
+	case Be::SHORT:
+	case Be::LONG:
+	case Be::INT64:
+		ptr.CreateInstance( BlueClassTypeTraits<EveSocketParameterInt>::Class() );
+		break;
+
+	case Be::FLOAT:
+	case Be::DOUBLE:
+		ptr.CreateInstance( BlueClassTypeTraits<EveSocketParameterFloat>::Class() );
+		break;
+
+	case Be::FLOATARRAY:
+		if ( destination->GetFloatArraySize() == 2 )
+		{
+			ptr.CreateInstance( BlueClassTypeTraits<EveSocketParameterVector2>::Class() );
+		}
+		else if ( destination->GetFloatArraySize() == 3 )
+		{
+			ptr.CreateInstance( BlueClassTypeTraits<EveSocketParameterVector3>::Class() );
+		}
+		else if ( destination->GetFloatArraySize() == 4 )
+		{
+			if ( Contains(destination->mName, "color" ) )
+			{
+				ptr.CreateInstance( BlueClassTypeTraits<EveSocketParameterColor>::Class() );
+			}
+			else
+			{
+				ptr.CreateInstance( BlueClassTypeTraits<EveSocketParameterVector4>::Class() );
+			}
+		}
+		else
+		{
+			CCP_LOGWARN( "EveChildSocket: Unsupported value type." );
+		}
+		break;
+
+	case Be::STDSTRING:
+	case Be::STDWSTRING:
+	case Be::CHARARRAY:
+	case Be::CSTRING:
+	case Be::WCSTRING:
+		if ( Contains( destination->mName, "path" ) )
+		{
+			ptr.CreateInstance( BlueClassTypeTraits<EveSocketParameterFilePath>::Class() );
+		}
+		else
+		{
+			ptr.CreateInstance( BlueClassTypeTraits<EveSocketParameterString>::Class() );
+		}
+		break;
+
+	default:
+		CCP_LOGWARN( "EveChildSocket: Unsupported value type." );
+		break;
+	}
+
+	if ( ptr )
+	{
+		ptr->SetName( externalParam.GetName() );
+		ptr->BindToExternalParameter( externalParam );
+		ptr->SetValueToDefault();
+		m_parameters.Append( ptr );
+
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
 
 void EveChildSocket::BindParameters()
 {
@@ -54,16 +146,23 @@ void EveChildSocket::BindParameters()
 			( *paramIt )->ClearBindings();
 		}
 
-		// Attack all the new external params
+		// Attach all the new external params
 		const PTr2ExternalParameterVector& externalParams = m_plug->GetExternalParameters();
 		for ( auto it = begin( externalParams ); it != end( externalParams ); ++it )
 		{
+			bool paramBound = false;
 			for ( auto paramIt = begin( m_parameters ); paramIt != end( m_parameters ); ++paramIt )
 			{
 				if ( ( *paramIt )->BindToExternalParameter( **it ) )
 				{
+					paramBound = true;
 					break;
 				}
+			}
+			// No appropriate SocketParameter found, so make a new one if possible.
+			if ( !paramBound )
+			{
+				AddParameterForExternal( **it );
 			}
 		}
 	}

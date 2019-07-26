@@ -34,6 +34,7 @@ public:
 	void SetPlugResPath( const char* resPath );
 
 	void Reload();
+	bool AddParameterForExternal( Tr2ExternalParameter& externalParam );
 	void BindParameters();
 
 	//////////////////////////////////////////////////////////////////////////////////////
