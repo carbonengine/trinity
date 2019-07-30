@@ -427,8 +427,6 @@ protected:
 	float m_fogEnd; // Depth at which fog does not get stronger
 	float m_fogMax; // Maximum strength of fog, range [0,1], at m_fogEnd distance.
 
-	std::string m_postProcessPath;
-
 	PerFramePSData m_perFramePS;
 	PerFrameVSData m_perFrameVS;
 

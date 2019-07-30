@@ -22,7 +22,7 @@ public:
 
 	// Tr2PPEffect
 	bool IsActive() override;
-
+	bool OnModified( Be::Var* value ) override;
 	Color m_color;
 	float m_intensity;
 };
