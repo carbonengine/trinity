@@ -2853,8 +2853,6 @@
     <ClInclude Include="autoversion.h" />
     <ClInclude Include="EveSprite2dBracket.h" />
     <ClInclude Include="EveSprite2dBracketRenderer.h" />
-    <ClInclude Include="Eve\SpaceObject\Children\Behaviors\FollowASpline.h" />
-    <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.h" />
     <ClInclude Include="GrannyBoneOffset.h" />
     <ClInclude Include="IRenderCallback.h" />
     <ClInclude Include="ITr2AttributeGenerator.h" />
@@ -3107,7 +3105,9 @@
     <ClInclude Include="Eve\SpaceObject\Children\IEveEffectChildrenOwner.h" />
     <ClInclude Include="Eve\SpaceObject\Children\IEveSpaceObjectChild.h" />
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\BehaviorGroup.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\Behaviors\FollowASpline.h" />
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\IBehavior.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.h" />
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\Wander.h" />
     <ClInclude Include="Eve\SpaceObject\Children\SocketParameters\EveSocketParameter.h" />
     <ClInclude Include="Eve\SpaceObject\Children\SocketParameters\IEveSocketParameter.h" />
@@ -3385,10 +3385,6 @@
     <ClCompile Include="EveSprite2dBracketRenderer.cpp" />
     <ClCompile Include="EveSprite2dBracketRenderer_Blue.cpp" />
     <ClCompile Include="EveSprite2dBracket_Blue.cpp" />
-    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\FollowASpline.cpp" />
-    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\FollowASpline_Blue.cpp" />
-    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.cpp" />
-    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup_Blue.cpp" />
     <ClCompile Include="GrannyBoneOffset.cpp" />
     <ClCompile Include="GrannyBoneOffset_Blue.cpp" />
     <ClCompile Include="ITr2PickableScene.cpp" />
@@ -3797,6 +3793,10 @@
     <ClCompile Include="Eve\SpaceObject\Children\EveCloudEditableVolume_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\BehaviorGroup.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\BehaviorGroup_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\FollowASpline.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\FollowASpline_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\Wander.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\Wander_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\SocketParameters\EveSocketParameter.cpp" />
