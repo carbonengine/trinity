@@ -64,12 +64,12 @@ void EveSocketParameterBindingBase::Propagate()
 }
 
 #define SOCKET_PARAMETER_DEFINE( _className, _valueType, _defaultValue )\
-	void _className##::ClearBindings()\
+	void _className::ClearBindings()\
 	{\
 		m_defaults.clear();\
 		EveSocketParameterBindingBase::ClearBindings();\
 	}\
-	void _className##::Reset()\
+	void _className::Reset()\
 	{\
 		for ( size_t i = 0; i < m_bindings.size(); ++i )\
 		{\
@@ -78,7 +78,7 @@ void EveSocketParameterBindingBase::Propagate()
 		}\
 		ClearBindings();\
 	}\
-	bool _className##::ExtractDefault( const Tr2ExternalParameter& externalParameter )\
+	bool _className::ExtractDefault( const Tr2ExternalParameter& externalParameter )\
 	{\
 		_valueType value;\
 		BlueScriptValue blueValue;\
@@ -93,7 +93,7 @@ void EveSocketParameterBindingBase::Propagate()
 		}\
 		return true;\
 	}\
-	void _className##::SetValueToDefault()\
+	void _className::SetValueToDefault()\
 	{\
 		if (!m_defaults.empty())\
 		{\

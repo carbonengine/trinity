@@ -18,10 +18,10 @@ const Be::ClassInfo* EveSocketParameterBindingBase::ExposeToBlue()
 }
 
 #define SOCKET_PARAM_EXPOSE_TO_BLUE( _className, _valueDescription )\
-	BLUE_DEFINE( ##_className## );\
-	const Be::ClassInfo* ##_className##::ExposeToBlue()\
+	BLUE_DEFINE( _className );\
+	const Be::ClassInfo* _className::ExposeToBlue()\
 	{\
-		EXPOSURE_BEGIN( ##_className##, "" )\
+		EXPOSURE_BEGIN( _className, "" )\
 			MAP_INTERFACE( IEveSocketParameter )\
 			MAP_ATTRIBUTE( "name", m_name, "Attribute name.", Be::READWRITE | Be::PERSIST )\
 			MAP_ATTRIBUTE( "value", m_value, _valueDescription, Be::READWRITE | Be::PERSIST )\
