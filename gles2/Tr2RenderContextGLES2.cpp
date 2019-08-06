@@ -797,6 +797,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 	}
 
 	ShadowStateRestoreInfo restore;
+    restore.m_instanceAttributesCount = 0;
 	if( !ApplyShadowRenderStates( restore ) || !ApplyVertexDeclaration( restore, vertexStreamZeroData, vertexStreamZeroStride ) )
 	{
 		RestoreState( restore );
