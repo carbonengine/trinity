@@ -22,6 +22,7 @@ private:
 	float ProcessTunnelEntrances(DroneAgent& agent, std::vector<SplineTunnel>& tunnels);
 	void ProcessAssignedTunnel(DroneAgent& agent, std::vector<SplineTunnel>& tunnels, BehaviorGroup& group);
 
+	TunnelGroupType m_tunnelGroupType;
 	float m_behaviorWeight;	
 	float m_smoothPullFactor;
 	float m_cornerSmoothener;

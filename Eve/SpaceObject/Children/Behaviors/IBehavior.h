@@ -9,6 +9,13 @@ public:
 	virtual std::vector<Vector3> CalculateBehavior(std::vector<DroneAgent>& agents, const float deltaTime,
 	                                               BehaviorGroup& sys, EveChildBehaviorSystem& system) = 0;
 	virtual void RenderDebugInfo(Tr2DebugRenderer& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation) = 0;
+
+	enum TunnelGroupType
+	{
+		EXIT_TUNNELS = 0,
+		ENTRANCE_TUNNELS = 1,
+		OTHER_TUNNELS = 2,
+	};
 };
 
 #endif

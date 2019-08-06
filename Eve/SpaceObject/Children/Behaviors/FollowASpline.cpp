@@ -4,7 +4,8 @@
 FollowASpline::FollowASpline( IRoot* lockobj ) :
 	m_behaviorWeight( 10.f ),
 	m_smoothPullFactor( 0.8 ),
-	m_cornerSmoothener( 0.8 )
+	m_cornerSmoothener( 0.8 ),
+	m_tunnelGroupType( OTHER_TUNNELS )
 {
 }
 
@@ -18,6 +19,12 @@ float FollowASpline::ProcessTunnelEntrances(DroneAgent& agent, std::vector<Splin
 	for ( auto tunnel = tunnels.begin(); tunnel != tunnels.end(); ++tunnel )
 	{
 		auto t = ( *tunnel );
+
+		if( t.tunnelGroupID != m_tunnelGroupType )
+		{
+			return 0;
+		}
+
 		Vector3 dist = t.splinePoints[ 0 ].pos - agent.position;
 		float length = Length( dist );
 		if ( length < t.pointOfNoReturnSize )
@@ -90,8 +97,6 @@ void FollowASpline::ProcessAssignedTunnel( DroneAgent& agent, std::vector<Spline
 	{
 		float lengthFromShip = Length( targetVector );
 
-		
-
 		float blendingMod = 0;
 
 		if ( lengthBetweenPoints != 0 )
@@ -131,7 +136,7 @@ std::vector<Vector3> FollowASpline::CalculateBehavior(std::vector<DroneAgent>& a
 
 	if ( tunnels.empty() )
 	{
-		forceVectors;
+		return forceVectors;
 	}
 
 	for ( auto drone = agents.begin(); drone != agents.end(); ++drone )

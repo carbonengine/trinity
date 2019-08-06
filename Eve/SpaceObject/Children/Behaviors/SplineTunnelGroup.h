@@ -31,7 +31,6 @@ struct SplineTunnelPoint
 	float accelerationMultiplier;
 	Vector3 pos;
 	Vector3 rot;
-	//Quaternion rot;
 };
 
 struct SplineTunnel
@@ -40,10 +39,12 @@ struct SplineTunnel
 		pullSize( 50 ),
 		pointOfNoReturnSize( 20 ),
 		cylWidth( 20 ),
-		tunnelID( -1 )
+		tunnelID( -1 ),
+		tunnelGroupID( 0 )
 	{}
 
 	int tunnelID;
+	int tunnelGroupID;
 	std::vector<SplineTunnelPoint> splinePoints;
 	float cylWidth;
 	float accelerationMultiplier;
@@ -74,7 +75,6 @@ public:
 
 	// ITr2DebugRenderable
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void tempDebugPointsDEV();
 	virtual void RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation );
 
 	// IInitialize
@@ -82,10 +82,16 @@ public:
 	void OnListModified(long event, ssize_t key, ssize_t key2, IRoot* value, const IList* theList);
 	bool OnModified( Be::Var* value );
 
-	
+	enum TunnelGroupType
+	{
+		EXIT_TUNNELS = 0,
+		ENTRANCE_TUNNELS = 1,
+		OTHER_TUNNELS = 2,
+	};
 
 private:
-	
+
+	TunnelGroupType m_tunnelGroupType;
 	int m_numBreakPoints;
 	std::vector<SplineTunnel> m_tunnels;
 	PTr2CurveVector3Vector m_curveSets;

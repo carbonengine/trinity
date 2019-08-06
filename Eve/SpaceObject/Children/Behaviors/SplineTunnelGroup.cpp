@@ -6,9 +6,10 @@
 SplineTunnelGroup::SplineTunnelGroup( IRoot* lockobj ) :
 	PARENTLOCK( m_curveSets ),
 	m_numBreakPoints( 2 ),
-	m_tunnelWidth(15),
-	m_entrancePullSize(50),
-	m_entrySize(20)
+	m_tunnelWidth( 15 ),
+	m_entrancePullSize( 50 ),
+	m_entrySize( 20 ),
+	m_tunnelGroupType( OTHER_TUNNELS )
 {
 	m_curveSets.SetNotify( this );
 }
@@ -57,8 +58,10 @@ void SplineTunnelGroup::createSplineTunnels()
 		tunnel.cylWidth = m_tunnelWidth;
 		tunnel.pullSize = m_entrancePullSize;
 		tunnel.pointOfNoReturnSize = m_entrySize;
+		tunnel.tunnelGroupID = m_tunnelGroupType;
 		m_tunnels.push_back( tunnel );
 	}
+
 	if ( m_changeSystemTunnelRegistry )
 	{
 		( m_changeSystemTunnelRegistry )();
@@ -126,22 +129,6 @@ void SplineTunnelGroup::OnListModified( long event, ssize_t key, ssize_t key2, I
 void SplineTunnelGroup::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "splineTunnels" );
-}
-
-void SplineTunnelGroup::tempDebugPointsDEV()
-{
-	for (auto tunnel = m_tunnels.begin(); tunnel != m_tunnels.end(); ++tunnel)
-	{
-		CCP_LOGWARN( "next Tunnel: \n" );
-		auto pnts = (*tunnel).splinePoints;
-		int i = 0;
-		for (auto point = pnts.begin(); point != pnts.end(); ++point)
-		{
-			i++;
-			CCP_LOGWARN("next point, P%i p: %f %f %f r: %f %f %f \n ", i, point->pos.x, point->pos.y, point->pos.z,
-			            point->rot.x, point->rot.y, point->rot.z);
-		}
-	}
 }
 
 void SplineTunnelGroup::RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation )
