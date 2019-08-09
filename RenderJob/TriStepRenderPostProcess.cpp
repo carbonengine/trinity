@@ -290,13 +290,12 @@ bool TriStepRenderPostProcess::ProcessBloom(Tr2PPBloomEffect* bloom)
 
 void TriStepRenderPostProcess::RenderBloom(Tr2RenderContext& renderContext, Tr2PPBloomEffect* bloom)
 {
-	if (!bloom->IsActive())
+	if (!bloom || !bloom->IsActive())
 	{
 		return;
 	}
 	auto rt1 = m_renderInfo->GetRt1Buffer();
 	auto rt2 = m_renderInfo->GetRt2Buffer();
-	auto sourceCopy = m_renderInfo->GetSourceBufferCopy();
 
 	Tr2Renderer::PushRenderTarget(*rt1, renderContext);
 

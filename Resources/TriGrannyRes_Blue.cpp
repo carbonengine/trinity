@@ -162,11 +162,6 @@ namespace
 		auto boneIndex = FindGrannyComponent( GrannyVertexBoneIndicesName, vertexFormat );
 		if( boneIndex.first )
 		{
-
-			Vector2 p0 = ExtractVector2( triangle[0], position );
-			Vector2 p1 = ExtractVector2( triangle[1], position );
-			Vector2 p2 = ExtractVector2( triangle[2], position );
-
 			result.boneIndex = triangle[0][boneIndex.second];
 			result.hasBoneIndex = true;
 		}
