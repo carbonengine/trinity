@@ -24,8 +24,8 @@ void KDdroneManagementTree::CreateTree(std::vector<DroneAgent>& agents)
 		return;
 	}
 
-	std::vector<AgentRef> drones = ChangeAgentsIntoAgentRefs( agents );
-	AgentRef tree = *SplitSort( drones, 0, static_cast< int > ( agents.size() ) -1, X);
+	ChangeAgentsIntoAgentRefs( agents );
+	AgentRef tree = *SplitSort( m_agentRefs, 0, static_cast< int > ( agents.size() ) -1, X);
 	m_tree = tree;
 }
 
@@ -61,15 +61,15 @@ AgentRef* KDdroneManagementTree::SplitSort(std::vector<AgentRef>& agents, int b,
 
 std::vector<AgentRef> KDdroneManagementTree::ChangeAgentsIntoAgentRefs( std::vector<DroneAgent>& agents)
 {
-	std::vector< AgentRef > agentRefs;
+	
 	for ( auto ag = agents.begin(); ag != agents.end(); ++ag )
 	{
 		AgentRef newRef;
 		newRef.pos = &(ag->position);
 		newRef.agentID =  ag->id;
-		agentRefs.push_back( newRef );
+		m_agentRefs.push_back( newRef );
 	}
-	return agentRefs;
+	return m_agentRefs;
 }
 
 AgentRef KDdroneManagementTree::ChangeAgentIntoAgentRef( DroneAgent& agent )
@@ -121,10 +121,9 @@ void KDdroneManagementTree::RenderDebugInfo( Tr2DebugRenderer& renderer, float d
 	Vector3 debugSquareCorner2 = debugSquareCorner1 * -1;
 
 	renderer.DrawBox( nullptr, debugSquareCorner1, debugSquareCorner2, Tr2DebugRenderer::Wireframe, 0xff555555 );
-	if ( &m_tree != nullptr )
-	{
-		DrawTree( renderer, &m_tree, debugSquareCorner1, debugSquareCorner2, parentWorldLocation );
-	}
+	
+	DrawTree( renderer, &m_tree, debugSquareCorner1, debugSquareCorner2, parentWorldLocation );
+	
 }
 
 void KDdroneManagementTree::DrawTree( Tr2DebugRenderer& renderer, AgentRef* tree,  Vector3 debugSquareCorner1, Vector3 debugSquareCorner2, Matrix& parentWorldLocation )

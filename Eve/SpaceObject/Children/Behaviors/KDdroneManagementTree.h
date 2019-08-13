@@ -74,6 +74,7 @@ private:
 	                          parentWorldLocation);
 	float m_freq;
 	AgentRef m_tree;
+	std::vector< AgentRef > m_agentRefs;
 };
 
 TYPEDEF_BLUECLASS( KDdroneManagementTree );

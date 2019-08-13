@@ -7,6 +7,7 @@
 #include "Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTransformCommon.h" 
 #include "Resources/TriGeometryRes.h"
 
+
 BehaviorGroup::BehaviorGroup( IRoot* lockobj ) :
 	PARENTLOCK( m_behaviors ),
 	PARENTLOCK( m_volumes ),
@@ -67,6 +68,16 @@ unsigned int BehaviorGroup::GetCount()
 	return unsigned( m_count );
 }
 
+void BehaviorGroup::CreateAgentTree()
+{
+	m_tree = nullptr;
+	if ( !m_tree.CreateInstance() )
+	{
+		return;
+	}
+	m_tree->CreateTree( m_agents );
+}
+
 // For Artists when they are creating the sprite to easily swap between mesh's
 void BehaviorGroup::ToggleMesh()
 {
@@ -122,10 +133,6 @@ void BehaviorGroup::AddAgentPrivate()
 	agent.id = TriRandInt( 500 ); //TODO: look better into parameter, could the same ID be generate more than once?
 	m_agents.push_back( agent );
 	m_count++;
-	if ( m_changeBufferVertexCount == nullptr )
-	{
-		return;
-	}
 }
 
 void BehaviorGroup::SetCount( int count )
@@ -151,6 +158,8 @@ void BehaviorGroup::SetCount( int count )
 			RemoveAgentPrivate();
 		}
 	}
+
+	CreateAgentTree();
 
 	if ( m_changeBufferVertexCount == nullptr )
 	{
@@ -448,7 +457,7 @@ const LocatorStructureList* BehaviorGroup::GetLocatorsForSet( const BlueSharedSt
 // ITr2DebugRenderable
 void BehaviorGroup::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	options.insert( "Agents" );
+	options.insert( "AgentsKDTree" );
 	options.insert( "Volumes" );
 	options.insert( "ExclusionVolumes" );
 	options.insert( "Bounding Sphere" );
@@ -464,11 +473,20 @@ float BehaviorGroup::GetBoundingSphereRadius()
 
 void BehaviorGroup::RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation )
 {
-	if ( renderer.HasOption( this, "Agents" ) )
+	if ( renderer.HasOption( this, "AgentsKDTree" ) )
 	{
 		for ( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 		{
 			renderer.DrawSphere( this, TranslationMatrix( agent->position ) * parentWorldLocation, m_scale.z * 5, 6, Tr2DebugRenderer::Wireframe, 0xff555555 );
+		}
+
+		if( m_tree != nullptr )
+		{
+			m_tree->RenderDebugInfo( renderer, 1000, parentWorldLocation );
+		} 
+		else
+		{
+			CreateAgentTree();
 		}
 	}
 
@@ -560,5 +578,6 @@ void BehaviorGroup::RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentW
 			}
 		}
 	}
+
 }
 

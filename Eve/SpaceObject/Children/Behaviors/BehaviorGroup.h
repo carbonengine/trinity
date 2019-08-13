@@ -6,9 +6,12 @@
 #include <functional>
 #include "TriFrustum.h"
 #include "Eve/SpaceObject/Utils/EveLocatorSets.h"
+#include "KDdroneManagementTree.h"
+
 
 struct DroneAgent
 {
+
 	DroneAgent() :
 		mass( 1.f ),
 		position( 0, 0, 0 ),
@@ -60,6 +63,8 @@ struct DroneAgent
 	Vector3 lastAcceleration;
 };
 
+
+
 struct BehaviorProperties
 {
 	BehaviorProperties() :
@@ -81,7 +86,7 @@ BLUE_DECLARE_INTERFACE( IEveVolume );
 BLUE_DECLARE_IVECTOR( IEveVolume );
 BLUE_DECLARE( EveLocatorSets );
 BLUE_DECLARE_VECTOR( EveLocatorSets );
-
+BLUE_DECLARE( KDdroneManagementTree );
 
 BLUE_CLASS( BehaviorGroup ) :
 	public IRoot
@@ -90,6 +95,8 @@ public:
 	EXPOSE_TO_BLUE();
 	BehaviorGroup( IRoot* lockobj = nullptr );
 	~BehaviorGroup();
+
+
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
@@ -107,6 +114,7 @@ public:
 	void AddAgent();
 	size_t GetSize();
 	unsigned int GetCount();
+	void CreateAgentTree();
 	void SetMeshToggle( bool toggle );
 	void RemoveAgent();
 	void SetCount( int count );
@@ -185,6 +193,9 @@ private:
 	// Bounding sphere
 	Vector3 m_boundingSphereCenter;
 	float m_boundingSphereRadius;
+
+	// Spatial partitioning manager/tree
+	KDdroneManagementTreePtr m_tree;
 
 };
 
