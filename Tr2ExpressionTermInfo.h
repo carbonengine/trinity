@@ -33,6 +33,7 @@ public:
 	static Tr2ExpressionTermInfoPtr Function( const char* category, const char* name, const char* arg0, const char* arg1, const char* description );
 	static Tr2ExpressionTermInfoPtr Function( const char* category, const char* name, const char* arg0, const char* arg1, const char* arg2, const char* description );
 	static Tr2ExpressionTermInfoPtr Function( const char* category, const char* name, const char* arg0, const char* arg1, const char* arg2, const char* arg3, const char* description );
+	static Tr2ExpressionTermInfoPtr Function( const char* category, const char* name, const char* arg0, const char* arg1, const char* arg2, const char* arg3, const char* arg4, const char* arg5, const char* description );
 	static Tr2ExpressionTermInfoPtr StringFunction( const char* category, const char* name, const char* arg0, const char* description );
 };
 

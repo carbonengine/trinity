@@ -260,6 +260,62 @@ namespace
 		}
 		return TimeAsFloat( time % p );
 	}
+
+	// Helper function to reduce nesting in f: ServerTimeGreaterThan() and ServerTimeLessThan()
+	float CompareTimeFloats(float arg, float arg2)
+	{
+		if ( arg != -1 )
+		{
+			if ( arg2 > arg )
+			{
+				return 1;
+			}
+	
+			if ( arg2 < arg )
+			{
+				return 0;
+			}
+		}
+		return -1;
+	}
+
+	float ServerTimeGreaterThan( float year, float month, float day, float hour, float minute, float second )
+	{
+		float ret = -1;
+		
+		ret = CompareTimeFloats( year, GetServerYear() );
+		if ( ret != -1 ) return ret;
+		ret = CompareTimeFloats( month, GetServerMonth() );
+		if ( ret != -1 ) return ret;
+		ret = CompareTimeFloats( day, GetServerDay() );
+		if ( ret != -1 ) return ret;
+		ret = CompareTimeFloats( hour, GetServerHour() );
+		if ( ret != -1 ) return ret;
+		ret = CompareTimeFloats( minute, GetServerMinute() );
+		if ( ret != -1 ) return ret;
+		ret = CompareTimeFloats( second, GetServerSecond() );
+		if ( ret != -1 ) return ret;
+		return 1;
+	}
+
+	float ServerTimeLessThan( float year, float month, float day, float hour, float minute, float second )
+	{
+		float ret = -1;
+
+		ret = CompareTimeFloats(  GetServerYear(), year );
+		if ( ret != -1 ) return ret;
+		ret = CompareTimeFloats( GetServerMonth(), month );
+		if ( ret != -1 ) return ret;
+		ret = CompareTimeFloats(  GetServerDay(), day );
+		if ( ret != -1 ) return ret;
+		ret = CompareTimeFloats( GetServerHour(), hour );
+		if ( ret != -1 ) return ret;
+		ret = CompareTimeFloats(  GetServerMinute(),  minute );
+		if ( ret != -1 ) return ret;
+		ret = CompareTimeFloats(  GetServerSecond(), second );
+		if ( ret != -1 ) return ret;
+		return 1;
+	}
 }
 
 
@@ -312,6 +368,8 @@ std::string Tr2ControllerExpression::CreateParser( const char* expression, Modif
 	m_expressionParser.DefineFun( "ServerMinute", GetServerMinute, false );
 	m_expressionParser.DefineFun( "ServerSecond", GetServerSecond, false );
 	m_expressionParser.DefineFun( "ServerTimePhase", TimePhase, false );
+	m_expressionParser.DefineFun( "ServerTimeGreaterThan", ServerTimeGreaterThan, false );
+	m_expressionParser.DefineFun( "ServerTimeLessThan", ServerTimeLessThan, false );
 
 
 	if( modifyParser )
@@ -398,5 +456,7 @@ void Tr2ControllerExpression::GetExpressionTermInfo( std::vector<Tr2ExpressionTe
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerMinute", "returns a minute (0-60) for current server time" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerSecond", "returns a second (0-60) for current server time" ) );
 	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimePhase", "period", "returns seconds phase in a server time period of the given length" ) );
-
+	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeGreaterThan", "year", "month", "day", "hour","minute", "second","args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
+	info.push_back( Tr2ExpressionTermInfo::Function( "DateTime", "ServerTimeLessThan", "year", "month", "day", "hour", "minute", "second", "args are: ( yyyy, mm, dd, hh, mm, ss )  use '-1' to ignore specific args" ) );
 }
+
