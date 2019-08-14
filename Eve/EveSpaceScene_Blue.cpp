@@ -370,6 +370,24 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
             Be::READWRITE | Be::PERSIST | Be::NOTIFY, 
             TriTextureChooser 
         )
+		MAP_ATTRIBUTE_WITH_CHOOSER
+		(
+			"lowQualityNebulaResPath",
+			m_lowQualityNebulaResPath,
+			"Resource path for lowQualityNebulaResPath, relates to externalParameter: LQ_Nebula.\n"
+			":jessica-group: Lighting",
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY,
+			TriTextureChooser
+		)
+		MAP_ATTRIBUTE_WITH_CHOOSER
+		(
+			"lowQualityNebulaMixResPath",
+			m_lowQualityNebulaMixResPath,
+			"Resource path for lowQualityNebulaResPath, used to populate externalParameter: LQ_NebulaMix1 and LQ_NebulaMix2.\n"
+			":jessica-group: Lighting",
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY,
+			TriTextureChooser
+		)
 		MAP_ATTRIBUTE
 		(
 			"envMap1",

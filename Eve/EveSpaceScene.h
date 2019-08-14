@@ -397,6 +397,12 @@ protected:
 	std::string m_envMap3ResPath;
 	ITr2TextureProviderPtr m_envMap3;
 
+	std::string m_lowQualityNebulaResPath;
+	ITr2TextureProviderPtr m_lowQualityNebula;
+
+	std::string m_lowQualityNebulaMixResPath;
+	ITr2TextureProviderPtr m_lowQualityNebulaMix;
+
 	Tr2Variable m_shadowLightnessVar;
 	Tr2Variable m_envMap1Var;
 	Tr2Variable m_envMap2Var;
