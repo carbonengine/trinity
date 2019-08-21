@@ -1938,7 +1938,7 @@ unsigned int TriGeometryRes::GetInstanceBufferCount() const
 // --------------------------------------------------------------------------------------
 unsigned int TriGeometryRes::GetInstanceBufferVertexDeclaration( unsigned int bufferIndex ) const
 {
-	if( bufferIndex < m_meshes.size() )
+	if( bufferIndex < m_meshes.size() && m_meshes[bufferIndex] )
 	{
 		return m_meshes[bufferIndex]->m_vertexDeclaration;
 	}
@@ -1956,7 +1956,7 @@ unsigned int TriGeometryRes::GetInstanceBufferVertexDeclaration( unsigned int bu
 // --------------------------------------------------------------------------------------
 unsigned int TriGeometryRes::GetInstanceBufferVertexCount( unsigned int bufferIndex ) const
 {
-	if( bufferIndex < m_meshes.size() )
+	if( bufferIndex < m_meshes.size() && m_meshes[bufferIndex] )
 	{
 		return m_meshes[bufferIndex]->m_vertexCount;
 	}
@@ -1973,7 +1973,7 @@ unsigned int TriGeometryRes::GetInstanceBufferVertexCount( unsigned int bufferIn
 // --------------------------------------------------------------------------------------
 void TriGeometryRes::GetVertexBuffer( unsigned int bufferIndex, Tr2BufferAL& buffer, unsigned& stride )
 {
-	if( bufferIndex < m_meshes.size() )
+	if( bufferIndex < m_meshes.size() && m_meshes[bufferIndex] )
 	{
 		buffer = m_meshes[bufferIndex]->m_vertexBuffer;
 		stride = m_meshes[bufferIndex]->m_bytesPerVertex;
@@ -1982,7 +1982,7 @@ void TriGeometryRes::GetVertexBuffer( unsigned int bufferIndex, Tr2BufferAL& buf
 
 bool TriGeometryRes::GetInstanceBufferBoundingBox( unsigned int bufferIndex, Vector3& minBounds, Vector3& maxBounds ) const
 {
-	if( bufferIndex >= m_meshes.size() )
+	if( bufferIndex >= m_meshes.size() || !m_meshes[bufferIndex] )
 	{
 		return false;
 	}
@@ -2006,7 +2006,7 @@ Tr2BufferAL* TriGeometryRes::GetGpuBuffer( unsigned bufferIndex )
 	{
 		return nullptr;
 	}
-	if( bufferIndex < m_meshes.size() )
+	if( bufferIndex < m_meshes.size() && m_meshes[bufferIndex] )
 	{
 		return &m_meshes[bufferIndex]->m_shaderResourceBuffer;
 	}
@@ -2164,7 +2164,7 @@ BlueStdResult TriGeometryRes::GetMeshVertexElements( size_t meshIndex, std::vect
 	{
 		return BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "TriGeometryRes is not prepared" );
 	}
-	if( meshIndex >= m_meshes.size() )
+	if( meshIndex >= m_meshes.size() || !m_meshes[meshIndex] )
 	{
 		return BlueStdResult( BLUE_STD_RESULT_INDEX_ERROR, "mesh index out of range" );
 	}
