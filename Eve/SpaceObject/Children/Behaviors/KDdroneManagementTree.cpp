@@ -4,7 +4,8 @@
 KDdroneManagementTree::KDdroneManagementTree(IRoot* lockobj) :
 	m_isInitialized( false ),
 	m_debugSquareSize( 0 ),
-	m_timeBetweenUpdate( 1 ) //update once per sec
+	m_timeBetweenUpdate( 1 ), //update once per sec
+	m_maxFoundPerAgent( 5 )
 {
 }
 
@@ -20,7 +21,7 @@ void KDdroneManagementTree::CreateTree(std::vector<DroneAgent>& agents)
 	}
 
 	ChangeAgentsIntoAgentRefs( agents );
-	AgentRef tree = *SplitSort( 0, static_cast< int > ( agents.size() ) -1, X);
+	AgentRef tree = *SplitSort( 0, static_cast< int > ( agents.size() ) - 1, X);
 	m_tree = tree;
 	m_isInitialized = true;
 }
@@ -363,6 +364,10 @@ void KDdroneManagementTree::findClosestAgentRecursive( Vector3& pos, AgentRef* c
 	}
 }
 
+
+// This is a very specialized function optimized for searching  for multiple ranges for multiple agents at the same time
+// Use: vvv = FindDronesInRange( (list of agents), (list of visionRanges/search-radiuses), (their own collision size / bounding sphere ));
+// After: vvv is an orginized tri-dementional list where the 1st index is the Behavior's index, 2nd the agent's index and the 3rd is the list of found agents in range (up to m_maxFoundPerAgent) 
 std::vector<std::vector<std::vector<DroneAgent*>>> KDdroneManagementTree::FindDronesInRange( std::vector<DroneAgent>& agents, std::vector<float>& ranges, float& BehaviorGroupboundingSphereRadius )
 {
 	std::vector<searchRange> searchRanges;
@@ -448,11 +453,11 @@ void KDdroneManagementTree::searchThroughTreeHelperFunction( std::vector<std::ve
 
 		AddAgentToSearchLists( closeAgents, node, dist, ranges, activeRange, c );
 
-		if ( closeAgents[ ranges[ activeRange ].behaviorNbr ][ c ].size() < 5 )
+		if ( closeAgents[ ranges[ activeRange ].behaviorNbr ][ c ].size() < m_maxFoundPerAgent )
 		{
 			AddAgentToSearchLists( closeAgents, node, dist, ranges, activeRange, c );
 		}
-		else if ( closeAgents[ ranges[ activeRange ].behaviorNbr ][ c ].size() == 5 )
+		else if ( closeAgents[ ranges[ activeRange ].behaviorNbr ][ c ].size() == m_maxFoundPerAgent )
 		{
 			AddAgentToSearchLists( closeAgents, node, dist, ranges, activeRange, c );
 			activeRange++;
@@ -510,20 +515,17 @@ void KDdroneManagementTree::AddAgentToSearchLists( std::vector<std::vector<std::
 	}
 }
 
-void KDdroneManagementTree::RenderDebugInfo( Tr2DebugRenderer& renderer, float debugSquareSize, Matrix& parentWorldLocation )
+void KDdroneManagementTree::RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation )
 {
-	//debugSquareSize = abs( debugSquareSize );
-	debugSquareSize = m_debugSquareSize;
-	const Vector3 debugSquareCorner1 = Vector3( debugSquareSize , debugSquareSize , debugSquareSize );
-	const Vector3 debugSquareCorner2 = debugSquareCorner1 * -1;
+	Vector3 debugSquareCorner1 = Vector3( m_debugSquareSize, m_debugSquareSize, m_debugSquareSize );
+	Vector3 debugSquareCorner2 = debugSquareCorner1 * -1;
 
 	renderer.DrawBox( nullptr, debugSquareCorner1, debugSquareCorner2, Tr2DebugRenderer::Wireframe, 0xff555555 );
 	Vector3 pwt = parentWorldLocation.GetTranslation();
 	DrawTree( renderer, &m_tree, debugSquareCorner1, debugSquareCorner2, pwt );
-	
 }
 
-void KDdroneManagementTree::DrawTree( Tr2DebugRenderer& renderer, AgentRef* tree,  Vector3 debugSquareCorner1, Vector3 debugSquareCorner2, Vector3& pwt )
+void KDdroneManagementTree::DrawTree( Tr2DebugRenderer& renderer, AgentRef* tree,  Vector3& debugSquareCorner1, Vector3& debugSquareCorner2, Vector3& pwt )
 {
 	if( tree == nullptr )
 	{
@@ -537,6 +539,7 @@ void KDdroneManagementTree::DrawTree( Tr2DebugRenderer& renderer, AgentRef* tree
 
 	Vector3 newCorner1;
 	Vector3 newCorner2;
+
 	switch ( (tree)->planeType )
 	{
 	case X:

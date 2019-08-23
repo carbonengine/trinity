@@ -87,39 +87,37 @@ public:
 	KDdroneManagementTree( IRoot* lockobj = nullptr );
 	~KDdroneManagementTree();
 
-	DroneAgent* findClosestAgent( Vector3 pos );
-	std::vector<std::vector<std::vector<DroneAgent*>>> FindDronesInRange( std::vector<DroneAgent>& agents, std::vector<float>& ranges, float& BehaviorGroupboundingSphereRadius);
-	void CreateTree(std::vector<DroneAgent>& agents);
 	void UpdateTree( const float dt );
-	void RenderDebugInfo(Tr2DebugRenderer& renderer, float debugSquareSize, Matrix& parentWorldLocation);
+	DroneAgent* findClosestAgent( Vector3 pos );
+	void CreateTree( std::vector<DroneAgent>& agents );
+	void RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation );
+	std::vector<std::vector<std::vector<DroneAgent*>>> FindDronesInRange( std::vector<DroneAgent>& agents, std::vector<float>& ranges, float& BehaviorGroupboundingSphereRadius);
+	
+	float m_timeBetweenUpdate;
 
 private:
+	planeType FindNextSplitAxis( planeType pt );
 	AgentRef* CompareNodeToChildren(AgentRef* node);
+	AgentRef* SplitSort( int b, int e, planeType pt );
 	bool IsBiggestOnAxis(AgentRef* node, float n, planeType pt);
 	bool IsSmallestOnAxis(AgentRef* node, float n, planeType pt);
-	AgentRef* SplitSort(int b, int e, planeType pt);
 	void ChangeAgentsIntoAgentRefs(std::vector<DroneAgent>& agents);
-	planeType FindNextSplitAxis(planeType pt);
-	
-	
 	void findClosestAgentRecursive( Vector3& pos, AgentRef* currentNode, closestDrone& agent );
+	std::vector<AgentRef>& sortByAxis( std::vector<AgentRef>& agents, int b, int e, planeType pt ) const;
 	void searchThroughTree( std::vector<std::vector<std::vector<DroneAgent*>>>& closeAgents, AgentRef* node, std::vector<DroneAgent>& agents, std::vector<searchRange>& ranges, int& activeRange) const;
+	static void AddAgentToSearchLists( std::vector<std::vector<std::vector<DroneAgent*>>>& closeAgents, AgentRef* node, float& dist, std::vector<searchRange>& ranges, int& activeRange, int& agentNbr );
 	void searchThroughTreeHelperFunction( std::vector<std::vector<std::vector<DroneAgent*>>>& closeAgents, AgentRef* node, DroneAgent& agent, std::vector<searchRange>& ranges, int& activeRange, int& c ) const;
-
-	static void AddAgentToSearchLists( std::vector<std::vector<std::vector<DroneAgent*>>>& closeAgents, AgentRef* node,
-	                                  float& dist, std::vector<searchRange>& ranges, int& activeRange, int& agentNbr );
-	std::vector<AgentRef>& sortByAxis(std::vector<AgentRef>& agents, int b, int e, planeType pt) const;
-
+	
 	// debug
-	void DrawTree(Tr2DebugRenderer& renderer, AgentRef* tree, Vector3 debugSquareCorner1, Vector3 debugSquareCorner2, Vector3& pwt );
+	void DrawTree(Tr2DebugRenderer& renderer, AgentRef* tree, Vector3& debugSquareCorner1, Vector3& debugSquareCorner2, Vector3& pwt );
 	void DrawSquareInnerLines(Tr2DebugRenderer& renderer, Vector3& agentPos, Vector3& P1, Vector3& P2, Color C, planeType pt, Vector3& pwt);
 
-	float m_debugSquareSize;
-	bool m_isInitialized;
 	AgentRef m_tree;
-	std::vector< AgentRef > m_agentRefs;
+	bool m_isInitialized;
+	float m_debugSquareSize;
 	float m_updateTimeCounter;
-	float m_timeBetweenUpdate;
+	size_t m_maxFoundPerAgent;
+	std::vector< AgentRef > m_agentRefs;
 };
 
 TYPEDEF_BLUECLASS( KDdroneManagementTree );

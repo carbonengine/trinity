@@ -587,7 +587,7 @@ void BehaviorGroup::RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentW
 	{
 		if ( m_tree != nullptr )
 		{
-			m_tree->RenderDebugInfo( renderer, 1000, parentWorldLocation );
+			m_tree->RenderDebugInfo( renderer, parentWorldLocation );
 		}
 		else
 		{
