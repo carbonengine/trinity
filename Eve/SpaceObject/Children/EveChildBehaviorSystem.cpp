@@ -65,7 +65,6 @@ public:
 	{
 		if ( m_geom )
 		{
-			auto r = GetGeometryResource();
 			bool displ = m_ground->m_display;
 
 			if ( m_isSpriteBatch )

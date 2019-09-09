@@ -198,7 +198,6 @@ std::vector<Vector3> FollowASpline::CalculateBehavior(std::vector<DroneAgent>& a
 		}
 
 		m_lastPullForces.clear();
-		const auto tunnels = system.GetTunnels();
 		m_targetPointVector.clear();
 
 		auto data = static_cast< FollowASplineData* >( scratchData );
