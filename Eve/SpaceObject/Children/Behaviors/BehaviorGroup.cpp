@@ -578,6 +578,7 @@ void BehaviorGroup::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "DebugBehaviors" );
 	options.insert( "BehaviorVisionRanges" );
 	options.insert( "Wander" );
+	options.insert( "LocatorRadius" );
 }
 
 float BehaviorGroup::GetBoundingSphereRadius()
@@ -626,14 +627,6 @@ void BehaviorGroup::RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentW
 		for ( auto volume = m_exclusionVolumes.begin(); volume != m_exclusionVolumes.end(); ++volume )
 		{
 			(*volume)->RenderDebugInfo( renderer, parentWorldLocation );
-		}
-	}
-
-	if( renderer.HasOption( this, "Locators" ) )
-	{
-		for( auto group = m_behaviors.begin(); group != m_behaviors.end(); ++group )
-		{
-			( *group )->RenderDebugInfo( renderer, m_agents, parentWorldLocation );
 		}
 	}
 

@@ -89,26 +89,44 @@ std::vector<Vector3> BackAndForth::CalculateBehavior(std::vector<DroneAgent>& ag
 
 void BackAndForth::RenderDebugInfo(Tr2DebugRenderer& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation)
 {
-	float boundingSphereRadius = 100.f;
-	float modelScale = 10;
-	for( auto it = m_locatorSets.begin(); it != m_locatorSets.end(); ++it )
+	if( renderer.HasOption( this, "Locators" ) )
 	{
-		const LocatorStructureList& locators = ( *( *it )->GetLocators() );
-		for( size_t i = 0; i < locators.size(); ++i )
+		float boundingSphereRadius = 100.f;
+		float modelScale = 10;
+		for( auto it = m_locatorSets.begin(); it != m_locatorSets.end(); ++it )
 		{
-			auto& locator = locators[i];
-			auto position = locator.position;
-			auto rotation = locator.direction;
-			uint32_t color = 0x990088ff;
+			const LocatorStructureList& locators = ( *( *it )->GetLocators() );
+			for( size_t i = 0; i < locators.size(); ++i )
+			{
+				auto& locator = locators[i];
+				auto position = locator.position;
+				auto rotation = locator.direction;
+				uint32_t color = 0x990088ff;
 
-			renderer.DrawSphereArrow(
-				Tr2DebugObjectReference( &locators, uint32_t( i ) ),
-				Vector3( XMVector3TransformCoord( position, parentWorldLocation ) ),
-				Vector3( XMVector3TransformNormal( Vector3( 0, 1, 0 ), Matrix( XMMatrixRotationQuaternion( rotation ) ) * parentWorldLocation ) ),
-				boundingSphereRadius * modelScale / 50.f,
-				8,
-				Tr2DebugRenderer::Lit,
-				color );
+				renderer.DrawSphereArrow(
+					Tr2DebugObjectReference( &locators, uint32_t( i ) ),
+					Vector3( XMVector3TransformCoord( position, parentWorldLocation ) ),
+					Vector3( XMVector3TransformNormal( Vector3( 0, 1, 0 ), Matrix( XMMatrixRotationQuaternion( rotation ) ) * parentWorldLocation ) ),
+					boundingSphereRadius * modelScale / 50.f,
+					8,
+					Tr2DebugRenderer::Lit,
+					color );
+			}
+		}
+	}
+
+	if( renderer.HasOption( this, "LocatorRadius" ) )
+	{
+		for( auto it = m_locatorSets.begin(); it != m_locatorSets.end(); ++it )
+		{
+			const LocatorStructureList& locators = ( *( *it )->GetLocators() );
+			for( size_t i = 0; i < locators.size(); ++i )
+			{
+				auto& locator = locators[i];
+				auto position = locator.position;
+				renderer.DrawSphere( this, position, m_arrivedRadius, 8, Tr2DebugRenderer::Wireframe, 0xffff00ff );
+				renderer.DrawSphere( this, position, m_slowDownRadius, 8, Tr2DebugRenderer::Wireframe, 0xff86d2fd );
+			}
 		}
 	}
 }
