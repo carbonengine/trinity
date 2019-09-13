@@ -1280,14 +1280,20 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 
 	{
 		CCP_STATS_ZONE( "UpdateVisibility" );
-		Tr2ParallelDo( m_objects.begin(), m_objects.end(), [&]( IEveSpaceObject2* obj ) { obj->UpdateVisibility( frustum, identity ); } );
+		Tr2ParallelDo( m_objects.begin(), m_objects.end(), [&]( IEveSpaceObject2* obj ) 
+		{ 
+			obj->UpdateVisibility( frustum, identity ); 
+		} );
 
 		m_cameraAttachmentParent->SetTransform( Tr2Renderer::GetInverseViewTransform() );
 		m_cameraAttachmentParent->UpdateSyncronous( m_updateContext );
 		m_cameraAttachmentParent->UpdateAsyncronous( m_updateContext );
 		m_cameraAttachmentParent->UpdateVisibility( frustum, identity );
 
-		Tr2ParallelDo( m_planets.begin(), m_planets.end(), [&]( EvePlanet* obj ) { obj->UpdateZOnlyVisibility( frustum ); } );
+		Tr2ParallelDo( m_planets.begin(), m_planets.end(), [&]( EvePlanet* obj ) 
+		{
+			obj->UpdateZOnlyVisibility( frustum ); 
+		} );
 	}
 	// Separate objects that will receive shadows from others. Shadowed objects will be rendered object by object,
 	// with a shadow map generated for each object. Remaining objects will be batched up.
@@ -1651,6 +1657,8 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 
 	renderContext.AddGpuMarker( __FUNCTION__ );
 
+	
+	
 	RenderBackgroundPassObjects( renderContext, BACKGROUND_RENDER_COLOR );
 
 	// Render background reflection cubemap
@@ -1747,7 +1755,7 @@ void EveSpaceScene::RenderBackgroundPassObjects( Tr2RenderContext& renderContext
 
 	// planets
 	if( !m_planets.empty() )
-	{
+	{	
 		RenderPlanets( renderContext );
 		// we must clear z-buffer if we rendered some planets because the planets
 		// have their own view/projection and so their own z-depth, BUT before
@@ -2758,7 +2766,7 @@ void EveSpaceScene::UpdatePlanets( EveUpdateContext& updateContext )
 
 	for( EvePlanetVector::iterator it = m_planets.begin(); it != m_planets.end(); ++it )
 	{
-		(*it)->Update( updateContext );
+		(*it)->UpdatePlanetSyncronous( updateContext, m_planetScale );
 	}
 
 	Tr2Renderer::SetViewTransform( orgViewMatrix );
@@ -2766,25 +2774,36 @@ void EveSpaceScene::UpdatePlanets( EveUpdateContext& updateContext )
 
 void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 {
+	// Update planet LODs and render planets
+	TriFrustum frustum;
+	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), gTriDev->mViewport );
+
+	Matrix orgViewMatrix = SetupPlanetViewMatrix();
+
+	for ( auto it = m_planets.begin(); it != m_planets.end(); ++it )
+	{
+		EvePlanet* obj = *it;
+		obj->SetRenderScale( m_planetScale );
+		obj->UpdateLOD( frustum );
+	}
+
+	Tr2ParallelDo( m_planets.begin(), m_planets.end(), [&]( EvePlanet* obj )
+	{
+		obj->UpdatePlanetVisibility( frustum, m_planetScale );
+	} );
+
+	Tr2Renderer::SetViewTransform( orgViewMatrix );
+	
 	// Backup current state
 	Tr2Renderer::PushProjection();
 	ScopeGuard guardPopProjection = MakeGuard( Tr2Renderer::PopProjection );
 	Tr2Renderer::PushViewTransform();
 	ScopeGuard guardPopViewTransform = MakeGuard( Tr2Renderer::PopViewTransform );
 
-	Matrix orgViewMatrix = SetupPlanetViewMatrix();
+	SetupPlanetViewMatrix();
 	Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
 	Tr2Renderer::SetProjectionTransform( planetProjection );
-	const Matrix& identity = IdentityMatrix();
 
-	// Planets are rendered with a custom frustum
-	TriFrustum frustum;
-	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), gTriDev->mViewport );
-
-	{
-		CCP_STATS_ZONE( "UpdateVisibility Planets" );
-		Tr2ParallelDo( m_planets.begin(), m_planets.end(), [&]( EvePlanet* obj ) { obj->SetRenderScale( m_planetScale ); obj->UpdateVisibility( frustum, identity ); } );
-	}
 	std::vector<ITr2Renderable*> planetRenderables;
 	for( EvePlanetVector::iterator it = m_planets.begin(); it != m_planets.end(); ++it )
 	{

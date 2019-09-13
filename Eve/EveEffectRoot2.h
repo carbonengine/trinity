@@ -133,58 +133,64 @@ public:
 	void FreezeHighDetailMesh();
 
 private:
-	// general
-	std::string m_name;
-	bool m_display;
-
 	void UpdateWorldTransform( Be::Time time );
-
-	PIEveSpaceObjectChildVector m_effectChildren;
 	PTr2ExternalParameterVector m_externalParameters;
-
-	Vector3 m_scaling;
-	Quaternion m_rotation;
-	Vector3 m_translation;
-
 	Be::Time m_startTime;
-
-	ITriVectorFunctionPtr m_ballPosition;
-	ITriQuaternionFunctionPtr m_ballRotation;
-	
 	ITriQuaternionFunctionPtr m_modelRotation;
 	ITriVectorFunctionPtr m_modelTranslation;
-	
-	PTriCurveSetVector m_curveSets;
-
 	Vector4 m_boundingSphere;
-	
-	// last known results from updating m_ballPosition and m_ballRotation
-	Matrix m_worldTransform;
 	Matrix m_lastUpdateMatrix;
 	Matrix m_localTransform;
 	Vector3 m_worldPosition;
 	float m_secondaryLightingSphereRadiusLocal;
 	float m_secondaryLightingSphereRadiusWorld;
+
+	// Lods
+	bool m_dynamicLODSelection;
+	bool m_changeLOD;
+
+	PTr2LightVector m_lights;
+	PITr2ControllerVector m_controllers;
+	TrackableStdUnorderedMap<std::string, float> m_controllerVariables;
+	float GetBoundingSphereRadius() { return m_boundingSphere.w; }
+
+	float m_estimatedSize;
+	float m_effectDuration;
+
+	IBlueEventListenerPtr m_loadedEventListener;
+	
+protected:
+	// general
+	std::string m_name;
+	bool m_display;
+	PIEveSpaceObjectChildVector m_effectChildren;
+	
+	Vector3 m_scaling;
+	Quaternion m_rotation;
+	Vector3 m_translation;
+	
+	ITriVectorFunctionPtr m_ballPosition;
+	ITriQuaternionFunctionPtr m_ballRotation;
+	
+	PTriCurveSetVector m_curveSets;
+
+	// last known results from updating m_ballPosition and m_ballRotation
+	Matrix m_worldTransform;
+
 	Color m_secondaryLightingEmissiveColor;
 
 	// PlacementObservers
 	PTriObserverLocalVector m_observers;
 
-	// Lods
-	bool m_dynamicLODSelection;
-	bool m_changeLOD;
+	// Current LOD level
 	Tr2Lod m_lodLevel;
 	
-	PTr2LightVector m_lights;
-
-	PITr2ControllerVector m_controllers;
-	TrackableStdUnorderedMap<std::string, float> m_controllerVariables;
-
-	float GetBoundingSphereRadius() { return m_boundingSphere.w; }
-	float m_estimatedSize;
-	float m_effectDuration;
 	
-	IBlueEventListenerPtr m_loadedEventListener;
+
+	
+
+	
+	
 
 };
 

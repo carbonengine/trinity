@@ -11,27 +11,19 @@ const float EvePlanet::SCALE = 1000000.0f;
 // Temporary variables, should be set by whatever module controls fov
 const float FOV_MIN = 0.65f;
 
-// global spacescene thresholds for loding, options dependent
+// Global SpaceScene thresholds for LODing, options dependent
 extern float g_eveSpaceSceneMediumDetailThreshold;
 extern float g_eveSpaceSceneVisibilityThreshold;
 
-EvePlanet::EvePlanet( IRoot* lockobj ) :
-	PARENTLOCK( m_observers ),
-	PARENTLOCK( m_effectChildren ),
-	PARENTLOCK( m_curveSets ),
-	PARENTLOCK( m_externalParameters ),
-	m_display( true ),
+EvePlanet::EvePlanet( IRoot* lockobj ) :  
 	m_update( true ),
 	m_renderScale( SCALE ),
-	m_scaling( 1.0f ),	
 	m_estimatedPixelDiameter( 0.f ),
 	m_estimatedMaxPixelDiameter( 0.f ),
-	m_currentLod( TR2_LOD_UNSPECIFIED ),
 	m_albedoColor( 0, 0, 0, 0 ),
-	m_emissiveColor( 0, 0, 0, 0 ),
-	m_radius( 1 )
+	m_radius( 1 ),
+	m_minScreenSize( 2.0 )
 {
-	PrepareResources();
 }
 
 EvePlanet::~EvePlanet()
@@ -40,7 +32,7 @@ EvePlanet::~EvePlanet()
 
 void EvePlanet::RegisterSecondaryLightSource( Tr2ShLightingManager& manager )
 {
-	manager.RegisterSecondaryLightSource( &m_worldTransform.GetTranslation(), &m_radius, &m_albedoColor, &m_emissiveColor );
+	manager.RegisterSecondaryLightSource( &m_worldTransform.GetTranslation(), &m_radius, &m_albedoColor, &m_secondaryLightingEmissiveColor );
 }
 
 void EvePlanet::UnregisterSecondaryLightSource( Tr2ShLightingManager& manager )
@@ -48,15 +40,15 @@ void EvePlanet::UnregisterSecondaryLightSource( Tr2ShLightingManager& manager )
 	manager.UnregisterSecondaryLightSource( &m_worldTransform.GetTranslation() );
 }
 
-void EvePlanet::UpdateEffectChildren( EveUpdateContext& updateContext, Matrix &worldTransform )
+void EvePlanet::UpdateEffectChildren( EveUpdateContext& updateContext, Matrix &worldTransform, float renderScale )
 {
 	EveChildUpdateParams params;
 	params.spaceObjectParent = nullptr;
 	params.childParent = nullptr;
 	params.boneCount = 0;
 	params.bones = nullptr;
-	params.isVisible = m_display && m_currentLod > TR2_LOD_LOW;
-	params.localToWorldTransform = CalculatePlanetScaleTransform( worldTransform );
+	params.isVisible = m_display && m_lodLevel > TR2_LOD_LOW;
+	params.localToWorldTransform = CalculatePlanetScaleTransform( worldTransform, renderScale );
 	if( !m_effectChildren.empty() )
 	{
 		for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
@@ -73,7 +65,7 @@ void EvePlanet::UpdateEffectChildren( EveUpdateContext& updateContext, Matrix &w
 	}
 }
 
-void EvePlanet::Update( EveUpdateContext& updateContext )
+void EvePlanet::UpdatePlanetSyncronous( EveUpdateContext& updateContext, float renderScale )
 {
 	if( !m_update )
 	{
@@ -95,10 +87,12 @@ void EvePlanet::Update( EveUpdateContext& updateContext )
 		m_ballRotation->Update( &rotation, time );
 	}
 
-	const auto scale = Vector3( m_scaling, m_scaling, m_scaling );
+	// Add Ball & EffectRoot Translation & Rotation 
+	translation += m_translation;
+	rotation = Normalize( rotation * m_rotation);
 
-	m_worldTransform = TransformationMatrix( scale, rotation, translation );
-	UpdateEffectChildren( updateContext, m_worldTransform);
+	m_worldTransform = TransformationMatrix( m_scaling, rotation, translation );
+	UpdateEffectChildren( updateContext, m_worldTransform, renderScale);
 
 	for (auto it = m_curveSets.begin(); it != m_curveSets.end(); ++it)
 	{
@@ -114,23 +108,23 @@ void EvePlanet::Update( EveUpdateContext& updateContext )
 	
 }
 
-Matrix EvePlanet::CalculatePlanetScaleTransform( const Matrix& worldTransform ) const
+Matrix EvePlanet::CalculatePlanetScaleTransform( const Matrix& worldTransform, float renderScale ) const
 {
-	const auto planetScaleTransform = ScalingMatrix( 1.f / m_renderScale, 1.f / m_renderScale, 1.f / m_renderScale );
+	const auto planetScaleTransform = ScalingMatrix( 1.f / renderScale, 1.f / renderScale, 1.f / renderScale );
 	return worldTransform * planetScaleTransform;
 }
 
-void EvePlanet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform )
+void EvePlanet::UpdatePlanetVisibility( const TriFrustum& frustum, float renderScale )
 {
-	const auto scaledTransform = CalculatePlanetScaleTransform( m_worldTransform );
-	
-	// pixel diameters, also for the max possible
-	m_estimatedPixelDiameter = EstimatePixelDiameterPos( reinterpret_cast<const Vector3*>( &scaledTransform._41 ), 1.f / Tr2Renderer::GetProjectionTransform()._11, m_renderScale );
-	m_estimatedMaxPixelDiameter = EstimatePixelDiameterPos( reinterpret_cast<const Vector3*>( &scaledTransform._41 ), tanf( FOV_MIN / 2.f ), m_renderScale );
+	const auto scaledTransform = CalculatePlanetScaleTransform( m_worldTransform, renderScale );
 
-	for (auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it)
+	// pixel diameters, also for the max possible
+	m_estimatedPixelDiameter = EstimatePixelDiameterPos( reinterpret_cast<const Vector3*>(&scaledTransform._41), 1.f / Tr2Renderer::GetProjectionTransform()._11, renderScale );
+	m_estimatedMaxPixelDiameter = EstimatePixelDiameterPos( reinterpret_cast<const Vector3*>(&scaledTransform._41), tanf( FOV_MIN / 2.f ), renderScale );
+
+	for ( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
 	{
-		(*it)->UpdateVisibility( frustum, scaledTransform, m_currentLod );
+		(*it)->UpdateVisibility( frustum, scaledTransform, m_lodLevel );
 	}
 }
 
@@ -138,22 +132,14 @@ void EvePlanet::UpdateZOnlyVisibility( const TriFrustum& frustum )
 {
 	if( nullptr != m_zOnlyModel )
 	{
-		m_zOnlyModel->UpdateVisibility( frustum, m_worldTransform, m_currentLod );
+		m_zOnlyModel->UpdateVisibility( frustum, m_worldTransform, m_lodLevel );
 	}
 }
-
 
 const Vector3* EvePlanet::GetWorldPosition()
 {
 	return reinterpret_cast<Vector3*>( &m_worldTransform._41 );
 }
-
-
-bool EvePlanet::OnPrepareResources()
-{
-	return true;
-}
-
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -173,7 +159,6 @@ float EvePlanet::EstimatePixelDiameterPos( const Vector3* scaledPlanetCenter, fl
 
 	return EstimatePixelDiameterDist( depth, tanFOV, scale );
 }
-
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -220,43 +205,63 @@ void EvePlanet::GetZOnlyRenderables( std::vector<ITr2Renderable*>& renderables )
 	}
 }
 
-void EvePlanet::GetRenderables( std::vector<ITr2Renderable*>& renderables )
+void EvePlanet::GetRenderables( std::vector<ITr2Renderable*>& renderables)
 {
 	if( !m_display )
 	{
 		return;
 	}
-
-	// visible at all?
-	if( m_estimatedPixelDiameter > GetVisibilityThreshold() )
+	if( m_lodLevel != TR2_LOD_HIGH)
 	{
-		if( m_currentLod != TR2_LOD_HIGH )
+		return;
+	}
+	
+	// visible at all?
+	if( m_estimatedPixelDiameter > m_minScreenSize )
+	{
+		for ( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
+		{
+			(*ecIt)->GetRenderables( renderables );
+		}
+	}
+}
+
+void EvePlanet::UpdateLOD( TriFrustum frustum )
+{
+	// visible at all?
+	if ( m_estimatedPixelDiameter > m_minScreenSize )
+	{
+		if ( m_lodLevel != TR2_LOD_HIGH )
 		{
 			SetLod( TR2_LOD_HIGH );
 		}
-
-		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
-		{
-			( *ecIt )->GetRenderables( renderables );
-		}
 	}
-	else if( m_currentLod != TR2_LOD_LOW )
+	else
 	{
-		SetLod( m_currentLod );
+		if ( m_lodLevel != TR2_LOD_LOW )
+		{
+			SetLod( TR2_LOD_LOW );
+		}
 	}
 }
 
 void EvePlanet::SetLod( Tr2Lod lod )
 {
-	m_currentLod = lod;
+	m_lodLevel = lod;
+
 	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
 	{
-		( *it )->ChangeLOD( lod );
+		(*it)->ChangeLOD( lod );
 	}
 	if( nullptr != m_zOnlyModel )
 	{
 		m_zOnlyModel->ChangeLOD( lod );
 	}
+}
+
+void EvePlanet::SetRenderScale( float value )
+{
+	m_renderScale = value;
 }
 
 // --------------------------------------------------------------------------------
@@ -266,27 +271,10 @@ void EvePlanet::SetLod( Tr2Lod lod )
 // Return value:
 //   Returns the visibilty threshold for planets
 // --------------------------------------------------------------------------------
-float EvePlanet::GetVisibilityThreshold() const
-{
-	return g_eveSpaceSceneVisibilityThreshold * 1.5f;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Just return a global variable, slightly modified by a constant, since this
-//   is a planet, not a ship.
-// Return value:
-//   Returns the medium lod threshold for planets
-// --------------------------------------------------------------------------------
-float EvePlanet::GetMediumDetailThreshold() const
-{
-	return g_eveSpaceSceneMediumDetailThreshold * 1.5f;
-}
-
-void EvePlanet::SetRenderScale( float value )
-{
-	m_renderScale = value;
-}
+//float EvePlanet::GetVisibilityThreshold() const
+//{
+//	return g_eveSpaceSceneVisibilityThreshold;
+//}
 
 // --------------------------------------------------------------------------------
 unsigned int EvePlanet::GetDamageLocatorCount() const
@@ -299,6 +287,7 @@ int EvePlanet::GetClosestDamageLocatorIndex( const Vector3* position )
 {
 	return 0;
 }
+
 // --------------------------------------------------------------------------------
 bool EvePlanet::GetDamageLocatorPosition( Vector3* out, int index, bool inWorldSpace )
 {
@@ -324,6 +313,7 @@ int EvePlanet::GetGoodDamageLocatorIndex( const Vector3& position )
 {
 	return 0;
 }
+
 // --------------------------------------------------------------------------------
 float EvePlanet::GetRadius() const
 {
