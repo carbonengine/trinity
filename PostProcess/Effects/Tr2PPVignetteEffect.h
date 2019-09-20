@@ -20,6 +20,8 @@ public:
 	Tr2PPVignetteEffect( IRoot* lockobj = NULL );
 	~Tr2PPVignetteEffect();
 
+	// Tr2PPEffect
+	bool IsActive() override;
 	BlueSharedString m_shapePath;
 	BlueSharedString m_detailPath;
 	Vector2 m_detail1Size;

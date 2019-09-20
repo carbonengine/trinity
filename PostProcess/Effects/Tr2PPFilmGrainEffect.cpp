@@ -21,3 +21,8 @@ Tr2PPFilmGrainEffect::~Tr2PPFilmGrainEffect()
 {
 
 }
+
+bool Tr2PPFilmGrainEffect::IsActive()
+{
+	return m_display && m_intensity > 0.0;
+}

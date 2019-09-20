@@ -20,6 +20,8 @@ public:
 	Tr2PPFadeEffect( IRoot* lockobj = NULL );
 	~Tr2PPFadeEffect();
 
+	// Tr2PPEffect
+	bool IsActive() override;
 	Color m_color;
 	float m_intensity;
 };

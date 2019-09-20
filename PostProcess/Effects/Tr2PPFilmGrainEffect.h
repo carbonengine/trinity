@@ -20,6 +20,9 @@ public:
 	Tr2PPFilmGrainEffect( IRoot* lockobj = NULL );
 	~Tr2PPFilmGrainEffect();
 
+	// Tr2PPEffect
+	bool IsActive() override;
+
 	float m_intensity;
 	bool m_colored;
 	float m_colorAmount;

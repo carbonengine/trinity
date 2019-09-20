@@ -20,6 +20,9 @@ public:
 
 	Tr2PPSignalLossEffect( IRoot* lockobj = NULL );
 	~Tr2PPSignalLossEffect();
+	
+	// Tr2PPEffect
+	bool IsActive() override;
 
 	float m_strength;
 };

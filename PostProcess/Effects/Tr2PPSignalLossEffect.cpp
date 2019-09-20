@@ -17,3 +17,11 @@ Tr2PPSignalLossEffect::Tr2PPSignalLossEffect( IRoot* lockobj ) :
 Tr2PPSignalLossEffect::~Tr2PPSignalLossEffect()
 {
 }
+
+bool Tr2PPSignalLossEffect::IsActive()
+{
+	return m_display && m_strength > 0.0f;
+}
+
+
+

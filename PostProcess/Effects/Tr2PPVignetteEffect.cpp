@@ -29,3 +29,7 @@ Tr2PPVignetteEffect::~Tr2PPVignetteEffect()
 {
 
 }
+
+bool Tr2PPVignetteEffect::IsActive() {
+	return m_display && m_intensity > 0.0f && m_opacity > 0.0f;
+}
