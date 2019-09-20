@@ -41,7 +41,7 @@ std::vector<Vector3> Inertia::CalculateBehavior(std::vector<DroneAgent>& agents,
 		auto accelLength = Length( agent->acceleration );
 		agent->target = agent->acceleration;
 
-		if ( Length( lastAccelNormalized ) != 0 && m_maxRotationSpeed > 0 )
+		if ( LengthSq( lastAccelNormalized ) != 0 && m_maxRotationSpeed > 0 )
 		{
 			auto c = Normalize( Cross( lastAccelNormalized, accelNormalized ) );
 			if ( Length( c ) == 0 )
