@@ -38,7 +38,7 @@ def _GetRgaStats(stageInfo, onComplete, onFail, rgaPath, targetPlatforms):
         inPath = os.path.join(dirPath, 'sh.txt')
         with open(inPath, 'w') as f:
             f.write(stageInfo['original']['source'])
-        args = [rgaPath, '-s', 'hlsl', '-f', stageInfo['original']['entryPoint'], '-p', stageInfo['profile'],
+        args = [rgaPath, '-s', 'dx11', '-f', stageInfo['original']['entryPoint'], '-p', stageInfo['profile'],
                 '--DXFlags', str((1 << 12) | (1 << 15))]
         for each in targetPlatforms:
             args.extend(['-c', each])
@@ -51,7 +51,7 @@ def _GetRgaStats(stageInfo, onComplete, onFail, rgaPath, targetPlatforms):
 
         output = subprocess.check_output(args, stderr=subprocess.STDOUT, startupinfo=startupinfo)
         _log.debug('RGA output: %s', output)
-        with open(os.path.join(dirPath, '%s_rga.txt' % stageInfo['original']['entryPoint'])) as f:
+        with open(os.path.join(dirPath, 'all_%s_rga.txt' % stageInfo['original']['entryPoint'])) as f:
             lines = f.readlines()
         onComplete(_TableToTree(lines))
     except BaseException as e:

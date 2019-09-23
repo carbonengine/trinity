@@ -46,7 +46,12 @@ def _GetShaderInfo(path, defines):
         yamlStr = tempFile.read()
         tempFile.close()
 
-        return yaml.load(yamlStr, Loader=yaml.CLoader)
+        try:
+            return yaml.load(yamlStr, Loader=yaml.CLoader)
+        except:
+            with open(r'x:\temp\info.yaml', 'w') as fi:
+                fi.write(yamlStr)
+            raise
     finally:
         os.unlink(tempFile.name)
 
@@ -388,6 +393,8 @@ class MainPanel(wx.Panel):
                 si = _GetShaderInfo(fd.path, fd.currentDefines)
             except subprocess.CalledProcessError as e:
                 si = {'errors': e.output}
+            except Exception as e:
+                si = {'errors': str(e)}
             fd.compiledData[key] = si
         self._PopulateNodes(fd, si)
         if path:
