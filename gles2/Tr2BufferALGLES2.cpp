@@ -239,7 +239,7 @@ namespace TrinityALImpl
 	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2BufferAL";
-		description["size"] = std::to_string( long long( GetDesc().count * GetDesc().stride ) );
+		description["size"] = std::to_string( (long long)( GetDesc().count * GetDesc().stride ) );
 	}
 }
 
