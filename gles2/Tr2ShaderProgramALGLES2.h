@@ -42,7 +42,7 @@ namespace TrinityALImpl
 		ProgramData m_patchedProgram;
 		bool m_isValid;
 
-		friend class Tr2RenderContextAL;
+		friend class ::Tr2RenderContextAL;
 	};
 
 }

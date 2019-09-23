@@ -28,7 +28,7 @@ namespace TrinityALImpl
 
 		CcpMallocBuffer	m_shadowCopy;
 
-		friend class Tr2RenderContextAL;
+		friend class ::Tr2RenderContextAL;
 	};
 }
 

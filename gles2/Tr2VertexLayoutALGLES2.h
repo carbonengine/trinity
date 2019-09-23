@@ -36,7 +36,7 @@ namespace TrinityALImpl
 		Tr2VertexLayoutAL& operator=( const Tr2VertexLayoutAL& )/* = delete */;
 
 		std::unique_ptr<Tr2VertexDefinition> m_definition;
-		friend class Tr2RenderContextAL;
+		friend class ::Tr2RenderContextAL;
 	};
 }
 #endif // DX9?

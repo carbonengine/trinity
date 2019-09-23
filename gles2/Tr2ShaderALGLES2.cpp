@@ -153,8 +153,8 @@ namespace TrinityALImpl
 	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2ShaderAL";
-		description["shader"] = std::to_string( long long( GetType() ) );
-		description["size"] = std::to_string( long long( m_bytecode.size() ) );
+		description["shader"] = std::to_string( (long long)( GetType() ) );
+		description["size"] = std::to_string( (long long)( m_bytecode.size() ) );
 	}
 
 }
