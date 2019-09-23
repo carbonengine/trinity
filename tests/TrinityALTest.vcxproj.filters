@@ -474,6 +474,9 @@
     <ClCompile Include="TextureSubresource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TrackedObjects.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="TrinityALTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

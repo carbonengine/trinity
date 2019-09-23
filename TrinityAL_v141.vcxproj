@@ -1775,7 +1775,6 @@
     <ClInclude Include="ITr2RenderContextEvents.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="Tr2AdapterStructures.h" />
-    <ClInclude Include="Tr2DeviceResourceAL.h" />
     <ClInclude Include="Tr2DrawUPHelper.h" />
     <ClInclude Include="Tr2DriverUtilities.h" />
     <ClInclude Include="Tr2FragmentOpSettings.h" />
@@ -1784,6 +1783,8 @@
     <ClInclude Include="Tr2MemoryCounterAL.h" />
     <ClInclude Include="Tr2ObjectFactory.h" />
     <ClInclude Include="Tr2RenderContextEnum.h" />
+    <ClInclude Include="Tr2TrackedALObject.h" />
+    <ClInclude Include="Tr2TrackedALObjectImpl.h" />
     <ClInclude Include="Tr2VertexDefinition.h" />
     <ClInclude Include="wglext.h" />
     <ClInclude Include="dx11\Tr2BufferALDx11.h" />
@@ -1914,16 +1915,9 @@
   <ItemGroup>
     <ClCompile Include="ALResult.cpp" />
     <ClCompile Include="BcDecompress.cpp" />
-    <ClCompile Include="src\Tr2ConstantBufferAL.cpp" />
-    <ClCompile Include="src\Tr2FenceAL.cpp" />
-    <ClCompile Include="src\Tr2OcclusionQueryAL.cpp" />
-    <ClCompile Include="src\Tr2ShaderProgramAL.cpp" />
-    <ClCompile Include="src\Tr2SwapChainAL.cpp" />
-    <ClCompile Include="src\Tr2VertexLayoutAL.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="Tr2DeviceResourceAL.cpp" />
     <ClCompile Include="Tr2DrawUPHelper.cpp" />
     <ClCompile Include="Tr2DriverUtilities.cpp" />
     <ClCompile Include="Tr2FragmentOpSettings.cpp" />
@@ -1931,6 +1925,7 @@
     <ClCompile Include="Tr2LockGuard.cpp" />
     <ClCompile Include="Tr2MemoryCounterAL.cpp" />
     <ClCompile Include="Tr2RenderContextEnum.cpp" />
+    <ClCompile Include="Tr2TrackedALObject.cpp" />
     <ClCompile Include="Tr2VertexDefinition.cpp" />
     <ClCompile Include="dx11\Tr2BufferALDx11.cpp" />
     <ClCompile Include="dx11\Tr2CapsALDx11.cpp" />

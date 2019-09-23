@@ -31,9 +31,6 @@
     <ClInclude Include="Tr2AdapterStructures.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="Tr2DeviceResourceAL.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="Tr2DrawUPHelper.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -56,6 +53,12 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2RenderContextEnum.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tr2TrackedALObject.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tr2TrackedALObjectImpl.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2VertexDefinition.h">
@@ -178,19 +181,10 @@
     <ClInclude Include="dx12\util\FrameLocalDescriptorHeapAllocatorDx12.h">
       <Filter>Source Files\dx12\util</Filter>
     </ClInclude>
-    <ClInclude Include="dx12\util\FrameLocalUploadBufferAllocatorDx12.h">
-      <Filter>Source Files\dx12\util</Filter>
-    </ClInclude>
     <ClInclude Include="dx12\util\FreeList.h">
       <Filter>Source Files\dx12\util</Filter>
     </ClInclude>
     <ClInclude Include="dx12\util\GlobalDescriptorHeapAllocatorDx12.h">
-      <Filter>Source Files\dx12\util</Filter>
-    </ClInclude>
-    <ClInclude Include="dx12\util\GpuMarkerBuffer.h">
-      <Filter>Source Files\dx12\util</Filter>
-    </ClInclude>
-    <ClInclude Include="dx12\util\PsoDescription.h">
       <Filter>Source Files\dx12\util</Filter>
     </ClInclude>
     <ClInclude Include="dx9\Tr2BufferALDx9.h">
@@ -305,6 +299,9 @@
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2FenceAL.h">
+      <Filter>Source Files\include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Tr2GpuBufferAL.h">
       <Filter>Source Files\include</Filter>
     </ClInclude>
     <ClInclude Include="include\Tr2GpuTimerAL.h">
@@ -466,9 +463,6 @@
     <ClCompile Include="StdAfx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Tr2DeviceResourceAL.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Tr2DrawUPHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -488,6 +482,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2RenderContextEnum.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2TrackedALObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2VertexDefinition.cpp">
@@ -604,16 +601,7 @@
     <ClCompile Include="dx12\util\FrameLocalDescriptorHeapAllocatorDx12.cpp">
       <Filter>Source Files\dx12\util</Filter>
     </ClCompile>
-    <ClCompile Include="dx12\util\FrameLocalUploadBufferAllocatorDx12.cpp">
-      <Filter>Source Files\dx12\util</Filter>
-    </ClCompile>
     <ClCompile Include="dx12\util\GlobalDescriptorHeapAllocatorDx12.cpp">
-      <Filter>Source Files\dx12\util</Filter>
-    </ClCompile>
-    <ClCompile Include="dx12\util\GpuMarkerBuffer.cpp">
-      <Filter>Source Files\dx12\util</Filter>
-    </ClCompile>
-    <ClCompile Include="dx12\util\PsoDescription.cpp">
       <Filter>Source Files\dx12\util</Filter>
     </ClCompile>
     <ClCompile Include="dx9\Tr2BufferALDx9.cpp">
@@ -709,16 +697,7 @@
     <ClCompile Include="src\Tr2BufferAL.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Tr2ConstantBufferAL.cpp">
-      <Filter>Source Files\src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Tr2FenceAL.cpp">
-      <Filter>Source Files\src</Filter>
-    </ClCompile>
     <ClCompile Include="src\Tr2GpuTimerAl.cpp">
-      <Filter>Source Files\src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Tr2OcclusionQueryAL.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
     <ClCompile Include="src\Tr2ResourceSetAL.cpp">
@@ -730,16 +709,7 @@
     <ClCompile Include="src\Tr2ShaderAL.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
-    <ClCompile Include="src\Tr2ShaderProgramAL.cpp">
-      <Filter>Source Files\src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Tr2SwapChainAL.cpp">
-      <Filter>Source Files\src</Filter>
-    </ClCompile>
     <ClCompile Include="src\Tr2TextureAL.cpp">
-      <Filter>Source Files\src</Filter>
-    </ClCompile>
-    <ClCompile Include="src\Tr2VertexLayoutAL.cpp">
       <Filter>Source Files\src</Filter>
     </ClCompile>
     <ClCompile Include="stub\Tr2BufferALStub.cpp">
@@ -790,16 +760,10 @@
     <ClCompile Include="vulkan\Tr2BufferALVulkan.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="vulkan\Tr2ConstantBufferALVulkan.cpp">
-      <Filter>Source Files\vulkan</Filter>
-    </ClCompile>
     <ClCompile Include="vulkan\Tr2PrimaryRenderContextVulkan.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\Tr2RenderContextVulkan.cpp">
-      <Filter>Source Files\vulkan</Filter>
-    </ClCompile>
-    <ClCompile Include="vulkan\Tr2ResourceSetALVulkan.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
     <ClCompile Include="vulkan\Tr2SamplerStateALVulkan.cpp">
