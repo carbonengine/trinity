@@ -205,8 +205,8 @@ uint32_t Tr2SwapChainAL::GetHeight() const
 void Tr2SwapChainAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 {
 	description["type"] = "Tr2SwapChainAL";
-	description["width"] = std::to_string( long long( m_width ) );
-	description["height"] = std::to_string( long long( m_height ) );
+	description["width"] = std::to_string( (long long)( m_width ) );
+	description["height"] = std::to_string( (long long)( m_height ) );
 }
 
 }
