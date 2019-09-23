@@ -1774,6 +1774,7 @@
     <ClInclude Include="ITr2RenderContextEvents.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="Tr2AdapterStructures.h" />
+    <ClInclude Include="Tr2DeviceResourceAL.h" />
     <ClInclude Include="Tr2DrawUPHelper.h" />
     <ClInclude Include="Tr2DriverUtilities.h" />
     <ClInclude Include="Tr2FragmentOpSettings.h" />
@@ -1782,8 +1783,6 @@
     <ClInclude Include="Tr2MemoryCounterAL.h" />
     <ClInclude Include="Tr2ObjectFactory.h" />
     <ClInclude Include="Tr2RenderContextEnum.h" />
-    <ClInclude Include="Tr2TrackedALObject.h" />
-    <ClInclude Include="Tr2TrackedALObjectImpl.h" />
     <ClInclude Include="Tr2VertexDefinition.h" />
     <ClInclude Include="wglext.h" />
     <ClInclude Include="dx11\Tr2BufferALDx11.h" />
@@ -1824,8 +1823,11 @@
     <ClInclude Include="dx12\util\DescriptorHeapViewDx12.h" />
     <ClInclude Include="dx12\util\DescriptorStateCacheDx12.h" />
     <ClInclude Include="dx12\util\FrameLocalDescriptorHeapAllocatorDx12.h" />
+    <ClInclude Include="dx12\util\FrameLocalUploadBufferAllocatorDx12.h" />
     <ClInclude Include="dx12\util\FreeList.h" />
     <ClInclude Include="dx12\util\GlobalDescriptorHeapAllocatorDx12.h" />
+    <ClInclude Include="dx12\util\GpuMarkerBuffer.h" />
+    <ClInclude Include="dx12\util\PsoDescription.h" />
     <ClInclude Include="dx9\Tr2BufferALDx9.h" />
     <ClInclude Include="dx9\Tr2CapsALDx9.h" />
     <ClInclude Include="dx9\Tr2ConstantBufferALDx9.h" />
@@ -1864,7 +1866,6 @@
     <ClInclude Include="include\Tr2ConstantBufferAL.h" />
     <ClInclude Include="include\Tr2CubemapFace.h" />
     <ClInclude Include="include\Tr2FenceAL.h" />
-    <ClInclude Include="include\Tr2GpuBufferAL.h" />
     <ClInclude Include="include\Tr2GpuTimerAL.h" />
     <ClInclude Include="include\Tr2OcclusionQueryAL.h" />
     <ClInclude Include="include\Tr2PixelFormat.h" />
@@ -1922,6 +1923,7 @@
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="Tr2DeviceResourceAL.cpp" />
     <ClCompile Include="Tr2DrawUPHelper.cpp" />
     <ClCompile Include="Tr2DriverUtilities.cpp" />
     <ClCompile Include="Tr2FragmentOpSettings.cpp" />
@@ -1929,7 +1931,6 @@
     <ClCompile Include="Tr2LockGuard.cpp" />
     <ClCompile Include="Tr2MemoryCounterAL.cpp" />
     <ClCompile Include="Tr2RenderContextEnum.cpp" />
-    <ClCompile Include="Tr2TrackedALObject.cpp" />
     <ClCompile Include="Tr2VertexDefinition.cpp" />
     <ClCompile Include="dx11\Tr2BufferALDx11.cpp" />
     <ClCompile Include="dx11\Tr2CapsALDx11.cpp" />
@@ -1968,7 +1969,10 @@
     <ClCompile Include="dx12\util\DescriptorHeapViewDx12.cpp" />
     <ClCompile Include="dx12\util\DescriptorStateCacheDx12.cpp" />
     <ClCompile Include="dx12\util\FrameLocalDescriptorHeapAllocatorDx12.cpp" />
+    <ClCompile Include="dx12\util\FrameLocalUploadBufferAllocatorDx12.cpp" />
     <ClCompile Include="dx12\util\GlobalDescriptorHeapAllocatorDx12.cpp" />
+    <ClCompile Include="dx12\util\GpuMarkerBuffer.cpp" />
+    <ClCompile Include="dx12\util\PsoDescription.cpp" />
     <ClCompile Include="dx9\Tr2BufferALDx9.cpp" />
     <ClCompile Include="dx9\Tr2CapsALDx9.cpp" />
     <ClCompile Include="dx9\Tr2ConstantBufferALDx9.cpp" />
@@ -2000,11 +2004,17 @@
     <ClCompile Include="gles2\Tr2VertexLayoutALGLES2.cpp" />
     <ClCompile Include="gles2\Tr2VideoAdapterInfoALGLES2.cpp" />
     <ClCompile Include="src\Tr2BufferAL.cpp" />
+    <ClCompile Include="src\Tr2ConstantBufferAL.cpp" />
+    <ClCompile Include="src\Tr2FenceAL.cpp" />
     <ClCompile Include="src\Tr2GpuTimerAl.cpp" />
+    <ClCompile Include="src\Tr2OcclusionQueryAL.cpp" />
     <ClCompile Include="src\Tr2ResourceSetAL.cpp" />
     <ClCompile Include="src\Tr2SamplerStateAL.cpp" />
     <ClCompile Include="src\Tr2ShaderAL.cpp" />
+    <ClCompile Include="src\Tr2ShaderProgramAL.cpp" />
+    <ClCompile Include="src\Tr2SwapChainAL.cpp" />
     <ClCompile Include="src\Tr2TextureAL.cpp" />
+    <ClCompile Include="src\Tr2VertexLayoutAL.cpp" />
     <ClCompile Include="stub\Tr2BufferALStub.cpp" />
     <ClCompile Include="stub\Tr2CapsALStub.cpp" />
     <ClCompile Include="stub\Tr2ConstantBufferALStub.cpp" />
@@ -2021,8 +2031,10 @@
     <ClCompile Include="stub\Tr2VertexLayoutALStub.cpp" />
     <ClCompile Include="stub\Tr2VideoAdapterInfoALStub.cpp" />
     <ClCompile Include="vulkan\Tr2BufferALVulkan.cpp" />
+    <ClCompile Include="vulkan\Tr2ConstantBufferALVulkan.cpp" />
     <ClCompile Include="vulkan\Tr2PrimaryRenderContextVulkan.cpp" />
     <ClCompile Include="vulkan\Tr2RenderContextVulkan.cpp" />
+    <ClCompile Include="vulkan\Tr2ResourceSetALVulkan.cpp" />
     <ClCompile Include="vulkan\Tr2SamplerStateALVulkan.cpp" />
     <ClCompile Include="vulkan\Tr2ShaderALVulkan.cpp" />
     <ClCompile Include="vulkan\Tr2ShaderProgramALVulkan.cpp" />
