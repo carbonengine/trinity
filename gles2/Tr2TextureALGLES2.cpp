@@ -1066,11 +1066,11 @@ namespace TrinityALImpl
 			size += m_desc.GetMipSize( i );
 		}
 
-		description["size"] = std::to_string( long long( size ) );
-		description["width"] = std::to_string( long long( m_desc.GetWidth() ) );
-		description["height"] = std::to_string( long long( m_desc.GetHeight() ) );
-		description["mipLevels"] = std::to_string( long long( m_desc.GetTrueMipCount() ) );
-		description["format"] = std::to_string( long long( m_desc.GetFormat() ) );
+		description["size"] = std::to_string( (long long)( size ) );
+		description["width"] = std::to_string( (long long)( m_desc.GetWidth() ) );
+		description["height"] = std::to_string( (long long)( m_desc.GetHeight() ) );
+		description["mipLevels"] = std::to_string( (long long)( m_desc.GetTrueMipCount() ) );
+		description["format"] = std::to_string( (long long)( m_desc.GetFormat() ) );
 	}
 }
 
