@@ -90,9 +90,6 @@
     <ClInclude Include="ITr2TextureProvider.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="ITr2VisibilityQueryable.h">
-      <Filter>Source Files</Filter>
-    </ClInclude>
     <ClInclude Include="ITr2VisualizationModeRenderer.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -1335,9 +1332,6 @@
     <ClInclude Include="RenderJob\TriStepRenderAtlas.h">
       <Filter>Source Files\RenderJob</Filter>
     </ClInclude>
-    <ClInclude Include="RenderJob\TriStepRenderCubeMap.h">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClInclude>
     <ClInclude Include="RenderJob\TriStepRenderDebug.h">
       <Filter>Source Files\RenderJob</Filter>
     </ClInclude>
@@ -1345,9 +1339,6 @@
       <Filter>Source Files\RenderJob</Filter>
     </ClInclude>
     <ClInclude Include="RenderJob\TriStepRenderFps.h">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderJob\TriStepRenderFullScreenShader.h">
       <Filter>Source Files\RenderJob</Filter>
     </ClInclude>
     <ClInclude Include="RenderJob\TriStepRenderLineGraph.h">
@@ -1407,9 +1398,6 @@
     <ClInclude Include="RenderJob\TriStepSetViewport.h">
       <Filter>Source Files\RenderJob</Filter>
     </ClInclude>
-    <ClInclude Include="RenderJob\TriStepSetVisibilityResults.h">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClInclude>
     <ClInclude Include="RenderJob\TriStepSetVisualizationMode.h">
       <Filter>Source Files\RenderJob</Filter>
     </ClInclude>
@@ -1420,9 +1408,6 @@
       <Filter>Source Files\RenderJob</Filter>
     </ClInclude>
     <ClInclude Include="RenderJob\TriStepUpdate.h">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderJob\TriStepVisibilityQuery.h">
       <Filter>Source Files\RenderJob</Filter>
     </ClInclude>
     <ClInclude Include="Resources\Tr2AsyncSave.h">
@@ -3609,12 +3594,6 @@
     <ClCompile Include="RenderJob\TriStepRenderAtlas_Blue.cpp">
       <Filter>Source Files\RenderJob</Filter>
     </ClCompile>
-    <ClCompile Include="RenderJob\TriStepRenderCubeMap.cpp">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderJob\TriStepRenderCubeMap_Blue.cpp">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClCompile>
     <ClCompile Include="RenderJob\TriStepRenderDebug.cpp">
       <Filter>Source Files\RenderJob</Filter>
     </ClCompile>
@@ -3631,12 +3610,6 @@
       <Filter>Source Files\RenderJob</Filter>
     </ClCompile>
     <ClCompile Include="RenderJob\TriStepRenderFps_Blue.cpp">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderJob\TriStepRenderFullScreenShader.cpp">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderJob\TriStepRenderFullScreenShader_Blue.cpp">
       <Filter>Source Files\RenderJob</Filter>
     </ClCompile>
     <ClCompile Include="RenderJob\TriStepRenderLineGraph.cpp">
@@ -3753,12 +3726,6 @@
     <ClCompile Include="RenderJob\TriStepSetView_Blue.cpp">
       <Filter>Source Files\RenderJob</Filter>
     </ClCompile>
-    <ClCompile Include="RenderJob\TriStepSetVisibilityResults.cpp">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderJob\TriStepSetVisibilityResults_Blue.cpp">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClCompile>
     <ClCompile Include="RenderJob\TriStepSetVisualizationMode.cpp">
       <Filter>Source Files\RenderJob</Filter>
     </ClCompile>
@@ -3781,12 +3748,6 @@
       <Filter>Source Files\RenderJob</Filter>
     </ClCompile>
     <ClCompile Include="RenderJob\TriStepUpdate_Blue.cpp">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderJob\TriStepVisibilityQuery.cpp">
-      <Filter>Source Files\RenderJob</Filter>
-    </ClCompile>
-    <ClCompile Include="RenderJob\TriStepVisibilityQuery_Blue.cpp">
       <Filter>Source Files\RenderJob</Filter>
     </ClCompile>
     <ClCompile Include="Resources\Tr2AsyncSave.cpp">

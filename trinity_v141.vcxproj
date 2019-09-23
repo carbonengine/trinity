@@ -2866,7 +2866,6 @@
     <ClInclude Include="ITr2SkinnedObject.h" />
     <ClInclude Include="ITr2SoundEmitterOwner.h" />
     <ClInclude Include="ITr2TextureProvider.h" />
-    <ClInclude Include="ITr2VisibilityQueryable.h" />
     <ClInclude Include="ITr2VisualizationModeRenderer.h" />
     <ClInclude Include="ITr2WorldTransformUpdater.h" />
     <ClInclude Include="ITriReroutable.h" />
@@ -3281,11 +3280,9 @@
     <ClInclude Include="RenderJob\TriStepRemoteSync.h" />
     <ClInclude Include="RenderJob\TriStepRemoteUpdate.h" />
     <ClInclude Include="RenderJob\TriStepRenderAtlas.h" />
-    <ClInclude Include="RenderJob\TriStepRenderCubeMap.h" />
     <ClInclude Include="RenderJob\TriStepRenderDebug.h" />
     <ClInclude Include="RenderJob\TriStepRenderEffect.h" />
     <ClInclude Include="RenderJob\TriStepRenderFps.h" />
-    <ClInclude Include="RenderJob\TriStepRenderFullScreenShader.h" />
     <ClInclude Include="RenderJob\TriStepRenderLineGraph.h" />
     <ClInclude Include="RenderJob\TriStepRenderObject.h" />
     <ClInclude Include="RenderJob\TriStepRenderPass.h" />
@@ -3305,12 +3302,10 @@
     <ClInclude Include="RenderJob\TriStepSetVariableStore.h" />
     <ClInclude Include="RenderJob\TriStepSetView.h" />
     <ClInclude Include="RenderJob\TriStepSetViewport.h" />
-    <ClInclude Include="RenderJob\TriStepSetVisibilityResults.h" />
     <ClInclude Include="RenderJob\TriStepSetVisualizationMode.h" />
     <ClInclude Include="RenderJob\TriStepTestBlocking.h" />
     <ClInclude Include="RenderJob\TriStepToggleCubemap.h" />
     <ClInclude Include="RenderJob\TriStepUpdate.h" />
-    <ClInclude Include="RenderJob\TriStepVisibilityQuery.h" />
     <ClInclude Include="Resources\Tr2AsyncSave.h" />
     <ClInclude Include="Resources\Tr2CairoScriptSourceRes.h" />
     <ClInclude Include="Resources\Tr2CompositedVectorTextureRes.h" />
@@ -4043,16 +4038,12 @@
     <ClCompile Include="RenderJob\TriStepRemoteUpdate_Blue.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderAtlas.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderAtlas_Blue.cpp" />
-    <ClCompile Include="RenderJob\TriStepRenderCubeMap.cpp" />
-    <ClCompile Include="RenderJob\TriStepRenderCubeMap_Blue.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderDebug.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderDebug_Blue.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderEffect.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderEffect_Blue.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderFps.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderFps_Blue.cpp" />
-    <ClCompile Include="RenderJob\TriStepRenderFullScreenShader.cpp" />
-    <ClCompile Include="RenderJob\TriStepRenderFullScreenShader_Blue.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderLineGraph.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderLineGraph_Blue.cpp" />
     <ClCompile Include="RenderJob\TriStepRenderObject.cpp" />
@@ -4091,8 +4082,6 @@
     <ClCompile Include="RenderJob\TriStepSetViewport.cpp" />
     <ClCompile Include="RenderJob\TriStepSetViewport_Blue.cpp" />
     <ClCompile Include="RenderJob\TriStepSetView_Blue.cpp" />
-    <ClCompile Include="RenderJob\TriStepSetVisibilityResults.cpp" />
-    <ClCompile Include="RenderJob\TriStepSetVisibilityResults_Blue.cpp" />
     <ClCompile Include="RenderJob\TriStepSetVisualizationMode.cpp" />
     <ClCompile Include="RenderJob\TriStepSetVisualizationMode_Blue.cpp" />
     <ClCompile Include="RenderJob\TriStepTestBlocking.cpp" />
@@ -4101,8 +4090,6 @@
     <ClCompile Include="RenderJob\TriStepToggleCubemap_Blue.cpp" />
     <ClCompile Include="RenderJob\TriStepUpdate.cpp" />
     <ClCompile Include="RenderJob\TriStepUpdate_Blue.cpp" />
-    <ClCompile Include="RenderJob\TriStepVisibilityQuery.cpp" />
-    <ClCompile Include="RenderJob\TriStepVisibilityQuery_Blue.cpp" />
     <ClCompile Include="Resources\Tr2AsyncSave.cpp" />
     <ClCompile Include="Resources\Tr2CairoScriptSourceRes.cpp" />
     <ClCompile Include="Resources\Tr2CairoScriptSourceRes_Blue.cpp" />
