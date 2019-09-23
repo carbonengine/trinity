@@ -16,6 +16,7 @@
 #include "Utilities.h"
 #include "Tr2FragmentOpSettings.h"
 #include "Tr2SwapChainALDx12.h"
+#include "Tr2TextureALDx12.h"
 
 extern bool g_requestDeviceDebugLayer;
 bool g_gatherPipelineStatistics = false;
@@ -128,7 +129,7 @@ namespace
 		swapChainDesc.Scaling = DXGI_SCALING_STRETCH;// DXGI_MODE_SCALING( presentationParameters.mode.scaling );
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-		swapChainDesc.Flags = 0;
+		swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
 
 
 		auto wnd = Tr2WindowHandle( presentationParameters.outputWindow );
@@ -181,10 +182,9 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 	m_rootSignatureVersion( D3D_ROOT_SIGNATURE_VERSION_1_0 ),
 	m_genMipsResources( nullptr ),
 	m_commandAllocatorIndex( 0 ),
-	m_immediateBufferGpuAddress( 0 ),
-	m_immediateBufferCpuAddress( nullptr ),
 	m_statsQueryFrameIndex( 0 ),
-	m_statsStatus( STAT_READY )
+	m_statsStatus( STAT_READY ),
+	m_completedFrameIndex( 0 )
 {
 	m_ownerDevice = this;
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
@@ -271,7 +271,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	{
 		// JB: Not pretty, but createRenderTargetView requires a valid device!
 		m_device = device;
-		HRESULT hr = Tr2SwapChainAL::GetBackBuffers(this, backBuffers, rtvs, device, swapChain);
+		HRESULT hr = TrinityALImpl::Tr2SwapChainAL::GetBackBuffers(this, backBuffers, rtvs, device, swapChain);
 		m_device = nullptr;
 
 		FORWARD_HR(hr);
@@ -294,9 +294,6 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	{
 		currentBackBufferIndex = 0;
 	}
-	CComPtr<ID3D12GraphicsCommandList> commandList;
-	CR_RETURN_HR( device->CreateCommandList( 0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocators[currentBackBufferIndex], nullptr, IID_PPV_ARGS( &commandList ) ) );
-	CR_RETURN_HR( commandList->Close() );
 
 	CComPtr<ID3D12Fence> fence;
 	CR_RETURN_HR( device->CreateFence( 0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS( &fence ) ) );
@@ -340,47 +337,19 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	m_commandAllocators = commandAllocators;
 	m_commandAllocatorIndex = 0;
 	m_currentBackBufferIndex = currentBackBufferIndex;
-	m_commandList = commandList;
 
-	commandList.QueryInterface( &m_commandList2 );
-	if( m_commandList2 )
-	{
-
-		D3D12_HEAP_PROPERTIES heapProperties = { D3D12_HEAP_TYPE_READBACK };
-
-		D3D12_RESOURCE_DESC resourceDesc = { D3D12_RESOURCE_DIMENSION_BUFFER };
-		resourceDesc.Width = 256;
-		resourceDesc.Height = resourceDesc.DepthOrArraySize = resourceDesc.MipLevels = 1;
-		resourceDesc.SampleDesc.Count = 1;
-		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-		resourceDesc.Flags = D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE;
-
-		if( SUCCEEDED( m_device->CreateCommittedResource(
-			&heapProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&resourceDesc,
-			D3D12_RESOURCE_STATE_COPY_DEST,
-			nullptr,
-			IID_PPV_ARGS( &m_immediateBuffer ) ) ) )
-		{
-			m_immediateBuffer->SetName( L"WriteImmedateBuffer" );
-			m_immediateBufferGpuAddress = m_immediateBuffer->GetGPUVirtualAddress();
-			CR( m_immediateBuffer->Map( 0, nullptr, (void**)&m_immediateBufferCpuAddress ) );
-		}
-		else
-		{
-			m_commandList2 = nullptr;
-		}
-	}
-
+	m_immediateBuffer.Create( m_device );
 
 	m_presentFence = fence;
 	m_presentFenceEvent = ::CreateEvent( NULL, FALSE, FALSE, NULL );
 
+	m_completedFrameIndex = 0;
 	m_fenceValue = 1;
 	m_frameFenceValues.clear();
 	m_frameFenceValues.resize( backBufferCount, 0 );
 	m_pendingRelease.resize( backBufferCount );
+
+	CreateDx12( commandAllocators[currentBackBufferIndex], *this );
 
 	m_syncInterval = presentationParameters.presentInterval & 0xf;
 
@@ -408,31 +377,13 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		m_events->OnContextCreated( *this );
 	}
 
-	m_boundRenderTargets[0] = m_defaultBackBuffer;
 	m_defaultBackBuffer.m_texture->SetSwapChainBufferIndexDx12( m_currentBackBufferIndex );
 
 	auto commandAllocator = m_commandAllocators[m_commandAllocatorIndex++ % m_commandAllocators.size()];
 	commandAllocator->Reset();
 	m_commandList->Reset( commandAllocator, nullptr );
 
-	{
-		auto barrier = TrinityALImpl::Transition( m_defaultBackBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET );
-		m_commandList->ResourceBarrier( 1, &barrier );
-		const std::shared_ptr<RenderTargetViewDx12>& rtv = m_defaultBackBuffer.m_texture->GetRtvDescriptorHandleDx12( m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
-		m_commandList->OMSetRenderTargets( 1, &rtv->GetHandleCPU(), FALSE, nullptr );
-	}
-
-	SetViewport( Tr2Viewport( m_defaultBackBuffer.GetWidth(), m_defaultBackBuffer.GetHeight() ) );
-	D3D12_RECT rect = {0, 0, m_defaultBackBuffer.GetWidth(), m_defaultBackBuffer.GetHeight() };
-	m_commandList->RSSetScissorRects( 1, &rect );
-	m_dirtyPso = true;
-	m_ownerDevice = this;
-
-	m_renderTargetCount = 1;
-	std::fill( std::begin( m_renderTargetFormats ), std::end( m_renderTargetFormats ), Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
-	m_renderTargetFormats[0] = m_defaultBackBuffer.GetFormat();
-	m_depthStencilFormat = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN;
-	m_sampleDesc = m_defaultBackBuffer.GetMsaaDesc();
+	ResetRenderTargets();
 
 	m_genMipsResources = new TrinityALImpl::GenerateMipsResources( m_device );
 
@@ -443,16 +394,15 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	D3D12_SUBRESOURCE_DATA cbd = { cb.data(), nullCbSize, nullCbSize };
 	m_nullCB.Create( TrinityALImpl::Tr2ResourceHelper::STATIC, nullCbSize, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_GENERIC_READ, 1, &cbd, *this );
 
-	// JB: I can't find an equivalent 'create' function in Tr2RenderContext so I'm leaving this here for now
-	// if additional contexts are supported, then this will need to be moved!
-	for(uint32_t bufferIdx = 0; bufferIdx < backBufferCount; ++bufferIdx)
-	{
-		m_descriptorCache.push_back(std::make_shared<DescriptorStateCache>(device, this, DESCRIPTOR_CACHE_CRVSRVUAV_PAGE_SIZE, DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE));
-	}
-
-	AddGpuMarker( "" );
+	m_immediateBuffer.PutMarker( m_commandList2, "" );
 	m_statsQueryFrameIndex = 0;
 	m_statsStatus = STAT_READY;
+
+	{
+		Tr2AdapterInfo info;
+		Tr2VideoAdapterInfo::GetAdapterInfo( adapter, info );
+		CCP_AL_LOGNOTICE( "Created dx12 device for adapter %S", info.description.c_str() );
+	}
 
 	return S_OK;
 }
@@ -465,23 +415,15 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	}
 
 	m_pendingPresents.clear();
-	m_descriptorCache.clear();
 
 	m_statsQuery = nullptr;
 	m_statsResult = nullptr;
 
 	Tr2RenderContextAL::Destroy();
 
-	m_shadowCB.Destroy();
+	m_shadowCB = Tr2ConstantBufferAL();
 
-	if( m_immediateBuffer )
-	{
-		D3D12_RANGE emptyRange = { 0, 0 };
-		m_immediateBuffer->Unmap( 0, &emptyRange );
-		m_immediateBuffer = nullptr;
-	}
-	m_immediateBufferCpuAddress = nullptr;
-	m_immediateBufferGpuAddress = 0;
+	m_immediateBuffer.Destroy();
 
 	delete m_genMipsResources;
 	m_genMipsResources = nullptr;
@@ -498,8 +440,6 @@ void Tr2PrimaryRenderContextAL::Destroy()
 
 	m_presentFence = nullptr;
 
-	m_commandList = nullptr;
-	m_commandList2 = nullptr;
 	m_commandAllocators.clear();
 
 	m_commandQueue = nullptr;
@@ -526,6 +466,7 @@ void Tr2PrimaryRenderContextAL::Destroy()
 		m_presentFenceEvent = nullptr;
 	}
 
+	m_completedFrameIndex = 0;
 	m_fenceValue = 0;
 	m_frameFenceValues.clear();
 
@@ -549,6 +490,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 		m_commandList->EndQuery( m_statsQuery, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0 );
 		m_statsStatus = STAT_READY;
 	}
+	FlushBarriersDx12();
 	CR( m_commandList->Close() );
 
 	CComPtr<IDXGIOutput> dxgiOutput;
@@ -575,12 +517,8 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	modeDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER( presentationParameters.mode.scanlineOrdering );
 	modeDesc.Scaling = DXGI_MODE_SCALING( presentationParameters.mode.scaling );
 
-	BOOL inFullScreen = false;
-	CR( m_swapChain->GetFullscreenState( &inFullScreen, nullptr ) );
-	if( !inFullScreen )
-	{
-		CR( m_swapChain->ResizeTarget( &modeDesc ) );
-	}
+	BOOL wasFullScreen = false;
+	CR( m_swapChain->GetFullscreenState( &wasFullScreen, nullptr ) );
 
 	m_defaultBackBuffer.m_texture->Destroy();
 
@@ -594,27 +532,56 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	m_frameFenceValues.clear();
 	m_frameFenceValues.resize( BACK_BUFFER_COUNT, value );
 
-	if( !presentationParameters.windowed )
+	if( !wasFullScreen && presentationParameters.windowed )
 	{
+		// windowed -> windowed
+		CR( m_swapChain->ResizeTarget( &modeDesc ) );
+		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
+			presentationParameters.mode.width,
+			presentationParameters.mode.height,
+			fmt,
+			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
+	}
+	else if( wasFullScreen && presentationParameters.windowed )
+	{
+		// fullscreen -> windowed
+		CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
+
+		CR( m_swapChain->ResizeTarget( &modeDesc ) );
+		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
+			presentationParameters.mode.width,
+			presentationParameters.mode.height,
+			fmt,
+			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
+	}
+	else if( !wasFullScreen && !presentationParameters.windowed )
+	{
+		// windowed -> fullscreen
+		CR( m_swapChain->ResizeTarget( &modeDesc ) );
 		CR( m_swapChain->SetFullscreenState( TRUE, dxgiOutput ) );
 		CR( m_swapChain->ResizeTarget( &modeDesc ) );
+		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
+			presentationParameters.mode.width,
+			presentationParameters.mode.height,
+			fmt,
+			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
 	}
 	else
 	{
-		CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
+		// fulscreen -> fullscreen (resolution change)
+		CR( m_swapChain->ResizeTarget( &modeDesc ) );
+		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
+			presentationParameters.mode.width,
+			presentationParameters.mode.height,
+			fmt,
+			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
 	}
-
-	CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
-		presentationParameters.mode.width,
-		presentationParameters.mode.height,
-		fmt,
-		DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
 
 	m_syncInterval = presentationParameters.presentInterval & 0xf;
 
 	std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 	std::vector<CComPtr<ID3D12Resource>> backBuffers;
-	FORWARD_HR( Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, m_device, m_swapChain ) );
+	FORWARD_HR( TrinityALImpl::Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, m_device, m_swapChain ) );
 
 	m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 	m_defaultBackBuffer.m_texture->AssignFromSwapChainDx12( backBuffers, rtvs, *this );
@@ -625,24 +592,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	m_commandList->Reset( commandAllocator, nullptr );
 
 	ResetDescriptorCaches();
-
-	{
-		auto barrier = TrinityALImpl::Transition( m_defaultBackBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET );
-		m_commandList->ResourceBarrier( 1, &barrier );
-		const std::shared_ptr<RenderTargetViewDx12>& rtv = m_defaultBackBuffer.m_texture->GetRtvDescriptorHandleDx12( m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
-		m_commandList->OMSetRenderTargets( 1, &rtv->GetHandleCPU(), FALSE, nullptr );
-	}
-
-	SetViewport( Tr2Viewport( m_defaultBackBuffer.GetWidth(), m_defaultBackBuffer.GetHeight() ) );
-	D3D12_RECT rect = {0, 0, m_defaultBackBuffer.GetWidth(), m_defaultBackBuffer.GetHeight() };
-	m_commandList->RSSetScissorRects( 1, &rect );
-	m_dirtyPso = true;
-
-	m_renderTargetCount = 1;
-	std::fill( std::begin( m_renderTargetFormats ), std::end( m_renderTargetFormats ), Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
-	m_renderTargetFormats[0] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( m_defaultBackBuffer.GetFormat() ) : m_defaultBackBuffer.GetFormat();
-	m_depthStencilFormat = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN;
-	m_sampleDesc = m_defaultBackBuffer.GetMsaaDesc();
+	ResetRenderTargets();
 
 	return S_OK;
 }
@@ -654,6 +604,11 @@ const Tr2CapsAL& Tr2PrimaryRenderContextAL::GetCaps() const
 
 ALResult Tr2PrimaryRenderContextAL::Present()
 {
+	// some swap chains scheduled for presenting might have already been destroyed
+	m_pendingPresents.erase(
+		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p )->bool { return !p.backBuffer.IsValid(); } ),
+		end( m_pendingPresents ) );
+
 	{
 		std::vector<D3D12_RESOURCE_BARRIER> barriers;
 		barriers.reserve( 1 + m_pendingPresents.size() );
@@ -662,12 +617,10 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 		{
 			barriers.push_back( TrinityALImpl::Transition( it->backBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT ) );
 		}
-		m_commandList->ResourceBarrier( uint32_t( barriers.size() ), barriers.data() );
+		ResourceBarrierDx12( barriers.size(), barriers.data() );
+		FlushBarriersDx12();
 	}
 	ResetDx12();
-
-	// JB: As with creation, if additional render contexts are added, this will need to be in that contexts reset function
-	m_descriptorCache[m_currentBackBufferIndex]->Reset();
 
 	if( g_gatherPipelineStatistics && m_statsQuery )
 	{
@@ -738,25 +691,27 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 		m_pendingRelease[m_currentBackBufferIndex].clear();
 	}
 
+	// JB: As with creation, if additional render contexts are added, this will need to be in that contexts reset function
+	m_descriptorCache[m_currentBackBufferIndex]->Reset();
+
 	m_defaultBackBuffer.m_texture->SetSwapChainBufferIndexDx12( m_currentBackBufferIndex );
 
 	auto commandAllocator = m_commandAllocators[m_commandAllocatorIndex++ % m_commandAllocators.size()];
 	commandAllocator->Reset();
 	m_commandList->Reset( commandAllocator, nullptr );
 
+	if( !m_pendingPresents.empty() )
 	{
 		std::vector<D3D12_RESOURCE_BARRIER> barriers;
-		barriers.reserve( 1 + m_pendingPresents.size() );
-		barriers.push_back( TrinityALImpl::Transition( m_defaultBackBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET ) );
+		barriers.reserve( m_pendingPresents.size() );
 		for( auto it = begin( m_pendingPresents ); it != end( m_pendingPresents ); ++it )
 		{
 			it->backBuffer.m_texture->SetSwapChainBufferIndexDx12( it->swapChain->GetCurrentBackBufferIndex() );
 			barriers.push_back( TrinityALImpl::Transition( it->backBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET ) );
 		}
-		m_commandList->ResourceBarrier( uint32_t( barriers.size() ), barriers.data() );
+		ResourceBarrierDx12( barriers.size(), barriers.data() );
 
-		const std::shared_ptr<RenderTargetViewDx12>& rtv = m_defaultBackBuffer.m_texture->GetRtvDescriptorHandleDx12( m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
-		m_commandList->OMSetRenderTargets( 1, &rtv->GetHandleCPU(), FALSE, nullptr );
+		// 	FlushBarriersDx12(); ?
 	}
 
 	for( auto it = begin( m_pendingPresents ); it != end( m_pendingPresents ); ++it )
@@ -765,20 +720,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	}
 	m_pendingPresents.clear();
 
-
-	m_boundRenderTargets[0] = m_defaultBackBuffer;
-
-	SetViewport( Tr2Viewport( m_defaultBackBuffer.GetWidth(), m_defaultBackBuffer.GetHeight() ) );
-	D3D12_RECT rect = {0, 0, m_defaultBackBuffer.GetWidth(), m_defaultBackBuffer.GetHeight() };
-	m_commandList->RSSetScissorRects( 1, &rect );
-
-	m_renderTargetCount = 1;
-	std::fill( std::begin( m_renderTargetFormats ), std::end( m_renderTargetFormats ), Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
-	m_renderTargetFormats[0] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( m_defaultBackBuffer.GetFormat() ) : m_defaultBackBuffer.GetFormat();
-	m_depthStencilFormat = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN;
-	m_sampleDesc = m_defaultBackBuffer.GetMsaaDesc();
-
-	m_dirtyPso = true;
+	ResetRenderTargets();
 
 	if( g_gatherPipelineStatistics )
 	{
@@ -832,13 +774,15 @@ uint64_t Tr2PrimaryRenderContextAL::SignalDx12()
 
 ALResult Tr2PrimaryRenderContextAL::WaitForFenceDx12( uint64_t value )
 {
-	if( m_presentFence->GetCompletedValue() < value )
+	m_completedFrameIndex = m_presentFence->GetCompletedValue();
+	if( m_completedFrameIndex < value )
 	{
 		CR_RETURN_HR( m_presentFence->SetEventOnCompletion( value, m_presentFenceEvent ) );
 		if( WaitForSingleObject( m_presentFenceEvent, 1000 ) == WAIT_TIMEOUT )
 		{
 			return E_FAIL;
 		}
+		m_completedFrameIndex = value;
 	}
 	return S_OK;
 }
@@ -863,16 +807,16 @@ uint64_t Tr2PrimaryRenderContextAL::GetCurrentFrameIndexDx12() const
 
 uint64_t Tr2PrimaryRenderContextAL::GetCompletedFrameIndexDx12() const
 {
-	return m_presentFence->GetCompletedValue();
+	return m_completedFrameIndex;
 }
 
-void Tr2PrimaryRenderContextAL::OnShaderProgramDestroyedDx12( Tr2ShaderProgramAL* sp )
+void Tr2PrimaryRenderContextAL::OnShaderProgramDestroyedDx12( TrinityALImpl::Tr2ShaderProgramAL* sp )
 {
 	for( auto it = begin( m_pipelineStates ); it != end( m_pipelineStates ); )
 	{
-		if( it->second.shaderProgram == sp )
+		if( it->first.m_shaderProgram.m_program.get() == sp )
 		{
-			RELEASE_LATER( this, it->second.pipelineState );
+			RELEASE_LATER( this, it->second );
 			it = m_pipelineStates.erase( it );
 		}
 		else
@@ -882,13 +826,13 @@ void Tr2PrimaryRenderContextAL::OnShaderProgramDestroyedDx12( Tr2ShaderProgramAL
 	}
 }
 
-void Tr2PrimaryRenderContextAL::OnVertexLayoutDestroyedDx12( Tr2VertexLayoutAL* vl )
+void Tr2PrimaryRenderContextAL::OnVertexLayoutDestroyedDx12( TrinityALImpl::Tr2VertexLayoutAL* vl )
 {
 	for( auto it = begin( m_pipelineStates ); it != end( m_pipelineStates ); )
 	{
-		if( it->second.vertexLayout == vl )
+		if( it->first.m_vertexLayout.m_layout.get() == vl )
 		{
-			RELEASE_LATER( this, it->second.pipelineState );
+			RELEASE_LATER( this, it->second );
 			it = m_pipelineStates.erase( it );
 		}
 		else
@@ -909,13 +853,16 @@ ALResult Tr2PrimaryRenderContextAL::FlushAndSyncDx12( Tr2RenderContextAL& render
 		m_commandList->EndQuery( m_statsQuery, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0 );
 		m_statsStatus = STAT_READY;
 	}
+	FlushBarriersDx12();
 
 	CR_RETURN_HR( renderContext.m_commandList->Close() );
 	ID3D12CommandList* const commandLists[] = { renderContext.m_commandList };
 	m_commandQueue->ExecuteCommandLists( _countof( commandLists ), commandLists );
 
 	WaitForFenceDx12( SignalDx12() );
-	m_pendingPresents.clear();
+	m_pendingPresents.erase(
+		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p )->bool { return !p.backBuffer.IsValid(); } ),
+		end( m_pendingPresents ) );
 	for( auto it = begin( m_pendingRelease ); it != end( m_pendingRelease ); ++it )
 	{
 		it->clear();
@@ -960,16 +907,15 @@ D3D12_CPU_DESCRIPTOR_HANDLE Tr2PrimaryRenderContextAL::GetNullRtHandle( const Tr
 	return handle;
 }
 
-D3D12_GPU_VIRTUAL_ADDRESS Tr2PrimaryRenderContextAL::GetImmediateBufferAddressDx12() const
+const TrinityALImpl::GpuMarkerBuffer& Tr2PrimaryRenderContextAL::GetMarkerBuffer() const
 {
-	return m_immediateBufferGpuAddress;
+	return m_immediateBuffer;
 }
 
 ALResult Tr2PrimaryRenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const
 {
-	if( m_immediateBuffer )
+	if( SUCCEEDED( m_immediateBuffer.GetMarker( marker ) ) )
 	{
-		marker = std::string( static_cast<const char*>( m_immediateBufferCpuAddress ), 255 );
 		status = Tr2RenderContextEnum::CONTEXT_STATUS_FINISHED;
 		return S_OK;
 	}
@@ -1069,6 +1015,18 @@ HRESULT Tr2PrimaryRenderContextAL::CreateDepthStencilView(ID3D12Resource* resour
 
 	dsvView = std::make_shared<DepthStencilViewDx12>(allocator.get(), entry);
 	return S_OK;
+}
+
+void Tr2PrimaryRenderContextAL::ResetRenderTargets()
+{
+	Tr2TextureAL nullTex;
+	SetDepthStencil( nullTex );
+	ResourceBarrierDx12( TrinityALImpl::Transition( m_defaultBackBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET ) );
+	SetRenderTarget( m_defaultBackBuffer );
+	for( uint32_t i = 1; i < RENDER_TARGET_COUNT; ++i )
+	{
+		SetRenderTarget( nullTex, i );
+	}
 }
 
 #endif

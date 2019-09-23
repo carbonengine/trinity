@@ -1,15 +1,12 @@
 #pragma once
-#ifndef Tr2TextureALGLES2_h_
-#define Tr2TextureALGLES2_h_
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
 
 
 
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
+#include "../include/Tr2TextureAL.h"
 #include "../include/Tr2BitmapDimensions.h"
-#include "../include/Tr2SamplerStateAL.h"
+#include "Tr2SamplerStateALGLES2.h"
 #include "../Tr2MemoryCounterAL.h"
 
 
@@ -29,7 +26,7 @@ namespace TrinityALImpl
 
 namespace TrinityALImpl
 {
-	class Tr2TextureAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
+	class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>
 	{
 	public:
 		Tr2TextureAL();
@@ -39,7 +36,7 @@ namespace TrinityALImpl
 		void Destroy();
 
 		bool IsValid() const;
-		Tr2ALMemoryType GetMemoryClass();
+		Tr2ALMemoryType GetMemoryClass() const;
 		const Tr2BitmapDimensions& GetDesc() const;
 		const Tr2MsaaDesc& GetMsaaDesc() const;
 		Tr2GpuUsage::Type GetGpuUsage() const;
@@ -56,6 +53,7 @@ namespace TrinityALImpl
 		ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
 		uintptr_t GetSharedHandle() const;
 
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 
 		CcpMallocBuffer m_lockedData;
@@ -82,7 +80,5 @@ namespace TrinityALImpl
 		friend class Tr2ResourceSetAL;
 	};
 }
-
-#endif 
 
 #endif 

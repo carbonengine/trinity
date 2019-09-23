@@ -14,6 +14,8 @@
 #include "Tr2AdapterStructures.h"
 #include "Tr2ResourceSetALDx9.h"
 #include "Tr2BufferALDx9.h"
+#include "Tr2TextureALDx9.h"
+#include "Tr2ShaderProgramALDx9.h"
 
 using namespace Tr2RenderContextEnum;
 #pragma warning( disable: 4189 )	// Scopeguard
@@ -619,25 +621,17 @@ ALResult Tr2RenderContextAL::SetConstants(
 	}
 	if( !buffer.IsValid() )
 	{
-		if( &buffer == &nullCB )
-		{
-			return S_OK;
-		}
-		else
-		{
-			return E_INVALIDARG;
-		}
+		return S_OK;
 	}
 
 	CCP_ASSERT( ( buffer.GetSize() % 16 ) == 0);
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
 	switch( constantType )
 	{
 	case VERTEX_SHADER:
 		return m_d3dDevice9->SetVertexShaderConstantF( 
 								registerIndex, 
-								(float*)buffer.m_shadowCopy.get(), 
+								(float*)buffer.m_buffer->m_shadowCopy.get(), 
 								(uint32_t)buffer.GetSize() / ( 4 * sizeof(float) ) );
 
 	case PIXEL_SHADER:
@@ -649,7 +643,7 @@ ALResult Tr2RenderContextAL::SetConstants(
 
 			return m_d3dDevice9->SetPixelShaderConstantF( 
 								registerIndex, 
-								(float*)buffer.m_shadowCopy.get(), 
+								(float*)buffer.m_buffer->m_shadowCopy.get(),
 								std::min(	maxRegisterCount, 
 											(uint32_t)(buffer.GetSize() / ( 4 * sizeof(float) )) ) );
 		}
@@ -977,10 +971,6 @@ ALResult Tr2RenderContextAL::EndScene()
 
 ALResult Tr2RenderContextAL::Present()
 {
-#if AL_TACK_RESOURCE_USAGE
-	extern uint64_t g_trackCurrentFrame;
-	++g_trackCurrentFrame;
-#endif
 	if( m_d3dDevice9 )
 	{
 		CComPtr<IDirect3DSwapChain9> chain;
@@ -1024,15 +1014,13 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 		return E_FAIL;
 	}
 	
-	AL_UPDATE_RESOURCE_FRAME_USAGE( layout );
-	return layout.SetLayout( nullptr, *this );
+	return layout.m_layout->SetLayout( nullptr, *this );
 }
 
 ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram )
 {
-	AL_UPDATE_RESOURCE_FRAME_USAGE( shaderProgram );
-	CR_RETURN_HR( m_d3dDevice9->SetVertexShader( shaderProgram.m_vertexShader.IsValid() ? shaderProgram.m_vertexShader.m_shader->m_vertexShader : nullptr ) );
-	return m_d3dDevice9->SetPixelShader( shaderProgram.m_pixelShader.IsValid() ? shaderProgram.m_pixelShader.m_shader->m_pixelShader : nullptr );
+	CR_RETURN_HR( m_d3dDevice9->SetVertexShader( shaderProgram.m_program->m_vertexShader.IsValid() ? shaderProgram.m_program->m_vertexShader.m_shader->m_vertexShader : nullptr ) );
+	return m_d3dDevice9->SetPixelShader( shaderProgram.m_program->m_pixelShader.IsValid() ? shaderProgram.m_program->m_pixelShader.m_shader->m_pixelShader : nullptr );
 }
 
 ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )

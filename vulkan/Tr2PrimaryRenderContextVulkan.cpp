@@ -9,6 +9,7 @@
 #include "ITr2RenderContextEvents.h"
 #include "Tr2AdapterStructures.h"
 #include "UtilitiesVulkan.h"
+#include "Tr2TextureALVulkan.h"
 
 namespace
 {

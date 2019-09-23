@@ -12,31 +12,25 @@
 
 namespace TrinityALImpl
 {
-	class Tr2ResourceSetAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_RESOURCE_SET>
+	class Tr2ResourceSetAL: public Tr2DeviceResourceAL<Tr2ResourceSetAL>
 	{
 	public:
-		Tr2ResourceSetAL()
-		{
+		Tr2ResourceSetAL();
+		~Tr2ResourceSetAL();
 
-		}
+		ALResult Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
+		void Destroy();
 
-		ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext )
-		{
-			return E_NOTIMPL;
-		}
-		bool IsValid() const
-		{
-			return false;
-		}
+		bool IsValid() const;
+		Tr2ALMemoryType GetMemoryClass() const;
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	private:
+		Tr2PrimaryRenderContextAL *m_owner;
 
-		void Destroy()
-		{
+		VkDescriptorPool m_pool;
+		VkDescriptorSet m_descriptorSet;
 
-		}
-		Tr2ALMemoryType GetMemoryClass() const
-		{
-			return AL_MEMORY_VIDEO;
-		}
+		friend class ::Tr2RenderContextAL;
 	};
 }
 

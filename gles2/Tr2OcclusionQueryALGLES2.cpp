@@ -45,89 +45,95 @@ namespace
 }
 #endif
 
-Tr2OcclusionQueryAL::Tr2OcclusionQueryAL()
-:   m_query( 0 )
+namespace TrinityALImpl
 {
-}
 
-Tr2OcclusionQueryAL::~Tr2OcclusionQueryAL()
-{
-	Destroy();
-}
-
-ALResult Tr2OcclusionQueryAL::Create( Tr2RenderContextAL& renderContext )
-{
-    if( !renderContext.IsValid() )
-    {
-        return E_INVALIDARG;
-    }
-	Destroy();
-#ifdef TRINITY_AL_MOBILE
-    InitializeExtension();
-    if( !glGenQueries )
-    {
-        CCP_AL_LOGERR( "Tr2OcclusionQueryAL::Create: occlusion queries are not supported on this device" );
-        return E_FAIL;
-    }
-#endif
-	CR_GL( glGenQueries( 1, &m_query ) );
-	return m_query ? S_OK : E_FAIL;
-}
-
-bool Tr2OcclusionQueryAL::IsValid() const
-{
-	return m_query != 0;
-}
-
-void Tr2OcclusionQueryAL::Destroy()
-{
-	if( m_query )
+	Tr2OcclusionQueryAL::Tr2OcclusionQueryAL()
+		: m_query( 0 )
 	{
-		glDeleteQueries( 1, &m_query );
-		m_query = 0;
 	}
-}
 
-ALResult Tr2OcclusionQueryAL::Begin( Tr2RenderContextAL& /*renderContext*/ )
-{
-	if( !IsValid() )
+	Tr2OcclusionQueryAL::~Tr2OcclusionQueryAL()
 	{
-		return E_INVALIDARG;
+		Destroy();
 	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
-	CR_GL( glBeginQuery( GL_SAMPLES_PASSED, m_query ) );
-	return S_OK;
-}
 
-ALResult Tr2OcclusionQueryAL::End( Tr2RenderContextAL& /*renderContext*/ )
-{
-	if( !IsValid() )
+	ALResult Tr2OcclusionQueryAL::Create( Tr2RenderContextAL& renderContext )
 	{
-		return E_INVALIDARG;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
-	CR_GL( glEndQuery( GL_SAMPLES_PASSED ) );
-	return S_OK;
-}
-
-ALResult Tr2OcclusionQueryAL::GetPixelCount( Tr2RenderContextAL& /*renderContext*/, uint32_t& count, WaitMode waitMode )
-{
-	if( !IsValid() )
-	{
-		return E_INVALIDARG;
-	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
-	if( waitMode != WAIT )
-	{
-		GLuint ready = 0;
-		CR_GL( glGetQueryObjectuiv( m_query, GL_QUERY_RESULT_AVAILABLE, &ready ) );
-		if( !ready )
+		if( !renderContext.IsValid() )
 		{
-			return S_FALSE;
+			return E_INVALIDARG;
+		}
+		Destroy();
+#ifdef TRINITY_AL_MOBILE
+		InitializeExtension();
+		if( !glGenQueries )
+		{
+			CCP_AL_LOGERR( "Tr2OcclusionQueryAL::Create: occlusion queries are not supported on this device" );
+			return E_FAIL;
+		}
+#endif
+		CR_GL( glGenQueries( 1, &m_query ) );
+		return m_query ? S_OK : E_FAIL;
+	}
+
+	bool Tr2OcclusionQueryAL::IsValid() const
+	{
+		return m_query != 0;
+	}
+
+	void Tr2OcclusionQueryAL::Destroy()
+	{
+		if( m_query )
+		{
+			glDeleteQueries( 1, &m_query );
+			m_query = 0;
 		}
 	}
-	GL_FAIL( glGetQueryObjectuiv( m_query, GL_QUERY_RESULT, &count ) );
-	return S_OK;
+
+	ALResult Tr2OcclusionQueryAL::Begin( Tr2RenderContextAL& /*renderContext*/ )
+	{
+		if( !IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+		CR_GL( glBeginQuery( GL_SAMPLES_PASSED, m_query ) );
+		return S_OK;
+	}
+
+	ALResult Tr2OcclusionQueryAL::End( Tr2RenderContextAL& /*renderContext*/ )
+	{
+		if( !IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+		CR_GL( glEndQuery( GL_SAMPLES_PASSED ) );
+		return S_OK;
+	}
+
+	ALResult Tr2OcclusionQueryAL::GetPixelCount( Tr2RenderContextAL& /*renderContext*/, uint32_t& count, ::Tr2OcclusionQueryAL::WaitMode waitMode )
+	{
+		if( !IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+		if( waitMode != ::Tr2OcclusionQueryAL::WAIT )
+		{
+			GLuint ready = 0;
+			CR_GL( glGetQueryObjectuiv( m_query, GL_QUERY_RESULT_AVAILABLE, &ready ) );
+			if( !ready )
+			{
+				return S_FALSE;
+			}
+		}
+		GL_FAIL( glGetQueryObjectuiv( m_query, GL_QUERY_RESULT, &count ) );
+		return S_OK;
+	}
+
+	void Tr2OcclusionQueryAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2OcclusionQueryAL";
+	}
 }
 
 #endif

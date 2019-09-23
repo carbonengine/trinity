@@ -6,6 +6,9 @@
 #include "Tr2BufferALVulkan.h"
 #include "Tr2ShaderProgramALVulkan.h"
 #include "Tr2PrimaryRenderContextVulkan.h"
+#include "Tr2ResourceSetALVulkan.h"
+#include "Tr2VertexLayoutALVulkan.h"
+#include "Tr2TextureALVulkan.h"
 #include "VkResult.h"
 
 bool g_gatherPipelineStatistics = false;
@@ -46,6 +49,36 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw( )
 	m_pipelineSource.m_depthStencilState.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 	m_pipelineSource.m_rasterizationState.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
 	m_pipelineSource.m_rasterizationState.lineWidth = 1;
+
+	VkPipelineColorBlendAttachmentState defaultAttachment = {
+		VK_FALSE,                                                     // VkBool32                                       blendEnable
+		VK_BLEND_FACTOR_ONE,                                          // VkBlendFactor                                  srcColorBlendFactor
+		VK_BLEND_FACTOR_ZERO,                                         // VkBlendFactor                                  dstColorBlendFactor
+		VK_BLEND_OP_ADD,                                              // VkBlendOp                                      colorBlendOp
+		VK_BLEND_FACTOR_ONE,                                          // VkBlendFactor                                  srcAlphaBlendFactor
+		VK_BLEND_FACTOR_ZERO,                                         // VkBlendFactor                                  dstAlphaBlendFactor
+		VK_BLEND_OP_ADD,                                              // VkBlendOp                                      alphaBlendOp
+		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |         // VkColorComponentFlags                          colorWriteMask
+		VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
+	};
+
+	for( uint32_t i = 0; i < _countof( m_pipelineSource.m_attachmentBlend ); ++i )
+	{
+		m_pipelineSource.m_attachmentBlend[i] = defaultAttachment;
+	}
+
+	VkPipelineColorBlendStateCreateInfo defaultColorBlend = {
+		VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,     // VkStructureType                                sType
+		nullptr,                                                      // const void                                    *pNext
+		0,                                                            // VkPipelineColorBlendStateCreateFlags           flags
+		VK_FALSE,                                                     // VkBool32                                       logicOpEnable
+		VK_LOGIC_OP_COPY,                                             // VkLogicOp                                      logicOp
+		1,                                                            // uint32_t                                       attachmentCount
+		m_pipelineSource.m_attachmentBlend,                                // const VkPipelineColorBlendAttachmentState     *pAttachments
+		{ 0.0f, 0.0f, 0.0f, 0.0f }                                    // float                                          blendConstants[4]
+	};
+	m_pipelineSource.m_colorBlendState = defaultColorBlend;
+
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL() throw( )
@@ -169,9 +202,9 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw( )
 
 ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw( )
 {
-	if( m_pipelineSource.m_layout != &layout )
+	if( !( m_pipelineSource.m_layout == layout ) )
 	{
-		m_pipelineSource.m_layout = &layout;
+		m_pipelineSource.m_layout = layout;
 		m_dirtyPso = true;
 	}
 	return S_OK;
@@ -204,13 +237,20 @@ ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topolog
 
 ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( )
 {
-	if( m_pipelineSource.m_shaderProgram != &shader )
+	if( !( m_pipelineSource.m_shaderProgram == shader ) )
 	{
-		m_pipelineSource.m_shaderProgram = &shader;
+		m_pipelineSource.m_shaderProgram = shader;
 		m_dirtyPso = true;
 	}
 	return S_OK;
 }
+
+ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( )
+{
+	m_resourceSet = resourceSet;
+	return S_OK;
+}
+
 
 ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw( )
 {
@@ -222,6 +262,13 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 		return S_OK;
 	case Tr2RenderContextEnum::RS_CULLMODE:
 		m_pipelineSource.m_rasterizationState.cullMode = value - 1;
+		m_dirtyPso = true;
+		return S_OK;
+	case Tr2RenderContextEnum::RS_ALPHABLENDENABLE:
+		m_pipelineSource.m_attachmentBlend[0].blendEnable = value != 0;
+		m_pipelineSource.m_attachmentBlend[1].blendEnable = value != 0;
+		m_pipelineSource.m_attachmentBlend[2].blendEnable = value != 0;
+		m_pipelineSource.m_attachmentBlend[3].blendEnable = value != 0;
 		m_dirtyPso = true;
 		return S_OK;
 	default:
@@ -465,19 +512,30 @@ ALResult Tr2RenderContextAL::SetPipeline()
 		pipeline = found->second;
 	}
 	vkCmdBindPipeline( m_commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline );
+
+	if( m_resourceSet.IsValid() && m_resourceSet.m_resourceSet->m_descriptorSet )
+	{
+		vkCmdBindDescriptorSets( 
+			m_commandBuffer, 
+			VK_PIPELINE_BIND_POINT_GRAPHICS, 
+			m_pipelineSource.m_shaderProgram.m_program->m_pipelineLayout, 
+			1, 
+			1,
+			&m_resourceSet.m_resourceSet->m_descriptorSet, 0, nullptr );
+	}
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::CreatePipeline( VkPipeline& pipeline )
 {
 	std::vector<VkVertexInputAttributeDescription> layout;
-	m_pipelineSource.m_layout->PopulateInputLayoutVulkan( layout, m_pipelineSource.m_shaderProgram->m_shaderInputs );
+	m_pipelineSource.m_layout.m_layout->PopulateInputLayoutVulkan( layout, m_pipelineSource.m_shaderProgram.m_program->m_shaderInputs );
 
 	VkPipelineVertexInputStateCreateInfo vertexInput = {
 		VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
 		nullptr,
 		0,
-		m_pipelineSource.m_layout->m_streamCount,
+		m_pipelineSource.m_layout.m_layout->m_streamCount,
 		m_pipelineSource.m_streams,
 		uint32_t( layout.size() ),
 		layout.data()
@@ -513,29 +571,6 @@ ALResult Tr2RenderContextAL::CreatePipeline( VkPipeline& pipeline )
 		VK_FALSE
 	};
 
-	VkPipelineColorBlendAttachmentState color_blend_attachment_state = {
-		VK_FALSE,                                                     // VkBool32                                       blendEnable
-		VK_BLEND_FACTOR_ONE,                                          // VkBlendFactor                                  srcColorBlendFactor
-		VK_BLEND_FACTOR_ZERO,                                         // VkBlendFactor                                  dstColorBlendFactor
-		VK_BLEND_OP_ADD,                                              // VkBlendOp                                      colorBlendOp
-		VK_BLEND_FACTOR_ONE,                                          // VkBlendFactor                                  srcAlphaBlendFactor
-		VK_BLEND_FACTOR_ZERO,                                         // VkBlendFactor                                  dstAlphaBlendFactor
-		VK_BLEND_OP_ADD,                                              // VkBlendOp                                      alphaBlendOp
-		VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |         // VkColorComponentFlags                          colorWriteMask
-		VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
-	};
-
-	VkPipelineColorBlendStateCreateInfo color_blend_state_create_info = {
-		VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,     // VkStructureType                                sType
-		nullptr,                                                      // const void                                    *pNext
-		0,                                                            // VkPipelineColorBlendStateCreateFlags           flags
-		VK_FALSE,                                                     // VkBool32                                       logicOpEnable
-		VK_LOGIC_OP_COPY,                                             // VkLogicOp                                      logicOp
-		1,                                                            // uint32_t                                       attachmentCount
-		&color_blend_attachment_state,                                // const VkPipelineColorBlendAttachmentState     *pAttachments
-		{ 0.0f, 0.0f, 0.0f, 0.0f }                                    // float                                          blendConstants[4]
-	};
-
 	VkDynamicState dynamicStates[] = { VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR, };
 
 	VkPipelineDynamicStateCreateInfo dynamicInfo = {
@@ -546,27 +581,12 @@ ALResult Tr2RenderContextAL::CreatePipeline( VkPipeline& pipeline )
 		dynamicStates
 	};
 
-
-	VkPipelineLayoutCreateInfo layoutInfo = {
-		VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-		nullptr,
-		0,
-		0,
-		nullptr,
-		0,
-		nullptr
-	};
-
-	VkPipelineLayout pipelineLayout;
-	Vk2Al( vkCreatePipelineLayout( m_owner->m_device, &layoutInfo, nullptr, &pipelineLayout ) );
-	ON_BLOCK_EXIT( [&] {vkDestroyPipelineLayout( m_owner->m_device, pipelineLayout, nullptr ); } );
-
 	VkGraphicsPipelineCreateInfo pipelineCreateInfo = {
 		VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
 		nullptr,
 		0,
-		static_cast<uint32_t>( m_pipelineSource.m_shaderProgram->m_shaderInfo.size() ),
-		m_pipelineSource.m_shaderProgram->m_shaderInfo.data(),
+		static_cast<uint32_t>( m_pipelineSource.m_shaderProgram.m_program->m_shaderInfo.size() ),
+		m_pipelineSource.m_shaderProgram.m_program->m_shaderInfo.data(),
 		&vertexInput,
 		&inputAssembly,
 		nullptr,
@@ -574,9 +594,9 @@ ALResult Tr2RenderContextAL::CreatePipeline( VkPipeline& pipeline )
 		&m_pipelineSource.m_rasterizationState,
 		&msaa,
 		nullptr,
-		&color_blend_state_create_info,
+		&m_pipelineSource.m_colorBlendState,
 		&dynamicInfo,
-		pipelineLayout,
+		m_pipelineSource.m_shaderProgram.m_program->m_pipelineLayout,
 		m_renderPass,
 		0,
 		VK_NULL_HANDLE,

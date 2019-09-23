@@ -1,4 +1,4 @@
-RWStructuredBuffer<uint> output: register(u0, space2);
+RWStructuredBuffer<uint> output: register(u0, space1);
 
 
 [numthreads(4, 1, 1)]

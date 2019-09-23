@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Tr2TrackedALObject.h"
+#include "../Tr2DeviceResourceAL.h"
 #include "../ALResult.h"
 #include "../Tr2RenderContextEnum.h"
 

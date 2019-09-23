@@ -110,7 +110,7 @@ namespace TrinityALImpl
 		return m_desc.GetWidth() != 0;
 	}
 
-	Tr2ALMemoryType Tr2TextureAL::GetMemoryClass()
+	Tr2ALMemoryType Tr2TextureAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_MANAGED;
 	}
@@ -336,6 +336,10 @@ namespace TrinityALImpl
 	uintptr_t Tr2TextureAL::GetSharedHandle() const
 	{
 		return 0;
+	}
+
+	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
 	}
 }
 

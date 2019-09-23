@@ -11,7 +11,7 @@ namespace TrinityALImpl
 	{
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		m_isValid = true;
 		return S_OK;
@@ -30,6 +30,10 @@ namespace TrinityALImpl
 	Tr2ALMemoryType Tr2ResourceSetAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_MANAGED;
+	}
+
+	void Tr2ResourceSetAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
 	}
 }
 

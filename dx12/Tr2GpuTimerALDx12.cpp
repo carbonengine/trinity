@@ -156,6 +156,11 @@ namespace TrinityALImpl
 	{ 
 		return AL_MEMORY_VIDEO; 
 	}
+
+	void Tr2GpuTimerAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2GpuTimerAL";
+	}
 }
 
 

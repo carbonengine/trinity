@@ -55,21 +55,20 @@ namespace TrinityALImpl
 				}
 				if( state != initialState )
 				{
-					auto barrier = Transition( buffer, initialState, state );
-					renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+					renderContext.ResourceBarrierDx12( Transition( buffer, initialState, state ) );
 				}
-			}
-			if( strategy == STATIC )
-			{
-				RELEASE_LATER( &renderContext, scratch );
-			}
-			else
-			{
-				Resource r = { scratch, renderContext.GetCurrentFrameIndexDx12(), nullptr, 0 };
-				D3D12_RANGE readRange = { 0, 0 };
-				CR_RETURN_HR( scratch->Map( 0, &readRange, &r.cpuAddress ) );
+				if( strategy == STATIC )
+				{
+					RELEASE_LATER( &renderContext, scratch );
+				}
+				else
+				{
+					Resource r = { scratch, renderContext.GetCurrentFrameIndexDx12(), nullptr, 0 };
+					D3D12_RANGE readRange = { 0, 0 };
+					CR_RETURN_HR( scratch->Map( 0, &readRange, &r.cpuAddress ) );
 
-				m_resources.push_back( r );
+					m_resources.push_back( r );
+				}
 			}
 			m_gpuResource.resource = buffer;
 			m_gpuResource.frameIndex = renderContext.GetCurrentFrameIndexDx12();
@@ -196,12 +195,13 @@ namespace TrinityALImpl
 		else
 		{
 			auto barrier = Transition( m_gpuResource.resource, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST );
-			renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+			renderContext.ResourceBarrierDx12( barrier );
+			renderContext.FlushBarriersDx12( m_gpuResource.resource );
 
 			renderContext.m_commandList->CopyBufferRegion( m_gpuResource.resource, 0, m_mapped.resource, 0, m_size );
 
 			std::swap( barrier.Transition.StateAfter, barrier.Transition.StateBefore );
-			renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+			renderContext.ResourceBarrierDx12( barrier );
 
 			if( m_strategy == STATIC )
 			{
@@ -223,12 +223,13 @@ namespace TrinityALImpl
 		memcpy( dst, data, size );
 
 		auto barrier = Transition( m_gpuResource.resource, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST );
-		renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+		renderContext.ResourceBarrierDx12( barrier );
+		renderContext.FlushBarriersDx12( m_gpuResource.resource );
 
 		renderContext.m_commandList->CopyBufferRegion( m_gpuResource.resource, offset, m_mapped.resource, 0, size );
 
 		std::swap( barrier.Transition.StateAfter, barrier.Transition.StateBefore );
-		renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+		renderContext.ResourceBarrierDx12( barrier );
 
 		if( m_strategy == STATIC )
 		{

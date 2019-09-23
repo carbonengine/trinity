@@ -45,7 +45,6 @@ namespace TrinityALImpl
 			( uint32_t( std::min( std::max( description.m_borderColor[1] * 255.f, 0.f ), 255.f ) ) << 8 ) |
 			uint32_t( std::min( std::max( description.m_borderColor[2] * 255.f, 0.f ), 255.f ) );
 		m_isValid = true;
-		ChangeObjectId();
 		return S_OK;
 	}
 
@@ -62,6 +61,11 @@ namespace TrinityALImpl
 	Tr2ALMemoryType Tr2SamplerStateAL::GetMemoryClass() const 
 	{ 
 		return AL_MEMORY_MANAGED; 
+	}
+
+	void Tr2SamplerStateAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2SamplerStateAL";
 	}
 
 }

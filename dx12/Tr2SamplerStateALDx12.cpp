@@ -58,13 +58,7 @@ namespace TrinityALImpl
 		m_isValid = true;
 
 		m_samplerState = nullptr;
-		HRESULT hr = renderContext.CreateSamplerState(m_sampler, m_samplerState);
-		if ( SUCCEEDED(hr) )
-		{
-			// JB: Is this legit? What does it do?
-			ChangeObjectId();
-		}
-		return hr;
+		return renderContext.CreateSamplerState(m_sampler, m_samplerState);
 	}
 
 	void Tr2SamplerStateAL::Destroy()
@@ -82,6 +76,12 @@ namespace TrinityALImpl
 	{
 		return AL_MEMORY_MANAGED;
 	}
+
+	void Tr2SamplerStateAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2SamplerStateAL";
+	}
+
 }
 
 #endif

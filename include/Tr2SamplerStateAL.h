@@ -1,11 +1,16 @@
 #pragma once
 
 #include "../ALResult.h"
+#include "../Tr2DeviceResourceAL.h"
 #include "../Tr2ObjectFactory.h"
-#include TRINITY_AL_PLATFORM_INCLUDE( Tr2SamplerStateAL )
 
 class Tr2PrimaryRenderContextAL;
 struct Tr2SamplerDescription;
+namespace TrinityALImpl
+{
+	class Tr2SamplerStateAL;
+	class Tr2ResourceSetAL;
+}
 
 class Tr2SamplerStateAL
 {

@@ -17,10 +17,9 @@
 
 using namespace Tr2RenderContextEnum;
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   Tr2SwapChainAL default constructor
-// --------------------------------------------------------------------------------------
+namespace TrinityALImpl
+{
+
 Tr2SwapChainAL::Tr2SwapChainAL()
 	:
 #ifdef _WIN32
@@ -115,7 +114,6 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextA
 	SetPixelFormat( m_hDC, iFormat, &pfd );
 #endif
 	CreateFramebuffer( renderContext );
-	ChangeObjectId();
 	return S_OK;
 }
 
@@ -125,7 +123,7 @@ ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextA
 // --------------------------------------------------------------------------------------
 void Tr2SwapChainAL::Destroy()
 {
-	m_backBuffer = Tr2TextureAL();
+	m_backBuffer = ::Tr2TextureAL();
 #ifdef _WIN32
 	::ReleaseDC( (Tr2WindowHandle)m_hWnd, m_hDC );
 	m_hDC = 0;
@@ -153,7 +151,7 @@ bool Tr2SwapChainAL::IsValid() const
 ALResult Tr2SwapChainAL::Present( Tr2RenderContextAL& renderContext )
 {
 #ifdef TRINITY_AL_MOBILE
-    return E_FAIL;
+	return E_FAIL;
 #else
 #ifdef _WIN32
 #pragma warning( disable: 4189 )	// scopeguard
@@ -164,18 +162,17 @@ ALResult Tr2SwapChainAL::Present( Tr2RenderContextAL& renderContext )
 	}
 	wglMakeCurrent( m_hDC, renderContext.m_hRC );
 #else
-    glfwMakeContextCurrent( reinterpret_cast<GLFWwindow*>( m_hWnd ) );
+	glfwMakeContextCurrent( reinterpret_cast<GLFWwindow*>( m_hWnd ) );
 #endif
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
 	renderContext.InternalBlitToBackBuffer( m_backBuffer );
 
 #ifdef _WIN32
 	SwapBuffers( m_hDC );
 	wglMakeCurrent( renderContext.m_hDC, renderContext.m_hRC );
 #else
-    glfwSwapBuffers( reinterpret_cast<GLFWwindow*>( m_hWnd ) );
-    glfwMakeContextCurrent( reinterpret_cast<GLFWwindow*>( renderContext.m_hWnd ) );
+	glfwSwapBuffers( reinterpret_cast<GLFWwindow*>( m_hWnd ) );
+	glfwMakeContextCurrent( reinterpret_cast<GLFWwindow*>( renderContext.m_hWnd ) );
 #endif
 	return S_OK;
 #endif
@@ -188,7 +185,7 @@ ALResult Tr2SwapChainAL::Present( Tr2RenderContextAL& renderContext )
 // Return value:
 //   Width of the back buffer
 // --------------------------------------------------------------------------------------
-int Tr2SwapChainAL::GetWidth() const
+uint32_t Tr2SwapChainAL::GetWidth() const
 {
 	return m_width;
 }
@@ -200,9 +197,18 @@ int Tr2SwapChainAL::GetWidth() const
 // Return value:
 //   Height of the back buffer
 // --------------------------------------------------------------------------------------
-int Tr2SwapChainAL::GetHeight() const
+uint32_t Tr2SwapChainAL::GetHeight() const
 {
 	return m_height;
 }
 
-#endif // TRINITY_PLATFORM==TRINITY_DIRECTX9
+void Tr2SwapChainAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+{
+	description["type"] = "Tr2SwapChainAL";
+	description["width"] = std::to_string( long long( m_width ) );
+	description["height"] = std::to_string( long long( m_height ) );
+}
+
+}
+
+#endif

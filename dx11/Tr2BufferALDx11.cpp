@@ -43,7 +43,7 @@ namespace TrinityALImpl
 			return E_INVALIDCALL;
 		}
 
-		bool isImmutable = !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE ) && !HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS );
+		bool isImmutable = !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE ) && !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) && !HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS );
 		if( isImmutable && !initialData )
 		{
 			return E_INVALIDARG;
@@ -202,7 +202,7 @@ namespace TrinityALImpl
 		return m_buffer != nullptr;
 	}
 
-	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass()
+	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_MANAGED;
 	}
@@ -287,10 +287,6 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDCALL;
 		}
-		if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE ) )
-		{
-			return E_INVALIDCALL;
-		}
 
 		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
@@ -321,7 +317,7 @@ namespace TrinityALImpl
 #endif
 			return hr;
 		}
-		else
+		else if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE ) )
 		{
 			if( m_writeLockMemory.empty() )
 			{
@@ -335,6 +331,10 @@ namespace TrinityALImpl
 
 			data = m_writeLockMemory.get();
 			return S_OK;
+		}
+		else
+		{
+			return E_INVALIDCALL;
 		}
 	}
 
@@ -374,18 +374,39 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDARG;
 		}
-		if( !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE ) || HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
-		{
-			return E_INVALIDCALL;
-		}
 		if( size == 0 )
 		{
 			return S_OK;
 		}
-		D3D11_BOX box = { 0, 0, 0, size, 1, 1 };
-		renderContext.m_context->UpdateSubresource( m_buffer, 0, &box, data, 0, 0 );
+
+		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+		{
+			void* ptr;
+			CR_RETURN_HR( MapForWriting( ptr, Tr2LockType::SYNCHRONIZED, renderContext ) );
+
+			uint8_t* dst = static_cast<uint8_t*>( ptr ) + offset;
+			const uint8_t* src = static_cast<const uint8_t*>( data ) + offset;
+
+			memcpy( dst, src, size );
+			UnmapForWriting( renderContext );
+		}
+		else if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE ) )
+		{
+			D3D11_BOX box = { offset, 0, 0, offset + size, 1, 1 };
+			renderContext.m_context->UpdateSubresource( m_buffer, 0, &box, data, 0, 0 );
+		}
+		else
+		{
+			return E_INVALIDCALL;
+		}
+
 		return S_OK;
 	}
 
+	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2BufferAL";
+		description["size"] = std::to_string( long long( GetDesc().count * GetDesc().stride ) );
+	}
 }
 #endif

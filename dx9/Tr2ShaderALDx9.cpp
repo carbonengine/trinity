@@ -60,7 +60,6 @@ namespace TrinityALImpl
 			m_type = INVALID_SHADER;
 			return E_INVALIDARG;
 		}
-		ChangeObjectId();
 		return S_OK;
 	}
 
@@ -127,11 +126,9 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2ShaderAL::SetNullShaderType( Tr2RenderContextEnum::ShaderType type )
+	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
-		CCP_ASSERT( !IsValid() );
-		m_type = type;
+		description["type"] = "Tr2ShaderAL";
 	}
-
 }
 #endif

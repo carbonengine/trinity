@@ -738,7 +738,7 @@ namespace TrinityALImpl
 		return m_texture != 0 || m_msaaBuffer != 0;
 	}
 
-	Tr2ALMemoryType Tr2TextureAL::GetMemoryClass()
+	Tr2ALMemoryType Tr2TextureAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_MANAGED;
 	}
@@ -1037,7 +1037,6 @@ namespace TrinityALImpl
 		{
 			return E_FAIL;
 		}
-		AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
 		GL_FAIL( glBindTexture( GL_TEXTURE_2D, m_texture ) );
 #if !defined(TRINITY_AL_MOBILE)
 		GL_IGNORE_ERROR( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
@@ -1055,6 +1054,23 @@ namespace TrinityALImpl
 	uintptr_t Tr2TextureAL::GetSharedHandle() const
 	{
 		return 0;
+	}
+
+	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2TextureAL";
+
+		unsigned size = 0;
+		for( unsigned i = 0; i < m_desc.GetTrueMipCount(); ++i )
+		{
+			size += m_desc.GetMipSize( i );
+		}
+
+		description["size"] = std::to_string( long long( size ) );
+		description["width"] = std::to_string( long long( m_desc.GetWidth() ) );
+		description["height"] = std::to_string( long long( m_desc.GetHeight() ) );
+		description["mipLevels"] = std::to_string( long long( m_desc.GetTrueMipCount() ) );
+		description["format"] = std::to_string( long long( m_desc.GetFormat() ) );
 	}
 }
 

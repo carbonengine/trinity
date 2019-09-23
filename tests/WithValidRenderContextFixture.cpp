@@ -181,7 +181,7 @@ void SaveReadableRenderTarget( Tr2TextureAL& rt, const char* outFilePath, Tr2Ren
 	auto loaded = LoadDDS( filePath, width, height, data );
 	if( !loaded )
 	{
-		return loaded;
+		return ::testing::AssertionSuccess();
 	}
 
 	if( width != rt.GetWidth() )
@@ -206,9 +206,12 @@ void SaveReadableRenderTarget( Tr2TextureAL& rt, const char* outFilePath, Tr2Ren
 	const uint8_t* flRow = data.get();
 	for( uint32_t i = 0; i < rt.GetHeight(); ++i )
 	{
-		if( memcmp( rtRow, flRow, 4 * width ) )
+		for( uint32_t j = 0; j < width; ++j )
 		{
-			return ::testing::AssertionFailure() << "pixel values in expected DDS and back buffer are different at row " << i;
+			if( rtRow[j * 4] != rtRow[j * 4] || rtRow[j * 4 + 1] != rtRow[j * 4 + 1] || rtRow[j * 4 + 2] != rtRow[j * 4 + 2] )
+			{
+				return ::testing::AssertionFailure() << "pixel values in expected DDS and back buffer are different at (" << j << ", " << i << ") pixel";
+			}
 		}
 		rtRow += rtPitch;
 		flRow += 4 * width;

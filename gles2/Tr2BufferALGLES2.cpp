@@ -113,7 +113,7 @@ namespace TrinityALImpl
 		return m_buffer != 0;
 	}
 
-	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass()
+	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_MANAGED;
 	}
@@ -234,6 +234,12 @@ namespace TrinityALImpl
 		GL_FAIL( glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, m_buffer ) );
 		GL_FAIL( glBufferSubData( GL_ARRAY_BUFFER, offset, size, data ) );
 		return S_OK;
+	}
+
+	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2BufferAL";
+		description["size"] = std::to_string( long long( GetDesc().count * GetDesc().stride ) );
 	}
 }
 

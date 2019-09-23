@@ -11,10 +11,6 @@ namespace
 	std::shared_ptr<TrinityALImpl::Tr2TextureAL> nullTexture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
 }
 
-const Tr2TextureAL nullRT;
-const Tr2TextureAL nullDS;
-const Tr2TextureAL nullTX;
-
 
 Tr2TextureAL::Tr2TextureAL()
 	:m_texture( nullTexture )

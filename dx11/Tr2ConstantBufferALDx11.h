@@ -1,101 +1,48 @@
 #pragma once
-#ifndef Tr2ConstantBufferALDx11_h_
-#define Tr2ConstantBufferALDx11_h_
 
 
-#include "../Tr2TrackedALObject.h"
-#include "../Tr2RenderContextEnum.h"
-#include "../ALResult.h"
+#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+
+#include "../include/Tr2ConstantBufferAL.h"
 
 #ifdef TRINITY_AL_GUARD_LOCKS
 #include "../Tr2LockGuard.h"
 #endif
 
-
-class Tr2PrimaryRenderContextAL;
-class Tr2RenderContextAL;
-
-
-#if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
-
-// -------------------------------------------------------------
-// Description:
-//   A low level wrapper around the calls needed to set up a constant
-//   buffer for a given platform. Any higher level logic should be
-//   handled one level up, this is only to avoid ifdef soup when
-//   creating and locking buffers.
-//	 32bit: no support for 64bit-sized buffers.
-// -------------------------------------------------------------
-class Tr2ConstantBufferAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_CONSTANT_BUFFER>
+namespace TrinityALImpl
 {
-public:
-    Tr2ConstantBufferAL();
-	~Tr2ConstantBufferAL();
-
-	Tr2ConstantBufferAL( Tr2ConstantBufferAL&& );
-	Tr2ConstantBufferAL& operator=( Tr2ConstantBufferAL&& );
-
-	ALResult Create( uint32_t size, Tr2PrimaryRenderContextAL & renderContext )
+	class Tr2ConstantBufferAL : public Tr2DeviceResourceAL<Tr2ConstantBufferAL>
 	{
-		return Create( size, Tr2RenderContextEnum::USAGE_CPU_WRITE, nullptr, renderContext );
-	}
+	public:
+		Tr2ConstantBufferAL();
 
-	ALResult Create( uint32_t size, Tr2RenderContextEnum::BufferUsage usage, const void* initialData, Tr2PrimaryRenderContextAL & renderContext );
-	ALResult Lock( void** data, Tr2RenderContextAL & renderContext );
-	ALResult Unlock( Tr2RenderContextAL & renderContext );
-	bool IsValid() const 
-	{ 
-		return m_size > 0 && ( ( m_usage & Tr2RenderContextEnum::USAGE_LOCK_FREQUENTLY ) != 0 || m_buffer != nullptr ); 
-	}
-	void Destroy();
+		ALResult Create( uint32_t size, Tr2ConstantUsageAL::Type usage, const void* initialData, Tr2PrimaryRenderContextAL & renderContext );
+		void Destroy();
 
-	Tr2RenderContextEnum::BufferUsage GetUsage() const
-	{
-		return m_usage;
-	}
+		ALResult Lock( void** data, Tr2RenderContextAL & renderContext );
+		ALResult Unlock( Tr2RenderContextAL & renderContext );
 
-	uint32_t GetSize() const { return m_size; }
+		bool IsValid() const;
+		Tr2ConstantUsageAL::Type GetUsage() const;
+		uint32_t GetSize() const;
+		Tr2ALMemoryType GetMemoryClass() const;
 
-	void* GetBufferMirror( uint32_t minimumSize, Tr2RenderContextAL & renderContext );
-	void* GetBufferMirror( Tr2RenderContextAL & renderContext ) 
-	{ 
-		return GetBufferMirror( 0, renderContext ); 
-	}
-	ALResult UpdateFromMirror( Tr2RenderContextAL & renderContext );
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	private:
+		Tr2ConstantBufferAL( const Tr2ConstantBufferAL& ) /* = delete */;
+		Tr2ConstantBufferAL& operator=( const Tr2ConstantBufferAL& ) /* = delete */;
 
-	bool operator==( const Tr2ConstantBufferAL& other ) const 
-	{ 
-		return this == &other; 
-	}
-
-	CComPtr<ID3D11Buffer>	m_buffer;
-
-	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
-
-private:
-	Tr2ConstantBufferAL( const Tr2ConstantBufferAL& ) /* = delete */;
-	Tr2ConstantBufferAL& operator=( const Tr2ConstantBufferAL& ) /* = delete */;
-
-	CcpMallocBuffer	m_bufferMirror;
-	Tr2RenderContextEnum::BufferUsage m_usage;
-	uint32_t	m_size;
-
-	// Helper for asserting correct use: if in the same frame we lock/unlock, and use get/updateMirror, that's
-	// a bug.
-	enum FrameUse
-	{
-		FRAME_USE_NOT_USED_YET,
-		FRAME_USE_LOCKING,
-		FRAME_USE_MIRRORED
-	};
-	mutable FrameUse	m_frameUse;
-	friend class Tr2RenderContextAL;
+		CComPtr<ID3D11Buffer>	m_buffer;
+		CcpMallocBuffer	m_bufferMirror;
+		Tr2ConstantUsageAL::Type m_usage;
+		uint32_t	m_size;
 
 #ifdef TRINITY_AL_GUARD_LOCKS
-	Tr2LockGuard m_lockGuard;
+		Tr2LockGuard m_lockGuard;
 #endif
-};
 
-#endif // #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+		friend class Tr2RenderContextAL;
+	};
 
-#endif //Tr2ConstantBufferALDx11_h_
+}
+#endif 

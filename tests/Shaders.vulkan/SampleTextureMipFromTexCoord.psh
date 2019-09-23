@@ -6,7 +6,7 @@ struct VS_OUTPUT
 	float2 TexCoord : TEXCOORD;
 };
 
-cbuffer cb0: register( b0, space1 )
+cbuffer cb0: register( b0 )
 {
   struct PerObjectPSData
   {

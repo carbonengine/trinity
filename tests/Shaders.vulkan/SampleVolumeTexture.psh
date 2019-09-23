@@ -10,7 +10,7 @@ Texture3D tex0: register( t0, space1 );
 SamplerState sampl: register( s0, space1 );
 
 
-cbuffer cb0: register(b0, space1)
+cbuffer cb0: register( b0 )
 {
     struct PerObjectVSData
     {

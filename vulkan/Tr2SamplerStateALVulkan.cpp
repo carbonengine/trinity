@@ -89,6 +89,10 @@ namespace TrinityALImpl
 		return AL_MEMORY_VIDEO;
 	}
 
+	void Tr2SamplerStateAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2SamplerStateAL";
+	}
 }
 
 

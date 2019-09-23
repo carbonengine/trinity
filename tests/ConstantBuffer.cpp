@@ -38,7 +38,7 @@ TEST_F( WithRenderContext, CreatingConstantBufferWithoutRenderContextFails )
 TEST_F( ConstantBuffer, CreatingImmutableConstantBufferWithoutInitialDataFails )
 {
 	Tr2ConstantBufferAL vb;
-	ASSERT_HRESULT_FAILED( vb.Create( 128, Tr2RenderContextEnum::USAGE_IMMUTABLE, nullptr, *renderContext ) );
+	ASSERT_HRESULT_FAILED( vb.Create( 128, Tr2ConstantUsageAL::IMMUTABLE, nullptr, *renderContext ) );
 }
 
 TEST_F( ConstantBuffer, ConstantBufferIsValidAfterCreation )
@@ -46,14 +46,6 @@ TEST_F( ConstantBuffer, ConstantBufferIsValidAfterCreation )
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
 	EXPECT_TRUE( vb.IsValid() );
-}
-
-TEST_F( ConstantBuffer, ConstantBufferIsInvalidAfterDestruction )
-{
-	Tr2ConstantBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
-	vb.Destroy();
-	EXPECT_FALSE( vb.IsValid() );
 }
 
 TEST_F( ConstantBuffer, ConstantBufferReportsCorrectSize )
@@ -114,25 +106,6 @@ TEST_F( ConstantBuffer, LockingImmutableConstantBufferFails )
 }
 #endif
 
-TEST_F( ConstantBuffer, CanUpdateFromMirror )
-{
-	Tr2ConstantBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
-	void* data = vb.GetBufferMirror( *renderContext );
-	ASSERT_NE( nullptr, data );
-	ASSERT_HRESULT_SUCCEEDED( vb.UpdateFromMirror( *renderContext ) );
-}
-
-TEST_F( ConstantBuffer, CanUpdateFromMirrorWithDifferentLength )
-{
-	Tr2ConstantBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
-	void* data = vb.GetBufferMirror( 256, *renderContext );
-	ASSERT_NE( nullptr, data );
-	memset( data, 0xab, 256 );
-	ASSERT_HRESULT_SUCCEEDED( vb.UpdateFromMirror( *renderContext ) );
-}
-
 TEST_F( ConstantBuffer, ConstantBufferHasMemoryClass )
 {
 	Tr2ConstantBufferAL cb;
@@ -145,7 +118,7 @@ TEST_F( ConstantBuffer, CanCreateConstantBufferWithInitialData )
 {
 	float initialData[] = { 0.5f, 1.5f, 2.5f, 3.5f };
 	Tr2ConstantBufferAL cb;
-	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( initialData ), Tr2RenderContextEnum::USAGE_CPU_WRITE, initialData, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( initialData ), Tr2ConstantUsageAL::REUSABLE, initialData, *renderContext ) );
 	// we can't really test if initial data is set correctly since CBs are write-only for CPU
 }
 
@@ -154,13 +127,5 @@ TEST_F( ConstantBuffer, CreatingTooLargeConstantBufferFails )
 {
 	Tr2ConstantBufferAL cb;
 	ASSERT_HRESULT_FAILED( cb.Create( uint32_t( -1 ), *renderContext ) );
-}
-
-TEST_F( ConstantBuffer, UpdateConstantBufferFromMirrorWithTooLargeSizeFails )
-{
-	Tr2ConstantBufferAL vb;
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
-	void* data = vb.GetBufferMirror( uint32_t( -3 ), *renderContext );
-	ASSERT_EQ( nullptr, data );
 }
 #endif

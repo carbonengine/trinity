@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Tr2TrackedALObject.h"
+#include "../Tr2DeviceResourceAL.h"
 #include "../ALResult.h"
 #include "../Tr2RenderContextEnum.h"
 #include "../Tr2VertexDefinition.h"
@@ -70,7 +70,7 @@ class Tr2ShaderAL;
 namespace TrinityALImpl
 {
 	class Tr2ShaderAL;
-	::Tr2ShaderAL GetNullShader( Tr2RenderContextEnum::ShaderType type );
+	class Tr2ShaderProgramAL;
 }
 
 class Tr2PrimaryRenderContextAL;
@@ -108,13 +108,5 @@ private:
 	std::shared_ptr<TrinityALImpl::Tr2ShaderAL> m_shader;
 
 	friend class Tr2RenderContextAL;
-	friend class Tr2ShaderProgramAL;
-	friend ::Tr2ShaderAL TrinityALImpl::GetNullShader( Tr2RenderContextEnum::ShaderType type );
+	friend class TrinityALImpl::Tr2ShaderProgramAL;
 };
-
-namespace TrinityALImpl
-{
-	::Tr2ShaderAL GetNullShader( Tr2RenderContextEnum::ShaderType type );
-}
-
-#include TRINITY_AL_PLATFORM_INCLUDE( Tr2ShaderAL )

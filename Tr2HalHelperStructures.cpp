@@ -9,21 +9,6 @@
 
 using namespace Tr2RenderContextEnum;
 
-const Tr2ShaderAL		nullShader[] = {
-	TrinityALImpl::GetNullShader( VERTEX_SHADER ),
-	TrinityALImpl::GetNullShader( PIXEL_SHADER ),
-	TrinityALImpl::GetNullShader( COMPUTE_SHADER ),
-	TrinityALImpl::GetNullShader( GEOMETRY_SHADER ),
-	TrinityALImpl::GetNullShader( HULL_SHADER ),
-	TrinityALImpl::GetNullShader( DOMAIN_SHADER ),
-};
-
-static_assert( sizeof( nullShader ) / sizeof( Tr2ShaderAL ) == SHADER_TYPE_COUNT, "nullShader count incorrect" );
-
-const Tr2ConstantBufferAL	nullCB;
-const Tr2VertexLayoutAL	nullVL;
-const Tr2ShaderProgramAL nullSP;
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Tr2TextureSubresource default constructor: construct a subresource range containing

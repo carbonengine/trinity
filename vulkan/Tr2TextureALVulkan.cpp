@@ -175,12 +175,12 @@ namespace TrinityALImpl
 						size,                                  // VkDeviceSize               bufferOffset
 						initialData[index].m_sysMemPitch / Tr2RenderContextEnum::GetBytesPerPixel( desc.GetFormat() ),   // uint32_t                   bufferRowLength
 						initialData[index].m_sysMemSlicePitch / Tr2RenderContextEnum::GetBytesPerPixel( desc.GetFormat() ),                                  // uint32_t                   bufferImageHeight
-						{ VK_IMAGE_ASPECT_COLOR_BIT, i, j, 1 },
+						{ VK_IMAGE_ASPECT_COLOR_BIT, j, i, 1 },
 						{ 0, 0, 0 },
-						{ desc.GetMipWidth( i ), desc.GetMipHeight( i ), desc.GetMipDepth( i ) }
+						{ desc.GetMipWidth( j ), desc.GetMipHeight( j ), desc.GetMipDepth( j ) }
 					};
 					copyInfo.push_back( buffer_image_copy_info );
-					size += initialData[index].m_sysMemSlicePitch * desc.GetMipDepth( i );
+					size += initialData[index].m_sysMemSlicePitch * desc.GetMipDepth( j );
 					++index;
 				}
 			}
@@ -202,7 +202,7 @@ namespace TrinityALImpl
 				nullptr,
 				stagingMemory,
 				0,
-				size
+				VK_WHOLE_SIZE
 			};
 			vkFlushMappedMemoryRanges( renderContext.m_device, 1, &flush_range );
 
@@ -288,7 +288,7 @@ namespace TrinityALImpl
 		return !m_images.empty();
 	}
 
-	Tr2ALMemoryType Tr2TextureAL::GetMemoryClass()
+	Tr2ALMemoryType Tr2TextureAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_MANAGED;
 	}
@@ -372,6 +372,11 @@ namespace TrinityALImpl
 	VkImageView Tr2TextureAL::GetImageView() const
 	{
 		return m_imageViews[m_currentIndex];
+	}
+
+	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2TextureAL";
 	}
 }
 

@@ -1462,7 +1462,6 @@
     <ClCompile Include="SwapChainResizing.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="TextureSubresource.cpp" />
-    <ClCompile Include="TrackedObjects.cpp" />
     <ClCompile Include="TrinityALTest.cpp" />
     <ClCompile Include="VertexDefinition.cpp" />
     <ClCompile Include="VertexLayout.cpp" />

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Tr2TrackedALObject.h"
+#include "../Tr2DeviceResourceAL.h"
 #include "../ALResult.h"
 #include "../Tr2RenderContextEnum.h"
 
@@ -8,6 +8,7 @@ namespace TrinityALImpl
 {
 	class Tr2TextureAL;
 	class Tr2ResourceSetAL;
+	class Tr2SwapChainAL;
 }
 
 
@@ -65,14 +66,7 @@ private:
 
 	friend class Tr2PrimaryRenderContextAL;
 	friend class Tr2RenderContextAL;
-	friend class Tr2SwapChainAL;
+	friend class TrinityALImpl::Tr2SwapChainAL;
 	friend class TrinityALImpl::Tr2ResourceSetAL;
 	friend class TrinityALImpl::Tr2TextureAL;
 };
-
-extern const Tr2TextureAL nullRT;
-extern const Tr2TextureAL nullDS;
-extern const Tr2TextureAL nullTX;
-
-
-#include TRINITY_AL_PLATFORM_INCLUDE( Tr2TextureAL )

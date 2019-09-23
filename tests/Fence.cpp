@@ -29,15 +29,6 @@ TEST_F( Fence, FenceIsValidAfterCreation )
 	EXPECT_TRUE( fence.IsValid() );
 }
 
-TEST_F( Fence, FenceIsInvalidAfterDestruction )
-{
-	Tr2FenceAL fence;
-	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
-	EXPECT_TRUE( fence.IsValid() );
-	fence.Destroy();
-	EXPECT_FALSE( fence.IsValid() );
-}
-
 TEST_F( Fence, UsingInvalidFenceFails )
 {
 	Tr2FenceAL fence;

@@ -14,6 +14,8 @@
 #include "Tr2ShaderProgramALDx11.h"
 #include "Tr2ResourceSetALDx11.h"
 #include "Tr2BufferALDx11.h"
+#include "Tr2TextureALDx11.h"
+#include "Tr2ConstantBufferALDx11.h"
 
 
 CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
@@ -525,14 +527,11 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw()
 	, m_lastSetTopology( TOP_INVALID )	
 	, m_dirtyFlag( 0 )
 	, m_renderTargetHighWaterMark( 1 )
-	, m_vertexLayout( nullptr )
-	, m_lastSetVertexLayout( nullptr )
 	, m_lastSetVertexLayoutVSHash( 0 )
 	, m_stackDS( "Tr2RenderContextAL::m_stackDS" )
 	, m_useReadOnlyDepthView( false )
 	, m_isDepthReadOnly( false )
 	, m_isSrgbRenderTarget( false )
-	, m_hasHullShader( false )
 	, m_previouslyHadHullShader( false )
 	, m_events( nullptr )
 	, m_aftermathContext( nullptr ),
@@ -651,11 +650,11 @@ void Tr2RenderContextAL::Destroy() throw()
 
 	m_dirtyFlag = 0;
 	
-	m_fragmentOpBuffer.Destroy();
+	m_fragmentOpBuffer = Tr2ConstantBufferAL();
 
 	//raw pointers only//m_vertexShader.Destroy();
-	m_vertexLayout = nullptr;
-	m_lastSetVertexLayout = nullptr;
+	m_vertexLayout = Tr2VertexLayoutAL();
+	m_lastSetVertexLayout = Tr2VertexLayoutAL();
 	m_lastSetVertexLayoutVSHash = 0;
 
 	m_drawUP.Destroy();
@@ -670,11 +669,9 @@ void Tr2RenderContextAL::Destroy() throw()
 		m_stackDS.swap( stack );
 	}
 
-	m_hasHullShader = false;
 	m_previouslyHadHullShader = false;
 
-	m_shaders = Tr2ShaderProgramAL::Shaders();
-	m_vertexShader = Tr2ShaderAL();
+	m_shaderProgram = Tr2ShaderProgramAL();
 
 	memset( m_allRenderStates, 0xff, sizeof( m_allRenderStates ) );
 	m_allRenderStates[RS_SRGBWRITEENABLE] = 0;
@@ -690,8 +687,7 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const throw()
 
 ALResult Tr2RenderContextAL::BeginScene() throw()
 { 
-	m_shaders = Tr2ShaderProgramAL::Shaders();
-	m_vertexShader = Tr2ShaderAL();
+	m_shaderProgram = Tr2ShaderProgramAL();
 	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
 
 	decltype( &ID3D11DeviceContext::VSSetShaderResources ) setResources[] = {
@@ -942,14 +938,12 @@ ALResult Tr2RenderContextAL::SetConstants(
 {
 	using namespace Tr2RenderContextEnum;
 
-	ID3D11Buffer* bufArray[1] = { buffer.m_buffer };
+	ID3D11Buffer* bufArray[1] = { buffer.m_buffer->m_buffer };
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-
-	if( buffer.GetUsage() & USAGE_LOCK_FREQUENTLY )
+	if( buffer.m_buffer->GetUsage() == Tr2ConstantUsageAL::ONE_SHOT )
 	{
 		uint32_t constantDataSize = buffer.GetSize();
-		const void* constantData = buffer.m_bufferMirror.get();
+		const void* constantData = buffer.m_buffer->m_bufferMirror.get();
 
 		if( constantType < SHADER_TYPE_FIRST || constantType >= SHADER_TYPE_COUNT || registerIndex >= CB_SLOT_COUNT )
 		{
@@ -970,10 +964,6 @@ ALResult Tr2RenderContextAL::SetConstants(
 			if( memcmp( cb.mirror.get(), constantData, constantDataSize ) == 0 )
 			{
 				CCP_STATS_INC( cbCacheHit );
-				if( &buffer != &nullCB )
-				{
-					buffer.m_frameUse = buffer.FRAME_USE_NOT_USED_YET;	// it's been set, so user has the choice again between using Lock or the mirror buffer.
-				}
 				return S_OK;
 			}
 		}
@@ -985,7 +975,7 @@ ALResult Tr2RenderContextAL::SetConstants(
 		if( !cb.constantBuffer.IsValid() || cb.constantBuffer.GetSize() < constantDataSize )
 		{
 			auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-			CR_RETURN_HR( cb.constantBuffer.Create( constantDataSize, USAGE_CPU_WRITE, nullptr, renderContext ) );
+			CR_RETURN_HR( cb.constantBuffer.Create( constantDataSize, renderContext ) );
 			alreadySet = false;
 		}
 		void* data;
@@ -993,13 +983,7 @@ ALResult Tr2RenderContextAL::SetConstants(
 		memcpy( data, constantData, constantDataSize );
 		CR_RETURN_HR( cb.constantBuffer.Unlock( *this ) );
 
-		bufArray[0] = cb.constantBuffer.m_buffer;
-		cb.constantBuffer.m_frameUse = buffer.FRAME_USE_NOT_USED_YET;	// it's been set, so user has the choice again between using Lock or the mirror buffer.
-
-		if( &buffer != &nullCB )
-		{
-			buffer.m_frameUse = buffer.FRAME_USE_NOT_USED_YET;	// it's been set, so user has the choice again between using Lock or the mirror buffer.
-		}
+		bufArray[0] = cb.constantBuffer.m_buffer->m_buffer;
 
 		if( alreadySet )
 		{
@@ -1043,11 +1027,6 @@ ALResult Tr2RenderContextAL::SetConstants(
 
 	default:
 		return E_FAIL;
-	}
-
-	if( &buffer != &nullCB )
-	{
-		buffer.m_frameUse = buffer.FRAME_USE_NOT_USED_YET;	// it's been set, so user has the choice again between using Lock or the mirror buffer.
 	}
 
 	return S_OK;
@@ -1193,7 +1172,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 	if( changedSlot == 0 )
 	{
 		SetViewport( Tr2Viewport ( bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() ) );
-		D3D11_RECT rect = { 0, 0, bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() };
+		D3D11_RECT rect = { 0, 0, LONG( bb.GetDesc().GetWidth() ), LONG( bb.GetDesc().GetHeight() ) };
 		m_context->RSSetScissorRects( 1, &rect );
 	}
 
@@ -1328,50 +1307,46 @@ ALResult Tr2RenderContextAL::CopySubBuffer(
 
 ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw()
 {
-	if( !layout.IsValid() && &layout != &nullVL )
-	{
-		return E_INVALIDARG;
-	}
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( layout );
-	m_vertexLayout = &layout == &nullVL ? nullptr : &layout;
+	m_vertexLayout = layout;
 
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& program ) throw()
+ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& p ) throw()
 {
-	AL_UPDATE_RESOURCE_FRAME_USAGE( program );
+	if( m_shaderProgram == p )
+	{
+		return S_OK;
+	}
+	auto& program = *p.m_program;
+	auto& old = *m_shaderProgram.m_program;
 
-	if( m_shaders.vertexShader != program.m_shaders.vertexShader )
+	if( old.m_shaders.vertexShader != program.m_shaders.vertexShader )
 	{
 		m_context->VSSetShader( program.m_shaders.vertexShader, nullptr, 0 );
 	}
-	if( m_shaders.computeShader != program.m_shaders.computeShader )
+	if( old.m_shaders.computeShader != program.m_shaders.computeShader )
 	{
 		m_context->CSSetShader( program.m_shaders.computeShader, nullptr, 0 );
 	}
-	if( m_shaders.geometryShader != program.m_shaders.geometryShader )
+	if( old.m_shaders.geometryShader != program.m_shaders.geometryShader )
 	{
 		m_context->GSSetShader( program.m_shaders.geometryShader, nullptr, 0 );
 	}
-	if( m_shaders.hullShader != program.m_shaders.hullShader )
+	if( old.m_shaders.hullShader != program.m_shaders.hullShader )
 	{
 		m_context->HSSetShader( program.m_shaders.hullShader, nullptr, 0 );
 	}
-	if( m_shaders.domainShader != program.m_shaders.domainShader )
+	if( old.m_shaders.domainShader != program.m_shaders.domainShader )
 	{
 		m_context->DSSetShader( program.m_shaders.domainShader, nullptr, 0 );
 	}
-	if( m_shaders.pixelShader != program.m_shaders.pixelShader  )
+	if( old.m_shaders.pixelShader != program.m_shaders.pixelShader  )
 	{
 		m_dirtyFlag |= Tr2FragmentOpSettings::DIRTY_PATCH_PS;
 	}
 
-	m_shaders = program.m_shaders;
-	m_vertexShader = program.m_vertexShader;
-
-	m_hasHullShader = program.m_shaders.hullShader != nullptr;
+	m_shaderProgram = p;
 
 	return S_OK;
 }
@@ -1664,25 +1639,25 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 
 	bool OK = true;
 
-	if( m_vertexLayout )
+	if( m_vertexLayout.IsValid() )
 	{
-		if( !m_shaders.vertexShader )
+		if( !m_shaderProgram.m_program->m_shaders.vertexShader )
 		{
 			return false;
 		}
-		if( m_vertexLayout != m_lastSetVertexLayout || 
-			m_vertexShader.m_shader->m_pipelineInputHash != m_lastSetVertexLayoutVSHash )
+		if( !( m_vertexLayout == m_lastSetVertexLayout ) || 
+			m_shaderProgram.m_program->m_vertexShader.m_shader->m_pipelineInputHash != m_lastSetVertexLayoutVSHash )
 		{
-			CR_RETURN_VAL(	m_vertexLayout->SetLayout( m_vertexShader.m_shader.get(), *this )
+			CR_RETURN_VAL(	m_vertexLayout.m_layout->SetLayout( m_shaderProgram.m_program->m_vertexShader.m_shader.get(), *this )
 						, false );
 
 			m_lastSetVertexLayout = m_vertexLayout;
-			m_lastSetVertexLayoutVSHash = m_vertexShader.m_shader->m_pipelineInputHash;
+			m_lastSetVertexLayoutVSHash = m_shaderProgram.m_program->m_vertexShader.m_shader->m_pipelineInputHash;
 		}
 	}
 	else
 	{
-		m_lastSetVertexLayout = nullptr;
+		m_lastSetVertexLayout = Tr2VertexLayoutAL();
 		m_lastSetVertexLayoutVSHash = (uint32_t)-1;
 		m_context->IASetInputLayout( nullptr );
 	}
@@ -1696,12 +1671,7 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 			if( !m_fragmentOpBuffer.IsValid() )
 			{
 				auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-				CR_RETURN_VAL( 
-					m_fragmentOpBuffer.Create(	sizeof( m_renderStateEmulation.m_fragmentOpSettings ), 
-												USAGE_CPU_WRITE,
-												nullptr,
-												renderContext )
-					, false );
+				CR_RETURN_VAL( m_fragmentOpBuffer.Create( sizeof( m_renderStateEmulation.m_fragmentOpSettings ), renderContext ), false );
 			}
 
 			{
@@ -1725,18 +1695,18 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 
 		if( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_PATCH_PS )
 		{
-			if( !m_shaders.pixelShader )
+			if( !m_shaderProgram.m_program->m_shaders.pixelShader )
 			{
 				return false;
 			}
 			if( m_renderStateEmulation.m_alphaTestParameters.m_alphaTestEnabled && 
 				m_renderStateEmulation.m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS )
 			{
-				m_context->PSSetShader( m_shaders.patchedPixelShader, nullptr, 0 );
+				m_context->PSSetShader( m_shaderProgram.m_program->m_shaders.patchedPixelShader, nullptr, 0 );
 			}
 			else
 			{
-				m_context->PSSetShader( m_shaders.pixelShader, nullptr, 0 );
+				m_context->PSSetShader( m_shaderProgram.m_program->m_shaders.pixelShader, nullptr, 0 );
 			}
 		}
 
@@ -1747,9 +1717,11 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 		m_dirtyFlag = 0;
 	}
 
-	if( m_topology == TOP_TRIANGLES && ( m_topology != m_lastSetTopology || m_previouslyHadHullShader != m_hasHullShader ) )
+	auto hasHullShader =m_shaderProgram.m_program->m_shaders.hullShader != nullptr;
+
+	if( m_topology == TOP_TRIANGLES && ( m_topology != m_lastSetTopology || m_previouslyHadHullShader != hasHullShader ) )
 	{
-		if( m_hasHullShader )
+		if( hasHullShader )
 		{
 			m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST );
 		}
@@ -1757,7 +1729,7 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 		{
 			m_context->IASetPrimitiveTopology( D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST );
 		}
-		m_previouslyHadHullShader = m_hasHullShader;
+		m_previouslyHadHullShader = hasHullShader;
 		m_lastSetTopology = m_topology;
 	}
 	
@@ -2117,8 +2089,6 @@ Tr2TextureAL& Tr2RenderContextAL::GetDefaultBackBuffer()
 
 void Tr2RenderContextAL::ReleaseDeviceResources() throw()
 {
-	m_shaders = Tr2ShaderProgramAL::Shaders();
-	m_vertexShader = Tr2ShaderAL();
 }
 
 void Tr2RenderContextAL::ResetCapturePlayback()

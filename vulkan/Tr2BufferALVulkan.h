@@ -9,12 +9,10 @@
 #if TRINITY_PLATFORM == TRINITY_VULKAN
 
 #include "../include/Tr2BufferAL.h"
-#include "../Tr2MemoryCounterAL.h"
-#include "../Tr2LockGuard.h"
 
 namespace TrinityALImpl
 {
-	class Tr2BufferAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_BUFFER>
+	class Tr2BufferAL : public Tr2DeviceResourceAL<Tr2BufferAL>
 	{
 	public:
 		Tr2BufferAL();
@@ -35,6 +33,7 @@ namespace TrinityALImpl
 		ALResult MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext );
 		void UnmapForWriting( Tr2RenderContextAL& renderContext );
 		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		VkBuffer m_buffer;
 		VkDeviceMemory m_memory;

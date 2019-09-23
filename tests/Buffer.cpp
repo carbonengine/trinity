@@ -187,6 +187,23 @@ TEST_F( Buffer, CanCreateVertexBufferWithShaderResource )
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 64, 4, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE, nullptr, *renderContext ) );
 }
 
+TEST_F( Buffer, CanCreateDynamicSrvBuffer )
+{
+	Tr2BufferAL buffer;
+	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 64, 4, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, nullptr, *renderContext ) );
+}
+
+TEST_F( Buffer, CanMapDynamicSrvBuffer )
+{
+	Tr2BufferAL buffer;
+	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 64, 4, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, nullptr, *renderContext ) );
+	void* data;
+	ASSERT_HRESULT_SUCCEEDED( buffer.MapForWriting( data, *renderContext ) );
+	buffer.UnmapForWriting( *renderContext );
+
+	ASSERT_HRESULT_SUCCEEDED( buffer.MapForWriting( data, *renderContext ) );
+	buffer.UnmapForWriting( *renderContext );
+}
 
 #if TRINITY_PLATFORM_SUPPORTS_UNORDERED_ACCESS
 

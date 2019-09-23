@@ -1,11 +1,8 @@
 #pragma once
-#ifndef Tr2GpuTimerALDx9_H
-#define Tr2GpuTimerALDx9_H
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
+#include "../include/Tr2GpuTimerAL.h"
 
 
 class Tr2PrimaryRenderContextAL;
@@ -14,7 +11,7 @@ class Tr2RenderContext;
 namespace TrinityALImpl
 {
 	class Tr2GpuTimerAL :
-		public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TIMER>
+		public Tr2DeviceResourceAL<Tr2GpuTimerAL>
 	{
 	public:
 		Tr2GpuTimerAL();
@@ -35,6 +32,7 @@ namespace TrinityALImpl
 		}
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		CComPtr<IDirect3DQuery9> m_beginQuery;
 		CComPtr<IDirect3DQuery9> m_endQuery;
@@ -53,7 +51,5 @@ namespace TrinityALImpl
 		} m_state;
 	};
 }
-
-#endif
 
 #endif

@@ -9,32 +9,21 @@
 #if TRINITY_PLATFORM == TRINITY_VULKAN
 
 
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
-#include "../Tr2MemoryCounterAL.h"
-
-#ifdef TRINITY_AL_GUARD_LOCKS
-#include "../Tr2LockGuard.h"
-#endif
-
-
-class Tr2PrimaryRenderContextAL;
-struct Tr2TextureSubresource;
-class Tr2RenderContextAL;
-struct Tr2SubresourceData;
-struct Tr2BitmapDimensions;
-struct Tr2DisplayModeInfo;
+#include "../include/Tr2TextureAL.h"
+#include "../include/Tr2BitmapDimensions.h"
+#include "../Tr2HalHelperStructures.h"
 
 namespace TrinityALImpl
 {
 	class Tr2ResourceSetAL;
 }
 
+struct Tr2DisplayModeInfo;
 
 
 namespace TrinityALImpl
 {
-	class Tr2TextureAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
+	class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>
 	{
 	public:
 		Tr2TextureAL();
@@ -49,7 +38,7 @@ namespace TrinityALImpl
 		void Destroy();
 
 		bool IsValid() const;
-		Tr2ALMemoryType GetMemoryClass();
+		Tr2ALMemoryType GetMemoryClass() const;
 		const Tr2BitmapDimensions& GetDesc() const;
 		const Tr2MsaaDesc& GetMsaaDesc() const;
 		Tr2GpuUsage::Type GetGpuUsage() const;
@@ -97,6 +86,7 @@ namespace TrinityALImpl
 		void SetCurrentImageVulkan( uint32_t index );
 		VkImage GetImageVulkan() const;
 		VkImageView GetImageView() const;
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		std::vector<VkImage> m_images;
 		std::vector<VkImageView> m_imageViews;
@@ -111,6 +101,7 @@ namespace TrinityALImpl
 		Tr2GpuUsage::Type m_gpuUsage;
 
 		friend class Tr2RenderContextAL;
+		friend class TrinityALImpl::Tr2ResourceSetAL;
 	};
 }
 

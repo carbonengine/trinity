@@ -60,7 +60,6 @@ namespace TrinityALImpl
 
 	bool Tr2GpuTimerAL::Begin(Tr2RenderContextAL& renderContext)
 	{
-		AL_UPDATE_RESOURCE_FRAME_USAGE(*this);
 		if (!m_beginQuery || !m_endQuery || m_state != READY)
 		{
 			return false;
@@ -73,7 +72,6 @@ namespace TrinityALImpl
 
 	void Tr2GpuTimerAL::End(Tr2RenderContextAL& renderContext)
 	{
-		AL_UPDATE_RESOURCE_FRAME_USAGE(*this);
 		if (!m_beginQuery || !m_endQuery || m_state != BEGIN_ISSUED)
 		{
 			return;
@@ -85,7 +83,6 @@ namespace TrinityALImpl
 
 	float Tr2GpuTimerAL::GetTime(Tr2RenderContextAL& renderContext)
 	{
-		AL_UPDATE_RESOURCE_FRAME_USAGE(*this);
 		if (!m_beginQuery || !m_endQuery)
 		{
 			return m_lastTime;
@@ -134,6 +131,11 @@ namespace TrinityALImpl
 			}
 		}
 		return m_lastTime;
+	}
+
+	void Tr2GpuTimerAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2GpuTimerAL";
 	}
 }
 

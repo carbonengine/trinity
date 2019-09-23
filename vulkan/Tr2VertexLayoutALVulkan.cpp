@@ -77,74 +77,81 @@ namespace
 	}
 }
 
-Tr2VertexLayoutAL::Tr2VertexLayoutAL()
-	:m_isValid( false )
+namespace TrinityALImpl
 {
-
-}
-
-ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2PrimaryRenderContextAL& )
-{
-	Destroy();
-
-	for( auto it = begin( definition.m_items ); it != end( definition.m_items ); ++it )
+	Tr2VertexLayoutAL::Tr2VertexLayoutAL()
+		:m_isValid( false )
 	{
-		VkVertexInputAttributeDescription desc;
-		desc.binding = it->m_stream;
-		desc.format = GetFormat( it->m_dataType );
-		desc.offset = it->m_offset;
-		m_attributes.push_back( desc );
-		m_streamRates[it->m_stream] = it->m_instanceStepRate ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
-		m_streamCount = std::max( m_streamCount, it->m_stream + 1 );
+
 	}
-	m_definition = definition;
-	m_isValid = true;
-	return S_OK;
-}
 
-bool Tr2VertexLayoutAL::IsValid() const
-{
-	return m_isValid;
-}
-
-void Tr2VertexLayoutAL::Destroy()
-{
-	m_streamCount = 0;
-	m_isValid = false;
-	m_definition = Tr2VertexDefinition();
-	m_attributes.clear();
-}
-
-Tr2ALMemoryType Tr2VertexLayoutAL::GetMemoryClass() const
-{
-	return AL_MEMORY_MANAGED;
-}
-
-void Tr2VertexLayoutAL::PopulateInputLayoutVulkan( std::vector<VkVertexInputAttributeDescription>& layout, const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const
-{
-	layout.reserve( shaderInputs.size() );
-	for( auto it = begin( shaderInputs ); it != end( shaderInputs ); ++it )
+	ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2PrimaryRenderContextAL& )
 	{
-		auto& in = *it;
-		bool found = false;
-		for( size_t i = 0; i < m_attributes.size(); ++i )
+		Destroy();
+
+		for( auto it = begin( definition.m_items ); it != end( definition.m_items ); ++it )
 		{
-			auto& item = m_definition.m_items[i];
-			if( in.usage == item.m_usage && in.usageIndex == item.m_usageIndex )
+			VkVertexInputAttributeDescription desc;
+			desc.binding = it->m_stream;
+			desc.format = GetFormat( it->m_dataType );
+			desc.offset = it->m_offset;
+			m_attributes.push_back( desc );
+			m_streamRates[it->m_stream] = it->m_instanceStepRate ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
+			m_streamCount = std::max( m_streamCount, it->m_stream + 1 );
+		}
+		m_definition = definition;
+		m_isValid = true;
+		return S_OK;
+	}
+
+	bool Tr2VertexLayoutAL::IsValid() const
+	{
+		return m_isValid;
+	}
+
+	void Tr2VertexLayoutAL::Destroy()
+	{
+		m_streamCount = 0;
+		m_isValid = false;
+		m_definition = Tr2VertexDefinition();
+		m_attributes.clear();
+	}
+
+	Tr2ALMemoryType Tr2VertexLayoutAL::GetMemoryClass() const
+	{
+		return AL_MEMORY_MANAGED;
+	}
+
+	void Tr2VertexLayoutAL::PopulateInputLayoutVulkan( std::vector<VkVertexInputAttributeDescription>& layout, const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const
+	{
+		layout.reserve( shaderInputs.size() );
+		for( auto it = begin( shaderInputs ); it != end( shaderInputs ); ++it )
+		{
+			auto& in = *it;
+			bool found = false;
+			for( size_t i = 0; i < m_attributes.size(); ++i )
 			{
-				auto attr = m_attributes[i];
-				attr.location = in.registerIndex;
+				auto& item = m_definition.m_items[i];
+				if( in.usage == item.m_usage && in.usageIndex == item.m_usageIndex )
+				{
+					auto attr = m_attributes[i];
+					attr.location = in.registerIndex;
+					layout.push_back( attr );
+					found = true;
+					break;
+				}
+			}
+			if( !found )
+			{
+				VkVertexInputAttributeDescription attr = { in.registerIndex, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0 };
 				layout.push_back( attr );
-				found = true;
-				break;
 			}
 		}
-		if( !found )
-		{
-			VkVertexInputAttributeDescription attr = { in.registerIndex, 0, VK_FORMAT_R32G32B32A32_SFLOAT, 0 };
-			layout.push_back( attr );
-		}
+	}
+
+	void Tr2VertexLayoutAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2VertexLayoutAL";
 	}
 }
-
 #endif

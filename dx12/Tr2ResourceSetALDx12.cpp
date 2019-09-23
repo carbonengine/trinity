@@ -12,6 +12,8 @@
 #include "Tr2PrimaryRenderContextDx12.h"
 #include "Tr2ShaderProgramALDx12.h"
 #include "Tr2BufferALDx12.h"
+#include "Tr2TextureALDx12.h"
+#include "Tr2SamplerStateALDx12.h"
 #include "Utilities.h"
 #include "ALLog.h"
 
@@ -29,7 +31,9 @@ namespace
 namespace TrinityALImpl
 {
 	Tr2ResourceSetAL::Tr2ResourceSetAL()
-		:m_owner( nullptr )
+		:m_owner( nullptr ),
+		m_samplerCount( 0 ),
+		m_resourceCount( 0 )
 	{
 
 	}
@@ -39,7 +43,7 @@ namespace TrinityALImpl
 		Destroy();
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		Destroy();
 
@@ -56,18 +60,18 @@ namespace TrinityALImpl
 		std::map<ID3D12Resource*, D3D12_RESOURCE_STATES> transitioned;
 		uint32_t bufferIndex = renderContext.GetCurrentBackBufferIndex();
 
-		for (auto it = begin(program.m_srvRegisters); it != end(program.m_srvRegisters); ++it)
+		for (auto it = begin(program.m_program->m_srvRegisters); it != end(program.m_program->m_srvRegisters); ++it)
 		{
 			auto& reg = *it;
 			auto& resource = description.m_srv[reg.stage][reg.index];
 			auto stateFlag = reg.stage == PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+			m_resourceCount = std::max( reg.parameter + 1, m_resourceCount );
 			switch (resource.type)
 			{
 			case Tr2ResourceSetDescriptionAL::TEXTURE:
 				if (resource.texture.IsValid())
 				{
 					m_srv[reg.parameter] = resource.texture.m_texture->m_view[resource.colorSpace];
-					m_srvUav[reg.parameter] = m_srv[reg.parameter];
 
 					auto texture = resource.texture.m_texture.get();
 					auto res = texture->GetResourceDx12();
@@ -79,6 +83,7 @@ namespace TrinityALImpl
 						m_outTransitions.push_back(Transition(res, stateFlag, texture->m_defaultState));
 						transitioned[res] = stateFlag;
 					}
+					m_usedResources.push_back( res );
 				}
 				break;
 			case Tr2ResourceSetDescriptionAL::BUFFER:
@@ -86,7 +91,6 @@ namespace TrinityALImpl
 				{
 					auto buffer = resource.buffer.m_buffer.get();
 					m_srv[reg.parameter] = buffer->m_srv;
-					m_srvUav[reg.parameter] = m_srv[reg.parameter];
 
 					auto res = buffer->GetGpuResource();
 
@@ -98,6 +102,7 @@ namespace TrinityALImpl
 						m_outTransitions.push_back(Transition(res, stateFlag, buffer->m_defaultState));
 						transitioned[res] = stateFlag;
 					}
+					m_usedResources.push_back( res );
 				}
 				break;
 			default:
@@ -105,11 +110,12 @@ namespace TrinityALImpl
 			}
 		}
 
-		for (auto it = begin(program.m_uavRegisters); it != end(program.m_uavRegisters); ++it)
+		for (auto it = begin(program.m_program->m_uavRegisters); it != end(program.m_program->m_uavRegisters); ++it)
 		{
 			auto& reg = *it;
 			auto& resource = description.m_uav[reg.stage][reg.index];
 			auto stateFlag = reg.stage == PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+			m_resourceCount = std::max( reg.parameter + 1, m_resourceCount );
 			switch (resource.type)
 			{
 			case Tr2ResourceSetDescriptionAL::TEXTURE:
@@ -119,7 +125,6 @@ namespace TrinityALImpl
 					auto res = texture->GetResourceDx12();
 
 					m_uav[reg.parameter] = texture->m_uav[resource.mip];
-					m_srvUav[reg.parameter] = m_uav[reg.parameter];
 
 					auto found = transitioned.find(res);
 					// TODO: verify state
@@ -129,6 +134,7 @@ namespace TrinityALImpl
 						m_outTransitions.push_back(Transition(res, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, texture->m_defaultState));
 						transitioned[res] = stateFlag;
 					}
+					m_usedResources.push_back( res );
 				}
 				break;
 			case Tr2ResourceSetDescriptionAL::BUFFER:
@@ -138,7 +144,6 @@ namespace TrinityALImpl
 					auto res = buffer->GetGpuResource();
 
 					m_uav[reg.parameter] = buffer->m_uav;
-					m_srvUav[reg.parameter] = m_uav[reg.parameter];
 
 					if (resource.initialCount != -1 && resource.buffer.m_buffer->m_counter)
 					{
@@ -153,6 +158,7 @@ namespace TrinityALImpl
 						m_outTransitions.push_back(Transition(res, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, buffer->m_defaultState));
 						transitioned[res] = stateFlag;
 					}
+					m_usedResources.push_back( res );
 				}
 				break;
 			default:
@@ -162,7 +168,7 @@ namespace TrinityALImpl
 
 		}
 
-		for (auto it = begin(program.m_samplerRegisters); it != end(program.m_samplerRegisters); ++it)
+		for (auto it = begin(program.m_program->m_samplerRegisters); it != end(program.m_program->m_samplerRegisters); ++it)
 		{
 			auto& reg = *it;
 			auto& sampler = description.m_samplers[reg.stage][reg.index];
@@ -170,6 +176,7 @@ namespace TrinityALImpl
 			{
 				m_sampler[reg.parameter] = sampler.sampler.m_sampler->m_samplerState;
 			}
+			m_samplerCount = std::max( reg.parameter + 1, m_samplerCount );
 		}
 
 		CComPtr<ID3D12Resource> initialCountBuffer;
@@ -207,18 +214,23 @@ namespace TrinityALImpl
 			RELEASE_LATER( m_owner, m_initialCountBuffer );
 			m_initialCountBuffer = nullptr;
 		}
-		for( uint32_t idx = 0; idx < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++idx )
+		for( uint32_t idx = 0; idx < m_resourceCount; ++idx )
 		{
 			m_srv[idx] = nullptr;
 			m_uav[idx] = nullptr;
-			m_srvUav[idx] = nullptr;
+		}
+		m_resourceCount = 0;
+		for( uint32_t idx = 0; idx < m_samplerCount; ++idx )
+		{
 			m_sampler[idx] = nullptr;
 		}
+		m_samplerCount = 0;
 
 		m_owner = nullptr;
 		m_initialCounts.clear();
 		m_inTransitions.clear();
 		m_outTransitions.clear();
+		m_usedResources.clear();
 	}
 
 	bool Tr2ResourceSetAL::IsValid() const
@@ -238,12 +250,15 @@ namespace TrinityALImpl
 			return;
 		}
 		std::vector<D3D12_RESOURCE_BARRIER> barriers( m_initialCounts.size() );
+		std::vector<ID3D12Resource*> resources( m_initialCounts.size() );
 		for( size_t i = 0; i < m_initialCounts.size(); ++i )
 		{
 			barriers[i] = Transition( m_initialCounts[i].buffer.m_buffer->m_counter, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST );
+			resources[i] = m_initialCounts[i].buffer.m_buffer->m_counter;
 		}
 
-		renderContext.m_commandList->ResourceBarrier( UINT( barriers.size() ), barriers.data() );
+		renderContext.ResourceBarrierDx12( barriers.size(), barriers.data() );
+		renderContext.FlushBarriersDx12( resources.size(), resources.data() );
 
 		for( size_t i = 0; i < m_initialCounts.size(); ++i )
 		{
@@ -255,7 +270,12 @@ namespace TrinityALImpl
 			std::swap( barriers[i].Transition.StateAfter, barriers[i].Transition.StateBefore );
 		}
 
-		renderContext.m_commandList->ResourceBarrier( UINT( barriers.size() ), barriers.data() );
+		renderContext.ResourceBarrierDx12( barriers.size(), barriers.data() );
+	}
+
+	void Tr2ResourceSetAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2ResourceSetAL";
 	}
 }
 

@@ -5,7 +5,6 @@
 #include "../ALResult.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2RenderContextEnum.h"
-#include "../Tr2TrackedALObject.h"
 
 #include "../Tr2AdapterStructures.h"
 
@@ -25,7 +24,3 @@
 #include "Tr2ShaderProgramAL.h"
 #include "Tr2ResourceSetAL.h"
 #include "Tr2BufferAL.h"
-// for now... this private include should go away, but for that
-// we need to clean up Tr2TrackedALObject stuff
-#include TRINITY_AL_PLATFORM_INCLUDE( Tr2ResourceSetAL )
-#include TRINITY_AL_PLATFORM_INCLUDE( Tr2BufferAL )

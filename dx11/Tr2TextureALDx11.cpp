@@ -611,7 +611,7 @@ namespace TrinityALImpl
 		return m_texture != nullptr;
 	}
 
-	Tr2ALMemoryType Tr2TextureAL::GetMemoryClass()
+	Tr2ALMemoryType Tr2TextureAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_MANAGED;
 	}
@@ -1146,6 +1146,23 @@ namespace TrinityALImpl
 		m_memory.Set( Tr2MemoryCounterAL::TEXTURE, m_desc, m_msaa );
 
 		return S_OK;
+	}
+
+	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2TextureAL";
+
+		unsigned size = 0;
+		for( unsigned i = 0; i < m_desc.GetTrueMipCount(); ++i )
+		{
+			size += m_desc.GetMipSize( i );
+		}
+
+		description["size"] = std::to_string( long long( size ) );
+		description["width"] = std::to_string( long long( m_desc.GetWidth() ) );
+		description["height"] = std::to_string( long long( m_desc.GetHeight() ) );
+		description["mipLevels"] = std::to_string( long long( m_desc.GetTrueMipCount() ) );
+		description["format"] = std::to_string( long long( m_desc.GetFormat() ) );
 	}
 }
 

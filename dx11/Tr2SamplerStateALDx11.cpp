@@ -50,12 +50,7 @@ namespace TrinityALImpl
 		samplerDesc.MaxLOD = description.m_mipFilter == TF_NONE ? description.m_minLOD : description.m_maxLOD;
 
 		m_samplerState = nullptr;
-		HRESULT hr = renderContext.m_d3dDevice11->CreateSamplerState( &samplerDesc, &m_samplerState );
-		if( SUCCEEDED( hr ) )
-		{
-			ChangeObjectId();
-		}
-		return hr;
+		return renderContext.m_d3dDevice11->CreateSamplerState( &samplerDesc, &m_samplerState );
 	}
 
 	void Tr2SamplerStateAL::Destroy()
@@ -68,9 +63,14 @@ namespace TrinityALImpl
 		return m_samplerState != nullptr;
 	}
 
-	Tr2ALMemoryType Tr2SamplerStateAL::GetMemoryClass()
+	Tr2ALMemoryType Tr2SamplerStateAL::GetMemoryClass() const 
 	{
 		return AL_MEMORY_MANAGED;
+	}
+
+	void Tr2SamplerStateAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2SamplerStateAL";
 	}
 }
 

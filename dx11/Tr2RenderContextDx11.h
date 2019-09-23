@@ -10,10 +10,10 @@
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2ShaderAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
+#include "../include/Tr2VertexLayoutAL.h"
 
 
 class Tr2ConstantBufferAL;
-class Tr2VertexLayoutAL;
 struct ITr2RenderContextEvents;
 
 class Tr2SamplerStateAL;
@@ -24,6 +24,7 @@ struct Tr2Viewport;
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 #include "Tr2RenderStateEmulationDx11.h"
+#include "Tr2ShaderProgramALDx11.h"
 
 // -------------------------------------------------------------
 // Description:
@@ -187,13 +188,12 @@ public:
 	CComPtr<ID3D11DeviceContext>	m_context;
 private:
 	// Current vertex layout (for creating vertex layout)
-	const Tr2VertexLayoutAL* m_vertexLayout;
-	const Tr2VertexLayoutAL* m_lastSetVertexLayout;
+	Tr2VertexLayoutAL m_vertexLayout;
+	Tr2VertexLayoutAL m_lastSetVertexLayout;
 	uint32_t m_lastSetVertexLayoutVSHash;
 
 	// Current shaders
-	Tr2ShaderAL m_vertexShader;
-	Tr2ShaderProgramAL::Shaders m_shaders;
+	Tr2ShaderProgramAL m_shaderProgram;
 
 	Tr2RenderContextEnum::Topology	m_topology;
 	Tr2RenderContextEnum::Topology	m_lastSetTopology;
@@ -249,7 +249,6 @@ private:
 
 	uint32_t m_allRenderStates[ Tr2RenderContextEnum::RS_MAX_STATE ];
 	
-	bool m_hasHullShader;
 	// Has active hull shader (requires changing topology)
 	bool m_previouslyHadHullShader;	
 

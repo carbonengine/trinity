@@ -16,6 +16,7 @@
 
 #include "./util/GlobalDescriptorHeapAllocatorDx12.h"
 #include "./util/DescriptorHeapViewDx12.h"
+#include "./util/GpuMarkerBuffer.h"
 
 
 // JB: Enable this to get some more details on stuff being released
@@ -24,7 +25,13 @@
 #if ENABLE_RELEASE_LATER_TAG
 	#define _RT_STRINGIFY__(s) #s
 	#define RT_STRINGIFY(s) _RT_STRINGIFY__(s)
-	#define RELEASE_LATER(ownerDevice, comObject) (ownerDevice)->ReleaseLater(comObject, __FILE__ ":" RT_STRINGIFY(__LINE__) " " #comObject);
+//	#define RELEASE_LATER(ownerDevice, comObject) (ownerDevice)->ReleaseLater(comObject, __FILE__ ":" RT_STRINGIFY(__LINE__) " " #comObject);
+	#define RELEASE_LATER(ownerDevice, comObject) \
+		{ \
+			char __dbo[256]; \
+			sprintf_s(__dbo, __FILE__ ":" RT_STRINGIFY(__LINE__) " " #comObject " Frame(%i)", (ownerDevice)->GetCurrentBackBufferIndex()); \
+			(ownerDevice)->ReleaseLater(comObject, __dbo); \
+		}
 #else
 	#define RELEASE_LATER(ownerDevice, comObject) (ownerDevice)->ReleaseLater(comObject);
 #endif
@@ -37,7 +44,7 @@ namespace TrinityALImpl
 }
 
 
-class Tr2PrimaryRenderContextAL : public Tr2RenderContextAL
+class Tr2PrimaryRenderContextAL: public Tr2RenderContextAL
 {
 public:
 	Tr2PrimaryRenderContextAL();
@@ -95,13 +102,13 @@ public:
 	uint64_t GetCurrentFrameIndexDx12() const;
 	uint64_t GetCompletedFrameIndexDx12() const;
 
-	void OnShaderProgramDestroyedDx12( Tr2ShaderProgramAL* sp );
-	void OnVertexLayoutDestroyedDx12( Tr2VertexLayoutAL* vl );
+	void OnShaderProgramDestroyedDx12( TrinityALImpl::Tr2ShaderProgramAL* sp );
+	void OnVertexLayoutDestroyedDx12( TrinityALImpl::Tr2VertexLayoutAL* vl );
 	ALResult FlushAndSyncDx12( Tr2RenderContextAL& renderContext );
 	D3D12_CPU_DESCRIPTOR_HANDLE GetNullRtHandle( const Tr2TextureAL& compatibleWith );
 	uint64_t SignalDx12();
 	ALResult WaitForFenceDx12( uint64_t value );
-	D3D12_GPU_VIRTUAL_ADDRESS GetImmediateBufferAddressDx12() const;
+	const TrinityALImpl::GpuMarkerBuffer &GetMarkerBuffer() const;
 	void ScheduleSwapchainPresentDx12( IDXGISwapChain3* swapChain, const Tr2TextureAL& backbuffer, uint32_t presentInterval );
 
 
@@ -122,8 +129,14 @@ public:
 
 	/** Get the current buffer index */
 	uint32_t GetCurrentBackBufferIndex() const { return m_currentBackBufferIndex; }
+	uint32_t GetBackBufferCount() const
+	{
+		return uint32_t( m_frameFenceValues.size() );
+	}
 
 private:
+	void ResetRenderTargets();
+
 	Tr2PrimaryRenderContextAL( const Tr2PrimaryRenderContextAL& ) /* = delete */;
 	Tr2PrimaryRenderContextAL& operator=( const Tr2PrimaryRenderContextAL& ) /* = delete */;
 
@@ -152,6 +165,7 @@ private:
 #endif
 
 	uint64_t m_fenceValue;
+	uint64_t m_completedFrameIndex;
 	std::vector<uint64_t> m_frameFenceValues;
 	
 
@@ -179,11 +193,17 @@ private:
 				( std::hash<uint32_t>()( msaa.samples ) << 3 );
 		}
 	};
-	std::unordered_map<NullRtDesc, D3D12_CPU_DESCRIPTOR_HANDLE> m_nullRts;
 
-	CComPtr<ID3D12Resource> m_immediateBuffer;
-	D3D12_GPU_VIRTUAL_ADDRESS m_immediateBufferGpuAddress;
-	const void* m_immediateBufferCpuAddress;
+	struct NullRtDescHash
+	{
+		size_t operator()( const NullRtDesc& desc ) const
+		{
+			return desc;
+		}
+	};
+	std::unordered_map<NullRtDesc, D3D12_CPU_DESCRIPTOR_HANDLE, NullRtDescHash> m_nullRts;
+
+	TrinityALImpl::GpuMarkerBuffer m_immediateBuffer;
 
 	CComPtr<ID3D12QueryHeap> m_statsQuery;
 	CComPtr<ID3D12Resource> m_statsResult;
@@ -221,14 +241,6 @@ private:
 		DSV_PAGE_SIZE = 256,
 		DSV_NUM_PAGES = 32,
 
-		/*
-		* NOTE: Cache heaps store descriptors for batches in flight, so they typically consume less total memory
-		*		but can benefit from having a larger page size to reduce the chance of having to hit the allocator
-		*		mid frame
-		*/
-
-		DESCRIPTOR_CACHE_CRVSRVUAV_PAGE_SIZE = 4096,
-		DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE = 1024
 	};
 
 	std::shared_ptr<GlobalDescriptorHeapAllocator> m_allocators[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
@@ -240,14 +252,7 @@ public:
 
 	D3D_ROOT_SIGNATURE_VERSION m_rootSignatureVersion;
 
-	struct Pso
-	{
-		CComPtr<ID3D12PipelineState> pipelineState;
-		const Tr2ShaderProgramAL* shaderProgram;
-		const Tr2VertexLayoutAL* vertexLayout;
-	};
-
-	typedef std::unordered_map<unsigned, Pso> PipelineStateMap;
+	typedef std::unordered_map<TrinityALImpl::PSODescription, CComPtr<ID3D12PipelineState>> PipelineStateMap;
 	PipelineStateMap m_pipelineStates;
 
 	Tr2ConstantBufferAL m_shadowCB;

@@ -7,6 +7,7 @@
 #include "Tr2AdapterStructures.h"
 #include "Tr2VideoAdapterInfoALDx11.h"
 #include "Tr2BufferALDx11.h"
+#include "Tr2TextureALDx11.h"
 
 #include "ALLog.h"
 
@@ -517,11 +518,6 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 
 ALResult Tr2PrimaryRenderContextAL::Present()
 {
-#if AL_TACK_RESOURCE_USAGE
-	extern uint64_t g_trackCurrentFrame;
-	++g_trackCurrentFrame;
-#endif
-
 	if( g_gatherPipelineStatistics )
 	{
 		if( !m_deviceStatistics )

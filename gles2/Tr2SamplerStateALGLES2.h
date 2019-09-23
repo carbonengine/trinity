@@ -1,23 +1,14 @@
 #pragma once
-#ifndef Tr2SamplerStateALDx9_H
-#define Tr2SamplerStateALDx9_H
-
-
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
-
-
-class Tr2RenderContextAL;
-struct Tr2SamplerDescription;
-
 
 #if( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
+
+#include "../include/Tr2SamplerStateAL.h"
 
 namespace TrinityALImpl
 {
 	class Tr2TextureAL;
 
-	class Tr2SamplerStateAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>
+	class Tr2SamplerStateAL : public Tr2DeviceResourceAL<Tr2SamplerStateAL>
 	{
 	public:
 		Tr2SamplerStateAL();
@@ -28,6 +19,7 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const;
 
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		friend class ::Tr2RenderContextAL;
 		friend class Tr2TextureAL;
@@ -58,7 +50,5 @@ namespace TrinityALImpl
 		// border?
 	};
 }
-
-#endif
 
 #endif

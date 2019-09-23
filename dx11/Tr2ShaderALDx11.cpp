@@ -146,7 +146,6 @@ namespace TrinityALImpl
 			m_pipelineInputHash = uint32_t( CcpHashFNV1( &signature.pipelineInputs[0], sizeof( Tr2ShaderPipelineInputAL ) * signature.pipelineInputs.size() ) );
 		}
 
-		ChangeObjectId();
 		return S_OK;
 	}
 
@@ -236,11 +235,11 @@ namespace TrinityALImpl
 		m_type = INVALID_SHADER;
 	}
 
-	void Tr2ShaderAL::SetNullShaderType( Tr2RenderContextEnum::ShaderType type )
+	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
-		CCP_ASSERT( !IsValid() );
-		m_type = type;
+		description["type"] = "Tr2ShaderAL";
+		description["shader"] = std::to_string( long long( GetType() ) );
+		description["size"] = std::to_string( long long( m_bytecode.size() ) );
 	}
-
 }
 #endif

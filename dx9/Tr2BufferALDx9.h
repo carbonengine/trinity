@@ -8,7 +8,7 @@
 
 namespace TrinityALImpl
 {
-	class Tr2BufferAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_BUFFER>
+	class Tr2BufferAL : public Tr2DeviceResourceAL<Tr2BufferAL>
 	{
 	public:
 		ALResult Create(
@@ -18,7 +18,7 @@ namespace TrinityALImpl
 		void Destroy();
 
 		bool IsValid() const;
-		Tr2ALMemoryType GetMemoryClass();
+		Tr2ALMemoryType GetMemoryClass() const;
 		const Tr2BufferDescriptionAL& GetDesc() const;
 
 		ALResult MapForReading( const void*& data, Tr2RenderContextAL& renderContext );
@@ -27,6 +27,7 @@ namespace TrinityALImpl
 		void UnmapForWriting( Tr2RenderContextAL& renderContext );
 
 		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		ALResult Lock( void** data, uint32_t flags );
 		void Unlock();

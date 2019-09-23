@@ -4,8 +4,8 @@
 
 #include "Tr2ResourceSetALDx11.h"
 #include "Tr2BufferALDx11.h"
-#include "../include/Tr2TextureAL.h"
-#include "../include/Tr2SamplerStateAL.h"
+#include "Tr2TextureALDx11.h"
+#include "Tr2SamplerStateALDx11.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -20,7 +20,7 @@ namespace TrinityALImpl
 		std::fill_n( m_uavInitialCounts, MAX_RESOURCES, -1 );
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& /*renderContext*/ )
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& /*renderContext*/ )
 	{
 		Destroy();
 		ON_BLOCK_EXIT_WITH_UNUSED( [&] { if( !IsValid() ) Destroy(); } );
@@ -101,7 +101,7 @@ namespace TrinityALImpl
 					break;
 				case Tr2ResourceSetDescriptionAL::TEXTURE:
 					m_uavs[registerIndex] = desc.texture.m_texture->m_uav[desc.mip];
-					m_uavInitialCounts[registerIndex] = -1;
+					m_uavInitialCounts[registerIndex] = 0xffffffff;
 					m_uavCount = registerIndex + 1;
 					m_uavOffset = std::min( m_uavOffset, registerIndex );
 					break;
@@ -206,6 +206,10 @@ namespace TrinityALImpl
 		samplerHash = 0;
 	}
 
+	void Tr2ResourceSetAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2ResourceSetAL";
+	}
 }
 
 #endif

@@ -53,54 +53,57 @@ namespace {
 	};
 }
 
-ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2RenderContextAL& renderContext )
+namespace TrinityALImpl
 {
-	if( !renderContext.IsValid() || definition.m_items.empty() )
+
+	ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2RenderContextAL& renderContext )
 	{
-		return E_FAIL;
+		if( !renderContext.IsValid() || definition.m_items.empty() )
+		{
+			return E_FAIL;
+		}
+
+		std::vector<D3DVERTEXELEMENT9> desc( definition.m_items.size() );
+
+		for( size_t i = 0; i != definition.m_items.size(); ++i )
+		{
+			const Tr2VertexDefinition::Item& src = definition.m_items[i];
+			D3DVERTEXELEMENT9& dst = desc[i];
+
+
+			dst.Method = D3DDECLMETHOD_DEFAULT;
+			dst.Offset = static_cast<WORD>( src.m_offset );
+			dst.Stream = static_cast<WORD>( src.m_stream );
+			dst.Usage = static_cast<BYTE>( usageNames[src.m_usage] );
+			dst.Type = static_cast<BYTE>( GetD3dDataType( src.m_dataType ) );
+			dst.UsageIndex = static_cast<BYTE>( src.m_usageIndex );
+
+			CCP_ASSERT( dst.Type != D3DDECLTYPE_UNUSED );
+		};
+
+		D3DVERTEXELEMENT9 end = D3DDECL_END();
+		desc.push_back( end );
+
+		return renderContext.m_d3dDevice9->CreateVertexDeclaration( desc.data(), &m_layout );
 	}
 
-	std::vector<D3DVERTEXELEMENT9> desc( definition.m_items.size() );
-
-	for( size_t i = 0; i != definition.m_items.size(); ++i )
-    {
-		const Tr2VertexDefinition::Item& src = definition.m_items[i];
-		D3DVERTEXELEMENT9& dst = desc[i];
-		
-		
-		dst.Method = D3DDECLMETHOD_DEFAULT;		
-		dst.Offset     = static_cast<WORD>( src.m_offset );
-		dst.Stream     = static_cast<WORD>( src.m_stream );
-		dst.Usage      = static_cast<BYTE>( usageNames[ src.m_usage ] );
-		dst.Type       = static_cast<BYTE>( GetD3dDataType( src.m_dataType ) );
-		dst.UsageIndex = static_cast<BYTE>( src.m_usageIndex );
-
-		CCP_ASSERT( dst.Type != D3DDECLTYPE_UNUSED );
-    };
-
-	D3DVERTEXELEMENT9 end = D3DDECL_END();
-	desc.push_back( end );
-
-	HRESULT hr = renderContext.m_d3dDevice9->CreateVertexDeclaration( desc.data(), &m_layout );
-	if( SUCCEEDED( hr ) )
+	void Tr2VertexLayoutAL::Destroy()
 	{
-		ChangeObjectId();
+		m_layout = nullptr;
 	}
-	return hr;
-}
 
-void Tr2VertexLayoutAL::Destroy()
-{
-	m_layout = nullptr;
-}
-
-ALResult Tr2VertexLayoutAL::SetLayout( const TrinityALImpl::Tr2ShaderAL* /*vertexShader*/, Tr2RenderContextAL& renderContext ) const
-{
-	if( m_layout == nullptr || renderContext.m_d3dDevice9 == nullptr )
+	ALResult Tr2VertexLayoutAL::SetLayout( const TrinityALImpl::Tr2ShaderAL* /*vertexShader*/, Tr2RenderContextAL& renderContext ) const
 	{
-		return E_FAIL;
+		if( m_layout == nullptr || renderContext.m_d3dDevice9 == nullptr )
+		{
+			return E_FAIL;
+		}
+		return renderContext.m_d3dDevice9->SetVertexDeclaration( m_layout );
 	}
-	return renderContext.m_d3dDevice9->SetVertexDeclaration( m_layout );
-}
 
+	void Tr2VertexLayoutAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2VertexLayoutAL";
+	}
+}
 #endif // DX9?

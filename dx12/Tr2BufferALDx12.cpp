@@ -241,7 +241,7 @@ namespace TrinityALImpl
 		return m_owner != nullptr;
 	}
 
-	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass()
+	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_MANAGED;
 	}
@@ -330,15 +330,10 @@ namespace TrinityALImpl
 			nullptr,
 			IID_PPV_ARGS( &scratch ) ) );
 
-		{
-			auto barrier = Transition( m_buffer.GetResource(), m_defaultState, D3D12_RESOURCE_STATE_COPY_SOURCE );
-			renderContext.m_commandList->ResourceBarrier( 1, &barrier );
-		}
+		renderContext.ResourceBarrierDx12( Transition( m_buffer.GetResource(), m_defaultState, D3D12_RESOURCE_STATE_COPY_SOURCE ) );
+		renderContext.FlushBarriersDx12( m_buffer.GetResource() );
 		renderContext.m_commandList->CopyBufferRegion( scratch, 0, m_buffer.GetResource(), 0, size );
-		{
-			auto barrier = Transition( m_buffer.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState );
-			renderContext.m_commandList->ResourceBarrier( 1, &barrier );
-		}
+		renderContext.ResourceBarrierDx12( Transition( m_buffer.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState ) );
 
 		auto hr = renderContext.FlushAndSyncDx12();
 		if( FAILED( hr ) )
@@ -374,6 +369,12 @@ namespace TrinityALImpl
 	D3D12_GPU_VIRTUAL_ADDRESS Tr2BufferAL::GetGpuView()
 	{
 		return m_buffer.GetGpuView();
+	}
+
+	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2BufferAL";
+		description["size"] = std::to_string( long long( GetDesc().count * GetDesc().stride ) );
 	}
 }
 

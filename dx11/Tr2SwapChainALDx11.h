@@ -5,52 +5,45 @@
 //
 
 #pragma once
-#ifndef Tr2SwapChainALDx11_H
-#define Tr2SwapChainALDx11_H
-
-
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
-#include "../Tr2MemoryCounterAL.h"
-#include "../include/Tr2TextureAL.h"
-
-
-class Tr2PrimaryRenderContextAL;
-class Tr2RenderContextAL;
-
 
 #if TRINITY_PLATFORM==TRINITY_DIRECTX11
 
-class Tr2SwapChainAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SWAP_CHAIN>
+#include "../include/Tr2SwapChainAL.h"
+#include "../include/Tr2TextureAL.h"
+#include "../Tr2MemoryCounterAL.h"
+
+
+namespace TrinityALImpl
 {
-public:
-	Tr2SwapChainAL();
+	class Tr2SwapChainAL : public Tr2DeviceResourceAL<Tr2SwapChainAL>
+	{
+	public:
+		Tr2SwapChainAL();
 
-	ALResult Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderContextAL &renderContext );
-	void Destroy();
+		ALResult Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderContextAL &renderContext );
+		void Destroy();
 
-	bool IsValid() const;
+		bool IsValid() const;
 
-	ALResult Present( Tr2RenderContextAL& renderContext );
+		ALResult Present( Tr2RenderContextAL& renderContext );
 
-	int GetWidth() const;
-	int GetHeight() const;
+		uint32_t GetWidth() const;
+		uint32_t GetHeight() const;
 
-	Tr2TextureAL m_backBuffer;
+		::Tr2TextureAL m_backBuffer;
 
-	bool operator==( const Tr2SwapChainAL& other ) const { return m_swapChain == other.m_swapChain; }
+		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	private:
+		Tr2SwapChainAL( const Tr2SwapChainAL& ) /* = delete */;
+		Tr2SwapChainAL& operator=( const Tr2SwapChainAL& ) /* = delete */;
 
-	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
-private:
-	Tr2SwapChainAL( const Tr2SwapChainAL& ) /* = delete */;
-	Tr2SwapChainAL& operator=( const Tr2SwapChainAL& ) /* = delete */;
+		DXGI_SWAP_CHAIN_DESC m_description;
+		CComPtr<IDXGISwapChain> m_swapChain;
+		uint32_t m_width;
+		uint32_t m_height;
+	};
 
-	DXGI_SWAP_CHAIN_DESC m_description;
-	CComPtr<IDXGISwapChain> m_swapChain;
-	uint32_t m_width;
-	uint32_t m_height;
-};
+}
 
-#endif // TRINITY_PLATFORM==TRINITY_DIRECTX11
-
-#endif // Tr2SwapChainALDx11_H
+#endif

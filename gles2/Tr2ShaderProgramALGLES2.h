@@ -1,45 +1,50 @@
 #pragma once
 
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
-#include "../include/Tr2ShaderAL.h"
-
 #if TRINITY_PLATFORM==TRINITY_OPENGLES2
 
-class Tr2ShaderProgramAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SHADER_PROGRAM>
+#include "../include/Tr2ShaderProgramAL.h"
+#include "../include/Tr2ShaderAL.h"
+#include "../Tr2VertexDefinition.h"
+
+namespace TrinityALImpl
 {
-public:
-	Tr2ShaderProgramAL();
-
-	ALResult Create( Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
-	void Destroy();
-
-	bool IsValid() const;
-
-	Tr2ALMemoryType GetMemoryClass() const;
-
-private:
-	struct ProgramData
+	class Tr2ShaderProgramAL : public Tr2DeviceResourceAL<Tr2ShaderProgramAL>
 	{
-		GLuint program;
-		int constantBuffers[16];
-		int intConstant;
-		int shadowStateInt;
-		int shadowStateFloat;
-		int shadowStateOffsets;
-		std::map<std::pair<Tr2VertexDefinition::UsageCode, uint32_t>, int> attributes;
+	public:
+		Tr2ShaderProgramAL();
+
+		ALResult Create( ::Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
+		void Destroy();
+
+		bool IsValid() const;
+
+		Tr2ALMemoryType GetMemoryClass() const;
+
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	private:
+		struct ProgramData
+		{
+			GLuint program;
+			int constantBuffers[16];
+			int intConstant;
+			int shadowStateInt;
+			int shadowStateFloat;
+			int shadowStateOffsets;
+			std::map<std::pair<Tr2VertexDefinition::UsageCode, uint32_t>, int> attributes;
+		};
+
+		ALResult CreateProgram( ProgramData& program, GLuint vertexShader, GLuint pixelShader, bool useShadowStates );
+
+		::Tr2ShaderAL m_vertexShader;
+		::Tr2ShaderAL m_pixelShader;
+
+		ProgramData m_program;
+		ProgramData m_patchedProgram;
+		bool m_isValid;
+
+		friend class Tr2RenderContextAL;
 	};
 
-	ALResult CreateProgram( ProgramData& program, GLuint vertexShader, GLuint pixelShader, bool useShadowStates );
-
-	Tr2ShaderAL m_vertexShader;
-	Tr2ShaderAL m_pixelShader;
-
-	ProgramData m_program;
-	ProgramData m_patchedProgram;
-	bool m_isValid;
-
-	friend class Tr2RenderContextAL;
-};
+}
 
 #endif

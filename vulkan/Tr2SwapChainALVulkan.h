@@ -8,60 +8,61 @@
 
 #if TRINITY_PLATFORM == TRINITY_VULKAN
 
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
-#include "../Tr2MemoryCounterAL.h"
+#include "../include/Tr2SwapChainAL.h"
 #include "../include/Tr2TextureAL.h"
 
 
-class Tr2PrimaryRenderContextAL;
-class Tr2RenderContextAL;
-
-
-class Tr2SwapChainAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SWAP_CHAIN>
+namespace TrinityALImpl
 {
-public:
-	Tr2SwapChainAL()
+
+	class Tr2SwapChainAL : public Tr2DeviceResourceAL<Tr2SwapChainAL>
 	{
+	public:
+		Tr2SwapChainAL()
+		{
 
-	}
+		}
 
-	ALResult Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderContextAL &renderContext )
-	{
-		return E_NOTIMPL;
-	}
-	void Destroy()
-	{
+		ALResult Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderContextAL &renderContext )
+		{
+			return E_NOTIMPL;
+		}
+		void Destroy()
+		{
 
-	}
+		}
 
-	bool IsValid() const
-	{
-		return false;
-	}
+		bool IsValid() const
+		{
+			return false;
+		}
 
-	ALResult Present( Tr2RenderContextAL& renderContext )
-	{
-		return E_NOTIMPL;
-	}
+		ALResult Present( Tr2RenderContextAL& renderContext )
+		{
+			return E_NOTIMPL;
+		}
 
-	int GetWidth() const
-	{
-		return 0;
-	}
-	int GetHeight() const
-	{
-		return 0;
-	}
+		uint32_t GetWidth() const
+		{
+			return 0;
+		}
+		uint32_t GetHeight() const
+		{
+			return 0;
+		}
 
-	Tr2TextureAL m_backBuffer;
+		::Tr2TextureAL m_backBuffer;
 
-	bool operator==( const Tr2SwapChainAL& other ) const { return false; }
+		bool operator==( const Tr2SwapChainAL& other ) const { return false; }
 
-	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
-private:
-	Tr2SwapChainAL( const Tr2SwapChainAL& ) /* = delete */;
-	Tr2SwapChainAL& operator=( const Tr2SwapChainAL& ) /* = delete */;
-};
+		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const
+		{
+		}
+	private:
+		Tr2SwapChainAL( const Tr2SwapChainAL& ) /* = delete */;
+		Tr2SwapChainAL& operator=( const Tr2SwapChainAL& ) /* = delete */;
+	};
+}
 
 #endif

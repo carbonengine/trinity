@@ -8,24 +8,50 @@
 
 #if TRINITY_PLATFORM == TRINITY_VULKAN
 
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
+#include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2ShaderAL.h"
 
-class Tr2ShaderProgramAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SHADER_PROGRAM>
+namespace TrinityALImpl
 {
-public:
-	ALResult Create( Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
-	void Destroy();
-	bool IsValid() const;
+	class Tr2ShaderProgramAL : public Tr2DeviceResourceAL<Tr2ShaderProgramAL>
+	{
+	public:
+		Tr2ShaderProgramAL();
+		~Tr2ShaderProgramAL();
 
-	Tr2ALMemoryType GetMemoryClass() const;
-private:
-	std::vector<VkPipelineShaderStageCreateInfo> m_shaderInfo;
-	std::vector<Tr2ShaderAL> m_shaders;
-	std::vector<Tr2ShaderPipelineInputAL> m_shaderInputs;
+		ALResult Create( ::Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
+		void Destroy();
+		bool IsValid() const;
 
-	friend class Tr2RenderContextAL;
-};
+		Tr2ALMemoryType GetMemoryClass() const;
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	private:
+		std::vector<VkPipelineShaderStageCreateInfo> m_shaderInfo;
+		std::vector<::Tr2ShaderAL> m_shaders;
+		std::vector<Tr2ShaderPipelineInputAL> m_shaderInputs;
 
+		std::vector<VkDescriptorPoolSize> m_poolSizes;
+
+		VkPipelineLayout m_pipelineLayout;
+
+		VkDescriptorSetLayout m_resourceLayout;
+		VkDescriptorSetLayout m_constantLayout;
+
+		//std::vector<VkDescriptorSetLayout> m_layouts;
+		Tr2PrimaryRenderContextAL* m_owner;
+
+		struct RegisterInput
+		{
+			uint32_t binding;
+			uint32_t stage;
+			uint32_t registerIndex;
+
+			Tr2ShaderRegisterAL::RegisterType type;
+		};
+		std::vector<RegisterInput> m_registerInput;
+
+		friend class Tr2RenderContextAL;
+		friend class TrinityALImpl::Tr2ResourceSetAL;
+	};
+}
 #endif

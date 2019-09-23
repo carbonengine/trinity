@@ -33,16 +33,6 @@ TEST_F( VertexLayout, VertexLayoutIsValidAfterCreation )
 	EXPECT_TRUE( layout.IsValid() );
 }
 
-TEST_F( VertexLayout, VertexLayoutIsInvalidAfterDestruction )
-{
-	Tr2VertexLayoutAL layout;
-	Tr2VertexDefinition def;
-	InitializeSampleVertexDefinition( def );
-	ASSERT_HRESULT_SUCCEEDED( layout.Create( def, *renderContext ) );
-	layout.Destroy();
-	EXPECT_FALSE( layout.IsValid() );
-}
-
 TEST_F( VertexLayout, VertexLayoutEqualsItself )
 {
 	Tr2VertexLayoutAL layout;

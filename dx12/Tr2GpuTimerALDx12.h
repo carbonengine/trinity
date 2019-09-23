@@ -9,8 +9,7 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
 
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
+#include "../include/Tr2GpuTimerAL.h"
 
 
 class Tr2PrimaryRenderContextAL;
@@ -20,7 +19,7 @@ class Tr2RenderContextAL;
 namespace TrinityALImpl
 {
 	class Tr2GpuTimerAL :
-		public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TIMER>
+		public Tr2DeviceResourceAL<Tr2GpuTimerAL>
 	{
 	public:
 		Tr2GpuTimerAL();
@@ -37,6 +36,7 @@ namespace TrinityALImpl
 
 		bool operator==( const Tr2GpuTimerAL& other ) const;
 		Tr2ALMemoryType GetMemoryClass() const;
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		CComPtr<ID3D12QueryHeap> m_query;
 		CComPtr<ID3D12Resource> m_result;

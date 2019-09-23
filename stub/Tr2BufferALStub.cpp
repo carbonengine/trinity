@@ -65,7 +65,7 @@ namespace TrinityALImpl
 		return m_buffer.size() > 0;
 	}
 
-	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass()
+	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_MANAGED;
 	}
@@ -132,6 +132,10 @@ namespace TrinityALImpl
 			return S_OK;
 		}
 		return S_OK;
+	}
+
+	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
 	}
 }
 

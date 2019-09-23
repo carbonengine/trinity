@@ -10,6 +10,7 @@
 
 #include "Tr2RenderContextDx12.h"
 #include "Tr2BufferALDx12.h"
+#include "Tr2TextureALDx12.h"
 #include "Tr2VertexLayoutALDx12.h"
 #include "Tr2ShaderProgramALDx12.h"
 #include "Tr2PrimaryRenderContextDx12.h"
@@ -24,46 +25,27 @@ CCP_STATS_DECLARE( sceneDrawcallCount, "Trinity/AL/sceneDrawcallCount", true, CS
 
 namespace
 {
-	const D3D12_RASTERIZER_DESC defaultRasterizer =
+	enum
 	{
-		D3D12_FILL_MODE_SOLID,
-		D3D12_CULL_MODE_BACK,
-		false,
-		0,
-		0,
-		0,
-		true,
-		false,
-		false,
-		0,
-		D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF
+		/*
+		* NOTE: Cache heaps store descriptors for batches in flight, so they typically consume less total memory
+		*		but can benefit from having a larger page size to reduce the chance of having to hit the allocator
+		*		mid frame
+		*/
+
+		DESCRIPTOR_CACHE_CRVSRVUAV_PAGE_SIZE = 4096,
+		DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE = 1024,
+
+		/*
+		* NOTE: The cache will allocate additional constant buffer pages if it runs out of room but these will be freed
+		*		once they are no longer used to ensure the upload heap usage is kept to a minimum. A warning is output
+		*		when this occurs, if it happens a lot then consider increasing the default page size.
+		*/
+		DESCRIPTOR_CACHE_UPLOAD_DEFAULT_PAGE_SIZE = 4 * 1024 * 1024,
+		DESCRIPTOR_CACHE_UPLOAD_SPILL_PAGE_SIZE = 2 * 1024 * 1024,
+
 	};
 
-	const D3D12_DEPTH_STENCILOP_DESC defaultStencilOp =
-	{
-		D3D12_STENCIL_OP_KEEP,
-		D3D12_STENCIL_OP_KEEP,
-		D3D12_STENCIL_OP_KEEP,
-		D3D12_COMPARISON_FUNC_ALWAYS
-	};
-
-	const D3D12_DEPTH_STENCIL_DESC defaultDepthStencil =
-	{
-		true,
-		D3D12_DEPTH_WRITE_MASK_ALL,
-		D3D12_COMPARISON_FUNC_LESS,
-		false,
-		D3D12_DEFAULT_STENCIL_READ_MASK,
-		D3D12_DEFAULT_STENCIL_WRITE_MASK,
-		defaultStencilOp,
-		defaultStencilOp
-	};
-
-	D3D12_BLEND_DESC s_defaultBlend = {
-		false,
-		false,
-		{ false, false, D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD, D3D12_BLEND_ONE, D3D12_BLEND_ZERO, D3D12_BLEND_OP_ADD, D3D12_LOGIC_OP_NOOP, D3D12_COLOR_WRITE_ENABLE_ALL }
-	};
 
 	D3D12_PRIMITIVE_TOPOLOGY s_topologies[] = {
 		D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,
@@ -97,19 +79,15 @@ namespace
 
 }
 
+
 Tr2RenderContextAL::Tr2RenderContextAL() throw( )
-	:m_vertexLayout( &nullVL ),
-	m_shaderProgram( &nullSP ),
-	m_topologyType( D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED ),
-	m_topology( Tr2RenderContextEnum::TOP_INVALID ),
-	m_rasterizerDesc( defaultRasterizer ),
-	m_depthStencilDesc( defaultDepthStencil ),
-	m_blendDesc( s_defaultBlend ),
-	m_primitiveToVertexCount( 0, 0 ),
+	:m_primitiveToVertexCount( 0, 0 ),
 	m_ownerDevice( nullptr ),
 	m_dirtyPso( true ),
 	m_readOnlyDepth( false ),
 	m_viewport(),
+	m_dynamicVBs( 0 ),
+	m_dynamicIB( false ),
 	m_separateAlphaBlendEnabled( false ),
 	m_srgbWriteEnable( false )
 {
@@ -130,11 +108,39 @@ void Tr2RenderContextAL::Destroy() throw( )
 
 	m_ownerDevice = nullptr;
 	m_drawUPHelper.Destroy();
+
+	m_commandList = nullptr;
+	m_commandList2 = nullptr;
 }
 
 bool Tr2RenderContextAL::IsValid() const throw( )
 {
 	return m_commandList != nullptr;
+}
+
+ALResult Tr2RenderContextAL::CreateDx12( ID3D12CommandAllocator* commandAllocator, Tr2PrimaryRenderContextAL& renderContext )
+{
+	CR_RETURN_HR( renderContext.m_device->CreateCommandList( 
+		0, 
+		D3D12_COMMAND_LIST_TYPE_DIRECT, 
+		commandAllocator,
+		nullptr, 
+		IID_PPV_ARGS( &m_commandList ) ) );
+	CR_RETURN_HR( m_commandList->Close() );
+	m_commandList.QueryInterface( &m_commandList2 );
+
+	for( uint32_t bufferIdx = 0; bufferIdx < renderContext.GetBackBufferCount(); ++bufferIdx )
+	{
+		m_descriptorCache.push_back( std::make_shared<DescriptorStateCache>( 
+			renderContext.m_device, 
+			&renderContext,
+			DESCRIPTOR_CACHE_CRVSRVUAV_PAGE_SIZE, 
+			DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE, 
+			DESCRIPTOR_CACHE_UPLOAD_DEFAULT_PAGE_SIZE, 
+			DESCRIPTOR_CACHE_UPLOAD_SPILL_PAGE_SIZE ) );
+	}
+	m_ownerDevice = &renderContext;
+	return S_OK;
 }
 
 Tr2PrimaryRenderContextAL& Tr2RenderContextAL::GetPrimaryRenderContext()
@@ -160,9 +166,47 @@ ALResult Tr2RenderContextAL::EndScene()
 
 ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float depth, uint32_t stencil, uint32_t slot ) throw( )
 {
+	bool rtClear = false;
+	bool dsClear = false;
+
 	if( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_TARGET )
 	{
 		if( m_boundRenderTargets[slot].IsValid() )
+		{
+			rtClear = true;
+		}
+		else
+		{
+			return E_INVALIDCALL;
+		}
+	}
+	if( ( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ) != 0 || ( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_STENCIL ) != 0 )
+	{
+		if( m_boundDepthStencil.IsValid() )
+		{
+			dsClear = true;
+		}
+		else
+		{
+			return E_INVALIDCALL;
+		}
+	}
+
+	if( rtClear || dsClear )
+	{
+		ID3D12Resource* resources[2];
+		size_t count = 0;
+		if( rtClear )
+		{
+			resources[count++] = m_boundRenderTargets[slot].m_texture->GetResourceDx12();
+		}
+		if( dsClear )
+		{
+			resources[count++] = m_boundDepthStencil.m_texture->GetResourceDx12();
+		}
+		FlushBarriersDx12( count, resources );
+
+		if( rtClear )
 		{
 			float f = 1.0f / 255.0f;
 			float colorComponents[] = {
@@ -175,14 +219,7 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 			const std::shared_ptr<RenderTargetViewDx12>& rtv = m_boundRenderTargets[slot].m_texture->GetRtvDescriptorHandleDx12();
 			m_commandList->ClearRenderTargetView( rtv->GetHandleCPU(), colorComponents, 0, nullptr );
 		}
-		else
-		{
-			return E_INVALIDCALL;
-		}
-	}
-	if( ( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ) != 0 || ( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_STENCIL ) != 0 )
-	{
-		if( m_boundDepthStencil.IsValid() )
+		if( dsClear )
 		{
 			D3D12_CLEAR_FLAGS flags = D3D12_CLEAR_FLAGS();
 			if( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER )
@@ -194,10 +231,6 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 				flags |= D3D12_CLEAR_FLAG_STENCIL;
 			}
 			m_commandList->ClearDepthStencilView( m_boundDepthStencil.m_texture->m_dsv->GetHandleCPU(), flags, depth, stencil, 0, nullptr );
-		}
-		else
-		{
-			return E_INVALIDCALL;
 		}
 	}
 
@@ -214,9 +247,33 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 	{
 		return E_INVALIDARG;
 	}
+
 	m_vertexBuffers[index].buffer = buffer;
 	m_vertexBuffers[index].offset = offset;
 	m_vertexBuffers[index].stride = stride;
+
+	if( !buffer.IsValid() || !HasFlag( buffer.GetDesc().cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+	{
+		D3D12_VERTEX_BUFFER_VIEW vb;
+		if( buffer.IsValid() )
+		{
+			vb.BufferLocation = buffer.m_buffer->GetGpuView() + offset;
+			vb.SizeInBytes = buffer.GetSize() - offset;
+			vb.StrideInBytes = stride;
+		}
+		else
+		{
+			vb.BufferLocation = 0;
+			vb.SizeInBytes = 0;
+			vb.StrideInBytes = 0;
+		}
+		m_commandList->IASetVertexBuffers( index, 1, &vb );
+		m_dynamicVBs = m_dynamicVBs & ~( 1 << index );
+	}
+	else
+	{
+		m_dynamicVBs = m_dynamicVBs | ( 1 << index );
+	}
 
 	return S_OK;
 }
@@ -225,16 +282,24 @@ ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer ) throw( )
 {
 	m_indexBuffer = buffer;
 
-	//D3D12_INDEX_BUFFER_VIEW ib = { buffer.m_buffer->GetGpuView(), buffer.GetSize(), buffer.GetDesc().stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT };
-	//m_commandList->IASetIndexBuffer( &ib );
+	if( !buffer.IsValid() || !HasFlag( buffer.GetDesc().cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+	{
+		D3D12_INDEX_BUFFER_VIEW ib = { buffer.m_buffer->GetGpuView(), buffer.GetSize(), buffer.GetDesc().stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT };
+		m_commandList->IASetIndexBuffer( &ib );
+		m_dynamicIB = false;
+	}
+	else
+	{
+		m_dynamicIB = true;
+	}
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout ) throw( )
 {
-	if( m_vertexLayout != &layout )
+	if( !( m_psoDescription.m_vertexLayout == layout ) )
 	{
-		m_vertexLayout = &layout;
+		m_psoDescription.m_vertexLayout = layout;
 		m_dirtyPso = true;
 	}
 	return S_OK;
@@ -242,9 +307,9 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout ) 
 
 ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shader ) throw( )
 {
-	if( m_shaderProgram != &shader )
+	if( !( m_psoDescription.m_shaderProgram == shader ) )
 	{
-		m_shaderProgram = &shader;
+		m_psoDescription.m_shaderProgram = shader;
 		m_dirtyPso = true;
 	}
 	return S_OK;
@@ -256,9 +321,9 @@ ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topolog
 	m_commandList->IASetPrimitiveTopology( dxTopology );
 	m_primitiveToVertexCount = s_primitiveToVertexCount[topology];
 	auto topologyType = s_topologyTypes[topology];
-	if( topologyType != m_topologyType )
+	if( topologyType != m_psoDescription.m_topologyType )
 	{
-		m_topologyType = s_topologyTypes[topology];
+		m_psoDescription.m_topologyType = s_topologyTypes[topology];
 		m_dirtyPso = true;
 	}
 	m_topology = topology;
@@ -298,36 +363,42 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 
 	switch( state )
 	{
-	HANDLE_STATE( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, m_blendDesc.RenderTarget[0].BlendEnable );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_SRCBLEND, m_blendDesc.RenderTarget[0].SrcBlend );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_DESTBLEND, m_blendDesc.RenderTarget[0].DestBlend );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_BLENDOP, m_blendDesc.RenderTarget[0].BlendOp );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_SRCBLENDALPHA, m_blendDesc.RenderTarget[0].SrcBlendAlpha );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_DESTBLENDALPHA, m_blendDesc.RenderTarget[0].DestBlendAlpha );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_BLENDOPALPHA, m_blendDesc.RenderTarget[0].BlendOpAlpha );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_COLORWRITEENABLE, m_blendDesc.RenderTarget[0].RenderTargetWriteMask );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, m_psoDescription.m_blendDesc.RenderTarget[0].BlendEnable );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_SRCBLEND, m_psoDescription.m_blendDesc.RenderTarget[0].SrcBlend );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_DESTBLEND, m_psoDescription.m_blendDesc.RenderTarget[0].DestBlend );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_BLENDOP, m_psoDescription.m_blendDesc.RenderTarget[0].BlendOp );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_SRCBLENDALPHA, m_psoDescription.m_blendDesc.RenderTarget[0].SrcBlendAlpha );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_DESTBLENDALPHA, m_psoDescription.m_blendDesc.RenderTarget[0].DestBlendAlpha );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_BLENDOPALPHA, m_psoDescription.m_blendDesc.RenderTarget[0].BlendOpAlpha );
+	case Tr2RenderContextEnum::RS_COLORWRITEENABLE:
+		if( m_psoDescription.m_blendDesc.RenderTarget[0].RenderTargetWriteMask != ( value & 0xf ) )
+		{
+			m_psoDescription.m_blendDesc.RenderTarget[0].RenderTargetWriteMask = value & 0xf;
+			m_dirtyPso = true;
+		}
+		break;
 
-	HANDLE_STATE( Tr2RenderContextEnum::RS_CULLMODE, m_rasterizerDesc.CullMode );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_FILLMODE, m_rasterizerDesc.FillMode );
-	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_DEPTHBIAS, m_rasterizerDesc.DepthBias );
-	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_ZBIAS, m_rasterizerDesc.DepthBias );
-	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_SLOPESCALEDEPTHBIAS, m_rasterizerDesc.SlopeScaledDepthBias );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_CULLMODE, m_psoDescription.m_rasterizerDesc.CullMode );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_FILLMODE, m_psoDescription.m_rasterizerDesc.FillMode );
+	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_DEPTHBIAS, m_psoDescription.m_rasterizerDesc.DepthBias );
+	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_ZBIAS, m_psoDescription.m_rasterizerDesc.DepthBias );
+	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_SLOPESCALEDEPTHBIAS, m_psoDescription.m_rasterizerDesc.SlopeScaledDepthBias );
 
-	HANDLE_STATE( Tr2RenderContextEnum::RS_ZENABLE, m_depthStencilDesc.DepthEnable );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_ZFUNC, m_depthStencilDesc.DepthFunc );
-	HANDLE_STATE( Tr2RenderContextEnum::RS_STENCILENABLE, m_depthStencilDesc.StencilEnable );
-	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILMASK, m_depthStencilDesc.StencilReadMask, m_depthStencilDesc.StencilWriteMask );
-	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILFAIL, m_depthStencilDesc.FrontFace.StencilFailOp, m_depthStencilDesc.BackFace.StencilFailOp );
-	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILZFAIL, m_depthStencilDesc.FrontFace.StencilDepthFailOp, m_depthStencilDesc.BackFace.StencilDepthFailOp );
-	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILPASS, m_depthStencilDesc.FrontFace.StencilPassOp, m_depthStencilDesc.BackFace.StencilPassOp );
-	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILFUNC, m_depthStencilDesc.FrontFace.StencilFunc, m_depthStencilDesc.BackFace.StencilFunc );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_ZENABLE, m_psoDescription.m_depthStencilDesc.DepthEnable );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_ZFUNC, m_psoDescription.m_depthStencilDesc.DepthFunc );
+	HANDLE_STATE( Tr2RenderContextEnum::RS_STENCILENABLE, m_psoDescription.m_depthStencilDesc.StencilEnable );
+	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILMASK, m_psoDescription.m_depthStencilDesc.StencilReadMask, m_psoDescription.m_depthStencilDesc.StencilWriteMask );
+	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILFAIL, m_psoDescription.m_depthStencilDesc.FrontFace.StencilFailOp, m_psoDescription.m_depthStencilDesc.BackFace.StencilFailOp );
+	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILZFAIL, m_psoDescription.m_depthStencilDesc.FrontFace.StencilDepthFailOp, m_psoDescription.m_depthStencilDesc.BackFace.StencilDepthFailOp );
+	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILPASS, m_psoDescription.m_depthStencilDesc.FrontFace.StencilPassOp, m_psoDescription.m_depthStencilDesc.BackFace.StencilPassOp );
+	HANDLE_STATE_DBL( Tr2RenderContextEnum::RS_STENCILFUNC, m_psoDescription.m_depthStencilDesc.FrontFace.StencilFunc, m_psoDescription.m_depthStencilDesc.BackFace.StencilFunc );
 
 	case Tr2RenderContextEnum::RS_ZWRITEENABLE:
 	{
 		auto mask = ( value != 0 && !m_readOnlyDepth ) ? D3D12_DEPTH_WRITE_MASK_ALL : D3D12_DEPTH_WRITE_MASK_ZERO;
-		if( m_depthStencilDesc.DepthWriteMask != mask )
+		if( m_psoDescription.m_depthStencilDesc.DepthWriteMask != mask )
 		{
-			m_depthStencilDesc.DepthWriteMask = mask;
+			m_psoDescription.m_depthStencilDesc.DepthWriteMask = mask;
 			m_dirtyPso = true;
 		}
 		break;
@@ -362,7 +433,7 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 				{
 					if( m_boundRenderTargets[i].IsValid() )
 					{
-						m_renderTargetFormats[i] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( m_boundRenderTargets[i].GetFormat() ) : m_boundRenderTargets[i].GetFormat();
+						m_psoDescription.m_renderTargetFormats[i] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( m_boundRenderTargets[i].GetFormat() ) : m_boundRenderTargets[i].GetFormat();
 					}
 				}
 				m_dirtyPso = true;
@@ -400,34 +471,30 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 {
 	if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_outTransitions.empty() )
 	{
-		m_commandList->ResourceBarrier( UINT( m_resourceSet.m_resourceSet->m_outTransitions.size() ), m_resourceSet.m_resourceSet->m_outTransitions.data() );
+		ResourceBarrierDx12( m_resourceSet.m_resourceSet->m_outTransitions.size(), m_resourceSet.m_resourceSet->m_outTransitions.data() );
 	}
 	m_resourceSet = resourceSet;
 
 	if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_inTransitions.empty() )
 	{
-		m_commandList->ResourceBarrier( UINT( m_resourceSet.m_resourceSet->m_inTransitions.size() ), m_resourceSet.m_resourceSet->m_inTransitions.data() );
+		ResourceBarrierDx12( m_resourceSet.m_resourceSet->m_inTransitions.size(), m_resourceSet.m_resourceSet->m_inTransitions.data() );
 	}
 	resourceSet.m_resourceSet->UploadInitialCounts( *this );
 
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	m_descriptorCache[bufferIndex]->SetSamplers(0, Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE, resourceSet.m_resourceSet->m_sampler);
+	m_descriptorCache[bufferIndex]->SetSamplers( 0, resourceSet.m_resourceSet->m_samplerCount, resourceSet.m_resourceSet->m_sampler );
 
 	// Because SRVs and UAVs are stacked in the resource slots, this will filter them out into the correct heap setup calls
 	// It's not great, but if the system is changed in the future to separate SRVs and UAVs then this is an easy change
-	for (uint32_t idx = 0; idx < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++idx)
+	for (uint32_t idx = 0; idx < resourceSet.m_resourceSet->m_resourceCount; ++idx)
 	{
-		if(resourceSet.m_resourceSet->m_srvUav[idx] == nullptr)
-			continue;
-
 		if (resourceSet.m_resourceSet->m_srv[idx] != nullptr)
 		{
 			CCP_ASSERT(resourceSet.m_resourceSet->m_uav[idx] == nullptr);
 
 			m_descriptorCache[bufferIndex]->SetShaderResources(idx, 1, &resourceSet.m_resourceSet->m_srv[idx]);
 		}
-
-		if (resourceSet.m_resourceSet->m_uav[idx] != nullptr)
+		else if (resourceSet.m_resourceSet->m_uav[idx] != nullptr)
 		{
 			CCP_ASSERT(resourceSet.m_resourceSet->m_srv[idx] == nullptr);
 
@@ -441,13 +508,14 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer, Tr2RenderContextEnum::ShaderType constantType, uint32_t registerIndex, uint32_t ) throw( )
 {
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	m_descriptorCache[bufferIndex]->SetConstantBuffers(constantType, registerIndex, buffer);
+	m_descriptorCache[bufferIndex]->SetConstantBuffers(constantType, registerIndex, *buffer.m_buffer);
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::DrawIndexedPrimitive( uint32_t numVertices, uint32_t startIndex, uint32_t primitiveCount, uint32_t minimumIndex ) throw( )
 {
-	SetAllState();
+	CR_RETURN_HR( SetAllState() );
+	FlushGraphicsBarriersDx12();
 
 	auto vc = m_primitiveToVertexCount.first * primitiveCount + m_primitiveToVertexCount.second;
 
@@ -461,7 +529,8 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive( uint32_t numVertices, uint32_
 
 ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount ) throw( )
 {
-	SetAllState();
+	CR_RETURN_HR( SetAllState() );
+	FlushGraphicsBarriersDx12();
 
 	auto vc = m_primitiveToVertexCount.first * primitiveCount + m_primitiveToVertexCount.second;
 
@@ -480,7 +549,8 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	uint32_t primitiveCount,
 	uint32_t numInstances ) throw( )
 {
-	SetAllState();
+	CR_RETURN_HR( SetAllState() );
+	FlushGraphicsBarriersDx12();
 
 	auto vc = m_primitiveToVertexCount.first * primitiveCount + m_primitiveToVertexCount.second;
 
@@ -495,20 +565,21 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 
 ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( )
 {
-	SetAllState();
+	auto buffer = params.m_buffer->GetGpuResource();
+	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	{
+		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) );
+	}
+	
+	CR_RETURN_HR( SetAllState() );
+	FlushGraphicsBarriersDx12( buffer );
 
 	CCP_STATS_INC( sceneDrawcallCount );
 
+	m_commandList->ExecuteIndirect( m_ownerDevice->m_drawIndexedInstancedIndirect, 1, buffer, offset, nullptr, 0 );
 	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
-		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT );
-		m_commandList->ResourceBarrier( 1, &transition );
-	}
-	m_commandList->ExecuteIndirect( m_ownerDevice->m_drawIndexedInstancedIndirect, 1, params.m_buffer->GetGpuResource(), offset, nullptr, 0 );
-	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
-	{
-		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState );
-		m_commandList->ResourceBarrier( 1, &transition );
+		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState ) );
 	}
 
 	return S_OK;
@@ -516,18 +587,18 @@ ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, 
 
 ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( )
 {
-	SetAllState();
-
+	auto buffer = params.m_buffer->GetGpuResource();
 	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
-		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT );
-		m_commandList->ResourceBarrier( 1, &transition );
+		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) );
 	}
-	m_commandList->ExecuteIndirect( m_ownerDevice->m_drawInstancedIndirect, 1, params.m_buffer->GetGpuResource(), offset, nullptr, 0 );
+	CR_RETURN_HR( SetAllState() );
+	FlushGraphicsBarriersDx12( buffer );
+
+	m_commandList->ExecuteIndirect( m_ownerDevice->m_drawInstancedIndirect, 1, buffer, offset, nullptr, 0 );
 	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
-		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState );
-		m_commandList->ResourceBarrier( 1, &transition );
+		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState ) );
 	}
 
 	return S_OK;
@@ -535,7 +606,8 @@ ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_
 
 ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw( )
 {
-	SetAllState();
+	CR_RETURN_HR( SetAllState() );
+	FlushComputeBarriersDx12();
 
 	m_commandList->Dispatch( groupDimX, groupDimY, groupDimZ );
 	return S_OK;
@@ -543,18 +615,18 @@ ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned grou
 
 ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& params, unsigned offset ) throw( )
 {
-	SetAllState();
-
+	auto buffer = params.m_buffer->GetGpuResource();
 	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
-		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT );
-		m_commandList->ResourceBarrier( 1, &transition );
+		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) );
 	}
-	m_commandList->ExecuteIndirect( m_ownerDevice->m_dispatchIndirect, 1, params.m_buffer->GetGpuResource(), offset, nullptr, 0 );
+	CR_RETURN_HR( SetAllState() );
+	FlushComputeBarriersDx12( buffer );
+
+	m_commandList->ExecuteIndirect( m_ownerDevice->m_dispatchIndirect, 1, buffer, offset, nullptr, 0 );
 	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
-		auto transition = TrinityALImpl::Transition( params.m_buffer->GetGpuResource(), D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState );
-		m_commandList->ResourceBarrier( 1, &transition );
+		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState ) );
 	}
 
 	return S_OK;
@@ -574,11 +646,12 @@ ALResult Tr2RenderContextAL::CopyBufferCounter( Tr2BufferAL& dest, uint32_t dest
 	{
 		barriers[count++] = TrinityALImpl::Transition( dest.m_buffer->GetGpuResource(), dest.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST );
 	}
-	m_commandList->ResourceBarrier( count, barriers );
+	ResourceBarrierDx12( count, barriers );
+	FlushBarriersDx12( dest.m_buffer->GetGpuResource(), src.m_buffer->m_counter );
 	m_commandList->CopyBufferRegion( dest.m_buffer->GetGpuResource(), destOffset, src.m_buffer->m_counter, 0, 4 );
 	std::swap( barriers[0].Transition.StateAfter, barriers[0].Transition.StateBefore );
 	std::swap( barriers[1].Transition.StateAfter, barriers[1].Transition.StateBefore );
-	m_commandList->ResourceBarrier( count, barriers );
+	ResourceBarrierDx12( count, barriers );
 
 	return S_OK;
 }
@@ -589,7 +662,7 @@ ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 {
 	if( !m_separateAlphaBlendEnabled )
 	{
-		auto& desc = m_blendDesc.RenderTarget[0];
+		auto& desc = m_psoDescription.m_blendDesc.RenderTarget[0];
 		static D3D12_BLEND alphaBlendRemap[] = {
 			D3D12_BLEND_ZERO,
 			D3D12_BLEND_ZERO,
@@ -616,118 +689,75 @@ ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 		desc.DestBlendAlpha = alphaBlendRemap[desc.DestBlend];
 	}
 
-	auto hash = CcpHashFNV1( &m_vertexLayout, reinterpret_cast<uint8_t*>( &m_sampleDesc ) + sizeof( m_sampleDesc ) - reinterpret_cast<uint8_t*>( &m_vertexLayout ) );
+	m_psoDescription.UpdateHash();
 
-	auto found = m_ownerDevice->m_pipelineStates.find( hash );
+	auto found = m_ownerDevice->m_pipelineStates.find( m_psoDescription );
 	if( found != m_ownerDevice->m_pipelineStates.end() )
 	{
-		return found->second.pipelineState;
+		return found->second;
 	}
 
-	Tr2PrimaryRenderContextAL::Pso pso;
-	pso.shaderProgram = m_shaderProgram;
-	pso.vertexLayout = m_vertexLayout;
+	CComPtr<ID3D12PipelineState> pipelineState;
+	CR( m_psoDescription.CreatePipelineState( m_ownerDevice->m_device, pipelineState ) );
 
-	if( m_shaderProgram && m_shaderProgram->IsComputeProgramDx12() )
-	{
-		D3D12_COMPUTE_PIPELINE_STATE_DESC desc;
-		memset( &desc, 0, sizeof( desc ) );
-		desc.pRootSignature = m_shaderProgram->m_rootSignature;
-		desc.CS = m_shaderProgram->m_CS;
+	m_ownerDevice->m_pipelineStates[m_psoDescription] = pipelineState;
 
-		CComPtr<ID3D12PipelineState> pipelineState;
-		CR( m_ownerDevice->m_device->CreateComputePipelineState( &desc, IID_PPV_ARGS( &pipelineState ) ) );
-		pso.pipelineState = pipelineState;
-	}
-	else
-	{
-		D3D12_GRAPHICS_PIPELINE_STATE_DESC desc;
-		memset( &desc, 0, sizeof( desc ) );
-
-		if( m_shaderProgram && m_shaderProgram->IsValid() )
-		{
-			desc.pRootSignature = m_shaderProgram->m_rootSignature;
-		}
-
-		if( m_shaderProgram && m_shaderProgram->IsValid() )
-		{
-			desc.VS = m_shaderProgram->m_VS;
-			desc.PS = m_shaderProgram->m_PS;
-			desc.DS = m_shaderProgram->m_DS;
-			desc.HS = m_shaderProgram->m_HS;
-			desc.GS = m_shaderProgram->m_GS;
-		}
-		desc.RasterizerState = m_rasterizerDesc;
-		desc.DepthStencilState = m_depthStencilDesc;
-		desc.BlendState = m_blendDesc;
-		desc.SampleMask = 0xff;
-		desc.SampleDesc.Count = 1;
-
-		std::vector<D3D12_INPUT_ELEMENT_DESC> layout;
-		if( m_vertexLayout && !m_vertexLayout->m_elements.empty() )
-		{
-			m_vertexLayout->PopulateInputLayout( layout, m_shaderProgram->m_iaInputs );
-			if( !layout.empty() )
-			{
-				desc.InputLayout.NumElements = UINT( layout.size() );
-				desc.InputLayout.pInputElementDescs = &layout[0];
-			}
-		}
-		desc.PrimitiveTopologyType = m_topologyType;
-
-
-		desc.NumRenderTargets = m_renderTargetCount;
-		memcpy( desc.RTVFormats, m_renderTargetFormats, sizeof( desc.RTVFormats ) );
-		desc.DSVFormat = DXGI_FORMAT( m_depthStencilFormat );
-		desc.SampleDesc.Count = m_sampleDesc.samples;
-		desc.SampleDesc.Quality = m_sampleDesc.quality;
-
-		CComPtr<ID3D12PipelineState> pipelineState;
-		CR( m_ownerDevice->m_device->CreateGraphicsPipelineState( &desc, IID_PPV_ARGS( &pipelineState ) ) );
-		pso.pipelineState = pipelineState;
-	}
-
-	m_ownerDevice->m_pipelineStates[hash] = pso;
-
-	return pso.pipelineState;
+	return pipelineState;
 }
 
-void Tr2RenderContextAL::SetAllState()
+ALResult Tr2RenderContextAL::SetAllState()
 {
-	D3D12_VERTEX_BUFFER_VIEW vb[4];
-	for( uint32_t i = 0; i < 4; ++i )
+	if( m_dynamicVBs )
 	{
-		if( m_vertexBuffers[i].buffer.IsValid() )
+		D3D12_VERTEX_BUFFER_VIEW vb[4];
+		for( uint32_t i = 0; i < 4; ++i )
 		{
-			vb[i].BufferLocation = m_vertexBuffers[i].buffer.m_buffer->GetGpuView() + m_vertexBuffers[i].offset;
-			vb[i].SizeInBytes = m_vertexBuffers[i].buffer.GetSize() - m_vertexBuffers[i].offset;
-			vb[i].StrideInBytes = m_vertexBuffers[i].stride;
+			if( m_vertexBuffers[i].buffer.IsValid() )
+			{
+				vb[i].BufferLocation = m_vertexBuffers[i].buffer.m_buffer->GetGpuView() + m_vertexBuffers[i].offset;
+				vb[i].SizeInBytes = m_vertexBuffers[i].buffer.GetSize() - m_vertexBuffers[i].offset;
+				vb[i].StrideInBytes = m_vertexBuffers[i].stride;
+			}
+			else
+			{
+				vb[i].BufferLocation = 0;
+				vb[i].SizeInBytes = 0;
+				vb[i].StrideInBytes = 0;
+			}
 		}
-		else
-		{
-			vb[i].BufferLocation = 0;
-			vb[i].SizeInBytes = 0;
-			vb[i].StrideInBytes = 0;
-		}
+		m_commandList->IASetVertexBuffers( 0, 4, vb );
 	}
-	m_commandList->IASetVertexBuffers( 0, 4, vb );
-	D3D12_INDEX_BUFFER_VIEW ib = { m_indexBuffer.m_buffer->GetGpuView(), m_indexBuffer.GetSize(), m_indexBuffer.GetDesc().stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT };
-	m_commandList->IASetIndexBuffer( &ib );
-
+	
+	if( m_dynamicIB )
+	{
+		D3D12_INDEX_BUFFER_VIEW ib = { 0, 0, DXGI_FORMAT_UNKNOWN };
+		if( m_indexBuffer.m_buffer->IsValid() )
+		{
+			ib.BufferLocation = m_indexBuffer.m_buffer->GetGpuView();
+			ib.SizeInBytes = m_indexBuffer.GetSize();
+			ib.Format = m_indexBuffer.GetDesc().stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT;
+		}
+		m_commandList->IASetIndexBuffer( &ib );
+	}
 
 	if( m_dirtyPso )
 	{
 		auto pso = GetPipelineState();
-		m_commandList->SetPipelineState( pso );
-		if( m_shaderProgram )
+		if( !pso )
 		{
-			if( m_shaderProgram->IsComputeProgramDx12() )
+			return E_FAIL;
+		}
+
+		m_commandList->SetPipelineState( pso );
+		if( m_psoDescription.m_shaderProgram.IsValid() )
+		{
+			if( m_psoDescription.m_shaderProgram.m_program->IsComputeProgramDx12() )
 			{
-				m_commandList->SetComputeRootSignature( m_shaderProgram->m_rootSignature );
+				m_commandList->SetComputeRootSignature( m_psoDescription.m_shaderProgram.m_program->m_rootSignature );
 			}
 			else
 			{
-				m_commandList->SetGraphicsRootSignature( m_shaderProgram->m_rootSignature );
+				m_commandList->SetGraphicsRootSignature( m_psoDescription.m_shaderProgram.m_program->m_rootSignature );
 			}
 		}
 		else
@@ -738,12 +768,88 @@ void Tr2RenderContextAL::SetAllState()
 		m_dirtyPso = false;
 	}
 
-	if( m_shaderProgram )
+	if( m_psoDescription.m_shaderProgram.IsValid() )
 	{
 		uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-		m_descriptorCache[bufferIndex]->Commit(GetPrimaryRenderContextPointer(), m_commandList, m_shaderProgram);
+		m_descriptorCache[bufferIndex]->Commit(m_commandList, m_psoDescription.m_shaderProgram.m_program.get() );
 	}
 
+	return S_OK;
+}
+
+void Tr2RenderContextAL::FlushGraphicsBarriersDx12( ID3D12Resource* resource )
+{
+	if( m_barriers.empty() )
+	{
+		return;
+	}
+	size_t count = 0;
+	// resource + m_boundRenderTargets + m_boundDepthStencil + m_vertexBuffers + m_indexBuffer + m_resourceSet
+	ID3D12Resource* resources[1 + RENDER_TARGET_COUNT + 1 + 4 + 1 + Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE]; 
+	
+	if( resource )
+	{
+		resources[count++] = resource;
+	}
+	for( auto rt = std::begin( m_boundRenderTargets ); rt != std::end( m_boundRenderTargets ); ++rt )
+	{
+		if( rt->IsValid() )
+		{
+			resources[count++] = rt->m_texture->GetResourceDx12();
+		}
+	}
+	if( m_boundDepthStencil.IsValid() )
+	{
+		resources[count++] = m_boundDepthStencil.m_texture->GetResourceDx12();
+	}
+	for( uint32_t i = 0; i < 4; ++i )
+	{
+		if( m_vertexBuffers[i].buffer.IsValid() )
+		{
+			resources[count++] = m_vertexBuffers[i].buffer.m_buffer->m_buffer.GetResource();
+		}
+	}
+	if( m_indexBuffer.IsValid() )
+	{
+		resources[count++] = m_indexBuffer.m_buffer->m_buffer.GetResource();
+	}
+
+	if( m_resourceSet.IsValid() )
+	{
+		std::copy( begin( m_resourceSet.m_resourceSet->m_usedResources ), end( m_resourceSet.m_resourceSet->m_usedResources ), resources + count );
+		count += m_resourceSet.m_resourceSet->m_usedResources.size();
+	}
+
+	FlushBarriersDx12( count, resources );
+}
+
+void Tr2RenderContextAL::FlushComputeBarriersDx12( ID3D12Resource* resource )
+{
+	if( m_barriers.empty() )
+	{
+		return;
+	}
+	if( !resource )
+	{
+		if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_usedResources.empty() )
+		{
+			FlushBarriersDx12( m_resourceSet.m_resourceSet->m_usedResources.size(), m_resourceSet.m_resourceSet->m_usedResources.data() );
+		}
+	}
+	else
+	{
+		size_t count = 0;
+		ID3D12Resource* resources[1 + Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
+		resources[count++] = resource;
+
+		if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_usedResources.empty() )
+		{
+			std::copy( begin( m_resourceSet.m_resourceSet->m_usedResources ), end( m_resourceSet.m_resourceSet->m_usedResources ), resources + count );
+			count += m_resourceSet.m_resourceSet->m_usedResources.size();
+		}
+
+		FlushBarriersDx12( count, resources );
+	}
 }
 
 ALResult Tr2RenderContextAL::PushRenderTarget( uint32_t slot ) throw()
@@ -794,7 +900,7 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 	}
 	if( barrierCount )
 	{
-		m_commandList->ResourceBarrier( barrierCount, barriers );
+		ResourceBarrierDx12( barrierCount, barriers );
 	}
 	m_boundRenderTargets[slot] = renderTarget;
 
@@ -815,13 +921,13 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 			D3D12_RECT rect = { 0, 0, m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() };
 			m_commandList->RSSetScissorRects( 1, &rect );
 		}
-		m_renderTargetCount = count;
+		m_psoDescription.m_renderTargetCount = count;
 	}
 
-	m_renderTargetFormats[slot] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( renderTarget.GetFormat() ) : renderTarget.GetFormat();
+	m_psoDescription.m_renderTargetFormats[slot] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( renderTarget.GetFormat() ) : renderTarget.GetFormat();
 	if( slot == 0 )
 	{
-		m_sampleDesc = renderTarget.GetMsaaDesc();
+		m_psoDescription.m_sampleDesc = renderTarget.GetMsaaDesc();
 	}
 
 	m_dirtyPso = true;
@@ -877,7 +983,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 	}
 	if( barrierCount )
 	{
-		m_commandList->ResourceBarrier( barrierCount, barriers );
+		ResourceBarrierDx12( barrierCount, barriers );
 	}
 
 	m_boundDepthStencil = depthStencil;
@@ -892,8 +998,15 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 			dsHandle = m_boundDepthStencil.m_texture->m_dsv->GetHandleCPU();
 		}
 		m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
+
+		if( m_boundRenderTargets[0].IsValid() )
+		{
+			SetViewport( Tr2Viewport( m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() ) );
+			D3D12_RECT rect = { 0, 0, m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() };
+			m_commandList->RSSetScissorRects( 1, &rect );
+		}
 	}
-	m_depthStencilFormat = depthStencil.GetFormat();
+	m_psoDescription.m_depthStencilFormat = depthStencil.GetFormat();
 
 	return S_OK;
 }
@@ -911,8 +1024,7 @@ void Tr2RenderContextAL::SetReadOnlyDepth( bool enable ) throw( )
 	}
 	D3D12_RESOURCE_STATES fromState = m_readOnlyDepth ? D3D12_RESOURCE_STATE_DEPTH_WRITE : D3D12_RESOURCE_STATE_DEPTH_READ;
 	D3D12_RESOURCE_STATES toState = m_readOnlyDepth ? D3D12_RESOURCE_STATE_DEPTH_READ : D3D12_RESOURCE_STATE_DEPTH_WRITE;
-	auto barrier = TrinityALImpl::Transition( m_boundDepthStencil.m_texture->GetResourceDx12(), fromState, toState );
-	m_commandList->ResourceBarrier( 1, &barrier );
+	ResourceBarrierDx12( TrinityALImpl::Transition( m_boundDepthStencil.m_texture->GetResourceDx12(), fromState, toState ) );
 
 	if( m_readOnlyDepth )
 	{
@@ -990,9 +1102,9 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
-		auto barrier = TrinityALImpl::Transition( obj->GetGpuResource(), obj->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
-		m_commandList->ResourceBarrier( 1, &barrier );
+		ResourceBarrierDx12( TrinityALImpl::Transition( obj->GetGpuResource(), obj->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS ) );
 	}
+	FlushBarriersDx12( obj->GetGpuResource() );
 
 	m_commandList->ClearUnorderedAccessViewFloat(
 		obj->m_clearUav->GetHandleGPU(),
@@ -1004,8 +1116,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
-		auto barrier = TrinityALImpl::Transition( obj->GetGpuResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState );
-		m_commandList->ResourceBarrier( 1, &barrier );
+		ResourceBarrierDx12( TrinityALImpl::Transition( obj->GetGpuResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState ) );
 	}
 
 	return S_OK;
@@ -1022,9 +1133,9 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t value
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
-		auto barrier = TrinityALImpl::Transition( obj->GetGpuResource(), obj->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
-		m_commandList->ResourceBarrier( 1, &barrier );
+		ResourceBarrierDx12( TrinityALImpl::Transition( obj->GetGpuResource(), obj->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS ) );
 	}
+	FlushBarriersDx12( obj->GetGpuResource() );
 
 	m_commandList->ClearUnorderedAccessViewUint(
 		obj->m_clearUav->GetHandleGPU(),
@@ -1036,8 +1147,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t value
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
-		auto barrier = TrinityALImpl::Transition( obj->GetGpuResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState );
-		m_commandList->ResourceBarrier( 1, &barrier );
+		ResourceBarrierDx12( TrinityALImpl::Transition( obj->GetGpuResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState ) );
 	}
 
 	return S_OK;
@@ -1057,9 +1167,9 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
-		auto barrier = TrinityALImpl::Transition( resource, obj->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
-		m_commandList->ResourceBarrier( 1, &barrier );
+		ResourceBarrierDx12( TrinityALImpl::Transition( resource, obj->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS ) );
 	}
+	FlushBarriersDx12( resource );
 
 	m_commandList->ClearUnorderedAccessViewFloat(
 		gpuDesc, 
@@ -1071,8 +1181,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
-		auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState );
-		m_commandList->ResourceBarrier( 1, &barrier );
+		ResourceBarrierDx12( TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState ) );
 	}
 
 	return S_OK;
@@ -1092,9 +1201,9 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
-		auto barrier = TrinityALImpl::Transition( resource, obj->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
-		m_commandList->ResourceBarrier( 1, &barrier );
+		ResourceBarrierDx12( TrinityALImpl::Transition( resource, obj->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS ) );
 	}
+	FlushBarriersDx12( resource );
 
 	m_commandList->ClearUnorderedAccessViewUint(
 		gpuDesc,
@@ -1106,8 +1215,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
-		auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState );
-		m_commandList->ResourceBarrier( 1, &barrier );
+		ResourceBarrierDx12( TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState ) );
 	}
 
 	return S_OK;
@@ -1151,14 +1259,15 @@ ALResult Tr2RenderContextAL::CopySubBuffer(
 	}
 	if( count )
 	{
-		m_commandList->ResourceBarrier( count, barriers );
+		ResourceBarrierDx12( count, barriers );
 	}
+	FlushBarriersDx12( dest.m_buffer->GetGpuResource(), src.m_buffer->GetGpuResource() );
 	m_commandList->CopyBufferRegion( dest.m_buffer->GetGpuResource(), destOffset, src.m_buffer->GetGpuResource(), offset, length );
 	if( count )
 	{
 		std::swap( barriers[0].Transition.StateAfter, barriers[0].Transition.StateBefore );
 		std::swap( barriers[1].Transition.StateAfter, barriers[1].Transition.StateBefore );
-		m_commandList->ResourceBarrier( count, barriers );
+		ResourceBarrierDx12( count, barriers );
 	}
 	return S_OK;
 }
@@ -1259,38 +1368,32 @@ void Tr2RenderContextAL::ResetDx12()
 {
 	if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_outTransitions.empty() )
 	{
-		m_commandList->ResourceBarrier( UINT( m_resourceSet.m_resourceSet->m_outTransitions.size() ), m_resourceSet.m_resourceSet->m_outTransitions.data() );
+		ResourceBarrierDx12( m_resourceSet.m_resourceSet->m_outTransitions.size(), m_resourceSet.m_resourceSet->m_outTransitions.data() );
 	}
 
 	for( uint32_t i = 0; i < 4; ++i )
 	{
 		m_vertexBuffers[i].buffer = Tr2BufferAL();
 	}
+	m_dynamicVBs = 0;
 	m_indexBuffer = Tr2BufferAL();
+	m_dynamicIB = false;
 
 	m_resourceSet = Tr2ResourceSetAL();
-	m_vertexLayout = &nullVL;
-	m_shaderProgram = &nullSP;
-	m_topologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_UNDEFINED;
+
+	m_psoDescription = TrinityALImpl::PSODescription();
 	m_topology = Tr2RenderContextEnum::TOP_INVALID;
-	m_rasterizerDesc = defaultRasterizer;
-	m_depthStencilDesc = defaultDepthStencil;
-	m_blendDesc = s_defaultBlend;
 	m_primitiveToVertexCount = std::make_pair( 0, 0 );
 
 	m_dirtyPso = true;
-	std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), nullTX );
+	std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), Tr2TextureAL() );
 	for( auto it = begin( m_rtStack ); it != end( m_rtStack ); ++it )
 	{
 		it->clear();
 	}
-	m_boundDepthStencil = nullTX;
+	m_boundDepthStencil = Tr2TextureAL();
 	m_dsStack.clear();
 
-	m_renderTargetCount = 0;
-	std::fill( std::begin( m_renderTargetFormats ), std::end( m_renderTargetFormats ), Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
-	m_depthStencilFormat = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN;
-	m_sampleDesc = Tr2MsaaDesc();
 	m_readOnlyDepth = false;
 	m_viewport = Tr2Viewport();
 	m_separateAlphaBlendEnabled = false;
@@ -1299,27 +1402,7 @@ void Tr2RenderContextAL::ResetDx12()
 
 void Tr2RenderContextAL::AddGpuMarker( const char* marker )
 {
-	if( m_commandList2 )
-	{
-		auto length = std::min( strlen( marker ) + 1, size_t( 256 ) );
-		D3D12_WRITEBUFFERIMMEDIATE_PARAMETER params[256 / 4];
-		D3D12_WRITEBUFFERIMMEDIATE_MODE modes[256 / 4];
-		auto addr = m_ownerDevice->GetImmediateBufferAddressDx12();
-		uint32_t count = 0;
-		for( size_t i = 0; i < 256 / 4 && length > 0; ++i )
-		{
-			params[i].Value = 0;
-			params[i].Dest = addr;
-			addr += 4;
-			auto l = std::min( length, sizeof( params[i].Value ) );
-			memcpy( &params[i].Value, marker, l );
-			marker += l;
-			length -= l;
-			modes[i] = D3D12_WRITEBUFFERIMMEDIATE_MODE_MARKER_OUT;
-			++count;
-		}
-		m_commandList2->WriteBufferImmediate( count, params, modes );
-	}
+	m_ownerDevice->GetMarkerBuffer().PutMarker( m_commandList2, marker );
 }
 
 /** Forcibly reset and dirty all descriptor caches (used for explicit synchronization) */
@@ -1354,7 +1437,145 @@ void Tr2RenderContextAL::ReApplyStateDx12()
 	}
 	m_commandList->IASetPrimitiveTopology( s_topologies[m_topology] );
 	SetViewport( m_viewport );
-	ResetDescriptorCaches();
+	if( m_boundRenderTargets[0].IsValid() )
+	{
+		D3D12_RECT rect = { 0, 0, m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() };
+		m_commandList->RSSetScissorRects( 1, &rect );
+	}
+	DirtyDescriptorCache();
+}
+
+void Tr2RenderContextAL::ResourceBarrierDx12( size_t count, const D3D12_RESOURCE_BARRIER* barriers )
+{
+	for( size_t i = 0; i < count; ++i )
+	{
+		auto& barrier = barriers[i];
+		CCP_ASSERT( barrier.Type == D3D12_RESOURCE_BARRIER_TYPE_TRANSITION );
+		CCP_ASSERT( barrier.Transition.pResource != nullptr );
+
+		bool found = false;
+		for( auto it = begin( m_barriers ); it != end( m_barriers ); ++it )
+		{
+			if( it->Type != D3D12_RESOURCE_BARRIER_TYPE_TRANSITION )
+			{
+				continue;
+			}
+			if( it->Transition.pResource == barrier.Transition.pResource )
+			{
+				CCP_ASSERT( it->Transition.StateAfter == barrier.Transition.StateBefore );
+				if( it->Transition.StateBefore == barrier.Transition.StateAfter )
+				{
+					if( ( it->Transition.StateBefore & D3D12_RESOURCE_STATE_UNORDERED_ACCESS ) != 0 )
+					{
+						D3D12_RESOURCE_BARRIER uavBarrier = { D3D12_RESOURCE_BARRIER_TYPE_UAV, D3D12_RESOURCE_BARRIER_FLAG_NONE };
+						uavBarrier.UAV.pResource = it->Transition.pResource;
+						*it = uavBarrier;
+					}
+					else
+					{
+						m_barriers.erase( it );
+					}
+				}
+				else
+				{
+					it->Transition.StateAfter = barrier.Transition.StateAfter;
+				}
+				found = true;
+				break;
+			}
+		}
+		if( !found )
+		{
+			m_barriers.push_back( barrier );
+		}
+	}
+}
+
+void Tr2RenderContextAL::ResourceBarrierDx12( const D3D12_RESOURCE_BARRIER& barrier )
+{
+	ResourceBarrierDx12( 1, &barrier );
+}
+
+void Tr2RenderContextAL::FlushBarriersDx12()
+{
+	if( !m_barriers.empty() )
+	{
+		m_commandList->ResourceBarrier( UINT( m_barriers.size() ), m_barriers.data() );
+		m_barriers.clear();
+	}
+}
+
+void Tr2RenderContextAL::FlushBarriersDx12( ID3D12Resource* resource )
+{
+	FlushBarriersDx12( 1, &resource );
+}
+
+void Tr2RenderContextAL::FlushBarriersDx12( ID3D12Resource* resource1, ID3D12Resource* resource2 )
+{
+	ID3D12Resource* resources[] = { resource1, resource2 };
+	FlushBarriersDx12( 2, resources );
+}
+
+void Tr2RenderContextAL::FlushBarriersDx12( size_t count, ID3D12Resource** resources )
+{
+	auto size = m_barriers.size();
+	if( size == 0 )
+	{
+		return;
+	}
+	if( size < 8 )
+	{
+		D3D12_RESOURCE_BARRIER barriers[8];
+		size_t barrierCount = 0;
+
+		for( size_t i = 0; i < count; ++i )
+		{
+			auto resource = resources[i];
+			for( size_t j = 0; j < size; ++j )
+			{
+				auto& barrier = m_barriers[j];
+				if( barrier.Transition.pResource == resource )
+				{
+					barriers[barrierCount++] = barrier;
+
+					m_barriers[j] = m_barriers[size - 1];
+					m_barriers.pop_back();
+					--size;
+					break;
+				}
+			}
+		}
+		if( barrierCount )
+		{
+			m_commandList->ResourceBarrier( UINT( barrierCount ), barriers );
+		}
+	}
+	else
+	{
+		std::vector<D3D12_RESOURCE_BARRIER> barriers;
+		barriers.reserve( m_barriers.size() );
+		for( size_t i = 0; i < count; ++i )
+		{
+			auto resource = resources[i];
+			for( size_t j = 0; j < size; ++j )
+			{
+				auto& barrier = m_barriers[j];
+				if( barrier.Transition.pResource == resource )
+				{
+					barriers.push_back( barrier );
+
+					m_barriers[j] = m_barriers[size - 1];
+					m_barriers.pop_back();
+					--size;
+					break;
+				}
+			}
+		}
+		if( !barriers.empty() )
+		{
+			m_commandList->ResourceBarrier( UINT( barriers.size() ), barriers.data() );
+		}
+	}
 }
 
 #endif

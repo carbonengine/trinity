@@ -9,6 +9,7 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
 #include "Tr2SwapChainALDx12.h"
+#include "Tr2TextureALDx12.h"
 #include "Tr2PrimaryRenderContextDx12.h"
 #include "Utilities.h"
 
@@ -134,140 +135,144 @@ namespace
 	}
 }
 
-Tr2SwapChainAL::Tr2SwapChainAL()
-	:m_owner( nullptr )
+namespace TrinityALImpl
 {
-	m_backBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
-}
 
-Tr2SwapChainAL::~Tr2SwapChainAL()
-{
-	Destroy();
-}
-
-ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderContextAL &renderContext )
-{
-	Destroy();
-	if( !renderContext.IsValid() )
+	Tr2SwapChainAL::Tr2SwapChainAL()
+		:m_owner( nullptr )
 	{
-		return E_INVALIDCALL;
+		m_backBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
+		memset( &m_presentParameters, 0, sizeof( m_presentParameters ) );
 	}
 
-	FORWARD_HR( renderContext.FlushAndSyncDx12( renderContext ) );
-
-	Tr2PresentParametersAL presentationParameters;
-	CR_RETURN_HR( FillPresentationParameters( presentationParameters, windowHandle ) );
-
-	return CreateDx12( presentationParameters, renderContext.m_device, nullptr, renderContext.m_commandQueue, renderContext );
-}
-
-ALResult Tr2SwapChainAL::CreateDx12( const Tr2PresentParametersAL& presentationParameters, ID3D12Device* device, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext )
-{
-	CComPtr<IDXGISwapChain3> swapChain;
-	auto backBufferCount = BACK_BUFFER_COUNT;
-	FORWARD_HR( CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output ) );
-
-	std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
-	std::vector<CComPtr<ID3D12Resource>> backBuffers;
-	FORWARD_HR( GetBackBuffers( &renderContext, backBuffers, rtvs, device, swapChain ) );
-
-	m_swapChain = swapChain;
-	m_presentParameters = presentationParameters;
-	m_owner = &renderContext;
-
-	m_backBuffer.m_texture->AssignFromSwapChainDx12( backBuffers, rtvs, renderContext );
-	m_backBuffer.m_texture->SetSwapChainBufferIndexDx12( swapChain->GetCurrentBackBufferIndex() );
-
+	Tr2SwapChainAL::~Tr2SwapChainAL()
 	{
-		auto barrier = TrinityALImpl::Transition( m_backBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET );
-		renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+		Destroy();
 	}
 
-	return S_OK;
-}
-
-void Tr2SwapChainAL::Destroy()
-{
-	if( m_owner )
+	ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2PrimaryRenderContextAL &renderContext )
 	{
-		m_backBuffer.m_texture->Destroy();
+		Destroy();
+		if( !renderContext.IsValid() )
+		{
+			return E_INVALIDCALL;
+		}
 
-		m_owner = nullptr;
-		m_swapChain = nullptr;
+		FORWARD_HR( renderContext.FlushAndSyncDx12( renderContext ) );
 
-		m_presentParameters = Tr2PresentParametersAL();
-	}
-}
+		Tr2PresentParametersAL presentationParameters;
+		CR_RETURN_HR( FillPresentationParameters( presentationParameters, windowHandle ) );
 
-bool Tr2SwapChainAL::IsValid() const
-{
-	return m_swapChain != nullptr;
-}
-
-ALResult Tr2SwapChainAL::Present( Tr2RenderContextAL& renderContext )
-{
-	if( !IsValid() )
-	{
-		return E_INVALIDCALL;
-	}
-	if( !renderContext.IsValid() )
-	{
-		return E_INVALIDARG;
+		return CreateDx12( presentationParameters, renderContext.m_device, nullptr, renderContext.m_commandQueue, renderContext );
 	}
 
-	m_owner->ScheduleSwapchainPresentDx12( m_swapChain, m_backBuffer, m_presentParameters.presentInterval & 0xf );
-	return S_OK;
-}
-
-int Tr2SwapChainAL::GetWidth() const
-{
-	return int( m_presentParameters.mode.width );
-}
-
-int Tr2SwapChainAL::GetHeight() const
-{
-	return int( m_presentParameters.mode.height );
-}
-
-bool Tr2SwapChainAL::operator==( const Tr2SwapChainAL& other ) const 
-{ 
-	return m_swapChain == other.m_swapChain; 
-}
-
-Tr2ALMemoryType Tr2SwapChainAL::GetMemoryClass() const 
-{ 
-	return AL_MEMORY_MANAGED; 
-}
-
-/** Gather backbuffer textures and RTVs (JB: Make this public-static since it was duplicated) */
-ALResult Tr2SwapChainAL::GetBackBuffers(
-	Tr2PrimaryRenderContextAL* primaryContext,
-	std::vector<CComPtr<ID3D12Resource>>& backBuffers,
-	std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs,
-	ID3D12Device* device,
-	IDXGISwapChain1* swapChain)
-{
-	DXGI_SWAP_CHAIN_DESC scDesc;
-	swapChain->GetDesc(&scDesc);
-
-	for (uint32_t i = 0; i < BACK_BUFFER_COUNT; ++i)
+	ALResult Tr2SwapChainAL::CreateDx12( const Tr2PresentParametersAL& presentationParameters, ID3D12Device* device, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext )
 	{
-		CComPtr<ID3D12Resource> backBuffer;
-		CR_RETURN_HR(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
-		backBuffers.push_back(backBuffer);
+		CComPtr<IDXGISwapChain3> swapChain;
+		auto backBufferCount = BACK_BUFFER_COUNT;
+		FORWARD_HR( CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output ) );
 
-		std::shared_ptr<RenderTargetViewDx12> view;
-		primaryContext->CreateRenderTargetView(backBuffer, nullptr, view);
-		rtvs.push_back(view);
+		std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
+		std::vector<CComPtr<ID3D12Resource>> backBuffers;
+		FORWARD_HR( GetBackBuffers( &renderContext, backBuffers, rtvs, device, swapChain ) );
 
+		m_swapChain = swapChain;
+		m_presentParameters = presentationParameters;
+		m_owner = &renderContext;
 
-		D3D12_RENDER_TARGET_VIEW_DESC rtv = { DXGI_FORMAT(Tr2RenderContextEnum::MakeSrgb(Tr2RenderContextEnum::PixelFormat(scDesc.BufferDesc.Format))), D3D12_RTV_DIMENSION_TEXTURE2D };
-		rtv.Texture2D.MipSlice = rtv.Texture2D.PlaneSlice = 0;
+		m_backBuffer.m_texture->AssignFromSwapChainDx12( backBuffers, rtvs, renderContext );
+		m_backBuffer.m_texture->SetSwapChainBufferIndexDx12( swapChain->GetCurrentBackBufferIndex() );
 
-		primaryContext->CreateRenderTargetView(backBuffer, &rtv, view);
-		rtvs.push_back(view);
+		renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( m_backBuffer.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET ) );
+
+		return S_OK;
 	}
-	return S_OK;
-}
 
+	void Tr2SwapChainAL::Destroy()
+	{
+		if( m_owner )
+		{
+			m_backBuffer.m_texture->Destroy();
+
+			m_owner = nullptr;
+			m_swapChain = nullptr;
+
+			m_presentParameters = Tr2PresentParametersAL();
+		}
+	}
+
+	bool Tr2SwapChainAL::IsValid() const
+	{
+		return m_swapChain != nullptr;
+	}
+
+	ALResult Tr2SwapChainAL::Present( Tr2RenderContextAL& renderContext )
+	{
+		if( !IsValid() )
+		{
+			return E_INVALIDCALL;
+		}
+		if( !renderContext.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+
+		m_owner->ScheduleSwapchainPresentDx12( m_swapChain, m_backBuffer, m_presentParameters.presentInterval & 0xf );
+		return S_OK;
+	}
+
+	uint32_t Tr2SwapChainAL::GetWidth() const
+	{
+		return m_presentParameters.mode.width;
+	}
+
+	uint32_t Tr2SwapChainAL::GetHeight() const
+	{
+		return m_presentParameters.mode.height;
+	}
+
+	Tr2ALMemoryType Tr2SwapChainAL::GetMemoryClass() const
+	{
+		return AL_MEMORY_MANAGED;
+	}
+
+	/** Gather backbuffer textures and RTVs (JB: Make this public-static since it was duplicated) */
+	ALResult Tr2SwapChainAL::GetBackBuffers(
+		Tr2PrimaryRenderContextAL* primaryContext,
+		std::vector<CComPtr<ID3D12Resource>>& backBuffers,
+		std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs,
+		ID3D12Device* device,
+		IDXGISwapChain1* swapChain )
+	{
+		DXGI_SWAP_CHAIN_DESC scDesc;
+		swapChain->GetDesc( &scDesc );
+
+		for( uint32_t i = 0; i < BACK_BUFFER_COUNT; ++i )
+		{
+			CComPtr<ID3D12Resource> backBuffer;
+			CR_RETURN_HR( swapChain->GetBuffer( i, IID_PPV_ARGS( &backBuffer ) ) );
+			backBuffers.push_back( backBuffer );
+
+			std::shared_ptr<RenderTargetViewDx12> view;
+			primaryContext->CreateRenderTargetView( backBuffer, nullptr, view );
+			rtvs.push_back( view );
+
+
+			D3D12_RENDER_TARGET_VIEW_DESC rtv = { DXGI_FORMAT( Tr2RenderContextEnum::MakeSrgb( Tr2RenderContextEnum::PixelFormat( scDesc.BufferDesc.Format ) ) ), D3D12_RTV_DIMENSION_TEXTURE2D };
+			rtv.Texture2D.MipSlice = rtv.Texture2D.PlaneSlice = 0;
+
+			primaryContext->CreateRenderTargetView( backBuffer, &rtv, view );
+			rtvs.push_back( view );
+		}
+		return S_OK;
+	}
+
+	void Tr2SwapChainAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2SwapChainAL";
+		description["width"] = std::to_string( long long( m_presentParameters.mode.width ) );
+		description["height"] = std::to_string( long long( m_presentParameters.mode.height ) );
+	}
+
+}
 #endif

@@ -5,77 +5,76 @@
 #include "Tr2FenceALDx12.h"
 #include "Tr2PrimaryRenderContextDx12.h"
 
-Tr2FenceAL::Tr2FenceAL()
-	:m_frameIndex( 0xffffffffffffffff ),
-	m_owner( nullptr )
+namespace TrinityALImpl
 {
-}
 
-Tr2FenceAL::~Tr2FenceAL()
-{
-}
-
-ALResult Tr2FenceAL::Create( Tr2PrimaryRenderContextAL& renderContext )
-{
-	Destroy();
-	if( !renderContext.IsValid() )
+	Tr2FenceAL::Tr2FenceAL()
+		:m_frameIndex( 0xffffffffffffffff ),
+		m_owner( nullptr )
 	{
-		return E_INVALIDARG;
 	}
-	m_owner = &renderContext;
-	return S_OK;
-}
 
-void Tr2FenceAL::Destroy()
-{
-	m_frameIndex = 0xffffffffffffffff;
-	m_owner = nullptr;
-}
-
-bool Tr2FenceAL::IsValid() const
-{
-	return m_owner != nullptr;
-}
-
-ALResult Tr2FenceAL::PutFence( Tr2RenderContextAL& )
-{
-	if( !m_owner )
+	ALResult Tr2FenceAL::Create( Tr2PrimaryRenderContextAL& renderContext )
 	{
-		return E_INVALIDCALL;
+		Destroy();
+		if( !renderContext.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+		m_owner = &renderContext;
+		return S_OK;
 	}
-	m_frameIndex = m_owner->GetCurrentFrameIndexDx12();
-	return S_OK;
-}
 
-ALResult Tr2FenceAL::IsReached( bool& isReached, Tr2RenderContextAL& )
-{
-	if( m_frameIndex == 0xffffffffffffffff )
+	void Tr2FenceAL::Destroy()
 	{
-		return E_INVALIDCALL;
+		m_frameIndex = 0xffffffffffffffff;
+		m_owner = nullptr;
 	}
-	isReached = m_owner->GetCompletedFrameIndexDx12() >= m_frameIndex;
-	return S_OK;
-}
 
-ALResult Tr2FenceAL::Wait( Tr2RenderContextAL& renderContext )
-{
-	if( !m_owner )
+	bool Tr2FenceAL::IsValid() const
 	{
-		return E_INVALIDCALL;
+		return m_owner != nullptr;
 	}
-	CR_RETURN_HR( renderContext.FlushAndSyncDx12() );
-	return S_OK;
-}
 
-bool Tr2FenceAL::operator==( const Tr2FenceAL& other ) const
-{
-	return this == &other;
-}
+	ALResult Tr2FenceAL::PutFence( Tr2RenderContextAL& )
+	{
+		if( !m_owner )
+		{
+			return E_INVALIDCALL;
+		}
+		m_frameIndex = m_owner->GetCurrentFrameIndexDx12();
+		return S_OK;
+	}
 
-Tr2ALMemoryType Tr2FenceAL::GetMemoryClass() const 
-{ 
-	return AL_MEMORY_VIDEO; 
-}
+	ALResult Tr2FenceAL::IsReached( bool& isReached, Tr2RenderContextAL& )
+	{
+		if( m_frameIndex == 0xffffffffffffffff )
+		{
+			return E_INVALIDCALL;
+		}
+		isReached = m_owner->GetCompletedFrameIndexDx12() >= m_frameIndex;
+		return S_OK;
+	}
 
+	ALResult Tr2FenceAL::Wait( Tr2RenderContextAL& renderContext )
+	{
+		if( !m_owner )
+		{
+			return E_INVALIDCALL;
+		}
+		CR_RETURN_HR( renderContext.FlushAndSyncDx12() );
+		return S_OK;
+	}
+
+	Tr2ALMemoryType Tr2FenceAL::GetMemoryClass() const
+	{
+		return AL_MEMORY_VIDEO;
+	}
+
+	void Tr2FenceAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2FenceAL";
+	}
+}
 
 #endif

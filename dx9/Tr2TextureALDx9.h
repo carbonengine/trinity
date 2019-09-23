@@ -1,25 +1,14 @@
 #pragma once
-#ifndef Tr2TextureALDx9_h_
-#define Tr2TextureALDx9_h_
-
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
-#include "../Tr2TrackedALObject.h"
-#include "../ALResult.h"
+#include "../include/Tr2TextureAL.h"
 #include "../Tr2MemoryCounterAL.h"
-#include "../include/Tr2BitmapDimensions.h"
-
-
-struct Tr2SubresourceData;
-class Tr2RenderContextAL;
-struct Tr2TextureSubresource;
-
 
 
 namespace TrinityALImpl
 {
-	class Tr2TextureAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
+	class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>
 	{
 	public:
 		Tr2TextureAL();
@@ -29,7 +18,7 @@ namespace TrinityALImpl
 		void Destroy();
 
 		bool IsValid() const;
-		Tr2ALMemoryType GetMemoryClass();
+		Tr2ALMemoryType GetMemoryClass() const;
 		const Tr2BitmapDimensions& GetDesc() const;
 		const Tr2MsaaDesc& GetMsaaDesc() const;
 		Tr2GpuUsage::Type GetGpuUsage() const;
@@ -48,6 +37,7 @@ namespace TrinityALImpl
 		uintptr_t GetSharedHandle() const;
 
 		ALResult Attach( IDirect3DSurface9* surface, Tr2PrimaryRenderContextAL& renderContext );
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		ALResult GetSurfaceLevel( CComPtr<IDirect3DSurface9>& surface, uint32_t face, uint32_t mip, Tr2RenderContextAL& renderContext );
 		ALResult Lock( const Tr2TextureSubresource& region, uint32_t lockType, void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext );
@@ -77,7 +67,5 @@ namespace TrinityALImpl
 		friend class Tr2ResourceSetAL;
 	};
 }
-
-#endif
 
 #endif

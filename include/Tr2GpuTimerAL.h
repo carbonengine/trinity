@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
+#include "../Tr2DeviceResourceAL.h"
 
 namespace TrinityALImpl
 {
@@ -33,5 +33,3 @@ public:
 private:
 	std::shared_ptr<TrinityALImpl::Tr2GpuTimerAL> m_gpu_timer;
 };
-
-#include TRINITY_AL_PLATFORM_INCLUDE( Tr2GpuTimerAL )

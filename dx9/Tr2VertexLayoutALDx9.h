@@ -1,57 +1,42 @@
 #pragma once
-#ifndef Tr2VertexLayoutALDx9_h_
-#define Tr2VertexLayoutALDx9_h_
-
-
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
-
-
-class Tr2VertexDefinition;
-class Tr2RenderContextAL;
 
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
-// -------------------------------------------------------------
-// Description
-//   Class to convert a platform agnostic Tr2VertexDeclaration to a DX9 specific
-//   declaration, and build a ID3D9InputLayout out of it.
-// -------------------------------------------------------------
+#include "../include/Tr2VertexLayoutAL.h"
 
-class Tr2VertexLayoutAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_VERTEX_LAYOUT>
+namespace TrinityALImpl
 {
-public:
-	Tr2VertexLayoutAL()
+	class Tr2ShaderAL;
+
+	class Tr2VertexLayoutAL : public Tr2DeviceResourceAL<Tr2VertexLayoutAL>
 	{
-	}
+	public:
+		Tr2VertexLayoutAL()
+		{
+		}
 
-	ALResult Create( const Tr2VertexDefinition& definition,
-					 Tr2RenderContextAL& renderContext );
-	bool IsValid() const
-	{
-		return m_layout != nullptr;
-	}
-	void Destroy();
+		ALResult Create( const Tr2VertexDefinition& definition,
+			Tr2RenderContextAL& renderContext );
+		bool IsValid() const
+		{
+			return m_layout != nullptr;
+		}
+		void Destroy();
 
-	ALResult SetLayout( const TrinityALImpl::Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const;
+		ALResult SetLayout( const TrinityALImpl::Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const;
 
-	bool operator==( const Tr2VertexLayoutAL& other ) const
-	{
-		return m_layout == other.m_layout;
-	}
+		Tr2ALMemoryType GetMemoryClass() const
+		{
+			return AL_MEMORY_MANAGED;
+		}
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	private:
+		Tr2VertexLayoutAL( const Tr2VertexLayoutAL& )/* = delete */;
+		Tr2VertexLayoutAL& operator=( const Tr2VertexLayoutAL& )/* = delete */;
 
-	Tr2ALMemoryType GetMemoryClass() const
-	{
-		return AL_MEMORY_MANAGED;
-	}
-private:
-	Tr2VertexLayoutAL( const Tr2VertexLayoutAL& )/* = delete */;
-	Tr2VertexLayoutAL& operator=( const Tr2VertexLayoutAL& )/* = delete */;
-
-	CComPtr<IDirect3DVertexDeclaration9> m_layout;
-};
+		CComPtr<IDirect3DVertexDeclaration9> m_layout;
+	};
+}
 
 #endif // DX9?
-
-#endif // Tr2VertexLayoutDx9_h_

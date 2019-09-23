@@ -1,46 +1,34 @@
 #pragma once
-#ifndef Tr2FenceALDx9_H
-#define Tr2FenceALDx9_H
-
-
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
-
-
-class Tr2PrimaryRenderContextAL;
-
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
 
-class Tr2FenceAL : 
-	public Tr2TrackedALObject<Tr2RenderContextEnum::OT_FENCE>
+#include "../include/Tr2FenceAL.h"
+
+namespace TrinityALImpl
 {
-public:
-	Tr2FenceAL();
-	~Tr2FenceAL();
-
-	ALResult Create( Tr2PrimaryRenderContextAL& renderContext );
-	void Destroy();
-
-	bool IsValid() const;
-
-	ALResult PutFence( Tr2RenderContextAL& renderContext );
-	ALResult IsReached( bool& isReached, Tr2RenderContextAL& renderContext );
-	ALResult Wait( Tr2RenderContextAL& renderContext );
-
-	bool operator==( const Tr2FenceAL& other ) const
+	class Tr2FenceAL :
+		public Tr2DeviceResourceAL<Tr2FenceAL>
 	{
-		return this == &other;
-	}
+	public:
+		Tr2FenceAL();
 
-	Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
-private:
-	Tr2FenceAL( const Tr2OcclusionQueryAL& ) /* = delete */;
-	Tr2FenceAL& operator=( const Tr2OcclusionQueryAL& ) /* = delete */;
+		ALResult Create( Tr2PrimaryRenderContextAL& renderContext );
+		void Destroy();
 
-	CComPtr<IDirect3DQuery9> m_query;
-};
+		bool IsValid() const;
 
-#endif
+		ALResult PutFence( Tr2RenderContextAL& renderContext );
+		ALResult IsReached( bool& isReached, Tr2RenderContextAL& renderContext );
+		ALResult Wait( Tr2RenderContextAL& renderContext );
+
+		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	private:
+		Tr2FenceAL( const Tr2FenceAL& ) /* = delete */;
+		Tr2FenceAL& operator=( const Tr2FenceAL& ) /* = delete */;
+
+		CComPtr<IDirect3DQuery9> m_query;
+	};
+}
 
 #endif

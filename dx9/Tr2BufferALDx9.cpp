@@ -120,7 +120,7 @@ namespace TrinityALImpl
 		return m_vertexBuffer || m_indexBuffer;
 	}
 
-	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass()
+	Tr2ALMemoryType Tr2BufferAL::GetMemoryClass() const
 	{
 		return m_pool == D3DPOOL_DEFAULT ? AL_MEMORY_VIDEO : AL_MEMORY_MANAGED;
 	}
@@ -261,6 +261,13 @@ namespace TrinityALImpl
 			return m_indexBuffer->Unlock();
 		}
 		return E_FAIL;
+	}
+
+	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2BufferAL";
+		description["memory"] = std::to_string( long long( GetMemoryClass() ) );
+		description["size"] = std::to_string( long long( GetDesc().count * GetDesc().stride ) );
 	}
 }
 

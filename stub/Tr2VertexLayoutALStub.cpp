@@ -9,30 +9,31 @@
 
 using namespace Tr2RenderContextEnum;
 
-ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2RenderContextAL& renderContext )
+namespace TrinityALImpl
 {
-	if( !renderContext.IsValid() )
+
+	ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2RenderContextAL& renderContext )
 	{
-		return E_FAIL;
+		if( !renderContext.IsValid() )
+		{
+			return E_FAIL;
+		}
+
+		m_definition = std::unique_ptr<Tr2VertexDefinition>( new Tr2VertexDefinition( definition ) );
+		if( definition.m_items.empty() )
+		{
+			return E_FAIL;
+		}
+		return S_OK;
 	}
 
-	m_definition = std::unique_ptr<Tr2VertexDefinition>( new Tr2VertexDefinition( definition ) );
-	if( definition.m_items.empty() )
+	void Tr2VertexLayoutAL::Destroy()
 	{
-		return E_FAIL;
+		m_definition.reset();
 	}
-	ChangeObjectId();
-	return S_OK;
-}
 
-void Tr2VertexLayoutAL::Destroy()
-{
-	m_definition.reset();
+	void Tr2VertexLayoutAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+	}
 }
-
-ALResult Tr2VertexLayoutAL::SetLayout( const TrinityALImpl::Tr2ShaderAL* /*vertexShader*/, Tr2RenderContextAL& renderContext ) const
-{
-	return E_FAIL;
-}
-
 #endif

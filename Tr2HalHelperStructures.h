@@ -235,26 +235,6 @@ namespace std
 	};
 }
 
-// -------------------------------------------------------------
-// Description:
-// These are null shaders. If you want to disable a shader stage, set any of these.
-// -------------------------------------------------------------
-extern const Tr2ShaderAL		nullShader[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
-
-// -------------------------------------------------------------
-// Description:
-// This is a null constant buffer. If you want to unbind any currently bound constant buffers, set this one.
-// -------------------------------------------------------------
-extern const Tr2ConstantBufferAL	nullCB;
-
-// -------------------------------------------------------------
-// Description:
-// This is a null vertex layout.
-// -------------------------------------------------------------
-extern const Tr2VertexLayoutAL	nullVL;
-
-
-extern const Tr2ShaderProgramAL nullSP;
 
 bool Crop(	Tr2TextureSubresource& sourceSR,
 			const Tr2BitmapDimensions& sourceBD, 

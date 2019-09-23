@@ -29,15 +29,6 @@ TEST_F( OcclusionQuery, OcclusionQueryIsValidAfterCreation )
 	EXPECT_TRUE( query.IsValid() );
 }
 
-TEST_F( OcclusionQuery, OcclusionQueryIsInvalidAfterDestruction )
-{
-	Tr2OcclusionQueryAL query;
-	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
-	EXPECT_TRUE( query.IsValid() );
-	query.Destroy();
-	EXPECT_FALSE( query.IsValid() );
-}
-
 TEST_F( OcclusionQuery, RuningInvalidOcclusionQueryFails )
 {
 	Tr2OcclusionQueryAL query;

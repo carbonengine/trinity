@@ -4,7 +4,8 @@
 
 #include "Tr2ResourceSetALDx9.h"
 #include "../include/Tr2TextureAL.h"
-#include "../include/Tr2SamplerStateAL.h"
+#include "Tr2SamplerStateALDx9.h"
+#include "Tr2TextureALDx9.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -17,7 +18,7 @@ namespace TrinityALImpl
 	{
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& /*renderContext*/ )
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& /*renderContext*/ )
 	{
 		Destroy();
 		ON_BLOCK_EXIT_WITH_UNUSED( [&] { if( !IsValid() ) Destroy(); } );
@@ -117,6 +118,11 @@ namespace TrinityALImpl
 	Tr2ALMemoryType Tr2ResourceSetAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_VIDEO;
+	}
+
+	void Tr2ResourceSetAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2ResourceSetAL";
 	}
 
 }

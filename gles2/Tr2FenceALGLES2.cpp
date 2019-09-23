@@ -67,7 +67,9 @@ namespace
 }
 #endif
 
-Tr2FenceAL::Tr2FenceAL()
+namespace TrinityALImpl
+{
+	Tr2FenceAL::Tr2FenceAL()
 	:m_isValid( false ),
 	m_fence( nullptr )
 {
@@ -134,7 +136,6 @@ ALResult Tr2FenceAL::PutFence( Tr2RenderContextAL& renderContext )
 	{
 		return E_INVALIDCALL;
 	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
 #ifdef __ANDROID__
     if( glSetFence )
     {
@@ -160,7 +161,6 @@ ALResult Tr2FenceAL::IsReached( bool& isReached, Tr2RenderContextAL& )
 	{
 		return E_INVALIDCALL;
 	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
 #ifdef __ANDROID__
     if( glTestFence )
     {
@@ -187,7 +187,6 @@ ALResult Tr2FenceAL::Wait( Tr2RenderContextAL& )
 	{
 		return E_INVALIDCALL;
 	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( *this );
 #ifdef __ANDROID__
     if( glFinishFence )
     {
@@ -202,5 +201,10 @@ ALResult Tr2FenceAL::Wait( Tr2RenderContextAL& )
 	return S_OK;
 }
 
+void Tr2FenceAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+{
+	description["type"] = "Tr2FenceAL";
+}
+}
 
 #endif

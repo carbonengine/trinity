@@ -2,24 +2,21 @@
 
 #if TRINITY_PLATFORM == TRINITY_STUB
 
-#include "../Tr2TrackedALObject.h"
-#include "../ALResult.h"
-
-class Tr2ResourceSetDescriptionAL;
-class Tr2PrimaryRenderContextAL;
+#include "../include/Tr2ResourceSetAL.h"
 
 namespace TrinityALImpl
 {
-	class Tr2ResourceSetAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_RESOURCE_SET>
+	class Tr2ResourceSetAL : public Tr2DeviceResourceAL<Tr2ResourceSetAL>
 	{
 	public:
 		Tr2ResourceSetAL();
 
-		ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
+		ALResult Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
 		bool IsValid() const;
 
 		void Destroy();
 		Tr2ALMemoryType GetMemoryClass() const;
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		bool m_isValid;
 	};

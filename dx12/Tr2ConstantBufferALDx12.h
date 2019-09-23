@@ -8,60 +8,56 @@
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
-#include "../Tr2TrackedALObject.h"
-#include "../Tr2RenderContextEnum.h"
-#include "../ALResult.h"
-
+#include "../include/Tr2ConstantBufferAL.h"
 #include "Tr2ResourceHelper.h"
 
-
-class Tr2PrimaryRenderContextAL;
-class Tr2RenderContextAL;
-
-
-// -------------------------------------------------------------
-// Description:
-//   A low level wrapper around the calls needed to set up a constant
-//   buffer for a given platform. Any higher level logic should be
-//   handled one level up, this is only to avoid ifdef soup when
-//   creating and locking buffers.
-//	 32bit: no support for 64bit-sized buffers.
-// -------------------------------------------------------------
-class Tr2ConstantBufferAL: public Tr2TrackedALObject<Tr2RenderContextEnum::OT_CONSTANT_BUFFER>
+namespace TrinityALImpl
 {
-public:
-	Tr2ConstantBufferAL();
-	~Tr2ConstantBufferAL();
 
-	ALResult Create( uint32_t size, Tr2PrimaryRenderContextAL & renderContext );
-	ALResult Create( uint32_t size, Tr2RenderContextEnum::BufferUsage usage, const void* initialData, Tr2PrimaryRenderContextAL & renderContext );
-	void Destroy();
+	class Tr2ConstantBufferAL : public Tr2DeviceResourceAL<Tr2ConstantBufferAL>
+	{
+	public:
 
-	ALResult Lock( void** data, Tr2RenderContextAL & renderContext );
-	ALResult Unlock( Tr2RenderContextAL & renderContext );
+		/** JB: A token which stored a previously allocated frame-local instance of this buffer */
+		struct GPUViewToken
+		{
+			GPUViewToken() : m_address( 0 ), m_frameNumber( UINT64_MAX ) { }
 
-	bool IsValid() const;
+			D3D12_GPU_VIRTUAL_ADDRESS m_address;
+			uint64_t m_frameNumber;
+		};
 
-	uint32_t GetSize() const;
-	Tr2ALMemoryType GetMemoryClass() const;
+		Tr2ConstantBufferAL();
+		~Tr2ConstantBufferAL();
 
-	void* GetBufferMirror( uint32_t minimumSize, Tr2RenderContextAL & renderContext );
-	void* GetBufferMirror( Tr2RenderContextAL & renderContext );
-	ALResult UpdateFromMirror( Tr2RenderContextAL & renderContext );
+		ALResult Create( uint32_t size, Tr2ConstantUsageAL::Type usage, const void* initialData, Tr2PrimaryRenderContextAL & renderContext );
+		void Destroy();
 
-	bool operator==( const Tr2ConstantBufferAL& other ) const;
-private:
-	Tr2ConstantBufferAL( const Tr2ConstantBufferAL& ) /* = delete */;
-	Tr2ConstantBufferAL& operator=( const Tr2ConstantBufferAL& ) /* = delete */;
+		ALResult Lock( void** data, Tr2RenderContextAL & renderContext );
+		ALResult Unlock( Tr2RenderContextAL & renderContext );
 
-	TrinityALImpl::Tr2ResourceHelper m_buffer;
+		bool IsValid() const;
 
-	CcpMallocBuffer m_mirror;
-	Tr2PrimaryRenderContextAL* m_owner;
-	uint32_t m_size;
+		uint32_t GetSize() const;
+		Tr2ALMemoryType GetMemoryClass() const;
 
-	friend class Tr2RenderContextAL;
-	friend class DescriptorStateCache;
-};
+		void* GetDataPtr() const { return (void*)m_data.get(); }
+		const GPUViewToken& GetToken() const { return m_token; }
+		void SetToken( const GPUViewToken& token ) { m_token = token; }
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	private:
+		Tr2ConstantBufferAL( const Tr2ConstantBufferAL& ) /* = delete */;
+		Tr2ConstantBufferAL& operator=( const Tr2ConstantBufferAL& ) /* = delete */;
+
+		Tr2PrimaryRenderContextAL* m_owner;
+		GPUViewToken m_token;
+
+		CcpMallocBuffer m_data;
+		uint32_t m_size;
+
+		friend class Tr2RenderContextAL;
+		friend class DescriptorStateCache;
+	};
+}
 
 #endif

@@ -3,7 +3,7 @@
 #if TRINITY_PLATFORM == TRINITY_OPENGLES2
 
 #include "Tr2ResourceSetALGLES2.h"
-#include "../include/Tr2TextureAL.h"
+#include "Tr2TextureALGLES2.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -35,7 +35,7 @@ namespace TrinityALImpl
 	{
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& )
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& )
 	{
 		Destroy();
 		ON_BLOCK_EXIT( [&] { if( !IsValid() ) Destroy(); } );
@@ -112,6 +112,11 @@ namespace TrinityALImpl
 	Tr2ALMemoryType Tr2ResourceSetAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_VIDEO;
+	}
+
+	void Tr2ResourceSetAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2ResourceSetAL";
 	}
 }
 

@@ -72,7 +72,7 @@ TEST_F( RenderContext, CanGetRenderTargetSizeForNonZeroSlot )
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget( 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( nullRT ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( Tr2TextureAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget( slot ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt, slot ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->GetRenderTargetSize( width, height, slot ) );
@@ -90,7 +90,7 @@ TEST_F( RenderContext, GetRenderTargetSizeFailsWithNoRenderTarget )
 	const uint32_t slot = 1;
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget( slot ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( nullRT, slot ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( Tr2TextureAL(), slot ) );
 	ASSERT_HRESULT_FAILED( renderContext->GetRenderTargetSize( width, height, slot ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->PopRenderTarget( slot ) );
 

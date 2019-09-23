@@ -69,5 +69,9 @@ namespace TrinityALImpl
 	{
 		m_type = type;
 	}
+
+	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+	}
 }
 #endif

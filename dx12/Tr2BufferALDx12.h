@@ -12,12 +12,11 @@
 #include "../Tr2MemoryCounterAL.h"
 #include "../Tr2LockGuard.h"
 #include "Tr2ResourceHelper.h"
-
 #include "./util/DescriptorHeapViewDx12.h"
 
 namespace TrinityALImpl
 {
-	class Tr2BufferAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_BUFFER>
+	class Tr2BufferAL : public Tr2DeviceResourceAL<Tr2BufferAL>
 	{
 	public:
 		Tr2BufferAL();
@@ -31,7 +30,7 @@ namespace TrinityALImpl
 		void Destroy();
 		bool IsValid() const;
 
-		Tr2ALMemoryType GetMemoryClass();
+		Tr2ALMemoryType GetMemoryClass() const;
 		const Tr2BufferDescriptionAL& GetDesc() const;
 
 		ALResult MapForReading( const void*& data, Tr2RenderContextAL& renderContext );
@@ -44,6 +43,8 @@ namespace TrinityALImpl
 
 		ID3D12Resource* GetGpuResource();
 		D3D12_GPU_VIRTUAL_ADDRESS GetGpuView();
+
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		Tr2BufferDescriptionAL m_desc;
 		Tr2ResourceHelper m_buffer;

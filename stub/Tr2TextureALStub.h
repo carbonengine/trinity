@@ -1,30 +1,14 @@
 #pragma once
-#ifndef Tr2TextureALStub_h_
-#define Tr2TextureALStub_h_
 
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
-#include "../Tr2MemoryCounterAL.h"
-
-
-class Tr2PrimaryRenderContextAL;
-struct Tr2TextureSubresource;
-class Tr2RenderContextAL;
-struct Tr2SubresourceData;
-struct Tr2BitmapDimensions;
+#include "../include/Tr2TextureAL.h"
+#include "../include/Tr2BitmapDimensions.h"
+#include "../Tr2HalHelperStructures.h"
 
 namespace TrinityALImpl
 {
-	class Tr2ResourceSetAL;
-}
-
-
-
-namespace TrinityALImpl
-{
-	class Tr2TextureAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
+	class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>
 	{
 	public:
 		Tr2TextureAL();
@@ -34,7 +18,7 @@ namespace TrinityALImpl
 		void Destroy();
 
 		bool IsValid() const;
-		Tr2ALMemoryType GetMemoryClass();
+		Tr2ALMemoryType GetMemoryClass() const;
 		const Tr2BitmapDimensions& GetDesc() const;
 		const Tr2MsaaDesc& GetMsaaDesc() const;
 		Tr2GpuUsage::Type GetGpuUsage() const;
@@ -50,6 +34,7 @@ namespace TrinityALImpl
 		ALResult GenerateMipMaps( Tr2RenderContextAL& renderContext );
 		ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
 		uintptr_t GetSharedHandle() const;
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 
 		Tr2BitmapDimensions m_desc;
@@ -60,7 +45,5 @@ namespace TrinityALImpl
 	};
 }
 
-
-#endif
 
 #endif

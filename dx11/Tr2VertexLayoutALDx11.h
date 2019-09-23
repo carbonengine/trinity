@@ -1,18 +1,10 @@
 #pragma once
-#ifndef Tr2VertexLayoutALDx11_h_
-#define Tr2VertexLayoutALDx11_h_
-
-
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
-
-
-class Tr2RenderContextAL;
-class Tr2VertexDefinition;
-class Tr2ShaderAL;
 
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
+
+#include "../include/Tr2VertexLayoutAL.h"
+
 // -------------------------------------------------------------
 // Description
 //   Class to convert a platform agnostic Tr2VertexDeclaration to a DX11 specific
@@ -21,37 +13,42 @@ class Tr2ShaderAL;
 //   the definition to the Tr2EffectStateManager, and let things happen behind the scenes.
 // -------------------------------------------------------------
 
-class Tr2VertexLayoutAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_VERTEX_LAYOUT>
+class Tr2RenderContextAL;
+
+namespace TrinityALImpl
 {
-public:
-	Tr2VertexLayoutAL()
-	: m_definition( "Tr2VertexLayoutAL::m_definition" )
+	class Tr2ShaderAL;
+
+	class Tr2VertexLayoutAL : public Tr2DeviceResourceAL<Tr2VertexLayoutAL>
 	{
-	}
+	public:
+		Tr2VertexLayoutAL()
+			: m_definition( "Tr2VertexLayoutAL::m_definition" )
+		{
+		}
 
-	ALResult Create( const Tr2VertexDefinition& definition,
-					 Tr2RenderContextAL& renderContext );
-	bool IsValid() const
-	{
-		return !m_definition.empty();
-	}
-	void Destroy();
+		ALResult Create( const Tr2VertexDefinition& definition, Tr2PrimaryRenderContextAL& renderContext );
+		bool IsValid() const
+		{
+			return !m_definition.empty();
+		}
+		void Destroy();
 
-	ALResult SetLayout( const TrinityALImpl::Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const;
+		ALResult SetLayout( const TrinityALImpl::Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const;
 
-	Tr2ALMemoryType GetMemoryClass() const
-	{
-		return AL_MEMORY_MANAGED;
-	}
+		Tr2ALMemoryType GetMemoryClass() const
+		{
+			return AL_MEMORY_MANAGED;
+		}
 
-private:
-	Tr2VertexLayoutAL( const Tr2VertexLayoutAL& )/* = delete */;
-	Tr2VertexLayoutAL& operator=( const Tr2VertexLayoutAL& )/* = delete */;
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	private:
+		Tr2VertexLayoutAL( const Tr2VertexLayoutAL& )/* = delete */;
+		Tr2VertexLayoutAL& operator=( const Tr2VertexLayoutAL& )/* = delete */;
 
-	TrackableStdVector<D3D11_INPUT_ELEMENT_DESC> m_definition;
-	mutable std::map<unsigned, CComPtr<ID3D11InputLayout>> m_layout;
-};
+		TrackableStdVector<D3D11_INPUT_ELEMENT_DESC> m_definition;
+		mutable std::map<unsigned, CComPtr<ID3D11InputLayout>> m_layout;
+	};
+}
 
 #endif // DX11?
-
-#endif // Tr2VertexLayoutDx11_h_

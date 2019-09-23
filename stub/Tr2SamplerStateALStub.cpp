@@ -26,6 +26,10 @@ namespace TrinityALImpl
 	{
 		return m_isValid;
 	}
+
+	void Tr2SamplerStateAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+	}
 }
 
 #endif

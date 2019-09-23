@@ -1,11 +1,12 @@
 #pragma once
 
 #include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
+#include "../Tr2DeviceResourceAL.h"
 #include "Tr2BufferAL.h"
 #include "Tr2TextureAL.h"
 #include "Tr2SamplerStateAL.h"
 
+class Tr2ShaderProgramAL;
 class Tr2PrimaryRenderContextAL;
 
 namespace TrinityALImpl
@@ -39,6 +40,9 @@ private:
 		Resource();
 
 		bool operator==( const Resource& other ) const;
+		bool Is( const Tr2BufferAL& other, uint32_t otherInitialCount ) const;
+		bool Is( const Tr2TextureAL& other, Tr2RenderContextEnum::ColorSpace otherColorSpace ) const;
+		bool Is( const Tr2TextureAL& other, uint32_t otherMip ) const;
 
 		Tr2TextureAL texture;
 		Tr2BufferAL buffer;
@@ -56,6 +60,7 @@ private:
 		Sampler();
 
 		bool operator==( const Sampler& other ) const;
+		bool operator==( const Tr2SamplerStateAL& other ) const;
 
 		Tr2SamplerStateAL sampler;
 		bool assigned;

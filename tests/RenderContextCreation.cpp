@@ -35,7 +35,7 @@ struct RenderContextEvents: public ITr2RenderContextEvents
 		m_timesOnTextureUnsetCalled = 0;
 	}
 
-	void OnContextCreated( Tr2RenderContextAL& renderContext )
+	void OnContextCreated( Tr2PrimaryRenderContextAL& renderContext )
 	{
 		m_timesOnContextCreatedCalled++;
 	}

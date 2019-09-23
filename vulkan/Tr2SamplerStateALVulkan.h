@@ -8,17 +8,11 @@
 
 #if TRINITY_PLATFORM == TRINITY_VULKAN
 
-#include "../Tr2TrackedALObject.h"
-#include "../ALResult.h"
-
-
-class Tr2PrimaryRenderContextAL;
-struct Tr2SamplerDescription;
-
+#include "../include/Tr2SamplerStateAL.h"
 
 namespace TrinityALImpl
 {
-	class Tr2SamplerStateAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SAMPLER_STATE>
+	class Tr2SamplerStateAL : public Tr2DeviceResourceAL<Tr2SamplerStateAL>
 	{
 	public:
 		Tr2SamplerStateAL();
@@ -29,9 +23,12 @@ namespace TrinityALImpl
 
 		bool IsValid() const;
 		Tr2ALMemoryType GetMemoryClass() const;
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		VkSampler m_sampler;
 		Tr2PrimaryRenderContextAL* m_owner;
+
+		friend class TrinityALImpl::Tr2ResourceSetAL;
 	};
 
 }

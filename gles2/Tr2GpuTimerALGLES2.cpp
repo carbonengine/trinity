@@ -36,5 +36,10 @@ namespace TrinityALImpl
 	{
 		return -1.f;
 	}
+
+	void Tr2GpuTimerAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2GpuTimerAL";
+	}
 }
 #endif

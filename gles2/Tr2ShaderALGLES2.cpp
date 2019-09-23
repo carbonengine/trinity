@@ -106,7 +106,6 @@ namespace TrinityALImpl
 			memcpy( &m_bytecode[0], bytecode.bytecode, bytecode.size );
 		}
 		m_signature = signature;
-		ChangeObjectId();
 
 		return S_OK;
 	}
@@ -151,10 +150,11 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2ShaderAL::SetNullShaderType( Tr2RenderContextEnum::ShaderType type )
+	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
-		CCP_ASSERT( !IsValid() );
-		m_type = type;
+		description["type"] = "Tr2ShaderAL";
+		description["shader"] = std::to_string( long long( GetType() ) );
+		description["size"] = std::to_string( long long( m_bytecode.size() ) );
 	}
 
 }

@@ -11,6 +11,7 @@
 #include "Tr2VertexLayoutALDx12.h"
 #include "Tr2PrimaryRenderContextDx12.h"
 #include "Tr2VertexDefinition.h"
+#include "Tr2ShaderALDx12.h"
 
 namespace
 {
@@ -100,86 +101,94 @@ namespace
 	};
 }
 
-Tr2VertexLayoutAL::Tr2VertexLayoutAL()
-	:m_owner( nullptr )
+namespace TrinityALImpl
 {
-}
 
-Tr2VertexLayoutAL::~Tr2VertexLayoutAL()
-{
-	Destroy();
-}
-
-ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2PrimaryRenderContextAL& renderContext )
-{
-	Destroy();
-
-	if( !renderContext.IsValid() )
+	Tr2VertexLayoutAL::Tr2VertexLayoutAL()
+		:m_owner( nullptr )
 	{
-		return E_INVALIDCALL;
 	}
 
-	for( auto it = begin( definition.m_items ); it != end( definition.m_items ); ++it )
+	Tr2VertexLayoutAL::~Tr2VertexLayoutAL()
 	{
-		D3D12_INPUT_ELEMENT_DESC element;
-		element.SemanticName = s_usageNames[it->m_usage];
-		element.SemanticIndex = it->m_usageIndex;
-		element.Format = GetDxgiDataType( it->m_dataType );
-		element.InputSlot = it->m_stream;
-		element.AlignedByteOffset = it->m_offset;
-		element.InputSlotClass = it->m_instanceStepRate ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
-		element.InstanceDataStepRate = it->m_instanceStepRate;
-		m_elements.push_back( element );
+		Destroy();
 	}
 
-	m_owner = &renderContext;
-
-	return S_OK;
-}
-
-bool Tr2VertexLayoutAL::IsValid() const
-{
-	return m_owner != nullptr;
-}
-
-void Tr2VertexLayoutAL::Destroy()
-{
-	if( m_owner )
+	ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2PrimaryRenderContextAL& renderContext )
 	{
-		m_owner->OnVertexLayoutDestroyedDx12( this );
-	}
-	m_elements.clear();
-	m_owner = nullptr;
-}
+		Destroy();
 
-Tr2ALMemoryType Tr2VertexLayoutAL::GetMemoryClass() const
-{
-	return AL_MEMORY_MANAGED;
-}
-
-void Tr2VertexLayoutAL::PopulateInputLayout( std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const
-{
-	layout.reserve( shaderInputs.size() );
-	for( auto it = begin( shaderInputs ); it != end( shaderInputs ); ++it )
-	{
-		auto& in = *it;
-		bool found = false;
-		for( auto jt = begin( m_elements ); jt != end( m_elements ); ++jt )
+		if( !renderContext.IsValid() )
 		{
-			auto out =  *jt;
-			if( in.usageIndex == out.SemanticIndex && s_usageNames[in.usage] == out.SemanticName )
+			return E_INVALIDCALL;
+		}
+
+		for( auto it = begin( definition.m_items ); it != end( definition.m_items ); ++it )
+		{
+			D3D12_INPUT_ELEMENT_DESC element;
+			element.SemanticName = s_usageNames[it->m_usage];
+			element.SemanticIndex = it->m_usageIndex;
+			element.Format = GetDxgiDataType( it->m_dataType );
+			element.InputSlot = it->m_stream;
+			element.AlignedByteOffset = it->m_offset;
+			element.InputSlotClass = it->m_instanceStepRate ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
+			element.InstanceDataStepRate = it->m_instanceStepRate;
+			m_elements.push_back( element );
+		}
+
+		m_owner = &renderContext;
+
+		return S_OK;
+	}
+
+	bool Tr2VertexLayoutAL::IsValid() const
+	{
+		return m_owner != nullptr;
+	}
+
+	void Tr2VertexLayoutAL::Destroy()
+	{
+		if( m_owner )
+		{
+			m_owner->OnVertexLayoutDestroyedDx12( this );
+		}
+		m_elements.clear();
+		m_owner = nullptr;
+	}
+
+	Tr2ALMemoryType Tr2VertexLayoutAL::GetMemoryClass() const
+	{
+		return AL_MEMORY_MANAGED;
+	}
+
+	void Tr2VertexLayoutAL::PopulateInputLayout( std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const
+	{
+		layout.reserve( shaderInputs.size() );
+		for( auto it = begin( shaderInputs ); it != end( shaderInputs ); ++it )
+		{
+			auto& in = *it;
+			bool found = false;
+			for( auto jt = begin( m_elements ); jt != end( m_elements ); ++jt )
 			{
-				layout.push_back( *jt );
-				found = true;
-				break;
+				auto out = *jt;
+				if( in.usageIndex == out.SemanticIndex && s_usageNames[in.usage] == out.SemanticName )
+				{
+					layout.push_back( *jt );
+					found = true;
+					break;
+				}
+			}
+			if( !found )
+			{
+				D3D12_INPUT_ELEMENT_DESC desc = { s_usageNames[in.usage], in.usageIndex, DXGI_FORMAT_R32G32B32A32_FLOAT, 4, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+				layout.push_back( desc );
 			}
 		}
-		if( !found )
-		{
-			D3D12_INPUT_ELEMENT_DESC desc = { s_usageNames[in.usage], in.usageIndex, DXGI_FORMAT_R32G32B32A32_FLOAT, 4, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
-			layout.push_back( desc );
-		}
+	}
+
+	void Tr2VertexLayoutAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2VertexLayoutAL";
 	}
 }
-
 #endif

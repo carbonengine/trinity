@@ -2,79 +2,89 @@
 
 #if TRINITY_PLATFORM==TRINITY_DIRECTX9 
 
+#include "../include/Tr2ShaderAL.h"
 #include "Tr2ShaderProgramALDx9.h"
 #include "Tr2RenderContextDx9.h"
 
 
 using namespace Tr2RenderContextEnum;
 
-Tr2ShaderProgramAL::Tr2ShaderProgramAL()
-	:m_isValid( false )
+namespace TrinityALImpl
 {
-}
 
-ALResult Tr2ShaderProgramAL::Create( Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext )
-{
-	Destroy();
-
-	if( !renderContext.IsValid() )
+	Tr2ShaderProgramAL::Tr2ShaderProgramAL()
+		:m_isValid( false )
 	{
-		return E_INVALIDCALL;
 	}
 
-	if( count != 2 )
+	ALResult Tr2ShaderProgramAL::Create( ::Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext )
 	{
-		return E_INVALIDARG;
-	}
+		Destroy();
 
-	uint32_t mask = 0;
-	for( size_t i = 0; i < count; ++i )
-	{
-		if( !shaders[i].IsValid() )
+		if( !renderContext.IsValid() )
+		{
+			return E_INVALIDCALL;
+		}
+
+		if( count != 2 )
 		{
 			return E_INVALIDARG;
 		}
-		uint32_t bit = 1 << shaders[i].GetType();
-		if( ( mask & bit ) != 0 )
+
+		uint32_t mask = 0;
+		for( size_t i = 0; i < count; ++i )
+		{
+			if( !shaders[i].IsValid() )
+			{
+				return E_INVALIDARG;
+			}
+			uint32_t bit = 1 << shaders[i].GetType();
+			if( ( mask & bit ) != 0 )
+			{
+				return E_INVALIDARG;
+			}
+			mask |= bit;
+		}
+		if( mask != ( ( 1 << VERTEX_SHADER ) | ( 1 << PIXEL_SHADER ) ) )
 		{
 			return E_INVALIDARG;
 		}
-		mask |= bit;
+
+		if( shaders[0].GetType() == VERTEX_SHADER )
+		{
+			m_vertexShader = shaders[0];
+			m_pixelShader = shaders[1];
+		}
+		else
+		{
+			m_vertexShader = shaders[1];
+			m_pixelShader = shaders[0];
+		}
+		m_isValid = true;
+		return S_OK;
 	}
-	if( mask != ( ( 1 << VERTEX_SHADER ) | ( 1 << PIXEL_SHADER ) ) )
+
+	void Tr2ShaderProgramAL::Destroy()
 	{
-		return E_INVALIDARG;
+		m_vertexShader = ::Tr2ShaderAL();
+		m_pixelShader = ::Tr2ShaderAL();
+		m_isValid = false;
 	}
 
-	if( shaders[0].GetType() == VERTEX_SHADER )
+	bool Tr2ShaderProgramAL::IsValid() const
 	{
-		m_vertexShader = shaders[0];
-		m_pixelShader = shaders[1];
+		return m_isValid;
 	}
-	else
+
+	Tr2ALMemoryType Tr2ShaderProgramAL::GetMemoryClass() const
 	{
-		m_vertexShader = shaders[1];
-		m_pixelShader = shaders[0];
+		return AL_MEMORY_MANAGED;
 	}
-	m_isValid = true;
-	return S_OK;
-}
 
-void Tr2ShaderProgramAL::Destroy()
-{
-	m_vertexShader = Tr2ShaderAL();
-	m_pixelShader = Tr2ShaderAL();
-	m_isValid = false;
-}
+	void Tr2ShaderProgramAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2ShaderProgramAL";
+	}
 
-bool Tr2ShaderProgramAL::IsValid() const
-{
-	return m_isValid;
 }
-
-Tr2ALMemoryType Tr2ShaderProgramAL::GetMemoryClass() const
-{
-	return AL_MEMORY_MANAGED;
-}
-
 #endif

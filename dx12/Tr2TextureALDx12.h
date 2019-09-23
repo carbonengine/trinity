@@ -9,8 +9,7 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
 
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
+#include "../include/Tr2TextureAL.h"
 #include "../Tr2MemoryCounterAL.h"
 
 #ifdef TRINITY_AL_GUARD_LOCKS
@@ -19,11 +18,6 @@
 
 #include "./util/DescriptorHeapViewDx12.h"
 
-class Tr2PrimaryRenderContextAL;
-struct Tr2TextureSubresource;
-class Tr2RenderContextAL;
-struct Tr2SubresourceData;
-struct Tr2BitmapDimensions;
 
 namespace TrinityALImpl
 {
@@ -34,7 +28,7 @@ namespace TrinityALImpl
 
 namespace TrinityALImpl
 {
-	class Tr2TextureAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
+	class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>
 	{
 	public:
 		Tr2TextureAL();
@@ -74,7 +68,13 @@ namespace TrinityALImpl
 		const std::shared_ptr<RenderTargetViewDx12>& GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
 		void AssignFromSwapChainDx12( const std::vector<CComPtr<ID3D12Resource>>& backBuffers, const std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs, Tr2PrimaryRenderContextAL& renderContext );
 		void SetSwapChainBufferIndexDx12( uint32_t index );
+
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+
+		bool operator==( const Tr2TextureAL& other ) const;
 	private:
+		void GetRegionSize( const Tr2TextureSubresource& region, uint32_t& pitch, uint64_t& size );
+
 		Tr2BitmapDimensions m_desc;
 		Tr2MsaaDesc m_msaa;
 		Tr2CpuUsage::Type m_cpuUsage;
@@ -82,7 +82,17 @@ namespace TrinityALImpl
 
 		std::vector<CComPtr<ID3D12Resource>> m_textures;
 
-		CComPtr<ID3D12Resource> m_writeScratch;
+		struct WriteScratch
+		{
+			CComPtr<ID3D12Resource> scratch;
+			uint64_t size;
+			uint64_t frameIndex;
+		};
+		typedef std::vector<WriteScratch> WriteScratches;
+
+		WriteScratches m_writeScratches;
+		WriteScratches::iterator m_mappedScratch;
+
 		CComPtr<ID3D12Resource> m_readScratch;
 		Tr2TextureSubresource m_mappedRegion;
 

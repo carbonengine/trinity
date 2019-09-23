@@ -6,6 +6,7 @@
 #include "Tr2VertexDefinition.h"
 #include "ALLog.h"
 #include "Tr2RenderContextDx11.h"
+#include "Tr2PrimaryRenderContextDx11.h"
 #include "Tr2ShaderALDx11.h"
 
 using namespace Tr2RenderContextEnum;
@@ -98,110 +99,118 @@ namespace {
 	};
 }
 
-ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2RenderContextAL& renderContext )
+namespace TrinityALImpl
 {
-	if( !renderContext.IsValid() )
+
+	ALResult Tr2VertexLayoutAL::Create( const Tr2VertexDefinition& definition, Tr2PrimaryRenderContextAL& renderContext )
 	{
-		return E_FAIL;
-	}
-
-	m_definition.resize( definition.m_items.size() );
-
-	for( size_t i = 0; i != definition.m_items.size(); ++i )
-    {
-		const Tr2VertexDefinition::Item& src = definition.m_items[i];
-		D3D11_INPUT_ELEMENT_DESC& dst = m_definition[i];
-
-		dst.SemanticName			= semanticNames[ src.m_usage ];
-		dst.SemanticIndex			= src.m_usageIndex;
-
-		dst.Format					= GetDxgiDataType( src.m_dataType );
-		CCP_ASSERT( dst.Format != DXGI_FORMAT_UNKNOWN );
-
-		dst.InputSlot				= src.m_stream;
-		dst.AlignedByteOffset		= src.m_offset;
-		dst.InputSlotClass			= src.m_instanceStepRate ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA;
-		dst.InstanceDataStepRate	= src.m_instanceStepRate;
-    };
-
-	ChangeObjectId();
-	return S_OK;
-}
-
-void Tr2VertexLayoutAL::Destroy()
-{
-	m_layout.clear();
-	m_definition.clear();
-}
-
-static bool FindInputElement( const TrackableStdVector<D3D11_INPUT_ELEMENT_DESC>& elements, 
-							  const Tr2ShaderPipelineInputAL& element )
-{
-	for( auto it = elements.begin(); it != elements.end(); ++it )
-	{
-		if( element.usageIndex == it->SemanticIndex && strcmp( semanticNames[element.usage], it->SemanticName ) == 0 )
+		if( !renderContext.IsValid() )
 		{
-			return true;
+			return E_FAIL;
 		}
-	}
-	return false;
-}
 
-ALResult Tr2VertexLayoutAL::SetLayout( const TrinityALImpl::Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const
-{
-	if( !renderContext.m_secondaryDevice11 || !vertexShader || m_definition.empty() )
-	{
-		return E_FAIL;
-	}
-	auto found = m_layout.find( vertexShader->m_pipelineInputHash );
-	if( found != m_layout.end() )
-	{
-		renderContext.m_context->IASetInputLayout( found->second );
+		m_definition.resize( definition.m_items.size() );
+
+		for( size_t i = 0; i != definition.m_items.size(); ++i )
+		{
+			const Tr2VertexDefinition::Item& src = definition.m_items[i];
+			D3D11_INPUT_ELEMENT_DESC& dst = m_definition[i];
+
+			dst.SemanticName = semanticNames[src.m_usage];
+			dst.SemanticIndex = src.m_usageIndex;
+
+			dst.Format = GetDxgiDataType( src.m_dataType );
+			CCP_ASSERT( dst.Format != DXGI_FORMAT_UNKNOWN );
+
+			dst.InputSlot = src.m_stream;
+			dst.AlignedByteOffset = src.m_offset;
+			dst.InputSlotClass = src.m_instanceStepRate ? D3D11_INPUT_PER_INSTANCE_DATA : D3D11_INPUT_PER_VERTEX_DATA;
+			dst.InstanceDataStepRate = src.m_instanceStepRate;
+		};
+
 		return S_OK;
 	}
 
-	Tr2ShaderBytecodeAL bytecode;
-	CR_RETURN_HR( vertexShader->GetBytecode( bytecode ) );
-	
-	const auto& definition = vertexShader->m_signature;
-	auto patchedDefinition = m_definition;
-	for( auto it = definition.pipelineInputs.begin(); it != definition.pipelineInputs.end(); ++it )
+	void Tr2VertexLayoutAL::Destroy()
 	{
-		if( !FindInputElement( m_definition, *it ) )
+		m_layout.clear();
+		m_definition.clear();
+	}
+
+	static bool FindInputElement( const TrackableStdVector<D3D11_INPUT_ELEMENT_DESC>& elements,
+		const Tr2ShaderPipelineInputAL& element )
+	{
+		for( auto it = elements.begin(); it != elements.end(); ++it )
 		{
-			D3D11_INPUT_ELEMENT_DESC fakeElement;
-			fakeElement.AlignedByteOffset = 0;
-			fakeElement.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			fakeElement.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
-			fakeElement.InstanceDataStepRate = 0;
-			fakeElement.SemanticIndex = it->usageIndex;
-			fakeElement.SemanticName = semanticNames[it->usage];
-			if( it->usedMask == 0 )
+			if( element.usageIndex == it->SemanticIndex && strcmp( semanticNames[element.usage], it->SemanticName ) == 0 )
 			{
-				fakeElement.InputSlot = 4;
+				return true;
 			}
-			else
-			{
-				fakeElement.InputSlot = 4;
-			}
-			patchedDefinition.push_back( fakeElement );
 		}
+		return false;
 	}
 
-	CComPtr<ID3D11InputLayout> layout;
-	long result = renderContext.m_secondaryDevice11->CreateInputLayout(
-						patchedDefinition.data(), 
-						(uint32_t)patchedDefinition.size(), 
-						bytecode.bytecode, 
-						bytecode.size, 
-						&layout );
-
-	if( result == S_OK )
+	ALResult Tr2VertexLayoutAL::SetLayout( const TrinityALImpl::Tr2ShaderAL* vertexShader, Tr2RenderContextAL& renderContext ) const
 	{
-		m_layout[vertexShader->m_pipelineInputHash] = layout;
-		renderContext.m_context->IASetInputLayout( layout );
+		if( !renderContext.m_secondaryDevice11 || !vertexShader || m_definition.empty() )
+		{
+			return E_FAIL;
+		}
+		auto found = m_layout.find( vertexShader->m_pipelineInputHash );
+		if( found != m_layout.end() )
+		{
+			renderContext.m_context->IASetInputLayout( found->second );
+			return S_OK;
+		}
+
+		Tr2ShaderBytecodeAL bytecode;
+		CR_RETURN_HR( vertexShader->GetBytecode( bytecode ) );
+
+		const auto& definition = vertexShader->m_signature;
+		auto patchedDefinition = m_definition;
+		for( auto it = definition.pipelineInputs.begin(); it != definition.pipelineInputs.end(); ++it )
+		{
+			if( !FindInputElement( m_definition, *it ) )
+			{
+				D3D11_INPUT_ELEMENT_DESC fakeElement;
+				fakeElement.AlignedByteOffset = 0;
+				fakeElement.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+				fakeElement.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
+				fakeElement.InstanceDataStepRate = 0;
+				fakeElement.SemanticIndex = it->usageIndex;
+				fakeElement.SemanticName = semanticNames[it->usage];
+				if( it->usedMask == 0 )
+				{
+					fakeElement.InputSlot = 4;
+				}
+				else
+				{
+					fakeElement.InputSlot = 4;
+				}
+				patchedDefinition.push_back( fakeElement );
+			}
+		}
+
+		CComPtr<ID3D11InputLayout> layout;
+		long result = renderContext.m_secondaryDevice11->CreateInputLayout(
+			patchedDefinition.data(),
+			(uint32_t)patchedDefinition.size(),
+			bytecode.bytecode,
+			bytecode.size,
+			&layout );
+
+		if( result == S_OK )
+		{
+			m_layout[vertexShader->m_pipelineInputHash] = layout;
+			renderContext.m_context->IASetInputLayout( layout );
+		}
+		return result;
 	}
-	return result;
+
+	void Tr2VertexLayoutAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2VertexLayoutAL";
+	}
 }
 
 #endif // DX11?

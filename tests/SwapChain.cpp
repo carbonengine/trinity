@@ -28,26 +28,13 @@ TEST_F( SwapChain, CanCreateSwapChain )
 		Tr2SwapChainAL sc;
 		ASSERT_HRESULT_SUCCEEDED( sc.Create( window, *renderContext ) );
 		EXPECT_TRUE( sc.IsValid() );
-		EXPECT_TRUE( sc.m_backBuffer.IsValid() );
+		EXPECT_TRUE( sc.GetBackBuffer().IsValid() );
 #if( TRINITY_PLATFORM != TRINITY_STUB )
 		EXPECT_EQ( window.GetClientWidth(), sc.GetWidth() );
 		EXPECT_EQ( window.GetClientHeight(), sc.GetHeight() );
-		EXPECT_EQ( sc.GetWidth(), sc.m_backBuffer.GetWidth() );
-		EXPECT_EQ( sc.GetHeight(), sc.m_backBuffer.GetHeight() );
+		EXPECT_EQ( sc.GetWidth(), sc.GetBackBuffer().GetWidth() );
+		EXPECT_EQ( sc.GetHeight(), sc.GetBackBuffer().GetHeight() );
 #endif
-	}
-}
-
-TEST_F( SwapChain, CanDestroySwapChain )
-{
-	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
-	{
-		RenderWindow window;
-		Tr2SwapChainAL sc;
-		ASSERT_HRESULT_SUCCEEDED( sc.Create( window, *renderContext ) );
-		EXPECT_TRUE( sc.IsValid() );
-		sc.Destroy();
-		EXPECT_FALSE( sc.IsValid() );
 	}
 }
 
@@ -105,9 +92,9 @@ TEST_F( SwapChain, CanPresentSwapChain )
 			ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
-			ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( Tr2TextureAL() ) );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
-			ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( sc.m_backBuffer ) );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( sc.GetBackBuffer() ) );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PopRenderTarget() );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );
@@ -139,9 +126,9 @@ TEST_F( SwapChain, CanRecreateSwapChain )
 			ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
 
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
-			ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( Tr2TextureAL() ) );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
-			ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( sc.m_backBuffer ) );
+			ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( sc.GetBackBuffer() ) );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 8 ), 1.0f ) );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PopRenderTarget() );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );

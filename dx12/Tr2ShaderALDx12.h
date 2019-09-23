@@ -22,7 +22,7 @@ namespace TrinityALImpl
 	//   32bit - no support for shader blobs > 4 gig
 	// -------------------------------------------------------------
 	class Tr2ShaderAL :
-		public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SHADER>
+		public Tr2DeviceResourceAL<Tr2ShaderAL>
 	{
 	public:
 		Tr2ShaderAL();
@@ -40,7 +40,7 @@ namespace TrinityALImpl
 		ALResult GetBytecode( Tr2ShaderBytecodeAL& bytecode ) const;
 		Tr2ALMemoryType GetMemoryClass() const;
 
-		void SetNullShaderType( Tr2RenderContextEnum::ShaderType type );
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		Tr2ShaderAL( const Tr2ShaderAL& shader );
 		Tr2ShaderAL& operator=( const Tr2ShaderAL& shader );

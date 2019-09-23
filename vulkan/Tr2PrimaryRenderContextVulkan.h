@@ -65,6 +65,15 @@ public:
 		m_frameData[m_frameIndex].pendingDestroys.push_back( pd );
 	}
 
+	template <typename T>
+	void DestroyLaterVulkan( const std::vector<T> objects, void( VKAPI_CALL *destroyFunction )( VkDevice, T, const VkAllocationCallbacks* ) )
+	{
+		for( auto it = begin( objects ); it != end( objects ); ++it )
+		{
+			this->DestroyLaterVulkan( *it, destroyFunction );
+		}
+	}
+
 	VkBuffer GetZeroBufferVulkan() const;
 public:
 	Tr2TextureAL m_defaultBackBuffer;

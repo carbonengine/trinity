@@ -5,69 +5,75 @@
 #include "Tr2OcclusionQueryALStub.h"
 #include "Tr2RenderContextStub.h"
 
-
-Tr2OcclusionQueryAL::Tr2OcclusionQueryAL()
-	: m_isValid(false),
-	m_isRunning(false)
+namespace TrinityALImpl
 {
-}
 
-Tr2OcclusionQueryAL::~Tr2OcclusionQueryAL()
-{
-}
-
-ALResult Tr2OcclusionQueryAL::Create( Tr2RenderContextAL& renderContext )
-{
-	if ( !renderContext.IsValid() )
+	Tr2OcclusionQueryAL::Tr2OcclusionQueryAL()
+		: m_isValid( false ),
+		m_isRunning( false )
 	{
-		return E_INVALIDARG;
 	}
-	m_isValid = true;
-	return S_OK;
-}
 
-bool Tr2OcclusionQueryAL::IsValid() const
-{
-	return m_isValid;
-}
-
-void Tr2OcclusionQueryAL::Destroy()
-{
-	m_isValid = false;
-}
-
-ALResult Tr2OcclusionQueryAL::Begin( Tr2RenderContextAL& /*renderContext*/ )
-{
-	if( !m_isValid )
+	Tr2OcclusionQueryAL::~Tr2OcclusionQueryAL()
 	{
-		return E_INVALIDCALL;
 	}
-	m_isRunning = true;
-	return S_OK;
-}
 
-ALResult Tr2OcclusionQueryAL::End( Tr2RenderContextAL& /*renderContext*/ )
-{
-	if( !m_isValid )
+	ALResult Tr2OcclusionQueryAL::Create( Tr2RenderContextAL& renderContext )
 	{
-		return E_INVALIDCALL;
+		if( !renderContext.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+		m_isValid = true;
+		return S_OK;
 	}
-	if( ! m_isRunning )
-	{
-		return E_INVALIDCALL;
-	}
-	m_isRunning = false;
-	return S_OK;
-}
 
-ALResult Tr2OcclusionQueryAL::GetPixelCount( Tr2RenderContextAL& /*renderContext*/, uint32_t& count, WaitMode waitMode )
-{
-	if( !m_isValid )
+	bool Tr2OcclusionQueryAL::IsValid() const
 	{
-		return E_INVALIDCALL;
+		return m_isValid;
 	}
-	count = 0;
-	return S_OK;
-}
 
+	void Tr2OcclusionQueryAL::Destroy()
+	{
+		m_isValid = false;
+	}
+
+	ALResult Tr2OcclusionQueryAL::Begin( Tr2RenderContextAL& /*renderContext*/ )
+	{
+		if( !m_isValid )
+		{
+			return E_INVALIDCALL;
+		}
+		m_isRunning = true;
+		return S_OK;
+	}
+
+	ALResult Tr2OcclusionQueryAL::End( Tr2RenderContextAL& /*renderContext*/ )
+	{
+		if( !m_isValid )
+		{
+			return E_INVALIDCALL;
+		}
+		if( !m_isRunning )
+		{
+			return E_INVALIDCALL;
+		}
+		m_isRunning = false;
+		return S_OK;
+	}
+
+	ALResult Tr2OcclusionQueryAL::GetPixelCount( Tr2RenderContextAL& /*renderContext*/, uint32_t& count, ::Tr2OcclusionQueryAL::WaitMode waitMode )
+	{
+		if( !m_isValid )
+		{
+			return E_INVALIDCALL;
+		}
+		count = 0;
+		return S_OK;
+	}
+
+	void Tr2OcclusionQueryAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+	}
+}
 #endif

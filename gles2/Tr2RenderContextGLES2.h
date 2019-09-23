@@ -9,9 +9,10 @@
 #include "../include/Tr2TextureAL.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../include/Tr2SamplerStateAL.h"
+#include "../include/Tr2ShaderProgramAL.h"
+#include "../include/Tr2ConstantBufferAL.h"
 
 
-class Tr2ConstantBufferAL;
 class Tr2VertexLayoutAL;
 class Tr2ShaderAL;
 class Tr2SamplerStateAL;
@@ -257,8 +258,8 @@ private:
 	struct Blitter;
 	Blitter* m_blitter;
 
-	const Tr2ShaderProgramAL* m_program;
-	Tr2ConstantBufferAL* m_boundBuffers[16];
+	Tr2ShaderProgramAL m_program;
+	Tr2ConstantBufferAL m_boundBuffers[16];
 	int m_numberOfLights;
 	const Tr2VertexDefinition* m_boundLayout;
 	struct VertexStream

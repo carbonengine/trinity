@@ -524,6 +524,7 @@ namespace TrinityALImpl
 		m_gpuUsage( Tr2GpuUsage::NONE ),
 		m_cpuUsage( Tr2CpuUsage::NONE )
 	{
+		m_mappedScratch = m_writeScratches.end();
 	}
 
 	Tr2TextureAL::~Tr2TextureAL()
@@ -543,6 +544,16 @@ namespace TrinityALImpl
 		FORWARD_HR( CheckCreationFlags( desc, msaa, gpuUsage, cpuUsage ) );
 
 		if( !IsWritable( gpuUsage ) && !HasFlag( cpuUsage, Tr2CpuUsage::WRITE ) && !initialData )
+		{
+			return E_INVALIDARG;
+		}
+
+		if( desc.GetType() == TEX_TYPE_INVALID )
+		{
+			return E_INVALIDARG;
+		}
+
+		if( desc.GetWidth() == 0 || desc.GetHeight() == 0 || ( desc.GetType() == TEX_TYPE_3D && desc.GetDepth() == 0 ) || ( desc.GetType() != TEX_TYPE_3D && desc.GetArraySize() == 0 ) )
 		{
 			return E_INVALIDARG;
 		}
@@ -604,14 +615,15 @@ namespace TrinityALImpl
 			nullptr,
 			IID_PPV_ARGS( &texture ) ) );
 
+		CComPtr<ID3D12Resource> scratch;
+		uint64_t writeScratchSize = 0;
 		if( initialData )
 		{
-			CComPtr<ID3D12Resource> scratch;
 			auto subresources = std::max( 1u, desc.GetArraySize() ) * resourceDesc.MipLevels;
-			auto totalSize = GetRequiredIntermediateSize( texture, 0, subresources );
+			writeScratchSize = GetRequiredIntermediateSize( texture, 0, subresources );
 
 			auto scratchHeap = HeapDesc( D3D12_HEAP_TYPE_UPLOAD );
-			auto scratchDesc = BufferDesc( totalSize );
+			auto scratchDesc = BufferDesc( writeScratchSize );
 			CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
 				&scratchHeap,
 				D3D12_HEAP_FLAG_NONE,
@@ -642,8 +654,7 @@ namespace TrinityALImpl
 			}
 			if( defaultState != creationState )
 			{
-				auto barrier = Transition( texture, creationState, defaultState );
-				renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+				renderContext.ResourceBarrierDx12( Transition( texture, creationState, defaultState ) );
 			}
 			RELEASE_LATER( &renderContext, scratch );
 		}
@@ -831,6 +842,11 @@ namespace TrinityALImpl
 		m_defaultState = defaultState;
 		m_gpuUsage = gpuUsage;
 		m_cpuUsage = cpuUsage;
+		if( HasFlag( cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) && scratch )
+		{
+			WriteScratch s = { scratch, writeScratchSize, renderContext.GetCurrentFrameIndexDx12() };
+			m_writeScratches.push_back( s );
+		}
 
 		return S_OK;
 	}
@@ -842,11 +858,12 @@ namespace TrinityALImpl
 			RELEASE_LATER( m_owner, *it );
 		}
 		m_textures.clear();
-		if( m_writeScratch )
+		for( auto it = begin( m_writeScratches ); it != end( m_writeScratches ); ++it )
 		{
-			RELEASE_LATER( m_owner, m_writeScratch );
-			m_writeScratch = nullptr;
+			RELEASE_LATER( m_owner, it->scratch );
 		}
+		m_writeScratches.clear();
+		m_mappedScratch = m_writeScratches.end();
 		m_readScratch = nullptr;
 		m_currentTextureIndex = 0;
 		memset( &m_desc, 0, sizeof( m_desc ) );
@@ -862,7 +879,6 @@ namespace TrinityALImpl
 		m_rtv.clear();
 		m_dsv = nullptr;
 		m_uav.clear();
-		
 	}
 
 	bool Tr2TextureAL::IsValid() const
@@ -906,18 +922,22 @@ namespace TrinityALImpl
 		renderContext.IsBoundDx12( *this, srcState );
 
 		D3D12_RESOURCE_BARRIER barriers[2];
+		ID3D12Resource* resources[2];
 		uint32_t barrierCount = 0;
 		if( srcState != D3D12_RESOURCE_STATE_RESOLVE_SOURCE )
 		{
+			resources[barrierCount] = GetResourceDx12();
 			barriers[barrierCount++] = Transition( GetResourceDx12(), srcState, D3D12_RESOURCE_STATE_RESOLVE_SOURCE, 0 );
 		}
 		if( destination.m_defaultState != D3D12_RESOURCE_STATE_RESOLVE_DEST )
 		{
+			resources[barrierCount] = destination.GetResourceDx12();
 			barriers[barrierCount++] = Transition( destination.GetResourceDx12(), destination.m_defaultState, D3D12_RESOURCE_STATE_RESOLVE_DEST, 0 );
 		}
 		if( barrierCount )
 		{
-			renderContext.m_commandList->ResourceBarrier( barrierCount, barriers );
+			renderContext.ResourceBarrierDx12( barrierCount, barriers );
+			renderContext.FlushBarriersDx12( barrierCount, resources );
 		}
 
 		renderContext.m_commandList->ResolveSubresource( destination.GetResourceDx12(), 0, GetResourceDx12(), 0, DXGI_FORMAT( m_desc.GetFormat() ) );
@@ -928,7 +948,7 @@ namespace TrinityALImpl
 			{
 				std::swap( barriers[i].Transition.StateAfter, barriers[i].Transition.StateBefore );
 			}
-			renderContext.m_commandList->ResourceBarrier( barrierCount, barriers );
+			renderContext.ResourceBarrierDx12( barrierCount, barriers );
 		}
 		return S_OK;
 	}
@@ -951,6 +971,8 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDCALL;
 		}
+
+		renderContext.FlushBarriersDx12( m_textures[0] );
 
 		renderContext.m_dirtyPso = true;
 		const auto desc = m_textures[0]->GetDesc();
@@ -994,7 +1016,8 @@ namespace TrinityALImpl
 					TrinityALImpl::Transition( srcResource, srcState, D3D12_RESOURCE_STATE_COPY_SOURCE ),
 					TrinityALImpl::Transition( dstResource, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST ),
 				};
-				renderContext.m_commandList->ResourceBarrier( 2, barriers );
+				renderContext.ResourceBarrierDx12( 2, barriers );
+				renderContext.FlushBarriersDx12( srcResource, dstResource );
 			}
 			renderContext.m_commandList->CopyResource( dstResource, srcResource );
 			{
@@ -1002,7 +1025,7 @@ namespace TrinityALImpl
 					TrinityALImpl::Transition( srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE, srcState ),
 					TrinityALImpl::Transition( dstResource, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState ),
 				};
-				renderContext.m_commandList->ResourceBarrier( 2, barriers );
+				renderContext.ResourceBarrierDx12( 2, barriers );
 			}
 			return S_OK;
 		}
@@ -1028,7 +1051,8 @@ namespace TrinityALImpl
 				TrinityALImpl::Transition( srcResource, srcState, D3D12_RESOURCE_STATE_COPY_SOURCE ),
 				TrinityALImpl::Transition( dstResource, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST ),
 			};
-			renderContext.m_commandList->ResourceBarrier( 2, barriers );
+			renderContext.ResourceBarrierDx12( 2, barriers );
+			renderContext.FlushBarriersDx12( srcResource, dstResource );
 		}
 
 		for( uint32_t mip = 0; mip != mipCount; ++mip )
@@ -1059,7 +1083,7 @@ namespace TrinityALImpl
 				TrinityALImpl::Transition( srcResource, D3D12_RESOURCE_STATE_COPY_SOURCE, srcState ),
 				TrinityALImpl::Transition( dstResource, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState ),
 			};
-			renderContext.m_commandList->ResourceBarrier( 2, barriers );
+			renderContext.ResourceBarrierDx12( 2, barriers );
 		}
 
 		return S_OK;
@@ -1090,6 +1114,22 @@ namespace TrinityALImpl
 		return m_cpuUsage;
 	}
 
+	void Tr2TextureAL::GetRegionSize( const Tr2TextureSubresource& region, uint32_t& pitch, uint64_t& size )
+	{
+		if( region.HasBox() )
+		{
+			pitch = region.GetWidth() * Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() );
+			pitch = ( ( pitch + D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1 ) / D3D12_TEXTURE_DATA_PITCH_ALIGNMENT ) * D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
+			size = region.GetHeight() * region.GetDepth() * pitch;
+		}
+		else
+		{
+			pitch = m_desc.GetMipPitch( region.m_startMipLevel );
+			pitch = ( ( pitch + D3D12_TEXTURE_DATA_PITCH_ALIGNMENT - 1 ) / D3D12_TEXTURE_DATA_PITCH_ALIGNMENT ) * D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
+			size = m_desc.GetMipHeight( region.m_startMipLevel ) * m_desc.GetMipDepth( region.m_startMipLevel ) * pitch;
+		}
+	}
+
 	ALResult Tr2TextureAL::MapForWriting( const Tr2TextureSubresource& region, void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
 	{
 		if( !IsValid() || !HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE ) )
@@ -1114,29 +1154,42 @@ namespace TrinityALImpl
 		}
 
 		auto texture = GetResourceDx12();
-		CComPtr<ID3D12Resource> scratch = m_writeScratch;
-		if( !scratch )
+		uint64_t requiredSize = 0;
+		uint32_t myPitch = 0;
+		GetRegionSize( region, myPitch, requiredSize );
+
+		auto completed = m_owner->GetCompletedFrameIndexDx12();
+		m_mappedScratch = m_writeScratches.end();
+		for( auto it = begin( m_writeScratches ); it != end( m_writeScratches ); ++it )
 		{
-			auto totalSize = GetRequiredIntermediateSize( texture, 0, 1 );
+			if( completed >= it->frameIndex && requiredSize <= it->size )
+			{
+				m_mappedScratch = it;
+				break;
+			}
+		}
+
+		if( m_mappedScratch == m_writeScratches.end() )
+		{
 			auto scratchHeap = HeapDesc( D3D12_HEAP_TYPE_UPLOAD );
-			auto scratchDesc = BufferDesc( totalSize );
+			auto scratchDesc = BufferDesc( requiredSize );
+			WriteScratch scratch;
 			CR_RETURN_HR( m_owner->m_device->CreateCommittedResource(
 				&scratchHeap,
 				D3D12_HEAP_FLAG_NONE,
 				&scratchDesc,
 				D3D12_RESOURCE_STATE_GENERIC_READ,
 				nullptr,
-				IID_PPV_ARGS( &scratch ) ) );
+				IID_PPV_ARGS( &scratch.scratch ) ) );
+			scratch.size = requiredSize;
+			scratch.frameIndex = m_owner->GetCurrentFrameIndexDx12();
+			m_writeScratches.push_back( scratch );
+			m_mappedScratch = m_writeScratches.begin() + ( m_writeScratches.size() - 1 );
 		}
 
-		D3D12_RESOURCE_DESC desc = texture->GetDesc();
-		D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout;
-		m_owner->m_device->GetCopyableFootprints( &desc, region.m_startMipLevel, 1, 0, &layout, nullptr, nullptr, nullptr );
-
 		D3D12_RANGE range = { 0, 0 };
-		CR_RETURN_HR( scratch->Map( 0, &range, &data ) );
-		m_writeScratch = scratch;
-		pitch = layout.Footprint.RowPitch;
+		CR_RETURN_HR( m_mappedScratch->scratch->Map( 0, &range, &data ) );
+		pitch = myPitch;
 		m_mappedRegion = region;
 
 		return S_OK;
@@ -1144,25 +1197,40 @@ namespace TrinityALImpl
 
 	void Tr2TextureAL::UnmapForWriting( Tr2RenderContextAL& renderContext )
 	{
-		if( !m_writeScratch || !renderContext.IsValid() || !m_mappedRegion.IsValid() )
+		if( m_mappedScratch == m_writeScratches.end() || !renderContext.IsValid() || !m_mappedRegion.IsValid() )
 		{
 			return;
 		}
-		m_writeScratch->Unmap( 0, nullptr );
+
+		uint64_t requiredSize = 0;
+		uint32_t pitch = 0;
+		GetRegionSize( m_mappedRegion, pitch, requiredSize );
+
+		D3D12_RANGE range = { 0, SIZE_T( requiredSize ) };
+		m_mappedScratch->scratch->Unmap( 0, nullptr );
 
 		auto texture = GetResourceDx12();
 		auto subresource = m_mappedRegion.m_startFace * m_desc.GetTrueMipCount() + m_mappedRegion.m_startMipLevel;
 		D3D12_RESOURCE_DESC desc = texture->GetDesc();
 		D3D12_PLACED_SUBRESOURCE_FOOTPRINT layout;
-		m_owner->m_device->GetCopyableFootprints( &desc, subresource, 1, 0, &layout, nullptr, nullptr, nullptr );
 		layout.Offset = 0;
-		D3D12_TEXTURE_COPY_LOCATION Dst = { texture, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, subresource };
-		D3D12_TEXTURE_COPY_LOCATION Src = { m_writeScratch, D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, layout };
-
+		if( m_mappedRegion.HasBox() )
 		{
-			auto barrier = TrinityALImpl::Transition( texture, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST );
-			renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+			D3D12_SUBRESOURCE_FOOTPRINT f = { desc.Format, m_mappedRegion.GetWidth(), m_mappedRegion.GetHeight(), m_mappedRegion.GetDepth(), pitch };
+			layout.Footprint = f;
 		}
+		else
+		{
+			auto mip = m_mappedRegion.m_startMipLevel;
+			D3D12_SUBRESOURCE_FOOTPRINT f = { desc.Format, m_desc.GetMipWidth( mip ), m_desc.GetMipHeight( mip ), m_desc.GetMipDepth( mip ), pitch };
+			layout.Footprint = f;
+		}
+		D3D12_TEXTURE_COPY_LOCATION Dst = { texture, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, subresource };
+		D3D12_TEXTURE_COPY_LOCATION Src = { m_mappedScratch->scratch, D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT, layout };
+
+		renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( texture, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST ) );
+		renderContext.FlushBarriersDx12( texture );
+
 		if( m_mappedRegion.HasBox() )
 		{
 			D3D12_BOX box = { 0, 0, 0, m_mappedRegion.m_right - m_mappedRegion.m_left, m_mappedRegion.m_bottom - m_mappedRegion.m_top, m_mappedRegion.m_back - m_mappedRegion.m_front };
@@ -1178,18 +1246,13 @@ namespace TrinityALImpl
 		{
 			renderContext.m_commandList->CopyTextureRegion( &Dst, 0, 0, 0, &Src, nullptr );
 		}
-		{
-			auto barrier = TrinityALImpl::Transition( texture, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState );
-			renderContext.m_commandList->ResourceBarrier( 1, &barrier );
-		}
 
-		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
-		{
-			RELEASE_LATER( m_owner, m_writeScratch );
-			m_writeScratch = nullptr;
-		}
+		renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( texture, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState ) );
+
+		m_mappedScratch->frameIndex = m_owner->GetCurrentFrameIndexDx12();
 
 		m_mappedRegion = Tr2TextureSubresource();
+		m_mappedScratch = m_writeScratches.end();
 	}
 
 	ALResult Tr2TextureAL::MapForReading( const Tr2TextureSubresource& region, const void*& data, uint32_t& pitch, Tr2RenderContextAL& renderContext )
@@ -1224,10 +1287,8 @@ namespace TrinityALImpl
 				IID_PPV_ARGS( &scratch ) ) );
 		}
 
-		{
-			auto barrier = Transition( texture, m_defaultState, D3D12_RESOURCE_STATE_COPY_SOURCE );
-			renderContext.m_commandList->ResourceBarrier( 1, &barrier );
-		}
+		renderContext.ResourceBarrierDx12( Transition( texture, m_defaultState, D3D12_RESOURCE_STATE_COPY_SOURCE ) );
+		renderContext.FlushBarriersDx12( texture );
 
 		auto subresource = region.m_startFace * m_desc.GetTrueMipCount() + region.m_startMipLevel;
 		D3D12_RESOURCE_DESC desc = texture->GetDesc();
@@ -1239,10 +1300,7 @@ namespace TrinityALImpl
 
 		renderContext.m_commandList->CopyTextureRegion( &Dst, 0, 0, 0, &Src, nullptr );
 
-		{
-			auto barrier = Transition( texture, D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState );
-			renderContext.m_commandList->ResourceBarrier( 1, &barrier );
-		}
+		renderContext.ResourceBarrierDx12( Transition( texture, D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState ) );
 
 		auto hr = renderContext.FlushAndSyncDx12();
 		if( FAILED( hr ) )
@@ -1364,6 +1422,28 @@ namespace TrinityALImpl
 	void Tr2TextureAL::SetSwapChainBufferIndexDx12( uint32_t index )
 	{
 		m_currentTextureIndex = index;
+	}
+
+	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2TextureAL";
+
+		unsigned size = 0;
+		for( unsigned i = 0; i < m_desc.GetTrueMipCount(); ++i )
+		{
+			size += m_desc.GetMipSize( i );
+		}
+
+		description["size"] = std::to_string( long long( size ) );
+		description["width"] = std::to_string( long long( m_desc.GetWidth() ) );
+		description["height"] = std::to_string( long long( m_desc.GetHeight() ) );
+		description["mipLevels"] = std::to_string( long long( m_desc.GetTrueMipCount() ) );
+		description["format"] = std::to_string( long long( m_desc.GetFormat() ) );
+	}
+
+	bool Tr2TextureAL::operator==( const Tr2TextureAL& other ) const
+	{
+		return GetResourceDx12() == other.GetResourceDx12();
 	}
 }
 

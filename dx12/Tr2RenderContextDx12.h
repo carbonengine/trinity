@@ -13,11 +13,14 @@
 #include "../include/Tr2ConstantBufferAL.h"
 #include "../include/Tr2ResourceSetAL.h"
 #include "../include/Tr2TextureAL.h"
+#include "../include/Tr2ShaderProgramAL.h"
+#include "../include/Tr2VertexLayoutAL.h"
 
 #include "./util/DescriptorStateCacheDx12.h"
+#include "./util/PsoDescription.h"
+#include "../Tr2HalHelperStructures.h"
 
 class Tr2ConstantBufferAL;
-class Tr2VertexLayoutAL;
 struct ITr2RenderContextEvents;
 
 class Tr2ShaderAL;
@@ -36,6 +39,8 @@ public:
 	void Destroy() throw( );
 
 	bool IsValid() const throw( );
+
+	ALResult CreateDx12( ID3D12CommandAllocator* commandAllocator, Tr2PrimaryRenderContextAL& renderContext );
 
 	static void SetPrimaryRenderContext( Tr2PrimaryRenderContextAL* )
 	{
@@ -177,9 +182,20 @@ public:
 	void DirtyDescriptorCache();
 	void ReApplyStateDx12();
 
+
+	void ResourceBarrierDx12( size_t count, const D3D12_RESOURCE_BARRIER* barriers );
+	void ResourceBarrierDx12( const D3D12_RESOURCE_BARRIER& barrier );
+	void FlushBarriersDx12();
+	void FlushBarriersDx12( ID3D12Resource* resource );
+	void FlushBarriersDx12( ID3D12Resource* resource1, ID3D12Resource* resource2 );
+	void FlushBarriersDx12( size_t count, ID3D12Resource** resources );
+
+	void FlushGraphicsBarriersDx12( ID3D12Resource* resource = nullptr );
+	void FlushComputeBarriersDx12( ID3D12Resource* resource = nullptr );
+
 protected:
 	ID3D12PipelineState* GetPipelineState();
-	void SetAllState();
+	ALResult SetAllState();
 
 	/** Forcibly reset and dirty all descriptor caches (used for explicit synchronization) */
 	void ResetDescriptorCaches();
@@ -192,19 +208,12 @@ protected:
 	};
 
 	VB m_vertexBuffers[4];
+	uint32_t m_dynamicVBs;
+
 	Tr2BufferAL m_indexBuffer;
+	bool m_dynamicIB;
 
-
-	const Tr2VertexLayoutAL* m_vertexLayout;
-	const Tr2ShaderProgramAL* m_shaderProgram;
-	D3D12_PRIMITIVE_TOPOLOGY_TYPE m_topologyType;
-	D3D12_BLEND_DESC m_blendDesc;
-	D3D12_RASTERIZER_DESC m_rasterizerDesc;
-	D3D12_DEPTH_STENCIL_DESC m_depthStencilDesc;
-	uint32_t m_renderTargetCount;
-	Tr2RenderContextEnum::PixelFormat m_renderTargetFormats[8];
-	Tr2RenderContextEnum::PixelFormat m_depthStencilFormat;
-	Tr2MsaaDesc m_sampleDesc;
+	TrinityALImpl::PSODescription m_psoDescription;
 
 
 	bool m_separateAlphaBlendEnabled;
@@ -242,6 +251,8 @@ protected:
 	Tr2RenderContextEnum::Topology m_topology;
 	TrinityALImpl::Tr2DrawUPHelper m_drawUPHelper;
 private:
+
+	std::vector<D3D12_RESOURCE_BARRIER> m_barriers;
 
 	Tr2RenderContextAL( const Tr2RenderContextAL& ) /* = delete */;
 	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;

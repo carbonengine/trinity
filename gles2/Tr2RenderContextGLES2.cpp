@@ -11,6 +11,7 @@
 #include "Tr2ShaderProgramALGLES2.h"
 #include "Tr2ResourceSetALGLES2.h"
 #include "Tr2BufferALGLES2.h"
+#include "Tr2TextureALGLES2.h"
 
 #include "ALLog.h"
 
@@ -231,8 +232,6 @@ struct Tr2RenderContextAL::Blitter
 	// --------------------------------------------------------------------------------------
 	ALResult Blit( Tr2TextureAL& source )
 	{
-		AL_UPDATE_RESOURCE_FRAME_USAGE( *m_sampler.m_sampler );
-
 		GL_FAIL( glActiveTexture( GL_TEXTURE0 ) );
 		GL_FAIL( glBindTexture( GL_TEXTURE_2D, source.m_texture->m_texture ) );
 		GL_IGNORE_ERROR( glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_SRGB_DECODE_EXT, GL_SKIP_DECODE_EXT ) );
@@ -276,7 +275,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_stackDS( "Tr2RenderContextAL::m_stackDS" )
 	, m_boundIndexBufferIs16Bit( false )
 	, m_boundLayout( nullptr )
-	, m_program( nullptr )
 #ifdef _WIN32
 	, m_hRC( INVALID_HRC )
 	, m_hDC( 0 )
@@ -301,11 +299,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
 		m_stackRT[i].SetName( "Tr2RenderContextAL::m_stackRT" );
-	}
-
-	for( unsigned i = 0; i < 16; ++i )
-	{
-		m_boundBuffers[i] = nullptr;
 	}
 
 	m_blendState.separateAlphaBlend = false;
@@ -427,7 +420,7 @@ void Tr2RenderContextAL::Destroy()
 	m_topology = TOP_TRIANGLES;
 
 	m_boundLayout = nullptr;
-	m_program = nullptr;
+	m_program = Tr2ShaderProgramAL();
 
 	for( unsigned i = 0; i < 8; ++i )
 	{
@@ -832,21 +825,7 @@ ALResult Tr2RenderContextAL::SetConstants(
 		registerIndex = CONSTANT_BUFFER_FOR_FRAGMENT_PARAMETERS;
 	}
 
-	if( !buffer.IsValid() )
-	{
-		m_boundBuffers[registerIndex] = nullptr;
-		if( &buffer == &nullCB )
-		{
-			return S_OK;
-		}
-		else
-		{
-			return E_INVALIDARG;
-		}
-	}
-
-	AL_UPDATE_RESOURCE_FRAME_USAGE( buffer );
-	m_boundBuffers[registerIndex] = &buffer;
+	m_boundBuffers[registerIndex] = buffer;
 
 	return S_OK;
 }
@@ -1110,7 +1089,7 @@ ALResult Tr2RenderContextAL::InternalBlitToBackBuffer( Tr2TextureAL& source )
 	}
 	ALResult result = m_blitter->Blit( source );
 
-	m_program = nullptr;
+	m_program = Tr2ShaderProgramAL();
 	if( m_renderStates[RS_ZENABLE] )
 	{
 		glEnable( GL_DEPTH_TEST );
@@ -1144,10 +1123,6 @@ ALResult Tr2RenderContextAL::Present()
 	{
 		return E_FAIL;
 	}
-#if AL_TACK_RESOURCE_USAGE
-	extern uint64_t g_trackCurrentFrame;
-	++g_trackCurrentFrame;
-#endif
 
 	InternalBlitToBackBuffer( m_defaultBackBuffer );
 
@@ -1174,22 +1149,19 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
 		m_boundLayout = nullptr;
 		return E_INVALIDARG;
 	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( layout );
-	m_boundLayout = layout.m_definition.get();
+	m_boundLayout = layout.m_layout->m_definition.get();
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram )
 {
-	AL_UPDATE_RESOURCE_FRAME_USAGE( shaderProgram );
-	
-	m_program = &shaderProgram;
+	m_program = shaderProgram;
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetProgram()
 {
-	if( !m_program )
+	if( !m_program.IsValid() )
 	{
 		return E_FAIL;
 	}
@@ -1197,7 +1169,7 @@ ALResult Tr2RenderContextAL::SetProgram()
 	bool patchedPS = (m_alphaTestParameters.m_alphaTestEnabled && 
 		m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS) ||
 		m_fragmentOpSettings.m_clipPlaneEnable;
-	auto programData = patchedPS && m_program->m_patchedProgram.program ? &m_program->m_patchedProgram : &m_program->m_program;
+	auto programData = patchedPS && m_program.m_program->m_patchedProgram.program ? &m_program.m_program->m_patchedProgram : &m_program.m_program->m_program;
 	if( !programData->program )
 	{
 		return E_FAIL;
@@ -2057,7 +2029,7 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 		0, 0, 0,		
 	};
 
-	if( m_boundLayout == nullptr || m_program == nullptr )
+	if( m_boundLayout == nullptr || !m_program.IsValid() )
 	{
 		return false;
 	}
@@ -2065,7 +2037,7 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 	bool patchedPS = ( m_alphaTestParameters.m_alphaTestEnabled &&
 		m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS ) ||
 		m_fragmentOpSettings.m_clipPlaneEnable;
-	auto programData = patchedPS && m_program->m_patchedProgram.program ? &m_program->m_patchedProgram : &m_program->m_program;
+	auto programData = patchedPS && m_program.m_program->m_patchedProgram.program ? &m_program.m_program->m_patchedProgram : &m_program.m_program->m_program;
 
 	unsigned currentArray = 8;
 	auto& definition = *m_boundLayout;
@@ -2133,16 +2105,16 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
 	bool patchedPS = ( m_alphaTestParameters.m_alphaTestEnabled &&
 		m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS ) ||
 		m_fragmentOpSettings.m_clipPlaneEnable;
-	auto programData = patchedPS && m_program->m_patchedProgram.program ? &m_program->m_patchedProgram : &m_program->m_program;
+	auto programData = patchedPS && m_program.m_program->m_patchedProgram.program ? &m_program.m_program->m_patchedProgram : &m_program.m_program->m_program;
 
 	for( unsigned i = 0; i != 16; ++i )
 	{
-		if( m_boundBuffers[i] && programData->constantBuffers[i] >= 0 )
+		if( m_boundBuffers[i].IsValid() && programData->constantBuffers[i] >= 0 )
 		{
 			glUniform4fv( 
 				programData->constantBuffers[i],
-				m_boundBuffers[i]->GetSize() / 4 / sizeof( float ), 
-				(float*)m_boundBuffers[i]->m_shadowCopy.get() );
+				m_boundBuffers[i].GetSize() / 4 / sizeof( float ), 
+				(float*)m_boundBuffers[i].m_buffer->m_shadowCopy.get() );
 		}
 	}
 	if( programData->intConstant >= 0 )
@@ -2443,8 +2415,6 @@ ALResult Tr2RenderContextAL::CopySubresourceRegion(
 		return E_INVALIDARG;
 	}
 
-	AL_UPDATE_RESOURCE_FRAME_USAGE( source );
-	AL_UPDATE_RESOURCE_FRAME_USAGE( destination );
 	uint32_t box[6] = { src.m_left, src.m_top, src.m_front, src.m_right, src.m_bottom, src.m_back };
 
 	const uint32_t mipCount = std::min( src.GetMipCount(), dst.GetMipCount() );
@@ -2495,8 +2465,6 @@ ALResult Tr2RenderContextAL::InternalResolveRT( TrinityALImpl::Tr2TextureAL& des
 	{
 		return E_INVALIDARG;
 	}
-	AL_UPDATE_RESOURCE_FRAME_USAGE( source );
-	AL_UPDATE_RESOURCE_FRAME_USAGE( destination );
 	CR_GL( glBindFramebuffer( GL_FRAMEBUFFER_EXT, 0 ) );
 	CR_GL( glBindFramebuffer( GL_READ_FRAMEBUFFER_EXT, m_offscreenFrameBuffer0 ) );
 	if( source.m_msaaBuffer )

@@ -7,75 +7,65 @@
 
 bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer )
 {
-	auto resource = Resource();
-	resource.type = BUFFER;
-	resource.buffer = buffer;
-	resource.colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-
-	if( m_srv[stage][registerIndex] == resource )
+	auto& resource = m_srv[stage][registerIndex];
+	if( resource.Is( buffer, 0 ) )
 	{
 		return false;
 	}
-	m_srv[stage][registerIndex] = resource;
+	resource.type = BUFFER;
+	resource.buffer = buffer;
+	resource.initialCount = 0;
 	return true;
 }
 
 bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace )
 {
-	auto resource = Resource();
-	resource.type = TEXTURE;
-	resource.texture = texture;
-	resource.colorSpace = colorSpace;
-
-	if( m_srv[stage][registerIndex] == resource )
+	auto& resource = m_srv[stage][registerIndex];
+	if( resource.Is( texture, colorSpace ) )
 	{
 		return false;
 	}
-	m_srv[stage][registerIndex] = resource;
+	resource.type = TEXTURE;
+	resource.texture = texture;
+	resource.colorSpace = colorSpace;
 	return true;
 }
 
 bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer, uint32_t initialCount )
 {
-	auto resource = Resource();
-	resource.type = BUFFER;
-	resource.buffer = buffer;
-	resource.initialCount = initialCount;
-
-	if( m_uav[stage][registerIndex] == resource )
+	auto& resource = m_uav[stage][registerIndex];
+	if( m_uav[stage][registerIndex].Is( buffer, initialCount ) )
 	{
 		return false;
 	}
-	m_uav[stage][registerIndex] = resource;
+	resource.type = BUFFER;
+	resource.buffer = buffer;
+	resource.initialCount = initialCount;
 	return true;
 }
 
 bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip )
 {
-	auto resource = Resource();
-	resource.type = TEXTURE;
-	resource.texture = texture;
-	resource.mip = mip;
-
-	if( m_uav[stage][registerIndex] == resource )
+	auto& resource = m_uav[stage][registerIndex];
+	if( m_uav[stage][registerIndex].Is( texture, mip ) )
 	{
 		return false;
 	}
-	m_uav[stage][registerIndex] = resource;
+	resource.type = TEXTURE;
+	resource.texture = texture;
+	resource.mip = mip;
 	return true;
 }
 
 bool Tr2ResourceSetDescriptionAL::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
 {
-	auto resource = Sampler();
-	resource.sampler = sampler;
-	resource.assigned = true;
-
-	if( m_samplers[stage][registerIndex] == resource )
+	auto& resource = m_samplers[stage][registerIndex];
+	if( resource == sampler )
 	{
 		return false;
 	}
-	m_samplers[stage][registerIndex] = resource;
+	resource.sampler = sampler;
+	resource.assigned = true;
 	return true;
 }
 
@@ -118,6 +108,21 @@ bool Tr2ResourceSetDescriptionAL::Resource::operator==( const Resource& other ) 
 	return type == other.type && buffer == other.buffer && texture == other.texture && initialCount == other.initialCount;
 }
 
+bool Tr2ResourceSetDescriptionAL::Resource::Is( const Tr2BufferAL& other, uint32_t otherInitialCount ) const
+{
+	return type == BUFFER && buffer == other && initialCount == otherInitialCount;
+}
+
+bool Tr2ResourceSetDescriptionAL::Resource::Is( const Tr2TextureAL& other, Tr2RenderContextEnum::ColorSpace otherColorSpace ) const
+{
+	return type == TEXTURE && texture == other && colorSpace == otherColorSpace;
+}
+
+bool Tr2ResourceSetDescriptionAL::Resource::Is( const Tr2TextureAL& other, uint32_t otherMip ) const
+{
+	return type == TEXTURE && texture == other && mip == otherMip;
+}
+
 Tr2ResourceSetDescriptionAL::Sampler::Sampler()
 	:assigned( false )
 {
@@ -126,6 +131,11 @@ Tr2ResourceSetDescriptionAL::Sampler::Sampler()
 bool Tr2ResourceSetDescriptionAL::Sampler::operator==( const Sampler& other ) const
 {
 	return sampler == other.sampler && assigned == other.assigned;
+}
+
+bool Tr2ResourceSetDescriptionAL::Sampler::operator==( const Tr2SamplerStateAL& other ) const
+{
+	return sampler == other && assigned;
 }
 
 

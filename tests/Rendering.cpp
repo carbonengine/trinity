@@ -222,7 +222,7 @@ TEST_F( Rendering, CanRenderASingleTriangle )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanRenderTriangleStrip )
@@ -274,7 +274,7 @@ TEST_F( Rendering, CanRenderTriangleStrip )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanRenderIndexedTriangles )
@@ -331,7 +331,7 @@ TEST_F( Rendering, CanRenderIndexedTriangles )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetIndices( Tr2BufferAL() ) );
 }
 
@@ -397,7 +397,7 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanSampleTexture )
@@ -482,7 +482,7 @@ TEST_F( Rendering, CanSampleTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 
@@ -583,7 +583,7 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanPassConstantBufferToRendering )
@@ -614,7 +614,7 @@ TEST_F( Rendering, CanPassConstantBufferToRendering )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	Tr2ConstantBufferAL cb;
-	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), Tr2RenderContextEnum::USAGE_CPU_WRITE, nullptr, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), *renderContext ) );
 
 
 	uint32_t g = 127;
@@ -645,8 +645,8 @@ TEST_F( Rendering, CanPassConstantBufferToRendering )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( const_cast<Tr2ConstantBufferAL&>( nullCB ), Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( Tr2ConstantBufferAL(), Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 }
 
 TEST_F( Rendering, CanDoInstancedRendering )
@@ -714,7 +714,7 @@ TEST_F( Rendering, CanDoInstancedRendering )
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 1, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanClearRenderTarget )
@@ -779,7 +779,7 @@ TEST_F( Rendering, CanClearRenderTarget )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( Tr2TextureAL() ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 16 ), 1.0f ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PopDepthStencil() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PopRenderTarget() );
@@ -802,7 +802,7 @@ TEST_F( Rendering, CanClearRenderTarget )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanRenderToRenderTarget )
@@ -874,7 +874,7 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( Tr2TextureAL() ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 0 ), 1.0f ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
@@ -907,7 +907,7 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanRenderToMsaaRenderTarget )
@@ -982,7 +982,7 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( Tr2TextureAL() ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 0 ), 1.0f ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
@@ -1017,7 +1017,7 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 
@@ -1079,7 +1079,7 @@ TEST_F( Rendering, CanClearDepthBuffer )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanRenderIntoDepthBuffer )
@@ -1145,7 +1145,7 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanSampleDepthBuffer )
@@ -1266,7 +1266,7 @@ TEST_F( Rendering, CanSampleDepthBuffer )
 
 	renderContext->SetReadOnlyDepth( false );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
@@ -1313,7 +1313,7 @@ TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
@@ -1362,7 +1362,7 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetIndices( Tr2BufferAL() ) );
 }
 
@@ -1412,7 +1412,7 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith32BitDrawIndexedPrimitiveUP )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetIndices( Tr2BufferAL() ) );
 }
 
@@ -1453,7 +1453,7 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	Tr2ConstantBufferAL cb;
-	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), Tr2RenderContextEnum::USAGE_CPU_WRITE, nullptr, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), *renderContext ) );
 
 	Tr2OcclusionQueryAL queryOccluded;
 	ASSERT_HRESULT_SUCCEEDED( queryOccluded.Create( *renderContext ) );
@@ -1541,8 +1541,8 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( const_cast<Tr2ConstantBufferAL&>( nullCB ), Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( Tr2ConstantBufferAL(), Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 }
 
 TEST_F( Rendering, CanUseViewport )
@@ -1599,7 +1599,7 @@ TEST_F( Rendering, CanUseViewport )
 
 	RunLoop( frame );
 
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetViewport( bkViewport ) );
 }
 
@@ -1718,7 +1718,7 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHATESTENABLE, 0 ) );
 }
 
@@ -1837,7 +1837,7 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHATESTENABLE, 0 ) );
 }
 
@@ -1957,7 +1957,7 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHATESTENABLE, 0 ) );
 }
 
@@ -2065,7 +2065,7 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_ALPHABLENDENABLE, 0 ) );
 }
 
@@ -2125,7 +2125,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 	definition.Add( Tr2VertexDefinition::FLOAT32_2, Tr2VertexDefinition::TEXCOORD );
 
 	Tr2ConstantBufferAL cb;
-	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), Tr2RenderContextEnum::USAGE_CPU_WRITE, nullptr, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), *renderContext ) );
 
 	Tr2VertexLayoutAL vertexLayout;
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
@@ -2165,7 +2165,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( Tr2TextureAL() ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 0 ), 1.0f ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
@@ -2193,8 +2193,10 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLE_STRIP ) );
 		for( uint32_t i = 0; i < 8; ++i )
 		{
-			static_cast<PerObjectData*>( cb.GetBufferMirror( *renderContext ) )->x = float( i );
-			ASSERT_HRESULT_SUCCEEDED( cb.UpdateFromMirror( *renderContext ) );
+			void* data;
+			ASSERT_HRESULT_SUCCEEDED( cb.Lock( &data, *renderContext ) );
+			static_cast<PerObjectData*>( data )->x = float( i );
+			ASSERT_HRESULT_SUCCEEDED( cb.Unlock( *renderContext ) );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::PIXEL_SHADER, 0 ) );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, quads[i], 0, vbStride ) );
 			ASSERT_HRESULT_SUCCEEDED( renderContext->DrawPrimitive( 0, 2 ) );
@@ -2208,7 +2210,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanCopyRenderTargetRegion )
@@ -2283,7 +2285,7 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( Tr2TextureAL() ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 0 ), 1.0f ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
@@ -2325,7 +2327,7 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 
@@ -2414,7 +2416,7 @@ TEST_F( Rendering, CanSampleBc1Texture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
 
@@ -2446,7 +2448,7 @@ TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 	ASSERT_HRESULT_SUCCEEDED( vertexLayout.Create( definition, *renderContext ) );
 
 	Tr2ConstantBufferAL cb;
-	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), Tr2RenderContextEnum::USAGE_CPU_WRITE | Tr2RenderContextEnum::USAGE_LOCK_FREQUENTLY, nullptr, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), Tr2ConstantUsageAL::ONE_SHOT, nullptr, *renderContext ) );
 
 
 	uint32_t g = 127;
@@ -2477,8 +2479,8 @@ TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( const_cast<Tr2ConstantBufferAL&>( nullCB ), Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( Tr2ConstantBufferAL(), Tr2RenderContextEnum::VERTEX_SHADER, 0 ) );
 }
 
 TEST_F( Rendering, CanSampleBc2Texture )
@@ -2566,7 +2568,7 @@ TEST_F( Rendering, CanSampleBc2Texture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
 
@@ -2656,7 +2658,7 @@ TEST_F( Rendering, CanSampleBc3Texture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
 
@@ -2727,7 +2729,7 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 
 
 	Tr2ConstantBufferAL cb;
-	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), Tr2RenderContextEnum::USAGE_CPU_WRITE, nullptr, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), *renderContext ) );
 
 	auto frame = [&] {
 		PerObjectData* data;
@@ -2758,7 +2760,7 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
 
@@ -2829,7 +2831,7 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 
 
 	Tr2ConstantBufferAL cb;
-	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), Tr2RenderContextEnum::USAGE_CPU_WRITE, nullptr, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( PerObjectData ), *renderContext ) );
 
 	auto frame = [&] {
 		PerObjectData* data;
@@ -2860,7 +2862,7 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
 
@@ -2917,7 +2919,7 @@ TEST_F( Rendering, CanSampleUnassignedTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES ) );
 }
 
@@ -3031,7 +3033,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanSampleSrgbTexture )
@@ -3118,7 +3120,7 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanOutputToSrgbTarget )
@@ -3207,7 +3209,7 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderState( Tr2RenderContextEnum::RS_SRGBWRITEENABLE, 0 ) );
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 #if TRINITY_PLATFORM_SUPPORTS_UNORDERED_ACCESS
@@ -3323,7 +3325,7 @@ TEST_F( Rendering, CanUsePsUavs )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 
 }
 
@@ -3387,7 +3389,7 @@ TEST_F( Rendering, CanDrawIndirect )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 #endif
@@ -3448,7 +3450,7 @@ TEST_F( Rendering, CanWriteToVB )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanWriteToDynamicVB )
@@ -3506,7 +3508,7 @@ TEST_F( Rendering, CanWriteToDynamicVB )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
@@ -3584,7 +3586,7 @@ TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 
@@ -3636,7 +3638,7 @@ TEST_F( Rendering, CanHaveMissingIAElements )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 #if TRINITY_PLATFORM_SUPPORTS_MSAA_SAMPLE
@@ -3709,7 +3711,7 @@ TEST_F( Rendering, CanLoadMsaaRenderTarget )
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushRenderTarget() );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetRenderTarget( rt ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->PushDepthStencil() );
-		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( nullDS ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetDepthStencil( Tr2TextureAL() ) );
 		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 0 ), 1.0f ) );
 
 		ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, vb, 0, vbStride ) );
@@ -3742,7 +3744,7 @@ TEST_F( Rendering, CanLoadMsaaRenderTarget )
 	RunLoop( frame );
 
 	ASSERT_HRESULT_SUCCEEDED( renderContext->SetStreamSource( 0, Tr2BufferAL(), 0, 0 ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( nullSP ) );
+	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( Tr2ShaderProgramAL() ) );
 }
 
 #endif

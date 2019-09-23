@@ -4,11 +4,6 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
 
 #include "../include/Tr2ShaderAL.h"
-#include "../Tr2TrackedALObject.h"
-
-
-class Tr2PrimaryRenderContextAL;
-class Tr2RenderContextAL;
 
 namespace TrinityALImpl
 {
@@ -22,7 +17,7 @@ namespace TrinityALImpl
 	//   32bit - no support for shader blobs > 4 gig
 	// -------------------------------------------------------------
 	class Tr2ShaderAL :
-		public Tr2TrackedALObject<Tr2RenderContextEnum::OT_SHADER>
+		public Tr2DeviceResourceAL<Tr2ShaderAL>
 	{
 	public:
 		Tr2ShaderAL();
@@ -43,8 +38,7 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 
-		void SetNullShaderType( Tr2RenderContextEnum::ShaderType type );
-
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		Tr2ShaderAL( const Tr2ShaderAL& shader );
 		Tr2ShaderAL& operator=( const Tr2ShaderAL& shader );

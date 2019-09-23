@@ -5,20 +5,12 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 
-#include "../ALResult.h"
-#include "../Tr2TrackedALObject.h"
+#include "../include/Tr2TextureAL.h"
 #include "../Tr2MemoryCounterAL.h"
-
 #ifdef TRINITY_AL_GUARD_LOCKS
 #include "../Tr2LockGuard.h"
 #endif
 
-
-class Tr2PrimaryRenderContextAL;
-struct Tr2TextureSubresource;
-class Tr2RenderContextAL;
-struct Tr2SubresourceData;
-struct Tr2BitmapDimensions;
 
 namespace TrinityALImpl
 {
@@ -29,7 +21,7 @@ namespace TrinityALImpl
 
 namespace TrinityALImpl
 {
-	class Tr2TextureAL : public Tr2TrackedALObject<Tr2RenderContextEnum::OT_TEXTURE>
+	class Tr2TextureAL : public Tr2DeviceResourceAL<Tr2TextureAL>
 	{
 	public:
 		Tr2TextureAL();
@@ -39,7 +31,7 @@ namespace TrinityALImpl
 		void Destroy();
 
 		bool IsValid() const;
-		Tr2ALMemoryType GetMemoryClass();
+		Tr2ALMemoryType GetMemoryClass() const;
 		const Tr2BitmapDimensions& GetDesc() const;
 		const Tr2MsaaDesc& GetMsaaDesc() const;
 		Tr2GpuUsage::Type GetGpuUsage() const;
@@ -57,6 +49,7 @@ namespace TrinityALImpl
 		uintptr_t GetSharedHandle() const;
 
 		ALResult Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderContextAL& renderContext );
+		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 	private:
 		struct DepthOption
 		{

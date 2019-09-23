@@ -137,14 +137,3 @@ bool Tr2ShaderAL::operator!=( const Tr2ShaderAL& other ) const
 {
 	return m_shader != other.m_shader;
 }
-
-namespace TrinityALImpl
-{
-	::Tr2ShaderAL GetNullShader( Tr2RenderContextEnum::ShaderType type )
-	{
-		std::shared_ptr<TrinityALImpl::Tr2ShaderAL> shader = std::make_shared<TrinityALImpl::Tr2ShaderAL>();
-		shader->SetNullShaderType( type );
-		return ::Tr2ShaderAL( shader );
-
-	}
-}

@@ -149,5 +149,10 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+
+	void Tr2SamplerStateAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	{
+		description["type"] = "Tr2SamplerStateAL";
+	}
 }
 #endif

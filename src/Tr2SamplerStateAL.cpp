@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2PrimaryRenderContextAL.h"
+#include TRINITY_AL_PLATFORM_INCLUDE( Tr2SamplerStateAL )
 
 namespace
 {

@@ -15,6 +15,7 @@
 #include "../include/Tr2ResourceSetAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2VertexLayoutAL.h"
+#include "../include/Tr2ShaderProgramAL.h"
 
 
 class Tr2ConstantBufferAL;
@@ -98,10 +99,7 @@ public:
 		return E_NOTIMPL;
 	}
 
-	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( )
-	{
-		return E_NOTIMPL;
-	}
+	ALResult SetResourceSet( const Tr2ResourceSetAL& resourceSet ) throw( );
 	
 	ALResult DrawIndexedPrimitive(
 		uint32_t numVertices,
@@ -299,11 +297,15 @@ private:
 
 	struct PipelineSource
 	{
-		const Tr2VertexLayoutAL* m_layout;
+		Tr2VertexLayoutAL m_layout;
 		VkPrimitiveTopology m_topology;
-		const Tr2ShaderProgramAL* m_shaderProgram;
+		Tr2ShaderProgramAL m_shaderProgram;
 		VkPipelineDepthStencilStateCreateInfo m_depthStencilState;
 		VkPipelineRasterizationStateCreateInfo m_rasterizationState;
+
+		VkPipelineColorBlendStateCreateInfo m_colorBlendState;
+		VkPipelineColorBlendAttachmentState m_attachmentBlend[4];
+
 		VkVertexInputBindingDescription m_streams[4];
 
 		size_t GetHash() const;
@@ -320,6 +322,8 @@ private:
 	std::pair<uint32_t, uint32_t> m_primitiveToVertexCount;
 
 	VkFramebuffer m_framebuffer;
+
+	Tr2ResourceSetAL m_resourceSet;
 public:
 	// If you need this, you're probably doing something wrong :P
 	//Tr2TextureAL&			GetDefaultBackBuffer()
