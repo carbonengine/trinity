@@ -157,7 +157,7 @@ public:
 	long m_topology;	// in DX9, that's part of the DrawXyz calls, so remember this.
 
 	ALResult SetConstants(			
-		Tr2ConstantBufferAL& buffer, 
+		const Tr2ConstantBufferAL& buffer, 
 		Tr2RenderContextEnum::ShaderType constantType, 
 		uint32_t registerIndex, 
 		uint32_t maxRegisterCount = 0 );
