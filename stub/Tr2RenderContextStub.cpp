@@ -169,7 +169,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 }
 
 ALResult Tr2RenderContextAL::SetConstants(
-	Tr2ConstantBufferAL& buffer, 
+	const Tr2ConstantBufferAL& buffer,
 	ShaderType constantType, 
 	uint32_t registerIndex, 
 	uint32_t maxRegisterCount )

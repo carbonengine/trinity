@@ -150,7 +150,7 @@ public:
 	ALResult SetRenderStates( const uint32_t * stateValuePairs, uint32_t count );
 
 	ALResult SetConstants(			
-		Tr2ConstantBufferAL& buffer, 
+		const Tr2ConstantBufferAL& buffer, 
 		Tr2RenderContextEnum::ShaderType constantType, 
 		uint32_t registerIndex, 
 		uint32_t maxRegisterCount = 0 );
