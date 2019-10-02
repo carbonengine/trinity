@@ -26,6 +26,7 @@
 
 #include "include/Rect.h"
 #include "include/Point.h"
+#include "Tr2DeviceResource.h"
 
 BLUE_DECLARE( Tr2MouseCursor );
 BLUE_DECLARE( TriRect );
@@ -33,7 +34,8 @@ BLUE_DECLARE( Tr2PresentParameters );
 
 BLUE_CLASS( App ) : 
 	public INotify,
-	public IBlueEvents
+	public IBlueEvents,
+	public Tr2DeviceResource
 {
 public:
 	using INotify::Lock;
@@ -61,7 +63,9 @@ public:
 
 
 	Be::Result<std::string> CreateDevice( unsigned int adapter, Tr2PresentParameters* pp );
-
+protected:
+	void ReleaseResources( TriStorage ) override;
+	bool OnPrepareResources() override;
 private:
 	void CreateImpl();
 

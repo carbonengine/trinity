@@ -1116,3 +1116,15 @@ void App::SetIcon(const wchar_t* filename)
 	::SendMessage( mHwnd, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 #endif
 }
+
+void App::ReleaseResources( TriStorage )
+{
+#if TRINITY_PLATFORM == TRINITY_DIRECTX9
+	::ReleaseCapture();
+#endif
+}
+
+bool App::OnPrepareResources()
+{
+	return true;
+}
