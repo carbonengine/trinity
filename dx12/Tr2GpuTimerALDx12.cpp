@@ -111,7 +111,7 @@ namespace TrinityALImpl
 		m_state = END_ISSUED;
 	}
 
-	float Tr2GpuTimerAL::GetTime( Tr2RenderContextAL& renderContext )
+	float Tr2GpuTimerAL::GetTime( Tr2RenderContextAL& )
 	{
 		if( !m_result )
 		{

@@ -116,7 +116,7 @@ private:
 	{
 		std::shared_ptr<GlobalDescriptorHeapPage> m_page;
 
-		HeapPageEntry(uint32_t entryIdx, const uint32_t& initArgs)
+		HeapPageEntry(uint32_t, const uint32_t&)
 			: m_page(nullptr)
 		{
 		}

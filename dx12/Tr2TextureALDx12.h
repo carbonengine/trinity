@@ -35,7 +35,7 @@ namespace TrinityALImpl
 		~Tr2TextureAL();
 
 		ALResult Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext );
-		ALResult OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext )
+		ALResult OpenShared( uintptr_t, Tr2GpuUsage::Type, Tr2PrimaryRenderContextAL& )
 		{
 			return E_NOTIMPL;
 		}

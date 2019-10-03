@@ -287,7 +287,7 @@ namespace TrinityALImpl
 				parameter.Descriptor.ShaderRegister = it->registerIndex;
 				parameter.ShaderVisibility = ShaderVisibility( shaderType );
 
-				CbRegister cbr = { shaderType, it->registerIndex, uint32_t( parameters.size() ) };
+				CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( parameters.size() ) };
 				m_cbRegisters.push_back( cbr );
 
 				parameters.push_back( parameter );
@@ -295,21 +295,21 @@ namespace TrinityALImpl
 			}
 			case Tr2ShaderRegisterAL::SAMPLER:
 			{
-				CbRegister cbr = { shaderType, it->registerIndex, uint32_t( samplerRanges.size() ) };
+				CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( samplerRanges.size() ) };
 				m_samplerRegisters.push_back( cbr );
 				samplerRanges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER ) );
 				break;
 			}
 			case Tr2ShaderRegisterAL::RESOURCE:
 			{
-				CbRegister cbr = { shaderType, it->registerIndex, uint32_t( ranges.size() ) };
+				CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( ranges.size() ) };
 				m_srvRegisters.push_back( cbr );
 				ranges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SRV ) );
 				break;
 			}
 			case Tr2ShaderRegisterAL::UAV:
 			{
-				CbRegister cbr = { shaderType, it->registerIndex, uint32_t( ranges.size() ) };
+				CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( ranges.size() ) };
 				m_uavRegisters.push_back( cbr );
 				ranges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_UAV ) );
 				break;

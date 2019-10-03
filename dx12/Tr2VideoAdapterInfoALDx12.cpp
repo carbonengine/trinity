@@ -388,7 +388,7 @@ bool Tr2VideoAdapterInfo::SupportsBackBufferFormat( unsigned adapterIndex,
 bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex,
 													  Tr2RenderContextEnum::PixelFormat/*backBufferFormat*/,
 													  Tr2RenderContextEnum::PixelFormat format,
-													  bool withAutoGenMipmap )
+													  bool )
 {
 	CHECK_INIT_BOOL;
 	CHECK_VALID_ADAPTER_BOOL;

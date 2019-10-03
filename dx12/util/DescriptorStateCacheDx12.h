@@ -104,9 +104,9 @@ private:
 		}
 
 		/** Does the slot contain a CBVat the given address/stage/index */
-		bool IsValidCBV(D3D12_GPU_VIRTUAL_ADDRESS address, uint8_t stage, uint8_t index)
+		bool IsValidCBV(D3D12_GPU_VIRTUAL_ADDRESS address)
 		{
-			return m_type == RPT_CBV && /* m_stage == stage && m_index == index && */ m_addressVirtual == address;
+			return m_type == RPT_CBV && m_addressVirtual == address;
 		}
 		
 		union 

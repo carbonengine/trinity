@@ -37,13 +37,12 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const;
 
-		ALResult CreateDx12( const Tr2PresentParametersAL& presentationParameters, ID3D12Device* device, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext );
+		ALResult CreateDx12( const Tr2PresentParametersAL& presentationParameters, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext );
 
 		static ALResult GetBackBuffers(
 			Tr2PrimaryRenderContextAL* primaryContext,
 			std::vector<CComPtr<ID3D12Resource>>& backBuffers,
 			std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs,
-			ID3D12Device* device,
 			IDXGISwapChain1* swapChain );
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;

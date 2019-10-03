@@ -112,8 +112,6 @@ void FrameLocalDescriptorHeapAllocator::AddPage()
 {
 	CComPtr<ID3D12DescriptorHeap> descriptorHeap = nullptr;
 
-	D3D12_DESCRIPTOR_HEAP_FLAGS HeapFlags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
 	D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
 	heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	heapDesc.Type = m_heapType;

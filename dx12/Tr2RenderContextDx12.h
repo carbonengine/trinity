@@ -168,7 +168,7 @@ public:
 		( 1 << Tr2RenderContextEnum::DOMAIN_SHADER );
 
 	// Debug helpers
-	size_t GetStackSizeRT( uint32_t RT = 0 )	const { return 0; }
+	size_t GetStackSizeRT( uint32_t = 0 )	const { return 0; }
 	size_t GetStackSizeDS()						const { return 0; }
 
 	void AddGpuMarker( const char* marker );

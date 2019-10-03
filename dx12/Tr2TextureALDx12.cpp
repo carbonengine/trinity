@@ -13,6 +13,9 @@
 #include "Utilities.h"
 #include "ALLog.h"
 
+#pragma warning( push )
+#pragma warning( disable : 4189 )
+
 using namespace Tr2RenderContextEnum;
 
 namespace
@@ -93,18 +96,18 @@ namespace
 		{
 		case TEX_TYPE_1D:
 			resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE1D;
-			resourceDesc.DepthOrArraySize = desc.GetArraySize();
+			resourceDesc.DepthOrArraySize = UINT16( desc.GetArraySize() );
 			break;
 		case TEX_TYPE_3D:
 			resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE3D;
-			resourceDesc.DepthOrArraySize = desc.GetDepth();
+			resourceDesc.DepthOrArraySize = UINT16( desc.GetDepth() );
 			break;
 		default:
 			resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-			resourceDesc.DepthOrArraySize = desc.GetArraySize();
+			resourceDesc.DepthOrArraySize = UINT16( desc.GetArraySize() );
 			break;
 		}
-		resourceDesc.MipLevels = desc.GetTrueMipCount();
+		resourceDesc.MipLevels = UINT16( desc.GetTrueMipCount() );
 		resourceDesc.Format = DXGI_FORMAT( desc.GetFormat() );
 		resourceDesc.SampleDesc.Count = msaa.samples;
 		resourceDesc.SampleDesc.Quality = msaa.quality;
@@ -1153,7 +1156,6 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
-		auto texture = GetResourceDx12();
 		uint64_t requiredSize = 0;
 		uint32_t myPitch = 0;
 		GetRegionSize( region, myPitch, requiredSize );
@@ -1318,7 +1320,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2TextureAL::UnmapForReading( Tr2RenderContextAL& renderContext )
+	void Tr2TextureAL::UnmapForReading( Tr2RenderContextAL& )
 	{
 		if( !m_readScratch )
 		{
@@ -1332,7 +1334,7 @@ namespace TrinityALImpl
 		}
 	}
 
-	ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t slicePitch, Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t, Tr2RenderContextAL& renderContext )
 	{
 		if( !IsValid() )
 		{

@@ -273,7 +273,7 @@ void DescriptorStateCache::Commit(CComPtr<ID3D12GraphicsCommandList> commandList
 		for( auto it = begin( shader->m_cbRegisters ); it != end( shader->m_cbRegisters ); ++it )
 		{
 			D3D12_GPU_VIRTUAL_ADDRESS address = m_cbv[it->stage][it->index];
-			if( m_parameterSlots[targetPipe][it->parameter].IsValidCBV( address, it->stage, it->index ) )
+			if( m_parameterSlots[targetPipe][it->parameter].IsValidCBV( address ) )
 				continue;
 			m_parameterSlots[targetPipe][it->parameter].SetCBV( address );
 			( commandList->*setConstantBufferView )( it->parameter, address != 0 ? address : nullCbv );

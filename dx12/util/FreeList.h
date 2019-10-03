@@ -204,6 +204,9 @@ public:
 
 		CCP_ASSERT(entryPtr >= startPtr);
 		CCP_ASSERT(entryPtr <= endPtr);
+		CCP_UNUSED( entryPtr );
+		CCP_UNUSED( startPtr );
+		CCP_UNUSED( endPtr );
 	}
 
 private:

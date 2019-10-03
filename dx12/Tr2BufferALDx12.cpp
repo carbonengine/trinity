@@ -268,7 +268,7 @@ namespace TrinityALImpl
 		return m_buffer.MapForWriting( data, lockType, *m_owner );
 	}
 
-	void Tr2BufferAL::UnmapForWriting( Tr2RenderContextAL& renderContext )
+	void Tr2BufferAL::UnmapForWriting( Tr2RenderContextAL& )
 	{
 		m_buffer.UnmapForWriting( *m_owner );
 	}
@@ -349,7 +349,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& renderContext )
+	void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& )
 	{
 		if( !m_lockedScratch )
 		{

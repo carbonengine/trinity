@@ -163,18 +163,17 @@ namespace TrinityALImpl
 		Tr2PresentParametersAL presentationParameters;
 		CR_RETURN_HR( FillPresentationParameters( presentationParameters, windowHandle ) );
 
-		return CreateDx12( presentationParameters, renderContext.m_device, nullptr, renderContext.m_commandQueue, renderContext );
+		return CreateDx12( presentationParameters, nullptr, renderContext.m_commandQueue, renderContext );
 	}
 
-	ALResult Tr2SwapChainAL::CreateDx12( const Tr2PresentParametersAL& presentationParameters, ID3D12Device* device, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext )
+	ALResult Tr2SwapChainAL::CreateDx12( const Tr2PresentParametersAL& presentationParameters, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext )
 	{
 		CComPtr<IDXGISwapChain3> swapChain;
-		auto backBufferCount = BACK_BUFFER_COUNT;
 		FORWARD_HR( CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output ) );
 
 		std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 		std::vector<CComPtr<ID3D12Resource>> backBuffers;
-		FORWARD_HR( GetBackBuffers( &renderContext, backBuffers, rtvs, device, swapChain ) );
+		FORWARD_HR( GetBackBuffers( &renderContext, backBuffers, rtvs, swapChain ) );
 
 		m_swapChain = swapChain;
 		m_presentParameters = presentationParameters;
@@ -241,7 +240,6 @@ namespace TrinityALImpl
 		Tr2PrimaryRenderContextAL* primaryContext,
 		std::vector<CComPtr<ID3D12Resource>>& backBuffers,
 		std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs,
-		ID3D12Device* device,
 		IDXGISwapChain1* swapChain )
 	{
 		DXGI_SWAP_CHAIN_DESC scDesc;

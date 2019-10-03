@@ -22,9 +22,9 @@ namespace TrinityALImpl
 	ALResult Tr2ShaderAL::Create(
 		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
-		const Tr2ShaderBytecodeAL& patchedBytecode,
+		const Tr2ShaderBytecodeAL&,
 		const Tr2ShaderSignatureAL& signature,
-		Tr2PrimaryRenderContextAL &renderContext )
+		Tr2PrimaryRenderContextAL& )
 	{
 		m_bytecode.resize( "Tr2ShaderAL::m_bytecode", bytecode.size );
 		if( m_bytecode.empty() )

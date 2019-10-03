@@ -58,7 +58,6 @@ namespace TrinityALImpl
 
 
 		std::map<ID3D12Resource*, D3D12_RESOURCE_STATES> transitioned;
-		uint32_t bufferIndex = renderContext.GetCurrentBackBufferIndex();
 
 		for (auto it = begin(program.m_program->m_srvRegisters); it != end(program.m_program->m_srvRegisters); ++it)
 		{

@@ -230,7 +230,7 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 			{
 				flags |= D3D12_CLEAR_FLAG_STENCIL;
 			}
-			m_commandList->ClearDepthStencilView( m_boundDepthStencil.m_texture->m_dsv->GetHandleCPU(), flags, depth, stencil, 0, nullptr );
+			m_commandList->ClearDepthStencilView( m_boundDepthStencil.m_texture->m_dsv->GetHandleCPU(), flags, depth, UINT8( stencil ), 0, nullptr );
 		}
 	}
 
@@ -512,7 +512,7 @@ ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer, Tr
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawIndexedPrimitive( uint32_t numVertices, uint32_t startIndex, uint32_t primitiveCount, uint32_t minimumIndex ) throw( )
+ALResult Tr2RenderContextAL::DrawIndexedPrimitive( uint32_t, uint32_t startIndex, uint32_t primitiveCount, uint32_t minimumIndex ) throw( )
 {
 	CR_RETURN_HR( SetAllState() );
 	FlushGraphicsBarriersDx12();
@@ -544,7 +544,7 @@ ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primi
 }
 
 ALResult Tr2RenderContextAL::DrawIndexedInstanced(
-	uint32_t numVertices,
+	uint32_t,
 	uint32_t startIndex,
 	uint32_t primitiveCount,
 	uint32_t numInstances ) throw( )
@@ -918,7 +918,7 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 		if( m_boundRenderTargets[0].IsValid() )
 		{
 			SetViewport( Tr2Viewport( m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() ) );
-			D3D12_RECT rect = { 0, 0, m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() };
+			D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].GetWidth() ), LONG( m_boundRenderTargets[0].GetHeight() ) };
 			m_commandList->RSSetScissorRects( 1, &rect );
 		}
 		m_psoDescription.m_renderTargetCount = count;
@@ -1002,7 +1002,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 		if( m_boundRenderTargets[0].IsValid() )
 		{
 			SetViewport( Tr2Viewport( m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() ) );
-			D3D12_RECT rect = { 0, 0, m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() };
+			D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].GetWidth() ), LONG( m_boundRenderTargets[0].GetHeight() ) };
 			m_commandList->RSSetScissorRects( 1, &rect );
 		}
 	}
@@ -1283,8 +1283,8 @@ ALResult Tr2RenderContextAL::FlushAndSyncDx12()
 
 bool Tr2RenderContextAL::GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* handles, uint32_t& count )
 {
-	uint32_t width = -1;
-	uint32_t height = -1;
+	uint32_t width = 0xffffffff;
+	uint32_t height = 0xffffffff;
 	Tr2MsaaDesc msaa;
 	if( m_boundDepthStencil.IsValid() )
 	{
@@ -1296,7 +1296,7 @@ bool Tr2RenderContextAL::GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* ha
 	{
 		if( m_boundRenderTargets[i].IsValid() )
 		{
-			if( width != -1 )
+			if( width != 0xffffffff )
 			{
 				if( m_boundRenderTargets[i].GetWidth() != width || m_boundRenderTargets[i].GetHeight() != height || m_boundRenderTargets[i].GetMsaaDesc() != msaa )
 				{
@@ -1439,7 +1439,7 @@ void Tr2RenderContextAL::ReApplyStateDx12()
 	SetViewport( m_viewport );
 	if( m_boundRenderTargets[0].IsValid() )
 	{
-		D3D12_RECT rect = { 0, 0, m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() };
+		D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].GetWidth() ), LONG( m_boundRenderTargets[0].GetHeight() ) };
 		m_commandList->RSSetScissorRects( 1, &rect );
 	}
 	DirtyDescriptorCache();

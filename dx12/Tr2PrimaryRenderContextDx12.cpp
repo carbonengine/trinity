@@ -271,7 +271,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	{
 		// JB: Not pretty, but createRenderTargetView requires a valid device!
 		m_device = device;
-		HRESULT hr = TrinityALImpl::Tr2SwapChainAL::GetBackBuffers(this, backBuffers, rtvs, device, swapChain);
+		HRESULT hr = TrinityALImpl::Tr2SwapChainAL::GetBackBuffers(this, backBuffers, rtvs, swapChain);
 		m_device = nullptr;
 
 		FORWARD_HR(hr);
@@ -581,7 +581,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 
 	std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 	std::vector<CComPtr<ID3D12Resource>> backBuffers;
-	FORWARD_HR( TrinityALImpl::Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, m_device, m_swapChain ) );
+	FORWARD_HR( TrinityALImpl::Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, m_swapChain ) );
 
 	m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 	m_defaultBackBuffer.m_texture->AssignFromSwapChainDx12( backBuffers, rtvs, *this );
@@ -924,12 +924,12 @@ ALResult Tr2PrimaryRenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::Ren
 }
 
 ALResult Tr2PrimaryRenderContextAL::GetGpuPageFaultResource(
-	Tr2RenderContextEnum::PixelFormat& format,
-	uint64_t& size,
-	uint32_t& width,
-	uint32_t& height,
-	uint32_t& depth,
-	uint32_t& mips ) const
+	Tr2RenderContextEnum::PixelFormat&,
+	uint64_t&,
+	uint32_t&,
+	uint32_t&,
+	uint32_t&,
+	uint32_t& ) const
 {
 	return E_FAIL;
 }
