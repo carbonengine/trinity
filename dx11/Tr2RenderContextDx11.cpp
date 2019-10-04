@@ -1599,6 +1599,13 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				m_dirtyFlag |= fos.DIRTY_RASTERIZER;
 			}
 			continue;	//return S_OK;
+		case RS_SRGBWRITEENABLE:
+			if( ( value != 0 ) != m_isSrgbRenderTarget )
+			{
+				m_isSrgbRenderTarget = ( value != 0 );
+				SetRtDsToDevice( MAX_RENDER_TARGET );
+			}
+			continue;
 
 		// explicit warning about fixed function requirements
 	#define CASE_WARN(x)	\
