@@ -167,6 +167,9 @@ private:
 
 	void TransformPoint( Vector2& result, const Vector2& point, Matrix m );
 
+	bool IsUsingLinearColorSpace() const;
+	void SetUseLinearColorSpace( bool use );
+
 private:
 	inline bool TexturesReady() const;
 	std::wstring m_name;
@@ -255,6 +258,8 @@ private:
 
 	bool m_clearBackground;
 	bool m_clearFinishedCurveSets;
+
+	bool m_useLinearColorSpace;
 
 	typedef TrackableStdVector<TransformStackEntry> TransformStack_t;
 	typedef TrackableStdVector<Vector2> DepthStack_t;

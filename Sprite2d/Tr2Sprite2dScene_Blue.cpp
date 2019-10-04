@@ -293,14 +293,12 @@ const Be::ClassInfo* Tr2Sprite2dScene::ExposeToBlue()
 			Be::READ
 		)
 
-		MAP_ATTRIBUTE
+		MAP_PROPERTY
 		(
-			"captureVertexDataCapacity",
-			m_captureVertexDataCapacity,
-			"Capacity of buffer used for vertices while capturing display lists.\n"
-			"This buffer grows automatically as needed - this is the number of\n"
-			"vertices, not byte size.",
-			Be::READ
+			"useLinearColorSpace",
+			IsUsingLinearColorSpace,
+			SetUseLinearColorSpace,
+			"For TESTING sRGB vs linear color math"
 		)
 
 		MAP_METHOD_AND_WRAP_OPTIONAL_ARGS

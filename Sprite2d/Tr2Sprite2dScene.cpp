@@ -114,7 +114,8 @@ Tr2Sprite2dScene::Tr2Sprite2dScene( IRoot* lockobj ) :
 	m_maxSpriteCount( 1024 ),
 	m_tileMode( S2D_TS_NONE ),
 	m_drawCallStartIndex( 0 ),
-	m_transformsHandle()
+	m_transformsHandle(),
+	m_useLinearColorSpace( false )
 {
 	m_transformStack = CCP_NEW( "Tr2Sprite2dScene/m_transformStack" ) TransformStack_t( "Tr2Sprite2dScene/m_transformStack" );
 	m_depthStack = CCP_NEW( "Tr2Sprite2dScene/m_depthStack" ) DepthStack_t( "Tr2Sprite2dScene/m_depthStack" );
@@ -228,6 +229,11 @@ void Tr2Sprite2dScene::Render( Tr2RenderContext& renderContext )
 
 	renderContext.AddGpuMarker( __FUNCTION__ );
 
+	if( m_useLinearColorSpace )
+	{
+		renderContext.SetRenderState( Tr2RenderContextEnum::RS_SRGBWRITEENABLE, 1 );
+	}
+
 	// Flash default texture to make it easier to spot missing textures
 	FlashDefaultTexture();
 
@@ -270,6 +276,11 @@ void Tr2Sprite2dScene::Render( Tr2RenderContext& renderContext )
 	m_is2dRenderContext = m_is2dRender;
 
 	renderContext.AddGpuMarker( "Tr2Sprite2dScene::Render End" );
+
+	if( m_useLinearColorSpace )
+	{
+		renderContext.SetRenderState( Tr2RenderContextEnum::RS_SRGBWRITEENABLE, 0 );
+	}
 }
 
 ITr2SpriteObject* Tr2Sprite2dScene::PickObject( int x, int y, const TriProjection* proj, const TriView* view, const TriViewport* vp, Be::Optional<int> )
@@ -1116,7 +1127,8 @@ void Tr2Sprite2dScene::IssueDrawCall()
 								}
 							}
 						}
-						desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, i, texAL ? *texAL : Tr2TextureAL() );
+						auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+						desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, i, texAL ? *texAL : Tr2TextureAL(), colorSpace );
 					}
 				}
 
@@ -2040,8 +2052,9 @@ void Tr2Sprite2dScene::ReplayCapture( Tr2Sprite2dDisplayList* dl )
 			m_texelSizeVar[1] = entry.texelSize1;
 
 			auto desc = entry.effect->GetPassDescription( 0, 0 );
-			desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, 0, ( entry.texture0 && entry.texture0->GetTexture() ) ? *entry.texture0->GetTexture() : Tr2TextureAL() );
-			desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, 1, ( entry.texture1 && entry.texture1->GetTexture() ) ? *entry.texture1->GetTexture() : Tr2TextureAL() );
+			auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+			desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, 0, ( entry.texture0 && entry.texture0->GetTexture() ) ? *entry.texture0->GetTexture() : Tr2TextureAL(), colorSpace );
+			desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, 1, ( entry.texture1 && entry.texture1->GetTexture() ) ? *entry.texture1->GetTexture() : Tr2TextureAL(), colorSpace );
 			
 			CCP_STATS_INC( spriteSceneDrawCallCount );
 
@@ -2540,6 +2553,25 @@ void Tr2Sprite2dScene::TransformPoint( Vector2& result, const Vector2& point, Ma
 	result.x = transformed.x;
 	result.y = transformed.y;
 }
+
+bool Tr2Sprite2dScene::IsUsingLinearColorSpace() const
+{
+	return m_useLinearColorSpace;
+}
+
+void Tr2Sprite2dScene::SetUseLinearColorSpace( bool use )
+{
+	m_useLinearColorSpace = use;
+	if( m_uberShader2d )
+	{
+		m_uberShader2d->SetOption( BlueSharedString( "COLOR_SPACE" ), BlueSharedString( m_useLinearColorSpace ? "COLOR_SPACE_LINEAR" : "COLOR_SPACE_SRGB" ) );
+	}
+	if( m_uberShader3d )
+	{
+		m_uberShader3d->SetOption( BlueSharedString( "COLOR_SPACE" ), BlueSharedString( m_useLinearColorSpace ? "COLOR_SPACE_LINEAR" : "COLOR_SPACE_SRGB" ) );
+	}
+}
+
 
 #if BLUE_WITH_PYTHON
 static PyObject* PyGetCursorPos( PyObject* module, PyObject* args )
