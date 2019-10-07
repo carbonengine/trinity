@@ -1772,6 +1772,14 @@
     <ClInclude Include="ALLog.h" />
     <ClInclude Include="ALResult.h" />
     <ClInclude Include="BcDecompress.h" />
+    <ClInclude Include="dx12\util\DescriptorHeapViewDx12.h" />
+    <ClInclude Include="dx12\util\DescriptorStateCacheDx12.h" />
+    <ClInclude Include="dx12\util\FrameLocalDescriptorHeapAllocatorDx12.h" />
+    <ClInclude Include="dx12\util\FrameLocalUploadBufferAllocatorDx12.h" />
+    <ClInclude Include="dx12\util\FreeList.h" />
+    <ClInclude Include="dx12\util\GlobalDescriptorHeapAllocatorDx12.h" />
+    <ClInclude Include="dx12\util\GpuMarkerBuffer.h" />
+    <ClInclude Include="dx12\util\PsoDescription.h" />
     <ClInclude Include="ITr2RenderContextEvents.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="Tr2AdapterStructures.h" />
@@ -1914,6 +1922,13 @@
   <ItemGroup>
     <ClCompile Include="ALResult.cpp" />
     <ClCompile Include="BcDecompress.cpp" />
+    <ClCompile Include="dx12\util\DescriptorHeapViewDx12.cpp" />
+    <ClCompile Include="dx12\util\DescriptorStateCacheDx12.cpp" />
+    <ClCompile Include="dx12\util\FrameLocalDescriptorHeapAllocatorDx12.cpp" />
+    <ClCompile Include="dx12\util\FrameLocalUploadBufferAllocatorDx12.cpp" />
+    <ClCompile Include="dx12\util\GlobalDescriptorHeapAllocatorDx12.cpp" />
+    <ClCompile Include="dx12\util\GpuMarkerBuffer.cpp" />
+    <ClCompile Include="dx12\util\PsoDescription.cpp" />
     <ClCompile Include="src\Tr2ConstantBufferAL.cpp" />
     <ClCompile Include="src\Tr2FenceAL.cpp" />
     <ClCompile Include="src\Tr2OcclusionQueryAL.cpp" />
