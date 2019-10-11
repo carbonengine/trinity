@@ -316,7 +316,7 @@ void FollowASpline::ReassignTunnelIDsAndAddSystemTunnels( EveChildBehaviorSystem
 	m_shouldReassignTunnelIDs = false;
 }
 
-void FollowASpline::RenderDebugInfo( Tr2DebugRenderer& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation )
+void FollowASpline::RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation )
 {
 	if ( renderer.HasOption( this, "splineTunnels" ) )
 	{

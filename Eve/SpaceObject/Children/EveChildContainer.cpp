@@ -486,14 +486,25 @@ void EveChildContainer::GetDebugOptions( Tr2DebugRendererOptions& options )
 		}
 	}
 	options.insert( "Lights" );
+
+	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	{
+		( *it )->GetDebugOptions( options );
+	}
 }
 
-void EveChildContainer::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveChildContainer::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if( !m_display )
 	{
 		return;
 	}
+
+	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	{
+		( *it )->RenderDebugInfo( renderer, m_worldTransform );
+	}
+
 	for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
 	{
 		if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( *it ) )

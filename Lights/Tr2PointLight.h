@@ -16,7 +16,7 @@ public:
 	EXPOSE_TO_BLUE();
 	Tr2PointLight( IRoot* lockobj = nullptr );
 	
-	void RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldMatrix ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix ) override;
 };
 
 TYPEDEF_BLUECLASS( Tr2PointLight );

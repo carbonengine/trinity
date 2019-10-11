@@ -113,7 +113,7 @@ void Tr2Light::Update()
 
 }
 
-void Tr2Light::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldMatrix )
+void Tr2Light::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix )
 {
 
 }

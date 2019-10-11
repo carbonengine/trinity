@@ -56,7 +56,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	void RenderDebugInfo( Tr2DebugRenderer& renderer ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
 
 	// re-positions all attached turrets to the corresponding locators
 	void RebuildTurretPositions();

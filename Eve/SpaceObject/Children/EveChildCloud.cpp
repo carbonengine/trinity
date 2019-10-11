@@ -456,7 +456,7 @@ void EveChildCloud::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void EveChildCloud::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveChildCloud::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if( renderer.HasOption( GetRawRoot(), "Bounding Box" ) )
 	{

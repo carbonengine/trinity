@@ -17,7 +17,7 @@ EveBoxVolume::~EveBoxVolume()
 {
 }
 
-void EveBoxVolume::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& parentTransform )
+void EveBoxVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform )
 {
 	Vector3 min, max;
 	max = Vector3( 0.5f, 0.5f, 0.5f );

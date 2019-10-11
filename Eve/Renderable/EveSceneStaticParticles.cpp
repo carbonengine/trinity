@@ -133,7 +133,7 @@ void EveSceneStaticParticles::GetDebugOptions( Tr2DebugRendererOptions& options 
 // Description:
 //   Render debug info of this static particle system: bounding sphere
 // --------------------------------------------------------------------------------
-void EveSceneStaticParticles::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveSceneStaticParticles::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if( renderer.HasOption( this, "Bounding Sphere" ) )
 	{

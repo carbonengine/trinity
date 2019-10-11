@@ -73,45 +73,45 @@ uint32_t GetAutoSelectedColor( uint32_t color )
 
 
 
-Tr2DebugColor::Tr2DebugColor( uint32_t color )
-	:m_color( color ),
-	m_zFailColor( 0u ),
-	m_colorSelected( GetAutoSelectedColor( color ) ),
-	m_zFailColorSelected( 0u )
-{
-}
-
-Tr2DebugColor::Tr2DebugColor( const Color& color )
-	:m_color( color ),
-	m_zFailColor( 0u ),
-	m_colorSelected( GetAutoSelectedColor( color ) ),
-	m_zFailColorSelected( 0u )
-{
-}
-
-Tr2DebugColor::Tr2DebugColor( uint32_t color, uint32_t zFailColor )
-	:m_color( color ),
-	m_zFailColor( zFailColor ),
-	m_colorSelected( GetAutoSelectedColor( color ) ),
-	m_zFailColorSelected( GetAutoSelectedColor( zFailColor ) )
-{
-}
-
-Tr2DebugColor::Tr2DebugColor( const Color& color, const Color& zFailColor )
-	:m_color( color ),
-	m_zFailColor( zFailColor ),
-	m_colorSelected( GetAutoSelectedColor( color ) ),
-	m_zFailColorSelected( GetAutoSelectedColor( zFailColor ) )
-{
-}
-
-Tr2DebugColor::Tr2DebugColor( const Color& color, const Color& zFailColor, const Color& selectedColor, const Color& zFailSelectedColor )
-	:m_color( color ),
-	m_zFailColor( zFailColor ),
-	m_colorSelected( selectedColor ),
-	m_zFailColorSelected( zFailSelectedColor )
-{
-}
+//Tr2DebugColor::Tr2DebugColor( uint32_t color )
+//	:m_color( color ),
+//	m_zFailColor( 0u ),
+//	m_colorSelected( GetAutoSelectedColor( color ) ),
+//	m_zFailColorSelected( 0u )
+//{
+//}
+//
+//Tr2DebugColor::Tr2DebugColor( const Color& color )
+//	:m_color( color ),
+//	m_zFailColor( 0u ),
+//	m_colorSelected( GetAutoSelectedColor( color ) ),
+//	m_zFailColorSelected( 0u )
+//{
+//}
+//
+//Tr2DebugColor::Tr2DebugColor( uint32_t color, uint32_t zFailColor )
+//	:m_color( color ),
+//	m_zFailColor( zFailColor ),
+//	m_colorSelected( GetAutoSelectedColor( color ) ),
+//	m_zFailColorSelected( GetAutoSelectedColor( zFailColor ) )
+//{
+//}
+//
+//Tr2DebugColor::Tr2DebugColor( const Color& color, const Color& zFailColor )
+//	:m_color( color ),
+//	m_zFailColor( zFailColor ),
+//	m_colorSelected( GetAutoSelectedColor( color ) ),
+//	m_zFailColorSelected( GetAutoSelectedColor( zFailColor ) )
+//{
+//}
+//
+//Tr2DebugColor::Tr2DebugColor( const Color& color, const Color& zFailColor, const Color& selectedColor, const Color& zFailSelectedColor )
+//	:m_color( color ),
+//	m_zFailColor( zFailColor ),
+//	m_colorSelected( selectedColor ),
+//	m_zFailColorSelected( zFailSelectedColor )
+//{
+//}
 
 
 Tr2DebugObjectReference::Tr2DebugObjectReference( IRoot* object )

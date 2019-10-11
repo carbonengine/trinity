@@ -4,23 +4,7 @@
 
 #include "Tr2DeviceResource.h"
 #include "include/Rect.h"
-
-enum TriDebugFont
-{
-    TRI_DBG_FONT_SMALL,
-    TRI_DBG_FONT_MEDIUM,
-    TRI_DBG_FONT_LARGE,
-};
-
-enum TriDebugFontStyle
-{
-    TRI_DFS_LEFT        = 0x00000000,
-    TRI_DFS_CENTER      = 0x00000001,
-    TRI_DFS_RIGHT       = 0x00000002,
-    TRI_DFS_TOP         = 0x00000000,
-    TRI_DFS_BOTTOM      = 0x00000008,
-    TRI_DFS_VCENTER     = 0x00000004,
-};
+#include "include/ITr2DebugRenderer2.h"
 
 class TriDebugTextRenderer : public Tr2DeviceResource
 {

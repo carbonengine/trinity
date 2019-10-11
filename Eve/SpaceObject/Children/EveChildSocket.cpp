@@ -437,7 +437,7 @@ void EveChildSocket::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void EveChildSocket::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveChildSocket::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if ( !m_display || !m_plug )
 	{

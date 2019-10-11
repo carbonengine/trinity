@@ -3,6 +3,7 @@
 #define TRIOBSERVERLOCAL_H
 
 #include "trinity/include/ITriObserverLocal.h"
+#include "Tr2DebugRenderer.h"
 
 
 struct Vector3;
@@ -21,6 +22,10 @@ public:
 	// ITriObserverLocal
 	IBluePlacementObserver* GetObserver();
 	void SetObserver( IBluePlacementObserver* obs );
+
+	// debug
+	void GetDebugOptions( Tr2DebugRendererOptions& options );
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation );
 
 	std::string m_name;
 private:

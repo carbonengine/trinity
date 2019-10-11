@@ -601,7 +601,7 @@ float BehaviorGroup::GetBoundingSphereRadius()
 }
 
 
-void BehaviorGroup::RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation )
+void BehaviorGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation )
 {
 	for ( auto group = m_behaviors.begin(); group != m_behaviors.end(); ++group )
 	{

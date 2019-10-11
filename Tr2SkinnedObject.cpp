@@ -491,7 +491,7 @@ void Tr2SkinnedObject::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void Tr2SkinnedObject::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void Tr2SkinnedObject::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if( !DoDisplay() )
 	{

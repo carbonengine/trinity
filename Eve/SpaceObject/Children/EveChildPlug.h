@@ -84,7 +84,7 @@ public:
 	void SetInheritProperties( const Color* colorSet );
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( Tr2DebugRenderer& renderer );
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
 	// external parameters
 	void AddExternalParameter( Tr2ExternalParameter* externalParameter );

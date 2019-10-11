@@ -369,7 +369,7 @@ void EveCloudEditableVolume::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Cloud Balls" );
 }
 
-void EveCloudEditableVolume::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldTransform )
+void EveCloudEditableVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform )
 {
 	if( renderer.HasOption( GetRawRoot(), "Cloud Balls" ) )
 	{

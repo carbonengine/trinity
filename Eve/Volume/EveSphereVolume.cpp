@@ -16,7 +16,7 @@ EveSphereVolume::~EveSphereVolume()
 {
 }
 
-void EveSphereVolume::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& parentTransform )
+void EveSphereVolume::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform )
 {
 	renderer.DrawSphere( this, TranslationMatrix( m_position ) * parentTransform, m_radius, 20, Tr2DebugRenderer::Wireframe, 0xff555555 );
 	renderer.DrawSphere( this, TranslationMatrix( m_position + m_centerOffset ) * parentTransform, max( m_innerRadius, 1.0f ), 20, Tr2DebugRenderer::Wireframe, 0xff777777 );

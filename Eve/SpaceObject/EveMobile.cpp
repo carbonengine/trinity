@@ -240,7 +240,7 @@ bool EveMobile::GetRenderablesCastingShadow( bool isSelf, const TriFrustumOrtho&
 //   Override base ::RenderDebugInfo() function, so we can draw debuginfo of
 //   the turrets etc.
 // --------------------------------------------------------------------------------
-void EveMobile::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveMobile::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	EveSpaceObject2::RenderDebugInfo( renderer );
 

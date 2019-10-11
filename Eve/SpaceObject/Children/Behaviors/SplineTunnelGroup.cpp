@@ -139,7 +139,7 @@ void SplineTunnelGroup::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "splineTunnels" );
 }
 
-void SplineTunnelGroup::RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation )
+void SplineTunnelGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation )
 {
 	for (auto tunnel = m_tunnels.begin(); tunnel != m_tunnels.end(); ++tunnel)
 	{

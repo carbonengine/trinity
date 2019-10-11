@@ -120,7 +120,7 @@ float DroneAvoidance::GetBehaviorSearchRadius()
 	}
 }
 
-void DroneAvoidance::RenderDebugInfo(Tr2DebugRenderer& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation)
+void DroneAvoidance::RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation)
 {
 	if ( renderer.HasOption( this, "BehaviorVisionRanges" ) )
 	{

@@ -5,7 +5,6 @@
 #include "TriPoolAllocator.h"
 #include "Shader/Tr2Effect.h"
 #include "Tr2Mesh.h"
-#include "Tr2DebugRenderer.h"
 #include "Resources/TriGeometryRes.h"
 #include "Utilities/BoundingBox.h"
 #include "Utilities/MatrixUtils.h"
@@ -358,7 +357,7 @@ void EveSpaceObjectDecal::CopyFrom( EveSpaceObjectDecal *object )
 }
 
 // ------------------------------------------------------------------------------------------------------
-void EveSpaceObjectDecal::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldMatrix ) const
+void EveSpaceObjectDecal::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix ) const
 {
 	Matrix worldDecalMatrix;
 

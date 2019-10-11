@@ -73,6 +73,6 @@ std::vector<Vector3> Inertia::CalculateBehavior(std::vector<DroneAgent>& agents,
 	return noNeedToReturnForces;
 }
 
-void Inertia::RenderDebugInfo(Tr2DebugRenderer& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation)
+void Inertia::RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation)
 {
 }

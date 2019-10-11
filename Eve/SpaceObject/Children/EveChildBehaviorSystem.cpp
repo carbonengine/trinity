@@ -560,7 +560,7 @@ void EveChildBehaviorSystem::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void EveChildBehaviorSystem::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveChildBehaviorSystem::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	for ( auto it = begin( m_behaviorGroups ); it != end( m_behaviorGroups ); ++it )
 	{

@@ -289,7 +289,7 @@ void EveChildRef::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void EveChildRef::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveChildRef::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if ( !m_display )
 	{

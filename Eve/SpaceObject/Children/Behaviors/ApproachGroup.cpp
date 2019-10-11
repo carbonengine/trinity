@@ -107,7 +107,7 @@ float ApproachGroup::GetBehaviorSearchRadius()
 	}
 }
 
-void ApproachGroup::RenderDebugInfo(Tr2DebugRenderer& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation)
+void ApproachGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation)
 {
 	if ( renderer.HasOption( this, "BehaviorVisionRanges" ) )
 	{

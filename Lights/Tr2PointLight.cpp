@@ -14,7 +14,7 @@ Tr2PointLight::Tr2PointLight( IRoot* lockobj ):
 	m_type = POINT_LIGHT;
 }
 
-void Tr2PointLight::RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldMatrix ) 
+void Tr2PointLight::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix ) 
 {
 	auto baseColor = m_lightData.color * m_lightData.brightness;
 	baseColor.a = 0.1;

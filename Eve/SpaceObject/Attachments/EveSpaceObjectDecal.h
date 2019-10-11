@@ -9,6 +9,7 @@
 #include "TriRenderBatch.h"
 #include "Tr2DeviceResource.h"
 #include "Tr2ShLightingManager.h"
+#include "Tr2DebugRenderer.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2Mesh );
@@ -129,7 +130,7 @@ public:
 	void SetMinScreenSize( float minScreenSize );
 
 	// edit helper
-	void RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldMatrix ) const;
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix ) const;
 
 	// set things from the parent, the spaceobject
 	void SetBoneMatrix( const granny_matrix_3x4* bonesMatrices, int bonesMatricesCount );

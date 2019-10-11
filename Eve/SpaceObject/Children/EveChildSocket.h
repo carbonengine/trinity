@@ -96,7 +96,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( Tr2DebugRenderer& renderer );
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
 	ITr2SoundEmitter* FindSoundEmitter( const char* name ) override;
 

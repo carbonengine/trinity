@@ -60,8 +60,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-	virtual void GetDebugOptions(Tr2DebugRendererOptions& options);
-	virtual void RenderDebugInfo(Tr2DebugRenderer& renderer);
+	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
 	// Light position
 	Vector3 m_position;

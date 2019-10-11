@@ -294,7 +294,7 @@ void EveChildMesh::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void EveChildMesh::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveChildMesh::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if( m_display && m_mesh )
 	{

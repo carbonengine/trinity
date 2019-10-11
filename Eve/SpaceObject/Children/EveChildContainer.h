@@ -101,7 +101,7 @@ public:
 	void StopAllCurveSets();
 	
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( Tr2DebugRenderer& renderer );
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
 	void GetWorldVelocity( Vector3& velocity ) const;
 	void SetInheritProperties( const Color* colorSet );

@@ -640,6 +640,11 @@ void EveEffectRoot2::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Bounding Sphere" );
 	options.insert( "Lights" );
 
+	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	{
+		( *it )->GetDebugOptions( options );
+	}
+
 	for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
 	{
 		if( auto renderable = dynamic_cast<ITr2DebugRenderable*>( *it ) )
@@ -650,7 +655,7 @@ void EveEffectRoot2::GetDebugOptions( Tr2DebugRendererOptions& options )
 }
 
 // -----------------------------------------------------------------------------
-void EveEffectRoot2::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveEffectRoot2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if (renderer.HasOption( GetRawRoot(), "Bounding Sphere" ))
 	{
@@ -671,6 +676,11 @@ void EveEffectRoot2::RenderDebugInfo( Tr2DebugRenderer& renderer )
 		{
 			( *it )->RenderDebugInfo( renderer, m_worldTransform );
 		}
+	}
+
+	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	{
+		( *it )->RenderDebugInfo( renderer, m_worldTransform );
 	}
 }
 

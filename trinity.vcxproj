@@ -3176,6 +3176,7 @@
     <ClInclude Include="Include\ITr2AudioEmitter.h" />
     <ClInclude Include="Include\ITr2BoundingBox.h" />
     <ClInclude Include="Include\ITr2DebugRenderer.h" />
+    <ClInclude Include="Include\ITr2DebugRenderer2.h" />
     <ClInclude Include="Include\ITr2GpuBuffer.h" />
     <ClInclude Include="Include\ITr2InstanceData.h" />
     <ClInclude Include="Include\ITr2Interior.h" />

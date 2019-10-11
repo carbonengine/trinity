@@ -536,7 +536,7 @@ void EveKDdroneManagementTree::AddAgentToSearchLists( std::vector<std::vector<st
 	}
 }
 
-void EveKDdroneManagementTree::RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation )
+void EveKDdroneManagementTree::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation )
 {
 	Vector3 debugSquareCorner1 = Vector3( m_debugSquareSize, m_debugSquareSize, m_debugSquareSize );
 	Vector3 debugSquareCorner2 = debugSquareCorner1 * -1;
@@ -546,7 +546,7 @@ void EveKDdroneManagementTree::RenderDebugInfo( Tr2DebugRenderer& renderer, Matr
 	DrawDebugTree( renderer, &m_tree, debugSquareCorner1, debugSquareCorner2, pwt );
 }
 
-void EveKDdroneManagementTree::DrawDebugTree( Tr2DebugRenderer& renderer, AgentRef* tree,  Vector3& debugSquareCorner1, 
+void EveKDdroneManagementTree::DrawDebugTree( ITr2DebugRenderer2& renderer, AgentRef* tree,  Vector3& debugSquareCorner1,
 																				Vector3& debugSquareCorner2, Vector3& pwt )
 {
 	if( tree == nullptr )
@@ -593,7 +593,7 @@ void EveKDdroneManagementTree::DrawDebugTree( Tr2DebugRenderer& renderer, AgentR
 									1.5f * abs(tree->agent->position.y) ),1.5f * abs(tree->agent->position.z) );
 }
 
-void EveKDdroneManagementTree::DrawSquareInnerLines( Tr2DebugRenderer& renderer, Vector3& agentPos, Vector3& P1,
+void EveKDdroneManagementTree::DrawSquareInnerLines( ITr2DebugRenderer2& renderer, Vector3& agentPos, Vector3& P1,
 																	Vector3& P2, Color C, PlaneType pt, Vector3& pwt )
 {
 	

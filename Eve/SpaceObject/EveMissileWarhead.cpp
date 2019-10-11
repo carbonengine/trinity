@@ -653,7 +653,7 @@ void EveMissileWarhead::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType 
 }
 
 
-void EveMissileWarhead::RenderDebugInfoFromParent( Tr2DebugRenderer& renderer, Matrix transform )
+void EveMissileWarhead::RenderDebugInfoFromParent( ITr2DebugRenderer2& renderer, Matrix transform )
 {
 	srand( static_cast<unsigned int>( reinterpret_cast<size_t>( this )));
 	uint32_t color = 0xff000000 + rand() % 0x00ffffff;

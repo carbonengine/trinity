@@ -48,7 +48,7 @@ public:
 	// ITr2DebugRenderable
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	float GetBoundingSphereRadius();
-	virtual void RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation );
 
 	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform );
 

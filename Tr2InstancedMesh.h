@@ -86,7 +86,7 @@ public:
 	bool IsLoading() const;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	void RenderDebugInfo( const Matrix& worldTransform, Tr2DebugRenderer& renderer ) override;
+	void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer ) override;
 
 protected:
 	class Batch;

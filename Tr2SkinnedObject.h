@@ -49,7 +49,7 @@ public:
 	const Matrix& GetSkinningTransform() const;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	void RenderDebugInfo( Tr2DebugRenderer& renderer ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
 
 	void ResetAnimationBindings();
 

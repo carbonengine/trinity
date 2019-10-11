@@ -59,7 +59,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-	virtual void RenderDebugInfo( Tr2DebugRenderer& renderer );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
 	// start this whole MIRV
 	void Start( const Vector3& shipVelocity, float estimatedFlyingTime );

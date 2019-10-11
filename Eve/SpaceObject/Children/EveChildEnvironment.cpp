@@ -225,7 +225,7 @@ void EveChildEnvironment::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Bounding Sphere" );
 }
 
-void EveChildEnvironment::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveChildEnvironment::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if (renderer.HasOption( this, "Volumes" ))
 	{

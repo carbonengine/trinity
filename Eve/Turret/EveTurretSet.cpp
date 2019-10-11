@@ -12,7 +12,6 @@
 #include "Utilities/BoundingSphere.h"
 #include "TriFrustumOrtho.h"
 #include "TriRenderBatch.h"
-#include "Tr2DebugRenderer.h"
 #include "Tr2Renderer.h"
 
 #include "Eve/EveUpdateContext.h"
@@ -1331,7 +1330,7 @@ bool EveTurretSet::GetLocalBoundingBox( Vector3& aabbMin, Vector3& aabbMax )
 // Description:
 //   Render debug info of this turret set: bounding sphere
 // --------------------------------------------------------------------------------
-void EveTurretSet::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveTurretSet::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	// draw bounding sphere for every turret in this set
 	for( std::vector<SingleTurretData>::const_iterator it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )

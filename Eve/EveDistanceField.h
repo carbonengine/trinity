@@ -43,7 +43,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
     void GetDebugOptions( Tr2DebugRendererOptions& options );
-    void RenderDebugInfo( Tr2DebugRenderer& renderer );
+    void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
 	void Update( const EveUpdateContext& updateContext );
 	

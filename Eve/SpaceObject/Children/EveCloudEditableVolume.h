@@ -85,7 +85,7 @@ public:
 		const struct IList* theList );
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldTransform );
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldTransform );
 
 	void OnVolumeModified();
 

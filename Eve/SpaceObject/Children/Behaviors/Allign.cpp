@@ -103,7 +103,7 @@ float Allign::GetBehaviorSearchRadius()
 	}
 }
 
-void Allign::RenderDebugInfo(Tr2DebugRenderer& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation)
+void Allign::RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation)
 {
 	if ( renderer.HasOption( this, "BehaviorVisionRanges" ) )
 	{
@@ -112,7 +112,7 @@ void Allign::RenderDebugInfo(Tr2DebugRenderer& renderer, std::vector<DroneAgent>
 		for ( auto agent = agents.begin(); agent != agents.end(); ++agent )
 		{
 			
-			renderer.DrawSphere( this, TranslationMatrix( agent->position ) * parentWorldLocation, m_visionRange, 6, Tr2DebugRenderer::Wireframe, Lerp( Color( 0xffffffff ), Color( 0xff1111ff ), lengthLerp ) );
+			renderer.DrawSphere( this, TranslationMatrix( agent->position ) * parentWorldLocation, m_visionRange, 6, ITr2DebugRenderer2::Wireframe, Lerp( Color( 0xffffffff ), Color( 0xff1111ff ), lengthLerp ) );
 		}
 	}
 }

@@ -167,9 +167,14 @@ void EveTransform::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Bounding Box" );
 	options.insert( "Bounding Sphere" );
 	options.insert( "Names" );
+
+	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	{
+		( *it )->GetDebugOptions( options );
+	}
 }
 
-void EveTransform::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveTransform::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	// is this one here enabled?
 	if( m_hideOnLowQuality && Tr2Renderer::IsLowQuality() )
@@ -181,6 +186,12 @@ void EveTransform::RenderDebugInfo( Tr2DebugRenderer& renderer )
 	{
 		return;
 	}
+
+	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	{
+		( *it )->RenderDebugInfo( renderer, m_worldTransform );
+	}
+
 
 	if( renderer.HasOption( this, "Bounding Box" ) )
 	{

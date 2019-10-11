@@ -9,6 +9,7 @@
 #include "Tr2DeviceResource.h"
 #include "Tr2PerObjectData.h"
 #include "include/TriColor.h"
+#include "Tr2DebugRenderer.h"
 
 // forwards
 class ITriRenderBatchAccumulator;
@@ -253,7 +254,7 @@ public:
 	float GetBoosterIntensity() const;
 	float GetBoosterIntensity( int index ) const;
 	// just debug info
-	void RenderDebugInfo( Tr2DebugRenderer& renderer );
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 	// get the transformed bounding sphere, ready for use
 	void GetBoundingSphere( Vector4& boundingSphere ) const;
 

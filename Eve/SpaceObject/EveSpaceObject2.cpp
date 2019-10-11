@@ -551,6 +551,12 @@ void EveSpaceObject2::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Lights" );
 	options.insert( "Locators" );
 	options.insert( "Shield" );
+
+	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	{
+		( *it )->GetDebugOptions( options );
+	}
+
 	for( auto it = m_locatorSets.begin(); it != m_locatorSets.end(); ++it )
 	{
 		std::string name = "Locators ";
@@ -572,7 +578,7 @@ void EveSpaceObject2::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void EveSpaceObject2::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if( renderer.HasOption( GetRawRoot(), "Projections" ) )
 	{
@@ -582,6 +588,11 @@ void EveSpaceObject2::RenderDebugInfo( Tr2DebugRenderer& renderer )
 			(*it)->GetDebugDrawMatrix( &customMaskTransform, GetBoundingSphereRadius() );
 			renderer.DrawBox( this, customMaskTransform, Vector3( -1, -1, -1 ), Vector3( 1, 1, 1 ), Tr2DebugRenderer::Wireframe, 0xff00ffff );
 		}
+	}
+
+	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
+	{
+		( *it )->RenderDebugInfo( renderer, m_worldTransform );
 	}
 
 	if( renderer.HasOption( GetRawRoot(), "Local Bounding Box" ) )
@@ -793,6 +804,7 @@ Matrix EveSpaceObject2::GetEveLocatorTransform( const char* name ) const
 			break;
 		}
 	}
+
 	if( !locator )
 	{
 		return IdentityMatrix();

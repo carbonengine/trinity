@@ -870,7 +870,7 @@ void Tr2InstancedMesh::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "Instance Mesh Bounds" );
 }
 
-void Tr2InstancedMesh::RenderDebugInfo( const Matrix& worldTransform, Tr2DebugRenderer& renderer )
+void Tr2InstancedMesh::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer )
 {
 	if( renderer.HasOption( this, "Instance Mesh Bounds" ) )
 	{

@@ -56,7 +56,7 @@ public:
 	void ChangeLightColor( Color c );
 
 	virtual void Update();
-	virtual void RenderDebugInfo( Tr2DebugRenderer& renderer, const Matrix& worldMatrix );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix );
 	virtual void SetLightData( LightData& baseData );
 	void SetBrightnessMultiplier( float multi );
 

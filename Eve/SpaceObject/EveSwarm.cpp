@@ -659,7 +659,7 @@ void EveSwarm::GetDebugOptions( Tr2DebugRendererOptions& options )
 // Description:
 //   From EveShip2
 // --------------------------------------------------------------------------------
-void EveSwarm::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveSwarm::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	EveShip2::RenderDebugInfo( renderer );
 

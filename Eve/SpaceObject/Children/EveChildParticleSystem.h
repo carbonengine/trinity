@@ -70,7 +70,7 @@ public:
 	virtual bool Initialize();
 	
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
-	void RenderDebugInfo( Tr2DebugRenderer& renderer ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
 
 	PITr2GenericEmitterVector m_particleEmitters;
 private:

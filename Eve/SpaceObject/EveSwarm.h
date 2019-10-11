@@ -229,7 +229,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
     virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-    virtual void RenderDebugInfo( Tr2DebugRenderer& renderer );
+    virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster - overriding EveSpaceObject2 implementations

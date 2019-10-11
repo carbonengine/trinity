@@ -164,7 +164,7 @@ void Tr2InteriorLightSource::GetDebugOptions(Tr2DebugRendererOptions & options)
 	options.insert("Lights");
 }
 
-void Tr2InteriorLightSource::RenderDebugInfo(Tr2DebugRenderer & renderer)
+void Tr2InteriorLightSource::RenderDebugInfo( ITr2DebugRenderer2& renderer)
 {
 	if (renderer.HasOption(GetRawRoot(), "Lights"))
 	{

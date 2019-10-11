@@ -298,7 +298,7 @@ void EveDistanceField::GetDebugOptions( Tr2DebugRendererOptions& options )
 
 
 // --------------------------------------------------------------------------------
-void EveDistanceField::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveDistanceField::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if( !renderer.HasOption( this, "DistanceField" ) )
 	{

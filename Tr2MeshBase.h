@@ -96,7 +96,7 @@ public:
 		);
 
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options ) {}
-	virtual void RenderDebugInfo( const Matrix& worldTransform, Tr2DebugRenderer& renderer ) {}
+	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer ) {}
 
 protected:
 	unsigned int FindJoint( const std::string* boneList, const int numBones, const char* name ) const;

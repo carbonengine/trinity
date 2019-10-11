@@ -283,7 +283,7 @@ void EveChildPlug::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void EveChildPlug::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveChildPlug::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if( !m_display )
 	{

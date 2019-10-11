@@ -164,7 +164,7 @@ void EveShip2::GetDebugOptions( Tr2DebugRendererOptions& options )
 // Description:
 //   Render some debug info of this space ship: turret sets
 // --------------------------------------------------------------------------------
-void EveShip2::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveShip2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	// now the boosters & trails
 	if( m_boosters && renderer.HasOption( this, "Boosters" ) )

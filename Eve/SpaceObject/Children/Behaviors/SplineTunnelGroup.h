@@ -84,7 +84,7 @@ public:
 
 	// ITr2DebugRenderable
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-	virtual void RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation );
 
 	// IInitialize
 	static bool Initialize();

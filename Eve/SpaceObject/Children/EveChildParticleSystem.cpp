@@ -309,7 +309,7 @@ void EveChildParticleSystem::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void EveChildParticleSystem::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveChildParticleSystem::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	if( m_display && m_mesh )
 	{

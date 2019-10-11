@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "TriObserverLocal.h"
 
+
 TriObserverLocal::TriObserverLocal( IRoot* lockobj ) :
 	m_front( 0.0f, 0.0f, 1.0f ),
 	m_position( 0.0f, 0.0f, 0.0f )
@@ -29,4 +30,22 @@ IBluePlacementObserver* TriObserverLocal::GetObserver()
 void TriObserverLocal::SetObserver( IBluePlacementObserver* obs )
 {
 	m_observer = obs;
+}
+
+void TriObserverLocal::GetDebugOptions( Tr2DebugRendererOptions& options )
+{
+	auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_observer.p );
+	if ( tmp )
+	{
+		tmp->GetDebugOptions( options );
+	}
+}
+
+void TriObserverLocal::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation )
+{
+	auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_observer.p );
+	if( tmp )
+	{
+		tmp->RenderDebugInfo( renderer );
+	}
 }

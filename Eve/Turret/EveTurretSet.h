@@ -13,6 +13,7 @@
 #include "Tr2ShLightingManager.h"
 #include "Tr2GrannyAnimation.h"
 #include "EveTurretTarget.h"
+#include "Tr2DebugRenderer.h"
 
 // needed for override
 #include "Tr2PerObjectData.h"
@@ -155,7 +156,7 @@ public:
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, const Vector4* shLighting );
 	void GetRenderablesCastingShadow( const TriFrustumOrtho& frustum, std::vector<ITr2Renderable*>& renderables );
 	// just debug info
-	void RenderDebugInfo( Tr2DebugRenderer& renderer );
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 	// rebuild the bounding sphere size
 	void RebuildBoundingSphere();
 	// disable LODing

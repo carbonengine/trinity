@@ -12,7 +12,6 @@
 #include "Eve/SpaceObject/Attachments/Sets/EveSpriteSet.h"
 #include "EveTrailsSet.h"
 #include "Tr2LightManager.h"
-#include "Tr2DebugRenderer.h"
 
 BLUE_DECLARE_VECTOR( EveSpriteSet );
 
@@ -1178,7 +1177,7 @@ float EveBoosterSet2::GetBoosterIntensity( int index ) const
 // Description:
 //   Render debug info of this turret set: bounding sphere
 // --------------------------------------------------------------------------------
-void EveBoosterSet2::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveBoosterSet2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	for( auto it = m_boosterRenderables.begin(); it != m_boosterRenderables.end(); it++ )
 	{
@@ -1192,12 +1191,12 @@ void EveBoosterSet2::RenderDebugInfo( Tr2DebugRenderer& renderer )
 				Vector3( 0, 0, -1 ), 
 				1.0f, 
 				8, 
-				Tr2DebugRenderer::Lit, 
+				ITr2DebugRenderer2::Lit, 
 				Tr2DebugColor( 0x88ffff00, 0x22ffff00 ) );
 		}
 
 		// trails box
-		renderer.DrawBox( this, (*it)->m_trailsBoundsMin, (*it)->m_trailsBoundsMax, Tr2DebugRenderer::Wireframe, 0xff00ffff );
+		renderer.DrawBox( this, (*it)->m_trailsBoundsMin, (*it)->m_trailsBoundsMax, ITr2DebugRenderer2::Wireframe, 0xff00ffff );
 	}
 }
 

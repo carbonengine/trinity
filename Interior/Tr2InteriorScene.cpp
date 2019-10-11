@@ -1458,7 +1458,7 @@ void Tr2InteriorScene::GetDebugOptions(Tr2DebugRendererOptions & options)
 	options.insert("Shadow Maps");
 }
 
-void Tr2InteriorScene::RenderDebugInfo(Tr2DebugRenderer & renderer)
+void Tr2InteriorScene::RenderDebugInfo( ITr2DebugRenderer2& renderer)
 {
 	if (renderer.HasOption(GetRawRoot(), "Shadow Maps") || m_debugRenderShadowMaps)
 	{

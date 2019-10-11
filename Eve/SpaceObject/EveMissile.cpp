@@ -277,7 +277,7 @@ void EveMissile::GetDebugOptions( Tr2DebugRendererOptions& options )
 // Arguments:
 //   renderContext - current rendercontext
 // --------------------------------------------------------------------------------
-void EveMissile::RenderDebugInfo( Tr2DebugRenderer& renderer )
+void EveMissile::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	EveSpaceObject2::RenderDebugInfo( renderer );
 

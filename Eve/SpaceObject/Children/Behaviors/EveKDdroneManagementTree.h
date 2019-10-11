@@ -22,7 +22,7 @@ public:
 	void UpdateTree( const float dt );
 	DroneAgent* FindClosestAgent( const Vector3 pos );
 	void CreateTree(std::vector<DroneAgent>& agents, size_t BNbr);
-	void RenderDebugInfo( Tr2DebugRenderer& renderer, Matrix& parentWorldLocation );
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation );
 	const std::vector<std::vector<std::vector<DroneAgent*>>>* FindDronesInRange(
 		std::vector<DroneAgent>& agents, std::vector<float>& ranges, float& BehaviorGroupBoundingSphereRadius);
 
@@ -102,8 +102,8 @@ private:
 										 SearchRange>& ranges, int& activeRange, int& c) const;
 	
 	// debug
-	void DrawDebugTree( Tr2DebugRenderer& renderer, AgentRef* tree, Vector3& debugSquareCorner1, Vector3& debugSquareCorner2, Vector3& pwt );
-	void DrawSquareInnerLines( Tr2DebugRenderer& renderer, Vector3& agentPos, Vector3& P1, Vector3& P2, Color C, PlaneType pt, Vector3& pwt );
+	void DrawDebugTree( ITr2DebugRenderer2& renderer, AgentRef* tree, Vector3& debugSquareCorner1, Vector3& debugSquareCorner2, Vector3& pwt );
+	void DrawSquareInnerLines( ITr2DebugRenderer2& renderer, Vector3& agentPos, Vector3& P1, Vector3& P2, Color C, PlaneType pt, Vector3& pwt );
 
 	AgentRef m_tree;
 	float m_debugSquareSize;
