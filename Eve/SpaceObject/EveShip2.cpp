@@ -351,6 +351,11 @@ void EveShip2::UpdateShipSpeedForAudio()
 // --------------------------------------------------------------------------------
 void EveShip2::GetLights( Tr2LightManager& lightManager ) const
 {
+	if( !m_display )
+	{
+		return;
+	}
+
 	EveMobile::GetLights( lightManager );
 	if( m_boosters )
 	{

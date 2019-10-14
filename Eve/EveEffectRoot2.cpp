@@ -329,6 +329,11 @@ void EveEffectRoot2::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadR
 
 void EveEffectRoot2::GetLights( Tr2LightManager& lightManager ) const
 {
+	if( !m_display )
+	{
+		return;
+	}
+
 	XMMATRIX worldTransform = m_lastUpdateMatrix;
 	float scaling = XMVectorGetX( XMVectorAdd( XMVector3LengthEst( m_lastUpdateMatrix.GetX() ), 
 		XMVectorAdd( XMVector3LengthEst( m_lastUpdateMatrix.GetY() ), XMVector3LengthEst( m_lastUpdateMatrix.GetZ() ) ) ) ) / 3.f;

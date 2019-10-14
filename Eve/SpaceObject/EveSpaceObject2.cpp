@@ -2956,6 +2956,11 @@ void EveSpaceObject2::SetMeshLod( Tr2MeshLod* mesh )
 
 void EveSpaceObject2::GetLights( Tr2LightManager& lightManager ) const
 {
+	if( !m_display )
+	{
+		return;
+	}
+
 	XMMATRIX worldTransform = m_worldTransform;
 	for( auto it = std::begin( m_lights ); it != std::end( m_lights ); ++it )
 	{
