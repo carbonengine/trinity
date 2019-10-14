@@ -354,7 +354,7 @@ namespace
 				desc.GetWidth(),
 				desc.GetHeight(),
 				desc.GetMipCount(),
-				D3DUSAGE_RENDERTARGET | D3DUSAGE_AUTOGENMIPMAP | usage,
+				D3DUSAGE_RENDERTARGET | usage,
 				format,
 				D3DPOOL_DEFAULT,
 				&tex,
