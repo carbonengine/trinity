@@ -2201,7 +2201,14 @@ ALResult Tr2RenderContextAL::GetGpuStateMarker( RenderContextStatus& status, std
 		return E_FAIL;
 	}
 	status = static_cast<RenderContextStatus>( data.status );
-	marker = static_cast<const char*>( data.markerData );
+	if( data.status != GFSDK_Aftermath_Context_Status_Invalid && data.markerData )
+	{
+		marker = static_cast<const char*>( data.markerData );
+	}
+	else
+	{
+		marker = "";
+	}
 	return S_OK;
 }
 
