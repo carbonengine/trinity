@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 
 #include "TriDebugTextRenderer.h"
-
+#include "blue/Include/Wine.h"
 #include "Tr2Renderer.h"
 
 #ifndef _WIN32
@@ -20,13 +20,20 @@ TriDebugTextRenderer::TriDebugTextRenderer() :
 #endif
 {
 #ifdef _WIN32
+	const char* font = Wine::IsWine() ? "Menlo" : "Lucida Console";
+	const char* fallbackFont = "Courier New";
 	for( int i = 0; i < 3; ++i )
     {
         static int heights[3] = { -9, -12, -16 };
-		m_dcFonts[i] = CreateFont( heights[i], 0, 0, 0, 0, FALSE, 0, 0, 0, 0, 0, NONANTIALIASED_QUALITY, 0, "Lucida Console" );
+		m_dcFonts[i] = CreateFont( heights[i], 0, 0, 0, 0, FALSE, 0, 0, 0, 0, 0, NONANTIALIASED_QUALITY, 0, font );
 		if( m_dcFonts[i] == NULL )
 		{
-			CCP_LOGERR( "Could not create debug text renderer font: Lucida Console, %d", heights[i] );
+			m_dcFonts[i] = CreateFont( heights[i], 0, 0, 0, 0, FALSE, 0, 0, 0, 0, 0, NONANTIALIASED_QUALITY, 0, fallbackFont );
+
+			if( m_dcFonts[i] == NULL )
+			{
+				CCP_LOGERR( "Could not create debug text renderer font: %s or %s, %d", font, fallbackFont, heights[i] );
+			}
 		}
     }
 	HDC screenDC = GetDC( NULL );
