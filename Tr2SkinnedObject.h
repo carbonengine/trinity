@@ -83,7 +83,8 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// IWorldPosition
-	virtual const Vector3* GetWorldPosition() { return &GetPosition(); }
+	virtual Vector3 GetWorldPosition() { return GetPosition(); }
+	virtual Quaternion GetWorldRotation() { return GetRotation(); }
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable

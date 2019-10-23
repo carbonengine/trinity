@@ -173,11 +173,11 @@ void EveTurretTarget::GetImpactPosition( Vector3& out, const Vector3* source )
 		}
 		else if( m_impactBehaviour == ImpactBehaviour::CENTER )
 		{
-			out = *m_objectPos->GetWorldPosition();
+			out = m_objectPos->GetWorldPosition();
 		}
 		else if( m_impactBehaviour == ImpactBehaviour::SHIELD_ELLIPSOID )
 		{
-			if( !m_object->GetImpactPosition( out, m_locator, *source, *m_objectPos->GetWorldPosition(), 0 ) )
+			if( !m_object->GetImpactPosition( out, m_locator, *source, m_objectPos->GetWorldPosition(), 0 ) )
 			{
 				// handle when we are inside the shield ellipsoid
 				m_object->GetDamageLocatorPosition( &out, m_locator, true );

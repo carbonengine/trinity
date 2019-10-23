@@ -395,9 +395,14 @@ void EveTransform::UpdateModelCenterWorldPosition( Vector3 &position, Be::Time t
 	position = m_worldTransform.GetTranslation();
 }
 
-const Vector3* EveTransform::GetWorldPosition()
+Vector3 EveTransform::GetWorldPosition()
 {
-	return (Vector3*)&m_worldTransform._41;
+	return m_worldTransform.GetTranslation();
+}
+
+Quaternion EveTransform::GetWorldRotation()
+{
+	return m_rotation;
 }
 
 void EveTransform::GetModelCenterWorldPosition( Vector3 &position ) const

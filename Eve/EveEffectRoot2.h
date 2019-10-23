@@ -97,7 +97,8 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IWorldPosition
-	virtual const Vector3* GetWorldPosition();
+	virtual Vector3 GetWorldPosition();
+	virtual Quaternion GetWorldRotation();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2CurveSetOwner
@@ -147,7 +148,6 @@ private:
 	Vector4 m_boundingSphere;
 	Matrix m_lastUpdateMatrix;
 	Matrix m_localTransform;
-	Vector3 m_worldPosition;
 	float m_secondaryLightingSphereRadiusLocal;
 	float m_secondaryLightingSphereRadiusWorld;
 

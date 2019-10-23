@@ -6,7 +6,7 @@
 
 #include "StdAfx.h"
 #include "Tr2FollowCurveKey.h"
-#include "Eve/SpaceObject/EveSpaceObject2.h"
+#include "IWorldPosition.h"
 #include "include/TriMath.h"
 
 
@@ -19,8 +19,7 @@ Tr2ObjectFollowCurveKey::Tr2ObjectFollowCurveKey( IRoot* lockobj ) :
 	m_interpolation( Tr2FollowCurveKeyInterpolation::LINEAR ),
 	m_offset( 0.0, 0.0, 0.0 ),
 	m_rotationSetting( NO_ROTATION ),
-	m_locatorOffset( 0.0, 0.0, 0.0 ),
-	m_locatorRotation( 0.0, 0.0, 0.0, 1.0 )
+	m_locator(nullptr)
 {
 }
 
@@ -50,7 +49,7 @@ const Tr2FollowCurveKeyInterpolation::Type Tr2ObjectFollowCurveKey::GetInterpola
 
 bool Tr2ObjectFollowCurveKey::Initialize()
 {
-	GetLocator();
+	m_locator = GetLocator();
 	return true;
 }
 
@@ -58,20 +57,17 @@ bool Tr2ObjectFollowCurveKey::OnModified( Be::Var *value )
 {
 	if( IsMatch( value, m_offsetLocatorName ) || IsMatch( value, m_object ) )
 	{
-		GetLocator();
+		m_locator = GetLocator();
 	}
 	return true;
 }
 
-void Tr2ObjectFollowCurveKey::GetLocator()
+
+Locator* Tr2ObjectFollowCurveKey::GetLocator()
 {
-
-	m_locatorOffset = Vector3( 0.0, 0.0, 0.0 );
-	m_locatorRotation = Quaternion( 0.0, 0.0, 0.0, 1.0 );
-
 	if( m_object == nullptr || m_offsetLocatorName.empty() )
 	{
-		return;
+		return nullptr;
 	}
 
 	if( EveSpaceObject2Ptr so = BlueCastPtr( m_object ) )
@@ -79,24 +75,26 @@ void Tr2ObjectFollowCurveKey::GetLocator()
 		auto locators = so->GetLocatorsForSet( m_offsetLocatorName );
 		if( locators != nullptr && locators->size() > 0 )
 		{
-			auto loc = ( *locators )[0];
-			m_locatorOffset = loc.position;
-			m_locatorRotation = Normalize( loc.direction );
-			return;
+			return const_cast< Locator* >( &( *locators )[0] );
 		}
 	}
+	return nullptr;
 }
 
 Matrix Tr2ObjectFollowCurveKey::GetLocatorRotation()
 {
-	return RotationMatrix( m_locatorRotation );
+	if( m_locator != nullptr )
+	{
+		return RotationMatrix( Normalize( m_locator->direction ) );
+	}
+	return Matrix();
 }
 
 Matrix Tr2ObjectFollowCurveKey::GetModelRotation()
 {
-	if( EveSpaceObject2Ptr so = BlueCastPtr( m_object ) )
+	if( IWorldPositionPtr wp = BlueCastPtr( m_object ) )
 	{
-		auto q = Normalize( *so->GetWorldRotation() );
+		auto q = Normalize( wp->GetWorldRotation() );
 		return RotationMatrix( q );
 	}
 	return Matrix();
@@ -107,6 +105,12 @@ Vector3 Tr2ObjectFollowCurveKey::GetValue()
 	if( m_object == nullptr )
 	{
 		return m_offset;
+	}
+
+	Vector3 offset = m_offset;
+	if( m_locator != nullptr )
+	{
+		offset += m_locator->position;
 	}
 
 	Matrix rotationMatrix;
@@ -127,11 +131,12 @@ Vector3 Tr2ObjectFollowCurveKey::GetValue()
 	m_rotatedLeftTangent = TransformCoord( m_leftTangent, rotationMatrix );
 	m_rotatedRightTangent = TransformCoord( m_rightTangent, rotationMatrix );
 
-	Vector3 offset = TransformCoord( m_offset + m_locatorOffset, rotationMatrix );
+	// rotate the offset
+	offset = TransformCoord( offset, rotationMatrix );
 
-	if( EveSpaceObject2Ptr so = BlueCastPtr( m_object ) )
+	if( IWorldPositionPtr wp = BlueCastPtr( m_object ) )
 	{
-		return *so->GetWorldPosition() + offset;
+		return wp->GetWorldPosition() + offset;
 	}
 
 	return offset;

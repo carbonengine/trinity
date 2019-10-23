@@ -168,7 +168,7 @@ void EveMissile::UpdateSyncronous( EveUpdateContext& updateContext )
 		}
 	}
 
-	const Vector3* worldPos = GetWorldPosition();
+	Vector3 worldPos = GetWorldPosition();
 
 	// update the submissiles aka warheads
 	for( EveMissileWarheadVector::const_iterator it = m_warheads.begin(); it != m_warheads.end(); ++it )
@@ -179,14 +179,14 @@ void EveMissile::UpdateSyncronous( EveUpdateContext& updateContext )
 
 		if( wh->GetState() != EveMissileWarhead::STATE_DEAD )
 		{
-			Vector3 locatorPositionWS(*worldPos);
+			Vector3 locatorPositionWS(worldPos);
 			Matrix locatorMatrix;
 
 			if( m_target )
 			{
 				m_target->GetDamageLocatorPosition( &locatorPositionWS, wh->GetTargetLocator(), true );
 			}
-			const Vector3 locatorOffset = locatorPositionWS - *worldPos;
+			const Vector3 locatorOffset = locatorPositionWS - worldPos;
 			locatorPositionWS = TransformCoord( locatorOffset, invBallRotationMatrix );
 			locatorMatrix = TranslationMatrix( locatorPositionWS );
 

@@ -25,7 +25,7 @@ const Be::ClassInfo* Tr2CurveVector3Lerp::ExposeToBlue()
 			"initialValue",
 			m_initialValue,
 			"Initial value of the curve",
-			Be::READWRITE | Be::PERSIST )
+			Be::READWRITE )
 
 		MAP_ATTRIBUTE(
 			"curve",

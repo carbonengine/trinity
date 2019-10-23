@@ -262,7 +262,9 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IWorldPosition
-	virtual const Vector3* GetWorldPosition();
+	virtual Vector3 GetWorldPosition();
+	virtual Quaternion GetWorldRotation();
+
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IWorldPosition
@@ -310,7 +312,6 @@ public:
 
 	Vector3 GetModelWorldPosition() const;
 	void GetWorldVelocity( Vector3& velocity ) const;
-	const Quaternion* GetWorldRotation();
 
 	Tr2GrannyAnimationPtr GetAnimationController() { return m_animationUpdater; }
 	bool IsAnimated() const; 

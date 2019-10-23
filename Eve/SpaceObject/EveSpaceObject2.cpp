@@ -2106,14 +2106,14 @@ void EveSpaceObject2::GetMissPosition( const Vector3* hit, const Vector3* source
 	}
 }
 
-const Vector3* EveSpaceObject2::GetWorldPosition()
+Vector3 EveSpaceObject2::GetWorldPosition()
 {
-	return &m_worldPosition;
+	return m_worldPosition;
 }
 
-const Quaternion* EveSpaceObject2::GetWorldRotation()
+Quaternion EveSpaceObject2::GetWorldRotation()
 {
-	return &m_worldRotation;
+	return m_worldRotation;
 }
 
 void EveSpaceObject2::SelectMeshLevelOfDetail()

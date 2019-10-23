@@ -399,7 +399,7 @@ EveMissileWarhead::StateChangeEvent EveMissileWarhead::UpdateState( float deltaT
 		break;
 	case STATE_START_TRACKING:
 		// get target locator from target
-		m_targetLocator = target ? target->GetGoodDamageLocatorIndex( *GetWorldPosition() ) : -1;
+		m_targetLocator = target ? target->GetGoodDamageLocatorIndex( GetWorldPosition() ) : -1;
 		if( estimatedTotalAliveTime >= 5.f && m_doSpread )
 		{
 			m_state = STATE_TRACKING_SPREAD;
@@ -412,7 +412,7 @@ EveMissileWarhead::StateChangeEvent EveMissileWarhead::UpdateState( float deltaT
 	case STATE_TRACKING_SPREAD:
 		if( flight01 >= m_finalTargetTime )
 		{
-			m_targetLocator = target ? target->GetGoodDamageLocatorIndex( *GetWorldPosition() ) : -1;
+			m_targetLocator = target ? target->GetGoodDamageLocatorIndex( GetWorldPosition() ) : -1;
 			evt = EVT_SWITCH_TARGET;
 			m_state = STATE_TRACKING_FINAL;
 		}
@@ -444,12 +444,12 @@ EveMissileWarhead::StateChangeEvent EveMissileWarhead::CheckImpact( float deltaT
 
 	if( !target )
 	{
-		m_explosionPosition = *GetWorldPosition();
+		m_explosionPosition = GetWorldPosition();
 		m_state = STATE_EXPLODED;
 		return EVT_EXPLODE;
 	}
 
-	posNow = *GetWorldPosition();
+	posNow = GetWorldPosition();
 	posLast = posNow - m_movement;
 	targetPosition = posNow;
 
@@ -488,8 +488,8 @@ void EveMissileWarhead::Update( EveUpdateContext& updateContext )
 
 	m_posLastFrame -= updateContext.GetOriginShift();
 	EveTransform::Update( updateContext );
-	m_movement = *GetWorldPosition() - m_posLastFrame;
-	m_posLastFrame = *GetWorldPosition();
+	m_movement = GetWorldPosition() - m_posLastFrame;
+	m_posLastFrame = GetWorldPosition();
 }
 
 // --------------------------------------------------------------------------------
@@ -657,8 +657,8 @@ void EveMissileWarhead::RenderDebugInfoFromParent( ITr2DebugRenderer2& renderer,
 {
 	srand( static_cast<unsigned int>( reinterpret_cast<size_t>( this )));
 	uint32_t color = 0xff000000 + rand() % 0x00ffffff;
-	renderer.DrawLine( this, transform.GetTranslation(), *this->GetWorldPosition(), color );
-	renderer.DrawLine( this, *this->GetWorldPosition(), TransformCoord( m_currentEndOffset, transform ), 0xff999999 );
+	renderer.DrawLine( this, transform.GetTranslation(), this->GetWorldPosition(), color );
+	renderer.DrawLine( this, this->GetWorldPosition(), TransformCoord( m_currentEndOffset, transform ), 0xff999999 );
 
 	std::string message = "";
 	switch( m_state )
@@ -689,7 +689,7 @@ void EveMissileWarhead::RenderDebugInfoFromParent( ITr2DebugRenderer2& renderer,
 		break;
 	};
 
-	renderer.DrawText( TRI_DBG_FONT_MEDIUM, *this->GetWorldPosition(), color, message.c_str() );
+	renderer.DrawText( TRI_DBG_FONT_MEDIUM, this->GetWorldPosition(), color, message.c_str() );
 }
 
 

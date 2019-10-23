@@ -67,7 +67,7 @@ public:
 	const Vector3 GetRightTangent();
 
 private:
-	void GetLocator();
+	Locator* GetLocator();
 	
 	Matrix GetLocatorRotation();
 	Matrix GetModelRotation();
@@ -86,8 +86,7 @@ private:
 	Vector3 m_offset;
 	RotationSetting m_rotationSetting;
 
-	Vector3 m_locatorOffset;
-	Quaternion m_locatorRotation;
+	Locator* m_locator;
 
 };
 TYPEDEF_BLUECLASS( Tr2ObjectFollowCurveKey );

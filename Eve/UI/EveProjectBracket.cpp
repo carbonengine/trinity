@@ -78,7 +78,7 @@ void EveProjectBracket::UpdateValue( double time )
 	}
 	else if( m_trackTransform )
 	{
-		pos = *(m_trackTransform->GetWorldPosition());
+		pos = m_trackTransform->GetWorldPosition();
 	}
 	else
 	{

@@ -138,9 +138,15 @@ void EvePlanet::UpdateZOnlyVisibility( const TriFrustum& frustum )
 	}
 }
 
-const Vector3* EvePlanet::GetWorldPosition()
+Vector3 EvePlanet::GetWorldPosition()
 {
-	return reinterpret_cast<Vector3*>( &m_worldTransform._41 );
+	return m_worldTransform.GetTranslation();
+}
+
+
+Quaternion EvePlanet::GetWorldRotation()
+{
+	return m_rotation;
 }
 
 // --------------------------------------------------------------------------------

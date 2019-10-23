@@ -7,7 +7,8 @@ struct Vector3;
 
 BLUE_INTERFACE(IWorldPosition) : IRoot
 {	
-	virtual const Vector3* GetWorldPosition() = 0;
+	virtual Vector3 GetWorldPosition() = 0;
+	virtual Quaternion GetWorldRotation() = 0;
 };
 
 #endif

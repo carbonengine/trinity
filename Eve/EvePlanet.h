@@ -41,7 +41,8 @@ public:
 	static const float SCALE;
 
 	// IWorldPosition
-	virtual const Vector3* GetWorldPosition();
+	virtual Vector3 GetWorldPosition();
+	virtual Quaternion GetWorldRotation();
 
 	// ITr2SecondaryLightSource
 	virtual void RegisterSecondaryLightSource( Tr2ShLightingManager& );
