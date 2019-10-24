@@ -170,6 +170,11 @@ void EveTurretTarget::GetImpactPosition( Vector3& out, const Vector3* source )
 		if( m_impactBehaviour == ImpactBehaviour::DAMAGE_LOCATOR )
 		{
 			m_object->GetDamageLocatorPosition( &out, m_locator, true );
+
+			if( LengthSq(out) > 22379561604000000000000.f ) // AU squared
+			{
+				out = m_objectPos->GetWorldPosition();
+			}
 		}
 		else if( m_impactBehaviour == ImpactBehaviour::CENTER )
 		{
