@@ -11,7 +11,6 @@ const char* g_moduleName = "TrinityALTest";
 bool g_usingEXDevice = false;
 bool g_useManagedDX9Buffers = true;
 std::vector<void*> g_D3DCreatedHeaps;
-bool IsTransgaming() { return false; }
 
 // Interactive test flag (set by --interactive option)
 bool g_interactive = false;
