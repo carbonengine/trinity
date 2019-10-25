@@ -589,7 +589,7 @@ bool App::AdjustWindowForChange(bool windowed, bool fixedWindow)
     {
         if (!mHideTitle)
         {
-			windowStyle = windowStyle | WS_CAPTION;
+			windowStyle = windowStyle | WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX;
         }
 	}
 
