@@ -175,6 +175,8 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_localAabbMax( 0.f, 0.f, 0.f ),
 	m_shapeEllipsoidCenter( 0.f, 0.f, 0.f ),
 	m_shapeEllipsoidRadius( -1.f, -1.f, -1.f ),
+	m_generatedShapeEllipsoidCenter( 0.f, 0.f, 0.f ),
+	m_generatedShapeEllipsoidRadius( -1.f, -1.f, -1.f ),
 	m_lastCurveUpdateTime( 0 ),
 	m_previousPosition( UNINITIALIZED_POSITION, UNINITIALIZED_POSITION, UNINITIALIZED_POSITION ),
 	m_spaceObjectShipData( 1.f, 1.f, EVE_SPACEOBJECT_DIRT_LEVEL_DEFAULT, 1.f ),
@@ -2735,14 +2737,17 @@ void EveSpaceObject2::GetShapeEllipsoid( Vector3& center, Vector3& radius )
 	{
 		center = m_shapeEllipsoidCenter;
 		radius = m_shapeEllipsoidRadius;
-		return;
 	}
-
-	// ok, let's calc it!
-	Vector3 mn( -1.f, -1.f, -1.f ), mx( 1.f, 1.f, 1.f );
-	GetLocalBoundingBox( mn, mx );
-	radius = 0.5f * TRI_SQRT3 * ( mx - mn );
-	center = mn + 0.5f * ( mx - mn );
+	else
+	{
+		// ok, let's calc it!
+		Vector3 mn( -1.f, -1.f, -1.f ), mx( 1.f, 1.f, 1.f );
+		GetLocalBoundingBox( mn, mx );
+		radius = 0.5f * TRI_SQRT3 * ( mx - mn );
+		center = mn + 0.5f * ( mx - mn );
+	}
+	m_generatedShapeEllipsoidCenter = center;
+	m_generatedShapeEllipsoidRadius = radius;
 }
 
 // --------------------------------------------------------------------------------

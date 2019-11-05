@@ -512,6 +512,8 @@ protected:
 	// shape ellipsoid info
 	Vector3 m_shapeEllipsoidCenter;
 	Vector3 m_shapeEllipsoidRadius;
+	Vector3 m_generatedShapeEllipsoidCenter;
+	Vector3 m_generatedShapeEllipsoidRadius;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// overlay effects
