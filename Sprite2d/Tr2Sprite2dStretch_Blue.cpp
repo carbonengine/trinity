@@ -37,7 +37,7 @@ const Be::ClassInfo* Tr2Sprite2dStretch::ExposeToBlue()
 			"leftEdgeSize", 
 			m_leftEdgeSize, 
 			"Number of fixed pixels on the left edge of the texture", 
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::NOTIFY
 		)
 
 		MAP_ATTRIBUTE
@@ -45,7 +45,7 @@ const Be::ClassInfo* Tr2Sprite2dStretch::ExposeToBlue()
 			"rightEdgeSize", 
 			m_rightEdgeSize, 
 			"Number of fixed pixels on the right edge of the texture", 
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::NOTIFY
 		)
 
 		MAP_ATTRIBUTE
@@ -54,15 +54,7 @@ const Be::ClassInfo* Tr2Sprite2dStretch::ExposeToBlue()
 			m_offset,
 			"Offset the sprite. Positive values will make it smaller horizontally,\n"
 			"and negative bigger. The sprite is shifted vertically by this offset.",
-			Be::READWRITE | Be::PERSIST
-		)
-
-		MAP_ATTRIBUTE
-		(
-			"texturePrimary",
-			m_texture,
-			"Texture for this frame",
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::NOTIFY
 		)
 
 		MAP_ATTRIBUTE
@@ -70,7 +62,23 @@ const Be::ClassInfo* Tr2Sprite2dStretch::ExposeToBlue()
 			"fillCenter",
 			m_fillCenter,
 			"If set, the center of the sprite is filled (this is the default).",
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::NOTIFY
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"saturation",
+			m_saturation,
+			"Saturation factor, used when TR2_SFX_COLOROVERLAY or TR2_SFX_SOFTLIGHT is used.",
+			Be::READWRITE | Be::NOTIFY
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"effectOpacity",
+			m_effectOpacity,
+			"Effect opacity, used when TR2_SFX_COLOROVERLAY or TR2_SFX_SOFTLIGHT is used.",
+			Be::READWRITE | Be::NOTIFY
 		)
 
 		MAP_ATTRIBUTE_WITH_CHOOSER
@@ -82,5 +90,5 @@ const Be::ClassInfo* Tr2Sprite2dStretch::ExposeToBlue()
 			Tr2Sprite2dStretchDpiScaleBehaviorChooser
 		)
 
-	EXPOSURE_CHAINTO( Tr2SpriteObject )
+	EXPOSURE_CHAINTO( Tr2TexturedSpriteObject )
 }

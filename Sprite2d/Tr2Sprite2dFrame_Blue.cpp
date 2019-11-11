@@ -25,13 +25,6 @@ const Be::ClassInfo* Tr2Sprite2dFrame::ExposeToBlue()
 			Be::READWRITE | Be::NOTIFY
 		)
 
-		MAP_PROPERTY
-		(
-			"texturePrimary",
-			GetTexture, SetTexture,
-			"Texture for this frame"
-		)
-
 		MAP_ATTRIBUTE
 		(
 			"fillCenter",
@@ -40,5 +33,5 @@ const Be::ClassInfo* Tr2Sprite2dFrame::ExposeToBlue()
 			Be::READWRITE | Be::NOTIFY
 		)
 
-	EXPOSURE_CHAINTO( Tr2SpriteObject )
+	EXPOSURE_CHAINTO( Tr2TexturedSpriteObject )
 }

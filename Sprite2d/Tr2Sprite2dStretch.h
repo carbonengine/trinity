@@ -24,7 +24,7 @@ enum Tr2StretchScaleBehavior
 // center piece appropriately according to the dimensions of the sprite.
 //////////////////////////////////////////////////////////////////////////
 class Tr2Sprite2dStretch:
-	public Tr2SpriteObject
+	public Tr2TexturedSpriteObject
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -37,6 +37,8 @@ public:
 	ITr2SpriteObject* PickPoint( float x, float y, Tr2Sprite2dScene* renderer );
 
 private:
+	void PrepareVertices( Tr2Sprite2dVertexBase* v, float sourceWidth, const Vector2& vertOffset, const Vector2& scale ) const;
+
 	// Resource path used to load a Tr2Sprite2dTexture stored in m_texture
 	std::string m_resPath;
 
@@ -45,6 +47,12 @@ private:
 
 	// Number of pixels on the right edge of the texture
 	unsigned int m_rightEdgeSize;
+
+	// Saturation factor, used when TR2_SFX_COLOROVERLAY or TR2_SFX_SOFTLIGHT is used
+	float m_saturation;
+
+	// Opacity of effect - used when TR2_SFX_COLOROVERLAY or TR2_SFX_SOFTLIGHT is used
+	float m_effectOpacity;
 
 	// Offset the sprite. Positive values will make it smaller horizontally,
 	// and negative bigger. The sprite is shifted vertically by this offset.
@@ -56,11 +64,8 @@ private:
 
 	Tr2StretchScaleBehavior m_dpiScaleBehavior;
 
-	// The texture object, loaded from the resource pointed to with m_resPath
-	Tr2Sprite2dTexturePtr m_texture;
-
 	// The buffer of vertices used to render the sprite
-	Tr2Sprite2dD3DVertex m_vertices[8];
+	Tr2Sprite2dD3DVertex m_vertices[8 * 3];
 };
 
 TYPEDEF_BLUECLASS( Tr2Sprite2dStretch );
