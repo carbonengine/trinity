@@ -23,6 +23,7 @@ const Be::ClassInfo* Tr2ActionSetExternalControllerVariable::ExposeToBlue()
 		MAP_ATTRIBUTE( "variable", m_variable, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "value", m_value, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sourceVariable", m_sourceVariable, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "startControllers", m_startControllers, "", Be::READWRITE | Be::PERSIST )
 
 		MAP_PROPERTY_READONLY( "destinationIsValid", IsDestinationValid, "")
 

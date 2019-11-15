@@ -17,7 +17,8 @@ BLUE_DECLARE_INTERFACE( ITr2ControllerOwner );
 
 Tr2ActionSetExternalControllerVariable::Tr2ActionSetExternalControllerVariable( IRoot* ) :
 	m_controller( nullptr ),
-	m_value( 0.0 )
+	m_value( 0.0 ),
+	m_startControllers( false )
 {
 
 }
@@ -38,7 +39,10 @@ void Tr2ActionSetExternalControllerVariable::Start( Tr2Controller& controller )
 {
 	if( IsDestinationValid() )
 	{
-		m_destination->StartControllers();
+		if( m_startControllers )
+		{
+			m_destination->StartControllers();
+		}
 		float value = m_value;
 		if( !m_sourceVariable.empty() ) 
 		{

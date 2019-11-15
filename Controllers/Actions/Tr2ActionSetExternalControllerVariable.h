@@ -41,6 +41,7 @@ private:
 	BlueSharedString m_sourceVariable;
 	BlueSharedString m_variable;
 	float m_value;
+	bool m_startControllers;
 
 	const Tr2Controller* m_controller;
 	Tr2ControllerExpression m_evaluator;
