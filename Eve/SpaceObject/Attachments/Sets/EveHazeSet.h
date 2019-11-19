@@ -53,7 +53,10 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	void ReleaseResources( TriStorage s );
+private:
+	bool OnPrepareResources();
 
+public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual void GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
@@ -73,12 +76,8 @@ public:
 	// picking
 	void GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData );
 
-	// fade in/out
-	void SetActivationStrength( float s );
 
 private:
-	bool OnPrepareResources();
-	
 	// toggle visibility
 	bool m_display;
 	// keep a name
@@ -95,8 +94,6 @@ private:
 	unsigned int m_vertexDeclHandle;
 	unsigned int m_vertexCount;
 	Tr2BufferAL m_vertexBuffer;
-
-	float m_activationStrength;
 };
 
 TYPEDEF_BLUECLASS( EveHazeSet );

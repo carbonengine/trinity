@@ -45,7 +45,6 @@ EveHazeSet::EveHazeSet( IRoot* lockobj ) :
 	PARENTLOCK( m_hazes ),
 	m_display( true ),
 	m_vertexCount( 0 ),
-	m_activationStrength( 1.0f ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 {
 }
@@ -86,13 +85,6 @@ void EveHazeSet::ReleaseResources( TriStorage s )
 {
 	m_vertexDeclHandle = Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
 	m_vertexBuffer = Tr2BufferAL();
-}
-
-// modify the attribute controlling the brightness multiplier
-void EveHazeSet::SetActivationStrength( float s )
-{
-	m_activationStrength = min( 1.f, max( s, 0.f ) );
-	this->Rebuild();
 }
 
 // --------------------------------------------------------------------------------
@@ -169,7 +161,7 @@ bool EveHazeSet::OnPrepareResources()
 				vertex.invTransform2 = Vector4( invItemTransform._12, invItemTransform._22, invItemTransform._32, invItemTransform._42 );
 				vertex.invTransform3 = Vector4( invItemTransform._13, invItemTransform._23, invItemTransform._33, invItemTransform._43 );
 				vertex.hazeData = m_hazes[i]->m_hazeData;
-				vertex.color = Vector4( m_hazes[i]->m_color.r, m_hazes[i]->m_color.g, m_hazes[i]->m_color.b, m_hazes[i]->m_color.a ) * m_activationStrength;
+				vertex.color = Vector4( m_hazes[i]->m_color.r, m_hazes[i]->m_color.g, m_hazes[i]->m_color.b, m_hazes[i]->m_color.a );
 				vertex.index = s_boxInds[s][j];
 				vertex.boneIndex = m_hazes[i]->m_boneIndex;
 			}

@@ -1689,14 +1689,6 @@ bool EveSpaceObject2::OnModified( Be::Var* val )
 		m_oldClipSphereFactor = m_clipSphereFactor;
 		SetControllerVariable( "ClipSphereFactor", m_clipSphereFactor );
 	}
-	else if( IsMatch( val, m_activationStrength ) )
-	{
-		for( auto it = std::begin( m_attachments ); it != std::end( m_attachments ); ++it )
-		{
-			(*it)->SetActivationStrength( m_activationStrength );
-		}
-	}
-	
 	return true;
 }
 
