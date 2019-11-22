@@ -503,7 +503,7 @@ Vector3 EveEffectRoot2::GetWorldPosition()
 
 Quaternion EveEffectRoot2::GetWorldRotation()
 {
-	return m_rotation;
+	return Normalize( m_rotation * RotationQuaternion( m_worldTransform ) );
 }
 
 void EveEffectRoot2::GetMissPosition( const Vector3* hit, const Vector3* source, Vector3* out )
