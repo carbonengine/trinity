@@ -32,6 +32,11 @@ void TriObserverLocal::SetObserver( IBluePlacementObserver* obs )
 	m_observer = obs;
 }
 
+void TriObserverLocal::SetPosition( Vector3 pos )
+{
+	m_position = pos;
+}
+
 void TriObserverLocal::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	if ( auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_observer.p ) )

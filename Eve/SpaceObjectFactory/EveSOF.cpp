@@ -1427,6 +1427,7 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, const EveSOFDNA
 			TriObserverLocalPtr observer;
 			observer.CreateInstance();
 			observer->m_name = cit->name;
+			observer->SetPosition( cit->position );
 
 			IBluePlacementObserverPtr emitter;
 			BeClasses->CreateInstanceFromName( "AudEmitter", BlueInterfaceIID<IBluePlacementObserver>(), reinterpret_cast<void**>( &emitter.p ) );

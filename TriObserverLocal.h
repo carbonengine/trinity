@@ -22,6 +22,7 @@ public:
 	// ITriObserverLocal
 	IBluePlacementObserver* GetObserver();
 	void SetObserver( IBluePlacementObserver* obs );
+	void SetPosition( Vector3 pos );
 
 	// debug
 	void GetDebugOptions( Tr2DebugRendererOptions& options );

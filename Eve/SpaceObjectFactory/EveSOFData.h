@@ -958,9 +958,12 @@ BLUE_CLASS( EveSOFDataHullSoundEmitter ): public IRoot
 {
 public:
 	EXPOSE_TO_BLUE();
+	EveSOFDataHullSoundEmitter( IRoot* lockobj = NULL );
+	~EveSOFDataHullSoundEmitter() {}
 
 	std::string m_name;
 	std::wstring m_prefix;
+	Vector3 m_position;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullSoundEmitter );
 BLUE_DECLARE_VECTOR( EveSOFDataHullSoundEmitter );
