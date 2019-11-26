@@ -26,31 +26,31 @@ TriStepRenderPostProcess::TriStepRenderPostProcess(IRoot* lockobj) :
 	m_tonemappingEffect->StartUpdate();
 	m_tonemappingEffect->SetEffectPathName("res:/Graphics/Effect/Managed/Space/PostProcess/ToneMapping.fx");
 	m_tonemappingEffect->SetParameter(BlueSharedString("VignetteDetailScroll"), Vector4(0.0, 0.0, 0.0, 0.0));
-	m_tonemappingEffect->SetParameter(BlueSharedString("GrainColorAmount"), 0.600000023842);
+	m_tonemappingEffect->SetParameter(BlueSharedString("GrainColorAmount"), 0.600000023842f);
 	m_tonemappingEffect->SetOption(BlueSharedString("TONE_MAPPING_TOGGLE"), BlueSharedString("TONE_MAPPING_ENABLED"));
 	m_tonemappingEffect->SetOption(BlueSharedString("DESATURATE_TOGGLE"), BlueSharedString("DESATURATE_ENABLED"));
 	m_tonemappingEffect->SetParameter(BlueSharedString("VignetteColor"), Vector4(1.0, 1.0, 1.0, 1.0));
 	m_tonemappingEffect->SetParameter(BlueSharedString("VignetteSineRange"), Vector4(0.0, 1.0, 0.0, 0.0));
-	m_tonemappingEffect->SetParameter(BlueSharedString("GrainIntensity"), 0.00300000002608);
+	m_tonemappingEffect->SetParameter(BlueSharedString("GrainIntensity"), 0.00300000002608f);
 	m_tonemappingEffect->SetOption(BlueSharedString("COLORED_GRAIN_TOGGLE"), BlueSharedString("COLORED_GRAIN_DISABLED"));
 	m_tonemappingEffect->SetOption(BlueSharedString("LUT_TOGGLE"), BlueSharedString("LUT_ENABLED"));
-	m_tonemappingEffect->SetParameter(BlueSharedString("FadeAmount"), 0.0);
-	m_tonemappingEffect->SetParameter(BlueSharedString("GrimeWeight"), 0.0);
-	m_tonemappingEffect->SetParameter(BlueSharedString("ExposureAdjust"), 2.0);
+	m_tonemappingEffect->SetParameter(BlueSharedString("FadeAmount"), 0.0f);
+	m_tonemappingEffect->SetParameter(BlueSharedString("GrimeWeight"), 0.0f);
+	m_tonemappingEffect->SetParameter(BlueSharedString("ExposureAdjust"), 2.0f);
 	m_tonemappingEffect->SetOption(BlueSharedString("DYNAMIC_EXPOSURE_TOGGLE"), BlueSharedString("DYNAMIC_EXPOSURE_DISABLED"));
-	m_tonemappingEffect->SetParameter(BlueSharedString("GrainSize"), 2.0);
+	m_tonemappingEffect->SetParameter(BlueSharedString("GrainSize"), 2.0f);
 	m_tonemappingEffect->SetOption(BlueSharedString("VIGNETTE_TOGGLE"), BlueSharedString("VIGNETTE_DISABLED"));
-	m_tonemappingEffect->SetParameter(BlueSharedString("GrainLuminanceExponent"), 0.20000000298);
+	m_tonemappingEffect->SetParameter(BlueSharedString("GrainLuminanceExponent"), 0.20000000298f);
 	m_tonemappingEffect->SetParameter(BlueSharedString("FadeColor"), Vector4(0.0, 0.0, 0.0, 0.0));
 	m_tonemappingEffect->SetOption(BlueSharedString("FILM_GRAIN_TOGGLE"), BlueSharedString("FILM_GRAIN_DISABLED"));
-	m_tonemappingEffect->SetParameter(BlueSharedString("ExposureMiddleValue"), 0.5);
+	m_tonemappingEffect->SetParameter(BlueSharedString("ExposureMiddleValue"), 0.5f);
 	m_tonemappingEffect->SetParameter(BlueSharedString("VignetteDetailSize"), Vector4(16.0, 16.0, 16.0, 16.0));
-	m_tonemappingEffect->SetParameter(BlueSharedString("LUTInfluence"), 0.0);
-	m_tonemappingEffect->SetParameter(BlueSharedString("VignetteSineFrequency"), 1.0);
-	m_tonemappingEffect->SetParameter(BlueSharedString("ExposureInfluence"), 1.0);
-	m_tonemappingEffect->SetParameter(BlueSharedString("BloomBrightness"), 0.20000000298);
+	m_tonemappingEffect->SetParameter(BlueSharedString("LUTInfluence"), 0.0f);
+	m_tonemappingEffect->SetParameter(BlueSharedString("VignetteSineFrequency"), 1.0f);
+	m_tonemappingEffect->SetParameter(BlueSharedString("ExposureInfluence"), 1.0f);
+	m_tonemappingEffect->SetParameter(BlueSharedString("BloomBrightness"), 0.20000000298f);
 	m_tonemappingEffect->SetParameter(BlueSharedString("VignetteIntensity"), Vector4(0.0, 0.0, 0.0, 0.0));
-	m_tonemappingEffect->SetParameter(BlueSharedString("SaturationFactor"), 1.0);
+	m_tonemappingEffect->SetParameter(BlueSharedString("SaturationFactor"), 1.0f);
 	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("Grime"), "res:/texture/global/black.dds");
 	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("TexLUT"), "res:/dx9/scene/postprocess/LUTdefault.dds");
 	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("VignetteDetail"), "res:/texture/global/white.dds");
@@ -245,7 +245,7 @@ bool TriStepRenderPostProcess::ProcessBloom(Tr2PPBloomEffect* bloom)
 			m_bloomHighPassFilter->SetParameter(BlueSharedString("LuminanceScale"), bloom->m_luminanceScale);
 			m_bloomHighPassFilter->SetParameter(BlueSharedString("BlitCurrent"), m_renderInfo->GetSourceBufferCopy());
 
-			m_bloomHighPassFilter->SetParameter(BlueSharedString("ExposureDependency"), m_exposure != nullptr);
+			m_bloomHighPassFilter->SetParameter(BlueSharedString("ExposureDependency"), m_exposure != nullptr ? 1.0f : 0.0f);
 			if (m_exposure != nullptr)
 			{
 				m_bloomHighPassFilter->SetParameter(BlueSharedString("Exposure"), m_exposure);
@@ -280,7 +280,7 @@ bool TriStepRenderPostProcess::ProcessBloom(Tr2PPBloomEffect* bloom)
 			m_bloomHighPassFilter->StartUpdate();
 			m_bloomHighPassFilter->SetParameter(BlueSharedString("LuminanceThreshold"), bloom->m_luminanceThreshold);
 			m_bloomHighPassFilter->SetParameter(BlueSharedString("LuminanceScale"), bloom->m_luminanceScale);
-			m_bloomHighPassFilter->SetParameter(BlueSharedString("ExposureDependency"), bloom->m_exposureDependency);
+			m_bloomHighPassFilter->SetParameter(BlueSharedString("ExposureDependency"), bloom->m_exposureDependency ? 1.0f : 0.0f);
 			m_bloomHighPassFilter->EndUpdate();
 
 			m_tonemappingEffect->StartUpdate();
@@ -628,7 +628,7 @@ void TriStepRenderPostProcess::ProcessFilmGrain(Tr2PPFilmGrainEffect* filmGrain)
 			m_tonemappingEffect->SetParameter(BlueSharedString("GrainIntensity"), filmGrain->m_intensity);
 			m_tonemappingEffect->SetOption(BlueSharedString("COLORED_GRAIN_TOGGLE"),
 				BlueSharedString(filmGrain->m_colored ? "COLORED_GRAIN_ENABLED" : "COLORED_GRAIN_DISABLED"));
-			m_tonemappingEffect->SetParameter(BlueSharedString("ColoredGrain"), filmGrain->m_colored);
+			m_tonemappingEffect->SetParameter(BlueSharedString("ColoredGrain"), filmGrain->m_colored ? 1.0f : 0.0f);
 			m_tonemappingEffect->SetParameter(BlueSharedString("GrainColorAmount"), filmGrain->m_colorAmount);
 			m_tonemappingEffect->SetParameter(BlueSharedString("GrainSize"), filmGrain->m_grainSize);
 			m_tonemappingEffect->SetParameter(BlueSharedString("GrainLuminanceExponent"), filmGrain->m_luminanceExponent);

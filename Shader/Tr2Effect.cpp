@@ -1715,6 +1715,26 @@ void Tr2Effect::SetParameter( const BlueSharedString& name, ITr2TextureProvider*
 }
 
 // --------------------------------------------------------------------------------------
+void Tr2Effect::SetParameter( const BlueSharedString& name, uint32_t value )
+{
+	auto existing = GetParameterByName( name.c_str() );
+	Tr2FloatParameterPtr param = BlueCastPtr( existing );
+	auto cast = *reinterpret_cast<float*>( value );
+
+	if( param )
+	{
+		param->SetValue( cast );
+	}
+	else
+	{
+		param.CreateInstance();
+		param->m_name = name;
+		param->SetValue( cast );
+		m_parameters.Append( param->GetRawRoot() );
+	}
+}
+
+// --------------------------------------------------------------------------------------
 void Tr2Effect::SetParameter( const BlueSharedString& name, float value )
 {
 	auto existing = GetParameterByName( name.c_str() );
