@@ -1442,7 +1442,7 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, const EveSOFDNA
 			ITr2SoundEmitterPtr theRealEmitter;
 			if( emitter->QueryInterface( BlueInterfaceIID<ITr2SoundEmitter>(), reinterpret_cast<void**>( &theRealEmitter.p ), BEQI_SILENT ) && theRealEmitter )
 			{
-				theRealEmitter->Initialize( cit->name.c_str(), cit->prefix.c_str() );
+				theRealEmitter->Initialize( cit->name.c_str(), cit->prefix.c_str(), cit->position );
 			}
 		}
 	}

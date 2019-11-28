@@ -672,7 +672,7 @@ EveSOFDataHullBoosterItem::EveSOFDataHullBoosterItem( IRoot* lockobj ) :
 }
 
 EveSOFDataHullSoundEmitter::EveSOFDataHullSoundEmitter( IRoot* )
-	:m_position( Vector3() )
+	:m_position( Vector3(0.0, 0.0, 0.0) )
 {}
 
 
