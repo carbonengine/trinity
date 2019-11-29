@@ -582,9 +582,9 @@ def _uses_compressed_tanget(inputs):
     has_tangent = False
     has_normal = False
     for each in inputs:
-        if each.usage == Usage.TANGENT:
+        if each.usage == Usage.TANGENT and each.usage_index == 0:
             has_tangent = True
-        elif each.usage == Usage.NORMAL:
+        elif each.usage == Usage.NORMAL and each.usage_index == 0:
             has_normal = True
     return has_tangent and not has_normal
 
@@ -623,7 +623,7 @@ def is_using_compressed_tangents(path, shader_filter=None):
                 for technique in shader.techniques:
                     for p in technique.passes:
                         if Stages.VERTEX_SHADER in p.stages:
-                            if _uses_compressed_tanget(p.stages[Stages.VERTEX_SHADER]):
+                            if _uses_compressed_tanget(p.stages[Stages.VERTEX_SHADER].inputs):
                                 return True
     if not has_compiled:
         raise IOError('could not find any compiled effect for %s' % path)
