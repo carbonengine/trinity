@@ -107,7 +107,7 @@ public:
 	bool GetHullTextureWithMeshIndex( std::string& resPath, const BlueSharedString& textureName, int32_t meshIndex, size_t n ) const;
 
 	// get faction data
-	void ModifyTextureResPath( std::string& resPath, const char* resName ) const;
+	void ModifyTextureResPath( std::string& resPath ) const;
 	const Vector4* GetFactionTurretParameters( const BlueSharedString& parameterName ) const;
 	const EveSOFDataMgr::FactionPlaneSetColorData* GetFactionPlaneSetData( int groupIndex ) const;
 	const EveSOFDataMgr::FactionSpotlightSetColorData* GetFactionSpotlightSetData( int groupIndex ) const;

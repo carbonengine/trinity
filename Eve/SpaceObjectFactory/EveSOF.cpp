@@ -485,7 +485,7 @@ size_t EveSOF::FillMeshAreaVector( std::map<std::string, Tr2LodResourcePtr>& lod
 			// res path how it is from hull data
 			std::string highResPath = it->second.resFilePath;
 			// get's modified by the faction data
-			dna->ModifyTextureResPath( highResPath, it->first.c_str() );
+			dna->ModifyTextureResPath( highResPath );
 			// make three paths for the three LODs
 			std::string mediumResPath, lowResPath, ultraResPath;
 			if( GenerateLodResourcePaths( mediumResPath, lowResPath, ultraResPath, highResPath.c_str(), it->first.c_str() ) )
@@ -1523,7 +1523,7 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 			for( auto it = him->textures.begin(); it != him->textures.end(); ++it )
 			{
 				std::string resPath = it->second.resFilePath;
-				dna->ModifyTextureResPath( resPath, it->first.c_str() );
+				dna->ModifyTextureResPath( resPath );
 				newShader->AddResourceTexture2D( it->first, resPath.c_str() );
 			}
 

@@ -645,7 +645,7 @@ bool EveSOFDNA::GetHullTextureWithMeshIndex( std::string& resPath, const BlueSha
 		if( texFinder != textures.end() )
 		{
 			resPath = texFinder->second.resFilePath;
-			ModifyTextureResPath( resPath, textureName.c_str() );
+			ModifyTextureResPath( resPath );
 			return true;
 		}
 	}
@@ -728,7 +728,7 @@ const std::vector<EveSOFDataMgr::HullLightSetData>& EveSOFDNA::GetHullLightSets(
 // Description:
 //   Changes the provided texture resource path, maybe modified depending on dna
 // --------------------------------------------------------------------------------
-void EveSOFDNA::ModifyTextureResPath( std::string& resPath, const char* resName ) const
+void EveSOFDNA::ModifyTextureResPath( std::string& resPath ) const
 {
 	// try finding the insert string...
 	const char* pathInsert = nullptr;
@@ -761,24 +761,20 @@ void EveSOFDNA::ModifyTextureResPath( std::string& resPath, const char* resName 
 	// found anyting?
 	if( pathInsert )
 	{
-		// hardcoded texture param names which'll get an override
-		if( !strcmp( resName, "GlowMap" ) || !strcmp( resName, "DirtMap" ) || !strcmp( resName, "MaterialMap" ) || !strcmp( resName, "PaintMaskMap" ) || !strcmp( resName, "PmdgMap" ) )
+		std::string resPathCopy = resPath;
+
+		// insert sub folder
+		size_t index = resPath.rfind("/");
+		if( index != std::string::npos )
 		{
-			std::string resPathCopy = resPath;
+			resPathCopy.insert( index + 1, std::string( pathInsert ) + "/" );
+		}
 
-			// insert sub folder
-			size_t index = resPath.rfind("/");
-			if( index != std::string::npos )
-			{
-				resPathCopy.insert( index + 1, std::string( pathInsert ) + "/" );
-			}
-
-			// insert part into filename
-			std::string insertStr = "_" + std::string( pathInsert );
-			if( StringInsertStubBefore( resPathCopy, "_", insertStr.c_str() ) && FileExists( resPathCopy ) )
-			{
-				resPath = resPathCopy;
-			}
+		// insert part into filename
+		std::string insertStr = "_" + std::string( pathInsert );
+		if( StringInsertStubBefore( resPathCopy, "_", insertStr.c_str() ) && FileExists( resPathCopy ) )
+		{
+			resPath = resPathCopy;
 		}
 	}
 }
