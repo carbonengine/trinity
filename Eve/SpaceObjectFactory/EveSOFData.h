@@ -1529,6 +1529,9 @@ public:
 
 	// effect data
 	PEveSOFDataGenericVariantVector m_variants;
+
+	// visibility groups
+	PEveSOFDataGenericStringVector m_visibilityGroups;
 };
 TYPEDEF_BLUECLASS( EveSOFDataGeneric );
 

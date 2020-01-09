@@ -1351,6 +1351,8 @@ const Be::ClassInfo* EveSOFDataGeneric::ExposeToBlue()
 		MAP_ATTRIBUTE( "bannerShader", m_bannerShader, "Banner shader", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "genericWreckMaterial", m_genericWreckMaterial, "Global wreck area shader data", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "variants", m_variants, "All the hull  variants", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "visibilityGroups", m_visibilityGroups, "All the visibility groups", Be::READ | Be::PERSIST )
+
 		EXPOSURE_END()
 }
 
