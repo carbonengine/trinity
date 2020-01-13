@@ -109,6 +109,7 @@ struct EveSpaceObjectPSData
 	Vector4 customMaskMaterialIDs[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskTargets[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskClamps;
+	Vector4 screenSize;
 };
 
 // ---------------------------------------------------------------------------------------

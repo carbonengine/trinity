@@ -47,6 +47,7 @@ BLUE_INTERFACE( IEveSpaceObjectChild ) : public IRoot
 	virtual void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) = 0;
 
 	virtual void ChangeLOD( Tr2Lod lod ) = 0;
+	virtual void SetCurrentScreenSize( float screenSize ) {};
 
 	virtual void GetLights( Tr2LightManager& lightManager ) const = 0;
 

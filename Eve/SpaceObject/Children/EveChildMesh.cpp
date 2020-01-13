@@ -31,6 +31,9 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_vsData.shipData.w = 1.f;
 	m_psData.shipData.y = 1.f;
 	m_psData.shipData.w = 1.f;
+	m_psData.screenSize.x = 0.5f;
+	m_psData.screenSize.y = 0.5f;
+	m_psData.screenSize.z = 0.5f;
 }
 
 EveChildMesh::~EveChildMesh()
@@ -74,6 +77,15 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 	{
 		m_currentScreenSize = -1;
 	}
+}
+// --------------------------------------------------------------------------------
+// Description:
+//   Only used by planets because they use a custom frustum and UpdateVisibility fails at calculating m_currentScreenSize
+// --------------------------------------------------------------------------------
+void EveChildMesh::SetCurrentScreenSize( float screenSize )
+{
+	m_currentScreenSize = screenSize;
+	m_isVisible = m_currentScreenSize >= m_minScreenSize * g_eveSpaceSceneLODFactor;
 }
 
 void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
@@ -220,6 +232,12 @@ void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, const Eve
 
 	m_vsData.worldTransform = Transpose( m_worldTransform );
 	m_vsData.invWorldTransform = Inverse( m_worldTransform );
+
+	// Normalize screenSize dimensions
+	auto screen_width = Tr2Renderer::GetViewport().width;
+	auto screen_height = Tr2Renderer::GetViewport().height;
+	m_psData.screenSize.x = float( m_currentScreenSize / screen_width );
+	m_psData.screenSize.y = float( m_currentScreenSize / screen_height );
 }
 
 void EveChildMesh::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
