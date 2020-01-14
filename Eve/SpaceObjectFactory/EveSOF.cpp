@@ -1304,13 +1304,25 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, const EveSOFDNA
 	for( auto childIt = hullChildren.begin(); childIt != hullChildren.end(); ++childIt )
 	{
 		const EveSOFDataMgr::FactionChildData* fcd = dna->GetFactionChildData( childIt->groupIndex );
-
-		// child can be invisibe for this faction
-		if( fcd && !fcd->isVisible )
+			   		
+		if( !dna->IsUsingExperimentalFeatures() )
 		{
-			continue;
+			// SOF UPDATE - Remove this if block when phase6 is complete!
+	                // child can be invisibe for this faction
+			if( fcd && !fcd->isVisible )
+			{
+				continue;
+			}
 		}
-
+		else
+		{
+                        // child can be invisibe for this faction
+			if( !dna->IsInVisibilityData( childIt->visibilityGroup ) )
+			{
+				continue;
+			}
+		}
+		
 		IRootPtr p;
 		IRoot* tmp = BeResMan->LoadObject( childIt->redFilePath.c_str() );
 		if( !tmp )

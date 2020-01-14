@@ -254,6 +254,7 @@ public:
 		Vector3 scaling;
 		int id;
 		int groupIndex;
+		uint32_t visibilityGroup;
 	};
 
 	struct HullMeshInstance
@@ -402,6 +403,7 @@ public:
 		LogoSetData logoSetData;
 		// visibility data
 		std::set<uint32_t> visibilityData;
+		// SOF UPDATE 6- spotlightSetsColors, planeSetColors and childData can be removed after the update
 		// spotlight sets
 		std::map<int, FactionSpotlightSetColorData> spotlightSetsColors;
 		// plane sets

@@ -840,6 +840,8 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		hc.scaling = child->m_scaling;
 		hc.id = child->m_id;
 		hc.groupIndex = child->m_groupIndex;
+		hc.visibilityGroup = GetVisibilityGroupHash( child->m_visibilityGroup );
+
 		hd.children.push_back( hc );
 	}
 
@@ -1541,6 +1543,4 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 		}
 	}
 }
-
-
 

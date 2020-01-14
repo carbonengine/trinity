@@ -694,6 +694,7 @@ const Be::ClassInfo* EveSOFDataHullChild::ExposeToBlue()
 		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "id", m_id, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "groupIndex", m_groupIndex, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "visibilityGroup", m_visibilityGroup, ":jessica-widget: visibilityGroup", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
 

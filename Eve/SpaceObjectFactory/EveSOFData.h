@@ -759,6 +759,7 @@ public:
 	Vector3 m_scaling;
 	int m_id;
 	int m_groupIndex;
+	BlueSharedString m_visibilityGroup;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullChild );
 BLUE_DECLARE_VECTOR( EveSOFDataHullChild );
