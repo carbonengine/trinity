@@ -35,37 +35,33 @@ std::vector<Vector3> Inertia::CalculateBehavior(std::vector<DroneAgent>& agents,
 
 	for (auto agent = agents.begin(); agent != agents.end(); ++agent, data++)
 	{
-		auto lastAccelNormalized = Normalize( *data );
-		auto lastAccelLength = Length( *data );
-		auto accelNormalized = Normalize( agent->acceleration );
-		auto accelLength = Length( agent->acceleration );
+		auto lastVelocityNormalized = Normalize( *data );
+		auto lastVelocityLength = Length( *data );
+		
+		auto desiredVelocity = *data + agent->acceleration;
+		auto velocityNormalized = Normalize( desiredVelocity );
+		auto velocityLength = Length( desiredVelocity );
 
-		if ( LengthSq( lastAccelNormalized ) != 0 && m_maxRotationSpeed > 0 )
+		if ( LengthSq( velocityNormalized ) != 0 )
 		{
-			auto c = Normalize( Cross( lastAccelNormalized, accelNormalized ) );
-			if ( Length( c ) == 0 )
+			if ( m_maxRotationSpeed > 0 )
 			{
-				c = Vector3( 0, 1, 0 );
+				auto c = Normalize( Cross( lastVelocityNormalized, velocityNormalized ) );
+				if ( Length( c ) != 0 )
+				{
+					auto angle = acos( TriClamp( Dot( velocityNormalized, lastVelocityNormalized ), -1, 1 ) );
+					angle = min( abs( angle ), m_maxRotationSpeed ) * deltaTime * ( angle >= 0 ? 1 : -1 );
+					auto quat = RotationQuaternion( c, angle );
+					TriVectorRotateQuaternion( &velocityNormalized, &lastVelocityNormalized, &quat);
+					velocityNormalized = Normalize( velocityNormalized );
+				}
 			}
-			auto angle = AngleFromNormalized( lastAccelNormalized, accelNormalized );
-			float step = m_maxRotationSpeed * deltaTime;
-			angle = min( angle, step );
-			if ( angle > 0 )
-			{
-				auto quat = RotationQuaternion( c, angle );
-				TriVectorRotateQuaternion( &agent->acceleration, &lastAccelNormalized, &quat);
-			}
-
-			// TODO this might need to be modified to act more naturally when forces flip directions i.e. bounce of walls
+			// This might need to be modified to act more naturally when forces flip directions i.e. bounce of walls
 			// or activate thrusters etc since length of lastAccel and Accel might be equal but the change is actually accel x2
-			 agent->acceleration = Normalize(agent->acceleration) * Lerp(lastAccelLength, accelLength,
-			                                                            TriClamp(m_inertiaWeight, 0, 1) * deltaTime);
-
-			// clamp to try to limit speedups more can be removed with the rework listed above
-			 agent->acceleration = ClampLength( agent->acceleration, m_maxAcceleration );
-
+			desiredVelocity = ( velocityNormalized * Lerp( velocityLength, lastVelocityLength, TriClamp( m_inertiaWeight, 0, 1 ) ) );
+			agent->acceleration = desiredVelocity - agent->velocity;
 		}
-		*data = agent->acceleration;
+		*data = desiredVelocity;
 	}
 	std::vector<Vector3> noNeedToReturnForces;
 	return noNeedToReturnForces;
