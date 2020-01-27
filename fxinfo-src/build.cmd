@@ -1,4 +1,4 @@
-@echo off
+@echo off 
 setlocal
 virtualenv > nul || pip install virtualenv
 rd /s /q env 2> nul
