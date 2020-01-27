@@ -1,16 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files" />
-    <Filter Include="Source Files\dx11" />
-    <Filter Include="Source Files\dx12" />
-    <Filter Include="Source Files\dx12\util" />
-    <Filter Include="Source Files\dx9" />
-    <Filter Include="Source Files\gles2" />
-    <Filter Include="Source Files\include" />
-    <Filter Include="Source Files\src" />
-    <Filter Include="Source Files\stub" />
-    <Filter Include="Source Files\vulkan" />
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{fb1c6db8-ce1c-5381-8e10-c7d6f5ab7ffb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dx11">
+      <UniqueIdentifier>{f732c7f6-8432-5e77-a644-a1fa8ed858d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dx12">
+      <UniqueIdentifier>{393672f2-b99d-52a7-9ea7-b688c34b31b8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dx12\util">
+      <UniqueIdentifier>{57c3a84e-aa85-5465-a994-15ef87a853a2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\dx9">
+      <UniqueIdentifier>{64221871-530a-5841-97e9-ea0845c601c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gles2">
+      <UniqueIdentifier>{6021797e-1e8c-5ff7-92e9-e3ac180287e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\include">
+      <UniqueIdentifier>{a70d1723-fe86-5ee0-aae9-52952c197b66}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\src">
+      <UniqueIdentifier>{6f6dacdc-2f10-5e34-9b2f-9d2dc788170a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\stub">
+      <UniqueIdentifier>{8041dadb-417b-5d16-8b62-8c34076ccfe9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\vulkan">
+      <UniqueIdentifier>{c1e794ce-6ea6-5db8-8524-eef2ee2d92f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ALLog.h">

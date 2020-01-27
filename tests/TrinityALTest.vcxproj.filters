@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files" />
-    <Filter Include="Source Files\Shaders.DX11" />
-    <Filter Include="Source Files\Shaders.DX12" />
-    <Filter Include="Source Files\Shaders.DX9" />
-    <Filter Include="Source Files\Shaders.GLES2" />
-    <Filter Include="Source Files\Shaders.vulkan" />
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{fb1c6db8-ce1c-5381-8e10-c7d6f5ab7ffb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders.DX11">
+      <UniqueIdentifier>{ed5bb16a-8420-5442-a5ca-66eebbd2191a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders.DX12">
+      <UniqueIdentifier>{1efb1509-e703-5bbb-b9bf-dad821f775e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders.DX9">
+      <UniqueIdentifier>{fb640b37-2254-5d2a-ae48-533f99f2da53}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders.GLES2">
+      <UniqueIdentifier>{e90d08a2-2544-5af4-a19a-e03c2a735b9b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Shaders.vulkan">
+      <UniqueIdentifier>{0138201e-15ef-500c-81fb-6fdbe0464693}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dxt1Image.h">
