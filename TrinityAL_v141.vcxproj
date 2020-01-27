@@ -1772,6 +1772,7 @@
     <ClInclude Include="ALLog.h" />
     <ClInclude Include="ALResult.h" />
     <ClInclude Include="BcDecompress.h" />
+    <ClInclude Include="dx12\util\AmdExtDevice.h" />
     <ClInclude Include="dx12\util\DescriptorHeapViewDx12.h" />
     <ClInclude Include="dx12\util\DescriptorStateCacheDx12.h" />
     <ClInclude Include="dx12\util\FrameLocalDescriptorHeapAllocatorDx12.h" />

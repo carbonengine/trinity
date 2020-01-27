@@ -2504,6 +2504,14 @@ void Tr2RenderContextAL::AddGpuMarker( const char* )
 {
 }
 
+void Tr2RenderContextAL::PushGpuMarker( const char* )
+{
+}
+
+void Tr2RenderContextAL::PopGpuMarker()
+{
+}
+
 // --------------------------------------------------------------------------------------
 ALResult Tr2RenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus&, std::string& ) const
 {

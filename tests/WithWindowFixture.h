@@ -24,6 +24,10 @@ public:
 					return;
 				}
 				t();
+				if( HasFatalFailure() )
+				{
+					return;
+				}
 			}
 		}
 		else

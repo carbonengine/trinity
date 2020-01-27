@@ -17,8 +17,10 @@
 #include "Tr2FragmentOpSettings.h"
 #include "Tr2SwapChainALDx12.h"
 #include "Tr2TextureALDx12.h"
+#include "util/AmdExtDevice.h"
 
 extern bool g_requestDeviceDebugLayer;
+extern bool g_requestDebugMarkers;
 bool g_gatherPipelineStatistics = false;
 
 CCP_STATS_DECLARE( dx12IAVertices, "Trinity/AL/Pipeline/IAVertices", false, CST_COUNTER_HIGH, "Number of vertices read by input assembler" );
@@ -184,7 +186,8 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 	m_commandAllocatorIndex( 0 ),
 	m_statsQueryFrameIndex( 0 ),
 	m_statsStatus( STAT_READY ),
-	m_completedFrameIndex( 0 )
+	m_completedFrameIndex( 0 ),
+	m_amdExtDeviceObject( 0 )
 {
 	m_ownerDevice = this;
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
@@ -372,6 +375,25 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		m_rootSignatureVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 	}
 
+	if( g_requestDebugMarkers )
+	{
+		if( HMODULE amdD3dDl2 = LoadLibrary( "amdxc64.dll" ) )
+		{
+			auto amdExtD3dCreateFunc = (PFNAmdExtD3DCreateInterface)GetProcAddress( amdD3dDl2, "AmdExtD3DCreateInterface" );
+
+			if( amdExtD3dCreateFunc )
+			{
+				IAmdExtD3DFactory* amdExtObject = nullptr;
+				amdExtD3dCreateFunc( m_device, __uuidof( IAmdExtD3DFactory ), reinterpret_cast<void**>( &amdExtObject ) );
+
+				if( amdExtObject )
+				{
+					amdExtObject->CreateInterface( m_device, __uuidof( IAmdExtD3DDevice1 ), &m_amdExtDeviceObject );
+				}
+			}
+		}
+	}
+
 	if( m_events )
 	{
 		m_events->OnContextCreated( *this );
@@ -411,7 +433,17 @@ void Tr2PrimaryRenderContextAL::Destroy()
 {
 	if( IsValid() )
 	{
-		WaitForFenceDx12( SignalDx12() );
+		uint64_t value;
+		if( SUCCEEDED( SignalDx12( value ) ) )
+		{
+			WaitForFenceDx12( value );
+		}
+	}
+
+	if( m_amdExtDeviceObject )
+	{
+		static_cast<IAmdExtD3DDevice1*>( m_ownerDevice->m_amdExtDeviceObject )->Release();
+		m_amdExtDeviceObject = nullptr;
 	}
 
 	m_pendingPresents.clear();
@@ -472,6 +504,8 @@ void Tr2PrimaryRenderContextAL::Destroy()
 
 	m_rootSignatureVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 	m_pendingRelease.clear();
+
+	TrinityALImpl::Destroy();
 }
 
 bool Tr2PrimaryRenderContextAL::IsValid() const
@@ -765,11 +799,17 @@ Tr2RenderContextEnum::PixelFormat Tr2PrimaryRenderContextAL::GetBackBufferFormat
 	return m_defaultBackBuffer.GetFormat();
 }
 
+ALResult Tr2PrimaryRenderContextAL::SignalDx12( uint64_t& fenceValue )
+{
+	fenceValue = ++m_fenceValue;
+	return m_commandQueue->Signal( m_presentFence, fenceValue );
+}
+
 uint64_t Tr2PrimaryRenderContextAL::SignalDx12()
 {
-	uint64_t fenceValueForSignal = ++m_fenceValue;
-	CR( m_commandQueue->Signal( m_presentFence, fenceValueForSignal ) );
-	return fenceValueForSignal;
+	uint64_t value;
+	CR( SignalDx12( value ) );
+	return value;
 }
 
 ALResult Tr2PrimaryRenderContextAL::WaitForFenceDx12( uint64_t value )

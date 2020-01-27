@@ -169,8 +169,39 @@ ALResult Tr2TextureAL::CopySubresourceRegion( const Tr2TextureSubresource& destS
 	return m_texture->CopySubresourceRegion( destSubresource, *source.m_texture, sourceSubresource, renderContext );
 }
 
+namespace
+{
+	bool FormatIsBGR( Tr2RenderContextEnum::PixelFormat format )
+	{
+		switch( format )
+		{
+		case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM:
+		case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM:
+		case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM_SRGB:
+		case Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8X8_UNORM_SRGB:
+			return true;
+		default:
+			return false;
+		}
+	}
+}
+
 ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& renderContext )
 {
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( GetTrueMipCount() <= 1 )
+	{
+		return S_OK;
+	}
+	if( FormatIsBGR( GetFormat() ) )
+	{
+		// ATM we don't support BGR formats in DirectX12 and don't seem to be using them with GenerateMipMaps
+		// so we just fail here. If needed the support can be added later.
+		return E_INVALIDCALL;
+	}
 	return m_texture->GenerateMipMaps( renderContext );
 }
 

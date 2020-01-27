@@ -2082,7 +2082,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 2, *renderContext ) );
 
 	Tr2TextureAL rt;
-	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16B16A16_FLOAT ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 	Tr2ShaderAL psFill;
 	ASSERT_HRESULT_SUCCEEDED( CreateConstantColorPS( psFill, *renderContext ) );

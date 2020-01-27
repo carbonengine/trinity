@@ -93,6 +93,7 @@ namespace TrinityALImpl
 
 		CComPtr<ID3D12RootSignature> rootSignature;
 		CComPtr<ID3D12PipelineState> generateMipsPSO;
+		CComPtr<ID3D12PipelineState> generateMipsArrayPSO;
 
 		enum RootParameterIndex
 		{

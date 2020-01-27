@@ -3,6 +3,8 @@
 #include "Tr2RenderContextEnum.h"
 #include "ALLog.h"
 
+bool g_requestDebugMarkers = false;
+
 using namespace Tr2RenderContextEnum;
 
 Tr2RenderContextEnum::PixelFormat Tr2RenderContextEnum::ConvertD3DBackBufferFormat( /*D3DFORMAT*/ unsigned fmt )

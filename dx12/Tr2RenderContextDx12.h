@@ -172,6 +172,8 @@ public:
 	size_t GetStackSizeDS()						const { return 0; }
 
 	void AddGpuMarker( const char* marker );
+	void PushGpuMarker( const char* marker );
+	void PopGpuMarker();
 
 	ALResult FlushAndSyncDx12();
 

@@ -106,6 +106,7 @@ public:
 	void OnVertexLayoutDestroyedDx12( TrinityALImpl::Tr2VertexLayoutAL* vl );
 	ALResult FlushAndSyncDx12( Tr2RenderContextAL& renderContext );
 	D3D12_CPU_DESCRIPTOR_HANDLE GetNullRtHandle( const Tr2TextureAL& compatibleWith );
+	ALResult Tr2PrimaryRenderContextAL::SignalDx12( uint64_t& fenceValue );
 	uint64_t SignalDx12();
 	ALResult WaitForFenceDx12( uint64_t value );
 	const TrinityALImpl::GpuMarkerBuffer &GetMarkerBuffer() const;
@@ -262,6 +263,8 @@ public:
 	CComPtr<ID3D12CommandSignature> m_dispatchIndirect;
 
 	TrinityALImpl::Tr2ResourceHelper m_nullCB;
+
+	void* m_amdExtDeviceObject;
 
 };
 

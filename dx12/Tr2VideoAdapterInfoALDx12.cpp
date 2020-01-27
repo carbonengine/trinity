@@ -548,7 +548,6 @@ bool Tr2VideoAdapterInfo::AreAdaptersDifferent( unsigned adapter1,
 
 namespace TrinityALImpl
 {
-
 	ALResult GetVideoAdapter( unsigned adapterIndex, IDXGIAdapter1** adapter, IDXGIOutput** output )
 	{
 		if( !s_factory )
@@ -563,6 +562,14 @@ namespace TrinityALImpl
 		( *adapter )->AddRef();
 		*output = s_adapters[adapterIndex].m_output;
 		( *output )->AddRef();
+		return S_OK;
+	}
+
+	ALResult Destroy()
+	{
+		s_adapters.resize( 0 );
+		s_deviceInfo.resize( 0 );
+		s_factory = nullptr;
 		return S_OK;
 	}
 }

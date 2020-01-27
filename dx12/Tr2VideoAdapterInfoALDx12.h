@@ -42,6 +42,7 @@ public:
 namespace TrinityALImpl
 {
 	ALResult GetVideoAdapter( unsigned adapterIndex, IDXGIAdapter1** adapter, IDXGIOutput** output );
+	ALResult Destroy();
 }
 
 #endif

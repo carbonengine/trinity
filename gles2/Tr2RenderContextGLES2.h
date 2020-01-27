@@ -226,6 +226,8 @@ public:
 	ALResult InternalResolveRT( TrinityALImpl::Tr2TextureAL& destination, const TrinityALImpl::Tr2TextureAL& source );
 
 	void AddGpuMarker( const char* marker );
+	void PushGpuMarker( const char* marker );
+	void PopGpuMarker();
 	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
 	ALResult GetGpuPageFaultResource(
 		Tr2RenderContextEnum::PixelFormat& format,

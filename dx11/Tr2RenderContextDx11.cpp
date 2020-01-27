@@ -2186,6 +2186,14 @@ void Tr2RenderContextAL::AddGpuMarker( const char* marker )
 	GFSDK_Aftermath_SetEventMarker( reinterpret_cast<GFSDK_Aftermath_ContextHandle>( m_aftermathContext ), buffer.get(), unsigned( paddedLength ) );
 }
 
+void Tr2RenderContextAL::PushGpuMarker( const char* )
+{
+}
+
+void Tr2RenderContextAL::PopGpuMarker()
+{
+}
+
 // --------------------------------------------------------------------------------------
 ALResult Tr2RenderContextAL::GetGpuStateMarker( RenderContextStatus& status, std::string& marker ) const
 {

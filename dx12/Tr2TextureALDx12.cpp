@@ -233,6 +233,7 @@ namespace
 
 		D3D12_HEAP_PROPERTIES defaultHeapProperties = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
 
+		D3D12_RESOURCE_STATES readState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 		// Create a staging resource if we have to
 		CComPtr<ID3D12Resource> staging;
 		if( ( desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS ) == 0 )
@@ -253,13 +254,22 @@ namespace
 			auto from = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
 			commandList->ResourceBarrier( 1, &from );
 			commandList->CopyResource( staging, resource );
-			auto to = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
+			auto to = TrinityALImpl::Transition( staging, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
 			commandList->ResourceBarrier( 1, &to );
 		}
 		else
 		{
 			// Resource is already a UAV so we can do this in-place
 			staging = resource;
+			if( ( resourceState & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) == 0 )
+			{
+				auto barrier = TrinityALImpl::Transition( staging, resourceState, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+				commandList->ResourceBarrier( 1, &barrier );
+			}
+			else
+			{
+				readState = resourceState;
+			}
 		}
 		ON_BLOCK_EXIT( [&] { if( staging != resource ) RELEASE_LATER( &device, staging ); } );
 
@@ -278,10 +288,20 @@ namespace
 		D3D12_CPU_DESCRIPTOR_HANDLE handleIt( descriptorHeap->GetCPUDescriptorHandleForHeapStart() );
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 		srvDesc.Format = desc.Format;
-		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		srvDesc.Texture2D.MostDetailedMip = 0;
-		srvDesc.Texture2D.MipLevels = desc.MipLevels;
+		if( desc.DepthOrArraySize > 1 )
+		{
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+			srvDesc.Texture2DArray.MipLevels = desc.MipLevels;
+			srvDesc.Texture2DArray.ArraySize = desc.DepthOrArraySize;
+		}
+		else
+		{
+			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+			srvDesc.Texture2D.MostDetailedMip = 0;
+			srvDesc.Texture2D.MipLevels = desc.MipLevels;
+		}
 
 		device.m_device->CreateShaderResourceView( staging, &srvDesc, handleIt );
 
@@ -290,8 +310,17 @@ namespace
 		{
 			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
 			uavDesc.Format = desc.Format;
-			uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-			uavDesc.Texture2D.MipSlice = mip;
+			if( desc.DepthOrArraySize > 1 )
+			{
+				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+				uavDesc.Texture2DArray.MipSlice = mip;
+				uavDesc.Texture2DArray.ArraySize = desc.DepthOrArraySize;
+			}
+			else
+			{
+				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+				uavDesc.Texture2D.MipSlice = mip;
+			}
 
 			handleIt.ptr += descriptorSize;
 			device.m_device->CreateUnorderedAccessView( staging, nullptr, &uavDesc, handleIt );
@@ -308,7 +337,7 @@ namespace
 		srv2uavDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 		srv2uavDesc.Transition.pResource = staging;
 		srv2uavDesc.Transition.Subresource = 0;
-		srv2uavDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		srv2uavDesc.Transition.StateBefore = readState;
 		srv2uavDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 
 		// Barrier for transitioning the subresources to SRVs
@@ -317,11 +346,11 @@ namespace
 		uav2srvDesc.Transition.pResource = staging;
 		uav2srvDesc.Transition.Subresource = 0;
 		uav2srvDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-		uav2srvDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		uav2srvDesc.Transition.StateAfter = readState;
 
 		// Set up state
 		commandList->SetComputeRootSignature( device.m_genMipsResources->rootSignature );
-		commandList->SetPipelineState( device.m_genMipsResources->generateMipsPSO );
+		commandList->SetPipelineState( desc.DepthOrArraySize > 1 ? device.m_genMipsResources->generateMipsArrayPSO : device.m_genMipsResources->generateMipsPSO );
 		commandList->SetDescriptorHeaps( 1, &descriptorHeap );
 		commandList->SetComputeRootDescriptorTable( TrinityALImpl::GenerateMipsResources::SourceTexture, descriptorHeap->GetGPUDescriptorHandleForHeapStart() );
 
@@ -358,7 +387,7 @@ namespace
 			commandList->Dispatch(
 				( mipWidth + TrinityALImpl::GenerateMipsResources::ThreadGroupSize - 1 ) / TrinityALImpl::GenerateMipsResources::ThreadGroupSize,
 				( mipHeight + TrinityALImpl::GenerateMipsResources::ThreadGroupSize - 1 ) / TrinityALImpl::GenerateMipsResources::ThreadGroupSize,
-				1 );
+				desc.DepthOrArraySize );
 
 			commandList->ResourceBarrier( 1, &barrierUAV );
 
@@ -384,6 +413,11 @@ namespace
 
 			// Transition the target resource back to pixel shader resource
 			auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
+			commandList->ResourceBarrier( 1, &barrier );
+		}
+		else if( ( resourceState & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) == 0 )
+		{
+			auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, resourceState );
 			commandList->ResourceBarrier( 1, &barrier );
 		}
 
@@ -970,15 +1004,24 @@ namespace TrinityALImpl
 		{
 			return S_OK;
 		}
-		if( m_desc.GetType() != TEX_TYPE_2D || m_desc.GetArraySize() > 1 )
+
+		const auto desc = m_textures[0]->GetDesc();
+		if( FormatIsUAVCompatible( desc.Format ) )
+		{
+			if( m_desc.GetType() != TEX_TYPE_2D && m_desc.GetType() != TEX_TYPE_CUBE )
+			{
+				return E_INVALIDCALL;
+			}
+		}
+		else if( m_desc.GetType() != TEX_TYPE_2D || m_desc.GetArraySize() > 1 )
 		{
 			return E_INVALIDCALL;
 		}
 
+		renderContext.SetResourceSet( ::Tr2ResourceSetAL() );
 		renderContext.FlushBarriersDx12( m_textures[0] );
 
 		renderContext.m_dirtyPso = true;
-		const auto desc = m_textures[0]->GetDesc();
 		if( FormatIsUAVCompatible( desc.Format ) )
 		{
 			FORWARD_HR( GenerateMips_UnorderedAccessPath( m_textures[0], *renderContext.m_ownerDevice, renderContext.m_commandList, m_defaultState ) );

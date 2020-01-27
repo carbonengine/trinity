@@ -273,6 +273,15 @@ public:
 	{
 
 	}
+	void PushGpuMarker( const char* marker )
+	{
+
+	}
+
+	void PopGpuMarker()
+	{
+
+	}
 	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const
 	{
 		return E_NOTIMPL;

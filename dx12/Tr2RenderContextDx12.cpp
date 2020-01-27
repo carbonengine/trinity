@@ -17,6 +17,7 @@
 #include "Tr2ResourceSetALDx12.h"
 #include "Utilities.h"
 #include "Tr2FragmentOpSettings.h"
+#include "util/AmdExtDevice.h"
 
 
 CCP_STATS_DECLARE( primitiveCount, "Trinity/AL/primitiveCount", true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
@@ -1403,6 +1404,22 @@ void Tr2RenderContextAL::ResetDx12()
 void Tr2RenderContextAL::AddGpuMarker( const char* marker )
 {
 	m_ownerDevice->GetMarkerBuffer().PutMarker( m_commandList2, marker );
+}
+
+void Tr2RenderContextAL::PushGpuMarker( const char* marker )
+{
+	if( m_ownerDevice->m_amdExtDeviceObject )
+	{
+		static_cast<IAmdExtD3DDevice1*>( m_ownerDevice->m_amdExtDeviceObject )->PushMarker( m_commandList, marker );
+	}
+}
+
+void Tr2RenderContextAL::PopGpuMarker()
+{
+	if( m_ownerDevice->m_amdExtDeviceObject )
+	{
+		static_cast<IAmdExtD3DDevice1*>( m_ownerDevice->m_amdExtDeviceObject )->PopMarker( m_commandList );
+	}
 }
 
 /** Forcibly reset and dirty all descriptor caches (used for explicit synchronization) */
