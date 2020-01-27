@@ -1820,6 +1820,7 @@
     <ClInclude Include="dx12\Tr2VertexLayoutALDx12.h" />
     <ClInclude Include="dx12\Tr2VideoAdapterInfoALDx12.h" />
     <ClInclude Include="dx12\Utilities.h" />
+    <ClInclude Include="dx12\util\AmdExtDevice.h" />
     <ClInclude Include="dx12\util\DescriptorHeapViewDx12.h" />
     <ClInclude Include="dx12\util\DescriptorStateCacheDx12.h" />
     <ClInclude Include="dx12\util\FrameLocalDescriptorHeapAllocatorDx12.h" />

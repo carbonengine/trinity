@@ -189,6 +189,9 @@
     <ClInclude Include="dx12\Utilities.h">
       <Filter>Source Files\dx12</Filter>
     </ClInclude>
+    <ClInclude Include="dx12\util\AmdExtDevice.h">
+      <Filter>Source Files\dx12\util</Filter>
+    </ClInclude>
     <ClInclude Include="dx12\util\DescriptorHeapViewDx12.h">
       <Filter>Source Files\dx12\util</Filter>
     </ClInclude>
