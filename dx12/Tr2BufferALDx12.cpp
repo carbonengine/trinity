@@ -219,6 +219,11 @@ namespace TrinityALImpl
 		if( m_owner )
 		{
 			m_buffer.Destroy( *m_owner );
+			if( m_counter )
+			{
+				m_owner->ReleaseLater( m_counter );
+				m_counter = nullptr;
+			}
 		}
 		if( m_lockedScratch )
 		{
