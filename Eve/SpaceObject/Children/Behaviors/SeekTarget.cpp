@@ -4,8 +4,9 @@
 
 SeekTarget::SeekTarget( IRoot* lockobj ) :
 	m_behaviorWeight( 20.f ),
-	m_arrivedRadius( 0.f ),
-	m_slowDownRadius( 0.f ),
+	m_arrivedRadius( 10.f ),
+	m_slowDownRadius( 33.f ),
+	m_distanceFromShip( 50.f ),
 	m_seconds( 0.25f ),
 	m_exit( false ),
 	m_target( nullptr ),
@@ -38,7 +39,6 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 		return m_todo;
 	}
 
-	// **** Can this be better? **** 
 	if( m_tunnelBehavior == nullptr && m_fxBehavior == nullptr )
 	{
 		m_tunnelBehavior = group.GetBehaviorByName( "ProcessLifetime" );
@@ -48,16 +48,6 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 	auto data = static_cast<LocatorData*>( scratchData );
 	for( auto agent = agents.begin(); agent != agents.end(); ++agent, ++data )
 	{
-		if( m_arrivedRadius == 0.f )
-		{
-			SetArrivedRadius();
-		}
-
-		if( m_slowDownRadius == 0.f )
-		{
-			SetSlowDownRadius();
-		}
-
 		// If drone does not have a picked locator, then pick one
 		if( agent->target == Vector3( 0, 0, 0 ) )
 		{
@@ -76,17 +66,15 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 			m_target->GetDamageLocatorPosition( &data->position, rand, true );
 			m_target->GetDamageLocatorDirection( &data->direction, rand, true );
 			agent->target = data->position;
-
-			// For debugging
-			m_debugLocator = data->position;
 		}
 
 		// Set the target point on the radius sphere
 		Vector3 fakePoint = data->direction;
 		fakePoint = Normalize( fakePoint );
-		fakePoint *= m_arrivedRadius;
+		fakePoint *= m_distanceFromShip;
 		fakePoint += data->position;
 
+		// For debugging
 		m_arrivalPoint = fakePoint;
 
 		Matrix worldTransform = system.GetWorldTransform();
@@ -161,16 +149,6 @@ void SeekTarget::SetTarget( ITriTargetable* target )
 void SeekTarget::SetExit( bool value )
 {
 	m_exit = value;
-}
-
-void SeekTarget::SetArrivedRadius()
-{
-	m_arrivedRadius = m_target->GetRadius() / 4;
-}
-
-void SeekTarget::SetSlowDownRadius()
-{
-	m_slowDownRadius = m_target->GetRadius() / 2;
 }
 
 void SeekTarget::RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation )

@@ -7,12 +7,10 @@ PlayFX::PlayFX( IRoot* lockobj ) :
 	PARENTLOCK( m_firingEffects ),
 	m_count( 0 ),
 	m_behaviorWeight( 20.f ),
-	m_intensity( 10.f ),
 	m_delay( 0.f ),
-	m_low( 10 ),
-	m_high( 20 ),
-	m_stop( false ),
-	m_display( false )
+	m_minSec( 10 ),
+	m_maxSec( 20 ),
+	m_stop( false )
 {
 	m_firingEffect = nullptr;
 }
@@ -74,23 +72,29 @@ std::vector<Vector3> PlayFX::CalculateBehavior( std::vector<DroneAgent>& agents,
 	// This behavior will be activated when the drone has arrived near the damage locator
 	for( auto agent = agents.begin(); agent != agents.end(); ++agent, ++i, ++data )
 	{
-		// Set the agent's position to world space because if the parent object had an offset the effect would also offset
-		Matrix worldTransform = system.GetWorldTransform();
-		Vector3 agentPositionWS = XMVector3TransformCoord( agent->position, worldTransform );
-
-		m_firingEffects[i]->SetFiringTransform( agentPositionWS, agent->target );
-
 		// Drone has arrived to target so play effect
-		if( agent->playFX && !data->effectPlayed )
+		if( agent->playFX && !data->effectPlaying )
 		{
-			data->seconds = TriRandInt( m_low, m_high );
-			data->effectPlayed = true;
+			data->seconds = TriRandInt( m_minSec, m_maxSec );
+			data->effectPlaying = true;
 
 			m_firingEffects[i]->StartFiring( m_delay );
 		}
 
-		if( data->effectPlayed )
+		// Set the agent's position to world space because if the parent object had an offset the effect would also offset
+		Matrix worldTransform = system.GetWorldTransform();
+		Vector3 agentPositionWS = XMVector3TransformCoord( agent->position, worldTransform );
+
+		// Without this drone will start shooting at the new target because of the cooldown of the effect
+		if( data->oldTarget != Vector3( 0, 0, 0 ) )
 		{
+			m_firingEffects[i]->SetFiringTransform( agentPositionWS, data->oldTarget );
+		}
+
+		if( data->effectPlaying )
+		{
+			m_firingEffects[i]->SetFiringTransform( agentPositionWS, agent->target );
+
 			Be::Time diff = BeOS->GetActualTime() - agent->fxStartTime;
 
 			auto duration = data->seconds * 10000000;
@@ -98,8 +102,8 @@ std::vector<Vector3> PlayFX::CalculateBehavior( std::vector<DroneAgent>& agents,
 			if( diff > duration )
 			{
 				m_firingEffects[i]->StopFiring();
-
-				data->effectPlayed = agent->playFX = false;
+				data->effectPlaying = agent->playFX = false;
+				data->oldTarget = agent->target;
 				agent->target = Vector3( 0, 0, 0 );
 			}
 		}

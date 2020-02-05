@@ -5,9 +5,6 @@
 #include "IBehavior.h"
 #include "PlayFX.h"
 
-//BLUE_DECLARE_INTERFACE( IEveFiringEffectElement );
-//BLUE_DECLARE_IVECTOR( IEveFiringEffectElement );
-
 struct LocatorData
 {
 	LocatorData() :
@@ -44,15 +41,12 @@ public:
 	void SetExit( bool value );
 
 private:
-	void SetArrivedRadius();
-	void SetSlowDownRadius();
-
 	bool m_exit;
 	float m_behaviorWeight;
 	float m_arrivedRadius;
 	float m_slowDownRadius;
+	float m_distanceFromShip;
 	float m_seconds;
-	Vector3 m_debugLocator; // debug
 	Vector3 m_arrivalPoint; // debug
 	ITriTargetable* m_target;
 	std::vector<int> m_takenLocatorIndices;

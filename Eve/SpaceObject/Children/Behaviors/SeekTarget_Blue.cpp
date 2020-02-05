@@ -16,6 +16,7 @@ const Be::ClassInfo* SeekTarget::ExposeToBlue()
 		MAP_ATTRIBUTE( "behaviorWeight", m_behaviorWeight, ":jessica-group: BackAndForth", Be::READWRITE )
 		MAP_ATTRIBUTE( "arrivedRadius", m_arrivedRadius, ":jessica-group: BackAndForth", Be::READWRITE )
 		MAP_ATTRIBUTE( "slowDownRadius", m_slowDownRadius, ":jessica-group: BackAndForth", Be::READWRITE )
+		MAP_ATTRIBUTE( "distanceFromShip", m_distanceFromShip, ":jessica-group: BackAndForth", Be::READWRITE )
 
 		MAP_METHOD_AND_WRAP(
 			"SetTarget",

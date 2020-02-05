@@ -9,13 +9,15 @@
 struct PlayFXData
 {
 	PlayFXData() :
-		effectPlayed( false ),
-		seconds( 10 )
+		effectPlaying( false ),
+		seconds( 10 ),
+		oldTarget( 0, 0, 0 )
 	{
 	}
 
-	bool effectPlayed;
+	bool effectPlaying;
 	int seconds;
+	Vector3 oldTarget;
 };
 
 BLUE_DECLARE_INTERFACE( IEveFiringEffectElement );
@@ -42,7 +44,6 @@ public:
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	void Update( EveUpdateContext& updateContext, const TriFrustum & frustum, const Matrix & parentTransform );
 
-
 	void UpdateState( bool state ) { m_stop = state; }
 
 private:
@@ -51,13 +52,10 @@ private:
 
 	size_t m_count;
 	float m_behaviorWeight;
-	float m_intensity;
 	float m_delay;
-	int m_low;
-	int m_high;
+	int m_minSec;
+	int m_maxSec;
 	bool m_stop;
-	bool m_display;
-	bool debugDisplay;
 
 	IEveFiringEffectElementPtr m_firingEffect;
 	PIEveFiringEffectElementVector m_firingEffects;
