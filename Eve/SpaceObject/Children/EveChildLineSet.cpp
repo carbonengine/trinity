@@ -285,7 +285,6 @@ void EveChildLineSet::InitializeLineSet()
 		Vector3 v = m_managedPoints[nextPoint] - m_managedPoints[i];
 		float length = Length( v );
 		
-		Vector3 offset = ( m_managedPoints[nextPoint] - m_managedPoints[i] );
 		
 		int id = m_lineSet->AddStraightLine(m_managedPoints[i], m_baseColor,m_managedPoints[nextPoint], m_baseColor, m_lineWidth );
 		
@@ -424,15 +423,24 @@ void EveChildLineSet::UpdateBuffer( Tr2RenderContext& renderContext )
 	Matrix WT = EveChildTransform::m_worldTransform;
 	CR_RETURN( m_vertexBuffer.MapForWriting( data, renderContext ) );
 	
-	
 	for( int i = 0; i < int( m_managedPoints.size() ); i++ )
 	{
 		if( m_billboardObject )
 		{
-			Matrix matrix = TransformationMatrix( m_objectScale, m_rotation, m_managedPoints[i] ) * WT;
-			matrix = Billboard2D( matrix );
-			Matrix m = Transpose( matrix );
+			Matrix m = TransformationMatrix( m_objectScale, m_rotation, m_managedPoints[i] ) * WT;
+
+			m = Billboard2D( m );
+			
+			Vector3 scale, translation;
+			Quaternion objRot, worldRot;
+			Decompose( scale, objRot, translation, m );
+			Decompose( scale, worldRot, translation, Inverse( WT ) );
+			
+			m = TransformationMatrix( m_objectScale, objRot * worldRot, m_managedPoints[i] ) ;
+			m = Transpose( m );
+			
 			memcpy( data, &m, m_stride );
+			
 			data += m_stride;
 		}
 		else
@@ -442,7 +450,10 @@ void EveChildLineSet::UpdateBuffer( Tr2RenderContext& renderContext )
 			
 			if ( nextPoint == 0 )
 			{
-				dirToNextPoint = m_managedPoints[i] - m_managedPoints[i-1];
+				float blender = 1.f - pow( 1.f - abs(  m_completeness - 1.f ), 15.f );
+				dirToNextPoint = Lerp(	m_managedPoints[nextPoint] - m_managedPoints[i],
+										m_managedPoints[i] - m_managedPoints[i - 1],
+										blender );
 			}
 			else
 			{
@@ -451,7 +462,7 @@ void EveChildLineSet::UpdateBuffer( Tr2RenderContext& renderContext )
 			
 			Quaternion rotation;
 			TriQuaternionArcFromForward( &rotation, &dirToNextPoint );
-			Matrix matrix = TransformationMatrix( m_objectScale, rotation, m_managedPoints[i] ) * WT;
+			Matrix matrix = TransformationMatrix( m_objectScale, rotation, m_managedPoints[i] );
 			Matrix m = Transpose( matrix );
 			memcpy( data, &m, m_stride );
 			data += m_stride;
