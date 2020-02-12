@@ -147,6 +147,7 @@ private:
 	float m_animSpeed;
 	float m_scrollSpeed;
 	float m_scrollSegmenting;
+	float m_brightness;
 
 	// BezierCurve
 	Vector3 m_point1;

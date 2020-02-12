@@ -112,6 +112,7 @@ EveChildLineSet::EveChildLineSet( IRoot* lockobj ) :
 	m_point2( 0, 0, 0 ),
 	m_bezierPoint(0, 0, 0 ),
 	m_curveSegments( 24 ),
+	m_brightness( 1 ),
 	m_exposedCurveSegments( 24 ),
 	m_type( LINE_RENDER ),
 	m_objType( CIRCLE ),
@@ -282,16 +283,15 @@ void EveChildLineSet::InitializeLineSet()
 		lines--;
 	}
 
+	Vector4 bv = Vector4( 1.f, 1.f, 1.f, m_brightness );
+	
 	for( int i = 0; i < lines; i++ )
 	{
 		int nextPoint = ( i + 1 ) % m_numSegments;
-		Vector3 v = m_managedPoints[nextPoint] - m_managedPoints[i];
-		float length = Length( v );
 		
+		int id = m_lineSet->AddStraightLine(m_managedPoints[i], m_baseColor *bv,m_managedPoints[nextPoint], m_baseColor *bv, m_lineWidth );
 		
-		int id = m_lineSet->AddStraightLine(m_managedPoints[i], m_baseColor,m_managedPoints[nextPoint], m_baseColor, m_lineWidth );
-		
-		m_lineSet->ChangeLineAnimation( id, (Vector4) m_animColor, m_scrollSpeed, m_scrollSegmenting );
+		m_lineSet->ChangeLineAnimation( id, (Vector4) m_animColor * bv, m_scrollSpeed, m_scrollSegmenting );
 	}
 	
 	m_lineSet->SubmitChanges();
@@ -307,20 +307,27 @@ void EveChildLineSet::InitializeLineSetForCurves()
 
 	m_lineSet->ClearLines();
 
-	for( int i = 0; i < m_curveSegments - 1; i++ )
+	Vector4 bv = Vector4( 1.f, 1.f, 1.f, m_brightness );
+
+	
+	for( int i = 0; i < m_curveSegments; i++ )
 	{
 		int nextPoint = ( i + 1 ) % m_curveSegments;
-		Vector3 v = m_managedPoints[nextPoint] - m_managedPoints[i];
-		float length = Length( v );
 
-		Vector3 offset = ( m_managedPoints[nextPoint] - m_managedPoints[i] );
-
-		int id = m_lineSet->AddStraightLine( m_managedPoints[i], m_baseColor, m_managedPoints[nextPoint], m_baseColor, m_lineWidth );
-
+		int id;
+		
+		if (nextPoint == 0)
+		{
+			id = m_lineSet->AddStraightLine( m_managedPoints[i], m_baseColor * bv, m_point2, m_baseColor * bv, m_lineWidth );
+		}
+		else
+		{
+			id = m_lineSet->AddStraightLine( m_managedPoints[i], m_baseColor * bv, m_managedPoints[nextPoint], m_baseColor * bv, m_lineWidth );
+		}
 
 		if( m_scrollSpeed != 0 )
 		{
-			m_lineSet->ChangeLineAnimation( id, (Vector4) m_animColor, m_scrollSpeed, m_scrollSegmenting );
+			m_lineSet->ChangeLineAnimation( id, (Vector4) m_animColor * bv, m_scrollSpeed, m_scrollSegmenting );
 		}
 	}
 

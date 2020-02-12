@@ -42,7 +42,6 @@ const Be::ClassInfo* EveChildLineSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
 		
-
 		MAP_ATTRIBUTE_WITH_CHOOSER( "objectType", m_objType, "", Be::READWRITE | Be::PERSIST | Be::ENUM | Be::NOTIFY, LineSetObjTypeChooser )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "renderType", m_type, "", Be::READWRITE | Be::PERSIST | Be::ENUM | Be::NOTIFY, LineSetTypeChooser )
 
@@ -56,14 +55,13 @@ const Be::ClassInfo* EveChildLineSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "bezierPoint", m_bezierPoint, "use this to bend the curve\n"":jessica-group: Curve", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "curveSegments", m_exposedCurveSegments, "nuber of segments that the curve is split up into\n:jessica-group: Curve", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		
-	
 		MAP_ATTRIBUTE( "lineWidth", m_lineWidth, "thickness of the circle's line\n:jessica-group: LineRender", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "baseColor", m_baseColor, "color for lines\n:jessica-group: LineRender", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "animColor", m_animColor, "color for lines\n:jessica-group: LineRender", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "additiveBatches", m_additiveBatch, "Control for how the curveSet is rendered\n:jessica-group: LineRender", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "scrollSpeed", m_scrollSpeed, "controls the animation speed of the anim texture\n:jessica-group: LineRender", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "scrollSegmenting", m_scrollSegmenting, "size of each animated portion\n:jessica-group: LineRender", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-
+		MAP_ATTRIBUTE( "brightness", m_brightness, "a multiplier for the animColor render\n:jessica-group: LineRender", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		
 		MAP_ATTRIBUTE( "objectScale", m_objectScale, "increase/decrease the size of the mesh render\n:jessica-group: ObjectRenderer", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "billboardObject", m_billboardObject, "should mesh face camera \n:jessica-group: ObjectRenderer", Be::READWRITE | Be::PERSIST )
