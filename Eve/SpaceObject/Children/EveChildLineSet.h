@@ -50,9 +50,10 @@ public:
 	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
 	void GetLights( Tr2LightManager& lightManager ) const {};
 	void GetLocalToWorldTransform( Matrix& transform ) const;
-	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const {};
+	
 	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
 	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod );
+	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const {};
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) {};
 
@@ -101,6 +102,7 @@ private:
 	void InitializeLineSet();
 	void GenerateManagedPoints();
 	void InitializeLineSetForCurves();
+	void UpdateBoundingSphere();
 	void GenerateManagedPointsForCurve();
 
 	BlueSharedString m_name;
@@ -155,6 +157,12 @@ private:
 	Vector3 m_bezierPoint;
 	int m_curveSegments;
 	float m_exposedCurveSegments;
+
+	// visibility culls
+	Vector4 m_boundingSphere;
+	float m_currentScreenSize;
+	float m_minScreenSize;
+	float m_isVisible;
 };
 
 TYPEDEF_BLUECLASS( EveChildLineSet );

@@ -45,6 +45,9 @@ const Be::ClassInfo* EveChildLineSet::ExposeToBlue()
 		MAP_ATTRIBUTE_WITH_CHOOSER( "objectType", m_objType, "", Be::READWRITE | Be::PERSIST | Be::ENUM | Be::NOTIFY, LineSetObjTypeChooser )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "renderType", m_type, "", Be::READWRITE | Be::PERSIST | Be::ENUM | Be::NOTIFY, LineSetTypeChooser )
 
+		MAP_ATTRIBUTE( "minScreenSize", m_minScreenSize, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "currentScreenSize", m_currentScreenSize, "render-threshold", Be::READ )
+	
 		MAP_ATTRIBUTE( "circleRadius", m_circleRadius, "the circle's radius\n"":jessica-group: Circle", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "circleDistort", m_circleDistort, "use this if you want to author an elipsoid or bend the circle in 3d space (.y and .w -> curvature) (.x and .z -> distort on x/z-axis)\n"":jessica-group: Circle", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "numSegments", m_exposedNumSegments, "nuber of segments that the circle is split up into\n:jessica-group: Circle", Be::READWRITE | Be::PERSIST | Be::NOTIFY )

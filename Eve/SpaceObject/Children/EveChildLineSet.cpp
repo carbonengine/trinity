@@ -11,6 +11,7 @@
 #include "TransformModifiers/EveChildModifierTransformCommon.h"
 #include "Resources/TriGeometryRes.h"
 #include "include/TriMath.h"
+#include "TriFrustum.h"
 #include "Utilities/BoundingSphere.h"
 
 namespace
@@ -113,6 +114,10 @@ EveChildLineSet::EveChildLineSet( IRoot* lockobj ) :
 	m_bezierPoint(0, 0, 0 ),
 	m_curveSegments( 24 ),
 	m_brightness( 1 ),
+	m_boundingSphere( 0,0,0,1 ),
+	m_currentScreenSize( 1 ),
+	m_minScreenSize( -1 ),
+	m_isVisible( true ),
 	m_exposedCurveSegments( 24 ),
 	m_type( LINE_RENDER ),
 	m_objType( CIRCLE ),
@@ -140,6 +145,7 @@ bool EveChildLineSet::Initialize()
 	
 	GenerateManagedPoints();
 	InitializeLineSet();
+	UpdateBoundingSphere();
 	
 	return true;
 }
@@ -170,6 +176,7 @@ bool EveChildLineSet::OnModified( Be::Var* value )
 	
 	GenerateManagedPoints();
 	InitializeLineSet();
+	UpdateBoundingSphere();
 	return true;
 }
 
@@ -334,6 +341,39 @@ void EveChildLineSet::InitializeLineSetForCurves()
 	m_lineSet->SubmitChanges();
 }
 
+void EveChildLineSet::UpdateBoundingSphere()
+{
+	float objectSizeBonus = 0;
+	
+	if( m_type != LINE_RENDER )
+	{
+		if( m_mesh->GetGeometryResource() != nullptr )
+		{
+			if( ( m_mesh->GetGeometryResource() )->IsGood() )
+			{
+				TriGeometryResMeshData* meshData = m_mesh->GetGeometryResource()->GetMeshData( m_mesh->GetMeshIndex() );
+				objectSizeBonus += meshData->m_boundingSphere.w;
+			}
+		}
+	}
+		
+	if (m_objType == CIRCLE)
+	{
+		m_boundingSphere = Vector4( m_translation, m_circleRadius + m_lineWidth + objectSizeBonus );
+	}
+	
+	if( m_objType == BEZIER_CURVE )
+	{
+		Vector3 center( 0.f, 0.f, 0.f );
+		center += m_point1;
+		center += m_point2;
+		center += m_bezierPoint;
+		center /= 3.f;
+		float rad = max( max( LengthSq( m_bezierPoint - center ), LengthSq( m_point2 - center ) ), LengthSq( m_point1 - center ) );
+		m_boundingSphere = Vector4( center, sqrt(rad) + m_lineWidth + objectSizeBonus );
+	}
+}
+
 const char* EveChildLineSet::GetName() const
 {
 	return m_name.c_str();
@@ -350,16 +390,33 @@ void EveChildLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	{
 		return;
 	}
-		
+
+	m_isVisible = false;
+
+	if( frustum.IsSphereVisible( &m_boundingSphere ) )
+	{
+		m_currentScreenSize = frustum.GetPixelSizeAccross( &m_boundingSphere );
+
+		if( m_currentScreenSize >= m_minScreenSize )
+		{
+			m_isVisible = true;
+		}
+	}
+	
 	if( m_lineSet )
 	{
-		m_lineSet->UpdateVisibility( frustum, parentTransform * EveChildTransform::m_worldTransform );
+		m_lineSet->UpdateVisibility( frustum, parentTransform * m_worldTransform );
 	}
 }
 
 void EveChildLineSet::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	if( !m_display )
+	{
+		return;
+	}
+
+	if( !m_isVisible )
 	{
 		return;
 	}
@@ -380,10 +437,8 @@ void EveChildLineSet::GetRenderables( std::vector<ITr2Renderable*>& renderables 
 
 bool EveChildLineSet::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 {
-	float r = m_circleRadius + m_lineWidth;
-	sphere = Vector4( m_translation, r );
+	sphere = m_boundingSphere;
 	BoundingSphereTransform( m_worldTransform, sphere );
-
 	return true;
 }
 
@@ -430,7 +485,7 @@ void EveChildLineSet::UpdateBuffer( Tr2RenderContext& renderContext )
 	}
 	
 	uint8_t *data;
-	Matrix WT = EveChildTransform::m_worldTransform;
+	Matrix WT = m_worldTransform;
 	
 	Vector3 scale, translation;
 	Quaternion objRot, worldRot;
@@ -706,12 +761,21 @@ void EveChildLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	{
 		return;
 	}
-
+	
 	if( renderer.HasOption( this, "EveChildLineSetPoints" ) )
 	{
 		for( auto point = m_managedPoints.begin(); point != m_managedPoints.end(); ++point )
 		{
-			renderer.DrawSphere( this, TranslationMatrix( *point ) * EveChildTransform::m_worldTransform, 25, 8, Tr2DebugRenderer::Wireframe, 0xffffffff );
+			renderer.DrawSphere( this, TranslationMatrix( *point ) * m_worldTransform, 25, 8, Tr2DebugRenderer::Wireframe, 0xffffffff );
+		}
+
+		renderer.DrawSphere( this, TranslationMatrix( m_boundingSphere.GetXYZ() ) * m_worldTransform, m_boundingSphere.w, 10, Tr2DebugRenderer::Wireframe, 0xffffffaa );
+		
+		if (m_objType == BEZIER_CURVE)
+		{
+			renderer.DrawSphere( this, TranslationMatrix( m_bezierPoint ) * m_worldTransform, 30, 10, Tr2DebugRenderer::Wireframe, 0xbbbbffff );
+			renderer.DrawSphere( this, TranslationMatrix( m_point1 ) * m_worldTransform, 30, 10, Tr2DebugRenderer::Wireframe, 0xbbffbbff );
+			renderer.DrawSphere( this, TranslationMatrix( m_point2 ) * m_worldTransform, 30, 10, Tr2DebugRenderer::Wireframe, 0xbbffbbff );
 		}
 	}
 }
