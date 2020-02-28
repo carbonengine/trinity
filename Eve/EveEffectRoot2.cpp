@@ -88,6 +88,7 @@ void EveEffectRoot2::OnListModified( long event, ssize_t key, ssize_t key2, IRoo
 				{
 					child->SetControllerVariable( it->first.c_str(), it->second );
 				}
+				child->StartControllers();
 			}
 			break;
 		default:
@@ -358,6 +359,9 @@ void EveEffectRoot2::GetPerObjectStructs( EveSpaceObjectVSData& vsData, EveSpace
 	// boundingsphere
 	vsData.shipData.w = 1.f;
 
+	// heightMap
+	vsData.details.x = 10.0;
+	
 	// ps
 	memset( &psData, 0, sizeof( EveSpaceObjectPSData ) );
 	// activation
