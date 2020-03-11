@@ -3073,6 +3073,7 @@
     <ClInclude Include="Eve\Renderable\Stretch\EveRemotePositionCurve.h" />
     <ClInclude Include="Eve\Renderable\Stretch\EveStretch.h" />
     <ClInclude Include="Eve\Renderable\Stretch\EveStretch2.h" />
+    <ClInclude Include="Eve\Renderable\Stretch\EveStretch3.h" />
     <ClInclude Include="Eve\SpaceObject\EveMissile.h" />
     <ClInclude Include="Eve\SpaceObject\EveMissileWarhead.h" />
     <ClInclude Include="Eve\SpaceObject\EveMobile.h" />
@@ -3756,6 +3757,8 @@
     <ClCompile Include="Eve\Renderable\Stretch\EveStretch.cpp" />
     <ClCompile Include="Eve\Renderable\Stretch\EveStretch2.cpp" />
     <ClCompile Include="Eve\Renderable\Stretch\EveStretch2_Blue.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveStretch3.cpp" />
+    <ClCompile Include="Eve\Renderable\Stretch\EveStretch3_Blue.cpp" />
     <ClCompile Include="Eve\Renderable\Stretch\EveStretch_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\EveMissile.cpp" />
     <ClCompile Include="Eve\SpaceObject\EveMissileWarhead.cpp" />

@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////
 //
-//    Created:   2020
+//    Created:   March 2020
 //    Copyright: CCP 2020
 //
 #pragma once
@@ -18,13 +18,12 @@ public:
 	~EveChildModifierStretch();
 
 	Matrix ApplyTransform( const Matrix& transform, size_t boneCount, const granny_matrix_3x4* bones ) const;
-	void SetSource( ITriVectorFunction* source );
 	void SetDest( ITriVectorFunction* dest );
+	void SetDestPosition( Vector3 destPosition );
 
 private:
-	ITriVectorFunctionPtr m_source;
 	ITriVectorFunctionPtr m_dest;
-
+	Vector3 m_destPosition;
 };
 
 TYPEDEF_BLUECLASS( EveChildModifierStretch );

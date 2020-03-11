@@ -1,6 +1,6 @@
 ////////////////////////////////////////////////////////////
 //
-//    Created:   2020
+//    Created:   March 2020
 //    Copyright: CCP 2020
 //
 #include "StdAfx.h"
@@ -14,7 +14,6 @@ const Be::ClassInfo* EveChildModifierStretch::ExposeToBlue()
 		MAP_INTERFACE( EveChildModifierStretch )
 		MAP_INTERFACE( IEveChildTransformModifier )
 
-		MAP_ATTRIBUTE( "source", m_source, "", Be::READWRITE | Be::PERSIST );
 		MAP_ATTRIBUTE( "dest", m_dest, "", Be::READWRITE | Be::PERSIST );
 
 	EXPOSURE_END()
