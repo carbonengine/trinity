@@ -789,6 +789,9 @@
     <ClInclude Include="Eve\Renderable\Stretch\EveStretch2.h">
       <Filter>Source Files\Eve\Renderable\Stretch</Filter>
     </ClInclude>
+    <ClInclude Include="Eve\Renderable\Stretch\EveStretch3.h">
+      <Filter>Source Files\Eve\Renderable\Stretch</Filter>
+    </ClInclude>
     <ClInclude Include="Eve\SpaceObject\EveMissile.h">
       <Filter>Source Files\Eve\SpaceObject</Filter>
     </ClInclude>
@@ -2824,6 +2827,12 @@
       <Filter>Source Files\Eve\Renderable\Stretch</Filter>
     </ClCompile>
     <ClCompile Include="Eve\Renderable\Stretch\EveStretch2_Blue.cpp">
+      <Filter>Source Files\Eve\Renderable\Stretch</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\Renderable\Stretch\EveStretch3.cpp">
+      <Filter>Source Files\Eve\Renderable\Stretch</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\Renderable\Stretch\EveStretch3_Blue.cpp">
       <Filter>Source Files\Eve\Renderable\Stretch</Filter>
     </ClCompile>
     <ClCompile Include="Eve\Renderable\Stretch\EveStretch_Blue.cpp">
