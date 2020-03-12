@@ -148,6 +148,27 @@ void SeekTarget::SetExit( bool value )
 	m_exit = value;
 }
 
+void SeekTarget::SetBehaviorWeight( float value )
+{
+	m_behaviorWeight = value;
+}
+
+void SeekTarget::ResetBehavior( )
+{
+	if( m_fxBehavior )
+	{
+		m_fxBehavior->UpdateState( false );
+	}
+
+	if( m_tunnelBehavior )
+	{
+		m_tunnelBehavior->UpdateState( false );
+	}
+
+	m_exit = false;
+	m_droneArrived = false;
+}
+
 void SeekTarget::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "SeekTarget" );

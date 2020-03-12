@@ -40,6 +40,8 @@ public:
 	
 	void SetTarget( ITriTargetable* target );
 	void SetExit( bool value );
+	void SetBehaviorWeight( float value );
+	void ResetBehavior();
 
 private:
 	bool m_exit;

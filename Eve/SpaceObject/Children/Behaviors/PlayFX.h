@@ -48,7 +48,6 @@ public:
 	void UpdateState( bool state ) { m_stop = state; }
 
 private:
-	void ClearEffects();
 	void CheckCount( size_t agentSize );
 
 	size_t m_count;

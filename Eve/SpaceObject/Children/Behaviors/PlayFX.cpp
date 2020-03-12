@@ -43,13 +43,6 @@ void PlayFX::InitializeScratch( void* scratchMemory )
 std::vector<Vector3> PlayFX::CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime,
 	BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius )
 {
-	if( m_stop )
-	{
-		ClearEffects();
-		m_behaviorWeight = 0;
-		return m_todo;
-	}
-
 	if( m_behaviorWeight <= 0 )
 	{
 		return m_todo;
@@ -75,6 +68,11 @@ std::vector<Vector3> PlayFX::CalculateBehavior( std::vector<DroneAgent>& agents,
 	// This behavior will be activated when the drone has arrived near the damage locator
 	for( ; agent != agents.end() && firingEffect != m_firingEffects.end(); ++agent, ++firingEffect, ++data )
 	{
+		if( m_stop )
+		{
+			data->droneArrived = false;
+		}
+
 		// Make sure the effect isn't showing when loading everything up
 		if( data->droneArrived == false )
 		{
@@ -143,12 +141,6 @@ void PlayFX::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 	{
 		( *fx )->GetRenderables( renderables );
 	}
-}
-
-void PlayFX::ClearEffects()
-{
-	m_firingEffects.Clear();
-	m_stop = false;
 }
 
 void PlayFX::CheckCount( size_t agentSize )

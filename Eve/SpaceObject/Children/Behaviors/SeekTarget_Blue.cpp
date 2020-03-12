@@ -32,5 +32,17 @@ const Be::ClassInfo* SeekTarget::ExposeToBlue()
 			"Set exit value.\n"
 			":param transforms: target" )
 
+		MAP_METHOD_AND_WRAP(
+			"SetBehaviorWeight",
+			SetBehaviorWeight,
+			"Set behavior weight.\n"
+			":param transforms: target" )
+
+		MAP_METHOD_AND_WRAP(
+			"ResetBehavior",
+			ResetBehavior,
+			"Reset seek target and play fx behavior for when players repair ship again.\n"
+			":param transforms: target" )
+
 		EXPOSURE_END()
 }
