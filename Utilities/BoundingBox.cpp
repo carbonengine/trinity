@@ -482,6 +482,45 @@ bool IntersectAxisAlignedBoxAxisAlignedBox( const Vector3& minBoundsA, const Vec
     return !XMVector3AnyTrue( Disjoint );
 }
 
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   A ray AABB intersection check.  
+// Arguments:
+//   minBounds, maxBounds - The min/max bounds of the AABB
+//   rayOrigin, rayDir - The ray origin and direction (normalized)
+//   intersection - The intersection point if there is any
+// Return Value:
+//   false if ray does not intersect AABB
+//   true if ray may intersect AABB
+// --------------------------------------------------------------------------------------
+bool IntersectAxisAlignedBoxRay( const Vector3& minBounds, const Vector3& maxBounds, const Vector3& rayOrigin, const Vector3& rayDir, Vector3& intersection )
+{
+	if( minBounds == maxBounds )
+	{
+		// we are actually dealing with a point but not a box
+		intersection = minBounds;
+		return LengthSq( Normalize( minBounds - rayOrigin ) - rayDir ) < 1e10;
+	}
+
+	XMVECTOR minA = XMVectorSet( minBounds.x, minBounds.y, minBounds.z, 0.0f );
+	XMVECTOR maxA = XMVectorSet( maxBounds.x, maxBounds.y, maxBounds.z, 0.0f );
+	
+	XMVECTOR invRayDir = XMVectorReciprocal( rayDir );
+
+	XMVECTOR t0 = ( minA - rayOrigin ) * invRayDir;
+	XMVECTOR t1 = ( maxA - rayOrigin ) * invRayDir;
+
+	XMVECTOR smallerIntersection = XMVectorMin( t0, t1 );
+	XMVECTOR biggerIntersection = XMVectorMax( t0, t1);
+
+	float minT = max( smallerIntersection.m128_f32[0], max( smallerIntersection.m128_f32[1], smallerIntersection.m128_f32[2] ) );
+	float maxT = min( biggerIntersection.m128_f32[0], min( biggerIntersection.m128_f32[1], biggerIntersection.m128_f32[2] ) );
+
+	intersection = rayOrigin + minT * rayDir;
+	return minT < maxT;
+}
+
 bool IntersectOrientedBoxAxisAlignedBox( const Vector3& centerA, const Vector3& extentsA, const Quaternion& orientationA, 
 										 const Vector3& minBounds, const Vector3& maxBounds )
 {

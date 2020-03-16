@@ -57,6 +57,8 @@ bool IntersectOrientedBoxAxisAlignedBox( const Vector3& centerA, const Vector3& 
 bool IntersectOrientedBoxOrientedBox( const Vector3& centerA, const Vector3& extentsA, const Quaternion& orientationA,
 									  const Vector3& centerB, const Vector3& extentsB, const Quaternion& orientationB );
 
+bool IntersectAxisAlignedBoxRay( const Vector3& minBounds, const Vector3& maxBounds, const Vector3& rayOrigin, const Vector3& rayDir, Vector3& intersection );
+
 bool IntersectTriangleOrientedBox(const Vector3* triangleVertices, const Matrix& invOrientedBox );
 
 bool IntersectTriangleOrientedBox( const Vector3* v0, 
