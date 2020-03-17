@@ -27,16 +27,16 @@ Vector4 EveSphereVolume::GetBoundingSphere() const
 	return Vector4( m_position, m_radius );
 }
 
-float EveSphereVolume::GetIntensity( Vector3 cameraPosition )
+float EveSphereVolume::GetIntensity( Vector3 position )
 {
 	// are we inside of the outer radius?
 	float radiusSq = m_radius * m_radius;
-	if (LengthSq( cameraPosition - m_position ) > radiusSq)
+	if (LengthSq( position - m_position ) > radiusSq)
 	{
 		return 0;
 	}
 
-	Vector3 line = cameraPosition - m_position - m_centerOffset;
+	Vector3 line = position - m_position - m_centerOffset;
 	float distanceToInnerRadiusSq = LengthSq( line );
 	float innerRadiusSq = m_innerRadius * m_innerRadius;
 	if (distanceToInnerRadiusSq <  innerRadiusSq)
