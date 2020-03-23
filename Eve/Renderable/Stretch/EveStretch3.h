@@ -51,6 +51,8 @@ public:
 	virtual bool GetLocalBoundingBox( Vector3& min, Vector3& max );
 	virtual void GetLocalToWorldTransform( Matrix& transform ) const;
 	virtual void GetLights( Tr2LightManager& lightManager ) const;
+	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+	virtual void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer );
 
 
 	/////////////////////////////////////////////////////////////////////////////////////

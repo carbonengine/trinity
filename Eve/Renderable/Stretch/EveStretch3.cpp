@@ -501,6 +501,47 @@ void EveStretch3::StartControllers()
 	}
 }
 
+
+void EveStretch3::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
+{
+	if( m_sourceObject )
+	{
+		m_sourceObject->RegisterWithQuadRenderer( quadRenderer );
+	}
+	if( m_destObject )
+	{
+		m_destObject->RegisterWithQuadRenderer( quadRenderer );
+	}
+	if( m_stretchObject )
+	{
+		m_stretchObject->RegisterWithQuadRenderer( quadRenderer );
+	}
+	if( m_moveObject )
+	{
+		m_moveObject->RegisterWithQuadRenderer( quadRenderer );
+	}
+}
+
+void EveStretch3::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer )
+{
+	if( m_sourceObject )
+	{
+		m_sourceObject->AddQuadsToQuadRenderer( frustum, quadRenderer );
+	}
+	if( m_destObject )
+	{
+		m_destObject->AddQuadsToQuadRenderer( frustum, quadRenderer );
+	}
+	if( m_stretchObject )
+	{
+		m_stretchObject->AddQuadsToQuadRenderer( frustum, quadRenderer );
+	}
+	if( m_moveObject )
+	{
+		m_moveObject->AddQuadsToQuadRenderer( frustum, quadRenderer );
+	}
+}
+
 void EveStretch3::UpdateModelCenterWorldPosition( Vector3& position, Be::Time t )
 {
 }
