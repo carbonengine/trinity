@@ -307,7 +307,7 @@ void EveChildLineSet::InitializeLineSet()
 
 void EveChildLineSet::InitializeLineSetForCurves()
 {
-	if( !m_lineSet || m_curveSegments <= 1 )
+	if( !m_lineSet || m_curveSegments <= 0 )
 	{
 		return;
 	}
