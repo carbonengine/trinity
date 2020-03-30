@@ -86,6 +86,7 @@ Be::VarChooser EveSOFDataAreaTypeChooser[] =
 	{ "Rock", BeCast( EveSOFDataArea::TYPE_ROCK ), "Area Type Rock" },
 	{ "Monument", BeCast( EveSOFDataArea::TYPE_MONUMENT ), "Area Type Monument" },
 	{ "Ornament", BeCast( EveSOFDataArea::TYPE_ORNAMENT ), "Area Type Ornament" },
+	{ "SimplePrimary", BeCast( EveSOFDataArea::TYPE_SIMPLEPRIMARY ), "Simple Primary Area Type" },
 	{ "NoOverwrite", BeCast( EveSOFDataArea::TYPE_NO_OVERWRITE ), "Area Type No Overwrite" },
 	{ 0 }
 };
@@ -105,6 +106,7 @@ const Be::ClassInfo* EveSOFDataArea::ExposeToBlue()
 		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[TYPE_ROCK].mKey, m_materials[TYPE_ROCK], "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[TYPE_MONUMENT].mKey, m_materials[TYPE_MONUMENT], "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[TYPE_ORNAMENT].mKey, m_materials[TYPE_ORNAMENT], "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[TYPE_SIMPLEPRIMARY].mKey, m_materials[TYPE_SIMPLEPRIMARY], "", Be::READWRITE | Be::PERSIST )
 		EXPOSURE_END()
 }
 
