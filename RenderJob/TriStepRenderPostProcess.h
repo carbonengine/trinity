@@ -95,7 +95,9 @@ private:
 	Tr2RenderTargetPtr m_velocityBuffer;
 
 	// film grain
-	void ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain );
+	bool ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain );
+	void RenderFilmGrain( Tr2RenderContext& renderContext, Tr2PPFilmGrainEffect* filmGrain );
+	Tr2EffectPtr m_grainShader;
 
 	// desaturate
 	void ProcessDesaturate( Tr2PPDesaturateEffect* desaturate );
@@ -111,7 +113,6 @@ private:
 
 	// tonemapping
 	Tr2EffectPtr m_tonemappingEffect;
-	bool m_filmGrainEnabled;
 	bool m_desaturateEnabled;
 	bool m_fadeEnabled;
 	bool m_lutEnabled;

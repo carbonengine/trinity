@@ -31,7 +31,6 @@ TriStepRenderPostProcess::TriStepRenderPostProcess(IRoot* lockobj) :
 	m_mergeHistogramXDim(0),
 	m_desaturateEnabled(false),
 	m_fadeEnabled(false),
-	m_filmGrainEnabled(false),
 	m_lutEnabled(false),
 	m_vignetteEnabled(false),
 	m_sceneDirty( false )
@@ -221,16 +220,20 @@ TriStepResult TriStepRenderPostProcess::Execute(Be::Time realTime, Be::Time simT
 		RenderBloom(renderContext, bloom);
 	}
 
-	ProcessFilmGrain(filmGrain);
 	ProcessDesaturate(desaturate);
 	ProcessFade(fade);
 	ProcessLut(lut);
 	ProcessVignette(vignette);
 
 	bool doFidelity = ProcessFidelityFX( renderContext, fidelity );
+	bool doGrain = ProcessFilmGrain( filmGrain );
 	if( doFidelity )
 	{
 		renderContext.m_esm.PushRenderTarget( *m_renderInfo->GetFidelityInputBuffer() );
+	}
+	else if( doGrain )
+	{
+		renderContext.m_esm.PushRenderTarget( *m_renderInfo->GetGrainInputBuffer() );
 	}
 
 	Tr2Renderer::DrawTexture( renderContext, m_tonemappingEffect, Vector2( 0, 0 ), Vector2( 1, 1 ) );
@@ -238,7 +241,27 @@ TriStepResult TriStepRenderPostProcess::Execute(Be::Time realTime, Be::Time simT
 	if( doFidelity )
 	{
 		renderContext.m_esm.PopRenderTarget();
+
+		if( doGrain )
+		{
+			renderContext.m_esm.PushRenderTarget( *m_renderInfo->GetGrainInputBuffer() );
+		}
+
 		RenderFidelityFX( renderContext, fidelity );
+
+		if( doGrain )
+		{
+			renderContext.m_esm.PopRenderTarget();
+		}
+	}
+	else if( doGrain )
+	{
+		renderContext.m_esm.PopRenderTarget();
+	}
+
+	if( doGrain )
+	{
+		RenderFilmGrain( renderContext, filmGrain );
 	}
 
 	if (ProcessSignalLoss(signalLoss))
@@ -693,43 +716,54 @@ bool TriStepRenderPostProcess::ProcessFidelityFX( Tr2RenderContext& renderContex
 void TriStepRenderPostProcess::RenderFidelityFX( Tr2RenderContext& renderContext, Tr2PPFidelityFXEffect* fx )
 {
 	auto source = m_renderInfo->GetFidelityInputBuffer();
-    int dispatchX = ( source->GetWidth () + ( CAS_THREAD_GROUP_WORK_REGION_DIM - 1 ) ) / CAS_THREAD_GROUP_WORK_REGION_DIM;
-    int dispatchY = ( source->GetHeight() + ( CAS_THREAD_GROUP_WORK_REGION_DIM - 1 ) ) / CAS_THREAD_GROUP_WORK_REGION_DIM;
+	int dispatchX = ( source->GetWidth () + ( CAS_THREAD_GROUP_WORK_REGION_DIM - 1 ) ) / CAS_THREAD_GROUP_WORK_REGION_DIM;
+	int dispatchY = ( source->GetHeight() + ( CAS_THREAD_GROUP_WORK_REGION_DIM - 1 ) ) / CAS_THREAD_GROUP_WORK_REGION_DIM;
 
 	Tr2Renderer::RunComputeShader( m_fidelityFXShader, dispatchX, dispatchY, 1, renderContext );
 	Tr2Renderer::DrawTexture( renderContext, *m_renderInfo->GetFidelityOutputBuffer() );
 }
 
-void TriStepRenderPostProcess::ProcessFilmGrain(Tr2PPFilmGrainEffect* filmGrain)
+bool TriStepRenderPostProcess::ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain )
 {
-	if (filmGrain && filmGrain->IsActive())
+	if( filmGrain && filmGrain->IsActive() )
 	{
-		if (filmGrain->IsDirty())
+		if( filmGrain->IsDirty() )
 		{
-			// we only need to update the tonemapping buffer
-			m_tonemappingEffect->StartUpdate();
-			m_tonemappingEffect->SetParameter(BlueSharedString("GrainIntensity"), filmGrain->m_intensity);
-			m_tonemappingEffect->SetOption(BlueSharedString("COLORED_GRAIN_TOGGLE"),
-				BlueSharedString(filmGrain->m_colored ? "COLORED_GRAIN_ENABLED" : "COLORED_GRAIN_DISABLED"));
-			m_tonemappingEffect->SetParameter(BlueSharedString("ColoredGrain"), filmGrain->m_colored ? 1.0f : 0.0f);
-			m_tonemappingEffect->SetParameter(BlueSharedString("GrainColorAmount"), filmGrain->m_colorAmount);
-			m_tonemappingEffect->SetParameter(BlueSharedString("GrainSize"), filmGrain->m_grainSize);
-			m_tonemappingEffect->SetParameter(BlueSharedString("GrainLuminanceExponent"), filmGrain->m_luminanceExponent);
-			m_tonemappingEffect->SetOption(BlueSharedString("FILM_GRAIN_TOGGLE"), BlueSharedString("FILM_GRAIN_ENABLED"));
-			m_tonemappingEffect->EndUpdate();
+			if( !m_grainShader )
+			{
+				m_grainShader.CreateInstance();
+				m_grainShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/FilmGrain.fx" );
+			}
 
-			filmGrain->SetDirty(false);
-			m_filmGrainEnabled = true;
+			m_grainShader->StartUpdate();
+			m_grainShader->SetOption( BlueSharedString( "COLORED_GRAIN_TOGGLE" ),
+				BlueSharedString( filmGrain->m_colored ? "COLORED_GRAIN_ENABLED" : "COLORED_GRAIN_DISABLED" ) );
+			m_grainShader->SetParameter( BlueSharedString( "GrainIntensity" ), filmGrain->m_intensity );
+			m_grainShader->SetParameter( BlueSharedString( "ColoredGrain" ), filmGrain->m_colored ? 1.0f : 0.0f );
+			m_grainShader->SetParameter( BlueSharedString( "GrainColorAmount" ), filmGrain->m_colorAmount );
+			m_grainShader->SetParameter( BlueSharedString( "GrainSize" ), filmGrain->m_grainSize );
+			m_grainShader->SetParameter( BlueSharedString( "GrainLuminanceExponent" ), filmGrain->m_luminanceExponent );
+			
+			m_grainShader->SetParameter( BlueSharedString( "InputTexture" ), m_renderInfo->GetGrainInputBuffer() );
+			m_grainShader->EndUpdate();
+
+			filmGrain->SetDirty( false );
 		}
+
+		return true;
 	}
-	else if (m_filmGrainEnabled)
-	{
-		m_tonemappingEffect->StartUpdate();
-		m_tonemappingEffect->SetOption(BlueSharedString("FILM_GRAIN_TOGGLE"), BlueSharedString("FILM_GRAIN_DISABLED"));
-		m_tonemappingEffect->SetOption(BlueSharedString("COLORED_GRAIN_TOGGLE"), BlueSharedString("COLORED_GRAIN_DISABLED"));
-		m_tonemappingEffect->EndUpdate();
-		m_filmGrainEnabled = false;
-	}
+	
+	m_grainShader = nullptr;
+	return false;
+}
+
+void TriStepRenderPostProcess::RenderFilmGrain( Tr2RenderContext& renderContext, Tr2PPFilmGrainEffect* filmGrain )
+{
+	GPU_REGION( renderContext, "Film grain" );
+
+	renderContext.m_esm.PushRenderTarget();
+	Tr2Renderer::DrawScreenQuad( renderContext, m_grainShader );
+	renderContext.m_esm.PopRenderTarget();
 }
 
 void TriStepRenderPostProcess::ProcessDesaturate(Tr2PPDesaturateEffect* desaturate)
@@ -985,7 +1019,7 @@ void TriStepRenderPostProcess::RenderFog(Tr2RenderContext& renderContext, Tr2PPF
 	// final composite
 	renderContext.m_esm.PushRenderTarget(*m_renderInfo->GetSourceBuffer());
 	Tr2Renderer::DrawScreenQuad( renderContext, m_fogCompositeEffect);
-		renderContext.m_esm.PopRenderTarget();
+	renderContext.m_esm.PopRenderTarget();
 }
 
 bool TriStepRenderPostProcess::ProcessTaa(Tr2PPTaaEffect* taa)

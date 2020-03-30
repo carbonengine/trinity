@@ -27,6 +27,9 @@ Tr2PostProcessRenderInfo::Tr2PostProcessRenderInfo( IRoot* lockobj )
 
 	m_fidelityOutputRT.CreateInstance();
 	m_fidelityOutputRT->m_name = "FidelityFX Output UAV RT";
+
+	m_grainInputRT.CreateInstance();
+	m_grainInputRT->m_name = "FilmGrain input RT";
 }
 
 
@@ -51,6 +54,10 @@ Tr2PostProcessRenderInfo::~Tr2PostProcessRenderInfo()
 	if( m_fidelityOutputRT->IsValid() )
 	{
 		m_fidelityOutputRT->Destroy();
+	}
+	if( m_grainInputRT->IsValid() )
+	{
+		m_grainInputRT->Destroy();
 	}
 
 	if( m_sourceBufferCopy && m_sourceBufferCopy->IsValid() )
@@ -176,4 +183,21 @@ Tr2RenderTarget* Tr2PostProcessRenderInfo::GetFidelityOutputBuffer()
 	}
 
 	return m_fidelityOutputRT;
+}
+
+
+Tr2RenderTarget* Tr2PostProcessRenderInfo::GetGrainInputBuffer()
+{
+	auto source = GetSourceBufferCopy();
+	if( source && !m_grainInputRT->IsValid() )
+	{
+		m_grainInputRT->Create(
+			source->GetWidth(),
+			source->GetHeight(),
+			1,
+			Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM
+		);
+	}
+
+	return m_grainInputRT;
 }
