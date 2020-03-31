@@ -8,7 +8,7 @@
 #include "Tr2PPFidelityFXEffect.h"
 
 Tr2PPFidelityFXEffect::Tr2PPFidelityFXEffect( IRoot* lockobj ) :
-	m_intensity( 1 )
+	m_intensity( 0 )
 {
 }
 
