@@ -3102,6 +3102,7 @@
     <ClInclude Include="Eve\SpaceObject\Children\EveChildBulletStorm.h" />
     <ClInclude Include="Eve\SpaceObject\Children\EveChildCloud.h" />
     <ClInclude Include="Eve\SpaceObject\Children\EveChildContainer.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildEffectPropagator.h" />
     <ClInclude Include="Eve\SpaceObject\Children\EveChildEnvironment.h" />
     <ClInclude Include="Eve\SpaceObject\Children\EveChildExplosion.h" />
     <ClInclude Include="Eve\SpaceObject\Children\EveChildInheritProperties.h" />
@@ -3815,6 +3816,8 @@
     <ClCompile Include="Eve\SpaceObject\Children\EveChildCloud_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\EveChildContainer.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\EveChildContainer_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildEffectPropagator.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildEffectPropagator_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\EveChildEnvironment.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\EveChildEnvironment_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\EveChildExplosion.cpp" />

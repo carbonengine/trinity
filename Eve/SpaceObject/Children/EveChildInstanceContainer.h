@@ -120,11 +120,13 @@ public:
 	// IBlueStructureListNotify
 	void OnStructureListModified( Event event, const void* item, size_t index, IBlueStructureList* list ) override;
 
+	void CreateInstance(const Vector3& scale, const Quaternion& rotation, const Vector3& translation, const int32_t boneIndex = -1);
+	void ClearInstanceList();
+
 protected:
 	void CreateInstances( IEveSpaceObject2* parent );
-	void CreateInstance( const Vector3& scale, const Quaternion& rotation, const Vector3& translation, const int32_t boneIndex = -1);
-
 	void RunOnInstances( std::function<void( IEveSpaceObjectChild* )> func ) const;
+
 protected:
 
 	BlueSharedString m_name;

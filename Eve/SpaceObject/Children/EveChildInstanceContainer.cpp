@@ -210,6 +210,11 @@ void EveChildInstanceContainer::RunOnInstances( std::function<void( IEveSpaceObj
 	}
 }
 
+void EveChildInstanceContainer::ClearInstanceList()
+{
+	m_instances.Clear();
+}
+
 float EveChildInstanceContainer::GetOwnerMaxSpeed() const
 {
 	return m_ownerMaxSpeed;
