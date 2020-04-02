@@ -85,13 +85,7 @@ void Tr2PostProcessRenderInfo::Setup()
 
 	if( !m_sourceBufferCopy->IsValid() )
 	{
-		m_sourceBufferCopy->Create(
-			uint32_t( float( m_sourceBuffer->GetWidth() ) ),
-			uint32_t( float( m_sourceBuffer->GetHeight() ) ),
-			1,
-			m_sourceBuffer->GetFormat(),
-			1,
-			0 );
+		CopySourceTo( m_sourceBufferCopy, 1.0f );
 	}
 
 	if( !m_rt1->IsValid() )
