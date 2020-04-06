@@ -50,9 +50,9 @@ BLUE_REGISTER_ENUM_EX( "EveSOFDataLogoSetType", EveSOFDataLogoSet::LogoType, Eve
 Be::VarChooser EveSOFDataPlaneSetBlinkTypeChooser [] =
 {
 	{ "Blink", BeCast( EveSOFDataBlinkType::TYPE_BLINK ), "Regular blink" },
-	{ "Fade in", BeCast( EveSOFDataBlinkType::TYPE_FADE_IN ), "Fade in" },
-	{ "Fade out", BeCast( EveSOFDataBlinkType::TYPE_FADE_OUT ), "Fade out" },
-	{ "Cycle (fade in/out)", BeCast( EveSOFDataBlinkType::TYPE_CYCLE ), "Cycle (fade in/out)" },
+	{ "FadeIn", BeCast( EveSOFDataBlinkType::TYPE_FADE_IN ), "Fade in" },
+	{ "FadeOut", BeCast( EveSOFDataBlinkType::TYPE_FADE_OUT ), "Fade out" },
+	{ "Cycle", BeCast( EveSOFDataBlinkType::TYPE_CYCLE ), "Cycle (fade in/out)" },
 	{ 0 }
 };
 BLUE_REGISTER_ENUM_EX( "EveSOFDataBlinkType", EveSOFDataBlinkType::BlinkType, EveSOFDataPlaneSetBlinkTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
