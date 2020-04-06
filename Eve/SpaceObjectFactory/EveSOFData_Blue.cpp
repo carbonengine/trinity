@@ -47,6 +47,15 @@ Be::VarChooser EveSOFDataLogoSetTypeChooser[] =
 };
 BLUE_REGISTER_ENUM_EX( "EveSOFDataLogoSetType", EveSOFDataLogoSet::LogoType, EveSOFDataLogoSetTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
+Be::VarChooser EveSOFDataPlaneSetBlinkTypeChooser [] =
+{
+	{ "Blink", BeCast( EveSOFDataBlinkType::TYPE_BLINK ), "Regular blink" },
+	{ "Fade in", BeCast( EveSOFDataBlinkType::TYPE_FADE_IN ), "Fade in" },
+	{ "Fade out", BeCast( EveSOFDataBlinkType::TYPE_FADE_OUT ), "Fade out" },
+	{ "Cycle (fade in/out)", BeCast( EveSOFDataBlinkType::TYPE_CYCLE ), "Cycle (fade in/out)" },
+	{ 0 }
+};
+BLUE_REGISTER_ENUM_EX( "EveSOFDataBlinkType", EveSOFDataBlinkType::BlinkType, EveSOFDataPlaneSetBlinkTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 BLUE_DEFINE( EveSOFDataAreaMaterial );
 const Be::ClassInfo* EveSOFDataAreaMaterial::ExposeToBlue()
@@ -272,7 +281,11 @@ const Be::ClassInfo* EveSOFDataHullPlaneSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "groupIndex", m_groupIndex, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "maskMapAtlasIndex", m_maskMapAtlasIndex, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "blinkData", m_blinkData, "rate (Hz), phase (0.-1.), duty cycle (0.-1), mode-> [0:blink - 1:fadeIn - 2:fadeOut - 3:Cycle]", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "rate", m_rate, "rate (Hz)", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "phase", m_phase, "phase (0.-1.)", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "dutyCycle", m_dutyCycle, "duty cycle (0.0 - 1.0) - blink on/off ratio (blinkMode:0 only)", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "blinkMode", m_blinkMode, "", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFDataPlaneSetBlinkTypeChooser )
+
 	EXPOSURE_END()
 }
 
@@ -1024,6 +1037,30 @@ const Be::ClassInfo* EveSOFDataLogoSet::ExposeToBlue()
 		MAP_ATTRIBUTE( EveSOFDataLogoSetTypeChooser[TYPE_MARKING_01].mKey, m_logos[TYPE_MARKING_01], ":jessica-group:Logos", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( EveSOFDataLogoSetTypeChooser[TYPE_MARKING_02].mKey, m_logos[TYPE_MARKING_02], ":jessica-group:Logos", Be::READWRITE | Be::PERSIST )
 		
+		EXPOSURE_END()
+}
+
+
+BLUE_DEFINE( EveSOFDataBlink );
+const Be::ClassInfo* EveSOFDataBlink::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( EveSOFDataBlink, "" )
+		MAP_INTERFACE( EveSOFDataBlink )
+		EXPOSURE_END()
+}
+
+
+BLUE_DEFINE( EveSOFDataBlinkType );
+const Be::ClassInfo* EveSOFDataBlinkType::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( EveSOFDataBlinkType, "" )
+		MAP_INTERFACE( EveSOFDataBlinkType )
+
+		MAP_ATTRIBUTE( EveSOFDataPlaneSetBlinkTypeChooser[TYPE_BLINK].mKey, m_blinkType[TYPE_BLINK], ":jessica-group:Blink", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataPlaneSetBlinkTypeChooser[TYPE_FADE_IN].mKey, m_blinkType[TYPE_FADE_IN], ":jessica-group:Blink", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataPlaneSetBlinkTypeChooser[TYPE_FADE_OUT].mKey, m_blinkType[TYPE_FADE_OUT], ":jessica-group:Blink", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataPlaneSetBlinkTypeChooser[TYPE_CYCLE].mKey, m_blinkType[TYPE_CYCLE], ":jessica-group:Blink", Be::READWRITE | Be::PERSIST )
+
 		EXPOSURE_END()
 }
 

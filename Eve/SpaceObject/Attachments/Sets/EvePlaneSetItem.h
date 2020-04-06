@@ -47,9 +47,8 @@ public:
 	int m_boneIndex;
 	// supports atlasing
 	uint32_t m_maskAtlasID;
+	// Blink data - [rate, phase, dutyCycle, blinkMode]
 	Vector4 m_blinkData;
-
-	
 };
 
 TYPEDEF_BLUECLASS( EvePlaneSetItem );

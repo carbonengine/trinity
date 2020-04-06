@@ -50,6 +50,18 @@ EveSOFDataLogoSet::EveSOFDataLogoSet( IRoot* lockobj )
 	}
 }
 
+EveSOFDataBlink::EveSOFDataBlink( IRoot* lockobj ) 
+{
+}
+
+EveSOFDataBlinkType::EveSOFDataBlinkType( IRoot* lockobj )
+{
+	for ( uint32_t i = 0; i < TYPE_CYCLE; ++i )
+	{
+		m_blinkType[i] = EveSOFDataBlinkPtr(); 
+	}
+}
+
 EveSOFDataParameter::EveSOFDataParameter( IRoot* lockobj ) :
 	m_value( 0.f, 0.f, 0.f, 0.f )
 {}
@@ -420,7 +432,11 @@ EveSOFDataHullPlaneSetItem::EveSOFDataHullPlaneSetItem( IRoot* lockobj ) :
 	m_boneIndex( -1 ),
 	m_groupIndex( -1 ),
 	m_maskMapAtlasIndex( 0 ),
-	m_blinkData( 1.f, 0.f, 1.f, 0.f )
+	// Blink data
+	m_rate( 1.f ),
+	m_phase( 0.f ),
+	m_dutyCycle( 1.f ),
+	m_blinkMode( 0 )
 {
 }
 

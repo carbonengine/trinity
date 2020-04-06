@@ -872,7 +872,7 @@ void EveSOF::SetupPlaneSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) co
 				planeSetItem->m_layer2Scroll = psiit->layer2Scroll;
 				planeSetItem->m_boneIndex = psiit->boneIndex;
 				planeSetItem->m_maskAtlasID = psiit->maskMapAtlasIndex;
-				planeSetItem->m_blinkData = psiit->blinkData;
+				planeSetItem->m_blinkData = Vector4( psiit->rate, psiit->phase, psiit->dutyCycle, (float)psiit->blinkMode );
 
 				// groupindex allows to overwrite color
 				const EveSOFDataMgr::FactionPlaneSetColorData* factionalData = dna->GetFactionPlaneSetData( psiit->groupIndex );

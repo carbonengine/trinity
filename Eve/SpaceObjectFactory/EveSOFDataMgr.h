@@ -122,7 +122,9 @@ public:
 		Color color;
 		Vector4 layer1Transform, layer2Transform, layer1Scroll, layer2Scroll;
 		int boneIndex, groupIndex, maskMapAtlasIndex;
-		Vector4 blinkData;
+		// BlinkData - combined into a float4 in the vertex buffer;
+		float rate, phase, dutyCycle;
+		int blinkMode; // selector
 	};
 
 	struct HullPlaneSetData

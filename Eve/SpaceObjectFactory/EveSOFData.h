@@ -183,6 +183,43 @@ public:
 };
 TYPEDEF_BLUECLASS( EveSOFDataLogoSet );
 
+/////////////////////////////////////////////
+
+BLUE_CLASS( EveSOFDataBlink ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataBlink( IRoot* lockobj = NULL );
+	~EveSOFDataBlink() {}
+
+	//PEveSOFDataTextureVector m_textures;
+};
+TYPEDEF_BLUECLASS( EveSOFDataBlink );
+
+
+BLUE_CLASS( EveSOFDataBlinkType ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataBlinkType( IRoot* lockobj = NULL );
+	~EveSOFDataBlinkType() {}
+
+	// color type
+	enum BlinkType
+	{
+		TYPE_BLINK = 0,
+		TYPE_FADE_IN,
+		TYPE_FADE_OUT,
+		TYPE_CYCLE
+	};
+
+	// blink data
+	EveSOFDataBlinkPtr m_blinkType[TYPE_CYCLE];
+};
+TYPEDEF_BLUECLASS( EveSOFDataBlinkType );
+
 BLUE_CLASS( EveSOFDataAreaMaterial ) :
 	public IRoot
 {
@@ -401,7 +438,9 @@ public:
 	Color m_color;
 	Vector4 m_layer1Transform, m_layer2Transform, m_layer1Scroll, m_layer2Scroll;
 	int m_boneIndex, m_groupIndex, m_maskMapAtlasIndex;
-	Vector4 m_blinkData;
+	//Vector4 m_blinkData;
+	float m_rate, m_phase, m_dutyCycle; 
+	int m_blinkMode;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullPlaneSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullPlaneSetItem );
