@@ -727,7 +727,7 @@ bool TriStepRenderPostProcess::ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain
 {
 	if( filmGrain && filmGrain->IsActive() )
 	{
-		if( filmGrain->IsDirty() )
+		if( filmGrain->IsDirty() || !m_grainShader )
 		{
 			if( !m_grainShader )
 			{
