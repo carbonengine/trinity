@@ -3,6 +3,7 @@
 #include "TriFloat.h"
 
 BLUE_DEFINE( EveStretch );
+BLUE_DEFINE_INTERFACE( ITr2DebugRenderable );
 
 const Be::ClassInfo* EveStretch::ExposeToBlue()
 {

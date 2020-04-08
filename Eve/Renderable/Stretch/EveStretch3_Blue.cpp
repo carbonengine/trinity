@@ -8,7 +8,6 @@
 #include "EveStretch3.h"
 
 BLUE_DEFINE( EveStretch3 );
-BLUE_DEFINE_INTERFACE( ITr2DebugRenderable );
 
 const Be::ClassInfo* EveStretch3::ExposeToBlue()
 {
@@ -40,7 +39,7 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 			"off update.",
 			Be::READWRITE | Be::PERSIST
 		)
-		
+
 		MAP_ATTRIBUTE
 		(
 			"update",
@@ -50,18 +49,18 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 		)
 
 		MAP_ATTRIBUTE
-		( 
-			"source",        
+		(
+			"source",
 			m_source,
-			"", 
+			"",
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY
-		)		
+		)
 
 		MAP_ATTRIBUTE
-		( 
-			"dest",        
+		(
+			"dest",
 			m_dest,
-			"", 
+			"",
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
@@ -95,27 +94,27 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 			m_destSpaceObject,
 			"",
 			Be::READWRITE
-		)		
+		)
 
 		MAP_ATTRIBUTE
-		( 
-			"sourceObject",        
+		(
+			"sourceObject",
 			m_sourceObject,
-			"Object to be rendered at the source", 
+			"Object to be rendered at the source",
 			Be::READWRITE | Be::PERSIST
 		)
 		MAP_ATTRIBUTE
-		( 
-			"destObject",        
+		(
+			"destObject",
 			m_destObject,
-			"Object to be rendered at the destination", 
+			"Object to be rendered at the destination",
 			Be::READWRITE | Be::PERSIST
 		)
 		MAP_ATTRIBUTE
-		( 
-			"stretchObject",        
+		(
+			"stretchObject",
 			m_stretchObject,
-			"Object to be stretched from source to destination", 
+			"Object to be stretched from source to destination",
 			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
@@ -155,13 +154,13 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 
 
 		MAP_ATTRIBUTE
-		( 
-			"curveSets", 
-			m_curveSets, 
-			"Curvesets for animating things", 
+		(
+			"curveSets",
+			m_curveSets,
+			"Curvesets for animating things",
 			Be::READ | Be::PERSIST
 		)
-		
+
 		MAP_ATTRIBUTE
 		(
 			"dynamicBindings",
@@ -176,8 +175,8 @@ const Be::ClassInfo* EveStretch3::ExposeToBlue()
 			m_length,
 			"Distance between the source and the destination",
 			Be::READ
-		) 
-		
+		)
+
 		MAP_METHOD_AND_WRAP(
 			"StartFiring",
 			StartFiring,
