@@ -1868,7 +1868,6 @@
     <ClInclude Include="include\Tr2ConstantBufferAL.h" />
     <ClInclude Include="include\Tr2CubemapFace.h" />
     <ClInclude Include="include\Tr2FenceAL.h" />
-    <ClInclude Include="include\Tr2GpuBufferAL.h" />
     <ClInclude Include="include\Tr2GpuTimerAL.h" />
     <ClInclude Include="include\Tr2OcclusionQueryAL.h" />
     <ClInclude Include="include\Tr2PixelFormat.h" />
