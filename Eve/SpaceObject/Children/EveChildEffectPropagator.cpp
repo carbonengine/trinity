@@ -342,7 +342,10 @@ void EveChildEffectPropagator::ProcessLocators( IEveSpaceObject2* parent )
 
 void EveChildEffectPropagator::GetLights( Tr2LightManager& lightManager ) const
 {
-	m_effect->GetLights( lightManager );
+	if (m_effect != nullptr)
+	{
+		m_effect->GetLights(lightManager);
+	}
 }
 
 // --------------------------------------------------------------------------------------

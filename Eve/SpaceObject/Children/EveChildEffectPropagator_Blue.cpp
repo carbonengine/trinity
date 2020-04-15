@@ -60,7 +60,7 @@ const Be::ClassInfo* EveChildEffectPropagator::ExposeToBlue()
 		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
 	
 		MAP_ATTRIBUTE( "trigger", m_trigger, "reset and start", Be::READWRITE )
-		MAP_ATTRIBUTE( "triggerSphereScalarMulti", m_triggerSphereScalarMulti, "multiplied by the scalar curve\n:jessica-group: ExternalLocatorSet", Be::READ )
+		MAP_ATTRIBUTE( "triggerSphereScalarMulti", m_triggerSphereScalarMulti, "multiplied by the scalar curve", Be::READ )
 		
 		MAP_ATTRIBUTE( "completeness", m_completeness, "range: [0:1] ~to use if you don't want 100% of a Locset. Doesn't work for randomSpread\n:jessica-group: SpawnSettings", Be::READWRITE | Be::PERSIST |Be::NOTIFY )
 		MAP_ATTRIBUTE( "triggerSphereOffset", m_triggerSphereOffset, "Centerpoint of the trigger sphere\n:jessica-group: SpawnSettings", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
