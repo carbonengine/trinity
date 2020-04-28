@@ -1,13 +1,10 @@
 
 class Platform(object):
-    DX9 = 0
-    DX11 = 1
-    GLES2 = 3
-    ORBIS = 4
-    GL4 = 6
+    DX9 = 1
+    DX11 = 2
+    DX12 = 6
 
-PLATFORM_NAMES = {Platform.DX9: 'dx9', Platform.DX11: 'dx11', Platform.GLES2: 'gles2', Platform.ORBIS: 'orbis',
-                 Platform.GL4: 'gl4'}
+PLATFORM_NAMES = {Platform.DX9: 'dx9', Platform.DX11: 'dx11', Platform.DX12: 'dx12'}
 
 
 class ShaderModel(object):
