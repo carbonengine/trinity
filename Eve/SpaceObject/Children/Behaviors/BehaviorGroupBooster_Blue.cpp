@@ -26,6 +26,7 @@ const Be::ClassInfo* BehaviorGroupBooster::ExposeToBlue()
 		MAP_ATTRIBUTE( "haloFlareEffect", m_haloFlareEffect, "The effect for the halo flare. \n:jessica-group: Halo Flare", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "haloFlareOffset", m_haloFlareOffset, "The offset for the halo flare. \n:jessica-group: Halo Flare", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "haloFlareScale", m_haloFlareScale, "The scale for the halo flare. \n:jessica-group: Halo Flare", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "haloFlareRotation", m_haloFlareRotation, "The rotation for the halo flare. \n:jessica-group: Halo Flare", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "haloFlareBrightness", m_haloFlareBrightness, "The brightness for the halo flare \n:jessica-group: Halo Flare", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "haloFlareColor", m_haloFlareColor, "The color for the halo flare. \n:jessica-group: Halo Flare", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		
@@ -41,8 +42,6 @@ const Be::ClassInfo* BehaviorGroupBooster::ExposeToBlue()
 		MAP_ATTRIBUTE( "displayBoosters", m_displayBoosters, "Should the boosters be displayed \njessica-group: Debug", Be::READWRITE )
 		MAP_ATTRIBUTE( "displayHazeFlare", m_displayHazeFlare, "Should the haze flare be displayed \njessica-group: Debug", Be::READWRITE  )
 		MAP_ATTRIBUTE( "displayAmbientFlare", m_displayAmbientFlare, "Should the ambient flare be displayed \njessica-group: Debug", Be::READWRITE )
-
-		MAP_METHOD_AND_WRAP( "InitializeEffects", InitializeEffect, "Initializes the booster and quad effects to something that works")
 
 		EXPOSURE_END()
 };

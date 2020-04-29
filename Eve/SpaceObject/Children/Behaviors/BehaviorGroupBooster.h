@@ -36,30 +36,46 @@ public:
 	struct Quad
 	{
 		Quad() {}
-		Quad( const Matrix& parentTransform, const Matrix& localTransform, const Color& color, float brightness )
+
+		Quad( const Matrix& parentTransform, const Matrix& localTransform, const Color& color, float brightness )			
 		{
 			m_parentTransform0 = Vector4( parentTransform._11, parentTransform._21, parentTransform._31, parentTransform._41 );
 			m_parentTransform1 = Vector4( parentTransform._12, parentTransform._22, parentTransform._32, parentTransform._42 );
 			m_parentTransform2 = Vector4( parentTransform._13, parentTransform._23, parentTransform._33, parentTransform._43 );
 
-			m_localTransform0 = Vector4_16( localTransform._11, localTransform._21, localTransform._31, localTransform._41 );
-			m_localTransform1 = Vector4_16( localTransform._12, localTransform._22, localTransform._32, localTransform._42 );
-			m_localTransform2 = Vector4_16( localTransform._13, localTransform._23, localTransform._33, localTransform._43 );
+			m_localTransform0[0] = Float_16( localTransform._11 );
+			m_localTransform0[1] = Float_16( localTransform._21 );
+			m_localTransform0[2] = Float_16( localTransform._31 );
+			m_localTransform0[3] = Float_16( localTransform._41 );
+
+			m_localTransform1[0] = Float_16( localTransform._12 );
+			m_localTransform1[1] = Float_16( localTransform._22 );
+			m_localTransform1[2] = Float_16( localTransform._32 );
+			m_localTransform1[3] = Float_16( localTransform._42 );
+
+			m_localTransform2[0] = Float_16( localTransform._13 );
+			m_localTransform2[1] = Float_16( localTransform._23 );
+			m_localTransform2[2] = Float_16( localTransform._33 );
+			m_localTransform2[3] = Float_16( localTransform._43 );
 			
-			m_color = Vector4_16( color );
-			m_brightness = Vector2_16( brightness, 0.0 );			
+			m_color[0] = Float_16( color.r );
+			m_color[1] = Float_16( color.g );
+			m_color[2] = Float_16( color.b );
+			m_color[3] = Float_16( color.a );
+			m_brightness[0] = Float_16( brightness );
+			m_brightness[1] = Float_16( 0.f );
 		}
 
 		Vector4 m_parentTransform0;
 		Vector4 m_parentTransform1;
 		Vector4 m_parentTransform2;
 
-		Vector4_16 m_localTransform0;
-		Vector4_16 m_localTransform1;
-		Vector4_16 m_localTransform2;
+		Float_16 m_localTransform0[4];
+		Float_16 m_localTransform1[4];
+		Float_16 m_localTransform2[4];
 
-		Vector4_16 m_color;
-		Vector2_16 m_brightness;
+		Float_16 m_color[4];
+		Float_16 m_brightness[2];
 	};
 
 	EXPOSE_TO_BLUE();
@@ -75,7 +91,6 @@ public:
 	Tr2EffectPtr GetEffect();
 	unsigned int GetVertexDeclaration();
 	void RebuildFlareBuffer( unsigned int count );
-	void InitializeEffect();
 	
 	void Draw( Tr2RenderContext& renderContext, Tr2BufferAL* instanceBuffer, unsigned int offset, unsigned int stride, unsigned int count );
 
@@ -97,8 +112,6 @@ public:
 	unsigned int GetAtlasIndex1() const;
 
 private:
-	Quad CreateQuad( const Matrix& parentTransform, const Matrix& localTransform, const Color& color, float brightness );
-
 	Tr2EffectPtr CreateBoosterEffect( const BlueSharedString& lodOption );
 	Tr2EffectPtr CreateFlareEffect();
 	void SetupBoosterEffect( Tr2EffectPtr effect );
@@ -119,6 +132,7 @@ private:
 	
 	Vector3 m_haloFlareOffset;
 	Vector3 m_haloFlareScale;
+	Quaternion m_haloFlareRotation;
 	float m_haloFlareBrightness;
 	Color m_haloFlareColor;
 	EveChildModifierHaloPtr m_haloModifier;
@@ -145,9 +159,6 @@ private:
 	bool m_displayBoosters;
 	bool m_displayHazeFlare;
 	bool m_displayAmbientFlare;
-	
-	// Continiously re-register effect (for editing in Jessica)
-	bool m_editMode;
 };
 
 TYPEDEF_BLUECLASS( BehaviorGroupBooster );

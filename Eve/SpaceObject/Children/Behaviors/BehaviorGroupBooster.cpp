@@ -92,6 +92,7 @@ BehaviorGroupBooster::BehaviorGroupBooster( IRoot* lockobj ) :
 	m_haloFlareHash( 0 ),
 	m_haloFlareOffset( 0, 0, 0 ),
 	m_haloFlareScale( 1, 1, 1 ),
+	m_haloFlareRotation( 0, 0, 0, 1 ),
 	m_haloFlareBrightness( 0 ),
 	m_haloFlareColor( 1, 1, 1, 1 ),
 	m_haloMatrix( IdentityMatrix() ),
@@ -109,15 +110,10 @@ BehaviorGroupBooster::BehaviorGroupBooster( IRoot* lockobj ) :
 	m_haloFlares( "BehaviorGroupBooster::m_haloFlares" ),
 	m_ambientFlares( "BehaviorGroupBooster::m_ambientFlares" )
 {
-	m_haloModifier.CreateInstance();
 }
+
 
 bool BehaviorGroupBooster::Initialize()
-{
-	return true;
-}
-
-void BehaviorGroupBooster::InitializeEffect()
 {
 	if( m_boosterEffect == nullptr )
 	{
@@ -131,7 +127,12 @@ void BehaviorGroupBooster::InitializeEffect()
 	{
 		m_haloFlareEffect = CreateFlareEffect();
 	}
+	m_haloModifier.CreateInstance();
+
+
+	return true;
 }
+
 
 bool BehaviorGroupBooster::OnModified( Be::Var* value )
 {
@@ -149,18 +150,17 @@ bool BehaviorGroupBooster::OnModified( Be::Var* value )
 void BehaviorGroupBooster::SetupQuads()
 {
 	auto ambientTransform = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), IdentityQuaternion(), m_ambientFlareOffset );
-	auto haloTransform = ScalingMatrix( m_haloFlareScale );
+	auto haloTransform = TransformationMatrix( m_haloFlareScale, IdentityQuaternion(), Vector3( 0.f, 0.f, 0.f ) );
 
-	Quad ambientFlare = Quad( IdentityMatrix(), ambientTransform, m_ambientFlareColor, 0.0f );
-	Quad haloFlare= Quad( IdentityMatrix(), haloTransform, m_haloFlareColor, 0.0f );
+	Quad ambientFlare( IdentityMatrix(), ambientTransform, m_ambientFlareColor, 0.0f );
+	Quad haloFlare( IdentityMatrix(), haloTransform, m_haloFlareColor, 0.0f );
 
-	Quaternion haloRotation = Quaternion( 1, 0, 0, 0 ); // This is so the halo is facing the camera
-	m_haloMatrix = TransformationMatrix( Vector3( 1, 1, 1 ), haloRotation, m_haloFlareOffset );
+	m_haloMatrix = TransformationMatrix( Vector3( 1, 1, 1 ), m_haloFlareRotation, m_haloFlareOffset );
 
 	for( unsigned int i = 0; i < m_flareCount; ++i )
 	{
-		m_haloFlares[i] = Quad( haloFlare );
-		m_ambientFlares[i] = Quad( ambientFlare );
+		m_haloFlares[i] = Quad(haloFlare);
+		m_ambientFlares[i] = Quad(ambientFlare);
 	}
 }
 
@@ -271,9 +271,6 @@ void BehaviorGroupBooster::CreateBuffer()
 void BehaviorGroupBooster::RebuildFlareBuffer( unsigned int count )
 {
 	m_flareCount = count;
-	
-	m_haloFlares.clear();
-	m_ambientFlares.clear();
 
 	m_haloFlares.resize( count );
 	m_ambientFlares.resize( count );
@@ -360,12 +357,12 @@ void BehaviorGroupBooster::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr
 	
 	if( !m_haloFlares.empty() && m_haloFlareEffect && m_displayHazeFlare)
 	{
-		quadRenderer.AddQuads( m_haloFlareHash, &m_haloFlares[0], m_haloFlares.size() );
+		quadRenderer.AddQuads( m_haloFlareHash, &m_haloFlares[0], m_flareCount );
 	}
 
 	if( !m_ambientFlares.empty() && m_ambientFlareEffect && m_displayAmbientFlare )
 	{
-		quadRenderer.AddQuads( m_ambientFlareHash, &m_ambientFlares[0], m_ambientFlares.size() );
+		quadRenderer.AddQuads( m_ambientFlareHash, &m_ambientFlares[0], m_flareCount );
 	}
 }
 
@@ -379,14 +376,12 @@ void BehaviorGroupBooster::AddFlare( Matrix& agentTransform, float lod, float in
 	if( m_haloFlareEffect )
 	{
 		auto& q = m_haloFlares[agentIndex];
-
-		auto haloMatrix = m_haloMatrix * agentTransform;
-		haloMatrix = m_haloModifier->ApplyTransform( haloMatrix, 0, nullptr );
+		auto haloMatrix = m_haloModifier->ApplyTransform( m_haloMatrix * agentTransform, 0, nullptr );
 		float haloModification = ( 1.0f + lod ) * ( 1.0f + lod ) * ( lod - 1.0f ) * ( lod - 1.0f );
 		haloModification = max( 0.0f, haloModification );
 		float scaledBrightness = ( 0.1f + 0.9f * intensity ) * m_haloFlareBrightness * haloModification;
 
-		q.m_brightness.x = Float_16( scaledBrightness );
+		q.m_brightness[0] = Float_16( scaledBrightness );
 		q.m_parentTransform0 = Vector4( haloMatrix._11, haloMatrix._21, haloMatrix._31, haloMatrix._41 );
 		q.m_parentTransform1 = Vector4( haloMatrix._12, haloMatrix._22, haloMatrix._32, haloMatrix._42 );
 		q.m_parentTransform2 = Vector4( haloMatrix._13, haloMatrix._23, haloMatrix._33, haloMatrix._43 );
@@ -404,20 +399,20 @@ void BehaviorGroupBooster::AddFlare( Matrix& agentTransform, float lod, float in
 		// the further away from the camera, the closer the flare is to the center of the agent
 		Vector3 modOffset = mod * m_ambientFlareOffset; 
 
-		q.m_brightness.x = Float_16( scaledBrightness );
+		q.m_brightness[0] = Float_16( scaledBrightness  );
 		q.m_parentTransform0 = Vector4( agentTransform._11, agentTransform._21, agentTransform._31, agentTransform._41 );
 		q.m_parentTransform1 = Vector4( agentTransform._12, agentTransform._22, agentTransform._32, agentTransform._42 );
 		q.m_parentTransform2 = Vector4( agentTransform._13, agentTransform._23, agentTransform._33, agentTransform._43 );
 
 		// adjust the scale
-		q.m_localTransform0.x = Float_16( nearScale.x + farScale );
-		q.m_localTransform1.y = Float_16( nearScale.y + farScale );
-		q.m_localTransform2.z = Float_16( nearScale.z + farScale );
+		q.m_localTransform0[0] = Float_16( nearScale.x + farScale );
+		q.m_localTransform1[1] = Float_16( nearScale.y + farScale );
+		q.m_localTransform2[2] = Float_16( nearScale.z + farScale );
 
 		// adjust the offset
-		q.m_localTransform0.z = Float_16( modOffset.x );
-		q.m_localTransform1.z = Float_16( modOffset.y );
-		q.m_localTransform2.z = Float_16( modOffset.z );
+		q.m_localTransform0[3] = Float_16( modOffset.x );
+		q.m_localTransform1[3] = Float_16( modOffset.y );
+		q.m_localTransform2[3] = Float_16( modOffset.z );
 	}
 }
 

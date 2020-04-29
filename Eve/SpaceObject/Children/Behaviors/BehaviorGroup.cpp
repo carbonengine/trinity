@@ -623,12 +623,10 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, Matrix& parentWorldLocation
 		if( agent->isVisible )
 		{
 			Matrix meshData = Matrix( zeroMatrix );
-
-			LODmod = ( 1 - LOD ) * ( 0.5f + ( 1 - LOD ) * 0.5f );
-
 			// agent mesh
 			if( LOD < 0.75f )
 			{
+				LODmod = ( 1 - LOD ) * ( 0.5f + ( 1 - LOD ) * 0.5f );
 				Vector3 meshScale = m_scale * Vector3( LODmod, LODmod, LODmod );
 				meshData = Transpose( ScalingMatrix( meshScale ) * agentTransform );
 			}
@@ -636,9 +634,9 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, Matrix& parentWorldLocation
 			data += 12 * sizeof( float );
 
 			// boosters
-			Vector4 boosterPos = Vector4(0, 0, 0, 0);
-			Quaternion boosterQuaternion = Quaternion(0, 0, 0, 1);
-			Vector4 boosterInfo = Vector4(0, 0, 0, 0);
+			Vector4 boosterPos = Vector4();
+			Quaternion boosterQuaternion = Quaternion();
+			Vector4 boosterInfo = Vector4();
 			if( m_booster != nullptr )
 			{
 				boosterPos.GetXYZ() = TransformCoord( m_booster->GetOffset() * LODmod, agentTransform );
