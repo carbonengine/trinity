@@ -407,7 +407,7 @@ void EveChildLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	
 	if( m_lineSet )
 	{
-		m_lineSet->UpdateVisibility( frustum, parentTransform * m_worldTransform );
+		m_lineSet->UpdateVisibility( frustum, m_worldTransform );
 	}
 }
 
