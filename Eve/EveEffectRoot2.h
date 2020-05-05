@@ -137,9 +137,8 @@ public:
 
 	void SetTransform( const Matrix& transform );
 
-
-
 	void FreezeHighDetailMesh();
+	void UpdateControllers();
 
 private:
 	void UpdateWorldTransform( Be::Time time );
@@ -172,7 +171,7 @@ protected:
 	std::string m_name;
 	bool m_display;
 	PIEveSpaceObjectChildVector m_effectChildren;
-	
+
 	Vector3 m_scaling;
 	Quaternion m_rotation;
 	Vector3 m_translation;

@@ -130,10 +130,7 @@ void EveEffectRoot2::UpdateSyncronous( EveUpdateContext& updateContext )
 		}
 	}
 
-	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
-	{
-		( *it )->Update();
-	}
+	UpdateControllers();
 }
 
 void EveEffectRoot2::UpdateAsyncronous( EveUpdateContext& updateContext ) 
@@ -225,6 +222,14 @@ void EveEffectRoot2::GetRenderables( std::vector<ITr2Renderable*>& renderables, 
 	}
 }
 
+
+void EveEffectRoot2::UpdateControllers() 
+{
+	for ( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
+	{
+		(*it)->Update();
+	}
+}
 
 bool EveEffectRoot2::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 { 
