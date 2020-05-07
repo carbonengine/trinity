@@ -72,9 +72,6 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 			}
 		}
 
-		Matrix targetWorldTransform;
-		m_target->GetLocalToWorldTransform( targetWorldTransform );
-
 		// Want to keep this updated because the ship might be moving (when docking)
 		if( m_sortedLocators )
 		{

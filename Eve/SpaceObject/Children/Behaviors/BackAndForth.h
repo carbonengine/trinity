@@ -11,13 +11,15 @@ struct BackAndForthData
 		locatorTarget( 0, 0, 0 ),
 		seek( true ),
 		deliver( false ),
-		arrived( true )
+		arrived( true ),
+		timePassed( 0.f )
 	{}
 
 	Vector3 locatorTarget;
 	bool seek;
 	bool deliver;
 	bool arrived;
+	float timePassed;
 };
 
 BLUE_CLASS( BackAndForth ) :
@@ -35,11 +37,15 @@ public:
 	                                               BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius);
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation);
+
 private:
 	float m_arrivedRadius;
 	float m_slowDownRadius;
 	int m_rand;
 	float m_backAndForthWeight;
+	float m_seconds;
+
+	IBehavior* m_fxBehavior;
 
 	//Locators
 	const LocatorStructureList* GetLocatorsForSet( const BlueSharedString& setName ) const;

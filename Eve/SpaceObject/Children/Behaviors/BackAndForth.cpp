@@ -9,7 +9,9 @@ BackAndForth::BackAndForth( IRoot* lockobj ) :
 	PARENTLOCK( m_locatorSets ),
 	m_arrivedRadius( 50.f ),
 	m_slowDownRadius( 200.f ),
-	m_backAndForthWeight( 100.f )
+	m_backAndForthWeight( 100.f ),
+	m_seconds( 0.25f ),
+	m_fxBehavior( nullptr )
 {
 }
 
@@ -30,13 +32,18 @@ void BackAndForth::InitializeScratch( void* scratchMemory )
 std::vector<Vector3> BackAndForth::CalculateBehavior(std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime,
                                                      BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius)
 {	
+	if( m_fxBehavior == nullptr )
+	{
+		m_fxBehavior = group.GetBehaviorByName( "PlayFX" );
+	}
+
 	auto data = static_cast<BackAndForthData*>( scratchData );
 
-	for (auto agent = agents.begin(); agent != agents.end(); ++agent, data++ )
+	for( auto agent = agents.begin(); agent != agents.end(); ++agent, ++data )
 	{
-		if (data->arrived)
+		if( data->arrived )
 		{
-			if (data->seek)
+			if( data->seek )
 			{
 				//Get all locators under the "seek" locatorSet
 				auto seekLocators = GetLocatorsForSet( SEEK_LOCATOR_SET_NAME );
@@ -59,28 +66,50 @@ std::vector<Vector3> BackAndForth::CalculateBehavior(std::vector<DroneAgent>& ag
 			}
 			data->arrived = false;
 		}
-		Vector3 target = data->locatorTarget - agent->position;
-		float distance = Length( target );
-		target = Normalize( target );
+
+		Matrix worldTransform = system.GetWorldTransform();
+		Vector3 agentPositionWS = XMVector3TransformCoord( agent->position, worldTransform );
+
+		Vector3 desiredVelocity = data->locatorTarget - agentPositionWS;
+		float distance = Length( desiredVelocity );
+		desiredVelocity = Normalize( desiredVelocity );
+		static const Vector3 zAxis( 0.f, 1.f, 0.f );
 
 		//If we are approaching the target
-		if (distance < m_slowDownRadius)
+		if( distance < m_slowDownRadius )
 		{
 			// make the agent slow down before arriving at target
-			target = target * m_backAndForthWeight * (distance / m_slowDownRadius);
+			desiredVelocity = desiredVelocity * m_backAndForthWeight * ( distance / m_slowDownRadius );
+
+			// Set the rotation of the drone
+			Quaternion newRotation;
+			auto invDir = Normalize( data->locatorTarget - agentPositionWS );
+			TriQuaternionRotationArc( &newRotation, &zAxis, &invDir );
+			agent->rotation = newRotation;
+			data->timePassed = 0.f;
+			
+			if( !agent->playFX && m_fxBehavior != nullptr )
+			{
+				agent->target = data->locatorTarget;
+				agent->fxStartTime = BeOS->GetActualTime();
+				agent->playFX = true;
+			}
 
 			//If the agent has arrived to the target, then switch targets
-			if (distance < m_arrivedRadius)
+			if( distance < m_arrivedRadius )
 			{
 				std::swap( data->seek, data->deliver );
 				data->arrived = true;
 			}
-			else
-			{
-				target *= m_backAndForthWeight;
-			}
-		}	
-		agent->acceleration += target;
+		}
+		else
+		{
+			// Have the drone slowly start moving based on time passed
+			data->timePassed += deltaTime;
+			data->timePassed = max( data->timePassed, m_seconds );
+			desiredVelocity *= Lerp( 0, 1, max( data->timePassed, m_seconds ) / m_seconds );
+		}
+		agent->acceleration += desiredVelocity - agent->velocity;
 
 	}
 	std::vector<Vector3> todo;
