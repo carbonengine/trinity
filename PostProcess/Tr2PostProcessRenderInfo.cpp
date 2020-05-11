@@ -189,7 +189,7 @@ Tr2RenderTarget* Tr2PostProcessRenderInfo::GetGrainInputBuffer()
 			source->GetWidth(),
 			source->GetHeight(),
 			1,
-			Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM
+			source->GetFormat()
 		);
 	}
 
