@@ -2,12 +2,12 @@
 Imports:
 - ../core_project/core_project.yaml
 - ../ImageIO/uses_ImageIO.yaml
-- ../../../../../../sdk/squish/1.10/squish_1.10.yaml
+- ../../../vendor/squish/1.10/squish.yaml
 - ../CcpMath/uses_CcpMath.yaml
-- ../../../../../../sdk/muparser/v2.2.5/muparser.yaml
-- ../../../../../../sdk/freetype/2.6.0/freetype_2.6.0.yaml
-- ../../../../../../sdk/cairo/1.15.12/cairo.yaml
-- ../../../../../../sdk/amd/FidelityFX/1.0/FidelityFX.yaml
+- ../../../vendor/muparser/v2.2.5/muparser.yaml
+- ../../../vendor/freetype/2.6.0/freetype.yaml
+- ../../../vendor/cairo/1.15.12/cairo.yaml
+- ../../../vendor/amd/FidelityFX/1.0/FidelityFX.yaml
 
 # Settings from the General section, for all configurations
 General:
@@ -48,10 +48,10 @@ ResourceCompile:
 BaseConfigurations:
   Windows:
     Imports:
-    - ../../../../../../sdk/Granny/2.12.0.5/granny_2.12.0.5.yaml
-    - ../../../../../../sdk/Granny/2.12.0.5/gstate_2.12.0.5.yaml
-    - ../../../../../../sdk/zlib/1.2.11/zlib_1.2.11.yaml
-    - ../../../../../../sdk/tbb/tbb2017_20160916oss/tbb.yaml
+    - ../../../vendor/Granny/2.12.0.5/granny.yaml
+    - ../../../vendor/Granny/2.12.0.5/gstate.yaml
+    - ../../../vendor/zlib/1.2.11/zlib.yaml
+    - ../../../vendor/tbb/tbb2017_20160916oss/tbb.yaml
     - ../manifests/manifests.props
 
     ClCompile:
@@ -190,6 +190,9 @@ Configurations:
     ClCompile:
       PreprocessorDefinitions:
       - TRINITYNAME=_trinity_dx9_internal
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Debug11|Win32,x64:
     BaseConfigurations:
@@ -203,6 +206,9 @@ Configurations:
     ClCompile:
       PreprocessorDefinitions:
       - TRINITYNAME=_trinity_dx11_internal
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Dev9|Win32,x64:
     BaseConfigurations:
@@ -213,6 +219,9 @@ Configurations:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx9_dev
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Dev11|Win32,x64:
     BaseConfigurations:
@@ -223,6 +232,9 @@ Configurations:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx11_dev
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Dev12|Win32,x64:
     BaseConfigurations:
@@ -234,9 +246,12 @@ Configurations:
     ClCompile:
       AdditionalIncludeDirectories:
       # HACK: this is needed to force including freetype before Windows SDK. Should be dropped after upgrading to VS2017
-      - " ../../../../../../sdk/freetype/2.6.0/include"
+      - " ../../../vendor/freetype/2.6.0/include"
     General:
       TargetName: _trinity_dx12_dev
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   DevGLES2|Win32:
     # Note that we only have a 32bit version here - don't have glew in 64 bit
@@ -256,7 +271,7 @@ Configurations:
     - STUB
     Imports:
     - ../blue/Include/uses_blue.yaml
-    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
+    - ../../../vendor/directx/february2010/directx.yaml
     General:
       TargetName: _trinity_stub_dev
 
@@ -269,6 +284,9 @@ Configurations:
     - ../blue/Include/uses_blue_26.yaml
     General:
       TargetName: _trinity_dx9_dev
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Release|Win32,x64:
     BaseConfigurations:
@@ -279,6 +297,9 @@ Configurations:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx9_internal
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Release_26|Win32,x64:
     BaseConfigurations:
@@ -289,6 +310,9 @@ Configurations:
     - ../blue/Include/uses_blue_26.yaml
     General:
       TargetName: _trinity_dx9_internal
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Release_27|Win32,x64:
     BaseConfigurations:
@@ -299,6 +323,9 @@ Configurations:
     - ../blue/Include/uses_blue_27.yaml
     General:
       TargetName: _trinity_dx9_internal
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Release11|Win32,x64:
     BaseConfigurations:
@@ -309,6 +336,9 @@ Configurations:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx11_internal
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Release12|Win32,x64:
     BaseConfigurations:
@@ -320,9 +350,12 @@ Configurations:
     ClCompile:
       AdditionalIncludeDirectories:
       # HACK: this is needed to force including freetype before Windows SDK. Should be dropped after upgrading to VS2017
-      - " ../../../../../../sdk/freetype/2.6.0/include"
+      - " ../../../vendor/freetype/2.6.0/include"
     General:
       TargetName: _trinity_dx12_internal
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   ReleaseGLES2|Win32:
     BaseConfigurations:
@@ -344,6 +377,9 @@ Configurations:
     - ../blue/Include/uses_blue_26.yaml
     General:
       TargetName: _trinity_dx11_internal
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Release11_27|Win32,x64:
     BaseConfigurations:
@@ -354,6 +390,9 @@ Configurations:
     - ../blue/Include/uses_blue_27.yaml
     General:
       TargetName: _trinity_dx11_internal
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   ReleaseGLES2_27|Win32,x64:
     BaseConfigurations:
@@ -385,11 +424,11 @@ Configurations:
       - IME_ENABLED=0
       - TBB_ENABLED=1
       AdditionalIncludeDirectories:
-      - ../../../../../../sdk/glfw/3.0/include
+      - ../../../vendor/glfw/3.0/include
       - /usr/include/freetype2
     Link:
       AdditionalLibraryDirectories:
-      - ../../../../../../sdk/glfw/3.0/lib/$(Platform)
+      - ../../../vendor/glfw/3.0/lib/$(Platform)
       AdditionalDependencies:
       - GL
       - GLEW
@@ -410,10 +449,10 @@ Configurations:
     - GLES2
     Imports:
     - ../blue/Include/uses_blue_27.yaml
-    - ../../../../../../sdk/python/ccpproj/Python_2.7.yaml
-    - ../../../../../../sdk/tbb/tbb2017_20160916oss/tbb.yaml
-    - ../../../../../../sdk/Granny/2.9.24.0/granny_2.9.24.0.yaml
-    - ../../../../../../sdk/Granny/2.9.24.0/gstate_2.9.24.0.yaml
+    - ../../../vendor/python/ccpproj/Python_2.7.yaml
+    - ../../../vendor/tbb/tbb2017_20160916oss/tbb.yaml
+    - ../../../vendor/Granny/2.9.24.0/granny.yaml
+    - ../../../vendor/Granny/2.9.24.0/gstate.yaml
     General:
       TargetName: _trinity_gles2_internal
     ClCompile:
@@ -432,9 +471,9 @@ Configurations:
     - GLES2
     Imports:
     - ../blue/Include/uses_blue.yaml
-    - ../../../../../../sdk/tbb/tbb2017_20160916oss/tbb.yaml
-    - ../../../../../../sdk/Granny/2.9.24.0/granny_2.9.24.0.yaml
-    - ../../../../../../sdk/Granny/2.9.24.0/gstate_2.9.24.0.yaml
+    - ../../../vendor/tbb/tbb2017_20160916oss/tbb.yaml
+    - ../../../vendor/Granny/2.9.24.0/granny.yaml
+    - ../../../vendor/Granny/2.9.24.0/gstate.yaml
     General:
       TargetName: _trinity_gles2_internal
     ClCompile:
@@ -456,6 +495,9 @@ Configurations:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx9_deploy
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Deploy11|Win32,x64:
     BaseConfigurations:
@@ -466,6 +508,9 @@ Configurations:
     - ../blue/Include/uses_blue.yaml
     General:
       TargetName: _trinity_dx11_deploy
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   Deploy12|Win32,x64:
     BaseConfigurations:
@@ -477,9 +522,12 @@ Configurations:
     ClCompile:
       AdditionalIncludeDirectories:
       # HACK: this is needed to force including freetype before Windows SDK. Should be dropped after upgrading to VS2017
-      - " ../../../../../../sdk/freetype/2.6.0/include"
+      - " ../../../vendor/freetype/2.6.0/include"
     General:
       TargetName: _trinity_dx12_deploy
+    Link:
+      AdditionalDependencies:
+      - legacy_stdio_definitions.lib
 
   DebugStub|Win32,x64:
     BaseConfigurations:
@@ -488,7 +536,7 @@ Configurations:
     - STUB
     Imports:
     - ../blue/Include/uses_blue.yaml
-    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
+    - ../../../vendor/directx/february2010/directx.yaml
     General:
       TargetName: _trinity_stub_internal_d
     ClCompile:
@@ -502,7 +550,7 @@ Configurations:
     - STUB
     Imports:
     - ../blue/Include/uses_blue.yaml
-    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
+    - ../../../vendor/directx/february2010/directx.yaml
     General:
       TargetName: _trinity_stub_internal
     ClCompile:
@@ -516,7 +564,7 @@ Configurations:
     - STUB
     Imports:
     - ../blue/Include/uses_blue_26.yaml
-    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
+    - ../../../vendor/directx/february2010/directx.yaml
     General:
       TargetName: _trinity_stub_internal
 
@@ -527,7 +575,7 @@ Configurations:
     - STUB
     Imports:
     - ../blue/Include/uses_blue_27.yaml
-    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
+    - ../../../vendor/directx/february2010/directx.yaml
     General:
       TargetName: _trinity_stub_internal
 
