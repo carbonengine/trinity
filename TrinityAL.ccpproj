@@ -3,7 +3,7 @@ ProjectGuid: 0556322D-6639-4545-5650-F93498443165
 Imports:
 - ../core_project/core_project.yaml
 - ../CcpCore/uses_CcpCore.yaml
-- ../../../../../../sdk/nvidia/aftermath/1.3/aftermath.yaml
+- ../../../vendor/nvidia/aftermath/1.3/aftermath.yaml
 
 # Settings from the General section, for all configurations
 General:
@@ -36,7 +36,7 @@ Link:
 BaseConfigurations:
   Posix:
     Imports:
-    - ../../../../../../sdk/glfw/3.0/glfw_3.0.yaml
+    - ../../../vendor/glfw/3.0/glfw.yaml
   
   Debug:
     General: 
@@ -75,21 +75,21 @@ BaseConfigurations:
   
   D3D9:
     Imports:
-    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
+    - ../../../vendor/directx/february2010/directx.yaml
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_DIRECTX9
 
   D3D11:
     Imports:
-    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
+    - ../../../vendor/directx/february2010/directx.yaml
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_DIRECTX11
 
   GLES2:
     Imports:
-    - ../../../../../../sdk/glew/1.7.0/glew_1.7.0.yaml
+    - ../../../vendor/glew/1.7.0/glew.yaml
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_OPENGLES2
@@ -109,8 +109,8 @@ BaseConfigurations:
 
   Vulkan:
     Imports:
-    - ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
-    - ../../../../../../sdk/vulkan/1.1.97.0/vulkan.yaml
+    - ../../../vendor/directx/february2010/directx.yaml
+    - ../../../vendor/vulkan/1.1.97.0/vulkan.yaml
     ClCompile:
       PreprocessorDefinitions:
       - TRINITY_PLATFORM=TRINITY_VULKAN

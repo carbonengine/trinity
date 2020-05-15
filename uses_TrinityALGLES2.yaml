@@ -3,7 +3,7 @@
 Imports:
 - ../core_project/core_project.yaml
 - ../CcpCore/uses_CcpCore.yaml
-- ../../../../../../sdk/glew/1.7.0/glew_1.7.0.yaml
+- ../../../vendor/glew/1.7.0/glew.yaml
 
 ClCompile:
   PreprocessorDefinitions:
@@ -15,14 +15,14 @@ Link:
 Configurations:
   Debug|Win32,x64:
     Imports:
-    - ../../../../../../sdk/ATI/CrossFire Detect/CrossFire.yaml
+    - ../../../vendor/ATI/CrossFire Detect/CrossFire.yaml
     Link:
       AdditionalDependencies:
       - TrinityAL_gles2_d.lib
   
   Dev|Win32,x64:
     Imports:
-    - ../../../../../../sdk/ATI/CrossFire Detect/CrossFire.yaml
+    - ../../../vendor/ATI/CrossFire Detect/CrossFire.yaml
     ClCompile:
       PreprocessorDefinitions:
       - AL_TACK_RESOURCE_USAGE=1
@@ -32,21 +32,21 @@ Configurations:
   
   Release|Win32,x64:
     Imports:
-    - ../../../../../../sdk/ATI/CrossFire Detect/CrossFire.yaml
+    - ../../../vendor/ATI/CrossFire Detect/CrossFire.yaml
     Link:
       AdditionalDependencies:
       - TrinityAL_gles2.lib
 
   Debug|Linux32,Linux64,Mac32,Mac64:
     Imports:
-    - ../../../../../../sdk/glfw/3.0/glfw_3.0.yaml
+    - ../../../vendor/glfw/3.0/glfw.yaml
     Link:
       AdditionalDependencies:
       - TrinityAL_gles2_d.lib
 
   Dev|Linux32,Linux64,Mac32,Mac64:
     Imports:
-    - ../../../../../../sdk/glfw/3.0/glfw_3.0.yaml
+    - ../../../vendor/glfw/3.0/glfw.yaml
     ClCompile:
       PreprocessorDefinitions:
       - AL_TACK_RESOURCE_USAGE=1
@@ -56,7 +56,7 @@ Configurations:
   
   Release|Linux32,Linux64,Mac32,Mac64:
     Imports:
-    - ../../../../../../sdk/glfw/3.0/glfw_3.0.yaml
+    - ../../../vendor/glfw/3.0/glfw.yaml
     Link:
       AdditionalDependencies:
       - TrinityAL_gles2.lib

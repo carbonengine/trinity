@@ -3,11 +3,10 @@
 Imports:
 - ../core_project/core_project.yaml
 - ../CcpCore/uses_CcpCore.yaml
-- ../../../../../../sdk/directx/february2010/Include/directx_february2010.yaml
-- ../../../../../../sdk/nvidia/NVAPI/R265/NVAPI_R265.yaml
-- ../../../../../../sdk/ATI/CrossFire Detect/CrossFire.yaml
-- ../../../../../../sdk/nvidia/aftermath/1.3/aftermath.yaml
-- ../../../../../../sdk/vulkan/1.1.97.0/vulkan.yaml
+- ../../../vendor/directx/february2010/directx.yaml
+- ../../../vendor/ATI/CrossFire Detect/CrossFire.yaml
+- ../../../vendor/nvidia/aftermath/1.3/aftermath.yaml
+- ../../../vendor/vulkan/1.1.97.0/vulkan.yaml
 
 ClCompile:
   PreprocessorDefinitions:

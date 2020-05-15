@@ -106,7 +106,7 @@ BaseConfigurations:
       
   WithGoogleTest:
     Imports:
-    - ../../../../../../sdk/GoogleTest/1.6.0/gtest.yaml
+    - ../../../vendor/GoogleTest/1.10.0/gtest.yaml
     ClCompile:
       PreprocessorDefinitions:
       - D3DTARGET=9
