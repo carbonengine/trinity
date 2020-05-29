@@ -27,7 +27,7 @@ protected:
 
 	std::string m_emitterName;
 	std::string m_controllerVariableName;
-	int m_scalingPercent;
+	float m_scalingFactor;
 };
 
 TYPEDEF_BLUECLASS( Tr2ActionSetAttenuationScaling );

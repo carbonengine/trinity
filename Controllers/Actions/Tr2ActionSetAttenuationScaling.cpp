@@ -13,7 +13,7 @@
 
 
 Tr2ActionSetAttenuationScaling::Tr2ActionSetAttenuationScaling( IRoot* lockobj ) :
-	m_scalingPercent( 100 )
+	m_scalingFactor( 1.0f )
 {
 }
 
@@ -43,7 +43,6 @@ void Tr2ActionSetAttenuationScaling::Start( Tr2Controller& controller )
 float Tr2ActionSetAttenuationScaling::GetScalingFactor() const
 {
 	float controllerVariableValue = 0;
-	float floatPercent = m_scalingPercent / 100.0f;
 
 	if ( !m_controllerVariableName.empty() && m_controller != nullptr )
 	{
@@ -55,10 +54,10 @@ float Tr2ActionSetAttenuationScaling::GetScalingFactor() const
 
 	if ( controllerVariableValue != 0 )
 	{
-		return floatPercent * controllerVariableValue;
+		return m_scalingFactor * controllerVariableValue;
 	}
 	else
 	{
-		return floatPercent;
+		return m_scalingFactor;
 	}
 }

@@ -23,24 +23,23 @@ const Be::ClassInfo* Tr2ActionSetAttenuationScaling::ExposeToBlue()
                      )
 		MAP_ATTRIBUTE( "controllerVariable", 
 					   m_controllerVariableName, 
-					   "Optionally use the value of a controller variable as a scaling factor. "
-					   "This is affected by the scale by percent.",
+					   "Optionally multiply the value of a controller variable by the scaling factor.",
 					   Be::READWRITE | Be::PERSIST
 				     )
-		MAP_ATTRIBUTE( "scaleByPercent",
-                       m_scalingPercent,
-                       "The amount you want to scale attenuation by in percent. Applies to all sounds on an emitter.\n"
+		MAP_ATTRIBUTE( "scalingFactor",
+                       m_scalingFactor,
+                       "The amount you want to scale attenuation by. Applies to all sounds on an emitter.\n"
                        "Example values:\n"
-                       "50 = halfing the attenuation range\n"
-                       "100 = keeping the attenuation range as defined in Wwise\n"
-                       "200 = Doubling attenuation range \n"
+                       "0.5 = halfing the attenuation range\n"
+                       "1.0 = keeping the attenuation range as defined in Wwise\n"
+                       "2.0 = Doubling attenuation range \n"
 					   "Debug notes: \n"
 			           "* You cannot see this visually represented without stopping the sound and starting it again.\n"
 					   "* All emitters that are scaled by this will change their color to red",
                        Be::READWRITE | Be::PERSIST 
                      )
 		// MAP_PROPERTY_READONLY is called regularly by Jessica so this will be updated at all times in Jessica.
-		MAP_PROPERTY_READONLY("scalingFactor",
+		MAP_PROPERTY_READONLY("finalScalingFactor",
                               GetScalingFactor,
                               "The final scaling factor that will be sent to Wwise."
 							  )
