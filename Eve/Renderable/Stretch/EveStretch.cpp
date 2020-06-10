@@ -38,6 +38,7 @@ EveStretch::EveStretch( IRoot* lockobj ) :
 	m_length.CreateInstance();
 }
 
+// start the update mess!
 void EveStretch::UpdateSyncronous( EveUpdateContext& updateContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -106,6 +107,16 @@ void EveStretch::Update( EveUpdateContext& updateContext )
 {
 	UpdateSyncronous( updateContext );
 	UpdateAsyncronous( updateContext );
+}
+
+void EveStretch::UpdateEffectAsync( EveUpdateContext& updateContext )
+{
+	Update( updateContext );
+}
+
+void EveStretch::UpdateEffectSync( EveUpdateContext& updateContext )
+{
+	// do nothing here
 }
 
 void EveStretch::UpdateCurves( EveUpdateContext& updateContext )

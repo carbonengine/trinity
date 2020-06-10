@@ -33,7 +33,8 @@ EveStretch3::EveStretch3( IRoot* lockobj ) :
 	m_startTime( 0 ),
 	m_destObjectScale( 1.0f ),
 	m_sourceMatrix( IdentityMatrix() ),
-	m_isMuzzleEffect( false )
+	m_isMuzzleEffect( false ),
+	m_stretchState( STRETCH_STATE_UNDEFINED )
 {
 	m_length.CreateInstance();
 	m_moveProgression.CreateInstance();
@@ -245,6 +246,19 @@ void EveStretch3::UpdateSyncronous( EveUpdateContext& updateContext )
 		return;
 	}
 
+	if( m_stretchState == STRETCH_STATE_STARTING )
+	{
+		StartControllers();
+		SetControllerVariable( "FiringDelay", m_delay );
+		SetControllerVariable( "IsFiring", 1 );
+		m_stretchState = STRETCH_STATE_STARTED;
+	}
+	else if( m_stretchState == STRETCH_STATE_STOPPING )
+	{
+		SetControllerVariable( "IsFiring", 0 );
+		m_stretchState = STRETCH_STATE_UNDEFINED;
+	}
+
 	Be::Time time = updateContext.GetTime();
 
 	for( auto binding = m_dynamicBindings.begin(); binding != m_dynamicBindings.end(); ++binding )
@@ -382,10 +396,14 @@ void EveStretch3::UpdateAsyncronous( EveUpdateContext& updateContext )
 	}
 }
 
-void EveStretch3::Update( EveUpdateContext& updateContext )
+void EveStretch3::UpdateEffectAsync( EveUpdateContext& updateContext )
 {
-	UpdateSyncronous(updateContext);
-	UpdateAsyncronous(updateContext);
+	UpdateAsyncronous( updateContext );
+}
+
+void EveStretch3::UpdateEffectSync( EveUpdateContext& updateContext )
+{
+	UpdateSyncronous( updateContext );
 }
 
 void EveStretch3::StartMoving()
@@ -509,13 +527,15 @@ float EveStretch3::GetCurveDuration()
 
 void EveStretch3::StartFiring( float delay )
 {
-	StartControllers();
-	SetControllerVariable( "FiringDelay", delay );
-	SetControllerVariable( "IsFiring", 1 );
+	// can't change the controllers since this could be called asyncronously
+	m_delay = delay;
+	m_stretchState = STRETCH_STATE_STARTING;
 }
 
 void EveStretch3::StopFiring()
 {
+	// can't change the controllers since this could be called asyncronously
+	m_stretchState = STRETCH_STATE_STOPPING;
 }
 
 void EveStretch3::SetFiringTransform( const Matrix& source, const Vector3& dest )
@@ -606,11 +626,20 @@ void EveStretch3::StartControllers()
 
 void EveStretch3::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 {
+	if( !m_display ) 
+	{
+		return;
+	}
 	RunOnComponents( [&quadRenderer]( IEveSpaceObjectChild* c ) { c->RegisterWithQuadRenderer( quadRenderer ); } );
 }
 
 void EveStretch3::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer )
 {
+	if( !m_display )
+	{
+		return;
+	}
+
 	RunOnComponents( [&frustum, &quadRenderer]( IEveSpaceObjectChild* c ) { c->AddQuadsToQuadRenderer( frustum, quadRenderer ); } );
 }
 

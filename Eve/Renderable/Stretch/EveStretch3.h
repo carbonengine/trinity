@@ -105,7 +105,8 @@ public:
 	void SetFiringTransform( const Matrix& source, const Vector3& dest ) override;
 	void SetFiringTransform( const Vector3& source, const Vector3& dest ) override;
 	void DisplayEndPoints( bool displaySource, bool displayDest ) override;
-	void Update( EveUpdateContext& updateContext ) override;
+	void UpdateEffectAsync( EveUpdateContext& updateContext ) override;
+	void UpdateEffectSync( EveUpdateContext& updateContext ) override;
 	void SetDisplay( bool display ) override;
 
 	//////////////////////////////////////////////////////////////////////////
@@ -117,6 +118,14 @@ public:
 	ITr2AudEmitterPtr FindSoundEmitter( const char* name ) override;
 
 private:
+
+	enum StretchState {
+		STRETCH_STATE_UNDEFINED,
+		STRETCH_STATE_STARTING,
+		STRETCH_STATE_STARTED,
+		STRETCH_STATE_STOPPING
+	};
+
 	void RunOnComponents( std::function<void( IEveSpaceObjectChild* )> func ) const;
 	float RunOnComponentsGetMax( std::function<float( IEveSpaceObjectChild* )> func ) const;
 
@@ -145,6 +154,7 @@ private:
 	PTriCurveSetVector m_curveSets;
 
 	Be::Time m_startTime;
+	float m_delay;
 	PITr2ControllerVector m_controllers;
 	PTr2DynamicBindingVector m_dynamicBindings;
 
@@ -155,6 +165,8 @@ private:
 
 	Matrix m_sourceMatrix;
 	bool m_isMuzzleEffect;
+
+	StretchState m_stretchState;
 
 	ITr2AudioPtr m_audio;
 };

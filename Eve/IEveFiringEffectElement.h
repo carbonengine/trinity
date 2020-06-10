@@ -18,8 +18,10 @@ BLUE_INTERFACE( IEveFiringEffectElement ): public IRoot
 	virtual void SetFiringTransform( const Vector3& source, const Vector3& dest ) = 0;
 	virtual void DisplayEndPoints( bool displaySource, bool displayDest ) = 0;
 
-	virtual void Update( EveUpdateContext& updateContext ) = 0;
-
+	virtual void Update( EveUpdateContext& updateContext ) {}
+	virtual void UpdateEffectAsync( EveUpdateContext& updateContext ) = 0;
+	virtual void UpdateEffectSync( EveUpdateContext& updateContext ) = 0;
+	
 	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform ) = 0;
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables ) = 0;
 

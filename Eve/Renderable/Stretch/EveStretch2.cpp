@@ -170,6 +170,16 @@ void EveStretch2::SetIntensity( float intensity )
 	m_intensity = intensity;
 }
 
+void EveStretch2::UpdateEffectSync( EveUpdateContext& updateContext )
+{
+	// do nothing here
+}
+
+void EveStretch2::UpdateEffectAsync( EveUpdateContext& updateContext ) 
+{
+	Update( updateContext );
+}
+
 void EveStretch2::Update(EveUpdateContext& updateContext)
 {
 	Be::Time time = updateContext.GetTime();

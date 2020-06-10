@@ -69,6 +69,8 @@ public:
 	virtual float GetCurveDuration();
 	virtual void StartFiring( float delay );
 	virtual void StopFiring();
+	virtual void UpdateEffectAsync( EveUpdateContext& updateContext ) override;
+	virtual void UpdateEffectSync( EveUpdateContext& updateContext ) override;
 
 	virtual void SetFiringTransform( const Matrix& source, const Vector3& dest );
 	virtual void SetFiringTransform( const Vector3& source, const Vector3& dest );

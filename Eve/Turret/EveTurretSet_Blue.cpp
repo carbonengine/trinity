@@ -80,6 +80,7 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "estimatedPixelDiameter", m_estimatedPixelDiameter, "value for LOD selection", Be::READ )
 		MAP_ATTRIBUTE( "lodLevel", m_lodLevel, "current LOD", Be::READ )
 		MAP_ATTRIBUTE( "trackingInfluence", m_trackingInfluence, "How much tracking is alowed?", Be::READ )
+		MAP_ATTRIBUTE( "maxTrackingTime", m_maxTrackingTime, "How long does tracking take?", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "updatePitchPose", m_updatePitchPose, "Rebuild pose for pitch bone calculations if using base turret position is insufficient for desired results", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "boundingSphere", m_boundingSphere, "Bounding sphere for visibility detection", Be::READWRITE | Be::PERSIST )
@@ -117,6 +118,11 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "firingEffect", m_firingEffect, "The module for the firing effect of this turret", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "firingEffectResPath", m_firingEffectResPath, "A res path to the redfile containing the primary firing effect", Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE( "useLowLodFiringTransform", m_useLowLodFiringTransform, "When the turret is lodded out, should we use a specific transform to offset the firing position?", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lowLodFiringEffectScale", m_lowLodFiringEffectScale, "When the turret is lodded out, how big should the firing effect be? (leave as 0 to maintain default behavior)", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lowLodFiringEffectRotation", m_lowLodFiringEffectRotation, "When the turret is lodded out, how should the firing effect be rotated?", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lowLodFiringEffectTranslation", m_lowLodFiringEffectTranslation, "When the turret is lodded out, how far should the firing effect be translated from the turret 0,0,0 position?", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "laserMissBehaviour", m_laserMissBehaviour, "Whether or not to use laser-like properties when this turret misses", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "projectileMissBehaviour", m_projectileMissBehaviour, "Whether or not to use projectile properties when this turret misses", Be::READWRITE | Be::PERSIST )

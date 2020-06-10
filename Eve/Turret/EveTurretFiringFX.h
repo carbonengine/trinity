@@ -64,7 +64,9 @@ public:
 public:
 	bool ReadyToFire() const;
 	// timing and worldspace positioning
-	bool Update( EveUpdateContext& updateContext );
+	bool UpdateSynchronous( EveUpdateContext& updateContext );
+	bool UpdateAsynchronous( EveUpdateContext& updateContext );
+
 	// rendering
 	void UpdateVisibility( const TriFrustum& frustum );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );

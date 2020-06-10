@@ -385,6 +385,7 @@ private:
 	float m_trackingInfluenceDelta;
 	float m_delayToFadeOutTracking;
 	float m_delayToFadeInTracking;
+	float m_maxTrackingTime;
 
 	// animation
 	struct AnimationRequest
@@ -435,6 +436,11 @@ private:
 	// firing effect
 	EveTurretFiringFXPtr m_firingEffect;
 	bool m_firingEffectMuzzlePosSet;
+
+	bool m_useLowLodFiringTransform;
+	Vector3 m_lowLodFiringEffectTranslation;
+	Vector3 m_lowLodFiringEffectScale;
+	Quaternion m_lowLodFiringEffectRotation;
 
 	bool m_chooseRandomLocator;
 

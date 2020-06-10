@@ -78,6 +78,7 @@ EveTurretSet::EveTurretSet( IRoot* lockobj ) :
 	m_trackingInfluenceDelta( 0.f ),
 	m_delayToFadeOutTracking( 0.f ),
 	m_delayToFadeInTracking( 0.f ),
+	m_maxTrackingTime( 1.f ),
 	m_boundingSphere( 0.f, 0.f, 0.f, 0.f ),
 	m_bottomClipHeight( 0.f ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
@@ -114,6 +115,10 @@ EveTurretSet::EveTurretSet( IRoot* lockobj ) :
 	m_chooseRandomLocator( true ),
 	m_ambientEffectEditingMode( false ),
 	m_ambientOffsetMatrix( IdentityMatrix() ),
+	m_lowLodFiringEffectTranslation( 0, 0, 0 ),
+	m_lowLodFiringEffectScale( 1, 1, 1 ),
+	m_lowLodFiringEffectRotation( 0, 0, 0, 1 ),
+	m_useLowLodFiringTransform( false ),
 	m_impactBehaviour( ImpactBehaviour::DAMAGE_LOCATOR )
 {
 	// 0
@@ -943,6 +948,7 @@ void EveTurretSet::UpdateSyncronous( EveUpdateContext& updateContext, const Matr
 				}
 			}
 		}
+		m_firingEffect->UpdateSynchronous( updateContext );
 	}
 
 	// update the target locator position
@@ -995,9 +1001,9 @@ void EveTurretSet::UpdateAsyncronous( EveUpdateContext& updateContext, const Par
 	if( m_trackingInfluenceDelta != 0.f )
 	{
 		m_trackingInfluence += m_trackingInfluenceDelta * deltaT;
-		if( m_trackingInfluence > 1.f )
+		if( m_trackingInfluence > m_maxTrackingTime )
 		{
-			m_trackingInfluence = 1.f;
+			m_trackingInfluence = m_maxTrackingTime;
 			m_trackingInfluenceDelta = 0.f;
 		}
 		else if( m_trackingInfluence < 0.f )
@@ -1094,7 +1100,7 @@ void EveTurretSet::UpdateAsyncronous( EveUpdateContext& updateContext, const Par
 		m_firingEffect->SetEndPosition( m_target->GetTargetPosition() );
 
 		// time update (return value tells us if effect is ready to fire!)
-		if( m_firingEffect->Update( updateContext ) )
+		if( m_firingEffect->UpdateAsynchronous( updateContext ) )
 		{
 			// if we haven't initialised muzzle positions, do it now 
 			// this can happen, and if we don't do this all effects originate from
@@ -1200,6 +1206,11 @@ Matrix EveTurretSet::GetTurretBoneTransform( uint32_t closestTurret, uint32_t bo
 		granny_real32* boneTransform = GrannyGetWorldPose4x4( m_singleTurrets[closestTurret].grnWorldPose, boneID );
 		// create this pos in worldspace
 		m = *reinterpret_cast<const Matrix*>( boneTransform ) * m;
+	}
+	else if( m_useLowLodFiringTransform )
+	{
+		// if we are too far out from the turret to have the granny loaded we have the option to offset/scale/rotate the effect statically
+		m = TransformationMatrix( m_lowLodFiringEffectScale, m_lowLodFiringEffectRotation, m_lowLodFiringEffectTranslation ) * m;
 	}
 	else
 	{
@@ -2292,7 +2303,7 @@ bool EveTurretSet::SetupFiringState()
 	case STATE_IDLE:
 	case STATE_RELOADING:
 		// and delay the effect until we are facing target
-		m_randomFiringDelay += TRACKING_FADE_TIME;
+		m_randomFiringDelay += m_maxTrackingTime;
 		// fadein tracking, play fire anim (only one the firing turret!) and then the active anim
 		m_delayToFadeInTracking = 0.0001f;
 
@@ -2437,7 +2448,7 @@ void EveTurretSet::ForceStateDeactive()
 // --------------------------------------------------------------------------------
 void EveTurretSet::ForceStateTargeting()
 {
-	m_trackingInfluence = 1.f;
+	m_trackingInfluence = m_maxTrackingTime;
 	m_trackingInfluenceDelta = 0.f;
 	unsigned int closestTurret = INVALID_TURRET_INDEX;
 	int closestLocator = -1;

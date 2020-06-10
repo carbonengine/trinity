@@ -52,7 +52,9 @@ public:
 	virtual void DisplayEndPoints( bool displaySource, bool displayDest );
 	virtual void SetIntensity( float intensity );
 
-	virtual void Update( EveUpdateContext& updateContext );
+	virtual void Update( EveUpdateContext& updateContext ) override;
+	virtual void UpdateEffectAsync( EveUpdateContext& updateContext ) override;
+	virtual void UpdateEffectSync( EveUpdateContext& updateContext ) override;
 
 	virtual void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform );
 	virtual void GetRenderables( std::vector<ITr2Renderable*>& renderables );

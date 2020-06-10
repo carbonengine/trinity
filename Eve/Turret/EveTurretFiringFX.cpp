@@ -66,7 +66,8 @@ void EveTurretFiringFX::CleanUp()
 	StopFiring();		
 	// Kick the curves so any sound change will trigger (playing -> stop) 
 	EveUpdateContext ctx( BeOS->GetCurrentFrameTime() );
-	Update( ctx );
+	UpdateAsynchronous( ctx );
+	UpdateSynchronous( ctx );
 }
 
 // --------------------------------------------------------------------------------
@@ -408,7 +409,7 @@ bool EveTurretFiringFX::ReadyToFire() const
 // Return value:
 //   Returns true if the effect has just fired
 // --------------------------------------------------------------------------------
-bool EveTurretFiringFX::Update( EveUpdateContext& updateContext )
+bool EveTurretFiringFX::UpdateAsynchronous( EveUpdateContext& updateContext )
 {
 	float deltaT = updateContext.GetDeltaT();
 	bool retVal = false;
@@ -472,7 +473,7 @@ bool EveTurretFiringFX::Update( EveUpdateContext& updateContext )
 					stretchEffect->DisplayEndPoints( GetDisplaySourceObject(), GetDisplayDestObject() );
 				}
 
-				stretchEffect->Update( updateContext );
+				stretchEffect->UpdateEffectAsync( updateContext );
 			}
 		}
 	}
@@ -500,6 +501,25 @@ bool EveTurretFiringFX::Update( EveUpdateContext& updateContext )
 	}
 
 	return retVal;
+}
+
+bool EveTurretFiringFX::UpdateSynchronous( EveUpdateContext &updateContext )
+{
+	// check all stretch effects and see if we have to start them
+	for( unsigned int i = 0; i < m_stretch.size(); ++i )
+	{		
+		if( m_perMuzzleData[i].elapsedTime < m_firingDuration || m_isLoopFiring )
+		{
+			auto stretchEffect = m_stretch[i];
+
+			// do not do all calculations if we are not firing -> waste
+			if( m_isFiring )
+			{				
+				stretchEffect->UpdateEffectSync( updateContext );
+			}
+		}
+	}
+	return true;
 }
 
 void EveTurretFiringFX::UpdateVisibility( const TriFrustum& frustum )
