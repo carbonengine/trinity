@@ -14,7 +14,7 @@ def initialize_p4(password=None):
     p4.connect()
     if password is not None:
         p4.password = password
-    p4.run_login()
+        p4.run_login()
     return p4
 
 
