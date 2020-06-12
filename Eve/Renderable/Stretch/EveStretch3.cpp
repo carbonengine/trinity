@@ -285,7 +285,7 @@ void EveStretch3::UpdateSyncronous( EveUpdateContext& updateContext )
 	m_length->m_value = Length( directionVec );
 
 	EveChildUpdateParams params;
-	params.spaceObjectParent = m_sourceSpaceObject == nullptr ? this : m_sourceSpaceObject;
+	params.spaceObjectParent = m_sourceSpaceObject == nullptr ? static_cast<IEveSpaceObject2*>(this) : m_sourceSpaceObject; 
 	params.childParent = nullptr;
 	params.boneCount = 0;
 	params.bones = nullptr;
@@ -314,7 +314,7 @@ void EveStretch3::UpdateSyncronous( EveUpdateContext& updateContext )
 	if( m_destObject )
 	{
 		params.localToWorldTransform = TranslationMatrix( m_destinationPosition );
-		params.spaceObjectParent = m_destSpaceObject == nullptr ? this : m_destSpaceObject;
+		params.spaceObjectParent = m_destSpaceObject == nullptr ? static_cast< IEveSpaceObject2* >( this ) : m_destSpaceObject;
 		m_destObject->UpdateSyncronous( updateContext, params );
 	}
 }

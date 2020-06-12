@@ -1194,9 +1194,16 @@ Matrix EveTurretSet::GetTurretBoneTransform( uint32_t closestTurret, uint32_t bo
 {
 	// source comes from position bones or, if we don't have any, from center of turret
 	Matrix m = m_singleTurrets[closestTurret].worldMatrix;
+	Matrix lowLodTransform = IdentityMatrix();
+
+	if( m_useLowLodFiringTransform )
+	{
+		lowLodTransform = TransformationMatrix( m_lowLodFiringEffectScale, m_lowLodFiringEffectRotation, m_lowLodFiringEffectTranslation );
+	}
+
 	if( boneID == INVALID_BONE_INDEX )
-	{ 
-		return m;
+	{ 		
+		return lowLodTransform * m;
 	}
 
 	// valid granny pose? (bone positions are stored "in" that thing)
@@ -1210,7 +1217,7 @@ Matrix EveTurretSet::GetTurretBoneTransform( uint32_t closestTurret, uint32_t bo
 	else if( m_useLowLodFiringTransform )
 	{
 		// if we are too far out from the turret to have the granny loaded we have the option to offset/scale/rotate the effect statically
-		m = TransformationMatrix( m_lowLodFiringEffectScale, m_lowLodFiringEffectRotation, m_lowLodFiringEffectTranslation ) * m;
+		m = lowLodTransform * m;
 	}
 	else
 	{

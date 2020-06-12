@@ -699,6 +699,11 @@ void EveTurretFiringFX::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer 
 // --------------------------------------------------------------------------------
 void EveTurretFiringFX::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer )
 {
+	if( !m_display || !m_isFiring )
+	{
+		return;
+	}
+
 	for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
 	{
 		( *it )->AddQuadsToQuadRenderer( frustum, quadRenderer );
