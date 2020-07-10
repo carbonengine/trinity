@@ -265,7 +265,6 @@ void BehaviorGroup::AddAgent()
 	// The function without arguments to be called from the UI
 	AddAgentPrivate();
 	
-	m_count++;
 	OnAgentCountChanged();
 }
 
@@ -298,6 +297,8 @@ void BehaviorGroup::AddAgentPrivate()
 			m_behaviors[ m_sortedBehaviorIndexes[i] ]->InitializeScratch( m_scratchData[ m_sortedBehaviorIndexes[i] ].get() + size * ( m_agents.size() - 1 ) );
 		}
 	}
+
+	m_count++;
 }
 
 // --------------------------------------------------------------------------------------
@@ -371,8 +372,6 @@ void BehaviorGroup::RemoveAgent()
 	// Removes the last agent
 	RemoveSpecificAgent( m_count - 1 );
 
-	m_count--;
-
 	OnAgentCountChanged();
 }
 
@@ -396,6 +395,8 @@ void BehaviorGroup::RemoveSpecificAgent( int index )
 		memcpy( m_scratchData[m_sortedBehaviorIndexes[i]].get() + size * index, m_scratchData[m_sortedBehaviorIndexes[i]].get() + size * m_agents.size(), size );
 		m_scratchData[m_sortedBehaviorIndexes[i]].resize( "BehaviorGroup::m_scratchData", m_agents.size() * size );
 	}
+
+	m_count--;
 }
 
 // --------------------------------------------------------------------------------------
