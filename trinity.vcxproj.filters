@@ -993,6 +993,9 @@
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SeekTarget.h">
       <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
     </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.h">
+      <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
+    </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.h">
       <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
     </ClInclude>
@@ -3202,6 +3205,12 @@
       <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
     </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SeekTarget_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones_Blue.cpp">
       <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
     </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.cpp">

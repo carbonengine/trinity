@@ -3140,6 +3140,7 @@
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\PlayFX.h" />
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\ProcessLifetime.h" />
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SeekTarget.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.h" />
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.h" />
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\Wander.h" />
     <ClInclude Include="Eve\SpaceObject\Children\SocketParameters\EveSocketParameter.h" />
@@ -3884,6 +3885,8 @@
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\ProcessLifetime_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SeekTarget.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SeekTarget_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\Wander.cpp" />
