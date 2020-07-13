@@ -12,6 +12,7 @@ ProcessLifetime::ProcessLifetime( IRoot* lockobj ) :
 	m_exit( false )
 {
 	m_splineTunnels.SetNotify( this );
+	m_potentialPoints.clear();
 }
 
 ProcessLifetime::~ProcessLifetime()
@@ -285,8 +286,7 @@ void ProcessLifetime::FindASpawnPoint(DroneAgent& agent, ProcessLifetimeData* da
 	for ( auto tunnel = begin( m_privateTunnels ); tunnel != end( m_privateTunnels ); ++tunnel )
 	{
 		if( ( *tunnel )->tunnelGroupType == ENTRANCE_TUNNELS )
-		{
-			
+		{	
 			Vector3 point = (*tunnel)->splinePoints[ 0 ].pos;
 			for(int i = 0; i < 3; i++)
 			{
@@ -310,6 +310,12 @@ void ProcessLifetime::FindASpawnPoint(DroneAgent& agent, ProcessLifetimeData* da
 	static const Vector3 zAxis( 0.f, 0.f, 1.f );
 	TriQuaternionRotationArc( &agent.rotation, &zAxis, &potentialRotations.at( randomNbr ) );
 	data->assignedLifeTimeTunnel = tunnelIndex.at( randomNbr );
+	m_potentialPoints = potentialPoints;
+}
+
+std::vector<Vector3> ProcessLifetime::GetPotentialPoints()
+{
+	return m_potentialPoints;
 }
 
 void ProcessLifetime::UpdateTunnelRegistry()

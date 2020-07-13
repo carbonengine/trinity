@@ -48,6 +48,8 @@ public:
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation);
 
 	void UpdateState( bool state ) { m_exit = state; }
+
+	std::vector<Vector3> GetPotentialPoints();
 	
 private:
 	void FindASpawnPoint( DroneAgent& agent, ProcessLifetimeData* data );
@@ -66,6 +68,7 @@ private:
 	bool m_shouldReassignTunnelIDs;
 	bool m_exit;
 	Vector3 m_desiredVector;
+	std::vector<Vector3> m_potentialPoints;
 };
 
 TYPEDEF_BLUECLASS( ProcessLifetime );
