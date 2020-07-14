@@ -9,6 +9,7 @@ struct BackAndForthData
 {
 	BackAndForthData() :
 		locatorTarget( 0, 0, 0 ),
+		locatorDirection( 0, 0, 0 ),
 		seek( true ),
 		deliver( false ),
 		arrived( true ),
@@ -16,6 +17,7 @@ struct BackAndForthData
 	{}
 
 	Vector3 locatorTarget;
+	Vector3 locatorDirection;
 	bool seek;
 	bool deliver;
 	bool arrived;

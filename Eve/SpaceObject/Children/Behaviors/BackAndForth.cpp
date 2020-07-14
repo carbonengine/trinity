@@ -56,6 +56,7 @@ std::vector<Vector3> BackAndForth::CalculateBehavior(std::vector<DroneAgent>& ag
 				{
 					m_rand = TriRandInt( 0, (int)seekLocators->size() );
 					data->locatorTarget = seekLocators[0][m_rand].position;
+					data->locatorDirection = (Vector3)XMVector3Rotate( Vector3( 0.f, 1.f, 0.f ), seekLocators[0][m_rand].direction );
 				}
 			}
 			//If the deliver behavior is active
@@ -67,6 +68,7 @@ std::vector<Vector3> BackAndForth::CalculateBehavior(std::vector<DroneAgent>& ag
 				{
 					m_rand = TriRandInt( 0, (int)deliverLocators->size() );
 					data->locatorTarget = deliverLocators[0][m_rand].position;
+					data->locatorDirection = (Vector3)XMVector3Rotate( Vector3( 0.f, 1.f, 0.f ), deliverLocators[0][m_rand].direction );
 				}
 			}
 			data->arrived = false;
@@ -74,10 +76,15 @@ std::vector<Vector3> BackAndForth::CalculateBehavior(std::vector<DroneAgent>& ag
 
 		agent->target = data->locatorTarget;
 
+		Vector3 targetPoint = data->locatorDirection;
+		targetPoint = Normalize( targetPoint );
+		targetPoint *= m_arrivedRadius;
+		targetPoint += data->locatorTarget;
+
 		Matrix worldTransform = system.GetWorldTransform();
 		Vector3 agentPositionWS = XMVector3TransformCoord( agent->position, worldTransform );
 
-		Vector3 desiredVelocity = data->locatorTarget - agentPositionWS;
+		Vector3 desiredVelocity = targetPoint - agentPositionWS;
 		float distance = Length( desiredVelocity );
 		desiredVelocity = Normalize( desiredVelocity );
 		static const Vector3 zAxis( 0.f, 0.f, 1.f );
