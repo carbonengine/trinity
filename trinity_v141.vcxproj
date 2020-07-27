@@ -2901,6 +2901,7 @@
     <ClInclude Include="Tr2GrannyPrimitiveSet.h" />
     <ClInclude Include="Tr2GRNMemoryPersist.h" />
     <ClInclude Include="Tr2GStateAnimation.h" />
+    <ClInclude Include="Tr2GStateParameter.h" />
     <ClInclude Include="Tr2HostBitmap.h" />
     <ClInclude Include="Tr2ImageIOHelpers.h" />
     <ClInclude Include="Tr2ImpostorManager.h" />
@@ -3470,6 +3471,8 @@
     <ClCompile Include="Tr2GRNMemoryPersist.cpp" />
     <ClCompile Include="Tr2GStateAnimation.cpp" />
     <ClCompile Include="Tr2GStateAnimation_Blue.cpp" />
+    <ClCompile Include="Tr2GStateParameter.cpp" />
+    <ClCompile Include="Tr2GStateParameter_Blue.cpp" />
     <ClCompile Include="Tr2HostBitmap.cpp" />
     <ClCompile Include="Tr2HostBitmap_Blue.cpp" />
     <ClCompile Include="Tr2ImageIOHelpers.cpp" />

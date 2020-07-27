@@ -4419,6 +4419,10 @@
     <ClInclude Include="Controllers\Actions\Tr2ActionSetAttenuationScaling.h">
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.h" />
+    <ClInclude Include="Tr2GStateParameter.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Audio\Tr2AudioStretchAuto.cpp">
@@ -4438,6 +4442,14 @@
     </ClCompile>
     <ClCompile Include="Controllers\Actions\Tr2ActionSetAttenuationScaling_Blue.cpp">
       <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones_Blue.cpp" />
+    <ClCompile Include="Tr2GStateParameter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2GStateParameter_Blue.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
