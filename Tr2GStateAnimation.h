@@ -10,11 +10,14 @@
 #include "gstate_parameters.h"
 #include "gstate_tokenized.h"
 #include "gstate_state_machine.h"
+#include "Tr2GStateParameter.h"
 
 BLUE_DECLARE( TriGrannyRes );
 BLUE_DECLARE( Tr2GrannyStateRes );
 BLUE_DECLARE( TriGeometryRes );
 
+BLUE_DECLARE( Tr2GStateParameter );
+BLUE_DECLARE_VECTOR( Tr2GStateParameter );
 
 struct GrannyBoneBindingBounds
 {
@@ -22,14 +25,14 @@ struct GrannyBoneBindingBounds
 	Vector3 m_corners[8];
 };
 
-BLUE_CLASS( Tr2GStateAnimation ):
-     public IInitialize,
-	 public ITr2AnimationUpdater,
-	 public IBlueAsyncResNotifyTarget
+BLUE_CLASS( Tr2GStateAnimation ) :
+	public IInitialize,
+	public ITr2AnimationUpdater,
+	public IBlueAsyncResNotifyTarget
 {
 public:
-    EXPOSE_TO_BLUE();
-    Tr2GStateAnimation( IRoot* lockobj = NULL );
+	EXPOSE_TO_BLUE();
+	Tr2GStateAnimation( IRoot* lockobj = NULL );
 	~Tr2GStateAnimation();
 
 	const std::string& GetResPath() const;
@@ -42,29 +45,31 @@ public:
 	void LoadModelFromGstate();
 	bool IsFullyLoaded();
 
-
 	bool IsAnimationEnabled() const;
 	void SetAnimationEnabled( bool enabled );
 
-	void	SetSharedGeometryRes( TriGeometryResPtr res );
-	void	SetUseMeshBinding( bool enable ) { m_useMeshBinding = enable; }
+	void SetSharedGeometryRes( TriGeometryResPtr res );
+	void SetUseMeshBinding( bool enable )
+	{
+		m_useMeshBinding = enable;
+	}
 
 	const std::string& GetModel() const;
-	void SetModel( const std::string& val);
+	void SetModel( const std::string& val );
 	granny_model* GetGrannyModel() const;
-	
+
 	bool IsInitialized() const;
 
 	std::vector<std::string> GetTopLevelNodeNames();
 	std::vector<std::string> GetTopLevelParameterNodeNames();
 	std::vector<std::string> GetTopLevelStateNodeNames();
-	std::vector<std::string> GetParameters( const std::string &param_node );
-	std::vector<float> GetParameterRange( const std::string &param_node, const std::string &param_name );
+	std::vector<std::string> GetParameters( const std::string& param_node );
+	std::vector<float> GetParameterRange( const std::string& param_node, const std::string& param_name );
 	gstate::tokenized* GetActiveMachineElement();
 	const std::string GetActiveMachineElementName();
 	int GetStartStateIdx();
-	void SetStartStateIdx(int StartState);
-	void SetStartStateByName( const std::string& name);
+	void SetStartStateIdx( int StartState );
+	void SetStartStateByName( const std::string& name );
 	bool RequestChangeToState( const std::string& name );
 	bool ForceChangeToState( const std::string& name );
 	bool StartTransitionByName( const std::string& name );
@@ -75,10 +80,10 @@ public:
 	float GetParameterByName( const std::string& param_node_name, const std::string& param_name );
 	granny_int32x GetParameterIndexByName( const std::string& param_node_name, const std::string& param_name );
 
-	bool GetDynamicBounds( Vector4& boundingSphere, Vector3 &aabbMin, Vector3 &aabbMax );
+	bool GetDynamicBounds( Vector4 & boundingSphere, Vector3 & aabbMin, Vector3 & aabbMax );
 	void RenderDynamicBounds( const Matrix& modelTransform );
-	Vector4 CalculateSkinnedBoundingSphere( granny_file_info* fi=nullptr );
-	bool CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform, Vector3& bbMin, Vector3& bbMax, granny_file_info* fi=nullptr );
+	Vector4 CalculateSkinnedBoundingSphere( granny_file_info* fi = nullptr );
+	bool CalculateSkinnedBoundingBoxFromTransform( const Matrix& transform, Vector3& bbMin, Vector3& bbMax, granny_file_info* fi = nullptr );
 
 	void RenderBones( const Matrix& modelTransform );
 
@@ -94,45 +99,45 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITr2AnimationUpdater
-	void PrePhysicsAnimation( Be::Time time, const Matrix &modelTransform );
-	void PostPhysicsAnimation( Be::Time time, const Matrix &modelTransform );
+	void PrePhysicsAnimation( Be::Time time, const Matrix& modelTransform );
+	void PostPhysicsAnimation( Be::Time time, const Matrix& modelTransform );
 	const Matrix* GetAnimationTransforms();
-	const std::string *GetAnimationBoneList( unsigned int& numBones ) const;
+	const std::string* GetAnimationBoneList( unsigned int& numBones ) const;
 
 	//////////////////////////////////////////////////////////////////////////
 	// IAsyncLoadedResNotifyTarget
-	void	ReleaseCachedData( BlueAsyncRes* p );
-	void	RebuildCachedData( BlueAsyncRes* p );
-	void	Cleanup();
+	void ReleaseCachedData( BlueAsyncRes * p );
+	void RebuildCachedData( BlueAsyncRes * p );
+	void Cleanup();
 
 
-	bool	FindBoneByName( const char* name, unsigned int& ix ) const;
-	granny_skeleton *m_skeleton;
-	granny_world_pose *m_worldPose;
-	granny_mesh_binding *m_meshBinding;
+	bool FindBoneByName( const char* name, unsigned int& ix ) const;
+	granny_skeleton* m_skeleton;
+	granny_world_pose* m_worldPose;
+	granny_mesh_binding* m_meshBinding;
 
 
 private:
-	std::string			m_name;
-	std::string			m_resPath;
-	std::string			m_gStateResPath;
-	std::string			m_model;
-	granny_model_instance	*m_modelInstance;
-	TriGrannyResPtr		m_grannyRes;
+	std::string m_name;
+	std::string m_resPath;
+	std::string m_gStateResPath;
+	std::string m_model;
+	granny_model_instance* m_modelInstance;
+	TriGrannyResPtr m_grannyRes;
 	Tr2GrannyStateResPtr m_gStateRes;
-	granny_pose_cache *m_gstate_pose_cache;
-	granny_real32		m_last_gstate_time;
-	TriGeometryResPtr	m_geometryRes;
+	granny_pose_cache* m_gstate_pose_cache;
+	granny_real32 m_last_gstate_time;
+	TriGeometryResPtr m_geometryRes;
 
+	bool InitializeBoundingInfo();
 	bool m_animationBound;
 	bool m_boneBoundsInitialized;
 	std::vector<GrannyBoneBindingBounds> m_boneBounds;
-	bool InitializeBoundingInfo();
 
-	gstate_character_instance *m_gStateCharacterInstance;
-	state_machine *m_state_machine;
-	granny_local_pose *m_localPose;
-	granny_local_pose *m_compositePose;
+	gstate_character_instance* m_gStateCharacterInstance;
+	state_machine* m_state_machine;
+	granny_local_pose* m_localPose;
+	granny_local_pose* m_compositePose;
 	std::map<std::string, float> m_animationLayerWeights;
 
 	typedef TrackableStdVector<std::string> BoneList_t;
@@ -158,8 +163,16 @@ private:
 	granny_file_info* GetFileInfo() const;
 	void LoadGrannyRes();
 
-	
+
 	IBlueEventListenerPtr m_eventListener;
+
+	///////////////////////////////////////////////
+	// Tr2GstateAnimationParameter
+	void InitializeParametersFromGState();
+	Tr2GStateParameterPtr GetParameterObjectByName( const std::string nodeName, const std::string name );
+	PTr2GStateParameterVector m_gStateParameterList;
+	// 2d map/dictionary to store parameter indices given parameter node name and parameter name
+	std::map<std::tuple<std::string, std::string>, int> m_gStateParameterCachedList;
 };
 
 TYPEDEF_BLUECLASS( Tr2GStateAnimation );
