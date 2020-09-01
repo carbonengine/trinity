@@ -104,7 +104,7 @@ void SetDirtyIfNotNull(Tr2PPEffect *effect)
 
 TriStepResult TriStepRenderPostProcess::Execute(Be::Time realTime, Be::Time simTime, Tr2RenderContext& renderContext)
 {
-	m_renderInfo->Setup();
+	m_renderInfo->Setup( renderContext );
 	auto sourceBuffer = m_renderInfo->GetSourceBuffer();
 
 	if (!sourceBuffer)
@@ -1106,8 +1106,6 @@ void TriStepRenderPostProcess::SetRenderTarget( Tr2RenderTarget* rt )
 	if( rt != GetRenderTarget() )
 	{
 		m_renderInfo->SetSourceBuffer( rt );
-		m_renderInfo->Setup();
-
 		if( rt != nullptr )
 		{
 			m_tilesX = rt->GetWidth() / HISTOGRAM_TILE_SIZE_X + 1;

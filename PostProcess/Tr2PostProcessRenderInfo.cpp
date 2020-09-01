@@ -76,11 +76,35 @@ bool Tr2PostProcessRenderInfo::OnModified( Be::Var* value )
 	return true;
 }
 
-void Tr2PostProcessRenderInfo::Setup()
+void Tr2PostProcessRenderInfo::Setup( Tr2RenderContext& renderContext )
 {
 	if( !m_black->IsValid() )
 	{
-		m_black->Create( 4, 4, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM );
+		m_black->CreateManual( 
+			4, // width
+			4, // height
+			1, // miplevelcount
+			Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, // format
+			1, // msaaType
+			0, // msaaQuality
+			Tr2RenderContextEnum::EX_NONE, // flags
+			Tr2RenderContextEnum::TEX_TYPE_2D, // texture type
+			Tr2CpuUsage::WRITE, // cpu flags
+			Tr2GpuUsage::SHADER_RESOURCE // gpu flags
+		);
+
+		auto texture = m_black->GetTexture();
+
+		// blackify texture
+		void* data = nullptr;
+		uint32_t pitch = 0;
+
+		if( SUCCEEDED( texture->MapForWriting( Tr2TextureSubresource( 0 ), data, pitch, renderContext ) ) )
+		{
+			uint32_t* mem = (uint32_t*)data;
+			memset( mem, 0, 4 * pitch ); // blackify!
+			texture->UnmapForWriting( renderContext );
+		}
 	}
 
 	if( !m_sourceBufferCopy->IsValid() )
@@ -189,8 +213,7 @@ Tr2RenderTarget* Tr2PostProcessRenderInfo::GetGrainInputBuffer()
 			source->GetWidth(),
 			source->GetHeight(),
 			1,
-			source->GetFormat()
-		);
+			source->GetFormat() );
 	}
 
 	return m_grainInputRT;
