@@ -46,16 +46,14 @@ namespace TrinityALImpl
 		m_samplerTableSize( 0 ),
 		m_srvUavParameter( 0xffffffff ),
 		m_samplerParameter( 0xffffffff ),
-		m_owner( nullptr )
+		m_owner( nullptr ),
+		m_VS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
+		m_PS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
+		m_DS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
+		m_HS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
+		m_GS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
+		m_CS( D3D12_SHADER_BYTECODE{ nullptr, 0 } )
 	{
-		D3D12_SHADER_BYTECODE none = { nullptr, 0 };
-		m_VS = none;
-		m_PS = none;
-		m_DS = none;
-		m_HS = none;
-		m_GS = none;
-		m_CS = none;
-
 	}
 
 	Tr2ShaderProgramAL::~Tr2ShaderProgramAL()

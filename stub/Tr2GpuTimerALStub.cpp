@@ -46,7 +46,7 @@ namespace TrinityALImpl
 		return m_isValid ? 0.0001f : -1.f;
 	}
 
-	void Tr2GpuTimerAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	void Tr2GpuTimerAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
 }

@@ -26,7 +26,7 @@ bool GetDeviceId( uint32_t& deviceId )
     return true;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterInfo( unsigned adapterIndex,
+ALResult Tr2VideoAdapterInfo::GetAdapterInfo( unsigned,
 											  Tr2AdapterInfo& info )
 {
 	
@@ -52,13 +52,13 @@ ALResult Tr2VideoAdapterInfo::GetAdapterInfo( unsigned adapterIndex,
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterMonitor( unsigned adapterIndex,
-												 void*& monitor )
+ALResult Tr2VideoAdapterInfo::GetAdapterMonitor( unsigned,
+												 void*& )
 {
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterDisplayMode( unsigned adapterIndex,
+ALResult Tr2VideoAdapterInfo::GetAdapterDisplayMode( unsigned,
 													 Tr2DisplayModeInfo& mode )
 {
 	mode.format = PIXEL_FORMAT_B8G8R8A8_UNORM;
@@ -71,17 +71,17 @@ ALResult Tr2VideoAdapterInfo::GetAdapterDisplayMode( unsigned adapterIndex,
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterModeCount( unsigned adapterIndex,
-												   Tr2RenderContextEnum::PixelFormat backBufferFormat,
+ALResult Tr2VideoAdapterInfo::GetAdapterModeCount( unsigned,
+												   Tr2RenderContextEnum::PixelFormat,
 												   unsigned& count )
 {
 	count = 1;
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned adapterIndex,
-											  Tr2RenderContextEnum::PixelFormat backBufferFormat,
-											  unsigned modeIndex,
+ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned,
+											  Tr2RenderContextEnum::PixelFormat,
+											  unsigned,
 											  Tr2DisplayModeInfo& mode )
 {
 	mode.format = PIXEL_FORMAT_B8G8R8X8_UNORM;
@@ -95,63 +95,63 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned adapterIndex,
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterShaderVersion( unsigned adapterIndex,
+ALResult Tr2VideoAdapterInfo::GetAdapterShaderVersion( unsigned,
 													   unsigned& version )
 {
 	version = 4294902528;
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned adapterIndex,
+ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned,
 														 unsigned& maxWidth )
 {
 	maxWidth = 16384;
 	return S_OK;
 }
 
-bool Tr2VideoAdapterInfo::SupportsBackBufferFormat( unsigned adapterIndex,
-													Tr2RenderContextEnum::PixelFormat backBufferFormat,
-													bool windowed )
+bool Tr2VideoAdapterInfo::SupportsBackBufferFormat( unsigned,
+													Tr2RenderContextEnum::PixelFormat,
+													bool )
 {
 	return true;
 }
 
-bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex,
-													  Tr2RenderContextEnum::PixelFormat backBufferFormat,
-													  Tr2RenderContextEnum::PixelFormat format,
-													  bool withAutoGenMipmap )
+bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned,
+													  Tr2RenderContextEnum::PixelFormat,
+													  Tr2RenderContextEnum::PixelFormat,
+													  bool )
 {
 	return true;
 }
 
-bool Tr2VideoAdapterInfo::SupportsDepthStencilFormat( unsigned adapterIndex,
-													  Tr2RenderContextEnum::PixelFormat backBufferFormat,
-													  Tr2RenderContextEnum::DepthStencilFormat format )
+bool Tr2VideoAdapterInfo::SupportsDepthStencilFormat( unsigned,
+													  Tr2RenderContextEnum::PixelFormat,
+													  Tr2RenderContextEnum::DepthStencilFormat )
 {
 	return true;
 }
 
-bool Tr2VideoAdapterInfo::SupportsVertexTextureFormat( unsigned adapterIndex,
-													   Tr2RenderContextEnum::PixelFormat backBufferFormat,
-													   Tr2RenderContextEnum::PixelFormat format )
+bool Tr2VideoAdapterInfo::SupportsVertexTextureFormat( unsigned,
+													   Tr2RenderContextEnum::PixelFormat,
+													   Tr2RenderContextEnum::PixelFormat )
 {
 	return true;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
-													 Tr2RenderContextEnum::PixelFormat format,
-													 bool windowed,
-													 unsigned msaaType,
+ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned,
+													 Tr2RenderContextEnum::PixelFormat,
+													 bool,
+													 unsigned,
 													 unsigned& msaaQuality )
 {
 	msaaQuality = 0;
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
-													 Tr2RenderContextEnum::DepthStencilFormat format,
-													 bool windowed,
-													 unsigned msaaType,
+ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned,
+													 Tr2RenderContextEnum::DepthStencilFormat,
+													 bool,
+													 unsigned,
 													 unsigned& msaaQuality )
 {
 	msaaQuality = 0;

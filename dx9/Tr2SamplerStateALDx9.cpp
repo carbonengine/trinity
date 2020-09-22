@@ -36,7 +36,7 @@ namespace TrinityALImpl
 		m_states[D3DSAMP_ADDRESSU] = description.m_addressU;
 		m_states[D3DSAMP_ADDRESSV] = description.m_addressV;
 		m_states[D3DSAMP_ADDRESSW] = description.m_addressW;
-		m_states[D3DSAMP_MIPMAPLODBIAS] = *(uint32_t*)&description.m_mipLODBias;
+		m_states[D3DSAMP_MIPMAPLODBIAS] = *(uint32_t*)&description.m_mipLODBias; // cppcheck-suppress invalidPointerCast
 		m_states[D3DSAMP_MAXANISOTROPY] = g_forceAnisotropy ? g_forceAnisotropy : description.m_maxAnisotropy;
 		m_states[D3DSAMP_MAXMIPLEVEL] = uint32_t( description.m_minLOD );
 		m_states[D3DSAMP_BORDERCOLOR] =

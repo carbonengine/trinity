@@ -76,7 +76,7 @@ namespace TrinityALImpl
 		return AL_MEMORY_MANAGED;
 	}
 
-	void Tr2ConstantBufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	void Tr2ConstantBufferAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
 }

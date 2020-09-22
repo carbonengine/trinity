@@ -63,7 +63,7 @@ namespace TrinityALImpl
 		return AL_MEMORY_MANAGED;
 	}
 
-	void Tr2ShaderProgramAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	void Tr2ShaderProgramAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
 

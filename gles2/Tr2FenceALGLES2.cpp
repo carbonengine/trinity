@@ -130,7 +130,7 @@ bool Tr2FenceAL::IsValid() const
 	return m_isValid;
 }
 
-ALResult Tr2FenceAL::PutFence( Tr2RenderContextAL& renderContext )
+ALResult Tr2FenceAL::PutFence( Tr2RenderContextAL& )
 {
 	if( !IsValid() )
 	{

@@ -34,9 +34,10 @@ namespace Tr2RenderContextImpl {
 }
 
 Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
-	: m_usingEXDevice( false )
-	, m_vsyncInterval( 0 ),
-	m_adapterVendorId( 0 )
+	: m_usingEXDevice( false ), 
+	m_vsyncInterval( 0 ), 
+	m_adapterVendorId( 0 ), 
+	m_deviceStatisticsQueryEmpty( false )
 {
 	m_context.Attach( (ID3D11DeviceContext*)&Tr2RenderContextImpl::s_nullContext );
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
@@ -529,7 +530,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 			m_context->Begin( m_deviceStatistics );
 			m_deviceStatisticsQueryEmpty = false;
 		}
-		else if( m_deviceStatistics )
+		else
 		{
 			if( !m_deviceStatisticsQueryEmpty )
 			{

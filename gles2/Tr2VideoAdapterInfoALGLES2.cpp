@@ -314,7 +314,7 @@ struct FindMonitorContext
 	HMONITOR monitor;
 };
 
-BOOL CALLBACK FindMonitor( HMONITOR hMonitor, HDC hdcMonitor, LPRECT lprcMonitor, LPARAM dwData )
+BOOL CALLBACK FindMonitor( HMONITOR hMonitor, HDC, LPRECT, LPARAM dwData )
 {
 	MONITORINFOEXW info;
 	info.cbSize = sizeof( info );
@@ -488,14 +488,14 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned adapterIndex,
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterShaderVersion( unsigned adapterIndex,
+ALResult Tr2VideoAdapterInfo::GetAdapterShaderVersion( unsigned,
 													   unsigned& version )
 {
 	version = 5 << 8;
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned adapterIndex,
+ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned,
 														 unsigned& maxWidth )
 {
 	maxWidth = 4096;
@@ -516,9 +516,9 @@ bool Tr2VideoAdapterInfo::SupportsBackBufferFormat( unsigned adapterIndex,
 }
 
 bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex,
-													  Tr2RenderContextEnum::PixelFormat backBufferFormat,
-													  Tr2RenderContextEnum::PixelFormat format,
-													  bool withAutoGenMipmap )
+													  Tr2RenderContextEnum::PixelFormat,
+													  Tr2RenderContextEnum::PixelFormat,
+													  bool )
 {
 	GetVideoDevices();
 	if( adapterIndex >= s_devices.size() )
@@ -530,8 +530,8 @@ bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex,
 }
 
 bool Tr2VideoAdapterInfo::SupportsDepthStencilFormat( unsigned adapterIndex,
-													  Tr2RenderContextEnum::PixelFormat backBufferFormat,
-													  Tr2RenderContextEnum::DepthStencilFormat format )
+													  Tr2RenderContextEnum::PixelFormat,
+													  Tr2RenderContextEnum::DepthStencilFormat )
 {
 	GetVideoDevices();
 	if( adapterIndex >= s_devices.size() )
@@ -543,8 +543,8 @@ bool Tr2VideoAdapterInfo::SupportsDepthStencilFormat( unsigned adapterIndex,
 }
 
 bool Tr2VideoAdapterInfo::SupportsVertexTextureFormat( unsigned adapterIndex,
-													   Tr2RenderContextEnum::PixelFormat backBufferFormat,
-													   Tr2RenderContextEnum::PixelFormat format )
+													   Tr2RenderContextEnum::PixelFormat,
+													   Tr2RenderContextEnum::PixelFormat )
 {
 	GetVideoDevices();
 	if( adapterIndex >= s_devices.size() )
@@ -556,9 +556,9 @@ bool Tr2VideoAdapterInfo::SupportsVertexTextureFormat( unsigned adapterIndex,
 }
 
 ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
-													 Tr2RenderContextEnum::PixelFormat format,
-													 bool windowed,
-													 unsigned msaaType,
+													 Tr2RenderContextEnum::PixelFormat,
+													 bool,
+													 unsigned,
 													 unsigned& msaaQuality )
 {
 	GetVideoDevices();
@@ -572,9 +572,9 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
 }
 
 ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
-													 Tr2RenderContextEnum::DepthStencilFormat format,
-													 bool windowed,
-													 unsigned msaaType,
+													 Tr2RenderContextEnum::DepthStencilFormat,
+													 bool,
+													 unsigned,
 													 unsigned& msaaQuality )
 {
 	GetVideoDevices();

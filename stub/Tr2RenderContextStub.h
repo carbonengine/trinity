@@ -75,12 +75,12 @@ public:
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram );
 
 
-	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( )
+	ALResult ClearUav( Tr2TextureAL&, uint32_t, const float[4] ) throw( )
 	{
 		return E_FAIL;
 	}
 
-	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw( )
+	ALResult ClearUav( Tr2TextureAL&, uint32_t, const uint32_t[4] ) throw( )
 	{
 		return E_FAIL;
 	}
@@ -120,26 +120,26 @@ public:
 		const void* vertexStreamZeroData, 
 		uint32_t vertexStreamZeroStride );
 
-	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL&, uint32_t )
 	{
 		return E_FAIL;
 	}
 
-	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+	ALResult DrawInstancedIndirect( Tr2BufferAL&, uint32_t )
 	{
 		return E_FAIL;
 	}
 
-	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ )
+	ALResult RunComputeShader( unsigned, unsigned, unsigned )
 	{
 		return E_FAIL;
 	}
-	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset )
+	ALResult RunComputeShaderIndirect( Tr2BufferAL&, unsigned )
 	{
 		return E_FAIL;
 	}
 
-	ALResult CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src )
+	ALResult CopyBufferCounter( Tr2BufferAL&, uint32_t, Tr2BufferAL& )
 	{
 		return E_FAIL;
 	}
@@ -191,7 +191,10 @@ public:
 		( 1 << Tr2RenderContextEnum::PIXEL_SHADER );
 
 	// Debug helpers
-	size_t GetStackSizeRT( uint32_t RT = 0 )	const { return 0; }
+	size_t GetStackSizeRT( uint32_t = 0 ) const
+	{
+		return 0;
+	}
 	size_t GetStackSizeDS()						const { return 0; }
 
 	Tr2CapsAL m_caps;

@@ -17,9 +17,9 @@ namespace TrinityALImpl
 	ALResult Tr2ShaderAL::Create(
 		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
-		const Tr2ShaderBytecodeAL& patchedBytecode,
+		const Tr2ShaderBytecodeAL&,
 		const Tr2ShaderSignatureAL&,
-		Tr2PrimaryRenderContextAL &renderContext )
+		Tr2PrimaryRenderContextAL & )
 	{
 		m_bytecode.resize( "Tr2ShaderALStub::m_bytecode", bytecode.size );
 		if( m_bytecode.empty() )
@@ -70,7 +70,7 @@ namespace TrinityALImpl
 		m_type = type;
 	}
 
-	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
 }

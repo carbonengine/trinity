@@ -32,7 +32,7 @@ namespace TrinityALImpl
 		m_definition.reset();
 	}
 
-	void Tr2VertexLayoutAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	void Tr2VertexLayoutAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
 }

@@ -625,7 +625,7 @@ void Tr2RenderContextAL::Destroy() throw()
 	m_topology = TOP_INVALID;
 	m_lastSetTopology = TOP_INVALID;
 
-	memset( m_boundRenderTarget, 0, sizeof( m_boundRenderTarget[0] ) * MAX_RENDER_TARGET );
+	std::fill_n( m_boundRenderTarget, MAX_RENDER_TARGET, Tr2TextureAL() );
 
 	memset( &m_renderStateEmulation.m_currentBlend, 0, 
 			sizeof( m_renderStateEmulation.m_currentBlend ) );
@@ -1319,7 +1319,7 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& p ) thr
 		return S_OK;
 	}
 	auto& program = *p.m_program;
-	auto& old = *m_shaderProgram.m_program;
+	const auto& old = *m_shaderProgram.m_program;
 
 	if( old.m_shaders.vertexShader != program.m_shaders.vertexShader )
 	{
@@ -1587,15 +1587,15 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( rs.DepthBias != static_cast<INT>(value) )
 			{
 				//rs.DepthBias = static_cast<INT>(value);
-				rs.DepthBias = static_cast<INT>(*(float*)&value);
+				rs.DepthBias = static_cast<INT>( *(float*)&value ); // cppcheck-suppress invalidPointerCast
 				m_dirtyFlag |= fos.DIRTY_RASTERIZER;
 			}
 			continue;	//return S_OK;
 
 		case RS_SLOPESCALEDEPTHBIAS:
-			if( rs.SlopeScaledDepthBias != *((float*)&value) )
+			if( rs.SlopeScaledDepthBias != *( (float*)&value ) ) // cppcheck-suppress invalidPointerCast
 			{
-				rs.SlopeScaledDepthBias = *((float*)&value);	// undo F2DW
+				rs.SlopeScaledDepthBias = *( (float*)&value ); // cppcheck-suppress invalidPointerCast
 				m_dirtyFlag |= fos.DIRTY_RASTERIZER;
 			}
 			continue;	//return S_OK;

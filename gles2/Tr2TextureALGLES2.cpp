@@ -7,6 +7,8 @@
 #include "ALLog.h"
 #include "Tr2RenderContextGLES2.h"
 
+#pragma warning( disable : 4189 ) // Scopeguard
+
 namespace
 {
 	ALResult FillInitialData( GLenum target, GLenum internalFormat, GLenum targetFormat, GLenum targetType, const Tr2BitmapDimensions& desc, Tr2SubresourceData* initialData )
@@ -311,7 +313,7 @@ namespace
 		return S_OK;
 	}
 
-	ALResult CreateDepthStencil( GLuint& texture, GLuint& msaaBuffer, GLuint& stencilBuffer, bool readable, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2SubresourceData* initialData )
+	ALResult CreateDepthStencil( GLuint& texture, GLuint& msaaBuffer, GLuint& stencilBuffer, bool readable, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2SubresourceData* )
 	{
 		texture = 0;
 		msaaBuffer = 0;
@@ -704,7 +706,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	ALResult Tr2TextureAL::OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Tr2TextureAL::OpenShared( uintptr_t, Tr2GpuUsage::Type, Tr2PrimaryRenderContextAL& )
 	{
 		return E_FAIL;
 	}
@@ -835,7 +837,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2TextureAL::UnmapForReading( Tr2RenderContextAL& renderContext )
+	void Tr2TextureAL::UnmapForReading( Tr2RenderContextAL& )
 	{
 		if( m_lockedData.get() && !HasFlag( m_cpuUsage, Tr2CpuUsage::READ_OFTEN ) )
 		{
@@ -895,7 +897,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2TextureAL::UnmapForWriting( Tr2RenderContextAL& renderContext )
+	void Tr2TextureAL::UnmapForWriting( Tr2RenderContextAL& )
 	{
 		if( !m_lockedData.get() )
 		{
@@ -957,7 +959,7 @@ namespace TrinityALImpl
 		}
 	}
 
-	ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t slicePitch, Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t, Tr2RenderContextAL& renderContext )
 	{
 		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE ) )
 		{
@@ -1021,7 +1023,7 @@ namespace TrinityALImpl
 		return renderContext.CopySubresourceRegion( *this, destSubresource, source, sourceSubresource );
 	}
 
-	ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& )
 	{
 		if( !HasFlag( m_gpuUsage, Tr2GpuUsage::RENDER_TARGET ) )
 		{

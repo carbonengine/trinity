@@ -163,7 +163,7 @@ namespace TrinityALImpl
 		CR_GL_RETURN( glUnmapBuffer( target ) );
 	}
 
-	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
+	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type, Tr2RenderContextAL& renderContext )
 	{
 		if( !renderContext.IsValid() || !IsValid() )
 		{

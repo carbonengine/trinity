@@ -11,6 +11,8 @@ namespace TrinityALImpl
 	class Tr2BufferAL : public Tr2DeviceResourceAL<Tr2BufferAL>
 	{
 	public:
+		Tr2BufferAL();
+
 		ALResult Create(
 			const Tr2BufferDescriptionAL& desc,
 			const void* initialData,

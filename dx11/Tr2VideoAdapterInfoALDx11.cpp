@@ -118,11 +118,6 @@ ALResult InitializeDirect3D()
 	s_deviceInfo.resize( 0 );
 
 	s_factory = nullptr;
-
-	HANDLE heapsBefore[256];
-	uint32_t countBefore = ::GetProcessHeaps( 256, heapsBefore );
-	( countBefore );
-
 	g_usingEXDevice = false;
 
 	CR_RETURN_HR( CreateDXGIFactory1(
@@ -257,8 +252,8 @@ ALResult Tr2VideoAdapterInfo::GetAdapterInfo( unsigned adapterIndex,
 	CHECK_INIT;
 	CHECK_VALID_ADAPTER;
 
-	auto & desc = s_adapters[adapterIndex].m_desc;
-	auto & outp = s_adapters[adapterIndex].m_outputDesc;
+	const auto& desc = s_adapters[adapterIndex].m_desc;
+	const auto& outp = s_adapters[adapterIndex].m_outputDesc;
 
 	info.driver = "";
 	info.description = desc.Description;
@@ -289,7 +284,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterDisplayMode( unsigned adapterIndex,
 	CHECK_INIT;
 	CHECK_VALID_ADAPTER;
 
-	auto & mm = s_adapters[adapterIndex].m_displayModes[DXGI_FORMAT_B8G8R8A8_UNORM][0];
+	const auto& mm = s_adapters[adapterIndex].m_displayModes[DXGI_FORMAT_B8G8R8A8_UNORM][0];
 	mode.format = static_cast<PixelFormat>( mm.Format );
 	mode.refreshRateDenominator = mm.RefreshRate.Denominator;
 	mode.refreshRateNumerator = mm.RefreshRate.Numerator;

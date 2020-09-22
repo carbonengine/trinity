@@ -5,6 +5,8 @@
 #include "Tr2ResourceSetALGLES2.h"
 #include "Tr2TextureALGLES2.h"
 
+#pragma warning( disable : 4189 ) // Scopeguard
+
 using namespace Tr2RenderContextEnum;
 
 namespace

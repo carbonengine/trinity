@@ -138,7 +138,7 @@ template<> const char* BeGetErrorMessage( const Be::Result<HRESULT>& result )
 		const char* message = "<No description>";
 #endif
 		static char buffer[1024];
-		sprintf_s( buffer, "ALResult(%x) %s: %s", result.GetResult(), name, message );
+		sprintf_s( buffer, "ALResult(%lx) %s: %s", result.GetResult(), name, message );
 		s_errorMessages[result] = buffer;
 		return s_errorMessages[result].c_str();
 	}

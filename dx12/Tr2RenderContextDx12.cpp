@@ -90,9 +90,13 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw( )
 	m_dynamicVBs( 0 ),
 	m_dynamicIB( false ),
 	m_separateAlphaBlendEnabled( false ),
-	m_srgbWriteEnable( false )
+	m_srgbWriteEnable( false ),
+	m_topology( Tr2RenderContextEnum::TOP_TRIANGLES )
 {
-
+	for( auto& buffer : m_vertexBuffers )
+	{
+		buffer = VB();
+	}
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL() throw( )
@@ -381,9 +385,9 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 
 	HANDLE_STATE( Tr2RenderContextEnum::RS_CULLMODE, m_psoDescription.m_rasterizerDesc.CullMode );
 	HANDLE_STATE( Tr2RenderContextEnum::RS_FILLMODE, m_psoDescription.m_rasterizerDesc.FillMode );
-	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_DEPTHBIAS, m_psoDescription.m_rasterizerDesc.DepthBias );
-	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_ZBIAS, m_psoDescription.m_rasterizerDesc.DepthBias );
-	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_SLOPESCALEDEPTHBIAS, m_psoDescription.m_rasterizerDesc.SlopeScaledDepthBias );
+	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_DEPTHBIAS, m_psoDescription.m_rasterizerDesc.DepthBias ); // cppcheck-suppress invalidPointerCast
+	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_ZBIAS, m_psoDescription.m_rasterizerDesc.DepthBias ); // cppcheck-suppress invalidPointerCast
+	HANDLE_STATE_FLT( Tr2RenderContextEnum::RS_SLOPESCALEDEPTHBIAS, m_psoDescription.m_rasterizerDesc.SlopeScaledDepthBias ); // cppcheck-suppress invalidPointerCast
 
 	HANDLE_STATE( Tr2RenderContextEnum::RS_ZENABLE, m_psoDescription.m_depthStencilDesc.DepthEnable );
 	HANDLE_STATE( Tr2RenderContextEnum::RS_ZFUNC, m_psoDescription.m_depthStencilDesc.DepthFunc );

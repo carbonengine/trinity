@@ -446,7 +446,7 @@ namespace TrinityALImpl
 
 		D3D12_RESOURCE_DESC Desc = pDestinationResource->GetDesc();
 		ID3D12Device* pDevice;
-		pDestinationResource->GetDevice( __uuidof( *pDevice ), reinterpret_cast<void**>( &pDevice ) );
+		pDestinationResource->GetDevice( __uuidof( ID3D12Device ), reinterpret_cast<void**>( &pDevice ) );
 		pDevice->GetCopyableFootprints( &Desc, FirstSubresource, NumSubresources, IntermediateOffset, pLayouts, pNumRows, pRowSizesInBytes, &RequiredSize );
 		pDevice->Release();
 
@@ -464,7 +464,7 @@ namespace TrinityALImpl
 		UINT64 RequiredSize = 0;
 
 		ID3D12Device* pDevice = nullptr;
-		pDestinationResource->GetDevice( __uuidof( *pDevice ), reinterpret_cast<void**>( &pDevice ) );
+		pDestinationResource->GetDevice( __uuidof( ID3D12Device ), reinterpret_cast<void**>( &pDevice ) );
 		pDevice->GetCopyableFootprints( &Desc, FirstSubresource, NumSubresources, 0, nullptr, nullptr, nullptr, &RequiredSize );
 		pDevice->Release();
 
@@ -478,9 +478,9 @@ namespace TrinityALImpl
 	}
 
 
-	GenerateMipsResources::GenerateMipsResources( _In_ ID3D12Device* device )
+	GenerateMipsResources::GenerateMipsResources( _In_ ID3D12Device* device ) :
+		rootSignature( CreateGenMipsRootSignature( device ) )
 	{
-		rootSignature = CreateGenMipsRootSignature( device );
 		generateMipsPSO = CreateGenMipsPipelineState( device, rootSignature, GenerateMips_main, sizeof( GenerateMips_main ) );
 		generateMipsArrayPSO = CreateGenMipsPipelineState( device, rootSignature, GenerateMipsArray_main, sizeof( GenerateMipsArray_main ) );
 	}

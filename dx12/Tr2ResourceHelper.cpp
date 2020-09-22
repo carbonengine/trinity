@@ -9,10 +9,12 @@
 
 namespace TrinityALImpl
 {
-	Tr2ResourceHelper::Tr2ResourceHelper()
-		:m_size( 0 ),
+	Tr2ResourceHelper::Tr2ResourceHelper() :
+		m_size( 0 ),
 		m_defaultState( D3D12_RESOURCE_STATE_COMMON ),
-		m_strategy( STATIC )
+		m_strategy( STATIC ),
+		m_gpuResource(),
+		m_mapped()
 	{
 	}
 

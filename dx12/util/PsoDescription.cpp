@@ -100,10 +100,6 @@ namespace TrinityALImpl
 			if( m_shaderProgram.IsValid() )
 			{
 				desc.pRootSignature = m_shaderProgram.m_program->m_rootSignature;
-			}
-
-			if( m_shaderProgram.IsValid() )
-			{
 				desc.VS = m_shaderProgram.m_program->m_VS;
 				desc.PS = m_shaderProgram.m_program->m_PS;
 				desc.DS = m_shaderProgram.m_program->m_DS;
@@ -141,7 +137,7 @@ namespace TrinityALImpl
 
 	void PSODescription::UpdateHash()
 	{
-		m_hash = CcpHashFNV1( GetHashableBlock(), sizeof( GetHashableBlockSize() ) );
+		m_hash = CcpHashFNV1( GetHashableBlock(), GetHashableBlockSize() );
 		const void* ptrs[2] = { m_shaderProgram.m_program.get(), m_vertexLayout.m_layout.get() };
 		m_hash = CcpHashFNV1( ptrs, sizeof( ptrs ), unsigned( m_hash ) );
 	}

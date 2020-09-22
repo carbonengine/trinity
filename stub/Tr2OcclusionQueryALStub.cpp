@@ -62,7 +62,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	ALResult Tr2OcclusionQueryAL::GetPixelCount( Tr2RenderContextAL& /*renderContext*/, uint32_t& count, ::Tr2OcclusionQueryAL::WaitMode waitMode )
+	ALResult Tr2OcclusionQueryAL::GetPixelCount( Tr2RenderContextAL& /*renderContext*/, uint32_t& count, ::Tr2OcclusionQueryAL::WaitMode )
 	{
 		if( !m_isValid )
 		{
@@ -72,7 +72,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2OcclusionQueryAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	void Tr2OcclusionQueryAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
 }

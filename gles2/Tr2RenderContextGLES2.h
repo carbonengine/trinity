@@ -77,12 +77,12 @@ public:
 	ALResult SetTopology( long topology );
 	ALResult SetShaderProgram( const Tr2ShaderProgramAL& shaderProgram );
 
-	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const float values[4] ) throw( )
+	ALResult ClearUav( Tr2TextureAL&, uint32_t, const float[4] ) throw( )
 	{
 		return E_FAIL;
 	}
 
-	ALResult ClearUav( Tr2TextureAL& rt, uint32_t mipLevel, const uint32_t values[4] ) throw( )
+	ALResult ClearUav( Tr2TextureAL&, uint32_t, const uint32_t[4] ) throw( )
 	{
 		return E_FAIL;
 	}
@@ -120,28 +120,28 @@ public:
 		const void* vertexStreamZeroData, 
 		uint32_t vertexStreamZeroStride );
 
-	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( )
+	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL&, uint32_t ) throw( )
 	{
 		// For desktop OpenGL 4.3 something like glMultiDrawArraysIndirect
 		return E_FAIL;
 	}
 
-	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset )
+	ALResult DrawInstancedIndirect( Tr2BufferAL&, uint32_t )
 	{
 		return E_FAIL;
 	}
 
-	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw()
+	ALResult RunComputeShader( unsigned, unsigned, unsigned ) throw()
 	{
 		return E_FAIL;
 	}
 
-	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset )
+	ALResult RunComputeShaderIndirect( Tr2BufferAL&, unsigned )
 	{
 		return E_FAIL;
 	}
 
-	ALResult CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src )
+	ALResult CopyBufferCounter( Tr2BufferAL&, uint32_t, Tr2BufferAL& )
 	{
 		return E_FAIL;
 	}
@@ -198,7 +198,10 @@ public:
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
 
 #ifdef _WIN32
-	bool	IsValid() { return m_hRC != (HGLRC)0xFFffFFff; }
+	bool IsValid()
+	{
+		return m_hRC != (HGLRC)INVALID_HANDLE_VALUE;
+	}
 #else
 	bool	IsValid() { return m_hWnd != 0; }
 #endif

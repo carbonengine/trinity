@@ -77,7 +77,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2FenceAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	void Tr2FenceAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
 }

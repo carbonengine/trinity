@@ -3,7 +3,8 @@
 
 Tr2LockGuard::Tr2LockGuard()
 	:m_memory( nullptr ),
-	m_originalMemory( nullptr )
+	m_originalMemory( nullptr ),
+	m_size( 0 )
 {
 }
 

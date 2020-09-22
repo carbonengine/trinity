@@ -1251,7 +1251,6 @@ namespace TrinityALImpl
 		uint32_t pitch = 0;
 		GetRegionSize( m_mappedRegion, pitch, requiredSize );
 
-		D3D12_RANGE range = { 0, SIZE_T( requiredSize ) };
 		m_mappedScratch->scratch->Unmap( 0, nullptr );
 
 		auto texture = GetResourceDx12();

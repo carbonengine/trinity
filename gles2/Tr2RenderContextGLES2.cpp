@@ -24,8 +24,8 @@ CCP_STATS_DECLARE( primitiveCount		, "Trinity/AL/primitiveCount"		, true, CST_CO
 CCP_STATS_DECLARE( vertexCount			, "Trinity/AL/vertexCount"			, true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
 CCP_STATS_DECLARE( sceneDrawcallCount	, "Trinity/AL/sceneDrawcallCount"	, true, CST_COUNTER_LOW,  "Number of DrawPrimitive calls." );
 
-#define	INVALID_WIN32	0xFFFFFFFF
-#define	INVALID_HRC  	(HGLRC)0xFFFFFFFF
+
+#define INVALID_HRC (HGLRC)INVALID_HANDLE_VALUE
 
 struct Tr2RenderContextAL::ShadowStateRestoreInfo
 {
@@ -97,23 +97,6 @@ void InitializeExtensions()
 }
 #endif
 
-}
-
-static GLenum ConvertTextureType( TextureType type )
-{
-	switch( type )
-	{
-	case TEX_TYPE_CUBE:
-		return GL_TEXTURE_CUBE_MAP;
-	case TEX_TYPE_3D:
-#ifdef TRINITY_AL_MOBILE
-        return GL_TEXTURE_3D_OES;
-#else
-		return GL_TEXTURE_3D;
-#endif
-	default:
-		return GL_TEXTURE_2D;
-	}
 }
 
 // --------------------------------------------------------------------------------------
@@ -490,7 +473,7 @@ ALResult Tr2RenderContextAL::Clear(
 	uint32_t color, 
 	float depth, 
 	uint32_t stencil,
-	uint32_t slot )
+	uint32_t )
 {
 	if( !IsValid() )
 	{ 
@@ -582,7 +565,7 @@ uint32_t Tr2RenderContextAL::ComputeVertexCount( uint32_t primitiveCount )
 			
 	
 	default:
-		CCP_ASSERT( false && "Unsupported topology" );
+		CCP_ASSERT_M( false, "Unsupported topology" );
 		return 0;
 	}
 }
@@ -733,7 +716,7 @@ ALResult Tr2RenderContextAL::DrawPrimitiveUP(
 }
 
 ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(	
-	uint32_t numVertices, 
+	uint32_t, 
 	uint32_t primitiveCount, 
 	const uint32_t* indexData, 
 	const void* vertexStreamZeroData, 
@@ -771,7 +754,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 }
 
 ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(	
-	uint32_t numVertices, 
+	uint32_t, 
 	uint32_t primitiveCount, 
 	const uint16_t* indexData, 
 	const void* vertexStreamZeroData, 
@@ -2097,7 +2080,7 @@ bool Tr2RenderContextAL::ApplyVertexDeclaration( ShadowStateRestoreInfo& info, c
 	return true;
 }
 
-bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& info )
+bool Tr2RenderContextAL::ApplyShadowRenderStates( ShadowStateRestoreInfo& )
 {
 	m_fragmentOpSettings.UpdateContents( m_alphaTestParameters );
 	CR_RETURN_VAL( SetProgram(), false );

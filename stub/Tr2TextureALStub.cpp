@@ -92,7 +92,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	ALResult Tr2TextureAL::OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Tr2TextureAL::OpenShared( uintptr_t, Tr2GpuUsage::Type, Tr2PrimaryRenderContextAL& )
 	{
 		return E_FAIL;
 	}
@@ -173,7 +173,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2TextureAL::UnmapForReading( Tr2RenderContextAL& renderContext )
+	void Tr2TextureAL::UnmapForReading( Tr2RenderContextAL& )
 	{
 		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ_OFTEN ) && !HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
@@ -223,7 +223,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2TextureAL::UnmapForWriting( Tr2RenderContextAL& renderContext )
+	void Tr2TextureAL::UnmapForWriting( Tr2RenderContextAL& )
 	{
 		if( !HasFlag( m_cpuUsage, Tr2CpuUsage::READ_OFTEN ) && !HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
@@ -231,7 +231,7 @@ namespace TrinityALImpl
 		}
 	}
 
-	ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t slicePitch, Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, const void*, uint32_t, uint32_t, Tr2RenderContextAL& renderContext )
 	{
 		if( HasFlag( m_cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
@@ -289,7 +289,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::GenerateMipMaps( Tr2RenderContextAL& )
 	{
 		if( !HasFlag( m_gpuUsage, Tr2GpuUsage::RENDER_TARGET ) || !HasFlag( m_gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
 		{
@@ -338,7 +338,7 @@ namespace TrinityALImpl
 		return 0;
 	}
 
-	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
 }

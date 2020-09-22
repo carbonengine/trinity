@@ -349,7 +349,7 @@ ALResult Tr2RenderContextAL::ReportIfFailure( long hr, const char* message )
 		BreakInDebugger();
 	}
 #else
-	(message);
+	CCP_UNUSED( message );
 #endif
 	return hr;
 }
@@ -863,12 +863,6 @@ ALResult Tr2RenderContextAL::CreateDevice(
 
 PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 {
-	if( !m_d3dDevice9 )
-	{
-		return PIXEL_FORMAT_UNKNOWN;
-	}
-
-
 	if( !m_d3dDevice9 )
 	{
 		return PIXEL_FORMAT_UNKNOWN;

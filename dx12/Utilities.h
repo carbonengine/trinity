@@ -71,7 +71,7 @@ namespace TrinityALImpl
 
 		D3D12_RESOURCE_DESC Desc = pDestinationResource->GetDesc();
 		ID3D12Device* pDevice;
-		pDestinationResource->GetDevice( __uuidof( *pDevice ), reinterpret_cast<void**>( &pDevice ) );
+		pDestinationResource->GetDevice( __uuidof( ID3D12Device ), reinterpret_cast<void**>( &pDevice ) );
 		pDevice->GetCopyableFootprints( &Desc, FirstSubresource, NumSubresources, IntermediateOffset, Layouts, NumRows, RowSizesInBytes, &RequiredSize );
 		pDevice->Release();
 

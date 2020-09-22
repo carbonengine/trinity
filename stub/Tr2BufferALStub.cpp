@@ -90,11 +90,11 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& renderContext )
+	void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& )
 	{
 	}
 
-	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
+	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type, Tr2RenderContextAL& renderContext )
 	{
 		if( !renderContext.IsValid() || !IsValid() )
 		{
@@ -109,11 +109,11 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2BufferAL::UnmapForWriting( Tr2RenderContextAL& renderContext )
+	void Tr2BufferAL::UnmapForWriting( Tr2RenderContextAL& )
 	{
 	}
 
-	ALResult Tr2BufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext )
+	ALResult Tr2BufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const void*, Tr2RenderContextAL & renderContext )
 	{
 		if( !renderContext.IsValid() || !IsValid() )
 		{
@@ -134,7 +134,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
 }

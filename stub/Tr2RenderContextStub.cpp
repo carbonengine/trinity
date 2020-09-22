@@ -90,11 +90,11 @@ ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&
 }
 
 ALResult Tr2RenderContextAL::Clear(	
-	uint32_t clearFlags, 
-	uint32_t color, 
-	float depth, 
-	uint32_t stencil,
-	uint32_t slot )
+	uint32_t, 
+	uint32_t, 
+	float, 
+	uint32_t,
+	uint32_t )
 {
 	return S_OK;
 }
@@ -110,42 +110,42 @@ ALResult Tr2RenderContextAL::SetTopology( long topology )
 
 
 ALResult Tr2RenderContextAL::DrawIndexedPrimitive(	
-	uint32_t numVertices, 
-	uint32_t startIndex, 
-	uint32_t primitiveCount, 
-	uint32_t minimumIndex )
+	uint32_t, 
+	uint32_t, 
+	uint32_t, 
+	uint32_t )
 {
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::DrawIndexedInstanced(	
-	uint32_t numVertices, 
-	uint32_t startIndex, 
-	uint32_t primitiveCount, 
-	uint32_t numInstances )
+	uint32_t, 
+	uint32_t, 
+	uint32_t, 
+	uint32_t )
 {
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t startVertex, uint32_t primitiveCount )
+ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t, uint32_t )
 {
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::DrawPrimitiveUP( 
-	uint32_t primitiveCount, 
-	const void* vertexStreamZeroData, 
-	uint32_t vertexStreamZeroStride )
+	uint32_t, 
+	const void*, 
+	uint32_t )
 {
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(	
-	uint32_t numVertices, 
-	uint32_t primitiveCount, 
+	uint32_t, 
+	uint32_t, 
 	const uint32_t* indexData, 
 	const void* vertexStreamZeroData, 
-	uint32_t vertexStreamZeroStride )
+	uint32_t )
 {
 	if( !indexData || !vertexStreamZeroData )
 	{
@@ -155,11 +155,11 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 }
 
 ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(	
-	uint32_t numVertices, 
-	uint32_t primitiveCount, 
+	uint32_t, 
+	uint32_t, 
 	const uint16_t* indexData, 
 	const void* vertexStreamZeroData, 
-	uint32_t vertexStreamZeroStride )
+	uint32_t )
 {
 	if( !indexData || !vertexStreamZeroData )
 	{
@@ -169,10 +169,10 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 }
 
 ALResult Tr2RenderContextAL::SetConstants(
-	const Tr2ConstantBufferAL& buffer,
-	ShaderType constantType, 
-	uint32_t registerIndex, 
-	uint32_t maxRegisterCount )
+	const Tr2ConstantBufferAL&,
+	ShaderType, 
+	uint32_t, 
+	uint32_t )
 {
 	return S_OK;
 }
@@ -185,7 +185,7 @@ bool Tr2RenderContextAL::GetReadOnlyDepth() const
 {
 	return false;
 }
-ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
+ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& )
 {
 	return S_OK;
 }
@@ -198,7 +198,7 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 
 ALResult Tr2RenderContextAL::CreateDevice(	
 	uint32_t Adapter, 
-	Tr2WindowHandle  hFocusWindow, 
+	Tr2WindowHandle, 
 	const Tr2PresentParametersAL& presentationParameters )
 {
 	m_isValid = true;
@@ -216,7 +216,7 @@ PixelFormat Tr2RenderContextAL::GetBackBufferFormat() const
 	return m_defaultBackBuffer.GetFormat();
 }
 
-ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& presentationParameters )
+ALResult Tr2RenderContextAL::SetPresentParameters( unsigned, const Tr2PresentParametersAL& presentationParameters )
 {
 	CR_RETURN_HR( m_defaultBackBuffer.Create(	
 		Tr2BitmapDimensions( presentationParameters.mode.width, presentationParameters.mode.height, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ),
@@ -253,7 +253,7 @@ bool Tr2RenderContextAL::IsValid()
 	return m_isValid;
 }
 
-ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout )
+ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& )
 {
 	return S_OK;
 }
@@ -263,22 +263,22 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
+ALResult Tr2RenderContextAL::SetRenderState( RenderState, uint32_t )
 {
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t* stateValuePairs, uint32_t count )
+ALResult Tr2RenderContextAL::SetRenderStates( const uint32_t*, uint32_t )
 {
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet )
+ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& )
 {
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights )
+ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t )
 {
 	return S_OK;
 }

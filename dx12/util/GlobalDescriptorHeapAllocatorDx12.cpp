@@ -22,9 +22,9 @@ GlobalDescriptorHeapAllocator::GlobalDescriptorHeapAllocator(CComPtr<ID3D12Devic
 	m_device(device),
 	m_heapType(heapType),
 	m_pageEntryCount(pageEntryCount),
-	m_descriptorsInUse(0)
+	m_descriptorsInUse(0),
+	m_pages( std::make_shared<PageList>( maxPages, maxPages ) )
 {
-	m_pages = std::make_shared<PageList>(maxPages, maxPages);
 	m_heapIncrement = m_device->GetDescriptorHandleIncrementSize(m_heapType);
 }
 

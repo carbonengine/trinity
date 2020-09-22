@@ -83,7 +83,7 @@ Tr2VertexDefinition::Item& Tr2VertexDefinition::Add( Tr2VertexDefinition::DataTy
 
 Tr2VertexDefinition::Item* Tr2VertexDefinition::Find( UsageCode usage )
 {
-	auto it = std::find_if( begin( m_items ), end( m_items ), [=]( Item& v )
+	auto it = std::find_if( begin( m_items ), end( m_items ), [=]( const Item& v )
 							{ return v.m_usage == usage; } );
 
 	return it == m_items.end() ? nullptr : &*it;
@@ -91,7 +91,7 @@ Tr2VertexDefinition::Item* Tr2VertexDefinition::Find( UsageCode usage )
 
 Tr2VertexDefinition::Item* Tr2VertexDefinition::Find( UsageCode usage, unsigned usageIndex )
 {
-	auto it = std::find_if( begin( m_items ), end( m_items ), [=]( Item& v )
+	auto it = std::find_if( begin( m_items ), end( m_items ), [=]( const Item& v )
 							{ return v.m_usage == usage && v.m_usageIndex == usageIndex; } );
 
 	return it == m_items.end() ? nullptr : &*it;

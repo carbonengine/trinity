@@ -61,14 +61,6 @@ public:
 	ALResult Present();
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
-	
-	static const uint32_t SHADER_TYPE_MASK = 
-		( 1 << Tr2RenderContextEnum::VERTEX_SHADER ) |
-		( 1 << Tr2RenderContextEnum::PIXEL_SHADER ) |
-		( 1 << Tr2RenderContextEnum::COMPUTE_SHADER ) |
-		( 1 << Tr2RenderContextEnum::GEOMETRY_SHADER ) |
-		( 1 << Tr2RenderContextEnum::HULL_SHADER ) |
-		( 1 << Tr2RenderContextEnum::DOMAIN_SHADER );
 
 public:
 	Tr2TextureAL m_defaultBackBuffer;

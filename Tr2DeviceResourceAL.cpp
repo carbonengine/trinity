@@ -66,7 +66,6 @@ void DestroyDeviceResources( Tr2ALMemoryTypes memoryTypes )
 	auto& allResources = GetAllResources();
 	for( auto it = begin( allResources ); it != end( allResources ); ++it )
 	{
-		Tr2DeviceResourceDescriptionAL desc;
 		if( ( *it )->IsResourceValid() && ( ( *it )->GetResourceMemoryClass() & memoryTypes ) != 0 )
 		{
 			( *it )->Destroy();

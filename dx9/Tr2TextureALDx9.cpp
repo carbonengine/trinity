@@ -10,6 +10,8 @@ extern bool g_preloadTextureToDeviceOnPrepare;
 extern bool g_usingEXDevice;
 extern bool g_useManagedDX9Buffers;
 
+#pragma warning( disable : 4189 )
+
 
 namespace
 {
@@ -545,7 +547,8 @@ namespace TrinityALImpl
 		m_pool( D3DPOOL_DEFAULT ),
 		m_format( D3DFMT_UNKNOWN ),
 		m_gpuUsage( Tr2GpuUsage::NONE ),
-		m_cpuUsage( Tr2CpuUsage::NONE )
+		m_cpuUsage( Tr2CpuUsage::NONE ),
+		m_lockedSubresource( 0 )
 	{
 	}
 
@@ -733,7 +736,7 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
-	ALResult Tr2TextureAL::OpenShared( uintptr_t handle, Tr2GpuUsage::Type gpuUsage, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Tr2TextureAL::OpenShared( uintptr_t, Tr2GpuUsage::Type, Tr2PrimaryRenderContextAL& )
 	{
 		return E_FAIL;
 	}

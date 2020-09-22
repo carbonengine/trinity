@@ -50,10 +50,6 @@ namespace TrinityALImpl
 
 			bd.ByteWidth = size;
 			bd.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-			if( usage == Tr2ConstantUsageAL::IMMUTABLE )
-			{
-				bd.Usage = D3D11_USAGE_IMMUTABLE;
-			}
 			bd.Usage = D3D11_USAGE_DYNAMIC;
 			bd.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 

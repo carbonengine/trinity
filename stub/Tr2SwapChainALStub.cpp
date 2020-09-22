@@ -14,7 +14,7 @@ namespace TrinityALImpl
 	{
 	}
 
-	ALResult Tr2SwapChainAL::Create( Tr2WindowHandle windowHandle, Tr2RenderContextAL& renderContext )
+	ALResult Tr2SwapChainAL::Create( Tr2WindowHandle, Tr2RenderContextAL& renderContext )
 	{
 		if( !renderContext.IsValid() )
 		{
@@ -37,7 +37,7 @@ namespace TrinityALImpl
 		return m_backBuffer.IsValid();
 	}
 
-	ALResult Tr2SwapChainAL::Present( Tr2RenderContextAL& renderContext )
+	ALResult Tr2SwapChainAL::Present( Tr2RenderContextAL& )
 	{
 		return S_OK;
 	}
@@ -52,7 +52,7 @@ namespace TrinityALImpl
 		return m_backBuffer.GetHeight();
 	}
 
-	void Tr2SwapChainAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+	void Tr2SwapChainAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
 

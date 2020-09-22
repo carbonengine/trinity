@@ -36,7 +36,9 @@ public:
 	FrameLocalUploadBufferPage() :
 		m_primaryContext(nullptr),
 		m_buffer(nullptr),
-		m_size(0)
+		m_cpuAddr( 0 ),
+		m_size(0),
+		m_currentOffset( 0 )
 	{
 	}
 

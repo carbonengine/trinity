@@ -17,6 +17,11 @@ namespace
 
 namespace TrinityALImpl
 {
+	Tr2BufferAL::Tr2BufferAL() :
+		m_pool()
+	{
+	}
+
 	ALResult Tr2BufferAL::Create(
 		const Tr2BufferDescriptionAL& desc,
 		const void* initialData,
