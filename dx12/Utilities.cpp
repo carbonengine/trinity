@@ -532,7 +532,8 @@ namespace TrinityALImpl
 		{
 			CComPtr<ID3DBlob> rootSignatureBlob;
 			CComPtr<ID3DBlob> errorBlob;
-			auto hr = D3D12SerializeRootSignature( &rsigDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &rootSignatureBlob, &errorBlob );
+			HRESULT hr;
+			CR( hr = D3D12SerializeRootSignature( &rsigDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &rootSignatureBlob, &errorBlob ) );
 			if( FAILED( hr ) )
 			{
 				if( errorBlob )
@@ -543,7 +544,6 @@ namespace TrinityALImpl
 				{
 					CCP_AL_LOGERR( "Failed to serialize a root signature - unknown error" );
 				}
-				CR( hr );
 			}
 
 			CR( device->CreateRootSignature(

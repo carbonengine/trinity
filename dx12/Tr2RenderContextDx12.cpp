@@ -93,10 +93,7 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw( )
 	m_srgbWriteEnable( false ),
 	m_topology( Tr2RenderContextEnum::TOP_TRIANGLES )
 {
-	for( auto& buffer : m_vertexBuffers )
-	{
-		buffer = VB();
-	}
+	std::fill( std::begin( m_vertexBuffers ), std::end( m_vertexBuffers ), VB() );
 }
 
 Tr2RenderContextAL::~Tr2RenderContextAL() throw( )

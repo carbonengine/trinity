@@ -37,8 +37,8 @@ namespace TrinityALImpl
 			auto& stage = m_stages[stageIndex];
 			for( uint32_t registerIndex = 0; registerIndex < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++registerIndex )
 			{
-				auto& desc = description.m_srv[stageIndex][registerIndex];
-				if( desc.type != Tr2ResourceSetDescriptionAL::NONE && registerIndex >= MAX_RESOURCES ) // cppcheck-suppress arrayIndexOutOfBoundsCond
+				auto& desc = description.m_srv[stageIndex][registerIndex]; // cppcheck-suppress arrayIndexOutOfBoundsCond
+				if( desc.type != Tr2ResourceSetDescriptionAL::NONE && registerIndex >= MAX_RESOURCES )
 				{
 					return E_INVALIDARG;
 				}
@@ -60,8 +60,8 @@ namespace TrinityALImpl
 			}
 			for( uint32_t registerIndex = 0; registerIndex < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++registerIndex )
 			{
-				auto& desc = description.m_samplers[stageIndex][registerIndex];
-				if( desc.assigned && registerIndex >= MAX_RESOURCES ) // cppcheck-suppress arrayIndexOutOfBoundsCond
+				auto& desc = description.m_samplers[stageIndex][registerIndex]; // cppcheck-suppress arrayIndexOutOfBoundsCond
+				if( desc.assigned && registerIndex >= MAX_RESOURCES )
 				{
 					return E_INVALIDARG;
 				}
