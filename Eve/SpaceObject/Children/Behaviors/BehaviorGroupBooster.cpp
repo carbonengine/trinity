@@ -437,9 +437,16 @@ void BehaviorGroupBooster::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr
 	}
 }
 
-void BehaviorGroupBooster::AddLight( Tr2LightManager& lightManager, Vector3 position, float radiusModifier, const Matrix& parentTransform )
+void BehaviorGroupBooster::AddLight( Tr2LightManager& lightManager, Vector3 position, float radiusModifier, int agentIndex, const Matrix& parentTransform )
 {
-	lightManager.AddPointLight( position, radiusModifier * m_lightRadius, m_lightColor, 0.1f * radiusModifier * m_lightRadius );
+	Vector4 color = m_lightColor;
+	if( m_ambientFlareNoiseAmplitude != 0.f )
+	{
+		float noise = float( PerlinNoise1D( TimeAsDouble( BeOS->GetCurrentFrameTime() + TimeFromMS( agentIndex * 10 ) ) * m_ambientFlareNoiseSpeed, 2.f, 2.f, m_ambientFlareNoiseOctaves ) );
+		color *= ( ( noise + 1.0f ) / 2.0f ) * m_ambientFlareNoiseAmplitude;
+	}
+
+	lightManager.AddPointLight( position, radiusModifier * m_lightRadius, color );
 }
 
 void BehaviorGroupBooster::AddFlare( const Matrix& agentTransform, float lod, float intensity, unsigned int agentIndex, float shipBoundingSphereRadius )
@@ -455,7 +462,7 @@ void BehaviorGroupBooster::AddFlare( const Matrix& agentTransform, float lod, fl
 		auto& q = m_haloFlares[agentIndex];
 		float haloModification = ( 1.0f + lod ) * ( 1.0f + lod ) * ( lod - 1.0f ) * ( lod - 1.0f );
 		haloModification = max( 0.0f, haloModification );
-		float scaledBrightness = ( 0.1f + 0.9f * intensity ) * m_haloFlareBrightness * haloModification;
+		float scaledBrightness = 0.1f + 0.9f * intensity * m_haloFlareBrightness * haloModification;
 		
 		// offset the halo towards the center of the ship when we lod out
 		Vector3 modOffset = haloModification * m_haloFlareOffset;

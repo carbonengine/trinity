@@ -99,7 +99,7 @@ public:
 	void SetupRenderables();
 
 	BehaviorGroupBoosterPtr GetBooster() const;
-	void AddLights( Tr2LightManager& lightManger );
+	void AddLights( Tr2LightManager& lightManger, const Matrix& parentTransform);
 
 	Vector3 m_spawnPosition;
 
@@ -148,7 +148,7 @@ private:
 
 	// boosters
 	BehaviorGroupBoosterPtr m_booster;
-	std::vector<Vector4> m_lightInfo;
+	std::map<uint32_t, Vector4> m_lightInfo;
 
 	// debug stuff
 	bool m_debugMode;

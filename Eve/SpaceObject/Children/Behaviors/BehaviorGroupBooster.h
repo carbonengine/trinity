@@ -88,7 +88,7 @@ public:
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const;
 
-	void AddLight( Tr2LightManager& lightManager, Vector3 position, float radiusModifier, const Matrix& parentTransform );
+	void AddLight( Tr2LightManager & lightManager, Vector3 position, float radiusModifier, int agentIndex, const Matrix& parentTransform );
 	void AddFlare( const Matrix& agentTransform, float lod, float intensity, unsigned int agentIndex, float shipBoundingSphereRadius );
 
 	

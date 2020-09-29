@@ -771,7 +771,7 @@ void EveChildBehaviorSystem::GetLights( Tr2LightManager& lightManager ) const
 {
 	for( auto it = begin( m_behaviorGroups ); it != end( m_behaviorGroups ); ++it )
 	{
-		( *it )->AddLights( lightManager );
+		( *it )->AddLights( lightManager, m_worldTransform );
 	}
 }
 

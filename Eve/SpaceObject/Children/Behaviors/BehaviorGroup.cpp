@@ -673,10 +673,10 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, Matrix& parentWorldLocation
 					if( LOD < 0.25 )
 					{
 						float lightScale = intensity * ( 1.0f - 4.0f * LOD ) * ( 2.0f * LOD + 1.0f ); // early scale down for lights
-						m_lightInfo.push_back( Vector4( boosterPos.GetXYZ(), lightScale ) ) ;
+						m_lightInfo[agentIndex] = Vector4( boosterPos.GetXYZ(), lightScale );
 					}
 				}
-				auto m = agentTransform * m_parentTransform;
+				auto m = agentTransform * parentWorldLocation;
 				m_booster->AddFlare( m, LOD, intensity, agentIndex, m_boundingSphereRadius );
 			}
 
@@ -836,14 +836,15 @@ BehaviorGroupBoosterPtr BehaviorGroup::GetBooster() const
 	return m_booster;
 }
 
-void BehaviorGroup::AddLights( Tr2LightManager& lightManager )
+void BehaviorGroup::AddLights( Tr2LightManager& lightManager, const Matrix& parentTransform )
 {
 	if( m_booster && m_booster->GetDisplay() )
 	{
 		for( auto it = m_lightInfo.begin(); it != m_lightInfo.end(); ++it )
 		{
-			Vector4 info = *it;
-			m_booster->AddLight( lightManager, info.GetXYZ(), info.w, m_parentTransform );			
+			Vector4 info = it->second;
+
+			m_booster->AddLight( lightManager, info.GetXYZ(), info.w, it->first, parentTransform );			
 		}
 	}
 }
@@ -947,8 +948,8 @@ void BehaviorGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& paren
 		
 		for( auto it = m_lightInfo.begin(); it != m_lightInfo.end(); ++it )
 		{
-			Vector4 info = *it;
-			m_booster->RenderLightDebug( renderer, this, TransformationMatrix( info.w * scale, iq, info.GetXYZ() ) );
+			Vector4 info = it->second;
+			m_booster->RenderLightDebug( renderer, this, TransformationMatrix( info.w * scale, iq, info.GetXYZ() ) * parentWorldLocation );
 		}
 	}
 }
