@@ -622,7 +622,7 @@ bool BehaviorGroup::IsGroupVisible()
 // Description:
 //   Get LOD info for buffer. Called from BehaviorSystem
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::GetInfoForBuffer( uint8_t* data, Matrix& parentWorldLocation )
+void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation )
 {	
 	CCP_STATS_ZONE( __FUNCTION__ );
 	m_lightInfo.clear();
