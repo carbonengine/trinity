@@ -33,6 +33,8 @@ class Tr2Sprite2dScene:
 public:
     EXPOSE_TO_BLUE();
     Tr2Sprite2dScene( IRoot* lockobj = NULL );
+	Tr2Sprite2dScene( const Tr2Sprite2dScene& ) = delete;
+	Tr2Sprite2dScene& operator=( const Tr2Sprite2dScene& ) = delete;
 	~Tr2Sprite2dScene();
 
 	ITr2SpriteObject* PickObject( int x, int y, const TriProjection* proj, const TriView* view, const TriViewport* vp, Be::Optional<int> );

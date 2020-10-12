@@ -176,7 +176,7 @@ void BehaviorGroup::CreateAgentTree()
 // Returns:
 //	The behavior object if it found a match, if not return a nullptr
 // --------------------------------------------------------------------------------------
-IBehavior* BehaviorGroup::GetBehaviorByName(const std::string name)
+IBehavior* BehaviorGroup::GetBehaviorByName( const std::string& name )
 {
 	for( auto behavior = m_behaviors.begin(); behavior != m_behaviors.end(); ++behavior )
 	{

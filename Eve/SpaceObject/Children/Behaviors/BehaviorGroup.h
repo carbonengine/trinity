@@ -71,7 +71,7 @@ public:
 	float GetBoundingSphereRadius();
 	EveKDdroneManagementTreePtr GetKDTree();
 	unsigned int GetCount();
-	IBehavior* GetBehaviorByName( const std::string name );
+	IBehavior* GetBehaviorByName( const std::string& name );
 	int GetGroupIndexIndicator() const;
 	unsigned int GetVertexDeclarationHandle() const;
 	void GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation );
