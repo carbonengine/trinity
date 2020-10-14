@@ -132,7 +132,7 @@ private:
 	float m_boundingSphereRadius;
 
 	// Lod-ing
-	float m_scale; // Size Multiplier for the agent mesh
+	Vector3 m_scale; // Size Multiplier for the agent mesh
 
 	// Tr2Debug 
 	std::vector<Vector3> m_forces; // A debug vector that represents the forces applied to the agent 

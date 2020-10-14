@@ -18,7 +18,7 @@ BehaviorGroup::BehaviorGroup( IRoot* lockobj ) :
 	m_display( true ),
 	m_maxVelocity( 100 ),
 	m_changeBufferVertexCount( nullptr ),
-	m_scale( 1.0 ),
+	m_scale( 1.0, 1.0, 1.0 ),
 	m_currentScreenSize( 0.0 ),
 	m_renderThreshold( 1.0 ),
 	m_blendScreenSizeMin( 5.0 ),
@@ -487,11 +487,11 @@ void BehaviorGroup::UpdateAgents(const float dt, EveChildBehaviorSystem& system 
 		}
 		else
 		{
-			ranges.push_back( searchRad + m_boundingSphereRadius * m_scale );
+			ranges.push_back( searchRad + m_boundingSphereRadius * m_scale[0] );
 		}
 	}
 	
-	auto bs = m_boundingSphereRadius * m_scale;
+	auto bs = m_boundingSphereRadius * m_scale[0];
 	const std::vector<std::vector<std::vector<DroneAgent*>>>* dronesInRange = m_tree->FindDronesInRange( m_agents, ranges, bs );
 
 	//Calculate the behaviors
@@ -524,7 +524,6 @@ void BehaviorGroup::UpdateAgents(const float dt, EveChildBehaviorSystem& system 
 		agent->lifetime += dt;
 
 		static const Vector3 zAxis( 0.f, 0.f, 1.f );
-		Vector3 test = agent->velocity - agent->acceleration;
 		
 		agent->velocity += agent->acceleration;
 		Vector3 facingDir = agent->velocity;
@@ -556,10 +555,10 @@ void BehaviorGroup::UpdateVisibility( const TriFrustum & frustum, const Matrix &
 	// Check if an agent is visible and calculate the xfade value
 	for ( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 	{
-		if( frustum.IsSphereVisible( agent->position, m_boundingSphereRadius * m_scale ) )
+		if( frustum.IsSphereVisible( agent->position, m_boundingSphereRadius * m_scale[0] ) )
 		{
-			float pixelSize = frustum.GetPixelSizeAccross( agent->position, m_boundingSphereRadius * m_scale );
-			agent->screenSize = pixelSize * m_scale; // Store the screen size for each agent
+			float pixelSize = frustum.GetPixelSizeAccross( agent->position, m_boundingSphereRadius * m_scale[0] );
+			agent->screenSize = pixelSize * m_scale[0]; // Store the screen size for each agent
 
 			if( pixelSize >= m_blendScreenSizeMax )
 			{
@@ -678,7 +677,7 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 					}
 				}
 				auto m = agentTransform * parentWorldLocation;
-				m_booster->AddFlare( m, LOD, intensity, agentIndex, m_boundingSphereRadius * m_scale );
+				m_booster->AddFlare( m, LOD, intensity, agentIndex, m_boundingSphereRadius * m_scale[0] );
 			}
 
 			memcpy( data, &boosterPos, 4 * sizeof( float ) );
@@ -699,7 +698,7 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 				memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
 				data += 12 * sizeof( float );
 
-				m_booster->AddFlare( IdentityMatrix(), 0, 0, agentIndex, m_boundingSphereRadius * m_scale );
+				m_booster->AddFlare( IdentityMatrix(), 0, 0, agentIndex, m_boundingSphereRadius * m_scale[0] );
 			}
 		}
 		agentIndex++;
@@ -824,7 +823,7 @@ void BehaviorGroup::GetDebugOptions( Tr2DebugRendererOptions& options )
 
 float BehaviorGroup::GetBoundingSphereRadius()
 {
-	return m_boundingSphereRadius * m_scale;
+	return m_boundingSphereRadius * m_scale[0];
 }
 
 EveKDdroneManagementTreePtr BehaviorGroup::GetKDTree()
@@ -897,7 +896,7 @@ void BehaviorGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& paren
 		{
 			if( drawBS )
 			{
-				renderer.DrawSphere( this, TranslationMatrix( agent->position ) * parentWorldLocation, m_boundingSphereRadius * m_scale, 8, Tr2DebugRenderer::Wireframe, 0xffff00ff );
+				renderer.DrawSphere( this, TranslationMatrix( agent->position ) * parentWorldLocation, m_boundingSphereRadius * m_scale[0], 8, Tr2DebugRenderer::Wireframe, 0xffff00ff );
 			}
 			if( drawBoosters )
 			{
