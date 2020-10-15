@@ -6,6 +6,7 @@
 
 class Tr2ShaderAL;
 class Tr2PrimaryRenderContextAL;
+struct Tr2RegisterMapAL;
 namespace TrinityALImpl
 {
 	class Tr2ShaderProgramAL;
@@ -24,6 +25,8 @@ public:
 	Tr2ALMemoryType GetMemoryClass() const;
 
 	bool operator==( const Tr2ShaderProgramAL& other ) const;
+
+	const Tr2RegisterMapAL& GetRegisterMap() const;
 private:
 	std::shared_ptr<TrinityALImpl::Tr2ShaderProgramAL> m_program;
 

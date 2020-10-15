@@ -6,18 +6,49 @@
 #include "Tr2TextureAL.h"
 #include "Tr2SamplerStateAL.h"
 
+class Tr2ShaderAL;
 class Tr2ShaderProgramAL;
 class Tr2PrimaryRenderContextAL;
+struct Tr2ShaderSignatureAL;
 
 namespace TrinityALImpl
 {
 	class Tr2ResourceSetAL;
 }
 
+struct Tr2RegisterMapAL
+{
+	Tr2RegisterMapAL();
+	Tr2RegisterMapAL( Tr2RenderContextEnum::ShaderType stage, const Tr2ShaderSignatureAL& signature );
+	Tr2RegisterMapAL( const Tr2ShaderAL* shaders, size_t shaderCount );
+	Tr2RegisterMapAL( const Tr2RenderContextEnum::ShaderType* shaders, const Tr2ShaderSignatureAL* signatures, size_t signatureCount );
+
+	bool operator==( const Tr2RegisterMapAL& other ) const;
+	bool operator!=( const Tr2RegisterMapAL& other ) const;
+
+	static const uint32_t MAX_RESOURCES_IN_STAGE = 32;
+
+	uint32_t srvCount;
+	uint32_t uavCount;
+	uint32_t samplerCount;
+	uint8_t srvs[Tr2RenderContextEnum::SHADER_TYPE_COUNT][MAX_RESOURCES_IN_STAGE];
+	uint8_t uavs[Tr2RenderContextEnum::SHADER_TYPE_COUNT][MAX_RESOURCES_IN_STAGE];
+	uint8_t samplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][MAX_RESOURCES_IN_STAGE];
+};
+
+
 class Tr2ResourceSetDescriptionAL
 {
 public:
 	static const uint32_t MAX_RESOURCES_IN_STAGE = 32;
+
+	Tr2ResourceSetDescriptionAL();
+	Tr2ResourceSetDescriptionAL( const Tr2ResourceSetDescriptionAL& );
+	Tr2ResourceSetDescriptionAL( Tr2ResourceSetDescriptionAL&& );
+	explicit Tr2ResourceSetDescriptionAL( const Tr2ShaderProgramAL& program );
+	explicit Tr2ResourceSetDescriptionAL( const Tr2RegisterMapAL& registers );
+	Tr2ResourceSetDescriptionAL& operator=( const Tr2ResourceSetDescriptionAL& other );
+	Tr2ResourceSetDescriptionAL& operator=( Tr2ResourceSetDescriptionAL&& other );
 
 	bool SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer );
 	bool SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
@@ -66,9 +97,10 @@ private:
 		bool assigned;
 	};
 
-	Resource m_srv[Tr2RenderContextEnum::SHADER_TYPE_COUNT][MAX_RESOURCES_IN_STAGE];
-	Resource m_uav[Tr2RenderContextEnum::SHADER_TYPE_COUNT][MAX_RESOURCES_IN_STAGE];
-	Sampler m_samplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][MAX_RESOURCES_IN_STAGE];
+	Tr2RegisterMapAL m_registerMap;
+	std::unique_ptr<Resource[]> m_srv;
+	std::unique_ptr<Resource[]> m_uav;
+	std::unique_ptr<Sampler[]> m_samplers;
 
 	friend class TrinityALImpl::Tr2ResourceSetAL;
 };

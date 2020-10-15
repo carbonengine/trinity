@@ -150,6 +150,11 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	const Tr2ShaderSignatureAL& Tr2ShaderAL::GetSignature() const
+	{
+		return m_signature;
+	}
+
 	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2ShaderAL";

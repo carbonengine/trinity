@@ -81,6 +81,7 @@ namespace TrinityALImpl
 				return E_FAIL;
 			}
 		}
+		m_registerMap = Tr2RegisterMapAL( shaders, count );
 
 		m_isValid = true;
 		return S_OK;
@@ -102,6 +103,7 @@ namespace TrinityALImpl
 			m_patchedProgram.program = 0;
 			m_patchedProgram.attributes.clear();
 		}
+		m_registerMap = Tr2RegisterMapAL();
 		m_isValid = false;
 	}
 
@@ -206,6 +208,11 @@ namespace TrinityALImpl
 	{
 		description["type"] = "Tr2ShaderProgramAL";
 	}
-}
+
+	const Tr2RegisterMapAL& Tr2ShaderProgramAL::GetRegisterMap() const
+	{
+		return m_registerMap;
+	}
+	}
 
 #endif

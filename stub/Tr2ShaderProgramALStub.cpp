@@ -67,5 +67,9 @@ namespace TrinityALImpl
 	{
 	}
 
+	const Tr2RegisterMapAL& Tr2ShaderProgramAL::GetRegisterMap() const
+	{
+		return m_registerMap;
+	}
 }
 #endif

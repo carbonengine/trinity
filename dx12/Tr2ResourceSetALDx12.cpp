@@ -56,13 +56,17 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
+		if( program.m_program->m_registerMap != description.m_registerMap )
+		{
+			return E_INVALIDARG;
+		}
 
 		std::map<ID3D12Resource*, D3D12_RESOURCE_STATES> transitioned;
 
 		for (auto it = begin(program.m_program->m_srvRegisters); it != end(program.m_program->m_srvRegisters); ++it)
 		{
 			auto& reg = *it;
-			auto& resource = description.m_srv[reg.stage][reg.index];
+			auto& resource = description.m_srv[description.m_registerMap.srvs[reg.stage][reg.index]];
 			auto stateFlag = reg.stage == PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 			m_resourceCount = std::max( reg.parameter + 1, m_resourceCount );
 			switch (resource.type)
@@ -112,7 +116,7 @@ namespace TrinityALImpl
 		for (auto it = begin(program.m_program->m_uavRegisters); it != end(program.m_program->m_uavRegisters); ++it)
 		{
 			auto& reg = *it;
-			auto& resource = description.m_uav[reg.stage][reg.index];
+			auto& resource = description.m_uav[description.m_registerMap.uavs[reg.stage][reg.index]];
 			auto stateFlag = reg.stage == PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 			m_resourceCount = std::max( reg.parameter + 1, m_resourceCount );
 			switch (resource.type)
@@ -170,8 +174,8 @@ namespace TrinityALImpl
 		for (auto it = begin(program.m_program->m_samplerRegisters); it != end(program.m_program->m_samplerRegisters); ++it)
 		{
 			auto& reg = *it;
-			auto& sampler = description.m_samplers[reg.stage][reg.index];
-			if (sampler.assigned)
+			auto& sampler = description.m_samplers[description.m_registerMap.samplers[reg.stage][reg.index]];
+			if( sampler.assigned )
 			{
 				m_sampler[reg.parameter] = sampler.sampler.m_sampler->m_samplerState;
 			}

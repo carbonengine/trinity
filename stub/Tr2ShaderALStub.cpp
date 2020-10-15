@@ -65,6 +65,11 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	const Tr2ShaderSignatureAL& Tr2ShaderAL::GetSignature() const
+	{
+		return m_signature;
+	}
+
 	void Tr2ShaderAL::SetNullShaderType( Tr2RenderContextEnum::ShaderType type )
 	{
 		m_type = type;

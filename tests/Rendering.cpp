@@ -454,7 +454,7 @@ TEST_F( Rendering, CanSampleTexture )
 
 	uint32_t g = 127;
 
-	Tr2ResourceSetDescriptionAL resourceSetDescription;
+	Tr2ResourceSetDescriptionAL resourceSetDescription( sp );
 	resourceSetDescription.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	resourceSetDescription.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -555,7 +555,7 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 				std::numeric_limits<float>::max() ),
 			*renderContext ) );
 
-		Tr2ResourceSetDescriptionAL desc;
+		Tr2ResourceSetDescriptionAL desc( sp );
 		desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 		desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -762,7 +762,7 @@ TEST_F( Rendering, CanClearRenderTarget )
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -858,7 +858,7 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -966,7 +966,7 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( readableRt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, readableRt );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -1217,7 +1217,7 @@ TEST_F( Rendering, CanSampleDepthBuffer )
 		Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, 
 		*renderContext ) );
 
-	Tr2ResourceSetDescriptionAL resourceSetDescription;
+	Tr2ResourceSetDescriptionAL resourceSetDescription( sp2 );
 	resourceSetDescription.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, depthBuffer );
 	resourceSetDescription.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -1685,7 +1685,7 @@ TEST_F( Rendering, CanPerformAlphaTestGreaterEqual )
 			0.0f ),
 		*renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -1804,7 +1804,7 @@ TEST_F( Rendering, CanPerformAlphaTestLessEqual )
 			0.0f ),
 		*renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -1924,7 +1924,7 @@ TEST_F( Rendering, CanPerformAlphaTestEqual )
 		*renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -2033,7 +2033,7 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 		*renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -2149,7 +2149,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 	ASSERT_HRESULT_SUCCEEDED( sampler.Create( samplerDesc, *renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampler );
 
@@ -2269,7 +2269,7 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 	ASSERT_HRESULT_SUCCEEDED( rt2.Create( Tr2BitmapDimensions( 256, 256, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt2 );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -2385,7 +2385,7 @@ TEST_F( Rendering, CanSampleBc1Texture )
 		*renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -2537,7 +2537,7 @@ TEST_F( Rendering, CanSampleBc2Texture )
 		*renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -2627,7 +2627,7 @@ TEST_F( Rendering, CanSampleBc3Texture )
 		*renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -2718,7 +2718,7 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 		*renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -2820,7 +2820,7 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 		*renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -2986,7 +2986,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 		*renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -3090,7 +3090,7 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 		*renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex, Tr2RenderContextEnum::COLOR_SPACE_SRGB );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -3177,7 +3177,7 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 		*renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, tex, Tr2RenderContextEnum::COLOR_SPACE_SRGB );
 	desc.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -3248,7 +3248,7 @@ TEST_F( Rendering, CanUsePsUavs )
 
 	Tr2ResourceSetAL uavResourceSet;
 	{
-		Tr2ResourceSetDescriptionAL resourceSetDescription;
+		Tr2ResourceSetDescriptionAL resourceSetDescription( sp );
 		resourceSetDescription.SetUav( Tr2RenderContextEnum::PIXEL_SHADER, 1, rwTexture );
 		ASSERT_HRESULT_SUCCEEDED( uavResourceSet.Create( resourceSetDescription, sp, *renderContext ) );
 	}
@@ -3285,7 +3285,7 @@ TEST_F( Rendering, CanUsePsUavs )
 	ASSERT_HRESULT_SUCCEEDED( sp2.Create( shaders2, 2, *renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL resourceSetDescription;
+	Tr2ResourceSetDescriptionAL resourceSetDescription( sp2 );
 	resourceSetDescription.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rwTexture );
 	resourceSetDescription.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
 
@@ -3696,7 +3696,7 @@ TEST_F( Rendering, CanLoadMsaaRenderTarget )
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, rt );
 
 	Tr2ResourceSetAL resourceSet;

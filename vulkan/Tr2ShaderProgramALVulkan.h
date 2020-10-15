@@ -10,6 +10,7 @@
 
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2ShaderAL.h"
+#include "../include/Tr2ResourceSetAL.h"
 
 namespace TrinityALImpl
 {
@@ -22,6 +23,7 @@ namespace TrinityALImpl
 		ALResult Create( ::Tr2ShaderAL* shaders, size_t count, Tr2PrimaryRenderContextAL& renderContext );
 		void Destroy();
 		bool IsValid() const;
+		const Tr2RegisterMapAL& GetRegisterMap() const;
 
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
@@ -49,6 +51,7 @@ namespace TrinityALImpl
 			Tr2ShaderRegisterAL::RegisterType type;
 		};
 		std::vector<RegisterInput> m_registerInput;
+		Tr2RegisterMapAL m_registerMap;
 
 		friend class Tr2RenderContextAL;
 		friend class TrinityALImpl::Tr2ResourceSetAL;

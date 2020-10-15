@@ -199,6 +199,8 @@ namespace TrinityALImpl
 		m_srvUavTableSize = uint32_t( ranges.size() );
 		m_samplerTableSize = uint32_t( samplerRanges.size() );
 
+		m_registerMap = Tr2RegisterMapAL( shaders, count );
+
 		m_owner = &renderContext;
 
 		return S_OK;
@@ -230,6 +232,8 @@ namespace TrinityALImpl
 		m_srvRegisters.clear();
 		m_uavRegisters.clear();
 		m_samplerRegisters.clear();
+
+		m_registerMap = Tr2RegisterMapAL();
 
 		m_srvUavTableSize = 0;
 		m_srvUavParameter = 0xffffffff;
@@ -316,6 +320,11 @@ namespace TrinityALImpl
 				continue;
 			}
 		}
+	}
+
+	const Tr2RegisterMapAL& Tr2ShaderProgramAL::GetRegisterMap() const
+	{
+		return m_registerMap;
 	}
 
 	bool Tr2ShaderProgramAL::IsComputeProgramDx12() const

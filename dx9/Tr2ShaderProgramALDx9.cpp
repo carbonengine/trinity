@@ -4,6 +4,7 @@
 
 #include "../include/Tr2ShaderAL.h"
 #include "Tr2ShaderProgramALDx9.h"
+#include "Tr2ShaderALDx9.h"
 #include "Tr2RenderContextDx9.h"
 
 
@@ -60,6 +61,22 @@ namespace TrinityALImpl
 			m_vertexShader = shaders[1];
 			m_pixelShader = shaders[0];
 		}
+
+		m_registerMap = Tr2RegisterMapAL( shaders, count );
+		for( uint32_t stage = VERTEX_SHADER; stage <= PIXEL_SHADER; ++stage )
+		{
+			for( uint32_t i = 0; i < Tr2RegisterMapAL::MAX_RESOURCES_IN_STAGE; ++i)
+			{
+				if( m_registerMap.samplers[stage][i] < m_registerMap.samplerCount )
+				{
+					if( m_registerMap.srvs[stage][i] >= m_registerMap.srvCount )
+					{
+						m_registerMap.srvs[stage][i] = uint8_t( m_registerMap.srvCount++ );
+					}
+				}
+			}
+		}
+
 		m_isValid = true;
 		return S_OK;
 	}
@@ -68,6 +85,7 @@ namespace TrinityALImpl
 	{
 		m_vertexShader = ::Tr2ShaderAL();
 		m_pixelShader = ::Tr2ShaderAL();
+		m_registerMap = Tr2RegisterMapAL();
 		m_isValid = false;
 	}
 
@@ -86,5 +104,9 @@ namespace TrinityALImpl
 		description["type"] = "Tr2ShaderProgramAL";
 	}
 
+	const Tr2RegisterMapAL& Tr2ShaderProgramAL::GetRegisterMap() const
+	{
+		return m_registerMap;
+	}
 }
 #endif

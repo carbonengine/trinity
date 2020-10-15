@@ -99,6 +99,7 @@ public:
 
 	Tr2RenderContextEnum::ShaderType GetType() const;
 	ALResult GetBytecode( Tr2ShaderBytecodeAL& bytecode ) const;
+	const Tr2ShaderSignatureAL& GetSignature() const;
 
 	bool operator==( const Tr2ShaderAL& other ) const;
 	bool operator!=( const Tr2ShaderAL& other ) const;

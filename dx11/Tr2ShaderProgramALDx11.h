@@ -2,6 +2,7 @@
 
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2ShaderAL.h"
+#include "../include/Tr2ResourceSetAL.h"
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
@@ -20,6 +21,9 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const;
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+
+		const Tr2RegisterMapAL& GetRegisterMap() const;
+
 	private:
 		struct Shaders
 		{
@@ -35,6 +39,7 @@ namespace TrinityALImpl
 
 		::Tr2ShaderAL m_vertexShader;
 		Shaders m_shaders;
+		Tr2RegisterMapAL m_registerMap;
 
 		bool m_isValid;
 

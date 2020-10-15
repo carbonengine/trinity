@@ -180,6 +180,11 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	const Tr2ShaderSignatureAL& Tr2ShaderAL::GetSignature() const
+	{
+		return m_signature;
+	}
+
 	void Tr2ShaderAL::ReleaseShader()
 	{
 		if( m_shader.vertexShader )

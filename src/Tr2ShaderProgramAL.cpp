@@ -43,3 +43,8 @@ bool Tr2ShaderProgramAL::operator==( const Tr2ShaderProgramAL& other ) const
 {
 	return m_program == other.m_program;
 }
+
+const Tr2RegisterMapAL& Tr2ShaderProgramAL::GetRegisterMap() const
+{
+	return m_program->GetRegisterMap();
+}

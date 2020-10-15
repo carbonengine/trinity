@@ -31,6 +31,7 @@ namespace TrinityALImpl
 		bool IsValid() const;
 		Tr2RenderContextEnum::ShaderType GetType() const;
 		ALResult GetBytecode( Tr2ShaderBytecodeAL& bytecode ) const;
+		const Tr2ShaderSignatureAL& GetSignature() const;
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 
@@ -43,6 +44,7 @@ namespace TrinityALImpl
 
 		Tr2RenderContextEnum::ShaderType	m_type;
 		CcpMallocBuffer						m_bytecode;
+		Tr2ShaderSignatureAL m_signature;
 		union
 		{
 			IDirect3DVertexShader9* m_vertexShader;

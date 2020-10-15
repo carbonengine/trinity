@@ -1,13 +1,270 @@
 #include "StdAfx.h"
 #include "../include/Tr2ResourceSetAL.h"
 #include "../include/Tr2TextureAL.h"
+#include "../include/Tr2ShaderAL.h"
+#include "../include/Tr2ShaderProgramAL.h"
+
 
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2ResourceSetAL )
+
+Tr2RegisterMapAL::Tr2RegisterMapAL() :
+	srvCount( 0 ),
+	uavCount( 0 ),
+	samplerCount( 0 )
+{
+}
+
+Tr2RegisterMapAL::Tr2RegisterMapAL( Tr2RenderContextEnum::ShaderType stage, const Tr2ShaderSignatureAL& signature ) :
+	srvCount( 0 ),
+	uavCount( 0 ),
+	samplerCount( 0 )
+{
+	memset( srvs, -1, sizeof( srvs ) );
+	memset( uavs, -1, sizeof( uavs ) );
+	memset( samplers, -1, sizeof( samplers ) );
+
+	for( auto it = begin( signature.registers ); it != end( signature.registers ); ++it )
+	{
+		switch( it->registerType )
+		{
+		case Tr2ShaderRegisterAL::RESOURCE:
+			srvs[stage][it->registerIndex] = uint8_t( srvCount++ );
+			break;
+		case Tr2ShaderRegisterAL::UAV:
+			uavs[stage][it->registerIndex] = uint8_t( uavCount++ );
+			break;
+		case Tr2ShaderRegisterAL::SAMPLER:
+			samplers[stage][it->registerIndex] = uint8_t( samplerCount++ );
+			break;
+		default:
+			break;
+		}
+	}
+}
+
+Tr2RegisterMapAL::Tr2RegisterMapAL( const Tr2ShaderAL* shaders, size_t shaderCount ) :
+	srvCount( 0 ),
+	uavCount( 0 ),
+	samplerCount( 0 )
+{
+	memset( srvs, -1, sizeof( srvs ) );
+	memset( uavs, -1, sizeof( uavs ) );
+	memset( samplers, -1, sizeof( samplers ) );
+
+	for( size_t i = 0; i < shaderCount; ++i )
+	{
+		auto shaderType = shaders[i].GetType();
+		auto& signature = shaders[i].GetSignature();
+		for( auto it = begin( signature.registers ); it != end( signature.registers ); ++it )
+		{
+			switch( it->registerType )
+			{
+			case Tr2ShaderRegisterAL::RESOURCE:
+				srvs[shaderType][it->registerIndex] = uint8_t( srvCount++ );
+				break;
+			case Tr2ShaderRegisterAL::UAV:
+				uavs[shaderType][it->registerIndex] = uint8_t( uavCount++ );
+				break;
+			case Tr2ShaderRegisterAL::SAMPLER:
+				samplers[shaderType][it->registerIndex] = uint8_t( samplerCount++ );
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+
+Tr2RegisterMapAL::Tr2RegisterMapAL( const Tr2RenderContextEnum::ShaderType* shaders, const Tr2ShaderSignatureAL* signatures, size_t signatureCount ) :
+	srvCount( 0 ),
+	uavCount( 0 ),
+	samplerCount( 0 )
+{
+	memset( srvs, -1, sizeof( srvs ) );
+	memset( uavs, -1, sizeof( uavs ) );
+	memset( samplers, -1, sizeof( samplers ) );
+
+	for( size_t i = 0; i < signatureCount; ++i )
+	{
+		for( auto it = begin( signatures[i].registers ); it != end( signatures[i].registers ); ++it )
+		{
+			switch( it->registerType )
+			{
+			case Tr2ShaderRegisterAL::RESOURCE:
+				srvs[shaders[i]][it->registerIndex] = uint8_t( srvCount++ );
+				break;
+			case Tr2ShaderRegisterAL::UAV:
+				uavs[shaders[i]][it->registerIndex] = uint8_t( uavCount++ );
+				break;
+			case Tr2ShaderRegisterAL::SAMPLER:
+				samplers[shaders[i]][it->registerIndex] = uint8_t( samplerCount++ );
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+
+bool Tr2RegisterMapAL::operator==( const Tr2RegisterMapAL& other ) const
+{
+	if( srvCount != other.srvCount || uavCount != other.uavCount || samplerCount != other.samplerCount )
+	{
+		return false;
+	}
+	if( srvCount > 0 && memcmp( srvs, other.srvs, sizeof( srvs ) ) )
+	{
+		return false;
+	}
+	if( uavCount > 0 && memcmp( uavs, other.uavs, sizeof( uavs ) ) )
+	{
+		return false;
+	}
+	if( samplerCount > 0 && memcmp( samplers, other.samplers, sizeof( samplers ) ) )
+	{
+		return false;
+	}
+	return true;
+}
+
+bool Tr2RegisterMapAL::operator!=( const Tr2RegisterMapAL& other ) const
+{
+	return !( *this == other );
+}
+
+
+Tr2ResourceSetDescriptionAL::Tr2ResourceSetDescriptionAL()
+{
+}
+
+Tr2ResourceSetDescriptionAL::Tr2ResourceSetDescriptionAL( const Tr2ResourceSetDescriptionAL& other ) :
+	m_registerMap( other.m_registerMap )
+{
+	if( m_registerMap.srvCount > 0 )
+	{
+		m_srv.reset( new Resource[m_registerMap.srvCount] );
+		std::copy_n( other.m_srv.get(), m_registerMap.srvCount, m_srv.get() );
+	}
+	if( m_registerMap.uavCount > 0 )
+	{
+		m_uav.reset( new Resource[m_registerMap.uavCount] );
+		std::copy_n( other.m_uav.get(), m_registerMap.uavCount, m_uav.get() );
+	}
+	if( m_registerMap.samplerCount > 0 )
+	{
+		m_samplers.reset( new Sampler[m_registerMap.samplerCount] );
+		std::copy_n( other.m_samplers.get(), m_registerMap.samplerCount, m_samplers.get() );
+	}
+}
+
+Tr2ResourceSetDescriptionAL::Tr2ResourceSetDescriptionAL( Tr2ResourceSetDescriptionAL&& other ) :
+	m_registerMap( other.m_registerMap )
+{
+	std::swap( m_srv, other.m_srv );
+	std::swap( m_uav, other.m_uav );
+	std::swap( m_samplers, other.m_samplers );
+}
+
+Tr2ResourceSetDescriptionAL::Tr2ResourceSetDescriptionAL( const Tr2ShaderProgramAL& program ) :
+	m_registerMap( program.GetRegisterMap() )
+{
+	if( m_registerMap.srvCount > 0 )
+	{
+		m_srv.reset( new Resource[m_registerMap.srvCount] );
+	}
+	if( m_registerMap.uavCount > 0 )
+	{
+		m_uav.reset( new Resource[m_registerMap.uavCount] );
+	}
+	if( m_registerMap.samplerCount > 0 )
+	{
+		m_samplers.reset( new Sampler[m_registerMap.samplerCount] );
+	}
+}
+
+Tr2ResourceSetDescriptionAL::Tr2ResourceSetDescriptionAL( const Tr2RegisterMapAL& registers ) :
+	m_registerMap( registers )
+{
+	if( m_registerMap.srvCount > 0 )
+	{
+		m_srv.reset( new Resource[m_registerMap.srvCount] );
+	}
+	if( m_registerMap.uavCount > 0 )
+	{
+		m_uav.reset( new Resource[m_registerMap.uavCount] );
+	}
+	if( m_registerMap.samplerCount > 0 )
+	{
+		m_samplers.reset( new Sampler[m_registerMap.samplerCount] );
+	}
+}
+
+Tr2ResourceSetDescriptionAL& Tr2ResourceSetDescriptionAL::operator=( const Tr2ResourceSetDescriptionAL& other )
+{
+	if( &other == this )
+	{
+		return *this;
+	}
+	m_registerMap = other.m_registerMap;
+	if( m_registerMap.srvCount > 0 )
+	{
+		m_srv.reset( new Resource[m_registerMap.srvCount] );
+		std::copy_n( other.m_srv.get(), m_registerMap.srvCount, m_srv.get() );
+	}
+	else
+	{
+		m_srv.reset();
+	}
+	if( m_registerMap.uavCount > 0 )
+	{
+		m_uav.reset( new Resource[m_registerMap.uavCount] );
+		std::copy_n( other.m_uav.get(), m_registerMap.uavCount, m_uav.get() );
+	}
+	else
+	{
+		m_uav.reset();
+	}
+	if( m_registerMap.samplerCount > 0 )
+	{
+		m_samplers.reset( new Sampler[m_registerMap.samplerCount] );
+		std::copy_n( other.m_samplers.get(), m_registerMap.samplerCount, m_samplers.get() );
+	}
+	else
+	{
+		m_samplers.reset();
+	}
+	return *this;
+}
+
+Tr2ResourceSetDescriptionAL& Tr2ResourceSetDescriptionAL::operator=( Tr2ResourceSetDescriptionAL&& other )
+{
+	if( &other == this )
+	{
+		return *this;
+	}
+	m_registerMap = other.m_registerMap;
+	std::swap( m_srv, other.m_srv );
+	other.m_srv.reset();
+	std::swap( m_uav, other.m_uav );
+	other.m_uav.reset();
+	std::swap( m_samplers, other.m_samplers );
+	other.m_samplers.reset();
+	return *this;
+}
 
 
 bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer )
 {
-	auto& resource = m_srv[stage][registerIndex];
+	if( m_registerMap.srvCount == 0 )
+	{
+		return false;
+	}
+	auto index = m_registerMap.srvs[stage][registerIndex];
+	if( index >= m_registerMap.srvCount )
+	{
+		return false;
+	}
+	auto& resource = m_srv[index];
 	if( resource.Is( buffer, 0 ) )
 	{
 		return false;
@@ -20,7 +277,16 @@ bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage
 
 bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace )
 {
-	auto& resource = m_srv[stage][registerIndex];
+	if( m_registerMap.srvCount == 0 )
+	{
+		return false;
+	}
+	auto index = m_registerMap.srvs[stage][registerIndex];
+	if( index >= m_registerMap.srvCount )
+	{
+		return false;
+	}
+	auto& resource = m_srv[index];
 	if( resource.Is( texture, colorSpace ) )
 	{
 		return false;
@@ -33,8 +299,17 @@ bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage
 
 bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer, uint32_t initialCount )
 {
-	auto& resource = m_uav[stage][registerIndex];
-	if( m_uav[stage][registerIndex].Is( buffer, initialCount ) )
+	if( m_registerMap.uavCount == 0 )
+	{
+		return false;
+	}
+	auto index = m_registerMap.uavs[stage][registerIndex];
+	if( index >= m_registerMap.uavCount )
+	{
+		return false;
+	}
+	auto& resource = m_uav[index];
+	if( resource.Is( buffer, initialCount ) )
 	{
 		return false;
 	}
@@ -46,8 +321,17 @@ bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage
 
 bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip )
 {
-	auto& resource = m_uav[stage][registerIndex];
-	if( m_uav[stage][registerIndex].Is( texture, mip ) )
+	if( m_registerMap.uavCount == 0 )
+	{
+		return false;
+	}
+	auto index = m_registerMap.uavs[stage][registerIndex];
+	if( index >= m_registerMap.uavCount )
+	{
+		return false;
+	}
+	auto& resource = m_uav[index];
+	if( resource.Is( texture, mip ) )
 	{
 		return false;
 	}
@@ -59,7 +343,16 @@ bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage
 
 bool Tr2ResourceSetDescriptionAL::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
 {
-	auto& resource = m_samplers[stage][registerIndex];
+	if( m_registerMap.samplerCount == 0 )
+	{
+		return false;
+	}
+	auto index = m_registerMap.samplers[stage][registerIndex];
+	if( index >= m_registerMap.samplerCount )
+	{
+		return false;
+	}
+	auto& resource = m_samplers[index];
 	if( resource == sampler )
 	{
 		return false;
@@ -76,23 +369,19 @@ bool Tr2ResourceSetDescriptionAL::operator==( const Tr2ResourceSetDescriptionAL&
 
 void Tr2ResourceSetDescriptionAL::ClearResources()
 {
-	for( auto sit = std::begin( m_srv ); sit != std::end( m_srv ); ++sit )
+	for( uint32_t i = 0; i < m_registerMap.srvCount; ++i )
 	{
-		for( auto rit = std::begin( *sit ); rit != std::end( *sit ); ++rit )
-		{
-			rit->type = NONE;
-			rit->texture = Tr2TextureAL();
-			rit->buffer = Tr2BufferAL();
-		}
+		auto& srv = m_srv[i];
+		srv.type = NONE;
+		srv.texture = Tr2TextureAL();
+		srv.buffer = Tr2BufferAL();
 	}
-	for( auto sit = std::begin( m_uav ); sit != std::end( m_uav ); ++sit )
+	for( uint32_t i = 0; i < m_registerMap.uavCount; ++i )
 	{
-		for( auto rit = std::begin( *sit ); rit != std::end( *sit ); ++rit )
-		{
-			rit->type = NONE;
-			rit->texture = Tr2TextureAL();
-			rit->buffer = Tr2BufferAL();
-		}
+		auto& uav = m_uav[i];
+		uav.type = NONE;
+		uav.texture = Tr2TextureAL();
+		uav.buffer = Tr2BufferAL();
 	}
 }
 

@@ -4,6 +4,7 @@
 
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2ShaderAL.h"
+#include "../include/Tr2ResourceSetAL.h"
 
 namespace TrinityALImpl
 {
@@ -19,9 +20,13 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+
+		const Tr2RegisterMapAL& GetRegisterMap() const;
+
 	private:
 		::Tr2ShaderAL m_vertexShader;
 		::Tr2ShaderAL m_pixelShader;
+		Tr2RegisterMapAL m_registerMap;
 		bool m_isValid;
 
 		friend class Tr2RenderContextAL;

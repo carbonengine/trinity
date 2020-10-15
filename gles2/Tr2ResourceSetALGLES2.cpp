@@ -4,6 +4,7 @@
 
 #include "Tr2ResourceSetALGLES2.h"
 #include "Tr2TextureALGLES2.h"
+#include "../include/Tr2ShaderProgramAL.h"
 
 #pragma warning( disable : 4189 ) // Scopeguard
 
@@ -37,41 +38,22 @@ namespace TrinityALImpl
 	{
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& )
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& )
 	{
 		Destroy();
 		ON_BLOCK_EXIT( [&] { if( !IsValid() ) Destroy(); } );
 
-		for( uint32_t stage = 0; stage < SHADER_TYPE_COUNT; ++stage )
+		if( program.GetRegisterMap() != description.m_registerMap )
 		{
-			if( stage == PIXEL_SHADER )
+			return E_INVALIDARG;
+		}
+		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
+		{
+			if( description.m_registerMap.srvs[PIXEL_SHADER][i] >= description.m_registerMap.srvCount )
 			{
 				continue;
 			}
-			for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
-			{
-				if( description.m_srv[stage][i].type != Tr2ResourceSetDescriptionAL::NONE )
-				{
-					return E_INVALIDARG;
-				}
-				if( description.m_samplers[stage][i].assigned )
-				{
-					return E_INVALIDARG;
-				}
-			}
-		}
-
-		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
-		{
-			if( description.m_samplers[PIXEL_SHADER][i].assigned && description.m_srv[PIXEL_SHADER][i].type == Tr2ResourceSetDescriptionAL::NONE )
-			{
-				return E_INVALIDARG;
-			}
-		}
-
-		for( uint32_t i = 0; i < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++i )
-		{
-			auto& resource = description.m_srv[PIXEL_SHADER][i];
+			auto& resource = description.m_srv[description.m_registerMap.srvs[PIXEL_SHADER][i]];
 			if( resource.type == Tr2ResourceSetDescriptionAL::NONE )
 			{
 				continue;
@@ -81,7 +63,7 @@ namespace TrinityALImpl
 				return E_INVALIDARG;
 			}
 
-			auto& sampler = description.m_samplers[PIXEL_SHADER][i];
+			auto& sampler = description.m_samplers[description.m_registerMap.samplers[PIXEL_SHADER][i]];
 			if( !sampler.assigned )
 			{
 				return E_INVALIDARG;

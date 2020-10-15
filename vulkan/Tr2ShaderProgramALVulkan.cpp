@@ -227,6 +227,8 @@ namespace TrinityALImpl
 		CR_RETURN_HR( Vk2Al( vkCreatePipelineLayout( renderContext.m_device, &layoutInfo, nullptr, &m_pipelineLayout ) ) );
 		m_owner = &renderContext;
 
+		m_registerMap = Tr2RegisterMapAL( shaders, count );
+
 		return S_OK;
 	}
 
@@ -249,6 +251,7 @@ namespace TrinityALImpl
 
 		m_poolSizes.clear();
 		m_registerInput.clear();
+		m_registerMap = Tr2RegisterMapAL();
 	}
 
 	bool Tr2ShaderProgramAL::IsValid() const
@@ -264,6 +267,11 @@ namespace TrinityALImpl
 	void Tr2ShaderProgramAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2ShaderProgramAL";
+	}
+
+	const Tr2RegisterMapAL& Tr2ShaderProgramAL::GetRegisterMap() const
+	{
+		return m_registerMap;
 	}
 }
 

@@ -128,6 +128,11 @@ ALResult Tr2ShaderAL::GetBytecode( Tr2ShaderBytecodeAL& bytecode ) const
 	return m_shader->GetBytecode( bytecode );
 }
 
+const Tr2ShaderSignatureAL& Tr2ShaderAL::GetSignature() const
+{
+	return m_shader->GetSignature();
+}
+
 bool Tr2ShaderAL::operator==( const Tr2ShaderAL& other ) const
 {
 	return m_shader == other.m_shader;

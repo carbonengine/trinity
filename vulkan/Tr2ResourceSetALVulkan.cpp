@@ -32,6 +32,11 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
+		if( program.GetRegisterMap() != description.m_registerMap )
+		{
+			return E_INVALIDARG;
+		}
+
 		if( program.m_program->m_resourceLayout )
 		{
 			VkDescriptorPoolCreateInfo poolDesc = { 
@@ -77,11 +82,11 @@ namespace TrinityALImpl
 					continue;
 				case Tr2ShaderRegisterAL::SAMPLER:
 				{
-					if( !description.m_samplers[it->stage][it->registerIndex].sampler.IsValid() )
+					if( !description.m_samplers[description.m_registerMap.samplers[it->stage][it->registerIndex]].sampler.IsValid() )
 					{
 						return E_FAIL;
 					}
-					VkDescriptorImageInfo imageInfo = { description.m_samplers[it->stage][it->registerIndex].sampler.m_sampler->m_sampler };
+					VkDescriptorImageInfo imageInfo = { description.m_samplers[description.m_registerMap.samplers[it->stage][it->registerIndex]].sampler.m_sampler->m_sampler };
 					imageInfos.push_back( imageInfo );
 					d.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLER;
 					d.pImageInfo = &imageInfos.back();
@@ -91,12 +96,12 @@ namespace TrinityALImpl
 					return E_FAIL;
 				default:
 					d.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-					if( !description.m_srv[it->stage][it->registerIndex].texture.IsValid() )
+					if( !description.m_srv[description.m_registerMap.srvs[it->stage][it->registerIndex]].texture.IsValid() )
 					{
 						return E_FAIL;
 					}
 					VkDescriptorImageInfo imageInfo = {  };
-					imageInfo.imageView = description.m_srv[it->stage][it->registerIndex].texture.m_texture->m_imageViews[0];
+					imageInfo.imageView = description.m_srv[description.m_registerMap.srvs[it->stage][it->registerIndex]].texture.m_texture->m_imageViews[0];
 					imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 					imageInfos.push_back( imageInfo );
 					d.pImageInfo = &imageInfos.back();

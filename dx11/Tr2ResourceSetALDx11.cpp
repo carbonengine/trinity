@@ -6,6 +6,7 @@
 #include "Tr2BufferALDx11.h"
 #include "Tr2TextureALDx11.h"
 #include "Tr2SamplerStateALDx11.h"
+#include "../include/Tr2ShaderProgramAL.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -20,9 +21,15 @@ namespace TrinityALImpl
 		std::fill_n( m_uavInitialCounts, MAX_RESOURCES, -1 );
 	}
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL&, Tr2PrimaryRenderContextAL& /*renderContext*/ )
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& /*renderContext*/ )
 	{
 		Destroy();
+
+		if( program.GetRegisterMap() != description.m_registerMap )
+		{
+			return E_INVALIDARG;
+		}
+
 		ON_BLOCK_EXIT_WITH_UNUSED( [&] { if( !IsValid() ) Destroy(); } );
 
 		for( auto it = std::begin( m_stages ); it != std::end( m_stages ); ++it )
@@ -37,7 +44,11 @@ namespace TrinityALImpl
 			auto& stage = m_stages[stageIndex];
 			for( uint32_t registerIndex = 0; registerIndex < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++registerIndex )
 			{
-				auto& desc = description.m_srv[stageIndex][registerIndex]; // cppcheck-suppress arrayIndexOutOfBoundsCond
+				if( description.m_registerMap.srvs[stageIndex][registerIndex] >= description.m_registerMap.srvCount )
+				{
+					continue;
+				}
+				auto& desc = description.m_srv[description.m_registerMap.srvs[stageIndex][registerIndex]];
 				if( desc.type != Tr2ResourceSetDescriptionAL::NONE && registerIndex >= MAX_RESOURCES )
 				{
 					return E_INVALIDARG;
@@ -60,7 +71,11 @@ namespace TrinityALImpl
 			}
 			for( uint32_t registerIndex = 0; registerIndex < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++registerIndex )
 			{
-				auto& desc = description.m_samplers[stageIndex][registerIndex]; // cppcheck-suppress arrayIndexOutOfBoundsCond
+				if( description.m_registerMap.samplers[stageIndex][registerIndex] >= description.m_registerMap.samplerCount )
+				{
+					continue;
+				}
+				auto& desc = description.m_samplers[description.m_registerMap.samplers[stageIndex][registerIndex]];
 				if( desc.assigned && registerIndex >= MAX_RESOURCES )
 				{
 					return E_INVALIDARG;
@@ -74,7 +89,11 @@ namespace TrinityALImpl
 			}
 			for( uint32_t registerIndex = 0; registerIndex < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++registerIndex )
 			{
-				auto& desc = description.m_uav[stageIndex][registerIndex];
+				if( description.m_registerMap.uavs[stageIndex][registerIndex] >= description.m_registerMap.uavCount )
+				{
+					continue;
+				}
+				auto& desc = description.m_uav[description.m_registerMap.uavs[stageIndex][registerIndex]];
 				if( desc.type == Tr2ResourceSetDescriptionAL::NONE )
 				{
 					continue;

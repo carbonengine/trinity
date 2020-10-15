@@ -31,6 +31,7 @@ namespace TrinityALImpl
 		bool IsValid() const;
 		Tr2RenderContextEnum::ShaderType GetType() const;
 		ALResult GetBytecode( Tr2ShaderBytecodeAL& bytecode ) const;
+		const Tr2ShaderSignatureAL& GetSignature() const;
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;

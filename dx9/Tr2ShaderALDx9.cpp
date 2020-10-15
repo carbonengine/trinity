@@ -19,7 +19,7 @@ namespace TrinityALImpl
 		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
 		const Tr2ShaderBytecodeAL&,
-		const Tr2ShaderSignatureAL&,
+		const Tr2ShaderSignatureAL& signature,
 		Tr2PrimaryRenderContextAL &renderContext )
 	{
 		Destroy();
@@ -60,6 +60,7 @@ namespace TrinityALImpl
 			m_type = INVALID_SHADER;
 			return E_INVALIDARG;
 		}
+		m_signature = signature;
 		return S_OK;
 	}
 
@@ -124,6 +125,11 @@ namespace TrinityALImpl
 		bytecode.bytecode = m_bytecode.empty() ? nullptr : m_bytecode.get();
 		bytecode.size = m_bytecode.size();
 		return S_OK;
+	}
+
+	const Tr2ShaderSignatureAL& Tr2ShaderAL::GetSignature() const
+	{
+		return m_signature;
 	}
 
 	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const

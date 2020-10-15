@@ -112,6 +112,11 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	const Tr2ShaderSignatureAL& Tr2ShaderAL::GetSignature() const
+	{
+		return m_signature;
+	}
+
 	Tr2ALMemoryType Tr2ShaderAL::GetMemoryClass() const 
 	{ 
 		return AL_MEMORY_MANAGED; 

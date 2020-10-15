@@ -24,7 +24,7 @@ TEST_F( Compute, CanReadCSResult )
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
 	Tr2ResourceSetAL resourceSet;
 	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
@@ -76,7 +76,7 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
 	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 1, arg2 );
 	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
@@ -136,7 +136,7 @@ TEST_F( Compute, CanAddConstantInCS )
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, arg1 );
 	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
 
@@ -211,7 +211,7 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32G32B32A32_FLOAT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, input );
 	desc.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, sampl );
 	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
@@ -254,7 +254,7 @@ TEST_F( Compute, CanDispatchCSGroups )
 	Tr2BufferAL output;
 	ASSERT_HRESULT_SUCCEEDED( output.Create( PIXEL_FORMAT_R32_UINT, 1, Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::READ, nullptr, *renderContext ) );
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output );
 
 	Tr2ResourceSetAL resourceSet;
@@ -296,7 +296,7 @@ TEST_F( Compute, CanUseBufferCounter )
 
 	const uint32_t initialValue = 5;
 
-	Tr2ResourceSetDescriptionAL desc;
+	Tr2ResourceSetDescriptionAL desc( sp );
 	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output, initialValue );
 
 	Tr2ResourceSetAL resourceSet;

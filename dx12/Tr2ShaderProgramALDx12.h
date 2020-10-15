@@ -32,6 +32,9 @@ namespace TrinityALImpl
 
 		bool IsComputeProgramDx12() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+
+		const Tr2RegisterMapAL& GetRegisterMap() const;
+
 	private:
 		void ParseRegisterSignature(
 			Tr2RenderContextEnum::ShaderType shaderType,
@@ -64,6 +67,8 @@ namespace TrinityALImpl
 		std::vector<CbRegister> m_srvRegisters;
 		std::vector<CbRegister> m_uavRegisters;
 		std::vector<CbRegister> m_samplerRegisters;
+
+		Tr2RegisterMapAL m_registerMap;
 
 		uint32_t m_srvUavTableSize;
 		uint32_t m_srvUavParameter;
