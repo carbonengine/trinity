@@ -49,10 +49,6 @@ namespace TrinityALImpl
 					continue;
 				}
 				auto& desc = description.m_srv[description.m_registerMap.srvs[stageIndex][registerIndex]];
-				if( desc.type != Tr2ResourceSetDescriptionAL::NONE && registerIndex >= MAX_RESOURCES )
-				{
-					return E_INVALIDARG;
-				}
 				switch( desc.type )
 				{
 				case Tr2ResourceSetDescriptionAL::BUFFER:
@@ -76,10 +72,6 @@ namespace TrinityALImpl
 					continue;
 				}
 				auto& desc = description.m_samplers[description.m_registerMap.samplers[stageIndex][registerIndex]];
-				if( desc.assigned && registerIndex >= MAX_RESOURCES )
-				{
-					return E_INVALIDARG;
-				}
 				if( desc.assigned )
 				{
 					stage.samplers[registerIndex] = desc.sampler.m_sampler->m_samplerState;

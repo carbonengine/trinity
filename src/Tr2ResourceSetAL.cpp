@@ -7,7 +7,7 @@
 
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2ResourceSetAL )
 
-Tr2RegisterMapAL::Tr2RegisterMapAL() :
+Tr2RegisterMapAL::Tr2RegisterMapAL() : // cppcheck-suppress uninitMemberVar
 	srvCount( 0 ),
 	uavCount( 0 ),
 	samplerCount( 0 )
