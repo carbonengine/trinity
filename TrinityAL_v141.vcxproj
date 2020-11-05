@@ -633,7 +633,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -649,7 +649,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -664,7 +664,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -679,7 +679,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -697,7 +697,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -712,7 +712,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -730,7 +730,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -746,7 +746,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -761,7 +761,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_OPENGLES2;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -777,7 +777,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;glew32.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -792,7 +792,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -808,7 +808,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -823,7 +823,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -839,7 +839,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -854,7 +854,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -870,7 +870,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;glew32.lib;opengl32.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -885,7 +885,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -901,7 +901,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -916,7 +916,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -932,7 +932,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -947,7 +947,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -962,7 +962,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -980,7 +980,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX11;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -996,7 +996,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1011,7 +1011,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_OPENGLES2;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1027,7 +1027,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1042,7 +1042,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1058,7 +1058,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1073,7 +1073,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_STUB;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1089,7 +1089,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1104,7 +1104,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1119,7 +1119,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -1137,7 +1137,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1153,7 +1153,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1168,7 +1168,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX11;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1183,7 +1183,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -1201,7 +1201,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1217,7 +1217,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1232,7 +1232,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1248,7 +1248,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1263,7 +1263,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1279,7 +1279,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1294,7 +1294,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1310,7 +1310,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1325,7 +1325,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1341,7 +1341,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1356,7 +1356,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1372,7 +1372,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1387,7 +1387,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX9;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1402,7 +1402,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -1420,7 +1420,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_DIRECTX9;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1436,7 +1436,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1451,7 +1451,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1466,7 +1466,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -1484,7 +1484,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_STUB;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1500,7 +1500,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x86.lib;psapi.lib;rad_tm_win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1515,7 +1515,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_PLATFORM=TRINITY_DIRECTX9;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1531,7 +1531,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1546,7 +1546,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>AL_TACK_RESOURCE_USAGE=1;CCP_ASSERT_ENABLED=1;NDEBUG;TRINITYDEV;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1562,7 +1562,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1577,7 +1577,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1592,7 +1592,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -1610,7 +1610,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>CCP_ASSERT_ENABLED=1;TRINITY_AL_GUARD_LOCKS=1;TRINITY_PLATFORM=TRINITY_VULKAN;_DEBUG;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <TreatWarningAsError>False</TreatWarningAsError>
@@ -1626,7 +1626,7 @@
     <Link>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x64;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x64;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalDependencies>CcpCore_d.lib;GFSDK_Aftermath_Lib.x64.lib;d3d9.lib;d3dx9d.lib;dxerr.lib;dxguid.lib;psapi.lib;rad_tm_win64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
@@ -1641,7 +1641,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_DIRECTX12;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\shared;$(ProgramFiles)\Windows Kits\10\Include\10.0.17763.0\um;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1656,7 +1656,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -1674,7 +1674,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_VULKAN;VK_USE_PLATFORM_WIN32_KHR=1;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)/vulkan/1.1.97.0/include;$(CcpSdkPath)\directx\february2010\Include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1689,7 +1689,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)/vulkan/1.1.97.0/lib/$(Platform);$(CcpSdkPath)\directx\february2010\Lib\x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -1707,7 +1707,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_STUB;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1722,7 +1722,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>
@@ -1740,7 +1740,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PreprocessorDefinitions>NDEBUG;TRINITY_PLATFORM=TRINITY_OPENGLES2;TRINITY_AL_WITH_BLUE_EXPOSURE=0;_MSC_PLATFORM_TOOLSET_$(PlatformToolset);%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.5.0.13\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(CcpSdkPath)\glew\1.7.0\include;$(CcpBranchPath)/carbon/src;$(CcpSdkPath)/nvidia/aftermath/1.3/include;$(CcpSdkPath)\telemetry\3.0.1.1719\include;.;..;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>True</MultiProcessorCompilation>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WholeProgramOptimization>True</WholeProgramOptimization>
@@ -1755,7 +1755,7 @@
       <RuntimeTypeInfo>True</RuntimeTypeInfo>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.5.0.13\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(CcpSdkPath)/nvidia/aftermath/1.3/lib/x86;$(CcpSdkPath)\glew\1.7.0\lib;$(CcpSdkPath)\telemetry\3.0.1.1719\lib;../../../carbon/autobuild/CcpCore/$(Platform)/$(PlatformToolset)/;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>True</GenerateDebugInformation>
       <ProgramDatabaseFile>$(TargetDir)$(TargetName).pdb</ProgramDatabaseFile>
       <AdditionalAppleFrameworks>CoreFoundation;%(AdditionalAppleFrameworks)</AdditionalAppleFrameworks>

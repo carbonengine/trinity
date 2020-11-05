@@ -379,7 +379,7 @@
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/glew/1.7.0/include",
-					"../../../../../../sdk/telemetry/3.5.0.13/include",
+					"../../../../../../sdk/telemetry/3.0.1.1008/include",
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -403,7 +403,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"../../../../../../sdk/googletest/1.6.0/lib/MacOsX$(ARCHS)",
 					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/telemetry/3.5.0.13/lib",
+					"../../../../../../sdk/telemetry/3.0.1.1008/lib",
 					"../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2/",
 					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
@@ -1083,7 +1083,7 @@
 					.,
 					"../../../carbon/src",
 					"../../../../../../sdk/glew/1.7.0/include",
-					"../../../../../../sdk/telemetry/3.5.0.13/include",
+					"../../../../../../sdk/telemetry/3.0.1.1008/include",
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -1107,7 +1107,7 @@
 				LIBRARY_SEARCH_PATHS = (
 					"../../../../../../sdk/googletest/1.6.0/lib/MacOsX$(ARCHS)",
 					"../../../../../../sdk/glfw/3.0/lib/MacOsX$(ARCHS)",
-					"../../../../../../sdk/telemetry/3.5.0.13/lib",
+					"../../../../../../sdk/telemetry/3.0.1.1008/lib",
 					"../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2/",
 					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
@@ -1275,7 +1275,7 @@
 				HEADER_SEARCH_PATHS = (
 					"../../../carbon/src",
 					"../../../../../../sdk/googletest/1.6.0/include",
-					"../../../../../../sdk/telemetry/3.5.0.13/include",
+					"../../../../../../sdk/telemetry/3.0.1.1008/include",
 					.,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
@@ -1299,7 +1299,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					"../../../../../../sdk/telemetry/3.5.0.13/lib",
+					"../../../../../../sdk/telemetry/3.0.1.1008/lib",
 					"../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2/",
 					"../../../../../../sdk/googletest/1.6.0/lib/MacOsX$(ARCHS)",
 					);
@@ -1528,7 +1528,7 @@
 				HEADER_SEARCH_PATHS = (
 					"../../../carbon/src",
 					"../../../../../../sdk/googletest/1.6.0/include",
-					"../../../../../../sdk/telemetry/3.5.0.13/include",
+					"../../../../../../sdk/telemetry/3.0.1.1008/include",
 					.,
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
@@ -1552,7 +1552,7 @@
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				LIBRARY_SEARCH_PATHS = (
 					"../../../carbon/autobuild/CcpCore/MacOsX$(ARCHS)/clang4.2/",
-					"../../../../../../sdk/telemetry/3.5.0.13/lib",
+					"../../../../../../sdk/telemetry/3.0.1.1008/lib",
 					"../../autobuild/TrinityAL/MacOsX$(ARCHS)/clang4.2/",
 					"../../../../../../sdk/googletest/1.6.0/lib/MacOsX$(ARCHS)",
 					);
