@@ -84,7 +84,7 @@ std::vector<Vector3> BackAndForth::CalculateBehavior( std::vector<DroneAgent>& a
 				data->arrived = false;
 			}
 		}
-		// UNFINISHED COULDN'T FIND OUT HOW TO GET PARENT WITHOUT CIRCULAR DEPENDENCY
+		/*
 		else if( m_locatorType == PARENT_LOCATORS )
 		{
 			if( m_parent == nullptr )
@@ -102,7 +102,7 @@ std::vector<Vector3> BackAndForth::CalculateBehavior( std::vector<DroneAgent>& a
 
 			GetParentLocatorPosition( data->locatorIndex, &data->locatorTarget, &data->locatorDirection );
 			data->arrived = false;
-		}
+		}*/
 		else if( m_locatorType == TARGET_LOCATORS )
 		{
 			if( data->arrived && m_target )
