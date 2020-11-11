@@ -724,7 +724,6 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			}
 
 			HullBannerSetItemData data;
-			data.item.angleX = bannerItem->m_angleX;
 			data.item.position = bannerItem->m_position;
 			data.item.scaling = bannerItem->m_scaling;
 			data.item.rotation = bannerItem->m_rotation;
