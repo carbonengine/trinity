@@ -165,14 +165,7 @@ IRootPtr EveSOF::BuildFromDNA( const char* dnaString )
 	SetupPlaneSets( newObj, dna );
 	SetupSpriteLineSets( newObj, dna );
 	SetupHazeSets( newObj, dna );
-	if( !dna->IsUsingExperimentalFeatures() )
-	{
-		SetupBanners( newObj, dna );
-	}
-	else
-	{
-		SetupBannerSets( newObj, dna );
-	}
+	SetupBannerSets( newObj, dna );
 	SetupEffects( newObj, dna );
 	SetupLights( newObj, dna );
 
@@ -1069,7 +1062,7 @@ void EveSOF::SetupHazeSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) con
 }
 
 // --------------------------------------------------------------------------------
-void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
+void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1077,16 +1070,16 @@ void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) cons
 	Vector3 hullOffset( 0.f, 0.f, 0.f );
 	for( size_t hullIdx = 0; hullIdx < dna->GetMultiHullCount(); ++hullIdx )
 	{
-		auto& hullBanners = dna->GetHullBanners( hullIdx );
-		for( auto hbit = begin( hullBanners ); hbit != end( hullBanners ); ++hbit )
+		auto& hullBannerSets = dna->GetHullBannerSets( hullIdx );
+		for( auto hbsit = begin( hullBannerSets ); hbsit != end( hullBannerSets ); ++hbsit )
 		{
-			auto& bannerData = *hbit;
+			auto& bannerSetData = *hbsit;
 
 			EveBannerSetPtr bannerSet;
 
-			for( auto hbiit = begin( bannerData.items ); hbiit != end( bannerData.items ); ++hbiit )
+			for( auto hhsiit = begin( bannerSetData.items ); hhsiit != end( bannerSetData.items ); ++hhsiit )
 			{
-				auto& itemData = *hbiit;
+				auto& itemData = *hhsiit;
 
 				if( !dna->IsInVisibilityData( itemData.visibilityGroup ) )
 				{
@@ -1154,7 +1147,7 @@ void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) cons
 
 			effect->EndUpdate();
 			bannerSet->SetEffect( effect );
-			bannerSet->SetKey( int32_t( bannerData.usage ) );
+			bannerSet->SetKey( int32_t( bannerSetData.usage ) );
 			bannerSet->Rebuild();
 			obj->AddAttachment( bannerSet );
 
@@ -1187,9 +1180,9 @@ void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) cons
 			static_assert( sizeof( names ) / sizeof( names[0] ) == EveSOFDataHullBanner::_USAGE_COUNT, "Banner usage names mismatch" );
 
 			const char* externalParamName = nullptr;
-			if( bannerData.usage >= 0 && bannerData.usage < EveSOFDataHullBanner::_USAGE_COUNT )
+			if( bannerSetData.usage >= 0 && bannerSetData.usage < EveSOFDataHullBanner::_USAGE_COUNT )
 			{
-				externalParamName = names[bannerData.usage];
+				externalParamName = names[bannerSetData.usage];
 			}
 
 			Tr2ExternalParameterPtr externalParameter;
@@ -1199,157 +1192,6 @@ void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) cons
 			externalParameter->SetDestinationAttribute( "highDetailResPath" );
 			externalParameter->Initialize();
 			obj->AddExternalParameter( externalParameter );
-		}
-
-		// next hull needs offset update from hull's locator
-		const Vector3* nextSubsystemOffset = dna->GetHullNextSubsystemOffset( hullIdx );
-		if( nextSubsystemOffset )
-		{
-			hullOffset += *nextSubsystemOffset;
-		}
-	}
-}
-
-//
-// Description:
-//	Set up the bannersets on the space object from the bannerset information from the hull
-//
-void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const 
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	// cycle over all hulls in the multi-hull list
-	Vector3 hullOffset( 0.f, 0.f, 0.f );
-	for( size_t hullIdx = 0; hullIdx < dna->GetMultiHullCount(); ++hullIdx )
-	{
-		auto& hullBannerSets = dna->GetHullBannerSets( hullIdx );
-		for( auto hbsit = begin( hullBannerSets ); hbsit != end( hullBannerSets ); ++hbsit )
-		{
-			auto& bannerSetData = *hbsit;
-
-			// don't need bannersets if they are not in the visibility group or if they don't have any banners
-			if( !dna->IsInVisibilityData( bannerSetData.visibilityGroup ) || bannerSetData.bannerTypes.empty() )
-			{
-				continue;
-			}
-
-			for( auto hbtit = begin( bannerSetData.bannerTypes ); hbtit != end( bannerSetData.bannerTypes ); ++hbtit )
-			{
-				auto usage = hbtit->first;
-				auto banners = hbtit->second;
-				EveBannerSetPtr bannerSet;
-
-				for( auto b = begin( banners ); b != end( banners ); ++b )
-				{
-					auto banner = *b;
-					if( !bannerSet )
-					{
-						bannerSet.CreateInstance();
-					}
-					bannerSet->AddBanner( banner.item );
-
-					// create the light
-					Tr2PointLightPtr light;
-					light.CreateInstance();
-
-					LightData data;
-					data.position = banner.item.position;
-
-					Vector3 scale = banner.item.scaling;
-					float rad = banner.bannerLight.radiusMultiplier * max( scale.x, max( scale.y, scale.z ) );
-					float innerRad = rad * banner.bannerLight.innerRadiusMultiplier;
-					data.radius = rad;
-					data.innerRadius = innerRad;
-
-					data.color = Color( 0.0, 0.0, 0.0, 0.0 );
-					data.brightness = banner.bannerLight.brightness;
-					data.noiseAmplitude = banner.bannerLight.noiseAmplitude;
-					data.noiseFrequency = banner.bannerLight.noiseFrequency;
-					data.noiseOctaves = banner.bannerLight.noiseOctaves;
-
-					light->SetLightData( data );
-					bannerSet->AddLight( light );
-
-					bannerSet->SetLightColorSaturation( banner.bannerLight.saturation );
-				}
-
-				// if no banners in set, then ignore it...
-				if( !bannerSet )
-				{
-					continue;
-				}
-
-				// setup shader
-				auto& shaderData = dna->GetGenericBannerShaderData();
-
-				Tr2EffectPtr effect;
-				effect.CreateInstance();
-
-				effect->StartUpdate();
-				effect->SetEffectPathName( shaderData.shader.c_str() );
-
-				for( auto pit = begin( shaderData.defaultParameters ); pit != end( shaderData.defaultParameters ); ++pit )
-				{
-					effect->AddParameterVector4( pit->first, &pit->second );
-				}
-				for( auto tit = begin( shaderData.defaultTextures ); tit != end( shaderData.defaultTextures ); ++tit )
-				{
-					effect->AddResourceTexture2D( tit->first, tit->second.resFilePath.c_str() );
-				}
-
-				Tr2LodResourcePtr imageMap;
-				imageMap.CreateInstance();
-				effect->AddResourceTexture2DLod( BlueSharedString( "ImageMap" ), imageMap );
-				bannerSet->AddLodResource( imageMap );
-
-				effect->EndUpdate();
-				bannerSet->SetEffect( effect );
-				bannerSet->SetKey( int32_t( usage ) );
-				bannerSet->Rebuild();
-				obj->AddAttachment( bannerSet );
-
-				static const char* names[] = {
-					"AllianceLogoResPath",
-					"CorpLogoResPath",
-					"CeoPortraitResPath",
-					"VerticalBannerResPath",
-					"HorizontalBannerResPath",
-					"TargetSystemAllianceLogoResPath",
-					"TargetSystemVerticalBannerResPath",
-					"TargetSystemHorizontalBannerResPath",
-					"TargetSystemInfo0ResPath",
-					"TargetSystemInfo1ResPath",
-					"TargetSystemInfo2ResPath",
-					"TargetSystemInfo3ResPath",
-					"TargetSystemInfo4ResPath",
-					"TargetSystemStatusResPath",
-					"CurrentSystemAllianceLogoResPath",
-					"CurrentSystemVerticalBannerResPath",
-					"CurrentSystemHorizontalBannerResPath",
-					"PublicityPosterResPath",
-					"PublicityPortraitResPath",
-					"RecruitmentInformation0ResPath",
-					"RecruitmentInformation1ResPath",
-					"RecruitmentInformation2ResPath",
-					"RecruitmentInformation3ResPath",
-					"RecruitmentInformation4ResPath",
-				};
-				static_assert( sizeof( names ) / sizeof( names[0] ) == EveSOFDataHullBanner::_USAGE_COUNT, "Banner usage names mismatch" );
-
-				const char* externalParamName = nullptr;
-				if( usage >= 0 && usage < EveSOFDataHullBanner::_USAGE_COUNT )
-				{
-					externalParamName = names[usage];
-				}
-
-				Tr2ExternalParameterPtr externalParameter;
-				externalParameter.CreateInstance();
-				externalParameter->SetName( externalParamName );
-				externalParameter->SetDestinationObject( imageMap );
-				externalParameter->SetDestinationAttribute( "highDetailResPath" );
-				externalParameter->Initialize();
-				obj->AddExternalParameter( externalParameter );
-			}
 		}
 
 		// next hull needs offset update from hull's locator
@@ -1708,9 +1550,6 @@ void EveSOF::SetupAudio( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr dna ) con
 void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr dna ) const
 {
 	const std::vector<EveSOFDataMgr::HullInstancedMesh>& hullInstanced = dna->GetHullInstancedMeshes();
-	
-	// Create a child container named "Instanced Meshes" and place the instances there
-
 	for( auto instIt = hullInstanced.begin(); instIt != hullInstanced.end(); ++instIt )
 	{
 		const EveSOFDataMgr::HullInstancedMesh* him = &(*instIt);

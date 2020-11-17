@@ -502,37 +502,6 @@ Be::VarChooser EveSOFDataHullBannerUsageChooser[] =
 };
 BLUE_REGISTER_ENUM_EX( "HullBannerUsage", EveSOFDataHullBanner::Usage, EveSOFDataHullBannerUsageChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
-// USED FOR SOF PHASE 6, PLEASE KEEP UP TO DATE!
-Be::VarChooser EveSOFDataHullBannerSetItemUsageChooser[] = {
-	{ "AllianceLogo", BeCast( EveSOFDataHullBannerSetItem::ALLIANCE_LOGO ), "Alliance logo" },
-	{ "CorpLogo", BeCast( EveSOFDataHullBannerSetItem::CORP_LOGO ), "Corporation logo" },
-	{ "CeoPortrait", BeCast( EveSOFDataHullBannerSetItem::CEO_PORTRAIT ), "Ceo portrait" },
-	{ "VerticalBanner", BeCast( EveSOFDataHullBannerSetItem::VERTICAL_BANNER ), "Vertical banner" },
-	{ "HorizontalBanner", BeCast( EveSOFDataHullBannerSetItem::HORIZONTAL_BANNER ), "Vertical banner" },
-
-	{ "TargetSystemAllianceLogo", BeCast( EveSOFDataHullBannerSetItem::TARGET_SYSTEM_ALLIANCE_LOGO ), "Target system alliance logo (gates)" },
-	{ "TargetSystemVerticalBanner", BeCast( EveSOFDataHullBannerSetItem::TARGET_SYSTEM_VERTICAL_BANNER ), "Target system vertical banner (gates)" },
-	{ "TargetSystemHorizontalBanner", BeCast( EveSOFDataHullBannerSetItem::TARGET_SYSTEM_HORIZONTAL_BANNER ), "Target system horizontal banner (gates)" },
-	{ "TargetSystemInfo0", BeCast( EveSOFDataHullBannerSetItem::TARGET_SYSTEM_INFO_0 ), "Target system information (gates)" },
-	{ "TargetSystemInfo1", BeCast( EveSOFDataHullBannerSetItem::TARGET_SYSTEM_INFO_1 ), "Target system information (gates)" },
-	{ "TargetSystemInfo2", BeCast( EveSOFDataHullBannerSetItem::TARGET_SYSTEM_INFO_2 ), "Target system information (gates)" },
-	{ "TargetSystemInfo3", BeCast( EveSOFDataHullBannerSetItem::TARGET_SYSTEM_INFO_3 ), "Target system information (gates)" },
-	{ "TargetSystemInfo4", BeCast( EveSOFDataHullBannerSetItem::TARGET_SYSTEM_INFO_4 ), "Target system information (gates)" },
-	{ "TargetSystemStatus", BeCast( EveSOFDataHullBannerSetItem::TARGET_SYSTEM_STATUS ), "Target system status (gates)" },
-	{ "CurrentSystemAllianceLogo", BeCast( EveSOFDataHullBannerSetItem::CURRENT_SYSTEM_ALLIANCE_LOGO ), "Current system alliance logo (gates)" },
-	{ "CurrentSystemVerticalBanner", BeCast( EveSOFDataHullBannerSetItem::CURRENT_SYSTEM_VERTICAL_BANNER ), "Current system vertical banner (gates)" },
-	{ "CurrentSystemHorizontalBanner", BeCast( EveSOFDataHullBannerSetItem::CURRENT_SYSTEM_HORIZONTAL_BANNER ), "Current system horizontal banner (gates)" },
-	{ "PublicityPoster", BeCast( EveSOFDataHullBannerSetItem::PUBLICITY_POSTER ), "Publicity structure poster" },
-	{ "PublicityPortrait", BeCast( EveSOFDataHullBannerSetItem::PUBLICITY_PORTRAIT ), "Publicity structure portrait" },
-	{ "RecruitmentInformation0", BeCast( EveSOFDataHullBannerSetItem::RECRUITMENT_INFORMATION_0 ), "Publicity structure recruitment information" },
-	{ "RecruitmentInformation1", BeCast( EveSOFDataHullBannerSetItem::RECRUITMENT_INFORMATION_1 ), "Publicity structure recruitment information" },
-	{ "RecruitmentInformation2", BeCast( EveSOFDataHullBannerSetItem::RECRUITMENT_INFORMATION_2 ), "Publicity structure recruitment information" },
-	{ "RecruitmentInformation3", BeCast( EveSOFDataHullBannerSetItem::RECRUITMENT_INFORMATION_3 ), "Publicity structure recruitment information" },
-	{ "RecruitmentInformation4", BeCast( EveSOFDataHullBannerSetItem::RECRUITMENT_INFORMATION_4 ), "Publicity structure recruitment information" },
-	{ 0 }
-};
-BLUE_REGISTER_ENUM_EX( "HullBannerSetItemUsage", EveSOFDataHullBannerSetItem::Usage, EveSOFDataHullBannerSetItemUsageChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
-
 BLUE_DEFINE( EveSOFDataHullBannerLight );
 const Be::ClassInfo* EveSOFDataHullBannerLight::ExposeToBlue()
 {
@@ -609,42 +578,7 @@ const Be::ClassInfo* EveSOFDataHullBanner::ExposeToBlue()
 	EXPOSURE_END()
 }
 
-BLUE_DEFINE( EveSOFDataHullBannerSet );
-const Be::ClassInfo* EveSOFDataHullBannerSet::ExposeToBlue(){
-	EXPOSURE_BEGIN( EveSOFDataHullBannerSet, "" )
-		MAP_INTERFACE( EveSOFDataHullBannerSet )
-		MAP_PROPERTY_READONLY( "name", GetName, "")
-		MAP_ATTRIBUTE( "visibilityGroup", m_visibilityGroup, ":jessica-widget: visibilityGroup", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "banners", m_banners, "", Be::READ | Be::PERSIST )
-		
-		
-	EXPOSURE_END()
-}
 
-BLUE_DEFINE( EveSOFDataHullBannerSetItem );
-const Be::ClassInfo* EveSOFDataHullBannerSetItem::ExposeToBlue(){
-	EXPOSURE_BEGIN( EveSOFDataHullBannerSetItem, "" )
-		MAP_INTERFACE( EveSOFDataHullBannerSetItem )
-
-		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE_WITH_CHOOSER( "usage", m_usage, "Banner usage", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFDataHullBannerSetItemUsageChooser )
-		MAP_ATTRIBUTE( "position", m_position, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "scaling", GetScaling, SetScaling, "" )
-		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "angleX", m_angleX, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "angleX", GetAngleX, SetAngleX, "Horizontal curve angle" )
-		MAP_ATTRIBUTE( "angleY", m_angleY, "", Be::PERSISTONLY )
-		MAP_PROPERTY( "angleY", GetAngleY, SetAngleY, "Vertical curve angle" )
-
-		MAP_ATTRIBUTE( "lightOverride", m_lightOverride, "", Be::READ | Be::PERSIST )
-
-
-		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE( "maintainAspectRatio", m_maintainAspectRatio, "Maintain UV aspect ratio when manipulating a banner", Be::READWRITE )
-	EXPOSURE_END()
-}
 
 BLUE_DEFINE( EveSOFDataHullBooster );
 const Be::ClassInfo* EveSOFDataHullBooster::ExposeToBlue()
@@ -920,7 +854,6 @@ const Be::ClassInfo* EveSOFDataHull::ExposeToBlue()
 		MAP_ATTRIBUTE( "spriteLineSets", m_spriteLineSets, "The spritelinesets", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "hazeSets", m_hazeSets, "The hazesets", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "banners", m_banners, "", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "bannerSets", m_bannerSets, "The bannerSets\n :jessica-group: sof-phase-6\n :jessica-sub-group: WIP", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "decalSets", m_decalSets, "The decalsets", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "lightSets", m_lightSets, "The lightSets", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "impactEffectType", m_impactEffectType, "Type of impact effect on this hull", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFImpactEffectTypeChooser )
@@ -1315,15 +1248,7 @@ const Be::ClassInfo* EveSOFDataGenericString::ExposeToBlue()
     EXPOSURE_END()
 }
 
-BLUE_DEFINE( EveSOFDataVisibilityGroup );
-const Be::ClassInfo* EveSOFDataVisibilityGroup::ExposeToBlue(){
-	EXPOSURE_BEGIN( EveSOFDataVisibilityGroup, "" )
-		MAP_INTERFACE( EveSOFDataVisibilityGroup )
 
-		MAP_ATTRIBUTE( "name", m_name, "The name of the visibilty group", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "description", m_description, "", Be::READWRITE | Be::PERSIST )
-	EXPOSURE_END()
-}
 
 BLUE_DEFINE( EveSOFDataGenericDamage );
 const Be::ClassInfo* EveSOFDataGenericDamage::ExposeToBlue()

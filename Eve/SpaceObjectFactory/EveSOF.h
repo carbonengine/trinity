@@ -88,8 +88,7 @@ private:
 	void SetupPlaneSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupSpriteLineSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupHazeSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
-	void SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const; 
-	void SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const; 
+	void SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const;
 	void SetupEffectChildren( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr dna ) const;
 	void SetupControllers( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr dna ) const;

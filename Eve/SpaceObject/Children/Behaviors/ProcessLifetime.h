@@ -10,15 +10,15 @@ struct ProcessLifetimeData
 	ProcessLifetimeData() :
 		hasUsedEntryTunnel( false ),
 		hasUsedExitTunnel( false ),
-		assignedLifeTimeTunnel( 0 ),
+		assignedLifeTimeTunnel( - 1 ),
 		tunnelPoint( 0 )
 	{
 	}
 
+	int unsigned assignedLifeTimeTunnel;
+	int tunnelPoint;
 	bool hasUsedEntryTunnel;
 	bool hasUsedExitTunnel;
-	int assignedLifeTimeTunnel;
-	int tunnelPoint;
 };
 
 BLUE_DECLARE( TriCurveSet );
@@ -55,7 +55,7 @@ public:
 	std::vector<Vector3> GetEntrancePoints();
 	
 private:
-	void FindASpawnPoint( DroneAgent & agent, ProcessLifetimeData * data, BehaviorGroup & group );
+	void FindASpawnPoint( DroneAgent& agent, ProcessLifetimeData* data );
 	bool ProcessTunnel(DroneAgent& agent, SplineTunnel& tunnel, int& pointID, float boundingSphere);
 	void findAndAssignAnExitTunnel(DroneAgent& agent, ProcessLifetimeData* data);
 	void UpdateTunnelRegistry();

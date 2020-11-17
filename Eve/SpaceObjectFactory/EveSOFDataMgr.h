@@ -197,30 +197,17 @@ public:
 		float saturation;
 	};
 
-	struct HullBannerItemData
-	{
-		EveBannerItem item;
-		HullBannerSetItemLightData bannerLight;
-		uint32_t visibilityGroup;
-	};
-
-	struct HullBannerData
-	{
-		std::vector<HullBannerItemData> items;
-		EveSOFDataHullBanner::Usage usage;
-		uint32_t visibilityGroup;
-	};
-
 	struct HullBannerSetItemData
 	{
 		EveBannerItem item;
 		HullBannerSetItemLightData bannerLight;
+		uint32_t visibilityGroup;
 	};
 
 	struct HullBannerSetData
 	{
-		std::map<EveSOFDataHullBannerSetItem::Usage, std::vector<HullBannerSetItemData>> bannerTypes;
-		uint32_t visibilityGroup;
+		std::vector<HullBannerSetItemData> items;
+		EveSOFDataHullBanner::Usage usage;
 	};
 
 	struct HullAreas
@@ -348,8 +335,7 @@ public:
 		std::vector<HullPlaneSetData> planeSets;
 		std::vector<HullSpriteLineSetData> spriteLineSets;
 		std::vector<HullHazeSetData> hazeSets;
-		std::vector<HullBannerData> banners; 
-		std::vector<HullBannerSetData> bannerSets; // new banners
+		std::vector<HullBannerSetData> bannerSets;
 		std::vector<HullDecalSetData> hullDecalSets;
 		std::vector<HullLightSetData> hullLightSets;
 		std::vector<HullChildSetData> childSets;

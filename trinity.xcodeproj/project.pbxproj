@@ -3939,7 +3939,7 @@
 					"../../../../../../sdk/granny/2.9.24.0/gstate",
 					"../../../../../../sdk/libpng/1.6.29/include",
 					"../../../../../../sdk/libjpg/jpeg-9b",
-					"../../../../../../sdk/telemetry/3.5.0.13/include",
+					"../../../../../../sdk/telemetry/3.0.1.1008/include",
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -3968,7 +3968,7 @@
 					"../../../carbon/autobuild/CcpMath/MacOsX$(ARCHS)/clang4.2/",
 					"../../../../../../sdk/granny/2.9.24.0/lib/macosx64",
 					"../../../../../../shared_tools/python/27_mac/lib",
-					"../../../../../../sdk/telemetry/3.5.0.13/lib",
+					"../../../../../../sdk/telemetry/3.0.1.1008/lib",
 					"../../../../../../sdk/squish/1.10/lib/MacOsX$(ARCHS)/clang4.2",
 					"../../../../../../sdk/muparser/v2.2.5/lib/MacOsX$(ARCHS)/clang4.2",
 					"../../../../../../sdk/cairo/1.15.12/lib/MacOsX$(ARCHS)/clang4.2",
@@ -8507,7 +8507,7 @@
 					.,
 					"../../../../../../sdk/libpng/1.6.29/include",
 					"../../../carbon/src/stackless/Mac",
-					"../../../../../../sdk/telemetry/3.5.0.13/include",
+					"../../../../../../sdk/telemetry/3.0.1.1008/include",
 					);
 				CLANG_WARN_INT_CONVERSION = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -8538,7 +8538,7 @@
 					"../../../carbon/autobuild/CcpMath/MacOsX$(ARCHS)/clang4.2/",
 					"../../../../../../sdk/granny/2.9.24.0/lib/macosx64",
 					"../../../../../../sdk/libjpg/jpeg-9b/lib/MacOsX$(ARCHS)/clang4.2",
-					"../../../../../../sdk/telemetry/3.5.0.13/lib",
+					"../../../../../../sdk/telemetry/3.0.1.1008/lib",
 					"../../../../../../sdk/glew/1.7.0/lib/MacOsXx86_64",
 					"../../../../../../sdk/cairo/1.15.12/lib/MacOsX$(ARCHS)/clang4.2",
 					"../../autobuild/ImageIO/MacOsX$(ARCHS)/clang4.2/",

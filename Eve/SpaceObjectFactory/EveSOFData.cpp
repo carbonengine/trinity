@@ -104,8 +104,6 @@ EveSOFDataInstancedMesh::EveSOFDataInstancedMesh( IRoot* lockobj ) :
 EveSOFDataGenericString::EveSOFDataGenericString( IRoot* lockobj )
 {}
 
-EveSOFDataVisibilityGroup::EveSOFDataVisibilityGroup( IRoot* lockobj )
-{}
 
 EveSOFDataGenericShader::EveSOFDataGenericShader( IRoot* lockobj ) :
 	m_doGenerateDepthArea( true ),
@@ -266,7 +264,6 @@ EveSOFDataHull::EveSOFDataHull( IRoot* lockobj ) :
 	PARENTLOCK( m_spriteLineSets ),
 	PARENTLOCK( m_hazeSets ),
 	PARENTLOCK( m_banners ),
-	PARENTLOCK( m_bannerSets ),
 	PARENTLOCK( m_decalSets ),
 	PARENTLOCK( m_lightSets ),
 	PARENTLOCK( m_opaqueAreas ),
@@ -539,10 +536,6 @@ EveSOFDataHullHazeSetItem::EveSOFDataHullHazeSetItem( IRoot* lockobj ) :
 	m_boosterGainInfluence( false )
 {}
 
-/// <summary>
-/// Banners
-/// </summary>
-
 EveSOFDataHullBannerLight::EveSOFDataHullBannerLight( IRoot* ) 
 	:m_radiusMultiplier( 1 ),
 	m_brightness( 1 ),
@@ -654,117 +647,6 @@ void EveSOFDataHullBanner::SetScaling( const Vector3& scaling )
 	}
 }
 
-EveSOFDataHullBannerSet::EveSOFDataHullBannerSet( IRoot* lockobj ):
-	PARENTLOCK( m_banners ),
-	m_visibilityGroup( "primary" )
-{}
-
-
-std::string EveSOFDataHullBannerSet::GetName()
-{
-	return m_visibilityGroup.c_str();
-}
-
-
-EveSOFDataHullBannerSetItem::EveSOFDataHullBannerSetItem( IRoot* ) :
-	m_usage( VERTICAL_BANNER ),
-	m_position( 0, 0, 0 ),
-	m_scaling( 1, 1, 1 ),
-	m_rotation( 0, 0, 0, 1 ),
-	m_angleX( 0 ),
-	m_angleY( 0 ),
-	m_boneIndex( -1 ),
-	m_maintainAspectRatio( true )
-{
-	m_lightOverride.CreateInstance();
-}
-
-float EveSOFDataHullBannerSetItem::GetTargetAspectRatio() const
-{
-	switch( m_usage )
-	{
-	case VERTICAL_BANNER:
-	case TARGET_SYSTEM_VERTICAL_BANNER:
-	case CURRENT_SYSTEM_VERTICAL_BANNER:
-		return 0.25f;
-	case PUBLICITY_POSTER:
-		return 3.f / 4.f;
-	case HORIZONTAL_BANNER:
-	case TARGET_SYSTEM_HORIZONTAL_BANNER:
-	case CURRENT_SYSTEM_HORIZONTAL_BANNER:
-	case TARGET_SYSTEM_STATUS:
-		return 4.f;
-	default:
-		return 1.f;
-	}
-}
-
-float EveSOFDataHullBannerSetItem::GetAspectRatio() const
-{
-	EveBannerItem banner;
-	banner.scaling = m_scaling;
-	banner.angleX = m_angleX;
-	banner.angleY = m_angleY;
-
-	return EveBannerSet::GetBannerAspectRatio( banner );
-}
-
-float EveSOFDataHullBannerSetItem::GetAngleX() const
-{
-	return m_angleX;
-}
-
-void EveSOFDataHullBannerSetItem::SetAngleX( float angle )
-{
-	m_angleX = angle;
-	if( m_maintainAspectRatio )
-	{
-		m_scaling.y *= GetAspectRatio() / GetTargetAspectRatio();
-	}
-}
-
-float EveSOFDataHullBannerSetItem::GetAngleY() const
-{
-	return m_angleY;
-}
-
-void EveSOFDataHullBannerSetItem::SetAngleY( float angle )
-{
-	m_angleY = angle;
-	if( m_maintainAspectRatio )
-	{
-		float ratio = GetAspectRatio();
-		if( ratio != 0 )
-		{
-			m_scaling.x *= GetTargetAspectRatio() / ratio;
-		}
-	}
-}
-
-Vector3 EveSOFDataHullBannerSetItem::GetScaling() const
-{
-	return m_scaling;
-}
-
-void EveSOFDataHullBannerSetItem::SetScaling( const Vector3& scaling )
-{
-	m_scaling = scaling;
-	if( m_maintainAspectRatio )
-	{
-		float ratio = GetAspectRatio();
-		if( GetTargetAspectRatio() < 1 )
-		{
-			if( ratio != 0 )
-			{
-				m_scaling.x *= GetTargetAspectRatio() / ratio;
-			}
-		}
-		else
-		{
-			m_scaling.y *= ratio / GetTargetAspectRatio();
-		}
-	}
-}
 
 EveSOFDataHullDecalSet::EveSOFDataHullDecalSet( IRoot* lockobj ):
 	PARENTLOCK( m_items ),

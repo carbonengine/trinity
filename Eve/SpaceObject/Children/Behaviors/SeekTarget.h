@@ -47,12 +47,13 @@ public:
 	// SeekTarget
 	virtual size_t GetScratchMemorySize() const;
 	virtual void InitializeScratch( void* scratchMemory );
-	virtual std::vector<Vector3> CalculateBehavior( std::vector<DroneAgent> & agents, void* scratchData, const float deltaTime, BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius );
-	void GetDebugOptions( Tr2DebugRendererOptions & options );
-	void RenderDebugInfo( ITr2DebugRenderer2 & renderer, std::vector<DroneAgent> & agents, Matrix & parentWorldLocation );
+	virtual std::vector<Vector3> CalculateBehavior( std::vector<DroneAgent>& agents, void* scratchData, const float deltaTime,
+		BehaviorGroup& group, EveChildBehaviorSystem& system, const std::vector<std::vector<DroneAgent*>>& dronesInSearchRadius );
+	void GetDebugOptions( Tr2DebugRendererOptions& options );
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation );
 	virtual int GetProcessPriority();
-
-	void SetTarget( EveSpaceObject2 * target );
+	
+	void SetTarget( EveSpaceObject2* target );
 	void SetExit( bool value );
 	void SetBehaviorWeight( float value );
 	void SetupShipRepair();
@@ -76,7 +77,6 @@ private:
 	float m_behaviorWeight;
 	float m_arrivedRadius;
 	float m_slowDownRadius;
-	float m_distFromOrigin;
 	float m_seconds;
 	Vector3 m_arrivalPoint; // debug
 	EveSpaceObject2* m_target;
@@ -102,61 +102,3 @@ private:
 TYPEDEF_BLUECLASS( SeekTarget );
 
 #endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-void EveChildEffectPropagator::ProcessRefLocators( IEveSpaceObject2* parent )
-{
-	if( m_locatorSetName.empty() )
-	{
-		m_locatorSetName = BlueSharedString( "damage" );
-	}
-
-	const LocatorStructureList* locators;
-
-	if( EveSpaceObject2Ptr spaceObject = BlueCastPtr( parent ) )
-	{
-		locators = spaceObject->GetLocatorsForSet( m_locatorSetName );
-		Vector4 bounds;
-		spaceObject->GetBoundingSphere( bounds );
-		m_triggerSphereScalarMulti = bounds.w;
-	}
-	else
-	{
-		return;
-	}
-
-	if( locators )
-	{
-		for( auto locator = locators->begin(); locator != locators->end(); ++locator )
-		{
-			if( TriRand() > m_completeness )
-			{
-				continue;
-			}
-
-			Transform t;
-			t.position = locator->position;
-			t.rotation = locator->direction;
-			float rand = m_randScaleMin + TriRand() * (m_randScaleMax - m_randScaleMin);
-			t.scale = m_effectScaling * rand;
-			m_processedTransforms.emplace_back( t );
-		}
-	}
-
-}*/

@@ -596,12 +596,6 @@ const std::vector<EveSOFDataMgr::HullHazeSetData>& EveSOFDNA::GetHullHazeSets( s
 }
 
 // --------------------------------------------------------------------------------
-const std::vector<EveSOFDataMgr::HullBannerData>& EveSOFDNA::GetHullBanners( size_t n ) const
-{
-	return m_hullDatas[n]->banners;
-}
-
-// --------------------------------------------------------------------------------
 const std::vector<EveSOFDataMgr::HullBannerSetData>& EveSOFDNA::GetHullBannerSets( size_t n ) const
 {
 	return m_hullDatas[n]->bannerSets;

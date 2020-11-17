@@ -655,30 +655,30 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		hd.hazeSets.push_back( hhsd );
 	}
 
-	hd.banners.clear();
+	hd.bannerSets.clear();
 	std::map<EveSOFDataHullBanner::Usage, size_t> setIndices;
 	int32_t bannerIndex = 0;
 	for( auto hsit = srcData->m_banners.begin(); hsit != srcData->m_banners.end(); ++hsit )
 	{
 		auto sourceBanner = *hsit;
 
-		HullBannerData* set = nullptr;
+		HullBannerSetData* set = nullptr;
 		auto found = setIndices.find( sourceBanner->m_usage );
 		if( found == end( setIndices ) )
 		{
-			setIndices[sourceBanner->m_usage] = hd.banners.size();
-			hd.banners.push_back( HullBannerData() );
-			set = &hd.banners.back();
+			setIndices[sourceBanner->m_usage] = hd.bannerSets.size();
+			hd.bannerSets.push_back( HullBannerSetData() );
+			set = &hd.bannerSets.back();
 			set->usage = sourceBanner->m_usage;
 		}
 		else
 		{
-			set = &hd.banners[found->second];
+			set = &hd.bannerSets[found->second];
 		}
 
 		std::string visGroupName( sourceBanner->m_visibilityGroup.c_str() );
 
-		HullBannerItemData hbsid;
+		HullBannerSetItemData hbsid;
 		hbsid.item.position = sourceBanner->m_position;
 		hbsid.item.scaling = sourceBanner->m_scaling;
 		hbsid.item.rotation = sourceBanner->m_rotation;
@@ -697,52 +697,6 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		hbsid.bannerLight.saturation = sourceBanner->m_lightOverride->m_saturation;
 
 		set->items.push_back( hbsid );
-	}
-
-	hd.bannerSets.clear();
-	std::map<uint32_t, size_t> bannerSetIndices;
-	bannerIndex = 0;
-	for( auto hsit = srcData->m_bannerSets.begin(); hsit != srcData->m_bannerSets.end(); ++hsit )
-	{
-		auto sourceBannerSet = *hsit;
-
-		HullBannerSetData set = HullBannerSetData();
-
-		std::string visGroupName( sourceBannerSet->m_visibilityGroup.c_str() );
-		set.visibilityGroup = CcpHashFNV1( visGroupName.c_str(), visGroupName.size() );
-		set.bannerTypes = std::map<EveSOFDataHullBannerSetItem::Usage, std::vector<HullBannerSetItemData>>();
-
-		for( auto hsiit = begin( sourceBannerSet->m_banners ); hsiit != end( sourceBannerSet->m_banners ); ++hsiit )
-		{
-			auto bannerItem = *hsiit;
-			std::vector<HullBannerSetItemData> bannerItems;
-
-			auto bannerEntry = set.bannerTypes.find( bannerItem->m_usage );
-			if( bannerEntry == set.bannerTypes.end() )
-			{
-				set.bannerTypes.insert( std::pair < EveSOFDataHullBannerSetItem::Usage, std::vector<HullBannerSetItemData> >(bannerItem->m_usage, std::vector<HullBannerSetItemData>() ) );
-			}
-
-			HullBannerSetItemData data;
-			data.item.position = bannerItem->m_position;
-			data.item.scaling = bannerItem->m_scaling;
-			data.item.rotation = bannerItem->m_rotation;
-			data.item.angleX = bannerItem->m_angleX;
-			data.item.angleY = bannerItem->m_angleY;
-			data.item.bone = bannerItem->m_boneIndex;
-			data.item.reference = bannerIndex++;
-			// lights
-			data.bannerLight.radiusMultiplier = bannerItem->m_lightOverride->m_radiusMultiplier;
-			data.bannerLight.brightness = bannerItem->m_lightOverride->m_brightness;
-			data.bannerLight.innerRadiusMultiplier = bannerItem->m_lightOverride->m_innerRadiusMultiplier;
-			data.bannerLight.noiseAmplitude = bannerItem->m_lightOverride->m_noiseAmplitude;
-			data.bannerLight.noiseFrequency = bannerItem->m_lightOverride->m_noiseFrequency;
-			data.bannerLight.noiseOctaves = bannerItem->m_lightOverride->m_noiseOctaves;
-			data.bannerLight.saturation = bannerItem->m_lightOverride->m_saturation;
-
-			set.bannerTypes[bannerItem->m_usage].push_back( data );
-		}
-		hd.bannerSets.push_back( set );
 	}
 
 	// default hull pattern

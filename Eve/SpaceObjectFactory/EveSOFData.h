@@ -42,22 +42,6 @@ public:
 TYPEDEF_BLUECLASS( EveSOFDataGenericString );
 BLUE_DECLARE_VECTOR( EveSOFDataGenericString );
 
-BLUE_CLASS( EveSOFDataVisibilityGroup ) :
-	public IRoot
-{
-public:
-	EXPOSE_TO_BLUE();
-	EveSOFDataVisibilityGroup( IRoot* lockobj = NULL );
-	~EveSOFDataVisibilityGroup()
-	{
-	}
-
-	std::string m_name;
-	std::string m_description;
-};
-TYPEDEF_BLUECLASS( EveSOFDataVisibilityGroup );
-BLUE_DECLARE_VECTOR( EveSOFDataVisibilityGroup );
-
 BLUE_CLASS( EveSOFDataTexture ) :
 	public IRoot
 {
@@ -619,6 +603,7 @@ public:
 TYPEDEF_BLUECLASS( EveSOFDataHullHazeSet );
 BLUE_DECLARE_VECTOR( EveSOFDataHullHazeSet );
 
+
 BLUE_CLASS( EveSOFDataHullBannerLight ) :
 	public IRoot
 {
@@ -631,95 +616,11 @@ public:
 	float m_innerRadiusMultiplier;
 	float m_noiseAmplitude;
 	float m_noiseFrequency;
-	int m_noiseOctaves;
+	int   m_noiseOctaves;
 	float m_saturation;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullBannerLight );
 BLUE_DECLARE_VECTOR( EveSOFDataHullBannerLight );
-
-BLUE_CLASS( EveSOFDataHullBannerSetItem ) :
-	public IRoot
-{
-public:
-	EXPOSE_TO_BLUE();
-
-	enum Usage
-	{
-		ALLIANCE_LOGO,
-		CORP_LOGO,
-		CEO_PORTRAIT,
-		VERTICAL_BANNER,
-		HORIZONTAL_BANNER,
-
-		// gates
-		TARGET_SYSTEM_ALLIANCE_LOGO,
-		TARGET_SYSTEM_VERTICAL_BANNER,
-		TARGET_SYSTEM_HORIZONTAL_BANNER,
-		TARGET_SYSTEM_INFO_0,
-		TARGET_SYSTEM_INFO_1,
-		TARGET_SYSTEM_INFO_2,
-		TARGET_SYSTEM_INFO_3,
-		TARGET_SYSTEM_INFO_4,
-		TARGET_SYSTEM_STATUS,
-		CURRENT_SYSTEM_ALLIANCE_LOGO,
-		CURRENT_SYSTEM_VERTICAL_BANNER,
-		CURRENT_SYSTEM_HORIZONTAL_BANNER,
-
-		// publicity structures
-		PUBLICITY_POSTER,
-		PUBLICITY_PORTRAIT,
-		RECRUITMENT_INFORMATION_0,
-		RECRUITMENT_INFORMATION_1,
-		RECRUITMENT_INFORMATION_2,
-		RECRUITMENT_INFORMATION_3,
-		RECRUITMENT_INFORMATION_4,
-
-		_USAGE_COUNT,
-	};
-
-	EveSOFDataHullBannerSetItem( IRoot* lockobj = nullptr );
-
-	float GetAspectRatio() const;
-	float GetTargetAspectRatio() const;
-
-	float GetAngleX() const;
-	void SetAngleX( float angle );
-	float GetAngleY() const;
-	void SetAngleY( float angle );
-	Vector3 GetScaling() const;
-	void SetScaling( const Vector3& scaling );
-
-	std::string m_name;
-	Usage m_usage;
-
-	Vector3 m_position, m_scaling;
-	Quaternion m_rotation;
-	EveSOFDataHullBannerLightPtr m_lightOverride;
-
-	float m_angleX;
-	float m_angleY;
-	int32_t m_boneIndex;
-
-	bool m_maintainAspectRatio;
-};
-TYPEDEF_BLUECLASS( EveSOFDataHullBannerSetItem );
-BLUE_DECLARE_VECTOR( EveSOFDataHullBannerSetItem );
-
-
-BLUE_CLASS( EveSOFDataHullBannerSet ) :
-	public IRoot
-{
-public:
-	EXPOSE_TO_BLUE();
-	EveSOFDataHullBannerSet( IRoot* lockobj = nullptr );
-
-	std::string GetName();
-
-	BlueSharedString m_visibilityGroup;
-	PEveSOFDataHullBannerSetItemVector m_banners;
-};
-TYPEDEF_BLUECLASS( EveSOFDataHullBannerSet );
-BLUE_DECLARE_VECTOR( EveSOFDataHullBannerSet );
 
 
 BLUE_CLASS( EveSOFDataHullBanner ) :
@@ -1220,7 +1121,6 @@ public:
 	PEveSOFDataHullSpriteLineSetVector m_spriteLineSets;
 	PEveSOFDataHullHazeSetVector m_hazeSets;
 	PEveSOFDataHullBannerVector m_banners;
-	PEveSOFDataHullBannerSetVector m_bannerSets; 
 	PEveSOFDataHullDecalSetVector m_decalSets;
 	PEveSOFDataHullLightSetVector m_lightSets;
 	ImpactEffectType m_impactEffectType;
@@ -1721,7 +1621,7 @@ public:
 	PEveSOFDataGenericVariantVector m_variants;
 
 	// visibility groups
-	PEveSOFDataVisibilityGroupVector m_visibilityGroups;
+	PEveSOFDataGenericStringVector m_visibilityGroups;
 
 	// hull categories
 	PEveSOFDataGenericStringVector m_hullCategories;

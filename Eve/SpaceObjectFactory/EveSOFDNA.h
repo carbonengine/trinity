@@ -101,7 +101,6 @@ public:
 	const std::vector<EveSOFDataMgr::HullSpriteSetData>& GetHullSpriteSets( size_t n ) const;
 	const std::vector<EveSOFDataMgr::HullSpriteLineSetData>& GetHullSpriteLineSets( size_t n ) const;
 	const std::vector<EveSOFDataMgr::HullHazeSetData>& GetHullHazeSets( size_t n ) const;
-	const std::vector<EveSOFDataMgr::HullBannerData>& GetHullBanners( size_t n ) const;
 	const std::vector<EveSOFDataMgr::HullBannerSetData>& GetHullBannerSets( size_t n ) const;
 	const std::vector<EveSOFDataMgr::LocatorData>& GetHullTurretLocators( size_t n ) const;
 	const std::vector<EveSOFDataMgr::LocatorDirectionData>* GetHullLocators( const char* setName, size_t n ) const;

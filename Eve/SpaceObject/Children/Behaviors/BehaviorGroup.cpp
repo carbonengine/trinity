@@ -5,7 +5,7 @@
 #include "include/TriMath.h"
 #include "IBehavior.h"
 #include "Tr2InstancedMesh.h"
-#include "Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTransformCommon.h"
+#include "Eve/SpaceObject/Children/TransformModifiers/EveChildModifierTransformCommon.h" 
 #include "Resources/TriGeometryRes.h"
 #include "PlayFX.h"
 
@@ -18,7 +18,6 @@ BehaviorGroup::BehaviorGroup( IRoot* lockobj ) :
 	m_display( true ),
 	m_maxVelocity( 100 ),
 	m_changeBufferVertexCount( nullptr ),
-	m_parent( nullptr ),
 	m_scale( 1.0 ),
 	m_currentScreenSize( 0.0 ),
 	m_renderThreshold( 1.0 ),
@@ -39,7 +38,7 @@ bool BehaviorGroup::Initialize()
 {
 	m_scratchData.resize( m_behaviors.size() );
 	CreateVertexDeclaration();
-
+	
 	if( m_booster )
 	{
 		m_booster->RebuildFlareBuffer( m_count );
@@ -66,44 +65,45 @@ BehaviorGroup::~BehaviorGroup()
 }
 
 void BehaviorGroup::OnListModified(
-	long event, // BLUELISTEVENT values
+	long event,		// BLUELISTEVENT values
 	ssize_t key,
 	ssize_t key2,
 	IRoot* value,
-	const struct IList* list )
+	const struct IList* list
+)
 {
 	if( list == &m_behaviors && ( event & BELIST_LOADING ) == 0 )
 	{
 		switch( event & BELIST_EVENTMASK )
 		{
-		case BELIST_INSERTED:
-		{
-			m_scratchData.insert( m_scratchData.begin() + key, CcpMallocBuffer() );
-			if( !m_agents.empty() )
+			case BELIST_INSERTED:
 			{
-				auto size = m_behaviors[key]->GetScratchMemorySize();
-				auto& scratchData = m_scratchData[key];
-				scratchData.resize( "BehaviorGroup::m_scratchData", m_agents.size() * size );
-				for( size_t i = 0; i < m_agents.size(); ++i )
+				m_scratchData.insert( m_scratchData.begin() + key, CcpMallocBuffer() );
+				if( !m_agents.empty() )
 				{
-					m_behaviors[key]->InitializeScratch( scratchData.get() + size * i );
+					auto size = m_behaviors[key]->GetScratchMemorySize();
+					auto& scratchData = m_scratchData[key];
+					scratchData.resize( "BehaviorGroup::m_scratchData", m_agents.size() * size );
+					for( size_t i = 0; i < m_agents.size(); ++i )
+					{
+						m_behaviors[key]->InitializeScratch( scratchData.get() + size * i );
+					}
 				}
+				CreateAgentTree();
+				break;
 			}
-			CreateAgentTree();
-			break;
-		}
-		case BELIST_REMOVED:
-			m_scratchData.erase( m_scratchData.begin() + key );
-			CreateAgentTree();
-			break;
-		case BELIST_SWAPPED:
-			std::swap( m_scratchData[key], m_scratchData[key2] );
-			break;
-		case BELIST_UNLOADSTART:
-			m_scratchData.clear();
-			break;
-		default:
-			break;
+			case BELIST_REMOVED:
+				m_scratchData.erase( m_scratchData.begin() + key );
+				CreateAgentTree();
+				break;
+			case BELIST_SWAPPED:
+				std::swap( m_scratchData[key], m_scratchData[key2] );
+				break;
+			case BELIST_UNLOADSTART:
+				m_scratchData.clear();
+				break;
+			default:
+				break;
 		}
 	}
 	InitializeGeometryResource();
@@ -131,7 +131,7 @@ void BehaviorGroup::InitializeGeometryResource()
 	SetCount( t );
 }
 
-void BehaviorGroup::SetVertexFunctionReferance( const std::function<void( void )>& F )
+void BehaviorGroup::SetVertexFunctionReferance( const std::function<void( void )> &F )
 {
 	m_changeBufferVertexCount = F;
 }
@@ -161,11 +161,11 @@ unsigned int BehaviorGroup::GetCount()
 void BehaviorGroup::CreateAgentTree()
 {
 	m_tree = nullptr;
-	if( !m_tree.CreateInstance() )
+	if ( !m_tree.CreateInstance() )
 	{
 		return;
 	}
-	m_tree->CreateTree( m_agents, m_behaviors.size() );
+	m_tree->CreateTree( m_agents, m_behaviors.size());
 }
 
 // --------------------------------------------------------------------------------------
@@ -190,7 +190,7 @@ IBehavior* BehaviorGroup::GetBehaviorByName( const std::string& name )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Loop through elements in ProcessPriority enum and re-arranges behavior indices
+//   Loop through elements in ProcessPriority enum and re-arranges behavior indices 
 //   based on priority
 // Returns:
 //	A vector of sorted indices
@@ -199,12 +199,12 @@ void BehaviorGroup::SortBehaviorIndexes()
 {
 	m_sortedBehaviorIndexes.clear();
 
-	for( int i = 0; i < IBehavior::ProcessPriority::COUNT; ++i )
+	for ( int i = 0; i < IBehavior::ProcessPriority::COUNT; ++i )
 	{
 		int p = 0;
-		for( auto behavior = m_behaviors.begin(); behavior != m_behaviors.end(); ++behavior, ++p )
+		for ( auto behavior = m_behaviors.begin(); behavior != m_behaviors.end(); ++behavior, ++p )
 		{
-			if( ( *behavior )->GetProcessPriority() == i )
+			if ( ( *behavior )->GetProcessPriority() == i )
 			{
 				m_sortedBehaviorIndexes.push_back( p );
 			}
@@ -232,7 +232,7 @@ float BehaviorGroup::GetMaxVelocity() const
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Return the vertex declaration handle for the BehaviorGroup instanced mesh
+//   Return the vertex declaration handle for the BehaviorGroup instanced mesh 
 // --------------------------------------------------------------------------------------
 unsigned int BehaviorGroup::GetVertexDeclarationHandle() const
 {
@@ -265,7 +265,7 @@ void BehaviorGroup::AddAgent()
 {
 	// The function without arguments to be called from the UI
 	AddAgentPrivate();
-
+	
 	OnAgentCountChanged();
 }
 
@@ -275,7 +275,7 @@ void BehaviorGroup::AddAgent()
 // --------------------------------------------------------------------------------------
 void BehaviorGroup::AddAgentPrivate()
 {
-	DroneAgent agent;
+ 	DroneAgent agent;
 	// This is because the process priority behavior can also affect where drones spawn
 	if( m_spawnPosition != Vector3( 0.f, 0.f, 0.f ) )
 	{
@@ -291,11 +291,11 @@ void BehaviorGroup::AddAgentPrivate()
 
 	for( size_t i = 0; i < m_behaviors.size(); ++i )
 	{
-		auto size = m_behaviors[m_sortedBehaviorIndexes[i]]->GetScratchMemorySize();
+		auto size = m_behaviors[ m_sortedBehaviorIndexes[i] ]->GetScratchMemorySize();
 		if( size > 0 )
 		{
-			m_scratchData[m_sortedBehaviorIndexes[i]].resize( "BehaviorGroup::m_scratchData", m_agents.size() * size );
-			m_behaviors[m_sortedBehaviorIndexes[i]]->InitializeScratch( m_scratchData[m_sortedBehaviorIndexes[i]].get() + size * ( m_agents.size() - 1 ) );
+			m_scratchData[ m_sortedBehaviorIndexes[i] ].resize( "BehaviorGroup::m_scratchData", m_agents.size() * size );
+			m_behaviors[ m_sortedBehaviorIndexes[i] ]->InitializeScratch( m_scratchData[ m_sortedBehaviorIndexes[i] ].get() + size * ( m_agents.size() - 1 ) );
 		}
 	}
 
@@ -309,12 +309,12 @@ void BehaviorGroup::AddAgentPrivate()
 // --------------------------------------------------------------------------------------
 void BehaviorGroup::SetCount( int count )
 {
-	if( count == m_count || count < 0 )
+	if ( count == m_count || count < 0 )
 	{
 		return;
 	}
 
-	if( m_count < count )
+	if ( m_count < count )
 	{
 		AddAgentsByCount( count );
 	}
@@ -322,7 +322,7 @@ void BehaviorGroup::SetCount( int count )
 	{
 		RemoveAgentsByCount( count );
 	}
-
+		
 	m_count = count;
 	OnAgentCountChanged();
 }
@@ -331,10 +331,10 @@ void BehaviorGroup::OnAgentCountChanged()
 {
 	if( m_changeBufferVertexCount )
 	{
-		( m_changeBufferVertexCount )();
+		( m_changeBufferVertexCount )( );
 	}
 	CreateAgentTree();
-
+	
 	if( m_booster )
 	{
 		m_booster->RebuildFlareBuffer( m_count );
@@ -352,12 +352,10 @@ float BehaviorGroup::AllTheSame()
 {
 	float same = -1;
 	// if none of the agents need either of the meshes we let the system know
-	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
+	for ( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 	{
-		if( same == -1 )
-			same = ( agent->xfade );
-		if( same != ( agent->xfade ) )
-			return -1;
+		if ( same == -1 ) same = (agent->xfade);
+		if ( same != (agent->xfade) ) return -1;
 	}
 	return same;
 }
@@ -429,7 +427,7 @@ void BehaviorGroup::AddAgentsByCount( int count )
 
 	for( size_t i = 0; i < m_behaviors.size(); ++i )
 	{
-		auto size = m_behaviors[m_sortedBehaviorIndexes[i]]->GetScratchMemorySize();
+ 		auto size = m_behaviors[m_sortedBehaviorIndexes[i]]->GetScratchMemorySize();
 		if( size > 0 )
 		{
 			m_scratchData[m_sortedBehaviorIndexes[i]].resize( "BehaviorGroup::m_scratchData", m_agents.size() * size );
@@ -469,21 +467,21 @@ void BehaviorGroup::RemoveAgentsByCount( int count )
 // Arguments:
 //	 dt: delta time, system: parent object
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::UpdateAgents( const float dt, EveChildBehaviorSystem& system )
+void BehaviorGroup::UpdateAgents(const float dt, EveChildBehaviorSystem& system )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if( m_agents.empty() )
+	if ( m_agents.empty() )
 	{
 		return;
 	}
 
 	std::vector<float> ranges;
 
-	for( auto behavior = m_behaviors.begin(); behavior != m_behaviors.end(); ++behavior )
+	for ( auto behavior = m_behaviors.begin(); behavior != m_behaviors.end(); ++behavior )
 	{
 		float searchRad = ( *behavior )->GetBehaviorSearchRadius();
-		if( searchRad == -1.f )
+		if ( searchRad == -1.f )
 		{
 			ranges.push_back( -1.f );
 		}
@@ -492,7 +490,7 @@ void BehaviorGroup::UpdateAgents( const float dt, EveChildBehaviorSystem& system
 			ranges.push_back( searchRad + m_boundingSphereRadius * m_scale );
 		}
 	}
-
+	
 	auto bs = m_boundingSphereRadius * m_scale;
 	const std::vector<std::vector<std::vector<DroneAgent*>>>* dronesInRange = m_tree->FindDronesInRange( m_agents, ranges, bs );
 
@@ -502,10 +500,10 @@ void BehaviorGroup::UpdateAgents( const float dt, EveChildBehaviorSystem& system
 		m_forces.clear();
 		auto scratch = m_scratchData.begin();
 
-		for( int i = 0; i < static_cast<int>( m_behaviors.size() ); ++i )
+		for ( int i = 0; i < static_cast< int >(m_behaviors.size()); ++i)
 		{
-			std::vector<Vector3> forces = m_behaviors[m_sortedBehaviorIndexes[i]]->CalculateBehavior( m_agents, ( scratch + m_sortedBehaviorIndexes[i] )->get(), dt, *this, system, ( *dronesInRange )[m_sortedBehaviorIndexes[i]] );
-			for( auto force = forces.begin(); force != forces.end(); ++force )
+			std::vector<Vector3> forces = m_behaviors[ m_sortedBehaviorIndexes[i] ]->CalculateBehavior( m_agents, (scratch + m_sortedBehaviorIndexes[i])->get(), dt, *this, system, (*dronesInRange)[ m_sortedBehaviorIndexes[i] ]);
+			for ( auto force = forces.begin(); force != forces.end(); ++force )
 			{
 				m_forces.push_back( *force );
 			}
@@ -514,26 +512,26 @@ void BehaviorGroup::UpdateAgents( const float dt, EveChildBehaviorSystem& system
 	else
 	{
 		auto scratch = m_scratchData.begin();
-		for( int i = 0; i < static_cast<int>( m_behaviors.size() ); ++i )
+		for ( int i = 0; i < static_cast< int >( m_behaviors.size()); ++i )
 		{
-			m_behaviors[m_sortedBehaviorIndexes[i]]->CalculateBehavior( m_agents, ( scratch + m_sortedBehaviorIndexes[i] )->get(), dt, *this, system, ( *dronesInRange )[m_sortedBehaviorIndexes[i]] );
+			m_behaviors[ m_sortedBehaviorIndexes[ i ] ]->CalculateBehavior( m_agents, ( scratch + m_sortedBehaviorIndexes[ i ] )->get(), dt, *this, system, ( *dronesInRange )[ m_sortedBehaviorIndexes[i] ] );
 		}
 	}
 
 	// Move the agents based on the behaviors
-	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
+	for ( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 	{
 		agent->lifetime += dt;
 
 		static const Vector3 zAxis( 0.f, 0.f, 1.f );
 		Vector3 test = agent->velocity - agent->acceleration;
-
+		
 		agent->velocity += agent->acceleration;
 		Vector3 facingDir = agent->velocity;
 		Vector3 interestPoint = Vector3();
 		TriVectorRotateQuaternion( &interestPoint, &zAxis, &agent->rotation );
-		Vector3 actualFacingDir = Lerp( interestPoint, facingDir, LengthSq( agent->velocity ) / max( 1.0f, m_maxVelocity * m_maxVelocity ) );
-		TriQuaternionRotationArc( &agent->rotation, &zAxis, &actualFacingDir );
+		Vector3 actualFacingDir = Lerp( interestPoint, facingDir, LengthSq(agent->velocity) / max(1.0f, m_maxVelocity * m_maxVelocity) );
+		TriQuaternionRotationArc( &agent->rotation, &zAxis, &actualFacingDir);
 		agent->targetDirection = actualFacingDir;
 
 		agent->velocity = ClampLength( agent->velocity, m_maxVelocity );
@@ -551,12 +549,12 @@ void BehaviorGroup::UpdateAgents( const float dt, EveChildBehaviorSystem& system
 // Description:
 //   Check if each agent is still visible or not and update it's visibility based on that.
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::UpdateVisibility( const TriFrustum& frustum, const Matrix& worldTransform )
+void BehaviorGroup::UpdateVisibility( const TriFrustum & frustum, const Matrix & worldTransform )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	// Check if an agent is visible and calculate the xfade value
-	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
+	for ( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 	{
 		auto agentPosInWorld = TransformCoord( agent->position, worldTransform );
 		if( frustum.IsSphereVisible( agentPosInWorld, m_boundingSphereRadius * m_scale ) )
@@ -597,7 +595,7 @@ void BehaviorGroup::UpdateVisibility( const TriFrustum& frustum, const Matrix& w
 // --------------------------------------------------------------------------------------
 void BehaviorGroup::UpdateCurrentScreenSize()
 {
-	if( !m_agents.empty() )
+	if ( !m_agents.empty() )
 	{
 		m_currentScreenSize = m_agents.begin()->screenSize;
 	}
@@ -611,10 +609,9 @@ bool BehaviorGroup::IsGroupVisible()
 {
 	bool isAnyAgentVisible = false;
 
-	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
+	for ( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
 	{
-		if( agent->screenSize >= m_renderThreshold )
-		{
+		if ( agent->screenSize >= m_renderThreshold ) {
 			isAnyAgentVisible = true;
 			break;
 		}
@@ -627,7 +624,7 @@ bool BehaviorGroup::IsGroupVisible()
 //   Get LOD info for buffer. Called from BehaviorSystem
 // --------------------------------------------------------------------------------------
 void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLocation )
-{
+{	
 	CCP_STATS_ZONE( __FUNCTION__ );
 	m_lightInfo.clear();
 	auto agentScale = Vector3( 1.0, 1.0, 1.0 );
@@ -661,7 +658,7 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 				boosterPos.GetXYZ() = TransformCoord( m_booster->GetOffset() * LODmod, agentTransform );
 				boosterPos.w = 1.0f;
 				boosterQuaternion = agent->rotation;
-
+				
 				float intensity = m_debugMode ? m_debugIntensity : Length( agent->velocity ) / max( 1.0f, m_maxVelocity );
 
 				if( LOD < 0.3 )
@@ -671,7 +668,7 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 					boosterQuaternion = agent->rotation;
 					srand( agent->id );
 					boosterInfo.x = intensity;
-					boosterInfo.y = (float)rand() / (float)RAND_MAX; // random stuff
+					boosterInfo.y = ( float )rand() / ( float )RAND_MAX; // random stuff
 					boosterInfo.z = float( m_booster->GetAtlasIndex0() );
 					boosterInfo.w = float( m_booster->GetAtlasIndex1() );
 
@@ -695,13 +692,13 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 		else
 		{
 			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
-			data += 12 * sizeof( float );
+			data += 12 * sizeof( float );	
 
 			// boosters
 			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
 			data += 12 * sizeof( float );
 			if( m_booster != nullptr )
-			{
+			{ 
 				m_booster->AddFlare( IdentityMatrix(), 0, 0, agentIndex, m_boundingSphereRadius * m_scale );
 			}
 		}
@@ -718,17 +715,17 @@ void BehaviorGroup::CreateVertexDeclaration()
 {
 	Tr2MeshPtr meshPtr = GetMesh();
 
-	if( meshPtr )
+	if ( meshPtr )
 	{
-		if( nullptr == meshPtr->GetGeometryResource() )
+		if ( nullptr == meshPtr->GetGeometryResource() )
 		{
 			return;
 		}
 
-		if( ( meshPtr->GetGeometryResource() )->IsGood() )
+		if ( (meshPtr->GetGeometryResource())->IsGood() )
 		{
 			TriGeometryResMeshData* meshData = meshPtr->GetGeometryResource()->GetMeshData( meshPtr->GetMeshIndex() );
-			if( meshData->m_vertexDeclaration != m_cachedVD )
+			if ( meshData->m_vertexDeclaration != m_cachedVD )
 			{
 				Tr2VertexDefinition s_agentInstancedVertex;
 				Tr2EffectStateManager::GetVertexDeclarationElements( meshData->m_vertexDeclaration, s_agentInstancedVertex );
@@ -791,7 +788,7 @@ void BehaviorGroup::UpdateAsyncronous( EveUpdateContext& updateContext )
 // Description:
 //   For the effect in PlayFX to be updated this is needed.
 // --------------------------------------------------------------------------------------
-void BehaviorGroup::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
+void BehaviorGroup::UpdateSyncronous( EveUpdateContext& updateContext )
 {
 	auto behavior = GetBehaviorByName( "PlayFX" );
 
@@ -803,19 +800,6 @@ void BehaviorGroup::UpdateSyncronous( EveUpdateContext& updateContext, const Eve
 			tmp->UpdateSyncronous( updateContext );
 		}
 	}
-
-	if( m_parent == nullptr )
-	{
-		if( EveSpaceObject2Ptr spaceObject = BlueCastPtr( params.spaceObjectParent ) )
-		{
-			m_parent = spaceObject;
-		}
-	}
-}
-
- EveSpaceObject2* BehaviorGroup::GetParent()
-{
-	return m_parent;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -825,8 +809,8 @@ void BehaviorGroup::GetDebugOptions( Tr2DebugRendererOptions& options )
 	options.insert( "AgentsKDTree" );
 	options.insert( "Bounding Sphere" );
 	options.insert( "DebugBehaviors" );
-
-	if( m_booster != nullptr )
+	
+        if( m_booster != nullptr )
 	{
 		options.insert( "Boosters" );
 		options.insert( "Lights" );
@@ -861,14 +845,14 @@ void BehaviorGroup::AddLights( Tr2LightManager& lightManager, const Matrix& pare
 		{
 			Vector4 info = it->second;
 
-			m_booster->AddLight( lightManager, info.GetXYZ(), info.w, it->first, parentTransform );
+			m_booster->AddLight( lightManager, info.GetXYZ(), info.w, it->first, parentTransform );			
 		}
 	}
 }
 
 void BehaviorGroup::RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer )
 {
-	if( m_booster )
+	if( m_booster ) 
 	{
 		m_booster->RegisterWithQuadRenderer( quadRenderer );
 	}
@@ -887,14 +871,14 @@ void BehaviorGroup::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRe
 
 void BehaviorGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation )
 {
-	for( auto behavior = m_behaviors.begin(); behavior != m_behaviors.end(); ++behavior )
+	for ( auto behavior = m_behaviors.begin(); behavior != m_behaviors.end(); ++behavior )
 	{
 		( *behavior )->RenderDebugInfo( renderer, m_agents, parentWorldLocation );
 	}
 
-	if( renderer.HasOption( this, "AgentsKDTree" ) )
+	if ( renderer.HasOption( this, "AgentsKDTree" ) )
 	{
-		if( m_tree != nullptr )
+		if ( m_tree != nullptr )
 		{
 			m_tree->RenderDebugInfo( renderer, parentWorldLocation );
 		}
@@ -909,7 +893,7 @@ void BehaviorGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& paren
 
 	if( drawBoosters || drawBS )
 	{
-		for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
+		for (auto agent = m_agents.begin(); agent != m_agents.end(); ++agent) 
 		{
 			if( drawBS )
 			{
@@ -917,20 +901,20 @@ void BehaviorGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& paren
 			}
 			if( drawBoosters )
 			{
-				m_booster->RenderBoosterDebug( renderer, this, TransformationMatrix( Vector3( 1, 1, 1 ), agent->rotation, agent->position ) * parentWorldLocation );
+				m_booster->RenderBoosterDebug( renderer, this, TransformationMatrix(Vector3(1, 1, 1), agent->rotation, agent->position ) * parentWorldLocation );
 			}
 		}
 	}
 
-	if( renderer.HasOption( this, "DebugBehaviors" ) )
+	if ( renderer.HasOption( this, "DebugBehaviors" ) )
 	{
 		if( m_collectForces )
 		{
 			bool loopToggle = true;
 			Vector3 point;
-			for( auto force = m_forces.begin(); force != m_forces.end(); ++force )
+			for ( auto force = m_forces.begin(); force != m_forces.end(); ++force )
 			{
-				if( loopToggle )
+				if(loopToggle)
 				{
 					point = ( *force ) + parentWorldLocation.GetTranslation();
 					loopToggle = false;
@@ -938,7 +922,8 @@ void BehaviorGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& paren
 				else
 				{
 					float lengthLerp = min( 1.f, max( 0.f, Length( *force ) / m_maxVelocity ) );
-					renderer.DrawLine( this, point, point + ( *force ), Lerp( Color( 0xff11ff11 ), Color( 0xffff1111 ), lengthLerp ) );
+					renderer.DrawLine(this, point, point + (*force),
+					                  Lerp(Color(0xff11ff11), Color(0xffff1111), lengthLerp));
 					loopToggle = true;
 				}
 			}
@@ -958,7 +943,7 @@ void BehaviorGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& paren
 	{
 		auto iq = IdentityQuaternion();
 		auto scale = Vector3( 1, 1, 1 );
-
+		
 		for( auto it = m_lightInfo.begin(); it != m_lightInfo.end(); ++it )
 		{
 			Vector4 info = it->second;
@@ -966,3 +951,4 @@ void BehaviorGroup::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& paren
 		}
 	}
 }
+

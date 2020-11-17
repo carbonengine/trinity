@@ -5,7 +5,7 @@
 Inertia::Inertia( IRoot* lockobj ) :
 	m_minInertiaWeight( 0.1 ),
 	m_maxRotationSpeed( 3.14 ),
-	m_maxAcceleration( 1 ),
+	m_maxAcceleration( 100 ),
 	m_priority( LEAST_PRIORITY )
 {
 }
@@ -21,7 +21,7 @@ int Inertia::GetProcessPriority()
 
 size_t Inertia::GetScratchMemorySize() const
 {
-	return sizeof( InertiaData );
+	return sizeof( Vector3 );
 }
 
 void Inertia::InitializeScratch( const DroneAgent& drone, void* scratchMemory )
@@ -33,7 +33,6 @@ std::vector<Vector3> Inertia::CalculateBehavior( std::vector<DroneAgent>& agents
 {
 	auto data = static_cast<InertiaData*>( scratchData );
 
-	std::vector<Vector3> force;
 	for( auto agent = agents.begin(); agent != agents.end(); ++agent, ++data )
 	{
 		auto lastAccelNormalized = Normalize( data->agentAccel );
@@ -65,11 +64,12 @@ std::vector<Vector3> Inertia::CalculateBehavior( std::vector<DroneAgent>& agents
 			data->inertiaWeight = TriClamp( data->inertiaWeight, 0.1, group.GetMaxVelocity() );
 
 			agent->acceleration = ClampLength( Normalize( agent->acceleration ) * Lerp( lastAccelLength, accelLength, data->inertiaWeight * deltaTime ), m_maxAcceleration );
-			force.push_back( agent->acceleration );
+
 		}
 		data->agentAccel = agent->acceleration;
 	}
-	return force;
+	std::vector<Vector3> noNeedToReturnForces;
+	return noNeedToReturnForces;
 }
 
 void Inertia::RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<DroneAgent>& agents, Matrix& parentWorldLocation )

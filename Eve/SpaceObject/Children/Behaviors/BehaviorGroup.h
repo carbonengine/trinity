@@ -3,7 +3,6 @@
 #include "Eve/SpaceObject/Children/EveChildBehaviorSystem.h"
 #include "TriFrustum.h"
 #include "EveKDdroneManagementTree.h"
-#include "Eve/SpaceObject/EveSpaceObject2.h"
 
 struct ITr2Renderable;
 
@@ -57,7 +56,7 @@ public:
 	void RemoveAgent();
 	void RemoveSpecificAgent( int index );
 	void UpdateAsyncronous( EveUpdateContext & updateContext );
-	void UpdateSyncronous( EveUpdateContext & updateContext, const EveChildUpdateParams& params );
+	void UpdateSyncronous( EveUpdateContext & updateContext );
 	void UpdateAgents( const float dt, EveChildBehaviorSystem& system );
 	float AllTheSame();
 	bool IsGroupVisible();
@@ -103,9 +102,6 @@ public:
 	void AddLights( Tr2LightManager& lightManger, const Matrix& parentTransform);
 
 	Vector3 m_spawnPosition;
-
-	EveSpaceObject2* m_parent;
-	EveSpaceObject2* GetParent();
 
 private:
 	/////////////////////////////////////////////////////////////////////////////////////

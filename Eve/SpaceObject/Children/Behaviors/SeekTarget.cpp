@@ -2,10 +2,11 @@
 #include "include/TriMath.h"
 #include "SeekTarget.h"
 
+const BlueSharedString LOCATOR_SET_NAME( "seek" );
+
 SeekTarget::SeekTarget( IRoot* lockobj ) :
 	m_behaviorWeight( 20.f ),
 	m_arrivedRadius( 10.f ),
-	m_distFromOrigin( 10.f ),
 	m_slowDownRadius( 33.f ),
 	m_seconds( 0.35f ),
 	m_counter( 0 ),
@@ -21,7 +22,6 @@ SeekTarget::SeekTarget( IRoot* lockobj ) :
 	m_locatorSetName( "damage" ),
 	m_startTimer( false ),
 	m_priority( LEAST_PRIORITY )
-
 {
 	m_locatorSet.CreateInstance();
 }
@@ -82,7 +82,6 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 			data->arrived = true;
 		}
 
-		// Get locators from target
 		if( m_repair == true && m_target != nullptr )
 		{
 			// If drone does not have a picked locator, then pick one
@@ -115,13 +114,12 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 				m_target->GetLocatorDirection( &data->direction, data->locatorIndex, true, m_locatorSetName );
 			}
 		}
-		// Get local locators
 		else
 		{
 			if( data->arrived && agent->target == Vector3( 0, 0, 0 ) )
 			{
 				//Get count of locators under the "seek" locatorSet
-				auto seekLocators = GetLocatorsForSet( m_locatorSetName );
+				auto seekLocators = GetLocatorsForSet( LOCATOR_SET_NAME );
 				if( seekLocators != NULL && seekLocators[0].size() > 0 )
 				{
 					int rand = TriRandInt( 0, (int)seekLocators->size() );
@@ -133,12 +131,6 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 		}
 
 		agent->target = data->position;
-
-		// If the direction is (0,0,0) it's pointing up but then the slowDown radius won't work
-		if( data->direction == Vector3( 0.0, 0.0, 0.0 ) )
-		{
-			data->direction = Vector3( 0.f, 1.f, 0.f );
-		}
 
 		// Set the target point on the radius sphere
 		Vector3 fakePoint = data->direction;
@@ -153,7 +145,7 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 		}
 		else
 		{
-			fakePoint *= m_distFromOrigin;
+			fakePoint *= m_arrivedRadius;
 		}
 
 		fakePoint += data->position;
@@ -192,17 +184,16 @@ std::vector<Vector3> SeekTarget::CalculateBehavior( std::vector<DroneAgent>& age
 			agent->rotation = newRotation;
 			data->timePassed = 0.f;
 
-			// Start playing fx when slowing down
-			if( !agent->playFX && m_fxBehavior != nullptr )
-			{
-				agent->fxStartTime = BeOS->GetActualTime();
-				agent->playFX = true;
-			}
-
 			// If the target has arrived then start playing effect
 			if( distance < m_arrivedRadius )
 			{
 				data->arrived = true;
+
+				if( !agent->playFX && m_fxBehavior != nullptr )
+				{
+					agent->fxStartTime = BeOS->GetActualTime();
+					agent->playFX = true;
+				}
 			}
 		}
 		else
@@ -250,19 +241,14 @@ const LocatorStructureList* SeekTarget::GetLocatorsForSet( const BlueSharedStrin
 	return nullptr;
 }
 
-// --------------------------------------------------------------------------------
-// Description:
-//   Set from python, how long should the drones stay to repair ship
-// --------------------------------------------------------------------------------
-void SeekTarget::SetTotalRepairTime( float seconds )
-{
-	m_totalRepairTime = seconds;
-}
-
-
 void SeekTarget::SetTarget( EveSpaceObject2* target )
 {
 	m_target = target;
+}
+
+void SeekTarget::SetTotalRepairTime( float seconds )
+{
+	m_totalRepairTime = seconds;
 }
 
 void SeekTarget::SetExit( bool value )
@@ -439,7 +425,7 @@ void SeekTarget::AddLocatorSet()
 {
 	EveLocatorSetsPtr seekSet;
 	seekSet.CreateInstance();
-	seekSet->Set( m_locatorSetName.c_str(), NULL, 0 );
+	seekSet->Set( "seek", NULL, 0 );
 
 	m_locatorSet = seekSet;
 }
