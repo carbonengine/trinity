@@ -46,11 +46,11 @@ TRI_REGISTER_SETTING( "secondaryLightingRadiusCutoffFactor", g_secondaryLighting
 const BlueSharedString DAMAGE_LOCATOR_SET_NAME( "damage" );
 
 
-void GetSortedBatchesFromMeshAreaVector(	const Tr2MeshAreaVector* areas,
-											ITriRenderBatchAccumulator* batches,
-											const Tr2PerObjectData* perObjectData,
-											const Tr2MeshBase* mesh,
-											const Matrix* worldTransform )
+void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
+										 ITriRenderBatchAccumulator* batches,
+										 const Tr2PerObjectData* perObjectData,
+										 const Tr2MeshBase* mesh,
+										 const Matrix* worldTransform )
 {
 	TriGeometryRes* geomRes = mesh->GetGeometryResource();
 
@@ -116,13 +116,13 @@ void GetSortedBatchesFromMeshAreaVector(	const Tr2MeshAreaVector* areas,
 
 namespace
 {
-	bool IsLocatorFacingPosition( const Vector3& locatorDir, const Vector3& posInObjectSpace )
-	{
-		auto lengthOfPos = LengthSq( posInObjectSpace );
-		auto lengthOfMovedPos = LengthSq( posInObjectSpace - locatorDir );
+bool IsLocatorFacingPosition( const Vector3& locatorDir, const Vector3& posInObjectSpace )
+{
+	auto lengthOfPos = LengthSq( posInObjectSpace );
+	auto lengthOfMovedPos = LengthSq( posInObjectSpace - locatorDir );
 
-		return lengthOfMovedPos < lengthOfPos;
-	}
+	return lengthOfMovedPos < lengthOfPos;
+}
 }
 
 
@@ -353,7 +353,7 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 
 	if( EveLODHelper::ShouldUpdate( m_lodLevelWithChildren, float( TimeAsDouble( time - m_lastCurveUpdateTime ) ) ) )
 	{
-		// overlay effect curves need to be updated on game thread because they may have references to this object's 
+		// overlay effect curves need to be updated on game thread because they may have references to this object's
 		// attributes, particularly to clipSphereFactor, which is not thread safe at the moment
 		m_lastCurveUpdateTime = time;
 		for( auto it = m_overlayEffects.begin(); it != m_overlayEffects.end(); ++it )
@@ -366,7 +366,7 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 	Matrix observerTransform = GetObserverTransform();
 	for( TriObserverLocalVector::iterator it = m_observers.begin(); it != observersEnd; ++it )
 	{
-		(*it)->Update( observerTransform );
+		( *it )->Update( observerTransform );
 	}
 
 	// trigger syncronous update of attachements here
@@ -384,7 +384,7 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
-			params.isVisible = m_display && ( DisplayChildren() || (*ecIt)->IsAlwaysOn() );
+			params.isVisible = m_display && ( DisplayChildren() || ( *ecIt )->IsAlwaysOn() );
 
 			( *ecIt )->UpdateSyncronous( updateContext, params );
 		}
@@ -449,7 +449,7 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 
 	if( m_impactOverlay )
 	{
-		m_psData.miscData.y = (float) m_impactOverlay->GetDataTextureOffset();
+		m_psData.miscData.y = (float)m_impactOverlay->GetDataTextureOffset();
 	}
 
 	for( size_t i = 0; i < EVE_SPACEOBJECT_CUSTOWMASK_MAX; ++i )
@@ -468,14 +468,14 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 	{
 		for( TriCurveSetVector::const_iterator it = m_curveSets.begin(); it != m_curveSets.end(); ++it )
 		{
-			(*it)->Update( time, time );
+			( *it )->Update( time, time );
 		}
 	}
 
 	// trigger syncronous update of attachements here
 	for( IEveTransformVector::const_iterator it = m_children.begin(); it != m_children.end(); ++it )
 	{
-		(*it)->Update( updateContext );
+		( *it )->Update( updateContext );
 	}
 
 	if( !m_effectChildren.empty() )
@@ -493,7 +493,7 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 		for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 		{
 			params.isVisible = m_display && ( DisplayChildren() || ( *ecIt )->IsAlwaysOn() );
-			(*ecIt)->UpdateAsyncronous( updateContext, params );
+			( *ecIt )->UpdateAsyncronous( updateContext, params );
 		}
 	}
 
@@ -590,7 +590,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		for( auto it = m_customMasks.begin(); it != m_customMasks.end(); ++it )
 		{
 			Matrix customMaskTransform;
-			(*it)->GetDebugDrawMatrix( &customMaskTransform, GetBoundingSphereRadius() );
+			( *it )->GetDebugDrawMatrix( &customMaskTransform, GetBoundingSphereRadius() );
 			renderer.DrawBox( this, customMaskTransform, Vector3( -1, -1, -1 ), Vector3( 1, 1, 1 ), Tr2DebugRenderer::Wireframe, 0xff00ffff );
 		}
 	}
@@ -689,7 +689,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		{
 			for( EveSpaceObjectDecalVector::iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 			{
-				(*it)->RenderDebugInfo( renderer, m_worldTransform );
+				( *it )->RenderDebugInfo( renderer, m_worldTransform );
 			}
 		}
 	}
@@ -842,14 +842,13 @@ bool EveSpaceObject2::HasTransparentBatches()
 
 	for( auto it = m_overlayEffects.begin(); it != m_overlayEffects.end(); ++it )
 	{
-		if( (*it)->HasTransparentArea() )
+		if( ( *it )->HasTransparentArea() )
 		{
 			return true;
 		}
 	}
 
 	return false;
-
 }
 
 void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
@@ -1070,7 +1069,7 @@ unsigned int EveSpaceObject2::CountLocatorsByPrefix( const char* namePrefix ) co
 	// want all?
 	if( namePrefix == NULL )
 	{
-		return ( unsigned int) m_locators.size();
+		return (unsigned int)m_locators.size();
 	}
 
 	// now, so count them
@@ -1111,7 +1110,7 @@ bool EveSpaceObject2::FindLocatorJointByName( const char* name, unsigned int& ix
 
 bool EveSpaceObject2::FindLocatorTransformByName( const char* name, unsigned int& ix ) const
 {
-	unsigned int n = ( unsigned int) m_locators.size();
+	unsigned int n = (unsigned int)m_locators.size();
 	for( unsigned int i = 0; i < n; ++i )
 	{
 		const char* locatorName = m_locators[i]->GetName();
@@ -1175,9 +1174,8 @@ uint32_t EveSpaceObject2::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType
 			boneCount = m_animationUpdater->GetMeshBoneCount();
 		}
 
-		return
-			sizeof( m_vsData ) +
-			boneCount * 3 * 16;	// m_vsBonesMatrix (3x4)
+		return sizeof( m_vsData ) +
+			boneCount * 3 * 16; // m_vsBonesMatrix (3x4)
 	}
 }
 
@@ -1187,13 +1185,13 @@ void EveSpaceObject2::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType sh
 
 	if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
 	{
-		uint8_t* perObjectPS = ( uint8_t*) data;
+		uint8_t* perObjectPS = (uint8_t*)data;
 
 		memcpy( perObjectPS, &m_psData, sizeof( m_psData ) );
 	}
 	else
 	{
-		uint8_t* perObjectVS = ( uint8_t*) data;
+		uint8_t* perObjectVS = (uint8_t*)data;
 		memcpy( perObjectVS, &m_vsData, sizeof( m_vsData ) );
 		perObjectVS += sizeof( m_vsData );
 
@@ -1266,9 +1264,9 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 
 	for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 	{
-		if( (*ecIt)->IsAlwaysOn() || DisplayChildren() )
+		if( ( *ecIt )->IsAlwaysOn() || DisplayChildren() )
 		{
-			(*ecIt)->GetRenderables( renderables );
+			( *ecIt )->GetRenderables( renderables );
 		}
 	}
 
@@ -1282,7 +1280,7 @@ void EveSpaceObject2::PushChildrenAndDecalRenderables( std::vector<ITr2Renderabl
 			for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 			{
 				// now prep to get the renderables
-				(*it)->GetRenderables( renderables, geometryRes );
+				( *it )->GetRenderables( renderables, geometryRes );
 			}
 		}
 	}
@@ -1387,12 +1385,11 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 			m_lodLevelWithChildren = TR2_LOD_LOW;
 			m_impostorMode = m_allowLodSelection;
 		}
-
 	}
 
 	for( auto ecIt = m_effectChildren.begin(); ecIt != m_effectChildren.end(); ++ecIt )
 	{
-		(*ecIt)->UpdateVisibility( frustum, m_worldTransform, m_lodLevelWithChildren );
+		( *ecIt )->UpdateVisibility( frustum, m_worldTransform, m_lodLevelWithChildren );
 	}
 
 	if( DisplayDecals() && m_isMeshVisible )
@@ -1460,7 +1457,7 @@ void EveSpaceObject2::FillDecalParentData( EveSpaceObjectDecal::ParentData* pd )
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Registers space object attachments (sprite and spotlight sets) with quad 
+//   Registers space object attachments (sprite and spotlight sets) with quad
 //   renderer.
 // Arguments:
 //   quadRenderer - quad renderer
@@ -1495,14 +1492,14 @@ void EveSpaceObject2::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Quad
 
 	for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 	{
-		(*it)->AddToQuadRenderer( quadRenderer, m_worldTransform, m_spaceObjectShipData.y, m_spaceObjectShipData.x, bones, boneCount );
+		( *it )->AddToQuadRenderer( quadRenderer, m_worldTransform, m_spaceObjectShipData.y, m_spaceObjectShipData.x, bones, boneCount );
 	}
 	auto displayChildren = DisplayChildren();
 	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
 	{
 		if( displayChildren || ( *it )->IsAlwaysOn() )
 		{
-			(*it)->AddQuadsToQuadRenderer( frustum, quadRenderer );
+			( *it )->AddQuadsToQuadRenderer( frustum, quadRenderer );
 		}
 	}
 }
@@ -1715,14 +1712,14 @@ bool EveSpaceObject2::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery qu
 	Vector4 childBounds;
 	for( auto it = m_children.begin(); it != m_children.end(); it++ )
 	{
-		if( (*it)->GetBoundingSphere( childBounds, query ) )
+		if( ( *it )->GetBoundingSphere( childBounds, query ) )
 		{
 			BoundingSphereUpdate( childBounds, sphere );
 		}
 	}
 	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); it++ )
 	{
-		if( (*it)->GetBoundingSphere( childBounds, query ) )
+		if( ( *it )->GetBoundingSphere( childBounds, query ) )
 		{
 			BoundingSphereUpdate( childBounds, sphere );
 		}
@@ -1738,7 +1735,7 @@ bool EveSpaceObject2::IsAnimated() const
 		return false;
 	}
 
-	// I don't like this, but we will need to do this while we don't have everything in the SOF 
+	// I don't like this, but we will need to do this while we don't have everything in the SOF
 	// (because the isSkinned parameter is stored in the sofHull) - Oli
 	return StringFind( m_shadowEffect->GetEffectPathName(), "skinned" );
 }
@@ -1804,7 +1801,7 @@ int EveSpaceObject2::GetClosestLocatorIndex( const Vector3* position, BlueShared
 	float closestLength = std::numeric_limits<float>::max();
 	int closestIndex = -1;
 
-	Vector3 posInObjectSpace = ( Vector3) XMVector3Transform( *position, m_invWorldTransform );
+	Vector3 posInObjectSpace = (Vector3)XMVector3Transform( *position, m_invWorldTransform );
 
 	Vector3 locatorPosition, locatorDirection;
 
@@ -2026,9 +2023,9 @@ const LocatorStructureList* EveSpaceObject2::GetLocatorsForSet( const BlueShared
 {
 	for( auto it = m_locatorSets.cbegin(); it != m_locatorSets.cend(); ++it )
 	{
-		if( (*it)->HasName( setName ) )
+		if( ( *it )->HasName( setName ) )
 		{
-			return (*it)->GetLocators();
+			return ( *it )->GetLocators();
 		}
 	}
 	return nullptr;
@@ -2040,7 +2037,7 @@ const LocatorStructureList* EveSpaceObject2::GetLocatorsForSet( const BlueShared
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::MergeToLocatorSet( const EveLocatorSets& locatorSet )
 {
-	const Locator* locators = ( const Locator* ) & ( *locatorSet.GetLocators() )[0];
+	const Locator* locators = (const Locator*)&( *locatorSet.GetLocators() )[0];
 
 	for( auto it = m_locatorSets.cbegin(); it != m_locatorSets.cend(); ++it )
 	{
@@ -2712,7 +2709,8 @@ unsigned int EveSpaceObject2::GetLocatorCount( BlueSharedString locatorSetName )
 	return 0;
 }
 
-int EveSpaceObject2::GetLastDamageLocatorHit() {
+int EveSpaceObject2::GetLastDamageLocatorHit()
+{
 	return m_lastDamageLocatorHit;
 }
 
@@ -2767,7 +2765,7 @@ Vector3 EveSpaceObject2::GetTransformedDamageLocator( uint32_t index )
 
 void EveSpaceObject2::GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator ) const
 {
-	Vector3 damagelocatorDirection = ( Vector3) XMVector3Rotate( Vector3( 0.f, 1.f, 0.f ), locator.direction );
+	Vector3 damagelocatorDirection = (Vector3)XMVector3Rotate( Vector3( 0.f, 1.f, 0.f ), locator.direction );
 	// We're assuming for now that the bone 0 isn't animated for performance reasons.
 	if( locator.boneIndex <= 0 )
 	{
@@ -3046,7 +3044,7 @@ void EveSpaceObject2::GetLights( Tr2LightManager& lightManager ) const
 	}
 
 	XMMATRIX worldTransform = m_worldTransform;
-	
+
 	size_t boneCount = 0;
 	const granny_matrix_3x4* bones = nullptr;
 	GetBoneList( bones, boneCount );
@@ -3055,7 +3053,6 @@ void EveSpaceObject2::GetLights( Tr2LightManager& lightManager ) const
 	{
 		( *it )->AddLight( lightManager, worldTransform, 1.0f, bones, boneCount );
 		( *it )->SetBrightnessMultiplier( m_activationStrength );
-
 	}
 	auto displayChildren = DisplayChildren();
 	for( auto it = m_effectChildren.begin(); it != m_effectChildren.end(); ++it )
@@ -3124,12 +3121,11 @@ void EveSpaceObject2::GetImpostorBatches( const TriFrustum& frustum, std::map<Tr
 	std::vector<ITr2Renderable*> renderables;
 	PushRenderables( renderables );
 
-	const TriBatchType allTypes[] =
-	{
-			TRIBATCHTYPE_OPAQUE,
-			TRIBATCHTYPE_DECAL,
-			TRIBATCHTYPE_TRANSPARENT,
-			TRIBATCHTYPE_ADDITIVE,
+	const TriBatchType allTypes[] = {
+		TRIBATCHTYPE_OPAQUE,
+		TRIBATCHTYPE_DECAL,
+		TRIBATCHTYPE_TRANSPARENT,
+		TRIBATCHTYPE_ADDITIVE,
 	};
 
 	for( auto it = renderables.begin(); it != renderables.end(); ++it )
