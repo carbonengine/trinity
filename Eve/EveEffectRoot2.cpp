@@ -389,7 +389,7 @@ void EveEffectRoot2::UnregisterSecondaryLightSource( Tr2ShLightingManager& manag
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Plays all "top level" curve sets.
+//   Plays all curve sets.
 // --------------------------------------------------------------------------------
 void EveEffectRoot2::Start()
 {
@@ -399,13 +399,12 @@ void EveEffectRoot2::Start()
 		( *it )->Play();
 	}
 
-	// play curvesets on containers owned by this effect root
+	// play curvesets on children owned by this effect root
 	for( auto cit = m_effectChildren.begin(); cit != m_effectChildren.end(); cit++ )
 	{
-		EveChildContainerPtr cont;
-		if( (*cit)->QueryInterface(BlueInterfaceIID<EveChildContainer>(), (void**)&cont, BEQI_SILENT ) )
+		if( auto child = dynamic_cast<ITr2CurveSetOwner*>( *cit ) )
 		{
-			cont->PlayAllCurveSets();
+			child->PlayAllCurveSets();
 		}
 	}
 }
@@ -422,13 +421,12 @@ void EveEffectRoot2::Stop()
 		( *it )->Stop();
 	}
 
-	// stop curvesets on containers owned by this effect root
+	// stop curvesets on children owned by this effect root
 	for( auto cit = m_effectChildren.begin(); cit != m_effectChildren.end(); cit++ )
 	{
-		EveChildContainerPtr cont;
-		if( (*cit)->QueryInterface(BlueInterfaceIID<EveChildContainer>(), (void**)&cont, BEQI_SILENT ) )
+		if( auto child = dynamic_cast<ITr2CurveSetOwner*>( *cit ) )
 		{
-			cont->StopAllCurveSets();
+			child->StopAllCurveSets();
 		}
 	}
 }

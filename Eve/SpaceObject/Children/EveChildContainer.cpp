@@ -364,6 +364,14 @@ void EveChildContainer::PlayCurveSet( const std::string& name, const std::string
 
 void EveChildContainer::PlayAllCurveSets()
 {
+	for( auto cit = m_objects.begin(); cit != m_objects.end(); cit++ )
+	{
+		if( auto child = dynamic_cast<ITr2CurveSetOwner*>( *cit ) )
+		{
+			child->PlayAllCurveSets();
+		}
+	}
+	
 	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
 	{
 		(*it)->Play();
@@ -372,6 +380,14 @@ void EveChildContainer::PlayAllCurveSets()
 
 void EveChildContainer::StopAllCurveSets()
 {
+	for( auto cit = m_objects.begin(); cit != m_objects.end(); cit++ )
+	{
+		if( auto child = dynamic_cast<ITr2CurveSetOwner*>( *cit ) )
+		{
+			child->StopAllCurveSets();
+		}
+	}
+	
 	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
 	{
 		(*it)->Stop();

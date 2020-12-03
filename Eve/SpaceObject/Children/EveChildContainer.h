@@ -99,8 +99,8 @@ public:
 	float GetCurveSetDuration( const std::string& name ) const;
 	float GetRangeDuration( const std::string& name, const std::string& rangeName ) const;
 
-	void PlayAllCurveSets();
-	void StopAllCurveSets();
+	void PlayAllCurveSets() override;
+	void StopAllCurveSets() override;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
