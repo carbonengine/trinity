@@ -9,7 +9,7 @@
 
 
 Tr2PPLutEffect::Tr2PPLutEffect( IRoot* lockobj ) :
-	m_influence( 0.0f ),
+	m_influence( 1.0f ),
 	m_path( "res:/dx9/scene/postprocess/LUTdefault.dds" )
 {
 

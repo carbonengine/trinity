@@ -165,7 +165,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_sunColor( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_sunColorWithDynamicLights( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_useSunColorWithDynamicLights( false ),
-	m_nebulaBrightnessOverride( 0.f ),
+	m_nebulaBrightnessOverride( 1.f ),
 	m_nebulaBrightnessOverrideVar( "NebulaBrightnessOverride", m_nebulaBrightnessOverride ),
 	m_hasDepthPass( false ),
 	m_msaaSamples( 0 ),
