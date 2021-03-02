@@ -60,6 +60,7 @@ private:
 	float m_slowDownRadius;
 	float m_backAndForthWeight;
 	float m_seconds;
+	float m_distFromOrigin;
 
 	Vector3 m_arrivalPoint; //debugging
 

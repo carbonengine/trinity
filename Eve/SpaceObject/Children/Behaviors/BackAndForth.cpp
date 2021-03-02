@@ -8,6 +8,7 @@ const BlueSharedString SEEK_LOCATOR_SET_NAME( "seek" );
 BackAndForth::BackAndForth( IRoot* lockobj ) :
 	PARENTLOCK( m_locatorSets ),
 	m_arrivedRadius( 50.f ),
+	m_distFromOrigin( 20.f ),
 	m_slowDownRadius( 200.f ),
 	m_backAndForthWeight( 100.f ),
 	m_seconds( 0.25f ),
@@ -127,8 +128,11 @@ std::vector<Vector3> BackAndForth::CalculateBehavior( std::vector<DroneAgent>& a
 
 		Vector3 targetPoint = data->locatorDirection;
 		targetPoint = Normalize( targetPoint );
-		targetPoint *= m_arrivedRadius;
+		targetPoint *= m_distFromOrigin;
 		targetPoint += data->locatorTarget;
+
+		// For debugging
+		m_arrivalPoint = targetPoint;
 
 		Matrix worldTransform = system.GetWorldTransform();
 		Vector3 agentPositionWS = XMVector3TransformCoord( agent->position, worldTransform );
@@ -151,6 +155,7 @@ std::vector<Vector3> BackAndForth::CalculateBehavior( std::vector<DroneAgent>& a
 			agent->rotation = newRotation;
 			data->timePassed = 0.f;
 
+			// Start playing fx when slowing down
 			if( !agent->playFX && m_fxBehavior != nullptr )
 			{
 				agent->fxStartTime = BeOS->GetActualTime();
@@ -252,24 +257,15 @@ void BackAndForth::RenderDebugInfo( ITr2DebugRenderer2& renderer, std::vector<Dr
 					color );
 			}
 		}
-		
 	}
 
 	if( renderer.HasOption( this, "Locator Radius" ) )
 	{
 		if( m_locatorType == LOCAL_LOCATORS )
 		{
-			for( auto it = m_locatorSets.begin(); it != m_locatorSets.end(); ++it )
-			{
-				const LocatorStructureList& locators = ( *( *it )->GetLocators() );
-				for( size_t i = 0; i < locators.size(); ++i )
-				{
-					auto& locator = locators[i];
-					auto position = locator.position;
-					renderer.DrawSphere( this, position, m_arrivedRadius, 8, Tr2DebugRenderer::Wireframe, 0xffff00ff );
-					renderer.DrawSphere( this, position, m_slowDownRadius, 8, Tr2DebugRenderer::Wireframe, 0xff86d2fd );
-				}
-			}
+			renderer.DrawSphere( this, m_arrivalPoint, m_arrivedRadius, 8, Tr2DebugRenderer::Wireframe, 0xffff00ff );
+			renderer.DrawSphere( this, m_arrivalPoint, 5, 8, Tr2DebugRenderer::Wireframe, 0xff0000ff );
+			renderer.DrawSphere( this, m_arrivalPoint, m_slowDownRadius, 8, Tr2DebugRenderer::Wireframe, 0xff86d2fd );
 		}
 		else if( m_locatorType == PARENT_LOCATORS && m_parent )
 		{
