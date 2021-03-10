@@ -129,6 +129,9 @@ EveChildBehaviorSystem::EveChildBehaviorSystem( IRoot* lockobj ) :
 	m_behaviorGroups.SetNotify( this );
 	m_splineTunnels.SetNotify( this );
 	PrepareResources();
+	// init per-object data with default values
+	memset( &m_vsData, 0, sizeof( EveSpaceObjectVSData ) );
+	memset( &m_psData, 0, sizeof( EveSpaceObjectPSData ) );
 }
 
 EveChildBehaviorSystem::~EveChildBehaviorSystem()
