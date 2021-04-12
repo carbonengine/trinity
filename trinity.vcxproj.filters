@@ -52,6 +52,9 @@
     <Filter Include="Source Files\Eve\SpaceObject\Children\Behaviors">
       <UniqueIdentifier>{bf649dff-30c5-52f3-ac1a-414c98669657}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Eve\SpaceObject\Children\LineSetPaths">
+      <UniqueIdentifier>{bb177cc4-75e9-5b99-8d86-5116b2a4969e}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source Files\Eve\SpaceObject\Children\SocketParameters">
       <UniqueIdentifier>{0a39aa37-0bec-5801-8859-fac34b1a3405}</UniqueIdentifier>
     </Filter>
@@ -265,6 +268,9 @@
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2GStateAnimation.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Tr2GStateParameter.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="Tr2HostBitmap.h">
@@ -537,6 +543,12 @@
     <ClInclude Include="Audio\ITr2Audio.h">
       <Filter>Source Files\Audio</Filter>
     </ClInclude>
+    <ClInclude Include="Audio\Tr2AudioStretchAuto.h">
+      <Filter>Source Files\Audio</Filter>
+    </ClInclude>
+    <ClInclude Include="Audio\Tr2AudioStretchBase.h">
+      <Filter>Source Files\Audio</Filter>
+    </ClInclude>
     <ClInclude Include="Controllers\ITr2Controller.h">
       <Filter>Source Files\Controllers</Filter>
     </ClInclude>
@@ -601,6 +613,9 @@
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClInclude>
     <ClInclude Include="Controllers\Actions\Tr2ActionResetClipSphereCenter.h">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="Controllers\Actions\Tr2ActionSetAttenuationScaling.h">
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClInclude>
     <ClInclude Include="Controllers\Actions\Tr2ActionSetAudioSwitch.h">
@@ -888,6 +903,9 @@
     <ClInclude Include="Eve\SpaceObject\Children\EveChildEffectPropagator.h">
       <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\EveChildEffectPropegator.h">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Children\EveChildEnvironment.h">
       <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClInclude>
@@ -1001,6 +1019,18 @@
     </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\Wander.h">
       <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\BezierCurve.h">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\Circle.h">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\ILineSetPath.h">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\LineContainer.h">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
     </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Children\SocketParameters\EveSocketParameter.h">
       <Filter>Source Files\Eve\SpaceObject\Children\SocketParameters</Filter>
@@ -1719,6 +1749,9 @@
     <ClInclude Include="Sprite2d\Tr2Sprite2dLineTrace.h">
       <Filter>Source Files\Sprite2d</Filter>
     </ClInclude>
+    <ClInclude Include="Sprite2d\Tr2Sprite2dPickingMask.h">
+      <Filter>Source Files\Sprite2d</Filter>
+    </ClInclude>
     <ClInclude Include="Sprite2d\Tr2Sprite2dPolygon.h">
       <Filter>Source Files\Sprite2d</Filter>
     </ClInclude>
@@ -1942,6 +1975,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2GStateAnimation_Blue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2GStateParameter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Tr2GStateParameter_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Tr2HostBitmap.cpp">
@@ -2397,6 +2436,18 @@
     <ClCompile Include="TriView_Blue.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Audio\Tr2AudioStretchAuto.cpp">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio\Tr2AudioStretchAuto_Blue.cpp">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio\Tr2AudioStretchBase.cpp">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
+    <ClCompile Include="Audio\Tr2AudioStretchBase_Blue.cpp">
+      <Filter>Source Files\Audio</Filter>
+    </ClCompile>
     <ClCompile Include="Controllers\Tr2BindingPoint.cpp">
       <Filter>Source Files\Controllers</Filter>
     </ClCompile>
@@ -2503,6 +2554,12 @@
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClCompile>
     <ClCompile Include="Controllers\Actions\Tr2ActionResetClipSphereCenter_Blue.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionSetAttenuationScaling.cpp">
+      <Filter>Source Files\Controllers\Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="Controllers\Actions\Tr2ActionSetAttenuationScaling_Blue.cpp">
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClCompile>
     <ClCompile Include="Controllers\Actions\Tr2ActionSetAudioSwitch.cpp">
@@ -3024,6 +3081,12 @@
     <ClCompile Include="Eve\SpaceObject\Children\EveChildEffectPropagator_Blue.cpp">
       <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildEffectPropegator.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\EveChildEffectPropegator_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children</Filter>
+    </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Children\EveChildEnvironment.cpp">
       <Filter>Source Files\Eve\SpaceObject\Children</Filter>
     </ClCompile>
@@ -3224,6 +3287,24 @@
     </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\Wander_Blue.cpp">
       <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\BezierCurve.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\BezierCurve_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\Circle.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\Circle_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\LineContainer.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\LineContainer_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
     </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Children\SocketParameters\EveSocketParameter.cpp">
       <Filter>Source Files\Eve\SpaceObject\Children\SocketParameters</Filter>
@@ -4284,6 +4365,12 @@
     <ClCompile Include="Sprite2d\Tr2Sprite2dLine_Blue.cpp">
       <Filter>Source Files\Sprite2d</Filter>
     </ClCompile>
+    <ClCompile Include="Sprite2d\Tr2Sprite2dPickingMask.cpp">
+      <Filter>Source Files\Sprite2d</Filter>
+    </ClCompile>
+    <ClCompile Include="Sprite2d\Tr2Sprite2dPickingMask_Blue.cpp">
+      <Filter>Source Files\Sprite2d</Filter>
+    </ClCompile>
     <ClCompile Include="Sprite2d\Tr2Sprite2dPolygon.cpp">
       <Filter>Source Files\Sprite2d</Filter>
     </ClCompile>
@@ -4419,25 +4506,5 @@
     <ResourceCompile Include="Trinity.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
-    <ClInclude Include="Audio\Tr2AudioStretchAuto.h">
-      <Filter>Source Files\Audio</Filter>
-    </ClInclude>
-    <ClInclude Include="Audio\Tr2AudioStretchBase.h">
-      <Filter>Source Files\Audio</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Audio\Tr2AudioStretchAuto.cpp">
-      <Filter>Source Files\Audio</Filter>
-    </ClCompile>
-    <ClCompile Include="Audio\Tr2AudioStretchAuto_Blue.cpp">
-      <Filter>Source Files\Audio</Filter>
-    </ClCompile>
-    <ClCompile Include="Audio\Tr2AudioStretchBase.cpp">
-      <Filter>Source Files\Audio</Filter>
-    </ClCompile>
-    <ClCompile Include="Audio\Tr2AudioStretchBase_Blue.cpp">
-      <Filter>Source Files\Audio</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>

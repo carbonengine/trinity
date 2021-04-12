@@ -3148,6 +3148,10 @@
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.h" />
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.h" />
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\Wander.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\EveBezierCurve.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\EveCircle.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\IEveLineSetPath.h" />
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\EveLineChildContainer.h" />
     <ClInclude Include="Eve\SpaceObject\Children\SocketParameters\EveSocketParameter.h" />
     <ClInclude Include="Eve\SpaceObject\Children\SocketParameters\IEveSocketParameter.h" />
     <ClInclude Include="Eve\SpaceObject\Children\TransformModifiers\EveChildModifierAttachToBone.h" />
@@ -3905,6 +3909,12 @@
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\Wander.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\Wander_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveBezierCurve.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveBezierCurve_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveCircle.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveCircle_Blue.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveLineChildContainer.cpp" />
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveLineChildContainer_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\SocketParameters\EveSocketParameter.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\SocketParameters\EveSocketParameter_Blue.cpp" />
     <ClCompile Include="Eve\SpaceObject\Children\TransformModifiers\EveChildModifierAttachToBone.cpp" />

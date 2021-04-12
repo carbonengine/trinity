@@ -121,6 +121,9 @@
     <Filter Include="Source Files\Wod">
       <UniqueIdentifier>{9b7dbf25-c064-5688-a6a7-29080b2817ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Eve\SpaceObject\Children\LineSetPaths">
+      <UniqueIdentifier>{2a6e3f45-d333-4692-a6c3-47950a08f3b3}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ALResultBlue.h">
@@ -4426,6 +4429,18 @@
     <ClInclude Include="Sprite2d\Tr2Sprite2dPickingMask.h">
       <Filter>Source Files\Sprite2d</Filter>
     </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\IEveLineSetPath.h">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\EveBezierCurve.h">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\EveCircle.h">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClInclude>
+    <ClInclude Include="Eve\SpaceObject\Children\LineSetPaths\EveLineChildContainer.h">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Audio\Tr2AudioStretchAuto.cpp">
@@ -4459,6 +4474,24 @@
     </ClCompile>
     <ClCompile Include="Sprite2d\Tr2Sprite2dPickingMask_Blue.cpp">
       <Filter>Source Files\Sprite2d</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveBezierCurve.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveBezierCurve_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveCircle.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveCircle_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveLineChildContainer.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\LineSetPaths\EveLineChildContainer_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\LineSetPaths</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -14,8 +14,11 @@
 #include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "Tr2PerObjectData.h"
 #include "Eve/UI/EveCurveLineSet.h"
+#include "LineSetPaths/IEveLineSetPath.h"
 
 class ChildLineSetInstancingBatch;
+
+
 
 BLUE_CLASS( EveChildLineSet ) :
 	public IInitialize,
@@ -42,51 +45,49 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
-	const char* GetName() const;
-	void SetName( const char* name );
+	const char* GetName() const override;
+	void SetName( const char* name ) override;
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	bool IsAlwaysOn() const override;
-	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible );
-	void GetLights( Tr2LightManager& lightManager ) const {};
-	void GetLocalToWorldTransform( Matrix& transform ) const;
+	void Setup( const Vector3* scale, const Quaternion* rotation, const Vector3* translation, Tr2Lod lowestLodVisible ) override;
+	void GetLights( Tr2LightManager & lightManager ) const override {};
+	void GetLocalToWorldTransform( Matrix & transform ) const override;
 
-	bool GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const;
-	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod );
-	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const {};
-	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
-	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) {};
+	bool GetBoundingSphere( Vector4 & sphere, BoundingSphereQuery query = EVE_BOUNDS_NORMAL ) const override;
+	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod ) override;
+	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override {};
+	void GetRenderables( std::vector<ITr2Renderable*> & renderables ) override;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override {};
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Tr2DeviceResource
-	void ReleaseResources( TriStorage s );
-	bool OnPrepareResources();
+	void ReleaseResources( TriStorage s ) override;
+	bool OnPrepareResources() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
-	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
-	bool HasTransparentBatches();
+	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
+	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData ) override;
+	bool HasTransparentBatches() override;
 
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// update
-	void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
-	void UpdateAsyncronous( EveUpdateContext& updateContext, Matrix& parentTransform );
-	void ChangeLOD( Tr2Lod lod );
+	void UpdateSyncronous( EveUpdateContext & updateContext, const EveChildUpdateParams& params ) override;
+	void UpdateAsyncronous( EveUpdateContext & updateContext, const EveChildUpdateParams& params ) override;
+	void ChangeLOD( Tr2Lod lod ) override;
 
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Debug
-	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
 
 	void GetWorldVelocity( Vector3& velocity ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveChildLineSet
-	// 
 	Tr2MeshPtr GetMesh() const;
 	float GetOwnerMaxSpeed() const;
 	void CreateSpriteVertexDeclaration();
@@ -94,50 +95,32 @@ public:
 	void UpdateBuffer( Tr2RenderContext& renderContext );
 	void Draw( ChildLineSetInstancingBatch* batch, Tr2RenderContext& renderContext );
 	std::vector<std::pair<int, int>> GetVertexElementAddedThroughCode() const;
-	void SetBezierPoints( Vector3 point1, Vector3 point2, Vector3 bezier );
 
 	enum lineSetType { OBJECT_RENDER, LINE_RENDER, BOTH };
-	enum lineSetObjType { CIRCLE, BEZIER_CURVE };
 
 private:
 
 	void InitializeLineSet();
 	void GenerateManagedPoints();
-	void InitializeLineSetForCurves();
-	void UpdateBoundingSphere();
-	void GenerateManagedPointsForCurve();
-	void UpdateSegmentSplitting();
+	void UpdateBoundingSphere( bool reCalculateChildren = true );
 
 	BlueSharedString m_name;
 	Vector3 m_worldVelocity;
 	float m_ownerMaxSpeed;
+	
 	bool m_display;
 	bool m_isAlwaysOn;
 	bool m_updateLineSet;
-	float m_completeness;
 	bool m_scaleSegmentsByCompleteness;
-	int m_actualSegments;
 
 	EveCurveLineSetPtr m_lineSet;
 	lineSetType m_type;
-	lineSetObjType m_objType;
-	std::vector<Vector3> m_managedPoints;
 
-	// circle attributes
-	float m_circleRadius;
-	int m_numSegments;
-	float m_exposedNumSegments;
-	Vector4 m_circleDistort;
-
-	//lines
-	float m_lineWidth;
+	// line render settings
 	Vector4 m_baseColor;
 	Vector4 m_animColor;
+	float m_brightness;
 	bool m_additiveBatch;
-
-	//obj
-	bool m_billboardObject;
-	bool m_scaleObjectsAtEndpoints;
 
 	// Instance data
 	Tr2BufferAL m_vertexBuffer;
@@ -149,27 +132,18 @@ private:
 	unsigned int m_cachedSVD;
 	EveSpaceObjectPSData m_psData;
 	EveSpaceObjectVSData m_vsData;
-	Vector3 m_objectScale;
+	unsigned m_totalObjectCount;
 
-	//animate the scene
-	float m_animValue;
-	float m_animSpeed;
+	//animate - lineRender
 	float m_scrollSpeed;
-	float m_scrollSegmenting;
-	float m_brightness;
-
-	// BezierCurve
-	Vector3 m_point1;
-	Vector3 m_point2;
-	Vector3 m_bezierPoint;
-	int m_curveSegments;
-	float m_exposedCurveSegments;
-
+	
 	// visibility culls
 	Vector4 m_boundingSphere;
 	float m_currentScreenSize;
 	float m_minScreenSize;
 	bool m_isVisible;
+
+	PIEveLineSetPathVector m_lines;
 };
 
 TYPEDEF_BLUECLASS( EveChildLineSet );
