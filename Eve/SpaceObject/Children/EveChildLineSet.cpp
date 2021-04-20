@@ -198,7 +198,7 @@ void EveChildLineSet::InitializeLineSet()
 
 	m_lineSet->ClearLines();
 	m_lineSet->SetDynamicFlag( true );
-		
+
 	for( auto it = begin( m_lines ); it != end( m_lines ); ++it )
 	{
 		( *it )->AddLinesToSet( *m_lineSet, m_baseColor * m_brightness, m_animColor * m_brightness, m_scrollSpeed );
@@ -210,7 +210,7 @@ void EveChildLineSet::InitializeLineSet()
 void EveChildLineSet::UpdateBoundingSphere( bool reCalculateChildren )
 {
 	Vector4 sphere;
-	float objectSizeBonus = 0.f;  
+	float objectSizeBonus = 0.f;
 
 	if( m_type != LINE_RENDER && m_mesh != nullptr )
 	{
@@ -223,9 +223,9 @@ void EveChildLineSet::UpdateBoundingSphere( bool reCalculateChildren )
 			}
 		}
 	}
-	
+
 	CalculateBoundingSphereForLineSetPaths( sphere, m_lines, reCalculateChildren, objectSizeBonus );
-	
+
 	m_boundingSphere = sphere;
 }
 
@@ -267,7 +267,7 @@ void EveChildLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 
 	for( auto it = begin( m_lines ); it != end( m_lines ); ++it )
 	{
-		( *it )->UpdateVisibility( frustum, parentLod );
+		( *it )->UpdateVisibility( frustum, parentLod, m_worldTransform );
 	}
 }
 
@@ -354,7 +354,7 @@ void EveChildLineSet::UpdateBuffer( Tr2RenderContext& renderContext )
 		total += points;
 	}
 	m_totalObjectCount = total;
-	
+
 	if( !m_vertexBuffer.IsValid() || m_vertexBuffer.GetDesc().count < m_totalObjectCount )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -375,7 +375,7 @@ void EveChildLineSet::UpdateBuffer( Tr2RenderContext& renderContext )
 	{
 		( *it )->UpdateBuffer( renderContext, data, m_stride );
 	}
-	
+
 	m_vertexBuffer.UnmapForWriting( renderContext );
 }
 

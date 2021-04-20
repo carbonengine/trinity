@@ -23,7 +23,7 @@ public:
 	
 	virtual void CalculateBoundingSphere( float meshSize = 0.0, bool reCalculateChildren = true );
 	virtual void GetBoundingSphere( Vector4 & sphere );
-	virtual void UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod );
+	virtual void UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod, const Matrix& systemLocation );
 
 	// IInitialize
 	bool Initialize() override;

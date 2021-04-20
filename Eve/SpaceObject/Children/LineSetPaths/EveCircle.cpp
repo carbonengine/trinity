@@ -150,7 +150,7 @@ void EveCircle::GetBoundingSphere( Vector4& sphere )
 	BoundingSphereTransform( m_localTransform, sphere );
 }
 
-void EveCircle::UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod )
+void EveCircle::UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod, const Matrix& systemLocation )
 {
 	if( !m_display )
 	{
@@ -160,7 +160,7 @@ void EveCircle::UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod )
 	m_isVisible = false;
 
 	Vector4 sphere = m_boundingSphere;
-	BoundingSphereTransform( m_worldTransform, sphere );
+	BoundingSphereTransform( m_worldTransform * systemLocation, sphere );
 
 	if( frustum.IsSphereVisible( &( sphere ) ) )
 	{

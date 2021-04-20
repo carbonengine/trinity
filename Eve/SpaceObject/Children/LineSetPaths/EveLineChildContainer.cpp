@@ -128,7 +128,7 @@ void EveLineChildContainer::GetBoundingSphere( Vector4& sphere )
 	BoundingSphereTransform( m_localTransform, sphere );
 }
 
-void EveLineChildContainer::UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod )
+void EveLineChildContainer::UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod, const Matrix& systemLocation )
 {
 	if( !m_display )
 	{
@@ -148,7 +148,7 @@ void EveLineChildContainer::UpdateVisibility( const TriFrustum& frustum, Tr2Lod 
 
 	for( auto it = begin( m_lines ); it != end( m_lines ); ++it )
 	{
-		( *it )->UpdateVisibility( frustum, parentLod );
+		( *it )->UpdateVisibility( frustum, parentLod, systemLocation );
 	}
 }
 

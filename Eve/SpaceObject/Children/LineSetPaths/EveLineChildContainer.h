@@ -26,7 +26,7 @@ public:
 
 	void CalculateBoundingSphere( float meshSize = 0.0, bool reCalculateChildren = true ) override;
 	void GetBoundingSphere( Vector4 & sphere ) override;
-	void UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod ) override;
+	void UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod, const Matrix& systemLocation ) override;
 
 	// INotify
 	bool OnModified( Be::Var * value ) override;

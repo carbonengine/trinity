@@ -145,7 +145,7 @@ void EveBezierCurve::GetBoundingSphere( Vector4& sphere )
 	BoundingSphereTransform( m_localTransform, sphere );
 }
 
-void EveBezierCurve::UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod )
+void EveBezierCurve::UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentLod, const Matrix& systemLocation )
 {
 	if( !m_display )
 	{
@@ -155,7 +155,8 @@ void EveBezierCurve::UpdateVisibility( const TriFrustum& frustum, Tr2Lod parentL
 	m_isVisible = false;
 
 	Vector4 sphere = m_boundingSphere;
-	BoundingSphereTransform( m_worldTransform, sphere );
+	
+	BoundingSphereTransform( m_worldTransform * systemLocation, sphere );
 
 	m_isVisible = frustum.IsSphereVisible( &( sphere ) );
 }
