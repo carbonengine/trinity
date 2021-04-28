@@ -643,6 +643,11 @@ const std::vector<SplineTunnel>* EveChildBehaviorSystem::GetTunnels() const
 	return &m_tunnels;
 }
 
+SplineTunnelGroupVector* EveChildBehaviorSystem::GetSplineTunnels()
+{
+	return &m_splineTunnels;
+}
+
 void EveChildBehaviorSystem::UpdateTunnelRegistry()
 {
 	m_tunnels.clear();

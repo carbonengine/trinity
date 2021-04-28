@@ -62,8 +62,8 @@ public:
 	std::vector<Vector3> GetEntrancePoints();
 	
 private:
-	void FindASpawnPoint( DroneAgent & agent, ProcessLifetimeData * data, BehaviorGroup & group );
-	bool FindInitialSpawnPoint( DroneAgent & agent, ProcessLifetimeData* data, Vector3& pos );
+	void FindASpawnPoint( DroneAgent& agent, ProcessLifetimeData* data, BehaviorGroup& group );
+	bool FindInitialSpawnPoint( DroneAgent& agent, ProcessLifetimeData* data, Vector3& pos, SplineTunnelGroupVector* systemTunnels );
 	bool ProcessTunnel( DroneAgent& agent, SplineTunnel& tunnel, int& pointID, float boundingSphere );
 	void FindAndAssignAnExitTunnel( const DroneAgent& agent, ProcessLifetimeData* data );
 	void UpdateTunnelRegistry();

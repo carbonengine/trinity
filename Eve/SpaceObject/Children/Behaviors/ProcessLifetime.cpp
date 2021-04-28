@@ -93,7 +93,7 @@ std::vector<Vector3> ProcessLifetime::CalculateBehavior( std::vector<DroneAgent>
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	if ( m_shouldReassignTunnelIDs )
+	if( m_shouldReassignTunnelIDs )
 	{
 		ReassignTunnelIDsAndAddSystemTunnels( system );
 	}
@@ -115,7 +115,8 @@ std::vector<Vector3> ProcessLifetime::CalculateBehavior( std::vector<DroneAgent>
 		if( !data->hasSpawned && m_intialSpawn )
 		{
 			Vector3 spawnPos = group.m_spawnPosition;
-			if( FindInitialSpawnPoint( *drone, data, spawnPos ) )
+			SplineTunnelGroupVector* systemTunnels = system.GetSplineTunnels();
+			if( FindInitialSpawnPoint( *drone, data, spawnPos, systemTunnels ) )
 			{
 				group.m_spawnPosition = spawnPos;
 			}
@@ -188,9 +189,9 @@ std::vector<Vector3> ProcessLifetime::CalculateBehavior( std::vector<DroneAgent>
 
 		drone->acceleration += pullForce;
 	}
-	
+
 	m_intialSpawn = false;
-	
+
 	for( int i = static_cast<int>( dronesThatDie.size() ) - 1; i >= 0; i-- )
 	{
 		group.RemoveSpecificAgent( dronesThatDie[i] );
@@ -318,22 +319,33 @@ void ProcessLifetime::FindAndAssignAnExitTunnel( const DroneAgent& agent, Proces
 	}
 }
 
-bool ProcessLifetime::FindInitialSpawnPoint( DroneAgent& drone, ProcessLifetimeData* data, Vector3& pos )
+bool ProcessLifetime::FindInitialSpawnPoint( DroneAgent& drone, ProcessLifetimeData* data, Vector3& pos, SplineTunnelGroupVector* systemTunnels )
 {
-	if( m_splineTunnels.size() <= 0 )
+	// if we have local tunnels use them, otherwise use system wide ones
+	SplineTunnelGroupVector* tunnels;
+	if( !m_splineTunnels.empty() )
+	{
+		tunnels = &m_splineTunnels;
+	}
+	else if( !systemTunnels->empty() )
+	{
+		tunnels = systemTunnels;
+	}
+	else
 	{
 		return false;
 	}
 
-	size_t sizeIndex = m_splineTunnels.size();
+	size_t sizeIndex = tunnels->size();
+
 	// random nr from 0 to sizeIndex
 	size_t randomNr = rand() % ( sizeIndex );
 
 	// pick a random splineTunnel
-	auto splineTunnel = m_splineTunnels[randomNr];
+	auto splineTunnel = (*tunnels)[randomNr];
 
 	// return early if there are no curves or the curves aren't loaded
-	if( splineTunnel->GetCurveSets()->size() <= 0 )
+	if( splineTunnel->GetCurveSets()->empty() )
 	{
 		return false;
 	}
@@ -357,7 +369,7 @@ bool ProcessLifetime::FindInitialSpawnPoint( DroneAgent& drone, ProcessLifetimeD
 		float stepSize = float( time ) / float( length );
 
 		// Get the next pointID
-		auto pointID =  floor(stepSize * ( splineTunnel->GetNumBreakPoints() ) + 1 ) + 0.5f;
+		auto pointID = floor( stepSize * ( splineTunnel->GetNumBreakPoints() ) + 1 ) + 0.5f;
 
 		drone.position = pos;
 		drone.lifetime += stepSize * pointID;

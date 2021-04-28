@@ -81,6 +81,7 @@ public:
 
 	void ChangeBufferVertexCount();
 	const std::vector<SplineTunnel>* GetTunnels() const;
+	SplineTunnelGroupVector* GetSplineTunnels();
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2InstanceData

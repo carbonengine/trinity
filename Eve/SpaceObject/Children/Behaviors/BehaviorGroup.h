@@ -123,7 +123,8 @@ private:
 
 	// Variables
 	BlueSharedString m_behaviorGroupName; 	// name to identify group
-	int32_t m_count; // Number of agents
+	int32_t m_count; // Number of agents to spawn initially
+	int32_t m_actualCount; // Number of actual agents spawned for this system
 	int m_groupIndex; // ID
 	Tr2MeshPtr m_mesh; // Instanced mesh
 	unsigned int m_cachedVD; // A cached Vertex Declaration to detect change

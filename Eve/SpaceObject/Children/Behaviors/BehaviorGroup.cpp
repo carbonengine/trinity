@@ -15,6 +15,7 @@ BehaviorGroup::BehaviorGroup( IRoot* lockobj ) :
 	m_vertexDeclarationHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_cachedVD( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_count( 0 ),
+	m_actualCount( 0 ),
 	m_display( true ),
 	m_maxVelocity( 100 ),
 	m_changeBufferVertexCount( nullptr ),
@@ -56,7 +57,7 @@ bool BehaviorGroup::OnModified( Be::Var* value )
 	}
 	if( IsMatch( value, m_booster ) && m_booster != nullptr )
 	{
-		m_booster->RebuildFlareBuffer( m_count );
+		m_booster->RebuildFlareBuffer( m_actualCount );
 	}
 
 	return true;
@@ -128,7 +129,7 @@ void BehaviorGroup::InitializeGeometryResource()
 	SortBehaviorIndexes();
 
 	const int t = m_count;
-	m_count = 0;
+	m_actualCount = 0;
 	SetCount( t );
 }
 
@@ -152,7 +153,7 @@ size_t BehaviorGroup::GetSize()
 // --------------------------------------------------------------------------------------
 unsigned int BehaviorGroup::GetCount()
 {
-	return unsigned( m_count );
+	return unsigned( m_actualCount );
 }
 
 // --------------------------------------------------------------------------------------
@@ -300,7 +301,7 @@ void BehaviorGroup::AddAgentPrivate()
 		}
 	}
 
-	m_count++;
+	m_actualCount++;
 }
 
 // --------------------------------------------------------------------------------------
@@ -310,12 +311,12 @@ void BehaviorGroup::AddAgentPrivate()
 // --------------------------------------------------------------------------------------
 void BehaviorGroup::SetCount( int count )
 {
-	if( count == m_count || count < 0 )
+	if( count == m_actualCount || count < 0 )
 	{
 		return;
 	}
 
-	if( m_count < count )
+	if( m_actualCount < count )
 	{
 		AddAgentsByCount( count );
 	}
@@ -324,7 +325,7 @@ void BehaviorGroup::SetCount( int count )
 		RemoveAgentsByCount( count );
 	}
 
-	m_count = count;
+	m_actualCount = count;
 	OnAgentCountChanged();
 }
 
@@ -344,7 +345,7 @@ void BehaviorGroup::OnAgentCountChanged()
 
 	if( m_booster )
 	{
-		m_booster->RebuildFlareBuffer( m_count );
+		m_booster->RebuildFlareBuffer( m_actualCount );
 	}
 }
 
@@ -380,7 +381,7 @@ void BehaviorGroup::RemoveAgent()
 		return;
 	}
 	// Removes the last agent
-	RemoveSpecificAgent( m_count - 1 );
+	RemoveSpecificAgent( m_actualCount - 1 );
 
 	OnAgentCountChanged();
 }
@@ -406,7 +407,7 @@ void BehaviorGroup::RemoveSpecificAgent( int index )
 		m_scratchData[m_sortedBehaviorIndexes[i]].resize( "BehaviorGroup::m_scratchData", m_agents.size() * size );
 	}
 
-	m_count--;
+	m_actualCount--;
 
 	OnAgentCountChanged();
 }
