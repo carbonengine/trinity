@@ -58,6 +58,12 @@ private:
 
 	bool m_prevCullInversion;
 	bool m_hdrOutput;
+
+	// TEMPORARY controls for experiments with environment maps
+	bool m_hackMode;
+	Color m_backlightColor;
+	float m_backlightContrast;
+	float m_intensity;
 };
 
 TYPEDEF_BLUECLASS( Tr2ReflectionProbe );

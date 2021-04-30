@@ -26,7 +26,12 @@ Tr2ReflectionProbe::Tr2ReflectionProbe( IRoot* lockobj )
 	m_intermediateSize( FILTER_SIZE * 4 ),
 	m_prevCullInversion( false ),
 	m_customSourceTexture(),
-	m_hdrOutput( true )
+	m_hdrOutput( true ),
+
+	m_hackMode( false ),
+	m_backlightColor( 1, 1, 1, 1 ),
+	m_backlightContrast( 16 ),
+	m_intensity( 1 )
 {
 	for( unsigned i = 0; i < 6; i++ )
 	{
@@ -197,6 +202,16 @@ bool Tr2ReflectionProbe::OnPrepareResources()
 		auto source = dynamic_cast< ITr2TextureProvider* >( m_customSourceTexture.p );
 		m_preFilterEffect->SetParameter( BlueSharedString( "tex_hi_res" ), source ? source : static_cast<ITr2TextureProvider*>( m_renderTargetCube ) );
 		m_preFilterEffect->SetParameter( BlueSharedString( "tex_lo_res" ), m_preFilterTarget );
+
+		m_preFilterEffect->SetOption( BlueSharedString( "HACK_MODE" ), BlueSharedString( m_hackMode ? "HACKS_ON" : "HACKS_OFF" ) );
+		if( m_hackMode )
+		{
+			m_preFilterEffect->SetParameter( BlueSharedString( "Intensity" ), m_intensity );
+			m_preFilterEffect->SetParameter( BlueSharedString( "BackLightColor" ), Vector4( m_backlightColor ) );
+			m_preFilterEffect->SetParameter( BlueSharedString( "BackLightContrast" ), m_backlightContrast );
+			m_preFilterEffect->SetParameter( BlueSharedString( "ViewDirection" ), Vector3( 0, 1, 0 ) );
+		}
+
 		m_filterEffect->SetParameter( BlueSharedString( "tex_in" ), m_preFilterTarget );
 
 		for( int i = 0; i < MIP_COUNT; i++ )
@@ -242,6 +257,15 @@ void Tr2ReflectionProbe::Filter( Tr2RenderContext &renderContext )
 
 	{
 		GPU_REGION( renderContext, "Reflection Pre Filter" );
+
+		if( m_hackMode )
+		{
+			m_preFilterEffect->SetParameter( BlueSharedString( "Intensity" ), m_intensity );
+			m_preFilterEffect->SetParameter( BlueSharedString( "BackLightColor" ), Vector4( m_backlightColor ) );
+			m_preFilterEffect->SetParameter( BlueSharedString( "BackLightContrast" ), m_backlightContrast );
+			m_preFilterEffect->SetParameter( BlueSharedString( "ViewDirection" ), Tr2Renderer::GetInverseViewTransform().GetZ() );
+		}
+
 		Tr2Renderer::RunComputeShader( m_preFilterEffect, FILTER_SIZE / 8, FILTER_SIZE / 8, 6, renderContext );
 	}
 
