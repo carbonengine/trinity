@@ -999,6 +999,9 @@
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SeekTarget.h">
       <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
     </ClInclude>
+ 	<ClInclude Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.h">
+      <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
+    </ClInclude>
     <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.h">
       <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
     </ClInclude>
@@ -3210,6 +3213,12 @@
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SeekTarget_Blue.cpp">
       <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
     </ClCompile>
+	<ClCompile Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
+    </ClCompile>
+    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones_Blue.cpp">
+      <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
+    </ClCompile>
     <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SplineTunnelGroup.cpp">
       <Filter>Source Files\Eve\SpaceObject\Children\Behaviors</Filter>
     </ClCompile>
@@ -4425,7 +4434,6 @@
     <ClInclude Include="Controllers\Actions\Tr2ActionSetAttenuationScaling.h">
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClInclude>
-    <ClInclude Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.h" />
     <ClInclude Include="Tr2GStateParameter.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -4473,8 +4481,6 @@
     <ClCompile Include="Controllers\Actions\Tr2ActionSetAttenuationScaling_Blue.cpp">
       <Filter>Source Files\Controllers\Actions</Filter>
     </ClCompile>
-    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones.cpp" />
-    <ClCompile Include="Eve\SpaceObject\Children\Behaviors\SpawnDrones_Blue.cpp" />
     <ClCompile Include="Tr2GStateParameter.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

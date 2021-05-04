@@ -614,7 +614,7 @@ void EveChildBehaviorSystem::DrawBoosters( TriBehaviorSystemInstancingBatch* bat
 // ITr2DebugRenderable
 void EveChildBehaviorSystem::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	options.insert( "splineTunnels" );
+	options.insert( "SplineTunnels" );
 
 	for ( auto it = begin( m_behaviorGroups ); it != end( m_behaviorGroups ); ++it )
 	{
@@ -629,7 +629,7 @@ void EveChildBehaviorSystem::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		(*it)->RenderDebugInfo( renderer, EveChildTransform::m_worldTransform );
 	}
 
-	if (renderer.HasOption( this, "splineTunnels" ))
+	if (renderer.HasOption( this, "SplineTunnels" ))
 	{
 		for (auto it = begin( m_splineTunnels ); it != end( m_splineTunnels ); ++it)
 		{

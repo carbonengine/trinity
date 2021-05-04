@@ -364,7 +364,7 @@ bool ProcessLifetime::FindInitialSpawnPoint( DroneAgent& drone, ProcessLifetimeD
 		size_t time = rand() % ( length + 1 );
 
 		// get value at time
-		Vector3 pos = ( *curveSets )[randomCurve]->GetValue( double( time ) );
+		pos = ( *curveSets )[randomCurve]->GetValue( double( time ) );
 
 		float stepSize = float( time ) / float( length );
 
