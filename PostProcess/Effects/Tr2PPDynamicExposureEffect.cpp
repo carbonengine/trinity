@@ -17,10 +17,10 @@ Tr2PPDynamicExposureEffect::Tr2PPDynamicExposureEffect( IRoot* lockobj ) :
 	m_minLuminance( 0.09f ),
 	m_maxLuminance( 10.0f ),
 	m_influence( 1.0f ),
-	m_middleValue( 0.5f ),
-	m_adjustment( 0.0f ),
-	m_minExposure( -1.0f ),
-	m_maxExposure( 10.0f )
+	m_middleValue( 0.55f ),
+	m_adjustment( 0.15f ),
+	m_minExposure( -1.25f ),
+	m_maxExposure( 0.0f )
 {
 }
 
