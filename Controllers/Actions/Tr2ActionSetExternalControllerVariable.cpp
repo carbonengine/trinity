@@ -84,12 +84,18 @@ void Tr2ActionSetExternalControllerVariable::LinkToDestinationOwner()
 	{
 		return;
 	}
-
 	owner->GetBindingRoots( bindingPathRoots );
+	std::string destOwner = m_destinationOwner.c_str();
+	std::transform( destOwner.begin(), destOwner.end(), destOwner.begin(), ::tolower );
 
-	auto bindingPath = bindingPathRoots.find( m_destinationOwner.c_str() );
-	if( bindingPath != bindingPathRoots.end() )
+	for( auto &it : bindingPathRoots )
 	{
-		m_destination = BlueCastPtr( bindingPath->second );
+		auto key = it.first;
+		std::transform( key.begin(), key.end(), key.begin(), ::tolower );
+		if( key == destOwner )
+		{
+			m_destination = BlueCastPtr( it.second );
+			return;
+		}
 	}
 }
