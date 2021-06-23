@@ -167,7 +167,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_useSunColorWithDynamicLights( false ),
 	m_nebulaBrightnessOverride( 0.f ),
 	m_nebulaBrightnessOverrideVar( "NebulaBrightnessOverride", m_nebulaBrightnessOverride ),
-	m_reflectionProbeIntensity( 2.f ),
+	m_reflectionProbeIntensity( 1.35f ),
 	m_reflectionProbeBackLightingContrast( 8.0f ),
 	m_reflectionProbeBackLightingColor( 2.0f, 2.0f, 2.0f, 2.0f ),
 	m_hasDepthPass( false ),
