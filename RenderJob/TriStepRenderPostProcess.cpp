@@ -50,7 +50,7 @@ TriStepRenderPostProcess::TriStepRenderPostProcess(IRoot* lockobj) :
 	m_tonemappingEffect->SetOption(BlueSharedString("LUT_TOGGLE"), BlueSharedString("LUT_ENABLED"));
 	m_tonemappingEffect->SetParameter(BlueSharedString("FadeAmount"), 0.0f);
 	m_tonemappingEffect->SetParameter(BlueSharedString("GrimeWeight"), 0.0f);
-	m_tonemappingEffect->SetParameter(BlueSharedString("ExposureAdjust"), 2.0f);
+	m_tonemappingEffect->SetParameter(BlueSharedString("ExposureAdjust"), 1.0f);
 	m_tonemappingEffect->SetOption(BlueSharedString("DYNAMIC_EXPOSURE_TOGGLE"), BlueSharedString("DYNAMIC_EXPOSURE_DISABLED"));
 	m_tonemappingEffect->SetParameter(BlueSharedString("GrainSize"), 2.0f);
 	m_tonemappingEffect->SetOption(BlueSharedString("VIGNETTE_TOGGLE"), BlueSharedString("VIGNETTE_DISABLED"));
