@@ -14,14 +14,6 @@ const uint32_t HISTOGRAM_TILE_SIZE_X = 16;
 const uint32_t HISTOGRAM_TILE_SIZE_Y = 16;
 const uint32_t NUM_TILES_PER_THREAD_GROUP = 256;
 
-const uint32_t CAS_THREAD_GROUP_WORK_REGION_DIM = 16;
-
-struct CASConstants
-{
-	uint32_t Const0;
-	uint32_t Const1;
-};
-
 
 TriStepRenderPostProcess::TriStepRenderPostProcess(IRoot* lockobj) :
 	m_quality(HIGH),
@@ -710,21 +702,24 @@ bool TriStepRenderPostProcess::ProcessFidelityFX( Tr2RenderContext& renderContex
 			{
 				m_fidelityFXShader.CreateInstance();
 				m_fidelityFXShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/CAS.fx" );
-				m_fidelityFXShader->StartUpdate();
-				m_fidelityFXShader->SetParameter( BlueSharedString( "InputTexture" ), source );
-				m_fidelityFXShader->SetParameter( BlueSharedString( "OutputTexture" ), dest );
-				m_fidelityFXShader->SetParameter( BlueSharedString( "const0" ), 0.0f );
-				m_fidelityFXShader->SetParameter( BlueSharedString( "const1" ), 0.0f );
-				m_fidelityFXShader->EndUpdate();
 			}
 
 			AF1 outWidth = static_cast<AF1>( source->GetWidth() );
 			AF1 outHeight = static_cast<AF1>( source->GetHeight() );
 
-			CASConstants consts;
-			CasSetup( static_cast<AU1*>( &consts.Const0 ), static_cast<AU1*>( &consts.Const1 ), fx->m_intensity, outWidth, outHeight, outWidth, outHeight );
-			m_fidelityFXShader->SetParameter( BlueSharedString( "const0" ), consts.Const0 );
-			m_fidelityFXShader->SetParameter( BlueSharedString( "const1" ), consts.Const1 );
+			union
+			{
+				AU1 u[4];
+				float f[4];
+			} const0 = {}, const1 = {};
+			CasSetup( const0.u, const1.u, fx->m_intensity, outWidth, outHeight, outWidth, outHeight );
+
+			m_fidelityFXShader->StartUpdate();
+			m_fidelityFXShader->SetParameter( BlueSharedString( "InputTexture" ), source );
+			m_fidelityFXShader->SetParameter( BlueSharedString( "OutputTexture" ), dest );
+			m_fidelityFXShader->SetParameter( BlueSharedString( "const0" ), Vector4( const0.f[0], const0.f[1], const0.f[2], const0.f[3] ) );
+			m_fidelityFXShader->SetParameter( BlueSharedString( "const1" ), Vector4( const1.f[0], const1.f[1], const1.f[2], const1.f[3] ) );
+			m_fidelityFXShader->EndUpdate();
 
 			fx->SetDirty( false );
 		}
@@ -740,6 +735,8 @@ bool TriStepRenderPostProcess::ProcessFidelityFX( Tr2RenderContext& renderContex
 
 void TriStepRenderPostProcess::RenderFidelityFX( Tr2RenderContext& renderContext, Tr2PPFidelityFXEffect* fx )
 {
+	const uint32_t CAS_THREAD_GROUP_WORK_REGION_DIM = 16;
+
 	auto source = m_renderInfo->GetFidelityInputBuffer();
 	int dispatchX = ( source->GetWidth () + ( CAS_THREAD_GROUP_WORK_REGION_DIM - 1 ) ) / CAS_THREAD_GROUP_WORK_REGION_DIM;
 	int dispatchY = ( source->GetHeight() + ( CAS_THREAD_GROUP_WORK_REGION_DIM - 1 ) ) / CAS_THREAD_GROUP_WORK_REGION_DIM;
