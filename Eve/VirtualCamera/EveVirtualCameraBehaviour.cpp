@@ -345,7 +345,8 @@ EveVirtualCameraBehaviourVector3Orbit::EveVirtualCameraBehaviourVector3Orbit( IR
 	m_distance(1.0f),
 	m_distanceScalarCurve(),
 	m_orbitCurve(),
-	m_proportional( true )
+	m_proportional( true ),
+	m_world( false )
 {
 	InitializeCurveAsConstant( m_distanceScalarCurve, 1.0f );
 	InitializeCurveAsEaseInOut( m_orbitCurve );
@@ -365,8 +366,13 @@ void EveVirtualCameraBehaviourVector3Orbit::SetName( const std::string& name )
 
 Vector3 EveVirtualCameraBehaviourVector3Orbit::Update( const EveVirtualCamera& camera, const Vector3& current, float deltaTime, float localElapsedTime, const Vector3& anchorPosition, float anchorRadius, const Vector3& anchorForwardDirection )
 {
-	// project the forward onto our orbit plane, i.e. the horizontal plane.
-	Vector3 orbitDir = Normalize( Vector3( anchorForwardDirection.x, 0, anchorForwardDirection.z ) );
+	Vector3 orbitDir = Vector3( 0, 0, 1 );
+
+	if( !m_world )
+	{
+		// project the forward onto our orbit plane, i.e. the horizontal plane.
+		orbitDir = Normalize( Vector3( anchorForwardDirection.x, 0, anchorForwardDirection.z ) );
+	}
 
 	float angle = 0.0f;
 	if( m_orbitCurve )

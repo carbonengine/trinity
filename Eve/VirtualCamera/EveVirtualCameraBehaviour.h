@@ -98,7 +98,7 @@ public:
 	
 private:
 	float m_frequency;
-	int m_octaves;
+	int32_t m_octaves;
 	float m_magnitude;
 	Tr2CurveScalarPtr m_magnitudeCurve;
 };
@@ -232,6 +232,7 @@ private:
 	Tr2CurveScalarPtr m_distanceScalarCurve;
 	Tr2CurveScalarPtr m_orbitCurve;
 	bool m_proportional;
+	bool m_world;
 };
 
 TYPEDEF_BLUECLASS( EveVirtualCameraBehaviourVector3Orbit );
@@ -317,7 +318,7 @@ public:
 	
 private:
 	float m_frequency;
-	int m_octaves;
+	int32_t m_octaves;
 	Vector3 m_magnitude;
 	Tr2CurveScalarPtr m_magnitudeCurve;
 	bool m_scaleByView;

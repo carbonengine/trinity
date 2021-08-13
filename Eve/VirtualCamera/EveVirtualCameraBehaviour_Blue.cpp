@@ -141,6 +141,7 @@ const Be::ClassInfo* EveVirtualCameraBehaviourVector3Orbit::ExposeToBlue()
 		MAP_ATTRIBUTE( "distanceScalarCurve", m_distanceScalarCurve, "A curve to scale the range with.\nShould typically range from 0-1 in value and time.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "orbitCurve", m_orbitCurve, "A curve to dictate how to lerp from start to end.\nWhen not specified interpolation is simply linear.\nShould typically range from 0-1 in value and time.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "proportional", m_proportional, "If false, the offset is in meters,\nif true the offset is scaled by the anchor object collision sphere radius.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "world", m_world, "If true the orbit angle is an angle from the world forward direction (0, 0, 1),\notherwise it's an angle from the forward direction of the anchors.", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_CHAINTO( EveVirtualCameraBehaviourVector3Base )
 }
 
