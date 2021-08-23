@@ -101,8 +101,8 @@ TEST_F( SwapChain, CanPresentSwapChain )
 			ASSERT_HRESULT_SUCCEEDED( sc.Present( *renderContext ) );
 
 			ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 16 ), 1.0f ) );
-            MakeTestScreenShot();
 			ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+			MakeTestScreenShot();
 			ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
 			g++;
 		};
@@ -135,8 +135,8 @@ TEST_F( SwapChain, CanRecreateSwapChain )
 			ASSERT_HRESULT_SUCCEEDED( sc.Present( *renderContext ) );
 
 			ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ( ( g & 0xff ) << 16 ), 1.0f ) );
-			MakeTestScreenShot();
 			ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+			MakeTestScreenShot();
 			ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
 			g++;
 		};

@@ -282,7 +282,7 @@ namespace TrinityALImpl
 			D3D12_ROOT_PARAMETER parameter;
 			switch( it->registerType )
 			{
-			case Tr2ShaderRegisterAL::CONSTANTS:
+			case Tr2ShaderRegisterAL::CONSTANT_BUFFER:
 			{
 				parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 				parameter.Descriptor.RegisterSpace = UINT( shaderType );
@@ -302,22 +302,23 @@ namespace TrinityALImpl
 				samplerRanges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER ) );
 				break;
 			}
-			case Tr2ShaderRegisterAL::RESOURCE:
-			{
-				CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( ranges.size() ) };
-				m_srvRegisters.push_back( cbr );
-				ranges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SRV ) );
-				break;
-			}
-			case Tr2ShaderRegisterAL::UAV:
-			{
-				CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( ranges.size() ) };
-				m_uavRegisters.push_back( cbr );
-				ranges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_UAV ) );
-				break;
-			}
 			default:
-				continue;
+				if( it->IsSrv() )
+				{
+					CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( ranges.size() ) };
+					m_srvRegisters.push_back( cbr );
+					ranges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SRV ) );
+				}
+				else if( it->IsUav() )
+				{
+					CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( ranges.size() ) };
+					m_uavRegisters.push_back( cbr );
+					ranges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_UAV ) );
+				}
+				else
+				{
+					continue;
+				}
 			}
 		}
 	}

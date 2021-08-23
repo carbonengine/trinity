@@ -610,7 +610,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitiveUP(
 }
 
 ALResult Tr2RenderContextAL::SetConstants(
-	Tr2ConstantBufferAL& buffer, 
+	const Tr2ConstantBufferAL& buffer, 
 	ShaderType constantType, 
 	uint32_t registerIndex, 
 	uint32_t maxRegisterCount )
@@ -826,9 +826,6 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	if( SUCCEEDED( hr ) && m_d3dDevice9 )
 	{
 		m_caps.QueryCaps( m_d3dDevice9 );
-
-		//m_depthStencilFormat = presentationParameters.depthStencilFormat;
-
 		m_adapter = Adapter;
 	}
 
@@ -892,7 +889,7 @@ ALResult Tr2RenderContextAL::SetPresentParameters( unsigned adapter, const Tr2Pr
 	pp.BackBufferHeight = presentationParameters.mode.height;
 	pp.BackBufferFormat = ConvertToD3D9Format( presentationParameters.mode.format );
 	pp.BackBufferCount = presentationParameters.backBufferCount;
-	pp.MultiSampleType = D3DMULTISAMPLE_TYPE( presentationParameters.msaaType );
+	pp.MultiSampleType = presentationParameters.msaaType == 1 ? D3DMULTISAMPLE_NONE : D3DMULTISAMPLE_TYPE( presentationParameters.msaaType );
 	pp.MultiSampleQuality = presentationParameters.msaaQuality;
 	pp.SwapEffect = presentationParameters.swapEffect == SWAP_EFFECT_DISCARD ? D3DSWAPEFFECT_DISCARD : D3DSWAPEFFECT_COPY;
 	pp.hDeviceWindow = HWND( presentationParameters.outputWindow );
@@ -1494,6 +1491,14 @@ ALResult Tr2RenderContextAL::TestCooperativeLevel()
 		break;
 	}
 	return hr;
+}
+
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2DepthAttachment& )
+{
+}
+
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2ColorAttachment&, const Tr2DepthAttachment& )
+{
 }
 
 #endif

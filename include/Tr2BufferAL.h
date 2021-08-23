@@ -82,6 +82,8 @@ public:
 	void UnmapForWriting( Tr2RenderContextAL& renderContext );
 
 	ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL& renderContext );
+
+	TrinityALImpl::Tr2BufferAL* TrinityALImpl_GetObject() const;
 private:
 	std::shared_ptr<TrinityALImpl::Tr2BufferAL> m_buffer;
 

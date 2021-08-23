@@ -19,6 +19,9 @@ public:
 			BeginLoopProcessing();
 			while( true )
 			{
+#if __OBJC__
+                @autoreleasepool {
+#endif
 				if( !DoLoopProcessing() )
 				{
 					return;
@@ -28,6 +31,9 @@ public:
 				{
 					return;
 				}
+#if __OBJC__
+                }
+#endif
 			}
 		}
 		else

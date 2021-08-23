@@ -61,6 +61,8 @@ public:
 	ALResult GenerateMipMaps( Tr2RenderContextAL& renderContext );
 	ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
 	uintptr_t GetSharedHandle() const;
+
+	TrinityALImpl::Tr2TextureAL* TrinityALImpl_GetObject() const;
 private:
 	std::shared_ptr<TrinityALImpl::Tr2TextureAL> m_texture;
 

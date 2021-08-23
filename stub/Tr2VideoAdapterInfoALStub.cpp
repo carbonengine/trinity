@@ -9,7 +9,6 @@ bool g_wantsEXDevice = false;
 
 #ifdef WIN32
 extern bool g_usingEXDevice;
-extern std::vector<HANDLE> g_D3DCreatedHeaps;
 #endif
 
 using namespace Tr2RenderContextEnum;

@@ -2253,4 +2253,13 @@ ALResult Tr2RenderContextAL::GetGpuPageFaultResource(
 	return S_OK;
 }
 
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2DepthAttachment& )
+{
+}
+
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2ColorAttachment&, const Tr2DepthAttachment& )
+{
+}
+
+
 #endif	//DX11?

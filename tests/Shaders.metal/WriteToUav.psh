@@ -1,0 +1,17 @@
+#include "MetalDefines.h"
+#include "ShadowState.fxh"
+
+#include <metal_stdlib>
+using namespace metal;
+
+struct VS_OUTPUT
+{
+	float4 Position [[ position ]];
+	float2 TexCoord;
+};
+
+fragment float4 mainPS(VS_OUTPUT In [[ stage_in ]], texture2d<float, access::write> Output [[ UAVT(1) ]])
+{
+    Output.write( float4( In.TexCoord, 0, 1 ), uint2( In.TexCoord.xy * 64 ) );
+    return float4( In.TexCoord.yx, 0, 1 );
+}

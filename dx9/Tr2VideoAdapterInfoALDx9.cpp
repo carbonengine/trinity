@@ -9,7 +9,6 @@ extern bool g_wantsEXDevice;
 #include "Tr2RenderContextDx9.h"
 
 extern bool g_usingEXDevice;
-extern std::vector<HANDLE> g_D3DCreatedHeaps;
 
 using namespace Tr2RenderContextEnum;
 
@@ -20,9 +19,6 @@ CComPtr<IDirect3D9> s_direct3D;
 ALResult InitializeDirect3D()
 {
 	s_direct3D = nullptr;
-
-	HANDLE heapsBefore[256];
-	uint32_t countBefore = ::GetProcessHeaps( 256, heapsBefore );
 
 	//
 	// First see if we the extended device is supported
@@ -90,20 +86,6 @@ ALResult InitializeDirect3D()
 		}
 		CCP_LOG( "Trinity is using the regular device" );
 		s_direct3D.Attach( d3d );
-	}
-
-	HANDLE heapsAfter[256];
-	uint32_t countAfter = ::GetProcessHeaps( 256, heapsAfter );
-
-	if ( countAfter > countBefore )
-	{
-		int count = countAfter - countBefore;
-		CCP_LOG( "Direct3DCreate9 created %d heaps", count );
-
-		for ( uint32_t i = countBefore; i < countAfter; ++i )
-		{
-			g_D3DCreatedHeaps.push_back( heapsAfter[i] );
-		}
 	}
 
 	if ( !s_direct3D )

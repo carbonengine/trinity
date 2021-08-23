@@ -218,7 +218,7 @@ namespace Tr2RenderContextEnum
 
 	inline ExFlag operator|( ExFlag a, ExFlag b )
 	{
-		return ExFlag( a | b );
+		return ExFlag( int( a ) | int( b ) );
 	}
 
 

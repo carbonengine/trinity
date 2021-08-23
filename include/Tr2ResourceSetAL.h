@@ -56,6 +56,8 @@ public:
 	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 );
 	bool SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler );
 	void ClearResources();
+	
+	uint32_t ComputeHash() const;
 
 	bool operator==( const Tr2ResourceSetDescriptionAL& other ) const;
 private:
@@ -74,6 +76,7 @@ private:
 		bool Is( const Tr2BufferAL& other, uint32_t otherInitialCount ) const;
 		bool Is( const Tr2TextureAL& other, Tr2RenderContextEnum::ColorSpace otherColorSpace ) const;
 		bool Is( const Tr2TextureAL& other, uint32_t otherMip ) const;
+		void UpdateHash( uint32_t& hash ) const;
 
 		Tr2TextureAL texture;
 		Tr2BufferAL buffer;
@@ -92,6 +95,8 @@ private:
 
 		bool operator==( const Sampler& other ) const;
 		bool operator==( const Tr2SamplerStateAL& other ) const;
+
+		void UpdateHash( uint32_t& hash ) const;
 
 		Tr2SamplerStateAL sampler;
 		bool assigned;

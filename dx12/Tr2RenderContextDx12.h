@@ -15,6 +15,7 @@
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2VertexLayoutAL.h"
+#include "../include/Tr2RenderPassAL.h"
 
 #include "./util/DescriptorStateCacheDx12.h"
 #include "./util/PsoDescription.h"
@@ -156,6 +157,9 @@ public:
 	ALResult PopDepthStencil() throw( );
 	void SetReadOnlyDepth( bool enable ) throw( );
 	bool GetReadOnlyDepth() const;
+
+	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2DepthAttachment& depth );
+	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2ColorAttachment& rt1, const Tr2DepthAttachment& depth );
 
 	ALResult GetRenderTargetSize( uint32_t& width, uint32_t& height, uint32_t slot = 0 ) throw( );
 	

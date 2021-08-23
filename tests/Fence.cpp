@@ -73,15 +73,3 @@ TEST_F( Fence, FenceHasMemoryClass )
 	auto memoryClass = fence.GetMemoryClass();
 	EXPECT_TRUE( memoryClass == AL_MEMORY_VIDEO || memoryClass == AL_MEMORY_MANAGED );
 }
-
-TEST_F( Fence, CanWaitForFence )
-{
-	Tr2FenceAL fence;
-	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
-
-	ASSERT_HRESULT_SUCCEEDED( fence.PutFence( *renderContext ) );
-	ASSERT_HRESULT_SUCCEEDED( fence.Wait( *renderContext ) );
-	bool reached = false;
-	ASSERT_HRESULT_SUCCEEDED( fence.IsReached( reached, *renderContext ) );
-	ASSERT_TRUE( reached );
-}

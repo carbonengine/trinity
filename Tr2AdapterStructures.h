@@ -53,7 +53,6 @@ struct Tr2PresentParametersAL
 	uint32_t msaaType;
 	uint32_t msaaQuality;
 	Tr2RenderContextEnum::SwapEffect swapEffect;
-	Tr2RenderContextEnum::DepthStencilFormat depthStencilFormat;
 	Tr2WindowHandle outputWindow;
 	bool windowed;
 	bool software;

@@ -215,6 +215,12 @@ uintptr_t Tr2TextureAL::GetSharedHandle() const
 	return m_texture->GetSharedHandle();
 }
 
+TrinityALImpl::Tr2TextureAL* Tr2TextureAL::TrinityALImpl_GetObject() const
+{
+	return m_texture.get();
+}
+
+
 
 namespace
 {

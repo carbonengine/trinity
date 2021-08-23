@@ -8,6 +8,7 @@
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2SamplerStateAL.h"
+#include "../include/Tr2RenderPassAL.h"
 #include "../Tr2HalHelperStructures.h"
 
 class Tr2ConstantBufferAL;
@@ -167,6 +168,9 @@ public:
 	void SetReadOnlyDepth(			bool enable );
 	bool GetReadOnlyDepth() const;
 	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 );
+
+	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2DepthAttachment& depth );
+	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2ColorAttachment& rt1, const Tr2DepthAttachment& depth );
 
 	ALResult SetNumberOfLights(			uint32_t numLights );
 

@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#if !defined(_WIN32) && !defined(TRINITY_AL_MOBILE) && (TRINITY_PLATFORM != TRINITY_STUB)
+#if !defined(_WIN32) && !defined(TRINITY_AL_MOBILE) && (TRINITY_PLATFORM == TRINITY_OPENGLES2)
 
 #include "WithWindowFixture.h"
 #include "RenderWindow.h"

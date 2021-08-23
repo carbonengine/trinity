@@ -1,4 +1,4 @@
-cbuffer Constants: register(b0)
+cbuffer Constants: register(b1)
 {
     float4 arg1;
 };

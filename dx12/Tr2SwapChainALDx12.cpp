@@ -124,7 +124,6 @@ namespace
 			1,
 			0,
 			SWAP_EFFECT_DISCARD,
-			DSFMT_UNKNOWN,
 			windowHandle,
 			true,
 			false,

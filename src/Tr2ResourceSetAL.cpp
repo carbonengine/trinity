@@ -7,6 +7,20 @@
 
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2ResourceSetAL )
 
+
+namespace
+{
+
+template <typename T>
+void HashResourcePtr( const T& resource, uint32_t& hash )
+{
+	auto p = resource.TrinityALImpl_GetObject();
+	hash = CcpHashFNV1( &p, sizeof( p ), hash );
+}
+
+}
+
+
 Tr2RegisterMapAL::Tr2RegisterMapAL() : // cppcheck-suppress uninitMemberVar
 	srvCount( 0 ),
 	uavCount( 0 ),
@@ -25,19 +39,17 @@ Tr2RegisterMapAL::Tr2RegisterMapAL( Tr2RenderContextEnum::ShaderType stage, cons
 
 	for( auto it = begin( signature.registers ); it != end( signature.registers ); ++it )
 	{
-		switch( it->registerType )
+		if( it->IsSrv() )
 		{
-		case Tr2ShaderRegisterAL::RESOURCE:
 			srvs[stage][it->registerIndex] = uint8_t( srvCount++ );
-			break;
-		case Tr2ShaderRegisterAL::UAV:
+		}
+		else if( it->IsUav() )
+		{
 			uavs[stage][it->registerIndex] = uint8_t( uavCount++ );
-			break;
-		case Tr2ShaderRegisterAL::SAMPLER:
+		}
+		else if( it->registerType == Tr2ShaderRegisterAL::SAMPLER )
+		{
 			samplers[stage][it->registerIndex] = uint8_t( samplerCount++ );
-			break;
-		default:
-			break;
 		}
 	}
 }
@@ -57,19 +69,17 @@ Tr2RegisterMapAL::Tr2RegisterMapAL( const Tr2ShaderAL* shaders, size_t shaderCou
 		auto& signature = shaders[i].GetSignature();
 		for( auto it = begin( signature.registers ); it != end( signature.registers ); ++it )
 		{
-			switch( it->registerType )
+			if( it->IsSrv() )
 			{
-			case Tr2ShaderRegisterAL::RESOURCE:
 				srvs[shaderType][it->registerIndex] = uint8_t( srvCount++ );
-				break;
-			case Tr2ShaderRegisterAL::UAV:
+			}
+			else if( it->IsUav() )
+			{
 				uavs[shaderType][it->registerIndex] = uint8_t( uavCount++ );
-				break;
-			case Tr2ShaderRegisterAL::SAMPLER:
+			}
+			else if( it->registerType == Tr2ShaderRegisterAL::SAMPLER )
+			{
 				samplers[shaderType][it->registerIndex] = uint8_t( samplerCount++ );
-				break;
-			default:
-				break;
 			}
 		}
 	}
@@ -88,19 +98,17 @@ Tr2RegisterMapAL::Tr2RegisterMapAL( const Tr2RenderContextEnum::ShaderType* shad
 	{
 		for( auto it = begin( signatures[i].registers ); it != end( signatures[i].registers ); ++it )
 		{
-			switch( it->registerType )
+			if( it->IsSrv() )
 			{
-			case Tr2ShaderRegisterAL::RESOURCE:
 				srvs[shaders[i]][it->registerIndex] = uint8_t( srvCount++ );
-				break;
-			case Tr2ShaderRegisterAL::UAV:
+			}
+			else if( it->IsUav() )
+			{
 				uavs[shaders[i]][it->registerIndex] = uint8_t( uavCount++ );
-				break;
-			case Tr2ShaderRegisterAL::SAMPLER:
+			}
+			else if( it->registerType == Tr2ShaderRegisterAL::SAMPLER )
+			{
 				samplers[shaders[i]][it->registerIndex] = uint8_t( samplerCount++ );
-				break;
-			default:
-				break;
 			}
 		}
 	}
@@ -385,6 +393,24 @@ void Tr2ResourceSetDescriptionAL::ClearResources()
 	}
 }
 
+uint32_t Tr2ResourceSetDescriptionAL::ComputeHash() const
+{
+	uint32_t hash = 0;
+	for( uint32_t i = 0; i < m_registerMap.srvCount; ++i )
+	{
+		m_srv[i].UpdateHash( hash );
+	}
+	for( uint32_t i = 0; i < m_registerMap.uavCount; ++i )
+	{
+		m_uav[i].UpdateHash( hash );
+	}
+	for( uint32_t i = 0; i < m_registerMap.samplerCount; ++i )
+	{
+		m_samplers[i].UpdateHash( hash );
+	}
+	return hash;
+}
+
 
 Tr2ResourceSetDescriptionAL::Resource::Resource()
 	:type( NONE ),
@@ -412,6 +438,18 @@ bool Tr2ResourceSetDescriptionAL::Resource::Is( const Tr2TextureAL& other, uint3
 	return type == TEXTURE && texture == other && mip == otherMip;
 }
 
+void Tr2ResourceSetDescriptionAL::Resource::UpdateHash( uint32_t& hash ) const
+{
+	if( type == BUFFER )
+	{
+		HashResourcePtr( buffer, hash );
+	}
+	else if( type == TEXTURE )
+	{
+		HashResourcePtr( texture, hash );
+	}
+}
+
 Tr2ResourceSetDescriptionAL::Sampler::Sampler()
 	:assigned( false )
 {
@@ -425,6 +463,14 @@ bool Tr2ResourceSetDescriptionAL::Sampler::operator==( const Sampler& other ) co
 bool Tr2ResourceSetDescriptionAL::Sampler::operator==( const Tr2SamplerStateAL& other ) const
 {
 	return sampler == other && assigned;
+}
+
+void Tr2ResourceSetDescriptionAL::Sampler::UpdateHash( uint32_t& hash ) const
+{
+	if( assigned )
+	{
+		HashResourcePtr( sampler, hash );
+	}
 }
 
 

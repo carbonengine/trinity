@@ -32,4 +32,5 @@ public:
 	Tr2ALMemoryType GetMemoryClass() const;
 private:
 	std::shared_ptr<TrinityALImpl::Tr2SwapChainAL> m_swapChain;
+	friend class Tr2RenderContextAL;
 };

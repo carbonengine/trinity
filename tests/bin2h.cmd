@@ -8,22 +8,19 @@ rem ^
 import argparse
 
 
-def _hex(d, d1, d2, d3):
-    return '0x{:0>2x}{:0>2x}{:0>2x}{:0>2x}'.format(d3, d2, d1, d)
+def _hex(d):
+    return '0x{:0>2x}'.format(d)
 
 
 def _to_hex(s):
     l = ''
-    for i in xrange(0, len(s), 4):
-        d3 = ord(s[i + 3]) if i + 3 < len(s) else 0
-        d2 = ord(s[i + 2]) if i + 2 < len(s) else 0
-        d1 = ord(s[i + 1]) if i + 1 < len(s) else 0
+    for i in xrange(0, len(s), 1):
         d = ord(s[i])
         if l:
             l += ', '
         if i and i % 16 == 0:
             l += '\n'
-        l += _hex(d, d1, d2, d3)
+        l += _hex(d)
     return l
 
 

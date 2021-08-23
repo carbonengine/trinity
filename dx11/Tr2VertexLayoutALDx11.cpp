@@ -174,7 +174,17 @@ namespace TrinityALImpl
 			{
 				D3D11_INPUT_ELEMENT_DESC fakeElement;
 				fakeElement.AlignedByteOffset = 0;
-				fakeElement.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+				switch( it->type )
+				{
+				case Tr2ShaderPipelineInputAL::INT:
+					fakeElement.Format = DXGI_FORMAT_R8G8B8A8_SINT;
+					break;
+				case Tr2ShaderPipelineInputAL::UINT:
+					fakeElement.Format = DXGI_FORMAT_R8G8B8A8_UINT;
+					break;
+				default:
+					fakeElement.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+				}
 				fakeElement.InputSlotClass = D3D11_INPUT_PER_VERTEX_DATA;
 				fakeElement.InstanceDataStepRate = 0;
 				fakeElement.SemanticIndex = it->usageIndex;

@@ -12,7 +12,7 @@ struct SamplerState : public WithValidRenderContext
 TEST_F( SamplerState, CanCreateSamplerState )
 {
 	Tr2SamplerStateAL ss;
-	float borderColor[] = { 0.1f, 0.2f, 0.3f, 0.4f };
+	float borderColor[] = { 0.f, 0.f, 0.f, 1.f };
 	Tr2SamplerDescription desc(
 		TF_ANISOTROPIC,
 		TF_LINEAR,
@@ -35,7 +35,7 @@ TEST_F( SamplerState, CanCreateSamplerState )
 TEST_F( SamplerState, SamplerStateEqualsItself )
 {
 	Tr2SamplerStateAL ss;
-	float borderColor[] = { 0.1f, 0.2f, 0.3f, 0.4f };
+	float borderColor[] = { 0.f, 0.f, 0.f, 1.f };
 	Tr2SamplerDescription desc(
 		TF_ANISOTROPIC,
 		TF_LINEAR,
@@ -57,7 +57,7 @@ TEST_F( SamplerState, SamplerStateEqualsItself )
 
 TEST_F( SamplerState, DifferentSamplerStatesAreNotEqual )
 {
-	float borderColor[] = { 0.1f, 0.2f, 0.3f, 0.4f };
+	float borderColor[] = { 0.f, 0.f, 0.f, 1.f };
 	Tr2SamplerDescription desc1(
 		TF_ANISOTROPIC,
 		TF_LINEAR,
@@ -98,7 +98,7 @@ TEST_F( SamplerState, DifferentSamplerStatesAreNotEqual )
 TEST_F( SamplerState, SamplerStateHasMemoryClass )
 {
 	Tr2SamplerStateAL ss;
-	float borderColor[] = { 0.1f, 0.2f, 0.3f, 0.4f };
+	float borderColor[] = { 0.f, 0.f, 0.f, 1.f };
 	Tr2SamplerDescription desc(
 		TF_ANISOTROPIC,
 		TF_LINEAR,

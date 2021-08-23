@@ -27,7 +27,6 @@ void WithValidRenderContext::SetUpTestCase()
 	presentParameters.msaaType = 0;
 	presentParameters.msaaQuality = 0;
 	presentParameters.swapEffect = Tr2RenderContextEnum::SWAP_EFFECT_DISCARD;
-	presentParameters.depthStencilFormat = Tr2RenderContextEnum::DSFMT_D24S8;
 	presentParameters.outputWindow = WithWindow::GetWindowHandle();
 	presentParameters.windowed = true;
 	presentParameters.software = false;
@@ -128,6 +127,14 @@ void SaveReadableRenderTarget( Tr2TextureAL& rt, const char* outFilePath, Tr2Ren
 
 	header.dwSurfaceFlags = DDS_SURFACE_FLAGS_TEXTURE;
 	header.dwPitchOrLinearSize = (header.ddspf.dwRGBBitCount * header.dwWidth * header.dwHeight) / 8;
+	
+	auto sz = pitch * rt.GetHeight();
+	std::unique_ptr<uint8_t[]> rgbx( new uint8_t[sz] );
+	memcpy( rgbx.get(), data, sz );
+	for( uint32_t i = 3; i < sz; i += 4 )
+	{
+		rgbx[i] = 0xff;
+	}
 
 	FILE* f;
 	if( fopen_s( &f, outFilePath, "wb" ) )
@@ -136,7 +143,7 @@ void SaveReadableRenderTarget( Tr2TextureAL& rt, const char* outFilePath, Tr2Ren
 		return;
 	}
 	EXPECT_EQ( 1, fwrite( &header, sizeof( header ), 1, f ) );
-	EXPECT_EQ( 1, fwrite( data, pitch * rt.GetHeight(), 1, f ) );
+	EXPECT_EQ( 1, fwrite( rgbx.get(), pitch * rt.GetHeight(), 1, f ) );
 	fclose( f );
 
 	rt.UnmapForReading( renderContext );

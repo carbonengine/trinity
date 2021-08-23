@@ -23,6 +23,9 @@ public:
 	Tr2ALMemoryType GetMemoryClass() const;
 
 	bool operator==( const Tr2SamplerStateAL& other ) const;
+
+	TrinityALImpl::Tr2SamplerStateAL* TrinityALImpl_GetObject() const;
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2SamplerStateAL> m_sampler;
 	friend class Tr2RenderContextAL;

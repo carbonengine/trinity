@@ -400,4 +400,12 @@ ALResult Tr2RenderContextAL::GetGpuPageFaultResource(
 	return E_FAIL;
 }
 
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2DepthAttachment& )
+{
+}
+
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2ColorAttachment&, const Tr2DepthAttachment& )
+{
+}
+
 #endif

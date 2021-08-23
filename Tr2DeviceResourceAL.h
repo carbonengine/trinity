@@ -21,7 +21,7 @@ namespace TrinityALImpl
 		typedef void ( *ResourceOperation )( Tr2BaseDeviceResourceAL* );
 
 		Tr2BaseDeviceResourceAL();
-		~Tr2BaseDeviceResourceAL();
+		virtual ~Tr2BaseDeviceResourceAL();
 
 		virtual bool IsResourceValid() const = 0;
 		virtual Tr2ALMemoryType GetResourceMemoryClass() const = 0;

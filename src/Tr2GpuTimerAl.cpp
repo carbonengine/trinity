@@ -3,6 +3,8 @@
 
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2GpuTimerAL )
 
+bool g_gpuTimersEnabled = true;
+
 namespace
 {
 	auto nullGpuTimer = std::make_shared<TrinityALImpl::Tr2GpuTimerAL>();
@@ -15,6 +17,12 @@ Tr2GpuTimerAL::Tr2GpuTimerAL()
 
 ALResult Tr2GpuTimerAL::Create( Tr2PrimaryRenderContextAL& renderContext )
 {
+	if( !g_gpuTimersEnabled )
+	{
+		m_gpu_timer = nullGpuTimer;
+		return E_FAIL;
+	}
+	
 	m_gpu_timer = std::make_shared<TrinityALImpl::Tr2GpuTimerAL>();
 	auto hr = m_gpu_timer->Create(renderContext);
 	if( FAILED( hr))

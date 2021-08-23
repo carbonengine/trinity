@@ -943,10 +943,10 @@ namespace TrinityALImpl
 			srcRect.bottom = std::min( src.m_bottom, source.m_desc.GetHeight() );
 
 			RECT destRect;
-			destRect.left = dst.m_left + srcRect.left;
-			destRect.top = dst.m_top = srcRect.top;
-			destRect.right = std::min( uint32_t( dst.m_left + srcRect.right ), m_desc.GetWidth() );
-			destRect.bottom = std::min( uint32_t( dst.m_top + srcRect.bottom ), m_desc.GetHeight() );
+			destRect.left = dst.m_left;
+			destRect.top = dst.m_top;
+			destRect.right = std::min( uint32_t( dst.m_left + ( srcRect.right - srcRect.left ) ), m_desc.GetWidth() );
+			destRect.bottom = std::min( uint32_t( dst.m_top + ( srcRect.bottom - srcRect.top ) ), m_desc.GetHeight() );
 
 			return renderContext.m_d3dDevice9->StretchRect( source.m_surface, &srcRect, m_surface, &destRect, D3DTEXF_POINT );
 		}

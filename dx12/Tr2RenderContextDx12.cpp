@@ -1007,6 +1007,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 			D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].GetWidth() ), LONG( m_boundRenderTargets[0].GetHeight() ) };
 			m_commandList->RSSetScissorRects( 1, &rect );
 		}
+		m_psoDescription.m_renderTargetCount = count;
 	}
 	m_psoDescription.m_depthStencilFormat = depthStencil.GetFormat();
 
@@ -1594,6 +1595,14 @@ void Tr2RenderContextAL::FlushBarriersDx12( size_t count, ID3D12Resource** resou
 			m_commandList->ResourceBarrier( UINT( barriers.size() ), barriers.data() );
 		}
 	}
+}
+
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2DepthAttachment& )
+{
+}
+
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2ColorAttachment&, const Tr2DepthAttachment& )
+{
 }
 
 #endif

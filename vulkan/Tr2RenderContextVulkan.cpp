@@ -606,4 +606,12 @@ ALResult Tr2RenderContextAL::CreatePipeline( VkPipeline& pipeline )
 	return Vk2Al( vkCreateGraphicsPipelines( m_owner->m_device, VK_NULL_HANDLE, 1, &pipelineCreateInfo, nullptr, &pipeline ) );
 }
 
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2DepthAttachment& )
+{
+}
+
+void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2ColorAttachment&, const Tr2DepthAttachment& )
+{
+}
+
 #endif

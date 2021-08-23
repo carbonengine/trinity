@@ -14,11 +14,11 @@ TEST_F( Shader, ShaderIsInvalidBeforeCreation )
 
 TEST_F( Shader, CanCreateShader )
 {
-	uint32_t vsBytecode[] = {
+	uint8_t vsBytecode[] = {
 #include INCLUDE_SHADER_CODE( PositionOnly.vs )
 	};
 
-	auto vsInput = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0 );
+	auto vsInput = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
@@ -38,11 +38,11 @@ TEST_F( Shader, CanCreateShader )
 
 TEST_F( Shader, ShaderEqualsItself )
 {
-	uint32_t vsBytecode[] = {
+	uint8_t vsBytecode[] = {
 #include INCLUDE_SHADER_CODE( PositionOnly.vs )
 	};
 
-	auto vsInput = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0 );
+	auto vsInput = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( vs.Create( 
@@ -56,11 +56,11 @@ TEST_F( Shader, ShaderEqualsItself )
 
 TEST_F( Shader, DifferentShadersAreNotEqual )
 {
-	uint32_t vsBytecode1[] = {
+	uint8_t vsBytecode1[] = {
 #include INCLUDE_SHADER_CODE( PositionOnly.vs )
 	};
 
-	auto vsInput = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0 );
+	auto vsInput = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
 	Tr2ShaderAL vs1;
 	ASSERT_HRESULT_SUCCEEDED( vs1.Create( 
@@ -69,11 +69,11 @@ TEST_F( Shader, DifferentShadersAreNotEqual )
 		vsInput,
 		*renderContext ) );
 
-	uint32_t vsBytecode2[] = {
+	uint8_t vsBytecode2[] = {
 #include INCLUDE_SHADER_CODE( PositionOnlyWithPerObjectData.vs )
 	};
 
-	auto vsInput2 = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0 ).Add( Tr2ShaderRegisterAL::CONSTANTS, 0 );
+	auto vsInput2 = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 ).Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
 	Tr2ShaderAL vs2;
 	ASSERT_HRESULT_SUCCEEDED( vs2.Create( 
 		Tr2RenderContextEnum::VERTEX_SHADER,
@@ -87,7 +87,7 @@ TEST_F( Shader, DifferentShadersAreNotEqual )
 #if( TRINITYPLATFORM == TRINITY_STUB )
 TEST_F( Shader, ShaderStoresType )
 {
-	uint32_t vsBytecode[] = {
+	uint8_t vsBytecode[] = {
 #include INCLUDE_SHADER_CODE( PositionOnly.vs )
 	};
 

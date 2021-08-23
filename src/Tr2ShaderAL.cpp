@@ -30,17 +30,19 @@ Tr2ShaderPipelineInputAL::Tr2ShaderPipelineInputAL()
 {
 }
 
-Tr2ShaderPipelineInputAL::Tr2ShaderPipelineInputAL( Tr2VertexDefinition::UsageCode usage_, uint32_t usageIndex_, uint32_t registerIndex_, uint32_t usedMask_ )
+Tr2ShaderPipelineInputAL::Tr2ShaderPipelineInputAL( Tr2VertexDefinition::UsageCode usage_, uint32_t usageIndex_, uint32_t registerIndex_, Type type_, uint32_t dimension_, uint32_t usedMask_ )
 	:usage( usage_ ),
 	usageIndex( usageIndex_ ),
 	registerIndex( registerIndex_ ),
-	usedMask( usedMask_ )
+	usedMask( usedMask_ ),
+	type( type_ ),
+	dimension( dimension_ )
 {
 }
 
 
 Tr2ShaderRegisterAL::Tr2ShaderRegisterAL()
-	:registerType( CONSTANTS ),
+	:registerType( CONSTANT_BUFFER ),
 	registerIndex( 0 )
 {
 }
@@ -51,6 +53,17 @@ Tr2ShaderRegisterAL::Tr2ShaderRegisterAL( RegisterType registerType_, uint32_t r
 {
 }
 
+bool Tr2ShaderRegisterAL::IsSrv() const
+{
+	return ( registerType & SRV_REGISTER_FLAG ) != 0;
+}
+
+bool Tr2ShaderRegisterAL::IsUav() const
+{
+	return ( registerType & UAV_REGISTER_FLAG ) != 0;
+}
+
+
 
 Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( const Tr2ShaderPipelineInputAL& pipelineInput )
 {
@@ -58,9 +71,9 @@ Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( const Tr2ShaderPipelineInputAL&
 	return *this;
 }
 
-Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( Tr2VertexDefinition::UsageCode usage, uint32_t usageIndex, uint32_t registerIndex, uint32_t usedMask )
+Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( Tr2VertexDefinition::UsageCode usage, uint32_t usageIndex, uint32_t registerIndex, Tr2ShaderPipelineInputAL::Type type, uint32_t dimension, uint32_t usedMask )
 {
-	pipelineInputs.push_back( Tr2ShaderPipelineInputAL( usage, usageIndex, registerIndex, usedMask ) );
+	pipelineInputs.push_back( Tr2ShaderPipelineInputAL( usage, usageIndex, registerIndex, type, dimension, usedMask ) );
 	return *this;
 }
 
@@ -76,7 +89,11 @@ Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( Tr2ShaderRegisterAL::RegisterTy
 	return *this;
 }
 
-
+Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( const Tr2ShaderThreadGroupSizeAL& size )
+{
+	threadGroupSize = size;
+	return *this;
+}
 
 Tr2ShaderAL::Tr2ShaderAL()
 	:m_shader( NullShader() )

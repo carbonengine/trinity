@@ -245,7 +245,6 @@ ALResult Tr2VideoAdapterInfo::RefreshData()
 #else
 
 extern bool g_usingEXDevice;
-extern std::vector<HANDLE> g_D3DCreatedHeaps;
 
 using namespace Tr2RenderContextEnum;
 

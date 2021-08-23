@@ -15,7 +15,6 @@ void SetUpPresentParameters( Tr2PresentParametersAL& presentParameters )
 	presentParameters.msaaType = 1;
 	presentParameters.msaaQuality = 0;
 	presentParameters.swapEffect = Tr2RenderContextEnum::SWAP_EFFECT_DISCARD;
-	presentParameters.depthStencilFormat = Tr2RenderContextEnum::DSFMT_D24S8;
 	presentParameters.outputWindow = WithWindow::GetWindowHandle();
 	presentParameters.windowed = true;
 	presentParameters.software = false;

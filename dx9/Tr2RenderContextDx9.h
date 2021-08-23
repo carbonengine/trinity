@@ -8,6 +8,7 @@
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
+#include "../include/Tr2RenderPassAL.h"
 
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
@@ -181,7 +182,7 @@ public:
 	long m_topology;	// in DX9, that's part of the DrawXyz calls, so remember this.
 
 	ALResult SetConstants(			
-		Tr2ConstantBufferAL& buffer, 
+		const Tr2ConstantBufferAL& buffer, 
 		Tr2RenderContextEnum::ShaderType constantType, 
 		uint32_t registerIndex, 
 		uint32_t maxRegisterCount = 0 );
@@ -198,6 +199,9 @@ public:
 	void SetReadOnlyDepth(			bool enable );
 	bool GetReadOnlyDepth() const;
 	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 );
+
+	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2DepthAttachment& depth );
+	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2ColorAttachment& rt1, const Tr2DepthAttachment& depth );
 
 	ALResult SetNumberOfLights(			uint32_t numLights );
 
@@ -230,7 +234,6 @@ public:
 	size_t GetStackSizeDS()						const { return m_stackDS    .size(); }
 
 	Tr2CapsAL m_caps;
-	//Tr2RenderContextEnum::DepthStencilFormat m_depthStencilFormat;
 
 	ALResult InternalBlit( IDirect3DSurface9* destination, IDirect3DBaseTexture9* source, uint32_t width, uint32_t height );
 

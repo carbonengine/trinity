@@ -39,3 +39,8 @@ bool Tr2SamplerStateAL::operator==( const Tr2SamplerStateAL& other ) const
 {
 	return m_sampler == other.m_sampler;
 }
+
+TrinityALImpl::Tr2SamplerStateAL* Tr2SamplerStateAL::TrinityALImpl_GetObject() const
+{
+	return m_sampler.get();
+}

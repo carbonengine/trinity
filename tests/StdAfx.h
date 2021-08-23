@@ -4,8 +4,16 @@
 #include <string>
 
 #ifdef _WIN32
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+
 #include <Windows.h>
 typedef HWND Tr2WindowHandle;
+#elif defined(__APPLE__)
+#include <objc/objc-runtime.h>
+typedef id Tr2WindowHandle;
 #else
 #include <cstdint>
 typedef uintptr_t Tr2WindowHandle;
@@ -14,17 +22,19 @@ typedef uintptr_t Tr2WindowHandle;
 #include "TrinityAL/include/TrinityAL.h"
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX9 )
-#define SHADER_PATH Shaders.dx9
+#define SHADER_PATH Shaders.DX9
 #elif( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
-#define SHADER_PATH Shaders.dx11
+#define SHADER_PATH Shaders.DX11
 #elif( TRINITY_PLATFORM==TRINITY_OPENGLES2 )
-#define SHADER_PATH Shaders.gles2
+#define SHADER_PATH Shaders.GLES2
 #elif( TRINITY_PLATFORM==TRINITY_STUB )
-#define SHADER_PATH Shaders.dx11
+#define SHADER_PATH Shaders.DX11
 #elif( TRINITY_PLATFORM==TRINITY_DIRECTX12 )
-#define SHADER_PATH Shaders.dx12
+#define SHADER_PATH Shaders.DX12
 #elif( TRINITY_PLATFORM==TRINITY_VULKAN )
 #define SHADER_PATH Shaders.vulkan
+#elif( TRINITY_PLATFORM==TRINITY_METAL )
+#define SHADER_PATH Shaders.metal
 #else
 #error Define shader path for this TrinityAL platform
 #endif
@@ -41,9 +51,15 @@ namespace testing
     {
         inline AssertionResult HRESULTFailureHelper( const char* expr, const char* expected, HRESULT hr )
         {
-            const String error_hex( String::Format( "0x%08X", hr ) );
+#if __APPLE__
+            std::stringstream error_hex;
+            error_hex << "0x" << std::hex << hr;
+            return AssertionFailure() << "Expected: " << expr << " " << expected << ".\n" << "  Actual: " << error_hex.str() << "\n";
+#else
+            const std::string error_hex( "0x" + String::FormatHexInt( hr ) );
             return AssertionFailure() << "Expected: " << expr << " " << expected << ".\n"
                 << "  Actual: " << error_hex << "\n";
+#endif
         }
         
         inline AssertionResult IsHRESULTSuccess( const char* expr, HRESULT hr )

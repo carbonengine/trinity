@@ -23,18 +23,18 @@ namespace
 
 	ALResult CreatePositionOnlyVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
 	{
-		uint32_t bytecode[] = {
+		uint8_t bytecode[] = {
 	#include INCLUDE_SHADER_CODE( PositionOnly.vs )
 		};
 
-		auto input = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0 );
+		auto input = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
 		return shader.Create( VERTEX_SHADER, bytecode, input, renderContext );
 	}
 
 	ALResult CreateConstantColorPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
 	{
-		uint32_t bytecode[] = {
+		uint8_t bytecode[] = {
 	#include INCLUDE_SHADER_CODE( ConstantColor.ps )
 		};
 

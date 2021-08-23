@@ -6,7 +6,6 @@
 #include "Tr2AdapterStructures.h"
 
 extern bool g_usingEXDevice;
-extern std::vector<HANDLE> g_D3DCreatedHeaps;
 
 using namespace Tr2RenderContextEnum;
 
@@ -273,28 +272,29 @@ ALResult Tr2VideoAdapterInfo::GetAdapterDisplayMode( unsigned adapterIndex,
 	CHECK_INIT;
 	CHECK_VALID_ADAPTER;
 
-	const auto& mm = s_adapters[adapterIndex].m_displayModes[DXGI_FORMAT_B8G8R8A8_UNORM][0];
+	MONITORINFOEX monitorInfo;
+	monitorInfo.cbSize = sizeof( MONITORINFOEX );
+	if( !GetMonitorInfo( s_adapters[adapterIndex].m_outputDesc.Monitor, &monitorInfo ) )
+	{
+		return E_FAIL;
+	}
+
+	const auto & mm = s_adapters[adapterIndex].m_displayModes[DXGI_FORMAT_B8G8R8A8_UNORM][0];
 	mode.format = static_cast<PixelFormat>( mm.Format );
 	mode.refreshRateDenominator = mm.RefreshRate.Denominator;
 	mode.refreshRateNumerator = mm.RefreshRate.Numerator;
 	mode.scaling = static_cast<DisplayScaling>( mm.Scaling );
 	mode.scanlineOrdering = static_cast<ScanlineOrdering>( mm.ScanlineOrdering );
-#if 0
-	// the above is probably the same for everything, but the dimensions are just whatever happens
-	// to be in slot [0], so that's a guess.  TODO: format?
-	mode.height					= mm.Height;
-	mode.width					= mm.Width;
-#else
+
 	DEVMODE devMode;
 	memset( &devMode, 0, sizeof( devMode ) );
 	devMode.dmSize = sizeof( devMode );
-	if ( !EnumDisplaySettings( 0, ENUM_CURRENT_SETTINGS, &devMode ) )
+	if ( !EnumDisplaySettings( monitorInfo.szDevice, ENUM_CURRENT_SETTINGS, &devMode ) )
 	{
 		return E_FAIL;
 	}
 	mode.width = devMode.dmPelsWidth;
 	mode.height = devMode.dmPelsHeight;
-#endif
 
 	return S_OK;
 }

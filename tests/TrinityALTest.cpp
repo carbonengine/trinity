@@ -10,7 +10,6 @@ const char* g_moduleName = "TrinityALTest";
 // Needed by TrinityAL
 bool g_usingEXDevice = false;
 bool g_useManagedDX9Buffers = true;
-std::vector<void*> g_D3DCreatedHeaps;
 
 // Interactive test flag (set by --interactive option)
 bool g_interactive = false;

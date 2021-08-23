@@ -16,6 +16,7 @@
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2VertexLayoutAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
+#include "../include/Tr2RenderPassAL.h"
 
 
 class Tr2ConstantBufferAL;
@@ -193,6 +194,9 @@ public:
 		return false;
 	}
 	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 ) throw( );
+
+	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2DepthAttachment& depth );
+	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2ColorAttachment& rt1, const Tr2DepthAttachment& depth );
 
 	static void DestroyMainThreadRenderContext()
 	{

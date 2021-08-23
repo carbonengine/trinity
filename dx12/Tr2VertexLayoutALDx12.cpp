@@ -180,7 +180,7 @@ namespace TrinityALImpl
 			}
 			if( !found )
 			{
-				D3D12_INPUT_ELEMENT_DESC desc = { s_usageNames[in.usage], in.usageIndex, DXGI_FORMAT_R32G32B32A32_FLOAT, 4, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
+				D3D12_INPUT_ELEMENT_DESC desc = { s_usageNames[in.usage], in.usageIndex, it->usage == Tr2VertexDefinition::BLENDINDICES ? DXGI_FORMAT_R8G8B8A8_UNORM : DXGI_FORMAT_R32G32B32A32_FLOAT, 4, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 };
 				layout.push_back( desc );
 			}
 		}

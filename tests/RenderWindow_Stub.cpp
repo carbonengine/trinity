@@ -5,7 +5,7 @@
 
 RenderWindow::RenderWindow( uint32_t width, uint32_t height )
 {
-    m_handle = ( width & 0xffff ) | ( ( height & 0xffff ) << 16 );
+    m_handle = reinterpret_cast<Tr2WindowHandle>( ( width & 0xffff ) | ( ( height & 0xffff ) << 16 ) );
 }
 
 RenderWindow::~RenderWindow()
@@ -14,12 +14,12 @@ RenderWindow::~RenderWindow()
 
 uint32_t RenderWindow::GetClientWidth() const
 {
-    return m_handle & 0xffff;
+    return reinterpret_cast<uintptr_t>( m_handle ) & 0xffff;
 }
 
 uint32_t RenderWindow::GetClientHeight() const
 {
-    return ( m_handle >> 16 ) & 0xffff;
+    return ( reinterpret_cast<uintptr_t>( m_handle ) >> 16 ) & 0xffff;
 }
 
 bool RenderWindow::Resize( uint32_t width, uint32_t height )

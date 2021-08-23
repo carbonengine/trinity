@@ -416,14 +416,16 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 		return E_FAIL;
 	}
 
-#if defined( WIN32 )
 	if( !presentationParameters.windowed && dxgiOutput != m_dxgiOutput )
 	{
 		// If we are switching between two monitors in fullscreen mode it seems we first should
 		// go windowed and then fullscreen on another monitor, otherwise DXGI behaves funny.
 		CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
 	}
-#endif
+	else if( presentationParameters.windowed )
+	{
+		CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
+	}
 
 	m_dxgiOutput = dxgiOutput;
 
@@ -438,8 +440,6 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 	modeDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER( presentationParameters.mode.scanlineOrdering );
 	modeDesc.Scaling = DXGI_MODE_SCALING( presentationParameters.mode.scaling );
 
-	CR( m_swapChain->ResizeTarget( &modeDesc ) );
-
 	m_defaultBackBuffer.m_texture->Destroy();
 
 	CR( m_swapChain->ResizeBuffers(	presentationParameters.backBufferCount, 
@@ -450,6 +450,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 
 	if( !presentationParameters.windowed )
 	{
+		CR( m_swapChain->ResizeTarget( &modeDesc ) );
 		CR( m_swapChain->SetFullscreenState( TRUE, dxgiOutput ) );
 		modeDesc.RefreshRate.Numerator = modeDesc.RefreshRate.Denominator = 0;
 		CR( m_swapChain->ResizeTarget( &modeDesc ) );
