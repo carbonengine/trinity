@@ -1,0 +1,5 @@
+{
+    "cmake.configureOnOpen": false,
+    "perforce.activationMode": "always",
+    "perforce.editOnFileSave": true
+}

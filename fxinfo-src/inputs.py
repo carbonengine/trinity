@@ -30,6 +30,27 @@ def _GetUsedMaskLabel(mask):
     return result
 
 
+_RESOURCE_TYPES = {
+    1: '1D Texture',
+    2: '2D Texture',
+    3: '3D Texture',
+    4: 'CUBE Texture',
+    5: 'Typeless Texture',
+
+    6: 'Buffer',
+    7: 'Structured Buffer',
+    8: 'Texture Buffer',
+    9: 'Byte Address Buffer',
+    10: 'Typed RW Buffer/Texture',
+    11: 'Structured RW Buffer',
+    12: 'Byte Address RW Buffer',
+    13: 'Append Buffer',
+    14: 'Consume Buffer',
+    15: 'Structured RW Buffer w/ Counter',
+    16: 'INVALID TYPE'
+}
+
+
 # noinspection PyMethodOverriding
 class ShaderInputModel(wx.dataview.PyDataViewModel):
     def __init__(self, stageInfo):
@@ -45,9 +66,17 @@ class ShaderInputModel(wx.dataview.PyDataViewModel):
                     cn.children.append(_InputNode(cn, y['name'], -1, y['annotationType'], y['value']))
             self._parents.append(node)
         if 'textures' in stageInfo:
-            node = _InputNode(None, 'Textures', -1, '', '')
+            node = _InputNode(None, 'Textures/Buffers', -1, '', '')
             for x in stageInfo['textures']:
-                cn = _InputNode(node, x['name'], x['register'], x['textureType'], '')
+                cn = _InputNode(node, x['name'], x['register'], _RESOURCE_TYPES.get(x['textureType'], x['textureType']), '')
+                node.children.append(cn)
+                for y in x.get('annotations', ()):
+                    cn.children.append(_InputNode(cn, y['name'], -1, y['annotationType'], y['value']))
+            self._parents.append(node)
+        if 'uavs' in stageInfo:
+            node = _InputNode(None, 'UAVs', -1, '', '')
+            for x in stageInfo['uavs']:
+                cn = _InputNode(node, x['name'], x['register'], _RESOURCE_TYPES.get(x['resourceType'], x['resourceType']), '')
                 node.children.append(cn)
                 for y in x.get('annotations', ()):
                     cn.children.append(_InputNode(cn, y['name'], -1, y['annotationType'], y['value']))

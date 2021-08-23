@@ -1,3 +1,2 @@
-http://sourceforge.net/projects/py2exe/files/latest/download?source=files
 pyyaml
 wxPython==4.0.3

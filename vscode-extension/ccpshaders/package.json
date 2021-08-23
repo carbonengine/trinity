@@ -1,0 +1,132 @@
+{
+	"name": "ccpshaders",
+	"publisher": "ccp",
+	"displayName": "CcpShaders",
+	"description": "CCP support for shader compiler",
+	"version": "0.0.10",
+	"engines": {
+		"vscode": "^1.45.0"
+	},
+	"repository": {
+		"type": "perforce",
+		"url": "//eve/branches/sandbox/NATIVE-MAC-CLIENT/carbon/tools/ShaderCompiler/vscode-extension/ccpshaders/"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"workspaceContains:**/*.fx",
+		"onCommand:workbench.action.tasks.runTask",
+		"onCommand:ccpshaders.compile",
+		"onCommand:ccpshaders.fxinfo"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"commands": [
+			{
+				"command": "ccpshaders.compile",
+				"title": "Compile"
+			},
+			{
+				"command": "ccpshaders.fxinfo",
+				"title": "FX Info"
+			}
+		],
+		"menus": {
+			"explorer/context": [
+				{
+					"when": "resourceExtname == .fx || explorerResourceIsFolder",
+					"command": "ccpshaders.compile"
+				},
+				{
+					"when": "resourceExtname == .fx",
+					"command": "ccpshaders.fxinfo"
+				}
+			]
+		},
+		"keybindings": [
+			{
+				"command": "ccpshaders.compile",
+				"key": "ctrl+f7",
+				"mac": "cmd+f7"
+			}
+		],
+		"taskDefinitions": [
+			{
+				"type": "shadercompiler",
+				"properties": {
+					"incremental": {
+						"type": "boolean",
+						"default": true,
+						"description": "Skip up to date files"
+					}
+				}
+			}
+		],
+		"problemMatchers": [
+			{
+				"name": "metal",
+				"fileLocation": "absolute",
+				"pattern": {
+					"regexp": "^(.*):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+					"file": 1,
+					"line": 2,
+					"severity": 4,
+					"message": 5
+				}
+			}
+		],
+		"configuration": {
+			"title": "CCP Shader Compiler",
+			"properties": {
+				"ccp-shaders.use-perforce": {
+					"type": "boolean",
+					"default": true,
+					"description": "Use Perforce to check out compiled shaders",
+					"scope": "window"
+				},
+				"targetPlatforms.directX9": {
+					"type":"boolean",
+					"default": true,
+					"description": "Compile shaders for DirectX 9 (if available on host platform)",
+					"scope": "window"
+				},
+				"targetPlatforms.directX11": {
+					"type":"boolean",
+					"default": true,
+					"description": "Compile shaders for DirectX 11 (if available on host platform)",
+					"scope": "window"
+				},
+				"targetPlatforms.directX12": {
+					"type":"boolean",
+					"default": true,
+					"description": "Compile shaders for DirectX 12 (if available on host platform)",
+					"scope": "window"
+				},
+				"targetPlatforms.metal": {
+					"type":"boolean",
+					"default": true,
+					"description": "Compile shaders for Metal (if available on host platform)",
+					"scope": "window"
+				}
+			}
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"lint": "tslint -p ./",
+		"watch": "tsc -watch -p ./"
+	},
+	"dependencies": {
+		"js-yaml": "3.13.1"
+	},
+	"devDependencies": {
+		"@types/js-yaml": "^3.12.4",
+		"@types/node": "^12.12.0",
+		"@types/vscode": "^1.34.0",
+		"tslint": "^5.19.0",
+		"typescript": "^3.8.3",
+		"vscode-test": "^1.3.0"
+	}
+}

@@ -1,3 +1,4 @@
+import contextlib
 import logging
 import os
 import subprocess
@@ -7,18 +8,44 @@ import wx
 import wx.dataview
 
 import yaml
+try:
+    yaml.CLoader
+except AttributeError:
+    setattr(yaml, 'CLoader', yaml.Loader)
 
 from inputs import CreateInputsView
 import rga
 from stats import CreateStatsView
 
 
+SRC_POST_PROCESS_KEY = 'SrcPostProcess'
+
+
 def _GetShaderCompilerPath():
     if getattr(sys, 'frozen', False):
-        exeDir = os.path.dirname(sys.executable)
+        if sys.platform == 'darwin':
+            exeDir = os.path.join(os.path.dirname(sys.executable), '..', '..', '..', '..')
+        else:
+            exeDir = os.path.join(os.path.dirname(sys.executable), '..')
     else:
         exeDir = os.path.dirname(__file__)
-    return os.path.join(exeDir, '..', 'ShaderCompiler.exe')
+    if sys.platform == 'win32':
+        return os.path.join(exeDir, '..', 'Windows', 'ShaderCompiler.exe')
+    elif sys.platform == 'darwin':
+        return os.path.join(exeDir, '..', 'macOS', 'ShaderCompiler')
+    else:
+        raise RuntimeError('unsupported platform')
+
+
+def _getProcessStartupInfo():
+    if sys.platform == 'win32':
+        # noinspection PyUnresolvedReferences
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags = subprocess.CREATE_NEW_CONSOLE | 1
+        startupinfo.wShowWindow = 0
+    else:
+        startupinfo = None
+    return startupinfo
 
 
 def _GetShaderInfo(path, defines):
@@ -35,12 +62,7 @@ def _GetShaderInfo(path, defines):
     tempOutput.close()
     try:
         cmdLine.append(tempOutput.name)
-
-        startupinfo = subprocess.STARTUPINFO()
-        startupinfo.dwFlags = subprocess.CREATE_NEW_CONSOLE | 1
-        startupinfo.wShowWindow = 0
-
-        subprocess.check_output(cmdLine, startupinfo=startupinfo)
+        subprocess.check_output(cmdLine, startupinfo=_getProcessStartupInfo())
 
         tempFile = open(tempFile.name)
         yamlStr = tempFile.read()
@@ -58,12 +80,7 @@ def _GetShaderInfo(path, defines):
 
 def _GetShaderPermutations(path):
     cmdLine = [_GetShaderCompilerPath(), '/single', '/permutations', path]
-
-    startupinfo = subprocess.STARTUPINFO()
-    startupinfo.dwFlags = subprocess.CREATE_NEW_CONSOLE | 1
-    startupinfo.wShowWindow = 0
-
-    output = subprocess.check_output(cmdLine, startupinfo=startupinfo)
+    output = subprocess.check_output(cmdLine, startupinfo=_getProcessStartupInfo())
     return yaml.load(output, Loader=yaml.CLoader) or {}
 
 
@@ -167,15 +184,23 @@ class _StageData(object):
         return self.passData.GetRootData()
 
 
-_PLATFORMS = (
-    {'name': 'DirectX 11', 'value': 2},
-    {'name': 'DirectX 9', 'value': 1},
-    {'name': 'GLES 2', 'value': 3},
-    {'name': 'DirectX 12', 'value': 6},
-    {'name': 'Vulkan', 'value': 7},
-    {'name': 'OpenGL 3', 'value': 8},
-    {'name': 'OpenGL 4', 'value': 9},
-)
+if sys.platform == 'win32':
+    _PLATFORMS = (
+        {'name': 'DirectX 11', 'value': 2},
+        {'name': 'DirectX 9', 'value': 1},
+        {'name': 'GLES 2', 'value': 3},
+        {'name': 'DirectX 12', 'value': 6},
+        {'name': 'Vulkan', 'value': 7},
+        {'name': 'OpenGL 3', 'value': 8},
+        {'name': 'OpenGL 4', 'value': 9},
+        {'name': 'Metal', 'value': 10},
+    )
+elif sys.platform == 'darwin':
+    _PLATFORMS = (
+        {'name': 'Metal', 'value': 10},
+    )
+else:
+    _PLATFORMS = ()
 _SHADER_MODELS = {'name': 'DEPTH', 'value': 5}, {'name': 'HIGH', 'value': 4}, {'name': 'LOW', 'value': 3}
 
 
@@ -191,14 +216,14 @@ class OptionsPanel(wx.Panel):
         self._RefreshUI()
 
     def _AddCombo(self, name, options):
-        cb = wx.ComboBox(self, choices=[], style=wx.CB_READONLY)
+        cb = wx.Choice(self, choices=[])
         cb.SetLabel(name)
         selected = self._fileData.currentDefines.get(name, None)
         for option in options:
-            cb.Append(option['name'], option['value'])
+            cb.Append(str(option['name']), option['value'])
             if option['value'] == selected:
                 cb.SetSelection(cb.GetCount() - 1)
-        cb.Bind(wx.EVT_COMBOBOX, self._OnPermutation)
+        cb.Bind(wx.EVT_CHOICE, self._OnPermutation)
         return cb
 
     def _RefreshUI(self):
@@ -207,18 +232,18 @@ class OptionsPanel(wx.Panel):
             self.DestroyChildren()
 
             sizer = wx.GridBagSizer(2, 2)
-            sizer.Add(wx.StaticText(self, label='Platform'), (0, 0))
+            sizer.Add(wx.StaticText(self, label='Platform'), (0, 0), flag=wx.EXPAND)
             self._platform = self._AddCombo('PLATFORM', _PLATFORMS)
             sizer.Add(self._platform, (0, 1), flag=wx.EXPAND)
 
-            sizer.Add(wx.StaticText(self, label='Shader Model'), (1, 0))
+            sizer.Add(wx.StaticText(self, label='Shader Model'), (1, 0), flag=wx.EXPAND)
             self._sm = self._AddCombo('SHADERMODEL', _SHADER_MODELS)
             sizer.Add(self._sm, (1, 1), flag=wx.EXPAND)
 
             if self._fileData:
                 for i, name in enumerate(sorted(self._fileData.permutations.keys())):
                     description = self._fileData.permutations[name]
-                    sizer.Add(wx.StaticText(self, label=name), (i + 2, 0))
+                    sizer.Add(wx.StaticText(self, label=name), (i + 2, 0), flag=wx.EXPAND)
                     cb = self._AddCombo(name, description['options'])
                     sizer.Add(cb, (i + 2, 1), flag=wx.EXPAND)
 
@@ -246,6 +271,18 @@ _SHADER_STAGE_NAMES = {'vs': 'Vertex Shader', 'ps': 'Pixel Shader', 'gs': 'Geome
 _shaderInfoPage = ''
 
 
+def _postProcessSource(src):
+    cmdLine = wx.Config.Get().Read(SRC_POST_PROCESS_KEY).strip()
+    if not cmdLine:
+        return src
+    try:
+        output = subprocess.Popen(cmdLine, shell=True, startupinfo=_getProcessStartupInfo(), stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE)
+        return output.communicate(src)[0]
+    except OSError:
+        return '// WARNING: post-processs tool %s failed to run\n\n%s' % (cmdLine, src)
+
+
 class ShaderInfoPanel(wx.Panel):
     def __init__(self, parent, si):
         super(ShaderInfoPanel, self).__init__(parent)
@@ -255,7 +292,7 @@ class ShaderInfoPanel(wx.Panel):
         nb.AddPage(CreateStatsView(nb, info), 'Stats')
 
         asm = wx.TextCtrl(nb, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_DONTWRAP,
-                          value=info['original']['asm'])
+                          value=info['original'].get('asm', ''))
         asm.SetFont(wx.Font(10, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
         nb.AddPage(asm, 'Assembly')
         if _shaderInfoPage == 'Assembly':
@@ -263,7 +300,7 @@ class ShaderInfoPanel(wx.Panel):
 
         if 'source' in info['original']:
             src = wx.TextCtrl(nb, style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH2 | wx.TE_DONTWRAP,
-                              value=info['original']['source'])
+                              value=_postProcessSource(info['original']['source']))
             src.SetFont(wx.Font(10, wx.FONTFAMILY_TELETYPE, wx.FONTSTYLE_NORMAL, wx.FONTWEIGHT_NORMAL))
             nb.AddPage(src, 'Source')
             if _shaderInfoPage == 'Source':
@@ -281,27 +318,40 @@ class ShaderInfoPanel(wx.Panel):
         self._notebook = nb
 
     def _OnPageChanged(self, evt):
+        evt.Skip()
         global _shaderInfoPage
         _shaderInfoPage = evt.GetEventObject().GetPageText(evt.GetSelection())
 
 
 class ErrorPanel(wx.Panel):
-    def __init__(self, parent, errors):
+    def __init__(self, parent, errors=''):
         super(ErrorPanel, self).__init__(parent)
 
         sizer = wx.BoxSizer(wx.VERTICAL)
         sizer.Add(wx.StaticText(self, label='Compile errors'), 0, wx.EXPAND)
-        sizer.Add(wx.TextCtrl(self, value=errors, style=wx.TE_MULTILINE | wx.TE_BESTWRAP | wx.TE_READONLY), 1, wx.EXPAND)
+        self._errors = wx.TextCtrl(self, value=errors, style=wx.TE_MULTILINE | wx.TE_BESTWRAP | wx.TE_READONLY)
+        sizer.Add(self._errors, 1, wx.EXPAND)
         self.SetSizer(sizer)
+
+    def SetErrors(self, errors):
+        self._errors.SetValue(errors)
 
 
 def _AddToolBarTool(tb, label, help):
-    if getattr(sys, 'frozen', False):
-        return tb.AddTool(-1, label, wx.NullBitmap, shortHelp=help)
+    return tb.AddTool(-1, label, wx.NullBitmap, shortHelp=help)
+
+
+@contextlib.contextmanager
+def FrozenWindow(window):
+    if sys.platform == 'darwin':
+        # wxPyhon on OSX misbehaves horribly with Freeze/Thaw
+        yield
     else:
-        t = tb.AddSimpleTool(-1, wx.NullBitmap, shortHelpString=help)
-        t.SetLabel(label)
-        return t
+        window.Freeze()
+        try:
+            yield
+        finally:
+            window.Thaw()
 
 
 class MainPanel(wx.Panel):
@@ -343,7 +393,7 @@ class MainPanel(wx.Panel):
     def AddFile(self, path):
         fn = self._tree.AppendItem(self._tree.GetRootItem(), os.path.basename(path))
         fd = _FileData(path, fn)
-        self._tree.SetItemPyData(fn, fd)
+        self._tree.SetItemData(fn, fd)
         fd.permutations = _GetShaderPermutations(path)
         fd.currentDefines['PLATFORM'] = _PLATFORMS[0]['value']
         fd.currentDefines['SHADERMODEL'] = _SHADER_MODELS[0]['value']
@@ -359,9 +409,8 @@ class MainPanel(wx.Panel):
         self._tree.ExpandAllChildren(fn)
 
     def _OnItemSelected(self, _):
-        fd = self._tree.GetItemPyData(self._tree.GetSelection())
-        self.Freeze()
-        try:
+        fd = self._tree.GetItemData(self._tree.GetSelection())
+        with FrozenWindow(self):
             self._options.SetFile(fd.GetFileData())
             self._main.DestroyChildren()
             if isinstance(fd, _StageData):
@@ -376,12 +425,10 @@ class MainPanel(wx.Panel):
                     sizer.Add(ErrorPanel(self._main, si['errors']), 1, wx.EXPAND)
                     self._main.SetSizer(sizer)
                     self._main.Layout()
-        finally:
-            self.Thaw()
 
     def Recompile(self, fd):
         if self._tree.GetSelection():
-            pfd = self._tree.GetItemPyData(self._tree.GetSelection())
+            pfd = self._tree.GetItemData(self._tree.GetSelection())
             path = pfd.GetNodePath() if pfd and pfd.GetRootData() == fd else []
         else:
             path = []
@@ -407,27 +454,27 @@ class MainPanel(wx.Panel):
         for each in si['permutation']['techniques']:
             tn = self._tree.AppendItem(fd.node, each['name'])
             td = _TechniqueData(fd, tn, each['name'])
-            self._tree.SetItemPyData(tn, td)
+            self._tree.SetItemData(tn, td)
             if len(each['passes']) > 1:
                 for i, p in enumerate(each['passes']):
                     pn = self._tree.AppendItem(tn, 'Pass #%s' % (i + 1))
                     pd = _PassData(td, pn, i)
-                    self._tree.SetItemPyData(pn, pd)
+                    self._tree.SetItemData(pn, pd)
                     for j, s in enumerate(p):
                         name = s['profile'][:2]
                         sn = self._tree.AppendItem(pn, _SHADER_STAGE_NAMES.get(name.lower(), name))
-                        self._tree.SetItemPyData(sn, _StageData(pd, sn, j))
+                        self._tree.SetItemData(sn, _StageData(pd, sn, j))
             elif each['passes']:
                 pd = _PassData(td, None, 0)
                 for j, s in enumerate(each['passes'][0]):
                     name = s['profile'][:2]
                     sn = self._tree.AppendItem(tn, _SHADER_STAGE_NAMES.get(name.lower(), name))
-                    self._tree.SetItemPyData(sn, _StageData(pd, sn, j))
+                    self._tree.SetItemData(sn, _StageData(pd, sn, j))
 
     def _SelectPath(self, node, path):
         nodes = _GetDescendants(self._tree, node)
         for each in nodes:
-            if self._tree.GetItemPyData(each).GetNodePath() == path:
+            if self._tree.GetItemData(each).GetNodePath() == path:
                 self._tree.SelectItem(each)
                 self._OnItemSelected(None)
                 return
@@ -447,16 +494,14 @@ class MainPanel(wx.Panel):
         if dlg.ShowModal() == wx.ID_OK:
             wx.Config.Get().Write(rga.RGA_PATH_KEY, dlg.rgaPath.GetValue())
             wx.Config.Get().Write(rga.RGA_TARGETS_KEY, dlg.rgaTargets.GetValue())
+            wx.Config.Get().Write(SRC_POST_PROCESS_KEY, dlg.postProcess.GetValue())
 
     def _OnRecompile(self, _):
-        pfd = self._tree.GetItemPyData(self._tree.GetSelection())
+        pfd = self._tree.GetItemData(self._tree.GetSelection())
         fd = pfd.GetRootData()
         fd.compiledData.clear()
-        self.Freeze()
-        try:
+        with FrozenWindow(self):
             self.Recompile(fd)
-        finally:
-            self.Thaw()
 
 
 def _GetDescendants(treeCtrl, node):
@@ -474,7 +519,7 @@ def _FreezeDict(d):
 
 
 # noinspection PyMethodOverriding
-class ExeFileValidator(wx.PyValidator):
+class ExeFileValidator(wx.Validator):
     def Clone(self):
         return self.__class__()
 
@@ -518,6 +563,11 @@ class Settings(wx.Dialog):
         contentSizer.Add(wx.StaticText(self, label='RGA Platform Targets'), (1, 0))
         self.rgaTargets = wx.TextCtrl(self, value=wx.Config.Get().Read(rga.RGA_TARGETS_KEY))
         contentSizer.Add(self.rgaTargets, (1, 1), flag=wx.EXPAND)
+
+        contentSizer.Add(wx.StaticText(self, label='Source Post-process'), (2, 0))
+        self.postProcess = wx.TextCtrl(self, value=wx.Config.Get().Read(SRC_POST_PROCESS_KEY))
+        contentSizer.Add(self.postProcess, (2, 1), flag=wx.EXPAND)
+
         contentSizer.AddGrowableCol(1)
 
         mainSizer.Add(contentSizer, 1, wx.EXPAND | wx.ALL, 5)

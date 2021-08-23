@@ -7,7 +7,12 @@ import threading
 from P4 import P4, P4Exception
 import Queue
 
-SHADER_COMPILER = os.path.dirname(__file__) + "\\ShaderCompiler.exe"
+if sys.platform == 'win32':
+    SHADER_COMPILER = os.path.join(os.path.dirname(__file__), "Windows", "ShaderCompiler.exe")
+elif sys.platform == 'darwin':
+    SHADER_COMPILER = os.path.join(os.path.dirname(__file__), "macOS", "ShaderCompiler")
+else:
+    raise RuntimeError('unsupported platform')
 SHADER_MODELS = {'lo': 3, 'hi': 4, 'depth': 5}
 PLATFORMS = {'dx9': 1, 'dx11': 2, 'gles2': 3, 'dx12': 6}
 OPTION_PREFIX = '/'
