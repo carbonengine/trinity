@@ -85,16 +85,33 @@ class _StringTable(object):
 
 
 class ShaderInput(object):
-    def __init__(self, stream):
+    def __init__(self, stream, version):
         self.usage = stream.read_uint8()
         self.register_index = stream.read_uint8()
         self.usage_index = stream.read_uint8()
         self.used_mask = stream.read_uint8()
+        if version > 10:
+            self.type = stream.read_uint8()
+            self.dimension = stream.read_uint8()
+        else:
+            self.type = 2 if self.usage == 6 else 0
+            self.dimension = 4
 
 
 class ShaderRegister(object):
-    def __init__(self, stream):
+    def __init__(self, stream, version):
         self.register_type = stream.read_uint8()
+        if version <= 9:
+            if self.register_type == 0:
+                self.register_type = 0
+            elif self.register_type == 1:
+                self.register_type = 36
+            elif self.register_type == 2:
+                self.register_type = 68
+            elif self.register_type == 3:
+                self.register_type = 1
+            else:
+                self.register_type = 36
         self.register_index = stream.read_uint32()
 
 
@@ -103,11 +120,18 @@ _TRINITY_FLOAT_PARAMETERS = {1: 'Tr2FloatParameter', 2: 'Tr2Vector2Parameter', 3
 
 
 class Constant(object):
-    def __init__(self, stream, string_table):
+    def __init__(self, stream, string_table, version):
         self.name = string_table.get_string(stream.read_uint32())
         self.offset = stream.read_uint32()
         self.size = stream.read_uint32()
         self.type = stream.read_uint8()
+        if version < 11:
+            if self.type in (0, 1):
+                pass
+            elif self.type == 2:
+                self.type = 3
+            else:
+                self.type = 4
         self.dimension = stream.read_uint8()
         self.elements = stream.read_uint32()
         self.is_srgb = stream.read_uint8() != 0
@@ -200,12 +224,12 @@ class Stage(object):
 
         self.inputs = []
         for input_index in xrange(stream.read_uint8()):
-            self.inputs.append(ShaderInput(stream))
+            self.inputs.append(ShaderInput(stream, version))
 
         self.registers = []
         if version > 8:
             for input_index in xrange(stream.read_uint8()):
-                self.registers.append(ShaderRegister(stream))
+                self.registers.append(ShaderRegister(stream, version))
 
         if version < 5:
             stream.seek(stream.read_uint32() + stream.offset())
@@ -223,7 +247,7 @@ class Stage(object):
 
         self.constants = []
         for i in xrange(stream.read_uint32()):
-            self.constants.append(Constant(stream, string_table))
+            self.constants.append(Constant(stream, string_table, version))
 
         constant_value_size = stream.read_uint32()
         if version < 5:
@@ -446,7 +470,7 @@ class EffectInfo(object):
         stream = self._stream
         version = stream.read_uint32()
         self._version = version
-        if version < 2 or version > 9:
+        if version < 2 or version > 11:
             raise RuntimeError('unsupported effect file version')
         if version < 5:
             header_size = stream.read_uint32()

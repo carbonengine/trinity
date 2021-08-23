@@ -1,15 +1,22 @@
 import os
 import subprocess
+import sys
 from . import paths
 
-COMPILER_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'carbon', 'tools', 'shadercompiler',
-                                             'shadercompiler.exe'))
+_SHADER_COMPILER_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'carbon', 'tools', 'ShaderCompiler')
+if sys.platform == 'win32':
+    COMPILER_PATH = os.path.abspath(os.path.join(_SHADER_COMPILER_DIR, 'Windows', 'ShaderCompiler.exe'))
+elif sys.platform == 'darwin':
+    COMPILER_PATH = os.path.abspath(os.path.join(_SHADER_COMPILER_DIR, 'macOS', 'ShaderCompiler'))
+else:
+    raise RuntimeError('unsupported platform')
 
 
 class GLESExtensionOption(object):
     WARN = 'w'
     ENABLE = 'e'
     DISABLE = 'd'
+
 
 CompilerError = subprocess.CalledProcessError
 
