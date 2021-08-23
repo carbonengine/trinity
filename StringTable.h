@@ -3,6 +3,7 @@
 #define StringTable_H
 
 #include <unordered_map>
+#include "InlineString.h"
 #include "Mutex.h"
 
 class StringReference
@@ -31,9 +32,10 @@ public:
 
 	StringReference AddString( const char* string );
 	StringReference AddString( const void* string, size_t length );
+	StringReference AddString( const InlineString& string );
 	uint32_t GetOffset( StringReference ref );
 	const char* GetString( StringReference ref );
-	bool Write( HANDLE file );
+	bool Write( FILE* file );
 	size_t GetSize() const;
 
 	static StringReference GetInvalidReference();
@@ -42,16 +44,13 @@ private:
 	struct Blob
 	{
 		Blob( const void* data, size_t size )
-			:m_size( size )
+			:m_data(nullptr),
+			m_size( size )
 		{
 			if( size )
 			{
 				m_data = new char[size];
 				memcpy( m_data, data, size );
-			}
-			else
-			{
-				m_data = nullptr;
 			}
 		}
 
@@ -98,6 +97,7 @@ private:
 			{
 				m_data = nullptr;
 			}
+			return *this;
 		}
 
 		bool operator==( const Blob& other ) const
@@ -107,7 +107,7 @@ private:
 
 		bool operator<( const Blob& other ) const
 		{
-			auto length = min( m_size, other.m_size );
+			auto length = std::min( m_size, other.m_size );
 			auto cmp = memcmp( m_data, other.m_data, length );
 			if( cmp < 0 )
 			{
@@ -132,7 +132,7 @@ private:
 			return result;
 		}
 
-		void* m_data;
+		char* m_data;
 		size_t m_size;
 	};
 

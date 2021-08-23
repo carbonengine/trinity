@@ -5,6 +5,7 @@
 //
 
 #include "stdafx.h"
+#if _WIN32
 #include "EffectCompilerGL2.h"
 #include "EffectData.h"
 #include "CompileMessageQueue.h"
@@ -323,12 +324,8 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 
 	// Has "lit" helper function declaration
 	bool hasLit = false;
-	// Has "sign" helper function declaration
-	bool hasSign = false;
 	// Has "saturate" helper function declaration
 	bool hasSaturate = false;
-	// Has DX9-style "nrm" function
-	bool hasNrm = false;
 
 	// Has declared OES_texture_3D extension
 	bool hasTexture3DExtension = false;
@@ -354,8 +351,8 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 	// Get constant buffer information from stage constants
 	for( int i = 0; i < 16; ++i )
 	{
-		cbs[i].first = -1;
-		cbs[i].second = -1;
+		cbs[i].first = unsigned( -1 );
+		cbs[i].second = unsigned( -1 );
 	}
 	for( auto constant = stage.constants.begin(); constant != stage.constants.end(); ++constant )
 	{
@@ -416,7 +413,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			{
 				if( cbs[j].first != -1 && cbs[j].first > cbs[i].first )
 				{
-					cbs[i].second = min( cbs[i].second, cbs[j].first - 1 ) + 1;
+					cbs[i].second = std::min( cbs[i].second, cbs[j].first - 1 ) + 1;
 				}
 			}
 		}
@@ -741,7 +738,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 		{
 			length1 = int( src1.swizzle.end - src1.swizzle.start );
 		}
-		int length = min( length0, length1 );
+		int length = std::min( length0, length1 );
 		if( length == 1 )
 		{
 			os << '(';
@@ -854,7 +851,6 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			{
 				InlineString index = reg.name;
 				index.start++;
-				unsigned newIndex = unsigned( atoi( ToString( index ).c_str() ) );
 				auto& info = registerInfo[reg.name.start[0]];
 				info.registers.insert( reg.name );
 				info.hasIndexed = reg.index;
@@ -869,7 +865,6 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			{
 				InlineString index = reg.name;
 				index.start++;
-				unsigned newIndex = unsigned( atoi( ToString( index ).c_str() ) );
 				auto& info = registerInfo[reg.name.start[0]];
 				info.registers.insert( reg.name );
 				info.hasIndexed = reg.index;
@@ -898,7 +893,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 	// Updated index ranges for register banks
 	for( auto bank = registerInfo.begin(); bank != registerInfo.end(); ++bank )
 	{
-		bank->second.indexesBegin = -1;
+		bank->second.indexesBegin = unsigned( -1 );
 		bank->second.indexesEnd = 0;
 		for( auto reg = bank->second.registers.begin(); reg != bank->second.registers.end(); ++reg )
 		{
@@ -1129,11 +1124,6 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 				os << "{bvec4 tmp=greaterThan(";
 				PrintRegister( os, src0, 4 );
 				os << ",vec4(0.5));";
-				int length = 4;
-				if( dst.swizzle )
-				{
-					length = int( dst.swizzle.end - dst.swizzle.start );
-				}
 				PrintRegister( os, dst, 0 );
 				os << '=';
 				if( dst.swizzle )
@@ -1693,7 +1683,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 
 			bool lvalueUse = false;
 			bool foundMul = false;
-			size_t mulIndex, expIndex;
+			size_t mulIndex = 0, expIndex = 0;
 			bool foundExp = false;
 			for( size_t t = tokenIndex; t < tokens.size(); ++t )
 			{
@@ -2445,7 +2435,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			bool srgbFunc = false;
 			if( g_glesEmulateSampler )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1 ) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				if( sampler.srgbTexture )
 				{
 					os << "g2l(";
@@ -2456,7 +2446,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			bool borderFunc = false;
 			if( g_glesEmulateSampler && samplerTypes[src1.name] != "Cube" )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1 ) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				std::string borders;
 				if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER )
 				{
@@ -2503,7 +2493,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			{
 				hasTextureLodExtension = true;
 				hasTexture3DExtension = true;
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1) ) )->second;
 				os << "tex3DLod";
 				os << '(' << ( stage.type == VERTEX_STAGE ? "v" : "" ) << src1.name << ',';
 				PrintRegister( os, src0, samplerTypes[src1.name] == "2D" ? 2 : 3 );
@@ -2565,7 +2555,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			bool srgbFunc = false;
 			if( g_glesEmulateSampler )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1 ) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				if( sampler.srgbTexture )
 				{
 					os << "g2l(";
@@ -2576,7 +2566,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			bool borderFunc = false;
 			if( g_glesEmulateSampler && samplerTypes[src1.name] != "Cube" )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1) ) )->second;
 				std::string borders;
 				if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER )
 				{
@@ -2602,7 +2592,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			}
 			if( samplerTypes[src1.name] == "3D" )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				os << "tex3D";
 				os << '(' << src1.name << ',';
 				PrintRegister( os, src0, samplerTypes[src1.name] == "2D" ? 2 : 3 );
@@ -2662,7 +2652,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			bool srgbFunc = false;
 			if( g_glesEmulateSampler )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1 ) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				if( sampler.srgbTexture )
 				{
 					os << "g2l(";
@@ -2673,7 +2663,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			bool borderFunc = false;
 			if( g_glesEmulateSampler && samplerTypes[src1.name] != "Cube" )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1 ) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				std::string borders;
 				if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER )
 				{
@@ -2760,7 +2750,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			bool srgbFunc = false;
 			if( g_glesEmulateSampler )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1 ) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				if( sampler.srgbTexture )
 				{
 					os << "g2l(";
@@ -2771,7 +2761,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			bool borderFunc = false;
 			if( g_glesEmulateSampler && samplerTypes[src1.name] != "Cube" )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1 ) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				std::string borders;
 				if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER )
 				{
@@ -2797,7 +2787,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			}
 			if( samplerTypes[src1.name] == "3D" )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				os << "tex3D";
 				os << '(' << src1.name << ',';
 				PrintRegister( os, src0, samplerTypes[src1.name] == "2D" ? 2 : 3 );
@@ -2857,7 +2847,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			bool srgbFunc = false;
 			if( g_glesEmulateSampler )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1 ) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				if( sampler.srgbTexture )
 				{
 					os << "g2l(";
@@ -2868,7 +2858,7 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 			bool borderFunc = false;
 			if( g_glesEmulateSampler && samplerTypes[src1.name] != "Cube" )
 			{
-				const Sampler& sampler = stage.samplers.find( atoi( ToString(src1.name).c_str() + 1 ) )->second;
+				const Sampler& sampler = stage.samplers.find( uint8_t( atoi( ToString(src1.name).c_str() + 1 ) ) )->second;
 				std::string borders;
 				if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER )
 				{
@@ -3269,6 +3259,8 @@ static bool AsmToGLES2( const char* source, std::string& glCode, const StageInpu
 // --------------------------------------------------------------------------------------
 bool EffectCompilerGL2::Create()
 {
+	tmFunction( 0, 0 );
+
 	if( !m_compilerDX9.Create() )
 	{
 		return false;
@@ -3441,7 +3433,7 @@ static GLEWContext* glewGetContext()
 			return false;
 		}
 
-		auto ver = glGetString(GL_VERSION);
+		glGetString( GL_VERSION );
 		GLEWContext* ctx = new GLEWContext;
 		auto ret = glewContextInit( ctx );
 		if( ret != GLEW_OK )
@@ -3532,7 +3524,7 @@ static bool RunProcess( const char* commandLine )
 	std::string filteredOutput = std::regex_replace( output, s_summary, std::string( "" ) );
 	if( !filteredOutput.empty() )
 	{
-		g_messages.AddMessage( "%s", filteredOutput );
+		g_messages.AddMessage( "%s", filteredOutput.c_str() );
 	}
 
 	CloseHandle( procInfo.hProcess );
@@ -3675,8 +3667,8 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 					const char* found = strstr( src, approximately );
 					if( found )
 					{
-						unsigned instructionCount = -1;
-						sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
+						int instructionCount = -1;
+						sscanf_s( found + strlen( approximately ), "%i", &instructionCount );
 						listing.literal( "stats" ).dict().literal( "instructionCount" ).literal( instructionCount ).end();
 					}
 					if( !usedExtensions.empty() )
@@ -3913,3 +3905,4 @@ bool EffectCompilerGL2::CompileEffect( const char* source,
 	listing.end();
 	return true;
 }
+#endif

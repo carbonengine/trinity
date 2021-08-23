@@ -23,9 +23,12 @@ enum ConstantType
 {
 	CONSTANT_TYPE_FLOAT = 0,
 	CONSTANT_TYPE_INT = 1,
-	CONSTANT_TYPE_BOOL = 2,
-	CONSTANT_TYPE_OTHER = 3,
+	CONSTANT_TYPE_UINT = 2,
+	CONSTANT_TYPE_BOOL = 3,
+	CONSTANT_TYPE_OTHER = 4,
 };
+
+const char* ToString( ConstantType constType );
 
 enum AnnotationType
 {
@@ -75,12 +78,36 @@ enum UsageCode
 	UC_NUM_USAGE_CODE
 };
 
+const char* GetStringForUsageCode( int usageCode );
+
 enum RegisterInputType
 {
-	RT_CONSTANTS,
-	RT_RESOURCE,
-	RT_UAV,
+	RT_CONSTANT_BUFFER,
 	RT_SAMPLER,
+
+	RT_SRV_BUFFER = 1 << 5,
+	RT_SRV_STRUCTURED_BUFFER,
+	RT_SRV_TEXTURE1D,
+	RT_SRV_TEXTURE1DARRAY,
+	RT_SRV_TEXTURE2D,
+	RT_SRV_TEXTURE2DARRAY,
+	RT_SRV_TEXTURE2DMS,
+	RT_SRV_TEXTURE2DMSARRAY,
+	RT_SRV_TEXTURE3D,
+	RT_SRV_TEXTURECUBE,
+	RT_SRV_TEXTURECUBEARRAY,
+
+	RT_UAV_BUFFER = 1 << 6,
+	RT_UAV_STRUCTURED_BUFFER,
+	RT_UAV_TEXTURE1D,
+	RT_UAV_TEXTURE1DARRAY,
+	RT_UAV_TEXTURE2D,
+	RT_UAV_TEXTURE2DARRAY,
+	RT_UAV_TEXTURE2DMS,
+	RT_UAV_TEXTURE2DMSARRAY,
+	RT_UAV_TEXTURE3D,
+	RT_UAV_TEXTURECUBE,
+	RT_UAV_TEXTURECUBEARRAY,
 };
 
 
@@ -413,17 +440,21 @@ struct PipelineInputDescription
 		stream.Save( registerIndex );
 		stream.Save( index );
 		stream.Save( usedMask );
+		stream.Save( type );
+		stream.Save( dimension );
 	}
 
 	bool operator==( const PipelineInputDescription& other ) const
 	{
-		return name == other.name && registerIndex == other.registerIndex && index == other.index && usedMask == other.usedMask;
+		return name == other.name && registerIndex == other.registerIndex && index == other.index && usedMask == other.usedMask && type == other.type && dimension == other.dimension;
 	}
 
 	uint8_t name;
 	uint8_t registerIndex;
 	uint8_t index;
 	uint8_t usedMask;
+	PackAs<ConstantType, uint8_t> type;
+	uint8_t dimension;
 };
 
 

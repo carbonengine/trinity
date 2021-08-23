@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#if _WIN32
 #include "EffectCompilerDx9.h"
 #include "EffectData.h"
 #include "CompileMessageQueue.h"
@@ -199,19 +200,19 @@ ULONG STDMETHODCALLTYPE EffectAnalyzerDx9::Release()
 	return 1;
 }
 
-HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetTransform( D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX *pMatrix )
+HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetTransform( D3DTRANSFORMSTATETYPE State, CONST D3DMATRIX* )
 {
 	g_messages.AddMessage( "\\memory(0): warning X0000: SetTransform( %d, <matrix> ) encountered when analyzing DX9 effect", State );
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetMaterial( CONST D3DMATERIAL9 *pMaterial )
+HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetMaterial( CONST D3DMATERIAL9* )
 {
 	g_messages.AddMessage( "\\memory(0): warning X0000: SetMaterial( <material> ) encountered when analyzing DX9 effect" );
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetLight( DWORD Index, CONST D3DLIGHT9 *pLight )
+HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetLight( DWORD Index, CONST D3DLIGHT9* )
 {
 	g_messages.AddMessage( "\\memory(0): warning X0000: SetLight( %d, <light> ) encountered when analyzing DX9 effect", Index );
 	return S_OK;
@@ -339,7 +340,7 @@ HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetVertexShaderConstantF( UINT Regi
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetVertexShaderConstantI( UINT RegisterIndex, CONST INT *pConstantData, UINT RegisterCount )
+HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetVertexShaderConstantI( UINT RegisterIndex, CONST INT*, UINT RegisterCount )
 {
 	if( RegisterCount > 0 )
 	{
@@ -348,7 +349,7 @@ HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetVertexShaderConstantI( UINT Regi
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetVertexShaderConstantB( UINT RegisterIndex, CONST BOOL *pConstantData, UINT RegisterCount )
+HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetVertexShaderConstantB( UINT RegisterIndex, CONST BOOL*, UINT RegisterCount )
 {
 	if( RegisterCount > 0 )
 	{
@@ -379,19 +380,15 @@ HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetPixelShaderConstantF( UINT Regis
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetPixelShaderConstantI( UINT RegisterIndex, CONST INT *pConstantData, UINT RegisterCount )
+HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetPixelShaderConstantI( UINT, CONST INT*, UINT )
 {
 	// We don't care about the default values for integer constants.
 	// As far as I know we're only using an int constant in one case, for number
 	// of pointlights and we rely on the engine properly setting it.
-	if( false && RegisterCount > 0 )
-	{
-		g_messages.AddMessage( "\\memory(0): warning X0000: SetPixelShaderConstantI( %d, <data>, %d ) encountered when analyzing DX9 effect", RegisterIndex, RegisterCount );
-	}
 	return S_OK;
 }
 
-HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetPixelShaderConstantB( UINT RegisterIndex, CONST BOOL *pConstantData, UINT RegisterCount )
+HRESULT STDMETHODCALLTYPE EffectAnalyzerDx9::SetPixelShaderConstantB( UINT RegisterIndex, CONST BOOL*, UINT RegisterCount )
 {
 	if( RegisterCount > 0 )
 	{
@@ -449,9 +446,11 @@ static void ExtractShaderInputs( DWORD* shaderCode, StageInput& stage )
 			g_messages.AddMessage( "\\memory(0): warning X0000: Vertex shader uses unsupported input semantics #%i", inputs[k].Usage );
 			continue;
 		}
-		input.index = inputs[k].UsageIndex;
+		input.index = uint8_t( inputs[k].UsageIndex );
 		input.usedMask = 0xff;
 		input.registerIndex = 0;
+		input.type = CONSTANT_TYPE_FLOAT;
+		input.dimension = 4;
 		stage.pipelineInputs.push_back( input );
 	}
 }
@@ -514,7 +513,7 @@ static StringReference StripComments( void* code, unsigned& codeSize )
 
 static unsigned GetInstructionCount( const void* shaderCode )
 {
-	unsigned instructionCount = -1;
+	unsigned instructionCount = unsigned( -1 );
 	CComPtr<ID3DXBuffer> disassembly;
 	D3DXDisassembleShader( (const DWORD*)shaderCode, FALSE, NULL, &disassembly);
 	char* asmCode = (char*)disassembly->GetBufferPointer();
@@ -529,6 +528,8 @@ static unsigned GetInstructionCount( const void* shaderCode )
 
 bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, YamlOutput& listing, ID3DXBuffer* shaderText )
 {
+	tmFunction( 0, 0 );
+
 	// Need to set the FFP to default values in texture stage mapping to
 	// coordindices.  This is some peculiar Direct3D interference with the
 	// new Programmable Pipeline.  Documented in some old info doc from Microsoft. 
@@ -884,19 +885,19 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 							for( unsigned a = 0; a < paramDesc.Annotations; ++a )
 							{
 								D3DXHANDLE annotation = fx->GetAnnotation( paramHandle, a );
-								D3DXPARAMETER_DESC annotationDescription;
-								if( annotation && SUCCEEDED( fx->GetParameterDesc( annotation, &annotationDescription ) ) )
+								D3DXPARAMETER_DESC textureAnnotationDescription;
+								if( annotation && SUCCEEDED( fx->GetParameterDesc( annotation, &textureAnnotationDescription ) ) )
 								{
-									if( annotationDescription.Type == D3DXPT_BOOL )
+									if( textureAnnotationDescription.Type == D3DXPT_BOOL )
 									{
 										BOOL boolValue;
 										if( SUCCEEDED( fx->GetBool( annotation, &boolValue ) ) )
 										{
-											if( strcmp( annotationDescription.Name, "Tr2sRGB" ) == 0 )
+											if( strcmp( textureAnnotationDescription.Name, "Tr2sRGB" ) == 0 )
 											{
 												tex.isSRGB = boolValue != 0;
 											}
-											else if( strcmp( annotationDescription.Name, "AutoRegister" ) == 0 )
+											else if( strcmp( textureAnnotationDescription.Name, "AutoRegister" ) == 0 )
 											{
 												tex.isAutoregister = boolValue != 0;
 											}
@@ -908,13 +909,13 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 					}
 					if( it->first >= D3DVERTEXTEXTURESAMPLER0 )
 					{
-						pass.stages[0].samplers[it->first - D3DVERTEXTEXTURESAMPLER0] = ss;
-						pass.stages[0].textures[it->first - D3DVERTEXTEXTURESAMPLER0] = tex;
+						pass.stages[0].samplers[uint8_t( it->first - D3DVERTEXTEXTURESAMPLER0 )] = ss;
+						pass.stages[0].textures[uint8_t( it->first - D3DVERTEXTEXTURESAMPLER0 )] = tex;
 					}
 					else
 					{
-						pass.stages[1].samplers[it->first] = ss;
-						pass.stages[1].textures[it->first] = tex;
+						pass.stages[1].samplers[uint8_t( it->first )] = ss;
+						pass.stages[1].textures[uint8_t( it->first )] = tex;
 					}
 				}
 
@@ -948,7 +949,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 							char* found = strstr( asmCode, approximately );
 							if( found )
 							{
-								unsigned instructionCount = -1;
+								int instructionCount = -1;
 								sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
 								listing.literal( "stats" ).dict().literal( "instructionCount" ).literal( instructionCount ).end();
 							}
@@ -984,7 +985,7 @@ bool EffectAnalyzerDx9::AnalyzeEffect( EffectData& effectData, ID3DXEffect* fx, 
 							char* found = strstr( asmCode, approximately );
 							if( found )
 							{
-								unsigned instructionCount = -1;
+								int instructionCount = -1;
 								sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
 								listing.literal( "stats" ).dict().literal( "instructionCount" ).literal( instructionCount ).end();
 							}
@@ -1090,7 +1091,7 @@ void EffectAnalyzerDx9::ExtractConstantTable( void* func, std::vector<Constant>&
 					}
 					if( desc.RegisterIndex >= found->second.first )
 					{
-						found->second.second = max( found->second.second, desc.RegisterIndex - found->second.first + desc.RegisterCount );
+						found->second.second = std::max( found->second.second, desc.RegisterIndex - found->second.first + desc.RegisterCount );
 					}
 				}
 				if( samplerOffset && desc.RegisterIndex + desc.RegisterCount == m_vertexConstantValueCount && strcmp( desc.Name, "g_uiTransforms" ) == 0 )
@@ -1100,7 +1101,7 @@ void EffectAnalyzerDx9::ExtractConstantTable( void* func, std::vector<Constant>&
 				}
 				else
 				{
-					defaultValueCount = max( defaultValueCount, desc.RegisterIndex + desc.RegisterCount );
+					defaultValueCount = std::max( defaultValueCount, desc.RegisterIndex + desc.RegisterCount );
 				}
 
 				Constant constant;
@@ -1184,7 +1185,7 @@ void EffectAnalyzerDx9::ExtractConstantTable( void* func, std::vector<Constant>&
 		{
 			if( buffer.second.second )
 			{
-				stage.registerInputs.push_back( { RT_CONSTANTS, buffer.second.first } );
+				stage.registerInputs.push_back( { RT_CONSTANT_BUFFER, buffer.second.first } );
 			}
 		}
 	}
@@ -1216,6 +1217,8 @@ static bool RegisterWindowClass()
 
 bool EffectCompilerDX9::Create()
 {
+	tmFunction( 0, 0 );
+
 	CComPtr<IDirect3D9Ex> direct3D9;
 	HRESULT hr;
 	if( FAILED( hr = Direct3DCreate9Ex( D3D_SDK_VERSION, &direct3D9 ) ) )
@@ -1321,9 +1324,39 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	return CompileEffect( source, sourceLength, defines, include, result, false );
 }
 
+static std::string FixRelativePaths( ID3DXBuffer* errors )
+{
+	std::string result;
+	std::regex messages( "^(.*)\\(\\d+,\\d+\\)" );
+
+	auto str = static_cast<const char*>( errors->GetBufferPointer() );
+	auto strEnd = str + errors->GetBufferSize();
+	//auto endOfLastMatch = str;
+	ptrdiff_t endOfLastMatch = 0;
+
+	std::string entryDirectory = g_messages.GetEntryFileName();
+	auto slash = entryDirectory.find_last_of( '\\' );
+	if( slash != std::string::npos )
+	{
+		entryDirectory.erase( entryDirectory.begin() + slash + 1, entryDirectory.end() );
+	}
+
+	for( auto it = std::cregex_iterator( str, strEnd, messages ); it != std::cregex_iterator(); ++it )
+	{
+		result.append( str + endOfLastMatch, str + it->position() );
+		endOfLastMatch = it->position() + it->length();
+
+		result += entryDirectory + it->str();
+	}
+	result.append( str + endOfLastMatch, strEnd );
+	return result;
+}
+
 bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result, bool disableListing )
 {
-	auto src = std::regex_replace( std::string( source, sourceLength ), s_premutationPragma, std::string( "" ) );
+	tmFunction( 0, 0 );
+
+	auto src = std::regex_replace( std::string( source, sourceLength ), s_premutationPragma, std::string( ";" ) );
 
 	// We need to replace BlendOpAlpha render state assignment because FXC bug will
 	// replace BlendOpAlpha with BendOp. We highjack VertexBlend state for that.
@@ -1382,21 +1415,23 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	D3DXMACRO dx9Defines[256];
 	Macro::FillDxMacros( dx9Defines, defines.begin(), defines.end() );
 
-
-	if( FAILED( D3DXCreateEffectCompiler( 
-		source, 
-		UINT( sourceLength ), 
-		dx9Defines,
-		include, 
-		D3DXSHADER_PACKMATRIX_COLUMNMAJOR | D3DXSHADER_NO_PRESHADER | optimizationLevel | ( g_avoidFlowControl ? D3DXSHADER_AVOID_FLOW_CONTROL : 0 ), 
-		&effectCompiler, 
-		&errors ) ) )
 	{
-		if( errors )
+		tmZone( 0, 0, "D3DXCreateEffectCompiler" );
+		if( FAILED( D3DXCreateEffectCompiler( 
+			source, 
+			UINT( sourceLength ), 
+			dx9Defines,
+			include, 
+			D3DXSHADER_PACKMATRIX_COLUMNMAJOR | D3DXSHADER_NO_PRESHADER | optimizationLevel | ( g_avoidFlowControl ? D3DXSHADER_AVOID_FLOW_CONTROL : 0 ), 
+			&effectCompiler, 
+			&errors ) ) )
 		{
-			g_messages.AddMessages( errors );
+			if( errors )
+			{
+				g_messages.AddMessage( FixRelativePaths( errors ).c_str() );
+			}
+			return false;
 		}
-		return false;
 	}
 	if( g_printWarnings && errors )
 	{
@@ -1404,15 +1439,21 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	}
 	errors = nullptr;
 
-	switch( SafeCompileEffect( effectCompiler,
-		D3DXSHADER_PACKMATRIX_COLUMNMAJOR | D3DXSHADER_NO_PRESHADER | optimizationLevel | ( g_avoidFlowControl ? D3DXSHADER_AVOID_FLOW_CONTROL : 0 ), 
-		&effectData, 
-		&errors ) )
+	HRESULT hr;
+	{
+		tmZone( 0, 0, "CompileEffect" );
+		hr = SafeCompileEffect( effectCompiler,
+								D3DXSHADER_PACKMATRIX_COLUMNMAJOR | D3DXSHADER_NO_PRESHADER | optimizationLevel | ( g_avoidFlowControl ? D3DXSHADER_AVOID_FLOW_CONTROL : 0 ),
+								&effectData,
+								&errors );
+	}
+
+	switch( hr )
 	{
 	case COMPILE_STATUS_ERROR:
 		if( errors )
 		{
-			g_messages.AddMessages( errors );
+			g_messages.AddMessage( FixRelativePaths( errors ).c_str() );
 		}
 		return false;
 	case COMPILE_STATUS_CRASH:
@@ -1421,7 +1462,7 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	}
 	if( g_printWarnings && errors )
 	{
-		g_messages.AddMessages( errors );
+		g_messages.AddMessage( FixRelativePaths( errors ).c_str() );
 	}
 	errors = nullptr;
 
@@ -1450,18 +1491,21 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 
 	CComPtr<ID3DXEffect> effect;
 
-	if( FAILED( D3DXCreateEffectEx(
-		g_device9,
-		effectData->GetBufferPointer(),
-		effectData->GetBufferSize(),
-		NULL,
-		NULL,
-		"PerFramePS;PerObjectPS;PerFrameVS;PerObjectVS;",
-		0,
-		NULL,
-		&effect,
-		&errors
-		) ) )
+	{
+		tmZone( 0, 0, "D3DXCreateEffectEx" );
+		hr = D3DXCreateEffectEx(
+			g_device9,
+			effectData->GetBufferPointer(),
+			effectData->GetBufferSize(),
+			NULL,
+			NULL,
+			"PerFramePS;PerObjectPS;PerFrameVS;PerObjectVS;",
+			0,
+			NULL,
+			&effect,
+			&errors );
+	}
+	if( FAILED( hr ) )
 	{
 		if( errors )
 		{
@@ -1480,3 +1524,4 @@ bool EffectCompilerDX9::CompileEffect( const char* source, size_t sourceLength, 
 	effect = nullptr;
 	return success;
 }
+#endif

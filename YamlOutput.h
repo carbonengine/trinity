@@ -8,8 +8,8 @@ class YamlOutput
 {
 public:
 	explicit YamlOutput( bool enabled = true )
-		:m_enabled( enabled ),
-		m_expected( ROOT )
+		:m_expected( ROOT ),
+		m_enabled( enabled )
 	{
 	}
 
@@ -105,7 +105,7 @@ public:
 		{
 			return multiline( str );
 		}
-		else if( strchr( str, ':' ) )
+		else if( strchr( str, ':' ) || strchr( str, '-' ) || strchr( str, '#' ) )
 		{
 			return _literal( quote( str ) );
 		}
@@ -254,6 +254,8 @@ private:
 			indent() << "-" << std::endl;
 			indent() << "  " << value << std::endl;
 			break;
+		default:
+			break;
 		}
 		return *this;
 	}
@@ -276,6 +278,8 @@ private:
 			indent() << "- |" << std::endl;
 			m_os << rawIndent << "  " << str.substr( 0, p ) << std::endl;
 			break;
+		default:
+			break;
 		}
 		while( p != std::string::npos )
 		{
@@ -293,6 +297,8 @@ private:
 			m_expected = KEY;
 			break;
 		case ELEMENT:
+			break;
+		default:
 			break;
 		}
 

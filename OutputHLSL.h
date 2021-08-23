@@ -4,19 +4,31 @@
 
 struct Type;
 
+enum class ShadingLanguage
+{
+	HLSL,
+	MSL
+};
+
 class CodeStream : public std::ostrstream
 {
 public:
+	explicit CodeStream( const ShadingLanguage lang )
+		: shadingLanguage( lang )
+	{}
+
 	virtual void Endl() = 0;
 	virtual void ChangeLocation( const FileLocation& location ) = 0;
 	virtual void Indent() = 0;
 	virtual void Unindent() = 0;
+
+	ShadingLanguage shadingLanguage;
 };
 
 class CompilerInputStream : public CodeStream
 {
 public:
-	CompilerInputStream( ParserState& state );
+	CompilerInputStream( ParserState& state, const ShadingLanguage lang );
 
 	void Endl() override;
 	void ChangeLocation( const FileLocation& location ) override;
@@ -26,18 +38,6 @@ private:
 	ParserState& m_state;
 	FileLocation m_location;
 };
-
-class ListingStream : public CodeStream
-{
-public:
-	void Endl() override;
-	void ChangeLocation( const FileLocation& location ) override;
-	void Indent() override;
-	void Unindent() override;
-private:
-	std::string m_indent;
-};
-
 
 template <typename T>
 inline CodeStream& operator<<( CodeStream& os, const T& t )
@@ -74,12 +74,18 @@ inline CodeStream& operator<<( CodeStream& os, const Endl& )
 	return os;
 }
 
-
 struct HLSL
 {
 	ASTNode* node;
 	SymbolTable* symbolTable;
 };
 
+struct MSL
+{
+	ASTNode* node;
+	SymbolTable* symbolTable;
+};
+
 CodeStream& operator<<( CodeStream& os, const HLSL& );
+CodeStream& operator<<( CodeStream& os, const MSL& );
 CodeStream& operator<<( CodeStream& os, const Type& type );

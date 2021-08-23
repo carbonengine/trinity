@@ -18,6 +18,9 @@ struct ScannerToken
 	long intValue;
 	InlineString stringValue;
 	FileLocation fileLocation;
+
+	static ScannerToken ID( const InlineString& value, const FileLocation& location = FileLocation() );
+	static ScannerToken FromTokenType( int type, const FileLocation& location = FileLocation() );
 };
 
 enum PreprocessorScanResult
@@ -76,7 +79,7 @@ enum ErrorCode
 	EC_ANNOTATION_TYPE_MISMATCH,
 	// params: none
 	EC_REGISTER_ASSIGNMENT_DEPRECATED,
-	// params: %s - function name
+	// params: %s - function name, %s - extended diagnostics
 	EC_NO_OVERRIDE,
 
 
@@ -117,6 +120,8 @@ enum ErrorCode
 	// params: %s - function name
 	EC_FUNCTIONS_NOT_SUPPORTED,
 	// params: none
+	EC_OPERATOR_NOT_SUPPORTED,
+	// params: none
 	EC_INCORRECT_NUMBER_OF_ARGS,
 
 	// params: %s - sampler name, %s - type, %s - type
@@ -150,6 +155,10 @@ enum ErrorCode
 	EC_STATE_DEPRECATED,
 	// params: none
 	EC_MULTIPLE_REGISTER_BINDINGS,
+	// params: format string, ...
+	EC_CUSTOM_ERROR,
+	// params: format string, ...
+	EC_CUSTOM_WARNING,
 };
 
 struct PreprocessorCondition
@@ -202,6 +211,10 @@ public:
 	FileLocation& GetCurrentLocation();
 
 	InlineString AllocateName();
+	InlineString AllocateName( const char* name );
+	InlineString AllocateName( const InlineString& name );
+	InlineString AllocateNameWithPrefix( const char* prefix );
+	InlineString AllocateNameWithPrefix( const InlineString& prefix );
 	char* AllocateString( size_t size );
 
 	void ShowMessage( const FileLocation& location, ErrorCode errorCode, ... );
@@ -237,6 +250,10 @@ public:
 
 	std::map<InlineString, PreprocessorDefine> m_defines;
 	std::vector<PreprocessorCondition> m_prepocessorConditions;
+
+	ASTNode* NewNode( int nodeType );
+	ASTNode* NewNode( int nodeType, const ScannerToken& token );
+
 private:
 	void ShowMessageImpl( const FileLocation& location, ErrorCode errorCode, va_list args );
 	bool FindConcatOperator( size_t depth );

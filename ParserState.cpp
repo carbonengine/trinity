@@ -8,6 +8,7 @@
 #include "ParserUtils.h"
 #include "Preprocessor.h"
 #include "IntrinsicTypes.h"
+#include <cstring>
 #include <regex>
 
 extern CompileMessageQueue g_messages;
@@ -21,6 +22,18 @@ void *PreprocessorParseAlloc( void *(*mallocProc)(size_t) );
 void PreprocessorParseFree( void *p, void (*freeProc)(void*) );
 void PreprocessorParse( void *yyp, int yymajor, ScannerToken token, ParserState* state );
 void PreprocessorParseTrace(FILE *TraceFILE, char *zTracePrompt);
+
+
+ScannerToken ScannerToken::ID( const InlineString& value, const FileLocation& location )
+{
+    return { OP_ID, 0, value, location };
+}
+
+ScannerToken ScannerToken::FromTokenType( int type, const FileLocation& location )
+{
+	return { type, 0, { nullptr, nullptr }, location };
+}
+
 
 void ParserState::AddIntrinsics()
 {
@@ -171,11 +184,11 @@ void ParserState::AddIntrinsics()
 ParserState::ParserState( const InlineString& code )
 	:m_newLine( true ),
 	m_mode( HLSL ),
+	m_expandMacros( true ),
 	m_symbols( nullptr ),
 	m_root( nullptr ),
 	m_offlineStatements( nullptr ),
 	m_hasErrors( false ),
-	m_expandMacros( true ),
 	m_inPreprocessorCondition( false ),
 	m_inDiscoverMode( false )
 {
@@ -328,7 +341,7 @@ PreprocessorScanResult ParserState::GetPreprocessorToken( PreprocessorToken& tok
 {
 	do
 	{
-		FileContents& curFile = m_fileStack.back();
+		// FileContents& curFile = m_fileStack.back();
 		PreprocessorScanResult code = ::GetPreprocessorToken( *this, token );
 		if( code != PPSR_OK )
 		{
@@ -336,7 +349,7 @@ PreprocessorScanResult ParserState::GetPreprocessorToken( PreprocessorToken& tok
 		}
 	} while( InSkipMode() );
 
-	FileContents& curFile = m_fileStack.back();
+	// FileContents& curFile = m_fileStack.back();
 
 	if( token.type == PPT_ID && m_expandMacros )
 	{
@@ -350,10 +363,18 @@ PreprocessorScanResult ParserState::GetPreprocessorToken( PreprocessorToken& tok
 				{
 					found = true;
 					char buffer[64];
+#if _WIN32
 					sprintf_s( buffer, "%u", it->location.lineNumber );
+#else
+					snprintf( buffer, sizeof( buffer ), "%u", it->location.lineNumber );
+#endif
 					auto len = strlen( buffer );
 					char* str = AllocateString( len + 1 );
+#if _WIN32
 					strcpy_s( str, len + 1, buffer );
+#else
+					strlcpy( str, buffer, len + 1 );
+#endif
 					token.string = MakeInlineString( str );
 					break;
 				}
@@ -601,6 +622,8 @@ bool ParserState::DiscoverPermutations( Permutations& permutations )
 
 bool ParserState::Parse()
 {
+	tmFunction( 0, 0 );
+
 	//PreprocessorParseTrace( stdout, "parser: " );
 	void* parser = ParseAlloc( malloc );
 
@@ -782,7 +805,68 @@ InlineString ParserState::AllocateName()
 	const char *format = "_new_symbol_%04i";
 	size_t len = strlen( format ) + 1;
 	char* newName = new char[len];
+#if _WIN32
 	sprintf_s( newName, len, format, m_strings.size() );
+#else
+	snprintf( newName, len, format, m_strings.size() );
+#endif
+	m_strings.push_back( newName );
+	return MakeInlineString( newName, newName + len - 1 );
+}
+
+InlineString ParserState::AllocateName( const char* name )
+{
+	size_t len = strlen( name ) + 1;
+	char* newName = new char[len];
+#if _WIN32
+	strncpy_s( newName, len, name, len );
+#else
+	std::strncpy( newName, name, len );
+#endif
+	m_strings.push_back( newName );
+	return MakeInlineString( newName, newName + len - 1 );
+}
+
+InlineString ParserState::AllocateName( const InlineString& name )
+{
+	size_t len = ( name.end - name.start ) + 1;
+	char* newName = new char[len];
+
+#if _WIN32
+	strncpy_s( newName, len, name.start, len - 1 );
+#else
+	std::strncpy( newName, name.start, len - 1 );
+#endif
+	newName[ len - 1 ] = '\0';
+
+	m_strings.push_back( newName );
+	return MakeInlineString( newName, newName + len - 1 );
+}
+
+InlineString ParserState::AllocateNameWithPrefix( const char* prefix )
+{
+	const char *format = "__%s_%04i";
+	size_t len = strlen( format ) - 2 + strlen( prefix ) + 1;
+	char* newName = new char[len];
+#if _WIN32
+	sprintf_s( newName, len, format, prefix, m_strings.size() );
+#else
+	snprintf( newName, len, format, prefix, m_strings.size() );
+#endif
+	m_strings.push_back( newName );
+	return MakeInlineString( newName, newName + len - 1 );
+}
+
+InlineString ParserState::AllocateNameWithPrefix( const InlineString& prefix )
+{
+	const char *format = "__%s_%04i";
+	size_t len = strlen( format ) - 2 + ( prefix.end - prefix.start ) + 1;
+	char* newName = new char[len];
+#if _WIN32
+	sprintf_s( newName, len, format, ToString( prefix ).c_str(), m_strings.size() );
+#else
+	snprintf( newName, len, format, ToString( prefix ).c_str(), m_strings.size() );
+#endif
 	m_strings.push_back( newName );
 	return MakeInlineString( newName, newName + len - 1 );
 }
@@ -980,7 +1064,7 @@ void ParserState::ShowMessageImpl( const FileLocation& location, ErrorCode error
 		"effect contains no techniques",
 		"annotation type mismatch for annotation \"%s\"",
 		"explicit register bindings for scalaras are deprecated",
-		"no suitable function override found for function call \"%s\"",
+		"no suitable function override found for function call \"%s\"%s",
 
 		"array, matrix, vector, or indexable object type expected in index expression",
 		"invalid subscript \'%s\'",
@@ -1000,6 +1084,7 @@ void ParserState::ShowMessageImpl( const FileLocation& location, ErrorCode error
 		"index [%i] is out of range",
 		"invalid swizzle \"%s\"",
 		"function calls are not supported in state assignments",
+		"operator is not supported in state assignments",
 		"incorrect number of arguments to numeric type constructor",
 		"sampler \"%s\" is used both as %s and as %s sampler",
 		"texture \"%s\" is declared as %s, but is used as %s",
@@ -1024,19 +1109,52 @@ void ParserState::ShowMessageImpl( const FileLocation& location, ErrorCode error
 	if( errorCode == EC_REGISTER_ASSIGNMENT_DEPRECATED || 
 		errorCode == EC_MISMATCHED_TEXTURE_TYPE || 
 		errorCode == EC_STATE_DEPRECATED ||
-		errorCode == EC_SAMPLER_WITHOUT_TEXTURE
+		errorCode == EC_SAMPLER_WITHOUT_TEXTURE ||
+		errorCode == EC_CUSTOM_WARNING
 		)
 	{
+#if _WIN32
 		sprintf_s( buffer1, "%s(%i): warning t%i: ", fileName.c_str(), location.lineNumber, errorCode + 1000 );
+#else
+		snprintf( buffer1, sizeof( buffer1 ), "%s(%i): warning t%i: ", fileName.c_str(), location.lineNumber, errorCode + 1000 );
+#endif
 	}
 	else
 	{
+#if _WIN32
 		sprintf_s( buffer1, "%s(%i): error t%i: ", fileName.c_str(), location.lineNumber, errorCode + 1000 );
+#else
+		snprintf( buffer1, sizeof( buffer1 ), "%s(%i): error t%i: ", fileName.c_str(), location.lineNumber, errorCode + 1000 );
+#endif
 		m_hasErrors = true;
 	}
-	vsprintf_s( buffer2, errorMessages[errorCode], args );
+    
+    const char* format;
+	if( errorCode == EC_CUSTOM_ERROR || errorCode == EC_CUSTOM_WARNING )
+    {
+        format = va_arg( args, const char* );
+    }
+    else
+    {
+        format = errorMessages[errorCode];
+    }
+#if _WIN32
+	vsprintf_s( buffer2, format, args );
+#else
+	vsnprintf( buffer2, sizeof( buffer2 ), format, args );
+#endif
 	std::string message = buffer1;
 	message += buffer2;
 	message += "\n";
-	g_messages.AddMessage( message.c_str() );
+	g_messages.AddMessage( "%s", message.c_str() );
+}
+
+ASTNode* ParserState::NewNode( int nodeType )
+{
+    return new ASTNode( ASTNodeType( nodeType ), GetCurrentLocation(), GetSymbolTable().GetCurrentScope(), nullptr );
+}
+
+ASTNode* ParserState::NewNode( int nodeType, const ScannerToken& token )
+{
+    return new ASTNode( ASTNodeType( nodeType ), GetCurrentLocation(), GetSymbolTable().GetCurrentScope(), &token );
 }

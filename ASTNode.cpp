@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "ASTNode.h"
 #include "HLSLParser.h"
 #include "ParserUtils.h"
@@ -6,8 +6,8 @@
 ASTNode::ASTNode( ASTNodeType type, const FileLocation& location, ScopeSymbolTable* scope, const ScannerToken* token )
 	:m_nodeType( type ),
 	m_symbol( nullptr ),
-	m_scope( scope ),
-	m_location( location )
+	m_location( location ),
+    m_scope( scope )
 {
 	m_type.FromTokenType( 0 );
 	if( token )
@@ -45,12 +45,17 @@ void ASTNode::AddChild( ASTNode* child )
 	m_children.push_back( child );
 }
 
-void ASTNode::InsertChild( unsigned place, ASTNode* child )
+void ASTNode::InsertChild( size_t place, ASTNode* child )
 {
 	m_children.insert( m_children.begin() + place, child );
 }
 
-void ASTNode::RemoveChild( unsigned place )
+void ASTNode::ReplaceChild( size_t place, ASTNode* child )
+{
+	m_children[place] = child;
+}
+
+void ASTNode::RemoveChild( size_t place )
 {
 	m_children.erase( m_children.begin() + place );
 }
@@ -143,22 +148,24 @@ ScopeSymbolTable* ASTNode::GetScope() const
 	return m_scope;
 }
 
-void ASTNode::SetType( Type type )
+void ASTNode::SetType( const Type& type )
 {
 	m_type = type;
 }
 
-Type ASTNode::GetType() const
+const Type& ASTNode::GetType() const
 {
 	return m_type;
 }
 
 ASTNode* ASTNode::FindNode( ASTNodeType type )
 {
+#if _WIN32
 	if( this == nullptr )
 	{
 		return nullptr;
 	}
+#endif
 	if( m_nodeType == type )
 	{
 		return this;
@@ -176,10 +183,12 @@ ASTNode* ASTNode::FindNode( ASTNodeType type )
 
 void ASTNode::FindNodes( ASTNodeType type, std::vector<ASTNode*>& nodes )
 {
+#if _WIN32
 	if( this == nullptr )
 	{
 		return;
 	}
+#endif
 	if( m_nodeType == type )
 	{
 		nodes.push_back( this );
@@ -187,6 +196,9 @@ void ASTNode::FindNodes( ASTNodeType type, std::vector<ASTNode*>& nodes )
 	}
 	for( auto it = m_children.begin(); it != m_children.end(); ++it )
 	{
-		( *it )->FindNodes( type, nodes );
+		if( *it )
+		{
+			( *it )->FindNodes( type, nodes );
+		}
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <cstring>
 #include <ostream>
 
@@ -43,7 +44,23 @@ inline bool operator==( const InlineString& str0, const InlineString& str1 )
 	return strncmp( str0.start, str1.start, len0 ) == 0;
 }
 
+inline bool operator==( const InlineString& str0, const char* str1 )
+{
+	size_t len0 = str0.end - str0.start;
+	size_t len1 = strlen( str1 );
+	if( len0 != len1 )
+	{
+		return false;
+	}
+	return strncmp( str0.start, str1, len0 ) == 0;
+}
+
 inline bool operator!=( const InlineString& str0, const InlineString& str1 )
+{
+	return !( str0 == str1 );
+}
+
+inline bool operator!=( const InlineString& str0, const char* str1 )
 {
 	return !( str0 == str1 );
 }
@@ -52,7 +69,7 @@ inline bool operator<( const InlineString& str0, const InlineString& str1 )
 {
 	size_t len0 = str0.end - str0.start;
 	size_t len1 = str1.end - str1.start;
-	auto cmp = strncmp( str0.start, str1.start, __min( len0, len1 ) );
+	auto cmp = strncmp( str0.start, str1.start, std::min( len0, len1 ) );
 	if( cmp < 0 )
 	{
 		return true;
@@ -67,6 +84,37 @@ inline bool operator<( const InlineString& str0, const InlineString& str1 )
 	}
 	return false;
 }
+
+inline bool IEquals( const InlineString& a, const InlineString& b )
+{
+    return std::equal(a.start, a.end,
+                      b.start, b.end,
+                      [](char a, char b) {
+                          return tolower(a) == tolower(b);
+                      });
+}
+
+inline bool IEquals( const InlineString& a, const char* b )
+{
+    return std::equal(a.start, a.end,
+                      b, b + strlen( b ),
+                      [](char a, char b) {
+                          return tolower(a) == tolower(b);
+                      });
+}
+
+struct ILess
+{
+	inline bool operator()( const InlineString& a, const InlineString& b ) const
+	{
+		
+		return std::lexicographical_compare(a.start, a.end,
+											b.start, b.end,
+											[](char a, char b) {
+												return tolower(a) < tolower(b);
+											});
+	}
+};
 
 inline std::string ToString( const InlineString& string )
 {

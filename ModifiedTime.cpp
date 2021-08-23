@@ -5,6 +5,12 @@
 #include "Macro.h"
 #include "CachingIncludeHandler.h"
 
+#if !_WIN32
+#include <libgen.h>
+#include <sys/param.h>
+#include <sys/stat.h>
+#endif
+
 
 namespace
 {
@@ -42,8 +48,8 @@ namespace
 			if( SUCCEEDED( hr ) )
 			{
 				if( m_lastMTime.dwHighDateTime < t.dwHighDateTime ||
-					m_lastMTime.dwHighDateTime == t.dwHighDateTime &&
-					m_lastMTime.dwLowDateTime < t.dwLowDateTime )
+					( m_lastMTime.dwHighDateTime == t.dwHighDateTime &&
+					  m_lastMTime.dwLowDateTime < t.dwLowDateTime ) )
 				{
 					m_lastMTime = t;
 					m_newestFile = fileName;
@@ -64,8 +70,13 @@ namespace
 
 		void SetRootPath( const char* rootPath )
 		{
+#if _WIN32
 			const char* filename = PathFindFileName( rootPath );
 			m_rootPath = std::string( rootPath, filename - rootPath );
+#else
+			char storage[MAXPATHLEN];
+			m_rootPath = dirname_r( rootPath, storage );
+#endif
 		}
 	private:
 		// Last modification time
@@ -78,11 +89,12 @@ namespace
 
 	bool FileTimeLess( const FILETIME& t0, const FILETIME& t1 )
 	{
-		return t0.dwHighDateTime < t1.dwHighDateTime || t0.dwHighDateTime == t1.dwHighDateTime && t0.dwLowDateTime < t1.dwLowDateTime;
+		return t0.dwHighDateTime < t1.dwHighDateTime || ( t0.dwHighDateTime == t1.dwHighDateTime && t0.dwLowDateTime < t1.dwLowDateTime );
 	}
 
 	bool GetPathTime( const char* path, FILETIME& time )
 	{
+#if _WIN32
 		HANDLE file = CreateFile(
 			path,
 			GENERIC_READ,
@@ -101,6 +113,18 @@ namespace
 			return false;
 		}
 		CloseHandle( file );
+#else
+		struct stat buf;
+		if( stat( path, &buf ) == 0 )
+		{
+			time.dwHighDateTime = buf.st_mtimespec.tv_sec;
+			time.dwLowDateTime = buf.st_mtimespec.tv_nsec;
+		}
+		else
+		{
+			return false;
+		}
+#endif
 		return true;
 	}
 
@@ -169,6 +193,8 @@ namespace
 
 		includeHandler.SetRootPath( query.sourcePath.c_str() );
 
+		// TODO MACOS: Need an alternative solution for macOS.
+#if _WIN32
 		D3DXMACRO defines[256];
 		Macro::FillDxMacros( defines, query.defines.begin(), query.defines.end() );
 		CComPtr<ID3DXBuffer> buffer;
@@ -179,7 +205,9 @@ namespace
 			MutexScope scope( s_modifiedOutputsCS );
 			s_modifiedOutputs.insert( query.outputPath );
 		}
-		else if( FileTimeLess( outputTime, includeHandler.GetLastModifiedTime() ) )
+		else
+#endif
+			if( FileTimeLess( outputTime, includeHandler.GetLastModifiedTime() ) )
 		{
 			MutexScope scope( s_modifiedOutputsCS );
 			s_modifiedOutputs.insert( query.outputPath );
@@ -196,13 +224,13 @@ void PrintModificationTime( size_t workerCount )
 	char buffer[4096];
 	while( !feof( stdin ) )
 	{
-		if( !gets_s( buffer ) )
+		if( !fgets( buffer, sizeof(buffer), stdin ) )
 		{
 			break;
 		}
-		size_t length = strlen( buffer ) + 1;
-		char* inputLine = new char[length];
-		strcpy_s( inputLine, length, buffer );
+		// size_t length = strlen( buffer ) + 1;
+		// char* inputLine = new char[length];
+		// strcpy_s( inputLine, length, buffer );
 
 		MTimeArguments query;
 

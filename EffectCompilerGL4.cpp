@@ -5,6 +5,7 @@
 //
 
 #include "stdafx.h"
+#if _WIN32
 #include "EffectCompilerGL4.h"
 #include "EffectData.h"
 #include "CompileMessageQueue.h"
@@ -487,7 +488,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void bfi( const DX11AsmToken& command )
+	void bfi( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -524,7 +525,7 @@ public:
 			Src( src3, dst.swizzle, Int ) << "&~bitmask));}" << endl;
 	}
 
-	void bfrev( const DX11AsmToken& command )
+	void bfrev( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -533,7 +534,7 @@ public:
 		m_codeOs << Dest( dst ) << "=intBitsToFloat(bitfieldReverse(" << Src( src0, dst.swizzle, Int ) << "));" << endl;
 	}
 
-	void break_( const DX11AsmToken& command )
+	void break_( const DX11AsmToken& )
 	{
 		m_codeOs << "break;" << endl;
 	}
@@ -557,13 +558,13 @@ public:
 		m_codeOs << "break;" << endl;
 	}
 
-	void case_( const DX11AsmToken& command )
+	void case_( const DX11AsmToken& )
 	{
 		auto& lbl = ExpectToken( DX11AsmToken::Number );
 		m_codeOs << "case " << lbl.name << ':' << endl;
 	}
 
-	void continue_( const DX11AsmToken& command )
+	void continue_( const DX11AsmToken& )
 	{
 		m_codeOs << "continue;" << endl;
 	}
@@ -587,7 +588,7 @@ public:
 		m_codeOs << "continue;" << endl;
 	}
 
-	void countbits( const DX11AsmToken& command )
+	void countbits( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -596,12 +597,12 @@ public:
 		m_codeOs << Dest( dst ) << "=intBitsToFloat(bitCount(" << Src( src0, dst.swizzle, Int ) << "));" << endl;
 	}
 
-	void cut( const DX11AsmToken& command )
+	void cut( const DX11AsmToken& )
 	{
 		m_codeOs << "EndPrimitive();" << endl;
 	}
 
-	void cut_stream( const DX11AsmToken& command )
+	void cut_stream( const DX11AsmToken& )
 	{
 		auto& lbl = ExpectToken( DX11AsmToken::Number );
 		m_codeOs << "EndStreamPrimitive(" << lbl.name << ");" << endl;
@@ -946,7 +947,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void default_( const DX11AsmToken& command )
+	void default_( const DX11AsmToken& )
 	{
 		m_codeOs << "default:" << endl;
 	}
@@ -1080,22 +1081,22 @@ public:
 		m_codeOs << ';' << endl;
 	}
 
-	void else_( const DX11AsmToken& command )
+	void else_( const DX11AsmToken& )
 	{
 		m_codeOs << "}else{" << endl;
 	}
 
-	void endif( const DX11AsmToken& command )
+	void endif( const DX11AsmToken& )
 	{
 		m_codeOs << "}" << endl;
 	}
 
-	void endloop( const DX11AsmToken& command )
+	void endloop( const DX11AsmToken& )
 	{
 		m_codeOs << "}" << endl;
 	}
 
-	void endswitch( const DX11AsmToken& command )
+	void endswitch( const DX11AsmToken& )
 	{
 		m_codeOs << "}" << endl;
 	}
@@ -1284,7 +1285,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void iadd( const DX11AsmToken& command )
+	void iadd( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1297,7 +1298,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void ieq( const DX11AsmToken& command )
+	void ieq( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1334,7 +1335,7 @@ public:
 		}
 	}
 
-	void ige( const DX11AsmToken& command )
+	void ige( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1357,7 +1358,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void ilt( const DX11AsmToken& command )
+	void ilt( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1380,7 +1381,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void imad( const DX11AsmToken& command )
+	void imad( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1395,7 +1396,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void imax( const DX11AsmToken& command )
+	void imax( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1408,7 +1409,7 @@ public:
 		m_codeOs << "));" << endl;
 	}
 
-	void imin( const DX11AsmToken& command )
+	void imin( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1421,7 +1422,7 @@ public:
 		m_codeOs << "));" << endl;
 	}
 
-	void imul( const DX11AsmToken& command )
+	void imul( const DX11AsmToken& )
 	{
 		auto& dst0 = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1443,7 +1444,7 @@ public:
 		}
 	}
 
-	void ine( const DX11AsmToken& command )
+	void ine( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1466,7 +1467,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void ineg( const DX11AsmToken& command )
+	void ineg( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1475,7 +1476,7 @@ public:
 		m_codeOs << Dest( dst ) << "=intBitsToFloat((abs(" << Src( src0, dst.swizzle, Int ) << ")^" << GlslType( Int, dst ) << "(0xffffffff))+" << GlslType( Int, dst ) << "(1));" << endl;
 	}
 
-	void ishl( const DX11AsmToken& command )
+	void ishl( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1488,7 +1489,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void ishr( const DX11AsmToken& command )
+	void ishr( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1501,7 +1502,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void itof( const DX11AsmToken& command )
+	void itof( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1540,7 +1541,7 @@ public:
 			ExpectToken( DX11AsmToken::Coma );
 			auto& src0 = ExpectToken( DX11AsmToken::ID );
 			ExpectToken( DX11AsmToken::Coma );
-			auto& offset = ExpectToken( DX11AsmToken::ID );
+			ExpectToken( DX11AsmToken::ID );  // TODO: offset
 			ExpectToken( DX11AsmToken::Coma );
 			auto& src1 = ExpectToken( DX11AsmToken::ID );
 
@@ -1569,7 +1570,7 @@ public:
 		m_codeOs << endl;
 	}
 
-	void ldms( const DX11AsmToken& command )
+	void ldms( const DX11AsmToken& )
 	{
 		ExpectToken( DX11AsmToken::OpenParen );
 		ExpectToken( DX11AsmToken::ID );
@@ -1620,7 +1621,7 @@ public:
 		m_codeOs << ';' << endl;
 	}
 
-	void loop( const DX11AsmToken& command )
+	void loop( const DX11AsmToken& )
 	{
 		m_codeOs << "while(true){" << endl;
 	}
@@ -1791,7 +1792,7 @@ public:
 	{
 	}
 
-	void not( const DX11AsmToken& command )
+	void not( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1821,7 +1822,7 @@ public:
 	{
 	}
 
-	void rcp( const DX11AsmToken& command )
+	void rcp( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -1830,7 +1831,7 @@ public:
 		m_codeOs << Dest( dst ) << "=" << GlslType( Float, dst ) << "(1.0)/" << Src( src0, dst.swizzle ) << ");" << endl;
 	}
 
-	void resinfo( const DX11AsmToken& command )
+	void resinfo( const DX11AsmToken& )
 	{
 		ExpectToken( DX11AsmToken::OpenParen );
 		auto& resType = ExpectToken( DX11AsmToken::ID );
@@ -1947,7 +1948,7 @@ public:
 		ExpectToken( DX11AsmToken::Coma );
 		auto& src1 = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
-		auto& src2 = ExpectToken( DX11AsmToken::ID );
+		ExpectToken( DX11AsmToken::ID );  // TODO: src2
 
 		m_codeOs << Dest( dst ) << "=";
 		if( command.modifier == MakeInlineString( "indexable" ) )
@@ -2054,14 +2055,14 @@ public:
 		m_codeOs << ';' << endl;
 	}
 
-	void switch_( const DX11AsmToken& command )
+	void switch_( const DX11AsmToken& )
 	{
 		auto& src0 = ExpectToken( DX11AsmToken::ID );
 
 		m_codeOs << "switch(" << Src( src0, "x", Int ) << "){" << endl;
 	}
 
-	void uaddc( const DX11AsmToken& command )
+	void uaddc( const DX11AsmToken& )
 	{
 		auto& dst0 = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -2074,7 +2075,7 @@ public:
 			<< ",_x,_y);" << Dest( dst0 ) << "=uintBitsToFloat(_x);" << Dest( dst1 ) << "=uintBitsToFloat(_x);}" << endl;
 	}
 
-	void udiv( const DX11AsmToken& command )
+	void udiv( const DX11AsmToken& )
 	{
 		auto& dst0 = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -2087,7 +2088,7 @@ public:
 		m_codeOs << Dest( dst1 ) << "=uintBitsToFloat(" << Src( src0, dst1.swizzle, Uint ) << '%' << Src( src1, dst1.swizzle, Uint ) << ");" << endl;
 	}
 
-	void uge( const DX11AsmToken& command )
+	void uge( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -2110,7 +2111,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void ult( const DX11AsmToken& command )
+	void ult( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -2133,7 +2134,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void umad( const DX11AsmToken& command )
+	void umad( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -2141,14 +2142,14 @@ public:
 		ExpectToken( DX11AsmToken::Coma );
 		auto& src1 = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
-		auto& src2 = ExpectToken( DX11AsmToken::ID );
+		ExpectToken( DX11AsmToken::ID );  // TODO: src2
 
 		m_codeOs << Dest( dst ) << "=uintBitsToFloat(";
 		m_codeOs << Src( src0, dst.swizzle, Uint ) << '*' << Src( src1, dst.swizzle, Uint ) << '+' << Src( src1, dst.swizzle, Uint );
 		m_codeOs << ");" << endl;
 	}
 
-	void umax( const DX11AsmToken& command )
+	void umax( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -2161,7 +2162,7 @@ public:
 		m_codeOs << "));" << endl;
 	}
 
-	void umin( const DX11AsmToken& command )
+	void umin( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -2174,7 +2175,7 @@ public:
 		m_codeOs << "));" << endl;
 	}
 
-	void umul( const DX11AsmToken& command )
+	void umul( const DX11AsmToken& )
 	{
 		auto& dst0 = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -2187,7 +2188,7 @@ public:
 			<< ",_x,_y);" << Dest( dst0 ) << "=uintBitsToFloat(_x);" << Dest( dst1 ) << "=uintBitsToFloat(_x);}" << endl;
 	}
 
-	void ushr( const DX11AsmToken& command )
+	void ushr( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -2200,7 +2201,7 @@ public:
 		m_codeOs << ");" << endl;
 	}
 
-	void utof( const DX11AsmToken& command )
+	void utof( const DX11AsmToken& )
 	{
 		auto& dst = ExpectToken( DX11AsmToken::ID );
 		ExpectToken( DX11AsmToken::Coma );
@@ -2361,7 +2362,6 @@ private:
 				else
 				{
 					os << '.';
-					int offset = 0;
 					int srcMax = int( m_reg.swizzle.end - m_reg.swizzle.start - 1 );
 					for( auto it = m_destSwizzle.start; it != m_destSwizzle.end; ++it )
 					{
@@ -2371,13 +2371,13 @@ private:
 							os << m_reg.swizzle.start[0];
 							break;
 						case 'y':
-							os << m_reg.swizzle.start[min( srcMax, 1 )];
+							os << m_reg.swizzle.start[std::min( srcMax, 1 )];
 							break;
 						case 'z':
-							os << m_reg.swizzle.start[min( srcMax, 2 )];
+							os << m_reg.swizzle.start[std::min( srcMax, 2 )];
 							break;
 						case 'w':
-							os << m_reg.swizzle.start[min( srcMax, 3 )];
+							os << m_reg.swizzle.start[std::min( srcMax, 3 )];
 							break;
 						}
 					}
@@ -2447,13 +2447,13 @@ private:
 						os << components[0];
 						break;
 					case 'y':
-						os << components[min(1, srcMax)];
+						os << components[std::min(1, srcMax)];
 						break;
 					case 'z':
-						os << components[min(2, srcMax)];
+						os << components[std::min(2, srcMax)];
 						break;
 					case 'w':
-						os << components[min(3, srcMax)];
+						os << components[std::min(3, srcMax)];
 						break;
 					}
 				}
@@ -2704,7 +2704,7 @@ static GLEWContext* glewGetContext()
 			return false;
 		}
 
-		auto ver = glGetString(GL_VERSION);
+		glGetString( GL_VERSION );
 		GLEWContext* ctx = new GLEWContext;
 		auto ret = glewContextInit( ctx );
 		if( ret != GLEW_OK )
@@ -2728,6 +2728,8 @@ static GLEWContext* glewGetContext()
 // --------------------------------------------------------------------------------------
 bool EffectCompilerGL4::Create()
 {
+	tmFunction( 0, 0 );
+
 	if( !m_compilerDX11.Create() )
 	{
 		return false;
@@ -3021,9 +3023,6 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 	}
 	listing.literal( "techniques" ).list();
 
-	GLint vertexShader = 0;
-	GLint fragmentShader = 0;
-
 	for( auto technique = result.techniques.begin(); technique != result.techniques.end(); ++technique )
 	{
 		listing.dict()
@@ -3073,8 +3072,8 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 					const char* found = strstr( src, approximately );
 					if( found )
 					{
-						unsigned instructionCount = -1;
-						sscanf_s( found + strlen( approximately ), "%u", &instructionCount );
+						int instructionCount = -1;
+						sscanf_s( found + strlen( approximately ), "%i", &instructionCount );
 						listing.literal( "stats" ).dict().literal( "instructionCount" ).literal( instructionCount ).end();
 					}
 					PrintStageInfo( listing, *stage, result );
@@ -3105,3 +3104,4 @@ bool EffectCompilerGL4::CompileEffect( const char* source,
 	listing.end();
 	return true;
 }
+#endif

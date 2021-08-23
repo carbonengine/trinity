@@ -6,20 +6,24 @@
 #include "EffectData.h"
 
 
-bool ParseRegisterID( const char* start, const char* end, char& registerType, int& registerNumber )
+bool ParseRegisterID( const char* start, const char*, char& registerType, int& registerNumber )
 {
 	char rType;
 	int rNumber;
+#if _WIN32
 	bool result = sscanf_s( start, "%c%i", &rType, 1, &rNumber ) == 2;
+#else
+	bool result = sscanf( start, "%1c%i", &rType, &rNumber ) == 2;
+#endif
 	if( result )
 	{
-		registerType = tolower( rType );
+		registerType = char( tolower( rType ) );
 		registerNumber = rNumber;
 	}
 	return result;
 }
 
-long ParseNumber( const char* start, const char* end, unsigned base )
+long ParseNumber( const char* start, const char*, unsigned base )
 {
 	char* stop;
 	return strtol( start, &stop, base );
@@ -72,7 +76,6 @@ std::string ParseString( const InlineString& string )
 	}
 	std::string result;
 	result.reserve( string.end - string.start );
-	size_t index = 0;
 	for( const char* c = string.start + 1; c + 1 < string.end; ++c )
 	{
 		if( *c == '\\' )
@@ -110,15 +113,15 @@ std::string ParseString( const InlineString& string )
 			case '7':
 				{
 					long code = ParseNumber( c, string.end, 8 );
-					result.append( 1, unsigned char( code ) );
+					result.append( 1, static_cast<unsigned char>( code ) );
 				}
 				break;
 			case 'x':
 			case 'X':
-				if( c[2] >= '0' && c[2] <= '9' || c[2] >= 'a' && c[2] <= 'f' || c[2] >= 'A' && c[2] <= 'F' )
+				if( isxdigit( c[2] ) )
 				{
 					long code = ParseNumber( c, string.end, 16 );
-					result.append( 1, unsigned char( code ) );
+					result.append( 1, static_cast<unsigned char>( code ) );
 				}
 			default:
 				result.append( 1, c[1] );
@@ -167,7 +170,9 @@ void MarkUsedSymbols( ASTNode* entryPoint, SymbolTable& symbols )
 		return;
 	}
 
-	if( entryPoint->GetNodeType() == NT_FUNCTION_ATTRIBUTE && 
+	const InlineString globalsStructName = MakeInlineString( "GlobalsData" );
+
+	if( entryPoint->GetNodeType() == NT_FUNCTION_ATTRIBUTE &&
 		entryPoint->GetChildOrNull( 0 ) &&
 		entryPoint->GetToken()->stringValue == MakeInlineString( "patchconstantfunc" ) &&
 		entryPoint->GetChildOrNull( 0 )->GetToken()->type == OP_STRING_CONST )
@@ -178,9 +183,14 @@ void MarkUsedSymbols( ASTNode* entryPoint, SymbolTable& symbols )
 			MarkUsedSymbols( symbol->definition, symbols );
 		}
 	}
-	for( size_t i = 0; i < entryPoint->GetChildrenCount(); ++i )
+	// "Globals" struct is a special case and we don't want to mark all of it's members
+	// as "used" automatically.
+	if( !(entryPoint->GetNodeType() == NT_STRUCT && entryPoint->GetSymbol()->name == globalsStructName ) )
 	{
-		MarkUsedSymbols( entryPoint->GetChild( i ), symbols );
+		for( size_t i = 0; i < entryPoint->GetChildrenCount(); ++i )
+		{
+			MarkUsedSymbols( entryPoint->GetChild( i ), symbols );
+		}
 	}
 	if( entryPoint->GetSymbol() && entryPoint->GetSymbol()->used )
 	{
@@ -208,18 +218,20 @@ static bool HasUsedDeclarations( ASTNode* node )
 {
 	for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
 	{
-		if( node->GetChild( i ) )
+		ASTNode* child = node->GetChild( i );
+		if( child )
 		{
-			if( node->GetChild( i )->GetNodeType() == NT_VAR_DECLARATION_LIST )
+			if( child->GetNodeType() == NT_VAR_DECLARATION_LIST ||
+				child->GetNodeType() == NT_STRUCT_MEMBER )
 			{
-				if( HasUsedDeclarations( node->GetChild( i ) ) )
+				if( HasUsedDeclarations( child ) )
 				{
 					return true;
 				}
 			}
-			else if( node->GetChild( i )->GetNodeType() == NT_NAME_DECLARATION )
+			else if( child->GetNodeType() == NT_NAME_DECLARATION )
 			{
-				if( node->GetChild( i )->GetSymbol() && node->GetChild( i )->GetSymbol()->used )
+				if( child->GetSymbol() && child->GetSymbol()->used )
 				{
 					return true;
 				}
@@ -229,13 +241,14 @@ static bool HasUsedDeclarations( ASTNode* node )
 	return false;
 }
 
-static void MarkCBuffersUsed( ASTNode* node, SymbolTable& symbols )
+static void MarkCBuffersAndStructsUsed( ASTNode* node, SymbolTable& symbols )
 {
 	if( node == nullptr )
 	{
 		return;
 	}
-	if( node->GetNodeType() == NT_CBUFFER )
+	if( node->GetNodeType() == NT_CBUFFER ||
+		node->GetNodeType() == NT_STRUCT )
 	{
 		if( HasUsedDeclarations( node ) )
 		{
@@ -244,14 +257,16 @@ static void MarkCBuffersUsed( ASTNode* node, SymbolTable& symbols )
 	}
 	for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
 	{
-		MarkCBuffersUsed( node->GetChild( i ), symbols );
+		MarkCBuffersAndStructsUsed( node->GetChild( i ), symbols );
 	}
 }
 
 void MarkUsedSymbols( ASTNode* entryPoint, ParserState& state )
 {
+	tmFunction( 0, 0 );
+
 	MarkUsedSymbols( entryPoint, state.GetSymbolTable() );
-	MarkCBuffersUsed( state.GetTree(), state.GetSymbolTable() );
+	MarkCBuffersAndStructsUsed( state.GetTree(), state.GetSymbolTable() );
 }
 
 bool ComputeMemberType( const Type& leftType, const InlineString& member, Type& type, Symbol*& symbol )
@@ -387,8 +402,8 @@ bool ComputeMemberType( const Type& leftType, const InlineString& member, Type& 
 			int swizzleSet = 0;
 			for( const char* c = member.start; c != member.end; ++c )
 			{
-				char *set1 = "xyzw";
-				char *set2 = "rgba";
+				const char *set1 = "xyzw";
+				const char *set2 = "rgba";
 				if( const char *pos = strchr( set1, *c ) )
 				{
 					if( swizzleSet == 2 )
@@ -401,13 +416,13 @@ bool ComputeMemberType( const Type& leftType, const InlineString& member, Type& 
 					}
 					swizzleSet = 1;
 				}
-				else if( const char *pos = strchr( set2, *c ) )
+				else if( const char *pos2 = strchr( set2, *c ) )
 				{
 					if( swizzleSet == 1 )
 					{
 						return false;
 					}
-					if( pos - set2 >= leftType.width )
+					if( pos2 - set2 >= leftType.width )
 					{
 						return false;
 					}
@@ -488,7 +503,11 @@ static ASTNode* AddCBuffer( ParserState& state, ASTNode* node, int cbufferIndex,
 					token.fileLocation = node->GetLocation();
 					token.intValue = 0;
 					char buffer[64];
+#if _WIN32
 					_itoa_s( arrayDimension, buffer, 10 );
+#else
+					snprintf( buffer, sizeof( buffer ), "%d", arrayDimension );
+#endif
 					char* string = state.AllocateString( strlen( buffer ) );
 					memcpy( string, buffer, strlen( buffer ) );
 					token.stringValue = MakeInlineString( string, string + strlen( buffer ) );
@@ -528,7 +547,7 @@ static ASTNode* AddCBuffer( ParserState& state, ASTNode* node, int cbufferIndex,
 	return cbuffer;
 }
 
-bool HasRegisterBinding( Symbol* symbol, const char* shaderProfile, char registerType, int registerNumber )
+bool HasRegisterBinding( const Symbol* symbol, const char* shaderProfile, char registerType, int registerNumber )
 {
 	auto found = symbol->registerSpecifier.find( MakeInlineString( shaderProfile ) );
 	if( found == symbol->registerSpecifier.end() )
@@ -542,37 +561,48 @@ bool HasRegisterBinding( Symbol* symbol, const char* shaderProfile, char registe
 	return false;
 }
 
-unsigned GetCBufferIndex( Symbol* symbol )
+int GetCBufferIndex( const InlineString& name )
+{
+	if( strncmp( name.start, "PerFrameVS", 10 ) == 0 )
+	{
+		return 1;
+	}
+	else if( strncmp( name.start, "PerObjectPSInt", 14 ) == 0 )
+	{
+		return 10;
+	}
+	else if( strncmp( name.start, "PerObjectPS", 11 ) == 0 )
+	{
+		return 4;
+	}
+	else if( strncmp( name.start, "PerFramePS", 10 ) == 0 )
+	{
+		return 2;
+	}
+	else if( !strncmp( name.start, "g_uiTransforms", 14 ) )
+	{
+		return 6;
+	}
+	else if( !strncmp( name.start, "Globals", 7 ) )
+	{
+		return 0;
+	}
+
+	return -1;
+}
+
+int GetCBufferIndex( const Symbol* symbol )
 {
 	if( strncmp( symbol->name.start, "PerObjectVS", 11 ) == 0 )
-	{					
+	{
 		if( HasRegisterBinding( symbol, "vs", 'c', 180 ) )
 		{
 			return 5;
 		}
 		return 3;
 	}
-	else if( strncmp( symbol->name.start, "PerFrameVS", 10 ) == 0 )
-	{
-		return 1;
-	}
-	else if( strncmp( symbol->name.start, "PerObjectPSInt", 14 ) == 0 )
-	{
-		return 10;
-	}
-	else if( strncmp( symbol->name.start, "PerObjectPS", 11 ) == 0 )
-	{
-		return 4;
-	}
-	else if( strncmp( symbol->name.start, "PerFramePS", 10 ) == 0 )
-	{
-		return 2;
-	}
-	else if( !strncmp( symbol->name.start, "g_uiTransforms", 14 ) )
-	{
-		return 6;
-	}
-	return 0;
+
+	return GetCBufferIndex( symbol->name );
 }
 
 static void PatchCBuffers( ParserState& state, ASTNode* parent, unsigned &index )
@@ -585,7 +615,7 @@ static void PatchCBuffers( ParserState& state, ASTNode* parent, unsigned &index 
 	if( node->GetNodeType() == NT_NAME_DECLARATION )
 	{
 		int cbufferIndex = GetCBufferIndex( node->GetSymbol() );
-		if( cbufferIndex )
+		if( cbufferIndex >= 0 )
 		{
 			ASTNode* shadowStruct;
 			ASTNode* cbuffer = AddCBuffer( state, node, cbufferIndex, shadowStruct );
@@ -607,6 +637,8 @@ static void PatchCBuffers( ParserState& state, ASTNode* parent, unsigned &index 
 
 void PatchCBuffers( ParserState& state )
 {
+	tmFunction( 0, 0 );
+
 	for( unsigned i = 0; i < state.GetTree()->GetChildrenCount(); ++i )
 	{
 		PatchCBuffers( state, state.GetTree(), i );
@@ -723,6 +755,8 @@ namespace
 			{
 				FindExplicitRegisters( root->GetChild( i ), stage, registers );
 			}
+			break;
+		default:
 			break;
 		}
 	}
@@ -856,12 +890,16 @@ namespace
 				AssignRegisters( root->GetChild( i ), stage, registers );
 			}
 			break;
+		default:
+			break;
 		}
 	}
 }
 
 void AssignRegisters( ASTNode* root, int32_t stage )
 {
+	tmFunction( 0, 0 );
+
 	Registers registers;
 	FindExplicitRegisters( root, InputStageType( stage ), registers );
 	AssignRegisters( root, InputStageType( stage ), registers );
@@ -922,8 +960,10 @@ void SortProgramNodes( ASTNode* root )
 	} );
 }
 
-void CreateGlobalsCB( ParserState& state, int32_t stage )
+void CreateGlobalsCB( ParserState& state )
 {
+	tmFunction( 0, 0 );
+
 	auto root = state.GetTree();
 	if( !root )
 	{
@@ -957,8 +997,8 @@ void CreateGlobalsCB( ParserState& state, int32_t stage )
 			}
 			if( !GetRegisterType( child->GetType() ) )
 			{
-				varStart = min( varStart, i );
-				varEnd = max( varEnd, i );
+				varStart = std::min( varStart, i );
+				varEnd = std::max( varEnd, i );
 			}
 		}
 	}
@@ -992,4 +1032,132 @@ void CreateGlobalsCB( ParserState& state, int32_t stage )
 		}
 		root->InsertChild( unsigned( varStart ), cbuffer );
 	}
+}
+
+ASTNode* NewStruct( ParserState& state, const InlineString& name )
+{
+	auto structDecl = state.NewNode( NT_STRUCT );
+	auto symbol = state.GetSymbolTable().AddSymbol( name ? name : state.AllocateName() );
+	symbol->isTypeName = true;
+	symbol->definition = structDecl;
+	structDecl->SetSymbol( symbol );
+	structDecl->SetType( TypeFromSymbol( symbol ) );
+	return structDecl;
+}
+
+ASTNode* NewVarIdentifier( ParserState& state, Symbol* var )
+{
+	auto access = state.NewNode( NT_VAR_IDENTIFIER, ScannerToken::ID( var->name ) );
+	access->SetSymbol( var );
+	access->SetType( var->type );
+	return access;
+}
+
+ASTNode* NewLiteralConst( ParserState& state, float value )
+{
+	ScannerToken token = { OP_FLOAT, 0, state.AllocateName( std::to_string( value ).c_str() ), {} };
+	auto result = state.NewNode(NT_CONSTANT, token );
+	result->SetType( TypeFromTokenType( OP_FLOAT ) );
+	return result;
+}
+
+ASTNode* NewDot( ParserState& state, ASTNode* expr, Symbol* field )
+{
+	auto access = state.NewNode( NT_POSTFIX_EXPRESSION, ScannerToken::ID( field->name ) );
+	access->AddChild( expr );
+	access->SetType( field->type );
+	access->SetSymbol( field );
+	return access;
+}
+
+ASTNode* NewDot( ParserState& state, ASTNode* expr, const InlineString& field )
+{
+	auto access = state.NewNode( NT_POSTFIX_EXPRESSION, ScannerToken::ID( field ) );
+	access->AddChild( expr );
+	Type type;
+	Symbol* symbol;
+	if( !ComputeMemberType( expr->GetType(), field, type, symbol ) )
+	{
+		state.ShowMessage( EC_INVALID_SUBSCRIPT, ToString( field ).c_str() );
+		type.FromTokenType( OP_VOID );
+	}
+	access->SetType( type );
+	access->SetSymbol( symbol );
+	return access;
+}
+
+ASTNode* NewBinaryExpression( ParserState& state, int op, ASTNode* left, ASTNode* right )
+{
+	auto expr = state.NewNode( NT_EXPRESSION, ScannerToken::FromTokenType( op ) );
+	expr->AddChild( left );
+	expr->AddChild( right );
+	Type type;
+	if( !GetCommonType( left->GetType(), right->GetType(), type ) )
+	{
+		state.ShowMessage( EC_TYPE_MISMATCH );
+		type.FromTokenType( OP_VOID );
+	}
+	expr->SetType( type );
+	return expr;
+}
+
+ASTNode* NewConditionalExpression( ParserState& state, ASTNode* condition, ASTNode* trueExpr, ASTNode* falseExpr )
+{
+	auto expr = state.NewNode( NT_CONDITIONAL_EXPRESSION, ScannerToken::FromTokenType( OP_QUESTION ) );
+	expr->AddChild( condition );
+	expr->AddChild( trueExpr );
+	expr->AddChild( falseExpr );
+	Type type;
+	if( !GetCommonType( trueExpr->GetType(), falseExpr->GetType(), type ) )
+	{
+		state.ShowMessage( EC_TYPE_MISMATCH );
+		type.FromTokenType( OP_VOID );
+	}
+	expr->SetType( type );
+	return expr;
+}
+
+ASTNode* NewVarDeclaration( ParserState& state, const Type& type, const InlineString& name )
+{
+	auto nameDecl = state.NewNode( NT_NAME_DECLARATION );
+	auto nameSymbol = state.GetSymbolTable().AddSymbol( name ? name : state.AllocateName() );
+	nameDecl->SetSymbol( nameSymbol );
+
+	nameSymbol->type = type;
+	nameSymbol->definition = nameDecl;
+	nameDecl->SetType( nameSymbol->type );
+
+	auto declList = state.NewNode( NT_VAR_DECLARATION_LIST );
+	declList->AddChild( nameDecl );
+	declList->SetType( nameSymbol->type );
+	return declList;
+}
+
+ASTNode* NewExpressionStatement( ParserState& state, ASTNode* expr )
+{
+	auto statement = state.NewNode( NT_EXPRESSION_STATEMENT );
+	statement->AddChild( expr );
+	return statement;
+}
+
+ASTNode* NewReturn( ParserState& state, ASTNode* expr )
+{
+	auto returnNode = state.NewNode( NT_JUMP, ScannerToken::FromTokenType( OP_RETURN ) );
+	if( expr )
+	{
+		returnNode->AddChild( expr );
+	}
+	return returnNode;
+}
+
+ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const InlineString& name )
+{
+	auto param = state.NewNode( NT_FUNCTION_PARAMETER );
+	auto symbol = state.GetSymbolTable().AddSymbol( name ? name : state.AllocateName() );
+	symbol->type = type;
+	symbol->definition = param;
+	param->SetType( symbol->type );
+	param->SetSymbol( symbol );
+	param->AddChild( nullptr );
+	return param;
 }

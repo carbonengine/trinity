@@ -15,6 +15,8 @@ enum Platform
 	PLATFORM_GL3 = 8,
 	PLATFORM_GL4 = 9,
 
+	PLATFORM_METAL = 10,
+
 	_PLATFORM_END,
 };
 
@@ -35,6 +37,8 @@ inline bool IsValidPlatform( Platform platform )
 	case PLATFORM_GL3:
 		return true;
 	case PLATFORM_GL4:
+		return true;
+	case PLATFORM_METAL:
 		return true;
 	default:
 		return false;
@@ -59,6 +63,8 @@ inline const char* GetPlatformShortName( Platform platform )
 		return "gl3";
 	case PLATFORM_GL4:
 		return "gl4";
+	case PLATFORM_METAL:
+		return "mtl";
 	default:
 		return "INVALID";
 	}
@@ -82,6 +88,8 @@ inline const char* GetPlatformLongName( Platform platform )
 		return "OpenGL 3";
 	case PLATFORM_GL4:
 		return "OpenGL 4";
+	case PLATFORM_METAL:
+		return "Metal";
 	default:
 		return "INVALID";
 	}
@@ -105,6 +113,8 @@ inline const char* GetPlatformIdString( Platform platform )
 		return "8";
 	case PLATFORM_GL4:
 		return "9";
+	case PLATFORM_METAL:
+		return "10";
 	default:
 		return "INVALID";
 	}

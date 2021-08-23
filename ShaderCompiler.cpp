@@ -14,17 +14,21 @@
 #include "EffectCompilerGL3.h"
 #include "EffectCompilerGL4.h"
 #include "EffectCompilerDX12.h"
+#include "EffectCompilerMetal.h"
 #include "EffectData.h"
 #include "Mutex.h"
 #include "WorkQueue.h"
 #include "Macro.h"
 #include "ModifiedTime.h"
 #include "Platforms.h"
+#include <atomic>
 
 
+#if _WIN32
 typedef BOOL (WINAPI *LPFN_GLPI)(
-    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION, 
+    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
     PDWORD);
+#endif
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -34,6 +38,7 @@ typedef BOOL (WINAPI *LPFN_GLPI)(
 // --------------------------------------------------------------------------------------
 unsigned GetNumberOfCores()
 {
+#if _WIN32
     BOOL done;
     BOOL rc;
     DWORD returnLength;
@@ -43,7 +48,7 @@ unsigned GetNumberOfCores()
     LPFN_GLPI Glpi;
 
     Glpi = (LPFN_GLPI) GetProcAddress( GetModuleHandle( TEXT( "kernel32" ) ), "GetLogicalProcessorInformation" );
-    if( NULL == Glpi ) 
+    if( NULL == Glpi )
     {
         return 1;
     }
@@ -52,42 +57,42 @@ unsigned GetNumberOfCores()
     buffer = NULL;
     returnLength = 0;
 
-    while( !done ) 
+    while( !done )
     {
         rc = Glpi( buffer, &returnLength );
 
-        if( FALSE == rc ) 
+        if( FALSE == rc )
         {
-            if( GetLastError() == ERROR_INSUFFICIENT_BUFFER ) 
+            if( GetLastError() == ERROR_INSUFFICIENT_BUFFER )
             {
-                if( buffer ) 
-				{
+                if( buffer )
+                {
                     free( buffer );
-				}
+                }
                 buffer=(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc( returnLength );
 
-                if( NULL == buffer ) 
+                if( NULL == buffer )
                 {
                     return 1;
                 }
-            } 
-            else 
+            }
+            else
             {
                 return 1;
             }
-        } 
-        else 
-		{
-			done = TRUE;
-		}
+        }
+        else
+        {
+            done = TRUE;
+        }
     }
 
     procCoreCount = 0;
     byteOffset = 0;
 
-    while( byteOffset < returnLength ) 
+    while( byteOffset < returnLength )
     {
-        if( buffer->Relationship == RelationProcessorCore ) 
+        if( buffer->Relationship == RelationProcessorCore )
         {
             procCoreCount++;
         }
@@ -96,11 +101,15 @@ unsigned GetNumberOfCores()
     }
 
     return procCoreCount;
+#else
+    long result = sysconf( _SC_NPROCESSORS_ONLN );
+    return unsigned(result);
+#endif
 }
 
 
 // Maximum length of defines string
-const unsigned BUFFER_SIZE = 4096;
+// const unsigned BUFFER_SIZE = 4096;
 
 
 struct CompiledData
@@ -111,7 +120,7 @@ struct CompiledData
 };
 
 // Flag indicating a compile error (in some worker thread) causes all worker threads to exit
-LONG g_error = 0;
+std::atomic<long> g_error( 0 );
 // Include file handler
 CachingIncludeHandler g_includeHandler;
 // Compiled effect code (indexed by permutaitons IDs)
@@ -156,6 +165,7 @@ GlesExtensionInfo g_glesExtensions;
 
 StringTable g_stringTable;
 
+Mutex g_compilersMutex;
 std::map<Platform, std::unique_ptr<EffectCompilerBase>> g_compilers;
 
 
@@ -175,7 +185,11 @@ Platform GetPlatform( const std::vector<Macro>& defines )
 			return platform;
 		}
 	}
-	return PLATFORM_DX11; 
+#if _WIN32
+	return PLATFORM_DX11;
+#else
+	return PLATFORM_METAL;
+#endif
 }
 
 
@@ -196,7 +210,7 @@ struct CompileShaderArguments
 // --------------------------------------------------------------------------------------
 bool CompileShader( const CompileShaderArguments& arguments )
 {
-	if( InterlockedCompareExchange( &g_error, 0, 0 ) )
+	if( g_error.load( std::memory_order_relaxed ) )
 	{
 		return false;
 	}
@@ -216,16 +230,61 @@ bool CompileShader( const CompileShaderArguments& arguments )
 
 	//EffectData outputData;
 
-	auto compiler = g_compilers.find( platform );
-	if( compiler == end( g_compilers ) )
+	EffectCompilerBase* compiler = nullptr;
 	{
-		g_messages.AddMessage( "\\memory(0): error C0000: trying to compile %s effect when %s compiler failed to initialize", GetPlatformShortName( platform ), GetPlatformShortName( platform ) );
-		InterlockedExchange( &g_error, 1 );
-		return false;
+		MutexScope lockCompilers( g_compilersMutex );
+
+		auto found = g_compilers.find( platform );
+		if( found == end( g_compilers ) )
+		{
+			std::unique_ptr<EffectCompilerBase> newCompiler;
+			switch( platform )
+			{
+#if _WIN32
+			case PLATFORM_DX9:
+				newCompiler.reset( new EffectCompilerDX9() );
+				break;
+			case PLATFORM_DX11:
+				newCompiler.reset( new EffectCompilerDX11() );
+				break;
+			case PLATFORM_GL2:
+				newCompiler.reset( new EffectCompilerGL2() );
+				break;
+			case PLATFORM_DX12:
+				newCompiler.reset( new EffectCompilerDX12() );
+				break;
+			case PLATFORM_GL3:
+				newCompiler.reset( new EffectCompilerGL3() );
+				break;
+			case PLATFORM_GL4:
+				newCompiler.reset( new EffectCompilerGL4() );
+				break;
+#endif
+			case PLATFORM_METAL:
+				newCompiler.reset( new EffectCompilerMetal() );
+				break;
+			default:
+				g_messages.AddMessage( "\\memory(0): error X0000: unsupported platform %i", int( platform ) );
+				g_error = 1;
+				return false;
+			}
+			if( !newCompiler->Create() )
+			{
+				g_messages.AddMessage( "\\memory(0): error X0000: failed to create %s compiler", GetPlatformLongName( platform ) );
+				g_error = 1;
+				return false;
+			}
+			compiler = newCompiler.get();
+			g_compilers[platform] = std::move( newCompiler );
+		}
+		else
+		{
+			compiler = found->second.get();
+		}
 	}
-	if( !compiler->second->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
+	if( !compiler->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
 	{
-		InterlockedExchange( &g_error, 1 );
+		g_error = 1;
 		return false;
 	}
 
@@ -257,6 +316,9 @@ void PrintUsage()
 	printf( "  /E{e,w,d}[extension] - Specify support for all or certain GLES extensions\n" );
 	printf( "  /novalidate - Skip validating converted GLSL code\n" );
 	printf( "  /permutations - Print permutations of the shader\n" );
+#if CCP_TELEMETRY_ENABLED
+	printf( "  /telemetry - Enable RAD Telemetry\n" );
+#endif
 	printf( "input_file - Path to input .fx file\n" );
 	printf( "output_file - Path to output .fxp file\n" );
 }
@@ -267,6 +329,8 @@ void PrintUsage()
 
 bool DiscoverPermutations( Permutations& permutations, const char* shaderSource, size_t shaderLength )
 {
+	tmFunction( 0, 0 );
+
 	ParserState state( MakeInlineString( shaderSource, shaderSource + shaderLength ) );
 	if( !state.DiscoverPermutations( permutations ) )
 	{
@@ -294,7 +358,8 @@ struct ProgramArguments
 		listingFile( nullptr ),
 		checkMTime( false ),
 		printPermutations( false ),
-		ignorePermutations( false )
+		ignorePermutations( false ),
+		telemetry( false )
 	{
 
 	}
@@ -307,10 +372,11 @@ struct ProgramArguments
 	bool checkMTime;
 	bool printPermutations;
 	bool ignorePermutations;
+	bool telemetry;
 };
 
 
-bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv[] )
+bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[] )
 {
 	g_glesExtensions.m_all = GlesExtensionInfo::WARN;
 
@@ -321,7 +387,7 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 			++i;
 			if( i < argc )
 			{
-				args.coreCount = max( atoi( argv[i] ), 1 );
+				args.coreCount = std::max( atoi( argv[i] ), 1 );
 			}
 			else
 			{
@@ -391,7 +457,7 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 			++i;
 			if( i < argc )
 			{
-				g_maxClipPlanes = min( atoi( argv[i] ), 4 );
+				g_maxClipPlanes = std::min( atoi( argv[i] ), 4 );
 			}
 			else
 			{
@@ -443,6 +509,12 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, _TCHAR* argv
 			g_glExternalCompilerSwitch = argv[++i];
 			g_glExternalCompilerPath = argv[++i];
 		}
+#if CCP_TELEMETRY_ENABLED
+		else if( strcmp( argv[i], "/telemetry" ) == 0 )
+		{
+			args.telemetry = true;
+		}
+#endif
 		else if( args.shaderPath == nullptr )
 		{
 			args.shaderPath = argv[i];
@@ -556,15 +628,84 @@ void AddPermutationsToWorkQueue( CompileQueue& queue, const Permutations& permut
 	}
 }
 
-
-int _tmain(int argc, _TCHAR* argv[])
+struct WithTelemetry
 {
+#if CCP_TELEMETRY_ENABLED
+	explicit WithTelemetry( bool enable )
+	{
+		if( !enable )
+		{
+			return;
+		}
+#ifdef NDEBUG
+		tmLoadLibrary( TM_RELEASE );
+#else
+		tmLoadLibrary( TM_DEBUG );
+#endif
+
+		tm_int32 memorySize = 8 * 1024 * 1024;
+		char* memory = (char*)malloc( memorySize );
+		tmInitialize( memorySize, memory );
+		tm_error err = tmOpen(
+			0, // unused
+			"ShaderCompiler", // program name, don't use slashes or weird character that will screw up a filename
+			__DATE__ " " __TIME__, // identifier, could be date time, or a build number ... whatever you want
+			"localhost", // telemetry server address
+			TMCT_TCP, // network capture
+			4719, // telemetry server port
+			TMOF_INIT_NETWORKING, // flags
+			100 ); // timeout in milliseconds ... pass -1 for infinite
+
+		if( err == TMERR_DISABLED )
+		{
+			printf( "Telemetry is disabled via #define NTELEMETRY\n" );
+		}
+		else if( err == TMERR_UNINITIALIZED )
+		{
+			printf( "tmInitialize failed or was not called\n" );
+		}
+		else if( err == TMERR_NETWORK_NOT_INITIALIZED )
+		{
+			printf( "WSAStartup was not called before tmOpen! Call WSAStartup or pass TMOF_INIT_NETWORKING.\n" );
+		}
+		else if( err == TMERR_NULL_API )
+		{
+			printf( "There is no Telemetry API (the DLL isn't in the EXE's path)!\n" );
+		}
+		else if( err == TMERR_COULD_NOT_CONNECT )
+		{
+			printf( "There is no Telemetry server running\n" );
+		}
+	}
+
+	~WithTelemetry()
+	{
+		tmTick( 0 );
+		tmClose( 0 );
+		tmShutdown();
+	}
+#else
+	explicit WithTelemetry( bool )
+	{
+	}
+#endif
+};
+
+#if _WIN32
+int _tmain(int argc, _TCHAR* argv[])
+#else
+int main(int argc, char* argv[])
+#endif
+{
+
 	ProgramArguments args;
 	if( !ExtractCommandLineArguments( args, argc, argv ) )
 	{
 		PrintUsage();
 		return 1;
 	}
+
+	WithTelemetry withTelemetry( args.telemetry );
 
 	if( args.checkMTime )
 	{
@@ -582,45 +723,11 @@ int _tmain(int argc, _TCHAR* argv[])
 		printf( "%s: error X0000: Could not open input file \"%s\"\n", args.shaderPath, args.shaderPath );
 		return 1;
 	}
-	
+
 	g_includeHandler.SetRootPath( args.shaderPath );
 	g_messages.SetEntryFileName( args.shaderPath );
 
 	CompileQueue compileQueue( args.coreCount, &CompileShader );
-
-	for( int32_t i = 0; i < _PLATFORM_END; ++i )
-	{
-		std::unique_ptr<EffectCompilerBase> compiler;
-		switch( i )
-		{
-		case PLATFORM_DX9:
-			compiler.reset( new EffectCompilerDX9() );
-			break;
-		case PLATFORM_DX11:
-			compiler.reset( new EffectCompilerDX11() );
-			break;
-		case PLATFORM_GL2:
-			compiler.reset( new EffectCompilerGL2() );
-			break;
-		case PLATFORM_DX12:
-			compiler.reset( new EffectCompilerDX12() );
-			break;
-		case PLATFORM_GL3:
-			compiler.reset( new EffectCompilerGL3() );
-			break;
-		case PLATFORM_GL4:
-			compiler.reset( new EffectCompilerGL4() );
-			break;
-		default:
-			continue;
-		}
-		if( !compiler->Create() )
-		{
-			printf( "%s: warning X0000: Failed to create %s compiler\n", args.shaderPath, GetPlatformLongName( Platform( i ) ) );
-			fflush( stdout );
-		}
-		g_compilers[Platform( i )] = std::move( compiler );
-	}
 
 	Permutations permutations;
 	{
@@ -649,7 +756,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	compileQueue.Join();
 
-	if( InterlockedCompareExchange( &g_error, 0, 0 ) )
+	if( g_error.load( std::memory_order_relaxed ) )
 	{
 		g_messages.Flush();
 		return 1;
@@ -659,156 +766,162 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	std::vector<unsigned> keys;
 
-	for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
 	{
-		keys.push_back( it->first );
+		tmZone( 0, 0, "Packing" );
 
-		auto& compiledData = *it->second;
+		for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
+		{
+			keys.push_back( it->first );
 
-		SizeCountStream size;
-		compiledData.data.Save( size );
-		compiledData.packedSize = size.GetSize();
-		compiledData.packed.reset( new uint8_t[compiledData.packedSize] );
+			auto& compiledData = *it->second;
 
-		PackedStream stream( compiledData.packed.get(), compiledData.packedSize );
-		compiledData.data.Save( stream );
+			SizeCountStream size;
+			compiledData.data.Save( size );
+			compiledData.packedSize = size.GetSize();
+			compiledData.packed.reset( new uint8_t[compiledData.packedSize] );
+
+			PackedStream stream( compiledData.packed.get(), compiledData.packedSize );
+			compiledData.data.Save( stream );
+		}
 	}
 
 	std::map<unsigned, unsigned> aliases;
 
-	for( size_t i = 0; i < keys.size(); ++i )
 	{
-		auto& b0 = g_compiledEffects[keys[i]];
-		if( !b0 )
+		tmZone( 0, 0, "Find aliases" );
+		for( size_t i = 0; i < keys.size(); ++i )
 		{
-			continue;
-		}
-		for( size_t j = i + 1; j < keys.size(); ++j )
-		{
-			auto& b1 = g_compiledEffects[keys[j]];
-			if( !b1 )
+			auto& b0 = g_compiledEffects[keys[i]];
+			if( !b0 )
 			{
 				continue;
 			}
-			if( b0->packedSize == b1->packedSize && memcmp( b0->packed.get(), b1->packed.get(), b0->packedSize ) == 0 )
+			for( size_t j = i + 1; j < keys.size(); ++j )
 			{
-				aliases[keys[j]] = keys[i];
-				g_compiledEffects[keys[j]] = nullptr;
-				keys.erase( keys.begin() + j );
-				--j;
+				auto& b1 = g_compiledEffects[keys[j]];
+				if( !b1 )
+				{
+					continue;
+				}
+				if( b0->packedSize == b1->packedSize && memcmp( b0->packed.get(), b1->packed.get(), b0->packedSize ) == 0 )
+				{
+					aliases[keys[j]] = keys[i];
+					g_compiledEffects[keys[j]] = nullptr;
+					keys.erase( keys.begin() + j );
+					--j;
+				}
 			}
 		}
 	}
 
-	// Open the output file
-	HANDLE file = CreateFile( args.outputPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
-	if( file == INVALID_HANDLE_VALUE )
 	{
-		printf( "%s: error X0000: Could not open output file \"%s\" for writing\n", args.shaderPath, args.outputPath );
-		fflush( stdout );
-		return 1;
-	}
-
-	size_t permutationSize = 1;
-	for( auto it = permutations.begin(); it != permutations.end(); ++it )
-	{
-		permutationSize += 2 * sizeof( DWORD ) + 1 + 1 + 1 + it->options.size() * sizeof( DWORD );
-	}
-
-	// Write file header
-	size_t totalSize = g_compiledEffects.size();
-	size_t headerSize = ( totalSize * 3 + 1 ) * sizeof( uint32_t ) + permutationSize;
-	uint8_t* fullHeader = new uint8_t[headerSize];
-	uint8_t* headerHead = fullHeader;
-
-	*headerHead++ = uint8_t( permutations.size() );
-	for( auto it = permutations.begin(); it != permutations.end(); ++it )
-	{
-		*reinterpret_cast<uint32_t*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( it->name.c_str() ) );
-		headerHead += sizeof( uint32_t );
-		for( size_t j = 0; j < it->options.size(); ++j )
+		tmZone( 0, 0, "Saving" );
+		// Open the output file
+		FILE* file = nullptr;
+		if( fopen_s( &file, args.outputPath, "wb" ) != 0 )
 		{
-			if( it->options[j].name == it->defaultOption )
-			{
-				*reinterpret_cast<uint8_t*>( headerHead ) = uint8_t( j );
-				++headerHead;
-				break;
-			}
+			printf( "%s: error X0000: Could not open output file \"%s\" for writing\n", args.shaderPath, args.outputPath );
+			fflush( stdout );
+			return 1;
 		}
-		*reinterpret_cast<uint32_t*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( it->description.c_str() ) );
-		headerHead += sizeof( uint32_t );
 
-		*reinterpret_cast<uint8_t*>( headerHead ) = it->type;
-		headerHead += sizeof( uint8_t );
-
-		*headerHead++ = uint8_t( it->options.size() );
-		for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
+		size_t permutationSize = 1;
+		for( auto it = permutations.begin(); it != permutations.end(); ++it )
 		{
-			*reinterpret_cast<uint32_t*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( jt->name.c_str() ) );
+			permutationSize += 2 * sizeof( uint32_t ) + 1 + 1 + 1 + it->options.size() * sizeof( uint32_t );
+		}
+
+		// Write file header
+		size_t totalSize = g_compiledEffects.size();
+		size_t headerSize = ( totalSize * 3 + 1 ) * sizeof( uint32_t ) + permutationSize;
+		uint8_t* fullHeader = new uint8_t[headerSize];
+		uint8_t* headerHead = fullHeader;
+
+		*headerHead++ = uint8_t( permutations.size() );
+		for( auto it = permutations.begin(); it != permutations.end(); ++it )
+		{
+			*reinterpret_cast<uint32_t*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( it->name.c_str() ) );
 			headerHead += sizeof( uint32_t );
+			for( size_t j = 0; j < it->options.size(); ++j )
+			{
+				if( it->options[j].name == it->defaultOption )
+				{
+					*reinterpret_cast<uint8_t*>( headerHead ) = uint8_t( j );
+					++headerHead;
+					break;
+				}
+			}
+			*reinterpret_cast<uint32_t*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( it->description.c_str() ) );
+			headerHead += sizeof( uint32_t );
+
+			*reinterpret_cast<uint8_t*>( headerHead ) = it->type;
+			headerHead += sizeof( uint8_t );
+
+			*headerHead++ = uint8_t( it->options.size() );
+			for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
+			{
+				*reinterpret_cast<uint32_t*>( headerHead ) = g_stringTable.GetOffset( g_stringTable.AddString( jt->name.c_str() ) );
+				headerHead += sizeof( uint32_t );
+			}
 		}
+
+		uint32_t* header = reinterpret_cast<uint32_t*>( headerHead );
+		unsigned index = 0;
+
+		header[index++] = uint32_t( totalSize );
+		size_t offset = sizeof( uint32_t ) + headerSize + g_stringTable.GetSize();
+
+		std::map<uint32_t, std::pair<size_t, size_t>> offsets;
+		for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
+		{
+			header[index++] = it->first;
+			if( it->second )
+			{
+				header[index++] = uint32_t( offset );
+				header[index++] = uint32_t( it->second->packedSize );
+				offsets[it->first] = std::make_pair( offset, it->second->packedSize );
+				offset += it->second->packedSize;
+			}
+			else
+			{
+				auto aliasOffset = offsets[aliases[it->first]];
+				header[index++] = uint32_t( aliasOffset.first );
+				header[index++] = uint32_t( aliasOffset.second );
+			}
+		}
+
+		uint32_t version = 11;
+		fwrite( &version, 1, sizeof( uint32_t ), file );
+		g_stringTable.Write( file );
+		fwrite( fullHeader, 1, headerSize, file );
+
+		// Write compiled code
+		for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
+		{
+			if( it->second )
+			{
+				fwrite( it->second->packed.get(), 1, it->second->packedSize, file );
+			}
+		}
+
+		delete[] fullHeader;
+
+		fclose( file );
+		file = nullptr;
 	}
 
-
-	uint32_t *header = reinterpret_cast<uint32_t*>( headerHead );
-	unsigned index = 0;
-	
-
-
-
-	header[index++] = uint32_t( totalSize );
-	size_t offset = sizeof( uint32_t ) + headerSize + g_stringTable.GetSize();
-
-	std::map<uint32_t, std::pair<size_t, size_t> > offsets;
-	for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
-	{
-		header[index++] = it->first;
-		if( it->second )
-		{
-			header[index++] = uint32_t( offset );
-			header[index++] = uint32_t( it->second->packedSize );
-			offsets[it->first] = std::make_pair( offset, it->second->packedSize );
-			offset += it->second->packedSize;
-		}
-		else
-		{
-			auto offset = offsets[aliases[it->first]];
-			header[index++] = uint32_t( offset.first );
-			header[index++] = uint32_t( offset.second );
-		}
-	}
-	DWORD bytesWritten;
-	uint32_t version = 9;
-	WriteFile( file, &version, sizeof( uint32_t ), &bytesWritten, NULL );
-	g_stringTable.Write( file );
-	WriteFile( file, fullHeader, DWORD( headerSize ), &bytesWritten, NULL );
-
-	// Write compiled code
-	for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
-	{
-		if( it->second )
-		{
-			WriteFile( file, it->second->packed.get(), DWORD( it->second->packedSize ), &bytesWritten, NULL );
-		}
-	}
-
-	delete[] fullHeader;
-
-	CloseHandle( file );
-	 
 	if( g_generateListing )
 	{
-		HANDLE file = CreateFile( args.listingFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL );
-		if( file == INVALID_HANDLE_VALUE )
+		FILE* file = nullptr;
+		if( fopen_s( &file, args.listingFile, "wb" ) != 0 )
 		{
 			printf( "%s: error X0000: Could not open listing file \"%s\" for writing\n", args.shaderPath, args.listingFile );
 			fflush( stdout );
 			return 1;
 		}
-		WriteFile( file, g_listing.c_str(), DWORD( g_listing.length() ), &bytesWritten, NULL );
-		CloseHandle( file );
+		fwrite( g_listing.c_str(), 1, g_listing.length(), file );
+		fclose( file );
 	}
 
 	return 0;
 }
-

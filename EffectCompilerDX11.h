@@ -1,5 +1,6 @@
 #pragma once
 
+#if _WIN32
 #include "EffectCompilerBase.h"
 
 
@@ -18,3 +19,4 @@ public:
 	};
 	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result, const CompileOptions& compileOptions );
 };
+#endif

@@ -1,4 +1,4 @@
-#include "StdAfx.h"
+#include "stdafx.h"
 #include "SymbolTable.h"
 #include "ASTNode.h"
 #include "HLSLParser.h"
@@ -25,11 +25,26 @@ bool PackOffset::Create( ParserState& state, const ScannerToken& subComponentTok
 	return true;
 }
 
+RegisterSpecifier RegisterSpecifier::Register( char type, int index )
+{
+    RegisterSpecifier reg;
+    reg.shaderProfile.start = nullptr;
+    reg.shaderProfile.end = nullptr;
+    reg.registerType = type;
+    reg.registerNumber = index;
+    reg.subComponent = -1;
+    reg.space = -1;
+    reg.explicitRegister = true;
+    reg.explicitSpace = false;
+    return reg;
+}
+
+
 bool CompareSymbols::operator()( const Symbol* symbol0, const Symbol* symbol1 ) const
 {
 	size_t len0 = symbol0->name.end - symbol0->name.start;
 	size_t len1 = symbol1->name.end - symbol1->name.start;
-	int cmp = strncmp( symbol0->name.start, symbol1->name.start, min( len0, len1 ) );
+	int cmp = strncmp( symbol0->name.start, symbol1->name.start, std::min( len0, len1 ) );
 	if( cmp < 0 )
 	{
 		return true;
@@ -53,10 +68,11 @@ Symbol::Symbol()
 	:isTypeName( false ),
 	isFunction( false ),
 	interpolationModifier( 0 ),
+	annotations( nullptr ),
 	definition( nullptr ),
-	used( false ),
 	intrinsicType( nullptr ),
-	annotations( nullptr )
+	addressSpace( AddressSpace::None ),
+	used( false )
 {
 	name.start = name.end = nullptr;
 	semantic.start = semantic.end = nullptr;
@@ -131,7 +147,6 @@ static bool MatchParameter( ASTNode* parameter, ASTNode* argument, int& casts )
 	{
 		return argumentType.CanImplicitCast( parameter->GetType(), casts );
 	}
-	return true;
 }
 
 Symbol* ScopeSymbolTable::LookupFunctionDeclaration( const InlineString& name, ASTNode* header ) const
@@ -188,8 +203,9 @@ Symbol* ScopeSymbolTable::LookupFunctionDeclaration( const InlineString& name, A
 	return nullptr;
 }
 
-Symbol* ScopeSymbolTable::LookupFunction( const InlineString& name, ASTNode* callNode ) const
+Symbol* ScopeSymbolTable::LookupFunction( const InlineString& name, ASTNode* callNode, std::string& diagnosticMessage ) const
 {
+	diagnosticMessage = "";
 	Symbol toFind;
 	toFind.name = name;
 
@@ -282,6 +298,39 @@ Symbol* ScopeSymbolTable::LookupFunction( const InlineString& name, ASTNode* cal
 			}
 		}
 	}
+	else if( !bestOverride )
+	{
+		std::strstream s;
+		s << "\n  called with " << name << "(";
+		for( size_t i = 0; i < callNode->GetChildrenCount(); ++i )
+		{
+			if( i )
+			{
+				s << ", ";
+			}
+			s << callNode->GetChild( i )->GetType().ToString();
+		}
+		s << ")\n  possible overrides:\n";
+		for( auto it = overrides.begin(); it != overrides.end(); ++it )
+		{
+			ASTNode* node = it->first->definition;
+			if( node->GetNodeType() == NT_FUNCTION_DEFINITION )
+			{
+				node = node->GetChildOrNull( 0 );
+			}
+			s << "    " << node->GetLocation().fileName << "(" << node->GetLocation().lineNumber << "): " << node->GetType().ToString() << " " << name << "(";
+			for( size_t i = 0; i < node->GetChildrenCount(); ++i )
+			{
+				if( i )
+				{
+					s << ", ";
+				}
+				s << node->GetChild( i )->GetType().ToString();
+			}
+			s << ")\n";
+		}
+		diagnosticMessage = s.str();
+	}
 	return bestOverride;
 }
 
@@ -363,9 +412,9 @@ Symbol* SymbolTable::Lookup( const InlineString& name ) const
 	return m_current->Lookup( name );
 }
 
-Symbol* SymbolTable::LookupFunction( const InlineString& name, ASTNode* callNode ) const
+Symbol* SymbolTable::LookupFunction( const InlineString& name, ASTNode* callNode, std::string& diagnosticMessage ) const
 {
-	return m_current->LookupFunction( name, callNode );
+	return m_current->LookupFunction( name, callNode, diagnosticMessage );
 }
 
 Symbol* SymbolTable::LookupFunctionDeclaration( const InlineString& name, ASTNode* header ) const

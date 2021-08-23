@@ -9,11 +9,7 @@
 #include "ParserUtils.h"
 #include "SymbolTable.h"
 #include "ParserState.h"
-#if 0
-#define DEBUG(stmt) stmt
-#else
-#define DEBUG(stmt)
-#endif
+
 
 #define RETURN_PP(x) { token.type = (x); token.stringValue.start = start; token.stringValue.end = YYCURSOR;token.fileLocation = state.GetCurrentLocation(); return SCAN_PREPROCESSOR; }
 
@@ -162,7 +158,6 @@ std:
 			if( state.InSkipMode() )
 			{
 				bool done = false;
-				bool endOfMacro = false;
 				bool slash = false;
 				for( ; !done && YYCURSOR < YYLIMIT; ++YYCURSOR )
 				{
@@ -244,7 +239,6 @@ std:
 				{
 					start = YYCURSOR;
 					bool done = false;
-					bool endOfMacro = false;
 					bool slash = false;
 					for( ; !done && YYCURSOR < YYLIMIT; ++YYCURSOR )
 					{
@@ -793,14 +787,10 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 #define YYCTYPE char
 #define YYCURSOR (start)
 #define YYLIMIT (ppToken.string.end)
-#define	YYMARKER (marker)
-#define	YYCTXMARKER (ctxMarker)
 
 #define RETURN(x) { token.type = (x); token.stringValue = ppToken.string; token.fileLocation = ppToken.fileLocation; return true; }
 
 	const char* start = ppToken.string.start;
-	const char* marker = 0;
-	const char* ctxMarker = 0;
 
 	switch( ppToken.type )
 	{

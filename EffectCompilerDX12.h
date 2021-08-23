@@ -1,5 +1,6 @@
 #pragma once
 
+#if _WIN32
 #include "EffectCompilerDX11.h"
 
 
@@ -11,3 +12,4 @@ public:
 private:
 	EffectCompilerDX11 m_compiler;
 };
+#endif

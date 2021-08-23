@@ -1,6 +1,7 @@
 #pragma once
 
-#include "EffectCompilerDx11.h"
+#if _WIN32
+#include "EffectCompilerDX11.h"
 
 
 class EffectCompilerGL4 : public EffectCompilerBase
@@ -11,3 +12,4 @@ public:
 private:
 	EffectCompilerDX11 m_compilerDX11;
 };
+#endif

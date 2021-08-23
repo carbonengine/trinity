@@ -130,8 +130,6 @@ inline Type MulIntrinsicType( ASTNode* call, int argIndex )
 			t1.width = t0.width;
 			return t1;
 		}
-		t1.width = t0.width;
-		return t1;
 	}
 	t0.height = t1.height;
 	return t0;
@@ -179,7 +177,7 @@ int TypeSameAsArg( ASTNode* call )
 
 
 template<int type>
-int TypeIs( ASTNode* call )
+int TypeIs( ASTNode* )
 {
 	return type;
 }
@@ -220,7 +218,7 @@ void DimSameAsArg( ASTNode* call, int& width, int& height )
 }
 
 template<int Width, int Height>
-void DimIs( ASTNode* call, int& width, int& height )
+void DimIs( ASTNode*, int& width, int& height )
 {
 	width = Width;
 	height = Height;
@@ -234,8 +232,8 @@ inline void CommonArgDim( ASTNode* call, int& width, int& height )
 	{
 		if( call->GetChild( i )->GetType().width > 1 || call->GetChild( i )->GetType().height > 1 )
 		{
-			width = min( call->GetChild( i )->GetType().width, width );
-			height = min( call->GetChild( i )->GetType().height, height );
+			width = std::min( call->GetChild( i )->GetType().width, width );
+			height = std::min( call->GetChild( i )->GetType().height, height );
 		}
 	}
 }

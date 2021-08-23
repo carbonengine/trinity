@@ -14,9 +14,8 @@ bool Type::operator==( const Type& type ) const
 	return builtInType == type.builtInType && 
 		width == type.width && 
 		height == type.height && 
-		( templateParameter == nullptr && type.templateParameter == nullptr ||
-		 templateParameter != nullptr && type.templateParameter != nullptr || *templateParameter == *type.templateParameter ) &&
-		templateSamples == type.templateSamples;
+		( ( templateParameter == nullptr && type.templateParameter == nullptr ) ||
+		  ( templateParameter != nullptr && type.templateParameter != nullptr && *templateParameter == *type.templateParameter && templateSamples == type.templateSamples ) );
 }
 
 bool Type::operator!=( const Type& type ) const
@@ -29,8 +28,8 @@ bool Type::FromToken( const ScannerToken& token )
 	// TODO: check if token.type is a type name
 	symbol = nullptr;
 	builtInType = token.type;
-	width = max( token.intValue & 0xf, 1 );
-	height = max( token.intValue >> 8, 1 );
+	width = std::max( token.intValue & 0xf, 1L );
+	height = std::max( token.intValue >> 8, 1L );
 	templateParameter = nullptr;
 	modifier = 0;
 	storageClass = 0;
@@ -79,6 +78,16 @@ bool Type::IsVector() const
 	return IsScalarOrVector() && width > 1 && height == 1;
 }
 
+bool Type::IsMatrix() const
+{
+	return IsScalarOrVector() && width > 1 && height > 1;
+}
+
+bool Type::IsStruct() const
+{
+	return symbol != nullptr;
+}
+
 bool Type::IsScalarOrVector() const
 {
 	return symbol == nullptr && 
@@ -103,8 +112,28 @@ bool Type::IsTexture() const
 		builtInType == OP_TEXTURE3DARRAY ||
 		builtInType == OP_TEXTURECUBEARRAY ||
 		builtInType == OP_TEXTURE2DMS ||
-		builtInType == OP_TEXTURE2DMSARRAY );
+		builtInType == OP_TEXTURE2DMSARRAY ||
+		builtInType == OP_RWTEXTURE1D ||
+		builtInType == OP_RWTEXTURE2D ||
+		builtInType == OP_RWTEXTURE3D ||
+		builtInType == OP_RWTEXTURE1DARRAY ||
+		builtInType == OP_RWTEXTURE2DARRAY ||
+		builtInType == OP_RWTEXTURE3DARRAY );
 }
+
+bool Type::IsTextureArray() const
+{
+	return symbol == nullptr &&
+		( builtInType == OP_TEXTURE1DARRAY ||
+		  builtInType == OP_TEXTURE2DARRAY ||
+		  builtInType == OP_TEXTURE3DARRAY ||
+		  builtInType == OP_TEXTURECUBEARRAY ||
+		  builtInType == OP_TEXTURE2DMSARRAY ||
+		  builtInType == OP_RWTEXTURE1DARRAY ||
+		  builtInType == OP_RWTEXTURE2DARRAY ||
+		  builtInType == OP_RWTEXTURE3DARRAY );
+}
+
 
 bool Type::IsSampler() const
 {
@@ -481,14 +510,28 @@ std::string Type::ToString() const
 	if( width > 1 || height > 1 )
 	{
 		char temp[64];
+#if _WIN32
 		_itoa_s( width, temp, 10 );
+#else
+		snprintf( temp, sizeof( temp ), "%d", width );
+#endif
 		result += temp;
 		if( height > 1 )
 		{
 			result += "x";
+#if _WIN32
 			_itoa_s( height, temp, 10 );
+#else
+			snprintf( temp, sizeof( temp ), "%d", height );
+#endif
 			result += temp;
 		}
+	}
+	for( int i = 0; i < arrayDimensions; ++i )
+	{
+		result += '[';
+		result += std::to_string( arraySizes[i] );
+		result += ']';
 	}
 	return result;
 }
@@ -519,7 +562,7 @@ bool Type::CanImplicitCast( const Type& to, int& casts ) const
 		{
 			casts++;
 		}
-		if( builtInType != builtInType )
+		if( builtInType != to.builtInType )
 		{
 			casts++;
 		}
@@ -528,7 +571,7 @@ bool Type::CanImplicitCast( const Type& to, int& casts ) const
 	return false;
 }
 
-bool Type::GetIndexedType( Type& type )
+bool Type::GetIndexedType( Type& type ) const
 {
 	if( arrayDimensions > 0 )
 	{
@@ -590,6 +633,20 @@ bool Type::GetIndexedType( Type& type )
 	return true;
 }
 
+Type TypeFromSymbol( const Symbol* symbol )
+{
+    Type t;
+    t.FromSymbol( symbol );
+    return t;
+}
+
+Type TypeFromTokenType( int type )
+{
+    Type t;
+    t.FromTokenType( type );
+    return t;
+}
+
 bool GetCommonType( const Type& type0, const Type& type1, Type& type )
 {
 	int casts = 0;
@@ -607,9 +664,9 @@ bool GetCommonType( const Type& type0, const Type& type1, Type& type )
 		type = type1;
 		return true;
 	}
-	static const int typePrecedence[] = { OP_BOOL, OP_INT, OP_UINT, OP_HALF, OP_FLOAT, OP_DOUBLE };
+	//static const int typePrecedence[] = { OP_BOOL, OP_INT, OP_UINT, OP_HALF, OP_FLOAT, OP_DOUBLE };
 	int prec0 = GetNumericTypePrecedence( type0.builtInType );
-	int prec1 = GetNumericTypePrecedence( type0.builtInType );
+	int prec1 = GetNumericTypePrecedence( type1.builtInType );
 	if( prec0 == -1 )
 	{
 		type = type0;
@@ -630,19 +687,19 @@ bool GetCommonType( const Type& type0, const Type& type1, Type& type )
 	}
 	if( type0.width == 1 || type1.width == 1 )
 	{
-		type.width = max( type0.width, type1.width );
+		type.width = std::max( type0.width, type1.width );
 	}
 	else
 	{
-		type.width = min( type0.width, type1.width );
+		type.width = std::min( type0.width, type1.width );
 	}
 	if( type0.height == 1 || type1.height == 1 )
 	{
-		type.height = max( type0.height, type1.height );
+		type.height = std::max( type0.height, type1.height );
 	}
 	else
 	{
-		type.height = min( type0.height, type1.height );
+		type.height = std::min( type0.height, type1.height );
 	}
 	return true;
 }
@@ -650,7 +707,7 @@ bool GetCommonType( const Type& type0, const Type& type1, Type& type )
 int GetNumericTypePrecedence( int type )
 {
 	static const int typePrecedence[] = { OP_BOOL, OP_INT, OP_UINT, OP_HALF, OP_FLOAT, OP_DOUBLE };
-	for( int i = 0; i < sizeof( typePrecedence ) / sizeof( int ); ++i )
+	for( int i = 0; i < int( sizeof( typePrecedence ) / sizeof( int ) ); ++i )
 	{
 		if( type == typePrecedence[i] )
 		{

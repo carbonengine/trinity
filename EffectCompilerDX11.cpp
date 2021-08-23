@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#if _WIN32
 #include "EffectCompilerDX11.h"
 #include "CompileMessageQueue.h"
 #include "StringTable.h"
@@ -127,8 +128,83 @@ static bool GetTextureType( const D3D11_SHADER_INPUT_BIND_DESC& desc, TextureTyp
 	return true;
 }
 
+RegisterInputType GetRegisterType( const D3D11_SHADER_INPUT_BIND_DESC& desc )
+{
+	switch( desc.Type )
+	{
+	case D3D_SIT_CBUFFER:
+		return RT_CONSTANT_BUFFER;
+	case D3D_SIT_TEXTURE:
+		switch( desc.Dimension )
+		{
+		case D3D_SRV_DIMENSION_TEXTURE1D:
+			return RT_SRV_TEXTURE1D;
+		case D3D_SRV_DIMENSION_TEXTURE1DARRAY:
+			return RT_SRV_TEXTURE1DARRAY;
+		case D3D_SRV_DIMENSION_TEXTURE2D:
+			return RT_SRV_TEXTURE2D;
+		case D3D_SRV_DIMENSION_TEXTURE2DARRAY:
+			return RT_SRV_TEXTURE2DARRAY;
+		case D3D_SRV_DIMENSION_TEXTURE2DMS:
+			return RT_SRV_TEXTURE2DMS;
+		case D3D_SRV_DIMENSION_TEXTURE2DMSARRAY:
+			return RT_SRV_TEXTURE2DMSARRAY;
+		case D3D_SRV_DIMENSION_TEXTURE3D:
+			return RT_SRV_TEXTURE3D;
+		case D3D_SRV_DIMENSION_TEXTURECUBE:
+			return RT_SRV_TEXTURECUBE;
+		case D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
+			return RT_SRV_TEXTURECUBEARRAY;
+		default:
+			return RT_SRV_BUFFER;
+		}
+	case D3D_SIT_SAMPLER:
+		return RT_SAMPLER;
+	case D3D_SIT_UAV_RWTYPED:
+		switch( desc.Dimension )
+		{
+		case D3D_SRV_DIMENSION_TEXTURE1D:
+			return RT_UAV_TEXTURE1D;
+		case D3D_SRV_DIMENSION_TEXTURE1DARRAY:
+			return RT_UAV_TEXTURE1DARRAY;
+		case D3D_SRV_DIMENSION_TEXTURE2D:
+			return RT_UAV_TEXTURE2D;
+		case D3D_SRV_DIMENSION_TEXTURE2DARRAY:
+			return RT_UAV_TEXTURE2DARRAY;
+		case D3D_SRV_DIMENSION_TEXTURE2DMS:
+			return RT_UAV_TEXTURE2DMS;
+		case D3D_SRV_DIMENSION_TEXTURE2DMSARRAY:
+			return RT_UAV_TEXTURE2DMSARRAY;
+		case D3D_SRV_DIMENSION_TEXTURE3D:
+			return RT_UAV_TEXTURE3D;
+		case D3D_SRV_DIMENSION_TEXTURECUBE:
+			return RT_UAV_TEXTURECUBE;
+		case D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
+			return RT_UAV_TEXTURECUBEARRAY;
+		default:
+			return RT_UAV_BUFFER;
+		}
+	case D3D_SIT_STRUCTURED:
+		return RT_SRV_STRUCTURED_BUFFER;
+	case D3D_SIT_UAV_RWSTRUCTURED:
+	case D3D_SIT_UAV_APPEND_STRUCTURED:
+	case D3D_SIT_UAV_CONSUME_STRUCTURED:
+	case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
+		return RT_UAV_STRUCTURED_BUFFER;
+	// D3D_SIT_TBUFFER???
+	case D3D_SIT_BYTEADDRESS:
+		return RT_SRV_BUFFER;
+	case D3D_SIT_UAV_RWBYTEADDRESS:
+		return RT_UAV_BUFFER;
+	default:
+		return RT_SRV_BUFFER;
+	}
+}
+
 static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* reflection, StageInput& stage, std::map<StringReference, ParameterAnnotation> &annotations )
 {
+	tmFunction( 0, 0 );
+
 	D3D11_SHADER_DESC reflDesc;
 	if( FAILED( reflection->GetDesc( &reflDesc ) ) )
 	{
@@ -152,7 +228,7 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 			{
 				continue;
 			}
-			if( resDesc.BindPoint != 0 )
+			if( resDesc.BindPoint != 0 || resDesc.Type != D3D_SIT_CBUFFER )
 			{
 				continue;
 			}
@@ -200,6 +276,9 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 			case D3D10_SVT_INT:
 				constant.type = CONSTANT_TYPE_INT;
 				break;
+			case D3D10_SVT_UINT:
+				constant.type = CONSTANT_TYPE_UINT;
+				break;
 			case D3D10_SVT_BOOL:
 				constant.type = CONSTANT_TYPE_BOOL;
 				break;
@@ -227,7 +306,7 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 
 			if( varDesc.DefaultValue )
 			{
-				stage.defaultValues.resize( max( stage.defaultValues.size(), constant.offset + constant.size ) );
+				stage.defaultValues.resize( std::max( stage.defaultValues.size(), size_t( constant.offset + constant.size ) ) );
 				memcpy( &stage.defaultValues[constant.offset], varDesc.DefaultValue, constant.size );
 			}
 
@@ -289,7 +368,7 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 				{
 					return false;
 				}
-				stage.samplers[desc.BindPoint] = sampler;
+				stage.samplers[uint8_t( desc.BindPoint )] = sampler;
 			}
 			break;
 		case D3D_SIT_UAV_RWTYPED:
@@ -299,11 +378,11 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 		case D3D_SIT_UAV_CONSUME_STRUCTURED:
 		case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
 			{
-				stage.registerInputs.push_back( { RT_UAV, desc.BindPoint } );
+				stage.registerInputs.push_back( { GetRegisterType( desc ), desc.BindPoint } );
 
 				Uav uav;
 				uav.isAutoregister = false;
-				std::string textureName = desc.Name;
+				std::string uavName = desc.Name;
 
 				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( desc.Name );
 				if( symbol == nullptr )
@@ -328,27 +407,27 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 
 					if( !paramAnnotations.annotations.empty() )
 					{
-						annotations[ g_stringTable.AddString( textureName.c_str() ) ] = paramAnnotations;
+						annotations[ g_stringTable.AddString( uavName.c_str() ) ] = paramAnnotations;
 					}
 				}
 
 
-				uav.name = g_stringTable.AddString( textureName.c_str() );
+				uav.name = g_stringTable.AddString( uavName.c_str() );
 				if( !GetTextureType( desc, uav.type ) )
 				{
 					continue;
 				}
-				stage.uavs[desc.BindPoint] = uav;
+				stage.uavs[uint8_t( desc.BindPoint )] = uav;
 			}
 			break;
 		case D3D_SIT_CBUFFER:
 		{
-			stage.registerInputs.push_back( { RT_CONSTANTS, desc.BindPoint } );
+			stage.registerInputs.push_back( { RT_CONSTANT_BUFFER, desc.BindPoint } );
 			break;
 		}
 		default:
 			{
-				stage.registerInputs.push_back( { RT_RESOURCE, desc.BindPoint } );
+				stage.registerInputs.push_back( { GetRegisterType(desc ), desc.BindPoint } );
 
 				Texture texture;
 				texture.isSRGB = false;
@@ -421,7 +500,7 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 				{
 					continue;
 				}
-				stage.textures[desc.BindPoint] = texture;
+				stage.textures[uint8_t( desc.BindPoint )] = texture;
 			}
 		}
 	}
@@ -435,29 +514,66 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 		}
 		if( desc.SystemValueType == D3D10_NAME_UNDEFINED )
 		{
-			static const char* usageNames[] = {
-				"POSITION",
-				"COLOR",
-				"NORMAL",
-				"TANGENT",
-				"BINORMAL",
-				"TEXCOORD",
-				"BLENDINDICES",
-				"BLENDWEIGHT"
-				};
 			bool found = false;
 			PipelineInputDescription input;
 			for( int n = 0; n < UC_NUM_USAGE_CODE; ++n )
 			{
-				if( _stricmp( desc.SemanticName, usageNames[n] ) == 0 )
+				if( _stricmp( desc.SemanticName, GetStringForUsageCode( n ) ) == 0 )
 				{
-					input.name = n;
-					input.registerIndex = desc.Register;
-					input.index = desc.SemanticIndex;
+					input.name = uint8_t( n );
+					input.registerIndex = uint8_t( desc.Register );
+					input.index = uint8_t( desc.SemanticIndex );
 					input.usedMask = desc.ReadWriteMask;
-					//input.componentType = desc.ComponentType;
+					switch( desc.ComponentType )
+					{
+					case D3D_REGISTER_COMPONENT_FLOAT32:
+						input.type = CONSTANT_TYPE_FLOAT;
+						break;
+					case D3D_REGISTER_COMPONENT_SINT32:
+						input.type = CONSTANT_TYPE_INT;
+						break;
+					case D3D_REGISTER_COMPONENT_UINT32:
+						input.type = CONSTANT_TYPE_UINT;
+						break;
+					default:
+						input.type = CONSTANT_TYPE_OTHER;
+						break;
+					}
+					if( desc.Mask >= ( 1 << 7 ) )
+					{
+						input.dimension = 8;
+					}
+					else if( desc.Mask >= ( 1 << 6 ) )
+					{
+						input.dimension = 7;
+					}
+					else if( desc.Mask >= ( 1 << 5 ) )
+					{
+						input.dimension = 6;
+					}
+					else if( desc.Mask >= ( 1 << 4 ) )
+					{
+						input.dimension = 5;
+					}
+					else if( desc.Mask >= ( 1 << 3 ) )
+					{
+						input.dimension = 4;
+					}
+					else if( desc.Mask >= ( 1 << 2 ) )
+					{
+						input.dimension = 3;
+					}
+					else if( desc.Mask >= ( 1 << 1 ) )
+					{
+						input.dimension = 2;
+					}
+					else
+					{
+						input.dimension = 1;
+					}
 					stage.pipelineInputs.push_back( input );
 					found = true;
+					break;
 				}
 			}
 			if( !found && g_printWarnings )
@@ -595,7 +711,6 @@ static void PatchSemantics( InputStageType shaderStage, ASTNode* callNode )
 	{
 		return;
 	}
-	std::vector<std::pair<const char*, const char>> semantics;
 	std::vector<Symbol*> targetPath;
 	switch( shaderStage )
 	{
@@ -652,6 +767,8 @@ static void PatchSemantics( InputStageType shaderStage, ASTNode* callNode )
 
 static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bool pixelOffset, ASTNode* callNode, ParserState& state, CodeStream& os, std::string& entryPointName, bool& hasShadowState )
 {
+	tmFunction( 0, 0 );
+
 	// 1. wrap uniforms
 	// 2. fix VPOS
 	// 3. alpha test
@@ -731,7 +848,7 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 		}
 		if( count != callNode->GetChildrenCount() )
 		{
-			state.ShowMessage( callNode->GetLocation(), EC_NO_OVERRIDE, ToString( functionHeader->GetToken()->stringValue ).c_str() );
+			state.ShowMessage( callNode->GetLocation(), EC_NO_OVERRIDE, ToString( functionHeader->GetToken()->stringValue ).c_str(), "" );
 			return PATCH_ERROR;
 		}
 		wrapUniforms = true;
@@ -864,12 +981,12 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 		{
 			if( callNode->GetChildrenCount() <= uniformIndex && functionHeader->GetChild( i )->GetChildOrNull( 1 ) != nullptr )
 			{
-				InlineString name = state.AllocateName();
+				InlineString uniformName = state.AllocateName();
 				Type type = functionHeader->GetChild( i )->GetType();
 				type.storageClass = 0;
-				os << type << ' ' << name << " = " << HLSL{ functionHeader->GetChild( i )->GetChildOrNull( 1 ), nullptr };
+				os << type << ' ' << uniformName << " = " << HLSL{ functionHeader->GetChild( i )->GetChildOrNull( 1 ), nullptr };
 				os << ";\n";
-				defaultUniformArguments[i] = name;
+				defaultUniformArguments[i] = uniformName;
 			}
 			uniformIndex++;
 		}
@@ -919,7 +1036,7 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 					os << ".";
 					for( int k = 0; k < symbol->type.width; ++k )
 					{
-						os << swizzle[min( k, positionPath.back()->type.width - 1 ) ];
+						os << swizzle[std::min( k, positionPath.back()->type.width - 1 ) ];
 					}
 					if( pixelOffset )
 					{
@@ -937,7 +1054,7 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 					os << ".";
 					for( int k = 0; k < symbol->type.width; ++k )
 					{
-						os << swizzle[min( k, symbol->type.width - 1 ) ];
+						os << swizzle[std::min( k, symbol->type.width - 1 ) ];
 					}
 				}
 				os << " )";
@@ -988,7 +1105,7 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 				os << ".";
 				for( int k = 0; k < 4; ++k )
 				{
-					os << swizzle[min( k, outPositionPath.back()->type.width - 1 ) ];
+					os << swizzle[std::min( k, outPositionPath.back()->type.width - 1 ) ];
 				}
 			}
 			os << ";\n";
@@ -1013,6 +1130,8 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 
 bool EffectCompilerDX11::Create()
 {
+	tmFunction( 0, 0 );
+
 	return true;
 }
 
@@ -1099,6 +1218,8 @@ std::string PrintPrettyCode( const char* code, const char* indent )
 
 void PrintShaderOutListing( YamlOutput& listing, ID3DBlob* effectData, ID3D11ShaderReflection* reflection )
 {
+	tmFunction( 0, 0 );
+
 	if( !listing.enabled() )
 	{
 		return;
@@ -1267,23 +1388,7 @@ void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectD
 		{
 			listing.dict()
 				.literal( "name" ).literal( g_stringTable.GetString( it->name ) )
-				.literal( "constantType" );
-			switch( it->type )
-			{
-			case CONSTANT_TYPE_FLOAT:
-				listing.literal( "float" );
-				break;
-			case CONSTANT_TYPE_INT:
-				listing.literal( "int" );
-				break;
-			case CONSTANT_TYPE_BOOL:
-				listing.literal( "bool" );
-				break;
-			default:
-				listing.literal( "other (struct, etc.)" );
-				break;
-			}
-			listing
+				.literal( "constantType" ).literal( ToString( it->type ) )
 				.literal( "dimension" ).literal( it->dimension )
 				.literal( "arrayElements" ).literal( it->elements )
 				.literal( "autoregister" ).literal( it->isAutoregister )
@@ -1373,6 +1478,8 @@ void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectD
 				.literal( "name" ).literal( it->name )
 				.literal( "index" ).literal( it->index )
 				.literal( "usedMask" ).literal( it->usedMask )
+				.literal( "type" ).literal( ToString( it->type ) )
+				.literal( "dimension" ).literal( it->dimension )
 				.end();
 		}
 		listing.end();
@@ -1393,6 +1500,7 @@ void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectD
 
 std::string SanitizeCode( const std::string& src )
 {
+	tmFunction( 0, 0 );
 	std::regex line( "#line[^\\n]*\\n?\\n" );
 	return std::regex_replace( src, line, std::string( "" ) );
 }
@@ -1452,8 +1560,10 @@ DWORD GetOptimizationLevel()
 	}
 }
 
-bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result, const CompileOptions& compileOptions )
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude*, EffectData& result, const CompileOptions& compileOptions )
 {
+	tmFunction( 0, 0 );
+
 	CComPtr<ID3D10Blob> effectData;
 	CComPtr<ID3D10Blob> errors;
 
@@ -1609,11 +1719,11 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 				if( compileOptions.addSpaces )
 				{
-					CreateGlobalsCB( state, stage.type );
+					CreateGlobalsCB( state );
 					AssignRegisters( state.GetTree(), stage.type );
 				}
 
-				CompilerInputStream os( state );
+				CompilerInputStream os( state, ShadingLanguage::HLSL );
 				os << HLSL{ state.GetTree(), &state.GetSymbolTable() };
 
 				std::string entryPoint = ToString( shaderNode->GetChild( 1 )->GetSymbol()->name );
@@ -1628,18 +1738,22 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				state.ResetPragmaUsage();
 				std::string code( os.str(), os.str() + os.pcount() );
 
-				HRESULT hr = D3DCompile(
-					code.c_str(),
-					code.length(),
-					"\\memory",
-					nullptr,
-					nullptr,
-					patchEntryPoint.c_str(),
-					profile.c_str(),
-					( compileOptions.minShaderVersion ? 0 : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
-					0,
-					&effectData,
-					&errors );
+				HRESULT hr;
+				{
+					tmZone( 0, 0, "D3DCompile" );
+					hr = D3DCompile(
+						code.c_str(),
+						code.length(),
+						"\\memory",
+						nullptr,
+						nullptr,
+						patchEntryPoint.c_str(),
+						profile.c_str(),
+						( compileOptions.minShaderVersion ? 0 : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
+						0,
+						&effectData,
+						&errors );
+				}
 				if( FAILED( hr ) )
 				{
 					if( errors )
@@ -1655,13 +1769,16 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 
 				CComPtr<ID3DBlob> strippedEffectData;
-				if( FAILED( D3DStripShader(
-					effectData->GetBufferPointer(),
-					effectData->GetBufferSize(),
-					D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
-					&strippedEffectData ) ) )
 				{
-					strippedEffectData = effectData;
+					tmZone( 0, 0, "D3DStripShader" );
+					if( FAILED( D3DStripShader(
+							effectData->GetBufferPointer(),
+							effectData->GetBufferSize(),
+							D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
+							&strippedEffectData ) ) )
+					{
+						strippedEffectData = effectData;
+					}
 				}
 				stage.shaderSize = uint32_t( strippedEffectData->GetBufferSize() );
 				stage.shaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
@@ -1669,10 +1786,14 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				stage.shadowShaderDataStr = INVALID_REFERENCE;
 
 				CComPtr<ID3D11ShaderReflection> reflection;
-				if( FAILED( D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection.p ) ) )
 				{
-					g_messages.AddMessage( "\\memory(0): error X0000: Could not get shader reflection" );
-					return false;
+					tmZone( 0, 0, "D3DReflect" );
+
+					if( FAILED( D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection.p ) ) )
+					{
+						g_messages.AddMessage( "\\memory(0): error X0000: Could not get shader reflection" );
+						return false;
+					}
 				}
 
 				if( !GetStageData( state, reflection, stage, result.annotations ) )
@@ -1686,11 +1807,11 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					{
 						for( auto a = symbol->annotations->begin(); a != symbol->annotations->end(); ++a )
 						{
-							Annotation result;
+							Annotation symbolAnnotation;
 							bool isSrgb, isAutoregister;
-							if( MakeEffectAnnotationFromSymbolAnnotation( *a, result, isSrgb, isAutoregister ) )
+							if( MakeEffectAnnotationFromSymbolAnnotation( *a, symbolAnnotation, isSrgb, isAutoregister ) )
 							{
-								stage.annotations.annotations[g_stringTable.AddString( ToString( a->name ).c_str() )] = result;
+								stage.annotations.annotations[g_stringTable.AddString( ToString( a->name ).c_str() )] = symbolAnnotation;
 							}
 						}
 					}
@@ -1705,18 +1826,26 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					stage.defaultValuesStr = INVALID_REFERENCE;
 				}
 
-				listing.dict()
-					.literal( "profile" ).literal( profile )
-					.literal( "original" ).dict()
-					.literal( "entryPoint" ).literal( patchEntryPoint )
-					.literal( "source" ).literal( SanitizeCode( code ) );
-				PrintShaderOutListing( listing, effectData, reflection );
-				listing.end();
+				if( listing.enabled() )
+				{
+					listing.dict()
+						.literal( "profile" )
+						.literal( profile )
+						.literal( "original" )
+						.dict()
+						.literal( "entryPoint" )
+						.literal( patchEntryPoint )
+						.literal( "source" )
+						.literal( SanitizeCode( code ) );
+					PrintShaderOutListing( listing, effectData, reflection );
+					listing.end();
+				}
 
 				reflections[stage.type] = reflection;
 
 				if( compileOptions.compileShadowShaders && ( stage.type == PIXEL_STAGE || g_maxClipPlanes > 0 ) )
 				{
+					tmZone( 0, 0, "Shadow Shader" );
 					os.freeze( false );
 					patchEntryPoint = entryPoint;
 					switch( PatchShader( stage.type, true, compileOptions.addPixelOffset, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
@@ -1730,18 +1859,21 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						effectData = nullptr;
 						errors = nullptr;
 
-						HRESULT hr = D3DCompile(
-							code.c_str(),
-							code.length(),
-							"\\memory",
-							nullptr,
-							nullptr,
-							patchEntryPoint.c_str(),
-							profile.c_str(),
-							( compileOptions.minShaderVersion ? 0 : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
-							0,
-							&effectData,
-							&errors );
+						{
+							tmZone( 0, 0, "D3DCompile (Shadow)" );
+							hr = D3DCompile(
+								code.c_str(),
+								code.length(),
+								"\\memory",
+								nullptr,
+								nullptr,
+								patchEntryPoint.c_str(),
+								profile.c_str(),
+								( compileOptions.minShaderVersion ? 0 : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
+								0,
+								&effectData,
+								&errors );
+						}
 						if( FAILED( hr ) )
 						{
 							if( errors )
@@ -1756,27 +1888,31 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							g_messages.AddMessages( errors );
 						}
 
-						CComPtr<ID3DBlob> strippedEffectData;
-						if( FAILED( D3DStripShader(
-							effectData->GetBufferPointer(),
-							effectData->GetBufferSize(),
-							D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
-							&strippedEffectData ) ) )
+						strippedEffectData = nullptr;
 						{
-							strippedEffectData = effectData;
+							tmZone( 0, 0, "D3DStripShader (Shadow)" );
+							if( FAILED( D3DStripShader(
+									effectData->GetBufferPointer(),
+									effectData->GetBufferSize(),
+									D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
+									&strippedEffectData ) ) )
+							{
+								strippedEffectData = effectData;
+							}
 						}
 						stage.shadowShaderSize = uint32_t( strippedEffectData->GetBufferSize() );
 						stage.shadowShaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
 
 
-						CComPtr<ID3D11ShaderReflection> reflection;
-						D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection.p );
+						if( listing.enabled() )
+						{
+							reflection = nullptr;
+							D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection.p );
 
-						listing.literal( "patched" ).dict()
-							.literal( "entryPoint" ).literal( patchEntryPoint )
-							.literal( "source" ).literal( SanitizeCode( code ) );
-						PrintShaderOutListing( listing, effectData, reflection );
-						listing.end();
+							listing.literal( "patched" ).dict().literal( "entryPoint" ).literal( patchEntryPoint ).literal( "source" ).literal( SanitizeCode( code ) );
+							PrintShaderOutListing( listing, effectData, reflection );
+							listing.end();
+						}
 						break;
 					}
 					}
@@ -1831,3 +1967,4 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 	return true;
 }
+#endif

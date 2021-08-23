@@ -12,10 +12,13 @@ struct Type
 	bool IsScalar() const;
 	bool IsScalarOrVector() const;
 	bool IsTexture() const;
+	bool IsTextureArray() const;
 	bool IsSampler() const;
 	bool IsVector() const;
+	bool IsMatrix() const;
+	bool IsStruct() const;
 	bool CanImplicitCast( const Type& to, int& casts ) const;
-	bool GetIndexedType( Type& type );
+	bool GetIndexedType( Type& type ) const;
 
 	bool GetMethodType( ASTNode* methodCall, Type& returnType ) const;
 
@@ -36,6 +39,10 @@ struct Type
 	int modifier;
 	int storageClass;
 };
+
+
+Type TypeFromSymbol( const Symbol* symbol );
+Type TypeFromTokenType( int type );
 
 bool GetCommonType( const Type& type0, const Type& type1, Type& type );
 int GetNumericTypePrecedence( int type );

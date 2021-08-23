@@ -38,11 +38,20 @@ StringReference StringTable::AddString( const void* string, size_t length )
 	return index;
 }
 
+StringReference StringTable::AddString( const InlineString& string )
+{
+	auto length = string.end - string.start;
+	std::unique_ptr<char[]> str( new char[length + 1] );
+	memcpy( str.get(), string.start, length );
+	str.get()[length] = 0;
+	return AddString( str.get(), length + 1 );
+}
+
 uint32_t StringTable::GetOffset( StringReference ref )
 {
-	if( ref.reference == -1 )
+	if( ref.reference == uint32_t( -1 ) )
 	{
-		return -1;
+		return 0xffffffff;
 	}
 	MutexScope scope( m_CS );
 	if( !m_sorted )
@@ -52,7 +61,7 @@ uint32_t StringTable::GetOffset( StringReference ref )
 	auto it = m_revTable.find( ref );
 	if( it == m_revTable.end() )
 	{
-		return -1;
+		return 0xffffffff;
 	}
 	return uint32_t( it->second.second );
 }
@@ -70,7 +79,7 @@ const char* StringTable::GetString( StringReference ref )
 
 size_t StringTable::GetSize() const
 {
-	return m_size + sizeof( DWORD );
+	return m_size + sizeof( uint32_t );
 }
 
 bool StringTable::ValueCompare( std::pair<Blob*, size_t>* a, std::pair<Blob*, size_t>* b )
@@ -96,7 +105,7 @@ void StringTable::Sort()
 	m_sorted = true;
 }
 
-bool StringTable::Write( HANDLE file )
+bool StringTable::Write( FILE* file )
 {
 	MutexScope scope( m_CS );
 
@@ -105,9 +114,8 @@ bool StringTable::Write( HANDLE file )
 		Sort();
 	}
 
-	DWORD bytesWritten = 0;
 	uint32_t size = uint32_t( m_size );
-	if( !WriteFile( file, &size, sizeof( size ), &bytesWritten, nullptr ) || bytesWritten != sizeof( size ) )
+	if( fwrite( &size, 1, sizeof( size ), file ) != sizeof( size ) )
 	{
 		return false;
 	}
@@ -117,14 +125,13 @@ bool StringTable::Write( HANDLE file )
 		return true;
 	}
 
-
 	char* buffer = new char[m_size];
 	for( auto it = begin( m_revTable ); it != end( m_revTable ); ++it )
 	{
 		memcpy( buffer + it->second.second, it->second.first->m_data, it->second.first->m_size );
 	}
 
-	if( !WriteFile( file, buffer, DWORD( m_size ), &bytesWritten, nullptr ) || bytesWritten != m_size )
+	if( fwrite( buffer, 1, m_size, file ) != m_size )
 	{
 		delete[] buffer;
 		return false;
@@ -137,6 +144,6 @@ bool StringTable::Write( HANDLE file )
 StringReference StringTable::GetInvalidReference()
 {
 	StringReference ref;
-	ref.reference = -1;
+	ref.reference = 0xffffffff;
 	return ref;
 }

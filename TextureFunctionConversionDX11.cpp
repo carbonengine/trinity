@@ -68,21 +68,27 @@ static ASTNode* GetSamplerArg( ASTNode* arg )
 		{
 			return GetSamplerArg( arg->GetChildOrNull( 0 ) );
 		}
+    default:
+        break;
 	}
 	return nullptr;
 }
 
 static const char* GetTextureTypeName( int textureType )
 {
-	static std::map<int, char*> s_textureType;
-	if( s_textureType.empty() )
+	switch( textureType )
 	{
-		s_textureType[OP_TEXTURE1D] = "1D";
-		s_textureType[OP_TEXTURE2D] = "2D";
-		s_textureType[OP_TEXTURE3D] = "3D";
-		s_textureType[OP_TEXTURECUBE] = "CUBE";
+	case OP_TEXTURE1D:
+		return "1D";
+	case OP_TEXTURE2D:
+		return "2D";
+	case OP_TEXTURE3D:
+		return "3D";
+	case OP_TEXTURECUBE:
+		return "CUBE";
+	default:
+		return "";
 	}
-	return s_textureType[textureType];
 }
 
 static bool AssignTextureType( ParserState& state, Symbol* texture, int type, const ScannerToken& token )
@@ -119,7 +125,7 @@ static bool AssignTextureType( ParserState& state, Symbol* texture, int type, co
 		}
 		break;
 	default:
-		state.ShowMessage( token.fileLocation, EC_NO_OVERRIDE, ToString( token.stringValue ).c_str() );
+		state.ShowMessage( token.fileLocation, EC_NO_OVERRIDE, ToString( token.stringValue ).c_str(), "" );
 		return false;
 	}
 	return true;
@@ -234,6 +240,7 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 					token.type = OP_DOT;
 					ASTNode *var = new ASTNode( NT_VAR_IDENTIFIER, node->GetLocation(), node->GetScope(), nullptr );
 					var->SetSymbol( texture );
+					var->SetType( texture->type );
 					result = new ASTNode( NT_POSTFIX_EXPRESSION, node->GetLocation(), node->GetScope(), &token );
 					result->AddChild( var );
 					result->AddChild( node );
@@ -241,7 +248,7 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 					const char* sample;
 					if( ContainsSubstring( node->GetSymbol()->name, "lod" ) )
 					{
-						static const char* s_sample = "SampleLevel";
+						const char* s_sample = "SampleLevel";
 						sample = s_sample;
 						ASTNode* coord = node->GetChildOrNull( 1 );
 						if( coord )
@@ -282,11 +289,10 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 								}
 								if( doSwizzle )
 								{
-									ASTNode* dot = new ASTNode( NT_POSTFIX_EXPRESSION, lod->GetLocation(), lod->GetScope(), &swizzle );
-									dot->AddChild( coord );
-									node->RemoveChild( 1 );
-									node->InsertChild( 1, dot );
-									coord = dot;
+									ASTNode* swizzleDot = new ASTNode( NT_POSTFIX_EXPRESSION, lod->GetLocation(), lod->GetScope(), &swizzle );
+									swizzleDot->AddChild( coord );
+									node->ReplaceChild( 1, swizzleDot );
+									coord = swizzleDot;
 								}
 							}
 							else
@@ -297,7 +303,7 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 					}
 					else if( ContainsSubstring( node->GetSymbol()->name, "bias" ) )
 					{
-						static const char* s_sample = "SampleBias";
+						const char* s_sample = "SampleBias";
 						sample = s_sample;
 						ASTNode* coord = node->GetChildOrNull( 1 );
 						if( coord )
@@ -339,11 +345,10 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 								}
 								if( doSwizzle )
 								{
-									ASTNode* dot = new ASTNode( NT_POSTFIX_EXPRESSION, lod->GetLocation(), lod->GetScope(), &swizzle );
-									dot->AddChild( coord );
-									node->RemoveChild( 1 );
-									node->InsertChild( 1, dot );
-									coord = dot;
+									ASTNode* swizzleDot = new ASTNode( NT_POSTFIX_EXPRESSION, lod->GetLocation(), lod->GetScope(), &swizzle );
+									swizzleDot->AddChild( coord );
+									node->ReplaceChild( 1, swizzleDot );
+									coord = swizzleDot;
 								}
 							}
 							else
@@ -354,7 +359,7 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 					}
 					else if( ContainsSubstring( node->GetSymbol()->name, "proj" ) )
 					{
-						static const char* s_sample = "Sample";
+						const char* s_sample = "Sample";
 						sample = s_sample;
 						ASTNode* coord = node->GetChildOrNull( 1 );
 						if( coord )
@@ -405,17 +410,15 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 								}
 								if( doSwizzle )
 								{
-									ASTNode* dot = new ASTNode( NT_POSTFIX_EXPRESSION, lod->GetLocation(), lod->GetScope(), &swizzle );
-									dot->AddChild( coord );
-									node->RemoveChild( 1 );
-									node->InsertChild( 1, dot );
-									coord = dot;
+									ASTNode* swizzleDot = new ASTNode( NT_POSTFIX_EXPRESSION, lod->GetLocation(), lod->GetScope(), &swizzle );
+									swizzleDot->AddChild( coord );
+									node->ReplaceChild( 1, swizzleDot );
+									coord = swizzleDot;
 								}
 
 								expr->AddChild( coord );
 								expr->AddChild( dot );
-								node->RemoveChild( 1 );
-								node->InsertChild( 1, expr );
+								node->ReplaceChild( 1, expr );
 							}
 							else
 							{
@@ -430,20 +433,19 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 								ASTNode* expr = new ASTNode( NT_EXPRESSION, coord->GetLocation(), coord->GetScope(), &div );
 								expr->AddChild( coord );
 								expr->AddChild( coord->Copy() );
-								node->RemoveChild( 1 );
-								node->InsertChild( 1, expr );
+								node->ReplaceChild( 1, expr );
 							}
 						}
 					}
 					else if( node->GetChildrenCount() == 4 || ContainsSubstring( node->GetSymbol()->name, "grad" ) )
 					{
 						// this is a form tex##( sampler, coord, ddx, ddy )
-						static const char* s_sample = "SampleGrad";
+						const char* s_sample = "SampleGrad";
 						sample = s_sample;
 					}
 					else
 					{
-						static const char* s_sample = "Sample";
+						const char* s_sample = "Sample";
 						sample = s_sample;
 					}
 					token.type = OP_ID;
@@ -460,8 +462,7 @@ static ASTNode* FindDX9TexSampleCalls( ParserState& state,
 		ASTNode* ret = FindDX9TexSampleCalls( state, node->GetChild( i ), dx9TextureFunctions, samplers );
 		if( ret )
 		{
-			node->RemoveChild( i );
-			node->InsertChild( i, ret );
+			node->ReplaceChild( i, ret );
 		}
 	}
 	return result;
@@ -558,9 +559,9 @@ static void PatchCalls( ParserState& state,
 								if( texture->registerSpecifier.empty() )
 								{
 									texture->registerSpecifier = samplerArg->registerSpecifier;
-									for( auto it = texture->registerSpecifier.begin(); it != texture->registerSpecifier.end(); ++it )
+									for( auto& registerSpecifier : texture->registerSpecifier )
 									{
-										it->second.registerType = 't';
+										registerSpecifier.second.registerType = 't';
 									}
 								}
 							}
@@ -597,7 +598,6 @@ static void PatchCalls( ParserState& state,
 						assert( false );
 						return;
 					}
-
 				}
 				ASTNode* header = node->GetSymbol()->definition;
 				if( header && header->GetNodeType() == NT_FUNCTION_DEFINITION )
@@ -625,28 +625,10 @@ static void PatchCalls( ParserState& state,
 	}
 }
 
-static void SubstituteSybmols( ASTNode* node, std::map<Symbol*, Symbol*> symbolSubstitution )
-{
-	if( node == nullptr )
-	{
-		return;
-	}
-	if( node->GetNodeType() == NT_VAR_IDENTIFIER && node->GetSymbol() != nullptr )
-	{
-		auto found = symbolSubstitution.find( node->GetSymbol() );
-		if( found != symbolSubstitution.end() )
-		{
-			node->SetSymbol( found->second );
-		}
-	}
-	for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
-	{
-		SubstituteSybmols( node->GetChild( i ), symbolSubstitution );
-	}
-}
-
 void ConvertTextureFunctionsDX11( ParserState& state )
 {
+	tmFunction( 0, 0 );
+
 	std::map<Symbol*, SamplerToTexture> samplers;
 	std::map<Symbol*, std::vector<ParameterInfo>> functions;
 
@@ -728,5 +710,303 @@ static void TransferSRGBToTexturesDX11( ParserState& state, ASTNode* node )
 
 void TransferSRGBToTexturesDX11( ParserState& state )
 {
+	tmFunction( 0, 0 );
+
 	TransferSRGBToTexturesDX11( state, state.GetTree() );
+}
+
+ASTNode* PatchMetalTextureCall( ASTNode* node )
+{
+	auto textureType = node->GetChild( 0 )->GetType();
+	ASTNode* call = node->GetChild( 1 );
+	
+	auto WrapInOption = [=]( const std::vector<size_t>& childIndexes, const char* option )
+	{
+		ScannerToken token = ScannerToken::ID( MakeInlineString( option ) );
+		token.fileLocation = call->GetLocation();
+		ASTNode* options = new ASTNode( NT_FUNCTION_CALL, call->GetLocation(), call->GetScope(), &token );
+		options->SetSymbol( nullptr );
+		for( auto child : childIndexes )
+		{
+			options->AddChild( call->GetChild( child ) );
+		}
+		call->ReplaceChild( unsigned( childIndexes[0] ), options );
+		for( size_t i = childIndexes.size() - 1; i > 0; --i )
+		{
+			call->RemoveChild( unsigned( childIndexes[i] ) );
+		}
+	};
+	
+	auto functionToken = *call->GetToken();
+	if( functionToken.stringValue == "Sample" )
+	{
+		// t.Sample(sampler, coord [,offset]) -> t.sample(sampler, coord, [offset])
+		functionToken.stringValue = MakeInlineString( "sample" );
+	}
+	else if( functionToken.stringValue == "SampleBias" )
+	{
+		// t.SampleBias(sampler, coord, bias) -> t.sample(sampler, coord, bias(bias))
+		// TODO: support offset?
+		functionToken.stringValue = MakeInlineString( "sample" );
+		WrapInOption( { 2 }, "bias" );
+	}
+	else if( functionToken.stringValue == "SampleGrad" )
+	{
+		// t.SampleGrad(sampler, coord, dx, dy) -> t.sample(sampler, coord, gradient#(dx, dy))
+		// TODO: support offset?
+		functionToken.stringValue = MakeInlineString( "sample" );
+		switch ( textureType.builtInType )
+		{
+		case OP_TEXTURE3D:
+			WrapInOption( { 2, 3 }, "gradient3d" );
+			break;
+		case OP_TEXTURECUBE:
+			WrapInOption( { 2, 3 }, "gradientcube" );
+			break;
+		default:
+			WrapInOption( { 2, 3 }, "gradient2d" );
+		}
+	}
+	else if( functionToken.stringValue == "SampleLevel" )
+	{
+		// t.SampleLevel(sampler, coord, lod) -> t.sample(sampler, coord, level(lod))
+		// TODO: support offset?
+		functionToken.stringValue = MakeInlineString( "sample" );
+		WrapInOption( { 2 }, "level" );
+	}
+	else if( functionToken.stringValue == "Load" )
+	{
+		// normal textures: t.Load(coord) -> t.read(coord.xy, coord.z)
+		// MS textures: t.Load(coord, sample) -> t.read(coord, sample)
+		// TODO: support offset?
+		functionToken.stringValue = MakeInlineString( "read" );
+		auto coord = call->GetChild( 0 );
+		if( textureType.builtInType != OP_TEXTURE2DMS && textureType.builtInType != OP_TEXTURE2DMSARRAY )
+		{
+			const char* xyzw = "xyzw";
+
+			ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + coord->GetType().width - 1 ) );
+			ASTNode* dot = new ASTNode( NT_POSTFIX_EXPRESSION, coord->GetLocation(), coord->GetScope(), &swizzle );
+			dot->AddChild( coord->Copy() );
+			if( coord->GetType().builtInType != OP_UINT )
+			{
+				ScannerToken typeToken = ScannerToken::FromTokenType( OP_FLOAT );
+				typeToken.intValue = 4;
+				ASTNode* cast = new ASTNode( NT_CAST_EXPRESSION, coord->GetLocation(), coord->GetScope(), &typeToken );
+				Type castType = coord->GetType();
+				castType.width -= 1;
+				castType.builtInType = OP_UINT;
+				cast->SetType( castType );
+				cast->AddChild( dot );
+				dot = cast;
+			}
+			call->ReplaceChild( 0 , dot );
+
+			swizzle = ScannerToken::ID( MakeInlineString( xyzw + coord->GetType().width - 1, xyzw + coord->GetType().width ) );
+			dot = new ASTNode( NT_POSTFIX_EXPRESSION, coord->GetLocation(), coord->GetScope(), &swizzle );
+			dot->AddChild( coord->Copy() );
+			call->InsertChild( 1 , dot );
+		}
+		else if( coord->GetType().builtInType != OP_UINT )
+		{
+			ScannerToken typeToken = ScannerToken::FromTokenType( OP_FLOAT );
+			typeToken.intValue = 4;
+			ASTNode* cast = new ASTNode( NT_CAST_EXPRESSION, coord->GetLocation(), coord->GetScope(), &typeToken );
+			Type castType = coord->GetType();
+			castType.builtInType = OP_UINT;
+			cast->SetType( castType );
+			cast->AddChild( coord );
+			call->ReplaceChild( 0, cast );
+		}
+	}
+	else if( functionToken.stringValue == "GetDimensions" )
+	{
+		// replace tex.GetDimensions(...) with GetDemensions(tex, ...)
+		call->InsertChild( 0, node->GetChild( 0 ) );
+		return call;
+	}
+	else
+	{
+		return node;
+	}
+	
+	call->SetToken( &functionToken );
+
+	if( textureType.templateParameter && textureType.templateParameter->width != 4 )
+	{
+		const char* xyzw = "xyzw";
+		ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + textureType.templateParameter->width ) );
+		ASTNode* dot = new ASTNode( NT_POSTFIX_EXPRESSION, call->GetLocation(), call->GetScope(), &swizzle );
+		dot->AddChild( node );
+
+		Type callType = *textureType.templateParameter;
+		callType.width = 4;
+		node->SetType( callType );
+		
+		dot->SetType( *textureType.templateParameter );
+		
+		return dot;
+	}
+	return node;
+}
+
+static bool IsTextureIndexing( ASTNode* node )
+{
+	return node->GetNodeType() == NT_POSTFIX_EXPRESSION &&
+		node->GetToken() &&
+		node->GetToken()->type == OP_LEFT_BRACKET &&
+		node->GetChild( 0 )->GetType().IsTexture();
+}
+
+
+ASTNode* PatchMetalTextureCalls( ParserState& state, ASTNode* node, bool rightHandSide = true )
+{
+	if( !node )
+	{
+		return node;
+	}
+	if( node->GetNodeType() == NT_POSTFIX_EXPRESSION &&
+	   node->GetToken() &&
+	   node->GetToken()->type == OP_DOT &&
+	   node->GetChildrenCount() == 2 &&
+	   node->GetChild( 0 )->GetType().IsTexture() &&
+	   node->GetChild( 1 )->GetNodeType() == NT_FUNCTION_CALL )
+	{
+		node = PatchMetalTextureCall( node );
+	}
+	else if( IsTextureIndexing( node ) )
+	{
+		if( rightHandSide )
+		{
+			// t[x] -> t.read(x)
+			auto functionToken = ScannerToken::ID( MakeInlineString( "read" ), node->GetLocation() );
+			auto call = new ASTNode( NT_FUNCTION_CALL, node->GetLocation(), node->GetScope(), &functionToken );
+			auto nodeToken = *node->GetToken();
+			nodeToken.type = OP_DOT;
+			node->SetToken( &nodeToken );
+			call->AddChild( node->GetChild( 1 ) );
+			node->ReplaceChild( 1, call );
+
+			auto textureType = node->GetChild( 0 )->GetType();
+			if( textureType.templateParameter && textureType.templateParameter->width != 4 )
+			{
+				const char* xyzw = "xyzw";
+				ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + textureType.width ) );
+				ASTNode* dot = new ASTNode( NT_POSTFIX_EXPRESSION, call->GetLocation(), call->GetScope(), &swizzle );
+				dot->AddChild( node );
+
+				Type callType = *textureType.templateParameter;
+				callType.width = 4;
+				node->SetType( callType );
+
+				dot->SetType( *textureType.templateParameter );
+
+				node = dot;
+			}
+		}
+		else
+		{
+			state.ShowMessage( node->GetLocation(), EC_CUSTOM_ERROR, "cannot rewite texture assignment for Metal" );
+		}
+	}
+	bool isAssignment = false; 
+	if( node->GetNodeType() == NT_EXPRESSION )
+	{
+		switch( node->GetToken()->type )
+		{
+		case OP_EQUAL:
+			if( IsTextureIndexing( node->GetChild( 0 ) ) )
+			{
+				// t[x] = y; -> t.write(y, x);
+				auto functionToken = ScannerToken::ID( MakeInlineString( "write" ), node->GetLocation() );
+				auto call = new ASTNode( NT_FUNCTION_CALL, node->GetLocation(), node->GetScope(), &functionToken );
+				auto nodeToken = *node->GetToken();
+				nodeToken.type = OP_DOT;
+				node->GetChild( 0 )->SetToken( &nodeToken );
+				call->AddChild( node->GetChild( 1 ) );
+				if( node->GetChild( 0 )->GetChild( 0 )->GetType().IsTextureArray() )
+				{
+					auto coord = node->GetChild( 0 )->GetChild( 1 );
+
+					const char* xyzw = "xyzw";
+
+					ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + coord->GetType().width - 1 ) );
+					ASTNode* dot = new ASTNode( NT_POSTFIX_EXPRESSION, coord->GetLocation(), coord->GetScope(), &swizzle );
+					dot->AddChild( coord->Copy() );
+
+					if( coord->GetType().builtInType != OP_UINT )
+					{
+						ScannerToken typeToken = ScannerToken::FromTokenType( OP_FLOAT );
+						typeToken.intValue = 4;
+						ASTNode* cast = new ASTNode( NT_CAST_EXPRESSION, coord->GetLocation(), coord->GetScope(), &typeToken );
+						Type castType = coord->GetType();
+						castType.width -= 1;
+						castType.builtInType = OP_UINT;
+						cast->SetType( castType );
+						cast->AddChild( dot );
+						dot = cast;
+					}
+
+					call->AddChild( dot );
+
+					swizzle = ScannerToken::ID( MakeInlineString( xyzw + coord->GetType().width - 1, xyzw + coord->GetType().width ) );
+					dot = new ASTNode( NT_POSTFIX_EXPRESSION, coord->GetLocation(), coord->GetScope(), &swizzle );
+					dot->AddChild( coord->Copy() );
+					call->AddChild( dot );
+				}
+				else
+				{
+					auto coord = node->GetChild( 0 )->GetChild( 1 );
+					if( coord->GetType().builtInType != OP_UINT )
+					{
+						ScannerToken typeToken = ScannerToken::FromTokenType( OP_FLOAT );
+						typeToken.intValue = 4;
+						ASTNode* cast = new ASTNode( NT_CAST_EXPRESSION, coord->GetLocation(), coord->GetScope(), &typeToken );
+						Type castType = coord->GetType();
+						castType.builtInType = OP_UINT;
+						cast->SetType( castType );
+						cast->AddChild( coord );
+						call->AddChild( cast );
+					}
+					else
+					{
+						call->AddChild( coord );
+					}
+				}
+				node->GetChild( 0 )->ReplaceChild( 1, call );
+				node = node->GetChild( 0 );
+			}
+			else
+			{
+				isAssignment = true;
+			}
+			break;
+		case OP_MUL_ASSIGN:
+		case OP_DIV_ASSIGN:
+		case OP_MOD_ASSIGN:
+		case OP_ADD_ASSIGN:
+		case OP_SUB_ASSIGN:
+		case OP_LEFT_ASSIGN:
+		case OP_RIGHT_ASSIGN:
+		case OP_AND_ASSIGN:
+		case OP_XOR_ASSIGN:
+		case OP_OR_ASSIGN:
+			isAssignment = true;
+			break;
+		default:
+			break;
+		}
+	}
+
+	for( size_t i = 0; i < node->GetChildrenCount(); ++i )
+	{
+		node->ReplaceChild( unsigned( i ), PatchMetalTextureCalls( state, node->GetChild( i ), isAssignment && i == 0 ? false : rightHandSide ) );
+	}
+	return node;
+}
+
+void ConvertTextureFunctionsToMetal( ParserState& state )
+{
+	ConvertTextureFunctionsDX11( state );
+	PatchMetalTextureCalls( state, state.GetTree() );
 }

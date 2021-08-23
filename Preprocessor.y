@@ -8,6 +8,10 @@
 	#include "HLSLParser.h"
 	#include "ParserUtils.h"
 	#include "ParserState.h"
+
+	#ifdef _MSC_VER
+	#pragma warning(disable: 4065 4100 4189 4701)
+	#endif
 }
 
 %extra_argument {ParserState* parserState}

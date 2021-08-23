@@ -13,6 +13,10 @@
 	#include "ParserUtils.h"
 	#include "ParserState.h"
 	#include "FXAnalyzer.h"
+
+	#ifdef _MSC_VER
+	#pragma warning(disable: 4065 4100 4189)
+	#endif
 }
 
 %extra_argument {ParserState* parserState}
@@ -169,10 +173,11 @@ postfix_expression(A) ::= function_call(B).
 
 	if( B->GetToken()->type == OP_ID )
 	{
-		Symbol* symbol = parserState->GetSymbolTable().LookupFunction( B->GetToken()->stringValue, B ); 
+		std::string diagnosticMessage;
+		Symbol* symbol = parserState->GetSymbolTable().LookupFunction( B->GetToken()->stringValue, B, diagnosticMessage ); 
 		if( !symbol ) 
 		{ 
-			parserState->ShowMessage( B->GetToken()->fileLocation, EC_NO_OVERRIDE, std::string( B->GetToken()->stringValue.start, B->GetToken()->stringValue.end ).c_str() );
+			parserState->ShowMessage( B->GetToken()->fileLocation, EC_NO_OVERRIDE, std::string( B->GetToken()->stringValue.start, B->GetToken()->stringValue.end ).c_str(), diagnosticMessage.c_str() );
 		}
 		else
 		{
@@ -1261,6 +1266,7 @@ register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_RIGHT_P
 	A.shaderProfile = MakeInlineString( "" );
 	A.subComponent = -1;
 	A.space = -1;
+	A.explicitSpace = false;
 	A.explicitRegister = true;
 	if( !ParseRegisterID( B.stringValue.start, B.stringValue.end, A.registerType, A.registerNumber ) )
 	{
@@ -1311,6 +1317,7 @@ register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_COMA OP
 
 register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_COMA OP_ID(T) OP_LEFT_BRACKET OP_INT_CONST(D) OP_RIGHT_BRACKET OP_RIGHT_PAREN.
 {
+	A.explicitSpace = false;
 	A.explicitRegister = true;
 	A.shaderProfile = MakeInlineString( "" );
 	A.subComponent = -1;
@@ -2787,10 +2794,11 @@ shader_assignment(A) ::= OP_ID(B) OP_EQUAL OP_COMPILE leave_fx_mode OP_ID(C) fun
 {
 	if( D->GetToken()->type == OP_ID )
 	{
-		Symbol* symbol = parserState->GetSymbolTable().LookupFunction( D->GetToken()->stringValue, D ); 
+		std::string diagnosticMessage;
+		Symbol* symbol = parserState->GetSymbolTable().LookupFunction( D->GetToken()->stringValue, D, diagnosticMessage ); 
 		if( !symbol ) 
 		{ 
-			parserState->ShowMessage( *D->GetToken(), EC_NO_OVERRIDE, std::string( D->GetToken()->stringValue.start, D->GetToken()->stringValue.end ).c_str() );
+            parserState->ShowMessage( *D->GetToken(), EC_NO_OVERRIDE, std::string( D->GetToken()->stringValue.start, D->GetToken()->stringValue.end ).c_str(), diagnosticMessage.c_str() );
 		}
 		D->SetSymbol( symbol );
 	}

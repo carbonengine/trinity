@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#if _WIN32
 #include "EffectCompilerDX12.h"
 #include "Macro.h"
 #include "Platforms.h"
@@ -6,6 +7,8 @@
 
 bool EffectCompilerDX12::Create()
 {
+	tmFunction( 0, 0 );
+
 	return m_compiler.Create();
 }
 
@@ -22,3 +25,4 @@ bool EffectCompilerDX12::CompileEffect( const char* source, size_t sourceLength,
 	}
 	return m_compiler.CompileEffect( source, sourceLength, defines, include, result, { "5_1", false, false, true } );
 }
+#endif

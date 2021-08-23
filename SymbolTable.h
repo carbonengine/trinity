@@ -21,6 +21,8 @@ struct PackOffset
 
 struct RegisterSpecifier
 {
+	static RegisterSpecifier Register( char type, int index = -1 );
+
 	InlineString shaderProfile;
 	char registerType;
 	int registerNumber;
@@ -35,6 +37,16 @@ struct SymbolAnnotation
 	int type;
 	InlineString name;
 	ScannerToken value;
+};
+
+enum class AddressSpace
+{
+	None = 0,
+	Device,
+	Constant,
+	Thread,
+	Threadgroup,
+	Threadgroup_imageblock
 };
 
 typedef std::vector<SymbolAnnotation> SymbolAnnotations;
@@ -62,6 +74,9 @@ struct Symbol
 
 	IntrinsicType intrinsicType;
 
+	// Specific to Metal shaders.
+	AddressSpace addressSpace;
+
 	bool used;
 };
 
@@ -83,7 +98,7 @@ public:
 	~ScopeSymbolTable();
 
 	Symbol* Lookup( const InlineString& name );
-	Symbol* LookupFunction( const InlineString& name, ASTNode* callNode ) const;
+	Symbol* LookupFunction( const InlineString& name, ASTNode* callNode, std::string& diagnosticMessage ) const;
 	Symbol* LookupFunctionDeclaration( const InlineString& name, ASTNode* header ) const;
 	Symbol* AddSymbol( const InlineString& name, OverrideBehavior overrideBehavior );
 	Symbol* AddSymbol( Symbol* symbol, OverrideBehavior overrideBehavior );
@@ -105,7 +120,7 @@ public:
 	~SymbolTable();
 
 	Symbol* Lookup( const InlineString& name ) const;
-	Symbol* LookupFunction( const InlineString& name, ASTNode* callNode ) const;
+	Symbol* LookupFunction( const InlineString& name, ASTNode* callNode, std::string& diagnosticMessage ) const;
 	Symbol* LookupFunctionDeclaration( const InlineString& name, ASTNode* header ) const;
 	Symbol* LookupType( const InlineString& name ) const;
 	Symbol* LookupBuffer( const InlineString& name ) const;

@@ -105,8 +105,9 @@ public:
 	ASTNode* Copy() const;
 
 	void AddChild( ASTNode* child );
-	void InsertChild( unsigned place, ASTNode* child );
-	void RemoveChild( unsigned place );
+	void InsertChild( size_t place, ASTNode* child );
+	void ReplaceChild( size_t place, ASTNode* child );
+	void RemoveChild( size_t place );
 
 	ASTNodeType GetNodeType() const;
 	void SetNodeType( ASTNodeType type );
@@ -128,11 +129,26 @@ public:
 	Symbol* GetSymbol() const;
 	ScopeSymbolTable* GetScope() const;
 
-	void SetType( Type type );
-	Type GetType() const;
+	void SetType( const Type& type );
+	const Type& GetType() const;
 
 	ASTNode* FindNode( ASTNodeType type );
 	void FindNodes( ASTNodeType type, std::vector<ASTNode*>& nodes );
+
+	template <typename T>
+	ASTNode* Map( T callback ) 
+	{
+		ASTNode* newNode = callback( this );
+		for( size_t i = 0; i < newNode->m_children.size(); ++i )
+		{
+			if( newNode->m_children[i] )
+			{
+				newNode->m_children[i] = newNode->m_children[i]->Map( callback );
+			}
+		}
+		return newNode;
+	}
+
 private:
 	ASTNodeType  m_nodeType;
 	ScannerToken m_token;
