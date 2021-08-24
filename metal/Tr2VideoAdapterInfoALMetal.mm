@@ -318,24 +318,24 @@ ALResult Tr2VideoAdapterInfo::GetAdapterDisplayMode( unsigned adapterIndex,
 
 	// Find native display mode (if available).
 	bool nativeModeFound = false;
-	CFArrayRef modes = CGDisplayCopyAllDisplayModes( s_displays[adapterIndex].displayID, NULL );
-
-	for( CFIndex i = 0, n = CFArrayGetCount( modes ); i < n; ++i )
+	if( CFArrayRef modes = CGDisplayCopyAllDisplayModes( s_displays[adapterIndex].displayID, NULL ) )
 	{
-		CGDisplayModeRef currentMode = (CGDisplayModeRef) CFArrayGetValueAtIndex( modes, i );
-		uint32_t ioFlags = CGDisplayModeGetIOFlags( currentMode );
-
-		if( ioFlags & kDisplayModeNativeFlag )
+		for( CFIndex i = 0, n = CFArrayGetCount( modes ); i < n; ++i )
 		{
-			w = CGDisplayModeGetPixelWidth( currentMode );
-			h = CGDisplayModeGetPixelHeight( currentMode );
+			CGDisplayModeRef currentMode = (CGDisplayModeRef) CFArrayGetValueAtIndex( modes, i );
+			uint32_t ioFlags = CGDisplayModeGetIOFlags( currentMode );
 
-			nativeModeFound = true;
-			break;
+			if( ioFlags & kDisplayModeNativeFlag )
+			{
+				w = CGDisplayModeGetPixelWidth( currentMode );
+				h = CGDisplayModeGetPixelHeight( currentMode );
+
+				nativeModeFound = true;
+				break;
+			}
 		}
+		CFRelease( modes );
 	}
-	CFRelease( modes );
-
 	// If native display mode is not available - use current (default) mode.
 	if( !nativeModeFound )
 	{
