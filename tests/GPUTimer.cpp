@@ -22,6 +22,9 @@ TEST_F( WithRenderContext, CreatingWithoutRenderContext )
 	ASSERT_HRESULT_FAILED(hrResult);
 }
 
+// GPU timers are disabled for now on Metal because of stability issues
+#if TRINITY_PLATFORM != TRINITY_METAL
+
 TEST_F( GpuTimer, IsValidAfterCreation )
 {
 	Tr2GpuTimerAL timer;
@@ -48,3 +51,5 @@ TEST_F( GpuTimer, ValidAfterStopping )
 	timer.End(*renderContext);
 	EXPECT_TRUE(timer.IsValid());
 }
+
+#endif

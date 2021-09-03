@@ -95,7 +95,10 @@ void Tr2RenderContextAL::SetAsPrimary()
 
 void Tr2RenderContextAL::SetPrimaryRenderContext( Tr2PrimaryRenderContextAL* renderContext )
 {
-	renderContext->SetAsPrimary();
+	if( renderContext )
+	{
+		renderContext->SetAsPrimary();
+	}
 	::GetPrimaryRenderContextPointer() = renderContext;
 }
 
