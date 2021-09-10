@@ -12,6 +12,7 @@ const Be::ClassInfo* EveSpaceObjectFxAttributes::ExposeToBlue()
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 
         MAP_ATTRIBUTE( "activationStrength", m_activationStrength, "activityStrength of the sapceObject parent \n:jessica-group: General", Be::READ )
+        MAP_ATTRIBUTE( "boundingSphereRadius", m_boundingSphereRadius, "SpaceObject Parent bounding sphere radius \n:jessica-group: General", Be::READ )
 		MAP_ATTRIBUTE( "generatedShapeEllipsoidCenter", m_generatedShapeEllipsoidCenter, "Generated or User-authored ellipsoid data for center \n:jessica-group: General", Be::READ )
 		MAP_ATTRIBUTE( "generatedShapeEllipsoidRadius", m_generatedShapeEllipsoidRadius, "Generated or User-authored ellipsoid data for radii \n:jessica-group: General", Be::READ )
 	
