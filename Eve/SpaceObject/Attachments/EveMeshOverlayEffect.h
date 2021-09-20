@@ -6,6 +6,7 @@
 #include "Tr2MeshArea.h"
 #include "ITr2Renderable.h"
 #include "Controllers/ITr2ControllerOwner.h"
+#include "ITr2CurveSetOwner.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriCurveSet );
@@ -23,8 +24,8 @@ BLUE_DECLARE_IVECTOR( ITr2Controller );
 BLUE_CLASS( EveMeshOverlayEffect ) :
         public IInitialize,
         public IListNotify,
-        public ITr2ControllerOwner
-
+        public ITr2ControllerOwner,
+        public ITr2CurveSetOwner
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -64,6 +65,13 @@ public:
     void SetControllerVariable( const char* name, float value ) override;
     void HandleControllerEvent( const char* name ) override;
     void StartControllers() override;
+
+    /////////////////////////////////////////////////////////////////////////////////////
+    // ITr2CurveSetOwner
+    void PlayCurveSet( const std::string& name, const std::string& rangeName ) override;
+    void StopCurveSet( const std::string& name ) override;
+    float GetCurveSetDuration( const std::string& name ) const override;
+    float GetRangeDuration( const std::string& name, const std::string& rangeName ) const override;
 
 private:
 	// general data

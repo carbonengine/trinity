@@ -13,6 +13,7 @@ const Be::ClassInfo* EveMeshOverlayEffect::ExposeToBlue()
 		MAP_INTERFACE( IInitialize )
         MAP_INTERFACE( IListNotify )
         MAP_INTERFACE( ITr2ControllerOwner )
+        MAP_INTERFACE( ITr2CurveSetOwner )
 
 		MAP_ATTRIBUTE( "display", m_display, "Toggle visibility", Be::READWRITE )
 		MAP_ATTRIBUTE( "update", m_update, "Toggle update", Be::READWRITE )

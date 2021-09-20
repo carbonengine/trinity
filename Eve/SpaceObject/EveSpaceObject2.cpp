@@ -2921,6 +2921,13 @@ void EveSpaceObject2::UpdateCurveSet( const std::string& name, Be::Time time )
 			owner->UpdateCurveSet( name, time );
 		}
 	}
+    for( auto it = m_overlayEffects.begin(); it != m_overlayEffects.end(); it++ )
+    {
+        if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( *it ) )
+        {
+            owner->UpdateCurveSet( name, time );
+        }
+    }
 }
 
 // --------------------------------------------------------------------------------
@@ -2958,6 +2965,13 @@ void EveSpaceObject2::PlayCurveSet( const std::string& name, const std::string& 
 			owner->PlayCurveSet( name, rangeName );
 		}
 	}
+    for( auto childIt = m_overlayEffects.begin(); childIt != m_overlayEffects.end(); childIt++ )
+    {
+        if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( *childIt ) )
+        {
+            owner->PlayCurveSet( name, rangeName );
+        }
+    }
 }
 
 // --------------------------------------------------------------------------------
@@ -2987,6 +3001,13 @@ void EveSpaceObject2::StopCurveSet( const std::string& name )
 			owner->StopCurveSet( name );
 		}
 	}
+    for( auto childIt = m_overlayEffects.begin(); childIt != m_overlayEffects.end(); childIt++ )
+    {
+        if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( *childIt ) )
+        {
+            owner->StopCurveSet( name );
+        }
+    }
 }
 
 // --------------------------------------------------------------------------------
@@ -3017,6 +3038,13 @@ float EveSpaceObject2::GetCurveSetDuration( const std::string& name ) const
 			maxDuration = max( maxDuration, owner->GetCurveSetDuration( name ) );
 		}
 	}
+    for( auto childIt = m_overlayEffects.begin(); childIt != m_overlayEffects.end(); childIt++ )
+    {
+        if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( *childIt ) )
+        {
+            maxDuration = max( maxDuration, owner->GetCurveSetDuration( name ) );
+        }
+    }
 	return maxDuration;
 }
 
@@ -3045,6 +3073,13 @@ float EveSpaceObject2::GetRangeDuration( const std::string& name, const std::str
 			maxDuration = max( maxDuration, owner->GetRangeDuration( name, rangeName ) );
 		}
 	}
+    for( auto childIt = m_overlayEffects.begin(); childIt != m_overlayEffects.end(); childIt++ )
+    {
+        if( auto owner = dynamic_cast<ITr2CurveSetOwner*>( *childIt ) )
+        {
+            maxDuration = max( maxDuration, owner->GetRangeDuration( name, rangeName ) );
+        }
+    }
 	return maxDuration;
 }
 

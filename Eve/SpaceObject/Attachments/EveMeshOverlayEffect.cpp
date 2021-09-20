@@ -54,7 +54,8 @@ bool EveMeshOverlayEffect::Initialize()
 // Description:
 //   IListNotify
 // --------------------------------------------------------------------------------------
-void EveMeshOverlayEffect::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list ) {
+void EveMeshOverlayEffect::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
+{
     if (list == &m_controllers && (event & BELIST_LOADING) == 0) {
         switch (event & BELIST_EVENTMASK) {
         case BELIST_INSERTED:
@@ -182,6 +183,76 @@ void EveMeshOverlayEffect::StartControllers()
     {
         ( *it )->Start();
     }
+}
+
+// --------------------------------------------------------------------------------
+// ITr2CurveSetOwner
+
+void EveMeshOverlayEffect::PlayCurveSet( const std::string& name, const std::string& rangeName )
+{
+    if( !m_curveSet )
+    {
+        return;
+    }
+
+    if( m_curveSet->GetName() == name )
+    {
+        if( rangeName.empty() )
+        {
+            m_curveSet->ResetTimeRange();
+            m_curveSet->Play();
+        }
+        else
+        {
+            m_curveSet->PlayTimeRange( rangeName.c_str() );
+        }
+    }
+}
+
+void EveMeshOverlayEffect::StopCurveSet( const std::string& name )
+{
+    if( !m_curveSet )
+    {
+        return;
+    }
+
+    if( m_curveSet->GetName() == name )
+    {
+        m_curveSet->Stop();
+    }
+}
+
+float EveMeshOverlayEffect::GetCurveSetDuration( const std::string& name ) const
+{
+    float maxDuration = 0.f;
+
+    if( !m_curveSet )
+    {
+        return maxDuration;
+    }
+
+    if( m_curveSet->GetName() == name )
+    {
+        maxDuration = max( maxDuration, m_curveSet->GetMaxCurveDuration() );
+    }
+    return maxDuration;
+}
+
+float EveMeshOverlayEffect::GetRangeDuration( const std::string& name, const std::string& rangeName ) const
+{
+    float maxDuration = 0.f;
+
+    if( !m_curveSet )
+    {
+        return maxDuration;
+    }
+
+    if( m_curveSet->GetName() == name )
+    {
+        maxDuration = max( maxDuration, m_curveSet->GetRangeDuration( rangeName.c_str() ) );
+    }
+
+    return maxDuration;
 }
 
 // --------------------------------------------------------------------------------------
