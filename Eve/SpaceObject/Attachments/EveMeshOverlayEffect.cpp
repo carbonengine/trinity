@@ -57,18 +57,18 @@ bool EveMeshOverlayEffect::Initialize()
 void EveMeshOverlayEffect::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list ) {
     if (list == &m_controllers && (event & BELIST_LOADING) == 0) {
         switch (event & BELIST_EVENTMASK) {
-            case BELIST_INSERTED:
-                if (ITr2ControllerPtr controller = BlueCastPtr(value)) {
-                    controller->Link(*GetRawRoot());
-                }
-                break;
-            case BELIST_REMOVED:
-                if (ITr2ControllerPtr controller = BlueCastPtr(value)) {
-                    controller->Unlink();
-                }
-                break;
-            default:
-                break;
+        case BELIST_INSERTED:
+            if (ITr2ControllerPtr controller = BlueCastPtr(value)) {
+                controller->Link(*GetRawRoot());
+            }
+            break;
+        case BELIST_REMOVED:
+            if (ITr2ControllerPtr controller = BlueCastPtr(value)) {
+                controller->Unlink();
+            }
+            break;
+        default:
+            break;
         }
     }
 }

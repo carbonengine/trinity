@@ -76,6 +76,7 @@ void Tr2ActionOverlay::Start( Tr2Controller& controller )
 	if( m_overlay && m_addOnStart)
 	{
 		owner->AddOverlayEffect( m_overlay );
+        m_overlay->StartControllers();
 	}
 
     if( rebind )

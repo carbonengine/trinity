@@ -2505,7 +2505,7 @@ void EveSpaceObject2::AddLocator( EveLocator2* newLocator )
 // Description:
 //   Add a new overlayEffect to the space object
 // --------------------------------------------------------------------------------
-void EveSpaceObject2::AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect )
+void EveSpaceObject2::AddOverlayEffect( EveMeshOverlayEffect* newOverlayEffect )
 {
     this->m_overlayEffects.Append( newOverlayEffect->GetRawRoot() );
 }
@@ -2514,7 +2514,7 @@ void EveSpaceObject2::AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect
 // Description:
 //   Remove a specific overlayEffect from the space object
 // --------------------------------------------------------------------------------
-void EveSpaceObject2::RemoveOverlayEffect( EveMeshOverlayEffectPtr overlayEffectToRemove )
+void EveSpaceObject2::RemoveOverlayEffect( EveMeshOverlayEffect* overlayEffectToRemove )
 {
 	ssize_t index = m_overlayEffects.FindKey( overlayEffectToRemove->GetRawRoot() );
 	m_overlayEffects.Remove( index );

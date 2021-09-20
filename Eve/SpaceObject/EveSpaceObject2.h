@@ -346,8 +346,8 @@ public:
 	void AddLight( Tr2Light* newLight );
 	void AddCurveSet( TriCurveSetPtr newCurveSet );
 	void AddLocator( EveLocator2* newLocator );
-	void AddOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect );
-	void RemoveOverlayEffect( EveMeshOverlayEffectPtr newOverlayEffect );
+	void AddOverlayEffect( EveMeshOverlayEffect* newOverlayEffect );
+	void RemoveOverlayEffect( EveMeshOverlayEffect* newOverlayEffect );
 	void AddLocatorSet( const char* name, const Locator* locators, size_t locatorCount );
 	Vector3 GetDamageLocator( uint32_t index ) const;
 	Vector3 GetDamageLocatorDirectionLocal( uint32_t index ) const;
