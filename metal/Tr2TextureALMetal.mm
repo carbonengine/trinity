@@ -141,6 +141,8 @@ namespace TrinityALImpl
 #endif
 		bool needsDecompression = false;
 		
+        Tr2BitmapDimensions realDesc = desc;
+        
 		// macOS 10.14 can't handle compressed volume textures, so we decompress them on the fly
 		// This only works with an assumption that we have BC 1, 2, 3 compression only and that such
 		// textures are immutable textures only participating in draw commands (not copy/map, etc.)
@@ -153,6 +155,14 @@ namespace TrinityALImpl
 			{
 				metalPixelFormat = MTLPixelFormatBGRA8Unorm;
 				needsDecompression = true;
+                realDesc = Tr2BitmapDimensions(
+                                               desc.GetType(),
+                                               Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM,
+                                               desc.GetWidth(),
+                                               desc.GetHeight(),
+                                               desc.GetDepth(),
+                                               desc.GetMipCount(),
+                                               desc.GetArraySize() );
 			}
 		}
 		
@@ -212,6 +222,8 @@ namespace TrinityALImpl
 
 			m_wrappedTexture = false;
 		}
+        
+        m_memory.Set( Tr2MemoryCounterAL::TEXTURE, realDesc, msaa );
 
 		m_metalContext  = metalContext;
 		m_desc          = desc;
@@ -295,6 +307,7 @@ namespace TrinityALImpl
 
 		m_metalContext   = nil;
 		m_wrappedTexture = false;
+        m_memory.Reset();
 	}
 
 	bool Tr2TextureAL::IsValid() const
@@ -379,12 +392,15 @@ namespace TrinityALImpl
 		if( !m_mtlReadBackBuffer )
 		{
 			m_mtlReadBackBuffer = metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), bufferSize, MTLResourceStorageModeManaged, nil);
+            m_memory.Grow( bufferSize );
 		}
 		// We recreate the buffer if it's not an exact match but we could just do this for larger buffers if performance is an issue
 		if( m_mtlReadBackBuffer.length != bufferSize )
 		{
+            m_memory.Shrink( m_mtlReadBackBuffer.length );
 			metalContext->DestroyMetalBuffer(m_mtlReadBackBuffer);
 			m_mtlReadBackBuffer = metalContext->CreateMetalBuffer(renderContext.GetMetalWorkQueue(), bufferSize, MTLResourceStorageModeManaged, nil);
+            m_memory.Grow( bufferSize );
 		}
 
 		renderContext.GetMetalWorkQueue()->CopyTextureToMTLBuffer( m_mtlTexture, m_mtlReadBackBuffer, mipPitch, bufferSize / std::max( 1u, m_desc.GetDepth() ), readOrigin, readSize, readMipLevel, true );
@@ -477,6 +493,7 @@ namespace TrinityALImpl
         if( !m_mtlWriteBuffer )
         {
             m_mtlWriteBuffer = metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), m_desc.GetMipSize( 0 ), MTLResourceStorageModeManaged, nil );
+            m_memory.Grow( m_mtlWriteBuffer.length );
         }
         uint32_t start = 0;
         if( !m_mappedRanges.empty() )
@@ -497,8 +514,10 @@ namespace TrinityALImpl
                 }
                 else
                 {
+                    m_memory.Shrink( m_mtlWriteBuffer.length );
                     metalContext->DestroyMetalBuffer( m_mtlWriteBuffer );
                     m_mtlWriteBuffer = metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), m_desc.GetMipSize( 0 ) + m_mtlWriteBuffer.length, MTLResourceStorageModeManaged, nil );
+                    m_memory.Grow( m_mtlWriteBuffer.length );
                     m_mappedRanges.clear();
                     start = 0;
                 }
@@ -511,8 +530,10 @@ namespace TrinityALImpl
                 }
                 else
                 {
+                    m_memory.Shrink( m_mtlWriteBuffer.length );
                     metalContext->DestroyMetalBuffer( m_mtlWriteBuffer );
                     m_mtlWriteBuffer = metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), m_desc.GetMipSize( 0 ) + m_mtlWriteBuffer.length, MTLResourceStorageModeManaged, nil );
+                    m_memory.Grow( m_mtlWriteBuffer.length );
                     m_mappedRanges.clear();
                     start = 0;
                 }

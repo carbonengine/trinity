@@ -72,6 +72,8 @@ namespace TrinityALImpl
 		m_owner = &renderContext;
 		m_mtlBuffer = m_metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), bufferSizeInBytes, m_resourceMode, initialData);
 		m_desc = desc;
+        
+        m_memory.Set( Tr2MemoryCounterAL::BUFFER, bufferSizeInBytes );
 
 		return m_mtlBuffer ? S_OK : E_FAIL;
 	}
@@ -90,6 +92,7 @@ namespace TrinityALImpl
 		m_metalContext = nil;
 		m_desc.count   = 0;
 		m_owner = nullptr;
+        m_memory.Reset();
 	}
 
 	bool Tr2BufferAL::IsValid() const
@@ -115,6 +118,8 @@ namespace TrinityALImpl
 		m_mappedBuffer = metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), m_mtlBuffer.length, MTLResourceStorageModeManaged, nil );
 		renderContext.GetMetalWorkQueue()->CopyBufferToBuffer( m_mappedBuffer, 0, m_mtlBuffer, 0, m_mtlBuffer.length );
 		renderContext.GetMetalWorkQueue()->ReadBackBufferToCPU( m_mappedBuffer, true );
+        
+        m_memory.Grow( m_mtlBuffer.length );
 
 		data = m_mappedBuffer.contents;
 		return S_OK;
@@ -122,9 +127,13 @@ namespace TrinityALImpl
 
 	void Tr2BufferAL::UnmapForReading( Tr2RenderContextAL& renderContext )
 	{
-		MetalContext *metalContext = renderContext.GetMetalContext();
-		metalContext->DestroyMetalBuffer( m_mappedBuffer );
-		m_mappedBuffer = nil;
+        if( m_mappedBuffer )
+        {
+            m_memory.Shrink( m_mappedBuffer.length );
+            MetalContext *metalContext = renderContext.GetMetalContext();
+            metalContext->DestroyMetalBuffer( m_mappedBuffer );
+            m_mappedBuffer = nil;
+        }
 	}
 
 	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
@@ -176,10 +185,12 @@ namespace TrinityALImpl
 			m_mappedBuffer = m_metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), m_mtlBuffer.length, MTLResourceStorageModeManaged, nil );
 			StagingBuffer staging = { m_mappedBuffer, m_metalContext->GetRecordingFrameNumber() };
 			m_stagingBuffers.push_back( staging );
+            m_memory.Grow( m_mtlBuffer.length );
 		}
 		else
 		{
 			m_mappedBuffer = m_metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), m_mtlBuffer.length, MTLResourceStorageModeManaged, nil );
+            m_memory.Grow( m_mtlBuffer.length );
 		}
 		data = m_mappedBuffer.contents;
 		return S_OK;
@@ -207,6 +218,7 @@ namespace TrinityALImpl
 		}
 		else
 		{
+            m_memory.Shrink( m_mappedBuffer.length );
 			renderContext.GetMetalWorkQueue()->CopyBufferToBuffer( m_mtlBuffer, 0, m_mappedBuffer, 0, m_mtlBuffer.length );
 			m_metalContext->DestroyMetalBuffer( m_mappedBuffer );
 			m_mappedBuffer = nil;

@@ -5,6 +5,7 @@
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2BitmapDimensions.h"
 #include "../Tr2HalHelperStructures.h"
+#include "../Tr2MemoryCounterAL.h"
 #include "MetalContext.h"
 
 namespace TrinityALImpl
@@ -68,6 +69,7 @@ namespace TrinityALImpl
 		std::vector<id<MTLTexture>>  m_mtlTextureUAV;
 
 		MetalContext   *m_metalContext;
+        Tr2MemoryCounterAL m_memory;
 		bool            m_wrappedTexture;
 	};
 }

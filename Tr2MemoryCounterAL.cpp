@@ -52,6 +52,20 @@ void Tr2MemoryCounterAL::Set( MemoryType memoryType, size_t size )
 	UpdateCounters( int32_t( m_size ) );
 }
 
+void Tr2MemoryCounterAL::Grow( size_t size )
+{
+    m_size += size;
+    UpdateCounters( int32_t( size ) );
+}
+
+void Tr2MemoryCounterAL::Shrink( size_t size )
+{
+    CCP_ASSERT( size <= m_size );
+    
+    m_size -= size;
+    UpdateCounters( -int32_t( size ) );
+}
+
 void Tr2MemoryCounterAL::Set( MemoryType memoryType, const Tr2BitmapDimensions& bitmap, const Tr2MsaaDesc& msaa )
 {
 	Reset();

@@ -4,6 +4,7 @@
 
 #include "../include/Tr2BufferAL.h"
 #include "MetalContext.h"
+#include "../Tr2MemoryCounterAL.h"
 
 namespace TrinityALImpl
 {
@@ -36,7 +37,8 @@ namespace TrinityALImpl
 		MetalContext *m_metalContext;
 		MTLResourceOptions m_resourceMode;
 		id<MTLBuffer> m_mtlBuffer;
-        
+        Tr2MemoryCounterAL m_memory;
+
         struct StagingBuffer
         {
             id<MTLBuffer> buffer;
