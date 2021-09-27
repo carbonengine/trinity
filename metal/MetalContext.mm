@@ -24,7 +24,8 @@ namespace TrinityALImpl
 		m_device           = MTLCreateSystemDefaultDevice();
 		m_commandQueue     = [m_device newCommandQueueWithMaxCommandBufferCount:1024];
 		
-        if( [m_device.name rangeOfString:@"NVidia" options:NSCaseInsensitiveSearch].location != NSNotFound )
+        if( [m_device.name rangeOfString:@"NVidia" options:NSCaseInsensitiveSearch].location != NSNotFound ||
+           [m_device.name rangeOfString:@"Intel" options:NSCaseInsensitiveSearch].location != NSNotFound )
         {
             CCP_LOGWARN("Disabling parallel rendering on nVidia GPU");
             g_useParallelEncoding = false;
