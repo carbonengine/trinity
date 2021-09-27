@@ -27,7 +27,7 @@ namespace TrinityALImpl
         if( [m_device.name rangeOfString:@"NVidia" options:NSCaseInsensitiveSearch].location != NSNotFound ||
            [m_device.name rangeOfString:@"Intel" options:NSCaseInsensitiveSearch].location != NSNotFound )
         {
-            CCP_LOGWARN("Disabling parallel rendering on nVidia GPU");
+            CCP_LOGWARN("Disabling parallel rendering on nVidia/Intel GPU");
             g_useParallelEncoding = false;
         }
 		if( g_useParallelEncoding )
