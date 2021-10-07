@@ -111,7 +111,14 @@ namespace TrinityALImpl
 					m_uavOffset = std::min( m_uavOffset, registerIndex );
 					break;
 				case Tr2ResourceSetDescriptionAL::TEXTURE:
-					m_uavs[registerIndex] = desc.texture.m_texture->m_uav[desc.mip];
+					if( desc.mip < desc.texture.m_texture->m_uav.size() )
+					{
+						m_uavs[registerIndex] = desc.texture.m_texture->m_uav[desc.mip];
+					}
+					else
+					{
+						m_uavs[registerIndex] = nullptr;
+					}
 					m_uavInitialCounts[registerIndex] = 0xffffffff;
 					m_uavCount = registerIndex + 1;
 					m_uavOffset = std::min( m_uavOffset, registerIndex );
