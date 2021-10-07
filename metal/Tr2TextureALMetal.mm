@@ -37,6 +37,16 @@ namespace TrinityALImpl
 		{
 			return E_FAIL;
 		}
+        
+        if( desc.GetWidth() == 0 || desc.GetHeight() == 0 )
+        {
+            return E_INVALIDARG;
+        }
+        if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D && desc.GetDepth() == 0 )
+        {
+            return E_INVALIDARG;
+        }
+        
 		if( msaa.samples > 1 )
 		{
 			if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
