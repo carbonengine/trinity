@@ -192,15 +192,18 @@ namespace TrinityALImpl
 	void MetalContext::GenerateDummyTexture()
 	{
 		uint32_t textureDim = 8;
+        // Enough size for TextureCube
 		uint32_t texData[textureDim][textureDim * textureDim];
 
 		const MTLTextureType dummyTextureTypes[METAL_NUM_DUMMY_TEXTURES] = {
 			MTLTextureType1D,
 			MTLTextureType2D,
+			MTLTextureTypeCube,
 			MTLTextureType3D };
 
 		const MTLSize dummyTextureSizes[METAL_NUM_DUMMY_TEXTURES] = {
 			MTLSizeMake(textureDim, 1, 1),
+			MTLSizeMake(textureDim, textureDim, 1),
 			MTLSizeMake(textureDim, textureDim, 1),
 			MTLSizeMake(textureDim, textureDim, textureDim) };
 
@@ -259,6 +262,10 @@ namespace TrinityALImpl
 				return m_dummyTexture[i];
 			}
 		}
+        
+        CCP_AL_LOGERR( "Dummy texture type not available. Accessing this texture can cause crashes on certain GPUs." );
+        CCP_ASSERT( false );
+        
 		return nil;
 	}
 
