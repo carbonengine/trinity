@@ -198,6 +198,10 @@ void Tr2RenderContextAL::BufferRewritten( id<MTLBuffer> from, id<MTLBuffer> to )
 
 ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( )
 {
+    if( !buffer.IsValid() )
+    {
+        return E_INVALIDARG;
+    }
 	m_workQueue->ClearBuffer( buffer.m_buffer->GetMetalBuffer(), values );
 
 	return S_OK;
@@ -205,6 +209,10 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4
 
 ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( )
 {
+    if( !buffer.IsValid() )
+    {
+        return E_INVALIDARG;
+    }
 	m_workQueue->ClearBuffer( buffer.m_buffer->GetMetalBuffer(), values );
 
 	return S_OK;
@@ -212,6 +220,10 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t value
 
 ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mipLevel, const float values[4] ) throw( )
 {
+    if( !texture.IsValid() )
+    {
+        return E_INVALIDARG;
+    }
 	m_workQueue->ClearTexture( texture.m_texture->GetMetalTexture(), mipLevel, values );
 
 	return S_OK;
@@ -219,6 +231,10 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mipLevel,
 
 ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mipLevel, const uint32_t values[4] ) throw( )
 {
+    if( !texture.IsValid() )
+    {
+        return E_INVALIDARG;
+    }
 	m_workQueue->ClearTexture( texture.m_texture->GetMetalTexture(), mipLevel, values );
 
 	return S_OK;
