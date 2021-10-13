@@ -17,7 +17,7 @@ function(set_shared_trinityal_properties target)
 
     target_precompile_headers(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
 
-    target_compile_options(${target} PUBLIC "/fp:fast")
+    target_compile_options(${target} PUBLIC "${MATH_OPTIMIZE_FLAG}")
 
     # FIXME we should really not be globbing here
     file(GLOB_RECURSE _SOURCES "*.cpp" "*.mm" "*.h")
