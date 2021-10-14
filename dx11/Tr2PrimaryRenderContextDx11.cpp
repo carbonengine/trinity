@@ -123,8 +123,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	sd.BufferDesc.Width  = pp.mode.width;
 	sd.BufferDesc.Height = pp.mode.height;
 	sd.BufferDesc.Format = SafeConvertD3DBackBufferFormat( pp.mode.format );
-	sd.BufferDesc.RefreshRate.Numerator = pp.mode.refreshRateNumerator;
-	sd.BufferDesc.RefreshRate.Denominator = pp.mode.refreshRateDenominator;
+	sd.BufferDesc.RefreshRate.Numerator = sd.BufferDesc.RefreshRate.Denominator = 0;
 	sd.BufferDesc.Scaling = DXGI_MODE_SCALING( pp.mode.scaling );
 	sd.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER( pp.mode.scanlineOrdering );
 	
@@ -434,8 +433,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 	DXGI_MODE_DESC modeDesc;
 	modeDesc.Width = presentationParameters.mode.width;
 	modeDesc.Height = presentationParameters.mode.height;
-	modeDesc.RefreshRate.Numerator = presentationParameters.mode.refreshRateNumerator;
-	modeDesc.RefreshRate.Denominator = presentationParameters.mode.refreshRateDenominator;
+	modeDesc.RefreshRate.Numerator = modeDesc.RefreshRate.Denominator = 0;
 	modeDesc.Format = fmt;
 	modeDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER( presentationParameters.mode.scanlineOrdering );
 	modeDesc.Scaling = DXGI_MODE_SCALING( presentationParameters.mode.scaling );
@@ -452,8 +450,6 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 	{
 		CR( m_swapChain->ResizeTarget( &modeDesc ) );
 		CR( m_swapChain->SetFullscreenState( TRUE, dxgiOutput ) );
-		modeDesc.RefreshRate.Numerator = modeDesc.RefreshRate.Denominator = 0;
-		CR( m_swapChain->ResizeTarget( &modeDesc ) );
 	}
 	else
 	{
