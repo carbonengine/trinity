@@ -194,18 +194,24 @@ namespace TrinityALImpl
 		uint32_t textureDim = 8;
         // Enough size for TextureCube
 		uint32_t texData[textureDim][textureDim * textureDim];
+		
+		struct TextureProperties
+		{
+			MTLTextureType type;
+			size_t width;
+			size_t height;
+			size_t depth;
+			uint32_t samples;
+		};
 
-		const MTLTextureType dummyTextureTypes[METAL_NUM_DUMMY_TEXTURES] = {
-			MTLTextureType1D,
-			MTLTextureType2D,
-			MTLTextureTypeCube,
-			MTLTextureType3D };
-
-		const MTLSize dummyTextureSizes[METAL_NUM_DUMMY_TEXTURES] = {
-			MTLSizeMake(textureDim, 1, 1),
-			MTLSizeMake(textureDim, textureDim, 1),
-			MTLSizeMake(textureDim, textureDim, 1),
-			MTLSizeMake(textureDim, textureDim, textureDim) };
+		const TextureProperties dummyTextureProperties[METAL_NUM_DUMMY_TEXTURES] = {
+			TextureProperties{MTLTextureType1D, textureDim, 1, 1, 1},
+			TextureProperties{MTLTextureType2D, textureDim, textureDim, 1, 1},
+			// 4 samples is supported by all devices according to docs
+			TextureProperties{MTLTextureType2DMultisample, textureDim, textureDim, 1, 4},
+			TextureProperties{MTLTextureTypeCube, textureDim, textureDim, 1, 1},
+			TextureProperties{MTLTextureType3D, textureDim, textureDim, textureDim, 1}
+		};
 
 		// Generate texture data
 		for( int z = 0; z < textureDim; z++ )
@@ -222,14 +228,25 @@ namespace TrinityALImpl
 
 		for( uint32_t i = 0; i < METAL_NUM_DUMMY_TEXTURES; ++i )
 		{
-			m_dummyTexture[i] = CreateMetalTexture(dummyTextureTypes[i],
+			uint32_t samples = dummyTextureProperties[i].samples;
+			
+			m_dummyTexture[i] = CreateMetalTexture(
+					dummyTextureProperties[i].type,
 					MTLPixelFormatRGBA8Unorm,
-					dummyTextureSizes[i].width,
-					dummyTextureSizes[i].height,
-					dummyTextureSizes[i].depth,
+					dummyTextureProperties[i].width,
+					dummyTextureProperties[i].height,
+					dummyTextureProperties[i].depth,
 					1,
 					MTLStorageModePrivate,
-					MTLTextureUsageShaderRead);
+					MTLTextureUsageShaderRead,
+					samples
+			);
+			
+			// Don't upload data to multisample texture
+			if( samples > 1 )
+			{
+				continue;
+			}
 
 			// Calculate the number of bytes per row in the image
 			uint32_t bytesPerRow   = sizeof(uint32_t) * textureDim;
