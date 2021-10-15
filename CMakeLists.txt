@@ -43,6 +43,8 @@ function(set_shared_trinityal_properties target)
             POSITION_INDEPENDENT_CODE ON
             EXPORT_NAME TrinityAL
     )
+
+    add_trinity_dev_debug_flags(${target})
 endfunction()
 
 #[[
