@@ -531,13 +531,6 @@ LRESULT Tr2MainWindow::WndProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPara
 			SetState( false, newMode );
 		}
 		break;
-	case WM_MOVE:
-		if( m_state.windowMode == Tr2WindowMode::WINDOWED )
-		{
-			m_state.left = int32_t( LOWORD( lParam ) );
-			m_state.top = int32_t( HIWORD( lParam ) );
-		}
-		break;
 	case WM_SIZE:
 		if( !m_isResizing )
 		{
