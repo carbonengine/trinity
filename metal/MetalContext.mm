@@ -8,6 +8,7 @@
 #include "ALLog.h"
 
 bool g_useParallelEncoding = true;
+extern bool g_brokenMacOSNvidiaDrivers;
 
 namespace TrinityALImpl
 {
@@ -23,9 +24,11 @@ namespace TrinityALImpl
 		m_utils            = new MetalUtils;
 		m_device           = MTLCreateSystemDefaultDevice();
 		m_commandQueue     = [m_device newCommandQueueWithMaxCommandBufferCount:1024];
+        
+        bool isNvidia = [m_device.name rangeOfString:@"NVidia" options:NSCaseInsensitiveSearch].location != NSNotFound;
+        bool isIntel = [m_device.name rangeOfString:@"Intel" options:NSCaseInsensitiveSearch].location != NSNotFound;
 		
-        if( [m_device.name rangeOfString:@"NVidia" options:NSCaseInsensitiveSearch].location != NSNotFound ||
-           [m_device.name rangeOfString:@"Intel" options:NSCaseInsensitiveSearch].location != NSNotFound )
+        if( isNvidia || isIntel )
         {
             CCP_LOGWARN("Disabling parallel rendering on nVidia/Intel GPU");
             g_useParallelEncoding = false;
@@ -48,6 +51,10 @@ namespace TrinityALImpl
 		{
 			[m_device sampleTimestamps:&m_beginCpuTime gpuTimestamp:&m_beginGpuTime];
 		}
+        else if( isNvidia )
+        {
+            g_brokenMacOSNvidiaDrivers = true;
+        }
 	}
 
 	MetalContext::~MetalContext()
