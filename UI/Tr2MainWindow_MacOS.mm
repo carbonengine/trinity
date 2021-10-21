@@ -1285,6 +1285,12 @@ void Tr2MainWindow::ClipCursor( int32_t left, int32_t top, int32_t right, int32_
 		return;
 	}
 
+	id delegate = [NSApp delegate];
+	if( ![delegate respondsToSelector:@selector(clipCursor:)] )
+	{
+		return;
+	}
+
 	auto window = (NSWindow*)GetWindowID();
 	auto content = window.contentView.frame;
 	
@@ -1295,12 +1301,18 @@ void Tr2MainWindow::ClipCursor( int32_t left, int32_t top, int32_t right, int32_
 	
 	auto rect = [window convertRectToScreen:NSMakeRect( l, b, r - l, t - b)];
 
-	[(CcpApplication*)[NSApp delegate] clipCursor:rect];
+	[(CcpApplication*)delegate clipCursor:rect];
 }
 
 void Tr2MainWindow::UnclipCursor()
 {
-	[(CcpApplication*)[NSApp delegate] unclipCursor];
+	id delegate = [NSApp delegate];
+	if( ![delegate respondsToSelector:@selector(unclipCursor)] )
+	{
+		return;
+	}
+
+	[(CcpApplication*)delegate unclipCursor];
 }
 
 void Tr2MainWindow::SetCursorPos( int32_t x, int32_t y )
