@@ -73,6 +73,10 @@ public:
 
 	void SetShaderOption(const BlueSharedString& name, const BlueSharedString& value) override;
 
+	// Active turret info
+	int GetActiveTurretCount() const;
+	unsigned int m_activeTurretCount;
+
 protected:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// children

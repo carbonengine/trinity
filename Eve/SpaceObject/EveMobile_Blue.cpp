@@ -17,6 +17,7 @@ const Be::ClassInfo* EveMobile::ExposeToBlue()
 		MAP_INTERFACE( IListNotify )
 
 		MAP_ATTRIBUTE( "turretSets", m_turretSets, "a list of all the turret sets on this ship", Be::READ | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "ActiveTurretCount", m_activeTurretCount, "How many active turretSets are on the space object", Be::READ )
 
 		MAP_METHOD_AND_WRAP(
 			"GetTurretLocatorIndex",
@@ -27,6 +28,7 @@ const Be::ClassInfo* EveMobile::ExposeToBlue()
 		)
 		MAP_METHOD_AND_WRAP( "GetTurretLocatorCount", GetTurretLocatorCount, "Returns the turret locator count of locators and bones matching the correct naming scheme." )
         MAP_METHOD_AND_WRAP( "RebuildTurretPositions", RebuildTurretPositions, "Re-positions all the turrets on this ship" )
+		
 
 
     EXPOSURE_CHAINTO( EveSpaceObject2 )

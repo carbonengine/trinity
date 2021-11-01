@@ -38,6 +38,7 @@ void EveSpaceObjectFxAttributes::UpdateAsyncronous( EveUpdateContext& updateCont
         if ( EveShip2Ptr rootParent = BlueCastPtr( params.spaceObjectParent ) )
         {
             m_killCount = rootParent->GetKillCounterValue();
+			m_activeTurretCount = float(rootParent->GetActiveTurretCount());
         }
 
 		m_initialized = true;

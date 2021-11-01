@@ -101,8 +101,15 @@ void EveMobile::UpdateSyncronous( EveUpdateContext& updateContext )
 
 	// turret update
 	unsigned int locatorInfoIdx = 0;
+	unsigned int activeTurretCount = 0;
 	for( auto it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{
+		// If the turretSet is in aggressive mode then update active turret counter
+		if( ( *it )->GetState() > EveTurretSet::STATE_TARGETING)
+		{
+			activeTurretCount++;
+		}
+
 		// if the turretset is of locatortype JOINT, it means it is attached to an
 		// animated bone, sowe must update the positions of all turrets in the set
 		if( locatorInfoIdx < m_turretSetsLocatorInfo.size() )
@@ -130,6 +137,7 @@ void EveMobile::UpdateSyncronous( EveUpdateContext& updateContext )
 		// next!
 		++locatorInfoIdx;
 	}
+	m_activeTurretCount = activeTurretCount;
 }
 
 // --------------------------------------------------------------------------------
@@ -156,6 +164,11 @@ void EveMobile::UpdateTurretsAsyncronous( EveUpdateContext& updateContext )
 	{
 		(*it)->UpdateAsyncronous( updateContext, &pd );
 	}
+}
+
+int EveMobile::GetActiveTurretCount() const
+{
+	return m_activeTurretCount;
 }
 
 void EveMobile::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )

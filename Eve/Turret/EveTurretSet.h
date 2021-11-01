@@ -156,6 +156,9 @@ public:
 	// ITr2DebugRenderable
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+
+	int GetState() const;
+
 private:
 	bool OnPrepareResources() override;
 
@@ -226,7 +229,6 @@ public:
 		LOD_DISABLED,
 	};
 
-private:
 	// turret set states
 	enum State
 	{
@@ -237,6 +239,8 @@ private:
 		STATE_FIRING,
 		STATE_RELOADING,
 	};
+private:
+	
 	// system-controlled bones
 	enum SystemBones
 	{

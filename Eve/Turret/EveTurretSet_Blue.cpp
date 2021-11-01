@@ -82,6 +82,7 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "trackingInfluence", m_trackingInfluence, "How much tracking is alowed?", Be::READ )
 		MAP_ATTRIBUTE( "maxTrackingTime", m_maxTrackingTime, "How long does tracking take?", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "updatePitchPose", m_updatePitchPose, "Rebuild pose for pitch bone calculations if using base turret position is insufficient for desired results", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "state", m_state, "State of the turretSet", Be::READ | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "boundingSphere", m_boundingSphere, "Bounding sphere for visibility detection", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "bottomClipHeight", m_bottomClipHeight, "Everything gets cut-off below this height (y-coord)", Be::READWRITE | Be::PERSIST )
@@ -90,7 +91,7 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "locatorName", m_locatorName, "locator name for all turrets of this pair (A, B, C is auto-attached!)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "slotNumber", m_slotNumber, "the slot number of the turret", Be::READWRITE )
 		MAP_ATTRIBUTE( "swarmID", m_swarmID, "id of the swarmer using this turret set(fighters) used for deriving turret transforms", Be::READWRITE )
-		
+		 
 		MAP_PROPERTY( "targetObject", GetTargetObject, SetTargetObject, "object this set of turrets will track"	)
 		MAP_ATTRIBUTE( "target", m_target, "Info on the target", Be::READ )
 

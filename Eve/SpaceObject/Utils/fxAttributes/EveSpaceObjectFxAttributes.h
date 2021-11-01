@@ -26,6 +26,7 @@ private:
 	float m_boundingSphereRadius;
 	float m_distanceToChildParent;
     float m_killCount;
+	float m_activeTurretCount;
 	Vector3 m_generatedShapeEllipsoidCenter;
 	Vector3 m_generatedShapeEllipsoidRadius;
 };

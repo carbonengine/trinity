@@ -1508,6 +1508,11 @@ void EveTurretSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 }
 
 
+int EveTurretSet::GetState() const
+{
+	return m_state;
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Use a more specialized ::GetRenderables() function to get this renderable. We
