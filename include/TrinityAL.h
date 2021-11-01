@@ -24,3 +24,4 @@
 #include "Tr2ShaderProgramAL.h"
 #include "Tr2ResourceSetAL.h"
 #include "Tr2BufferAL.h"
+#include "Tr2PipelineStatsQueryAL.h"
