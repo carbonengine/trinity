@@ -20,4 +20,4 @@ private:
 };
 
 
-#define GPU_REGION( renderContext, name ) Tr2GpuRegion _gpuRegion##__COUNTER__( renderContext, name )
+#define GPU_REGION_AL( renderContext, name ) Tr2GpuRegion _gpuRegion##__COUNTER__( renderContext, name )
