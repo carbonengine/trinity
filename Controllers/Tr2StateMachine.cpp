@@ -123,19 +123,18 @@ void Tr2StateMachine::FollowTransitions()
 
 	while( next )
 	{
+		auto count = 1u;
 		auto found = seen.find( next );
 		if( found != seen.end() )
 		{
-			if( found->second > 20 )
+			count = found->second + 1;
+			if( count > 20 )
 			{
 				CCP_LOGERR( "Tr2StateMachine: infinite loop in state machine %s detected", m_name.c_str() );
 				return;
 			}
-			else
-			{
-				++found->second;
-			}
 		}
+		seen.insert_or_assign( next, count );
 		m_currentState = next;
 		m_currentState->Start();
 		m_stateStartTime = BeOS->GetCurrentFrameTime();
