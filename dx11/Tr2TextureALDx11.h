@@ -69,6 +69,7 @@ namespace TrinityALImpl
 			Tr2GpuUsage::Type gpuUsage, 
 			Tr2CpuUsage::Type cpuUsage, 
 			bool createSrgb,
+			bool logProgress,
 			Tr2PrimaryRenderContextAL& renderContext );
 
 		CComPtr<ID3D11Resource> m_texture;

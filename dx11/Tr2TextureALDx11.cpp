@@ -349,7 +349,7 @@ namespace TrinityALImpl
 			FORWARD_HR( Create3D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
 		}
 
-		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, true, renderContext ) );
+		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, true, false, renderContext ) );
 
 		m_desc = desc;
 		m_gpuUsage = gpuUsage;
@@ -403,7 +403,7 @@ namespace TrinityALImpl
 
 		CCP_AL_LOG( "Creating views for the shared texture %lld, GPU usage is %d", uint64_t( handle ), int( gpuUsage ) );
 
-		hr = CreateViews( resource, desc, Tr2MsaaDesc(), gpuUsage, Tr2CpuUsage::NONE, createSrgb, renderContext );
+		hr = CreateViews( resource, desc, Tr2MsaaDesc(), gpuUsage, Tr2CpuUsage::NONE, createSrgb, true, renderContext );
 		if( FAILED( hr ) )
 		{
 			CCP_AL_LOG( "Failed to create views for the shared texture %lld, GPU usage is %d", uint64_t( handle ), int( gpuUsage ) );
@@ -425,6 +425,7 @@ namespace TrinityALImpl
 		Tr2GpuUsage::Type gpuUsage, 
 		Tr2CpuUsage::Type cpuUsage, 
 		bool createSrgb,
+		bool logProgress,
 		Tr2PrimaryRenderContextAL& renderContext )
 	{
 		CCP_UNUSED( cpuUsage );
@@ -462,10 +463,12 @@ namespace TrinityALImpl
 				srvDesc.Texture2D.MipLevels = desc.GetTrueMipCount();
 				srvDesc.Texture2DArray.ArraySize = desc.GetArraySize();
 			}
+			CCP_AL_LOG( "Creating linear SRV" );
 			FORWARD_HR( renderContext.m_d3dDevice11->CreateShaderResourceView( texture, &srvDesc, &view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] ) );
 			if( createSrgb )
 			{
 				srvDesc.Format = GetSrvFormat( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+				CCP_AL_LOG( "Creating sRGB SRV" );
 				FORWARD_HR( renderContext.m_d3dDevice11->CreateShaderResourceView( texture, &srvDesc, &view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
 			}
 			else
@@ -501,10 +504,12 @@ namespace TrinityALImpl
 				rtvDesc.Texture2DArray.ArraySize = desc.GetArraySize();
 			}
 
+			CCP_AL_LOG( "Creating linear RTV" );
 			FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] ) );
 			if( createSrgb )
 			{
 				rtvDesc.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+				CCP_AL_LOG( "Creating sRGB RTV" );
 				FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
 			}
 			else
@@ -534,8 +539,10 @@ namespace TrinityALImpl
 				descDSV.Texture2DArray.ArraySize = desc.GetArraySize();
 			}
 
+			CCP_AL_LOG( "Creating read-only DSV" );
 			FORWARD_HR( renderContext.m_d3dDevice11->CreateDepthStencilView( texture, &descDSV, &depthStencil[DepthOption::READ_WRITE] ) );
 			descDSV.Flags |= D3D11_DSV_READ_ONLY_DEPTH;
+			CCP_AL_LOG( "Creating read/write DSV" );
 			FORWARD_HR( renderContext.m_d3dDevice11->CreateDepthStencilView( texture, &descDSV, &depthStencil[DepthOption::READ_ONLY] ) );
 		}
 
@@ -570,6 +577,7 @@ namespace TrinityALImpl
 					descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
 					descUAV.Texture2D.MipSlice = mip;
 				}
+				CCP_AL_LOG( "Creating mip UAV" );
 				FORWARD_HR( renderContext.m_d3dDevice11->CreateUnorderedAccessView( texture, &descUAV, &uav[mip] ) );
 			}
 		}
@@ -1088,8 +1096,15 @@ namespace TrinityALImpl
 	{
 		Destroy();
 
-		if( texture == nullptr || !renderContext.IsValid() )
+		if( texture == nullptr )
 		{
+			CCP_AL_LOGERR( "Null texture passed to Attach" );
+			return E_INVALIDARG;
+		}
+
+		if( !renderContext.IsValid() )
+		{
+			CCP_AL_LOGERR( "Invalid render context passed to Attach" );
 			return E_INVALIDARG;
 		}
 
@@ -1135,7 +1150,7 @@ namespace TrinityALImpl
 			gpuUsage = gpuUsage | Tr2GpuUsage::UNORDERED_ACCESS;
 		}
 
-		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, true, renderContext ) );
+		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, true, true, renderContext ) );
 
 		m_texture = texture;
 		m_desc = desc;
