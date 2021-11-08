@@ -469,7 +469,11 @@ namespace TrinityALImpl
 			{
 				srvDesc.Format = GetSrvFormat( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
 				CCP_AL_LOG( "Creating sRGB SRV" );
-				FORWARD_HR( renderContext.m_d3dDevice11->CreateShaderResourceView( texture, &srvDesc, &view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
+				if( FAILED( renderContext.m_d3dDevice11->CreateShaderResourceView( texture, &srvDesc, &view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) ) )
+				{
+					CCP_AL_LOGWARN( "Failed to create an sRGB view for the texture of format %i - will use the linear view instead", int( srvDesc.Format ) );
+					view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR];
+				}
 			}
 			else
 			{
@@ -1110,17 +1114,17 @@ namespace TrinityALImpl
 
 		D3D11_TEXTURE2D_DESC dx11Desc;
 		texture->GetDesc( &dx11Desc );
-		CCP_AL_LOGERR( "Attaching to texture %u x %u, mips: %u, format: %i, MSAA: %i/%i, usage: %i, bind: %u, cpu: %u, flags: %u",
-					   dx11Desc.Width,
-					   dx11Desc.Height,
-					   dx11Desc.MipLevels,
-					   int( dx11Desc.Format ),
-					   int( dx11Desc.SampleDesc.Count ),
-					   int( dx11Desc.SampleDesc.Quality ),
-					   int( dx11Desc.Usage ),
-					   dx11Desc.BindFlags,
-					   dx11Desc.CPUAccessFlags,
-					   dx11Desc.MiscFlags );
+		CCP_AL_LOG( "Attaching to texture %u x %u, mips: %u, format: %i, MSAA: %i/%i, usage: %i, bind: %u, cpu: %u, flags: %u",
+					dx11Desc.Width,
+					dx11Desc.Height,
+					dx11Desc.MipLevels,
+					int( dx11Desc.Format ),
+					int( dx11Desc.SampleDesc.Count ),
+					int( dx11Desc.SampleDesc.Quality ),
+					int( dx11Desc.Usage ),
+					dx11Desc.BindFlags,
+					dx11Desc.CPUAccessFlags,
+					dx11Desc.MiscFlags );
 
 		Tr2BitmapDimensions desc( dx11Desc.Width, dx11Desc.Height, dx11Desc.MipLevels, static_cast<Tr2RenderContextEnum::PixelFormat>( dx11Desc.Format ) );
 		Tr2MsaaDesc msaa( dx11Desc.SampleDesc.Count, dx11Desc.SampleDesc.Quality );
