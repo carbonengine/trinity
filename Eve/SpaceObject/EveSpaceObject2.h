@@ -484,6 +484,7 @@ protected:
 	float m_oldClipSphereFactor;
 	Vector3 m_clipSphereCenter;
 
+	bool m_wantsGeometryResFromMesh;
 	bool m_impostorMode;
 	// Set to true if the object is inside the frustum
 	bool m_isInFrustum;

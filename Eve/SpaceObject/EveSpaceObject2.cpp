@@ -144,6 +144,7 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	PARENTLOCK( m_externalParameters ),
 	PARENTLOCK( m_customMasks ),
 	PARENTLOCK( m_controllers ),
+	m_wantsGeometryResFromMesh( true ),
 	m_impostorMode( false ),
 	m_display( true ),
 	m_update( true ),
@@ -1667,7 +1668,7 @@ void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
 
 	if( !m_geometryResFromMesh || !m_geometryResFromMesh->IsGood() )
 	{
-		m_geometryResFromMesh = nullptr;
+		m_wantsGeometryResFromMesh = true;
 		return;
 	}
 
@@ -2390,19 +2391,24 @@ void EveSpaceObject2::FreeAnimationData()
 
 void EveSpaceObject2::PrepareForAnimation()
 {
-	if( !m_geometryResFromMesh )
+	if( m_wantsGeometryResFromMesh )
 	{
 		// If this is the first time we see a mesh we set up a callback on the geometry resource
 		// file load to check for possible animations. If the file has animations we set up
 		// the data structures for animation playback.
-		m_geometryResFromMesh = m_mesh->GetGeometryResource();
-		if( m_geometryResFromMesh )
+		auto geometryRes = m_mesh->GetGeometryResource();
+		if( geometryRes && geometryRes != m_geometryResFromMesh )
 		{
 			// We might be loading, still. The AddNotifyTarget below will trigger a callback
 			// once the loading is done. If the geometry resource has already loaded we get the callback
 			// immediately. Further initialization that relies on the granny file being in
 			// memory happens in the callback (RebuildCachedData)
-
+			if( m_geometryResFromMesh )
+			{
+				m_geometryResFromMesh->RemoveNotifyTarget( this );
+			}
+			m_geometryResFromMesh = geometryRes;
+			m_wantsGeometryResFromMesh = false;
 			m_geometryResFromMesh->AddNotifyTarget( this );
 		}
 	}
