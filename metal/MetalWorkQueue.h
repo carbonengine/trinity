@@ -15,6 +15,7 @@ namespace TrinityALImpl
 {
 
 	class MetalContext;
+    class Tr2PipelineStatsQueryAL;
 	
 	// Values below must be synchronized with (propagated to) ShaderCompiler/EffectCompilerMetal.cpp
 	// and TrinityALTest/Shaders.metal/MetalDefines.h (CBUFFER, SRV, UAV, UAVT).
@@ -325,7 +326,12 @@ namespace TrinityALImpl
 		void EndVisibilityQuery(uint64_t queryNumber);
 		bool GetVisibilityQueryPixelCount(uint64_t queryNumber, uint64_t *pixelCount, bool finishOutstandingWork);
 		
-		void SampleCounter( id buffer, NSUInteger index );
+        enum CounterType
+        {
+            COUNTER_TIMER,
+            COUNTER_PIPELINE_STATS,
+        };
+		bool SampleCounter( id buffer, NSUInteger index, CounterType counter );
 		
 		void PushDebugGroup( const char* name );
 		void PopDebugGroup();
@@ -335,6 +341,8 @@ namespace TrinityALImpl
 		
 		bool CanBeginParallelEncoding() const;
 
+        void PipelineQueryStarted( Tr2PipelineStatsQueryAL* query );
+        void PipelineQueryEnded( Tr2PipelineStatsQueryAL* query );
 
 	private:
 		void CreateClearFunctions();
@@ -481,6 +489,8 @@ namespace TrinityALImpl
 		uint64_t                      m_currentVisibilityQueryIndex;
 		uint64_t                      m_numCompletedVisibilityQueries;
 		uint64_t                      m_visibilityQueriesInThisEncoder;
+        
+        std::vector<Tr2PipelineStatsQueryAL*> m_pipelineQueriesInProgress;
 	};
 
 } // namespace TrinityALImpl

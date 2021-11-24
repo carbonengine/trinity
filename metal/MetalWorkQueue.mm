@@ -9,6 +9,7 @@
 #include "MetalContext.h"
 #include "MetalShaderTypes.h"
 #include "MetalShaderStrings.h"
+#include "Tr2PipelineStatsQueryALMetal.h"
 #include "ALLog.h"
 
 // NOTE: If you spot any rendering artifacts - try disabling render/compute state cashing.
@@ -316,6 +317,8 @@ void MetalWorkQueue::ResetWorkQueue()
 void MetalWorkQueue::ResetFrame()
 {
 	CCP_ASSERT( m_isPrimary );
+    
+    m_pipelineQueriesInProgress.clear();
 	
 	for( int i = 0; i < METAL_VERTEX_STREAM_BUFFER_COUNT; ++i )
 	{
@@ -637,7 +640,12 @@ void MetalWorkQueue::ReleaseEncoder( bool endEncoding )
     
 	if( endEncoding )
 	{
-		m_hasPendingRenderTargetBarrier = false;
+        for( auto query : m_pipelineQueriesInProgress )
+        {
+            query->EncoderEnding( this );
+        }
+
+        m_hasPendingRenderTargetBarrier = false;
 		
 		switch( m_currentEncoderType )
 		{
@@ -836,6 +844,11 @@ void MetalWorkQueue::SetCurrentEncoder( MetalEncoderType encoderType, NSString *
 	m_encoderHasWork     = true;
 
 	m_numCommands = 0;
+    
+    for( auto query : m_pipelineQueriesInProgress )
+    {
+        query->EncoderStarted( this );
+    }
 }
 
 id<MTLBlitCommandEncoder> MetalWorkQueue::GetBlitEncoder( NSString *encoderLabel )
@@ -2785,7 +2798,7 @@ void MetalWorkQueue::Dispatch( id<MTLBuffer> indirectBuffer, uint32_t indirectBu
 	ReleaseEncoder( false );
 }
 	
-void MetalWorkQueue::SampleCounter( id buffer, NSUInteger index )
+bool MetalWorkQueue::SampleCounter( id buffer, NSUInteger index, CounterType counter )
 {
 	CCP_ASSERT( m_isPrimary );
 	if( @available(macOS 10.15, *) )
@@ -2795,26 +2808,36 @@ void MetalWorkQueue::SampleCounter( id buffer, NSUInteger index )
 		case MTLENCODERTYPE_RENDER:
 		{
 			[m_currentRenderEncoder sampleCountersInBuffer:buffer atSampleIndex:index withBarrier:YES];
-			break;
+			return true;
 		}
 		case MTLENCODERTYPE_COMPUTE:
 		{
-			[m_currentComputeEncoder sampleCountersInBuffer:buffer atSampleIndex:index withBarrier:YES];
-			break;
+            if( counter != COUNTER_PIPELINE_STATS )
+            {
+                [m_currentComputeEncoder sampleCountersInBuffer:buffer atSampleIndex:index withBarrier:YES];
+                return true;
+            }
+            break;
 		}
 		case MTLENCODERTYPE_BLIT:
 		{
-			[m_currentBlitEncoder sampleCountersInBuffer:buffer atSampleIndex:index withBarrier:YES];
-			break;
+            if( counter != COUNTER_PIPELINE_STATS )
+            {
+                [m_currentBlitEncoder sampleCountersInBuffer:buffer atSampleIndex:index withBarrier:YES];
+                return true;
+            }
+            break;
 		}
 		default:
 		{
-			id<MTLRenderCommandEncoder> renderEncoder = GetRenderEncoder();
-			[renderEncoder sampleCountersInBuffer:buffer atSampleIndex:index withBarrier:YES];
-			ReleaseEncoder(false);
+            id<MTLRenderCommandEncoder> renderEncoder = GetRenderEncoder();
+            [renderEncoder sampleCountersInBuffer:buffer atSampleIndex:index withBarrier:YES];
+            ReleaseEncoder(false);
+            return true;
 		}
 		}
 	}
+    return false;
 }
 
 void MetalWorkQueue::PushDebugGroup( const char* name )
@@ -2971,6 +2994,8 @@ void MetalWorkQueue::EndParallelEncoding()
 		m_currentVertexDescriptor = nil;
 		
 		m_currentRenderPipelineState = nullptr;
+        m_pipelineQueriesInProgress.clear();
+
 	}
 }
 	
@@ -2978,6 +3003,21 @@ bool MetalWorkQueue::CanBeginParallelEncoding() const
 {
 	return !m_visibilityQueryInProgress;
 }
+
+void MetalWorkQueue::PipelineQueryStarted( Tr2PipelineStatsQueryAL* query )
+{
+    m_pipelineQueriesInProgress.push_back( query );
+}
+
+void MetalWorkQueue::PipelineQueryEnded( Tr2PipelineStatsQueryAL* query )
+{
+    auto found = std::find( begin( m_pipelineQueriesInProgress ), end( m_pipelineQueriesInProgress ), query );
+    if( found != end( m_pipelineQueriesInProgress ) )
+    {
+        m_pipelineQueriesInProgress.erase( found );
+    }
+}
+
 
 } // TrinityALImpl
 

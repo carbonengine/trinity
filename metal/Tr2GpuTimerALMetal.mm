@@ -6,6 +6,9 @@
 #include "Tr2PrimaryRenderContextMetal.h"
 #include <mach/mach_time.h>
 
+
+extern bool g_enableMetalCounters;
+
 namespace TrinityALImpl
 {
 	Tr2GpuTimerAL::Tr2GpuTimerAL()
@@ -24,9 +27,12 @@ namespace TrinityALImpl
 	{
 		// GPU timers on metal are not stable enough (cause crashes on some machines).
 		// Disabling them for now.
-		return E_FAIL;
-#if 0
-		Destroy();
+        if( !g_enableMetalCounters )
+        {
+            return E_FAIL;
+        }
+
+        Destroy();
 		if( !renderContext.IsValid() )
 		{
 			return E_INVALIDARG;
@@ -71,7 +77,6 @@ namespace TrinityALImpl
 			return E_FAIL;
 		}
 		return S_OK;
-#endif
 	}
 
 	void Tr2GpuTimerAL::Destroy()
@@ -100,7 +105,7 @@ namespace TrinityALImpl
 			{
 				return false;
 			}
-			renderContext.GetMetalWorkQueue()->SampleCounter( m_buffer, 0 );
+			renderContext.GetMetalWorkQueue()->SampleCounter( m_buffer, 0, MetalWorkQueue::COUNTER_TIMER );
 			m_state = BEGIN_ISSUED;
 			return true;
 		}
@@ -118,7 +123,7 @@ namespace TrinityALImpl
 			{
 				return;
 			}
-			renderContext.GetMetalWorkQueue()->SampleCounter( m_buffer, 1 );
+			renderContext.GetMetalWorkQueue()->SampleCounter( m_buffer, 1, MetalWorkQueue::COUNTER_TIMER );
 			m_state = END_ISSUED;
 		}
 	}
