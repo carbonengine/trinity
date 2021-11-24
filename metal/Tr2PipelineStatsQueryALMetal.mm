@@ -10,6 +10,12 @@ extern bool g_enableMetalCounters;
 
 namespace
 {
+
+
+const uint32_t MAX_SAMPLES_PER_QUERY = 128;
+
+static_assert( 2 * 64 >= MAX_SAMPLES_PER_QUERY, "too many samples" );
+
 struct Field
 {
     const char* label;

@@ -59,11 +59,9 @@ private:
 	Tr2PipelineStatsQueryAL( const Tr2PipelineStatsQueryAL& ) = delete;
 	Tr2PipelineStatsQueryAL& operator=( const Tr2PipelineStatsQueryAL& ) = delete;
 
-    static const uint32_t MAX_SAMPLES_PER_QUERY = 128;
-
     id m_buffer;
     uint32_t m_nextIndex;
-    uint64_t m_zeroSamples[( MAX_SAMPLES_PER_QUERY + 63 ) / 64];
+    uint64_t m_zeroSamples[2];
     enum
     {
         READY,
