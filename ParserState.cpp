@@ -934,40 +934,25 @@ void ParserState::IncludeFile( const InlineString& fileName )
 	extern CachingIncludeHandler g_includeHandler;
 
 	std::string path( fileName.start + 1, fileName.end - 1 );
-	char* data;
-	unsigned size;
-	HRESULT hr = g_includeHandler.Open( 
-		*fileName.start == '<' ? D3DXINC_SYSTEM : D3DXINC_LOCAL, 
-		path.c_str(), 
-		m_fileStack.back().code.start + 1, 
-		(LPCVOID*)&data,
-		&size );
-	if( FAILED( hr ) )
-	{
-		ShowMessage( EC_FILE_NOT_FOUND, path.c_str() );
-	}
-	else
+	if( auto file = g_includeHandler.Open( path.c_str(), m_fileStack.back().code.start + 1 ) )
 	{
 		FileContents fileContents;
-		char fullPathBuffer[MAX_PATH];
-		if( FAILED( g_includeHandler.GetFullPathName( path.c_str(), m_fileStack.back().code.start + 1, fullPathBuffer ) ) )
-		{
-			fileContents.location.fileName.start = fileName.start + 1;
-			fileContents.location.fileName.end = fileName.end - 1;
-		}
-		else
-		{
-			size_t len = strlen( fullPathBuffer );
-			char* fullPath = AllocateString( len );
-			memcpy( fullPath, fullPathBuffer, len );
-			fileContents.location.fileName = MakeInlineString( fullPath, fullPath + len );
-		}
+
+		size_t len = file->fullPath.size();
+		char* fullPath = AllocateString( len );
+		memcpy( fullPath, file->fullPath.data(), len );
+		fileContents.location.fileName = MakeInlineString( fullPath, fullPath + len );
+
 		fileContents.location.lineNumber = 0;
-		fileContents.code = MakeInlineString( data - 1, data + size );
-		fileContents.position = data - 1;
+		fileContents.code = MakeInlineString( file->data - 1, file->data + file->size );
+		fileContents.position = file->data - 1;
 		fileContents.isMacro = false;
 
 		m_fileStack.push_back( fileContents );
+	}
+	else
+	{
+		ShowMessage( EC_FILE_NOT_FOUND, path.c_str() );
 	}
 }
 

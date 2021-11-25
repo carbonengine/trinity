@@ -21,8 +21,6 @@
 #include "OutputHLSL.h"
 #include <regex>
 
-extern int g_maxClipPlanes;
-
 extern CompileMessageQueue g_messages;
 extern StringTable g_stringTable;
 extern bool g_printWarnings;
@@ -765,19 +763,15 @@ static void PatchSemantics( InputStageType shaderStage, ASTNode* callNode )
 	}
 }
 
-static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bool pixelOffset, ASTNode* callNode, ParserState& state, CodeStream& os, std::string& entryPointName, bool& hasShadowState )
+static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, ParserState& state, CodeStream& os, std::string& entryPointName )
 {
 	tmFunction( 0, 0 );
 
 	// 1. wrap uniforms
 	// 2. fix VPOS
-	// 3. alpha test
-	// 4. fix VFACE: it appears that HLSL compiler may crash for cirtain usages of VFACE
-	// 5. 0.5 pixel offset
 
 	bool wrapUniforms = false;
 	bool fixVPOS = false;
-	bool fixVFACE = false;
 	bool fixVPOSType = false;
 
 	Symbol* entryPointSymbol = callNode->GetSymbol();
@@ -797,38 +791,7 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 	std::vector<Symbol*> outPositionPath;
 	std::vector<Symbol*> vfacePath;
 
-	if( patchOutput )
-	{
-		if( shaderStage == PIXEL_STAGE )
-		{
-			const char* target[] = { "color", "color0", "sv_target", "sv_target0", nullptr };
-			// check "out" parameters
-			if( !FindOutputBySemantics( functionHeader, target, &targetPath ) )
-			{
-				return PATCH_SKIP;
-			}
-		}
-		else if( shaderStage == VERTEX_STAGE )
-		{
-			const char* target[] = { "sv_clipdistance", "sv_clipdistance0", nullptr };
-			if( FindOutputBySemantics( functionHeader, target, nullptr ) )
-			{
-				// shader outputs SV_ClipDistance0, so we skip patching for clip planes
-				return PATCH_SKIP;
-			}
-			const char* position[] = { "position", "sv_position", nullptr };
-			if( !FindOutputBySemantics( functionHeader, position, &outPositionPath ) )
-			{
-				// shader somehow doesn't output SV_Position, so we skip patching for clip planes
-				return PATCH_SKIP;
-			}
-		}
-		else
-		{
-			return PATCH_SKIP;
-		}
-	}
-	else if( shaderStage == VERTEX_STAGE )
+	if( shaderStage == VERTEX_STAGE )
 	{
 		const char* position[] = { "position", "sv_position", nullptr };
 		FindOutputBySemantics( functionHeader, position, &outPositionPath );
@@ -859,7 +822,7 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 	std::vector<Symbol*> vposPath;
 	const char* vpos[] = { "vpos", nullptr };
 	fixVPOSType = fixVPOS = FindParameterBySemantics( functionHeader, vpos, &vposPath );
-	if( fixVPOS || patchOutput && shaderStage == VERTEX_STAGE )
+	if( fixVPOS )
 	{
 		const char* position[] = { "position", "sv_position", nullptr };
 		bool foundPosition = FindParameterBySemantics( functionHeader, position, &positionPath );
@@ -878,29 +841,10 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 		}
 	}
 
-	const char* vface[] = { "vface", nullptr };
-	fixVFACE = FindParameterBySemantics( functionHeader, vface, &vfacePath );
-
-	if( !wrapUniforms && !fixVPOS && !patchOutput && !fixVFACE && !fixVPOSType && ( shaderStage != VERTEX_STAGE || outPositionPath.empty() ) )
+	if( !wrapUniforms && !fixVPOS && !fixVPOSType && ( shaderStage != VERTEX_STAGE || outPositionPath.empty() ) )
 	{
 		entryPointName = ToString( entryPointSymbol->name );
 		return PATCH_USE;
-	}
-
-	Symbol* perObjectPSInt = state.GetSymbolTable().LookupGlobal( "DX11ShadowState" );
-	hasShadowState |= perObjectPSInt != nullptr && perObjectPSInt->used;
-	if( !hasShadowState )
-	{
-		hasShadowState = true;
-		os << "cbuffer DX11ShadowState : register( b10 )\n{\n";
-		os << "struct {\n";
-		os << "int invertedTest;\n";
-		os << "int alphaTestRef;\n";
-		os << "int alphaTestFunc;\n";
-		os << "uint clipPlaneEnabled;\n";
-		os << "float4 clipPlanes[4];\n";
-		os << "float4 renderTargetSize;\n";
-		os << "} DX11ShadowState;\n}\n";
 	}
 
 	if( entryPointSymbol->definition->GetChildOrNull( 2 ) )
@@ -938,33 +882,14 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 		{
 			first = false;
 		}
-		if( fixVFACE && symbol->semantic.start && _stricmp( ToString( symbol->semantic ).c_str(), "vface" ) == 0 )
+		if( fixVPOSType && symbol->semantic.start && _stricmp( ToString( symbol->semantic ).c_str(), "vpos" ) == 0 )
 		{
-			os << "bool " << symbol->name << ": SV_IsFrontFace";
+			os << "float4 " << functionHeader->GetChild( i )->GetSymbol()->name << ": VPOS";
 		}
 		else
 		{
-			if( fixVPOSType && symbol->semantic.start && _stricmp( ToString( symbol->semantic ).c_str(), "vpos" ) == 0 )
-			{
-				os << "float4 " << functionHeader->GetChild( i )->GetSymbol()->name << ": VPOS";
-			}
-			else
-			{
-				os << HLSL{ functionHeader->GetChild( i ), nullptr };
-			}
+			os << HLSL{ functionHeader->GetChild( i ), nullptr };
 		}
-	}
-	if( patchOutput && shaderStage == VERTEX_STAGE )
-	{
-		if( !first )
-		{
-			os << ", ";
-		}
-		else
-		{
-			first = false;
-		}
-		os << "out float" << g_maxClipPlanes << " __clipDistance : SV_ClipDistance";
 	}
 	os << " )";
 	// semantics
@@ -1038,10 +963,6 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 					{
 						os << swizzle[std::min( k, positionPath.back()->type.width - 1 ) ];
 					}
-					if( pixelOffset )
-					{
-						os << " - 0.5";
-					}
 				}
 			}
 			else if( fixVPOSType && symbol->semantic.start && _stricmp( ToString( symbol->semantic ).c_str(), "vpos" ) == 0 )
@@ -1059,10 +980,6 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 				}
 				os << " )";
 			}
-			else if( fixVFACE && symbol->semantic.start && _stricmp( ToString( symbol->semantic ).c_str(), "vface" ) == 0 )
-			{
-				os << symbol->name << " ? 1.0 : -1.0";
-			}
 			else
 			{
 				os << symbol->name;
@@ -1070,54 +987,6 @@ static PatchAction PatchShader( InputStageType shaderStage, bool patchOutput, bo
 		}
 	}
 	os << ");\n";
-	if( shaderStage == VERTEX_STAGE && pixelOffset)
-	{
-		PrintValuePath( os, outPositionPath, "__returnValue" );
-		os << ".xy += DX11ShadowState.renderTargetSize.xy * ";
-		PrintValuePath( os, outPositionPath, "__returnValue" );
-		os << ".w;\n";
-	}
-	if( patchOutput )
-	{
-		if( shaderStage == PIXEL_STAGE )
-		{
-			os << "int __alphaValue = int( saturate( ";
-			PrintValuePath( os, targetPath, "__returnValue" );
-			os << ".a ) * 255 + 0.5 );\n";
-
-			os << "[branch] if( DX11ShadowState.alphaTestFunc == 0 )\n";
-			os << "{\nif( __alphaValue * DX11ShadowState.invertedTest + DX11ShadowState.alphaTestRef < 0 ) discard;\n}\nelse\n";
-			os << "{\nif( ( __alphaValue == DX11ShadowState.alphaTestRef ) == DX11ShadowState.invertedTest ) discard;\n}\n";
-		}
-		else
-		{
-			os << "float4 __position = ";
-			PrintValuePath( os, outPositionPath, "__returnValue" );
-			Symbol* lastPosition = outPositionPath.back();
-			if( lastPosition == nullptr )
-			{
-				lastPosition = callNode->GetSymbol();
-			}
-			if( lastPosition->type.symbol == nullptr && lastPosition->type.builtInType == OP_FLOAT && 
-				lastPosition->type.height == 1 && lastPosition->type.width != 4 )
-			{
-				const char* swizzle = "xyzw";
-				os << ".";
-				for( int k = 0; k < 4; ++k )
-				{
-					os << swizzle[std::min( k, outPositionPath.back()->type.width - 1 ) ];
-				}
-			}
-			os << ";\n";
-			os << "__clipDistance = 0.0;\n";
-			for( int i = 0; i < g_maxClipPlanes; ++i )
-			{
-				static const char* swizzle = "xyzw";
-				os << "[branch] if( DX11ShadowState.clipPlaneEnabled & " << ( 1 << i ) << " )\n";
-				os << "{\n__clipDistance." << swizzle[i] << " = dot( __position, DX11ShadowState.clipPlanes[" << i << "] );\n}\n";
-			}
-		}
-	}
 	if( functionHeader->GetSymbol()->type.symbol || functionHeader->GetSymbol()->type.builtInType != OP_VOID )
 	{
 		os << "return __returnValue;\n";
@@ -1540,9 +1409,9 @@ bool ParseShaderName( const InlineString& name, InputStageType& type )
 }
 
 
-bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result )
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result )
 {
-	return CompileEffect( source, sourceLength, defines, include, result, { nullptr, true, true } );
+	return CompileEffect( source, sourceLength, defines, result, { nullptr, false } );
 }
 
 DWORD GetOptimizationLevel()
@@ -1550,17 +1419,17 @@ DWORD GetOptimizationLevel()
 	switch( g_optimizationLevel )
 	{
 	case 0:
-		return D3DXSHADER_OPTIMIZATION_LEVEL0;
+		return D3DCOMPILE_OPTIMIZATION_LEVEL0;
 	case 1:
-		return D3DXSHADER_OPTIMIZATION_LEVEL1;
+		return D3DCOMPILE_OPTIMIZATION_LEVEL1;
 	case 2:
-		return D3DXSHADER_OPTIMIZATION_LEVEL2;
+		return D3DCOMPILE_OPTIMIZATION_LEVEL2;
 	default:
-		return D3DXSHADER_OPTIMIZATION_LEVEL3;
+		return D3DCOMPILE_OPTIMIZATION_LEVEL3;
 	}
 }
 
-bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude*, EffectData& result, const CompileOptions& compileOptions )
+bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions )
 {
 	tmFunction( 0, 0 );
 
@@ -1709,14 +1578,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 				state.GetSymbolTable().ResetUsedFlag();
 				MarkUsedSymbols( shaderNode->GetChild( 1 ), state );
-				{
-					Symbol* symbol = state.GetSymbolTable().LookupGlobal( "DX11ShadowState" );
-					if( symbol )
-					{
-						symbol->used = true;
-						MarkUsedSymbols( symbol->definition, state );
-					}
-				}
+
 				if( compileOptions.addSpaces )
 				{
 					CreateGlobalsCB( state );
@@ -1729,8 +1591,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				std::string entryPoint = ToString( shaderNode->GetChild( 1 )->GetSymbol()->name );
 
 				std::string patchEntryPoint = entryPoint;
-				bool hasShadowState = false;
-				switch( PatchShader( stage.type, false, compileOptions.addPixelOffset, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
+				switch( PatchShader( stage.type, shaderNode->GetChild( 1 ), state, os, patchEntryPoint ) )
 				{
 				case PATCH_ERROR:
 					return false;
@@ -1782,8 +1643,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 				stage.shaderSize = uint32_t( strippedEffectData->GetBufferSize() );
 				stage.shaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
-				stage.shadowShaderSize = 0;
-				stage.shadowShaderDataStr = INVALID_REFERENCE;
 
 				CComPtr<ID3D11ShaderReflection> reflection;
 				{
@@ -1842,81 +1701,6 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 
 				reflections[stage.type] = reflection;
-
-				if( compileOptions.compileShadowShaders && ( stage.type == PIXEL_STAGE || g_maxClipPlanes > 0 ) )
-				{
-					tmZone( 0, 0, "Shadow Shader" );
-					os.freeze( false );
-					patchEntryPoint = entryPoint;
-					switch( PatchShader( stage.type, true, compileOptions.addPixelOffset, shaderNode->GetChild( 1 ), state, os, patchEntryPoint, hasShadowState ) )
-					{
-					case PATCH_ERROR:
-						return false;
-					case PATCH_USE:
-					{
-						state.ResetPragmaUsage();
-						code = std::string( os.str(), os.str() + os.pcount() );
-						effectData = nullptr;
-						errors = nullptr;
-
-						{
-							tmZone( 0, 0, "D3DCompile (Shadow)" );
-							hr = D3DCompile(
-								code.c_str(),
-								code.length(),
-								"\\memory",
-								nullptr,
-								nullptr,
-								patchEntryPoint.c_str(),
-								profile.c_str(),
-								( compileOptions.minShaderVersion ? 0 : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
-								0,
-								&effectData,
-								&errors );
-						}
-						if( FAILED( hr ) )
-						{
-							if( errors )
-							{
-								g_messages.AddMessages( errors );
-							}
-							return false;
-						}
-
-						if( g_printWarnings && errors )
-						{
-							g_messages.AddMessages( errors );
-						}
-
-						strippedEffectData = nullptr;
-						{
-							tmZone( 0, 0, "D3DStripShader (Shadow)" );
-							if( FAILED( D3DStripShader(
-									effectData->GetBufferPointer(),
-									effectData->GetBufferSize(),
-									D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
-									&strippedEffectData ) ) )
-							{
-								strippedEffectData = effectData;
-							}
-						}
-						stage.shadowShaderSize = uint32_t( strippedEffectData->GetBufferSize() );
-						stage.shadowShaderDataStr = g_stringTable.AddString( strippedEffectData->GetBufferPointer(), strippedEffectData->GetBufferSize() );
-
-
-						if( listing.enabled() )
-						{
-							reflection = nullptr;
-							D3DReflect( effectData->GetBufferPointer(), effectData->GetBufferSize(), IID_ID3D11ShaderReflection, (void**)&reflection.p );
-
-							listing.literal( "patched" ).dict().literal( "entryPoint" ).literal( patchEntryPoint ).literal( "source" ).literal( SanitizeCode( code ) );
-							PrintShaderOutListing( listing, effectData, reflection );
-							listing.end();
-						}
-						break;
-					}
-					}
-				}
 
 				PrintStageInfo( listing, stage, result );
 				listing.end();

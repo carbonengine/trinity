@@ -5,7 +5,7 @@
 #include "StringTable.h"
 #include <vector>
 
-struct IUnknown;
+const uint32_t DATA_VERSION = 12;
 
 // These next enums must have the same values as corresponding Trinity enums
 
@@ -542,8 +542,6 @@ struct StageInput
 
 		stream.Save( shaderSize );
 		stream.Save( shaderDataStr );
-		stream.Save( shadowShaderSize );
-		stream.Save( shadowShaderDataStr );
 		stream.Save( threadGroupSize[0] );
 		stream.Save( threadGroupSize[1] );
 		stream.Save( threadGroupSize[2] );
@@ -585,8 +583,6 @@ struct StageInput
 	std::vector<RegisterInputDescription> registerInputs;
 	uint32_t shaderSize;
 	StringReference shaderDataStr;
-	uint32_t shadowShaderSize;
-	StringReference shadowShaderDataStr;
 	uint32_t threadGroupSize[3];
 	std::vector<Constant> constants;
 	std::vector<BYTE> defaultValues;

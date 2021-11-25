@@ -1,7 +1,6 @@
 #pragma once
 
 #include "EffectCompilerBase.h"
-#include "Mutex.h"
 
 struct MetalRegister
 {
@@ -58,5 +57,5 @@ class EffectCompilerMetal: public EffectCompilerBase
 {
 public:
 	bool Create() override;
-	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result ) override;
+	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result ) override;
 };

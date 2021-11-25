@@ -465,85 +465,6 @@ static ASTNode* AddCBuffer( ParserState& state, ASTNode* node, int cbufferIndex,
 	reg.explicitSpace = false;
 	cbufferName->registerSpecifier[reg.shaderProfile] = reg;
 	cbuffer->SetSymbol( cbufferName );
-
-	if( cbufferIndex == 10 )
-	{
-		if( state.GetSymbolTable().LookupGlobal( "DX11ShadowState" ) == nullptr )
-		{
-			ASTNode* shadowState = new ASTNode( NT_STRUCT, node->GetLocation(), node->GetScope(), nullptr );
-
-			Symbol* symbol = node->GetScope()->AddSymbol( MakeInlineString( "DX11ShadowStateType" ), DISALOW_OVERRIDES ); 
-			symbol->isTypeName = true;
-			symbol->definition = shadowState;
-		
-			Type type;
-			type.symbol = symbol;
-
-			shadowState->SetSymbol( symbol );
-			shadowState->SetType( type );
-
-			ScopeSymbolTable* scope = node->GetScope()->AddScope();
-
-			auto AddMember = [&]( int typeID, int width, int arrayDimension, const char* name )->void
-			{
-				Type type;
-				type.FromTokenType( typeID );
-				type.width = width;
-				type.arrayDimensions = arrayDimension ? 1 : 0;
-				if( arrayDimension )
-				{
-					type.arraySizes[0] = arrayDimension;
-				}
-
-				ASTNode* member = new ASTNode( NT_STRUCT_MEMBER, node->GetLocation(), scope, nullptr );
-				ASTNode* nameNode = new ASTNode( NT_NAME_DECLARATION, node->GetLocation(), scope, nullptr );
-				if( arrayDimension )
-				{
-					ScannerToken token;
-					token.fileLocation = node->GetLocation();
-					token.intValue = 0;
-					char buffer[64];
-#if _WIN32
-					_itoa_s( arrayDimension, buffer, 10 );
-#else
-					snprintf( buffer, sizeof( buffer ), "%d", arrayDimension );
-#endif
-					char* string = state.AllocateString( strlen( buffer ) );
-					memcpy( string, buffer, strlen( buffer ) );
-					token.stringValue = MakeInlineString( string, string + strlen( buffer ) );
-					token.type = OP_INT_CONST;
-
-					ASTNode* index = new ASTNode( NT_CONSTANT, node->GetLocation(), scope, &token );
-					nameNode->AddChild( index );
-				}
-				Symbol* symbol = scope->AddSymbol( MakeInlineString( name ), DISALOW_OVERRIDES );
-				symbol->type = type;
-				nameNode->SetSymbol( symbol );
-				nameNode->SetType( type );
-				member->AddChild( nameNode );
-				member->SetType( type );
-				shadowState->AddChild( member );
-			};
-			AddMember( OP_INT, 1, 0, "invertedTest" );
-			AddMember( OP_INT, 1, 0, "alphaTestRef" );
-			AddMember( OP_INT, 1, 0, "alphaTestFunc" );
-			AddMember( OP_UINT, 1, 0, "clipPlaneEnabled" );
-			AddMember( OP_FLOAT, 4, 4, "clipPlanes" );
-			AddMember( OP_FLOAT, 4, 0, "renderTargetSize" );
-
-			shadowStruct = shadowState;
-
-			ASTNode* shadowVar = new ASTNode( NT_NAME_DECLARATION, node->GetLocation(), scope, nullptr );
-			type.FromSymbol( symbol );
-			shadowVar->SetType( type );
-
-			symbol = node->GetScope()->AddSymbol( MakeInlineString( "DX11ShadowState" ), DISALOW_OVERRIDES ); 
-			symbol->type = shadowVar->GetType();
-			symbol->definition = shadowState;
-			shadowVar->SetSymbol( symbol );
-			cbuffer->AddChild( shadowVar );
-		}
-	}
 	return cbuffer;
 }
 
@@ -566,10 +487,6 @@ int GetCBufferIndex( const InlineString& name )
 	if( strncmp( name.start, "PerFrameVS", 10 ) == 0 )
 	{
 		return 1;
-	}
-	else if( strncmp( name.start, "PerObjectPSInt", 14 ) == 0 )
-	{
-		return 10;
 	}
 	else if( strncmp( name.start, "PerObjectPS", 11 ) == 0 )
 	{

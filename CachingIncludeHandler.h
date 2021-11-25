@@ -5,10 +5,6 @@
 //
 
 #pragma once
-#ifndef CachingIncludeHandler_h
-#define CachingIncludeHandler_h
-
-#include "Mutex.h"
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -16,43 +12,28 @@
 //   contents of included files, so the next time they are requested it returns cached 
 //   contents. This object can be accessed from different threads. 
 // --------------------------------------------------------------------------------------
-class CachingIncludeHandler: public ID3DXInclude
+class CachingIncludeHandler
 {
 public:
 	CachingIncludeHandler();
 	~CachingIncludeHandler();
 
-    HRESULT __stdcall Open( D3DXINCLUDE_TYPE includeType, 
-							LPCSTR fileName, 
-							LPCVOID parentData, 
-							LPCVOID *data, 
-							UINT *bytes );
-    HRESULT __stdcall Close( LPCVOID data );
+	struct IncludedFile
+	{
+		std::string fullPath;
+		const char* data;
+		size_t size;
+		time_t modifiedTime;
+	};
 
-	HRESULT GetFullPathName( LPCSTR fileName, 
-							 LPCVOID parentData,
-							 LPSTR fullFileName );
+	std::optional<IncludedFile> Open( const char* fileName, const char* parentData = nullptr, const char* rootPath = nullptr );
+
 	void SetRootPath( const char* shaderPath );
 
-	HRESULT __stdcall Open( D3DXINCLUDE_TYPE includeType, 
-							LPCSTR fileName, 
-							LPCVOID parentData, 
-							LPCVOID *data, 
-							UINT *bytes,
-							LPCSTR rootPath,
-							FILETIME& mtime );
-
-	HRESULT AddPrefix( const char* fileName, const char* prefix, LPCVOID *data, UINT *bytes );
+	std::optional<IncludedFile> AddPrefix( const char* fileName, const char* prefix );
 private:
-	// Cached file contents
-	struct FileInfo
-	{
-		void* data;
-		size_t size;
-		FILETIME modifiedTime;
-	};
-	typedef std::map<LPCVOID, std::string> PathFromFile;
-	typedef std::map<std::string, FileInfo> FileFromPath;
+	typedef std::map<const void*, std::string> PathFromFile;
+	typedef std::map<std::string, IncludedFile> FileFromPath;
 
 	// Mapping from file path to file contents
 	PathFromFile m_pathFromFile;
@@ -60,8 +41,6 @@ private:
 	FileFromPath m_fileFromPath;
 	// Path of the entry point file
 	std::string m_rootPath;
-	// Critical section for shared data
-	Mutex m_CS;
-};
 
-#endif // CachingIncludeHandler_h
+	std::mutex m_cs;
+};

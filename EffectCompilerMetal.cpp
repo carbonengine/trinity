@@ -47,7 +47,7 @@ extern bool g_printWarnings;
 
 namespace
 {
-	Mutex s_fileMutex;
+	std::mutex s_fileMutex;
 
 	struct AtomicFn
 	{
@@ -2110,30 +2110,6 @@ namespace
 		}
 	}
 	
-	// Patches VFACE inputs for pixel shaders: changes the type to bool
-	bool PatchVFace( ParserState& state, ASTNode* inputsStruct, std::vector<ASTNode*>& argumentAccessors )
-	{
-		for( size_t index = 0; index < inputsStruct->GetChildrenCount(); ++index )
-		{
-			auto child = inputsStruct->GetChild( index );
-			auto member = child->GetChild( 0 );
-			if( IEquals( member->GetSymbol()->semantic, "VFACE" ) )
-			{
-				if( !child->GetType().IsScalar() || child->GetType().builtInType != OP_FLOAT )
-				{
-					state.ShowMessage( EC_CUSTOM_ERROR, "Pixel shader %s input needs to be a float", ToString( member->GetSymbol()->semantic ).c_str() );
-					return false;
-				}
-				argumentAccessors[index] = NewConditionalExpression( state, argumentAccessors[index], NewLiteralConst( state, 1.f ), NewLiteralConst( state, -1.f ) );
-				auto boolType = TypeFromTokenType( OP_BOOL );
-				inputsStruct->GetChild( index )->SetType( boolType );
-				inputsStruct->GetChild( index )->GetChild( 0 )->SetType( boolType );
-				inputsStruct->GetChild( index )->GetChild( 0 )->GetSymbol()->type = boolType;
-			}
-		}
-		return true;
-	}
-	
 	// Patches VPOS usages for pixel shaders: a common Dx9 legacy pattern of passing both POSITION (from
 	// vertex shader) and VPOS. Function remaps VPOS inputs to POSION so that there are no duplicate semantics
 	// in the stage_in struct.
@@ -2435,11 +2411,6 @@ namespace
 
 			if( shaderType == PIXEL_STAGE )
 			{
-				if( !PatchVFace( state, inputsStruct, argumentAccessors ) )
-				{
-					return nullptr;
-				}
-
 				if( !PatchVpos( state, inputsStruct, argumentAccessors ) )
 				{
 					return nullptr;
@@ -3262,13 +3233,13 @@ namespace
 
 	std::pair<int, std::string> RunProcess( const char* commandLine )
 	{
-		s_fileMutex.Lock();
+		s_fileMutex.lock();
 #ifdef _WIN32
 		FILE* process = _popen( commandLine, "r" );
 #else
 		FILE* process = popen( commandLine, "r" );
 #endif
-		s_fileMutex.Unlock();
+		s_fileMutex.unlock();
 
 		if( !process )
 		{
@@ -3582,7 +3553,7 @@ bool EffectCompilerMetal::Create()
 	return true;
 }
 
-bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude*, EffectData& result )
+bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result )
 {
 	tmFunction( 0, 0 );
 
@@ -3774,14 +3745,6 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 				state.GetSymbolTable().ResetUsedFlag();
 				MarkUsedSymbols( shaderNode->GetChild( 1 ), state );
-				{
-					Symbol* symbol = state.GetSymbolTable().LookupGlobal( "DX11ShadowState" );
-					if( symbol )
-					{
-						symbol->used = true;
-						MarkUsedSymbols( symbol->definition, state );
-					}
-				}
 
 				CompilerInputStream os( state, ShadingLanguage::MSL );
 
@@ -4093,7 +4056,7 @@ struct VectorReference3
 
 				// "mktemp" function calls to "arc4random" which is not reentrant. So, we need to sync
 				// our threads here to avoid parallel execution of this function.
-				s_fileMutex.Lock();
+				s_fileMutex.lock();
 
 #ifdef _WIN32
 				char srcFilenameTemplate[] = "mtl_tmpXXXXXXX";
@@ -4122,7 +4085,7 @@ struct VectorReference3
 					close( binFd );
 				}
 #endif
-				s_fileMutex.Unlock();
+				s_fileMutex.unlock();
 
 				if( !srcFilename || !binFilename )
 				{
@@ -4136,7 +4099,7 @@ struct VectorReference3
 					{
 						tmZone( 0, 0, "Write Source" );
 
-						MutexScope withFileMutex( s_fileMutex );
+						std::lock_guard withFileMutex( s_fileMutex );
 						FILE* file = nullptr;
 						if( fopen_s( &file, srcFilename, "w" ) != 0 )
 						{
@@ -4197,7 +4160,7 @@ struct VectorReference3
 					{
 						tmZone( 0, 0, "Read binary" );
 
-						MutexScope withFileMutex( s_fileMutex );
+						std::lock_guard withFileMutex( s_fileMutex );
 						FILE* file = nullptr;
 						if( fopen_s( &file, binFilename, "rb" ) != 0 )
 						{
@@ -4226,8 +4189,6 @@ struct VectorReference3
 
 						stage.shaderSize = uint32_t( compiledCode.size() );
 						stage.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
-						stage.shadowShaderSize = 0;
-						stage.shadowShaderDataStr = INVALID_REFERENCE;
 						// printf( "shader size: %lu\n", (size_t)stage.shaderSize );
 					}
 
@@ -4238,7 +4199,7 @@ struct VectorReference3
 				// Remove temp files.
 				if( shaderWriteSucceeded )
 				{
-					MutexScope withFileMutex( s_fileMutex );
+					std::lock_guard withFileMutex( s_fileMutex );
 					int removeResult = remove( srcFilename );
 					if( removeResult != 0 )
 					{
@@ -4249,7 +4210,7 @@ struct VectorReference3
 
 				if( shaderCompileSucceeded )
 				{
-					MutexScope withFileMutex( s_fileMutex );
+					std::lock_guard withFileMutex( s_fileMutex );
 					int removeResult = remove( binFilename );
 					if( removeResult != 0 )
 					{

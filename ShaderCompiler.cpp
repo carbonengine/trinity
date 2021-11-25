@@ -8,108 +8,16 @@
 #include "CachingIncludeHandler.h"
 #include "CompileMessageQueue.h"
 #include "StringTable.h"
-#include "EffectCompilerDx9.h"
 #include "EffectCompilerDX11.h"
-#include "EffectCompilerGL2.h"
-#include "EffectCompilerGL3.h"
-#include "EffectCompilerGL4.h"
 #include "EffectCompilerDX12.h"
 #include "EffectCompilerMetal.h"
 #include "EffectData.h"
-#include "Mutex.h"
 #include "WorkQueue.h"
 #include "Macro.h"
 #include "ModifiedTime.h"
 #include "Platforms.h"
 #include <atomic>
 
-
-#if _WIN32
-typedef BOOL (WINAPI *LPFN_GLPI)(
-    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION,
-    PDWORD);
-#endif
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Get number of physical cores on machine.
-// Return value:
-//   number of physical cores on machine
-// --------------------------------------------------------------------------------------
-unsigned GetNumberOfCores()
-{
-#if _WIN32
-    BOOL done;
-    BOOL rc;
-    DWORD returnLength;
-    DWORD procCoreCount;
-    DWORD byteOffset;
-    PSYSTEM_LOGICAL_PROCESSOR_INFORMATION buffer;
-    LPFN_GLPI Glpi;
-
-    Glpi = (LPFN_GLPI) GetProcAddress( GetModuleHandle( TEXT( "kernel32" ) ), "GetLogicalProcessorInformation" );
-    if( NULL == Glpi )
-    {
-        return 1;
-    }
-
-    done = FALSE;
-    buffer = NULL;
-    returnLength = 0;
-
-    while( !done )
-    {
-        rc = Glpi( buffer, &returnLength );
-
-        if( FALSE == rc )
-        {
-            if( GetLastError() == ERROR_INSUFFICIENT_BUFFER )
-            {
-                if( buffer )
-                {
-                    free( buffer );
-                }
-                buffer=(PSYSTEM_LOGICAL_PROCESSOR_INFORMATION)malloc( returnLength );
-
-                if( NULL == buffer )
-                {
-                    return 1;
-                }
-            }
-            else
-            {
-                return 1;
-            }
-        }
-        else
-        {
-            done = TRUE;
-        }
-    }
-
-    procCoreCount = 0;
-    byteOffset = 0;
-
-    while( byteOffset < returnLength )
-    {
-        if( buffer->Relationship == RelationProcessorCore )
-        {
-            procCoreCount++;
-        }
-        byteOffset += sizeof( SYSTEM_LOGICAL_PROCESSOR_INFORMATION );
-        buffer++;
-    }
-
-    return procCoreCount;
-#else
-    long result = sysconf( _SC_NPROCESSORS_ONLN );
-    return unsigned(result);
-#endif
-}
-
-
-// Maximum length of defines string
-// const unsigned BUFFER_SIZE = 4096;
 
 
 struct CompiledData
@@ -126,18 +34,15 @@ CachingIncludeHandler g_includeHandler;
 // Compiled effect code (indexed by permutaitons IDs)
 std::map<uint32_t, std::unique_ptr<CompiledData>> g_compiledEffects;
 // Critical section for g_compiledEffects
-Mutex g_compiledEffectsCS( 1000 );
+std::mutex g_compiledEffectsCS;
 // Queue of compiler output messages
 CompileMessageQueue g_messages;
 // Entry point shader file contents
-char* g_shaderSource = NULL;
+const char* g_shaderSource = NULL;
 // Entry point shader file length
-uint32_t g_shaderLength = 0;
+size_t g_shaderLength = 0;
 // Print warning messages?
 bool g_printWarnings = true;
-
-std::string g_glExternalCompilerSwitch;
-std::string g_glExternalCompilerPath;
 
 
 // Generate DX11 HLSL listing file
@@ -145,27 +50,17 @@ bool g_generateListing = false;
 // Listing text
 std::string g_listing;
 // CS for listing access
-Mutex g_listingCS;
+std::mutex g_listingCS;
 
 // Optimization level
 unsigned g_optimizationLevel = 3;
 
-// Number of clip planes for DX11 patched vertex shaders
-int g_maxClipPlanes = 1;
-
-// Emulate sampler states not supported by GLES (namely border mode)
-bool g_glesEmulateSampler = false;
 // Avoid flow control in compiled shaders (especially useful for GLES)
 bool g_avoidFlowControl = false;
-// Try validating converted OpenGL
-bool g_validateOpenGL = true;
-
-// Allowed GLES extensions
-GlesExtensionInfo g_glesExtensions;
 
 StringTable g_stringTable;
 
-Mutex g_compilersMutex;
+std::mutex g_compilersMutex;
 std::map<Platform, std::unique_ptr<EffectCompilerBase>> g_compilers;
 
 
@@ -218,7 +113,7 @@ bool CompileShader( const CompileShaderArguments& arguments )
 	Platform platform = GetPlatform( arguments.defines );
 
 	{
-		MutexScope scope( g_compiledEffectsCS );
+		std::lock_guard scope( g_compiledEffectsCS );
 		if( g_compiledEffects.find( arguments.permutation ) != g_compiledEffects.end() )
 		{
 			return true;
@@ -232,7 +127,7 @@ bool CompileShader( const CompileShaderArguments& arguments )
 
 	EffectCompilerBase* compiler = nullptr;
 	{
-		MutexScope lockCompilers( g_compilersMutex );
+		std::lock_guard lockCompilers( g_compilersMutex );
 
 		auto found = g_compilers.find( platform );
 		if( found == end( g_compilers ) )
@@ -241,23 +136,11 @@ bool CompileShader( const CompileShaderArguments& arguments )
 			switch( platform )
 			{
 #if _WIN32
-			case PLATFORM_DX9:
-				newCompiler.reset( new EffectCompilerDX9() );
-				break;
 			case PLATFORM_DX11:
 				newCompiler.reset( new EffectCompilerDX11() );
 				break;
-			case PLATFORM_GL2:
-				newCompiler.reset( new EffectCompilerGL2() );
-				break;
 			case PLATFORM_DX12:
 				newCompiler.reset( new EffectCompilerDX12() );
-				break;
-			case PLATFORM_GL3:
-				newCompiler.reset( new EffectCompilerGL3() );
-				break;
-			case PLATFORM_GL4:
-				newCompiler.reset( new EffectCompilerGL4() );
 				break;
 #endif
 			case PLATFORM_METAL:
@@ -282,14 +165,14 @@ bool CompileShader( const CompileShaderArguments& arguments )
 			compiler = found->second.get();
 		}
 	}
-	if( !compiler->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, &g_includeHandler, compiledData->data ) )
+	if( !compiler->CompileEffect( g_shaderSource, g_shaderLength, arguments.defines, compiledData->data ) )
 	{
 		g_error = 1;
 		return false;
 	}
 
 	{
-		MutexScope scope( g_compiledEffectsCS );
+		std::lock_guard scope( g_compiledEffectsCS );
 		g_compiledEffects[arguments.permutation] = std::move( compiledData );
 	}
 
@@ -306,11 +189,9 @@ void PrintUsage()
 	printf( "  /single - Compile single permutation only\n" );
 	printf( "  /define <name> <value> - Add define (only valid with /single)\n" );
 	printf( "  /listing <listing_file> - Print DX11 HLSL output in a file\n" );
-	printf( "  /clipPlanes <number> - Number of clip planes for DX11 patched VS\n" );
+	printf( "  /no_permutations - Ignore permutation pragmas\n" );
 	printf( "  /O{0,1,2,3} - Set optimization level. 3 is default\n" );
-	printf( "  /shaderStats - Print compiled shader statistics\n" );
 	printf( "  /mtime - Determine which compiled files are out of date\n" );
-	printf( "  /GS - Emulate sampler states in GLSL (namely border wrap mode)\n" );
 	printf( "  /Gfa - Avoid flow control constructs\n" );
 	printf( "  /Gc <switch> <path> - Compile GLSL to binary shader using external compiler\n" );
 	printf( "  /E{e,w,d}[extension] - Specify support for all or certain GLES extensions\n" );
@@ -319,8 +200,8 @@ void PrintUsage()
 #if CCP_TELEMETRY_ENABLED
 	printf( "  /telemetry - Enable RAD Telemetry\n" );
 #endif
-	printf( "input_file - Path to input .fx file\n" );
-	printf( "output_file - Path to output .fxp file\n" );
+	printf( "input_file - Path to input HLSL file\n" );
+	printf( "output_file - Path to output binary file\n" );
 }
 
 #include "ParserUtils.h"
@@ -354,7 +235,7 @@ struct ProgramArguments
 	ProgramArguments()
 		:shaderPath( nullptr ),
 		outputPath( nullptr ),
-		coreCount( GetNumberOfCores() * 2 ),
+		coreCount( std::max( 1u, std::thread::hardware_concurrency() ) ),
 		listingFile( nullptr ),
 		checkMTime( false ),
 		printPermutations( false ),
@@ -378,8 +259,6 @@ struct ProgramArguments
 
 bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[] )
 {
-	g_glesExtensions.m_all = GlesExtensionInfo::WARN;
-
 	for( int i = 1; i < argc; ++i )
 	{
 		if( strcmp( argv[i], "/threads" ) == 0 )
@@ -398,15 +277,8 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[]
 		{
 			g_printWarnings = false;
 		}
-		else if( strcmp( argv[i], "/shaderStats" ) == 0 )
-		{
-		}
 		else if( strcmp( argv[i], "/single" ) == 0 )
 		{
-		}
-		else if( strcmp( argv[i], "/novalidate" ) == 0 )
-		{
-			g_validateOpenGL = false;
 		}
 		else if( strcmp( argv[i], "/permutations" ) == 0 )
 		{
@@ -452,18 +324,6 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[]
 				return false;
 			}
 		}
-		else if( strcmp( argv[i], "/clipPlanes" ) == 0 )
-		{
-			++i;
-			if( i < argc )
-			{
-				g_maxClipPlanes = std::min( atoi( argv[i] ), 4 );
-			}
-			else
-			{
-				return false;
-			}
-		}
 		else if( strncmp( argv[i], "/O", 2 ) == 0 && strlen( argv[i] ) == 3 && argv[i][2] >= '0' && argv[i][2] <= '3' )
 		{
 			g_optimizationLevel = argv[i][2] - '0';
@@ -472,42 +332,9 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[]
 		{
 			args.checkMTime = true;
 		}
-		else if( strcmp( argv[i], "/GS" ) == 0 )
-		{
-			g_glesEmulateSampler = true;
-		}
 		else if( strcmp( argv[i], "/Gfa" ) == 0 )
 		{
 			g_avoidFlowControl = true;
-		}
-		else if( argv[i][0] == '/' && argv[i][1] == 'E' && ( argv[i][2] == 'e' || argv[i][2] == 'w' || argv[i][2] == 'd' ) )
-		{
-			GlesExtensionInfo::Support support;
-			switch( argv[i][2] )
-			{
-			case 'e':
-				support = GlesExtensionInfo::ENABLE;
-				break;
-			case 'd':
-				support = GlesExtensionInfo::DISABLE;
-				break;
-			default:
-				support = GlesExtensionInfo::WARN;
-				break;
-			}
-			if( argv[i][3] )
-			{
-				g_glesExtensions.m_extensions[argv[i] + 3] = support;
-			}
-			else
-			{
-				g_glesExtensions.m_all = support;
-			}
-		}
-		else if( strcmp( argv[i], "/Gc" ) == 0 )
-		{
-			g_glExternalCompilerSwitch = argv[++i];
-			g_glExternalCompilerPath = argv[++i];
 		}
 #if CCP_TELEMETRY_ENABLED
 		else if( strcmp( argv[i], "/telemetry" ) == 0 )
@@ -541,10 +368,9 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[]
 
 bool PrintPermutations( const char* shaderPath )
 {
-	char* shaderSource;
-	uint32_t shaderLength;
+	auto shader = g_includeHandler.Open( shaderPath );
 
-	if( FAILED( g_includeHandler.Open( D3DXINC_LOCAL, shaderPath, NULL, (LPCVOID*)&shaderSource, &shaderLength ) ) )
+	if( !shader )
 	{
 		printf( "%s: error X0000: Could not open input file \"%s\"\n", shaderPath, shaderPath );
 		return false;
@@ -553,7 +379,7 @@ bool PrintPermutations( const char* shaderPath )
 	g_messages.SetEntryFileName( shaderPath );
 
 	Permutations permutations;
-	if( !DiscoverPermutations( permutations, shaderSource, shaderLength ) )
+	if( !DiscoverPermutations( permutations, shader->data, shader->size ) )
 	{
 		g_messages.Flush();
 		return false;
@@ -718,11 +544,14 @@ int main(int argc, char* argv[])
 	}
 
 	// Preload shader file
-	if( FAILED( g_includeHandler.Open( D3DXINC_LOCAL, args.shaderPath, NULL, (LPCVOID*)&g_shaderSource, &g_shaderLength ) ) )
+	auto shader = g_includeHandler.Open( args.shaderPath );
+	if( !shader )
 	{
 		printf( "%s: error X0000: Could not open input file \"%s\"\n", args.shaderPath, args.shaderPath );
 		return 1;
 	}
+	g_shaderSource = shader->data;
+	g_shaderLength = shader->size;
 
 	g_includeHandler.SetRootPath( args.shaderPath );
 	g_messages.SetEntryFileName( args.shaderPath );
@@ -749,7 +578,11 @@ int main(int argc, char* argv[])
 		os << "#line 1" << std::endl;
 		auto prefix = os.str();
 
-		g_includeHandler.AddPrefix( args.shaderPath, prefix.c_str(), (LPCVOID*)&g_shaderSource, &g_shaderLength );
+		if( auto newShader = g_includeHandler.AddPrefix( args.shaderPath, prefix.c_str() ) )
+		{
+			g_shaderSource = newShader->data;
+			g_shaderLength = newShader->size;
+		}
 
 		AddPermutationsToWorkQueue( compileQueue, permutations, args.ignorePermutations, args.defines );
 	}
@@ -890,7 +723,7 @@ int main(int argc, char* argv[])
 			}
 		}
 
-		uint32_t version = 11;
+		uint32_t version = DATA_VERSION;
 		fwrite( &version, 1, sizeof( uint32_t ), file );
 		g_stringTable.Write( file );
 		fwrite( fullHeader, 1, headerSize, file );

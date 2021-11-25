@@ -12,7 +12,7 @@ bool EffectCompilerDX12::Create()
 	return m_compiler.Create();
 }
 
-bool EffectCompilerDX12::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, ID3DXInclude* include, EffectData& result )
+bool EffectCompilerDX12::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result )
 {
 	std::vector<Macro> newDefines = defines;
 	if( auto define = FindMacro( newDefines, "PLATFORM" ) )
@@ -23,6 +23,6 @@ bool EffectCompilerDX12::CompileEffect( const char* source, size_t sourceLength,
 	{
 		newDefines.push_back( { "PLATFORM", GetPlatformIdString( PLATFORM_DX12 ) } );
 	}
-	return m_compiler.CompileEffect( source, sourceLength, defines, include, result, { "5_1", false, false, true } );
+	return m_compiler.CompileEffect( source, sourceLength, defines, result, { "5_1", true } );
 }
 #endif

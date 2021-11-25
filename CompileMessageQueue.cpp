@@ -7,73 +7,28 @@
 #include "stdafx.h"
 #include "CompileMessageQueue.h"
 
-#if !_WIN32
-#include <pthread.h>
-#include <unistd.h>
-#endif
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   CompileMessageQueue default constructor
-// --------------------------------------------------------------------------------------
 CompileMessageQueue::CompileMessageQueue()
-	:m_messagesMutex( 300 )
-	,m_stop( false )
+	:m_stop( false )
 {
-#if _WIN32
-	m_queueEvent = CreateEvent( NULL, FALSE, FALSE, NULL );
-	m_thread = CreateThread( NULL, 0, &ThreadRoutine, this, 0, NULL );
-#elif __APPLE__
-	pthread_cond_init( &m_queueEvent, nullptr );
-	pthread_create( &m_thread, nullptr, ThreadRoutine, this );
-#else
-	#error "Unsupported platform."
-#endif
+	m_thread = std::thread( [this] { this->Run(); } );
 }
 
-// --------------------------------------------------------------------------------------
-// Description:
-//   CompileMessageQueue destructor
-// --------------------------------------------------------------------------------------
 CompileMessageQueue::~CompileMessageQueue()
 {
 	m_stop = true;
 
-#if _WIN32
-	SetEvent( m_queueEvent );
-	WaitForSingleObject( m_thread, INFINITE );
-	CloseHandle( m_queueEvent );
-	CloseHandle( m_thread );
-#else
-	m_messagesMutex.Lock();
-	pthread_cond_signal( &m_queueEvent );
-	m_messagesMutex.Unlock();
-
-	pthread_join( m_thread, nullptr );
-	pthread_cond_destroy( &m_queueEvent );
-#endif
+	m_queueEvent.notify_one();
+	m_thread.join();
 }
 
-// TODO MACOS
 #if _WIN32
-// --------------------------------------------------------------------------------------
-// Description:
-//   Adds new messages to the output queue.
-// Arguments:
-//   buffer - Buffer with compiler messages
-// --------------------------------------------------------------------------------------
-void CompileMessageQueue::AddMessages( ID3DXBuffer* buffer )
+void CompileMessageQueue::AddMessages( ID3DBlob* buffer )
 {
-	m_messagesMutex.Lock();
+	m_messagesMutex.lock();
 	m_messages.push( reinterpret_cast<char*>( buffer->GetBufferPointer() ) );
-	m_messagesMutex.Unlock();
-	SetEvent( m_queueEvent );
-}
-
-void CompileMessageQueue::AddMessages( ID3D10Blob* buffer )
-{
-	// This is hacky, but it works as interfaces are identical
-	AddMessages( (ID3DXBuffer*)buffer );
+	m_messagesMutex.unlock();
+	m_queueEvent.notify_one();
 }
 #endif
 
@@ -92,17 +47,10 @@ void CompileMessageQueue::AddMessage( const char* format, ... )
 	count = vsnprintf( &message[0], message.size(), format, args );
 	va_end( args );
 
-#if _WIN32
-	m_messagesMutex.Lock();
+	m_messagesMutex.lock();
 	m_messages.push( message );
-	m_messagesMutex.Unlock();
-	SetEvent( m_queueEvent );
-#else
-	m_messagesMutex.Lock();
-	m_messages.push( message );
-	pthread_cond_signal( &m_queueEvent );
-	m_messagesMutex.Unlock();
-#endif
+	m_messagesMutex.unlock();
+	m_queueEvent.notify_one();
 }
 
 // --------------------------------------------------------------------------------------
@@ -113,26 +61,15 @@ void CompileMessageQueue::Flush()
 {
 	while( true )
 	{
-#if _WIN32
-		SetEvent( m_queueEvent );
-		m_messagesMutex.Lock();
+		m_queueEvent.notify_one();
+		m_messagesMutex.lock();
 		bool empty = m_messages.empty();
-		m_messagesMutex.Unlock();
-#else
-		m_messagesMutex.Lock();
-		bool empty = m_messages.empty();
-		pthread_cond_signal( &m_queueEvent );
-		m_messagesMutex.Unlock();
-#endif
+		m_messagesMutex.unlock();
 		if( empty )
 		{
 			break;
 		}
-#if _WIN32
-		Sleep( 500 );
-#else
-		sleep( 0.5 );
-#endif
+		std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
 	}
 }
 
@@ -154,28 +91,24 @@ void CompileMessageQueue::Run()
 {
 	while( true )
 	{
-#if _WIN32
-		WaitForSingleObject( m_queueEvent, INFINITE );
-#else
-		m_messagesMutex.Lock();
-		while ( m_messages.empty() && !m_stop )
-			pthread_cond_wait( &m_queueEvent, m_messagesMutex.GetRaw() );
-		m_messagesMutex.Unlock();
-#endif
+		{
+			std::unique_lock lock( m_messagesMutex );
+			m_queueEvent.wait( lock, [this] { return !m_messages.empty() || m_stop; } );
+		}
 		while( true )
 		{
-			m_messagesMutex.Lock();
+			m_messagesMutex.lock();
 			if( !m_messages.empty() )
 			{
 				std::string buffer = m_messages.front();
 				m_messages.pop();
-				m_messagesMutex.Unlock();
+				m_messagesMutex.unlock();
 
 				OutputMessages( buffer.c_str() );
 			}
 			else
 			{
-				m_messagesMutex.Unlock();
+				m_messagesMutex.unlock();
 				break;
 			}
 		}
@@ -225,21 +158,3 @@ void CompileMessageQueue::OutputMessages( const char* messages )
 		++end;
 	}
 }
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Output thread routine. Calls CompileMessageQueue::Run
-// --------------------------------------------------------------------------------------
-#if _WIN32
-DWORD WINAPI CompileMessageQueue::ThreadRoutine( LPVOID param )
-{
-	reinterpret_cast<CompileMessageQueue*>( param )->Run(); 
-	return 0;
-} 
-#else
-void* CompileMessageQueue::ThreadRoutine( void* param )
-{
-	reinterpret_cast<CompileMessageQueue*>( param )->Run(); 
-	return nullptr;
-} 
-#endif

@@ -5,15 +5,10 @@ enum Platform
 {
 	PLATFORM_INVALID = 0,
 
-	PLATFORM_DX9 = 1,
 	PLATFORM_DX11 = 2,
-	PLATFORM_GL2 = 3,
 
 	PLATFORM_DX12 = 6,
 	PLATFORM_VULKAN = 7,
-
-	PLATFORM_GL3 = 8,
-	PLATFORM_GL4 = 9,
 
 	PLATFORM_METAL = 10,
 
@@ -24,19 +19,11 @@ inline bool IsValidPlatform( Platform platform )
 {
 	switch( platform )
 	{
-	case PLATFORM_DX9:
-		return true;
 	case PLATFORM_DX11:
-		return true;
-	case PLATFORM_GL2:
 		return true;
 	case PLATFORM_DX12:
 		return true;
 	case PLATFORM_VULKAN:
-		return true;
-	case PLATFORM_GL3:
-		return true;
-	case PLATFORM_GL4:
 		return true;
 	case PLATFORM_METAL:
 		return true;
@@ -49,20 +36,12 @@ inline const char* GetPlatformShortName( Platform platform )
 {
 	switch( platform )
 	{
-	case PLATFORM_DX9:
-		return "dx9";
 	case PLATFORM_DX11:
 		return "dx11";
-	case PLATFORM_GL2:
-		return "gl2";
 	case PLATFORM_DX12:
 		return "dx12";
 	case PLATFORM_VULKAN:
 		return "vulkan";
-	case PLATFORM_GL3:
-		return "gl3";
-	case PLATFORM_GL4:
-		return "gl4";
 	case PLATFORM_METAL:
 		return "mtl";
 	default:
@@ -74,20 +53,12 @@ inline const char* GetPlatformLongName( Platform platform )
 {
 	switch( platform )
 	{
-	case PLATFORM_DX9:
-		return "DirectX 9";
 	case PLATFORM_DX11:
 		return "DirectX 11";
-	case PLATFORM_GL2:
-		return "GLES 2";
 	case PLATFORM_DX12:
 		return "DirectX 12";
 	case PLATFORM_VULKAN:
 		return "Vulkan";
-	case PLATFORM_GL3:
-		return "OpenGL 3";
-	case PLATFORM_GL4:
-		return "OpenGL 4";
 	case PLATFORM_METAL:
 		return "Metal";
 	default:
@@ -99,20 +70,12 @@ inline const char* GetPlatformIdString( Platform platform )
 {
 	switch( platform )
 	{
-	case PLATFORM_DX9:
-		return "1";
 	case PLATFORM_DX11:
 		return "2";
-	case PLATFORM_GL2:
-		return "3";
 	case PLATFORM_DX12:
 		return "6";
 	case PLATFORM_VULKAN:
 		return "7";
-	case PLATFORM_GL3:
-		return "8";
-	case PLATFORM_GL4:
-		return "9";
 	case PLATFORM_METAL:
 		return "10";
 	default:

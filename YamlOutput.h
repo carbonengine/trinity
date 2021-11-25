@@ -1,7 +1,6 @@
 #pragma once
 
 #include "InlineString.h"
-#include "Mutex.h"
 
 
 class YamlOutput
@@ -349,9 +348,9 @@ public:
 			return;
 		}
 		extern std::string g_listing;
-		extern Mutex g_listingCS;
+		extern std::mutex g_listingCS;
 
-		MutexScope scope( g_listingCS );
+		std::lock_guard scope( g_listingCS );
 		g_listing += yaml();
 	}
 };

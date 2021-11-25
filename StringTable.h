@@ -2,9 +2,7 @@
 #ifndef StringTable_H
 #define StringTable_H
 
-#include <unordered_map>
 #include "InlineString.h"
-#include "Mutex.h"
 
 class StringReference
 {
@@ -163,7 +161,7 @@ private:
 	void Sort();
 	static bool ValueCompare( std::pair<Blob*, size_t>* a, std::pair<Blob*, size_t>* b );
 
-	Mutex m_CS;
+	std::mutex m_CS;
 	std::unordered_map<Blob*, StringReference, BlobPtrHash, BlobPtrEqual> m_table;
 	std::unordered_map<StringReference, std::pair<Blob*, size_t>, StringReferenceHash> m_revTable;
 	size_t m_size;

@@ -7,7 +7,7 @@ struct Macro
 	std::string value;
 
 	template <typename Iterator, size_t Size>
-	static bool FillDxMacros( D3DXMACRO (&outMacros)[Size], Iterator inBegin, Iterator inEnd )
+	static bool FillDxMacros( D3D_SHADER_MACRO (&outMacros)[Size], Iterator inBegin, Iterator inEnd )
 	{
 		bool result = true;
 		size_t i = 0;

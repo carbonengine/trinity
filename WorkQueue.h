@@ -1,59 +1,34 @@
 #pragma once
 
-#include "Mutex.h"
-
-#if !_WIN32
-#include <dispatch/dispatch.h>
-#endif
 
 template <typename T, typename Processor>
 class WorkQueue
 {
 public:
 	WorkQueue( size_t workerCount, Processor processor )
-		:m_processor( processor ),
-		m_mutex( 1000 ),
-		m_workerCount( workerCount )
+		:m_processor( processor )
 	{
-#if _WIN32
-		m_added = CreateSemaphore( NULL, 0, LONG_MAX, NULL );
-
-		m_workerThreads = new HANDLE[workerCount];
-		for( unsigned i = 0; i < workerCount; ++i )
+		for( size_t i = 0; i < workerCount; ++i )
 		{
-			m_workerThreads[i] = CreateThread( NULL, 0, &WorkerThread, this, 0, NULL );
+			m_workerThreads.emplace_back( std::thread( [this] { WorkerThread(); } ) );
 		}
-#else
-		m_added = dispatch_semaphore_create( 0 );
-
-		m_workerThreads = new pthread_t[workerCount];
-		for( unsigned i = 0; i < workerCount; ++i )
-		{
-			pthread_create( &m_workerThreads[i], nullptr, WorkerThread, this );
-		}
-#endif
 	}
 
 	~WorkQueue()
 	{
-		while( !m_queue.empty() )
 		{
-			delete m_queue.front();
-			m_queue.pop();
+			std::lock_guard lock( m_mutex );
+			while( !m_queue.empty() )
+			{
+				delete m_queue.front();
+				m_queue.pop();
+			}
 		}
-#if _WIN32
-		for( unsigned i = 0; i < m_workerCount; ++i )
+		m_added.notify_all();
+		for( auto& thread : m_workerThreads )
 		{
-			CloseHandle( m_workerThreads[i] );
+			thread.join();
 		}
-		CloseHandle( m_added );
-#else
-		for( unsigned i = 0; i < m_workerCount; ++i )
-		{
-			pthread_join( m_workerThreads[i], nullptr );
-		}
-#endif
-		delete [] m_workerThreads;
 	}
 
 	void Put( const T& item )
@@ -63,90 +38,62 @@ public:
 
 	void Join()
 	{
-		for( unsigned i = 0; i < m_workerCount; ++i )
+		for( unsigned i = 0; i < m_workerThreads.size(); ++i )
 		{
 			PutPtr( nullptr );
 		}
-
-#if _WIN32
-		WaitForMultipleObjects( DWORD( m_workerCount ), m_workerThreads, TRUE, INFINITE );
-#else
-		for( unsigned i = 0; i < m_workerCount; ++i )
+		for( auto& thread : m_workerThreads )
 		{
-			pthread_join( m_workerThreads[i], nullptr );
+			thread.join();
 		}
-#endif
+		m_workerThreads.clear();
 	}
 private:
 
 	void PutPtr( T* item )
 	{
-		MutexScope scope( m_mutex );
+		std::lock_guard scope( m_mutex );
 		m_queue.push( item );
-#if _WIN32
-		ReleaseSemaphore( m_added, 1, NULL );
-#else
-		dispatch_semaphore_signal( m_added );
-#endif
+		m_added.notify_all();
 	}
 
 	T* Get()
 	{
 		for( ;; )
 		{
+			std::unique_lock scope( m_mutex );
+			if( !m_queue.empty() )
 			{
-				MutexScope scope( m_mutex );
-				if( !m_queue.empty() )
-				{
-					auto item = m_queue.front();
-					m_queue.pop();
-					return item;
-				}
+				auto item = m_queue.front();
+				m_queue.pop();
+				return item;
 			}
-
-#if _WIN32
-			WaitForSingleObject( m_added, INFINITE );
-#else
-			dispatch_semaphore_wait( m_added, DISPATCH_TIME_FOREVER );
-#endif
+			m_added.wait( scope, [this] { return !m_queue.empty(); } );
 		}
 	}
 
-#if _WIN32
-	static DWORD WINAPI WorkerThread( LPVOID param )
-#else
-	static void* WorkerThread( void* param )
-#endif
+	void WorkerThread()
 	{
 		tmThreadName( 0, 0, "Compile Worker Thread" );
 
-		WorkQueue* self = static_cast<WorkQueue*>( param );
 		while( true )
 		{
-			auto item = self->Get();
+			auto item = Get();
 			if( !item )
 			{
-				return 0;
+				return;
 			}
-			if( !self->m_processor( *item ) )
+			if( !m_processor( *item ) )
 			{
-				return 0;
+				return;
 			}
 			delete item;
 		}
-		return 0;
 	}
 
 	Processor m_processor;
 	std::queue<T*> m_queue;
-	Mutex m_mutex;
-	// Semaphore for blocking Get
-#if _WIN32
-	HANDLE m_added;
-	HANDLE *m_workerThreads;
-#else
-	dispatch_semaphore_t m_added;
-	pthread_t* m_workerThreads;
-#endif
-	size_t m_workerCount;
+	std::mutex m_mutex;
+	std::condition_variable m_added;
+	std::vector<std::thread> m_workerThreads;
 };

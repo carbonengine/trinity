@@ -21,7 +21,7 @@ StringReference StringTable::AddString( const char* string )
 StringReference StringTable::AddString( const void* string, size_t length )
 {
 	Blob blob( string, length );
-	MutexScope scope( m_CS );
+	std::lock_guard scope( m_CS );
 	auto it = m_table.find( &blob );
 	if( it != m_table.end() )
 	{
@@ -53,7 +53,7 @@ uint32_t StringTable::GetOffset( StringReference ref )
 	{
 		return 0xffffffff;
 	}
-	MutexScope scope( m_CS );
+	std::lock_guard scope( m_CS );
 	if( !m_sorted )
 	{
 		Sort();
@@ -68,7 +68,7 @@ uint32_t StringTable::GetOffset( StringReference ref )
 
 const char* StringTable::GetString( StringReference ref )
 {
-	MutexScope scope( m_CS );
+	std::lock_guard scope( m_CS );
 	auto it = m_revTable.find( ref );
 	if( it == m_revTable.end() )
 	{
@@ -107,7 +107,7 @@ void StringTable::Sort()
 
 bool StringTable::Write( FILE* file )
 {
-	MutexScope scope( m_CS );
+	std::lock_guard scope( m_CS );
 
 	if( !m_sorted )
 	{

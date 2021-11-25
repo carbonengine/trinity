@@ -8,8 +8,8 @@ endif()
 project(ShaderCompiler VERSION 1.0.0)
 
 cmake_policy(SET CMP0074 NEW)
-set(CMAKE_CXX_STANDARD 14)
-set(RadGameToolsTelemetry_ROOT "${CMAKE_SOURCE_DIR}/../../../vendor/Telemetry/3.5.0.19")
+set(CMAKE_CXX_STANDARD 17)
+set(RadGameToolsTelemetry_ROOT "${CMAKE_SOURCE_DIR}/../../../vendor/Telemetry/3.5.0.21")
 
 include(../../../cmake/CcpVendorUtilities.cmake)
 
@@ -20,11 +20,6 @@ else()
 endif()
 
 option(WITH_TELEMETRY "Enable integration with RAD Game tools Telemetry SDK" ${TELEMETRY_DEFAULT})
-
-if (WIN32)
-    set(GLEW_ROOT "${CMAKE_SOURCE_DIR}/../../../vendor/glew/1.9.0")
-    find_package(GLEW REQUIRED NO_CMAKE_PATH)
-endif()
 
 set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
 
@@ -40,14 +35,6 @@ add_executable(ShaderCompiler
     EffectCompilerDX11.h
     EffectCompilerDX12.cpp
     EffectCompilerDX12.h
-    EffectCompilerDx9.cpp
-    EffectCompilerDx9.h
-    EffectCompilerGL2.cpp
-    EffectCompilerGL2.h
-    EffectCompilerGL3.cpp
-    EffectCompilerGL3.h
-    EffectCompilerGL4.cpp
-    EffectCompilerGL4.h
     EffectCompilerMetal.cpp
     EffectCompilerMetal.h
     EffectData.cpp
@@ -64,7 +51,6 @@ add_executable(ShaderCompiler
     Macro.h
     ModifiedTime.cpp
     ModifiedTime.h
-    Mutex.h
     OutputHLSL.cpp
     OutputHLSL.h
     ParserState.cpp
@@ -86,7 +72,6 @@ add_executable(ShaderCompiler
     TextureFunctionConversionDX11.h
     Type.cpp
     Type.h
-    wglext.h
     WorkQueue.h
     YamlOutput.h
 )
@@ -161,17 +146,10 @@ set_target_properties(ShaderCompiler PROPERTIES
 )
 
 if (WIN32)
-    target_include_directories(ShaderCompiler PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/d3dx9/include
-    )
     target_link_libraries(ShaderCompiler PRIVATE
-        GLEW::GLEW
-        ${CMAKE_CURRENT_SOURCE_DIR}/d3dx9/lib/x64/d3dx9.lib
         d3dcompiler.lib
         d3d11.lib
-        d3d9.lib
         dxguid.lib
-        opengl32.lib
     )
     target_compile_options(ShaderCompiler PRIVATE /W4)
 else()
