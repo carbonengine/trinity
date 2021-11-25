@@ -237,8 +237,9 @@ class Stage(object):
         else:
             stream.read_uint32()
             stream.read_uint32()
-            stream.read_uint32()
-            stream.read_uint32()
+            if version < 12:
+                stream.read_uint32()
+                stream.read_uint32()
 
         if version >= 3:
             self.thread_group_size = stream.read_uint32(), stream.read_uint32(), stream.read_uint32()
@@ -283,7 +284,7 @@ class Stage(object):
 class Pass(object):
     def __init__(self, stream, string_table, version):
         self.stages = {}
-        """:type: dict[str, Stage]"""
+        """:type: dict[int, Stage]"""
 
         stage_count = stream.read_uint8()
         if stage_count > Stages.COUNT:
@@ -368,7 +369,7 @@ class _Parameter(object):
 
     def update(self, other):
         if isinstance(self.constant, Resource):
-            if self.constant.type == 5: # typeless texture
+            if self.constant.type == 5:  # typeless texture
                 self.constant = other.constant
         for k, v in other.annotation.annotations.iteritems():
             if k not in self.annotation.annotations:
@@ -470,7 +471,7 @@ class EffectInfo(object):
         stream = self._stream
         version = stream.read_uint32()
         self._version = version
-        if version < 2 or version > 11:
+        if version < 2 or version > 12:
             raise RuntimeError('unsupported effect file version')
         if version < 5:
             header_size = stream.read_uint32()

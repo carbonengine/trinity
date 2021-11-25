@@ -76,18 +76,18 @@ class TestCompiler(unittest2.TestCase):
 
     def test_compiling_empty_shader_raises(self):
         with self.assertRaises(compiler.CompilerError):
-            self._compile_and_parse("", defines={'PLATFORM': 0})
+            self._compile_and_parse("", defines={'PLATFORM': 2})
 
     def test_compiling_invalid_shader_raises(self):
         with self.assertRaises(compiler.CompilerError):
-            self._compile_and_parse("blah", defines={'PLATFORM': 0})
+            self._compile_and_parse("blah", defines={'PLATFORM': 2})
 
     def test_can_compile_shader(self):
-        info = self._compile_and_parse(MINIMAL_SHADER, defines={'PLATFORM': 0})
+        info = self._compile_and_parse(MINIMAL_SHADER, defines={'PLATFORM': 2})
         self.assertEqual(len(info.techniques), 1)
         self.assertEqual(len(info.techniques[0].passes), 1)
 
     def test_can_access_parameters(self):
-        info = self._compile_and_parse(SHADER_WITH_PARAMETER, defines={'PLATFORM': 0})
+        info = self._compile_and_parse(SHADER_WITH_PARAMETER, defines={'PLATFORM': 2})
         self.assertEqual(info.parameters['param']['MyAnnotation'], 'blah-blah')
         self.assertEqual(info.parameters['param'].trinity_type, 'Tr2Vector4Parameter')
