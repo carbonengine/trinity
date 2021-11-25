@@ -33,8 +33,6 @@ namespace TrinityALImpl
 			CComPtr<ID3D11GeometryShader> geometryShader;
 			CComPtr<ID3D11HullShader> hullShader;
 			CComPtr<ID3D11DomainShader> domainShader;
-
-			CComPtr<ID3D11PixelShader> patchedPixelShader;
 		};
 
 		::Tr2ShaderAL m_vertexShader;

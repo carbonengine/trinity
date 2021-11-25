@@ -54,22 +54,13 @@ TEST( VideoAdapterInfo, CanEnumerateModesForDefaultAdapter )
 	}
 }
 
-TEST( VideoAdapterInfo, CanGetShaderVersionForDefaultAdapter )
-{
-	unsigned version = 0xDeadBeef;
-	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterShaderVersion( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, version ) );
-	ASSERT_NE( version, 0xDeadBeef );
-}
-
 TEST( VideoAdapterInfo, DefaultAdapterSupportsItsCurrentBackBufferFormat )
 {
 	Tr2DisplayModeInfo mode;
 	memset( &mode, 0, sizeof( mode ) );
 	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode ) );
 	
-	EXPECT_TRUE( 
-		Tr2VideoAdapterInfo::SupportsBackBufferFormat( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode.format, false ) ||
-		Tr2VideoAdapterInfo::SupportsBackBufferFormat( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode.format, true ) );
+	EXPECT_TRUE( Tr2VideoAdapterInfo::SupportsBackBufferFormat( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode.format ) );
 }
 
 TEST( VideoAdapterInfo, SameAdaptersAreNotDifferent )
@@ -83,40 +74,15 @@ TEST( VideoAdapterInfo, CanQueryMsaaSupport )
 	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterMsaaSupport( 
 		Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
 		PIXEL_FORMAT_B8G8R8A8_UNORM, 
-		true, 
-		1, 
-		quality ) );
-	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterMsaaSupport( 
-		Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
-		DSFMT_D16, 
-		true, 
 		1, 
 		quality ) );
 }
 
 TEST( VideoAdapterInfo, DefaultAdapterSupports32bppRenderTarget )
 {
-	Tr2DisplayModeInfo mode;
-	memset( &mode, 0, sizeof( mode ) );
-	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode ) );
-
 	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::SupportsRenderTargetFormat( 
 		Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
-		mode.format, 
-		PIXEL_FORMAT_B8G8R8A8_UNORM, 
-		false ) );
-}
-
-TEST( VideoAdapterInfo, DefaultAdapterSupports16bppDepthStencil )
-{
-	Tr2DisplayModeInfo mode;
-	memset( &mode, 0, sizeof( mode ) );
-	ASSERT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::GetAdapterDisplayMode( Tr2VideoAdapterInfo::DEFAULT_ADAPTER, mode ) );
-
-	EXPECT_HRESULT_SUCCEEDED( Tr2VideoAdapterInfo::SupportsDepthStencilFormat( 
-		Tr2VideoAdapterInfo::DEFAULT_ADAPTER, 
-		mode.format, 
-		DSFMT_D16 ) );
+		PIXEL_FORMAT_B8G8R8A8_UNORM ) );
 }
 
 #ifdef _WIN32

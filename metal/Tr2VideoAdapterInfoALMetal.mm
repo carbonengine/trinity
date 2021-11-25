@@ -390,15 +390,6 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned adapterIndex,
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterShaderVersion( unsigned adapterIndex,
-													   unsigned& version )
-{
-	CHECK_ADAPTER;
-
-	version = 4294902528;
-	return S_OK;
-}
-
 ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned adapterIndex,
 														 unsigned& maxWidth )
 {
@@ -409,18 +400,14 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned adapterIndex,
 }
 
 bool Tr2VideoAdapterInfo::SupportsBackBufferFormat( unsigned adapterIndex,
-													Tr2RenderContextEnum::PixelFormat backBufferFormat,
-													bool )
+													Tr2RenderContextEnum::PixelFormat backBufferFormat )
 {
 	CHECK_ADAPTER;
 
 	return backBufferFormat == PIXEL_FORMAT_B8G8R8A8_UNORM;
 }
 
-bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex,
-													  Tr2RenderContextEnum::PixelFormat,
-													  Tr2RenderContextEnum::PixelFormat format,
-													  bool withAutoGenMipmap )
+bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex, Tr2RenderContextEnum::PixelFormat format )
 {
 	CHECK_ADAPTER;
 	switch( format )
@@ -484,51 +471,8 @@ bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex,
 	return true;
 }
 
-bool Tr2VideoAdapterInfo::SupportsDepthStencilFormat( unsigned adapterIndex,
-													  Tr2RenderContextEnum::PixelFormat,
-													  Tr2RenderContextEnum::DepthStencilFormat format )
-{
-	CHECK_ADAPTER;
-
-	return true;
-}
-
-bool Tr2VideoAdapterInfo::SupportsVertexTextureFormat( unsigned adapterIndex,
-													   Tr2RenderContextEnum::PixelFormat backBufferFormat,
-													   Tr2RenderContextEnum::PixelFormat format )
-{
-	CHECK_ADAPTER;
-
-	return true;
-}
-
 ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
 													 Tr2RenderContextEnum::PixelFormat,
-													 bool,
-													 unsigned msaaType,
-													 unsigned& msaaQuality )
-{
-	CHECK_ADAPTER;
-
-	if( msaaType >= 32 )
-	{
-		msaaQuality = 0;
-		return S_OK;
-	}
-	if( ( s_displays[adapterIndex].msaaSamples & (1 << msaaType ) ) != 0 )
-	{
-		msaaQuality = 1;
-	}
-	else
-	{
-		msaaQuality = 0;
-	}
-	return S_OK;
-}
-
-ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
-													 Tr2RenderContextEnum::DepthStencilFormat format,
-													 bool windowed,
 													 unsigned msaaType,
 													 unsigned& msaaQuality )
 {

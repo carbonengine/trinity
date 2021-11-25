@@ -1,5 +1,4 @@
 #include "MetalDefines.h"
-#include "ShadowState.fxh"
 
 #include <metal_stdlib>
 using namespace metal;
@@ -13,6 +12,5 @@ struct VS_OUTPUT
 fragment float4 mainPS(VS_OUTPUT In [[ stage_in ]] SHADOW_PS_DECL)
 {
     float4 color = float4( In.TexCoord, 0, 1 );
-    SHADOW_PS_PART(color);
     return color;
 }

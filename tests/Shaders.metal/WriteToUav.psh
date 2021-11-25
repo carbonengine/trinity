@@ -1,5 +1,4 @@
 #include "MetalDefines.h"
-#include "ShadowState.fxh"
 
 #include <metal_stdlib>
 using namespace metal;

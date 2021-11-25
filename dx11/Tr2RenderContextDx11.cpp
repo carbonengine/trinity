@@ -525,7 +525,6 @@ namespace Tr2RenderContextImpl {
 Tr2RenderContextAL::Tr2RenderContextAL() throw()
 	: m_topology( TOP_INVALID )
 	, m_lastSetTopology( TOP_INVALID )	
-	, m_dirtyFlag( 0 )
 	, m_renderTargetHighWaterMark( 1 )
 	, m_lastSetVertexLayoutVSHash( 0 )
 	, m_stackDS( "Tr2RenderContextAL::m_stackDS" )
@@ -539,6 +538,7 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw()
 	m_assignedUavOffset( 0 ),
 	m_assignedPsUavs( false )
 {	
+	m_dirtyFlag.flags = 0;
 	m_context.Attach( &Tr2RenderContextImpl::s_nullContext );
 
 	static_assert(	D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT >= MAX_RENDER_TARGET, 
@@ -563,13 +563,6 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw()
 	m_renderStateEmulation.m_separateAlphaBlendEnabled = false;
 
 	m_renderStateEmulation.m_currentRasterizer = defaultRasterizer;
-
-	memset( &m_renderStateEmulation.m_fragmentOpSettings, 0, 
-			sizeof( m_renderStateEmulation.m_fragmentOpSettings ) );
-
-	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestEnabled = 0;
-	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestRef = 0;
-	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestFunc = CMP_ALWAYS;
 
 	std::fill( std::begin( m_samplerHashes ), std::end( m_samplerHashes ), 0 );
 	std::fill( std::begin( m_resourceHashes ), std::end( m_resourceHashes ), 0 );
@@ -636,19 +629,12 @@ void Tr2RenderContextAL::Destroy() throw()
 
 	m_renderStateEmulation.m_currentRasterizer = defaultRasterizer;
 
-	memset( &m_renderStateEmulation.m_fragmentOpSettings, 0, 
-			sizeof( m_renderStateEmulation.m_fragmentOpSettings ) );
-
-	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestEnabled = 0;
-	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestRef = 0;
-	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestFunc = CMP_ALWAYS;
-
 	//TODO don't do this if this is a secondary context
 	m_renderStateEmulation.s_blendStateCache.clear();
 	m_renderStateEmulation.s_depthStencilStateCache.clear();
 	m_renderStateEmulation.s_rasterizerCache.clear();
 
-	m_dirtyFlag = 0;
+	m_dirtyFlag.flags = 0;
 	
 	m_fragmentOpBuffer = Tr2ConstantBufferAL();
 
@@ -1325,6 +1311,10 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& p ) thr
 	{
 		m_context->VSSetShader( program.m_shaders.vertexShader, nullptr, 0 );
 	}
+	if( old.m_shaders.pixelShader != program.m_shaders.pixelShader )
+	{
+		m_context->PSSetShader( program.m_shaders.pixelShader, nullptr, 0 );
+	}
 	if( old.m_shaders.computeShader != program.m_shaders.computeShader )
 	{
 		m_context->CSSetShader( program.m_shaders.computeShader, nullptr, 0 );
@@ -1340,10 +1330,6 @@ ALResult Tr2RenderContextAL::SetShaderProgram( const Tr2ShaderProgramAL& p ) thr
 	if( old.m_shaders.domainShader != program.m_shaders.domainShader )
 	{
 		m_context->DSSetShader( program.m_shaders.domainShader, nullptr, 0 );
-	}
-	if( old.m_shaders.pixelShader != program.m_shaders.pixelShader  )
-	{
-		m_dirtyFlag |= Tr2FragmentOpSettings::DIRTY_PATCH_PS;
 	}
 
 	m_shaderProgram = p;
@@ -1372,15 +1358,13 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 	auto& rt0 = m_renderStateEmulation.m_currentBlend.RenderTarget[0];
 	auto& ds  = m_renderStateEmulation.m_currentDepthStencil;
 	auto& rs  = m_renderStateEmulation.m_currentRasterizer;
-	auto& fos = m_renderStateEmulation.m_fragmentOpSettings;
-	auto& atp = m_renderStateEmulation.m_alphaTestParameters;
 
-#define checkBlend(blend,value)								\
+#define checkBlend(blends,value)							\
 	{														\
-		if( blend != static_cast<D3D11_BLEND>( value ) )	\
+		if( blends != static_cast<D3D11_BLEND>( value ) )	\
 		{													\
-			blend = static_cast<D3D11_BLEND>( value );		\
-			m_dirtyFlag |= fos.DIRTY_BLEND;					\
+			blends = static_cast<D3D11_BLEND>( value );		\
+			m_dirtyFlag.blend = true;						\
 		}													\
 	}
 
@@ -1389,7 +1373,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 		if( op != static_cast<D3D11_BLEND_OP>( value ) )	\
 		{													\
 			op = static_cast<D3D11_BLEND_OP>( value );		\
-			m_dirtyFlag |= fos.DIRTY_BLEND;					\
+			m_dirtyFlag.blend = true;						\
 		}													\
 	}
 
@@ -1414,19 +1398,6 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 		}
 #endif
 
-		const uint32_t dirty = fos.SetRenderState( state, value, atp );
-		if( dirty == fos.HANDLED_BUT_NO_CHANGES )
-		{
-			continue;	//return S_OK;
-		}
-		if( dirty )
-		{
-			m_dirtyFlag |= dirty;
-			continue;	//return S_OK;
-		}
-
-		
-
 		switch( state )
 		{
 			// ------------------------------ Alpha blending
@@ -1434,7 +1405,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( ( rt0.BlendEnable == 0 ) != ( value == 0 ) )
 			{
 				rt0.BlendEnable = value ? 1 : 0;
-				m_dirtyFlag |= fos.DIRTY_BLEND;
+				m_dirtyFlag.blend = true;
 			}
 			continue;	//return S_OK;
 
@@ -1450,7 +1421,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( rt0.RenderTargetWriteMask != value )
 			{
 				rt0.RenderTargetWriteMask = static_cast<UINT8>( value ) & 0xf;
-				m_dirtyFlag |= fos.DIRTY_BLEND;			
+				m_dirtyFlag.blend = true;			
 			}
 			//m_queryableRenderState.m_colorWriteEnable = value;
 			continue;	//return S_OK;
@@ -1459,7 +1430,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( m_renderStateEmulation.m_separateAlphaBlendEnabled != ( value != 0 ) )
 			{
 				m_renderStateEmulation.m_separateAlphaBlendEnabled = value != 0;
-				m_dirtyFlag |= fos.DIRTY_BLEND;
+				m_dirtyFlag.blend = true;
 			}
 			continue;	//return S_OK;
 
@@ -1468,7 +1439,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( ( ds.DepthEnable != 0 ) != ( value != 0 ) )
 			{
 				ds.DepthEnable = value ? 1 : 0;
-				m_dirtyFlag |= fos.DIRTY_DEPTHSTENCIL;			
+				m_dirtyFlag.depthStencil = true;
 			}
 			//m_queryableRenderState.m_zEnable = value;
 			continue;	//return S_OK;
@@ -1479,7 +1450,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				ds.DepthWriteMask = value	? D3D11_DEPTH_WRITE_MASK_ALL 
 											: D3D11_DEPTH_WRITE_MASK_ZERO;
-				m_dirtyFlag |= fos.DIRTY_DEPTHSTENCIL;			
+				m_dirtyFlag.depthStencil = true;
 			}
 			//m_queryableRenderState.m_zWriteEnable = value;
 			continue;	//return S_OK;
@@ -1488,7 +1459,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( ds.DepthFunc != static_cast<D3D11_COMPARISON_FUNC>( value ) )
 			{
 				ds.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>( value );	// same -- TODO Halify the enum values
-				m_dirtyFlag |= fos.DIRTY_DEPTHSTENCIL;
+				m_dirtyFlag.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1496,7 +1467,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( ( ds.StencilEnable == 0 ) != ( value == 0 ) )
 			{
 				ds.StencilEnable = value ? 1 : 0;
-				m_dirtyFlag |= fos.DIRTY_DEPTHSTENCIL;
+				m_dirtyFlag.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1504,7 +1475,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( ds.StencilReadMask != value || ds.StencilWriteMask != value )
 			{
 				ds.StencilReadMask = ds.StencilWriteMask = static_cast<UINT8>( value );
-				m_dirtyFlag |= fos.DIRTY_DEPTHSTENCIL;
+				m_dirtyFlag.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1512,7 +1483,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( m_renderStateEmulation.m_currentStencilRef != value )
 			{
 				m_renderStateEmulation.m_currentStencilRef = value;
-				m_dirtyFlag |= fos.DIRTY_DEPTHSTENCIL;
+				m_dirtyFlag.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1522,7 +1493,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				ds.FrontFace.StencilFailOp = 
 					ds.BackFace.StencilFailOp = static_cast<D3D11_STENCIL_OP>( value );	// same -- TODO halify
-				m_dirtyFlag |= fos.DIRTY_DEPTHSTENCIL;
+				m_dirtyFlag.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1532,7 +1503,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				ds.FrontFace.StencilDepthFailOp = 
 					ds.BackFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>( value );	// same -- TODO halify
-				m_dirtyFlag |= fos.DIRTY_DEPTHSTENCIL;
+				m_dirtyFlag.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1542,7 +1513,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				ds.FrontFace.StencilPassOp = 
 					ds.BackFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>( value );	// same -- TODO halify
-				m_dirtyFlag |= fos.DIRTY_DEPTHSTENCIL;
+				m_dirtyFlag.depthStencil = true;
 			}
 			continue;	//return S_OK;
 		
@@ -1552,7 +1523,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				ds.FrontFace.StencilFunc = 
 					ds.BackFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>( value );	// same -- TODO halify
-				m_dirtyFlag |= fos.DIRTY_DEPTHSTENCIL;
+				m_dirtyFlag.depthStencil = true;
 			}
 			continue;	//return S_OK;
 
@@ -1562,7 +1533,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( rs.FillMode != static_cast<D3D11_FILL_MODE>( value ) )
 			{
 				rs.FillMode = static_cast<D3D11_FILL_MODE>( value );	// same -- Halify
-				m_dirtyFlag |= fos.DIRTY_RASTERIZER;
+				m_dirtyFlag.rasterizer = true;
 			}
 			continue;	//return S_OK;
 
@@ -1575,7 +1546,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				{
 					rs.CullMode = newValue;
 					rs.FrontCounterClockwise = FALSE;
-					m_dirtyFlag |= fos.DIRTY_RASTERIZER;
+					m_dirtyFlag.rasterizer = true;
 				}
 				//m_queryableRenderState.m_cullMode = value;
 			}
@@ -1588,7 +1559,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			{
 				//rs.DepthBias = static_cast<INT>(value);
 				rs.DepthBias = static_cast<INT>( *(float*)&value ); // cppcheck-suppress invalidPointerCast
-				m_dirtyFlag |= fos.DIRTY_RASTERIZER;
+				m_dirtyFlag.rasterizer = true;
 			}
 			continue;	//return S_OK;
 
@@ -1596,7 +1567,7 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 			if( rs.SlopeScaledDepthBias != *( (float*)&value ) ) // cppcheck-suppress invalidPointerCast
 			{
 				rs.SlopeScaledDepthBias = *( (float*)&value ); // cppcheck-suppress invalidPointerCast
-				m_dirtyFlag |= fos.DIRTY_RASTERIZER;
+				m_dirtyFlag.rasterizer = true;
 			}
 			continue;	//return S_OK;
 		case RS_SRGBWRITEENABLE:
@@ -1606,34 +1577,10 @@ ALResult Tr2RenderContextAL::SetRenderStatesImpl( const uint32_t *stateValuePair
 				SetRtDsToDevice( MAX_RENDER_TARGET );
 			}
 			continue;
-
-		// explicit warning about fixed function requirements
-	#define CASE_WARN(x)	\
-		case x:				\
-			CCP_AL_LOGWARN( "No DX11 support for fixed function state " #x );	continue;	//return S_OK;
-	
-		CASE_WARN(RS_LIGHTING)
-		CASE_WARN(RS_AMBIENT)
-		CASE_WARN(RS_FOGVERTEXMODE)
-		CASE_WARN(RS_COLORVERTEX)
-		CASE_WARN(RS_LOCALVIEWER)
-		CASE_WARN(RS_NORMALIZENORMALS)
-		CASE_WARN(RS_DIFFUSEMATERIALSOURCE)
-		CASE_WARN(RS_SPECULARMATERIALSOURCE)
-		CASE_WARN(RS_AMBIENTMATERIALSOURCE)
-		CASE_WARN(RS_EMISSIVEMATERIALSOURCE)
-	#undef CASE_WARN
-
 		default:
-			CCP_AL_LOGWARN( "No DX11 support for SetRenderState( %d, %d )", (uint32_t)state, value );
+			continue;
 		}
 	}
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights ) throw()
-{
-	m_dirtyFlag |= m_renderStateEmulation.m_fragmentOpSettings.SetNumberOfLights( numLights );	
 	return S_OK;
 }
 
@@ -1669,59 +1616,10 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 		m_context->IASetInputLayout( nullptr );
 	}
 
-	if( m_dirtyFlag )
+	if( m_dirtyFlag.flags )
 	{
-		if( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_FRAGMENTOP )
-		{
-			m_renderStateEmulation.m_fragmentOpSettings.UpdateContents( m_renderStateEmulation.m_alphaTestParameters );
-
-			if( !m_fragmentOpBuffer.IsValid() )
-			{
-				auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-				CR_RETURN_VAL( m_fragmentOpBuffer.Create( sizeof( m_renderStateEmulation.m_fragmentOpSettings ), renderContext ), false );
-			}
-
-			{
-				void * mapped = nullptr;
-				CR_RETURN_VAL( m_fragmentOpBuffer.Lock( &mapped, *this ), false );
-
-				if( !mapped )
-				{
-					return false;
-				}
-				memcpy( mapped, &m_renderStateEmulation.m_fragmentOpSettings,
-						sizeof( m_renderStateEmulation.m_fragmentOpSettings ) );
-				m_fragmentOpBuffer.Unlock( *this );
-			}
-
-			{
-				SetConstants( m_fragmentOpBuffer, PIXEL_SHADER,  CONSTANT_BUFFER_FOR_FRAGMENT_OP_EMULATION );
-				SetConstants( m_fragmentOpBuffer, VERTEX_SHADER, CONSTANT_BUFFER_FOR_FRAGMENT_OP_EMULATION );
-			}
-		}
-
-		if( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_PATCH_PS )
-		{
-			if( !m_shaderProgram.m_program->m_shaders.pixelShader )
-			{
-				return false;
-			}
-			if( m_renderStateEmulation.m_alphaTestParameters.m_alphaTestEnabled && 
-				m_renderStateEmulation.m_alphaTestParameters.m_alphaTestFunc != CMP_ALWAYS )
-			{
-				m_context->PSSetShader( m_shaderProgram.m_program->m_shaders.patchedPixelShader, nullptr, 0 );
-			}
-			else
-			{
-				m_context->PSSetShader( m_shaderProgram.m_program->m_shaders.pixelShader, nullptr, 0 );
-			}
-		}
-
-		OK =	ApplyBlendState()		 &&
-				ApplyDepthStencilState() &&
-				ApplyRasterizerState();
-
-		m_dirtyFlag = 0;
+		OK = ApplyBlendState() && ApplyDepthStencilState() && ApplyRasterizerState();
+		m_dirtyFlag.flags = 0;
 	}
 
 	auto hasHullShader =m_shaderProgram.m_program->m_shaders.hullShader != nullptr;
@@ -1745,7 +1643,7 @@ bool Tr2RenderContextAL::ApplyShadowRenderStates() throw()
 
 bool Tr2RenderContextAL::ApplyBlendState() throw()
 {	
-	if( !( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_BLEND ) )
+	if( !m_dirtyFlag.blend )
 	{
 		return true;
 	}
@@ -1761,7 +1659,7 @@ bool Tr2RenderContextAL::ApplyBlendState() throw()
 
 bool Tr2RenderContextAL::ApplyDepthStencilState() throw()
 {	
-	if( !( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_DEPTHSTENCIL ) )
+	if( !m_dirtyFlag.depthStencil )
 	{
 		return true;
 	}
@@ -1778,7 +1676,7 @@ bool Tr2RenderContextAL::ApplyDepthStencilState() throw()
 
 bool Tr2RenderContextAL::ApplyRasterizerState() throw()
 {	
-	if( !( m_dirtyFlag & Tr2FragmentOpSettings::DIRTY_RASTERIZER ) )
+	if( !m_dirtyFlag.rasterizer )
 	{
 		return true;
 	}
@@ -1988,21 +1886,11 @@ ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport ) throw()
 {
 	static_assert( sizeof( viewport ) == sizeof( D3D11_VIEWPORT ), "viewport size mismatch" );
 	m_context->RSSetViewports( 1, reinterpret_cast<const D3D11_VIEWPORT*>(&viewport) );
-	float invWidth = 1.f / viewport.m_width;
-	float invHeight = -1.f / viewport.m_height;
-	if( invWidth != m_renderStateEmulation.m_fragmentOpSettings.m_renderTargetSize[0] ||
-		invHeight != m_renderStateEmulation.m_fragmentOpSettings.m_renderTargetSize[1] )
-	{
-		m_renderStateEmulation.m_fragmentOpSettings.m_renderTargetSize[0] = invWidth;
-		m_renderStateEmulation.m_fragmentOpSettings.m_renderTargetSize[1] = invHeight;
-		m_dirtyFlag |= Tr2FragmentOpSettings::DIRTY_FRAGMENTOP;
-	}
 	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::GetViewport( Tr2Viewport& viewport ) throw()
 {
-	static_assert( sizeof( viewport ) == sizeof( D3D11_VIEWPORT ), "viewport size mismatch" );
 	uint32_t count = 1;
 	m_context->RSGetViewports( &count, reinterpret_cast<D3D11_VIEWPORT*>(&viewport) );
 	return S_OK;
@@ -2115,13 +2003,6 @@ void Tr2RenderContextAL::ResetCapturePlayback()
 	m_renderStateEmulation.m_separateAlphaBlendEnabled = false;
 
 	m_renderStateEmulation.m_currentRasterizer = defaultRasterizer;
-
-	memset( &m_renderStateEmulation.m_fragmentOpSettings, 0, 
-			sizeof( m_renderStateEmulation.m_fragmentOpSettings.m_alphaTestRef ) );
-
-	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestEnabled = 0;
-	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestRef = 0;
-	m_renderStateEmulation.m_alphaTestParameters.m_alphaTestFunc = CMP_ALWAYS;
 }
 
 ALResult Tr2RenderContextAL::SetTopology( Tr2RenderContextEnum::Topology topology ) throw()

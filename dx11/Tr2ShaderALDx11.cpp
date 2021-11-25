@@ -15,13 +15,11 @@ namespace TrinityALImpl
 		m_pipelineInputHash( 0 )
 	{
 		m_shader.vertexShader = nullptr;
-		m_patchedShader.vertexShader = nullptr;
 	}
 
 	ALResult Tr2ShaderAL::Create(
 		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
-		const Tr2ShaderBytecodeAL& patchedBytecode,
 		const Tr2ShaderSignatureAL& signature,
 		Tr2PrimaryRenderContextAL &renderContext )
 	{
@@ -43,7 +41,6 @@ namespace TrinityALImpl
 		m_signature = signature;
 
 		m_shader.vertexShader = nullptr;
-		m_patchedShader.vertexShader = nullptr;
 
 		switch( type )
 		{
@@ -54,24 +51,12 @@ namespace TrinityALImpl
 				m_type = INVALID_SHADER;
 				return E_FAIL;
 			}
-			if( patchedBytecode.size && FAILED( renderContext.m_d3dDevice11->CreateVertexShader( patchedBytecode.bytecode, patchedBytecode.size, nullptr, &m_patchedShader.vertexShader ) ) )
-			{
-				CCP_AL_LOGERR( "Tr2ShaderAL: vertex shader creation failed" );
-				ReleaseShader();
-				return E_FAIL;
-			}
 			break;
 		case PIXEL_SHADER:
 			if( FAILED( renderContext.m_d3dDevice11->CreatePixelShader( bytecode.bytecode, bytecode.size, nullptr, &m_shader.pixelShader ) ) )
 			{
 				CCP_AL_LOGERR( "Tr2ShaderAL: pixel shader creation failed" );
 				m_type = INVALID_SHADER;
-				return E_FAIL;
-			}
-			if( patchedBytecode.size && FAILED( renderContext.m_d3dDevice11->CreatePixelShader( patchedBytecode.bytecode, patchedBytecode.size, nullptr, &m_patchedShader.pixelShader ) ) )
-			{
-				CCP_AL_LOGERR( "Tr2ShaderAL: pixel shader creation failed" );
-				ReleaseShader();
 				return E_FAIL;
 			}
 			break;
@@ -82,24 +67,12 @@ namespace TrinityALImpl
 				m_type = INVALID_SHADER;
 				return E_FAIL;
 			}
-			if( patchedBytecode.size && FAILED( renderContext.m_d3dDevice11->CreateComputeShader( patchedBytecode.bytecode, patchedBytecode.size, nullptr, &m_patchedShader.computeShader ) ) )
-			{
-				CCP_AL_LOGERR( "Tr2ShaderAL: compute shader creation failed" );
-				ReleaseShader();
-				return E_FAIL;
-			}
 			break;
 		case GEOMETRY_SHADER:
 			if( FAILED( renderContext.m_d3dDevice11->CreateGeometryShader( bytecode.bytecode, bytecode.size, nullptr, &m_shader.geometryShader ) ) )
 			{
 				CCP_AL_LOGERR( "Tr2ShaderAL: geometry shader creation failed" );
 				m_type = INVALID_SHADER;
-				return E_FAIL;
-			}
-			if( patchedBytecode.size && FAILED( renderContext.m_d3dDevice11->CreateGeometryShader( patchedBytecode.bytecode, patchedBytecode.size, nullptr, &m_patchedShader.geometryShader ) ) )
-			{
-				CCP_AL_LOGERR( "Tr2ShaderAL: geometry shader creation failed" );
-				ReleaseShader();
 				return E_FAIL;
 			}
 			break;
@@ -110,24 +83,12 @@ namespace TrinityALImpl
 				m_type = INVALID_SHADER;
 				return E_FAIL;
 			}
-			if( patchedBytecode.size && FAILED( renderContext.m_d3dDevice11->CreateHullShader( patchedBytecode.bytecode, patchedBytecode.size, nullptr, &m_patchedShader.hullShader ) ) )
-			{
-				CCP_AL_LOGERR( "Tr2ShaderAL: hull shader creation failed" );
-				ReleaseShader();
-				return E_FAIL;
-			}
 			break;
 		case DOMAIN_SHADER:
 			if( FAILED( renderContext.m_d3dDevice11->CreateDomainShader( bytecode.bytecode, bytecode.size, nullptr, &m_shader.domainShader ) ) )
 			{
 				CCP_AL_LOGERR( "Tr2ShaderAL: domain shader creation failed" );
 				m_type = INVALID_SHADER;
-				return E_FAIL;
-			}
-			if( patchedBytecode.size && FAILED( renderContext.m_d3dDevice11->CreateDomainShader( patchedBytecode.bytecode, patchedBytecode.size, nullptr, &m_patchedShader.domainShader ) ) )
-			{
-				CCP_AL_LOGERR( "Tr2ShaderAL: domain shader creation failed" );
-				ReleaseShader();
 				return E_FAIL;
 			}
 			break;
@@ -211,31 +172,6 @@ namespace TrinityALImpl
 				break;
 			}
 			m_shader.vertexShader = nullptr;
-		}
-		if( m_patchedShader.vertexShader )
-		{
-			switch( m_type )
-			{
-			case VERTEX_SHADER:
-				m_patchedShader.vertexShader->Release();
-				break;
-			case PIXEL_SHADER:
-				m_patchedShader.pixelShader->Release();
-				break;
-			case COMPUTE_SHADER:
-				m_patchedShader.computeShader->Release();
-				break;
-			case GEOMETRY_SHADER:
-				m_patchedShader.geometryShader->Release();
-				break;
-			case HULL_SHADER:
-				m_patchedShader.hullShader->Release();
-				break;
-			case DOMAIN_SHADER:
-				m_patchedShader.domainShader->Release();
-				break;
-			}
-			m_patchedShader.vertexShader = nullptr;
 		}
 		m_type = INVALID_SHADER;
 	}

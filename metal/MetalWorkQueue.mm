@@ -1970,7 +1970,7 @@ void MetalWorkQueue::SetShaders(
 
 void MetalWorkQueue::SetViewport( float originX, float originY, float width, float height, float znear, float zfar )
 {
-	m_viewport = { originX + 0.5, originY + 0.5, width, height, znear, zfar };
+	m_viewport = { originX, originY, width, height, znear, zfar };
 	m_dirtyRenderEncoderState |= METAL_RENDERENCODERDIRTYSTATE_VIEWPORT;
 	m_validViewport = true;
 }

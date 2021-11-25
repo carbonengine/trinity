@@ -65,8 +65,6 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 
 Tr2RenderContextAL::~Tr2RenderContextAL()
 {
-	m_lightCountBuffer = Tr2ConstantBufferAL();
-	
 	m_vertexLayout = Tr2VertexLayoutAL();
 	m_resourceSet = Tr2ResourceSetAL();
 	m_shaderProgram = Tr2ShaderProgramAL();
@@ -617,8 +615,6 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	m_caMetalLayer = (CAMetalLayer *)view.layer;
 	METAL_LOG(@"Creating device");
 	SetPresentParameters( Adapter, presentationParameters );
-	
-	m_lightCountBuffer.Create( 16, Tr2ConstantUsageAL::ONE_SHOT, nullptr, *this );
 
 	if( m_events )
 	{
@@ -1013,20 +1009,6 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 
     m_needsDrawResourceCheck = true;
 	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights )
-{
-	if( !m_lightCountBuffer.IsValid() )
-	{
-		CR_RETURN_HR( m_lightCountBuffer.Create( 16, Tr2ConstantUsageAL::ONE_SHOT, nullptr, *this ) );
-	}
-	void* data;
-	CR_RETURN_HR( m_lightCountBuffer.Lock( &data, *this ) );
-	*static_cast<uint32_t*>( data ) = numLights;
-	m_lightCountBuffer.Unlock( *this );
-	
-	return SetConstants( m_lightCountBuffer, PIXEL_SHADER, 10 ); // CB 10 is "reserved" for this constant
 }
 
 ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport )

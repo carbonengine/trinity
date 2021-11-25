@@ -22,7 +22,6 @@ namespace TrinityALImpl
 	ALResult Tr2ShaderAL::Create(
 		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
-		const Tr2ShaderBytecodeAL&,
 		const Tr2ShaderSignatureAL& signature,
 		Tr2PrimaryRenderContextAL& )
 	{

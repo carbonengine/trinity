@@ -52,7 +52,6 @@ namespace TrinityALImpl
 					return E_INVALIDARG;
 				}
 				m_shaders.pixelShader = shaders[i].m_shader->m_shader.pixelShader;
-				m_shaders.patchedPixelShader = shaders[i].m_shader->m_patchedShader.pixelShader;
 				break;
 			case COMPUTE_SHADER:
 				if( m_shaders.computeShader )
@@ -100,7 +99,6 @@ namespace TrinityALImpl
 		m_shaders.geometryShader = nullptr;
 		m_shaders.hullShader = nullptr;
 		m_shaders.domainShader = nullptr;
-		m_shaders.patchedPixelShader = nullptr;
 		m_isValid = false;
 		m_vertexShader = ::Tr2ShaderAL();
 		m_registerMap = Tr2RegisterMapAL();

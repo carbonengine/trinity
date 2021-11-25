@@ -1,5 +1,3 @@
-#include "ShadowState.fxh"
-
 struct VS_OUTPUT
 {
 	float4 Position : SV_Position;
@@ -17,6 +15,5 @@ SamplerState sampl: register( s0 );
 float4 main(VS_OUTPUT In) : SV_Target
 {
     float4 color = tex0.SampleLevel( sampl, In.TexCoord, PerObjectPS.lod );
-    SHADOW_PS_PART(color);
     return color;
 }

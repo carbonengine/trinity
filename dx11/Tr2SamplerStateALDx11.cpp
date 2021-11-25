@@ -26,7 +26,7 @@ namespace TrinityALImpl
 		D3D11_SAMPLER_DESC samplerDesc;
 		if( g_forceAnisotropy != 1 && ( description.m_minFilter == TF_ANISOTROPIC || description.m_magFilter == TF_ANISOTROPIC || description.m_mipFilter == TF_ANISOTROPIC ) )
 		{
-			samplerDesc.Filter = D3D11_ENCODE_ANISOTROPIC_FILTER( description.m_isComparisonFilter );
+			samplerDesc.Filter = D3D11_ENCODE_ANISOTROPIC_FILTER( description.m_isComparisonFilter ? 1 : 0 );
 		}
 		else
 		{
@@ -34,7 +34,7 @@ namespace TrinityALImpl
 				description.m_minFilter == TF_POINT ? D3D11_FILTER_TYPE_POINT : D3D11_FILTER_TYPE_LINEAR,
 				description.m_magFilter == TF_POINT ? D3D11_FILTER_TYPE_POINT : D3D11_FILTER_TYPE_LINEAR,
 				description.m_mipFilter == TF_POINT || description.m_mipFilter == TF_NONE ? D3D11_FILTER_TYPE_POINT : D3D11_FILTER_TYPE_LINEAR,
-				description.m_isComparisonFilter );
+				description.m_isComparisonFilter ? 1 : 0 );
 		}
 		samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_MODE( description.m_addressU );
 		samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_MODE( description.m_addressV );

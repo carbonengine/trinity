@@ -248,8 +248,6 @@ public:
 	typedef std::unordered_map<TrinityALImpl::PSODescription, CComPtr<ID3D12PipelineState>> PipelineStateMap;
 	PipelineStateMap m_pipelineStates;
 
-	Tr2ConstantBufferAL m_shadowCB;
-
 	CComPtr<ID3D12CommandSignature> m_drawInstancedIndirect;
 	CComPtr<ID3D12CommandSignature> m_drawIndexedInstancedIndirect;
 	CComPtr<ID3D12CommandSignature> m_dispatchIndirect;

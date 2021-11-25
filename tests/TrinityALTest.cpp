@@ -7,10 +7,6 @@
 // Needed by CcpCore
 const char* g_moduleName = "TrinityALTest";
 
-// Needed by TrinityAL
-bool g_usingEXDevice = false;
-bool g_useManagedDX9Buffers = true;
-
 // Interactive test flag (set by --interactive option)
 bool g_interactive = false;
 // Make screenshots for the first frame of interactive tests (set by --screenshots option)

@@ -1,5 +1,4 @@
 #include "MetalDefines.h"
-#include "ShadowState.fxh"
 
 #include <metal_stdlib>
 using namespace metal;
@@ -7,7 +6,6 @@ using namespace metal;
 struct VS_OUTPUT
 {
 	float4 Position [[ position ]];
-	SHADOW_VS_OUTPUT
 };
 
 struct VS_INPUT
@@ -19,6 +17,5 @@ vertex VS_OUTPUT mainVS( VS_INPUT input [[ stage_in ]] SHADOW_PS_DECL )
 {
 	VS_OUTPUT Output;
 	Output.Position = float4(input.Position, 1);
-    SHADOW_VS_PART(Output, Position);
 	return Output;
 }

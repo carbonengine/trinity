@@ -110,11 +110,6 @@ TEST_F( PrimaryRenderContext, ValidRenderContextHasValidBackBuffer )
 	EXPECT_EQ( renderContext->GetBackBufferFormat(), renderContext->GetDefaultBackBuffer().GetFormat() );
 }
 
-TEST_F( RenderContext, CanSetNumberOfLights )
-{
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetNumberOfLights( 13 ) );
-}
-
 TEST( RenderContextEnum, CanConvertPixelFormatToTypeless )
 {
 	Tr2RenderContextEnum::PixelFormat formats[] = {

@@ -132,8 +132,6 @@ TEST_F( Buffer, CanLockDynamicBufferForWriting )
 	buffer.UnmapForWriting( *renderContext );
 }
 
-#if TRINITY_PLATFORM_SUPPORTS_NON_SYNCHRONIZED_LOCKS
-
 TEST_F( Buffer, CanLockDynamicBufferForWritingWithoutSynchronization )
 {
 	Tr2BufferAL buffer;
@@ -143,8 +141,6 @@ TEST_F( Buffer, CanLockDynamicBufferForWritingWithoutSynchronization )
 	ASSERT_HRESULT_SUCCEEDED( buffer.MapForWriting( locked, Tr2LockType::NON_SYNCHRONIZED, *renderContext ) );
 	buffer.UnmapForWriting( *renderContext );
 }
-
-#endif
 
 TEST_F( Buffer, CanUpdateBuffer )
 {

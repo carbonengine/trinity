@@ -278,11 +278,6 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t )
-{
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport )
 {
 	m_viewport = viewport;

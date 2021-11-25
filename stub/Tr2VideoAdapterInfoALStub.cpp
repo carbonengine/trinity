@@ -1,15 +1,9 @@
 #include "StdAfx.h"
 
-bool g_wantsEXDevice = false;
-
 #if( TRINITY_PLATFORM==TRINITY_STUB )
 
 #include "Tr2VideoAdapterInfoALStub.h"
 #include "Tr2AdapterStructures.h"
-
-#ifdef WIN32
-extern bool g_usingEXDevice;
-#endif
 
 using namespace Tr2RenderContextEnum;
 
@@ -94,13 +88,6 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned,
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterShaderVersion( unsigned,
-													   unsigned& version )
-{
-	version = 4294902528;
-	return S_OK;
-}
-
 ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned,
 														 unsigned& maxWidth )
 {
@@ -109,47 +96,18 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned,
 }
 
 bool Tr2VideoAdapterInfo::SupportsBackBufferFormat( unsigned,
-													Tr2RenderContextEnum::PixelFormat,
-													bool )
+													Tr2RenderContextEnum::PixelFormat )
 {
 	return true;
 }
 
-bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned,
-													  Tr2RenderContextEnum::PixelFormat,
-													  Tr2RenderContextEnum::PixelFormat,
-													  bool )
-{
-	return true;
-}
-
-bool Tr2VideoAdapterInfo::SupportsDepthStencilFormat( unsigned,
-													  Tr2RenderContextEnum::PixelFormat,
-													  Tr2RenderContextEnum::DepthStencilFormat )
-{
-	return true;
-}
-
-bool Tr2VideoAdapterInfo::SupportsVertexTextureFormat( unsigned,
-													   Tr2RenderContextEnum::PixelFormat,
-													   Tr2RenderContextEnum::PixelFormat )
+bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned, Tr2RenderContextEnum::PixelFormat )
 {
 	return true;
 }
 
 ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned,
 													 Tr2RenderContextEnum::PixelFormat,
-													 bool,
-													 unsigned,
-													 unsigned& msaaQuality )
-{
-	msaaQuality = 0;
-	return S_OK;
-}
-
-ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned,
-													 Tr2RenderContextEnum::DepthStencilFormat,
-													 bool,
 													 unsigned,
 													 unsigned& msaaQuality )
 {

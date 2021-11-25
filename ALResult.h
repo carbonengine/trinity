@@ -100,65 +100,6 @@ typedef int32_t HRESULT;
 	#define FORWARD_HR( x ) { HRESULT _hr = x; if( FAILED( _hr ) ) return _hr; }
 #endif
 
-#if TRINITY_PLATFORM==TRINITY_OPENGLES2
-
-void ReportGLError( const char* fileName, int lineNumber, const char* statement, unsigned errorCode );
-
-#if defined(_DEBUG) || defined(TRINITYDEV)
-
-#define	CR_GL(x)											\
-	{														\
-		x;													\
-		if( GLenum error = glGetError() )					\
-		{													\
-			ReportGLError( __FILE__, __LINE__, #x, error ); \
-			BreakInDebugger();								\
-		}													\
-	}
-
-#define	CR_GL_RETURN(x)										\
-	{														\
-		x;													\
-		if( GLenum error = glGetError() )					\
-		{													\
-			ReportGLError( __FILE__, __LINE__, #x, error ); \
-			BreakInDebugger();								\
-			return;											\
-		}													\
-	}
-
-#define	CR_GL_RETURN_VAL(x,ret)								\
-	{														\
-		x;													\
-		if( GLenum error = glGetError() )					\
-		{													\
-			ReportGLError( __FILE__, __LINE__, #x, error ); \
-			BreakInDebugger();								\
-			return ret;										\
-		}													\
-	}
-#define GL_IGNORE_ERROR(x) { x; glGetError(); }
-
-#else
-#	define	CR_GL(x)				x
-#	define	CR_GL_RETURN(x)			x
-#	define	CR_GL_RETURN_VAL(x,ret)	x
-#	define	GL_IGNORE_ERROR(x)		x
-#endif
-
-#define GL_FAIL(x)				CR_GL_RETURN_VAL(x,E_FAIL)
-#define GL_VALIDATE(x) 										\
-	{														\
-		glGetError();										\
-		x;													\
-		if( GLenum error = glGetError() )					\
-		{													\
-			ReportGLError( __FILE__, __LINE__, #x, error ); \
-			return E_FAIL;									\
-		}													\
-	}
-#endif
-
 
 #if !TRINITY_AL_WITH_BLUE_EXPOSURE
 

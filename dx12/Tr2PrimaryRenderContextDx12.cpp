@@ -14,7 +14,6 @@
 #include "Tr2AdapterStructures.h"
 #include "ITr2RenderContextEvents.h"
 #include "Utilities.h"
-#include "Tr2FragmentOpSettings.h"
 #include "Tr2SwapChainALDx12.h"
 #include "Tr2TextureALDx12.h"
 #include "util/AmdExtDevice.h"
@@ -409,8 +408,6 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	m_genMipsResources = new TrinityALImpl::GenerateMipsResources( m_device );
 
-	m_shadowCB.Create( uint32_t( sizeof( Tr2FragmentOpSettings ) ), *this );
-
 	const uint32_t nullCbSize = 128 * 1024;
 	std::vector<uint8_t> cb( nullCbSize );
 	D3D12_SUBRESOURCE_DATA cbd = { cb.data(), nullCbSize, nullCbSize };
@@ -452,8 +449,6 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	m_statsResult = nullptr;
 
 	Tr2RenderContextAL::Destroy();
-
-	m_shadowCB = Tr2ConstantBufferAL();
 
 	m_immediateBuffer.Destroy();
 

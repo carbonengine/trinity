@@ -1,9 +1,6 @@
-#include "ShadowState.fxh"
-
 struct VS_OUTPUT
 {
 	float4 Position : SV_Position;
-	SHADOW_VS_OUTPUT
 };
 
 struct VS_INPUT
@@ -23,6 +20,5 @@ VS_OUTPUT main( VS_INPUT input )
 {
 	VS_OUTPUT Output;
 	Output.Position = float4(input.Position + float3( PerObjectVS.position, 0 ), 1);
-    SHADOW_VS_PART(Output, Position);
 	return Output;    
 }

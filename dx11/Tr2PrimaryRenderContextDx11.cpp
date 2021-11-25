@@ -507,9 +507,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 	m_context->OMSetRenderTargets(	1, 
 									&m_defaultBackBuffer.m_texture->m_renderTarget[COLOR_SPACE_LINEAR], 
 									nullptr );
-	m_renderStateEmulation.m_fragmentOpSettings.m_renderTargetSize[0] = viewport.Width ? 1.f / viewport.Width : 0.f;
-	m_renderStateEmulation.m_fragmentOpSettings.m_renderTargetSize[1] = viewport.Height ? -1.f / viewport.Height : 0.f;
-	m_dirtyFlag = 0xffffffff;
+	m_dirtyFlag.flags = 0xffffffff;
 
 	return S_OK;
 }

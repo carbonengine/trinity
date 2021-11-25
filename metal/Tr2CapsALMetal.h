@@ -2,7 +2,6 @@
 
 #if( TRINITY_PLATFORM == TRINITY_METAL )
 
-#define TRINITY_PLATFORM_SUPPORTS_NON_SYNCHRONIZED_LOCKS 1
 #define TRINITY_PLATFORM_SUPPORTS_BUFFER_SHADER_RESOURCES 1
 #define TRINITY_PLATFORM_SUPPORTS_BUFFER_COUNTERS 0
 #define TRINITY_PLATFORM_SUPPORTS_UNORDERED_ACCESS 1
@@ -21,9 +20,7 @@ public:
 	bool SupportsFloat16() const;
 	bool SupportsGpuBuffer() const;
 	bool SupportsStandaloneSwapChain() const;
-	uint32_t GetShaderVersion() const;
 	bool SupportsVertexShaderTextures() const;
-	bool SupportsNoOverwriteLock() const;
 };
 
 #endif

@@ -1,5 +1,4 @@
 #include "MetalDefines.h"
-#include "ShadowState.fxh"
 
 #include <metal_stdlib>
 using namespace metal;
@@ -18,6 +17,5 @@ struct PerObjectVSData
 fragment float4 mainPS(VS_OUTPUT In [[ stage_in ]], constant PerObjectVSData& PerObjectVS [[ CBUFFER(0) ]], texture3d<float> tex0 [[ texture(0) ]], sampler sampl [[ sampler(0) ]] SHADOW_PS_DECL)
 {
     float4 color = tex0.sample( sampl, float3( In.TexCoord, PerObjectVS.layer ) );
-    SHADOW_PS_PART(color);
     return color;
 }

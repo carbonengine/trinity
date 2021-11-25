@@ -16,7 +16,6 @@
 #include "Tr2PrimaryRenderContextDx12.h"
 #include "Tr2ResourceSetALDx12.h"
 #include "Utilities.h"
-#include "Tr2FragmentOpSettings.h"
 #include "util/AmdExtDevice.h"
 
 
@@ -1083,7 +1082,7 @@ ALResult Tr2RenderContextAL::DrawPrimitiveUP(
 ALResult Tr2RenderContextAL::SetViewport( const Tr2Viewport& viewport ) throw( )
 {
 	m_viewport = viewport;
-	D3D12_VIEWPORT vp = { viewport.m_x + 0.5f, viewport.m_y + 0.5f, viewport.m_width, viewport.m_height, viewport.m_minZ, viewport.m_maxZ };
+	D3D12_VIEWPORT vp = { viewport.m_x, viewport.m_y, viewport.m_width, viewport.m_height, viewport.m_minZ, viewport.m_maxZ };
 	m_commandList->RSSetViewports( 1, &vp );
 	return S_OK;
 }
@@ -1220,21 +1219,6 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState ) );
 	}
-
-	return S_OK;
-}
-
-ALResult Tr2RenderContextAL::SetNumberOfLights( uint32_t numLights ) throw( )
-{
-	Tr2FragmentOpSettings settings;
-	settings.m_numLights = numLights;
-
-	void* data;
-	CR_RETURN_HR( m_ownerDevice->m_shadowCB.Lock( &data, *this ) );
-	memcpy( data, &settings, sizeof( settings ) );
-	m_ownerDevice->m_shadowCB.Unlock( *this );
-
-	CR_RETURN_HR( SetConstants( m_ownerDevice->m_shadowCB, Tr2RenderContextEnum::PIXEL_SHADER, 10 ) );
 
 	return S_OK;
 }

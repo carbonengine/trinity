@@ -1,5 +1,4 @@
 #include "MetalDefines.h"
-#include "ShadowState.fxh"
 
 #include <metal_stdlib>
 using namespace metal;
@@ -15,6 +14,5 @@ fragment float4 mainPS(VS_OUTPUT In [[ stage_in ]], texture2d_ms<float> tex0 [[ 
 	uint w = tex0.get_width();
 	uint h = tex0.get_height();
     float4 color = tex0.read( uint2( In.TexCoord * float2( w, h ) ), 0 );
-    SHADOW_PS_PART(color);
     return color;
 }

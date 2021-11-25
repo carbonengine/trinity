@@ -26,7 +26,6 @@ namespace TrinityALImpl
 		ALResult Create(
 			Tr2RenderContextEnum::ShaderType type,
 			const Tr2ShaderBytecodeAL& bytecode,
-			const Tr2ShaderBytecodeAL& patchedBytecode,
 			const Tr2ShaderSignatureAL& signature,
 			Tr2PrimaryRenderContextAL &renderContext );
 
@@ -60,7 +59,6 @@ namespace TrinityALImpl
 			ID3D11DomainShader* domainShader;
 		};
 		Shader m_shader;
-		Shader m_patchedShader;
 
 		friend class Tr2RenderContextAL;
 		friend class Tr2ShaderProgramAL;

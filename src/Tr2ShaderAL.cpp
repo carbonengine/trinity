@@ -108,26 +108,16 @@ Tr2ShaderAL::Tr2ShaderAL( std::shared_ptr<TrinityALImpl::Tr2ShaderAL> shader )
 ALResult Tr2ShaderAL::Create(
 	Tr2RenderContextEnum::ShaderType type,
 	const Tr2ShaderBytecodeAL& bytecode,
-	const Tr2ShaderBytecodeAL& patchedBytecode,
 	const Tr2ShaderSignatureAL& signature,
 	Tr2PrimaryRenderContextAL &renderContext )
 {
 	m_shader = std::make_shared<TrinityALImpl::Tr2ShaderAL>();
-	auto result = m_shader->Create( type, bytecode, patchedBytecode, signature, renderContext );
+	auto result = m_shader->Create( type, bytecode, signature, renderContext );
 	if( FAILED( result ) )
 	{
 		m_shader = NullShader();
 	}
 	return result;
-}
-
-ALResult Tr2ShaderAL::Create(
-	Tr2RenderContextEnum::ShaderType type,
-	const Tr2ShaderBytecodeAL& bytecode,
-	const Tr2ShaderSignatureAL& signature,
-	Tr2PrimaryRenderContextAL &renderContext )
-{
-	return Create( type, bytecode, Tr2ShaderBytecodeAL(), signature, renderContext );
 }
 
 bool Tr2ShaderAL::IsValid() const

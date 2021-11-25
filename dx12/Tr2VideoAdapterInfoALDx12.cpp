@@ -5,8 +5,6 @@
 #include "Tr2VideoAdapterInfoALDx12.h"
 #include "Tr2AdapterStructures.h"
 
-extern bool g_usingEXDevice;
-
 using namespace Tr2RenderContextEnum;
 
 namespace
@@ -117,7 +115,6 @@ ALResult InitializeDirect3D()
 	s_deviceInfo.resize( 0 );
 
 	s_factory = nullptr;
-	g_usingEXDevice = false;
 
 	CR_RETURN_HR( CreateDXGIFactory1(
 							__uuidof( IDXGIFactory1 ),
@@ -344,13 +341,6 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMode( unsigned adapterIndex,
 	return S_OK;
 }
 
-ALResult Tr2VideoAdapterInfo::GetAdapterShaderVersion( unsigned/*adapterIndex*/,
-													   unsigned& version )
-{
-	version = 5 << 8;
-	return S_OK;
-}
-
 ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned/*adapterIndex*/,
 														 unsigned& maxWidth )
 {
@@ -359,8 +349,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterMaxTextureWidth( unsigned/*adapterIndex*
 }
 
 bool Tr2VideoAdapterInfo::SupportsBackBufferFormat( unsigned adapterIndex,
-													Tr2RenderContextEnum::PixelFormat backBufferFormat,
-													bool /*windowed*/ )
+													Tr2RenderContextEnum::PixelFormat backBufferFormat )
 {
 	CHECK_INIT_BOOL;
 	CHECK_VALID_ADAPTER_BOOL;
@@ -380,10 +369,7 @@ bool Tr2VideoAdapterInfo::SupportsBackBufferFormat( unsigned adapterIndex,
 	return true;
 }
 
-bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex,
-													  Tr2RenderContextEnum::PixelFormat/*backBufferFormat*/,
-													  Tr2RenderContextEnum::PixelFormat format,
-													  bool )
+bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex, Tr2RenderContextEnum::PixelFormat format )
 {
 	CHECK_INIT_BOOL;
 	CHECK_VALID_ADAPTER_BOOL;
@@ -400,58 +386,7 @@ bool Tr2VideoAdapterInfo::SupportsRenderTargetFormat( unsigned adapterIndex,
 		return false;
 	}
 
-	//if ( withAutoGenMipmap && ( ( flags & D3D11_FORMAT_SUPPORT_MIP_AUTOGEN ) == 0 ) )
-	//{
-	//	return false;
-	//}
-
 	return true;
-}
-
-bool Tr2VideoAdapterInfo::SupportsDepthStencilFormat( unsigned adapterIndex,
-													  Tr2RenderContextEnum::PixelFormat/*backBufferFormat*/,
-													  Tr2RenderContextEnum::DepthStencilFormat formatDS )
-{
-	CHECK_INIT_BOOL;
-	CHECK_VALID_ADAPTER_BOOL;
-
-	DXGI_FORMAT format = DXGI_FORMAT( ConvertDepthStencilFormat( formatDS ) );
-
-	if ( format >= (unsigned)DeviceInfo::FORMAT_COUNT )
-	{
-		return false;
-	}
-
-	uint32_t flags = s_deviceInfo[s_adapters[adapterIndex].m_deviceInfoIndex].m_formatSupport[format];
-
-	if ( ( flags & D3D12_FORMAT_SUPPORT1_DEPTH_STENCIL ) == 0 )
-	{
-		return false;
-	}
-
-	return true;
-}
-
-bool Tr2VideoAdapterInfo::SupportsVertexTextureFormat( unsigned adapterIndex,
-													   Tr2RenderContextEnum::PixelFormat/*backBufferFormat*/,
-													   Tr2RenderContextEnum::PixelFormat format )
-{
-	CHECK_INIT_BOOL;
-	CHECK_VALID_ADAPTER_BOOL;
-
-	if ( format >= (unsigned)DeviceInfo::FORMAT_COUNT )
-	{
-		return false;
-	}
-
-	uint32_t flags = s_deviceInfo[s_adapters[adapterIndex].m_deviceInfoIndex].m_formatSupport[format];
-
-	if ( ( flags & D3D12_FORMAT_SUPPORT1_TEXTURE2D ) == 0 )
-	{
-		return false;
-	}
-
-	return true;	// uh, close enough?
 }
 
 unsigned log2( unsigned int x )
@@ -466,45 +401,11 @@ unsigned log2( unsigned int x )
 
 ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
 													 Tr2RenderContextEnum::PixelFormat format,
-													 bool/*windowed*/,
 													 unsigned msaaType,
 													 unsigned& msaaQuality )
 {
 	CHECK_INIT;
 	CHECK_VALID_ADAPTER;
-
-	if ( msaaType <= 1 )
-	{
-		msaaQuality = 0;
-		return S_OK;
-	}
-
-	if ( format >= (unsigned)DeviceInfo::FORMAT_COUNT || msaaType >= (unsigned)DeviceInfo::MAX_SAMPLE_COUNT )
-	{
-		return E_INVALIDARG;
-	}
-
-	msaaQuality = s_deviceInfo[s_adapters[adapterIndex].m_deviceInfoIndex].m_qualityLevels[format][msaaType - 2];
-	return S_OK;
-}
-
-ALResult Tr2VideoAdapterInfo::GetAdapterMsaaSupport( unsigned adapterIndex,
-													 Tr2RenderContextEnum::DepthStencilFormat formatDS,
-													 bool/*windowed*/,
-													 unsigned msaaType,
-													 unsigned& msaaQuality )
-{
-	CHECK_INIT;
-	CHECK_VALID_ADAPTER;
-
-	DXGI_FORMAT format = DXGI_FORMAT( ConvertDepthStencilFormat( formatDS ) );
-
-	uint32_t flags = s_deviceInfo[s_adapters[adapterIndex].m_deviceInfoIndex].m_formatSupport[format];
-
-	if ( ( flags & D3D12_FORMAT_SUPPORT1_DEPTH_STENCIL ) == 0 )
-	{
-		return E_INVALIDARG;
-	}
 
 	if ( msaaType <= 1 )
 	{

@@ -17,17 +17,7 @@ bool Tr2CapsAL::SupportsStandaloneSwapChain() const
 	return true;
 }
 
-uint32_t Tr2CapsAL::GetShaderVersion() const
-{
-	return 0;
-}
-
 bool Tr2CapsAL::SupportsVertexShaderTextures() const
-{
-	return true;
-}
-
-bool Tr2CapsAL::SupportsNoOverwriteLock() const
 {
 	return true;
 }

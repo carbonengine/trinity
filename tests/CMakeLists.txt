@@ -19,8 +19,6 @@ set(_SOURCES
     RenderContextCreation.cpp
     RenderTarget.cpp
     RenderWindow.h
-    RenderWindow_Egl.cpp
-    RenderWindow_Glfw.cpp
     RenderWindow_Stub.cpp
     RenderWindow_Win32.cpp
     RenderWindow_Macos.mm
@@ -42,8 +40,6 @@ set(_SOURCES
     WithValidRenderContextFixture.h
     WithValidRenderContextFixture.cpp
     WithWindowFixture.h
-    WithWindowFixture_Egl.cpp
-    WithWindowFixture_Glfw.cpp
     WithWindowFixture_Stub.cpp
     WithWindowFixture_Win32.cpp
     WithWindowFixture_Macos.mm
@@ -87,11 +83,6 @@ function(set_shared_trinityaltest_properties target)
 endfunction()
 
 if(WIN32)
-    add_executable(TrinityALTest_dx9 EXCLUDE_FROM_ALL ${_SOURCES})
-    target_link_libraries(TrinityALTest_dx9 PRIVATE TrinityAL_dx9)
-    target_compile_definitions(TrinityALTest_dx9 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX9)
-    set_shared_trinityaltest_properties(TrinityALTest_dx9)
-
     add_executable(TrinityALTest_dx11 ${_SOURCES})
     target_link_libraries(TrinityALTest_dx11 PRIVATE TrinityAL_dx11)
     target_compile_definitions(TrinityALTest_dx11 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX11)

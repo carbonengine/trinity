@@ -26,16 +26,10 @@ std::map<HRESULT, std::string> s_errorMessages;
 
 void ReportHresultError( const char* fileName, int lineNumber, const char* statement, HRESULT hr )
 {
-	const char* msgFormat = "%s(%d) : '%s' returned error %s\n";
-#ifdef HAS_DXERR
-	const char* errorString = DXGetErrorStringA( hr );
-#else
-    char errorString[64];
-	sprintf_s( errorString, "0x%X", hr );
-#endif
+	const char* msgFormat = "%s(%d) : '%s' returned error 0x%X\n";
 	const int bufferSize = 1024;
 	char buffer[ bufferSize ] = "";
-	_snprintf_s( buffer, _TRUNCATE, msgFormat, fileName, lineNumber, statement, errorString );
+	_snprintf_s( buffer, _TRUNCATE, msgFormat, fileName, lineNumber, statement, hr );
 #ifdef _WIN32
 	OutputDebugString( buffer );
 #else
@@ -73,49 +67,6 @@ void BreakInDebugger()
 
 #endif
 
-#if TRINITY_PLATFORM==TRINITY_OPENGLES2
-
-void ReportGLError( const char* fileName, int lineNumber, const char* statement, unsigned errorCode )
-{
-	const char* msgFormat = "%s(%d) : '%s' returned error %s (%u)\n";
-	const char* errorName;
-	switch( errorCode )
-	{
-	case GL_INVALID_ENUM:
-		errorName = "INVALID_ENUM";
-		break;
-	case GL_INVALID_VALUE:
-		errorName = "INVALID_VALUE";
-		break;
-	case GL_INVALID_OPERATION:
-		errorName = "INVALID_OPERATION";
-		break;
-	case GL_INVALID_FRAMEBUFFER_OPERATION:
-		errorName = "INVALID_FRAMEBUFFER_OPERATION";
-		break;
-	case GL_OUT_OF_MEMORY:
-		errorName = "OUT_OF_MEMORY";
-		break;
-#if defined(_WIN32)
-	case GL_STACK_UNDERFLOW:
-		errorName = "STACK_UNDERFLOW";
-		break;
-	case GL_STACK_OVERFLOW:
-		errorName = "STACK_OVERFLOW";
-		break;
-#endif
-	default:
-		errorName = "<unknown error>";
-		break;
-	}
-	const int bufferSize = 1024;
-	char buffer[ bufferSize ] = "";
-	_snprintf_s( buffer, _TRUNCATE, msgFormat, fileName, lineNumber, statement, errorName, errorCode );
-	CCP_AL_LOGERR( buffer );
-}
-
-#endif
-
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -130,15 +81,11 @@ template<> const char* BeGetErrorMessage( const Be::Result<HRESULT>& result )
 	auto found = s_errorMessages.find( result );
 	if( found == s_errorMessages.end() )
 	{
-#ifdef HAS_DXERR
-		const char* name = DXGetErrorString( result );
-		const char* message = DXGetErrorDescription( result );
-#else
 		const char* name = "<Unknown>";
 		const char* message = "<No description>";
-#endif
+
 		static char buffer[1024];
-		sprintf_s( buffer, "ALResult(%lx) %s: %s", result.GetResult(), name, message );
+		sprintf_s( buffer, "ALResult: %lx", result.GetResult() );
 		s_errorMessages[result] = buffer;
 		return s_errorMessages[result].c_str();
 	}
@@ -156,9 +103,6 @@ Be::Result<HRESULT>::Category Be::Result<HRESULT>::GetCategory() const
 	switch( GetResult() )
 	{
 	case E_OUTOFMEMORY:
-#if TRINITY_PLATFORM == TRINITY_DIRECTX9
-	case D3DERR_OUTOFVIDEOMEMORY:
-#endif
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
 	case DXGI_ERROR_REMOTE_OUTOFMEMORY:
 #endif

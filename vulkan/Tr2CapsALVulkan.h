@@ -8,7 +8,6 @@
 
 #if TRINITY_PLATFORM==TRINITY_VULKAN
 
-#define TRINITY_PLATFORM_SUPPORTS_NON_SYNCHRONIZED_LOCKS 1
 #define TRINITY_PLATFORM_SUPPORTS_BUFFER_SHADER_RESOURCES 1
 #define TRINITY_PLATFORM_SUPPORTS_BUFFER_COUNTERS 0
 #define TRINITY_PLATFORM_SUPPORTS_UNORDERED_ACCESS 1
@@ -35,15 +34,7 @@ public:
 	{
 		return true;
 	}
-	uint32_t GetShaderVersion() const
-	{
-		return 5;
-	}
 	bool SupportsVertexShaderTextures() const
-	{
-		return true;
-	}
-	bool SupportsNoOverwriteLock() const
 	{
 		return true;
 	}

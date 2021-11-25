@@ -167,4 +167,4 @@ namespace TrinityALImpl
 	}
 
 }
-#endif // TRINITY_PLATFORM==TRINITY_DIRECTX9
+#endif

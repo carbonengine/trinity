@@ -1,5 +1,3 @@
-#include "ShadowState.fxh"
-
 struct VS_OUTPUT
 {
 	float4 Position : SV_Position;
@@ -9,6 +7,5 @@ struct VS_OUTPUT
 float4 main(VS_OUTPUT In) : SV_Target
 {
     float4 color = float4( In.TexCoord, 0, 1 );
-    SHADOW_PS_PART(color);
     return color;
 }

@@ -5,7 +5,6 @@
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 #include "../ALResult.h"
-#include "../Tr2FragmentOpSettings.h"
 
 // -------------------------------------------------------------
 // Description:
@@ -24,8 +23,6 @@ struct Tr2RenderStateEmulation
 	D3D11_BLEND_DESC							m_currentBlend;
 	D3D11_DEPTH_STENCIL_DESC					m_currentDepthStencil;
 	D3D11_RASTERIZER_DESC						m_currentRasterizer;
-	Tr2FragmentOpSettings::TAlphaTestParameters	m_alphaTestParameters;
-	Tr2FragmentOpSettings						m_fragmentOpSettings;
 	uint32_t									m_currentStencilRef;	
 	bool										m_separateAlphaBlendEnabled;
 

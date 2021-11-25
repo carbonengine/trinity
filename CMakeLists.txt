@@ -58,18 +58,12 @@ set_shared_trinityal_properties(TrinityAL_stub)
 endif()
 
 if(WIN32)
-    # required for dx9 and 11
-    find_package(MicrosoftDirectX9 REQUIRED)
+    # required for 11
     find_package(NvidiaAftermath REQUIRED)
-
-    add_library(TrinityAL_dx9 STATIC EXCLUDE_FROM_ALL)
-    target_compile_definitions(TrinityAL_dx9 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX9)
-    target_link_libraries(TrinityAL_dx9 PUBLIC Microsoft::DirectX9 Nvidia::Aftermath legacy_stdio_definitions)
-    set_shared_trinityal_properties(TrinityAL_dx9)
 
     add_library(TrinityAL_dx11 STATIC)
     target_compile_definitions(TrinityAL_dx11 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX11)
-    target_link_libraries(TrinityAL_dx11 PUBLIC Microsoft::DirectX9 Nvidia::Aftermath d3d11 dxgi legacy_stdio_definitions)
+    target_link_libraries(TrinityAL_dx11 PUBLIC Nvidia::Aftermath d3d11 dxgi legacy_stdio_definitions)
     set_shared_trinityal_properties(TrinityAL_dx11)
 
     add_library(TrinityAL_dx12 STATIC EXCLUDE_FROM_ALL)

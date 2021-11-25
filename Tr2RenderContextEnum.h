@@ -413,14 +413,6 @@ namespace Tr2RenderContextEnum
 
 	PixelFormat ConvertDepthStencilFormat( DepthStencilFormat format );
 
-#if defined(_WIN32) && TRINITY_PLATFORM==TRINITY_DIRECTX9
-	// Debug helper while texture work is WIP
-	D3DFORMAT ConvertToD3D9Format( Tr2RenderContextEnum::PixelFormat format );
-	Tr2RenderContextEnum::PixelFormat ConvertFromD3D9Format( D3DFORMAT format );
-	D3DFORMAT ConvertToD3D9DepthStencilFormat( Tr2RenderContextEnum::DepthStencilFormat format );
-	Tr2RenderContextEnum::DepthStencilFormat ConvertFromD3D9DepthStencilFormat( D3DFORMAT format );
-#endif
-
 
 	static const int CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS = 0;
 	static const int CONSTANT_BUFFER_FOR_FRAGMENT_PARAMETERS = 7;

@@ -145,9 +145,6 @@ public:
 		uint32_t stencil = 0,
 		uint32_t slot = 0 ) throw();
 
-	// rather hacky call to make integer loops work across DX9 and DX11.
-	ALResult SetNumberOfLights( uint32_t numLights ) throw();
-
 	ALResult SetViewport( const Tr2Viewport& viewport ) throw();
 	ALResult GetViewport( Tr2Viewport& viewport ) throw();
 
@@ -189,7 +186,16 @@ public:
 		uint32_t& depth, 
 		uint32_t& mips ) const;
 private:
-	uint32_t						m_dirtyFlag;
+	union
+	{
+		struct
+		{
+			bool blend : 1;
+			bool depthStencil : 1;
+			bool rasterizer : 1;
+		};
+		uint32_t flags;
+	} m_dirtyFlag;
 public:
 	CComPtr<ID3D11DeviceContext>	m_context;
 private:

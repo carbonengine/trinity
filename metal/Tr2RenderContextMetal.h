@@ -153,8 +153,6 @@ public:
 	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2DepthAttachment& depth );
 	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2ColorAttachment& rt1, const Tr2DepthAttachment& depth );
 
-	ALResult SetNumberOfLights( uint32_t numLights );
-
 	ALResult SetViewport( const Tr2Viewport& viewport );
 	ALResult GetViewport( Tr2Viewport& viewport );
 
@@ -261,8 +259,6 @@ protected:
 
 	Tr2RenderContextEnum::Topology m_topology;
 	TrinityALImpl::Tr2DrawUPHelper m_drawUPHelper;
-	
-	Tr2ConstantBufferAL m_lightCountBuffer;
 
 	bool m_depthWriteEnabled;
 	bool m_depthCompareEnabled;
