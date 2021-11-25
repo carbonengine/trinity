@@ -22,8 +22,7 @@ CompilerError = subprocess.CalledProcessError
 
 
 def compile_shader(effect_path, output_path=None, platform=None, shader_model=None, threads=None, warnings=True,
-                   defines=None, optimizations=3, clip_planes=1, gles_emulate_samplers=False, avoid_flow_control=False,
-                   gles_extension_option=GLESExtensionOption.WARN, gles_extensions=None):
+                   defines=None, optimizations=3, avoid_flow_control=False):
     if output_path is None:
         if platform is None or shader_model is None:
             raise RuntimeError('cannot have both output_path and platform or shader_model None')
@@ -32,8 +31,7 @@ def compile_shader(effect_path, output_path=None, platform=None, shader_model=No
         os.makedirs(os.path.dirname(output_path))
     except OSError:
         pass
-    args = [COMPILER_PATH, '/single', '/O%s' % optimizations, '/clipPlanes', str(clip_planes),
-            '/E%s' % gles_extension_option]
+    args = [COMPILER_PATH, '/single', '/O%s' % optimizations]
     if threads is not None:
         args.extend(('/threads', str(threads)))
     if not warnings:
@@ -44,12 +42,8 @@ def compile_shader(effect_path, output_path=None, platform=None, shader_model=No
         args.extend(('/define', 'SHADERMODEL', str(shader_model)))
     for name, value in (defines or {}).iteritems():
         args.extend(('/define', name, str(value)))
-    if gles_emulate_samplers:
-        args.append('/GS')
     if avoid_flow_control:
         args.append('/Gfa')
-    for name, value in gles_extensions or {}:
-        args.append('/E%s%s' % (value, name))
     args.append(effect_path)
     args.append(output_path)
     print args
