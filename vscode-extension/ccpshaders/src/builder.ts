@@ -51,7 +51,7 @@ export class Builder
 		switch (platform) {
 		case 'win32':
 			this.osNameDir = 'Windows';
-			this.supportedPlatforms = {'dx9': 1, 'dx11': 2, 'dx12': 6, 'metal': 10};
+			this.supportedPlatforms = {'dx11': 2, 'dx12': 6, 'metal': 10};
 			break;
 		case 'darwin':
 			this.osNameDir = 'macOS';

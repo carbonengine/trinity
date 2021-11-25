@@ -3,7 +3,7 @@
 	"publisher": "ccp",
 	"displayName": "CcpShaders",
 	"description": "CCP support for shader compiler",
-	"version": "0.0.10",
+	"version": "0.0.12",
 	"engines": {
 		"vscode": "^1.45.0"
 	},
@@ -83,12 +83,6 @@
 					"type": "boolean",
 					"default": true,
 					"description": "Use Perforce to check out compiled shaders",
-					"scope": "window"
-				},
-				"targetPlatforms.directX9": {
-					"type":"boolean",
-					"default": true,
-					"description": "Compile shaders for DirectX 9 (if available on host platform)",
 					"scope": "window"
 				},
 				"targetPlatforms.directX11": {

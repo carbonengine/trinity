@@ -20,11 +20,11 @@ else:
 
 
 SHADER_MODELS = {'lo': 3, 'hi': 4, 'depth': 5}
-PLATFORMS = {'dx9': 1, 'dx11': 2, 'dx12': 6, 'metal': 10}
+PLATFORMS = {'dx11': 2, 'dx12': 6, 'metal': 10}
 if sys.platform == 'darwin':
     SUPPORTED_PLATFORMS = ('metal',)
 elif sys.platform == 'win32':
-    SUPPORTED_PLATFORMS = 'dx9', 'dx11', 'dx12', 'metal'
+    SUPPORTED_PLATFORMS = 'dx11', 'dx12', 'metal'
 else:
     SUPPORTED_PLATFORMS = ()
 

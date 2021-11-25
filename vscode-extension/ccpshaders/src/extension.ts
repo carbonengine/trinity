@@ -89,7 +89,6 @@ function activate(context: vscode.ExtensionContext) {
 					builder.usePerforce = vscode.workspace.getConfiguration('ccp-shaders').get<boolean>('use-perforce', true);
 					const config = vscode.workspace.getConfiguration('targetPlatforms');
 
-					builder.enablePlatform('dx9', config.get<boolean>('directX9', true));
 					builder.enablePlatform('dx11', config.get<boolean>('directX11', true));
 					builder.enablePlatform('dx12', config.get<boolean>('directX12', true));
 					builder.enablePlatform('metal', config.get<boolean>('metal', true));

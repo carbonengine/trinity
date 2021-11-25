@@ -187,12 +187,8 @@ class _StageData(object):
 if sys.platform == 'win32':
     _PLATFORMS = (
         {'name': 'DirectX 11', 'value': 2},
-        {'name': 'DirectX 9', 'value': 1},
-        {'name': 'GLES 2', 'value': 3},
         {'name': 'DirectX 12', 'value': 6},
         {'name': 'Vulkan', 'value': 7},
-        {'name': 'OpenGL 3', 'value': 8},
-        {'name': 'OpenGL 4', 'value': 9},
         {'name': 'Metal', 'value': 10},
     )
 elif sys.platform == 'darwin':
