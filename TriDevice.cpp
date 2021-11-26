@@ -82,9 +82,12 @@ CCP_STATS_DECLARE( frameTimeAbove200ms, "Trinity/FrameTimeAbove200ms", false, CS
 CCP_STATS_DECLARE( frameTimeAbove300ms, "Trinity/FrameTimeAbove300ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 300ms (but below 400)");
 CCP_STATS_DECLARE( frameTimeAbove400ms, "Trinity/FrameTimeAbove400ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 400ms (but below 500)");
 CCP_STATS_DECLARE( frameTimeAbove500ms, "Trinity/FrameTimeAbove500ms", false, CST_COUNTER_LOW, "Number of frames where the frame time was above 500ms");
-CCP_STATS_DECLARE( presentTime, "Trinity/PresentTime", true, CST_TIME, "Time spent in Present call");
+CCP_STATS_DECLARE( presentTime, "Trinity/PresentTime", true, CST_TIME, "Time spent in Present call" );
+CCP_STATS_DECLARE( activeFrameTime, "Trinity/ActiveFrameTime", true, CST_TIME, "Frame time not counting persent or throttle time" );
+CCP_STATS_DECLARE( throttleTime, "Trinity/ThrottleTime", true, CST_TIME, "Time spent throttling" );
 
-// NOTE: This is a global pointer to a ROT object, initialized by it
+
+	// NOTE: This is a global pointer to a ROT object, initialized by it
 // We never want this rot object to die, so we hold a reference here.
 BlueBasicPtr<TriDevice> gTriDev;
 
@@ -554,6 +557,8 @@ void TriDevice::OnTick( Be::Time realTime, Be::Time simTime, void* cookie )
 
 	double frameTime = s_frameTimer.GetSeconds();
 #if CCP_STATS_ENABLED
+	//CCP_STATS_SET
+	g_ccpStatistics_activeFrameTime.Set( frameTime - g_ccpStatistics_presentTime.GetValue() - g_ccpStatistics_throttleTime.GetValue() );
 	g_ccpStatistics_frameTime.Set( frameTime );
 	if( g_ccpStatistics_frameTimeMin.GetValue() > 0 )
 	{
@@ -1063,7 +1068,7 @@ void TriDevice::Throttle() const
 
 	if( sleepTime > 0 )
 	{
-		CCP_STATS_ZONE( "TriDevice::Throttle" );
+		CCP_STATS_SCOPED_TIME( throttleTime );
 		CcpThreadSleep( sleepTime );
 	}
 }
