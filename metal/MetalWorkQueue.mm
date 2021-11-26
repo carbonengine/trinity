@@ -605,7 +605,7 @@ bool MetalWorkQueue::BlitToDrawableAndPresent( id<MTLTexture> srcTexture, NSView
     [m_commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> commandBuffer) {
         if (@available(macOS 10.15, *))
         {
-            auto duration = commandBuffer.GPUEndTime - commandBuffer.GPUEndTime;
+            auto duration = commandBuffer.GPUEndTime - commandBuffer.GPUStartTime;
             s_gpuFrameTime += duration;
 #if CCP_STATS_ENABLED
             g_ccpStatistics_gpuFrameTime.Set( s_gpuFrameTime );
@@ -620,7 +620,7 @@ bool MetalWorkQueue::BlitToDrawableAndPresent( id<MTLTexture> srcTexture, NSView
 	[m_commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> commandBuffer) {
         if (@available(macOS 10.15, *))
         {
-            auto duration = commandBuffer.GPUEndTime - commandBuffer.GPUEndTime;
+            auto duration = commandBuffer.GPUEndTime - commandBuffer.GPUStartTime;
             s_gpuFrameTime += duration;
 #if CCP_STATS_ENABLED
             g_ccpStatistics_gpuFrameTime.Set( s_gpuFrameTime );
@@ -957,7 +957,7 @@ void MetalWorkQueue::ReadBackBufferToCPU( id<MTLBuffer> buffer, bool waitForData
         [m_commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> commandBuffer) {
             if (@available(macOS 10.15, *))
             {
-                auto duration = commandBuffer.GPUEndTime - commandBuffer.GPUEndTime;
+                auto duration = commandBuffer.GPUEndTime - commandBuffer.GPUStartTime;
                 s_gpuFrameTime += duration;
             }
         }];
@@ -1251,7 +1251,7 @@ void MetalWorkQueue::CopyTextureToMTLBuffer(id<MTLTexture> texture,
         [m_commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> commandBuffer) {
             if (@available(macOS 10.15, *))
             {
-                auto duration = commandBuffer.GPUEndTime - commandBuffer.GPUEndTime;
+                auto duration = commandBuffer.GPUEndTime - commandBuffer.GPUStartTime;
                 s_gpuFrameTime += duration;
             }
         }];
@@ -2789,7 +2789,7 @@ bool MetalWorkQueue::GetVisibilityQueryPixelCount( uint64_t queryNumber, uint64_
         [m_commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> commandBuffer) {
             if (@available(macOS 10.15, *))
             {
-                auto duration = commandBuffer.GPUEndTime - commandBuffer.GPUEndTime;
+                auto duration = commandBuffer.GPUEndTime - commandBuffer.GPUStartTime;
                 s_gpuFrameTime += duration;
             }
         }];
