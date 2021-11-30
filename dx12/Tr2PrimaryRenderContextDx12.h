@@ -13,6 +13,7 @@
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
+#include "../include/Tr2GpuTimerAL.h"
 
 #include "./util/GlobalDescriptorHeapAllocatorDx12.h"
 #include "./util/DescriptorHeapViewDx12.h"
@@ -207,6 +208,8 @@ private:
 		STAT_BEGIN_ISSUED,
 		STAT_END_ISSUED,
 	} m_statsStatus;
+
+	Tr2GpuTimerAL m_frameTimer;
 
 	struct PendingPresent
 	{

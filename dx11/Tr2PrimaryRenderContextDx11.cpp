@@ -27,6 +27,7 @@ CCP_STATS_DECLARE( dx11CPrimitives, "Trinity/AL/Pipeline/CPrimitives", false, CS
 CCP_STATS_DECLARE( dx11PSInvocations, "Trinity/AL/Pipeline/PSInvocations", false, CST_COUNTER_HIGH, "Number of times a pixel shader was invoked" );
 CCP_STATS_DECLARE( dx11HSInvocations, "Trinity/AL/Pipeline/HSInvocations", false, CST_COUNTER_HIGH, "Number of times a hull shader was invoked" );
 CCP_STATS_DECLARE( dx11DSInvocations, "Trinity/AL/Pipeline/DSInvocations", false, CST_COUNTER_HIGH, "Number of times a domain shader was invoked" );
+CCP_STATS_DECLARE( gpuFrameTime, "Trinity/AL/GpuFrameTime", false, CST_TIME, "Time spent on GPU processing a frame" );
 
 namespace Tr2RenderContextImpl {
 	struct NullContext;
@@ -393,6 +394,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	Tr2RenderContextAL::m_secondaryDefaultBackBuffer = m_defaultBackBuffer;
 	Tr2RenderContextAL::m_boundDepthStencil = Tr2TextureAL();
 
+	m_frameTimer.Create( *this );
+
 	if( m_events )
 	{
 		m_events->OnContextCreated( *this );
@@ -458,6 +461,8 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 
 	m_vsyncInterval = presentationParameters.presentInterval & 0xf;
 
+	m_frameTimer.Create( *this );
+
 	return CreateBackBuffers( presentationParameters );
 }
 
@@ -514,6 +519,15 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 
 ALResult Tr2PrimaryRenderContextAL::Present()
 {
+	m_frameTimer.End( *this );
+	auto frameTime = m_frameTimer.GetTime( *this );
+	if( frameTime > 0 )
+	{
+#if CCP_STATS_ENABLED
+		g_ccpStatistics_gpuFrameTime.Set( frameTime );
+#endif
+	}
+
 	if( g_gatherPipelineStatistics )
 	{
 		if( !m_deviceStatistics )
@@ -597,6 +611,8 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 		}
 		queue->ClearStoredMessages();
 	}
+
+	m_frameTimer.Begin( *this );
 
 	return S_OK;
 }
