@@ -32,6 +32,7 @@ CCP_STATS_DECLARE( dx12CPrimitives, "Trinity/AL/Pipeline/CPrimitives", false, CS
 CCP_STATS_DECLARE( dx12PSInvocations, "Trinity/AL/Pipeline/PSInvocations", false, CST_COUNTER_HIGH, "Number of times a pixel shader was invoked" );
 CCP_STATS_DECLARE( dx12HSInvocations, "Trinity/AL/Pipeline/HSInvocations", false, CST_COUNTER_HIGH, "Number of times a hull shader was invoked" );
 CCP_STATS_DECLARE( dx12DSInvocations, "Trinity/AL/Pipeline/DSInvocations", false, CST_COUNTER_HIGH, "Number of times a domain shader was invoked" );
+CCP_STATS_DECLARE( gpuFrameTime, "Trinity/AL/GpuFrameTime", false, CST_TIME, "Time spent on GPU processing a frame" );
 
 
 namespace
@@ -423,6 +424,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		CCP_AL_LOGNOTICE( "Created dx12 device for adapter %S", info.description.c_str() );
 	}
 
+	m_frameTimer.Create( *this );
+
 	return S_OK;
 }
 
@@ -628,6 +631,8 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	ResetDescriptorCaches();
 	ResetRenderTargets();
 
+	m_frameTimer.Create( *this );
+
 	return S_OK;
 }
 
@@ -692,6 +697,17 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 		}
 	}
 
+	m_frameTimer.End( *this );
+	auto frameTime = m_frameTimer.GetTime( *this );
+	if( frameTime > 0 )
+	{
+#if CCP_STATS_ENABLED
+		g_ccpStatistics_gpuFrameTime.Set( frameTime );
+#endif
+	}
+
+
+
 	CR( m_commandList->Close() );
 
 
@@ -755,6 +771,8 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	m_pendingPresents.clear();
 
 	ResetRenderTargets();
+
+	m_frameTimer.Begin( *this );
 
 	if( g_gatherPipelineStatistics )
 	{

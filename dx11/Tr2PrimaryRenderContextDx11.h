@@ -8,6 +8,7 @@
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
+#include "../include/Tr2GpuTimerAL.h"
 
 
 struct Tr2PresentParametersAL;
@@ -61,6 +62,7 @@ private:
 	// Device statistics
 	CComPtr<ID3D11Query> m_deviceStatistics;
 	bool m_deviceStatisticsQueryEmpty;
+	Tr2GpuTimerAL m_frameTimer;
 
 	uint32_t m_adapterVendorId;
 
