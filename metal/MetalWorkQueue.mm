@@ -10,6 +10,7 @@
 #include "MetalShaderTypes.h"
 #include "MetalShaderStrings.h"
 #include "Tr2PipelineStatsQueryALMetal.h"
+#include "Tr2VertexLayoutALMetal.h"
 #include "ALLog.h"
 
 // NOTE: If you spot any rendering artifacts - try disabling render/compute state cashing.
@@ -2997,6 +2998,8 @@ void MetalWorkQueue::BeginParallelEncoding( MetalWorkQueue* primaryQueue )
 
 void MetalWorkQueue::EndParallelEncoding()
 {
+    FlushCachedVertexDescriptors();
+    
 	if( m_isPrimary )
 	{
 		if( m_currentParallelEncoder )
@@ -3066,6 +3069,33 @@ void MetalWorkQueue::PipelineQueryEnded( Tr2PipelineStatsQueryAL* query )
     }
 }
 
+MTLVertexDescriptor* MetalWorkQueue::GetCachedVertexDescriptor( Tr2VertexLayoutAL* layout, size_t inputHash, uint8_t& streamMask, bool& needsDummyStream ) const
+{
+    for( auto& desc : m_cachedVertexLayouts )
+    {
+        if( desc.layout == layout && desc.inputHash == inputHash )
+        {
+            streamMask = desc.streamMask;
+            needsDummyStream = desc.needsDummyStream;
+            return desc.descriptor;
+        }
+    }
+    return nullptr;
+}
+
+void MetalWorkQueue::CacheVertexDescriptor( Tr2VertexLayoutAL* layout, size_t inputHash, MTLVertexDescriptor* descriptor, uint8_t streamMask, bool needsDummyStream )
+{
+    m_cachedVertexLayouts.push_back( { layout, inputHash, descriptor, streamMask, needsDummyStream } );
+}
+
+void MetalWorkQueue::FlushCachedVertexDescriptors()
+{
+    for( auto& desc : m_cachedVertexLayouts )
+    {
+        desc.layout->AddVertexDescriptor( desc.inputHash, desc.descriptor, desc.streamMask, desc.needsDummyStream );
+    }
+    m_cachedVertexLayouts.clear();
+}
 
 } // TrinityALImpl
 

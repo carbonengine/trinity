@@ -25,7 +25,7 @@ namespace TrinityALImpl
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 
 		void SetVertexLayout( const std::shared_ptr<TrinityALImpl::Tr2ShaderProgramAL>& shaderProgram, Tr2RenderContextAL& renderContext );
-
+        void AddVertexDescriptor( size_t inputHash, MTLVertexDescriptor* descriptor, uint8_t streamMask, bool needsDummyStream );
 	private:
 		Tr2VertexLayoutAL( const Tr2VertexLayoutAL& ) = delete;
 		Tr2VertexLayoutAL& operator=( const Tr2VertexLayoutAL& ) = delete;
@@ -54,7 +54,6 @@ namespace TrinityALImpl
 		std::vector<Item> m_items;
 		Tr2RenderContextAL  *m_renderContext;
 		std::unordered_map<size_t, MetalVertexDescriptor> m_metalVertexDescriptors;
-		std::mutex m_descriptorMutex;
 	};
 }
 

@@ -168,24 +168,26 @@ namespace TrinityALImpl
 
 		bool isInParallelEncoding = renderContext.GetMetalContext()->IsInParallelEncoding();
 		
-		if( isInParallelEncoding )
-		{
-			m_descriptorMutex.lock();
-		}
 		auto inputHash = shaderProgram->GetInputsHash();
 		auto found = m_metalVertexDescriptors.find( inputHash );
 		if( found != end( m_metalVertexDescriptors ) )
 		{
 			descriptor = found->second;
 		}
+        else if( isInParallelEncoding )
+        {
+            auto queue = renderContext.GetMetalWorkQueue();
+            descriptor.descriptor = queue->GetCachedVertexDescriptor( this, inputHash, descriptor.streamMask, descriptor.needsDummyStream );
+            if( !descriptor.descriptor )
+            {
+                descriptor = GenerateVertexDescriptor( shaderProgram->GetInputs() );
+                queue->CacheVertexDescriptor( this, inputHash, descriptor.descriptor, descriptor.streamMask, descriptor.needsDummyStream );
+            }
+        }
 		else
 		{
 			descriptor = GenerateVertexDescriptor( shaderProgram->GetInputs() );
 			m_metalVertexDescriptors[inputHash] = descriptor;
-		}
-		if( isInParallelEncoding )
-		{
-			m_descriptorMutex.unlock();
 		}
 
 		if( descriptor.needsDummyStream )
@@ -194,6 +196,11 @@ namespace TrinityALImpl
 		}
 		renderContext.GetMetalWorkQueue()->SetCurrentVertexDescriptor( descriptor.descriptor, descriptor.streamMask );
 	}
+
+    void Tr2VertexLayoutAL::AddVertexDescriptor( size_t inputHash, MTLVertexDescriptor* descriptor, uint8_t streamMask, bool needsDummyStream )
+    {
+        m_metalVertexDescriptors[inputHash] = { descriptor, streamMask, needsDummyStream };
+    }
 }
 
 #endif
