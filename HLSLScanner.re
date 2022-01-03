@@ -946,7 +946,7 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 		"Texture1DArray" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE1DARRAY ); }
 		"Texture2DArray" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE2DARRAY ); }
 		"Texture3DArray" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE3DARRAY ); }
-		"TextureCUBE" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURECUBEARRAY ); }
+		"TextureCubeArray" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURECUBEARRAY ); }
 		"Texture2DMS" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE2DMS ); }
 		"Texture2DMSArray" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE2DMSARRAY ); }
 		"texture" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_TEXTURE  ); }

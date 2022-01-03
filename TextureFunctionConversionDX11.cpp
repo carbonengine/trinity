@@ -742,6 +742,38 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 	{
 		// t.Sample(sampler, coord [,offset]) -> t.sample(sampler, coord, [offset])
 		functionToken.stringValue = MakeInlineString( "sample" );
+		// texture arrays: t.Sample(sampler, coord [,offset]) -> t.sample(sampler, coord., coord., [offset])
+		switch( textureType.builtInType )
+		{
+		case OP_TEXTURE1DARRAY:
+		case OP_TEXTURE2DARRAY:
+		case OP_TEXTURE3DARRAY:
+		case OP_TEXTURECUBEARRAY: 
+		{
+			const char* xyzw = "xyzw";
+
+			auto coord = call->GetChild( 1 );
+			ScannerToken swizzle = ScannerToken::ID( MakeInlineString( xyzw, xyzw + coord->GetType().width - 1 ) );
+			ASTNode* dot = new ASTNode( NT_POSTFIX_EXPRESSION, coord->GetLocation(), coord->GetScope(), &swizzle );
+			dot->AddChild( coord->Copy() );
+			call->ReplaceChild( 1, dot );
+
+			swizzle = ScannerToken::ID( MakeInlineString( xyzw + coord->GetType().width - 1, xyzw + coord->GetType().width ) );
+			dot = new ASTNode( NT_POSTFIX_EXPRESSION, coord->GetLocation(), coord->GetScope(), &swizzle );
+			dot->AddChild( coord->Copy() );
+
+			ScannerToken typeToken = ScannerToken::FromTokenType( OP_UINT );
+			typeToken.intValue = 1;
+			ASTNode* cast = new ASTNode( NT_CAST_EXPRESSION, coord->GetLocation(), coord->GetScope(), &typeToken );
+			cast->SetType( TypeFromTokenType( OP_UINT ) );
+			cast->AddChild( dot );
+
+			call->InsertChild( 2, cast );
+			break;
+		}
+		default:
+			break;
+		}
 	}
 	else if( functionToken.stringValue == "SampleBias" )
 	{
