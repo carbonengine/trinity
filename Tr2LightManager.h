@@ -75,6 +75,10 @@ private:
 	Tr2AddSafeGrowableBuffer<PerLightData> m_lightData;
 	Tr2GpuStructuredBufferPtr m_lightBuffer;
 	Tr2GpuStructuredBufferPtr m_indexBuffer;
+	
+	Tr2GpuStructuredBufferPtr m_emptyLightBuffer;
+	Tr2GpuStructuredBufferPtr m_emptyIndexBuffer;
+
 	Tr2GpuBufferPtr m_indexBufferCounter;
 	Tr2ConstantBufferAL m_perFrameData;
 	Tr2EffectPtr m_effect;

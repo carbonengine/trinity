@@ -332,9 +332,6 @@ void EveTacticalOverlay::UpdateVisibility( const TriFrustum& frustum, const Matr
 	m_requestedSegmentsLast = requestedSegments;
 }
 
-void EveTacticalOverlay::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors )
-{
-}
 
 void EveTacticalOverlay::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer )
 {

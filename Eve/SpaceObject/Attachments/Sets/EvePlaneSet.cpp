@@ -262,7 +262,7 @@ AxisAlignedBoundingBox EvePlaneSet::GetAabb( const granny_matrix_3x4* bones, siz
 // Description:
 //   Trinity's way of providing batches to render
 // --------------------------------------------------------------------------------
-void EvePlaneSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EvePlaneSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( batchType != TRIBATCHTYPE_ADDITIVE && batchType != TRIBATCHTYPE_PICKING )
 	{

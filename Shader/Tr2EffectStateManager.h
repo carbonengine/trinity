@@ -42,7 +42,7 @@ public:
 	// This is called when device is reset
 	void ReleaseDeviceResources( TriStorage s );
 
-	void BeginManagedRendering();
+	void BeginManagedRendering( Tr2RenderContextEnum::CullMode cullmode = Tr2RenderContextEnum::CULLMODE_CW );
 	void EndManagedRendering();
 
 	enum

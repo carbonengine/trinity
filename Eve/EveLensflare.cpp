@@ -335,7 +335,7 @@ void EveLensflare::RunBackgroundOcclusionQueries( Tr2RenderContext& renderContex
 	}
 }
 
-void EveLensflare::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveLensflare::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( m_mesh )
 	{

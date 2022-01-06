@@ -467,6 +467,8 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 	hd.castShadow = srcData->m_castShadow;
 	hd.audioPosition = srcData->m_audioPosition;
 	hd.impactEffectType = srcData->m_impactEffectType;
+	
+	hd.category = std::string(srcData->m_category.c_str());
 
 	// boosters
 	if( srcData->m_booster )
@@ -1156,8 +1158,10 @@ void EveSOFDataMgr::GenerateFactionData( FactionData& fd, EveSOFDataFactionPtr s
 	}
 
 	// pattern data
-	EveSOFUtils::GeneratePatternLayerData( &fd.defaultPattern, srcData->m_defaultPattern );
+	EveSOFUtils::GeneratePatternLayerData( &fd.defaultPatternInfo, srcData->m_defaultPattern, nullptr);
 	fd.defaultPatternLayer1MaterialName = srcData->m_defaultPatternLayer1MaterialName;
+	fd.defaultPatternLayer2MaterialName = srcData->m_defaultPatternLayer2MaterialName;
+	fd.defaultPatternName = srcData->m_defaultPatternName;
 }
 
 // --------------------------------------------------------------------------------
@@ -1320,39 +1324,67 @@ bool EveSOFDataMgr::LoadMaterialData( EveSOFDataPtr srcData )
 // --------------------------------------------------------------------------------
 void EveSOFDataMgr::GeneratePatternData( PatternData& pd, EveSOFDataPatternPtr srcData ) const
 {
-	// pattern projections
+	pd.applicationData.clear();
+	// per-layer data
+	PatternLayerData pld1, pld2;
+
+	bool hasLayer1 = srcData->m_layer1 != nullptr;
+	bool hasLayer2 = srcData->m_layer2 != nullptr;
+
+	// generate layer data, even if we don't have the layer (we still need the data that it isn't there)
+	EveSOFUtils::GeneratePatternLayerData( &pld1, srcData->m_layer1, nullptr );
+	EveSOFUtils::GeneratePatternLayerData( &pld2, srcData->m_layer2, nullptr );
+		
+	// pattern projections, TODO remove after PHASE-6
 	for( auto ppit = srcData->m_projections.begin(); ppit != srcData->m_projections.end(); ++ppit )
 	{
-		EveSOFDataPatternPerHullPtr pattern = ( *ppit );
+		EveSOFDataPatternPerHullPtr hullData = ( *ppit );
 
-		pd.projectionData[pattern->m_name].clear();
-		if( pattern->m_transformLayer1 )
-		{
-			PatternProjectionData ppd;
-			EveSOFUtils::GeneratePatternProjectionData( &ppd, pattern->m_transformLayer1 );
-			pd.projectionData[pattern->m_name].push_back( ppd );
-		}
-		if( pattern->m_transformLayer2 )
-		{
-			PatternProjectionData ppd;
-			EveSOFUtils::GeneratePatternProjectionData( &ppd, pattern->m_transformLayer2 );
-			pd.projectionData[pattern->m_name].push_back( ppd );
-		}
-	}
+		auto hullApplicationData = PatternApplicationData();
+		
+		PatternProjectionData ppd1, ppd2;		
+		EveSOFUtils::GeneratePatternProjectionData( &ppd1, hullData->m_transformLayer1 );		
+		EveSOFUtils::GeneratePatternProjectionData( &ppd2, hullData->m_transformLayer2 );
 
-	// per-layer data
-	pd.layerData.clear();
-	if( srcData->m_layer1 )
-	{
-		PatternLayerData pld;
-		EveSOFUtils::GeneratePatternLayerData( &pld, srcData->m_layer1 );
-		pd.layerData.push_back( pld );
+		hullApplicationData.layerAndProjection.push_back( std::make_pair( pld1, ppd1 ) );
+		hullApplicationData.layerAndProjection.push_back( std::make_pair( pld2, ppd2 ) );
+
+		pd.old_applicationData[hullData->m_name] = hullApplicationData;
 	}
-	if( srcData->m_layer2 )
+	
+
+	for( auto groupIt = srcData->m_applicationGroups.begin(); groupIt != srcData->m_applicationGroups.end(); ++groupIt )
 	{
-		PatternLayerData pld;
-		EveSOFUtils::GeneratePatternLayerData( &pld, srcData->m_layer2 );
-		pd.layerData.push_back( pld );
+		auto group = *groupIt;
+		
+		// create layer1 and layer2
+		PatternLayerData layer1, layer2;
+
+		EveSOFUtils::GeneratePatternLayerData( &layer1, srcData->m_layer1, group->m_layer1Properties );
+		EveSOFUtils::GeneratePatternLayerData( &layer2, srcData->m_layer2, group->m_layer2Properties );
+		
+		// go over all the hulls in the group and generate the pattern application list
+		for( auto hullIt = group->m_projections.begin(); hullIt != group->m_projections.end(); ++hullIt )
+		{
+			auto applicationInfo = PatternApplicationData();
+			auto hull = *hullIt;
+
+			if( srcData->m_layer1 && group->m_layer1Properties && hull->m_transformLayer1 )
+			{
+				PatternProjectionData projectionData;
+				EveSOFUtils::GeneratePatternProjectionData( &projectionData, hull->m_transformLayer1 );
+				applicationInfo.layerAndProjection.push_back( std::make_pair( layer1, projectionData ) );
+			}
+			if( srcData->m_layer2 && group->m_layer2Properties && hull->m_transformLayer2 )
+			{
+				PatternProjectionData projectionData;
+				EveSOFUtils::GeneratePatternProjectionData( &projectionData, hull->m_transformLayer2 );
+
+				applicationInfo.layerAndProjection.push_back( std::make_pair( layer2, projectionData ) );
+			}
+
+			pd.applicationData[hull->m_name] = applicationInfo;
+		}
 	}
 }
 

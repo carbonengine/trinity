@@ -41,6 +41,31 @@ EveChildExplosion::~EveChildExplosion()
 {
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//    Registers itself and its children with the scene registration container.
+//    This is so we don't have to traverse the tree every frame
+// --------------------------------------------------------------------------------
+void EveChildExplosion::RegisterComponents()
+{
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Unregisters itself and its children with the scene registration container.
+// --------------------------------------------------------------------------------
+void EveChildExplosion::UnRegisterComponents()
+{
+	// manually unregister the global explosion container
+	if( m_globalExplosionContainer )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_globalExplosionContainer ) )
+		{
+			entity->UnRegister( GetComponentRegistry() );
+		}
+	}
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Starts explosion playback
@@ -71,6 +96,14 @@ void EveChildExplosion::Play()
 // --------------------------------------------------------------------------------------
 void EveChildExplosion::Stop()
 {
+	// manually unregister the global explosion container
+	if( this->IsInRegistry() )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_globalExplosionContainer ) )
+		{
+			entity->UnRegister( GetComponentRegistry() );
+		}
+	}
 	m_objects.Clear();
 	m_isPlaying = false;
 	m_sharedObjects.clear();
@@ -210,6 +243,15 @@ void EveChildExplosion::UpdateSyncronous( EveUpdateContext& updateContext, const
 						m_objects.Append( m_globalExplosionContainer->GetRawRoot() );
 						m_globalExplosionInstances.Append( instance );
 					}
+
+					// manually register the container, since it has now been created
+					if( this->IsInRegistry() && !m_globalExplosionContainer->IsInRegistry() )
+					{
+						if( EveEntityPtr entity = BlueCastPtr( m_globalExplosionContainer ) )
+						{
+							entity->Register( this->GetComponentRegistry() );
+						}
+					}
 				}
 			}
 		}
@@ -231,8 +273,17 @@ void EveChildExplosion::UpdateSyncronous( EveUpdateContext& updateContext, const
 							m_globalExplosionContainer->m_objects.Append( instance );
 							m_globalExplosionInstances.Append( instance );
 						}
-					}					
-						
+					}			
+					
+					// manually register the container, since it has now been created
+					if( this->IsInRegistry() && !m_globalExplosionContainer->IsInRegistry() )
+					{
+						if( EveEntityPtr entity = BlueCastPtr( m_globalExplosionContainer ) )
+						{
+							entity->Register( this->GetComponentRegistry() );
+						}
+					}
+
 					m_objects.Append( m_globalExplosionContainer->GetRawRoot() );
 				}
 			}

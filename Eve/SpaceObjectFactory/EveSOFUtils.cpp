@@ -104,7 +104,7 @@ void EveSOFUtils::GeneratePatternProjectionData( EveSOFDataMgr::PatternProjectio
 // Description:
 //   Fill structs from other structs
 // --------------------------------------------------------------------------------
-void EveSOFUtils::GeneratePatternLayerData( EveSOFDataMgr::PatternLayerData* pld, const EveSOFDataPatternLayer* patternLayer )
+void EveSOFUtils::GeneratePatternLayerData( EveSOFDataMgr::PatternLayerData* pld, const EveSOFDataPatternLayer* patternLayer, const EveSOFDataPatternLayerProperties* patternProperties  )
 {
 	if( patternLayer )
 	{
@@ -112,13 +112,32 @@ void EveSOFUtils::GeneratePatternLayerData( EveSOFDataMgr::PatternLayerData* pld
 		pld->textureName = patternLayer->m_textureName;
 		// texture res file
 		pld->textureResFilePath = patternLayer->m_textureResFilePath;
-		// projection types, translate to AL enums right here
-		pld->projectionAddressModeU = GetTextureAddressMode( patternLayer->m_projectionTypeU );
-		pld->projectionAddressModeV = GetTextureAddressMode( patternLayer->m_projectionTypeV );
+		if( patternProperties )
+		{
+			// projection types, translate to AL enums right here
+			pld->projectionAddressModeU = GetTextureAddressMode( (EveSOFDataPatternLayer::ProjectionType) patternProperties->m_projectionTypeU );
+			pld->projectionAddressModeV = GetTextureAddressMode( (EveSOFDataPatternLayer::ProjectionType) patternProperties->m_projectionTypeV );
+		
+			// material targets are bools, but need to be stored as floats (for shader)
+			pld->materialTargets = CreateMaterialApplicationVector( patternProperties->m_isTargetMtl1, patternProperties->m_isTargetMtl2, patternProperties->m_isTargetMtl3, patternProperties->m_isTargetMtl4 );
+		
+			for( int i = 0; i < EveSOFDataArea::AreaType::TYPE_MAX; i++ )
+			{
+				pld->applicableAreas[(EveSOFDataArea::AreaType)i] = patternProperties->m_applicableAreas[i];
+			}
+		}
+		else
+		{
+			// projection types, translate to AL enums right here
+			pld->projectionAddressModeU = GetTextureAddressMode( patternLayer->m_projectionTypeU );
+			pld->projectionAddressModeV = GetTextureAddressMode( patternLayer->m_projectionTypeV );
+			// material targets are bools, but need to be stored as floats (for shader)
+			pld->materialTargets = CreateMaterialApplicationVector( patternLayer->m_isTargetMtl1, patternLayer->m_isTargetMtl2, patternLayer->m_isTargetMtl3, patternLayer->m_isTargetMtl4 );
+		
+		}
 		// material source id can be directly transltaed from enum
 		pld->materialSourceID = (uint8_t)patternLayer->m_materialSource;
-		// material targets are bools, but need to be stored as floats (for shader)
-		pld->materialTargets = Vector4( patternLayer->m_isTargetMtl1 ? 1.f : 0.f, patternLayer->m_isTargetMtl2 ? 1.f : 0.f, patternLayer->m_isTargetMtl3 ? 1.f : 0.f, patternLayer->m_isTargetMtl4 ? 1.f : 0.f );
+		
 	}
 	else
 	{
@@ -130,6 +149,12 @@ void EveSOFUtils::GeneratePatternLayerData( EveSOFDataMgr::PatternLayerData* pld
 		pld->materialSourceID = 0;
 		pld->materialTargets = Vector4( 0.f, 0.f, 0.f, 0.f );
 	}
+}
+
+
+const Vector4 EveSOFUtils::CreateMaterialApplicationVector( bool material1, bool material2, bool material3, bool material4 )
+{
+	return Vector4( material1 ? 1.f : 0.f, material2 ? 1.f : 0.f, material3 ? 1.f : 0.f, material4 ? 1.f : 0.f );
 }
 
 // --------------------------------------------------------------------------------

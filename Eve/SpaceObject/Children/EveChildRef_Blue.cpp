@@ -20,10 +20,11 @@ const Be::ClassInfo* EveChildRef::ExposeToBlue()
 		MAP_INTERFACE( IEveEffectChildrenOwner )
 		MAP_INTERFACE( IShaderConfigurer )
 		MAP_INTERFACE( ITr2SoundEmitterOwner )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "resPath", m_resPath, "Path to a red file.", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY)
 		MAP_ATTRIBUTE( "child", m_child, "Reference to the loaded child.\n:jessica-hidden: True\n", Be::READ )
 
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )

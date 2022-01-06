@@ -108,7 +108,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	void GetBatchWithEffect( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Effect* effect );
 	virtual bool HasTransparentBatches();

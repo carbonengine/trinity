@@ -203,6 +203,38 @@ bool EveChildSocket::OnModified( Be::Var* value )
 	return true;
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//    Registers itself and its children with the scene registration container.
+//    This is so we don't have to traverse the tree every frame
+// --------------------------------------------------------------------------------
+void EveChildSocket::RegisterComponents()
+{
+	if( IsInRegistry() && m_plug != nullptr && m_display )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_plug ) )
+		{
+			entity->Register( this->GetComponentRegistry() );
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Unregisters itself and its children with the scene registration container.
+// --------------------------------------------------------------------------------
+void EveChildSocket::UnRegisterComponents()
+{
+	if( IsInRegistry() && m_plug )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_plug ) )
+		{
+			entity->UnRegister( this->GetComponentRegistry() );
+		}
+	}
+}
+
+
 const char* EveChildSocket::GetName() const
 {
 	return m_name.c_str();
@@ -453,6 +485,9 @@ void EveChildSocket::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 bool EveChildSocket::LoadChild()
 {
+	// unregister the current child
+	UnRegisterComponents();
+
 	CCP_LOG( "Loading child red file...", m_plugResPath.c_str() );
 	m_plug = BlueCastPtr( BeResMan->LoadObject( m_plugResPath.c_str() ) );
 	if ( !m_plug )
@@ -460,6 +495,9 @@ bool EveChildSocket::LoadChild()
 		CCP_LOGERR( "Red file %s is invalid or not an Eve Child type.", m_plugResPath.c_str() );
 		return false;
 	}
+
+	RegisterComponents();
+
 	return true;
 }
 

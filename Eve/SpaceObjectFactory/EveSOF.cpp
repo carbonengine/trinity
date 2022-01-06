@@ -410,6 +410,9 @@ void EveSOF::SetupMesh( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, Inherita
 
 	// assign mesh to ship
 	obj->SetMeshLod( mesh );
+
+	// Set the reflectionMode based on the category
+	obj->SetReflectionMode( dna->GetReflectionMode() );
 }
 
 // --------------------------------------------------------------------------------
@@ -556,28 +559,30 @@ size_t EveSOF::FillMeshAreaVector( std::map<std::string, Tr2LodResourcePtr>& lod
 			}
 		}
 
-		// pattern textures
+		auto pattern = dna->GetPatternApplicationData();
 		size_t patternLayerCount = dna->GetPatternLayerCount();
 
-		if( patternLayerCount )
+		// pattern textures
+		if( patternLayerCount > 0 )
 		{
 			newShader->SetOption( BlueSharedString( "SPACE_OBJECT_PPT_ENABLED" ), BlueSharedString( "SOPPT_ENABLED" ) );
-		}
-		else
-		{
-			newShader->SetOption( BlueSharedString( "SPACE_OBJECT_PPT_ENABLED" ), BlueSharedString( "SOPPT_DISABLED" ) );
-		}
-
-		for( size_t i = 0; i < patternLayerCount; ++i )
-		{
-			const EveSOFDataMgr::PatternLayerData* patternLayerData = dna->GetPatternLayerData( i );
-			if( patternLayerData )
+			
+			for( size_t i = 0; i < patternLayerCount; ++i )
 			{
-				newShader->AddResourceTexture2D( patternLayerData->textureName, patternLayerData->textureResFilePath.c_str() );
+				const EveSOFDataMgr::PatternLayerData* patternLayerData = dna->GetPatternLayerData( pattern, i );
+				
+				if( patternLayerData && dna->IsPatternLayerApplicableToArea( patternLayerData, area->areaType ) )
+				{
+					newShader->AddResourceTexture2D( patternLayerData->textureName, patternLayerData->textureResFilePath.c_str() );
 
-				// pattern textures almost always require a sampler change: repeat is boring....
-				newShader->AddSamplerOverride( BlueSharedString( std::string( patternLayerData->textureName.c_str() ) + "Sampler" ), patternLayerData->projectionAddressModeU, patternLayerData->projectionAddressModeV );
+					// pattern textures almost always require a sampler change: repeat is boring....
+					newShader->AddSamplerOverride( BlueSharedString( std::string( patternLayerData->textureName.c_str() ) + "Sampler" ), patternLayerData->projectionAddressModeU, patternLayerData->projectionAddressModeV );
+				}
 			}
+		}
+		else 
+		{
+			newShader->SetOption( BlueSharedString( "SPACE_OBJECT_PPT_ENABLED" ), BlueSharedString( "SOPPT_DISABLED" ) );	
 		}
 
 		// default shader textures & parameters from the generic data
@@ -1612,7 +1617,7 @@ void EveSOF::SetupChildrenAndAnimations( EveSpaceObject2Ptr obj, const EveSOFDNA
 // --------------------------------------------------------------------------------
 void EveSOF::SetupEffectChildren( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr dna ) const
 {
-	// Experimental features for phase 6
+	// Experimental features for PHASE-6
 	// Note that this will ignore the child id and the animation id thing... don't know what will happen with the rorqual...
 	const std::vector<EveSOFDataMgr::HullChildSetData>& hullChildSets = dna->GetHullChildSets();
 
@@ -1851,28 +1856,34 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 // --------------------------------------------------------------------------------
 void EveSOF::SetupCustomMask( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 {
-	size_t layerCount = dna->GetPatternLayerCount();
-	for( size_t i = 0; i < layerCount; ++i )
+	const EveSOFDataMgr::PatternApplicationData* data = dna->GetPatternApplicationData();
+
+	if( data )
 	{
-		const EveSOFDataMgr::PatternProjectionData* patternProjectionData = dna->GetPatternProjectionData( i );
-		if( patternProjectionData )
+		size_t layerCount = dna->GetPatternLayerCount();
+		for( size_t i = 0; i < layerCount; ++i )
 		{
-			if( patternProjectionData->enabled )
+			auto patternProjectionData = dna->GetPatternProjectionData( data, i );
+
+			if( patternProjectionData && patternProjectionData->enabled )
 			{
-				const EveSOFDataMgr::PatternLayerData* patternLayerData = dna->GetPatternLayerData( i );
+				const EveSOFDataMgr::PatternLayerData* patternLayerData = dna->GetPatternLayerData( data, i );
+
 				if( patternLayerData )
 				{
+					Vector4 materialTargets = dna->GetMaterialTargets( patternLayerData );
+
 					EveCustomMaskPtr customMask;
 					customMask.CreateInstance();
-					customMask->Setup( 
-						patternProjectionData->position, 
-						patternProjectionData->scaling, 
-						patternProjectionData->rotation, 
-						patternProjectionData->isMirrored, 
+					customMask->Setup(
+						patternProjectionData->position,
+						patternProjectionData->scaling,
+						patternProjectionData->rotation,
+						patternProjectionData->isMirrored,
 						patternLayerData->projectionAddressModeU == Tr2RenderContextEnum::TA_CLAMP,
 						patternLayerData->projectionAddressModeV == Tr2RenderContextEnum::TA_CLAMP,
 						patternLayerData->materialSourceID,
-						patternLayerData->materialTargets );
+						materialTargets );
 					obj->AddCustomMask( customMask );
 				}
 			}

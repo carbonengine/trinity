@@ -705,7 +705,14 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"Reflection probe back light color\n"
 			":jessica-group: Lighting\n"
 			":jessica-widget: color",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY )			
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY )		
+
+		MAP_ATTRIBUTE(
+			"dynamicObjectReflectionEnabled",
+			m_dynamicObjectReflectionEnabled,
+			"Are reflections enabled for selected dynamic objects\n"
+			":jessica-group: Lighting\n",
+			Be::READWRITE )	
 
 		MAP_ATTRIBUTE
 		( 
@@ -713,6 +720,14 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_impostorManager, 
 			"Impostor manager",
 			Be::READWRITE
+		)
+
+		MAP_ATTRIBUTE
+		(
+			"componentRegistry",
+			m_componentRegistry,
+			"Component Registry",
+			Be::READ
 		)
 
 		MAP_ATTRIBUTE
@@ -730,6 +745,12 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"The virtual camera system",
 			Be::READWRITE | Be::PERSIST
 		)
+
+		MAP_METHOD_AND_WRAP(
+			"ReregisterEntities",
+			ReregisterEntities,
+			"Re registers all entities" )
+
     EXPOSURE_END()
 }
 

@@ -62,6 +62,77 @@ void EveChildPlug::OnListModified( long event, ssize_t key, ssize_t key2, IRoot*
 			break;
 		}
 	}
+	else if( list == &m_objects && ( event & BELIST_LOADING ) == 0 )
+	{
+		if( IsInRegistry() )
+		{
+			switch( event & BELIST_EVENTMASK )
+			{
+			case BELIST_INSERTED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_REMOVED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->UnRegister( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_UNLOADSTART:
+				for( ssize_t i = 0; i < list->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Registers itself and its children with the scene registration container.
+//    This is so we don't have to traverse the tree every frame
+// --------------------------------------------------------------------------------
+void EveChildPlug::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display )
+	{
+		for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->Register( registry );
+			}
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Unregisters itself and its children with the scene registration container.
+// --------------------------------------------------------------------------------
+void EveChildPlug::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->UnRegister( registry );
+			}
+		}
+	}
 }
 
 const char* EveChildPlug::GetName() const
@@ -338,6 +409,13 @@ IEveSpaceObjectChildPtr EveChildPlug::GetEffectChildByName( const char* name ) c
 
 void EveChildPlug::AddToEffectChildrenList( IEveSpaceObjectChild* child )
 {
+	if( IsInRegistry() )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( child->GetRootObject() ) )
+		{
+			entity->Register( GetComponentRegistry() );
+		}
+	}
 	m_objects.Append( child->GetRootObject() );
 }
 
@@ -346,6 +424,13 @@ void EveChildPlug::RemoveFromEffectChildrenList( IEveSpaceObjectChild* child )
 	auto index = m_objects.FindKey( child );
 	if( index >= 0 )
 	{
+		if( IsInRegistry() )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( m_objects[index] ) )
+			{
+				entity->UnRegister( GetComponentRegistry() );
+			}
+		}
 		m_objects.Remove( index );
 	}
 }

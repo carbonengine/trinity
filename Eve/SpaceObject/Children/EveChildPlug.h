@@ -30,7 +30,8 @@ BLUE_CLASS( EveChildPlug ) :
 	public IEveEffectChildrenOwner,
 	public ITr2DebugRenderable,
 	public IShaderConfigurer,
-	public ITr2SoundEmitterOwner
+	public ITr2SoundEmitterOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -51,6 +52,11 @@ public:
 	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
 	void AddToEffectChildrenList( IEveSpaceObjectChild* child );
 	void RemoveFromEffectChildrenList( IEveSpaceObjectChild* child );
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	const char* GetName() const;
 	void SetName( const char* name );

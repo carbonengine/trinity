@@ -35,12 +35,14 @@ BLUE_CLASS( EveChildContainer ) :
 	public EveChildTransform,
 	public ITr2CurveSetOwner,
 	public IInitialize,
+	public INotify,
 	public IListNotify,
 	public IEveEffectChildrenOwner,
 	public ITr2DebugRenderable,
 	public IShaderConfigurer,
 	public ITr2SoundEmitterOwner,
-	public ITr2ControllerOwner
+	public ITr2ControllerOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -55,6 +57,9 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
+	//////////////////////////////////////////////////////////////////////////////////////
+	// INotify
+	virtual bool OnModified( Be::Var * val );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
@@ -75,6 +80,11 @@ public:
 	void HandleControllerEvent( const char* name ) override;
 	void StartControllers();
 	bool GetControllerValueByName( const char* name, float& out );
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	const char* GetName() const;
 	void SetName( const char* name );
@@ -117,6 +127,7 @@ public:
 
 	enum DisplayQualityModifier
 	{
+		ONLY_REFLECTIONS = 6,
 		SHADER_ALL = 5,
 		SHADER_HIGHMID = 3,
 		SHADER_LOWMID = 1,
@@ -131,6 +142,7 @@ public:
 protected:
 
 	bool IsRendering() const;
+	bool IsUpdating() const;
 
 	BlueSharedString m_name;
 	PTriCurveSetVector m_curveSets;

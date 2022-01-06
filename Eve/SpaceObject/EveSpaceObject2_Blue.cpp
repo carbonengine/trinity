@@ -12,6 +12,9 @@ BLUE_DEFINE_INTERFACE( IEveLightReceiver );
 BLUE_DEFINE_INTERFACE( IEveEffectChildrenOwner );
 BLUE_DEFINE_INTERFACE( IEveSpaceObjectAttachment );
 BLUE_DEFINE_INTERFACE( ITr2SoundEmitterOwner );
+BLUE_DEFINE_INTERFACE( IEveSceneRegistrationObject );
+BLUE_DEFINE_INTERFACE( IEveReflectionRenderable );
+BLUE_DEFINE_INTERFACE( IEveLightOwner );
 BLUE_DEFINE_ABSTRACT( EveSpaceObject2 );
 
 #if BLUE_WITH_PYTHON
@@ -133,6 +136,7 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveSpaceObject2, "" )
 		MAP_INTERFACE( EveSpaceObject2 )
+		MAP_INTERFACE( EveEntity )
 		MAP_INTERFACE( IEveShadowCaster )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( ITr2Pickable )
@@ -157,7 +161,7 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			"display",
 			m_display,
 			"Specifies whether to render the object or not",
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
 		MAP_ATTRIBUTE
@@ -594,7 +598,9 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 		Be::READ
 	)
 
-		MAP_ATTRIBUTE( "lights", m_lights, "List of dynamic lights", Be::READ | Be::PERSIST );
+	MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When is this object rendered into the cubemap", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, EntityComponents::ReflectionModeChooser );
+
+	MAP_ATTRIBUTE( "lights", m_lights, "List of dynamic lights", Be::READ | Be::PERSIST );
 
 	MAP_ATTRIBUTE( "externalParameters", m_externalParameters, "List of external parameters to bind to object elements", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "controllers", m_controllers, "List of object controllers", Be::READ | Be::PERSIST )

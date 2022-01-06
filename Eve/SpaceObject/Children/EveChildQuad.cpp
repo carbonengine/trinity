@@ -137,7 +137,7 @@ bool EveChildQuad::HasTransparentBatches()
 	return false;
 }
 
-void EveChildQuad::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveChildQuad::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 }
 

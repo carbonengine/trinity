@@ -23,7 +23,7 @@ const Be::ClassInfo* EveChildSocket::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "resPath", m_plugResPath, "Path to the plug (must be a red file with just an EveChildPlug).", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY)
 		MAP_ATTRIBUTE( "plug", m_plug, "Reference to the loaded plus.\n:jessica-hidden: True\n", Be::READ )
 
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )

@@ -15,6 +15,7 @@ const Be::ClassInfo* EveChildExplosion::ExposeToBlue()
     EXPOSURE_BEGIN( EveChildExplosion, "Specialized explosion space object child" )
         MAP_INTERFACE( EveChildExplosion )
         MAP_INTERFACE( EveChildContainer )
+        MAP_INTERFACE( EveEntity )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )

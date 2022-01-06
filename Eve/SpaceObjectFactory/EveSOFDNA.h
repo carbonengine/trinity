@@ -128,8 +128,11 @@ public:
 
 	// get pattern data
 	size_t GetPatternLayerCount() const;
-	const EveSOFDataMgr::PatternProjectionData* GetPatternProjectionData( size_t layer ) const;
-	const EveSOFDataMgr::PatternLayerData* GetPatternLayerData( size_t layer ) const;
+	const EveSOFDataMgr::PatternApplicationData* GetPatternApplicationData() const;
+	const EveSOFDataMgr::PatternProjectionData* GetPatternProjectionData( const EveSOFDataMgr::PatternApplicationData* patternApplicationData, size_t layer ) const;
+	const EveSOFDataMgr::PatternLayerData* GetPatternLayerData( const EveSOFDataMgr::PatternApplicationData* patternApplicationData, size_t layer ) const;
+	const Vector4 GetMaterialTargets( const EveSOFDataMgr::PatternLayerData* ) const;
+	bool IsPatternLayerApplicableToArea( const EveSOFDataMgr::PatternLayerData* layerData, EveSOFDataArea::AreaType areaType ) const;
 
 	// get mixed data
 	const char* GetDnaString() const;
@@ -138,6 +141,7 @@ public:
 	unsigned int GetHighestMeshAreaIndex( TriBatchType areaType, size_t n = 0 ) const;
 
 	bool IsUsingExperimentalFeatures() const;
+	EntityComponents::ReflectionMode GetReflectionMode() const;
 
 private:
 	// special cusomt data setup
@@ -145,6 +149,10 @@ private:
 	// search for a dna
 	bool GetDnaCommandArgs( DnaCommand cmd, std::vector<std::string>& args ) const;
 	bool HasDnaCommand( DnaCommand cmd ) const;
+
+	// the factional pattern application data
+	const EveSOFDataMgr::PatternApplicationData* GetFactionalPatternApplicationData() const;
+	const EveSOFDataMgr::PatternApplicationData* GetHullPatternApplicationData() const;
 
 	// the dna as a string
 	std::string m_dna;

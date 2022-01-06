@@ -8,6 +8,7 @@
 
 #include "Tr2DeviceResource.h"
 #include <array>
+#include "TriFrustum.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
@@ -22,6 +23,12 @@ BLUE_CLASS( Tr2ReflectionProbe ) :
 public:
 	EXPOSE_TO_BLUE();
 
+	enum ReflectionProbeFrequency
+	{
+		ONE_SIDE_PER_FRAME,
+		ALL_SIDES_PER_FRAME
+	};
+
 	Tr2ReflectionProbe( IRoot* lockobj = NULL );
 	~Tr2ReflectionProbe();
 
@@ -34,6 +41,8 @@ public:
 	void StartRenderFace( unsigned face, Tr2RenderContext &renderContext );
 	void EndRenderPass( Tr2RenderContext &renderContext );
 
+	TriFrustum GetFrustum( unsigned face, Tr2RenderContext& renderContext );
+
 	Tr2RenderTargetPtr GetReflection();
 	void SetPosition( Vector3 position );
 
@@ -45,12 +54,16 @@ public:
 
 	bool IsHollyWoodModeOn() const;
 
+	uint8_t GetStartFace() const;
+	uint8_t GetEndFace() const;
+
 private:
 	void RunFilter();
 	void Filter( Tr2RenderContext &renderContext );
 
 	bool m_initialized;
 	bool m_hasData;
+	bool m_lockPosition;
 	Vector3 m_position;
 	int m_intermediateSize;
 
@@ -67,6 +80,9 @@ private:
 
 	bool m_prevCullInversion;
 	bool m_hdrOutput;
+	ReflectionProbeFrequency m_renderFrequency;
+	uint8_t m_currentFrame;
+	bool m_onePassDone;
 
 	// Controls for hollywood lighting
 	bool m_hollywoodMode;

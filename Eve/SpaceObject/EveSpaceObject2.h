@@ -29,6 +29,8 @@
 #include "Shader/IShaderConfigurer.h"
 #include "ITr2SoundEmitterOwner.h"
 #include "Controllers/ITr2ControllerOwner.h"
+#include "Eve/EveEntity.h"
+#include "Eve/Components/IEveLightOwner.h"
 
 // consts
 #define EVE_SPACEOBJECT_DIRT_LEVEL_DEFAULT (0.f)
@@ -160,7 +162,8 @@ BLUE_CLASS( EveSpaceObject2 ):
 	public IEveEffectChildrenOwner,
 	public IShaderConfigurer,
 	public ITr2SoundEmitterOwner,
-	public ITr2ControllerOwner
+	public ITr2ControllerOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -233,10 +236,11 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	virtual bool HasTransparentBatches();
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	virtual void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
+	virtual bool IsVisible( const TriFrustum& frustum ) const;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IAsyncLoadedResNotifyTarget
@@ -272,13 +276,18 @@ public:
 
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	// IWorldPosition
+	// INotify
 	bool OnModified( Be::Var* value );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// decal
 	virtual void FillDecalParentData( EveSpaceObjectDecal::ParentData* pd ) const;
 
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
+		
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2ShLightingReceiver
 	virtual void UpdateShLighting( Tr2ShLightingManager& );
@@ -417,6 +426,9 @@ public:
 	void ResetClipSphereCenterToPos( Vector3 center );
 
 	Matrix GetEveLocatorTransform( const char* name ) const;
+
+	void SetReflectionMode(EntityComponents::ReflectionMode mode);
+
 protected:
 	// Activation-Strength
 	float m_activationStrength;
@@ -435,7 +447,7 @@ protected:
 	void PrepareForAnimation();
 	void FreeAnimationData();
 	void SelectMeshLevelOfDetail();
-	void GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType );
+	void GetBatchesFromOverlayVector( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType, Tr2MeshBase* mesh );
 
 	bool GetBoneList( const granny_matrix_3x4*& bones, size_t& boneCount ) const;
 
@@ -622,7 +634,8 @@ protected:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Observer position
 	virtual Matrix GetObserverTransform();
-private:
+
+ private:
 
 #if BLUE_WITH_PYTHON
 	static PyObject* PyTransformLocators( PyObject* self, PyObject* args );
@@ -634,6 +647,8 @@ private:
 
 	PITr2ControllerVector m_controllers;
 	TrackableStdUnorderedMap<std::string, float> m_controllerVariables;
+
+	EntityComponents::ReflectionMode m_reflectionMode;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceObject2 );

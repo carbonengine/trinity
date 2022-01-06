@@ -307,7 +307,6 @@ public:
 };
 TYPEDEF_BLUECLASS( EveSOFDataArea );
 
-
 // --------------------------------------------------------------------------------
 // All data storage classes for per pattern data
 // --------------------------------------------------------------------------------
@@ -328,6 +327,21 @@ public:
 	bool m_isMirrored;
 };
 TYPEDEF_BLUECLASS( EveSOFDataPatternTransform );
+
+// should probably be named patternPerHullSet...
+BLUE_CLASS( EveSOFDataPatternMaterialOverride ) :
+	public IRoot
+{
+public: 
+	EXPOSE_TO_BLUE();
+	EveSOFDataPatternMaterialOverride( IRoot* lockobj = NULL );
+	~EveSOFDataPatternMaterialOverride()
+	{
+	}
+	// what is the pattern's material target?
+	bool m_isTargetMtl1, m_isTargetMtl2, m_isTargetMtl3, m_isTargetMtl4;
+};
+TYPEDEF_BLUECLASS( EveSOFDataPatternMaterialOverride );
 
 
 BLUE_CLASS( EveSOFDataPatternPerHull ) :
@@ -390,6 +404,58 @@ public:
 TYPEDEF_BLUECLASS( EveSOFDataPatternLayer );
 
 
+BLUE_CLASS( EveSOFDataPatternLayerProperties ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataPatternLayerProperties( IRoot* lockobj = NULL );
+	~EveSOFDataPatternLayerProperties()
+	{
+	}
+
+	// texture projection type
+	enum ProjectionType
+	{
+		PROJECTION_REPEAT = 0,
+		PROJECTION_CLAMP,
+		PROJECTION_BORDER,
+	};
+
+	// how is the texture projected?
+	ProjectionType m_projectionTypeU, m_projectionTypeV;
+	// what is the pattern's material target?
+	bool m_isTargetMtl1, m_isTargetMtl2, m_isTargetMtl3, m_isTargetMtl4;
+	
+	// applicable area types
+	bool m_applicableAreas[EveSOFDataArea::AreaType::TYPE_MAX];
+};
+TYPEDEF_BLUECLASS( EveSOFDataPatternLayerProperties );
+
+
+BLUE_CLASS( EveSOFDataPatternApplicationGroup ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataPatternApplicationGroup( IRoot* lockobj = NULL );
+	~EveSOFDataPatternApplicationGroup()
+	{
+	}
+
+	BlueSharedString m_name;
+
+	// layer information
+	EveSOFDataPatternLayerPropertiesPtr m_layer1Properties;
+	EveSOFDataPatternLayerPropertiesPtr m_layer2Properties;
+
+	// The actual projections per hull in the group
+	PEveSOFDataPatternPerHullVector m_projections;
+};
+TYPEDEF_BLUECLASS( EveSOFDataPatternApplicationGroup );
+BLUE_DECLARE_VECTOR( EveSOFDataPatternApplicationGroup );
+
+
 BLUE_CLASS( EveSOFDataPattern ) :
 	public IRoot
 {
@@ -405,6 +471,7 @@ public:
 	EveSOFDataPatternLayerPtr m_layer2;
 	// pattern placement per hull
 	PEveSOFDataPatternPerHullVector m_projections;
+	PEveSOFDataPatternApplicationGroupVector m_applicationGroups;
 };
 TYPEDEF_BLUECLASS( EveSOFDataPattern );
 BLUE_DECLARE_VECTOR( EveSOFDataPattern );
@@ -1403,8 +1470,12 @@ public:
 	EveSOFDataAreaPtr m_areaTypes;
 
 	// default pattern
+	// TODO: Phase6 remove the m_defaultPattern and replace with m_defaultPatternName
 	EveSOFDataPatternLayerPtr m_defaultPattern;
 	std::string m_defaultPatternLayer1MaterialName;
+	std::string m_defaultPatternLayer2MaterialName;
+	std::string m_defaultPatternName;
+
 };
 TYPEDEF_BLUECLASS( EveSOFDataFaction );
 BLUE_DECLARE_VECTOR( EveSOFDataFaction );

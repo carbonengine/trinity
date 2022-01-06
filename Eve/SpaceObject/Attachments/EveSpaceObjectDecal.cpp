@@ -198,7 +198,8 @@ bool EveSpaceObjectDecal::HasTransparentBatches()
 // --------------------------------------------------------------------------------
 void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches, 
 									  TriBatchType batchType, 
-									  const Tr2PerObjectData* perObjectData )
+									  const Tr2PerObjectData* perObjectData,
+									  Tr2RenderReason reason )
 {
 	if( batchType != TRIBATCHTYPE_DECAL )
 	{

@@ -68,7 +68,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
-	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData ) override;
+	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
 	bool HasTransparentBatches() override;
 
 

@@ -29,10 +29,13 @@ const Be::ClassInfo* EveChildEffectPropagator::ExposeToBlue()
         MAP_INTERFACE( EveChildContainer )
 		MAP_INTERFACE( IEveSpaceObjectChild )
 		MAP_INTERFACE( INotify )
+		MAP_INTERFACE( EveEntity ) 
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
 
-		MAP_ATTRIBUTE( "effect", m_effect, "childInstanceContainer", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "effect", m_effect, "childInstanceContainer", Be::PERSISTONLY )
+		MAP_PROPERTY( "effect", GetEffect, SetEffect, "The instance container that manages the instances" )
+
 		MAP_ATTRIBUTE( "triggerSphereRadiusCurve",	m_triggerSphereRadiusCurve, "Manage the the triggering of effects based on a distance from the triggerSphereOffset", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "localLocators", m_localLocators, "locators for a self-contained propagation", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "", Be::READ | Be::PERSIST )

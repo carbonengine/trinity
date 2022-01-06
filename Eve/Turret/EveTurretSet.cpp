@@ -1674,7 +1674,8 @@ bool EveTurretSet::HasTransparentBatches()
 // --------------------------------------------------------------------------------
 void EveTurretSet::GetBatches( ITriRenderBatchAccumulator* batches, 
 							   TriBatchType batchType, 
-							   const Tr2PerObjectData* perObjectData )
+							   const Tr2PerObjectData* perObjectData,
+							   Tr2RenderReason reason )
 {
 	if( batchType != TRIBATCHTYPE_OPAQUE )
 	{

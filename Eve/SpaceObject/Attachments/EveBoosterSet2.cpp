@@ -172,7 +172,7 @@ bool EveBoosterSet2Renderable::HasTransparentBatches()
 //   Only have additive batches via a geometry provider, since we are using
 //   instanced rendering.
 // --------------------------------------------------------------------------------
-void EveBoosterSet2Renderable::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveBoosterSet2Renderable::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( batchType != TRIBATCHTYPE_ADDITIVE )
 	{

@@ -70,7 +70,7 @@ public:
 	bool Initialize();
 	void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
 	
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
     virtual bool HasTransparentBatches();
     virtual float GetSortValue(); 
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );

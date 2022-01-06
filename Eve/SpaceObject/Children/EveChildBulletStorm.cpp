@@ -358,7 +358,7 @@ bool EveChildBulletStorm::HasTransparentBatches()
 // Description:
 //   Hand out batches to render
 // --------------------------------------------------------------------------------
-void EveChildBulletStorm::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveChildBulletStorm::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( batchType != TRIBATCHTYPE_ADDITIVE )
 	{

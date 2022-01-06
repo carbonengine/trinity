@@ -301,7 +301,8 @@ bool EveSpherePin::HasTransparentBatches()
 // -----------------------------------------------------------------------------
 void EveSpherePin::GetBatches( ITriRenderBatchAccumulator* accumulator, 
 							   TriBatchType batchType, 
-							   const Tr2PerObjectData* perObjectData )
+							   const Tr2PerObjectData* perObjectData,
+							   Tr2RenderReason reason )
 {
 	if( batchType == TRIBATCHTYPE_TRANSPARENT && m_pinEffect )
 	{

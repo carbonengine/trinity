@@ -264,7 +264,8 @@ bool Tr2Transform::HasTransparentBatches()
 
 void Tr2Transform::GetBatches( ITriRenderBatchAccumulator* batches,
 							   TriBatchType batchType,
-							   const Tr2PerObjectData* perObjectData )
+							   const Tr2PerObjectData* perObjectData,
+							   Tr2RenderReason reason )
 {
 	if( m_display && m_mesh )
 	{

@@ -37,7 +37,8 @@ EveChildParticleSystem::EveChildParticleSystem( IRoot* lockobj ):
 	m_lodClampLow( 5 ),
 	m_lodSphereRadius( 0.0f ),
 	m_minScreenSize( 0.0f ),
-	m_currentScreenSize( -1 )
+	m_currentScreenSize( -1 ),
+	m_reflectionMode( EntityComponents::REFLECT_NEVER )
 {
 }
 
@@ -50,6 +51,34 @@ bool EveChildParticleSystem::Initialize()
 	if( m_staticTransform )
 	{
 		RebuildLocalTransform();
+	}
+	return true;
+}
+
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Registers itself and its children with the scene registration container.
+//    This is so we don't have to traverse the tree every frame
+// --------------------------------------------------------------------------------
+void EveChildParticleSystem::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display )
+	{
+		if( EntityComponents::ShouldReflect( m_reflectionMode ) && m_display )
+		{
+			registry->RegisterComponent( ComponentType::REFLECTION_RENDERABLE, this, this->m_state );
+		}
+	}
+}
+
+
+bool EveChildParticleSystem::OnModified( Be::Var* value)
+{
+	if( IsMatch(value, m_reflectionMode) || IsMatch(value, m_display))
+	{
+		ReRegister();
 	}
 	return true;
 }
@@ -96,6 +125,12 @@ void EveChildParticleSystem::UpdateVisibility( const TriFrustum& frustum, const 
 	}
 }
 
+bool EveChildParticleSystem::IsVisible( const TriFrustum& frustum ) const
+{
+	return frustum.IsSphereVisible( &m_boundingSphere ) && frustum.GetPixelSizeAccrossEst( &m_lodSphere ) >= m_minScreenSize * g_eveSpaceSceneLODFactor;
+}
+
+
 void EveChildParticleSystem::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	if( !m_isVisible )
@@ -131,11 +166,31 @@ bool EveChildParticleSystem::HasTransparentBatches()
 	return false;
 }
 
-void EveChildParticleSystem::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveChildParticleSystem::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
-	if( m_display && m_mesh )
+	if( m_display && m_mesh && m_mesh->GetAreas(batchType)->size() != 0 )
 	{
+		if( reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION )
+		{
+			// rendering into the reflection cubemap is lefthanded, so we need to reverse all the areas 
+			auto areas = m_mesh->GetAreas( batchType );
+			for( auto it = areas->begin(); it != areas->end(); ++it )
+			{
+				( *it )->SetReversed( !( *it )->IsReversed() );
+			}
+		}
+
 		m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData );
+
+		if( reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION )
+		{
+			// reverse them again!
+			auto areas = m_mesh->GetAreas( batchType );
+			for( auto it = areas->begin(); it != areas->end(); ++it )
+			{
+				( *it )->SetReversed( !( *it )->IsReversed() );
+			}
+		}
 	}
 }
 
@@ -228,7 +283,7 @@ void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext,
 		}
 		else
 		{
-			if( m_minScreenSize > 0.f && m_lodSphereRadius > 0.f )
+			if( m_minScreenSize > 0.f && m_lodSphereRadius > 0.f && m_reflectionMode == EntityComponents::REFLECT_NEVER )
 			{
 				TriFrustum frustum;
 				frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionRawTransform(), Tr2Renderer::GetViewport() );

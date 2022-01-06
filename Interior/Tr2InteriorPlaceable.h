@@ -85,7 +85,8 @@ public:
 	// ITr2Renderable
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, 
 							 TriBatchType batchType,
-							 const Tr2PerObjectData* data ); 
+							 const Tr2PerObjectData* data,
+							 Tr2RenderReason reason = TR2RENDERREASON_NORMAL ); 
 
 	virtual bool HasTransparentBatches( void );
     virtual float GetSortValue( void );

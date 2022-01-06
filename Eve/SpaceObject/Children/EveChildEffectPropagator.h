@@ -21,8 +21,7 @@ BLUE_DECLARE_VECTOR( Tr2SphereShapeAttributeGenerator );
 //   see also: EveChildExplosion
 // --------------------------------------------------------------------------------------
 BLUE_CLASS( EveChildEffectPropagator ) :
-	public EveChildContainer,
-	public INotify
+	public EveChildContainer
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -45,6 +44,12 @@ public:
 
 	void GetDebugOptions( Tr2DebugRendererOptions & options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	enum PropagationType
 	{
@@ -89,6 +94,9 @@ private:
 	void DistanceSortLocators();
 	void ManageTriggers();
 	int GetSmartRandomLocatorIndex();
+
+	EveChildInstanceContainer* GetEffect() const;
+	void SetEffect( EveChildInstanceContainer* effect );
 
 	float m_playTime;
 

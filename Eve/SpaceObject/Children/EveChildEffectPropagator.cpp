@@ -10,6 +10,7 @@
 #include "Particle/Tr2SphereShapeAttributeGenerator.h"
 #include "include/TriMath.h"
 #include "Curves/Tr2CurveScalar.h"
+#include "EveChildInstanceContainer.h"
 
 EveChildEffectPropagator::EveChildEffectPropagator( IRoot* lockobj )
 	:EveChildContainer( lockobj ),
@@ -44,6 +45,23 @@ EveChildEffectPropagator::~EveChildEffectPropagator()
 {
 }
 
+
+void EveChildEffectPropagator::RegisterComponents()
+{
+	if( IsInRegistry() && m_effect )
+	{
+		m_effect->Register( this->GetComponentRegistry() );
+	}
+}
+
+void EveChildEffectPropagator::UnRegisterComponents()
+{
+	if( IsInRegistry() && m_effect )
+	{
+		m_effect->UnRegister( this->GetComponentRegistry() );
+	}
+}
+
 bool EveChildEffectPropagator::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_completeness ) )
@@ -68,7 +86,7 @@ bool EveChildEffectPropagator::OnModified( Be::Var* value )
 	
 	m_trigger = true;
 
-	return true;
+	return EveChildContainer::OnModified( value );
 }
 
 // --------------------------------------------------------------------------------------
@@ -598,3 +616,19 @@ void EveChildEffectPropagator::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	}
 }
 
+
+EveChildInstanceContainer* EveChildEffectPropagator::GetEffect() const
+{
+	return m_effect;
+}
+
+void EveChildEffectPropagator::SetEffect( EveChildInstanceContainer* effect )
+{
+	// unregister the current effect
+	UnRegisterComponents();
+
+	m_effect = effect;
+
+	// register again
+	RegisterComponents();
+}

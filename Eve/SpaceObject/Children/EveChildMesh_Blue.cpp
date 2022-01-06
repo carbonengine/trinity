@@ -7,13 +7,16 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 {
     EXPOSURE_BEGIN( EveChildMesh, "" )
         MAP_INTERFACE( EveChildMesh )
+        MAP_INTERFACE( EveEntity )
 		MAP_INTERFACE( IEveSpaceObjectChild )
+		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST	)
-		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "useSpaceObjectData", m_useSpaceObjectData, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "mesh", m_mesh, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "mesh", m_mesh, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "lowestLodVisible", m_lowestLodVisible, "Lowest LOD this guy is visible\n:jessica-group: LOD", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( 
 			"minScreenSize", 
@@ -36,6 +39,8 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 		MAP_ATTRIBUTE( "origin", m_origin, "Where did this effect originate from", Be::READ )
 
 		MAP_METHOD_AND_WRAP( "RebuildLocalTransform", RebuildLocalTransform, "Rebuilds local transform if useSRT is set." )
-
+		
+		MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When is this object rendered into the cubemap", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, EntityComponents::ReflectionModeChooser );
+		
     EXPOSURE_END()
 }

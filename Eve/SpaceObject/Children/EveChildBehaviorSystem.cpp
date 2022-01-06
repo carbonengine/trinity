@@ -439,7 +439,7 @@ void EveChildBehaviorSystem::GetGroupBoosterBatches( ITriRenderBatchAccumulator*
 }
 
 void EveChildBehaviorSystem::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType,
-	const Tr2PerObjectData* perObjectData )
+	const Tr2PerObjectData* perObjectData, Tr2RenderReason reason  )
 {
 	if ( !m_display )
 	{

@@ -158,7 +158,7 @@ void EveChildParticleSphere::Setup( const Vector3*, const Quaternion*, const Vec
 }
 
 // -----------------------------------------------------------------------------
-void EveChildParticleSphere::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveChildParticleSphere::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( !m_display || !m_mesh || !m_mesh->GetDisplay() )
 	{

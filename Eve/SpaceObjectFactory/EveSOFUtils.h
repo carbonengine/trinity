@@ -50,10 +50,11 @@ class EveSOFUtils
 {
 public:
 	static void GeneratePatternProjectionData( EveSOFDataMgr::PatternProjectionData* ppd, const EveSOFDataPatternTransform* patternTransform );
-	static void GeneratePatternLayerData( EveSOFDataMgr::PatternLayerData* pld, const EveSOFDataPatternLayer* patternLayer );
+	static void GeneratePatternLayerData( EveSOFDataMgr::PatternLayerData* pld, const EveSOFDataPatternLayer* patternLayer, const EveSOFDataPatternLayerProperties* patternProperties );
 	static Tr2RenderContextEnum::TextureAddressMode GetTextureAddressMode( EveSOFDataPatternLayer::ProjectionType projectionType );
 	static const Vector4* SearchForParameterData( const EveSOFDataMgr* dataMgr, const char* materialName, const EveSOFUtilsParameterName* parameterName );
 	static const Vector4* SearchForParameterData( const EveSOFDataMgr* dataMgr, const Color* colorSet, const EveSOFDataMgr::AreaMaterialData* areaMaterialData, EveSOFDataArea::AreaType areaType, const EveSOFUtilsParameterName* parameterName );
+	static const Vector4 CreateMaterialApplicationVector( bool material1, bool material2, bool material3, bool material4 );
 };
 
 

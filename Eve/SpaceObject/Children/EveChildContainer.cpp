@@ -22,6 +22,7 @@
 
 EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 	EveChildTransform(),
+	EveEntity( lockobj ),
 	PARENTLOCK( m_objects ),
 	PARENTLOCK( m_curveSets ),
 	PARENTLOCK( m_observers ),
@@ -38,6 +39,7 @@ EveChildContainer::EveChildContainer( IRoot* lockobj ) :
 	m_origin( SPACE )
 {
 	m_controllers.SetNotify( this );
+	m_objects.SetNotify( this );
 }
 
 EveChildContainer::~EveChildContainer()
@@ -49,6 +51,15 @@ bool EveChildContainer::Initialize()
 	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
 	{
 		( *it )->Link( *GetRawRoot() );
+	}
+	return true;
+}
+
+bool EveChildContainer::OnModified( Be::Var* val )
+{
+	if( IsMatch( val, m_display ) || IsMatch( val, m_displayFilter ) )
+	{
+		ReRegister();
 	}
 	return true;
 }
@@ -79,6 +90,77 @@ void EveChildContainer::OnListModified( long event, ssize_t key, ssize_t key2, I
 			break;
 		}
 	}
+	else if( list == &m_objects && ( event & BELIST_LOADING ) == 0 )
+	{
+		if( IsInRegistry() )
+		{
+			switch( event & BELIST_EVENTMASK )
+			{
+			case BELIST_INSERTED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_REMOVED:
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->UnRegister( GetComponentRegistry() );
+				}
+				break;
+			case BELIST_UNLOADSTART:
+				for( ssize_t i = 0; i < list->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}		
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Registers itself and its children with the scene registration container.
+//    This is so we don't have to traverse the tree every frame
+// --------------------------------------------------------------------------------
+void EveChildContainer::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display && IsUpdating() )
+	{
+		for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->Register( registry );			
+			}
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Unregisters itself and its children with the scene registration container.
+// --------------------------------------------------------------------------------
+void EveChildContainer::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->UnRegister( registry );
+			}
+		}
+	}
 }
 
 void EveChildContainer::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
@@ -102,7 +184,7 @@ bool EveChildContainer::IsRendering() const
 
 	TR2SHADERMODEL settings = Tr2Renderer::GetShaderModel();
 
-	if( settings == TR2SM_AUTHORING )
+	if( settings == TR2SM_AUTHORING && m_displayFilter != ONLY_REFLECTIONS )
 	{
 		return true;
 	}
@@ -111,26 +193,26 @@ bool EveChildContainer::IsRendering() const
 	{
 	case SHADER_LOW:
 		return settings == TR2SM_3_0_LO;
-		break;
 	case SHADER_LOWMID:
 		return settings <= TR2SM_3_0_HI;
-		break;
 	case SHADER_MED:
 		return settings == TR2SM_3_0_HI;
-		break;
 	case SHADER_HIGHMID:
 		return settings >= TR2SM_3_0_HI;
-		break;
 	case SHADER_HIGH:
 		return settings == TR2SM_3_0_DEPTH;
-		break;
 	case SHADER_ALL:
 		return true;
-		break;
+	case ONLY_REFLECTIONS:
+		return false;
 	}
 	return false;
 }
 
+bool EveChildContainer::IsUpdating() const
+{
+	return IsRendering() || m_displayFilter == ONLY_REFLECTIONS;
+}
 
 const char* EveChildContainer::GetName() const
 {
@@ -149,7 +231,7 @@ void EveChildContainer::UpdateVisibility( const TriFrustum& frustum, const Matri
 		return;
 	}
 
-	if( !IsRendering() )
+	if( !IsUpdating() )
 	{
 		return;
 	}
@@ -179,7 +261,7 @@ void EveChildContainer::GetRenderables( std::vector<ITr2Renderable*>& renderable
 
 bool EveChildContainer::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
 {
-	if( !IsRendering() )
+	if( !IsUpdating() )
 	{
 		return false;
 	}
@@ -223,7 +305,7 @@ void EveChildContainer::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Qu
 
 void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
-	if( !IsRendering() )
+	if( !IsUpdating() )
 	{
 		return;
 	}
@@ -250,7 +332,7 @@ void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, const
 
 void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
-	if( !IsRendering() )
+	if( !IsUpdating() )
 	{
 		return;
 	}
@@ -347,7 +429,7 @@ void EveChildContainer::SetOrigin( Origin origin )
 
 void EveChildContainer::PlayCurveSet( const std::string& name, const std::string& rangeName )
 {
-	if( !IsRendering() )
+	if( !IsUpdating() )
 	{
 		return;
 	}
@@ -411,7 +493,7 @@ void EveChildContainer::StopAllCurveSets()
 
 void EveChildContainer::StopCurveSet( const std::string& name )
 {
-	if( !IsRendering() )
+	if( !IsUpdating() )
 	{
 		return;
 	}
@@ -453,7 +535,7 @@ void EveChildContainer::UpdateCurveSet( const std::string& name, Be::Time time )
 
 float EveChildContainer::GetCurveSetDuration( const std::string& name ) const
 {
-	if( !IsRendering() )
+	if( !IsUpdating() )
 	{
 		return 0.f;
 	}
@@ -480,7 +562,7 @@ float EveChildContainer::GetCurveSetDuration( const std::string& name ) const
 
 float EveChildContainer::GetRangeDuration( const std::string& name, const std::string& rangeName ) const
 {
-	if( !IsRendering() )
+	if( !IsUpdating() )
 	{
 		return 0.f;
 	}
@@ -609,6 +691,13 @@ IEveSpaceObjectChildPtr EveChildContainer::GetEffectChildByName( const char* nam
 
 void EveChildContainer::AddToEffectChildrenList( IEveSpaceObjectChild* child )
 {
+	if( IsInRegistry() && m_display )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( child ) )
+		{
+			entity->Register( GetComponentRegistry() );
+		}
+	}
 	m_objects.Append( child->GetRootObject() );
 }
 
@@ -617,6 +706,13 @@ void EveChildContainer::RemoveFromEffectChildrenList( IEveSpaceObjectChild* chil
 	auto index = m_objects.FindKey( child );
 	if( index >= 0 )
 	{
+		if( IsInRegistry() )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( m_objects.GetAt( index ) ) )
+			{
+				entity->UnRegister( GetComponentRegistry() );
+			}
+		}
 		m_objects.Remove( index );
 	}
 }

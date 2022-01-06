@@ -35,7 +35,7 @@ EveSwarmRenderable::~EveSwarmRenderable()
 	m_mesh = nullptr;
 }
 
-void EveSwarmRenderable::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveSwarmRenderable::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( !m_mesh )
 	{

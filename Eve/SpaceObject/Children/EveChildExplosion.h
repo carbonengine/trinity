@@ -35,6 +35,13 @@ public:
 
 	void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
+
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
+
 private:
 	struct Transform
 	{

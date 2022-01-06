@@ -38,7 +38,7 @@ void EveStation2::PrepareShaderData( EveUpdateContext& updateContext )
 //   Override base ::UpdateSyncronous() function, so we can update the turrets and 
 //   their positions (if they are attached to animated bones!)
 // --------------------------------------------------------------------------------
-void EveStation2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveStation2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
-	EveSpaceObject2::GetBatches( batches, batchType, perObjectData );
+	EveSpaceObject2::GetBatches( batches, batchType, perObjectData, reason );
 }

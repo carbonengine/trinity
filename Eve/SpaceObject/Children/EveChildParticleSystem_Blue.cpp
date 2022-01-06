@@ -7,11 +7,14 @@ const Be::ClassInfo* EveChildParticleSystem::ExposeToBlue()
 {
     EXPOSURE_BEGIN( EveChildParticleSystem, "" )
         MAP_INTERFACE( EveChildParticleSystem )
+        MAP_INTERFACE( EveEntity )
 		MAP_INTERFACE( IEveSpaceObjectChild )
+		MAP_INTERFACE( ITr2Renderable )
 		MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST	)
-		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "mesh", m_mesh, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "particleEmitters", m_particleEmitters, "", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "particleSystems", m_particleSystems, "", Be::READ | Be::PERSIST )
@@ -25,6 +28,8 @@ const Be::ClassInfo* EveChildParticleSystem::ExposeToBlue()
 		MAP_ATTRIBUTE( "staticTransform", m_staticTransform, "Does local transform need to be rebuilt every frame.", Be::READWRITE | Be::PERSIST )
 		
 		MAP_ATTRIBUTE( "transformModifiers", m_transformModifiers, "", Be::READ | Be::PERSIST )
+
+		MAP_ATTRIBUTE_WITH_CHOOSER( "reflectionMode", m_reflectionMode, "When is this object rendered into the cubemap", Be::READWRITE | Be::PERSIST | Be::NOTIFY | Be::ENUM, EntityComponents::ReflectionModeChooser );
 
 		MAP_ATTRIBUTE
 		( 

@@ -27,7 +27,8 @@ BLUE_CLASS( EveChildRef ) :
 	public IEveEffectChildrenOwner,
 	public ITr2DebugRenderable,
 	public IShaderConfigurer,
-	public ITr2SoundEmitterOwner
+	public ITr2SoundEmitterOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -47,6 +48,11 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
 	virtual bool OnModified( Be::Var* value );
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild

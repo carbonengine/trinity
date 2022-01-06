@@ -17,6 +17,7 @@
 #include "Shader/IShaderConfigurer.h"
 #include "ITr2SoundEmitterOwner.h"
 #include "Controllers/ITr2ControllerOwner.h"
+#include "EveEntity.h"
 
 BLUE_DECLARE( Tr2Light );
 BLUE_DECLARE_VECTOR( Tr2Light );
@@ -37,11 +38,13 @@ BLUE_CLASS( EveEffectRoot2 ):
 	public ITriTargetable,
 	public ITr2DebugRenderable,
 	public ITr2CurveSetOwner,
+	public INotify,
 	public IListNotify,
 	public IEveEffectChildrenOwner,
 	public IShaderConfigurer,
 	public ITr2SoundEmitterOwner,
-	public ITr2ControllerOwner
+	public ITr2ControllerOwner,
+	public EveEntity
 
 {
 public:
@@ -58,6 +61,10 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IListNotify
 	virtual void OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list );
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// INotify
+	virtual bool OnModified( Be::Var* val );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObject2
@@ -79,6 +86,11 @@ public:
 	// ITr2SecondaryLightSource
 	virtual void RegisterSecondaryLightSource( Tr2ShLightingManager& );
 	virtual void UnregisterSecondaryLightSource( Tr2ShLightingManager& );
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents( );
+	void UnRegisterComponents( );
 	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriTargetable
@@ -139,6 +151,9 @@ public:
 
 	void FreezeHighDetailMesh();
 	void UpdateControllers();
+
+	bool ShouldReflect() const;
+
 
 private:
 	void UpdateWorldTransform( Be::Time time );

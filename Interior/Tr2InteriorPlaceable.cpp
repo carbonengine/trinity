@@ -287,7 +287,8 @@ bool Tr2InteriorPlaceable::HasTransparentBatches( void )
 
 void Tr2InteriorPlaceable::GetBatches( ITriRenderBatchAccumulator* batches, 
 									   TriBatchType batchType,
-									   const Tr2PerObjectData* data )
+									   const Tr2PerObjectData* data,
+									   Tr2RenderReason reason )
 {
 	if( !m_display )
 	{

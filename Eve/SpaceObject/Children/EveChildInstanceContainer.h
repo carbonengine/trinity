@@ -13,6 +13,7 @@
 #include "Controllers/ITr2ControllerOwner.h"
 #include "Shader/IShaderConfigurer.h"
 #include "TransformModifiers/IEveChildTransformModifier.h"
+#include "Eve/EveEntity.h"
 
 
 struct EveChildInstanceTransform
@@ -42,12 +43,14 @@ BLUE_CLASS( EveChildInstanceContainer ) :
 	public IShaderConfigurer,
 	public ITr2ControllerOwner,
 	public EveChildTransform,
-	public IBlueStructureListNotify	,
-	public IListNotify
+	public IBlueStructureListNotify,
+	public IListNotify,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
 	EveChildInstanceContainer( IRoot* lockobj = NULL );
+	~EveChildInstanceContainer();
 
 	void DistributeAcrossLocatorset( const BlueSharedString locatorSetName );
 	float GetOwnerMaxSpeed() const;
@@ -115,6 +118,11 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IBlueStructureListNotify
 	void OnStructureListModified( Event event, const void* item, size_t index, IBlueStructureList* list ) override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	void CreateInstance(const Vector3& scale, const Quaternion& rotation, const Vector3& translation, const int32_t boneIndex = -1);
 	void ClearInstanceList();

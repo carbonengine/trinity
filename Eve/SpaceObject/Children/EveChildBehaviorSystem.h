@@ -46,7 +46,7 @@ public:
 	// EveChildMesh
 	void UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params );
 
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	// IInitialize
 	bool Initialize();

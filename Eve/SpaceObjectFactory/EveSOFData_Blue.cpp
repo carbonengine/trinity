@@ -66,10 +66,10 @@ const Be::ClassInfo* EveSOFDataAreaMaterial::ExposeToBlue()
 	EXPOSURE_BEGIN( EveSOFDataAreaMaterial, "" )
 		MAP_INTERFACE( EveSOFDataAreaMaterial )
 
-		MAP_ATTRIBUTE( "material1", m_material[MATERIAL1], "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "material2", m_material[MATERIAL2], "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "material3", m_material[MATERIAL3], "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "material4", m_material[MATERIAL4], "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "material1", m_material[MATERIAL1], ":jessica-widget: materialpicker", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "material2", m_material[MATERIAL2], ":jessica-widget: materialpicker", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "material3", m_material[MATERIAL3], ":jessica-widget: materialpicker", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "material4", m_material[MATERIAL4], ":jessica-widget: materialpicker", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_glowColorType, "", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
 		EXPOSURE_END()
 }
@@ -156,8 +156,6 @@ const Be::ClassInfo* EveSOFDataFactionColorSet::ExposeToBlue()
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_WHITE_LIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_WHITE_LIGHT], ":jessica-group:Light Colors", Be::READWRITE | Be::PERSIST )
 		EXPOSURE_END()
 }
-
-
 
 
 
@@ -506,7 +504,7 @@ Be::VarChooser EveSOFDataHullBannerUsageChooser[] =
 };
 BLUE_REGISTER_ENUM_EX( "HullBannerUsage", EveSOFDataHullBanner::Usage, EveSOFDataHullBannerUsageChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
-// USED FOR SOF PHASE 6, PLEASE KEEP UP TO DATE!
+// USED FOR SOF PHASE-6, PLEASE KEEP UP TO DATE AND MAKE IT MATCH THE LIST ABOVE!
 Be::VarChooser EveSOFDataHullBannerSetItemUsageChooser[] = {
 	{ "AllianceLogo", BeCast( EveSOFDataHullBannerSetItem::ALLIANCE_LOGO ), "Alliance logo" },
 	{ "CorpLogo", BeCast( EveSOFDataHullBannerSetItem::CORP_LOGO ), "Corporation logo" },
@@ -1194,8 +1192,10 @@ const Be::ClassInfo* EveSOFDataFaction::ExposeToBlue()
 		MAP_ATTRIBUTE( "materialUsageMtl3", m_materialUsageMtl3, "Material usage of Mtl3\n:jessica-group: MaterialUsage", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "materialUsageMtl4", m_materialUsageMtl4, "Material usage of Mtl4\n:jessica-group: MaterialUsage", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "defaultPattern", m_defaultPattern, "The default pattern data for this faction\n:jessica-group: DefaultPattern", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "defaultPatternLayer1MaterialName", m_defaultPatternLayer1MaterialName, "The default pattern material name for this faction and layer 1\n:jessica-group: DefaultPattern", Be::READWRITE | Be::PERSIST )
-		EXPOSURE_END()
+		MAP_ATTRIBUTE( "defaultPatternLayer1MaterialName", m_defaultPatternLayer1MaterialName, "The default pattern material name for this faction and layer 1\n:jessica-group: DefaultPattern\n:jessica-widget: materialpicker", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "defaultPatternLayer2MaterialName", m_defaultPatternLayer2MaterialName, "The default pattern material name for this faction and layer 2\n:jessica-group: DefaultPattern\n:jessica-sub-group: WIP \n:jessica-widget: materialpicker", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "defaultPatternName", m_defaultPatternName, "The default pattern used for this faction \n:jessica-widget: patternpicker \n:jessica-group: DefaultPattern\n:jessica-sub-group: WIP", Be::READWRITE | Be::PERSIST )
+	EXPOSURE_END()
 }
 
 
@@ -1239,7 +1239,9 @@ const Be::ClassInfo* EveSOFDataPattern::ExposeToBlue()
 		MAP_ATTRIBUTE( "layer1", m_layer1, "Pattern data for layer #1.", Be::READWRITE | Be::PERSIST)
 		MAP_ATTRIBUTE( "layer2", m_layer2, "Pattern data for layer #2.", Be::READWRITE | Be::PERSIST)
 		MAP_ATTRIBUTE( "projections", m_projections, "", Be::READ | Be::PERSIST )
-		EXPOSURE_END()
+		MAP_ATTRIBUTE( "applicationGroups", m_applicationGroups, "Groups that define how the pattern is applied to its hulls\n :jessica-sub-group: WIP", Be::READ | Be::PERSIST )
+
+	EXPOSURE_END()
 }
 
 
@@ -1286,6 +1288,29 @@ const Be::ClassInfo* EveSOFDataPatternLayer::ExposeToBlue()
 }
 
 
+BLUE_DEFINE( EveSOFDataPatternLayerProperties );
+const Be::ClassInfo* EveSOFDataPatternLayerProperties::ExposeToBlue(){
+	EXPOSURE_BEGIN( EveSOFDataPatternLayerProperties, "" )
+		MAP_INTERFACE( EveSOFDataPatternLayerProperties )
+
+		MAP_ATTRIBUTE_WITH_CHOOSER( "projectionTypeU", m_projectionTypeU, "Choose the type of texture projection in u direction\n :jessica-group: Projection Direction", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFDataPatternLayerProjectionTypeChooser )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "projectionTypeV", m_projectionTypeV, "Choose the type of texture projection in v direction\n :jessica-group: Projection Direction", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFDataPatternLayerProjectionTypeChooser )
+		MAP_ATTRIBUTE( "isTargetMtl1", m_isTargetMtl1, "This pattern goes onto material 1\n :jessica-group: Materials", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "isTargetMtl2", m_isTargetMtl2, "This pattern goes onto material 2\n :jessica-group: Materials", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "isTargetMtl3", m_isTargetMtl3, "This pattern goes onto material 3\n :jessica-group: Materials", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "isTargetMtl4", m_isTargetMtl4, "This pattern goes onto material 4\n :jessica-group: Materials", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[EveSOFDataArea::AreaType::TYPE_PRIMARY].mKey, m_applicableAreas[EveSOFDataArea::AreaType::TYPE_PRIMARY], ":jessica-group: Applicable Areas", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[EveSOFDataArea::AreaType::TYPE_GLASS].mKey, m_applicableAreas[EveSOFDataArea::AreaType::TYPE_GLASS], ":jessica-group: Applicable Areas", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[EveSOFDataArea::AreaType::TYPE_SAILS].mKey, m_applicableAreas[EveSOFDataArea::AreaType::TYPE_SAILS], ":jessica-group: Applicable Areas", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[EveSOFDataArea::AreaType::TYPE_REACTOR].mKey, m_applicableAreas[EveSOFDataArea::AreaType::TYPE_REACTOR], ":jessica-group: Applicable Areas", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[EveSOFDataArea::AreaType::TYPE_DARKHULL].mKey, m_applicableAreas[EveSOFDataArea::AreaType::TYPE_DARKHULL], ":jessica-group: Applicable Areas", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[EveSOFDataArea::AreaType::TYPE_ROCK].mKey, m_applicableAreas[EveSOFDataArea::AreaType::TYPE_ROCK], ":jessica-group: Applicable Areas", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[EveSOFDataArea::AreaType::TYPE_MONUMENT].mKey, m_applicableAreas[EveSOFDataArea::AreaType::TYPE_MONUMENT], ":jessica-group: Applicable Areas", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[EveSOFDataArea::AreaType::TYPE_ORNAMENT].mKey, m_applicableAreas[EveSOFDataArea::AreaType::TYPE_ORNAMENT], ":jessica-group: Applicable Areas", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( EveSOFDataAreaTypeChooser[EveSOFDataArea::AreaType::TYPE_SIMPLEPRIMARY].mKey, m_applicableAreas[EveSOFDataArea::AreaType::TYPE_SIMPLEPRIMARY], ":jessica-group: Applicable Areas", Be::READWRITE | Be::PERSIST )
+
+	EXPOSURE_END()
+} 
 
 BLUE_DEFINE( EveSOFDataPatternTransform );
 const Be::ClassInfo* EveSOFDataPatternTransform::ExposeToBlue()
@@ -1300,7 +1325,31 @@ const Be::ClassInfo* EveSOFDataPatternTransform::ExposeToBlue()
 		EXPOSURE_END()
 }
 
+BLUE_DEFINE( EveSOFDataPatternMaterialOverride );
+const Be::ClassInfo* EveSOFDataPatternMaterialOverride::ExposeToBlue(){
+	EXPOSURE_BEGIN( EveSOFDataPatternMaterialOverride, "" )
+		MAP_INTERFACE( EveSOFDataPatternMaterialOverride )
 
+		MAP_ATTRIBUTE( "isTargetMtl1", m_isTargetMtl1, "This pattern goes onto material 1", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "isTargetMtl2", m_isTargetMtl2, "This pattern goes onto material 2", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "isTargetMtl3", m_isTargetMtl3, "This pattern goes onto material 3", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "isTargetMtl4", m_isTargetMtl4, "This pattern goes onto material 4", Be::READWRITE | Be::PERSIST )
+
+	EXPOSURE_END()
+}
+
+BLUE_DEFINE( EveSOFDataPatternApplicationGroup );
+const Be::ClassInfo* EveSOFDataPatternApplicationGroup::ExposeToBlue(){
+	EXPOSURE_BEGIN( EveSOFDataPatternApplicationGroup, "" )
+		MAP_INTERFACE( EveSOFDataPatternApplicationGroup )
+
+		MAP_ATTRIBUTE( "name", m_name, "The name of the group", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "layer1Properties", m_layer1Properties, "Properties for layer 1 to define how to apply the layer to the hulls", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "layer2Properties", m_layer2Properties, "Properties for layer 2 to define how to apply the layer to the hulls", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "projections", m_projections, "The projections for different hulls", Be::READ | Be::PERSIST )
+
+	EXPOSURE_END()
+}
 
 BLUE_DEFINE( EveSOFDataPatternPerHull );
 const Be::ClassInfo* EveSOFDataPatternPerHull::ExposeToBlue()
@@ -1308,11 +1357,11 @@ const Be::ClassInfo* EveSOFDataPatternPerHull::ExposeToBlue()
 	EXPOSURE_BEGIN( EveSOFDataPatternPerHull, "" )
 		MAP_INTERFACE( EveSOFDataPatternPerHull )
 
-		MAP_ATTRIBUTE( "name", m_name, "The exact hull name. This functions as an ID.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "name", m_name, "The exact hull name. This functions as an ID.\n:jessica-widget: hullpicker", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "transformLayer1", m_transformLayer1, "Pattern projection transform for layer #1.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "transformLayer2", m_transformLayer2, "Pattern projection transform for layer #2.", Be::READWRITE | Be::PERSIST )
 
-		EXPOSURE_END()
+	EXPOSURE_END()
 }
 
 

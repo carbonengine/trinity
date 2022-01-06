@@ -309,9 +309,9 @@ void EveMissile::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 // SeeAlso:
 //   EveSpaceObject2::GetBatches
 // -----------------------------------------------------------------------------
-void EveMissile::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveMissile::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
-	EveSpaceObject2::GetBatches( batches, batchType, perObjectData );
+	EveSpaceObject2::GetBatches( batches, batchType, perObjectData, reason );
 }
 
 // --------------------------------------------------------------------------------

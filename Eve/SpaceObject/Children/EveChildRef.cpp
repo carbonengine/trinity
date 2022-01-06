@@ -51,6 +51,10 @@ bool EveChildRef::OnModified( Be::Var* value )
 	{
 		LoadChild();
 	}
+	if( IsMatch( value, m_display ) )
+	{
+		ReRegister();
+	}
 	return true;
 }
 
@@ -62,6 +66,28 @@ const char* EveChildRef::GetName() const
 void EveChildRef::SetName( const char* name )
 {
 	m_name = BlueSharedString( name );
+}
+
+void EveChildRef::RegisterComponents()
+{
+	if( IsInRegistry() && m_child != nullptr && m_display )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_child ) )
+		{
+			entity->Register( GetComponentRegistry() );
+		}
+	}
+}
+
+void EveChildRef::UnRegisterComponents()
+{
+	if( IsInRegistry() && m_child != nullptr )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( m_child ) )
+		{
+			entity->UnRegister( GetComponentRegistry() );
+		}
+	}
 }
 
 IEveSpaceObjectChildPtr EveChildRef::GetEffectChildByName( const char* name ) const
@@ -303,6 +329,9 @@ void EveChildRef::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 bool EveChildRef::LoadChild()
 {
+	// unregister the old child
+	UnRegisterComponents();
+	
 	CCP_LOG( "Loading child red file...", m_resPath.c_str() );
 	m_child = BlueCastPtr( BeResMan->LoadObject( m_resPath.c_str() ) );
 	if ( !m_child )
@@ -310,6 +339,9 @@ bool EveChildRef::LoadChild()
 		CCP_LOGERR( "Red file %s is invalid or not an Eve Child type.", m_resPath.c_str() );
 		return false;
 	}
+
+	RegisterComponents();
+
 	return true;
 }
 

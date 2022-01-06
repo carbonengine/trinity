@@ -469,7 +469,7 @@ void Tr2EffectStateManager::Shutdown()
 	s_shaders.clear();
 }
 
-void Tr2EffectStateManager::BeginManagedRendering()
+void Tr2EffectStateManager::BeginManagedRendering( Tr2RenderContextEnum::CullMode cullmode )
 {
 	D3DPERF_EVENT(L"Tr2EffectStateManager::BeginManagedRendering");
 
@@ -479,7 +479,17 @@ void Tr2EffectStateManager::BeginManagedRendering()
 
 	m_isManagedRendering = true;
 
-	Tr2EffectStateManager::SetInvertedCullMode( false );
+	switch( cullmode )
+	{
+	case Tr2RenderContextEnum::CULLMODE_CW:
+		Tr2EffectStateManager::SetInvertedCullMode( false );
+		break;
+	case Tr2RenderContextEnum::CULLMODE_CCW:
+		Tr2EffectStateManager::SetInvertedCullMode( true );
+		break;
+	case Tr2RenderContextEnum::CULLMODE_NONE:
+		break;
+	}
 
 	if( !m_renderContext.IsValid() )
 	{

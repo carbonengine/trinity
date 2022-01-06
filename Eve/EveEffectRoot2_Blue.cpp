@@ -8,6 +8,7 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
     EXPOSURE_BEGIN( EveEffectRoot2, "" )
 		MAP_INTERFACE( IEveSpaceObject2 )
 		MAP_INTERFACE( IInitialize )
+		MAP_INTERFACE( INotify )
 		MAP_INTERFACE( ITr2SecondaryLightSource )
 		MAP_INTERFACE( ITriTargetable )
 		MAP_INTERFACE( ITr2CurveSetOwner )
@@ -16,6 +17,7 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 		MAP_INTERFACE ( IShaderConfigurer )
 		MAP_INTERFACE( ITr2SoundEmitterOwner )
 		MAP_INTERFACE( IWorldPosition )
+		MAP_INTERFACE( EveEntity )
 
 		MAP_ATTRIBUTE
 		(
@@ -30,7 +32,7 @@ const Be::ClassInfo* EveEffectRoot2::ExposeToBlue()
 			"display",
 			m_display,
 			"",
-			Be::READWRITE | Be::PERSIST
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY
 		)
 
 		

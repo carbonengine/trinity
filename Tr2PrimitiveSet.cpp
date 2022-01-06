@@ -49,7 +49,8 @@ bool Tr2PrimitiveSet::HasTransparentBatches()
 
 void Tr2PrimitiveSet::GetBatches( ITriRenderBatchAccumulator* accumulator, 
 							 TriBatchType batchType,
-							 const Tr2PerObjectData* perObjectData )
+							 const Tr2PerObjectData* perObjectData,
+	     					         Tr2RenderReason reason )
 {
 	m_isDrawingForPicking = false;
 	// Is only rendered as transparent or additive.

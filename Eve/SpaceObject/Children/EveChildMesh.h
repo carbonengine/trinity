@@ -28,7 +28,9 @@ BLUE_CLASS( EveChildMesh ) :
 	public EveChildTransform,
 	public ITr2Renderable,
 	public IInitialize,
-	public ITr2DebugRenderable
+	public ITr2DebugRenderable,
+	public EveEntity,
+	public INotify
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -54,17 +56,27 @@ public:
 	void SetScale( const Vector3& scale );
 	void ForceCurrentScreenSize( float screenSize );
 	void AddTransformModifier( IEveChildTransformModifier* modifier ) override;
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	virtual bool HasTransparentBatches();
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	virtual void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-	
+	virtual bool IsVisible( const TriFrustum& frustum ) const;
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	virtual bool Initialize();
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// INotify
+	bool OnModified( Be::Var * value );
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
@@ -79,6 +91,9 @@ public:
 	void SetOrigin( Origin origin );
 
 protected:
+	bool ShouldReflect() const;
+
+
 	// general data
 	BlueSharedString m_name;
 
@@ -106,6 +121,8 @@ protected:
 	bool m_useSpaceObjectData;
 
 	Origin m_origin;
+
+	EntityComponents::ReflectionMode m_reflectionMode;
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );

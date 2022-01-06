@@ -160,7 +160,7 @@ bool EveChildEnvironment::HasTransparentBatches()
 	return false;
 }
 
-void EveChildEnvironment::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveChildEnvironment::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 
 }

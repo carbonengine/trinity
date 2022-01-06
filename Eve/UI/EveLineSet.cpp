@@ -163,7 +163,8 @@ bool EveLineSet::HasTransparentBatches()
 
 void EveLineSet::GetBatches( ITriRenderBatchAccumulator* accumulator, 
 						     TriBatchType batchType,
-						     const Tr2PerObjectData* perObjectData )
+						     const Tr2PerObjectData* perObjectData,
+						     Tr2RenderReason reason )
 {
 	// Is only rendered as transparent or additive.
 	if( !(batchType == TRIBATCHTYPE_TRANSPARENT && m_isRenderedAsTransparent) &&

@@ -48,7 +48,7 @@ public:
 	virtual bool Initialize();
 
 	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
@@ -109,6 +109,8 @@ private:
 	bool m_display;
 	bool m_isPickable;
 	bool m_isVisible;
+
+	bool m_renderToReflection;
 };
 
 TYPEDEF_BLUECLASS( EveBannerSet );

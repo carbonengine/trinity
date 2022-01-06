@@ -32,7 +32,9 @@ BLUE_CLASS( EveChildParticleSystem ) :
 	public EveChildTransform,
 	public ITr2Renderable,
 	public IInitialize,
-	public ITr2DebugRenderable
+	public ITr2DebugRenderable,
+	public INotify,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -61,14 +63,23 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	bool HasTransparentBatches();
-	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData );
+	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData );
 	float GetSortValue();
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
+	bool IsVisible( const TriFrustum& frustum ) const;
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	virtual bool Initialize();
+		
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents();
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// INotify
+	bool OnModified( Be::Var * value );
 	
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
@@ -96,6 +107,8 @@ private:
 
 	bool m_display;
 	bool m_isVisible;
+
+	EntityComponents::ReflectionMode m_reflectionMode;
 };
 
 TYPEDEF_BLUECLASS( EveChildParticleSystem );

@@ -20,9 +20,10 @@ const Be::ClassInfo* EveChildInstanceContainer::ExposeToBlue()
 		MAP_INTERFACE( IShaderConfigurer )
 		MAP_INTERFACE( ITr2ControllerOwner )
 		MAP_INTERFACE( IListNotify )
+		MAP_INTERFACE( EveEntity )
 		
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "alwaysOn", m_isAlwaysOn, "If false this will be hidden if a spaceobjects activation strength < 0.5. If True then it is always on.", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "inheritProperties", m_inheritProperties, "Properties inherited from the parent ship when loaded through SOF", Be::READWRITE | Be::PERSIST )

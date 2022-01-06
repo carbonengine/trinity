@@ -20,15 +20,19 @@ const unsigned MIP_COUNT = 7;
 const unsigned FILTER_SIZE = 128;
 const unsigned FILTER_GROUP_DIM = 342; // ceil(sum(2**(x+x) for x in range(1, MIP_COUNT + 1)) / GROUP_SIZE)
 
-Tr2ReflectionProbe::Tr2ReflectionProbe( IRoot* lockobj )
-	: m_initialized( false ),
+Tr2ReflectionProbe::Tr2ReflectionProbe( IRoot* lockobj ) :
+	m_initialized( false ),
 	m_hasData( false ),
 	m_position( 0, 0, 0 ),
 	m_intermediateSize( FILTER_SIZE * 4 ),
 	m_prevCullInversion( false ),
 	m_customSourceTexture(),
+	m_renderFrequency( ONE_SIDE_PER_FRAME ),
+	m_currentFrame( 0 ),
+	m_onePassDone( false ),
 	m_hdrOutput( true ),
 	m_hollywoodMode( true ),
+	m_lockPosition( false ),
 	m_backlightColor( 1, 1, 1, 1 ),
 	m_backlightContrast( 16 )
 {
@@ -60,8 +64,39 @@ bool Tr2ReflectionProbe::HasData() const
 	return m_hasData && m_postFilterTarget->IsValid();
 }
 
+TriFrustum Tr2ReflectionProbe::GetFrustum( unsigned face, Tr2RenderContext& renderContext )
+{
+	TriFrustum frustum = TriFrustum();
+	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &m_position, &Tr2Renderer::GetProjectionTransform(), renderContext.m_esm.GetViewport() );
+	return frustum;
+}
+
+uint8_t Tr2ReflectionProbe::GetStartFace() const
+{
+	if( m_renderFrequency == ALL_SIDES_PER_FRAME || !m_onePassDone )
+	{
+		return 0;
+	}
+	return m_currentFrame;
+}
+
+uint8_t Tr2ReflectionProbe::GetEndFace() const
+{
+	if( m_renderFrequency == ALL_SIDES_PER_FRAME || !m_onePassDone )
+	{
+		return 6;
+	}
+	return m_currentFrame + 1;
+}
+
+
 void Tr2ReflectionProbe::InitRenderPass( Tr2RenderContext &renderContext )
 {
+	if( !m_lockPosition )
+	{
+		m_position = Tr2Renderer::GetViewPosition();
+	}
+
 	renderContext.m_esm.PushViewport();
 	Tr2Renderer::PushViewTransform();
 	Tr2Renderer::PushProjection();
@@ -88,13 +123,11 @@ void Tr2ReflectionProbe::InitRenderPass( Tr2RenderContext &renderContext )
 	{
 		GPU_REGION( renderContext, "Reflection Depth Clear" );
 
-		Tr2TextureAL nullTex;
-		renderContext.SetRenderTarget( nullTex, 0 );
-
-		for( int i = 0; i < 6; i++ )
+		for( int i = GetStartFace(); i < GetEndFace(); i++ )
 		{
+			renderContext.SetRenderTarget( *m_renderTargets[i], 0 );
 			renderContext.m_esm.SetDepthStencilBuffer( m_stencilMaps[i] );
-			CR( renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 ) );
+			CR( renderContext.Clear( CLEARFLAGS_ZBUFFER | CLEARFLAGS_TARGET, 0, 0, 0 ) );
 		}
 	}
 #endif
@@ -136,7 +169,7 @@ void Tr2ReflectionProbe::EndRenderPass( Tr2RenderContext &renderContext )
 	{
 		GPU_REGION( renderContext, "Reflection RT Copy" );
 
-		for( int i = 0; i < 6; i++ )
+		for( int i = GetStartFace(); i < GetEndFace(); i++ )
 		{
 			CR( m_renderTargetCube->GetRenderTarget().CopySubresourceRegion( Tr2TextureSubresource( i, 0 ), *m_renderTargets[i], Tr2TextureSubresource( 0, 0 ), renderContext ) );
 		}
@@ -152,16 +185,17 @@ void Tr2ReflectionProbe::EndRenderPass( Tr2RenderContext &renderContext )
 
 	Filter( renderContext );
 	m_hasData = true;
+	m_onePassDone = true;
+	
+	if( m_renderFrequency != ALL_SIDES_PER_FRAME )
+	{
+		m_currentFrame = ( m_currentFrame + 1 ) % 6;
+	}
 }
 
 Tr2RenderTargetPtr Tr2ReflectionProbe::GetReflection()
 {
 	return m_postFilterTarget;
-}
-
-void Tr2ReflectionProbe::SetPosition( Vector3 position )
-{
-	m_position = position;
 }
 
 void Tr2ReflectionProbe::SetBackLightColor( Color color )
@@ -268,6 +302,9 @@ bool Tr2ReflectionProbe::OnModified( Be::Var* value )
 	m_initialized = false;
 
 	PrepareResources();
+
+	m_onePassDone = false;
+	m_currentFrame = 0;
 
 	return true;
 }

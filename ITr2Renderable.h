@@ -5,6 +5,7 @@
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 class TriPoolAllocator;
+class TriFrustum;
 
 BLUE_DECLARE_INTERFACE( ITr2Renderable );
 BLUE_DECLARE_IVECTOR( ITr2Renderable );
@@ -28,9 +29,20 @@ enum TriBatchType
 	TRIBATCHTYPE_COUNT_OF_BATCH_TYPES // This element must be last!
 };
 
-BLUE_INTERFACE( ITr2Renderable ) : public  IRoot
+enum Tr2RenderReason
 {
-	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData ) = 0;
+	TR2RENDERREASON_NORMAL,
+	TR2RENDERREASON_REFLECTION,
+};
+
+BLUE_INTERFACE( ITr2Renderable ) :
+	public IRoot
+{
+	virtual bool IsVisible( const TriFrustum & frustum ) const
+	{
+		return true;
+	}
+	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) = 0;
 	virtual void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData ) {}
 
     virtual bool HasTransparentBatches() = 0;

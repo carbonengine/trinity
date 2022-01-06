@@ -477,7 +477,7 @@ bool EveChildLineSet::HasTransparentBatches()
 	return false;
 }
 
-void EveChildLineSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveChildLineSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( !m_display )
 	{

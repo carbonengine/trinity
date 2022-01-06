@@ -255,7 +255,7 @@ float EveChildCloud::GetSortValue()
 	return distance;
 }
 
-void EveChildCloud::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveChildCloud::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( batchType != TRIBATCHTYPE_TRANSPARENT )
 	{

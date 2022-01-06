@@ -624,7 +624,8 @@ bool Tr2CurveLineSet::HasTransparentBatches()
 // -------------------------------------------------------------
 void Tr2CurveLineSet::GetBatches( ITriRenderBatchAccumulator* accumulator, 
 								  TriBatchType batchType, 
-								  const Tr2PerObjectData* perObjectData )
+								  const Tr2PerObjectData* perObjectData,
+								  Tr2RenderReason reason )
 {
 	if( !m_display )
 	{

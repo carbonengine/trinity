@@ -9,6 +9,7 @@
 
 
 extern float g_eveSpaceSceneLODFactor;
+extern float g_eveSpaceSceneVisibilityThreshold;
 
 
 EveChildMesh::EveChildMesh( IRoot* lockobj ):
@@ -22,7 +23,9 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_sortValueScale( 1 ),
 	m_useSpaceObjectData( true ),
 	m_origin( SPACE ),
-	EveChildTransform()
+	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
+	EveChildTransform(),
+	EveEntity( lockobj )
 {
 	// init per-object data with default values
 	memset( &m_vsData, 0, sizeof( EveSpaceObjectVSData ) );
@@ -47,6 +50,15 @@ bool EveChildMesh::Initialize()
 	return true;
 }
 
+bool EveChildMesh::OnModified( Be::Var* val )
+{
+	if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display) || IsMatch( val, m_mesh) )
+	{
+		ReRegister();
+	}
+	return true;
+}
+
 const char* EveChildMesh::GetName() const
 {
 	return m_name.c_str();
@@ -56,6 +68,24 @@ void EveChildMesh::SetName( const char* name )
 {
 	m_name = BlueSharedString( name );
 }
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Registers itself and its children with the scene registration container.
+//    This is so we don't have to traverse the tree every frame
+// --------------------------------------------------------------------------------
+void EveChildMesh::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display && m_mesh != nullptr)
+	{
+		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
+		{
+			registry->RegisterComponent( ComponentType::REFLECTION_RENDERABLE, this, this->m_state );
+		}
+	}
+}
+
 
 void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
 {
@@ -116,7 +146,21 @@ bool EveChildMesh::HasTransparentBatches()
 	return false;
 }
 
-void EveChildMesh::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+bool EveChildMesh::IsVisible( const TriFrustum& frustum ) const
+{
+	Vector4 boundingSphere;
+
+	if( GetBoundingSphere( boundingSphere ) && boundingSphere.w != 0)
+	{
+		if( frustum.IsSphereVisible( boundingSphere.GetXYZ(), boundingSphere.w ) )
+		{
+			return frustum.GetPixelSizeAccrossEst( boundingSphere.GetXYZ(), boundingSphere.w ) >= g_eveSpaceSceneVisibilityThreshold;
+		}
+	}
+	return false;
+}
+
+void EveChildMesh::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( m_display && m_mesh )
 	{

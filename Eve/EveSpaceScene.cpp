@@ -35,6 +35,7 @@
 #include "EveEffectRoot2.h"
 #include "Tr2ReflectionProbe.h"
 #include "VirtualCamera/EveVirtualCameraSystem.h"
+#include "Eve/EveEntity.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -57,7 +58,7 @@ TRI_REGISTER_SETTING( "eveSpaceObjectResourceUnloadingTimeThreshold", g_eveSpace
 float g_eveSpaceSceneVisibilityThreshold = 5.0f;
 TRI_REGISTER_SETTING( "eveSpaceSceneVisibilityThreshold", g_eveSpaceSceneVisibilityThreshold );
 
-// Object itself renders with low detail geometry (if available) if estimated pixel 
+// Object itself renders with low detail geometry (if available) if estimated pixel
 // diameter is above this threshold. Note that attachments may still render, in particular
 // turret firing effects, or light glows as they may be more noticeable from afar.
 float g_eveSpaceSceneLowDetailThreshold = 100.0f;
@@ -89,6 +90,9 @@ TRI_REGISTER_SETTING( "eveSpaceObjectImpactEffectEnabled", g_eveSpaceObjectImpac
 
 bool g_eveSpaceSceneDynamicLighting = false;
 TRI_REGISTER_SETTING( "eveSpaceSceneDynamicLighting", g_eveSpaceSceneDynamicLighting );
+
+int g_eveReflectionMode = EntityComponents::REFLECT_NEVER;
+TRI_REGISTER_SETTING( "eveReflectionSetting", g_eveReflectionMode );
 
 namespace
 {
@@ -170,6 +174,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_reflectionIntensity( 1.35f ),
 	m_reflectionBackLightingContrast( 8.0f ),
 	m_reflectionBackLightingColor( 2.0f, 2.0f, 2.0f, 2.0f ),
+	m_dynamicObjectReflectionEnabled( true ),
 	m_msaaSamples( 0 ),
 	m_hasBackgroundDistortionBatches( false ),
 	m_hasForegroundDistortionBatches( false ),
@@ -210,6 +215,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 
 	m_updateTime = BeOS->GetCurrentFrameTime();
 
+	m_backgroundObjects.SetNotify( this );
 	m_planets.SetNotify( this );
 	m_objects.SetNotify( this );
 	m_uiObjects.SetNotify( this );
@@ -235,6 +241,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 
 	m_cameraAttachmentParent.CreateInstance();
 	m_reflectionProbe.CreateInstance();
+	m_componentRegistry.CreateInstance();
 }
 
 IRoot* EveSpaceScene::GetCameraAttachments() const
@@ -253,6 +260,8 @@ EveSpaceScene::~EveSpaceScene()
 	{
 		CCP_DELETE( it->second );
 	}
+
+	m_componentRegistry->Clear();
 }
 
 void EveSpaceScene::ReleaseResources( TriStorage s )
@@ -667,7 +676,7 @@ void EveSpaceScene::ApplyPerFrameData( Tr2RenderContext& renderContext )
 //   objectsWithTransparencies - a list of renderables with transparencies
 //   batches - the batch map to be used
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::PrepareTransparentBatch( Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches )
+void EveSpaceScene::PrepareTransparentBatch( Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches, Tr2RenderReason reason )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -679,14 +688,14 @@ void EveSpaceScene::PrepareTransparentBatch( Tr2RenderableSortList& objectsWithT
 	{
 		ITr2Renderable* r = it->m_object;
 		Tr2PerObjectData* objectData = r->GetPerObjectData( batches[TRIBATCHTYPE_TRANSPARENT] );
-		r->GetBatches( batches[TRIBATCHTYPE_TRANSPARENT], TRIBATCHTYPE_TRANSPARENT, objectData );
+		r->GetBatches( batches[TRIBATCHTYPE_TRANSPARENT], TRIBATCHTYPE_TRANSPARENT, objectData, reason );
 	}
 }
 
 void GetBatchesFromRenderables(	ITr2Renderable** const objectRenderables, const unsigned renderableCount, 
 								Tr2RenderableSortList* const objectsWithTransparencies, 
 								EveSpaceScene::BatchMap& batches, 
-								const TriBatchType* batchTypes, const unsigned batchTypeCount )
+								const TriBatchType* batchTypes, const unsigned batchTypeCount, Tr2RenderReason reason )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -698,7 +707,7 @@ void GetBatchesFromRenderables(	ITr2Renderable** const objectRenderables, const 
 		
 		for( unsigned type = 0; type != batchTypeCount; ++type )
 		{
-			r->GetBatches( batches[batchTypes[type]], batchTypes[type], objectData );
+			r->GetBatches( batches[batchTypes[type]], batchTypes[type], objectData, reason );
 		}
 
 		if( objectsWithTransparencies && r->HasTransparentBatches() )
@@ -720,7 +729,7 @@ void GetBatchesFromRenderables(	ITr2Renderable** const objectRenderables, const 
 //   objectsWithTransparencies - out, a list of renderables with transparencies
 //   batches - the batch map to be used
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches )
+void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches, Tr2RenderReason reason )
 {
 	if( objectRenderables.empty() || !Tr2Renderer::GetPoolAllocator() )
 	{
@@ -738,7 +747,7 @@ void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& 
 
 	unsigned typeCount = m_distortionMap ? 5 : 4;
 
-	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), &objectsWithTransparencies, batches, s_allTypes, typeCount );	
+	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), &objectsWithTransparencies, batches, s_allTypes, typeCount, reason );
 }
 
 // --------------------------------------------------------------------------------------
@@ -748,7 +757,7 @@ void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& 
 //   objectRenderables - object renderables that we want to gather batches from
 //   batches - the batch map to be used
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*> &objectRenderables,  BatchMap& batches )
+void EveSpaceScene::GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*> &objectRenderables,  BatchMap& batches, Tr2RenderReason reason )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -763,7 +772,7 @@ void EveSpaceScene::GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*
 			TRIBATCHTYPE_DECAL
 	};
 
-	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), nullptr, batches, s_allTypes, 2 );	
+	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), nullptr, batches, s_allTypes, 2, reason );	
 }
 
 // --------------------------------------------------------------------------------------
@@ -773,7 +782,7 @@ void EveSpaceScene::GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*
 //   objectRenderables - object renderables that we want to gather batches from
 //   batches - the batch map to be used
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, BatchMap& batches )
+void EveSpaceScene::GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, BatchMap& batches, Tr2RenderReason reason )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -787,7 +796,7 @@ void EveSpaceScene::GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>
 			TRIBATCHTYPE_DEPTH
 	};
 
-	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), nullptr, batches, s_allTypes, 1 );
+	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), nullptr, batches, s_allTypes, 1, reason);
 }
 
 // --------------------------------------------------------------------------------------
@@ -799,7 +808,7 @@ void EveSpaceScene::GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>
 //   objectsWithTransparencies - a list of renderables with transparencies
 //   batches - the batch map to be used
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*> &objectRenderables, Tr2RenderableSortList &objectsWithTransparencies, BatchMap& batches )
+void EveSpaceScene::GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches, Tr2RenderReason reason )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -816,7 +825,7 @@ void EveSpaceScene::GetTransparentBatchesFromRenderables( std::vector<ITr2Render
 
 	unsigned typeCount = m_distortionMap ? 2 : 1;
 
-	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), &objectsWithTransparencies, batches, s_allTypes, typeCount );	
+	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), &objectsWithTransparencies, batches, s_allTypes, typeCount, reason );	
 }
 
 // --------------------------------------------------------------------------------------
@@ -833,7 +842,8 @@ void EveSpaceScene::RenderRenderables(	const std::vector<ITr2Renderable*> &rende
 										ITriRenderBatchAccumulator* batch, 
 										TriBatchType batchType, 
 										Tr2EffectStateManager::RenderingMode rm,
-										Tr2RenderContext &renderContext )
+										Tr2RenderContext &renderContext,
+									    Tr2RenderReason reason )
 {
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
 	if( !allocator )
@@ -844,7 +854,7 @@ void EveSpaceScene::RenderRenderables(	const std::vector<ITr2Renderable*> &rende
 	{
 		ITr2Renderable* r = *it;
 		Tr2PerObjectData* objectData = r->GetPerObjectData( batch );
-		r->GetBatches( batch, batchType, objectData );
+		r->GetBatches( batch, batchType, objectData, reason );
 	}
 
 	RenderBatch( batch, rm, renderContext );
@@ -1652,6 +1662,83 @@ Tr2QuadRenderer* EveSpaceScene::GetQuadRenderer() const
 	return Tr2QuadRenderer::Instance();
 }
 
+void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
+{
+	if( !HasReflectionProbe() || !m_display )
+	{
+		return;
+	}
+
+	CCP_STATS_ZONE( __FUNCTION__ );
+	
+	// set the current reflection
+	GPU_REGION( renderContext, "Reflection" );
+
+	m_reflectionProbe->InitRenderPass( renderContext );
+	for( unsigned i = m_reflectionProbe->GetStartFace(); i < m_reflectionProbe->GetEndFace(); i++ )
+	{
+		GPU_REGION( renderContext, "Reflection Face" );
+		m_reflectionProbe->StartRenderFace( i, renderContext );
+
+		PopulatePerFramePSData( m_perFramePS, renderContext );
+		PopulatePerFrameVSData( m_perFrameVS, renderContext );
+		ApplyPerFrameData( renderContext );
+		
+		// get the background reflection renderables from the component registry
+		RenderBackgroundPassObjects( renderContext, BackgroundRenderingReason::BACKGROUND_RENDER_REFLECTION);
+
+
+		if( m_dynamicObjectReflectionEnabled )
+		{
+			auto& reflectionRenderables = m_componentRegistry->GetReflectionRenderables();
+
+			std::vector<ITr2Renderable*> visibleRenderables;
+			visibleRenderables.reserve( reflectionRenderables.size() );
+			TriFrustum currentFrustum = m_reflectionProbe->GetFrustum( i, renderContext );
+
+			// Filter out the non-visible reflection renderables based on the current frustum
+			for( auto it = reflectionRenderables.begin(); it != reflectionRenderables.end(); ++it )
+			{
+				auto ref = *it;
+				if( ref->IsVisible(currentFrustum) )
+				{
+					visibleRenderables.push_back( ref );
+				}
+			}
+
+			if( !visibleRenderables.empty() )
+			{
+				// clear planets
+				renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 );
+				ClearBatches( m_secondaryBatches );
+
+				// We are rendering in a left hand coordinate system (for cubemaps) so don't override the cullmode!!!
+				renderContext.m_esm.BeginManagedRendering( CullMode::CULLMODE_NONE );
+
+				Tr2RenderableSortList transparentObjects;
+				GetAllBatchesFromRenderables( visibleRenderables, transparentObjects, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
+
+				PrepareTransparentBatch( transparentObjects, m_secondaryBatches, Tr2RenderReason::TR2RENDERREASON_REFLECTION );
+				FinalizeBatches( m_secondaryBatches );
+
+				renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_DEPTH_ONLY );
+				renderContext.RenderBatches( m_secondaryBatches[TRIBATCHTYPE_DEPTH], BlueSharedString( "Depth" ) );
+
+				RenderOpaqueBatches( m_secondaryBatches, renderContext );
+				RenderTransparentBatches( m_secondaryBatches, renderContext );
+
+				ClearBatches( m_secondaryBatches );
+				renderContext.m_esm.EndManagedRendering();
+			}
+		}
+	}
+
+	m_reflectionProbe->EndRenderPass( renderContext );
+	PopulatePerFramePSData( m_perFramePS, renderContext );
+	PopulatePerFrameVSData( m_perFrameVS, renderContext );
+	ApplyPerFrameData( renderContext );
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Render the background scene with all objects, and generate reflection map
@@ -1712,32 +1799,6 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 		{
 			renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 );
 		}
-	}
-
-	// Render background reflection cubemap
-	if( HasReflectionProbe() )
-	{
-		GPU_REGION( renderContext, "Reflection" );
-
-		m_reflectionProbe->SetPosition( Tr2Renderer::GetViewPosition() );
-		m_reflectionProbe->InitRenderPass( renderContext );
-
-		for( unsigned i = 0; i < 6; i++ )
-		{
-			GPU_REGION( renderContext, "Reflection Face" );
-			m_reflectionProbe->StartRenderFace( i, renderContext );
-
-			PopulatePerFramePSData( m_perFramePS, renderContext );
-			PopulatePerFrameVSData( m_perFrameVS, renderContext );
-			ApplyPerFrameData( renderContext );
-
-			RenderBackgroundPassObjects( renderContext, BACKGROUND_RENDER_REFLECTION );
-		}
-
-		m_reflectionProbe->EndRenderPass( renderContext );
-		PopulatePerFramePSData( m_perFramePS, renderContext );
-		PopulatePerFrameVSData( m_perFrameVS, renderContext );
-		ApplyPerFrameData( renderContext );
 	}
 
 	renderContext.m_esm.EndManagedRendering();
@@ -1916,13 +1977,13 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 // Description:
 //   Main rendering of foreground objects.
 // --------------------------------------------------------------------------------------
-void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext )
+void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cullmode )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	m_hasForegroundDistortionBatches = false;
 	
-	renderContext.m_esm.BeginManagedRendering();
+	renderContext.m_esm.BeginManagedRendering(cullmode);
 
 	if( !m_display )
 	{
@@ -2199,6 +2260,9 @@ ITr2MultiPassScene::RenderPassResult EveSpaceScene::RenderPass( PassType pass, T
 	case RP_END_RENDER:
 		EndRender( renderContext );
 		break;
+	case RP_REFLECTION_RENDER:
+		RenderReflectionPass( renderContext );
+		break;
 	case RP_BACKGROUND_RENDER:
 		RenderBackgroundPass( renderContext );
 		break;
@@ -2431,6 +2495,10 @@ bool EveSpaceScene::Initialize()
 
 	for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
 	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->Register( m_componentRegistry );
+		}
 		( *it )->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
 	}
 	m_cameraAttachmentParent->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
@@ -2586,6 +2654,17 @@ void EveSpaceScene::OnListModified(
 				}
 			}
 		}
+		if( theList == &m_objects )
+		{
+			for( ssize_t i = 0; i < theList->GetSize(); ++i )
+			{
+				if( EveEntityPtr entity = BlueCastPtr( theList->GetAt( i ) ) )
+				{
+					entity->UnRegister( m_componentRegistry );
+				}
+			}
+		}
+		
 		break;
 	case BELIST_INSERTED:
 		{
@@ -2602,6 +2681,13 @@ void EveSpaceScene::OnListModified(
 			if( spaceObject )
 			{
 				spaceObject->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
+			}
+			if( theList == &m_objects )
+			{
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( m_componentRegistry );
+				}
 			}
 		}
 		break;
@@ -2620,6 +2706,14 @@ void EveSpaceScene::OnListModified(
 					receiver->ClearShLighting();
 				}
 			}
+			if( theList == &m_objects )
+			{
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->UnRegister( m_componentRegistry );
+				}
+			}
+				
 		}
 		break;
 	}
@@ -3042,4 +3136,17 @@ bool EveSpaceScene::GetPredicate( const char* name ) const
 bool EveSpaceScene::HasReflectionProbe() const
 {
 	return m_reflectionProbe && m_reflectionProbe->IsValid();
+}
+
+
+void EveSpaceScene::ReregisterEntities()
+{
+	for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( *it ) )
+		{
+			entity->UnRegister( m_componentRegistry );
+			entity->Register( m_componentRegistry );
+		}
+	}
 }

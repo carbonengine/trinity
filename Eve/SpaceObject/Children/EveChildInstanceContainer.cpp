@@ -55,6 +55,10 @@ EveChildInstanceContainer::EveChildInstanceContainer( IRoot* lockobj ) :
 	m_transformModifiers.SetNotify( this );
 }
 
+EveChildInstanceContainer::~EveChildInstanceContainer()
+{
+}
+
 const char* EveChildInstanceContainer::GetName() const
 {
 	return m_name.c_str();
@@ -71,7 +75,40 @@ bool EveChildInstanceContainer::OnModified( Be::Var* value )
 	{
 		m_reset = true;
 	}
+	if( IsMatch(value, m_display) )
+	{	
+		ReRegister();
+	}
 	return true;
+}
+
+
+void EveChildInstanceContainer::RegisterComponents()
+{
+	if( IsInRegistry() && m_display )
+	{
+		for( auto instance = m_instances.begin(); instance != m_instances.end(); ++instance )
+		{
+			if( EveEntityPtr entity = BlueCastPtr(*instance) )
+			{
+				entity->Register( this->GetComponentRegistry() );
+			}
+		}	
+	}
+}
+
+void EveChildInstanceContainer::UnRegisterComponents()
+{
+	if( IsInRegistry() )
+	{
+		for( auto instance = m_instances.begin(); instance != m_instances.end(); ++instance )
+		{
+			if( EveEntityPtr entity = BlueCastPtr(*instance) )
+			{
+				entity->UnRegister( this->GetComponentRegistry() );
+			}
+		}	
+	}
 }
 
 void EveChildInstanceContainer::SetSourceEffect( IEveSpaceObjectChildPtr sourceEffect )
@@ -130,7 +167,8 @@ void EveChildInstanceContainer::DistributeAcrossLocatorset( const BlueSharedStri
 // --------------------------------------------------------------------------------------
 void EveChildInstanceContainer::CreateInstances( IEveSpaceObject2* parent )
 {
-	m_instances.Clear();
+	ClearInstanceList();
+	
 	if( !m_source )
 	{
 		return;
@@ -203,12 +241,15 @@ void EveChildInstanceContainer::CreateInstance( const Vector3& scale, const Quat
 		boneParent->AddTransformModifier( mod );
 		boneParent->AddToEffectChildrenList( translationParent );
 		boneParent->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
+		boneParent->Register( GetComponentRegistry() );
+
 		m_instances.Append( ( IEveSpaceObjectChildPtr ) boneParent );
 	}
 	else
 	{
 		translationParent->RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );
-		m_instances.Append( ( IEveSpaceObjectChildPtr ) translationParent );
+		translationParent->Register( GetComponentRegistry() );
+		m_instances.Append( (IEveSpaceObjectChildPtr)translationParent );
 	}
 	
 	return;
@@ -253,6 +294,7 @@ void EveChildInstanceContainer::RunOnInstances( std::function<void( IEveSpaceObj
 
 void EveChildInstanceContainer::ClearInstanceList()
 {
+	UnRegisterComponents();
 	m_instances.Clear();
 }
 
@@ -260,6 +302,14 @@ void EveChildInstanceContainer::PopFront()
 {
 	if( !m_instances.empty() )
 	{
+		if( EveEntityPtr front = BlueCastPtr( m_instances[0] ) )
+		{
+			if( IsInRegistry() )
+			{
+				front->UnRegister( GetComponentRegistry() );
+			}
+		}
+	
 		m_instances.Remove( 0 );
 	}
 }

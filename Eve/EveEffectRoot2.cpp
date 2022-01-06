@@ -51,6 +51,16 @@ bool EveEffectRoot2::Initialize()
 	return true;
 }
 
+bool EveEffectRoot2::OnModified( Be::Var* val )
+{
+	if( IsMatch( val, m_display ) )
+	{
+		ReRegister();
+	}
+	return true;
+}
+
+
 void EveEffectRoot2::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* value, const IList* list )
 {
 	if( list == &m_controllers && ( event & BELIST_LOADING ) == 0 )
@@ -90,7 +100,34 @@ void EveEffectRoot2::OnListModified( long event, ssize_t key, ssize_t key2, IRoo
 				}
 				child->StartControllers();
 			}
+			if( IsInRegistry() )
+			{
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( GetComponentRegistry() );
+				}
+			}
 			break;
+		case BELIST_REMOVED:
+			if( IsInRegistry() )
+			{
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->UnRegister( GetComponentRegistry() );
+				}
+			}
+			break;
+		case BELIST_UNLOADSTART:
+			if( IsInRegistry() )
+			{
+				for( ssize_t i = 0; i < list->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( list->GetAt(i) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}			
+			}
 		default:
 			break;
 		}
@@ -385,6 +422,37 @@ void EveEffectRoot2::RegisterSecondaryLightSource( Tr2ShLightingManager& manager
 void EveEffectRoot2::UnregisterSecondaryLightSource( Tr2ShLightingManager& manager )
 {
 	manager.UnregisterSecondaryLightSource( &m_worldTransform.GetTranslation() );
+}
+
+
+void EveEffectRoot2::RegisterComponents( )
+{
+	auto registry = GetComponentRegistry();
+	if( registry && m_display )
+	{
+		for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->Register( registry );
+			}
+		}
+	}	
+}
+
+void EveEffectRoot2::UnRegisterComponents(  )
+{
+	auto registry = GetComponentRegistry();
+	if( registry )
+	{
+		for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->UnRegister( registry );
+			}
+		}
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -752,6 +820,13 @@ IEveSpaceObjectChildPtr EveEffectRoot2::GetEffectChildByName( const char* name )
 // --------------------------------------------------------------------------------
 void EveEffectRoot2::AddToEffectChildrenList( IEveSpaceObjectChild* child )
 {
+	if( IsInRegistry() && m_display )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( child->GetRootObject() ) )
+		{
+			entity->Register( GetComponentRegistry() );
+		}
+	}
 	m_effectChildren.Append( child->GetRootObject() );
 }
 
@@ -761,6 +836,13 @@ void EveEffectRoot2::RemoveFromEffectChildrenList( IEveSpaceObjectChild* child )
 	auto index = m_effectChildren.FindKey( child );
 	if( index >= 0 )
 	{
+		if( IsInRegistry() )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( m_effectChildren[index] ) )
+			{
+				entity->UnRegister( GetComponentRegistry() );
+			}
+		}
 		m_effectChildren.Remove( index );
 	}
 }

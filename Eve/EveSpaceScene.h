@@ -20,6 +20,7 @@
 #include "Tr2LightManager.h"
 #include "PostProcess/Tr2PostProcess2.h"
 #include "Include/ITr2NamedPredicate.h"
+#include "Eve/EveComponentRegistry.h"
 
 class TriProjection;
 class TriView;
@@ -42,6 +43,10 @@ extern float g_eveSpaceSceneVisibilityThreshold;
 extern float g_eveSpaceSceneLowDetailThreshold;
 extern float g_eveSpaceSceneMediumDetailThreshold;
 extern float g_eveSpaceSceneHighDetailThreshold;
+
+// Setting for what reflection mode is used
+extern int g_eveReflectionMode;
+
 
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2Effect );
@@ -100,9 +105,10 @@ public:
 	virtual void RenderDebugInfo( Tr2RenderContext& renderContext );
 
 	RenderPassResult RenderPass( PassType pass, Tr2RenderContext& renderContext );
-	void RenderMainPass( Tr2RenderContext& renderContext );
+	void RenderMainPass( Tr2RenderContext & renderContext, Tr2RenderContextEnum::CullMode cullmode = Tr2RenderContextEnum::CULLMODE_CW );
 	void RenderDepthPass( Tr2RenderContext& renderContext );
 	void RenderBackgroundPass( Tr2RenderContext& renderContext );
+	void RenderReflectionPass( Tr2RenderContext& renderContext );
 	void BeginRender( Tr2RenderContext& renderContext );
 	void EndRender( Tr2RenderContext& renderContext );
 	void Render3DUI( Tr2RenderContext& renderContext );
@@ -305,11 +311,11 @@ protected:
 		                    float& depth ) const;
 
 	// Batch gathering and preparation	
-	void GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches );
-	void GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, BatchMap& batches );
-	void GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, BatchMap& batches );
-	void GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*>& objectRenderables, Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches );
-	void PrepareTransparentBatch( Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches );
+	void GetAllBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, Tr2RenderableSortList & objectsWithTransparencies, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void GetTransparentBatchesFromRenderables( std::vector<ITr2Renderable*> & objectRenderables, Tr2RenderableSortList & objectsWithTransparencies, BatchMap & batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	void PrepareTransparentBatch( Tr2RenderableSortList& objectsWithTransparencies, BatchMap& batches, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	
 	// Batch rendering
 	void RenderObjectsReceivingShadows( std::vector<ShadowReceiver>& objectReceivingShadows, bool renderShadows, Tr2RenderContext& renderContext );
@@ -326,9 +332,11 @@ protected:
 							ITriRenderBatchAccumulator* batch, 
 							TriBatchType batchType, 
 							Tr2EffectStateManager::RenderingMode rm,
-							Tr2RenderContext &renderContext );
+							Tr2RenderContext &renderContext,
+							Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	void UpdateSceneFromScript( Be::Time time );
+	void ReregisterEntities();
 
 protected:
 	bool m_display;
@@ -576,6 +584,11 @@ private:
 	Color m_reflectionBackLightingColor;
 
 	BlueSharedString m_name;
+
+	// Object to gather all components
+	EveComponentRegistryPtr m_componentRegistry;
+
+	bool m_dynamicObjectReflectionEnabled;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceScene );
@@ -590,10 +603,11 @@ TYPEDEF_BLUECLASS( EveSpaceScene );
 //	batches - map holding the outcome
 //	allocator - allocator to use
 //	batchTypes, batchTypeCount - which batches to query
+//  reason - Why do we need the renderabes (either normal or reflections)
 void GetBatchesFromRenderables(	ITr2Renderable** objectRenderables, const unsigned renderableCount, 
 								Tr2RenderableSortList* objectsWithTransparencies, 
 								EveSpaceScene::BatchMap& batches, 
-								const TriBatchType* batchTypes, const unsigned batchTypeCount );
+								const TriBatchType* batchTypes, const unsigned batchTypeCount, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 
 #endif // EveSpaceScene_H

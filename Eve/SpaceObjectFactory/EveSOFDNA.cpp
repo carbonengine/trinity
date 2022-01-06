@@ -1065,11 +1065,22 @@ const Vector4* EveSOFDNA::GetMeshAreaParameter( EveSOFDataArea::AreaType areaTyp
 		EveSOFUtilsParameterName param( m_genericData->patternMaterialPrefixes, parameterName.c_str() );
 		if( param.IsMaterialIdxValid() )
 		{
-			// get the material from the lib using the racial name
-			const Vector4* res = EveSOFUtils::SearchForParameterData( m_dataMgr, m_factionData->defaultPatternLayer1MaterialName.c_str(), &param );
-			if( res )
+			if( param.GetMaterialIdx() == 0)
 			{
-				return res;
+				// get the material from the lib using the racial name
+				const Vector4* res = EveSOFUtils::SearchForParameterData( m_dataMgr, m_factionData->defaultPatternLayer1MaterialName.c_str(), &param );
+				if( res )
+				{
+					return res;
+				}
+			}
+			else if( IsUsingExperimentalFeatures() && param.GetMaterialIdx() == 1 )
+			{
+				const Vector4* res = EveSOFUtils::SearchForParameterData( m_dataMgr, m_factionData->defaultPatternLayer2MaterialName.c_str(), &param );
+				if( res )
+				{
+					return res;
+				}
 			}
 		}
 	}
@@ -1242,11 +1253,28 @@ size_t EveSOFDNA::GetPatternLayerCount() const
 	// do we have a dna command for a pattern?
 	if( m_patternData )
 	{
-		return m_patternData->layerData.size();
+		// TODO - PHASE-6
+		auto applicationData = GetHullPatternApplicationData();
+		if( nullptr == applicationData )
+		{
+			return 0;
+		}
+		return applicationData->layerAndProjection.size();
 	}
-	// there should be a default pattern!
-	if( m_hullDatas[0]->defaultPattern.enabled )
+
+	// ok lets check for default patterns
+	if( IsUsingExperimentalFeatures() )
 	{
+		auto applicationData = GetFactionalPatternApplicationData();
+		if( nullptr != applicationData)
+		{
+			return applicationData->layerAndProjection.size();	
+		}
+		// could not find the hull in the pattern or couldn't find the pattern, so just fall out of this function
+	}
+	else if( m_hullDatas[0]->defaultPattern.enabled )
+	{
+		// there should be a default pattern!
 		return 1;
 	}
 	return 0;
@@ -1254,43 +1282,155 @@ size_t EveSOFDNA::GetPatternLayerCount() const
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Return pattern data, but needs to exist for provided hull!
+//   Return pattern application data for the provided faction! (if available)
 // --------------------------------------------------------------------------------
-const EveSOFDataMgr::PatternProjectionData* EveSOFDNA::GetPatternProjectionData( size_t layer ) const
+const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetFactionalPatternApplicationData() const
+{
+	// get the pattern info directly from the faction
+	auto patternData = m_dataMgr->GetPatternData( m_factionData->defaultPatternName.c_str() );
+	if( patternData )
+	{
+		auto finder = patternData->applicationData.find( BlueSharedString( m_hullNames[0] ) );
+		if( finder != patternData->applicationData.end() )
+		{
+			return &finder->second;
+		}
+	}
+	return nullptr;
+}
+
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Return pattern application data for the provided hull! (if available)
+// --------------------------------------------------------------------------------
+const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetHullPatternApplicationData() const
+{
+	// TODO PHASE-6
+	if( IsUsingExperimentalFeatures() )
+	{
+		auto finder = m_patternData->applicationData.find( BlueSharedString( m_hullNames[0] ) );
+		if( finder != m_patternData->applicationData.end() )
+		{
+			return &finder->second;
+		}
+	}
+	else
+	{
+		auto finder = m_patternData->old_applicationData.find( BlueSharedString( m_hullNames[0] ) );
+		if( finder != m_patternData->old_applicationData.end() )
+		{
+			return &finder->second;
+		}
+	}
+	
+	return nullptr;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Return pattern application data for the provided hull or faction! (if available)
+// --------------------------------------------------------------------------------
+const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetPatternApplicationData( ) const
 {
 	if( !HasDnaCommand( CMD_PATTERN ) )
 	{
+		if( IsUsingExperimentalFeatures() )
+		{
+			return GetFactionalPatternApplicationData();
+		}
+		else {
+			// ok no DNA command for a pattern, so we use the default from the hull
+			auto patternTransform = &m_hullDatas[0]->defaultPattern;
+			auto patternLayer = &m_factionData->defaultPatternInfo;
+
+			EveSOFDataMgr::PatternApplicationData* application = new EveSOFDataMgr::PatternApplicationData();
+			application->layerAndProjection.push_back( std::make_pair( *patternLayer, *patternTransform ) );
+			return application;
+		}
+	}
+
+	return GetHullPatternApplicationData();
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Return pattern data, but needs to exist for provided hull! (if available)
+// --------------------------------------------------------------------------------
+const EveSOFDataMgr::PatternProjectionData* EveSOFDNA::GetPatternProjectionData( const EveSOFDataMgr::PatternApplicationData* patternApplicationData, size_t layer ) const
+{
+	if( nullptr == patternApplicationData )
+	{
+		return nullptr;
+	}
+	if( !HasDnaCommand( CMD_PATTERN ) && !IsUsingExperimentalFeatures() )
+	{
+		if( layer > 0 )
+		{
+			// only 1 layer for default patterns, might be increased to 2
+			return nullptr;
+		}
 		// ok no DNA command for a pattern, so we use the default from the hull
-		return &m_hullDatas[0]->defaultPattern;
+		return &patternApplicationData->layerAndProjection[0].second;
 	}
-	auto finder = m_patternData->projectionData.find( BlueSharedString( m_hullNames[0] ) );
-	if( finder == m_patternData->projectionData.end() )
+
+	if( patternApplicationData->layerAndProjection.size() < layer )
 	{
 		return nullptr;
 	}
-	if( finder->second.size() < layer )
+	return &patternApplicationData->layerAndProjection[layer].second;
+}
+
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Return pattern layer data, but needs to exist for provided hull!
+// --------------------------------------------------------------------------------
+const EveSOFDataMgr::PatternLayerData* EveSOFDNA::GetPatternLayerData( const EveSOFDataMgr::PatternApplicationData* patternApplicationData, size_t layer ) const 
+{
+	if( nullptr == patternApplicationData )
 	{
 		return nullptr;
 	}
-	return &finder->second[ layer ];
+	if( !HasDnaCommand( CMD_PATTERN ) && !IsUsingExperimentalFeatures() )
+	{
+		if( layer > 0 )
+		{
+			// only 1 layer for default patterns, might be increased to 2
+			return nullptr;
+		}
+		// ok no DNA command for a pattern, so we use the default from the hull
+		return &patternApplicationData->layerAndProjection[0].first;
+	}
+
+	if( patternApplicationData->layerAndProjection.size() < layer )
+	{
+		return nullptr;
+	}
+	return &patternApplicationData->layerAndProjection[layer].first;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Return applicable material targets for the pattern
+// --------------------------------------------------------------------------------
+const Vector4 EveSOFDNA::GetMaterialTargets( const EveSOFDataMgr::PatternLayerData* layerData ) const
+{
+	return layerData->materialTargets;	
 }
 
 // --------------------------------------------------------------------------------
 // Description:
 //   Return pattern data
 // --------------------------------------------------------------------------------
-const EveSOFDataMgr::PatternLayerData* EveSOFDNA::GetPatternLayerData( size_t layer ) const
-{
-	if( !HasDnaCommand( CMD_PATTERN ) )
+bool EveSOFDNA::IsPatternLayerApplicableToArea( const EveSOFDataMgr::PatternLayerData* layerData, EveSOFDataArea::AreaType areaType ) const
+{			
+	if( nullptr == layerData )
 	{
-		// ok no DNA command for a pattern, so we use the default from the race
-		return &m_factionData->defaultPattern;
+		return false;
 	}
-	if( m_patternData->layerData.size() < layer )
-	{
-		return nullptr;
-	}
-	return &m_patternData->layerData[layer];
+	auto finder = layerData->applicableAreas.find( areaType );
+	return ( finder != layerData->applicableAreas.end() ) && finder->second;
 }
 
 // --------------------------------------------------------------------------------
@@ -1352,7 +1492,24 @@ bool EveSOFDNA::IsUsingExperimentalFeatures() const
 	return m_experimental;
 }
 
+EntityComponents::ReflectionMode EveSOFDNA::GetReflectionMode() const
+{
+	std::string category = m_hullDatas[0]->category;
+	
+	// Warning non future proofed code ahead!
+	// this should come from the category (as in the category being an object that has information about features)
+	if( category == "hangar" || category == "hangar4k" )
+	{
+		return EntityComponents::REFLECT_LOW_MEDIUM_HIGH;
+	}
+	if( category.find( "station" ) != std::string::npos || category.find( "structure" ) != std::string::npos )
+	{
+		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
+	}
+	if( category == "jumpgate" )
+	{
+		return EntityComponents::REFLECT_MEDIUM_AND_HIGH;
+	}
+	return EntityComponents::REFLECT_NEVER;
 
-
-
-
+}

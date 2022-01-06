@@ -291,7 +291,7 @@ Tr2PerObjectData* EveStretch2::GetPerObjectData( ITriRenderBatchAccumulator* acc
 	return data;
 }
 
-void EveStretch2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveStretch2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( batchType == TRIBATCHTYPE_ADDITIVE && m_effect && m_effect->GetShaderStateInterface() && m_vb.IsValid() )
 	{

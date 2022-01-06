@@ -30,7 +30,8 @@ BLUE_CLASS( EveChildSocket ) :
 	public IEveEffectChildrenOwner,
 	public ITr2DebugRenderable,
 	public IShaderConfigurer,
-	public ITr2SoundEmitterOwner
+	public ITr2SoundEmitterOwner,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -64,6 +65,11 @@ public:
 	IEveSpaceObjectChildPtr GetEffectChildByName( const char* name ) const;
 	void AddToEffectChildrenList( IEveSpaceObjectChild* child );
 	void RemoveFromEffectChildrenList( IEveSpaceObjectChild* child );
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 	void UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );

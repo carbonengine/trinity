@@ -591,7 +591,8 @@ void Tr2SkinnedObject::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 void Tr2SkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 								   TriBatchType batchType,
-								   const Tr2PerObjectData* perObjectData )
+								   const Tr2PerObjectData* perObjectData,
+								   Tr2RenderReason reason )
 {
 	if( m_visualModel && perObjectData && DoDisplay() )
 	{

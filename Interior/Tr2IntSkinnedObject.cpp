@@ -181,7 +181,8 @@ extern int g_maxClothLod;
 
 void Tr2IntSkinnedObject::GetBatches( ITriRenderBatchAccumulator* batches,
 								   TriBatchType batchType,
-								   const Tr2PerObjectData* perObjectData )
+								   const Tr2PerObjectData* perObjectData, 
+								   Tr2RenderReason reason)
 {
 	if( !DoDisplay() )
 	{

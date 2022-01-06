@@ -65,18 +65,35 @@ public:
 		std::string textureResFilePath;
 		// material source
 		uint8_t materialSourceID;
-		// material targets
+		// default material targets
 		Vector4 materialTargets;
 		// projection type
 		Tr2RenderContextEnum::TextureAddressMode projectionAddressModeU, projectionAddressModeV;
+
+		// pattern applicable areas
+		std::map<EveSOFDataArea::AreaType, bool> applicableAreas;
+		PatternLayerData()
+		{
+			for( int i = 0; i < EveSOFDataArea::AreaType::TYPE_MAX; i++ )
+			{
+				applicableAreas[(EveSOFDataArea::AreaType)i] = true;
+			}
+		}
+	};
+
+	struct PatternApplicationData
+	{
+		std::vector < std::pair<PatternLayerData, PatternProjectionData> > layerAndProjection;
 	};
 
 	struct PatternData
 	{
-		// pattern data (per hull)
-		std::map<BlueSharedString, std::vector<PatternProjectionData>> projectionData;
-		// pattern data (per layer)
-		std::vector<PatternLayerData> layerData;
+		// remove - temporary conversion of things (but need to be able to use new pipeline)
+		std::map<BlueSharedString, PatternApplicationData> old_applicationData;
+
+		// SOF PHASE-6
+		// pattern data (per hull with data from the projection groups)
+		std::map<BlueSharedString, PatternApplicationData> applicationData;
 	};
 
 	// hull data structs
@@ -375,6 +392,7 @@ public:
 		std::string modelRotationCurvePath;
 		std::string modelTranslationCurvePath;
 		std::map<int32_t, size_t> meshIndexToOpaqueAreaLookup;
+		std::string category;
 	};
 
 	// color data structs
@@ -428,8 +446,10 @@ public:
 		int materialUsageList[4];
 
 		// default pattern
-		PatternLayerData defaultPattern;
+		PatternLayerData defaultPatternInfo;
 		std::string defaultPatternLayer1MaterialName;
+		std::string defaultPatternLayer2MaterialName;
+		std::string defaultPatternName;
 
 		// hull area materials
 		AreaMaterialData areaMaterials;
@@ -439,7 +459,7 @@ public:
 		LogoSetData logoSetData;
 		// visibility data
 		std::set<uint32_t> visibilityData;
-		// SOF UPDATE 6- spotlightSetsColors, planeSetColors and childData can be removed after the update
+		// PHASE-6- spotlightSetsColors, planeSetColors and childData can be removed after the update
 		// spotlight sets
 		std::map<int, FactionSpotlightSetColorData> spotlightSetsColors;
 		// plane sets

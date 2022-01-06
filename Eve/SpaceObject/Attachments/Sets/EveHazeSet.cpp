@@ -228,12 +228,12 @@ void EveHazeSet::CreateBoundingBox()
 // Description:
 //   Trinity's way of providing batches to render
 // --------------------------------------------------------------------------------
-void EveHazeSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveHazeSet::GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
-	if( batchType != TRIBATCHTYPE_ADDITIVE || !m_vertexBuffer.IsValid() )
+	if( batchType != TRIBATCHTYPE_ADDITIVE || !m_vertexBuffer.IsValid() || reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION)
 	{
 		return;
-	}
+	} 
 
 	if( m_vertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 	{

@@ -40,7 +40,7 @@ static const double UNINITIALIZED_POSITION = std::numeric_limits<double>::infini
 CCP_STATS_DECLARE( eveLowDetailObjects, "Trinity/EveSpaceObject2/lowDetailObjects", true, CST_COUNTER_LOW, "Number of objects rendered in low detail per frame." );
 CCP_STATS_DECLARE( eveHighDetailObjects, "Trinity/EveSpaceObject2/highDetailObjects", true, CST_COUNTER_LOW, "Number of objects rendered in high detail per frame." );
 
-float g_secondaryLightingRadiusCutoffFactor = 0.3;
+float g_secondaryLightingRadiusCutoffFactor = 0.3f;
 TRI_REGISTER_SETTING( "secondaryLightingRadiusCutoffFactor", g_secondaryLightingRadiusCutoffFactor );
 
 const BlueSharedString DAMAGE_LOCATOR_SET_NAME( "damage" );
@@ -187,7 +187,8 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_lastDamageLocatorHit( -1 ),
 	m_worldTransform( XMMatrixIdentity() ),
 	m_invWorldTransform( XMMatrixIdentity() ),
-	m_controllerVariables( "EveSpaceObject2::m_controllerVariables" )
+	m_controllerVariables( "EveSpaceObject2::m_controllerVariables" ),
+	m_reflectionMode( EntityComponents::REFLECT_NEVER )
 {
 	m_positionDelta.CreateInstance();
 
@@ -281,6 +282,30 @@ void EveSpaceObject2::OnListModified( long event, ssize_t key, ssize_t key2, IRo
 				for( auto it = begin( m_controllerVariables ); it != end( m_controllerVariables ); ++it )
 				{
 					child->SetControllerVariable( it->first.c_str(), it->second );
+				}
+			}
+			if( IsInRegistry() )
+			{
+				if( EveEntityPtr entity = BlueCastPtr( value ) )
+				{
+					entity->Register( this->GetComponentRegistry() );
+				}
+			}
+			break;
+		case BELIST_REMOVED:
+			if( EveEntityPtr entity = BlueCastPtr( value ) )
+			{
+				entity->UnRegister( this->GetComponentRegistry() );
+			}
+		case BELIST_UNLOADSTART:
+			if( IsInRegistry() )
+			{
+				for( ssize_t i = 0; i < list->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( list->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
 				}
 			}
 			break;
@@ -872,14 +897,21 @@ bool EveSpaceObject2::HasTransparentBatches()
 	return false;
 }
 
-void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData )
+void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
-	if( !m_mesh )
+	auto mesh = m_mesh;
+	if( reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION && !mesh)
+	{
+		// when frustum culling we could get into a situation where m_mesh is nullptr so lets use the m_meshlod instead
+		mesh = m_meshLod;  
+	}
+	
+	if( !mesh )
 	{
 		return;
 	}
 
-	if( !m_mesh->GetDisplay() )
+	if( !mesh->GetDisplay() )
 	{
 		return;
 	}
@@ -888,8 +920,8 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 	{
 		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
 		{
-			( *it )->GetBatches( batches, batchType, perObjectData );
-		}
+			( *it )->GetBatches( batches, batchType, perObjectData, reason);
+		}																				
 	}
 
 	if( m_impactOverlay )
@@ -898,23 +930,23 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 	}
 
 	// Everything except for shadow batches
-	Tr2MeshAreaVector* areas = m_mesh->GetAreas( batchType );
+	Tr2MeshAreaVector* areas = mesh->GetAreas( batchType );
 	// Could be NULL if we're rendering a batch type that hasn't got a mesh area vector
 	if( areas )
 	{
 		// transparent needs sorted meshareas
 		if( batchType != TRIBATCHTYPE_TRANSPARENT )
 		{
-			m_mesh->GetBatches( batches, areas, perObjectData );
+			mesh->GetBatches( batches, areas, perObjectData );
 		}
 		else
 		{
-			GetSortedBatchesFromMeshAreaVector( areas, batches, perObjectData, m_mesh, &m_worldTransform );
+			GetSortedBatchesFromMeshAreaVector( areas, batches, perObjectData, mesh, &m_worldTransform );
 		}
 	}
 
 	// add overlay effect batches
-	GetBatchesFromOverlayVector( batches, perObjectData, batchType );
+	GetBatchesFromOverlayVector( batches, perObjectData, batchType, mesh );
 }
 
 
@@ -982,16 +1014,16 @@ float EveSpaceObject2::GetSortValue()
 //  Description:
 //    Given a pointer to a mesh overlay vector, gathers TriGeometryBatches for each.
 // ---------------------------------------------------------------------------------------
-void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType )
+void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType, Tr2MeshBase* mesh )
 {
-	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
+	TriGeometryRes* geomRes = mesh->GetGeometryResource();
 
 	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;
 	}
 
-	int meshIx = m_mesh->GetMeshIndex();
+	int meshIx = mesh->GetMeshIndex();
 
 	// first the damage overlays
 	if( m_impactOverlay )
@@ -1435,6 +1467,12 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 		}
 	}
 }
+;
+bool EveSpaceObject2::IsVisible( const TriFrustum& frustum ) const
+{
+	return frustum.IsSphereVisible( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) && 
+		frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) >= g_eveSpaceSceneVisibilityThreshold;
+}
 
 void EveSpaceObject2::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2ImpostorManager* impostors )
 {
@@ -1720,6 +1758,10 @@ bool EveSpaceObject2::OnModified( Be::Var* val )
 		m_oldClipSphereFactor = m_clipSphereFactor;
 		SetControllerVariable( "ClipSphereFactor", m_clipSphereFactor );
 	}
+	else if( IsMatch( val, m_reflectionMode) || IsMatch( val, m_display ) )
+	{
+		ReRegister();
+	}
 
 	return true;
 }
@@ -1735,9 +1777,9 @@ bool EveSpaceObject2::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery qu
 	if( query == EVE_BOUNDS_NORMAL || !DisplayChildren() )
 	{
 		return true;
-	}
+	} 
 
-	Vector4 childBounds;
+	Vector4 childBounds; 
 	for( auto it = m_children.begin(); it != m_children.end(); it++ )
 	{
 		if( ( *it )->GetBoundingSphere( childBounds, query ) )
@@ -2591,6 +2633,13 @@ IEveSpaceObjectChildPtr EveSpaceObject2::GetEffectChildByName( const char* name 
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::AddToEffectChildrenList( IEveSpaceObjectChild* child )
 {
+	if( IsInRegistry() && m_display )
+	{
+		if( EveEntityPtr entity = BlueCastPtr( child->GetRootObject() ) )
+		{
+			entity->Register( GetComponentRegistry() );
+		}
+	}
 	m_effectChildren.Append( child->GetRootObject() );
 }
 
@@ -2600,6 +2649,13 @@ void EveSpaceObject2::RemoveFromEffectChildrenList( IEveSpaceObjectChild* child 
 	auto index = m_effectChildren.FindKey( child );
 	if( index >= 0 )
 	{
+		if( IsInRegistry() )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( m_effectChildren[index] ) )
+			{
+				entity->UnRegister( GetComponentRegistry() );
+			}
+		}
 		m_effectChildren.Remove( index );
 	}
 }
@@ -3108,6 +3164,50 @@ bool EveSpaceObject2::IsPickable() const
 	return m_isPickable;
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//    Registers itself and its children with the scene registration container.
+//    This is so we don't have to traverse the tree every frame
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::RegisterComponents( )
+{
+	auto registry = this->GetComponentRegistry();
+	if(registry && m_display)
+	{
+		if(EntityComponents::ShouldReflect(m_reflectionMode) )
+		{
+			registry->RegisterComponent( ComponentType::REFLECTION_RENDERABLE, this, this->m_state );
+		}
+
+		for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->Register( registry );
+			}
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Unregisters itself and its children with the scene registration container.
+// --------------------------------------------------------------------------------
+void EveSpaceObject2::UnRegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if(registry)
+	{
+		for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
+		{
+			if( EveEntityPtr entity = BlueCastPtr( *it ) )
+			{
+				entity->UnRegister( registry );
+			}
+		}
+	}
+}
+
 IRoot* EveSpaceObject2::GetID( uint16_t areaID )
 {
 	return GetRawRoot();
@@ -3123,8 +3223,8 @@ void EveSpaceObject2::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr
 	{
 		GetBatches( batches, TRIBATCHTYPE_OPAQUE, perObjectData );
 		// We also get stuff from overlay so that some effects (like cloaking) can be pickable
-		GetBatchesFromOverlayVector( batches, perObjectData, TRIBATCHTYPE_TRANSPARENT );
-		GetBatchesFromOverlayVector( batches, perObjectData, TRIBATCHTYPE_ADDITIVE );
+		GetBatchesFromOverlayVector( batches, perObjectData, TRIBATCHTYPE_TRANSPARENT, m_mesh );
+		GetBatchesFromOverlayVector( batches, perObjectData, TRIBATCHTYPE_ADDITIVE , m_mesh);
 	}
 	if( ( pickTypes & PICK_TYPE_TRANSPARENT ) != 0 )
 	{
@@ -3357,4 +3457,10 @@ void EveSpaceObject2::ResetClipSphereCenter()
 void EveSpaceObject2::ResetClipSphereCenterToPos( Vector3 center )
 {
 	m_clipSphereCenter = center;
+}
+
+void EveSpaceObject2::SetReflectionMode( EntityComponents::ReflectionMode mode )
+{
+	m_reflectionMode = mode;
+	ReRegister();
 }
