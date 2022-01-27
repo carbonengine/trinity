@@ -1280,7 +1280,7 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 			// Render the CoC - r is near, g is far, black is focus
 			DrawInto( *coc, Tr2LoadAction::DONT_CARE, m_depthOfFieldCoCShader, renderContext );
 			// Blur the near CoC
-			Blur( coc, coc, renderContext, BlurType::Small, BlurChannel::r );
+			Blur( coc, coc, renderContext, BlurType::Small, BlurChannel::r, 1.0 );
 		} 
 		{
 			GPU_REGION( renderContext, "Bokeh Foreground Blur" );
