@@ -159,7 +159,7 @@ private:
 
 	// Common
 	void Blur( Tr2RenderTarget * dest, Tr2RenderTarget * src, Tr2RenderContext & renderContext, BlurType blurType = BlurType::Big, BlurChannel blurChannel = BlurChannel::rgba, float size = 0.5f );
-	Tr2RenderTarget* DownSampleDepth( Tr2RenderContext& renderContext, float size = 0.5f );
+	void DownSampleDepth( Tr2RenderContext & renderContext, Tr2RenderTarget* destination );
 
 	Tr2EffectPtr m_downsampleDepthEffect;
 	std::map<uint32_t, std::pair<Tr2EffectPtr, Tr2EffectPtr>> m_blurEffects;

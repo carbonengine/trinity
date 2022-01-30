@@ -380,7 +380,7 @@ void TriStepRenderPostProcess::Blur( Tr2RenderTarget* dest, Tr2RenderTarget* src
 	DrawInto( *dest, Tr2LoadAction::DONT_CARE, effects.second, renderContext );
 }
 
-Tr2RenderTarget* TriStepRenderPostProcess::DownSampleDepth( Tr2RenderContext& renderContext, float size )
+void TriStepRenderPostProcess::DownSampleDepth( Tr2RenderContext& renderContext, Tr2RenderTarget* destination )
 {
 	if( !m_downsampleDepthEffect )
 	{
@@ -390,9 +390,7 @@ Tr2RenderTarget* TriStepRenderPostProcess::DownSampleDepth( Tr2RenderContext& re
 		m_downsampleDepthEffect->EndUpdate();
 	}
 
-	auto rt1 = m_renderInfo->GetTempTexture( size );
-	DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_downsampleDepthEffect, renderContext );
-	return rt1;
+	DrawInto( *destination, Tr2LoadAction::DONT_CARE, m_downsampleDepthEffect, renderContext );
 }
 
 bool TriStepRenderPostProcess::ProcessBloom( Tr2PPBloomEffect* bloom, Tr2PPDynamicExposureEffect* dynamicExposure )
@@ -526,7 +524,8 @@ void TriStepRenderPostProcess::RenderGodRays( Tr2RenderTarget* dest, Tr2RenderCo
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 	
 	// Downsample depth
-	auto rt1 = DownSampleDepth( renderContext );
+	auto rt1 = m_renderInfo->GetTempTexture( 0.5f );
+	DownSampleDepth( renderContext, rt1 );
 
 	// God rays
 	auto rt2 = m_renderInfo->GetTempTexture( 0.5f );
