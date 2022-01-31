@@ -36,6 +36,13 @@
 	}
 }
 
+%stack_overflow 
+{
+	parserState->ShowMessage( EC_CUSTOM_ERROR, "Compiler stack overflow :/" );
+}
+
+%stack_size 2000
+
 in ::= translation_unit(A). {parserState->SetTree( A );}
 
 
