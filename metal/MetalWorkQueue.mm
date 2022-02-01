@@ -549,7 +549,21 @@ bool MetalWorkQueue::BlitToDrawableAndPresent( id<MTLTexture> srcTexture, NSView
 
 	if( view == nil || caMetalLayer == nil || drawable == nil )
 	{
-		CCP_AL_LOGERR( "Bad view/metalLayer/drawable." );
+		if( view == nil )
+		{
+			CCP_AL_LOGERR( "No target view - present failed." );
+		}
+
+		if( caMetalLayer == nil )
+		{
+			CCP_AL_LOGERR( "Target view doesn't have a Metal layer - present failed." );
+		}
+
+		if( drawable == nil )
+		{
+			CCP_AL_LOGERR( "Next drawable is not available - present failed." );
+		}
+
 		return false;
 	}
 
@@ -1642,7 +1656,21 @@ bool MetalWorkQueue::EmitRenderEncoderState()
 {
 	if( m_currentEncoderType != MTLENCODERTYPE_RENDER || !m_encoderInUse || !m_currentRenderEncoder )
 	{
-		CCP_AL_LOGERR( "Error to emit render encoder state." );
+		if( m_currentEncoderType != MTLENCODERTYPE_RENDER )
+		{
+			CCP_AL_LOGERR( "Current command encoder is not render type - failed to change render state." );
+		}
+
+		if( !m_encoderInUse )
+		{
+			CCP_AL_LOGERR( "Current render encoder is not in use - failed to change render state." );
+		}
+
+		if( !m_currentRenderEncoder )
+		{
+			CCP_AL_LOGERR( "Current render encoder is nil - failed to change render state." );
+		}
+
 		return false;
 	}
 
@@ -1814,7 +1842,21 @@ bool MetalWorkQueue::EmitComputeEncoderState()
 	CCP_ASSERT( m_isPrimary );
 	if( m_currentEncoderType != MTLENCODERTYPE_COMPUTE || !m_encoderInUse || !m_currentComputeEncoder )
 	{
-		CCP_AL_LOGERR( "Error to emit compute encoder state" );
+		if( m_currentEncoderType != MTLENCODERTYPE_COMPUTE )
+		{
+			CCP_AL_LOGERR( "Current command encoder is not compute type - failed to change compute state." );
+		}
+
+		if( !m_encoderInUse )
+		{
+			CCP_AL_LOGERR( "Current compute encoder is not in use - failed to change compute state." );
+		}
+
+		if( !m_currentComputeEncoder )
+		{
+			CCP_AL_LOGERR( "Current compute encoder is nil - failed to change compute state." );
+		}
+
 		return false;
 	}
 
