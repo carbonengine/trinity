@@ -50,7 +50,7 @@ void MetalUtils::SetupPixelFormatConversionTable()
 	PixelFormatConversionTable[Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM]              = MTLPixelFormatRGBA8Unorm;
 	PixelFormatConversionTable[Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM_SRGB]         = MTLPixelFormatRGBA8Unorm_sRGB;
 	PixelFormatConversionTable[Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UINT]               = MTLPixelFormatRGBA8Uint;
-	PixelFormatConversionTable[Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_SNORM]              = MTLPixelFormatInvalid;
+	PixelFormatConversionTable[Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_SNORM]              = MTLPixelFormatRGBA8Snorm;
 	PixelFormatConversionTable[Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_SINT]               = MTLPixelFormatRGBA8Sint;
 	PixelFormatConversionTable[Tr2RenderContextEnum::PIXEL_FORMAT_R16G16_TYPELESS]             = MTLPixelFormatInvalid;
 	PixelFormatConversionTable[Tr2RenderContextEnum::PIXEL_FORMAT_R16G16_FLOAT]                = MTLPixelFormatRG16Float;
