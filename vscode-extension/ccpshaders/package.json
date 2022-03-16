@@ -3,7 +3,7 @@
 	"publisher": "ccp",
 	"displayName": "CcpShaders",
 	"description": "CCP support for shader compiler",
-	"version": "0.0.12",
+	"version": "0.0.13",
 	"engines": {
 		"vscode": "^1.45.0"
 	},

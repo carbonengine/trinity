@@ -135,7 +135,7 @@ function activate(context: vscode.ExtensionContext) {
 		}
 		var execution = new vscode.CustomExecution(()=>buildTask([itemPath], false));
 		var problemMatchers = ["$msCompile", "$metal"];
-		vscode.tasks.executeTask(new vscode.Task({type: 'shadercompiler'}, vscode.TaskScope.Workspace, "compile", "ccpshaders", execution, problemMatchers));
+		vscode.tasks.executeTask(new vscode.Task({type: 'compilesingle'}, vscode.TaskScope.Workspace, "compile", "fxfile", execution, problemMatchers));
 	}));
 
 	function _constructBuildExecution(incremental: boolean): vscode.CustomExecution {
