@@ -1558,7 +1558,7 @@ bool MetalWorkQueue::EmitRenderPipelineState()
 		size_t sampleCount = 0;
 		for( uint32_t i = 0; i < m_numRenderAttachments; ++i )
 		{
-			if( m_blendState[i].blendType == METAL_BLENDING_ENABLED )
+			if( m_blendState[0].blendType == METAL_BLENDING_ENABLED )
 			{
 				renderPipelineStateDescriptor.colorAttachments[i].blendingEnabled             = YES;
 				renderPipelineStateDescriptor.colorAttachments[i].writeMask                   = m_blendState[0].writeMask;
@@ -1569,16 +1569,16 @@ bool MetalWorkQueue::EmitRenderPipelineState()
 				renderPipelineStateDescriptor.colorAttachments[i].sourceAlphaBlendFactor      = m_blendState[0].srcColorFactor;
 				renderPipelineStateDescriptor.colorAttachments[i].destinationAlphaBlendFactor = m_blendState[0].destColorFactor;
 			}
-			else if( m_blendState[i].blendType == METAL_BLENDING_ENABLED_SEPARATE_ALPHA )
+			else if( m_blendState[0].blendType == METAL_BLENDING_ENABLED_SEPARATE_ALPHA )
 			{
 				renderPipelineStateDescriptor.colorAttachments[i].blendingEnabled             = YES;
-				renderPipelineStateDescriptor.colorAttachments[i].writeMask                   = m_blendState[i].writeMask;
-				renderPipelineStateDescriptor.colorAttachments[i].rgbBlendOperation           = m_blendState[i].rgbBlendOp;
-				renderPipelineStateDescriptor.colorAttachments[i].sourceRGBBlendFactor        = m_blendState[i].srcColorFactor;
-				renderPipelineStateDescriptor.colorAttachments[i].destinationRGBBlendFactor   = m_blendState[i].destColorFactor;
-				renderPipelineStateDescriptor.colorAttachments[i].alphaBlendOperation         = m_blendState[i].alphaBlendOp;
-				renderPipelineStateDescriptor.colorAttachments[i].sourceAlphaBlendFactor      = m_blendState[i].srcAlphaFactor;
-				renderPipelineStateDescriptor.colorAttachments[i].destinationAlphaBlendFactor = m_blendState[i].destAlphaFactor;
+				renderPipelineStateDescriptor.colorAttachments[i].writeMask                   = m_blendState[0].writeMask;
+				renderPipelineStateDescriptor.colorAttachments[i].rgbBlendOperation           = m_blendState[0].rgbBlendOp;
+				renderPipelineStateDescriptor.colorAttachments[i].sourceRGBBlendFactor        = m_blendState[0].srcColorFactor;
+				renderPipelineStateDescriptor.colorAttachments[i].destinationRGBBlendFactor   = m_blendState[0].destColorFactor;
+				renderPipelineStateDescriptor.colorAttachments[i].alphaBlendOperation         = m_blendState[0].alphaBlendOp;
+				renderPipelineStateDescriptor.colorAttachments[i].sourceAlphaBlendFactor      = m_blendState[0].srcAlphaFactor;
+				renderPipelineStateDescriptor.colorAttachments[i].destinationAlphaBlendFactor = m_blendState[0].destAlphaFactor;
 			}
 			else
 			{
