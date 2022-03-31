@@ -67,6 +67,8 @@ function(set_shared_trinityaltest_properties target)
 
         target_link_libraries(${target} PRIVATE "-framework CoreFoundation")
         target_link_libraries(${target} PRIVATE "-framework Cocoa")
+    elseif(WIN32)
+        target_link_options(${target} PRIVATE "/IGNORE:4049")
     endif()
 
     # override the output directory to ensure that all TrinityALTest outputs end up in the same folder.
