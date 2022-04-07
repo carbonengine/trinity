@@ -3859,6 +3859,12 @@ float4x3 to_float4x3( constant const float4x4& m )
 float3x4 to_float3x4( constant const float4x4& m )
 { return float3x4( m[0], m[1], m[2] ); }
 
+float f16tof32( uint x )
+{ return static_cast<float>( as_type<half>( static_cast<uint16_t>( x ) ) ); }
+
+uint f32tof16( float x )
+{ return as_type<uint16_t>( static_cast<half>( x ) ); }
+
 
 float3 matrixRow( float3x3 m, int row )
 { return float3( m[0][row], m[1][row], m[2][row] ); }
