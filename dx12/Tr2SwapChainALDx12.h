@@ -46,6 +46,8 @@ namespace TrinityALImpl
 			IDXGISwapChain1* swapChain );
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2SwapChainAL( const Tr2SwapChainAL& ) /* = delete */;
 		Tr2SwapChainAL& operator=( const Tr2SwapChainAL& ) /* = delete */;
@@ -53,6 +55,7 @@ namespace TrinityALImpl
 		CComPtr<IDXGISwapChain3> m_swapChain;
 		Tr2PrimaryRenderContextAL* m_owner;
 		Tr2PresentParametersAL m_presentParameters;
+		std::string m_name;
 
 		friend class Tr2PrimaryRenderContextAL;
 	};

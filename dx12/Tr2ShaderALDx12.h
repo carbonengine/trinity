@@ -41,6 +41,8 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const;
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2ShaderAL( const Tr2ShaderAL& shader );
 		Tr2ShaderAL& operator=( const Tr2ShaderAL& shader );
@@ -48,6 +50,7 @@ namespace TrinityALImpl
 		Tr2ShaderSignatureAL m_signature;
 		CcpMallocBuffer m_bytecode;
 		Tr2RenderContextEnum::ShaderType m_type;
+		std::string m_name;
 
 		friend class Tr2ShaderProgramAL;
 	};

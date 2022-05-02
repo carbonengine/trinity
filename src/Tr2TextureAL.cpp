@@ -215,6 +215,19 @@ uintptr_t Tr2TextureAL::GetSharedHandle() const
 	return m_texture->GetSharedHandle();
 }
 
+ALResult Tr2TextureAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_texture->SetName( name );
+}
+
 TrinityALImpl::Tr2TextureAL* Tr2TextureAL::TrinityALImpl_GetObject() const
 {
 	return m_texture.get();

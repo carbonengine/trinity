@@ -87,6 +87,8 @@ namespace TrinityALImpl
 		VkImage GetImageVulkan() const;
 		VkImageView GetImageView() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		std::vector<VkImage> m_images;
 		std::vector<VkImageView> m_imageViews;

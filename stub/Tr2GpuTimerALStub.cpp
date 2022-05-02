@@ -49,6 +49,11 @@ namespace TrinityALImpl
 	void Tr2GpuTimerAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
+
+	ALResult Tr2GpuTimerAL::SetName( const char* )
+	{
+		return S_OK;
+	}
 }
 
 #endif

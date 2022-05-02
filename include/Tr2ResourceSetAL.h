@@ -119,6 +119,9 @@ public:
 	bool IsValid() const;
 
 	Tr2ALMemoryType GetMemoryClass() const;
+
+	ALResult SetName( const char* name );
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2ResourceSetAL> m_resourceSet;
 

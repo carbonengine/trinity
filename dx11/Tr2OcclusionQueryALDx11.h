@@ -26,12 +26,15 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2OcclusionQueryAL( const Tr2OcclusionQueryAL& ) /* = delete */;
 		Tr2OcclusionQueryAL& operator=( const Tr2OcclusionQueryAL& ) /* = delete */;
 
 		CComPtr<ID3D11Query> m_query;
+		std::string m_name;
 	};
-}
+	}
 
 #endif

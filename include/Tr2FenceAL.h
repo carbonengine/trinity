@@ -25,6 +25,9 @@ public:
 	bool IsValid() const;
 	bool operator==( const Tr2FenceAL& other ) const;
 	Tr2ALMemoryType GetMemoryClass() const;
+
+	ALResult SetName( const char* name );
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2FenceAL> m_fence;
 };

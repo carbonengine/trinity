@@ -32,6 +32,9 @@ namespace TrinityALImpl
 
 		ID3D12Resource* GetResource() const;
 		D3D12_GPU_VIRTUAL_ADDRESS GetGpuView() const;
+
+		void SetName( const char* name );
+		const std::string& GetName() const;
 	private:
 		struct Resource
 		{
@@ -49,7 +52,8 @@ namespace TrinityALImpl
 		size_t m_size;
 		D3D12_RESOURCE_STATES m_defaultState;
 		Strategy m_strategy;
+		std::string m_name;
 	};
-}
+	}
 
 #endif

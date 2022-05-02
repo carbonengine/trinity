@@ -24,6 +24,8 @@ namespace TrinityALImpl
 		bool IsValid() const;
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2PrimaryRenderContextAL *m_owner;
 

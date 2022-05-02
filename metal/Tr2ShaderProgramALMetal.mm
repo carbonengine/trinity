@@ -234,6 +234,25 @@ namespace TrinityALImpl
 	void Tr2ShaderProgramAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2ShaderProgramAL";
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2ShaderProgramAL::SetName( const char* name )
+	{
+		m_name = name;
+		if( m_vertexFunction )
+		{
+			m_vertexFunction.label = [NSString stringWithUTF8String:name];
+		}
+		if( m_fragmentFunction )
+		{
+			m_fragmentFunction.label = [NSString stringWithUTF8String:name];
+		}
+		if( m_computeFunction )
+		{
+			m_computeFunction.label = [NSString stringWithUTF8String:name];
+		}
+		return S_OK;
 	}
 
 	void Tr2ShaderProgramAL::SetDummyResources( TrinityALImpl::MetalWorkQueue& workQueue )

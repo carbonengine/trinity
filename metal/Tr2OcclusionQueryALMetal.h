@@ -23,6 +23,7 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 	private:
 		Tr2OcclusionQueryAL( const Tr2OcclusionQueryAL& ) /* = delete */;
@@ -32,6 +33,7 @@ namespace TrinityALImpl
 		bool           m_isRunning;
 		MetalContext  *m_metalContext;
 		uint64_t       m_currentQueryNumber;
+		std::string m_name;
 	};
 }
 

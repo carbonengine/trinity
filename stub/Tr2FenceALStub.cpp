@@ -80,6 +80,11 @@ namespace TrinityALImpl
 	void Tr2FenceAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
+
+	ALResult Tr2FenceAL::SetName( const char* )
+	{
+		return S_OK;
+	}
 }
 
 #endif

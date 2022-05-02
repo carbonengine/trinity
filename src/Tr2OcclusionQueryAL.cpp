@@ -58,3 +58,16 @@ Tr2ALMemoryType Tr2OcclusionQueryAL::GetMemoryClass() const
 {
 	return m_query->GetMemoryClass();
 }
+
+ALResult Tr2OcclusionQueryAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_query->SetName( name );
+}

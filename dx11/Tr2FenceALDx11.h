@@ -24,11 +24,14 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2FenceAL( const Tr2FenceAL& ) /* = delete */;
 		Tr2FenceAL& operator=( const Tr2FenceAL& ) /* = delete */;
 
 		CComPtr<ID3D11Query> m_query;
+		std::string m_name;
 	};
 
 }

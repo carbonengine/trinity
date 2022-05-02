@@ -49,6 +49,11 @@ namespace TrinityALImpl
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const
 		{
 		}
+		ALResult SetName( const char* name )
+		{
+			return E_NOTIMPL;
+		}
+
 	private:
 		Tr2OcclusionQueryAL( const Tr2OcclusionQueryAL& ) /* = delete */;
 		Tr2OcclusionQueryAL& operator=( const Tr2OcclusionQueryAL& ) /* = delete */;

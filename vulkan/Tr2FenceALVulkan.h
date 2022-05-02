@@ -61,6 +61,11 @@ namespace TrinityALImpl
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const
 		{
 		}
+		ALResult SetName( const char* name )
+		{
+			return E_NOTIMPL;
+		}
+
 	private:
 		Tr2FenceAL( const Tr2FenceAL& ) /* = delete */;
 		Tr2FenceAL& operator=( const Tr2FenceAL& ) /* = delete */;

@@ -49,6 +49,8 @@ namespace TrinityALImpl
 
 		void SetNullShaderType( Tr2RenderContextEnum::ShaderType type );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2ShaderAL( const Tr2ShaderAL& shader );
 		Tr2ShaderAL& operator=( const Tr2ShaderAL& shader );

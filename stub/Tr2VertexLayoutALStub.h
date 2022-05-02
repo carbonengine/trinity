@@ -28,6 +28,8 @@ namespace TrinityALImpl
 			return AL_MEMORY_MANAGED;
 		}
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		std::unique_ptr<Tr2VertexDefinition> m_definition;
 	};

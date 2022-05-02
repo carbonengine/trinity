@@ -137,6 +137,12 @@ namespace TrinityALImpl
 	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
+
+	ALResult Tr2BufferAL::SetName( const char* )
+	{
+		return S_OK;
+	}
+
 }
 
 #endif

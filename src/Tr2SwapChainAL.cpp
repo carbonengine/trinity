@@ -62,3 +62,16 @@ Tr2ALMemoryType Tr2SwapChainAL::GetMemoryClass() const
 { 
 	return m_swapChain->GetMemoryClass(); 
 }
+
+ALResult Tr2SwapChainAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_swapChain->SetName( name );
+}

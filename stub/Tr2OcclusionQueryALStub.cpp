@@ -75,5 +75,10 @@ namespace TrinityALImpl
 	void Tr2OcclusionQueryAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
+
+	ALResult Tr2OcclusionQueryAL::SetName( const char* )
+	{
+		return S_OK;
+	}
 }
 #endif

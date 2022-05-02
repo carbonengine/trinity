@@ -164,7 +164,18 @@ namespace TrinityALImpl
 		description["type"] = "Tr2SwapChainAL";
 		description["width"] = std::to_string( long long( m_width ) );
 		description["height"] = std::to_string( long long( m_height ) );
+		description["name"] = m_name;
 	}
 
-}
+	ALResult Tr2SwapChainAL::SetName( const char* name )
+	{
+		if( !m_swapChain )
+		{
+			return E_INVALIDCALL;
+		}
+		m_name = name;
+		return m_swapChain->SetPrivateData( WKPDID_D3DDebugObjectName, UINT( strlen( name ) ), name );
+	}
+
+	}
 #endif

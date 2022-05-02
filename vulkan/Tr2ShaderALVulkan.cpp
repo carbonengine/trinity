@@ -132,5 +132,10 @@ namespace TrinityALImpl
 		description["type"] = "Tr2ShaderAL";
 	}
 
+	ALResult Tr2ShaderAL::SetName( const char* )
+	{
+		return E_NOTIMPL;
+	}
+
 }
 #endif

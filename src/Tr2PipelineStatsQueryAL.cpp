@@ -79,3 +79,16 @@ Tr2PipelineStatsQueryAL::Value Tr2PipelineStatsQueryAL::GetValue( const Tr2Pipel
 {
 	return TrinityALImpl::Tr2PipelineStatsQueryAL::GetValue( data, index );
 }
+
+ALResult Tr2PipelineStatsQueryAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_query->SetName( name );
+}

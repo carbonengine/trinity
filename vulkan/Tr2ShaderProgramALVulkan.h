@@ -27,6 +27,8 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		std::vector<VkPipelineShaderStageCreateInfo> m_shaderInfo;
 		std::vector<::Tr2ShaderAL> m_shaders;

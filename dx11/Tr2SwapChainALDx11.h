@@ -34,6 +34,8 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2SwapChainAL( const Tr2SwapChainAL& ) /* = delete */;
 		Tr2SwapChainAL& operator=( const Tr2SwapChainAL& ) /* = delete */;
@@ -42,6 +44,7 @@ namespace TrinityALImpl
 		CComPtr<IDXGISwapChain> m_swapChain;
 		uint32_t m_width;
 		uint32_t m_height;
+		std::string m_name;
 	};
 
 }

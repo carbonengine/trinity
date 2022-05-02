@@ -20,6 +20,7 @@ namespace TrinityALImpl
 		void Destroy();
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 	private:
 		id<MTLBuffer>       m_buffers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
@@ -29,6 +30,7 @@ namespace TrinityALImpl
 		uint32_t m_buffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		NSRange m_texturesRange[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		NSRange m_samplersRange[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
+		std::string m_name;
 
 		bool m_isValid;
 

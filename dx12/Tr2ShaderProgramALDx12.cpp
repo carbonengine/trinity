@@ -12,6 +12,7 @@
 #include "Tr2ShaderALDx12.h"
 #include "Tr2PrimaryRenderContextDx12.h"
 #include "ALLog.h"
+#include "Utilities.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -336,6 +337,14 @@ namespace TrinityALImpl
 	void Tr2ShaderProgramAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2ShaderProgramAL";
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2ShaderProgramAL::SetName( const char* name )
+	{
+		m_name = name;
+		SetDebugName( m_rootSignature, name );
+		return S_OK;
 	}
 }
 #endif

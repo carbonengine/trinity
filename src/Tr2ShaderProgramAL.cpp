@@ -48,3 +48,16 @@ const Tr2RegisterMapAL& Tr2ShaderProgramAL::GetRegisterMap() const
 {
 	return m_program->GetRegisterMap();
 }
+
+ALResult Tr2ShaderProgramAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_program->SetName( name );
+}

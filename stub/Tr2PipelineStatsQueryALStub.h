@@ -35,6 +35,7 @@ public:
 		return AL_MEMORY_MANAGED;
 	}
 	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	ALResult SetName( const char* name );
 
 private:
 	Tr2PipelineStatsQueryAL( const Tr2PipelineStatsQueryAL& ) = delete;

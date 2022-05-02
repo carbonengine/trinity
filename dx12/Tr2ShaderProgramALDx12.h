@@ -34,6 +34,7 @@ namespace TrinityALImpl
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 
 		const Tr2RegisterMapAL& GetRegisterMap() const;
+		ALResult SetName( const char* name );
 
 	private:
 		void ParseRegisterSignature(
@@ -74,6 +75,7 @@ namespace TrinityALImpl
 		uint32_t m_srvUavParameter;
 		uint32_t m_samplerTableSize;
 		uint32_t m_samplerParameter;
+		std::string m_name;
 
 		friend class ::Tr2RenderContextAL;
 		friend class Tr2ResourceSetAL;

@@ -35,6 +35,11 @@ namespace TrinityALImpl
 	void Tr2ResourceSetAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
+
+	ALResult Tr2ResourceSetAL::SetName( const char* )
+	{
+		return S_OK;
+	}
 }
 
 #endif

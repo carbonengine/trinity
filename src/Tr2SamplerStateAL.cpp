@@ -44,3 +44,16 @@ TrinityALImpl::Tr2SamplerStateAL* Tr2SamplerStateAL::TrinityALImpl_GetObject() c
 {
 	return m_sampler.get();
 }
+
+ALResult Tr2SamplerStateAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_sampler->SetName( name );
+}

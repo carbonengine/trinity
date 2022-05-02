@@ -249,6 +249,13 @@ namespace TrinityALImpl
 	void Tr2SamplerStateAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
         description["type"] = "Tr2SamplerStateAL";
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2SamplerStateAL::SetName( const char* name )
+	{
+		m_name = name;
+		return S_OK;
 	}
 }
 

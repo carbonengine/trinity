@@ -149,3 +149,16 @@ bool Tr2ShaderAL::operator!=( const Tr2ShaderAL& other ) const
 {
 	return m_shader != other.m_shader;
 }
+
+ALResult Tr2ShaderAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_shader->SetName( name );
+}

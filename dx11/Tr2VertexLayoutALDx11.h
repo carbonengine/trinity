@@ -42,13 +42,16 @@ namespace TrinityALImpl
 		}
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2VertexLayoutAL( const Tr2VertexLayoutAL& )/* = delete */;
 		Tr2VertexLayoutAL& operator=( const Tr2VertexLayoutAL& )/* = delete */;
 
 		TrackableStdVector<D3D11_INPUT_ELEMENT_DESC> m_definition;
 		mutable std::map<unsigned, CComPtr<ID3D11InputLayout>> m_layout;
+		std::string m_name;
 	};
-}
+	}
 
 #endif // DX11?

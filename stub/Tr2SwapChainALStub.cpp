@@ -56,6 +56,11 @@ namespace TrinityALImpl
 	{
 	}
 
+	ALResult Tr2SwapChainAL::SetName( const char* )
+	{
+		return S_OK;
+	}
+
 }
 
 #endif // TRINITY_PLATFORM==TRINITY_STUB

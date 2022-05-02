@@ -70,6 +70,7 @@ namespace TrinityALImpl
 		void SetSwapChainBufferIndexDx12( uint32_t index );
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 		bool operator==( const Tr2TextureAL& other ) const;
 	private:
@@ -105,6 +106,7 @@ namespace TrinityALImpl
 		std::shared_ptr<ShaderResourceViewDx12> m_view[2];
 		std::vector<std::shared_ptr<RenderTargetViewDx12>> m_rtv;
 		std::shared_ptr<DepthStencilViewDx12> m_dsv;
+		std::string m_name;
 
 		friend class Tr2ResourceSetAL;
 		friend class Tr2RenderContextAL;

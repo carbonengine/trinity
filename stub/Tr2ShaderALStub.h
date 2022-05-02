@@ -36,6 +36,8 @@ namespace TrinityALImpl
 
 		void SetNullShaderType( Tr2RenderContextEnum::ShaderType type );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2RenderContextEnum::ShaderType m_type;
 		CcpMallocBuffer m_bytecode;

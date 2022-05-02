@@ -378,6 +378,11 @@ namespace TrinityALImpl
 	{
 		description["type"] = "Tr2TextureAL";
 	}
+
+	ALResult Tr2TextureAL::SetName( const char* )
+	{
+		return E_NOTIMPL;
+	}
 }
 
 #endif

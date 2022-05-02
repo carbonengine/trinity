@@ -505,3 +505,16 @@ Tr2ALMemoryType Tr2ResourceSetAL::GetMemoryClass() const
 {
 	return m_resourceSet->GetMemoryClass();
 }
+
+ALResult Tr2ResourceSetAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_resourceSet->SetName( name );
+}

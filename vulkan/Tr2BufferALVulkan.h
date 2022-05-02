@@ -34,6 +34,8 @@ namespace TrinityALImpl
 		void UnmapForWriting( Tr2RenderContextAL& renderContext );
 		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		VkBuffer m_buffer;
 		VkDeviceMemory m_memory;

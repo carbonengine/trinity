@@ -30,6 +30,11 @@ namespace TrinityALImpl
 	void Tr2SamplerStateAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
+
+	ALResult Tr2SamplerStateAL::SetName( const char* )
+	{
+		return S_OK;
+	}
 }
 
 #endif

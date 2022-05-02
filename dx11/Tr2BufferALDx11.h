@@ -30,6 +30,8 @@ namespace TrinityALImpl
 		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		ALResult CreateStagingBuffer( Tr2RenderContextAL& renderContext );
 
@@ -44,6 +46,7 @@ namespace TrinityALImpl
 #if TRINITY_AL_GUARD_LOCKS
 		Tr2LockGuard m_lockGuard;
 #endif
+		std::string m_name;
 
 		friend class Tr2RenderContextAL;
 		friend class Tr2PrimaryRenderContextAL;

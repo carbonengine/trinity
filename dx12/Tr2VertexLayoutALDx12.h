@@ -26,6 +26,8 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2VertexLayoutAL( const Tr2VertexLayoutAL& )/* = delete */;
 		Tr2VertexLayoutAL& operator=( const Tr2VertexLayoutAL& )/* = delete */;
@@ -34,6 +36,7 @@ namespace TrinityALImpl
 
 		std::vector<D3D12_INPUT_ELEMENT_DESC> m_elements;
 		Tr2PrimaryRenderContextAL* m_owner;
+		std::string m_name;
 
 		friend class Tr2RenderContextAL;
 		friend class PSODescription;

@@ -117,11 +117,18 @@ namespace TrinityALImpl
 	void Tr2ShaderProgramAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2ShaderProgramAL";
+		description["name"] = m_name;
 	}
 
 	const Tr2RegisterMapAL& Tr2ShaderProgramAL::GetRegisterMap() const
 	{
 		return m_registerMap;
+	}
+
+	ALResult Tr2ShaderProgramAL::SetName( const char* name )
+	{
+		m_name = name;
+		return S_OK;
 	}
 }
 #endif

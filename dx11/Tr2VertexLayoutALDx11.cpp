@@ -211,6 +211,10 @@ namespace TrinityALImpl
 
 		if( result == S_OK )
 		{
+			if( !m_name.empty() )
+			{
+				layout->SetPrivateData( WKPDID_D3DDebugObjectName, UINT( m_name.size() ), m_name.c_str() );
+			}
 			m_layout[vertexShader->m_pipelineInputHash] = layout;
 			renderContext.m_context->IASetInputLayout( layout );
 		}
@@ -220,6 +224,16 @@ namespace TrinityALImpl
 	void Tr2VertexLayoutAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2VertexLayoutAL";
+	}
+
+	ALResult Tr2VertexLayoutAL::SetName( const char* name )
+	{
+		m_name = name;
+		for( auto& vl : m_layout )
+		{
+			SetDebugName( vl.second, name );
+		}
+		return S_OK;
 	}
 }
 

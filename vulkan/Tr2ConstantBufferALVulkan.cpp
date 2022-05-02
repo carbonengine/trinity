@@ -144,6 +144,11 @@ namespace TrinityALImpl
 	{
 		description["type"] = "Tr2ConstantBufferAL";
 	}
+
+	ALResult Tr2ConstantBufferAL::SetName( const char* )
+	{
+		return E_NOTIMPL;
+	}
 }
 
 #endif

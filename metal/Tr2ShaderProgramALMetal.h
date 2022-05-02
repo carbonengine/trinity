@@ -23,6 +23,8 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const;
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 		id<MTLFunction> GetVertexShader() const;
 		id<MTLFunction> GetFragmentShader() const;
 		id<MTLFunction> GetComputeKernel()  const;
@@ -49,6 +51,7 @@ namespace TrinityALImpl
 		Tr2RegisterMapAL m_registerMap;
 
 		MTLSize m_threadGroupSize;
+		std::string m_name;
 
 		bool m_isValid;
 

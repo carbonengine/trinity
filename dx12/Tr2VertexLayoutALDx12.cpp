@@ -189,6 +189,13 @@ namespace TrinityALImpl
 	void Tr2VertexLayoutAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2VertexLayoutAL";
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2VertexLayoutAL::SetName( const char* name )
+	{
+		m_name = name;
+		return S_OK;
 	}
 }
 #endif

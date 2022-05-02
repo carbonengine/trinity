@@ -30,6 +30,9 @@ public:
 	bool operator==( const Tr2SwapChainAL& other ) const;
 
 	Tr2ALMemoryType GetMemoryClass() const;
+
+	ALResult SetName( const char* name );
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2SwapChainAL> m_swapChain;
 	friend class Tr2RenderContextAL;

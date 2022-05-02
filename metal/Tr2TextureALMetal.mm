@@ -743,6 +743,44 @@ namespace TrinityALImpl
 	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2TextureAL";
+
+		unsigned size = 0;
+		for( unsigned i = 0; i < m_desc.GetTrueMipCount(); ++i )
+		{
+			size += m_desc.GetMipSize( i );
+		}
+
+		description["size"] = std::to_string( size * std::max( 1u, m_desc.GetArraySize() ) * std::max( 1u, m_msaa.samples ) );
+		description["width"] = std::to_string( m_desc.GetWidth() );
+		description["height"] = std::to_string( m_desc.GetHeight() );
+		description["depth"] = std::to_string( m_desc.GetDepth() );
+		description["mipLevels"] = std::to_string( m_desc.GetTrueMipCount() );
+		description["format"] = std::to_string( int( m_desc.GetFormat() ) );
+		description["texType"] = std::to_string( int( m_desc.GetType() ) );
+		description["array"] = std::to_string( m_desc.GetArraySize() );
+		description["cpuUsage"] = std::to_string( int( m_cpuUsage ) );
+		description["gpuUsage"] = std::to_string( int( m_gpuUsage ) );
+		description["msaa"] = std::to_string( m_msaa.samples );
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2TextureAL::SetName( const char* name )
+	{
+		m_name = name;
+		auto nsname = [NSString stringWithUTF8String:name];
+		if( m_mtlTexture )
+		{
+			m_mtlTexture.label = nsname;
+		}
+		if( m_mtlTextureSRGBView )
+		{
+			m_mtlTextureSRGBView.label = nsname;
+		}
+		for( auto& uav : m_mtlTextureUAV )
+		{
+			uav.label = nsname;
+		}
+		return S_OK;
 	}
 	
 	void Tr2TextureAL::AssignFromTexture( Tr2TextureAL& backBuffer )

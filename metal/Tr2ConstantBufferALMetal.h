@@ -23,6 +23,7 @@ namespace TrinityALImpl
 		uint32_t GetSize() const;
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 		ALResult SetConstants( Tr2RenderContextEnum::ShaderType, uint32_t constantIndex, Tr2RenderContextAL& renderContext );
 	private:
@@ -33,6 +34,7 @@ namespace TrinityALImpl
 		void* m_buffer;
 		uint64_t m_lockTag;
 		uint32_t m_size;
+		std::string m_name;
 
 		friend class Tr2RenderContextAL;
 	};

@@ -19,8 +19,11 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		CComPtr<ID3D11SamplerState> m_samplerState;
+		std::string m_name;
 		friend class Tr2RenderContextAL;
 		friend class Tr2ResourceSetAL;
 	};

@@ -93,6 +93,11 @@ namespace TrinityALImpl
 	{
 		description["type"] = "Tr2SamplerStateAL";
 	}
+
+	ALResult Tr2SamplerStateAL::SetName( const char* )
+	{
+		return E_NOTIMPL;
+	}
 }
 
 

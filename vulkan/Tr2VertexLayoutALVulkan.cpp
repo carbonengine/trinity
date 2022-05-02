@@ -153,5 +153,10 @@ namespace TrinityALImpl
 	{
 		description["type"] = "Tr2VertexLayoutAL";
 	}
+
+	ALResult Tr2VertexLayoutAL::SetName( const char* )
+	{
+		return E_NOTIMPL;
+	}
 }
 #endif

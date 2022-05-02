@@ -28,6 +28,8 @@ namespace TrinityALImpl
 
 		void PopulateInputLayoutVulkan( std::vector<VkVertexInputAttributeDescription>& layout, const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2VertexDefinition m_definition;
 		std::vector<VkVertexInputAttributeDescription> m_attributes;

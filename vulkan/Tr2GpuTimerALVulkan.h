@@ -62,8 +62,12 @@ namespace TrinityALImpl
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const
 		{
 		}
+		ALResult SetName( const char* name )
+		{
+			return E_NOTIMPL;
+		}
 	};
-}
+	}
 
 
 #endif

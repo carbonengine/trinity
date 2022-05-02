@@ -28,6 +28,8 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const;
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2ConstantBufferAL( const Tr2ConstantBufferAL& ) /* = delete */;
 		Tr2ConstantBufferAL& operator=( const Tr2ConstantBufferAL& ) /* = delete */;
@@ -40,6 +42,7 @@ namespace TrinityALImpl
 #ifdef TRINITY_AL_GUARD_LOCKS
 		Tr2LockGuard m_lockGuard;
 #endif
+		std::string m_name;
 
 		friend class Tr2RenderContextAL;
 	};

@@ -23,6 +23,7 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 		void SetVertexLayout( const std::shared_ptr<TrinityALImpl::Tr2ShaderProgramAL>& shaderProgram, Tr2RenderContextAL& renderContext );
         void AddVertexDescriptor( size_t inputHash, MTLVertexDescriptor* descriptor, uint8_t streamMask, bool needsDummyStream );
@@ -54,6 +55,7 @@ namespace TrinityALImpl
 		std::vector<Item> m_items;
 		Tr2RenderContextAL  *m_renderContext;
 		std::unordered_map<size_t, MetalVertexDescriptor> m_metalVertexDescriptors;
+		std::string m_name;
 	};
 }
 

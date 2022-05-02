@@ -145,6 +145,9 @@ public:
 
 	bool operator==( const Tr2ShaderAL& other ) const;
 	bool operator!=( const Tr2ShaderAL& other ) const;
+
+	ALResult SetName( const char* name );
+
 private:
 	Tr2ShaderAL( std::shared_ptr<TrinityALImpl::Tr2ShaderAL> shader );
 

@@ -62,6 +62,8 @@ public:
 	ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
 	uintptr_t GetSharedHandle() const;
 
+	ALResult SetName( const char* name );
+
 	TrinityALImpl::Tr2TextureAL* TrinityALImpl_GetObject() const;
 private:
 	std::shared_ptr<TrinityALImpl::Tr2TextureAL> m_texture;

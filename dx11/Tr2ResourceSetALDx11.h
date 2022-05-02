@@ -17,6 +17,8 @@ namespace TrinityALImpl
 		void Destroy();
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		static const uint32_t MAX_RESOURCES = 32;
 
@@ -42,6 +44,7 @@ namespace TrinityALImpl
 		uint32_t m_uavInitialCounts[MAX_RESOURCES];
 		uint32_t m_uavOffset;
 		uint32_t m_uavCount;
+		std::string m_name;
 		bool m_csUavs;
 
 		bool m_empty;

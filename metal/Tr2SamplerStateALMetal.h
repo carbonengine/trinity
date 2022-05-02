@@ -20,12 +20,14 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 		id<MTLSamplerState> GetMetalSamplerState() { return m_mtlSamplerState; };
 
 	private:
 		MetalContext* m_metalContext;
 		id<MTLSamplerState> m_mtlSamplerState;
+		std::string m_name;
 	};
 }
 

@@ -17,6 +17,8 @@ namespace TrinityALImpl
 		void Destroy();
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		bool m_isValid;
 	};

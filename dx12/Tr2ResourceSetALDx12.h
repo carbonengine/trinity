@@ -27,6 +27,8 @@ namespace TrinityALImpl
 
 		void UploadInitialCounts( Tr2RenderContextAL& renderContext );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		std::shared_ptr<ShaderResourceViewDx12> m_srv[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 		std::shared_ptr<UnorderedAccessViewDx12> m_uav[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
@@ -47,6 +49,7 @@ namespace TrinityALImpl
 		std::vector<D3D12_RESOURCE_BARRIER> m_inTransitions;
 		std::vector<D3D12_RESOURCE_BARRIER> m_outTransitions;
 		std::vector<ID3D12Resource*> m_usedResources;
+		std::string m_name;
 
 		friend class ::Tr2RenderContextAL;
 	};

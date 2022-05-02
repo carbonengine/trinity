@@ -31,6 +31,7 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 	private:
 		id m_buffer;
@@ -41,6 +42,7 @@ namespace TrinityALImpl
 			BEGIN_ISSUED,
 			END_ISSUED,
 		} m_state;
+		std::string m_name;
 	};
 }
 

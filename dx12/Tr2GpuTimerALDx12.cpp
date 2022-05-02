@@ -160,6 +160,15 @@ namespace TrinityALImpl
 	void Tr2GpuTimerAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2GpuTimerAL";
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2GpuTimerAL::SetName( const char* name )
+	{
+		m_name = name;
+		SetDebugName( m_query, name );
+		SetDebugName( m_result, name );
+		return S_OK;
 	}
 }
 

@@ -37,6 +37,8 @@ namespace TrinityALImpl
 		bool operator==( const Tr2GpuTimerAL& other ) const;
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		CComPtr<ID3D12QueryHeap> m_query;
 		CComPtr<ID3D12Resource> m_result;
@@ -50,6 +52,7 @@ namespace TrinityALImpl
 			BEGIN_ISSUED,
 			END_ISSUED,
 		} m_state;
+		std::string m_name;
 	};
 }
 

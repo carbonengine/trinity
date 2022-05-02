@@ -114,6 +114,13 @@ namespace TrinityALImpl
 	{
 		description["type"] = "Tr2ConstantBufferAL";
 		description["size"] = std::to_string( m_size );
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2ConstantBufferAL::SetName( const char* name )
+	{
+		m_name = name;
+		return S_OK;
 	}
 }
 #endif

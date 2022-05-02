@@ -32,6 +32,9 @@ public:
 	bool IsValid() const;
 	bool operator==( const Tr2OcclusionQueryAL& other ) const;
 	Tr2ALMemoryType GetMemoryClass() const;
+
+	ALResult SetName( const char* name );
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2OcclusionQueryAL> m_query;
 };

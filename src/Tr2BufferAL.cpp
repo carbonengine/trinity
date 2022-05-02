@@ -147,6 +147,19 @@ ALResult Tr2BufferAL::UpdateBuffer( uint32_t offset, uint32_t size, const void* 
 	return m_buffer->UpdateBuffer( offset, size, data, renderContext );
 }
 
+ALResult Tr2BufferAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_buffer->SetName( name );
+}
+
 TrinityALImpl::Tr2BufferAL* Tr2BufferAL::TrinityALImpl_GetObject() const
 {
 	return m_buffer.get();

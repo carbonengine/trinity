@@ -24,6 +24,9 @@ public:
 
 	bool operator==( const Tr2VertexLayoutAL& other ) const;
 	Tr2ALMemoryType GetMemoryClass() const;
+
+	ALResult SetName( const char* name );
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2VertexLayoutAL> m_layout;
 

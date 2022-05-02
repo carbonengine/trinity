@@ -26,6 +26,8 @@ public:
 
 	TrinityALImpl::Tr2SamplerStateAL* TrinityALImpl_GetObject() const;
 
+	ALResult SetName( const char* name );
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2SamplerStateAL> m_sampler;
 	friend class Tr2RenderContextAL;

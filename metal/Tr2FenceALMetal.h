@@ -25,9 +25,11 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_VIDEO; }
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 	private:
 		uint64_t m_frame;
+		std::string m_name;
 		bool m_isValid;
 		bool m_hasBeenPut;
 	};

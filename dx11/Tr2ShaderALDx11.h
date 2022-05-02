@@ -39,6 +39,8 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const { return AL_MEMORY_MANAGED; }
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2ShaderAL( const Tr2ShaderAL& shader );
 		Tr2ShaderAL& operator=( const Tr2ShaderAL& shader );
@@ -59,6 +61,7 @@ namespace TrinityALImpl
 			ID3D11DomainShader* domainShader;
 		};
 		Shader m_shader;
+		std::string m_name;
 
 		friend class Tr2RenderContextAL;
 		friend class Tr2ShaderProgramAL;

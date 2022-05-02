@@ -292,6 +292,11 @@ public:
 	ITr2RenderContextEvents* m_events;
 };
 
+namespace TrinityALImpl
+{
+void SetDebugName( ID3D11DeviceChild* resource, const char* name );
+}
+
 #endif // ( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 
 #endif //Tr2RenderContextDx11_h_

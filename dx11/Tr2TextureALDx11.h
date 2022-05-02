@@ -50,6 +50,7 @@ namespace TrinityALImpl
 
 		ALResult Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderContextAL& renderContext );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 	private:
 		struct DepthOption
 		{
@@ -89,6 +90,7 @@ namespace TrinityALImpl
 		Tr2LockGuard m_lockGuard;
 #endif
 		uint32_t m_lockedSubresource;
+		std::string m_name;
 
 		friend class Tr2PrimaryRenderContextAL;
 		friend class Tr2RenderContextAL;

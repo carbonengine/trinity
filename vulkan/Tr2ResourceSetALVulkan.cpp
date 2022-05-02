@@ -143,6 +143,11 @@ namespace TrinityALImpl
 	{
 		description["type"] = "Tr2ResourceSetAL";
 	}
+
+	ALResult Tr2ResourceSetAL::SetName( const char* )
+	{
+		return E_NOTIMPL;
+	}
 }
 
 

@@ -80,6 +80,13 @@ namespace TrinityALImpl
 		description["type"] = "Tr2ShaderAL";
 		description["shader"] = std::to_string( long long( GetType() ) );
 		description["size"] = std::to_string( long long( m_bytecode.size() ) );
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2ShaderAL::SetName( const char* name )
+	{
+		m_name = name;
+		return S_OK;
 	}
 }
 

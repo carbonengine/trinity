@@ -183,6 +183,10 @@ namespace TrinityALImpl
 				}
 			}
 			m_mappedBuffer = m_metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), m_mtlBuffer.length, MTLResourceStorageModeManaged, nil );
+			if( !m_name.empty() )
+			{
+				m_mappedBuffer.label = [NSString stringWithUTF8String:m_name.c_str()];
+			}
 			StagingBuffer staging = { m_mappedBuffer, m_metalContext->GetRecordingFrameNumber() };
 			m_stagingBuffers.push_back( staging );
             m_memory.Grow( m_mtlBuffer.length );
@@ -267,6 +271,27 @@ namespace TrinityALImpl
 	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2BufferAL";
+		description["size"] = std::to_string( GetDesc().count * GetDesc().stride );
+		description["cpuUsage"] = std::to_string( int( GetDesc().cpuUsage ) );
+		description["gpuUsage"] = std::to_string( int( GetDesc().gpuUsage ) );
+		description["format"] = std::to_string( int( GetDesc().format ) );
+		description["stride"] = std::to_string( GetDesc().stride );
+		description["count"] = std::to_string( GetDesc().count );
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2BufferAL::SetName( const char* name )
+	{
+		m_name = name;
+		if( m_mtlBuffer )
+		{
+			m_mtlBuffer.label = [NSString stringWithUTF8String:name];
+		}
+		for( auto& staging : m_stagingBuffers )
+		{
+			staging.buffer.label = [NSString stringWithUTF8String:name];
+		}
+		return S_OK;
 	}
 }
 

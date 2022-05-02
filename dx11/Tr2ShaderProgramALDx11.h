@@ -23,6 +23,7 @@ namespace TrinityALImpl
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 
 		const Tr2RegisterMapAL& GetRegisterMap() const;
+		ALResult SetName( const char* name );
 
 	private:
 		struct Shaders
@@ -38,6 +39,7 @@ namespace TrinityALImpl
 		::Tr2ShaderAL m_vertexShader;
 		Shaders m_shaders;
 		Tr2RegisterMapAL m_registerMap;
+		std::string m_name;
 
 		bool m_isValid;
 

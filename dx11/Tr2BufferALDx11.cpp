@@ -407,6 +407,22 @@ namespace TrinityALImpl
 	{
 		description["type"] = "Tr2BufferAL";
 		description["size"] = std::to_string( long long( GetDesc().count * GetDesc().stride ) );
+		description["cpuUsage"] = std::to_string( int( GetDesc().cpuUsage ) );
+		description["gpuUsage"] = std::to_string( int( GetDesc().gpuUsage ) );
+		description["format"] = std::to_string( int( GetDesc().format ) );
+		description["stride"] = std::to_string( GetDesc().stride );
+		description["count"] = std::to_string( GetDesc().count );
+		description["name"] = m_name;
+	}
+	
+	ALResult Tr2BufferAL::SetName( const char* name )
+	{
+		m_name = name;
+		SetDebugName( m_buffer, name );
+		SetDebugName( m_staging, name );
+		SetDebugName( m_srv, name );
+		SetDebugName( m_uav, name );
+		return S_OK;
 	}
 }
 #endif

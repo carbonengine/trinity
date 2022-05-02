@@ -26,6 +26,8 @@ namespace TrinityALImpl
 
 		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		CcpMallocBuffer m_buffer;
 		Tr2BufferDescriptionAL m_desc;

@@ -27,6 +27,9 @@ public:
 	bool operator==( const Tr2ShaderProgramAL& other ) const;
 
 	const Tr2RegisterMapAL& GetRegisterMap() const;
+
+	ALResult SetName( const char* name );
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2ShaderProgramAL> m_program;
 

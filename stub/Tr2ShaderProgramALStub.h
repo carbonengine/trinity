@@ -21,6 +21,8 @@ namespace TrinityALImpl
 		Tr2ALMemoryType GetMemoryClass() const;
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2RegisterMapAL m_registerMap;
 		bool m_isValid;

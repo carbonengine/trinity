@@ -57,3 +57,16 @@ Tr2ALMemoryType Tr2FenceAL::GetMemoryClass() const
 {
 	return m_fence->GetMemoryClass();
 }
+
+ALResult Tr2FenceAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_fence->SetName( name );
+}

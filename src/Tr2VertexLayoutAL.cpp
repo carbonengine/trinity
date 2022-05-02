@@ -41,3 +41,16 @@ Tr2ALMemoryType Tr2VertexLayoutAL::GetMemoryClass() const
 {
 	return m_layout->GetMemoryClass();
 }
+
+ALResult Tr2VertexLayoutAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_layout->SetName( name );
+}

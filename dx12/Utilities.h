@@ -126,6 +126,7 @@ namespace TrinityALImpl
 			_In_ size_t bytecodeSize );
 	};
 
+	void SetDebugName( ID3D12DeviceChild* resource, const char* name );
 }
 
 #endif

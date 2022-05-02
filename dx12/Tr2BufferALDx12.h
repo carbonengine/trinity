@@ -45,6 +45,8 @@ namespace TrinityALImpl
 		D3D12_GPU_VIRTUAL_ADDRESS GetGpuView();
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2BufferDescriptionAL m_desc;
 		Tr2ResourceHelper m_buffer;

@@ -573,6 +573,14 @@ namespace TrinityALImpl
 		return pso;
 	}
 
+	void SetDebugName( ID3D12DeviceChild* resource, const char* name )
+	{
+		if( resource )
+		{
+			resource->SetPrivateData( WKPDID_D3DDebugObjectName, UINT( strlen( name ) ), name );
+		}
+	}
+
 }
 
 

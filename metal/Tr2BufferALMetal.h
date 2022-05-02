@@ -28,6 +28,7 @@ namespace TrinityALImpl
 
 		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 		id<MTLBuffer> GetMetalBuffer() { return m_mtlBuffer; }
 
@@ -46,6 +47,7 @@ namespace TrinityALImpl
         };
         std::vector<StagingBuffer> m_stagingBuffers;
         id<MTLBuffer> m_mappedBuffer;
+		std::string m_name;
 
 		friend class Tr2RenderContextAL;
 		friend class Tr2PrimaryRenderContextAL;

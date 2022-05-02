@@ -77,5 +77,10 @@ namespace TrinityALImpl
 	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
+
+	ALResult Tr2ShaderAL::SetName( const char* )
+	{
+		return S_OK;
+	}
 }
 #endif

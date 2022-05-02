@@ -173,6 +173,14 @@ namespace TrinityALImpl
 		description["type"] = "Tr2ConstantBufferAL";
 		description["usage"] = std::to_string( long long( m_usage ) );
 		description["size"] = std::to_string( long long( m_size ) );
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2ConstantBufferAL::SetName( const char* name )
+	{
+		m_name = name;
+		SetDebugName( m_buffer, name );
+		return S_OK;
 	}
 }
 #endif

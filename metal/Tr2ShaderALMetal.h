@@ -36,6 +36,7 @@ namespace TrinityALImpl
 
 		void SetNullShaderType( Tr2RenderContextEnum::ShaderType type );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 	private:
 		Tr2ShaderSignatureAL m_signature;
@@ -44,6 +45,7 @@ namespace TrinityALImpl
 		
 		// Used to quickly compare the resources declared here and those required by the shader
 		ShaderResourceMask m_resourceMask;
+		std::string m_name;
 		
 		friend class Tr2ShaderProgramAL;
 	};

@@ -28,13 +28,16 @@ namespace TrinityALImpl
 
 		Tr2ALMemoryType GetMemoryClass() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 		Tr2FenceAL( const Tr2FenceAL& ) /* = delete */;
 		Tr2FenceAL& operator=( const Tr2FenceAL& ) /* = delete */;
 
 		uint64_t m_frameIndex;
 		Tr2PrimaryRenderContextAL* m_owner;
+		std::string m_name;
 	};
-}
+	}
 
 #endif

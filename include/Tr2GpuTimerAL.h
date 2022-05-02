@@ -30,6 +30,8 @@ public:
 
 	Tr2ALMemoryType GetMemoryClass() const;
 
+	ALResult SetName( const char* name );
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2GpuTimerAL> m_gpu_timer;
 };

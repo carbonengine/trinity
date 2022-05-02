@@ -35,6 +35,8 @@ namespace TrinityALImpl
 		ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
 		uintptr_t GetSharedHandle() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
+
 	private:
 
 		Tr2BitmapDimensions m_desc;

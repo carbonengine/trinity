@@ -38,6 +38,7 @@ public:
 		return AL_MEMORY_MANAGED;
 	}
 	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	ALResult SetName( const char* name );
 
 private:
 	Tr2PipelineStatsQueryAL( const Tr2PipelineStatsQueryAL& ) = delete;
@@ -47,6 +48,7 @@ private:
 	CComPtr<ID3D12Resource> m_result;
 	Tr2PrimaryRenderContextAL* m_owner;
 	uint64_t m_frameIndex;
+	std::string m_name;
 };
 
 }

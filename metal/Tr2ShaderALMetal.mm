@@ -273,6 +273,13 @@ namespace TrinityALImpl
 	void Tr2ShaderAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2ShaderAL";
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2ShaderAL::SetName( const char* name )
+	{
+		m_name = name;
+		return S_OK;
 	}
 }
 

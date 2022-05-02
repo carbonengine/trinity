@@ -37,6 +37,7 @@ namespace TrinityALImpl
 		ALResult Resolve( Tr2TextureAL& destination, Tr2RenderContextAL& renderContext );
 		uintptr_t GetSharedHandle() const;
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+		ALResult SetName( const char* name );
 
 		id<MTLTexture> GetMetalTexture() { return m_mtlTexture; };
 		id<MTLTexture> GetSRGBViewMetalTexture();
@@ -69,7 +70,8 @@ namespace TrinityALImpl
 		std::vector<id<MTLTexture>>  m_mtlTextureUAV;
 
 		MetalContext   *m_metalContext;
-        Tr2MemoryCounterAL m_memory;
+		std::string m_name;
+		Tr2MemoryCounterAL m_memory;
 		bool            m_wrappedTexture;
 	};
 }

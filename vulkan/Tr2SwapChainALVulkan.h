@@ -59,6 +59,11 @@ namespace TrinityALImpl
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const
 		{
 		}
+		ALResult SetName( const char* name )
+		{
+			return E_NOTIMPL;
+		}
+
 	private:
 		Tr2SwapChainAL( const Tr2SwapChainAL& ) /* = delete */;
 		Tr2SwapChainAL& operator=( const Tr2SwapChainAL& ) /* = delete */;

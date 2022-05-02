@@ -65,6 +65,11 @@ void Tr2PipelineStatsQueryAL::Describe( Tr2DeviceResourceDescriptionAL& descript
 	description["type"] = "Tr2PipelineStatsQueryAL";
 }
 
+ALResult Tr2PipelineStatsQueryAL::SetName( const char* )
+{
+	return E_NOTIMPL;
+}
+
 }
 
 #endif

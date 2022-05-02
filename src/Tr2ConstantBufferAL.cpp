@@ -73,3 +73,16 @@ bool Tr2ConstantBufferAL::operator==( const Tr2ConstantBufferAL& other ) const
 {
 	return m_buffer == other.m_buffer;
 }
+
+ALResult Tr2ConstantBufferAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_buffer->SetName( name );
+}

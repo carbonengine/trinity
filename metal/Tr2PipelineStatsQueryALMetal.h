@@ -52,6 +52,7 @@ public:
 		return AL_MEMORY_MANAGED;
 	}
 	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	ALResult SetName( const char* name );
 
     void EncoderStarted( MetalWorkQueue* queue );
     void EncoderEnding( MetalWorkQueue* queue );
@@ -62,7 +63,8 @@ private:
     id m_buffer;
     uint32_t m_nextIndex;
     uint64_t m_zeroSamples[2];
-    enum
+	std::string m_name;
+	enum
     {
         READY,
         BEGIN_ISSUED,

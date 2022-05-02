@@ -37,7 +37,10 @@ public:
 	uint32_t GetSize() const;
 	Tr2ALMemoryType GetMemoryClass() const;
 
+	ALResult SetName( const char* name );
+
 	bool operator==( const Tr2ConstantBufferAL& other ) const;
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2ConstantBufferAL> m_buffer;
 	friend class Tr2RenderContextAL;

@@ -279,6 +279,13 @@ namespace TrinityALImpl
 	void Tr2ResourceSetAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2ResourceSetAL";
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2ResourceSetAL::SetName( const char* name )
+	{
+		m_name = name;
+		return S_OK;
 	}
 }
 

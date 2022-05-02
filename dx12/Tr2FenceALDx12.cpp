@@ -74,6 +74,13 @@ namespace TrinityALImpl
 	void Tr2FenceAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2FenceAL";
+		description["name"] = m_name;
+	}
+
+	ALResult Tr2FenceAL::SetName( const char* name )
+	{
+		m_name = name;
+		return S_OK;
 	}
 }
 

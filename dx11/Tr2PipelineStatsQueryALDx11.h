@@ -37,12 +37,14 @@ public:
 		return AL_MEMORY_MANAGED;
 	}
 	void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+	ALResult SetName( const char* name );
 
 private:
 	Tr2PipelineStatsQueryAL( const Tr2PipelineStatsQueryAL& ) = delete;
 	Tr2PipelineStatsQueryAL& operator=( const Tr2PipelineStatsQueryAL& ) = delete;
 
 	CComPtr<ID3D11Query> m_query;
+	std::string m_name;
 };
 
 }

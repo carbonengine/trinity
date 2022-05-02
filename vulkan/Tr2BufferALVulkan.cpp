@@ -213,6 +213,11 @@ namespace TrinityALImpl
 		description["type"] = "Tr2BufferAL";
 		description["size"] = std::to_string( long long( GetDesc().count * GetDesc().stride ) );
 	}
+
+	ALResult Tr2BufferAL::SetName( const char* )
+	{
+		return E_NOTIMPL;
+	}
 }
 
 

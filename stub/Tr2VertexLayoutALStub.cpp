@@ -35,5 +35,10 @@ namespace TrinityALImpl
 	void Tr2VertexLayoutAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
+
+	ALResult Tr2VertexLayoutAL::SetName( const char* )
+	{
+		return S_OK;
+	}
 }
 #endif

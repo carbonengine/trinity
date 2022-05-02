@@ -71,5 +71,10 @@ namespace TrinityALImpl
 	{
 		return m_registerMap;
 	}
+
+	ALResult Tr2ShaderProgramAL::SetName( const char* )
+	{
+		return S_OK;
+	}
 }
 #endif

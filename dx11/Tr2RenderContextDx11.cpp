@@ -2142,5 +2142,12 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Col
 {
 }
 
+void TrinityALImpl::SetDebugName( ID3D11DeviceChild* resource, const char* name )
+{
+	if( resource )
+	{
+		resource->SetPrivateData( WKPDID_D3DDebugObjectName, UINT( strlen( name ) ), name );
+	}
+}
 
 #endif	//DX11?

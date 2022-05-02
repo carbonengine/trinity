@@ -37,6 +37,8 @@ public:
 	static const char* GetDescription( const Tr2PipelineStatsDataAL& data, size_t index );
 	static Value GetValue( const Tr2PipelineStatsDataAL& data, size_t index );
 
+	ALResult SetName( const char* name );
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2PipelineStatsQueryAL> m_query;
 };

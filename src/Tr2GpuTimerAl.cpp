@@ -62,3 +62,16 @@ Tr2ALMemoryType Tr2GpuTimerAL::GetMemoryClass() const
 {
 	return m_gpu_timer->GetMemoryClass();
 }
+
+ALResult Tr2GpuTimerAL::SetName( const char* name )
+{
+	if( !IsValid() )
+	{
+		return E_INVALIDCALL;
+	}
+	if( !name )
+	{
+		return E_INVALIDARG;
+	}
+	return m_gpu_timer->SetName( name );
+}

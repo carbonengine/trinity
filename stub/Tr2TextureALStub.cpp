@@ -341,6 +341,11 @@ namespace TrinityALImpl
 	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& ) const
 	{
 	}
+
+	ALResult Tr2TextureAL::SetName( const char* )
+	{
+		return S_OK;
+	}
 }
 
 #endif
