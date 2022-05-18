@@ -349,7 +349,52 @@ namespace TrinityALImpl
 			FORWARD_HR( Create3D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
 		}
 
-		FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, true, renderContext ) );
+		// Behold! A workaround for WARP device crash when creating multiple SRVs into a BC7 texture!
+		if( !renderContext.m_dxgiOutput && desc.GetFormat() == Tr2RenderContextEnum::PIXEL_FORMAT_BC7_UNORM )
+		{
+			// Create a single linear view into the texture
+			FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, false, renderContext ) );
+
+			// For sRGB view we create a copy of BC7 texture with an sRGB view into it
+			if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+			{
+				CComPtr<ID3D11Resource> srgbTexture;
+				FORWARD_HR( Create2D( srgbTexture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
+
+				D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+				memset( &srvDesc, 0, sizeof( srvDesc ) );
+
+				srvDesc.Format = GetSrvFormat( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+
+				if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+				{
+					srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+					srvDesc.Texture3D.MipLevels = desc.GetTrueMipCount();
+				}
+				else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
+				{
+					srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+					srvDesc.TextureCube.MipLevels = desc.GetTrueMipCount();
+				}
+				else if( msaa.samples > 1 )
+				{
+					srvDesc.ViewDimension = desc.GetArraySize() > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY : D3D11_SRV_DIMENSION_TEXTURE2DMS;
+					srvDesc.Texture2DMSArray.ArraySize = desc.GetArraySize();
+				}
+				else
+				{
+					srvDesc.ViewDimension = desc.GetArraySize() > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DARRAY : D3D11_SRV_DIMENSION_TEXTURE2D;
+					srvDesc.Texture2D.MipLevels = desc.GetTrueMipCount();
+					srvDesc.Texture2DArray.ArraySize = desc.GetArraySize();
+				}
+				m_view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = nullptr;
+				FORWARD_HR( renderContext.m_d3dDevice11->CreateShaderResourceView( srgbTexture, &srvDesc, &m_view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
+			}
+		}
+		else
+		{
+			FORWARD_HR( CreateViews( texture, desc, msaa, gpuUsage, cpuUsage, true, renderContext ) );
+		}
 
 		m_desc = desc;
 		m_gpuUsage = gpuUsage;

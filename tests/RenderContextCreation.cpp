@@ -128,3 +128,20 @@ TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfter
 	EXPECT_EQ( presentParameters.mode.width, renderContext->GetDefaultBackBuffer().GetWidth() );
 	EXPECT_EQ( presentParameters.mode.height, renderContext->GetDefaultBackBuffer().GetHeight() );
 }
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX11
+
+TEST_F( RenderContextCreation, CanCreateBC7TexturesWithSoftwareContext )
+{
+	Tr2PresentParametersAL presentParameters;
+	SetUpPresentParameters( presentParameters );
+	presentParameters.software = true;
+	presentParameters.outputWindow = 0;
+
+	ASSERT_HRESULT_SUCCEEDED( renderContext->CreateDevice( 0, 0, presentParameters ) );
+
+	Tr2TextureAL tex;
+	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 64, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC7_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, nullptr, *renderContext ) );
+}
+
+#endif
