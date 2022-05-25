@@ -108,7 +108,7 @@ namespace
 			break;
 		}
 		resourceDesc.MipLevels = UINT16( desc.GetTrueMipCount() );
-		resourceDesc.Format = DXGI_FORMAT( desc.GetFormat() );
+		resourceDesc.Format = DXGI_FORMAT( Tr2RenderContextEnum::MakeTypeless( desc.GetFormat() ) );
 		resourceDesc.SampleDesc.Count = msaa.samples;
 		resourceDesc.SampleDesc.Quality = msaa.quality;
 		resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
@@ -133,34 +133,6 @@ namespace
 
 namespace
 {
-
-	bool FormatIsUAVCompatible( DXGI_FORMAT format )
-	{
-		switch( format )
-		{
-		case DXGI_FORMAT_R32G32B32A32_FLOAT:
-		case DXGI_FORMAT_R32G32B32A32_UINT:
-		case DXGI_FORMAT_R32G32B32A32_SINT:
-		case DXGI_FORMAT_R16G16B16A16_FLOAT:
-		case DXGI_FORMAT_R16G16B16A16_UINT:
-		case DXGI_FORMAT_R16G16B16A16_SINT:
-		case DXGI_FORMAT_R8G8B8A8_UNORM:
-		case DXGI_FORMAT_R8G8B8A8_UINT:
-		case DXGI_FORMAT_R8G8B8A8_SINT:
-		case DXGI_FORMAT_R32_FLOAT:
-		case DXGI_FORMAT_R32_UINT:
-		case DXGI_FORMAT_R32_SINT:
-		case DXGI_FORMAT_R16_FLOAT:
-		case DXGI_FORMAT_R16_UINT:
-		case DXGI_FORMAT_R16_SINT:
-		case DXGI_FORMAT_R8_UNORM:
-		case DXGI_FORMAT_R8_UINT:
-		case DXGI_FORMAT_R8_SINT:
-			return true;
-		default:
-			return false;
-		}
-	}
 
 	bool FormatIsBGR( DXGI_FORMAT format )
 	{
@@ -223,10 +195,10 @@ namespace
 	}
 
 
-	ALResult GenerateMips_UnorderedAccessPath( _In_ ID3D12Resource* resource, Tr2PrimaryRenderContextAL& device, ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES resourceState )
+	ALResult GenerateMips_UnorderedAccessPath( _In_ ID3D12Resource* resource, DXGI_FORMAT format, Tr2PrimaryRenderContextAL& device, ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES resourceState )
 	{
 		const auto desc = resource->GetDesc();
-		if( FormatIsBGR( desc.Format ) || FormatIsSRGB( desc.Format ) )
+		if( FormatIsBGR( format ) || FormatIsSRGB( format ) )
 		{
 			return E_INVALIDARG;
 		}
@@ -240,7 +212,6 @@ namespace
 		{
 			D3D12_RESOURCE_DESC stagingDesc = desc;
 			stagingDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-			stagingDesc.Format = ConvertSRVtoResourceFormat( desc.Format );
 
 			CR_RETURN_HR( device.m_device->CreateCommittedResource(
 				&defaultHeapProperties,
@@ -287,7 +258,7 @@ namespace
 		// Create the top-level SRV
 		D3D12_CPU_DESCRIPTOR_HANDLE handleIt( descriptorHeap->GetCPUDescriptorHandleForHeapStart() );
 		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Format = desc.Format;
+		srvDesc.Format = format;
 		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 		if( desc.DepthOrArraySize > 1 )
 		{
@@ -309,7 +280,7 @@ namespace
 		for( uint16_t mip = 1; mip < desc.MipLevels; ++mip )
 		{
 			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-			uavDesc.Format = desc.Format;
+			uavDesc.Format = format;
 			if( desc.DepthOrArraySize > 1 )
 			{
 				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
@@ -435,7 +406,7 @@ namespace
 		}
 
 		auto copyDesc = resourceDesc;
-		copyDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		copyDesc.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
 		copyDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
 		auto heapProperties = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
@@ -459,7 +430,7 @@ namespace
 		commandList->ResourceBarrier( 1, &barrier );
 
 		// Generate the mips
-		GenerateMips_UnorderedAccessPath( resourceCopy, device, commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+		GenerateMips_UnorderedAccessPath( resourceCopy, DXGI_FORMAT_R8G8B8A8_UNORM, device, commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
 
 		// Direct copy back
 		barrier = TrinityALImpl::Transition( resourceCopy, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE );
@@ -482,7 +453,7 @@ namespace
 
 		// Create a resource with the same description, but without SRGB, and with UAV flags
 		auto copyDesc = resourceDesc;
-		copyDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+		copyDesc.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
 		copyDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
 		D3D12_HEAP_DESC heapDesc = {};
@@ -509,7 +480,7 @@ namespace
 
 		// Create a BGRA alias
 		auto aliasDesc = resourceDesc;
-		aliasDesc.Format = ( resourceDesc.Format == DXGI_FORMAT_B8G8R8X8_UNORM || resourceDesc.Format == DXGI_FORMAT_B8G8R8X8_UNORM_SRGB ) ? DXGI_FORMAT_B8G8R8X8_UNORM : DXGI_FORMAT_B8G8R8A8_UNORM;
+		aliasDesc.Format = ( resourceDesc.Format == DXGI_FORMAT_B8G8R8X8_TYPELESS ) ? DXGI_FORMAT_B8G8R8X8_TYPELESS : DXGI_FORMAT_B8G8R8A8_TYPELESS;
 		aliasDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 		CComPtr<ID3D12Resource> aliasCopy;
@@ -534,7 +505,7 @@ namespace
 		commandList->ResourceBarrier( 1, &barrier );
 		barrier = TrinityALImpl::Transition( resourceCopy, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
 		commandList->ResourceBarrier( 1, &barrier );
-		FORWARD_HR( GenerateMips_UnorderedAccessPath( resourceCopy, device, commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) );
+		FORWARD_HR( GenerateMips_UnorderedAccessPath( resourceCopy, DXGI_FORMAT_R8G8B8A8_UNORM, device, commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) );
 
 		// Direct copy back
 		barrier = TrinityALImpl::AliasBarrier( resourceCopy, aliasCopy );
@@ -832,7 +803,7 @@ namespace TrinityALImpl
 			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 
 			D3D12_RENDER_TARGET_VIEW_DESC rtv;
-			rtv.Format = resourceDesc.Format;
+			rtv.Format = DXGI_FORMAT( desc.GetFormat() );
 			if( msaa.samples > 1 )
 			{
 				rtv.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
@@ -846,7 +817,7 @@ namespace TrinityALImpl
 			m_rtv.resize(2);
 			renderContext.CreateRenderTargetView(texture, &rtv, m_rtv[0]);
 
-			rtv.Format = DXGI_FORMAT( Tr2RenderContextEnum::MakeSrgb( Tr2RenderContextEnum::PixelFormat( resourceDesc.Format ) ) );
+			rtv.Format = DXGI_FORMAT( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
 			renderContext.CreateRenderTargetView(texture, &rtv, m_rtv[1]);
 		}
 		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
@@ -857,7 +828,7 @@ namespace TrinityALImpl
 			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
 
 			D3D12_DEPTH_STENCIL_VIEW_DESC dsv;
-			dsv.Format = resourceDesc.Format;
+			dsv.Format = DXGI_FORMAT( desc.GetFormat() );
 			dsv.Flags = D3D12_DSV_FLAG_NONE;
 			if( msaa.samples > 1 )
 			{
@@ -1006,14 +977,7 @@ namespace TrinityALImpl
 		}
 
 		const auto desc = m_textures[0]->GetDesc();
-		if( FormatIsUAVCompatible( desc.Format ) )
-		{
-			if( m_desc.GetType() != TEX_TYPE_2D && m_desc.GetType() != TEX_TYPE_CUBE )
-			{
-				return E_INVALIDCALL;
-			}
-		}
-		else if( m_desc.GetType() != TEX_TYPE_2D || m_desc.GetArraySize() > 1 )
+		if( m_desc.GetType() != TEX_TYPE_2D && m_desc.GetType() != TEX_TYPE_CUBE )
 		{
 			return E_INVALIDCALL;
 		}
@@ -1022,9 +986,9 @@ namespace TrinityALImpl
 		renderContext.FlushBarriersDx12( m_textures[0] );
 
 		renderContext.m_dirtyPso = true;
-		if( FormatIsUAVCompatible( desc.Format ) )
+		if( m_owner->FormatIsUAVCompatibleDx12( DXGI_FORMAT( m_desc.GetFormat() ) ) )
 		{
-			FORWARD_HR( GenerateMips_UnorderedAccessPath( m_textures[0], *renderContext.m_ownerDevice, renderContext.m_commandList, m_defaultState ) );
+			FORWARD_HR( GenerateMips_UnorderedAccessPath( m_textures[0], DXGI_FORMAT( m_desc.GetFormat() ), * renderContext.m_ownerDevice, renderContext.m_commandList, m_defaultState ) );
 		}
 		else if( FormatIsBGR( desc.Format ) )
 		{

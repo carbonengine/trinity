@@ -48,6 +48,8 @@ public:
 	/** Set an array or UnorderedAccessViews */
 	void SetUnorderedAccessViews(uint32_t startSlot, uint32_t numViews, std::shared_ptr<UnorderedAccessViewDx12>* unorderedAccessViews);
 
+	DescriptorHeapEntry Commit( ID3D12GraphicsCommandList* commandList, UnorderedAccessViewDx12* uav );
+
 private:
 
 	/** Instance of a root parameter set slot */

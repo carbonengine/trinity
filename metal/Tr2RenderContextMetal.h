@@ -121,11 +121,6 @@ public:
 	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ );
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset );
 
-	ALResult CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src )
-	{
-		return E_FAIL;
-	}
-
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout );
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value );

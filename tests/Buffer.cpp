@@ -207,19 +207,7 @@ TEST_F( Buffer, CanMapDynamicSrvBuffer )
 TEST_F( Buffer, CanCreateWritableShaderResourceBuffer )
 {
 	Tr2BufferAL buffer;
-	ASSERT_HRESULT_SUCCEEDED( buffer.Create( Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 4, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::NONE, nullptr, *renderContext ) );
-}
-
-TEST_F( Buffer, CanCreateAppendConsumeBuffer )
-{
-	Tr2BufferAL buffer;
-	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 4, 4, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::APPEND_CONSUME, Tr2CpuUsage::NONE, nullptr, *renderContext ) );
-}
-
-TEST_F( Buffer, CanCreateBufferWithCounter )
-{
-	Tr2BufferAL buffer;
-	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 4, 4, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::BUFFER_COUNTER, Tr2CpuUsage::NONE, nullptr, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( buffer.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, 4, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::NONE, nullptr, *renderContext ) );
 }
 
 #endif

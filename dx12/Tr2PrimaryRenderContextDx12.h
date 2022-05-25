@@ -8,6 +8,7 @@
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
+#include "../include/Tr2ShaderAL.h"
 #include "../Tr2MemoryCounterAL.h"
 #include "../include/Tr2RenderContextAL.h"
 #include "../include/Tr2CapsAL.h"
@@ -18,6 +19,7 @@
 #include "./util/GlobalDescriptorHeapAllocatorDx12.h"
 #include "./util/DescriptorHeapViewDx12.h"
 #include "./util/GpuMarkerBuffer.h"
+#include "./util/GpuCrashTracker.h"
 
 
 // JB: Enable this to get some more details on stuff being released
@@ -63,6 +65,9 @@ public:
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
 
+	void AddShaderBinaryToCrashTracker(const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath);
+	void UnRegisterFromCrashTracker(ID3D12GraphicsCommandList2* commandList);
+
 public:
 	Tr2TextureAL m_defaultBackBuffer;
 
@@ -78,7 +83,7 @@ public:
 		return m_defaultBackBuffer;
 	}
 
-	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const;
+	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker, std::string& crashInfo ) const;
 	ALResult GetGpuPageFaultResource(
 		Tr2RenderContextEnum::PixelFormat& format,
 		uint64_t& size,
@@ -103,6 +108,8 @@ public:
 	uint64_t SignalDx12();
 	ALResult WaitForFenceDx12( uint64_t value );
 	const TrinityALImpl::GpuMarkerBuffer &GetMarkerBuffer() const;
+	TrinityALImpl::GpuCrashTracker* GetGpuCrashTracker() const;
+
 	void ScheduleSwapchainPresentDx12( IDXGISwapChain3* swapChain, const Tr2TextureAL& backbuffer, uint32_t presentInterval );
 
 
@@ -128,6 +135,10 @@ public:
 		return uint32_t( m_frameFenceValues.size() );
 	}
 
+	bool FormatIsUAVCompatibleDx12( DXGI_FORMAT format ) const;
+	std::shared_ptr<ShaderResourceViewDx12> GetNullSrvDx12( Tr2ShaderRegisterAL::RegisterType type ) const;
+	std::shared_ptr<UnorderedAccessViewDx12> GetNullUavDx12( Tr2ShaderRegisterAL::RegisterType type ) const;
+
 private:
 	void ResetRenderTargets();
 
@@ -140,6 +151,7 @@ private:
 
 
 	Tr2CapsAL m_caps;
+	D3D12_FEATURE_DATA_D3D12_OPTIONS m_options = {};
 	CComPtr<IDXGIOutput> m_output;
 
 	uint32_t m_currentBackBufferIndex;
@@ -198,6 +210,7 @@ private:
 	std::unordered_map<NullRtDesc, D3D12_CPU_DESCRIPTOR_HANDLE, NullRtDescHash> m_nullRts;
 
 	TrinityALImpl::GpuMarkerBuffer m_immediateBuffer;
+	TrinityALImpl::GpuCrashTracker* m_gpuCrashTracker;
 
 	CComPtr<ID3D12QueryHeap> m_statsQuery;
 	CComPtr<ID3D12Resource> m_statsResult;
@@ -240,6 +253,9 @@ private:
 	};
 
 	std::shared_ptr<GlobalDescriptorHeapAllocator> m_allocators[D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES];
+
+	std::shared_ptr<ShaderResourceViewDx12> m_nullSrv[16];
+	std::shared_ptr<UnorderedAccessViewDx12> m_nullUav[16];
 
 public:
 	CComPtr<ID3D12Device> m_device;

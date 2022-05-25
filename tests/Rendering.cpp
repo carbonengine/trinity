@@ -24,7 +24,7 @@ ALResult CreatePositionOnlyVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& r
 
 	auto input = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
-	return shader.Create( VERTEX_SHADER, bytecode, input, renderContext );
+	return shader.Create( VERTEX_SHADER, bytecode, input, "", renderContext );
 }
 
 ALResult CreateConstantColorPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
@@ -33,7 +33,7 @@ ALResult CreateConstantColorPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& 
 #include INCLUDE_SHADER_CODE( ConstantColor.ps )
 	};
 
-	return shader.Create( PIXEL_SHADER, bytecode, Tr2ShaderSignatureAL(), renderContext );
+	return shader.Create( PIXEL_SHADER, bytecode, Tr2ShaderSignatureAL(), "", renderContext );
 }
 
 ALResult CreateTexCoordAndPositionVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
@@ -46,7 +46,7 @@ ALResult CreateTexCoordAndPositionVS( Tr2ShaderAL& shader, Tr2PrimaryRenderConte
 		.Add( Tr2VertexDefinition::TEXCOORD, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 2 )
 		.Add( Tr2VertexDefinition::POSITION, 0, 1, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
-	return shader.Create( VERTEX_SHADER, bytecode, input, renderContext );
+	return shader.Create( VERTEX_SHADER, bytecode, input, "", renderContext );
 }
 
 ALResult CreateSampleTextureFromTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
@@ -59,7 +59,7 @@ ALResult CreateSampleTextureFromTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRende
 		.Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 )
 		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
 
-	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
+	return shader.Create( PIXEL_SHADER, bytecode, input, "", renderContext );
 }
 
 ALResult CreatePositionOnlyWithPerObjectDataVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
@@ -72,7 +72,7 @@ ALResult CreatePositionOnlyWithPerObjectDataVS( Tr2ShaderAL& shader, Tr2PrimaryR
 		.Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 )
 		.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
 
-	return shader.Create( VERTEX_SHADER, bytecode, input, renderContext );
+	return shader.Create( VERTEX_SHADER, bytecode, input, "", renderContext );
 }
 
 ALResult CreateInstancedRenderingVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
@@ -85,7 +85,7 @@ ALResult CreateInstancedRenderingVS( Tr2ShaderAL& shader, Tr2PrimaryRenderContex
 		.Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 )
 		.Add( Tr2VertexDefinition::POSITION, 8, 1, Tr2ShaderPipelineInputAL::FLOAT, 2 );
 
-	return shader.Create( VERTEX_SHADER, bytecode, input, renderContext );
+	return shader.Create( VERTEX_SHADER, bytecode, input, "", renderContext );
 }
 
 ALResult CreateOutputTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
@@ -94,7 +94,7 @@ ALResult CreateOutputTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL&
 #include INCLUDE_SHADER_CODE( OutputTexCoord.ps )
 	};
 
-	return shader.Create( PIXEL_SHADER, bytecode, Tr2ShaderSignatureAL(), renderContext );
+	return shader.Create( PIXEL_SHADER, bytecode, Tr2ShaderSignatureAL(), "", renderContext );
 }
 
 ALResult CreateSampleTextureMipFromTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
@@ -108,7 +108,7 @@ ALResult CreateSampleTextureMipFromTexCoordPS( Tr2ShaderAL& shader, Tr2PrimaryRe
 		.Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 )
 		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
 
-	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
+	return shader.Create( PIXEL_SHADER, bytecode, input, "", renderContext );
 }
 
 ALResult CreateSampleVolumeTexturePS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
@@ -122,7 +122,7 @@ ALResult CreateSampleVolumeTexturePS( Tr2ShaderAL& shader, Tr2PrimaryRenderConte
 		.Add( Tr2ShaderRegisterAL::SRV_TEXTURE3D, 0 )
 		.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
 
-	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
+	return shader.Create( PIXEL_SHADER, bytecode, input, "", renderContext );
 }
 
 #if TRINITY_PLATFORM_SUPPORTS_UNORDERED_ACCESS
@@ -136,7 +136,7 @@ ALResult CreateWriteToUavPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& ren
 	auto input = Tr2ShaderSignatureAL()
 		.Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 1 );
 
-	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
+	return shader.Create( PIXEL_SHADER, bytecode, input, "", renderContext );
 }
 
 #endif
@@ -152,7 +152,7 @@ ALResult CreateLoadMsaaTexturePS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL
 	auto input = Tr2ShaderSignatureAL()
 		.Add( Tr2ShaderRegisterAL::SRV_TEXTURE2DMS, 0 );
 
-	return shader.Create( PIXEL_SHADER, bytecode, input, renderContext );
+	return shader.Create( PIXEL_SHADER, bytecode, input, "", renderContext );
 }
 
 #endif
@@ -350,7 +350,7 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 		.Add( Tr2VertexDefinition::POSITION, 0, 1, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
 	Tr2ShaderAL vs;
-	ASSERT_HRESULT_SUCCEEDED( vs.Create( VERTEX_SHADER, vsBytecode, vsInput, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( vs.Create( VERTEX_SHADER, vsBytecode, vsInput, "",  *renderContext ) );
 
 	Tr2ShaderAL ps;
 	ASSERT_HRESULT_SUCCEEDED( CreateOutputTexCoordPS( ps, *renderContext ) );

@@ -140,11 +140,6 @@ public:
 		return E_FAIL;
 	}
 
-	ALResult CopyBufferCounter( Tr2BufferAL&, uint32_t, Tr2BufferAL& )
-	{
-		return E_FAIL;
-	}
-
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout );
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value );

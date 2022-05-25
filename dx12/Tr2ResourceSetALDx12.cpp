@@ -33,9 +33,10 @@ namespace TrinityALImpl
 	Tr2ResourceSetAL::Tr2ResourceSetAL()
 		:m_owner( nullptr ),
 		m_samplerCount( 0 ),
-		m_resourceCount( 0 )
+		m_resourceCount( 0 ),
+		m_srvMask( 0 ),
+		m_uavMask( 0 )
 	{
-
 	}
 
 	Tr2ResourceSetAL::~Tr2ResourceSetAL()
@@ -61,7 +62,22 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
-		std::map<ID3D12Resource*, D3D12_RESOURCE_STATES> transitioned;
+		std::vector<ID3D12Resource*> transitioned;
+
+		auto AddTransition = [&]( ID3D12Resource* res, D3D12_RESOURCE_STATES defaultState, D3D12_RESOURCE_STATES expectedState ) {
+			// TODO: verify state
+			if( ( defaultState & expectedState ) == 0 )
+			{
+				auto found = std::find( begin( transitioned ), end( transitioned ), res );
+				if( found == transitioned.end() )
+				{
+					m_inTransitions.push_back( Transition( res, defaultState, expectedState ) );
+					m_outTransitions.push_back( Transition( res, expectedState, defaultState ) );
+					transitioned.push_back( res );
+				}
+			}
+			m_usedResources.push_back( res );
+		};
 
 		for (auto it = begin(program.m_program->m_srvRegisters); it != end(program.m_program->m_srvRegisters); ++it)
 		{
@@ -69,46 +85,47 @@ namespace TrinityALImpl
 			auto& resource = description.m_srv[description.m_registerMap.srvs[reg.stage][reg.index]];
 			auto stateFlag = reg.stage == PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 			m_resourceCount = std::max( reg.parameter + 1, m_resourceCount );
+			m_srvMask |= 1 << reg.parameter;
 			switch (resource.type)
 			{
 			case Tr2ResourceSetDescriptionAL::TEXTURE:
-				if (resource.texture.IsValid())
+				if( resource.texture.IsValid() && it->registerType >= Tr2ShaderRegisterAL::SRV_TEXTURE1D )
 				{
 					m_srv[reg.parameter] = resource.texture.m_texture->m_view[resource.colorSpace];
-
-					auto texture = resource.texture.m_texture.get();
-					auto res = texture->GetResourceDx12();
-					auto found = transitioned.find(res);
-					// TODO: verify state
-					if ((texture->m_defaultState & stateFlag) == 0 && found == transitioned.end())
-					{
-						m_inTransitions.push_back(Transition(res, texture->m_defaultState, stateFlag));
-						m_outTransitions.push_back(Transition(res, stateFlag, texture->m_defaultState));
-						transitioned[res] = stateFlag;
-					}
-					m_usedResources.push_back( res );
+				}
+				else
+				{
+					m_srv[reg.parameter] = nullptr;
+				}
+				if( !m_srv[reg.parameter] )
+				{
+					m_srv[reg.parameter] = renderContext.GetNullSrvDx12( it->registerType );
+				}
+				else
+				{
+					AddTransition( resource.texture.m_texture->GetResourceDx12(), resource.texture.m_texture->m_defaultState, stateFlag );
 				}
 				break;
 			case Tr2ResourceSetDescriptionAL::BUFFER:
-				if (resource.buffer.IsValid())
+				if( resource.buffer.IsValid() && it->registerType <= Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER )
 				{
-					auto buffer = resource.buffer.m_buffer.get();
-					m_srv[reg.parameter] = buffer->m_srv;
-
-					auto res = buffer->GetGpuResource();
-
-					auto found = transitioned.find(res);
-					// TODO: verify state
-					if ((buffer->m_defaultState & stateFlag) == 0 && found == transitioned.end())
-					{
-						m_inTransitions.push_back(Transition(res, buffer->m_defaultState, stateFlag));
-						m_outTransitions.push_back(Transition(res, stateFlag, buffer->m_defaultState));
-						transitioned[res] = stateFlag;
-					}
-					m_usedResources.push_back( res );
+					m_srv[reg.parameter] = resource.buffer.m_buffer->m_srv;
+				}
+				else
+				{
+					m_srv[reg.parameter] = nullptr;
+				}
+				if( !m_srv[reg.parameter] )
+				{
+					m_srv[reg.parameter] = renderContext.GetNullSrvDx12( it->registerType );
+				}
+				else
+				{
+					AddTransition( resource.buffer.m_buffer->GetGpuResource(), resource.buffer.m_buffer->m_defaultState, stateFlag );
 				}
 				break;
 			default:
+				m_srv[reg.parameter] = renderContext.GetNullSrvDx12( it->registerType );
 				break;
 			}
 		}
@@ -119,53 +136,54 @@ namespace TrinityALImpl
 			auto& resource = description.m_uav[description.m_registerMap.uavs[reg.stage][reg.index]];
 			auto stateFlag = reg.stage == PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 			m_resourceCount = std::max( reg.parameter + 1, m_resourceCount );
-			switch (resource.type)
+			m_uavMask |= 1 << reg.parameter;
+			switch( resource.type )
 			{
 			case Tr2ResourceSetDescriptionAL::TEXTURE:
 				if (resource.texture.IsValid())
 				{
-					auto texture = resource.texture.m_texture.get();
-					auto res = texture->GetResourceDx12();
-
-					m_uav[reg.parameter] = texture->m_uav[resource.mip];
-
-					auto found = transitioned.find(res);
-					// TODO: verify state
-					if ((texture->m_defaultState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) == 0 && found == transitioned.end())
+					if( resource.texture.IsValid() && it->registerType >= Tr2ShaderRegisterAL::UAV_TEXTURE1D )
 					{
-						m_inTransitions.push_back(Transition(res, texture->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
-						m_outTransitions.push_back(Transition(res, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, texture->m_defaultState));
-						transitioned[res] = stateFlag;
+						m_uav[reg.parameter] = resource.texture.m_texture->m_uav[resource.mip];
 					}
-					m_usedResources.push_back( res );
+					else
+					{
+						m_uav[reg.parameter] = nullptr;
+					}
+					if( !m_uav[reg.parameter] )
+					{
+						m_uav[reg.parameter] = renderContext.GetNullUavDx12( it->registerType );
+					}
+					else
+					{
+						AddTransition( resource.texture.m_texture->GetResourceDx12(), resource.texture.m_texture->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
+					}
 				}
 				break;
 			case Tr2ResourceSetDescriptionAL::BUFFER:
 				if (resource.buffer.IsValid())
 				{
-					auto buffer = resource.buffer.m_buffer.get();
-					auto res = buffer->GetGpuResource();
-
-					m_uav[reg.parameter] = buffer->m_uav;
-
-					if (resource.initialCount != -1 && resource.buffer.m_buffer->m_counter)
+					if( resource.buffer.IsValid() && it->registerType <= Tr2ShaderRegisterAL::UAV_STRUCTURED_BUFFER )
 					{
-						InitialCount cnt = { resource.buffer, resource.initialCount };
-						m_initialCounts.push_back(cnt);
+						m_uav[reg.parameter] = resource.buffer.m_buffer->m_uav;
 					}
-					auto found = transitioned.find(res);
-					// TODO: verify state
-					if ((buffer->m_defaultState & D3D12_RESOURCE_STATE_UNORDERED_ACCESS) == 0 && found == transitioned.end())
+					else
 					{
-						m_inTransitions.push_back(Transition(res, buffer->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS));
-						m_outTransitions.push_back(Transition(res, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, buffer->m_defaultState));
-						transitioned[res] = stateFlag;
+						m_uav[reg.parameter] = nullptr;
 					}
-					m_usedResources.push_back( res );
+					if( !m_uav[reg.parameter] )
+					{
+						m_uav[reg.parameter] = renderContext.GetNullUavDx12( it->registerType );
+					}
+					else
+					{
+						AddTransition( resource.buffer.m_buffer->GetGpuResource(), resource.buffer.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
+					}
 				}
 				break;
 			default:
 				CCP_AL_LOGWARN("Missing UAV resource in resource set for register %u, stage %u", reg.index, reg.stage);
+				m_uav[reg.parameter] = renderContext.GetNullUavDx12( it->registerType );
 				break;
 			}
 
@@ -182,47 +200,21 @@ namespace TrinityALImpl
 			m_samplerCount = std::max( reg.parameter + 1, m_samplerCount );
 		}
 
-		CComPtr<ID3D12Resource> initialCountBuffer;
-		if( !m_initialCounts.empty() )
-		{
-			auto scratchHeap = HeapDesc( D3D12_HEAP_TYPE_UPLOAD );
-			auto scratchDesc = BufferDesc( uint32_t( m_initialCounts.size() ) * 4 );
-			CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
-				&scratchHeap,
-				D3D12_HEAP_FLAG_NONE,
-				&scratchDesc,
-				D3D12_RESOURCE_STATE_GENERIC_READ,
-				nullptr,
-				IID_PPV_ARGS( &initialCountBuffer ) ) );
-			D3D12_RANGE range = { 0, 0 };
-			uint32_t* data = nullptr;
-			CR_RETURN_HR( initialCountBuffer->Map( 0, &range, reinterpret_cast<void**>( &data ) ) );
-			for( auto it = begin( m_initialCounts ); it != end( m_initialCounts ); ++it )
-			{
-				*data++ = it->initialCount;
-			}
-			initialCountBuffer->Unmap( 0, nullptr );
-		}
-
 		m_owner = &renderContext;
-		m_initialCountBuffer = initialCountBuffer;
 
 		return S_OK;
 	}
 
 	void Tr2ResourceSetAL::Destroy()
 	{
-		if( m_owner && m_initialCountBuffer )
-		{
-			RELEASE_LATER( m_owner, m_initialCountBuffer );
-			m_initialCountBuffer = nullptr;
-		}
 		for( uint32_t idx = 0; idx < m_resourceCount; ++idx )
 		{
 			m_srv[idx] = nullptr;
 			m_uav[idx] = nullptr;
 		}
 		m_resourceCount = 0;
+		m_srvMask = 0;
+		m_uavMask = 0;
 		for( uint32_t idx = 0; idx < m_samplerCount; ++idx )
 		{
 			m_sampler[idx] = nullptr;
@@ -230,7 +222,6 @@ namespace TrinityALImpl
 		m_samplerCount = 0;
 
 		m_owner = nullptr;
-		m_initialCounts.clear();
 		m_inTransitions.clear();
 		m_outTransitions.clear();
 		m_usedResources.clear();
@@ -244,36 +235,6 @@ namespace TrinityALImpl
 	Tr2ALMemoryType Tr2ResourceSetAL::GetMemoryClass() const
 	{
 		return AL_MEMORY_MANAGED;
-	}
-
-	void Tr2ResourceSetAL::UploadInitialCounts( Tr2RenderContextAL& renderContext )
-	{
-		if( m_initialCounts.empty() )
-		{
-			return;
-		}
-		std::vector<D3D12_RESOURCE_BARRIER> barriers( m_initialCounts.size() );
-		std::vector<ID3D12Resource*> resources( m_initialCounts.size() );
-		for( size_t i = 0; i < m_initialCounts.size(); ++i )
-		{
-			barriers[i] = Transition( m_initialCounts[i].buffer.m_buffer->m_counter, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_DEST );
-			resources[i] = m_initialCounts[i].buffer.m_buffer->m_counter;
-		}
-
-		renderContext.ResourceBarrierDx12( barriers.size(), barriers.data() );
-		renderContext.FlushBarriersDx12( resources.size(), resources.data() );
-
-		for( size_t i = 0; i < m_initialCounts.size(); ++i )
-		{
-			renderContext.m_commandList->CopyBufferRegion( m_initialCounts[i].buffer.m_buffer->m_counter, 0, m_initialCountBuffer, i * 4, 4 );
-		}
-
-		for( size_t i = 0; i < m_initialCounts.size(); ++i )
-		{
-			std::swap( barriers[i].Transition.StateAfter, barriers[i].Transition.StateBefore );
-		}
-
-		renderContext.ResourceBarrierDx12( barriers.size(), barriers.data() );
 	}
 
 	void Tr2ResourceSetAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const

@@ -18,7 +18,6 @@ namespace TrinityALImpl
 		m_uavCount( 0 ),
 		m_csUavs( false )
 	{
-		std::fill_n( m_uavInitialCounts, MAX_RESOURCES, -1 );
 	}
 
 	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& /*renderContext*/ )
@@ -106,7 +105,6 @@ namespace TrinityALImpl
 				{
 				case Tr2ResourceSetDescriptionAL::BUFFER:
 					m_uavs[registerIndex] = desc.buffer.m_buffer->m_uav;
-					m_uavInitialCounts[registerIndex] = desc.initialCount;
 					m_uavCount = registerIndex + 1;
 					m_uavOffset = std::min( m_uavOffset, registerIndex );
 					break;
@@ -119,7 +117,6 @@ namespace TrinityALImpl
 					{
 						m_uavs[registerIndex] = nullptr;
 					}
-					m_uavInitialCounts[registerIndex] = 0xffffffff;
 					m_uavCount = registerIndex + 1;
 					m_uavOffset = std::min( m_uavOffset, registerIndex );
 					break;
@@ -190,7 +187,6 @@ namespace TrinityALImpl
 			it->Destroy();
 		}
 		std::fill_n( m_uavs, MAX_RESOURCES, nullptr );
-		std::fill_n( m_uavInitialCounts, MAX_RESOURCES, -1 );
 		m_uavCount = 0;
 		m_uavOffset = 0;
 		m_isValid = false;

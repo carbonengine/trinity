@@ -52,7 +52,7 @@ public:
 
 	bool SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer );
 	bool SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
-	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer, uint32_t initialCount = -1 );
+	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer );
 	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 );
 	bool SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler );
 	void ClearResources();
@@ -73,7 +73,7 @@ private:
 		Resource();
 
 		bool operator==( const Resource& other ) const;
-		bool Is( const Tr2BufferAL& other, uint32_t otherInitialCount ) const;
+		bool Is( const Tr2BufferAL& other ) const;
 		bool Is( const Tr2TextureAL& other, Tr2RenderContextEnum::ColorSpace otherColorSpace ) const;
 		bool Is( const Tr2TextureAL& other, uint32_t otherMip ) const;
 		void UpdateHash( uint32_t& hash ) const;
@@ -85,7 +85,6 @@ private:
 		{
 			Tr2RenderContextEnum::ColorSpace colorSpace;
 			uint32_t mip;
-			uint32_t initialCount;
 		};
 	};
 

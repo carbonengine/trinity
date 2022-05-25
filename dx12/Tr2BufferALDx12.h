@@ -50,7 +50,6 @@ namespace TrinityALImpl
 	private:
 		Tr2BufferDescriptionAL m_desc;
 		Tr2ResourceHelper m_buffer;
-		CComPtr<ID3D12Resource> m_counter;
 
 		Tr2PrimaryRenderContextAL* m_owner;
 		D3D12_RESOURCE_STATES m_defaultState;

@@ -25,6 +25,7 @@ TEST_F( Shader, CanCreateShader )
 		Tr2RenderContextEnum::VERTEX_SHADER,
 		vsBytecode,
 		vsInput,
+		"",
 		*renderContext ) );
 
 	EXPECT_TRUE( vs.IsValid() );
@@ -49,6 +50,7 @@ TEST_F( Shader, ShaderEqualsItself )
 		Tr2RenderContextEnum::VERTEX_SHADER,
 		vsBytecode,
 		vsInput,
+		"",
 		*renderContext ) );
 
 	EXPECT_TRUE( vs == vs );
@@ -67,6 +69,7 @@ TEST_F( Shader, DifferentShadersAreNotEqual )
 		Tr2RenderContextEnum::VERTEX_SHADER,
 		vsBytecode1,
 		vsInput,
+		"",
 		*renderContext ) );
 
 	uint8_t vsBytecode2[] = {
@@ -79,6 +82,7 @@ TEST_F( Shader, DifferentShadersAreNotEqual )
 		Tr2RenderContextEnum::VERTEX_SHADER,
 		vsBytecode2,
 		vsInput2,
+		"", 
 		*renderContext ) );
 
 	EXPECT_FALSE( vs1 == vs2 );

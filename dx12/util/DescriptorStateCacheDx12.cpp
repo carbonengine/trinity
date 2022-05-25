@@ -161,6 +161,32 @@ void DescriptorStateCache::SetConstantBuffers(Tr2RenderContextEnum::ShaderType s
 	m_cbv[shaderStage][slot] = addr;
 }
 
+DescriptorHeapEntry DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, UnorderedAccessViewDx12* uav )
+{
+	bool dirtyHeaps = m_heapsDirty;
+	DescriptorHeapEntry result = m_allocatorSRV.Allocate( 1 );
+	dirtyHeaps |= result.m_isDirty;
+	D3D12_CPU_DESCRIPTOR_HANDLE dest = { result.m_cpuHandle.ptr };
+	m_device->CopyDescriptorsSimple( 1, dest, uav->GetHandleCPU(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+
+	if( dirtyHeaps )
+	{
+		ID3D12DescriptorHeap* heaps[] = {
+			m_allocatorSRV.GetCurrentHeap(),
+			m_allocatorSampler.GetCurrentHeap()
+		};
+
+		commandList->SetDescriptorHeaps( 2, heaps );
+
+	}
+	m_pipeDirty[Tr2RenderContextEnum::GRAPHICS_PIPE] = true;
+	m_pipeDirty[Tr2RenderContextEnum::COMPUTE_PIPE] = true;
+	m_heapsDirty = false;
+	m_srvUavDirty = true;
+	m_samplerDirty = true;
+	return result;
+}
+
 /** Apply state */
 void DescriptorStateCache::Commit(CComPtr<ID3D12GraphicsCommandList> commandList, const TrinityALImpl::Tr2ShaderProgramAL* shader)
 {

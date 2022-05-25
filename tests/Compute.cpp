@@ -17,7 +17,7 @@ TEST_F( Compute, CanReadCSResult )
 		.Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
 		.Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
 	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, "", *renderContext ) );
 
 	Tr2ShaderAL shaders[] = { cs };
 	Tr2ShaderProgramAL sp;
@@ -62,7 +62,7 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 		.Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
 
 	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, "", *renderContext ) );
 
 	Tr2ShaderAL shaders[] = { cs };
 	Tr2ShaderProgramAL sp;
@@ -119,7 +119,7 @@ TEST_F( Compute, CanAddConstantInCS )
 		.Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
 
 	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, "", *renderContext ) );
 
 	Tr2ShaderAL shaders[] = { cs };
 	Tr2ShaderProgramAL sp;
@@ -182,7 +182,7 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 		.Add( Tr2ShaderThreadGroupSizeAL( 1, 1, 1 ) );
 
 	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, "", *renderContext ) );
 	Tr2ShaderAL shaders[] = { cs };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
@@ -252,7 +252,7 @@ TEST_F( Compute, CanDispatchCSGroups )
 		.Add( Tr2ShaderThreadGroupSizeAL( 10, 10, 2 ) );
 
 	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, "", *renderContext ) );
 	Tr2ShaderAL shaders[] = { cs };
 	Tr2ShaderProgramAL sp;
 	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
@@ -281,60 +281,5 @@ TEST_F( Compute, CanDispatchCSGroups )
 
 	output.UnmapForReading( *renderContext );
 }
-
-#if TRINITY_PLATFORM_SUPPORTS_BUFFER_COUNTERS
-TEST_F( Compute, CanUseBufferCounter )
-{
-	uint8_t vsBytecode[] = {
-#include INCLUDE_SHADER_CODE( UseBufferCounter.cs )
-	};
-
-	auto signature = Tr2ShaderSignatureAL()
-		.Add( Tr2ShaderRegisterAL::UAV_BUFFER, 0 )
-		.Add( Tr2ShaderThreadGroupSizeAL( 4, 1, 1 ) );
-
-	Tr2ShaderAL cs;
-	ASSERT_HRESULT_SUCCEEDED( cs.Create( COMPUTE_SHADER, vsBytecode, signature, *renderContext ) );
-	Tr2ShaderAL shaders[] = { cs };
-	Tr2ShaderProgramAL sp;
-	ASSERT_HRESULT_SUCCEEDED( sp.Create( shaders, 1, *renderContext ) );
-
-	Tr2BufferAL output;
-	ASSERT_HRESULT_SUCCEEDED( output.Create( 4, 4, Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::BUFFER_COUNTER, Tr2CpuUsage::READ, nullptr, *renderContext ) );
-
-	const uint32_t initialValue = 5;
-
-	Tr2ResourceSetDescriptionAL desc( sp );
-	desc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, output, initialValue );
-
-	Tr2ResourceSetAL resourceSet;
-	ASSERT_HRESULT_SUCCEEDED( resourceSet.Create( desc, sp, *renderContext ) );
-
-
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( resourceSet ) );
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( sp ) );
-
-	ASSERT_HRESULT_SUCCEEDED( renderContext->RunComputeShader( 1, 1, 1 ) );
-
-	ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( Tr2ResourceSetAL() ) );
-
-	const uint32_t* data;
-	ASSERT_HRESULT_SUCCEEDED( output.MapForReading( data, *renderContext ) );
-
-	EXPECT_LE( initialValue, data[0] );
-	EXPECT_GT( initialValue + 4, data[0] );
-
-	EXPECT_LE( initialValue, data[1] );
-	EXPECT_GT( initialValue + 4, data[1] );
-
-	EXPECT_LE( initialValue, data[2] );
-	EXPECT_GT( initialValue + 4, data[2] );
-
-	EXPECT_LE( initialValue, data[3] );
-	EXPECT_GT( initialValue + 4, data[3] );
-
-	output.UnmapForReading( *renderContext );
-}
-#endif
 
 #endif

@@ -273,13 +273,12 @@ bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage
 		return false;
 	}
 	auto& resource = m_srv[index];
-	if( resource.Is( buffer, 0 ) )
+	if( resource.Is( buffer ) )
 	{
 		return false;
 	}
 	resource.type = BUFFER;
 	resource.buffer = buffer;
-	resource.initialCount = 0;
 	return true;
 }
 
@@ -305,7 +304,7 @@ bool Tr2ResourceSetDescriptionAL::SetSrv( Tr2RenderContextEnum::ShaderType stage
 	return true;
 }
 
-bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer, uint32_t initialCount )
+bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer )
 {
 	if( m_registerMap.uavCount == 0 )
 	{
@@ -317,13 +316,12 @@ bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage
 		return false;
 	}
 	auto& resource = m_uav[index];
-	if( resource.Is( buffer, initialCount ) )
+	if( resource.Is( buffer ) )
 	{
 		return false;
 	}
 	resource.type = BUFFER;
 	resource.buffer = buffer;
-	resource.initialCount = initialCount;
 	return true;
 }
 
@@ -420,12 +418,12 @@ Tr2ResourceSetDescriptionAL::Resource::Resource()
 
 bool Tr2ResourceSetDescriptionAL::Resource::operator==( const Resource& other ) const
 {
-	return type == other.type && buffer == other.buffer && texture == other.texture && initialCount == other.initialCount;
+	return type == other.type && buffer == other.buffer && texture == other.texture;
 }
 
-bool Tr2ResourceSetDescriptionAL::Resource::Is( const Tr2BufferAL& other, uint32_t otherInitialCount ) const
+bool Tr2ResourceSetDescriptionAL::Resource::Is( const Tr2BufferAL& other ) const
 {
-	return type == BUFFER && buffer == other && initialCount == otherInitialCount;
+	return type == BUFFER && buffer == other;
 }
 
 bool Tr2ResourceSetDescriptionAL::Resource::Is( const Tr2TextureAL& other, Tr2RenderContextEnum::ColorSpace otherColorSpace ) const

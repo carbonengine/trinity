@@ -41,7 +41,6 @@ namespace TrinityALImpl
 		StageInput m_stages[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 
 		CComPtr<ID3D11UnorderedAccessView> m_uavs[MAX_RESOURCES];
-		uint32_t m_uavInitialCounts[MAX_RESOURCES];
 		uint32_t m_uavOffset;
 		uint32_t m_uavCount;
 		std::string m_name;

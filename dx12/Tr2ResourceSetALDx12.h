@@ -25,7 +25,6 @@ namespace TrinityALImpl
 		bool IsValid() const;
 		Tr2ALMemoryType GetMemoryClass() const;
 
-		void UploadInitialCounts( Tr2RenderContextAL& renderContext );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
 
@@ -35,16 +34,9 @@ namespace TrinityALImpl
 		std::shared_ptr<SamplerStateDx12> m_sampler[Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 		uint32_t m_samplerCount;
 		uint32_t m_resourceCount;
+		uint32_t m_srvMask;
+		uint32_t m_uavMask;
 		Tr2PrimaryRenderContextAL* m_owner;
-
-		struct InitialCount
-		{
-			::Tr2BufferAL buffer;
-			uint32_t initialCount;
-		};
-
-		std::vector<InitialCount> m_initialCounts;
-		CComPtr<ID3D12Resource> m_initialCountBuffer;
 
 		std::vector<D3D12_RESOURCE_BARRIER> m_inTransitions;
 		std::vector<D3D12_RESOURCE_BARRIER> m_outTransitions;

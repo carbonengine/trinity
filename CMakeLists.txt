@@ -68,7 +68,7 @@ if(WIN32)
 
     add_library(TrinityAL_dx12 STATIC EXCLUDE_FROM_ALL)
     target_compile_definitions(TrinityAL_dx12 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX12)
-    target_link_libraries(TrinityAL_dx12 PUBLIC d3d12 dxgi dxguid)
+    target_link_libraries(TrinityAL_dx12 PUBLIC Nvidia::Aftermath d3d12 dxgi dxguid)
     set_shared_trinityal_properties(TrinityAL_dx12)
 elseif(APPLE)
     enable_language(OBJCXX)

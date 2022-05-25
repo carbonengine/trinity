@@ -18,6 +18,7 @@ namespace TrinityALImpl
 		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
 		const Tr2ShaderSignatureAL&,
+		const char* shaderPath,
 		Tr2PrimaryRenderContextAL & )
 	{
 		m_bytecode.resize( "Tr2ShaderALStub::m_bytecode", bytecode.size );

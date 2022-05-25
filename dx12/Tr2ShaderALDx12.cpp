@@ -9,6 +9,7 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
 #include "Tr2ShaderALDx12.h"
+#include "Tr2PrimaryRenderContextDx12.h"
 
 namespace TrinityALImpl
 {
@@ -23,7 +24,8 @@ namespace TrinityALImpl
 		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
 		const Tr2ShaderSignatureAL& signature,
-		Tr2PrimaryRenderContextAL& )
+		const char* shaderPath,
+		Tr2PrimaryRenderContextAL& renderContext)
 	{
 		m_bytecode.resize( "Tr2ShaderAL::m_bytecode", bytecode.size );
 		if( m_bytecode.empty() )
@@ -33,6 +35,9 @@ namespace TrinityALImpl
 		memcpy( m_bytecode.get(), bytecode.bytecode, bytecode.size );
 		m_signature = signature;
 		m_type = type;
+
+		renderContext.AddShaderBinaryToCrashTracker(bytecode, shaderPath);
+
 		return S_OK;
 	}
 

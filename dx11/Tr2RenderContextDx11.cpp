@@ -902,20 +902,6 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectPara
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src ) throw( )
-{
-	if( !m_context )
-	{
-		return E_INVALIDCALL;
-	}
-	if( !dest.m_buffer->m_buffer || !src.m_buffer->m_uav )
-	{
-		return E_INVALIDARG;
-	}
-	m_context->CopyStructureCount( dest.m_buffer->m_buffer, destOffset, src.m_buffer->m_uav );
-	return S_OK;
-}
-
 ALResult Tr2RenderContextAL::SetConstants(
 									const Tr2ConstantBufferAL& buffer, 
 									Tr2RenderContextEnum::ShaderType constantType, 
@@ -1717,7 +1703,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 				m_assignedUavOffset,
 				m_assignedUavCount,
 				nullUAVs,
-				rs.m_uavInitialCounts );
+				nullptr );
 		}
 		else
 		{
@@ -1795,7 +1781,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 				begin,
 				end - begin, 
 				reinterpret_cast<ID3D11UnorderedAccessView**>( rs.m_uavs + begin ), 
-				rs.m_uavInitialCounts + begin );
+				nullptr );
 			m_assignedUavCount = rs.m_uavCount;
 			m_assignedUavOffset = rs.m_uavOffset;
 			m_assignedPsUavs = false;
@@ -1827,7 +1813,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 				begin,
 				end - begin,
 				reinterpret_cast<ID3D11UnorderedAccessView**>( rs.m_uavs + begin ),
-				rs.m_uavInitialCounts + begin );
+				nullptr );
 			m_assignedUavCount = rs.m_uavCount;
 			m_assignedUavOffset = rs.m_uavOffset;
 			m_assignedPsUavs = true;
@@ -2122,7 +2108,7 @@ ALResult Tr2RenderContextAL::GetGpuPageFaultResource(
 	{
 		return E_FAIL;
 	}
-	if( !info.bhasPageFaultOccured )
+	if( !info.bHasPageFaultOccured )
 	{
 		return E_FAIL;
 	}

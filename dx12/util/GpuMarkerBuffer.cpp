@@ -27,6 +27,13 @@ namespace TrinityALImpl
 	{
 		Destroy();
 
+		D3D12_FEATURE_DATA_D3D12_OPTIONS3 options;
+		CR_RETURN_HR( device->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS3, &options, sizeof( options ) ) );
+		if( ( options.WriteBufferImmediateSupportFlags & D3D12_COMMAND_LIST_SUPPORT_FLAG_DIRECT ) == 0 )
+		{
+			return E_FAIL;
+		}
+
 		D3D12_HEAP_PROPERTIES heapProperties = { D3D12_HEAP_TYPE_READBACK };
 
 		D3D12_RESOURCE_DESC resourceDesc = { D3D12_RESOURCE_DIMENSION_BUFFER };
@@ -94,7 +101,7 @@ namespace TrinityALImpl
 	{
 		if( m_buffer )
 		{
-			marker = std::string( static_cast<const char*>( m_cpuAddress ), 255 );
+			marker = std::string( static_cast<const char*>( m_cpuAddress ));
 			return S_OK;
 		}
 

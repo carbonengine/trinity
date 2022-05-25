@@ -164,11 +164,6 @@ public:
 		return E_NOTIMPL;
 	}
 
-	ALResult CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src ) throw( )
-	{
-		return E_NOTIMPL;
-	}
-
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw( );
 	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw( );
 

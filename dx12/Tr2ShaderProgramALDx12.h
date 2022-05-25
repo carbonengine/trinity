@@ -10,6 +10,7 @@
 
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2ResourceSetAL.h"
+#include "../include/Tr2ShaderAL.h"
 
 class DescriptorStateCache;
 struct Tr2ShaderSignatureAL;
@@ -63,6 +64,7 @@ namespace TrinityALImpl
 			uint32_t stage;
 			uint32_t index;
 			uint32_t parameter;
+			Tr2ShaderRegisterAL::RegisterType registerType;
 		};
 		std::vector<CbRegister> m_cbRegisters;
 		std::vector<CbRegister> m_srvRegisters;

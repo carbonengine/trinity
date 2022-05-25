@@ -102,6 +102,12 @@ Tr2RenderContextAL::~Tr2RenderContextAL() throw( )
 
 void Tr2RenderContextAL::Destroy() throw( )
 {
+	if( m_ownerDevice )
+	{
+		// unregister from the crash tracker before doing anything else
+		m_ownerDevice->UnRegisterFromCrashTracker( m_commandList2 );
+	}
+
 	ResetDx12();
 
 	m_descriptorCache.clear();
@@ -475,31 +481,30 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 		ResourceBarrierDx12( m_resourceSet.m_resourceSet->m_outTransitions.size(), m_resourceSet.m_resourceSet->m_outTransitions.data() );
 	}
 	m_resourceSet = resourceSet;
-
-	if( m_resourceSet.IsValid() && !m_resourceSet.m_resourceSet->m_inTransitions.empty() )
+	if( !m_resourceSet.IsValid() )
 	{
-		ResourceBarrierDx12( m_resourceSet.m_resourceSet->m_inTransitions.size(), m_resourceSet.m_resourceSet->m_inTransitions.data() );
+		return S_OK;
 	}
-	resourceSet.m_resourceSet->UploadInitialCounts( *this );
+	auto rs = resourceSet.m_resourceSet.get();
+	if( !rs->m_inTransitions.empty() )
+	{
+		ResourceBarrierDx12( rs->m_inTransitions.size(), rs->m_inTransitions.data() );
+	}
 
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	m_descriptorCache[bufferIndex]->SetSamplers( 0, resourceSet.m_resourceSet->m_samplerCount, resourceSet.m_resourceSet->m_sampler );
+	m_descriptorCache[bufferIndex]->SetSamplers( 0, rs->m_samplerCount, rs->m_sampler );
 
 	// Because SRVs and UAVs are stacked in the resource slots, this will filter them out into the correct heap setup calls
 	// It's not great, but if the system is changed in the future to separate SRVs and UAVs then this is an easy change
-	for (uint32_t idx = 0; idx < resourceSet.m_resourceSet->m_resourceCount; ++idx)
+	for( uint32_t idx = 0; idx < rs->m_resourceCount; ++idx )
 	{
-		if (resourceSet.m_resourceSet->m_srv[idx] != nullptr)
+		if( ( rs->m_srvMask & ( 1 << idx ) ) != 0 )
 		{
-			CCP_ASSERT(resourceSet.m_resourceSet->m_uav[idx] == nullptr);
-
-			m_descriptorCache[bufferIndex]->SetShaderResources(idx, 1, &resourceSet.m_resourceSet->m_srv[idx]);
+			m_descriptorCache[bufferIndex]->SetShaderResources( idx, 1, &rs->m_srv[idx] );
 		}
-		else if (resourceSet.m_resourceSet->m_uav[idx] != nullptr)
+		else if( ( rs->m_uavMask & ( 1 << idx ) ) != 0 )
 		{
-			CCP_ASSERT(resourceSet.m_resourceSet->m_srv[idx] == nullptr);
-
-			m_descriptorCache[bufferIndex]->SetUnorderedAccessViews(idx, 1, &resourceSet.m_resourceSet->m_uav[idx]);
+			m_descriptorCache[bufferIndex]->SetUnorderedAccessViews( idx, 1, &rs->m_uav[idx] );
 		}
 	}
 
@@ -632,31 +637,6 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& params, unsi
 
 	return S_OK;
 }
-
-
-ALResult Tr2RenderContextAL::CopyBufferCounter( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src ) throw( )
-{
-	if( !dest.IsValid() || !src.m_buffer->m_counter )
-	{
-		return E_INVALIDARG;
-	}
-	D3D12_RESOURCE_BARRIER barriers[2];
-	uint32_t count = 0;
-	barriers[count++] = TrinityALImpl::Transition( src.m_buffer->m_counter, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_COPY_SOURCE );
-	if( dest.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_COPY_DEST )
-	{
-		barriers[count++] = TrinityALImpl::Transition( dest.m_buffer->GetGpuResource(), dest.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST );
-	}
-	ResourceBarrierDx12( count, barriers );
-	FlushBarriersDx12( dest.m_buffer->GetGpuResource(), src.m_buffer->m_counter );
-	m_commandList->CopyBufferRegion( dest.m_buffer->GetGpuResource(), destOffset, src.m_buffer->m_counter, 0, 4 );
-	std::swap( barriers[0].Transition.StateAfter, barriers[0].Transition.StateBefore );
-	std::swap( barriers[1].Transition.StateAfter, barriers[1].Transition.StateBefore );
-	ResourceBarrierDx12( count, barriers );
-
-	return S_OK;
-}
-
 
 
 ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
@@ -1108,8 +1088,11 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4
 	}
 	FlushBarriersDx12( obj->GetGpuResource() );
 
+	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
+	auto entry = m_descriptorCache[bufferIndex]->Commit( m_commandList, obj->m_clearUav.get() );
+
 	m_commandList->ClearUnorderedAccessViewFloat(
-		obj->m_clearUav->GetHandleGPU(),
+		entry.m_gpuHandle,
 		obj->m_clearUav->GetHandleCPU(),
 		obj->GetGpuResource(),
 		values,
@@ -1139,8 +1122,11 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t value
 	}
 	FlushBarriersDx12( obj->GetGpuResource() );
 
+	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
+	auto entry = m_descriptorCache[bufferIndex]->Commit( m_commandList, obj->m_clearUav.get() );
+
 	m_commandList->ClearUnorderedAccessViewUint(
-		obj->m_clearUav->GetHandleGPU(),
+		entry.m_gpuHandle,
 		obj->m_clearUav->GetHandleCPU(),
 		obj->GetGpuResource(),
 		values,
@@ -1163,8 +1149,9 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 	{
 		return E_INVALIDARG;
 	}
-	auto gpuDesc = obj->m_uav[mip]->GetHandleGPU();
-	auto cpuDesc = obj->m_uav[mip]->GetHandleCPU();
+	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
+	auto entry = m_descriptorCache[bufferIndex]->Commit( m_commandList, obj->m_uav[mip].get() );
+
 	auto resource = obj->GetResourceDx12();
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
@@ -1174,8 +1161,8 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 	FlushBarriersDx12( resource );
 
 	m_commandList->ClearUnorderedAccessViewFloat(
-		gpuDesc, 
-		cpuDesc,
+		entry.m_gpuHandle,
+		obj->m_uav[mip]->GetHandleCPU(),
 		resource,
 		values,
 		0,
@@ -1197,8 +1184,8 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 	{
 		return E_INVALIDARG;
 	}
-	auto gpuDesc = obj->m_uav[mip]->GetHandleGPU();
-	auto cpuDesc = obj->m_uav[mip]->GetHandleCPU();
+	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
+	auto entry = m_descriptorCache[bufferIndex]->Commit( m_commandList, obj->m_uav[mip].get() );
 	auto resource = obj->GetResourceDx12();
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
@@ -1208,8 +1195,8 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 	FlushBarriersDx12( resource );
 
 	m_commandList->ClearUnorderedAccessViewUint(
-		gpuDesc,
-		cpuDesc,
+		entry.m_gpuHandle,
+		obj->m_uav[mip]->GetHandleCPU(),
 		resource,
 		values,
 		0,
@@ -1390,6 +1377,11 @@ void Tr2RenderContextAL::ResetDx12()
 void Tr2RenderContextAL::AddGpuMarker( const char* marker )
 {
 	m_ownerDevice->GetMarkerBuffer().PutMarker( m_commandList2, marker );
+	auto crashTracker = m_ownerDevice->GetGpuCrashTracker();
+	if( crashTracker )
+	{
+		crashTracker->PutMarker( m_commandList2, marker );
+	}
 }
 
 void Tr2RenderContextAL::PushGpuMarker( const char* marker )

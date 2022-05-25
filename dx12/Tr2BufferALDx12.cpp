@@ -123,22 +123,7 @@ namespace TrinityALImpl
 			defaultState = D3D12_RESOURCE_STATE_GENERIC_READ;
 		}
 		FORWARD_HR( m_buffer.Create( strategy, size, resourceFlags, defaultState, initialData ? 1 : 0, initialData ? &subresourceData : nullptr, renderContext ) );
-		
-		CComPtr<ID3D12Resource> counter;
-		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::APPEND_CONSUME ) || HasFlag( desc.gpuUsage, Tr2GpuUsage::BUFFER_COUNTER ) )
-		{
-			auto counterHeap = HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
-			auto counterDesc = BufferDesc( 64, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS );
-			CR_RETURN_HR( renderContext.m_device->CreateCommittedResource(
-				&counterHeap,
-				D3D12_HEAP_FLAG_NONE,
-				&counterDesc,
-				D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
-				nullptr,
-				IID_PPV_ARGS( &counter ) ) );
-		}
 
-		m_counter = counter;
 		m_desc = desc;
 		m_owner = &renderContext;
 		m_defaultState = defaultState;
@@ -200,7 +185,7 @@ namespace TrinityALImpl
 			m_uavDesc.Buffer.CounterOffsetInBytes = 0;
 			m_uavDesc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
 
-			if (FAILED(hr = renderContext.CreateUnorderedAccessView(m_buffer.GetResource(), m_counter, m_uavDesc, m_uav)))
+			if (FAILED(hr = renderContext.CreateUnorderedAccessView(m_buffer.GetResource(), nullptr, m_uavDesc, m_uav)))
 			{
 				Destroy();
 				return hr;
@@ -219,11 +204,6 @@ namespace TrinityALImpl
 		if( m_owner )
 		{
 			m_buffer.Destroy( *m_owner );
-			if( m_counter )
-			{
-				m_owner->ReleaseLater( m_counter );
-				m_counter = nullptr;
-			}
 		}
 		if( m_lockedScratch )
 		{

@@ -164,14 +164,6 @@ namespace TrinityALImpl
 			descUAV.Buffer.FirstElement = 0;
 			descUAV.Buffer.NumElements = desc.count;
 			descUAV.Buffer.Flags = 0;
-			if( HasFlag( desc.gpuUsage, Tr2GpuUsage::APPEND_CONSUME ) )
-			{
-				descUAV.Buffer.Flags |= D3D11_BUFFER_UAV_FLAG_APPEND;
-			}
-			if( HasFlag( desc.gpuUsage, Tr2GpuUsage::BUFFER_COUNTER ) )
-			{
-				descUAV.Buffer.Flags |= D3D11_BUFFER_UAV_FLAG_COUNTER;
-			}
 			if( FAILED( hr = renderContext.m_d3dDevice11->CreateUnorderedAccessView( m_buffer, &descUAV, &m_uav ) ) )
 			{
 				Destroy();

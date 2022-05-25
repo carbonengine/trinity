@@ -134,6 +134,7 @@ public:
 		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
 		const Tr2ShaderSignatureAL& signature,
+		const char* shaderPath,
 		Tr2PrimaryRenderContextAL &renderContext
 	);
 

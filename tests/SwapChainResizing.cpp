@@ -29,7 +29,7 @@ namespace
 
 		auto input = Tr2ShaderSignatureAL().Add( Tr2VertexDefinition::POSITION, 0, 0, Tr2ShaderPipelineInputAL::FLOAT, 3 );
 
-		return shader.Create( VERTEX_SHADER, bytecode, input, renderContext );
+		return shader.Create( VERTEX_SHADER, bytecode, input, "", renderContext );
 	}
 
 	ALResult CreateConstantColorPS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL& renderContext )
@@ -38,7 +38,7 @@ namespace
 	#include INCLUDE_SHADER_CODE( ConstantColor.ps )
 		};
 
-		return shader.Create( PIXEL_SHADER, bytecode, Tr2ShaderSignatureAL(), renderContext );
+		return shader.Create( PIXEL_SHADER, bytecode, Tr2ShaderSignatureAL(), "", renderContext );
 	}
 
 }

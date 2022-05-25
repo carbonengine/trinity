@@ -100,6 +100,11 @@ namespace
 		return out;
 	}
 
+	size_t RegisterTypeIndex( Tr2ShaderRegisterAL::RegisterType type )
+	{
+		return size_t( type ) & 31;
+	}
+
 	uint32_t BACK_BUFFER_COUNT = 3;
 
 	ALResult CreateSwapChain(
@@ -187,7 +192,8 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 	m_statsQueryFrameIndex( 0 ),
 	m_statsStatus( STAT_READY ),
 	m_completedFrameIndex( 0 ),
-	m_amdExtDeviceObject( 0 )
+	m_amdExtDeviceObject( 0 ),
+	m_gpuCrashTracker( nullptr )
 {
 	m_ownerDevice = this;
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
@@ -216,9 +222,23 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	CComPtr<IDXGIAdapter1> dxgiAdapter;
 	CComPtr<IDXGIOutput> output;
 
+	if( !m_gpuCrashTracker )
+	{
+		m_gpuCrashTracker = new TrinityALImpl::GpuCrashTracker();
+	}
+
 	CR_RETURN_HR( TrinityALImpl::GetVideoAdapter( adapter, &dxgiAdapter, &output ) );
 
 	CR_RETURN_HR( D3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS( &device ) ) );
+
+	if( !m_gpuCrashTracker->IsValid() )
+	{
+		m_gpuCrashTracker = nullptr;
+	}
+	else
+	{
+		m_gpuCrashTracker->Initialize(device);
+	}
 
 	if( hasDebugLayer )
 	{
@@ -424,6 +444,72 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		CCP_AL_LOGNOTICE( "Created dx12 device for adapter %S", info.description.c_str() );
 	}
 
+    m_options = {};
+	device->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS, &m_options, sizeof( m_options ) );
+
+
+	{
+		D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
+		nullSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+
+		nullSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+		nullSrvDesc.Buffer = { 0, 1, 4 };
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_BUFFER )] );
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER )] );
+		nullSrvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1D;
+		nullSrvDesc.Texture1D = { 0, 1 };
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE1D )] );
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE1DARRAY;
+		nullSrvDesc.Texture1DArray = { 0, 1, 0, 1 };
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE1DARRAY )] );
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		nullSrvDesc.Texture2D = { 0, 1 };
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE2D )] );
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+		nullSrvDesc.Texture2DArray = { 0, 1, 0, 1 };
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE2DARRAY )] );
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMS;
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE2DMS )] );
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DMSARRAY;
+		nullSrvDesc.Texture2DMSArray = { 0, 1 };
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE2DMSARRAY )] );
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE3D;
+		nullSrvDesc.Texture3D = { 0, 1 };
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE3D )] );
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+		nullSrvDesc.TextureCube = { 0, 1 };
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURECUBE )] );
+		nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBEARRAY;
+		nullSrvDesc.TextureCubeArray = { 0, 1, 0, 1 };
+		CreateShaderResourceView( nullptr, nullSrvDesc, m_nullSrv[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURECUBEARRAY )] );
+
+		D3D12_UNORDERED_ACCESS_VIEW_DESC nullUavDesc = {};
+
+		nullUavDesc.Format = DXGI_FORMAT_UNKNOWN;
+		nullUavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+		nullUavDesc.Buffer = { 0, 1, 4 };
+		CreateUnorderedAccessView( nullptr, nullptr, nullUavDesc, m_nullUav[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_BUFFER )] );
+		CreateUnorderedAccessView( nullptr, nullptr, nullUavDesc, m_nullUav[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_STRUCTURED_BUFFER )] );
+		nullUavDesc.Format = DXGI_FORMAT_R32_FLOAT;
+		nullUavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1D;
+		nullUavDesc.Texture1D = {};
+		CreateUnorderedAccessView( nullptr, nullptr, nullUavDesc, m_nullUav[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE1D )] );
+		nullUavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE1DARRAY;
+		nullUavDesc.Texture1DArray = { 0, 0, 1 };
+		CreateUnorderedAccessView( nullptr, nullptr, nullUavDesc, m_nullUav[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE1DARRAY )] );
+		nullUavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+		nullUavDesc.Texture2D = {};
+		CreateUnorderedAccessView( nullptr, nullptr, nullUavDesc, m_nullUav[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE2D )] );
+		nullUavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+		nullUavDesc.Texture2DArray = { 0, 0, 1 };
+		CreateUnorderedAccessView( nullptr, nullptr, nullUavDesc, m_nullUav[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE2DARRAY )] );
+		nullUavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE3D;
+		nullUavDesc.Texture3D = { 0, 0, 1 };
+		CreateUnorderedAccessView( nullptr, nullptr, nullUavDesc, m_nullUav[RegisterTypeIndex( Tr2ShaderRegisterAL::SRV_TEXTURE3D )] );
+	}
+
 	m_frameTimer.Create( *this );
 
 	return S_OK;
@@ -439,6 +525,9 @@ void Tr2PrimaryRenderContextAL::Destroy()
 			WaitForFenceDx12( value );
 		}
 	}
+
+	std::fill( begin( m_nullSrv ), end( m_nullSrv ), nullptr );
+	std::fill( begin( m_nullUav ), end( m_nullUav ), nullptr );
 
 	if( m_amdExtDeviceObject )
 	{
@@ -502,6 +591,12 @@ void Tr2PrimaryRenderContextAL::Destroy()
 
 	m_rootSignatureVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
 	m_pendingRelease.clear();
+
+	if( m_gpuCrashTracker )
+	{
+		delete m_gpuCrashTracker;
+		m_gpuCrashTracker = nullptr;
+	}
 
 	TrinityALImpl::Destroy();
 }
@@ -647,6 +742,8 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	m_pendingPresents.erase(
 		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p )->bool { return !p.backBuffer.IsValid(); } ),
 		end( m_pendingPresents ) );
+
+	SetResourceSet( Tr2ResourceSetAL() );
 
 	{
 		std::vector<D3D12_RESOURCE_BARRIER> barriers;
@@ -970,10 +1067,41 @@ const TrinityALImpl::GpuMarkerBuffer& Tr2PrimaryRenderContextAL::GetMarkerBuffer
 	return m_immediateBuffer;
 }
 
-ALResult Tr2PrimaryRenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker ) const
+TrinityALImpl::GpuCrashTracker* Tr2PrimaryRenderContextAL::GetGpuCrashTracker() const
+{
+	return m_gpuCrashTracker;
+}
+
+void Tr2PrimaryRenderContextAL::UnRegisterFromCrashTracker(ID3D12GraphicsCommandList2* commandList)
+{
+	if(m_gpuCrashTracker)
+	{
+		m_gpuCrashTracker->UnRegisterCommandList(commandList);
+	}
+}
+
+void Tr2PrimaryRenderContextAL::AddShaderBinaryToCrashTracker(const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath)
+{
+	if(m_gpuCrashTracker)
+	{
+		m_gpuCrashTracker->RegisterShaderBinary(bytecode, shaderPath);
+	}
+}
+
+
+ALResult Tr2PrimaryRenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker, std::string& crashInfo ) const
 {
 	if( SUCCEEDED( m_immediateBuffer.GetMarker( marker ) ) )
 	{
+		if( m_gpuCrashTracker )
+		{
+			std::string shaderPath;
+			m_gpuCrashTracker->GetOffendingShader(shaderPath);
+			marker += ", Shader: " + shaderPath;
+
+			m_gpuCrashTracker->GetCrashInfo(crashInfo);
+		}
+
 		status = Tr2RenderContextEnum::CONTEXT_STATUS_FINISHED;
 		return S_OK;
 	}
@@ -1085,6 +1213,56 @@ void Tr2PrimaryRenderContextAL::ResetRenderTargets()
 	{
 		SetRenderTarget( nullTex, i );
 	}
+}
+
+bool Tr2PrimaryRenderContextAL::FormatIsUAVCompatibleDx12( DXGI_FORMAT format ) const
+{
+	switch( format )
+	{
+	case DXGI_FORMAT_R32_FLOAT:
+	case DXGI_FORMAT_R32_UINT:
+	case DXGI_FORMAT_R32_SINT:
+		return true;
+	case DXGI_FORMAT_R32G32B32A32_FLOAT:
+	case DXGI_FORMAT_R32G32B32A32_UINT:
+	case DXGI_FORMAT_R32G32B32A32_SINT:
+	case DXGI_FORMAT_R16G16B16A16_FLOAT:
+	case DXGI_FORMAT_R16G16B16A16_UINT:
+	case DXGI_FORMAT_R16G16B16A16_SINT:
+	case DXGI_FORMAT_R8G8B8A8_UNORM:
+	case DXGI_FORMAT_R8G8B8A8_UINT:
+	case DXGI_FORMAT_R8G8B8A8_SINT:
+	case DXGI_FORMAT_R16_FLOAT:
+	case DXGI_FORMAT_R16_UINT:
+	case DXGI_FORMAT_R16_SINT:
+	case DXGI_FORMAT_R8_UNORM:
+	case DXGI_FORMAT_R8_UINT:
+	case DXGI_FORMAT_R8_SINT:
+		return m_options.TypedUAVLoadAdditionalFormats != 0;
+	case DXGI_FORMAT_R11G11B10_FLOAT: 
+		if( m_device && m_options.TypedUAVLoadAdditionalFormats != 0 )
+		{
+			D3D12_FEATURE_DATA_FORMAT_SUPPORT formatSupport = { format, D3D12_FORMAT_SUPPORT1_NONE, D3D12_FORMAT_SUPPORT2_NONE };
+			if( SUCCEEDED( m_device->CheckFeatureSupport( D3D12_FEATURE_FORMAT_SUPPORT, &formatSupport, sizeof( formatSupport ) ) ) )
+			{
+				const DWORD mask = D3D12_FORMAT_SUPPORT2_UAV_TYPED_LOAD | D3D12_FORMAT_SUPPORT2_UAV_TYPED_STORE;
+				return ( ( formatSupport.Support2 & mask ) == mask );
+			}
+		}
+		return false;
+	default:
+		return false;
+	}
+}
+
+std::shared_ptr<ShaderResourceViewDx12> Tr2PrimaryRenderContextAL::GetNullSrvDx12( Tr2ShaderRegisterAL::RegisterType type ) const
+{
+	return m_nullSrv[RegisterTypeIndex( type )];
+}
+
+std::shared_ptr<UnorderedAccessViewDx12> Tr2PrimaryRenderContextAL::GetNullUavDx12( Tr2ShaderRegisterAL::RegisterType type ) const
+{
+	return m_nullUav[RegisterTypeIndex( type )];
 }
 
 #endif
