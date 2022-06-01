@@ -929,16 +929,13 @@ uint64_t Tr2PrimaryRenderContextAL::SignalDx12()
 
 ALResult Tr2PrimaryRenderContextAL::WaitForFenceDx12( uint64_t value )
 {
-	m_completedFrameIndex = m_presentFence->GetCompletedValue();
-	if( m_completedFrameIndex < value )
+	CR_RETURN_HR( m_presentFence->SetEventOnCompletion( value, m_presentFenceEvent ) );
+	if( WaitForSingleObject( m_presentFenceEvent, 1000 ) == WAIT_TIMEOUT )
 	{
-		CR_RETURN_HR( m_presentFence->SetEventOnCompletion( value, m_presentFenceEvent ) );
-		if( WaitForSingleObject( m_presentFenceEvent, 1000 ) == WAIT_TIMEOUT )
-		{
-			return E_FAIL;
-		}
-		m_completedFrameIndex = value;
+		return E_FAIL;
 	}
+	m_completedFrameIndex = value;
+
 	return S_OK;
 }
 
