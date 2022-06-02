@@ -18,7 +18,10 @@ DescriptorStateCache::DescriptorStateCache(CComPtr<ID3D12Device> device, Tr2Prim
 	m_allocatorSampler(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, pageSizeSampler),
 	m_allocatorUpload(context, pageSizeUploadDefault, pageSizeUploadSpill),
 	m_primaryContext(context),
-	m_device(device)
+	m_device(device),
+	m_lastSamplerMaxSlot(0),
+	m_lastUavMaxSlot(0),
+	m_lastSrvMaxSlot(0)
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
 	nullSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -60,6 +63,10 @@ void DescriptorStateCache::Reset()
 	m_srvUavDirty = true;
 	m_samplerDirty = true;
 
+	m_lastSrvMaxSlot = 0;
+	m_lastUavMaxSlot = 0;
+	m_lastSamplerMaxSlot = 0;
+
 	m_pipeDirty[Tr2RenderContextEnum::GRAPHICS_PIPE] = true;
 	m_pipeDirty[Tr2RenderContextEnum::COMPUTE_PIPE] = true;
 
@@ -75,6 +82,11 @@ void DescriptorStateCache::Dirty()
 {
 	m_heapsDirty = true;
 
+	// Set the last slots to 0 so if we need any then we will resend the descriptors to the gpu
+	m_lastSrvMaxSlot = 0;
+	m_lastUavMaxSlot = 0;
+	m_lastSamplerMaxSlot = 0;
+
 	// Pretend that nothing is currently bound forcing the next Commit() to re-assign every parameter
 	for (uint32_t slot = 0; slot < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++slot)
 	{
@@ -86,6 +98,7 @@ void DescriptorStateCache::Dirty()
 /** Set an array of ShaderResourceViews */
 void DescriptorStateCache::SetShaderResources(uint32_t startSlot, uint32_t numViews, std::shared_ptr<ShaderResourceViewDx12>* shaderResourceViews)
 {
+	m_srvUavDirty |= m_lastSrvMaxSlot != (numViews + startSlot);
 	for (uint32_t slot = 0; slot < numViews; ++slot)
 	{
 		uint32_t writeSlot = startSlot + slot;
@@ -96,11 +109,13 @@ void DescriptorStateCache::SetShaderResources(uint32_t startSlot, uint32_t numVi
 			m_srvUavDirty = true;
 		}
 	}
+	m_lastSrvMaxSlot = numViews + startSlot;
 }
 
 /** Set an array or UnorderedAccessViews */
 void DescriptorStateCache::SetUnorderedAccessViews(uint32_t startSlot, uint32_t numViews, std::shared_ptr<UnorderedAccessViewDx12>* unorderedAccessViews)
 {
+	m_srvUavDirty |= m_lastUavMaxSlot != (numViews + startSlot);
 	for (uint32_t slot = 0; slot < numViews; ++slot)
 	{
 		uint32_t writeSlot = startSlot + slot;
@@ -112,11 +127,13 @@ void DescriptorStateCache::SetUnorderedAccessViews(uint32_t startSlot, uint32_t 
 			m_srvUavDirty = true;
 		}
 	}
+	m_lastUavMaxSlot = numViews + startSlot;
 }
 
 /** Set an array of SamplerStates */
 void DescriptorStateCache::SetSamplers(uint32_t startSlot, uint32_t numViews, std::shared_ptr<SamplerStateDx12>* samplers)
 {
+	m_samplerDirty = m_lastSamplerMaxSlot != (numViews + startSlot);
 	for (uint32_t slot = 0; slot < numViews; ++slot)
 	{
 		uint32_t writeSlot = startSlot + slot;
@@ -127,6 +144,7 @@ void DescriptorStateCache::SetSamplers(uint32_t startSlot, uint32_t numViews, st
 			m_samplerDirty = true;
 		}
 	}
+	m_lastSamplerMaxSlot = numViews + startSlot;
 }
 
 /** Set a constantbuffer */

@@ -139,6 +139,10 @@ private:
 	bool m_srvUavDirty;
 	bool m_samplerDirty;
 
+	uint32_t m_lastSamplerMaxSlot;
+	uint32_t m_lastUavMaxSlot;
+	uint32_t m_lastSrvMaxSlot;
+
 	bool m_pipeDirty[Tr2RenderContextEnum::SHADER_PIPE_COUNT];
 
 	RootParameterSlot m_parameterSlots[Tr2RenderContextEnum::SHADER_PIPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
