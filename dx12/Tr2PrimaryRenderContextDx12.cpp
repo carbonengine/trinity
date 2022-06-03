@@ -657,7 +657,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 
 	auto value = m_frameFenceValues[m_currentBackBufferIndex];
 	m_frameFenceValues.clear();
-	m_frameFenceValues.resize( BACK_BUFFER_COUNT, value );
+	m_frameFenceValues.resize( BACK_BUFFER_COUNT, value + 1 );
 
 	if( !wasFullScreen && presentationParameters.windowed )
 	{
