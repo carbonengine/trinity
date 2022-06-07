@@ -195,342 +195,410 @@ namespace
 	}
 
 
-	ALResult GenerateMips_UnorderedAccessPath( _In_ ID3D12Resource* resource, DXGI_FORMAT format, Tr2PrimaryRenderContextAL& device, ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES resourceState )
-	{
-		const auto desc = resource->GetDesc();
-		if( FormatIsBGR( format ) || FormatIsSRGB( format ) )
-		{
-			return E_INVALIDARG;
-		}
-
-		D3D12_HEAP_PROPERTIES defaultHeapProperties = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
-
-		D3D12_RESOURCE_STATES readState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-		// Create a staging resource if we have to
-		CComPtr<ID3D12Resource> staging;
-		if( ( desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS ) == 0 )
-		{
-			D3D12_RESOURCE_DESC stagingDesc = desc;
-			stagingDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-
-			CR_RETURN_HR( device.m_device->CreateCommittedResource(
-				&defaultHeapProperties,
-				D3D12_HEAP_FLAG_NONE,
-				&stagingDesc,
-				D3D12_RESOURCE_STATE_COPY_DEST,
-				nullptr,
-				IID_PPV_ARGS( &staging ) ) );
-
-			// Copy the resource to staging
-			auto from = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
-			commandList->ResourceBarrier( 1, &from );
-			commandList->CopyResource( staging, resource );
-			auto to = TrinityALImpl::Transition( staging, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
-			commandList->ResourceBarrier( 1, &to );
-		}
-		else
-		{
-			// Resource is already a UAV so we can do this in-place
-			staging = resource;
-			if( ( resourceState & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) == 0 )
-			{
-				auto barrier = TrinityALImpl::Transition( staging, resourceState, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
-				commandList->ResourceBarrier( 1, &barrier );
-			}
-			else
-			{
-				readState = resourceState;
-			}
-		}
-		ON_BLOCK_EXIT( [&] { if( staging != resource ) RELEASE_LATER( &device, staging ); } );
-
-		// Create a descriptor heap that holds our resource descriptors
-		CComPtr<ID3D12DescriptorHeap> descriptorHeap;
-		D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
-		descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-		descriptorHeapDesc.NumDescriptors = desc.MipLevels;
-		CR_RETURN_HR( device.m_device->CreateDescriptorHeap( &descriptorHeapDesc, IID_PPV_ARGS( &descriptorHeap ) ) );
-		ON_BLOCK_EXIT( [&] { RELEASE_LATER( &device, descriptorHeap ); } );
-
-		uint32_t descriptorSize = device.m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
-
-		// Create the top-level SRV
-		D3D12_CPU_DESCRIPTOR_HANDLE handleIt( descriptorHeap->GetCPUDescriptorHandleForHeapStart() );
-		D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-		srvDesc.Format = format;
-		srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-		if( desc.DepthOrArraySize > 1 )
-		{
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
-			srvDesc.Texture2DArray.MipLevels = desc.MipLevels;
-			srvDesc.Texture2DArray.ArraySize = desc.DepthOrArraySize;
-		}
-		else
-		{
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			srvDesc.Texture2D.MostDetailedMip = 0;
-			srvDesc.Texture2D.MipLevels = desc.MipLevels;
-		}
-
-		device.m_device->CreateShaderResourceView( staging, &srvDesc, handleIt );
-
-		// Create the UAVs for the tail
-		for( uint16_t mip = 1; mip < desc.MipLevels; ++mip )
-		{
-			D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-			uavDesc.Format = format;
-			if( desc.DepthOrArraySize > 1 )
-			{
-				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
-				uavDesc.Texture2DArray.MipSlice = mip;
-				uavDesc.Texture2DArray.ArraySize = desc.DepthOrArraySize;
-			}
-			else
-			{
-				uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-				uavDesc.Texture2D.MipSlice = mip;
-			}
-
-			handleIt.ptr += descriptorSize;
-			device.m_device->CreateUnorderedAccessView( staging, nullptr, &uavDesc, handleIt );
-		}
-
-		// Set up UAV barrier (used in loop)
-		D3D12_RESOURCE_BARRIER barrierUAV = {};
-		barrierUAV.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
-		barrierUAV.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrierUAV.UAV.pResource = staging;
-
-		// Barrier for transitioning the subresources to UAVs
-		D3D12_RESOURCE_BARRIER srv2uavDesc = {};
-		srv2uavDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		srv2uavDesc.Transition.pResource = staging;
-		srv2uavDesc.Transition.Subresource = 0;
-		srv2uavDesc.Transition.StateBefore = readState;
-		srv2uavDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-
-		// Barrier for transitioning the subresources to SRVs
-		D3D12_RESOURCE_BARRIER uav2srvDesc = {};
-		uav2srvDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		uav2srvDesc.Transition.pResource = staging;
-		uav2srvDesc.Transition.Subresource = 0;
-		uav2srvDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-		uav2srvDesc.Transition.StateAfter = readState;
-
-		// Set up state
-		commandList->SetComputeRootSignature( device.m_genMipsResources->rootSignature );
-		commandList->SetPipelineState( desc.DepthOrArraySize > 1 ? device.m_genMipsResources->generateMipsArrayPSO : device.m_genMipsResources->generateMipsPSO );
-		commandList->SetDescriptorHeaps( 1, &descriptorHeap );
-		commandList->SetComputeRootDescriptorTable( TrinityALImpl::GenerateMipsResources::SourceTexture, descriptorHeap->GetGPUDescriptorHandleForHeapStart() );
-
-		// Get the descriptor handle -- uavH will increment over each loop
-		D3D12_GPU_DESCRIPTOR_HANDLE uavH = { descriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + descriptorSize }; // offset by 1 descriptor
-
-		// Process each mip
-		auto mipWidth = static_cast<uint32_t>( desc.Width );
-		uint32_t mipHeight = desc.Height;
-		for( uint32_t mip = 1; mip < desc.MipLevels; ++mip )
-		{
-			mipWidth = std::max<uint32_t>( 1, mipWidth >> 1 );
-			mipHeight = std::max<uint32_t>( 1, mipHeight >> 1 );
-
-			// Transition the mip to a UAV
-			srv2uavDesc.Transition.Subresource = mip;
-			commandList->ResourceBarrier( 1, &srv2uavDesc );
-
-			// Bind the mip subresources
-			commandList->SetComputeRootDescriptorTable( TrinityALImpl::GenerateMipsResources::TargetTexture, uavH );
-
-			// Set constants
-			TrinityALImpl::GenerateMipsResources::ConstantData constants;
-			constants.SrcMipIndex = mip - 1;
-			constants.InvOutTexelSizeX = 1 / float( mipWidth );
-			constants.InvOutTexelSizeY = 1 / float( mipHeight );
-			commandList->SetComputeRoot32BitConstants(
-				TrinityALImpl::GenerateMipsResources::Constants,
-				TrinityALImpl::GenerateMipsResources::Num32BitConstants,
-				&constants,
-				0 );
-
-			// Process this mip
-			commandList->Dispatch(
-				( mipWidth + TrinityALImpl::GenerateMipsResources::ThreadGroupSize - 1 ) / TrinityALImpl::GenerateMipsResources::ThreadGroupSize,
-				( mipHeight + TrinityALImpl::GenerateMipsResources::ThreadGroupSize - 1 ) / TrinityALImpl::GenerateMipsResources::ThreadGroupSize,
-				desc.DepthOrArraySize );
-
-			commandList->ResourceBarrier( 1, &barrierUAV );
-
-			// Transition the mip to an SRV
-			uav2srvDesc.Transition.Subresource = mip;
-			commandList->ResourceBarrier( 1, &uav2srvDesc );
-
-			// Offset the descriptor heap handles
-			uavH.ptr += descriptorSize;
-		}
-
-		// If the staging resource is NOT the same as the resource, we need to copy everything back
-		if( staging != resource )
-		{
-			// Transition the resources ready for copy
-			D3D12_RESOURCE_BARRIER barriers[2] = {
-				TrinityALImpl::Transition( staging, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE ),
-				TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST ) };
-
-			commandList->ResourceBarrier( 2, barriers );
-			// Copy the entire resource back
-			commandList->CopyResource( resource, staging );
-
-			// Transition the target resource back to pixel shader resource
-			auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
-			commandList->ResourceBarrier( 1, &barrier );
-		}
-		else if( ( resourceState & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) == 0 )
-		{
-			auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, resourceState );
-			commandList->ResourceBarrier( 1, &barrier );
-		}
-
-		device.DirtyDescriptorCache();
-
-		return S_OK;
-	}
-
-	ALResult GenerateMips_TexturePath( _In_ ID3D12Resource* resource, Tr2PrimaryRenderContextAL& device, ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES resourceState )
-	{
-		const auto resourceDesc = resource->GetDesc();
-		if( FormatIsBGR( resourceDesc.Format ) && !FormatIsSRGB( resourceDesc.Format ) )
-		{
-			return E_FAIL;
-		}
-
-		auto copyDesc = resourceDesc;
-		copyDesc.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
-		copyDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-
-		auto heapProperties = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
-
-		// Create a resource with the same description, but without SRGB, and with UAV flags
-		CComPtr<ID3D12Resource> resourceCopy;
-		CR_RETURN_HR( device.m_device->CreateCommittedResource(
-			&heapProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&copyDesc,
-			D3D12_RESOURCE_STATE_COPY_DEST,
-			nullptr,
-			IID_PPV_ARGS( &resourceCopy ) ) );
-		ON_BLOCK_EXIT( [&] { RELEASE_LATER( &device, resourceCopy ); } );
-
-		// Copy the resource data
-		auto barrier = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
-		commandList->CopyResource( resourceCopy, resource );
-		barrier = TrinityALImpl::Transition( resourceCopy, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
-
-		// Generate the mips
-		GenerateMips_UnorderedAccessPath( resourceCopy, DXGI_FORMAT_R8G8B8A8_UNORM, device, commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
-
-		// Direct copy back
-		barrier = TrinityALImpl::Transition( resourceCopy, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
-		barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
-		commandList->ResourceBarrier( 1, &barrier );
-		commandList->CopyResource( resource, resourceCopy );
-		barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
-		commandList->ResourceBarrier( 1, &barrier );
-		return S_OK;
-	}
-
-	ALResult GenerateMips_TexturePathBGR( _In_ ID3D12Resource* resource, Tr2PrimaryRenderContextAL& device, ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES resourceState )
-	{
-		const auto resourceDesc = resource->GetDesc();
-		if( !FormatIsBGR( resourceDesc.Format ) )
-		{
-			return E_FAIL;
-		}
-
-		// Create a resource with the same description, but without SRGB, and with UAV flags
-		auto copyDesc = resourceDesc;
-		copyDesc.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
-		copyDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-
-		D3D12_HEAP_DESC heapDesc = {};
-		auto allocInfo = device.m_device->GetResourceAllocationInfo( 0, 1, &resourceDesc );
-		heapDesc.SizeInBytes = allocInfo.SizeInBytes;
-		heapDesc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES;
-		heapDesc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-		heapDesc.Properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-		heapDesc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
-
-		CComPtr<ID3D12Heap> heap;
-		CR_RETURN_HR( device.m_device->CreateHeap( &heapDesc, IID_PPV_ARGS( &heap ) ) );
-		ON_BLOCK_EXIT( [&] { RELEASE_LATER( &device, heap ); } );
-
-		CComPtr<ID3D12Resource> resourceCopy;
-		CR_RETURN_HR( device.m_device->CreatePlacedResource(
-			heap,
-			0,
-			&copyDesc,
-			D3D12_RESOURCE_STATE_COPY_DEST,
-			nullptr,
-			IID_PPV_ARGS( &resourceCopy ) ) );
-		ON_BLOCK_EXIT( [&] { RELEASE_LATER( &device, resourceCopy ); } );
-
-		// Create a BGRA alias
-		auto aliasDesc = resourceDesc;
-		aliasDesc.Format = ( resourceDesc.Format == DXGI_FORMAT_B8G8R8X8_TYPELESS ) ? DXGI_FORMAT_B8G8R8X8_TYPELESS : DXGI_FORMAT_B8G8R8A8_TYPELESS;
-		aliasDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-
-		CComPtr<ID3D12Resource> aliasCopy;
-		CR_RETURN_HR( device.m_device->CreatePlacedResource(
-			heap,
-			0,
-			&aliasDesc,
-			D3D12_RESOURCE_STATE_COPY_DEST,
-			nullptr,
-			IID_PPV_ARGS( &aliasCopy ) ) );
-		ON_BLOCK_EXIT( [&] { RELEASE_LATER( &device, aliasCopy ); } );
-
-		// Copy the resource data
-		auto barrier = TrinityALImpl::AliasBarrier( nullptr, aliasCopy );
-		commandList->ResourceBarrier( 1, &barrier );
-		barrier = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
-		commandList->CopyResource( aliasCopy, resource );
-
-		// Generate the mips
-		barrier = TrinityALImpl::AliasBarrier( aliasCopy, resourceCopy );
-		commandList->ResourceBarrier( 1, &barrier );
-		barrier = TrinityALImpl::Transition( resourceCopy, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
-		FORWARD_HR( GenerateMips_UnorderedAccessPath( resourceCopy, DXGI_FORMAT_R8G8B8A8_UNORM, device, commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) );
-
-		// Direct copy back
-		barrier = TrinityALImpl::AliasBarrier( resourceCopy, aliasCopy );
-		commandList->ResourceBarrier( 1, &barrier );
-		barrier = TrinityALImpl::Transition( aliasCopy, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COPY_SOURCE );
-		commandList->ResourceBarrier( 1, &barrier );
-		barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
-		commandList->ResourceBarrier( 1, &barrier );
-		commandList->CopyResource( resource, aliasCopy );
-		barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
-		commandList->ResourceBarrier( 1, &barrier );
-		return S_OK;
-	}
 
 } // anonymous namespace
 
 
 namespace TrinityALImpl
 {
+	struct Tr2TextureAL::MipMapGenerator
+	{
+		MipMapGenerator( Tr2PrimaryRenderContextAL& device ) :
+			m_device( device )
+		{
+		}
+
+		~MipMapGenerator()
+		{
+			if( m_staging )
+			{
+				RELEASE_LATER( &m_device, m_staging );
+			}
+			if( m_descriptorHeap )
+			{
+				RELEASE_LATER( &m_device, m_descriptorHeap );
+			}
+			if( m_resourceCopy )
+			{
+				RELEASE_LATER( &m_device, m_resourceCopy );
+			}
+			if( m_bgrHeap )
+			{
+				RELEASE_LATER( &m_device, m_bgrHeap );
+			}
+			if( m_bgrResourceCopy )
+			{
+				RELEASE_LATER( &m_device, m_bgrResourceCopy );
+			}
+			if( m_bgrAliasCopy )
+			{
+				RELEASE_LATER( &m_device, m_bgrAliasCopy );
+			}
+		}
+
+		ALResult GenerateMips_UnorderedAccessPath( _In_ ID3D12Resource* resource, DXGI_FORMAT format, ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES resourceState )
+		{
+			const auto desc = resource->GetDesc();
+			if( FormatIsBGR( format ) || FormatIsSRGB( format ) )
+			{
+				return E_INVALIDARG;
+			}
+
+			D3D12_RESOURCE_STATES readState = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			CComPtr<ID3D12Resource> staging;
+			// Create a staging resource if we have to
+			if( ( desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS ) == 0 )
+			{
+				if( !m_staging )
+				{
+					D3D12_HEAP_PROPERTIES defaultHeapProperties = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
+
+					D3D12_RESOURCE_DESC stagingDesc = desc;
+					stagingDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+					CR_RETURN_HR( m_device.m_device->CreateCommittedResource(
+						&defaultHeapProperties,
+						D3D12_HEAP_FLAG_NONE,
+						&stagingDesc,
+						D3D12_RESOURCE_STATE_COPY_DEST,
+						nullptr,
+						IID_PPV_ARGS( &m_staging ) ) );
+					SetDebugName( m_staging, "GenerateMips UAVCopy" );
+				}
+				else
+				{
+					auto restore = TrinityALImpl::Transition( m_staging, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
+					commandList->ResourceBarrier( 1, &restore );
+				}
+				
+				staging = m_staging;
+
+				// Copy the resource to staging
+				auto from = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
+				commandList->ResourceBarrier( 1, &from );
+				commandList->CopyResource( staging, resource );
+				auto to = TrinityALImpl::Transition( staging, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+				commandList->ResourceBarrier( 1, &to );
+			}
+			else
+			{
+				// Resource is already a UAV so we can do this in-place
+				staging = resource;
+				if( ( resourceState & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) == 0 )
+				{
+					auto barrier = TrinityALImpl::Transition( staging, resourceState, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+					commandList->ResourceBarrier( 1, &barrier );
+				}
+				else
+				{
+					readState = resourceState;
+				}
+			}
+
+			uint32_t descriptorSize = m_device.m_device->GetDescriptorHandleIncrementSize( D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+			// Create a descriptor heap that holds our resource descriptors
+			if( !m_descriptorHeap )
+			{
+				D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc = {};
+				descriptorHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+				descriptorHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+				descriptorHeapDesc.NumDescriptors = desc.MipLevels;
+				CR_RETURN_HR( m_device.m_device->CreateDescriptorHeap( &descriptorHeapDesc, IID_PPV_ARGS( &m_descriptorHeap ) ) );
+				SetDebugName( m_descriptorHeap, "GenerateMips DescriptorHeap" );
+
+
+				// Create the top-level SRV
+				D3D12_CPU_DESCRIPTOR_HANDLE handleIt( m_descriptorHeap->GetCPUDescriptorHandleForHeapStart() );
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				srvDesc.Format = format;
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				if( desc.DepthOrArraySize > 1 )
+				{
+					srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY;
+					srvDesc.Texture2DArray.MipLevels = desc.MipLevels;
+					srvDesc.Texture2DArray.ArraySize = desc.DepthOrArraySize;
+				}
+				else
+				{
+					srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+					srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+					srvDesc.Texture2D.MostDetailedMip = 0;
+					srvDesc.Texture2D.MipLevels = desc.MipLevels;
+				}
+
+				m_device.m_device->CreateShaderResourceView( staging, &srvDesc, handleIt );
+
+				// Create the UAVs for the tail
+				for( uint16_t mip = 1; mip < desc.MipLevels; ++mip )
+				{
+					D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+					uavDesc.Format = format;
+					if( desc.DepthOrArraySize > 1 )
+					{
+						uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY;
+						uavDesc.Texture2DArray.MipSlice = mip;
+						uavDesc.Texture2DArray.ArraySize = desc.DepthOrArraySize;
+					}
+					else
+					{
+						uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+						uavDesc.Texture2D.MipSlice = mip;
+					}
+
+					handleIt.ptr += descriptorSize;
+					m_device.m_device->CreateUnorderedAccessView( staging, nullptr, &uavDesc, handleIt );
+				}
+			}
+
+			// Set up UAV barrier (used in loop)
+			D3D12_RESOURCE_BARRIER barrierUAV = {};
+			barrierUAV.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+			barrierUAV.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+			barrierUAV.UAV.pResource = staging;
+
+			// Barrier for transitioning the subresources to UAVs
+			D3D12_RESOURCE_BARRIER srv2uavDesc = {};
+			srv2uavDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			srv2uavDesc.Transition.pResource = staging;
+			srv2uavDesc.Transition.Subresource = 0;
+			srv2uavDesc.Transition.StateBefore = readState;
+			srv2uavDesc.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+
+			// Barrier for transitioning the subresources to SRVs
+			D3D12_RESOURCE_BARRIER uav2srvDesc = {};
+			uav2srvDesc.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			uav2srvDesc.Transition.pResource = staging;
+			uav2srvDesc.Transition.Subresource = 0;
+			uav2srvDesc.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			uav2srvDesc.Transition.StateAfter = readState;
+
+			// Set up state
+			commandList->SetComputeRootSignature( m_device.m_genMipsResources->rootSignature );
+			commandList->SetPipelineState( desc.DepthOrArraySize > 1 ? m_device.m_genMipsResources->generateMipsArrayPSO : m_device.m_genMipsResources->generateMipsPSO );
+			commandList->SetDescriptorHeaps( 1, &m_descriptorHeap );
+			commandList->SetComputeRootDescriptorTable( TrinityALImpl::GenerateMipsResources::SourceTexture, m_descriptorHeap->GetGPUDescriptorHandleForHeapStart() );
+
+			// Get the descriptor handle -- uavH will increment over each loop
+			D3D12_GPU_DESCRIPTOR_HANDLE uavH = { m_descriptorHeap->GetGPUDescriptorHandleForHeapStart().ptr + descriptorSize }; // offset by 1 descriptor
+
+			// Process each mip
+			auto mipWidth = static_cast<uint32_t>( desc.Width );
+			uint32_t mipHeight = desc.Height;
+			for( uint32_t mip = 1; mip < desc.MipLevels; ++mip )
+			{
+				mipWidth = std::max<uint32_t>( 1, mipWidth >> 1 );
+				mipHeight = std::max<uint32_t>( 1, mipHeight >> 1 );
+
+				// Transition the mip to a UAV
+				srv2uavDesc.Transition.Subresource = mip;
+				commandList->ResourceBarrier( 1, &srv2uavDesc );
+
+				// Bind the mip subresources
+				commandList->SetComputeRootDescriptorTable( TrinityALImpl::GenerateMipsResources::TargetTexture, uavH );
+
+				// Set constants
+				TrinityALImpl::GenerateMipsResources::ConstantData constants;
+				constants.SrcMipIndex = mip - 1;
+				constants.InvOutTexelSizeX = 1 / float( mipWidth );
+				constants.InvOutTexelSizeY = 1 / float( mipHeight );
+				commandList->SetComputeRoot32BitConstants(
+					TrinityALImpl::GenerateMipsResources::Constants,
+					TrinityALImpl::GenerateMipsResources::Num32BitConstants,
+					&constants,
+					0 );
+
+				// Process this mip
+				commandList->Dispatch(
+					( mipWidth + TrinityALImpl::GenerateMipsResources::ThreadGroupSize - 1 ) / TrinityALImpl::GenerateMipsResources::ThreadGroupSize,
+					( mipHeight + TrinityALImpl::GenerateMipsResources::ThreadGroupSize - 1 ) / TrinityALImpl::GenerateMipsResources::ThreadGroupSize,
+					desc.DepthOrArraySize );
+
+				commandList->ResourceBarrier( 1, &barrierUAV );
+
+				// Transition the mip to an SRV
+				uav2srvDesc.Transition.Subresource = mip;
+				commandList->ResourceBarrier( 1, &uav2srvDesc );
+
+				// Offset the descriptor heap handles
+				uavH.ptr += descriptorSize;
+			}
+
+			// If the staging resource is NOT the same as the resource, we need to copy everything back
+			if( staging != resource )
+			{
+				// Transition the resources ready for copy
+				D3D12_RESOURCE_BARRIER barriers[2] = {
+					TrinityALImpl::Transition( staging, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE ),
+					TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST )
+				};
+
+				commandList->ResourceBarrier( 2, barriers );
+				// Copy the entire resource back
+				commandList->CopyResource( resource, staging );
+
+				// Transition the target resource back to pixel shader resource
+				auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
+				commandList->ResourceBarrier( 1, &barrier );
+			}
+			else if( ( resourceState & D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) == 0 )
+			{
+				auto barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, resourceState );
+				commandList->ResourceBarrier( 1, &barrier );
+			}
+
+			m_device.DirtyDescriptorCache();
+
+			return S_OK;
+		}
+
+		ALResult GenerateMips_TexturePath( _In_ ID3D12Resource* resource, ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES resourceState )
+		{
+			const auto resourceDesc = resource->GetDesc();
+			if( FormatIsBGR( resourceDesc.Format ) && !FormatIsSRGB( resourceDesc.Format ) )
+			{
+				return E_FAIL;
+			}
+
+			if( !m_resourceCopy )
+			{
+				auto copyDesc = resourceDesc;
+				copyDesc.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
+				copyDesc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+				auto heapProperties = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
+
+				// Create a resource with the same description, but without SRGB, and with UAV flags
+				CR_RETURN_HR( m_device.m_device->CreateCommittedResource(
+					&heapProperties,
+					D3D12_HEAP_FLAG_NONE,
+					&copyDesc,
+					D3D12_RESOURCE_STATE_COPY_DEST,
+					nullptr,
+					IID_PPV_ARGS( &m_resourceCopy ) ) );
+			}
+			else
+			{
+				auto restore = TrinityALImpl::Transition( m_resourceCopy, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
+				commandList->ResourceBarrier( 1, &restore );
+			}
+
+			// Copy the resource data
+			auto barrier = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
+			commandList->ResourceBarrier( 1, &barrier );
+			commandList->CopyResource( m_resourceCopy, resource );
+			barrier = TrinityALImpl::Transition( m_resourceCopy, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+			commandList->ResourceBarrier( 1, &barrier );
+
+			// Generate the mips
+			GenerateMips_UnorderedAccessPath( m_resourceCopy, DXGI_FORMAT_R8G8B8A8_UNORM, commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+
+			// Direct copy back
+			barrier = TrinityALImpl::Transition( m_resourceCopy, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE );
+			commandList->ResourceBarrier( 1, &barrier );
+			barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
+			commandList->ResourceBarrier( 1, &barrier );
+			commandList->CopyResource( resource, m_resourceCopy );
+			barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
+			commandList->ResourceBarrier( 1, &barrier );
+			return S_OK;
+		}
+
+		ALResult GenerateMips_TexturePathBGR( _In_ ID3D12Resource* resource, ID3D12GraphicsCommandList* commandList, D3D12_RESOURCE_STATES resourceState )
+		{
+			const auto resourceDesc = resource->GetDesc();
+			if( !FormatIsBGR( resourceDesc.Format ) )
+			{
+				return E_FAIL;
+			}
+
+			if( !m_bgrHeap )
+			{
+				// Create a resource with the same description, but without SRGB, and with UAV flags
+				auto copyDesc = resourceDesc;
+				copyDesc.Format = DXGI_FORMAT_R8G8B8A8_TYPELESS;
+				copyDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+				D3D12_HEAP_DESC heapDesc = {};
+				auto allocInfo = m_device.m_device->GetResourceAllocationInfo( 0, 1, &resourceDesc );
+				heapDesc.SizeInBytes = allocInfo.SizeInBytes;
+				heapDesc.Flags = D3D12_HEAP_FLAG_ALLOW_ONLY_NON_RT_DS_TEXTURES;
+				heapDesc.Properties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+				heapDesc.Properties.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+				heapDesc.Properties.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+				CR_RETURN_HR( m_device.m_device->CreateHeap( &heapDesc, IID_PPV_ARGS( &m_bgrHeap ) ) );
+
+				CR_RETURN_HR( m_device.m_device->CreatePlacedResource(
+					m_bgrHeap,
+					0,
+					&copyDesc,
+					D3D12_RESOURCE_STATE_COPY_DEST,
+					nullptr,
+					IID_PPV_ARGS( &m_bgrResourceCopy ) ) );
+
+				// Create a BGRA alias
+				auto aliasDesc = resourceDesc;
+				aliasDesc.Format = ( resourceDesc.Format == DXGI_FORMAT_B8G8R8X8_TYPELESS ) ? DXGI_FORMAT_B8G8R8X8_TYPELESS : DXGI_FORMAT_B8G8R8A8_TYPELESS;
+				aliasDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+				CR_RETURN_HR( m_device.m_device->CreatePlacedResource(
+					m_bgrHeap,
+					0,
+					&aliasDesc,
+					D3D12_RESOURCE_STATE_COPY_DEST,
+					nullptr,
+					IID_PPV_ARGS( &m_bgrAliasCopy ) ) );
+			}
+			else
+			{
+				auto restore = TrinityALImpl::Transition( m_bgrAliasCopy, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
+				commandList->ResourceBarrier( 1, &restore );
+			}
+
+			// Copy the resource data
+			auto barrier = TrinityALImpl::AliasBarrier( nullptr, m_bgrAliasCopy );
+			commandList->ResourceBarrier( 1, &barrier );
+			barrier = TrinityALImpl::Transition( resource, resourceState, D3D12_RESOURCE_STATE_COPY_SOURCE );
+			commandList->ResourceBarrier( 1, &barrier );
+			commandList->CopyResource( m_bgrAliasCopy, resource );
+
+			// Generate the mips
+			barrier = TrinityALImpl::AliasBarrier( m_bgrAliasCopy, m_bgrResourceCopy );
+			commandList->ResourceBarrier( 1, &barrier );
+			barrier = TrinityALImpl::Transition( m_bgrResourceCopy, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE );
+			commandList->ResourceBarrier( 1, &barrier );
+			FORWARD_HR( GenerateMips_UnorderedAccessPath( m_bgrResourceCopy, DXGI_FORMAT_R8G8B8A8_UNORM, commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE ) );
+
+			// Direct copy back
+			barrier = TrinityALImpl::AliasBarrier( m_bgrResourceCopy, m_bgrAliasCopy );
+			commandList->ResourceBarrier( 1, &barrier );
+			barrier = TrinityALImpl::Transition( m_bgrAliasCopy, D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COPY_SOURCE );
+			commandList->ResourceBarrier( 1, &barrier );
+			barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_COPY_DEST );
+			commandList->ResourceBarrier( 1, &barrier );
+			commandList->CopyResource( resource, m_bgrAliasCopy );
+			barrier = TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceState );
+			commandList->ResourceBarrier( 1, &barrier );
+			return S_OK;
+		}
+
+		
+		CComPtr<ID3D12Resource> m_staging;
+		CComPtr<ID3D12DescriptorHeap> m_descriptorHeap;
+		CComPtr<ID3D12Resource> m_resourceCopy;
+		CComPtr<ID3D12Heap> m_bgrHeap;
+		CComPtr<ID3D12Resource> m_bgrResourceCopy;
+		CComPtr<ID3D12Resource> m_bgrAliasCopy;
+		Tr2PrimaryRenderContextAL& m_device;
+	};
+
 	Tr2TextureAL::Tr2TextureAL()
 		:m_owner( nullptr ),
 		m_currentTextureIndex( 0 ),
 		m_defaultState( D3D12_RESOURCE_STATE_COMMON ),
 		m_gpuUsage( Tr2GpuUsage::NONE ),
-		m_cpuUsage( Tr2CpuUsage::NONE )
+		m_cpuUsage( Tr2CpuUsage::NONE ),
+		m_mipMapGenerator( nullptr )
 	{
 		m_mappedScratch = m_writeScratches.end();
 	}
@@ -861,6 +929,8 @@ namespace TrinityALImpl
 
 	void Tr2TextureAL::Destroy()
 	{
+		m_mipMapGenerator.reset();
+
 		for( auto it = begin( m_textures ); it != end( m_textures ); ++it )
 		{
 			RELEASE_LATER( m_owner, *it );
@@ -986,17 +1056,22 @@ namespace TrinityALImpl
 		renderContext.FlushBarriersDx12( m_textures[0] );
 
 		renderContext.m_dirtyPso = true;
+
+		if( !m_mipMapGenerator )
+		{
+			m_mipMapGenerator.reset( new MipMapGenerator( *m_owner ) );
+		}
 		if( m_owner->FormatIsUAVCompatibleDx12( DXGI_FORMAT( m_desc.GetFormat() ) ) )
 		{
-			FORWARD_HR( GenerateMips_UnorderedAccessPath( m_textures[0], DXGI_FORMAT( m_desc.GetFormat() ), * renderContext.m_ownerDevice, renderContext.m_commandList, m_defaultState ) );
+			FORWARD_HR( m_mipMapGenerator->GenerateMips_UnorderedAccessPath( m_textures[0], DXGI_FORMAT( m_desc.GetFormat() ), renderContext.m_commandList, m_defaultState ) );
 		}
 		else if( FormatIsBGR( desc.Format ) )
 		{
-			FORWARD_HR( GenerateMips_TexturePathBGR( m_textures[0], *renderContext.m_ownerDevice, renderContext.m_commandList, m_defaultState ) );
+			FORWARD_HR( m_mipMapGenerator->GenerateMips_TexturePathBGR( m_textures[0], renderContext.m_commandList, m_defaultState ) );
 		}
 		else
 		{
-			FORWARD_HR( GenerateMips_TexturePath( m_textures[0], *renderContext.m_ownerDevice, renderContext.m_commandList, m_defaultState ) );
+			FORWARD_HR( m_mipMapGenerator->GenerateMips_TexturePath( m_textures[0], renderContext.m_commandList, m_defaultState ) );
 		}
 
 		return S_OK;

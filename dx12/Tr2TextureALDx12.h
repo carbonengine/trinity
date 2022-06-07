@@ -108,6 +108,9 @@ namespace TrinityALImpl
 		std::shared_ptr<DepthStencilViewDx12> m_dsv;
 		std::string m_name;
 
+		struct MipMapGenerator;
+		std::unique_ptr<MipMapGenerator> m_mipMapGenerator;
+
 		friend class Tr2ResourceSetAL;
 		friend class Tr2RenderContextAL;
 	};
