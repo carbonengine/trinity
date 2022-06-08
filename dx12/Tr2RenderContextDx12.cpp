@@ -947,7 +947,12 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 	D3D12_RESOURCE_BARRIER barriers[2];
 	uint32_t barrierCount = 0;
 
-	D3D12_RESOURCE_STATES depthState = m_readOnlyDepth ? D3D12_RESOURCE_STATE_DEPTH_READ : D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	auto readState = D3D12_RESOURCE_STATE_DEPTH_READ;
+	if( HasFlag( depthStencil.GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE ) )
+	{
+		readState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+	}
+	D3D12_RESOURCE_STATES depthState = m_readOnlyDepth ? readState : D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	if( m_boundDepthStencil.IsValid() )
 	{
 		if( m_boundDepthStencil.m_texture->m_defaultState != depthState )
@@ -1004,8 +1009,13 @@ void Tr2RenderContextAL::SetReadOnlyDepth( bool enable ) throw( )
 	{
 		return;
 	}
-	D3D12_RESOURCE_STATES fromState = m_readOnlyDepth ? D3D12_RESOURCE_STATE_DEPTH_WRITE : D3D12_RESOURCE_STATE_DEPTH_READ;
-	D3D12_RESOURCE_STATES toState = m_readOnlyDepth ? D3D12_RESOURCE_STATE_DEPTH_READ : D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	auto readState = D3D12_RESOURCE_STATE_DEPTH_READ;
+	if( HasFlag( m_boundDepthStencil.GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE ) )
+	{
+		readState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+	}
+	D3D12_RESOURCE_STATES fromState = m_readOnlyDepth ? D3D12_RESOURCE_STATE_DEPTH_WRITE : readState;
+	D3D12_RESOURCE_STATES toState = m_readOnlyDepth ? readState : D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	ResourceBarrierDx12( TrinityALImpl::Transition( m_boundDepthStencil.m_texture->GetResourceDx12(), fromState, toState ) );
 
 	if( m_readOnlyDepth )
@@ -1332,7 +1342,12 @@ bool Tr2RenderContextAL::IsBoundDx12( const TrinityALImpl::Tr2TextureAL& texture
 	}
 	if( *m_boundDepthStencil.m_texture == texture )
 	{
-		boundState = m_readOnlyDepth ? D3D12_RESOURCE_STATE_DEPTH_READ : D3D12_RESOURCE_STATE_DEPTH_WRITE;
+		auto readState = D3D12_RESOURCE_STATE_DEPTH_READ;
+		if( HasFlag( m_boundDepthStencil.GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE ) )
+		{
+			readState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+		}
+		boundState = m_readOnlyDepth ? readState : D3D12_RESOURCE_STATE_DEPTH_WRITE;
 		return true;
 	}
 	return false;
