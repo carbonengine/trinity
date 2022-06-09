@@ -303,8 +303,8 @@ void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, const Eve
 	// Normalize screenSize dimensions
 	auto screen_width = Tr2Renderer::GetViewport().width;
 	auto screen_height = Tr2Renderer::GetViewport().height;
-	m_psData.screenSize.x = float( m_currentScreenSize / screen_width );
-	m_psData.screenSize.y = float( m_currentScreenSize / screen_height );
+	m_psData.screenSize.x = min( float( m_currentScreenSize / screen_width ), 1.0f );
+	m_psData.screenSize.y = min( float( m_currentScreenSize / screen_height ), 1.0f );
 }
 
 void EveChildMesh::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
