@@ -208,8 +208,26 @@ namespace
 
 	bool IsValidVariableName( const char* name )
 	{
-		static std::regex namePattern( "[a-zA-Z_][a-zA-Z_0-9]*" );
-		return std::regex_match( name, namePattern );
+		auto isLetter = []( char x ) {
+			return ( x >= 'a' && x <= 'z' ) || ( x >= 'A' && x <= 'Z' ) || ( x == '_' );
+		};
+		auto isDigit = []( char x ) {
+			return x >= '0' && x <= '9';
+		};
+		if( !isLetter( *name ) )
+		{
+			return false;
+		}
+		++name;
+		while( *name )
+		{
+			if( !isLetter( *name ) && !isDigit( *name) )
+			{
+				return false;
+			}
+			++name;
+		}
+		return true;
 	}
 
 #ifdef _WIN32
@@ -420,6 +438,7 @@ Tr2ControllerExpression::Tr2ControllerExpression()
 
 std::string Tr2ControllerExpression::SetExpr( const char* expression, const Tr2StateMachine& stateMachine )
 {
+	Clear();
 	m_stateMachine = &stateMachine;
 	m_controller = stateMachine.GetController();
 	return CreateParser( expression, nullptr );
@@ -427,6 +446,7 @@ std::string Tr2ControllerExpression::SetExpr( const char* expression, const Tr2S
 
 std::string Tr2ControllerExpression::SetExpr( const char* expression, const Tr2Controller& controller, ModifyParser modifyParser )
 {
+	Clear();
 	m_stateMachine = nullptr;
 	m_controller = &controller;
 	return CreateParser( expression, modifyParser );
@@ -434,7 +454,6 @@ std::string Tr2ControllerExpression::SetExpr( const char* expression, const Tr2C
 
 std::string Tr2ControllerExpression::CreateParser( const char* expression, ModifyParser modifyParser )
 {
-	m_expressionParser = mu::Parser();
 	m_expressionParser.EnableOptimizer( false );
 	auto& variables = m_controller->GetVariables();
 	for( auto it = begin( variables ); it != end( variables ); ++it )
@@ -524,9 +543,12 @@ std::pair<bool, float> Tr2ControllerExpression::Eval() const
 
 void Tr2ControllerExpression::Clear()
 {
+	if( m_controller )
+	{
+		m_expressionParser = mu::Parser();
+	}
 	m_stateMachine = nullptr;
 	m_controller = nullptr;
-	m_expressionParser = mu::Parser();
 }
 
 bool Tr2ControllerExpression::IsExpressionValid() const
