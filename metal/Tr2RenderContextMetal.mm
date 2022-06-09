@@ -347,6 +347,11 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
 	uint32_t primitiveCount,
 	uint32_t minimumIndex )
 {
+    if( m_metalIndexBuffer == nil )
+    {
+        return E_INVALIDARG; 
+    }
+    
 	auto vc = ComputeVertexCount( primitiveCount );
 
 	CCP_STATS_ADD( primitiveCount, primitiveCount );
@@ -366,6 +371,11 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	uint32_t primitiveCount,
 	uint32_t numInstances )
 {
+    if( m_metalIndexBuffer == nil )
+    {
+        return E_INVALIDARG;
+    }
+    
 	auto vc = ComputeVertexCount( primitiveCount );
 
 	CCP_STATS_ADD( primitiveCount, primitiveCount * numInstances );
