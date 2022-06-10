@@ -1086,16 +1086,16 @@ void Tr2PrimaryRenderContextAL::AddShaderBinaryToCrashTracker(const Tr2ShaderByt
 }
 
 
-ALResult Tr2PrimaryRenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker, std::string& crashInfo ) const
+ALResult Tr2PrimaryRenderContextAL::GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker, std::string& offendingShader, std::string& crashInfo ) const
 {
 	if( SUCCEEDED( m_immediateBuffer.GetMarker( marker ) ) )
 	{
+		offendingShader = "";
+		crashInfo = "";
+
 		if( m_gpuCrashTracker )
 		{
-			std::string shaderPath;
-			m_gpuCrashTracker->GetOffendingShader(shaderPath);
-			marker += ", Shader: " + shaderPath;
-
+			m_gpuCrashTracker->GetOffendingShader( offendingShader );
 			m_gpuCrashTracker->GetCrashInfo(crashInfo);
 		}
 

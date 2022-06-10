@@ -34,6 +34,7 @@ namespace TrinityALImpl
 
 		void PopulateInputLayout( std::vector<D3D12_INPUT_ELEMENT_DESC>& layout, const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const;
 
+		uint32_t m_vertexStreamMask;
 		std::vector<D3D12_INPUT_ELEMENT_DESC> m_elements;
 		Tr2PrimaryRenderContextAL* m_owner;
 		std::string m_name;

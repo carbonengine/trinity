@@ -38,6 +38,9 @@ namespace TrinityALImpl
 		Tr2RenderContextEnum::PixelFormat m_renderTargetFormats[8];
 		Tr2RenderContextEnum::PixelFormat m_depthStencilFormat;
 		Tr2MsaaDesc m_sampleDesc;
+
+		uint32_t m_vertexStreamMask;
+
 	private:
 		size_t m_hash;
 	private:

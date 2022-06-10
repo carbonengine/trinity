@@ -17,6 +17,8 @@ namespace
 		static CcpMutex mutex( "GetAllResourcesMutex", "mutex" );
 		return mutex;
 	}
+
+	bool s_resourcesMutated = false;
 }
 
 namespace TrinityALImpl
@@ -25,12 +27,14 @@ namespace TrinityALImpl
 	{
 		CcpAutoMutex lock( GetAllResourcesMutex() );
 		GetAllResources().insert( this );
+		s_resourcesMutated = true;
 	}
 
 	Tr2BaseDeviceResourceAL::~Tr2BaseDeviceResourceAL()
 	{
 		CcpAutoMutex lock( GetAllResourcesMutex() );
 		GetAllResources().erase( this );
+		s_resourcesMutated = true;
 	}
 
 	void Tr2BaseDeviceResourceAL::EnumerateResources( ResourceOperation* operation )
@@ -64,11 +68,16 @@ void DestroyDeviceResources( Tr2ALMemoryTypes memoryTypes )
 {
 	CcpAutoMutex lock( GetAllResourcesMutex() );
 	auto& allResources = GetAllResources();
-	for( auto it = begin( allResources ); it != end( allResources ); ++it )
+	do
 	{
-		if( ( *it )->IsResourceValid() && ( ( *it )->GetResourceMemoryClass() & memoryTypes ) != 0 )
+		s_resourcesMutated = false;
+		for( auto it = begin( allResources ); it != end( allResources ); ++it )
 		{
-			( *it )->Destroy();
+			if( ( *it )->IsResourceValid() && ( ( *it )->GetResourceMemoryClass() & memoryTypes ) != 0 )
+			{
+				( *it )->Destroy();
+			}
 		}
-	}
+	} 
+	while( s_resourcesMutated );
 }

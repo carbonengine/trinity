@@ -19,9 +19,8 @@ DescriptorStateCache::DescriptorStateCache(CComPtr<ID3D12Device> device, Tr2Prim
 	m_allocatorUpload(context, pageSizeUploadDefault, pageSizeUploadSpill),
 	m_primaryContext(context),
 	m_device(device),
-	m_lastSamplerMaxSlot(0),
-	m_lastUavMaxSlot(0),
-	m_lastSrvMaxSlot(0)
+	m_uploadedSamplerCount( 0 ),
+	m_uploadedSrvUavCount( 0 )
 {
 	D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
 	nullSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -63,9 +62,8 @@ void DescriptorStateCache::Reset()
 	m_srvUavDirty = true;
 	m_samplerDirty = true;
 
-	m_lastSrvMaxSlot = 0;
-	m_lastUavMaxSlot = 0;
-	m_lastSamplerMaxSlot = 0;
+	m_uploadedSamplerCount = 0;
+	m_uploadedSrvUavCount = 0;
 
 	m_pipeDirty[Tr2RenderContextEnum::GRAPHICS_PIPE] = true;
 	m_pipeDirty[Tr2RenderContextEnum::COMPUTE_PIPE] = true;
@@ -83,9 +81,8 @@ void DescriptorStateCache::Dirty()
 	m_heapsDirty = true;
 
 	// Set the last slots to 0 so if we need any then we will resend the descriptors to the gpu
-	m_lastSrvMaxSlot = 0;
-	m_lastUavMaxSlot = 0;
-	m_lastSamplerMaxSlot = 0;
+	m_uploadedSamplerCount = 0;
+	m_uploadedSrvUavCount = 0;
 
 	// Pretend that nothing is currently bound forcing the next Commit() to re-assign every parameter
 	for (uint32_t slot = 0; slot < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++slot)
@@ -98,7 +95,6 @@ void DescriptorStateCache::Dirty()
 /** Set an array of ShaderResourceViews */
 void DescriptorStateCache::SetShaderResources(uint32_t startSlot, uint32_t numViews, std::shared_ptr<ShaderResourceViewDx12>* shaderResourceViews)
 {
-	m_srvUavDirty |= m_lastSrvMaxSlot != (numViews + startSlot);
 	for (uint32_t slot = 0; slot < numViews; ++slot)
 	{
 		uint32_t writeSlot = startSlot + slot;
@@ -109,13 +105,11 @@ void DescriptorStateCache::SetShaderResources(uint32_t startSlot, uint32_t numVi
 			m_srvUavDirty = true;
 		}
 	}
-	m_lastSrvMaxSlot = numViews + startSlot;
 }
 
 /** Set an array or UnorderedAccessViews */
 void DescriptorStateCache::SetUnorderedAccessViews(uint32_t startSlot, uint32_t numViews, std::shared_ptr<UnorderedAccessViewDx12>* unorderedAccessViews)
 {
-	m_srvUavDirty |= m_lastUavMaxSlot != (numViews + startSlot);
 	for (uint32_t slot = 0; slot < numViews; ++slot)
 	{
 		uint32_t writeSlot = startSlot + slot;
@@ -127,13 +121,11 @@ void DescriptorStateCache::SetUnorderedAccessViews(uint32_t startSlot, uint32_t 
 			m_srvUavDirty = true;
 		}
 	}
-	m_lastUavMaxSlot = numViews + startSlot;
 }
 
 /** Set an array of SamplerStates */
 void DescriptorStateCache::SetSamplers(uint32_t startSlot, uint32_t numViews, std::shared_ptr<SamplerStateDx12>* samplers)
 {
-	m_samplerDirty = m_lastSamplerMaxSlot != (numViews + startSlot);
 	for (uint32_t slot = 0; slot < numViews; ++slot)
 	{
 		uint32_t writeSlot = startSlot + slot;
@@ -144,7 +136,6 @@ void DescriptorStateCache::SetSamplers(uint32_t startSlot, uint32_t numViews, st
 			m_samplerDirty = true;
 		}
 	}
-	m_lastSamplerMaxSlot = numViews + startSlot;
 }
 
 /** Set a constantbuffer */
@@ -206,17 +197,17 @@ DescriptorHeapEntry DescriptorStateCache::Commit( ID3D12GraphicsCommandList* com
 }
 
 /** Apply state */
-void DescriptorStateCache::Commit(CComPtr<ID3D12GraphicsCommandList> commandList, const TrinityALImpl::Tr2ShaderProgramAL* shader)
+void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, const TrinityALImpl::Tr2ShaderProgramAL* shader )
 {
 	Tr2RenderContextEnum::ShaderPipe targetPipe = shader->IsComputeProgramDx12() ? Tr2RenderContextEnum::COMPUTE_PIPE : Tr2RenderContextEnum::GRAPHICS_PIPE;
 	Tr2RenderContextEnum::ShaderPipe otherPipe = shader->IsComputeProgramDx12() ? Tr2RenderContextEnum::GRAPHICS_PIPE : Tr2RenderContextEnum::COMPUTE_PIPE;
 
-	bool mustBindSrvUav = m_pipeDirty[targetPipe] || m_srvUavDirty;
-	bool mustBindSampler = m_pipeDirty[targetPipe] || m_samplerDirty;
+	bool mustBindSrvUav = m_pipeDirty[targetPipe] || m_srvUavDirty || m_uploadedSrvUavCount < shader->m_srvUavTableSize;
+	bool mustBindSampler = m_pipeDirty[targetPipe] || m_samplerDirty || m_uploadedSamplerCount < shader->m_samplerTableSize;
 
 	bool dirtyHeaps = m_heapsDirty;
 
-	if (mustBindSrvUav)
+	if( mustBindSrvUav )
 	{
 		uint32_t requiredViews = shader->m_srvUavTableSize;
 
@@ -234,9 +225,10 @@ void DescriptorStateCache::Commit(CComPtr<ID3D12GraphicsCommandList> commandList
 			D3D12_CPU_DESCRIPTOR_HANDLE dest = { result.m_cpuHandle.ptr + destIncrement * idx };
 			m_device->CopyDescriptorsSimple(1, dest, m_srvUav[idx]->GetHandleCPU(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 		}
+		m_uploadedSrvUavCount = shader->m_srvUavTableSize;
 	}
 
-	if (mustBindSampler)
+	if( mustBindSampler )
 	{
 		uint32_t requiredViews = shader->m_samplerTableSize;
 
@@ -254,6 +246,7 @@ void DescriptorStateCache::Commit(CComPtr<ID3D12GraphicsCommandList> commandList
 			D3D12_CPU_DESCRIPTOR_HANDLE dest = { result.m_cpuHandle.ptr + destIncrement * idx };
 			m_device->CopyDescriptorsSimple(1, dest, m_sampler[idx]->GetHandleCPU(), D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 		}
+		m_uploadedSamplerCount = shader->m_samplerTableSize;
 	}
 
 	if (dirtyHeaps)
@@ -311,6 +304,7 @@ void DescriptorStateCache::Commit(CComPtr<ID3D12GraphicsCommandList> commandList
 			m_parameterSlots[targetPipe][it->parameter].SetCBV( address );
 			( commandList->*setConstantBufferView )( it->parameter, address != 0 ? address : nullCbv );
 		}
+		m_rootSignature = shader->m_rootSignature;
 	}
 	else
 	{
@@ -328,7 +322,6 @@ void DescriptorStateCache::Commit(CComPtr<ID3D12GraphicsCommandList> commandList
 	m_pipeDirty[targetPipe] = false;
 	m_srvUavDirty = false;
 	m_samplerDirty = false;
-	m_rootSignature = shader->m_rootSignature;
 }
 
 #endif

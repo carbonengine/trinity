@@ -65,7 +65,8 @@ namespace TrinityALImpl
 		m_rasterizerDesc( s_defaultRasterizer ),
 		m_depthStencilDesc( s_defaultDepthStencil ),
 		m_renderTargetCount( 0 ),
-		m_depthStencilFormat( Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN )
+		m_depthStencilFormat( Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN ),
+		m_vertexStreamMask( 0 )
 	{
 		std::fill( std::begin( m_renderTargetFormats ), std::end( m_renderTargetFormats ), Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
 		UpdateHash();

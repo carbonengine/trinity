@@ -34,7 +34,7 @@ public:
 	void Dirty();
 
 	/** Apply state */
-	void Commit(CComPtr<ID3D12GraphicsCommandList> commandList, const TrinityALImpl::Tr2ShaderProgramAL* shader);
+	void Commit( ID3D12GraphicsCommandList* commandList, const TrinityALImpl::Tr2ShaderProgramAL* shader );
 
 	/** Set an array of ShaderResourceViews */
 	void SetShaderResources(uint32_t startSlot, uint32_t numViews, std::shared_ptr<ShaderResourceViewDx12>* shaderResourceViews);
@@ -139,9 +139,8 @@ private:
 	bool m_srvUavDirty;
 	bool m_samplerDirty;
 
-	uint32_t m_lastSamplerMaxSlot;
-	uint32_t m_lastUavMaxSlot;
-	uint32_t m_lastSrvMaxSlot;
+	uint32_t m_uploadedSamplerCount;
+	uint32_t m_uploadedSrvUavCount;
 
 	bool m_pipeDirty[Tr2RenderContextEnum::SHADER_PIPE_COUNT];
 

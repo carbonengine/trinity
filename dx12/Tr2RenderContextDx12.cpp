@@ -77,6 +77,20 @@ namespace
 		std::make_pair( 1, 0 ),
 	};
 
+	D3D12_RESOURCE_STATES GetDepthBufferState( const Tr2TextureAL& depthBuffer, bool readOnly )
+	{
+		if( readOnly )
+		{
+			auto readState = D3D12_RESOURCE_STATE_DEPTH_READ;
+			if( HasFlag( depthBuffer.GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE ) )
+			{
+				readState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+			}
+			return readState;
+		}
+		return D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	}
+
 }
 
 
@@ -307,6 +321,7 @@ ALResult Tr2RenderContextAL::SetVertexLayout( const Tr2VertexLayoutAL& layout ) 
 	if( !( m_psoDescription.m_vertexLayout == layout ) )
 	{
 		m_psoDescription.m_vertexLayout = layout;
+		m_psoDescription.m_vertexStreamMask = layout.m_layout->m_vertexStreamMask;
 		m_dirtyPso = true;
 	}
 	return S_OK;
@@ -688,7 +703,7 @@ ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 
 ALResult Tr2RenderContextAL::SetAllState()
 {
-	if( m_dynamicVBs )
+	if( ( m_dynamicVBs & m_psoDescription.m_vertexStreamMask ) != 0 )
 	{
 		D3D12_VERTEX_BUFFER_VIEW vb[4];
 		for( uint32_t i = 0; i < 4; ++i )
@@ -947,24 +962,20 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 	D3D12_RESOURCE_BARRIER barriers[2];
 	uint32_t barrierCount = 0;
 
-	auto readState = D3D12_RESOURCE_STATE_DEPTH_READ;
-	if( HasFlag( depthStencil.GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE ) )
-	{
-		readState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-	}
-	D3D12_RESOURCE_STATES depthState = m_readOnlyDepth ? readState : D3D12_RESOURCE_STATE_DEPTH_WRITE;
 	if( m_boundDepthStencil.IsValid() )
 	{
-		if( m_boundDepthStencil.m_texture->m_defaultState != depthState )
+		auto from = GetDepthBufferState( m_boundDepthStencil, m_readOnlyDepth );
+		if( m_boundDepthStencil.m_texture->m_defaultState != from )
 		{
-			barriers[barrierCount++] = TrinityALImpl::Transition( m_boundDepthStencil.m_texture->GetResourceDx12(), depthState, m_boundDepthStencil.m_texture->m_defaultState );
+			barriers[barrierCount++] = TrinityALImpl::Transition( m_boundDepthStencil.m_texture->GetResourceDx12(), from, m_boundDepthStencil.m_texture->m_defaultState );
 		}
 	}
 	if( depthStencil.IsValid() )
 	{
-		if( depthStencil.m_texture->m_defaultState != depthState )
+		auto to = GetDepthBufferState( depthStencil, m_readOnlyDepth );
+		if( depthStencil.m_texture->m_defaultState != to )
 		{
-			barriers[barrierCount++] = TrinityALImpl::Transition( depthStencil.m_texture->GetResourceDx12(), depthStencil.m_texture->m_defaultState, depthState );
+			barriers[barrierCount++] = TrinityALImpl::Transition( depthStencil.m_texture->GetResourceDx12(), depthStencil.m_texture->m_defaultState, to );
 		}
 	}
 	if( barrierCount )
@@ -1009,13 +1020,8 @@ void Tr2RenderContextAL::SetReadOnlyDepth( bool enable ) throw( )
 	{
 		return;
 	}
-	auto readState = D3D12_RESOURCE_STATE_DEPTH_READ;
-	if( HasFlag( m_boundDepthStencil.GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE ) )
-	{
-		readState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-	}
-	D3D12_RESOURCE_STATES fromState = m_readOnlyDepth ? D3D12_RESOURCE_STATE_DEPTH_WRITE : readState;
-	D3D12_RESOURCE_STATES toState = m_readOnlyDepth ? readState : D3D12_RESOURCE_STATE_DEPTH_WRITE;
+	D3D12_RESOURCE_STATES fromState = GetDepthBufferState( m_boundDepthStencil, !m_readOnlyDepth );
+	D3D12_RESOURCE_STATES toState = GetDepthBufferState( m_boundDepthStencil, m_readOnlyDepth );
 	ResourceBarrierDx12( TrinityALImpl::Transition( m_boundDepthStencil.m_texture->GetResourceDx12(), fromState, toState ) );
 
 	if( m_readOnlyDepth )
@@ -1342,12 +1348,7 @@ bool Tr2RenderContextAL::IsBoundDx12( const TrinityALImpl::Tr2TextureAL& texture
 	}
 	if( *m_boundDepthStencil.m_texture == texture )
 	{
-		auto readState = D3D12_RESOURCE_STATE_DEPTH_READ;
-		if( HasFlag( m_boundDepthStencil.GetGpuUsage(), Tr2GpuUsage::SHADER_RESOURCE ) )
-		{
-			readState |= D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
-		}
-		boundState = m_readOnlyDepth ? readState : D3D12_RESOURCE_STATE_DEPTH_WRITE;
+		boundState = GetDepthBufferState( m_boundDepthStencil, m_readOnlyDepth );
 		return true;
 	}
 	return false;

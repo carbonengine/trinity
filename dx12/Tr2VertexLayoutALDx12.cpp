@@ -104,8 +104,9 @@ namespace
 namespace TrinityALImpl
 {
 
-	Tr2VertexLayoutAL::Tr2VertexLayoutAL()
-		:m_owner( nullptr )
+	Tr2VertexLayoutAL::Tr2VertexLayoutAL() :
+		m_vertexStreamMask( 0 ),
+		m_owner( nullptr )
 	{
 	}
 
@@ -134,6 +135,8 @@ namespace TrinityALImpl
 			element.InputSlotClass = it->m_instanceStepRate ? D3D12_INPUT_CLASSIFICATION_PER_INSTANCE_DATA : D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA;
 			element.InstanceDataStepRate = it->m_instanceStepRate;
 			m_elements.push_back( element );
+
+			m_vertexStreamMask |= 1 << it->m_stream;
 		}
 
 		m_owner = &renderContext;
@@ -154,6 +157,7 @@ namespace TrinityALImpl
 		}
 		m_elements.clear();
 		m_owner = nullptr;
+		m_vertexStreamMask = 0;
 	}
 
 	Tr2ALMemoryType Tr2VertexLayoutAL::GetMemoryClass() const
