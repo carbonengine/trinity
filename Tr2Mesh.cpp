@@ -14,6 +14,10 @@ Tr2Mesh::~Tr2Mesh()
 	{
 		m_geometryResource->RemoveNotifyTarget( this );
 	}
+	if( m_lowResGeometryResource )
+	{
+		m_lowResGeometryResource->RemoveNotifyTarget( this );
+	}
 }
 
 
