@@ -34,6 +34,7 @@
 class Tr2RenderTarget;
 class Tr2ImageHandler;
 class Tr2TextureLodManager;
+struct Tr2TextureLodUpdateRequest;
 
 BLUE_DECLARE( Tr2RenderTarget );
 BLUE_DECLARE( Tr2HostBitmap );
@@ -104,7 +105,8 @@ public:
 	Tr2TexturePipeline* GetPipeline() const;
 
 	void RequestResolution( float resolutionFraction );
-	void UpdateLods( Tr2TextureLodManager & manager );
+	void UpdateLodRequest( Tr2TextureLodUpdateRequest& request, Tr2TextureLodManager & manager );
+	void ProcessLodRequest( const Tr2TextureLodUpdateRequest& request, Tr2TextureLodManager& manager );
 	uint32_t GetOriginalResolution() const;
 
 	

@@ -10,6 +10,14 @@
 BLUE_DECLARE( TriTextureRes );
 
 
+struct Tr2TextureLodUpdateRequest
+{
+	uint64_t frameNumber;
+	int32_t mipChange;
+	bool cachedInRam;
+};
+
+
 BLUE_CLASS( Tr2TextureLodManager ) :
 	public IRoot, 
 	public IBlueEvents
@@ -56,7 +64,7 @@ private:
 	CcpAtomic<uint32_t> m_gpuMemorySize;
 	CcpAtomic<uint32_t> m_cpuMemorySize;
 
-	std::vector<TriTextureRes*> m_textures;
+	std::vector<std::pair<TriTextureRes*, Tr2TextureLodUpdateRequest>> m_textures;
 	Stats m_currentStats;
 };
 TYPEDEF_BLUECLASS( Tr2TextureLodManager );

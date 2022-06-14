@@ -18,6 +18,8 @@ namespace
 {
 uint32_t s_gpuMemoryBudget = 300 * 1024 * 1024;
 uint32_t s_cpuMemoryBudget = 200 * 1024 * 1024;
+uint32_t s_lodChanges = 4;
+uint32_t s_loadRequests = 2;
 
 uint32_t GetTextureSize( const Tr2BitmapDimensions& desc )
 {
@@ -33,6 +35,8 @@ uint32_t GetTextureSize( const Tr2BitmapDimensions& desc )
 
 TRI_REGISTER_SETTING( "textureLodGpuBudget", s_gpuMemoryBudget );
 TRI_REGISTER_SETTING( "textureLodCpuBudget", s_cpuMemoryBudget );
+TRI_REGISTER_SETTING( "textureLodChanges", s_lodChanges );
+TRI_REGISTER_SETTING( "textureLoadRequests", s_loadRequests );
 
 
 
@@ -64,25 +68,75 @@ void Tr2TextureLodManager::OnTick( Be::Time, Be::Time, void* )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
-	for( auto it = begin( m_textures ); it != end( m_textures ); ++it )
+	for( auto& it : m_textures )
 	{
-		auto texture = *it;
-		texture->UpdateLods( *this );
+		it.first->UpdateLodRequest( it.second, *this );
+		if( it.second.mipChange == 0 )
+		{
+			it.second.frameNumber = 0;
+		}
+	}
+
+	std::sort( begin( m_textures ), end( m_textures ), []( const auto& a, const auto& b ) {
+		if( a.second.mipChange < b.second.mipChange )
+		{
+			return true;
+		}
+		if( a.second.mipChange == b.second.mipChange )
+		{
+			return a.second.frameNumber > b.second.frameNumber;
+		}
+
+		return false;
+	} );
+	uint32_t creates = 0;
+	uint32_t loads = 0;
+	for( auto& it : m_textures )
+	{
+		if( it.second.mipChange == 0 )
+		{
+			continue;
+		}
+		if( it.second.mipChange >= 0 && !NeedToTrimGpuTexture() )
+		{
+			break;
+		}
+		if( creates >= s_lodChanges && loads >= s_loadRequests )
+		{
+			break;
+		}
+		if( it.second.cachedInRam )
+		{
+			if( creates < s_lodChanges )
+			{
+				++creates;
+				it.first->ProcessLodRequest( it.second, *this );
+				it.second.frameNumber = 0;
+			}
+		}
+		else
+		{
+			if( loads < s_loadRequests )
+			{
+				++loads;
+				it.first->ProcessLodRequest( it.second, *this );
+				it.second.frameNumber = 0;
+			}
+		}
 	}
 }
 
 void Tr2TextureLodManager::RegisterTexture( TriTextureRes* texture )
 {
-	m_textures.push_back( texture );
+	m_textures.push_back( { texture, {} } );
 }
 
 void Tr2TextureLodManager::UnregisterTexture( TriTextureRes* texture )
 {
-	auto found = std::find( begin( m_textures ), end( m_textures ), texture );
-	if( found != end( m_textures ) )
-	{
-		m_textures.erase( found );
-	}
+	m_textures.erase(
+		std::remove_if( begin( m_textures ), end( m_textures ), [texture]( const auto& x ) {
+			return x.first == texture;
+		} ) );
 }
 
 bool Tr2TextureLodManager::CanUploadToGpu( const Tr2BitmapDimensions& desc ) const
@@ -134,5 +188,11 @@ Tr2TextureLodManager::Stats Tr2TextureLodManager::GetStats() const
 
 std::vector<TriTextureRes*> Tr2TextureLodManager::GetManagedTextures() const
 {
-	return m_textures;
+	std::vector<TriTextureRes*> textures;
+	textures.reserve( m_textures.size() );
+	for( auto& t : m_textures )
+	{
+		textures.push_back( t.first );
+	}
+	return textures;
 }

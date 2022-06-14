@@ -634,9 +634,11 @@ void TriTextureRes::RequestResolution( float resolutionFraction )
 	AtomicMinUpdate( m_requestedMip, requestedLod );
 }
 
-void TriTextureRes::UpdateLods( Tr2TextureLodManager& manager )
+void TriTextureRes::UpdateLodRequest( Tr2TextureLodUpdateRequest& request, Tr2TextureLodManager& manager )
 {
 	ON_BLOCK_EXIT( [&] { m_requestedMip = INVALID_LOD; } );
+
+	request.mipChange = 0;
 
 	if( !IsGood() || !m_lodEnabled || m_originalResolution == 0 )
 	{
@@ -676,53 +678,49 @@ void TriTextureRes::UpdateLods( Tr2TextureLodManager& manager )
 		return;
 	}
 
-	if( m_cpuMip <= m_requestedMip )
+	if( m_requestedMip != m_gpuMip )
 	{
+		request.mipChange = int32_t( m_requestedMip ) - int32_t( m_gpuMip );
+		++request.frameNumber;
+		request.cachedInRam = m_cpuMip <= m_requestedMip;
+	}
+}
+
+void TriTextureRes::ProcessLodRequest( const Tr2TextureLodUpdateRequest& request, Tr2TextureLodManager& manager )
+{
+	if( request.cachedInRam )
+	{
+		CCP_STATS_ZONE( "CreateTexture" );
+
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 
 		Tr2BitmapDimensions desc;
 		std::vector<Tr2SubresourceData> initialData;
-		CreateDescription( *m_loadedBitmap, m_requestedMip - m_cpuMip, desc, initialData );
+		CreateDescription( *m_loadedBitmap, m_gpuMip + request.mipChange - m_cpuMip, desc, initialData );
 
-		if( m_requestedMip < m_gpuMip || manager.NeedToTrimGpuTexture() && manager.CanUploadToGpu( desc ) )
+		Tr2TextureAL newTexture;
+		if( SUCCEEDED( newTexture.Create( desc, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData[0], renderContext ) ) )
 		{
-			Tr2TextureAL newTexture;
-			if( SUCCEEDED( newTexture.Create( desc, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, &initialData[0], renderContext ) ) )
+			manager.GpuTextureCreated( desc );
+
+			if( m_ownTexture.IsValid() )
 			{
-				manager.GpuTextureCreated( desc );
-
-				if( m_ownTexture.IsValid() )
-				{
-					manager.GpuTextureDestroyed( m_ownTexture.GetDesc() );
-				}
-
-				m_ownTexture = newTexture;
-				m_ownTexture.SetName( CW2A( GetPath() ) );
-				SetTexture( m_ownTexture );
-				NotifyRebuildCachedData();
-				m_gpuMip = m_requestedMip;
-
-				if( manager.NeedToTrimCpuTexture() )
-				{
-					if( m_cpuMip + 1 < m_requestedMip )
-					{
-						TrimLods( m_requestedMip - 1, manager );
-					}
-					else
-					{
-						TrimLods( m_maxMip, manager );
-					}
-				}
+				manager.GpuTextureDestroyed( m_ownTexture.GetDesc() );
 			}
-			else
-			{
-				CCP_LOGERR( "Failed to create %ux%u texture %S", desc.GetWidth(), desc.GetHeight(), GetPath() );
-			}
+
+			m_ownTexture = newTexture;
+			m_ownTexture.SetName( CW2A( GetPath() ) );
+			SetTexture( m_ownTexture );
+			NotifyRebuildCachedData();
+			m_gpuMip += request.mipChange;
+		}
+		else
+		{
+			CCP_LOGERR( "Failed to create %ux%u texture %S", desc.GetWidth(), desc.GetHeight(), GetPath() );
 		}
 	}
 	else
 	{
-		AtomicMinUpdate( m_requestedMip, m_maxMip );
 		Initialize( GetFilePath().c_str(), GetExt() );
 	}
 }
