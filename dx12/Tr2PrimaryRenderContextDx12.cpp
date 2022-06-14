@@ -700,8 +700,20 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	}
 	else
 	{
+		CComPtr<IDXGIOutput> prevOutput;
+		m_swapChain->GetContainingOutput( &prevOutput );
+		if( dxgiOutput != prevOutput )
+		{
+			// If we are switching between two monitors in fullscreen mode it seems we first should
+			// go windowed and then fullscreen on another monitor, otherwise DXGI behaves funny.
+			CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
+		}
 		// fulscreen -> fullscreen (resolution change)
 		CR( m_swapChain->ResizeTarget( &modeDesc ) );
+		if( dxgiOutput != prevOutput )
+		{
+			CR( m_swapChain->SetFullscreenState( TRUE, dxgiOutput ) );
+		}
 		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
 			presentationParameters.mode.width,
 			presentationParameters.mode.height,
