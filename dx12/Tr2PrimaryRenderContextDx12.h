@@ -145,6 +145,7 @@ private:
 	Tr2PrimaryRenderContextAL( const Tr2PrimaryRenderContextAL& ) /* = delete */;
 	Tr2PrimaryRenderContextAL& operator=( const Tr2PrimaryRenderContextAL& ) /* = delete */;
 
+	void PopPendingRelease( size_t backBufferIndex );
 
 	std::vector < CComPtr<ID3D12CommandAllocator>> m_commandAllocators;
 	uint32_t m_commandAllocatorIndex;

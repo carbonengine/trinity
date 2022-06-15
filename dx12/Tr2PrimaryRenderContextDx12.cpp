@@ -177,6 +177,9 @@ namespace
 		CR_RETURN_HR( dxgiFactory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER | DXGI_MWA_NO_WINDOW_CHANGES ) );
 		return S_OK;
 	}
+
+	
+	size_t s_perFramePendingRemovalSize = 50;
 }
 
 
@@ -833,22 +836,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 	WaitForFenceDx12( m_frameFenceValues[m_currentBackBufferIndex] );
 
-	{
-#if ENABLE_RELEASE_LATER_TAG && DUMP_RELEASE_LATER_TAGS
-		std::vector<ReleasePair>& toRelease = m_pendingRelease[m_currentBackBufferIndex];
-		for (size_t idx = 0; idx < toRelease.size(); ++idx)
-		{
-			char dbo[512];
-			sprintf_s(dbo, "Releasing: %s\n", toRelease[idx].m_name.c_str());
-			
-			OutputDebugStringA(dbo);
-			//CCP_LOG(dbo);
-
-			toRelease[idx].m_object = nullptr;
-		}
-#endif
-		m_pendingRelease[m_currentBackBufferIndex].clear();
-	}
+	PopPendingRelease( m_currentBackBufferIndex );
 
 	// JB: As with creation, if additional render contexts are added, this will need to be in that contexts reset function
 	m_descriptorCache[m_currentBackBufferIndex]->Reset();
@@ -919,6 +907,35 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	}
 
 	return S_OK;
+}
+
+void Tr2PrimaryRenderContextAL::PopPendingRelease( size_t backBufferIndex )
+{
+	auto& releaseBuffer = m_pendingRelease[backBufferIndex];
+
+	auto releaseCount = std::min( s_perFramePendingRemovalSize, releaseBuffer.size() );
+	if( releaseCount == 0 )
+	{
+		return;
+	}
+	// just release at most s_perFramePendingRemovalSize at a time, so we don't get stalls in present when warping away from heavy scenes
+#if ENABLE_RELEASE_LATER_TAG && DUMP_RELEASE_LATER_TAGS
+	CCP_LOG( "Release buffer[%zu] size %zu, releasing %zu", backBufferIndex, releaseBuffer.size(), releaseCount );
+	for( auto r = releaseBuffer.end() - releaseCount; r != releaseBuffer.end(); r++ )
+	{
+		char dbo[512];
+		sprintf_s( dbo, "Releasing %zu: %s\n", r - releaseBuffer.begin(), r->m_name.c_str() );
+
+		OutputDebugStringA( dbo );
+		CCP_LOG( dbo );
+
+		r->m_object = nullptr;
+	}
+#endif
+	releaseBuffer.erase( releaseBuffer.end() - releaseCount, releaseBuffer.end() );
+#if ENABLE_RELEASE_LATER_TAG && DUMP_RELEASE_LATER_TAGS
+	CCP_LOG( "Release buffer[%zu] size is %zu after releasing %zu", backBufferIndex, releaseBuffer.size(), releaseCount );
+#endif
 }
 
 Tr2RenderContextEnum::PixelFormat Tr2PrimaryRenderContextAL::GetBackBufferFormat() const
@@ -1027,9 +1044,11 @@ ALResult Tr2PrimaryRenderContextAL::FlushAndSyncDx12( Tr2RenderContextAL& render
 	m_pendingPresents.erase(
 		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p )->bool { return !p.backBuffer.IsValid(); } ),
 		end( m_pendingPresents ) );
-	for( auto it = begin( m_pendingRelease ); it != end( m_pendingRelease ); ++it )
+
+	// Reduce the pending releases 
+	for( auto index = 0; index < m_pendingRelease.size(); ++index )
 	{
-		it->clear();
+		PopPendingRelease(index);
 	}
 
 	auto commandAllocator = m_commandAllocators[m_commandAllocatorIndex++ % m_commandAllocators.size()];
