@@ -947,7 +947,7 @@ ALResult Tr2RenderContextAL::SetConstants(
 		if( !cb.constantBuffer.IsValid() || cb.constantBuffer.GetSize() < constantDataSize )
 		{
 			auto& renderContext = Tr2RenderContextAL::GetPrimaryRenderContext();
-			CR_RETURN_HR( cb.constantBuffer.Create( constantDataSize, renderContext ) );
+			CR_RETURN_HR( cb.constantBuffer.Create( ( constantDataSize + 15 ) / 16 * 16, renderContext ) );
 			alreadySet = false;
 		}
 		void* data;
