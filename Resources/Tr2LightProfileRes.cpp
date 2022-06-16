@@ -24,7 +24,7 @@ bool IsCompatibleBitmap( const ImageIO::HostBitmap& bitmap )
 		bitmap.GetWidth() == PROFILE_LIGHTMAP_SIZE &&
 		bitmap.GetHeight() == 1 &&
 		bitmap.GetFormat() == PROFILE_LIGHTMAP_FORMAT &&
-		bitmap.GetTrueMipCount() == 1;
+		bitmap.GetTrueMipCount() == 11;
 }
 
 template <typename T>
