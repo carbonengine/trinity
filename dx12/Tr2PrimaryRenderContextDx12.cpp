@@ -649,6 +649,16 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 
 	BOOL wasFullScreen = false;
 	CR( m_swapChain->GetFullscreenState( &wasFullScreen, nullptr ) );
+	bool needsFullscreen = !presentationParameters.windowed;
+	if( presentationParameters.outputWindow )
+	{
+		WINDOWPLACEMENT placement = {};
+		GetWindowPlacement( presentationParameters.outputWindow, &placement );
+		if( placement.showCmd == SW_SHOWMINIMIZED )
+		{
+			needsFullscreen = false;
+		}
+	}
 
 	m_defaultBackBuffer.m_texture->Destroy();
 
@@ -662,7 +672,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	m_frameFenceValues.clear();
 	m_frameFenceValues.resize( BACK_BUFFER_COUNT, value + 1 );
 
-	if( !wasFullScreen && presentationParameters.windowed )
+	if( !wasFullScreen && !needsFullscreen )
 	{
 		// windowed -> windowed
 		CR( m_swapChain->ResizeTarget( &modeDesc ) );
@@ -672,7 +682,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 			fmt,
 			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
 	}
-	else if( wasFullScreen && presentationParameters.windowed )
+	else if( wasFullScreen && !needsFullscreen )
 	{
 		// fullscreen -> windowed
 		CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
@@ -684,7 +694,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 			fmt,
 			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
 	}
-	else if( !wasFullScreen && !presentationParameters.windowed )
+	else if( !wasFullScreen && needsFullscreen )
 	{
 		// windowed -> fullscreen
 		CR( m_swapChain->ResizeTarget( &modeDesc ) );
