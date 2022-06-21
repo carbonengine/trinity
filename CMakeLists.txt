@@ -6,7 +6,6 @@ set(_SOURCES
     ALResult.h
     BcDecompress.cpp
     BcDecompress.h
-    CMakeLists.txt
     ITr2RenderContextEvents.h
     StdAfx.cpp
     StdAfx.h
@@ -28,7 +27,6 @@ set(_SOURCES
     Tr2RenderContextEnum.h
     Tr2VertexDefinition.cpp
     Tr2VertexDefinition.h
-    TrinityAL_v141.vcxproj.user
     wglext.h
     dx11/Tr2BufferALDx11.cpp
     dx11/Tr2BufferALDx11.h
