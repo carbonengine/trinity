@@ -265,7 +265,7 @@ void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, const
 	}
 
 	// Check if the SRV/UAV table *can* be bound, *must* be bound and isn't already bound
-	if (shader->m_srvUavParameter != 0xffffffff && (mustBindSrvUav || !m_parameterSlots[targetPipe][shader->m_srvUavParameter].IsValidSRV(m_lastSrvUavAddress[targetPipe])))
+	if( shader->m_srvUavParameter != 0xffffffff && ( mustBindSrvUav || !m_parameterSlots[targetPipe][shader->m_srvUavParameter].IsValidSRV( m_lastSrvUavAddress[targetPipe] ) || shader->m_rootSignature != m_rootSignature ) )
 	{
 		m_parameterSlots[targetPipe][shader->m_srvUavParameter].SetSRV(m_lastSrvUavAddress[targetPipe]);
 
@@ -280,7 +280,7 @@ void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, const
 	}
 
 	// Check if the Sampler table *can* be bound, *must* be bound and isn't already bound
-	if (shader->m_samplerParameter != 0xffffffff && (mustBindSampler || !m_parameterSlots[targetPipe][shader->m_samplerParameter].IsValidSampler(m_lastSamplerAddress[targetPipe])))
+	if( shader->m_samplerParameter != 0xffffffff && ( mustBindSampler || !m_parameterSlots[targetPipe][shader->m_samplerParameter].IsValidSampler( m_lastSamplerAddress[targetPipe] ) || shader->m_rootSignature != m_rootSignature ) )
 	{
 		m_parameterSlots[targetPipe][shader->m_samplerParameter].SetSampler(m_lastSamplerAddress[targetPipe]);
 
