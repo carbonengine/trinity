@@ -52,7 +52,6 @@ namespace TrinityALImpl
 		void RegisterShaderBinary(const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath);
 
 		void GetOffendingShader(std::string& shaderString) const;
-		void GetCrashInfo(std::string& crashInfo) const;
 	private:
 
 		GFSDK_Aftermath_ContextHandle GetCommandListContextHandle(ID3D12GraphicsCommandList2* commandList);
@@ -68,7 +67,6 @@ namespace TrinityALImpl
 		bool m_initialized;
 		bool m_initializedForDevice;
 		std::string m_offendingShader;
-		std::string m_jsonCrashInfo;
 
 		std::map<GFSDK_Aftermath_ShaderHash, std::pair<	const void*,  size_t>> m_shaderHashToBytecode;
 		std::map<GFSDK_Aftermath_ShaderInstructionsHash, GFSDK_Aftermath_ShaderHash> m_shaderInstructionsToShaderHash;
@@ -79,7 +77,6 @@ namespace TrinityALImpl
 
 		// Static callback wrappers.
 		static void GpuCrashDumpCallback( const void* pGpuCrashDump, const uint32_t gpuCrashDumpSize, void* pUserData );
-		static void CrashDumpDescriptionCallback( PFN_GFSDK_Aftermath_AddGpuCrashDumpDescription addDescription, void* pUserData);
 		static void ShaderDebugInfoCallback( const void* pShaderDebugInfo, const uint32_t shaderDebugInfoSize, void* pUserData);
 		static void ShaderLookupCallback( const GFSDK_Aftermath_ShaderHash* pShaderHash, PFN_GFSDK_Aftermath_SetData setShaderBinary, void* pUserData);
 		static void ShaderDebugInfoLookupCallback( const GFSDK_Aftermath_ShaderDebugInfoIdentifier* pIdentifier, PFN_GFSDK_Aftermath_SetData setShaderDebugInfo, void* pUserData);

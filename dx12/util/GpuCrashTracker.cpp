@@ -74,7 +74,6 @@ namespace TrinityALImpl
 
 	GpuCrashTracker::GpuCrashTracker():
 		m_offendingShader(""),
-		m_jsonCrashInfo(""),
 		m_initializedForDevice( false )
 	{
 		m_initialized = AFTERMATH_CHECK_ERROR( GFSDK_Aftermath_EnableGpuCrashDumps(
@@ -83,7 +82,7 @@ namespace TrinityALImpl
 			GFSDK_Aftermath_GpuCrashDumpFeatureFlags_DeferDebugInfoCallbacks, // Let the Nsight Aftermath library cache shader debug information.
 			GpuCrashDumpCallback, // Register callback for GPU crash dumps.
 			ShaderDebugInfoCallback, // Register callback for shader debug information.
-			CrashDumpDescriptionCallback, // Register callback for GPU crash dump description.
+			nullptr, // callback for GPU crash dump description.
 			this ) ); // Set the GpuCrashTracker object as user data for the above callbacks.
 	}
 
@@ -98,11 +97,6 @@ namespace TrinityALImpl
 	void GpuCrashTracker::GetOffendingShader(std::string& shaderString) const
 	{
 		shaderString = m_offendingShader;
-	}
-
-	void GpuCrashTracker::GetCrashInfo(std::string& crashInfo) const
-	{
-		crashInfo = m_jsonCrashInfo;
 	}
 
 	bool GpuCrashTracker::IsValid() const
@@ -223,26 +217,6 @@ namespace TrinityALImpl
 		AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_SetEventMarker(context, (void*)marker, (unsigned int)strlen( marker ) + 1));
 	}
 
-
-	// Handler for GPU crash dump description callbacks
-	void GpuCrashTracker::OnDescription( PFN_GFSDK_Aftermath_AddGpuCrashDumpDescription addDescription )
-	{
-		// Add some basic description about the crash. This is called after the GPU crash happens, but before
-		// the actual GPU crash dump callback. The provided data is included in the crash dump and can be
-		// retrieved using GFSDK_Aftermath_GpuCrashDump_GetDescription().
-		addDescription( GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationName, "Trinity" );
-		addDescription( GFSDK_Aftermath_GpuCrashDumpDescriptionKey_ApplicationVersion, "1.0" );
-
-		// Since we can't the shader information into the dump, because our lack of dxil
-		// we just dump the hash to shaderpath mapping so we at least know what shader crashed!
-		std::stringstream shaderLookupTable;
-		uint32_t shaderIndex = 0;
-		for( const auto &hashToPath: m_shaderHashToPath)
-		{
-			addDescription( GFSDK_Aftermath_GpuCrashDumpDescriptionKey_UserDefined + shaderIndex++, (Aftermath::to_string(hashToPath.first) + " (" + std::to_string(hashToPath.first.hash) + ") : " + hashToPath.second).c_str() );
-		}
-	}
-
 	// Helper for writing a GPU crash dump to a file
 	void GpuCrashTracker::ResolveCrash( const void* pGpuCrashDump, const uint32_t gpuCrashDumpSize )
 	{
@@ -255,7 +229,7 @@ namespace TrinityALImpl
 			&decoder ) );
 
 		// Decode the crash dump to a JSON string.
-		// Step 1: Generate the JSON and get the size.
+		// Fake most of this since we don't care about anything except the shader that failed
 		uint32_t jsonSize = 0;
 		AFTERMATH_CHECK_ERROR( GFSDK_Aftermath_GpuCrashDump_GenerateJSON(
 			decoder,
@@ -267,15 +241,6 @@ namespace TrinityALImpl
 			nullptr,
 			this,
 			&jsonSize ) );
-		// Step 2: Allocate a buffer and fetch the generated JSON.
-		std::vector<char> json( jsonSize );
-		AFTERMATH_CHECK_ERROR( GFSDK_Aftermath_GpuCrashDump_GetJSON(
-			decoder,
-			uint32_t( json.size() ),
-			json.data() ) );
-
-		// store the json data for
-		m_jsonCrashInfo = json.data();
 
 		// Destroy the GPU crash dump decoder object.
 		AFTERMATH_CHECK_ERROR( GFSDK_Aftermath_GpuCrashDump_DestroyDecoder( decoder ) );
@@ -286,12 +251,6 @@ namespace TrinityALImpl
 	{
 		auto tracker = reinterpret_cast<GpuCrashTracker*>( pUserData );
 		tracker->ResolveCrash( pGpuCrashDump, gpuCrashDumpSize );
-	}
-
-	void GpuCrashTracker::CrashDumpDescriptionCallback( PFN_GFSDK_Aftermath_AddGpuCrashDumpDescription addDescription, void* pUserData )
-	{
-		auto pGpuCrashTracker = reinterpret_cast<GpuCrashTracker*>(pUserData);
-		pGpuCrashTracker->OnDescription(addDescription);
 	}
 
 	void GpuCrashTracker::ShaderDebugInfoCallback(

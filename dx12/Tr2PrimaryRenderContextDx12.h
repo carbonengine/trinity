@@ -83,7 +83,7 @@ public:
 		return m_defaultBackBuffer;
 	}
 
-	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker, std::string& offendingShader, std::string& crashInfo ) const;
+	ALResult GetGpuStateMarker( Tr2RenderContextEnum::RenderContextStatus& status, std::string& marker, std::string& offendingShader ) const;
 	ALResult GetGpuPageFaultResource(
 		Tr2RenderContextEnum::PixelFormat& format,
 		uint64_t& size,
