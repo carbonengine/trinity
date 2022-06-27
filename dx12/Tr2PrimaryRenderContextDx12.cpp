@@ -726,6 +726,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 		if( dxgiOutput != prevOutput )
 		{
 			CR( m_swapChain->SetFullscreenState( TRUE, dxgiOutput ) );
+			CR( m_swapChain->ResizeTarget( &modeDesc ) );
 		}
 		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
 			presentationParameters.mode.width,
