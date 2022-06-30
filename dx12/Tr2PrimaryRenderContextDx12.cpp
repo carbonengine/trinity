@@ -622,6 +622,8 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	}
 	FlushBarriersDx12();
 	CR( m_commandList->Close() );
+	ID3D12CommandList* const commandLists[] = { m_commandList };
+	m_commandQueue->ExecuteCommandLists( _countof( commandLists ), commandLists );
 
 	CComPtr<IDXGIOutput> dxgiOutput;
 	CComPtr<IDXGIAdapter1> adapterPtr;

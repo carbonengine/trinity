@@ -139,7 +139,7 @@ namespace TrinityALImpl
 		resource.gpuAddress = buffer->GetGPUVirtualAddress();
 		if( !m_name.empty() )
 		{
-			buffer->SetPrivateData( WKPDID_D3DDebugObjectName, UINT( m_name.size() ), m_name.c_str() );
+			SetDebugName( buffer, m_name.c_str() );
 		}
 		return S_OK;
 	}
@@ -261,6 +261,10 @@ namespace TrinityALImpl
 		for( auto& r : m_resources )
 		{
 			SetDebugName( r.resource, name );
+		}
+		if( m_gpuResource.resource )
+		{
+			SetDebugName( m_gpuResource.resource, name );
 		}
 	}
 
