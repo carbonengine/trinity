@@ -146,6 +146,15 @@ namespace
 		}
 
 		CComPtr<IDXGISwapChain1> swapChain1;
+#if USE_BORDERLESS_WINDOW
+		CR_RETURN_HR( dxgiFactory->CreateSwapChainForHwnd(
+			commandQueue,
+			wnd,
+			&swapChainDesc,
+			nullptr,
+			output,
+			&swapChain1 ) );
+#else
 		if( presentationParameters.windowed )
 		{
 			CR_RETURN_HR( dxgiFactory->CreateSwapChainForHwnd(
@@ -173,6 +182,7 @@ namespace
 				output,
 				&swapChain1 ) );
 		}
+#endif
 		CR_RETURN_HR( swapChain1.QueryInterface( &swapChain ) );
 		CR_RETURN_HR( dxgiFactory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER | DXGI_MWA_NO_WINDOW_CHANGES ) );
 		return S_OK;
@@ -615,19 +625,26 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	{
 		return E_FAIL;
 	}
+
+	CComPtr<IDXGIOutput> dxgiOutput;
+	CComPtr<IDXGIAdapter1> adapterPtr;
+	auto hr = TrinityALImpl::GetVideoAdapter( adapter, &adapterPtr, &dxgiOutput );
+	if( FAILED( hr ) )
+	{
+		return hr;
+	}
+
 	if( m_statsQuery && m_statsStatus == STAT_BEGIN_ISSUED )
 	{
 		m_commandList->EndQuery( m_statsQuery, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0 );
 		m_statsStatus = STAT_READY;
 	}
 	FlushBarriersDx12();
-	CR( m_commandList->Close() );
-	ID3D12CommandList* const commandLists[] = { m_commandList };
-	m_commandQueue->ExecuteCommandLists( _countof( commandLists ), commandLists );
-
-	CComPtr<IDXGIOutput> dxgiOutput;
-	CComPtr<IDXGIAdapter1> adapterPtr;
-	FORWARD_HR( TrinityALImpl::GetVideoAdapter( adapter, &adapterPtr, &dxgiOutput ) );
+	if( SUCCEEDED( m_commandList->Close() ) )
+	{
+		ID3D12CommandList* const commandLists[] = { m_commandList };
+		m_commandQueue->ExecuteCommandLists( _countof( commandLists ), commandLists );
+	}
 
 	//if( !presentationParameters.windowed && dxgiOutput != m_output )
 	//{
@@ -651,6 +668,9 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 
 	BOOL wasFullScreen = false;
 	CR( m_swapChain->GetFullscreenState( &wasFullScreen, nullptr ) );
+#if USE_BORDERLESS_WINDOW
+	bool needsFullscreen = false;
+#else
 	bool needsFullscreen = !presentationParameters.windowed;
 	if( presentationParameters.outputWindow )
 	{
@@ -661,6 +681,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 			needsFullscreen = false;
 		}
 	}
+#endif
 
 	m_defaultBackBuffer.m_texture->Destroy();
 
@@ -677,7 +698,9 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	if( !wasFullScreen && !needsFullscreen )
 	{
 		// windowed -> windowed
+#if !USE_BORDERLESS_WINDOW
 		CR( m_swapChain->ResizeTarget( &modeDesc ) );
+#endif
 		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
 			presentationParameters.mode.width,
 			presentationParameters.mode.height,
@@ -741,7 +764,15 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 
 	std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 	std::vector<CComPtr<ID3D12Resource>> backBuffers;
-	FORWARD_HR( TrinityALImpl::Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, m_swapChain ) );
+	hr = TrinityALImpl::Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, m_swapChain );
+	if( FAILED( hr ) )
+	{
+		auto commandAllocator = m_commandAllocators[m_commandAllocatorIndex++ % m_commandAllocators.size()];
+		commandAllocator->Reset();
+		m_commandList->Reset( commandAllocator, nullptr );
+
+		return hr;
+	}
 
 	m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
 	m_defaultBackBuffer.m_texture->AssignFromSwapChainDx12( backBuffers, rtvs, *this );

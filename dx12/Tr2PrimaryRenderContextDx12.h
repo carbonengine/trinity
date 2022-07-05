@@ -22,6 +22,8 @@
 #include "./util/GpuCrashTracker.h"
 
 
+#define USE_BORDERLESS_WINDOW 1
+
 // JB: Enable this to get some more details on stuff being released
 #define ENABLE_RELEASE_LATER_TAG 0
 #define DUMP_RELEASE_LATER_TAGS 1
