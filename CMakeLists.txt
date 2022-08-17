@@ -51,6 +51,7 @@ add_executable(ShaderCompiler
     Macro.h
     ModifiedTime.cpp
     ModifiedTime.h
+    MSLInclude.h
     OutputHLSL.cpp
     OutputHLSL.h
     ParserState.cpp

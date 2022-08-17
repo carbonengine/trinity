@@ -42,6 +42,8 @@ enum ASTNodeType
 	NT_STRUCT,
 	// struct member declaration: child[0]=NT_TYPE_DECLARATION, child[i]=names
 	NT_STRUCT_MEMBER,
+	// [expr] bracket declaration list: child[i]=constant expression
+	NT_BRACKET_LIST,
 
 	// program
 	NT_PROGRAM,

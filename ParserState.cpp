@@ -1049,7 +1049,7 @@ void ParserState::ShowMessageImpl( const FileLocation& location, ErrorCode error
 		"effect contains no techniques",
 		"annotation type mismatch for annotation \"%s\"",
 		"explicit register bindings for scalaras are deprecated",
-		"no suitable function override found for function call \"%s\"%s",
+		"no suitable function override found for function call \"%s\"",
 
 		"array, matrix, vector, or indexable object type expected in index expression",
 		"invalid subscript \'%s\'",

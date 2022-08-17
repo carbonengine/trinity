@@ -532,6 +532,11 @@ bool EvaluateInitializer( ParserState& state, ASTNode* node, Type& type, Express
 
 bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, ExpressionValue& value, StateValue* stateValues )
 {
+	if( !node )
+	{
+		return false;
+	}
+
 	type.symbol = nullptr;
 	switch( node->GetNodeType() )
 	{
@@ -614,6 +619,10 @@ bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, Expressi
 		}
 		ExpressionValue left, right;
 		Type leftType, rightType;
+		if( node->GetChildrenCount() < 2 )
+		{
+			return false;
+		}
 		if( !EvaluateExpression( state, node->GetChild( 0 ), leftType, left, stateValues ) )
 		{
 			return false;

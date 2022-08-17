@@ -566,19 +566,19 @@ namespace
 				return;
 #endif
 			case OP_RWTEXTURE1D:
-				os << "texture1d<" << MslTextureTemplateType( type ) << ", access::write>";
+				os << "texture1d<" << MslTextureTemplateType( type ) << ", access::read_write>";
 				return;
 			case OP_RWTEXTURE1DARRAY:
-				os << "texture1d_array<" << MslTextureTemplateType( type ) << ", access::write>";
+				os << "texture1d_array<" << MslTextureTemplateType( type ) << ", access::read_write>";
 				return;
 			case OP_RWTEXTURE2D:
-				os << "texture2d<" << MslTextureTemplateType( type ) << ", access::write>";
+				os << "texture2d<" << MslTextureTemplateType( type ) << ", access::read_write>";
 				return;
 			case OP_RWTEXTURE2DARRAY:
-				os << "texture2d_array<" << MslTextureTemplateType( type ) << ", access::write>";
+				os << "texture2d_array<" << MslTextureTemplateType( type ) << ", access::read_write>";
 				return;
 			case OP_RWTEXTURE3D:
-				os << "texture3d<" << MslTextureTemplateType( type ) << ", access::write>";
+				os << "texture3d<" << MslTextureTemplateType( type ) << ", access::read_write>";
 				return;
 #if 0
 			// There is no "texture3d_array" in MSL.
@@ -819,7 +819,7 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 		}
 		if( node->GetChildOrNull( 0 ) )
 		{
-			os << "[" << Child( 0 ) << "]";
+			os << Child( 0 );
 		}
 		if( node->GetSymbol() )
 		{
@@ -857,7 +857,7 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 		os << node->GetSymbol()->type << " " << node->GetSymbol()->name;
 		if( node->GetChildOrNull( 0 ) )
 		{
-			os << "[" << Child( 0 ) << "]";
+			os << Child( 0 );
 		}
 		if( node->GetSymbol()->semantic.start )
 		{
@@ -919,6 +919,17 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 		break;
 	case NT_STRUCT_MEMBER:
 		os << Children<HLSL>( hlsl, "" );
+		break;
+	case NT_BRACKET_LIST:
+		for( int i = 0; i < node->GetChildrenCount(); i++ )
+		{
+			os << "[";
+			if( node->GetChildOrNull( i ) )
+			{
+				os << Child( i );
+			}
+			os << "]";
+		}
 		break;
 	case NT_PROGRAM:
 		for( unsigned i = 0; i < node->GetChildrenCount(); ++i )
@@ -1384,7 +1395,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		os << " " << symbol->name;
 		if( node->GetChildOrNull( 0 ) )
 		{
-			os << "[" << Child( 0 ) << "]";
+			os << Child( 0 );
 		}
 		if( symbol )
 		{
@@ -1496,7 +1507,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		os << symbol->type << " " << symbol->name;
 		if( node->GetChildOrNull( 0 ) )
 		{
-			os << "[" << Child( 0 ) << "]";
+			os << Child( 0 );
 		}
 		// TODO
 #if 0
@@ -1561,6 +1572,17 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		break;
 	case NT_STRUCT_MEMBER:
 		os << Children<MSL>( msl, "" );
+		break;
+	case NT_BRACKET_LIST:
+		for( int i = 0; i < node->GetChildrenCount(); i++ )
+		{
+			os << "[";
+			if( node->GetChildOrNull( i ) )
+			{
+				os << Child( i );
+			}
+			os << "]";
+		}
 		break;
 	case NT_PROGRAM:
 		for( unsigned i = 0; i < node->GetChildrenCount(); ++i )

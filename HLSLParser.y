@@ -1105,11 +1105,14 @@ parameter_declarator(A) ::= fully_specified_type(B) OP_ID(C) interpolation_modif
 	A->AddChild( nullptr );
 }
 
-parameter_declarator(A) ::= fully_specified_type(B) OP_ID(C) OP_LEFT_BRACKET constant_expression(D) OP_RIGHT_BRACKET semantics(E) interpolation_modifier(F).
+parameter_declarator(A) ::= fully_specified_type(B) OP_ID(C) bracket_list(D) semantics(E) interpolation_modifier(F).
 {
 	A = new ASTNode( NT_FUNCTION_PARAMETER, C.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
-	B.arraySizes[0] = EvaluateIntegerExpression( *parserState, D, 0 );
-	B.arrayDimensions = 1;
+	B.arrayDimensions = static_cast<int>( D->GetChildrenCount() );
+	for( int i = 0; i < B.arrayDimensions; i++ )
+	{
+		B.arraySizes[i] = EvaluateIntegerExpression( *parserState, D->GetChild( i ), 0 );
+	}
 	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( C.stringValue ); 
 	if( !symbol ) 
 	{ 
@@ -1127,11 +1130,14 @@ parameter_declarator(A) ::= fully_specified_type(B) OP_ID(C) OP_LEFT_BRACKET con
 	A->AddChild( D );
 }
 
-parameter_declarator(A) ::= fully_specified_type(B) OP_ID(C) OP_LEFT_BRACKET constant_expression(D) OP_RIGHT_BRACKET interpolation_modifier(F).
+parameter_declarator(A) ::= fully_specified_type(B) OP_ID(C) bracket_list(D) interpolation_modifier(F).
 {
 	A = new ASTNode( NT_FUNCTION_PARAMETER, C.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
-	B.arraySizes[0] = EvaluateIntegerExpression( *parserState, D, 0 );
-	B.arrayDimensions = 1;
+	B.arrayDimensions = static_cast<int>( D->GetChildrenCount() );
+	for( int i = 0; i < B.arrayDimensions; i++ )
+	{
+		B.arraySizes[i] = EvaluateIntegerExpression( *parserState, D->GetChild( i ), 0 );
+	}
 	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( C.stringValue ); 
 	if( !symbol ) 
 	{ 
@@ -1244,10 +1250,14 @@ parameter_type_specifier(A) ::= fully_specified_type(B).
 	A->AddChild( nullptr );
 }
 
-parameter_type_specifier(A) ::= fully_specified_type(B) OP_LEFT_BRACKET(D) constant_expression(C) OP_RIGHT_BRACKET.
+parameter_type_specifier(A) ::= fully_specified_type(B) bracket_list(C).
 {
-	A = new ASTNode( NT_FUNCTION_PARAMETER, D.fileLocation, parserState->GetSymbolTable().GetCurrentScope(), nullptr );
-	B.arraySizes[B.arrayDimensions++] = EvaluateIntegerExpression( *parserState, C, 0 );
+	A = new ASTNode( NT_FUNCTION_PARAMETER, C->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
+	B.arrayDimensions = static_cast<int>( C->GetChildrenCount() );
+	for( int i = 0; i < B.arrayDimensions; i++ )
+	{
+		B.arraySizes[i] = EvaluateIntegerExpression( *parserState, C->GetChild( i ), 0 );
+	}
 	A->SetType( B );
 	A->AddChild( C );
 }
@@ -1513,7 +1523,29 @@ name_declaration(A) ::= OP_ID(C) name_post_declaration(B).
 	A->SetSymbol( symbol );
 }
 
-name_declaration(A) ::= OP_ID(C) OP_LEFT_BRACKET constant_expression(D) OP_RIGHT_BRACKET name_post_declaration(B).
+bracket_expression(A) ::= OP_LEFT_BRACKET OP_RIGHT_BRACKET.
+{
+	A = nullptr;
+}
+
+bracket_expression(A) ::= OP_LEFT_BRACKET constant_expression(B) OP_RIGHT_BRACKET.
+{
+	A = B;
+}
+
+bracket_list(A) ::= bracket_expression(B).
+{
+	A = new ASTNode( NT_BRACKET_LIST, B ? B->GetLocation() : FileLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
+	A->AddChild( B );
+}
+
+bracket_list(A) ::= bracket_list(B) bracket_expression(C).
+{
+	A = B;
+	A->AddChild( C );
+}
+
+name_declaration(A) ::= OP_ID(C) bracket_list(D) name_post_declaration(B).
 {
 	Symbol* symbol = nullptr;
 	if( B )
@@ -1536,7 +1568,7 @@ name_declaration(A) ::= OP_ID(C) OP_LEFT_BRACKET constant_expression(D) OP_RIGHT
 	A->SetSymbol( symbol );
 }
 
-name_declaration(A) ::= OP_ID(C) OP_LEFT_BRACKET constant_expression(D) OP_RIGHT_BRACKET name_post_declaration(B) OP_EQUAL initializer(E).
+name_declaration(A) ::= OP_ID(C) bracket_list(D) name_post_declaration(B) OP_EQUAL initializer(E).
 {
 	Symbol* symbol = nullptr;
 	if( B )
@@ -1614,12 +1646,15 @@ init_declarator_list(A) ::= single_declaration(B).
 init_declarator_list(A) ::= init_declarator_list(B) OP_COMA name_declaration(C).
 {
 	Type type = B->GetType();
-	if( C->GetChildOrNull( 0 ) )
+	auto child = C->GetChildOrNull( 0 );
+	if( child )
 	{
-		type.arraySizes[0] = EvaluateIntegerExpression( *parserState, C->GetChild( 0 ), 0 );
-		type.arrayDimensions = 1;
+		type.arrayDimensions = static_cast<int>( child->GetChildrenCount() );
+		for( int i = 0; i < type.arrayDimensions; i++ )
+		{
+			type.arraySizes[i] = EvaluateIntegerExpression( *parserState, child->GetChild( i ), 0 );
+		}
 	}
-	
 	Symbol* symbol = C->GetSymbol();
 	if( symbol )
 	{
@@ -1637,10 +1672,14 @@ single_declaration(A) ::= fully_specified_type(B) name_declaration(C).
 	A = new ASTNode( NT_VAR_DECLARATION_LIST, C->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	A->AddChild( C );
 	Type type = B;
-	if( C->GetChildOrNull( 0 ) )
+	auto child = C->GetChildOrNull( 0 );
+	if( child )
 	{
-		type.arraySizes[0] = EvaluateIntegerExpression( *parserState, C->GetChild( 0 ), 0 );
-		type.arrayDimensions = 1;
+		type.arrayDimensions = static_cast<int>( child->GetChildrenCount() );
+		for( int i = 0; i < type.arrayDimensions; i++ )
+		{
+			type.arraySizes[i] = EvaluateIntegerExpression( *parserState, child->GetChild( i ), 0 );
+		}
 	}
 	C->SetType( type );
 
@@ -2097,10 +2136,14 @@ struct_declaration(A) ::= type_specifier(B) struct_declarator_list(C) OP_SEMICOL
 	for( unsigned i = 0; i < C->GetChildrenCount(); ++i )
 	{
 		Type type = B;
-		if( C->GetChild( i )->GetChildOrNull( 0 ) )
+		auto child = C->GetChild( i )->GetChildOrNull( 0 );
+		if( child )
 		{
-			type.arraySizes[0] = EvaluateIntegerExpression( *parserState, C->GetChild( i )->GetChild( 0 ), 0 );
-			type.arrayDimensions = 1;
+			type.arrayDimensions = static_cast<int>( child->GetChildrenCount() );
+			for( int j = 0; j < type.arrayDimensions; j++ )
+			{
+				type.arraySizes[j] = EvaluateIntegerExpression( *parserState, child->GetChild( j ), 0 );
+			}
 		}
 		C->GetChild( i )->SetType( type );
 		Symbol* symbol = C->GetChild( i )->GetSymbol();
@@ -2119,10 +2162,14 @@ struct_declaration(A) ::= type_modifier(D) type_specifier(B) struct_declarator_l
 	for( unsigned i = 0; i < C->GetChildrenCount(); ++i )
 	{
 		Type type = B;
-		if( C->GetChild( i )->GetChildOrNull( 0 ) )
+		auto child = C->GetChild( i )->GetChildOrNull( 0 );
+		if( child )
 		{
-			type.arraySizes[0] = EvaluateIntegerExpression( *parserState, C->GetChild( i )->GetChild( 0 ), 0 );
-			type.arrayDimensions = 1;
+			type.arrayDimensions = static_cast<int>( child->GetChildrenCount() );
+			for( int j = 0; j < type.arrayDimensions; j++ )
+			{
+				type.arraySizes[j] = EvaluateIntegerExpression( *parserState, child->GetChild( j ), 0 );
+			}
 		}
 		C->GetChild( i )->SetType( type );
 		Symbol* symbol = C->GetChild( i )->GetSymbol();
@@ -2141,10 +2188,14 @@ struct_declaration(A) ::= interpolation_modifier2(E) type_modifier(D) type_speci
 	for( unsigned i = 0; i < C->GetChildrenCount(); ++i )
 	{
 		Type type = B;
-		if( C->GetChild( i )->GetChildOrNull( 0 ) )
+		auto child = C->GetChild( i )->GetChildOrNull( 0 );
+		if( child )
 		{
-			type.arraySizes[0] = EvaluateIntegerExpression( *parserState, C->GetChild( i )->GetChild( 0 ), 0 );
-			type.arrayDimensions = 1;
+			type.arrayDimensions = static_cast<int>( child->GetChildrenCount() );
+			for( int j = 0; j < type.arrayDimensions; j++ )
+			{
+				type.arraySizes[j] = EvaluateIntegerExpression( *parserState, child->GetChild( j ), 0 );
+			}
 		}
 		C->GetChild( i )->SetType( type );
 		Symbol* symbol = C->GetChild( i )->GetSymbol();
@@ -2163,10 +2214,14 @@ struct_declaration(A) ::= interpolation_modifier2(E) type_specifier(B) struct_de
 	for( unsigned i = 0; i < C->GetChildrenCount(); ++i )
 	{
 		Type type = B;
-		if( C->GetChild( i )->GetChildOrNull( 0 ) )
+		auto child = C->GetChild( i )->GetChildOrNull( 0 );
+		if( child )
 		{
-			type.arraySizes[0] = EvaluateIntegerExpression( *parserState, C->GetChild( i )->GetChild( 0 ), 0 );
-			type.arrayDimensions = 1;
+			type.arrayDimensions = static_cast<int>( child->GetChildrenCount() );
+			for( int j = 0; j < type.arrayDimensions; j++ )
+			{
+				type.arraySizes[j] = EvaluateIntegerExpression( *parserState, child->GetChild( j ), 0 );
+			}
 		}
 		C->GetChild( i )->SetType( type );
 		Symbol* symbol = C->GetChild( i )->GetSymbol();
@@ -2219,7 +2274,7 @@ struct_declarator(A) ::= OP_ID(B) semantics(C).
 	A->SetSymbol( symbol );
 }
 
-struct_declarator(A) ::= OP_ID(B) OP_LEFT_BRACKET constant_expression(C) OP_RIGHT_BRACKET.
+struct_declarator(A) ::= OP_ID(B) bracket_list(C).
 {
 	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( B.stringValue ); 
 	if( !symbol ) 
@@ -2233,7 +2288,7 @@ struct_declarator(A) ::= OP_ID(B) OP_LEFT_BRACKET constant_expression(C) OP_RIGH
 	A->SetSymbol( symbol );
 }
 
-struct_declarator(A) ::= OP_ID(B) OP_LEFT_BRACKET constant_expression(C) OP_RIGHT_BRACKET semantics(D).
+struct_declarator(A) ::= OP_ID(B) bracket_list(C) semantics(D).
 {
 	Symbol* symbol = parserState->GetSymbolTable().AddSymbol( B.stringValue ); 
 	if( !symbol ) 

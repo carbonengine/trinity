@@ -14,6 +14,10 @@
 #include "TextureFunctionConversionDX11.h"
 #include "YamlOutput.h"
 
+const char MSL_INCLUDE[] = 
+#include "MSLInclude.h"
+;
+
 	// Values below must be synchronized with (propagated from) TrinityAL/metal/MetalWorkQueue.h
 #define METAL_MAX_BOUND_BUFFERS  31
 #define METAL_MAX_BOUND_TEXTURES 31 // 31+ on iOS, 128 on macOS
@@ -310,7 +314,7 @@ namespace
 							ASTNode* definition = it->second;
 							assert( definition && definition->GetNodeType() == NT_FUNCTION_DEFINITION );
 
-							ASTNode* header = definition->GetChild( 0 );
+							[[maybe_unused]] ASTNode* header = definition->GetChild( 0 );
 							assert( header->GetNodeType() == NT_FUNCTION_HEADER );
 							assert( header->GetSymbol() == symbol );
 
@@ -349,7 +353,7 @@ namespace
 			ASTNode* node = it.second;
 			assert( node && node->GetNodeType() == NT_FUNCTION_DEFINITION );
 
-			ASTNode* header = node->GetChild( 0 );
+			[[maybe_unused]] ASTNode* header = node->GetChild( 0 );
 			assert( header->GetNodeType() == NT_FUNCTION_HEADER );
 
 			// Is already processed?
@@ -548,12 +552,10 @@ namespace
 					param->SetType( varSymbol->type );
 					param->SetSymbol( symbol );
 
-					ASTNode* subscript = globalIt->GetChildOrNull( 0 );
-					if( subscript )
+					ASTNode* bracketList = globalIt->GetChildOrNull( 0 );
+					if( bracketList )
 					{
-						ASTNode* subscriptConst = new ASTNode( NT_CONSTANT, header->GetLocation(),
-								header->GetScope(), subscript->GetToken() );
-						param->AddChild( subscriptConst );
+						param->AddChild( bracketList->Copy() );
 					}
 					header->InsertChild( 0, param );
 
@@ -1553,6 +1555,18 @@ namespace
 
 		auto RecordRegister = [&state]( int index, std::vector<Symbol*>& registers, ASTNode* node, const char* registerBankName ) {
 			Symbol* symbol = node->GetSymbol();
+
+			if( index < 0 )
+			{
+				state.ShowMessage(
+					node->GetLocation(),
+					EC_CUSTOM_ERROR,
+					"Couldn't allocate %s register for %s. Reason: Invalid register index.",
+					registerBankName,
+					ToString( symbol->name ).c_str() );
+				return false;
+			}
+
 			if( !registers[index] )
 			{
 				registers[index] = symbol;
@@ -2302,7 +2316,7 @@ namespace
 
 			ASTNode* sourceArg = functionHeader->GetChild( i );
 			Symbol* sourceSymbol = sourceArg->GetSymbol();
-			ASTNode* subscript = sourceArg->GetChildOrNull( 0 );
+			ASTNode* bracketList = sourceArg->GetChildOrNull( 0 );
 
 			if( sourceSymbol->addressSpace != AddressSpace::Threadgroup &&
                 !IsUniformInputArgument( sourceArg ) &&
@@ -2337,12 +2351,9 @@ namespace
 				declaration->AddChild( nullptr );
 				declaration->AddChild( callNode->GetChild( uniformArgIndex++ ) );
 			}
-			else if( subscript )
+			else if( bracketList )
 			{
-				ASTNode* subscriptConst = new ASTNode( NT_CONSTANT, declaration->GetLocation(),
-						declaration->GetScope(), subscript->GetToken() );
-
-				declaration->AddChild( subscriptConst );
+				declaration->AddChild( bracketList->Copy() );
 			}
 		}
 		if( callNode->GetChildrenCount() != uniformArgIndex )
@@ -3748,42 +3759,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 				CompilerInputStream os( state, ShadingLanguage::MSL );
 
-				os << "#include <metal_stdlib>\n";
-				os << "using namespace metal;\n\n";
-
-				// TODO: Maybe move all those definitions into a separate header file and #include it here?
-				if( stage.type == PIXEL_STAGE )
-				{
-					os << "#define clip(x) if (any((x) < 0)) discard_fragment()\n";
-				}
-				os << "#define any(x) any((x) != 0)\n";
-				os << "#define mul(a, b) ((a) * (b))\n";
-				os << "#define sincos(x, s, c) do { float cc; ( s ) = sincos( ( x ), cc ); ( c ) = cc; } while( false )\n\n";
-
-				// These values must be synchronized with defines in TrinityAL/metal/MetalWorkQueue.h
-				os << "#define CBUFFER(i) buffer(4 + i)\n";
-				os << "#define SRV(i) buffer(4 + i)\n";
-				os << "#define UAV(i) buffer(24 + i)\n";
-				os << "#define UAVT(i) texture(24 + i)\n\n";
-
-				os << "template< typename T, int n >\n";
-				os << "vec<float, n> mix( vec<T, n> x, vec<T, n> y, float a )\n";
-				os << "{ return mix( static_cast< vec<float, n> >( x ), static_cast< vec<float, n> >( y ), vec<float, n>( a ) ); }\n\n";
-
-				os << "template< typename T, int n >\n";
-				os << "vec<float, n> asfloat( vec<T, n> v ) { return as_type< vec<float, n> >( v ); }\n";
-				os << "template< typename T >\n";
-				os << "float asfloat( T v ) { return as_type< float >( v ); }\n\n";
-
-				os << "template< typename T, int n >\n";
-				os << "vec<uint, n> asuint( vec<T, n> v ) { return as_type< vec<uint, n> >( v ); }\n";
-				os << "template< typename T >\n";
-				os << "uint asuint( T v ) { return as_type< uint >( v ); }\n\n";
-
-				os << "template< typename T, int n >\n";
-				os << "vec<int, n> asint( vec<T, n> v ) { return as_type< vec<int, n> >( v ); }\n";
-				os << "template< typename T >\n";
-				os << "int asint( T v ) { return as_type< int >( v ); }\n\n";
+				os << MSL_INCLUDE;
 
 				os << AtomicFn{"add", "Add"};
 				os << AtomicFn{"max", "Max"};
@@ -3791,261 +3767,6 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				os << AtomicFn{"and", "And"};
 				os << AtomicFn{"or", "Or"};
 				os << AtomicFn{"xor", "Xor"};
-
-os << R"(
-void InterlockedCompareExchange(threadgroup uint& dest, uint compare_value, uint value, thread uint& original_value)
-{ original_value = atomic_compare_exchange_weak_explicit((threadgroup atomic_uint*)&dest, &compare_value, value, memory_order_relaxed, memory_order_relaxed);}
-
-void InterlockedCompareExchange(threadgroup int& dest, int compare_value, int value, thread int& original_value)
-{ original_value = atomic_compare_exchange_weak_explicit((threadgroup atomic_int*)&dest, &compare_value, value, memory_order_relaxed, memory_order_relaxed);}
-
-void InterlockedCompareExchange(device uint& dest, uint compare_value, uint value, thread uint& original_value)
-{ original_value = atomic_compare_exchange_weak_explicit((device atomic_uint*)&dest, &compare_value, value, memory_order_relaxed, memory_order_relaxed);}
-
-void InterlockedCompareExchange(device int& dest, int compare_value, int value, thread int& original_value)
-{ original_value = atomic_compare_exchange_weak_explicit((device atomic_int*)&dest, &compare_value, value, memory_order_relaxed, memory_order_relaxed);}
-
-void InterlockedCompareStore(threadgroup uint& dest, uint compare_value, uint value)
-{atomic_compare_exchange_weak_explicit((threadgroup atomic_uint*)&dest, &compare_value, value, memory_order_relaxed, memory_order_relaxed);}
-
-void InterlockedCompareStore(threadgroup int& dest, int compare_value, int value)
-{atomic_compare_exchange_weak_explicit((threadgroup atomic_int*)&dest, &compare_value, value, memory_order_relaxed, memory_order_relaxed);}
-
-void InterlockedCompareStore(device uint& dest, uint compare_value, uint value)
-{atomic_compare_exchange_weak_explicit((device atomic_uint*)&dest, &compare_value, value, memory_order_relaxed, memory_order_relaxed);}
-
-void InterlockedCompareStore(device int& dest, int compare_value, int value)
-{atomic_compare_exchange_weak_explicit((device atomic_int*)&dest, &compare_value, value, memory_order_relaxed, memory_order_relaxed);}
-
-void InterlockedExchange(threadgroup uint& dest, uint value, thread uint& original_value)
-{ original_value = atomic_exchange_explicit((threadgroup atomic_uint*)&dest, value, memory_order_relaxed);}
-
-void InterlockedExchange(threadgroup int& dest, int value, thread int& original_value)
-{ original_value = atomic_exchange_explicit((threadgroup atomic_int*)&dest, value, memory_order_relaxed);}
-
-void InterlockedExchange(device uint& dest, uint value, thread uint& original_value)
-{ original_value = atomic_exchange_explicit((device atomic_uint*)&dest, value, memory_order_relaxed);}
-
-void InterlockedExchange(device int& dest, int value, thread int& original_value)
-{ original_value = atomic_exchange_explicit((device atomic_int*)&dest, value, memory_order_relaxed);}
-
-float3x3 to_float3x3( thread const float4x3& m )
-{ return float3x3( m[0].xyz, m[1].xyz, m[2].xyz ); }
-
-float3x3 to_float3x3( thread const float3x4& m )
-{ return float3x3( m[0].xyz, m[1].xyz, m[2].xyz ); }
-
-float3x3 to_float3x3( thread const float4x4& m )
-{ return float3x3( m[0].xyz, m[1].xyz, m[2].xyz ); }
-
-float4x3 to_float4x3( thread const float4x4& m )
-{ return float4x3( m[0].xyz, m[1].xyz, m[2].xyz, m[3].xyz ); }
-
-float3x4 to_float3x4( thread const float4x4& m )
-{ return float3x4( m[0], m[1], m[2] ); }
-
-float3x3 to_float3x3( constant const float4x3& m )
-{ return float3x3( m[0].xyz, m[1].xyz, m[2].xyz ); }
-
-float3x3 to_float3x3( constant const float3x4& m )
-{ return float3x3( m[0].xyz, m[1].xyz, m[2].xyz ); }
-
-float3x3 to_float3x3( constant const float4x4& m )
-{ return float3x3( m[0].xyz, m[1].xyz, m[2].xyz ); }
-
-float4x3 to_float4x3( constant const float4x4& m )
-{ return float4x3( m[0].xyz, m[1].xyz, m[2].xyz, m[3].xyz ); }
-
-float3x4 to_float3x4( constant const float4x4& m )
-{ return float3x4( m[0], m[1], m[2] ); }
-
-float f16tof32( uint x )
-{ return static_cast<float>( as_type<half>( static_cast<uint16_t>( x ) ) ); }
-
-uint f32tof16( float x )
-{ return as_type<uint16_t>( static_cast<half>( x ) ); }
-
-
-float3 matrixRow( float3x3 m, int row )
-{ return float3( m[0][row], m[1][row], m[2][row] ); }
-
-float4 matrixRow( float4x4 m, int row )
-{ return float4( m[0][row], m[1][row], m[2][row], m[3][row] ); }
-
-float3 matrixRow( float3x4 m, int row )
-{ return float3( m[0][row], m[1][row], m[2][row] ); }
-
-float4 matrixRow( float4x3 m, int row )
-{ return float4( m[0][row], m[1][row], m[2][row], m[3][row] ); }
-
-template <size_t Rows>
-struct MatrixRow2LH
-{
-	MatrixRow2LH(thread matrix<float, 2, Rows>& m, int row): m_matrix(m), m_row(row) {}
-	operator float2() const { return float2(m_matrix[0][m_row], m_matrix[1][m_row]); }
-#define ROW_ASSIGN_OP(op)								\
-	thread MatrixRow2LH& operator op(float2 value) {	\
-		m_matrix[0][m_row] op value[0];					\
-		m_matrix[1][m_row] op value[1];					\
-		return *this;									\
-	}
-
-	ROW_ASSIGN_OP(=)
-	ROW_ASSIGN_OP(+=)
-	ROW_ASSIGN_OP(-=)
-	ROW_ASSIGN_OP(*=)
-	ROW_ASSIGN_OP(/=)
-
-#undef ROW_ASSIGN_OP
-
-	thread matrix<float, 2, Rows>& m_matrix;
-	int m_row;
-};
-
-template <size_t Rows>
-struct MatrixRow3LH
-{
-	MatrixRow3LH(thread matrix<float, 3, Rows>& m, int row): m_matrix(m), m_row(row) {}
-	operator float3() const { return float3(m_matrix[0][m_row], m_matrix[1][m_row], m_matrix[2][m_row]); }
-#define ROW_ASSIGN_OP(op)								\
-	thread MatrixRow3LH& operator op(float3 value) {	\
-		m_matrix[0][m_row] op value[0];					\
-		m_matrix[1][m_row] op value[1];					\
-		m_matrix[2][m_row] op value[2];					\
-		return *this;									\
-	}
-
-	ROW_ASSIGN_OP(=)
-	ROW_ASSIGN_OP(+=)
-	ROW_ASSIGN_OP(-=)
-	ROW_ASSIGN_OP(*=)
-	ROW_ASSIGN_OP(/=)
-
-#undef ROW_ASSIGN_OP
-
-	thread matrix<float, 3, Rows>& m_matrix;
-	int m_row;
-};
-
-template <size_t Rows>
-struct MatrixRow4LH
-{
-	MatrixRow4LH(thread matrix<float, 4, Rows>& m, int row): m_matrix(m), m_row(row) {}
-	operator float4() const { return float4(m_matrix[0][m_row], m_matrix[1][m_row], m_matrix[2][m_row], m_matrix[3][m_row]); }
-#define ROW_ASSIGN_OP(op)								\
-	thread MatrixRow4LH& operator op(float4 value) {	\
-		m_matrix[0][m_row] op value[0];					\
-		m_matrix[1][m_row] op value[1];					\
-		m_matrix[2][m_row] op value[2];					\
-		m_matrix[3][m_row] op value[3];					\
-		return *this;									\
-	}
-
-	ROW_ASSIGN_OP(=)
-	ROW_ASSIGN_OP(+=)
-	ROW_ASSIGN_OP(-=)
-	ROW_ASSIGN_OP(*=)
-	ROW_ASSIGN_OP(/=)
-
-#undef ROW_ASSIGN_OP
-
-	thread matrix<float, 4, Rows>& m_matrix;
-	int m_row;
-};
-
-float radians( float degrees )
-{ return degrees * 0.0174532924; }
-
-template <typename T, typename W, typename H>
-void GetDimensions( texture2d<T> tex, thread W& w, thread H& h )
-{ w = W( tex.get_width() ); h = H( tex.get_height() ); }
-
-template <typename T, typename W, typename H>
-void GetDimensions( texturecube<T> tex, thread W& w, thread H& h )
-{ w = W( tex.get_width() ); h = H( tex.get_height() ); }
-
-template <typename T, typename W, typename H, typename D>
-void GetDimensions( texture3d<T> tex, thread W& w, thread H& h, thread D& d )
-{ w = W( tex.get_width() ); h = H( tex.get_height() ); d = D( tex.get_depth() ); }
-
-template <typename T, typename W, typename H>
-void GetDimensions( texture2d_ms<T> tex, thread W& w, thread H& h )
-{ w = W( tex.get_width() ); h = H( tex.get_height() ); }
-
-template <typename T, typename W, typename H, typename S>
-void GetDimensions( texture2d_ms<T> tex, thread W& w, thread H& h, thread S& s )
-{ w = W( tex.get_width() ); h = H( tex.get_height() ); s = S( tex.get_num_samples() ); }
-
-template <typename TOut, typename TIn>
-struct VectorReference1
-{
-    VectorReference1( TOut reference, int swizzles )
-    :   m_reference( reference ),
-        m_swizzles( swizzles )
-    {
-        m_value = reference[swizzles];
-    }
-    ~VectorReference1()
-    {
-        m_reference[m_swizzles] = m_value;
-    }
-    operator TIn()
-    {
-        return m_value;
-    }
-    TOut m_reference;
-    int m_swizzles;
-    typename metal::remove_reference<TIn>::type m_value;
-};
-template <typename TOut, typename TIn>
-struct VectorReference2
-{
-    VectorReference2( TOut reference, int2 swizzles )
-    :   m_reference( reference ),
-        m_swizzles( swizzles )
-    {
-        m_value[0] = reference[swizzles[0]];
-        m_value[1] = reference[swizzles[1]];
-    }
-    ~VectorReference2()
-    {
-        m_reference[m_swizzles[0]] = m_value[0];
-        m_reference[m_swizzles[1]] = m_value[1];
-    }
-    operator TIn()
-    {
-        return m_value;
-    }
-    TOut m_reference;
-    int2 m_swizzles;
-    typename metal::remove_reference<TIn>::type m_value;
-};
-template <typename TOut, typename TIn>
-struct VectorReference3
-{
-    VectorReference3( TOut reference, int3 swizzles )
-    :   m_reference( reference ),
-        m_swizzles( swizzles )
-    {
-        m_value[0] = reference[swizzles[0]];
-        m_value[1] = reference[swizzles[1]];
-        m_value[2] = reference[swizzles[2]];
-    }
-    ~VectorReference3()
-    {
-        m_reference[m_swizzles[0]] = m_value[0];
-        m_reference[m_swizzles[1]] = m_value[1];
-        m_reference[m_swizzles[2]] = m_value[2];
-    }
-    operator TIn()
-    {
-        return m_value;
-    }
-    TOut m_reference;
-    int3 m_swizzles;
-    typename metal::remove_reference<TIn>::type m_value;
-};
-)";
 
 				os << MSL{ state.GetTree(), &state.GetSymbolTable() };
 
