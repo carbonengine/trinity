@@ -284,6 +284,7 @@ namespace TrinityALImpl
 		void SetDepthStencilAttachment( id<MTLTexture> texture );
 		
 		void RenderPassHint( const MetalRenderPassHint& hint );
+        void EndRenderPassHint();
 
 		void SetConstants( Tr2RenderContextEnum::ShaderType shaderType, const void* constantBuffer, uint32_t size, uint64_t lockTag, uint32_t constantIndex );
 		void SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask );

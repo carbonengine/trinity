@@ -13,7 +13,7 @@
 namespace TrinityALImpl
 {
 
-#define METAL_NUM_DUMMY_TEXTURES 5
+#define METAL_NUM_DUMMY_TEXTURES 6
 
 /*
   A Metal context is implicitly per-device. As such resources exist at the top level as they can be shared
