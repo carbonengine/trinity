@@ -1192,6 +1192,11 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment& rt0, const Tr
 
 }
 
+void Tr2RenderContextAL::EndRenderPassHint()
+{
+    m_workQueue->EndRenderPassHint();
+}
+
 uint32_t Tr2RenderContextAL::BeginParallelEncoding( uint32_t requestedEncodersCount )
 {
 	if( !m_isValid || !m_isPrimary )

@@ -37,6 +37,68 @@ namespace
 		}
 	}
 
+	ALResult Create1D( CComPtr<ID3D11Resource>& texture, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		D3D11_TEXTURE1D_DESC desc1D;
+		memset( &desc1D, 0, sizeof( desc1D ) );
+		desc1D.Width = desc.GetWidth();
+		desc1D.MipLevels = desc.GetTrueMipCount(); // see below, no auto-gen yet
+		desc1D.ArraySize = desc.GetArraySize();
+		desc1D.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeTypeless( desc.GetFormat() ) );
+
+		if( HasFlag( cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+		{
+			desc1D.Usage = D3D11_USAGE_DYNAMIC;
+			desc1D.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		}
+		else if( HasFlag( cpuUsage, Tr2CpuUsage::WRITE ) )
+		{
+			desc1D.Usage = D3D11_USAGE_DEFAULT;
+			desc1D.CPUAccessFlags = 0;
+		}
+		else if( IsWritable( gpuUsage ) )
+		{
+			desc1D.Usage = D3D11_USAGE_DEFAULT;
+		}
+		else
+		{
+			desc1D.Usage = D3D11_USAGE_IMMUTABLE;
+		}
+
+		if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+		{
+			desc1D.BindFlags |= D3D11_BIND_SHADER_RESOURCE;
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) )
+		{
+			desc1D.BindFlags |= D3D11_BIND_RENDER_TARGET;
+			if( desc.GetTrueMipCount() > 1 && HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+			{
+				desc1D.MiscFlags |= D3D11_RESOURCE_MISC_GENERATE_MIPS;
+			}
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
+		{
+			desc1D.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+		{
+			desc1D.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+		}
+		if( HasFlag( gpuUsage, Tr2GpuUsage::SHARED ) )
+		{
+			desc1D.MiscFlags |= D3D11_RESOURCE_MISC_SHARED;
+		}
+
+		auto init = ConvertInitialData( desc1D.MipLevels * desc1D.ArraySize, initialData );
+
+		CComPtr<ID3D11Texture1D> texture1D;
+
+		FORWARD_HR( renderContext.m_d3dDevice11->CreateTexture1D( &desc1D, initialData ? &init[0] : nullptr, &texture1D ) );
+		texture = texture1D;
+		return S_OK;
+	}
+
 	ALResult Create2D( CComPtr<ID3D11Resource>& texture, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		D3D11_TEXTURE2D_DESC desc2D;
@@ -340,13 +402,17 @@ namespace TrinityALImpl
 		}
 
 		CComPtr<ID3D11Resource> texture;
-		if( desc.GetType() != Tr2RenderContextEnum::TEX_TYPE_3D )
+		if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_1D )
 		{
-			FORWARD_HR( Create2D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
+			FORWARD_HR( Create1D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
+		}
+		else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+		{
+			FORWARD_HR( Create3D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
 		}
 		else
 		{
-			FORWARD_HR( Create3D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
+			FORWARD_HR( Create2D( texture, desc, msaa, gpuUsage, cpuUsage, initialData, renderContext ) );
 		}
 
 		// Behold! A workaround for WARP device crash when creating multiple SRVs into a BC7 texture!
@@ -486,7 +552,12 @@ namespace TrinityALImpl
 
 			srvDesc.Format = GetSrvFormat( desc.GetFormat() );
 
-			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_1D )
+			{
+				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
+				srvDesc.Texture1D.MipLevels = desc.GetTrueMipCount();
+			}
+			else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
 			{
 				srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
 				srvDesc.Texture3D.MipLevels = desc.GetTrueMipCount();
@@ -529,7 +600,11 @@ namespace TrinityALImpl
 			memset( &rtvDesc, 0, sizeof( rtvDesc ) );
 
 			rtvDesc.Format = static_cast<DXGI_FORMAT>( desc.GetFormat() );
-			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_1D )
+			{
+				rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE1D;
+			}	
+			else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
 			{
 				rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE3D;
 				rtvDesc.Texture3D.WSize = (UINT)-1;
@@ -596,7 +671,12 @@ namespace TrinityALImpl
 			uav.resize( desc.GetTrueMipCount() );
 			for( uint32_t mip = 0; mip < desc.GetTrueMipCount(); ++mip )
 			{
-				if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+				if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_1D )
+				{
+					descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE1D;
+					descUAV.Texture1D.MipSlice = mip;
+				}
+				else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
 				{
 					descUAV.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE3D;
 					descUAV.Texture3D.WSize = (UINT)-1;

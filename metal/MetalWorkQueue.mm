@@ -2962,6 +2962,15 @@ void MetalWorkQueue::RenderPassHint( const MetalRenderPassHint& hint )
 	m_hasPendingRenderPassHint = true;
 }
 
+void MetalWorkQueue::EndRenderPassHint()
+{
+    if( m_hasPendingRenderPassHint || m_pendingClear )
+    {
+        GetRenderEncoder();
+        ReleaseEncoder( true );
+    }
+}
+
 void MetalWorkQueue::BeginParallelEncoding( MetalWorkQueue* primaryQueue )
 {
 	m_isPrimary = false;
