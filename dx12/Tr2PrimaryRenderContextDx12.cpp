@@ -189,7 +189,7 @@ namespace
 	}
 
 	
-	size_t s_perFramePendingRemovalSize = 50;
+	size_t s_perFrameMinReleaseCount = 100;
 }
 
 
@@ -957,12 +957,14 @@ void Tr2PrimaryRenderContextAL::PopPendingRelease( size_t backBufferIndex )
 {
 	auto& releaseBuffer = m_pendingRelease[backBufferIndex];
 
-	auto releaseCount = std::min( s_perFramePendingRemovalSize, releaseBuffer.size() );
-	if( releaseCount == 0 )
+	if( releaseBuffer.size() == 0 )
 	{
 		return;
 	}
-	// just release at most s_perFramePendingRemovalSize at a time, so we don't get stalls in present when warping away from heavy scenes
+
+	// Release an eighth of the buffer per frame or the preferred release count, which one is larger so we will eventually release all things
+	size_t releaseCount = std::max( s_perFrameMinReleaseCount, releaseBuffer.size() / 8 );
+	releaseCount = std::min( releaseCount, releaseBuffer.size() );
 #if ENABLE_RELEASE_LATER_TAG && DUMP_RELEASE_LATER_TAGS
 	CCP_LOG( "Release buffer[%zu] size %zu, releasing %zu", backBufferIndex, releaseBuffer.size(), releaseCount );
 	for( auto r = releaseBuffer.end() - releaseCount; r != releaseBuffer.end(); r++ )
