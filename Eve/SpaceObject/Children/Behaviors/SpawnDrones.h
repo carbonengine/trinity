@@ -27,6 +27,7 @@ private:
 	int m_count;
 	Vector3 m_spawnPosition;
 	Vector4 m_gridInfo; // x = x count, y = y count, z = z count, w = distance between
+	float m_gridFullnessFactor; // we sometimes don't want a perfect grid so randomly decide when not to spawn some drones
 };
 
 TYPEDEF_BLUECLASS( SpawnDrones );

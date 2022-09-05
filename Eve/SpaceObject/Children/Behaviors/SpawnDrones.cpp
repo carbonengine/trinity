@@ -11,7 +11,8 @@ SpawnDrones::SpawnDrones( IRoot* lockobj ) :
 	m_time( 0.f ),
 	m_count( 1 ),
 	m_spawnPosition( 0, 0, 0 ),
-	m_gridInfo( 1, 1, 1, 10 )
+	m_gridInfo( 1, 1, 1, 10 ),
+	m_gridFullnessFactor( 1.f )
 {
 }
 
@@ -45,8 +46,16 @@ std::vector<Vector3> SpawnDrones::CalculateBehavior( std::vector<DroneAgent>& ag
 			{
 				for( int k = 0; k < xCount; ++k )
 				{
-					// render object in x direction
-					group.AddAgent();
+					// the higher the gridRandomFactor the more full the grid should be
+					if( m_gridFullnessFactor == -1 )
+					{
+						m_gridFullnessFactor = TriRand();
+					}
+					if( TriRand() <= m_gridFullnessFactor )
+					{
+						group.AddAgent();
+					}
+					
 					group.m_spawnPosition.x += distBetween;
 				}
 				group.m_spawnPosition.y += distBetween;
@@ -105,9 +114,6 @@ std::vector<Vector3> SpawnDrones::CalculateBehavior( std::vector<DroneAgent>& ag
 		}
 		m_time = 0.0f;
 	}
-
-
-
 
 	return noNeedToReturnForces;
 }
