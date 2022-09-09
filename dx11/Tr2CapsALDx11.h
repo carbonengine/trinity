@@ -22,6 +22,8 @@ public:
 	bool SupportsGpuBuffer() const;
 	bool SupportsStandaloneSwapChain() const;
 	bool SupportsVertexShaderTextures() const;
+	bool SupportsVariableRefreshRate() const;
+
 private:
 	Tr2CapsAL();
 	Tr2CapsAL( const Tr2CapsAL& );

@@ -386,7 +386,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 		}
 	}
 
-	m_vsyncInterval = pp.presentInterval & 0xf;
+	m_vsyncInterval = pp.presentInterval;
 
 	Tr2RenderContextAL::m_secondarySwapChain = m_swapChain;
 	Tr2RenderContextAL::m_secondaryDevice11 = m_d3dDevice11;
@@ -459,7 +459,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( unsigned adapter, cons
 		CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
 	}
 
-	m_vsyncInterval = presentationParameters.presentInterval & 0xf;
+	m_vsyncInterval = presentationParameters.presentInterval;
 
 	m_frameTimer.Create( *this );
 

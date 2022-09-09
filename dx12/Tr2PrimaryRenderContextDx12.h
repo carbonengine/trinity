@@ -214,6 +214,7 @@ private:
 
 	TrinityALImpl::GpuMarkerBuffer m_immediateBuffer;
 	TrinityALImpl::GpuCrashTracker* m_gpuCrashTracker;
+	bool m_supportsVariableRefreshRate;
 
 	CComPtr<ID3D12QueryHeap> m_statsQuery;
 	CComPtr<ID3D12Resource> m_statsResult;
@@ -277,7 +278,6 @@ public:
 	TrinityALImpl::Tr2ResourceHelper m_nullCB;
 
 	void* m_amdExtDeviceObject;
-
 };
 
 #endif

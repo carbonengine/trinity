@@ -18,9 +18,8 @@ extern bool g_requestDeviceDebugLayer;
 
 using namespace Tr2RenderContextEnum;
 
-namespace
+namespace Tr2SwapChainUtils
 {
-	uint32_t BACK_BUFFER_COUNT = 3;
 
 	DXGI_FORMAT SafeConvertD3DBackBufferFormat( Tr2RenderContextEnum::PixelFormat bbFormat )
 	{
@@ -61,12 +60,16 @@ namespace
 		swapChainDesc.SampleDesc.Count = std::max( presentationParameters.msaaType, 1u );
 		swapChainDesc.SampleDesc.Quality = presentationParameters.msaaQuality;
 		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapChainDesc.BufferCount = BACK_BUFFER_COUNT;// presentationParameters.windowed ? 2 : 3;
+		swapChainDesc.BufferCount = Tr2SwapChainUtils::BACK_BUFFER_COUNT;
 		swapChainDesc.Scaling = DXGI_SCALING_STRETCH;// DXGI_MODE_SCALING( presentationParameters.mode.scaling );
 		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
 		swapChainDesc.Flags = 0;
-
+		 
+		if( presentationParameters.variableRefreshRateSupported )
+		{
+			swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+		}
 
 		auto wnd = Tr2WindowHandle( presentationParameters.outputWindow );
 		if( !presentationParameters.outputWindow )
@@ -75,33 +78,15 @@ namespace
 		}
 
 		CComPtr<IDXGISwapChain1> swapChain1;
-		if( presentationParameters.windowed )
-		{
-			CR_RETURN_HR( dxgiFactory->CreateSwapChainForHwnd(
-				commandQueue,
-				wnd,
-				&swapChainDesc,
-				nullptr,
-				output,
-				&swapChain1 ) );
-		}
-		else
-		{
-			DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullscreen;
-			fullscreen.RefreshRate.Numerator = presentationParameters.mode.refreshRateNumerator;
-			fullscreen.RefreshRate.Denominator = presentationParameters.mode.refreshRateDenominator;
-			fullscreen.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER( presentationParameters.mode.scanlineOrdering );
-			fullscreen.Scaling = DXGI_MODE_SCALING( presentationParameters.mode.scaling );
-			fullscreen.Windowed = FALSE;
-
-			CR_RETURN_HR( dxgiFactory->CreateSwapChainForHwnd(
-				commandQueue,
-				wnd,
-				&swapChainDesc,
-				&fullscreen,
-				output,
-				&swapChain1 ) );
-		}
+		
+		CR_RETURN_HR( dxgiFactory->CreateSwapChainForHwnd(
+			commandQueue,
+			wnd,
+			&swapChainDesc,
+			nullptr,
+			output,
+			&swapChain1 ) );
+		
 		CR_RETURN_HR( swapChain1.QueryInterface( &swapChain ) );
 		CR_RETURN_HR( dxgiFactory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER ) );
 		return S_OK;
@@ -120,14 +105,15 @@ namespace
 		}
 		Tr2PresentParametersAL pp = {
 			{ uint32_t( rect.right - rect.left ), uint32_t( rect.bottom - rect.top ), 0, 0, PIXEL_FORMAT_B8G8R8X8_UNORM, SCANLINE_ORDER_UNSPECIFIED, DISPLAY_SCALING_UNSPECIFIED },
-			BACK_BUFFER_COUNT,
+			Tr2SwapChainUtils::BACK_BUFFER_COUNT,
 			1,
 			0,
 			SWAP_EFFECT_DISCARD,
 			windowHandle,
 			true,
 			false,
-			PRESENT_INTERVAL_IMMEDIATE
+			PRESENT_INTERVAL_IMMEDIATE,
+			false
 		};
 		presentationParameters = pp;
 		return S_OK;
@@ -160,7 +146,7 @@ namespace TrinityALImpl
 		FORWARD_HR( renderContext.FlushAndSyncDx12( renderContext ) );
 
 		Tr2PresentParametersAL presentationParameters;
-		CR_RETURN_HR( FillPresentationParameters( presentationParameters, windowHandle ) );
+		CR_RETURN_HR( Tr2SwapChainUtils::FillPresentationParameters( presentationParameters, windowHandle ) );
 
 		return CreateDx12( presentationParameters, nullptr, renderContext.m_commandQueue, renderContext );
 	}
@@ -168,7 +154,7 @@ namespace TrinityALImpl
 	ALResult Tr2SwapChainAL::CreateDx12( const Tr2PresentParametersAL& presentationParameters, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext )
 	{
 		CComPtr<IDXGISwapChain3> swapChain;
-		FORWARD_HR( CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output ) );
+		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output ) );
 
 		std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 		std::vector<CComPtr<ID3D12Resource>> backBuffers;
@@ -244,7 +230,7 @@ namespace TrinityALImpl
 		DXGI_SWAP_CHAIN_DESC scDesc;
 		swapChain->GetDesc( &scDesc );
 
-		for( uint32_t i = 0; i < BACK_BUFFER_COUNT; ++i )
+		for( uint32_t i = 0; i < Tr2SwapChainUtils::BACK_BUFFER_COUNT; ++i )
 		{
 			CComPtr<ID3D12Resource> backBuffer;
 			CR_RETURN_HR( swapChain->GetBuffer( i, IID_PPV_ARGS( &backBuffer ) ) );
