@@ -6,7 +6,6 @@
 
 #include "StdAfx.h"
 #include "Tr2BindingPoint.h"
-#include <regex>
 
 
 namespace
@@ -115,58 +114,159 @@ namespace
 		return nullptr;
 	}
 
-	IRoot* ResolveReference( const std::string& reference, const std::unordered_map<std::string, IRoot*>& roots )
+	bool IsAlpha( char ch )
+	{
+		return ( ch >= 'a' && ch <= 'z' ) || ( ch >= 'A' && ch <= 'Z' );
+	}
+
+	bool IsNum( char ch )
+	{
+		return ch >= '0' && ch <= '9';
+	}
+
+	const char* MatchRoot( const char* path )
+	{
+		if( !IsAlpha( *path ) && *path != '_' )
+		{
+			return path;
+		}
+		++path;
+		while( true )
+		{
+			if( !IsAlpha( *path ) && !IsNum( *path ) && *path != '_' )
+			{
+				return path;
+			}
+			++path;
+		}
+	}
+
+	const char* MatchProperty( const char* path )
+	{
+		if( *path != '.' )
+		{
+			return path;
+		}
+		++path;
+		return MatchRoot( path );
+	}
+
+	const char* MatchNumericIndex( const char* path )
+	{
+		auto start = path;
+		if( *path != '[' )
+		{
+			return path;
+		}
+		++path;
+		if( *path == '-' )
+		{
+			++path;
+		}
+		while( true )
+		{
+			if( !IsNum( *path ) )
+			{
+				if( *path == ']' )
+				{
+					++path;
+					return path;
+				}
+				else
+				{
+					return start;
+				}
+			}
+			++path;
+		}
+	}
+
+	const char* MatchNameIndex( const char* path )
+	{
+		auto start = path;
+		if( *path != '[' )
+		{
+			return path;
+		}
+		++path;
+		if( *path != '\"' )
+		{
+			return start;
+		}
+		++path;
+		while( true )
+		{
+			if( *path == 0 )
+			{
+				return start;
+			}
+			if( *path == '\"' )
+			{
+				if( path[1] == ']' )
+				{
+					return path + 2;
+				}
+				else
+				{
+					return start;
+				}
+			}
+			++path;
+		}
+	}
+
+	IRoot* ResolveReference( const std::string& reference, const std::vector<std::pair<std::string, IRoot*>>& roots )
 	{
 		if( reference.empty() )
 		{
 			return nullptr;
 		}
 
-		static const std::regex tokens( "((\\.[a-zA-Z_][a-zA-Z_0-9]*)|(\\[-?[0-9]+\\])|(\\[\"[^\"]*\"\\])).*" );
-		static const std::regex root( "([a-zA-Z_][a-zA-Z_0-9]*).*" );
-
-		auto start = begin( reference );
-		auto finish = end( reference );
-		std::smatch match;
-		if( !std::regex_match( start, finish, match, root ) )
+		auto rootEnd = MatchRoot( reference.c_str() );
+		if( rootEnd == reference.c_str() )
 		{
 			return nullptr;
 		}
-		auto found = roots.find( match[1].str() );
+		auto rootLength = rootEnd - reference.c_str();
+
+		auto found = std::find_if( begin( roots ), end( roots ), [&]( const auto& x ) {
+			return x.first.length() == rootLength && strncmp( x.first.c_str(), reference.c_str(), rootLength ) == 0;
+		} );
 		if( found == roots.end() )
 		{
 			return nullptr;
 		}
 		auto object = found->second;
-		start += match[1].length();
 
-		while( object && start != finish )
+		const char* start = rootEnd;
+		while( *start )
 		{
-			if( !std::regex_match( start, finish, match, tokens ) )
+			const char* end;
+			end = MatchProperty( start );
+			if( end != start )
 			{
-				return nullptr;
-			}
-			if( match[2].length() )
-			{
-				auto attrName = match[2].str().substr( 1 );
+				auto attrName = std::string( start + 1, end );
 				object = GetIRootAttribute( object, attrName );
+				start = end;
+				continue;
 			}
-			else if( match[3].length() )
+			end = MatchNumericIndex( start );
+			if( end != start )
 			{
-				auto index = std::atoi( match[3].str().c_str() + 1 );
+				auto index = std::atoi( start + 1 );
 				object = GetListElement( object, ssize_t( index ) );
+				start = end;
+				continue;
 			}
-			else if( match[4].length() )
+			end = MatchNameIndex( start );
+			if( end != start )
 			{
-				auto name = match[4].str();
-				name = name.substr( 2, name.length() - 4 );
+				auto name = std::string( start + 2, end - 2 );
 				object = GetListElement( object, name );
+				start = end;
+				continue;
 			}
-			else
-			{
-				object = nullptr;
-			}
-			start += match[1].length();
+			return nullptr;
 		}
 		return object;
 	}
@@ -183,7 +283,7 @@ Tr2BindingPoint::Tr2BindingPoint()
 {
 }
 
-void Tr2BindingPoint::Link( const std::unordered_map<std::string, IRoot*>& roots )
+void Tr2BindingPoint::Link( const std::vector<std::pair<std::string, IRoot*>>& roots )
 {
 	Unlink();
 	if( m_path.empty() )
@@ -395,10 +495,10 @@ IRoot* Tr2BindingPoint::GetBoundObject() const
 
 IRootPtr ResolveObjectPath( const std::string& reference, const std::map<std::string, IRoot*>& roots )
 {
-	std::unordered_map<std::string, IRoot*> unorderedRoots;
+	std::vector<std::pair<std::string, IRoot*>> unorderedRoots;
 	for( auto it = begin( roots ); it != end( roots ); ++it )
 	{
-		unorderedRoots.insert( *it );
+		unorderedRoots.push_back( *it );
 	}
 	return ResolveReference( reference, unorderedRoots );
 }

@@ -14,28 +14,31 @@
 
 namespace
 {
-	Tr2ActionBindRTPC* s_action = nullptr;
-	float s_stateTime = 0;
-
-	float StateTime()
+	struct ExtraBuffer
 	{
-		return s_stateTime;
+		const Tr2ActionBindRTPC* action = nullptr;
+		float stateTime = 0;
+	};
+
+	float StateTime( float* stateTime )
+	{
+		return *stateTime;
 	}
 
-	float Curve( float time )
+	float Curve( Tr2ActionBindRTPC* action, float time )
 	{
-		if( !s_action )
+		if( !action )
 		{
 			return 0;
 		}
-		return s_action->GetCurveValue( time );
+		return action->GetCurveValue( time );
 	}
 
-	void ModifyParser( mu::Parser& parser )
-	{
-		parser.DefineFun( "StateTime", StateTime );
-		parser.DefineFun( "Curve", Curve );
-	}
+	CcpParser::Function s_extraFunctions[] = {
+		CcpParser::Function( "StateTime", StateTime, Tr2ControllerExpression::EXTRA_BUFFER_INDEX, offsetof( ExtraBuffer, stateTime ) ),
+		CcpParser::Function( "Curve", Curve, Tr2ControllerExpression::EXTRA_BUFFER_INDEX, offsetof( ExtraBuffer, action ) ),
+	};
+
 }
 
 
@@ -50,7 +53,7 @@ Tr2ActionBindRTPC::Tr2ActionBindRTPC( IRoot* ):
 void Tr2ActionBindRTPC::Link( Tr2Controller& controller )
 {
 	m_controller = &controller;
-	m_evaluator.SetExpr( m_value.c_str(), controller, ModifyParser );
+	m_evaluator.SetExpr( m_value.c_str(), controller, s_extraFunctions );
 }
 
 void Tr2ActionBindRTPC::Unlink()
@@ -104,15 +107,12 @@ void Tr2ActionBindRTPC::Update( Be::Time realTime, Be::Time simTime )
 {
 	// Handle logic necessary in order to use simulated time in the expression.
 	m_lastSimTime = simTime;
-	s_stateTime = TimeAsFloat( simTime - m_startTime );
-	s_action = this;
-	auto value = m_evaluator.Eval();
-	s_stateTime = 0;
-	s_action = nullptr;
+	ExtraBuffer buffer = { this, TimeAsFloat( simTime - m_startTime ) };
+	auto value = m_evaluator.Eval( &buffer );
 
 	if ( value.first && m_emitter )
 	{
-		m_emitter->SetRTPC( m_rtpcName.c_str(), value.second );
+		m_emitter->SetRTPC( m_rtpcName, value.second );
 	}
 }
 
@@ -124,7 +124,7 @@ bool Tr2ActionBindRTPC::OnModified( Be::Var* value )
 	}
 	if( IsMatch( value, m_value ) )
 	{
-		m_evaluator.SetExpr( m_value.c_str(), *m_controller, ModifyParser );
+		m_evaluator.SetExpr( m_value.c_str(), *m_controller, s_extraFunctions );
 	}
 	return true;
 }
@@ -162,13 +162,13 @@ BlueStdResult Tr2ActionBindRTPC::EvaluateExpression( const char* expression, flo
 		return BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "controller needs to be running when evaluating expressions" );
 	}
 	Tr2ControllerExpression expr;
-	auto error = expr.SetExpr( expression, *m_controller, ModifyParser);
+	auto error = expr.SetExpr( expression, *m_controller, s_extraFunctions );
 	if( !error.empty() )
 	{
 		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, error.c_str() );
 	}
-	s_stateTime = TimeAsFloat( m_lastSimTime - m_startTime );
-	auto result = expr.Eval();
+	ExtraBuffer buffer = { this, TimeAsFloat( m_lastSimTime - m_startTime ) };
+	auto result = expr.Eval( &buffer );
 	if( !result.first )
 	{
 		return BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "error evaluating expression" );

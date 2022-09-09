@@ -51,6 +51,19 @@ static float frandom( float a, float b )
 	return ((b-a)*((float)rand()/RAND_MAX))+a;
 }
 
+namespace
+{
+CcpParser::Function s_functions[] = {
+	CcpParser::Function( "perlin_simple", perlin_wrap_simple, CcpParser::FunctionFlags::PURE_FUNC ),
+	CcpParser::Function( "perlin", perlin_wrap, CcpParser::FunctionFlags::PURE_FUNC ),
+	CcpParser::Function( "random", frandom ),
+};
+CcpParser::Constant s_constants[] = {
+	{ "pi", 3.1415926f },
+	{ "pi2", 2.0f * 3.1415926f },
+};
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Tr2ScalarExprKey destructor.
@@ -71,11 +84,6 @@ Tr2ScalarExprKey::Tr2ScalarExprKey( IRoot* lockobj )
 	m_time = 0.0f;
 	m_value = 0.0f;
 	m_interpolation = LINEAR;
-
-	InitializeParser( m_timeParser );
-	InitializeParser( m_valueParser );
-	InitializeParser( m_leftTangentParser );
-	InitializeParser( m_rightTangentParser );
 }
 
 // --------------------------------------------------------------------------------------
@@ -123,50 +131,24 @@ bool Tr2ScalarExprKey::OnModified( Be::Var* value )
 		SetExpression( m_rightTangentParser, m_rightTangentExpression );
 	}
 
-	if( !m_timeExpression.empty() )
+	void* buffers[] = { this };
+	if( !m_timeExpression.empty() && m_timeParser )
 	{
-		m_time = m_timeParser.Eval();
+		m_time = m_timeParser.Eval( buffers, m_tempArena.data() );
 	}
-	if( !m_valueExpression.empty() )
+	if( !m_valueExpression.empty() && m_valueParser )
 	{
-		m_value = m_valueParser.Eval();
+		m_value = m_valueParser.Eval( buffers, m_tempArena.data() );
 	}
-	if( !m_leftTangentExpression.empty() )
+	if( !m_leftTangentExpression.empty() && m_leftTangentParser )
 	{
-		m_leftTangent = m_leftTangentParser.Eval();
+		m_leftTangent = m_leftTangentParser.Eval( buffers, m_tempArena.data() );
 	}
-	if( !m_rightTangentExpression.empty() )
+	if( !m_rightTangentExpression.empty() && m_rightTangentParser )
 	{
-		m_rightTangent = m_rightTangentParser.Eval();
+		m_rightTangent = m_rightTangentParser.Eval( buffers, m_tempArena.data() );
 	}
 	return true;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Initializes user-defined functions and variables for muParser.  
-// Arguments:
-//   parser - A parser to initialize
-// --------------------------------------------------------------------------------------
-void Tr2ScalarExprKey::InitializeParser( mu::Parser& parser )
-{
-	parser.EnableOptimizer( false );
-	parser.DefineFun( "perlin_simple", perlin_wrap_simple, false );
-	parser.DefineFun( "perlin", perlin_wrap, false );
-	parser.DefineFun( "random", frandom, false );
-	parser.DefineVar( "value", &m_value );
-	parser.DefineVar( "time", &m_time );
-	parser.DefineVar( "input1", &m_inputVar1 );
-	parser.DefineVar( "input2", &m_inputVar2 );
-	parser.DefineVar( "input3", &m_inputVar3 );
-	parser.DefineVar( "input4", &m_inputVar4 );
-	parser.DefineVar( "randomConstant", &m_randomConstant );
-	parser.DefineVar( "leftTangent", &m_leftTangent );
-	parser.DefineVar( "rightTangent", &m_rightTangent );
-	parser.DefineVar( "prevKeyTime", &m_prevKeyTime );
-	parser.DefineVar( "prevKeyValue", &m_prevKeyValue );
-	parser.DefineConst( "pi", 3.1415926f );
-	parser.DefineConst( "pi2", 2.0f*3.1415926f );
 }
 
 // --------------------------------------------------------------------------------------
@@ -176,21 +158,49 @@ void Tr2ScalarExprKey::InitializeParser( mu::Parser& parser )
 //   parser - A parser
 //   expression - Expression to compile
 // --------------------------------------------------------------------------------------
-void Tr2ScalarExprKey::SetExpression( mu::Parser& parser, std::string& expression )
+void Tr2ScalarExprKey::SetExpression( CcpParser::Program& parser, std::string& expression )
 {
-	try
+	if( expression.empty() )
 	{
-		parser.SetExpr( expression );
-		// Generate the bytecode
-		parser.Eval();
+		parser = {};
+		return;
 	}
-	catch( const mu::Parser::exception_type& e )
-	{
-		if( expression.size() )
-		{
+	CcpParser::Variable s_variables[] = {
+		{ "value", 0, offsetof( Tr2ScalarExprKey, m_time ) },
+		{ "time", 0, offsetof( Tr2ScalarExprKey, m_time ) },
+		{ "input1", 0, offsetof( Tr2ScalarExprKey, m_inputVar1 ) },
+		{ "input2", 0, offsetof( Tr2ScalarExprKey, m_inputVar2 ) },
+		{ "input3", 0, offsetof( Tr2ScalarExprKey, m_inputVar3 ) },
+		{ "input4", 0, offsetof( Tr2ScalarExprKey, m_inputVar4 ) },
+		{ "randomConstant", 0, offsetof( Tr2ScalarExprKey, m_randomConstant ) },
+		{ "leftTangent", 0, offsetof( Tr2ScalarExprKey, m_leftTangent ) },
+		{ "rightTangent", 0, offsetof( Tr2ScalarExprKey, m_rightTangent ) },
+		{ "prevKeyTime", 0, offsetof( Tr2ScalarExprKey, m_prevKeyTime ) },
+		{ "prevKeyValue", 0, offsetof( Tr2ScalarExprKey, m_prevKeyValue ) },
+	};
 
-			CCP_LOGERR( "Tr2ScalarExprKey expression: %s", e.GetMsg().c_str() );
-		}
+	CcpParser::FunctionView functionView[] = { s_functions };
+	CcpParser::ConstantView constantView[] = { s_constants };
+	CcpParser::VariableView variableView[] = { s_variables };
+
+	CcpParser::Externals externals;
+	externals.functions = functionView;
+	externals.variables = variableView;
+	externals.constants = constantView;
+	auto result = CcpParser::Parse( expression.c_str(), externals, parser );
+	if( !result )
+	{
+		CCP_LOGERR( "Tr2ScalarExprKey expression: %s", ToString( result, expression.c_str() ).c_str() );
+		return;
+	}
+	size_t arenaSize = 0;
+	arenaSize = std::max( arenaSize, m_timeParser.GetTempArenaSize() );
+	arenaSize = std::max( arenaSize, m_valueParser.GetTempArenaSize() );
+	arenaSize = std::max( arenaSize, m_leftTangentParser.GetTempArenaSize() );
+	arenaSize = std::max( arenaSize, m_rightTangentParser.GetTempArenaSize() );
+	if( m_tempArena.size() < arenaSize )
+	{
+		m_tempArena.resize( arenaSize );
 	}
 }
 
@@ -221,21 +231,22 @@ void Tr2ScalarExprKey::UpdateValues( Tr2ScalarExprKey* previousKey )
 		m_prevKeyTime = 0.0f;
 		m_prevKeyValue = 0.0f;
 	}
-	if( !m_timeExpression.empty() )
+	void* buffers[] = { this };
+	if( !m_timeExpression.empty() && m_timeParser )
 	{
-		m_time = m_timeParser.Eval();
+		m_time = m_timeParser.Eval( buffers, m_tempArena.data() );
 	}
-	if( !m_valueExpression.empty() )
+	if( !m_valueExpression.empty() && m_valueParser )
 	{
-		m_value = m_valueParser.Eval();
+		m_value = m_valueParser.Eval( buffers, m_tempArena.data() );
 	}
-	if( !m_leftTangentExpression.empty() )
+	if( !m_leftTangentExpression.empty() && m_leftTangentParser )
 	{
-		m_leftTangent = m_leftTangentParser.Eval();
+		m_leftTangent = m_leftTangentParser.Eval( buffers, m_tempArena.data() );
 	}
-	if( !m_rightTangentExpression.empty() )
+	if( !m_rightTangentExpression.empty() && m_rightTangentParser )
 	{
-		m_rightTangent = m_rightTangentParser.Eval();
+		m_rightTangent = m_rightTangentParser.Eval( buffers, m_tempArena.data() );
 	}
 }
 

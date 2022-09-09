@@ -32,17 +32,14 @@ TRI_REGISTER_SETTING( "controllerServerTime", g_controllerServerTime );
 
 namespace
 {
-	const Tr2StateMachine* s_stateMachine = nullptr;
-	IRoot* s_owner = nullptr;
-
-	float StateTime()
+	float StateTime( const Tr2StateMachine* stateMachine )
 	{
-		return s_stateMachine ? s_stateMachine->GetStateRunTime() : 0;
+		return stateMachine ? stateMachine->GetStateRunTime() : 0;
 	}
 
-	float CurveSetTime( const char* name )
+	float CurveSetTime( IRoot* owner, const char* name )
 	{
-		ITr2CurveSetOwnerPtr csOwner = BlueCastPtr( s_owner );
+		ITr2CurveSetOwnerPtr csOwner = BlueCastPtr( owner );
 		if( !csOwner )
 		{
 			return 0;
@@ -60,9 +57,9 @@ namespace
 		}
 	}
 
-	float GetExternalControllerVariable( const char* name, float defaultVal )
+	float GetExternalControllerVariable( IRoot* ctx, const char* name, float defaultVal )
 	{
-		ITr2ControllerOwnerPtr owner = BlueCastPtr( s_owner );
+		ITr2ControllerOwnerPtr owner = BlueCastPtr( ctx );
 		if( !owner )
 		{
 			return defaultVal;
@@ -77,9 +74,9 @@ namespace
 		return defaultVal;
 	}
 
-	float AnimationTime( const char* name )
+	float AnimationTime( IRoot* ctx, const char* name )
 	{
-		EveSpaceObject2Ptr spaceObject = BlueCastPtr( s_owner );
+		EveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx );
 		if( !spaceObject )
 		{
 			return 0;
@@ -112,9 +109,9 @@ namespace
 		return fmod( number, mod );
 	}
 
-	float IsAnimationPlaying( const char* layerName )
+	float IsAnimationPlaying( IRoot* ctx, const char* layerName )
 	{
-		EveSpaceObject2Ptr spaceObject = BlueCastPtr( s_owner );
+		EveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx );
 		if( !spaceObject )
 		{
 			return 0;
@@ -133,37 +130,37 @@ namespace
 		return remaining > 0;
 	}
 
-	float KillCount()
+	float KillCount( IRoot* ctx )
 	{
-		if( EveShip2Ptr ship = BlueCastPtr( s_owner ) )
+		if( EveShip2Ptr ship = BlueCastPtr( ctx ) )
 		{
 			return ship->GetKillCounterValue();
 		}
 		return 0.0f;
 	}
 
-	float BoundingSphereRadius()
+	float BoundingSphereRadius( IRoot* ctx )
 	{
-		if( EveSpaceObject2Ptr spaceObject = BlueCastPtr( s_owner ) )
+		if( EveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx ) )
 		{
 			return spaceObject->GetRadius();
 		}
 		return 0.0f;
 	}
 
-	float ShipSpeed()
+	float ShipSpeed( IRoot* ctx )
 	{
 		if( g_controllerFunctionOverrideEnabled )
 		{
 			return g_controllerShipSpeed;
 		}
-		if( IEveSpaceObject2Ptr spaceObject = BlueCastPtr( s_owner ) )
+		if( IEveSpaceObject2Ptr spaceObject = BlueCastPtr( ctx ) )
 		{
 			Vector3 velocity;
 			spaceObject->GetWorldVelocity( velocity );
 			return Length( velocity );
 		}
-		else if( EveChildContainerPtr child = BlueCastPtr( s_owner ) )
+		else if( EveChildContainerPtr child = BlueCastPtr( ctx ) )
 		{
 			Vector3 velocity;
 			child->GetWorldVelocity( velocity );
@@ -172,23 +169,23 @@ namespace
 		return 0;
 	}
 
-	float ShipMaxSpeed()
+	float ShipMaxSpeed( IRoot* ctx )
 	{
 		if( g_controllerFunctionOverrideEnabled )
 		{
 			return g_controllerShipMaxSpeed;
 		}
-		if( EveShip2Ptr ship = BlueCastPtr( s_owner ) )
+		if( EveShip2Ptr ship = BlueCastPtr( ctx ) )
 		{
 			auto speed = ship->GetMaxSpeed();
 			return speed > 0 ? speed : 1;
 		}
-		else if( EveChildContainerPtr child = BlueCastPtr( s_owner ) )
+		else if( EveChildContainerPtr child = BlueCastPtr( ctx ) )
 		{
 			auto speed = child->GetOwnerMaxSpeed();
 			return speed > 0 ? speed : 1;
 		}
-		else if( EveChildInstanceContainerPtr child = BlueCastPtr( s_owner ) )
+		else if( EveChildInstanceContainerPtr child = BlueCastPtr( ctx ) )
 		{
 			auto speed = child->GetOwnerMaxSpeed();
 			return speed > 0 ? speed : 1;
@@ -196,9 +193,9 @@ namespace
 		return 1;
 	}
 
-	float BoosterIntensity()
+	float BoosterIntensity( void* ctx )
 	{
-		if( EveShip2Ptr ship = BlueCastPtr( s_owner ) )
+		if( EveShip2Ptr ship = BlueCastPtr( static_cast<IRoot*>( ctx ) ) )
 		{
 			auto intensity = ship->GetBoosterIntensity();
 			return intensity > 0 ? intensity: 0;
@@ -427,12 +424,72 @@ namespace
 		if ( ret != -1 ) return ret;
 		return 1;
 	}
+
+	CcpParser::Function s_functions[] = {
+		CcpParser::Function( "StateTime", StateTime, Tr2ControllerExpression::STATE_MACHINE_BUFFER_INDEX, 0 ),
+		CcpParser::Function( "AnimationTime", AnimationTime, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+		CcpParser::Function( "IsAnimationPlaying", IsAnimationPlaying, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+		CcpParser::Function( "CurveSetTime", CurveSetTime, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+		CcpParser::Function( "GetExternalControllerVariable", GetExternalControllerVariable, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+		CcpParser::Function( "ShipSpeed", ShipSpeed, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+		CcpParser::Function( "ShipMaxSpeed", ShipMaxSpeed, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+		CcpParser::Function( "Random", Random ),
+		CcpParser::Function( "ShipBoosterIntensity", BoosterIntensity, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+		CcpParser::Function( "KillCount", KillCount, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+		CcpParser::Function( "BoundingSphereRadius", BoundingSphereRadius, Tr2ControllerExpression::OWNER_BUFFER_INDEX, 0 ),
+
+		CcpParser::Function( "IsWeekend", IsWeekend ),
+		CcpParser::Function( "ServerYear", GetServerYear ),
+		CcpParser::Function( "ServerMonth", GetServerMonth ),
+		CcpParser::Function( "ServerDay", GetServerDay ),
+		CcpParser::Function( "ServerDayOfWeek", GetServerDayOfWeek ),
+		CcpParser::Function( "ServerHour", GetServerHour ),
+		CcpParser::Function( "ServerMinute", GetServerMinute ),
+		CcpParser::Function( "ServerSecond", GetServerSecond ),
+		CcpParser::Function( "ServerTimePhase", TimePhase ),
+		CcpParser::Function( "ServerTimeGreaterThan", ServerTimeGreaterThan ),
+		CcpParser::Function( "ServerTimeLessThanOrEqual", ServerTimeLessThanOrEqual ),
+	};
+
+
+	struct ParserObserver: public CcpParser::Observer
+	{
+		CcpParser::VariableView m_variables = {};
+		uint64_t m_mask = 0;
+		bool m_maskOverflow = false;
+		bool m_hasNonPureFunctions = false;
+
+		void OnVariable( const CcpParser::Variable* variable ) override
+		{
+			auto offset = variable - m_variables.data;
+			if( offset >= 0 && offset < ptrdiff_t( m_variables.count ) )
+			{
+				if( offset >= 64 )
+				{
+					m_maskOverflow = true;
+				}
+				else
+				{
+					m_mask |= 1ull << offset;
+				}
+			}
+		}
+		
+		void OnFunction( const CcpParser::Function* func ) override
+		{
+			if( !HasFlag( func->flags, CcpParser::FunctionFlags::PURE_FUNC ) )
+			{
+				m_hasNonPureFunctions = true;
+			}
+		}
+	};
 }
 
 
 Tr2ControllerExpression::Tr2ControllerExpression()
 	:m_stateMachine( nullptr ),
-	m_controller( nullptr )
+	m_controller( nullptr ),
+	m_variableMask( 0 )
 {
 }
 
@@ -441,111 +498,56 @@ std::string Tr2ControllerExpression::SetExpr( const char* expression, const Tr2S
 	Clear();
 	m_stateMachine = &stateMachine;
 	m_controller = stateMachine.GetController();
-	return CreateParser( expression, nullptr );
+	return CreateParser( expression, {} );
 }
 
-std::string Tr2ControllerExpression::SetExpr( const char* expression, const Tr2Controller& controller, ModifyParser modifyParser )
+std::string Tr2ControllerExpression::SetExpr( const char* expression, const Tr2Controller& controller, const CcpParser::FunctionView& extraFunctions )
 {
 	Clear();
 	m_stateMachine = nullptr;
 	m_controller = &controller;
-	return CreateParser( expression, modifyParser );
+	return CreateParser( expression, extraFunctions );
 }
 
-std::string Tr2ControllerExpression::CreateParser( const char* expression, ModifyParser modifyParser )
+std::string Tr2ControllerExpression::CreateParser( const char* expression, const CcpParser::FunctionView& extraFunctions )
 {
-	m_expressionParser.EnableOptimizer( false );
-	auto& variables = m_controller->GetVariables();
-	for( auto it = begin( variables ); it != end( variables ); ++it )
+	CcpParser::Externals externals;
+	CcpParser::VariableView varViews[] = { m_controller->GetVariableView() };
+	externals.variables = varViews;
+	CcpParser::FunctionView funcViews[2] = { s_functions, extraFunctions };
+	externals.functions = { funcViews, 2 };
+	ParserObserver observer;
+	observer.m_variables = varViews[0];
+	auto parsed = CcpParser::Parse( expression, externals, m_program, &observer );
+	if( parsed )
 	{
-		if( !IsValidVariableName( ( *it )->GetName().c_str() ) )
-		{
-			continue;
-		}
-		m_expressionParser.DefineVar( ( *it )->GetName(), ( *it )->GetPointerForParser() );
+		m_controller->EnsureTempArenaSize( m_program.GetTempArenaSize() );
+		m_variableMask = observer.m_maskOverflow || observer.m_hasNonPureFunctions ? 0ull : observer.m_mask;
+		return std::string();
 	}
-
-	m_expressionParser.DefineFun( "StateTime", StateTime, false );
-	m_expressionParser.DefineFun( "AnimationTime", AnimationTime, false );
-	m_expressionParser.DefineFun( "IsAnimationPlaying", IsAnimationPlaying, false );
-	m_expressionParser.DefineFun( "CurveSetTime", CurveSetTime, false );
-	m_expressionParser.DefineFun( "GetExternalControllerVariable", GetExternalControllerVariable, false );
-	m_expressionParser.DefineFun( "ShipSpeed", ShipSpeed, false );
-	m_expressionParser.DefineFun( "ShipMaxSpeed", ShipMaxSpeed, false );
-	m_expressionParser.DefineFun( "Random", Random, false );
-	m_expressionParser.DefineFun( "ShipBoosterIntensity", BoosterIntensity, false );
-	m_expressionParser.DefineFun( "KillCount", KillCount, false );
-	m_expressionParser.DefineFun( "BoundingSphereRadius", BoundingSphereRadius, false );
-
-
-	// % operator should have the same priority as / and * (6)
-	// see here https://beltoforion.de/en/muparser/features.php#idDef2
-	m_expressionParser.DefineOprt( "%", Mod, 6 );
-
-	m_expressionParser.DefineFun( "IsWeekend", IsWeekend, false );
-	m_expressionParser.DefineFun( "ServerYear", GetServerYear, false );
-	m_expressionParser.DefineFun( "ServerMonth", GetServerMonth, false );
-	m_expressionParser.DefineFun( "ServerDay", GetServerDay, false );
-	m_expressionParser.DefineFun( "ServerDayOfWeek", GetServerDayOfWeek, false );
-	m_expressionParser.DefineFun( "ServerHour", GetServerHour, false );
-	m_expressionParser.DefineFun( "ServerMinute", GetServerMinute, false );
-	m_expressionParser.DefineFun( "ServerSecond", GetServerSecond, false );
-	m_expressionParser.DefineFun( "ServerTimePhase", TimePhase, false );
-	m_expressionParser.DefineFun( "ServerTimeGreaterThan", ServerTimeGreaterThan, false );
-	m_expressionParser.DefineFun( "ServerTimeLessThanOrEqual", ServerTimeLessThanOrEqual, false );
-
-
-	if( modifyParser )
+	else
 	{
-		( *modifyParser )( m_expressionParser );
+		return ToString( parsed, expression );
 	}
-
-	try
-	{
-		m_expressionParser.SetExpr( expression );
-		s_stateMachine = m_stateMachine;
-		s_owner = m_controller->GetOwner();
-		m_expressionParser.Eval();
-	}
-	catch( const mu::Parser::exception_type& e )
-	{
-		s_stateMachine = nullptr;
-		s_owner = nullptr;
-		return e.GetMsg();
-	}
-	s_stateMachine = nullptr;
-	s_owner = nullptr;
-	return std::string();
 }
 
-std::pair<bool, float> Tr2ControllerExpression::Eval() const
+std::pair<bool, float> Tr2ControllerExpression::Eval( void* extraBuffer ) const
 {
-	if( !m_controller )
+	if( !m_controller || !m_program )
 	{
 		return std::make_pair( false, 0.f );
 	}
-	s_stateMachine = m_stateMachine;
-	s_owner = m_controller->GetOwner();
-	bool success = true;
-	float result = 0.f;
-	try
-	{
-		result = m_expressionParser.Eval();
-	}
-	catch( const mu::Parser::exception_type& )
-	{
-		success = false;
-	}
-	s_stateMachine = nullptr;
-	s_owner = nullptr;
-	return std::make_pair( success, result );
+	auto owner = m_controller->GetOwner();
+	void* externals[] = { m_controller->GetVariableBuffer(), &owner, (void*)&m_stateMachine, extraBuffer };
+	float result = m_program.Eval( externals, m_controller->GetTempArena() );
+	return std::make_pair( true, result );
 }
 
 void Tr2ControllerExpression::Clear()
 {
 	if( m_controller )
 	{
-		m_expressionParser = mu::Parser();
+		m_program = std::move( CcpParser::Program() );
 	}
 	m_stateMachine = nullptr;
 	m_controller = nullptr;
@@ -553,15 +555,12 @@ void Tr2ControllerExpression::Clear()
 
 bool Tr2ControllerExpression::IsExpressionValid() const
 {
-	try
-	{
-		m_expressionParser.Eval();
-	}
-	catch( const mu::Parser::exception_type& )
-	{
-		return false;
-	}
-	return true;
+	return m_program;
+}
+
+uint64_t Tr2ControllerExpression::GetVariableMask() const
+{
+	return m_variableMask;
 }
 
 void Tr2ControllerExpression::GetExpressionTermInfo( std::vector<Tr2ExpressionTermInfoPtr>& info ) const

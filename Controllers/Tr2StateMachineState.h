@@ -31,7 +31,7 @@ public:
 
 	void Start();
 	void Stop();
-	Tr2StateMachineState* Update();
+	Tr2StateMachineState* Update( uint64_t variableDirtyMask );
 
 	void RebaseSimTime( Be::Time diff );
 
@@ -47,6 +47,7 @@ private:
 	ITr2StateMachineStateFinalizerPtr m_finalizer;
 
 	const Tr2StateMachine* m_stateMachine;
+	uint64_t m_transitionVariableMask;
 	bool m_isActive;
 	bool m_isFinalizing;
 };

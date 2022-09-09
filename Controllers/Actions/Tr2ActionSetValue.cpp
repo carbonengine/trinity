@@ -111,9 +111,7 @@ std::vector<Tr2ExpressionTermInfoPtr> Tr2ActionSetValue::GetExpressionTermInfo()
 
 void Tr2ActionSetValue::LinkDestination( const Tr2Controller& controller )
 {
-	std::unordered_map<std::string, IRoot*> roots;
-	controller.GetBindingPathRoots( roots );
-	m_destination.Link( roots );
+	m_destination.Link( controller.GetBindingPathRoots() );
 }
 
 bool Tr2ActionSetValue::HasDelayedBinding() const

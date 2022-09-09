@@ -14,18 +14,15 @@
 
 namespace
 {
-	float s_stateTime = 0;
-
-	float StateTime()
+	float StateTime( float* stateTime )
 	{
-		return s_stateTime;
+		return *stateTime;
 	}
 
-	void ModifyParser( mu::Parser& parser )
-	{
-		parser.DefineFun( "StateTime", StateTime );
+	CcpParser::Function s_extraFunctions[] = {
+		CcpParser::Function( "StateTime", StateTime, Tr2ControllerExpression::EXTRA_BUFFER_INDEX, 0 ),
+	};
 	}
-}
 
 
 Tr2ActionAnimateCurveSet::Tr2ActionAnimateCurveSet( IRoot* )
@@ -39,9 +36,7 @@ Tr2ActionAnimateCurveSet::Tr2ActionAnimateCurveSet( IRoot* )
 void Tr2ActionAnimateCurveSet::Link( Tr2Controller& controller )
 {
 	m_controller = &controller;
-	std::unordered_map<std::string, IRoot*> roots;
-	controller.GetBindingPathRoots( roots );
-	m_evaluator.SetExpr( m_value.c_str(), controller, ModifyParser );
+	m_evaluator.SetExpr( m_value.c_str(), controller, s_extraFunctions );
 }
 
 void Tr2ActionAnimateCurveSet::Unlink()
@@ -78,8 +73,8 @@ void Tr2ActionAnimateCurveSet::Update( Be::Time realTime, Be::Time simTime )
 	{
 		return;
 	}
-	s_stateTime = TimeAsFloat( simTime - m_startTime );
-	auto value = m_evaluator.Eval();
+	float stateTime = TimeAsFloat( simTime - m_startTime );
+	auto value = m_evaluator.Eval( &stateTime );
 	if( value.first )
 	{
 		m_curveSet->ApplyTime( value.second );
@@ -94,7 +89,7 @@ bool Tr2ActionAnimateCurveSet::OnModified( Be::Var* value )
 	}
 	if( IsMatch( value, m_value ) )
 	{
-		m_evaluator.SetExpr( m_value.c_str(), *m_controller, ModifyParser );
+		m_evaluator.SetExpr( m_value.c_str(), *m_controller, s_extraFunctions );
 	}
 	return true;
 }
@@ -132,13 +127,13 @@ BlueStdResult Tr2ActionAnimateCurveSet::EvaluateExpression( const char* expressi
 		return BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "controller needs to be running when evaluating expressions" );
 	}
 	Tr2ControllerExpression expr;
-	auto error = expr.SetExpr( expression, *m_controller, ModifyParser );
+	auto error = expr.SetExpr( expression, *m_controller, s_extraFunctions );
 	if( !error.empty() )
 	{
 		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, error.c_str() );
 	}
-	s_stateTime = TimeAsFloat( m_lastSimTime - m_startTime );
-	auto result = expr.Eval();
+	float stateTime = TimeAsFloat( m_lastSimTime - m_startTime );
+	auto result = expr.Eval( &stateTime );
 	if( !result.first )
 	{
 		return BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "error evaluating expression" );

@@ -121,9 +121,7 @@ void Tr2ActionPlayMeshAnimation::LinkDestination( const Tr2Controller& controlle
 		m_destination.Unlink();
 		return;
 	}
-	std::unordered_map<std::string, IRoot*> roots;
-	controller.GetBindingPathRoots( roots );
-	m_destination.Link( roots );
+	m_destination.Link( controller.GetBindingPathRoots() );
 }
 
 bool Tr2ActionPlayMeshAnimation::HasDelayedBinding() const

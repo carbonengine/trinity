@@ -440,10 +440,6 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 		}
 	}
 
-	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
-	{
-		( *it )->Update();
-	}
 }
 
 void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
@@ -451,6 +447,11 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 	if( !m_update )
 	{
 		return;
+	}
+
+	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
+	{
+		( *it )->Update();
 	}
 
 	Be::Time time = updateContext.GetTime();

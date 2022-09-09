@@ -16,6 +16,7 @@ const Be::ClassInfo* EveSOF::ExposeToBlue()
         MAP_INTERFACE( EveSOF )
 
 		MAP_ATTRIBUTE( "dataMgr", m_dataMgr, "Holds all the source data to the ships", Be::READ )
+		MAP_ATTRIBUTE( "allowFileCaching", m_allowFileCaching, "Allow caching of \"file exists\" queries in SOF for better performance", Be::READWRITE )
 
 		MAP_METHOD_AND_WRAP( 
 			"Build", 

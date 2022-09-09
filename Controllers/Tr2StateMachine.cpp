@@ -110,36 +110,44 @@ void Tr2StateMachine::Unlink()
 	}
 }
 
-void Tr2StateMachine::FollowTransitions()
+void Tr2StateMachine::FollowTransitions( uint64_t variableDirtyMask )
 {
-	auto next = m_currentState->Update();
+	auto next = m_currentState->Update( variableDirtyMask );
 	if( !next )
 	{
 		return;
 	}
 
-	std::unordered_map<Tr2StateMachineState*, uint32_t> seen;
-	seen.insert( std::make_pair( m_currentState, 1u ) );
+	std::vector<std::pair<Tr2StateMachineState*, uint32_t>> seen;
 
-	while( next )
+	for( uint32_t iteration = 0; next; ++iteration )
 	{
-		auto count = 1u;
-		auto found = seen.find( next );
-		if( found != seen.end() )
+		if( iteration > 10 )
 		{
-			count = found->second + 1;
-			if( count > 20 )
+			seen.push_back( std::make_pair( m_currentState, 1u ) );
+
+			auto found = std::find_if( begin( seen ), end( seen ), [next]( const auto& x ) {
+				return x.first == next;
+			} );
+			if( found != seen.end() )
 			{
-				CCP_LOGERR( "Tr2StateMachine: infinite loop in state machine %s detected", m_name.c_str() );
-				return;
+				++found->second;
+				if( found->second > 20 )
+				{
+					CCP_LOGERR( "Tr2StateMachine: infinite loop in state machine %s detected", m_name.c_str() );
+					return;
+				}
+			}
+			else
+			{
+				seen.push_back( { next, 1u } );
 			}
 		}
-		seen.insert_or_assign( next, count );
 		m_currentState = next;
 		m_currentState->Start();
 		m_stateStartTime = BeOS->GetCurrentFrameTime();
 
-		next = m_currentState->Update();
+		next = m_currentState->Update( 0xffffffffffffffffull );
 	}
 }
 
@@ -157,7 +165,7 @@ void Tr2StateMachine::Start()
 		return;
 	}
 	m_currentState->Start();
-	FollowTransitions();
+	FollowTransitions( 0xffffffffffffffffull );
 }
 
 void Tr2StateMachine::Stop()
@@ -171,11 +179,11 @@ void Tr2StateMachine::Stop()
 	m_stateStartTime = 0;
 }
 
-void Tr2StateMachine::Update()
+void Tr2StateMachine::Update( uint64_t variableDirtyMask )
 {
 	if( m_currentState )
 	{
-		FollowTransitions();
+		FollowTransitions( variableDirtyMask );
 	}
 }
 

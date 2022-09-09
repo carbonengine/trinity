@@ -130,7 +130,7 @@ public:
 	void SetScaling( const Vector3& sc );
 	int GetBoneIndex() const;
 	void SetBoneIndex( int idx );
-	void SetIndices( std::vector<std::vector<uint32_t>> indices );
+	void SetIndices( const std::vector<std::vector<uint32_t>>& indices );
 	void SetMinScreenSize( float minScreenSize );
 
 	// edit helper

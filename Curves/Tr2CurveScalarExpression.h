@@ -8,7 +8,7 @@
 
 #include "Include/ITriFunction.h"
 #include "Include/ITriCurveLength.h"
-#include <muParser.h>
+#include "ccpparser.h"
 
 BLUE_DECLARE_IVECTOR( ITriScalarFunction );
 BLUE_DECLARE( Tr2ExpressionTermInfo );
@@ -42,12 +42,11 @@ public:
 	std::vector<Tr2ExpressionTermInfoPtr> GetExpressionTermInfo() const;
 	BlueStdResult EvaluateExpression( const char* expression, float& value ) const;
 private:
-	void SetupParser( mu::Parser& parser );
-
 	std::string m_name;
 	std::string m_expression;
 
-	mu::Parser m_expressionParser;
+	CcpParser::Program m_program;
+	std::unique_ptr<uint8_t[]> m_tempArena;
 
 	PITriScalarFunctionVector m_inputs;
 

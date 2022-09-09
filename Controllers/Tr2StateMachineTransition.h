@@ -25,8 +25,9 @@ public:
 	void Link( const Tr2StateMachineState& state );
 	void Unlink();
 
-	bool CanActivate() const;
+	bool CanActivate( uint64_t variableDirtyMask ) const;
 	Tr2StateMachineState* GetDestination() const;
+	uint64_t GetVariableMask() const;
 
 	IRoot* GetSource() const;
 

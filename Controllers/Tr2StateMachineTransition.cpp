@@ -69,9 +69,14 @@ void Tr2StateMachineTransition::UpdateDestination()
 	}
 }
 
-bool Tr2StateMachineTransition::CanActivate() const
+bool Tr2StateMachineTransition::CanActivate( uint64_t variableDirtyMask ) const
 {
 	if( !m_source )
+	{
+		return false;
+	}
+	auto variableMask = m_evaluator.GetVariableMask();
+	if( variableMask != 0 && ( ( variableMask & variableDirtyMask ) == 0 ) )
 	{
 		return false;
 	}
@@ -81,6 +86,11 @@ bool Tr2StateMachineTransition::CanActivate() const
 		return false;
 	}
 	return result.second != 0;
+}
+
+uint64_t Tr2StateMachineTransition::GetVariableMask() const
+{
+	return m_evaluator.GetVariableMask();
 }
 
 IRoot* Tr2StateMachineTransition::GetSource() const

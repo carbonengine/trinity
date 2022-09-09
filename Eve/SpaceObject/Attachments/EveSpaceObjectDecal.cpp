@@ -672,7 +672,7 @@ void EveSpaceObjectDecal::CreateDecalIndexBuffers( TriGeometryResPtr geomRes )
 	m_rebuildIndexBuffers = false;
 }
 
-void EveSpaceObjectDecal::SetIndices( std::vector<std::vector<uint32_t>> indices )
+void EveSpaceObjectDecal::SetIndices( const std::vector<std::vector<uint32_t>>& indices )
 {
 	m_rebuildIndexBuffers = true;
 	m_indexBuffers.clear();

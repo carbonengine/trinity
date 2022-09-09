@@ -12,21 +12,19 @@
 // Description:
 //   Initialize data members and do all initial analyzing
 // --------------------------------------------------------------------------------
-EveSOFUtilsParameterName::EveSOFUtilsParameterName( const std::vector<std::string>& prefixes, const char* parameterName ) : m_fullname( parameterName ), m_shortname( parameterName ), m_materialIdx( -1 )
+EveSOFUtilsParameterName::EveSOFUtilsParameterName( const std::vector<std::string>& prefixes, const char* parameterName ) : m_fullname( parameterName ), m_materialIdx( -1 )
 {
 	// try to find the material prefix and with that indentify the index
 	for( size_t i = 0; i < prefixes.size(); ++i )
 	{
-		if( StringStartsWithI( m_shortname.c_str(), prefixes[i].c_str() ) )
+		if( StringStartsWithI( m_fullname.c_str(), prefixes[i].c_str() ) )
 		{
-			if(i < prefixes.size() )
-			{
-				m_materialIdx = int32_t(i);
-				StringRemove( m_shortname, prefixes[i].c_str() );
-				return;
-			}
+			m_materialIdx = int32_t(i);
+			m_shortname = parameterName + prefixes[i].length();
+			return;
 		}
 	}
+	m_shortname = m_fullname;
 }
 
 // --------------------------------------------------------------------------------

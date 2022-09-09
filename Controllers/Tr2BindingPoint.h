@@ -12,7 +12,7 @@ class Tr2BindingPoint
 public:
 	Tr2BindingPoint();
 
-	void Link( const std::unordered_map<std::string, IRoot*>& roots );
+	void Link( const std::vector<std::pair<std::string, IRoot*>>& roots );
 	void Unlink();
 
 	bool IsValid() const;

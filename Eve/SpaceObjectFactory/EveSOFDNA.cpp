@@ -644,19 +644,19 @@ const Vector3* EveSOFDNA::GetHullNextSubsystemOffset( size_t n ) const
 }
 
 // --------------------------------------------------------------------------------
-bool EveSOFDNA::GetHullTextureWithMeshIndex( std::string& resPath, const BlueSharedString& textureName, int32_t meshIndex, size_t n ) const
+bool EveSOFDNA::GetHullTextureWithMeshIndex( std::string& resPath, const BlueSharedString& textureName, int32_t meshIndex, size_t n, std::unordered_map<std::string, bool>* existingFilesCache ) const
 {
 	// find the textures with the meshindex lookup map
 	auto hullFinder = m_hullDatas[n]->meshIndexToOpaqueAreaLookup.find( meshIndex );
 	if( hullFinder != m_hullDatas[n]->meshIndexToOpaqueAreaLookup.end() )
 	{
-		auto textures = m_hullDatas[n]->opaqueAreas[hullFinder->second].textures;
+		auto& textures = m_hullDatas[n]->opaqueAreas[hullFinder->second].textures;
 		// find the right texture with it's name
 		auto texFinder = textures.find( textureName );
 		if( texFinder != textures.end() )
 		{
 			resPath = texFinder->second.resFilePath;
-			ModifyTextureResPath( resPath );
+			ModifyTextureResPath( resPath, existingFilesCache );
 			return true;
 		}
 	}
@@ -769,7 +769,7 @@ const std::vector<EveSOFDataMgr::HullLightSetData>& EveSOFDNA::GetHullLightSets(
 // Description:
 //   Changes the provided texture resource path, maybe modified depending on dna
 // --------------------------------------------------------------------------------
-void EveSOFDNA::ModifyTextureResPath( std::string& resPath ) const
+void EveSOFDNA::ModifyTextureResPath( std::string& resPath, std::unordered_map<std::string, bool>* existingFilesCache ) const
 {
 	// try finding the insert string...
 	const char* pathInsert = nullptr;
@@ -813,9 +813,32 @@ void EveSOFDNA::ModifyTextureResPath( std::string& resPath ) const
 
 		// insert part into filename
 		std::string insertStr = "_" + std::string( pathInsert );
-		if( StringInsertStubBefore( resPathCopy, "_", insertStr.c_str() ) && FileExists( resPathCopy ) )
+		if( StringInsertStubBefore( resPathCopy, "_", insertStr.c_str() ) )
 		{
-			resPath = resPathCopy;
+			if( existingFilesCache )
+			{
+				auto found = existingFilesCache->find( resPathCopy );
+				if( found != end( *existingFilesCache ) )
+				{
+					if( found->second )
+					{
+						resPath = resPathCopy;
+					}
+				}
+				else
+				{
+					auto exists = FileExists( resPathCopy );
+					(*existingFilesCache)[resPathCopy] = exists;
+					if( exists )
+					{
+						resPath = resPathCopy;
+					}
+				}
+			}
+			else if( FileExists( resPathCopy ) )
+			{
+				resPath = resPathCopy;
+			}
 		}
 	}
 }

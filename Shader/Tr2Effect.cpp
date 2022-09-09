@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 
-#include <muParser.h>
+#include "ccpparser.h"
 
 #include "Tr2Effect.h"
 #include "Tr2Shader.h"
@@ -1176,56 +1176,59 @@ namespace
 struct VariableFactoryArguments
 {
 	const Tr2ConstantEffectParameterStructureList* constParams;
-	bool hasInvalidVariables;
+	bool hasInvalidVariable;
+	std::vector<std::unique_ptr<CcpParser::Variable>> variables;
 };
 
-float s_invalidVariable = 0;
-
-float* GetParserVariable( const char* name, void* ctx )
+const CcpParser::Variable* GetParserVariable( void* ctx, const CcpParser::StringView& name )
 {
 	auto arguments = static_cast<VariableFactoryArguments*>( ctx );
 	for( auto& param : *arguments->constParams )
 	{
 		auto len = strlen( param.name.c_str() );
-		if( strncmp( param.name.c_str(), name, len ) == 0 )
+		auto nlen = name.end - name.begin;
+		if( ( nlen == len || nlen == len + 2 ) && strncmp( param.name.c_str(), name.begin, len ) == 0 )
 		{
 			size_t swizzle = 0;
-			if( name[len] == '_' )
+			if( nlen == len + 2 && name.begin[len] == '_' )
 			{
-				if( name[len + 1] != 0 && name[len + 2] == 0 )
+				switch( name.begin[len + 1] )
 				{
-					switch( name[len + 1] )
-					{
-					case 'x':
-					case 'r':
-						swizzle = 0;
-						break;
-					case 'y':
-					case 'g':
-						swizzle = 1;
-						break;
-					case 'z':
-					case 'b':
-						swizzle = 2;
-						break;
-					case 'w':
-					case 'a':
-						swizzle = 3;
-						break;
-					default:
-						continue;
-					}
+				case 'x':
+				case 'r':
+					swizzle = 0;
+					break;
+				case 'y':
+				case 'g':
+					swizzle = 1;
+					break;
+				case 'z':
+				case 'b':
+					swizzle = 2;
+					break;
+				case 'w':
+				case 'a':
+					swizzle = 3;
+					break;
+				default:
+					continue;
 				}
 			}
-			else if( name[len] != 0 )
+			else if( nlen != len )
 			{
 				continue;
 			}
-			return const_cast<float*>( ( &param.value.x ) + swizzle );
+			std::unique_ptr<CcpParser::Variable> var( new CcpParser::Variable() );
+			var->name = param.name.c_str();
+			var->buffer = 0;
+			var->offset = uint32_t( reinterpret_cast<const uint8_t*>( &param.value ) - reinterpret_cast<const uint8_t*>( &( *arguments->constParams )[0] ) );
+			auto result = var.get();
+			arguments->variables.push_back( std::move( var ) );
+			return result;
 		}
 	}
-	arguments->hasInvalidVariables = true;
-	return &s_invalidVariable;
+	arguments->hasInvalidVariable = true;
+	return nullptr;
 }
 
 std::optional<float> GetUvScaleFromAnnotation( const char* paramName, const Tr2EffectParameterAnnotation& annotation, const Tr2ConstantEffectParameterStructureList& constParams )
@@ -1236,10 +1239,6 @@ std::optional<float> GetUvScaleFromAnnotation( const char* paramName, const Tr2E
 	}
 	else if( annotation.type == Tr2EffectParameterAnnotation::STRING )
 	{
-		VariableFactoryArguments factoryArgs = { &constParams, false };
-		mu::Parser parser;
-		parser.SetVarFactory( &GetParserVariable, &factoryArgs );
-
 		std::string expr( annotation.stringValue );
 		for( size_t i = 0; i < expr.length(); ++i )
 		{
@@ -1268,21 +1267,22 @@ std::optional<float> GetUvScaleFromAnnotation( const char* paramName, const Tr2E
 			}
 		}
 
-		try
+		VariableFactoryArguments factoryArgs = { &constParams, false };
+		CcpParser::Externals externals;
+		externals.variableFactory = { &GetParserVariable, &factoryArgs };
+		CcpParser::Program program;
+		auto parsed = CcpParser::Parse( expr.c_str(), externals, program );
+		if( !parsed )
 		{
-			parser.SetExpr( expr );
-			auto result = parser.Eval();
-			if( factoryArgs.hasInvalidVariables )
+			if( !factoryArgs.hasInvalidVariable )
 			{
-				return std::nullopt;
+				CCP_LOGWARN( "Invalid LodUvScale annotation for effect parameter \"%s\": %s", paramName, ToString( parsed, expr.c_str() ).c_str() );
 			}
-			return result;
-		}
-		catch( const mu::Parser::exception_type& e )
-		{
-			CCP_LOGWARN( "Invalid LodUvScale annotation for effect parameter \"%s\": %s", paramName, e.GetMsg().c_str() );
 			return std::nullopt;
 		}
+		void* buffers[] = { (void*)&constParams[0] };
+		std::unique_ptr<uint8_t[]> tempArena( new uint8_t[program.GetTempArenaSize()] );
+		return program.Eval( buffers, tempArena.get() );
 	}
 	return std::nullopt;
 }

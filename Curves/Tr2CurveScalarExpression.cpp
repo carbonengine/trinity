@@ -18,33 +18,30 @@ TRI_REGISTER_SETTING( "expressionCurveFakeRandom", g_expressionCurveFakeRandom )
 
 namespace
 {
-	CcpMutex s_mutex( "Tr2CurveScalarExpression", "s_mutex", 1000 );
-
-	std::vector<const Tr2CurveScalarExpression*> s_currentCurve;
 
 	// --------------------------------------------------------------------------------
-	float Fractal( float x, float alpha, float beta, float n )
+	float Fractal( const Tr2CurveScalarExpression* curve, float x, float alpha, float beta, float n )
 	{
-		return float( ( PerlinNoise1D( x + s_currentCurve.back()->GetRandomConstant(), alpha, beta, int( n + 0.5f ) ) + 1.0 ) / 2.0 );
+	return float( ( PerlinNoise1D( x + curve->GetRandomConstant(), alpha, beta, int( n + 0.5f ) ) + 1.0 ) / 2.0 );
 	}
 
 	// --------------------------------------------------------------------------------
-	float Noise( float x )
+	float Noise( const Tr2CurveScalarExpression* curve, float x )
 	{
-		return float( ( PerlinNoise1D( x + s_currentCurve.back()->GetRandomConstant(), 1.0, 1.0, 1 ) + 1.0 ) / 2.0 );
+		return float( ( PerlinNoise1D( x + curve->GetRandomConstant(), 1.0, 1.0, 1 ) + 1.0 ) / 2.0 );
 	}
 
 	// --------------------------------------------------------------------------------
-	float RandomConstant( float a, float b )
+	float RandomConstant( const Tr2CurveScalarExpression* curve, float a, float b )
 	{
-		return ( ( b - a ) * s_currentCurve.back()->GetRandomConstant() ) + a;
+		return ( ( b - a ) * curve->GetRandomConstant() ) + a;
 	}
 
-	float RandomHash( float a, float b, float x )
+	float RandomHash( const Tr2CurveScalarExpression* curve, float a, float b, float x )
 	{
 		std::seed_seq::result_type seeds[] = { 
 			*reinterpret_cast<std::seed_seq::result_type*>( &x ), 
-			std::seed_seq::result_type( reinterpret_cast<uint64_t>( s_currentCurve.back() ) ) 
+			std::seed_seq::result_type( reinterpret_cast<uint64_t>( curve ) ) 
 		};
 		std::seed_seq seq( std::begin( seeds ), std::end( seeds ) );
 		std::default_random_engine e1( seq );
@@ -63,16 +60,32 @@ namespace
 	}
 
 	// --------------------------------------------------------------------------------
-	float Input( float index )
+	float Input( const Tr2CurveScalarExpression* curve, float index )
 	{
-		return s_currentCurve.back()->GetInputValue( int32_t( index + 0.5f ) );
+		return curve->GetInputValue( int32_t( index + 0.5f ) );
 	}
 
 	// --------------------------------------------------------------------------------
-	float InputAt( float index, float time )
+	float InputAt( const Tr2CurveScalarExpression* curve, float index, float time )
 	{
-		return s_currentCurve.back()->GetInputValue( int32_t( index + 0.5f ), time );
+		return curve->GetInputValue( int32_t( index + 0.5f ), time );
 	}
+
+	CcpParser::Function s_functions[] = {
+		CcpParser::Function( "fractal", &Fractal, 1, 0 ),
+		CcpParser::Function( "noise", &Noise, 1, 0 ),
+		CcpParser::Function( "randomConstant", &RandomConstant, 1, 0 ),
+		CcpParser::Function( "randconst", &RandomConstant, 1, 0 ),
+		CcpParser::Function( "random", &Random ),
+		CcpParser::Function( "randhash", &RandomHash, 1, 0 ),
+		CcpParser::Function( "input", &Input, 1, 0 ),
+		CcpParser::Function( "inputAt", &InputAt, 1, 0 ),
+		CcpParser::Function( "clamp", &TriClamp, CcpParser::FunctionFlags::PURE_FUNC ),
+	};
+	CcpParser::Constant s_constants[] = {
+		{ "pi", 3.1415926f },
+		{ "pi2", 2.0f * 3.1415926f },
+	};
 }
 
 // --------------------------------------------------------------------------------
@@ -87,7 +100,6 @@ Tr2CurveScalarExpression::Tr2CurveScalarExpression( IRoot* lockobj )
 	m_input3( 0 ),
 	m_input4( 0 )
 {
-	SetupParser( m_expressionParser );
 }
 
 // --------------------------------------------------------------------------------
@@ -100,30 +112,6 @@ bool Tr2CurveScalarExpression::Initialize()
 		SetExpression( expression );
 	}
 	return true;
-}
-
-void Tr2CurveScalarExpression::SetupParser( mu::Parser& parser )
-{
-	parser.EnableOptimizer( false );
-	parser.DefineFun( "fractal", &Fractal, false );
-	parser.DefineFun( "noise", &Noise, false );
-	parser.DefineFun( "randomConstant", &RandomConstant, false );
-	parser.DefineFun( "randconst", &RandomConstant, false );
-	parser.DefineFun( "random", &Random, false );
-	parser.DefineFun( "randhash", &RandomHash, false );
-	parser.DefineFun( "input", &Input, false );
-	parser.DefineFun( "inputAt", &InputAt, false );
-	parser.DefineFun( "clamp", &TriClamp, false );
-
-	parser.DefineVar( "input1", &m_input1 );
-	parser.DefineVar( "input2", &m_input2 );
-	parser.DefineVar( "input3", &m_input3 );
-	parser.DefineVar( "input4", &m_input4 );
-
-	parser.DefineVar( "time", &m_time );
-
-	parser.DefineConst( "pi", 3.1415926f );
-	parser.DefineConst( "pi2", 2.0f * 3.1415926f );
 }
 
 // --------------------------------------------------------------------------------
@@ -171,20 +159,13 @@ float Tr2CurveScalarExpression::GetValue( double time ) const
 	}
 
 	m_time = float( time / m_timeScale );
-
-	CcpAutoMutex lock( s_mutex );
-	s_currentCurve.push_back( this );
-	float value;
-	try
+	if( m_program )
 	{
-		value = m_expressionParser.Eval();
+		auto self = this;
+		void* buffers[] = { (void*)this, (void*)&self };
+		return m_program.Eval( buffers, m_tempArena.get() );
 	}
-	catch( const mu::Parser::exception_type& )
-	{
-		value = 0;
-	}
-	s_currentCurve.pop_back();
-	return value;
+	return 0;
 }
 
 // --------------------------------------------------------------------------------
@@ -202,21 +183,29 @@ void Tr2CurveScalarExpression::SetExpression( const std::string& expression )
 		return;
 	}
 
-	CcpAutoMutex lock( s_mutex );
-	s_currentCurve.push_back( this );
+	CcpParser::Variable s_variables[] = {
+		{ "time", 0, offsetof( Tr2CurveScalarExpression, m_time ) },
+		{ "input1", 0, offsetof( Tr2CurveScalarExpression, m_input1 ) },
+		{ "input2", 0, offsetof( Tr2CurveScalarExpression, m_input2 ) },
+		{ "input3", 0, offsetof( Tr2CurveScalarExpression, m_input3 ) },
+		{ "input4", 0, offsetof( Tr2CurveScalarExpression, m_input4 ) },
+	};
 
-	try
+	CcpParser::FunctionView functionView[] = { s_functions };
+	CcpParser::ConstantView constantView[] = { s_constants };
+	CcpParser::VariableView variableView[] = { s_variables };
+
+	CcpParser::Externals externals;
+	externals.functions = functionView;
+	externals.variables = variableView;
+	externals.constants = constantView;
+	auto result = CcpParser::Parse( expression.c_str(), externals, m_program );
+	if( !result )
 	{
-		m_expressionParser.SetExpr( expression );
-		m_expressionParser.Eval();
-	}
-	catch( const mu::Parser::exception_type& e )
-	{
-		s_currentCurve.pop_back();
-		CCP_LOGERR( "Tr2CurveScalarExpression::SetExpression invalid expression \"%s\": %s", expression.c_str(), e.GetMsg().c_str() );
+		CCP_LOGERR( "Tr2CurveScalarExpression::SetExpression invalid expression \"%s\": %s", expression.c_str(), ToString( result, expression.c_str() ).c_str() );
 		return;
 	}
-	s_currentCurve.pop_back();
+	m_tempArena.reset( new uint8_t[m_program.GetTempArenaSize()] );
 	m_expression = expression;
 }
 
@@ -284,22 +273,31 @@ std::vector<Tr2ExpressionTermInfoPtr> Tr2CurveScalarExpression::GetExpressionTer
 
 BlueStdResult Tr2CurveScalarExpression::EvaluateExpression( const char* expression, float& value ) const
 {
-	mu::Parser parser;
-	const_cast<Tr2CurveScalarExpression*>( this )->SetupParser( parser );
+	CcpParser::Variable s_variables[] = {
+		{ "time", 0, offsetof( Tr2CurveScalarExpression, m_time ) },
+		{ "input1", 0, offsetof( Tr2CurveScalarExpression, m_input1 ) },
+		{ "input2", 0, offsetof( Tr2CurveScalarExpression, m_input2 ) },
+		{ "input3", 0, offsetof( Tr2CurveScalarExpression, m_input3 ) },
+		{ "input4", 0, offsetof( Tr2CurveScalarExpression, m_input4 ) },
+	};
 
-	CcpAutoMutex lock( s_mutex );
-	s_currentCurve.push_back( this );
+	CcpParser::FunctionView functionView[] = { s_functions };
+	CcpParser::ConstantView constantView[] = { s_constants };
+	CcpParser::VariableView variableView[] = { s_variables };
 
-	try
+	CcpParser::Externals externals;
+	externals.functions = functionView;
+	externals.variables = variableView;
+	externals.constants = constantView;
+	CcpParser::Program program;
+	auto result = CcpParser::Parse( expression, externals, program );
+	if( !result )
 	{
-		parser.SetExpr( expression );
-		value = parser.Eval();
+		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, ToString( result, expression ).c_str() );
 	}
-	catch( const mu::Parser::exception_type& e )
-	{
-		s_currentCurve.pop_back();
-		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, e.GetMsg().c_str() );
-	}
-	s_currentCurve.pop_back();
+	std::unique_ptr<uint8_t[]> tempArena( new uint8_t[program.GetTempArenaSize()] );
+	auto self = this;
+	void* buffers[] = { (void*)this, (void*)&self };
+	value = program.Eval( buffers, tempArena.get() );
 	return BlueStdResult();
 }

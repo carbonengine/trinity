@@ -1,6 +1,5 @@
 project(trinity VERSION 1.0.0)
 
-find_package(muparser REQUIRED)
 find_package(libSquish REQUIRED)
 find_package(FidelityFX REQUIRED)
 find_package(CACAO REQUIRED)
@@ -1505,7 +1504,6 @@ function(set_shared_trinity_properties target)
             ImageIO
             Blue
             Freetype::Freetype
-            muParser
             SQUISH::SQUISH
             AMD::FidelityFX
             AMD::CACAO
@@ -1513,6 +1511,7 @@ function(set_shared_trinity_properties target)
             Intel::TBB
             CcpMath
             PDM::PDM
+            CcpParser
     )
 
     target_sources(${target} PRIVATE ${_SOURCES})

@@ -63,7 +63,8 @@ namespace
 //   Initialize data members
 // --------------------------------------------------------------------------------
 EveSOF::EveSOF( IRoot* lockobj ) :
-	PARENTLOCK( m_dataMgr )
+	PARENTLOCK( m_dataMgr ),
+	m_allowFileCaching( true )
 {
 	// hard-coded names
 	m_depthOnlyEffectName = BlueSharedString( "depthonlyv5.fx" );
@@ -484,7 +485,7 @@ size_t EveSOF::FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchTy
 			// res path how it is from hull data
 			std::string highResPath = it->second.resFilePath;
 			// get's modified by the faction data
-			dna->ModifyTextureResPath( highResPath );
+			dna->ModifyTextureResPath( highResPath, m_allowFileCaching ? &m_existingFilesCache : nullptr );
 			// make three paths for the three LODs
 			std::string mediumResPath, lowResPath, ultraResPath;
 			newShader->AddResourceTexture2D( it->first, highResPath.c_str() );
@@ -1754,7 +1755,7 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 			for( auto it = him->textures.begin(); it != him->textures.end(); ++it )
 			{
 				std::string resPath = it->second.resFilePath;
-				dna->ModifyTextureResPath( resPath );
+				dna->ModifyTextureResPath( resPath, m_allowFileCaching ? &m_existingFilesCache : nullptr );
 				newShader->AddResourceTexture2D( it->first, resPath.c_str() );
 			}
 
@@ -2322,7 +2323,7 @@ void EveSOF::SetupDecalSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) co
 						{
 							// get the filepath from the hull
 							std::string resFilePath;
-							if( dna->GetHullTextureWithMeshIndex( resFilePath, *ptit, itemData.meshIndex, hullIdx ) )
+							if( dna->GetHullTextureWithMeshIndex( resFilePath, *ptit, itemData.meshIndex, hullIdx, m_allowFileCaching ? &m_existingFilesCache : nullptr ) )
 							{
 								shader->AddResourceTexture2D( *ptit, resFilePath.c_str() );
 							}

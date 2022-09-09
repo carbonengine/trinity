@@ -12,10 +12,14 @@
 #include "Finalizers/ITr2StateMachineStateFinalizer.h"
 
 
+extern CcpMutex g_controllerMutex;
+
+
 Tr2StateMachineState::Tr2StateMachineState( IRoot* lockobj )
 	:PARENTLOCK( m_actions ),
 	PARENTLOCK( m_transitions ),
 	m_stateMachine( nullptr ),
+	m_transitionVariableMask( 0 ),
 	m_isActive( false ),
 	m_isFinalizing( false )
 {
@@ -101,10 +105,26 @@ void Tr2StateMachineState::Link( const Tr2StateMachine& stateMachine )
 	Unlink();
 
 	m_stateMachine = &stateMachine;
+	m_transitionVariableMask = 0;
+	bool hasMask = true;
 	for( auto it = begin( m_transitions ); it != end( m_transitions ); ++it )
 	{
 		( *it )->Link( *this );
+		auto mask = ( *it )->GetVariableMask();
+		if( mask == 0 )
+		{
+			hasMask = false;
+		}
+		else
+		{
+			m_transitionVariableMask |= mask;
+		}
 	}
+	if( !hasMask )
+	{
+		m_transitionVariableMask = 0;
+	}
+
 	for( auto it = begin( m_actions ); it != end( m_actions ); ++it )
 	{
 		( *it )->Link( *stateMachine.GetController() );
@@ -135,9 +155,10 @@ void Tr2StateMachineState::Unlink()
 	{
 		m_finalizer->Unlink();
 	}
+	m_transitionVariableMask = 0;
 }
 
-Tr2StateMachineState* Tr2StateMachineState::Update()
+Tr2StateMachineState* Tr2StateMachineState::Update( uint64_t variableDirtyMask )
 {
 	if( !m_isActive )
 	{
@@ -146,6 +167,9 @@ Tr2StateMachineState* Tr2StateMachineState::Update()
 	if( m_isFinalizing )
 	{
 		auto next = GetNextState();
+
+		CcpAutoMutex lock( g_controllerMutex );
+
 		if( !next )
 		{
 			m_isActive = false;
@@ -157,10 +181,16 @@ Tr2StateMachineState* Tr2StateMachineState::Update()
 		}
 		return nullptr;
 	}
+	if( m_transitionVariableMask != 0 && ( ( m_transitionVariableMask & variableDirtyMask ) == 0 ) )
+	{
+		return nullptr;
+	}
 	for( auto it = begin( m_transitions ); it != end( m_transitions ); ++it )
 	{
-		if( ( *it )->CanActivate() && ( *it )->GetDestination() )
+		if( ( *it )->CanActivate( variableDirtyMask ) && ( *it )->GetDestination() )
 		{
+			CcpAutoMutex lock( g_controllerMutex );
+
 			for( auto ai = begin( m_actions ); ai != end( m_actions ); ++ai )
 			{
 				if( !( *ai )->CanTransition() )
@@ -192,7 +222,7 @@ Tr2StateMachineState* Tr2StateMachineState::GetNextState() const
 {
 	for( auto it = begin( m_transitions ); it != end( m_transitions ); ++it )
 	{
-		if( ( *it )->CanActivate() && ( *it )->GetDestination() )
+		if( ( *it )->CanActivate( 0xffffffffffffffffull ) && ( *it )->GetDestination() )
 		{
 			return ( *it )->GetDestination();
 		}

@@ -15,33 +15,29 @@ extern bool g_expressionCurveFakeRandom;
 
 namespace
 {
-	CcpMutex s_mutex( "Tr2CurveScalarExpression", "s_mutex", 1000 );
-
-	std::vector<const Tr2CurveEulerRotationExpression*> s_currentCurve;
-
 	// --------------------------------------------------------------------------------
-	float Fractal( float x, float alpha, float beta, float n )
+	float Fractal( const Tr2CurveEulerRotationExpression* curve, float x, float alpha, float beta, float n )
 	{
-		return float( ( PerlinNoise1D( x + s_currentCurve.back()->GetRandomConstant(), alpha, beta, int( n + 0.5f ) ) + 1.0 ) / 2.0 );
+		return float( ( PerlinNoise1D( x + curve->GetRandomConstant(), alpha, beta, int( n + 0.5f ) ) + 1.0 ) / 2.0 );
 	}
 
 	// --------------------------------------------------------------------------------
-	float Noise( float x )
+	float Noise( const Tr2CurveEulerRotationExpression* curve, float x )
 	{
-		return float( ( PerlinNoise1D( x + s_currentCurve.back()->GetRandomConstant(), 1.0, 1.0, 1 ) + 1.0 ) / 2.0 );
+		return float( ( PerlinNoise1D( x + curve->GetRandomConstant(), 1.0, 1.0, 1 ) + 1.0 ) / 2.0 );
 	}
 
 	// --------------------------------------------------------------------------------
-	float RandomConstant( float a, float b )
+	float RandomConstant( const Tr2CurveEulerRotationExpression* curve, float a, float b )
 	{
-		return ( ( b - a ) * s_currentCurve.back()->GetRandomConstant() ) + a;
+		return ( ( b - a ) * curve->GetRandomConstant() ) + a;
 	}
 
-	float RandomHash( float a, float b, float x )
+	float RandomHash( const Tr2CurveEulerRotationExpression* curve, float a, float b, float x )
 	{
 		std::seed_seq::result_type seeds[] = {
 			*reinterpret_cast<std::seed_seq::result_type*>( &x ),
-			std::seed_seq::result_type( reinterpret_cast<uint64_t>( s_currentCurve.back() ) )
+			std::seed_seq::result_type( reinterpret_cast<uint64_t>( curve ) )
 		};
 		std::seed_seq seq( std::begin( seeds ), std::end( seeds ) );
 		std::default_random_engine e1( seq );
@@ -60,16 +56,33 @@ namespace
 	}
 
 	// --------------------------------------------------------------------------------
-	float Input( float index )
+	float Input( const Tr2CurveEulerRotationExpression* curve, float index )
 	{
-		return s_currentCurve.back()->GetInputValue( int32_t( index + 0.5f ) );
+		return curve->GetInputValue( int32_t( index + 0.5f ) );
 	}
 
 	// --------------------------------------------------------------------------------
-	float InputAt( float index, float time )
+	float InputAt( const Tr2CurveEulerRotationExpression* curve, float index, float time )
 	{
-		return s_currentCurve.back()->GetInputValue( int32_t( index + 0.5f ), time );
+		return curve->GetInputValue( int32_t( index + 0.5f ), time );
 	}
+
+	CcpParser::Function s_functions[] = {
+		CcpParser::Function( "fractal", &Fractal, 1, 0 ),
+		CcpParser::Function( "noise", &Noise, 1, 0 ),
+		CcpParser::Function( "randomConstant", &RandomConstant, 1, 0 ),
+		CcpParser::Function( "randconst", &RandomConstant, 1, 0 ),
+		CcpParser::Function( "random", &Random ),
+		CcpParser::Function( "randhash", &RandomHash, 1, 0 ),
+		CcpParser::Function( "input", &Input, 1, 0 ),
+		CcpParser::Function( "inputAt", &InputAt, 1, 0 ),
+		CcpParser::Function( "clamp", &TriClamp, CcpParser::FunctionFlags::PURE_FUNC ),
+		CcpParser::Function( "radians", &XMConvertToRadians, CcpParser::FunctionFlags::PURE_FUNC ),
+	};
+	CcpParser::Constant s_constants[] = {
+		{ "pi", 3.1415926f },
+		{ "pi2", 2.0f * 3.1415926f },
+	};
 }
 
 // --------------------------------------------------------------------------------
@@ -84,11 +97,6 @@ Tr2CurveEulerRotationExpression::Tr2CurveEulerRotationExpression( IRoot* lockobj
 	m_input3( 0 ),
 	m_input4( 0 )
 {
-	for( size_t i = 0; i < 3; ++i )
-	{
-		SetupParser( m_expressionParsers[i] );
-
-	}
 }
 
 // --------------------------------------------------------------------------------
@@ -107,32 +115,6 @@ bool Tr2CurveEulerRotationExpression::Initialize()
 
 }
 
-void Tr2CurveEulerRotationExpression::SetupParser( mu::Parser& parser )
-{
-	parser.EnableOptimizer( false );
-	parser.DefineFun( "fractal", &Fractal, false );
-	parser.DefineFun( "noise", &Noise, false );
-	parser.DefineFun( "randomConstant", &RandomConstant, false );
-	parser.DefineFun( "randconst", &RandomConstant, false );
-	parser.DefineFun( "random", &Random, false );
-	parser.DefineFun( "randconst", &RandomConstant, false );
-	parser.DefineFun( "randhash", &RandomHash, false );
-	parser.DefineFun( "input", &Input, false );
-	parser.DefineFun( "inputAt", &InputAt, false );
-	parser.DefineFun( "clamp", &TriClamp, false );
-	parser.DefineFun( "radians", &XMConvertToRadians, true );
-
-	parser.DefineVar( "input1", &m_input1 );
-	parser.DefineVar( "input2", &m_input2 );
-	parser.DefineVar( "input3", &m_input3 );
-	parser.DefineVar( "input4", &m_input4 );
-
-	parser.DefineVar( "time", &m_time );
-
-	parser.DefineConst( "pi", 3.1415926f );
-	parser.DefineConst( "pi2", 2.0f * 3.1415926f );
-}
-
 // --------------------------------------------------------------------------------
 void Tr2CurveEulerRotationExpression::UpdateValue( double time )
 {
@@ -146,26 +128,16 @@ Quaternion Tr2CurveEulerRotationExpression::GetValue( double time ) const
 	float* components = &result.x;
 
 	m_time = float( time / m_timeScale );
+	auto self = this;
+	void* buffers[] = { (void*)this, (void*)&self };
 
 	for( size_t i = 0; i < 3; ++i )
 	{
-		if( m_expressions[i].empty() )
+		if( !m_programs[i] )
 		{
 			continue;
 		}
-
-		CcpAutoMutex lock( s_mutex );
-		s_currentCurve.push_back( this );
-
-		try
-		{
-			components[i] = m_expressionParsers[i].Eval();
-		}
-		catch( const mu::Parser::exception_type& )
-		{
-			components[i] = 0;
-		}
-		s_currentCurve.pop_back();
+		components[i] = m_programs[i].Eval( buffers, m_tempArena.get() );
 	}
     return RotationQuaternion( result.x, result.y, result.z );
 }
@@ -185,21 +157,29 @@ void Tr2CurveEulerRotationExpression::SetExpression( size_t index, const std::st
 		return;
 	}
 
-	CcpAutoMutex lock( s_mutex );
-	s_currentCurve.push_back( this );
+	CcpParser::Variable s_variables[] = {
+		{ "time", 0, offsetof( Tr2CurveEulerRotationExpression, m_time ) },
+		{ "input1", 0, offsetof( Tr2CurveEulerRotationExpression, m_input1 ) },
+		{ "input2", 0, offsetof( Tr2CurveEulerRotationExpression, m_input2 ) },
+		{ "input3", 0, offsetof( Tr2CurveEulerRotationExpression, m_input3 ) },
+		{ "input4", 0, offsetof( Tr2CurveEulerRotationExpression, m_input4 ) },
+	};
 
-	try
+	CcpParser::FunctionView functionView[] = { s_functions };
+	CcpParser::ConstantView constantView[] = { s_constants };
+	CcpParser::VariableView variableView[] = { s_variables };
+
+	CcpParser::Externals externals;
+	externals.functions = functionView;
+	externals.variables = variableView;
+	externals.constants = constantView;
+	auto result = CcpParser::Parse( expression.c_str(), externals, m_programs[index] );
+	if( !result )
 	{
-		m_expressionParsers[index].SetExpr( expression );
-		m_expressionParsers[index].Eval();
-	}
-	catch( const mu::Parser::exception_type& e )
-	{
-		s_currentCurve.pop_back();
-		CCP_LOGERR( "Tr2CurveEulerRotationExpression::SetExpression invalid expression \"%s\": %s", expression.c_str(), e.GetMsg().c_str() );
+		CCP_LOGERR( "Tr2CurveEulerRotationExpression::SetExpression invalid expression \"%s\": %s", expression.c_str(), ToString( result, expression.c_str() ).c_str() );
 		return;
 	}
-	s_currentCurve.pop_back();
+	m_tempArena.reset( new uint8_t[std::max( m_programs[0].GetTempArenaSize(), std::max( m_programs[1].GetTempArenaSize(), m_programs[2].GetTempArenaSize() ) )] );
 	m_expressions[index] = expression;
 }
 
@@ -356,22 +336,31 @@ std::vector<Tr2ExpressionTermInfoPtr> Tr2CurveEulerRotationExpression::GetExpres
 
 BlueStdResult Tr2CurveEulerRotationExpression::EvaluateExpression( const char* expression, float& value ) const
 {
-	mu::Parser parser;
-	const_cast<Tr2CurveEulerRotationExpression*>( this )->SetupParser( parser );
+	CcpParser::Variable s_variables[] = {
+		{ "time", 0, offsetof( Tr2CurveEulerRotationExpression, m_time ) },
+		{ "input1", 0, offsetof( Tr2CurveEulerRotationExpression, m_input1 ) },
+		{ "input2", 0, offsetof( Tr2CurveEulerRotationExpression, m_input2 ) },
+		{ "input3", 0, offsetof( Tr2CurveEulerRotationExpression, m_input3 ) },
+		{ "input4", 0, offsetof( Tr2CurveEulerRotationExpression, m_input4 ) },
+	};
 
-	CcpAutoMutex lock( s_mutex );
-	s_currentCurve.push_back( this );
+	CcpParser::FunctionView functionView[] = { s_functions };
+	CcpParser::ConstantView constantView[] = { s_constants };
+	CcpParser::VariableView variableView[] = { s_variables };
 
-	try
+	CcpParser::Externals externals;
+	externals.functions = functionView;
+	externals.variables = variableView;
+	externals.constants = constantView;
+	CcpParser::Program program;
+	auto result = CcpParser::Parse( expression, externals, program );
+	if( !result )
 	{
-		parser.SetExpr( expression );
-		value = parser.Eval();
+		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, ToString( result, expression ).c_str() );
 	}
-	catch( const mu::Parser::exception_type& e )
-	{
-		s_currentCurve.pop_back();
-		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, e.GetMsg().c_str() );
-	}
-	s_currentCurve.pop_back();
+	std::unique_ptr<uint8_t[]> tempArena( new uint8_t[program.GetTempArenaSize()] );
+	auto self = this;
+	void* buffers[] = { (void*)this, (void*)&self };
+	value = program.Eval( buffers, tempArena.get() );
 	return BlueStdResult();
 }

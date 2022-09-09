@@ -169,12 +169,12 @@ void EveEffectRoot2::UpdateSyncronous( EveUpdateContext& updateContext )
 			( *ecIt )->UpdateSyncronous( updateContext, params );
 		}
 	}
-
-	UpdateControllers();
 }
 
 void EveEffectRoot2::UpdateAsyncronous( EveUpdateContext& updateContext ) 
 {	
+	UpdateControllers();
+
 	Be::Time time = updateContext.GetTime();
 	for( auto it = m_curveSets.begin(); it != m_curveSets.end(); it++ )
 	{

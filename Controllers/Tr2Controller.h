@@ -7,6 +7,7 @@
 #pragma once
 
 #include "ITr2Controller.h"
+#include "ccpparser.h"
 
 BLUE_DECLARE( Tr2ControllerFloatVariable );
 BLUE_DECLARE_VECTOR( Tr2ControllerFloatVariable );
@@ -43,7 +44,11 @@ public:
 	Tr2ControllerFloatVariable* GetVariableByName( const char* name ) const;
 
 	const PTr2ControllerFloatVariableVector& GetVariables() const;
-	void GetBindingPathRoots( std::unordered_map<std::string, IRoot*>& variables ) const;
+	CcpParser::VariableView GetVariableView() const;
+	void* GetVariableBuffer() const;
+	void EnsureTempArenaSize( size_t size ) const;
+	void* GetTempArena() const;
+	const std::vector<std::pair<std::string, IRoot*>>& GetBindingPathRoots() const;
 
 	void RegisterUpdateable( ITr2Updateable& updateable );
 	void UnRegisterUpdateable( ITr2Updateable& updateable );
@@ -61,6 +66,12 @@ private:
 	
 	TrackableStdSet<ITr2UpdateablePtr> m_updateables;
 	std::vector<std::pair<BlueSharedString, BlueScriptCallback>>  m_callbacks;
+	std::vector<CcpParser::Variable> m_variableView;
+	CcpMallocBuffer m_variableData;
+	mutable CcpMallocBuffer m_tempArena;
+	uint64_t m_dirtyVariables;
+
+	mutable std::vector<std::pair<std::string, IRoot*>> m_bindingPathRoots;
 
 	IRoot* m_owner;
 	bool m_isActive;

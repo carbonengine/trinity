@@ -13,28 +13,30 @@
 
 namespace
 {
-	Tr2ActionAnimateValue* s_action = nullptr;
-	float s_stateTime = 0;
-
-	float StateTime()
+	struct ExtraBuffer
 	{
-		return s_stateTime;
+		const Tr2ActionAnimateValue* action = nullptr;
+		float stateTime = 0;
+	};
+
+	float StateTime( float* stateTime )
+	{
+		return *stateTime;
 	}
 
-	float Curve( float time )
+	float Curve( Tr2ActionAnimateValue* action, float time )
 	{
-		if( !s_action )
+		if( !action )
 		{
 			return 0;
 		}
-		return s_action->GetCurveValue( time );
+		return action->GetCurveValue( time );
 	}
 
-	void ModifyParser( mu::Parser& parser )
-	{
-		parser.DefineFun( "StateTime", StateTime );
-		parser.DefineFun( "Curve", Curve );
-	}
+	CcpParser::Function s_extraFunctions[] = {
+		CcpParser::Function( "StateTime", StateTime, Tr2ControllerExpression::EXTRA_BUFFER_INDEX, offsetof( ExtraBuffer, stateTime ) ),
+		CcpParser::Function( "Curve", Curve, Tr2ControllerExpression::EXTRA_BUFFER_INDEX, offsetof( ExtraBuffer, action ) ),
+	};
 }
 
 
@@ -54,7 +56,7 @@ void Tr2ActionAnimateValue::Link( Tr2Controller& controller )
 	{
 		LinkDestination( controller );
 	}
-	m_evaluator.SetExpr( m_value.c_str(), controller, ModifyParser );
+	m_evaluator.SetExpr( m_value.c_str(), controller, s_extraFunctions );
 }
 
 void Tr2ActionAnimateValue::Unlink()
@@ -96,11 +98,8 @@ void Tr2ActionAnimateValue::Update( Be::Time realTime, Be::Time simTime )
 	{
 		return;
 	}
-	s_stateTime = TimeAsFloat( simTime - m_startTime );
-	s_action = this;
-	auto value = m_evaluator.Eval();
-	s_stateTime = 0;
-	s_action = nullptr;
+	ExtraBuffer buffer = { this, TimeAsFloat( simTime - m_startTime ) };
+	auto value = m_evaluator.Eval( &buffer );
 	if( value.first )
 	{
 		m_destination.SetValue( value.second );
@@ -122,7 +121,7 @@ bool Tr2ActionAnimateValue::OnModified( Be::Var* value )
 	}
 	else if( IsMatch( value, m_value ) )
 	{
-		m_evaluator.SetExpr( m_value.c_str(), *m_controller, ModifyParser );
+		m_evaluator.SetExpr( m_value.c_str(), *m_controller, s_extraFunctions );
 	}
 	return true;
 }
@@ -175,9 +174,7 @@ std::vector<Tr2ExpressionTermInfoPtr> Tr2ActionAnimateValue::GetExpressionTermIn
 
 void Tr2ActionAnimateValue::LinkDestination( const Tr2Controller& controller )
 {
-	std::unordered_map<std::string, IRoot*> roots;
-	controller.GetBindingPathRoots( roots );
-	m_destination.Link( roots );
+	m_destination.Link( controller.GetBindingPathRoots() );
 }
 
 bool Tr2ActionAnimateValue::HasDelayedBinding() const
@@ -192,13 +189,13 @@ BlueStdResult Tr2ActionAnimateValue::EvaluateExpression( const char* expression,
 		return BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "controller needs to be running when evaluating expressions" );
 	}
 	Tr2ControllerExpression expr;
-	auto error = expr.SetExpr( expression, *m_controller, ModifyParser );
+	auto error = expr.SetExpr( expression, *m_controller, s_extraFunctions );
 	if( !error.empty() )
 	{
 		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, error.c_str() );
 	}
-	s_stateTime = TimeAsFloat( m_lastSimTime - m_startTime );
-	auto result = expr.Eval();
+	ExtraBuffer buffer = { this, TimeAsFloat( m_lastSimTime - m_startTime ) };
+	auto result = expr.Eval( &buffer );
 	if( !result.first )
 	{
 		return BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "error evaluating expression" );

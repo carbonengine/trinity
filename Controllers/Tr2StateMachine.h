@@ -34,7 +34,7 @@ public:
 
 	void Start();
 	void Stop();
-	void Update();
+	void Update( uint64_t variableDirtyMask );
 
 	Tr2Controller* GetController() const;
 	Tr2StateMachineState* GetStateByName( const char* name ) const;
@@ -42,7 +42,7 @@ public:
 	float GetMachineRunTime() const;
 	float GetStateRunTime() const;
 private:
-	void FollowTransitions();
+	void FollowTransitions( uint64_t variableDirtyMask );
 	std::string m_name;
 	PTr2StateMachineStateVector m_states;
 	Tr2StateMachineStatePtr m_startState;

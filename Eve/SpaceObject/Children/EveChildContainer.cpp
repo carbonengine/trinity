@@ -327,10 +327,6 @@ void EveChildContainer::UpdateSyncronous( EveUpdateContext& updateContext, const
 	{
 		( *it )->Update( m_worldTransform );
 	}
-	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
-	{
-		( *it )->Update();
-	}
 }
 
 void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
@@ -338,6 +334,11 @@ void EveChildContainer::UpdateAsyncronous( EveUpdateContext& updateContext, cons
 	if( !IsUpdating() )
 	{
 		return;
+	}
+
+	for( auto it = begin( m_controllers ); it != end( m_controllers ); ++it )
+	{
+		( *it )->Update();
 	}
 
 	Matrix localToWorldTransform = params.localToWorldTransform;

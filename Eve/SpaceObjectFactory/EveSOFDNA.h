@@ -108,10 +108,10 @@ public:
 	unsigned int GetLocatorCount( const char* setName ) const;
 	const std::vector<BlueSharedString> GetHullLocatorSetNames( size_t n ) const;
 	const Vector3* GetHullNextSubsystemOffset( size_t n ) const;
-	bool GetHullTextureWithMeshIndex( std::string& resPath, const BlueSharedString& textureName, int32_t meshIndex, size_t n ) const;
+	bool GetHullTextureWithMeshIndex( std::string & resPath, const BlueSharedString& textureName, int32_t meshIndex, size_t n, std::unordered_map<std::string, bool>* existingFilesCache ) const;
 
 	// get faction data
-	void ModifyTextureResPath( std::string& resPath ) const;
+	void ModifyTextureResPath( std::string& resPath, std::unordered_map<std::string, bool>* existingFilesCache ) const;
 	const Vector4* GetFactionTurretParameters( const BlueSharedString& parameterName ) const;
 	const EveSOFDataMgr::FactionPlaneSetColorData* GetFactionPlaneSetData( int groupIndex ) const;
 	const EveSOFDataMgr::FactionSpotlightSetColorData* GetFactionSpotlightSetData( int groupIndex ) const;

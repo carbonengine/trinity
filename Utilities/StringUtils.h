@@ -84,13 +84,16 @@ inline bool StringRemove( std::string& baseString, const char* remove )
 // --------------------------------------------------------------------------------
 inline bool StringStartsWithI( const char* baseString, const char* startString )
 {
-	// turn all lowercase
-	std::string b( baseString );
-	std::transform( b.begin(), b.end(), b.begin(), ::tolower );
-	std::string f( startString );
-	std::transform( f.begin(), f.end(), f.begin(), ::tolower );
-	
-	return ( b.compare( 0, f.size(), f ) == 0 );
+	while( *startString )
+	{
+		if( tolower( *startString ) != tolower( *baseString ) )
+		{
+			return false;
+		}
+		++baseString;
+		++startString;
+	}
+	return true;
 }
 
 // --------------------------------------------------------------------------------

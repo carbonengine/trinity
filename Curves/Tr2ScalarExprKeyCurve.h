@@ -9,7 +9,7 @@
 #define Tr2ScalarExprKeyCurve_h
 
 #include "include/Tr2Curve.h"
-#include <muParser.h>
+#include "ccpparser.h"
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -48,24 +48,26 @@ public:
 	float	m_rightTangent;
 private:
 	// Parser for time expression
-	mu::Parser m_timeParser;
+	CcpParser::Program m_timeParser;
 	// Time expression
 	std::string m_timeExpression;
 
 	// Parser for value expression
-	mu::Parser m_valueParser;
+	CcpParser::Program m_valueParser;
 	// Value expression
 	std::string m_valueExpression;
 
 	// Parser for left tangent expression
-	mu::Parser m_leftTangentParser;
+	CcpParser::Program m_leftTangentParser;
 	// Left tangent expression
 	std::string m_leftTangentExpression;
 
 	// Parser for right tangent expression
-	mu::Parser m_rightTangentParser;
+	CcpParser::Program m_rightTangentParser;
 	// Right tangent expression
 	std::string m_rightTangentExpression;
+
+	std::vector<uint8_t> m_tempArena;
 
 	// Input variables for expressions
 	float m_inputVar1;
@@ -83,8 +85,7 @@ private:
 	// Value of the previous key (can be used in expressions)
 	float m_prevKeyValue;
 
-	void InitializeParser( mu::Parser& parser );
-	void SetExpression( mu::Parser& parser, std::string& expression );
+	void SetExpression( CcpParser::Program& parser, std::string & expression );
 };
 BLUE_DECLARE_VECTOR( Tr2ScalarExprKey );
 
