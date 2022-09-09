@@ -218,7 +218,7 @@ namespace TrinityALImpl
 			// 4 samples is supported by all devices according to docs
 			TextureProperties{MTLTextureType2DMultisample, textureDim, textureDim, 1, 4},
 			TextureProperties{MTLTextureTypeCube, textureDim, textureDim, 1, 1},
-			TextureProperties{MTLTextureType3D, textureDim, textureDim, textureDim, 1},
+            TextureProperties{MTLTextureType3D, textureDim, textureDim, textureDim, 1},
             TextureProperties{MTLTextureType2DArray, textureDim, textureDim, 1, 1},
 		};
 
