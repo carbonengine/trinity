@@ -14,6 +14,21 @@
 #include "../Tr2AdapterStructures.h"
 #include "util/DescriptorHeapViewDx12.h"
 
+namespace Tr2SwapChainUtils
+{
+	const uint32_t BACK_BUFFER_COUNT = 3;
+
+	DXGI_FORMAT SafeConvertD3DBackBufferFormat( Tr2RenderContextEnum::PixelFormat bbFormat );
+	
+	ALResult CreateSwapChain(
+		CComPtr<IDXGISwapChain3>& swapChain,
+		Tr2WindowHandle focusWindow,
+		const Tr2PresentParametersAL& presentationParameters,
+		ID3D12CommandQueue* commandQueue,
+		IDXGIOutput* output );
+	
+	ALResult FillPresentationParameters( Tr2PresentParametersAL& presentationParameters, Tr2WindowHandle windowHandle );
+}
 
 namespace TrinityALImpl
 {

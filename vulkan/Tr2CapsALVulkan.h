@@ -38,6 +38,11 @@ public:
 	{
 		return true;
 	}
+	bool SupportsVariableRefreshRate() const
+	{
+		return false;
+	}
+
 private:
 	Tr2CapsAL() {}
 	Tr2CapsAL( const Tr2CapsAL& ) {}

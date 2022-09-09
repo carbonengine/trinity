@@ -57,6 +57,7 @@ struct Tr2PresentParametersAL
 	bool windowed;
 	bool software;
 	Tr2RenderContextEnum::PresentInterval presentInterval;
+	bool variableRefreshRateSupported;
 };
 
 #endif // Tr2AdapterStructures_H

@@ -86,108 +86,10 @@ namespace
 		}
 	}
 
-	DXGI_FORMAT SafeConvertD3DBackBufferFormat( Tr2RenderContextEnum::PixelFormat bbFormat )
-	{
-		DXGI_FORMAT out = static_cast<DXGI_FORMAT>( bbFormat );
-		if( out == DXGI_FORMAT_B8G8R8X8_UNORM )
-		{
-			return DXGI_FORMAT_B8G8R8A8_UNORM;
-		}
-		if( out == Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN )
-		{
-			return DXGI_FORMAT_B8G8R8A8_UNORM;
-		}
-		return out;
-	}
-
 	size_t RegisterTypeIndex( Tr2ShaderRegisterAL::RegisterType type )
 	{
 		return size_t( type ) & 31;
 	}
-
-	uint32_t BACK_BUFFER_COUNT = 3;
-
-	ALResult CreateSwapChain(
-		CComPtr<IDXGISwapChain3>& swapChain,
-		Tr2WindowHandle focusWindow,
-		const Tr2PresentParametersAL& presentationParameters,
-		ID3D12CommandQueue* commandQueue,
-		IDXGIOutput* output )
-	{
-		CComPtr<IDXGIFactory4> dxgiFactory;
-
-		UINT createFactoryFlags = 0;
-		if( g_requestDeviceDebugLayer )
-		{
-			createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
-		}
-
-		CR_RETURN_HR( CreateDXGIFactory2( createFactoryFlags, IID_PPV_ARGS( &dxgiFactory ) ) );
-
-		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-		swapChainDesc.Width = presentationParameters.mode.width;
-		swapChainDesc.Height = presentationParameters.mode.height;
-		swapChainDesc.Format = SafeConvertD3DBackBufferFormat( presentationParameters.mode.format );
-		swapChainDesc.Stereo = FALSE;
-		swapChainDesc.SampleDesc.Count = std::max( presentationParameters.msaaType, 1u );
-		swapChainDesc.SampleDesc.Quality = presentationParameters.msaaQuality;
-		swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapChainDesc.BufferCount = BACK_BUFFER_COUNT;// presentationParameters.windowed ? 2 : 3;
-		swapChainDesc.Scaling = DXGI_SCALING_STRETCH;// DXGI_MODE_SCALING( presentationParameters.mode.scaling );
-		swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-		swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
-		swapChainDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
-
-
-		auto wnd = Tr2WindowHandle( presentationParameters.outputWindow );
-		if( !presentationParameters.outputWindow )
-		{
-			wnd = focusWindow;
-		}
-
-		CComPtr<IDXGISwapChain1> swapChain1;
-#if USE_BORDERLESS_WINDOW
-		CR_RETURN_HR( dxgiFactory->CreateSwapChainForHwnd(
-			commandQueue,
-			wnd,
-			&swapChainDesc,
-			nullptr,
-			output,
-			&swapChain1 ) );
-#else
-		if( presentationParameters.windowed )
-		{
-			CR_RETURN_HR( dxgiFactory->CreateSwapChainForHwnd(
-				commandQueue,
-				wnd,
-				&swapChainDesc,
-				nullptr,
-				output,
-				&swapChain1 ) );
-		}
-		else
-		{
-			DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullscreen;
-			fullscreen.RefreshRate.Numerator = 0;
-			fullscreen.RefreshRate.Denominator = 0;
-			fullscreen.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER( presentationParameters.mode.scanlineOrdering );
-			fullscreen.Scaling = DXGI_MODE_SCALING( presentationParameters.mode.scaling );
-			fullscreen.Windowed = FALSE;
-
-			CR_RETURN_HR( dxgiFactory->CreateSwapChainForHwnd(
-				commandQueue,
-				wnd,
-				&swapChainDesc,
-				&fullscreen,
-				output,
-				&swapChain1 ) );
-		}
-#endif
-		CR_RETURN_HR( swapChain1.QueryInterface( &swapChain ) );
-		CR_RETURN_HR( dxgiFactory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER | DXGI_MWA_NO_WINDOW_CHANGES ) );
-		return S_OK;
-	}
-
 	
 	size_t s_perFrameMinReleaseCount = 100;
 }
@@ -210,6 +112,7 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 {
 	m_ownerDevice = this;
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
+	m_supportsVariableRefreshRate = m_caps.SupportsVariableRefreshRate();
 }
 
 Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
@@ -221,10 +124,12 @@ Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
 ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	uint32_t adapter,
 	Tr2WindowHandle  focusWindow,
-	const Tr2PresentParametersAL& presentationParameters )
+	const Tr2PresentParametersAL& pp )
 {
 	Destroy();
-
+	
+	Tr2PresentParametersAL presentationParameters = pp;
+	presentationParameters.variableRefreshRateSupported = m_supportsVariableRefreshRate;
 	bool hasDebugLayer = false;
 	if( g_requestDeviceDebugLayer )
 	{
@@ -296,8 +201,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	uint32_t backBufferCount = 1;
 	if( !isWindowless )
 	{
-		backBufferCount = BACK_BUFFER_COUNT;
-		FORWARD_HR( CreateSwapChain( swapChain, focusWindow, presentationParameters, commandQueue, output ) );
+		backBufferCount = Tr2SwapChainUtils::BACK_BUFFER_COUNT;
+		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapChain, focusWindow, presentationParameters, commandQueue, output ) );
 	}
 
 	
@@ -387,7 +292,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	CreateDx12( commandAllocators[currentBackBufferIndex], *this );
 
-	m_syncInterval = presentationParameters.presentInterval & 0xf;
+	m_syncInterval = presentationParameters.presentInterval;
 
 	m_defaultBackBuffer.m_texture->AssignFromSwapChainDx12( backBuffers, rtvs, *this );
 
@@ -655,7 +560,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 
 	m_output = dxgiOutput;
 
-	DXGI_FORMAT fmt = SafeConvertD3DBackBufferFormat( presentationParameters.mode.format );
+	DXGI_FORMAT fmt = Tr2SwapChainUtils::SafeConvertD3DBackBufferFormat( presentationParameters.mode.format );
 
 	DXGI_MODE_DESC modeDesc;
 	modeDesc.Width = presentationParameters.mode.width;
@@ -665,23 +570,6 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	modeDesc.Format = fmt;
 	modeDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER( presentationParameters.mode.scanlineOrdering );
 	modeDesc.Scaling = DXGI_MODE_SCALING( presentationParameters.mode.scaling );
-
-	BOOL wasFullScreen = false;
-	CR( m_swapChain->GetFullscreenState( &wasFullScreen, nullptr ) );
-#if USE_BORDERLESS_WINDOW
-	bool needsFullscreen = false;
-#else
-	bool needsFullscreen = !presentationParameters.windowed;
-	if( presentationParameters.outputWindow )
-	{
-		WINDOWPLACEMENT placement = {};
-		GetWindowPlacement( presentationParameters.outputWindow, &placement );
-		if( placement.showCmd == SW_SHOWMINIMIZED )
-		{
-			needsFullscreen = false;
-		}
-	}
-#endif
 
 	m_defaultBackBuffer.m_texture->Destroy();
 
@@ -693,74 +581,23 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 
 	auto value = m_frameFenceValues[m_currentBackBufferIndex];
 	m_frameFenceValues.clear();
-	m_frameFenceValues.resize( BACK_BUFFER_COUNT, value + 1 );
+	m_frameFenceValues.resize( Tr2SwapChainUtils::BACK_BUFFER_COUNT, value + 1 );
 
-	if( !wasFullScreen && !needsFullscreen )
+	UINT resizeFlags = 0;
+	
+	if( presentationParameters.variableRefreshRateSupported )
 	{
-		// windowed -> windowed
-#if !USE_BORDERLESS_WINDOW
-		CR( m_swapChain->ResizeTarget( &modeDesc ) );
-#endif
-		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
-			presentationParameters.mode.width,
-			presentationParameters.mode.height,
-			fmt,
-			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
-	}
-	else if( wasFullScreen && !needsFullscreen )
-	{
-		// fullscreen -> windowed
-		CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
-
-		CR( m_swapChain->ResizeTarget( &modeDesc ) );
-		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
-			presentationParameters.mode.width,
-			presentationParameters.mode.height,
-			fmt,
-			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
-	}
-	else if( !wasFullScreen && needsFullscreen )
-	{
-		// windowed -> fullscreen
-		CR( m_swapChain->ResizeTarget( &modeDesc ) );
-		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
-			presentationParameters.mode.width,
-			presentationParameters.mode.height,
-			fmt,
-			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
-		CR( m_swapChain->SetFullscreenState( TRUE, dxgiOutput ) );
-		CR( m_swapChain->ResizeTarget( &modeDesc ) );
-		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
-			presentationParameters.mode.width,
-			presentationParameters.mode.height,
-			fmt,
-			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
-	}
-	else
-	{
-		CComPtr<IDXGIOutput> prevOutput;
-		m_swapChain->GetContainingOutput( &prevOutput );
-		if( dxgiOutput != prevOutput )
-		{
-			// If we are switching between two monitors in fullscreen mode it seems we first should
-			// go windowed and then fullscreen on another monitor, otherwise DXGI behaves funny.
-			CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
-		}
-		// fulscreen -> fullscreen (resolution change)
-		CR( m_swapChain->ResizeTarget( &modeDesc ) );
-		if( dxgiOutput != prevOutput )
-		{
-			CR( m_swapChain->SetFullscreenState( TRUE, dxgiOutput ) );
-			CR( m_swapChain->ResizeTarget( &modeDesc ) );
-		}
-		CR( m_swapChain->ResizeBuffers( BACK_BUFFER_COUNT,
-			presentationParameters.mode.width,
-			presentationParameters.mode.height,
-			fmt,
-			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH ) );
+		resizeFlags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
 	}
 
-	m_syncInterval = presentationParameters.presentInterval & 0xf;
+	// Dx12 is never in proper fullscreen
+	CR( m_swapChain->ResizeBuffers( Tr2SwapChainUtils::BACK_BUFFER_COUNT,
+		presentationParameters.mode.width,
+		presentationParameters.mode.height,
+		fmt,
+		resizeFlags ) );
+
+	m_syncInterval = presentationParameters.presentInterval;
 
 	std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 	std::vector<CComPtr<ID3D12Resource>> backBuffers;
@@ -871,7 +708,9 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	m_commandQueue->ExecuteCommandLists( _countof( commandLists ), commandLists );
 	m_frameFenceValues[m_currentBackBufferIndex] = SignalDx12();
 
-	CR( m_swapChain->Present( m_syncInterval, 0 ) );
+	auto presentFlag = (m_syncInterval == Tr2RenderContextEnum::PRESENT_INTERVAL_IMMEDIATE && m_supportsVariableRefreshRate) ? DXGI_PRESENT_ALLOW_TEARING : 0;
+
+	CR(m_swapChain->Present( m_syncInterval, presentFlag ) );
 	for( auto it = begin( m_pendingPresents ); it != end( m_pendingPresents ); ++it )
 	{
 		it->swapChain->Present( it->presentInterval, 0 );

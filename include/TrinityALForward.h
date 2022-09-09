@@ -69,7 +69,7 @@
 #define TRINITY_PLATFORM_NAME "dx12"
 
 #include <d3d12.h>
-#include <dxgi1_4.h>
+#include <dxgi1_5.h>
 
 #elif TRINITY_PLATFORM == TRINITY_VULKAN
 

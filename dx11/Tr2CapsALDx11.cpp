@@ -26,4 +26,8 @@ bool Tr2CapsAL::SupportsVertexShaderTextures() const
 	return true;
 }
 
+bool Tr2CapsAL::SupportsVariableRefreshRate() const
+{
+	return false;
+}
 #endif

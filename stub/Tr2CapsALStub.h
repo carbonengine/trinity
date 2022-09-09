@@ -23,6 +23,7 @@ public:
 	bool SupportsGpuBuffer() const;
 	bool SupportsStandaloneSwapChain() const;
 	bool SupportsVertexShaderTextures() const;
+	bool SupportsVariableRefreshRate() const;
 };
 
 #endif
