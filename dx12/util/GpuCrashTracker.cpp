@@ -14,15 +14,25 @@
 #include <fstream>
 #include <iomanip>
 
-#define AFTERMATH_CHECK_ERROR( FC )                             		 \
+#define AFTERMATH_CHECK_ERROR( FC )                                                      \
 	[&]() {                                                    			 \
 		GFSDK_Aftermath_Result _result = FC;                    		 \
 		if( !GFSDK_Aftermath_SUCCEED( _result ) )               		 \
-		{                                                       		 \
-			CCP_LOGERR( Aftermath::GetErrorMessage( _result ).c_str() ); \
+		{                                                                        \
 			return false;                                       		 \
 		}                                                       		 \
 		return true;                                           			 \
+	}()
+
+#define AFTERMATH_CHECK_AND_LOG_ERROR( FC )                                              \
+	[&]() {                                                                          \
+		GFSDK_Aftermath_Result _result = FC;                                     \
+		if( !GFSDK_Aftermath_SUCCEED( _result ) )                                \
+		{                                                                        \
+			CCP_LOGERR( Aftermath::GetErrorMessage( _result ).c_str() );     \
+			return false;                                                    \
+		}                                                                        \
+		return true;                                                             \
 	}()
 
 namespace Aftermath
@@ -116,6 +126,11 @@ namespace TrinityALImpl
 			GFSDK_Aftermath_Version_API,
 			aftermathFlags,
 			device ) );
+
+		if(m_initializedForDevice)
+		{
+			CCP_LOGNOTICE( "Aftermath enabled for device" );
+		}
 	}
 
 	void GpuCrashTracker::RegisterShaderBinary(const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath)
@@ -128,7 +143,7 @@ namespace TrinityALImpl
 		const D3D12_SHADER_BYTECODE shader{ bytecode.bytecode, bytecode.size };
 		GFSDK_Aftermath_ShaderHash shaderHash;
 		GFSDK_Aftermath_ShaderInstructionsHash shaderInstructionsHash;
-		AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_GetShaderHash(
+		AFTERMATH_CHECK_AND_LOG_ERROR( GFSDK_Aftermath_GetShaderHash(
 			GFSDK_Aftermath_Version_API,
 			&shader,
 			&shaderHash,
@@ -147,7 +162,7 @@ namespace TrinityALImpl
 	{
 		// Get shader debug information identifier.
 		GFSDK_Aftermath_ShaderDebugInfoIdentifier identifier = {};
-		AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_GetShaderDebugInfoIdentifier(GFSDK_Aftermath_Version_API, pShaderDebugInfo, shaderDebugInfoSize, &identifier));
+		AFTERMATH_CHECK_AND_LOG_ERROR( GFSDK_Aftermath_GetShaderDebugInfoIdentifier( GFSDK_Aftermath_Version_API, pShaderDebugInfo, shaderDebugInfoSize, &identifier ) );
 
 		// store the debug info for retrieval in the json file
 		std::vector<uint8_t> data((uint8_t*)pShaderDebugInfo, (uint8_t*)pShaderDebugInfo + shaderDebugInfoSize);
@@ -190,7 +205,7 @@ namespace TrinityALImpl
 			return results->second;
 		}
 		GFSDK_Aftermath_ContextHandle context = nullptr;
-		AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_DX12_CreateContextHandle(commandList, &context));
+		AFTERMATH_CHECK_AND_LOG_ERROR( GFSDK_Aftermath_DX12_CreateContextHandle( commandList, &context ) );
 
 		m_commandListContextMap[commandList] = context;
 		return context;
@@ -214,7 +229,7 @@ namespace TrinityALImpl
 			return;
 		}
 		auto context = GetCommandListContextHandle(commandList);
-		AFTERMATH_CHECK_ERROR(GFSDK_Aftermath_SetEventMarker(context, (void*)marker, (unsigned int)strlen( marker ) + 1));
+		AFTERMATH_CHECK_AND_LOG_ERROR( GFSDK_Aftermath_SetEventMarker( context, (void*)marker, (unsigned int)strlen( marker ) + 1 ) );
 	}
 
 	// Helper for writing a GPU crash dump to a file
@@ -222,7 +237,7 @@ namespace TrinityALImpl
 	{
 		// Create a GPU crash dump decoder object for the GPU crash dump.
 		GFSDK_Aftermath_GpuCrashDump_Decoder decoder = {};
-		AFTERMATH_CHECK_ERROR( GFSDK_Aftermath_GpuCrashDump_CreateDecoder(
+		AFTERMATH_CHECK_AND_LOG_ERROR( GFSDK_Aftermath_GpuCrashDump_CreateDecoder(
 			GFSDK_Aftermath_Version_API,
 			pGpuCrashDump,
 			gpuCrashDumpSize,
@@ -231,7 +246,7 @@ namespace TrinityALImpl
 		// Decode the crash dump to a JSON string.
 		// Fake most of this since we don't care about anything except the shader that failed
 		uint32_t jsonSize = 0;
-		AFTERMATH_CHECK_ERROR( GFSDK_Aftermath_GpuCrashDump_GenerateJSON(
+		AFTERMATH_CHECK_AND_LOG_ERROR( GFSDK_Aftermath_GpuCrashDump_GenerateJSON(
 			decoder,
 			GFSDK_Aftermath_GpuCrashDumpDecoderFlags_ALL_INFO,
 			GFSDK_Aftermath_GpuCrashDumpFormatterFlags_NONE,
@@ -243,7 +258,7 @@ namespace TrinityALImpl
 			&jsonSize ) );
 
 		// Destroy the GPU crash dump decoder object.
-		AFTERMATH_CHECK_ERROR( GFSDK_Aftermath_GpuCrashDump_DestroyDecoder( decoder ) );
+		AFTERMATH_CHECK_AND_LOG_ERROR( GFSDK_Aftermath_GpuCrashDump_DestroyDecoder( decoder ) );
 	}
 
 	// Static callback wrapper for OnCrashDump
