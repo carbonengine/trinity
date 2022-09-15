@@ -355,7 +355,7 @@ bool ProcessLifetime::FindInitialSpawnPoint( DroneAgent& drone, ProcessLifetimeD
 		return false;
 	}
 
-	if( splineTunnel->GetTunnelGroupType() == ENTRANCE_TUNNELS )
+	if( splineTunnel->GetTunnelGroupType() == SplineTunnelGroup::ENTRANCE_TUNNELS )
 	{
 		// get the curve sets for that tunnel
 		auto curveSets = splineTunnel->GetCurveSets();
@@ -393,7 +393,7 @@ void ProcessLifetime::FindASpawnPoint( DroneAgent& agent, ProcessLifetimeData* d
 
 	for( auto tunnel = begin( m_privateTunnels ); tunnel != end( m_privateTunnels ); ++tunnel )
 	{
-		if( ( *tunnel )->tunnelGroupType == ENTRANCE_TUNNELS )
+		if( ( *tunnel )->tunnelGroupType == TunnelGroupType::ENTRANCE_TUNNELS )
 		{
 			if( !( *tunnel )->splinePoints.empty() )
 			{
@@ -429,7 +429,7 @@ std::vector<Vector3> ProcessLifetime::GetEntrancePoints()
 	std::vector<Vector3> entrancePoints;
 	for( auto tunnel = begin( m_privateTunnels ); tunnel != end( m_privateTunnels ); ++tunnel )
 	{
-		if( ( *tunnel )->tunnelGroupType == ENTRANCE_TUNNELS )
+		if( ( *tunnel )->tunnelGroupType == TunnelGroupType::ENTRANCE_TUNNELS )
 		{
 			if( !( *tunnel )->splinePoints.empty() )
 			{
