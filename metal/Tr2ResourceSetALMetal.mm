@@ -59,7 +59,7 @@ namespace TrinityALImpl
 			NSUInteger texturesMax = 0;
 
 			// Init required resource mask to that required by the shader.
-			uint32_t bufferMask  = program.m_program->m_resourceMask[stage].bufferMask;
+			// uint32_t bufferMask  = program.m_program->m_resourceMask[stage].bufferMask;
 			uint32_t textureMask = program.m_program->m_resourceMask[stage].textureMask;
 			uint32_t samplerMask = program.m_program->m_resourceMask[stage].samplerMask;
 
@@ -83,7 +83,7 @@ namespace TrinityALImpl
 						buffersMask |= (1 << bufferIndex);
 
 						// Remove this resource from mask.
-						bufferMask &= ~(1 << bufferIndex);
+						// bufferMask &= ~(1 << bufferIndex);
 					}
 					break;
 				case Tr2ResourceSetDescriptionAL::TEXTURE:
@@ -136,7 +136,7 @@ namespace TrinityALImpl
 						buffersMask |= (1 << bufferIndex);
 
 						// Remove this resource from mask.
-						bufferMask &= ~(1 << bufferIndex);
+						// bufferMask &= ~(1 << bufferIndex);
 					}
 					break;
 				case Tr2ResourceSetDescriptionAL::TEXTURE:

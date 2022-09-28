@@ -179,17 +179,6 @@ namespace TrinityALImpl
 		{
 			uint32_t mipMapCount = desc.GetTrueMipCount();
 
-			uint32_t bytesPerRow    = 0;
-			uint32_t bytesPerSlice  = 0;
-			const void *textureData = nil;
-
-			if( initialData )
-			{
-				textureData   = initialData->m_sysMem;
-				bytesPerRow   = initialData->m_sysMemPitch;
-				bytesPerSlice = initialData->m_sysMemSlicePitch;
-			}
-
 			m_mtlTexture = metalContext->CreateMetalTexture(metalTextureType,
 															metalPixelFormat,
 															desc.GetWidth(),
