@@ -9,7 +9,7 @@ project(ShaderCompiler VERSION 1.0.0)
 
 cmake_policy(SET CMP0074 NEW)
 set(CMAKE_CXX_STANDARD 17)
-set(RadGameToolsTelemetry_ROOT "${CMAKE_SOURCE_DIR}/../../../vendor/Telemetry/3.5.0.21")
+set(RadGameToolsTelemetry_ROOT "${CMAKE_SOURCE_DIR}/../../../vendor/Telemetry/3.5.0.63")
 
 include(../../../cmake/CcpVendorUtilities.cmake)
 

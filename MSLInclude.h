@@ -308,6 +308,13 @@ float radians( float degrees )
 {
 	return degrees * 0.0174532924;
 }
+ 
+// We can be fairly confident that this will be ok, since dx11/dx12 shader compilers will complain if we use unaccepted types in here...
+template <typename T>
+T rcp( T v )
+{
+	return (T)1.0 / v;
+}
 
 template <typename T, typename W, typename H>
 void GetDimensions( texture2d<T> tex, thread W& w, thread H& h )

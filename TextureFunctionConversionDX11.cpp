@@ -820,7 +820,40 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 	{
 		isGatherCall = true;
 		functionToken.stringValue = MakeInlineString( "gather" );
+		
+		// Add x component enumeration to the function
+		auto x = ScannerToken::FromTokenType(OP_INT_CONST, call->GetLocation());
+		x.stringValue = MakeInlineString("component::x");
+		ASTNode* component = new ASTNode(NT_CONSTANT, call->GetLocation(), call->GetScope(), &x);
+		call->AddChild(component);
+
 		SplitCoordVec( call, textureType );
+	}
+	else if (functionToken.stringValue == "GatherGreen")
+	{
+		isGatherCall = true;
+		functionToken.stringValue = MakeInlineString("gather");
+		
+		// Add y component enumeration to the function
+		auto y = ScannerToken::FromTokenType(OP_INT_CONST, call->GetLocation());
+		y.stringValue = MakeInlineString("component::y");
+		ASTNode* component = new ASTNode(NT_CONSTANT, call->GetLocation(), call->GetScope(), &y);
+		call->AddChild(component);
+
+		SplitCoordVec(call, textureType);
+	}
+	else if (functionToken.stringValue == "GatherBlue")
+	{
+		isGatherCall = true;
+		functionToken.stringValue = MakeInlineString("gather");
+		
+		// Add z component enumeration to the function
+		auto z = ScannerToken::FromTokenType(OP_INT_CONST, call->GetLocation());
+		z.stringValue = MakeInlineString("component::z");
+		ASTNode* component = new ASTNode(NT_CONSTANT, call->GetLocation(), call->GetScope(), &z);
+		call->AddChild(component);
+
+		SplitCoordVec(call, textureType);
 	}
 	else if( functionToken.stringValue == "Load" )
 	{
