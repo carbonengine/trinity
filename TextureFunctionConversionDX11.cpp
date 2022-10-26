@@ -822,10 +822,10 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 		functionToken.stringValue = MakeInlineString( "gather" );
 		
 		// Add x component enumeration to the function
-		auto x = ScannerToken::FromTokenType(OP_INT_CONST, call->GetLocation());
-		x.stringValue = MakeInlineString("component::x");
-		ASTNode* component = new ASTNode(NT_CONSTANT, call->GetLocation(), call->GetScope(), &x);
-		call->AddChild(component);
+		//auto x = ScannerToken::FromTokenType(OP_INT_CONST, call->GetLocation());
+		//x.stringValue = MakeInlineString("component::x");
+		//ASTNode* component = new ASTNode(NT_CONSTANT, call->GetLocation(), call->GetScope(), &x);
+		//call->AddChild(component);
 
 		SplitCoordVec( call, textureType );
 	}
