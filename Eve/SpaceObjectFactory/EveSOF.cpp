@@ -840,8 +840,6 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 	// cycle over all hulls in the multi-hull list
 	Vector3 hullOffset( 0.f, 0.f, 0.f );
 
-	EveSpaceObject2Ptr objAsSpaceObject = BlueCastPtr( obj->GetRootObject() );
-
 	for( size_t hullIdx = 0; hullIdx < dna->GetMultiHullCount(); ++hullIdx )
 	{
 		// cycle over all planesets of this hull
@@ -860,7 +858,7 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 			planeEffect->StartUpdate();
 
 			// Select the planeset's data based on the usage
-			std::string effectResPath, imageMapResPath, externalParamName;
+			std::string effectResPath, imageMapResPath;
 			float angularFadeOut = 0.f;
 			switch( planeSetData->usage )
 			{
@@ -891,21 +889,9 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 			planeEffect->AddResourceTexture2D( BlueSharedString( "MaskMap" ), planeSetData->maskMapResPath.c_str() );
 
 			// Imagemap texture?
-			if( objAsSpaceObject && (!imageMapResPath.empty() || !externalParamName.empty()) )
+			if( !imageMapResPath.empty() )
 			{
 				planeEffect->AddResourceTexture2D( BlueSharedString( "ImageMap" ), imageMapResPath.c_str() );
-
-				if( !externalParamName.empty() )
-				{
-					ITriEffectParameter* imageMapParameter = planeEffect->GetParameterByName( "ImageMap" );
-					Tr2ExternalParameterPtr externalParameter;
-					externalParameter.CreateInstance();
-					externalParameter->SetName( externalParamName );
-					externalParameter->SetDestinationObject( imageMapParameter );
-					externalParameter->SetDestinationAttribute( "resourcePath" );
-					externalParameter->Initialize();
-					objAsSpaceObject->AddExternalParameter( externalParameter );
-				}
 			}
 
 			// parameters

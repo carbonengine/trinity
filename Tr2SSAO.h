@@ -75,6 +75,8 @@ private:
 		// Importance
 		Tr2RenderTargetPtr importanceTargetA;
 		Tr2RenderTargetPtr importanceTargetB;
+
+		Tr2RenderTargetPtr outputTarget;
 	};
 
 	struct Layer

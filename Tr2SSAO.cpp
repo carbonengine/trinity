@@ -30,6 +30,7 @@ Tr2SSAO::SSAOResources::SSAOResources()
 	ssaoWorkerTargetB.CreateInstance();
 	importanceTargetA.CreateInstance();
 	importanceTargetB.CreateInstance();
+	outputTarget.CreateInstance();
 }
 
 void Tr2SSAO::SSAOResources::ReleaseResources()
@@ -40,6 +41,7 @@ void Tr2SSAO::SSAOResources::ReleaseResources()
 	ssaoWorkerTextureB = {};
 	importanceTargetA->Destroy();
 	importanceTargetB->Destroy();
+	outputTarget->Destroy();
 }
 
 void Tr2SSAO::Layer::ReleaseResources()
@@ -230,6 +232,10 @@ bool Tr2SSAO::PrepareSsaoResources( Layer& layer, const Layer* prevLayer, Tr2Pri
 			}
 		}
 	}
+	if( !prevLayer && m_large.enabled && !layer.resources.outputTarget->IsValid() )
+	{
+		CR_RETURN_VAL( layer.resources.outputTarget->Create( m_inputDepthBuffer->GetWidth(), m_inputDepthBuffer->GetHeight(), 1, PIXEL_FORMAT_R8_UNORM, 1, 0, EX_BIND_UNORDERED_ACCESS ), false );
+	}
 	return true;
 }
 
@@ -245,7 +251,7 @@ bool Tr2SSAO::OnPrepareResources()
 		return false;
 	}
 
-	if( !m_detail.enabled && !m_large.enabled )
+	if( !m_detail.enabled )
 	{
 		return false;
 	}
@@ -340,11 +346,14 @@ void Tr2SSAO::UpdateEffect( Layer& layer )
 	layer.effect->SetParameter( BlueSharedString( "g_BilateralUpscaleInput" ), settings.blurPassCount ? layer.resources.ssaoWorkerTargetA : layer.resources.ssaoWorkerTargetB );
 	layer.effect->SetParameter( BlueSharedString( "g_BilateralUpscaleDepth" ), m_inputDepthBuffer );
 	layer.effect->SetParameter( BlueSharedString( "g_BilateralUpscaleDownscaledDepth" ), layer.resources.deinterleavedDepthTarget );
-	layer.effect->SetParameter( BlueSharedString( "g_BilateralUpscaleOutput" ), m_outputTarget );
+	layer.effect->SetParameter( BlueSharedString( "g_BilateralUpscaleOutput" ), layer.resources.outputTarget->IsValid() ? layer.resources.outputTarget : m_outputTarget );
+
+	auto& otherLayer = &layer == &m_detail ? m_large : m_detail;
+	layer.effect->SetParameter( BlueSharedString( "g_PrevLayerSSAO" ), otherLayer.resources.outputTarget );
 
 	// Apply pass
 	layer.effect->SetParameter( BlueSharedString( "g_ApplyFinalSSAO" ), settings.blurPassCount ? layer.resources.ssaoWorkerTargetA : layer.resources.ssaoWorkerTargetB );
-	layer.effect->SetParameter( BlueSharedString( "g_ApplyOutput" ), m_outputTarget );
+	layer.effect->SetParameter( BlueSharedString( "g_ApplyOutput" ), layer.resources.outputTarget->IsValid() ? layer.resources.outputTarget : m_outputTarget );
 }
 
 bool Tr2SSAO::OnModified( Be::Var* value )
