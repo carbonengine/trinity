@@ -1018,15 +1018,33 @@ bool TriStepRenderPostProcess::ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain
 			}
 
 			m_grainShader->StartUpdate();
-			m_grainShader->SetOption( BlueSharedString( "COLORED_GRAIN_TOGGLE" ),
-				BlueSharedString( filmGrain->m_colored ? "COLORED_GRAIN_ENABLED" : "COLORED_GRAIN_DISABLED" ) );
-			m_grainShader->SetParameter( BlueSharedString( "GrainIntensity" ), filmGrain->m_intensity );
-			m_grainShader->SetParameter( BlueSharedString( "ColoredGrain" ), filmGrain->m_colored ? 1.0f : 0.0f );
-			m_grainShader->SetParameter( BlueSharedString( "GrainColorAmount" ), filmGrain->m_colorAmount );
-			m_grainShader->SetParameter( BlueSharedString( "GrainSize" ), filmGrain->m_grainSize );
-			m_grainShader->SetParameter( BlueSharedString( "GrainLuminanceExponent" ), filmGrain->m_luminanceExponent );
-			
+
+
+			//shared parameters
+			if( filmGrain->m_compare )
+			{
+				m_grainShader->SetOption( BlueSharedString( "TECHNIQUE" ), BlueSharedString( "TECHNIQUE_COMPARE" ) );
+			}
+			else
+			{
+				m_grainShader->SetOption( BlueSharedString( "TECHNIQUE" ), BlueSharedString( filmGrain->m_useNewTechnique ? "TECHNIQUE_NEW" : "TECHNIQUE_OLD" ) );
+			}
+			m_grainShader->SetParameter( BlueSharedString( "GrainColorAmount" ), filmGrain->m_colored ? filmGrain->m_colorAmount : 0.0f );
 			m_grainShader->SetParameter( BlueSharedString( "InputTexture" ), PLACEHOLDER );
+
+			//old parameters
+			m_grainShader->SetParameter( BlueSharedString( "OldGrainSize" ), filmGrain->m_oldGrainSize );
+			m_grainShader->SetParameter( BlueSharedString( "OldGrainIntensity" ), filmGrain->m_oldIntensity );
+			m_grainShader->SetParameter( BlueSharedString( "OldGrainLuminanceExponent" ), filmGrain->m_oldLuminanceExponent );
+
+			//new parameters
+			m_grainShader->SetParameter( BlueSharedString( "NewGrainSize" ), filmGrain->m_newGrainSize );
+			m_grainShader->SetParameter( BlueSharedString( "NewGrainIntensity" ), filmGrain->m_newIntensity );
+			m_grainShader->SetParameter( BlueSharedString( "NewGrainDensity" ), filmGrain->m_newGrainDensity );
+			m_grainShader->SetParameter( BlueSharedString( "NewGrainContrast" ), filmGrain->m_newGrainContrast );
+			m_grainShader->SetParameter( BlueSharedString( "NewLuminanceSensitivity" ), filmGrain->m_newLuminanceSensitivity );
+			m_grainShader->AddResourceTexture2D( BlueSharedString( "NoiseTexture" ), "res:/texture/global/film_grain_noise.png" );
+			
 			m_grainShader->EndUpdate();
 
 			filmGrain->SetDirty( false );

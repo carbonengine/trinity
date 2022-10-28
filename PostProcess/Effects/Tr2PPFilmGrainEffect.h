@@ -23,11 +23,21 @@ public:
 	// Tr2PPEffect
 	bool IsActive() override;
 
-	float m_intensity;
+	bool m_useNewTechnique;
+	bool m_compare;
+	bool m_srgbCorrect;
 	bool m_colored;
 	float m_colorAmount;
-	float m_grainSize;
-	float m_luminanceExponent;
+
+	float m_oldGrainSize;
+	float m_oldIntensity;
+	float m_oldLuminanceExponent;
+
+	float m_newGrainSize;
+	float m_newIntensity;
+	float m_newGrainDensity;
+	float m_newGrainContrast;
+	float m_newLuminanceSensitivity;
 };
 
 TYPEDEF_BLUECLASS( Tr2PPFilmGrainEffect );
