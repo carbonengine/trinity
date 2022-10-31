@@ -328,6 +328,13 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 			taa = postProcess->GetTaa();
 		}
 	}
+
+	// fsr is enabled on all quality levels, but sharpening is only for high
+	if( fidelity && !fidelity->m_fsrEnabled && m_quality < HIGH )
+	{
+		fidelity = nullptr;
+	}
+
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
 	renderContext.m_esm.PushRenderTarget();
@@ -1456,7 +1463,7 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 		{
 			auto coc = m_renderInfo->GetTempTexture( 1.0f, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_SNORM );
 			auto blur = m_renderInfo->GetTempTexture( 1.0f, Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_SNORM );
-			
+
 			{
 				GPU_REGION( renderContext, "CoC" );
 				m_depthOfFieldCoCShader->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
