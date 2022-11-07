@@ -553,7 +553,7 @@ void EveBoosterSet2Renderable::CalculateSplineData( float deltaT )
 
 
 	// first tangent is always constant and points backwards from ship
-	Vector3 firstTangent( 0.f, 0.f, -1.f * m_boosterSet->m_trailsSmoothing );
+	Vector3 firstTangent( 0.f, 0.f, -1.f * std::min( m_boosterSet->m_trailsSmoothing, Length( m_trailsControlPositions[1] - m_trailsControlPositions[0] ) ) );
 	m_trailsControlNormals[0] = TransformNormal( firstTangent, m_parentTransform );
 
 	// last tangent is always from before-last to last point

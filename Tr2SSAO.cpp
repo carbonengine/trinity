@@ -97,6 +97,7 @@ void Tr2SSAO::ReleaseResources( TriStorage s )
 	m_detail.ReleaseResources();
 	m_large.ReleaseResources();
 
+	m_outputTarget->Detach();
 	m_outputTarget->Destroy();
 }
 
