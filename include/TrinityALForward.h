@@ -34,7 +34,7 @@
 #include <algorithm>
 #include <set>
 
-#include "CcpCore/include/CcpCore.h"
+#include <CcpCore.h>
 
 #ifdef _MSC_VER
 #pragma warning(pop)
