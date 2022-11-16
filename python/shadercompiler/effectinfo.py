@@ -530,7 +530,7 @@ class EffectInfo(object):
         return options
 
 
-def apply_to_shaders(path, callback):
+def apply_to_shaders(path, callback, shader_filter=None):
     """
     Applies a callback to all shader permutations
 
@@ -538,6 +538,8 @@ def apply_to_shaders(path, callback):
     :type path: basestring
     :param callback: callback function that is called for each shader permutation
     :type callback: (ShaderInfo)->None
+    :param shader_filter: optional filter for permutations, called with platform, shader model
+    :type shader_filter: (int, int, list[(str, Permutation)])->bool
     :return:
     """
     for platform in PLATFORM_NAMES.iterkeys():
@@ -554,6 +556,9 @@ def apply_to_shaders(path, callback):
             for each in effect.permutations:
                 count *= len(each.options)
             for each in xrange(count):
+                if shader_filter:
+                    if not shader_filter(platform, sm, effect.index_to_options(each)):
+                        continue
                 callback(effect.get_shader(each))
 
 
