@@ -22,41 +22,33 @@ Tr2ActionPlaySound::Tr2ActionPlaySound( IRoot* ) :
 
 void Tr2ActionPlaySound::Start( Tr2Controller& controller )
 {
-	IEveEffectChildrenOwnerPtr owner = BlueCastPtr( controller.GetOwner() );
+	ITr2SoundEmitterOwnerPtr owner = BlueCastPtr( controller.GetOwner() );
 
-	if( owner && !m_target.empty() )
+	if( !m_target.empty() )
 	{
-		owner = BlueCastPtr( owner->GetEffectChildByName( m_target.c_str() ) );
-	}
-
-	if( !owner )
-	{
-		if( !m_target.empty() )
+		if( EveMultiEffectPtr multiEffect = BlueCastPtr( controller.GetOwner() ) )
 		{
-			if( EveMultiEffectPtr multiEffect = BlueCastPtr( controller.GetOwner() ) )
+			if( EveMultiEffectParameterPtr mep = multiEffect->GetParameterByName( m_target ) )
 			{
-                if( EveMultiEffectParameterPtr mep = multiEffect->GetParameterByName( m_target ) )
-                {
-					owner = BlueCastPtr( mep->GetParameterObject() );
-                }
-			} 
-		}
-		if( !owner )
+				owner = BlueCastPtr( mep->GetParameterObject() );
+			}
+		} 
+		else if( IEveEffectChildrenOwnerPtr childEffectOwner = BlueCastPtr( controller.GetOwner() ) )
 		{
-			return;
+			owner = BlueCastPtr( childEffectOwner->GetEffectChildByName( m_target.c_str() ) );
 		}
 	}
 
-	if( auto emitterOwner = dynamic_cast<ITr2SoundEmitterOwner*>( owner.p ) )
+	if( owner != nullptr )
 	{
-		if( auto emitter = emitterOwner->FindSoundEmitter( m_emitterName.c_str() ) )
+		if( auto emitter = owner->FindSoundEmitter( m_emitterName.c_str() ) )
 		{
 			emitter->SendEvent( static_cast<const wchar_t*>( CA2W( m_soundEvent.c_str() ) ), m_bypassPrefix );
 		}
 	}
 	else
 	{
-		CCP_LOGERR( "Tr2ActionPlaySound failed to find an owner! The target must be dervied from ITr2SoundEmitterOwner." );
+		CCP_LOGERR( "Tr2ActionPlaySound failed to find an owner! The target must be derived from ITr2SoundEmitterOwner." );
 	}
 }
 
