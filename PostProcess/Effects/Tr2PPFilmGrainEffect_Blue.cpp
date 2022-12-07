@@ -27,7 +27,7 @@ const Be::ClassInfo* Tr2PPFilmGrainEffect::ExposeToBlue()
 		MAP_ATTRIBUTE( "newIntensity", m_newIntensity, "Film grain intensity. \n:jessica-group: New technique settings", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "newGrainDensity", m_newGrainDensity, "Density of grains. Lower values produces well-spaced distinct grains, while higher values produce a more even noise. \n:jessica-group: New technique settings", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "newGrainContrast", m_newGrainContrast, "Contrast of grains, a higher value produces sharper grain edges. \n:jessica-group: New technique settings", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "newLuminanceSensitivity", m_newLuminanceSensitivity, "Luminance sensitivity. The higher the value, the more the noise is reduced for bright pixels. 0.0 disables the reduction completely. \n:jessica-group: New technique settings", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "newBrightnessModifier", m_newBrightnessModifier, "How the brightness of the pixel affects the film grain. Negative values reduce the noise intensity for bright pixels, while positive values increase the noise for bright pixels. \n:jessica-group: New technique settings", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		EXPOSURE_CHAINTO( Tr2PPEffect )
 }

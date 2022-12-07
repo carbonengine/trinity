@@ -37,7 +37,7 @@ public:
 	float m_newIntensity;
 	float m_newGrainDensity;
 	float m_newGrainContrast;
-	float m_newLuminanceSensitivity;
+	float m_newBrightnessModifier;
 };
 
 TYPEDEF_BLUECLASS( Tr2PPFilmGrainEffect );

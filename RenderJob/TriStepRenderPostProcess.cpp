@@ -1033,11 +1033,13 @@ bool TriStepRenderPostProcess::ProcessFilmGrain( Tr2PPFilmGrainEffect* filmGrain
 			m_grainShader->SetParameter( BlueSharedString( "OldGrainLuminanceExponent" ), filmGrain->m_oldLuminanceExponent );
 
 			//new parameters
+			float threshold = 1.0f - filmGrain->m_newGrainDensity;
+			float edge = 1.0f / ( filmGrain->m_newGrainContrast * filmGrain->m_newGrainSize );
 			m_grainShader->SetParameter( BlueSharedString( "NewGrainSize" ), filmGrain->m_newGrainSize );
 			m_grainShader->SetParameter( BlueSharedString( "NewGrainIntensity" ), filmGrain->m_newIntensity );
-			m_grainShader->SetParameter( BlueSharedString( "NewGrainDensity" ), filmGrain->m_newGrainDensity );
-			m_grainShader->SetParameter( BlueSharedString( "NewGrainContrast" ), filmGrain->m_newGrainContrast );
-			m_grainShader->SetParameter( BlueSharedString( "NewLuminanceSensitivity" ), filmGrain->m_newLuminanceSensitivity );
+			m_grainShader->SetParameter( BlueSharedString( "NewGrainThreshold" ), threshold );
+			m_grainShader->SetParameter( BlueSharedString( "NewGrainEdge" ), edge );
+			m_grainShader->SetParameter( BlueSharedString( "NewBrightnessModifier" ), filmGrain->m_newBrightnessModifier );
 			m_grainShader->AddResourceTexture2D( BlueSharedString( "NoiseTexture" ), "res:/texture/global/film_grain_noise.png" );
 			
 			m_grainShader->EndUpdate();
