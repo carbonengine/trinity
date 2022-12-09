@@ -2861,7 +2861,7 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const 
 			}
 
 
-			if ( !ProcessLayoutDistributionConditions( placement, dna, locators, locatorSets[placement.locatorSetName]) )
+			if ( !ProcessLayoutDistributionConditions( placement, dna, locators, locatorSets[placement.locatorSetName] ) )
 			{
 				placementIdx++;
 				continue;
@@ -2869,7 +2869,7 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const 
 
 			if( placement.hasDistribution )
 			{
-				ProcessLayoutDistributionDistribute(placement.distribution, dna, locators, locatorSets[placement.locatorSetName]);
+				ProcessLayoutDistributionDistribute( placement.distribution, dna, locators, locatorSets[placement.locatorSetName] );
 			}
 			
 			EveSOFDNAPtr placementDna;
