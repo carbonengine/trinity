@@ -76,7 +76,7 @@ using std::max;
 #endif
 
 
-#include "CcpMath/include/CcpMath.h"
+#include <CcpMath.h>
 
 #include "include/Tr2WindowHandle.h"
 #include "TrinityAL/include/TrinityAL.h"
