@@ -2817,7 +2817,6 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const 
 							if( mLoc.uniqueID == pID )
 							{
 								inBoth = true;
-								break;
 							}
 						}
 
@@ -3238,11 +3237,7 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 
 	for( auto& placementContainer : placementContainers )
 	{
-		// we don't really know until now if we have an empty placement container
-		if( !placementContainer->Empty() )
-		{
-			container->AddToEffectChildrenList( placementContainer );
-		}		
+		container->AddToEffectChildrenList( placementContainer );
 	}
 
 	parent->AddToEffectChildrenList( container );

@@ -299,33 +299,33 @@ Tr2PerObjectData* EveSpaceObjectDecal::GetPerObjectData( ITriRenderBatchAccumula
 		return NULL;
 	}
 
-    // world matrix
-    perObjectData->m_vsData.m_worldMatrix = Transpose( m_parentData.transform );
+	// world matrix
+	perObjectData->m_worldMatrix = Transpose( m_parentData.transform );
 	// inv world matrix
-    perObjectData->m_vsData.m_invWorldMatrix = Inverse( perObjectData->m_vsData.m_worldMatrix );
+	perObjectData->m_invWorldMatrix = Inverse( perObjectData->m_worldMatrix );
 
 	// decal matrix (both nrm and inv)
-    perObjectData->m_vsData.m_decalMatrix = Transpose( m_decalMatrix );
-    perObjectData->m_vsData.m_invDecalMatrix = Transpose( m_invDecalMatrix );
+	perObjectData->m_decalMatrix = Transpose( m_decalMatrix );
+	perObjectData->m_invDecalMatrix = Transpose( m_invDecalMatrix );
 
 	// matrix from possible bone animation of parent
-    perObjectData->m_vsData.m_parentBoneMatrix = Transpose( m_parentBoneMatrix );
-    perObjectData->m_vsData.m_invParentBoneMatrix = Inverse( Transpose( m_parentBoneMatrix ) );
+	perObjectData->m_parentBoneMatrix = Transpose( m_parentBoneMatrix );
+	perObjectData->m_invParentBoneMatrix = Inverse( Transpose( m_parentBoneMatrix ) );
 
 	// clip sphere data from parent
-    perObjectData->m_psData.m_shipData = m_parentData.shipData;
-    perObjectData->m_psData.m_clipData = m_parentData.clipData;
+	perObjectData->m_shipData = m_parentData.shipData;
+	perObjectData->m_clipData = m_parentData.clipData;
 
 	// display data
-    perObjectData->m_psData.m_displayData = Vector4( (float)m_parentData.killCount, m_isVisible, 0.f, 0.f );
+	perObjectData->m_displayData = Vector4( (float)m_parentData.killCount, m_isVisible, 0.f, 0.f );
 
 	if( m_parentData.shLighting )
 	{
-		memcpy( perObjectData->m_psData.m_shLightingCoefficients, m_parentData.shLighting, sizeof( perObjectData->m_psData.m_shLightingCoefficients ) );
+		memcpy( perObjectData->m_shLightingCoefficients, m_parentData.shLighting, sizeof( perObjectData->m_shLightingCoefficients ) );
 	}
 	else
 	{
-		memset( perObjectData->m_psData.m_shLightingCoefficients, 0, sizeof( perObjectData->m_psData.m_shLightingCoefficients ) );
+		memset( perObjectData->m_shLightingCoefficients, 0, sizeof( perObjectData->m_shLightingCoefficients ) );
 	}
 
 	return perObjectData;
@@ -871,6 +871,6 @@ std::vector<uint32_t> EveSpaceObjectDecal::GetDecalPrimitiveCounts() const
 void EveDecalPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 {
 	// add up constant count, see EveDecalPerObjectData
-	FillAndSetConstants( *buffers[VERTEX_SHADER], &m_vsData, sizeof(DecalVSPerObjectData), VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
-	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_psData, sizeof(DecalPSPerObjectData), PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+	FillAndSetConstants( *buffers[VERTEX_SHADER], &m_worldMatrix, 6 * 64, VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
+	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_displayData, ( 4 + Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT ) * 16, PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
 }

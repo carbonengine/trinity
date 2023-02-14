@@ -12,7 +12,6 @@
 #include "Tr2Variable.h"
 #include "TriFrustum.h"
 #include "Tr2AddSafeGrowableBuffer.h"
-#include "TbbStub.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2GpuBuffer );
@@ -94,8 +93,7 @@ private:
 	ALResult ClearLightIndices( Tr2RenderContext& renderContext );
 	ALResult UpdateLightBuffer( Tr2RenderContext& renderContext );
 
-	Tr2EnumerableThreadSpecific<std::vector<PerLightData>> m_tlsLightData;
-	std::vector<PerLightData> m_lightData;
+	Tr2AddSafeGrowableBuffer<PerLightData> m_lightData;
 	Tr2GpuStructuredBufferPtr m_lightBuffer;
 	Tr2GpuStructuredBufferPtr m_indexBuffer;
 

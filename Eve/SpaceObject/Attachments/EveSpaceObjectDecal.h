@@ -28,22 +28,6 @@ struct DecalIndexBuffer
 	uint32_t m_primitiveCount{ 0 };
 };
 
-struct DecalVSPerObjectData {
-    Matrix m_worldMatrix;
-    Matrix m_invWorldMatrix;
-    Matrix m_decalMatrix;
-    Matrix m_invDecalMatrix;
-    Matrix m_parentBoneMatrix;
-    Matrix m_invParentBoneMatrix;
-};
-
-struct DecalPSPerObjectData {
-    Vector4 m_displayData;
-    Vector4 m_shipData;
-    Vector4 m_clipData;
-    Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
-};
-
 // --------------------------------------------------------------------------------
 // Description:
 //   This class holds the per object data for decals
@@ -56,9 +40,17 @@ public:
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
 
 	// vs per object data
-    DecalVSPerObjectData m_vsData;
+	Matrix m_worldMatrix;
+	Matrix m_invWorldMatrix;
+	Matrix m_decalMatrix;
+	Matrix m_invDecalMatrix;
+	Matrix m_parentBoneMatrix;
+	Matrix m_invParentBoneMatrix;
 	// pixel shader per object data
-    DecalPSPerObjectData m_psData;
+	Vector4 m_displayData;
+	Vector4 m_shipData;
+	Vector4 m_clipData;
+	Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
 };
 
 // --------------------------------------------------------------------------------

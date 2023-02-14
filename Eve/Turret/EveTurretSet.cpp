@@ -1780,10 +1780,10 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	Vector3 scale, translation;
 
 	// tell "parent"-ship matrix
-	perObjectData->m_vsData.m_shipMatrix = Transpose( m_parentData.transform );
+	perObjectData->m_shipMatrix = Transpose( m_parentData.transform );
 
 	// put together clip-data, so we can have a clip plane to cut off the turrets base to avoid intersections
-	perObjectData->m_vsData.m_baseCutoffData = Vector4( m_bottomClipHeight, 0.f, 0.f, 0.f );
+	perObjectData->m_baseCutoffData = Vector4( m_bottomClipHeight, 0.f, 0.f, 0.f );
 
 	// fill with data
 	if( !m_singleTurrets.empty() )
@@ -1830,13 +1830,13 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 				// actual turret position and rotation
 				if( m_singleTurrets[i].valid )
 				{
-					perObjectData->m_vsData.m_turretRotation[turretIndex] = m_singleTurrets[i].localQuaternion;
-					perObjectData->m_vsData.m_turretTranslation[turretIndex] = m_singleTurrets[i].localPosition;
+					perObjectData->m_turretRotation[turretIndex] = m_singleTurrets[i].localQuaternion;
+					perObjectData->m_turretTranslation[turretIndex] = m_singleTurrets[i].localPosition;
 				}
 				else
 				{
-					perObjectData->m_vsData.m_turretTranslation[turretIndex] = Vector4( 0, 0, 0, 1 );
-					perObjectData->m_vsData.m_turretRotation[turretIndex] = Quaternion( 0, 0, 0, 1 );
+					perObjectData->m_turretTranslation[turretIndex] = Vector4( 0, 0, 0, 1 );
+					perObjectData->m_turretRotation[turretIndex] = Quaternion( 0, 0, 0, 1 );
 				}
 
 				++turretIndex;
@@ -1844,18 +1844,18 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 		}
 
 		// store how many bones in in the turrets, so we can correctly read from the buffer in the shader
-		perObjectData->m_vsData.m_turretSetData = Vector4( (float)boneCount, 0, 0, 0 );
+		perObjectData->m_turretSetData = Vector4( (float)boneCount, 0, 0, 0 );
 
 		// ps data
-		perObjectData->m_psData.m_shipData = m_parentData.shipData;
-		perObjectData->m_psData.m_clipData1 = m_parentData.clipData;
+		perObjectData->m_shipData = m_parentData.shipData;
+		perObjectData->m_clipData1 = m_parentData.clipData;
 		if( m_parentShLighting )
 		{
-			memcpy( perObjectData->m_psData.m_shLightingCoefficients, m_parentShLighting, sizeof( perObjectData->m_psData.m_shLightingCoefficients ) );
+			memcpy( perObjectData->m_shLightingCoefficients, m_parentShLighting, sizeof( perObjectData->m_shLightingCoefficients ) );
 		}
 		else
 		{
-			memset( perObjectData->m_psData.m_shLightingCoefficients, 0, sizeof( perObjectData->m_psData.m_shLightingCoefficients ) );
+			memset( perObjectData->m_shLightingCoefficients, 0, sizeof( perObjectData->m_shLightingCoefficients ) );
 		}
 	}
 
@@ -2859,14 +2859,14 @@ float EveTurretSet::GetBonePitchOffset(unsigned int boneIndex) const{
 void EveTurretSet::SetTurretBonePose( EveTurretSetPerObjectData* perObjectData, int boneIndex, const Vector3& poseTranslation, const Quaternion& poseRotation )
 {
 	int startIndex = boneIndex * 8;
-	perObjectData->m_vsData.m_turretPosAndRotationBuffer[startIndex] = poseTranslation.x;
-	perObjectData->m_vsData.m_turretPosAndRotationBuffer[startIndex+1] = poseTranslation.y;
-	perObjectData->m_vsData.m_turretPosAndRotationBuffer[startIndex+2] = poseTranslation.z;
-	perObjectData->m_vsData.m_turretPosAndRotationBuffer[startIndex+3] = 1.0f;
-	perObjectData->m_vsData.m_turretPosAndRotationBuffer[startIndex+4] = poseRotation.x;
-	perObjectData->m_vsData.m_turretPosAndRotationBuffer[startIndex+5] = poseRotation.y;
-	perObjectData->m_vsData.m_turretPosAndRotationBuffer[startIndex+6] = poseRotation.z;
-	perObjectData->m_vsData.m_turretPosAndRotationBuffer[startIndex+7] = poseRotation.w;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex] = poseTranslation.x;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+1] = poseTranslation.y;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+2] = poseTranslation.z;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+3] = 1.0f;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+4] = poseRotation.x;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+5] = poseRotation.y;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+6] = poseRotation.z;
+	perObjectData->m_turretPosAndRotationBuffer[startIndex+7] = poseRotation.w;
 }
 
 // --------------------------------------------------------------------------------
@@ -2991,8 +2991,17 @@ void EveTurretSet::SetShaderOption( const BlueSharedString& name, const BlueShar
 // --------------------------------------------------------------------------------
 void EveTurretSetPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
 {
-	FillAndSetConstants( *buffers[VERTEX_SHADER], &m_vsData, sizeof(EveTurretSetVSData), VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
+	// add up constant count, see EveTurretSetPerObjectData
+	int vsConstantCount =
+		1 +															// Vector4 clip data
+		1 +							   								// Vector4 extra data (x is bone count)
+		4 +															// World matrix
+		EVE_MAX_TURRETS_PER_SET +									// Vector4 array translation
+		EVE_MAX_TURRETS_PER_SET +									// Vector4 array rotation quaternion
+		EVE_MAX_TURRET_SET_BONES +									// Vector4 array for bone pose translation
+		EVE_MAX_TURRET_SET_BONES;									// Vector4 array for bone pose rotation
+	FillAndSetConstants( *buffers[VERTEX_SHADER], &m_baseCutoffData, vsConstantCount * 16, VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
 
-	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_psData, sizeof(EveTurretSetPSData), PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_shipData, ( 2 + Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT ) * 16, PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
 
 }

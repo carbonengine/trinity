@@ -177,9 +177,6 @@ BLUE_INTERFACE( ITr2DebugRenderer2 ) : public IRoot
 
 	virtual void DrawText( TriDebugFont font, const Vector3& pos, const Color& color, const char* msg, ... ) = 0;
 
-	virtual bool GetColorForOption( Color & color, const Tr2DebugRendererOption& option ) const = 0;
-	virtual void SetColorForOption( const Tr2DebugRendererOption& option, const Color& color ) = 0;
-
 };
 
 BLUE_INTERFACE( ITr2DebugRenderable ) : public IRoot

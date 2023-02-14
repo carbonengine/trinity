@@ -806,23 +806,13 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		name += ( *it )->GetName();
 		if( renderer.HasOption( this, name.c_str() ) )
 		{
-			uint32_t color;
-			Color c;
-			if( !renderer.GetColorForOption( c, name.c_str() ) )
-			{
-				color = 0x990088ff;
-			}
-			else
-			{
-				color = c;
-			}
-
 			const LocatorStructureList& locators = ( *( *it )->GetLocators() );
 			for( size_t i = 0; i < locators.size(); ++i )
 			{
 				auto& locator = locators[i];
 				auto position = locator.position;
 				auto rotation = locator.direction;
+				uint32_t color = 0x990088ff;
 
 				size_t boneCount;
 				const granny_matrix_3x4* bones;

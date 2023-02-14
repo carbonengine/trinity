@@ -166,8 +166,6 @@ public:
 	void SetDisplayQualityModifier( DisplayQualityModifier filter );
 	void SetIsPlacementRoot( bool isPlacementRoot );
 
-	bool Empty() const;
-
 	PIEveSpaceObjectChildVector m_objects;
 
 protected:
