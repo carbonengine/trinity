@@ -4,16 +4,27 @@ if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15 CACHE STRING "The minimum macOS version we target." FORCE)
 endif()
 
-
 project(ShaderCompiler VERSION 1.0.0)
 
-cmake_policy(SET CMP0074 NEW)
-set(CMAKE_CXX_STANDARD 17)
-set(RadGameToolsTelemetry_ROOT "${CMAKE_SOURCE_DIR}/../../../vendor/Telemetry/3.5.0.63")
+if(NOT DEFINED ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "Missing required environment variable CCP_EVE_PERFORCE_BRANCH_PATH")
+elseif(NOT IS_ABSOLUTE $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH needs to be an absolute path")
+elseif(NOT EXISTS $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH is pointing at a non-existing location $ENV{CCP_EVE_PERFORCE_BRANCH_PATH}")
+elseif(NOT IS_DIRECTORY $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH needs to be a directory")
+else()
+    message(STATUS "Using CCP_EVE_PERFORCE_BRANCH_PATH located at $ENV{CCP_EVE_PERFORCE_BRANCH_PATH}")
+endif()
 
-include(../../../cmake/CcpVendorUtilities.cmake)
+file(TO_CMAKE_PATH "$ENV{CCP_EVE_PERFORCE_BRANCH_PATH}" BRANCH_ROOT_DIR)
+list(INSERT CMAKE_MODULE_PATH 0 ${BRANCH_ROOT_DIR}/cmake)
+include(CcpGlobalSettings)
+include(CcpPackageConfigHelpers)
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+
+if (APPLE)
     set(TELEMETRY_DEFAULT OFF)
 else()
     set(TELEMETRY_DEFAULT ON)
@@ -102,6 +113,8 @@ source_group(Grammar FILES
     Type.h
 )
 
+set(PUBLIC_HEADER_FILES "")
+
 set_source_files_properties(${GENERATED_SOURCES_DIR}/HLSLParser.c ${GENERATED_SOURCES_DIR}/Preprocessor.c PROPERTIES LANGUAGE CXX )
 
 if (WIN32)
@@ -137,6 +150,7 @@ add_custom_command(
 
 target_precompile_headers(ShaderCompiler PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/stdafx.h)
 target_compile_definitions(ShaderCompiler PRIVATE GLEW_MX GLEW_STATIC)
+
 target_include_directories(ShaderCompiler PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${GENERATED_SOURCES_DIR}
@@ -161,9 +175,40 @@ endif()
 
 
 if(WITH_TELEMETRY)
-    find_package(RadGameToolsTelemetry REQUIRED)
+    find_package(RadGameToolsTelemetry REQUIRED NO_CMAKE_PATH)
     target_link_libraries(ShaderCompiler PUBLIC RadGameTools::Telemetry)
     target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=1)
 else()
     target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=0)
+endif()
+
+
+# Provide an install target iff this is the top level project only
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
+    install(
+        TARGETS ShaderCompiler
+        EXPORT ShaderCompilerTargets
+        CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+        LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+        ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+        RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+    )
+    # Install rule for available public headers
+    install(FILES ${PUBLIC_HEADER_FILES} DESTINATION include)
+
+    message(STATUS "lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/")
+
+    configure_ccp_vendor_config_file(
+        TARGET ShaderCompiler
+        DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/ShaderCompilerConfig.cmake"
+        DEPENDENCIES ""
+    )
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/ShaderCompilerConfig.cmake DESTINATION .)
+
+     # Install python package
+     install(DIRECTORY python/ DESTINATION python
+     FILES_MATCHING
+     PATTERN "*.py"
+)
 endif()
