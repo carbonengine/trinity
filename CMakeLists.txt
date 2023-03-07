@@ -118,17 +118,18 @@ set(PUBLIC_HEADER_FILES "")
 set_source_files_properties(${GENERATED_SOURCES_DIR}/HLSLParser.c ${GENERATED_SOURCES_DIR}/Preprocessor.c PROPERTIES LANGUAGE CXX )
 
 if (WIN32)
-    set(LemonPath ${CMAKE_CURRENT_SOURCE_DIR}/buildtools/${CCP_VENDOR_PLATFORM}/lemon.bat)
-    set(Re2cPath ${CMAKE_CURRENT_SOURCE_DIR}/buildtools/${CCP_VENDOR_PLATFORM}/re2c.exe)
+    set(LemonPath ${Lemon_ROOT}/${CCP_VENDOR_BIN_PATH}/lemon.bat)
+    set(Re2cPath ${re2c_ROOT}/${CCP_VENDOR_BIN_PATH}re2c.exe)
 elseif (APPLE)
-    set(LemonPath ${CMAKE_CURRENT_SOURCE_DIR}/buildtools/${CCP_VENDOR_PLATFORM}/lemon.sh)
-    set(Re2cPath ${CMAKE_CURRENT_SOURCE_DIR}/buildtools/${CCP_VENDOR_PLATFORM}/re2c)
+    set(LemonPath ${Lemon_ROOT}/${CCP_VENDOR_BIN_PATH}/lemon.sh)
+    set(Re2cPath ${re2c_ROOT}/${CCP_VENDOR_BIN_PATH}re2c)
 endif()
+
 
 add_custom_command(
     OUTPUT ${GENERATED_SOURCES_DIR}/HLSLParser.c ${GENERATED_SOURCES_DIR}/HLSLParser.h
     COMMAND ${CMAKE_COMMAND} -E make_directory ${GENERATED_SOURCES_DIR}
-    COMMAND ${LemonPath} -d${GENERATED_SOURCES_DIR} -T${CMAKE_CURRENT_SOURCE_DIR}/lempar.c ${CMAKE_CURRENT_SOURCE_DIR}/HLSLParser.y
+    COMMAND ${LemonPath} -d${GENERATED_SOURCES_DIR} -T${Lemon_ROOT}/include/lempar.c ${CMAKE_CURRENT_SOURCE_DIR}/HLSLParser.y
     DEPENDS lempar.c
     MAIN_DEPENDENCY HLSLParser.y
 )
