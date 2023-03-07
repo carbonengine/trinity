@@ -118,10 +118,10 @@ set(PUBLIC_HEADER_FILES "")
 set_source_files_properties(${GENERATED_SOURCES_DIR}/HLSLParser.c ${GENERATED_SOURCES_DIR}/Preprocessor.c PROPERTIES LANGUAGE CXX )
 
 if (WIN32)
-    set(LemonPath ${Lemon_ROOT}/${CCP_VENDOR_BIN_PATH}/lemon.bat)
+    set(LemonPath ${Lemon_ROOT}/${CCP_VENDOR_BIN_PATH}lemon.bat)
     set(Re2cPath ${re2c_ROOT}/${CCP_VENDOR_BIN_PATH}re2c.exe)
 elseif (APPLE)
-    set(LemonPath ${Lemon_ROOT}/${CCP_VENDOR_BIN_PATH}/lemon.sh)
+    set(LemonPath ${Lemon_ROOT}/${CCP_VENDOR_BIN_PATH}lemon.sh)
     set(Re2cPath ${re2c_ROOT}/${CCP_VENDOR_BIN_PATH}re2c)
 endif()
 
