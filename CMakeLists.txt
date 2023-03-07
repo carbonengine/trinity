@@ -210,5 +210,10 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
      install(DIRECTORY python/ DESTINATION python
      FILES_MATCHING
      PATTERN "*.py"
+
+     # Install python build script
+     install(DIRECTORY pythonBuildScript/ DESTINATION pythonBuildScript
+     FILES_MATCHING
+     PATTERN "*.py"
 )
 endif()
