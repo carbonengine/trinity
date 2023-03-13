@@ -36,7 +36,7 @@ static const float IMPACT_ARMOR_PARTICLE_LOD_FACTOR = 400.f;
 
 EveImpactOverlay::EveImpactOverlay( IRoot* lockobj ) :
 	m_display( true ),
-	m_configuration( IMPACT_INVALID ),
+	m_configuration( ITriTargetable::IMPACT_INVALID ),
 	m_overallShieldImpact( -1.f ),
 	m_shieldIsEllipsoid( true ),
 	m_maxShieldImpacts( 8 ),
@@ -173,7 +173,7 @@ void EveImpactOverlay::UpdateSyncronous( EveUpdateContext& updateContext, EveSpa
 						m_armorImpactEmitter->SpawnOnce( args, parentVelocityWS, scale, rateModifier );
 						aidit->second.requestSpawnDebris = false;
 
-						if( m_hullImpactEmitter && m_configuration == IMPACT_HULL )
+						if( m_hullImpactEmitter && m_configuration == ITriTargetable::IMPACT_HULL )
 						{
 							m_hullImpactEmitter->SetPosition( &impactPosWS );
 							m_hullImpactEmitter->SetDirection( &impactDirWS );
@@ -471,7 +471,7 @@ int32_t EveImpactOverlay::GetDataTextureOffset() const
 // Description:
 //   Check if a certain type of defense is there
 // --------------------------------------------------------------------------------
-EveImpactOverlay::ImpactConfiguration EveImpactOverlay::GetImpactConfiguration() const
+ITriTargetable::ImpactConfiguration EveImpactOverlay::GetImpactConfiguration() const
 {
 	return m_configuration;
 }
@@ -561,15 +561,15 @@ void EveImpactOverlay::SetDamageState( float shield, float armor, float hull, bo
 	// what's left?
 	if( shield > 0.05 )
 	{
-		m_configuration = IMPACT_SHIELD;
+		m_configuration = ITriTargetable::IMPACT_SHIELD;
 	}
 	else if( armor > 0.05 )
 	{
-		m_configuration = IMPACT_ARMOR;
+		m_configuration = ITriTargetable::IMPACT_ARMOR;
 	}
 	else if( hull > 0.0 )
 	{
-		m_configuration = IMPACT_HULL;
+		m_configuration = ITriTargetable::IMPACT_HULL;
 	}
 
 	// always calculate the expected/desired number of impact effects
@@ -629,11 +629,11 @@ int EveImpactOverlay::CreateImpact( int damageLocatorIndex, const Vector3& direc
 	}
 	
 	// what's the situation?
-	if( m_configuration == IMPACT_SHIELD && lod != TR2_LOD_LOW )
+	if( m_configuration == ITriTargetable::IMPACT_SHIELD && lod != TR2_LOD_LOW )
 	{
 		return CreateShieldImpact( damageLocatorIndex, direction, lifeTime, size, intensity, parent );
 	}
-	else if( m_configuration == IMPACT_ARMOR || m_configuration == IMPACT_HULL )
+	else if( m_configuration == ITriTargetable::IMPACT_ARMOR || m_configuration == ITriTargetable::IMPACT_HULL )
 	{
 		bool spawnEffects = lod != TR2_LOD_LOW;
 		return CreateArmorImpact( damageLocatorIndex, size, spawnEffects );

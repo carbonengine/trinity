@@ -12,6 +12,13 @@
 // invalids
 const unsigned int INVALID_BONE_INDEX = 0xffffffff;
 const unsigned int INVALID_TURRET_INDEX = 0xffffffff;
+
+// audio related consts
+const std::wstring AUDIO_IMPACT_SWITCH_GROUP = L"Impact_On";
+const std::wstring AUDIO_IMPACT_SWITCH_SHIELD = L"Shield";
+const std::wstring AUDIO_IMPACT_SWITCH_ARMOR = L"Armor";
+const std::wstring AUDIO_IMPACT_SWITCH_HULL = L"Hull";
+
 namespace
 {
 	const float LOD_ANGLE_FACTOR = 0.002f;
@@ -38,7 +45,8 @@ EveTurretFiringFX::EveTurretFiringFX( IRoot* lockobj ) :
 	m_minRadius( 30.0 ),
 	m_maxScale( 10.0 ),
 	m_minScale( 1.0 ),
-	m_scaleEffectTarget( false )
+	m_scaleEffectTarget( false ),
+	m_impactConfiguration( ITriTargetable::ImpactConfiguration::IMPACT_INVALID )
 {
 	for( unsigned int i = 0; i < MUZZLECOUNT_MAX; ++i )
 	{
@@ -146,7 +154,7 @@ void EveTurretFiringFX::SetEndPosition( const Vector3* endPos )
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Use this function to scale the destination object, using the target's radius.
+//   Use this function to scale the destination object's visuals and audio emitter using the target's radius.
 // Arguments:
 //   radius - the radius of the target object.
 // --------------------------------------------------------------------------------
@@ -164,6 +172,14 @@ void EveTurretFiringFX::SetScaleByRadius( float radius )
 	for ( auto it = m_stretch.begin(); it != m_stretch.end(); it++ )
 	{
 		(*it)->SetDestObjectScale( scale );
+	}
+
+	if ( m_destinationObserver != nullptr )
+	{
+		if ( ITr2AudEmitterPtr emitter = BlueCastPtr( m_destinationObserver->GetObserver() ) )
+		{
+			emitter->SetAttenuationScalingFactor( radius );
+		}
 	}
 }
 
@@ -730,6 +746,39 @@ void EveTurretFiringFX::HandleControllerEvent( const char* name )
 	}
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Set the impact configuration of the target's impact overlay effect and handle setting values on the target's
+//   audio emitter based off of the given impact configuration.
+// Arguments:
+//   impactConfiguration - The impact configuration state of the current target. 
+// --------------------------------------------------------------------------------
+void EveTurretFiringFX::SetImpactConfiguration( ITriTargetable::ImpactConfiguration impactConfiguration )
+{
+	if( m_impactConfiguration != impactConfiguration )
+	{
+		if( m_destinationObserver != nullptr )
+		{
+			if( auto destAudioEmitter = dynamic_cast<ITr2AudEmitter*>( m_destinationObserver->GetObserver() ) )
+			{
+				switch ( impactConfiguration )
+				{
+				case ITriTargetable::ImpactConfiguration::IMPACT_ARMOR:
+					destAudioEmitter->SetSwitch( AUDIO_IMPACT_SWITCH_GROUP, AUDIO_IMPACT_SWITCH_ARMOR );
+					break;
+				case ITriTargetable::ImpactConfiguration::IMPACT_HULL:
+					destAudioEmitter->SetSwitch( AUDIO_IMPACT_SWITCH_GROUP, AUDIO_IMPACT_SWITCH_HULL );
+					break;
+				default:
+					destAudioEmitter->SetSwitch( AUDIO_IMPACT_SWITCH_GROUP, AUDIO_IMPACT_SWITCH_SHIELD );
+					break;
+				}
+			}
+		}
+	}
+	m_impactConfiguration = impactConfiguration;
+}
+
 void EveTurretFiringFX::StartControllers()
 {
 	for( auto it = m_stretch.begin(); it != m_stretch.end(); ++it )
@@ -751,6 +800,16 @@ void EveTurretFiringFX::GetDebugOptions( Tr2DebugRendererOptions& options )
 			debugRenderable->GetDebugOptions( options );
 		}
 	}
+
+	if( m_sourceObserver != nullptr )
+	{
+		m_sourceObserver->GetDebugOptions( options );
+	}
+
+	if( m_destinationObserver != nullptr )
+	{
+		m_destinationObserver->GetDebugOptions( options );
+	}
 }
 
 void EveTurretFiringFX::RenderDebugInfo( ITr2DebugRenderer2& renderer ) 
@@ -761,5 +820,15 @@ void EveTurretFiringFX::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		{
 			debugRenderable->RenderDebugInfo( renderer );
 		}
+	}
+
+	if( m_sourceObserver != nullptr )
+	{
+		m_sourceObserver->RenderDebugInfo( renderer );
+	}
+
+	if( m_destinationObserver != nullptr )
+	{
+		m_destinationObserver->RenderDebugInfo( renderer );
 	}
 }

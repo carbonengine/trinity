@@ -8,6 +8,8 @@
 #ifndef EveTurretTarget_H
 #define EveTurretTarget_H
 
+#include "Include/ITriTargetable.h"
+
 namespace ImpactBehaviour {
 	
 	enum Type {
@@ -19,7 +21,6 @@ namespace ImpactBehaviour {
 }
 
 // forwards
-BLUE_DECLARE_INTERFACE( ITriTargetable );
 BLUE_DECLARE_INTERFACE( IWorldPosition );
 
 BLUE_CLASS( EveTurretTarget ) :
@@ -57,6 +58,7 @@ public:
 
 	// target object queries
 	float GetRadius() const;
+	ITriTargetable::ImpactConfiguration GetImpactConfiguration() const;
 	bool ShowDestObject() const;
 
 private:

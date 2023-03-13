@@ -37,7 +37,7 @@ struct PerFrameData
 	Matrix viewInverse;
 	Matrix projInverse;
 	Vector3 cameraPos;
-	// cppcheck-suppress unusedStructMember 
+	// cppcheck-suppress unusedStructMember
 	float _padding0;
 	uint32_t width;
 	uint32_t height;
@@ -46,13 +46,13 @@ struct PerFrameData
 	uint32_t lightCount;
 	uint32_t indexBufferSize;
 	uint32_t msaaSamples;
-	// cppcheck-suppress unusedStructMember 
+	// cppcheck-suppress unusedStructMember
 	uint32_t _padding[1];
 };
 
-bool ExtractAnnotationValue( const Tr2EffectParameterAnnotation& annotation, 
-							const char* name,
-							uint32_t& value )
+bool ExtractAnnotationValue( const Tr2EffectParameterAnnotation& annotation,
+							 const char* name,
+							 uint32_t& value )
 {
 	if( strcmp( annotation.name, name ) == 0 )
 	{
@@ -78,7 +78,6 @@ Tr2LightManager*& Singleton()
 }
 
 Tr2LightManager::Tr2LightManager( const char* effectPath )
-	:m_lightData( LIGHT_BUFFER_SIZE, "Tr2LightManager::m_lightData" )
 {
 	m_effect.CreateInstance();
 	m_effect->SetEffectPathName( effectPath );
@@ -142,7 +141,12 @@ void Tr2LightManager::Clear( Tr2RenderContext& renderContext )
 	m_lightBufferVariable = m_lightBuffer;
 	m_indexBufferVariable = m_indexBuffer;
 	ClearLightIndices( renderContext );
-	m_lightData.Clear();
+
+	for( auto& data : m_tlsLightData )
+	{
+		data.clear();
+	}
+	m_lightData.clear();
 }
 
 void Tr2LightManager::SetFrustum( const TriFrustum& frustum )
@@ -183,7 +187,7 @@ void Tr2LightManager::AddPointLight( const Vector3& position, float radius, cons
 		data.direction = Vector3_16( Vector3( 1.f, 0.f, 0.f ) );
 		data.outerAngle = Float_16( 0.f );
 		data.innerAngle = Float_16( 0.f );
-		m_lightData.Add( data, "Tr2LightManager::m_lightData" );
+		m_tlsLightData.local().push_back( data );
 	}
 }
 
@@ -193,7 +197,7 @@ void Tr2LightManager::AddLight( PerLightData& data )
 	{
 		return;
 	}
-	float brightness = std::max( std::max( data.color.x, data.color.y), data.color.z );
+	float brightness = std::max( std::max( data.color.x, data.color.y ), data.color.z );
 	if( brightness <= 0 || data.radius <= 0 )
 	{
 		return;
@@ -211,7 +215,7 @@ void Tr2LightManager::AddLight( PerLightData& data )
 		data.color.x *= data.radius * dimming;
 		data.color.y *= data.radius * dimming;
 		data.color.z *= data.radius * dimming;
-		m_lightData.Add( data, "Tr2LightManager::m_lightData" );
+		m_tlsLightData.local().push_back( data );
 	}
 }
 
@@ -228,20 +232,20 @@ ALResult Tr2LightManager::ClearLightIndices( Tr2RenderContext& renderContext )
 
 ALResult Tr2LightManager::UpdateLightBuffer( Tr2RenderContext& renderContext )
 {
-	if( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count < m_lightData.GetCount() )
+	if( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count < uint32_t( m_lightData.size() ) )
 	{
-		CR_RETURN_HR( m_lightBuffer->Create( 
-			std::max( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count + 1024, m_lightData.GetCount() ),
-			sizeof( PerLightData ), 
+		CR_RETURN_HR( m_lightBuffer->Create(
+			std::max( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count + 1024, uint32_t( m_lightData.size() ) ),
+			sizeof( PerLightData ),
 			Tr2GpuBuffer::CPU_WRITABLE ) );
 	}
 
-	auto lightCount = std::min( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count, uint32_t( m_lightData.GetCount() ) );
+	auto lightCount = std::min( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count, uint32_t( m_lightData.size() ) );
 
 	Vector4* data;
 	CR_RETURN_HR( m_lightBuffer->GetGpuBuffer( 0 )->MapForWriting( data, renderContext ) );
-	memcpy( data, m_lightData.GetData(), lightCount * sizeof( PerLightData ) );
-	CCP_STATS_ADD( lightsGathered, m_lightData.GetCount() );
+	memcpy( data, m_lightData.data(), lightCount * sizeof( PerLightData ) );
+	CCP_STATS_ADD( lightsGathered, m_lightData.size() );
 	m_lightBuffer->GetGpuBuffer( 0 )->UnmapForWriting( renderContext );
 	return S_OK;
 }
@@ -263,18 +267,19 @@ ALResult Tr2LightManager::DoUpdateLists( uint32_t msaaType, Tr2RenderContext& re
 	perFrameData.height = uint32_t( renderContext.m_esm.GetRenderTargetHeight() );
 	perFrameData.tilesX = ( perFrameData.width + ( TILE_WIDTH - 1 ) ) / TILE_WIDTH;
 	perFrameData.tilesY = ( perFrameData.height + ( TILE_HEIGHT - 1 ) ) / TILE_HEIGHT;
-	perFrameData.lightCount = std::min( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count, uint32_t( m_lightData.GetCount() ) );
+	perFrameData.lightCount = std::min( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count, uint32_t( m_lightData.size() ) );
 	perFrameData.indexBufferSize = INDEX_BUFFER_SIZE;
 	perFrameData.msaaSamples = msaaType;
 	if( !FillAndSetConstants( m_perFrameData, perFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerFramePSStartRegister(), renderContext ) )
 	{
 		return E_FAIL;
 	}
-	static const BlueSharedString msaaOptions[] = { 
-		BlueSharedString( "DEPTH_BUFFER_NONE" ), 
-		BlueSharedString( "DEPTH_BUFFER_NON_MSAA" ), 
-		BlueSharedString( "DEPTH_BUFFER_MSAA" ) };
-	m_effect->SetOption( BlueSharedString( "DEPTH_BUFFER_TYPE" ), msaaOptions[std::min( msaaType, 2u )]);
+	static const BlueSharedString msaaOptions[] = {
+		BlueSharedString( "DEPTH_BUFFER_NONE" ),
+		BlueSharedString( "DEPTH_BUFFER_NON_MSAA" ),
+		BlueSharedString( "DEPTH_BUFFER_MSAA" )
+	};
+	m_effect->SetOption( BlueSharedString( "DEPTH_BUFFER_TYPE" ), msaaOptions[std::min( msaaType, 2u )] );
 
 	if( !Tr2Renderer::RunComputeShader( m_effect, BlueSharedString( "Clear" ), 1, 1, 1, renderContext ) )
 	{
@@ -293,7 +298,17 @@ ALResult Tr2LightManager::UpdateLists( uint32_t msaaType, Tr2RenderContext& rend
 	m_lightBufferVariable = m_lightBuffer;
 	m_indexBufferVariable = m_indexBuffer;
 
-	if( m_lightData.GetCount() == 0 )
+	m_lightData.clear();
+	for( auto& data : m_tlsLightData )
+	{
+		if( !data.empty() )
+		{
+			m_lightData.insert( end( m_lightData ), begin( data ), end( data ) );
+		}
+		data.clear();
+	}
+
+	if( m_lightData.empty() )
 	{
 		return ClearLightIndices( renderContext );
 	}
@@ -321,7 +336,7 @@ bool Tr2LightManager::OnPrepareResources()
 
 	m_lightBuffer->Create( LIGHT_BUFFER_SIZE, sizeof( PerLightData ), Tr2GpuBuffer::CPU_WRITABLE );
 	m_indexBuffer->Create( INDEX_BUFFER_SIZE, sizeof( uint32_t ), Tr2GpuStructuredBuffer::GPU_WRITABLE );
-	m_indexBufferCounter->Create( 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32_SINT,  Tr2GpuBuffer::GPU_WRITABLE );
+	m_indexBufferCounter->Create( 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32_SINT, Tr2GpuBuffer::GPU_WRITABLE );
 	ClearLightIndices( renderContext );
 	m_perFrameData.Create( sizeof( PerFrameData ), Tr2ConstantUsageAL::ONE_SHOT, nullptr, renderContext );
 

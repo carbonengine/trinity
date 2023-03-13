@@ -477,7 +477,7 @@ void EveChildContainer::DoUpdateAsyncronous( EveUpdateContext& updateContext, co
 		m_perObjectDataVs.InvalidateBufferData();
 		m_perObjectDataPs.InvalidateBufferData();
 		m_vsData.worldTransform = Transpose( m_worldTransform );
-		m_vsData.invWorldTransform = Inverse( m_worldTransform );
+		m_vsData.invWorldTransform = Transpose( Inverse( m_worldTransform ) );
 		m_vsData.worldTransformLast = Transpose( lastWorldTransform );
 	}
 	
@@ -763,7 +763,7 @@ void EveChildContainer::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 	for( auto it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
-		( *it )->RenderDebugInfo( renderer, m_worldTransform );
+		( *it )->RenderDebugInfo( renderer );
 	}
 
 	for( auto it = begin( m_objects ); it != end( m_objects ); ++it )
@@ -1084,4 +1084,10 @@ Tr2PerObjectData* EveChildContainer::GetPerObjectData( ITriRenderBatchAccumulato
 void EveChildContainer::SetIsPlacementRoot( bool isPlacementRoot )
 {
 	m_isPlacementRoot = isPlacementRoot;
+}
+
+bool EveChildContainer::Empty() const
+{
+	return m_objects.empty() && m_lights.empty() && m_attachments.empty() && m_controllers.empty() &&
+		m_curveSets.empty() && m_transformModifiers.empty() && m_observers.empty();
 }

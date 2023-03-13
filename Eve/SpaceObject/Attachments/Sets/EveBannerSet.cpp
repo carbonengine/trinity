@@ -119,6 +119,11 @@ bool EveBannerSet::Initialize()
 }
 
 
+namespace
+{
+const std::vector<float> s_fullScreenSize = { 1 };
+}
+
 bool EveBannerSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	auto aabb = GetAabb( bones, boneCount );
@@ -156,7 +161,7 @@ bool EveBannerSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 
 	if( m_effect )
 	{
-		m_effect->UsedWithScreenSize( screenSize, { 1.f } );
+		m_effect->UsedWithScreenSize( screenSize, s_fullScreenSize );
 	}
 
 	if( isLoddedOut )

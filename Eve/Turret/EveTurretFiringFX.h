@@ -11,6 +11,7 @@
 #include "TriFrustum.h"
 #include "Controllers/ITr2ControllerOwner.h"
 #include "Eve/SpaceObject/Children/IEveEffectChildrenOwner.h"
+#include "Include/ITriTargetable.h"
 #include "Tr2DebugRenderer.h"
 
 // forwards
@@ -101,6 +102,8 @@ public:
 	void SetEndPosition( const Vector3* endPos );
 	// set the scale of the destination object
 	void SetScaleByRadius( float radius );
+	// set the impact configuration of the target being hit (e.g. shield, armor or hull).
+	void SetImpactConfiguration( ITriTargetable::ImpactConfiguration impactConfiguration );
 
 	// reset the move objets when looping
 	void PrepareFiringEffectMoveObjects();
@@ -184,6 +187,9 @@ private:
 	TriCurveSetPtr m_stopCurveSet;
 	TriObserverLocalPtr m_sourceObserver;
 	TriObserverLocalPtr m_destinationObserver;
+
+	// The configuration of impact overlay on the target, e.g. whether the impact is hitting the target's shield, armor or hull
+	ITriTargetable::ImpactConfiguration m_impactConfiguration;
 };
 
 TYPEDEF_BLUECLASS( EveTurretFiringFX );

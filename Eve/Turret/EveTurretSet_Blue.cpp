@@ -137,6 +137,11 @@ const Be::ClassInfo* EveTurretSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "generatedDistributedAmbientEffect", m_generatedDistributedAmbientEffect, "The generated and distributed ambient effect across all turret locations", Be::READ )
 		MAP_ATTRIBUTE( "ambientEffectEditingMode", m_ambientEffectEditingMode, "This toggles on/off the ambient effect editing mode \n:jessica-group: Editing", Be::READWRITE | Be::NOTIFY )
 
+		MAP_ATTRIBUTE( "turretMovementObserver", m_turretMovementObserver, "The observer for turret movement sounds. Note: the positioning of this observer is automatic.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "playMovementSound", m_playMovementSound, "If true this turret set will play its mechanical movement sounds if movement audio events are defined.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "idleToTargetingMovementAudioEvent", m_idleToTargetingMovementAudioEvent, "The event to send to the audio engine for mechanical noise when a turretset moves from idle to targeting.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "targetingToIdleMovementAudioEvent", m_targetingToIdleMovementAudioEvent, "The event to send to the audio engine for mechanical noise when a turretset moves from targeting to idle.", Be::READWRITE | Be::PERSIST )
+
 		MAP_METHOD_AND_WRAP(
 			"RebuildBoundingSphere",
 			RebuildBoundingSphere,

@@ -194,7 +194,7 @@ void EveTransform::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 	for ( auto it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
-		( *it )->RenderDebugInfo( renderer, m_worldTransform );
+		( *it )->RenderDebugInfo( renderer );
 	}
 
 

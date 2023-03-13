@@ -1,4 +1,5 @@
 #include "StdAfx.h"
+#include "Audio/ITr2AudEmitter.h"
 #include "TriObserverLocal.h"
 
 
@@ -50,11 +51,30 @@ void TriObserverLocal::GetDebugOptions( Tr2DebugRendererOptions& options )
 	}
 }
 
-void TriObserverLocal::RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation )
+void TriObserverLocal::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 {
 	auto tmp = dynamic_cast< ITr2DebugRenderable* > ( m_observer.p );
 	if( tmp )
 	{
 		tmp->RenderDebugInfo( renderer );
+	}
+}
+
+
+//-----------------------------------------------------
+// Description:
+//   Send an audio event to an observer if it is not a nullptr and can be cast to ITr2AudEmitter.
+// Arguments:
+//   observer - The observer that you want to send an audio event to.
+//   audioEvent - The audio event you want to be sent to the sound engine.
+//-----------------------------------------------------
+void SendEventToAudEmitter( TriObserverLocal* observer, const std::wstring& audioEvent ) 
+{
+	if( observer != nullptr )
+	{
+		if( ITr2AudEmitter* emitter = dynamic_cast<ITr2AudEmitter*>( observer->GetObserver() ) )
+		{
+			emitter->SendEvent( audioEvent );
+		}
 	}
 }

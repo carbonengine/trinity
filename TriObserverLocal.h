@@ -27,7 +27,7 @@ public:
 
 	// debug
 	void GetDebugOptions( Tr2DebugRendererOptions& options );
-	void RenderDebugInfo( ITr2DebugRenderer2& renderer, Matrix& parentWorldLocation );
+	void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
 	std::string m_name;
 private:
@@ -38,5 +38,10 @@ private:
 
 BLUE_DECLARE_VECTOR( TriObserverLocal );
 TYPEDEF_BLUECLASS( TriObserverLocal );
+
+//--- Utility functions that act on TriObserverLocal objects. ---//
+
+// Send an audio event to an observer if it is not a nullptr and can be cast to ITr2AudEmitter.
+void SendEventToAudEmitter( TriObserverLocal* observer, const std::wstring& audioEvent );
 
 #endif

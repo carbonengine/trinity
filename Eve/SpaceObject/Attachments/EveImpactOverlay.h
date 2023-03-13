@@ -11,6 +11,7 @@
 //#include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "ITr2Renderable.h"
 #include "ITr2GeometryProvider.h"
+#include "Include/ITriTargetable.h"
 #include "Resources/Tr2LodResource.h"
 
 BLUE_DECLARE( TriPerlinCurve );
@@ -33,14 +34,6 @@ public:
 
 	EveImpactOverlay( IRoot* lockobj = NULL );
 	~EveImpactOverlay();
-
-	enum ImpactConfiguration
-	{
-		IMPACT_INVALID = 0,
-		IMPACT_SHIELD,
-		IMPACT_ARMOR,
-		IMPACT_HULL,
-	};
 
 	enum
 	{
@@ -96,7 +89,7 @@ public:
 
 	// getters
 	int32_t GetDataTextureOffset() const;
-	ImpactConfiguration GetImpactConfiguration() const;
+	ITriTargetable::ImpactConfiguration GetImpactConfiguration() const;
 	bool HasShieldEllipsoid() const;
 	float GetActivationStrength( EveUpdateContext& updateContext ) const;
 	float GetArmorImpactLifeTime() const;
@@ -132,7 +125,7 @@ private:
 	// general data
 	BlueSharedString m_name;
 	bool m_display;
-	ImpactConfiguration m_configuration;
+	ITriTargetable::ImpactConfiguration m_configuration;
 	int m_impactDataNextIdx;
 	bool m_debugForceSpawnDebris;
 	float m_armorImpactLifeTime;

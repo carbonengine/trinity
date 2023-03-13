@@ -911,6 +911,42 @@ void Tr2DebugRenderer::SetOptions( IRoot* owner, std::vector<Tr2DebugRendererOpt
 	dest.insert( options.begin(), options.end() );
 }
 
+
+bool Tr2DebugRenderer::GetColorForOption( Color& color, const Tr2DebugRendererOption& option ) const
+{
+	auto iter = m_optionColors.find( option );
+	if( iter != m_optionColors.end() )
+	{
+		color = iter->second;
+		return true;
+	}
+	return false;
+}
+
+void Tr2DebugRenderer::SetColorForOption( const Tr2DebugRendererOption& option, const Color& color )
+{
+	m_optionColors.insert_or_assign( option, color );
+}
+
+#if BLUE_WITH_PYTHON
+PyObject* Tr2DebugRenderer::PyGetColorForOption( PyObject* self, PyObject* args )
+{
+	auto renderer = BluePythonCast<Tr2DebugRenderer*>( self );
+	const char* option;
+	if( !PyArg_ParseTuple( args, "s", &option ) )
+	{
+		return nullptr;
+	}
+	Color color;
+	if( renderer->GetColorForOption( color, option ) )
+	{
+		PyObject* result = Py_BuildValue( "(ffff)", color.r, color.g, color.b, color.a );
+		return result;
+	}
+	Py_RETURN_NONE;
+}
+#endif
+
 std::vector<Tr2DebugRendererOption> Tr2DebugRenderer::GetOptions( IRoot* owner ) const
 {
 	std::vector<Tr2DebugRendererOption> result;

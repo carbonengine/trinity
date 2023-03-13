@@ -91,6 +91,14 @@ public:
 	std::vector<Tr2DebugRendererOption> GetOptions( IRoot* owner ) const;
     void SetDefaultOptions( const std::vector<Tr2DebugRendererOption>& options );
 	std::vector<Tr2DebugRendererOption> GetDefaultOptions() const;
+
+	bool GetColorForOption( Color & color, const Tr2DebugRendererOption& option ) const;
+	void SetColorForOption( const Tr2DebugRendererOption& option, const Color& color );
+
+#if BLUE_WITH_PYTHON
+	static PyObject* PyGetColorForOption( PyObject * self, PyObject * args );
+#endif
+
 private:
 	struct Vertex
 	{
@@ -119,6 +127,7 @@ private:
 	Tr2DebugRendererOptions m_defaultOptions;
 	std::map<IRootPtr, Tr2DebugRendererOptions> m_options;
 	std::set<Tr2DebugObjectReference> m_selectedObjects;
+	std::map<Tr2DebugRendererOption, Color> m_optionColors;
 };
 
 TYPEDEF_BLUECLASS( Tr2DebugRenderer );

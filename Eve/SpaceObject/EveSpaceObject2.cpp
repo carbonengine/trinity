@@ -651,7 +651,7 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 
 	for( auto it = m_observers.begin(); it != m_observers.end(); ++it )
 	{
-		( *it )->RenderDebugInfo( renderer, m_worldTransform );
+		( *it )->RenderDebugInfo( renderer );
 	}
 
 	if( renderer.HasOption( GetRawRoot(), "Local Bounding Box" ) )
@@ -806,13 +806,23 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 		name += ( *it )->GetName();
 		if( renderer.HasOption( this, name.c_str() ) )
 		{
+			uint32_t color;
+			Color c;
+			if( !renderer.GetColorForOption( c, name.c_str() ) )
+			{
+				color = 0x990088ff;
+			}
+			else
+			{
+				color = c;
+			}
+
 			const LocatorStructureList& locators = ( *( *it )->GetLocators() );
 			for( size_t i = 0; i < locators.size(); ++i )
 			{
 				auto& locator = locators[i];
 				auto position = locator.position;
 				auto rotation = locator.direction;
-				uint32_t color = 0x990088ff;
 
 				size_t boneCount;
 				const granny_matrix_3x4* bones;
@@ -2080,7 +2090,7 @@ bool EveSpaceObject2::GetLocatorPosition( Vector3* out, int index, bool inWorldS
 // --------------------------------------------------------------------------------
 bool EveSpaceObject2::HasImpactConfigurationShield() const
 {
-	return m_impactOverlay && m_impactOverlay->HasShieldEllipsoid() && ( m_impactOverlay->GetImpactConfiguration() == EveImpactOverlay::IMPACT_SHIELD );
+	return m_impactOverlay && m_impactOverlay->HasShieldEllipsoid() && ( m_impactOverlay->GetImpactConfiguration() == ITriTargetable::IMPACT_SHIELD );
 }
 
 // --------------------------------------------------------------------------------
@@ -2665,6 +2675,19 @@ void EveSpaceObject2::SetModelTranslationCurve( ITriVectorFunctionPtr translatio
 void EveSpaceObject2::SetDnaString( const char* dna )
 {
 	m_dna = dna;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Get the impact configuration of the impact overlay on this object.
+// --------------------------------------------------------------------------------
+ITriTargetable::ImpactConfiguration EveSpaceObject2::GetImpactConfiguration() const
+{
+	if( m_impactOverlay != nullptr )	
+	{
+		return m_impactOverlay->GetImpactConfiguration();
+	}
+	return ImpactConfiguration::IMPACT_INVALID;
 }
 
 // --------------------------------------------------------------------------------

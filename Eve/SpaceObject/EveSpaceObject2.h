@@ -277,6 +277,7 @@ public:
 	void SetLastDamageLocatorHit( unsigned int locator );
 
 	bool UpdateImpact( Vector3& out, const Vector3& direction, int impactIndex );
+	ImpactConfiguration GetImpactConfiguration() const override;
 	bool GetImpactPosition( Vector3& out, int locator, const Vector3& posPrev, const Vector3& posNow, float epsilon );
 	bool HasImpactConfigurationShield() const;
 

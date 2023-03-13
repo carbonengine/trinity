@@ -412,6 +412,19 @@ float EveTurretTarget::GetRadius() const
 
 // --------------------------------------------------------------------------------
 // Description:
+//   Pass through the GetImpactConfiguration call to the target object 
+// --------------------------------------------------------------------------------
+ITriTargetable::ImpactConfiguration EveTurretTarget::GetImpactConfiguration() const
+{
+	if( m_object )
+	{
+		return m_object->GetImpactConfiguration();
+	}
+	return ITriTargetable::ImpactConfiguration::IMPACT_INVALID;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
 //   This determines if we show the dest-object of the stretch effect. We usually
 //   do, except in some scenarios
 // --------------------------------------------------------------------------------

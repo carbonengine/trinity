@@ -145,6 +145,7 @@ Tr2TextureAL Tr2TextureArray::CreateTexture() const
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	std::vector<Tr2SubresourceData> initialData;
 	Tr2SubresourceData filler;
+    bool validFiller = false;
 	auto mipCount = m_dimensions.GetTrueMipCount();
 	for( auto& element : m_elements )
 	{
@@ -153,6 +154,7 @@ Tr2TextureAL Tr2TextureArray::CreateTexture() const
 			filler = { element.GetMipRawData( 0 ),
 					   element.GetMipPitch( 0 ),
 					   element.GetMipSize( 0 ) };
+            validFiller = true;
 			for( uint32_t i = 0; i < mipCount; ++i )
 			{
 				initialData.push_back( { element.GetMipRawData( i ), element.GetMipPitch( i ), element.GetMipSize( i ) } );
@@ -173,16 +175,24 @@ Tr2TextureAL Tr2TextureArray::CreateTexture() const
 			initialData.push_back( { nullptr, 0, 0 } );
 		}
 	}
-	for( auto& data : initialData )
+
+    Tr2TextureAL newTexture;
+    if( validFiller )
+    {
+        for( auto& data : initialData )
+        {
+            if( !data.m_sysMem )
+            {
+                data = filler;
+            }
+        }
+        newTexture.Create( m_dimensions, Tr2MsaaDesc(), m_gpuUsage, m_cpuUsage, initialData.data(), renderContext );
+    }
+	else
 	{
-		if( !data.m_sysMem )
-		{
-			data = filler;
-		}
+        newTexture.Create( m_dimensions, Tr2MsaaDesc(), m_gpuUsage, m_cpuUsage, nullptr, renderContext );	
 	}
 
-	Tr2TextureAL newTexture;
-	newTexture.Create( m_dimensions, Tr2MsaaDesc(), m_gpuUsage, m_cpuUsage, initialData.data(), renderContext );
 	return newTexture;
 }
 

@@ -62,6 +62,24 @@ const Be::ClassInfo* Tr2DebugRenderer::ExposeToBlue()
 			"Assign a list of fallback visualization options\n"
 			":param options: set of visualization options\n" 
 		)
+		MAP_METHOD (
+			"GetColorForOption",
+			PyGetColorForOption,
+			"Get color assigned to visulization option globally\n"
+			":param option: the visualization option\n"
+			":type: option: str\n"
+			":returns: RGBA tuple each entry in range 0-1\n"
+			":rtype: tuple[float, float, float, float]"
+		)
+		MAP_METHOD_AND_WRAP(
+			"SetColorForOption",
+			SetColorForOption,
+			"Set color assigned to visulization option globally\n"
+			":param option: the visualization option\n"
+			":type: option: str\n"
+			":param color: the color as a RGBA tuple each entry in range 0-1\n"
+			":type: color: tuple[float, float, float, float]\n"
+		)
 	EXPOSURE_END()
 }
 

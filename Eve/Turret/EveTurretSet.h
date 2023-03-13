@@ -38,6 +38,7 @@ BLUE_DECLARE( EveTurretFiringFX );
 BLUE_DECLARE( EveTurretTarget );
 BLUE_DECLARE( Tr2DebugRenderer );
 BLUE_DECLARE( Tr2QuadRenderer );
+BLUE_DECLARE( TriObserverLocal );
 
 // constants
 // maximum number of single turrets per turret set
@@ -46,6 +47,26 @@ const unsigned int EVE_MAX_TURRETS_PER_SET = 24;
 const unsigned int EVE_MAX_TURRET_SET_BONES = EVE_MAX_TURRETS_PER_SET * 3;
 // maximum time offset for turret firing
 const float EVE_TURRET_RANDOM_DELAY_MAX = 0.6f;
+
+struct EveTurretSetVSData {
+    Vector4 m_baseCutoffData;
+    Vector4 m_turretSetData;
+    Matrix m_shipMatrix;
+
+    // per turret data
+    Vector4 m_turretTranslation[EVE_MAX_TURRETS_PER_SET];
+    Quaternion m_turretRotation[EVE_MAX_TURRETS_PER_SET];
+
+    // pose information
+    // For each turret we have a position (Vector4) and then quaternion (and then position and then quaternion etc.)
+    float m_turretPosAndRotationBuffer[4 * 2 * EVE_MAX_TURRET_SET_BONES];
+};
+
+struct EveTurretSetPSData {
+    Vector4 m_shipData;
+    Vector4 m_clipData1;
+    Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
+};
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -59,22 +80,10 @@ public:
 	void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const override;
 
 	// vs per object data
-	Vector4 m_baseCutoffData;
-	Vector4 m_turretSetData;
-	Matrix m_shipMatrix;
-
-	// per turret data
-	Vector4 m_turretTranslation[EVE_MAX_TURRETS_PER_SET];
-	Quaternion m_turretRotation[EVE_MAX_TURRETS_PER_SET];
-
-	// pose information
-	// For each turret we have a position (Vector4) and then quaternion (and then position and then quaternion etc.)
-	float m_turretPosAndRotationBuffer[4 * 2 * EVE_MAX_TURRET_SET_BONES];
+    EveTurretSetVSData m_vsData;
 
 	// pixel shader per object data
-	Vector4 m_shipData;
-	Vector4 m_clipData1;
-	Vector4 m_shLightingCoefficients[Tr2ShLightingManager::PACKED_COEFFICIENT_COUNT];
+    EveTurretSetPSData m_psData;
 };
 
 // --------------------------------------------------------------------------------
@@ -444,6 +453,12 @@ private:
 	EveChildInstanceContainerPtr m_generatedDistributedAmbientEffect;
 	Matrix m_ambientOffsetMatrix; // used while editing
 	bool m_ambientEffectEditingMode; // used for editing
+
+	// Audio specific attributes
+	bool m_playMovementSound;
+	TriObserverLocalPtr m_turretMovementObserver;
+	std::wstring m_idleToTargetingMovementAudioEvent;
+	std::wstring m_targetingToIdleMovementAudioEvent;
 };
 
 TYPEDEF_BLUECLASS( EveTurretSet );
