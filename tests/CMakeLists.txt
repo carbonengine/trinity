@@ -107,7 +107,7 @@ if(WIN32)
     set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "TestsDX11")
     gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
 
-    ccp_add_executable(TrinityALTest_dx12 EXCLUDE_FROM_ALL ${_SOURCES})
+    ccp_add_executable(TrinityALTest_dx12 ${_SOURCES})
     target_link_libraries(TrinityALTest_dx12 PRIVATE TrinityAL_dx12)
     target_compile_definitions(TrinityALTest_dx12 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX12)
     set_shared_trinityaltest_properties(TrinityALTest_dx12)
