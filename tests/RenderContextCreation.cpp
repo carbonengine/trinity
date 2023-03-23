@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "WithRenderContextFixture.h"
-#include "TrinityAL/ITr2RenderContextEvents.h"
+#include <ITr2RenderContextEvents.h>
 
 struct RenderContextCreation: public WithRenderContext {};
 

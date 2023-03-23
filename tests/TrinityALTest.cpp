@@ -2,7 +2,7 @@
 #include "WithWindowFixture.h"
 #include "WithRenderContextFixture.h"
 #include "WithValidRenderContextFixture.h"
-#include "TrinityAL/Tr2DriverUtilities.h"
+#include <Tr2DriverUtilities.h>
 
 // Needed by CcpCore
 const char* g_moduleName = "TrinityALTest";

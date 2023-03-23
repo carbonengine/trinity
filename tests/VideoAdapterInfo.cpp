@@ -1,5 +1,5 @@
 #include "StdAfx.h"
-#include "TrinityAL/Tr2DriverUtilities.h"
+#include <Tr2DriverUtilities.h>
 
 using namespace Tr2RenderContextEnum;
 

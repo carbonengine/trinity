@@ -46,6 +46,8 @@ set(_SOURCES
     XrgbVolume.h
 )
 
+find_package(GTest REQUIRED)
+
 function(set_shared_trinityaltest_properties target)
 
     target_include_directories(${target}
@@ -85,7 +87,7 @@ function(set_shared_trinityaltest_properties target)
 endfunction()
 
 if(WIN32)
-    add_executable(TrinityALTest_dx11 ${_SOURCES})
+    ccp_add_executable(TrinityALTest_dx11 ${_SOURCES})
     target_link_libraries(TrinityALTest_dx11 PRIVATE TrinityAL_dx11)
     target_compile_definitions(TrinityALTest_dx11 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX11)
     set_shared_trinityaltest_properties(TrinityALTest_dx11)
@@ -94,7 +96,6 @@ if(WIN32)
     # TrintyALTest requires Aftermath DLL. We need to copy it to the output folder so that 
     # gtest_discover_tests call would not fail.
     # If we figure out a better way of copying dlls around this will become obsolete.
-    find_package(NvidiaAftermath REQUIRED)
     get_target_property(_AFTERMATH_DIR Nvidia::Aftermath INTERFACE_LINK_DIRECTORIES)
     get_target_property(_AFTERMATH_LIB Nvidia::Aftermath INTERFACE_LINK_LIBRARIES)
     add_custom_command(TARGET TrinityALTest_dx11 POST_BUILD
@@ -102,18 +103,31 @@ if(WIN32)
             "${_AFTERMATH_DIR}/${_AFTERMATH_LIB}.dll"
             $<TARGET_FILE_DIR:TrinityALTest_dx11>)
 
-    add_executable(TrinityALTest_dx12 EXCLUDE_FROM_ALL ${_SOURCES})
+    #GTest
+    set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "TestsDX11")
+    gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
+
+    ccp_add_executable(TrinityALTest_dx12 EXCLUDE_FROM_ALL ${_SOURCES})
     target_link_libraries(TrinityALTest_dx12 PRIVATE TrinityAL_dx12)
     target_compile_definitions(TrinityALTest_dx12 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX12)
     set_shared_trinityaltest_properties(TrinityALTest_dx12)
 
+    #GTest
+    set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "TestsDX12")
+    gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
+
 elseif(APPLE)
     enable_language(OBJCXX)
 
-    add_executable(TrinityALTest_metal ${_SOURCES})
+    ccp_add_executable(TrinityALTest_metal ${_SOURCES})
     target_link_libraries(TrinityALTest_metal PRIVATE TrinityAL_metal)
     target_compile_definitions(TrinityALTest_metal PRIVATE TRINITY_PLATFORM=TRINITY_METAL)
     set_shared_trinityaltest_properties(TrinityALTest_metal)
+
+    #GTest
+    set_target_properties(TrinityALTest_metal PROPERTIES FOLDER "TestsMetal")
+    gtest_discover_tests(TrinityALTest_metal myListOfTests)
 endif()
+
 
 

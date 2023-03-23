@@ -19,7 +19,7 @@ typedef id Tr2WindowHandle;
 typedef uintptr_t Tr2WindowHandle;
 #endif
 
-#include "TrinityAL/include/TrinityAL.h"
+#include <include/TrinityAL.h>
 
 #if( TRINITY_PLATFORM==TRINITY_DIRECTX11 )
 #define SHADER_PATH Shaders.DX11
