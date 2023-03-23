@@ -1,4 +1,70 @@
+cmake_minimum_required(VERSION 3.16)
+
+if(APPLE)
+    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15 CACHE STRING "The minimum macOS version we target." FORCE)
+endif()
+
 project(TrinityAL VERSION 1.0.0)
+
+if(NOT DEFINED ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "Missing required environment variable CCP_EVE_PERFORCE_BRANCH_PATH")
+elseif(NOT IS_ABSOLUTE $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH needs to be an absolute path")
+elseif(NOT EXISTS $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH is pointing at a non-existing location $ENV{CCP_EVE_PERFORCE_BRANCH_PATH}")
+elseif(NOT IS_DIRECTORY $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
+    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH needs to be a directory")
+else()
+    message(STATUS "Using CCP_EVE_PERFORCE_BRANCH_PATH located at $ENV{CCP_EVE_PERFORCE_BRANCH_PATH}")
+endif()
+
+file(TO_CMAKE_PATH "$ENV{CCP_EVE_PERFORCE_BRANCH_PATH}" BRANCH_ROOT_DIR)
+list(INSERT CMAKE_MODULE_PATH 0 ${BRANCH_ROOT_DIR}/cmake)
+include(CcpGlobalSettings)
+include(CcpPackageConfigHelpers)
+
+set(PUBLIC_HEADER_FILES
+    ALResult.h
+    BcDecompress.h
+    ITr2RenderContextEvents.h
+    Tr2AdapterStructures.h
+    Tr2DeviceResourceAL.h
+    Tr2DrawUPHelper.h
+    Tr2DriverUtilities.h
+    Tr2HalHelperStructures.h
+    Tr2LockGuard.h
+    Tr2MemoryCounterAL.h
+    Tr2ObjectFactory.h
+    Tr2RenderContextEnum.h
+    Tr2VertexDefinition.h
+)
+
+set(PUBLIC_AL_HEADER_FILES
+    include/Tr2BitmapDimensions.h
+    include/Tr2BufferAL.h
+    include/Tr2CapsAL.h
+    include/Tr2ConstantBufferAL.h
+    include/Tr2CubemapFace.h
+    include/Tr2FenceAL.h
+    include/Tr2GpuTimerAL.h
+    include/Tr2OcclusionQueryAL.h
+    include/Tr2PipelineStatsQueryAL.h
+    include/Tr2PixelFormat.h
+    include/Tr2PrimaryRenderContextAL.h
+    include/Tr2RenderContextAL.h
+    include/Tr2RenderPassAL.h
+    include/Tr2ResourceSetAL.h
+    include/Tr2SamplerStateAL.h
+    include/Tr2ShaderAL.h
+    include/Tr2ShaderProgramAL.h
+    include/Tr2SwapChainAL.h
+    include/Tr2TextureAL.h
+    include/Tr2TextureType.h
+    include/Tr2VertexLayoutAL.h
+    include/Tr2VideoAdapterInfoAL.h
+    include/TrinityAL.h
+    include/TrinityALForward.h
+)
 
 set(_SOURCES
     ALLog.h
@@ -276,7 +342,8 @@ if(CMAKE_GENERATOR STREQUAL "Xcode" OR CMAKE_GENERATOR MATCHES "Visual Studio.*"
 endif()
 
 # utility function that sets properties shared between all trinityAL targets
-function(set_shared_trinityal_properties target)
+function(set_shared_trinityal_properties targetSuffix)
+    set(target TrinityAL_${targetSuffix})
     target_compile_definitions(${target}
         PUBLIC
             $<$<CONFIG:Debug>:TRINITYDEV>
@@ -285,6 +352,8 @@ function(set_shared_trinityal_properties target)
     )
 
     target_include_directories(${target}
+        PUBLIC
+            ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
             ${CMAKE_CURRENT_SOURCE_DIR}/..
@@ -295,6 +364,8 @@ function(set_shared_trinityal_properties target)
     target_compile_options(${target} PUBLIC "${MATH_OPTIMIZE_FLAG}")
 
     target_sources(${target} PRIVATE ${_SOURCES})
+
+    find_package(CcpCore REQUIRED NO_CMAKE_PATH)
 
     target_link_libraries(${target} PUBLIC CcpCore)
 
@@ -314,6 +385,36 @@ function(set_shared_trinityal_properties target)
     )
 
     add_trinity_dev_debug_flags(${target})
+
+
+    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+
+        file(GLOB PUBLIC_DEVICE_HEADER_FILES RELATIVE ${CMAKE_SOURCE_DIR} "${targetSuffix}/*.h")
+        file(GLOB PUBLIC_DEVICE_HEADER_FILES_UTIL RELATIVE ${CMAKE_SOURCE_DIR} "${targetSuffix}/util/*.h")  #Used in dx12
+
+        # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
+        install(
+            TARGETS ${target}
+            EXPORT ${target}Targets
+            CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
+            LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+            ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+            RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+        )
+        # Install rule for available public headers
+        install(FILES ${PUBLIC_HEADER_FILES} DESTINATION include)
+        install(FILES ${PUBLIC_AL_HEADER_FILES} DESTINATION include/include)
+        install(FILES ${PUBLIC_DEVICE_HEADER_FILES} DESTINATION include/${targetSuffix})
+        install(FILES ${PUBLIC_DEVICE_HEADER_FILES_UTIL} DESTINATION include/${targetSuffix}/util)
+
+        configure_ccp_vendor_config_file(
+            TARGET ${target}
+            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake"
+            DEPENDENCIES ""
+        )
+        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake DESTINATION .)
+
+    endif()
 endfunction()
 
 #[[
@@ -321,29 +422,29 @@ FIXME currently the _stub platform does not build on macOS due to "unknown type 
 There are probably more issues because we haven't build the stub project on macOS so far IIRC
 ]]
 if(WIN32)
-add_library(TrinityAL_stub STATIC EXCLUDE_FROM_ALL)
-target_compile_definitions(TrinityAL_stub PUBLIC TRINITY_PLATFORM=TRINITY_STUB)
-set_shared_trinityal_properties(TrinityAL_stub)
+    ccp_add_library(TrinityAL_stub STATIC)
+    target_compile_definitions(TrinityAL_stub PUBLIC TRINITY_PLATFORM=TRINITY_STUB)
+    set_shared_trinityal_properties(stub)
 endif()
 
 if(WIN32)
     # required for 11
     find_package(NvidiaAftermath REQUIRED)
 
-    add_library(TrinityAL_dx11 STATIC)
+    ccp_add_library(TrinityAL_dx11 STATIC)
     target_compile_definitions(TrinityAL_dx11 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX11)
     target_link_libraries(TrinityAL_dx11 PUBLIC Nvidia::Aftermath d3d11 dxgi dxguid legacy_stdio_definitions)
-    set_shared_trinityal_properties(TrinityAL_dx11)
+    set_shared_trinityal_properties(dx11)
 
-    add_library(TrinityAL_dx12 STATIC EXCLUDE_FROM_ALL)
+    ccp_add_library(TrinityAL_dx12 STATIC)
     target_compile_definitions(TrinityAL_dx12 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX12)
     target_link_libraries(TrinityAL_dx12 PUBLIC Nvidia::Aftermath d3d12 dxgi dxguid)
-    set_shared_trinityal_properties(TrinityAL_dx12)
+    set_shared_trinityal_properties(dx12)
 elseif(APPLE)
     enable_language(OBJCXX)
-    add_library(TrinityAL_metal STATIC)
+    ccp_add_library(TrinityAL_metal STATIC)
     target_compile_definitions(TrinityAL_metal PUBLIC TRINITY_PLATFORM=TRINITY_METAL)
-    set_shared_trinityal_properties(TrinityAL_metal)
+    set_shared_trinityal_properties(metal)
     target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework IOKit" "-framework QuartzCore")
     target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework IOKit" "-framework QuartzCore")
     #[[
