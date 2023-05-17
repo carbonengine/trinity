@@ -67,6 +67,7 @@ TEST_F( RenderTarget, CanCreateMsaaRenderTarget )
 
 TEST_F( RenderTarget, CanResolveMsaaRenderTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL rtMsaa;
 	ASSERT_HRESULT_SUCCEEDED( rtMsaa.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 

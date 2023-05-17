@@ -26,6 +26,7 @@ TEST_F( WithRenderContext, CreatingVertexLayoutWithoutRenderContextFails )
 
 TEST_F( VertexLayout, VertexLayoutIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2VertexLayoutAL layout;
 	Tr2VertexDefinition def;
 	InitializeSampleVertexDefinition( def );
@@ -35,6 +36,7 @@ TEST_F( VertexLayout, VertexLayoutIsValidAfterCreation )
 
 TEST_F( VertexLayout, VertexLayoutEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2VertexLayoutAL layout;
 	Tr2VertexDefinition def;
 	InitializeSampleVertexDefinition( def );
@@ -44,6 +46,7 @@ TEST_F( VertexLayout, VertexLayoutEqualsItself )
 
 TEST_F( VertexLayout, DifferentVertexLayoutsAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2VertexLayoutAL layout1;
 	Tr2VertexDefinition def;
 	InitializeSampleVertexDefinition( def );
@@ -57,6 +60,7 @@ TEST_F( VertexLayout, DifferentVertexLayoutsAreNotEqual )
 
 TEST_F( VertexLayout, VertexLayoutMemoryClass )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2VertexLayoutAL layout;
 	Tr2VertexDefinition def;
 	InitializeSampleVertexDefinition( def );

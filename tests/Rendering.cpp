@@ -2594,6 +2594,7 @@ TEST_F( Rendering, CanSampleUnassignedTexture )
 
 TEST_F( Rendering, CanLockTextureTwice )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2707,6 +2708,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 
 TEST_F( Rendering, CanSampleSrgbTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2794,6 +2796,7 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 
 TEST_F( Rendering, CanOutputToSrgbTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 

@@ -56,6 +56,7 @@ TEST_F( Texture, CreatingVolumeTextureWithoutInitialDataFails )
 
 TEST_F( Texture, Texture2DIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 128, 128, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
 	EXPECT_TRUE( tex.IsValid() );
@@ -65,6 +66,7 @@ TEST_F( Texture, Texture2DIsValidAfterCreation )
 #if TRINITY_PLATFORM_SUPPORTS_TEXTURE_ARRAYS 
 TEST_F( Texture, Texture2DArrayIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( TEX_TYPE_2D, PIXEL_FORMAT_B8G8R8A8_UNORM, 128, 128, 1, 1, 2 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
 	EXPECT_TRUE( tex.IsValid() );
@@ -81,6 +83,7 @@ TEST_F( Texture, Texture2DArrayFailsOnUnsupportingPlatforms )
 
 TEST_F( Texture, TextureCubeIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( TEX_TYPE_CUBE, PIXEL_FORMAT_B8G8R8A8_UNORM, 128, 128, 1, 1 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
 	EXPECT_TRUE( tex.IsValid() );
@@ -89,6 +92,7 @@ TEST_F( Texture, TextureCubeIsValidAfterCreation )
 
 TEST_F( Texture, TextureVolumeIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	uint32_t pixels[4 * 4 * 4 * 4] = { 0 };
 	Tr2SubresourceData initialData;
 	initialData.m_sysMemPitch = 4 * 4;
@@ -103,6 +107,7 @@ TEST_F( Texture, TextureVolumeIsValidAfterCreation )
 
 TEST_F( Texture, CanCreateMipMapped2DTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 128, 128, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
 	EXPECT_TRUE( tex.IsValid() );
@@ -111,6 +116,7 @@ TEST_F( Texture, CanCreateMipMapped2DTexture )
 
 TEST_F( Texture, CanCreateMipMappedCubeTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( TEX_TYPE_CUBE, PIXEL_FORMAT_B8G8R8A8_UNORM, 128, 128, 1, 0 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
 	EXPECT_TRUE( tex.IsValid() );
@@ -119,6 +125,7 @@ TEST_F( Texture, CanCreateMipMappedCubeTexture )
 
 TEST_F( Texture, TextureEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 128, 128, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
 	EXPECT_TRUE( tex == tex );
@@ -126,6 +133,7 @@ TEST_F( Texture, TextureEqualsItself )
 
 TEST_F( Texture, DifferentTexturesAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL tex1;
 	ASSERT_HRESULT_SUCCEEDED( tex1.Create( Tr2BitmapDimensions( 128, 128, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
 	Tr2TextureAL tex2;
@@ -145,6 +153,7 @@ TEST_F( Texture, LockingInvalidTextureFails )
 
 TEST_F( Texture, TextureHasMemoryClass )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 128, 128, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
 	auto memoryClass = tex.GetMemoryClass();
@@ -153,6 +162,7 @@ TEST_F( Texture, TextureHasMemoryClass )
 
 TEST_F( Texture, CanCreateCompressed2DTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( 128, 128, 1, PIXEL_FORMAT_BC1_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
 	EXPECT_TRUE( tex.IsValid() );
@@ -162,6 +172,7 @@ TEST_F( Texture, CanCreateCompressed2DTexture )
 
 TEST_F( Texture, CanCreateCompressedCubeTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL tex;
 	ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( TEX_TYPE_CUBE, PIXEL_FORMAT_BC1_UNORM, 128, 128, 1, 1 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, *renderContext ) );
 	EXPECT_TRUE( tex.IsValid() );

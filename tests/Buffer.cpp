@@ -120,6 +120,7 @@ TEST_F( Buffer, CanLockWriteableBufferForWriting )
 
 TEST_F( Buffer, LockingNonWriteableBufferForWritingFails )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	float data[4] = { 0 };
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::READ, data, *renderContext ) );

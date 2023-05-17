@@ -171,6 +171,7 @@ TEST_F( SwapChainResizing, CanSwitchToFullScreen )
 
 TEST_F( SwapChainResizing, CanChangeFullscreenResolution )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 

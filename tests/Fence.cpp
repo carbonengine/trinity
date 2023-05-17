@@ -24,6 +24,7 @@ TEST_F( WithRenderContext, CreatingFenceWithoutRenderContextFails )
 
 TEST_F( Fence, FenceIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2FenceAL fence;
 	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
 	EXPECT_TRUE( fence.IsValid() );
