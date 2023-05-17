@@ -338,6 +338,7 @@ TEST( RenderContextEnum, CanConvertPixelFormatTosRgb )
 
 TEST_F( RenderContext, PrimaryRenderContextIsSetCorrectly )
 {
+	ENSURE_GPU_OR_SKIP
 	EXPECT_EQ( renderContext, &renderContext->GetPrimaryRenderContext() );
 }
 

@@ -57,6 +57,7 @@ TEST_F( SamplerState, SamplerStateEqualsItself )
 
 TEST_F( SamplerState, DifferentSamplerStatesAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	float borderColor[] = { 0.f, 0.f, 0.f, 1.f };
 	Tr2SamplerDescription desc1(
 		TF_ANISOTROPIC,
@@ -97,6 +98,7 @@ TEST_F( SamplerState, DifferentSamplerStatesAreNotEqual )
 
 TEST_F( SamplerState, SamplerStateHasMemoryClass )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2SamplerStateAL ss;
 	float borderColor[] = { 0.f, 0.f, 0.f, 1.f };
 	Tr2SamplerDescription desc(

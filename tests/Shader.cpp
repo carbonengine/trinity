@@ -14,6 +14,7 @@ TEST_F( Shader, ShaderIsInvalidBeforeCreation )
 
 TEST_F( Shader, CanCreateShader )
 {
+	ENSURE_GPU_OR_SKIP
 	uint8_t vsBytecode[] = {
 #include INCLUDE_SHADER_CODE( PositionOnly.vs )
 	};
@@ -39,6 +40,7 @@ TEST_F( Shader, CanCreateShader )
 
 TEST_F( Shader, ShaderEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	uint8_t vsBytecode[] = {
 #include INCLUDE_SHADER_CODE( PositionOnly.vs )
 	};
@@ -58,6 +60,7 @@ TEST_F( Shader, ShaderEqualsItself )
 
 TEST_F( Shader, DifferentShadersAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	uint8_t vsBytecode1[] = {
 #include INCLUDE_SHADER_CODE( PositionOnly.vs )
 	};

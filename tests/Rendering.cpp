@@ -2888,6 +2888,7 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 
 TEST_F( Rendering, CanUsePsUavs )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -3004,6 +3005,7 @@ TEST_F( Rendering, CanUsePsUavs )
 
 TEST_F( Rendering, CanDrawIndirect )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -3069,6 +3071,7 @@ TEST_F( Rendering, CanDrawIndirect )
 
 TEST_F( Rendering, CanWriteToVB )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -3127,6 +3130,7 @@ TEST_F( Rendering, CanWriteToVB )
 
 TEST_F( Rendering, CanWriteToDynamicVB )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -3185,6 +3189,7 @@ TEST_F( Rendering, CanWriteToDynamicVB )
 
 TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -3263,6 +3268,7 @@ TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
 
 TEST_F( Rendering, CanHaveMissingIAElements )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -3316,6 +3322,7 @@ TEST_F( Rendering, CanHaveMissingIAElements )
 
 TEST_F( Rendering, CanLoadMsaaRenderTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 

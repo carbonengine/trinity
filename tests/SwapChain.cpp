@@ -22,6 +22,7 @@ TEST_F( WithRenderContext, CreatingSwapChainWithoutRenderContextFails )
 
 TEST_F( SwapChain, CanCreateSwapChain )
 {
+	ENSURE_GPU_OR_SKIP
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
 		RenderWindow window;
@@ -40,6 +41,7 @@ TEST_F( SwapChain, CanCreateSwapChain )
 
 TEST_F( SwapChain, SwapChainEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
 		RenderWindow window;
@@ -51,6 +53,7 @@ TEST_F( SwapChain, SwapChainEqualsItself )
 
 TEST_F( SwapChain, DifferentSwapChainsAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
 		RenderWindow window1;
@@ -67,6 +70,7 @@ TEST_F( SwapChain, DifferentSwapChainsAreNotEqual )
 
 TEST_F( SwapChain, SwapChainHasMemoryClass )
 {
+	ENSURE_GPU_OR_SKIP
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
 		RenderWindow window;
@@ -80,6 +84,7 @@ TEST_F( SwapChain, SwapChainHasMemoryClass )
 
 TEST_F( SwapChain, CanPresentSwapChain )
 {
+	ENSURE_GPU_OR_SKIP
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
 		RenderWindow window;
@@ -113,6 +118,7 @@ TEST_F( SwapChain, CanPresentSwapChain )
 
 TEST_F( SwapChain, CanRecreateSwapChain )
 {
+	ENSURE_GPU_OR_SKIP
 	if( renderContext->GetCaps().SupportsStandaloneSwapChain() )
 	{
 		RenderWindow window;

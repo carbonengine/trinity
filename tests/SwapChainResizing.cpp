@@ -45,6 +45,7 @@ namespace
 
 TEST_F( SwapChainResizing, CanResizeSwapChainWhileRendering )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -109,6 +110,7 @@ TEST_F( SwapChainResizing, CanResizeSwapChainWhileRendering )
 
 TEST_F( SwapChainResizing, CanSwitchToFullScreen )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
