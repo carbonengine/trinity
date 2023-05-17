@@ -21,13 +21,6 @@ TEST_F( Buffer, CreatingImmutableBufferWithoutInitialDataFails )
 
 TEST_F( Buffer, BufferIsValidAfterCreation )
 {
-	unsigned count = 0;
-	Tr2VideoAdapterInfo::GetAdapterCount(count);
-	if (!count)
-	{
-		GTEST_SKIP() << "Skipping test as no adaptors found on machine.";
-	}
-
 	Tr2BufferAL buffer;
 	float data[4] = { 0 };
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, data, *renderContext ) );

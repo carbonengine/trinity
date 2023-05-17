@@ -15,6 +15,13 @@ WithValidRenderContext::WithValidRenderContext()
 
 void WithValidRenderContext::SetUpTestCase()
 {
+	unsigned count = 0;
+	Tr2VideoAdapterInfo::GetAdapterCount(count);
+	if (!count)
+	{
+		GTEST_SKIP() << "Skipping test as no adaptors found on machine.";
+	}
+
 	WithWindow::SetUpTestCase();
 
 	renderContext = new Tr2PrimaryRenderContextAL();
