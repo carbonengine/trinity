@@ -11,6 +11,7 @@ struct SamplerState : public WithValidRenderContext
 
 TEST_F( SamplerState, CanCreateSamplerState )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2SamplerStateAL ss;
 	float borderColor[] = { 0.f, 0.f, 0.f, 1.f };
 	Tr2SamplerDescription desc(
@@ -34,6 +35,7 @@ TEST_F( SamplerState, CanCreateSamplerState )
 
 TEST_F( SamplerState, SamplerStateEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2SamplerStateAL ss;
 	float borderColor[] = { 0.f, 0.f, 0.f, 1.f };
 	Tr2SamplerDescription desc(
