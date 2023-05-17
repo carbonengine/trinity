@@ -9,6 +9,7 @@ using namespace Tr2RenderContextEnum;
 
 TEST_F( Compute, CanReadCSResult )
 {
+	ENSURE_GPU_OR_SKIP
 	uint8_t vsBytecode[] = {
 #include INCLUDE_SHADER_CODE( OutputVector.cs )
 	};
@@ -108,6 +109,7 @@ TEST_F( Compute, DISABLED_CanAddInCS )
 
 TEST_F( Compute, CanAddConstantInCS )
 {
+	ENSURE_GPU_OR_SKIP
 	uint8_t vsBytecode[] = {
 #include INCLUDE_SHADER_CODE( AddConstantToBuffer.cs )
 	};
@@ -243,6 +245,7 @@ TEST_F( Compute, DISABLED_CanRead2DTextureInCS )
 
 TEST_F( Compute, CanDispatchCSGroups )
 {
+	ENSURE_GPU_OR_SKIP
 	uint8_t vsBytecode[] = {
 #include INCLUDE_SHADER_CODE( GroupShared.cs )
 	};

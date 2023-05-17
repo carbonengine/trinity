@@ -57,6 +57,8 @@ TEST_F( RenderContextCreation, RenderContextStartsAsInvalid )
 
 TEST_F( RenderContextCreation, CanCreateRenderContext )
 {
+	if( !MachineHasGfxAdapter() ) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
@@ -65,6 +67,7 @@ TEST_F( RenderContextCreation, CanCreateRenderContext )
 
 TEST_F( RenderContextCreation, RenderContextIsValidAfterCreation )
 {
+	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
@@ -74,6 +77,7 @@ TEST_F( RenderContextCreation, RenderContextIsValidAfterCreation )
 
 TEST_F( RenderContextCreation, RenderContextIsInvalidAfterDestroy )
 {
+	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
@@ -84,6 +88,7 @@ TEST_F( RenderContextCreation, RenderContextIsInvalidAfterDestroy )
 
 TEST_F( RenderContextCreation, CanChangeRenderContextPresentParameters )
 {
+	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
@@ -93,6 +98,7 @@ TEST_F( RenderContextCreation, CanChangeRenderContextPresentParameters )
 
 TEST_F( RenderContextCreation, CreateDeviceCallsEventsOnContextCreated )
 {
+	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
@@ -106,6 +112,7 @@ TEST_F( RenderContextCreation, CreateDeviceCallsEventsOnContextCreated )
 
 TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfterCreation )
 {
+	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 
@@ -117,6 +124,7 @@ TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfter
 
 TEST_F( RenderContextCreation, RenderContextBackBufferWithCorrectDimensionsAfterReset )
 {
+	if (!MachineHasGfxAdapter()) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
 	Tr2PresentParametersAL presentParameters;
 	SetUpPresentParameters( presentParameters );
 

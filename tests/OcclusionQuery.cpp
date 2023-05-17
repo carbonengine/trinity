@@ -24,6 +24,7 @@ TEST_F( WithRenderContext, CreatingOcclusionQueryWithoutRenderContextFails )
 
 TEST_F( OcclusionQuery, OcclusionQueryIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
 	EXPECT_TRUE( query.IsValid() );
@@ -41,6 +42,7 @@ TEST_F( OcclusionQuery, RuningInvalidOcclusionQueryFails )
 
 TEST_F( OcclusionQuery, CanRunOcclusionQuery )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
 	ASSERT_TRUE( query.IsValid() );
@@ -51,6 +53,7 @@ TEST_F( OcclusionQuery, CanRunOcclusionQuery )
 
 TEST_F( OcclusionQuery, CanGetOcclusionQueryResultSynchronously )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
 	ASSERT_TRUE( query.IsValid() );
@@ -65,6 +68,7 @@ TEST_F( OcclusionQuery, CanGetOcclusionQueryResultSynchronously )
 
 TEST_F( OcclusionQuery, OcclusionQueryEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
 	EXPECT_TRUE( query == query );
@@ -72,6 +76,7 @@ TEST_F( OcclusionQuery, OcclusionQueryEqualsItself )
 
 TEST_F( OcclusionQuery, DifferentOcclusionQueriesAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2OcclusionQueryAL query1;
 	ASSERT_HRESULT_SUCCEEDED( query1.Create( *renderContext ) );
 	Tr2OcclusionQueryAL query2;
@@ -81,6 +86,7 @@ TEST_F( OcclusionQuery, DifferentOcclusionQueriesAreNotEqual )
 
 TEST_F( OcclusionQuery, OcclusionQueryHasMemoryClass )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2OcclusionQueryAL query;
 	ASSERT_HRESULT_SUCCEEDED( query.Create( *renderContext ) );
 	auto memoryClass = query.GetMemoryClass();

@@ -41,6 +41,7 @@ TEST_F( Fence, UsingInvalidFenceFails )
 
 TEST_F( Fence, CanUseFence )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2FenceAL fence;
 	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
 	ASSERT_TRUE( fence.IsValid() );
@@ -52,6 +53,7 @@ TEST_F( Fence, CanUseFence )
 
 TEST_F( Fence, FenceEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2FenceAL fence;
 	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
 	EXPECT_TRUE( fence == fence );
@@ -59,6 +61,7 @@ TEST_F( Fence, FenceEqualsItself )
 
 TEST_F( Fence, DifferentFencesAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2FenceAL fence1;
 	ASSERT_HRESULT_SUCCEEDED( fence1.Create( *renderContext ) );
 	Tr2FenceAL fence2;
@@ -68,6 +71,7 @@ TEST_F( Fence, DifferentFencesAreNotEqual )
 
 TEST_F( Fence, FenceHasMemoryClass )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2FenceAL fence;
 	ASSERT_HRESULT_SUCCEEDED( fence.Create( *renderContext ) );
 	auto memoryClass = fence.GetMemoryClass();

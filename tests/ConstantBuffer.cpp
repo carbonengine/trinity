@@ -43,6 +43,7 @@ TEST_F( ConstantBuffer, CreatingImmutableConstantBufferWithoutInitialDataFails )
 
 TEST_F( ConstantBuffer, ConstantBufferIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
 	EXPECT_TRUE( vb.IsValid() );
@@ -50,6 +51,7 @@ TEST_F( ConstantBuffer, ConstantBufferIsValidAfterCreation )
 
 TEST_F( ConstantBuffer, ConstantBufferReportsCorrectSize )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
 	EXPECT_EQ( 128, vb.GetSize() );
@@ -57,6 +59,7 @@ TEST_F( ConstantBuffer, ConstantBufferReportsCorrectSize )
 
 TEST_F( ConstantBuffer, ConstantBufferEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
 	EXPECT_TRUE( vb == vb );
@@ -64,6 +67,7 @@ TEST_F( ConstantBuffer, ConstantBufferEqualsItself )
 
 TEST_F( ConstantBuffer, DifferentConstantBuffersAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ConstantBufferAL vb1;
 	ASSERT_HRESULT_SUCCEEDED( vb1.Create( 128, *renderContext ) );
 	Tr2ConstantBufferAL vb2;
@@ -80,6 +84,7 @@ TEST_F( ConstantBuffer, LockingInvalidConstantBufferFails )
 
 TEST_F( ConstantBuffer, CanLockConstantBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ConstantBufferAL vb;
 	ASSERT_HRESULT_SUCCEEDED( vb.Create( 128, *renderContext ) );
 	void* data;
@@ -108,6 +113,7 @@ TEST_F( ConstantBuffer, LockingImmutableConstantBufferFails )
 
 TEST_F( ConstantBuffer, ConstantBufferHasMemoryClass )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ConstantBufferAL cb;
 	ASSERT_HRESULT_SUCCEEDED( cb.Create( 128, *renderContext ) );
 	auto memoryClass = cb.GetMemoryClass();
@@ -116,6 +122,7 @@ TEST_F( ConstantBuffer, ConstantBufferHasMemoryClass )
 
 TEST_F( ConstantBuffer, CanCreateConstantBufferWithInitialData )
 {
+	ENSURE_GPU_OR_SKIP
 	float initialData[] = { 0.5f, 1.5f, 2.5f, 3.5f };
 	Tr2ConstantBufferAL cb;
 	ASSERT_HRESULT_SUCCEEDED( cb.Create( sizeof( initialData ), Tr2ConstantUsageAL::REUSABLE, initialData, *renderContext ) );

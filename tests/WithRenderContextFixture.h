@@ -19,6 +19,13 @@ public:
 		Tr2PrimaryRenderContextAL::SetPrimaryRenderContext( nullptr );
 	}
 
+	static bool MachineHasGfxAdapter()
+	{
+		unsigned count = 0;
+		Tr2VideoAdapterInfo::GetAdapterCount(count);
+		return count > 0;
+	}
+
 	Tr2PrimaryRenderContextAL* renderContext;
 };
 

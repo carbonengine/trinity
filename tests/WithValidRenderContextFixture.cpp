@@ -15,13 +15,6 @@ WithValidRenderContext::WithValidRenderContext()
 
 void WithValidRenderContext::SetUpTestCase()
 {
-	unsigned count = 0;
-	Tr2VideoAdapterInfo::GetAdapterCount(count);
-	if (!count)
-	{
-		GTEST_SKIP() << "Skipping test as no adaptors found on machine.";
-	}
-
 	WithWindow::SetUpTestCase();
 
 	renderContext = new Tr2PrimaryRenderContextAL();
@@ -285,6 +278,13 @@ void MkDirs( const std::string& path )
 	mkdir( path.c_str() );
 }
 
+}
+
+bool WithValidRenderContext::MachineHasGfxAdapter()
+{
+	unsigned count = 0;
+	Tr2VideoAdapterInfo::GetAdapterCount(count);
+	return count > 0;
 }
 
 void WithValidRenderContext::MakeScreenShot( const char* outFilePath )

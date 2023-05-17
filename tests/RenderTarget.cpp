@@ -24,6 +24,7 @@ TEST_F( WithRenderContext, CreatingRenderTargetWithoutRenderContextFails )
 
 TEST_F( RenderTarget, RenderTargetIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 	EXPECT_TRUE( rt.IsValid() );
@@ -37,6 +38,7 @@ TEST_F( RenderTarget, RenderTargetIsValidAfterCreation )
 
 TEST_F( RenderTarget, CanCreateMipMappedRenderTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 	EXPECT_TRUE( rt.IsValid() );
@@ -51,6 +53,7 @@ TEST_F( RenderTarget, CanCreateMipMappedRenderTarget )
 
 TEST_F( RenderTarget, CanCreateMsaaRenderTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 	EXPECT_TRUE( rt.IsValid() );
@@ -77,6 +80,7 @@ TEST_F( RenderTarget, CanResolveMsaaRenderTarget )
 
 TEST_F( RenderTarget, RenderTargetEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 	EXPECT_TRUE( rt == rt );
@@ -84,6 +88,7 @@ TEST_F( RenderTarget, RenderTargetEqualsItself )
 
 TEST_F( RenderTarget, DifferentRenderTargetsAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL rt1;
 	ASSERT_HRESULT_SUCCEEDED( rt1.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 	Tr2TextureAL rt2;
@@ -93,6 +98,7 @@ TEST_F( RenderTarget, DifferentRenderTargetsAreNotEqual )
 
 TEST_F( RenderTarget, RenderTargetHasMemoryClass )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, *renderContext ) );
 	auto memoryClass = rt.GetMemoryClass();
@@ -101,6 +107,7 @@ TEST_F( RenderTarget, RenderTargetHasMemoryClass )
 
 TEST_F( RenderTarget, CanLockRenderTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ, *renderContext ) );
 
@@ -114,6 +121,7 @@ TEST_F( RenderTarget, CanLockRenderTarget )
 
 TEST_F( RenderTarget, CanLockPartOfRenderTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ, *renderContext ) );
 
@@ -128,6 +136,7 @@ TEST_F( RenderTarget, CanLockPartOfRenderTarget )
 
 TEST_F( RenderTarget, CanLockRenderTargetMipLevel )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL rt;
 	ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 0, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::READ, *renderContext ) );
 

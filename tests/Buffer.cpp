@@ -1,7 +1,5 @@
 #include "StdAfx.h"
 #include "WithValidRenderContextFixture.h"
-#include <Tr2DriverUtilities.h>
-
 
 struct Buffer : public WithValidRenderContext
 {
@@ -21,6 +19,7 @@ TEST_F( Buffer, CreatingImmutableBufferWithoutInitialDataFails )
 
 TEST_F( Buffer, BufferIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	float data[4] = { 0 };
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, data, *renderContext ) );
@@ -29,6 +28,7 @@ TEST_F( Buffer, BufferIsValidAfterCreation )
 
 TEST_F( Buffer, BufferReportsCorrectSize )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	float data[4] = { 0 };
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, data, *renderContext ) );
@@ -37,6 +37,7 @@ TEST_F( Buffer, BufferReportsCorrectSize )
 
 TEST_F( Buffer, BufferEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	float data[4] = { 0 };
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, data, *renderContext ) );
@@ -45,6 +46,7 @@ TEST_F( Buffer, BufferEqualsItself )
 
 TEST_F( Buffer, DifferentBuffersAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	float data[4] = { 0 };
 	Tr2BufferAL buffer1;
 	ASSERT_HRESULT_SUCCEEDED( buffer1.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, data, *renderContext ) );
@@ -77,6 +79,7 @@ TEST_F( Buffer, UpdatingInvalidBufferFails )
 
 TEST_F( Buffer, CanLockReadableBufferForReading )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	float data[4] = { 1, 2, 3, 4 };
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::READ, data, *renderContext ) );
@@ -94,6 +97,7 @@ TEST_F( Buffer, CanLockReadableBufferForReading )
 
 TEST_F( Buffer, LockingNonReadableBufferForReadingFails )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	float data[4] = { 0 };
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, data, *renderContext ) );
@@ -105,6 +109,7 @@ TEST_F( Buffer, LockingNonReadableBufferForReadingFails )
 
 TEST_F( Buffer, CanLockWriteableBufferForWriting )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE, nullptr, *renderContext ) );
 
@@ -126,6 +131,7 @@ TEST_F( Buffer, LockingNonWriteableBufferForWritingFails )
 
 TEST_F( Buffer, CanLockDynamicBufferForWriting )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE_OFTEN, nullptr, *renderContext ) );
 
@@ -136,6 +142,7 @@ TEST_F( Buffer, CanLockDynamicBufferForWriting )
 
 TEST_F( Buffer, CanLockDynamicBufferForWritingWithoutSynchronization )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE_OFTEN, nullptr, *renderContext ) );
 
@@ -146,6 +153,7 @@ TEST_F( Buffer, CanLockDynamicBufferForWritingWithoutSynchronization )
 
 TEST_F( Buffer, CanUpdateBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE, nullptr, *renderContext ) );
 
@@ -155,12 +163,14 @@ TEST_F( Buffer, CanUpdateBuffer )
 
 TEST_F( Buffer, CanCreate16BitIndexBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 2, 4, Tr2GpuUsage::INDEX_BUFFER, Tr2CpuUsage::WRITE, nullptr, *renderContext ) );
 }
 
 TEST_F( Buffer, CanCreate32BitIndexBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 2, 4, Tr2GpuUsage::INDEX_BUFFER, Tr2CpuUsage::WRITE, nullptr, *renderContext ) );
 }
@@ -169,30 +179,35 @@ TEST_F( Buffer, CanCreate32BitIndexBuffer )
 
 TEST_F( Buffer, CanCreateStructuredShaderResourceBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 64, 4, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, nullptr, *renderContext ) );
 }
 
 TEST_F( Buffer, CanCreateTypedShaderResourceBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 4, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, nullptr, *renderContext ) );
 }
 
 TEST_F( Buffer, CanCreateVertexBufferWithShaderResource )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 64, 4, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE, nullptr, *renderContext ) );
 }
 
 TEST_F( Buffer, CanCreateDynamicSrvBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 64, 4, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, nullptr, *renderContext ) );
 }
 
 TEST_F( Buffer, CanMapDynamicSrvBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( 64, 4, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, nullptr, *renderContext ) );
 	void* data;
@@ -208,6 +223,7 @@ TEST_F( Buffer, CanMapDynamicSrvBuffer )
 
 TEST_F( Buffer, CanCreateWritableShaderResourceBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
 	ASSERT_HRESULT_SUCCEEDED( buffer.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R32_FLOAT, 4, Tr2GpuUsage::SHADER_RESOURCE | Tr2GpuUsage::UNORDERED_ACCESS, Tr2CpuUsage::NONE, nullptr, *renderContext ) );
 }

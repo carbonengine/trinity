@@ -15,6 +15,7 @@ struct PrimaryRenderContext : public WithValidRenderContext
 
 TEST_F( RenderContext, CanSetViewport )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2Viewport viewport( 123, 67 );
 	viewport.m_x = 30;
 	viewport.m_y = 18;
@@ -33,11 +34,13 @@ TEST_F( RenderContext, CanSetViewport )
 
 TEST_F( PrimaryRenderContext, CanGetBackbufferFormat )
 {
+	ENSURE_GPU_OR_SKIP
 	EXPECT_NE( Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN, renderContext->GetBackBufferFormat() );
 }
 
 TEST_F( PrimaryRenderContext, CanGetBackbufferSize )
 {
+	ENSURE_GPU_OR_SKIP
 	uint32_t width = 0xDeadBeef;
 	uint32_t height = 0xDeadBeef;
 	ASSERT_HRESULT_SUCCEEDED( renderContext->GetRenderTargetSize( width, height ) );
@@ -47,6 +50,7 @@ TEST_F( PrimaryRenderContext, CanGetBackbufferSize )
 
 TEST_F( RenderContext, CanGetRenderTargetSize )
 {
+	ENSURE_GPU_OR_SKIP
 	uint32_t width = 0xDeadBeef;
 	uint32_t height = 0xDeadBeef;
 
@@ -64,6 +68,7 @@ TEST_F( RenderContext, CanGetRenderTargetSize )
 
 TEST_F( RenderContext, CanGetRenderTargetSizeForNonZeroSlot )
 {
+	ENSURE_GPU_OR_SKIP
 	uint32_t width = 0xDeadBeef;
 	uint32_t height = 0xDeadBeef;
 	const uint32_t slot = 2;
@@ -105,6 +110,7 @@ TEST_F( WithRenderContext, InvalidRenderContextHasInvalidBackBuffer )
 
 TEST_F( PrimaryRenderContext, ValidRenderContextHasValidBackBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	EXPECT_TRUE( renderContext->GetDefaultBackBuffer().IsValid() );
 	EXPECT_EQ( 1, renderContext->GetDefaultBackBuffer().GetMipCount() );
 	EXPECT_EQ( renderContext->GetBackBufferFormat(), renderContext->GetDefaultBackBuffer().GetFormat() );

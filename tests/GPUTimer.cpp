@@ -27,6 +27,7 @@ TEST_F( WithRenderContext, CreatingWithoutRenderContext )
 
 TEST_F( GpuTimer, IsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2GpuTimerAL timer;
 	auto hrResult = timer.Create(*renderContext);
 	ASSERT_HRESULT_SUCCEEDED(hrResult);
@@ -35,6 +36,7 @@ TEST_F( GpuTimer, IsValidAfterCreation )
 
 TEST_F( GpuTimer, Begins )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2GpuTimerAL timer;
 	const auto hrResult = timer.Create(*renderContext);
 	ASSERT_HRESULT_SUCCEEDED(hrResult);
@@ -44,6 +46,7 @@ TEST_F( GpuTimer, Begins )
 
 TEST_F( GpuTimer, ValidAfterStopping )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2GpuTimerAL timer;
 	const auto hrResult = timer.Create(*renderContext);
 	ASSERT_HRESULT_SUCCEEDED(hrResult);

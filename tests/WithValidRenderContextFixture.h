@@ -4,6 +4,8 @@
 
 #include "WithWindowFixture.h"
 
+#define ENSURE_GPU_OR_SKIP if( !MachineHasGfxAdapter() ) { GTEST_SKIP() << "Test Skipped as no adapters present on machine."; }
+
 struct WithValidRenderContext: public WithWindow
 {
 public:
@@ -12,6 +14,7 @@ public:
 	static void SetUpTestCase();
 	static void TearDownTestCase();
 
+	static bool MachineHasGfxAdapter();
 	static void MakeScreenShot( const char* outFilePath );
 	void MakeTestScreenShot();
 

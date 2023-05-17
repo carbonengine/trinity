@@ -24,6 +24,7 @@ TEST_F( WithRenderContext, CreatingDepthStencilWithoutRenderContextFails )
 
 TEST_F( DepthStencil, DepthStencilIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	EXPECT_TRUE( ds.IsValid() );
@@ -36,6 +37,7 @@ TEST_F( DepthStencil, DepthStencilIsValidAfterCreation )
 
 TEST_F( DepthStencil, MsaaDepthStencilIsValidAfterCreation )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2MsaaDesc( 4 ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	EXPECT_TRUE( ds.IsValid() );
@@ -48,6 +50,7 @@ TEST_F( DepthStencil, MsaaDepthStencilIsValidAfterCreation )
 
 TEST_F( DepthStencil, DepthStencilEqualsItself )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	EXPECT_TRUE( ds == ds );
@@ -55,6 +58,7 @@ TEST_F( DepthStencil, DepthStencilEqualsItself )
 
 TEST_F( DepthStencil, DifferentDepthStencilsAreNotEqual )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL ds1;
 	ASSERT_HRESULT_SUCCEEDED( ds1.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL, *renderContext ) );
 	Tr2TextureAL ds2;
@@ -64,6 +68,7 @@ TEST_F( DepthStencil, DifferentDepthStencilsAreNotEqual )
 
 TEST_F( DepthStencil, CanCreateReadableDepthStencil )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 	EXPECT_TRUE( ds.IsValid() );
@@ -78,6 +83,7 @@ TEST_F( DepthStencil, CanCreateReadableDepthStencil )
 
 TEST_F( DepthStencil, DepthStencilHasMemoryClass )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2TextureAL ds;
 	ASSERT_HRESULT_SUCCEEDED( ds.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_D24_UNORM_S8_UINT ), Tr2GpuUsage::DEPTH_STENCIL | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
 	auto memoryClass = ds.GetMemoryClass();
