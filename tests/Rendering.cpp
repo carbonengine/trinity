@@ -161,6 +161,7 @@ ALResult CreateLoadMsaaTexturePS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL
 
 TEST_F( Rendering, CanClearBackBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	uint32_t g = 127;
 
 	auto frame = [&] {
