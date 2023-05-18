@@ -789,6 +789,8 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 		}
 	}
 
+	SetRenderTarget( m_defaultBackBuffer );
+
 	return S_OK;
 }
 

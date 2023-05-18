@@ -1083,10 +1083,6 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 		{
 			rtViews[i] = m_boundRenderTarget[i].m_texture->m_renderTarget[srgb];
 		}
-		else if( i == 0 )
-		{
-			rtViews[i] = m_secondaryDefaultBackBuffer.m_texture->m_renderTarget[srgb];
-		}
 		else
 		{
 			rtViews[i] = nullptr;
@@ -1102,12 +1098,12 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 	// dont't even bother setting it when the dimensions don't match, it's not gonna work.
 	// This happens when we set/push/pop an RT and DS in two separate calls -- there's a point between
 	// those two where it's in a bad state.  Silently "works" in DX9, complains in DX11. Fix the spam:
-	if( !m_boundDepthStencil.IsValid()	||
-		( m_boundDepthStencil.GetDesc().GetWidth()		== bb.GetDesc().GetWidth()		&&
-		  m_boundDepthStencil.GetDesc().GetHeight()		== bb.GetDesc().GetHeight()		&&
-		  m_boundDepthStencil.GetMsaaDesc().quality == bb.GetMsaaDesc().quality	&&
-		  dsMsaaType							== bbMsaaType
-		) )
+	if(		!m_boundDepthStencil.IsValid()				|| 
+			!m_boundRenderTarget[0].IsValid()			||
+		(	m_boundDepthStencil.GetDesc().GetWidth()	== bb.GetDesc().GetWidth() &&
+			m_boundDepthStencil.GetDesc().GetHeight()	== bb.GetDesc().GetHeight() &&
+			m_boundDepthStencil.GetMsaaDesc().quality	== bb.GetMsaaDesc().quality	&&
+			dsMsaaType									== bbMsaaType ) )
 	{		
 		ID3D11DepthStencilView* dsView = nullptr;
 		if( m_boundDepthStencil.IsValid() )
@@ -1141,11 +1137,20 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 	//	http://msdn.microsoft.com/en-us/library/windows/desktop/bb147354%28v=vs.85%29.aspx
 	// " IDirect3DDevice9::SetRenderTarget resets the scissor rectangle to the full render target, analogous to the viewport reset. "
 	//
-	if( changedSlot == 0 )
+	if( changedSlot == 0 || !m_boundRenderTarget[0].IsValid() )
 	{
-		SetViewport( Tr2Viewport ( bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() ) );
-		D3D11_RECT rect = { 0, 0, LONG( bb.GetDesc().GetWidth() ), LONG( bb.GetDesc().GetHeight() ) };
-		m_context->RSSetScissorRects( 1, &rect );
+		if( m_boundRenderTarget[0].IsValid() )
+		{
+			SetViewport( Tr2Viewport( bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() ) );
+			D3D11_RECT rect = { 0, 0, LONG( bb.GetDesc().GetWidth() ), LONG( bb.GetDesc().GetHeight() ) };
+			m_context->RSSetScissorRects( 1, &rect );
+		}
+		else if( m_boundDepthStencil.IsValid() )
+		{
+			SetViewport( Tr2Viewport( m_boundDepthStencil.GetDesc().GetWidth(), m_boundDepthStencil.GetDesc().GetHeight() ) );
+			D3D11_RECT rect = { 0, 0, LONG( m_boundDepthStencil.GetDesc().GetWidth() ), LONG( m_boundDepthStencil.GetDesc().GetHeight() ) };
+			m_context->RSSetScissorRects( 1, &rect );
+		}
 	}
 
 	return S_OK;

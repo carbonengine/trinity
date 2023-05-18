@@ -196,10 +196,6 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 		{
 			rtClear = true;
 		}
-		else
-		{
-			return E_INVALIDCALL;
-		}
 	}
 	if( ( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_ZBUFFER ) != 0 || ( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_STENCIL ) != 0 )
 	{
@@ -917,6 +913,15 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 			D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].GetWidth() ), LONG( m_boundRenderTargets[0].GetHeight() ) };
 			m_commandList->RSSetScissorRects( 1, &rect );
 		}
+		else
+		{
+			if( m_boundDepthStencil.IsValid() )
+			{
+				SetViewport( Tr2Viewport( m_boundDepthStencil.GetWidth(), m_boundDepthStencil.GetHeight() ) );
+				D3D12_RECT rect = { 0, 0, LONG( m_boundDepthStencil.GetWidth() ), LONG( m_boundDepthStencil.GetHeight() ) };
+				m_commandList->RSSetScissorRects( 1, &rect );
+			}
+		}
 		m_psoDescription.m_renderTargetCount = count;
 	}
 
@@ -1002,6 +1007,15 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 			D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].GetWidth() ), LONG( m_boundRenderTargets[0].GetHeight() ) };
 			m_commandList->RSSetScissorRects( 1, &rect );
 		}
+		else
+		{
+			if( m_boundDepthStencil.IsValid() )
+			{
+				SetViewport( Tr2Viewport( m_boundDepthStencil.GetWidth(), m_boundDepthStencil.GetHeight() ) );
+				D3D12_RECT rect = { 0, 0, LONG( m_boundDepthStencil.GetWidth() ), LONG( m_boundDepthStencil.GetHeight() ) };
+				m_commandList->RSSetScissorRects( 1, &rect );
+			}
+		}
 		m_psoDescription.m_renderTargetCount = count;
 	}
 	m_psoDescription.m_depthStencilFormat = depthStencil.GetFormat();
@@ -1037,13 +1051,14 @@ bool Tr2RenderContextAL::GetReadOnlyDepth() const
 
 ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& height, uint32_t slot ) throw( )
 {
-	if( !m_boundRenderTargets[slot].IsValid() )
+	if( m_boundRenderTargets[slot].IsValid() )
 	{
-		return E_INVALIDARG;
+		width = m_boundRenderTargets[slot].GetWidth();
+		height = m_boundRenderTargets[slot].GetHeight();
+		return S_OK;
 	}
-	width = m_boundRenderTargets[slot].GetWidth();
-	height = m_boundRenderTargets[slot].GetHeight();
-	return S_OK;
+
+	return E_FAIL;
 }
 
 

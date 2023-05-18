@@ -400,7 +400,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 	{
 		m_events->OnContextCreated( *this );
 	}
-
+	
 	return S_OK;
 }
 
@@ -509,9 +509,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 
 	Tr2RenderContextAL::m_boundDepthStencil = Tr2TextureAL();
 
-	m_context->OMSetRenderTargets(	1, 
-									&m_defaultBackBuffer.m_texture->m_renderTarget[COLOR_SPACE_LINEAR], 
-									nullptr );
+	SetRenderTarget( m_defaultBackBuffer );
+
 	m_dirtyFlag.flags = 0xffffffff;
 
 	return S_OK;
@@ -613,6 +612,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	}
 
 	m_frameTimer.Begin( *this );
+	SetRenderTarget( m_defaultBackBuffer );
 
 	return S_OK;
 }
