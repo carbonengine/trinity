@@ -618,7 +618,7 @@ void Tr2RenderContextAL::Destroy() throw()
 	m_topology = TOP_INVALID;
 	m_lastSetTopology = TOP_INVALID;
 
-	std::fill_n( m_boundRenderTarget, MAX_RENDER_TARGET, Tr2TextureAL() );
+	std::fill_n( m_boundRenderTarget, MAX_RENDER_TARGET, BoundRT{} );
 
 	memset( &m_renderStateEmulation.m_currentBlend, 0, 
 			sizeof( m_renderStateEmulation.m_currentBlend ) );
@@ -647,7 +647,7 @@ void Tr2RenderContextAL::Destroy() throw()
 	
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
-		TextureStack stack;
+		TrackableStdStack<BoundRT> stack;
 		m_stackRT[i].swap( stack );
 	}
 	{
@@ -1014,8 +1014,8 @@ ALResult Tr2RenderContextAL::Clear(
 	if( clearFlags & CLEARFLAGS_TARGET )
 	{
 		ID3D11RenderTargetView*	rtView = 
-			m_boundRenderTarget[slot].IsValid()	?	m_boundRenderTarget[slot].m_texture->m_renderTarget[COLOR_SPACE_LINEAR]
-										:	slot == 0	? m_secondaryDefaultBackBuffer.m_texture->m_renderTarget[COLOR_SPACE_LINEAR]
+			m_boundRenderTarget[slot].texture.IsValid() ? m_boundRenderTarget[slot].texture.m_texture->m_renderTarget[COLOR_SPACE_LINEAR + m_boundRenderTarget[slot].slice * 2]
+										:	slot == 0	? ( m_secondaryDefaultBackBuffer.m_texture->m_renderTarget.empty() ? nullptr : m_secondaryDefaultBackBuffer.m_texture->m_renderTarget[COLOR_SPACE_LINEAR] )
 														: nullptr;
 
 		if( rtView )
@@ -1079,9 +1079,9 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 	for( uint32_t i = 0; i != m_renderTargetHighWaterMark; ++i )
 	{
 		auto srgb = m_isSrgbRenderTarget ? COLOR_SPACE_SRGB : COLOR_SPACE_LINEAR;
-		if( m_boundRenderTarget[i].IsValid() )
+		if( m_boundRenderTarget[i].texture.IsValid() )
 		{
-			rtViews[i] = m_boundRenderTarget[i].m_texture->m_renderTarget[srgb];
+			rtViews[i] = m_boundRenderTarget[i].texture.m_texture->m_renderTarget[srgb + m_boundRenderTarget[i].slice * 2];
 		}
 		else
 		{
@@ -1089,7 +1089,7 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 		}
 	}
 
-	auto& bb = m_boundRenderTarget[0].IsValid() ? m_boundRenderTarget[0] : m_secondaryDefaultBackBuffer;
+	auto& bb = m_boundRenderTarget[0].texture.IsValid() ? m_boundRenderTarget[0].texture : m_secondaryDefaultBackBuffer;
 
 	// Msaa zero is the same as one, so does need to show up as 'compatible'
 	const uint32_t dsMsaaType = m_boundDepthStencil.IsValid() ? std::max( m_boundDepthStencil.GetMsaaDesc().samples, 1u ) : 1;
@@ -1099,10 +1099,10 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 	// This happens when we set/push/pop an RT and DS in two separate calls -- there's a point between
 	// those two where it's in a bad state.  Silently "works" in DX9, complains in DX11. Fix the spam:
 	if(		!m_boundDepthStencil.IsValid()				|| 
-			!m_boundRenderTarget[0].IsValid()			||
-		(	m_boundDepthStencil.GetDesc().GetWidth()	== bb.GetDesc().GetWidth() &&
-			m_boundDepthStencil.GetDesc().GetHeight()	== bb.GetDesc().GetHeight() &&
-			m_boundDepthStencil.GetMsaaDesc().quality	== bb.GetMsaaDesc().quality	&&
+			!m_boundRenderTarget[0].texture.IsValid() ||
+		( m_boundDepthStencil.GetDesc().GetWidth()		== bb.GetDesc().GetWidth()		&&
+		  m_boundDepthStencil.GetDesc().GetHeight()		== bb.GetDesc().GetHeight()		&&
+		  m_boundDepthStencil.GetMsaaDesc().quality == bb.GetMsaaDesc().quality	&&
 			dsMsaaType									== bbMsaaType ) )
 	{		
 		ID3D11DepthStencilView* dsView = nullptr;
@@ -1137,14 +1137,14 @@ ALResult Tr2RenderContextAL::SetRtDsToDevice( uint32_t changedSlot ) throw()
 	//	http://msdn.microsoft.com/en-us/library/windows/desktop/bb147354%28v=vs.85%29.aspx
 	// " IDirect3DDevice9::SetRenderTarget resets the scissor rectangle to the full render target, analogous to the viewport reset. "
 	//
-	if( changedSlot == 0 || !m_boundRenderTarget[0].IsValid() )
+	if( changedSlot == 0 || !m_boundRenderTarget[0].texture.IsValid() )
 	{
-		if( m_boundRenderTarget[0].IsValid() )
+		if( m_boundRenderTarget[0].texture.IsValid() )
 		{
 			SetViewport( Tr2Viewport( bb.GetDesc().GetWidth(), bb.GetDesc().GetHeight() ) );
-			D3D11_RECT rect = { 0, 0, LONG( bb.GetDesc().GetWidth() ), LONG( bb.GetDesc().GetHeight() ) };
-			m_context->RSSetScissorRects( 1, &rect );
-		}
+		D3D11_RECT rect = { 0, 0, LONG( bb.GetDesc().GetWidth() ), LONG( bb.GetDesc().GetHeight() ) };
+		m_context->RSSetScissorRects( 1, &rect );
+	}
 		else if( m_boundDepthStencil.IsValid() )
 		{
 			SetViewport( Tr2Viewport( m_boundDepthStencil.GetDesc().GetWidth(), m_boundDepthStencil.GetDesc().GetHeight() ) );
@@ -1195,7 +1195,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot ) throw()
+ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot, uint32_t slice ) throw()
 {
 	CCP_ASSERT( slot < MAX_RENDER_TARGET );
 	if( slot >= MAX_RENDER_TARGET )
@@ -1206,7 +1206,7 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 	{
 		if( Tr2GpuUsage::HasFlag( renderTarget.GetGpuUsage(), Tr2GpuUsage::RENDER_TARGET ) )
 		{
-			m_boundRenderTarget[slot] = renderTarget;
+			m_boundRenderTarget[slot] = { renderTarget, slice };
 		}
 		else
 		{
@@ -1215,7 +1215,7 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 	}
 	else
 	{
-		m_boundRenderTarget[slot] = Tr2TextureAL();
+		m_boundRenderTarget[slot] = { Tr2TextureAL(), 0 };
 	}
 
 	m_renderTargetHighWaterMark = std::max( m_renderTargetHighWaterMark, slot + 1 );
@@ -1944,10 +1944,10 @@ ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& hei
 		return E_INVALIDARG;
 	}
 
-	if( m_boundRenderTarget[slot].IsValid() )
+	if( m_boundRenderTarget[slot].texture.IsValid() )
 	{
-		width = m_boundRenderTarget[slot].GetDesc().GetWidth();
-		height = m_boundRenderTarget[slot].GetDesc().GetHeight();
+		width = m_boundRenderTarget[slot].texture.GetDesc().GetWidth();
+		height = m_boundRenderTarget[slot].texture.GetDesc().GetHeight();
 		return S_OK;
 	}
 	

@@ -192,7 +192,7 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 
 	if( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_TARGET )
 	{
-		if( m_boundRenderTargets[slot].IsValid() )
+		if( m_boundRenderTargets[slot].texture.IsValid() )
 		{
 			rtClear = true;
 		}
@@ -215,7 +215,7 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 		size_t count = 0;
 		if( rtClear )
 		{
-			resources[count++] = m_boundRenderTargets[slot].m_texture->GetResourceDx12();
+			resources[count++] = m_boundRenderTargets[slot].texture.m_texture->GetResourceDx12();
 		}
 		if( dsClear )
 		{
@@ -233,7 +233,7 @@ ALResult Tr2RenderContextAL::Clear( uint32_t clearFlags, uint32_t color, float d
 				f * (float)(uint8_t)( color >> 24 )
 			};
 
-			const std::shared_ptr<RenderTargetViewDx12>& rtv = m_boundRenderTargets[slot].m_texture->GetRtvDescriptorHandleDx12();
+			const std::shared_ptr<RenderTargetViewDx12>& rtv = m_boundRenderTargets[slot].texture.m_texture->GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::COLOR_SPACE_LINEAR, m_boundRenderTargets[slot].slice );
 			m_commandList->ClearRenderTargetView( rtv->GetHandleCPU(), colorComponents, 0, nullptr );
 		}
 		if( dsClear )
@@ -449,9 +449,9 @@ ALResult Tr2RenderContextAL::SetRenderState( Tr2RenderContextEnum::RenderState s
 				m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
 				for( uint32_t i = 0; i < RENDER_TARGET_COUNT; ++i )
 				{
-					if( m_boundRenderTargets[i].IsValid() )
+					if( m_boundRenderTargets[i].texture.IsValid() )
 					{
-						m_psoDescription.m_renderTargetFormats[i] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( m_boundRenderTargets[i].GetFormat() ) : m_boundRenderTargets[i].GetFormat();
+						m_psoDescription.m_renderTargetFormats[i] = m_srgbWriteEnable ? Tr2RenderContextEnum::MakeSrgb( m_boundRenderTargets[i].texture.GetFormat() ) : m_boundRenderTargets[i].texture.GetFormat();
 					}
 				}
 				m_dirtyPso = true;
@@ -785,9 +785,9 @@ void Tr2RenderContextAL::FlushGraphicsBarriersDx12( ID3D12Resource* resource )
 	}
 	for( auto rt = std::begin( m_boundRenderTargets ); rt != std::end( m_boundRenderTargets ); ++rt )
 	{
-		if( rt->IsValid() )
+		if( rt->texture.IsValid() )
 		{
-			resources[count++] = rt->m_texture->GetResourceDx12();
+			resources[count++] = rt->texture.m_texture->GetResourceDx12();
 		}
 	}
 	if( m_boundDepthStencil.IsValid() )
@@ -859,12 +859,12 @@ ALResult Tr2RenderContextAL::PopRenderTarget( uint32_t slot ) throw()
 	}
 	auto rt = stack.back();
 	stack.pop_back();
-	return SetRenderTarget( rt, slot );
+	return SetRenderTarget( rt.texture, slot, rt.slice );
 }
 
-ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot ) throw( )
+ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot, uint32_t slice ) throw()
 {
-	if( renderTarget == m_boundRenderTargets[slot] )
+	if( renderTarget == m_boundRenderTargets[slot].texture && slice == m_boundRenderTargets[slot].slice )
 	{
 		return S_OK;
 	}
@@ -876,25 +876,49 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 	D3D12_RESOURCE_BARRIER barriers[2];
 	uint32_t barrierCount = 0;
 
-	if( m_boundRenderTargets[slot].IsValid() )
+	if( m_boundRenderTargets[slot].texture.IsValid() )
 	{
-		if( m_boundRenderTargets[slot].m_texture->m_defaultState != D3D12_RESOURCE_STATE_RENDER_TARGET )
+		if( m_boundRenderTargets[slot].texture.m_texture->m_defaultState != D3D12_RESOURCE_STATE_RENDER_TARGET )
 		{
-			barriers[barrierCount++] = TrinityALImpl::Transition( m_boundRenderTargets[slot].m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_RENDER_TARGET, m_boundRenderTargets[slot].m_texture->m_defaultState );
+			bool boundElsewhere = false;
+			for( uint32_t i = 0; i < RENDER_TARGET_COUNT; ++i )
+			{
+				if( i != slot && m_boundRenderTargets[i].texture == m_boundRenderTargets[slot].texture )
+				{
+					boundElsewhere = true;
+					break;
+				}
+			}
+			if( !boundElsewhere )
+			{
+				barriers[barrierCount++] = TrinityALImpl::Transition( m_boundRenderTargets[slot].texture.m_texture->GetResourceDx12(), D3D12_RESOURCE_STATE_RENDER_TARGET, m_boundRenderTargets[slot].texture.m_texture->m_defaultState );
+			}
 		}
 	}
 	if( renderTarget.IsValid() )
 	{
 		if( renderTarget.m_texture->m_defaultState != D3D12_RESOURCE_STATE_RENDER_TARGET )
 		{
+			bool boundElsewhere = false;
+			for( uint32_t i = 0; i < RENDER_TARGET_COUNT; ++i )
+			{
+				if( i != slot && m_boundRenderTargets[i].texture == renderTarget )
+				{
+					boundElsewhere = true;
+					break;
+				}
+			}
+			if( !boundElsewhere )
+			{
 			barriers[barrierCount++] = TrinityALImpl::Transition( renderTarget.m_texture->GetResourceDx12(), renderTarget.m_texture->m_defaultState, D3D12_RESOURCE_STATE_RENDER_TARGET );
 		}
+	}
 	}
 	if( barrierCount )
 	{
 		ResourceBarrierDx12( barrierCount, barriers );
 	}
-	m_boundRenderTargets[slot] = renderTarget;
+	m_boundRenderTargets[slot] = { renderTarget, slice };
 
 	D3D12_CPU_DESCRIPTOR_HANDLE handles[RENDER_TARGET_COUNT];
 	uint32_t count = 0;
@@ -907,10 +931,10 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 		}
 		m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
 
-		if( m_boundRenderTargets[0].IsValid() )
+		if( m_boundRenderTargets[0].texture.IsValid() )
 		{
-			SetViewport( Tr2Viewport( m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() ) );
-			D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].GetWidth() ), LONG( m_boundRenderTargets[0].GetHeight() ) };
+			SetViewport( Tr2Viewport( m_boundRenderTargets[0].texture.GetWidth(), m_boundRenderTargets[0].texture.GetHeight() ) );
+			D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].texture.GetWidth() ), LONG( m_boundRenderTargets[0].texture.GetHeight() ) };
 			m_commandList->RSSetScissorRects( 1, &rect );
 		}
 		else
@@ -1001,10 +1025,10 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 		}
 		m_commandList->OMSetRenderTargets( count, handles, FALSE, m_boundDepthStencil.IsValid() ? &dsHandle : nullptr );
 
-		if( m_boundRenderTargets[0].IsValid() )
+		if( m_boundRenderTargets[0].texture.IsValid() )
 		{
-			SetViewport( Tr2Viewport( m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() ) );
-			D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].GetWidth() ), LONG( m_boundRenderTargets[0].GetHeight() ) };
+			SetViewport( Tr2Viewport( m_boundRenderTargets[0].texture.GetWidth(), m_boundRenderTargets[0].texture.GetHeight() ) );
+			D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].texture.GetWidth() ), LONG( m_boundRenderTargets[0].texture.GetHeight() ) };
 			m_commandList->RSSetScissorRects( 1, &rect );
 		}
 		else
@@ -1051,10 +1075,10 @@ bool Tr2RenderContextAL::GetReadOnlyDepth() const
 
 ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& height, uint32_t slot ) throw( )
 {
-	if( m_boundRenderTargets[slot].IsValid() )
+	if( m_boundRenderTargets[slot].texture.IsValid() )
 	{
-		width = m_boundRenderTargets[slot].GetWidth();
-		height = m_boundRenderTargets[slot].GetHeight();
+		width = m_boundRenderTargets[slot].texture.GetWidth();
+		height = m_boundRenderTargets[slot].texture.GetHeight();
 		return S_OK;
 	}
 
@@ -1299,20 +1323,20 @@ bool Tr2RenderContextAL::GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* ha
 	}
 	for( uint32_t i = 0; i < RENDER_TARGET_COUNT; ++i )
 	{
-		if( m_boundRenderTargets[i].IsValid() )
+		if( m_boundRenderTargets[i].texture.IsValid() )
 		{
 			if( width != 0xffffffff )
 			{
-				if( m_boundRenderTargets[i].GetWidth() != width || m_boundRenderTargets[i].GetHeight() != height || m_boundRenderTargets[i].GetMsaaDesc() != msaa )
+				if( m_boundRenderTargets[i].texture.GetWidth() != width || m_boundRenderTargets[i].texture.GetHeight() != height || m_boundRenderTargets[i].texture.GetMsaaDesc() != msaa )
 				{
 					return false;
 				}
 			}
 			else
 			{
-				width = m_boundRenderTargets[i].GetWidth();
-				height = m_boundRenderTargets[i].GetHeight();
-				msaa = m_boundRenderTargets[i].GetMsaaDesc();
+				width = m_boundRenderTargets[i].texture.GetWidth();
+				height = m_boundRenderTargets[i].texture.GetHeight();
+				msaa = m_boundRenderTargets[i].texture.GetMsaaDesc();
 			}
 		}
 	}
@@ -1323,14 +1347,16 @@ bool Tr2RenderContextAL::GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* ha
 	Tr2TextureAL* boundRtExample = nullptr;
 	for( uint32_t i = 0; i < RENDER_TARGET_COUNT; ++i )
 	{
-		if( m_boundRenderTargets[i].IsValid() )
+		if( m_boundRenderTargets[i].texture.IsValid() )
 		{
-			const std::shared_ptr<RenderTargetViewDx12>& rtv = m_boundRenderTargets[i].m_texture->GetRtvDescriptorHandleDx12( m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
+			const std::shared_ptr<RenderTargetViewDx12>& rtv = m_boundRenderTargets[i].texture.m_texture->GetRtvDescriptorHandleDx12( 
+				m_srgbWriteEnable ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR, 
+				m_boundRenderTargets[i].slice );
 			CCP_ASSERT(rtv != nullptr);
 			handles[i] = rtv->GetHandleCPU();
 			count = i + 1;
 			hasNullRtsInside = hasNullRts;
-			boundRtExample = m_boundRenderTargets + i;
+			boundRtExample = &m_boundRenderTargets[i].texture;
 		}
 		else
 		{
@@ -1342,7 +1368,7 @@ bool Tr2RenderContextAL::GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* ha
 		auto null = m_ownerDevice->GetNullRtHandle( *boundRtExample );
 		for( uint32_t i = 0; i < count; ++i )
 		{
-			if( !m_boundRenderTargets[i].IsValid() )
+			if( !m_boundRenderTargets[i].texture.IsValid() )
 			{
 				handles[i] = null;
 			}
@@ -1355,7 +1381,7 @@ bool Tr2RenderContextAL::IsBoundDx12( const TrinityALImpl::Tr2TextureAL& texture
 {
 	for( uint32_t i = 0; i < RENDER_TARGET_COUNT; ++i )
 	{
-		if( *m_boundRenderTargets[i].m_texture == texture )
+		if( *m_boundRenderTargets[i].texture.m_texture == texture )
 		{
 			boundState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 			return true;
@@ -1391,7 +1417,7 @@ void Tr2RenderContextAL::ResetDx12()
 	m_primitiveToVertexCount = std::make_pair( 0, 0 );
 
 	m_dirtyPso = true;
-	std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), Tr2TextureAL() );
+	std::fill( std::begin( m_boundRenderTargets ), std::end( m_boundRenderTargets ), BoundRT{} );
 	for( auto it = begin( m_rtStack ); it != end( m_rtStack ); ++it )
 	{
 		it->clear();
@@ -1463,9 +1489,9 @@ void Tr2RenderContextAL::ReApplyStateDx12()
 	}
 	m_commandList->IASetPrimitiveTopology( s_topologies[m_topology] );
 	SetViewport( m_viewport );
-	if( m_boundRenderTargets[0].IsValid() )
+	if( m_boundRenderTargets[0].texture.IsValid() )
 	{
-		D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].GetWidth() ), LONG( m_boundRenderTargets[0].GetHeight() ) };
+		D3D12_RECT rect = { 0, 0, LONG( m_boundRenderTargets[0].texture.GetWidth() ), LONG( m_boundRenderTargets[0].texture.GetHeight() ) };
 		m_commandList->RSSetScissorRects( 1, &rect );
 	}
 	DirtyDescriptorCache();

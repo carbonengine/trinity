@@ -193,7 +193,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot )
+ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot, uint32_t )
 {
 	m_boundRenderTarget[slot] = renderTarget;
 	return S_OK;

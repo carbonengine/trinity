@@ -260,7 +260,6 @@ void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, const
 		commandList->SetDescriptorHeaps(2, heaps);
 
 		// If we're required to switch pipes in the future, we must force it to re-bind contents
-		m_pipeDirty[otherPipe] = true;
 		m_heapsDirty = false;
 	}
 
@@ -320,6 +319,7 @@ void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, const
 
 	// Clear dirty flags
 	m_pipeDirty[targetPipe] = false;
+	m_pipeDirty[otherPipe] = true;
 	m_srvUavDirty = false;
 	m_samplerDirty = false;
 }

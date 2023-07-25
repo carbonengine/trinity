@@ -162,7 +162,7 @@ public:
 	ALResult SetDepthStencil( const Tr2TextureAL& depthStencil );
 	void SetReadOnlyDepth(			bool enable );
 	bool GetReadOnlyDepth() const;
-	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 );
+	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0, uint32_t slice = 0 );
 
 	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2DepthAttachment& depth );
 	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2ColorAttachment& rt1, const Tr2DepthAttachment& depth );

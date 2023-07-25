@@ -208,7 +208,7 @@ namespace
 		{
 			desc3D.BindFlags |= D3D11_BIND_RENDER_TARGET;
 		}
-		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) )
+		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
 		{
 			desc3D.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
 		}
@@ -329,9 +329,9 @@ namespace TrinityALImpl
 	Tr2TextureAL::Tr2TextureAL()
 		:m_gpuUsage( Tr2GpuUsage::NONE ),
 		m_cpuUsage( Tr2CpuUsage::NONE ),
-		m_lockedSubresource( 0 )
+		m_lockedSubresource( 0 ),
+		m_writeBox{ 0, 0, 0, 0, 0, 0 }
 	{
-		m_writeLtrb[0] = m_writeLtrb[1] = m_writeLtrb[2] = m_writeLtrb[3] = 0;
 	}
 
 	ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
@@ -393,10 +393,6 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) && desc.GetTrueMipCount() > 1 )
-		{
-			return E_INVALIDARG;
-		}
-		if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D && cpuUsage != Tr2CpuUsage::NONE )
 		{
 			return E_INVALIDARG;
 		}
@@ -541,7 +537,7 @@ namespace TrinityALImpl
 		CCP_UNUSED( cpuUsage );
 
 		CComPtr<ID3D11ShaderResourceView> view[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
-		CComPtr<ID3D11RenderTargetView> renderTarget[Tr2RenderContextEnum::_COLOR_SPACE_COUNT];
+		std::vector<CComPtr<ID3D11RenderTargetView>> renderTargets;
 		CComPtr<ID3D11DepthStencilView> depthStencil[DepthOption::COUNT];
 		std::vector<CComPtr<ID3D11UnorderedAccessView>> uav;
 
@@ -607,34 +603,73 @@ namespace TrinityALImpl
 			else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
 			{
 				rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE3D;
-				rtvDesc.Texture3D.WSize = (UINT)-1;
+				rtvDesc.Texture3D.WSize = 1;
 			}
 			else if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_CUBE )
 			{
 				rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DARRAY;
-				rtvDesc.Texture2DArray.ArraySize = 6;
+				rtvDesc.Texture2DArray.ArraySize = 1;
 			}
 			else if( msaa.samples > 1 )
 			{
 				rtvDesc.ViewDimension = desc.GetArraySize() > 1 ? D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY : D3D11_RTV_DIMENSION_TEXTURE2DMS;
-				rtvDesc.Texture2DMSArray.ArraySize = desc.GetArraySize();
+				rtvDesc.Texture2DMSArray.ArraySize = 1;
 			}
 			else
 			{
 				rtvDesc.ViewDimension = desc.GetArraySize() > 1 ? D3D11_RTV_DIMENSION_TEXTURE2DARRAY : D3D11_RTV_DIMENSION_TEXTURE2D;
-				rtvDesc.Texture2DArray.ArraySize = desc.GetArraySize();
+				rtvDesc.Texture2DArray.ArraySize = 1;
 			}
 
-			FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] ) );
+			renderTargets.resize( 2 );
+			FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTargets[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] ) );
 			if( createSrgb )
 			{
 				rtvDesc.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
-				FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
+				FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTargets[Tr2RenderContextEnum::COLOR_SPACE_SRGB] ) );
 			}
 			else
 			{
-				renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR];
+				renderTargets[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = renderTargets[Tr2RenderContextEnum::COLOR_SPACE_LINEAR];
 			}
+
+			if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D )
+			{
+				renderTargets.resize( desc.GetDepth() * 2 );
+				for( uint32_t i = 1; i < desc.GetDepth(); ++i )
+				{
+					rtvDesc.Texture3D.FirstWSlice = i;
+					FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTargets[Tr2RenderContextEnum::COLOR_SPACE_LINEAR + i * 2] ) );
+					if( createSrgb )
+					{
+						rtvDesc.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+						FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTargets[Tr2RenderContextEnum::COLOR_SPACE_SRGB + i * 2] ) );
+					}
+					else
+					{
+						renderTargets[Tr2RenderContextEnum::COLOR_SPACE_SRGB + i * 2] = renderTargets[Tr2RenderContextEnum::COLOR_SPACE_LINEAR + i * 2];
+					}
+				}
+			}
+			else if( desc.GetArraySize() > 1 )
+			{
+				renderTargets.resize( desc.GetArraySize() * 2 );
+				for( uint32_t i = 1; i < desc.GetArraySize(); ++i )
+				{
+					rtvDesc.Texture2DArray.FirstArraySlice = i;
+					FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTargets[Tr2RenderContextEnum::COLOR_SPACE_LINEAR + i * 2] ) );
+					if( createSrgb )
+					{
+						rtvDesc.Format = static_cast<DXGI_FORMAT>( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+						FORWARD_HR( renderContext.m_d3dDevice11->CreateRenderTargetView( texture, &rtvDesc, &renderTargets[Tr2RenderContextEnum::COLOR_SPACE_SRGB + i * 2] ) );
+					}
+					else
+					{
+						renderTargets[Tr2RenderContextEnum::COLOR_SPACE_SRGB + i * 2] = renderTargets[Tr2RenderContextEnum::COLOR_SPACE_LINEAR + i * 2];
+					}
+				}
+			}
+
 		}
 
 		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
@@ -706,8 +741,7 @@ namespace TrinityALImpl
 		m_texture = texture;
 		m_view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] = view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR];
 		m_view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = view[Tr2RenderContextEnum::COLOR_SPACE_SRGB];
-		m_renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] = renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR];
-		m_renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB];
+		m_renderTarget = renderTargets;
 		m_depthStencil[DepthOption::READ_WRITE] = depthStencil[DepthOption::READ_WRITE];
 		m_depthStencil[DepthOption::READ_ONLY] = depthStencil[DepthOption::READ_ONLY];
 		m_uav = uav;
@@ -719,8 +753,7 @@ namespace TrinityALImpl
 		m_texture = nullptr;
 		m_view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] = nullptr;
 		m_view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = nullptr;
-		m_renderTarget[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] = nullptr;
-		m_renderTarget[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = nullptr;
+		m_renderTarget.clear();
 		m_depthStencil[DepthOption::READ_WRITE] = nullptr;
 		m_depthStencil[DepthOption::READ_ONLY] = nullptr;
 		m_uav.clear();
@@ -732,7 +765,7 @@ namespace TrinityALImpl
 		m_cpuUsage = Tr2CpuUsage::NONE;
 		m_writeStaging.clear();
 		m_lockedSubresource = 0;
-		m_writeLtrb[0] = m_writeLtrb[1] = m_writeLtrb[2] = m_writeLtrb[3] = 0;
+		m_writeBox = { 0, 0, 0, 0, 0, 0 };
 	}
 
 	bool Tr2TextureAL::IsValid() const
@@ -820,7 +853,7 @@ namespace TrinityALImpl
 		//renderContext.m_context->CopyResource( m_staging, m_texture );
 		if( region.HasBox() )
 		{
-			D3D11_BOX box = { region.m_left, region.m_top, 0, region.m_right, region.m_bottom, 1 };
+			D3D11_BOX box = { region.m_box.left, region.m_box.top, region.m_box.front, region.m_box.right, region.m_box.bottom, region.m_box.back };
 			renderContext.m_context->CopySubresourceRegion( m_stagingTexture, 0, 0, 0, 0, m_texture, D3D10CalcSubresource( region.m_startMipLevel, region.m_startFace, m_desc.GetTrueMipCount() ), &box );
 		}
 		else
@@ -893,13 +926,13 @@ namespace TrinityALImpl
 			}
 			if( region.HasBox() )
 			{
-				ms.pData = static_cast<uint8_t*>( ms.pData ) + region.m_left * Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() ) + region.m_top * ms.RowPitch;
+				ms.pData = static_cast<uint8_t*>( ms.pData ) + region.m_box.left * Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() ) + region.m_box.top * ms.RowPitch + region.m_box.front * ms.DepthPitch;
 			}
 #if TRINITY_AL_GUARD_LOCKS
 			size_t size;
 			if( region.HasBox() )
 			{
-				size = ms.RowPitch * ( region.m_bottom - region.m_top );
+				size = ms.RowPitch * ( region.m_box.bottom - region.m_box.top );
 			}
 			else
 			{
@@ -918,33 +951,28 @@ namespace TrinityALImpl
 		}
 		else
 		{
-			const uint32_t w = region.HasBox() ? region.m_right - region.m_left : m_desc.GetMipWidth( region.m_startMipLevel );
-			const uint32_t h = region.HasBox() ? region.m_bottom - region.m_top : m_desc.GetMipHeight( region.m_startMipLevel );
+			const uint32_t w = region.HasBox() ? region.GetWidth() : m_desc.GetMipWidth( region.m_startMipLevel );
+			const uint32_t h = region.HasBox() ? region.GetHeight() : m_desc.GetMipHeight( region.m_startMipLevel );
+			const uint32_t d = std::max( 1u, region.HasBox() ? region.GetDepth() : m_desc.GetMipDepth( region.m_startMipLevel ) );
 			pitch = w * Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() );
 
-			CcpAlignedMallocBuffer buf( "Tr2TextureAL::MapForWriting", pitch * h, 32 );
+			CcpAlignedMallocBuffer buf( "Tr2TextureAL::MapForWriting", pitch * h * d, 32 );
 			m_writeStaging.swap( buf );
 
 			if( region.HasBox() )
 			{
-				m_writeLtrb[0] = region.m_left;
-				m_writeLtrb[1] = region.m_top;
-				m_writeLtrb[2] = region.m_right;
-				m_writeLtrb[3] = region.m_bottom;
+				m_writeBox = region.m_box;
 			}
 			else
 			{
-				m_writeLtrb[0] = 0;
-				m_writeLtrb[1] = 0;
-				m_writeLtrb[2] = w;
-				m_writeLtrb[3] = h;
+				m_writeBox = { 0, 0, 0, w, h, d };
 			}
 
-			CCP_ASSERT( m_writeLtrb[2] <= m_desc.GetMipWidth( region.m_startMipLevel ) && m_writeLtrb[3] <= m_desc.GetMipHeight( region.m_startMipLevel ) );
-			if( m_writeLtrb[2] > m_desc.GetMipWidth( region.m_startMipLevel ) && m_writeLtrb[3] > m_desc.GetMipHeight( region.m_startMipLevel ) )
+			if( m_writeBox.right > m_desc.GetMipWidth( region.m_startMipLevel ) || m_writeBox.bottom > m_desc.GetMipHeight( region.m_startMipLevel ) || m_writeBox.back > m_desc.GetMipDepth( region.m_startMipLevel ) )
 			{
 				CCP_LOGERR( "TrinityAL: invalid rectangle in Tr2TextureAL::LockWriting" );
 				m_writeStaging.clear();
+				CCP_ASSERT( false );
 				return E_FAIL;
 			}
 
@@ -956,11 +984,11 @@ namespace TrinityALImpl
 			size_t size;
 			if( region.HasBox() )
 			{
-				size = pitch * ( region.m_bottom - region.m_top );
+				size = pitch * region.GetHeight() * region.GetDepth();
 			}
 			else
 			{
-				size = pitch * m_desc.GetMipHeight( region.m_startMipLevel );
+				size = pitch * m_desc.GetMipHeight( region.m_startMipLevel ) * m_desc.GetMipDepth( region.m_startMipLevel );
 			}
 
 			m_lockGuard.Lock( size, m_writeStaging.get() );
@@ -989,32 +1017,32 @@ namespace TrinityALImpl
 		}
 		else
 		{
-			const uint32_t w = m_writeLtrb[2] - m_writeLtrb[0];
+			const uint32_t w = m_writeBox.GetWidth();
 			const uint32_t pitch = w * Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() );
 
 			if( renderContext.m_context )
 			{
 				D3D11_BOX box;
-				box.left = m_writeLtrb[0];
-				box.top = m_writeLtrb[1];
-				box.right = m_writeLtrb[2];
-				box.bottom = m_writeLtrb[3];
-				box.front = 0;
-				box.back = 1;
+				box.left = m_writeBox.left;
+				box.top = m_writeBox.top;
+				box.right = m_writeBox.right;
+				box.bottom = m_writeBox.bottom;
+				box.front = m_writeBox.front;
+				box.back = m_writeBox.back;
 
 				auto mip = m_lockedSubresource % m_desc.GetTrueMipCount();
 
-				if( m_writeLtrb[2] > m_desc.GetMipWidth( mip ) && m_writeLtrb[3] > m_desc.GetMipHeight( mip ) )
+				if( m_writeBox.right > m_desc.GetMipWidth( mip ) || m_writeBox.bottom > m_desc.GetMipHeight( mip ) || m_writeBox.back > m_desc.GetMipDepth( mip ) )
 				{
 					CCP_LOGERR( "TrinityAL: invalid rectangle in Tr2TextureAL::UnlockWriting" );
 					return;
 				}
 
-				renderContext.m_context->UpdateSubresource( m_texture, m_lockedSubresource, &box, m_writeStaging.get(), pitch, 0 );
+				renderContext.m_context->UpdateSubresource( m_texture, m_lockedSubresource, &box, m_writeStaging.get(), pitch, pitch * m_writeBox.GetHeight() );
 			}
 
 			m_writeStaging.clear();
-			m_writeLtrb[0] = m_writeLtrb[1] = m_writeLtrb[2] = m_writeLtrb[3] = 0;
+			m_writeBox = { 0, 0, 0, 0, 0, 0 };
 		}
 	}
 
@@ -1048,12 +1076,12 @@ namespace TrinityALImpl
 		if( region.HasBox() )
 		{
 			D3D11_BOX box;
-			box.left = region.m_left;
-			box.top = region.m_top;
-			box.front = region.m_front;
-			box.right = region.m_right;
-			box.bottom = region.m_bottom;
-			box.back = region.m_back;
+			box.left = region.m_box.left;
+			box.top = region.m_box.top;
+			box.front = region.m_box.front;
+			box.right = region.m_box.right;
+			box.bottom = region.m_box.bottom;
+			box.back = region.m_box.back;
 
 			renderContext.m_context->UpdateSubresource( m_texture, subResource, &box, source, pitch, slicePitch );
 		}
@@ -1094,7 +1122,7 @@ namespace TrinityALImpl
 			return E_FAIL;
 		}
 
-		D3D11_BOX box = { src.m_left, src.m_top, src.m_front, src.m_right, src.m_bottom, src.m_back };
+		D3D11_BOX box = { src.m_box.left, src.m_box.top, src.m_box.front, src.m_box.right, src.m_box.bottom, src.m_box.back };
 
 		const uint32_t srcMipCount = source.m_desc.GetTrueMipCount();
 		const uint32_t dstMipCount = m_desc.GetTrueMipCount();
@@ -1108,9 +1136,9 @@ namespace TrinityALImpl
 				renderContext.m_context->CopySubresourceRegion(
 					m_texture,
 					D3D10CalcSubresource( dst.m_startMipLevel + mip, dst.m_startFace + face, dstMipCount ),
-					dst.m_left,
-					dst.m_top,
-					dst.m_front,
+					dst.m_box.left,
+					dst.m_box.top,
+					dst.m_box.front,
 					source.m_texture,
 					D3D10CalcSubresource( src.m_startMipLevel + mip, src.m_startFace + face, srcMipCount ),
 					&box );

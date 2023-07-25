@@ -143,7 +143,7 @@ public:
 	ALResult SetViewport( const Tr2Viewport& viewport ) throw( );
 	ALResult GetViewport( Tr2Viewport& viewport ) throw( );
 
-	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 ) throw( );
+	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0, uint32_t slice = 0 ) throw( );
 	ALResult PushRenderTarget( uint32_t slot = 0 ) throw( );
 	ALResult PopRenderTarget( uint32_t slot = 0 ) throw( );
 
@@ -240,8 +240,13 @@ protected:
 
 	static const uint32_t RENDER_TARGET_COUNT = 4;
 
-	Tr2TextureAL m_boundRenderTargets[RENDER_TARGET_COUNT];
-	std::vector<Tr2TextureAL> m_rtStack[RENDER_TARGET_COUNT];
+	struct BoundRT
+	{
+		Tr2TextureAL texture;
+		uint32_t slice;
+	};
+	BoundRT m_boundRenderTargets[RENDER_TARGET_COUNT];
+	std::vector<BoundRT> m_rtStack[RENDER_TARGET_COUNT];
 
 	Tr2TextureAL m_boundDepthStencil;
 	std::vector<Tr2TextureAL> m_dsStack;

@@ -128,7 +128,7 @@ public:
 	ALResult SetDepthStencil( const Tr2TextureAL& depthStencil ) throw();
 	void SetReadOnlyDepth( bool enable ) throw();
 	bool GetReadOnlyDepth() const;
-	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0 ) throw();
+	ALResult SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot = 0, uint32_t slice = 0 ) throw();
 
 	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2DepthAttachment& depth );
 	void RenderPassHint( const Tr2ColorAttachment& rt0, const Tr2ColorAttachment& rt1, const Tr2DepthAttachment& depth );
@@ -242,7 +242,12 @@ private:
 	// We can only set renderTarget and depthStencil together, so remember what's set in case code asks
 	// to update only one.
 	enum { MAX_RENDER_TARGET = 8 };
-	Tr2TextureAL m_boundRenderTarget[MAX_RENDER_TARGET];
+	struct BoundRT
+	{
+		Tr2TextureAL texture;
+		uint32_t slice;
+	};
+	BoundRT m_boundRenderTarget[MAX_RENDER_TARGET];
 	uint32_t					m_renderTargetHighWaterMark;
 
 	Tr2TextureAL m_boundDepthStencil;
@@ -275,7 +280,7 @@ private:
 
 	friend class Tr2PrimaryRenderContextAL;
 	typedef	TrackableStdStack<Tr2TextureAL>	TextureStack;
-	TextureStack m_stackRT[MAX_RENDER_TARGET];
+	TrackableStdStack<BoundRT> m_stackRT[MAX_RENDER_TARGET];
 	TextureStack m_stackDS;
 
 	uint32_t m_assignedUavOffset;

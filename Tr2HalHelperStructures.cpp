@@ -14,17 +14,12 @@ using namespace Tr2RenderContextEnum;
 //   Tr2TextureSubresource default constructor: construct a subresource range containing
 //   the entire resource.
 // --------------------------------------------------------------------------------------
-Tr2TextureSubresource::Tr2TextureSubresource()
-	: m_startFace( 0 )
-	, m_endFace( std::numeric_limits<uint32_t>::max() ),
-	m_startMipLevel( 0 ),
-	m_endMipLevel( 0xffffffff ),
-	m_left( 0xffffffff ),
-	m_top( 0xffffffff ),
-	m_front( 0xffffffff ),
-	m_right( 0xffffffff ),
-	m_bottom( 0xffffffff ),
-	m_back( 0xffffffff )
+Tr2TextureSubresource::Tr2TextureSubresource() :
+	m_startFace( 0 ), 
+	m_endFace( std::numeric_limits<uint32_t>::max() ), 
+	m_startMipLevel( 0 ), 
+	m_endMipLevel( 0xffffffff ), 
+	m_box{ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff }
 {
 }
 
@@ -33,12 +28,7 @@ Tr2TextureSubresource::Tr2TextureSubresource( uint32_t mipLevel )
 	m_endFace( 1 ),
 	m_startMipLevel( mipLevel ),
 	m_endMipLevel( mipLevel + 1 ),
-	m_left( 0xffffffff ),
-	m_top( 0xffffffff ),
-	m_front( 0xffffffff ),
-	m_right( 0xffffffff ),
-	m_bottom( 0xffffffff ),
-	m_back( 0xffffffff )
+	m_box{ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff }
 {
 }
 
@@ -52,12 +42,7 @@ Tr2TextureSubresource::Tr2TextureSubresource( uint32_t face, uint32_t mipLevel )
 	m_endFace( face + 1 ),
 	m_startMipLevel( mipLevel ),
 	m_endMipLevel( mipLevel + 1 ),
-	m_left( 0xffffffff ),
-	m_top( 0xffffffff ),
-	m_front( 0xffffffff ),
-	m_right( 0xffffffff ),
-	m_bottom( 0xffffffff ),
-	m_back( 0xffffffff )
+	m_box{ 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff }
 {
 }
 
@@ -82,27 +67,24 @@ void Tr2TextureSubresource::ClampToTexture( const Tr2BitmapDimensions& texture )
 
 	if( HasBox() )
 	{
-		m_left = std::min( m_left, mipWidth - 1 );
-		m_right = std::min( m_right, mipWidth );
-		m_top = std::min( m_top, mipHeight - 1 );
-		m_bottom = std::min( m_bottom, mipHeight );
+		m_box.left = std::min( m_box.left, mipWidth - 1 );
+		m_box.right = std::min( m_box.right, mipWidth );
+		m_box.top = std::min( m_box.top, mipHeight - 1 );
+		m_box.bottom = std::min( m_box.bottom, mipHeight );
 		if( texture.GetType() == TEX_TYPE_3D )
 		{
-			m_front = std::min( m_front, mipDepth - 1 );
-			m_back = std::min( m_back, mipDepth );
+			m_box.front = std::min( m_box.front, mipDepth - 1 );
+			m_box.back = std::min( m_box.back, mipDepth );
 		}
 		else
 		{
-			m_front = 0;
-			m_back = 1;
+			m_box.front = 0;
+			m_box.back = 1;
 		}
 	}
 	else
 	{
-		m_left = m_top = m_front = 0;
-		m_right = mipWidth;
-		m_bottom = mipHeight;
-		m_back = mipDepth;
+		m_box = { 0, 0, 0, mipWidth, mipHeight, mipDepth };
 	}
 }
 
@@ -131,11 +113,11 @@ bool Tr2TextureSubresource::IsSubresourceFull( const Tr2BitmapDimensions& textur
 	}
 	if( HasBox() )
 	{
-		if( m_left > 0 || m_top > 0 || m_front > 0 )
+		if( m_box.left > 0 || m_box.top > 0 || m_box.front > 0 )
 		{
 			return false;
 		}
-		if( m_right < texture.GetWidth() || m_bottom < texture.GetHeight() || m_back < texture.GetDepth() )
+		if( m_box.right < texture.GetWidth() || m_box.bottom < texture.GetHeight() || m_box.back < texture.GetDepth() )
 		{
 			return false;
 		}
@@ -156,15 +138,15 @@ bool Tr2TextureSubresource::IsValidForBitmap( const Tr2BitmapDimensions& bitmap 
 	}
 	if( HasBox() )
 	{
-		if( m_right > bitmap.GetMipWidth( m_startMipLevel ) )
+		if( m_box.right > bitmap.GetMipWidth( m_startMipLevel ) )
 		{
 			return false;
 		}
-		if( m_bottom > bitmap.GetMipHeight( m_startMipLevel ) )
+		if( m_box.bottom > bitmap.GetMipHeight( m_startMipLevel ) )
 		{
 			return false;
 		}
-		if( bitmap.GetType() == TEX_TYPE_3D && m_back > bitmap.GetMipDepth( m_startMipLevel ) )
+		if( bitmap.GetType() == TEX_TYPE_3D && m_box.back > bitmap.GetMipDepth( m_startMipLevel ) )
 		{
 			return false;
 		}
@@ -174,7 +156,7 @@ bool Tr2TextureSubresource::IsValidForBitmap( const Tr2BitmapDimensions& bitmap 
 
 bool Tr2TextureSubresource::HasBox() const
 {
-	return m_left != 0xffffffff || m_top != 0xffffffff || m_front != 0xffffffff || m_right != 0xffffffff || m_bottom != 0xffffffff || m_back != 0xffffffff;
+	return m_box.left != 0xffffffff || m_box.top != 0xffffffff || m_box.front != 0xffffffff || m_box.right != 0xffffffff || m_box.bottom != 0xffffffff || m_box.back != 0xffffffff;
 }
 
 bool Tr2TextureSubresource::IsSingleSubresource() const
@@ -184,34 +166,34 @@ bool Tr2TextureSubresource::IsSingleSubresource() const
 
 Tr2TextureSubresource& Tr2TextureSubresource::SetBox( const uint32_t* ltfrbb )
 {
-	m_left = ltfrbb[0];
-	m_top = ltfrbb[1];
-	m_front = ltfrbb[2];
-	m_right = ltfrbb[3];
-	m_bottom = ltfrbb[4];
-	m_back = ltfrbb[5];
+	m_box.left = ltfrbb[0];
+	m_box.top = ltfrbb[1];
+	m_box.front = ltfrbb[2];
+	m_box.right = ltfrbb[3];
+	m_box.bottom = ltfrbb[4];
+	m_box.back = ltfrbb[5];
 	return *this;
 }
 
 Tr2TextureSubresource& Tr2TextureSubresource::SetRect( const uint32_t* ltrb )
 {
-	m_left = ltrb[0];
-	m_top = ltrb[1];
-	m_front = 0;
-	m_right = ltrb[2];
-	m_bottom = ltrb[3];
-	m_back = 1;
+	m_box.left = ltrb[0];
+	m_box.top = ltrb[1];
+	m_box.front = 0;
+	m_box.right = ltrb[2];
+	m_box.bottom = ltrb[3];
+	m_box.back = 1;
 	return *this;
 }
 
 Tr2TextureSubresource& Tr2TextureSubresource::SetRect( uint32_t left, uint32_t top, uint32_t right, uint32_t bottom )
 {
-	m_left = left;
-	m_top = top;
-	m_front = 0;
-	m_right = right;
-	m_bottom = bottom;
-	m_back = 1;
+	m_box.left = left;
+	m_box.top = top;
+	m_box.front = 0;
+	m_box.right = right;
+	m_box.bottom = bottom;
+	m_box.back = 1;
 	return *this;
 }
 
@@ -221,19 +203,14 @@ bool Tr2TextureSubresource::operator==( const Tr2TextureSubresource& other ) con
 			m_endFace		== other.m_endFace			&&
 			m_startMipLevel	== other.m_startMipLevel	&&
 			m_endMipLevel	== other.m_endMipLevel		&&
-			m_left			== other.m_left				&&
-			m_top			== other.m_top				&&
-			m_front			== other.m_front			&&
-			m_right			== other.m_right			&&
-			m_bottom		== other.m_bottom			&&
-			m_back			== other.m_back;
+			m_box			== other.m_box;
 }
 
 bool Tr2TextureSubresource::IsValid() const
 {
 	if( HasBox() )
 	{
-		if( m_left >= m_right || m_top >= m_bottom || m_front >= m_back )
+		if( m_box.left >= m_box.right || m_box.top >= m_box.bottom || m_box.front >= m_box.back )
 		{
 			return false;
 		}
@@ -264,20 +241,20 @@ bool Crop(	Tr2TextureSubresource& sourceSR,
 
 	if( sourceSR.GetWidth() < destSR.GetWidth() )
 	{
-		destSR.m_right = destSR.m_left + sourceSR.GetWidth();
+		destSR.m_box.right = destSR.m_box.left + sourceSR.GetWidth();
 	}
 	else
 	{
-		sourceSR.m_right = sourceSR.m_left + destSR.GetWidth();
+		sourceSR.m_box.right = sourceSR.m_box.left + destSR.GetWidth();
 	}
 
 	if( sourceSR.GetHeight() < destSR.GetHeight() )
 	{
-		destSR.m_bottom = destSR.m_top + sourceSR.GetHeight();
+		destSR.m_box.bottom = destSR.m_box.top + sourceSR.GetHeight();
 	}
 	else
 	{
-		sourceSR.m_bottom = sourceSR.m_top + destSR.GetHeight();
+		sourceSR.m_box.bottom = sourceSR.m_box.top + destSR.GetHeight();
 	}
 
 	sourceSR.ClampToTexture( sourceBD );
@@ -297,34 +274,34 @@ void AdvanceMip( Tr2TextureSubresource& sub, const Tr2BitmapDimensions& bd, uint
 {
 	if( bd.GetMipWidth( sub.m_startMipLevel + mip + 1 ) < bd.GetMipWidth( sub.m_startMipLevel + mip ) )
 	{
-		sub.m_left  /= 2;
-		sub.m_right /= 2;
+		sub.m_box.left /= 2;
+		sub.m_box.right /= 2;
 
 		if( bd.IsCompressed() && sub.GetWidth() < 4 )
 		{
-			sub.m_right = sub.m_left + 4;
+			sub.m_box.right = sub.m_box.left + 4;
 		}
 	}
 
 	if( bd.GetMipHeight( sub.m_startMipLevel + mip + 1 ) < bd.GetMipHeight( sub.m_startMipLevel + mip ) )
 	{
-		sub.m_top    /= 2;
-		sub.m_bottom /= 2;
+		sub.m_box.top /= 2;
+		sub.m_box.bottom /= 2;
 
 		if( bd.IsCompressed() && sub.GetHeight() < 4 )
 		{
-			sub.m_bottom = sub.m_top + 4;
+			sub.m_box.bottom = sub.m_box.top + 4;
 		}
 	}
 
 	if( bd.GetMipDepth( sub.m_startMipLevel + mip + 1 ) < bd.GetMipDepth( sub.m_startMipLevel + mip ) )
 	{
-		sub.m_front /= 2;
-		sub.m_back  /= 2;
+		sub.m_box.front /= 2;
+		sub.m_box.back /= 2;
 
 		if( bd.IsCompressed() && sub.GetDepth() < 4 )
 		{
-			sub.m_bottom = sub.m_top + 4;
+			sub.m_box.bottom = sub.m_box.top + 4;
 		}
 	}
 }

@@ -76,10 +76,6 @@ namespace
 		{
 			return E_INVALIDARG;
 		}
-		if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D && cpuUsage != Tr2CpuUsage::NONE )
-		{
-			return E_INVALIDARG;
-		}
 		if( HasFlag( cpuUsage, Tr2CpuUsage::READ ) && HasFlag( cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
 			return E_INVALIDARG;
@@ -629,6 +625,11 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
+		if( desc.GetFormat() == Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN )
+		{
+			return E_INVALIDARG;
+		}
+
 		if( desc.GetWidth() == 0 || desc.GetHeight() == 0 || ( desc.GetType() == TEX_TYPE_3D && desc.GetDepth() == 0 ) || ( desc.GetType() != TEX_TYPE_3D && desc.GetArraySize() == 0 ) )
 		{
 			return E_INVALIDARG;
@@ -865,28 +866,111 @@ namespace TrinityALImpl
 		}
 		if( HasFlag( gpuUsage, Tr2GpuUsage::RENDER_TARGET ) )
 		{
-			D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
-			heapDesc.NumDescriptors = 2;
-			heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-			heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-
 			D3D12_RENDER_TARGET_VIEW_DESC rtv;
 			rtv.Format = DXGI_FORMAT( desc.GetFormat() );
-			if( msaa.samples > 1 )
+			if( desc.GetType() == TEX_TYPE_3D )
 			{
-				rtv.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+				rtv.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE3D;
+				rtv.Texture3D.MipSlice = 0;
+				rtv.Texture3D.WSize = 1;
+				m_rtv.resize( 2 * desc.GetDepth() );
+				auto srgb = DXGI_FORMAT( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+
+				for( uint32_t i = 0; i < desc.GetDepth(); ++i )
+				{
+					rtv.Texture3D.FirstWSlice = i;
+					rtv.Format = DXGI_FORMAT( desc.GetFormat() );
+					renderContext.CreateRenderTargetView( texture, &rtv, m_rtv[i * 2] );
+					if( srgb != rtv.Format )
+					{
+						rtv.Format = srgb;
+						renderContext.CreateRenderTargetView( texture, &rtv, m_rtv[i * 2 + 1] );
+					}
+					else
+					{
+						m_rtv[i * 2 + 1] = m_rtv[i * 2];
+					}
+				}
+			}
+			else if( desc.GetArraySize() > 1 )
+			{
+				if( msaa.samples > 1 )
+				{
+					rtv.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMSARRAY;
+					rtv.Texture2DMSArray.ArraySize = 1;
+
+					m_rtv.resize( 2 * desc.GetArraySize() );
+					auto srgb = DXGI_FORMAT( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+
+					for( uint32_t i = 0; i < desc.GetArraySize(); ++i )
+					{
+						rtv.Texture2DMSArray.FirstArraySlice = i;
+						rtv.Format = DXGI_FORMAT( desc.GetFormat() );
+						renderContext.CreateRenderTargetView( texture, &rtv, m_rtv[i * 2] );
+						if( srgb != rtv.Format )
+						{
+							rtv.Format = srgb;
+							renderContext.CreateRenderTargetView( texture, &rtv, m_rtv[i * 2 + 1] );
+						}
+						else
+						{
+							m_rtv[i * 2 + 1] = m_rtv[i * 2];
+						}
+					}
+				}
+				else
+				{
+					rtv.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DARRAY;
+					rtv.Texture2DArray.ArraySize = 1;
+					rtv.Texture2DArray.MipSlice = 0;
+					rtv.Texture2DArray.PlaneSlice = 0;
+
+					m_rtv.resize( 2 * desc.GetArraySize() );
+					auto srgb = DXGI_FORMAT( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+
+					for( uint32_t i = 0; i < desc.GetArraySize(); ++i )
+					{
+						rtv.Texture2DArray.FirstArraySlice = i;
+						rtv.Format = DXGI_FORMAT( desc.GetFormat() );
+						renderContext.CreateRenderTargetView( texture, &rtv, m_rtv[i * 2] );
+						if( srgb != rtv.Format )
+						{
+							rtv.Format = srgb;
+							renderContext.CreateRenderTargetView( texture, &rtv, m_rtv[i * 2 + 1] );
+						}
+						else
+						{
+							m_rtv[i * 2 + 1] = m_rtv[i * 2];
+						}
+					}
+				}
 			}
 			else
 			{
-				rtv.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
-				rtv.Texture2D.MipSlice = 0;
-				rtv.Texture2D.PlaneSlice = 0;
-			}
-			m_rtv.resize(2);
-			renderContext.CreateRenderTargetView(texture, &rtv, m_rtv[0]);
+				if( msaa.samples > 1 )
+				{
+					rtv.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2DMS;
+				}
+				else
+				{
+					rtv.ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D;
+					rtv.Texture2D.MipSlice = 0;
+					rtv.Texture2D.PlaneSlice = 0;
+				}
+				m_rtv.resize( 2 );
+				renderContext.CreateRenderTargetView( texture, &rtv, m_rtv[0] );
 
-			rtv.Format = DXGI_FORMAT( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
-			renderContext.CreateRenderTargetView(texture, &rtv, m_rtv[1]);
+				auto srgb = DXGI_FORMAT( Tr2RenderContextEnum::MakeSrgb( desc.GetFormat() ) );
+				if( srgb != rtv.Format )
+				{
+					rtv.Format = srgb;
+					renderContext.CreateRenderTargetView( texture, &rtv, m_rtv[1] );
+				}
+				else
+				{
+					m_rtv[1] = m_rtv[0];
+				}
+			}
 		}
 		if( HasFlag( gpuUsage, Tr2GpuUsage::DEPTH_STENCIL ) )
 		{
@@ -1124,7 +1208,7 @@ namespace TrinityALImpl
 			return E_FAIL;
 		}
 
-		D3D12_BOX box = { src.m_left, src.m_top, src.m_front, src.m_right, src.m_bottom, src.m_back };
+		D3D12_BOX box = { src.m_box.left, src.m_box.top, src.m_box.front, src.m_box.right, src.m_box.bottom, src.m_box.back };
 
 		const uint32_t srcMipCount = source.m_desc.GetTrueMipCount();
 		const uint32_t dstMipCount = m_desc.GetTrueMipCount();
@@ -1146,7 +1230,7 @@ namespace TrinityALImpl
 			{
 				D3D12_TEXTURE_COPY_LOCATION dstLoc = { dstResource, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, dst.m_startMipLevel + mip + ( dst.m_startFace + face ) * dstMipCount };
 				D3D12_TEXTURE_COPY_LOCATION srcLoc = { srcResource, D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX, src.m_startMipLevel + mip + ( src.m_startFace + face ) * srcMipCount };
-				renderContext.m_commandList->CopyTextureRegion( &dstLoc, dst.m_left, dst.m_top, dst.m_front, &srcLoc, &box );
+				renderContext.m_commandList->CopyTextureRegion( &dstLoc, dst.m_box.left, dst.m_box.top, dst.m_box.front, &srcLoc, &box );
 			}
 
 			if( mip + 1 != src.GetMipCount() )
@@ -1316,12 +1400,12 @@ namespace TrinityALImpl
 
 		if( m_mappedRegion.HasBox() )
 		{
-			D3D12_BOX box = { 0, 0, 0, m_mappedRegion.m_right - m_mappedRegion.m_left, m_mappedRegion.m_bottom - m_mappedRegion.m_top, m_mappedRegion.m_back - m_mappedRegion.m_front };
+			D3D12_BOX box = { 0, 0, 0, m_mappedRegion.m_box.GetWidth(), m_mappedRegion.m_box.GetHeight(), m_mappedRegion.m_box.GetDepth() };
 			renderContext.m_commandList->CopyTextureRegion( 
 				&Dst, 
-				m_mappedRegion.m_left, 
-				m_mappedRegion.m_top, 
-				m_mappedRegion.m_front, 
+				m_mappedRegion.m_box.left, 
+				m_mappedRegion.m_box.top, 
+				m_mappedRegion.m_box.front, 
 				&Src, 
 				&box );
 		}
@@ -1415,7 +1499,7 @@ namespace TrinityALImpl
 		}
 	}
 
-	ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t, Tr2RenderContextAL& renderContext )
+	ALResult Tr2TextureAL::UpdateSubresource( const Tr2TextureSubresource& region, const void* source, uint32_t pitch, uint32_t depthPitch, Tr2RenderContextAL& renderContext )
 	{
 		if( !IsValid() )
 		{
@@ -1447,14 +1531,25 @@ namespace TrinityALImpl
 		void* dest;
 		uint32_t destPitch;
 		FORWARD_HR( MapForWriting( region, dest, destPitch, renderContext ) );
+
+		auto clamped = region;
+		clamped.ClampToTexture( m_desc );
+
 		auto bpp = Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() );
-		auto width = region.m_right - region.m_left;
+		auto width = clamped.m_box.GetWidth();
 		width *= bpp;
-		for( uint32_t i = region.m_top; i != region.m_bottom; ++i )
+		auto depthSlice = static_cast<const uint8_t*>( source );
+
+		for( uint32_t j = clamped.m_box.front; j != clamped.m_box.back; ++j )
 		{
-			memcpy( dest, source, width );
-			dest = static_cast<uint8_t*>( dest ) + destPitch;
-			source = static_cast<const uint8_t*>( source ) + pitch;
+			auto src = depthSlice;
+			for( uint32_t i = clamped.m_box.top; i != clamped.m_box.bottom; ++i )
+			{
+				memcpy( dest, src, width );
+				dest = static_cast<uint8_t*>( dest ) + destPitch;
+				src += pitch;
+			}
+			depthSlice += depthPitch;
 		}
 		UnmapForWriting( renderContext );
 
@@ -1472,9 +1567,11 @@ namespace TrinityALImpl
 		return nullptr;
 	}
 
-	const std::shared_ptr<RenderTargetViewDx12>& Tr2TextureAL::GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace ) const
+	const std::shared_ptr<RenderTargetViewDx12>& Tr2TextureAL::GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace, uint32_t slice ) const
 	{
-		return m_rtv[m_currentTextureIndex * 2 + colorSpace];
+		auto slices = std::max( 1u, m_desc.GetDepth() );
+		auto index = m_currentTextureIndex * slices * 2 + 2 * slice + colorSpace;
+		return m_rtv[index];
 	}
 
 	void Tr2TextureAL::AssignFromSwapChainDx12( const std::vector<CComPtr<ID3D12Resource>>& backBuffers, const std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs, Tr2PrimaryRenderContextAL& renderContext )

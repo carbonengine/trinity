@@ -116,7 +116,7 @@ void Tr2RenderContextAL::Destroy()
 {
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
-		m_boundRenderTargets[i] = Tr2TextureAL();
+		m_boundRenderTargets[i] = {};
 	}
 	m_boundDepthStencil = Tr2TextureAL();
 	m_isValid = false;
@@ -263,7 +263,7 @@ ALResult Tr2RenderContextAL::Clear(
 
 	if( clearFlags & Tr2RenderContextEnum::CLEARFLAGS_TARGET )
 	{
-		if( m_boundRenderTargets[slot].IsValid() )
+		if( m_boundRenderTargets[slot].texture.IsValid() )
 		{
 			metalClearColor = MakeClearColor( color );
 			clearColor = &metalClearColor;
@@ -588,7 +588,7 @@ ALResult Tr2RenderContextAL::SetDepthStencil( const Tr2TextureAL& depthStencil )
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot )
+ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, uint32_t slot, uint32_t slice )
 {
 	id<MTLTexture> renderTargetTexture = nil;
 	if( renderTarget.m_texture->IsValid() )
@@ -598,13 +598,13 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 			renderTarget.m_texture->GetSRGBViewMetalTexture();
 	}
 
-	m_workQueue->SetRenderAttachments( renderTargetTexture, slot );
+	m_workQueue->SetRenderAttachments( renderTargetTexture, slot, slice );
 
-	m_boundRenderTargets[slot] = renderTarget;
+	m_boundRenderTargets[slot] = { renderTarget, slice };
 
-	if( m_boundRenderTargets[0].IsValid() )
+	if( m_boundRenderTargets[0].texture.IsValid() )
 	{
-		SetViewport( Tr2Viewport( m_boundRenderTargets[0].GetWidth(), m_boundRenderTargets[0].GetHeight() ) );
+		SetViewport( Tr2Viewport( m_boundRenderTargets[0].texture.GetWidth(), m_boundRenderTargets[0].texture.GetHeight() ) );
 	}
 
 	return S_OK;
@@ -934,10 +934,10 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 		{
 			for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 			{
-				if( m_boundRenderTargets[i].IsValid() )
+				if( m_boundRenderTargets[i].texture.IsValid() )
 				{
-					id<MTLTexture> renderTargetTexture = m_boundRenderTargets[i].m_texture->GetSRGBViewMetalTexture();
-					m_workQueue->SetRenderAttachments( renderTargetTexture, i );
+					id<MTLTexture> renderTargetTexture = m_boundRenderTargets[i].texture.m_texture->GetSRGBViewMetalTexture();
+					m_workQueue->SetRenderAttachments( renderTargetTexture, i, m_boundRenderTargets[i].slice );
 				}
 			}
 		}
@@ -945,10 +945,10 @@ ALResult Tr2RenderContextAL::SetRenderState( RenderState state, uint32_t value )
 		{
 			for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 			{
-				if( m_boundRenderTargets[i].IsValid() )
+				if( m_boundRenderTargets[i].texture.IsValid() )
 				{
-					id<MTLTexture> renderTargetTexture = m_boundRenderTargets[i].m_texture->GetMetalTexture();
-					m_workQueue->SetRenderAttachments( renderTargetTexture, i );
+					id<MTLTexture> renderTargetTexture = m_boundRenderTargets[i].texture.m_texture->GetMetalTexture();
+					m_workQueue->SetRenderAttachments( renderTargetTexture, i, m_boundRenderTargets[i].slice );
 				}
 			}
 		}
@@ -1068,7 +1068,7 @@ ALResult Tr2RenderContextAL::PopRenderTarget( uint32_t slot )
 	auto rt = m_stackRT[slot].top();
 	m_stackRT[slot].pop();
 
-	return SetRenderTarget( rt, slot );
+	return SetRenderTarget( rt.texture, slot, rt.slice );
 }
 
 ALResult Tr2RenderContextAL::PushDepthStencil()
@@ -1099,14 +1099,14 @@ ALResult Tr2RenderContextAL::GetRenderTargetSize( uint32_t& width, uint32_t& hei
 	{
 		return E_FAIL;
 	}
-	if( !m_boundRenderTargets[slot].IsValid() )
+	if( !m_boundRenderTargets[slot].texture.IsValid() )
 	{
 		return E_INVALIDCALL;
 	}
 	else
 	{
-		width  = m_boundRenderTargets[slot].GetWidth();
-		height = m_boundRenderTargets[slot].GetHeight();
+		width  = m_boundRenderTargets[slot].texture.GetWidth();
+		height = m_boundRenderTargets[slot].texture.GetHeight();
 	}
 	return S_OK;
 }
@@ -1129,7 +1129,7 @@ void Tr2RenderContextAL::ReleaseDeviceResources()
 {
 	for( unsigned i = 0; i != MAX_RENDER_TARGET; ++i )
 	{
-		m_boundRenderTargets[i] = Tr2TextureAL();
+		m_boundRenderTargets[i] = {};
 	}
 	m_boundDepthStencil = Tr2TextureAL();
 

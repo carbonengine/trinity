@@ -84,6 +84,8 @@ MetalWorkQueue::MetalWorkQueue()
 		m_blendState[i].blendColor          = MetalColor{0.0f, 0.0f, 0.0f, 0.0f};
 		m_blendState[i].writeMask           = MTLColorWriteMaskAll;
 	}
+    
+    m_frameSemaphore = dispatch_semaphore_create( 3 );
 
 	m_depthStencilDescriptor = [MTLDepthStencilDescriptor new];
 	m_depthStencilDescriptor.depthWriteEnabled    = false;
@@ -537,6 +539,8 @@ bool MetalWorkQueue::BlitToDrawableAndPresent( id<MTLTexture> srcTexture, NSView
 	CCP_ASSERT( m_isPrimary );
 	
 	METAL_LOG(@"Log:BlitToDrawableAndPresent");
+    
+    dispatch_semaphore_wait( m_frameSemaphore, DISPATCH_TIME_FOREVER );
 
 	// JM - this should not be done every blit but rather setup only when something changes.
 	// Probably from the SwapChain or PresentParameters code.
@@ -633,6 +637,7 @@ bool MetalWorkQueue::BlitToDrawableAndPresent( id<MTLTexture> srcTexture, NSView
 	CommitCommandBuffer(MTLCBCOMMIT_WAITUNTILCOMPLETE);
     ++*renderedFrameNumber;
 #else
+    __block dispatch_semaphore_t frameSemaphore = m_frameSemaphore;
 	[m_commandBuffer addCompletedHandler:^(id<MTLCommandBuffer> commandBuffer) {
         if (@available(macOS 10.15, *))
         {
@@ -644,6 +649,7 @@ bool MetalWorkQueue::BlitToDrawableAndPresent( id<MTLTexture> srcTexture, NSView
             s_gpuFrameTime = 0;
         }
         ++*renderedFrameNumber;
+        dispatch_semaphore_signal( frameSemaphore );
 	}];
 	[m_commandBuffer presentDrawable:drawable];
 	CommitCommandBuffer(MTLCBCOMMIT_NOFLAGS);
@@ -1337,10 +1343,13 @@ void MetalWorkQueue::ResolveMsaa( id<MTLTexture> source, id<MTLTexture> destinat
 		uint32_t numOldColorAttachments = m_numRenderAttachments;
 		id<MTLTexture> oldColorAttachments[METAL_MAX_RENDER_TARGETS];
 		std::fill_n(oldColorAttachments, METAL_MAX_RENDER_TARGETS, nil);
+		uint32_t oldAttachmentSlice[METAL_MAX_RENDER_TARGETS];
+		std::fill_n(oldAttachmentSlice, METAL_MAX_RENDER_TARGETS, 0);
 
 		for( uint32_t i = 0; i < numOldColorAttachments; ++i )
 		{
 			oldColorAttachments[i] = m_currentRenderPassDescriptor.colorAttachments[i].texture;
+			oldAttachmentSlice[i] = m_currentRenderPassDescriptor.colorAttachments[i].depthPlane;
 			SetRenderAttachments( nil, i );
 		}
 
@@ -1355,7 +1364,7 @@ void MetalWorkQueue::ResolveMsaa( id<MTLTexture> source, id<MTLTexture> destinat
 		SetRenderAttachments( nil, 0 );
 		for( uint32_t i = 0; i < numOldColorAttachments; ++i )
 		{
-			SetRenderAttachments( oldColorAttachments[i], i );
+			SetRenderAttachments( oldColorAttachments[i], i, oldAttachmentSlice[i] );
 		}
 	}
 	m_hasPendingRenderPassHint = bkHasPendingRenderPassHint;
@@ -1893,7 +1902,7 @@ void MetalWorkQueue::ResetClearState()
 	m_pendingClear = false;
 }
 
-void MetalWorkQueue::SetRenderAttachments( id<MTLTexture> texture, uint32_t index )
+void MetalWorkQueue::SetRenderAttachments( id<MTLTexture> texture, uint32_t index, uint32_t slice )
 {
 	CCP_ASSERT( m_isPrimary );
 	CCP_ASSERT(index < METAL_MAX_RENDER_TARGETS);
@@ -1908,6 +1917,7 @@ void MetalWorkQueue::SetRenderAttachments( id<MTLTexture> texture, uint32_t inde
 	FlushOutstandingOperations();
 
 	m_currentRenderPassDescriptor.colorAttachments[index].texture = texture;
+	m_currentRenderPassDescriptor.colorAttachments[index].slice = slice;
 
 	if( texture )
 	{

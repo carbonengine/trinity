@@ -50,6 +50,34 @@ struct Tr2Viewport
 
 struct Tr2BitmapDimensions;
 
+struct Tr2TextureCoordBox
+{
+	uint32_t left;
+	uint32_t top;
+	uint32_t front;
+	uint32_t right;
+	uint32_t bottom;
+	uint32_t back;
+
+	uint32_t GetWidth() const
+	{
+		return right - left;
+	}
+	uint32_t GetHeight() const
+	{
+		return bottom - top;
+	}
+	uint32_t GetDepth() const
+	{
+		return back - front;
+	}
+
+	bool operator==( const Tr2TextureCoordBox& other ) const
+	{
+		return left == other.left && top == other.top && front == other.front && right == other.right && bottom == other.bottom && back == other.back;
+	}
+};
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Descibes region of texture (range of cubemap faces, mip levels, rectangle/box 
@@ -74,11 +102,26 @@ struct Tr2TextureSubresource
 	bool operator==( const Tr2TextureSubresource& other ) const;
 	bool IsValid() const;
 
-	uint32_t GetWidth()		const { return m_right - m_left; }
-	uint32_t GetHeight()	const { return m_bottom - m_top; }
-	uint32_t GetMipCount()	const { return m_endMipLevel - m_startMipLevel; }
-	uint32_t GetDepth()		const { return m_back - m_front; }
-	uint32_t GetFaceCount()	const { return m_endFace - m_startFace; }
+	uint32_t GetWidth() const
+	{
+		return m_box.GetWidth();
+	}
+	uint32_t GetHeight() const
+	{
+		return m_box.GetHeight();
+	}
+	uint32_t GetDepth() const
+	{
+		return m_box.GetDepth();
+	}
+	uint32_t GetMipCount() const
+	{
+		return m_endMipLevel - m_startMipLevel;
+	}
+	uint32_t GetFaceCount() const
+	{
+		return m_endFace - m_startFace;
+	}
 
 	// Starting cubemap face
 	uint32_t m_startFace;
@@ -88,15 +131,7 @@ struct Tr2TextureSubresource
 	uint32_t m_startMipLevel;
 	// One past ending mip level
 	uint32_t m_endMipLevel;
-	uint32_t m_left;
-	uint32_t m_top;
-	uint32_t m_front;
-	// Ignored for destination
-	uint32_t m_right;
-	// Ignored for destination
-	uint32_t m_bottom;
-	// Ignored for destination
-	uint32_t m_back;
+	Tr2TextureCoordBox m_box;
 };
 
 // --------------------------------------------------------------------------------------

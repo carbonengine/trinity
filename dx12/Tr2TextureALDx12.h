@@ -65,7 +65,7 @@ namespace TrinityALImpl
 		}
 
 		ID3D12Resource* GetResourceDx12() const;
-		const std::shared_ptr<RenderTargetViewDx12>& GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
+		const std::shared_ptr<RenderTargetViewDx12>& GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR, uint32_t slice = 0 ) const;
 		void AssignFromSwapChainDx12( const std::vector<CComPtr<ID3D12Resource>>& backBuffers, const std::vector<std::shared_ptr<RenderTargetViewDx12>>& rtvs, Tr2PrimaryRenderContextAL& renderContext );
 		void SetSwapChainBufferIndexDx12( uint32_t index );
 

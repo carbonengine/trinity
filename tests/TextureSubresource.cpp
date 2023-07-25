@@ -45,12 +45,12 @@ TEST( TextureSubresource, TextureSubresourceDefaultConstructorCreatesFullResourc
 	EXPECT_EQ( 0, ts.m_startMipLevel );
 	EXPECT_EQ( uint32_t( -1 ), ts.m_endMipLevel );
 	EXPECT_FALSE( ts.HasBox() );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_left );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_top );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_front );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_right );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_bottom );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_back );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.left );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.top );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.front );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.right );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.bottom );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.back );
 	EXPECT_TRUE( ts.IsValid() );
 }
 
@@ -63,12 +63,12 @@ TEST( TextureSubresource, TextureSubresourceFaceAndMipLevelConstructorCreatesFul
 	EXPECT_LE( uint32_t( face + 1 ), ts.m_endFace );
 	EXPECT_EQ( mipLevel, ts.m_startMipLevel );
 	EXPECT_EQ( mipLevel + 1, ts.m_endMipLevel );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_left );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_top );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_front );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_right );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_bottom );
-	EXPECT_EQ( uint32_t( -1 ), ts.m_back );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.left );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.top );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.front );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.right );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.bottom );
+	EXPECT_EQ( uint32_t( -1 ), ts.m_box.back );
 	EXPECT_TRUE( ts.IsValid() );
 }
 
@@ -88,12 +88,12 @@ TEST( TextureSubresource, CanClampTextureSubresourceTo2DTexture )
 	EXPECT_LE( 1u, ts.m_endFace );
 	EXPECT_EQ( 0, ts.m_startMipLevel );
 	EXPECT_EQ( 3, ts.m_endMipLevel );
-	EXPECT_EQ( 0, ts.m_left );
-	EXPECT_EQ( 0, ts.m_top );
-	EXPECT_EQ( 0, ts.m_front );
-	EXPECT_EQ( 26, ts.m_right );
-	EXPECT_EQ( 71, ts.m_bottom );
-	EXPECT_EQ( 1, ts.m_back );
+	EXPECT_EQ( 0, ts.m_box.left );
+	EXPECT_EQ( 0, ts.m_box.top );
+	EXPECT_EQ( 0, ts.m_box.front );
+	EXPECT_EQ( 26, ts.m_box.right );
+	EXPECT_EQ( 71, ts.m_box.bottom );
+	EXPECT_EQ( 1, ts.m_box.back );
 }
 
 TEST( TextureSubresource, CanClampTextureSubresourceToCubeTexture )
@@ -112,12 +112,12 @@ TEST( TextureSubresource, CanClampTextureSubresourceToCubeTexture )
 	EXPECT_LE( 6u, ts.m_endFace );
 	EXPECT_EQ( 0, ts.m_startMipLevel );
 	EXPECT_EQ( 2, ts.m_endMipLevel );
-	EXPECT_EQ( 0, ts.m_left );
-	EXPECT_EQ( 0, ts.m_top );
-	EXPECT_EQ( 0, ts.m_front );
-	EXPECT_EQ( 13, ts.m_right );
-	EXPECT_EQ( 13, ts.m_bottom );
-	EXPECT_EQ( 1, ts.m_back );
+	EXPECT_EQ( 0, ts.m_box.left );
+	EXPECT_EQ( 0, ts.m_box.top );
+	EXPECT_EQ( 0, ts.m_box.front );
+	EXPECT_EQ( 13, ts.m_box.right );
+	EXPECT_EQ( 13, ts.m_box.bottom );
+	EXPECT_EQ( 1, ts.m_box.back );
 }
 
 TEST( TextureSubresource, CanClampTextureSubresourceTo3DTexture )
@@ -137,12 +137,12 @@ TEST( TextureSubresource, CanClampTextureSubresourceTo3DTexture )
 	EXPECT_LE( 1u, ts.m_endFace );
 	EXPECT_EQ( 0, ts.m_startMipLevel );
 	EXPECT_EQ( 3, ts.m_endMipLevel );
-	EXPECT_EQ( 0, ts.m_left );
-	EXPECT_EQ( 0, ts.m_top );
-	EXPECT_EQ( 0, ts.m_front );
-	EXPECT_EQ( 26, ts.m_right );
-	EXPECT_EQ( 71, ts.m_bottom );
-	EXPECT_EQ( 15, ts.m_back );
+	EXPECT_EQ( 0, ts.m_box.left );
+	EXPECT_EQ( 0, ts.m_box.top );
+	EXPECT_EQ( 0, ts.m_box.front );
+	EXPECT_EQ( 26, ts.m_box.right );
+	EXPECT_EQ( 71, ts.m_box.bottom );
+	EXPECT_EQ( 15, ts.m_box.back );
 }
 
 TEST( TextureSubresource, DefaultTextureSubresourceCovers2DTexture )
@@ -161,7 +161,7 @@ TEST( TextureSubresource, DefaultTextureSubresourceCovers2DTexture )
 TEST( TextureSubresource, SmallerTextureSubresourceDoesNotCover2DTexture )
 {
 	Tr2TextureSubresource ts;
-	ts.m_right = 21;
+	ts.m_box.right = 21;
 
 	BitmapDimensionsTest dim;
 	dim.SetType( TEX_TYPE_2D );
@@ -203,7 +203,7 @@ TEST( TextureSubresource, TextureSubresourceWithSmallerMipmapsDoesNotCover2DText
 TEST( TextureSubresource, TextureSubresourceWithOffsetDoesNotCover2DTexture )
 {
 	Tr2TextureSubresource ts;
-	ts.m_top = 3;
+	ts.m_box.top = 3;
 
 	BitmapDimensionsTest dim;
 	dim.SetType( TEX_TYPE_2D );
@@ -231,8 +231,8 @@ TEST( TextureSubresource, IdenticalTextureSubresourcesAreEqual )
 {
 	Tr2TextureSubresource ts1;
 	ts1.m_startFace = CUBEMAP_FACE_NEGATIVE_Y;
-	ts1.m_left = 3;
-	ts1.m_right = 5;
+	ts1.m_box.left = 3;
+	ts1.m_box.right = 5;
 	ts1.m_startMipLevel = 6;
 
 	Tr2TextureSubresource ts2 = ts1;
@@ -244,12 +244,12 @@ TEST( TextureSubresource, DifferentTextureSubresourcesAreNotEqual )
 {
 	Tr2TextureSubresource ts1;
 	ts1.m_startFace = CUBEMAP_FACE_NEGATIVE_Y;
-	ts1.m_left = 3;
-	ts1.m_right = 5;
+	ts1.m_box.left = 3;
+	ts1.m_box.right = 5;
 	ts1.m_startMipLevel = 6;
 
 	Tr2TextureSubresource ts2 = ts1;
-	ts2.m_top = 12;
+	ts2.m_box.top = 12;
 
 	EXPECT_FALSE( ts1 == ts2 );
 }
@@ -257,8 +257,8 @@ TEST( TextureSubresource, DifferentTextureSubresourcesAreNotEqual )
 TEST( TextureSubresource, TextureSubresourceWithIncorrectLeftAndRightIsNotValid )
 {
 	Tr2TextureSubresource ts;
-	ts.m_left = 5;
-	ts.m_right = 3;
+	ts.m_box.left = 5;
+	ts.m_box.right = 3;
 
 	EXPECT_FALSE( ts.IsValid() );
 }
@@ -266,8 +266,8 @@ TEST( TextureSubresource, TextureSubresourceWithIncorrectLeftAndRightIsNotValid 
 TEST( TextureSubresource, TextureSubresourceWithIncorrectTopAndBottomIsNotValid )
 {
 	Tr2TextureSubresource ts;
-	ts.m_top = 15;
-	ts.m_bottom = 15;
+	ts.m_box.top = 15;
+	ts.m_box.bottom = 15;
 
 	EXPECT_FALSE( ts.IsValid() );
 }
@@ -275,8 +275,8 @@ TEST( TextureSubresource, TextureSubresourceWithIncorrectTopAndBottomIsNotValid 
 TEST( TextureSubresource, TextureSubresourceWithIncorrectFrontAndBackIsNotValid )
 {
 	Tr2TextureSubresource ts;
-	ts.m_front = 25;
-	ts.m_back = 21;
+	ts.m_box.front = 25;
+	ts.m_box.back = 21;
 
 	EXPECT_FALSE( ts.IsValid() );
 }
@@ -302,28 +302,28 @@ TEST( TextureSubresource, TextureSubresourceWithIncorrectFacesIsNotValid )
 TEST( TextureSubresource, TextureSubresourceReportsCorrectWidth )
 {
 	Tr2TextureSubresource ts;
-	ts.m_left = 5;
-	ts.m_right = 27;
+	ts.m_box.left = 5;
+	ts.m_box.right = 27;
 
-	EXPECT_EQ( ts.m_right - ts.m_left, ts.GetWidth() );
+	EXPECT_EQ( ts.m_box.right - ts.m_box.left, ts.GetWidth() );
 }
 
 TEST( TextureSubresource, TextureSubresourceReportsCorrectHeight )
 {
 	Tr2TextureSubresource ts;
-	ts.m_top = 5;
-	ts.m_bottom = 27;
+	ts.m_box.top = 5;
+	ts.m_box.bottom = 27;
 
-	EXPECT_EQ( ts.m_bottom - ts.m_top, ts.GetHeight() );
+	EXPECT_EQ( ts.m_box.bottom - ts.m_box.top, ts.GetHeight() );
 }
 
 TEST( TextureSubresource, TextureSubresourceReportsCorrectDepth )
 {
 	Tr2TextureSubresource ts;
-	ts.m_front = 5;
-	ts.m_back = 27;
+	ts.m_box.front = 5;
+	ts.m_box.back = 27;
 
-	EXPECT_EQ( ts.m_back - ts.m_front, ts.GetDepth() );
+	EXPECT_EQ( ts.m_box.back - ts.m_box.front, ts.GetDepth() );
 }
 
 TEST( TextureSubresource, TextureSubresourceReportsCorrectMipCount )
@@ -382,22 +382,22 @@ TEST( TextureSubresource, CroppingFullTextureSubresourcesWithSameBitmapSucceeds 
 
 	EXPECT_EQ( 0, ts1.m_startMipLevel );
 	EXPECT_EQ( 6, ts1.m_endMipLevel );
-	EXPECT_EQ( 0, ts1.m_left );
-	EXPECT_EQ( 0, ts1.m_top );
-	EXPECT_EQ( 0, ts1.m_front );
-	EXPECT_EQ( 32, ts1.m_right );
-	EXPECT_EQ( 16, ts1.m_bottom );
-	EXPECT_EQ( 1, ts1.m_back );
+	EXPECT_EQ( 0, ts1.m_box.left );
+	EXPECT_EQ( 0, ts1.m_box.top );
+	EXPECT_EQ( 0, ts1.m_box.front );
+	EXPECT_EQ( 32, ts1.m_box.right );
+	EXPECT_EQ( 16, ts1.m_box.bottom );
+	EXPECT_EQ( 1, ts1.m_box.back );
 	EXPECT_TRUE( ts1 == ts2 );
 }
 
 TEST( TextureSubresource, CanAdvanceMipForUncompressedTexture )
 {
 	Tr2TextureSubresource ts;
-	ts.m_left = 4;
-	ts.m_right = 24;
-	ts.m_top = 7;
-	ts.m_bottom = 10;
+	ts.m_box.left = 4;
+	ts.m_box.right = 24;
+	ts.m_box.top = 7;
+	ts.m_box.bottom = 10;
 
 	BitmapDimensionsTest dim;
 	dim.SetType( TEX_TYPE_2D );
@@ -407,26 +407,26 @@ TEST( TextureSubresource, CanAdvanceMipForUncompressedTexture )
 
 	AdvanceMip( ts, dim, 1 );
 
-	EXPECT_EQ( 2, ts.m_left );
-	EXPECT_EQ( 3, ts.m_top );
-	EXPECT_EQ( 12, ts.m_right );
-	EXPECT_EQ( 5, ts.m_bottom );
+	EXPECT_EQ( 2, ts.m_box.left );
+	EXPECT_EQ( 3, ts.m_box.top );
+	EXPECT_EQ( 12, ts.m_box.right );
+	EXPECT_EQ( 5, ts.m_box.bottom );
 
 	AdvanceMip( ts, dim, 2 );
 
-	EXPECT_EQ( 1, ts.m_left );
-	EXPECT_EQ( 1, ts.m_top );
-	EXPECT_EQ( 6, ts.m_right );
-	EXPECT_EQ( 2, ts.m_bottom );
+	EXPECT_EQ( 1, ts.m_box.left );
+	EXPECT_EQ( 1, ts.m_box.top );
+	EXPECT_EQ( 6, ts.m_box.right );
+	EXPECT_EQ( 2, ts.m_box.bottom );
 }
 
 TEST( TextureSubresource, CanAdvanceMipForCompressedTexture )
 {
 	Tr2TextureSubresource ts;
-	ts.m_left = 4;
-	ts.m_right = 24;
-	ts.m_top = 7;
-	ts.m_bottom = 10;
+	ts.m_box.left = 4;
+	ts.m_box.right = 24;
+	ts.m_box.top = 7;
+	ts.m_box.bottom = 10;
 
 	BitmapDimensionsTest dim;
 	dim.SetType( TEX_TYPE_2D );
@@ -436,15 +436,15 @@ TEST( TextureSubresource, CanAdvanceMipForCompressedTexture )
 
 	AdvanceMip( ts, dim, 1 );
 
-	EXPECT_EQ( 2, ts.m_left );
-	EXPECT_EQ( 3, ts.m_top );
-	EXPECT_EQ( 12, ts.m_right );
-	EXPECT_EQ( 7, ts.m_bottom );
+	EXPECT_EQ( 2, ts.m_box.left );
+	EXPECT_EQ( 3, ts.m_box.top );
+	EXPECT_EQ( 12, ts.m_box.right );
+	EXPECT_EQ( 7, ts.m_box.bottom );
 
 	AdvanceMip( ts, dim, 2 );
 
-	EXPECT_EQ( 1, ts.m_left );
-	EXPECT_EQ( 3, ts.m_top );
-	EXPECT_EQ( 6, ts.m_right );
-	EXPECT_EQ( 7, ts.m_bottom );
+	EXPECT_EQ( 1, ts.m_box.left );
+	EXPECT_EQ( 3, ts.m_box.top );
+	EXPECT_EQ( 6, ts.m_box.right );
+	EXPECT_EQ( 7, ts.m_box.bottom );
 }

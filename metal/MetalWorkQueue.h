@@ -280,7 +280,7 @@ namespace TrinityALImpl
 		void SetStencilRefValue( uint32_t value );
 		void SetStencilMask( uint32_t mask );
 
-		void SetRenderAttachments( id<MTLTexture> texture, uint32_t index );
+		void SetRenderAttachments( id<MTLTexture> texture, uint32_t index, uint32_t slice = 0 );
 		void SetDepthStencilAttachment( id<MTLTexture> texture );
 		
 		void RenderPassHint( const MetalRenderPassHint& hint );
@@ -506,6 +506,8 @@ namespace TrinityALImpl
             bool needsDummyStream;
         };
         std::vector<CachedVertexLayout> m_cachedVertexLayouts;
+        
+        dispatch_semaphore_t m_frameSemaphore;
 	};
 
 } // namespace TrinityALImpl
