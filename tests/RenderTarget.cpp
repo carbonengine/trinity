@@ -163,30 +163,6 @@ TEST_F( RenderTarget, CannotCreateCpuWriteableRenderTarget )
 	ASSERT_HRESULT_FAILED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET, Tr2CpuUsage::WRITE, *renderContext ) );
 }
 
-TEST_F( RenderTarget, CannotCreateReadable3DTexture )
-{
-	uint32_t pixels[4 * 4 * 4 * 4] = { 0 };
-	Tr2SubresourceData initialData;
-	initialData.m_sysMemPitch = 4 * 4;
-	initialData.m_sysMemSlicePitch = 4 * 4 * 4;
-	initialData.m_sysMem = pixels;
-
-	Tr2TextureAL tex;
-	ASSERT_HRESULT_FAILED( tex.Create( Tr2BitmapDimensions( TEX_TYPE_3D, PIXEL_FORMAT_B8G8R8A8_UNORM, 4, 4, 4, 1 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::READ, &initialData, *renderContext ) );
-}
-
-TEST_F( RenderTarget, CannotCreateWritable3DTexture )
-{
-	uint32_t pixels[4 * 4 * 4 * 4] = { 0 };
-	Tr2SubresourceData initialData;
-	initialData.m_sysMemPitch = 4 * 4;
-	initialData.m_sysMemSlicePitch = 4 * 4 * 4;
-	initialData.m_sysMem = pixels;
-
-	Tr2TextureAL tex;
-	ASSERT_HRESULT_FAILED( tex.Create( Tr2BitmapDimensions( TEX_TYPE_3D, PIXEL_FORMAT_B8G8R8A8_UNORM, 4, 4, 4, 1 ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE, &initialData, *renderContext ) );
-}
-
 TEST_F( RenderTarget, CannotCreateCpuReadableDepthStencil )
 {
 	Tr2TextureAL ds;

@@ -161,6 +161,7 @@ ALResult CreateLoadMsaaTexturePS( Tr2ShaderAL& shader, Tr2PrimaryRenderContextAL
 
 TEST_F( Rendering, CanClearBackBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	uint32_t g = 127;
 
 	auto frame = [&] {
@@ -175,6 +176,7 @@ TEST_F( Rendering, CanClearBackBuffer )
 
 TEST_F( Rendering, CanRenderASingleTriangle )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -226,6 +228,7 @@ TEST_F( Rendering, CanRenderASingleTriangle )
 
 TEST_F( Rendering, CanRenderTriangleStrip )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -278,6 +281,7 @@ TEST_F( Rendering, CanRenderTriangleStrip )
 
 TEST_F( Rendering, CanRenderIndexedTriangles )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -336,6 +340,7 @@ TEST_F( Rendering, CanRenderIndexedTriangles )
 
 TEST_F( Rendering, CanReorderInputsToVertexShader )
 {
+	ENSURE_GPU_OR_SKIP
 	// This test case checks if AL will correctly match (Position, TexCoord) vertex layout
 	// to (TexCoord, Position) vertex input (notice the different order here). This test
 	// mostly makes sence for platforms that don't provide out of the box layout matching
@@ -401,6 +406,7 @@ TEST_F( Rendering, CanReorderInputsToVertexShader )
 
 TEST_F( Rendering, CanSampleTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -487,6 +493,7 @@ TEST_F( Rendering, CanSampleTexture )
 
 TEST_F( Rendering, CanSampleMipMappedTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -587,6 +594,7 @@ TEST_F( Rendering, CanSampleMipMappedTexture )
 
 TEST_F( Rendering, CanPassConstantBufferToRendering )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyWithPerObjectDataVS( vs, *renderContext ) );
 
@@ -650,6 +658,7 @@ TEST_F( Rendering, CanPassConstantBufferToRendering )
 
 TEST_F( Rendering, CanDoInstancedRendering )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateInstancedRenderingVS( vs, *renderContext ) );
 
@@ -718,6 +727,7 @@ TEST_F( Rendering, CanDoInstancedRendering )
 
 TEST_F( Rendering, CanClearRenderTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -806,6 +816,7 @@ TEST_F( Rendering, CanClearRenderTarget )
 
 TEST_F( Rendering, CanRenderToRenderTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -911,6 +922,7 @@ TEST_F( Rendering, CanRenderToRenderTarget )
 
 TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -1022,6 +1034,7 @@ TEST_F( Rendering, CanRenderToMsaaRenderTarget )
 
 TEST_F( Rendering, CanClearDepthBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -1083,6 +1096,7 @@ TEST_F( Rendering, CanClearDepthBuffer )
 
 TEST_F( Rendering, CanRenderIntoDepthBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -1149,6 +1163,7 @@ TEST_F( Rendering, CanRenderIntoDepthBuffer )
 
 TEST_F( Rendering, CanSampleDepthBuffer )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -1270,6 +1285,7 @@ TEST_F( Rendering, CanSampleDepthBuffer )
 
 TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -1317,6 +1333,7 @@ TEST_F( Rendering, CanRenderASingleTriangleWithDrawPrimitiveUP )
 
 TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -1367,6 +1384,7 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith16BitDrawIndexedPrimitiveUP )
 
 TEST_F( Rendering, CanRenderIndexedTrianglesWith32BitDrawIndexedPrimitiveUP )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -1417,6 +1435,7 @@ TEST_F( Rendering, CanRenderIndexedTrianglesWith32BitDrawIndexedPrimitiveUP )
 
 TEST_F( Rendering, CanUseOcclusionQueries )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyWithPerObjectDataVS( vs, *renderContext ) );
 
@@ -1546,6 +1565,7 @@ TEST_F( Rendering, CanUseOcclusionQueries )
 
 TEST_F( Rendering, CanUseViewport )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -1604,6 +1624,7 @@ TEST_F( Rendering, CanUseViewport )
 
 TEST_F( Rendering, CanPerformAlphaBlend )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -1712,6 +1733,7 @@ TEST_F( Rendering, CanPerformAlphaBlend )
 
 TEST_F( Rendering, CanGenerateRenderTargetMips )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -1856,6 +1878,7 @@ TEST_F( Rendering, CanGenerateRenderTargetMips )
 
 TEST_F( Rendering, CanCopyRenderTargetRegion )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -1974,6 +1997,7 @@ TEST_F( Rendering, CanCopyRenderTargetRegion )
 
 TEST_F( Rendering, CanSampleBc1Texture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2063,6 +2087,7 @@ TEST_F( Rendering, CanSampleBc1Texture )
 
 TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyWithPerObjectDataVS( vs, *renderContext ) );
 
@@ -2126,6 +2151,7 @@ TEST_F( Rendering, CanPassDynamicConstantBufferToRendering )
 
 TEST_F( Rendering, CanSampleBc2Texture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2216,6 +2242,7 @@ TEST_F( Rendering, CanSampleBc2Texture )
 
 TEST_F( Rendering, CanSampleBc3Texture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2306,6 +2333,7 @@ TEST_F( Rendering, CanSampleBc3Texture )
 
 TEST_F( Rendering, CanSampleVolumeTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2408,6 +2436,7 @@ TEST_F( Rendering, CanSampleVolumeTexture )
 
 TEST_F( Rendering, CanSampleBc3VolumeTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2509,6 +2538,7 @@ TEST_F( Rendering, CanSampleBc3VolumeTexture )
 
 TEST_F( Rendering, CanSampleUnassignedTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2565,6 +2595,7 @@ TEST_F( Rendering, CanSampleUnassignedTexture )
 
 TEST_F( Rendering, CanLockTextureTwice )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2678,6 +2709,7 @@ TEST_F( Rendering, CanLockTextureTwice )
 
 TEST_F( Rendering, CanSampleSrgbTexture )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2765,6 +2797,7 @@ TEST_F( Rendering, CanSampleSrgbTexture )
 
 TEST_F( Rendering, CanOutputToSrgbTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2856,6 +2889,7 @@ TEST_F( Rendering, CanOutputToSrgbTarget )
 
 TEST_F( Rendering, CanUsePsUavs )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -2972,6 +3006,7 @@ TEST_F( Rendering, CanUsePsUavs )
 
 TEST_F( Rendering, CanDrawIndirect )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -3037,6 +3072,7 @@ TEST_F( Rendering, CanDrawIndirect )
 
 TEST_F( Rendering, CanWriteToVB )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -3095,6 +3131,7 @@ TEST_F( Rendering, CanWriteToVB )
 
 TEST_F( Rendering, CanWriteToDynamicVB )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -3153,6 +3190,7 @@ TEST_F( Rendering, CanWriteToDynamicVB )
 
 TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreatePositionOnlyVS( vs, *renderContext ) );
 
@@ -3231,6 +3269,7 @@ TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
 
 TEST_F( Rendering, CanHaveMissingIAElements )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
@@ -3284,6 +3323,7 @@ TEST_F( Rendering, CanHaveMissingIAElements )
 
 TEST_F( Rendering, CanLoadMsaaRenderTarget )
 {
+	ENSURE_GPU_OR_SKIP
 	Tr2ShaderAL vs;
 	ASSERT_HRESULT_SUCCEEDED( CreateTexCoordAndPositionVS( vs, *renderContext ) );
 
