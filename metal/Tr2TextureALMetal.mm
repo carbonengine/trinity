@@ -96,10 +96,6 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDARG;
 		}
-		if( desc.GetType() == Tr2RenderContextEnum::TEX_TYPE_3D && cpuUsage != Tr2CpuUsage::NONE )
-		{
-			return E_INVALIDARG;
-		}
 		if( !IsWritable( gpuUsage ) && !HasFlag( cpuUsage, Tr2CpuUsage::WRITE ) && !initialData )
 		{
 			return E_INVALIDARG;
@@ -376,8 +372,8 @@ namespace TrinityALImpl
 
 		if( region.HasBox() )
 		{
-			readOrigin = MTLOriginMake(region.m_left, region.m_bottom, 0);
-			readSize   = MTLSizeMake(region.GetWidth(), region.GetHeight(), 1);
+			readOrigin = MTLOriginMake(region.m_box.left, region.m_box.bottom, region.m_box.front);
+			readSize   = MTLSizeMake(region.GetWidth(), region.GetHeight(), region.GetDepth());
 		}
 		else
 		{
@@ -463,6 +459,7 @@ namespace TrinityALImpl
         {
             auto width = MAX( MIN( region.GetWidth(), m_desc.GetMipWidth( region.m_startMipLevel ) ), 1);
             auto height = MAX( MIN( region.GetHeight(), m_desc.GetMipHeight( region.m_startMipLevel ) ), 1 );
+            auto depth = MAX( MIN( region.GetDepth(), m_desc.GetMipDepth( region.m_startMipLevel ) ), 1 );
             if( m_desc.IsCompressed() )
             {
                 mipPitch = MAX( width / 4u, 1 ) * GetBlockByteSize( m_desc.GetFormat() );
@@ -471,7 +468,7 @@ namespace TrinityALImpl
             {
                 mipPitch = width * GetBytesPerPixel( m_desc.GetFormat() );
             }
-            bufferSize = mipPitch * height;
+            bufferSize = mipPitch * height * depth;
         }
         
         auto renderedFrame = metalContext->GetRenderedFrameNumber();
@@ -565,7 +562,7 @@ namespace TrinityALImpl
 
 		if( m_mappedRegion.HasBox() )
 		{
-			MTLOrigin origin = MTLOriginMake( m_mappedRegion.m_left, m_mappedRegion.m_top, m_mappedRegion.m_front );
+			MTLOrigin origin = MTLOriginMake( m_mappedRegion.m_box.left, m_mappedRegion.m_box.top, m_mappedRegion.m_box.front );
 
 			MTLSize size = MTLSizeMake(
 				MAX( MIN( m_mappedRegion.GetWidth(), m_desc.GetMipWidth( m_mappedRegion.m_startMipLevel ) ), 1),
@@ -613,14 +610,25 @@ namespace TrinityALImpl
 		void* dest;
 		uint32_t destPitch;
 		FORWARD_HR( MapForWriting( region, dest, destPitch, renderContext ) );
+
+		auto clamped = region;
+		clamped.ClampToTexture( m_desc );
+
 		auto bpp = Tr2RenderContextEnum::GetBytesPerPixel( m_desc.GetFormat() );
-		auto width = region.m_right - region.m_left;
+		auto width = clamped.m_box.GetWidth();
 		width *= bpp;
-		for( uint32_t i = region.m_top; i != region.m_bottom; ++i )
+		auto depthSlice = static_cast<const uint8_t*>( source );
+
+		for( uint32_t j = clamped.m_box.front; j != clamped.m_box.back; ++j )
 		{
-			memcpy( dest, source, width );
-			dest = static_cast<uint8_t*>( dest ) + destPitch;
-			source = static_cast<const uint8_t*>( source ) + pitch;
+			auto src = depthSlice;
+			for( uint32_t i = clamped.m_box.top; i != clamped.m_box.bottom; ++i )
+			{
+				memcpy( dest, src, width );
+				dest = static_cast<uint8_t*>( dest ) + destPitch;
+				src += pitch;
+			}
+			depthSlice += slicePitch;
 		}
 		UnmapForWriting( renderContext );
 
@@ -663,12 +671,12 @@ namespace TrinityALImpl
 					source.GetMetalTexture(),
 					src.m_startFace + slice,
 					src.m_startMipLevel + mip,
-					MTLOriginMake( src.m_left, src.m_top, src.m_front ),
+					MTLOriginMake( src.m_box.left, src.m_box.top, src.m_box.front ),
 					MTLSizeMake( src.GetWidth(), src.GetHeight(), src.GetDepth() ),
 					GetMetalTexture(),
 					dst.m_startFace + slice,
 					dst.m_startMipLevel + mip,
-					MTLOriginMake( dst.m_left, dst.m_top, dst.m_front ) );
+					MTLOriginMake( dst.m_box.left, dst.m_box.top, dst.m_box.front ) );
 			}
 		}
 
