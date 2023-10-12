@@ -137,7 +137,10 @@ void FrameLocalUploadBufferAllocator::AddPage(uint32_t size)
 		return;
 	}
 	
-	m_pages.push_back(FrameLocalUploadBufferPage(m_primaryContext, buffer, size));
+	const char* name = "Constant upload heap";
+	buffer->SetPrivateData( WKPDID_D3DDebugObjectName, UINT( strlen( name ) ), name );
+
+	m_pages.push_back( FrameLocalUploadBufferPage( m_primaryContext, buffer, size ) );
 }
 
 #endif
