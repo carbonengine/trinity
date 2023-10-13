@@ -69,6 +69,7 @@ const Be::ClassInfo* EveChildContainer::ExposeToBlue()
 		MAP_ATTRIBUTE( "useSRT", m_useSRT, "Should local transform be built from scaling, rotation and translation attributes.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "staticTransform", m_staticTransform, "Does local transform need to be rebuilt every frame.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "useStaticRotation", m_useStaticRotation, "Should this container ignore the parent rotation.", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "useStaticScale", m_useStaticScale, "Should this container ignore the parent scale.", Be::READWRITE | Be::PERSIST )
 		
 		MAP_ATTRIBUTE( "observers", m_observers, "List of audio observers", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "lights", m_lights, "List of dynamic lights", Be::READ | Be::PERSIST )

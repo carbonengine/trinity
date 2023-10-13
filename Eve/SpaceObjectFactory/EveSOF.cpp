@@ -58,8 +58,39 @@
 
 namespace
 {
-	const float MIN_DECAL_SCREEN_SIZE = 10.f;
-	const uint8_t PICKABLE_HANGARVIEO_BUFFER_ID = 100;
+const float MIN_DECAL_SCREEN_SIZE = 10.f;
+const uint8_t PICKABLE_HANGARVIEO_BUFFER_ID = 100;
+
+const char* GetPlaneSetEffectPath( EveSOFDataHullPlaneSet::Usage usage, bool isSkinned )
+{
+	switch( usage )
+	{
+	case EveSOFDataHullPlaneSet::USAGE_STANDARD:
+		return isSkinned ? "res:/graphics/effect/managed/space/spaceobject/fx/skinned_planeglow.fx" : "res:/graphics/effect/managed/space/spaceobject/fx/planeglow.fx";
+	case EveSOFDataHullPlaneSet::USAGE_HAZE:
+		return isSkinned ? "res:/graphics/effect/managed/space/spaceobject/fx/skinned_planeglow.fx" : "res:/graphics/effect/managed/space/spaceobject/fx/planeglow.fx";
+	case EveSOFDataHullPlaneSet::USAGE_SPACE_VIDEO:
+		return isSkinned ? "res:/graphics/effect/managed/space/spaceobject/fx/skinned_planehologram.fx" : "res:/graphics/effect/managed/space/spaceobject/fx/planehologram.fx";
+	case EveSOFDataHullPlaneSet::USAGE_HANGAR_VIDEO:
+		return isSkinned ? "res:/graphics/effect/managed/space/spaceobject/fx/skinned_planehologram.fx" : "res:/graphics/effect/managed/space/spaceobject/fx/planehologram.fx";
+	default:
+		return "";
+	}
+}
+
+Color ModifyColor( const Color& color, float saturation, float brightness )
+{
+	CTriColor cl;
+	float maxc = std::max( { color.r, color.g, color.b, 1.0f } );
+	cl.SetRGB( color.r / maxc, color.g / maxc, color.b / maxc, 1 );
+	float h, s, v;
+	cl.GetHSV( &h, &s, &v );
+	s *= saturation;
+	v *= brightness;
+	cl.SetHSV( h, s, v );
+	return Color( cl.r, cl.g, cl.b, color.a );
+}
+
 }
 
 
@@ -256,7 +287,7 @@ void EveSOF::SetupAttachments( IEveSpaceObjectAttachmentOwnerPtr newObj, const E
         // So no banners for layouts... yet
 	if( EveSpaceObject2Ptr spaceObject = BlueCastPtr( newObj->GetRootObject() ) )
 	{
-		if( !dna->IsUsingExperimentalFeatures() )
+		if( !dna->IsHullUsingExperimentalFeatures() )
 		{
 			SetupBanners( spaceObject, dna, offsets );
 		}
@@ -274,7 +305,7 @@ void EveSOF::SetupAttachments( IEveSpaceObjectAttachmentOwnerPtr newObj, const E
 
 void EveSOF::SetupEffects( EveSpaceObject2Ptr obj, IEveEffectChildrenOwnerPtr childContainer, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, uint32_t buildFlags ) const
 {
-	if( !dna->IsUsingExperimentalFeatures() )
+	if( !dna->IsHullUsingExperimentalFeatures() )
 	{
 		// children, animations and particles
 		SetupChildrenAndAnimations( obj, childContainer, dna, offsets, buildFlags );
@@ -749,9 +780,12 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 	{
 		// cycle over all spritesets of this hull
 		const std::vector<EveSOFDataMgr::HullSpotlightSetData>& hullSpotlightSets = dna->GetHullSpotlightSets( hullIdx );
-		for( auto ssit = hullSpotlightSets.begin(); ssit != hullSpotlightSets.end(); ++ssit )
+		for( auto& spotlightSetData : hullSpotlightSets )
 		{
-			const EveSOFDataMgr::HullSpotlightSetData* spotlightSetData = &(*ssit);
+			if( dna->IsHullUsingExperimentalFeatures() && !dna->IsInVisibilityData( spotlightSetData.visibilityGroup ) )
+			{
+				continue;
+			}
 
 			// create a spriteset for this ship
 			EveSpotlightSetPtr spotlightSet;
@@ -770,11 +804,11 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 
 			// textures
 			BlueSharedString textureMap( "TextureMap" );
-			glowEffect->AddResourceTexture2D( textureMap, spotlightSetData->glowTextureResPath.c_str() );
-			coneEffect->AddResourceTexture2D( textureMap, spotlightSetData->coneTextureResPath.c_str() );
+			glowEffect->AddResourceTexture2D( textureMap, spotlightSetData.glowTextureResPath.c_str() );
+			coneEffect->AddResourceTexture2D( textureMap, spotlightSetData.coneTextureResPath.c_str() );
 
 			// parameters
-			coneEffect->AddParameterFloat( BlueSharedString( "zOffset" ), spotlightSetData->zOffset );
+			coneEffect->AddParameterFloat( BlueSharedString( "zOffset" ), spotlightSetData.zOffset );
 
 			// that's it for setting up these shaders, must rebuild cache on it!
 			coneEffect->EndUpdate();
@@ -783,36 +817,50 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 			// set to set
 			spotlightSet->SetConeEffect( coneEffect );
 			spotlightSet->SetGlowEffect( glowEffect );
-			spotlightSet->SetSkinned( spotlightSetData->skinned && buildFlags != EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT );
+			spotlightSet->SetSkinned( spotlightSetData.skinned && buildFlags != EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT );
 
 			for( auto& offset: offsets)
 			{
 				// add all individual items
-				for( auto ssiit = spotlightSetData->items.begin(); ssiit != spotlightSetData->items.end(); ++ssiit )
+				for( auto& ssiit : spotlightSetData.items )
 				{
-					// faction data?
-					const EveSOFDataMgr::FactionSpotlightSetColorData* factionSpotlightData = dna->GetFactionSpotlightSetData( ssiit->groupIndex );
-					if( !factionSpotlightData )
+					const EveSOFDataMgr::FactionSpotlightSetColorData* factionSpotlightData = nullptr;
+					if( !dna->IsHullUsingExperimentalFeatures() )
 					{
-						// This spotlight item is not used for this faction.
-						continue;
+						// faction data?
+						factionSpotlightData = dna->GetFactionSpotlightSetData( ssiit.groupIndex );
+						if( !factionSpotlightData )
+						{
+							// This spotlight item is not used for this faction.
+							continue;
+						}
 					}
 
 					// create it
 					EveSpotlightSetItemPtr spotlightSetItem;
 					spotlightSetItem.CreateInstance();
 
-					// set it up the per-faction data
-					spotlightSetItem->m_coneColor = ssiit->coneIntensity * factionSpotlightData->coneColor;
-					spotlightSetItem->m_flareColor = ssiit->flareIntensity * factionSpotlightData->flareColor;
-					spotlightSetItem->m_spriteColor = ssiit->spriteIntensity * factionSpotlightData->spriteColor;
+					if( dna->IsHullUsingExperimentalFeatures() )
+					{
+						auto colorSet = dna->GetColorSet();
+						spotlightSetItem->m_coneColor = ssiit.coneIntensity * ModifyColor( colorSet[ssiit.colorType], 0.75f, 0.5f );
+						spotlightSetItem->m_flareColor = ssiit.flareIntensity * ModifyColor( colorSet[ssiit.colorType], 1.0f, 1.0f );
+						spotlightSetItem->m_spriteColor = ssiit.spriteIntensity * ModifyColor( colorSet[ssiit.colorType], 0.9f, 0.75f );
+					}
+					else
+					{
+						// set it up the per-faction data
+						spotlightSetItem->m_coneColor = ssiit.coneIntensity * factionSpotlightData->coneColor;
+						spotlightSetItem->m_flareColor = ssiit.flareIntensity * factionSpotlightData->flareColor;
+						spotlightSetItem->m_spriteColor = ssiit.spriteIntensity * factionSpotlightData->spriteColor;
+					}
 
 					// set it up the per-hull data
-					spotlightSetItem->m_boneIndex = ssiit->boneIndex;
-					spotlightSetItem->m_boosterGainInfluence = ssiit->boosterGainInfluence;
-					spotlightSetItem->m_spriteScale = ssiit->spriteScale;
+					spotlightSetItem->m_boneIndex = ssiit.boneIndex;
+					spotlightSetItem->m_boosterGainInfluence = ssiit.boosterGainInfluence;
+					spotlightSetItem->m_spriteScale = ssiit.spriteScale;
 
-					Matrix transformed = XMMatrixMultiply( XMMatrixMultiply(ssiit->transform, TranslationMatrix(hullOffset)), offset );
+					Matrix transformed = XMMatrixMultiply( XMMatrixMultiply(ssiit.transform, TranslationMatrix(hullOffset)), offset );
 					TriMatrixTranslate( &spotlightSetItem->m_transform, &transformed, &hullOffset );
 
 					// add it
@@ -849,10 +897,12 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 	for( size_t hullIdx = 0; hullIdx < dna->GetMultiHullCount(); ++hullIdx )
 	{
 		// cycle over all planesets of this hull
-		const std::vector<EveSOFDataMgr::HullPlaneSetData>& hullPlaneSets = dna->GetHullPlaneSets( hullIdx );
-		for( auto psit = hullPlaneSets.begin(); psit != hullPlaneSets.end(); ++psit )
+		for( auto& planeSetData : dna->GetHullPlaneSets( hullIdx ) )
 		{
-			const EveSOFDataMgr::HullPlaneSetData* planeSetData = &(*psit);
+			if( dna->IsHullUsingExperimentalFeatures() && !dna->IsInVisibilityData( planeSetData.visibilityGroup ) )
+			{
+				continue;
+			}
 
 			// create a planeset for this ship
 			EvePlaneSetPtr planeSet;
@@ -863,46 +913,30 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 			planeEffect.CreateInstance();
 			planeEffect->StartUpdate();
 
+			auto isSkinned = planeSetData.skinned && buildFlags != EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT;
+			planeEffect->SetEffectPathName( GetPlaneSetEffectPath( planeSetData.usage, isSkinned ) );
+
 			// Select the planeset's data based on the usage
-			std::string effectResPath, imageMapResPath;
-			float angularFadeOut = 0.f;
-			auto isSkinned = planeSetData->skinned && buildFlags != EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT;
-			switch( planeSetData->usage )
+			switch( planeSetData.usage )
 			{
-			case EveSOFDataHullPlaneSet::USAGE_STANDARD:
-				effectResPath = isSkinned ? "res:/graphics/effect/managed/space/spaceobject/fx/skinned_planeglow.fx" : "res:/graphics/effect/managed/space/spaceobject/fx/planeglow.fx";
-				break;
-			case EveSOFDataHullPlaneSet::USAGE_HAZE:
-				angularFadeOut = 1.f;
-				effectResPath = isSkinned ? "res:/graphics/effect/managed/space/spaceobject/fx/skinned_planeglow.fx" : "res:/graphics/effect/managed/space/spaceobject/fx/planeglow.fx";
-				break;
 			case EveSOFDataHullPlaneSet::USAGE_SPACE_VIDEO:
-				effectResPath = isSkinned ? "res:/graphics/effect/managed/space/spaceobject/fx/skinned_planehologram.fx" : "res:/graphics/effect/managed/space/spaceobject/fx/planehologram.fx";
-				imageMapResPath = "dynamic:/inspacevideos";
+				planeEffect->AddResourceTexture2D( BlueSharedString( "ImageMap" ), "dynamic:/inspacevideos" );
 				break;
 			case EveSOFDataHullPlaneSet::USAGE_HANGAR_VIDEO:
-				effectResPath = isSkinned ? "res:/graphics/effect/managed/space/spaceobject/fx/skinned_planehologram.fx" : "res:/graphics/effect/managed/space/spaceobject/fx/planehologram.fx";
-				imageMapResPath = "dynamic:/hangarvideos";
+				planeEffect->AddResourceTexture2D( BlueSharedString( "ImageMap" ), "dynamic:/hangarvideos" );
 				// Set the pickbuffer so we can pick the videos in the client
 				planeSet->SetPickBufferID( PICKABLE_HANGARVIEO_BUFFER_ID );
 				break;
 			}
 
-			planeEffect->SetEffectPathName( effectResPath.c_str() );
-
 			// textures
-			planeEffect->AddResourceTexture2D( BlueSharedString( "Layer1Map" ), planeSetData->layer1MapResPath.c_str() );
-			planeEffect->AddResourceTexture2D( BlueSharedString( "Layer2Map" ), planeSetData->layer2MapResPath.c_str() );
-			planeEffect->AddResourceTexture2D( BlueSharedString( "MaskMap" ), planeSetData->maskMapResPath.c_str() );
-
-			// Imagemap texture?
-			if( !imageMapResPath.empty() )
-			{
-				planeEffect->AddResourceTexture2D( BlueSharedString( "ImageMap" ), imageMapResPath.c_str() );
-			}
+			planeEffect->AddResourceTexture2D( BlueSharedString( "Layer1Map" ), planeSetData.layer1MapResPath.c_str() );
+			planeEffect->AddResourceTexture2D( BlueSharedString( "Layer2Map" ), planeSetData.layer2MapResPath.c_str() );
+			planeEffect->AddResourceTexture2D( BlueSharedString( "MaskMap" ), planeSetData.maskMapResPath.c_str() );
 
 			// parameters
-			Vector4 planeData( angularFadeOut, (float)planeSetData->atlasSize, 0.f, 0.f );
+			float angularFadeOut = planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_HAZE ? 1.f : 0.f;
+			Vector4 planeData( angularFadeOut, (float)planeSetData.atlasSize, 0.f, 0.f );
 			planeEffect->AddParameterVector4( BlueSharedString( "PlaneData" ), &planeData );
 
 			// finish up shader and set it
@@ -912,7 +946,7 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 			for( auto& offset : offsets )
 			{
 				// add all individual items
-				for( auto psiit = planeSetData->items.begin(); psiit != planeSetData->items.end(); ++psiit )
+				for( auto& psiit : planeSetData.items )
 				{
 					// create it
 					EvePlaneSetItemPtr planeSetItem;
@@ -920,26 +954,33 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 
 					// set up the position data
 					Vector3 tmp;
-					Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), psiit->rotation, psiit->position + hullOffset ) * offset;
+					Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), psiit.rotation, psiit.position + hullOffset ) * offset;
 					Decompose( tmp, planeSetItem->m_rotation, planeSetItem->m_position, m );
 
-
 					// fill it up
-					planeSetItem->m_scaling = psiit->scaling;
-					planeSetItem->m_color = psiit->color;
-					planeSetItem->m_layer1Transform = psiit->layer1Transform;
-					planeSetItem->m_layer1Scroll = psiit->layer1Scroll;
-					planeSetItem->m_layer2Transform = psiit->layer2Transform;
-					planeSetItem->m_layer2Scroll = psiit->layer2Scroll;
-					planeSetItem->m_boneIndex = psiit->boneIndex;
-					planeSetItem->m_maskAtlasID = psiit->maskMapAtlasIndex;
-					planeSetItem->m_blinkData = Vector4( psiit->rate, psiit->phase, psiit->dutyCycle, (float)psiit->blinkMode );
+					planeSetItem->m_scaling = psiit.scaling;
+					planeSetItem->m_layer1Transform = psiit.layer1Transform;
+					planeSetItem->m_layer1Scroll = psiit.layer1Scroll;
+					planeSetItem->m_layer2Transform = psiit.layer2Transform;
+					planeSetItem->m_layer2Scroll = psiit.layer2Scroll;
+					planeSetItem->m_boneIndex = psiit.boneIndex;
+					planeSetItem->m_maskAtlasID = psiit.maskMapAtlasIndex;
+					planeSetItem->m_blinkData = Vector4( psiit.rate, psiit.phase, psiit.dutyCycle, (float)psiit.blinkMode );
 
-					// groupindex allows to overwrite color
-					const EveSOFDataMgr::FactionPlaneSetColorData* factionalData = dna->GetFactionPlaneSetData( psiit->groupIndex );
-					if( factionalData )
+					if( dna->IsHullUsingExperimentalFeatures() )
 					{
-						planeSetItem->m_color = factionalData->color;
+						auto colorSet = dna->GetColorSet();
+						planeSetItem->m_color = psiit.intensity * colorSet[psiit.colorType];
+					}
+					else
+					{
+						planeSetItem->m_color = psiit.color;
+						// groupindex allows to overwrite color
+						const EveSOFDataMgr::FactionPlaneSetColorData* factionalData = dna->GetFactionPlaneSetData( psiit.groupIndex );
+						if( factionalData )
+						{
+							planeSetItem->m_color = factionalData->color;
+						}
 					}
 
 					// add it
@@ -2802,107 +2843,147 @@ void EveSOF::SetupLayout( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const 
 	for( size_t layoutIdx = 0; layoutIdx < dna->GetLayoutCount(); ++layoutIdx )
 	{
 		auto layout = dna->GetLayoutData( layoutIdx );
-		size_t placementIdx = -1;
-		TriRandomSeed( layout->seed );
+		size_t placementIdx = 0;
+
+		uint32_t oldSeed = TriRandGetSeed();
+		uint32_t trinitySeed = layout->seed; 
+
+		if( layout->scrambleSeed )
+		{
+			trinitySeed = uint32_t(BeOS->GetActualTime());
+		}
+
+		TriSrand( trinitySeed );
+
 
 		// Go over all the placements (each layout can have multiple mesh attachments)
 		for( auto placement : layout->placements )
 		{
-			placementIdx++;
-			auto locators = std::vector<EveSOFDataMgr::LocatorDirectionData>();
-
-			Vector3 hullOffset( 0, 0, 0 );
-
-			// Need to go over all the hulls
-			for( size_t hullIdx = 0; hullIdx < dna->GetMultiHullCount(); ++hullIdx )
-			{
-				auto hullLocators = dna->GetPlacementLocators( hullIdx, layoutIdx, placementIdx );
-				if( hullLocators && !hullLocators->empty())
-				{
-					std::vector<EveSOFDataMgr::LocatorDirectionData>  placementLocators( *hullLocators );
-
-					for( int32_t index = 0; index < placementLocators.size(); index++ )
-					{
-						bool inBoth = false;
-						int32_t pID = placementLocators.at(index).uniqueID;
-						for( auto mLoc : locatorSets[placement.locatorSetName] )
-						{
-							if( mLoc.uniqueID == pID )
-							{
-								inBoth = true;
-								break;
-							}
-						}
-
-						if( !inBoth )
-						{
-							std::swap(placementLocators.at(index), placementLocators.back());
-							placementLocators.pop_back();
-							index--;
-						}
-					}
-
-					if( !placementLocators.empty() )
-					{
-						if(hullIdx == 0)
-						{
-							locators.insert( locators.end(), placementLocators.begin(), placementLocators.end() );
-						}
-						else
-						{
-							// need to move the locators by the hullOffset
-							std::transform( placementLocators.begin(), placementLocators.end(), std::back_inserter( locators ),
-											[hullOffset]( EveSOFDataMgr::LocatorDirectionData d ) -> EveSOFDataMgr::LocatorDirectionData {
-												d.position += hullOffset;
-												return d;
-											}
-							);
-						}
-					}
-				}
-
-				const Vector3* nextSubsystemOffset = dna->GetHullNextSubsystemOffset( hullIdx );
-				if( nextSubsystemOffset )
-				{
-					hullOffset += *nextSubsystemOffset;
-				}
-			}
-
-			if( locators.empty() )
-			{
-				placementIdx++;
-				continue;
-			}
-
-
-			if ( !ProcessLayoutDistributionConditions( placement, dna, locators, locatorSets[placement.locatorSetName] ) )
-			{
-				placementIdx++;
-				continue;
-			}
-
-			if( placement.hasDistribution )
-			{
-				ProcessLayoutDistributionDistribute( placement.distribution, dna, locators, locatorSets[placement.locatorSetName] );
-			}
-			
-			EveSOFDNAPtr placementDna;
-			placementDna.CreateInstance();
-			placementDna->Setup( placement.name, placement.descriptor, dna, &m_dataMgr );
-			if( placement.isInstanced )
-			{
-				placementDna->DisableAnimation();
-			}
-
-			CreatePlacement( obj, placementDna, placement, locators, offsets);
+			ProcessPlacementDistributionOrGroup( placement, obj, dna, locatorSets, layoutIdx, placementIdx, offsets );
+		}
+		
+		if( layout->scrambleSeed )
+		{
+			TriSrand( oldSeed ); //restore seed if scrambled for parent proceduralness
 		}
 	}
 }
 
-bool EveSOF::ProcessLayoutDistributionConditions( EveSOFDataMgr::ExtensionPlacementData& placement,
+void EveSOF::ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacementData& placement,
+												  EveSpaceObject2Ptr obj,
 												  const EveSOFDNAPtr dna,
-												  std::vector<EveSOFDataMgr::LocatorDirectionData>& placementSet,
-												  std::vector<EveSOFDataMgr::LocatorDirectionData>& managedLocatorSet )
+												  std::map<BlueSharedString, std::vector<EveSOFDataMgr::LocatorDirectionData>>& managedLocatorSets,
+												  size_t& layoutIdx,
+												  size_t& placementIdx,
+												  const std::vector<Matrix>& offsets )
+{
+	if( placement.isAGroup )
+	{
+		if( !ProcessLayoutDistributionConditions( placement, dna ) )
+		{
+			placementIdx += placement.placements.size();
+			return;
+		}
+
+		// Go over all the placements (each layout can have multiple mesh attachments)
+		for( auto placement : placement.placements  )
+		{
+			ProcessPlacementDistributionOrGroup( placement, obj, dna, managedLocatorSets, layoutIdx, placementIdx, offsets );
+		}
+		return;
+	}
+
+	auto locators = std::vector<EveSOFDataMgr::LocatorDirectionData>();
+
+	Vector3 hullOffset( 0, 0, 0 );
+
+	// Need to go over all the hulls
+	for( size_t hullIdx = 0; hullIdx < dna->GetMultiHullCount(); ++hullIdx )
+	{
+		auto hullLocators = dna->GetPlacementLocators( hullIdx, placement.locatorSetName );
+		if( hullLocators && !hullLocators->empty() )
+		{
+			std::vector<EveSOFDataMgr::LocatorDirectionData> placementLocators( *hullLocators );
+
+			for( int32_t index = 0; index < placementLocators.size(); index++ )
+			{
+				bool inBoth = false;
+				int32_t pID = placementLocators.at( index ).uniqueID;
+				for( auto mLoc : managedLocatorSets[placement.locatorSetName] )
+				{
+					if( mLoc.uniqueID == pID )
+					{
+						inBoth = true;
+						break;
+					}
+				}
+
+				if( !inBoth )
+				{
+					std::swap( placementLocators.at( index ), placementLocators.back() );
+					placementLocators.pop_back();
+					index--;
+				}
+			}
+
+			if( !placementLocators.empty() )
+			{
+				if( hullIdx == 0 )
+				{
+					locators.insert( locators.end(), placementLocators.begin(), placementLocators.end() );
+				}
+				else
+				{
+					// need to move the locators by the hullOffset
+					std::transform( placementLocators.begin(), placementLocators.end(), std::back_inserter( locators ), [hullOffset]( EveSOFDataMgr::LocatorDirectionData d ) -> EveSOFDataMgr::LocatorDirectionData {
+						d.position += hullOffset;
+						return d;
+					} );
+				}
+			}
+		}
+
+		const Vector3* nextSubsystemOffset = dna->GetHullNextSubsystemOffset( hullIdx );
+		if( nextSubsystemOffset )
+		{
+			hullOffset += *nextSubsystemOffset;
+		}
+	}
+
+	if( locators.empty() )
+	{
+		placementIdx++;
+		return;
+	}
+
+
+	if( !ProcessLayoutDistributionConditions( placement, dna ) )
+	{
+		placementIdx++;
+		return;
+	}
+
+	if( placement.hasDistribution )
+	{
+		ProcessLayoutDistributionDistribute( placement.distribution, dna, locators, managedLocatorSets[placement.locatorSetName] );
+	}
+
+	EveSOFDNAPtr placementDna;
+	placementDna.CreateInstance();
+	placementDna->Setup( placement.name, placement.descriptor, dna, &m_dataMgr );
+	if( placement.isInstanced )
+	{
+		placementDna->DisableAnimation();
+	}
+
+	CreatePlacement( obj, placementDna, placement, locators, offsets );
+
+	placementIdx++;
+}
+ 
+
+bool EveSOF::ProcessLayoutDistributionConditions( EveSOFDataMgr::ExtensionPlacementData& placement,
+												  const EveSOFDNAPtr dna )
 {
 	bool distributionSuccessful = true;
 	for( auto condition : placement.placementConditions )
@@ -2910,10 +2991,11 @@ bool EveSOF::ProcessLayoutDistributionConditions( EveSOFDataMgr::ExtensionPlacem
 		switch( condition.distributionType )
 		{
 		case EveSOFDataMgr::RANDOM_INCLUCION: {
-			distributionSuccessful = distributionSuccessful && condition.triggerChance > TriFloatRandom01();
+			distributionSuccessful = distributionSuccessful && condition.triggerChance > TriRand();
 			break;
 		}
 		case EveSOFDataMgr::PARENT_MATCH: {
+			
 			bool hull = condition.spaceObjectParentDescriptor.hull.empty() ? true : true; // TODO condition.spaceObjectParentDescriptor.hull == dna->;
 			bool faction = condition.spaceObjectParentDescriptor.faction.empty() ? true : condition.spaceObjectParentDescriptor.faction == dna->GetFactionName();
 			bool race = condition.spaceObjectParentDescriptor.race.empty() ? true : condition.spaceObjectParentDescriptor.race == dna->GetRaceName();
@@ -2927,6 +3009,7 @@ bool EveSOF::ProcessLayoutDistributionConditions( EveSOFDataMgr::ExtensionPlacem
 			break;
 		}
 		case EveSOFDataMgr::DEPLETION_COUNTER: {
+			// TODO
 			break;
 		}
 		case EveSOFDataMgr::GRAPHIC_SETTING_MAP: {
@@ -2990,7 +3073,9 @@ void EveSOF::ProcessLayoutDistributionDistribute( EveSOFDataMgr::ExtensionPlacem
 										std::vector<EveSOFDataMgr::LocatorDirectionData>& placementSet,
 										std::vector<EveSOFDataMgr::LocatorDirectionData>& managedLocatorSet )
 {
-	int32_t count = int( float( placementSet.size() ) * ( 1 - distributionData.completeness ) );
+	float preCount = float( placementSet.size() ) * ( 1.f - distributionData.completeness );
+	float remainder = fmod(preCount, 1.f);
+	int32_t count = int( preCount ) + int( remainder + TriRand() );
 
 	if( distributionData.cap > 0 )
 	{
@@ -3038,7 +3123,7 @@ void EveSOF::ProcessLayoutDistributionDistribute( EveSOFDataMgr::ExtensionPlacem
 		float powerRank = rankedLocators[uID].x * distributionData.placementBias.x;
 		powerRank += rankedLocators[uID].y * distributionData.placementBias.y + rankedLocators[uID].z * distributionData.placementBias.z;
 		powerRank *= -1;
-		powerRank += float( placementSet.size() ) * TriFloatRandom01() * randomFactor * 4.f;
+		powerRank += float( placementSet.size() ) * TriRand() * randomFactor * 4.f;
 		float cb = distributionData.centerBias;
 		cb = cb < 0 ?  ( float(placementSet.size()) - rankedLocators[uID].w ) * abs(cb) : rankedLocators[uID].w * cb;
 		powerRank += cb;
@@ -3073,9 +3158,9 @@ void EveSOF::ProcessLayoutDistributionDistribute( EveSOFDataMgr::ExtensionPlacem
 
 		for( auto& locator : placementSet )
 		{
-			yaw = stepYaw * floor( distributionData.randomRotationMaxSteps[0] * TriFloatRandom01() + 0.5f );
-			pitch = stepPitch * floor( distributionData.randomRotationMaxSteps[1] * TriFloatRandom01() + 0.5f );
-			roll = stepRoll * floor( distributionData.randomRotationMaxSteps[2] * TriFloatRandom01() + 0.5f );
+			yaw = stepYaw * floor( distributionData.randomRotationMaxSteps[0] * TriRand() + 0.5f );
+			pitch = stepPitch * floor( distributionData.randomRotationMaxSteps[1] * TriRand() + 0.5f );
+			roll = stepRoll * floor( distributionData.randomRotationMaxSteps[2] * TriRand() + 0.5f );
 			
 			Quaternion randomRotation = RotationQuaternion( yaw, pitch, roll );
 
@@ -3116,6 +3201,12 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 	// This will however not work properly for effects... sigh...
 	container->SetAlwaysOn( true ); // #vomit
 
+	if( !extensionDna->IsValid() )
+	{
+		CCP_LOGERR( "Creating layout placement failed because extentionDNA is invalid (probably missing assets): %s", extensionDna->GetDnaString() );
+		return container;
+	}
+
 	std::vector<Matrix> placementOffsets;
 	placementOffsets.reserve( nestedOffsets.size() * locators.size() );
 	
@@ -3140,10 +3231,16 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 			Vector3 randomScale = loc->scaling;
 			if( placement.hasDistribution )
 			{
-				auto factor = Lerp( placement.distribution.randomScaleMin, placement.distribution.randomScaleMax, TriFloatRandom01() );
-				randomScale.x *= factor.x;
-				randomScale.y *= factor.y;
-				randomScale.z *= factor.z;
+				if (placement.distribution.uniformScaling)
+				{
+					randomScale = randomScale * Lerp( placement.distribution.randomScaleMin, placement.distribution.randomScaleMax, TriRand() );
+				}
+				else
+				{
+					randomScale[0] = randomScale[0] * Lerp( placement.distribution.randomScaleMin[0], placement.distribution.randomScaleMax[0], TriRand() );
+					randomScale[1] = randomScale[1] * Lerp( placement.distribution.randomScaleMin[1], placement.distribution.randomScaleMax[1], TriRand() );
+					randomScale[2] = randomScale[2] * Lerp( placement.distribution.randomScaleMin[2], placement.distribution.randomScaleMax[2], TriRand() );
+				}
 			}
 			Matrix transform = placementOffset * TransformationMatrix( randomScale, Normalize( loc->rotation ), loc->position ) * offset;
 			placementOffsets.push_back( transform );
@@ -3189,7 +3286,7 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 					placementContainer->SetAnimationOwner( child );
 				}
 				child->SetName( "Hull" );
-				child->Setup( &scale, &rotation, &translation, Tr2Lod::TR2_LOD_LOW );
+				child->Setup( &randomScale, &rotation, &translation, Tr2Lod::TR2_LOD_LOW );
 				SetupDecalSets( BlueCastPtr( child->GetRawRoot() ), extensionDna );
 				auto centerOffset = std::vector<Matrix>( 1, IdentityMatrix() );
 

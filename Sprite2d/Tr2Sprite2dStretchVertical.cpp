@@ -215,9 +215,9 @@ void Tr2Sprite2dStretchVertical::PrepareVertices( Tr2Sprite2dVertexBase* v, floa
 	v->position.y = offsetY + scaledHeight - bottomEdgeSize * m_edgeScale * scale.y + vertOffset.y;
 	v->position.z = 0.0f;
 	v->texCoord[0].x = 0.0f;
-	v->texCoord[0].y = 1.0f - topEdgeSize / srcHeight;
+	v->texCoord[0].y = 1.0f - bottomEdgeSize / srcHeight;
 	v->texCoord[1].x = 0.0f;
-	v->texCoord[1].y = 1.0f - topEdgeSize / srcHeight;
+	v->texCoord[1].y = 1.0f - bottomEdgeSize / srcHeight;
 	v->color = white;
 	++v;
 
@@ -226,9 +226,9 @@ void Tr2Sprite2dStretchVertical::PrepareVertices( Tr2Sprite2dVertexBase* v, floa
 	v->position.y = offsetY + scaledHeight - bottomEdgeSize * m_edgeScale * scale.y + vertOffset.y;
 	v->position.z = 0.0f;
 	v->texCoord[0].x = 1.0f;
-	v->texCoord[0].y = 1.0f - topEdgeSize / srcHeight;
+	v->texCoord[0].y = 1.0f - bottomEdgeSize / srcHeight;
 	v->texCoord[1].x = 1.0f;
-	v->texCoord[1].y = 1.0f - topEdgeSize / srcHeight;
+	v->texCoord[1].y = 1.0f - bottomEdgeSize / srcHeight;
 	v->color = white;
 	++v;
 

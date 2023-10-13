@@ -64,11 +64,19 @@ ALResult Tr2DynamicRingBuffer::PutData(
 		if( m_bufferSize < size + m_sizeIncrement )
 		{
 			CR_RETURN_HR( CreateBuffer( size + m_sizeIncrement ) );
+			if( !m_name.empty() )
+			{
+				m_buffer.SetName( m_name.c_str() );
+			}
 			m_bufferSize = size + m_sizeIncrement;
 		}
 		else if( m_sizeIncrement )
 		{
 			CR_RETURN_HR( CreateBuffer( m_bufferSize + m_sizeIncrement ) );
+			if( !m_name.empty() )
+			{
+				m_buffer.SetName( m_name.c_str() );
+			}
 			m_bufferSize += m_sizeIncrement;
 		}
 	}
@@ -198,6 +206,7 @@ bool Tr2DynamicRingBuffer::GetUnusedRegion( uint32_t minSize, uint32_t& offset )
 // --------------------------------------------------------------------------------------
 void Tr2DynamicRingBuffer::ReleaseResources( TriStorage )
 {
+	m_buffer = Tr2BufferAL();
 	RemoveRegions( m_regions.begin(), m_regions.end() );
 	for( auto it = m_availableFences.begin(); it != m_availableFences.end(); ++it )
 	{
@@ -214,7 +223,11 @@ void Tr2DynamicRingBuffer::ReleaseResources( TriStorage )
 // --------------------------------------------------------------------------------------
 bool Tr2DynamicRingBuffer::OnPrepareResources()
 {
-	return true;
+	if( !m_bufferSize )
+	{
+		return true;
+	}
+	return SUCCEEDED( CreateBuffer( m_bufferSize ) );
 }
 
 // --------------------------------------------------------------------------------------
@@ -291,6 +304,68 @@ uint32_t Tr2DynamicRingBuffer::GetBufferSize() const
 	return m_bufferSize;
 }
 
+void Tr2DynamicRingBuffer::SetName( const char* name )
+{
+	m_name = name;
+	if( m_buffer.IsValid() )
+	{
+		m_buffer.SetName( name );
+	}
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Check if the buffer is valid.
+// Return Value:
+//   true If the buffer is valid
+//   false Otherwise
+// --------------------------------------------------------------------------------------
+bool Tr2DynamicRingBuffer::IsValid() const
+{
+	return m_buffer.IsValid();
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Returns the buffer.
+// Return Value:
+//   Vertex buffer
+// --------------------------------------------------------------------------------------
+Tr2BufferAL& Tr2DynamicRingBuffer::GetBuffer()
+{
+	return m_buffer;
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//   Updates portion of the buffer with new data.
+// Arguments:
+//   data - Pointer to data
+//   offset - Offset into the buffer in bytes where the data needs to be stored
+//   size - Size of the data in bytes
+//   lockType - Type of buffer lock
+//   renderContext - Current render context
+// Return Value:
+//   AL result code
+// --------------------------------------------------------------------------------------
+ALResult Tr2DynamicRingBuffer::UpdateBuffer( 
+	const void* data, 
+	uint32_t offset, 
+	uint32_t size, 
+	Tr2LockType::Type lockType,
+	Tr2RenderContext& renderContext )
+{
+	uint8_t* bufferData = nullptr;
+	CR_RETURN_HR( m_buffer.MapForWriting( bufferData, lockType, renderContext ) );
+	if( !bufferData )
+	{
+		return E_FAIL;
+	}
+	memcpy( bufferData + offset, data, size );
+	m_buffer.UnmapForWriting( renderContext );
+	return S_OK;
+}
+
 
 // --------------------------------------------------------------------------------------
 // Description:
@@ -306,39 +381,6 @@ bool Tr2RingVertexBuffer::Create( uint32_t bufferSize )
 	ReleaseResources( TRISTORAGE_ALL );
 	m_bufferSize = bufferSize;
 	return PrepareResources();
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Check if the buffer is valid.
-// Return Value:
-//   true If the buffer is valid
-//   false Otherwise
-// --------------------------------------------------------------------------------------
-bool Tr2RingVertexBuffer::IsValid() const
-{
-	return m_buffer.IsValid();
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns the vertex buffer.
-// Return Value:
-//   Vertex buffer
-// --------------------------------------------------------------------------------------
-Tr2BufferAL& Tr2RingVertexBuffer::GetBuffer()
-{
-	return m_buffer;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Implements Tr2DeviceResource interface. Releases GPU resources.
-// --------------------------------------------------------------------------------------
-void Tr2RingVertexBuffer::ReleaseResources( TriStorage s )
-{
-	m_buffer = Tr2BufferAL();
-	Tr2DynamicRingBuffer::ReleaseResources( s );
 }
 
 // --------------------------------------------------------------------------------------
@@ -359,53 +401,6 @@ ALResult Tr2RingVertexBuffer::CreateBuffer( uint32_t size )
 		Tr2CpuUsage::WRITE_OFTEN, 
 		nullptr, 
 		renderContext );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Updates portion of the buffer with new data.
-// Arguments:
-//   data - Pointer to data
-//   offset - Offset into the buffer in bytes where the data needs to be stored
-//   size - Size of the data in bytes
-//   lockType - Type of buffer lock
-//   renderContext - Current render context
-// Return Value:
-//   AL result code
-// --------------------------------------------------------------------------------------
-ALResult Tr2RingVertexBuffer::UpdateBuffer( 
-	const void* data, 
-	uint32_t offset, 
-	uint32_t size, 
-	Tr2LockType::Type lockType,
-	Tr2RenderContext& renderContext )
-{
-	uint8_t* bufferData = nullptr;
-	CR_RETURN_HR( m_buffer.MapForWriting( bufferData, lockType, renderContext ) );
-	if( !bufferData )
-	{
-		return E_FAIL;
-	}
-	memcpy( bufferData + offset, data, size );
-	m_buffer.UnmapForWriting( renderContext );
-	return S_OK;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Implements Tr2DeviceResource interface. Creates a vertex buffer.
-// Return value:
-//   true If successful
-//   false Otherwise
-// --------------------------------------------------------------------------------------
-bool Tr2RingVertexBuffer::OnPrepareResources()
-{
-	Tr2DynamicRingBuffer::OnPrepareResources();
-	if( !m_bufferSize )
-	{
-		return true;
-	}
-	return SUCCEEDED( CreateBuffer( m_bufferSize ) );
 }
 
 
@@ -435,39 +430,6 @@ bool Tr2RingIndexBuffer::Create( uint32_t numberOfIndices, uint32_t indexSize )
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Check if the buffer is valid.
-// Return Value:
-//   true If the buffer is valid
-//   false Otherwise
-// --------------------------------------------------------------------------------------
-bool Tr2RingIndexBuffer::IsValid() const
-{
-	return m_buffer.IsValid();
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Returns the index buffer.
-// Return Value:
-//   Index buffer
-// --------------------------------------------------------------------------------------
-Tr2BufferAL& Tr2RingIndexBuffer::GetBuffer()
-{
-	return m_buffer;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Implements Tr2DeviceResource interface. Releases GPU resources.
-// --------------------------------------------------------------------------------------
-void Tr2RingIndexBuffer::ReleaseResources( TriStorage s )
-{
-	m_buffer = Tr2BufferAL();
-	Tr2DynamicRingBuffer::ReleaseResources( s );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
 //   Creates an index buffer.
 // Arguments:
 //   size - Size of the buffer in bytes
@@ -484,51 +446,4 @@ ALResult Tr2RingIndexBuffer::CreateBuffer( uint32_t size )
 		Tr2CpuUsage::WRITE_OFTEN, 
 		nullptr, 
 		renderContext );
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Updates portion of the buffer with new data.
-// Arguments:
-//   data - Pointer to data
-//   offset - Offset into the buffer in bytes where the data needs to be stored
-//   size - Size of the data in bytes
-//   lockType - Type of buffer lock
-//   renderContext - Current render context
-// Return Value:
-//   AL result code
-// --------------------------------------------------------------------------------------
-ALResult Tr2RingIndexBuffer::UpdateBuffer( 
-	const void* data, 
-	uint32_t offset, 
-	uint32_t size, 
-	Tr2LockType::Type lockType,
-	Tr2RenderContext& renderContext )
-{
-	uint8_t* bufferData = nullptr;
-	CR_RETURN_HR( m_buffer.MapForWriting( bufferData, lockType, renderContext ) );
-	if( !bufferData )
-	{
-		return E_FAIL;
-	}
-	memcpy( bufferData + offset, data, size );
-	m_buffer.UnmapForWriting( renderContext );
-	return S_OK;
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Implements Tr2DeviceResource interface. Creates an index buffer.
-// Return value:
-//   true If successful
-//   false Otherwise
-// --------------------------------------------------------------------------------------
-bool Tr2RingIndexBuffer::OnPrepareResources()
-{
-	Tr2DynamicRingBuffer::OnPrepareResources();
-	if( !m_bufferSize )
-	{
-		return true;
-	}
-	return SUCCEEDED( CreateBuffer( m_bufferSize ) );
 }

@@ -48,6 +48,10 @@ TriStepResult TriStepCopyRenderTarget::Execute( Be::Time realTime, Be::Time simT
 			const auto& vp = *m_sourceViewport;
 			Tr2TextureSubresource src( 0 );
 			src.SetRect( (uint32_t)vp.x, (uint32_t)vp.y, (uint32_t)(vp.x + vp.width), (uint32_t)(vp.y + vp.height) );
+			if( vp.width <= 0 || vp.height <= 0 )
+			{
+				return RS_OK;
+			}
 
 			if( m_destinationViewport )
 			{

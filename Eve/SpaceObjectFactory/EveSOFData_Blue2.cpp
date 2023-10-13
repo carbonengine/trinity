@@ -252,10 +252,13 @@ const Be::ClassInfo* EveSOFDataPatternPerHull::ExposeToBlue()
 	EXPOSURE_END()
 }
 
+BLUE_DEFINE_INTERFACE( IEveSOFDataHullExtensionPlacement );
+
 BLUE_DEFINE( EveSOFDataHullExtensionPlacement );
 const Be::ClassInfo* EveSOFDataHullExtensionPlacement::ExposeToBlue(){
 	EXPOSURE_BEGIN( EveSOFDataHullExtensionPlacement, "" )
 		MAP_INTERFACE( EveSOFDataHullExtensionPlacement )
+		MAP_INTERFACE( IEveSOFDataHullExtensionPlacement )
 		MAP_ATTRIBUTE( "name", m_name, "The name of the placement", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "locatorSetName", m_locatorSetName, "The name of the locatorset to distribute the extension", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "offset", m_offset, "The offset of the extension (", Be::READWRITE | Be::PERSIST )
@@ -266,12 +269,25 @@ const Be::ClassInfo* EveSOFDataHullExtensionPlacement::ExposeToBlue(){
 	EXPOSURE_END()
 }
 
+BLUE_DEFINE( EveSOFDataHullExtensionPlacementGroup );
+const Be::ClassInfo* EveSOFDataHullExtensionPlacementGroup::ExposeToBlue(){
+	EXPOSURE_BEGIN( EveSOFDataHullExtensionPlacementGroup, "" )
+		MAP_INTERFACE( EveSOFDataHullExtensionPlacementGroup )
+		MAP_INTERFACE( IEveSOFDataHullExtensionPlacement )
+		MAP_ATTRIBUTE( "name", m_name, "The name of the placement", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "placements", m_placements, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "distributionConditions", m_distributionConditions, "", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "depletionCounters", m_depletionCounters, "", Be::READ | Be::PERSIST ) 
+	EXPOSURE_END()
+}
+
 BLUE_DEFINE( EveSOFDataLayout );
 const Be::ClassInfo* EveSOFDataLayout::ExposeToBlue(){
 	EXPOSURE_BEGIN( EveSOFDataLayout, "" )
 		MAP_INTERFACE( EveSOFDataLayout )
 		MAP_ATTRIBUTE( "name", m_name, "The name of the layout", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "seed", m_seed, "used in all random processing for the placements", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "randomizeSeedOnLoad", m_randomizeSeedOnLoad, "this will non-proceduraly scramble the seed on load", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "depletionCounters", m_depletionCounters, "", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "placements", m_placements, "The placements of the layout", Be::READ | Be::PERSIST )
 
@@ -348,10 +364,11 @@ const Be::ClassInfo* EveSOFDataHullExtensionPlacementDistributionPlacement::Expo
 		MAP_ATTRIBUTE( "placementBias", m_placementBias, "Vector to direct the spread of placements towards a direction", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "centerBias", m_centerBias, "0=doesn't care, -1=prioritizes edges, 1=starts from center", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "cap", m_cap, "cap on how many locators this distribution can utilize (0=uncapped)", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "randomRotationStepSizeYPR", m_randomRotationStepSizeYPR, "step size for randomizing rotations, (yaw, pitch, roll) [-1:1] ", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "randomRotationStepSizeYPR", m_randomRotationStepSizeYPR, "step size for randomizing rotations, (yaw, pitch, roll) in degrees (90 = quarter circle)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "randomRotationMaxSteps", m_randomRotationMaxSteps, "max number of times the above stepSize can be added per locator", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "randomScaleMin", m_randomScaleMin, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "randomScaleMax", m_randomScaleMax, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "uniformScale", m_uniformScale, "when toggled the random value is on the linear axis between min and max", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "occupyLocators", m_occupyLocators, "when toggled the placement will reserve locator from other layouts", Be::READWRITE | Be::PERSIST )
 
 	EXPOSURE_END()

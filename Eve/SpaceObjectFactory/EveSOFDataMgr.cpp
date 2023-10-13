@@ -8,6 +8,80 @@
 #include "EveSOFUtils.h"
 #include "Utilities/StringUtils.h"
 
+namespace
+{
+uint32_t GetVisibilityGroupHash( const BlueSharedString visibilityGroup )
+{
+	return CcpHashFNV1( visibilityGroup.c_str(), std::string( visibilityGroup.c_str() ).length() );
+}
+
+}
+
+EveSOFDataMgr::HullSpotlightSetItemData::HullSpotlightSetItemData( const EveSOFDataHullSpotlightSetItem& item ):
+	boneIndex( item.m_boneIndex ),
+	boosterGainInfluence( item.m_boosterGainInfluence ),
+	colorType( item.m_colorType ),
+	spriteScale( item.m_spriteScale ),
+	transform( item.m_transform ),
+	groupIndex( item.m_groupIndex ),
+	coneIntensity( item.m_coneIntensity ),
+	flareIntensity( item.m_flareIntensity ),
+	spriteIntensity( item.m_spriteIntensity )
+{
+}
+
+EveSOFDataMgr::HullSpotlightSetData::HullSpotlightSetData( const EveSOFDataHullSpotlightSet& spotLightSet ):
+	skinned( spotLightSet.m_skinned ),
+	zOffset( spotLightSet.m_zOffset ),
+	visibilityGroup( GetVisibilityGroupHash( spotLightSet.m_visibilityGroup ) ),
+	coneTextureResPath( spotLightSet.m_coneTextureResPath ),
+	glowTextureResPath( spotLightSet.m_glowTextureResPath )
+{
+	items.reserve( spotLightSet.m_items.size() );
+	for( auto& item : spotLightSet.m_items )
+	{
+		items.push_back( HullSpotlightSetItemData( *item ) );
+	}
+}
+
+EveSOFDataMgr::HullPlaneSetItemData::HullPlaneSetItemData( const EveSOFDataHullPlaneSetItem& item ):
+	boneIndex( item.m_boneIndex ),
+	layer1Scroll( item.m_layer1Scroll ),
+	layer1Transform( item.m_layer1Transform ),
+	layer2Scroll( item.m_layer2Scroll ),
+	layer2Transform( item.m_layer2Transform ),
+	position( item.m_position ),
+	rotation( item.m_rotation ),
+	scaling( item.m_scaling ),
+	color( item.m_color ),
+	colorType( item.m_colorType ),
+	intensity( item.m_intensity ),
+	groupIndex( item.m_groupIndex ),
+	maskMapAtlasIndex( item.m_maskMapAtlasIndex ),
+	rate( item.m_rate ),
+	phase( item.m_phase ),
+	dutyCycle( item.m_dutyCycle ),
+	blinkMode( item.m_blinkMode )
+{
+}
+
+EveSOFDataMgr::HullPlaneSetData::HullPlaneSetData( const EveSOFDataHullPlaneSet& planeSet ) :
+	layer1MapResPath( planeSet.m_layer1MapResPath ),
+	layer2MapResPath( planeSet.m_layer2MapResPath ),
+	maskMapResPath( planeSet.m_maskMapResPath ),
+	visibilityGroup( GetVisibilityGroupHash( planeSet.m_visibilityGroup ) ),
+	atlasSize( planeSet.m_atlasSize ),
+	skinned( planeSet.m_skinned ),
+	usage( planeSet.m_usage )
+{
+	items.reserve( planeSet.m_items.size() );
+	for( auto& planeSetItemData : planeSet.m_items )
+	{
+		items.push_back( HullPlaneSetItemData( *planeSetItemData ) );
+	}
+}
+
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Initialize data members
@@ -23,17 +97,6 @@ EveSOFDataMgr::EveSOFDataMgr( IRoot* lockobj ) :
 // --------------------------------------------------------------------------------
 EveSOFDataMgr::~EveSOFDataMgr()
 {
-}
-
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Generate a hash for the visibility group, keeping this here to reduce
-//   code duplication
-// --------------------------------------------------------------------------------
-uint32_t EveSOFDataMgr::GetVisibilityGroupHash( const BlueSharedString visibilityGroup ) const
-{
-	return CcpHashFNV1( visibilityGroup.c_str(), std::string( visibilityGroup.c_str() ).length() );
 }
 
 // --------------------------------------------------------------------------------
@@ -535,6 +598,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 	hd.castShadow = srcData->m_castShadow;
 	hd.audioPosition = srcData->m_audioPosition;
 	hd.impactEffectType = srcData->m_impactEffectType;
+	hd.sof6 = srcData->m_sof6;
 
 	hd.category = std::string( srcData->m_category.c_str() );
 
@@ -596,70 +660,18 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 
 	// spotlightsets
 	hd.spotlightSets.clear();
-	for( auto ssit = srcData->m_spotlightSets.begin(); ssit != srcData->m_spotlightSets.end(); ++ssit )
+	hd.spotlightSets.reserve( srcData->m_spotlightSets.size() );
+	for( auto& ssit : srcData->m_spotlightSets )
 	{
-		EveSOFDataHullSpotlightSetPtr spotlightSetData = ( *ssit );
-
-		HullSpotlightSetData hssd;
-		hssd.skinned = spotlightSetData->m_skinned;
-		hssd.zOffset = spotlightSetData->m_zOffset;
-		hssd.coneTextureResPath = spotlightSetData->m_coneTextureResPath;
-		hssd.glowTextureResPath = spotlightSetData->m_glowTextureResPath;
-		for( auto ssiit = spotlightSetData->m_items.begin(); ssiit != spotlightSetData->m_items.end(); ++ssiit )
-		{
-			EveSOFDataHullSpotlightSetItemPtr spotlightSetItemData = ( *ssiit );
-
-			HullSpotlightSetItemData hssid;
-			hssid.boneIndex = spotlightSetItemData->m_boneIndex;
-			hssid.boosterGainInfluence = spotlightSetItemData->m_boosterGainInfluence;
-			hssid.spriteScale = spotlightSetItemData->m_spriteScale;
-			hssid.transform = spotlightSetItemData->m_transform;
-			hssid.groupIndex = spotlightSetItemData->m_groupIndex;
-			hssid.coneIntensity = spotlightSetItemData->m_coneIntensity;
-			hssid.flareIntensity = spotlightSetItemData->m_flareIntensity;
-			hssid.spriteIntensity = spotlightSetItemData->m_spriteIntensity;
-			hssd.items.push_back( hssid );
-		}
-		hd.spotlightSets.push_back( hssd );
+		hd.spotlightSets.push_back( HullSpotlightSetData( *ssit ) );
 	}
 
 	// planesets
 	hd.planeSets.clear();
-	for( auto psit = srcData->m_planeSets.begin(); psit != srcData->m_planeSets.end(); ++psit )
+	hd.planeSets.reserve( srcData->m_planeSets.size() );
+	for( auto& psit : srcData->m_planeSets )
 	{
-		EveSOFDataHullPlaneSetPtr planeSetData = ( *psit );
-
-		HullPlaneSetData hpsd;
-		hpsd.layer1MapResPath = planeSetData->m_layer1MapResPath;
-		hpsd.layer2MapResPath = planeSetData->m_layer2MapResPath;
-		hpsd.maskMapResPath = planeSetData->m_maskMapResPath;
-		hpsd.atlasSize = planeSetData->m_atlasSize;
-		hpsd.skinned = planeSetData->m_skinned;
-		hpsd.usage = planeSetData->m_usage;
-
-		for( auto psiit = planeSetData->m_items.begin(); psiit != planeSetData->m_items.end(); ++psiit )
-		{
-			EveSOFDataHullPlaneSetItemPtr planeSetItemData = ( *psiit );
-
-			HullPlaneSetItemData pssid;
-			pssid.boneIndex = planeSetItemData->m_boneIndex;
-			pssid.layer1Scroll = planeSetItemData->m_layer1Scroll;
-			pssid.layer1Transform = planeSetItemData->m_layer1Transform;
-			pssid.layer2Scroll = planeSetItemData->m_layer2Scroll;
-			pssid.layer2Transform = planeSetItemData->m_layer2Transform;
-			pssid.position = planeSetItemData->m_position;
-			pssid.rotation = planeSetItemData->m_rotation;
-			pssid.scaling = planeSetItemData->m_scaling;
-			pssid.color = planeSetItemData->m_color;
-			pssid.groupIndex = planeSetItemData->m_groupIndex;
-			pssid.maskMapAtlasIndex = planeSetItemData->m_maskMapAtlasIndex;
-			pssid.rate = planeSetItemData->m_rate;
-			pssid.phase = planeSetItemData->m_phase;
-			pssid.dutyCycle = planeSetItemData->m_dutyCycle;
-			pssid.blinkMode = planeSetItemData->m_blinkMode;
-			hpsd.items.push_back( pssid );
-		}
-		hd.planeSets.push_back( hpsd );
+		hd.planeSets.push_back( HullPlaneSetData( *psit ) );
 	}
 
 	// spritelinesets
@@ -1471,27 +1483,22 @@ void EveSOFDataMgr::GeneratePatternData( PatternData& pd, EveSOFDataPatternPtr s
 	}
 }
 
-// --------------------------------------------------------------------------------
-// Description:
-//   Fill a non-trinity layout data struct with all the data from the trinity
-//   data struct
-// --------------------------------------------------------------------------------
-void EveSOFDataMgr::GenerateLayoutData( LayoutData& ld, EveSOFDataLayoutPtr srcData ) const
+// helper function so that we can recursively unpack placement data
+EveSOFDataMgr::ExtensionPlacementData EveSOFDataMgr::UnpackPlacementData( IEveSOFDataHullExtensionPlacementPtr placementOrGroup ) const
 {
-	ld.name = BlueSharedString( srcData->m_name );
-	ld.seed = srcData->m_seed;
+	auto placementData = ExtensionPlacementData();
 
-	for( auto placement : srcData->m_placements )
+	if (EveSOFDataHullExtensionPlacementPtr placement = BlueCastPtr( placementOrGroup ))
 	{
+		placementData.isAGroup = false;
+
 		if( placement->m_descriptor == nullptr )
 		{
-			CCP_LOGERR( "Layout (%s) placement (%s) has no dna descriptor", srcData->m_name.c_str(), placement->m_name.c_str() );
-			continue;
+			CCP_LOGERR( "Layout placement (%s) has no dna descriptor", placement->m_name.c_str() );
 		}
 		if( placement->m_descriptor->m_hull.empty() )
 		{
-			CCP_LOGERR( "Layout (%s) placement (%s) has no hull", srcData->m_name.c_str(), placement->m_name.c_str() );
-			continue;
+			CCP_LOGERR( "Layout placement (%s) has no hull", placement->m_name.c_str() );
 		}
 
 		auto descriptor = DNADescriptorData();
@@ -1506,7 +1513,6 @@ void EveSOFDataMgr::GenerateLayoutData( LayoutData& ld, EveSOFDataLayoutPtr srcD
 		descriptor.material4 = BlueSharedString( placement->m_descriptor->m_material4 );
 		descriptor.layout = BlueSharedString( placement->m_descriptor->m_layout );
 
-		auto placementData = ExtensionPlacementData();
 		placementData.name = BlueSharedString( placement->m_name );
 		placementData.offset = placement->m_offset;
 		placementData.locatorSetName = BlueSharedString( placement->m_locatorSetName );
@@ -1523,7 +1529,57 @@ void EveSOFDataMgr::GenerateLayoutData( LayoutData& ld, EveSOFDataLayoutPtr srcD
 		{
 			placementData.placementConditions.push_back( generateDistributionConditionData( placementCondition ) );
 		}
+	}
+	if( EveSOFDataHullExtensionPlacementGroupPtr placement = BlueCastPtr( placementOrGroup ) )
+	{
+		placementData.isAGroup = true;
+		
+		placementData.name = BlueSharedString( placement->m_name );
+		
 
+		for( auto counter : placement->m_depletionCounters )
+		{
+			auto counterStruct = ExtensionPlacementDepletionCounter();
+			counterStruct.counterName = BlueSharedString( counter->m_name );
+			counterStruct.counterValue = counter->m_value;
+			placementData.depletionCounters.push_back( counterStruct );
+		}
+
+		for( auto placementOrGroup : placement->m_placements )
+		{
+			placementData.placements.push_back( UnpackPlacementData( placementOrGroup ) );
+		}
+
+		for( auto placementCondition : placement->m_distributionConditions )
+		{
+			placementData.placementConditions.push_back( generateDistributionConditionData( placementCondition ) );
+		}
+	}
+	return placementData;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//   Fill a non-trinity layout data struct with all the data from the trinity
+//   data struct
+// --------------------------------------------------------------------------------
+void EveSOFDataMgr::GenerateLayoutData( LayoutData& ld, EveSOFDataLayoutPtr srcData ) const
+{
+	ld.name = BlueSharedString( srcData->m_name );
+	ld.seed = srcData->m_seed;
+	ld.scrambleSeed = srcData->m_randomizeSeedOnLoad;
+
+	for( auto counter : srcData->m_depletionCounters )
+	{
+		auto counterStruct = ExtensionPlacementDepletionCounter();
+		counterStruct.counterName = BlueSharedString( counter->m_name );
+		counterStruct.counterValue = counter->m_value;
+		ld.depletionCounters.push_back( counterStruct );
+	}
+
+	for( auto placement : srcData->m_placements )
+	{
+		auto placementData = UnpackPlacementData( placement );
 		ld.placements.push_back( placementData );
 	}
 }
@@ -1540,6 +1596,7 @@ EveSOFDataMgr::ExtensionPlacementDistribution EveSOFDataMgr::generateDistributio
 	placementDistribution.randomRotationMaxSteps = distributionObj->m_randomRotationMaxSteps;
 	placementDistribution.randomScaleMin = distributionObj->m_randomScaleMin;
 	placementDistribution.randomScaleMax = distributionObj->m_randomScaleMax; 
+	placementDistribution.uniformScaling = distributionObj->m_uniformScale;
 	placementDistribution.occupyLocators = distributionObj->m_occupyLocators;
 
 	return placementDistribution;

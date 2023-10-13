@@ -7,6 +7,11 @@
 #include "EveSOFData.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveBannerSet.h"
 
+namespace
+{
+const BlueSharedString PRIMARY_VISIBILITY_GROUP( "primary" );
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   x
@@ -291,6 +296,7 @@ EveSOFDataHull::EveSOFDataHull( IRoot* lockobj ) :
 	m_isSkinned( false ),
 	m_enableDynamicBoundingSphere( false ),
 	m_castShadow( true ),
+	m_sof6( false ),
 	m_impactEffectType( IMPACTEFFECT_NONE ),
 	m_audioPosition( 0.f, 0.f, 0.f )
 {}
@@ -423,7 +429,7 @@ std::string EveSOFDataHullChildSetItem::GetName()
 
 EveSOFDataHullChildSet::EveSOFDataHullChildSet( IRoot* lockobj ) :
 	PARENTLOCK( m_items ),
-	m_visibilityGroup( "primary" )
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP )
 {}
 
 std::string EveSOFDataHullChildSet::GetName()
@@ -478,6 +484,7 @@ EveSOFDataHullAnimation::EveSOFDataHullAnimation( IRoot* lockobj ) :
 
 EveSOFDataHullSpotlightSet::EveSOFDataHullSpotlightSet( IRoot* lockobj ) :
 	PARENTLOCK( m_items ),
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP ),
 	m_skinned( false ),
 	m_zOffset( 0.f )
 {}
@@ -490,13 +497,15 @@ EveSOFDataHullSpotlightSetItem::EveSOFDataHullSpotlightSetItem( IRoot* lockobj )
 	m_coneIntensity( 0.f ),
 	m_flareIntensity( 0.f ),
 	m_spriteIntensity( 0.f ),
-	m_transform( IdentityMatrix() )
+	m_transform( IdentityMatrix() ), 
+	m_colorType( SOFDataFactionColorChooser::TYPE_HULL )
 {
 }
 
 
 EveSOFDataHullPlaneSet::EveSOFDataHullPlaneSet( IRoot* lockobj ) :
 	PARENTLOCK( m_items ),
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP ),
 	m_skinned( false ),
 	m_usage( USAGE_STANDARD ),
 	m_atlasSize( 1 )
@@ -508,6 +517,8 @@ EveSOFDataHullPlaneSetItem::EveSOFDataHullPlaneSetItem( IRoot* lockobj ) :
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
 	m_scaling( 1.f, 1.f, 1.f ),
 	m_color( 1.f, 1.f, 1.f, 1.f ),
+	m_colorType( SOFDataFactionColorChooser::TYPE_PRIMARY ),
+	m_intensity( 1.f ),
 	m_layer1Transform( 0.f, 0.f, 0.f, 0.f ),
 	m_layer2Transform( 0.f, 0.f, 0.f, 0.f ),
 	m_layer1Scroll( 0.f, 0.f, 0.f, 0.f ),
@@ -527,7 +538,7 @@ EveSOFDataHullPlaneSetItem::EveSOFDataHullPlaneSetItem( IRoot* lockobj ) :
 EveSOFDataHullSpriteSet::EveSOFDataHullSpriteSet( IRoot* lockobj ) :
 	PARENTLOCK( m_items ),
 	m_skinned( false ),
-	m_visibilityGroup( "primary" )
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP )
 {}
 
 
@@ -542,7 +553,7 @@ EveSOFDataHullSpriteSetItem::EveSOFDataHullSpriteSetItem( IRoot* lockobj ) :
 EveSOFDataHullSpriteLineSet::EveSOFDataHullSpriteLineSet( IRoot* lockobj ) :
 	PARENTLOCK( m_items ),
 	m_skinned( false ),
-	m_visibilityGroup( "primary" )
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP )
 {}
 
 EveSOFDataHullSpriteLineSetItem::EveSOFDataHullSpriteLineSetItem( IRoot* lockobj ) :
@@ -556,7 +567,7 @@ EveSOFDataHullSpriteLineSetItem::EveSOFDataHullSpriteLineSetItem( IRoot* lockobj
 
 EveSOFDataHullHazeSet::EveSOFDataHullHazeSet( IRoot* lockobj ) :
 	PARENTLOCK( m_items ),
-	m_visibilityGroup( "primary" ),
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP ),
 	m_skinned( false ),
 	m_hazeType( EveSOFDataHullHazeSet::TYPE_SPHERICAL )
 {}
@@ -586,7 +597,7 @@ EveSOFDataHullBannerLight::EveSOFDataHullBannerLight( IRoot* )
 
 EveSOFDataHullBanner::EveSOFDataHullBanner( IRoot* )
 	:m_usage( VERTICAL_BANNER ),
-	m_visibilityGroup( "primary" ),
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP ),
 	m_position( 0, 0, 0 ),
 	m_scaling( 1, 1, 1 ),
 	m_rotation( 0, 0, 0, 1 ),
@@ -687,7 +698,7 @@ void EveSOFDataHullBanner::SetScaling( const Vector3& scaling )
 
 EveSOFDataHullBannerSet::EveSOFDataHullBannerSet( IRoot* lockobj ):
 	PARENTLOCK( m_banners ),
-	m_visibilityGroup( "primary" )
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP )
 {}
 
 
@@ -799,7 +810,7 @@ void EveSOFDataHullBannerSetItem::SetScaling( const Vector3& scaling )
 
 EveSOFDataHullDecalSet::EveSOFDataHullDecalSet( IRoot* lockobj ):
 	PARENTLOCK( m_items ),
-	m_visibilityGroup( "primary" )
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP )
 {}
 
 EveSOFDataHullDecalSetItem::EveSOFDataHullDecalSetItem( IRoot* lockobj ) :
@@ -857,7 +868,7 @@ unsigned char* EveSOFDataDecalIndexBuffer::AllocateReadBuffer( const char* membe
 
 EveSOFDataHullLightSet::EveSOFDataHullLightSet( IRoot* lockobj ) :
 	PARENTLOCK( m_items ),
-	m_visibilityGroup( "primary" )
+	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP )
 {}
 
 
@@ -948,15 +959,25 @@ EveSOFDNADescriptor::EveSOFDNADescriptor( IRoot* ) :
 {
 }
 
-EveSOFDataHullExtensionPlacement::EveSOFDataHullExtensionPlacement( IRoot*  lockobj) :
+EveSOFDataHullExtensionPlacement::EveSOFDataHullExtensionPlacement( IRoot*  lockobj ):
 	PARENTLOCK( m_distributionConditions ),
 	m_name( "" ),
 	m_locatorSetName( "" ),
-	m_offset( 0.f, 0.f, 0.f),
+	m_offset( 0.f, 0.f, 0.f ),
 	m_isInstanced( true )
 {
+	m_distribution.CreateInstance();
 	m_descriptor.CreateInstance();
 }
+
+EveSOFDataHullExtensionPlacementGroup::EveSOFDataHullExtensionPlacementGroup(IRoot* lockobj) :
+	PARENTLOCK( m_placements ),
+	PARENTLOCK( m_distributionConditions ),
+	PARENTLOCK( m_depletionCounters ),
+	m_name( "" )
+{
+}
+
 
 EveSOFDataHullExtensionBucket::EveSOFDataHullExtensionBucket( IRoot* lockobj ) :
 	PARENTLOCK( m_depletionCounters ),
@@ -999,10 +1020,11 @@ EveSOFDataHullExtensionPlacementDistributionPlacement::EveSOFDataHullExtensionPl
 	m_placementBias( 0.f, 0.f, 0.f ),
 	m_centerBias( 0.0f ),
 	m_cap( 0 ),
-	m_randomRotationStepSizeYPR( 0.f, 0.f ,0.f, 0.f ),
-	m_randomRotationMaxSteps( 0.f, 0.f, 0.f ), 
+	m_randomRotationStepSizeYPR( 0.008802f, 0.0086497f, 0.0086497f, 0.9998864f ),
+	m_randomRotationMaxSteps( 0.f, 0.f, 0.f ),
 	m_randomScaleMin( 1.f, 1.f, 1.f ),
 	m_randomScaleMax( 1.f, 1.f, 1.f ),
+	m_uniformScale( true ),
 	m_occupyLocators( true )
 {
 }
@@ -1010,6 +1032,7 @@ EveSOFDataHullExtensionPlacementDistributionPlacement::EveSOFDataHullExtensionPl
 EveSOFDataLayout::EveSOFDataLayout( IRoot* lockobj ) :
 	PARENTLOCK( m_depletionCounters ),
 	PARENTLOCK( m_placements ),
+	m_randomizeSeedOnLoad( false ),
 	m_seed( 1337 ),
 	m_name( "" )
 {

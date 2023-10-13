@@ -16,6 +16,8 @@ const Be::ClassInfo* EveSpaceObjectFxAttributes::ExposeToBlue()
 		MAP_ATTRIBUTE( "generatedShapeEllipsoidCenter", m_generatedShapeEllipsoidCenter, "Generated or User-authored ellipsoid data for center \n:jessica-group: General", Be::READ )
 		MAP_ATTRIBUTE( "generatedShapeEllipsoidRadius", m_generatedShapeEllipsoidRadius, "Generated or User-authored ellipsoid data for radii \n:jessica-group: General", Be::READ )
 		MAP_ATTRIBUTE( "activeTurretCount", m_activeTurretCount, "Count of how many active turrets are on the spaceObject parent \n:jessica-group: General", Be::READ )
+		MAP_ATTRIBUTE( "parentWorldTranslation", m_parentWorldTranslation, "the world translation of the spaceObject parent\n:jessica-group: General", Be::READ )
+		MAP_ATTRIBUTE( "parentWorldRotation", m_parentWorldRotation, "the world rotation of the spaceObject parent\n:jessica-group: General", Be::READ )
 	
 		MAP_ATTRIBUTE( "ship", m_distanceToShip, "player ship distance to spaceObject-parent \n:jessica-group: DistanceTo", Be::READ )
 		MAP_ATTRIBUTE( "childParent", m_distanceToChildParent, "distance to closest-parent \n:jessica-group: DistanceTo", Be::READ )

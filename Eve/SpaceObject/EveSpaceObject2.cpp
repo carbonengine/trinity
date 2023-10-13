@@ -292,6 +292,7 @@ void EveSpaceObject2::OnListModified( long event, ssize_t key, ssize_t key2, IRo
 			{
 				entity->UnRegister( this->GetComponentRegistry() );
 			}
+			break;
 		case BELIST_UNLOADSTART:
 			if( IsInRegistry() )
 			{

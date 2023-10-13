@@ -1239,12 +1239,14 @@ bool Tr2Sprite2dScene::OnPrepareResources()
 		CCP_LOGERR( "Tr2Sprite2dScene::OnPrepareResources failed to create streaming vertex buffer" );
 		return false;
 	}
+	m_vertexBuffer.SetName( "UI Vertex Buffer" );
 
 	if( !m_indexBuffer.Create( indexCount, 4 ) )
 	{
 		CCP_LOGERR( "Tr2Sprite2dScene::OnPrepareResources failed to create streaming index buffer" );
 		return false;
 	}
+	m_indexBuffer.SetName( "UI Index Buffer" );
 
 	m_vertexBufferData.resize( "Tr2Sprite2dScene::m_vertexBufferData", vbSize );
 	if( m_vertexBufferData.empty() )
@@ -2001,6 +2003,7 @@ Tr2Sprite2dDisplayList* Tr2Sprite2dScene::EndCapture( Tr2Sprite2dDisplayList* pr
 			else
 			{
 				CCP_STATS_ADD( displayListVertexBufferSize, vbSize );
+				m_captureDisplayList->vertexBuffer.SetName( "UI Captured Vertex Buffer" );
 			}
 		}
 	}
@@ -2033,6 +2036,7 @@ Tr2Sprite2dDisplayList* Tr2Sprite2dScene::EndCapture( Tr2Sprite2dDisplayList* pr
 			else
 			{
 				CCP_STATS_ADD( displayListIndexBufferSize, ibSize );
+				m_captureDisplayList->indexBuffer.SetName( "UI Captured Index Buffer" );
 			}
 		}
 	}

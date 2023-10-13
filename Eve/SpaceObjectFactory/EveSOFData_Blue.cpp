@@ -34,7 +34,9 @@ const Be::VarChooser EveSOFDataFactionColorSetTypeChooser[] =
                 { "SecondaryLight", BeCast( TYPE_SECONDARY_LIGHT ), "Secondary light color" },
                 { "TertiaryLight", BeCast( TYPE_TERTIARY_LIGHT ), "Tertiary light color" },
                 { "WhiteLight", BeCast( TYPE_WHITE_LIGHT ), "White light color" },
-                { 0 }
+				{ "ForceField", BeCast( TYPE_FORCE_FIELD ), "Force field color" },
+				{ "Haze", BeCast( TYPE_HAZE ), "Haze color" },
+				{ 0 }
         };
 BLUE_REGISTER_ENUM_EX( "EveSOFDataFactionColorSetType", ColorType, EveSOFDataFactionColorSetTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 }
@@ -163,7 +165,9 @@ const Be::ClassInfo* EveSOFDataFactionColorSet::ExposeToBlue()
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_LIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_LIGHT], ":jessica-group:Light Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_TERTIARY_LIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_TERTIARY_LIGHT], ":jessica-group:Light Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_WHITE_LIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_WHITE_LIGHT], ":jessica-group:Light Colors", Be::READWRITE | Be::PERSIST )
-		EXPOSURE_END()
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_FORCE_FIELD].mKey, m_colors[SOFDataFactionColorChooser::TYPE_FORCE_FIELD], ":jessica-group:Plane Sets", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_HAZE].mKey, m_colors[SOFDataFactionColorChooser::TYPE_HAZE], ":jessica-group:Plane Sets", Be::READWRITE | Be::PERSIST )
+	EXPOSURE_END()
 }
 
 
@@ -246,6 +250,7 @@ const Be::ClassInfo* EveSOFDataHullSpotlightSetItem::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "transform", m_transform, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_colorType, ":jessica-group: sof-phase-6\n :jessica-sub-group: WIP", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
 		MAP_ATTRIBUTE( "boosterGainInfluence", m_boosterGainInfluence, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "groupIndex", m_groupIndex, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "spriteScale", m_spriteScale, "", Be::READWRITE | Be::PERSIST )
@@ -264,6 +269,7 @@ const Be::ClassInfo* EveSOFDataHullSpotlightSet::ExposeToBlue()
         MAP_INTERFACE( EveSOFDataHullSpotlightSet )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "visibilityGroup", m_visibilityGroup, "Name for visibility group to toggle visibility for the whole set.\n :jessica-group: sof-phase-6\n :jessica-sub-group: WIP\n:jessica-widget: visibilitygroup", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "skinned", m_skinned, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "zOffset", m_zOffset, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "coneTextureResPath", m_coneTextureResPath, "", Be::READWRITE | Be::PERSIST )
@@ -284,6 +290,8 @@ const Be::ClassInfo* EveSOFDataHullPlaneSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "scaling", m_scaling, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "color", m_color, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_colorType, ":jessica-group: sof-phase-6\n :jessica-sub-group: WIP", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
+		MAP_ATTRIBUTE( "intensity", m_intensity, ":jessica-group: sof-phase-6\n :jessica-sub-group: WIP", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "layer1Transform", m_layer1Transform, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "layer1Scroll", m_layer1Scroll, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "layer2Transform", m_layer2Transform, "", Be::READWRITE | Be::PERSIST )
@@ -317,6 +325,7 @@ const Be::ClassInfo* EveSOFDataHullPlaneSet::ExposeToBlue()
         MAP_INTERFACE( EveSOFDataHullPlaneSet )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "visibilityGroup", m_visibilityGroup, "Name for visibility group to toggle visibility for the whole set.\n :jessica-group: sof-phase-6\n :jessica-sub-group: WIP\n:jessica-widget: visibilitygroup", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "layer1MapResPath", m_layer1MapResPath, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "layer2MapResPath", m_layer2MapResPath, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "maskMapResPath", m_maskMapResPath, "", Be::READWRITE | Be::PERSIST )
@@ -889,6 +898,8 @@ const Be::ClassInfo* EveSOFDataHull::ExposeToBlue()
         MAP_INTERFACE( EveSOFDataHull )
 
 		MAP_ATTRIBUTE( "name", m_name, "The hull name, eg cb2_t1. This functions as an ID.", Be::READWRITE | Be::PERSIST )
+
+		MAP_ATTRIBUTE( "sof6", m_sof6, "Use SOF-6 features", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "description", m_description, "A description string. NOT used by the SOF, it's just for debugging purposes.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "category", m_category, "A category string. NOT used by the SOF, it's for tool validation.\n:jessica-widget: hullcategory", Be::READWRITE | Be::PERSIST )

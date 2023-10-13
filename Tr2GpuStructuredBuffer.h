@@ -56,6 +56,8 @@ public:
 	bool IsValid() const;
 	uint32_t GetCount() const;
 
+	void SetName( const char* name );
+
 	operator Tr2BufferAL&() { return m_buffer; }
 	operator const Tr2BufferAL&() const { return m_buffer; }
 
@@ -66,6 +68,8 @@ private:
 
 	// AL buffer
 	Tr2BufferAL	m_buffer;
+
+	std::string m_name;
 
 	// Number of elements in the buffer
 	uint32_t m_count;

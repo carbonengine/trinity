@@ -161,6 +161,8 @@ namespace SOFDataFactionColorChooser
         TYPE_SECONDARY_LIGHT,
         TYPE_TERTIARY_LIGHT,
         TYPE_WHITE_LIGHT,
+		TYPE_FORCE_FIELD,
+		TYPE_HAZE,
 
         TYPE_MAX,
     };
@@ -499,6 +501,7 @@ public:
 	bool m_boosterGainInfluence;
 	Vector3 m_spriteScale;
 	float m_flareIntensity, m_spriteIntensity, m_coneIntensity;
+	SOFDataFactionColorChooser::ColorType m_colorType;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullSpotlightSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullSpotlightSetItem );
@@ -514,6 +517,7 @@ public:
 
 	// data
 	std::string m_name;
+	BlueSharedString m_visibilityGroup;
 	bool m_skinned;
 	float m_zOffset;
 	std::string m_glowTextureResPath;
@@ -538,6 +542,8 @@ public:
 	Vector3 m_scaling;
 	Quaternion m_rotation;
 	Color m_color;
+	SOFDataFactionColorChooser::ColorType m_colorType;
+	float m_intensity;
 	Vector4 m_layer1Transform, m_layer2Transform, m_layer1Scroll, m_layer2Scroll;
 	int32_t m_boneIndex, m_groupIndex, m_maskMapAtlasIndex;
 	
@@ -568,6 +574,7 @@ public:
 
 	// data
 	std::string m_name;
+	BlueSharedString m_visibilityGroup;
 	bool m_skinned;
 	std::string m_layer1MapResPath;
 	std::string m_layer2MapResPath;
@@ -1336,6 +1343,7 @@ public:
 	bool m_isSkinned;
 	bool m_enableDynamicBoundingSphere;
 	bool m_castShadow;
+	bool m_sof6;
 	
 	// materials
 	PEveSOFDataHullAreaVector m_opaqueAreas;
@@ -1678,7 +1686,7 @@ public:
 TYPEDEF_BLUECLASS( EveSOFDNADescriptor );
 BLUE_DECLARE_VECTOR( EveSOFDNADescriptor );
 
-// interface
+// interfaces
 BLUE_INTERFACE( IEveSOFDataHullExtensionPlacementDistribution ) :
 	public IRoot
 {
@@ -1686,6 +1694,14 @@ BLUE_INTERFACE( IEveSOFDataHullExtensionPlacementDistribution ) :
 
 BLUE_DECLARE_INTERFACE( IEveSOFDataHullExtensionPlacementDistribution );
 BLUE_DECLARE_IVECTOR( IEveSOFDataHullExtensionPlacementDistribution );
+
+BLUE_INTERFACE( IEveSOFDataHullExtensionPlacement ) :
+	public IRoot
+{
+};
+
+BLUE_DECLARE_INTERFACE( IEveSOFDataHullExtensionPlacement );
+BLUE_DECLARE_IVECTOR( IEveSOFDataHullExtensionPlacement );
 
 
 BLUE_CLASS( EveSOFDataHullExtensionPlacementDistributionParentMatch ) :
@@ -1789,12 +1805,13 @@ public:
 	Vector3 m_randomRotationMaxSteps;
 	Vector3 m_randomScaleMin;
 	Vector3 m_randomScaleMax;
+	bool m_uniformScale;
 	bool m_occupyLocators;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullExtensionPlacementDistributionPlacement );
 
 BLUE_CLASS( EveSOFDataHullExtensionPlacement ) :
-	public IRoot
+	public IEveSOFDataHullExtensionPlacement
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -1814,6 +1831,24 @@ public:
 TYPEDEF_BLUECLASS( EveSOFDataHullExtensionPlacement );
 BLUE_DECLARE_VECTOR( EveSOFDataHullExtensionPlacement );
 
+BLUE_CLASS( EveSOFDataHullExtensionPlacementGroup ) :
+	public IEveSOFDataHullExtensionPlacement
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataHullExtensionPlacementGroup( IRoot* lockobj = NULL );
+	~EveSOFDataHullExtensionPlacementGroup()
+	{
+	}
+
+	std::string m_name;
+	PEveSOFDataDistributionDepletionCounterVector m_depletionCounters;
+	PIEveSOFDataHullExtensionPlacementVector m_placements;
+	PIEveSOFDataHullExtensionPlacementDistributionVector m_distributionConditions;
+};
+TYPEDEF_BLUECLASS( EveSOFDataHullExtensionPlacementGroup );
+BLUE_DECLARE_VECTOR( EveSOFDataHullExtensionPlacementGroup );
+
 BLUE_CLASS( EveSOFDataLayout ) :
 	public IRoot
 {
@@ -1826,9 +1861,10 @@ public:
 
 	// layout name
 	std::string m_name;
+	bool m_randomizeSeedOnLoad;
 	int32_t m_seed;
 	PEveSOFDataDistributionDepletionCounterVector m_depletionCounters;
-	PEveSOFDataHullExtensionPlacementVector m_placements;
+	PIEveSOFDataHullExtensionPlacementVector m_placements;
 };
 TYPEDEF_BLUECLASS( EveSOFDataLayout );
 BLUE_DECLARE_VECTOR( EveSOFDataLayout );

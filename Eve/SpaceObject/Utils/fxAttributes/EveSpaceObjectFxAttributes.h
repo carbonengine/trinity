@@ -29,6 +29,8 @@ private:
 	float m_activeTurretCount;
 	Vector3 m_generatedShapeEllipsoidCenter;
 	Vector3 m_generatedShapeEllipsoidRadius;
+	Vector3 m_parentWorldTranslation;
+	Quaternion m_parentWorldRotation;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceObjectFxAttributes );

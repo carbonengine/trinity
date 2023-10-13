@@ -204,10 +204,6 @@ bool Tr2GStateAnimation::Initialize()
 	{
 		m_gStateRes->AddNotifyTarget( this );
 	}
-	if( !m_resPath.empty() )
-	{
-		LoadGrannyRes();
-	}
 
 	return true;
 }
@@ -1043,10 +1039,6 @@ void Tr2GStateAnimation::SetModel( const std::string& val )
 
 void Tr2GStateAnimation::PrePhysicsAnimation( Be::Time time, const Matrix& modelTransform )
 {
-	if( !m_state_machine && IsFullyLoaded() )
-	{
-		InstantiateCharacter();
-	}
 	if( IsInitialized() && m_animationEnabled )
 	{
 		// Update gstate with parameters if fully loaded

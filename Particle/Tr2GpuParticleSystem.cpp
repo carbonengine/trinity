@@ -208,31 +208,37 @@ bool Tr2GpuParticleSystem::OnPrepareResources()
 	if( !m_drawParameters->IsValid() )
 	{
 		m_drawParameters->Create( 4, Tr2RenderContextEnum::PIXEL_FORMAT_R32_UINT, Tr2GpuBuffer::GPU_WRITABLE | Tr2GpuBuffer::DRAW_INDIRECT );
+		m_drawParameters->SetName( "GPU Particle Draw Params" );
 		m_clearRequested = true;
 	}
 	if( !m_sortParameters->IsValid() )
 	{
 		m_sortParameters->Create( 4, Tr2RenderContextEnum::PIXEL_FORMAT_R32_UINT, Tr2GpuBuffer::GPU_WRITABLE | Tr2GpuBuffer::DRAW_INDIRECT );
+		m_sortParameters->SetName( "GPU Particle Sort Params" );
 		m_clearRequested = true;
 	}
 	if( !m_particleData->IsValid() )
 	{
 		m_particleData->Create( m_maxParticles, sizeof( ParticleData ), Tr2GpuStructuredBuffer::GPU_WRITABLE );
+		m_particleData->SetName( "GPU Particles" );
 		m_clearRequested = true;
 	}
 	if( !m_deadList->IsValid() )
 	{
 		m_deadList->Create( m_maxParticles, sizeof( uint32_t ), Tr2GpuStructuredBuffer::GPU_WRITABLE );
+		m_deadList->SetName( "GPU Particle Dead List" );
 		m_clearRequested = true;
 	}
 	if( !m_visibleList->IsValid() )
 	{
 		m_visibleList->Create( m_maxParticles, sizeof( uint32_t ) * 2, Tr2GpuStructuredBuffer::GPU_WRITABLE );
+		m_visibleList->SetName( "GPU Particle Visible List" );
 		m_clearRequested = true;
 	}
 	if( !m_counters->IsValid() )
 	{
 		m_counters->Create( 2, Tr2RenderContextEnum::PIXEL_FORMAT_R32_SINT, Tr2GpuBuffer::GPU_WRITABLE );
+		m_counters->SetName( "GPU Particle Counters" );
 		m_clearRequested = true;
 	}
 	UpdateGpuEmitterParams( renderContext );

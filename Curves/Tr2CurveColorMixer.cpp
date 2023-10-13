@@ -2,6 +2,7 @@
 
 Tr2CurveColorMixer::Tr2CurveColorMixer( IRoot* lockobj )
 	:m_currentValue( 0, 0, 0, 1 ),
+	m_convertedLinearValue( 0, 0, 0, 1 ),
 	m_color1( 0, 0, 0, 1 ),
 	m_color2( 0, 0, 0, 1 ),
 	m_lerpValue( 0.f ),
@@ -13,6 +14,7 @@ Tr2CurveColorMixer::Tr2CurveColorMixer( IRoot* lockobj )
 void Tr2CurveColorMixer::UpdateValue( double time )
 {
 	m_currentValue = GetValue( time );
+	InvertLinearColor( &m_currentValue, &m_convertedLinearValue );
 }
 
 float Tr2CurveColorMixer::Length()
@@ -62,3 +64,20 @@ Color* Tr2CurveColorMixer::GetValueAt( Color* in, double time )
 	return in;
 }
 
+void Tr2CurveColorMixer::InvertLinearColor( Color* in, Color* out )
+{
+	// converting the input color from linear to srgb
+	out->r = InvertLinearValue( in->r );
+	out->b= InvertLinearValue( in->b );
+	out->g = InvertLinearValue( in->g );
+}
+
+float Tr2CurveColorMixer::InvertLinearValue( float x )
+{
+	if( x < 0.04045f )
+	{
+		return x / 12.92f;
+	}
+	
+	return std::pow( (x + 0.055f) / 1.055f ,2.4f);
+}

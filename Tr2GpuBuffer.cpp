@@ -166,13 +166,18 @@ ALResult Tr2GpuBuffer::CreateBuffer()
 	}
 	
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return m_buffer.Create( 
+	auto hr = m_buffer.Create( 
 		static_cast<PixelFormat>( m_format ), 
 		m_count, 
 		gpuUsage,
 		cpuUsage,
 		nullptr,
 		renderContext );
+	if( !m_name.empty() && SUCCEEDED( hr ) )
+	{
+		m_buffer.SetName( m_name.c_str() );
+	}
+	return hr;
 }
 
 void Tr2GpuBuffer::ReleaseResources( TriStorage )
@@ -191,4 +196,13 @@ bool Tr2GpuBuffer::OnPrepareResources()
 uint32_t Tr2GpuBuffer::GetCount() const
 {
 	return m_buffer.GetDesc().count;
+}
+
+void Tr2GpuBuffer::SetName( const char* name )
+{
+	m_name = name;
+	if( m_buffer.IsValid() )
+	{
+		m_buffer.SetName( name );
+	}
 }

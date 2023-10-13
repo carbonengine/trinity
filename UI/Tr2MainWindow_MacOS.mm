@@ -1107,7 +1107,7 @@ void Tr2MainWindow::CreateOSWindow( Tr2MainWindowState::State& state )
         {
             [window setFrameOrigin:screen.visibleFrame.origin];
         }
-        [window setFrame:[screen frame] display:YES];
+        [window setFrame:screen.visibleFrame display:YES];
 
         auto factor = [window screen].backingScaleFactor;
         [window setContentMinSize:NSMakeSize( m_minimumSize.width / factor, m_minimumSize.height / factor )];
@@ -1188,7 +1188,7 @@ void Tr2MainWindow::AdjustWindow( Tr2MainWindowState::State& state )
                 [window setFrameOrigin:screen.visibleFrame.origin];
             }
             [window setStyleMask:GetWindowStyleMask( state.windowMode )];
-            [window setFrame:[[window screen] frame] display:YES];
+            [window setFrame:screen.visibleFrame display:YES];
             [window toggleFullScreen:nil];
         }
         else
@@ -1224,7 +1224,7 @@ void Tr2MainWindow::AdjustWindow( Tr2MainWindowState::State& state )
         }
         auto screen = GetAdapterScreen( state.adapter );
         [window setFrameOrigin:screen.visibleFrame.origin];
-        [window setFrame:[screen frame] display:YES];
+        [window setFrame:screen.visibleFrame display:YES];
         [window toggleFullScreen:nil];
     }
     else if( !wantsFullscreen )
@@ -1447,7 +1447,7 @@ void Tr2MainWindow::OnWindowFnishedResizing_MacOS()
 
 void Tr2MainWindow::OnWindowResized_MacOS()
 {
-    if( m_isResizing || m_inSetState )
+    if( m_isResizing || m_inSetState || m_state.windowMode == Tr2WindowMode::FULL_SCREEN )
     {
         return;
     }
@@ -1690,14 +1690,21 @@ Tr2MainWindow::Size Tr2MainWindow::GetLargestWindowSize( uint32_t adapter, Tr2Wi
     if( [NSScreen screensHaveSeparateSpaces] )
     {
         auto screen = GetAdapterScreen( adapter );
-		if( mode == Tr2WindowMode::WINDOWED )
-		{
-			return { uint32_t( screen.visibleFrame.size.width * screen.backingScaleFactor ), uint32_t( screen.visibleFrame.size.height * screen.backingScaleFactor ) };
-		}
-		else
-		{
-			return { uint32_t( screen.frame.size.width * screen.backingScaleFactor ), uint32_t( screen.frame.size.height * screen.backingScaleFactor ) };
-		}
+        switch( mode )
+        {
+        case Tr2WindowMode::WINDOWED:
+            return { uint32_t( screen.visibleFrame.size.width * screen.backingScaleFactor ), uint32_t( screen.visibleFrame.size.height * screen.backingScaleFactor ) };
+        case Tr2WindowMode::FULL_SCREEN:
+            {
+                auto screenFrame = screen.visibleFrame;
+                return { uint32_t( screenFrame.size.width * screen.backingScaleFactor ), uint32_t( screenFrame.size.height * screen.backingScaleFactor ) };
+            }
+        default:
+            {
+                auto screenFrame = screen.frame;
+                return { uint32_t( screenFrame.size.width * screen.backingScaleFactor ), uint32_t( screenFrame.size.height * screen.backingScaleFactor ) };
+            }
+        }
     }
     else
     {
@@ -1710,6 +1717,13 @@ void Tr2MainWindow::OnWindowFullscreenChanged_MacOS( bool fullscreen )
 {
     bool isFullscreen = m_state.windowMode == Tr2WindowMode::FULL_SCREEN;
     auto window = (NSWindow*)GetWindowID();
+    if (fullscreen)
+    {
+        // We have to resize here again because now that the dock and menu bar is hidden
+        // we get the real "visible frame"
+        auto screen = [window screen];
+        [window setFrame:screen.visibleFrame display:YES];
+    }
     if( isFullscreen != fullscreen )
     {
         auto screen = [window screen];

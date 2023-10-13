@@ -32,8 +32,13 @@ public:
 	// ITriCurveLength
 	float Length() override;
 private:
+	// this function was added as an option to convert Linear color to SRGB Color
+	void InvertLinearColor( Color * in, Color * out );
+	float InvertLinearValue( float x );
+
 	std::string m_name;
 
+	Color m_convertedLinearValue;
 	Color m_color1;
 	Color m_color2;
 	Color m_currentValue;

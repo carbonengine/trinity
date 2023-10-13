@@ -14,6 +14,42 @@
 #include "Tr2TextureArray.h"
 #include "Resources/TriTextureRes.h"
 
+namespace
+{
+
+struct DepthSizeHash
+{
+	size_t operator()( const std::pair<uint32_t, uint32_t>& ds ) const
+	{
+		return std::hash<uint32_t>()( ds.first ) ^ std::hash<uint32_t>()( ds.second );
+	}
+};
+
+std::unordered_map<std::pair<uint32_t, uint32_t>, BlueWeakRef<Tr2DepthStencil>, DepthSizeHash> s_sharedDepthMaps;
+
+Tr2DepthStencilPtr GetShadowAtlas( uint32_t width, uint32_t height )
+{
+	Tr2DepthStencilPtr result;
+	auto& found = s_sharedDepthMaps[{ width, height }];
+	if( !found )
+	{
+		result.CreateInstance();
+		found = result.p;
+	}
+	else
+	{
+		result = found;
+	}
+	if( !result->IsValid() )
+	{
+		result->Create( width, height, Tr2RenderContextEnum::DSFMT_D32F, 1, 0, Tr2RenderContextEnum::EX_NONE );
+	}
+	return result;
+}
+
+}
+
+
 using namespace Tr2RenderContextEnum;
 Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	m_quality( HIGH ),
@@ -32,8 +68,7 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	m_shadowMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 	m_cascadedShadowMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneCascadedShadowMap", static_cast<ITr2TextureProvider*>( nullptr ) );
 
-	m_cascadedShadowMapDS.CreateInstance();
-	m_cascadedShadowMapDS->Create( m_size * m_width, m_size * m_height, DSFMT_D24S8, 1, 0, EX_NONE );
+	m_cascadedShadowMapDS = GetShadowAtlas( m_size * m_width, m_size * m_height );
 
 	m_whiteTexture.CreateInstance();
 	m_denoiser.CreateInstance();
@@ -64,7 +99,6 @@ bool Tr2ShadowMap::OnModified( Be::Var* value )
 
 	if( IsMatch( value, m_size ) )
 	{
-		m_cascadedShadowMapDS->Destroy();
 		ReleaseResources( TRISTORAGE_ALL );
 		PrepareResources();
 	}
@@ -131,8 +165,7 @@ bool Tr2ShadowMap::OnPrepareResources()
 
 	if( !m_cascadedShadowMapDS )
 	{
-		m_cascadedShadowMapDS.CreateInstance();
-		m_cascadedShadowMapDS->Create( m_size * m_width, m_size * m_height, DSFMT_D24S8, 1, 0, EX_NONE );
+		m_cascadedShadowMapDS = GetShadowAtlas( m_size * m_width, m_size * m_height );
 	}
 
 	if( !m_whiteTexture->IsValid() )

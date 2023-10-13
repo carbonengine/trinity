@@ -138,13 +138,27 @@ ALResult Tr2GpuStructuredBuffer::CreateBuffer()
 	}
 	
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	return m_buffer.Create( 
+	auto hr = m_buffer.Create( 
 		m_stride,
 		m_count,
 		gpuUsage,
 		cpuUsage,
 		nullptr, 
 		renderContext );
+	if( !m_name.empty() && SUCCEEDED( hr ) )
+	{
+		m_buffer.SetName( m_name.c_str() );
+	}
+	return hr;
+}
+
+void Tr2GpuStructuredBuffer::SetName( const char* name )
+{
+	m_name = name;
+	if( m_buffer.IsValid() )
+	{
+		m_buffer.SetName( name );
+	}
 }
 
 void Tr2GpuStructuredBuffer::ReleaseResources( TriStorage )

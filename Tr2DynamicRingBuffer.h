@@ -40,14 +40,17 @@ public:
 
 	uint32_t GetBufferSize() const;
 
-	virtual bool IsValid() const = 0;
+	bool IsValid() const;
+	Tr2BufferAL& GetBuffer();
+
+	void SetName( const char* name );
 
 	//////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
 protected:
 	virtual ALResult CreateBuffer( uint32_t size ) = 0;
-	virtual ALResult UpdateBuffer( const void* data, uint32_t offset, uint32_t size, Tr2LockType::Type lockType, Tr2RenderContext& renderContext ) = 0;
+	ALResult UpdateBuffer( const void* data, uint32_t offset, uint32_t size, Tr2LockType::Type lockType, Tr2RenderContext& renderContext );
 	virtual bool OnPrepareResources();
 
 	// Size of buffer in bytes
@@ -82,6 +85,10 @@ private:
 
 	// Fence objects available for reuse
 	FenceVector m_availableFences;
+
+protected:
+	Tr2BufferAL m_buffer;
+	std::string m_name;
 };
 
 // --------------------------------------------------------------------------------------
@@ -94,17 +101,8 @@ class Tr2RingVertexBuffer: public Tr2DynamicRingBuffer
 {
 public:
 	bool Create( uint32_t bufferSize );
-
-	Tr2BufferAL& GetBuffer();
-
-	virtual bool IsValid() const;
-	virtual void ReleaseResources( TriStorage s );
 protected:
 	virtual ALResult CreateBuffer( uint32_t size );
-	virtual ALResult UpdateBuffer( const void* data, uint32_t offset, uint32_t size, Tr2LockType::Type lockType, Tr2RenderContext& renderContext );
-	virtual bool OnPrepareResources();
-private:
-	Tr2BufferAL m_buffer;
 };
 
 // --------------------------------------------------------------------------------------
@@ -119,17 +117,9 @@ public:
 	Tr2RingIndexBuffer();
 
 	bool Create( uint32_t numberOfIndices, uint32_t indexSize );
-
-	Tr2BufferAL& GetBuffer();
-
-	virtual bool IsValid() const;
-	virtual void ReleaseResources( TriStorage s );
 protected:
 	virtual ALResult CreateBuffer( uint32_t size );
-	virtual ALResult UpdateBuffer( const void* data, uint32_t offset, uint32_t size, Tr2LockType::Type lockType, Tr2RenderContext& renderContext );
-	virtual bool OnPrepareResources();
 private:
-	Tr2BufferAL m_buffer;
 	uint32_t m_indexSize;
 };
 

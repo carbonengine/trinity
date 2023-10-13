@@ -1700,12 +1700,10 @@ const EveSOFDataMgr::LayoutData* EveSOFDNA::GetLayoutData( size_t layoutIndex ) 
 // Description:
 //   Return locator distribution for layout placement
 // --------------------------------------------------------------------------------
-const std::vector<EveSOFDataMgr::LocatorDirectionData>* EveSOFDNA::GetPlacementLocators( size_t hullIndex, size_t layoutIndex, size_t placementIndex ) const
+const std::vector<EveSOFDataMgr::LocatorDirectionData>* EveSOFDNA::GetPlacementLocators( size_t hullIndex, BlueSharedString& locatorSetName ) const
 {
-	auto layout = m_layoutData[layoutIndex];
-	auto placement = layout->placements[placementIndex];
 	auto hull = m_hullDatas[hullIndex];
-	auto locators = hull->locatorSets.find( placement.locatorSetName );
+	auto locators = hull->locatorSets.find( locatorSetName );
 	if( locators == hull->locatorSets.end())
 	{
 		return nullptr;
@@ -1770,6 +1768,11 @@ bool EveSOFDNA::GetDnaCommandArgs( DnaCommand cmd, std::vector<std::string>& arg
 bool EveSOFDNA::IsUsingExperimentalFeatures() const
 {
 	return m_experimental;
+}
+
+bool EveSOFDNA::IsHullUsingExperimentalFeatures() const
+{
+	return m_experimental || ( !m_hullDatas.empty() && m_hullDatas[0]->sof6 );
 }
 
 BlueSharedString EveSOFDNA::GetFactionName() const

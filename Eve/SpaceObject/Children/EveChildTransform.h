@@ -32,7 +32,9 @@ protected:
 	bool m_useSRT;
 	// Do we want rotation from the parent
 	bool m_useStaticRotation;
-	
+	// Do we want scale from the parent
+	bool m_useStaticScale;
+
 	void UpdateTransform( const Matrix& parentTransform );
 };
 

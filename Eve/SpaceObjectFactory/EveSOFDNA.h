@@ -142,7 +142,7 @@ public:
 	// get layout data
 	size_t GetLayoutCount() const;
 	const EveSOFDataMgr::LayoutData* GetLayoutData( size_t layoutIndex ) const;
-	const std::vector<EveSOFDataMgr::LocatorDirectionData>* GetPlacementLocators( size_t hullIndex, size_t layoutIndex, size_t placementIndex ) const;
+	const std::vector<EveSOFDataMgr::LocatorDirectionData>* GetPlacementLocators( size_t hullIndex, BlueSharedString& locatorSetName ) const;
 
 	// get mixed data
 	const char* GetDnaString() const;
@@ -151,6 +151,7 @@ public:
 	unsigned int GetHighestMeshAreaIndex( TriBatchType areaType, size_t n = 0 ) const;
 
 	bool IsUsingExperimentalFeatures() const;
+	bool IsHullUsingExperimentalFeatures() const;
 	EntityComponents::ReflectionMode GetReflectionMode() const;
 
 	BlueSharedString GetFactionName() const;

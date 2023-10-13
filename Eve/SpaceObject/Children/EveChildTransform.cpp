@@ -8,6 +8,7 @@ EveChildTransform::EveChildTransform() :
 	m_useSRT( true ),
 	m_staticTransform( false ),
 	m_useStaticRotation( false ),
+	m_useStaticScale( false ),
 	m_localTransform( IdentityMatrix() ),
 	m_worldTransform( IdentityMatrix() )
 {
@@ -56,20 +57,35 @@ void EveChildTransform::UpdateTransform( const Matrix& parentTransform )
 	else
 	{
 		m_localTransform = TransformationMatrix( m_scaling, m_rotation, m_translation );
-		if( !m_useStaticRotation )
+
+		if( !m_useStaticRotation && !m_useStaticScale )
 		{
 			m_worldTransform = m_localTransform * parentTransform;
+			return;
+		}
+
+		Vector3 scale, translation;
+		Quaternion rotation;
+		Matrix modifiedParentTransform;
+
+		Decompose( scale, rotation, translation, parentTransform );
+
+		if( m_useStaticScale )
+		{
+			scale = Vector3( 1.f, 1.f, 1.f );
+		}
+
+		if( m_useStaticRotation )
+		{
+			// rotation is static and scale might be
+			modifiedParentTransform = ScalingMatrix( scale ) * TranslationMatrix( translation );
+			m_worldTransform = m_localTransform * modifiedParentTransform;
 		}
 		else
 		{
-			// Take out the rotation
-			Vector3 scale, translation;
-			Quaternion rotation;
-			Matrix parentTransformWithoutRotation;
-			
-			Decompose( scale, rotation, translation, parentTransform );
-			parentTransformWithoutRotation = ScalingMatrix( scale ) * TranslationMatrix( translation );
-			m_worldTransform = m_localTransform * parentTransformWithoutRotation;
+			// rotation is not static but scale is
+			modifiedParentTransform = RotationMatrix( rotation ) * TranslationMatrix( translation );
+			m_worldTransform = m_localTransform * modifiedParentTransform;
 		}
 	}
 }

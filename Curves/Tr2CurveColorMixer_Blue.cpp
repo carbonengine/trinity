@@ -52,6 +52,13 @@ const Be::ClassInfo* Tr2CurveColorMixer::ExposeToBlue()
 			"Curve value after the last update",
 			Be::READ )
 
+		MAP_ATTRIBUTE(
+			"convertedLinearValue",
+			m_convertedLinearValue,
+			"Curve value after applying SRGB transformation to the current value, this is used for the cases in" 
+			"\n which a linear transformation to the values is occurring such as fog and light colors",
+			Be::READ )
+
 		MAP_METHOD_AND_WRAP(
 			"GetValueAt",
 			GetValue,

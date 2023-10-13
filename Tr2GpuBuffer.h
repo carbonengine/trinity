@@ -55,6 +55,8 @@ public:
 	bool IsValid() const;
 	uint32_t GetCount() const;
 
+	void SetName( const char* name );
+
 	Tr2RenderContextEnum::PixelFormat GetFormat() const { return m_format; }
 
 	operator Tr2BufferAL&() { return m_buffer; }
@@ -75,6 +77,8 @@ private:
 	// Type of elements
 	Tr2RenderContextEnum::PixelFormat m_format;
 	CreationFlags m_creationFlags;
+
+	std::string m_name;
 };
 
 TYPEDEF_BLUECLASS( Tr2GpuBuffer );

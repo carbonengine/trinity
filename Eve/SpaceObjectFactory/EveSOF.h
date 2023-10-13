@@ -127,8 +127,9 @@ private:
 
 	Tr2EffectPtr CreateBoosterEffect( const EveSOFDataMgr::RaceBoosterData* rdata, const BlueSharedString& lodOption ) const;
 
-	bool ProcessLayoutDistributionConditions(  EveSOFDataMgr::ExtensionPlacementData& placement, const EveSOFDNAPtr dna, std::vector<EveSOFDataMgr::LocatorDirectionData>& placementSet, std::vector<EveSOFDataMgr::LocatorDirectionData>& managedLocatorSet );
+	bool ProcessLayoutDistributionConditions(  EveSOFDataMgr::ExtensionPlacementData& placement, const EveSOFDNAPtr dna );
 	void ProcessLayoutDistributionDistribute( EveSOFDataMgr::ExtensionPlacementDistribution& distributionData, const EveSOFDNAPtr dna, std::vector<EveSOFDataMgr::LocatorDirectionData>& placementSet, std::vector<EveSOFDataMgr::LocatorDirectionData>& managedLocatorSet );
+	void ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacementData & distributionData, EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, std::map<BlueSharedString, std::vector<EveSOFDataMgr::LocatorDirectionData>>& managedLocatorSet, size_t& layoutIdx, size_t& placementIdx, const std::vector<Matrix>& offsets );
 
 	// helper functions
 	size_t FillMeshAreaVector( Tr2MeshAreaVector* meshAreaVector, TriBatchType areaType, const EveSOFDNAPtr dna, size_t hullIdx, size_t meshIndexOffset ) const;

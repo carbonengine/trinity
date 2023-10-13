@@ -322,7 +322,7 @@ const wchar_t* Tr2MeshBase::GetGeometryResPath() const
 	const TriGeometryRes* currentRes = GetGeometryResource();
 	if( !currentRes )
 	{
-		return L"";
+		return nullptr;
 	}
 	return currentRes->GetPath();
 }

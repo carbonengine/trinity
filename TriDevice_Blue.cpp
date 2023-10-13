@@ -71,6 +71,79 @@ PyObject* TriDevice::PyGetPickRayFromViewport( PyObject* args )
 
 	return r;
 }
+
+
+PyObject* GetVideoMemoryInfo( PyObject* self, PyObject* args )
+{
+	if( !PyArg_ParseTuple( args, "" ) )
+	{
+		return NULL;
+	}
+	if( !gTriDev )
+	{
+		PyErr_SetString( PyExc_ValueError, "device is not available yet" );
+		return nullptr;
+	}
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	CComPtr<IDXGIAdapter1> dxgiAdapter;
+	CComPtr<IDXGIOutput> output;
+
+	if( FAILED( TrinityALImpl::GetVideoAdapter( gTriDev->GetAdapter(), &dxgiAdapter, &output ) ) )
+	{
+		PyErr_SetString( PyExc_OSError, "failed to query the GPU adapter" );
+		return nullptr;
+	}
+
+	CComQIPtr<IDXGIAdapter3> adapter( dxgiAdapter );
+	if( !adapter )
+	{
+		PyErr_SetString( PyExc_OSError, "no OS support: old Windows version?" );
+		return nullptr;
+	}
+
+	auto result = PyDict_New();
+
+	auto ExtractInfo = [&]( auto group, const char* groupName ) {
+		DXGI_QUERY_VIDEO_MEMORY_INFO info;
+		if( FAILED( adapter->QueryVideoMemoryInfo( 0, group, &info ) ) )
+		{
+			return;
+		}
+
+		auto dict = PyDict_New();
+		auto value = PyLong_FromSize_t( info.AvailableForReservation );
+		PyDict_SetItemString( dict, "AvailableForReservation", value );
+		Py_DecRef( value );
+		value = PyLong_FromSize_t( info.Budget );
+		PyDict_SetItemString( dict, "Budget", value );
+		Py_DecRef( value );
+		value = PyLong_FromSize_t( info.CurrentReservation );
+		PyDict_SetItemString( dict, "CurrentReservation", value );
+		Py_DecRef( value );
+		value = PyLong_FromSize_t( info.CurrentUsage );
+		PyDict_SetItemString( dict, "CurrentUsage", value );
+		Py_DecRef( value );
+		PyDict_SetItemString( result, groupName, dict );
+		Py_DecRef( dict );
+	};
+
+	ExtractInfo( DXGI_MEMORY_SEGMENT_GROUP_LOCAL, "Local" );
+	ExtractInfo( DXGI_MEMORY_SEGMENT_GROUP_NON_LOCAL, "NonLocal" );
+
+	return result;
+#else
+	PyErr_SetString( PyExc_NotImplementedError, "function is not available for this platform" );
+	return nullptr;
+#endif
+}
+
+MAP_FUNCTION(
+	"GetVideoMemoryInfo",
+	GetVideoMemoryInfo,
+	"Returns an API-specific video memory information. Implemented for dx12 only.\n"
+	":rtype: dict[str, Dict[str, long]]" );
+
 #endif
 
 const Be::VarChooser TriDeviceTypeChooser[] = {

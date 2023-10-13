@@ -237,6 +237,7 @@ ALResult Tr2LightManager::UpdateLightBuffer( Tr2RenderContext& renderContext )
 			std::max( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count + 1024, uint32_t( m_lightData.size() ) ),
 			sizeof( PerLightData ),
 			Tr2GpuBuffer::CPU_WRITABLE ) );
+		m_lightBuffer->SetName( "Light buffer" );
 	}
 
 	auto lightCount = std::min( m_lightBuffer->GetGpuBuffer( 0 )->GetDesc().count, uint32_t( m_lightData.size() ) );
@@ -327,7 +328,9 @@ bool Tr2LightManager::OnPrepareResources()
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	m_lightBuffer->Create( LIGHT_BUFFER_SIZE, sizeof( PerLightData ), Tr2GpuBuffer::CPU_WRITABLE );
+	m_lightBuffer->SetName( "Light buffer" );
 	m_indexBuffer->Create( INDEX_BUFFER_SIZE, sizeof( uint32_t ), Tr2GpuStructuredBuffer::GPU_WRITABLE );
+	m_indexBuffer->SetName( "Light indices" );
 	m_indexBufferCounter->Create( 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32_SINT, Tr2GpuBuffer::GPU_WRITABLE );
 	ClearLightIndices( renderContext );
 	m_perFrameData.Create( sizeof( PerFrameData ), Tr2ConstantUsageAL::ONE_SHOT, nullptr, renderContext );
