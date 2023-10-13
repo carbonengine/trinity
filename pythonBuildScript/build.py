@@ -10,14 +10,15 @@ import sys
 import threading
 import yaml
 
-
+BUILDER_DIR = os.path.dirname(__file__)
+BRANCH_DIR = os.path.join(BUILDER_DIR, '..', '..', '..')
 if sys.platform == 'win32':
-    SHADER_COMPILER = os.path.join(os.path.dirname(__file__), "Windows", "ShaderCompiler.exe")
+    SHADER_COMPILER = os.path.join(BUILDER_DIR, "Windows", "ShaderCompiler.exe")
 elif sys.platform == 'darwin':
-    SHADER_COMPILER = os.path.join(os.path.dirname(__file__), "macOS", "ShaderCompiler")
+    SHADER_COMPILER = os.path.join(BUILDER_DIR, "macOS", "ShaderCompiler")
 else:
     raise RuntimeError('unsupported platform')
-
+ARGS_PATH = os.path.join(BUILDER_DIR, 'shadercompiler.args')
 
 SHADER_MODELS = {'lo': 3, 'hi': 4, 'depth': 5}
 PLATFORMS = {'dx11': 2, 'dx12': 6, 'metal': 10}
@@ -66,24 +67,29 @@ def get_output_file(path, sm, platform):
 
 
 class WorkItem(object):
-    def __init__(self, src, platform, sm, compiler, warnings):
+    def __init__(self, src, platform, sm, compiler, warnings, extraArgs, staging):
         self.src = src
         self.platform = platform
         self.sm = sm
         self.compiler = compiler
         self.warnings = warnings
-        self.dest = get_output_file(src, sm, platform)
+        self.compiled = get_output_file(src, sm, platform)
+        self.dest = self.compiled
         self.permutations = 0
+        self.extraArgs = extraArgs
+        self.staging = staging
+        if self.staging:
+            self.dest = os.path.join(self.staging, os.path.relpath(self.compiled, BRANCH_DIR))
 
     def get_command_line(self):
         args = [self.compiler, '/single', '/O3']
         if not self.warnings:
             args.append('/no_warnings')
         return args + ['/define', 'SHADERMODEL', str(SHADER_MODELS[self.sm]),
-                       '/define', 'PLATFORM', str(PLATFORMS[self.platform]), self.src, self.dest]
+                       '/define', 'PLATFORM', str(PLATFORMS[self.platform]), self.src, self.dest] + self.extraArgs
 
     def get_mtime_line(self):
-        return '%s %s SHADERMODEL %s PLATFORM %s' % (self.src, self.dest, SHADER_MODELS[self.sm],
+        return '%s %s SHADERMODEL %s PLATFORM %s' % (self.src, self.compiled, SHADER_MODELS[self.sm],
                                                      PLATFORMS[self.platform])
 
     def get_permutations(self):
@@ -101,10 +107,10 @@ class WorkItem(object):
         return '%s, %s, %s' % (self.src, self.platform, self.sm)
 
 
-def get_outputs(path, platforms, shader_models, compiler, warnings):
+def get_outputs(path, platforms, shader_models, compiler, warnings, extra_args, staging):
     for platform in platforms:
         for sm in shader_models:
-            yield WorkItem(path, platform, sm, compiler, warnings)
+            yield WorkItem(path, platform, sm, compiler, warnings, extra_args, staging)
 
 
 class WorkItemProcessor(object):
@@ -162,7 +168,7 @@ class WorkItemProcessor(object):
     def _worker(self, item):
         logging.info('Building %s', item)
         try:
-            #logging.debug('Spawning %s', ' '.join(item.get_command_line()))
+            logging.debug('Spawning %s', ' '.join(item.get_command_line()))
             try:
                 os.makedirs(os.path.dirname(item.dest))
             except OSError:
@@ -171,14 +177,11 @@ class WorkItemProcessor(object):
             stdout, _ = p.communicate()
             if p.returncode != 0:
                 self._has_errors = True
-                logging.info('Errors when building %s', item)
+                logging.error('Errors when building %s', item, extra={'output': stdout or 'ShaderCompiler returned non-zero exit code without producing any output'})
                 if not stdout:
                     stdout = '%s: error: ShaderCompiler returned non-zero exit code without producing any output' % item.src
-            if stdout:
-                with self._print_mutex:
-                    print str(item)
-                    print stdout
-                    sys.stdout.flush()
+            if stdout and p.returncode == 0:
+                logging.warning('Warnings when building %s', item, extra={'output': stdout})
         except BaseException:
             self._has_errors = True
             raise
@@ -189,10 +192,10 @@ class WorkItemProcessor(object):
             self._process_done.set()
 
 
-def _get_modified(compiler, work_items):
+def _get_modified(compiler, work_items, extra_args):
     logging.info('Searching for out of date files')
-    outputs = {x.dest: x for x in work_items}
-    p = subprocess.Popen([compiler, '/mtime'], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+    outputs = {x.compiled: x for x in work_items}
+    p = subprocess.Popen([compiler, '/mtime', '/O3'] + extra_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     stdout, stderr = p.communicate('\n'.join(x.get_mtime_line() for x in work_items))
     for line in stdout.split('\n'):
@@ -202,20 +205,36 @@ def _get_modified(compiler, work_items):
             yield item
 
 
+def _get_extra_args():
+    try:
+        with open(ARGS_PATH) as f:
+            args = json.load(f)
+    except (IOError, OSError):
+        return []
+    if 'metal' in args:
+        return ['/metal', os.path.join(os.path.dirname(ARGS_PATH), args['metal'].replace('/', os.path.sep))]
+    return []
+
+
 def build(paths, vcs, incremental, platforms=SUPPORTED_PLATFORMS, shader_models=tuple(SHADER_MODELS),
-          shader_compiler=SHADER_COMPILER, warnings=True):
+          shader_compiler=SHADER_COMPILER, warnings=True, staging=''):
     files = set(flatten_paths(paths))
     logging.debug('Discovered %s files to build', len(files))
     if not files:
         return True
 
+    extra_args = _get_extra_args()
+    if staging:
+        if not os.path.exists(staging):
+            os.makedirs(staging)
+
     work_items = []
     for each in files:
         work_items.extend(get_outputs(each, platforms or SUPPORTED_PLATFORMS, shader_models or SHADER_MODELS,
-                                      shader_compiler, warnings))
+                                      shader_compiler, warnings, extra_args, staging))
 
     if incremental:
-        work_items = list(_get_modified(shader_compiler, work_items))
+        work_items = list(_get_modified(shader_compiler, work_items, extra_args))
         if not work_items:
             logging.info('All files are up to date')
             return True
@@ -317,6 +336,48 @@ def str2bool(v):
         raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
+_quote = {"'": "|'", "|": "||", "\n": "|n", "\r": "|r", '[': '|[', ']': '|]'}
+
+
+def escape_value(value):
+    return "".join(_quote.get(x, x) for x in value.strip().replace('\r', ''))
+
+
+class OutputFormatter(logging.Formatter):
+    def format(self, record):
+        string = logging.Formatter.format(self, record)
+        if hasattr(record, 'output'):
+            string += '\n%s' % record.output
+        return string
+
+
+class TeamCityFormatter(logging.Formatter):
+    def __init__(self):
+        super(TeamCityFormatter, self).__init__('##teamcity[message text=\'%(message)s\' status=\'%(levelname)s\']')
+
+    def format(self, record):
+        record.message = record.getMessage()
+        if record.exc_info:
+            if not record.exc_text:
+                record.exc_text = self.formatException(record.exc_info)
+        if record.exc_text:
+            try:
+                _ = '' + record.exc_text
+            except UnicodeError:
+                record.exc_text = record.exc_text.decode(sys.getfilesystemencoding(), 'replace')
+
+        tc_level = 'NORMAL'
+        if record.levelno >= logging.ERROR:
+            tc_level = 'ERROR'
+        elif record.levelno >= logging.WARNING:
+            tc_level = 'WARNING'
+        output = getattr(record, 'output', '')
+        message = '\n'.join((record.message, record.exc_text or '', output)).strip()
+
+        s = '\n'.join((self._fmt % {'message': escape_value(x), 'levelname': tc_level}) for x in message.split('\n'))
+        return s
+
+
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--perforce', choices=('submit', 'save', 'revert', 'none'), default='save',
@@ -329,12 +390,19 @@ def main(argv):
     parser.add_argument('--platform', action='append', default=[], help='Override platforms to build')
     parser.add_argument('--model', nargs='*', default=[], help='Override shader models to build')
     parser.add_argument('--warnings', type=str2bool, default=True, help='Emit compiler warnings (true by default)')
+    parser.add_argument('--staging', default='', help='Path to the output staging directory to place compiled files (if not specified, files are modified in-place)')
+    parser.add_argument('--teamcity', action='store_true', default=False, help='Use TeamCity formatter for logs')
     parser.add_argument('path', nargs='+', help='Path to .fx file, folder or VS Code workspace')
 
     args = parser.parse_args(argv)
-    logging.basicConfig(level=args.log.upper())
+    logging.basicConfig(level=args.log.upper(), stream=sys.stdout)
+    if args.teamcity:
+        logging.root.handlers[0].setFormatter(TeamCityFormatter())
+    else:
+        logging.root.handlers[0].setFormatter(OutputFormatter(logging.BASIC_FORMAT))
+
     return build(args.path, Perforce(args.perforce, args.cl), incremental=not args.rebuild, platforms=args.platform,
-                 shader_models=args.model, shader_compiler=args.compiler, warnings=args.warnings)
+                 shader_models=args.model, shader_compiler=args.compiler, warnings=args.warnings, staging=args.staging)
 
 
 if __name__ == '__main__':

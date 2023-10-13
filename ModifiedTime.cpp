@@ -3,50 +3,38 @@
 #include "WorkQueue.h"
 #include "Macro.h"
 #include "CachingIncludeHandler.h"
-
-#if !_WIN32
-#include <libgen.h>
-#include <sys/param.h>
-#include <sys/stat.h>
-#endif
+#include "EffectData.h"
+#include "md5.h"
+#include "ShaderCompilerConfig.h"
 
 
 namespace
 {
 	CachingIncludeHandler s_includeHandler;
 
-	bool GetPathTime( const char* path, time_t& time )
-	{
-		struct stat buf;
-		if( stat( path, &buf ) == 0 )
-		{
-			time = buf.st_mtime;
-		}
-		else
-		{
-			return false;
-		}
-		return true;
-	}
-
 	char* GetNextWord( char* string )
 	{
 
 		char* end = string;
-		while( *end && *end != 32 )
+		while( *end && *end != ' ' && *end != '\n' )
 		{
 			++end;
 		}
-		if( *end )
+		switch (*end)
 		{
+		case 0:
+			return end;
+		case '\n':
+			*end = 0;
+			return end;
+		default:
 			*end = 0;
 			return end + 1;
 		}
-		return end;
 	}
 
 
-	struct MTimeArguments
+	struct HashCheckArguments
 	{
 		std::string sourcePath;
 		std::string outputPath;
@@ -59,29 +47,49 @@ namespace
 
 	const std::regex s_include( "#[[:space:]]*include[[:space:]]*[<\"]([^>\"]*)" );
 
-	time_t GetSourceMTime( const char* sourcePath, const char* parentData, const char* rootPath, std::set<std::string>& visited )
+	bool IsOutputUpToDate(const char* path, const std::string& sourceHash )
 	{
-		if( visited.find( sourcePath ) != end( visited ) )
+		FILE* file = nullptr;
+		fopen_s( &file, path, "rb" );
+		if( !file )
 		{
-			return 0;
+			return false;
 		}
-		visited.insert( sourcePath );
-		time_t result = 0;
-		if( auto opened = s_includeHandler.Open( sourcePath, parentData, rootPath ) )
+		uint32_t fileVersion;
+		if( fread( &fileVersion, sizeof( fileVersion ), 1, file ) != 1 )
 		{
-			result = opened->modifiedTime;
-			std::cmatch match;
-			auto begin = opened->data;
-			while( std::regex_search( begin, opened->data + opened->size, match, s_include ) )
-			{
-				result = std::max( result, GetSourceMTime( match[1].str().c_str(), opened->data, rootPath, visited ) );
-				begin += match.position() + match.length();
-			}
+			fclose( file );
+			return false;
 		}
-		return result;
+		if( fileVersion != DATA_VERSION )
+		{
+			fclose( file );
+			return false;
+		}
+		uint8_t compilerVersion[4];
+		if( fread( compilerVersion, sizeof( compilerVersion ), 1, file ) != 1 )
+		{
+			fclose( file );
+			return false;
+		}
+		if( compilerVersion[0] != ShaderCompilerVersion[0] || compilerVersion[1] != ShaderCompilerVersion[1] || compilerVersion[2] != ShaderCompilerVersion[2] )
+		{
+			fclose( file );
+			return false;
+		}
+
+		char buffer[MD5::HashBytes * 2];
+		if( fread( buffer, sizeof( buffer ), 1, file ) != 1 )
+		{
+			fclose( file );
+			return false;
+		}
+		fclose( file );
+
+		return sourceHash == std::string( buffer, buffer + sizeof( buffer ) );
 	}
 
-	bool CheckMTime( const MTimeArguments& query )
+	bool CheckHash( const HashCheckArguments& query )
 	{
 		{
 			std::lock_guard scope( s_modifiedOutputsCS );
@@ -91,18 +99,9 @@ namespace
 			}
 		}
 
-		time_t outputTime;
-		if( !GetPathTime( query.outputPath.c_str(), outputTime ) )
-		{
-			std::lock_guard scope( s_modifiedOutputsCS );
-			s_modifiedOutputs.insert( query.outputPath );
-			return true;
-		}
+		auto in = ::GetSourceHash( query.sourcePath.c_str(), query.defines );
 
-		std::set<std::string> visited;
-		time_t inputTime = GetSourceMTime( query.sourcePath.c_str(), nullptr, query.sourcePath.c_str(), visited );
-
-		if( outputTime < inputTime )
+		if( !IsOutputUpToDate( query.outputPath.c_str(), in ) )
 		{
 			std::lock_guard scope( s_modifiedOutputsCS );
 			s_modifiedOutputs.insert( query.outputPath );
@@ -110,11 +109,56 @@ namespace
 
 		return true;
 	}
+
+	void GetSourceHash( const char* sourcePath, const char* parentData, const char* rootPath, std::set<std::string>& visited, MD5& md5 )
+	{
+		if( visited.find( sourcePath ) != end( visited ) )
+		{
+			return;
+		}
+		visited.insert( sourcePath );
+		if( auto opened = s_includeHandler.Open( sourcePath, parentData, rootPath ) )
+		{
+			md5.add( opened->data, opened->size );
+
+			std::cmatch match;
+			auto begin = opened->data;
+			while( std::regex_search( begin, opened->data + opened->size, match, s_include ) )
+			{
+				GetSourceHash( match[1].str().c_str(), opened->data, rootPath, visited, md5 );
+				begin += match.position() + match.length();
+			}
+		}
+	}
+
 }
 
-void PrintModificationTime( size_t workerCount )
+extern unsigned g_optimizationLevel;
+extern bool g_avoidFlowControl;
+
+std::string GetSourceHash( const char* sourcePath, const std::vector<Macro>& defines )
 {
-	WorkQueue<MTimeArguments, decltype( &CheckMTime )> workQueue( workerCount, &CheckMTime );
+	MD5 md5;
+	std::set<std::string> visited;
+
+	// Include defines from command line and relevant compiler settings into the hash
+
+	for( auto& each : defines )
+	{
+		md5.add( each.name.c_str(), each.name.length() );
+		md5.add( each.value.c_str(), each.value.length() );
+	}
+	
+	md5.add( &g_optimizationLevel, sizeof( g_optimizationLevel ) );
+	md5.add( &g_avoidFlowControl, sizeof( g_avoidFlowControl ) );
+	
+	GetSourceHash( sourcePath, nullptr, sourcePath, visited, md5 );
+	return md5.getHash();
+}
+
+void PrintOutOfDateFiles( size_t workerCount )
+{
+	WorkQueue<HashCheckArguments, decltype( &CheckHash )> workQueue( workerCount, &CheckHash );
 
 	char buffer[4096];
 	while( !feof( stdin ) )
@@ -123,11 +167,8 @@ void PrintModificationTime( size_t workerCount )
 		{
 			break;
 		}
-		// size_t length = strlen( buffer ) + 1;
-		// char* inputLine = new char[length];
-		// strcpy_s( inputLine, length, buffer );
 
-		MTimeArguments query;
+		HashCheckArguments query;
 
 		char* line = buffer;
 		auto next = GetNextWord( line );

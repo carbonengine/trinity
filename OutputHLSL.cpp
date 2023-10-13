@@ -566,19 +566,19 @@ namespace
 				return;
 #endif
 			case OP_RWTEXTURE1D:
-				os << "texture1d<" << MslTextureTemplateType( type ) << ", access::write>";
+				os << "texture1d<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_": "" ) << "write>";
 				return;
 			case OP_RWTEXTURE1DARRAY:
-				os << "texture1d_array<" << MslTextureTemplateType( type ) << ", access::write>";
+				os << "texture1d_array<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
 				return;
 			case OP_RWTEXTURE2D:
-				os << "texture2d<" << MslTextureTemplateType( type ) << ", access::write>";
+				os << "texture2d<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
 				return;
 			case OP_RWTEXTURE2DARRAY:
-				os << "texture2d_array<" << MslTextureTemplateType( type ) << ", access::write>";
+				os << "texture2d_array<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
 				return;
 			case OP_RWTEXTURE3D:
-				os << "texture3d<" << MslTextureTemplateType( type ) << ", access::write>";
+				os << "texture3d<" << MslTextureTemplateType( type ) << ", access::" << ( type.metalTextureAccess ? "read_" : "" ) << "write>";
 				return;
 #if 0
 			// There is no "texture3d_array" in MSL.

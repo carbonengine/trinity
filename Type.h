@@ -38,6 +38,7 @@ struct Type
 
 	int modifier;
 	int storageClass;
+	int metalTextureAccess;
 };
 
 
