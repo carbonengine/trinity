@@ -1599,34 +1599,59 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				state.ResetPragmaUsage();
 				std::string code( os.str(), os.str() + os.pcount() );
 
-				HRESULT hr;
+				bool hasCompiled = false;
 				{
-					tmZone( 0, 0, "D3DCompile" );
-					hr = D3DCompile(
-						code.c_str(),
-						code.length(),
-						"\\memory",
-						nullptr,
-						nullptr,
-						patchEntryPoint.c_str(),
-						profile.c_str(),
-						( compileOptions.minShaderVersion ? 0 : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
-						0,
-						&effectData,
-						&errors );
+					std::lock_guard scope( m_compiledCS );
+					auto found = m_compiled.find( code );
+					if( found != end( m_compiled ) )
+					{
+						effectData = found->second;
+						if( !effectData )
+						{
+							return false;
+						}
+						hasCompiled = true;
+					}
 				}
-				if( FAILED( hr ) )
+				if( !hasCompiled )
 				{
-					if( errors )
+					HRESULT hr;
+					{
+						tmZone( 0, 0, "D3DCompile" );
+						hr = D3DCompile(
+							code.c_str(),
+							code.length(),
+							"\\memory",
+							nullptr,
+							nullptr,
+							patchEntryPoint.c_str(),
+							profile.c_str(),
+							( compileOptions.minShaderVersion ? 0 : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
+							0,
+							&effectData,
+							&errors );
+					}
+					if( FAILED( hr ) )
+					{
+						{
+							std::lock_guard scope( m_compiledCS );
+							m_compiled[code] = nullptr;
+						}
+						if( errors )
+						{
+							g_messages.AddMessages( errors );
+						}
+						return false;
+					}
+					{
+						std::lock_guard scope( m_compiledCS );
+						m_compiled[code] = effectData;
+					}
+
+					if( g_printWarnings && errors )
 					{
 						g_messages.AddMessages( errors );
 					}
-					return false;
-				}
-
-				if( g_printWarnings && errors )
-				{
-					g_messages.AddMessages( errors );
 				}
 
 				CComPtr<ID3DBlob> strippedEffectData;

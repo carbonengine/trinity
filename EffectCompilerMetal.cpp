@@ -14,6 +14,8 @@
 #include "TextureFunctionConversionDX11.h"
 #include "YamlOutput.h"
 
+extern std::string g_metalToolsPath;
+
 const char MSL_INCLUDE[] = 
 #include "MSLInclude.h"
 ;
@@ -226,6 +228,7 @@ namespace
 					ASTNode* dotNode = new ASTNode( NT_POSTFIX_EXPRESSION, childNode->GetLocation(), childNode->GetScope(), &token );
 					dotNode->AddChild( prefix );
 					dotNode->AddChild( childNode );
+					dotNode->SetType( childNode->GetType() );
 
 					node->ReplaceChild( i, dotNode );
 				}
@@ -3291,10 +3294,18 @@ namespace
 	{
 		std::ostringstream cmd;
 #ifdef _WIN32
-		char programFiles[MAX_PATH] = { 0 };
-		size_t programFilesSize;
-		getenv_s( &programFilesSize, programFiles, "PROGRAMFILES" );
-		cmd << "\"" << programFiles << "\\Metal Developer Tools\\macos\\bin\\" << name << ".exe\"";
+		if( !g_metalToolsPath.empty() )
+		{
+			cmd << "\"" << g_metalToolsPath << "\\macos\\bin\\" << name << ".exe\"";
+		}
+		else
+		{
+			char programFiles[MAX_PATH] = { 0 };
+			size_t programFilesSize;
+			getenv_s( &programFilesSize, programFiles, "PROGRAMFILES" );
+
+			cmd << "\"" << programFiles << "\\Metal Developer Tools\\macos\\bin\\" << name << ".exe\"";
+		}
 #else
 		cmd << "xcrun -sdk macosx " << name;
 #endif
@@ -3648,8 +3659,10 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 		technique.name = g_stringTable.AddString( techniqueNode->GetToken()->stringValue );
 
 		listing.dict()
-			.literal( "name" ).literal( techniqueNode->GetToken()->stringValue )
-			.literal( "passes" ).list();
+			.literal( "name" )
+			.literal( techniqueNode->GetToken()->stringValue )
+			.literal( "passes" )
+			.list();
 
 		for( size_t passIx = 0; passIx < techniqueNode->GetChildrenCount(); ++passIx )
 		{
@@ -3660,44 +3673,44 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 			{
 				if( passNode->GetChild( stateIx )->GetNodeType() == NT_STATE_ASSIGNMENT )
 				{
-					unsigned stateCode = 0;
-					unsigned value = 0;
-					if( ParseStateAssignment( state, passNode->GetChild( stateIx ), g_renderStates, &value ) )
-					{
-						std::string name = ToString( passNode->GetChild( stateIx )->GetToken()->stringValue );
-						for( int i = 0; g_renderStateNames[i].name; ++i )
+						unsigned stateCode = 0;
+						unsigned value = 0;
+						if( ParseStateAssignment( state, passNode->GetChild( stateIx ), g_renderStates, &value ) )
 						{
-							if( _stricmp( name.c_str(), g_renderStateNames[i].name ) == 0 )
+							std::string name = ToString( passNode->GetChild( stateIx )->GetToken()->stringValue );
+							for( int i = 0; g_renderStateNames[i].name; ++i )
 							{
-								stateCode = g_renderStateNames[i].value;
+								if( _stricmp( name.c_str(), g_renderStateNames[i].name ) == 0 )
+								{
+									stateCode = g_renderStateNames[i].value;
+								}
+							}
+							switch( stateCode )
+							{
+							case unsigned( -1 ):
+							case unsigned( -2 ):
+							case unsigned( -3 ):
+							case unsigned( -4 ):
+							case unsigned( -5 ):
+							case unsigned( -6 ):
+								if( value != 0 )
+								{
+									state.ShowMessage( passNode->GetChild( stateIx )->GetLocation(), EC_INVALID_STATE_VALUE, name.c_str() );
+								}
+								break;
+							case 0:
+								state.ShowMessage( passNode->GetChild( stateIx )->GetLocation(), EC_STATE_DEPRECATED, name.c_str() );
+								break;
+							default:
+								outPass.states[stateCode] = value;
 							}
 						}
-						switch( stateCode )
-						{
-						case unsigned(-1):
-						case unsigned(-2):
-						case unsigned(-3):
-						case unsigned(-4):
-						case unsigned(-5):
-						case unsigned(-6):
-							if( value != 0 )
-							{
-								state.ShowMessage( passNode->GetChild( stateIx )->GetLocation(), EC_INVALID_STATE_VALUE, name.c_str() );
-							}
-							break;
-						case 0:
-							state.ShowMessage( passNode->GetChild( stateIx )->GetLocation(), EC_STATE_DEPRECATED, name.c_str() );
-							break;
-						default:
-							outPass.states[stateCode] = value;
-						}
-					}
-					continue;
+						continue;
 				}
 
 				if( passNode->GetChild( stateIx )->GetNodeType() != NT_SHADER_ASSIGNMENT )
 				{
-					continue;
+						continue;
 				}
 
 				ASTNode* shaderNode = passNode->GetChild( stateIx );
@@ -3705,15 +3718,15 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				StageInput stage;
 				if( !ParseShaderName( shaderNode->GetToken()->stringValue, stage.type ) )
 				{
-					state.ShowMessage( shaderNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( shaderNode->GetToken()->stringValue ).c_str() );
-					return false;
+						state.ShowMessage( shaderNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( shaderNode->GetToken()->stringValue ).c_str() );
+						return false;
 				}
 
 				std::string profile = ToString( shaderNode->GetChild( 0 )->GetToken()->stringValue );
 
 				if( shaderNode->GetChild( 1 )->GetSymbol() == nullptr )
 				{
-					return false;
+						return false;
 				}
 
 				// This must be called before PatchShader, because patching doesn't preserve
@@ -3722,10 +3735,21 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 				RemapSystemSemanticsDXtoMetal( shaderNode->GetChild( 1 ) );
 
+				std::string shaderCacheKey;
+				{
+						state.GetSymbolTable().ResetUsedFlag();
+						MarkUsedSymbols( shaderNode->GetChild( 1 ), state );
+
+						CompilerInputStream os( state, ShadingLanguage::MSL );
+						os << MSL{ state.GetTree(), &state.GetSymbolTable() };
+						shaderCacheKey = std::string( os.str(), os.str() + os.pcount() );
+						state.GetSymbolTable().ResetUsedFlag();
+				}
+
 				auto patchedShader = PatchShader( stage.type, shaderNode->GetChild( 1 ), state );
 				if( !patchedShader )
 				{
-					return false;
+						return false;
 				}
 				shaderNode->GetChild( 1 )->SetSymbol( patchedShader->GetChild( 0 )->GetSymbol() );
 
@@ -3734,24 +3758,24 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				switch( stage.type )
 				{
 				case VERTEX_STAGE:
-					PrepareVertexFunction( stage, shaderNode->GetChild( 1 ) );
-					break;
+						PrepareVertexFunction( stage, shaderNode->GetChild( 1 ) );
+						break;
 				case PIXEL_STAGE:
-					PrepareFragmentFunction( stage, shaderNode->GetChild( 1 ) );
-					break;
+						PrepareFragmentFunction( stage, shaderNode->GetChild( 1 ) );
+						break;
 				case COMPUTE_STAGE:
-					PrepareKernelFunction( stage, shaderNode->GetChild( 1 ) );
-					break;
+						PrepareKernelFunction( stage, shaderNode->GetChild( 1 ) );
+						break;
 				default:
-					assert( false && "Not supported." );
-					break;
+						assert( false && "Not supported." );
+						break;
 				}
 
 				// Assign register numbers to all input textures, buffers, and samplers if they
 				// don't have any register assigned already.
 				if( !AutoAssignRegisters( state, shaderNode->GetChild( 1 ) ) )
 				{
-					return false;
+						return false;
 				}
 
 				state.GetSymbolTable().ResetUsedFlag();
@@ -3761,12 +3785,12 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 				os << MSL_INCLUDE;
 
-				os << AtomicFn{"add", "Add"};
-				os << AtomicFn{"max", "Max"};
-				os << AtomicFn{"min", "Min"};
-				os << AtomicFn{"and", "And"};
-				os << AtomicFn{"or", "Or"};
-				os << AtomicFn{"xor", "Xor"};
+				os << AtomicFn{ "add", "Add" };
+				os << AtomicFn{ "max", "Max" };
+				os << AtomicFn{ "min", "Min" };
+				os << AtomicFn{ "and", "And" };
+				os << AtomicFn{ "or", "Or" };
+				os << AtomicFn{ "xor", "Xor" };
 
 				os << MSL{ state.GetTree(), &state.GetSymbolTable() };
 
@@ -3777,178 +3801,212 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 				std::string code( os.str(), os.str() + os.pcount() );
 
-				bool shaderWriteSucceeded = false;
-				bool shaderCompileSucceeded = false;
-				bool shaderBinaryReady = false;
+				std::string stageName = "ps";
+				if( stage.type == VERTEX_STAGE )
+				{
+						stageName = "vs";
+				}
 
-				// "mktemp" function calls to "arc4random" which is not reentrant. So, we need to sync
-				// our threads here to avoid parallel execution of this function.
-				s_fileMutex.lock();
+				bool hasCompiled = false;
+				{
+						std::lock_guard scope( m_compiledCS );
+						auto found = m_compiled.find( shaderCacheKey );
+						if( found != end( m_compiled ) )
+						{
+							if( found->second.empty() )
+							{
+								return false;
+							}
+
+							stage.shaderSize = uint32_t( found->second.size() );
+							stage.shaderDataStr = g_stringTable.AddString( found->second.data(), found->second.size() );
+							hasCompiled = true;
+						}
+				}
+				if( !hasCompiled )
+				{
+						bool shaderWriteSucceeded = false;
+						bool shaderCompileSucceeded = false;
+						bool shaderBinaryReady = false;
+
+						// "mktemp" function calls to "arc4random" which is not reentrant. So, we need to sync
+						// our threads here to avoid parallel execution of this function.
+						s_fileMutex.lock();
 
 #ifdef _WIN32
-				char srcFilenameTemplate[] = "mtl_tmpXXXXXXX";
-				char binFilenameTemplate[] = "air_tmpXXXXXXX";
+						char srcFilenameTemplate[] = "mtl_tmpXXXXXXX";
+						char binFilenameTemplate[] = "air_tmpXXXXXXX";
 
-				_mktemp_s( srcFilenameTemplate );
-				_mktemp_s( binFilenameTemplate );
+						_mktemp_s( srcFilenameTemplate );
+						_mktemp_s( binFilenameTemplate );
 
-				char* srcFilename = srcFilenameTemplate;
-				char* binFilename = binFilenameTemplate;
+						char* srcFilename = srcFilenameTemplate;
+						char* binFilename = binFilenameTemplate;
 #else
-				char srcFilenameTemplate[] = "src_XXXXXXX.metal";
-				char binFilenameTemplate[] = "bin_XXXXXXX.air";
+						char srcFilenameTemplate[] = "src_XXXXXXX.metal";
+						char binFilenameTemplate[] = "bin_XXXXXXX.air";
 
-				char* srcFilename = nullptr;
-				char* binFilename = nullptr;
+						char* srcFilename = nullptr;
+						char* binFilename = nullptr;
 
-				{
-					int srcFd = mkstemps( srcFilenameTemplate, 6 );
-					int binFd = mkstemps( binFilenameTemplate, 4 );
+						{
+							int srcFd = mkstemps( srcFilenameTemplate, 6 );
+							int binFd = mkstemps( binFilenameTemplate, 4 );
 
-					srcFilename = ( srcFd != -1 ) ? srcFilenameTemplate : nullptr;
-					binFilename = ( binFd != -1 ) ? binFilenameTemplate : nullptr;
+							srcFilename = ( srcFd != -1 ) ? srcFilenameTemplate : nullptr;
+							binFilename = ( binFd != -1 ) ? binFilenameTemplate : nullptr;
 
-					close( srcFd );
-					close( binFd );
-				}
+							close( srcFd );
+							close( binFd );
+						}
 #endif
-				s_fileMutex.unlock();
+						s_fileMutex.unlock();
 
-				if( !srcFilename || !binFilename )
-				{
-					// Failed to generate a name for temporary file(s).
-					return false;
-				}
-
-				do
-				{
-					// Write shader source into temp file.
-					{
-						tmZone( 0, 0, "Write Source" );
-
-						std::lock_guard withFileMutex( s_fileMutex );
-						FILE* file = nullptr;
-						if( fopen_s( &file, srcFilename, "w" ) != 0 )
+						if( !srcFilename || !binFilename )
 						{
-							// Failed to create shader source file.
-							break;
+							// Failed to generate a name for temporary file(s).
+							return false;
 						}
-						size_t bytesWritten = fwrite( code.c_str(), 1, code.length(), file );
-						fclose( file );
-						file = nullptr;
 
-						if( bytesWritten != code.length() )
+						do
 						{
-							// Failed to write shader source file.
-							break;
-						}
-					}
+							// Write shader source into temp file.
+							{
+								tmZone( 0, 0, "Write Source" );
 
-					shaderWriteSucceeded = true;
+								std::lock_guard withFileMutex( s_fileMutex );
+								FILE* file = nullptr;
+								if( fopen_s( &file, srcFilename, "w" ) != 0 )
+								{
+									// Failed to create shader source file.
+									break;
+								}
+								size_t bytesWritten = fwrite( code.c_str(), 1, code.length(), file );
+								fclose( file );
+								file = nullptr;
 
-					// Compile shader.
-					{
-						tmZone( 0, 0, "Call compiler" );
+								if( bytesWritten != code.length() )
+								{
+									// Failed to write shader source file.
+									break;
+								}
+							}
 
-						std::ostringstream cmd;
-						cmd << MetalTool( "metal" ) << " -x metal -std=macos-metal2.1 -mmacos-version-min=10.14 ";
-						// This switch should probably be done in runtime via a command-line argument to ShaderCompiler.
+							shaderWriteSucceeded = true;
+
+							// Compile shader.
+							{
+								tmZone( 0, 0, "Call compiler" );
+
+								std::ostringstream cmd;
+								cmd << MetalTool( "metal" ) << " -x metal -std=macos-metal2.1 -mmacos-version-min=10.14 ";
+								// This switch should probably be done in runtime via a command-line argument to ShaderCompiler.
 #if 1
-						// Disable shader debug information.
-						cmd << "-Wno-unused-variable -Wno-missing-braces 2>&1";
+								// Disable shader debug information.
+								cmd << "-Wno-unused-variable -Wno-missing-braces 2>&1";
 #else
-						// Enable shader debug information.
-						cmd << "-frecord-sources=yes -gline-tables-only -Wno-unused-variable -Wno-missing-braces 2>&1";
+								// Enable shader debug information.
+								cmd << "-frecord-sources=yes -gline-tables-only -Wno-unused-variable -Wno-missing-braces 2>&1";
 #endif
-						for( auto& it : defines )
+								for( auto& it : defines )
+								{
+									cmd << " -D" << it.name << '=' << it.value;
+								}
+								cmd << " " << srcFilename << " -o " << binFilename;
+								// g_messages.AddMessage( "Compile shader: %s", cmd.str().c_str() );
+
+								auto compilerOutput = RunProcess( cmd.str().c_str() );
+								if( !compilerOutput.second.empty() )
+								{
+									g_messages.AddMessage( "%s", compilerOutput.second.c_str() );
+								}
+								if( compilerOutput.first != 0 )
+								{
+									// Shader compilation failed.
+									break;
+								}
+
+								// Disabled unused arguments detection because it provides nothing more than noise
+								// DetectUnusedArguments( binFilename, state, shaderNode );
+							}
+
+							shaderCompileSucceeded = true;
+
+							// Read shader binary.
+							{
+								tmZone( 0, 0, "Read binary" );
+
+								std::lock_guard withFileMutex( s_fileMutex );
+								FILE* file = nullptr;
+								if( fopen_s( &file, binFilename, "rb" ) != 0 )
+								{
+									// Failed to open compiled shader file.
+									break;
+								}
+
+								fseek( file, 0, SEEK_END );
+								fpos_t pos = 0;
+								fgetpos( file, &pos );
+								fseek( file, 0, SEEK_SET );
+
+								size_t dataSize = pos;
+								std::vector<uint8_t> compiledCode( dataSize );
+
+								size_t readBytes = fread( compiledCode.data(), 1, dataSize, file );
+
+								fclose( file );
+								file = nullptr;
+
+								if( readBytes != dataSize )
+								{
+									// Failed to read compiled shader binary from file.
+									break;
+								}
+
+								stage.shaderSize = uint32_t( compiledCode.size() );
+								stage.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
+								// printf( "shader size: %lu\n", (size_t)stage.shaderSize );
+
+								{
+									std::lock_guard scope( m_compiledCS );
+									m_compiled[shaderCacheKey] = compiledCode;
+								}
+							}
+
+							shaderBinaryReady = true;
+						} while( false );
+
+						// Remove temp files.
+						if( shaderWriteSucceeded )
 						{
-							cmd << " -D" << it.name << '=' << it.value;
+							std::lock_guard withFileMutex( s_fileMutex );
+							int removeResult = remove( srcFilename );
+							if( removeResult != 0 )
+							{
+								// Can't delete shader source file.
+								// return false;
+							}
 						}
-						cmd << " " << srcFilename << " -o " << binFilename;
-						// g_messages.AddMessage( "Compile shader: %s", cmd.str().c_str() );
 
-						auto compilerOutput = RunProcess( cmd.str().c_str() );
-						if( !compilerOutput.second.empty() )
+						if( shaderCompileSucceeded )
 						{
-							g_messages.AddMessage( "%s", compilerOutput.second.c_str() );
+							std::lock_guard withFileMutex( s_fileMutex );
+							int removeResult = remove( binFilename );
+							if( removeResult != 0 )
+							{
+								// Can't delete compiled shader file.
+								// return false;
+							}
 						}
-						if( compilerOutput.first != 0 )
+
+						if( !shaderBinaryReady )
 						{
-							// Shader compilation failed.
-							break;
+							{
+								std::lock_guard scope( m_compiledCS );
+								m_compiled[code] = std::vector<uint8_t>();
+							}
+							return false;
 						}
-
-						DetectUnusedArguments( binFilename, state, shaderNode );
-					}
-
-					shaderCompileSucceeded = true;
-
-					// Read shader binary.
-					{
-						tmZone( 0, 0, "Read binary" );
-
-						std::lock_guard withFileMutex( s_fileMutex );
-						FILE* file = nullptr;
-						if( fopen_s( &file, binFilename, "rb" ) != 0 )
-						{
-							// Failed to open compiled shader file.
-							break;
-						}
-
-						fseek( file, 0, SEEK_END );
-						fpos_t pos = 0;
-						fgetpos( file, &pos );
-						fseek( file, 0, SEEK_SET );
-
-						size_t dataSize = pos;
-						std::vector<uint8_t> compiledCode( dataSize );
-
-						size_t readBytes = fread( compiledCode.data(), 1, dataSize, file );
-
-						fclose( file );
-						file = nullptr;
-
-						if( readBytes != dataSize )
-						{
-							// Failed to read compiled shader binary from file.
-							break;
-						}
-
-						stage.shaderSize = uint32_t( compiledCode.size() );
-						stage.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
-						// printf( "shader size: %lu\n", (size_t)stage.shaderSize );
-					}
-
-					shaderBinaryReady = true;
-				}
-				while( false );
-
-				// Remove temp files.
-				if( shaderWriteSucceeded )
-				{
-					std::lock_guard withFileMutex( s_fileMutex );
-					int removeResult = remove( srcFilename );
-					if( removeResult != 0 )
-					{
-						// Can't delete shader source file.
-						// return false;
-					}
-				}
-
-				if( shaderCompileSucceeded )
-				{
-					std::lock_guard withFileMutex( s_fileMutex );
-					int removeResult = remove( binFilename );
-					if( removeResult != 0 )
-					{
-						// Can't delete compiled shader file.
-						// return false;
-					}
-				}
-
-				if( !shaderBinaryReady )
-				{
-					return false;
 				}
 
 				if( !GetStageData( state, stage, shaderNode->GetChild( 1 ), result.annotations ) )

@@ -34,6 +34,8 @@ bool Type::FromToken( const ScannerToken& token )
 	modifier = 0;
 	storageClass = 0;
 	arrayDimensions = 0;
+	metalTextureAccess = 0;
+	templateSamples = -1;
 	return true;
 }
 
@@ -48,6 +50,8 @@ bool Type::FromTokenType( int type )
 	modifier = 0;
 	storageClass = 0;
 	arrayDimensions = 0;
+	metalTextureAccess = 0;
+	templateSamples = -1;
 	return true;
 }
 
@@ -65,6 +69,8 @@ bool Type::FromSymbol( const Symbol* asymbol )
 	modifier = 0;
 	storageClass = 0;
 	arrayDimensions = 0;
+	metalTextureAccess = 0;
+	templateSamples = -1;
 	return true;
 }
 

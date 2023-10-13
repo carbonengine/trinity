@@ -862,6 +862,17 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 		// TODO: support offset?
 		functionToken.stringValue = MakeInlineString( "read" );
 		auto coord = call->GetChild( 0 );
+
+		if( node->GetChild( 0 )->GetSymbol() &&
+			( textureType.builtInType == OP_RWTEXTURE1D ||
+			textureType.builtInType == OP_RWTEXTURE1DARRAY ||
+			textureType.builtInType == OP_RWTEXTURE2D ||
+			textureType.builtInType == OP_RWTEXTURE2DARRAY ||
+			textureType.builtInType == OP_RWTEXTURE3D ||
+			textureType.builtInType == OP_RWTEXTURE3DARRAY ) )
+		{
+			node->GetChild( 0 )->GetSymbol()->type.metalTextureAccess = 1;
+		}
 		if( textureType.builtInType != OP_TEXTURE2DMS && textureType.builtInType != OP_TEXTURE2DMSARRAY )
 		{
 			const char* xyzw = "xyzw";
@@ -963,6 +974,17 @@ ASTNode* PatchMetalTextureCalls( ParserState& state, ASTNode* node, bool rightHa
 	{
 		if( rightHandSide )
 		{
+			if( node->GetChild( 0 )->GetSymbol() &&
+				( node->GetChild( 0 )->GetType().builtInType == OP_RWTEXTURE1D ||
+				  node->GetChild( 0 )->GetType().builtInType == OP_RWTEXTURE1DARRAY ||
+				  node->GetChild( 0 )->GetType().builtInType == OP_RWTEXTURE2D ||
+				  node->GetChild( 0 )->GetType().builtInType == OP_RWTEXTURE2DARRAY ||
+				  node->GetChild( 0 )->GetType().builtInType == OP_RWTEXTURE3D ||
+				  node->GetChild( 0 )->GetType().builtInType == OP_RWTEXTURE3DARRAY ) )
+			{
+				node->GetChild( 0 )->GetSymbol()->type.metalTextureAccess = 1;
+			}
+
 			// t[x] -> t.read(x)
 			auto functionToken = ScannerToken::ID( MakeInlineString( "read" ), node->GetLocation() );
 			auto call = new ASTNode( NT_FUNCTION_CALL, node->GetLocation(), node->GetScope(), &functionToken );

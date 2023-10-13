@@ -16,5 +16,9 @@ public:
 		bool addSpaces; // add space declarations to shader resources (dx12)
 	};
 	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions );
+
+private:
+	std::unordered_map<std::string, CComPtr<ID3D10Blob>> m_compiled;
+	std::mutex m_compiledCS;
 };
 #endif

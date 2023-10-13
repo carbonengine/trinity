@@ -4,7 +4,7 @@ if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15 CACHE STRING "The minimum macOS version we target." FORCE)
 endif()
 
-project(ShaderCompiler VERSION 1.0.0)
+project(ShaderCompiler VERSION 1.1.1)
 
 if(NOT DEFINED ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
     message(FATAL_ERROR "Missing required environment variable CCP_EVE_PERFORCE_BRANCH_PATH")
@@ -56,10 +56,14 @@ add_executable(ShaderCompiler
     ${GENERATED_SOURCES_DIR}/HLSLParser.h
     HLSLParser.y
     ${GENERATED_SOURCES_DIR}/HLSLScanner.cpp
+    ${GENERATED_SOURCES_DIR}/ShaderCompilerConfig.h
+    ShaderCompilerConfig.h.in
     HLSLScanner.re
     InlineString.h
     IntrinsicTypes.h
     Macro.h
+    md5.cpp
+    md5.h
     ModifiedTime.cpp
     ModifiedTime.h
     MSLInclude.h
@@ -112,6 +116,8 @@ source_group(Grammar FILES
     Type.cpp
     Type.h
 )
+
+configure_file("${PROJECT_SOURCE_DIR}/ShaderCompilerConfig.h.in" "${GENERATED_SOURCES_DIR}/ShaderCompilerConfig.h") 
 
 set(PUBLIC_HEADER_FILES "")
 

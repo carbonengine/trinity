@@ -58,4 +58,8 @@ class EffectCompilerMetal: public EffectCompilerBase
 public:
 	bool Create() override;
 	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result ) override;
+
+private:
+	std::unordered_map<std::string, std::vector<uint8_t>> m_compiled;
+	std::mutex m_compiledCS;
 };

@@ -16,6 +16,7 @@
 #include "Macro.h"
 #include "ModifiedTime.h"
 #include "Platforms.h"
+#include "ShaderCompilerConfig.h"
 #include <atomic>
 
 
@@ -43,6 +44,7 @@ const char* g_shaderSource = NULL;
 size_t g_shaderLength = 0;
 // Print warning messages?
 bool g_printWarnings = true;
+std::string g_metalToolsPath;
 
 
 // Generate DX11 HLSL listing file
@@ -200,6 +202,7 @@ void PrintUsage()
 #if CCP_TELEMETRY_ENABLED
 	printf( "  /telemetry - Enable RAD Telemetry\n" );
 #endif
+	printf( "  /metal <path> - Path to Metal Developer Tools for Windows\n" );
 	printf( "input_file - Path to input HLSL file\n" );
 	printf( "output_file - Path to output binary file\n" );
 }
@@ -318,6 +321,18 @@ bool ExtractCommandLineArguments( ProgramArguments& args, int argc, char* argv[]
 			if( i < argc )
 			{
 				args.listingFile = argv[i];
+			}
+			else
+			{
+				return false;
+			}
+		}
+		else if( strcmp( argv[i], "/metal" ) == 0 )
+		{
+			++i;
+			if( i < argc )
+			{
+				g_metalToolsPath = argv[i];
 			}
 			else
 			{
@@ -535,7 +550,7 @@ int main(int argc, char* argv[])
 
 	if( args.checkMTime )
 	{
-		PrintModificationTime( args.coreCount );
+		PrintOutOfDateFiles( args.coreCount );
 		return 0;
 	}
 	if( args.printPermutations )
@@ -598,6 +613,19 @@ int main(int argc, char* argv[])
 	g_messages.Flush();
 
 	std::vector<unsigned> keys;
+
+	{
+		// Add strings for permutations
+		for( auto it = permutations.begin(); it != permutations.end(); ++it )
+		{
+			g_stringTable.AddString( it->name.c_str() );
+			g_stringTable.AddString( it->description.c_str() );
+			for( auto jt = it->options.begin(); jt != it->options.end(); ++jt )
+			{
+				g_stringTable.AddString( jt->name.c_str() );
+			}
+		}
+	}
 
 	{
 		tmZone( 0, 0, "Packing" );
@@ -702,7 +730,7 @@ int main(int argc, char* argv[])
 		unsigned index = 0;
 
 		header[index++] = uint32_t( totalSize );
-		size_t offset = sizeof( uint32_t ) + headerSize + g_stringTable.GetSize();
+		size_t offset = sizeof( uint32_t ) + sizeof( uint32_t ) + 32 + headerSize + g_stringTable.GetSize();
 
 		std::map<uint32_t, std::pair<size_t, size_t>> offsets;
 		for( auto it = g_compiledEffects.begin(); it != g_compiledEffects.end(); ++it )
@@ -725,6 +753,12 @@ int main(int argc, char* argv[])
 
 		uint32_t version = DATA_VERSION;
 		fwrite( &version, 1, sizeof( uint32_t ), file );
+
+		fwrite( &ShaderCompilerVersion, sizeof( ShaderCompilerVersion ), 1, file );
+		
+		auto hash = GetSourceHash( args.shaderPath, args.defines );
+		fwrite( hash.c_str(), 1, hash.length(), file );
+
 		g_stringTable.Write( file );
 		fwrite( fullHeader, 1, headerSize, file );
 
