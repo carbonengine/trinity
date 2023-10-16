@@ -5,7 +5,7 @@
 #include "StringTable.h"
 #include <vector>
 
-const uint32_t DATA_VERSION = 12;
+const uint32_t DATA_VERSION = 15;
 
 // These next enums must have the same values as corresponding Trinity enums
 
@@ -504,16 +504,30 @@ struct Annotation
 };
 
 
+
 struct ParameterAnnotation
 {
 	template <typename T>
 	void Save( T& stream )
 	{
 		stream.Save( uint8_t( annotations.size() ) );
-		for( auto it = annotations.begin(); it != annotations.end(); ++it )
+
+		std::vector<StringReference> keys;
+		keys.reserve( annotations.size() );
+		for( auto& k : annotations )
 		{
-			stream.Save( it->first );
-			it->second.Save( stream );
+			keys.push_back( k.first );
+		}
+
+		std::sort( begin( keys ), end( keys ), []( StringReference a, StringReference b ) {
+			extern StringTable g_stringTable;
+			return strcmp( g_stringTable.GetString( a ), g_stringTable.GetString( b ) ) < 0;
+		} );
+
+		for (auto key : keys)
+		{
+			stream.Save( key );
+			annotations[key].Save( stream );
 		}
 	}
 
@@ -649,10 +663,24 @@ struct EffectData
 			it->Save( stream );
 		}
 		stream.Save( uint16_t( annotations.size() ) );
-		for( auto it = annotations.begin(); it != annotations.end(); ++it )
+
+
+		std::vector<StringReference> keys;
+		keys.reserve( annotations.size() );
+		for( auto& k : annotations )
 		{
-			stream.Save( it->first );
-			it->second.Save( stream );
+			keys.push_back( k.first );
+		}
+
+		std::sort( begin( keys ), end( keys ), []( StringReference a, StringReference b ) {
+			extern StringTable g_stringTable;
+			return strcmp( g_stringTable.GetString( a ), g_stringTable.GetString( b ) ) < 0;
+		} );
+
+		for( auto key : keys )
+		{
+			stream.Save( key );
+			annotations[key].Save( stream );
 		}
 	}
 
