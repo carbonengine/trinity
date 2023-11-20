@@ -6,23 +6,6 @@ endif()
 
 project(TrinityAL VERSION 1.0.0)
 
-if(NOT DEFINED ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
-    message(FATAL_ERROR "Missing required environment variable CCP_EVE_PERFORCE_BRANCH_PATH")
-elseif(NOT IS_ABSOLUTE $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
-    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH needs to be an absolute path")
-elseif(NOT EXISTS $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
-    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH is pointing at a non-existing location $ENV{CCP_EVE_PERFORCE_BRANCH_PATH}")
-elseif(NOT IS_DIRECTORY $ENV{CCP_EVE_PERFORCE_BRANCH_PATH})
-    message(FATAL_ERROR "CCP_EVE_PERFORCE_BRANCH_PATH needs to be a directory")
-else()
-    message(STATUS "Using CCP_EVE_PERFORCE_BRANCH_PATH located at $ENV{CCP_EVE_PERFORCE_BRANCH_PATH}")
-endif()
-
-file(TO_CMAKE_PATH "$ENV{CCP_EVE_PERFORCE_BRANCH_PATH}" BRANCH_ROOT_DIR)
-list(INSERT CMAKE_MODULE_PATH 0 ${BRANCH_ROOT_DIR}/cmake)
-include(CcpGlobalSettings)
-include(CcpPackageConfigHelpers)
-
 set(PUBLIC_HEADER_FILES
     ALResult.h
     BcDecompress.h
@@ -385,36 +368,6 @@ function(set_shared_trinityal_properties targetSuffix)
     )
 
     add_trinity_dev_debug_flags(${target})
-
-
-    if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-
-        file(GLOB PUBLIC_DEVICE_HEADER_FILES RELATIVE ${CMAKE_SOURCE_DIR} "${targetSuffix}/*.h")
-        file(GLOB PUBLIC_DEVICE_HEADER_FILES_UTIL RELATIVE ${CMAKE_SOURCE_DIR} "${targetSuffix}/util/*.h")  #Used in dx12
-
-        # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
-        install(
-            TARGETS ${target}
-            EXPORT ${target}Targets
-            CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
-            LIBRARY DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-            ARCHIVE DESTINATION lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-            RUNTIME DESTINATION bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-        )
-        # Install rule for available public headers
-        install(FILES ${PUBLIC_HEADER_FILES} DESTINATION include)
-        install(FILES ${PUBLIC_AL_HEADER_FILES} DESTINATION include/include)
-        install(FILES ${PUBLIC_DEVICE_HEADER_FILES} DESTINATION include/${targetSuffix})
-        install(FILES ${PUBLIC_DEVICE_HEADER_FILES_UTIL} DESTINATION include/${targetSuffix}/util)
-
-        configure_ccp_vendor_config_file(
-            TARGET ${target}
-            DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake"
-            DEPENDENCIES ""
-        )
-        install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${target}Config.cmake DESTINATION .)
-
-    endif()
 endfunction()
 
 #[[

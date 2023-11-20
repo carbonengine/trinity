@@ -7,7 +7,7 @@
 #include "StdAfx.h"
 #include "Tr2VideoAdapters.h"
 #include "TriSettingsRegistrar.h"
-#include <Tr2DriverUtilities.h>
+#include "../trinityal/Tr2DriverUtilities.h"
 
 #ifdef _WIN32
 std::vector<HANDLE> g_D3DCreatedHeaps;

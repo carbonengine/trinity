@@ -79,7 +79,7 @@ using std::max;
 #include <CcpMath.h>
 
 #include "include/Tr2WindowHandle.h"
-#include <include/TrinityAL.h>
+#include <../trinityal/include/TrinityAL.h>
 #include "Tr2RenderContext.h"
 #include "Tr2RenderUtils.h"
 #include "granny.h"

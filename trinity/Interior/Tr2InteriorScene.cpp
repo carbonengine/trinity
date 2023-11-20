@@ -20,7 +20,6 @@
 #include "Resources/TriTextureRes.h"
 #include "Tr2DebugRenderer.h"
 #include "Tr2RenderTarget.h"
-#include <include/Tr2BitmapDimensions.h> //c:\EVE\eve\branches\sandbox\TTL-EVE-CHARS\carbon\src\TrinityAL\include\Tr2BitmapDimensions.h"
 #include "Tr2InteriorLightSource.h"
 #include "include/TriMath.h"
 #include "Tr2DepthStencil.h"
