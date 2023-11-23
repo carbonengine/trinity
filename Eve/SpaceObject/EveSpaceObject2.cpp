@@ -752,11 +752,11 @@ void EveSpaceObject2::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 	if( renderer.HasOption( GetRawRoot(), "Decals" ) )
 	{
 		// are decals visible?
-			for( EveSpaceObjectDecalVector::iterator it = m_decals.begin(); it != m_decals.end(); ++it )
-			{
-				( *it )->RenderDebugInfo( renderer, m_worldTransform );
-			}
+		for( EveSpaceObjectDecalVector::iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+		{
+			( *it )->RenderDebugInfo( renderer, m_worldTransform );
 		}
+	}
 
 	if( renderer.HasOption( this, "Lights" ) )
 	{
@@ -1472,7 +1472,7 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	if( m_mesh )
 	{
 		auto size = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius );
-		m_mesh->UseWithScreenSize( size, m_boundingSphereWorldRadius);
+		m_mesh->UseWithScreenSize( size );
 	}
 }
 
@@ -2433,6 +2433,12 @@ void EveSpaceObject2::GetLocalToWorldTransform( Matrix& transform ) const
 void EveSpaceObject2::FreezeHighDetailMesh()
 {
 	m_allowLodSelection = false;
+	// run through all the decals and set that the geometry is frozen for it
+	for( auto decal : m_decals )
+	{
+		decal->SetHighDetailDecalState( true );
+	}
+
 }
 
 void EveSpaceObject2::PrepareForAnimation()
@@ -2513,6 +2519,12 @@ void EveSpaceObject2::ClearAttachments()
 // --------------------------------------------------------------------------------
 void EveSpaceObject2::AddDecal( EveSpaceObjectDecalPtr newDecal )
 {
+	// before we append the decal to the list we need to check if we are freezing the high detail mesh
+	// if it is true then we need to set that the geometry is frozen for that decal
+	if( !m_allowLodSelection )
+	{
+		newDecal->SetHighDetailDecalState( true );
+	}
 	m_decals.Append( newDecal->GetRawRoot() );
 }
 

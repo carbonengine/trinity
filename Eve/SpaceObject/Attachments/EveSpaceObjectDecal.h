@@ -142,6 +142,8 @@ public:
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );
 
+	void SetHighDetailDecalState( bool isFrozen );
+
 private:
 	// create
 	void CreateDecalIndexBuffers( TriGeometryResPtr geomRes );
@@ -194,6 +196,9 @@ private:
 
 	// Bounds for mimicing the frustum culling and fading for instanced hulls that have decals
 	Vector3 m_minBounds, m_maxBounds;
+
+	// the geometry can be frozen 
+	bool m_isGeometryFrozen;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceObjectDecal );

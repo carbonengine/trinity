@@ -42,7 +42,8 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_vertexDeclarationOverride( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_instanceData( nullptr ),
 	m_minBounds( 0, 0, 0 ),
-	m_maxBounds( 0, 0, 0 )
+	m_maxBounds( 0, 0, 0 ),
+	m_isGeometryFrozen( false )
 {
 	// init
 	PrepareResources();
@@ -178,7 +179,7 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 		return;
 	}
 
-	m_geometryLodIndex = geomRes->GetLodIndexForScreenSize( 0, screensize );
+	m_geometryLodIndex = m_isGeometryFrozen ? 0 : geomRes->GetLodIndexForScreenSize( 0, screensize );
 
 	if( HasStaticIndexBuffers() )
 	{
@@ -515,6 +516,15 @@ void EveSpaceObjectDecal::SetShaderOption( const BlueSharedString& name, const B
 	{
 		m_decalEffect->SetOption( name, value );
 	}
+}
+
+// --------------------------------------------------------------------------------------
+// Description:
+//  Sets the state for the geometry of this decal
+// --------------------------------------------------------------------------------------
+void EveSpaceObjectDecal::SetHighDetailDecalState( bool isFrozen )
+{
+	m_isGeometryFrozen = isFrozen;
 }
 
 // --------------------------------------------------------------------------------------
