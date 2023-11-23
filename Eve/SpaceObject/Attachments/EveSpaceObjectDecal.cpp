@@ -179,7 +179,7 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 		return;
 	}
 
-	m_geometryLodIndex = m_isGeometryFrozen ? 0 : geomRes->GetLodIndexForScreenSize( 0, screensize );
+	m_geometryLodIndex = m_isGeometryFrozen ? -1 : geomRes->GetLodIndexForScreenSize( 0, screensize );
 
 	if( HasStaticIndexBuffers() )
 	{
