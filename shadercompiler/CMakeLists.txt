@@ -171,6 +171,8 @@ else()
     target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=0)
 endif()
 
+get_filename_component(SHADER_COMPILER_BRANCH_PREFIX $ENV{CCP_EVE_PERFORCE_BRANCH_PATH} ABSOLUTE)
+
 # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
 install(
     TARGETS ShaderCompiler
@@ -178,7 +180,7 @@ install(
     CONFIGURATIONS ${CMAKE_CONFIGURATION_TYPES}
     LIBRARY DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
     ARCHIVE DESTINATION shadercompiler/lib/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
-    RUNTIME DESTINATION shadercompiler/bin/${CCP_PLATFORM}/${CCP_ARCHITECTURE}/${CCP_TOOLSET}/
+    RUNTIME DESTINATION ${SHADER_COMPILER_BRANCH_PREFIX}/carbon/tools/ShaderCompiler/${CCP_PLATFORM}/
 )
 # Install rule for available public headers
 install(FILES ${PUBLIC_HEADER_FILES} DESTINATION shadercompiler/include)
