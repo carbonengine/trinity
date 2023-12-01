@@ -1,0 +1,18 @@
+#include "MetalDefines.h"
+
+#include <metal_stdlib>
+using namespace metal;
+
+struct VS_OUTPUT
+{
+	float4 Position [[ position ]];
+	float2 TexCoord;
+};
+
+fragment float4 mainPS(VS_OUTPUT In [[ stage_in ]], texture2d_ms<float> tex0 [[ texture(0) ]] SHADOW_PS_DECL )
+{
+	uint w = tex0.get_width();
+	uint h = tex0.get_height();
+    float4 color = tex0.read( uint2( In.TexCoord * float2( w, h ) ), 0 );
+    return color;
+}

@@ -2,3 +2,5 @@
 out/**
 temp/**
 carbon/autobuild/**
+cmake-build*/
+.idea/
