@@ -1,4 +1,4 @@
-RWBuffer<uint> output: register(u0, space2);
+RWBuffer<uint> output: register(u0);
 
 
 groupshared uint sum;

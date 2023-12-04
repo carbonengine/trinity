@@ -14,6 +14,7 @@ public:
 	{
 		const char* minShaderVersion; // minimal shader version (5_0 by default)
 		bool addSpaces; // add space declarations to shader resources (dx12)
+		bool useStaticSamplers; // dx12
 	};
 	bool CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result, const CompileOptions& compileOptions );
 

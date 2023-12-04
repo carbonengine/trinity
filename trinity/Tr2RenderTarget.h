@@ -56,6 +56,7 @@ public:
 		Tr2GpuUsage::Type gpuUsage );
 
 	virtual Tr2TextureAL* GetTexture();
+	OnTextureChangeEvent& OnTextureChange() override;
 
 	void Attach( const Tr2TextureAL& renderTarget, IRoot* owner );
 	void Detach();
@@ -105,6 +106,7 @@ private:
 	Tr2CpuUsage::Type m_cpuUsage;
 	Tr2GpuUsage::Type m_gpuUsage;
 	std::string m_name;
+	OnTextureChangeEvent m_onTextureChange; 
 
 	bool HasALObject( int type, size_t object );
 };

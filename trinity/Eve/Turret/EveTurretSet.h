@@ -8,7 +8,6 @@
 #define EveTurretSet_H
 
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "include/ITriTargetable.h"
 #include "Tr2ShLightingManager.h"
 #include "Tr2GrannyAnimation.h"
@@ -78,6 +77,7 @@ class EveTurretSetPerObjectData : public Tr2PerObjectData
 {
 public:
 	void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const override;
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	// vs per object data
     EveTurretSetVSData m_vsData;
@@ -99,7 +99,6 @@ public:
 BLUE_CLASS( EveTurretSet ):
 	public IInitialize,
 	public INotify,
-	public ITr2GeometryProvider,
 	public IBlueAsyncResNotifyTarget,
 	public Tr2DeviceResource,
 	public ITr2Renderable,
@@ -123,10 +122,6 @@ public:
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var* value ) override;
-	
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void SubmitGeometry( Tr2RenderContext& renderContext ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
@@ -370,7 +365,7 @@ private:
 	std::string m_geomResPath;
 	TriGeometryResPtr m_geometryResource;
 	// instance vertex stream
-	Tr2BufferAL m_instanceBuffer;
+	Tr2SuballocatedBuffer::Allocation m_instanceBuffer;
 
 	// Assign the target object
 	void SetTargetObject( IRoot* target );

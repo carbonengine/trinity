@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2LineSet.h"
+#include "TriRenderBatch.h"
 
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
@@ -134,26 +135,27 @@ bool Tr2LineSet::OnPrepareResources()
 	return true;
 }
 
-//////////////////////////////////////////////////////////////////////////
-// ITr2GeometryProvider
-void Tr2LineSet::SubmitGeometry( Tr2RenderContext& renderContext )
-{	
+void Tr2LineSet::GetBatchesImpl( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect, GetBatchesReason reason )
+{
 	if( !m_vertexBuffer.IsValid() )
 	{
 		return;
 	}
 
-	if( (m_currentSubmittedTriangleCount > 0) && m_isDrawingForPicking )
+	if( ( m_currentSubmittedTriangleCount > 0 ) && reason == GetBatchesReason::Picking )
 	{
 		if( m_pickingVertexDeclHandle == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 		{
 			return;
 		}
 
-		renderContext.m_esm.ApplyVertexDeclaration( m_pickingVertexDeclHandle );
-		renderContext.m_esm.ApplyStreamSource( 0, m_pickingVertexBuffer, 0, sizeof( Triangle )/3 );
-		renderContext.SetTopology( TOP_TRIANGLES );
-		renderContext.DrawPrimitive( 0, m_currentSubmittedTriangleCount );
+		Tr2RenderBatch batch;
+		batch.SetMaterial( effect );
+		batch.SetPerObjectData( perObjectData );
+		batch.SetVertexDeclaration( m_pickingVertexDeclHandle );
+		batch.SetStreamSource( 0, m_pickingVertexBuffer, sizeof( Triangle ) / 3 );
+		batch.SetDrawInstanced( m_currentSubmittedTriangleCount * 3, 1, 0, 0 );
+		accumulator->Commit( batch );
 	}
 	else
 	{
@@ -162,10 +164,14 @@ void Tr2LineSet::SubmitGeometry( Tr2RenderContext& renderContext )
 			return;
 		}
 
-		renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-		renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( LineData ) / 2 );
-		renderContext.SetTopology( TOP_LINES );
-		renderContext.DrawPrimitive( 0, m_currentSubmittedLineCount );
+		Tr2RenderBatch batch;
+		batch.SetMaterial( effect );
+		batch.SetPerObjectData( perObjectData );
+		batch.SetTopology( TOP_LINES );
+		batch.SetVertexDeclaration( m_vertexDeclHandle );
+		batch.SetStreamSource( 0, m_vertexBuffer, sizeof( LineData ) / 2 );
+		batch.SetDrawInstanced( m_currentSubmittedLineCount * 2, 1, 0, 0 );
+		accumulator->Commit( batch );
 	}
 }
 

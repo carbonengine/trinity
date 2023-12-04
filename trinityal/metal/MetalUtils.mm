@@ -353,6 +353,86 @@ MetalUtils::~MetalUtils()
 {
 }
 
+
+ConstantBufferAllocator::ConstantBufferAllocator()
+:   m_device( nullptr ),
+    m_offset( 0 ),
+    m_totalUploadedSize( 0 )
+{
+    std::fill( std::begin( m_pages ), std::end( m_pages ), nullptr );
+}
+
+void ConstantBufferAllocator::Initialize( id<MTLDevice> device )
+{
+    m_device = device;
+    std::fill( std::begin( m_pages ), std::end( m_pages ), nullptr );
+    CreatePage( 0 );
+    m_offset = 0;
+    m_totalUploadedSize = 0;
+}
+
+void ConstantBufferAllocator::Reset()
+{
+    m_offset = 0;
+    m_totalUploadedSize = 0;
+}
+
+uint32_t ConstantBufferAllocator::GetTotalUploadedSize() const
+{
+    return m_totalUploadedSize + ( m_offset & 0xffffffff );
+}
+
+ConstantBufferAllocator::Entry ConstantBufferAllocator::Allocate( const void* data, uint32_t size )
+{
+    auto dataSize = size;
+    size = ( size + ( CONST_ALIGNMENT - 1 ) ) & ~( CONST_ALIGNMENT - 1 );
+
+    uint64_t offset = m_offset.fetch_add( size, std::memory_order_relaxed );
+    if( ( offset & 0xffffffff ) + size > CONST_PAGE_SIZE )
+    {
+        m_pagesMutex.lock();
+        offset = m_offset.fetch_add( size, std::memory_order_relaxed );
+        if( ( offset & 0xffffffff ) + size > CONST_PAGE_SIZE )
+        {
+            auto pageIndex = offset >> 32;
+            ++pageIndex;
+            if( !m_pages[pageIndex] )
+            {
+                CreatePage( uint32_t( pageIndex ) );
+            }
+            m_totalUploadedSize += m_offset & 0xffffffff;
+            m_offset = ( pageIndex << 32 ) | size;
+            offset = pageIndex << 32;
+        }
+        m_pagesMutex.unlock();
+    }
+    Entry entry;
+    entry.offset = offset & 0xffffffff;
+    entry.page = offset >> 32;
+    if( data )
+    {
+        memcpy( static_cast<uint8_t*>( m_pages[entry.page].contents ) + entry.offset, data, dataSize );
+    }
+    return entry;
+}
+
+id<MTLBuffer> ConstantBufferAllocator::GetPage( uint32_t page )
+{
+    return m_pages[page];
+}
+
+void ConstantBufferAllocator::CreatePage( uint32_t index )
+{
+    auto options = MTLResourceStorageModeShared | MTLResourceCPUCacheModeWriteCombined;
+    if( @available(macOS 10.15, *) )
+    {
+        options |= MTLHazardTrackingModeUntracked;
+    }
+    m_pages[index] = [m_device newBufferWithLength:CONST_PAGE_SIZE options:options];
+    m_pages[index].label = [NSString stringWithUTF8String:"Constant buffer"];
+}
+
+
 } // TrinityALImpl
 
 #endif

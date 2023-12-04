@@ -2,6 +2,7 @@
 
 class ASTNode;
 struct Sampler;
+struct StaticSampler;
 class ParserState;
 struct Type;
 
@@ -42,6 +43,7 @@ extern StateDescription g_renderStates[];
 
 bool ParseStateAssignment( ParserState& parserState, ASTNode* state, StateDescription* states, void* dataBlob );
 bool GetSamplerState( ParserState& state, ASTNode* node, Sampler& sampler );
+bool ConvertToStaticSampler( StaticSampler& staticSampler, const Sampler& sampler );
 
 bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, ExpressionValue& value, StateValue* stateValues );
 bool EvaluateInitializer( ParserState& state, ASTNode* node, Type& type, ExpressionValue& value, StateValue* stateValues );

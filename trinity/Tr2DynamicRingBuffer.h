@@ -34,6 +34,12 @@ public:
 		uint32_t size, 
 		uint32_t& offset, 
 		Tr2RenderContext& renderContext );
+	ALResult PutData(
+		const void* data,
+		uint32_t size,
+		uint32_t alignment,
+		uint32_t& offset,
+		Tr2RenderContext& renderContext );
 	void DoneUsingData( Tr2RenderContext& renderContext );
 
 	void SetSizeIncrement( uint32_t sizeIncrement );

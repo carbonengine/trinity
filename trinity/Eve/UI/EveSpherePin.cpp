@@ -352,8 +352,7 @@ Tr2PerObjectData* EveSpherePin::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	return perObjectData;
 }
 
-// ------------------------------------------------------------------------------------------------------
-void EveSpherePin::SubmitGeometry( Tr2RenderContext& renderContext )
+void EveSpherePin::GetBatchWithEffect( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Effect* effect )
 {
 	if( !m_geometryResource )
 	{
@@ -381,31 +380,17 @@ void EveSpherePin::SubmitGeometry( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	if( !meshData->m_vertexBuffer.IsValid() )
+	if( !meshData->m_allocationsValid )
 	{
 		return;
 	}
 
-	// render
-	renderContext.m_esm.ApplyVertexDeclaration( meshData->m_vertexDeclaration );
-	renderContext.m_esm.ApplyStreamSource( 0, meshData->m_vertexBuffer, 0, meshData->m_bytesPerVertex );
-	renderContext.m_esm.ApplyIndexBuffer( m_indexBuffer );
-	
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawIndexedPrimitive( meshData->m_vertexCount, 0, m_primitiveCount );
-}
-
-void EveSpherePin::GetBatchWithEffect( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Effect* effect )
-{
-	TriForwardingBatch* batch = accumulator->Allocate<TriForwardingBatch>();
-	if( batch )
-	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( effect );
-		batch->SetGeometryProvider( this );
-
-		accumulator->Commit( batch );
-	}
+	Tr2RenderBatch batch;
+	batch.SetMaterial( effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation.GetBuffer(), meshData->m_vertexAllocation.GetStride(), m_indexBuffer, m_indexBuffer.GetDesc().stride );
+	batch.SetDrawIndexedInstanced( m_primitiveCount * 3, 1, 0, meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(), 0 );
+	accumulator->Commit( batch );
 }
 
 void EveSpherePin::GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData )
@@ -438,4 +423,10 @@ void EveSpherePinPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** 
 	// set to PS
 	int psConstantCount = 4 + 6;
 	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_worldMatrix, psConstantCount * 16, PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+}
+
+void EveSpherePinPerObjectData::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+{
+	writer.SetPerObjectData( VERTEX_SHADER, &m_worldMatrix, ( 4 + 6 ) * 16 );
+	writer.SetPerObjectData( PIXEL_SHADER, &m_worldMatrix, ( 4 + 6 ) * 16 );
 }

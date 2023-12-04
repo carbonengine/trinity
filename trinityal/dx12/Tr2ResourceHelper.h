@@ -22,7 +22,7 @@ namespace TrinityALImpl
 
 		Tr2ResourceHelper();
 
-		ALResult Create( Strategy strategy, size_t size, D3D12_RESOURCE_FLAGS resourceFlags, D3D12_RESOURCE_STATES state, uint32_t initialDataCount, const D3D12_SUBRESOURCE_DATA* initialData, Tr2PrimaryRenderContextAL& renderContext );
+		ALResult Create( Strategy strategy, size_t size, D3D12_RESOURCE_FLAGS resourceFlags, D3D12_RESOURCE_STATES state, bool requiresImmediateBarriers, uint32_t initialDataCount, const D3D12_SUBRESOURCE_DATA* initialData, Tr2PrimaryRenderContextAL& renderContext );
 		void Destroy( Tr2PrimaryRenderContextAL& renderContext );
 
 		ALResult MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2PrimaryRenderContextAL& renderContext );
@@ -44,7 +44,11 @@ namespace TrinityALImpl
 			D3D12_GPU_VIRTUAL_ADDRESS gpuAddress;
 		};
 
-		ALResult CreateScratch( Resource& resource, Tr2PrimaryRenderContextAL& renderContext );
+		ALResult CreateScratch( Resource& resource, Tr2PrimaryRenderContextAL& renderContext )
+		{
+			return CreateScratch( resource, renderContext, m_size );
+		}
+		ALResult CreateScratch( Resource& resource, Tr2PrimaryRenderContextAL& renderContext, size_t size );
 
 		std::vector<Resource> m_resources;
 		Resource m_gpuResource;
@@ -53,6 +57,7 @@ namespace TrinityALImpl
 		D3D12_RESOURCE_STATES m_defaultState;
 		Strategy m_strategy;
 		std::string m_name;
+		bool m_requiresImmediateBarriers;
 	};
 	}
 

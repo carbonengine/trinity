@@ -10,7 +10,6 @@
 
 
 #include "IEveSpaceObjectAttachment.h"
-#include "ITr2GeometryProvider.h"
 #include "Tr2DeviceResource.h"
 #include "EveSpriteSet.h"
 #include "EveSpotlightSetItem.h"
@@ -72,8 +71,6 @@ public:
 	// access items
 	const EveSpotlightSetItemVector* GetSpotlightItems() const;
 	void AddSpotlightItem( EveSpotlightSetItemPtr item );
-
-	void GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData );
 
 	void SetShaderOption (const BlueSharedString& name, const BlueSharedString& value ) override;
 

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2SolidSet.h"
 #include "Tr2Renderer.h"
+#include "TriRenderBatch.h"
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 using namespace Tr2RenderContextEnum;
@@ -131,9 +132,7 @@ Vector3 Tr2SolidSet::GetCenterOfMass( void )
 }
 
 
-//////////////////////////////////////////////////////////////////////////
-// ITr2GeometryProvider
-void Tr2SolidSet::SubmitGeometry( Tr2RenderContext& renderContext )
+void Tr2SolidSet::GetBatchesImpl( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect, GetBatchesReason reason )
 {
 	if( !m_vertexBuffer.IsValid() )
 	{
@@ -145,11 +144,13 @@ void Tr2SolidSet::SubmitGeometry( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( TriangleVertex ) );
-	
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawPrimitive( 0, m_currentSubmittedTriangleCount );
+	Tr2RenderBatch batch;
+	batch.SetMaterial( effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetVertexDeclaration( m_vertexDeclHandle );
+	batch.SetStreamSource( 0, m_vertexBuffer, sizeof( TriangleVertex ) );
+	batch.SetDrawInstanced( m_currentSubmittedTriangleCount * 3, 1, 0, 0 );
+	accumulator->Commit( batch );
 }
 
 void Tr2SolidSet::AddTriangle( const Vector3& position1, const Vector4& color1, const Vector3& position2, const Vector4& color2,  const Vector3& position3, const Vector4& color3 )

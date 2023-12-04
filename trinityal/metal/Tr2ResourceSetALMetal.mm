@@ -55,6 +55,7 @@ namespace TrinityALImpl
 		for( auto stage : stages )
 		{
 			uint32_t buffersMask = 0;
+            uint32_t heapViewMask = 0;
 			NSUInteger texturesMin = NSUIntegerMax;
 			NSUInteger texturesMax = 0;
 
@@ -86,6 +87,15 @@ namespace TrinityALImpl
 						// bufferMask &= ~(1 << bufferIndex);
 					}
 					break;
+                case Tr2ResourceSetDescriptionAL::HEAP_VIEW:
+                    {
+                        CCP_ASSERT( i < METAL_SRV_BUFFER_COUNT );
+
+                        const NSUInteger bufferIndex = METAL_SRV_BUFFER_OFFSET + i;
+                        heapViewMask |= (1 << bufferIndex);
+
+                    }
+                    break;
 				case Tr2ResourceSetDescriptionAL::TEXTURE:
 					if( resource.texture.IsValid() )
 					{
@@ -139,6 +149,14 @@ namespace TrinityALImpl
 						// bufferMask &= ~(1 << bufferIndex);
 					}
 					break;
+                case Tr2ResourceSetDescriptionAL::HEAP_VIEW:
+                    {
+                        CCP_ASSERT( i < METAL_UAV_BUFFER_COUNT );
+
+                        const NSUInteger bufferIndex = METAL_UAV_BUFFER_OFFSET + i;
+                        heapViewMask |= (1 << heapViewMask);
+                    }
+                    break;
 				case Tr2ResourceSetDescriptionAL::TEXTURE:
 					if( resource.texture.IsValid() )
 					{
@@ -225,6 +243,7 @@ namespace TrinityALImpl
 			}
 
 			m_buffersMask[stage] = buffersMask;
+            m_heapViewMask[stage] = heapViewMask;
 			m_texturesRange[stage] = ( texturesMin != NSUIntegerMax ) ? NSMakeRange( texturesMin, texturesMax - texturesMin + 1 ) : NSMakeRange( 0, 0 );
 			m_samplersRange[stage] = ( samplersMin != NSUIntegerMax ) ? NSMakeRange( samplersMin, samplersMax - samplersMin + 1 ) : NSMakeRange( 0, 0 );
 		}
@@ -253,7 +272,8 @@ namespace TrinityALImpl
 				m_samplers[stage][i] = nil;
 			}
 
-			m_buffersMask[stage] = 0;
+            m_buffersMask[stage] = 0;
+            m_heapViewMask[stage] = 0;
 			m_texturesRange[stage] = NSMakeRange( 0, 0 );
 			m_samplersRange[stage] = NSMakeRange( 0, 0 );
 		}

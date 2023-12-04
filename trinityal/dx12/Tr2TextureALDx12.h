@@ -73,6 +73,10 @@ namespace TrinityALImpl
 		ALResult SetName( const char* name );
 
 		bool operator==( const Tr2TextureAL& other ) const;
+
+		uint32_t GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
+		uint32_t GetUavIndexInHeap( uint32_t mip ) const;
+
 	private:
 		void GetRegionSize( const Tr2TextureSubresource& region, uint32_t& pitch, uint64_t& size );
 
@@ -106,6 +110,7 @@ namespace TrinityALImpl
 		std::shared_ptr<ShaderResourceViewDx12> m_view[2];
 		std::vector<std::shared_ptr<RenderTargetViewDx12>> m_rtv;
 		std::shared_ptr<DepthStencilViewDx12> m_dsv;
+		uint32_t m_srvIndicesInHeap[2];
 		std::string m_name;
 
 		struct MipMapGenerator;

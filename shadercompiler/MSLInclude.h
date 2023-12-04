@@ -422,4 +422,12 @@ struct VectorReference3
 	int3 m_swizzles;
 	typename metal::remove_reference<TIn>::type m_value;
 };
+
+
+template <typename Resource>
+struct _ResourceRef
+{
+	Resource resource;
+};
+
 )MSL"

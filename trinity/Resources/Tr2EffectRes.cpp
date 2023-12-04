@@ -7,6 +7,12 @@ static unsigned int s_effectResId = 0;
 
 using namespace Tr2RenderContextEnum;
 
+namespace
+{
+std::vector<Tr2ShaderOption> s_globalOptions;
+}
+
+
 IBlueResource* CreateTr2EffectRes( const wchar_t* name )
 {
 	Tr2EffectResPtr p;
@@ -59,18 +65,31 @@ Tr2ShaderPtr Tr2EffectRes::GetShader( const Tr2ShaderOption* options, size_t cou
 	{
 		auto value = m_permutations[i].defaultOption;
 
-		Tr2ShaderOption* systemOptions;
-		size_t systemCount;
-		if( Tr2Renderer::GetSystemShaderOptions( &systemOptions, &systemCount ) )
+		bool foundGlobal = false;
+		for( auto& opt : GetGlobalEffectOptions() )
 		{
-			for( size_t k = 0; k < systemCount; ++k )
+			if( opt.name == m_permutations[i].name )
 			{
-				if( systemOptions[k].name == m_permutations[i].name )
+				auto found = std::find( begin( m_permutations[i].options ), end( m_permutations[i].options ), opt.value );
+				if( found != end( m_permutations[i].options ) )
+				{
+					value = found - begin( m_permutations[i].options );
+				}
+				foundGlobal = true;
+				break;
+			}
+		}
+
+		if( !foundGlobal )
+		{
+			for( size_t k = 0; k < count; ++k )
+			{
+				if( options[k].name == m_permutations[i].name )
 				{
 					size_t val = -1;
 					for( size_t j = 0; j < m_permutations[i].options.size(); ++j )
 					{
-						if( m_permutations[i].options[j] == systemOptions[k].value )
+						if( m_permutations[i].options[j] == options[k].value )
 						{
 							val = j;
 							break;
@@ -78,36 +97,12 @@ Tr2ShaderPtr Tr2EffectRes::GetShader( const Tr2ShaderOption* options, size_t cou
 					}
 					if( val == -1 )
 					{
-						CCP_LOGWARN( "Invalid situation value %s for permutation %s in effect %S", systemOptions[k].value.c_str(), m_permutations[i].name.c_str(), GetPath() );
+						CCP_LOGWARN( "Invalid situation value %s for permutation %s in effect %S", options[k].value.c_str(), m_permutations[i].name.c_str(), GetPath() );
 					}
 					else
 					{
 						value = val;
 					}
-				}
-			}
-		}
-
-		for( size_t k = 0; k < count; ++k )
-		{
-			if( options[k].name == m_permutations[i].name )
-			{
-				size_t val = -1;
-				for( size_t j = 0; j < m_permutations[i].options.size(); ++j )
-				{
-					if( m_permutations[i].options[j] == options[k].value )
-					{
-						val = j;
-						break;
-					}
-				}
-				if( val == -1 )
-				{
-					CCP_LOGWARN( "Invalid situation value %s for permutation %s in effect %S", options[k].value.c_str(), m_permutations[i].name.c_str(), GetPath() );
-				}
-				else
-				{
-					value = val;
 				}
 			}
 		}
@@ -384,4 +379,40 @@ size_t Tr2EffectRes::GetMemoryUsage()
 	// memory usage here is kind of nebulous - pixel/vertex shaders are
 	// registered with the effect state manager, won't ever be freed.
 	return m_data.size();
+}
+
+
+void ModifyGlobalEffectOptions( const std::vector<Tr2ShaderOption>& changes )
+{
+	if( changes.empty() )
+	{
+		return;
+	}
+	auto& options = s_globalOptions;
+	for( auto& change : changes )
+	{
+		auto SameOption = [&change]( auto& x ) { return change.name == x.name; };
+		if( change.value == BlueSharedString() )
+		{
+			options.erase( std::remove_if( begin( options ), end( options ), SameOption ) );
+		}
+		else
+		{
+			auto found = std::find_if( begin( options ), end( options ), SameOption );
+			if( found != end( options ) )
+			{
+				found->value = change.value;
+			}
+			else
+			{
+				options.push_back( change );
+			}
+		}
+	}
+	Tr2Renderer::RebuildEffects();
+}
+
+const std::vector<Tr2ShaderOption>& GetGlobalEffectOptions()
+{
+	return s_globalOptions;
 }

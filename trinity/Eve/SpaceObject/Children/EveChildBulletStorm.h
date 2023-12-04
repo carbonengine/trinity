@@ -25,6 +25,7 @@ class EveChildBulletStormPerObjectData : public Tr2PerObjectData
 {
 public:
 	void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	// vs
 	Matrix m_worldTransform;
@@ -39,7 +40,6 @@ public:
 BLUE_CLASS( EveChildBulletStorm ) :
 	public IEveSpaceObjectChild,
 	public ITr2Renderable,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource,
 	public INotify,
 	public IInitialize
@@ -78,10 +78,6 @@ public:
 	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 	float GetSortValue();
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource

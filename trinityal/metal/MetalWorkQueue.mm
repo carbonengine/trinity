@@ -85,7 +85,7 @@ MetalWorkQueue::MetalWorkQueue()
 		m_blendState[i].writeMask           = MTLColorWriteMaskAll;
 	}
     
-    m_frameSemaphore = dispatch_semaphore_create( 3 );
+    m_frameSemaphore = dispatch_semaphore_create( 2 );
 
 	m_depthStencilDescriptor = [MTLDepthStencilDescriptor new];
 	m_depthStencilDescriptor.depthWriteEnabled    = false;
@@ -1349,7 +1349,7 @@ void MetalWorkQueue::ResolveMsaa( id<MTLTexture> source, id<MTLTexture> destinat
 		for( uint32_t i = 0; i < numOldColorAttachments; ++i )
 		{
 			oldColorAttachments[i] = m_currentRenderPassDescriptor.colorAttachments[i].texture;
-			oldAttachmentSlice[i] = m_currentRenderPassDescriptor.colorAttachments[i].depthPlane;
+			oldAttachmentSlice[i] = uint32_t( m_currentRenderPassDescriptor.colorAttachments[i].depthPlane );
 			SetRenderAttachments( nil, i );
 		}
 
@@ -1393,7 +1393,7 @@ id<MTLDepthStencilState> MetalWorkQueue::GetCachedDepthStencilState( MTLDepthSte
 	if( m_depthStencilDescriptor.frontFaceStencil.stencilCompareFunction == MTLCompareFunctionAlways &&
 		m_depthStencilDescriptor.backFaceStencil.stencilCompareFunction == MTLCompareFunctionAlways )
 	{
-		index = descriptor.depthCompareFunction * 2 + ( descriptor.depthWriteEnabled ? 1 : 0 );
+		index = int( descriptor.depthCompareFunction * 2 + ( descriptor.depthWriteEnabled ? 1 : 0 ) );
 		CCP_ASSERT( index < METAL_DEPTHSTENCIL_CACHE_SIZE );
 
 		result = m_depthStencilStateCache[index];
@@ -1426,7 +1426,7 @@ size_t MetalWorkQueue::CalculateVertexDescriptorHash()
 		unsigned int mask = m_currentVertexStreamMask;
 		for( int i = 0; mask && i < METAL_MAX_VERTEX_ATTRIBUTES; ++i )
 		{
-			int stream = m_currentVertexDescriptor.attributes[i].bufferIndex;
+			auto stream = m_currentVertexDescriptor.attributes[i].bufferIndex;
 			unsigned int flag = ( 1 << stream );
 			if( mask & flag )
 			{
@@ -2285,27 +2285,48 @@ void MetalWorkQueue::SetColorWriteMask( uint32_t attachmentIndex, MTLColorWriteM
 	}
 }
 
-void MetalWorkQueue::SetConstants( Tr2RenderContextEnum::ShaderType shaderType, const void* constantBuffer, uint32_t size, uint64_t lockTag, uint32_t bufferIndex )
+void MetalWorkQueue::SetConstants( Tr2RenderContextEnum::ShaderType shaderType, const void* constantBuffer, uint32_t size, ConstantBufferToken& token, uint32_t bufferIndex )
 {
 	CCP_ASSERT( bufferIndex < METAL_CONST_BUFFER_COUNT );
 
 	ConstantBuffer& bufferSlot = m_constBuffers[shaderType][bufferIndex];
 	uint32_t flag = (1 << bufferIndex);
 
-	if( bufferSlot.data != constantBuffer || bufferSlot.size != size || bufferSlot.lockTag != lockTag )
+    auto frameNo = m_context->GetRecordingFrameNumber();
+    uint32_t page, offset;
+    if( token.frame != frameNo )
+    {
+        auto& allocator = m_context->GetConstantBufferAllocator();
+        auto entry = allocator.Allocate( constantBuffer, size );
+        token.offset = uint64_t( entry.offset ) | ( uint64_t( entry.page ) << 32 );
+        token.frame = frameNo;
+        page = entry.page;
+        offset = entry.offset;
+    }
+    else
+    {
+        uint64_t offs = token.offset;
+        
+        page = uint32_t( offs >> 32 );
+        offset = uint32_t( offs & 0xffffffff );
+    }
+	if( bufferSlot.offset != offset || bufferSlot.page != page )
 	{
-		bufferSlot = { constantBuffer, lockTag, size };
+		bufferSlot = { page, offset };
 		m_dirtyConstBuffersMask[shaderType] |= flag;
 	}
 	m_activeConstBuffersMask[shaderType] |= flag;
 }
 
-void MetalWorkQueue::SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask )
+void MetalWorkQueue::SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask, id<MTLBuffer> heapView, uint32_t heapViewMask )
 {
 	static_assert( sizeof( buffersMask ) * 8 >= METAL_MAX_BOUND_BUFFERS );
 	CCP_ASSERT( ( buffersMask & METAL_VERTEX_STREAM_BUFFER_MASK ) == 0 );
 
-	if( buffersMask == 0 )
+    static_assert( sizeof( heapViewMask ) * 8 >= METAL_MAX_BOUND_BUFFERS );
+    CCP_ASSERT( ( heapViewMask & METAL_VERTEX_STREAM_BUFFER_MASK ) == 0 );
+
+	if( buffersMask == 0 && heapViewMask == 0 )
 	{
 		return;
 	}
@@ -2325,10 +2346,25 @@ void MetalWorkQueue::SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, co
 			m_dirtyBuffersMask[shaderType] |= flag;
 		}
 	}
+    mask = heapViewMask;
+    while( mask )
+    {
+        int i = __builtin_ctz( mask );
+        uint32_t flag = ( 1 << i );
+
+        mask &= ~flag;
+
+        MetalBuffer& bufferSlot = m_buffers[shaderType][i];
+        if( bufferSlot.buffer != heapView )
+        {
+            bufferSlot = { heapView, 0 };
+            m_dirtyBuffersMask[shaderType] |= flag;
+        }
+    }
 
 	// Override all active buffers except stream buffers.
 	uint32_t oldActiveBuffersMask = m_activeBuffersMask[shaderType];
-	m_activeBuffersMask[shaderType] = buffersMask | ( m_activeBuffersMask[shaderType] & METAL_VERTEX_STREAM_BUFFER_MASK );
+	m_activeBuffersMask[shaderType] = buffersMask | heapViewMask | ( m_activeBuffersMask[shaderType] & METAL_VERTEX_STREAM_BUFFER_MASK );
 }
 
 void MetalWorkQueue::SetTextures( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLTexture>* textures, NSRange texturesRange )
@@ -2377,7 +2413,7 @@ void MetalWorkQueue::ResetBuffers( Tr2RenderContextEnum::ShaderType shaderType )
 	}
 	for( size_t i = 0, n = sizeof( m_constBuffers[shaderType] ) / sizeof( *m_constBuffers[shaderType] ); i < n; ++i )
 	{
-		m_constBuffers[shaderType][i] = { nullptr, 0, 0 };
+		m_constBuffers[shaderType][i] = { 0, 0 };
 	}
 
 	m_activeConstBuffersMask[shaderType] = 0;
@@ -2469,6 +2505,7 @@ void MetalWorkQueue::SetVertexBufferBindings()
 	// Bind constant buffers.
 	dirtyMask = m_dirtyConstBuffersMask[VERTEX_SHADER];
 	mask = dirtyMask & m_activeConstBuffersMask[VERTEX_SHADER] & m_shaderResourceMasks[VERTEX_SHADER].constantBufferMask;
+    auto& allocator = m_context->GetConstantBufferAllocator();
 	while( mask )
 	{
 		int i = __builtin_ctz( mask );
@@ -2478,9 +2515,10 @@ void MetalWorkQueue::SetVertexBufferBindings()
 		m_dirtyConstBuffersMask[VERTEX_SHADER] &= ~flag;
 		m_dirtyBuffersMask[VERTEX_SHADER] |= flag;
 
-		[m_currentRenderEncoder setVertexBytes:m_constBuffers[VERTEX_SHADER][i].data
-										length:m_constBuffers[VERTEX_SHADER][i].size
-									   atIndex:i];
+        auto& cbd = m_constBuffers[VERTEX_SHADER][i];
+        [m_currentRenderEncoder setVertexBuffer:allocator.GetPage( cbd.page )
+                                         offset:cbd.offset
+                                        atIndex:i];
 	}
 
 	dirtyMask = m_dirtyTexturesMask[VERTEX_SHADER];
@@ -2536,6 +2574,7 @@ void MetalWorkQueue::SetFragmentBufferBindings()
 	// Bind constant buffers.
 	dirtyMask = m_dirtyConstBuffersMask[PIXEL_SHADER];
 	mask = dirtyMask & m_activeConstBuffersMask[PIXEL_SHADER] & m_shaderResourceMasks[PIXEL_SHADER].constantBufferMask;
+    auto& allocator = m_context->GetConstantBufferAllocator();
 	while( mask )
 	{
 		int i = __builtin_ctz( mask );
@@ -2545,9 +2584,10 @@ void MetalWorkQueue::SetFragmentBufferBindings()
 		m_dirtyConstBuffersMask[PIXEL_SHADER] &= ~flag;
 		m_dirtyBuffersMask[PIXEL_SHADER] |= flag;
 
-		[m_currentRenderEncoder setFragmentBytes:m_constBuffers[PIXEL_SHADER][i].data
-										  length:m_constBuffers[PIXEL_SHADER][i].size
-										 atIndex:i];
+        auto& cbd = m_constBuffers[PIXEL_SHADER][i];
+        [m_currentRenderEncoder setFragmentBuffer:allocator.GetPage( cbd.page )
+                                           offset:cbd.offset
+                                          atIndex:i];
 	}
 
 	dirtyMask = m_dirtyTexturesMask[PIXEL_SHADER];
@@ -2604,6 +2644,7 @@ void MetalWorkQueue::SetComputeBufferBindings()
 	// Bind constant buffers.
 	dirtyMask = m_dirtyConstBuffersMask[COMPUTE_SHADER];
 	mask = dirtyMask & m_activeConstBuffersMask[COMPUTE_SHADER] & m_shaderResourceMasks[COMPUTE_SHADER].constantBufferMask;
+    auto& allocator = m_context->GetConstantBufferAllocator();
 	while( mask )
 	{
 		int i = __builtin_ctz( mask );
@@ -2613,9 +2654,10 @@ void MetalWorkQueue::SetComputeBufferBindings()
 		m_dirtyConstBuffersMask[COMPUTE_SHADER] &= ~flag;
 		m_dirtyBuffersMask[COMPUTE_SHADER] |= flag;
 
-		[m_currentComputeEncoder setBytes:m_constBuffers[COMPUTE_SHADER][i].data
-								   length:m_constBuffers[COMPUTE_SHADER][i].size
-								  atIndex:i];
+        auto& cbd = m_constBuffers[COMPUTE_SHADER][i];
+        [m_currentComputeEncoder setBuffer:allocator.GetPage( cbd.page )
+                                    offset:cbd.offset
+                                   atIndex:i];
 	}
 
 	dirtyMask = m_dirtyTexturesMask[COMPUTE_SHADER];
@@ -2685,7 +2727,8 @@ void MetalWorkQueue::DrawPrimitives(
 		MTLPrimitiveType primitiveType,
 		uint32_t numVertices,
 		uint32_t startVertex,
-		uint32_t numInstances )
+		uint32_t numInstances,
+		uint32_t startInstance )
 {
 	id<MTLRenderCommandEncoder> renderEncoder = GetRenderEncoder();
 	if( EmitRenderEncoderState() )
@@ -2702,7 +2745,7 @@ void MetalWorkQueue::DrawPrimitives(
 							  vertexStart:startVertex
 							  vertexCount:numVertices
 							instanceCount:numInstances
-							 baseInstance:0];
+							 baseInstance:startInstance];
 		}
 	}
 	ReleaseEncoder( false );
@@ -2729,12 +2772,15 @@ void MetalWorkQueue::DrawIndexedPrimitives(
 		MTLIndexType     indexType,
 		id<MTLBuffer>    indexBuffer,
 		uint32_t         startIndex,
-		uint32_t         numInstances )
+		uint32_t         numInstances,
+		int32_t          baseVertex,
+		uint32_t         baseInstance )
 {
 	id<MTLRenderCommandEncoder> renderEncoder = GetRenderEncoder();
 	if( EmitRenderEncoderState() )
 	{
-		if (numInstances <= 1) {
+		if ( numInstances <= 1 && baseVertex == 0 ) 
+		{
 			[renderEncoder drawIndexedPrimitives:primitiveType
 									  indexCount:numIndices
 									   indexType:indexType
@@ -2749,8 +2795,8 @@ void MetalWorkQueue::DrawIndexedPrimitives(
 									 indexBuffer:indexBuffer
 							   indexBufferOffset:startIndex * ( indexType == MTLIndexTypeUInt16 ? 2 : 4 )
 								   instanceCount:numInstances
-									  baseVertex:0
-									baseInstance:0];
+									  baseVertex:baseVertex
+									baseInstance:baseInstance];
 		}
 	}
 	ReleaseEncoder(false);

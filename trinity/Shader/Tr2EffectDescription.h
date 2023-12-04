@@ -3,6 +3,8 @@
 #ifndef Tr2EffectDescription_H
 #define Tr2EffectDescription_H
 
+#include "../Tr2IndirectDrawBuffer.h"
+
 extern const BlueSharedString DEFAULT_TECHNIQUE;
 extern const BlueSharedString ANY_TECHNIQUE;
 
@@ -90,6 +92,7 @@ struct Tr2EffectResource
 	const char* name;
 	// Texture type
 	Type type;
+	uint32_t arrayElements;
 	// Is texture requested to be converted from sRGB to linear
 	bool isSRGB;
 	// Autoregister annotation value
@@ -196,6 +199,10 @@ struct Tr2Pass
 	unsigned int shaderTypeMask;
 	unsigned int shaderProgram;
 	Tr2ResourceSetDescriptionAL resourceSetDesc;
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	Tr2IndirectDrawBufferLayout indirectLayout;
+#endif
 };
 
 struct Tr2EffectTechnique

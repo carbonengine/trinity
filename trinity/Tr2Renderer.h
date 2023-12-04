@@ -102,6 +102,7 @@ public:
 	static void RegisterEffect( Tr2Effect* f );
 	static void UnregisterEffect( Tr2Effect* f );
 	static void ReinitializeRegisteredEffects();
+	static void RebuildEffects();
 
 	// pointer since this can fail
 	static Tr2BufferAL* GetQuadListIndexBuffer( uint32_t numOfQuads );
@@ -223,7 +224,7 @@ public:
 	static void EnableFallbackTextureDebugging();
 	static void DisableFallbackTextureDebugging();
 	static const Tr2TextureAL& GetFallbackTexture( Tr2EffectResource::Type textureType, const char* debugContext );
-	static bool GetSystemShaderOptions( Tr2ShaderOption** options, size_t* count );
+	static void InitializeSystemShaderOptions();
 
 	static bool GetGeometryShaderSupport();
 private:

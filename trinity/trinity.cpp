@@ -129,17 +129,6 @@ void InitializeTrinity()
 	{
 		isUsingMetalValidation = strcmp( type, "0" ) != 0;
 	}
-
-	extern bool g_fullSizeConstantBuffers;
-	g_fullSizeConstantBuffers = BeOS->HasStartupArg( L"fullcb" );
-	if( isUsingMetalValidation )
-	{
-		g_fullSizeConstantBuffers = true;
-	}
-	if( g_fullSizeConstantBuffers )
-	{
-		CCP_LOGNOTICE( "trinity is using full constant buffer uploads to bypass graphics validation issues" );
-	}
 #endif
 
 #if TRINITY_PLATFORM_SUPPORTS_PARALLEL_CONTEXTS

@@ -23,7 +23,6 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_currentScreenSize( -1.f ),
 	m_sortValueOffset( 0 ),
 	m_sortValueScale( 1 ),
-	m_useSpaceObjectData( true ),
 	m_activationStrength( 1.0f ),
 	m_origin( SPACE ),
 	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
@@ -163,31 +162,34 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 	if( m_isVisible )
 	{
 		renderables.push_back( this );
-		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) ) 
+		if( !m_decals.empty() )
 		{
-			TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
-
-			if( geometryRes )
+			if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 			{
-				// runn over every decal and update it
-				for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+				auto geometryRes = m_mesh->GetGeometryResource();
+
+				if( geometryRes )
 				{
-					// now prep to get the renderables
-					( *it )->GetInstancedRenderables( renderables, instanced );
+					// runn over every decal and update it
+					for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+					{
+						// now prep to get the renderables
+						( *it )->GetInstancedRenderables( renderables, instanced );
+					}
 				}
 			}
-		}
-		else
-		{
-			TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
-
-			if( geometryRes )
+			else
 			{
-				// runn over every decal and update it
-				for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+				auto geometryRes = m_mesh->GetGeometryResource();
+
+				if( geometryRes )
 				{
-					// now prep to get the renderables
-					( *it )->GetRenderables( renderables, geometryRes, m_currentScreenSize );
+					// runn over every decal and update it
+					for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+					{
+						// now prep to get the renderables
+						( *it )->GetRenderables( renderables, geometryRes, m_currentScreenSize );
+					}
 				}
 			}
 		}
@@ -272,20 +274,6 @@ float EveChildMesh::GetSortValue()
 
 Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
-	if( !m_useSpaceObjectData )
-	{
-		EveBasicPerObjectData* perObjectData = accumulator->Allocate<EveBasicPerObjectData>();
-
-		if( !perObjectData )
-		{
-			return nullptr;
-		}
-
-		perObjectData->m_world = m_vsData.worldTransform;
-		perObjectData->m_worldInverseTranspose = Inverse( m_worldTransform );
-		return perObjectData;
-	}
-	
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
 	if( !perObjectData )
 	{

@@ -161,6 +161,7 @@ long Tr2RenderTarget::CreateManual(
 		m_cpuUsage = cpuUsage;
 		m_gpuUsage = gpuUsage;
 		m_renderTarget.SetName( m_name.c_str() );
+		m_onTextureChange();
 	}
 	else
 	{
@@ -177,6 +178,11 @@ Tr2TextureAL* Tr2RenderTarget::GetTexture()
 		return  &rt;
 	}
 	return nullptr;
+}
+
+Tr2RenderTarget::OnTextureChangeEvent& Tr2RenderTarget::OnTextureChange()
+{
+	return m_onTextureChange;
 }
 
 // --------------------------------------------------------------------------------------
@@ -197,6 +203,7 @@ void Tr2RenderTarget::Attach( const Tr2TextureAL& renderTarget, IRoot* owner )
 	{
 		m_attachedOwner = owner;
 	}
+	m_onTextureChange();
 }
 
 // --------------------------------------------------------------------------------------
@@ -205,6 +212,11 @@ void Tr2RenderTarget::Attach( const Tr2TextureAL& renderTarget, IRoot* owner )
 // --------------------------------------------------------------------------------------
 void Tr2RenderTarget::Detach()
 {
+	if( m_attachedOwner )
+	{
+		m_attachedOwner = nullptr;
+		m_onTextureChange();
+	}
 	m_attachedOwner = nullptr;
 }
 
@@ -257,6 +269,8 @@ bool Tr2RenderTarget::IsValid() const
 
 void Tr2RenderTarget::Destroy()
 {
+	auto wasValid = m_renderTarget.IsValid();
+
 	m_renderTarget = Tr2TextureAL();
 	m_width = 0;
 	m_height = 0;
@@ -267,6 +281,11 @@ void Tr2RenderTarget::Destroy()
 	m_type = TEX_TYPE_INVALID;
 	m_gpuUsage = Tr2GpuUsage::NONE;
 	m_cpuUsage = Tr2CpuUsage::NONE;
+
+	if( wasValid )
+	{
+		m_onTextureChange();
+	}
 }
 
 bool Tr2RenderTarget::IsReadable() const
@@ -396,6 +415,7 @@ void Tr2RenderTarget::ReleaseResources( TriStorage s )
 	if( m_renderTarget.IsValid() && ( m_renderTarget.GetMemoryClass() & s ) )
 	{
 		m_renderTarget = Tr2TextureAL();
+		m_onTextureChange();
 	}
 }
 
@@ -407,6 +427,7 @@ bool Tr2RenderTarget::OnPrepareResources()
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 
 		m_renderTarget.Create( Tr2BitmapDimensions( m_type, m_format, m_width, m_height, 1, m_mipCount ), m_msaa, m_gpuUsage, m_cpuUsage, nullptr, renderContext );
+		m_onTextureChange();
 	}
 	return true;
 }

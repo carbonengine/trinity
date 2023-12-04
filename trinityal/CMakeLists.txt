@@ -194,6 +194,8 @@ set(_SOURCES
     include/TrinityALForward.h
     metal/MetalContext.h
     metal/MetalContext.mm
+    metal/MetalResourceArray.h
+    metal/MetalResourceArray.mm
     metal/MetalShaders.metal
     metal/MetalShaderStrings.h
     metal/MetalShaderTypes.h

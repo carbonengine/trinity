@@ -10,7 +10,6 @@
 
 //#include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Include/ITriTargetable.h"
 #include "Resources/Tr2LodResource.h"
 
@@ -82,7 +81,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Rendering
 	void GetBatches( ITriRenderBatchAccumulator* accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, float screenSize );
-	Tr2EffectPtr GetArmorDamageShader( TriBatchType batchType ) const;
+	Tr2Effect* GetArmorDamageShader( TriBatchType batchType ) const;
 
 	// setup
 	void Set( TriPerlinCurvePtr hullDamageFlickerCurve, Tr2GpuUniqueEmitterPtr armorDamageEmitter, Tr2GpuUniqueEmitterPtr hullImpactEmitter, Tr2EffectPtr armorDamageShader, Tr2MeshBase* shieldImpactMesh, bool shieldIsEllipsoid );

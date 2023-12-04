@@ -289,6 +289,9 @@ public:
 	{
 		return E_NOTIMPL;
 	}
+
+	ALResult UseTextures( Tr2GpuUsage::Type usage, size_t count, Tr2TextureAL* textures );
+
 private:
 	ALResult SetPass();
 	ALResult CreateRenderPass( VkRenderPass& renderPass );

@@ -39,15 +39,12 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
 	virtual void ReleaseResources( TriStorage s );
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 #if TRINITYDEV
 	virtual void GetDescription( std::string& desc ) { desc = "<Tr2LineSet>"; }
 #endif
 
 protected:
+	void GetBatchesImpl( ITriRenderBatchAccumulator * accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect, GetBatchesReason reason ) override;
 
 	std::vector<LineData> m_lines;
 	unsigned int m_maxCurrentLineCount;

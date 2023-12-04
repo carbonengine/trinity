@@ -23,7 +23,6 @@ const Be::ClassInfo* TriGeometryRes::ExposeToBlue()
 		MAP_INTERFACE( IBlueResource )
 		MAP_INTERFACE( ICacheable )
 		MAP_INTERFACE( ITr2InstanceData )
-		MAP_INTERFACE( ITr2GpuBuffer )
 		MAP_ICACHEABLE_METHODS()
 
 		MAP_PROPERTY_READONLY

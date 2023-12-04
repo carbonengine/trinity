@@ -185,7 +185,7 @@ void MarkUsedSymbols( ASTNode* entryPoint, SymbolTable& symbols )
 	}
 	// "Globals" struct is a special case and we don't want to mark all of it's members
 	// as "used" automatically.
-	if( !(entryPoint->GetNodeType() == NT_STRUCT && entryPoint->GetSymbol()->name == globalsStructName ) )
+	if( !(entryPoint->GetNodeType() == NT_STRUCT && entryPoint->GetSymbol()->name == globalsStructName ) && entryPoint->GetNodeType() != NT_SAMPLER_STATE_LIST )
 	{
 		for( size_t i = 0; i < entryPoint->GetChildrenCount(); ++i )
 		{
@@ -247,8 +247,26 @@ static void MarkCBuffersAndStructsUsed( ASTNode* node, SymbolTable& symbols )
 	{
 		return;
 	}
-	if( node->GetNodeType() == NT_CBUFFER ||
-		node->GetNodeType() == NT_STRUCT )
+	if( node->GetNodeType() == NT_STRUCT )
+	{
+		if( HasUsedDeclarations( node ) )
+		{
+			MarkUsedSymbols( node, symbols );
+		}
+	}
+	auto IsGlobals = [node]() {
+		if( !node->GetSymbol() )
+		{
+			return false;
+		}
+		auto found = node->GetSymbol()->registerSpecifier.find( MakeInlineString( "" ) );
+		if( found == end( node->GetSymbol()->registerSpecifier ) )
+		{
+			return false;
+		}
+		return found->second.registerNumber == 0 && found->second.explicitRegister;
+	};
+	if( node->GetNodeType() == NT_CBUFFER && !IsGlobals() )
 	{
 		if( HasUsedDeclarations( node ) )
 		{
@@ -583,6 +601,7 @@ namespace
 		std::set<int> t;
 		std::set<int> s;
 		std::set<int> u;
+		std::set<int> spaces;
 	};
 
 	std::set<int>* GetRegisterSet( Registers& registers, char specifier )
@@ -624,57 +643,6 @@ namespace
 			return profile == MakeInlineString( "ds" );
 		default:
 			return false;
-		}
-	}
-
-
-	void FindExplicitRegisters( ASTNode* root, InputStageType stage, Registers& registers )
-	{
-		if( !root )
-		{
-			return;
-		}
-		switch( root->GetNodeType() )
-		{
-		case NT_CBUFFER:
-			for( auto& r : root->GetSymbol()->registerSpecifier )
-			{
-				if( r.second.explicitRegister && DoesProfileMatchStage( r.first, stage ) )
-				{
-					registers.b.insert( r.second.registerNumber );
-					if( !r.second.explicitSpace )
-					{
-						r.second.space = int( stage );
-					}
-				}
-			}
-			break;
-		case NT_NAME_DECLARATION:
-			for( auto& r : root->GetSymbol()->registerSpecifier )
-			{
-				if( r.second.explicitRegister && DoesProfileMatchStage( r.first, stage ) )
-				{
-					auto set = GetRegisterSet( registers, r.second.registerType );
-					if( set )
-					{
-						set->insert( r.second.registerNumber );
-						if( !r.second.explicitSpace )
-						{
-							r.second.space = int( stage );
-						}
-					}
-				}
-			}
-			break;
-		case NT_PROGRAM:
-		case NT_VAR_DECLARATION_LIST:
-			for( size_t i = 0; i < root->GetChildrenCount(); ++i )
-			{
-				FindExplicitRegisters( root->GetChild( i ), stage, registers );
-			}
-			break;
-		default:
-			break;
 		}
 	}
 
@@ -763,7 +731,7 @@ namespace
 					r.registerType = 'b';
 					r.registerNumber = AllocateRegister( registers.b );
 					r.subComponent = -1;
-					r.space = int( stage );
+					r.space = 0;
 					r.explicitRegister = false;
 					r.explicitSpace = false;
 					root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
@@ -788,12 +756,25 @@ namespace
 				}
 				if( !assigned )
 				{
+					bool isArray = root->GetChildOrNull( 0 ) && root->GetChildOrNull( 0 )->GetNodeType() == NT_BRACKET_LIST;
+
 					RegisterSpecifier r;
 					r.shaderProfile = MakeInlineString( "" );
 					r.registerType = registerType;
 					r.registerNumber = AllocateRegister( *GetRegisterSet( registers, registerType ) );
+					if( isArray )
+					{
+						r.space = AllocateRegister( registers.spaces );
+					}
+					else if( registerType == 's' )
+					{
+						r.space = int( stage );
+					}
+					else
+					{
+						r.space = 0;
+					}
 					r.subComponent = -1;
-					r.space = int( stage );
 					r.explicitRegister = false;
 					r.explicitSpace = false;
 					root->GetSymbol()->registerSpecifier[r.shaderProfile] = r;
@@ -818,7 +799,7 @@ void AssignRegisters( ASTNode* root, int32_t stage )
 	tmFunction( 0, 0 );
 
 	Registers registers;
-	FindExplicitRegisters( root, InputStageType( stage ), registers );
+	registers.spaces.insert( 0 );
 	AssignRegisters( root, InputStageType( stage ), registers );
 }
 
@@ -946,6 +927,22 @@ void CreateGlobalsCB( ParserState& state )
 		{
 			cbuffer->AddChild( root->GetChild( varStart ) );
 			root->RemoveChild( unsigned( varStart ) );
+		}
+
+		if( cbuffer->GetChildrenCount() > 1 )
+		{
+			size_t back = cbuffer->GetChildrenCount() - 1;
+			for( size_t i = 0; i < back; ++i )
+			{
+				auto nameDecl = cbuffer->GetChild( i )->GetChild( 0 );
+				auto type = nameDecl->GetType();
+				if( type.IsScalar() )
+				{
+					std::swap( cbuffer->GetChildren()[i], cbuffer->GetChildren()[back] );
+					--back;
+					--i;
+				}
+			}
 		}
 		root->InsertChild( unsigned( varStart ), cbuffer );
 	}
@@ -1075,6 +1072,15 @@ ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const Inlin
 	symbol->definition = param;
 	param->SetType( symbol->type );
 	param->SetSymbol( symbol );
-	param->AddChild( nullptr );
+	if (type.arrayDimensions)
+	{
+		auto brackets = state.NewNode( NT_BRACKET_LIST );
+		brackets->AddChild( nullptr );
+		param->AddChild( brackets );
+	}
+	else
+	{
+		param->AddChild( nullptr );
+	}
 	return param;
 }

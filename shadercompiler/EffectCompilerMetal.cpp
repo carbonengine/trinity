@@ -539,7 +539,11 @@ namespace
 							symbol->addressSpace = AddressSpace::Device;
 							break;
 						default:
-							if( type.storageClass == OP_GROUPSHARED )
+							if (type.arrayDimensions && type.IsTexture())
+							{
+								symbol->addressSpace = AddressSpace::Device;
+							}
+							else if( type.storageClass == OP_GROUPSHARED )
 							{
 								symbol->addressSpace = AddressSpace::Threadgroup;
 								if( type.arrayDimensions == 0 )
@@ -716,19 +720,46 @@ namespace
 							type.builtInType == OP_RWTEXTURE1DARRAY ||
 							type.builtInType == OP_RWTEXTURE2D ||
 							type.builtInType == OP_RWTEXTURE2DARRAY ||
-							type.builtInType == OP_RWTEXTURE3D ||
+							type.builtInType == OP_RWTEXTURE3D
 							// type.builtInType == OP_RWTEXTURE3DARRAY ||
-							type.builtInType == OP_SAMPLER ||
-							type.builtInType == OP_SAMPLER2D ||
-							type.builtInType == OP_SAMPLER3D ||
-							type.builtInType == OP_SAMPLERCUBE ||
-							type.builtInType == OP_SAMPLERCOMPARISON )
+							 )
 						{
 							globals.push_back( childNode );
 
 							root->RemoveChild( i );
 							--i;
 							--n;
+						}
+						else if( type.IsSampler() )
+						{
+							bool isDynamic = true;
+							Sampler sampler;
+							StaticSampler staticSampler = {};
+							if( GetSamplerState( state, childNode, sampler ) )
+							{
+								isDynamic = sampler.isDynamic;
+								if( !isDynamic )
+								{
+									if( !ConvertToStaticSampler( staticSampler, sampler ) )
+									{
+										isDynamic = true;
+									}
+								}
+							}
+
+							if( isDynamic )
+							{
+								globals.push_back( childNode );
+
+								root->RemoveChild( i );
+								--i;
+								--n;
+							}
+							else
+							{
+								symbol->addressSpace = AddressSpace::Constexpr;
+								childNode->GetChild( 1 )->m_extraData = new StaticSampler( staticSampler );
+							}
 						}
 						else
 						{
@@ -1894,23 +1925,44 @@ namespace
 			case OP_TEXTURE2DMS:
 			case OP_TEXTURE2DMSARRAY:
 			{
-				reg.registerType = MetalRegister::Texture;
-
-				if( FindUnusedRegister( nextFreeSRV, METAL_SRV_TEXTURE_COUNT, srvs, reg.registerNumber ) )
+				if( type.arrayDimensions )
 				{
-					srvs[reg.registerNumber] = symbol;
+					reg.registerType = MetalRegister::SRV;
+
+					if( FindUnusedRegister( nextFreeSRV, METAL_SRV_BUFFER_COUNT, srvs, reg.registerNumber ) )
+					{
+						srvs[reg.registerNumber] = symbol;
+					}
+					else
+					{
+						state.ShowMessage(
+							callNode->GetLocation(),
+							EC_CUSTOM_ERROR,
+							"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
+							ToString( symbol->name ).c_str(),
+							GetAssignedSymbolNames( srvs, 0, METAL_SRV_BUFFER_COUNT ).c_str() );
+						return false;
+					}
 				}
 				else
 				{
-					state.ShowMessage(
-						callNode->GetLocation(),
-						EC_CUSTOM_ERROR,
-						"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
-						ToString( symbol->name ).c_str(),
-						GetAssignedSymbolNames( srvs, 0, METAL_SRV_TEXTURE_COUNT ).c_str() );
-					return false;
-				}
+					reg.registerType = MetalRegister::Texture;
 
+					if( FindUnusedRegister( nextFreeSRV, METAL_SRV_TEXTURE_COUNT, srvs, reg.registerNumber ) )
+					{
+						srvs[reg.registerNumber] = symbol;
+					}
+					else
+					{
+						state.ShowMessage(
+							callNode->GetLocation(),
+							EC_CUSTOM_ERROR,
+							"Couldn't allocate an SRV register for %s. Reason: no free registers left. Already assigned SRVs: %s",
+							ToString( symbol->name ).c_str(),
+							GetAssignedSymbolNames( srvs, 0, METAL_SRV_TEXTURE_COUNT ).c_str() );
+						return false;
+					}
+				}
 				break;
 			}
 
@@ -2482,7 +2534,18 @@ namespace
 		call->SetType( functionHeader->GetType() );
 		for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
 		{
-			call->AddChild( NewVarIdentifier( state, params[i] ) );
+			if( params[i]->type.IsTexture() && params[i]->type.arrayDimensions > 0 )
+			{
+				auto cast = state.NewNode( NT_CAST_EXPRESSION );
+				cast->SetType( params[i]->type );
+				cast->AddChild( NewVarIdentifier( state, params[i] ) );
+				call->AddChild( cast );
+				cast->SetSymbol( params[i] );
+			}
+			else
+			{
+				call->AddChild( NewVarIdentifier( state, params[i] ) );
+			}
 		}
 		if( hasReturnType )
 		{
@@ -2665,6 +2728,9 @@ namespace
 			break;
 		case OP_INT:
 		case OP_UINT:
+		case OP_BINDLESSHANDLETEXTURE2D:
+		case OP_BINDLESSHANDLETEXTURE3D:
+		case OP_BINDLESSHANDLETEXTURECUBE:
 			if( isPacked )
 			{
 				typeSize = packedIntSize[type.width - 1];
@@ -2815,6 +2881,9 @@ namespace
 					constant.type = CONSTANT_TYPE_INT;
 					break;
 				case OP_UINT:
+				case OP_BINDLESSHANDLETEXTURE2D:
+				case OP_BINDLESSHANDLETEXTURE3D:
+				case OP_BINDLESSHANDLETEXTURECUBE:
 					constant.type = CONSTANT_TYPE_UINT;
 					break;
 				case OP_BOOL:
@@ -2864,19 +2933,28 @@ namespace
 					}
 				}
 
-				if( symbol->annotations && annotations.find( constant.name ) == annotations.end() )
+				if( annotations.find( constant.name ) == annotations.end() )
 				{
 					ParameterAnnotation paramAnnotations;
 
-					for( auto a = symbol->annotations->begin(); a != symbol->annotations->end(); ++a )
+					if( symbol->annotations )
 					{
-						Annotation result;
-						if( MakeEffectAnnotationFromSymbolAnnotation( *a, result, constant.isSRGB, constant.isAutoregister ) )
+						for( auto a = symbol->annotations->begin(); a != symbol->annotations->end(); ++a )
 						{
-							paramAnnotations.annotations[g_stringTable.AddString( a->name )] = result;
+							Annotation result;
+							if( MakeEffectAnnotationFromSymbolAnnotation( *a, result, constant.isSRGB, constant.isAutoregister ) )
+							{
+								paramAnnotations.annotations[g_stringTable.AddString( a->name )] = result;
+							}
 						}
 					}
-
+					if( symbol->type.IsBindlessHandle() )
+					{
+						Annotation symbolAnnotation;
+						symbolAnnotation.type = ANNOTATION_TYPE_INT;
+						symbolAnnotation.intValue = BindlessTextureType( symbol->type.builtInType );
+						paramAnnotations.annotations[g_stringTable.AddString( "BindlessHandleType" )] = symbolAnnotation;
+					}
 					if( !paramAnnotations.annotations.empty() )
 					{
 						annotations[constant.name] = paramAnnotations;
@@ -2940,6 +3018,40 @@ namespace
 		default:
 			assert( false );
 			return RT_SRV_TEXTURE2D;
+		}
+	}
+	TextureType TypeToTextureType( const Type& type )
+	{
+		switch( type.builtInType )
+		{
+		case OP_TEXTURE1D:
+		case OP_TEXTURE1DARRAY:
+		case OP_RWTEXTURE1D:
+		case OP_RWTEXTURE1DARRAY:
+			return TEX_TYPE_1D;
+		case OP_TEXTURE:
+		case OP_TEXTURE2D:
+		case OP_TEXTURE2DARRAY:
+		case OP_TEXTURE2DMS:
+		case OP_TEXTURE2DMSARRAY:
+		case OP_RWTEXTURE2D:
+		case OP_RWTEXTURE2DARRAY:
+			return TEX_TYPE_2D;
+		case OP_TEXTURE3D:
+		case OP_RWTEXTURE3D:
+		case OP_TEXTURE3DARRAY:
+			return TEX_TYPE_3D;
+		case OP_TEXTURECUBE:
+		case OP_TEXTURECUBEARRAY:
+			return TEX_TYPE_CUBE;
+		case OP_BUFFER:
+		case OP_RWBUFFER:
+			return TEX_TYPE_BUFFER;
+		case OP_STRUCTUREDBUFFER:
+		case OP_RWSTRUCTUREDBUFFER:
+			return TEX_TYPE_STRUCTURED_BUFFER;
+		default:
+			return TEX_TYPE_INVALID;
 		}
 	}
 
@@ -3025,28 +3137,73 @@ namespace
 			{
 				case MetalRegister::CBuffer:
 					{
-						stage.registerInputs.push_back( { RT_CONSTANT_BUFFER, (uint32_t)reg.registerNumber } );
+						stage.registerInputs.push_back( { RT_CONSTANT_BUFFER, (uint32_t)reg.registerNumber, 1, 0 } );
 					}
 					continue;
 				default:
 					break;
 			}
 
-			switch( type.builtInType )
+			if( type.arrayDimensions > 0 )
 			{
-			case OP_BUFFER:
-			case OP_STRUCTUREDBUFFER:
+				assert( reg.registerType == MetalRegister::SRV || reg.registerType == MetalRegister::UAV );
+
+				stage.registerInputs.push_back( { reg.registerType == MetalRegister::SRV ? RT_SRV_BUFFER : RT_UAV_BUFFER, (uint32_t)reg.registerNumber, (uint32_t)type.arraySizes[0], 0 } );
+
+				if( symbol->used )
 				{
+					if( reg.registerType == MetalRegister::SRV )
+					{
+						Texture texture;
+						texture.name = g_stringTable.AddString( symbol->name );
+						texture.type = TypeToTextureType( type );
+						if( texture.type == TEX_TYPE_INVALID )
+						{
+							continue;
+						}
+						ParameterAnnotation paramAnnotations;
+						if( ExtractAnnotations( symbol->name, state, paramAnnotations, &texture.isSRGB, &texture.isAutoregister ) )
+						{
+							annotations[texture.name] = paramAnnotations;
+						}
+						stage.textures[uint8_t( reg.registerNumber )] = texture;
+					}
+					else
+					{
+						Uav texture;
+						texture.name = g_stringTable.AddString( symbol->name );
+						texture.type = TypeToTextureType( type );
+						if( texture.type == TEX_TYPE_INVALID )
+						{
+							continue;
+						}
+
+						ParameterAnnotation paramAnnotations;
+						if( ExtractAnnotations( symbol->name, state, paramAnnotations, nullptr, &texture.isAutoregister ) )
+						{
+							annotations[texture.name] = paramAnnotations;
+						}
+
+						stage.uavs[uint8_t( reg.registerNumber )] = texture;
+					}
+				}
+			}
+			else
+			{
+				switch( type.builtInType )
+				{
+				case OP_BUFFER:
+				case OP_STRUCTUREDBUFFER: {
 					assert( reg.registerType == MetalRegister::CBuffer ||
 							reg.registerType == MetalRegister::SRV );
 
-					stage.registerInputs.push_back( { TypeToRegisterInputType( type ), (uint32_t)reg.registerNumber } );
+					stage.registerInputs.push_back( { TypeToRegisterInputType( type ), (uint32_t)reg.registerNumber, 1, 0 } );
 
 					if( symbol->used )
 					{
 						Texture texture;
 						texture.name = g_stringTable.AddString( symbol->name );
-						texture.type = type.builtInType == OP_BUFFER ? TEX_TYPE_BUFFER : TEX_TYPE_STRUCTURED_BUFFER;
+						texture.type = TypeToTextureType( type );
 
 						ParameterAnnotation paramAnnotations;
 						if( ExtractAnnotations( symbol->name, state, paramAnnotations, &texture.isSRGB, &texture.isAutoregister ) )
@@ -3059,18 +3216,17 @@ namespace
 				}
 				break;
 
-			case OP_RWBUFFER:
-			case OP_RWSTRUCTUREDBUFFER:
-				{
+				case OP_RWBUFFER:
+				case OP_RWSTRUCTUREDBUFFER: {
 					assert( reg.registerType == MetalRegister::UAV );
 
-					stage.registerInputs.push_back( { TypeToRegisterInputType( type ), (uint32_t)reg.registerNumber } );
+					stage.registerInputs.push_back( { TypeToRegisterInputType( type ), (uint32_t)reg.registerNumber, 1, 1 } );
 
 					if( symbol->used )
 					{
 						Uav uav;
 						uav.name = g_stringTable.AddString( symbol->name );
-						uav.type = ( type.builtInType == OP_RWBUFFER ) ? TEX_TYPE_UAV_RWTYPED : TEX_TYPE_UAV_RWSTRUCTURED;
+						uav.type = TypeToTextureType( type );
 
 						ParameterAnnotation paramAnnotations;
 						if( ExtractAnnotations( symbol->name, state, paramAnnotations, nullptr, &uav.isAutoregister ) )
@@ -3083,162 +3239,116 @@ namespace
 				}
 				break;
 
-			case OP_TEXTURE:
-			case OP_TEXTURE1D:
-			case OP_TEXTURE1DARRAY:
-			case OP_TEXTURE2D:
-			case OP_TEXTURE2DARRAY:
-			case OP_TEXTURE3D:
-			// case OP_TEXTURE3DARRAY:
-			case OP_TEXTURECUBE:
-			case OP_TEXTURECUBEARRAY:
-			case OP_TEXTURE2DMS:
-			case OP_TEXTURE2DMSARRAY:
-			{
-				assert( reg.registerType == MetalRegister::Texture );
+				case OP_TEXTURE:
+				case OP_TEXTURE1D:
+				case OP_TEXTURE1DARRAY:
+				case OP_TEXTURE2D:
+				case OP_TEXTURE2DARRAY:
+				case OP_TEXTURE3D:
+				// case OP_TEXTURE3DARRAY:
+				case OP_TEXTURECUBE:
+				case OP_TEXTURECUBEARRAY:
+				case OP_TEXTURE2DMS:
+				case OP_TEXTURE2DMSARRAY: {
+					assert( reg.registerType == MetalRegister::Texture );
 
-				stage.registerInputs.push_back( { TypeToRegisterInputType( type ), (uint32_t)reg.registerNumber } );
+					stage.registerInputs.push_back( { TypeToRegisterInputType( type ), (uint32_t)reg.registerNumber, 1, 0 } );
 
-				if( symbol->used )
-				{
-					Texture texture;
-					texture.name = g_stringTable.AddString( symbol->name );
-
-					ParameterAnnotation paramAnnotations;
-					if( ExtractAnnotations( symbol->name, state, paramAnnotations, &texture.isSRGB, &texture.isAutoregister ) )
+					if( symbol->used )
 					{
-						annotations[texture.name] = paramAnnotations;
-					}
-
-					switch( type.builtInType )
-					{
-					case OP_TEXTURE1D:
-					case OP_TEXTURE1DARRAY:
-						texture.type = TEX_TYPE_1D;
-						break;
-					case OP_TEXTURE:
-					case OP_TEXTURE2D:
-					case OP_TEXTURE2DARRAY:
-					case OP_TEXTURE2DMS:
-					case OP_TEXTURE2DMSARRAY:
-						texture.type = TEX_TYPE_2D;
-						break;
-					case OP_TEXTURE3D:
-					// case OP_TEXTURE3DARRAY:
-						texture.type = TEX_TYPE_3D;
-						break;
-					case OP_TEXTURECUBE:
-					case OP_TEXTURECUBEARRAY:
-						texture.type = TEX_TYPE_CUBE;
-						break;
-					default:
-						texture.type = TEX_TYPE_INVALID;
-						break;
-					}
-
-					if( texture.type == TEX_TYPE_INVALID )
-					{
-						continue;
-					}
-
-					stage.textures[uint8_t( reg.registerNumber )] = texture;
-				}
-				break;
-			}
-			case OP_RWTEXTURE1D:
-			case OP_RWTEXTURE1DARRAY:
-			case OP_RWTEXTURE2D:
-			case OP_RWTEXTURE2DARRAY:
-			case OP_RWTEXTURE3D:
-			// case OP_RWTEXTURE3DARRAY:
-			{
-				assert( reg.registerType == MetalRegister::UAV );
-
-				stage.registerInputs.push_back( { TypeToRegisterInputType( type ), (uint32_t)reg.registerNumber } );
-
-				if( symbol->used )
-				{
-					Uav uav;
-					uav.name = g_stringTable.AddString( symbol->name );
-
-					ParameterAnnotation paramAnnotations;
-					if( ExtractAnnotations( symbol->name, state, paramAnnotations, nullptr, &uav.isAutoregister ) )
-					{
-						annotations[uav.name] = paramAnnotations;
-					}
-
-					switch( type.builtInType )
-					{
-					case OP_RWTEXTURE1D:
-					case OP_RWTEXTURE1DARRAY:
-						uav.type = TEX_TYPE_1D;
-						break;
-					case OP_RWTEXTURE2D:
-					case OP_RWTEXTURE2DARRAY:
-						uav.type = TEX_TYPE_2D;
-						break;
-					case OP_RWTEXTURE3D:
-					// case OP_RWTEXTURE3DARRAY:
-						uav.type = TEX_TYPE_3D;
-						break;
-					default:
-						uav.type = TEX_TYPE_INVALID;
-						break;
-					}
-
-					if( uav.type == TEX_TYPE_INVALID )
-					{
-						continue;
-					}
-
-					stage.uavs[uint8_t( reg.registerNumber )] = uav;
-				}
-
-				break;
-			}
-
-			case OP_SAMPLER:
-			case OP_SAMPLER2D:
-			case OP_SAMPLER3D:
-			case OP_SAMPLERCUBE:
-			case OP_SAMPLERCOMPARISON:
-			{
-				assert( reg.registerType == MetalRegister::Sampler );
-
-				stage.registerInputs.push_back( { TypeToRegisterInputType( type ), (uint32_t)reg.registerNumber } );
-
-				if( symbol->used )
-				{
-					Sampler sampler = {};
-
-					auto globalSamplerSymbol = state.GetSymbolTable().LookupGlobal( ToString( symbol->name ).c_str() );
-					if( !GetSamplerState( state, globalSamplerSymbol->definition, sampler ) )
-					{
-						return false;
-					}
-
-					if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressV == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressW == D3D11_TEXTURE_ADDRESS_BORDER )
-					{
-						auto& c = sampler.borderColor;
-						if( ( c.x != 0 || c.y != 0 || c.z != 0 || c.w != 0 ) &&
-							( c.x != 0 || c.y != 0 || c.z != 0 || c.w != 1 ) &&
-							( c.x != 1 || c.y != 1 || c.z != 1 || c.w != 1 ) )
+						Texture texture;
+						texture.name = g_stringTable.AddString( symbol->name );
+						texture.type = TypeToTextureType( type );
+						if( texture.type == TEX_TYPE_INVALID )
 						{
-							state.ShowMessage( globalSamplerSymbol->definition->GetLocation(), EC_CUSTOM_ERROR, "sampler border color is not one of colors supported by Metal" );
+							continue;
+						}
+
+						ParameterAnnotation paramAnnotations;
+						if( ExtractAnnotations( symbol->name, state, paramAnnotations, &texture.isSRGB, &texture.isAutoregister ) )
+						{
+							annotations[texture.name] = paramAnnotations;
+						}
+
+						stage.textures[uint8_t( reg.registerNumber )] = texture;
+					}
+					break;
+				}
+				case OP_RWTEXTURE1D:
+				case OP_RWTEXTURE1DARRAY:
+				case OP_RWTEXTURE2D:
+				case OP_RWTEXTURE2DARRAY:
+				case OP_RWTEXTURE3D:
+					// case OP_RWTEXTURE3DARRAY:
+					{
+						assert( reg.registerType == MetalRegister::UAV );
+
+						stage.registerInputs.push_back( { TypeToRegisterInputType( type ), (uint32_t)reg.registerNumber, 1, 0 } );
+
+						if( symbol->used )
+						{
+							Uav uav;
+							uav.name = g_stringTable.AddString( symbol->name );
+							uav.type = TypeToTextureType( type );
+							if( uav.type == TEX_TYPE_INVALID )
+							{
+								continue;
+							}
+
+							ParameterAnnotation paramAnnotations;
+							if( ExtractAnnotations( symbol->name, state, paramAnnotations, nullptr, &uav.isAutoregister ) )
+							{
+								annotations[uav.name] = paramAnnotations;
+							}
+
+							stage.uavs[uint8_t( reg.registerNumber )] = uav;
+						}
+
+						break;
+					}
+
+				case OP_SAMPLER:
+				case OP_SAMPLER2D:
+				case OP_SAMPLER3D:
+				case OP_SAMPLERCUBE:
+				case OP_SAMPLERCOMPARISON: {
+					assert( reg.registerType == MetalRegister::Sampler );
+
+					stage.registerInputs.push_back( { TypeToRegisterInputType( type ), (uint32_t)reg.registerNumber, 1, 0 } );
+
+					if( symbol->used )
+					{
+						Sampler sampler = {};
+
+						auto globalSamplerSymbol = state.GetSymbolTable().LookupGlobal( ToString( symbol->name ).c_str() );
+						if( !GetSamplerState( state, globalSamplerSymbol->definition, sampler ) )
+						{
 							return false;
 						}
+
+						if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressV == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressW == D3D11_TEXTURE_ADDRESS_BORDER )
+						{
+							auto& c = sampler.borderColor;
+							if( ( c.x != 0 || c.y != 0 || c.z != 0 || c.w != 0 ) &&
+								( c.x != 0 || c.y != 0 || c.z != 0 || c.w != 1 ) &&
+								( c.x != 1 || c.y != 1 || c.z != 1 || c.w != 1 ) )
+							{
+								state.ShowMessage( globalSamplerSymbol->definition->GetLocation(), EC_CUSTOM_ERROR, "sampler border color is not one of colors supported by Metal" );
+								return false;
+							}
+						}
+
+						sampler.name = g_stringTable.AddString( symbol->name );
+
+						stage.samplers[uint8_t( reg.registerNumber )] = sampler;
 					}
 
-					sampler.name = g_stringTable.AddString( symbol->name );
-
-					stage.samplers[uint8_t( reg.registerNumber )] = sampler;
+					break;
 				}
 
-				break;
-			}
-
-			default:
-				break;
+				default:
+					break;
+				}
 			}
 		}
 

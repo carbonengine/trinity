@@ -9,7 +9,6 @@
 #define EveChildCloud_H
 
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
 #include "Tr2ShLightingManager.h"
@@ -26,7 +25,6 @@ BLUE_DECLARE_INTERFACE( ITriQuaternionFunction );
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveChildCloud ) :
 	public ITr2Renderable,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource,
 	public IInitialize,
 	public INotify,
@@ -67,10 +65,6 @@ public:
 	virtual bool HasTransparentBatches();
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource

@@ -26,6 +26,18 @@ class Tr2BufferAL;
 struct ITr2RenderContextEvents;
 
 
+class Tr2BindlessResourcesAL
+{
+public:
+	void Add( const Tr2TextureAL& texture );
+	void Add( const Tr2BindlessResourcesAL& resources );
+	void Clear();
+	friend class Tr2RenderContextAL;
+
+private:
+	std::vector<TrinityALImpl::Tr2TextureAL*> m_textures;
+};
+
 // -------------------------------------------------------------
 // Description:
 //   See http://carbon/wiki/Tr2RenderContext
@@ -63,7 +75,8 @@ public:
 		uint32_t offset,
 		uint32_t stride ) throw( );
 
-	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( );
+	ALResult SetIndices( const Tr2BufferAL& buffer ) throw( );
+	ALResult SetIndices( const Tr2BufferAL& buffer, int stride ) throw();
 
 	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
 	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
@@ -95,6 +108,18 @@ public:
 		uint32_t startIndex,
 		uint32_t primitiveCount,
 		uint32_t numInstances );
+
+	ALResult DrawIndexedInstanced(
+		uint32_t indexCountPerInstance,
+		uint32_t instanceCount,
+		uint32_t startIndexLocation,
+		int32_t baseVertexLocation,
+		uint32_t startInstanceLocation );
+	ALResult DrawInstanced(
+		uint32_t vertexCountPerInstance,
+		uint32_t instanceCount,
+		uint32_t startVertexLocation,
+		uint32_t startInstanceLocation );
 
 	ALResult DrawIndexedPrimitiveUP(
 		uint32_t numVertices,
@@ -205,6 +230,8 @@ public:
 	void EndParallelEncoding();
 	
 	ALResult ForkContext( Tr2RenderContextAL* context, uint32_t index ) const;
+
+	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
 
 protected:
 	bool                               m_isValid;

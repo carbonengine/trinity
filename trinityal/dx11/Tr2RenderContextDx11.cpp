@@ -750,7 +750,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
 	uint32_t,
 	uint32_t startIndex, 
 	uint32_t primitiveCount, 
-	uint32_t ) throw()
+	uint32_t baseVertexLocation ) throw()
 {
 	auto vc = ComputeVertexCount( primitiveCount );
 	
@@ -764,7 +764,7 @@ ALResult Tr2RenderContextAL::DrawIndexedPrimitive(
 	}
 
 	ApplyReadOnlyDepth();
-	m_context->DrawIndexed( vc, startIndex, 0 );
+	m_context->DrawIndexed( vc, startIndex, baseVertexLocation );
 	
 	return S_OK;
 }
@@ -791,6 +791,50 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	
 	return S_OK;
 }
+
+ALResult Tr2RenderContextAL::DrawIndexedInstanced(
+	uint32_t indexCountPerInstance,
+	uint32_t instanceCount,
+	uint32_t startIndexLocation,
+	int32_t baseVertexLocation,
+	uint32_t startInstanceLocation ) throw()
+{
+	CCP_STATS_ADD( primitiveCount, indexCountPerInstance * instanceCount / 3 );
+	CCP_STATS_ADD( vertexCount, indexCountPerInstance * instanceCount );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	if( !ApplyShadowRenderStates() )
+	{
+		return E_FAIL;
+	}
+
+	ApplyReadOnlyDepth();
+	m_context->DrawIndexedInstanced( indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation );
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DrawInstanced(
+	uint32_t vertexCountPerInstance,
+	uint32_t instanceCount,
+	uint32_t startVertexLocation,
+	uint32_t startInstanceLocation ) throw( )
+{
+	CCP_STATS_ADD( primitiveCount, vertexCountPerInstance * instanceCount / 3 );
+	CCP_STATS_ADD( vertexCount, vertexCountPerInstance * instanceCount );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	if( !ApplyShadowRenderStates() )
+	{
+		return E_FAIL;
+	}
+
+	ApplyReadOnlyDepth();
+	m_context->DrawInstanced( vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation );
+
+	return S_OK;
+}
+
 
 ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw()
 {
@@ -1241,9 +1285,13 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 
 ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL & buffer ) throw()
 {
-	m_context->IASetIndexBuffer( buffer.m_buffer->m_buffer,
-		buffer.GetDesc().stride == 2  ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT,
-		0 );
+	return SetIndices( buffer, buffer.GetDesc().stride );
+}
+
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, uint32_t stride) throw()
+{
+	m_context->IASetIndexBuffer( buffer.m_buffer->m_buffer, stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT, 0 );
 	return S_OK;
 }
 
@@ -2131,6 +2179,11 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Dep
 
 void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2ColorAttachment&, const Tr2DepthAttachment& )
 {
+}
+
+ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type, const Tr2BindlessResourcesAL& )
+{
+	return S_OK;
 }
 
 void TrinityALImpl::SetDebugName( ID3D11DeviceChild* resource, const char* name )

@@ -957,6 +957,10 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 		"InputPatch" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_INPUTPATCH ); }
 		"OutputPatch" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_OUTPUTPATCH ); }
 
+		"BindlessHandleTexture2D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLETEXTURE2D ); }
+		"BindlessHandleTexture3D" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLETEXTURE3D ); }
+		"BindlessHandleTextureCube" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_BINDLESSHANDLETEXTURECUBE ); }
+
 		"RWBuffer" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_RWBUFFER ); }
 		"RWByteAddressBuffer" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_RWBYTEADDRESSBUFFER ); }
 		"RWStructuredBuffer" { RETURN( state.m_mode == ParserState::FX ? OP_ID : OP_RWSTRUCTUREDBUFFER ); }

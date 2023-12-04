@@ -116,6 +116,7 @@ public:
 		void GetSharedConstantBuffer( const void* contents, uint32_t size );
 
 		Tr2EffectParamVector m_shaderParameters;
+		Tr2EffectParamVector m_shaderParametersWithNotification;
 		Tr2EffectParamVector m_textures;
 		Tr2EffectParamVector m_uavs;
 		Tr2SamplerOverrideDataVector m_samplers;
@@ -129,8 +130,12 @@ public:
 	std::vector<ITriReroutable*> m_reroutedParameters;
 	Tr2ResourceSetDescriptionAL m_resourceSetDesc;
 	Tr2ResourceSetAL m_resourceSet;
+	std::vector<ITr2EffectValuePtr> m_usedResources;
+	Tr2BindlessResourcesAL m_usedTextures;
 	uint32_t m_resourceSetHash;
 	bool m_resourceSetDirty;
+	bool m_compatibleWithGdr;
+	bool m_usedTexturesDirty;
 };
 
 typedef std::vector<std::unique_ptr<Tr2EffectPassParameters>> Tr2EffectPassParametersVector;
@@ -154,8 +159,16 @@ public:
 	Tr2EffectPassParameters* GetPassDescription( uint32_t techniqueIndex, uint32_t passIndex );
 
 	void InvalidateResourceSets();
+	void ResourceChanged();
+	void MarkConstantBuffersDirty();
 
 	void UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities );
+
+	void GetUsedBindlessTextures( uint32_t techniqueIndex, Tr2BindlessResourcesAL& usedTextures );
+
+	bool CompatibleWithGdr() const;
+	bool CompatibleWithGdr( const BlueSharedString& techniqueName ) const;
+	void ApplyConstantBuffers( uint32_t techniqueIndex, unsigned int passIndex, Tr2IndirectDrawBufferWriter& indirectBuffer, Tr2RenderContext& renderContext );
 
 protected:
 	bool ApplyShaderInputs( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const;
@@ -164,6 +177,7 @@ protected:
 	Tr2EffectTechniqueParametersVector m_parametersForPasses;
 	std::vector<ITriEffectTextureParameterPtr> m_lodTextureParameters;
 	mutable uint32_t m_resourceSetHash;
+	bool m_compatibleWithGdr;
 };
 
 TYPEDEF_BLUECLASS( Tr2Material );

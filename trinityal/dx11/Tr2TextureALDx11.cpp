@@ -1305,6 +1305,16 @@ namespace TrinityALImpl
 		return S_OK;
 	}
 
+	uint32_t Tr2TextureAL::GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace ) const
+	{
+		return 0xffffffff;
+	}
+	
+	uint32_t Tr2TextureAL::GetUavIndexInHeap( uint32_t ) const
+	{
+		return 0xffffffff;
+	}
+
 	void Tr2TextureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2TextureAL";

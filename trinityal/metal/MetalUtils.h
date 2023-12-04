@@ -59,6 +59,60 @@ namespace TrinityALImpl
 		void SetupVertexFormatConversionTable();
 	};
 
+struct ConstantBufferToken
+{
+    void Invalidate()
+    {
+        frame--;
+    }
+    void Reset()
+    {
+        frame = 0;
+        offset = 0;
+    }
+    
+    // page index (32 bits) and offset (32 bits)
+    std::atomic<uint64_t> offset = 0;
+    std::atomic<uint64_t> frame = 0;
+};
+
+
+class ConstantBufferAllocator
+{
+public:
+    struct Entry
+    {
+        uint32_t offset;
+        uint32_t page;
+    };
+
+    ConstantBufferAllocator();
+    ConstantBufferAllocator( const ConstantBufferAllocator& ) = delete;
+
+    void Initialize( id<MTLDevice> device );
+    void Reset();
+
+    Entry Allocate( const void* data, uint32_t size );
+    id<MTLBuffer> GetPage( uint32_t page );
+    
+    uint32_t GetTotalUploadedSize() const;
+    
+    static const uint32_t CONST_PAGE_SIZE = 2 * 1024 * 1024;
+    static const uint32_t CONST_ALIGNMENT = 256;
+    static const uint32_t MAX_PAGE_COUNT = 32;
+
+private:
+    void CreatePage( uint32_t index );
+
+    // page index (32 bits) and offset (32 bits)
+    std::atomic<uint64_t> m_offset;
+    id<MTLBuffer> m_pages[MAX_PAGE_COUNT];
+    id<MTLDevice> m_device;
+    std::mutex m_pagesMutex;
+    uint32_t m_totalUploadedSize;
+};
+
+
 } // TrinityALImpl
 
 

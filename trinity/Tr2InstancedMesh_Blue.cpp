@@ -47,7 +47,6 @@ const Be::ClassInfo* Tr2InstancedMesh::ExposeToBlue()
 		MAP_ATTRIBUTE( "minBounds", m_minBounds, "Min bounds in local space for EXPLICIT bounds\n:jessica-group: Bounds", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "maxBounds", m_maxBounds, "Max bounds in local space for EXPLICIT bounds\n:jessica-group: Bounds", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "maxInstanceSize", m_maxInstanceSize, "Max instance radius for FROM_INSTANCES bounds\n:jessica-group: Bounds", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "instanceCount", m_instanceCount, "Buffer containing instance count for indirect rendering", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 	EXPOSURE_CHAINTO( Tr2Mesh )
 }

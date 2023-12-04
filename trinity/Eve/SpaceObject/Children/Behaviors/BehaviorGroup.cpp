@@ -661,7 +661,6 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 	m_lightInfo.clear();
 	auto agentScale = Vector3( 1.0, 1.0, 1.0 );
 	Matrix zeroMatrix = ScalingMatrix( Vector3( 0.0, 0.0, 0.0 ) );
-	unsigned int agentIndex = 0;
 
 	if( m_currentScreenSize == 0.0 )
 	{
@@ -695,6 +694,22 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 			}
 			memcpy( data, &meshData, 12 * sizeof( float ) );
 			data += 12 * sizeof( float );
+		}
+		else
+		{
+			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
+			data += 12 * sizeof( float );
+		}
+	}
+
+	unsigned int agentIndex = 0;
+	for( auto agent = m_agents.begin(); agent != m_agents.end(); ++agent )
+	{
+		float LOD = m_debugMode ? m_debugLodLevel : ( *agent ).xfade;
+		Matrix agentTransform = TransformationMatrix( agentScale, agent->rotation, agent->position );
+		if( agent->isVisible && m_display )
+		{
+			float LODmod = 0;
 
 			// boosters
 			Vector4 boosterPos = Vector4( 0, 0, 0, 0 );
@@ -738,9 +753,6 @@ void BehaviorGroup::GetInfoForBuffer( uint8_t* data, const Matrix& parentWorldLo
 		}
 		else
 		{
-			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
-			data += 12 * sizeof( float );
-
 			// boosters
 			memcpy( data, &zeroMatrix, 12 * sizeof( float ) );
 			data += 12 * sizeof( float );

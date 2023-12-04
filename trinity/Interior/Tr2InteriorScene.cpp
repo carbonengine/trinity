@@ -616,6 +616,11 @@ void Tr2InteriorScene::RenderFullForward( Tr2RenderContext& renderContext )
 		FillAndSetConstants(m_perFrameVSBuffer, m_perFrameVSData, VERTEX_SHADER, Tr2Renderer::GetPerFrameVSStartRegister(), renderContext);
 		FillAndSetConstants(m_perFramePSBuffer, m_perFramePSData, PIXEL_SHADER, Tr2Renderer::GetPerFramePSStartRegister(), renderContext);
 	}
+
+	if( m_renderBackgroundCubeMap && m_backgroundEffect )
+	{
+		Tr2Renderer::DrawCameraSpaceScreenQuad( renderContext, m_backgroundEffect->GetShaderStateInterface(), m_backgroundEffect );
+	}
 	
 	// Render geometry
 	RenderGeometry( nullptr, renderContext );
@@ -772,49 +777,6 @@ void Tr2InteriorScene::RenderShadows(Tr2RenderContext& renderContext)
 
 		// Clear batches
 		m_primaryRenderBatches->Clear();
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description
-//   This function queues up a background cubemap batch in the supplied accumulator.
-// Arguments:
-//   batches - The accumulator
-// See Also:
-//   OnQueryBeginForwardPass, OnStencilMaskForwardPass
-// --------------------------------------------------------------------------------------
-void Tr2InteriorScene::PrepareBackgroundCubemapBatch( ITriRenderBatchAccumulator* batches )
-{
-	// Verify that we actually want to render the background effect, that we have a background effect & that the accumulator is good
-	if( m_renderBackgroundCubeMap && m_backgroundEffect && batches )
-	{
-		// Allocate a batch
-		Tr2InteriorBackgroundCubemapBatch* batch =
-			batches->Allocate<Tr2InteriorBackgroundCubemapBatch>();
-
-		// Allocate a per-object data for the background cubemap
-		Tr2PerObjectDataStandard* perObjectData =
-			batches->Allocate<Tr2PerObjectDataStandard>();
-
-		// If the batch & per-object data allocations succeeded
-		if( batch && perObjectData )
-		{
-			// Pixel shader per-object buffer
-			Tr2InteriorPerObjectPSData perObjectPSBuffer;
-			memset( &perObjectPSBuffer, 0, sizeof( perObjectPSBuffer ) );
-
-			// Copy buffer into the per-object data
-			perObjectData->CopyToPSFloatBuffer( perObjectPSBuffer );
-
-			batch->SetShaderMaterial( m_backgroundEffect );
-			batch->SetPerObjectData( perObjectData );
-			batch->SetRenderingMode( Tr2EffectStateManager::RM_ANY );
-			batches->SetUserData(
-				ConstructKey( 0, WODINTBATCHGROUP_BEGIN )
-				);
-
-			batches->Commit( batch );
-		}
 	}
 }
 
@@ -1090,7 +1052,6 @@ void Tr2InteriorScene::DoQueryBegin( const Tr2VisibilityEvent& event )
 	m_activeLightSet.Clear();
 
 	// If we're gathering forward batches, then we need a background cubemap batch here
-	PrepareBackgroundCubemapBatch( m_primaryRenderBatches );
 	for( auto it = m_lights.begin(); it != m_lights.end(); ++it )
 	{
 		m_activeLightSet.AddLight( *it, Vector3( 0.f, 0.f, 0.f ) );
@@ -1135,11 +1096,7 @@ void Tr2InteriorScene::DoInstanceVisible( const Tr2VisibilityEvent& event )
 				DO_GET_BATCHES( m_primaryRenderBatches, RM_OPAQUE, WODINTBATCHGROUP_OPAQUE, TRIBATCHTYPE_OPAQUE );
 				DO_GET_BATCHES( m_primaryRenderBatches, RM_DECAL, WODINTBATCHGROUP_DECAL, TRIBATCHTYPE_DECAL );
 
-				auto start = m_primaryRenderBatches->GetBatchCount();
 				DO_GET_BATCHES( m_primaryRenderBatches, RM_ALPHA, WODINTBATCHGROUP_BLEND, TRIBATCHTYPE_TRANSPARENT );
-				auto end = m_primaryRenderBatches->GetBatchCount();
-				auto acc = static_cast<TriRenderBatchAccumulator<Tr2IntKeyGenerator>*>( m_primaryRenderBatches );
-				acc->ReverseBatchOrder( start, end );
 			}
 		}
 	}

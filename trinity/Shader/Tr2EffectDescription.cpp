@@ -1,5 +1,8 @@
 #include "StdAfx.h"
+
 #include "Tr2EffectDescription.h"
+#include "Tr2Renderer.h"
+
 
 const BlueSharedString DEFAULT_TECHNIQUE = BlueSharedString( "Main" );
 const BlueSharedString ANY_TECHNIQUE = BlueSharedString();
@@ -224,7 +227,81 @@ bool Tr2EffectDescription::Read( const void* data,
 								element.registerType = Tr2ShaderRegisterAL::SRV_TEXTURE2D;
 							}
 						}
-						READ( uint32_t, unsigned, element.registerIndex );
+
+						READ( uint32_t, uint32_t, element.registerIndex );
+						if( version > 12 )
+						{
+							READ( uint32_t, uint32_t, element.arrayCount );
+							READ( uint8_t, uint32_t, element.registerSpace );
+						}
+						else
+						{
+							element.arrayCount = 1;
+							element.registerSpace = type;
+						}
+
+						bool dynamic = true;
+						if( element.registerType == Tr2ShaderRegisterAL::CONSTANT_BUFFER )
+						{
+							if( type == Tr2RenderContextEnum::ShaderType::VERTEX_SHADER && element.registerIndex == Tr2Renderer::GetPerFrameVSStartRegister() )
+							{
+								dynamic = false;
+							}
+							if( type == Tr2RenderContextEnum::ShaderType::PIXEL_SHADER && element.registerIndex == Tr2Renderer::GetPerFramePSStartRegister() )
+							{
+								dynamic = false;
+							}
+						}
+						element.dynamic = dynamic;
+					}
+				}
+				if( version > 12 )
+				{
+					READ( uint8_t, uint8_t, inputCount );
+					pass.stageInputs[type].signature.samplers.resize( inputCount );
+					for( int inputIx = 0; inputIx < inputCount; ++inputIx )
+					{
+						auto& element = pass.stageInputs[type].signature.samplers[inputIx];
+						READ( uint32_t, uint32_t, element.registerIndex );
+						READ( uint8_t, uint32_t, element.registerSpace );
+
+						READ( uint8_t, bool, element.sampler.m_isComparisonFilter );
+						READ( uint8_t, Tr2RenderContextEnum::TextureFilter, element.sampler.m_minFilter );
+						READ( uint8_t, Tr2RenderContextEnum::TextureFilter, element.sampler.m_magFilter );
+						READ( uint8_t, Tr2RenderContextEnum::TextureFilter, element.sampler.m_mipFilter );
+						READ( uint8_t, Tr2RenderContextEnum::TextureAddressMode, element.sampler.m_addressU );
+						READ( uint8_t, Tr2RenderContextEnum::TextureAddressMode, element.sampler.m_addressV );
+						READ( uint8_t, Tr2RenderContextEnum::TextureAddressMode, element.sampler.m_addressW );
+						READ( float, float, element.sampler.m_mipLODBias );
+						READ( uint8_t, unsigned, element.sampler.m_maxAnisotropy );
+						READ( uint8_t, Tr2RenderContextEnum::CompareFunc, element.sampler.m_comparisonFunc );
+
+						uint8_t borderColor;
+						READ( uint8_t, uint8_t, borderColor );
+						switch( borderColor )
+						{
+						case 1:
+							element.sampler.m_borderColor[0] = 0;
+							element.sampler.m_borderColor[1] = 0;
+							element.sampler.m_borderColor[2] = 0;
+							element.sampler.m_borderColor[3] = 1;
+							break;
+						case 2:
+							element.sampler.m_borderColor[0] = 1;
+							element.sampler.m_borderColor[1] = 1;
+							element.sampler.m_borderColor[2] = 1;
+							element.sampler.m_borderColor[3] = 1;
+							break;
+						default:
+							element.sampler.m_borderColor[0] = 0;
+							element.sampler.m_borderColor[1] = 0;
+							element.sampler.m_borderColor[2] = 0;
+							element.sampler.m_borderColor[3] = 0;
+							break;
+						}
+
+						READ( float, float, element.sampler.m_minLOD );
+						READ( float, float, element.sampler.m_maxLOD );
 					}
 				}
 
@@ -397,6 +474,14 @@ bool Tr2EffectDescription::Read( const void* data,
 
 					READ_STRING( resource.name );
 					READ( uint8_t, Tr2EffectResource::Type, resource.type );
+					if( version >= 13 )
+					{
+						READ( uint32_t, uint32_t, resource.arrayElements );
+					}
+					else
+					{
+						resource.arrayElements = 1;
+					}
 					READ( uint8_t, bool, resource.isSRGB );
 					READ( uint8_t, bool, resource.isAutoregister );
 
@@ -471,6 +556,15 @@ bool Tr2EffectDescription::Read( const void* data,
 						READ( uint8_t, bool, isSRGBTexture );
 					}
 
+					if( version > 12 )
+					{
+						bool isDynamic = true;
+						READ( uint8_t, bool, isDynamic );
+						if( !isDynamic )
+						{
+							samplerSetup.name = nullptr;
+						}
+					}
 					Tr2SamplerDescription sampler(
 						minFilter,
 						magFilter,
@@ -511,6 +605,14 @@ bool Tr2EffectDescription::Read( const void* data,
 
 						READ_STRING( resource.name );
 						READ( uint8_t, Tr2EffectResource::Type, resource.type );
+						if( version >= 13 )
+						{
+							READ( uint32_t, uint32_t, resource.arrayElements );
+						}
+						else
+						{
+							resource.arrayElements = 1;
+						}
 						READ( uint8_t, bool, resource.isAutoregister );
 
 						pass.stageInputs[type].uavs[registerIndex] = resource;
@@ -601,6 +703,49 @@ bool Tr2EffectDescription::Read( const void* data,
 		if( !ReadAnnotations( annotationMap ) )
 		{
 			return false;
+		}
+	}
+
+	for( auto& technique : techniques )
+	{
+		for( auto& pass : technique.passes )
+		{
+			uint32_t type = 0;
+			for( auto& stage : pass.stageInputs )
+			{
+				if (stage.m_exists)
+				{
+					auto IsHeapView = [&]( const char* name ) {
+						auto it = std::find_if( annotations.begin(), annotations.end(), [&]( Tr2EffectAnnotationMap::const_reference key ) { return strcmp( key.first, name ) == 0; } );
+						if( it != annotations.end() )
+						{
+							auto value = std::find_if( it->second.begin(), it->second.end(), [&]( const Tr2EffectParameterAnnotation& a ) { return strcmp( a.name, "IsHeapView" ) == 0; } );
+							if( value != it->second.end() && value->type == Tr2EffectParameterAnnotation::BOOL )
+							{
+								return value->boolValue;
+							}
+						}
+						return false;
+					};
+					for( auto& res : stage.resources )
+					{
+						auto isHeapView = IsHeapView( res.second.name );
+						if( IsHeapView( res.second.name ) )
+						{
+							pass.resourceSetDesc.SetSrvHeapView( Tr2RenderContextEnum::ShaderType( type ), res.first );
+						}
+					}
+					for( auto& res : stage.uavs )
+					{
+						auto isHeapView = IsHeapView( res.second.name );
+						if( IsHeapView( res.second.name ) )
+						{
+							pass.resourceSetDesc.SetUavHeapView( Tr2RenderContextEnum::ShaderType( type ), res.first );
+						}
+					}
+				}
+				++type;
+			}
 		}
 	}
 	return true;

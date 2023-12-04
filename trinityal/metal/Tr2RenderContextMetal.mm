@@ -153,24 +153,29 @@ ALResult Tr2RenderContextAL::SetStreamSource(uint32_t stream,
 
 ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer) throw( )
 {
+	return SetIndices( buffer, buffer.GetDesc().stride );
+}
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, int stride) throw( )
+{
 	if( !buffer.IsValid() )
 	{
 		m_metalIndexBuffer = nil;
 		return S_OK;
 	}
 	
-	if( buffer.GetDesc().stride == 2 )
+	if( stride == 2 )
 	{
 		m_metalIndexType = MTLIndexTypeUInt16;
 	}
-	else if( buffer.GetDesc().stride == 4 )
+	else if( stride == 4 )
 	{
 		m_metalIndexType = MTLIndexTypeUInt32;
 	}
 	else
 	{
 		m_metalIndexType = MTLIndexTypeUInt32;
-		CCP_AL_LOGWARN( "Unsupported index buffer stride: %d. Defaulting to 4.", (int)buffer.GetDesc().stride );
+		CCP_AL_LOGWARN( "Unsupported index buffer stride: %d. Defaulting to 4.", (int)stride );
 	}
 
 	m_metalIndexBuffer = buffer.m_buffer->GetMetalBuffer();
@@ -239,9 +244,14 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mipLevel,
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL&, uint32_t, Tr2BufferAL&, uint32_t, uint32_t )
+ALResult Tr2RenderContextAL::CopySubBuffer( Tr2BufferAL& dest, uint32_t destOffset, Tr2BufferAL& src, uint32_t srcOffset, uint32_t length )
 {
-	return E_FAIL;
+    if( !dest.IsValid() || !src.IsValid() )
+    {
+        return E_INVALIDARG;
+    }
+    m_workQueue->CopyBufferToBuffer( dest.m_buffer->GetMetalBuffer(), destOffset, src.m_buffer->GetMetalBuffer(), srcOffset, length );
+	return S_OK;
 }
 
 ALResult Tr2RenderContextAL::Clear(
@@ -385,6 +395,46 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	CheckDrawResources();
 
 	m_workQueue->DrawIndexedPrimitives(m_metalPrimitiveInfo.metalPrimitiveType, vc, m_metalIndexType, m_metalIndexBuffer, startIndex, numInstances);
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DrawIndexedInstanced(
+	uint32_t indexCountPerInstance,
+	uint32_t instanceCount,
+	uint32_t startIndexLocation,
+	int32_t baseVertexLocation,
+	uint32_t startInstanceLocation )
+{
+    if( m_metalIndexBuffer == nil )
+    {
+        return E_INVALIDARG;
+    }
+    
+	CCP_STATS_ADD( primitiveCount, indexCountPerInstance * instanceCount / 3 );
+	CCP_STATS_ADD( vertexCount, indexCountPerInstance * instanceCount );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	CheckDrawResources();
+
+	m_workQueue->DrawIndexedPrimitives( m_metalPrimitiveInfo.metalPrimitiveType, indexCountPerInstance, m_metalIndexType, m_metalIndexBuffer, startIndexLocation, instanceCount, baseVertexLocation, startInstanceLocation );
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DrawInstanced(
+	uint32_t vertexCountPerInstance,
+	uint32_t instanceCount,
+	uint32_t startVertexLocation,
+	uint32_t startInstanceLocation )
+{
+	CCP_STATS_ADD( primitiveCount, vertexCountPerInstance * instanceCount / 3 );
+	CCP_STATS_ADD( vertexCount, vertexCountPerInstance * instanceCount );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	CheckDrawResources();
+
+	m_workQueue->DrawPrimitives( m_metalPrimitiveInfo.metalPrimitiveType, vertexCountPerInstance, startVertexLocation, instanceCount, startInstanceLocation );
 
 	return S_OK;
 }
@@ -1001,7 +1051,7 @@ ALResult Tr2RenderContextAL::SetResourceSet( const Tr2ResourceSetAL& resourceSet
 		const ShaderType stages[] = { VERTEX_SHADER, PIXEL_SHADER, COMPUTE_SHADER };
 		for( auto stage : stages )
 		{
-			m_workQueue->SetBuffers( stage, rs.m_buffers[stage], rs.m_buffersMask[stage] );
+			m_workQueue->SetBuffers( stage, rs.m_buffers[stage], rs.m_buffersMask[stage], GetMetalContext()->GetHeapViewBuffer(), rs.m_heapViewMask[stage] );
 			m_workQueue->SetTextures( stage, rs.m_textures[stage], rs.m_texturesRange[stage] );
 			m_workQueue->SetSamplers( stage, rs.m_samplers[stage], rs.m_samplersRange[stage] );
 		}
@@ -1248,5 +1298,49 @@ ALResult Tr2RenderContextAL::ForkContext( Tr2RenderContextAL* context, uint32_t 
 
 	return S_OK;
 }
+
+ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
+{
+    if( resources.m_textures.empty() )
+    {
+        return S_OK;
+    }
+    if( @available( macOS 13.0, * ) )
+    {
+        std::vector<id<MTLTexture>> textures;
+        textures.reserve( resources.m_textures.size() );
+        for( auto& tex : resources.m_textures )
+        {
+            if( tex->IsValid() )
+            {
+                textures.push_back( tex->GetMetalTexture() );
+            }
+        }
+        auto encoder = m_workQueue->GetRenderEncoder();
+        [encoder useResources:textures.data()
+                        count:NSUInteger( textures.size())
+                        usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageWrite | MTLResourceUsageWrite : MTLResourceUsageRead];
+    }
+	return S_OK;
+}
+
+
+
+
+void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )
+{
+	m_textures.push_back( texture.TrinityALImpl_GetObject() );
+}
+
+void Tr2BindlessResourcesAL::Add( const Tr2BindlessResourcesAL& resources )
+{
+	m_textures.insert( end( m_textures ), begin( resources.m_textures ), end( resources.m_textures ) );
+}
+
+void Tr2BindlessResourcesAL::Clear()
+{
+	m_textures.clear();
+}
+
 
 #endif

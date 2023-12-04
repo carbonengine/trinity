@@ -94,6 +94,11 @@ bool Type::IsStruct() const
 	return symbol != nullptr;
 }
 
+bool Type::IsBindlessHandle() const
+{
+	return IsScalar() && ( builtInType == OP_BINDLESSHANDLETEXTURE2D || builtInType == OP_BINDLESSHANDLETEXTURE3D || builtInType == OP_BINDLESSHANDLETEXTURECUBE );
+}
+
 bool Type::IsScalarOrVector() const
 {
 	return symbol == nullptr && 
@@ -102,7 +107,10 @@ bool Type::IsScalarOrVector() const
 		builtInType == OP_BOOL ||
 		builtInType == OP_HALF ||
 		builtInType == OP_FLOAT ||
-		builtInType == OP_DOUBLE );
+		builtInType == OP_DOUBLE ||
+		builtInType == OP_BINDLESSHANDLETEXTURE2D ||
+		builtInType == OP_BINDLESSHANDLETEXTURE3D ||
+		builtInType == OP_BINDLESSHANDLETEXTURECUBE	);
 }
 
 bool Type::IsTexture() const

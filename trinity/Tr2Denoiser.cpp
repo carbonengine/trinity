@@ -130,24 +130,37 @@ ALResult Tr2Denoiser::Apply( ITr2TextureProvider& source, ITr2TextureProvider& d
 
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
 
-	renderContext.m_esm.SetRenderTarget( 0, *m_intermediate );
-	renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-	Tr2Renderer::DrawScreenQuad( renderContext, m_estimateNoise );
+	{
+		GPU_REGION( renderContext, "Estimate noise" );
+		renderContext.m_esm.SetRenderTarget( 0, *m_intermediate );
+		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
+		Tr2Renderer::DrawScreenQuad( renderContext, m_estimateNoise );
+	}
 
-	renderContext.m_esm.SetRenderTarget( 0, *m_noiseEstimate );
-	renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-	Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseEstimate );
+	{
+		GPU_REGION( renderContext, "Estimate denoising" );
+		renderContext.m_esm.SetRenderTarget( 0, *m_noiseEstimate );
+		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
+		Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseEstimate );
+	}
 
 	m_denoiseHoriz->SetParameter( SOURCE, &source );
-	SetParams( m_denoiseHoriz, Vector2( 1, 0 ) );
-	renderContext.m_esm.SetRenderTarget( 0, *m_intermediate );
-	renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-	Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseHoriz );
 
-	SetParams( m_denoiseVert, Vector2( 0, 1 ) );
-	renderContext.m_esm.SetRenderTarget( 0, *m_result );
-	renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-	Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseVert );
+	{
+		GPU_REGION( renderContext, "Denoise horizontal" );
+		SetParams( m_denoiseHoriz, Vector2( 1, 0 ) );
+		renderContext.m_esm.SetRenderTarget( 0, *m_intermediate );
+		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
+		Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseHoriz );
+	}
+
+	{
+		GPU_REGION( renderContext, "Denoise vertical" );
+		SetParams( m_denoiseVert, Vector2( 0, 1 ) );
+		renderContext.m_esm.SetRenderTarget( 0, *m_result );
+		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
+		Tr2Renderer::DrawScreenQuad( renderContext, m_denoiseVert );
+	}
 
 	m_parametersDirty = false;
 	return S_OK;

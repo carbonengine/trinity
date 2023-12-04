@@ -15,6 +15,8 @@
 #include "Utilities/BoundingBox.h"
 #include "Utilities/BoundingSphere.h"
 
+#include "Resources/TriGeometryRes.h"
+
 #include "Eve/SpaceObject/Attachments/EveBoosterSet2.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveSpriteSet.h"
 #include "Eve/SpaceObject/Attachments/Sets/EveSpotlightSet.h"
@@ -67,31 +69,24 @@ void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, 
 		return;
 	}
 
-	Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-
 	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
-	int meshIx = m_mesh->GetMeshIndex();
-
-	for( Tr2MeshAreaVector::iterator it = areas->begin(); it != areas->end(); ++it )
+	if( !geomRes || !geomRes->IsGood() )
 	{
-		Tr2MeshArea* area = *it;
-		auto material = area->GetMaterialInterface();
+		return;
+	}
+	int meshIx = m_mesh->GetMeshIndex();
+	auto grannyMesh = geomRes->GetMeshData( meshIx, shadowPixelSize );
+	if( !grannyMesh )
+	{
+		return;
+	}
 
-		if( !area->GetDisplay() || !material )
-		{
-			continue;
-		}
-		TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-		// Note that this can fail if the accumulator can't add more batches!
-		if( batch )
-		{
-			batch->SetShaderMaterial( m_shadowEffect );
-			batch->SetPerObjectData( perObjectData );
-			batch->SetGeometryResource( geomRes );
-			batch->SetMeshParameters( meshIx, area->GetIndex(), area->GetCount() );
-
-			batches->Commit( batch );
-		}
+	Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	for( auto& area : *areas )
+	{
+		Tr2RenderBatch batch = CreateGeometryBatch( grannyMesh, area, perObjectData );
+		batch.SetMaterial( m_shadowEffect );
+		batches->Commit( batch );
 	}
 }
 

@@ -15,37 +15,92 @@
 #include "Utilities.h"
 
 using namespace Tr2RenderContextEnum;
+extern uint32_t g_forceAnisotropy;
 
 namespace
 {
 
-	D3D12_SHADER_VISIBILITY ShaderVisibility( Tr2RenderContextEnum::ShaderType type )
+D3D12_SHADER_VISIBILITY ShaderVisibility( Tr2RenderContextEnum::ShaderType type )
+{
+	switch( type )
 	{
-		switch( type )
-		{
-		case Tr2RenderContextEnum::VERTEX_SHADER:
-			return D3D12_SHADER_VISIBILITY_VERTEX;
-		case Tr2RenderContextEnum::PIXEL_SHADER:
-			return D3D12_SHADER_VISIBILITY_PIXEL;
-		case Tr2RenderContextEnum::GEOMETRY_SHADER:
-			return D3D12_SHADER_VISIBILITY_GEOMETRY;
-		case Tr2RenderContextEnum::HULL_SHADER:
-			return D3D12_SHADER_VISIBILITY_HULL;
-		case Tr2RenderContextEnum::DOMAIN_SHADER:
-			return D3D12_SHADER_VISIBILITY_DOMAIN;
-		default:
-			return D3D12_SHADER_VISIBILITY_ALL;
-		}
+	case Tr2RenderContextEnum::VERTEX_SHADER:
+		return D3D12_SHADER_VISIBILITY_VERTEX;
+	case Tr2RenderContextEnum::PIXEL_SHADER:
+		return D3D12_SHADER_VISIBILITY_PIXEL;
+	case Tr2RenderContextEnum::GEOMETRY_SHADER:
+		return D3D12_SHADER_VISIBILITY_GEOMETRY;
+	case Tr2RenderContextEnum::HULL_SHADER:
+		return D3D12_SHADER_VISIBILITY_HULL;
+	case Tr2RenderContextEnum::DOMAIN_SHADER:
+		return D3D12_SHADER_VISIBILITY_DOMAIN;
+	default:
+		return D3D12_SHADER_VISIBILITY_ALL;
 	}
+}
+
+D3D12_DESCRIPTOR_RANGE CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE rangeType, uint32_t registerIndex, uint32_t registerSpace, uint32_t arrayCount, uint32_t offset = 0 )
+{
+	D3D12_DESCRIPTOR_RANGE range;
+	range.RangeType = rangeType;
+	range.NumDescriptors = arrayCount ? arrayCount : UINT_MAX;
+	range.BaseShaderRegister = registerIndex;
+	range.RegisterSpace = registerSpace;
+	range.OffsetInDescriptorsFromTableStart = offset;
+	return range;
+}
+
+D3D12_STATIC_SAMPLER_DESC CreateStaticSampler( const Tr2StaticSamplerAL& sampl, Tr2RenderContextEnum::ShaderType stage )
+{
+	auto& description = sampl.sampler;
+	D3D12_STATIC_SAMPLER_DESC sampler;
+	if( g_forceAnisotropy != 1 && ( description.m_minFilter == TF_ANISOTROPIC || description.m_magFilter == TF_ANISOTROPIC || description.m_mipFilter == TF_ANISOTROPIC ) )
+	{
+		sampler.Filter = D3D12_ENCODE_ANISOTROPIC_FILTER( description.m_isComparisonFilter ? 1 : 0 );
+	}
+	else
+	{
+		sampler.Filter = D3D12_ENCODE_BASIC_FILTER(
+			description.m_minFilter == TF_POINT ? D3D12_FILTER_TYPE_POINT : D3D12_FILTER_TYPE_LINEAR,
+			description.m_magFilter == TF_POINT ? D3D12_FILTER_TYPE_POINT : D3D12_FILTER_TYPE_LINEAR,
+			description.m_mipFilter == TF_POINT || description.m_mipFilter == TF_NONE ? D3D12_FILTER_TYPE_POINT : D3D12_FILTER_TYPE_LINEAR,
+			description.m_isComparisonFilter ? 1 : 0 );
+	}
+	sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE( description.m_addressU );
+	sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE( description.m_addressV );
+	sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE( description.m_addressW );
+	sampler.MipLODBias = description.m_mipLODBias;
+	sampler.MaxAnisotropy = g_forceAnisotropy ? g_forceAnisotropy : description.m_maxAnisotropy;
+	sampler.ComparisonFunc = D3D12_COMPARISON_FUNC( description.m_comparisonFunc );
+	if( description.m_borderColor[0] > 0 )
+	{
+		sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE;
+	}
+	else if( description.m_borderColor[3] > 0 )
+	{
+		sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_OPAQUE_BLACK;
+	}
+	else
+	{
+		sampler.BorderColor = D3D12_STATIC_BORDER_COLOR_TRANSPARENT_BLACK;
+	}
+	sampler.MinLOD = description.m_minLOD;
+	sampler.MaxLOD = description.m_mipFilter == TF_NONE ? description.m_minLOD : description.m_maxLOD;
+
+	sampler.ShaderRegister = sampl.registerIndex;
+	sampler.RegisterSpace = sampl.registerSpace;
+	sampler.ShaderVisibility = ShaderVisibility( stage );
+	return sampler;
+}
+
 }
 
 namespace TrinityALImpl
 {
 
-	Tr2ShaderProgramAL::Tr2ShaderProgramAL()
-		:m_srvUavTableSize( 0 ),
+	Tr2ShaderProgramAL::Tr2ShaderProgramAL() :
+		m_srvUavParameterCount( 0 ),
 		m_samplerTableSize( 0 ),
-		m_srvUavParameter( 0xffffffff ),
 		m_samplerParameter( 0xffffffff ),
 		m_owner( nullptr ),
 		m_VS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
@@ -102,10 +157,6 @@ namespace TrinityALImpl
 		D3D12_ROOT_SIGNATURE_DESC signatureDesc;
 		memset( &signatureDesc, 0, sizeof( signatureDesc ) );
 
-		std::vector<D3D12_ROOT_PARAMETER> parameters;
-		std::vector<D3D12_DESCRIPTOR_RANGE> ranges;
-		std::vector<D3D12_DESCRIPTOR_RANGE> samplerRanges;
-
 		for( size_t i = 0; i < count; ++i )
 		{
 			switch( shaders[i].GetType() )
@@ -134,22 +185,34 @@ namespace TrinityALImpl
 				m_CS = MakeShaderBytecode( shaders[i] );
 				break;
 			}
-			ParseRegisterSignature( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, ranges, samplerRanges );
 			m_shaders.push_back( shaders[i] );
 		}
 
-		if( !ranges.empty() )
+		std::vector<D3D12_ROOT_PARAMETER> parameters;
+		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>> ranges;
+
+		for( size_t i = 0; i < count; ++i )
 		{
-			D3D12_ROOT_PARAMETER parameter;
-			parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			parameter.DescriptorTable.NumDescriptorRanges = UINT( ranges.size() );
-			parameter.DescriptorTable.pDescriptorRanges = &ranges[0];
-			parameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-			m_srvUavParameter = uint32_t( parameters.size() );
-
-			parameters.push_back( parameter );
+			AddCbvParameters( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, ranges, true );
 		}
+
+		for( size_t i = 0; i < count; ++i )
+		{
+			AddCbvParameters( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, ranges, false );
+		}
+
+		m_srvUavParameterOffset = uint32_t( parameters.size() );
+		for( size_t i = 0; i < count; ++i )
+		{
+			AddSrvUavParameters( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, ranges );
+		}
+
+		std::vector<D3D12_DESCRIPTOR_RANGE> samplerRanges;
+		for( size_t i = 0; i < count; ++i )
+		{
+			AddSamplerRanges( shaders[i].GetType(), shaders[i].m_shader->m_signature, samplerRanges );
+		}
+
 		if( !samplerRanges.empty() )
 		{
 			D3D12_ROOT_PARAMETER parameter;
@@ -163,11 +226,23 @@ namespace TrinityALImpl
 			parameters.push_back( parameter );
 		}
 
+		std::vector<D3D12_STATIC_SAMPLER_DESC> samplers;
+		for( size_t i = 0; i < count; ++i )
+		{
+			for( auto& sampl : shaders[i].m_shader->m_signature.samplers )
+			{
+				samplers.push_back( CreateStaticSampler( sampl, shaders[i].GetType() ) );
+			}
+		}
+
 		signatureDesc.NumParameters = UINT( parameters.size() );
 		if( signatureDesc.NumParameters )
 		{
 			signatureDesc.pParameters = &parameters[0];
 		}
+
+		signatureDesc.NumStaticSamplers = UINT( samplers.size() );
+		signatureDesc.pStaticSamplers = samplers.data();
 
 		CComPtr<ID3DBlob> rootSignatureBlob;
 		CComPtr<ID3DBlob> errorBlob;
@@ -197,7 +272,6 @@ namespace TrinityALImpl
 			return hr;
 		}
 
-		m_srvUavTableSize = uint32_t( ranges.size() );
 		m_samplerTableSize = uint32_t( samplerRanges.size() );
 
 		m_registerMap = Tr2RegisterMapAL( shaders, count );
@@ -213,6 +287,16 @@ namespace TrinityALImpl
 		{
 			RELEASE_LATER( m_owner, m_rootSignature );
 			m_rootSignature = nullptr;
+		}
+		if( m_drawInstanced )
+		{
+			RELEASE_LATER( m_owner, m_drawInstanced );
+			m_drawInstanced = nullptr;
+		}
+		if( m_drawIndexedInstanced )
+		{
+			RELEASE_LATER( m_owner, m_drawIndexedInstanced );
+			m_drawIndexedInstanced = nullptr;
 		}
 		if( m_owner )
 		{
@@ -236,11 +320,77 @@ namespace TrinityALImpl
 
 		m_registerMap = Tr2RegisterMapAL();
 
-		m_srvUavTableSize = 0;
-		m_srvUavParameter = 0xffffffff;
+		m_srvUavParameterCount = 0;
 		m_samplerTableSize = 0;
 		m_samplerParameter = 0xffffffff;
+
+		m_indirectBufferLayout.constantBufferCount = {};
+
 		m_owner = nullptr;
+	}
+
+	ALResult Tr2ShaderProgramAL::CreateCommandSignatures( Tr2IndirectBufferLayoutAL& bufferLayout, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		if( !IsValid() )
+		{
+			return E_INVALIDCALL;
+		}
+		if( m_drawInstanced )
+		{
+			bufferLayout = m_indirectBufferLayout;
+			return S_OK;
+		}
+
+		m_indirectBufferLayout = {};
+
+		std::vector<D3D12_INDIRECT_ARGUMENT_DESC> indirectArgs;
+
+		for( auto& reg : m_cbRegisters )
+		{
+			if( reg.dynamic )
+			{
+				D3D12_INDIRECT_ARGUMENT_DESC arg;
+				arg.Type = D3D12_INDIRECT_ARGUMENT_TYPE_CONSTANT_BUFFER_VIEW;
+				arg.ConstantBufferView.RootParameterIndex = reg.parameter;
+				indirectArgs.push_back( arg );
+
+				m_indirectBufferLayout.constantBuffers[m_indirectBufferLayout.constantBufferCount++] = { Tr2RenderContextEnum::ShaderType( reg.stage ), reg.index };
+			}
+		}
+
+		if( indirectArgs.empty() )
+		{
+			m_drawInstanced = renderContext.m_drawInstancedIndirect;
+			m_indirectBufferLayout.drawStride = sizeof( D3D12_DRAW_ARGUMENTS );
+
+			m_drawIndexedInstanced = renderContext.m_drawIndexedInstancedIndirect;
+			m_indirectBufferLayout.drawIndexedStride = sizeof( D3D12_DRAW_INDEXED_ARGUMENTS );
+
+			m_indirectBufferLayout.drawArgOffset = 0;
+		}
+		else
+		{
+			indirectArgs.push_back( {} );
+			indirectArgs.back().Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW;
+
+			D3D12_COMMAND_SIGNATURE_DESC signature;
+			signature.ByteStride = UINT( sizeof( D3D12_DRAW_ARGUMENTS ) + 8 * ( indirectArgs.size() - 1 ) );
+			signature.NodeMask = 0;
+			signature.NumArgumentDescs = UINT( indirectArgs.size() );
+			signature.pArgumentDescs = indirectArgs.data();
+
+			FORWARD_HR( renderContext.m_device->CreateCommandSignature( &signature, indirectArgs.size() > 1 ? m_rootSignature : nullptr, IID_PPV_ARGS( &m_drawInstanced ) ) );
+			m_indirectBufferLayout.drawStride = signature.ByteStride;
+			signature.ByteStride = UINT( sizeof( D3D12_DRAW_INDEXED_ARGUMENTS ) + 8 * ( indirectArgs.size() - 1 ) );
+			indirectArgs.back().Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
+			FORWARD_HR( renderContext.m_device->CreateCommandSignature( &signature, indirectArgs.size() > 1 ? m_rootSignature : nullptr, IID_PPV_ARGS( &m_drawIndexedInstanced ) ) );
+			m_indirectBufferLayout.drawIndexedStride = signature.ByteStride;
+			m_indirectBufferLayout.drawArgOffset = uint32_t( 8 * ( indirectArgs.size() - 1 ) );
+		}
+
+
+		bufferLayout = m_indirectBufferLayout;
+		return S_OK;
 	}
 
 	bool Tr2ShaderProgramAL::IsValid() const
@@ -261,65 +411,81 @@ namespace TrinityALImpl
 		return result;
 	}
 
-	void Tr2ShaderProgramAL::ParseRegisterSignature(
+	void Tr2ShaderProgramAL::AddSrvUavParameters(
 		ShaderType shaderType,
 		const Tr2ShaderSignatureAL& signature,
 		std::vector<D3D12_ROOT_PARAMETER>& parameters,
-		std::vector<D3D12_DESCRIPTOR_RANGE>& ranges,
-		std::vector<D3D12_DESCRIPTOR_RANGE>& samplerRanges )
+		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>>& ranges )
 	{
-		for( auto it = begin( signature.registers ); it != end( signature.registers ); ++it )
+		for( auto& reg : signature.registers )
 		{
-			auto CreateRange = [=]( D3D12_DESCRIPTOR_RANGE_TYPE rangeType ) -> D3D12_DESCRIPTOR_RANGE {
-				D3D12_DESCRIPTOR_RANGE range;
-				range.RangeType = rangeType;
-				range.NumDescriptors = 1;
-				range.BaseShaderRegister = it->registerIndex;
-				range.RegisterSpace = UINT( shaderType );
-				range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-				return range;
-			};
-
-			D3D12_ROOT_PARAMETER parameter;
-			switch( it->registerType )
+			auto isSrv = reg.IsSrv();
+			if( isSrv || reg.IsUav() )
 			{
-			case Tr2ShaderRegisterAL::CONSTANT_BUFFER:
-			{
-				parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-				parameter.Descriptor.RegisterSpace = UINT( shaderType );
-				parameter.Descriptor.ShaderRegister = it->registerIndex;
-				parameter.ShaderVisibility = ShaderVisibility( shaderType );
-
-				CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( parameters.size() ), it->registerType };
-				m_cbRegisters.push_back( cbr );
-
-				parameters.push_back( parameter );
-				break;
-			}
-			case Tr2ShaderRegisterAL::SAMPLER:
-			{
-				CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( samplerRanges.size() ), it->registerType };
-				m_samplerRegisters.push_back( cbr );
-				samplerRanges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER ) );
-				break;
-			}
-			default:
-				if( it->IsSrv() )
+				CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( parameters.size() ), reg.registerType };
+				D3D12_DESCRIPTOR_RANGE_TYPE rangeType;
+				if( isSrv )
 				{
-					CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( ranges.size() ), it->registerType };
 					m_srvRegisters.push_back( cbr );
-					ranges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SRV ) );
-				}
-				else if( it->IsUav() )
-				{
-					CbRegister cbr = { uint32_t( shaderType ), it->registerIndex, uint32_t( ranges.size() ), it->registerType };
-					m_uavRegisters.push_back( cbr );
-					ranges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_UAV ) );
+					rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 				}
 				else
 				{
-					continue;
+					m_uavRegisters.push_back( cbr );
+					rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 				}
+				ranges.push_back( std::make_unique<D3D12_DESCRIPTOR_RANGE>( CreateRange( rangeType, reg.registerIndex, reg.registerSpace, reg.arrayCount ) ) );
+
+				D3D12_ROOT_PARAMETER parameter;
+				parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+				parameter.DescriptorTable.NumDescriptorRanges = 1;
+				parameter.DescriptorTable.pDescriptorRanges = ranges.back().get();
+				parameter.ShaderVisibility = ShaderVisibility( shaderType );
+				parameters.push_back( parameter );
+				m_srvUavParameterCount++;
+			}
+		}
+	}
+
+	void Tr2ShaderProgramAL::AddCbvParameters(
+		ShaderType shaderType,
+		const Tr2ShaderSignatureAL& signature,
+		std::vector<D3D12_ROOT_PARAMETER>& parameters,
+		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>>& ranges,
+		bool dynamicBuffers )
+	{
+		for( auto& reg : signature.registers )
+		{
+			if( reg.registerType != Tr2ShaderRegisterAL::CONSTANT_BUFFER || reg.dynamic != dynamicBuffers )
+			{
+				continue;
+			}
+
+			D3D12_ROOT_PARAMETER parameter;
+			parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			parameter.Descriptor.RegisterSpace = reg.registerSpace;
+			parameter.Descriptor.ShaderRegister = reg.registerIndex;
+			parameter.ShaderVisibility = ShaderVisibility( shaderType );
+
+			CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( parameters.size() ), reg.registerType, reg.dynamic };
+			m_cbRegisters.push_back( cbr );
+
+			parameters.push_back( parameter );
+		}
+	}
+
+	void Tr2ShaderProgramAL::AddSamplerRanges(
+		ShaderType shaderType,
+		const Tr2ShaderSignatureAL& signature,
+		std::vector<D3D12_DESCRIPTOR_RANGE>& samplerRanges )
+	{
+		for( auto& reg : signature.registers )
+		{
+			if( reg.registerType == Tr2ShaderRegisterAL::SAMPLER ) 
+			{
+				CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( samplerRanges.size() ), reg.registerType };
+				m_samplerRegisters.push_back( cbr );
+				samplerRanges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, reg.registerIndex, reg.registerSpace, reg.arrayCount, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND ) );
 			}
 		}
 	}

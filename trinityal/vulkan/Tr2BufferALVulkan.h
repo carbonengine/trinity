@@ -36,6 +36,9 @@ namespace TrinityALImpl
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
 
+		uint32_t GetSrvIndexInHeap() const;
+		uint32_t GetUavIndexInHeap() const;
+
 	private:
 		VkBuffer m_buffer;
 		VkDeviceMemory m_memory;

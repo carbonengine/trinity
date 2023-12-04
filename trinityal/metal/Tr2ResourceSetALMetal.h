@@ -28,6 +28,7 @@ namespace TrinityALImpl
 		id<MTLSamplerState> m_samplers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE];
 
 		uint32_t m_buffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
+        uint32_t m_heapViewMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		NSRange m_texturesRange[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		NSRange m_samplersRange[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		std::string m_name;

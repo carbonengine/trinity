@@ -44,6 +44,10 @@ namespace TrinityALImpl
 		id<MTLTexture> GetUAVMetalTexture( uint32_t mipLevel );
 
 		void AssignFromTexture( Tr2TextureAL& backBuffer );
+
+		uint32_t GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR ) const;
+		uint32_t GetUavIndexInHeap( uint32_t mip ) const;
+
 	private:
 		Tr2BitmapDimensions m_desc;
 		Tr2MsaaDesc m_msaa;
@@ -67,7 +71,9 @@ namespace TrinityALImpl
 		id<MTLBuffer>   m_mtlReadBackBuffer;
 		id<MTLTexture>  m_mtlTexture;
 		id<MTLTexture>  m_mtlTextureSRGBView;
+        uint32_t m_srvHeapIndices[2];
 		std::vector<id<MTLTexture>>  m_mtlTextureUAV;
+        std::vector<uint32_t> m_uavHeapIndices;
 
 		MetalContext   *m_metalContext;
 		std::string m_name;

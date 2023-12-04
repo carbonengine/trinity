@@ -23,6 +23,6 @@ bool EffectCompilerDX12::CompileEffect( const char* source, size_t sourceLength,
 	{
 		newDefines.push_back( { "PLATFORM", GetPlatformIdString( PLATFORM_DX12 ) } );
 	}
-	return m_compiler.CompileEffect( source, sourceLength, defines, result, { "5_1", true } );
+	return m_compiler.CompileEffect( source, sourceLength, defines, result, { "5_1", true, true } );
 }
 #endif

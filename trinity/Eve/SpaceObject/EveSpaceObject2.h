@@ -126,7 +126,7 @@ struct EveSpaceObjectPSData
 
 // ---------------------------------------------------------------------------------------
 //  Description:
-//    Given a pointer to a mesh area vector, gathers TriGeometryBatches for each of the
+//    Given a pointer to a mesh area vector, gathers render batches for each of the
 //    areas. Order of batches is sorted, based upon distance to camera.
 // Arguments:
 //   areas - mesharea vector to collect from

@@ -10,7 +10,6 @@
 #define Tr2CurveLineSet_H
 
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Tr2DeviceResource.h"
 
 BLUE_DECLARE( Tr2CurveLineSet );
@@ -24,7 +23,6 @@ BLUE_DECLARE( Tr2Material );
 // -------------------------------------------------------------
 class Tr2CurveLineSet : 
 	public ITr2Renderable,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource,
 	public ITr2Pickable,
 	public INotify
@@ -45,10 +43,6 @@ public:
 private:
 	bool OnPrepareResources();
 public:
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable

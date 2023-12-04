@@ -144,6 +144,7 @@ namespace TrinityALImpl
 		}
 
 		FORWARD_HR( renderContext.FlushAndSyncDx12( renderContext ) );
+		renderContext.FlushPendingRelease();  // Make sure we have no references to the old swap chain lingering around
 
 		Tr2PresentParametersAL presentationParameters;
 		CR_RETURN_HR( Tr2SwapChainUtils::FillPresentationParameters( presentationParameters, windowHandle ) );

@@ -286,8 +286,8 @@ namespace TrinityALImpl
 		void RenderPassHint( const MetalRenderPassHint& hint );
         void EndRenderPassHint();
 
-		void SetConstants( Tr2RenderContextEnum::ShaderType shaderType, const void* constantBuffer, uint32_t size, uint64_t lockTag, uint32_t constantIndex );
-		void SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask );
+		void SetConstants( Tr2RenderContextEnum::ShaderType shaderType, const void* constantBuffer, uint32_t size, ConstantBufferToken& token, uint32_t constantIndex );
+		void SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask, id<MTLBuffer> heapView, uint32_t heapViewMask );
 		void SetTextures( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLTexture>* textures, NSRange texturesRange );
 		void SetSamplers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLSamplerState>* samplers, NSRange samplersRange );
 		void ResetBuffers( Tr2RenderContextEnum::ShaderType shaderType );
@@ -302,7 +302,8 @@ namespace TrinityALImpl
 		void DrawPrimitives(MTLPrimitiveType primitiveType,
 				uint32_t numVertices,
 				uint32_t startVertex,
-				uint32_t numInstances);
+				uint32_t numInstances,
+				uint32_t startInstance = 0 );
 		void DrawPrimitives(MTLPrimitiveType primitiveType,
 				id<MTLBuffer> indirectBuffer,
 				uint32_t indirectBufferOffset);
@@ -312,7 +313,9 @@ namespace TrinityALImpl
 				MTLIndexType     indexType,
 				id<MTLBuffer>    indexBuffer,
 				uint32_t         startIndex,
-				uint32_t         numInstances);
+				uint32_t         numInstances,
+				int32_t          baseVertex = 0,
+				uint32_t         baseInstance = 0 );
 		void DrawIndexedPrimitives(MTLPrimitiveType primitiveType,
 				MTLIndexType     indexType,
 				id<MTLBuffer>    indexBuffer,
@@ -457,9 +460,8 @@ namespace TrinityALImpl
 		
 		struct ConstantBuffer
 		{
-			const void* data;
-			uint64_t lockTag;
-			uint32_t size;
+            uint32_t page;
+            uint32_t offset;
 		};
 
 		ConstantBuffer              m_constBuffers[Tr2RenderContextEnum::SHADER_TYPE_COUNT][METAL_MAX_BOUND_BUFFERS];

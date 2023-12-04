@@ -28,6 +28,15 @@
 #include "include/ITr2InstanceData.h"
 #include "include/ITr2GpuBuffer.h"
 
+#include "Tr2SuballocatedBuffer.h"
+
+constexpr uint32_t SHARED_BUFFER_BLOCK_SIZE = 64 * 1024 * 1024;
+extern Tr2SuballocatedBuffer g_sharedBuffer;
+
+
+
+
+
 BLUE_DECLARE( TriGrannyRes );
 class Tr2RenderContext;
 
@@ -85,11 +94,15 @@ struct TriGeometryResMeshData
 	unsigned int m_bytesPerVertex;
 	unsigned int m_vertexCount;
 	unsigned int m_primitiveCount;
-	Tr2BufferAL m_vertexBuffer;
-	Tr2BufferAL m_shaderResourceBuffer;
-	Tr2BufferAL m_indexBuffer;
+
+	bool m_allocationsValid;
+	Tr2SuballocatedBuffer::Allocation m_vertexAllocation;
+	Tr2SuballocatedBuffer::Allocation m_indexAllocation;
+
 	// Index buffer with indexes in reversed order (used by hair/clothing)
-	Tr2BufferAL	m_reversedIndexBuffer;
+	bool m_reversedIndicesValid;
+	Tr2SuballocatedBuffer::Allocation m_reversedIndexAllocation;
+
 	Vector3 m_minBounds;
 	Vector3 m_maxBounds;
 	Vector4 m_boundingSphere;
@@ -107,6 +120,9 @@ struct TriGeometryResMeshData
 	};
 	std::vector<LodRef> m_lods;
 };
+
+uint32_t GetPrimitiveCount( const TriGeometryResMeshData& mesh, uint32_t index, uint32_t count );
+
 
 struct TriGeometryResJointData
 {
@@ -136,8 +152,7 @@ BLUE_CLASS( TriGeometryRes ):
 	public BlueAsyncRes,
 	public ICacheable,
 	public Tr2DeviceResource,
-	public ITr2InstanceData,
-	public ITr2GpuBuffer
+	public ITr2InstanceData
 {
 public:
 	EXPOSE_TO_BLUE();

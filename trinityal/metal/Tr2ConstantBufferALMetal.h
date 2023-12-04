@@ -32,7 +32,7 @@ namespace TrinityALImpl
 
 		MetalContext *m_metalContext;
 		void* m_buffer;
-		uint64_t m_lockTag;
+        mutable TrinityALImpl::ConstantBufferToken m_token;
 		uint32_t m_size;
 		std::string m_name;
 

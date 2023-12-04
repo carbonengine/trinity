@@ -218,25 +218,6 @@ void EveChildBulletStorm::Rebuild()
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Setup instanced reandering and call DIP
-// --------------------------------------------------------------------------------
-void EveChildBulletStorm::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( BulletStormVertex ) );
-	renderContext.m_esm.ApplyStreamSource( 1, m_perInstanceBuffer, 0, sizeof( PerInstanceVertex ) );
-	auto ib = Tr2Renderer::GetQuadListIndexBuffer( 2 );
-	if( !ib )
-	{
-		return;
-	}
-	renderContext.m_esm.ApplyIndexBuffer( *ib );
-	renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
-	renderContext.DrawIndexedInstanced( 4, 0, 2, m_objectCount );
-}
-
-// --------------------------------------------------------------------------------
-// Description:
 //   This object might have a huge bounding sphere
 // --------------------------------------------------------------------------------
 bool EveChildBulletStorm::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery query ) const
@@ -380,14 +361,19 @@ void EveChildBulletStorm::GetBatches( ITriRenderBatchAccumulator* batches, TriBa
 		return;
 	}
 
-	TriForwardingBatch* batch = batches->Allocate<TriForwardingBatch>();
-	if( batch )
+	auto ib = Tr2Renderer::GetQuadListIndexBuffer( 2 );
+	if( !ib )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_effect );
-		batch->SetGeometryProvider( this );
-		batches->Commit( batch );
+		return;
 	}
+
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetGeometry( m_vertexDeclHandle, m_vertexBuffer, sizeof( BulletStormVertex ), *ib, ib->GetDesc().stride );
+	batch.SetStreamSource( 1, m_perInstanceBuffer, sizeof( PerInstanceVertex ) );
+	batch.SetDrawIndexedInstanced( 6, m_objectCount, 0, 0, 0 );
+	batches->Commit( batch );
 }
 
 // --------------------------------------------------------------------------------
@@ -431,5 +417,7 @@ void EveChildBulletStormPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBuff
 	FillAndSetConstants( *buffers[Tr2RenderContextEnum::VERTEX_SHADER], &m_worldTransform, 64 + 16 + 10 * 16, Tr2RenderContextEnum::VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
 }
 
-
-
+void EveChildBulletStormPerObjectData::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+{
+	writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, &m_worldTransform, 64 + 16 + 10 * 16 );
+}

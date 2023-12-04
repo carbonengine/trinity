@@ -30,6 +30,10 @@ namespace TrinityALImpl
 		{
 			return E_FAIL;
 		}
+		if( !signature.samplers.empty() )
+		{
+			return E_INVALIDARG;
+		}
 
 		m_type = type;
 

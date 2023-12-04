@@ -43,6 +43,13 @@ public:
 			renderContext );
 	}
 
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override
+	{
+		writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, &m_data, sizeof( m_data ) );
+		writer.SetPerObjectData( Tr2RenderContextEnum::GEOMETRY_SHADER, &m_data, sizeof( m_data ) );
+	}
+
+
 	struct Data
 	{
 		Matrix m_world;
@@ -261,15 +268,18 @@ void EveChildCloud::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchTyp
 	{
 		return;
 	}
-	TriForwardingBatch* batch = batches->Allocate<TriForwardingBatch>();
-	if( batch )
+	if( m_declaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION || !m_effect || m_indexBuffers.empty() )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_effect );
-		batch->SetGeometryProvider( this );
-		batch->SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
-		batches->Commit( batch );
+		return;
 	}
+
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
+	batch.SetGeometry( m_declaration, m_vertexBuffer, sizeof( Vector2 ), m_indexBuffers[std::min( m_currentIB, m_indexBuffers.size() - 1 )], 2 );
+	batch.SetDrawIndexedInstanced( m_indexBuffers[std::min( m_currentIB, m_indexBuffers.size() - 1 )].GetDesc().count, 1, 0, 0, 0 );
+	batches->Commit( batch );
 }
 
 void EveChildCloud::ReleaseResources( TriStorage s )
@@ -406,18 +416,6 @@ Tr2PerObjectData* EveChildCloud::GetPerObjectData( ITriRenderBatchAccumulator* a
 	}
 
 	return data;
-}
-
-void EveChildCloud::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	renderContext.m_esm.ApplyVertexDeclaration( m_declaration );
-	renderContext.m_esm.ApplyIndexBuffer( m_indexBuffers[std::min( m_currentIB, m_indexBuffers.size() - 1 )] );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( Vector2 ) );
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawIndexedPrimitive( 
-		m_vertexBuffer.GetSize() / sizeof( Vector2 ), 
-		0, 
-		m_indexBuffers[std::min( m_currentIB, m_indexBuffers.size() - 1 )].GetDesc().count / 3 );
 }
 
 void EveChildCloud::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )

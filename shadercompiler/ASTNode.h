@@ -159,4 +159,7 @@ private:
 	FileLocation m_location;
 	std::vector<ASTNode*> m_children;
 	ScopeSymbolTable* m_scope;
+
+public:
+	void* m_extraData = nullptr;
 };

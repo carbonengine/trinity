@@ -102,6 +102,7 @@ void ParserState::AddIntrinsics()
 	m_dx9Functions["InterlockedMin"] = AddFunction( table, "InterlockedMin", &FunctionDescription3<TypeIs<OP_VOID>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>> );
 	m_dx9Functions["InterlockedOr"] = AddFunction( table, "InterlockedOr", &FunctionDescription3<TypeIs<OP_VOID>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>> );
 	m_dx9Functions["InterlockedXor"] = AddFunction( table, "InterlockedXor", &FunctionDescription3<TypeIs<OP_VOID>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>, TypeIs<OP_INT>, DimIs<1, 1>> );
+	m_dx9Functions["NonUniformResourceIndex"] = AddFunction( table, "NonUniformResourceIndex", &FunctionDescription1<TypeIs<OP_UINT>, DimSameAsArg<0>, TypeIs<OP_UINT>, DimIs<1, 1>> );
 	m_dx9Functions["isfinite"] = AddFunction( table, "isfinite", &FunctionDescription1<TypeIs<OP_BOOL>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
 	m_dx9Functions["isinf"] = AddFunction( table, "isinf", &FunctionDescription1<TypeIs<OP_BOOL>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );
 	m_dx9Functions["isnan"] = AddFunction( table, "isnan", &FunctionDescription1<TypeIs<OP_BOOL>, DimIs<1, 1>, TypeIs<OP_FLOAT>, DimSameAsArg<0>> );

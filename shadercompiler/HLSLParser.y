@@ -2057,6 +2057,21 @@ type_specifier(A) ::= OP_TRIANGLESTREAM(B) OP_LESS type_specifier(C) OP_MORE.
 	A.templateParameter = new Type( C );
 }
 
+type_specifier(A) ::= OP_BINDLESSHANDLETEXTURE2D(B).
+{
+	A.FromToken( B );
+}
+
+type_specifier(A) ::= OP_BINDLESSHANDLETEXTURE3D(B).
+{
+	A.FromToken( B );
+}
+
+type_specifier(A) ::= OP_BINDLESSHANDLETEXTURECUBE(B).
+{
+	A.FromToken( B );
+}
+
 type_specifier(A) ::= OP_TYPE_NAME(B).
 {
 	const Symbol* symbol = parserState->GetSymbolTable().LookupType( B.stringValue ); 

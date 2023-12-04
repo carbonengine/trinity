@@ -41,6 +41,27 @@ PyObject* Tr2EffectRes::GetPermutationDescription()
 	return result;
 }
 
+void ModifyGlobalOptions( const std::vector<std::pair<BlueSharedString, BlueSharedString>>& change, std::vector<BlueSharedString>& remove )
+{
+	std::vector<Tr2ShaderOption> changes;
+	for( auto& ch : change )
+	{
+		changes.push_back( { ch.first, ch.second } );
+	}
+	for( auto& name : remove )
+	{
+		changes.push_back( { name } );
+	}
+	ModifyGlobalEffectOptions( changes );
+}
+
+MAP_FUNCTION_AND_WRAP(
+	"ModifyGlobalEffectOptions",
+	ModifyGlobalOptions,
+	"Sets global effect options. Calling this function will result in rebuilding of all effects (slow).\n"
+	":param change: list of pairs (name, value) for options\n"
+	":param remove: list of names to remove from global option set\n" );
+
 #endif
 
 

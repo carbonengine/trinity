@@ -8,7 +8,6 @@
 #define EveHazeSet_H
 
 #include "IEveSpaceObjectAttachment.h"
-#include "ITr2GeometryProvider.h"
 #include "ITr2Renderable.h"
 #include "Utilities/BoundingBox.h"
 #include "EveHazeSetItem.h"
@@ -30,7 +29,6 @@ class Tr2PerObjectData;
 BLUE_CLASS( EveHazeSet ) :
 	public IEveSpaceObjectAttachment,
 	public IInitialize,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource
 {
 public:
@@ -45,10 +43,6 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
 	bool Initialize();
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource
@@ -71,9 +65,6 @@ public:
 	// rebuild the interal vertexbuffers etc.
 	void Rebuild();
 
-	// picking
-	void GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData );
-
 private:
 	bool OnPrepareResources();
 
@@ -92,7 +83,7 @@ private:
 	// has it's own vertex handle and buffer
 	unsigned int m_vertexDeclHandle;
 	unsigned int m_vertexCount;
-	Tr2BufferAL m_vertexBuffer;
+	Tr2SuballocatedBuffer::Allocation m_vertexBuffer;
 
 	// bounding box around static items
 	AxisAlignedBoundingBox m_aabb;

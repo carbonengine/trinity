@@ -88,6 +88,7 @@ void Tr2VolumetricsRenderer::RenderVolumetrics( const std::vector<ITr2Volumetric
 								 Tr2CpuUsage::NONE,
 								 initialData,
 								 renderContext );
+			m_volumeSlices->OnTextureChange().Broadcast();
 			m_volumeHasContent = false;
 		}
 		if( m_volumeHasContent && volumeSlices.IsValid() )
@@ -161,6 +162,7 @@ void Tr2VolumetricsRenderer::RenderVolumetrics( const std::vector<ITr2Volumetric
 								 slices ),
 							 Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE,
 							 renderContext );
+		m_volumeSlices->OnTextureChange().Broadcast();
 		if( !volumeSlices.IsValid() )
 		{
 			CCP_LOGERR( "Tr2VolumetricsRenderer failed to create slices texture with size %ix%ix%i", int( width ), int( height ), int( slices ) );

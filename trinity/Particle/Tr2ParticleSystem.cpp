@@ -308,7 +308,7 @@ bool Tr2ParticleSystem::IsInstanceDataReady() const
 
 ITr2InstanceData::InstanceData Tr2ParticleSystem::GetInstanceData( unsigned int, float ) const
 {
-	return { m_vertexBuffer, uint32_t( m_vertexSizes[Tr2ParticleElementData::GPU] * sizeof( float ) ), m_aliveCount };
+	return { m_vertexBuffer, 0, uint32_t( m_vertexSizes[Tr2ParticleElementData::GPU] * sizeof( float ) ), m_aliveCount };
 }
 
 // --------------------------------------------------------------------------------------

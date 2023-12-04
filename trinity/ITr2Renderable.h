@@ -54,7 +54,7 @@ BLUE_INTERFACE( ITr2Renderable ) :
 
 struct ITr2RenderableEntry
 {
-    ITr2RenderablePtr m_object;
+    ITr2Renderable* m_object;
     float m_distance;
     bool operator<( const ITr2RenderableEntry& other ) const
     {

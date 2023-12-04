@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2QuadRenderer.h"
 #include "TriRenderBatch.h"
+#include <numeric>
 
 using namespace Tr2RenderContextEnum;
 
@@ -10,24 +11,13 @@ CCP_STATS_DECLARE( instanceBufferSize, "Trinity/Tr2QuadRenderer/instanceBufferSi
 namespace
 {
 
-	// --------------------------------------------------------------------------------------
-// Description:
-//   A simple forwarding batch for quad rendering.  
-// --------------------------------------------------------------------------------------
-class Tr2QuadRendererBatch : public TriRenderBatch
-{
-public:
-	void SubmitGeometry( Tr2RenderContext& renderContext )
-	{
-		m_pool->SubmitGeometry( m_key, renderContext );
-	}
-
-	Tr2QuadRenderer* m_pool;
-	Tr2QuadRenderer::EffectKey m_key;
-};
-
 // Initial size of the instance buffer
 const size_t BUFFER_INITIAL_SIZE = 4 * 1024 * 1024;
+
+uint32_t Align( uint32_t offset, uint32_t alignment )
+{
+	return ( offset + alignment - 1 ) / alignment * alignment;
+}
 
 }
 
@@ -36,7 +26,8 @@ Tr2QuadRenderer::Tr2QuadRenderer( IRoot* )
 	m_buffer( "Tr2QuadRenderer::m_buffer", 1024, 128 ),
 	m_effects( "Tr2QuadRenderer::m_effects" ),
 	m_bufferSize( 0 ),
-	m_lastInstanceDataSize( 0 )
+	m_lastInstanceDataSize( 0 ),
+	m_bufferAlignment( 4 )
 {
 	// let the instance buffer grow to avoid buffer rewrites (helps AMD)
 	m_vertexBuffer.SetSizeIncrement( 512 * 1024 );
@@ -87,6 +78,7 @@ void Tr2QuadRenderer::RegisterEffect(
 	record->vertexDeclHandle = Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
 	record->definition = definition;
 	m_effects[key] = record;
+	m_bufferAlignment = std::lcm( m_bufferAlignment, instanceSize );
 }
 
 // --------------------------------------------------------------------------------------
@@ -139,23 +131,30 @@ uint32_t Tr2QuadRenderer::MergeBuffers()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
+	// Add padding to accomodate alignment
+	for( auto& jt : m_effects )
+	{
+		m_bufferSize += jt.second->instanceSize;
+	}
+
 	if( m_bufferSize > m_buffer.size() )
 	{
 		m_buffer.resize( "pool", m_bufferSize );
 	}
 	uint32_t offset = 0;
 	uint32_t quadCount = 0;
-	for( auto jt = m_effects.begin(); jt != m_effects.end(); ++jt )
+	for( auto& jt : m_effects )
 	{
-		auto record = jt->second;
+		auto record = jt.second;
+		offset = Align( offset, record->instanceSize );
 		record->bufferOffset = offset;
-		for( auto it = record->combinable.begin(); it != record->combinable.end(); ++it )
+		for( auto& it : record->combinable )
 		{
-			if( it->addedSize > 0 )
+			if( it.addedSize > 0 )
 			{
-				memcpy( m_buffer.get() + offset, it->buffer.get(), it->addedSize );
-				offset += it->addedSize;
-				it->addedSize = 0;
+				memcpy( m_buffer.get() + offset, it.buffer.get(), it.addedSize );
+				offset += it.addedSize;
+				it.addedSize = 0;
 			}
 		}
 		record->count = ( offset - record->bufferOffset ) / record->instanceSize;
@@ -183,7 +182,7 @@ void Tr2QuadRenderer::UpdateInstanceBuffer( Tr2RenderContext& renderContext )
 		m_vertexBuffer.Create( BUFFER_INITIAL_SIZE );
 	}
 
-	if( FAILED( m_vertexBuffer.PutData( m_buffer.get(), m_bufferSize, m_vertexBufferOffset, renderContext ) ) )
+	if( FAILED( m_vertexBuffer.PutData( m_buffer.get(), m_bufferSize, m_bufferAlignment, m_vertexBufferOffset, renderContext ) ) )
 	{
 		m_vertexBufferOffset = -1;
 		return;
@@ -295,50 +294,24 @@ bool Tr2QuadRenderer::OnPrepareResources()
 // --------------------------------------------------------------------------------------
 void Tr2QuadRenderer::GetBatches( TriBatchType batchType, ITriRenderBatchAccumulator* accumulator )
 {
-	for( auto it = m_effects.begin(); it != m_effects.end(); ++it )
-	{
-		if( it->second->count && it->second->batchType == batchType )
-		{
-			Tr2QuadRendererBatch* batch = accumulator->Allocate<Tr2QuadRendererBatch>();
-			if( batch )
-			{
-				batch->m_pool = this;
-				batch->m_key = it->first;
-				batch->SetShaderMaterial( it->second->effect );
-				batch->SetPerObjectData( nullptr );
-
-				accumulator->Commit( batch );
-			}
-		}
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Renders quads for a single effect.
-// Arguments:
-//   effectKey - effect key
-//   renderContext - current render context
-// --------------------------------------------------------------------------------------
-void Tr2QuadRenderer::SubmitGeometry( EffectKey effectKey, Tr2RenderContext& renderContext )
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-
-	auto found = m_effects.find( effectKey );
-	if( found == m_effects.end() )
+	if( m_vertexBufferOffset == -1 || !m_quadIB.IsValid() )
 	{
 		return;
 	}
-	auto record = found->second;
 
-	if( m_vertexBufferOffset != -1 && record->vertexDeclHandle != Tr2EffectStateManager::UNINITIALIZED_DECLARATION && m_quadIB.IsValid() )
+	for( auto& it : m_effects )
 	{
-		renderContext.m_esm.ApplyVertexDeclaration( record->vertexDeclHandle );
-		renderContext.m_esm.ApplyIndexBuffer( m_quadIB );
-		renderContext.m_esm.ApplyStreamSource( 0, m_quad, 0, sizeof( float ) );
-		renderContext.m_esm.ApplyStreamSource( 1, m_vertexBuffer.GetBuffer(), m_vertexBufferOffset + record->bufferOffset, record->instanceSize );
-		renderContext.SetTopology( TOP_TRIANGLES );
-		renderContext.DrawIndexedInstanced( 4 * record->quadCount, 0, 2 * record->quadCount, record->count );
+		auto& record = *it.second;
+		if( record.count && record.batchType == batchType && record.vertexDeclHandle != Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+		{
+			Tr2RenderBatch batch;
+			batch.SetMaterial( record.effect );
+			batch.SetGeometry( record.vertexDeclHandle, m_quad, 4, m_quadIB, m_quadIB.GetDesc().stride );
+			batch.SetStreamSource( 1, m_vertexBuffer.GetBuffer(), record.instanceSize );
+			batch.SetDrawIndexedInstanced( 6 * record.quadCount, record.count, 0, 0, ( m_vertexBufferOffset + record.bufferOffset ) / record.instanceSize );
+
+			accumulator->Commit( batch );
+		}
 	}
 }
 

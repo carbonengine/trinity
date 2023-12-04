@@ -54,6 +54,8 @@ public:
 	bool SetSrv( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, Tr2RenderContextEnum::ColorSpace colorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
 	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2BufferAL& buffer );
 	bool SetUav( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2TextureAL& texture, uint32_t mip = 0 );
+	bool SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex );
+	bool SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex );
 	bool SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler );
 	void ClearResources();
 	
@@ -66,6 +68,7 @@ private:
 		NONE,
 		BUFFER,
 		TEXTURE,
+		HEAP_VIEW,
 	};
 
 	struct Resource

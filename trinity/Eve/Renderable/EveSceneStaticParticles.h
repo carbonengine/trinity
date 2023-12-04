@@ -10,7 +10,6 @@
 
 #include "Utilities/Vector3d.h"
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "Tr2PersistentPerObjectData.h"
 #include "Tr2DebugRenderer.h"

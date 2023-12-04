@@ -6,10 +6,11 @@
 #include "TriViewport.h"
 #include "Tr2Variable.h"
 
+#include "Tr2SuballocatedBuffer.h"
+
 
 BLUE_DECLARE( Tr2EffectRes );
 
-class TriRenderBatch;
 class ITriRenderBatchAccumulator;
 class Tr2Effect;
 class Tr2LowLevelShader;
@@ -85,8 +86,14 @@ public:
 	void ApplyShaderProgram( uint32_t ix );
 	static Tr2ShaderProgramAL* GetShaderProgram( uint32_t ix );
 
+
+	void ApplyStreamSource( uint32_t stream, const Tr2SuballocatedBuffer::Allocation& vertices );
+
 	void ApplyStreamSource( uint32_t stream, const Tr2BufferAL & buffer, uint32_t offset, uint32_t stride );
-	void ApplyIndexBuffer( const Tr2BufferAL & indices );
+	void ApplyIndexBuffer( const Tr2BufferAL& indices );
+
+	void ApplyIndexBuffer( const Tr2SuballocatedBuffer::Allocation& indices );
+	void ApplyIndexBuffer( const Tr2BufferAL& indices, uint32_t stride );
 
 	// --------------------------------------------------------------------------------------
 	// Description:
@@ -173,6 +180,7 @@ private:
 		HalStream m_streams[VERTEX_STREAM_MAX_COUNT];
 
 		Tr2BufferAL m_indexBuffer;
+		uint32_t m_indexStride;
 		Tr2EffectStateManager::RenderingMode m_renderingMode;
 		uint32_t m_renderStateSetup;
 	};

@@ -7,6 +7,7 @@ find_package(FidelityFX_FSR REQUIRED)
 find_package(CACAO REQUIRED)
 find_package(IntelTBB REQUIRED)
 find_package(NanoVDB REQUIRED)
+find_package(VMA REQUIRED)
 
 set(PUBLIC_HEADER_FILES
     Include/IEveBallpark.h
@@ -1256,7 +1257,6 @@ set(_SOURCES
     ITr2CurveSetOwner.h
     ITr2DynamicBindingOwner.h
     ITr2EffectValue.h
-    ITr2GeometryProvider.h
     ITr2PickableScene.cpp
     ITr2PickableScene.h
     ITr2Renderable.h
@@ -1313,6 +1313,7 @@ set(_SOURCES
     Tr2ExternalParameter.cpp
     Tr2ExternalParameter.h
     Tr2ExternalParameter_Blue.cpp
+    Tr2Event.h
     Tr2GpuBuffer.cpp
     Tr2GpuBuffer.h
     Tr2GpuBuffer_Blue.cpp
@@ -1347,6 +1348,8 @@ set(_SOURCES
     Tr2ImpostorManager.cpp
     Tr2ImpostorManager.h
     Tr2ImpostorManager_Blue.cpp
+    Tr2IndirectDrawBuffer.cpp
+    Tr2IndirectDrawBuffer.h
     Tr2InstancedMesh.cpp
     Tr2InstancedMesh.h
     Tr2InstancedMesh_Blue.cpp
@@ -1388,7 +1391,6 @@ set(_SOURCES
     Tr2PersistentPerObjectData.h
     Tr2PickBuffer.cpp
     Tr2PickBuffer.h
-    Tr2PickingHelperBatch.h
     Tr2PlatformInfo.cpp
     Tr2PlatformInfo.h
     Tr2PlatformInfo_Blue.cpp
@@ -1467,9 +1469,13 @@ set(_SOURCES
     Tr2StreamingBitmapSaver.cpp
     Tr2StreamingBitmapSaver.h
     Tr2StreamingBitmapSaver_Blue.cpp
+    Tr2SuballocatedBuffer.cpp
+    Tr2SuballocatedBuffer.h
     Tr2SwapChain.cpp
     Tr2SwapChain.h
     Tr2SwapChain_Blue.cpp
+    Tr2SyncToGpu.cpp
+    Tr2SyncToGpu.h
 	Tr2TextureAnimation.cpp
     Tr2TextureAnimation.h
     Tr2TextureAnimation_Blue.cpp
@@ -1500,6 +1506,8 @@ set(_SOURCES
     Tr2VideoAdapters.cpp
     Tr2VideoAdapters.h
     Tr2VideoAdapters_Blue.cpp
+    Tr2VirtualAllocator.cpp
+    Tr2VirtualAllocator.h
     Tr2VisibilityResults.cpp
     Tr2VisibilityResults.h
     Tr2VisibilityResults_Blue.cpp
@@ -1618,6 +1626,7 @@ function(set_shared_trinity_properties target)
             CcpMath
             PDM::PDM
             CcpParser
+			GPUOpen::VMA
     )
 
     target_sources(${target} PRIVATE ${_SOURCES})

@@ -28,25 +28,20 @@ DescriptorHeapViewDx12::~DescriptorHeapViewDx12()
 }
 
 /** */
-ShaderResourceViewDx12::ShaderResourceViewDx12(GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry) :
-	DescriptorHeapViewDx12(allocator, heapEntry)
+ShaderResourceViewDx12::ShaderResourceViewDx12( SrvUavDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry ) :
+	m_entry( heapEntry ),
+	m_allocator( allocator )
 {
+	m_index = allocator->GetIndexInHeap( heapEntry );
 }
 
 /** */
 ShaderResourceViewDx12::~ShaderResourceViewDx12()
 {
-}
-
-/** */
-UnorderedAccessViewDx12::UnorderedAccessViewDx12(GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry) :
-	DescriptorHeapViewDx12(allocator, heapEntry)
-{
-}
-
-/** */
-UnorderedAccessViewDx12::~UnorderedAccessViewDx12()
-{
+	if( m_allocator != nullptr )
+	{
+		m_allocator->Free( m_entry );
+	}
 }
 
 /** */

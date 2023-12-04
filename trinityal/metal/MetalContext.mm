@@ -10,6 +10,8 @@
 bool g_useParallelEncoding = true;
 extern bool g_brokenMacOSNvidiaDrivers;
 
+CCP_STATS_DECLARE( constantDataSize, "Trinity/AL/constantDataSize", true, CST_MEMORY, "Total size of constant data uploaded per frame" );
+
 namespace TrinityALImpl
 {
 
@@ -44,6 +46,14 @@ namespace TrinityALImpl
 		}
 		m_primaryWorkQueue.SetCommandQueue( m_commandQueue );
 		m_primaryWorkQueue.SetMetalContext( this );
+        
+        if( @available( macOS 13.0, * ) )
+        {
+            if( m_device.argumentBuffersSupport >= MTLArgumentBuffersTier2 )
+            {
+                m_resourceHeap.Initialize( 2048, m_device );
+            }
+        }
 		
 		GenerateDummyTexture();
 		GenerateDummyBuffer();
@@ -55,6 +65,10 @@ namespace TrinityALImpl
         else if( isNvidia )
         {
             g_brokenMacOSNvidiaDrivers = true;
+        }
+        for( auto& alloc : m_cbAllocator )
+        {
+            alloc.Initialize( m_device );
         }
 	}
 
@@ -357,6 +371,48 @@ namespace TrinityALImpl
 	#endif
 	}
 
+    uint32_t MetalContext::AllocateHeapIndex( id<MTLTexture> texture )
+    {
+        if( !texture || !m_resourceHeap )
+        {
+            return 0xffffffff;
+        }
+        if( @available( macOS 13.0, * ) )
+        {
+            return m_resourceHeap.Allocate( texture.gpuResourceID._impl );
+        }
+        else
+        {
+            return 0xffffffff;
+        }
+    }
+
+    uint32_t MetalContext::AllocateHeapIndex( id<MTLBuffer> buffer )
+    {
+        if( !buffer || !m_resourceHeap )
+        {
+            return 0xffffffff;
+        }
+        if( @available( macOS 13.0, * ) )
+        {
+            return m_resourceHeap.Allocate( buffer.gpuAddress );
+        }
+        else
+        {
+            return 0xffffffff;
+        }
+    }
+
+    void MetalContext::DeallocateHeapIndex( uint32_t index )
+    {
+        m_resourceHeap.Deallocate( index );
+    }
+
+    id<MTLBuffer> MetalContext::GetHeapViewBuffer() const
+    {
+        return m_resourceHeap.GetBuffer();
+    }
+
 	bool MetalContext::IsResourceInUse( uint64_t resourceLastAccessedFrame ) const
 	{
 		return GetRenderedFrameNumber() < resourceLastAccessedFrame;
@@ -376,12 +432,21 @@ namespace TrinityALImpl
 	{
 		if( m_primaryWorkQueue.BlitToDrawableAndPresent( srcTexture, view, &m_renderedFrameNumber ) )
 		{
+            CCP_STATS_SET( constantDataSize, GetConstantBufferAllocator().GetTotalUploadedSize() );
 			++m_recordingFrameNumber;
+            for( auto& alloc : m_cbAllocator )
+            {
+                alloc.Reset();
+            }
 			for( auto buffer : m_destroyedConstantBuffers )
 			{
 				CCPAlignedFree( buffer );
 			}
 			m_destroyedConstantBuffers.clear();
+            if( m_resourceHeap )
+            {
+                m_resourceHeap.SetFrameIndices( m_recordingFrameNumber, m_renderedFrameNumber );
+            }
 		}
 		if( !m_gpuTimerRateMeasured )
 		{
@@ -510,5 +575,11 @@ namespace TrinityALImpl
 	{
 		return &m_primaryWorkQueue;
 	}
+
+ConstantBufferAllocator& MetalContext::GetConstantBufferAllocator()
+{
+    return m_cbAllocator[GetRecordingFrameNumber() % 3];
+}
+
 } // namespace TrinityALImpl
 #endif

@@ -330,9 +330,14 @@ void TriTextureRes::ReleaseResources( TriStorage s )
 
 		m_ownTexture = Tr2TextureAL();
 		m_texture = nullptr;
+		if( m_wrappedRenderTarget )
+		{
+			m_wrappedRenderTarget->OnTextureChange().UnregisterListener( this );
+		}
 		m_wrappedRenderTarget = nullptr;
 		SetPrepared( false );
 		SetGood( false );
+		m_onTextureChange();
 	}
 }
 
@@ -340,7 +345,7 @@ Tr2TextureAL* TriTextureRes::GetTexture()
 {
 	if( m_wrappedRenderTarget )
 	{
-		if( !m_texture || !m_texture->IsValid() )
+		if( (!m_texture || !m_texture->IsValid()) && m_wrappedRenderTarget->GetRenderTarget().IsValid() )
 		{
 			SetTexture( m_wrappedRenderTarget->GetRenderTarget() );
 		}
@@ -352,6 +357,11 @@ Tr2TextureAL* TriTextureRes::GetTexture()
 const Tr2TextureAL* TriTextureRes::GetTexture() const
 {
 	return ( m_texture && m_texture->IsValid() ) ? m_texture : nullptr;
+}
+
+TriTextureRes::OnTextureChangeEvent& TriTextureRes::OnTextureChange()
+{
+	return m_onTextureChange;
 }
 
 #if TRINITYDEV
@@ -818,7 +828,16 @@ void TriTextureRes::SetAverageColor( float red, float green, float blue, float a
 bool TriTextureRes::SetTextureFromRT( Tr2RenderTarget* renderTarget )
 {
 	DestroyOwnTexture();
+	if( m_wrappedRenderTarget )
+	{
+		m_wrappedRenderTarget->OnTextureChange().UnregisterListener( this );
+	}
 	m_wrappedRenderTarget = renderTarget;
+
+	if( m_wrappedRenderTarget )
+	{
+		m_wrappedRenderTarget->OnTextureChange().RegisterListener<TriTextureRes, &TriTextureRes::OnWrappedRenderTargetChanged>( this );
+	}
 
 	if( renderTarget && renderTarget->IsValid() )
 	{
@@ -1106,6 +1125,8 @@ bool TriTextureRes::SetTexture( Tr2TextureAL& texture )
 		SetGood( false );
 
 		Tr2BitmapDimensions::Destroy();
+
+		m_onTextureChange();
 		return true;
 	}
 
@@ -1124,6 +1145,7 @@ bool TriTextureRes::SetTexture( Tr2TextureAL& texture )
 
 	SetPrepared( true );
 	SetGood( true );
+	m_onTextureChange();
 	return true;
 }
 
@@ -1181,4 +1203,21 @@ bool TriTextureRes::HadLodRequests() const
 size_t TriTextureRes::GetOriginalMemoryUsage() const
 {
 	return m_originalMemoryUse;
+}
+
+uint32_t TriTextureRes::GetSrvIndexInHeap() const
+{
+	if( m_texture )
+	{
+		return m_texture->GetSrvIndexInHeap();
+	}
+	else
+	{
+		return 0xffffffff;
+	}
+}
+
+void TriTextureRes::OnWrappedRenderTargetChanged()
+{
+	m_onTextureChange();
 }

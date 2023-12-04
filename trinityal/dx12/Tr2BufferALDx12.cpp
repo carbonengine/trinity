@@ -63,11 +63,6 @@ namespace TrinityALImpl
 			stride = GetBytesPerPixel( desc.format );
 		}
 
-		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) && stride != 2 && stride != 4 )
-		{
-			return E_INVALIDARG;
-		}
-
 		auto size = desc.count * stride;
 
 		D3D12_RESOURCE_FLAGS resourceFlags = D3D12_RESOURCE_FLAG_NONE;
@@ -81,17 +76,25 @@ namespace TrinityALImpl
 		}
 
 		D3D12_RESOURCE_STATES defaultState;
-		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) )
+		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) ||
+			HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) ||
+			HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE )
+			)
 		{
-			defaultState = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-		}
-		else if( HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) )
-		{
-			defaultState = D3D12_RESOURCE_STATE_INDEX_BUFFER;
-		}
-		else if( HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
-		{
-			defaultState = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			defaultState = D3D12_RESOURCE_STATE_COMMON;
+
+			if( HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) )
+			{
+				defaultState |= D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+			}
+			if( HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) )
+			{
+				defaultState |= D3D12_RESOURCE_STATE_INDEX_BUFFER;
+			}
+			if( HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+			{
+				defaultState |= D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+			}
 		}
 		else if( HasFlag( desc.gpuUsage, Tr2GpuUsage::DRAW_INDIRECT_ARGS ) )
 		{
@@ -122,7 +125,7 @@ namespace TrinityALImpl
 			strategy = Tr2ResourceHelper::DYNAMIC;
 			defaultState = D3D12_RESOURCE_STATE_GENERIC_READ;
 		}
-		FORWARD_HR( m_buffer.Create( strategy, size, resourceFlags, defaultState, initialData ? 1 : 0, initialData ? &subresourceData : nullptr, renderContext ) );
+		FORWARD_HR( m_buffer.Create( strategy, size, resourceFlags, defaultState, RequiresImmediateBarriers( desc.gpuUsage ), initialData ? 1 : 0, initialData ? &subresourceData : nullptr, renderContext ) );
 
 		m_desc = desc;
 		m_owner = &renderContext;
@@ -319,6 +322,10 @@ namespace TrinityALImpl
 		renderContext.FlushBarriersDx12( m_buffer.GetResource() );
 		renderContext.m_commandList->CopyBufferRegion( scratch, 0, m_buffer.GetResource(), 0, size );
 		renderContext.ResourceBarrierDx12( Transition( m_buffer.GetResource(), D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState ) );
+		if( RequiresImmediateBarriers( m_desc.gpuUsage ) )
+		{
+			renderContext.FlushBarriersDx12( m_buffer.GetResource() );
+		}
 
 		auto hr = renderContext.FlushAndSyncDx12();
 		if( FAILED( hr ) )
@@ -354,6 +361,30 @@ namespace TrinityALImpl
 	D3D12_GPU_VIRTUAL_ADDRESS Tr2BufferAL::GetGpuView()
 	{
 		return m_buffer.GetGpuView();
+	}
+
+	uint32_t Tr2BufferAL::GetSrvIndexInHeap() const
+	{
+		if( m_srv )
+		{
+			return m_srv->GetIndexInHeap();
+		}
+		else
+		{
+			return 0xffffffff;
+		}
+	}
+	
+	uint32_t Tr2BufferAL::GetUavIndexInHeap() const
+	{
+		if( m_uav )
+		{
+			return m_uav->GetIndexInHeap();
+		}
+		else
+		{
+			return 0xffffffff;
+		}
 	}
 
 	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const

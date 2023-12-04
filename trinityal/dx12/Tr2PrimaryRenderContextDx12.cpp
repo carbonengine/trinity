@@ -185,6 +185,12 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		CCP_ASSERT(m_allocators[idx].get() != nullptr);
 	}
 
+	m_srvUavAllocator = std::make_shared<SrvUavDescriptorAllocator>( device, 16 * 1024 );
+	if( auto entry = m_srvUavAllocator->Allocate() )
+	{
+		m_srvUavHeapStart = std::make_shared<ShaderResourceViewDx12>( m_srvUavAllocator.get(), entry );
+	}
+
 	CComPtr<ID3D12CommandQueue> commandQueue;
 
 	D3D12_COMMAND_QUEUE_DESC desc = {};
@@ -286,6 +292,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	m_completedFrameIndex = 0;
 	m_fenceValue = 1;
+	m_srvUavAllocator->SetFrameIndices( GetCurrentFrameIndexDx12(), GetCompletedFrameIndexDx12() );
 	m_frameFenceValues.clear();
 	m_frameFenceValues.resize( backBufferCount, 0 );
 	m_pendingRelease.resize( backBufferCount );
@@ -350,7 +357,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	const uint32_t nullCbSize = 128 * 1024;
 	std::vector<uint8_t> cb( nullCbSize );
 	D3D12_SUBRESOURCE_DATA cbd = { cb.data(), nullCbSize, nullCbSize };
-	m_nullCB.Create( TrinityALImpl::Tr2ResourceHelper::STATIC, nullCbSize, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_GENERIC_READ, 1, &cbd, *this );
+	m_nullCB.Create( TrinityALImpl::Tr2ResourceHelper::STATIC, nullCbSize, D3D12_RESOURCE_FLAG_NONE, D3D12_RESOURCE_STATE_GENERIC_READ, false, 1, &cbd, *this );
 
 	m_immediateBuffer.PutMarker( m_commandList2, "" );
 	m_statsQueryFrameIndex = 0;
@@ -489,8 +496,9 @@ void Tr2PrimaryRenderContextAL::Destroy()
 
 	// JB: Forcing the destruction of samplers because they now hold a SamplerStateDx12 object
 	m_samplerStateFactory.Clear();
-
-	for (int32_t idx = 0; idx < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES; ++idx)
+	m_srvUavHeapStart = nullptr;
+	m_srvUavAllocator = nullptr;
+	for (int32_t idx = 0; idx < D3D12_DESCRIPTOR_HEAP_TYPE_NUM_TYPES + 1; ++idx)
 	{
 		m_allocators[idx] = nullptr;
 	}
@@ -578,6 +586,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	{
 		it->clear();
 	}
+	m_srvUavAllocator->SetFrameIndices( GetCurrentFrameIndexDx12(), GetCompletedFrameIndexDx12() );
 
 	auto value = m_frameFenceValues[m_currentBackBufferIndex];
 	m_frameFenceValues.clear();
@@ -720,6 +729,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	WaitForFenceDx12( m_frameFenceValues[m_currentBackBufferIndex] );
 
 	PopPendingRelease( m_currentBackBufferIndex );
+	m_srvUavAllocator->SetFrameIndices( GetCurrentFrameIndexDx12(), GetCompletedFrameIndexDx12() );
 
 	// JB: As with creation, if additional render contexts are added, this will need to be in that contexts reset function
 	m_descriptorCache[m_currentBackBufferIndex]->Reset();
@@ -868,6 +878,14 @@ void Tr2PrimaryRenderContextAL::ReleaseLater(IUnknown* resource)
 }
 #endif
 
+void Tr2PrimaryRenderContextAL::FlushPendingRelease()
+{
+	for( auto& releases : m_pendingRelease )
+	{
+		releases.clear();
+	}
+}
+
 uint64_t Tr2PrimaryRenderContextAL::GetCurrentFrameIndexDx12() const
 {
 	return m_fenceValue + 1;
@@ -931,6 +949,7 @@ ALResult Tr2PrimaryRenderContextAL::FlushAndSyncDx12( Tr2RenderContextAL& render
 	m_pendingPresents.erase(
 		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p )->bool { return !p.backBuffer.IsValid(); } ),
 		end( m_pendingPresents ) );
+	m_srvUavAllocator->SetFrameIndices( GetCurrentFrameIndexDx12(), GetCompletedFrameIndexDx12() );
 
 	// Reduce the pending releases 
 	for( auto index = 0; index < m_pendingRelease.size(); ++index )
@@ -1046,31 +1065,41 @@ void Tr2PrimaryRenderContextAL::ScheduleSwapchainPresentDx12( IDXGISwapChain3* s
 	m_pendingPresents.push_back( pp );
 }
 
+ID3D12DescriptorHeap* Tr2PrimaryRenderContextAL::GetGlobalSrvUavHeap() const
+{
+	return m_srvUavAllocator->GetGpuVisibleHeap();
+}
+
+std::shared_ptr<ShaderResourceViewDx12> Tr2PrimaryRenderContextAL::GetSrvUavHeapView() const
+{
+	return m_srvUavHeapStart;
+}
+
 /** Create a ShaderResourceView */
 HRESULT Tr2PrimaryRenderContextAL::CreateShaderResourceView(ID3D12Resource* resource, const D3D12_SHADER_RESOURCE_VIEW_DESC& desc, std::shared_ptr<class ShaderResourceViewDx12>& srvView)
 {
-	const std::shared_ptr<GlobalDescriptorHeapAllocator>& allocator = m_allocators[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
-	GlobalDescriptorHeapPage::DescriptorEntry* entry = allocator->Allocate();
-	if (entry == nullptr)
+	auto entry = m_srvUavAllocator->Allocate();
+	if( entry == nullptr )
+	{
 		return E_OUTOFMEMORY;
-
-	m_device->CreateShaderResourceView(resource, &desc, entry->m_offsetCPU);
-
-	srvView = std::make_shared<ShaderResourceViewDx12>(allocator.get(), entry);
+	}
+	m_device->CreateShaderResourceView( resource, &desc, entry->m_offsetCPU );
+	m_device->CreateShaderResourceView( resource, &desc, m_srvUavAllocator->GetDescriptorInCpuHeap( entry ) );
+	srvView = std::make_shared<ShaderResourceViewDx12>( m_srvUavAllocator.get(), entry );
 	return S_OK;
 }
 
 /** Create an UnorderedAccessView */
 HRESULT Tr2PrimaryRenderContextAL::CreateUnorderedAccessView(ID3D12Resource* resource, ID3D12Resource* counterResource, const D3D12_UNORDERED_ACCESS_VIEW_DESC& desc, std::shared_ptr<class UnorderedAccessViewDx12>& uavView)
 {
-	const std::shared_ptr<GlobalDescriptorHeapAllocator>& allocator = m_allocators[D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV];
-	GlobalDescriptorHeapPage::DescriptorEntry* entry = allocator->Allocate();
-	if (entry == nullptr)
+	auto entry = m_srvUavAllocator->Allocate();
+	if( entry == nullptr )
+	{
 		return E_OUTOFMEMORY;
-
-	m_device->CreateUnorderedAccessView(resource, counterResource, &desc, entry->m_offsetCPU);
-
-	uavView = std::make_shared<UnorderedAccessViewDx12>(allocator.get(), entry);
+	}
+	m_device->CreateUnorderedAccessView( resource, counterResource, &desc, entry->m_offsetCPU );
+	m_device->CreateUnorderedAccessView( resource, counterResource, &desc, m_srvUavAllocator->GetDescriptorInCpuHeap( entry ) );
+	uavView = std::make_shared<UnorderedAccessViewDx12>( m_srvUavAllocator.get(), entry );
 	return S_OK;
 }
 

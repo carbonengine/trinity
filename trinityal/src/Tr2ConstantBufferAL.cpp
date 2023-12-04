@@ -86,3 +86,8 @@ ALResult Tr2ConstantBufferAL::SetName( const char* name )
 	}
 	return m_buffer->SetName( name );
 }
+
+TrinityALImpl::Tr2ConstantBufferAL* Tr2ConstantBufferAL::TrinityALImpl_GetObject() const
+{
+	return m_buffer.get();
+}

@@ -41,6 +41,8 @@ public:
 
 	bool operator==( const Tr2ConstantBufferAL& other ) const;
 
+	TrinityALImpl::Tr2ConstantBufferAL* TrinityALImpl_GetObject() const;
+
 private:
 	std::shared_ptr<TrinityALImpl::Tr2ConstantBufferAL> m_buffer;
 	friend class Tr2RenderContextAL;

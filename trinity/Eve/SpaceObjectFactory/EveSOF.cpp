@@ -943,6 +943,8 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 			planeEffect->EndUpdate();
 			planeSet->SetEffect( planeEffect );
 
+			planeSet->SetIsSkinned( isSkinned );
+
 			for( auto& offset : offsets )
 			{
 				// add all individual items
@@ -2998,7 +3000,7 @@ void EveSOF::ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacem
 		}
 		else
 		{
-	CreatePlacement( obj, placementDna, placement, locators, offsets );
+			CreatePlacement( obj, placementDna, placement, locators, offsets );
 		}
 	}
 

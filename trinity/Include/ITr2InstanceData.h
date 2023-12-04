@@ -35,7 +35,8 @@ BLUE_INTERFACE( ITr2InstanceData ) : public IRoot
 
 	struct InstanceData
 	{
-		Tr2BufferAL buffer;
+		const Tr2BufferAL& buffer;
+		uint32_t offset;
 		uint32_t stride;
 		uint32_t count;
 	};

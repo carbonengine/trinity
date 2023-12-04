@@ -61,7 +61,6 @@ public:
 	void SetKey( int32_t key );
 	void Rebuild();
 
-	void Render( Tr2RenderContext& renderContext ) const;
 	unsigned int GetPickingID() const;
 
 	int32_t GetReference( size_t index ) const;
@@ -93,8 +92,8 @@ private:
 	PEveBannerItemStructureList m_banners;
 	TriTextureParameterPtr m_primaryTextureParameter;
 
-	Tr2BufferAL m_vertexBuffer;
-	Tr2BufferAL m_indexBuffer;
+	Tr2SuballocatedBuffer::Allocation m_vertexBuffer;
+	Tr2SuballocatedBuffer::Allocation m_indexBuffer;
 	uint32_t m_vertexDeclaration;
 
 	AxisAlignedBoundingBox m_aabb;

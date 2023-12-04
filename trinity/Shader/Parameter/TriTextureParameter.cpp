@@ -2,6 +2,7 @@
 #include "TriTextureParameter.h"
 #include "ITr2TextureProvider.h"
 #include "Shader/Tr2Shader.h"
+#include "Shader/Tr2Material.h"
 #include "Tr2Renderer.h"
 #include "Resources/TriTextureRes.h"
 
@@ -10,9 +11,11 @@ TriTextureParameter::TriTextureParameter(IRoot* lockobj):
 	m_resourceType( Tr2EffectResource::TEXTURE_TYPELESS ),
 	m_uavMipLevel( 0 ),
 	m_isUsedByEffect( false ),
-	m_textureLodEnabled( false )
+	m_textureLodEnabled( false ),
+	m_bindlessColorSpace( Tr2RenderContextEnum::COLOR_SPACE_LINEAR )
 {
 	std::fill( std::begin( m_uvDensityScale ), std::end( m_uvDensityScale ), 0.f );
+	std::fill( std::begin( m_cachedSrvIndex ), std::end( m_cachedSrvIndex ), 0xffffffff );
 }
 
 
@@ -38,6 +41,11 @@ unsigned TriTextureParameter::GetHashValue( unsigned startingHash ) const
 	}
 	auto name = m_name.c_str();
 	return CcpHashFNV1( &name, sizeof( name ), startingHash );
+}
+
+bool TriTextureParameter::SupportsDirtyNotification() const
+{
+	return true;
 }
 
 void TriTextureParameter::UsedWithScreenSize( float screenSize, float worldRadius, const std::vector<float>& uvDensities )
@@ -113,8 +121,16 @@ void TriTextureParameter::DisableTextureLoding()
 
 bool TriTextureParameter::OnModified(	Be::Var* val )
 {
-	m_resource.Unlock();
-	m_lowResResource = nullptr;
+	if( m_resource )
+	{
+		m_resource->OnTextureChange().UnregisterListener( this );
+		m_resource = nullptr;
+	}
+	if( m_lowResResource )
+	{
+		m_lowResResource->OnTextureChange().UnregisterListener( this );
+		m_lowResResource = nullptr;
+	}
 	m_textureRes = nullptr;
 
 	Initialize();
@@ -124,6 +140,21 @@ bool TriTextureParameter::OnModified(	Be::Var* val )
 	return true;
 }
 
+void TriTextureParameter::CopyValueToEffect(
+	Tr2RenderContextEnum::ShaderType inputType,
+	unsigned char* destHandle,
+	size_t size,
+	Tr2RenderContext& renderContext) const
+{
+	uint32_t value = m_cachedSrvIndex[m_bindlessColorSpace];
+	memcpy( destHandle, &value, std::min( size, sizeof( value ) ) );
+}
+
+void TriTextureParameter::AddUsedTexture( Tr2BindlessResourcesAL& usedTextures ) const
+{
+	usedTextures.Add( m_cachedTexture );
+}
+
 // --------------------------------------------------------------------------------------
 bool TriTextureParameter::CopyToResourceSet(
 	Tr2ResourceSetDescriptionAL& resourceDesc,
@@ -131,17 +162,9 @@ bool TriTextureParameter::CopyToResourceSet(
 	uint32_t registerIndex,
 	ResourceFlags flags ) const
 {
-	auto resource = GetResource();
 	bool isSrgb = ( flags & RESOURCE_FLAG_SRGB ) != 0;
 	auto colorSpace = isSrgb ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-	if( const Tr2TextureAL* tex = ( resource ? resource->GetTexture() : nullptr ) )
-	{
-		return resourceDesc.SetSrv( stage, registerIndex, *tex, colorSpace );
-	}
-	else
-	{
-		return resourceDesc.SetSrv( stage, registerIndex, Tr2Renderer::GetFallbackTexture( m_resourceType, m_name.c_str() ), colorSpace );
-	}
+	return resourceDesc.SetSrv( stage, registerIndex, m_cachedTexture, colorSpace );
 }
 
 // --------------------------------------------------------------------------------------
@@ -150,22 +173,22 @@ bool TriTextureParameter::ApplyUav(
 	Tr2RenderContextEnum::ShaderType stage,
 	uint32_t registerIndex ) const
 {
-	auto resource = GetResource();
-	if( Tr2TextureAL* tex = ( resource ? resource->GetTexture() : nullptr ) )
-	{
-		return resourceDesc.SetUav( stage, registerIndex, *tex, m_uavMipLevel );
-	}
-	else
-	{
-		return resourceDesc.SetUav( stage, registerIndex, Tr2TextureAL() );
-	}
+	return resourceDesc.SetUav( stage, registerIndex, m_cachedTexture, m_uavMipLevel );
 }
 
 // ---------------------------------------------------------------
 bool TriTextureParameter::Initialize()
 {
-	m_resource = nullptr;
-	m_lowResResource = nullptr;
+	if( m_resource )
+	{
+		m_resource->OnTextureChange().UnregisterListener( this );
+		m_resource = nullptr;
+	}
+	if( m_lowResResource )
+	{
+		m_lowResResource->OnTextureChange().UnregisterListener( this );
+		m_lowResResource = nullptr;
+	}
 	m_textureRes = nullptr;
 
 	if( !m_resourcePath.empty() )
@@ -179,14 +202,23 @@ bool TriTextureParameter::Initialize()
 				if( BePaths->FileExistsLocally( CA2W( lowResPath.c_str() ) ) )
 				{
 					BeResMan->GetResource( lowResPath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_lowResResource );
+					if( m_lowResResource )
+					{
+						m_lowResResource->OnTextureChange().RegisterListener<TriTextureParameter, &TriTextureParameter::OnTextureChanged>( this );
+					}
 				}
 			}
 		}
 
 
 		BeResMan->GetResource( m_resourcePath.c_str(), "", BlueInterfaceIID<ITr2TextureProvider>(), (void**)&m_resource );
+		if( m_resource )
+		{
+			m_resource->OnTextureChange().RegisterListener<TriTextureParameter, &TriTextureParameter::OnTextureChanged>( this );
+		}
 		m_textureRes = BlueCastPtr( m_resource );
 	}
+	OnTextureChanged();
 	return true;
 }
 
@@ -196,10 +228,26 @@ bool TriTextureParameter::Initialize()
 // --------------------------------------------------------------------------------------
 void TriTextureParameter::SetResource( ITr2TextureProvider* newRes )
 {
-	m_resource = newRes;
-	m_lowResResource = nullptr;
+	if( m_resource != newRes )
+	{
+		if( m_resource )
+		{
+			m_resource->OnTextureChange().UnregisterListener( this );
+		}
+		m_resource = newRes;
+		if( m_resource )
+		{
+			m_resource->OnTextureChange().RegisterListener<TriTextureParameter, &TriTextureParameter::OnTextureChanged>( this );
+		}
+	}
+	if( m_lowResResource )
+	{
+		m_lowResResource->OnTextureChange().UnregisterListener( this );
+		m_lowResResource = nullptr;
+	}
 	m_textureRes = BlueCastPtr( m_resource );
 	RebuildEffectHandles( m_cachedEffect );
+	OnTextureChanged();
 }
 
 ITr2TextureProvider* TriTextureParameter::GetResource() const
@@ -208,7 +256,11 @@ ITr2TextureProvider* TriTextureParameter::GetResource() const
 	{
 		if( m_resource->GetTexture() )
 		{
-			m_lowResResource = nullptr;
+			if( m_lowResResource )
+			{
+				m_lowResResource->OnTextureChange().UnregisterListener( this );
+				m_lowResResource = nullptr;
+			}
 		}
 		else
 		{
@@ -234,6 +286,16 @@ bool TriTextureParameter::AssignTo( ICopierCustomAssignment* other,
 	return true;
 }
 
+void TriTextureParameter::OnAddedToMaterial( Tr2Material* material )
+{
+	m_materials.push_back( material );
+}
+
+void TriTextureParameter::OnRemovedFromMaterial( Tr2Material* material )
+{
+	m_materials.erase( find( begin( m_materials ), end( m_materials ), material ), end( m_materials ) );
+}
+
 void TriTextureParameter::RebuildEffectHandles( Tr2Shader* effectRes )
 {
 	m_cachedEffect = effectRes;
@@ -245,10 +307,67 @@ void TriTextureParameter::RebuildEffectHandles( Tr2Shader* effectRes )
 	}
 
 	auto resource = effectRes->GetResource( m_name.c_str() );
-	if( !resource )
+	if( resource )
 	{
-		return;
+		m_resourceType = resource->type;
+		m_isUsedByEffect = true;
 	}
-	m_resourceType = resource->type;
-	m_isUsedByEffect = true;
+	else
+	{
+		auto c = effectRes->GetConstant( m_name.c_str() );
+		if( c )
+		{
+			m_isUsedByEffect = true;
+			m_resourceType = Tr2EffectResource::TEXTURE_2D;
+			m_bindlessColorSpace = Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+
+			if( auto annotations = effectRes->GetParameterAnnotations( m_name.c_str() ) )
+			{
+				auto found = std::find_if( begin( *annotations ), end( *annotations ), []( auto& x ) {
+					return strcmp( x.name, "BindlessHandleType" ) == 0 && x.type == Tr2EffectParameterAnnotation::INT;
+				} );
+				if( found != end( *annotations ) )
+				{
+					m_resourceType = Tr2EffectResource::Type( found->intValue );
+					//CCP_LOGERR( "Got resource type." );
+				}
+				else
+				{
+					CCP_ASSERT_M( false, "Bindless texture input is defined as uint, but does not have the BindlessHandleType annotation set. Either change the type to BindlessTexture??? or add the annotation" );
+				}
+				found = std::find_if( begin( *annotations ), end( *annotations ), [&]( auto& x ) {
+					return strcmp( x.name, "Tr2sRGB" ) == 0 && x.type == Tr2EffectParameterAnnotation::BOOL;
+				} );
+				if( found != end( *annotations ) )
+				{
+					m_bindlessColorSpace = found->boolValue ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+				}
+			}
+		}
+	}
+	CacheTexture();
+}
+
+void TriTextureParameter::CacheTexture()
+{
+	auto resource = GetResource();
+	if( const Tr2TextureAL* tex = ( resource ? resource->GetTexture() : nullptr ) )
+	{
+		m_cachedTexture = *tex;
+	}
+	else
+	{
+		m_cachedTexture = Tr2Renderer::GetFallbackTexture( m_resourceType, m_name.c_str() );
+	}
+	m_cachedSrvIndex[0] = m_cachedTexture.GetSrvIndexInHeap( Tr2RenderContextEnum::COLOR_SPACE_LINEAR );
+	m_cachedSrvIndex[1] = m_cachedTexture.GetSrvIndexInHeap( Tr2RenderContextEnum::COLOR_SPACE_SRGB );
+}
+
+void TriTextureParameter::OnTextureChanged()
+{
+	CacheTexture();
+	for_each( begin( m_materials ), end( m_materials ), []( auto& material ) {
+		material->ResourceChanged();
+		material->MarkConstantBuffersDirty();
+	} );
 }

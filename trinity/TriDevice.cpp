@@ -7,6 +7,7 @@
 #include "RenderJob/Tr2RenderJobs.h"
 #include "Curves/TriCurveSet.h"
 #include "Include/TriMath.h"
+#include "Tr2SyncToGpu.h"
 
 #include <IBlueCallbackMan.h>
 
@@ -62,6 +63,7 @@ namespace {
 		}
 #endif
 
+		Tr2Renderer::InitializeSystemShaderOptions();
 
 		return hr;
 	}
@@ -205,6 +207,7 @@ bool TriDevice::CreateSimpleDevice(
 		pp.windowed = true;
 	}
 	pp.presentInterval = presentInterval;
+	pp.variableRefreshRateSupported = IsVariableRefreshRateSupported();
 
 	//take nvperfhud into account!
 	// Set default settings
@@ -303,6 +306,8 @@ bool TriDevice::ChangeDevice(
 		ReleaseDeviceResources( TRISTORAGE_ALL );
 		Tr2RenderContext::DestroyMainThreadRenderContext();	
 	}
+
+	Tr2SyncToGpu::GetInstance().Flush();
 
 	if( FAILED( CreateDeviceInt( adapter, hWnd, *pp ) ) )
 	{
@@ -981,6 +986,9 @@ bool TriDevice::Render()
 	Throttle();
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	Tr2SyncToGpu::GetInstance().Tick();
+
 	Tr2Viewport vp;
 	mViewport.ConvertToTr2Viewport( vp );
 	renderContext.SetViewport( vp );

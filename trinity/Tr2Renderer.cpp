@@ -43,11 +43,6 @@ namespace
 	// keep an array of directories which are to exclude from texture-sizing
 	std::vector<std::string> s_dirsToExclude;
 
-	// ShaderOptions, only GEOMETRY_SHADER_SUPPORT at the moment
-	const size_t s_shaderOptionCount = 1;
-	Tr2ShaderOption s_shaderOptions[s_shaderOptionCount];
-	bool s_shaderOptionsInitialized = false;
-
 	PROJECTION_TYPE s_currentProjectionType = PT_PERSPECTIVE;
 
 	Matrix s_projectionTransform;
@@ -1088,6 +1083,14 @@ void Tr2Renderer::ReinitializeRegisteredEffects()
 	}
 }
 
+void Tr2Renderer::RebuildEffects()
+{
+	for( auto& effect : GetEffectSet() )
+	{
+		effect->RebuildCachedData();
+	}
+}
+
 void Tr2Renderer::SetShaderModel( TR2SHADERMODEL sm )
 {
 	bool changed = ( s_shaderModel != sm );
@@ -1189,10 +1192,14 @@ unsigned int Tr2Renderer::GetPerObjectPSStartRegister()
 
 Tr2BufferAL* Tr2Renderer::GetQuadListIndexBuffer( uint32_t numOfQuads )
 {
+	static std::mutex s_mutex;
+
 	if( !Tr2Renderer::IsResourceCreationAllowed() )
 	{
 		return nullptr;
 	}
+
+	std::scoped_lock lock( s_mutex );
 
 	// how many indices do these quads need?
 	uint32_t numOfIndices = numOfQuads * 6;
@@ -1408,21 +1415,9 @@ const Tr2TextureAL& Tr2Renderer::GetFallbackTexture( Tr2EffectResource::Type tex
 	}
 }
 
-bool Tr2Renderer::GetSystemShaderOptions( Tr2ShaderOption** options, size_t* count )
+void Tr2Renderer::InitializeSystemShaderOptions()
 {
-	if( !s_shaderOptionsInitialized )
-	{
-		Tr2ShaderOption option;
-		option.name = BlueSharedString( "GEOMETRY_SHADER_SUPPORT" );
-		option.value = BlueSharedString( GetGeometryShaderSupport() ? "SUPPORTED" : "UNSUPPORTED" );
-		s_shaderOptions[0] = option;
-		s_shaderOptionsInitialized = true;
-	}
-
-	*options = s_shaderOptions;
-	*count = s_shaderOptionCount;
-
-	return true;
+	ModifyGlobalEffectOptions( { { BlueSharedString( "GEOMETRY_SHADER_SUPPORT" ), BlueSharedString( GetGeometryShaderSupport() ? "SUPPORTED" : "UNSUPPORTED" ) } } );
 }
 
 bool Tr2Renderer::GetGeometryShaderSupport()

@@ -17,6 +17,7 @@ struct Type
 	bool IsVector() const;
 	bool IsMatrix() const;
 	bool IsStruct() const;
+	bool IsBindlessHandle() const;
 	bool CanImplicitCast( const Type& to, int& casts ) const;
 	bool GetIndexedType( Type& type ) const;
 

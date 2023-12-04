@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Tr2MeshArea.h"
+#include "Tr2MeshBase.h"
 
 Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_display( true ),
@@ -132,6 +133,12 @@ bool Tr2MeshArea::GetReversed() const
 void Tr2MeshArea::SetReversed( bool reversed )
 {
 	m_reversed = reversed;
+	if( m_reversed )
+	{
+		for_each( begin( m_ownerMeshes ), end( m_ownerMeshes ), []( auto mesh ) {
+			mesh->ReverseIndexBufferIfNeeded();
+		} );
+	}
 }
 
 // -------------------------------------------------------------
@@ -176,6 +183,25 @@ void Tr2MeshArea::SetJointCount( unsigned int val )
 unsigned int* Tr2MeshArea::GetJointMappingAnimRig() const
 {
 	return m_jointMappingAnimRig;
+}
+
+void Tr2MeshArea::AddOwnerMesh( Tr2MeshBase* mesh )
+{
+	m_ownerMeshes.push_back( mesh );
+}
+
+void Tr2MeshArea::RemoveOwnerMesh( Tr2MeshBase* mesh )
+{
+	auto found = find( begin( m_ownerMeshes ), end( m_ownerMeshes ), mesh );
+	if( found != end( m_ownerMeshes ) )
+	{
+		*found = m_ownerMeshes.back();
+		m_ownerMeshes.pop_back();
+	}
+	else
+	{
+		CCP_ASSERT( false );
+	}
 }
 
 Tr2Lod Tr2MeshArea::GetMinLod() const

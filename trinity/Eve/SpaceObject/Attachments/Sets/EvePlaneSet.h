@@ -8,7 +8,6 @@
 #define EvePlaneSet_H
 
 #include "IEveSpaceObjectAttachment.h"
-#include "ITr2GeometryProvider.h"
 #include "ITr2Renderable.h"
 #include "Tr2GrannyAnimation.h"
 #include "Utilities/BoundingBox.h"
@@ -34,8 +33,6 @@ class Tr2PerObjectData;
 BLUE_CLASS( EvePlaneSet ):
 	public IEveSpaceObjectAttachment,
 	public IInitialize,
-	public ITr2GeometryProvider,
-	public Tr2DeviceResource,
 	public INotify
 {
 public:
@@ -56,19 +53,10 @@ public:
 	bool OnModified( Be::Var* val );
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void SubmitGeometry( Tr2RenderContext& renderContext );
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITriDeviceResource
-	void ReleaseResources( TriStorage s );
-private:
-	bool OnPrepareResources();
-
-public:
-	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
+	void AddToQuadRenderer( Tr2QuadRenderer & quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount ) override;
 	virtual void GetBatches( ITriRenderBatchAccumulator * accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = Tr2RenderReason::TR2RENDERREASON_NORMAL );
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
@@ -84,16 +72,39 @@ public:
 	// access pickBufferID
 	void SetPickBufferID( uint8_t pickBufferID );
 
+	void SetIsSkinned( bool isSkinned );
+
 	// rebuild the interal vertexbuffers etc.
 	void Rebuild();
 
-	void GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData );
-
 	EvePlaneSetItemVector* GetPlanes();
 private:
+	struct PlaneVertex
+	{
+		Vector4 transform1;
+		Vector4 transform2;
+		Vector4 transform3;
+		Vector4 color;
+		Vector4_16 layer1Transform;
+		Vector4_16 layer2Transform;
+		Vector4_16 layer1Scroll;
+		Vector4_16 layer2Scroll;
+		Vector4_16 blinkData;
+		uint8_t index;
+		uint8_t boneIndex;
+		uint8_t pickBufferID;
+		uint8_t maskMapAtlasIndex;
+	};
+	struct VolatileData
+	{
+		Matrix transform;
+		Vector4 color;
+	};
+
 	// toggle visibility
 	bool m_display;
 	bool m_hideOnLowQuality;
+	bool m_isSkinned;
 	// pickbuffer ID
 	uint8_t m_pickBufferID;
 	// keep a name
@@ -109,16 +120,14 @@ private:
 
 	// the list of all them plane items
 	PEvePlaneSetItemVector m_planes;
-	// transforms for each of the planes
-	std::vector<Matrix> m_cachedTransforms;
+
+	unsigned m_effectHash;
+
+	std::vector<PlaneVertex> m_items;
+	std::vector<VolatileData> m_volatileData;
+
 	// this shader renders or picks them all
 	Tr2EffectPtr m_effect;
-	Tr2EffectPtr m_pickEffect;
-
-	// has it's own vertex handle and buffer
-	unsigned int m_vertexDeclHandle;
-	unsigned int m_vertexCount;
-	Tr2BufferAL m_vertexBuffer;
 };
 
 TYPEDEF_BLUECLASS( EvePlaneSet );

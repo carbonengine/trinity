@@ -63,24 +63,13 @@ public:
 		}
 	}
 
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+	{
+		writer.SetPerObjectData( VERTEX_SHADER, &m_data, sizeof( m_data ) );
+		writer.SetPerObjectData( PIXEL_SHADER, &m_data, sizeof( m_data ) );
+	}
+
 	EveChildCloud2::PerObjectData m_data;
-};
-
-class ShadowBatch : public TriRenderBatch
-{
-public:
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext )
-	{
-		renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
-		renderContext.SetVertexLayout( Tr2VertexLayoutAL() );
-		renderContext.DrawPrimitive( 0, 1 );
-	}
-
-	virtual const std::string& GetBatchTypeName( void ) const
-	{
-		static const std::string name = "EveChildCloud2::ShadowBatch";
-		return name;
-	}
 };
 
 }
@@ -255,15 +244,14 @@ void EveChildCloud2::GetVolumetricBatches( const TriFrustum& frustum, ITriRender
 	{
 		return;
 	}
-	TriForwardingBatch* batch = batches->Allocate<TriForwardingBatch>();
-	if( batch )
-	{
-		batch->SetPerObjectData( GetPerObjectData( batches, screenSize ) );
-		batch->SetShaderMaterial( m_effect );
-		batch->SetGeometryProvider( this );
-		batch->SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
-		batches->Commit( batch );
-	}
+
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_effect );
+	batch.SetPerObjectData( GetPerObjectData( batches, screenSize ) );
+	batch.SetGeometry( m_declaration, m_vertexBuffer, sizeof( Vector3 ), m_indexBuffer, m_indexBuffer.GetDesc().stride );
+	batch.SetDrawIndexedInstanced( 12 * 3, 1, 0, 0, 0 );
+	batches->Commit( batch );
+
 	m_renderedLastFrame = true;
 }
 
@@ -286,6 +274,7 @@ void EveChildCloud2::CreateEmptyLightMap()
 			&initialData,
 			renderContext );
 		m_emptyLightMap->GetTexture()->SetName( "EveChildCloud2 Empty Lightmap" );
+		m_emptyLightMap->OnTextureChange().Broadcast();
 	}
 }
 
@@ -324,6 +313,7 @@ bool EveChildCloud2::UpdateVolumetricLightmap( Tr2RenderContext& renderContext )
 							   renderContext ),
 						   false );
 			lightMap.SetName( "EveChildCloud2 Lightmap" );
+			m_lightMap->OnTextureChange().Broadcast();
 			m_lightmapDirtyOffset = 0;
 			m_variableStore->RegisterVariable( "LightMap", m_emptyLightMap );
 		}
@@ -351,6 +341,7 @@ bool EveChildCloud2::UpdateVolumetricLightmap( Tr2RenderContext& renderContext )
 				m_lightmapDirtyOffset = 0;
 				m_variableStore->RegisterVariable( "LightMap", m_lightMap );
 				*m_emptyLightMap->GetTexture() = Tr2TextureAL();
+				m_emptyLightMap->OnTextureChange().Broadcast();
 			}
 			return true;
 		}
@@ -395,11 +386,9 @@ void EveChildCloud2::SetSceneInformation( const SceneInformation& sceneInformati
 	m_targetWidth = sceneInformation.targetWidth;
 	m_targetHeight = sceneInformation.targetHeight;
 
-	if( m_effect ){
-		m_effect->SetOption(
-			BlueSharedString( "CLOUD_SHADOWS" ),
-			sceneInformation.receiveShadows && m_receiveShadows ? BlueSharedString( "CLOUD_SHADOWS_RECEIVE" ) : BlueSharedString( "CLOUD_SHADOWS_NONE" ) );
-	}
+	m_effect->SetOption(
+		BlueSharedString( "CLOUD_SHADOWS" ),
+		sceneInformation.receiveShadows && m_receiveShadows ? BlueSharedString( "CLOUD_SHADOWS_RECEIVE" ) : BlueSharedString( "CLOUD_SHADOWS_NONE" ) );
 }
 
 void EveChildCloud2::ReleaseResources( TriStorage s )
@@ -581,16 +570,6 @@ void EveChildCloud2::PopulatePerObjectData( PerObjectData& data, float screenSiz
 	data.mapOffsets[2] = Vector4( m_mapOffsets[2], 0.f );
 }
 
-
-void EveChildCloud2::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	renderContext.m_esm.ApplyVertexDeclaration( m_declaration );
-	renderContext.m_esm.ApplyIndexBuffer( m_indexBuffer );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( Vector3 ) );
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawIndexedPrimitive( 8, 0, 12 );
-}
-
 void EveChildCloud2::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
 	if( m_effect )
@@ -641,6 +620,7 @@ void EveChildCloud2::UpdateSyncronous( EveUpdateContext& updateContext, const Ev
 				CreateEmptyLightMap();
 				m_variableStore->RegisterVariable( "LightMap", m_emptyLightMap );
 				*m_lightMap->GetTexture() = Tr2TextureAL();
+				m_lightMap->OnTextureChange().Broadcast();
 				m_lightmapDirty = false;
 			}
 		}
@@ -753,14 +733,13 @@ void EveChildCloud2::GetVolumetricShadowBatches( ITriRenderBatchAccumulator* bat
 		return;
 	}
 
-	auto batch = batches->Allocate<ShadowBatch>();
-	if( batch )
-	{
-		batch->SetPerObjectData( GetPerObjectData( batches, 1 ) );
-		batch->SetShaderMaterial( m_effect );
-		batch->SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
-		batches->Commit( batch );
-	}
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_effect );
+	batch.SetPerObjectData( GetPerObjectData( batches, 1 ) );
+	batch.SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
+	batch.SetVertexDeclaration( Tr2EffectStateManager::NULL_DECLARATION );
+	batch.SetDrawInstanced( 3, 1, 0, 0 );
+	batches->Commit( batch );
 }
 
 bool EveChildCloud2::IsVisible( const TriFrustum& frustum ) const 
@@ -800,15 +779,14 @@ void EveChildCloud2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchTy
 		{
 			return;
 		}
-		TriForwardingBatch* batch = batches->Allocate<TriForwardingBatch>();
-		if( batch )
-		{
-			batch->SetPerObjectData( GetPerObjectData( batches, 10000 ) );
-			batch->SetShaderMaterial( m_reflectionEffect );
-			batch->SetGeometryProvider( this );
-			batch->SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
-			batches->Commit( batch );
-		}
+
+		Tr2RenderBatch batch;
+		batch.SetMaterial( m_reflectionEffect );
+		batch.SetPerObjectData( GetPerObjectData( batches, 10000 ) );
+		batch.SetGeometry( m_declaration, m_vertexBuffer, sizeof( Vector3 ), m_indexBuffer, m_indexBuffer.GetDesc().stride );
+		batch.SetDrawIndexedInstanced( 12 * 3, 1, 0, 0, 0 );
+		batch.SetRenderingMode( Tr2EffectStateManager::RM_ALPHA );
+		batches->Commit( batch );
 	}
 }
 

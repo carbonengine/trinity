@@ -265,6 +265,7 @@ void Tr2EffectStateManager::CurrentValues::Reset()
 
 	m_vertexDeclaration = UNKNOWN;
 	m_indexBuffer = Tr2BufferAL();
+	m_indexStride = 0;
 	for( int i = 0; i < VERTEX_STREAM_MAX_COUNT; ++i )
 	{
 		m_streams[i].m_vertexBuffer = Tr2BufferAL();
@@ -330,8 +331,11 @@ uint32_t Tr2EffectStateManager::RegisterShader(
 		{
 			if( memcmp( existingBytecode.bytecode, bytecode.bytecode, bytecode.size ) == 0 )
 			{
-				// We've seen this setup before
-				return (uint32_t)i;
+				if( existing.GetSignature().samplers == signature.samplers )
+				{
+					// We've seen this setup before
+					return (uint32_t)i;
+				}
 			}
 		}
 	}
@@ -723,7 +727,12 @@ bool Tr2EffectStateManager::GetVertexDeclarationElements( uint32_t declaration, 
 	return false;
 }
 
-void Tr2EffectStateManager::ApplyStreamSource( uint32_t stream, const Tr2BufferAL & buffer, uint32_t offset, uint32_t stride )
+void Tr2EffectStateManager::ApplyStreamSource( uint32_t stream, const Tr2SuballocatedBuffer::Allocation& vertices )
+{
+	ApplyStreamSource( stream, vertices.GetBuffer(), vertices.GetOffset(), vertices.GetStride() );
+}
+
+void Tr2EffectStateManager::ApplyStreamSource( uint32_t stream, const Tr2BufferAL& buffer, uint32_t offset, uint32_t stride )
 {
 	
 	if( m_isManagedRendering )
@@ -743,19 +752,35 @@ void Tr2EffectStateManager::ApplyStreamSource( uint32_t stream, const Tr2BufferA
 	m_renderContext.SetStreamSource( stream, buffer, offset, stride );
 }
 
-void Tr2EffectStateManager::ApplyIndexBuffer( const Tr2BufferAL & indices )
+
+void Tr2EffectStateManager::ApplyIndexBuffer( const Tr2BufferAL& indices )
 {
+	ApplyIndexBuffer( indices, indices.GetDesc().stride );
+}
+
+void Tr2EffectStateManager::ApplyIndexBuffer( const Tr2SuballocatedBuffer::Allocation& indices )
+{
+	ApplyIndexBuffer( indices.GetBuffer(), indices.GetStride() );
+}
+
+void Tr2EffectStateManager::ApplyIndexBuffer( const Tr2BufferAL& indices, const uint32_t stride )
+{
+	if( stride == 1 )
+	{
+		CCP_LOGWARN( "Oh no! This is a big bug!" );
+	}
 	
 	if( m_isManagedRendering )
 	{
-		if( indices == m_currentValues.m_indexBuffer )
+		if( indices == m_currentValues.m_indexBuffer && stride == m_currentValues.m_indexStride )
 		{
 			return;
 		}
 		m_currentValues.m_indexBuffer = indices;
+		m_currentValues.m_indexStride = stride;
 	}
 
-	m_renderContext.SetIndices( indices );
+	m_renderContext.SetIndices( indices, stride );
 }
 
 

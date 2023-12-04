@@ -188,7 +188,8 @@ private:
 protected:
 	void MapPassResources( 
 		const Tr2EffectResourceMap& resources, 
-		Tr2EffectParamVector &pv );
+		Tr2EffectParamVector &pv,
+		bool& compatibleWithGdr );
 	void MapPassParameters(
 		size_t technique,
 		unsigned passIx,
@@ -197,6 +198,7 @@ protected:
 		const Tr2EffectConstantVector& constants,
 		const Tr2EffectDescription& desc,
 		Tr2RenderContext& renderContext );
+	void AddLoddable( ITriEffectParameter* param, const char* name );
 
 	// Python
 	bool IsParameterUsedByTechnique( const std::string& parameterName );

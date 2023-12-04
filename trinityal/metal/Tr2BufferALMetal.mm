@@ -51,11 +51,6 @@ namespace TrinityALImpl
 			stride = GetBytesPerPixel( desc.format );
 		}
 
-		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) && stride != 2 && stride != 4 )
-		{
-			return E_INVALIDARG;
-		}
-
 		m_metalContext = renderContext.GetMetalContext();
 		auto bufferSizeInBytes = desc.count * stride;
 
@@ -72,7 +67,10 @@ namespace TrinityALImpl
 		m_owner = &renderContext;
 		m_mtlBuffer = m_metalContext->CreateMetalBuffer( renderContext.GetMetalWorkQueue(), bufferSizeInBytes, m_resourceMode, initialData);
 		m_desc = desc;
-        
+        if( HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) || HasFlag( desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
+        {
+            m_heapIndex = m_metalContext->AllocateHeapIndex( m_mtlBuffer );
+        }
         m_memory.Set( Tr2MemoryCounterAL::BUFFER, bufferSizeInBytes );
 
 		return m_mtlBuffer ? S_OK : E_FAIL;
@@ -80,17 +78,22 @@ namespace TrinityALImpl
 
 	void Tr2BufferAL::Destroy()
 	{
-		m_metalContext->DestroyMetalBuffer(m_mtlBuffer);
-		m_metalContext->DestroyMetalBuffer(m_mappedBuffer);
-		for( auto& staging : m_stagingBuffers )
-		{
-			m_metalContext->DestroyMetalBuffer( staging.buffer );
-		}
+        if( m_metalContext )
+        {
+            m_metalContext->DeallocateHeapIndex( m_heapIndex );
+            m_metalContext->DestroyMetalBuffer(m_mtlBuffer);
+            m_metalContext->DestroyMetalBuffer(m_mappedBuffer);
+            for( auto& staging : m_stagingBuffers )
+            {
+                m_metalContext->DestroyMetalBuffer( staging.buffer );
+            }
+        }
 		m_stagingBuffers.clear();
 		m_mtlBuffer    = nil;
 		m_mappedBuffer = nil;
 		m_metalContext = nil;
 		m_desc.count   = 0;
+        m_heapIndex = 0xffffffff;
 		m_owner = nullptr;
         m_memory.Reset();
 	}
@@ -266,6 +269,16 @@ namespace TrinityALImpl
 
 
 		return S_OK;
+	}
+
+	uint32_t Tr2BufferAL::GetSrvIndexInHeap() const
+	{
+		return m_heapIndex;
+	}
+	
+	uint32_t Tr2BufferAL::GetUavIndexInHeap() const
+	{
+		return m_heapIndex;
 	}
 
 	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const

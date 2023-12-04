@@ -170,8 +170,17 @@ public:
 		VM_COUNT
 	};
 
+	struct PerThreadAccumulator : TriRenderBatchAccumulator<EffectKeyGenerator>
+	{
+		PerThreadAccumulator() :
+			TriRenderBatchAccumulator<EffectKeyGenerator>( Tr2Renderer::GetPoolAllocator() )
+		{
+		}
+	};
+
 	// BatchMaps are used to store batch accumulators for rendering
 	typedef std::map<TriBatchType, ITriRenderBatchAccumulator*> BatchMap;
+	typedef std::map<TriBatchType, Tr2EnumerableThreadSpecific<PerThreadAccumulator>> PerThreadBatchMap;
 
 	Tr2ShLightingManagerPtr GetShLightingManager() const;
 	void SetShLightingManager( Tr2ShLightingManager * manager );
@@ -392,6 +401,7 @@ protected:
 	// Secondary batches used to render planets, stars, shadowed objects
 	// and so forth. Should be finalized and cleared each time they're used.
 	BatchMap m_secondaryBatches;
+	PerThreadBatchMap m_perThreadBatches;
 
 	// Utility batches.
 	std::vector<TriPoolAllocator> m_shadowAllocators;

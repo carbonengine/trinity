@@ -666,6 +666,8 @@ void Tr2Effect::RebuildSamplerOverrides()
 
 							pp.m_stageInput[i].m_samplers.push_back( d );
 							pp.m_resourceSetDesc.SetSampler( ShaderType( i ), it->first, d.sampler );
+							pp.m_compatibleWithGdr = false;
+							m_compatibleWithGdr = false;
 							break;
 						}
 					}
@@ -686,6 +688,7 @@ void Tr2Effect::RebuildCachedDataInternal()
 	auto bk = m_shader;
 	m_shader = nullptr;
 	m_lodTextureParameters.clear();
+	m_compatibleWithGdr = true;
 
 	if( m_effectResource )
 	{		
@@ -715,6 +718,7 @@ void Tr2Effect::RebuildCachedDataInternal()
 					pp.m_resourceSetDesc = desc.techniques[technique].passes[passIx].resourceSetDesc;
 					pp.m_resourceSetHash = 0;
 					pp.m_resourceSetDirty = true;
+					pp.m_compatibleWithGdr = true;
 
 					for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++i )
 					{
@@ -729,11 +733,15 @@ void Tr2Effect::RebuildCachedDataInternal()
 						auto& input = pp.m_stageInput[i];
 						if( !stage.resources.empty() )
 						{
-							MapPassResources( stage.resources, input.m_textures );
+							MapPassResources( stage.resources, input.m_textures, pp.m_compatibleWithGdr );
 						}
 						if( !stage.uavs.empty() )
 						{
-							MapPassResources( stage.uavs, input.m_uavs );
+							MapPassResources( stage.uavs, input.m_uavs, pp.m_compatibleWithGdr );
+						}
+						if( !pp.m_compatibleWithGdr )
+						{
+							m_compatibleWithGdr = false;
 						}
 					}
 				}
@@ -1291,7 +1299,8 @@ bool ExtractLodingAnnotations( std::array<float, ITriEffectTextureParameter::UV_
 {
 	std::fill( begin( densityScale ), end( densityScale ), 0.f );
 
-	auto annotations = effectAnnotations.find( name );
+	auto annotations = find_if( begin( effectAnnotations ), end( effectAnnotations ), [name]( auto& x ) {
+		return strcmp( name, x.first ) == 0; } );
 	if( annotations == end( effectAnnotations ) )
 	{
 		return false;
@@ -1347,7 +1356,7 @@ bool ExtractLodingAnnotations( std::array<float, ITriEffectTextureParameter::UV_
 }
 
 
-void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2EffectParamVector &pv )
+void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2EffectParamVector& pv, bool& compatibleWithGdr )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
@@ -1362,29 +1371,8 @@ void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2Effe
 		if( ITriEffectParameter* p = GetResourceByName( name ) )
 		{
 			param.m_sourceValue = p;
-
-			if( ITriEffectTextureParameterPtr loddable = BlueCastPtr( p ) )
-			{
-				std::array<float, ITriEffectTextureParameter::UV_SET_MAX_COUNT> uvScale;
-				if( ExtractLodingAnnotations( uvScale, name, m_shader->GetEffectDescription().annotations, m_constParameters ) )
-				{
-					auto found = find( begin( m_lodTextureParameters ), end( m_lodTextureParameters ), loddable );
-					if( found == end( m_lodTextureParameters ) )
-					{
-						loddable->EnableTextureLoding( uvScale );
-						m_lodTextureParameters.push_back( loddable );
-					}
-				}
-				else
-				{
-					auto found = find( begin( m_lodTextureParameters ), end( m_lodTextureParameters ), loddable );
-					if( found == end( m_lodTextureParameters ) )
-					{
-						loddable->DisableTextureLoding();
-						m_lodTextureParameters.push_back( loddable );
-					}					
-				}
-			}
+			compatibleWithGdr = false;
+			AddLoddable( p, name );
 		}
 		// Secondly search in effect parameter list
 		else if( ITriEffectParameter* p = FindParameterByName( name ) )
@@ -1396,6 +1384,7 @@ void Tr2Effect::MapPassResources( const Tr2EffectResourceMap& resources, Tr2Effe
 				&& ( vp->m_variable->GetType() == TRIVARIABLE_TEXTURE_RES || 
 					 vp->m_variable->GetType() == TRIVARIABLE_GPUBUFFER ) )
 			{
+				compatibleWithGdr = false;
 				param.m_sourceValue = p;
 			}
 
@@ -1612,6 +1601,44 @@ bool GetBool( const Tr2Shader* shaderState, const char* paramName, const char* a
 			: defaultValue;
 }
 
+
+bool GetBindlessFallbackTextureIndex( const Tr2EffectDescription& desc, const Tr2EffectConstant& c, uint32_t& result)
+{
+	//Bindless are always 1D uint parameters, so filter out everything else
+	if( c.type != Tr2EffectConstant::UINT || c.dimension != 1 )
+	{
+		return false;
+	}
+
+	//Find annotations for the parameter
+	auto it = std::find_if( desc.annotations.begin(), desc.annotations.end(), [&]( Tr2EffectAnnotationMap::const_reference key ) {
+		return strcmp( key.first, c.name.c_str() ) == 0;
+	} );
+	if( it == desc.annotations.end() )
+	{
+		//No annotations found, early out
+		return false;
+	}
+
+	//Find the annotation that tells us what type the bindless texture has
+	auto& map = it->second;
+	auto found = std::find_if( map.begin(), map.end(), []( auto& x ) {
+		return strcmp( x.name, "BindlessHandleType" ) == 0 && x.type == Tr2EffectParameterAnnotation::INT;
+	} );
+	if( found == map.end() )
+	{
+		return false;
+	}
+
+	auto resourceType = Tr2EffectResource::Type( found->intValue );
+
+	auto& fallbackTexture = Tr2Renderer::GetFallbackTexture( resourceType, c.name.c_str() );
+
+	result = fallbackTexture.GetSrvIndexInHeap();
+
+	return true;
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Maps the parameters for a pass to indices in the constant mirror.
@@ -1654,7 +1681,7 @@ void Tr2Effect::MapPassParameters(
 	auto constParams = GetConstParameters( constParamCount );
 	uint32_t constIndexes[MAX_PARAMS];
 
-	// Fist pass: determine the size of the constant buffer
+	// First pass: determine the size of the constant buffer
 	for( auto constantIx = constants.begin(); constantIx != constants.end(); ++constantIx )
 	{
 		constIndexes[index] = -1;
@@ -1678,6 +1705,12 @@ void Tr2Effect::MapPassParameters(
 			{
 				paramAsEffectValue = p;
 			}
+			else if( auto r = GetResourceByName( constantIx->name.c_str() ) )
+			{
+				paramAsEffectValue = r;
+				AddLoddable( r, constantIx->name.c_str() );
+				pp.m_usedResources.push_back( r );
+			}
 			// Fallback to variable store
 			else if( TriVariable* v = variableStore.FindVariable( constantIx->name.c_str() ) )
 			{
@@ -1695,33 +1728,29 @@ void Tr2Effect::MapPassParameters(
 		}
 		foundParams[index++] = paramAsEffectValue;
 
-		if( foundConstant )
+		//Figure out how large the constant buffer has to be.
+		//This has to be done even if the constant isn't set, as the shader may still sample it and expect
+		//to get some kind of default (usually zero).
+		constantSize = max( constantSize, constantIx->offset + constantIx->size );
+		
+		// It's illegal to pass the perObjectStart if the effect has the block
+		if( foundConstant && constantIx->offset >= perObjectStart )
 		{
-			// It's illegal to pass the perObjectStart if the effect has the block
-			if( constantIx->offset >= perObjectStart )
-			{
-				CCP_ASSERT_M( false, "Register is mapped beyond valid range" );
-				CCP_LOGERR( "Effect maps parameter '%s' beyond limit (target is c%d, limit is c%d)", 
-					constantIx->name.c_str(), constantIx->offset, perObjectStart );
+			CCP_ASSERT_M( false, "Register is mapped beyond valid range" );
+			CCP_LOGERR( "Effect maps parameter '%s' beyond limit (target is c%d, limit is c%d)", 
+				constantIx->name.c_str(), constantIx->offset, perObjectStart );
 
-				// We must ignore this parameter!
-				constIndexes[index - 1] = -1;
-				foundParams[index - 1] = nullptr;
-				continue;
-			}
-
-			unsigned int constantIndex = constantIx->offset + constantIx->size;
-			if( constantIndex > constantSize )
-			{
-				constantSize = constantIndex;
-			}
+			// We must ignore this parameter!
+			constIndexes[index - 1] = -1;
+			foundParams[index - 1] = nullptr;
+			continue;
 		}
 	}
 
 	unsigned int constantDefaultValueSize = desc.techniques[technique].passes[passIx].stageInputs[stage].m_constantValueSize;
 	const void* constantDefaultValues = desc.techniques[technique].passes[passIx].stageInputs[stage].constantValues;
 
-	constantSize = std::max( constantSize, constantDefaultValueSize );
+	CCP_ASSERT( constantSize >= constantDefaultValueSize );
 
 	if( constantSize > 0 && !hasVariableParams )
 	{
@@ -1748,6 +1777,20 @@ void Tr2Effect::MapPassParameters(
 				}
 			}
 		}
+
+		//Loop over constants to initialize bindless textures constants that don't have a parameter mapped to them.
+		//This is necessary to fill in the texture with the fallback texture, so we don't crash when trying to read from it.
+		for( size_t i = 0; i < constants.size(); ++i )
+		{
+			auto& c = constants[i];
+
+			uint32_t srvIndex;
+			if (GetBindlessFallbackTextureIndex(desc, c, srvIndex))
+			{
+				memcpy( mirror.get() + c.offset, &srvIndex, 4 );
+			}
+		}
+
 
 		pp.GetSharedConstantBuffer( stage, mirror.get(), constantSize );
 	}
@@ -1788,6 +1831,7 @@ void Tr2Effect::MapPassParameters(
 			{
 				ITriReroutablePtr paramAsReroutable;
 				ITr2EffectValuePtr paramAsEffectValue = foundParams[index++];
+				bool supportsDirtyNotification = false;
 
 				ITriEffectParameterPtr param = ITriEffectParameterPtr( BlueCastPtr( paramAsEffectValue ) );
 				if( param )
@@ -1795,11 +1839,15 @@ void Tr2Effect::MapPassParameters(
 					// Notify a parameter of its future binding. Here
 					// the parameter might check for sRGB flags, etc.
 					param->RebuildEffectHandles( m_shader );
+					supportsDirtyNotification = param->SupportsDirtyNotification();
 
-					paramAsReroutable = ITriReroutablePtr( BlueCastPtr( param ) );
-					if( paramAsReroutable )
+					if( !supportsDirtyNotification )
 					{
-						paramAsEffectValue.Unlock();
+						paramAsReroutable = ITriReroutablePtr( BlueCastPtr( param ) );
+						if( paramAsReroutable )
+						{
+							paramAsEffectValue.Unlock();
+						}
 					}
 				}
 
@@ -1858,10 +1906,50 @@ void Tr2Effect::MapPassParameters(
 						param.m_registerIndex = constantIx->offset;
 						param.m_registerCount = constantIx->size;
 
-						pv.push_back( param );
+						if( supportsDirtyNotification )
+						{
+							pp.m_stageInput[stage].m_shaderParametersWithNotification.push_back( param );
+						}
+						else
+						{
+							pv.push_back( param );
+						}
 					}
 				}
+				else
+				{
+					//If this constant is used as a bindless texture index, if it isn't set by any other source,
+					//we need to fill it in with a fallback texture index!
+					uint32_t srvIndex;
+					if( GetBindlessFallbackTextureIndex( desc, *constantIx, srvIndex ) )
+					{
+						void* dest = (void*)( (uint8_t*)mirror + constantIx->offset );
+						memcpy( dest, &srvIndex, 4 );
+					}
+				}
+
 			}
+		}
+	}
+}
+
+void Tr2Effect::AddLoddable( ITriEffectParameter* param, const char* name )
+{
+	if( ITriEffectTextureParameterPtr loddable = BlueCastPtr( param ) )
+	{
+		auto found = find( begin( m_lodTextureParameters ), end( m_lodTextureParameters ), loddable );
+		if( found == end( m_lodTextureParameters ) )
+		{
+			std::array<float, ITriEffectTextureParameter::UV_SET_MAX_COUNT> uvScale;
+			if( ExtractLodingAnnotations( uvScale, name, m_shader->GetEffectDescription().annotations, m_constParameters ) )
+			{
+				loddable->EnableTextureLoding( uvScale );
+			}
+			else
+			{
+				loddable->DisableTextureLoding();
+			}
+			m_lodTextureParameters.push_back( loddable );
 		}
 	}
 }

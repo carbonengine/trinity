@@ -87,4 +87,9 @@ protected:
 
 TYPEDEF_BLUECLASS_WR_SHUTDOWN( Tr2EffectRes );
 
+
+void ModifyGlobalEffectOptions( const std::vector<Tr2ShaderOption>& changes );
+const std::vector<Tr2ShaderOption>& GetGlobalEffectOptions();
+
+
 #endif

@@ -360,6 +360,7 @@ void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2T
 
 	if( m_shadowMapResultRT || m_shadowMapResultRT->IsValid() )
 	{
+		GPU_REGION( renderContext, "Denoising" );
 		renderContext.m_esm.PushRenderTarget( *m_shadowMapResultRT );
 		renderContext.m_esm.PushDepthStencilBuffer( Tr2TextureAL() );
 

@@ -20,30 +20,7 @@ BLUE_DECLARE( TriGeometryRes );
 struct TriGeometryResSkeletonData;
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
-class TriRenderBatch;
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   A callback object for Tr2Mesh::GetBatches function. Callers of Tr2Mesh::GetBatches
-//   can perform custom per-area operations on a render batch created by Tr2Mesh or even 
-//   reject a batch from submitting.
-// See Also:
-//   Tr2Mesh
-// --------------------------------------------------------------------------------------
-struct ITr2MeshBatchCallback
-{
-	// ----------------------------------------------------------------------------------
-	// Description:
-	//   Per-area/batch callback function.
-	// Arguments:
-	//   area - Mesh area for which the render batch was created
-	//   batch - A new render batch that is about to be submitted
-	// Return Value:
-	//   true If the batch needs to be submitted
-	//   false If the batch needs to be dropped
-	// ----------------------------------------------------------------------------------
-	virtual bool ProcessBatch( Tr2MeshArea* area, TriRenderBatch* batch ) = 0;
-};
+struct TriGeometryResMeshData;
 
 BLUE_CLASS( Tr2MeshBase ):
 	public IListNotify
@@ -57,8 +34,7 @@ public:
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches,
 		const Tr2MeshAreaVector* areas, 
 		const Tr2PerObjectData* data,
-		float screenSize = std::numeric_limits<float>::max(),
-		ITr2MeshBatchCallback* callback = nullptr ) const;
+		float screenSize = std::numeric_limits<float>::max() ) const;
 
 	Tr2MeshAreaVector* GetAreas( TriBatchType areaType );
 	const Tr2MeshAreaVector* GetAreas( TriBatchType areaType ) const;
@@ -105,9 +81,12 @@ public:
 
 	void UseWithScreenSize( float screenSize, float worldRadius ) const;
 
+	void ReverseIndexBufferIfNeeded();
+
 protected:
 	unsigned int FindJoint( const std::string* boneList, const int numBones, const char* name ) const;
 	void CacheBounds();
+	void ReverseIndexBuffers();
 
 protected:
 	std::string m_name;
@@ -145,6 +124,9 @@ protected:
 
 TYPEDEF_BLUECLASS( Tr2MeshBase );
 BLUE_DECLARE_VECTOR( Tr2MeshBase );
+
+
+Tr2RenderBatch CreateGeometryBatch( TriGeometryResMeshData* mesh, Tr2MeshArea* area, const Tr2PerObjectData* data );
 
 
 #endif // Tr2MeshBase_h

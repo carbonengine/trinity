@@ -34,54 +34,15 @@ public:
 			Tr2Renderer::GetPerObjectPSStartRegister(),
 			renderContext );
 	}
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override
+	{
+		writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, m_vsData, sizeof( *m_vsData ) );
+		writer.SetPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER, m_psData, sizeof( *m_psData ) );
+	}
 	EveSpaceObjectPSData* m_psData;
 	EveSpaceObjectVSData* m_vsData;
 };
 }
-
-// --------------------------------------------------------------------------------------
-// Description
-//   Render batch specialization for EveChildContainer-batches
-// See Also
-//   TriRenderBatch, ITr2GeometryBatch
-// --------------------------------------------------------------------------------------
-class ChildLineSetInstancingBatch : public TriGeometryBatch
-{
-public:
-	void SetGeometryResource( TriGeometryRes* val )
-	{
-		m_geometryResource = val;
-	}
-
-
-	// Set the geometry provider
-	void SetGeometryProvider( EveChildLineSet* val )
-	{
-		m_geom = val;
-	}
-
-	// Forward the SubmitGeometry call to the geometry provider
-	void SubmitGeometry( Tr2RenderContext& renderContext )
-	{
-		if( m_geom )
-		{
-			if( m_geom->GetMesh()->GetDisplay() )
-			{
-				m_geom->Draw( this, renderContext );
-			}
-		}
-	}
-
-	// Gets the batch type name for PIX debugging
-	virtual const std::string& GetBatchTypeName( void ) const
-	{
-		static const std::string name = "ChildLineSetInstancingBatch";
-		return name;
-	}
-
-private:
-	EveChildLineSetPtr m_geom;
-};
 
 
 EveChildLineSet::EveChildLineSet( IRoot* lockobj ) :
@@ -504,101 +465,28 @@ void EveChildLineSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 		return;
 	}
 
-	if( m_mesh->GetGeometryResource() == nullptr )
+	auto geometry = m_mesh->GetGeometryResource();
+	if( !geometry || !geometry->IsGood() )
 	{
 		return;
 	}
 
-	if( !( m_mesh->GetGeometryResource()->IsGood() ) )
-	{
-		return;
-	}
-
-	if( m_mesh->GetGeometryResource()->GetMeshCount() < 1 )
+	TriGeometryResMeshData* meshData = geometry->GetMeshData( 0 );
+	if( !meshData || !meshData->m_allocationsValid )
 	{
 		return;
 	}
 
 	auto areaList = m_mesh->GetAreas( batchType );
 
-	for( auto srcMeshArea = areaList->begin(); srcMeshArea != areaList->end(); ++srcMeshArea )
+	for( auto& area : *areaList )
 	{
-		auto a = *srcMeshArea;
-
-		ChildLineSetInstancingBatch* batch = batches->Allocate<ChildLineSetInstancingBatch>();
-
-		if( nullptr == batch )
-		{
-			continue;
-		}
-
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( a->GetMaterialInterface() );
-		batch->SetMeshParameters( m_mesh->GetMeshIndex(), a->GetIndex(), a->GetCount(), a->IsReversed() );
-		batch->SetGeometryResource( m_mesh->GetGeometryResource() );
-		batch->SetGeometryProvider( this );
+		auto batch = CreateGeometryBatch( meshData, area, perObjectData );
+		batch.SetVertexDeclaration( m_vertexDeclarationHandle );
+		batch.SetStreamSource( 1, m_vertexBuffer, m_stride );
+		batch.m_instanceCount = m_totalObjectCount;
 		batches->Commit( batch );
 	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Setup instanced rendering and call DIP
-// --------------------------------------------------------------------------------
-void EveChildLineSet::Draw( ChildLineSetInstancingBatch* batch, Tr2RenderContext& renderContext )
-{
-	auto geometry = batch->GetGeometryResource();
-
-	if( geometry == nullptr )
-	{
-		return;
-	}
-	if( !( geometry->IsGood() ) )
-	{
-		return;
-	}
-	if( geometry->GetMeshCount() < 1 )
-	{
-		return;
-	}
-	if( !m_vertexBuffer.IsValid() )
-	{
-		return;
-	}
-
-	const TriGeometryResMeshData* meshData = geometry->GetMeshData( 0 );
-	auto areaIx = batch->GetAreaIndex();
-	auto areaCount = batch->GetAreaCount();
-
-	if( areaIx >= meshData->m_areas.size() )
-	{
-		return;
-	}
-
-	if( areaIx + areaCount > meshData->m_areas.size() )
-	{
-		areaCount = static_cast<unsigned int>( meshData->m_areas.size() ) - areaIx;
-	}
-
-	const TriGeometryResAreaData& area = meshData->m_areas[areaIx];
-
-	unsigned int primCount = area.m_primitiveCount;
-	for( unsigned int i = 1; i < areaCount; ++i )
-	{
-		const TriGeometryResAreaData& curArea = meshData->m_areas[areaIx + i];
-		primCount += curArea.m_primitiveCount;
-	}
-
-
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclarationHandle );
-	renderContext.m_esm.ApplyIndexBuffer( meshData->m_indexBuffer );
-	// Stream 0: "geometry": here: our object's geometry
-	renderContext.m_esm.ApplyStreamSource( 0, meshData->m_vertexBuffer, 0, meshData->m_bytesPerVertex );
-	// Stream 1: instance", here: instance index
-	renderContext.m_esm.ApplyStreamSource( 1, m_vertexBuffer, 0, m_stride );
-
-	renderContext.SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
-	renderContext.DrawIndexedInstanced( meshData->m_vertexCount, area.m_firstIndex, primCount, m_totalObjectCount );
 }
 
 

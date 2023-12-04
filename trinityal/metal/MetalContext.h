@@ -7,6 +7,7 @@
 #if TRINITY_PLATFORM == TRINITY_METAL
 #include "MetalWorkQueue.h"
 #include "MetalUtils.h"
+#include "MetalResourceArray.h"
 
 // Macros to cut down on code for passing through of work queue functions
 
@@ -62,6 +63,11 @@ public:
 	id<MTLTexture> CreateUAVOfMetalTexture( id<MTLTexture> texture, uint32_t mipLevel );
 
 	void DestroyMetalTexture( id<MTLTexture> texture );
+    
+    uint32_t AllocateHeapIndex( id<MTLTexture> texture );
+    uint32_t AllocateHeapIndex( id<MTLBuffer> buffer );
+    void DeallocateHeapIndex( uint32_t index );
+    id<MTLBuffer> GetHeapViewBuffer() const;
 
 	MTLVertexDescriptor* CreateVertexLayout();
 	void DestroyVertexLayout( MTLVertexDescriptor* vertexDescriptor );
@@ -90,11 +96,14 @@ public:
 
 	MetalWorkQueue* GetSecondaryWorkQueue( uint32_t index );
 	MetalWorkQueue* GetPrimaryWorkQueue();
+    
+    ConstantBufferAllocator& GetConstantBufferAllocator();
 private:
 	id<MTLDevice>       m_device;
 	id<MTLCommandQueue> m_commandQueue;
 	TrinityALImpl::MetalWorkQueue m_primaryWorkQueue;
 	std::vector<TrinityALImpl::MetalWorkQueue> m_secondaryWorkQueues;
+    ConstantBufferAllocator m_cbAllocator[3];
 	uint32_t m_parallelEncodersCount;
 	uint64_t m_recordingFrameNumber;
 	uint64_t m_renderedFrameNumber;
@@ -111,6 +120,8 @@ private:
 	id<MTLTexture> m_dummyTexture[METAL_NUM_DUMMY_TEXTURES];
 	id<MTLSamplerState> m_dummySampler;
 	id<MTLBuffer> m_dummyBuffer;
+    
+    ResourceArrayArgumentBuffer m_resourceHeap;
 	
 
 	std::unordered_map<size_t, id<MTLRenderPipelineState>>  m_renderPipelineStateMap;

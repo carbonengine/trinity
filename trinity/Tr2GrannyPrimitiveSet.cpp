@@ -2,6 +2,7 @@
 #include "Tr2GrannyPrimitiveSet.h"
 #include "Resources/TriGrannyRes.h"
 #include "TriDevice.h"
+#include "TriRenderBatch.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -129,10 +130,7 @@ bool Tr2GrannyPrimitiveSet::OnPrepareResources()
 	return true;
 }
 
-
-//////////////////////////////////////////////////////////////////////////
-// ITr2GeometryProvider
-void Tr2GrannyPrimitiveSet::SubmitGeometry( Tr2RenderContext& renderContext )
+void Tr2GrannyPrimitiveSet::GetBatchesImpl( ITriRenderBatchAccumulator* accumulator, const Tr2PerObjectData* perObjectData, Tr2Material* effect, GetBatchesReason reason )
 {
 	if( !m_vertexBuffer.IsValid() )
 	{
@@ -144,29 +142,30 @@ void Tr2GrannyPrimitiveSet::SubmitGeometry( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( TriangleVertex ) );
-
-	if( m_renderSolid || m_isDrawingForPicking )
+	Tr2RenderBatch batch;
+	batch.SetMaterial( effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetVertexDeclaration( m_vertexDeclHandle );
+	batch.SetStreamSource( 0, m_vertexBuffer, sizeof( TriangleVertex ) );
+	if( m_renderSolid || reason == GetBatchesReason::Picking )
 	{
-		renderContext.m_esm.ApplyIndexBuffer( m_triangleIndexBuffer );
-		renderContext.SetTopology( TOP_TRIANGLES );
-		if( m_isDrawingForPicking &&  ( m_pickingPrimitiveCount > 0 ))
-		{		
-			renderContext.DrawIndexedPrimitive( (unsigned int)m_points.size(), m_pickingIndexOffset, m_pickingPrimitiveCount );
+		batch.SetInidices( m_triangleIndexBuffer, m_triangleIndexBuffer.GetDesc().stride );
+		if( reason == GetBatchesReason::Picking && ( m_pickingPrimitiveCount > 0 ) )
+		{
+			batch.SetDrawIndexedInstanced( m_pickingPrimitiveCount * 3, 1, m_pickingIndexOffset, 0, 0 );
 		}
 		else
-		{			
-			renderContext.DrawIndexedPrimitive( (unsigned int)m_points.size(), 0, m_primitiveCount - m_pickingPrimitiveCount );
+		{
+			batch.SetDrawIndexedInstanced( ( m_primitiveCount - m_pickingPrimitiveCount ) * 3, 1, 0, 0, 0 );
 		}
 	}
 	else
 	{
-		renderContext.m_esm.ApplyIndexBuffer( m_lineIndexBuffer );
-		renderContext.SetTopology( TOP_LINES );
-		renderContext.DrawIndexedPrimitive( (unsigned int)m_points.size(), 0, (m_primitiveCount-m_pickingPrimitiveCount)*3 );
+		batch.SetInidices( m_lineIndexBuffer, m_lineIndexBuffer.GetDesc().stride );
+		batch.SetTopology( TOP_LINES );
+		batch.SetDrawIndexedInstanced( ( m_primitiveCount - m_pickingPrimitiveCount ) * 3, 1, 0, 0, 0 );
 	}
-
+	accumulator->Commit( batch );
 }
 
 

@@ -7,8 +7,6 @@
 #ifndef EvePlaneSetItem_H
 #define EvePlaneSetItem_H
 
-#include "ITr2GeometryProvider.h"
-
 // forwards
 BLUE_DECLARE( EvePlaneSetItem );
 BLUE_DECLARE_VECTOR( EvePlaneSetItem );

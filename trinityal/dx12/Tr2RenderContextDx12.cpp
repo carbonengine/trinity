@@ -18,10 +18,11 @@
 #include "Utilities.h"
 #include "util/AmdExtDevice.h"
 
+extern bool g_requestDebugMarkers;
 
-CCP_STATS_DECLARE( primitiveCount, "Trinity/AL/primitiveCount", true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
-CCP_STATS_DECLARE( vertexCount, "Trinity/AL/vertexCount", true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
-CCP_STATS_DECLARE( sceneDrawcallCount, "Trinity/AL/sceneDrawcallCount", true, CST_COUNTER_LOW, "Number of DrawPrimitive calls." );
+CCP_STATS_DECLARE( primitiveCount			, "Trinity/AL/primitiveCount"			, true, CST_COUNTER_HIGH, "Primitive count in DrawPrimitive calls." );
+CCP_STATS_DECLARE( vertexCount				, "Trinity/AL/vertexCount"				, true, CST_COUNTER_HIGH, "Vertex count in DrawPrimitive calls." );
+CCP_STATS_DECLARE( sceneDrawcallCount		, "Trinity/AL/sceneDrawcallCount"		, true, CST_COUNTER_LOW,  "Number of DrawPrimitive calls." );
 
 namespace
 {
@@ -33,7 +34,6 @@ namespace
 		*		mid frame
 		*/
 
-		DESCRIPTOR_CACHE_CRVSRVUAV_PAGE_SIZE = 4096,
 		DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE = 1024,
 
 		/*
@@ -155,7 +155,6 @@ ALResult Tr2RenderContextAL::CreateDx12( ID3D12CommandAllocator* commandAllocato
 		m_descriptorCache.push_back( std::make_shared<DescriptorStateCache>( 
 			renderContext.m_device, 
 			&renderContext,
-			DESCRIPTOR_CACHE_CRVSRVUAV_PAGE_SIZE, 
 			DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE, 
 			DESCRIPTOR_CACHE_UPLOAD_DEFAULT_PAGE_SIZE, 
 			DESCRIPTOR_CACHE_UPLOAD_SPILL_PAGE_SIZE ) );
@@ -295,13 +294,18 @@ ALResult Tr2RenderContextAL::SetStreamSource(
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer ) throw( )
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer ) throw()
+{
+	return SetIndices( buffer, buffer.GetDesc().stride );
+}
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& buffer, int stride ) throw( )
 {
 	m_indexBuffer = buffer;
 
 	if( !buffer.IsValid() || !HasFlag( buffer.GetDesc().cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 	{
-		D3D12_INDEX_BUFFER_VIEW ib = { buffer.m_buffer->GetGpuView(), buffer.GetSize(), buffer.GetDesc().stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT };
+		D3D12_INDEX_BUFFER_VIEW ib = { buffer.m_buffer->GetGpuView(), buffer.GetSize(), stride == 2 ? DXGI_FORMAT_R16_UINT : DXGI_FORMAT_R32_UINT };
 		m_commandList->IASetIndexBuffer( &ib );
 		m_dynamicIB = false;
 	}
@@ -529,6 +533,20 @@ ALResult Tr2RenderContextAL::SetConstants( const Tr2ConstantBufferAL& buffer, Tr
 	return S_OK;
 }
 
+uint64_t Tr2RenderContextAL::UploadConstants( const void* data, size_t size )
+{
+	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
+	return m_descriptorCache[bufferIndex]->UploadConstants( data, uint32_t( size ) );
+}
+
+uint64_t Tr2RenderContextAL::UploadConstants( const Tr2ConstantBufferAL& buffer )
+{
+	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
+	return m_descriptorCache[bufferIndex]->UploadConstants( *buffer.m_buffer );
+}
+
+
+
 ALResult Tr2RenderContextAL::DrawIndexedPrimitive( uint32_t, uint32_t startIndex, uint32_t primitiveCount, uint32_t minimumIndex ) throw( )
 {
 	CR_RETURN_HR( SetAllState() );
@@ -580,10 +598,48 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 	return S_OK;
 }
 
+ALResult Tr2RenderContextAL::DrawIndexedInstanced(
+	uint32_t indexCountPerInstance,
+	uint32_t instanceCount,
+	uint32_t startIndexLocation,
+	int32_t baseVertexLocation,
+	uint32_t startInstanceLocation ) throw()
+{
+	CR_RETURN_HR( SetAllState() );
+	FlushGraphicsBarriersDx12();
+
+	CCP_STATS_ADD( primitiveCount, indexCountPerInstance * instanceCount / 3 );
+	CCP_STATS_ADD( vertexCount, indexCountPerInstance * instanceCount );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	m_commandList->DrawIndexedInstanced( indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation );
+
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DrawInstanced(
+	uint32_t vertexCountPerInstance,
+	uint32_t instanceCount,
+	uint32_t startVertexLocation,
+	uint32_t startInstanceLocation ) throw( )
+{
+	CR_RETURN_HR( SetAllState() );
+	FlushGraphicsBarriersDx12();
+
+	CCP_STATS_ADD( primitiveCount, vertexCountPerInstance * instanceCount / 3 );
+	CCP_STATS_ADD( vertexCount, vertexCountPerInstance * instanceCount );
+	CCP_STATS_INC( sceneDrawcallCount );
+
+	m_commandList->DrawInstanced( vertexCountPerInstance, instanceCount, startVertexLocation, startInstanceLocation );
+
+	return S_OK;
+}
+
+
 ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( )
 {
 	auto buffer = params.m_buffer->GetGpuResource();
-	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	if( ( params.m_buffer->m_defaultState & D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) );
 	}
@@ -594,9 +650,13 @@ ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, 
 	CCP_STATS_INC( sceneDrawcallCount );
 
 	m_commandList->ExecuteIndirect( m_ownerDevice->m_drawIndexedInstancedIndirect, 1, buffer, offset, nullptr, 0 );
-	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	if( ( params.m_buffer->m_defaultState & D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState ) );
+		if( TrinityALImpl::RequiresImmediateBarriers( params.GetDesc().gpuUsage ) )
+		{
+			FlushBarriersDx12( buffer );
+		}
 	}
 
 	return S_OK;
@@ -605,7 +665,7 @@ ALResult Tr2RenderContextAL::DrawIndexedInstancedIndirect( Tr2BufferAL& params, 
 ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( )
 {
 	auto buffer = params.m_buffer->GetGpuResource();
-	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	if( ( params.m_buffer->m_defaultState & D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) );
 	}
@@ -613,9 +673,13 @@ ALResult Tr2RenderContextAL::DrawInstancedIndirect( Tr2BufferAL& params, uint32_
 	FlushGraphicsBarriersDx12( buffer );
 
 	m_commandList->ExecuteIndirect( m_ownerDevice->m_drawInstancedIndirect, 1, buffer, offset, nullptr, 0 );
-	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	if( ( params.m_buffer->m_defaultState & D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState ) );
+		if( TrinityALImpl::RequiresImmediateBarriers( params.GetDesc().gpuUsage ) )
+		{
+			FlushBarriersDx12( buffer );
+		}
 	}
 
 	return S_OK;
@@ -633,7 +697,7 @@ ALResult Tr2RenderContextAL::RunComputeShader( unsigned groupDimX, unsigned grou
 ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& params, unsigned offset ) throw( )
 {
 	auto buffer = params.m_buffer->GetGpuResource();
-	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	if( ( params.m_buffer->m_defaultState & D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, params.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) );
 	}
@@ -641,9 +705,13 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& params, unsi
 	FlushComputeBarriersDx12( buffer );
 
 	m_commandList->ExecuteIndirect( m_ownerDevice->m_dispatchIndirect, 1, buffer, offset, nullptr, 0 );
-	if( params.m_buffer->m_defaultState != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
+	if( ( params.m_buffer->m_defaultState & D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT ) != D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( buffer, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, params.m_buffer->m_defaultState ) );
+		if( TrinityALImpl::RequiresImmediateBarriers( params.GetDesc().gpuUsage ) )
+		{
+			FlushBarriersDx12( buffer );
+		}
 	}
 
 	return S_OK;
@@ -763,7 +831,7 @@ ALResult Tr2RenderContextAL::SetAllState()
 	if( m_psoDescription.m_shaderProgram.IsValid() )
 	{
 		uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-		m_descriptorCache[bufferIndex]->Commit(m_commandList, m_psoDescription.m_shaderProgram.m_program.get() );
+		m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), m_psoDescription.m_shaderProgram.m_program.get() );
 	}
 
 	return S_OK;
@@ -1144,11 +1212,11 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4
 	FlushBarriersDx12( obj->GetGpuResource() );
 
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	auto entry = m_descriptorCache[bufferIndex]->Commit( m_commandList, obj->m_clearUav.get() );
+	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap() );
 
 	m_commandList->ClearUnorderedAccessViewFloat(
-		entry.m_gpuHandle,
-		obj->m_clearUav->GetHandleCPU(),
+		obj->m_clearUav->GetHandleGPU(),
+		obj->m_clearUav->GetDescriptorInCpuHeap(),
 		obj->GetGpuResource(),
 		values,
 		0,
@@ -1157,6 +1225,10 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const float values[4
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( obj->GetGpuResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState ) );
+		if( TrinityALImpl::RequiresImmediateBarriers( buffer.GetDesc().gpuUsage ) )
+		{
+			FlushBarriersDx12( obj->GetGpuResource() );
+		}
 	}
 
 	return S_OK;
@@ -1178,11 +1250,11 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t value
 	FlushBarriersDx12( obj->GetGpuResource() );
 
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	auto entry = m_descriptorCache[bufferIndex]->Commit( m_commandList, obj->m_clearUav.get() );
+	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap() );
 
 	m_commandList->ClearUnorderedAccessViewUint(
-		entry.m_gpuHandle,
-		obj->m_clearUav->GetHandleCPU(),
+		obj->m_clearUav->GetHandleGPU(),
+		obj->m_clearUav->GetDescriptorInCpuHeap(),
 		obj->GetGpuResource(),
 		values,
 		0,
@@ -1191,6 +1263,10 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2BufferAL& buffer, const uint32_t value
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( obj->GetGpuResource(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState ) );
+		if( TrinityALImpl::RequiresImmediateBarriers( buffer.GetDesc().gpuUsage ) )
+		{
+			FlushBarriersDx12( obj->GetGpuResource() );
+		}
 	}
 
 	return S_OK;
@@ -1205,7 +1281,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 		return E_INVALIDARG;
 	}
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	auto entry = m_descriptorCache[bufferIndex]->Commit( m_commandList, obj->m_uav[mip].get() );
+	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap() );
 
 	auto resource = obj->GetResourceDx12();
 
@@ -1216,8 +1292,8 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 	FlushBarriersDx12( resource );
 
 	m_commandList->ClearUnorderedAccessViewFloat(
-		entry.m_gpuHandle,
-		obj->m_uav[mip]->GetHandleCPU(),
+		obj->m_uav[mip]->GetHandleGPU(),
+		obj->m_uav[mip]->GetDescriptorInCpuHeap(),
 		resource,
 		values,
 		0,
@@ -1226,6 +1302,10 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState ) );
+		if( TrinityALImpl::RequiresImmediateBarriers( texture.GetGpuUsage() ) )
+		{
+			FlushBarriersDx12( resource );
+		}
 	}
 
 	return S_OK;
@@ -1240,7 +1320,7 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 		return E_INVALIDARG;
 	}
 	uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-	auto entry = m_descriptorCache[bufferIndex]->Commit( m_commandList, obj->m_uav[mip].get() );
+	m_descriptorCache[bufferIndex]->SetHeaps( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap() );
 	auto resource = obj->GetResourceDx12();
 
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
@@ -1250,8 +1330,8 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 	FlushBarriersDx12( resource );
 
 	m_commandList->ClearUnorderedAccessViewUint(
-		entry.m_gpuHandle,
-		obj->m_uav[mip]->GetHandleCPU(),
+		obj->m_uav[mip]->GetHandleGPU(),
+		obj->m_uav[mip]->GetDescriptorInCpuHeap(),
 		resource,
 		values,
 		0,
@@ -1260,6 +1340,10 @@ ALResult Tr2RenderContextAL::ClearUav( Tr2TextureAL& texture, uint32_t mip, cons
 	if( obj->m_defaultState != D3D12_RESOURCE_STATE_UNORDERED_ACCESS )
 	{
 		ResourceBarrierDx12( TrinityALImpl::Transition( resource, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, obj->m_defaultState ) );
+		if( TrinityALImpl::RequiresImmediateBarriers( texture.GetGpuUsage() ) )
+		{
+			FlushBarriersDx12( resource );
+		}
 	}
 
 	return S_OK;
@@ -1297,6 +1381,19 @@ ALResult Tr2RenderContextAL::CopySubBuffer(
 		std::swap( barriers[0].Transition.StateAfter, barriers[0].Transition.StateBefore );
 		std::swap( barriers[1].Transition.StateAfter, barriers[1].Transition.StateBefore );
 		ResourceBarrierDx12( count, barriers );
+
+		if( TrinityALImpl::RequiresImmediateBarriers( src.GetDesc().gpuUsage ) && TrinityALImpl::RequiresImmediateBarriers( dest.GetDesc().gpuUsage ) )
+		{
+			FlushBarriersDx12( src.m_buffer->GetGpuResource(), dest.m_buffer->GetGpuResource() );
+		}
+		else if( TrinityALImpl::RequiresImmediateBarriers( src.GetDesc().gpuUsage ) )
+		{
+			FlushBarriersDx12( src.m_buffer->GetGpuResource() );
+		}
+		else if( TrinityALImpl::RequiresImmediateBarriers( dest.GetDesc().gpuUsage ) )
+		{
+			FlushBarriersDx12( dest.m_buffer->GetGpuResource() );
+		}
 	}
 	return S_OK;
 }
@@ -1447,6 +1544,11 @@ void Tr2RenderContextAL::PushGpuMarker( const char* marker )
 	{
 		static_cast<IAmdExtD3DDevice1*>( m_ownerDevice->m_amdExtDeviceObject )->PushMarker( m_commandList, marker );
 	}
+	if( g_requestDebugMarkers )
+	{
+		// + 1 to include the NULL terminator
+		m_commandList->BeginEvent(1, marker, strlen(marker) + 1);
+	}
 }
 
 void Tr2RenderContextAL::PopGpuMarker()
@@ -1455,6 +1557,11 @@ void Tr2RenderContextAL::PopGpuMarker()
 	{
 		static_cast<IAmdExtD3DDevice1*>( m_ownerDevice->m_amdExtDeviceObject )->PopMarker( m_commandList );
 	}
+	if( g_requestDebugMarkers )
+	{
+		m_commandList->EndEvent();
+	}
+	
 }
 
 /** Forcibly reset and dirty all descriptor caches (used for explicit synchronization) */
@@ -1636,6 +1743,72 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Dep
 
 void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2ColorAttachment&, const Tr2DepthAttachment& )
 {
+}
+
+ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& textures )
+{
+	D3D12_RESOURCE_STATES state;
+	switch( usage )
+	{
+	case Tr2GpuUsage::SHADER_RESOURCE:
+		state = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+		break;
+	case Tr2GpuUsage::UNORDERED_ACCESS:
+		state = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+		break;
+	default:
+		return E_INVALIDARG;
+	}
+	std::vector<D3D12_RESOURCE_BARRIER> barriers;
+	barriers.reserve( textures.m_textures.size() );
+	std::vector<ID3D12Resource*> resources;
+	resources.reserve( textures.m_textures.size() );
+	for( size_t i = 0; i < textures.m_textures.size(); ++i )
+	{
+		auto obj = textures.m_textures[i];
+		if( ( obj->m_defaultState & state ) != state )
+		{
+			barriers.push_back( TrinityALImpl::Transition( obj->GetResourceDx12(), obj->m_defaultState, state ) );
+			resources.push_back( obj->GetResourceDx12() );
+		}
+	}
+	if( !barriers.empty() )
+	{
+		ResourceBarrierDx12( barriers.size(), barriers.data() );
+		// TODO: can we postpone this until the draw/dispatch command? Or maybe it's an imaginary problem?
+		FlushBarriersDx12( resources.size(), resources.data() );
+		for( auto& barrier : barriers )
+		{
+			std::swap( barrier.Transition.StateBefore, barrier.Transition.StateAfter );
+		}
+		ResourceBarrierDx12( barriers.size(), barriers.data() );
+	}
+	return S_OK;
+}
+
+
+
+
+
+
+
+
+void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )
+{
+	if( texture.IsValid() && !TrinityALImpl::RequiresImmediateBarriers( texture.GetGpuUsage() ) )
+	{
+		m_textures.push_back( texture.TrinityALImpl_GetObject() );
+	}
+}
+
+void Tr2BindlessResourcesAL::Add( const Tr2BindlessResourcesAL& resources )
+{
+	m_textures.insert( end( m_textures ), begin( resources.m_textures ), end( resources.m_textures ) );
+}
+
+void Tr2BindlessResourcesAL::Clear()
+{
+	m_textures.clear();
 }
 
 #endif

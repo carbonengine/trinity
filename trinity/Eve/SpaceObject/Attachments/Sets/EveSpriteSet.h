@@ -86,8 +86,6 @@ public:
 	// IInitialize
 	bool Initialize();
 
-	void GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData );
-
 private:
 	// Persisted members
 	bool m_display;

@@ -16,6 +16,8 @@ public:
 
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
 
+	virtual void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const;
+
 	unsigned int GetUserData() const { return m_userData; }
 	void SetUserData(unsigned int val) { m_userData = val; }
 
@@ -64,6 +66,7 @@ public:
 	Tr2PerObjectDataStandard();
 
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	template<typename T> void CopyToVSFloatBuffer( const T& objectRef )
 	{
@@ -98,6 +101,9 @@ public:
 	}
 
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
+	void ApplyPsConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const;
+
 	
 	void SetSkinningMatrices( unsigned int n, float* data );
 	float* GetSkinningMatrices() const { return m_data; }
@@ -132,6 +138,7 @@ public:
 	}
 
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	void SetJointCount( unsigned int n );
 	void SetJointTransform( unsigned int ix, float* data );

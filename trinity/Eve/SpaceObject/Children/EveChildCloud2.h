@@ -7,7 +7,6 @@
 #pragma once
 
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
 #include "Tr2DebugRenderer.h"
@@ -29,7 +28,6 @@ BLUE_DECLARE( Tr2TextureAnimation );
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveChildCloud2 ) :
 	public ITr2VolumetricRenderable,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource,
 	public IInitialize,
 	public INotify,
@@ -83,10 +81,6 @@ public:
 	bool HasTransparentBatches() override;
 	float GetSortValue() override;
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// ITriDeviceResource

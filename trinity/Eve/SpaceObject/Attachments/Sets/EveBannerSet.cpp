@@ -10,12 +10,12 @@
 #include "Tr2Renderer.h"
 #include "Eve/EveTransform.h"
 #include "TriFrustum.h"
-#include "Tr2PickingHelperBatch.h"
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/MatrixUtils.h"
 #include "Resources/TriTextureRes.h"
 #include "Lights/Tr2Light.h"
 #include "Shader/Parameter/TriTextureParameter.h"
+#include "Resources/TriGeometryRes.h"
 
 
 namespace
@@ -34,31 +34,6 @@ namespace
 	};
 
 	EveBannerItem s_defaultBannerItem;
-
-	class RenderBatch : public TriRenderBatch
-	{
-	public:
-		RenderBatch()
-			:m_bannerSet( nullptr )
-		{
-		}
-
-		void SetBannerSet( const EveBannerSet* bannerSet )
-		{
-			m_bannerSet = bannerSet;
-		}
-
-		virtual void SubmitGeometry( Tr2RenderContext& renderContext )
-		{
-			m_bannerSet->Render( renderContext );
-		}
-		virtual unsigned int GetPickingData() const
-		{
-			return m_bannerSet->GetPickingID();
-		}
-	private:
-		const EveBannerSet* m_bannerSet;
-	};
 }
 
 
@@ -173,18 +148,6 @@ bool EveBannerSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 
 void EveBannerSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
-	if( !m_display || !m_vertexBuffer.IsValid() || !m_effect )
-	{
-		return;
-	}
-	if( m_primaryTextureParameter && !m_primaryTextureParameter->GetResource() )
-	{
-		return;
-	}
-	if( !m_isVisible )
-	{
-		return;
-	}
 	if( batchType != TRIBATCHTYPE_ADDITIVE && batchType != TRIBATCHTYPE_PICKING )
 	{
 		return;
@@ -193,17 +156,28 @@ void EveBannerSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType
 	{
 		return;
 	}
-	if( auto batch = batches->Allocate<RenderBatch>() )
+
+	if( !m_display || !m_isVisible || !m_effect || !m_vertexBuffer.IsValid() )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_effect );
-		batch->SetBannerSet( this );
-		if( batchType == TRIBATCHTYPE_ADDITIVE )
-		{
-			batch->SetRenderingMode( Tr2EffectStateManager::RM_ALPHA_ADDITIVE );
-		}
-		batches->Commit( batch );
+		return;
 	}
+	if( m_primaryTextureParameter && !m_primaryTextureParameter->GetResource() )
+	{
+		return;
+	}
+
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_effect );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetPickingData( GetPickingID() );
+	batch.SetGeometry( m_vertexDeclaration, m_vertexBuffer, m_indexBuffer );
+	batch.SetDrawIndexedInstanced( m_indexBuffer.GetSize() / m_indexBuffer.GetStride(), 1, m_indexBuffer.GetStartIndex(), m_vertexBuffer.GetOffset() / m_vertexBuffer.GetStride(), 0 );
+	if( batchType == TRIBATCHTYPE_ADDITIVE )
+	{
+		batch.SetRenderingMode( Tr2EffectStateManager::RM_ALPHA_ADDITIVE );
+	}
+
+	batches->Commit( batch );
 }
 
 void EveBannerSet::GetDebugOptions( Tr2DebugRendererOptions& options )
@@ -305,15 +279,6 @@ void EveBannerSet::SetPrimaryTextureParameter( TriTextureParameter* primaryTextu
 	m_primaryTextureParameter = primaryTextureParameter;
 }
 
-void EveBannerSet::Render( Tr2RenderContext& renderContext ) const
-{
-	renderContext.m_esm.ApplyStreamSource( 0, m_vertexBuffer, 0, sizeof( Vertex ) );
-	renderContext.m_esm.ApplyIndexBuffer( m_indexBuffer );
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclaration );
-
-	renderContext.DrawIndexedPrimitive( m_vertexBuffer.GetSize(), 0, m_indexBuffer.GetDesc().count / 3 );
-}
-
 unsigned int EveBannerSet::GetPickingID() const
 {
 	return unsigned( PICK_ID_OFFSET + m_key );
@@ -367,8 +332,8 @@ AxisAlignedBoundingBox EveBannerSet::GetAabb( const granny_matrix_3x4* bones, si
 void EveBannerSet::Rebuild()
 {
 	m_aabb = AxisAlignedBoundingBox();
-	m_vertexBuffer = Tr2BufferAL();
-	m_indexBuffer = Tr2BufferAL();
+	g_sharedBuffer.Free( m_vertexBuffer );
+	g_sharedBuffer.Free( m_indexBuffer );
 	m_maxBannerRadius = 0;
 	m_skinnedBoxes.clear();
 
@@ -403,8 +368,8 @@ void EveBannerSet::Rebuild()
 	if( !vertices.empty() )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		m_vertexBuffer.Create( sizeof( Vertex), uint32_t( vertices.size() ), Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::NONE, &vertices[0], renderContext );
-		m_indexBuffer.Create( sizeof( uint16_t ), uint32_t( indices.size() ), Tr2GpuUsage::INDEX_BUFFER, Tr2CpuUsage::NONE, &indices[0], renderContext );
+		g_sharedBuffer.Allocate( sizeof( Vertex ), uint32_t( vertices.size() ), &vertices[0], renderContext, m_vertexBuffer );
+		g_sharedBuffer.Allocate( sizeof( uint16_t ), uint32_t( indices.size() ), &indices[0], renderContext, m_indexBuffer );
 	}
 }
 

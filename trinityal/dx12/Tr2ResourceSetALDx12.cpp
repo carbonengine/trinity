@@ -124,6 +124,9 @@ namespace TrinityALImpl
 					AddTransition( resource.buffer.m_buffer->GetGpuResource(), resource.buffer.m_buffer->m_defaultState, stateFlag );
 				}
 				break;
+			case Tr2ResourceSetDescriptionAL::HEAP_VIEW:
+				m_srv[reg.parameter] = renderContext.GetSrvUavHeapView();
+				break;
 			default:
 				m_srv[reg.parameter] = renderContext.GetNullSrvDx12( it->registerType );
 				break;
@@ -180,6 +183,9 @@ namespace TrinityALImpl
 						AddTransition( resource.buffer.m_buffer->GetGpuResource(), resource.buffer.m_buffer->m_defaultState, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
 					}
 				}
+				break;
+			case Tr2ResourceSetDescriptionAL::HEAP_VIEW:
+				m_srv[reg.parameter] = renderContext.GetSrvUavHeapView();
 				break;
 			default:
 				CCP_AL_LOGWARN("Missing UAV resource in resource set for register %u, stage %u", reg.index, reg.stage);

@@ -99,7 +99,7 @@ class ShaderInput(object):
 
 
 class ShaderRegister(object):
-    def __init__(self, stream, version):
+    def __init__(self, stream, version, stage):
         self.register_type = stream.read_uint8()
         if version <= 9:
             if self.register_type == 0:
@@ -113,6 +113,12 @@ class ShaderRegister(object):
             else:
                 self.register_type = 36
         self.register_index = stream.read_uint32()
+        if version > 12:
+            self.array_count = stream.read_uint32()
+            self.register_space = stream.read_uint8()
+        else:
+            self.array_count = 1
+            self.register_space = stage
 
 
 _TRINITY_FLOAT_PARAMETERS = {1: 'Tr2FloatParameter', 2: 'Tr2Vector2Parameter', 3: 'Tr2Vector3Parameter',
@@ -169,10 +175,14 @@ class Constant(object):
 
 
 class Resource(object):
-    def __init__(self, stream, string_table):
+    def __init__(self, stream, string_table, version):
         self.register_index = stream.read_uint8()
         self.name = string_table.get_string(stream.read_uint32())
         self.type = stream.read_uint8()
+        if version > 12:
+            self.array_count = stream.read_uint32()
+        else:
+            self.array_count = 1
         self.is_srgb = stream.read_uint8() != 0
         self.is_autoregister = stream.read_uint8() != 0
         if self.type <= 5:
@@ -182,10 +192,14 @@ class Resource(object):
 
 
 class UAV(object):
-    def __init__(self, stream, string_table):
+    def __init__(self, stream, string_table, version):
         self.register_index = stream.read_uint8()
         self.name = string_table.get_string(stream.read_uint32())
         self.type = stream.read_uint8()
+        if version > 12:
+            self.array_count = stream.read_uint32()
+        else:
+            self.array_count = 1
         self.is_srgb = False
         self.is_autoregister = stream.read_uint8() != 0
         if self.type <= 5:
@@ -216,6 +230,32 @@ class Sampler(object):
         self.max_lod = stream.read_float()
         if version < 4:
             stream.read_uint8()
+        if version > 12:
+            self.is_dynamic = stream.read_uint8() != 0
+            if not self.is_dynamic:
+                self.name = ''
+        else:
+            self.is_dynamic = True
+
+
+class StaticSampler(object):
+    def __init__(self, stream):
+        self.register_index = stream.read_uint32()
+        self.register_space = stream.read_uint8()
+
+        self.is_comparison = stream.read_uint8() != 0
+        self.min_filter = stream.read_uint8()
+        self.max_filter = stream.read_uint8()
+        self.mip_filter = stream.read_uint8()
+        self.address_u = stream.read_uint8()
+        self.address_v = stream.read_uint8()
+        self.address_w = stream.read_uint8()
+        self.mip_lod_bias = stream.read_float()
+        self.max_anisotropy = stream.read_uint8()
+        self.comparison_func = stream.read_uint8()
+        self.border_color = stream.read_uint8()
+        self.min_lod = stream.read_float()
+        self.max_lod = stream.read_float()
 
 
 class Stage(object):
@@ -229,7 +269,11 @@ class Stage(object):
         self.registers = []
         if version > 8:
             for input_index in xrange(stream.read_uint8()):
-                self.registers.append(ShaderRegister(stream, version))
+                self.registers.append(ShaderRegister(stream, version, self.stage))
+        self.static_samplers = []
+        if version > 12:
+            for sampler_index in xrange(stream.read_uint8()):
+                self.static_samplers.append(StaticSampler(stream))
 
         if version < 5:
             stream.seek(stream.read_uint32() + stream.offset())
@@ -263,7 +307,7 @@ class Stage(object):
 
         self.resources = []
         for i in xrange(stream.read_uint8()):
-            self.resources.append(Resource(stream, string_table))
+            self.resources.append(Resource(stream, string_table, version))
 
         self.samplers = []
         for i in xrange(stream.read_uint8()):
@@ -272,7 +316,7 @@ class Stage(object):
         self.uavs = []
         if version >= 3:
             for i in xrange(stream.read_uint8()):
-                self.uavs.append(UAV(stream, string_table))
+                self.uavs.append(UAV(stream, string_table, version))
 
         self.annotations = {}
         if version >= 8:
@@ -418,6 +462,21 @@ class ShaderInfo(object):
         for i in xrange(stream.read_uint16()):
             annotation = ParameterAnnotation(stream, string_table)
             self.annotations[annotation.name] = annotation
+        for k, v in self.annotations.iteritems():
+            heap_view = v.annotations.get('IsHeapView')
+            if heap_view and heap_view.type == AnnotationType.BOOL and heap_view.value:
+                for technique in self.techniques:
+                    for p in technique.passes:
+                        for stage in p.stages.itervalues():
+                            for tex in stage.resources:
+                                if tex.name == k:
+                                    tex.trinity_type = 'Tr2HeapViewParameter'
+                                    break
+                            for tex in stage.uavs:
+                                if tex.name == k:
+                                    tex.trinity_type = 'Tr2HeapViewParameter'
+                                    break
+
 
         self.parameters = self._extract_parameters('constants')
         self.resources = self._extract_parameters('resources')

@@ -790,8 +790,18 @@ int EveImpactOverlay::CreateArmorImpact( int damageLocatorIndex, float size, boo
 // Description:
 //   Hand out the shader for armor efects
 // --------------------------------------------------------------------------------
-Tr2EffectPtr EveImpactOverlay::GetArmorDamageShader( TriBatchType batchType ) const
+Tr2Effect* EveImpactOverlay::GetArmorDamageShader( TriBatchType batchType ) const
 {
+	if( batchType != TRIBATCHTYPE_DECAL )
+	{
+		return nullptr;
+	}
+
+	if( ( m_dataTextureBlockID == -1 ) || ( m_dataTextureOffset == -1 ) )
+	{
+		return nullptr;
+	}
+
 	// settings
 	if( !g_eveSpaceObjectImpactEffectEnabled )
 	{
@@ -802,16 +812,7 @@ Tr2EffectPtr EveImpactOverlay::GetArmorDamageShader( TriBatchType batchType ) co
 	{
 		return nullptr;
 	}
-	if( ( m_dataTextureBlockID == -1 ) || ( m_dataTextureOffset == -1 ) )
-	{
-		return nullptr;
-	}
-
-	if( batchType == TRIBATCHTYPE_DECAL )
-	{
-		return m_armorDamageShader;
-	}
-	return nullptr;
+	return m_armorDamageShader;
 }
 
 

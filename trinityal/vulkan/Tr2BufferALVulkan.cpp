@@ -208,6 +208,16 @@ namespace TrinityALImpl
 		return E_NOTIMPL;;
 	}
 
+	uint32_t Tr2BufferAL::GetSrvIndexInHeap() const
+	{
+		return 0xffffffff;
+	}
+
+	uint32_t Tr2BufferAL::GetUavIndexInHeap() const
+	{
+		return 0xffffffff;
+	}
+
 	void Tr2BufferAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
 	{
 		description["type"] = "Tr2BufferAL";

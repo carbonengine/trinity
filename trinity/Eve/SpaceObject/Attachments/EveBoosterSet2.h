@@ -5,7 +5,6 @@
 
 
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Tr2DeviceResource.h"
 #include "Tr2PerObjectData.h"
 #include "include/TriColor.h"
@@ -69,6 +68,7 @@ public:
 	};
 
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	// the data
 	VertexShaderData m_vsData;
@@ -78,14 +78,10 @@ public:
 BLUE_DECLARE( EveBoosterSet2 );
 
 BLUE_CLASS( EveBoosterSet2Renderable ):
-	public ITr2GeometryProvider,
 	public ITr2Renderable
 {
 public:
 	EXPOSE_TO_BLUE();
-
-	using ITr2GeometryProvider::Lock;
-	using ITr2GeometryProvider::Unlock;
 
 	EveBoosterSet2Renderable( IRoot* lockobj = NULL );
 	~EveBoosterSet2Renderable();
@@ -98,10 +94,6 @@ public:
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables );
 	void UpdateTrails( float deltaT, Be::Time t );
 	float GetIntensity() const { return m_overallIntensity; }
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
@@ -301,7 +293,7 @@ private:
 	unsigned int m_vertexDeclHandle;
 	// vertex buffers for multi-stream rendering
 	Tr2ProceduralBuffer m_vertexBuffer;
-	Tr2BufferAL m_instanceBuffer;
+	Tr2SuballocatedBuffer::Allocation m_instanceBuffer;
 
 	// holds all the lensflares of this booster
 	EveSpriteSetPtr m_glows;

@@ -18,7 +18,6 @@ BLUE_DECLARE_VECTOR( SplineTunnelGroup );
 BLUE_DECLARE( BehaviorGroup );
 BLUE_DECLARE_VECTOR( BehaviorGroup );
 
-class TriBehaviorSystemInstancingBatch;
 
 BLUE_CLASS( EveChildBehaviorSystem ) :
 	public IEveSpaceObjectChild,
@@ -95,11 +94,6 @@ public:
 	float GetSortValue();
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
 
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	void Draw( TriBehaviorSystemInstancingBatch*, Tr2RenderContext& renderContext, int count, unsigned int vertexDecl,
-			  int groupIndex, RenderType renderType );
-
 	std::vector<std::pair<int, int>> GetVertexElementAddedThroughCode() const;
 
 private:
@@ -127,11 +121,6 @@ private:
 						 Tr2MeshPtr mesh, BehaviorGroup* group );
 	void GetGroupBoosterBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType,
 								 const Tr2PerObjectData* perObjectData, BehaviorGroup* group );
-
-	void DrawMeshes( TriBehaviorSystemInstancingBatch* batch, Tr2RenderContext& renderContext, int count,
-		unsigned int vertexDecl, int groupIndex );
-	void DrawBoosters( TriBehaviorSystemInstancingBatch* batch, Tr2RenderContext& renderContext, int count,
-		unsigned int vertexDecl, int groupIndex );
 
 	std::vector<uint32_t> m_offsets;
 

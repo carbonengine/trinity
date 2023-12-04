@@ -13,15 +13,14 @@
 #include "../Tr2PrimaryRenderContextDx12.h"
 
 /** */
-DescriptorStateCache::DescriptorStateCache(CComPtr<ID3D12Device> device, Tr2PrimaryRenderContextAL* context, uint32_t pageSizeCBVSRVUAV, uint32_t pageSizeSampler, uint32_t pageSizeUploadDefault, uint32_t pageSizeUploadSpill) :
-	m_allocatorSRV(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, pageSizeCBVSRVUAV),
+DescriptorStateCache::DescriptorStateCache(CComPtr<ID3D12Device> device, Tr2PrimaryRenderContextAL* context, uint32_t pageSizeSampler, uint32_t pageSizeUploadDefault, uint32_t pageSizeUploadSpill) :
 	m_allocatorSampler(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, pageSizeSampler),
-	m_allocatorUpload(context, pageSizeUploadDefault, pageSizeUploadSpill),
 	m_primaryContext(context),
 	m_device(device),
-	m_uploadedSamplerCount( 0 ),
-	m_uploadedSrvUavCount( 0 )
+	m_uploadedSamplerCount( 0 )
 {
+	m_allocatorUpload.Initialize( device );
+
 	D3D12_SHADER_RESOURCE_VIEW_DESC nullSrvDesc = {};
 	nullSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	nullSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
@@ -63,14 +62,18 @@ void DescriptorStateCache::Reset()
 	m_samplerDirty = true;
 
 	m_uploadedSamplerCount = 0;
-	m_uploadedSrvUavCount = 0;
 
 	m_pipeDirty[Tr2RenderContextEnum::GRAPHICS_PIPE] = true;
 	m_pipeDirty[Tr2RenderContextEnum::COMPUTE_PIPE] = true;
 
-	m_allocatorSRV.Reset();
 	m_allocatorSampler.Reset();
-	m_allocatorUpload.Reset();
+
+	std::vector<CComPtr<ID3D12Resource>> releaseLater;
+	m_allocatorUpload.Reset( releaseLater );
+	for( auto& it : releaseLater )
+	{
+		m_primaryContext->ReleaseLater( it );
+	}
 
 	m_rootSignature = nullptr;
 }
@@ -82,7 +85,6 @@ void DescriptorStateCache::Dirty()
 
 	// Set the last slots to 0 so if we need any then we will resend the descriptors to the gpu
 	m_uploadedSamplerCount = 0;
-	m_uploadedSrvUavCount = 0;
 
 	// Pretend that nothing is currently bound forcing the next Commit() to re-assign every parameter
 	for (uint32_t slot = 0; slot < Tr2ResourceSetDescriptionAL::MAX_RESOURCES_IN_STAGE; ++slot)
@@ -142,91 +144,92 @@ void DescriptorStateCache::SetSamplers(uint32_t startSlot, uint32_t numViews, st
 void DescriptorStateCache::SetConstantBuffers(Tr2RenderContextEnum::ShaderType shaderStage, uint32_t slot, const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer)
 {
 	uint64_t frameNr = m_primaryContext->GetCompletedFrameIndexDx12();
-	const TrinityALImpl::Tr2ConstantBufferAL::GPUViewToken& currentToken = constantBuffer.GetToken();
 	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
 	
 	// CB isn't resident
-	if (currentToken.m_frameNumber != frameNr)
+	if( constantBuffer.m_token.m_frameNumber != frameNr )
 	{
-		UploadHeapEntry entry = m_allocatorUpload.Allocate(constantBuffer.GetSize(), D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT);
+		auto entry = m_allocatorUpload.Allocate( constantBuffer.GetDataPtr(), constantBuffer.GetSize() );
 		if(entry.m_cpuAddr != nullptr)
 		{
-			CCP_ASSERT(entry.m_size >= constantBuffer.GetSize());
-
-			memcpy(entry.m_cpuAddr, constantBuffer.GetDataPtr(), constantBuffer.GetSize());
 			addr = entry.m_gpuAddr;
 		}
 
-		TrinityALImpl::Tr2ConstantBufferAL::GPUViewToken token;
-		token.m_address = addr;
-		token.m_frameNumber = frameNr;
-		const_cast<TrinityALImpl::Tr2ConstantBufferAL&>(constantBuffer).SetToken(token);
+		constantBuffer.m_token.m_address = addr;
+		constantBuffer.m_token.m_frameNumber = frameNr;
 	}
 	else
 	{
-		addr = currentToken.m_address;
+		addr = constantBuffer.m_token.m_address;
 	}
 
 	m_cbv[shaderStage][slot] = addr;
 }
 
-DescriptorHeapEntry DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, UnorderedAccessViewDx12* uav )
+D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer )
 {
-	bool dirtyHeaps = m_heapsDirty;
-	DescriptorHeapEntry result = m_allocatorSRV.Allocate( 1 );
-	dirtyHeaps |= result.m_isDirty;
-	D3D12_CPU_DESCRIPTOR_HANDLE dest = { result.m_cpuHandle.ptr };
-	m_device->CopyDescriptorsSimple( 1, dest, uav->GetHandleCPU(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV );
+	uint64_t frameNr = m_primaryContext->GetCompletedFrameIndexDx12();
+	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
 
-	if( dirtyHeaps )
+	// CB isn't resident
+	if( constantBuffer.m_token.m_frameNumber != frameNr )
+	{
+		auto entry = m_allocatorUpload.Allocate( constantBuffer.GetDataPtr(), constantBuffer.GetSize() );
+		if( entry.m_cpuAddr != nullptr )
+		{
+			addr = entry.m_gpuAddr;
+		}
+
+		constantBuffer.m_token.m_address = addr;
+		constantBuffer.m_token.m_frameNumber = frameNr;
+	}
+	else
+	{
+		addr = constantBuffer.m_token.m_address;
+	}
+	return addr;
+}
+
+D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const void* data, uint32_t size )
+{
+	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
+	auto entry = m_allocatorUpload.Allocate( data, size );
+	if( entry.m_cpuAddr != nullptr )
+	{
+		addr = entry.m_gpuAddr;
+	}
+	return addr;
+}
+
+
+void DescriptorStateCache::SetHeaps( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap )
+{
+	if( m_heapsDirty )
 	{
 		ID3D12DescriptorHeap* heaps[] = {
-			m_allocatorSRV.GetCurrentHeap(),
+			globalSrvUavHeap,
 			m_allocatorSampler.GetCurrentHeap()
 		};
 
 		commandList->SetDescriptorHeaps( 2, heaps );
-
 	}
 	m_pipeDirty[Tr2RenderContextEnum::GRAPHICS_PIPE] = true;
 	m_pipeDirty[Tr2RenderContextEnum::COMPUTE_PIPE] = true;
 	m_heapsDirty = false;
 	m_srvUavDirty = true;
 	m_samplerDirty = true;
-	return result;
 }
 
 /** Apply state */
-void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, const TrinityALImpl::Tr2ShaderProgramAL* shader )
+void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, const TrinityALImpl::Tr2ShaderProgramAL* shader )
 {
 	Tr2RenderContextEnum::ShaderPipe targetPipe = shader->IsComputeProgramDx12() ? Tr2RenderContextEnum::COMPUTE_PIPE : Tr2RenderContextEnum::GRAPHICS_PIPE;
 	Tr2RenderContextEnum::ShaderPipe otherPipe = shader->IsComputeProgramDx12() ? Tr2RenderContextEnum::GRAPHICS_PIPE : Tr2RenderContextEnum::COMPUTE_PIPE;
 
-	bool mustBindSrvUav = m_pipeDirty[targetPipe] || m_srvUavDirty || m_uploadedSrvUavCount < shader->m_srvUavTableSize;
+	bool mustBindSrvUav = m_pipeDirty[targetPipe] || m_srvUavDirty || m_globalSrvUavHeap != globalSrvUavHeap;
 	bool mustBindSampler = m_pipeDirty[targetPipe] || m_samplerDirty || m_uploadedSamplerCount < shader->m_samplerTableSize;
 
 	bool dirtyHeaps = m_heapsDirty;
-
-	if( mustBindSrvUav )
-	{
-		uint32_t requiredViews = shader->m_srvUavTableSize;
-
-		// Allocate space in the heap
-		DescriptorHeapEntry result = m_allocatorSRV.Allocate(requiredViews);
-		dirtyHeaps |= result.m_isDirty;
-		m_lastSrvUavAddress[targetPipe] = result.m_gpuHandle;
-
-		// Iterate over bindings and copy to GPU-visible heap
-		uint32_t destIncrement = m_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		for (uint32_t idx = 0; idx < requiredViews; ++idx)
-		{
-			CCP_ASSERT(m_srvUav[idx] != nullptr);
-
-			D3D12_CPU_DESCRIPTOR_HANDLE dest = { result.m_cpuHandle.ptr + destIncrement * idx };
-			m_device->CopyDescriptorsSimple(1, dest, m_srvUav[idx]->GetHandleCPU(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-		}
-		m_uploadedSrvUavCount = shader->m_srvUavTableSize;
-	}
 
 	if( mustBindSampler )
 	{
@@ -249,13 +252,16 @@ void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, const
 		m_uploadedSamplerCount = shader->m_samplerTableSize;
 	}
 
-	if (dirtyHeaps)
+	bool forceSet = shader->m_rootSignature != m_rootSignature || m_globalSrvUavHeap != globalSrvUavHeap;
+
+	if( dirtyHeaps || m_globalSrvUavHeap != globalSrvUavHeap )
 	{
 		ID3D12DescriptorHeap* heaps[] =
 		{
-			m_allocatorSRV.GetCurrentHeap(),
+			globalSrvUavHeap,
 			m_allocatorSampler.GetCurrentHeap()
 		};
+		m_globalSrvUavHeap = globalSrvUavHeap;
 
 		commandList->SetDescriptorHeaps(2, heaps);
 
@@ -264,17 +270,18 @@ void DescriptorStateCache::Commit( ID3D12GraphicsCommandList* commandList, const
 	}
 
 	// Check if the SRV/UAV table *can* be bound, *must* be bound and isn't already bound
-	if( shader->m_srvUavParameter != 0xffffffff && ( mustBindSrvUav || !m_parameterSlots[targetPipe][shader->m_srvUavParameter].IsValidSRV( m_lastSrvUavAddress[targetPipe] ) || shader->m_rootSignature != m_rootSignature ) )
+	if( mustBindSrvUav || forceSet )
 	{
-		m_parameterSlots[targetPipe][shader->m_srvUavParameter].SetSRV(m_lastSrvUavAddress[targetPipe]);
-
-		if (shader->IsComputeProgramDx12())
+		auto setRootDescriptorTable = shader->IsComputeProgramDx12() ? &ID3D12GraphicsCommandList::SetComputeRootDescriptorTable : &ID3D12GraphicsCommandList::SetGraphicsRootDescriptorTable;
+		for( uint32_t i = 0; i < shader->m_srvUavParameterCount; ++i )
 		{
-			commandList->SetComputeRootDescriptorTable(shader->m_srvUavParameter, m_lastSrvUavAddress[targetPipe]);
-		}
-		else
-		{
-			commandList->SetGraphicsRootDescriptorTable(shader->m_srvUavParameter, m_lastSrvUavAddress[targetPipe]);
+			uint32_t index = shader->m_srvUavParameterOffset + i;
+			auto handle = m_srvUav[index]->GetHandleGPU();
+			if( forceSet || !m_parameterSlots[targetPipe][index].IsValidSRV( handle ) )
+			{
+				m_parameterSlots[targetPipe][index].SetSRV( handle );
+				( commandList->*setRootDescriptorTable )( index, handle );
+			}
 		}
 	}
 

@@ -614,4 +614,9 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Col
 {
 }
 
+ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type, size_t, Tr2TextureAL* )
+{
+	return S_OK;
+}
+
 #endif

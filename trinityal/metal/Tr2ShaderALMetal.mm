@@ -21,6 +21,10 @@ namespace TrinityALImpl
 		const char* shaderPath,
 		Tr2PrimaryRenderContextAL &renderContext )
 	{
+		if( !signature.samplers.empty() )
+		{
+			return E_INVALIDARG;
+		}
 		m_bytecode.resize( "Tr2ShaderALMetal::m_bytecode", bytecode.size );
 		if( m_bytecode.empty() )
 		{

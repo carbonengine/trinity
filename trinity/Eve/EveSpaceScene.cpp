@@ -191,6 +191,13 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_secondaryBatches[TRIBATCHTYPE_TRANSPARENT] = CCP_NEW( "EveSpaceScene/m_sortedBatches2" ) TriRenderBatchAccumulator<>( allocator );
 	m_secondaryBatches[TRIBATCHTYPE_DEPTH] = CCP_NEW( "EveSpaceScene/m_depthBatches2" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
 
+	m_perThreadBatches[TRIBATCHTYPE_OPAQUE] = {};
+	m_perThreadBatches[TRIBATCHTYPE_DECAL] = {};
+	m_perThreadBatches[TRIBATCHTYPE_ADDITIVE] = {};
+	m_perThreadBatches[TRIBATCHTYPE_DISTORTION] = {};
+	m_perThreadBatches[TRIBATCHTYPE_TRANSPARENT] = {};
+	m_perThreadBatches[TRIBATCHTYPE_DEPTH] = {};
+
 	m_shadowAllocators.resize( SHADOW_FRUSTUM_COUNT );
 	m_shadowBatches.resize( SHADOW_FRUSTUM_COUNT );
 	m_shadowCasters.resize( SHADOW_FRUSTUM_COUNT );
@@ -536,54 +543,68 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		} );
 	}
 
-
-	for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 	{
-		auto& casters = m_shadowCasters[i];
+		GPU_REGION( renderContext, "Cascaded shadow maps" );
 
-		if( casters.empty() )
 		{
-			continue;
+			GPU_REGION( renderContext, "Cascade rendering" );
+
+			const char* base_label = "Split ";
+			std::string label;
+
+			for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
+			{
+				auto& casters = m_shadowCasters[i];
+
+				if( casters.empty() )
+				{
+					continue;
+				}
+
+				label.append( base_label ).append( std::to_string( i ) );
+				GPU_REGION( renderContext, label.c_str() );
+				label.clear();
+
+				m_cascadedShadowMap->BeginShadowRendering( renderContext, i );
+
+				// column_major for shaders
+				ShadowPerFrameVSData data;
+				data.ViewProjectionMat = Transpose( m_splitSetup[i].lightViewProjection );
+
+				static const unsigned perFrameVsMask =
+					( 1 << VERTEX_SHADER ) |
+					SHADER_TYPE_EXISTS( COMPUTE_SHADER ) |
+					SHADER_TYPE_EXISTS( GEOMETRY_SHADER ) |
+					SHADER_TYPE_EXISTS( HULL_SHADER ) |
+					SHADER_TYPE_EXISTS( DOMAIN_SHADER );
+				FillAndSetConstants( m_shadowPerFrameVSBuffer, &data, sizeof( data ), perFrameVsMask, Tr2Renderer::GetPerFrameVSStartRegister(), renderContext );
+
+				//***** Do the actual shadow rendering to the atlas (cascaded shadow depth map)
+				{
+					CCP_STATS_ZONE( "ShadowRendering" );
+
+					renderContext.m_esm.SetInvertedDepthTest( false );
+					ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
+					renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
+					renderContext.RenderBatches( m_shadowBatches[i].get() );
+				}
+
+				m_shadowBatches[i]->Clear();
+				m_shadowAllocators[i].Clear();
+				m_shadowCasters[i].clear();
+			}
+			m_cascadedShadowMap->EndShadowRendering( renderContext );
 		}
 
-		m_cascadedShadowMap->BeginShadowRendering( renderContext, i );
+		PopulatePerFramePSData( m_perFramePS, renderContext );
+		ApplyPerFrameData( renderContext );
+		SetupPlanetsAsShadowCaster( renderContext );
+		m_cascadedShadowMap->DrawToShadowMapResult( renderContext, m_depthMap );
 
-		// column_major for shaders
-		ShadowPerFrameVSData data;
-		data.ViewProjectionMat = Transpose( m_splitSetup[i].lightViewProjection );
-
-		static const unsigned perFrameVsMask =
-			( 1 << VERTEX_SHADER ) |
-			SHADER_TYPE_EXISTS( COMPUTE_SHADER ) |
-			SHADER_TYPE_EXISTS( GEOMETRY_SHADER ) |
-			SHADER_TYPE_EXISTS( HULL_SHADER ) |
-			SHADER_TYPE_EXISTS( DOMAIN_SHADER );
-		FillAndSetConstants( m_shadowPerFrameVSBuffer, &data, sizeof( data ), perFrameVsMask, Tr2Renderer::GetPerFrameVSStartRegister(), renderContext );
-
-		//***** Do the actual shadow rendering to the atlas (cascaded shadow depth map)
+		if( m_componentRegistry && m_volumetricsRenderer )
 		{
-			CCP_STATS_ZONE( "ShadowRendering" );
-
-			renderContext.m_esm.SetInvertedDepthTest( false );
-			ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
-			renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
-			renderContext.RenderBatches( m_shadowBatches[i].get() );
+			m_volumetricsRenderer->RenderShadows( m_componentRegistry->GetVolumetricRenderables(), m_cascadedShadowMap->GetShadowMap(), renderContext );
 		}
-
-		m_shadowBatches[i]->Clear();
-		m_shadowAllocators[i].Clear();
-		m_shadowCasters[i].clear();
-	}
-	m_cascadedShadowMap->EndShadowRendering( renderContext );
-
-	PopulatePerFramePSData( m_perFramePS, renderContext );
-	ApplyPerFrameData( renderContext );
-	SetupPlanetsAsShadowCaster( renderContext );
-	m_cascadedShadowMap->DrawToShadowMapResult( renderContext, m_depthMap );
-
-	if( m_componentRegistry && m_volumetricsRenderer )
-	{
-		m_volumetricsRenderer->RenderShadows( m_componentRegistry->GetVolumetricRenderables(), m_cascadedShadowMap->GetShadowMap(), renderContext );
 	}
 }
 
@@ -676,6 +697,74 @@ void GetBatchesFromRenderables( ITr2Renderable** const objectRenderables, const 
 	}
 }
 
+void GetBatchesFromRenderables(
+	ITr2Renderable** const objectRenderables,
+	const unsigned renderableCount,
+	Tr2RenderableSortList* const objectsWithTransparencies,
+	EveSpaceScene::BatchMap& batches,
+	EveSpaceScene::PerThreadBatchMap& perThreadBatches,
+	const TriBatchType* batchTypes, 
+	const unsigned batchTypeCount, 
+	Tr2RenderReason reason )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+
+	std::vector<Tr2PerObjectData*> perObjectData;
+	perObjectData.reserve( renderableCount );
+
+	{
+		CCP_STATS_ZONE( "PerObjectData" );
+
+		for( unsigned i = 0; i != renderableCount; ++i )
+		{
+			ITr2Renderable* r = objectRenderables[i];
+
+			perObjectData.push_back( r->GetPerObjectData( batches[TRIBATCHTYPE_OPAQUE] ) );
+		}
+	}
+	{
+		CCP_STATS_ZONE( "GetBatches" );
+
+		Tr2ParallelFor( unsigned( 0 ), renderableCount, [&]( unsigned i ) {
+			ITr2Renderable* r = objectRenderables[i];
+			for( unsigned type = 0; type != batchTypeCount; ++type )
+			{
+				r->GetBatches( &perThreadBatches[batchTypes[type]].local(), batchTypes[type], perObjectData[i], reason );
+			}
+		} );
+	}
+	{
+		CCP_STATS_ZONE( "Combine" );
+
+		for( unsigned type = 0; type != batchTypeCount; ++type )
+		{
+			auto& dest = batches[batchTypes[type]];
+			for( auto& src : perThreadBatches[batchTypes[type]] )
+			{
+				dest->TransferFrom( &src );
+			}
+		}
+	}
+	if( objectsWithTransparencies )
+	{
+		CCP_STATS_ZONE( "Transparencies" );
+
+		objectsWithTransparencies->reserve( renderableCount );
+
+		for( unsigned i = 0; i != renderableCount; ++i )
+		{
+			ITr2Renderable* r = objectRenderables[i];
+			if( r->HasTransparentBatches() )
+			{
+				ITr2RenderableEntry entry;
+				entry.m_object = r;
+				entry.m_distance = r->GetSortValue();
+				objectsWithTransparencies->push_back( entry );
+			}
+		}
+	}
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Gathers all batches from renderables and populates a list of renderables with
@@ -703,7 +792,7 @@ void EveSpaceScene::GetAllBatchesFromRenderables( std::vector<ITr2Renderable*>& 
 
 	unsigned typeCount = m_distortionMap ? 5 : 4;
 
-	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), &objectsWithTransparencies, batches, s_allTypes, typeCount, reason );
+	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), &objectsWithTransparencies, batches, m_perThreadBatches, s_allTypes, typeCount, reason );
 }
 
 // --------------------------------------------------------------------------------------
@@ -728,7 +817,7 @@ void EveSpaceScene::GetOpaqueBatchesFromRenderables( std::vector<ITr2Renderable*
 			TRIBATCHTYPE_DECAL
 		};
 
-	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), nullptr, batches, s_allTypes, 2, reason );
+	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), nullptr, batches, m_perThreadBatches, s_allTypes, 2, reason );
 }
 
 // --------------------------------------------------------------------------------------
@@ -752,7 +841,7 @@ void EveSpaceScene::GetDepthBatchesFromRenderables( std::vector<ITr2Renderable*>
 			TRIBATCHTYPE_DEPTH
 		};
 
-	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), nullptr, batches, s_allTypes, 1, reason );
+	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), nullptr, batches, m_perThreadBatches, s_allTypes, 1, reason );
 }
 
 // --------------------------------------------------------------------------------------
@@ -781,7 +870,7 @@ void EveSpaceScene::GetTransparentBatchesFromRenderables( std::vector<ITr2Render
 
 	unsigned typeCount = m_distortionMap ? 2 : 1;
 
-	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), &objectsWithTransparencies, batches, s_allTypes, typeCount, reason );
+	::GetBatchesFromRenderables( &objectRenderables[0], (unsigned int)objectRenderables.size(), &objectsWithTransparencies, batches, m_perThreadBatches, s_allTypes, typeCount, reason );
 }
 
 // --------------------------------------------------------------------------------------

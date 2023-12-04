@@ -40,6 +40,63 @@ public:
 	{
 		m_bufferDirty = true;
 	}
+    
+    void UpdateBuffer( Owner& owner, Tr2RenderContextEnum::ShaderType shaderType )
+    {
+#if TRINITY_PLATFORM != TRINITY_DIRECTX11
+        if( !m_bufferDirty )
+        {
+            return;
+        }
+        uint32_t size = owner.GetPerObjectDataSize( shaderType );
+        if( size > 0 )
+        {
+            USE_MAIN_THREAD_RENDER_CONTEXT();
+            
+            auto& buffer = m_constantBuffer;
+            if( !buffer.IsValid() || size > buffer.GetSize() )
+            {
+                CR_RETURN( buffer.Create( size, renderContext.GetPrimaryRenderContext() ) );
+            }
+            void* data = nullptr;
+
+            if( SUCCEEDED( buffer.Lock( &data, renderContext ) ) && data )
+            {
+                owner.UpdatePerObjectBuffer( shaderType, size, data );
+                buffer.Unlock( renderContext );
+            }
+        }
+        m_bufferDirty = false;
+#endif
+    }
+
+	Tr2ConstantBufferAL& UpdateBuffer(
+		Owner& owner,
+		Tr2RenderContextEnum::ShaderType shaderType,
+		Tr2RenderContext& renderContext)
+	{
+		if( m_bufferDirty )
+		{
+			uint32_t size = owner.GetPerObjectDataSize( shaderType );
+			if( size > 0 )
+			{
+				auto& buffer = m_constantBuffer;
+				if( !buffer.IsValid() || size > buffer.GetSize() )
+				{
+					CR_RETURN_VAL( buffer.Create( size, renderContext.GetPrimaryRenderContext() ), m_constantBuffer );
+				}
+				void* data = nullptr;
+
+				if( SUCCEEDED( buffer.Lock( &data, renderContext ) ) && data )
+				{
+					owner.UpdatePerObjectBuffer( shaderType, size, data );
+					buffer.Unlock( renderContext );
+				}
+			}
+			m_bufferDirty = false;
+		}
+		return m_constantBuffer;
+	}
 
 	// ----------------------------------------------------------------------------------
 	// Description:
@@ -62,7 +119,7 @@ public:
 		bool isPrimary = true;
 #endif
 
-		if( isPrimary && !m_bufferDirty )
+		if( !m_bufferDirty )
 		{
 			renderContext.SetConstants( m_constantBuffer,
 				shaderType,
@@ -148,7 +205,9 @@ public:
 	{
 		m_owner = owner;
 		m_perObjectDataVs = perObjectDataVs;
+        m_perObjectDataVs->UpdateBuffer( *owner, Tr2RenderContextEnum::VERTEX_SHADER );
 		m_perObjectDataPs = perObjectDataPs;
+        m_perObjectDataPs->UpdateBuffer( *owner, Tr2RenderContextEnum::PIXEL_SHADER );
 	}
 
 	// ----------------------------------------------------------------------------------
@@ -176,6 +235,23 @@ public:
 			m_perObjectDataPs->SetPerObjectDataToDevice( *m_owner, Tr2RenderContextEnum::PIXEL_SHADER, buffers, renderContext );
 		}
 	}
+
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override
+	{
+		if( writer.HasPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER ) )
+		{
+			writer.SetPerObjectData( Tr2RenderContextEnum::VERTEX_SHADER, m_perObjectDataVs->UpdateBuffer( *m_owner, Tr2RenderContextEnum::VERTEX_SHADER, renderContext ) );
+		}
+		if( writer.HasPerObjectData( Tr2RenderContextEnum::GEOMETRY_SHADER ) )
+		{
+			writer.SetPerObjectData( Tr2RenderContextEnum::GEOMETRY_SHADER, m_perObjectDataVs->UpdateBuffer( *m_owner, Tr2RenderContextEnum::GEOMETRY_SHADER, renderContext ) );
+		}
+		if( writer.HasPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER ) )
+		{
+			writer.SetPerObjectData( Tr2RenderContextEnum::PIXEL_SHADER, m_perObjectDataPs->UpdateBuffer( *m_owner, Tr2RenderContextEnum::PIXEL_SHADER, renderContext ) );
+		}
+	}
+
 private:
 	PerObjectDataVs* m_perObjectDataVs;
 	PerObjectDataPs* m_perObjectDataPs;

@@ -34,21 +34,51 @@ protected:
 };
 
 /** ShaderResourceView object */
-class ShaderResourceViewDx12 : public DescriptorHeapViewDx12
+class ShaderResourceViewDx12
 {
 public:
 
-	ShaderResourceViewDx12(GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry);
+	ShaderResourceViewDx12( SrvUavDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry );
 	virtual ~ShaderResourceViewDx12();
+
+
+	/** Get the underlying CPU descriptor handle */
+	D3D12_CPU_DESCRIPTOR_HANDLE GetHandleCPU() const
+	{
+		CCP_ASSERT( m_entry != nullptr );
+		return m_entry->m_offsetCPU;
+	};
+
+	/** Get the underlying GPU descriptor handle */
+	D3D12_GPU_DESCRIPTOR_HANDLE GetHandleGPU() const
+	{
+		CCP_ASSERT( m_entry != nullptr );
+		return m_entry->m_offsetGPU;
+	};
+
+	D3D12_CPU_DESCRIPTOR_HANDLE GetDescriptorInCpuHeap() const
+	{
+		return m_allocator->GetDescriptorInCpuHeap( m_entry );
+	}
+
+	uint32_t GetIndexInHeap() const
+	{
+		return m_index;
+	}
+
+private:
+	GlobalDescriptorHeapPage::DescriptorEntry* m_entry;
+	SrvUavDescriptorAllocator* m_allocator;
+	uint32_t m_index;
 };
 
-/** UnorderedAccessView object */
-class UnorderedAccessViewDx12 : public DescriptorHeapViewDx12
+class UnorderedAccessViewDx12 : public ShaderResourceViewDx12
 {
 public:
-
-	UnorderedAccessViewDx12(GlobalDescriptorHeapAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry);
-	virtual ~UnorderedAccessViewDx12();
+	UnorderedAccessViewDx12( SrvUavDescriptorAllocator* allocator, GlobalDescriptorHeapPage::DescriptorEntry* heapEntry ) :
+		ShaderResourceViewDx12( allocator, heapEntry )
+	{
+	}
 };
 
 /** SamplerState object */

@@ -66,6 +66,12 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 
 	int meshIx = mesh->GetMeshIndex();
 
+	auto grannyMesh = geomRes->GetMeshData( meshIx, screenSize );
+	if( !grannyMesh )
+	{
+		return;
+	}
+
 	// build a sortable mesharea item list
 	Tr2MeshAreaItemList meshAreasToSort( "EveSpaceObject2/SortMeshAreaVector" );
 	meshAreasToSort.reserve( areas->size() );
@@ -104,17 +110,9 @@ void GetSortedBatchesFromMeshAreaVector( const Tr2MeshAreaVector* areas,
 		{
 			continue;
 		}
-		TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-		// Note that this can fail if the accumulator can't add more batches!
-		if( batch )
-		{
-			batch->SetShaderMaterial( material );
-			batch->SetPerObjectData( perObjectData );
-			batch->SetGeometryResource( geomRes );
-			batch->SetMeshParameters( meshIx, area->GetIndex(), area->GetCount(), screenSize );
 
-			batches->Commit( batch );
-		}
+		Tr2RenderBatch batch = CreateGeometryBatch( grannyMesh, area, perObjectData );
+		batches->Commit( batch );
 	}
 }
 
@@ -939,9 +937,9 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 
 	if( m_activationStrength != 0 )
 	{
-		for( auto it = begin( m_attachments ); it != end( m_attachments ); ++it )
+		for( auto& it : m_attachments )
 		{
-			( *it )->GetBatches( batches, batchType, perObjectData, reason );
+			it->GetBatches( batches, batchType, perObjectData, reason );
 		}
 	}
 
@@ -975,7 +973,7 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 
 void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize )
 {
-	if( !m_shadowEffect )
+	if( !m_shadowEffect || !m_shadowEffect->GetShaderStateInterface() )
 	{
 		return;
 	}
@@ -985,25 +983,34 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 		return;
 	}
 
-	Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-
 	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
+	if( !geomRes->IsGood() )
+	{
+		return;
+	}
 	int meshIx = m_mesh->GetMeshIndex();
 
-	auto meshScreenSize = shadowPixelSize;
-
+	auto mesh = geomRes->GetMeshData( meshIx, shadowPixelSize );
+	if( !mesh || !mesh->m_allocationsValid )
+	{
+		return;
+	}
 
 	auto& opaqueAreaBlocks = m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_OPAQUEONLY];
 	for( auto& areaBlock : opaqueAreaBlocks )
 	{
-		TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-		// Note that this can fail if the accumulator can't add more batches!
-		if( batch )
+		if( auto primCount = GetPrimitiveCount( *mesh, areaBlock.m_startIndex, areaBlock.m_count ) )
 		{
-			batch->SetShaderMaterial( m_shadowEffect );
-			batch->SetPerObjectData( perObjectData );
-			batch->SetGeometryResource( geomRes );
-			batch->SetMeshParameters( meshIx, areaBlock.m_startIndex, areaBlock.m_count, meshScreenSize );
+			Tr2RenderBatch batch;
+			batch.SetMaterial( m_shadowEffect );
+			batch.SetGeometry( mesh->m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
+			batch.SetPerObjectData( perObjectData );
+			batch.SetDrawIndexedInstanced(
+				primCount * 3,
+				1,
+				mesh->m_indexAllocation.GetStartIndex() + mesh->m_areas[areaBlock.m_startIndex].m_firstIndex,
+				mesh->m_vertexAllocation.GetOffset() / mesh->m_vertexAllocation.GetStride(),
+				0 );
 			batches->Commit( batch );
 		}
 	}
@@ -1019,39 +1026,52 @@ float EveSpaceObject2::GetSortValue()
 
 // ---------------------------------------------------------------------------------------
 //  Description:
-//    Given a pointer to a mesh overlay vector, gathers TriGeometryBatches for each.
+//    Given a pointer to a mesh overlay vector, gathers render batches for each.
 // ---------------------------------------------------------------------------------------
 void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, TriBatchType batchType, Tr2MeshBase* mesh )
 {
-	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	Tr2Effect* impactOverlayEffect = nullptr;
+	// first the damage overlays
+	if( m_impactOverlay )
+	{
+		impactOverlayEffect = m_impactOverlay->GetArmorDamageShader( batchType );
+	}
+	if( !impactOverlayEffect && m_overlayEffects.empty() )
+	{
+		return;
+	}
 
-	if( !geomRes || !geomRes->IsGood() )
+	TriGeometryRes* geomRes = mesh->GetGeometryResource();
+	if( !geomRes->IsGood() )
 	{
 		return;
 	}
 
 	int meshIx = mesh->GetMeshIndex();
-
 	auto meshScreenSize = m_allowLodSelection ? m_estimatedPixelDiameter / g_eveSpaceSceneLODFactor : std::numeric_limits<float>::max();
-
-	// first the damage overlays
-	if( m_impactOverlay )
+	auto meshData = geomRes->GetMeshData( meshIx, meshScreenSize );
+	if( !meshData || !meshData->m_allocationsValid )
 	{
-		Tr2EffectPtr effect = m_impactOverlay->GetArmorDamageShader( batchType );
-		if( effect )
+		return;
+	}
+
+	if( impactOverlayEffect )
+	{
+		for( auto& areaBlock : m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL] )
 		{
-			for( auto areaBlock = m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL].begin(); areaBlock != m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_ALL].end(); ++areaBlock )
+			if( auto primCount = GetPrimitiveCount( *meshData, areaBlock.m_startIndex, areaBlock.m_count ) )
 			{
-				TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-				// Note that this can fail if the accumulator can't add more batches!
-				if( batch )
-				{
-					batch->SetShaderMaterial( effect );
-					batch->SetPerObjectData( perObjectData );
-					batch->SetGeometryResource( geomRes );
-					batch->SetMeshParameters( meshIx, areaBlock->m_startIndex, areaBlock->m_count, meshScreenSize );
-					batches->Commit( batch );
-				}
+				Tr2RenderBatch batch;
+			batch.SetMaterial( impactOverlayEffect );
+				batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation, meshData->m_indexAllocation );
+				batch.SetPerObjectData( perObjectData );
+				batch.SetDrawIndexedInstanced(
+					primCount * 3,
+					1,
+					meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[areaBlock.m_startIndex].m_firstIndex,
+					meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+					0 );
+				batches->Commit( batch );
 			}
 		}
 	}
@@ -1070,16 +1090,20 @@ void EveSpaceObject2::GetBatchesFromOverlayVector( ITriRenderBatchAccumulator* b
 				Tr2EffectPtr effect = *eff;
 
 				// add all mesh area blocks
-				for( auto areaBlock = m_overlayMeshAreaBlocks[overlayType].begin(); areaBlock != m_overlayMeshAreaBlocks[overlayType].end(); ++areaBlock )
+				for( auto& areaBlock : m_overlayMeshAreaBlocks[overlayType] )
 				{
-					TriGeometryBatch* batch = batches->Allocate<TriGeometryBatch>();
-					// Note that this can fail if the accumulator can't add more batches!
-					if( batch )
+					if( auto primCount = GetPrimitiveCount( *meshData, areaBlock.m_startIndex, areaBlock.m_count ) )
 					{
-						batch->SetShaderMaterial( effect );
-						batch->SetPerObjectData( perObjectData );
-						batch->SetGeometryResource( geomRes );
-						batch->SetMeshParameters( meshIx, areaBlock->m_startIndex, areaBlock->m_count, meshScreenSize );
+						Tr2RenderBatch batch;
+						batch.SetMaterial( effect );
+						batch.SetGeometry( meshData->m_vertexDeclaration, meshData->m_vertexAllocation, meshData->m_indexAllocation );
+						batch.SetPerObjectData( perObjectData );
+						batch.SetDrawIndexedInstanced(
+							primCount * 3,
+							1,
+							meshData->m_indexAllocation.GetStartIndex() + meshData->m_areas[areaBlock.m_startIndex].m_firstIndex,
+							meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+							0 );
 						batches->Commit( batch );
 					}
 				}

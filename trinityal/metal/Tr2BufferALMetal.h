@@ -32,6 +32,9 @@ namespace TrinityALImpl
 
 		id<MTLBuffer> GetMetalBuffer() { return m_mtlBuffer; }
 
+		uint32_t GetSrvIndexInHeap() const;
+		uint32_t GetUavIndexInHeap() const;
+
 	private:
 		Tr2BufferDescriptionAL m_desc;
 		Tr2RenderContextAL* m_owner;
@@ -39,6 +42,7 @@ namespace TrinityALImpl
 		MTLResourceOptions m_resourceMode;
 		id<MTLBuffer> m_mtlBuffer;
         Tr2MemoryCounterAL m_memory;
+        uint32_t m_heapIndex;
 
         struct StagingBuffer
         {

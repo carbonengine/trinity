@@ -347,6 +347,46 @@ bool Tr2ResourceSetDescriptionAL::SetUav( Tr2RenderContextEnum::ShaderType stage
 	return true;
 }
 
+bool Tr2ResourceSetDescriptionAL::SetSrvHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex )
+{
+	if( m_registerMap.srvCount == 0 )
+	{
+		return false;
+	}
+	auto index = m_registerMap.srvs[stage][registerIndex];
+	if( index >= m_registerMap.srvCount )
+	{
+		return false;
+	}
+	auto& resource = m_srv[index];
+	if( resource.type == HEAP_VIEW )
+	{
+		return false;
+	}
+	resource.type = HEAP_VIEW;
+	return true;
+}
+
+bool Tr2ResourceSetDescriptionAL::SetUavHeapView( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex )
+{
+	if( m_registerMap.uavCount == 0 )
+	{
+		return false;
+	}
+	auto index = m_registerMap.uavs[stage][registerIndex];
+	if( index >= m_registerMap.uavCount )
+	{
+		return false;
+	}
+	auto& resource = m_uav[index];
+	if( resource.type == HEAP_VIEW )
+	{
+		return false;
+	}
+	resource.type = HEAP_VIEW;
+	return true;
+}
+
 bool Tr2ResourceSetDescriptionAL::SetSampler( Tr2RenderContextEnum::ShaderType stage, uint32_t registerIndex, const Tr2SamplerStateAL& sampler )
 {
 	if( m_registerMap.samplerCount == 0 )
@@ -445,6 +485,10 @@ void Tr2ResourceSetDescriptionAL::Resource::UpdateHash( uint32_t& hash ) const
 	else if( type == TEXTURE )
 	{
 		HashResourcePtr( texture, hash );
+	}
+	else if( type == HEAP_VIEW )
+	{
+		hash = CcpHashFNV1( &type, sizeof( type ), hash );
 	}
 }
 

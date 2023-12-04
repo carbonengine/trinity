@@ -275,13 +275,13 @@ void EveTurretSet::InitializeInstanceBuffer()
 		pBufferData[i] = (float)i;
 	}
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	CR_RETURN( m_instanceBuffer.Create(
+
+	CR_RETURN( g_sharedBuffer.Allocate(
 		sizeof( float ),
 		EVE_MAX_TURRETS_PER_SET,
-		Tr2GpuUsage::VERTEX_BUFFER,
-		Tr2CpuUsage::NONE,
 		pBufferData,
-		renderContext ) );
+		renderContext,
+		m_instanceBuffer ) );
 }
 
 // --------------------------------------------------------------------------------
@@ -820,8 +820,7 @@ void EveTurretSet::ReleaseCachedData( BlueAsyncRes* p )
 void EveTurretSet::ReleaseResources( TriStorage s )
 {
 	m_vertexDeclHandle = Tr2EffectStateManager::UNINITIALIZED_DECLARATION;
-	// CComPtr, this is safe!
-	m_instanceBuffer = Tr2BufferAL();
+	g_sharedBuffer.Free( m_instanceBuffer );
 }
 
 // --------------------------------------------------------------------------------
@@ -1755,21 +1754,37 @@ void EveTurretSet::GetBatches( ITriRenderBatchAccumulator* batches,
 	{
 		return;
 	}
-	if( !m_display )
+	if( !m_display || !m_visibleCount )
 	{
 		return;
 	}
-	if( !m_visibleCount )
+	if( !m_instanceBuffer.IsValid() )
+	{
+		return;
+	}
+	if( !m_geometryResource || !m_geometryResource->IsGood() )
+	{
+		return;
+	}
+	const TriGeometryResMeshData* meshData = m_geometryResource->GetMeshData( 0 );
+	if( !meshData || !meshData->m_allocationsValid )
 	{
 		return;
 	}
 
-	TriForwardingBatch* batch = batches->Allocate<TriForwardingBatch>();
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_turretEffect );
+	batch.SetGeometry( m_vertexDeclHandle, meshData->m_vertexAllocation, m_instanceBuffer, meshData->m_indexAllocation );
+	batch.SetPerObjectData( perObjectData );
+	batch.SetDrawIndexedInstanced( 
+		meshData->m_primitiveCount * 3, 
+		m_visibleCount, 
+		meshData->m_indexAllocation.GetStartIndex(), 
+		meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(), 
+		m_instanceBuffer.GetOffset() / m_instanceBuffer.GetStride() );
+
 	if( batch )
 	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_turretEffect );
-		batch->SetGeometryProvider( this );
 		batches->Commit( batch );
 	}
 }
@@ -1780,23 +1795,37 @@ void EveTurretSet::GetBatches( ITriRenderBatchAccumulator* batches,
 // --------------------------------------------------------------------------------
 void EveTurretSet::GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize )
 {
-	if( !m_display )
+	if( !m_display || !m_visibleCount )
 	{
 		return;
 	}
-	if( !m_visibleCount )
+	if( !m_instanceBuffer.IsValid() )
+	{
+		return;
+	}
+	if( !m_geometryResource || !m_geometryResource->IsGood() )
+	{
+		return;
+	}
+	const TriGeometryResMeshData* meshData = m_geometryResource->GetMeshData( 0 );
+	if( !meshData || !meshData->m_allocationsValid )
 	{
 		return;
 	}
 
-	TriForwardingBatch* batch = batches->Allocate<TriForwardingBatch>();
-	if( batch )
-	{
-		batch->SetPerObjectData( perObjectData );
-		batch->SetShaderMaterial( m_shadowEffect );
-		batch->SetGeometryProvider( this );
-		batches->Commit( batch );
-	}
+	Tr2RenderBatch batch;
+	batch.SetMaterial( m_shadowEffect );
+	batch.SetGeometry( m_vertexDeclHandle, meshData->m_vertexAllocation, m_instanceBuffer, meshData->m_indexAllocation );
+	batch.SetPerObjectData( perObjectData );
+
+	batch.SetDrawIndexedInstanced(
+		meshData->m_primitiveCount * 3,
+		m_visibleCount,
+		meshData->m_indexAllocation.GetStartIndex(),
+		meshData->m_vertexAllocation.GetOffset() / meshData->m_vertexAllocation.GetStride(),
+		m_instanceBuffer.GetOffset() / m_instanceBuffer.GetStride() );
+
+	batches->Commit( batch );
 }
 
 // --------------------------------------------------------------------------------
@@ -1926,55 +1955,6 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	}
 
 	return perObjectData;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Setup instanced reandering and call DIP
-// --------------------------------------------------------------------------------
-void EveTurretSet::SubmitGeometry( Tr2RenderContext& renderContext )
-{
-	if( !m_geometryResource )
-	{
-		return;
-	}
-
-	if( !m_geometryResource->IsGood() )
-	{
-		return;
-	}
-
-	if( m_geometryResource->GetMeshCount() < 1 )
-	{
-		return;
-	}
-
-	const TriGeometryResMeshData* meshData = m_geometryResource->GetMeshData( 0 );
-	if( !meshData )
-	{
-		return;
-	}
-
-	if( !meshData->m_indexBuffer.IsValid() || !meshData->m_vertexBuffer.IsValid() )
-	{
-		return;
-	}
-
-	if( !m_visibleCount )
-	{
-		return;
-	}
-
-	// render
-	renderContext.m_esm.ApplyVertexDeclaration( m_vertexDeclHandle );
-	renderContext.m_esm.ApplyIndexBuffer( meshData->m_indexBuffer );
-	// Stream 0: "geometry": here: our turret geometry
-	renderContext.m_esm.ApplyStreamSource( 0, meshData->m_vertexBuffer, 0, meshData->m_bytesPerVertex );
-	// Stream 1: instance", here: instance index
-	renderContext.m_esm.ApplyStreamSource( 1, m_instanceBuffer, 0, sizeof( float ) );
-
-	renderContext.SetTopology( TOP_TRIANGLES );
-	renderContext.DrawIndexedInstanced( meshData->m_vertexCount, 0, meshData->m_primitiveCount, m_visibleCount );
 }
 
 // --------------------------------------------------------------------------------
@@ -3083,4 +3063,9 @@ void EveTurretSetPerObjectData::SetPerObjectDataToDevice( Tr2ConstantBufferAL** 
 	FillAndSetConstants( *buffers[VERTEX_SHADER], &m_vsData, sizeof( EveTurretSetVSData ), VERTEX_SHADER, Tr2Renderer::GetPerObjectVSStartRegister(), renderContext );
 
 	FillAndSetConstants( *buffers[PIXEL_SHADER], &m_psData, sizeof( EveTurretSetPSData ), PIXEL_SHADER, Tr2Renderer::GetPerObjectPSStartRegister(), renderContext );
+}
+void EveTurretSetPerObjectData::ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const
+{
+	writer.SetPerObjectData( VERTEX_SHADER, &m_vsData, sizeof( EveTurretSetVSData ) );
+	writer.SetPerObjectData( PIXEL_SHADER, &m_psData, sizeof( EveTurretSetPSData ) );
 }

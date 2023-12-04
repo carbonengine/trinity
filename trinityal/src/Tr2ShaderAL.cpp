@@ -43,13 +43,17 @@ Tr2ShaderPipelineInputAL::Tr2ShaderPipelineInputAL( Tr2VertexDefinition::UsageCo
 
 Tr2ShaderRegisterAL::Tr2ShaderRegisterAL()
 	:registerType( CONSTANT_BUFFER ),
-	registerIndex( 0 )
+	registerIndex( 0 ),
+	dynamic( true )
 {
 }
 
-Tr2ShaderRegisterAL::Tr2ShaderRegisterAL( RegisterType registerType_, uint32_t registerIndex_ )
+Tr2ShaderRegisterAL::Tr2ShaderRegisterAL( RegisterType registerType_, uint32_t registerIndex_, uint32_t registerSpace_, uint32_t arrayCount_, bool dynamic_ )
 	: registerType( registerType_ ),
-	registerIndex( registerIndex_ )
+	registerIndex( registerIndex_ ),
+	registerSpace( registerSpace_ ),
+	arrayCount( arrayCount_ ),
+	dynamic( dynamic_ )
 {
 }
 
@@ -83,15 +87,21 @@ Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( const Tr2ShaderRegisterAL& regi
 	return *this;
 }
 
-Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( Tr2ShaderRegisterAL::RegisterType registerType, uint32_t registerIndex )
+Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( Tr2ShaderRegisterAL::RegisterType registerType, uint32_t registerIndex, uint32_t registerSpace, uint32_t arrayCount )
 {
-	registers.push_back( Tr2ShaderRegisterAL( registerType, registerIndex ) );
+	registers.push_back( Tr2ShaderRegisterAL( registerType, registerIndex, registerSpace, arrayCount ) );
 	return *this;
 }
 
 Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( const Tr2ShaderThreadGroupSizeAL& size )
 {
 	threadGroupSize = size;
+	return *this;
+}
+
+Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( const Tr2SamplerDescription& sampler, uint32_t registerIndex, uint32_t registerSpace )
+{
+	samplers.push_back( { sampler, registerIndex, registerSpace } );
 	return *this;
 }
 

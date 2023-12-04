@@ -11,7 +11,6 @@
 #include "Utilities/BoundingSphere.h"
 #include "Utilities/MatrixUtils.h"
 #include "Tr2QuadRenderer.h"
-#include "Tr2PickingHelperBatch.h"
 #include "Tr2DebugRenderer.h"
 
 using namespace Tr2RenderContextEnum;
@@ -377,27 +376,6 @@ const EveSpotlightSetItemVector* EveSpotlightSet::GetSpotlightItems() const
 void EveSpotlightSet::AddSpotlightItem( EveSpotlightSetItemPtr item )
 {
 	m_spotlightItems.Insert( -1, item );
-}
-
-void EveSpotlightSet::GetPickingBatches( ITriRenderBatchAccumulator* batches, uint16_t& areaIDOffset, const Tr2PerObjectData* perObjectData )
-{
-	for( auto it = m_spotlightItems.begin(); it != m_spotlightItems.end(); ++it )
-	{
-		if( auto batch = batches->Allocate<Tr2PickingHelperBatch>() )
-		{
-			batch->SetPerObjectData( perObjectData );
-			batch->AddSphere(
-				( *it )->m_transform.GetTranslation(),
-				std::max( float( ( *it )->m_spriteScale.x ), std::max( float( ( *it )->m_spriteScale.y ), float( ( *it )->m_spriteScale.z ) ) ) * 0.5f );
-			batch->SetAreaID( areaIDOffset );
-			batches->Commit( batch );
-		}
-		else
-		{
-			break;
-		}
-		++areaIDOffset;
-	}
 }
 
 void EveSpotlightSet::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )

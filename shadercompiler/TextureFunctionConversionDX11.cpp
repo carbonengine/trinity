@@ -951,7 +951,8 @@ static bool IsTextureIndexing( ASTNode* node )
 	return node->GetNodeType() == NT_POSTFIX_EXPRESSION &&
 		node->GetToken() &&
 		node->GetToken()->type == OP_LEFT_BRACKET &&
-		node->GetChild( 0 )->GetType().IsTexture();
+		node->GetChild( 0 )->GetType().IsTexture() &&
+		node->GetChild( 0 )->GetType().arrayDimensions == 0;
 }
 
 
@@ -1163,4 +1164,57 @@ void ConvertTextureFunctionsToMetal( ParserState& state )
 {
 	ConvertTextureFunctionsDX11( state );
 	PatchMetalTextureCalls( state, state.GetTree() );
+}
+
+
+void MergeSamplers( ParserState& state )
+{
+	std::map<Sampler, Symbol*> samplers;
+
+	for( auto child : state.GetTree()->GetChildren() )
+	{
+		if( child->GetNodeType() == NT_VAR_DECLARATION_LIST )
+		{
+			for( auto name : child->GetChildren() )
+			{
+				if( name && name->GetSymbol() && name->GetSymbol()->type.IsSampler() )
+				{
+					Sampler sampler;
+					if( GetSamplerState( state, name, sampler ) && !sampler.isDynamic )
+					{
+						auto found = samplers.find( sampler );
+						if( found != samplers.end() )
+						{
+							state.GetTree()->Map( [&]( auto node ) {
+								if( node->GetNodeType() != NT_NAME_DECLARATION && node->GetSymbol() == name->GetSymbol() )
+								{
+									node->SetSymbol( found->second );
+								}
+								return node;
+							} );
+						}
+						else
+						{
+							samplers[sampler] = name->GetSymbol();
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+int32_t BindlessTextureType( int type )
+{
+	switch( type )
+	{
+	case OP_BINDLESSHANDLETEXTURE2D:
+		return TEX_TYPE_2D;
+	case OP_BINDLESSHANDLETEXTURE3D:
+		return TEX_TYPE_3D;
+	case OP_BINDLESSHANDLETEXTURECUBE:
+		return TEX_TYPE_CUBE;
+	default:
+		return TEX_TYPE_INVALID;
+	}
 }

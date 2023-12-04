@@ -588,6 +588,31 @@ namespace TrinityALImpl
 		Tr2PrimaryRenderContextAL& m_device;
 	};
 
+	void FlushBarriersMaybe( const Tr2TextureAL& tex1, const Tr2TextureAL& tex2, Tr2RenderContextAL& renderContext )
+	{
+		if( RequiresImmediateBarriers( tex1.GetGpuUsage() ) && RequiresImmediateBarriers( tex2.GetGpuUsage() ) )
+		{
+			renderContext.FlushBarriersDx12( tex1.GetResourceDx12(), tex2.GetResourceDx12() );
+		}
+		else if( RequiresImmediateBarriers( tex1.GetGpuUsage() ) )
+		{
+			renderContext.FlushBarriersDx12( tex1.GetResourceDx12() );
+		}
+		else if( RequiresImmediateBarriers( tex2.GetGpuUsage() ) )
+		{
+			renderContext.FlushBarriersDx12( tex2.GetResourceDx12() );
+		}
+	}
+
+	void FlushBarriersMaybe( const Tr2TextureAL& tex, Tr2RenderContextAL& renderContext )
+	{
+		if( RequiresImmediateBarriers( tex.GetGpuUsage() ) )
+		{
+			renderContext.FlushBarriersDx12( tex.GetResourceDx12() );
+		}
+	}
+
+
 	Tr2TextureAL::Tr2TextureAL()
 		:m_owner( nullptr ),
 		m_currentTextureIndex( 0 ),
@@ -596,6 +621,7 @@ namespace TrinityALImpl
 		m_cpuUsage( Tr2CpuUsage::NONE ),
 		m_mipMapGenerator( nullptr )
 	{
+		m_srvIndicesInHeap[0] = m_srvIndicesInHeap[1] = 0xffffffff;
 		m_mappedScratch = m_writeScratches.end();
 	}
 
@@ -732,6 +758,10 @@ namespace TrinityALImpl
 			if( defaultState != creationState )
 			{
 				renderContext.ResourceBarrierDx12( Transition( texture, creationState, defaultState ) );
+				if( RequiresImmediateBarriers( gpuUsage ) )
+				{
+					renderContext.FlushBarriersDx12( texture );
+				}
 			}
 			RELEASE_LATER( &renderContext, scratch );
 		}
@@ -801,6 +831,8 @@ namespace TrinityALImpl
 
 			renderContext.CreateShaderResourceView(texture, m_srvDesc[0], m_view[0]);
 			renderContext.CreateShaderResourceView(texture, m_srvDesc[1], m_view[1]);
+			m_srvIndicesInHeap[0] = m_view[0]->GetIndexInHeap();
+			m_srvIndicesInHeap[1] = m_view[1]->GetIndexInHeap();
 		}
 		if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
 		{
@@ -1038,6 +1070,8 @@ namespace TrinityALImpl
 		// JB: Don't need to ReleaseLater() because views aren't actually GPU visible
 		m_view[Tr2RenderContextEnum::COLOR_SPACE_LINEAR] = nullptr;
 		m_view[Tr2RenderContextEnum::COLOR_SPACE_SRGB] = nullptr;
+		m_srvIndicesInHeap[0] = 0xffffffff;
+		m_srvIndicesInHeap[1] = 0xffffffff;
 		m_rtv.clear();
 		m_dsv = nullptr;
 		m_uav.clear();
@@ -1111,6 +1145,7 @@ namespace TrinityALImpl
 				std::swap( barriers[i].Transition.StateAfter, barriers[i].Transition.StateBefore );
 			}
 			renderContext.ResourceBarrierDx12( barrierCount, barriers );
+			FlushBarriersMaybe( *this, destination, renderContext );
 		}
 		return S_OK;
 	}
@@ -1195,6 +1230,7 @@ namespace TrinityALImpl
 					TrinityALImpl::Transition( dstResource, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState ),
 				};
 				renderContext.ResourceBarrierDx12( 2, barriers );
+				FlushBarriersMaybe( *this, source, renderContext );
 			}
 			return S_OK;
 		}
@@ -1253,6 +1289,7 @@ namespace TrinityALImpl
 				TrinityALImpl::Transition( dstResource, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState ),
 			};
 			renderContext.ResourceBarrierDx12( 2, barriers );
+			FlushBarriersMaybe( *this, source, renderContext );
 		}
 
 		return S_OK;
@@ -1415,6 +1452,7 @@ namespace TrinityALImpl
 		}
 
 		renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( texture, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState ) );
+		FlushBarriersMaybe( *this, renderContext );
 
 		m_mappedScratch->frameIndex = m_owner->GetCurrentFrameIndexDx12();
 
@@ -1468,6 +1506,7 @@ namespace TrinityALImpl
 		renderContext.m_commandList->CopyTextureRegion( &Dst, 0, 0, 0, &Src, nullptr );
 
 		renderContext.ResourceBarrierDx12( Transition( texture, D3D12_RESOURCE_STATE_COPY_SOURCE, m_defaultState ) );
+		FlushBarriersMaybe( *this, renderContext );
 
 		auto hr = renderContext.FlushAndSyncDx12();
 		if( FAILED( hr ) )
@@ -1597,6 +1636,20 @@ namespace TrinityALImpl
 			m_gpuUsage = Tr2GpuUsage::RENDER_TARGET;
 			m_defaultState = D3D12_RESOURCE_STATE_RENDER_TARGET;
 		}
+	}
+
+	uint32_t Tr2TextureAL::GetSrvIndexInHeap( Tr2RenderContextEnum::ColorSpace colorSpace ) const
+	{
+		return m_srvIndicesInHeap[colorSpace];
+	}
+	
+	uint32_t Tr2TextureAL::GetUavIndexInHeap( uint32_t mip ) const
+	{
+		if( mip < m_uav.size() && m_uav[mip] )
+		{
+			return m_uav[mip]->GetIndexInHeap();
+		}
+		return 0xffffffff;
 	}
 
 	void Tr2TextureAL::SetSwapChainBufferIndexDx12( uint32_t index )

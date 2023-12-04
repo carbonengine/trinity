@@ -6,7 +6,6 @@
 #include "ITr2Renderable.h"
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/IEveTransform.h"
-#include "ITr2GeometryProvider.h"
 #include "include/ITriFunction.h"
 
 #include "Tr2DeviceResource.h"
@@ -31,7 +30,6 @@ class EveLineSet :
 	public ITr2Renderable,
 	public IEveTransform,
 	public IEveSpaceObject2,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource
 {
 public:
@@ -70,10 +68,6 @@ public:
 private:
 	bool OnPrepareResources();
 public:
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable

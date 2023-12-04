@@ -18,7 +18,6 @@
 #include "Eve/SpaceObject/Attachments/Sets/IEveSpaceObjectAttachment.h"
 #include "Eve/SpaceObject/Attachments/Sets/IEveSpaceObjectAttachmentOwner.h"
 #include "ITr2Renderable.h"
-#include "ITr2GeometryProvider.h"
 #include "Resources/Tr2LodResource.h"
 #include "TransformModifiers/IEveChildTransformModifier.h"
 #include "Tr2DebugRenderer.h"
@@ -151,7 +150,6 @@ protected:
 	
 	bool m_display;
 	bool m_isVisible;
-	bool m_useSpaceObjectData;
 	float m_activationStrength;
 
 	Origin m_origin;

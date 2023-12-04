@@ -19,6 +19,7 @@ Tr2Transform::Tr2Transform( IRoot* lockobj ) :
 	m_distanceBasedScaleArg2( 0.63f ),
 	m_sortValueMultiplier( 1.0f ),
 	m_worldTransform( IdentityMatrix() ),
+	m_lastWorldTransform( IdentityMatrix() ),
 	m_localTransform( IdentityMatrix() )
 {
 }
@@ -62,7 +63,7 @@ void Tr2Transform::UpdateViewDependentData( const TriFrustum& frustum, const Mat
 	{
 		finalScale = m_scaling;
 	}
-
+	m_lastWorldTransform = m_worldTransform;
 	m_localTransform = TransformationMatrix( finalScale, m_rotation, m_translation );
 	m_worldTransform = m_localTransform * parentTransform;
 

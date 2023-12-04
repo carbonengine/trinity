@@ -310,6 +310,7 @@ StateDescription g_samplerStates[] = {
 	{ "MipMapLodBias",	SVT_FLOAT,	nullptr,			offsetof( Sampler, mipLODBias ) },
 	{ "ComparisonFunc",	SVT_BYTE,	s_comparisonValues,	offsetof( Sampler, comparisonFunc ) },
 	{ "SRGBTexture",	SVT_BOOL,	s_boolValues,		offsetof( Sampler, srgbTexture ) },
+	{ "IsDynamic",      SVT_BOOL,   s_boolValues,       offsetof( Sampler, isDynamic ) },
 	{ nullptr,			SVT_BOOL,	nullptr,			0 },
 };
 
@@ -1659,6 +1660,7 @@ bool GetSamplerState( ParserState& parserState, ASTNode* node, Sampler& sampler 
 	sampler.borderColor.z = 0.0f;
 	sampler.borderColor.w = 0.0f;
 	sampler.srgbTexture = 0;
+	sampler.isDynamic = 0;
 
 	ASTNode* states = node->GetChildOrNull( 1 );
 	if( states && states->GetNodeType() == NT_SAMPLER_STATE_LIST )
@@ -1724,6 +1726,50 @@ bool GetSamplerState( ParserState& parserState, ASTNode* node, Sampler& sampler 
 			//}
 		}
 	}
+	return true;
+}
+
+bool ConvertToStaticSampler( StaticSampler& staticSampler, const Sampler& sampler )
+{
+	if( sampler.isDynamic )
+	{
+		return false;
+	}
+	if( sampler.addressU == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressV == D3D11_TEXTURE_ADDRESS_BORDER || sampler.addressW == D3D11_TEXTURE_ADDRESS_BORDER )
+	{
+		if( sampler.borderColor.x == 0 && sampler.borderColor.y == 0 && sampler.borderColor.z == 0 && sampler.borderColor.w == 0 )
+		{
+			staticSampler.borderColor = 0;
+		}
+		else if( sampler.borderColor.x == 0 && sampler.borderColor.y == 0 && sampler.borderColor.z == 0 && sampler.borderColor.w == 1 )
+		{
+			staticSampler.borderColor = 1;
+		}
+		else if( sampler.borderColor.x == 1 && sampler.borderColor.y == 1 && sampler.borderColor.z == 1 && sampler.borderColor.w == 1 )
+		{
+			staticSampler.borderColor = 2;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	else
+	{
+		staticSampler.borderColor = 0;
+	}
+	staticSampler.comparison = sampler.comparison;
+	staticSampler.minFilter = sampler.minFilter;
+	staticSampler.magFilter = sampler.magFilter;
+	staticSampler.mipFilter = sampler.mipFilter;
+	staticSampler.addressU = sampler.addressU;
+	staticSampler.addressV = sampler.addressV;
+	staticSampler.addressW = sampler.addressW;
+	staticSampler.minLOD = sampler.minLOD;
+	staticSampler.maxLOD = sampler.maxLOD;
+	staticSampler.mipLODBias = sampler.mipLODBias;
+	staticSampler.maxAnisotropy = sampler.maxAnisotropy;
+	staticSampler.comparisonFunc = sampler.comparisonFunc;
 	return true;
 }
 

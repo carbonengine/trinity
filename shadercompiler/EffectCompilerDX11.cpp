@@ -199,7 +199,7 @@ RegisterInputType GetRegisterType( const D3D11_SHADER_INPUT_BIND_DESC& desc )
 	}
 }
 
-static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* reflection, StageInput& stage, std::map<StringReference, ParameterAnnotation> &annotations )
+static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* reflection, bool collectStaticSamplers, StageInput& stage, std::map<StringReference, ParameterAnnotation> &annotations )
 {
 	tmFunction( 0, 0 );
 
@@ -310,18 +310,29 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 
 			if( annotations.find( constant.name ) == annotations.end() )
 			{
-				ParameterAnnotation paramAnnotations;
-
 				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( varDesc.Name );
-				if( symbol && symbol->annotations )
+				if( symbol )
 				{
-					for( auto a = symbol->annotations->begin(); a != symbol->annotations->end(); ++a )
+					ParameterAnnotation paramAnnotations;
+
+					if( symbol->annotations )
 					{
-						Annotation result;
-						if( MakeEffectAnnotationFromSymbolAnnotation( *a, result, constant.isSRGB, constant.isAutoregister ) )
+						for( auto a = symbol->annotations->begin(); a != symbol->annotations->end(); ++a )
 						{
-							paramAnnotations.annotations[g_stringTable.AddString( ToString( a->name ).c_str() )] = result;
+							Annotation result;
+							if( MakeEffectAnnotationFromSymbolAnnotation( *a, result, constant.isSRGB, constant.isAutoregister ) )
+							{
+								paramAnnotations.annotations[g_stringTable.AddString( ToString( a->name ).c_str() )] = result;
+							}
 						}
+					}
+
+					if( symbol->type.IsBindlessHandle() )
+					{
+						Annotation symbolAnnotation;
+						symbolAnnotation.type = ANNOTATION_TYPE_INT;
+						symbolAnnotation.intValue = BindlessTextureType( symbol->type.builtInType );
+						paramAnnotations.annotations[g_stringTable.AddString( "BindlessHandleType" )] = symbolAnnotation;
 					}
 					if( !paramAnnotations.annotations.empty() )
 					{
@@ -333,6 +344,21 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 			stage.constants.push_back( constant );
 		}
 	}
+
+	auto GetRegisterSpace = []( Symbol* symbol ) -> uint8_t {
+		if( symbol )
+		{
+			if( !symbol->registerSpecifier.empty() )
+			{
+				auto space = symbol->registerSpecifier.begin()->second.space;
+				if( space > 0 )
+				{
+					return uint8_t( space );
+				}
+			}
+		}
+		return 0;
+	};
 
 	for( unsigned i = 0; i < reflDesc.BoundResources; ++i )
 	{
@@ -349,8 +375,6 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 		{
 		case D3D_SIT_SAMPLER:
 			{
-				stage.registerInputs.push_back( { RT_SAMPLER, desc.BindPoint } );
-			
 				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( desc.Name );
 				if( symbol == nullptr || symbol->definition == nullptr )
 				{
@@ -358,15 +382,28 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 					{
 						g_messages.AddMessage( "\\memory(0): warning X0000: Could not find sampler \"%s\" definition in the source code", desc.Name );
 					}
+					stage.registerInputs.push_back( { RT_SAMPLER, desc.BindPoint, desc.BindCount, GetRegisterSpace( symbol ) } );
 					continue;
 				}
 				Sampler sampler;
-				sampler.name = g_stringTable.AddString( desc.Name );
 				if( !GetSamplerState( parserState, symbol->definition, sampler ) )
 				{
 					return false;
 				}
-				stage.samplers[uint8_t( desc.BindPoint )] = sampler;
+
+				StaticSampler staticSampler;
+				if( desc.BindCount == 1 && collectStaticSamplers && ConvertToStaticSampler( staticSampler, sampler ) )
+				{
+					staticSampler.registerIndex = desc.BindPoint;
+					staticSampler.registerSpace = GetRegisterSpace( symbol );
+					stage.staticSamplers.push_back( staticSampler );
+				}
+				else
+				{
+					sampler.name = g_stringTable.AddString( desc.Name );
+					stage.samplers[uint8_t( desc.BindPoint )] = sampler;
+					stage.registerInputs.push_back( { RT_SAMPLER, desc.BindPoint, desc.BindCount, GetRegisterSpace( symbol ) } );
+				}
 			}
 			break;
 		case D3D_SIT_UAV_RWTYPED:
@@ -376,13 +413,14 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 		case D3D_SIT_UAV_CONSUME_STRUCTURED:
 		case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
 			{
-				stage.registerInputs.push_back( { GetRegisterType( desc ), desc.BindPoint } );
+				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( desc.Name );
+				stage.registerInputs.push_back( { GetRegisterType( desc ), desc.BindPoint, desc.BindCount, GetRegisterSpace( symbol ) } );
 
 				Uav uav;
+				uav.count = desc.BindCount;
 				uav.isAutoregister = false;
 				std::string uavName = desc.Name;
 
-				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( desc.Name );
 				if( symbol == nullptr )
 				{
 					continue;
@@ -420,19 +458,20 @@ static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* refl
 			break;
 		case D3D_SIT_CBUFFER:
 		{
-			stage.registerInputs.push_back( { RT_CONSTANT_BUFFER, desc.BindPoint } );
+			stage.registerInputs.push_back( { RT_CONSTANT_BUFFER, desc.BindPoint, desc.BindCount, 0 } );
 			break;
 		}
 		default:
 			{
-				stage.registerInputs.push_back( { GetRegisterType(desc ), desc.BindPoint } );
+				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( desc.Name );
+				stage.registerInputs.push_back( { GetRegisterType( desc ), desc.BindPoint, desc.BindCount, GetRegisterSpace( symbol ) } );
 
 				Texture texture;
+				texture.count = desc.BindCount;
 				texture.isSRGB = false;
 				texture.isAutoregister = false;
 				std::string textureName = desc.Name;
 
-				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( desc.Name );
 				if( symbol == nullptr )
 				{
 					continue;
@@ -1294,6 +1333,7 @@ void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectD
 				.literal( "minLOD" ).literal( it->second.minLOD )
 				.literal( "maxLOD" ).literal( it->second.maxLOD )
 				.literal( "srgbTexture" ).literal( it->second.srgbTexture != 0 )
+				.literal( "isDynamic" ).literal( it->second.isDynamic != 0 )
 				.end();
 		}
 		listing.end();
@@ -1361,6 +1401,46 @@ void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectD
 			listing.dict()
 				.literal( "registerType" ).literal( it->registerType )
 				.literal( "register" ).literal( it->registerIndex )
+				.end();
+		}
+		listing.end();
+	}
+	if( !stage.staticSamplers.empty() )
+	{
+		listing.literal( "staticSamplers" ).list();
+		for( auto& it : stage.staticSamplers )
+		{
+			listing.dict()
+				.literal( "register" )
+				.literal( it.registerIndex )
+				.literal( "space" )
+				.literal( it.registerSpace )
+				.literal( "comparison" )
+				.literal( int( it.comparison ) )
+				.literal( "minFilter" )
+				.literal( int( it.minFilter ) )
+				.literal( "magFilter" )
+				.literal( int( it.magFilter ) )
+				.literal( "mipFilter" )
+				.literal( int( it.mipFilter ) )
+				.literal( "addressU" )
+				.literal( int( it.addressU ) )
+				.literal( "addressV" )
+				.literal( int( it.addressV ) )
+				.literal( "addressW" )
+				.literal( int( it.addressW ) )
+				.literal( "mipLODBias" )
+				.literal( it.mipLODBias )
+				.literal( "maxAnisotropy" )
+				.literal( int( it.maxAnisotropy ) )
+				.literal( "comparisonFunc" )
+				.literal( int( it.comparisonFunc ) )
+				.literal( "borderColor" )
+				.literal( it.borderColor )
+				.literal( "minLOD" )
+				.literal( it.minLOD )
+				.literal( "maxLOD" )
+				.literal( it.maxLOD )
 				.end();
 		}
 		listing.end();
@@ -1455,6 +1535,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 	PatchCBuffers( state );
 	TransferSRGBToTexturesDX11( state );
 	ConvertTextureFunctionsDX11( state );
+	MergeSamplers( state );
 
 	std::vector<ASTNode*> techniqueNodes;
 	state.GetTree()->FindNodes( NT_TECHNIQUE, techniqueNodes );
@@ -1626,7 +1707,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							nullptr,
 							patchEntryPoint.c_str(),
 							profile.c_str(),
-							( compileOptions.minShaderVersion ? 0 : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
+							( compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
 							0,
 							&effectData,
 							&errors );
@@ -1680,7 +1761,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					}
 				}
 
-				if( !GetStageData( state, reflection, stage, result.annotations ) )
+				if( !GetStageData( state, reflection, compileOptions.useStaticSamplers, stage, result.annotations ) )
 				{
 					return false;
 				}

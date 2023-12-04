@@ -30,6 +30,18 @@ class Tr2BufferAL;
 struct Tr2Viewport;
 
 
+class Tr2BindlessResourcesAL
+{
+public:
+	void Add( const Tr2TextureAL& texture );
+	void Add( const Tr2BindlessResourcesAL& resources );
+	void Clear();
+	friend class Tr2RenderContextAL;
+
+private:
+	std::vector<TrinityALImpl::Tr2TextureAL*> m_textures;
+};
+
 
 class Tr2RenderContextAL
 {
@@ -60,8 +72,9 @@ public:
 
 
 	ALResult SetStreamSource( uint32_t stream, const Tr2BufferAL& buffer, uint32_t offset, uint32_t stride ) throw( );
-
+	
 	ALResult SetIndices( const Tr2BufferAL & buffer ) throw( );
+	ALResult SetIndices( const Tr2BufferAL & buffer, int stride ) throw();
 
 	ALResult ClearUav( Tr2BufferAL& buffer, const float values[4] ) throw( );
 	ALResult ClearUav( Tr2BufferAL& buffer, const uint32_t values[4] ) throw( );
@@ -94,6 +107,17 @@ public:
 		uint32_t startIndex,
 		uint32_t primitiveCount,
 		uint32_t numInstances ) throw( );
+	ALResult DrawIndexedInstanced(
+		uint32_t indexCountPerInstance,
+		uint32_t instanceCount,
+		uint32_t startIndexLocation,
+		int32_t baseVertexLocation,
+		uint32_t startInstanceLocation ) throw();
+	ALResult DrawInstanced(
+		uint32_t vertexCountPerInstance,
+		uint32_t instanceCount,
+		uint32_t startVertexLocation,
+		uint32_t startInstanceLocation ) throw();
 	
 	ALResult DrawIndexedInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( );
 	ALResult DrawInstancedIndirect( Tr2BufferAL& params, uint32_t offset ) throw( );
@@ -126,6 +150,9 @@ public:
 		Tr2RenderContextEnum::ShaderType constantType,
 		uint32_t registerIndex,
 		uint32_t unusedArgument = 0 ) throw( );
+
+	uint64_t UploadConstants( const void* data, size_t size );
+	uint64_t UploadConstants( const Tr2ConstantBufferAL& buffer );
 
 
 	static void DestroyMainThreadRenderContext()
@@ -194,9 +221,11 @@ public:
 	void FlushGraphicsBarriersDx12( ID3D12Resource* resource = nullptr );
 	void FlushComputeBarriersDx12( ID3D12Resource* resource = nullptr );
 
+	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& textures );
+
+	ALResult SetAllState();
 protected:
 	ID3D12PipelineState* GetPipelineState();
-	ALResult SetAllState();
 
 	/** Forcibly reset and dirty all descriptor caches (used for explicit synchronization) */
 	void ResetDescriptorCaches();

@@ -83,6 +83,9 @@ public:
 
 	ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL& renderContext );
 
+	uint32_t GetSrvIndexInHeap() const;
+	uint32_t GetUavIndexInHeap() const;
+
 	ALResult SetName( const char* name );
 
 	TrinityALImpl::Tr2BufferAL* TrinityALImpl_GetObject() const;

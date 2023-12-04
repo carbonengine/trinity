@@ -3,7 +3,6 @@
 #define EVESPACEOBJECTDECAL_H
 
 
-#include "ITr2GeometryProvider.h"
 #include "ITr2Renderable.h"
 #include "Tr2PerObjectData.h"
 #include "TriRenderBatch.h"
@@ -20,6 +19,7 @@ BLUE_DECLARE( TriVariable );
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2DebugRenderer );
 BLUE_DECLARE( Tr2InstancedMesh );
+BLUE_DECLARE( TriGeometryRes );
 
 struct DecalIndexBuffer
 {
@@ -54,6 +54,7 @@ class EveDecalPerObjectData : public Tr2PerObjectData
 {
 public:
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	// vs per object data
     DecalVSPerObjectData m_vsData;
@@ -67,7 +68,6 @@ public:
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveSpaceObjectDecal ) : 
 	public IInitialize,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource,
 	public INotify,
 	public ITr2Pickable,
@@ -101,10 +101,6 @@ public:
 	// ITr2Pickable
 	virtual IRoot* GetID( uint16_t ) { return this->GetRawRoot(); }
 	virtual void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData );
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
@@ -186,7 +182,7 @@ private:
 
 	// new index buffers
 	std::vector<DecalIndexBuffer> m_indexBuffers;
-	Tr2BufferAL m_indexBuffer;
+	Tr2SuballocatedBuffer::Allocation m_indexBuffer;
 	bool m_rebuildIndexBuffers;
 	float m_isVisible;
 	float m_minScreenSize;

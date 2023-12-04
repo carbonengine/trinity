@@ -100,7 +100,7 @@ private:
 	// Vertex layout
 	Tr2VertexDefinition m_layout;
 	// Instance data as vertex buffer
-	Tr2BufferAL m_vb;
+	Tr2SuballocatedBuffer::Allocation m_vb;
 
 	// Bounding box
 	CcpMath::AxisAlignedBox m_aabb;

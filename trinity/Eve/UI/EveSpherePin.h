@@ -7,7 +7,6 @@
 #include "Eve/IEveTransform.h"
 #include "Eve/SpaceObject/EveSpaceObject2.h"
 #include "Tr2DeviceResource.h"
-#include "ITr2GeometryProvider.h"
 
 BLUE_DECLARE( EveSpherePin );
 BLUE_DECLARE( Tr2Effect );
@@ -25,6 +24,7 @@ class EveSpherePinPerObjectData : public Tr2PerObjectData
 {
 public:
 	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const;
+	void ApplyConstantBuffers( Tr2IndirectDrawBufferWriter& writer, Tr2RenderContext& renderContext ) const override;
 
 	// per object data (shared to VS and PS)
 	Matrix m_worldMatrix;
@@ -49,7 +49,6 @@ class EveSpherePin :
 	public ITr2Renderable,
 	public IEveTransform,
 	public IEveSpaceObject2,
-	public ITr2GeometryProvider,
 	public Tr2DeviceResource,
 	public IBlueAsyncResNotifyTarget,
 	public ITr2Pickable,
@@ -96,10 +95,6 @@ public:
 private:
 	bool OnPrepareResources();
 public:
-
-	//////////////////////////////////////////////////////////////////////////////////////
-	// ITr2GeometryProvider
-	virtual void SubmitGeometry( Tr2RenderContext& renderContext );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Pickable

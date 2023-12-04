@@ -72,7 +72,12 @@ ALResult Tr2RenderContextAL::SetStreamSource( uint32_t, const Tr2BufferAL&, uint
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& ) throw( )
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL& ) throw()
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::SetIndices( const Tr2BufferAL&, uint32_t ) throw()
 {
 	return S_OK;
 }
@@ -129,6 +134,26 @@ ALResult Tr2RenderContextAL::DrawIndexedInstanced(
 {
 	return S_OK;
 }
+
+ALResult Tr2RenderContextAL::DrawIndexedInstanced(
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	int32_t,
+	uint32_t )
+{
+	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DrawInstanced(
+	uint32_t,
+	uint32_t,
+	uint32_t,
+	uint32_t )
+{
+	return S_OK;
+}
+
 
 ALResult Tr2RenderContextAL::DrawPrimitive( uint32_t, uint32_t )
 {
@@ -404,6 +429,11 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Dep
 
 void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2ColorAttachment&, const Tr2DepthAttachment& )
 {
+}
+
+ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type, const Tr2BindlessResourcesAL& )
+{
+	return S_OK;
 }
 
 #endif
