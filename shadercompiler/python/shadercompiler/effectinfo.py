@@ -695,30 +695,30 @@ def is_using_compressed_tangents(path, shader_filter=None):
     :rtype: bool
     """
     has_compiled = False
-    platform = Platform.DX12
-    sm = ShaderModel.DEPTH
-    try:
-        compiled = paths.get_compiled_path(path, sm, platform)
-    except ValueError:
-        raise IOError('could not find any compiled effect for %s' % path)
-    try:
-        effect = EffectInfo(compiled)
-    except IOError:
-        raise IOError('could not generate effect info for %s' % path)
-    has_compiled = True
-    count = 1
-    for each in effect.permutations:
-        count *= len(each.options)
-    for each in xrange(count):
-        if shader_filter:
-            if not shader_filter(platform, sm, effect.index_to_options(each)):
+    for platform in PLATFORM_NAMES.iterkeys():
+        for sm in SHADER_MODEL_NAMES.iterkeys():
+            try:
+                compiled = paths.get_compiled_path(path, sm, platform)
+            except ValueError:
                 continue
-        shader = effect.get_shader(each)
-        for technique in shader.techniques:
-            for p in technique.passes:
-                if Stages.VERTEX_SHADER in p.stages:
-                    if _uses_compressed_tanget(p.stages[Stages.VERTEX_SHADER].inputs):
-                        return True
+            try:
+                effect = EffectInfo(compiled)
+            except IOError:
+                continue
+            has_compiled = True
+            count = 1
+            for each in effect.permutations:
+                count *= len(each.options)
+            for each in xrange(count):
+                if shader_filter:
+                    if not shader_filter(platform, sm, effect.index_to_options(each)):
+                        continue
+                shader = effect.get_shader(each)
+                for technique in shader.techniques:
+                    for p in technique.passes:
+                        if Stages.VERTEX_SHADER in p.stages:
+                            if _uses_compressed_tanget(p.stages[Stages.VERTEX_SHADER].inputs):
+                                return True
     if not has_compiled:
         raise IOError('could not find any compiled effect for %s' % path)
     return False
