@@ -20,7 +20,6 @@
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
 bool g_gatherPipelineStatistics = false;
-bool Tr2PrimaryRenderContextAL::s_streamlineEnabled = false;
 
 CCP_STATS_DECLARE( dx12IAVertices, "Trinity/AL/Pipeline/IAVertices", false, CST_COUNTER_HIGH, "Number of vertices read by input assembler" );
 CCP_STATS_DECLARE( dx12IAPrimitives, "Trinity/AL/Pipeline/IAPrimitives", false, CST_COUNTER_HIGH, "Number of primitives read by input assembler" );

@@ -288,7 +288,6 @@ public:
 	TrinityALImpl::Tr2ResourceHelper m_nullCB;
 
 	void* m_amdExtDeviceObject;
-	static bool s_streamlineEnabled;
 };
 
 #endif

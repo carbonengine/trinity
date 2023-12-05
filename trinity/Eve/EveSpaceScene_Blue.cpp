@@ -541,7 +541,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"postprocess",
 			m_postProcess,
 			"The post process",
-			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+			Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE(
 			"virtualCameraSystem",
