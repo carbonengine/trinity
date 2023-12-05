@@ -20,7 +20,10 @@ const Be::ClassInfo* EveSceneStaticParticles::ExposeToBlue()
 		MAP_ATTRIBUTE( "clusterParticleDensity", m_clusterParticleDensity, "How many particles per radius", Be::READWRITE )
 		MAP_ATTRIBUTE( "clusterParticleDensityAdjust", m_clusterParticleDensityAdjust, "DEBUG: how much do we have to reduce", Be::READ )
 
-		MAP_ATTRIBUTE( "transform", m_transform, "The particle system", Be::READWRITE )
+		MAP_ATTRIBUTE( "mesh", m_mesh, "The the instanced mesh ", Be::READWRITE )
+		MAP_ATTRIBUTE( "estimatedSize", m_estimatedSize, "Estimated pixel size", Be::READ )
+		MAP_ATTRIBUTE( "visible", m_visible, "visible?", Be::READ )
+
 
 		MAP_METHOD_AND_WRAP(
 			"AddCluster",

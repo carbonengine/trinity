@@ -31,6 +31,7 @@ namespace TrinityALImpl
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+		ID3D11Buffer* GetGpuResource() const;
 
 	private:
 		ALResult CreateStagingBuffer( Tr2RenderContextAL& renderContext );

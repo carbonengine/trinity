@@ -160,9 +160,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_nebulaIntensityVar( "NebulaIntensity", m_nebulaIntensity ),
 	m_planetScale( 1e6 ),
 	m_planetCameraScale( 1e6 ),
-	m_taaPixelOffsetScale( 0.5f ),
-	m_taaSamplingIndex( 0 ),
-	m_taaPattern( TAA_NONE ),
 	m_sunColor( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_sunColorWithDynamicLights( 1.0f, 1.0f, 1.0f, 1.0f ),
 	m_useSunColorWithDynamicLights( false ),
@@ -173,8 +170,12 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_hasBackgroundDistortionBatches( false ),
 	m_hasForegroundDistortionBatches( false ),
 	m_freezeFrustum( false ),
+	m_velocityMapDirty( false ),
 	m_virtualCameraSystem(),
-	m_shadowView( IdentityMatrix() )
+	m_shadowView( IdentityMatrix() ),
+	m_projection( IdentityMatrix() ),
+	m_jitteredProjection( IdentityMatrix() ),
+	m_jitter( 0.f, 0.f, 0.f, 0.f )
 {
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
 	m_primaryBatches[TRIBATCHTYPE_OPAQUE] = CCP_NEW( "EveSpaceScene/m_batches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
@@ -227,18 +228,6 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_dataTextureMgr.CreateInstance();
 	m_postProcessPSBuffer.CreateInstance();
 	m_planetPerObjBuffer.CreateInstance();
-	// 2x sampling pattern
-	m_taaSamplingPatterns[0] = Vector2( .5f, -.5f );
-	m_taaSamplingPatterns[1] = Vector2( -.5f, .5f );
-	// 4x sampling pattern
-	m_taaSamplingPatterns[2] = Vector2( .25f, -.75f );
-	m_taaSamplingPatterns[3] = Vector2( -.25f, .75f );
-	m_taaSamplingPatterns[4] = Vector2( .75f, .25f );
-	m_taaSamplingPatterns[5] = Vector2( -.75f, -.25f );
-	// 3x sampling pattern
-	m_taaSamplingPatterns[6] = Vector2( -.67f, -.1f );
-	m_taaSamplingPatterns[7] = Vector2( .1f, .67f );
-	m_taaSamplingPatterns[8] = Vector2( .67f, -.67f );
 
 	m_visualizerEffects[VW_LIGHT_COUNT].type = VisualizerEffect::FULL_SCREEN_QUAD_OVERLAY;
 
@@ -311,11 +300,9 @@ Tr2ShaderBufferPtr EveSpaceScene::GetPostProcessPSBuffer()
 	return m_postProcessPSBuffer;
 }
 
-void EveSpaceScene::SetupTAA( Tr2RenderTargetPtr velocityMap, float pixelOffsetScale, TAASampling sampling )
+void EveSpaceScene::SetVelocityMap( Tr2RenderTargetPtr velocityMap )
 {
 	m_velocityMap = velocityMap;
-	m_taaPixelOffsetScale = pixelOffsetScale;
-	m_taaPattern = sampling;
 }
 
 bool EveSpaceScene::OnPrepareResources()
@@ -585,6 +572,21 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 	{
 		m_volumetricsRenderer->RenderShadows( m_componentRegistry->GetVolumetricRenderables(), m_cascadedShadowMap->GetShadowMap(), renderContext );
 	}
+}
+
+void EveSpaceScene::ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext& renderContext )
+{
+	// Vs Data
+	m_perFrameVS.TargetResolution.x = (float)width;
+	m_perFrameVS.TargetResolution.y = (float)height;
+	m_perFrameVS.ViewportSize.x = (float)width;
+	m_perFrameVS.ViewportSize.y = (float)height;
+	// Ps Data
+	m_perFramePS.TargetResolution.x = (float)width;
+	m_perFramePS.TargetResolution.y = (float)height;
+	m_perFramePS.ViewportSize.x = (float)width;
+	m_perFramePS.ViewportSize.y = (float)height;
+	ApplyPerFrameData( renderContext );
 }
 
 void EveSpaceScene::DisableShadows()
@@ -982,37 +984,27 @@ bool EveSpaceScene::RenderDistortionBatches( BatchMap& batches, Tr2RenderContext
 	return true;
 }
 
-void EveSpaceScene::TAAOffset( Tr2RenderContext& renderContext )
+void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 {
-	auto rtWidth = float( renderContext.m_esm.GetRenderTargetWidth() );
-	auto rtHeight = float( renderContext.m_esm.GetRenderTargetHeight() );
-	if( m_taaPattern == TAA_NONE )
+	m_projection = Tr2Renderer::GetProjectionTransform();
+
+	if( m_postProcess )
 	{
-		m_xProjOffset = 0;
-		m_yProjOffset = 0;
-	}
-	else if( m_taaPattern == TAA_RANDOM )
-	{
-		m_xProjOffset = m_taaPixelOffsetScale / rtWidth * ( 2.f * TriFloatRandom01() - 1.f );
-		m_yProjOffset = m_taaPixelOffsetScale / rtHeight * ( 2.f * TriFloatRandom01() - 1.f );
-	}
-	else if( m_taaPattern == TAA_2X )
-	{
-		m_taaSamplingIndex = m_taaSamplingIndex % 2;
-		m_xProjOffset = m_taaPixelOffsetScale / rtWidth * m_taaSamplingPatterns[m_taaSamplingIndex].x;
-		m_yProjOffset = m_taaPixelOffsetScale / rtHeight * m_taaSamplingPatterns[m_taaSamplingIndex].y;
-	}
-	else if( m_taaPattern == TAA_3X )
-	{
-		m_taaSamplingIndex = m_taaSamplingIndex % 3;
-		m_xProjOffset = m_taaPixelOffsetScale / rtWidth * m_taaSamplingPatterns[m_taaSamplingIndex + 6].x;
-		m_yProjOffset = m_taaPixelOffsetScale / rtHeight * m_taaSamplingPatterns[m_taaSamplingIndex + 6].y;
+		auto rtWidth = renderContext.m_esm.GetRenderTargetWidth();
+		auto rtHeight = renderContext.m_esm.GetRenderTargetHeight();
+
+		m_postProcess->GetJitter( rtWidth, rtHeight, m_jitter.x, m_jitter.y );
+		m_postProcess->GetJitterOffset( m_jitter.z, m_jitter.w );
+
+		auto currJitterOffset = Vector3( m_jitter.x, m_jitter.y, 0 );
+
+		m_jitterMatrix = TranslationMatrix( currJitterOffset );
+		m_jitteredProjection = m_projection * m_jitterMatrix;
 	}
 	else
 	{
-		m_taaSamplingIndex = m_taaSamplingIndex % 4;
-		m_xProjOffset = m_taaPixelOffsetScale / rtWidth * m_taaSamplingPatterns[m_taaSamplingIndex + 2].x;
-		m_yProjOffset = m_taaPixelOffsetScale / rtHeight * m_taaSamplingPatterns[m_taaSamplingIndex + 2].y;
+		m_jitterMatrix = IdentityMatrix();
+		m_jitteredProjection = m_projection;
 	}
 }
 
@@ -1020,15 +1012,22 @@ void EveSpaceScene::UpdatePostProcessPSData()
 {
 	Matrix currentProj;
 
-	currentProj = m_frameData.projection;
-	currentProj = EveCamera::AddCenterOffset( currentProj, -m_xProjOffset, -m_yProjOffset, Tr2Renderer::GetBackClip(), Tr2Renderer::GetFrontClip() );
+	currentProj = m_projection;
+
+	// if we are using TAA we need to make the projection use inverse depth so we get the correct velocity
+	// however we don't want that when using upscaling
+	if( m_postProcess && m_postProcess->GetUpscalingAmount() == 1.0f )
+	{
+		currentProj._33 = -currentProj._33 - 1.f;
+		currentProj._43 = -currentProj._43;
+	}
 
 	// Find the current inverse view projection
 	double viewTransform[16];
 	double currentProjection[16];
 	Matrix4dFromMatrix( viewTransform, Tr2Renderer::GetViewTransform() );
 	Matrix4dFromMatrix( currentProjection, currentProj );
-
+	
 	//Reprojection matrix for objects inside the view frustrum.
 	{
 		double currentViewProjD[16];
@@ -1120,16 +1119,12 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	TriFrustum& frustum = m_frameData.frustum;
 	frustum.DeriveFrustum( &Tr2Renderer::GetViewTransform(), &Tr2Renderer::GetViewPosition(), &Tr2Renderer::GetProjectionTransform(), renderContext.m_esm.GetViewport() );
 
-	TAAOffset( renderContext );
-	m_taaSamplingIndex++;
+	Jitter( renderContext );
 
-	Matrix proj = Tr2Renderer::GetProjectionTransform();
-	if( m_taaPattern != TAA_NONE )
-	{
-		proj = EveCamera::AddCenterOffset( proj, m_xProjOffset, m_yProjOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
-	}
-	m_frameData.projection = proj;
+	m_frameData.projection = m_jitteredProjection;
 	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
+
+	m_velocityMapDirty = false;
 
 	renderContext.m_esm.BeginManagedRendering();
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
@@ -1147,7 +1142,6 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	}
 
 	GatherBatches( renderContext );
-
 	UpdatePostProcessPSData();
 	UpdateVariableStore();
 
@@ -1346,6 +1340,9 @@ void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
 	Vector3 eye = Tr2Renderer::GetInverseViewTransform().GetTranslation();
 	Vector3 up = TransformNormal( Vector3( 0, 1, 0 ), Tr2Renderer::GetInverseViewTransform() );
 
+	// disable shadows because otherwise we get black ships all the time
+	DisableShadows();
+
 	for( size_t i = 0; i < m_impostorManager->GetRenderQueueLength(); ++i )
 	{
 		GPU_REGION( renderContext, "Impostor Update" );
@@ -1509,11 +1506,7 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 		m_ssaoMapHandle->SetValue( m_ssao->GetBlankOutput() );
 	}
 
-	// disable shadows
-	if( m_cascadedShadowMap )
-	{
-		m_cascadedShadowMap->SetNoShadow();
-	}
+	DisableShadows();
 
 	m_reflectionProbe->InitRenderPass( renderContext );
 	for( unsigned i = m_reflectionProbe->GetStartFace(); i < m_reflectionProbe->GetEndFace(); i++ )
@@ -1528,7 +1521,9 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 		ApplyPerFrameData( renderContext );
 
 		{
-			Matrix orgViewMatrix = SetupPlanetViewMatrix();
+			Matrix orgViewMatrix = Tr2Renderer::GetViewTransform();
+			Matrix planetViewMatrix = CreatePlanetViewMatrix( orgViewMatrix );
+			Tr2Renderer::SetViewTransform( planetViewMatrix );
 
 			TriFrustum frustum;
 			Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
@@ -1660,9 +1655,9 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 	}
 
 	renderContext.AddGpuMarker( __FUNCTION__ );
-
-	Matrix orgViewMatrix = SetupPlanetViewMatrix();
-
+	Matrix orgViewMatrix = Tr2Renderer::GetViewTransform();
+	Matrix planetView = CreatePlanetViewMatrix( orgViewMatrix );
+	Tr2Renderer::SetViewTransform( planetView );
 	// Update planet LODs and render planets
 	TriFrustum frustum;
 	Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
@@ -1683,9 +1678,24 @@ void EveSpaceScene::RenderBackgroundPass( Tr2RenderContext& renderContext )
 
 	{
 		GPU_REGION( renderContext, "Background" );
-		renderContext.RenderPassHint( { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE },
-									  { Tr2LoadAction::CLEAR, Tr2StoreAction::DONT_CARE } );
-		RenderBackgroundPassObjects( renderContext, BACKGROUND_RENDER_COLOR );
+
+		if( m_velocityMap )
+		{
+			if( !m_velocityMapDirty )
+			{
+				ClearRenderTargetIfNoBatches( m_velocityMap, 1, renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() );
+			}
+
+			Tr2PushPopRT rt( *m_velocityMap, renderContext, 1 );
+			renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { m_velocityMapDirty ? Tr2LoadAction::LOAD : Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
+			RenderBackgroundPassObjects( renderContext, BACKGROUND_RENDER_COLOR );
+			m_velocityMapDirty = true;
+		}
+		else
+		{
+			renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::DONT_CARE } );
+			RenderBackgroundPassObjects( renderContext, BACKGROUND_RENDER_COLOR );
+		}
 		if( !m_planets.empty() )
 		{
 			renderContext.Clear( CLEARFLAGS_ZBUFFER, 0, 0, 0 );
@@ -1805,10 +1815,10 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
     
-    if( !m_display )
-    {
-        return;
-    }
+	if( !m_display )
+	{
+		return;
+	}
 
 	renderContext.m_esm.BeginManagedRendering();
 
@@ -1949,18 +1959,15 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		{
 			if( m_velocityMap )
 			{
-#if TRINITY_PLATFORM_SUPPORTS_RENDER_PASS_HINTS
-				if( m_primaryBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() == 0 &&
-					m_primaryBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() == 0 )
+				if( !m_velocityMapDirty )
 				{
-					renderContext.RenderPassHint( {}, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, {} );
-					Tr2PushPopRT rt( *m_velocityMap, renderContext, 1 );
-					renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 1 );
+					ClearRenderTargetIfNoBatches( m_velocityMap, 1, renderContext, m_primaryBatches[TRIBATCHTYPE_OPAQUE]->GetBatchCount() );
 				}
-#endif
+
 				Tr2PushPopRT rt( *m_velocityMap, renderContext, 1 );
-				renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
+				renderContext.RenderPassHint( { Tr2LoadAction::LOAD, Tr2StoreAction::STORE }, { m_velocityMapDirty ? Tr2LoadAction::LOAD : Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, { Tr2LoadAction::LOAD, Tr2StoreAction::STORE } );
 				RenderOpaqueBatches( m_primaryBatches, renderContext );
+				m_velocityMapDirty = true;
 			}
 			else
 			{
@@ -1971,11 +1978,6 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 	}
 
 
-	/* {
-		GPU_REGION( renderContext, "Transparent" );
-		RenderTransparentBatches2( m_primaryBatches, renderContext, false );
-	}*/
-
 	if( m_opaqueColorMap != nullptr )
 	{
 		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {Tr2LoadAction::LOAD, Tr2StoreAction::STORE} );
@@ -1984,17 +1986,9 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		renderContext.m_esm.PopRenderTarget();
 	}
 
-	Matrix proj = Tr2Renderer::GetProjectionTransform();
-	if( m_taaPattern != TAA_NONE )
-	{
-		//proj = EveCamera::AddCenterOffset( proj, -m_xProjOffset, -m_yProjOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
-	}
-	m_frameData.projection = proj;
 	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
 	
 	PopulateAndApplyPerFrameData( renderContext );
-	//ApplyPerFrameData( renderContext );
-
 	RenderVolumetrics( renderContext );
 
 	{
@@ -2017,15 +2011,6 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		GetGpuParticleSystem()->Update( m_updateTime, m_updateContext.GetOriginShift(), renderContext );
 		GetGpuParticleSystem()->Render( renderContext );
 	}
-
-	
-	proj = Tr2Renderer::GetProjectionTransform();
-	if( m_taaPattern != TAA_NONE )
-	{
-		//proj = EveCamera::AddCenterOffset( proj, +m_xProjOffset, +m_yProjOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
-	}
-	m_frameData.projection = proj;
-	Tr2Renderer::SetProjectionTransform( m_frameData.projection );
 
 	Tr2OcclusionBuffer::GetInstance().ProcessBuffer( renderContext );
 
@@ -2121,15 +2106,9 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 			Tr2Renderer::DrawTexture( renderContext, *texture );
 		}
 	}
+	// Store the view transform from this frame
+	m_viewLast = Tr2Renderer::GetViewTransform();
 
-	float xOffset = m_xProjOffset;
-	float yOffset = m_yProjOffset;
-	TAAOffset( renderContext );
-
-	Matrix currentProj = m_frameData.projection;
-	currentProj = EveCamera::AddCenterOffset( currentProj, m_xProjOffset - xOffset, m_yProjOffset - yOffset, Tr2Renderer::GetFrontClip(), Tr2Renderer::GetBackClip() );
-
-	m_viewProjectLast = Tr2Renderer::GetViewTransform() * currentProj;
 	ClearVariableStore();
 
 	if( m_visualizerEffects[m_visualizeMethod].type == VisualizerEffect::FULL_SCREEN_QUAD_OVERLAY )
@@ -2332,7 +2311,8 @@ void EveSpaceScene::PopulatePerFrameVSData( PerFrameVSData& data, Tr2RenderConte
 	data.ViewProjectionMat = Transpose( viewProject );
 	// attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
 	data.ViewInverseTransposeMat = Tr2Renderer::GetInverseViewTransform();
-	data.ViewProjectionLast = Transpose( m_viewProjectLast );
+	data.ViewProjectionLast = Transpose( m_viewLast * m_jitteredProjection );
+	data.ViewLast = Transpose( m_viewLast );
 
 	// each scene has a nebula and that can be rotated and inverted (via scaling)
 	data.EnvMapRotationMat = Transpose( RotationMatrix( m_envMapRotation ) );
@@ -2367,6 +2347,7 @@ void EveSpaceScene::PopulatePerFrameVSData( PerFrameVSData& data, Tr2RenderConte
 	data.ViewportAdjustment.z = deviceViewport.m_width / viewport.width;
 	data.ViewportAdjustment.w = deviceViewport.m_height / viewport.height;
 	data.Time = Tr2Renderer::GetAnimationTime();
+	data.Upscaling = m_postProcess ? m_postProcess->GetUpscalingAmount() : 1.0f;
 
 	data.ViewportSize.x = renderContext.m_esm.GetDeviceViewport().m_width;
 	data.ViewportSize.y = renderContext.m_esm.GetDeviceViewport().m_height;
@@ -2412,7 +2393,7 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 	data.ViewportSize.y = renderContext.m_esm.GetDeviceViewport().m_height;
 
 	data.Time = Tr2Renderer::GetAnimationTime();
-	data.FrameCounter = (float)Tr2Renderer::GetCurrentFrameCounter();
+	data.Upscaling = m_postProcess ? m_postProcess->GetUpscalingAmount() : 1.0f;
 
 	data.ShadowMapSettings = Vector4( 1.f, 1.f, 0.f, 0.f );
 	
@@ -2922,7 +2903,8 @@ void EveSpaceScene::UpdatePlanets( EveUpdateContext& updateContext )
 	// The planet view matrix must be set up for update to accommodate
 	// potential transform modifiers in the transform hierarchy of the
 	// planets.
-	Matrix orgViewMatrix = SetupPlanetViewMatrix();
+	Matrix orgViewMatrix = Tr2Renderer::GetViewTransform();
+	Tr2Renderer::SetViewTransform( CreatePlanetViewMatrix( orgViewMatrix ) );
 
 	for( EvePlanetVector::iterator it = m_planets.begin(); it != m_planets.end(); ++it )
 	{
@@ -2940,8 +2922,10 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 	Tr2Renderer::PushViewTransform();
 	ScopeGuard guardPopViewTransform = MakeGuard( Tr2Renderer::PopViewTransform );
 
-	SetupPlanetViewMatrix();
-	Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f );
+	Matrix lastPlanetViewMatrix = CreatePlanetViewMatrix( m_viewLast );
+	Tr2Renderer::SetViewTransform( CreatePlanetViewMatrix( Tr2Renderer::GetViewTransform() ));
+
+	Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f ) * m_jitterMatrix;
 	Tr2Renderer::SetProjectionTransform( planetProjection );
 
 	std::vector<ITr2Renderable*> planetRenderables;
@@ -2959,6 +2943,7 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 	// Need to populate per frame data again as view/projection matrices changed
 	PopulatePerFramePSData( m_perFramePS, renderContext );
 	PopulatePerFrameVSData( m_perFrameVS, renderContext );
+	m_perFrameVS.ViewProjectionLast = Transpose( lastPlanetViewMatrix * planetProjection );
 	ApplyPerFrameData( renderContext );
 
 	Tr2RenderableSortList renderablesWithTransparencies;
@@ -2985,16 +2970,26 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 	ApplyPerFrameData( renderContext );
 }
 
-Matrix EveSpaceScene::SetupPlanetViewMatrix()
+Matrix EveSpaceScene::CreatePlanetViewMatrix( const Matrix& original )
 {
-	Matrix orgViewMatrix = Tr2Renderer::GetViewTransform();
-	Matrix planetViewMatrix = orgViewMatrix;
+	Matrix planetViewMatrix = original;
 	const float planetScale = 1.0f / m_planetCameraScale;
 	Vector3& viewPos = planetViewMatrix.GetTranslation();
 	viewPos *= planetScale;
-	Tr2Renderer::SetViewTransform( planetViewMatrix );
 
-	return orgViewMatrix;
+	return planetViewMatrix;
+}
+
+void EveSpaceScene::ClearRenderTargetIfNoBatches( Tr2RenderTarget* rt, uint32_t slot, Tr2RenderContext& renderContext, size_t batchCount )
+{
+#if TRINITY_PLATFORM_SUPPORTS_RENDER_PASS_HINTS
+	if( batchCount == 0 )
+	{
+		renderContext.RenderPassHint( {}, { Tr2LoadAction::CLEAR, Tr2StoreAction::STORE }, {} );
+		Tr2PushPopRT pprt( *rt, renderContext, slot );
+		renderContext.Clear( CLEARFLAGS_TARGET, 0, 0, 0, 1 );
+	}
+#endif
 }
 
 void EveSpaceScene::SetupPlanetsAsShadowCaster( Tr2RenderContext& renderContext )
@@ -3174,4 +3169,22 @@ void EveSpaceScene::ClearComponentRegistry()
 		}
 	}
 	m_componentRegistry = nullptr;
+}
+
+float EveSpaceScene::GetUpscalingAmount() const {
+	if (m_postProcess)
+	{
+		return m_postProcess->GetUpscalingAmount();
+	}
+	return 1.0f;
+}
+
+Tr2DepthStencil* EveSpaceScene::GetDepth()
+{
+	return m_depthMap;
+}
+
+Matrix EveSpaceScene::GetReprojectionMatrix()
+{
+	return m_postProcessPSData.ReprojectionMatSkyBox;
 }

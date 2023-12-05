@@ -20,6 +20,7 @@ namespace
 struct ImposterVertex
 {
 	Vector4 position; // w - bounding sphere radius
+	Vector4 oldPosition;
 	Vector2_16 texCoord;
 };
 
@@ -115,6 +116,7 @@ Tr2ImpostorManager::Tr2ImpostorManager()
 	{
 		def.Add( def.FLOAT32_1, def.TEXCOORD, 5 );
 		def.Add( def.FLOAT32_4, def.POSITION, 0, 1, 1 );
+		def.Add( def.FLOAT32_4, def.TEXCOORD, 1, 1, 1 );
 		def.Add( def.FLOAT16_2, def.TEXCOORD, 0, 1, 1 );
 	}
 
@@ -304,13 +306,13 @@ void Tr2ImpostorManager::EndUpdate()
 		}
 		else
 		{
-			Matrix transform;
-			Vector4 sphere;
-			it->first->GetLocalToWorldTransform( transform );
+			Vector4 sphere, oldSphere;
 			it->first->GetImpostorBoundingSphere( sphere );
+			it->first->GetLastImpostorBoundingSphere( oldSphere );
 
 			ImposterVertex vertex;
 			vertex.position = sphere;
+			vertex.oldPosition = oldSphere;
 			vertex.texCoord = it->second.texcoord;
 			Tr2QuadRenderer::Instance()->AddQuads( m_effectKey, &vertex, 1 );
 		}

@@ -25,21 +25,21 @@ Be::VarChooser EveVisualizerChooser[] =
 		  BeCast( EveSpaceScene::VM_TEXCOORD0 ),
 		  "" },
 		{ "TexCoord1",
-		  BeCast( EveSpaceScene::VM_TEXCOORD1 ),
+		BeCast( EveSpaceScene::VM_TEXCOORD1 ),
 		  "" },
 		{ "White",
-		  BeCast( EveSpaceScene::VM_WHITE ),
+		BeCast( EveSpaceScene::VM_WHITE ),
 		  "" },
 		{ "Overdraw",
-		  BeCast( EveSpaceScene::VM_OVERDRAW ),
+		BeCast( EveSpaceScene::VM_OVERDRAW ),
 		  "" },
 		{ "Wireframe",
-		  BeCast( EveSpaceScene::VW_WIREFRAME ),
+		BeCast( EveSpaceScene::VW_WIREFRAME ),
 		  "" },
 		{ "LightCount",
-		  BeCast( EveSpaceScene::VW_LIGHT_COUNT ),
+		BeCast( EveSpaceScene::VW_LIGHT_COUNT ),
 		  "" },
-		{ 0 }
+	{ 0 }
 	};
 BLUE_REGISTER_ENUM_EX( "EveVisualizeMethod", EveSpaceScene::EveVisualizeMethod, EveVisualizerChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
@@ -485,25 +485,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_updateTime,
 			"Time of the last call to Update, for this scene",
 			Be::READ )
-
-		MAP_ATTRIBUTE(
-			"pixelOffsetScale",
-			m_taaPixelOffsetScale,
-			"Size of the offset in pixels for TAA",
-			Be::READWRITE )
-
-		MAP_ATTRIBUTE(
-			"taaSubpixelPattern",
-			m_taaPattern,
-			"Pattern type for TAA sampling offsets."
-			"\n 0 - none"
-			"\n 1 - totally random"
-			"\n 2 - 2x pattern"
-			"\n 3 - 3x pattern"
-			"\n 4 - 4x pattern",
-			Be::READWRITE )
-
-
+			
 		MAP_PROPERTY_READONLY(
 			"quadRenderer",
 			GetQuadRenderer,
@@ -559,7 +541,7 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"postprocess",
 			m_postProcess,
 			"The post process",
-			Be::READWRITE | Be::PERSIST )
+			Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		MAP_ATTRIBUTE(
 			"virtualCameraSystem",

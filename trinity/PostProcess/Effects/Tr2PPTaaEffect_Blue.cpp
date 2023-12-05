@@ -19,6 +19,9 @@ const Be::ClassInfo* Tr2PPTaaEffect::ExposeToBlue()
 		MAP_ATTRIBUTE( "earlyOutThreshold", m_earlyOutThreshold, "Controls the threshold used to skip calculations when a larger area is close to a flat color", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "showMotionVectors", m_showMotionVectors, "Shows motion vectors used by the new TAA algorithm", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "showEarlyOutMask", m_showEarlyOutMask, "Shows the early out mask of the new TAA algorithm", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		
+		MAP_ATTRIBUTE( "jitterX", m_jitterX, "x jittering", Be::READ )
+		MAP_ATTRIBUTE( "jitterY", m_jitterY, "y jittering", Be::READ )
 
 		
 		EXPOSURE_CHAINTO( Tr2PPEffect )

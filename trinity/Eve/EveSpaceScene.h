@@ -83,15 +83,6 @@ BLUE_DECLARE( Tr2GpuStructuredBuffer );
 BLUE_DECLARE( Tr2TextureReference );
 BLUE_DECLARE( Tr2VolumetricsRenderer );
 
-enum TAASampling
-{
-	TAA_NONE = 0,
-	TAA_RANDOM = 1,
-	TAA_2X = 2,
-	TAA_3X = 3,
-	TAA_4X = 4
-};
-
 BLUE_CLASS( EveSpaceScene ) :
 	public ITr2Scene,
 	public ITr2MultiPassScene,
@@ -127,6 +118,7 @@ public:
 	void EndRender( Tr2RenderContext & renderContext );
 	void Render3DUI( Tr2RenderContext & renderContext );
 	void PopulateAndApplyPerFrameData( Tr2RenderContext & renderContext );
+	void ApplyUpscalingToPerFrameData( uint32_t width, uint32_t height, Tr2RenderContext & renderContext );
 
 	void GatherBatches( Tr2RenderContext & renderContext );
 
@@ -182,7 +174,9 @@ public:
 	}
 	Tr2PostProcess2Ptr GetPostProcess();
 	Tr2ShaderBufferPtr GetPostProcessPSBuffer();
-	void SetupTAA( Tr2RenderTargetPtr velocityMap, float pixelOffsetScale, TAASampling sampling );
+	void SetVelocityMap( Tr2RenderTargetPtr velocityMap );
+	Tr2DepthStencil* GetDepth();
+	Matrix GetReprojectionMatrix();
 
 protected:
 	// Data shared between the different rendering method chunks
@@ -246,7 +240,7 @@ protected:
 		// MiscData
 		float Time;
 		float SceneMipLodBias;
-		float FrameCounter;
+		float Upscaling;
 		float GammaBrightness;
 
 		float VolumetricSlices[4];
@@ -259,7 +253,8 @@ protected:
 	};
 	double m_viewProjectLastD[16];
 	double m_viewProjectLastSkyBoxD[16];
-	Matrix m_viewProjectLast;
+	Matrix m_viewLast;
+	Matrix m_jitterMatrix;
 
 	// Per-frame vertex constants for rendering scene
 	struct PerFrameVSData
@@ -272,6 +267,7 @@ protected:
 		Matrix ShadowViewProjectionMat;
 		Matrix EnvMapRotationMat;
 		Matrix ViewProjectionLast;
+		Matrix ViewLast;
 
 		// pass sun data to vertexshader, so certain lighting-calculations can be done per-vertex and not per-pixel
 		SunData Sun;
@@ -285,7 +281,7 @@ protected:
 		Vector4 ViewportAdjustment;
 
 		float Time;
-		float _;
+		float Upscaling;
 		Vector2 ViewportSize;
 	};
 
@@ -324,7 +320,7 @@ protected:
 
 	void RenderDistortion( Tr2RenderContext & renderContext );
 
-	Matrix SetupPlanetViewMatrix();
+	Matrix CreatePlanetViewMatrix( const Matrix& original );
 	void SetupPlanetsAsShadowCaster( Tr2RenderContext & renderContext );
 
 	void GetPickingResults( Tr2PickBuffer & pickBuffer, Tr2RenderContext & renderContext, unsigned short& objId, unsigned short& areaId, float& depth );
@@ -444,6 +440,11 @@ protected:
 	Tr2RenderTargetPtr m_distortionMap;
 	Tr2RenderTargetPtr m_velocityMap;
 
+	// has the velocity map been written to?
+	bool m_velocityMapDirty; 
+
+	void ClearRenderTargetIfNoBatches( Tr2RenderTarget* rt, uint32_t slot, Tr2RenderContext& renderContext, size_t batchCount );
+
 	SunData m_sunData;
 	Color m_sunColor;
 	Color m_sunColorWithDynamicLights;
@@ -492,6 +493,8 @@ private:
 	}
 
 	bool HasReflectionProbe() const;
+
+	float GetUpscalingAmount() const;
 
 	Be::Time m_updateTime;
 	EveSpaceObject2Ptr m_egoBall;
@@ -568,18 +571,12 @@ private:
 
 	Tr2ShLightingManagerPtr m_shLightingManager;
 
-	TAASampling m_taaPattern;
-	Vector2 m_taaSamplingPatterns[9];
-	int m_taaSamplingIndex;
-	float m_xProjOffset;
-	float m_yProjOffset;
-
-	float m_taaPixelOffsetScale;
+	Vector4 m_jitter; // xy: projection offset, zw: pixel offset
 
 	bool m_hasBackgroundDistortionBatches;
 	bool m_hasForegroundDistortionBatches;
 
-	void TAAOffset( Tr2RenderContext & renderContext );
+	void Jitter( Tr2RenderContext& renderContext );
 
 	Tr2ImpostorManagerPtr m_impostorManager;
 
@@ -611,6 +608,9 @@ private:
 	bool m_freezeFrustum;
 	Matrix m_shadowView;
 
+	// projection matrices
+	Matrix m_projection;
+	Matrix m_jitteredProjection;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceScene );

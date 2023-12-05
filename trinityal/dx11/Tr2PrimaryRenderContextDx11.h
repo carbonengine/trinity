@@ -9,6 +9,7 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2GpuTimerAL.h"
+#include "../include/Tr2Streamline.h"
 
 
 struct Tr2PresentParametersAL;
@@ -42,6 +43,7 @@ public:
 	bool m_usingEXDevice;
 
 	CComPtr<ID3D11Device>			m_d3dDevice11;
+
 	CComPtr<IDXGISwapChain>			m_swapChain;
 	CComPtr<IDXGIFactory>			m_dxgiFactory;
 	CComPtr<IDXGIOutput>			m_dxgiOutput;

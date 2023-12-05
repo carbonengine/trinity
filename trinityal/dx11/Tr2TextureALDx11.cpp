@@ -1351,6 +1351,12 @@ namespace TrinityALImpl
 		}
 		return S_OK;
 	}
+
+	ID3D11Resource* Tr2TextureAL::GetResourceDx11() const
+	{
+		return m_texture;
+	}
+
 }
 
 #endif

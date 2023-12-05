@@ -57,6 +57,8 @@ Tr2PerObjectData* EveTransform::GetPerObjectData( ITriRenderBatchAccumulator* ac
 
 	// column_major for shaders
 	data->m_world = Transpose( m_worldTransform );
+	// column_major for shaders
+	data->m_worldLast = Transpose( m_lastWorldTransform );
 	// attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
 	if( !Inverse( data->m_worldInverseTranspose, m_worldTransform ) )
 	{

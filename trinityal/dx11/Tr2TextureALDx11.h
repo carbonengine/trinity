@@ -51,6 +51,9 @@ namespace TrinityALImpl
 		ALResult Attach( ID3D11Texture2D* texture, Tr2PrimaryRenderContextAL& renderContext );
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+
+		ID3D11Resource* GetResourceDx11() const;
+
 	private:
 		struct DepthOption
 		{

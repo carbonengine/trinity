@@ -105,6 +105,8 @@ set(_SOURCES
     dx11/Tr2ShaderALDx11.h
     dx11/Tr2ShaderProgramALDx11.cpp
     dx11/Tr2ShaderProgramALDx11.h
+    dx11/Tr2StreamlineALDx11.cpp
+    dx11/Tr2StreamlineALDx11.h
     dx11/Tr2SwapChainALDx11.cpp
     dx11/Tr2SwapChainALDx11.h
     dx11/Tr2TextureALDx11.cpp
@@ -140,6 +142,8 @@ set(_SOURCES
     dx12/Tr2ShaderALDx12.h
     dx12/Tr2ShaderProgramALDx12.cpp
     dx12/Tr2ShaderProgramALDx12.h
+    dx12/Tr2StreamlineALDx12.cpp
+    dx12/Tr2StreamlineALDx12.h
     dx12/Tr2SwapChainALDx12.cpp
     dx12/Tr2SwapChainALDx12.h
     dx12/Tr2TextureALDx12.cpp
@@ -185,6 +189,7 @@ set(_SOURCES
     include/Tr2SamplerStateAL.h
     include/Tr2ShaderAL.h
     include/Tr2ShaderProgramAL.h
+    include/Tr2Streamline.h
     include/Tr2SwapChainAL.h
     include/Tr2TextureAL.h
     include/Tr2TextureType.h
@@ -244,7 +249,8 @@ set(_SOURCES
     src/Tr2ResourceSetAL.cpp
     src/Tr2SamplerStateAL.cpp
     src/Tr2ShaderAL.cpp
-    src/Tr2ShaderProgramAL.cpp
+    src/Tr2ShaderProgramAL.cpp    
+    src/Tr2Streamline.cpp
     src/Tr2SwapChainAL.cpp
     src/Tr2TextureAL.cpp
     src/Tr2VertexLayoutAL.cpp
@@ -381,17 +387,20 @@ if(WIN32)
 endif()
 
 if(WIN32)
-    # required for 11
     find_package(NvidiaAftermath REQUIRED)
+    find_package(NvidiaStreamline REQUIRED)
+    find_package(NvidiaDlssPlugin REQUIRED)
+    find_package(NvidiaNisPlugin REQUIRED)
+    find_package(NvidiaReflexPlugin REQUIRED)
 
     ccp_add_library(TrinityAL_dx11 STATIC)
     target_compile_definitions(TrinityAL_dx11 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX11)
-    target_link_libraries(TrinityAL_dx11 PUBLIC Nvidia::Aftermath d3d11 dxgi dxguid legacy_stdio_definitions)
+    target_link_libraries(TrinityAL_dx11 PUBLIC Nvidia::Aftermath d3d11 dxgi NVIDIA::Streamline NVIDIA::dlss_sl_plugin NVIDIA::nis_sl_plugin NVIDIA::reflex_sl_plugin dxguid legacy_stdio_definitions)
     set_shared_trinityal_properties(dx11)
 
     ccp_add_library(TrinityAL_dx12 STATIC)
     target_compile_definitions(TrinityAL_dx12 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX12)
-    target_link_libraries(TrinityAL_dx12 PUBLIC Nvidia::Aftermath d3d12 dxgi dxguid)
+    target_link_libraries(TrinityAL_dx12 PUBLIC Nvidia::Aftermath d3d12 dxgi NVIDIA::Streamline NVIDIA::dlss_sl_plugin NVIDIA::nis_sl_plugin NVIDIA::reflex_sl_plugin dxguid)
     set_shared_trinityal_properties(dx12)
 elseif(APPLE)
     enable_language(OBJCXX)

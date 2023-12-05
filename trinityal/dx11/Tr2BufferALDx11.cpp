@@ -416,5 +416,11 @@ namespace TrinityALImpl
 		SetDebugName( m_uav, name );
 		return S_OK;
 	}
+
+
+	ID3D11Buffer* Tr2BufferAL::GetGpuResource() const
+	{
+		return m_buffer;
+	}
 }
 #endif

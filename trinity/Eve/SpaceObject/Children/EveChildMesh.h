@@ -151,7 +151,6 @@ protected:
 	
 	bool m_display;
 	bool m_isVisible;
-	bool m_useSpaceObjectData;
 	float m_activationStrength;
 
 	Origin m_origin;

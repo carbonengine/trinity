@@ -602,6 +602,8 @@ namespace TrinityALImpl
 	Tr2TextureAL::~Tr2TextureAL()
 	{
 		Destroy();
+
+		m_mipMapGenerator = nullptr;
 	}
 
 	ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
@@ -1565,6 +1567,11 @@ namespace TrinityALImpl
 			return m_textures[m_currentTextureIndex];
 		}
 		return nullptr;
+	}
+
+	D3D12_RESOURCE_STATES Tr2TextureAL::GetResourceState() const
+	{
+		return m_defaultState;
 	}
 
 	const std::shared_ptr<RenderTargetViewDx12>& Tr2TextureAL::GetRtvDescriptorHandleDx12( Tr2RenderContextEnum::ColorSpace colorSpace, uint32_t slice ) const

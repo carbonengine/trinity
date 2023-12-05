@@ -312,6 +312,8 @@ public:
 	virtual void GetImpostorBatches( const TriFrustum& frustum, std::map<TriBatchType, ITriRenderBatchAccumulator*>& batches );
 	virtual float GetRenderPriority( const ImpostorHash& oldHash, const ImpostorHash& newHash ) const;
 	virtual bool GetImpostorBoundingSphere( Vector4& sphere ) const;
+	virtual void GetLastImpostorBoundingSphere( Vector4 & sphere ) const;
+
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable

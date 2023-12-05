@@ -87,9 +87,9 @@ void Tr2OcclusionBuffer::ReleaseResources( TriStorage s )
 	{
 		m_clear.clear();
 		for( uint32_t i = 0; i < m_size; i += ELEMENT_SIZE )
-	{
+		{
 			m_clear.push_back( i );
-	}
+		}
 	}
 }
 

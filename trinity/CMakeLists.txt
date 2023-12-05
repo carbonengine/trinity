@@ -4,6 +4,8 @@ project(trinity VERSION 1.0.0)
 find_package(libSquish REQUIRED)
 find_package(FidelityFX REQUIRED)
 find_package(FidelityFX_FSR REQUIRED)
+find_package(FidelityFX_FSR2 REQUIRED)
+find_package(IntelXeSS REQUIRED)
 find_package(CACAO REQUIRED)
 find_package(IntelTBB REQUIRED)
 find_package(NanoVDB REQUIRED)
@@ -443,7 +445,7 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildCloud.cpp
     Eve/SpaceObject/Children/EveChildCloud.h
     Eve/SpaceObject/Children/EveChildCloud_Blue.cpp
-	Eve/SpaceObject/Children/EveChildCloud2.cpp
+    Eve/SpaceObject/Children/EveChildCloud2.cpp
     Eve/SpaceObject/Children/EveChildCloud2.h
     Eve/SpaceObject/Children/EveChildCloud2_Blue.cpp
     Eve/SpaceObject/Children/EveChildContainer.cpp
@@ -827,6 +829,34 @@ set(_SOURCES
     Particle/Tr2StaticEmitter.cpp
     Particle/Tr2StaticEmitter.h
     Particle/Tr2StaticEmitter_Blue.cpp
+    PostProcess/Effects/Sharpening/ITr2Sharpening.h
+    PostProcess/Effects/Sharpening/Tr2FidelityFxCas.cpp
+    PostProcess/Effects/Sharpening/Tr2FidelityFxCas.h
+    PostProcess/Effects/Sharpening/Tr2FidelityFxCas_Blue.cpp
+    PostProcess/Effects/Sharpening/Tr2NoopSharpening.cpp
+    PostProcess/Effects/Sharpening/Tr2NoopSharpening.h
+    PostProcess/Effects/Sharpening/Tr2NoopSharpening_Blue.cpp
+    PostProcess/Effects/Upscaling/ITr2Upscaling.h
+    PostProcess/Effects/Upscaling/Tr2DlssUpscaling.cpp
+    PostProcess/Effects/Upscaling/Tr2DlssUpscaling.h
+    PostProcess/Effects/Upscaling/Tr2DlssUpscaling_Blue.cpp
+    PostProcess/Effects/Upscaling/Tr2Fsr1Upscaling.cpp
+    PostProcess/Effects/Upscaling/Tr2Fsr1Upscaling.h
+    PostProcess/Effects/Upscaling/Tr2Fsr1Upscaling_Blue.cpp
+    PostProcess/Effects/Upscaling/Tr2Fsr2Upscaling.cpp
+    PostProcess/Effects/Upscaling/Tr2Fsr2Upscaling.h
+    PostProcess/Effects/Upscaling/Tr2Fsr2Upscaling_Blue.cpp
+    PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling.mm
+    PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling.h
+    PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling_Blue.cpp
+    PostProcess/Effects/Upscaling/Tr2NoopUpscaling.cpp
+    PostProcess/Effects/Upscaling/Tr2NoopUpscaling.h
+    PostProcess/Effects/Upscaling/Tr2NoopUpscaling_Blue.cpp    
+    PostProcess/Effects/Upscaling/Tr2UpscalingUtils.cpp
+    PostProcess/Effects/Upscaling/Tr2UpscalingUtils.h
+    PostProcess/Effects/Upscaling/Tr2XeSSUpscaling.cpp
+    PostProcess/Effects/Upscaling/Tr2XeSSUpscaling.h
+    PostProcess/Effects/Upscaling/Tr2XeSSUpscaling_Blue.cpp   
     PostProcess/Effects/Tr2PPBloomEffect.cpp
     PostProcess/Effects/Tr2PPBloomEffect.h
     PostProcess/Effects/Tr2PPBloomEffect_Blue.cpp
@@ -845,9 +875,6 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPFadeEffect.cpp
     PostProcess/Effects/Tr2PPFadeEffect.h
     PostProcess/Effects/Tr2PPFadeEffect_Blue.cpp
-    PostProcess/Effects/Tr2PPFidelityFXEffect.cpp
-    PostProcess/Effects/Tr2PPFidelityFXEffect.h
-    PostProcess/Effects/Tr2PPFidelityFXEffect_Blue.cpp
     PostProcess/Effects/Tr2PPFilmGrainEffect.cpp
     PostProcess/Effects/Tr2PPFilmGrainEffect.h
     PostProcess/Effects/Tr2PPFilmGrainEffect_Blue.cpp
@@ -866,6 +893,9 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPTaaEffect.cpp
     PostProcess/Effects/Tr2PPTaaEffect.h
     PostProcess/Effects/Tr2PPTaaEffect_Blue.cpp
+    PostProcess/Effects/Tr2PPUpscalingEffect.cpp
+    PostProcess/Effects/Tr2PPUpscalingEffect.h
+    PostProcess/Effects/Tr2PPUpscalingEffect_Blue.cpp
     PostProcess/Effects/Tr2PPVignetteEffect.cpp
     PostProcess/Effects/Tr2PPVignetteEffect.h
     PostProcess/Effects/Tr2PPVignetteEffect_Blue.cpp
@@ -1092,7 +1122,7 @@ set(_SOURCES
     Shader/Parameter/Tr2RuntimeTextureParameter.cpp
     Shader/Parameter/Tr2RuntimeTextureParameter.h
     Shader/Parameter/Tr2RuntimeTextureParameter_Blue.cpp
-	Shader/Parameter/Tr2TextureAnimationParameter.cpp
+    Shader/Parameter/Tr2TextureAnimationParameter.cpp
     Shader/Parameter/Tr2TextureAnimationParameter.h
     Shader/Parameter/Tr2TextureAnimationParameter_Blue.cpp
     Shader/Parameter/Tr2Vector2Parameter.cpp
@@ -1264,7 +1294,7 @@ set(_SOURCES
     ITr2SoundEmitterOwner.h
     ITr2TextureProvider.h
     ITr2VisualizationModeRenderer.h
-	ITr2VolumetricRenderable.h
+    ITr2VolumetricRenderable.h
     ITr2WorldTransformUpdater.h
     ITriReroutable.h
     IWorldPosition.h
@@ -1470,7 +1500,7 @@ set(_SOURCES
     Tr2SwapChain.cpp
     Tr2SwapChain.h
     Tr2SwapChain_Blue.cpp
-	Tr2TextureAnimation.cpp
+    Tr2TextureAnimation.cpp
     Tr2TextureAnimation.h
     Tr2TextureAnimation_Blue.cpp
     Tr2TextureArray.cpp
@@ -1503,7 +1533,7 @@ set(_SOURCES
     Tr2VisibilityResults.cpp
     Tr2VisibilityResults.h
     Tr2VisibilityResults_Blue.cpp
-	Tr2VolumetricsRenderer.cpp
+    Tr2VolumetricsRenderer.cpp
     Tr2VolumetricsRenderer.h
     Tr2VolumetricsRenderer_Blue.cpp
     TriColor.cpp
@@ -1684,9 +1714,9 @@ There are probably more issues because we haven't build the stub project on macO
 if(WIN32)
     ccp_add_library(trinity_stub SHARED)
     target_compile_definitions(trinity_stub
-        PRIVATE
-            TRINITY_PLATFORM=TRINITY_STUB
-            TRINITYNAME=_trinity_stub
+    PRIVATE
+        TRINITY_PLATFORM=TRINITY_STUB
+        TRINITYNAME=_trinity_stub
     )
 
     target_link_libraries(trinity_stub PRIVATE TrinityAL_stub)
@@ -1710,7 +1740,7 @@ if(WIN32)
             TRINITY_PLATFORM=TRINITY_DIRECTX12
             TRINITYNAME=_trinity_dx12
     )
-    target_link_libraries(trinity_dx12 PRIVATE TrinityAL_dx12)
+    target_link_libraries(trinity_dx12 PRIVATE AMD::FidelityFX_FSR2 INTEL::xess TrinityAL_dx12 )
     set_shared_trinity_properties(trinity_dx12)
 elseif(APPLE)
     enable_language(OBJCXX)
@@ -1729,6 +1759,7 @@ elseif(APPLE)
             "-framework Carbon"
             "-framework GameController"
             "-framework Metal"
+            "-framework MetalFX"
             "-framework IOKit"
             "-framework QuartzCore"
     )

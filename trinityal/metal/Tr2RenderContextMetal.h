@@ -205,7 +205,6 @@ public:
 	void EndParallelEncoding();
 	
 	ALResult ForkContext( Tr2RenderContextAL* context, uint32_t index ) const;
-
 protected:
 	bool                               m_isValid;
 

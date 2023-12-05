@@ -103,6 +103,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 												Tr2WindowHandle  hFocusWindow, 
 												const Tr2PresentParametersAL& pp )
 {
+
 	const bool isWindowless = (hFocusWindow == 0) && pp.software;
 
 	DXGI_SWAP_CHAIN_DESC sd;
@@ -212,6 +213,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 
 	if( SUCCEEDED( HR ) )		
 	{
+		Tr2Streamline::Attach( m_d3dDevice11 );
 		CCP_AL_LOG( "DX11: device created succesfully" );
 	}
 	else		
@@ -626,5 +628,7 @@ const Tr2CapsAL& Tr2PrimaryRenderContextAL::GetCaps() const
 {
 	return m_caps;
 }
+
+
 
 #endif	//DX11?

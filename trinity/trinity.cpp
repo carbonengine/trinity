@@ -111,6 +111,7 @@ const char* InitializeForPython()
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
 extern bool g_gpuTimersEnabled;
+extern bool g_skipNvidiaStreamline;
 
 #if TRINITY_PLATFORM == TRINITY_METAL
 extern bool g_enableMetalCounters;
@@ -169,7 +170,7 @@ void InitializeTrinity()
 		CCP_LOGNOTICE( "trinity is not using parallel encoding" );
 	}
 #endif
-	
+
 	auto debugArg = BeOS->GetStartupArgValue( L"deviceDebug" );
 	if( !debugArg.empty() )
 	{
@@ -188,6 +189,12 @@ void InitializeTrinity()
 		g_gpuTimersEnabled = timers != L"0";
 	}
 
+	auto skipStreamline = BeOS->GetStartupArgValue( L"skipStreamline" );
+	if( !skipStreamline.empty() )
+	{
+		g_skipNvidiaStreamline = skipStreamline == L"1";
+	}
+	
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );
 
 	Tr2FontManager::Initialize();

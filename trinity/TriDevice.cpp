@@ -163,7 +163,6 @@ TriDevice::TriDevice(IRoot* lockobj) :
 TriDevice::~TriDevice()
 {
     m_scene = (ITr2Scene*)NULL;
-
 	BeOS->UnregisterForSimTimeRebase( this );
 }
 

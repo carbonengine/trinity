@@ -15,11 +15,13 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2GpuTimerAL.h"
+#include "../Tr2AdapterStructures.h"
 
 #include "./util/GlobalDescriptorHeapAllocatorDx12.h"
 #include "./util/DescriptorHeapViewDx12.h"
 #include "./util/GpuMarkerBuffer.h"
 #include "./util/GpuCrashTracker.h"
+#include "../include/Tr2Streamline.h"
 
 
 #define USE_BORDERLESS_WINDOW 1
@@ -56,6 +58,9 @@ public:
 	~Tr2PrimaryRenderContextAL();
 
 	ALResult CreateDevice( uint32_t adapter, Tr2WindowHandle  focusWindow, const Tr2PresentParametersAL& presentationParameters );
+	ALResult DeleteSwapchain();
+	ALResult CreateSwapchain();
+
 	void Destroy();
 	bool IsValid() const;
 
@@ -99,6 +104,7 @@ public:
 #else
 	void ReleaseLater(IUnknown* resource);
 #endif
+	void FlushPendingRelease();
 	uint64_t GetCurrentFrameIndexDx12() const;
 	uint64_t GetCompletedFrameIndexDx12() const;
 
@@ -261,9 +267,13 @@ private:
 	std::shared_ptr<ShaderResourceViewDx12> m_nullSrv[16];
 	std::shared_ptr<UnorderedAccessViewDx12> m_nullUav[16];
 
+	Tr2PresentParametersAL m_presentationParameters;
+	uint32_t m_adapter;
+	Tr2WindowHandle m_focusWindow;
+
 public:
 	CComPtr<ID3D12Device> m_device;
-	CComPtr<IDXGISwapChain3> m_swapChain;
+	CComPtr<IDXGISwapChain3> m_swapchain;
 	CComPtr<ID3D12CommandQueue> m_commandQueue;
 
 	D3D_ROOT_SIGNATURE_VERSION m_rootSignatureVersion;
@@ -278,6 +288,7 @@ public:
 	TrinityALImpl::Tr2ResourceHelper m_nullCB;
 
 	void* m_amdExtDeviceObject;
+	static bool s_streamlineEnabled;
 };
 
 #endif

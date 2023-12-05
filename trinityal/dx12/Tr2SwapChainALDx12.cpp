@@ -42,7 +42,8 @@ namespace Tr2SwapChainUtils
 		ID3D12CommandQueue* commandQueue,
 		IDXGIOutput* output )
 	{
-		CComPtr<IDXGIFactory4> dxgiFactory;
+		CComPtr<IDXGIFactory4> proxyFactory;
+		CComPtr<IDXGIFactory4> nativeFactory;
 
 		UINT createFactoryFlags = 0;
 		if( g_requestDeviceDebugLayer )
@@ -50,7 +51,8 @@ namespace Tr2SwapChainUtils
 			createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 		}
 
-		CR_RETURN_HR( CreateDXGIFactory2( createFactoryFlags, IID_PPV_ARGS( &dxgiFactory ) ) );
+		CR_RETURN_HR( Tr2Streamline::SlCreateDXGIFactory2( createFactoryFlags, IID_PPV_ARGS( &proxyFactory ) ) );
+		nativeFactory = Tr2Streamline::CreateNative( proxyFactory );
 
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 		swapChainDesc.Width = presentationParameters.mode.width;
@@ -79,7 +81,7 @@ namespace Tr2SwapChainUtils
 
 		CComPtr<IDXGISwapChain1> swapChain1;
 		
-		CR_RETURN_HR( dxgiFactory->CreateSwapChainForHwnd(
+		CR_RETURN_HR( proxyFactory->CreateSwapChainForHwnd(
 			commandQueue,
 			wnd,
 			&swapChainDesc,
@@ -88,7 +90,7 @@ namespace Tr2SwapChainUtils
 			&swapChain1 ) );
 		
 		CR_RETURN_HR( swapChain1.QueryInterface( &swapChain ) );
-		CR_RETURN_HR( dxgiFactory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER ) );
+		CR_RETURN_HR( nativeFactory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER ) );
 		return S_OK;
 	}
 

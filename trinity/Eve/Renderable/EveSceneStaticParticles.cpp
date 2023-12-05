@@ -12,7 +12,9 @@
 #include "Tr2InstancedMesh.h"
 #include "Tr2Mesh.h"
 #include "Eve/EveUpdateContext.h"
-#include "Eve/EveTransform.h"
+#include "TriFrustum.h"
+
+extern float g_eveSpaceSceneLODFactor;
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -26,7 +28,11 @@ EveSceneStaticParticles::EveSceneStaticParticles( IRoot* lockobj ) :
 	m_clusterParticleDensityAdjust( 1.f ),
 	m_centerOfClusters( 0.0, 0.0, 0.0 ),
 	m_boundingSphere( 0.f, 0.f, 0.f, 0.f ),
-	m_worldMatrix( IdentityMatrix() )
+	m_worldMatrix( IdentityMatrix() ),
+	m_lastWorldMatrix( IdentityMatrix() ),
+	m_estimatedSize( 0.0f ),
+	m_visible( false ),
+	m_center( 0.f, 0.f, 0.f )
 {
 }
 
@@ -87,16 +93,12 @@ bool EveSceneStaticParticles::Initialize()
 void EveSceneStaticParticles::Update( EveUpdateContext& updateContext )
 {
 	// nothing to do here?
-	if( m_clusters.empty() )
-	{
-		return;
-	}
-	if( !m_transform )
+	if( Tr2Renderer::IsLowQuality() || m_clusters.empty() || !m_mesh )
 	{
 		return;
 	}
 
-	m_transform->Update( updateContext );
+	m_lastWorldMatrix = m_worldMatrix;
 	// calc float offset from egopos to center of particles
 	Vector3d offset = m_centerOfClusters - updateContext.GetOrigin();
 	// build a transform matrix
@@ -110,18 +112,57 @@ void EveSceneStaticParticles::Update( EveUpdateContext& updateContext )
 void EveSceneStaticParticles::GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables )
 {
 	// nothing to do here?
-	if( m_clusters.empty() )
+	if( Tr2Renderer::IsLowQuality() || m_clusters.empty() || !m_mesh )
 	{
 		return;
 	}
-	if( !m_transform )
+	m_center = TransformCoord( m_boundingSphere.GetXYZ(), m_worldMatrix );
+	bool inBoundingSphere = LengthSq( m_center - frustum.m_viewPos ) <= m_boundingSphere.w * m_boundingSphere.w;
+	m_estimatedSize = frustum.GetPixelSizeAccross( &m_boundingSphere );
+	m_visible = inBoundingSphere || IsVisible( frustum );
+	if( m_visible )
 	{
-		return;
+		renderables.push_back( this );
 	}
+}
 
-	// eve transform does this
-	m_transform->UpdateVisibility( frustum, m_worldMatrix );
-	m_transform->GetRenderables( renderables, nullptr );
+void EveSceneStaticParticles::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
+{
+	m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, m_estimatedSize );
+}
+
+void EveSceneStaticParticles::GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize )
+{
+	return;
+}
+
+Tr2PerObjectData* EveSceneStaticParticles::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
+{
+	EveSceneStaticParticlesPerObjectData* data = accumulator->Allocate<EveSceneStaticParticlesPerObjectData>();
+	if( !data )
+	{
+		return nullptr;
+	}
+	// column_major for shaders
+	data->m_world = Transpose( m_worldMatrix );
+	data->m_lastWorld = Transpose( m_lastWorldMatrix );
+	return data;
+}
+
+bool EveSceneStaticParticles::HasTransparentBatches()
+{
+	return false;
+}
+
+float EveSceneStaticParticles::GetSortValue()
+{
+	return 0.0f;
+}
+
+bool EveSceneStaticParticles::IsVisible( const TriFrustum& frustum ) const
+{
+	Vector4 transformedSphere( m_center, m_boundingSphere.w );
+	return frustum.IsSphereVisible( &transformedSphere ) && m_estimatedSize > 100.0f * g_eveSpaceSceneLODFactor;
 }
 
 void EveSceneStaticParticles::GetDebugOptions( Tr2DebugRendererOptions& options )
@@ -151,20 +192,12 @@ void EveSceneStaticParticles::RenderDebugInfo( ITr2DebugRenderer2& renderer )
 Tr2RuntimeInstanceData* EveSceneStaticParticles::GetInstanceDataObject()
 {
 	// anything there at all?
-	if( !m_transform )
+	if( !m_mesh )
 	{
 		return nullptr;
 	}
 
-	// is mesh of correct type?
-	Tr2InstancedMeshPtr meshPtr;
-	if( !m_transform->GetMesh()->QueryInterface( BlueInterfaceIID<Tr2InstancedMesh>(), (void**)&meshPtr ) )
-	{
-		CCP_LOGERR( "EveSceneStaticParticles: mesh is not of correct type!" );
-		return nullptr;
-	}
-
-	ITr2InstanceData* instanceData = meshPtr->GetInstanceGeometryResource();
+	ITr2InstanceData* instanceData = m_mesh->GetInstanceGeometryResource();
 
 	// is instance data of correct type
 	Tr2RuntimeInstanceDataPtr dataPtr;
@@ -179,42 +212,18 @@ Tr2RuntimeInstanceData* EveSceneStaticParticles::GetInstanceDataObject()
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Let's iterate through the object which has been loaded via Ptyhon and
-//   find the particle instance mseh
-// --------------------------------------------------------------------------------
-Tr2InstancedMesh* EveSceneStaticParticles::GetInstanceMeshObject()
-{
-	// anything there at all?
-	if( !m_transform )
-	{
-		return nullptr;
-	}
-
-	// is mesh of correct type?
-	Tr2InstancedMeshPtr meshPtr;
-	if( !m_transform->GetMesh()->QueryInterface( BlueInterfaceIID<Tr2InstancedMesh>(), (void**)&meshPtr ) )
-	{
-		CCP_LOGERR( "EveSceneStaticParticles: mesh is not of correct type!" );
-		return nullptr;
-	}
-
-	return meshPtr;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
 //   Distributes particles in the clusters.
 // --------------------------------------------------------------------------------
 void EveSceneStaticParticles::Rebuild()
 {
-	// this object must have been set via python
-	Tr2RuntimeInstanceData* instanceData = GetInstanceDataObject();
-	if( !instanceData )
+	if( !m_mesh )
 	{
 		return;
 	}
-	Tr2InstancedMesh* instanceMesh = GetInstanceMeshObject();
-	if( !instanceMesh )
+
+	// this object must have been set via python
+	Tr2RuntimeInstanceData* instanceData = GetInstanceDataObject();
+	if( !instanceData )
 	{
 		return;
 	}
@@ -307,7 +316,7 @@ void EveSceneStaticParticles::Rebuild()
 	instanceData->UpdateData();
 	Vector3 bbmin, bbmax;
 	instanceData->GetBoundingBox( bbmin, bbmax );
-	instanceMesh->SetBoundingBox( bbmin, bbmax );
+	m_mesh->SetBoundingBox( bbmin, bbmax );
 
 	// calculate a rough bounding sphere
 	BoundingSphereFromBox( m_boundingSphere, bbmin, bbmax );

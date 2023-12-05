@@ -2998,7 +2998,7 @@ void EveSOF::ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacem
 		}
 		else
 		{
-	CreatePlacement( obj, placementDna, placement, locators, offsets );
+			CreatePlacement( obj, placementDna, placement, locators, offsets );
 		}
 	}
 

@@ -23,7 +23,6 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_currentScreenSize( -1.f ),
 	m_sortValueOffset( 0 ),
 	m_sortValueScale( 1 ),
-	m_useSpaceObjectData( true ),
 	m_activationStrength( 1.0f ),
 	m_origin( SPACE ),
 	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
@@ -272,20 +271,6 @@ float EveChildMesh::GetSortValue()
 
 Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
-	if( !m_useSpaceObjectData )
-	{
-		EveBasicPerObjectData* perObjectData = accumulator->Allocate<EveBasicPerObjectData>();
-
-		if( !perObjectData )
-		{
-			return nullptr;
-		}
-
-		perObjectData->m_world = m_vsData.worldTransform;
-		perObjectData->m_worldInverseTranspose = Inverse( m_worldTransform );
-		return perObjectData;
-	}
-	
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
 	if( !perObjectData )
 	{
