@@ -10,9 +10,9 @@
 #if TRINITY_PLATFORM == TRINITY_METAL
 
 #include <MetalFx/MetalFX.h>
-#include "trinityAL/metal/Tr2RenderContextMetal.h"
-#include "trinityAL/metal/MetalContext.h"
-#include "trinityAL/metal/Tr2TextureALMetal.h"
+#include "../trinityal/metal/Tr2RenderContextMetal.h"
+#include "../trinityal/metal/MetalContext.h"
+#include "../trinityal/metal/Tr2TextureALMetal.h"
 
 namespace MetalUpscalingUtils {
     id<MTLTexture> GetMetalTexture(ITr2TextureProvider* texture)
