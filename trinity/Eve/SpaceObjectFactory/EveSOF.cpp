@@ -287,7 +287,7 @@ void EveSOF::SetupAttachments( IEveSpaceObjectAttachmentOwnerPtr newObj, const E
         // So no banners for layouts... yet
 	if( EveSpaceObject2Ptr spaceObject = BlueCastPtr( newObj->GetRootObject() ) )
 	{
-		if( !dna->IsHullUsingExperimentalFeatures() )
+		if( !dna->UsingSof6() )
 		{
 			SetupBanners( spaceObject, dna, offsets );
 		}
@@ -305,7 +305,7 @@ void EveSOF::SetupAttachments( IEveSpaceObjectAttachmentOwnerPtr newObj, const E
 
 void EveSOF::SetupEffects( EveSpaceObject2Ptr obj, IEveEffectChildrenOwnerPtr childContainer, const EveSOFDNAPtr dna, const std::vector<Matrix>& offsets, uint32_t buildFlags ) const
 {
-	if( !dna->IsHullUsingExperimentalFeatures() )
+	if( !dna->UsingSof6() )
 	{
 		// children, animations and particles
 		SetupChildrenAndAnimations( obj, childContainer, dna, offsets, buildFlags );
@@ -782,7 +782,7 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 		const std::vector<EveSOFDataMgr::HullSpotlightSetData>& hullSpotlightSets = dna->GetHullSpotlightSets( hullIdx );
 		for( auto& spotlightSetData : hullSpotlightSets )
 		{
-			if( dna->IsHullUsingExperimentalFeatures() && !dna->IsInVisibilityData( spotlightSetData.visibilityGroup ) )
+			if( dna->UsingSof6() && !dna->IsInVisibilityData( spotlightSetData.visibilityGroup ) )
 			{
 				continue;
 			}
@@ -825,7 +825,7 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 				for( auto& ssiit : spotlightSetData.items )
 				{
 					const EveSOFDataMgr::FactionSpotlightSetColorData* factionSpotlightData = nullptr;
-					if( !dna->IsHullUsingExperimentalFeatures() )
+					if( !dna->UsingSof6() )
 					{
 						// faction data?
 						factionSpotlightData = dna->GetFactionSpotlightSetData( ssiit.groupIndex );
@@ -840,7 +840,7 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 					EveSpotlightSetItemPtr spotlightSetItem;
 					spotlightSetItem.CreateInstance();
 
-					if( dna->IsHullUsingExperimentalFeatures() )
+					if( dna->UsingSof6() )
 					{
 						auto colorSet = dna->GetColorSet();
 						spotlightSetItem->m_coneColor = ssiit.coneIntensity * ModifyColor( colorSet[ssiit.colorType], 0.75f, 0.5f );
@@ -899,7 +899,7 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 		// cycle over all planesets of this hull
 		for( auto& planeSetData : dna->GetHullPlaneSets( hullIdx ) )
 		{
-			if( dna->IsHullUsingExperimentalFeatures() && !dna->IsInVisibilityData( planeSetData.visibilityGroup ) )
+			if( dna->UsingSof6() && !dna->IsInVisibilityData( planeSetData.visibilityGroup ) )
 			{
 				continue;
 			}
@@ -967,7 +967,7 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 					planeSetItem->m_maskAtlasID = psiit.maskMapAtlasIndex;
 					planeSetItem->m_blinkData = Vector4( psiit.rate, psiit.phase, psiit.dutyCycle, (float)psiit.blinkMode );
 
-					if( dna->IsHullUsingExperimentalFeatures() )
+					if( dna->UsingSof6() )
 					{
 						auto colorSet = dna->GetColorSet();
 						planeSetItem->m_color = psiit.intensity * colorSet[psiit.colorType];

@@ -55,8 +55,7 @@ EveSOFDNA::EveSOFDNA( IRoot* lockobj ) :
 	m_factionData( nullptr ),
 	m_raceData( nullptr ),
 	m_patternData( nullptr ),
-	m_genericData( nullptr ),
-	m_experimental( false )
+	m_genericData( nullptr )
 {
 }
 
@@ -328,8 +327,6 @@ void EveSOFDNA::Setup( const char* dnaString, EveSOFDataMgrPtr dataMgr )
 		SetupCustomData();
 	}
 
-	// some dna commands require a custom block data
-	m_experimental = HasDnaCommand( CMD_EXPERIMENTAL );
 	// store the parent bounding sphere here as a copy of the hull bounding sphere...
 	m_parentBoundingSphere = GetHullBoundingSphere(); 
 	m_parentHullShapeEllipsoid = GetHullShapeEllipsoid();
@@ -431,13 +428,6 @@ void EveSOFDNA::Setup( const BlueSharedString layoutName, const EveSOFDataMgr::D
 		m_commands[s_dnaCommands[CMD_VARIANT]] = variant;
 	}
 
-	// are we in experimental mode
-	std::vector<std::string> experimental;
-	if( parent->GetDnaCommandArgs( CMD_EXPERIMENTAL, experimental ) )
-	{
-		m_commands[s_dnaCommands[CMD_EXPERIMENTAL]] = experimental;
-	}
-
 	// nested layouts!
 	if( !descriptor.layout.empty() )
 	{
@@ -461,9 +451,6 @@ void EveSOFDNA::Setup( const BlueSharedString layoutName, const EveSOFDataMgr::D
 	{
 		SetupCustomData();
 	}
-
-	// some dna commands require a custom block data
-	m_experimental = parent->HasDnaCommand( CMD_EXPERIMENTAL );
 
 	// contruct the dna string
 	m_dna = std::string( descriptor.hull.c_str() ) + s_dnaSeperatorCmd + std::string( m_factionName ) + s_dnaSeperatorCmd + std::string( m_raceName );
@@ -1316,7 +1303,7 @@ const Vector4* EveSOFDNA::GetMeshAreaParameter( EveSOFDataArea::AreaType areaTyp
 					return res;
 				}
 			}
-			else if( IsUsingExperimentalFeatures() && param.GetMaterialIdx() == 1 )
+			else if( UsingSof6() && param.GetMaterialIdx() == 1 )
 			{
 				const Vector4* res = EveSOFUtils::SearchForParameterData( m_dataMgr, m_factionData->defaultPatternLayer2MaterialName.c_str(), &param );
 				if( res )
@@ -1505,7 +1492,7 @@ size_t EveSOFDNA::GetPatternLayerCount() const
 	}
 
 	// ok lets check for default patterns
-	if( IsUsingExperimentalFeatures() )
+	if( UsingSof6() )
 	{
 		auto applicationData = GetFactionalPatternApplicationData();
 		if( nullptr != applicationData)
@@ -1549,7 +1536,7 @@ const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetFactionalPatternAppli
 const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetHullPatternApplicationData() const
 {
 	// TODO PHASE-6
-	if( IsUsingExperimentalFeatures() )
+	if( UsingSof6() )
 	{
 		auto finder = m_patternData->applicationData.find( BlueSharedString( m_hullNames[0] ) );
 		if( finder != m_patternData->applicationData.end() )
@@ -1578,7 +1565,7 @@ const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetPatternApplicationDat
     theCallerNeedsToDeleteTheResultBecauseIAmBroken = false;
 	if( !HasDnaCommand( CMD_PATTERN ) )
 	{
-		if( IsUsingExperimentalFeatures() )
+		if( UsingSof6() )
 		{
 			return GetFactionalPatternApplicationData();
 		}
@@ -1607,7 +1594,7 @@ const EveSOFDataMgr::PatternProjectionData* EveSOFDNA::GetPatternProjectionData(
 	{
 		return nullptr;
 	}
-	if( !HasDnaCommand( CMD_PATTERN ) && !IsUsingExperimentalFeatures() )
+	if( !HasDnaCommand( CMD_PATTERN ) && !UsingSof6() )
 	{
 		if( layer > 0 )
 		{
@@ -1636,7 +1623,7 @@ const EveSOFDataMgr::PatternLayerData* EveSOFDNA::GetPatternLayerData( const Eve
 	{
 		return nullptr;
 	}
-	if( !HasDnaCommand( CMD_PATTERN ) && !IsUsingExperimentalFeatures() )
+	if( !HasDnaCommand( CMD_PATTERN ) && !UsingSof6() )
 	{
 		if( layer > 0 )
 		{
@@ -1765,14 +1752,9 @@ bool EveSOFDNA::GetDnaCommandArgs( DnaCommand cmd, std::vector<std::string>& arg
 // Description:
 //	Check if we are using experimental features
 // --------------------------------------------------------------------------------
-bool EveSOFDNA::IsUsingExperimentalFeatures() const
+bool EveSOFDNA::UsingSof6() const
 {
-	return m_experimental;
-}
-
-bool EveSOFDNA::IsHullUsingExperimentalFeatures() const
-{
-	return m_experimental || ( !m_hullDatas.empty() && m_hullDatas[0]->sof6 );
+	return ( !m_hullDatas.empty() && m_hullDatas[0]->sof6 );
 }
 
 BlueSharedString EveSOFDNA::GetFactionName() const
