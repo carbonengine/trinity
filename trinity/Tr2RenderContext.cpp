@@ -35,6 +35,10 @@ void UseTextures( ITriRenderBatchAccumulator* batches, const BlueSharedString& t
 	CCP_STATS_ZONE( __FUNCTION__ );
 	Tr2BindlessResourcesAL usedTextures;
 
+    usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_2D, "" ) );
+    usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_3D, "" ) );
+    usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_CUBE, "" ) );
+
 	auto ProcessBatch = [&usedTextures, &techniqueName]( auto& batch ) {
 		uint32_t technique;
 		if( batch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
