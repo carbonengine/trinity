@@ -45,18 +45,18 @@ using std::max;
 // #pragma warning( disable : 4786 )
 #include <BlueExposure.h>
 #include <BlueExposureMacrosDeprecated.h>
-#include <IBlueOS.h>
-#include <IBluePaths.h>
-#include <IBlueResMan.h>
-#include <IBluePersist.h>
-#include <BlueStatistics.h>
-#include <BlueAsyncRes.h>
-#include <ICacheable.h>
-#include <IBluePlacementObserver.h>
-#include <IBlueEventListener.h>
-#include <IBlueObjectProxy.h>
-#include <BluePySwrap.h> //simple wrapping
-#include <ITaskletTimer.h>
+#include "blue/include/IBlueOS.h"
+#include "blue/include/IBluePaths.h"
+#include "blue/include/IBlueResMan.h"
+#include "blue/include/IBluePersist.h"
+#include "blue/include/BlueStatistics.h"
+#include "Blue/include/BlueAsyncRes.h"
+#include "blue/include/ICacheable.h"
+#include "blue/include/IBluePlacementObserver.h"
+#include <blue/include/IBlueEventListener.h>
+#include "blue/include/IBlueObjectProxy.h"
+#include "blue/include/BluePySwrap.h" //simple wrapping
+#include "Blue/Include/ITaskletTimer.h"
 
 // here we define the directInput version we are going to use
 // If this is not defined here manually there is a build warning
@@ -79,7 +79,7 @@ using std::max;
 #include <CcpMath.h>
 
 #include "include/Tr2WindowHandle.h"
-#include <../trinityal/include/TrinityAL.h>
+#include "TrinityAL/include/TrinityAL.h"
 #include "Tr2RenderContext.h"
 #include "Tr2RenderUtils.h"
 #include "granny.h"
@@ -121,8 +121,8 @@ using std::max;
 
 #endif
 
-#include <Tr2ImageHandler.h>
-#include <HostBitmap.h>
+#include "ImageIO/Tr2ImageHandler.h"
+#include "ImageIO/HostBitmap.h"
 
 
 #include "Tr2GpuProfiler.h"

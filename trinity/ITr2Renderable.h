@@ -2,6 +2,8 @@
 #ifndef ITr2Renderable_H
 #define ITr2Renderable_H
 
+#include "Eve/EveComponentRegistry.h"
+
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 class TriPoolAllocator;
@@ -51,6 +53,8 @@ BLUE_INTERFACE( ITr2Renderable ) :
 
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) = 0;
 };
+
+REGISTER_COMPONENT_TYPE( "ReflectionRenderable", ITr2Renderable );
 
 struct ITr2RenderableEntry
 {
