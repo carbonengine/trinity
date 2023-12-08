@@ -208,9 +208,9 @@ Tr2Upscaling::UpscalingType Tr2MetalFxTemporalUpscaling::GetUpscalingType() cons
 
 void Tr2MetalFxTemporalUpscaling::GetJitter( float& x, float& y )
 {
-    m_jitterX = Jitter::Halton(m_jitterIndex, 3);
-    m_jitterY = Jitter::Halton(m_jitterIndex, 2);
-    m_jitterIndex = m_jitterIndex % 32 + 1;
+    m_jitterX = m_jitterSequence[m_jitterIndex].first;
+    m_jitterY = m_jitterSequence[m_jitterIndex].second;
+	m_jitterIndex = ++m_jitterIndex % m_jitterSequence.size();
     
     x = m_jitterX / ( float ) m_renderWidth;
     y = -m_jitterY / ( float ) m_renderHeight;
@@ -257,6 +257,7 @@ void Tr2MetalFxTemporalUpscaling::ApplySetting( const Tr2Upscaling::Setting& set
     m_upscaling = MetalUpscalingUtils::GetUpscalingBasedOnSetting(setting);
     m_renderWidth = UpscalingUtils::ConvertDisplaySizeToRenderSize(m_displayWidth, m_upscaling);
     m_renderHeight = UpscalingUtils::ConvertDisplaySizeToRenderSize(m_displayHeight, m_upscaling);
+    m_jitterSequence = Jitter::GenerateHaltonSequence(32, 2, 3);
 }
 
 void Tr2MetalFxTemporalUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, Tr2RenderContext& renderContext )

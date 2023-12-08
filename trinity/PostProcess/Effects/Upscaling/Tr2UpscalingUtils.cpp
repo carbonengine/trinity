@@ -13,6 +13,19 @@ namespace AMDUpscaling
 }
 
 namespace Jitter{
+    JitterSequence GenerateHaltonSequence(uint32_t totalPhases, uint32_t xBase, uint32_t yBase)
+    {
+		auto result = JitterSequence();
+		result.reserve( totalPhases );
+
+        for( uint32_t i = 0; i < totalPhases; ++i )
+		{
+			result.push_back( { Halton( i, xBase ), Halton( i, yBase ) } );
+        }
+
+        return result;
+    }
+
     float Halton(uint32_t index, uint32_t base)
     {
        float result = 0.0;
@@ -22,7 +35,7 @@ namespace Jitter{
            result += fractional * float(index % base);
            index /= base;
        }
-       return result;
+       return result - 0.5f;
     }
 }
 

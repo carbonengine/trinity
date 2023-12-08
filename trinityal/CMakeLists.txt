@@ -105,8 +105,6 @@ set(_SOURCES
     dx11/Tr2ShaderALDx11.h
     dx11/Tr2ShaderProgramALDx11.cpp
     dx11/Tr2ShaderProgramALDx11.h
-    dx11/Tr2StreamlineALDx11.cpp
-    dx11/Tr2StreamlineALDx11.h
     dx11/Tr2SwapChainALDx11.cpp
     dx11/Tr2SwapChainALDx11.h
     dx11/Tr2TextureALDx11.cpp
@@ -142,8 +140,6 @@ set(_SOURCES
     dx12/Tr2ShaderALDx12.h
     dx12/Tr2ShaderProgramALDx12.cpp
     dx12/Tr2ShaderProgramALDx12.h
-    dx12/Tr2StreamlineALDx12.cpp
-    dx12/Tr2StreamlineALDx12.h
     dx12/Tr2SwapChainALDx12.cpp
     dx12/Tr2SwapChainALDx12.h
     dx12/Tr2TextureALDx12.cpp
