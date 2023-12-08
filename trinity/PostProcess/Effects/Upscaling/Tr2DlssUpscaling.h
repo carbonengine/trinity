@@ -6,6 +6,7 @@
 #pragma once
 
 #include "ITr2Upscaling.h"
+#include "Tr2UpscalingUtils.h"
 
 BLUE_DECLARE( Tr2Effect );
 
@@ -57,6 +58,8 @@ private:
 	float m_jitterX;
 	float m_jitterY;
 	uint32_t m_jitterIndex;
+	Jitter::JitterSequence m_jitterSequence;
+
 	DlssUtils::DlssOptimalSetting m_optimalSettings;
 	DlssUtils::DlssOptions m_options;
 	Tr2Upscaling::Setting m_currentSetting;

@@ -5,7 +5,7 @@
 //
 #include "StdAfx.h"
 #include "Tr2DlssUpscaling.h"
-#include "Tr2UpscalingUtils.h"
+#include "TriDevice.h"
 
 Tr2DlssUpscaling::Tr2DlssUpscaling( IRoot* lockobj ):
 	m_sharpeningAmount( 0.35f ),
@@ -40,7 +40,8 @@ bool Tr2DlssUpscaling::OnModified( Be::Var* value )
 	m_dirty = true;
 	if( IsMatch( value, m_useSharpening ) )
 	{
-		Tr2Streamline::Toggle( StreamlineUtils::SP_NIS, m_useSharpening );
+		auto adapter = gTriDev->GetAdapter();
+		Tr2Streamline::Toggle( StreamlineUtils::SP_NIS, adapter, m_useSharpening );
 	}
 	return true;
 }
@@ -52,12 +53,16 @@ bool Tr2DlssUpscaling::IsDirty() const
 
 bool Tr2DlssUpscaling::IsApplicable() const
 {
-	return Tr2Streamline::IsAvailable( StreamlineUtils::SP_DLSS );
+	auto adapter = gTriDev->GetAdapter();
+
+	return Tr2Streamline::IsAvailable( StreamlineUtils::SP_DLSS, adapter );
 }
 
 bool Tr2DlssUpscaling::SupportsFrameGeneration() const
 {
-	return Tr2Streamline::IsAvailable( StreamlineUtils::SP_DLSSG );
+	auto adapter = gTriDev->GetAdapter();
+
+	return Tr2Streamline::IsAvailable( StreamlineUtils::SP_DLSSG, adapter );
 }
 
 Tr2Upscaling::UpscalingType Tr2DlssUpscaling::GetUpscalingType() const
@@ -73,10 +78,10 @@ void Tr2DlssUpscaling::GetJitter( float& x, float& y )
 		y = 0;
 		return;
 	}
-	uint32_t totalPhases = 8 * (uint32_t)powf( m_upscaling, 2.0f );
-	m_jitterX = Jitter::Halton( m_jitterIndex, 3 ) - 0.5f;
-	m_jitterY = Jitter::Halton( m_jitterIndex, 2 ) - 0.5f;
-	m_jitterIndex = m_jitterIndex % totalPhases + 1;
+	m_jitterX = m_jitterSequence[m_jitterIndex].first;
+	m_jitterY = m_jitterSequence[m_jitterIndex].second;
+	
+	m_jitterIndex = ++m_jitterIndex % m_jitterSequence.size();
 
 	x = m_jitterX / (float)m_renderWidth;
 	y = -m_jitterY / (float)m_renderHeight;
@@ -161,6 +166,7 @@ void Tr2DlssUpscaling::ApplySetting( const Tr2Upscaling::Setting& setting, uint3
 
 			m_upscaling = (float)m_options.outputHeight / (float)m_renderHeight;
 			
+			m_jitterSequence = Jitter::GenerateHaltonSequence( 8 * (uint32_t)powf( m_upscaling, 2.0f ), 2, 3 );
 			m_options.renderWidth = m_renderWidth;
 			m_options.renderHeight = m_renderHeight;
 		}

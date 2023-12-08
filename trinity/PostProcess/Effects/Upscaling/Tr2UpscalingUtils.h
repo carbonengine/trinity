@@ -30,8 +30,13 @@ namespace AMDUpscaling
 	};
 }
 
-namespace Jitter {
-    float Halton(uint32_t index, uint32_t base);
+
+namespace Jitter
+{
+	typedef std::vector<std::pair<float, float>> JitterSequence;
+
+	JitterSequence GenerateHaltonSequence( uint32_t totalPhases, uint32_t xBase, uint32_t yBase );
+	float Halton(uint32_t index, uint32_t base);
 }
 
 namespace UpscalingUtils

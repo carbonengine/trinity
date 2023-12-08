@@ -57,6 +57,7 @@ private:
 	uint32_t m_displayWidth;
 
 	uint32_t m_jitterIndex;
+	Jitter::JitterSequence m_jitterSequence;
 	float m_jitterX;
 	float m_jitterY;
 	float m_jitterXScale;

@@ -18,6 +18,7 @@
 #include "Sharpening/Tr2NoopSharpening.h"
 
 #include "Tr2Renderer.h"
+#include "TriDevice.h"
 
 Tr2PPUpscalingEffect::Tr2PPUpscalingEffect( IRoot* lockobj ) :
 	m_currentSetting( Tr2Upscaling::Setting::COUNT ),
@@ -58,12 +59,13 @@ void Tr2PPUpscalingEffect::SetUpscalingTechnique( Tr2Upscaling::Technique techni
 {
 	if( technique != m_currentUpscalingTechnique || m_frameGeneration != frameGeneration )
 	{
+		auto adapter = gTriDev->GetAdapter();
 		if( m_currentUpscalingTechnique == Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS && technique != Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS )
 		{
-			Tr2Streamline::Toggle( StreamlineUtils::SP_DLSS, false );
+			Tr2Streamline::Toggle( StreamlineUtils::SP_DLSS, adapter, false );
 			if( m_frameGeneration )
 			{
-				Tr2Streamline::Toggle( StreamlineUtils::SP_DLSSG, false );
+				Tr2Streamline::Toggle( StreamlineUtils::SP_DLSSG, adapter, false );
 			}
 		}
 
@@ -95,10 +97,10 @@ void Tr2PPUpscalingEffect::SetUpscalingTechnique( Tr2Upscaling::Technique techni
 		{
 			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2DlssUpscaling>::Class() );
 			m_upscalingEffect->SetUseFrameGeneration( frameGeneration );
-			Tr2Streamline::Toggle( StreamlineUtils::SP_DLSS, true );
+			Tr2Streamline::Toggle( StreamlineUtils::SP_DLSS, adapter, true );
 			if( m_frameGeneration != frameGeneration )
 			{
-				Tr2Streamline::Toggle( StreamlineUtils::SP_DLSSG, frameGeneration );
+				Tr2Streamline::Toggle( StreamlineUtils::SP_DLSSG, adapter, frameGeneration );
 			}
 		}
 		else

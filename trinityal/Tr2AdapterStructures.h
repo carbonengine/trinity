@@ -44,6 +44,7 @@ struct Tr2AdapterInfo
 	uint32_t subSystemID;
 	uint32_t revision;
 	AdapterGuid deviceIdentifier;
+	uint8_t luid[8];
 };
 
 struct Tr2PresentParametersAL

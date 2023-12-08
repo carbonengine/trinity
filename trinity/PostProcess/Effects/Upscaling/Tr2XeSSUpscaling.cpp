@@ -169,10 +169,9 @@ void Tr2XeSSUpscaling::GetJitter( float& x, float& y )
 		return;
 	}
 
-	uint32_t totalPhases = 8 * (uint32_t)powf( ceilf(m_upscaling), 2.0f );
-	m_jitterX = Jitter::Halton( m_jitterIndex, 3 ) - 0.5f;
-	m_jitterY = Jitter::Halton( m_jitterIndex, 2 ) - 0.5f;
-	m_jitterIndex = m_jitterIndex % totalPhases + 1;
+	m_jitterX = m_jitterSequence[m_jitterIndex].first;
+	m_jitterY = m_jitterSequence[m_jitterIndex].second;
+	m_jitterIndex = ++m_jitterIndex % m_jitterSequence.size();
 
 	x = m_jitterXScale * m_jitterX / (float)m_renderWidth;
 	y = -m_jitterYScale * m_jitterY / (float)m_renderHeight;
@@ -276,6 +275,7 @@ void Tr2XeSSUpscaling::ApplySetting( const Tr2Upscaling::Setting& setting, uint3
 	m_renderHeight = inputRes.y;
 
 	m_upscaling = (float)m_displayWidth / (float)m_renderWidth;
+	m_jitterSequence = Jitter::GenerateHaltonSequence( 8 * (uint32_t)powf( ceilf( m_upscaling ), 2.0f ), 2, 3);
 
 	CCP_LOGNOTICE( "XeSS: Initialized." );
 	m_initialized = true;
@@ -290,6 +290,7 @@ void Tr2XeSSUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, 
 	params.outputResolution.x = m_displayWidth;
 	params.outputResolution.y = m_displayHeight;
 	params.qualitySetting = m_xessSetting;
+	params.visibleNodeMask = s_creationNodeMask;
 	params.creationNodeMask = s_creationNodeMask++;
 	params.initFlags = XESS_INIT_FLAG_INVERTED_DEPTH | XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE | XESS_INIT_FLAG_USE_NDC_VELOCITY;
 
@@ -319,7 +320,7 @@ void Tr2XeSSUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, 
 
 	CCP_LOGNOTICE( "XeSS: Version - %u.%u.%u", ver.major, ver.minor, ver.patch );
 
-//#if DEBUG
+#if DEBUG
 	// Set logging callback here.
 	ret = xessSetLoggingCallback( m_context, XESS_LOGGING_LEVEL_DEBUG, LogXeSS );
 	;
@@ -329,7 +330,7 @@ void Tr2XeSSUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, 
 		return;
 
 	}
-//#endif
+#endif
 
 	m_setup = true;
 }
@@ -383,10 +384,8 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 	renderContext.FlushBarriersDx12();
 
 	xess_d3d12_execute_params_t params{};
-	float x, y;
-	GetJitterOffset( x, y );
-	params.jitterOffsetX = x;
-	params.jitterOffsetY = y;
+	params.jitterOffsetX = m_jitterX;
+	params.jitterOffsetY = m_jitterY;
 	params.inputWidth = m_renderWidth;
 	params.inputHeight = m_renderHeight;
 	params.resetHistory = m_reset ? 1 : 0;

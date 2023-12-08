@@ -76,6 +76,7 @@ private:
     float m_upscaling;
     
     uint32_t m_jitterIndex;
+    Jitter::JitterSequence m_jitterSequence;
     float m_jitterX;
     float m_jitterY;
     uint32_t m_renderWidth;
