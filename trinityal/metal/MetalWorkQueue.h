@@ -472,6 +472,7 @@ namespace TrinityALImpl
 		uint32_t m_activeConstBuffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		uint32_t m_activeBuffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		uint32_t m_dirtyConstBuffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
+        uint32_t m_dirtyConstBufferPageMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		uint32_t m_dirtyBuffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		uint32_t m_dirtyTexturesMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		uint32_t m_dirtySamplersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
