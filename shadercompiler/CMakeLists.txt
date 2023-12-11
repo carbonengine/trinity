@@ -4,7 +4,7 @@ if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15 CACHE STRING "The minimum macOS version we target." FORCE)
 endif()
 
-project(ShaderCompiler VERSION 1.1.1)
+project(ShaderCompiler VERSION 1.1.2)
 
 if (APPLE)
     set(TELEMETRY_DEFAULT OFF)
