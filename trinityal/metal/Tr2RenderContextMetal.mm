@@ -1308,12 +1308,21 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
     if( @available( macOS 13.0, * ) )
     {
         std::vector<id<MTLTexture>> textures;
-        textures.reserve( resources.m_textures.size() );
+        textures.reserve( resources.m_textures.size() * 2 );
         for( auto& tex : resources.m_textures )
         {
             if( tex->IsValid() )
             {
-                textures.push_back( tex->GetMetalTexture() );
+                auto t0 = tex->GetMetalTexture();
+                if( t0 )
+                {
+                    textures.push_back( t0 );
+                }
+                auto t1 = tex->GetSRGBViewMetalTexture();
+                if( t1 && t1 != t0 )
+                {
+                    textures.push_back( t1 );
+                }
             }
         }
         auto encoder = m_workQueue->GetRenderEncoder();

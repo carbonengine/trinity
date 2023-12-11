@@ -17,6 +17,18 @@ namespace
 
 namespace TrinityALImpl
 {
+    Tr2BufferAL::Tr2BufferAL()
+    :   m_owner( nullptr ),
+        m_metalContext( nullptr ),
+        m_heapIndex( 0xffffffff )
+    {
+    }
+
+    Tr2BufferAL::~Tr2BufferAL()
+    {
+        Destroy();
+    }
+
 	ALResult Tr2BufferAL::Create(
 		const Tr2BufferDescriptionAL& desc,
 		const void* initialData,
