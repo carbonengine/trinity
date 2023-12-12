@@ -1328,7 +1328,8 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
         auto encoder = m_workQueue->GetRenderEncoder();
         [encoder useResources:textures.data()
                         count:NSUInteger( textures.size())
-                        usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageWrite | MTLResourceUsageWrite : MTLResourceUsageRead];
+                        usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite : MTLResourceUsageRead];
+        m_workQueue->ReleaseEncoder( false );
     }
 	return S_OK;
 }
