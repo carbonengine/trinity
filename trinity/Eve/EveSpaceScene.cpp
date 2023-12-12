@@ -549,9 +549,6 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		{
 			GPU_REGION( renderContext, "Cascade rendering" );
 
-			const char* base_label = "Split ";
-			std::string label;
-
 			for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 			{
 				auto& casters = m_shadowCasters[i];
@@ -560,10 +557,6 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 				{
 					continue;
 				}
-
-				label.append( base_label ).append( std::to_string( i ) );
-				GPU_REGION( renderContext, label.c_str() );
-				label.clear();
 
 				m_cascadedShadowMap->BeginShadowRendering( renderContext, i );
 
