@@ -76,7 +76,11 @@ namespace TrinityALImpl
 		}
 
 		D3D12_RESOURCE_STATES defaultState;
-		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) ||
+		if( HasFlag( desc.gpuUsage, Tr2GpuUsage::ACCELERATION_STRUCTURE ) )
+		{
+			defaultState = D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE;
+		}
+		else if( HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) ||
 			HasFlag( desc.gpuUsage, Tr2GpuUsage::INDEX_BUFFER ) ||
 			HasFlag( desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE )
 			)
@@ -135,11 +139,24 @@ namespace TrinityALImpl
 		{
 			m_srvDesc.Format = DXGI_FORMAT( desc.format );
 			m_srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			m_srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-			m_srvDesc.Buffer.FirstElement = 0;
-			m_srvDesc.Buffer.NumElements = desc.count;
-			m_srvDesc.Buffer.StructureByteStride = m_srvDesc.Format == DXGI_FORMAT_UNKNOWN ? stride : 0;
-			m_srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+			if( HasFlag( desc.gpuUsage, Tr2GpuUsage::ACCELERATION_STRUCTURE ) )
+			{
+				m_srvDesc.ViewDimension = D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE;
+				m_srvDesc.RaytracingAccelerationStructure.Location = m_buffer.GetGpuView();
+			}
+			else
+			{
+				m_srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+				m_srvDesc.Buffer.FirstElement = 0;
+				m_srvDesc.Buffer.NumElements = desc.count;
+				m_srvDesc.Buffer.StructureByteStride = m_srvDesc.Format == DXGI_FORMAT_UNKNOWN ? stride : 0;
+				m_srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+				if( HasFlag( desc.gpuUsage, Tr2GpuUsage::VERTEX_BUFFER ) )
+				{
+					m_srvDesc.Buffer.StructureByteStride = 4;
+					m_srvDesc.Buffer.NumElements = size / 4;
+				}
+			}
 
 			HRESULT hr;
 			if (FAILED(hr = renderContext.CreateShaderResourceView(m_buffer.GetResource(), m_srvDesc, m_srv)))
@@ -403,6 +420,11 @@ namespace TrinityALImpl
 	{
 		m_buffer.SetName( name );
 		return S_OK;
+	}
+
+	D3D12_RESOURCE_STATES Tr2BufferAL::GetDefaultState() const
+	{
+		return m_defaultState;
 	}
 }
 

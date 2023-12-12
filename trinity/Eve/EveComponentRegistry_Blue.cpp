@@ -12,7 +12,6 @@ const Be::ClassInfo* EveComponentRegistry::ExposeToBlue()
 {
 	EXPOSURE_BEGIN( EveComponentRegistry, "" )
 		MAP_INTERFACE( EveComponentRegistry )
-		MAP_PROPERTY_READONLY("lightOwners", GetLightOwnerCount, "How many objects contain light")
-		MAP_PROPERTY_READONLY("reflectionRenderable", GetReflectionRenderableCount, "How many objects are registered as reflection renderables")
+		MAP_METHOD_AND_WRAP( "GetComponentInfo", GetComponentInfo, "Returns information about the components registered" )
 	EXPOSURE_END()
 }

@@ -16,6 +16,7 @@ namespace {
 	VertexLayoutMap_t	s_vertexLayoutMap;
 
 	std::vector<Tr2ShaderAL*> s_shaders;
+	std::vector<Tr2ShaderBytecodeAL*> s_shaderLibraries;
 	std::vector<std::pair<Tr2ShaderProgramAL*, std::vector<uint32_t>>> s_shaderPrograms;
 
 	typedef std::vector<uint32_t>		TRenderStateKeyValues;
@@ -356,6 +357,36 @@ uint32_t Tr2EffectStateManager::RegisterShader(
 	return (uint32_t)s_shaders.size() - 1;
 }
 
+uint32_t Tr2EffectStateManager::RegisterShaderLibrary( const Tr2ShaderBytecodeAL& bytecode )
+{
+	for( size_t i = 0; i != s_shaderLibraries.size(); ++i )
+	{
+		auto& existing = *s_shaderLibraries[i];
+		if( existing.size == bytecode.size )
+		{
+			if( memcmp( existing.bytecode, bytecode.bytecode, bytecode.size ) == 0 )
+			{
+				return (uint32_t)i;
+			}
+		}
+	}
+
+	void* code = new uint8_t[bytecode.size];
+	memcpy( code, bytecode.bytecode, bytecode.size );
+	Tr2ShaderBytecodeAL* newBytecode = new Tr2ShaderBytecodeAL( code, bytecode.size );
+	s_shaderLibraries.push_back( newBytecode );
+	return uint32_t( s_shaderLibraries.size() - 1 );
+}
+
+const Tr2ShaderBytecodeAL* Tr2EffectStateManager::GetShaderLibraryCode( uint32_t handle )
+{
+	if( handle >= s_shaderLibraries.size() )
+	{
+		return nullptr;
+	}
+	return s_shaderLibraries[handle];
+}
+
 uint32_t Tr2EffectStateManager::RegisterShaderProgram( uint32_t* shaders, size_t count )
 {
 	if( !count )
@@ -473,6 +504,13 @@ void Tr2EffectStateManager::Shutdown()
 		delete *it;
 	}
 	s_shaders.clear();
+
+	for( auto it = s_shaderLibraries.begin(); it != s_shaderLibraries.end(); ++it )
+	{
+		delete[]( *it )->bytecode;
+		delete* it;
+	}
+	s_shaderLibraries.clear();
 }
 
 void Tr2EffectStateManager::BeginManagedRendering( Tr2RenderContextEnum::CullMode cullmode )
@@ -810,6 +848,12 @@ void Tr2EffectStateManager::ReleaseDeviceResources( TriStorage s )
 			delete it->first;
 		}
 		s_shaderPrograms.clear();
+		for( auto it = s_shaderLibraries.begin(); it != s_shaderLibraries.end(); ++it )
+		{
+			delete[]( *it )->bytecode;
+			delete* it;
+		}
+		s_shaderLibraries.clear();
 
 		s_renderStateSetups.erase( s_renderStateSetups.begin() + RM_COUNT, s_renderStateSetups.end() );
 		m_renderStates.clear();

@@ -30,6 +30,18 @@ void CompileMessageQueue::AddMessages( ID3DBlob* buffer )
 	m_messagesMutex.unlock();
 	m_queueEvent.notify_one();
 }
+
+void CompileMessageQueue::AddMessages( IDxcBlobEncoding* blob )
+{
+	DWORD size = DWORD( blob->GetBufferSize() );
+	if( size > 0 )
+	{
+		m_messagesMutex.lock();
+		m_messages.push( reinterpret_cast<char*>(blob->GetBufferPointer()) );
+		m_messagesMutex.unlock();
+		m_queueEvent.notify_one();
+	}
+}
 #endif
 
 void CompileMessageQueue::AddMessage( const char* format, ... )
@@ -104,7 +116,7 @@ void CompileMessageQueue::Run()
 				m_messages.pop();
 				m_messagesMutex.unlock();
 
-				OutputMessages( buffer.c_str() );
+				OutputMessages( buffer.c_str(), buffer.size() );
 			}
 			else
 			{
@@ -126,18 +138,18 @@ void CompileMessageQueue::Run()
 //   messages - A string containing several messages. A message is delimed by new line
 //              followed by non-space character
 // --------------------------------------------------------------------------------------
-void CompileMessageQueue::OutputMessages( const char* messages )
+void CompileMessageQueue::OutputMessages( const char* messages, size_t length )
 {
 	const char* start = messages;
 	const char* end = messages + 1;
-	while( *start )
+	while( *start && start - messages < ptrdiff_t( length ) )
 	{
-		if( *end == 0 || ( end[0] == '\n' && !isspace(end[1]) ) )
+		if( *end == 0 || end - messages >= ptrdiff_t( length ) || (end[0] == '\n' && (end - messages + 1 >= ptrdiff_t( length ) || !isspace( end[1] ))) )
 		{
 			std::string message( start, end );
 			if( m_printedMessages.insert( message ).second )
 			{
-				const char* memoryRefs[] = { "\\memory(", "/memory(", "/memory:" };
+				const char* memoryRefs[] = { "\\memory(", "/memory(", "/memory:", "memory:"};
 				for( auto memoryRef : memoryRefs )
 				{
 					auto pos = message.find( memoryRef );

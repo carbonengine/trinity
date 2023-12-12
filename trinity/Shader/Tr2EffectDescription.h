@@ -205,6 +205,25 @@ struct Tr2Pass
 #endif
 };
 
+struct Tr2EffectLibrary
+{
+	uint32_t payloadSize;
+	uint32_t libraryHandle;
+
+	BlueSharedStringW rayGenName;
+	BlueSharedStringW missName;
+	BlueSharedStringW closestHitName;
+	BlueSharedStringW anyHitName;
+	BlueSharedStringW intersectionName;
+	BlueSharedStringW hitGroupName;
+
+	Tr2EffectStageInput globalInput;
+	Tr2EffectStageInput localInput;
+	Tr2ResourceSetDescriptionAL globalResourceSetDesc;
+	Tr2ResourceSetDescriptionAL localResourceSetDesc;
+};
+
+
 struct Tr2EffectTechnique
 {
 	Tr2EffectTechnique()
@@ -215,6 +234,7 @@ struct Tr2EffectTechnique
 
 	BlueSharedString name;
 	TrackableStdVector<Tr2Pass> passes;
+	std::vector<Tr2EffectLibrary> libraries;
 	unsigned int shaderTypeMask;
 };
 

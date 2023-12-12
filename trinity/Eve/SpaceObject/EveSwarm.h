@@ -21,7 +21,9 @@ BLUE_DECLARE( EveSwarm );
 BLUE_CLASS( EveSwarmRenderable ) :
 	public ITr2Renderable,
 	public ITr2Pickable,
-	public IShaderConfigurer
+	public IShaderConfigurer,
+	public IEveShadowCaster,
+	public EveEntity
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -32,7 +34,6 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) override;
-	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 
     bool HasTransparentBatches() override;
     float GetSortValue() override; 
@@ -43,11 +44,10 @@ public:
 	// PerObjectData
 	void UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shaderType, uint32_t size, void* );
 	uint32_t GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const;
-
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// EveSwarmRenderable
-	void InitializeRenderable( EveSwarm* owner, Tr2MeshBase* mesh, Tr2Effect* shadowEffect );
+	void InitializeRenderable( EveSwarm* owner, Tr2MeshBase* mesh );
 	void SetWorldTransform( const Matrix& transform );
 	const Matrix* GetWorldTransform() const { return &m_worldTransform; }
 	void SetBoosterIntensity( float intensity );
@@ -63,9 +63,19 @@ public:
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
+	//////////////////////////////////////////////////////////////////////////////////////
+	// IEveShadowCaster
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
+	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
+
 private:
 	Tr2MeshBasePtr m_mesh;
-	Tr2EffectPtr m_shadowEffect;
 	BlueWeakRef<EveSwarm> m_owner;
 	Matrix m_worldTransform;
 	PEveSpaceObjectDecalVector m_decals;
@@ -232,11 +242,11 @@ public:
     virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
 	//////////////////////////////////////////////////////////////////////////////////////
-	// IEveShadowCaster - overriding EveSpaceObject2 implementations
-	bool GetRenderablesCastingShadow( bool isSelf, const TriFrustumOrtho& frustum, std::vector<ITr2Renderable*>& renderables );
+	// EveEntity
+	void RegisterComponents() override;
+	void UnRegisterComponents() override;
 
 protected:
-
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Object space damage locator information
 	virtual void GetLocatorInObjectSpace( Vector3& position, Vector3& direction, const Locator& locator ) const;

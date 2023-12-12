@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2MeshArea.h"
 #include "Tr2MeshBase.h"
+#include "Raytracing/Tr2RaytracingGeometry.h"
 
 Tr2MeshArea::Tr2MeshArea( IRoot* lockobj ):
 	m_display( true ),
@@ -212,4 +213,18 @@ Tr2Lod Tr2MeshArea::GetMinLod() const
 void Tr2MeshArea::SetMinLod( Tr2Lod lod )
 {
 	m_minLod = lod;
+}
+
+Tr2RaytracingMeshArea* Tr2MeshArea::GetOrCreateRtMeshArea()
+{
+	if( !m_rtMeshArea )
+	{
+		m_rtMeshArea.reset( new Tr2RaytracingMeshArea( m_index ) );
+	}
+	return m_rtMeshArea.get();
+}
+
+Tr2RaytracingMeshArea* Tr2MeshArea::GetRtMeshArea() const
+{
+	return m_rtMeshArea.get();
 }

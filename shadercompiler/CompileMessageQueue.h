@@ -21,8 +21,10 @@ public:
 
 #if _WIN32
 	void AddMessages( ID3DBlob* buffer );
+	void AddMessages( IDxcBlobEncoding* buffer ); // windows only? or is it also for mac
 #endif
 	void AddMessage( const char* format, ... );
+	
 	void Flush();
 	void SetEntryFileName( const char* fileName );
 
@@ -30,7 +32,7 @@ public:
 
 private:
 	void Run();
-	void OutputMessages( const char* messages );
+	void OutputMessages( const char* messages, size_t length );
 
 	// Message queue
 	std::queue<std::string> m_messages;

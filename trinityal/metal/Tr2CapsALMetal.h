@@ -14,6 +14,7 @@
 #define TRINITY_PLATFORM_SUPPORTS_PARALLEL_CONTEXTS 1
 #define TRINITY_PLATFORM_SUPPORTS_HEAP_VIEW 1
 
+#define TRINITY_PLATFORM_SUPPORTS_RAY_TRACING 0
 
 class Tr2CapsAL
 {
@@ -23,6 +24,7 @@ public:
 	bool SupportsStandaloneSwapChain() const;
 	bool SupportsVertexShaderTextures() const;
 	bool SupportsVariableRefreshRate() const;
+	bool SupportsRayTracing() const;
 };
 
 #endif

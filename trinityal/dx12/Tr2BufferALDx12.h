@@ -16,6 +16,8 @@
 
 namespace TrinityALImpl
 {
+	class Tr2RtShaderTableAL;
+
 	class Tr2BufferAL : public Tr2DeviceResourceAL<Tr2BufferAL>
 	{
 	public:
@@ -46,6 +48,7 @@ namespace TrinityALImpl
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+		D3D12_RESOURCE_STATES GetDefaultState() const;
 
 		uint32_t GetSrvIndexInHeap() const;
 		uint32_t GetUavIndexInHeap() const;
@@ -66,6 +69,7 @@ namespace TrinityALImpl
 
 		friend class Tr2RenderContextAL;
 		friend class TrinityALImpl::Tr2ResourceSetAL;
+		friend class TrinityALImpl::Tr2RtShaderTableAL;
 	};
 }
 

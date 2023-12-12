@@ -110,6 +110,8 @@ public:
 	static uint32_t RegisterShaderProgram( uint32_t* shaders, size_t count );
 	static uint32_t RegisterShaderProgramOverride( uint32_t originalProgram, uint32_t overrideProgram );
 
+	static uint32_t RegisterShaderLibrary( const Tr2ShaderBytecodeAL& bytecode );
+	static const Tr2ShaderBytecodeAL* GetShaderLibraryCode( uint32_t handle );
 
 	static uint32_t RegisterRenderStateSetup( 
 		const Tr2RenderStateSetup& rss );

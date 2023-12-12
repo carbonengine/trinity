@@ -50,6 +50,9 @@ extern float g_eveSpaceSceneHighDetailThreshold;
 // Setting for what reflection mode is used
 extern int g_eveReflectionMode;
 
+// raytracing shadow setting
+extern bool g_eveSpaceSceneRaytracedShadows;
+
 struct ShadowReceiver;
 
 BLUE_DECLARE( TriFrustum );
@@ -82,6 +85,7 @@ BLUE_DECLARE( Tr2GpuBuffer );
 BLUE_DECLARE( Tr2GpuStructuredBuffer );
 BLUE_DECLARE( Tr2TextureReference );
 BLUE_DECLARE( Tr2VolumetricsRenderer );
+BLUE_DECLARE( Tr2RaytracingManager );
 
 enum TAASampling
 {
@@ -511,7 +515,6 @@ private:
 	Tr2ConstantBufferAL	m_shadowPerFrameVSBuffer;
 
 	// Cascaded shadows
-	void GetShadowCasters();
 	void SetupCascadedShadows( Tr2RenderContext & renderContext );
 	void DisableShadows();
 
@@ -614,12 +617,16 @@ private:
 
 	bool m_dynamicObjectReflectionEnabled;
 
-	std::vector<std::vector<ShadowCasterInfo>> m_shadowCasters;
+	std::vector<std::vector<EveShadowCaster::Info>> m_shadowCasters;
 	ShadowMap::SplitSetup m_splitSetup[SHADOW_FRUSTUM_COUNT];
 
 	// Cascaded shadow debugging
 	bool m_freezeFrustum;
 	Matrix m_shadowView;
+
+	// Raytracing
+	Tr2RaytracingManagerPtr m_rtManager;
+	bool m_enableRaytracing;
 
 };
 

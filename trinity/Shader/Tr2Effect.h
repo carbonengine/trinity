@@ -191,12 +191,12 @@ protected:
 		Tr2EffectParamVector &pv,
 		bool& compatibleWithGdr );
 	void MapPassParameters(
-		size_t technique,
-		unsigned passIx,
-		Tr2EffectPassParameters& pp,
 		Tr2RenderContextEnum::ShaderType stage,
-		const Tr2EffectConstantVector& constants,
-		const Tr2EffectDescription& desc,
+		Tr2MaterialStageInput& stageInput,
+		std::vector<ITriReroutable*>& reroutedParameters,
+		const Tr2EffectStageInput& stageInputDesc,
+		const Tr2EffectDescription& descriptionDesc,
+		std::vector<ITr2EffectValuePtr>& usedResources,
 		Tr2RenderContext& renderContext );
 	void AddLoddable( ITriEffectParameter* param, const char* name );
 

@@ -559,23 +559,23 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 		{
 			CCP_STATS_ZONE( "Prepare" );
 
-			uint32_t size = uint32_t( gdprBatches.size() );
-			uint32_t endIndex = 0;
-			for( uint32_t firstIndex = 0; firstIndex < size; firstIndex = endIndex )
-			{
-				auto& firstBatch = gdprBatches[firstIndex];
-				endIndex = firstIndex + firstBatch.m_groupCount;
+		uint32_t size = uint32_t( gdprBatches.size() );
+		uint32_t endIndex = 0;
+		for( uint32_t firstIndex = 0; firstIndex < size; firstIndex = endIndex )
+		{
+			auto& firstBatch = gdprBatches[firstIndex];
+			endIndex = firstIndex + firstBatch.m_groupCount;
 
-				uint32_t technique;
+			uint32_t technique;
 				if( !firstBatch.m_shader->GetTechniqueIndex( techniqueName, technique ) )
-				{
-					continue;
-				}
+			{
+				continue;
+			}
 				const uint32_t passCount = firstBatch.m_shader->GetPassCount( technique );
-				if( passCount == 0 )
-				{
-					continue;
-				}
+			if( passCount == 0 )
+			{
+				continue;
+			}
 
 				for( uint32_t passIx = 0; passIx < passCount; ++passIx )
 				{
@@ -624,16 +624,16 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 				{
 					auto& firstBatch = gdprBatches[bin.firstIndex];
 
-					m_esm.ApplyVertexDeclaration( firstBatch.m_vertexDeclaration );
-					if( firstBatch.m_vertexStreams[0] )
-					{
-						m_esm.ApplyStreamSource( 0, *firstBatch.m_vertexStreams[0], 0, firstBatch.m_stride[0] );
-					}
-					if( firstBatch.m_vertexStreams[1] )
-					{
-						m_esm.ApplyStreamSource( 1, *firstBatch.m_vertexStreams[1], 0, firstBatch.m_stride[1] );
-					}
-					m_esm.ApplyIndexBuffer( *firstBatch.m_indexBuffer, firstBatch.m_indexStride );
+				m_esm.ApplyVertexDeclaration( firstBatch.m_vertexDeclaration );
+				if( firstBatch.m_vertexStreams[0] )
+				{
+					m_esm.ApplyStreamSource( 0, *firstBatch.m_vertexStreams[0], 0, firstBatch.m_stride[0] );
+				}
+				if( firstBatch.m_vertexStreams[1] )
+				{
+					m_esm.ApplyStreamSource( 1, *firstBatch.m_vertexStreams[1], 0, firstBatch.m_stride[1] );
+				}
+				m_esm.ApplyIndexBuffer( *firstBatch.m_indexBuffer, firstBatch.m_indexStride );
 
 					firstBatch.m_shader->ApplyAllStateForPass( bin.technique, bin.pass, *renderContext );
 					firstBatch.m_material->ApplyMaterialDataForPass( bin.technique, bin.pass, *renderContext );

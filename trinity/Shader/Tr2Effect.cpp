@@ -638,13 +638,30 @@ void Tr2Effect::RebuildSamplerOverrides()
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
+	auto UpdateSamplers = [&]( ShaderType shaderType, const Tr2EffectStageInput& stage, Tr2ResourceSetDescriptionAL& resourceSetDesc )
+	{
+		for( auto jt = m_samplerOverrides.begin(); jt != m_samplerOverrides.end(); ++jt )
+		{
+			for( auto it = stage.samplers.begin(); it != stage.samplers.end(); ++it )
+			{
+				if( it->second.name && strcmp( jt->name.c_str(), it->second.name ) == 0 )
+				{
+					Tr2SamplerStateAL sampler;
+					sampler.Create( CreateSamplerDescription( *jt ), renderContext );
+					resourceSetDesc.SetSampler( shaderType, it->first, sampler );
+					break;
+				}
+			}
+		}
+	};
+
 	auto& desc = m_shader->GetEffectDescription();
 	for( size_t technique = 0; technique < desc.techniques.size(); ++technique )
 	{
 		const unsigned passCount = unsigned( desc.techniques[technique].passes.size() );
 		for( unsigned passIx = 0; passIx != passCount; ++passIx )
 		{
-			Tr2EffectPassParameters& pp = *m_parametersForPasses[technique][passIx];
+			Tr2EffectPassParameters& pp = *m_parametersForPasses[technique].passes[passIx];
 
 			for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++i )
 			{
@@ -654,24 +671,17 @@ void Tr2Effect::RebuildSamplerOverrides()
 					continue;
 				}
 
-				for( auto jt = m_samplerOverrides.begin(); jt != m_samplerOverrides.end(); ++jt )
-				{
-					for( auto it = stage.samplers.begin(); it != stage.samplers.end(); ++it )
-					{
-						if( it->second.name && strcmp( jt->name.c_str(), it->second.name ) == 0 )
-						{
-							Tr2SamplerOverrideData d;
-							d.sampler.Create( CreateSamplerDescription( *jt ), renderContext );
-							d.registerIndex = it->first;
+				UpdateSamplers( ShaderType( i ), stage, pp.m_resourceSetDesc );
+			}
+		}
+		for( unsigned passIx = 0; passIx != desc.techniques[technique].libraries.size(); ++passIx )
+		{
+			auto& pp = *m_parametersForPasses[technique].libraries[passIx];
 
-							pp.m_stageInput[i].m_samplers.push_back( d );
-							pp.m_resourceSetDesc.SetSampler( ShaderType( i ), it->first, d.sampler );
-							pp.m_compatibleWithGdr = false;
-							m_compatibleWithGdr = false;
-							break;
-						}
-					}
-				}
+			for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++i )
+			{
+				UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].globalInput, pp.m_globalResourceSetDesc );
+				UpdateSamplers( Tr2RenderContextEnum::COMPUTE_SHADER, desc.techniques[technique].libraries[passIx].localInput, pp.m_localResourceSetDesc );
 			}
 		}
 	}
@@ -701,24 +711,24 @@ void Tr2Effect::RebuildCachedDataInternal()
 			m_parametersForPasses.clear();
 
 			auto& desc = m_shader->GetEffectDescription();
-
 			m_parametersForPasses.resize( desc.techniques.size() );
 
 			for( size_t technique = 0; technique < desc.techniques.size(); ++technique )
 			{
-
 				const unsigned passCount = unsigned( desc.techniques[technique].passes.size() );
 
-				m_parametersForPasses[technique].resize( passCount );
+				m_parametersForPasses[technique].passes.resize( passCount );
 
 				for( unsigned passIx = 0; passIx != passCount; ++passIx )
 				{
-					m_parametersForPasses[technique][passIx].reset( CCP_NEW( "Tr2EffectPassParameters" ) Tr2EffectPassParameters() );
-					Tr2EffectPassParameters& pp = *m_parametersForPasses[technique][passIx];
+					m_parametersForPasses[technique].passes[passIx].reset( CCP_NEW( "Tr2EffectPassParameters" ) Tr2EffectPassParameters() );
+					Tr2EffectPassParameters& pp = *m_parametersForPasses[technique].passes[passIx];
 					pp.m_resourceSetDesc = desc.techniques[technique].passes[passIx].resourceSetDesc;
 					pp.m_resourceSetHash = 0;
 					pp.m_resourceSetDirty = true;
 					pp.m_compatibleWithGdr = true;
+
+					uint32_t stageCount = 0;
 
 					for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT; ++i )
 					{
@@ -727,10 +737,9 @@ void Tr2Effect::RebuildCachedDataInternal()
 						{
 							continue;
 						}
-
-						MapPassParameters( technique, passIx, pp, Tr2RenderContextEnum::ShaderType( i ), stage.constants, desc, renderContext );
-
 						auto& input = pp.m_stageInput[i];
+						MapPassParameters( Tr2RenderContextEnum::ShaderType( i ), input, pp.m_reroutedParameters, stage, desc, pp.m_usedResources, renderContext );
+
 						if( !stage.resources.empty() )
 						{
 							MapPassResources( stage.resources, input.m_textures, pp.m_compatibleWithGdr );
@@ -742,6 +751,55 @@ void Tr2Effect::RebuildCachedDataInternal()
 						if( !pp.m_compatibleWithGdr )
 						{
 							m_compatibleWithGdr = false;
+						}
+					}
+				}
+
+				const unsigned libCount = unsigned( desc.techniques[technique].libraries.size() );
+
+				m_parametersForPasses[technique].libraries.resize( libCount );
+
+				for( unsigned libIx = 0; libIx != libCount; ++libIx )
+				{
+					m_parametersForPasses[technique].libraries[libIx].reset( CCP_NEW( "Tr2EffectLibraryParameters" ) Tr2EffectLibraryParameters() );
+
+					auto& lib = *m_parametersForPasses[technique].libraries[libIx];
+					lib.m_globalResourceSetDesc = desc.techniques[technique].libraries[libIx].globalResourceSetDesc;
+					lib.m_globalResourceSetDirty = true;
+					lib.m_localResourceSetDesc = desc.techniques[technique].libraries[libIx].localResourceSetDesc;
+
+
+					bool compatibleWithGdr = true; //we don't care
+
+					{
+						auto& stage = desc.techniques[technique].libraries[libIx].globalInput;
+						auto& input = lib.m_globalInput;
+
+						MapPassParameters( Tr2RenderContextEnum::COMPUTE_SHADER, input, lib.m_reroutedParameters, stage, desc, lib.m_usedResources, renderContext );
+
+						if( !stage.resources.empty() )
+						{
+							MapPassResources( stage.resources, input.m_textures, compatibleWithGdr );
+						}
+						if( !stage.uavs.empty() )
+						{
+							MapPassResources( stage.uavs, input.m_uavs, compatibleWithGdr );
+						}
+					}
+					{
+						auto& stage = desc.techniques[technique].libraries[libIx].localInput;
+						auto& input = lib.m_localInput;
+
+
+						MapPassParameters( Tr2RenderContextEnum::COMPUTE_SHADER, input, lib.m_reroutedParameters, stage, desc, lib.m_usedResources, renderContext );
+
+						if( !stage.resources.empty() )
+						{
+							MapPassResources( stage.resources, input.m_textures, compatibleWithGdr );
+						}
+						if( !stage.uavs.empty() )
+						{
+							MapPassResources( stage.uavs, input.m_uavs, compatibleWithGdr );
 						}
 					}
 				}
@@ -1642,30 +1700,22 @@ bool GetBindlessFallbackTextureIndex( const Tr2EffectDescription& desc, const Tr
 // --------------------------------------------------------------------------------------
 // Description:
 //   Maps the parameters for a pass to indices in the constant mirror.
-// Arguments:
-//   passIx - Pass index
-//   pp - Pass parameters
-//   stage - Stage type
-//   constants - The constant table
-//	 resource - effect being mapped
-//   owner - shaderState being mapped
-//	 renderContext - render context
 // --------------------------------------------------------------------------------------
 void Tr2Effect::MapPassParameters( 
-	size_t technique,
-	unsigned passIx,
-	Tr2EffectPassParameters& pp,
 	Tr2RenderContextEnum::ShaderType stage,
-	const Tr2EffectConstantVector& constants, 
-	const Tr2EffectDescription& desc,
+	Tr2MaterialStageInput& stageInput,
+	std::vector<ITriReroutable*>& reroutables,
+	const Tr2EffectStageInput& stageInputDesc,
+	const Tr2EffectDescription& descriptionDesc,
+	std::vector<ITr2EffectValuePtr>& usedResources,
 	Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	static const size_t MAX_PARAMS = 64;
 
-	Tr2EffectParamVector &pv = pp.m_stageInput[stage].m_shaderParameters;
-	auto& reroutables = pp.m_reroutedParameters;
+	Tr2EffectParamVector& pv = stageInput.m_shaderParameters;
+	auto& constants = stageInputDesc.constants;
 	Tr2VariableStore& variableStore = GetVariableStore();
 
 	unsigned int perObjectStart = 0xffffffff;
@@ -1709,7 +1759,7 @@ void Tr2Effect::MapPassParameters(
 			{
 				paramAsEffectValue = r;
 				AddLoddable( r, constantIx->name.c_str() );
-				pp.m_usedResources.push_back( r );
+				usedResources.push_back( r );
 			}
 			// Fallback to variable store
 			else if( TriVariable* v = variableStore.FindVariable( constantIx->name.c_str() ) )
@@ -1747,8 +1797,8 @@ void Tr2Effect::MapPassParameters(
 		}
 	}
 
-	unsigned int constantDefaultValueSize = desc.techniques[technique].passes[passIx].stageInputs[stage].m_constantValueSize;
-	const void* constantDefaultValues = desc.techniques[technique].passes[passIx].stageInputs[stage].constantValues;
+	unsigned int constantDefaultValueSize = stageInputDesc.m_constantValueSize;
+	const void* constantDefaultValues = stageInputDesc.constantValues;
 
 	CCP_ASSERT( constantSize >= constantDefaultValueSize );
 
@@ -1785,25 +1835,25 @@ void Tr2Effect::MapPassParameters(
 			auto& c = constants[i];
 
 			uint32_t srvIndex;
-			if (GetBindlessFallbackTextureIndex(desc, c, srvIndex))
+			if (GetBindlessFallbackTextureIndex(descriptionDesc, c, srvIndex))
 			{
 				memcpy( mirror.get() + c.offset, &srvIndex, 4 );
 			}
 		}
 
 
-		pp.GetSharedConstantBuffer( stage, mirror.get(), constantSize );
+		//pp.GetSharedConstantBuffer( stage, mirror.get(), constantSize );
+		stageInput.GetSharedConstantBuffer( mirror.get(), constantSize );
 	}
 	else
 	{
 		// Allocate constant buffer
-		pp.AllocateConstantMirror( stage, constantSize );
-		if( constantSize == 0 || !pp.m_stageInput[stage].m_constantBuffer.IsValid() )
+		stageInput.AllocateConstants( constantSize );
+		if( constantSize == 0 )
 		{
 			return;
 		}
-
-		void* mirror = pp.m_stageInput[stage].m_constantMirror.get();
+		void* mirror = stageInput.m_constantMirror.get();
 		if( !mirror )
 		{
 			return;
@@ -1908,7 +1958,7 @@ void Tr2Effect::MapPassParameters(
 
 						if( supportsDirtyNotification )
 						{
-							pp.m_stageInput[stage].m_shaderParametersWithNotification.push_back( param );
+							stageInput.m_shaderParametersWithNotification.push_back( param );
 						}
 						else
 						{
@@ -1921,7 +1971,7 @@ void Tr2Effect::MapPassParameters(
 					//If this constant is used as a bindless texture index, if it isn't set by any other source,
 					//we need to fill it in with a fallback texture index!
 					uint32_t srvIndex;
-					if( GetBindlessFallbackTextureIndex( desc, *constantIx, srvIndex ) )
+					if( GetBindlessFallbackTextureIndex( descriptionDesc, *constantIx, srvIndex ) )
 					{
 						void* dest = (void*)( (uint8_t*)mirror + constantIx->offset );
 						memcpy( dest, &srvIndex, 4 );

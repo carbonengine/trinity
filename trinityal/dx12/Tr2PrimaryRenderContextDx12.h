@@ -270,6 +270,7 @@ private:
 
 public:
 	CComPtr<ID3D12Device> m_device;
+	CComPtr<ID3D12Device5> m_device5;
 	CComPtr<IDXGISwapChain3> m_swapChain;
 	CComPtr<ID3D12CommandQueue> m_commandQueue;
 

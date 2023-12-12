@@ -98,18 +98,48 @@ D3D12_STATIC_SAMPLER_DESC CreateStaticSampler( const Tr2StaticSamplerAL& sampl, 
 namespace TrinityALImpl
 {
 
-	Tr2ShaderProgramAL::Tr2ShaderProgramAL() :
+	Tr2RootSignatureAL::Tr2RootSignatureAL() :
 		m_srvUavParameterCount( 0 ),
+		m_srvUavParameterOffset( 0 ),
+		//m_srvUavTableSize( 0 ),
 		m_samplerTableSize( 0 ),
 		m_samplerParameter( 0xffffffff ),
-		m_owner( nullptr ),
-		m_VS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
-		m_PS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
-		m_DS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
-		m_HS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
-		m_GS( D3D12_SHADER_BYTECODE{ nullptr, 0 } ),
-		m_CS( D3D12_SHADER_BYTECODE{ nullptr, 0 } )
+		m_isCompute( false )
 	{
+	}
+
+	void Tr2RootSignatureAL::Destroy( Tr2PrimaryRenderContextAL& owner )
+	{
+		if( m_rootSignature )
+		{
+			RELEASE_LATER( &owner, m_rootSignature );
+			m_rootSignature = nullptr;
+		}
+
+		m_cbRegisters.clear();
+		m_srvRegisters.clear();
+		m_uavRegisters.clear();
+		m_samplerRegisters.clear();
+
+		m_registerMap = Tr2RegisterMapAL();
+
+		m_srvUavParameterCount = 0;
+		m_srvUavParameterOffset = 0;
+		m_samplerTableSize = 0;
+		m_samplerParameter = 0xffffffff;
+	}
+
+	Tr2ShaderProgramAL::Tr2ShaderProgramAL()
+		:m_owner( nullptr )
+	{
+		D3D12_SHADER_BYTECODE none = { nullptr, 0 };
+		m_VS = none;
+		m_PS = none;
+		m_DS = none;
+		m_HS = none;
+		m_GS = none;
+		m_CS = none;
+
 	}
 
 	Tr2ShaderProgramAL::~Tr2ShaderProgramAL()
@@ -201,7 +231,7 @@ namespace TrinityALImpl
 			AddCbvParameters( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, ranges, false );
 		}
 
-		m_srvUavParameterOffset = uint32_t( parameters.size() );
+		m_rootSignature.m_srvUavParameterOffset = uint32_t( parameters.size() );
 		for( size_t i = 0; i < count; ++i )
 		{
 			AddSrvUavParameters( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, ranges );
@@ -221,7 +251,7 @@ namespace TrinityALImpl
 			parameter.DescriptorTable.pDescriptorRanges = &samplerRanges[0];
 			parameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-			m_samplerParameter = uint32_t( parameters.size() );
+			m_rootSignature.m_samplerParameter = uint32_t( parameters.size() );
 
 			parameters.push_back( parameter );
 		}
@@ -265,16 +295,17 @@ namespace TrinityALImpl
 			0,
 			rootSignatureBlob->GetBufferPointer(),
 			rootSignatureBlob->GetBufferSize(),
-			IID_PPV_ARGS( &m_rootSignature ) );
+			IID_PPV_ARGS( &m_rootSignature.m_rootSignature ) );
 		if( FAILED( hr ) )
 		{
 			Destroy();
 			return hr;
 		}
 
-		m_samplerTableSize = uint32_t( samplerRanges.size() );
+		m_rootSignature.m_isCompute = IsComputeProgramDx12();
+		m_rootSignature.m_samplerTableSize = uint32_t( samplerRanges.size() );
 
-		m_registerMap = Tr2RegisterMapAL( shaders, count );
+		m_rootSignature.m_registerMap = Tr2RegisterMapAL( shaders, count );
 
 		m_owner = &renderContext;
 
@@ -283,11 +314,6 @@ namespace TrinityALImpl
 
 	void Tr2ShaderProgramAL::Destroy()
 	{
-		if( m_rootSignature && m_owner )
-		{
-			RELEASE_LATER( m_owner, m_rootSignature );
-			m_rootSignature = nullptr;
-		}
 		if( m_drawInstanced )
 		{
 			RELEASE_LATER( m_owner, m_drawInstanced );
@@ -300,8 +326,10 @@ namespace TrinityALImpl
 		}
 		if( m_owner )
 		{
+			m_rootSignature.Destroy( *m_owner );
 			m_owner->OnShaderProgramDestroyedDx12( this );
 		}
+
 		m_shaders.clear();
 		D3D12_SHADER_BYTECODE none = { nullptr, 0 };
 		m_VS = none;
@@ -313,16 +341,6 @@ namespace TrinityALImpl
 
 		m_iaInputs.clear();
 
-		m_cbRegisters.clear();
-		m_srvRegisters.clear();
-		m_uavRegisters.clear();
-		m_samplerRegisters.clear();
-
-		m_registerMap = Tr2RegisterMapAL();
-
-		m_srvUavParameterCount = 0;
-		m_samplerTableSize = 0;
-		m_samplerParameter = 0xffffffff;
 
 		m_indirectBufferLayout.constantBufferCount = {};
 
@@ -345,7 +363,7 @@ namespace TrinityALImpl
 
 		std::vector<D3D12_INDIRECT_ARGUMENT_DESC> indirectArgs;
 
-		for( auto& reg : m_cbRegisters )
+		for( auto& reg : m_rootSignature.m_cbRegisters )
 		{
 			if( reg.dynamic )
 			{
@@ -379,11 +397,11 @@ namespace TrinityALImpl
 			signature.NumArgumentDescs = UINT( indirectArgs.size() );
 			signature.pArgumentDescs = indirectArgs.data();
 
-			FORWARD_HR( renderContext.m_device->CreateCommandSignature( &signature, indirectArgs.size() > 1 ? m_rootSignature : nullptr, IID_PPV_ARGS( &m_drawInstanced ) ) );
+			FORWARD_HR( renderContext.m_device->CreateCommandSignature( &signature, indirectArgs.size() > 1 ? m_rootSignature.m_rootSignature : nullptr, IID_PPV_ARGS( &m_drawInstanced ) ) );
 			m_indirectBufferLayout.drawStride = signature.ByteStride;
 			signature.ByteStride = UINT( sizeof( D3D12_DRAW_INDEXED_ARGUMENTS ) + 8 * ( indirectArgs.size() - 1 ) );
 			indirectArgs.back().Type = D3D12_INDIRECT_ARGUMENT_TYPE_DRAW_INDEXED;
-			FORWARD_HR( renderContext.m_device->CreateCommandSignature( &signature, indirectArgs.size() > 1 ? m_rootSignature : nullptr, IID_PPV_ARGS( &m_drawIndexedInstanced ) ) );
+			FORWARD_HR( renderContext.m_device->CreateCommandSignature( &signature, indirectArgs.size() > 1 ? m_rootSignature.m_rootSignature : nullptr, IID_PPV_ARGS( &m_drawIndexedInstanced ) ) );
 			m_indirectBufferLayout.drawIndexedStride = signature.ByteStride;
 			m_indirectBufferLayout.drawArgOffset = uint32_t( 8 * ( indirectArgs.size() - 1 ) );
 		}
@@ -395,7 +413,7 @@ namespace TrinityALImpl
 
 	bool Tr2ShaderProgramAL::IsValid() const
 	{
-		return m_rootSignature != nullptr;
+		return m_rootSignature.m_rootSignature != nullptr;
 	}
 
 	Tr2ALMemoryType Tr2ShaderProgramAL::GetMemoryClass() const
@@ -422,16 +440,16 @@ namespace TrinityALImpl
 			auto isSrv = reg.IsSrv();
 			if( isSrv || reg.IsUav() )
 			{
-				CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( parameters.size() ), reg.registerType };
+				Tr2RootSignatureAL::CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( parameters.size() ), reg.registerType };
 				D3D12_DESCRIPTOR_RANGE_TYPE rangeType;
 				if( isSrv )
 				{
-					m_srvRegisters.push_back( cbr );
+					m_rootSignature.m_srvRegisters.push_back( cbr );
 					rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 				}
 				else
 				{
-					m_uavRegisters.push_back( cbr );
+					m_rootSignature.m_uavRegisters.push_back( cbr );
 					rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
 				}
 				ranges.push_back( std::make_unique<D3D12_DESCRIPTOR_RANGE>( CreateRange( rangeType, reg.registerIndex, reg.registerSpace, reg.arrayCount ) ) );
@@ -442,7 +460,7 @@ namespace TrinityALImpl
 				parameter.DescriptorTable.pDescriptorRanges = ranges.back().get();
 				parameter.ShaderVisibility = ShaderVisibility( shaderType );
 				parameters.push_back( parameter );
-				m_srvUavParameterCount++;
+				m_rootSignature.m_srvUavParameterCount++;
 			}
 		}
 	}
@@ -466,9 +484,9 @@ namespace TrinityALImpl
 			parameter.Descriptor.RegisterSpace = reg.registerSpace;
 			parameter.Descriptor.ShaderRegister = reg.registerIndex;
 			parameter.ShaderVisibility = ShaderVisibility( shaderType );
-
-			CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( parameters.size() ), reg.registerType, reg.dynamic };
-			m_cbRegisters.push_back( cbr );
+			
+			Tr2RootSignatureAL::CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( parameters.size() ), reg.registerType, reg.dynamic };
+			m_rootSignature.m_cbRegisters.push_back( cbr );
 
 			parameters.push_back( parameter );
 		}
@@ -481,10 +499,10 @@ namespace TrinityALImpl
 	{
 		for( auto& reg : signature.registers )
 		{
-			if( reg.registerType == Tr2ShaderRegisterAL::SAMPLER ) 
+			if( reg.registerType == Tr2ShaderRegisterAL::SAMPLER )
 			{
-				CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( samplerRanges.size() ), reg.registerType };
-				m_samplerRegisters.push_back( cbr );
+				Tr2RootSignatureAL::CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( samplerRanges.size() ), reg.registerType };
+				m_rootSignature.m_samplerRegisters.push_back( cbr );
 				samplerRanges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, reg.registerIndex, reg.registerSpace, reg.arrayCount, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND ) );
 			}
 		}
@@ -492,7 +510,7 @@ namespace TrinityALImpl
 
 	const Tr2RegisterMapAL& Tr2ShaderProgramAL::GetRegisterMap() const
 	{
-		return m_registerMap;
+		return m_rootSignature.m_registerMap;
 	}
 
 	bool Tr2ShaderProgramAL::IsComputeProgramDx12() const
@@ -509,7 +527,7 @@ namespace TrinityALImpl
 	ALResult Tr2ShaderProgramAL::SetName( const char* name )
 	{
 		m_name = name;
-		SetDebugName( m_rootSignature, name );
+		SetDebugName( m_rootSignature.m_rootSignature, name );
 		return S_OK;
 	}
 }

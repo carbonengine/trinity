@@ -6,10 +6,11 @@ struct StaticSampler;
 class ParserState;
 struct Type;
 
-union ExpressionValueElement
+struct ExpressionValueElement
 {
 	long intValue;
 	double floatValue;
+	std::string stringValue;
 };
 
 typedef std::vector<ExpressionValueElement> ExpressionValue;

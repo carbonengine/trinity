@@ -27,4 +27,9 @@ bool Tr2CapsAL::SupportsVariableRefreshRate() const
 	return false;
 }
 
+bool Tr2CapsAL::SupportsRayTracing() const
+{
+	return false;
+}
+
 #endif

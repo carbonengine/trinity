@@ -4,7 +4,7 @@
 #include "EffectCompilerBase.h"
 
 
-class EffectCompilerDX11: public EffectCompilerBase
+class EffectCompilerDX11 : public EffectCompilerBase
 {
 public:
 	bool Create() override;
@@ -21,5 +21,6 @@ public:
 private:
 	std::unordered_map<std::string, CComPtr<ID3D10Blob>> m_compiled;
 	std::mutex m_compiledCS;
+	CComPtr<IDxcUtils> m_dxilUtils;
 };
 #endif

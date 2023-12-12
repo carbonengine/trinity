@@ -37,8 +37,8 @@ namespace EntityComponents
 }
 
 EveEntity::EveEntity(IRoot* root):
-	m_state( RegistrationState() ),
-	m_registry(nullptr)
+	m_registry(nullptr),
+	m_state(0)
 {}
 
 EveEntity::~EveEntity()
@@ -46,6 +46,10 @@ EveEntity::~EveEntity()
 	m_registry = nullptr;
 }
 
+bool EveEntity::IsInRegistry() const
+{
+	return m_registry != nullptr;
+}
 
 /// Registers the entity to an component registry.
 /// If the entity has been registered with another registry, then we first unregister the entity
@@ -66,7 +70,6 @@ void EveEntity::Register( EveComponentRegistry* registry )
 		return;
 	}
 
-	m_state = RegistrationState();
 	m_registry = registry;
 	this->RegisterComponents();
 }
@@ -80,15 +83,12 @@ void EveEntity::UnRegister( EveComponentRegistry* registry )
 		// can't unregister from a registry that is not the registry that we are registered to...
 		return;
 	}
-	
-	// unregister everything
-	for( auto component = 0; component != ComponentType::COUNT; ++component )
-	{
-		registry->UnRegisterComponent( (ComponentType)component, this, m_state, true );
-	}
+	// unregister the components tied to this entity
+	m_registry->UnRegisterAllComponents( this );
 
+	// unregister children
 	this->UnRegisterComponents();
-	m_state = RegistrationState();
+
 	m_registry = nullptr;
 }
 

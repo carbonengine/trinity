@@ -40,6 +40,11 @@ Tr2ShaderPipelineInputAL::Tr2ShaderPipelineInputAL( Tr2VertexDefinition::UsageCo
 {
 }
 
+bool Tr2ShaderPipelineInputAL::operator==( const Tr2ShaderPipelineInputAL& other ) const
+{
+	return usage == other.usage && usageIndex == other.usageIndex && registerIndex == other.registerIndex && usedMask == other.usedMask;
+}
+
 
 Tr2ShaderRegisterAL::Tr2ShaderRegisterAL()
 	:registerType( CONSTANT_BUFFER ),
@@ -67,7 +72,10 @@ bool Tr2ShaderRegisterAL::IsUav() const
 	return ( registerType & UAV_REGISTER_FLAG ) != 0;
 }
 
-
+bool Tr2ShaderRegisterAL::operator==( const Tr2ShaderRegisterAL& other ) const
+{
+	return registerType == other.registerType && registerIndex == other.registerIndex;
+}
 
 Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( const Tr2ShaderPipelineInputAL& pipelineInput )
 {
@@ -103,6 +111,16 @@ Tr2ShaderSignatureAL& Tr2ShaderSignatureAL::Add( const Tr2SamplerDescription& sa
 {
 	samplers.push_back( { sampler, registerIndex, registerSpace } );
 	return *this;
+}
+
+bool Tr2ShaderSignatureAL::IsEmpty() const
+{
+	return registers.empty() && pipelineInputs.empty();
+}
+
+bool Tr2ShaderSignatureAL::operator==( const Tr2ShaderSignatureAL& other ) const
+{
+	return registers == other.registers && pipelineInputs == other.pipelineInputs;
 }
 
 Tr2ShaderAL::Tr2ShaderAL()

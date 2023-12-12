@@ -1417,6 +1417,7 @@ void TriStepRenderPostProcess::RenderTaa( Tr2RenderTarget* dest, Tr2RenderContex
 		output = m_accumulationBuffer0;
 	}
 
+
 	Tr2EffectPtr effects[] = {m_taaEffect, m_taaCopyEffect};
 	for( Tr2EffectPtr effect : effects )
 	{
@@ -1438,6 +1439,8 @@ void TriStepRenderPostProcess::RenderTaa( Tr2RenderTarget* dest, Tr2RenderContex
 
 		effect->EndUpdate();
 	}
+		
+
 
 	m_taaEffect->SetParameter( BlueSharedString( "FrameIndex" ), frame_count );
 

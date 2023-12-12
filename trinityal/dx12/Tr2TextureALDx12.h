@@ -22,6 +22,7 @@
 namespace TrinityALImpl
 {
 	class Tr2ResourceSetAL;
+	class Tr2RtShaderTableAL;
 }
 
 
@@ -118,6 +119,7 @@ namespace TrinityALImpl
 
 		friend class Tr2ResourceSetAL;
 		friend class Tr2RenderContextAL;
+		friend class Tr2RtShaderTableAL;
 	};
 }
 

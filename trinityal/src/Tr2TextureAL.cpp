@@ -250,7 +250,6 @@ TrinityALImpl::Tr2TextureAL* Tr2TextureAL::TrinityALImpl_GetObject() const
 }
 
 
-
 namespace
 {
 	void ConvertUsage( Tr2RenderContextEnum::BufferUsage usage, Tr2GpuUsage::Type& gpuUsage, Tr2CpuUsage::Type& cpuUsage )

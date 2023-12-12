@@ -7,6 +7,7 @@
 
 BLUE_DECLARE( Tr2Material );
 BLUE_DECLARE( Tr2MeshBase );
+class Tr2RaytracingMeshArea;
 
 BLUE_CLASS ( Tr2MeshArea ) :
 	public IRoot
@@ -61,6 +62,9 @@ public:
 
 	Tr2Lod GetMinLod() const;
 	void SetMinLod( Tr2Lod lod );
+
+	Tr2RaytracingMeshArea* GetOrCreateRtMeshArea();
+	Tr2RaytracingMeshArea* GetRtMeshArea() const;
 private:
 	Tr2MaterialPtr m_material;
 	std::string m_name;
@@ -83,6 +87,8 @@ private:
 
 	unsigned int m_jointCount;
 	unsigned int* m_jointMappingAnimRig;
+
+	std::unique_ptr<Tr2RaytracingMeshArea> m_rtMeshArea;
 public:
 	EXPOSE_TO_BLUE();
 };

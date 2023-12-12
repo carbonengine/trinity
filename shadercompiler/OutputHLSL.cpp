@@ -381,6 +381,12 @@ namespace
 			case OP_BINDLESSHANDLETEXTURECUBE:
 				os << "uint";
 				return;
+			case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+				os << "RaytracingAccelerationStructure";
+				return;
+			case OP_RAY_DESC:
+				os << "RayDesc";
+				return;
 			default:
 				os << "!!error_type!!";
 				return;

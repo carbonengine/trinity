@@ -2194,4 +2194,9 @@ void TrinityALImpl::SetDebugName( ID3D11DeviceChild* resource, const char* name 
 	}
 }
 
+ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
+{
+	return E_FAIL;
+}
+
 #endif	//DX11?

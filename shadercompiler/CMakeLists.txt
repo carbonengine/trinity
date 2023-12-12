@@ -4,15 +4,19 @@ if(APPLE)
     set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15 CACHE STRING "The minimum macOS version we target." FORCE)
 endif()
 
-project(ShaderCompiler VERSION 1.1.1)
+project(ShaderCompiler VERSION 1.2.1)
 
 if (APPLE)
     set(TELEMETRY_DEFAULT OFF)
+    set(DXC_DEFAULT OFF)
 else()
     set(TELEMETRY_DEFAULT ON)
+    set(DXC_DEFAULT ON)
 endif()
 
 option(WITH_TELEMETRY "Enable integration with RAD Game tools Telemetry SDK" ${TELEMETRY_DEFAULT})
+
+option(WITH_DXC "Enable DXC Compiler" ${DXC_DEFAULT})
 
 set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
 
@@ -23,6 +27,8 @@ add_executable(ShaderCompiler
     CachingIncludeHandler.h
     CompileMessageQueue.cpp
     CompileMessageQueue.h
+    DxReflection.cpp
+    DxReflection.h
     EffectCompilerBase.h
     EffectCompilerDX11.cpp
     EffectCompilerDX11.h
@@ -149,19 +155,42 @@ set_target_properties(ShaderCompiler PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../../tools/ShaderCompiler/${CCP_VENDOR_PLATFORM}$<$<CONFIG:DEBUG>:>"
 )
 
+get_filename_component(SHADER_COMPILER_BRANCH_PREFIX $ENV{CCP_EVE_PERFORCE_BRANCH_PATH} ABSOLUTE)
+
 if (WIN32)
+    if(WITH_DXC)
+        set(dxc_ROOT "${SHADER_COMPILER_BRANCH_PREFIX}/vendor/dxc/v1.7.2212.1")
+        find_package(dxc REQUIRED)
+    endif()
+
     target_link_libraries(ShaderCompiler PRIVATE
         d3dcompiler.lib
         d3d11.lib
         dxguid.lib
+        dxc
     )
     target_compile_options(ShaderCompiler PRIVATE /W4)
+
+    if(WITH_DXC)
+        get_target_property(DEST_DIR ShaderCompiler RUNTIME_OUTPUT_DIRECTORY)
+        add_custom_command(
+            TARGET ShaderCompiler POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "${DXC_BIN_DIR}/x64/dxcompiler.dll" "${DEST_DIR}/dxcompiler.dll"
+            COMMAND cmd /C attrib -R "${DEST_DIR}/dxcompiler.dll"
+            message(STATUS "${DEST_DIR}")
+        )
+        add_custom_command(
+            TARGET ShaderCompiler POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy "${DXC_BIN_DIR}/x64/dxil.dll" "${DEST_DIR}/dxil.dll"
+            message(STATUS "${DEST_DIR}")
+            COMMAND cmd /C attrib -R "${DEST_DIR}/dxil.dll"
+        )
+    endif()
 else()
     target_compile_options(ShaderCompiler PRIVATE -Wall -Wextra -pedantic -Wno-gnu-zero-variadic-macro-arguments)
     set_source_files_properties(${GENERATED_SOURCES_DIR}/HLSLParser.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-sign-compare -Wno-unused-variable")
     set_source_files_properties(${GENERATED_SOURCES_DIR}/Preprocessor.c PROPERTIES COMPILE_FLAGS "-Wno-unused-parameter -Wno-sign-compare -Wno-unused-variable")
 endif()
-
 
 if(WITH_TELEMETRY)
     find_package(RadGameToolsTelemetry REQUIRED NO_CMAKE_PATH)
@@ -170,8 +199,6 @@ if(WITH_TELEMETRY)
 else()
     target_compile_definitions(ShaderCompiler PUBLIC CCP_TELEMETRY_ENABLED=0)
 endif()
-
-get_filename_component(SHADER_COMPILER_BRANCH_PREFIX $ENV{CCP_EVE_PERFORCE_BRANCH_PATH} ABSOLUTE)
 
 # Install rule to ensure that our runtime and linker files are in the expected, platform-specific folders
 install(

@@ -15,7 +15,13 @@ using namespace Tr2RenderContextEnum;
 
 CCP_STATS_DECLARE( geometryResBytes, "Trinity/geometryResBytes", false, CST_MEMORY, "Size of memory occupied by geometry resources." );
 
-Tr2SuballocatedBuffer g_sharedBuffer( "TriGeometryRes shared vertex/index buffer", Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::INDEX_BUFFER, SHARED_BUFFER_BLOCK_SIZE );
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+const auto gpuUsage = Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE;
+#else
+const auto gpuUsage = Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::INDEX_BUFFER;
+#endif
+
+Tr2SuballocatedBuffer g_sharedBuffer( "TriGeometryRes shared vertex/index buffer", gpuUsage, SHARED_BUFFER_BLOCK_SIZE );
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -665,6 +671,53 @@ void TriGeometryRes::DetermineAreaBones( TriGeometryResAreaData& area, granny_me
 	}
 }
 
+bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex )
+{
+	CCP_STATS_ZONE( __FUNCTION__ );
+	bool isSkinned = false;
+	// offset to boneindex
+	int boneIndexOffset = GetVertexComponentOffset( myMesh, GrannyVertexBoneIndicesName );
+	// if there are no bone-indices , we are done
+	if( boneIndexOffset == -1 )
+	{
+		return isSkinned;
+	}
+
+	// pointers to bone indices
+	uint8_t* pBoneIndex0 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 0;
+	uint8_t* pBoneIndex1 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 1;
+	uint8_t* pBoneIndex2 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 2;
+	uint8_t* pBoneIndex3 = (uint8_t*)myMesh->PrimaryVertexData->Vertices + boneIndexOffset + 3;
+	
+	// cycle thorugh all vertices of this area and collect bone indices
+	for( int vIx = 0; vIx < area.m_primitiveCount * 3; ++vIx )
+	{
+		int index;
+
+		if( myMesh->PrimaryTopology->Indices16 )
+		{
+			index = myMesh->PrimaryTopology->Indices16[vIx + area.m_firstIndex];
+		}
+		else
+		{
+			index = myMesh->PrimaryTopology->Indices[vIx + area.m_firstIndex];
+		}
+
+		// bones
+		uint8_t boneIndex0 = *(pBoneIndex0 + index * bytesPerVertex);
+		uint8_t boneIndex1 = *(pBoneIndex1 + index * bytesPerVertex);
+		uint8_t boneIndex2 = *(pBoneIndex2 + index * bytesPerVertex);
+		uint8_t boneIndex3 = *(pBoneIndex3 + index * bytesPerVertex);
+
+		if( boneIndex0 != 0 || boneIndex1 != 0 || boneIndex2 != 0 || boneIndex3 != 0 )
+		{
+			// found it attached to a bone so return early
+			return true;
+		}
+	}
+	return isSkinned;
+}
+
 bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -754,7 +807,7 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 
 				TriGeometryResAreaData& area = pMesh->m_areas[groupIx];
 				area.m_name = "";
-
+				
 				if( myMesh->MaterialBindingCount > grp.MaterialIndex )
 				{
 					if( myMesh->MaterialBindings[grp.MaterialIndex].Material != NULL )
@@ -768,6 +821,12 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 				area.m_primitiveCount = myMesh->PrimaryTopology->Groups[groupIx].TriCount;
 
 				pMesh->m_primitiveCount += area.m_primitiveCount;
+
+				area.m_isSkinned = IsAreaSkinned( area, myMesh, bytesPerVertex );
+				if( area.m_isSkinned )
+				{
+					bool yes = 1;
+				}
 
 				// only re-map the bone indices if there is a skeleton...
 				if( gi->SkeletonCount )
@@ -1435,7 +1494,8 @@ TriGeometryResAreaData::TriGeometryResAreaData() :
 	m_firstIndex( 0 ),
 	m_primitiveCount( 0 ),
 	m_vertexCount( 0 ),
-	m_jointBindings( "TriGeometryResAreaData/m_jointBindings" )
+	m_jointBindings( "TriGeometryResAreaData/m_jointBindings" ),
+	m_isSkinned( false )
 {
 }
 
@@ -1644,6 +1704,8 @@ bool TriGeometryRes::CreateMeshFromGrannyMesh( granny_mesh* myMesh, TriGeometryR
 	{
 		std::vector<uint8_t> tempBuffer( indexCount * bytesPerIndex );
 		GrannyCopyMeshIndices( myMesh, bytesPerIndex, &tempBuffer[0] );
+
+		
 
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		ALResult hr = g_sharedBuffer.Allocate( bytesPerIndex, indexCount, &tempBuffer[0], renderContext, pMesh->m_indexAllocation );

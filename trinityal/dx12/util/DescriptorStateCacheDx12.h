@@ -34,7 +34,7 @@ public:
 	void Dirty();
 
 	/** Apply state */
-	void Commit( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, const TrinityALImpl::Tr2ShaderProgramAL* shader );
+	void Commit( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap, const TrinityALImpl::Tr2RootSignatureAL* rootSignature );
 
 	/** Set an array of ShaderResourceViews */
 	void SetShaderResources(uint32_t startSlot, uint32_t numViews, std::shared_ptr<ShaderResourceViewDx12>* shaderResourceViews);
@@ -47,10 +47,15 @@ public:
 	D3D12_GPU_VIRTUAL_ADDRESS UploadConstants( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer );
 	D3D12_GPU_VIRTUAL_ADDRESS UploadConstants( const void* data, uint32_t size );
 
+	/** Upload constantbuffer */
+	D3D12_GPU_VIRTUAL_ADDRESS UploadConstantBuffer( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer );
+
 	/** Set an array or UnorderedAccessViews */
 	void SetUnorderedAccessViews(uint32_t startSlot, uint32_t numViews, std::shared_ptr<UnorderedAccessViewDx12>* unorderedAccessViews);
 
 	void SetHeaps( ID3D12GraphicsCommandList* commandList, ID3D12DescriptorHeap* globalSrvUavHeap );
+
+	FrameLocalDescriptorHeapAllocator& GetSamplerHeapAllocator();
 
 private:
 
@@ -123,7 +128,7 @@ private:
 	};
 
 	FrameLocalDescriptorHeapAllocator m_allocatorSampler;
-	ConstantBufferAllocator m_allocatorUpload;
+	FrameLocalUploadBufferAllocator m_allocatorUpload;
 
 	class Tr2PrimaryRenderContextAL* m_primaryContext;
 	CComPtr<ID3D12Device> m_device;

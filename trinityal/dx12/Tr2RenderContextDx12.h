@@ -27,6 +27,7 @@ struct ITr2RenderContextEvents;
 class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2BufferAL;
+class Tr2RtShaderTableAL;
 struct Tr2Viewport;
 
 
@@ -142,6 +143,8 @@ public:
 	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw( );
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( );
 
+	ALResult DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth );
+
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw( );
 	ALResult SetRenderStates( const uint32_t* stateValuePairs, uint32_t count ) throw( );
 
@@ -253,14 +256,16 @@ protected:
 
 	Tr2ResourceSetAL m_resourceSet;
 
-	std::vector<std::shared_ptr<DescriptorStateCache>> m_descriptorCache;
-
 	bool GetRenderTargetHandles( D3D12_CPU_DESCRIPTOR_HANDLE* handles, uint32_t& count );
 public:
+	std::vector<std::shared_ptr<DescriptorStateCache>> m_descriptorCache;
+
 	// If you need this, you're probably doing something wrong :P
 	//Tr2TextureAL&			GetDefaultBackBuffer()
 	CComPtr<ID3D12GraphicsCommandList> m_commandList;
 	CComPtr<ID3D12GraphicsCommandList2> m_commandList2;
+	// extends the interface to support ray tracing and render passes
+	CComPtr<ID3D12GraphicsCommandList4> m_commandList4;
 
 	Tr2PrimaryRenderContextAL* m_ownerDevice;
 	bool m_dirtyPso;

@@ -164,6 +164,13 @@ inline Symbol* AddFunction( SymbolTable& table, const char* name, IntrinsicType 
 	return symbol;
 }
 
+inline Symbol* AddConstant( SymbolTable& table, const char* name, int opType )
+{
+	Symbol* symbol = table.AddSymbol( MakeInlineString( name ), ALLOW_OVERRIDES );
+	symbol->type.FromTokenType( opType );
+	return symbol;
+}
+
 template<int Arg>
 int TypeSameAsArg( ASTNode* call )
 {
@@ -393,6 +400,63 @@ Type FunctionDescription4( ASTNode* call, int argIndex )
 	case 3:
 		type.builtInType = Arg3Type( call );
 		Arg3Dim( call, type.width, type.height );
+		return type;
+	case -1:
+		type.builtInType = ResultType( call );
+		ResultDim( call, type.width, type.height );
+		return type;
+	}
+	return type;
+}
+
+template<
+	TypeComponent ResultType, DimComponent ResultDim,
+	TypeComponent Arg0Type, DimComponent Arg0Dim,
+	TypeComponent Arg1Type, DimComponent Arg1Dim,
+	TypeComponent Arg2Type, DimComponent Arg2Dim,
+	TypeComponent Arg3Type, DimComponent Arg3Dim,
+	TypeComponent Arg4Type, DimComponent Arg4Dim,
+	TypeComponent Arg5Type, DimComponent Arg5Dim,
+	TypeComponent Arg6Type, DimComponent Arg6Dim,
+	TypeComponent Arg7Type, DimComponent Arg7Dim
+>
+Type FunctionDescription8( ASTNode* call, int argIndex )
+{
+	Type type;
+	type.FromTokenType( OP_VOID );
+	switch( argIndex )
+	{
+	case 0:
+		type.builtInType = Arg0Type( call );
+		Arg0Dim( call, type.width, type.height );
+		return type;
+	case 1:
+		type.builtInType = Arg1Type( call );
+		Arg1Dim( call, type.width, type.height );
+		return type;
+	case 2:
+		type.builtInType = Arg2Type( call );
+		Arg2Dim( call, type.width, type.height );
+		return type;
+	case 3:
+		type.builtInType = Arg3Type( call );
+		Arg3Dim( call, type.width, type.height );
+		return type;
+	case 4:
+		type.builtInType = Arg4Type( call );
+		Arg4Dim( call, type.width, type.height );
+		return type;
+	case 5:
+		type.builtInType = Arg5Type( call );
+		Arg5Dim( call, type.width, type.height );
+		return type;
+	case 6:
+		type.builtInType = Arg6Type( call );
+		Arg6Dim( call, type.width, type.height );
+		return type;
+	case 7:
+		type.builtInType = Arg7Type( call );
+		Arg7Dim( call, type.width, type.height );
 		return type;
 	case -1:
 		type.builtInType = ResultType( call );
