@@ -41,6 +41,7 @@ public:
 #endif
 	};
 	Allocation Allocate( uint32_t size );
+	void CopyArguments();
 	void SetFrameNumbers( uint64_t recordingFrame, uint64_t completedFrame );
 	void Submit( const Tr2IndirectDrawBufferWriter& writer );
 
@@ -53,7 +54,8 @@ private:
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	void Resize();
 
-	CComPtr<ID3D12Resource> m_buffer;
+	CComPtr<ID3D12Resource> m_uploadBuffer;
+	CComPtr<ID3D12Resource> m_defaultBuffer;
 	uint8_t* m_cpuAddr = nullptr;
 	int32_t m_size = 0;
 	int32_t m_head = 0;

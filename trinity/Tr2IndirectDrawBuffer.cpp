@@ -128,9 +128,10 @@ Tr2IndirectDrawBuffer::~Tr2IndirectDrawBuffer()
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( m_buffer && renderContext.IsValid() )
+	if( m_uploadBuffer && renderContext.IsValid() )
 	{
-		renderContext.ReleaseLater( m_buffer );
+		renderContext.ReleaseLater( m_uploadBuffer );
+		renderContext.ReleaseLater( m_defaultBuffer );
 	}
 #endif
 }
@@ -138,7 +139,7 @@ Tr2IndirectDrawBuffer::~Tr2IndirectDrawBuffer()
 bool Tr2IndirectDrawBuffer::IsValid() const
 {
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
-	return m_buffer != nullptr;
+	return m_uploadBuffer != nullptr;
 #else
 	return false;
 #endif
@@ -173,9 +174,57 @@ Tr2IndirectDrawBuffer::Allocation Tr2IndirectDrawBuffer::Allocate( uint32_t size
 	m_head += size;
 	m_regions.push_back( { m_frame, m_head } );
 
-	return { m_buffer, m_cpuAddr, result };
+	return { m_defaultBuffer, m_cpuAddr, result };
 #else
 	return {};
+#endif
+}
+
+
+
+void Tr2IndirectDrawBuffer::CopyArguments()
+{
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	GPU_REGION( renderContext, "Copy arguments" );
+
+	{
+		D3D12_RESOURCE_TRANSITION_BARRIER transition = {
+			m_defaultBuffer,
+			0,
+			D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,
+			D3D12_RESOURCE_STATE_COPY_DEST
+		};
+
+		D3D12_RESOURCE_BARRIER barrier = {
+			D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+			D3D12_RESOURCE_BARRIER_FLAG_NONE,
+			transition
+		};
+
+		renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+	}
+
+	renderContext.m_commandList->CopyBufferRegion( m_defaultBuffer, 0, m_uploadBuffer, 0, m_size );
+
+	{
+		D3D12_RESOURCE_TRANSITION_BARRIER transition = {
+			m_defaultBuffer,
+			0,
+			D3D12_RESOURCE_STATE_COPY_DEST,
+			D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT
+		};
+
+		D3D12_RESOURCE_BARRIER barrier = {
+			D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+			D3D12_RESOURCE_BARRIER_FLAG_NONE,
+			transition
+		};
+
+		renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+	}
 #endif
 }
 
@@ -205,6 +254,44 @@ void Tr2IndirectDrawBuffer::Submit( const Tr2IndirectDrawBufferWriter& writer )
 	if( writer.m_commandCount )
 	{
 		auto offset = static_cast<uint8_t*>( writer.m_allocation.address ) - static_cast<uint8_t*>( writer.m_allocation.baseAddress );
+
+		{
+			D3D12_RESOURCE_TRANSITION_BARRIER transition = {
+				m_defaultBuffer,
+				0,
+				D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT,
+				D3D12_RESOURCE_STATE_COPY_DEST
+			};
+
+			D3D12_RESOURCE_BARRIER barrier = {
+				D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+				D3D12_RESOURCE_BARRIER_FLAG_NONE,
+				transition
+			};
+
+			writer.m_renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+		}
+
+		writer.m_renderContext.m_commandList->CopyBufferRegion( m_defaultBuffer, offset, m_uploadBuffer, offset, writer.m_commandCount * writer.m_layout.m_stride );
+
+		{
+			D3D12_RESOURCE_TRANSITION_BARRIER transition = {
+				m_defaultBuffer,
+				0,
+				D3D12_RESOURCE_STATE_COPY_DEST,
+				D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT
+			};
+
+			D3D12_RESOURCE_BARRIER barrier = {
+				D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
+				D3D12_RESOURCE_BARRIER_FLAG_NONE,
+				transition
+			};
+
+			writer.m_renderContext.m_commandList->ResourceBarrier( 1, &barrier );
+		}
+
+
 		writer.m_renderContext.m_commandList->ExecuteIndirect( writer.m_layout.m_shaderProgram.TrinityALImpl_GetObject()->m_drawIndexedInstanced, writer.m_commandCount, writer.m_allocation.buffer, offset, nullptr, 0 );
 		CCP_STATS_INC( sceneExecuteIndirectCount );
 		CCP_STATS_ADD( sceneIndirectDrawCount, writer.m_commandCount );
@@ -219,10 +306,15 @@ void Tr2IndirectDrawBuffer::ReleaseResources( TriStorage s )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 
-		if( m_buffer )
+		if (m_uploadBuffer)
 		{
-			renderContext.ReleaseLater( m_buffer );
-			m_buffer = nullptr;
+			renderContext.ReleaseLater( m_uploadBuffer );
+			m_uploadBuffer = nullptr;
+		}
+		if (m_defaultBuffer)
+		{
+			renderContext.ReleaseLater(m_defaultBuffer);
+			m_defaultBuffer = nullptr;
 		}
 		m_cpuAddr = nullptr;
 		m_size = 0;
@@ -246,22 +338,43 @@ void Tr2IndirectDrawBuffer::Resize()
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
-	if( m_buffer )
+
+
+	if( m_uploadBuffer )
 	{
-		renderContext.ReleaseLater( m_buffer );
-		m_buffer = nullptr;
+		CopyArguments(); //Make sure we copy the old arguments so that we don't break previous allocations!
+
+		renderContext.ReleaseLater( m_uploadBuffer );
+		m_uploadBuffer = nullptr;
+		renderContext.ReleaseLater( m_defaultBuffer );
+		m_defaultBuffer = nullptr;
 	}
-	CComPtr<ID3D12Resource> buffer;
 
-	D3D12_HEAP_PROPERTIES heap = { D3D12_HEAP_TYPE_UPLOAD, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 1, 1 };
-	D3D12_RESOURCE_DESC resourceDesc = { D3D12_RESOURCE_DIMENSION_BUFFER, 0, UINT64( m_size ), 1, 1, 1, DXGI_FORMAT_UNKNOWN, 1, 0, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE };
+	{
+		CComPtr<ID3D12Resource> uploadBuffer;
 
-	renderContext.m_device->CreateCommittedResource( &heap, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS( &buffer ) );
+		D3D12_HEAP_PROPERTIES heap = { D3D12_HEAP_TYPE_UPLOAD, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 1, 1 };
+		D3D12_RESOURCE_DESC resourceDesc = { D3D12_RESOURCE_DIMENSION_BUFFER, 0, UINT64(m_size), 1, 1, 1, DXGI_FORMAT_UNKNOWN, 1, 0, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE };
 
-	m_buffer = buffer;
+		HRESULT result = renderContext.m_device->CreateCommittedResource(&heap, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&uploadBuffer));
 
-	D3D12_RANGE range = { 0, 0 };
-	m_buffer->Map( 0, &range, (void**)&m_cpuAddr );
+		m_uploadBuffer = uploadBuffer;
+
+		D3D12_RANGE range = { 0, 0 };
+		m_uploadBuffer->Map(0, &range, (void**)&m_cpuAddr);
+	}
+
+	{
+
+		CComPtr<ID3D12Resource> defaultBuffer;
+
+		D3D12_HEAP_PROPERTIES heap = { D3D12_HEAP_TYPE_DEFAULT, D3D12_CPU_PAGE_PROPERTY_UNKNOWN, D3D12_MEMORY_POOL_UNKNOWN, 1, 1 };
+		D3D12_RESOURCE_DESC resourceDesc = { D3D12_RESOURCE_DIMENSION_BUFFER, 0, UINT64(m_size), 1, 1, 1, DXGI_FORMAT_UNKNOWN, 1, 0, D3D12_TEXTURE_LAYOUT_ROW_MAJOR, D3D12_RESOURCE_FLAG_NONE };
+
+		HRESULT result = renderContext.m_device->CreateCommittedResource(&heap, D3D12_HEAP_FLAG_NONE, &resourceDesc, D3D12_RESOURCE_STATE_INDIRECT_ARGUMENT, nullptr, IID_PPV_ARGS(&defaultBuffer));
+
+		m_defaultBuffer = defaultBuffer;
+	}
 
 
 	m_head = 0;
