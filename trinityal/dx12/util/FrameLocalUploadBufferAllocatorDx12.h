@@ -19,8 +19,8 @@ class ConstantBufferAllocator
 public:
 	struct Entry
 	{
-	void* m_cpuAddr;
-	D3D12_GPU_VIRTUAL_ADDRESS m_gpuAddr;
+		void* m_cpuAddr;
+		D3D12_GPU_VIRTUAL_ADDRESS m_gpuAddr;
 	};
 
 	ConstantBufferAllocator();

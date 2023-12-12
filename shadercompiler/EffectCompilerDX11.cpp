@@ -1223,8 +1223,8 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						return false;
 					}
 				}
-
-				if( !DxReflection::ProcessReflection<DxReflection::FunctionDx11>( state, reflection.p, compileOptions.useStaticSamplers, stage, result.annotations ) )
+				
+				if( !DxReflection::ProcessReflection<DxReflection::ReflectionDx11>( state, reflection.p, compileOptions.useStaticSamplers, stage, result.annotations ) )
 				{
 					return false;
 				}

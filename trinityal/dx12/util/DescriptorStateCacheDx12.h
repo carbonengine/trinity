@@ -128,7 +128,7 @@ private:
 	};
 
 	FrameLocalDescriptorHeapAllocator m_allocatorSampler;
-	FrameLocalUploadBufferAllocator m_allocatorUpload;
+	ConstantBufferAllocator m_allocatorUpload;
 
 	class Tr2PrimaryRenderContextAL* m_primaryContext;
 	CComPtr<ID3D12Device> m_device;

@@ -5,9 +5,6 @@
 #include "ParserUtils.h"
 
 
-extern StringTable g_stringTable;
-
-
 namespace DxReflection
 {
 

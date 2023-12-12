@@ -1,9 +1,23 @@
 #pragma once
 
+//#ifndef DxReflection_H
+//#define DxReflection_H
+
 #include "stdafx.h"
 #include "EffectData.h"
 #include "ParserState.h"
 #include "SymbolTable.h"
+#include "CompileMessageQueue.h"
+#include "FxAnalyzer.h"
+//#include "ASTNode.h"
+
+
+extern StringTable g_stringTable;
+extern CompileMessageQueue g_messages;
+extern bool g_printWarnings;
+extern unsigned g_optimizationLevel;
+extern bool g_avoidFlowControl;
+extern StateDescription g_samplerStates[];
 
 
 namespace DxReflection
@@ -527,7 +541,7 @@ namespace DxReflection
 					if( symbol->definition )
 					{
 						ASTNode* states = symbol->definition->GetChildOrNull( 1 );
-						if( states && states->GetNodeType() == NT_SAMPLER_STATE_LIST )
+						if( states && states->GetNodeType() == ASTNodeType::NT_SAMPLER_STATE_LIST )
 						{
 							for( size_t k = 0; k < states->GetChildrenCount(); ++k )
 							{
@@ -682,3 +696,5 @@ namespace DxReflection
 		return true;
 	}
 }
+
+//#endif // !DxReflection_H

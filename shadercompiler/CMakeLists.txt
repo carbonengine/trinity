@@ -177,12 +177,10 @@ if (WIN32)
             TARGET ShaderCompiler POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy "${DXC_BIN_DIR}/x64/dxcompiler.dll" "${DEST_DIR}/dxcompiler.dll"
             COMMAND cmd /C attrib -R "${DEST_DIR}/dxcompiler.dll"
-            message(STATUS "${DEST_DIR}")
         )
         add_custom_command(
             TARGET ShaderCompiler POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy "${DXC_BIN_DIR}/x64/dxil.dll" "${DEST_DIR}/dxil.dll"
-            message(STATUS "${DEST_DIR}")
             COMMAND cmd /C attrib -R "${DEST_DIR}/dxil.dll"
         )
     endif()
