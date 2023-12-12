@@ -188,7 +188,7 @@ void Tr2Material::ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned in
 		return;
 	}
 	unsigned mask = m_shader->GetShaderTypeMask( techniqueIndex );
-	auto& pp = *m_parametersForPasses[techniqueIndex][passIndex];
+	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
 	bool descChanged = pp.m_resourceSetDirty;
 	for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT && mask; ++i )
 	{
@@ -215,9 +215,10 @@ void Tr2Material::ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned in
 		pp.m_resourceSetDirty = false;
 
 		m_resourceSetHash = 0;
+
 		for( auto& technique : m_parametersForPasses )
 		{
-			for( auto& params : technique )
+			for( auto& params : technique.passes )
 			{
 				m_resourceSetHash = CcpHashFNV1( &params->m_resourceSetHash, sizeof( params->m_resourceSetHash ), m_resourceSetHash );
 			}
@@ -229,13 +230,35 @@ void Tr2Material::ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned in
 
 bool Tr2Material::ApplyShaderInputs( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const
 {
-	auto& pp = *m_parametersForPasses[techniqueIndex][passIndex];
+	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
+	return ApplyShaderInputs( pp, shaderType, renderContext );
+}
+
+bool Tr2Material::ApplyShaderInputs( Tr2EffectPassParameters& pp, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const
+{
 	auto& input = pp.m_stageInput[shaderType];
 
+	ApplyConstants( shaderType, input, !pp.m_reroutedParameters.empty(), renderContext );
+
+	return UpdateResourceSetDesc( shaderType, input, pp.m_resourceSetDesc );
+}
+
+void Tr2Material::ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext) const
+{
 	auto& cb = input.m_constantBuffer;
 	if( cb.GetSize() )
 	{
-		if( input.m_constantBufferDirty || !pp.m_reroutedParameters.empty() || !input.m_shaderParameters.empty() )
+		UpdateConstants( shaderType, input, hasReroutables, renderContext );
+		renderContext.SetConstants( cb, shaderType, Tr2RenderContextEnum::CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS );
+	}
+}
+
+void Tr2Material::UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const
+{
+	auto& cb = input.m_constantBuffer;
+	if( cb.GetSize() )
+	{
+		if( input.m_constantBufferDirty || hasReroutables || !input.m_shaderParameters.empty() )
 		{
 			uint8_t* const mirror = reinterpret_cast<uint8_t*>( input.m_constantMirror.get() );
 			if( mirror )
@@ -265,20 +288,19 @@ bool Tr2Material::ApplyShaderInputs( uint32_t techniqueIndex, unsigned int passI
 		}
 		renderContext.SetConstants( cb, shaderType, Tr2RenderContextEnum::CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS );
 	}
+}
 
-
+bool Tr2Material::UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, Tr2ResourceSetDescriptionAL & desc ) const
+{
 	bool descChanged = false;
-
 	for( auto it = input.m_textures.cbegin(); it != input.m_textures.cend(); ++it )
 	{
-		descChanged |= it->m_sourceValue->CopyToResourceSet( pp.m_resourceSetDesc, shaderType, it->m_registerIndex, ITr2EffectValue::ResourceFlags( it->m_registerCount ) );
+		descChanged |= it->m_sourceValue->CopyToResourceSet( desc, shaderType, it->m_registerIndex, ITr2EffectValue::ResourceFlags( it->m_registerCount ) );
 	}
-
 	for( auto it = input.m_uavs.cbegin(); it != input.m_uavs.cend(); ++it )
 	{
-		descChanged |= it->m_sourceValue->ApplyUav( pp.m_resourceSetDesc, shaderType, it->m_registerIndex );
+		descChanged |= it->m_sourceValue->ApplyUav( desc, shaderType, it->m_registerIndex );
 	}
-
 	return descChanged;
 }
 
@@ -294,14 +316,14 @@ Tr2Shader* Tr2Material::GetShaderStateInterface() const
 
 Tr2EffectPassParameters* Tr2Material::GetPassDescription( uint32_t techniqueIndex, uint32_t passIndex )
 {
-	return m_parametersForPasses[techniqueIndex][passIndex].get();
+	return m_parametersForPasses[techniqueIndex].passes[passIndex].get();
 }
 
 void Tr2Material::InvalidateResourceSets()
 {
 	for( auto tit = begin( m_parametersForPasses ); tit != end( m_parametersForPasses ); ++tit )
 	{
-		for( auto pit = begin( *tit ); pit != end( *tit ); ++pit )
+		for( auto pit = begin( tit->passes ); pit != end( tit->passes ); ++pit )
 		{
 			auto params = pit->get();
 			params->m_resourceSet = Tr2ResourceSetAL();
@@ -319,7 +341,7 @@ void Tr2Material::ResourceChanged()
 {
 	for( auto& technique : m_parametersForPasses )
 	{
-		for( auto& pass : technique )
+		for( auto& pass : technique.passes )
 		{
 			pass->m_resourceSetHash = 0;
 			pass->m_resourceSetDirty = true;
@@ -333,7 +355,7 @@ void Tr2Material::MarkConstantBuffersDirty()
 {
 	for( auto& technique : m_parametersForPasses )
 	{
-		for( auto& pass : technique )
+		for( auto& pass : technique.passes )
 		{
 			for( auto& stage : pass->m_stageInput )
 			{
@@ -361,7 +383,7 @@ void Tr2Material::GetUsedBindlessTextures( uint32_t techniqueIndex, Tr2BindlessR
 	{
 		return;
 	}
-	for( auto& pass : m_parametersForPasses[techniqueIndex] )
+	for( auto& pass : m_parametersForPasses[techniqueIndex].passes )
 	{
 		if( pass->m_usedTexturesDirty )
 		{
@@ -375,7 +397,6 @@ void Tr2Material::GetUsedBindlessTextures( uint32_t techniqueIndex, Tr2BindlessR
 		usedTextures.Add( pass->m_usedTextures );
 	}
 }
-
 bool Tr2Material::CompatibleWithGdr() const
 {
 	return m_compatibleWithGdr;
@@ -392,7 +413,7 @@ bool Tr2Material::CompatibleWithGdr( const BlueSharedString& techniqueName ) con
 	{
 		return false;
 	}
-	for( auto& pass : m_parametersForPasses[technique] )
+	for( auto& pass : m_parametersForPasses[technique].passes )
 	{
 		if( !pass->m_compatibleWithGdr )
 		{
@@ -406,7 +427,7 @@ void Tr2Material::ApplyConstantBuffers( uint32_t techniqueIndex, unsigned int pa
 {
 	unsigned mask = m_shader->GetShaderTypeMask( techniqueIndex );
 	auto& passDesc = m_shader->GetEffectDescription().techniques[techniqueIndex].passes[passIndex];
-	auto& pp = *m_parametersForPasses[techniqueIndex][passIndex];
+	auto& pp = *m_parametersForPasses[techniqueIndex].passes[passIndex];
 	for( unsigned i = 0; i != Tr2RenderContextEnum::SHADER_TYPE_COUNT && mask; ++i )
 	{
 		auto& input = pp.m_stageInput[i];
@@ -449,4 +470,61 @@ void Tr2Material::ApplyConstantBuffers( uint32_t techniqueIndex, unsigned int pa
 			mask &= ~( 1 << i );
 		}
 	}
+}
+
+void Tr2Material::ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr2RtPipelineStateAL& rtPipelineState, Tr2RenderContext& renderContext ) const
+{
+	if( !m_shader )
+	{
+		return;
+	}
+	auto& pp = *m_parametersForPasses[techniqueIndex].libraries[0];
+
+	ApplyConstants( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_globalInput, !pp.m_reroutedParameters.empty(), renderContext );
+
+	bool descChanged = pp.m_globalResourceSetDirty;
+	descChanged |= UpdateResourceSetDesc( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_globalInput, pp.m_globalResourceSetDesc );
+
+	if( descChanged || !pp.m_globalResourceSet.IsValid() )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		pp.m_globalResourceSet.Create( pp.m_globalResourceSetDesc, rtPipelineState, renderContext );
+		pp.m_globalResourceSetDirty = false;
+	}
+
+	renderContext.SetResourceSet( pp.m_globalResourceSet );
+}
+
+void Tr2Material::ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, const Tr2BufferAL* vb, const Tr2BufferAL* ib, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const
+{
+	if( !m_shader )
+	{
+		return;
+	}
+	auto& pp = *m_parametersForPasses[techniqueIndex].libraries[0];
+	auto& cb = pp.m_localInput.m_constantBuffer;
+	if( cb.GetSize() )
+	{
+		UpdateConstants( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_localInput, !pp.m_reroutedParameters.empty(), renderContext );
+		localMaterial.SetConstants( Tr2RenderContextEnum::CONSTANT_BUFFER_FOR_EFFECT_PARAMETERS, cb );
+	}
+
+	if( vb || ib )
+	{
+		auto& desc = m_shader->GetEffectDescription();
+		auto& resources = desc.techniques[techniqueIndex].libraries[0].localInput.resources;
+		for( auto it = begin( resources ); it != end( resources ); ++it )
+		{
+			if( vb && strcmp( it->second.name, "RtVertexBuffer" ) == 0 )
+			{
+				pp.m_localResourceSetDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, it->first, *vb );
+			}
+			else if( ib && strcmp( it->second.name, "RtIndexBuffer" ) == 0 )
+			{
+				pp.m_localResourceSetDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, it->first, *ib );
+			}
+		}
+	}
+	UpdateResourceSetDesc( Tr2RenderContextEnum::COMPUTE_SHADER, pp.m_localInput, pp.m_localResourceSetDesc );
+	localMaterial.SetResourceSet( pp.m_localResourceSetDesc );
 }

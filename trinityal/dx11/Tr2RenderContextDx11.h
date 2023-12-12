@@ -19,6 +19,7 @@ struct ITr2RenderContextEvents;
 
 class Tr2SamplerStateAL;
 class Tr2BufferAL;
+class Tr2RtShaderTableAL;
 struct Tr2Viewport;
 
 
@@ -140,6 +141,8 @@ public:
 
 	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ ) throw();
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( );
+
+	ALResult DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth );
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw();
 

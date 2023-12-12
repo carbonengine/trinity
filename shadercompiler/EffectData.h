@@ -61,6 +61,9 @@ enum TextureType
 	TEX_TYPE_UAV_CONSUME_STRUCTURED,
 	TEX_TYPE_UAV_RWSTRUCTURED_WITH_COUNTER,
 
+	// raytracing
+	TEX_TYPE_RAYTRACING_ACCELERATION_STRUCTURE,
+
 	TEX_TYPE_INVALID
 };
 
@@ -110,6 +113,14 @@ enum RegisterInputType
 	RT_UAV_TEXTURECUBEARRAY,
 };
 
+enum class RtShaderType : uint8_t
+{
+	RAY_GEN,
+	MISS,
+	CLOSEST_HIT,
+	ANY_HIT,
+	INTERSECTION,
+};
 
 template <typename T, typename P>
 class PackAs
@@ -607,19 +618,11 @@ struct ParameterAnnotation
 };
 
 
-struct StageInput
+struct StageData
 {
 	template <typename T>
 	void Save( T& stream )
 	{
-		stream.Save( type );
-
-		stream.Save( uint8_t( pipelineInputs.size() ) );
-		for( auto it = pipelineInputs.begin(); it != pipelineInputs.end(); ++it )
-		{
-			it->Save( stream );
-		}
-
 		stream.Save( uint8_t( registerInputs.size() ) );
 		for( auto it = registerInputs.begin(); it != registerInputs.end(); ++it )
 		{
@@ -631,12 +634,6 @@ struct StageInput
 		{
 			it.Save( stream );
 		}
-
-		stream.Save( shaderSize );
-		stream.Save( shaderDataStr );
-		stream.Save( threadGroupSize[0] );
-		stream.Save( threadGroupSize[1] );
-		stream.Save( threadGroupSize[2] );
 
 		stream.Save( uint32_t( constants.size() ) );
 		for( auto it = constants.begin(); it != constants.end(); ++it )
@@ -670,13 +667,8 @@ struct StageInput
 		annotations.Save( stream );
 	}
 
-	PackAs<InputStageType, uint8_t> type;
-	std::vector<PipelineInputDescription> pipelineInputs;
 	std::vector<RegisterInputDescription> registerInputs;
 	std::vector<StaticSampler> staticSamplers;
-	uint32_t shaderSize;
-	StringReference shaderDataStr;
-	uint32_t threadGroupSize[3];
 	std::vector<Constant> constants;
 	std::vector<BYTE> defaultValues;
 	StringReference defaultValuesStr;
@@ -686,6 +678,35 @@ struct StageInput
 	ParameterAnnotation annotations;
 };
 
+struct StageInput : public StageData
+{
+	template <typename T>
+	void Save( T& stream )
+	{
+		stream.Save( type );
+
+		stream.Save( shaderSize );
+		stream.Save( shaderDataStr );
+		stream.Save( threadGroupSize[0] );
+		stream.Save( threadGroupSize[1] );
+		stream.Save( threadGroupSize[2] );
+
+		stream.Save( uint8_t( pipelineInputs.size() ) );
+		for( auto it = pipelineInputs.begin(); it != pipelineInputs.end(); ++it )
+		{
+			it->Save( stream );
+		}
+
+		StageData::Save( stream );
+	}
+
+	PackAs<InputStageType, uint8_t> type;
+	uint32_t shaderSize;
+	StringReference shaderDataStr;
+	uint32_t threadGroupSize[3];
+	std::vector<PipelineInputDescription> pipelineInputs;
+
+};
 
 typedef std::map<uint32_t, uint32_t> RenderStates;
 
@@ -712,6 +733,47 @@ struct Pass
 	RenderStates states;
 };
 
+struct ShaderExport
+{
+	template <typename T>
+	void Save( T& stream )
+	{
+		stream.Save( type );
+		stream.Save( name );
+	}
+
+	PackAs<RtShaderType, uint8_t> type;
+	StringReference name;
+};
+
+
+struct Library
+{
+	template <typename T>
+	void Save( T& stream )
+	{
+		stream.Save( payloadSize );
+		stream.Save( shaderSize );
+		stream.Save( shaderDataStr );
+		stream.Save( uint32_t( exports.size() ) );
+		for( auto it : exports )
+		{
+			it.Save( stream );
+		}
+		stream.Save( hitGroupName );
+
+		globalInputs.Save( stream );
+		localInputs.Save( stream );
+	}
+
+	uint32_t payloadSize;
+	uint32_t shaderSize;
+	StringReference shaderDataStr;
+	std::vector<ShaderExport> exports;
+	StringReference hitGroupName;
+	StageData globalInputs;
+	StageData localInputs;
+};
 
 struct Technique
 {
@@ -724,10 +786,17 @@ struct Technique
 		{
 			it->Save( stream );
 		}
+
+		stream.Save( uint8_t( libraries.size() ) );
+		for( auto& it : libraries )
+		{
+			it.Save( stream );
+		}
 	}
 
 	StringReference name;
 	std::vector<Pass> passes;
+	std::vector<Library> libraries;
 };
 
 

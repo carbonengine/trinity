@@ -7,6 +7,7 @@
 #include "Utilities/BoundingSphere.h"
 #include "Tr2InstancedMesh.h"
 #include "Tr2GrannyAnimation.h"
+#include "TriFrustumOrtho.h"
 
 extern float g_eveSpaceSceneLODFactor;
 extern float g_eveSpaceSceneVisibilityThreshold;
@@ -18,6 +19,7 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	PARENTLOCK( m_lights ),
 	m_display( true ),
 	m_isVisible( false ),
+	m_castShadow( false ),
 	m_lowestLodVisible( TR2_LOD_LOW ),
 	m_minScreenSize( 0.f ),
 	m_currentScreenSize( -1.f ),
@@ -57,7 +59,7 @@ bool EveChildMesh::Initialize()
 
 bool EveChildMesh::OnModified( Be::Var* val )
 {
-	if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display) || IsMatch( val, m_mesh) )
+	if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display) || IsMatch( val, m_mesh) || IsMatch( val, m_castShadow ) )
 	{
 		ReRegister();
 	}
@@ -108,11 +110,40 @@ void EveChildMesh::RegisterComponents()
 	{
 		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
 		{
-			registry->RegisterComponent( ComponentType::REFLECTION_RENDERABLE, this, this->m_state );
+			registry->RegisterComponent<ITr2Renderable>( this );
+		}
+		if( m_castShadow )
+		{
+			registry->RegisterComponent<IEveShadowCaster>( this );
 		}
 	}
 }
+// --------------------------------------------------------------------------------
+// Description:
+//   Check if the object is casting a shadow in the camera/shadow frustums
+bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
+{
+	if( !m_display || !m_castShadow )
+	{
+		return false;
+	}
 
+	Vector4 bs;
+	GetBoundingSphere( bs );
+	sizeInShadow = 0;
+
+	if( bs.w <= 0.0f )
+	{
+		return false;
+	}
+
+
+	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, bs ) )
+	{
+		sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, bs );
+	}
+	return sizeInShadow > 10.f;
+}
 
 void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
 {
@@ -282,6 +313,11 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	perObjectData->Initialize( this, &m_perObjectDataVs, &m_perObjectDataPs );
 
 	return perObjectData;
+}
+
+Tr2PerObjectData* EveChildMesh::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
+{
+	return GetPerObjectData( accumulator );
 }
 
 uint32_t EveChildMesh::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const
@@ -609,4 +645,13 @@ void EveChildMesh::ClearLights()
 void EveChildMesh::SetReflectionMode( EntityComponents::ReflectionMode mode )
 {
 	m_reflectionMode = mode;
+	if( GetComponentRegistry() )
+	{
+		ReRegister();
+	}
+}
+
+void EveChildMesh::SetCastShadow( bool castShadow )
+{
+	m_castShadow = castShadow;
 }

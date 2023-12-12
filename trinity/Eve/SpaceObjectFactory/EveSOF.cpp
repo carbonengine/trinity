@@ -139,11 +139,6 @@ EveSOF::EveSOF( IRoot* lockobj ) :
 	m_hazeSetEffectHalfSpherical->StartUpdate();
 	m_hazeSetEffectHalfSpherical->SetEffectPathName( "res:/graphics/effect/managed/space/spaceobject/fx/hazehalfspherical.fx" );
 	m_hazeSetEffectHalfSpherical->EndUpdate();
-
-	m_shadowEffect.CreateInstance();
-	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/spaceobject/shadow/shadow.fx" );
-	m_shadowEffectSkinned.CreateInstance();
-	m_shadowEffectSkinned->SetEffectPathName( "res:/graphics/effect/managed/space/spaceobject/shadow/skinned_shadow.fx" );
 }
 
 // --------------------------------------------------------------------------------
@@ -458,18 +453,8 @@ void EveSOF::SetupMesh( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 	obj->SetShapeEllipsoid( dna->GetHullShapeEllipsoid() );
 	obj->EnableDynamicBoundingSphere( dna->DynamicBoundingSphereEnabled() );
 
-	// shadow caster?
-	if( dna->CastShadow() )
-	{
-		if( dna->IsHullAnimated() )
-		{
-			obj->SetShadowEffect( m_shadowEffectSkinned );
-		}
-		else
-		{
-			obj->SetShadowEffect( m_shadowEffect );
-		}
-	}
+	obj->SetCastsShadow( dna->CastShadow() );
+	obj->SetIsAnimated( dna->IsHullAnimated() );
 
 	// assign mesh to ship
 	obj->SetMesh( CreateMesh( dna ) );
@@ -3299,6 +3284,7 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 				auto mesh = CreateMesh( extensionDna );
 				child->SetMesh( mesh );
 				child->SetReflectionMode( extensionDna->GetReflectionMode() );
+				child->SetCastShadow( extensionDna->CastShadow() );
 
 				if( extensionDna->IsHullAnimated() )
 				{ 
@@ -3354,6 +3340,7 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 		child.CreateInstance();
 		child->SetMesh( instancedMesh );
 		child->SetName( "Instanced Hull" );
+		child->SetCastShadow( extensionDna->CastShadow() );
 
 		// Set the reflectionMode based on the category
 		child->SetReflectionMode( extensionDna->GetReflectionMode() );

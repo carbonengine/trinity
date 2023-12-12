@@ -23,6 +23,8 @@ class Tr2SamplerStateAL;
 class Tr2TextureAL;
 class Tr2ResourceSetAL;
 class Tr2BufferAL;
+class Tr2RtShaderTableAL;
+class Tr2RtPipelineStateAL;
 struct ITr2RenderContextEvents;
 
 
@@ -145,6 +147,11 @@ public:
 
 	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ );
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset );
+
+	ALResult DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
+	{
+		return E_FAIL;
+	}
 
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout );
 

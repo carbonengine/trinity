@@ -39,7 +39,8 @@ BLUE_CLASS( EveChildMesh ) :
 	public INotify,
 	public IEveSpaceObjectDecalOwner,
 	public IEveSpaceObjectAttachmentOwner,
-	public ITr2LightOwner
+	public ITr2LightOwner,
+	public IEveShadowCaster
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -79,7 +80,6 @@ public:
 	// ITr2Renderable
 	virtual bool HasTransparentBatches();
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
 	virtual bool IsVisible( const TriFrustum& frustum ) const;
@@ -102,6 +102,12 @@ public:
 	virtual void GetLights( Tr2LightManager& lightManager ) const;
 	virtual void AddLight( Tr2Light* newLight );
 	virtual void ClearLights();
+	
+	/////////////////////////////////////////////////////////////////////////////////////
+	// IEveShadowCaster
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
+	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
@@ -115,6 +121,7 @@ public:
 	void SetMesh( Tr2MeshBase* mesh );
 	void SetOrigin( Origin origin );
 	void SetReflectionMode( EntityComponents::ReflectionMode reflectionMode );
+	void SetCastShadow( bool castShadow );
 
 	Tr2GrannyAnimation* GetAnimationController() const override;
 	void SetAnimationController( Tr2GrannyAnimation* animation );
@@ -150,6 +157,8 @@ protected:
 	
 	bool m_display;
 	bool m_isVisible;
+	bool m_castShadow;
+
 	float m_activationStrength;
 
 	Origin m_origin;

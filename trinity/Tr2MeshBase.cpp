@@ -8,7 +8,7 @@
 #include "Tr2MeshBase.h"
 #include "Resources/TriGeometryRes.h"
 #include "Utilities/BoundingBox.h"
-
+#include "Raytracing/Tr2RaytracingGeometry.h"
 
 CCP_STATS_DECLARE( tr2MeshBindToRig, "Trinity/BindToRig", true, CST_COUNTER_LOW, "Number of times a mesh executed bind to a new rig" );
 
@@ -497,6 +497,30 @@ void Tr2MeshBase::CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& colle
 	}
 }
 
+// -------------------------------------------------------------
+// Description:
+//   Put the very basic info of a mesharea (block) into a class that contains the list of areas and a pointer to a material
+// -------------------------------------------------------------
+void Tr2MeshBase::CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksWithSharedMaterial& collector, TriBatchType areaType ) const
+{
+	const Tr2MeshAreaVector* areas = GetAreas( areaType );
+	collector.m_areaBlockVector.reserve( areas->size() );
+
+	for( auto a = areas->begin(); a != areas->end(); ++a )
+	{
+		if( areaType == TRIBATCHTYPE_OPAQUE && !( *a )->IsCastingShadows() )
+		{
+			continue;
+		}
+		if( !collector.m_shaderMaterial && !!( *a )->GetMaterialInterface() )
+		{
+			collector.m_shaderMaterial = ( *a )->GetMaterialInterface();
+		}
+		TriRenderBatchAreaBlock ab( ( *a )->GetIndex(), ( *a )->GetCount() );
+		collector.m_areaBlockVector.push_back( ab );
+	}
+}
+
 void Tr2MeshBase::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
 {
 	const auto length = TRIBATCHTYPE_COUNT_OF_BATCH_TYPES;
@@ -575,4 +599,16 @@ void Tr2MeshBase::UseWithScreenSize( float screenSize, float worldRadius ) const
 			}
 		}
 	}
+}Tr2RaytracingMesh* Tr2MeshBase::GetOrCreateRtMesh()
+{
+	if( !m_rtMesh )
+	{
+		m_rtMesh.reset( new Tr2RaytracingMesh() );
+	}
+	return m_rtMesh.get();
+}
+
+Tr2RaytracingMesh* Tr2MeshBase::GetRtMesh() const
+{
+	return m_rtMesh.get();
 }

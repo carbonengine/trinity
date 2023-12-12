@@ -36,6 +36,8 @@ struct Tr2ShaderPipelineInputAL
 	Tr2ShaderPipelineInputAL();
 	Tr2ShaderPipelineInputAL( Tr2VertexDefinition::UsageCode usage, uint32_t usageIndex, uint32_t registerIndex, Type type, uint32_t dimension, uint32_t usedMask = 0xf );
 
+	bool operator==( const Tr2ShaderPipelineInputAL& other ) const;
+
 	Tr2VertexDefinition::UsageCode usage;
 	uint32_t usageIndex;
 	uint32_t registerIndex;
@@ -83,6 +85,8 @@ struct Tr2ShaderRegisterAL
 	Tr2ShaderRegisterAL();
 	Tr2ShaderRegisterAL( RegisterType registerType, uint32_t registerIndex, uint32_t registerSpace = 0, uint32_t arrayCount = 1, bool dynamic = true );
 
+	bool operator==( const Tr2ShaderRegisterAL& other ) const;
+
 	bool IsSrv() const;
 	bool IsUav() const;
 
@@ -125,6 +129,9 @@ struct Tr2ShaderSignatureAL
 	Tr2ShaderSignatureAL& Add( Tr2ShaderRegisterAL::RegisterType registerType, uint32_t registerIndex, uint32_t registerSpace = 0, uint32_t arrayCount = 1 );
 	Tr2ShaderSignatureAL& Add( const Tr2ShaderThreadGroupSizeAL& size );
 	Tr2ShaderSignatureAL& Add( const Tr2SamplerDescription& sampler, uint32_t registerIndex, uint32_t registerSpace = 0 );
+
+	bool IsEmpty() const;
+	bool operator==( const Tr2ShaderSignatureAL& other ) const;
 
 	std::vector<Tr2ShaderPipelineInputAL> pipelineInputs;
 	std::vector<Tr2ShaderRegisterAL> registers;

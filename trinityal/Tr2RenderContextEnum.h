@@ -470,6 +470,8 @@ namespace Tr2GpuUsage
 
 		DRAW_INDIRECT_ARGS = 1 << 7,
 
+		ACCELERATION_STRUCTURE = 1 << 8,
+
 		SHARED = 1 << 9,
 	};
 

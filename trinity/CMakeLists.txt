@@ -444,7 +444,7 @@ set(_SOURCES
     Eve/SpaceObject/Children/EveChildCloud.cpp
     Eve/SpaceObject/Children/EveChildCloud.h
     Eve/SpaceObject/Children/EveChildCloud_Blue.cpp
-	Eve/SpaceObject/Children/EveChildCloud2.cpp
+    Eve/SpaceObject/Children/EveChildCloud2.cpp
     Eve/SpaceObject/Children/EveChildCloud2.h
     Eve/SpaceObject/Children/EveChildCloud2_Blue.cpp
     Eve/SpaceObject/Children/EveChildContainer.cpp
@@ -753,6 +753,12 @@ set(_SOURCES
     Lights/Tr2TexturedPointLight.cpp
     Lights/Tr2TexturedPointLight.h
     Lights/Tr2TexturedPointLight_Blue.cpp
+    Raytracing/Tr2RaytracingGeometry.cpp
+    Raytracing/Tr2RaytracingGeometry.h
+    Raytracing/Tr2RaytracingGeometry_Blue.cpp
+    Raytracing/Tr2RaytracingManager.cpp
+    Raytracing/Tr2RaytracingManager.h
+    Raytracing/Tr2RaytracingManager_Blue.cpp
     Particle/ITr2GenericEmitter.h
     Particle/ITr2GenericParticleConstraint.h
     Particle/ITr2ParticleForce.h
@@ -1093,7 +1099,7 @@ set(_SOURCES
     Shader/Parameter/Tr2RuntimeTextureParameter.cpp
     Shader/Parameter/Tr2RuntimeTextureParameter.h
     Shader/Parameter/Tr2RuntimeTextureParameter_Blue.cpp
-	Shader/Parameter/Tr2TextureAnimationParameter.cpp
+    Shader/Parameter/Tr2TextureAnimationParameter.cpp
     Shader/Parameter/Tr2TextureAnimationParameter.h
     Shader/Parameter/Tr2TextureAnimationParameter_Blue.cpp
     Shader/Parameter/Tr2Vector2Parameter.cpp
@@ -1264,7 +1270,7 @@ set(_SOURCES
     ITr2SoundEmitterOwner.h
     ITr2TextureProvider.h
     ITr2VisualizationModeRenderer.h
-	ITr2VolumetricRenderable.h
+    ITr2VolumetricRenderable.h
     ITr2WorldTransformUpdater.h
     ITriReroutable.h
     IWorldPosition.h
@@ -1314,6 +1320,9 @@ set(_SOURCES
     Tr2ExternalParameter.h
     Tr2ExternalParameter_Blue.cpp
     Tr2Event.h
+    Tr2FidelityFXDenoiser.cpp
+    Tr2FidelityFXDenoiser.h
+    Tr2FidelityFXDenoiser_Blue.cpp
     Tr2GpuBuffer.cpp
     Tr2GpuBuffer.h
     Tr2GpuBuffer_Blue.cpp
@@ -1476,7 +1485,7 @@ set(_SOURCES
     Tr2SwapChain_Blue.cpp
     Tr2SyncToGpu.cpp
     Tr2SyncToGpu.h
-	Tr2TextureAnimation.cpp
+    Tr2TextureAnimation.cpp
     Tr2TextureAnimation.h
     Tr2TextureAnimation_Blue.cpp
     Tr2TextureArray.cpp
@@ -1511,7 +1520,7 @@ set(_SOURCES
     Tr2VisibilityResults.cpp
     Tr2VisibilityResults.h
     Tr2VisibilityResults_Blue.cpp
-	Tr2VolumetricsRenderer.cpp
+    Tr2VolumetricsRenderer.cpp
     Tr2VolumetricsRenderer.h
     Tr2VolumetricsRenderer_Blue.cpp
     TriColor.cpp
@@ -1637,6 +1646,7 @@ function(set_shared_trinity_properties target)
             ${CMAKE_CURRENT_SOURCE_DIR}/include
         PRIVATE
             ${CMAKE_CURRENT_SOURCE_DIR}
+            ${CMAKE_CURRENT_SOURCE_DIR}/..
     )
     target_compile_definitions(${target}
         PRIVATE
@@ -1693,9 +1703,9 @@ There are probably more issues because we haven't build the stub project on macO
 if(WIN32)
     ccp_add_library(trinity_stub SHARED)
     target_compile_definitions(trinity_stub
-        PRIVATE
-            TRINITY_PLATFORM=TRINITY_STUB
-            TRINITYNAME=_trinity_stub
+    PRIVATE
+        TRINITY_PLATFORM=TRINITY_STUB
+        TRINITYNAME=_trinity_stub
     )
 
     target_link_libraries(trinity_stub PRIVATE TrinityAL_stub)

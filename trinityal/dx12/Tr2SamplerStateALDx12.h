@@ -14,6 +14,8 @@
 
 namespace TrinityALImpl
 {
+	class Tr2RtShaderTableAL;
+
 	class Tr2SamplerStateAL : public Tr2DeviceResourceAL<Tr2SamplerStateAL>
 	{
 	public:
@@ -36,6 +38,7 @@ namespace TrinityALImpl
 
 		friend class Tr2RenderContextAL;
 		friend class Tr2ResourceSetAL;
+		friend class TrinityALImpl::Tr2RtShaderTableAL;
 	};
 
 }

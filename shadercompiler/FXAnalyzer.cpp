@@ -566,8 +566,13 @@ bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, Expressi
 		}
 			return true;
 		case OP_STRING_CONST:
-			state.ShowMessage( node->GetToken()->fileLocation, EC_UNSUPPORTED_TYPE, "string" );
-			return false;
+		{
+			type.FromTokenType( OP_STRING );
+			ExpressionValueElement element;
+			element.stringValue = ParseString( node->GetToken()->stringValue );
+			value.push_back( element );
+		}
+		return true;
 		}
 		return false;
 	case NT_VAR_IDENTIFIER: {

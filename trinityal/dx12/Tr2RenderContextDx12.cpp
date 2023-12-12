@@ -15,6 +15,8 @@
 #include "Tr2ShaderProgramALDx12.h"
 #include "Tr2PrimaryRenderContextDx12.h"
 #include "Tr2ResourceSetALDx12.h"
+#include "Tr2RtPipelineStateALDx12.h"
+#include "Tr2RtShaderTableALDx12.h"
 #include "Utilities.h"
 #include "util/AmdExtDevice.h"
 
@@ -132,6 +134,7 @@ void Tr2RenderContextAL::Destroy() throw( )
 
 	m_commandList = nullptr;
 	m_commandList2 = nullptr;
+	m_commandList4 = nullptr;
 }
 
 bool Tr2RenderContextAL::IsValid() const throw( )
@@ -149,6 +152,11 @@ ALResult Tr2RenderContextAL::CreateDx12( ID3D12CommandAllocator* commandAllocato
 		IID_PPV_ARGS( &m_commandList ) ) );
 	CR_RETURN_HR( m_commandList->Close() );
 	m_commandList.QueryInterface( &m_commandList2 );
+
+	if( renderContext.GetCaps().SupportsRayTracing() )
+	{
+		m_commandList.QueryInterface( &m_commandList4 );
+	}
 
 	for( uint32_t bufferIdx = 0; bufferIdx < renderContext.GetBackBufferCount(); ++bufferIdx )
 	{
@@ -717,6 +725,46 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& params, unsi
 	return S_OK;
 }
 
+ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
+{
+	if( !m_commandList4 )
+	{
+		return E_FAIL;
+	}
+
+	auto st = shaderTable.TrinityALImpl_GetObject();
+	auto p = pipeline.TrinityALImpl_GetObject();
+
+	D3D12_DISPATCH_RAYS_DESC desc = {};
+	desc.RayGenerationShaderRecord.StartAddress = st->GetRayGenShader( rayGenShader );
+	desc.RayGenerationShaderRecord.SizeInBytes = st->GetEntrySize();
+
+	desc.MissShaderTable.StartAddress = st->GetMissShaders();
+	desc.MissShaderTable.SizeInBytes = st->GetMissShaderTableSize();
+	desc.MissShaderTable.StrideInBytes = st->GetEntrySize();
+
+	desc.HitGroupTable.StartAddress = st->GetHitGroupShaders();
+	desc.HitGroupTable.SizeInBytes = st->GetHitGroupTableSize();
+	desc.HitGroupTable.StrideInBytes = st->GetEntrySize();
+
+	desc.Width = width;
+	desc.Height = height;
+	desc.Depth = depth;
+
+	m_commandList->SetComputeRootSignature( p->GetGlobalRootSignature().m_rootSignature );
+	uint32_t bufferIndex = m_ownerDevice->GetCurrentBackBufferIndex();
+	m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), & pipeline.TrinityALImpl_GetObject()->GetGlobalRootSignature());
+	FlushComputeBarriersDx12();
+
+	if( m_commandList4 )
+	{
+		m_commandList4->SetPipelineState1( p->GetStateObject() );
+		m_commandList4->DispatchRays( &desc );
+	}
+
+	m_dirtyPso = true;
+	return S_OK;
+}
 
 ID3D12PipelineState* Tr2RenderContextAL::GetPipelineState()
 {
@@ -813,11 +861,11 @@ ALResult Tr2RenderContextAL::SetAllState()
 		{
 			if( m_psoDescription.m_shaderProgram.m_program->IsComputeProgramDx12() )
 			{
-				m_commandList->SetComputeRootSignature( m_psoDescription.m_shaderProgram.m_program->m_rootSignature );
+				m_commandList->SetComputeRootSignature( m_psoDescription.m_shaderProgram.m_program->m_rootSignature.m_rootSignature );
 			}
 			else
 			{
-				m_commandList->SetGraphicsRootSignature( m_psoDescription.m_shaderProgram.m_program->m_rootSignature );
+				m_commandList->SetGraphicsRootSignature( m_psoDescription.m_shaderProgram.m_program->m_rootSignature.m_rootSignature );
 			}
 		}
 		else
@@ -831,7 +879,7 @@ ALResult Tr2RenderContextAL::SetAllState()
 	if( m_psoDescription.m_shaderProgram.IsValid() )
 	{
 		uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
-		m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), m_psoDescription.m_shaderProgram.m_program.get() );
+		m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), &m_psoDescription.m_shaderProgram.m_program->m_rootSignature );
 	}
 
 	return S_OK;
@@ -978,9 +1026,9 @@ ALResult Tr2RenderContextAL::SetRenderTarget( const Tr2TextureAL& renderTarget, 
 			}
 			if( !boundElsewhere )
 			{
-			barriers[barrierCount++] = TrinityALImpl::Transition( renderTarget.m_texture->GetResourceDx12(), renderTarget.m_texture->m_defaultState, D3D12_RESOURCE_STATE_RENDER_TARGET );
+				barriers[barrierCount++] = TrinityALImpl::Transition( renderTarget.m_texture->GetResourceDx12(), renderTarget.m_texture->m_defaultState, D3D12_RESOURCE_STATE_RENDER_TARGET );
+			}
 		}
-	}
 	}
 	if( barrierCount )
 	{
@@ -1547,7 +1595,7 @@ void Tr2RenderContextAL::PushGpuMarker( const char* marker )
 	if( g_requestDebugMarkers )
 	{
 		// + 1 to include the NULL terminator
-		m_commandList->BeginEvent(1, marker, strlen(marker) + 1);
+		m_commandList->BeginEvent( 1, marker, strlen( marker ) + 1 );
 	}
 }
 
@@ -1615,6 +1663,20 @@ void Tr2RenderContextAL::ResourceBarrierDx12( size_t count, const D3D12_RESOURCE
 		bool found = false;
 		for( auto it = begin( m_barriers ); it != end( m_barriers ); ++it )
 		{
+			if( it->Type == D3D12_RESOURCE_BARRIER_TYPE_UAV )
+			{
+				if( it->UAV.pResource == barrier.Transition.pResource )
+				{
+					CCP_ASSERT( ( barrier.Transition.StateBefore & D3D12_RESOURCE_STATE_UNORDERED_ACCESS ) != 0 );
+					*it = barrier;
+					found = true;
+					break;
+				}
+				else
+				{
+					continue;
+				}
+			}
 			if( it->Type != D3D12_RESOURCE_BARRIER_TYPE_TRANSITION )
 			{
 				continue;

@@ -2072,6 +2072,16 @@ type_specifier(A) ::= OP_BINDLESSHANDLETEXTURECUBE(B).
 	A.FromToken( B );
 }
 
+type_specifier(A) ::= OP_RAYTRACING_ACCELERATION_STRUCTURE(B).
+{
+	A.FromToken( B );
+}
+
+type_specifier(A) ::= OP_RAY_DESC(B).
+{
+	A.FromToken( B );
+}
+
 type_specifier(A) ::= OP_TYPE_NAME(B).
 {
 	const Symbol* symbol = parserState->GetSymbolTable().LookupType( B.stringValue ); 
@@ -2792,6 +2802,14 @@ function_definition(A) ::= function_prototype(B) compount_statement_no_new_scope
 	parserState->GetSymbolTable().LeaveScope(); 
 }
 
+library(A) ::= OP_LIBRARY(P) OP_ID(B) enter_fx_mode OP_LEFT_BRACE state_list(C) OP_RIGHT_BRACE.
+{
+	A = C;
+	A->SetNodeType( NT_LIBRARY );
+	A->SetLocation( P.fileLocation );
+	A->SetToken( &B );
+	parserState->m_mode = ParserState::HLSL;
+}
 
 technique(A) ::= OP_TECHNIQUE(T) OP_ID(B) OP_LEFT_BRACE OP_RIGHT_BRACE.
 {
@@ -2805,8 +2823,17 @@ technique(A) ::= OP_TECHNIQUE(T) OP_ID(B) OP_LEFT_BRACE pass_list(C) OP_RIGHT_BR
 	A->SetLocation( T.fileLocation );
 }
 
+pass_list_element(A) ::= pass_declaration(B).
+{
+	A = B;
+}
 
-pass_list(A) ::= pass_declaration(B).
+pass_list_element(A) ::= library(B).
+{
+	A = B;
+}
+
+pass_list(A) ::= pass_list_element(B).
 {
 	A = new ASTNode( NT_TECHNIQUE, B->GetLocation(), parserState->GetSymbolTable().GetCurrentScope(), nullptr );
 	A->AddChild( B );

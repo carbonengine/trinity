@@ -42,10 +42,7 @@ public:
 	void Register( EveComponentRegistry * registry );
 	void UnRegister( EveComponentRegistry * registry );
 	
-	bool IsInRegistry() const
-	{
-		return m_registry != nullptr;
-	};
+	bool IsInRegistry() const;
 
 protected:
 	void ReRegister();
@@ -55,10 +52,10 @@ protected:
 
 	EveComponentRegistry* GetComponentRegistry() const;
 
-	RegistrationState m_state;
-
 private:
 	EveComponentRegistry* m_registry;
+	RegistrationState m_state;
+	friend class EveComponentRegistry;
 };
 
 TYPEDEF_BLUECLASS( EveEntity );

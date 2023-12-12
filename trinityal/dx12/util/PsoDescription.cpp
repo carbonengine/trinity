@@ -88,7 +88,7 @@ namespace TrinityALImpl
 		{
 			D3D12_COMPUTE_PIPELINE_STATE_DESC desc;
 			memset( &desc, 0, sizeof( desc ) );
-			desc.pRootSignature = m_shaderProgram.m_program->m_rootSignature;
+			desc.pRootSignature = m_shaderProgram.m_program->m_rootSignature.m_rootSignature;
 			desc.CS = m_shaderProgram.m_program->m_CS;
 
 			return device->CreateComputePipelineState( &desc, IID_PPV_ARGS( &pipelineState ) );
@@ -100,7 +100,7 @@ namespace TrinityALImpl
 
 			if( m_shaderProgram.IsValid() )
 			{
-				desc.pRootSignature = m_shaderProgram.m_program->m_rootSignature;
+				desc.pRootSignature = m_shaderProgram.m_program->m_rootSignature.m_rootSignature;
 				desc.VS = m_shaderProgram.m_program->m_VS;
 				desc.PS = m_shaderProgram.m_program->m_PS;
 				desc.DS = m_shaderProgram.m_program->m_DS;

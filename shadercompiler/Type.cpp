@@ -520,6 +520,10 @@ std::string Type::ToString() const
 		return "LineStream";
 	case OP_TRIANGLESTREAM:
 		return "TriangleStream";
+	case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+		return "RaytracingAccelerationStructure";
+	case OP_RAY_DESC:
+		return "RayDesc";
 	}
 	if( width > 1 || height > 1 )
 	{

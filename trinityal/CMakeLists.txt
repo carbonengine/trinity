@@ -134,6 +134,14 @@ set(_SOURCES
     dx12/Tr2ResourceHelper.h
     dx12/Tr2ResourceSetALDx12.cpp
     dx12/Tr2ResourceSetALDx12.h
+    dx12/Tr2RtBottomLevelAccelerationStructureALDx12.cpp
+    dx12/Tr2RtBottomLevelAccelerationStructureALDx12.h
+    dx12/Tr2RtPipelineStateALDx12.cpp
+    dx12/Tr2RtPipelineStateALDx12.h
+    dx12/Tr2RtShaderTableALDx12.cpp
+    dx12/Tr2RtShaderTableALDx12.h
+    dx12/Tr2RtTopLevelAccelerationStructureALDx12.cpp
+    dx12/Tr2RtTopLevelAccelerationStructureALDx12.h
     dx12/Tr2SamplerStateALDx12.cpp
     dx12/Tr2SamplerStateALDx12.h
     dx12/Tr2ShaderALDx12.cpp
@@ -176,6 +184,10 @@ set(_SOURCES
     include/Tr2FenceAL.h
     include/Tr2GpuTimerAL.h
     include/Tr2OcclusionQueryAL.h
+    include/Tr2RtBottomLevelAccelerationStructureAL.h
+    include/Tr2RtPipelineStateAL.h
+    include/Tr2RtShaderTableAL.h
+    include/Tr2RtTopLevelAccelerationStructureAL.h
     include/Tr2PipelineStatsQueryAL.h
     include/Tr2PixelFormat.h
     include/Tr2PrimaryRenderContextAL.h
@@ -244,6 +256,10 @@ set(_SOURCES
     src/Tr2OcclusionQueryAL.cpp
     src/Tr2PipelineStatsQueryAL.cpp
     src/Tr2ResourceSetAL.cpp
+    src/Tr2RtBottomLevelAccelerationStructureAL.cpp
+    src/Tr2RtPipelineStateAL.cpp
+    src/Tr2RtShaderTableAL.cpp
+    src/Tr2RtTopLevelAccelerationStructureAL.cpp
     src/Tr2SamplerStateAL.cpp
     src/Tr2ShaderAL.cpp
     src/Tr2ShaderProgramAL.cpp

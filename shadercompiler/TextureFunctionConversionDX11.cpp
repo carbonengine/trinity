@@ -1203,7 +1203,6 @@ void MergeSamplers( ParserState& state )
 		}
 	}
 }
-
 int32_t BindlessTextureType( int type )
 {
 	switch( type )

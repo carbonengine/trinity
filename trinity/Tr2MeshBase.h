@@ -21,6 +21,8 @@ struct TriGeometryResSkeletonData;
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 struct TriGeometryResMeshData;
+class TriRenderBatch;
+class Tr2RaytracingMesh;
 
 BLUE_CLASS( Tr2MeshBase ):
 	public IListNotify
@@ -39,6 +41,7 @@ public:
 	Tr2MeshAreaVector* GetAreas( TriBatchType areaType );
 	const Tr2MeshAreaVector* GetAreas( TriBatchType areaType ) const;
 	void CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& areaBlockVector, TriBatchType areaType ) const;
+	void CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksWithSharedMaterial & collector, TriBatchType areaType ) const;
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );
 
@@ -73,6 +76,9 @@ public:
 
 	virtual void GetDebugOptions( Tr2DebugRendererOptions & options );
 	virtual void RenderDebugInfo( const Matrix& worldTransform, ITr2DebugRenderer2& renderer );
+
+	Tr2RaytracingMesh* GetOrCreateRtMesh();
+	Tr2RaytracingMesh* GetRtMesh() const;
 
 	std::vector<Tr2MeshAreaPtr> GetAllAreas() const;
 
@@ -120,6 +126,8 @@ protected:
 
 	CcpMath::AxisAlignedBox m_cachedBounds;
 	Tr2MaterialBoundsAdjustment m_boundsAdjustment;
+
+	std::unique_ptr<Tr2RaytracingMesh> m_rtMesh;
 };
 
 TYPEDEF_BLUECLASS( Tr2MeshBase );

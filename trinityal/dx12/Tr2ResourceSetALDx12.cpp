@@ -14,6 +14,7 @@
 #include "Tr2BufferALDx12.h"
 #include "Tr2TextureALDx12.h"
 #include "Tr2SamplerStateALDx12.h"
+#include "Tr2RtPipelineStateALDx12.h"
 #include "Utilities.h"
 #include "ALLog.h"
 
@@ -57,7 +58,28 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
-		if( program.m_program->m_registerMap != description.m_registerMap )
+		return Create( description, program.m_program->m_rootSignature, renderContext );
+	}
+
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		Destroy();
+
+		if( !renderContext.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+		if( !pipeline.IsValid() )
+		{
+			return E_INVALIDARG;
+		}
+
+		return Create( description, pipeline.TrinityALImpl_GetObject()->GetGlobalRootSignature(), renderContext );
+	}
+
+	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RootSignatureAL& rootSignature, Tr2PrimaryRenderContextAL& renderContext )
+	{
+		if( rootSignature.m_registerMap != description.m_registerMap )
 		{
 			return E_INVALIDARG;
 		}
@@ -66,7 +88,7 @@ namespace TrinityALImpl
 
 		auto AddTransition = [&]( ID3D12Resource* res, D3D12_RESOURCE_STATES defaultState, D3D12_RESOURCE_STATES expectedState ) {
 			// TODO: verify state
-			if( ( defaultState & expectedState ) == 0 )
+			if( ( defaultState & expectedState ) == 0 && defaultState != D3D12_RESOURCE_STATE_RAYTRACING_ACCELERATION_STRUCTURE )
 			{
 				auto found = std::find( begin( transitioned ), end( transitioned ), res );
 				if( found == transitioned.end() )
@@ -79,7 +101,7 @@ namespace TrinityALImpl
 			m_usedResources.push_back( res );
 		};
 
-		for (auto it = begin(program.m_program->m_srvRegisters); it != end(program.m_program->m_srvRegisters); ++it)
+		for( auto it = begin( rootSignature.m_srvRegisters ); it != end( rootSignature.m_srvRegisters ); ++it )
 		{
 			auto& reg = *it;
 			auto& resource = description.m_srv[description.m_registerMap.srvs[reg.stage][reg.index]];
@@ -133,7 +155,7 @@ namespace TrinityALImpl
 			}
 		}
 
-		for (auto it = begin(program.m_program->m_uavRegisters); it != end(program.m_program->m_uavRegisters); ++it)
+		for (auto it = begin(rootSignature.m_uavRegisters); it != end( rootSignature.m_uavRegisters); ++it)
 		{
 			auto& reg = *it;
 			auto& resource = description.m_uav[description.m_registerMap.uavs[reg.stage][reg.index]];
@@ -195,7 +217,7 @@ namespace TrinityALImpl
 
 		}
 
-		for (auto it = begin(program.m_program->m_samplerRegisters); it != end(program.m_program->m_samplerRegisters); ++it)
+		for (auto it = begin(rootSignature.m_samplerRegisters); it != end( rootSignature.m_samplerRegisters); ++it)
 		{
 			auto& reg = *it;
 			auto& sampler = description.m_samplers[description.m_registerMap.samplers[reg.stage][reg.index]];

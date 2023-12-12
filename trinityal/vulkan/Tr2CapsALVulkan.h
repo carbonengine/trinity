@@ -17,6 +17,7 @@
 #define TRINITY_PLATFORM_SUPPORTS_RENDER_PASS_HINTS 0
 #define TRINITY_PLATFORM_IS_LOW_PERFORMACE 0
 #define TRINITY_PLATFORM_MAX_CONSTANT_BUFFER_SIZE ( 64 * 1024 )
+#define TRINITY_PLATFORM_SUPPORTS_RAY_TRACING 0
 
 
 class Tr2CapsAL
@@ -39,6 +40,10 @@ public:
 		return true;
 	}
 	bool SupportsVariableRefreshRate() const
+	{
+		return false;
+	}
+	bool SupportsRayTracing() const
 	{
 		return false;
 	}

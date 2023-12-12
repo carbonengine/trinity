@@ -3,6 +3,7 @@
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2ShaderAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
+#include "../include/Tr2CapsAL.h"
 
 
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2ResourceSetAL )
@@ -536,6 +537,22 @@ ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& descriptio
 		m_resourceSet = nullRS;
 	}
 	return result;
+}
+
+ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+{
+#if TRINITY_PLATFORM_SUPPORTS_RAY_TRACING
+	m_resourceSet = std::make_shared<TrinityALImpl::Tr2ResourceSetAL>();
+	auto result = m_resourceSet->Create( description, pipeline, renderContext );
+	if( FAILED( result ) )
+	{
+		m_resourceSet = nullRS;
+	}
+	return result;
+#else
+	m_resourceSet = nullRS;
+	return E_FAIL;
+#endif
 }
 
 bool Tr2ResourceSetAL::IsValid() const

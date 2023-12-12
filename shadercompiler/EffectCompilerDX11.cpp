@@ -19,609 +19,38 @@
 #include "YamlOutput.h"
 #include "Macro.h"
 #include "OutputHLSL.h"
-#include <regex>
+
+#include "DxReflection.h"
+
+#define DXIL_FOURCC(ch0, ch1, ch2, ch3) (                            \
+  (uint32_t)(uint8_t)(ch0)        | (uint32_t)(uint8_t)(ch1) << 8  | \
+  (uint32_t)(uint8_t)(ch2) << 16  | (uint32_t)(uint8_t)(ch3) << 24   \
+  )
+
+enum DxilFourCC
+{
+	DFCC_Container = DXIL_FOURCC( 'D', 'X', 'B', 'C' ), // for back-compat with tools that look for DXBC containers
+	DFCC_ResourceDef = DXIL_FOURCC( 'R', 'D', 'E', 'F' ),
+	DFCC_InputSignature = DXIL_FOURCC( 'I', 'S', 'G', '1' ),
+	DFCC_OutputSignature = DXIL_FOURCC( 'O', 'S', 'G', '1' ),
+	DFCC_PatchConstantSignature = DXIL_FOURCC( 'P', 'S', 'G', '1' ),
+	DFCC_ShaderStatistics = DXIL_FOURCC( 'S', 'T', 'A', 'T' ),
+	DFCC_ShaderDebugInfoDXIL = DXIL_FOURCC( 'I', 'L', 'D', 'B' ),
+	DFCC_ShaderDebugName = DXIL_FOURCC( 'I', 'L', 'D', 'N' ),
+	DFCC_FeatureInfo = DXIL_FOURCC( 'S', 'F', 'I', '0' ),
+	DFCC_PrivateData = DXIL_FOURCC( 'P', 'R', 'I', 'V' ),
+	DFCC_RootSignature = DXIL_FOURCC( 'R', 'T', 'S', '0' ),
+	DFCC_DXIL = DXIL_FOURCC( 'D', 'X', 'I', 'L' ),
+	DFCC_PipelineStateValidation = DXIL_FOURCC( 'P', 'S', 'V', '0' ),
+	DFCC_RuntimeData = DXIL_FOURCC( 'R', 'D', 'A', 'T' ),
+	DFCC_ShaderHash = DXIL_FOURCC( 'H', 'A', 'S', 'H' ),
+};
 
 extern CompileMessageQueue g_messages;
 extern StringTable g_stringTable;
 extern bool g_printWarnings;
 extern unsigned g_optimizationLevel;
 extern bool g_avoidFlowControl;
-
-
-
-bool MakeEffectAnnotationFromSymbolAnnotation( const SymbolAnnotation& annotation, Annotation& result, bool& isSRGB, bool& isAutoregister )
-{
-	switch( annotation.type )
-	{
-	case OP_FLOAT:
-	case OP_HALF:
-	case OP_DOUBLE:
-		result.type = ANNOTATION_TYPE_FLOAT;
-		result.floatValue = float( ParseFloat( annotation.value.stringValue.start, annotation.value.stringValue.end ) );
-		return true;
-
-	case OP_UINT:
-	case OP_INT:
-		result.type = ANNOTATION_TYPE_INT;
-		result.intValue = ParseNumber( annotation.value.stringValue.start, annotation.value.stringValue.end );
-		return true;
-
-	case OP_BOOL:
-		result.type = ANNOTATION_TYPE_BOOL;
-		result.intValue = annotation.value.intValue ? 1 : 0;
-		if( ToString( annotation.name ) == "Tr2sRGB" )
-		{
-			isSRGB = result.intValue != 0;
-		}
-		else if( ToString( annotation.name ) == "AutoRegister" )
-		{
-			isAutoregister = result.intValue != 0;
-		}
-		return true;
-
-	case OP_STRING:
-		result.type = ANNOTATION_TYPE_STRING;
-		result.stringValue = g_stringTable.AddString( ParseString( annotation.value.stringValue ).c_str() );
-		return true;
-	}
-
-	return false;
-}
-
-static bool GetTextureType( const D3D11_SHADER_INPUT_BIND_DESC& desc, TextureType& type )
-{
-	switch( desc.Type )
-	{
-	case D3D_SIT_TEXTURE:
-		type = TEX_TYPE_TYPELESS;
-		switch( desc.Dimension )
-		{
-		case D3D10_SRV_DIMENSION_TEXTURE1D:
-			type = TEX_TYPE_1D;
-			break;
-		case D3D10_SRV_DIMENSION_TEXTURE2D:
-			type = TEX_TYPE_2D;
-			break;
-		case D3D10_SRV_DIMENSION_TEXTURE3D:
-			type = TEX_TYPE_3D;
-			break;
-		case D3D10_SRV_DIMENSION_TEXTURECUBE:
-			type = TEX_TYPE_CUBE;
-			break;
-		case D3D10_SRV_DIMENSION_BUFFER:
-			type = TEX_TYPE_BUFFER;
-			break;
-		}
-		break;
-	case D3D_SIT_TBUFFER:
-		type = TEX_TYPE_TBUFFER;
-		break;
-	case D3D_SIT_STRUCTURED:
-		type = TEX_TYPE_STRUCTURED_BUFFER;
-		break;
-	case D3D_SIT_BYTEADDRESS:
-		type = TEX_TYPE_BYTEADDRESS_BUFFER;
-		break;
-	case D3D_SIT_UAV_RWTYPED:
-		type = TEX_TYPE_UAV_RWTYPED;
-		break;
-	case D3D_SIT_UAV_RWSTRUCTURED:
-		type = TEX_TYPE_UAV_RWSTRUCTURED;
-		break;
-	case D3D_SIT_UAV_RWBYTEADDRESS:
-		type = TEX_TYPE_UAV_RWBYTEADDRESS;
-		break;
-	case D3D_SIT_UAV_APPEND_STRUCTURED:
-		type = TEX_TYPE_UAV_APPEND_STRUCTURED;
-		break;
-	case D3D_SIT_UAV_CONSUME_STRUCTURED:
-		type = TEX_TYPE_UAV_CONSUME_STRUCTURED;
-		break;
-	case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
-		type = TEX_TYPE_UAV_RWSTRUCTURED_WITH_COUNTER;
-		break;
-	default:
-		return false;
-	}
-	return true;
-}
-
-RegisterInputType GetRegisterType( const D3D11_SHADER_INPUT_BIND_DESC& desc )
-{
-	switch( desc.Type )
-	{
-	case D3D_SIT_CBUFFER:
-		return RT_CONSTANT_BUFFER;
-	case D3D_SIT_TEXTURE:
-		switch( desc.Dimension )
-		{
-		case D3D_SRV_DIMENSION_TEXTURE1D:
-			return RT_SRV_TEXTURE1D;
-		case D3D_SRV_DIMENSION_TEXTURE1DARRAY:
-			return RT_SRV_TEXTURE1DARRAY;
-		case D3D_SRV_DIMENSION_TEXTURE2D:
-			return RT_SRV_TEXTURE2D;
-		case D3D_SRV_DIMENSION_TEXTURE2DARRAY:
-			return RT_SRV_TEXTURE2DARRAY;
-		case D3D_SRV_DIMENSION_TEXTURE2DMS:
-			return RT_SRV_TEXTURE2DMS;
-		case D3D_SRV_DIMENSION_TEXTURE2DMSARRAY:
-			return RT_SRV_TEXTURE2DMSARRAY;
-		case D3D_SRV_DIMENSION_TEXTURE3D:
-			return RT_SRV_TEXTURE3D;
-		case D3D_SRV_DIMENSION_TEXTURECUBE:
-			return RT_SRV_TEXTURECUBE;
-		case D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
-			return RT_SRV_TEXTURECUBEARRAY;
-		default:
-			return RT_SRV_BUFFER;
-		}
-	case D3D_SIT_SAMPLER:
-		return RT_SAMPLER;
-	case D3D_SIT_UAV_RWTYPED:
-		switch( desc.Dimension )
-		{
-		case D3D_SRV_DIMENSION_TEXTURE1D:
-			return RT_UAV_TEXTURE1D;
-		case D3D_SRV_DIMENSION_TEXTURE1DARRAY:
-			return RT_UAV_TEXTURE1DARRAY;
-		case D3D_SRV_DIMENSION_TEXTURE2D:
-			return RT_UAV_TEXTURE2D;
-		case D3D_SRV_DIMENSION_TEXTURE2DARRAY:
-			return RT_UAV_TEXTURE2DARRAY;
-		case D3D_SRV_DIMENSION_TEXTURE2DMS:
-			return RT_UAV_TEXTURE2DMS;
-		case D3D_SRV_DIMENSION_TEXTURE2DMSARRAY:
-			return RT_UAV_TEXTURE2DMSARRAY;
-		case D3D_SRV_DIMENSION_TEXTURE3D:
-			return RT_UAV_TEXTURE3D;
-		case D3D_SRV_DIMENSION_TEXTURECUBE:
-			return RT_UAV_TEXTURECUBE;
-		case D3D_SRV_DIMENSION_TEXTURECUBEARRAY:
-			return RT_UAV_TEXTURECUBEARRAY;
-		default:
-			return RT_UAV_BUFFER;
-		}
-	case D3D_SIT_STRUCTURED:
-		return RT_SRV_STRUCTURED_BUFFER;
-	case D3D_SIT_UAV_RWSTRUCTURED:
-	case D3D_SIT_UAV_APPEND_STRUCTURED:
-	case D3D_SIT_UAV_CONSUME_STRUCTURED:
-	case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
-		return RT_UAV_STRUCTURED_BUFFER;
-	// D3D_SIT_TBUFFER???
-	case D3D_SIT_BYTEADDRESS:
-		return RT_SRV_BUFFER;
-	case D3D_SIT_UAV_RWBYTEADDRESS:
-		return RT_UAV_BUFFER;
-	default:
-		return RT_SRV_BUFFER;
-	}
-}
-
-static bool GetStageData( ParserState& parserState, ID3D11ShaderReflection* reflection, bool collectStaticSamplers, StageInput& stage, std::map<StringReference, ParameterAnnotation> &annotations )
-{
-	tmFunction( 0, 0 );
-
-	D3D11_SHADER_DESC reflDesc;
-	if( FAILED( reflection->GetDesc( &reflDesc ) ) )
-	{
-		g_messages.AddMessage( "\\memory(0): error X0000: Could not get shader reflection description" );
-		return false;
-	}
-
-	reflection->GetThreadGroupSize( &stage.threadGroupSize[0], &stage.threadGroupSize[1], &stage.threadGroupSize[2] );
-
-	for( unsigned cbIndex = 0; cbIndex < reflDesc.ConstantBuffers; ++cbIndex )
-	{
-		ID3D11ShaderReflectionConstantBuffer* cb = reflection->GetConstantBufferByIndex( cbIndex );
-
-		D3D11_SHADER_BUFFER_DESC cbDesc;
-		cb->GetDesc( &cbDesc );
-
-		if( strcmp( cbDesc.Name, "$Globals" ) )
-		{
-			D3D11_SHADER_INPUT_BIND_DESC resDesc;
-			if( FAILED( reflection->GetResourceBindingDescByName( cbDesc.Name, &resDesc ) ) )
-			{
-				continue;
-			}
-			if( resDesc.BindPoint != 0 || resDesc.Type != D3D_SIT_CBUFFER )
-			{
-				continue;
-			}
-		}
-
-		for( unsigned i = 0; i < cbDesc.Variables ; ++i )
-		{
-			ID3D11ShaderReflectionVariable* variable = cb->GetVariableByIndex( i );
-
-			D3D11_SHADER_VARIABLE_DESC varDesc;
-			if( FAILED( variable->GetDesc( &varDesc ) ) )
-			{
-				if( g_printWarnings )
-				{
-					g_messages.AddMessage( "\\memory(0): warning X0000: Could not get shader constant #%i description", i );
-				}
-				continue;
-			}
-			if( ( varDesc.uFlags & D3D_SVF_USED ) == 0 )
-			{
-				continue;
-			}
-
-			ID3D11ShaderReflectionType* type = variable->GetType();
-			D3D11_SHADER_TYPE_DESC typeDesc;
-			if( FAILED( type->GetDesc( &typeDesc ) ) )
-			{
-				if( g_printWarnings )
-				{
-					g_messages.AddMessage( "\\memory(0): warning X0000: Could not get shader constant \"%s\" type description", varDesc.Name );
-				}
-				continue;
-			}
-				
-			Constant constant;
-			constant.name = g_stringTable.AddString( varDesc.Name );
-			constant.offset = varDesc.StartOffset;
-			constant.size = varDesc.Size;
-
-			switch( typeDesc.Type )
-			{
-			case D3D10_SVT_FLOAT:
-				constant.type = CONSTANT_TYPE_FLOAT;
-				break;
-			case D3D10_SVT_INT:
-				constant.type = CONSTANT_TYPE_INT;
-				break;
-			case D3D10_SVT_UINT:
-				constant.type = CONSTANT_TYPE_UINT;
-				break;
-			case D3D10_SVT_BOOL:
-				constant.type = CONSTANT_TYPE_BOOL;
-				break;
-			default:
-				constant.type = CONSTANT_TYPE_OTHER;
-			}
-			switch( typeDesc.Class )
-			{
-			case D3D10_SVC_SCALAR:
-				constant.dimension = 1;
-				break;
-			case D3D10_SVC_VECTOR:
-				constant.dimension = 4;
-				break;
-			case D3D10_SVC_MATRIX_ROWS:
-			case D3D10_SVC_MATRIX_COLUMNS:
-				constant.dimension = 16;
-				break;
-			default:
-				constant.dimension = 1;
-			}
-			constant.elements = typeDesc.Elements;
-			constant.isSRGB = false;
-			constant.isAutoregister = false;
-
-			if( varDesc.DefaultValue )
-			{
-				stage.defaultValues.resize( std::max( stage.defaultValues.size(), size_t( constant.offset + constant.size ) ) );
-				memcpy( &stage.defaultValues[constant.offset], varDesc.DefaultValue, constant.size );
-			}
-
-			if( annotations.find( constant.name ) == annotations.end() )
-			{
-				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( varDesc.Name );
-				if( symbol )
-				{
-					ParameterAnnotation paramAnnotations;
-
-					if( symbol->annotations )
-					{
-						for( auto a = symbol->annotations->begin(); a != symbol->annotations->end(); ++a )
-						{
-							Annotation result;
-							if( MakeEffectAnnotationFromSymbolAnnotation( *a, result, constant.isSRGB, constant.isAutoregister ) )
-							{
-								paramAnnotations.annotations[g_stringTable.AddString( ToString( a->name ).c_str() )] = result;
-							}
-						}
-					}
-
-					if( symbol->type.IsBindlessHandle() )
-					{
-						Annotation symbolAnnotation;
-						symbolAnnotation.type = ANNOTATION_TYPE_INT;
-						symbolAnnotation.intValue = BindlessTextureType( symbol->type.builtInType );
-						paramAnnotations.annotations[g_stringTable.AddString( "BindlessHandleType" )] = symbolAnnotation;
-					}
-					if( !paramAnnotations.annotations.empty() )
-					{
-						annotations[constant.name] = paramAnnotations;
-					}
-				}
-			}
-
-			stage.constants.push_back( constant );
-		}
-	}
-
-	auto GetRegisterSpace = []( Symbol* symbol ) -> uint8_t {
-		if( symbol )
-		{
-			if( !symbol->registerSpecifier.empty() )
-			{
-				auto space = symbol->registerSpecifier.begin()->second.space;
-				if( space > 0 )
-				{
-					return uint8_t( space );
-				}
-			}
-		}
-		return 0;
-	};
-
-	for( unsigned i = 0; i < reflDesc.BoundResources; ++i )
-	{
-		D3D11_SHADER_INPUT_BIND_DESC desc;
-		if( FAILED( reflection->GetResourceBindingDesc(i, &desc) ) )
-		{
-			if( g_printWarnings )
-			{
-				g_messages.AddMessage( "\\memory(0): warning X0000: Could not get shader resource #%i description", i );
-			}
-			continue;
-		}
-		switch( desc.Type )
-		{
-		case D3D_SIT_SAMPLER:
-			{
-				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( desc.Name );
-				if( symbol == nullptr || symbol->definition == nullptr )
-				{
-					if( g_printWarnings )
-					{
-						g_messages.AddMessage( "\\memory(0): warning X0000: Could not find sampler \"%s\" definition in the source code", desc.Name );
-					}
-					stage.registerInputs.push_back( { RT_SAMPLER, desc.BindPoint, desc.BindCount, GetRegisterSpace( symbol ) } );
-					continue;
-				}
-				Sampler sampler;
-				if( !GetSamplerState( parserState, symbol->definition, sampler ) )
-				{
-					return false;
-				}
-
-				StaticSampler staticSampler;
-				if( desc.BindCount == 1 && collectStaticSamplers && ConvertToStaticSampler( staticSampler, sampler ) )
-				{
-					staticSampler.registerIndex = desc.BindPoint;
-					staticSampler.registerSpace = GetRegisterSpace( symbol );
-					stage.staticSamplers.push_back( staticSampler );
-				}
-				else
-				{
-					sampler.name = g_stringTable.AddString( desc.Name );
-					stage.samplers[uint8_t( desc.BindPoint )] = sampler;
-					stage.registerInputs.push_back( { RT_SAMPLER, desc.BindPoint, desc.BindCount, GetRegisterSpace( symbol ) } );
-				}
-			}
-			break;
-		case D3D_SIT_UAV_RWTYPED:
-		case D3D_SIT_UAV_RWSTRUCTURED:
-		case D3D_SIT_UAV_RWBYTEADDRESS:
-		case D3D_SIT_UAV_APPEND_STRUCTURED:
-		case D3D_SIT_UAV_CONSUME_STRUCTURED:
-		case D3D_SIT_UAV_RWSTRUCTURED_WITH_COUNTER:
-			{
-				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( desc.Name );
-				stage.registerInputs.push_back( { GetRegisterType( desc ), desc.BindPoint, desc.BindCount, GetRegisterSpace( symbol ) } );
-
-				Uav uav;
-				uav.count = desc.BindCount;
-				uav.isAutoregister = false;
-				std::string uavName = desc.Name;
-
-				if( symbol == nullptr )
-				{
-					continue;
-				}
-				if( symbol && symbol->annotations )
-				{
-					ParameterAnnotation paramAnnotations;
-
-					bool srgb;
-					uav.isAutoregister = false;
-
-					for( auto ai = symbol->annotations->begin(); ai != symbol->annotations->end(); ++ai )
-					{
-						Annotation result;
-						if( MakeEffectAnnotationFromSymbolAnnotation( *ai, result, srgb, uav.isAutoregister ) )
-						{
-							paramAnnotations.annotations[g_stringTable.AddString( ToString( ai->name ).c_str() )] = result;					
-						}
-					}
-
-					if( !paramAnnotations.annotations.empty() )
-					{
-						annotations[ g_stringTable.AddString( uavName.c_str() ) ] = paramAnnotations;
-					}
-				}
-
-
-				uav.name = g_stringTable.AddString( uavName.c_str() );
-				if( !GetTextureType( desc, uav.type ) )
-				{
-					continue;
-				}
-				stage.uavs[uint8_t( desc.BindPoint )] = uav;
-			}
-			break;
-		case D3D_SIT_CBUFFER:
-		{
-			stage.registerInputs.push_back( { RT_CONSTANT_BUFFER, desc.BindPoint, desc.BindCount, 0 } );
-			break;
-		}
-		default:
-			{
-				Symbol* symbol = parserState.GetSymbolTable().LookupGlobal( desc.Name );
-				stage.registerInputs.push_back( { GetRegisterType( desc ), desc.BindPoint, desc.BindCount, GetRegisterSpace( symbol ) } );
-
-				Texture texture;
-				texture.count = desc.BindCount;
-				texture.isSRGB = false;
-				texture.isAutoregister = false;
-				std::string textureName = desc.Name;
-
-				if( symbol == nullptr )
-				{
-					continue;
-				}
-				// For legacy sampling functions (like tex2D) the reflection will create "dummy"
-				// texture object with the same name as the sampler, so we need to find the
-				// actual texture object from sampler definition.
-				if( symbol && symbol->type.IsSampler() )
-				{
-					if( symbol->definition )
-					{
-						ASTNode* states = symbol->definition->GetChildOrNull( 1 );
-						if( states && states->GetNodeType() == NT_SAMPLER_STATE_LIST )
-						{
-							for( size_t k = 0; k < states->GetChildrenCount(); ++k )
-							{
-								ASTNode* state = states->GetChild( k );
-								std::string name = ToString( state->GetToken()->stringValue );
-								if( _stricmp( name.c_str(), "Texture" ) == 0 )
-								{
-									ASTNode* value = state->GetChildOrNull( 0 );
-									if( value && value->GetSymbol() )
-									{
-										textureName = ToString( value->GetSymbol()->name );
-									}
-								}
-								else if( _stricmp( name.c_str(), "SRGBTexture" ) == 0 )
-								{
-									Sampler sampler;
-									sampler.srgbTexture = 0;
-									ParseStateAssignment( parserState, state, g_samplerStates, &sampler );
-									texture.isSRGB = sampler.srgbTexture != 0;
-								}
-							}
-						}
-					}
-				}
-				else if( symbol && symbol->annotations )
-				{
-					ParameterAnnotation paramAnnotations;
-				
-					texture.isSRGB = false;
-					texture.isAutoregister = false;
-
-					for( auto ai = symbol->annotations->begin(); ai != symbol->annotations->end(); ++ai )
-					{
-						Annotation result;
-						if( MakeEffectAnnotationFromSymbolAnnotation( *ai, result, texture.isSRGB, texture.isAutoregister ) )
-						{
-							paramAnnotations.annotations[g_stringTable.AddString( ToString( ai->name ).c_str() )] = result;					
-						}
-					}
-
-					if( !paramAnnotations.annotations.empty() )
-					{
-						annotations[ g_stringTable.AddString( textureName.c_str() ) ] = paramAnnotations;
-					}
-				}
-
-
-				texture.name = g_stringTable.AddString( textureName.c_str() );
-				if( !GetTextureType( desc, texture.type ) )
-				{
-					continue;
-				}
-				stage.textures[uint8_t( desc.BindPoint )] = texture;
-			}
-		}
-	}
-	for( unsigned k = 0; k < reflDesc.InputParameters; ++k )
-	{
-		D3D11_SIGNATURE_PARAMETER_DESC desc;
-		if( FAILED( reflection->GetInputParameterDesc( k, &desc ) ) )
-		{
-			g_messages.AddMessage( "\\memory(0): error X0000: Could not get shader input parameter description" );
-			return false;
-		}
-		if( desc.SystemValueType == D3D10_NAME_UNDEFINED )
-		{
-			bool found = false;
-			PipelineInputDescription input;
-			for( int n = 0; n < UC_NUM_USAGE_CODE; ++n )
-			{
-				if( _stricmp( desc.SemanticName, GetStringForUsageCode( n ) ) == 0 )
-				{
-					input.name = uint8_t( n );
-					input.registerIndex = uint8_t( desc.Register );
-					input.index = uint8_t( desc.SemanticIndex );
-					input.usedMask = desc.ReadWriteMask;
-					switch( desc.ComponentType )
-					{
-					case D3D_REGISTER_COMPONENT_FLOAT32:
-						input.type = CONSTANT_TYPE_FLOAT;
-						break;
-					case D3D_REGISTER_COMPONENT_SINT32:
-						input.type = CONSTANT_TYPE_INT;
-						break;
-					case D3D_REGISTER_COMPONENT_UINT32:
-						input.type = CONSTANT_TYPE_UINT;
-						break;
-					default:
-						input.type = CONSTANT_TYPE_OTHER;
-						break;
-					}
-					if( desc.Mask >= ( 1 << 7 ) )
-					{
-						input.dimension = 8;
-					}
-					else if( desc.Mask >= ( 1 << 6 ) )
-					{
-						input.dimension = 7;
-					}
-					else if( desc.Mask >= ( 1 << 5 ) )
-					{
-						input.dimension = 6;
-					}
-					else if( desc.Mask >= ( 1 << 4 ) )
-					{
-						input.dimension = 5;
-					}
-					else if( desc.Mask >= ( 1 << 3 ) )
-					{
-						input.dimension = 4;
-					}
-					else if( desc.Mask >= ( 1 << 2 ) )
-					{
-						input.dimension = 3;
-					}
-					else if( desc.Mask >= ( 1 << 1 ) )
-					{
-						input.dimension = 2;
-					}
-					else
-					{
-						input.dimension = 1;
-					}
-					stage.pipelineInputs.push_back( input );
-					found = true;
-					break;
-				}
-			}
-			if( !found && g_printWarnings )
-			{
-				g_messages.AddMessage( "\\memory(0): error X0000: Shader uses unsupported input semantics \"%s\"", desc.SemanticName );
-				return false;
-			}
-		}
-	}
-	return true;
-}
 
 
 static bool FindParameterBySemantics( ASTNode* node, const char** semantics, std::vector<Symbol*>* path, bool outParameter = false )
@@ -694,7 +123,7 @@ bool FindOutputBySemantics( ASTNode* node, const char** semantics, std::vector<S
 		}
 	}
 	// finally check return value as a structure
-	if( node->GetType().symbol && 
+	if( node->GetType().symbol &&
 		node->GetType().symbol->definition )
 	{
 		for( unsigned i = 0; i < node->GetType().symbol->definition->GetChildrenCount(); ++i )
@@ -727,7 +156,7 @@ void PrintValuePath( std::ostream& os, const std::vector<Symbol*>& path, const c
 		}
 		if( *it )
 		{
-			os << ( *it )->name;
+			os << (*it)->name;
 		}
 		else
 		{
@@ -820,7 +249,7 @@ static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, P
 		return PATCH_ERROR;
 	}
 
-	ASTNode* functionHeader  = entryPointSymbol->definition->GetChildOrNull( 0 );
+	ASTNode* functionHeader = entryPointSymbol->definition->GetChildOrNull( 0 );
 	if( functionHeader == nullptr )
 	{
 		return PATCH_ERROR;
@@ -872,15 +301,15 @@ static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, P
 	{
 		if( vposPath.back() )
 		{
-			if( vposPath.back()->type.symbol || 
-				( vposPath.back()->type.builtInType == OP_FLOAT && vposPath.back()->type.width == 4 && vposPath.back()->type.height == 1 ) )
+			if( vposPath.back()->type.symbol ||
+				(vposPath.back()->type.builtInType == OP_FLOAT && vposPath.back()->type.width == 4 && vposPath.back()->type.height == 1) )
 			{
 				fixVPOSType = false;
 			}
 		}
 	}
 
-	if( !wrapUniforms && !fixVPOS && !fixVPOSType && ( shaderStage != VERTEX_STAGE || outPositionPath.empty() ) )
+	if( !wrapUniforms && !fixVPOS && !fixVPOSType && (shaderStage != VERTEX_STAGE || outPositionPath.empty()) )
 	{
 		entryPointName = ToString( entryPointSymbol->name );
 		return PATCH_USE;
@@ -993,14 +422,14 @@ static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, P
 				// pass VPOS value from POSITION
 				PrintValuePath( os, positionPath, "" );
 				if( symbol->type.symbol == nullptr && symbol->type.builtInType == OP_FLOAT && symbol->type.height == 1 &&
-					positionPath.back()->type.symbol == nullptr && positionPath.back()->type.builtInType == OP_FLOAT && 
+					positionPath.back()->type.symbol == nullptr && positionPath.back()->type.builtInType == OP_FLOAT &&
 					positionPath.back()->type.height == 1 && positionPath.back()->type.width != symbol->type.width )
 				{
 					const char* swizzle = "xyzw";
 					os << ".";
 					for( int k = 0; k < symbol->type.width; ++k )
 					{
-						os << swizzle[std::min( k, positionPath.back()->type.width - 1 ) ];
+						os << swizzle[std::min( k, positionPath.back()->type.width - 1 )];
 					}
 				}
 			}
@@ -1014,7 +443,7 @@ static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, P
 					os << ".";
 					for( int k = 0; k < symbol->type.width; ++k )
 					{
-						os << swizzle[std::min( k, symbol->type.width - 1 ) ];
+						os << swizzle[std::min( k, symbol->type.width - 1 )];
 					}
 				}
 				os << " )";
@@ -1039,8 +468,7 @@ static PatchAction PatchShader( InputStageType shaderStage, ASTNode* callNode, P
 bool EffectCompilerDX11::Create()
 {
 	tmFunction( 0, 0 );
-
-	return true;
+	return SUCCEEDED( ::DxcCreateInstance( CLSID_DxcUtils, IID_PPV_ARGS( &m_dxilUtils ) ) );
 }
 
 bool MatchShaderInputOutput( ID3D11ShaderReflection* output, ID3D11ShaderReflection* input )
@@ -1079,7 +507,7 @@ bool MatchShaderInputOutput( ID3D11ShaderReflection* output, ID3D11ShaderReflect
 				g_messages.AddMessage( "\\memory(0): error X0000: Could not get shader output parameter description" );
 				return false;
 			}
-			if( vsDesc.Register == psDesc.Register && ( ( ~vsDesc.Mask & psDesc.Mask ) == 0 ) )
+			if( vsDesc.Register == psDesc.Register && ((~vsDesc.Mask & psDesc.Mask) == 0) )
 			{
 				if( _stricmp( vsDesc.SemanticName, psDesc.SemanticName ) || vsDesc.SemanticIndex != psDesc.SemanticIndex )
 				{
@@ -1136,7 +564,7 @@ void PrintShaderOutListing( YamlOutput& listing, ID3DBlob* effectData, ID3D11Sha
 	CComPtr<ID3DBlob> disassembly;
 	if( SUCCEEDED( D3DDisassemble( effectData->GetBufferPointer(), effectData->GetBufferSize(), D3D_DISASM_ENABLE_DEFAULT_VALUE_PRINTS, nullptr, &disassembly ) ) )
 	{
-		listing.literal( "asm" ).literal( reinterpret_cast<const char*>( disassembly->GetBufferPointer() ) );
+		listing.literal( "asm" ).literal( reinterpret_cast<const char*>(disassembly->GetBufferPointer()) );
 	}
 	D3D11_SHADER_DESC desc;
 	if( reflection && SUCCEEDED( reflection->GetDesc( &desc ) ) )
@@ -1283,7 +711,7 @@ YamlOutput& YamlTextureType( YamlOutput& listing, TextureType type )
 }
 
 
-void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectData& result )
+void PrintStageInfo( YamlOutput& listing, const StageData& stage, const EffectData& result )
 {
 	if( !listing.enabled() )
 	{
@@ -1377,22 +805,6 @@ void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectD
 		}
 		listing.end();
 	}
-	if( !stage.pipelineInputs.empty() )
-	{
-		listing.literal( "inputs" ).list();
-		for( auto it = stage.pipelineInputs.begin(); it != stage.pipelineInputs.end(); ++it )
-		{
-			listing.dict()
-				.literal( "register" ).literal( it->registerIndex )
-				.literal( "name" ).literal( it->name )
-				.literal( "index" ).literal( it->index )
-				.literal( "usedMask" ).literal( it->usedMask )
-				.literal( "type" ).literal( ToString( it->type ) )
-				.literal( "dimension" ).literal( it->dimension )
-				.end();
-		}
-		listing.end();
-	}
 	if( !stage.registerInputs.empty() )
 	{
 		listing.literal( "registers" ).list();
@@ -1404,6 +816,25 @@ void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectD
 				.end();
 		}
 		listing.end();
+	}
+}
+
+void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectData& result )
+{
+	PrintStageInfo( listing, static_cast<const StageData&>(stage), result );
+	if( !stage.pipelineInputs.empty() )
+	{
+		listing.literal( "inputs" ).list();
+		for( auto it = stage.pipelineInputs.begin(); it != stage.pipelineInputs.end(); ++it )
+		{
+			listing.dict()
+				.literal( "register" ).literal( it->registerIndex )
+				.literal( "name" ).literal( it->name )
+				.literal( "index" ).literal( it->index )
+				.literal( "usedMask" ).literal( it->usedMask )
+				.end();
+		}
+		listing.end(); // inputs
 	}
 	if( !stage.staticSamplers.empty() )
 	{
@@ -1443,7 +874,7 @@ void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectD
 				.literal( it.maxLOD )
 				.end();
 		}
-		listing.end();
+		listing.end(); //staticSamplers
 	}
 }
 
@@ -1488,6 +919,34 @@ bool ParseShaderName( const InlineString& name, InputStageType& type )
 	return true;
 }
 
+bool ParseRtShaderName( const InlineString& name, RtShaderType& type )
+{
+	if( _stricmp( ToString( name ).c_str(), "raygenshader" ) == 0 )
+	{
+		type = RtShaderType::RAY_GEN;
+	}
+	else if( _stricmp( ToString( name ).c_str(), "missshader" ) == 0 )
+	{
+		type = RtShaderType::MISS;
+	}
+	else if( _stricmp( ToString( name ).c_str(), "closesthitshader" ) == 0 )
+	{
+		type = RtShaderType::CLOSEST_HIT;
+	}
+	else if( _stricmp( ToString( name ).c_str(), "anyhitshader" ) == 0 )
+	{
+		type = RtShaderType::ANY_HIT;
+	}
+	else if( _stricmp( ToString( name ).c_str(), "intersectionshader" ) == 0 )
+	{
+		type = RtShaderType::INTERSECTION;
+	}
+	else
+	{
+		return false;
+	}
+	return true;
+}
 
 bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result )
 {
@@ -1541,7 +1000,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 	state.GetTree()->FindNodes( NT_TECHNIQUE, techniqueNodes );
 	if( techniqueNodes.empty() )
 	{
-		g_messages.AddMessage( "\\memory(0): error X0000: No technique found" );
+		g_messages.AddMessage( "\\memory(0): error X0000: No technique or libraries found" );
 		return false;
 	}
 
@@ -1570,9 +1029,13 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 		for( size_t passIx = 0; passIx < techniqueNode->GetChildrenCount(); ++passIx )
 		{
+			ASTNode* passNode = techniqueNode->GetChild( passIx );
+			if( passNode->GetNodeType() != NT_PASS )
+			{
+				continue;
+			}
 			listing.list();
 			Pass outPass;
-			ASTNode* passNode = techniqueNode->GetChild( passIx );
 			CComPtr<ID3D11ShaderReflection> reflections[6];
 			for( size_t stateIx = 0; stateIx < passNode->GetChildrenCount(); ++stateIx )
 			{
@@ -1667,7 +1130,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				}
 
 				CompilerInputStream os( state, ShadingLanguage::HLSL );
-				os << HLSL{ state.GetTree(), &state.GetSymbolTable() };
+				os << HLSL{ state.GetTree(), & state.GetSymbolTable() };
 
 				std::string entryPoint = ToString( shaderNode->GetChild( 1 )->GetSymbol()->name );
 
@@ -1707,7 +1170,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 							nullptr,
 							patchEntryPoint.c_str(),
 							profile.c_str(),
-							( compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY ) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | ( g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0 ),
+							(compileOptions.minShaderVersion ? D3DCOMPILE_ENABLE_UNBOUNDED_DESCRIPTOR_TABLES : D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY) | GetOptimizationLevel() | D3DCOMPILE_PACK_MATRIX_COLUMN_MAJOR | (g_avoidFlowControl ? D3DCOMPILE_AVOID_FLOW_CONTROL : 0),
 							0,
 							&effectData,
 							&errors );
@@ -1739,10 +1202,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				{
 					tmZone( 0, 0, "D3DStripShader" );
 					if( FAILED( D3DStripShader(
-							effectData->GetBufferPointer(),
-							effectData->GetBufferSize(),
-							D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
-							&strippedEffectData ) ) )
+						effectData->GetBufferPointer(),
+						effectData->GetBufferSize(),
+						D3DCOMPILER_STRIP_REFLECTION_DATA | D3DCOMPILER_STRIP_DEBUG_INFO | D3DCOMPILER_STRIP_TEST_BLOBS,
+						&strippedEffectData ) ) )
 					{
 						strippedEffectData = effectData;
 					}
@@ -1761,7 +1224,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					}
 				}
 
-				if( !GetStageData( state, reflection, compileOptions.useStaticSamplers, stage, result.annotations ) )
+				if( !DxReflection::ProcessReflection<DxReflection::FunctionDx11>( state, reflection.p, compileOptions.useStaticSamplers, stage, result.annotations ) )
 				{
 					return false;
 				}
@@ -1774,7 +1237,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 						{
 							Annotation symbolAnnotation;
 							bool isSrgb, isAutoregister;
-							if( MakeEffectAnnotationFromSymbolAnnotation( *a, symbolAnnotation, isSrgb, isAutoregister ) )
+							if( DxReflection::MakeEffectAnnotationFromSymbolAnnotation( *a, symbolAnnotation, isSrgb, isAutoregister ) )
 							{
 								stage.annotations.annotations[g_stringTable.AddString( ToString( a->name ).c_str() )] = symbolAnnotation;
 							}
@@ -1794,14 +1257,10 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				if( listing.enabled() )
 				{
 					listing.dict()
-						.literal( "profile" )
-						.literal( profile )
-						.literal( "original" )
-						.dict()
-						.literal( "entryPoint" )
-						.literal( patchEntryPoint )
-						.literal( "source" )
-						.literal( SanitizeCode( code ) );
+						.literal( "profile" ).literal( profile )
+						.literal( "original" ).dict()
+						.literal( "entryPoint" ).literal( patchEntryPoint )
+						.literal( "source" ).literal( SanitizeCode( code ) );
 					PrintShaderOutListing( listing, effectData, reflection );
 					listing.end();
 				}
@@ -1813,6 +1272,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 				outPass.stages.push_back( stage );
 			}
+
 
 			// Check if PS input matches VS output
 			InputStageType pipelineStages[] = {
@@ -1849,8 +1309,168 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 
 			listing.end(); // stages list
 		}
+
+		listing.end(); // passes list
+		listing.literal( "libraries" ).list();
+
+		for( size_t passIx = 0; passIx < techniqueNode->GetChildrenCount(); ++passIx )
+		{
+			ASTNode* libNode = techniqueNode->GetChild( passIx );
+			if( libNode->GetNodeType() != NT_LIBRARY )
+			{
+				continue;
+			}
+			listing.dict()
+				.literal( "name" ).literal( libNode->GetToken()->stringValue )
+				.literal( "exports" ).list();
+
+			Library library;
+			library.payloadSize = 0;
+			library.hitGroupName = g_stringTable.AddString( "" );
+
+			std::map<std::string, std::string> shaders;
+
+			state.GetSymbolTable().ResetUsedFlag();
+			for( size_t i = 0; i < libNode->GetChildrenCount(); ++i )
+			{
+				auto childNode = libNode->GetChild( i );
+				if( childNode->GetNodeType() == NT_SHADER_ASSIGNMENT )
+				{
+					ShaderExport shaderExport;
+					if( !ParseRtShaderName( childNode->GetToken()->stringValue, shaderExport.type ) )
+					{
+						state.ShowMessage( childNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( childNode->GetToken()->stringValue ).c_str() );
+						return false;
+					}
+					listing.literal( childNode->GetChild( 1 )->GetSymbol()->name );
+					MarkUsedSymbols( childNode->GetChild( 1 ), state );
+					shaderExport.name = g_stringTable.AddString( ToString( childNode->GetChild( 1 )->GetSymbol()->name ).c_str() );
+					library.exports.push_back( shaderExport );
+				}
+				else if( childNode->GetNodeType() == NT_STATE_ASSIGNMENT )
+				{
+					auto name = childNode->GetToken()->stringValue;
+					if( EqualsCaseInsensitive( name, "payloadsize" ) )
+					{
+						Type type;
+						type.FromTokenType( OP_UINT );
+						ExpressionValue value;
+						if( !EvaluateExpression( state, childNode->GetChildOrNull( 0 ), type, value, nullptr ) )
+						{
+							state.ShowMessage( childNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( name ).c_str() );
+							return false;
+						}
+						library.payloadSize = uint32_t( value[0].intValue );
+					}
+					else if( EqualsCaseInsensitive( name, "hitgroupname" ) )
+					{
+						Type type;
+						type.FromTokenType( OP_STRING );
+						ExpressionValue value;
+						if( !EvaluateExpression( state, childNode->GetChildOrNull( 0 ), type, value, nullptr ) )
+						{
+							state.ShowMessage( childNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( name ).c_str() );
+							return false;
+						}
+						library.hitGroupName = g_stringTable.AddString( value[0].stringValue.c_str() );
+					}
+				}
+			}
+			listing.end(); // exports list
+
+			if( compileOptions.addSpaces )
+			{
+				CreateGlobalsCB( state );
+				AssignRegisters( state.GetTree(), 8 );
+			}
+
+
+			CompilerInputStream os( state, ShadingLanguage::HLSL );
+			os << HLSL{ state.GetTree(), & state.GetSymbolTable() };
+
+			CComPtr<IDxcBlobEncoding> src;
+
+			//m_dxilLibrary->CreateBlobWithEncodingFromPinned( os.str(), UINT32( os.pcount() ), CP_UTF8, &src );
+			m_dxilUtils->CreateBlobFromPinned( os.str(), UINT32( os.pcount() ), CP_UTF8, &src );
+
+			CComPtr<IDxcCompiler> compiler;
+			DxcCreateInstance( CLSID_DxcCompiler, IID_PPV_ARGS( &compiler ) );
+
+			CComPtr<IDxcOperationResult> opResult;
+			compiler->Compile(
+				src,
+				L"memory",
+				L"",
+				L"lib_6_3",
+				nullptr, 0,
+				nullptr, 0,
+				nullptr,
+				&opResult );
+
+			HRESULT hrCompilation;
+			opResult->GetStatus( &hrCompilation );
+
+			CComPtr<IDxcBlobEncoding> messages;
+			if( SUCCEEDED( opResult->GetErrorBuffer( &messages ) ) )
+			{
+				g_messages.AddMessages( messages );
+			}
+			if( FAILED( hrCompilation ) )
+			{
+				return false;
+			}
+
+			CComPtr<IDxcBlob> compiled;
+			opResult->GetResult( &compiled );
+
+			library.shaderDataStr = g_stringTable.AddString( compiled->GetBufferPointer(), compiled->GetBufferSize() );
+			library.shaderSize = uint32_t( compiled->GetBufferSize() );
+
+			CComPtr<IDxcContainerReflection> reflection;
+			DxcCreateInstance( CLSID_DxcContainerReflection, IID_PPV_ARGS( &reflection ) );
+			reflection->Load( compiled );
+			UINT32 shaderIdx;
+			reflection->FindFirstPartKind( DFCC_DXIL, &shaderIdx );
+
+			CComPtr<ID3D12LibraryReflection> shaderReflection;
+			reflection->GetPartReflection( shaderIdx, IID_PPV_ARGS( &shaderReflection ) );
+			D3D12_LIBRARY_DESC desc;
+			shaderReflection->GetDesc( &desc );
+
+			for( UINT i = 0; i < desc.FunctionCount; ++i )
+			{
+				// global root signature space = 7
+				if( !DxReflection::ProcessReflection<DxReflection::FunctionDx12>( state, shaderReflection->GetFunctionByIndex( i ), compileOptions.useStaticSamplers, library.globalInputs, result.annotations, 7, { 7, 8 } ) )
+				{
+					return false;
+				}
+				// local root signature space = 8
+				if( !DxReflection::ProcessReflection<DxReflection::FunctionDx12>( state, shaderReflection->GetFunctionByIndex( i ), compileOptions.useStaticSamplers, library.localInputs, result.annotations, 8, { 7, 8 } ) )
+				{
+					return false;
+				}
+			}
+
+			technique.libraries.push_back( library );
+
+			if( listing.enabled() )
+			{
+				listing.literal( "profile" ).literal( "lib_6_3" );
+				listing.literal( "original" ).dict();
+				listing.literal( "source" ).literal( SanitizeCode( std::string( os.str(), os.str() + os.pcount() ) ) );
+				CComPtr<IDxcBlobEncoding> disassembly;
+				if( SUCCEEDED( compiler->Disassemble( compiled, &disassembly ) ) )
+				{
+					listing.literal( "asm" ).literal( reinterpret_cast<const char*>(disassembly->GetBufferPointer()) );
+				}
+				listing.end();
+				PrintStageInfo( listing, library.globalInputs, result );
+			}
+			listing.end();
+		}
+
 		result.techniques.push_back( technique );
-		listing.end(); // pases list
+		listing.end(); // libraries list
 		listing.end(); // technique dict
 	}
 	listing.end(); // technique list

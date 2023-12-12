@@ -144,10 +144,28 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	{
 		m_gpuCrashTracker = new TrinityALImpl::GpuCrashTracker();
 	}
-
 	CR_RETURN_HR( TrinityALImpl::GetVideoAdapter( adapter, &dxgiAdapter, &output ) );
-
-	CR_RETURN_HR( D3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS( &device ) ) );
+	
+	bool dxrAvailable = false;
+	// Create directX 12.1 device for raytracing, if it fails fall back to 12.0
+	if( SUCCEEDED( D3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS( &device ) ) ) )
+	{	
+		D3D12_FEATURE_DATA_D3D12_OPTIONS5 caps = {};
+		if( FAILED( device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &caps, sizeof( caps ) ) ) || caps.RaytracingTier < D3D12_RAYTRACING_TIER_1_0 )
+		{
+			CCP_LOGERR( "DirectX device or driver does not support raytracing" );
+		}
+		else
+		{
+			CCP_LOGERR( "Successfully created DirectX 12.1 device, ray tracing will be available" );
+			dxrAvailable = true;
+		}
+	}
+	else
+	{
+		CCP_LOGERR( "Failed to create DirectX 12.1 device, now creating DirectX 12.0 device instead" );
+		CR_RETURN_HR( D3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS( &device ) ) );
+	}
 
 	if( !m_gpuCrashTracker->IsValid() )
 	{
@@ -277,6 +295,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 
 	m_device = device;
+	device.QueryInterface( &m_device5 );
 	m_commandQueue = commandQueue;
 	m_swapChain = swapChain;
 	m_output = output;
@@ -296,6 +315,8 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	m_frameFenceValues.clear();
 	m_frameFenceValues.resize( backBufferCount, 0 );
 	m_pendingRelease.resize( backBufferCount );
+
+	m_caps.m_supportsDxr = dxrAvailable;
 
 	CreateDx12( commandAllocators[currentBackBufferIndex], *this );
 
@@ -1083,8 +1104,9 @@ HRESULT Tr2PrimaryRenderContextAL::CreateShaderResourceView(ID3D12Resource* reso
 	{
 		return E_OUTOFMEMORY;
 	}
-	m_device->CreateShaderResourceView( resource, &desc, entry->m_offsetCPU );
-	m_device->CreateShaderResourceView( resource, &desc, m_srvUavAllocator->GetDescriptorInCpuHeap( entry ) );
+	// CHECK
+	m_device->CreateShaderResourceView( desc.ViewDimension == D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE ? nullptr : resource , &desc, entry->m_offsetCPU );
+	m_device->CreateShaderResourceView( desc.ViewDimension == D3D12_SRV_DIMENSION_RAYTRACING_ACCELERATION_STRUCTURE ? nullptr : resource, &desc, m_srvUavAllocator->GetDescriptorInCpuHeap( entry ) );
 	srvView = std::make_shared<ShaderResourceViewDx12>( m_srvUavAllocator.get(), entry );
 	return S_OK;
 }

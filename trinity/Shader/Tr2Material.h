@@ -86,6 +86,32 @@ private:
 	std::unordered_map<Key, Value, KeyHash, KeyEquals> m_buffers;
 };
 
+// ----------------------------------------------------------------------------------
+// Description:
+//   Represents per-render-stage inputs.
+// ----------------------------------------------------------------------------------
+struct Tr2MaterialStageInput
+{
+	Tr2MaterialStageInput();
+	~Tr2MaterialStageInput();
+
+	Tr2EffectParamVector m_shaderParameters;
+	Tr2EffectParamVector m_shaderParametersWithNotification;
+	Tr2EffectParamVector m_textures;
+	Tr2EffectParamVector m_uavs;
+	Tr2ConstantBufferAL m_constantBuffer;
+	CcpMallocBuffer m_constantMirror;
+	bool m_constantBufferDirty;
+	Tr2SharedConstantBuffers::Key m_sharedBufferKey;
+	//Tr2SamplerOverrideDataVector m_samplers;
+
+	// previously AllocateConstantMirror
+	//bool AllocateConstantBuffer( uint32_t size );
+
+	// new AllocateConstantMirror
+	void AllocateConstants( uint32_t size );
+	void GetSharedConstantBuffer( const void* contents, uint32_t size );
+};
 
 // Tr2EffectPassParameters holds information on parameters for the effect pass.
 // * For each vertex/pixel shader parameter there is a Tr2EffectParam instance
@@ -103,30 +129,9 @@ public:
 	void AllocateConstantMirror( Tr2RenderContextEnum::ShaderType type, unsigned int size );
 	void GetSharedConstantBuffer( Tr2RenderContextEnum::ShaderType type, const void* contents, unsigned int size );
 
-	// ----------------------------------------------------------------------------------
-	// Description:
-	//   Represents per-render-stage inputs.
-	// ----------------------------------------------------------------------------------
-	struct StageInput
-	{
-		StageInput();
-		~StageInput();
+	Tr2MaterialStageInput m_stageInput[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 
-		void AllocateConstants( uint32_t size );
-		void GetSharedConstantBuffer( const void* contents, uint32_t size );
 
-		Tr2EffectParamVector m_shaderParameters;
-		Tr2EffectParamVector m_shaderParametersWithNotification;
-		Tr2EffectParamVector m_textures;
-		Tr2EffectParamVector m_uavs;
-		Tr2SamplerOverrideDataVector m_samplers;
-		Tr2ConstantBufferAL m_constantBuffer;
-		Tr2SharedConstantBuffers::Key m_sharedBufferKey;
-		CcpMallocBuffer m_constantMirror;
-		bool m_constantBufferDirty;
-	};
-
-	StageInput m_stageInput[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 	std::vector<ITriReroutable*> m_reroutedParameters;
 	Tr2ResourceSetDescriptionAL m_resourceSetDesc;
 	Tr2ResourceSetAL m_resourceSet;
@@ -138,8 +143,46 @@ public:
 	bool m_usedTexturesDirty;
 };
 
-typedef std::vector<std::unique_ptr<Tr2EffectPassParameters>> Tr2EffectPassParametersVector;
-typedef std::vector<Tr2EffectPassParametersVector> Tr2EffectTechniqueParametersVector;
+struct Tr2EffectLibraryParameters
+{
+	Tr2EffectLibraryParameters();
+
+	Tr2MaterialStageInput m_localInput;
+	Tr2ResourceSetDescriptionAL m_localResourceSetDesc;
+
+	Tr2MaterialStageInput m_globalInput;
+	Tr2ResourceSetDescriptionAL m_globalResourceSetDesc;
+	Tr2ResourceSetAL m_globalResourceSet;
+	std::vector<ITriReroutable*> m_reroutedParameters;
+	std::vector<ITr2EffectValuePtr> m_usedResources;
+	bool m_globalResourceSetDirty;
+};
+
+struct Tr2EffectTechniqueInputs
+{
+	Tr2EffectTechniqueInputs()
+	{
+	}
+	Tr2EffectTechniqueInputs( Tr2EffectTechniqueInputs&& other )
+	{
+		std::swap( passes, other.passes );
+		std::swap( libraries, other.libraries );
+	}
+	Tr2EffectTechniqueInputs& operator=( Tr2EffectTechniqueInputs&& other )
+	{
+		std::swap( passes, other.passes );
+		std::swap( libraries, other.libraries );
+		return *this;
+	}
+
+	std::vector<std::unique_ptr<Tr2EffectPassParameters>> passes;
+	std::vector<std::unique_ptr<Tr2EffectLibraryParameters>> libraries;
+};
+
+typedef std::vector<Tr2EffectTechniqueInputs> Tr2EffectTechniqueParametersVector;
+
+//typedef std::vector<std::unique_ptr<Tr2EffectPassParameters>> Tr2EffectPassParametersVector;
+//typedef std::vector<Tr2EffectPassParametersVector> Tr2EffectTechniqueParametersVector;
 
 BLUE_CLASS( Tr2Material ): 
 	public IRoot
@@ -151,8 +194,12 @@ public:
 	EXPOSE_TO_BLUE();
 
 	void ApplyMaterialDataForPass( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContext& renderContext ) const;
+	void ApplyMaterialDataForRtState( uint32_t techniqueIndex, const Tr2RtPipelineStateAL& rtPipelineState, Tr2RenderContext& renderContext ) const;
+	//void ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const;
+	void ApplyMaterialDataForRtMaterial( uint32_t techniqueIndex, const Tr2BufferAL* vb, const Tr2BufferAL* ib, Tr2RtLocalMaterialDescriptionAL& localMaterial, Tr2RenderContext& renderContext ) const;
 	uint64_t GetSortValue() const;
 	Tr2Shader* GetShaderStateInterface() const;
+
 
 	virtual void SetOption( const BlueSharedString& name, const BlueSharedString& value ) {}
 
@@ -172,9 +219,16 @@ public:
 
 protected:
 	bool ApplyShaderInputs( uint32_t techniqueIndex, unsigned int passIndex, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const;
+	bool ApplyShaderInputs( Tr2EffectPassParameters& pp, Tr2RenderContextEnum::ShaderType shaderType, Tr2RenderContext& renderContext ) const;
+
+	void ApplyConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
+	void UpdateConstants( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, bool hasReroutables, Tr2RenderContext& renderContext ) const;
+	bool UpdateResourceSetDesc( Tr2RenderContextEnum::ShaderType shaderType, Tr2MaterialStageInput& input, Tr2ResourceSetDescriptionAL& desc ) const;
+
 
 	Tr2ShaderPtr m_shader;
 	Tr2EffectTechniqueParametersVector m_parametersForPasses;
+	Tr2EffectTechniqueParametersVector m_parametersForLibraries;
 	std::vector<ITriEffectTextureParameterPtr> m_lodTextureParameters;
 	mutable uint32_t m_resourceSetHash;
 	bool m_compatibleWithGdr;

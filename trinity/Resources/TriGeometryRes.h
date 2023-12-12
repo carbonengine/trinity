@@ -40,6 +40,14 @@ extern Tr2SuballocatedBuffer g_sharedBuffer;
 BLUE_DECLARE( TriGrannyRes );
 class Tr2RenderContext;
 
+struct TriRtGeometryConstants
+{
+	uint32_t indexBufferOffset;
+	uint32_t indexBufferStride;
+	uint32_t vertexBufferStride;
+	uint32_t texCoord0Offset;
+};
+
 struct TriGeometryResAreaData
 {
 	TriGeometryResAreaData();
@@ -51,6 +59,10 @@ struct TriGeometryResAreaData
 	Vector3 m_minBounds;
 	Vector3 m_maxBounds;
 	TrackableStdVector<int> m_jointBindings;
+
+	Tr2RtBottomLevelAccelerationStructureAL m_staticBlas;
+	bool m_isSkinned;
+	Tr2ConstantBufferAL m_rtGeometryConstants;
 };
 
 struct TriGeometryResVertexData
@@ -317,6 +329,7 @@ private:
 	void SetupSkeletons( granny_file_info* gi );
 	void DetermineAreaBoundsAndVertCount( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
 	void DetermineAreaBones( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
+	bool IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex );
 	
 	// Create D3D mesh from data in m_pGrannyFile
 	bool CreateMeshesFromGrannyFile( granny_file_info * gi, Tr2CpuUsage::Type cpuUsage, Tr2PrimaryRenderContext & renderContext );

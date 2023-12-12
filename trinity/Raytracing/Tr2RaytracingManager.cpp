@@ -1,0 +1,154 @@
+#include "StdAfx.h"
+#include "Tr2RaytracingManager.h"
+
+#include "Shader/Tr2Shader.h"
+
+#include "ITr2TextureProvider.h"
+#include "Tr2RenderTarget.h"
+#include "Tr2Renderer.h"
+
+namespace
+{
+	// for shadow scene
+	struct ShadowPerFrameData
+	{
+		Matrix projectionInverse;
+		Matrix viewInverse;
+
+		Vector3 sunDirection;
+		float sunAngle;
+
+		Vector2 resolution;
+		uint32_t frameIndex;
+	};
+
+	const BlueSharedString RtShadowTechniqueName = BlueSharedString( "RtShadow" );
+}
+
+//***********************************************************
+// Tr2RaytracingManager
+//***********************************************************
+
+Tr2RaytracingManager::Tr2RaytracingManager( IRoot* lockobj ) :
+	m_sunAngle( 0.01 ),
+	m_applyDenoiser( true )
+{
+	m_geometry.CreateInstance();
+	m_geometry->m_pipelineManager = &m_pipelineManager;
+	m_destTex.CreateInstance();
+
+	m_shadowEffect.CreateInstance();
+	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/rtshadows.fx" );
+
+	m_denoiser.CreateInstance();
+}
+
+Tr2RaytracingManager::~Tr2RaytracingManager()
+{
+}
+
+Tr2RaytracingGeometry& Tr2RaytracingManager::GetGeometry()
+{
+	return *m_geometry;
+}
+
+void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, const Vector3& sunDirection, Tr2RenderContext& renderContext )
+{
+	renderContext.AddGpuMarker( __FUNCTION__ );
+	GPU_REGION( renderContext, "Raytraced shadows" );
+	CCP_STATS_ZONE( __FUNCTION__ );
+	
+	auto depthTex = depth->GetTexture();
+	if( !depthTex )
+	{
+		return;
+	}
+
+	if( !m_destTex->IsValid() || m_destTex->GetWidth() != depthTex->GetWidth() || m_destTex->GetHeight() != depthTex->GetHeight() )
+	{
+		// Create the output resource. The dimensions and format should match the swap-chain
+		if( FAILED( m_destTex->Create( depthTex->GetWidth(), depthTex->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8_UNORM, 1, 0, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS ) ) )
+		{
+			return;
+		}
+		m_destTex->SetName( "raytracing_shadow_dest" );
+	}
+
+	// texture uav
+	m_shadowEffect->SetParameter( BlueSharedString( "ShadowDest" ), m_destTex );
+	
+	// scene srv
+	m_shadowEffect->SetParameter( BlueSharedString( "Scene" ), m_geometry );
+
+	GlobalStore().RegisterVariable( "ShadowDest", m_destTex );
+
+	if( !m_shadowEffect->GetEffectRes() || !m_shadowEffect->GetEffectRes()->IsGood() )
+	{
+		return;
+	}
+
+	if( !m_geometry->HasGeometry() )
+	{
+		return;
+	}
+
+	uint32_t techniqueIndex;
+	if( !m_shadowEffect->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
+	{
+		return;
+	}
+
+	std::wstring rayGenName, missName;
+	m_pipelineManager.AddLibrary( rayGenName, missName, m_shadowEffect, BlueSharedString( "RtShadow" ) );
+
+	auto pipelineState = m_pipelineManager.GetPipelineState( renderContext );
+	
+	if( !pipelineState.IsValid() )
+	{
+		return;
+	}
+
+	auto& shaderTableDesc = m_geometry->m_shaderTableDesc;
+	shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
+	shaderTableDesc.AddMissShader( missName.c_str() );
+	m_shadowShaderTable.Create( shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+
+	if( !m_shadowPerFrameData.IsValid() )
+	{
+		m_shadowPerFrameData.Create( sizeof( ShadowPerFrameData ), renderContext.GetPrimaryRenderContext() );
+	}
+
+	auto destTex = m_destTex->GetTexture();
+	{
+		ShadowPerFrameData* data;
+		m_shadowPerFrameData.Lock( reinterpret_cast<void**>(&data), renderContext );
+		data->projectionInverse = Transpose( Inverse( Tr2Renderer::GetReversedDepthProjectionTransform() ) );
+		data->viewInverse = Transpose( Tr2Renderer::GetInverseViewTransform() );
+
+		data->sunDirection = Normalize( sunDirection );
+		data->sunAngle = m_sunAngle / 180.f * XM_PI;
+
+		data->resolution = Vector2( float( destTex->GetWidth() ), float( destTex->GetHeight() ) );
+		data->frameIndex = uint32_t( Tr2Renderer::GetCurrentFrameCounter() & 0xffffffff );
+
+		m_shadowPerFrameData.Unlock( renderContext );
+	}
+
+	const float clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	renderContext.ClearUav( *m_destTex->GetTexture(), 0, clearValue);
+	
+	m_shadowEffect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
+
+	renderContext.SetConstants( m_shadowPerFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, 2 );
+	renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1);
+
+	if( m_denoiser && m_applyDenoiser )
+	{
+		m_denoiser->Apply( *m_destTex, *depth, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), renderContext );
+		GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_denoiser->GetTexture() );
+	}
+	else
+	{
+		GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_destTex );
+	}
+}

@@ -421,6 +421,9 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "cascadedShadowMap", m_cascadedShadowMap, "This should get created in python.", Be::READWRITE | Be::PERSIST )
 
+		MAP_ATTRIBUTE( "enableRaytracing", m_enableRaytracing, "enable raytracing.\n:jessica-group: Raytracing", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
+		MAP_ATTRIBUTE( "raytracingManager", m_rtManager, "Raytracing manager\n:jessica-group: Raytracing", Be::READWRITE | Be::NOTIFY )
+
 		MAP_ATTRIBUTE_WITH_CHOOSER(
 			"visualizeMethod",
 			m_visualizeMethod,

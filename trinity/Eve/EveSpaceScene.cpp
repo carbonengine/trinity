@@ -36,8 +36,9 @@
 #include "Eve/EveEntity.h"
 #include "Tr2SSAO.h"
 #include "Lights/ITr2LightOwner.h"
-#include "../Tr2VolumetricsRenderer.h"
 #include <ScopedBlockTrap.h>
+#include "../Tr2VolumetricsRenderer.h"
+#include "Raytracing/Tr2RaytracingManager.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -96,6 +97,9 @@ TRI_REGISTER_SETTING( "eveSpaceSceneDynamicLighting", g_eveSpaceSceneDynamicLigh
 int g_eveReflectionMode = EntityComponents::REFLECT_NEVER;
 TRI_REGISTER_SETTING( "eveReflectionSetting", g_eveReflectionMode );
 
+bool g_eveSpaceSceneRaytracedShadows = true;
+TRI_REGISTER_SETTING( "eveSpaceSceneRaytracedShadows", g_eveSpaceSceneRaytracedShadows );
+
 namespace
 {
 const char* VISUALIZER_EFFECT_PATH[EveSpaceScene::VM_COUNT] =
@@ -109,6 +113,7 @@ const char* VISUALIZER_EFFECT_PATH[EveSpaceScene::VM_COUNT] =
 		"res:/Graphics/Effect/Managed/Space/Visualizer/LightCount.fx",
 	};
 }
+
 
 struct ShadowReceiver
 {
@@ -125,6 +130,7 @@ struct ShadowReceiver
 		return estimatedSize < other.estimatedSize;
 	}
 };
+
 
 EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	PARENTLOCK( m_backgroundObjects ),
@@ -173,6 +179,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_hasBackgroundDistortionBatches( false ),
 	m_hasForegroundDistortionBatches( false ),
 	m_freezeFrustum( false ),
+	m_enableRaytracing( false ),
 	m_virtualCameraSystem(),
 	m_shadowView( IdentityMatrix() )
 {
@@ -257,6 +264,8 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_ssao.CreateInstance();
 
 	m_volumetricsRenderer.CreateInstance();
+
+	m_rtManager.CreateInstance();
 }
 
 IRoot* EveSpaceScene::GetCameraAttachments() const
@@ -452,13 +461,17 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
+	GPU_REGION( renderContext, "Cascaded shadows" );
 
-	if( !m_cascadedShadowMap )
+	if( !m_cascadedShadowMap || !m_componentRegistry )
 	{
 		return;
 	}
 
-	if( m_objects.size() == 0 )
+	size_t shadowCasterCount = m_componentRegistry->ComponentCount<IEveShadowCaster>();
+	size_t volumetricCount = m_componentRegistry->ComponentCount<ITr2VolumetricRenderable>();
+
+	if( shadowCasterCount + volumetricCount == 0 )
 	{
 		return;
 	}
@@ -469,7 +482,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		ShadowMap::SplitSetup splitSetupInfo = m_cascadedShadowMap->SetupShadowSplit( splitIndex, m_shadowView, m_sunData.DirWorld, m_frameData.frustum.m_zNear );
 
 		// reserve
-		m_shadowCasters[splitIndex].reserve( m_objects.size() );
+		m_shadowCasters[splitIndex].reserve( shadowCasterCount );
 
 		// Get the split up camera frustum so we can use it to do some "half space culling" for objects
 		TriFrustum frustum;
@@ -494,36 +507,57 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		m_splitSetup[splitIndex] = splitSetupInfo;
 	}
 
-	GetShadowCasters();
-
 	// if the shadow map DS isn't set then skip everything
 	if( !m_cascadedShadowMap->PrepareShadowRendering( renderContext ) )
 	{
 		return;
 	}
 
+	std::vector<std::vector<Tr2PerObjectData*>> perObjectData;
+	perObjectData.resize( SHADOW_FRUSTUM_COUNT );
+
 	// Get shadow batches in parallel
 	std::vector<size_t> indices;
 	for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 	{
 		indices.push_back( i );
+		perObjectData[i].reserve( shadowCasterCount );
+	}
+
+	{
+		CCP_STATS_ZONE( "GetShadowCasterInfo" );
+		unsigned int shadowMapSize = m_cascadedShadowMap->GetShadowMapSize();
+
+		m_componentRegistry->ProcessComponents<IEveShadowCaster>( [this, &indices, shadowMapSize, &perObjectData]( IEveShadowCaster* caster ) -> void {
+			float radius;
+
+			for( size_t index : indices )
+			{
+				if( caster->IsCastingShadow( m_cameraFrustums[index], m_shadowFrustums[index], shadowMapSize, m_sunData.DirWorld, radius ) )
+				{
+					EveShadowCaster::Info i;
+					i.caster = caster;
+					i.size = radius;
+					m_shadowCasters[index].push_back( i );
+				}
+			}
+		} 
+		);
 	}
 
 	{
 		CCP_STATS_ZONE( "GetShadowBatches" );
-		std::vector<std::vector<Tr2PerObjectData*>> perObjectData;
-		perObjectData.resize( m_shadowCasters.size() );
-
 		{
 			CCP_STATS_ZONE( "PerObjectData" );
 			for( size_t index : indices )
 			{
 				auto& casters = m_shadowCasters[index];
-				perObjectData[index].reserve( m_shadowCasters.size() );
+				perObjectData[index].reserve( casters.size() );
+
 				for( auto shadowCaster = casters.begin(); shadowCaster != casters.end(); ++shadowCaster )
 				{
-					auto obj = shadowCaster->renderable;
-					auto objectData = obj->GetPerObjectData( m_shadowBatches[index].get() );
+					auto obj = shadowCaster->caster;
+					auto objectData = obj->GetShadowPerObjectData( m_shadowBatches[index].get() );
 					perObjectData[index].push_back( objectData );
 				}
 			}
@@ -535,12 +569,13 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 			auto objectData = perObjectData[index].begin();
 			for( auto shadowCaster = casters.begin(); shadowCaster != casters.end(); ++shadowCaster )
 			{
-				auto obj = shadowCaster->renderable;
-				obj->GetShadowBatches( m_shadowBatches[index].get(), *objectData, shadowCaster->shadowSize );
+				auto obj = shadowCaster->caster;
+				obj->GetShadowBatches( m_shadowBatches[index].get(), *objectData, shadowCaster->size );
 				++objectData;
 			}
 			m_shadowBatches[index]->Finalize();
-		} );
+		} 
+		);
 	}
 
 	{
@@ -568,11 +603,11 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 				m_cascadedShadowMap->BeginShadowRendering( renderContext, i );
 
 				// column_major for shaders
-				ShadowPerFrameVSData data;
+				PerFrameVSData data;
 				data.ViewProjectionMat = Transpose( m_splitSetup[i].lightViewProjection );
 
 				static const unsigned perFrameVsMask =
-					( 1 << VERTEX_SHADER ) |
+					(1 << VERTEX_SHADER) |
 					SHADER_TYPE_EXISTS( COMPUTE_SHADER ) |
 					SHADER_TYPE_EXISTS( GEOMETRY_SHADER ) |
 					SHADER_TYPE_EXISTS( HULL_SHADER ) |
@@ -586,7 +621,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 					renderContext.m_esm.SetInvertedDepthTest( false );
 					ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
 					renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
-					renderContext.RenderBatches( m_shadowBatches[i].get() );
+					renderContext.RenderBatches( m_shadowBatches[i].get(), BlueSharedString("Shadow") );
 				}
 
 				m_shadowBatches[i]->Clear();
@@ -603,36 +638,17 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 
 		if( m_componentRegistry && m_volumetricsRenderer )
 		{
-			m_volumetricsRenderer->RenderShadows( m_componentRegistry->GetVolumetricRenderables(), m_cascadedShadowMap->GetShadowMap(), renderContext );
+			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_cascadedShadowMap->GetShadowMap(), renderContext );
 		}
 	}
 }
+	
 
 void EveSpaceScene::DisableShadows()
 {
 	if( m_cascadedShadowMap )
 	{
 		m_cascadedShadowMap->SetNoShadow();
-	}
-}
-
-// --------------------------------------------------------------------------------------
-// Description:
-//   Fills provided vector with non-NULL shadow casters from m_objects list.
-// Arguments:
-//   sortedShadowCasters - (out) list of all shadow casters in the scene
-// --------------------------------------------------------------------------------------
-void EveSpaceScene::GetShadowCasters()
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-	unsigned int shadowMapSize = m_cascadedShadowMap->GetShadowMapSize();
-
-	for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
-	{
-		if( IEveShadowCasterPtr caster = BlueCastPtr( *it ) )
-		{
-			caster->GatherShadowRenderables( m_shadowCasters, m_cameraFrustums, m_shadowFrustums, SHADOW_FRUSTUM_COUNT, shadowMapSize, m_sunData.DirWorld );
-		}
 	}
 }
 
@@ -1237,6 +1253,16 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
 	GatherBatches( renderContext );
 
+	if( m_rtManager && m_enableRaytracing && m_enableShadows )
+	{
+		m_rtManager->GetGeometry().BeginSceneUpdate();
+		for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
+		{
+			(*it)->PushRtGeometry( *m_rtManager );
+		}
+		m_rtManager->GetGeometry().EndSceneUpdate( renderContext );
+	}
+
 	UpdatePostProcessPSData();
 	UpdateVariableStore();
 
@@ -1661,20 +1687,18 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 
 		if( m_dynamicObjectReflectionEnabled && m_reflectionProbe->ReadyForDynamicObjectReflections() )
 		{
-			auto& reflectionRenderables = m_componentRegistry->GetReflectionRenderables();
-
 			std::vector<ITr2Renderable*> visibleRenderables;
-			visibleRenderables.reserve( reflectionRenderables.size() );
+			visibleRenderables.reserve( m_componentRegistry->ComponentCount<ITr2Renderable>() );
 
 			// Filter out the non-visible reflection renderables based on the current frustum
-			for( auto it = reflectionRenderables.begin(); it != reflectionRenderables.end(); ++it )
-			{
-				auto ref = *it;
-				if( ref->IsVisible( currentFrustum ) )
-				{
-					visibleRenderables.push_back( ref );
-				}
-			}
+			m_componentRegistry->ProcessComponents<ITr2Renderable> (
+				[currentFrustum, &visibleRenderables]( ITr2Renderable* renderable ) -> void {
+					if( renderable->IsVisible( currentFrustum ) )
+					{
+						visibleRenderables.push_back( renderable );
+					}
+				}	
+			);
 
 			if( !visibleRenderables.empty() )
 			{
@@ -1959,6 +1983,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 
 			visible.clear();
 		}
+
 		if( m_normalMap )
 		{
 #if TRINITY_PLATFORM_SUPPORTS_RENDER_PASS_HINTS
@@ -1975,7 +2000,15 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	}
 
 	renderContext.m_esm.EndManagedRendering();
-
+	
+	
+	if( m_rtManager && m_enableRaytracing && m_depthMap->IsValid() )
+	{
+		renderContext.SetReadOnlyDepth( true );
+		m_rtManager->RenderShadows( m_depthMap, m_sunData.DirWorld, renderContext );
+		renderContext.SetReadOnlyDepth( false );
+	}
+	
 	if( m_ssao )
 	{
 		renderContext.SetReadOnlyDepth( true );
@@ -1991,8 +2024,7 @@ void EveSpaceScene::RenderVolumetrics( Tr2RenderContext& renderContext )
 	{
 		return;
 	}
-
-	m_volumetricsRenderer->RenderVolumetrics( m_componentRegistry->GetVolumetricRenderables(), m_frameData.frustum, *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
+	m_volumetricsRenderer->RenderVolumetrics( *m_componentRegistry, m_frameData.frustum, *m_depthMap, m_sunData.DirWorld, m_perFramePS.VolumetricSlices, renderContext );
 }
 
 
@@ -2013,7 +2045,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		return;
 	}
 	
-	if( !m_freezeFrustum && m_enableShadows )
+	if( !m_freezeFrustum && m_enableShadows && !m_enableRaytracing )
 	{
 		m_shadowView = Tr2Renderer::GetInverseViewTransform();
 		SetupCascadedShadows( renderContext );
@@ -2201,7 +2233,7 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 	// Clear primary batches
 	ClearBatches( m_primaryBatches );
 
-	if( m_displayShadowMap )
+	if( m_displayShadowMap && m_cascadedShadowMap )
 	{
 		Tr2RenderTargetPtr shadowMapRT = m_cascadedShadowMap->GetCascadedShadowMapRT();
 		if( shadowMapRT && shadowMapRT->IsValid() )
@@ -2645,6 +2677,25 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 		m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
 	}
 
+	if( IsMatch( value, m_enableRaytracing ) )
+	{
+		g_eveSpaceSceneRaytracedShadows = m_enableRaytracing;
+		for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
+		{
+			if( EveSpaceObject2Ptr spaceObj = BlueCastPtr( *it ) )
+			{
+				if( m_enableRaytracing )
+				{
+					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_RT" ) );
+				}
+				else
+				{
+					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_CASCADED" ) );
+				}
+			}
+		}
+	}
+
 	return true;
 }
 
@@ -2762,6 +2813,18 @@ void EveSpaceScene::OnListModified(
 			if( EveEntityPtr entity = BlueCastPtr( value ) )
 			{
 				entity->Register( m_componentRegistry );
+			}
+
+			if( EveSpaceObject2Ptr spaceObj = BlueCastPtr( value ) )
+			{
+				if( m_enableRaytracing )
+				{
+					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_RT" ) );
+				}
+				else
+				{
+					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_CASCADED" ) );
+				}
 			}
 		}
 	}

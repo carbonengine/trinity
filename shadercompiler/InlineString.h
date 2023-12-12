@@ -116,6 +116,28 @@ struct ILess
 	}
 };
 
+inline bool EqualsCaseInsensitive( const InlineString& str0, const InlineString& str1 )
+{
+	size_t len0 = str0.end - str0.start;
+	size_t len1 = str1.end - str1.start;
+	if( len0 != len1 )
+	{
+		return false;
+	}
+	return _strnicmp( str0.start, str1.start, len0 ) == 0;
+}
+
+inline bool EqualsCaseInsensitive( const InlineString& str0, const char* str1 )
+{
+	size_t len0 = str0.end - str0.start;
+	size_t len1 = strlen( str1 );
+	if( len0 != len1 )
+	{
+		return false;
+	}
+	return _strnicmp( str0.start, str1, len0 ) == 0;
+}
+
 inline std::string ToString( const InlineString& string )
 {
 	std::string ret( string.start, string.end );

@@ -27,6 +27,7 @@ class Tr2ShaderAL;
 class Tr2SamplerStateAL;
 class Tr2BufferAL;
 struct Tr2Viewport;
+class Tr2RtShaderTableAL;
 
 
 // -------------------------------------------------------------
@@ -162,6 +163,11 @@ public:
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset ) throw( )
 	{
 		return E_NOTIMPL;
+	}
+
+	ALResult DispatchRays( Tr2RtPipelineStateAL&, Tr2RtShaderTableAL&, const wchar_t*, uint32_t, uint32_t, uint32_t )
+	{
+		return E_FAIL;
 	}
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value ) throw( );

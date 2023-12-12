@@ -1,0 +1,148 @@
+#pragma once
+
+#include "include/ITr2GpuBuffer.h"
+#include "Shader/Tr2Effect.h"
+
+BLUE_DECLARE( Tr2Effect );
+BLUE_DECLARE( TriGeometryRes );
+BLUE_DECLARE( Tr2RaytracingGeometry );
+
+struct TriGeometryResMeshData;
+class Tr2RtMesh;
+class Tr2RtMeshArea;
+
+class Tr2RaytracingPipelineStateManager
+{
+public:
+	Tr2RaytracingPipelineStateManager();
+
+	bool AddLibrary( std::wstring& rayGenName, std::wstring& missName, Tr2Material* material, BlueSharedString techniqueName );
+	void AddLibrary( std::wstring& rayGenName, std::wstring& missName, const Tr2EffectLibrary& library );
+	std::wstring AddHitGroup( const Tr2EffectLibrary& library );
+	Tr2RtPipelineStateAL GetPipelineState( Tr2RenderContext& renderContext );
+
+private:
+	std::wstring GetUniqueName();
+
+	Tr2RtPipelineStateDescriptionAL m_pipelineDesc;
+	Tr2RtPipelineStateAL m_pipelineState;
+	std::unordered_map<uint32_t, std::wstring> m_hitGroups;
+	std::unordered_map<uint32_t, std::pair<std::wstring, std::wstring>> m_libraries;
+	uint32_t m_nextName;
+	bool m_isDirty;
+};
+
+
+BLUE_CLASS( Tr2RuntimeGpuBuffer ) : public ITr2GpuBuffer
+{
+public:
+	EXPOSE_TO_BLUE();
+
+	Tr2BufferAL* GetGpuBuffer( unsigned ) override
+	{
+		return &m_buffer;
+	}
+	void SetGpuBuffer( const Tr2BufferAL& buffer )
+	{
+		m_buffer = buffer;
+	}
+
+	Tr2BufferAL m_buffer;
+};
+TYPEDEF_BLUECLASS( Tr2RuntimeGpuBuffer );
+
+
+class Tr2RaytracingMesh
+{
+public:
+	Tr2RaytracingMesh();
+
+	void SetMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize );
+	void SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms );
+
+	bool IsGood() const;
+	bool IsDirty() const;
+
+	TriGeometryResMeshData* GetMeshData() const;
+	size_t GetTransformsSize() const;
+	const void* GetTransforms() const;
+	Tr2BufferAL GetSkinnedVertexBuffer( Tr2RenderContext& renderContext );
+	const Tr2BufferAL& GetVertexBuffer() const;
+	const Tr2BufferAL& GetIndexBuffer() const;
+
+private:
+	Tr2BufferAL m_skinnedVertices;
+	TriGeometryResPtr m_geometry;
+	uint32_t m_meshIndex;
+	std::vector<float> m_transforms;
+	bool m_isDirty;
+	float m_screenSize;
+
+	friend class Tr2RaytracingGeometry;
+};
+
+class Tr2RaytracingMeshArea
+{
+public:
+	Tr2RaytracingMeshArea( uint32_t index );
+	const Tr2RtBottomLevelAccelerationStructureAL& BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
+	const Tr2ConstantBufferAL& GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
+	uint32_t GetAreaIndex(){ return m_areaIndex; }
+
+private:
+	Tr2RtBottomLevelAccelerationStructureAL m_blas;
+	uint32_t m_areaIndex;
+};
+
+BLUE_CLASS( Tr2RaytracingGeometry ) : public ITr2GpuBuffer
+{
+public:
+	EXPOSE_TO_BLUE();
+
+	Tr2RaytracingGeometry();
+
+	Tr2BufferAL* GetGpuBuffer( unsigned index ) override;
+	void BeginSceneUpdate();
+	void EndSceneUpdate( Tr2RenderContext& renderContext );
+	void AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform );
+	bool HasGeometry() const;
+
+	Tr2RaytracingPipelineStateManager* m_pipelineManager;
+	Tr2RtShaderTableDescriptionAL m_shaderTableDesc;
+
+private:
+	struct VtxOffsets
+	{
+		uint32_t positionOffset;
+		uint32_t boneOffset;
+	};
+
+	struct Geometry
+	{
+		Tr2RaytracingMesh* mesh;
+		Tr2RaytracingMeshArea* area;
+		const Tr2Material* material;
+		const Tr2ConstantBufferAL* perObjectData;
+		Matrix worldTransform;
+		uint32_t materialIndex;
+		bool isTransparent;
+	};
+
+	const BlueSharedString RtShadowTechniqueName = BlueSharedString( "RtShadow" );
+	static const uint32_t INVALID_MATERIAL = 0xffffffff;
+
+	void PrepareShaderTableDescription( Tr2RenderContext& renderContext );
+	void TransformMeshes( Tr2RenderContext& renderContext );
+	void BuildAccelerationStructures(Tr2RenderContext& renderContext);
+
+	VtxOffsets FindOffsets( unsigned declHandle );
+	
+	std::vector<Geometry> m_meshAreas;
+	Tr2RtTopLevelAccelerationStructureAL m_tlas;
+
+	Tr2EffectPtr m_skinVerticesEffect;
+	Tr2ConstantBufferAL m_skinVerticesData;
+	std::unordered_map<unsigned, VtxOffsets> m_offsets;
+};
+
+TYPEDEF_BLUECLASS( Tr2RaytracingGeometry );

@@ -9,11 +9,13 @@
 class Tr2ShaderAL;
 class Tr2ShaderProgramAL;
 class Tr2PrimaryRenderContextAL;
+class Tr2RtPipelineStateAL;
 struct Tr2ShaderSignatureAL;
 
 namespace TrinityALImpl
 {
 	class Tr2ResourceSetAL;
+	class Tr2RtShaderTableAL;
 }
 
 struct Tr2RegisterMapAL
@@ -110,6 +112,7 @@ private:
 	std::unique_ptr<Sampler[]> m_samplers;
 
 	friend class TrinityALImpl::Tr2ResourceSetAL;
+	friend class TrinityALImpl::Tr2RtShaderTableAL;
 };
 
 class Tr2ResourceSetAL
@@ -118,6 +121,7 @@ public:
 	Tr2ResourceSetAL();
 
 	ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
+	ALResult Create( const Tr2ResourceSetDescriptionAL& description, const Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
 	bool IsValid() const;
 
 	Tr2ALMemoryType GetMemoryClass() const;

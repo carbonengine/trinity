@@ -321,6 +321,21 @@ bool ComputeMemberType( const Type& leftType, const InlineString& member, Type& 
 	}
 	else
 	{
+		if( leftType.builtInType == OP_RAY_DESC )
+		{
+			if( member == MakeInlineString( "Origin" ) || member == MakeInlineString( "Direction" ) )
+			{
+				type.FromTokenType( OP_FLOAT );
+				type.width = 3;
+				return true;
+			}
+			if( member == MakeInlineString( "TMin" ) || member == MakeInlineString( "TMax" ) )
+			{
+				type.FromTokenType( OP_FLOAT );
+				return true;
+			}
+			return false;
+		}
 		if( ( leftType.builtInType == OP_INPUTPATCH || leftType.builtInType == OP_OUTPUTPATCH ) && member == MakeInlineString( "Length" ) )
 		{
 			type.FromTokenType( OP_UINT );
@@ -685,9 +700,10 @@ namespace
 		case OP_TEXTURE:
 		case OP_BUFFER:
 		case OP_STRUCTUREDBUFFER:
+		case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+		case OP_BYTEADDRESSBUFFER:
 			return 't';
 		case OP_APPENDSTRUCTUREDBUFFER:
-		case OP_BYTEADDRESSBUFFER:
 		case OP_CONSUMESTRUCTUREDBUFFER:
 		case OP_RWBUFFER:
 		case OP_RWBYTEADDRESSBUFFER:
