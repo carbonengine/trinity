@@ -8,6 +8,7 @@
 #include "ITr2Upscaling.h"
 
 #if TRINITY_PLATFORM == TRINITY_METAL
+#include "Tr2UpscalingUtils.h"
 #include <MetalFx/MetalFX.h>
 
 
