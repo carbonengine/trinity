@@ -52,7 +52,7 @@ protected:
 
 private:
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
-	void Resize();
+	void Resize( uint32_t newSize );
 
 	CComPtr<ID3D12Resource> m_uploadBuffer;
 	CComPtr<ID3D12Resource> m_defaultBuffer;
@@ -65,7 +65,9 @@ private:
 	struct Region
 	{
 		uint64_t frame;
-		int32_t tail;
+		int32_t start;
+		int32_t end;
+		bool copied;
 	};
 
 	std::vector<Region> m_regions;
