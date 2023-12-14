@@ -1743,6 +1743,7 @@ void Tr2Effect::MapPassParameters(
 				paramAsEffectValue = r;
 				AddLoddable( r, constantIx->name.c_str() );
 				pp.m_usedResources.push_back( r );
+                pp.m_usedTexturesDirty = true;
 			}
 			// Fallback to variable store
 			else if( TriVariable* v = variableStore.FindVariable( constantIx->name.c_str() ) )
