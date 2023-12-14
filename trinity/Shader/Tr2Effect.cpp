@@ -949,6 +949,39 @@ bool Tr2Effect::PopulateParameters()
 						continue;
 					}
 
+					if( constant->type == Tr2EffectConstant::UINT )
+					{
+						if( auto annotations = m_shader->GetParameterAnnotations( constant->name.c_str() ) )
+						{
+							auto value = std::find_if( annotations->begin(), annotations->end(), [&]( const auto& a ) { return strcmp( a.name, "BindlessHandleType" ) == 0; } );
+							if( value != annotations->end() && value->type == Tr2EffectParameterAnnotation::INT )
+							{
+								switch( value->intValue )
+								{
+								case Tr2EffectResource::TEXTURE_CUBE:
+								case Tr2EffectResource::TEXTURE_1D:
+								case Tr2EffectResource::TEXTURE_2D:
+								case Tr2EffectResource::TEXTURE_3D:
+								case Tr2EffectResource::TEXTURE_TYPELESS: {
+									OTriTextureParameter* newTex2D = new OTriTextureParameter();
+									newTex2D->SetParameterName( BlueSharedString( constant->name ) );
+									resourceAdder( newTex2D );
+									newTex2D->Unlock();
+								}
+								break;
+								default: {
+									OTr2GeometryBufferParameter* newBuffer = new OTr2GeometryBufferParameter();
+									newBuffer->m_name = BlueSharedString( constant->name );
+									resourceAdder( newBuffer );
+									newBuffer->Unlock();
+								}
+								break;
+								}
+								continue;
+							}
+						}
+					}
+
 					ConvertEffectConstant( *constant, input.constantValues, paramAdder );
 				}
 
