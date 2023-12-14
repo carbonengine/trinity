@@ -90,6 +90,20 @@ void Tr2SharedConstantBuffers::ReleaseBuffer( const Key& key )
 	}
 }
 
+Tr2MaterialStageInput::Tr2MaterialStageInput() :
+	m_constantBufferDirty( false )
+{
+}
+
+Tr2MaterialStageInput::~Tr2MaterialStageInput()
+{
+	g_sharedConstantBuffers.ReleaseBuffer( m_sharedBufferKey );
+}
+
+Tr2EffectLibraryParameters::Tr2EffectLibraryParameters()
+	:m_globalResourceSetDirty( true )
+{
+}
 
 Tr2EffectPassParameters::Tr2EffectPassParameters()
 	:m_resourceSetDirty( true ),
@@ -117,18 +131,7 @@ void Tr2EffectPassParameters::GetSharedConstantBuffer( Tr2RenderContextEnum::Sha
 	m_stageInput[type].GetSharedConstantBuffer( contents, size );
 }
 
-
-Tr2EffectPassParameters::StageInput::StageInput() :
-	m_constantBufferDirty( false )
-{
-}
-
-Tr2EffectPassParameters::StageInput::~StageInput()
-{
-	g_sharedConstantBuffers.ReleaseBuffer( m_sharedBufferKey );
-}
-
-void Tr2EffectPassParameters::StageInput::AllocateConstants( uint32_t size )
+void Tr2MaterialStageInput::AllocateConstants( uint32_t size )
 {
 	g_sharedConstantBuffers.ReleaseBuffer( m_sharedBufferKey );
 	m_sharedBufferKey = Tr2SharedConstantBuffers::Key();
@@ -157,7 +160,7 @@ void Tr2EffectPassParameters::StageInput::AllocateConstants( uint32_t size )
 	}
 }
 
-void Tr2EffectPassParameters::StageInput::GetSharedConstantBuffer( const void* contents, uint32_t size )
+void Tr2MaterialStageInput::GetSharedConstantBuffer( const void* contents, uint32_t size )
 {
 	g_sharedConstantBuffers.ReleaseBuffer( m_sharedBufferKey );
 
@@ -168,7 +171,6 @@ void Tr2EffectPassParameters::StageInput::GetSharedConstantBuffer( const void* c
 	m_constantMirror.clear();
 	m_constantBufferDirty = false;
 }
-
 
 
 Tr2Material::Tr2Material( IRoot* lockobj ) :

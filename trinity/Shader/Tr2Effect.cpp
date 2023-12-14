@@ -305,6 +305,7 @@ Tr2Effect::~Tr2Effect()
 
 void Tr2Effect::ReleaseResources( TriStorage s )
 {
+	/*
 	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
 	{
 		for( auto it = m_parametersForPasses.begin(); it != m_parametersForPasses.end(); ++it )
@@ -317,7 +318,7 @@ void Tr2Effect::ReleaseResources( TriStorage s )
 				}
 			}
 		}
-	}
+	}*/
 }
 
 bool Tr2Effect::OnPrepareResources()

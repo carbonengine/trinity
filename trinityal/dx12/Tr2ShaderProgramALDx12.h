@@ -92,23 +92,12 @@ namespace TrinityALImpl
 			std::vector<D3D12_DESCRIPTOR_RANGE>& samplerRanges );
 		static D3D12_SHADER_BYTECODE MakeShaderBytecode( const ::Tr2ShaderAL& shader );
 
-		struct CbRegister
-		{
-			uint32_t stage;
-			uint32_t index;
-			uint32_t parameter;
-			Tr2ShaderRegisterAL::RegisterType registerType;
-			bool dynamic;
-		};
 
-		CComPtr<ID3D12RootSignature> m_rootSignature;
-		uint32_t m_srvUavParameterOffset, m_srvUavParameterCount;
+		Tr2RootSignatureAL m_rootSignature;
 		uint32_t m_samplerTableSize;
 		uint32_t m_samplerParameter;
 
 		CComPtr<ID3D12CommandSignature> m_drawInstanced;
-
-		std::vector<CbRegister> m_cbRegisters;
 
 		D3D12_SHADER_BYTECODE m_CS;
 		D3D12_SHADER_BYTECODE m_VS;
@@ -116,14 +105,11 @@ namespace TrinityALImpl
 		D3D12_SHADER_BYTECODE m_DS;
 		D3D12_SHADER_BYTECODE m_HS;
 		D3D12_SHADER_BYTECODE m_GS;
+
 		std::vector<::Tr2ShaderAL> m_shaders;
 		std::vector<Tr2ShaderPipelineInputAL> m_iaInputs;
 
 		Tr2PrimaryRenderContextAL* m_owner;
-
-		std::vector<CbRegister> m_srvRegisters;
-		std::vector<CbRegister> m_uavRegisters;
-		std::vector<CbRegister> m_samplerRegisters;
 
 		Tr2RegisterMapAL m_registerMap;
 
