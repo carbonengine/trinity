@@ -857,13 +857,13 @@ IEveSpaceObjectChildPtr EveChildContainer::GetEffectChildByName( const char* nam
 void EveChildContainer::AddToEffectChildrenList( IEveSpaceObjectChild* child )
 {
 	auto childRoot = child->GetRootObject();
-	m_objects.Append(childRoot);
+	m_objects.Append( childRoot );
 
-	if (ITr2ControllerOwnerPtr ptr = BlueCastPtr(childRoot))
+	if( ITr2ControllerOwnerPtr ptr = BlueCastPtr( childRoot ) )
 	{
-		for (auto it = begin(m_controllerVariables); it != end(m_controllerVariables); ++it)
+		for( auto it = begin( m_controllerVariables ); it != end( m_controllerVariables ); ++it )
 		{
-			ptr->SetControllerVariable(it->first.c_str(), it->second);
+			ptr->SetControllerVariable( it->first.c_str(), it->second );
 		}
 	}
 }
