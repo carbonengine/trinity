@@ -551,10 +551,8 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 		{
 			s_buffer.Create( 1024 * 1024 );
 		}
-		else
-		{
-			s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetCurrentFrameIndexDx12(), primaryContext->GetPrimaryRenderContext().GetCompletedFrameIndexDx12() );
-		}
+
+		s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetCurrentFrameIndexDx12(), primaryContext->GetPrimaryRenderContext().GetCompletedFrameIndexDx12() );
 
 		struct Bin
 		{
