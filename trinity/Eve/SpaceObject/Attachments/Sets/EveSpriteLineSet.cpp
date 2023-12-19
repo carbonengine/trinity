@@ -101,23 +101,23 @@ bool EveSpriteLineSet::ReallocateResources()
 
 		// increase buffer
 		totalBufferSize += positions.size();
-		m_buffer.resize(totalBufferSize);
-		m_spriteData.resize(totalBufferSize);
+		m_buffer.resize( totalBufferSize );
+		m_spriteData.resize( totalBufferSize );
 
 		EveSpriteSet::PoolVertex* vtx = &m_buffer[totalBufferidx];
 		EveSpriteSet::SpriteData* spr = &m_spriteData[totalBufferidx];
 
 		float index = 0.0f;
-		for (auto& pos : positions) {
+		for( auto& pos : positions ) {
 			// fill static pool data
 			vtx->position = pos;
-			vtx->warpColor = vtx->color = ((spriteLine->m_color & 0xff0000) >> 16) | (spriteLine->m_color & 0xff00ff00) | ((spriteLine->m_color & 0xff) << 16);
-			vtx->blinkPhase = Float_16(spriteLine->m_blinkPhase + spriteLine->m_blinkPhaseShift * index);
-			vtx->blinkRate = Float_16(spriteLine->m_blinkRate);
-			vtx->minScale = Float_16(spriteLine->m_minScale);
-			vtx->maxScale = Float_16(spriteLine->m_maxScale);
-			vtx->falloff = Float_16(spriteLine->m_falloff);
-			vtx->activation = Float_16(1.f);
+			vtx->warpColor = vtx->color = ( ( spriteLine->m_color & 0xff0000 ) >> 16 ) | ( spriteLine->m_color & 0xff00ff00 ) | ( ( spriteLine->m_color & 0xff ) << 16 );
+			vtx->blinkPhase = Float_16( spriteLine->m_blinkPhase + spriteLine->m_blinkPhaseShift * index );
+			vtx->blinkRate = Float_16( spriteLine->m_blinkRate );
+			vtx->minScale = Float_16( spriteLine->m_minScale );
+			vtx->maxScale = Float_16( spriteLine->m_maxScale );
+			vtx->falloff = Float_16( spriteLine->m_falloff );
+			vtx->activation = Float_16( 1.f );
 
 			// fill animated pool data
 			spr->position = pos;
