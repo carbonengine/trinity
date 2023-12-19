@@ -64,10 +64,11 @@ const int SPRITE_QUAD_COUNT = 2;
 //   Initialize data members, set everything to invalid/empty
 // --------------------------------------------------------------------------------
 EveSpotlightSet::EveSpotlightSet( IRoot* lockobj ) :
+	PARENTLOCK( m_spotlightItems ),
+	PARENTLOCK( m_lights ),
 	m_display( true ),
 	m_skinned( false ),
 	m_intensity( 1.0f ),
-	PARENTLOCK( m_spotlightItems ),
 	m_coneEffectHash( 0 ),
 	m_glowEffectHash( 0 ),
 	m_coneBuffer( "EveSpotlightSet::m_coneBuffer" ),
@@ -421,6 +422,7 @@ void EveSpotlightSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Spotlight Sets" );
 	options.insert( "Spotlight Sets Bounds" );
+	options.insert( "Lights" );
 }
 
 void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
@@ -462,4 +464,30 @@ void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 			Tr2DebugRenderer::Wireframe,
 			0xff00ff00 );
 	}
+
+	if( renderer.HasOption( this, "Lights" ) )
+	{
+		for( auto& l : m_lights )
+		{
+			l->RenderDebugInfo( renderer, parentTransform );
+		}
+	}
+}
+
+void EveSpotlightSet::AddLight( Tr2Light* light )
+{
+	m_lights.Append( light->GetRawRoot() );
+}
+
+void EveSpotlightSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+{
+	for( auto& light : m_lights )
+	{
+		light->AddLight( lightManager, parentTransform, 1.0f );
+	}
+}
+
+void EveSpotlightSet::SetLightColorSaturation( float saturation )
+{
+
 }

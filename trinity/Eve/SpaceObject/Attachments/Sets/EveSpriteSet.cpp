@@ -30,6 +30,7 @@ const Tr2VertexDefinition& EveSpriteSet::PoolVertex::GetDefinition()
 
 EveSpriteSet::EveSpriteSet( IRoot* lockobj ) :
 	PARENTLOCK( m_sprites ),
+	PARENTLOCK( m_lights ),
 	m_display( true ),
 	m_skinned( false ),
 	m_effectHash( 0 ),
@@ -360,6 +361,14 @@ void EveSpriteSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 			Tr2DebugRenderer::Wireframe,
 			0xff00ff00 );
 	}
+
+	if( renderer.HasOption( this, "Lights" ) )
+	{
+		for( auto& l : m_lights )
+		{
+			l->RenderDebugInfo( renderer, parentTransform );
+		}
+	}
 }
 
 void EveSpriteSet::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
@@ -370,4 +379,22 @@ void EveSpriteSet::SetShaderOption( const BlueSharedString& name, const BlueShar
 		m_effectHash = m_effect->GetHashValue();
 		RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );		
 	}
+}
+
+void EveSpriteSet::AddLight( Tr2Light* light )
+{
+	m_lights.Append( light->GetRawRoot() );
+}
+
+void EveSpriteSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+{
+	for( auto& light : m_lights )
+	{
+		light->AddLight( lightManager, parentTransform, 1.0f );
+	}
+}
+
+void EveSpriteSet::SetLightColorSaturation( float saturation )
+{
+
 }

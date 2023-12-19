@@ -12,6 +12,7 @@ BLUE_DECLARE( EveSpriteSet );
 BLUE_DECLARE_VECTOR( EveSpriteSet );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2DebugRenderer );
+BLUE_DECLARE_VECTOR( Tr2Light );
 
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
@@ -70,6 +71,10 @@ public:
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
+	void AddLight( Tr2Light* light ) override;
+	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
+	void SetLightColorSaturation( float saturation ) override;
+
 	void AddBoosterGlowToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& world, float boosterGain, float warpIntensity );
 
 	EveSpriteSetItemVector* GetSprites();
@@ -110,6 +115,8 @@ private:
 	AxisAlignedBoundingBox m_aabb;
 	// bounding boxes are grouped together by bone index
 	std::vector<std::pair<int, AxisAlignedBoundingBox>> m_boundingBoxes;
+
+	PTr2LightVector m_lights;
 };
 
 TYPEDEF_BLUECLASS( EveSpriteSet );

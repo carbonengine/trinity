@@ -240,7 +240,43 @@ const Be::ClassInfo* EveSOFDataRaceDamage::ExposeToBlue()
 		EXPOSURE_END()
 }
 
+BLUE_DEFINE(EveSOFDataPointLightAttachment);
+const Be::ClassInfo* EveSOFDataPointLightAttachment::ExposeToBlue()
+{
+	EXPOSURE_BEGIN(EveSOFDataPointLightAttachment, "")
+		MAP_INTERFACE(EveSOFDataPointLightAttachment)
 
+		MAP_ATTRIBUTE( "saturation", m_saturation, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "intensity", m_intensity, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "offset", m_offset, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "innerScaleMultiplier", m_innerScaleMultiplier, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "outerScaleMultiplier", m_outerScaleMultiplier, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseAmplitude", m_noiseAmplitude, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseFrequency", m_noiseFrequency, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseOctaves", m_noiseOctaves, "", Be::READWRITE | Be::PERSIST )	
+		MAP_ATTRIBUTE( "texturePath", m_texturePath, "", Be::READWRITE | Be::PERSIST )
+	EXPOSURE_END()
+}
+
+BLUE_DEFINE(EveSOFDataSpotLightAttachment);
+const Be::ClassInfo* EveSOFDataSpotLightAttachment::ExposeToBlue()
+{
+	EXPOSURE_BEGIN( EveSOFDataSpotLightAttachment, "" )
+		MAP_INTERFACE( EveSOFDataSpotLightAttachment )
+
+		MAP_ATTRIBUTE( "saturation", m_saturation, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "intensity", m_intensity, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "offset", m_offset, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "innerAngleMultiplier", m_innerAngleMultiplier, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "outerAngleMultiplier", m_outerAngleMultiplier, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "innerScaleMultiplier", m_innerScaleMultiplier, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "outerScaleMultiplier", m_outerScaleMultiplier, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseAmplitude", m_noiseAmplitude, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseFrequency", m_noiseFrequency, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "noiseOctaves", m_noiseOctaves, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "texturePath", m_texturePath, "", Be::READWRITE | Be::PERSIST )
+		EXPOSURE_END()
+}
 
 BLUE_DEFINE( EveSOFDataHullSpotlightSetItem );
 const Be::ClassInfo* EveSOFDataHullSpotlightSetItem::ExposeToBlue()
@@ -257,6 +293,7 @@ const Be::ClassInfo* EveSOFDataHullSpotlightSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "coneIntensity", m_coneIntensity, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "flareIntensity", m_flareIntensity, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "spriteIntensity", m_spriteIntensity, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "light", m_light, "", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
 
@@ -302,6 +339,7 @@ const Be::ClassInfo* EveSOFDataHullPlaneSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "blinkRate", m_rate, "rate (Hz)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "blinkPhase", m_phase, "phase (0.-1.)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "blinkMode", m_blinkMode, "", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFDataPlaneSetBlinkTypeChooser )
+		MAP_ATTRIBUTE( "light", m_light, "", Be::READWRITE | Be::PERSIST )
 
 	EXPOSURE_END()
 }
@@ -396,7 +434,10 @@ const Be::ClassInfo* EveSOFDataHullSpriteSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "intensity", m_intensity, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_colorType, "", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
-		EXPOSURE_END()
+
+		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST)
+		MAP_ATTRIBUTE( "light", m_light, "", Be::READWRITE | Be::PERSIST )
+	EXPOSURE_END()
 }
 
 
@@ -436,6 +477,7 @@ const Be::ClassInfo* EveSOFDataHullSpriteLineSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "isCircle", m_isCircle, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_colorType, "", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
+		MAP_ATTRIBUTE( "light", m_light, "", Be::READWRITE | Be::PERSIST)
 		EXPOSURE_END()
 }
 
@@ -472,6 +514,8 @@ const Be::ClassInfo* EveSOFDataHullHazeSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "sourceBrightness", m_sourceBrightness, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sourceSize", m_sourceSize, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boosterGainInfluence", m_boosterGainInfluence, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "light", m_light, "", Be::READWRITE | Be::PERSIST )
+
 		EXPOSURE_END()
 }
 
@@ -653,9 +697,7 @@ const Be::ClassInfo* EveSOFDataHullBannerSetItem::ExposeToBlue(){
 		MAP_PROPERTY( "angleX", GetAngleX, SetAngleX, "Horizontal curve angle" )
 		MAP_ATTRIBUTE( "angleY", m_angleY, "", Be::PERSISTONLY )
 		MAP_PROPERTY( "angleY", GetAngleY, SetAngleY, "Vertical curve angle" )
-
-		MAP_ATTRIBUTE( "lightOverride", m_lightOverride, "", Be::READ | Be::PERSIST )
-
+		MAP_ATTRIBUTE( "light", m_light, "", Be::READ | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 

@@ -44,6 +44,7 @@ using namespace Tr2RenderContextEnum;
 // --------------------------------------------------------------------------------
 EveHazeSet::EveHazeSet( IRoot* lockobj ) :
 	PARENTLOCK( m_hazes ),
+	PARENTLOCK( m_lights ),
 	m_display( true ),
 	m_vertexCount( 0 ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
@@ -332,6 +333,14 @@ void EveHazeSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& pa
 			renderer.DrawBox( haze, t * parentTransform, Vector3( -0.5f, -0.5f, -0.5f ), Vector3( 0.5f, 0.5f, 0.5f ), Tr2DebugRenderer::Solid, 0 );
 		}
 	}
+
+	if( renderer.HasOption( this, "Lights" ) )
+	{
+		for( auto& l : m_lights )
+		{
+			l->RenderDebugInfo( renderer, parentTransform );
+		}
+	}
 }
 
 void EveHazeSet::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
@@ -340,4 +349,23 @@ void EveHazeSet::SetShaderOption( const BlueSharedString& name, const BlueShared
 	{
 		m_effect->SetOption( name, value );
 	}
+}
+
+
+void EveHazeSet::AddLight( Tr2Light* light )
+{
+	m_lights.Append( light->GetRawRoot() );
+}
+
+void EveHazeSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+{
+	for( auto& light : m_lights )
+	{
+		light->AddLight( lightManager, parentTransform, 1.0f );
+	}
+}
+
+void EveHazeSet::SetLightColorSaturation( float saturation )
+{
+
 }

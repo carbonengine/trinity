@@ -23,6 +23,7 @@ BLUE_DECLARE( EveSpotlightSet );
 BLUE_DECLARE_VECTOR( EveSpotlightSet );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2DebugRenderer );
+BLUE_DECLARE_VECTOR( Tr2Light );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -50,6 +51,10 @@ public:
 	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount );
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo(ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount);
+
+	void AddLight( Tr2Light* light ) override;
+	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
+	void SetLightColorSaturation( float saturation ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
@@ -137,6 +142,7 @@ private:
 	AxisAlignedBoundingBox m_aabb;
 	// bounding boxes are grouped together by bone index
 	std::vector<std::pair<int, AxisAlignedBoundingBox>> m_boundingBoxes;
+	PTr2LightVector m_lights;
 };
 
 TYPEDEF_BLUECLASS( EveSpotlightSet );

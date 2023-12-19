@@ -21,6 +21,7 @@ using namespace Tr2RenderContextEnum;
 // --------------------------------------------------------------------------------
 EveSpriteLineSet::EveSpriteLineSet( IRoot* lockobj ) :
 	PARENTLOCK( m_spriteLines ),
+	PARENTLOCK( m_lights ),
 	m_display( true ),
 	m_skinned( false ),
 	m_effectHash( 0 ),
@@ -96,93 +97,36 @@ bool EveSpriteLineSet::ReallocateResources()
 	for( auto slit = m_spriteLines.begin(); slit != m_spriteLines.end(); ++slit )
 	{
 		auto spriteLine = *slit;
+		auto positions = spriteLine->GetPositions();
 
-		// need matrix for roation
-		Matrix m = RotationMatrix( spriteLine->m_rotation );
+		// increase buffer
+		totalBufferSize += positions.size();
+		m_buffer.resize(totalBufferSize);
+		m_spriteData.resize(totalBufferSize);
 
-		// interpret as circle or line?
-		if( spriteLine->m_isCircle )
-		{
-			// how many sprites on this line?
-			size_t numOfSprites = size_t( spriteLine->m_spacing );
+		EveSpriteSet::PoolVertex* vtx = &m_buffer[totalBufferidx];
+		EveSpriteSet::SpriteData* spr = &m_spriteData[totalBufferidx];
 
-			// increase buffer
-			totalBufferSize += numOfSprites;
-			m_buffer.resize( totalBufferSize );
-			m_spriteData.resize( totalBufferSize );
+		float index = 0.0f;
+		for (auto& pos : positions) {
+			// fill static pool data
+			vtx->position = pos;
+			vtx->warpColor = vtx->color = ((spriteLine->m_color & 0xff0000) >> 16) | (spriteLine->m_color & 0xff00ff00) | ((spriteLine->m_color & 0xff) << 16);
+			vtx->blinkPhase = Float_16(spriteLine->m_blinkPhase + spriteLine->m_blinkPhaseShift * index);
+			vtx->blinkRate = Float_16(spriteLine->m_blinkRate);
+			vtx->minScale = Float_16(spriteLine->m_minScale);
+			vtx->maxScale = Float_16(spriteLine->m_maxScale);
+			vtx->falloff = Float_16(spriteLine->m_falloff);
+			vtx->activation = Float_16(1.f);
 
-			// start populating the sprites from this circle
-			float alpha = 0.f;
-			EveSpriteSet::PoolVertex* vtx = &m_buffer[totalBufferidx];
-			EveSpriteSet::SpriteData* spr = &m_spriteData[totalBufferidx];
-			for( size_t i = 0; i < numOfSprites; ++i )
-			{
-				// position on an ellipsoid in x,z-plane
-				Vector3 pos( spriteLine->m_scaling.x * sinf( alpha ), 0.f, spriteLine->m_scaling.y * cosf( alpha ) );
-				pos = TransformCoord( pos, m );
-				pos += spriteLine->m_position;
-				// fill static pool data
-				vtx->position = pos;
-				vtx->warpColor = vtx->color = ( ( spriteLine->m_color & 0xff0000 ) >> 16 ) | ( spriteLine->m_color & 0xff00ff00 ) | ( ( spriteLine->m_color & 0xff ) << 16 );
-				vtx->blinkPhase = Float_16( spriteLine->m_blinkPhase + spriteLine->m_blinkPhaseShift * (float)i );
-				vtx->blinkRate = Float_16( spriteLine->m_blinkRate );
-				vtx->minScale = Float_16( spriteLine->m_minScale );
-				vtx->maxScale = Float_16( spriteLine->m_maxScale );
-				vtx->falloff = Float_16( spriteLine->m_falloff );
-				vtx->activation = Float_16( 1.f );
+			// fill animated pool data
+			spr->position = pos;
+			spr->boneIndex = spriteLine->m_boneIndex;
 
-				// fill animated pool data
-				spr->position = pos;
-				spr->boneIndex = spriteLine->m_boneIndex;
-
-				// next
-				alpha += TRI_2PI / spriteLine->m_spacing;
-				++vtx;
-				++spr;
-			}
-
-			totalBufferidx = totalBufferSize;
+			++vtx;
+			++spr;
+			index += 1.0f;
 		}
-		else
-		{
-			// how many sprites on this line?
-			size_t numOfSprites = size_t( spriteLine->m_scaling.x );
-
-			// increase buffer
-			totalBufferSize += numOfSprites;
-			m_buffer.resize( totalBufferSize );
-			m_spriteData.resize( totalBufferSize );
-
-			// start populating the sprites from this line
-			Vector3 pos( spriteLine->m_position );
-			Vector3 dir = TransformNormal( Vector3( 1.f, 0.f, 0.f ), m );
-			EveSpriteSet::PoolVertex* vtx = &m_buffer[totalBufferidx];
-			EveSpriteSet::SpriteData* spr = &m_spriteData[totalBufferidx];
-			for( size_t i = 0; i < numOfSprites; ++i )
-			{
-				// fill static pool data
-				vtx->position = pos;
-				vtx->warpColor = vtx->color = ( ( spriteLine->m_color & 0xff0000 ) >> 16 ) | ( spriteLine->m_color & 0xff00ff00 ) | ( ( spriteLine->m_color & 0xff ) << 16 );
-				vtx->blinkPhase = Float_16( spriteLine->m_blinkPhase + spriteLine->m_blinkPhaseShift * (float)i );
-				vtx->blinkRate = Float_16( spriteLine->m_blinkRate );
-				vtx->minScale = Float_16( spriteLine->m_minScale );
-				vtx->maxScale = Float_16( spriteLine->m_maxScale );
-				vtx->falloff = Float_16( spriteLine->m_falloff );
-				vtx->activation = Float_16( 1.f );
-
-				// fill animated pool data
-				spr->position = pos;
-				spr->boneIndex = spriteLine->m_boneIndex;
-
-				// next
-				pos += spriteLine->m_spacing * dir;
-				++vtx;
-				++spr;
-			}
-
-			totalBufferidx = totalBufferSize;
-		}
-
 	}
 
 	return true;
@@ -278,4 +222,92 @@ void EveSpriteLineSet::SetShaderOption( const BlueSharedString& name, const Blue
 	{
 		m_effect->SetOption( name, value );
 	}
+}
+
+void EveSpriteLineSet::GetDebugOptions( Tr2DebugRendererOptions& options )
+{
+	options.insert( "Sprite Line Sets" );
+	options.insert( "Lights" );
+}
+
+void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
+{
+	if( renderer.HasOption( GetRawRoot(), "Sprite Line Sets" ) )
+	{
+		Matrix transform = parentTransform;
+
+		for( auto& spriteLine : m_spriteLines ) {
+			auto boneIndex = spriteLine->m_boneIndex;
+
+			Tr2DebugColor color( Color( 0.0f, 0.7f, 0.9f, 0.5f ), Color( 0.0f, 0.7f, 0.9f, 0.1f ) );
+			if( boneIndex >= 0 )
+			{
+				if( boneIndex < int( boneCount ) )
+				{
+					Matrix boneTF = IdentityMatrix();
+					TriMatrixCopyFrom3x4( &boneTF, &bones[boneIndex] );
+					transform = boneTF * transform;
+				}
+				else
+				{
+					color = Tr2DebugColor( Color( 0.9f, 0.2f, 0.2f, 0.5f ), Color( 0.9f, 0.2f, 0.2f, 0.1f ) );
+				}
+			}
+
+			unsigned index = 0;
+			Vector3 lastPos( 0.0, 0.0, 0.0 );
+			for( auto& position : spriteLine->GetPositions() ) {
+				if( index != 0 ) {
+					renderer.DrawCylinder(
+						spriteLine,
+						transform,
+						lastPos,
+						position,
+						spriteLine->m_minScale / 2.0f,
+						8,
+						Tr2DebugRenderer::Lit,
+						color
+					);
+				}
+				index += 1;
+				lastPos = position;
+
+				renderer.DrawSphere(
+					spriteLine,
+					transform,
+					position,
+					spriteLine->m_maxScale,
+					6,
+					Tr2DebugRenderer::Lit,
+					color );
+
+			}
+		}
+	}
+
+	if( renderer.HasOption( this, "Lights" ) )
+	{
+		for( auto& l : m_lights )
+		{
+			l->RenderDebugInfo( renderer, parentTransform );
+		}
+	}
+}
+
+void EveSpriteLineSet::AddLight( Tr2Light* light )
+{
+	m_lights.Append( light->GetRawRoot() );
+}
+
+void EveSpriteLineSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+{
+	for( auto& light : m_lights )
+	{
+		light->AddLight( lightManager, parentTransform, 1.0f );
+	}
+}
+
+void EveSpriteLineSet::SetLightColorSaturation( float saturation )
+{
+
 }

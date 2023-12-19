@@ -47,6 +47,7 @@ using namespace Tr2RenderContextEnum;
 // --------------------------------------------------------------------------------
 EvePlaneSet::EvePlaneSet( IRoot* lockobj ) :
 	PARENTLOCK( m_planes ),
+	PARENTLOCK( m_lights ),
 	m_display( true ),
 	m_hideOnLowQuality( false ),
 	m_pickBufferID( 0 ),
@@ -426,6 +427,14 @@ void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& p
 			Tr2DebugRenderer::Wireframe,
 			0xff00ff00 );
 	}
+
+	if( renderer.HasOption( this, "Lights" ) )
+	{
+		for( auto& l : m_lights )
+		{
+			l->RenderDebugInfo( renderer, parentTransform );
+		}
+	}
 }
 
 void EvePlaneSet::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
@@ -434,4 +443,23 @@ void EvePlaneSet::SetShaderOption( const BlueSharedString& name, const BlueShare
 	{
 		m_effect->SetOption( name, value );
 	}
+}
+
+
+void EvePlaneSet::AddLight( Tr2Light* light )
+{
+	m_lights.Append( light->GetRawRoot() );
+}
+
+void EvePlaneSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+{
+	for( auto& light : m_lights )
+	{
+		light->AddLight( lightManager, parentTransform, 1.0f );
+	}
+}
+
+void EvePlaneSet::SetLightColorSaturation( float saturation )
+{
+
 }

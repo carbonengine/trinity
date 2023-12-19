@@ -265,9 +265,9 @@ void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 	}
 	if( renderer.HasOption( this, "Lights" ) )
 	{
-		for( auto l = begin( m_lights ); l != end( m_lights ); ++l )
+		for( auto& l : m_lights )
 		{
-			( *l )->RenderDebugInfo( renderer, parentTransform );
+			l->RenderDebugInfo( renderer, parentTransform );
 		}
 	}
 }

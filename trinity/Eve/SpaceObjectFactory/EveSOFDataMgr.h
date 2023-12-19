@@ -207,6 +207,36 @@ public:
 		std::vector<HullBoosterItemData> items;
 	};
 
+	struct PointLightAttachment {
+		explicit PointLightAttachment( const EveSOFDataPointLightAttachment& light );
+		LightData AsLightData() const;
+		float saturation;
+		float intensity;
+		Vector3 offset;
+		float innerScaleMultiplier;
+		float outerScaleMultiplier;
+		float noiseAmplitude;
+		float noiseFrequency;
+		int32_t noiseOctaves;
+		std::wstring texturePath;
+	};
+
+	struct SpotLightAttachment {
+		explicit SpotLightAttachment( const EveSOFDataSpotLightAttachment& light );
+		LightData AsLightData() const;
+		float saturation;
+		float intensity;
+		Vector3 offset;
+		float innerAngleMultiplier;
+		float outerAngleMultiplier;
+		float innerScaleMultiplier;
+		float outerScaleMultiplier;
+		float noiseAmplitude;
+		float noiseFrequency;
+		int32_t noiseOctaves;
+		std::wstring texturePath;
+	};
+
 	struct HullSpotlightSetItemData
 	{
 		explicit HullSpotlightSetItemData( const EveSOFDataHullSpotlightSetItem& item );
@@ -217,6 +247,7 @@ public:
 		SOFDataFactionColorChooser::ColorType colorType;
 		Vector3 spriteScale;
 		float coneIntensity, flareIntensity, spriteIntensity;
+		SpotLightAttachment* light;
 	};
 
 	struct HullSpotlightSetData
@@ -246,6 +277,7 @@ public:
 		// BlinkData - combined into a float4 in the vertex buffer;
 		float rate, phase, dutyCycle;
 		int blinkMode; // selector
+		PointLightAttachment* light;
 	};
 
 	struct HullPlaneSetData
@@ -268,6 +300,7 @@ public:
 		float blinkRate, blinkPhase, minScale, maxScale, falloff, intensity;
 		int boneIndex;
 		SOFDataFactionColorChooser::ColorType colorType;
+		PointLightAttachment* light;
 	};
 
 	struct HullSpriteSetData
@@ -285,6 +318,7 @@ public:
 		int boneIndex;
 		bool isCircle;
 		SOFDataFactionColorChooser::ColorType colorType;
+		PointLightAttachment* light;
 	};
 
 	struct HullSpriteLineSetData
@@ -302,6 +336,7 @@ public:
 		SOFDataFactionColorChooser::ColorType colorType;
 		float hazeBrightness, hazeFalloff, sourceSize, sourceBrightness;
 		bool boosterGainInfluence;
+		PointLightAttachment* light;
 	};
 
 	struct HullHazeSetData
@@ -340,7 +375,7 @@ public:
 	struct HullBannerSetItemData
 	{
 		EveBannerItem item;
-		HullBannerSetItemLightData bannerLight;
+		PointLightAttachment* light;
 	};
 
 	struct HullBannerSetData

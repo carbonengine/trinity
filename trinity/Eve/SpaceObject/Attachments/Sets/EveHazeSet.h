@@ -17,6 +17,7 @@
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2DebugRenderer );
+BLUE_DECLARE_VECTOR( Tr2Light );
 struct ViewDistanceInfo;
 
 class Tr2PerObjectData;
@@ -62,6 +63,10 @@ public:
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
+	void AddLight( Tr2Light* light ) override;
+	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
+	void SetLightColorSaturation( float saturation ) override;
+
 	// setup
 	void Setup( Tr2EffectPtr effect );
 
@@ -97,6 +102,8 @@ private:
 	// bounding box around static items
 	AxisAlignedBoundingBox m_aabb;
 	std::vector<std::pair<int, CcpMath::AxisAlignedBox>> m_boundingBoxes;
+
+	PTr2LightVector m_lights;
 
 	void CreateBoundingBox();
 };

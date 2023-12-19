@@ -20,6 +20,7 @@ BLUE_DECLARE( EvePlaneSet );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2DebugRenderer );
+BLUE_DECLARE_VECTOR( Tr2Light ); 
 struct ViewDistanceInfo;
 
 class Tr2PerObjectData;
@@ -73,6 +74,10 @@ public:
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
 
+	void AddLight( Tr2Light* light ) override;
+	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
+	void SetLightColorSaturation( float saturation ) override;
+
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
 	// access effect
@@ -119,6 +124,8 @@ private:
 	unsigned int m_vertexDeclHandle;
 	unsigned int m_vertexCount;
 	Tr2BufferAL m_vertexBuffer;
+
+	PTr2LightVector m_lights;
 };
 
 TYPEDEF_BLUECLASS( EvePlaneSet );

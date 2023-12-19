@@ -745,8 +745,21 @@ void EveSOF::SetupSpriteSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSO
 						spriteSetItem->m_minScale = itemData->minScale;
 						spriteSetItem->m_position = XMVector3TransformCoord( itemData->position + hullOffset, offset );
 
-						// put it into spriteset
-						spriteSet->Add( spriteSetItem );
+						if( itemData->light )
+						{
+							auto lightData = itemData->light->AsLightData();
+							lightData.position += spriteSetItem->m_position;
+							lightData.boneIndex = spriteSetItem->m_boneIndex;
+							lightData.color = spriteSetItem->m_color;
+
+							Tr2PointLightPtr pointLight;
+							pointLight.CreateInstance();
+							pointLight->SetLightData( lightData );
+							pointLight->SetBlinkingBehavior( itemData->blinkRate, itemData->blinkPhase, itemData->minScale, itemData->maxScale );
+							spriteSet->AddLight( pointLight );
+						}
+
+						spriteSet->Add(spriteSetItem);
 					}
 				}
 				
@@ -862,6 +875,37 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 
 					Matrix transformed = XMMatrixMultiply( XMMatrixMultiply(ssiit.transform, TranslationMatrix(hullOffset)), offset );
 					TriMatrixTranslate( &spotlightSetItem->m_transform, &transformed, &hullOffset );
+
+					if( ssiit.light ) {
+						auto data = ssiit.light->AsLightData();
+
+						data.boneIndex = ssiit.boneIndex;
+						data.color = factionSpotlightData->coneColor;
+						
+						Quaternion rotation;
+						Vector3 pos;
+						Vector3 scale;
+						Decompose( scale, rotation, pos, spotlightSetItem->m_transform );
+
+						data.innerRadius *= scale.z;
+						data.radius *= scale.z;
+						data.position = (TranslationMatrix(data.position) * RotationMatrix(rotation) * TranslationMatrix(pos)).GetTranslation();
+						data.rotation = rotation;
+						data.brightness *= ssiit.coneIntensity;
+
+						if( data.innerRadius > 0.f ) {
+							data.innerAngle *= 45.0f * atanf( max( scale.x, scale.y ) / data.innerRadius );
+						}
+						if( data.radius > 0.f ) {
+							data.outerAngle *= 45.0f * atanf( max( scale.x, scale.y ) / data.radius );
+						}
+
+						Tr2SpotLightPtr spotlight;
+						spotlight.CreateInstance();
+						spotlight->SetLightData( data );
+						
+						spotlightSet->AddLight( spotlight );
+					}
 
 					// add it
 					spotlightSet->AddSpotlightItem( spotlightSetItem );
@@ -983,6 +1027,41 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 						}
 					}
 
+					if( psiit.light )
+					{
+						float maxScale = max( psiit.scaling.x, max( psiit.scaling.y, psiit.scaling.z ) );
+						auto lightData = psiit.light->AsLightData();
+						lightData.position += planeSetItem->m_position;
+						lightData.boneIndex = planeSetItem->m_boneIndex;
+						lightData.radius *= maxScale;
+						lightData.innerRadius *= maxScale;
+						lightData.color = planeSetItem->m_color;
+
+						Tr2LightPtr light;
+
+						if( planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_SPACE_VIDEO ) {
+							Tr2TexturedPointLightPtr l;
+							l.CreateInstance();
+							light = l;
+							lightData.texturePath = std::wstring( L"dynamic:/inspacevideos" );
+						}
+						else if( planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_HANGAR_VIDEO ) {
+							Tr2TexturedPointLightPtr l;
+							l.CreateInstance();
+							light = l;
+							lightData.texturePath = std::wstring( L"dynamic:/hangarvideos" );
+						}
+						else {
+							Tr2PointLightPtr pointLight;
+							pointLight.CreateInstance();
+							light = pointLight;
+
+						}
+						light->SetLightData( lightData );
+
+						planeSet->AddLight( light );
+					}
+
 					// add it
 					planeSet->AddPlaneItem( planeSetItem );
 				}
@@ -1063,6 +1142,23 @@ void EveSOF::SetupSpriteLineSets( IEveSpaceObjectAttachmentOwnerPtr obj, const E
 						spriteLineSetItem->m_scaling = itemData->scaling;
 						spriteLineSetItem->m_spacing = itemData->spacing;
 						spriteLineSetItem->m_isCircle = itemData->isCircle;
+
+						if( itemData->light )
+						{
+							auto lightData = itemData->light->AsLightData();
+							lightData.boneIndex = spriteLineSetItem->m_boneIndex;
+							lightData.color = spriteLineSetItem->m_color;
+							unsigned index = 0;
+							for( auto& pos : spriteLineSetItem->GetPositions() )
+							{
+								lightData.position = itemData->light->offset + pos;
+								Tr2PointLightPtr pointLight;
+								pointLight.CreateInstance();
+								pointLight->SetLightData( lightData );
+								pointLight->SetBlinkingBehavior( itemData->blinkRate, itemData->blinkPhase + itemData->blinkPhaseShift * index++, itemData->minScale, itemData->maxScale );
+								spriteLineSet->AddLight( pointLight );
+							}
+						}
 
 						// put it into spriteset
 						spriteLineSet->Add( spriteLineSetItem );
@@ -1154,6 +1250,24 @@ void EveSOF::SetupHazeSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOFD
 						hazeSetItem->m_scaling = itemData->scaling;
 						hazeSetItem->m_boneIndex = itemData->boneIndex;
 						hazeSetItem->m_hazeData = Vector4( itemData->hazeFalloff, itemData->sourceSize, itemData->sourceBrightness, itemData->boosterGainInfluence ? 1.f : 0.f );
+						
+						if( itemData->light )
+						{
+							Vector3 scale = hazeSetItem->m_scaling;
+							float maxScale = max( scale.x, max( scale.y, scale.z ) );
+							auto lightData = itemData->light->AsLightData();
+							lightData.position += itemData->position;
+							lightData.boneIndex = itemData->boneIndex;
+							lightData.radius *= maxScale;
+							lightData.innerRadius *= maxScale;
+							lightData.color = color;
+
+							Tr2PointLightPtr pointLight;
+							pointLight.CreateInstance();
+							pointLight->SetLightData( lightData );
+
+							hazeSet->AddLight( pointLight );
+						}
 
 						// put it into hazeset
 						hazeSet->AddHazeItem( hazeSetItem );
@@ -1377,29 +1491,21 @@ void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, co
 
 						bannerSet->AddBanner( modifiedItem );
 
-						// create the light
-						Tr2PointLightPtr light;
-						light.CreateInstance();
+						if( banner.light ) {
 
-						LightData data;
-						data.position = modifiedItem.position;
+							Vector3 scale = banner.item.scaling;
+							float maxScale = max( scale.x, max( scale.y, scale.z ) );
+							auto lightData = banner.light->AsLightData();
+							lightData.position += modifiedItem.position;
+							lightData.boneIndex = modifiedItem.bone;
+							lightData.color = Color( 0, 0, 0, 0 );
 
-						Vector3 scale = banner.item.scaling;
-						float rad = banner.bannerLight.radiusMultiplier * max( scale.x, max( scale.y, scale.z ) );
-						float innerRad = rad * banner.bannerLight.innerRadiusMultiplier;
-						data.radius = rad;
-						data.innerRadius = innerRad;
+							Tr2PointLightPtr pointLight;
+							pointLight.CreateInstance();
+							pointLight->SetLightData( lightData );
 
-						data.color = Color( 0.0, 0.0, 0.0, 0.0 );
-						data.brightness = banner.bannerLight.brightness;
-						data.noiseAmplitude = banner.bannerLight.noiseAmplitude;
-						data.noiseFrequency = banner.bannerLight.noiseFrequency;
-						data.noiseOctaves = banner.bannerLight.noiseOctaves;
-
-						light->SetLightData( data );
-						bannerSet->AddLight( light );
-
-						bannerSet->SetLightColorSaturation( banner.bannerLight.saturation );
+							bannerSet->AddLight( pointLight );
+						}
 					}
 				}
 

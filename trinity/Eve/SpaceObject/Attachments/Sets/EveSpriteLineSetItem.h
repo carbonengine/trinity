@@ -42,6 +42,8 @@ public:
 	float m_falloff;
 	Color m_color;
 	int32_t m_boneIndex;
+
+	const std::vector<Vector3> GetPositions() const;
 };
 
 TYPEDEF_BLUECLASS( EveSpriteLineSetItem );

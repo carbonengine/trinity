@@ -57,7 +57,8 @@ public:
 	void AddBanner( const EveBannerItem& banner );
 	void SetEffect( Tr2Effect* effect );
 	void SetPrimaryTextureParameter( TriTextureParameter * primaryTextureParameter );
-	void AddLight( Tr2Light* light );
+	void AddLight( Tr2Light* light ) override;
+	
 	void SetKey( int32_t key );
 	void Rebuild();
 

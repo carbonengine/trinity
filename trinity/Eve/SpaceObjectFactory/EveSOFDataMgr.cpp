@@ -26,8 +26,12 @@ EveSOFDataMgr::HullSpotlightSetItemData::HullSpotlightSetItemData( const EveSOFD
 	groupIndex( item.m_groupIndex ),
 	coneIntensity( item.m_coneIntensity ),
 	flareIntensity( item.m_flareIntensity ),
-	spriteIntensity( item.m_spriteIntensity )
+	spriteIntensity( item.m_spriteIntensity ),
+	light( nullptr )
 {
+	if (item.m_light) {
+		light = new SpotLightAttachment( *item.m_light );
+	}
 }
 
 EveSOFDataMgr::HullSpotlightSetData::HullSpotlightSetData( const EveSOFDataHullSpotlightSet& spotLightSet ):
@@ -61,8 +65,12 @@ EveSOFDataMgr::HullPlaneSetItemData::HullPlaneSetItemData( const EveSOFDataHullP
 	rate( item.m_rate ),
 	phase( item.m_phase ),
 	dutyCycle( item.m_dutyCycle ),
-	blinkMode( item.m_blinkMode )
+	blinkMode( item.m_blinkMode ),
+	light( nullptr )
 {
+	if (item.m_light) {
+		light = new PointLightAttachment(*item.m_light);
+	}
 }
 
 EveSOFDataMgr::HullPlaneSetData::HullPlaneSetData( const EveSOFDataHullPlaneSet& planeSet ) :
@@ -79,6 +87,65 @@ EveSOFDataMgr::HullPlaneSetData::HullPlaneSetData( const EveSOFDataHullPlaneSet&
 	{
 		items.push_back( HullPlaneSetItemData( *planeSetItemData ) );
 	}
+}
+
+
+EveSOFDataMgr::PointLightAttachment::PointLightAttachment( const EveSOFDataPointLightAttachment& light ) {
+	this->innerScaleMultiplier = light.m_innerScaleMultiplier;
+	this->intensity = light.m_intensity;
+	this->noiseAmplitude = light.m_noiseAmplitude;
+	this->noiseFrequency = light.m_noiseFrequency;
+	this->noiseOctaves = light.m_noiseOctaves;
+	this->offset = light.m_offset;
+	this->outerScaleMultiplier = light.m_outerScaleMultiplier;
+	this->saturation = light.m_saturation;
+	this->texturePath = light.m_texturePath;
+}
+
+LightData EveSOFDataMgr::PointLightAttachment::AsLightData() const {
+	LightData data;
+	data.position = this->offset;
+	data.radius = this->outerScaleMultiplier;
+	data.innerRadius = this->innerScaleMultiplier;
+
+	data.brightness = this->intensity;
+	data.noiseAmplitude = this->noiseAmplitude;
+	data.noiseFrequency = this->noiseFrequency;
+	data.noiseOctaves = this->noiseOctaves;
+
+	data.texturePath = this->texturePath;
+	return data;
+}
+
+EveSOFDataMgr::SpotLightAttachment::SpotLightAttachment( const EveSOFDataSpotLightAttachment& light ) {
+	this->innerAngleMultiplier = light.m_innerAngleMultiplier;
+	this->intensity = light.m_intensity;
+	this->noiseAmplitude = light.m_noiseAmplitude;
+	this->noiseFrequency = light.m_noiseFrequency;
+	this->noiseOctaves = light.m_noiseOctaves;
+	this->offset = light.m_offset;
+	this->outerAngleMultiplier = light.m_outerAngleMultiplier;
+	this->saturation = light.m_saturation;
+	this->innerScaleMultiplier = light.m_innerScaleMultiplier;
+	this->outerScaleMultiplier = light.m_outerScaleMultiplier;
+	this->texturePath = light.m_texturePath;
+}
+
+LightData EveSOFDataMgr::SpotLightAttachment::AsLightData() const {
+	LightData data;
+	data.position = this->offset;
+	data.innerAngle = this->innerAngleMultiplier;
+	data.outerAngle = this->outerAngleMultiplier;
+	data.innerRadius = this->innerScaleMultiplier;
+	data.radius = this->outerScaleMultiplier;
+
+	data.brightness = this->intensity;
+	data.noiseAmplitude = this->noiseAmplitude;
+	data.noiseFrequency = this->noiseFrequency;
+	data.noiseOctaves = this->noiseOctaves;
+	data.texturePath = this->texturePath;
+
+	return data;
 }
 
 
@@ -653,6 +720,10 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hssid.position = spriteSetItemData->m_position;
 			hssid.intensity = spriteSetItemData->m_intensity;
 			hssid.colorType = spriteSetItemData->m_colorType;
+			hssid.light = nullptr;
+			if( spriteSetItemData->m_light ) {
+				hssid.light = new PointLightAttachment( *spriteSetItemData->m_light );
+			}
 			hssd.items.push_back( hssid );
 		}
 		hd.spriteSets.push_back( hssd );
@@ -703,6 +774,11 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hslsid.isCircle = spriteLineSetItemData->m_isCircle;
 			hslsid.intensity = spriteLineSetItemData->m_intensity;
 			hslsid.colorType = spriteLineSetItemData->m_colorType;
+			hslsid.light = nullptr;
+			if( spriteLineSetItemData->m_light )
+			{
+				hslsid.light = new PointLightAttachment( *spriteLineSetItemData->m_light );
+			}
 			hslsd.items.push_back( hslsid );
 		}
 		hd.spriteLineSets.push_back( hslsd );
@@ -735,6 +811,11 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hhsid.sourceBrightness = hazeSetItemData->m_sourceBrightness;
 			hhsid.sourceSize = hazeSetItemData->m_sourceSize;
 			hhsid.boosterGainInfluence = hazeSetItemData->m_boosterGainInfluence;
+			hhsid.light = nullptr;
+
+			if( hazeSetItemData->m_light ) {
+				hhsid.light = new PointLightAttachment( *hazeSetItemData->m_light );
+			}
 			hhsd.items.push_back( hhsid );
 		}
 
@@ -817,14 +898,10 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			data.item.angleY = bannerItem->m_angleY;
 			data.item.bone = bannerItem->m_boneIndex;
 			data.item.reference = bannerIndex++;
-			// lights
-			data.bannerLight.radiusMultiplier = bannerItem->m_lightOverride->m_radiusMultiplier;
-			data.bannerLight.brightness = bannerItem->m_lightOverride->m_brightness;
-			data.bannerLight.innerRadiusMultiplier = bannerItem->m_lightOverride->m_innerRadiusMultiplier;
-			data.bannerLight.noiseAmplitude = bannerItem->m_lightOverride->m_noiseAmplitude;
-			data.bannerLight.noiseFrequency = bannerItem->m_lightOverride->m_noiseFrequency;
-			data.bannerLight.noiseOctaves = bannerItem->m_lightOverride->m_noiseOctaves;
-			data.bannerLight.saturation = bannerItem->m_lightOverride->m_saturation;
+			data.light = nullptr;
+			if( bannerItem->m_light ) {
+				data.light = new PointLightAttachment( *bannerItem->m_light );
+			}
 
 			set.bannerTypes[bannerItem->m_usage].push_back( data );
 		}
