@@ -34,6 +34,8 @@ BLUE_DEFINE_INTERFACE( IBlueObjectProxy );
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
 
+#include "Resources/Tr2EffectRes.h"
+
 #ifndef TRINITYNAME
 #error Please add TRINITYNAME=<PythonModuleName> to compiler preprocessor definitions (/D)
 #endif
@@ -185,6 +187,12 @@ void InitializeTrinity()
 
 	// Make sure noise table is initialized before we start calling noise functions from multiple threads
 	PerlinNoise1D( 0.0, 1.0, 1.0, 1 );
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	std::vector<Tr2ShaderOption> changes;
+	changes.push_back( { BlueSharedString("BINDLESS_RENDERING"), BlueSharedString("BINDLESS_RENDERING_ENABLED") } );
+	ModifyGlobalEffectOptions( changes );
+#endif
 }
 
 static void StartDLL()
