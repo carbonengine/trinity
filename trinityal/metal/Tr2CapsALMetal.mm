@@ -30,7 +30,7 @@ bool Tr2CapsAL::SupportsVariableRefreshRate() const
 
 bool Tr2CapsAL::SupportsRayTracing() const
 {
-	return false;
+	return m_supportsRaytracing;
 }
 
 #endif

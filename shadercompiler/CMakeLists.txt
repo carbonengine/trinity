@@ -152,7 +152,7 @@ target_include_directories(ShaderCompiler PRIVATE
 )
 set_target_properties(ShaderCompiler PROPERTIES 
     OUTPUT_NAME "ShaderCompiler$<$<CONFIG:DEBUG>:d>"
-    RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/../../tools/ShaderCompiler/${CCP_VENDOR_PLATFORM}$<$<CONFIG:DEBUG>:>"
+    RUNTIME_OUTPUT_DIRECTORY "$ENV{CCP_EVE_PERFORCE_BRANCH_PATH}/carbon/tools/ShaderCompiler/${CCP_VENDOR_PLATFORM}$<$<CONFIG:DEBUG>:>"
 )
 
 get_filename_component(SHADER_COMPILER_BRANCH_PREFIX $ENV{CCP_EVE_PERFORCE_BRANCH_PATH} ABSOLUTE)

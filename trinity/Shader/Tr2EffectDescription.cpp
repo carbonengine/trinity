@@ -638,6 +638,7 @@ bool Tr2EffectDescription::Read( const void* data,
 
 				techniques[technique].shaderTypeMask |= pass.shaderTypeMask;
 			}
+            // raytracing
 			if( version > 13 )
 			{
 				uint8_t librariesCount = stream.Read<uint8_t>();

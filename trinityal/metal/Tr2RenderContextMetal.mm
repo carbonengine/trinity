@@ -680,6 +680,9 @@ ALResult Tr2RenderContextAL::CreateDevice(
 	{
 		m_events->OnContextCreated( *this );
 	}
+    
+    bool raytracingAvailable = metalContext->GetDevice().supportsRaytracing;
+    m_caps.m_supportsRaytracing = raytracingAvailable;
 
 	return S_OK;
 }

@@ -13,8 +13,7 @@
 #define TRINITY_PLATFORM_MAX_CONSTANT_BUFFER_SIZE ( 4 * 1024 )
 #define TRINITY_PLATFORM_SUPPORTS_PARALLEL_CONTEXTS 1
 #define TRINITY_PLATFORM_SUPPORTS_HEAP_VIEW 1
-
-#define TRINITY_PLATFORM_SUPPORTS_RAY_TRACING 0
+#define TRINITY_PLATFORM_SUPPORTS_RAY_TRACING 1
 
 class Tr2CapsAL
 {
@@ -25,6 +24,24 @@ public:
 	bool SupportsVertexShaderTextures() const;
 	bool SupportsVariableRefreshRate() const;
 	bool SupportsRayTracing() const;
+    
+private:
+    bool m_supportsRaytracing;
+    
+    Tr2CapsAL( ) : m_supportsRaytracing(false)
+    {
+    }
+    
+    Tr2CapsAL(const Tr2CapsAL& other)
+        :m_supportsRaytracing(other.m_supportsRaytracing)
+    {
+    }
+    
+    Tr2CapsAL& operator=(const Tr2CapsAL& other)
+    {
+        m_supportsRaytracing = other.m_supportsRaytracing;
+        return *this;
+    }
 };
 
 #endif

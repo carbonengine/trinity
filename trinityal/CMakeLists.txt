@@ -235,6 +235,10 @@ set(_SOURCES
     metal/Tr2RenderContextMetal.mm
     metal/Tr2ResourceSetALMetal.h
     metal/Tr2ResourceSetALMetal.mm
+    metal/Tr2RtBottomLevelAccelerationStructureALMetal.mm
+    metal/Tr2RtBottomLevelAccelerationStructureALMetal.h
+    metal/Tr2RtTopLevelAccelerationStructureALMetal.mm
+    metal/Tr2RtTopLevelAccelerationStructureALMetal.h
     metal/Tr2SamplerStateALMetal.h
     metal/Tr2SamplerStateALMetal.mm
     metal/Tr2ShaderALMetal.h

@@ -179,7 +179,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_hasBackgroundDistortionBatches( false ),
 	m_hasForegroundDistortionBatches( false ),
 	m_freezeFrustum( false ),
-	m_enableRaytracing( false ),
+	m_enableRaytracing( true ),
 	m_virtualCameraSystem(),
 	m_shadowView( IdentityMatrix() )
 {
