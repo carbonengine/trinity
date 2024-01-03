@@ -161,8 +161,20 @@ namespace SOFDataFactionColorChooser
         TYPE_SECONDARY_LIGHT,
         TYPE_TERTIARY_LIGHT,
         TYPE_WHITE_LIGHT,
-		TYPE_FORCE_FIELD,
-		TYPE_HAZE,
+        TYPE_PRIMARY_HOLOGRAM,
+        TYPE_SECONDARY_HOLOGRAM,
+        TYPE_TERTIARY_HOLOGRAM,
+        TYPE_STATE_0,
+        TYPE_STATE_1,
+        TYPE_STATE_2,
+        TYPE_STATE_3,
+        TYPE_STATE_VULNERABLE,
+        TYPE_STATE_INVULNERABLE,
+        TYPE_PRIMARY_FORCEFIELD,
+        TYPE_SECONDARY_FORCEFIELD,
+        TYPE_PRIMARY_BANNER,
+        TYPE_PRIMARY_FX,
+        TYPE_SECONDARY_FX,
 
         TYPE_MAX,
     };
@@ -526,7 +538,7 @@ public:
 	float m_noiseFrequency;
 	int32_t m_noiseOctaves;
 	std::wstring m_texturePath;
-}°;
+};
 TYPEDEF_BLUECLASS(EveSOFDataSpotLightAttachment);
 
 BLUE_CLASS( EveSOFDataHullSpotlightSetItem ) :

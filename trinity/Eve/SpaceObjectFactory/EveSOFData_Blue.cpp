@@ -34,8 +34,20 @@ const Be::VarChooser EveSOFDataFactionColorSetTypeChooser[] =
                 { "SecondaryLight", BeCast( TYPE_SECONDARY_LIGHT ), "Secondary light color" },
                 { "TertiaryLight", BeCast( TYPE_TERTIARY_LIGHT ), "Tertiary light color" },
                 { "WhiteLight", BeCast( TYPE_WHITE_LIGHT ), "White light color" },
-				{ "ForceField", BeCast( TYPE_FORCE_FIELD ), "Force field color" },
-				{ "Haze", BeCast( TYPE_HAZE ), "Haze color" },
+                { "PrimaryHologram", BeCast( TYPE_PRIMARY_HOLOGRAM ), "Primary Hologram"},
+                { "SecondaryHologram", BeCast( TYPE_SECONDARY_HOLOGRAM ), "Secondary Hologram color" },
+                { "TertiaryHologram", BeCast( TYPE_TERTIARY_HOLOGRAM ), "Tertiary Hologram color" },
+                { "State0", BeCast( TYPE_STATE_0 ), "State 0 color" },
+                { "State1", BeCast( TYPE_STATE_1 ), "State 1 color" },
+                { "State2", BeCast( TYPE_STATE_2 ), "State 2 color" },
+                { "State3", BeCast( TYPE_STATE_3 ), "State 3 color" },
+                { "StateVulnerable", BeCast( TYPE_STATE_VULNERABLE ), "State Vulnerable color" },
+                { "StateInvulnerable", BeCast( TYPE_STATE_INVULNERABLE ), "State Invulnerable color" },
+                { "PrimaryForcefield", BeCast( TYPE_PRIMARY_FORCEFIELD ), "Primary Forcefield color" },
+                { "SecondaryForcefield", BeCast( TYPE_SECONDARY_FORCEFIELD ), "Secondary Forcefield color" },
+                { "PrimaryBanner", BeCast( TYPE_PRIMARY_BANNER ), "Primary Banner color" },
+                { "PrimaryFx", BeCast( TYPE_PRIMARY_FX ), "Primary Fx color" },
+                { "SecondaryFx", BeCast( TYPE_SECONDARY_FX ), "Secondary Fx color" },
 				{ 0 }
         };
 BLUE_REGISTER_ENUM_EX( "EveSOFDataFactionColorSetType", ColorType, EveSOFDataFactionColorSetTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
@@ -165,8 +177,20 @@ const Be::ClassInfo* EveSOFDataFactionColorSet::ExposeToBlue()
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_LIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_LIGHT], ":jessica-group:Light Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_TERTIARY_LIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_TERTIARY_LIGHT], ":jessica-group:Light Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_WHITE_LIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_WHITE_LIGHT], ":jessica-group:Light Colors", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_FORCE_FIELD].mKey, m_colors[SOFDataFactionColorChooser::TYPE_FORCE_FIELD], ":jessica-group:Plane Sets", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_HAZE].mKey, m_colors[SOFDataFactionColorChooser::TYPE_HAZE], ":jessica-group:Plane Sets", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_HOLOGRAM].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_HOLOGRAM], ":jessica-group:Hologram Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_HOLOGRAM].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_HOLOGRAM], ":jessica-group:Hologram Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_TERTIARY_HOLOGRAM].mKey, m_colors[SOFDataFactionColorChooser::TYPE_TERTIARY_HOLOGRAM], ":jessica-group:Hologram Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_STATE_0].mKey, m_colors[SOFDataFactionColorChooser::TYPE_STATE_0], ":jessica-group:State Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_STATE_1].mKey, m_colors[SOFDataFactionColorChooser::TYPE_STATE_1], ":jessica-group:State Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_STATE_2].mKey, m_colors[SOFDataFactionColorChooser::TYPE_STATE_2], ":jessica-group:State Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_STATE_3].mKey, m_colors[SOFDataFactionColorChooser::TYPE_STATE_3], ":jessica-group:State Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_STATE_VULNERABLE].mKey, m_colors[SOFDataFactionColorChooser::TYPE_STATE_VULNERABLE], ":jessica-group:State Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_STATE_INVULNERABLE].mKey, m_colors[SOFDataFactionColorChooser::TYPE_STATE_INVULNERABLE], ":jessica-group:State Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_FORCEFIELD].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_FORCEFIELD], ":jessica-group:Forcefield Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_FORCEFIELD].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_FORCEFIELD], ":jessica-group:Forcefield Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_BANNER].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_BANNER], ":jessica-group:Banner Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_FX].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_FX], ":jessica-group:FX Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_FX].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_FX], ":jessica-group:FX Colors", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_END()
 }
 
