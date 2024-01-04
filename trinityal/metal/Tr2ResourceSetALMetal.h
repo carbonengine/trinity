@@ -15,7 +15,8 @@ namespace TrinityALImpl
 		~Tr2ResourceSetAL();
 
 		ALResult Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext );
-		bool IsValid() const;
+        ALResult Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext );
+        bool IsValid() const;
 
 		void Destroy();
 		Tr2ALMemoryType GetMemoryClass() const;

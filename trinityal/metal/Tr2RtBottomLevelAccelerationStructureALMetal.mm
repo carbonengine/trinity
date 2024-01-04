@@ -4,49 +4,63 @@
 //
 //  Created by Iris Dogg Skarphedinsdottir on 3.1.2024.
 //
+#include "StdAfx.h"
 
+#if TRINITY_PLATFORM == TRINITY_METAL
 
-Tr2RtBottomLevelAccelerationStructureAL()::Tr2RtBottomLevelAccelerationStructureAL()
-{
-    
-}
+#include "Tr2RtBottomLevelAccelerationStructureALMetal.h"
 
-Tr2RtBottomLevelAccelerationStructureAL()::~Tr2RtBottomLevelAccelerationStructureAL()
-{
+namespace  TrinityALImpl {
 
-}
-
-ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
-{
-    if( !renderContext.IsValid() || !renderContext.GetCaps().SupportsRayTracing() )
+    Tr2RtBottomLevelAccelerationStructureAL::Tr2RtBottomLevelAccelerationStructureAL()
     {
-        return E_INVALIDCALL;
+        
     }
-    if( !positions.IsValid() || !HasFlag( positions.m_vertexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+
+    Tr2RtBottomLevelAccelerationStructureAL::~Tr2RtBottomLevelAccelerationStructureAL()
     {
-        return E_INVALIDARG;
+        
     }
-    if( !indices.IsValid() || !HasFlag( indices.m_indexBuffer.GetDesc().gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
+
+    ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
     {
-        return E_INVALIDARG;
+        return S_OK;
     }
-}
 
 
-ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, Tr2RenderContextAL& renderContext )
-{
-    
-}
+    ALResult Tr2RtBottomLevelAccelerationStructureAL::Update( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, Tr2RenderContextAL& renderContext )
+    {
+        return S_OK;
+    }
 
-ALResult Tr2RtBottomLevelAccelerationStructureAL::CompactBlas( Tr2PrimaryRenderContextAL& renderContext )
-{
-    return S_OK;
-}
+    ALResult Tr2RtBottomLevelAccelerationStructureAL::CompactBlas( Tr2PrimaryRenderContextAL& renderContext )
+    {
+        return S_OK;
+    }
 
-bool Tr2RtBottomLevelAccelerationStructureAL::IsValid() const
-{
-    if( m_primitiveAccelerationStructures )
+    bool Tr2RtBottomLevelAccelerationStructureAL::IsValid() const
     {
         return true;
+       // if( m_primitiveAccelerationStructures )
+        //{
+       //     return true;
+       // }
     }
+
+    Tr2ALMemoryType Tr2RtBottomLevelAccelerationStructureAL::GetMemoryClass() const
+    {
+        return AL_MEMORY_MANAGED;
+    }
+        
+    void Tr2RtBottomLevelAccelerationStructureAL::Destroy()
+    {
+        
+    }
+
+void Tr2RtBottomLevelAccelerationStructureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
+    {
+        description["type"] = "Tr2RtBottomLevelAccelerationStructureAL";
+    }
+
 }
+#endif

@@ -69,7 +69,7 @@ public:
 		return false;
 	}
 
-	bool SupportsRayTracing() const
+	bool SupportsRaytracing() const
 	{
 		return m_supportsDxr;
 	}

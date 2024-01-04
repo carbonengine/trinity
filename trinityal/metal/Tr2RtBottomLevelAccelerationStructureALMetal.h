@@ -7,15 +7,14 @@
 
 
 // NOTE: on DXR we have these things called BottomLevelAccelerationStructure (BLAS) and TopLevelAccelerationStructure (TLAS). 
-// In Metal similar objects are referenced as primitive acceleration structure (BLAS) and
-
-instance acceleration structure (TLAS)
+// In Metal similar objects are referenced as primitive acceleration structure (BLAS) and instance acceleration structure (TLAS)
 
 #pragma once
 
-#if( TRINITY_PLATFORM == TRINITY_METAL )
+#if TRINITY_PLATFORM == TRINITY_METAL
 
 #include "../include/Tr2RtBottomLevelAccelerationStructureAL.h"
+#include "Tr2PrimaryRenderContextAL.h"
 
 namespace TrinityALImpl
 {
@@ -29,11 +28,15 @@ namespace TrinityALImpl
         ALResult Update( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, Tr2RenderContextAL& renderContext );
         ALResult CompactBlas( Tr2PrimaryRenderContextAL& renderContext );
         bool IsValid() const;
-    
-    private:
+        
+        void Destroy();
+        void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
+        Tr2ALMemoryType GetMemoryClass() const;
+        
+   // private:
         //BLAS
-        NSMutableArray m_primitiveAccelerationStructures;
-    }
+        //id <MTLAccelerationStructure> m_primitiveAccelerationStructures;
+    };
 }
 
 #endif

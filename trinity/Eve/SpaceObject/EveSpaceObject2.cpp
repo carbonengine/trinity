@@ -492,7 +492,7 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 void EveSpaceObject2::UpdateRtMesh()
  {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	if( !renderContext.GetCaps().SupportsRayTracing() )
+	if( !renderContext.GetCaps().SupportsRaytracing() )
 	{
 		return;
 	}

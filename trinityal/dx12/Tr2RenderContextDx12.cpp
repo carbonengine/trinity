@@ -153,7 +153,7 @@ ALResult Tr2RenderContextAL::CreateDx12( ID3D12CommandAllocator* commandAllocato
 	CR_RETURN_HR( m_commandList->Close() );
 	m_commandList.QueryInterface( &m_commandList2 );
 
-	if( renderContext.GetCaps().SupportsRayTracing() )
+	if( renderContext.GetCaps().SupportsRaytracing() )
 	{
 		m_commandList.QueryInterface( &m_commandList4 );
 	}

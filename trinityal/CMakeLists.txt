@@ -237,6 +237,10 @@ set(_SOURCES
     metal/Tr2ResourceSetALMetal.mm
     metal/Tr2RtBottomLevelAccelerationStructureALMetal.mm
     metal/Tr2RtBottomLevelAccelerationStructureALMetal.h
+    metal/Tr2RtPipelineStateALMetal.mm
+    metal/Tr2RtPipelineStateALMetal.h
+    metal/Tr2RtShaderTableALMetal.mm
+    metal/Tr2RtShaderTableALMetal.h
     metal/Tr2RtTopLevelAccelerationStructureALMetal.mm
     metal/Tr2RtTopLevelAccelerationStructureALMetal.h
     metal/Tr2SamplerStateALMetal.h

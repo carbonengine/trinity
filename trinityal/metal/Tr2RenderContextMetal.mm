@@ -60,6 +60,8 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_separateAlphaBlendEnabled( false )
 	, m_srgbWriteEnable( false )
     , m_isPrimary( false )
+    , m_caps()
+    
 {
 }
 
@@ -681,9 +683,11 @@ ALResult Tr2RenderContextAL::CreateDevice(
 		m_events->OnContextCreated( *this );
 	}
     
-    bool raytracingAvailable = metalContext->GetDevice().supportsRaytracing;
-    m_caps.m_supportsRaytracing = raytracingAvailable;
-
+    if( @available( macOS 11.0, * ) )
+    {
+        bool raytracingAvailable = m_metalContext->GetDevice().supportsRaytracing;
+        m_caps.m_supportsRaytracing = raytracingAvailable;
+    }
 	return S_OK;
 }
 

@@ -24,7 +24,7 @@ public:
 	bool SupportsStandaloneSwapChain() const;
 	bool SupportsVertexShaderTextures() const;
 	bool SupportsVariableRefreshRate() const;
-	bool SupportsRayTracing() const;
+	bool SupportsRaytracing() const;
 };
 
 #endif

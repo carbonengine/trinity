@@ -41,6 +41,11 @@ namespace TrinityALImpl
 		Destroy();
 	}
 
+    ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+    {
+        return S_OK;
+    }
+
 	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL &program, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		Destroy();

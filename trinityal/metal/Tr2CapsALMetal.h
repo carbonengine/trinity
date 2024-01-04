@@ -23,25 +23,14 @@ public:
 	bool SupportsStandaloneSwapChain() const;
 	bool SupportsVertexShaderTextures() const;
 	bool SupportsVariableRefreshRate() const;
-	bool SupportsRayTracing() const;
-    
-private:
+	bool SupportsRaytracing() const;
+
     bool m_supportsRaytracing;
     
-    Tr2CapsAL( ) : m_supportsRaytracing(false)
-    {
-    }
+    Tr2CapsAL();
+    Tr2CapsAL(const Tr2CapsAL& other);
     
-    Tr2CapsAL(const Tr2CapsAL& other)
-        :m_supportsRaytracing(other.m_supportsRaytracing)
-    {
-    }
-    
-    Tr2CapsAL& operator=(const Tr2CapsAL& other)
-    {
-        m_supportsRaytracing = other.m_supportsRaytracing;
-        return *this;
-    }
+    Tr2CapsAL& operator=(const Tr2CapsAL& other);
 };
 
 #endif

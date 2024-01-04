@@ -43,7 +43,7 @@ public:
 	{
 		return false;
 	}
-	bool SupportsRayTracing() const
+	bool SupportsRaytracing() const
 	{
 		return false;
 	}

@@ -40,7 +40,7 @@ namespace TrinityALImpl
 
 	ALResult Tr2RtTopLevelAccelerationStructureAL::Create( const size_t count, const Tr2RtInstanceAL* instances, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
 	{
-		if( !renderContext.IsValid() || !renderContext.GetCaps().SupportsRayTracing() )
+		if( !renderContext.IsValid() || !renderContext.GetCaps().SupportsRaytracing() )
 		{
 			return E_INVALIDCALL;
 		}
