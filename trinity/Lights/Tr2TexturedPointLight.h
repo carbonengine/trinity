@@ -16,12 +16,14 @@ public:
 	bool Initialize() override;
 	bool OnModified( Be::Var* value ) override;
 	void SetLightData( LightData& data ) override;
+	void SetSaturation( float saturation );
 
 protected:
 	void Update() override;
 private:
 	void SetTexturePath( std::wstring path );
 	TriTextureResPtr m_texture;
+	float m_saturation;
 };
 
 TYPEDEF_BLUECLASS( Tr2TexturedPointLight );

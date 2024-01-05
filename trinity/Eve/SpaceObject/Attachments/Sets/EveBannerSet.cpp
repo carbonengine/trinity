@@ -424,19 +424,9 @@ Color EveBannerSet::GetSaturatedLightColor() const
 
 	Color c = resource->GetAverageColor();
 
-	Color c2 = Color( c.r * c.a, c.g * c.a, c.b * c.a, c.a );
+	c = Color( c.r * c.a, c.g * c.a, c.b * c.a, c.a );
 	
-	if( m_colorSaturation == 1.f )
-	{
-		return c2;
-	} 
-
-	// intencity (the magic numbers are values based on how strongly our eyes perceive each color)
-	float i = ( c2.r * 0.299f ) + ( c2.g * 0.587f ) + (c2.b * 0.114f);
-
-	Color finalC = Lerp( Color(i,i,i,i), c2, max( 0.0f, m_colorSaturation ) );
-
-	return  finalC;
+	return Saturate( c, m_colorSaturation );
 }
 
 void EveBannerSet::SetLightColorSaturation(float saturation )

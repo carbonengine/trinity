@@ -458,8 +458,3 @@ void EvePlaneSet::GetLights( Tr2LightManager& lightManager, const Matrix& parent
 		light->AddLight( lightManager, parentTransform, 1.0f );
 	}
 }
-
-void EvePlaneSet::SetLightColorSaturation( float saturation )
-{
-
-}

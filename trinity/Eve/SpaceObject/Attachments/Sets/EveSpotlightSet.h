@@ -54,7 +54,6 @@ public:
 
 	void AddLight( Tr2Light* light ) override;
 	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
-	void SetLightColorSaturation( float saturation ) override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize

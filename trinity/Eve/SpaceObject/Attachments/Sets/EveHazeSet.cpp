@@ -364,8 +364,3 @@ void EveHazeSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentT
 		light->AddLight( lightManager, parentTransform, 1.0f );
 	}
 }
-
-void EveHazeSet::SetLightColorSaturation( float saturation )
-{
-
-}

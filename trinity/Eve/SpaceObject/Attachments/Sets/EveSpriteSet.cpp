@@ -393,8 +393,3 @@ void EveSpriteSet::GetLights( Tr2LightManager& lightManager, const Matrix& paren
 		light->AddLight( lightManager, parentTransform, 1.0f );
 	}
 }
-
-void EveSpriteSet::SetLightColorSaturation( float saturation )
-{
-
-}

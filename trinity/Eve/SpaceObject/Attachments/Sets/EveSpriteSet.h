@@ -73,7 +73,6 @@ public:
 
 	void AddLight( Tr2Light* light ) override;
 	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
-	void SetLightColorSaturation( float saturation ) override;
 
 	void AddBoosterGlowToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& world, float boosterGain, float warpIntensity );
 

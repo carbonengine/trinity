@@ -31,5 +31,4 @@ BLUE_INTERFACE( IEveSpaceObjectAttachment ) : public IRoot
 	
 	virtual void AddLight( Tr2Light* light ) {}
 	virtual void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const {}
-	virtual void SetLightColorSaturation( float saturation ) {};
 };

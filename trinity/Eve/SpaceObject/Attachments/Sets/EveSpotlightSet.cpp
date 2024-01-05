@@ -486,8 +486,3 @@ void EveSpotlightSet::GetLights( Tr2LightManager& lightManager, const Matrix& pa
 		light->AddLight( lightManager, parentTransform, 1.0f );
 	}
 }
-
-void EveSpotlightSet::SetLightColorSaturation( float saturation )
-{
-
-}
