@@ -63,8 +63,8 @@ void Tr2PointLight::Update() {
 float Tr2PointLight::Blink() const
 {
 	const float FLASH_PEAK_TIME = 0.05f;
-	float f = Tr2Renderer::GetAnimationTime() * m_blinkRate + m_blinkPhase;
-	f -= std::floorf( f );
+	float intPart;
+	float f = modf(Tr2Renderer::GetAnimationTime() * m_blinkRate + m_blinkPhase, &intPart);
 
 	float peak = FLASH_PEAK_TIME * m_blinkRate;
 	float result = 0.0f;
