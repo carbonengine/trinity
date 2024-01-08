@@ -36,6 +36,7 @@ namespace TrinityALImpl
     private:
         //BLAS
         NSMutableArray *_primitiveAccelerationStructures;
+        
     };
 }
 

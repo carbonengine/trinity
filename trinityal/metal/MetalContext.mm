@@ -466,12 +466,16 @@ namespace TrinityALImpl
 		return m_gpuTimerRate;
 	}
 
-	id<MTLDevice>  MetalContext::GetDevice()
+	id<MTLDevice> MetalContext::GetDevice()
 	{
 		return m_device;
 	}
 
-	
+    id<MTLCommandQueue> MetalContext::GetCommandQueue()
+    {
+        return m_commandQueue;
+    }
+
 	id<MTLRenderPipelineState> MetalContext::GetCachedRenderPipelineState( size_t renderPipelineDescriptorHash )
 	 {
 		 id<MTLRenderPipelineState> pipelineState = nil;
