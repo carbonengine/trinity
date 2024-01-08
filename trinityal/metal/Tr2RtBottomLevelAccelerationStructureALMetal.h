@@ -33,9 +33,9 @@ namespace TrinityALImpl
         void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
         Tr2ALMemoryType GetMemoryClass() const;
         
-   // private:
+    private:
         //BLAS
-        //id <MTLAccelerationStructure> m_primitiveAccelerationStructures;
+        NSMutableArray *_primitiveAccelerationStructures;
     };
 }
 

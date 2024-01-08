@@ -9,7 +9,8 @@
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
 #include "../include/Tr2RtBottomLevelAccelerationStructureAL.h"
-
+#import <Metal/Metal.h>
+//#import <MetalKit/MetalKit.h>
 namespace TrinityALImpl
 {
 	class Tr2RtBottomLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2RtBottomLevelAccelerationStructureAL>
