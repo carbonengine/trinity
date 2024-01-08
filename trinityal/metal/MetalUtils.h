@@ -105,6 +105,7 @@ private:
 
     // page index (32 bits) and offset (32 bits)
     std::atomic<uint64_t> m_offset;
+    uint8_t* m_pageContents[MAX_PAGE_COUNT];
     id<MTLBuffer> m_pages[MAX_PAGE_COUNT];
     id<MTLDevice> m_device;
     std::mutex m_pagesMutex;

@@ -365,6 +365,7 @@ void ConstantBufferAllocator::Initialize( id<MTLDevice> device )
 {
     m_device = device;
     std::fill( std::begin( m_pages ), std::end( m_pages ), nullptr );
+    std::fill( std::begin( m_pageContents ), std::end( m_pageContents ), nullptr );
     CreatePage( 0 );
     m_offset = 0;
     m_totalUploadedSize = 0;
@@ -410,7 +411,7 @@ ConstantBufferAllocator::Entry ConstantBufferAllocator::Allocate( const void* da
     entry.page = offset >> 32;
     if( data )
     {
-        memcpy( static_cast<uint8_t*>( m_pages[entry.page].contents ) + entry.offset, data, dataSize );
+        memcpy( m_pageContents[entry.page] + entry.offset, data, dataSize );
     }
     return entry;
 }
@@ -429,6 +430,7 @@ void ConstantBufferAllocator::CreatePage( uint32_t index )
     }
     m_pages[index] = [m_device newBufferWithLength:CONST_PAGE_SIZE options:options];
     m_pages[index].label = [NSString stringWithUTF8String:"Constant buffer"];
+    m_pageContents[index] = static_cast<uint8_t*>( m_pages[index].contents );
 }
 
 
