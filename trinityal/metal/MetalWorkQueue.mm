@@ -789,6 +789,18 @@ void MetalWorkQueue::SetRenderStatesDirty()
 	m_dirtySamplersMask[PIXEL_SHADER] = ~0u;
 }
 
+void MetalWorkQueue::MarkConstantBuffersDirty()
+{
+    m_dirtyConstBuffersMask[VERTEX_SHADER] = ~0u;
+    m_dirtyConstBufferPageMask[VERTEX_SHADER] = ~0u;
+
+    m_dirtyConstBuffersMask[PIXEL_SHADER] = ~0u;
+    m_dirtyConstBufferPageMask[PIXEL_SHADER] = ~0u;
+
+    m_dirtyConstBuffersMask[COMPUTE_SHADER] = ~0u;
+    m_dirtyConstBufferPageMask[COMPUTE_SHADER] = ~0u;
+}
+
 void MetalWorkQueue::SetCurrentEncoder( MetalEncoderType encoderType, NSString *encoderLabel )
 {
 	if( m_encoderInUse )
@@ -2289,25 +2301,14 @@ void MetalWorkQueue::SetConstants( Tr2RenderContextEnum::ShaderType shaderType, 
 	ConstantBuffer& bufferSlot = m_constBuffers[shaderType][bufferIndex];
 	uint32_t flag = (1 << bufferIndex);
 
-    auto frameNo = m_context->GetRecordingFrameNumber();
+    UploadConstants( constantBuffer, size, token );
     uint32_t page, offset;
-    if( token.frame != frameNo )
-    {
-        auto& allocator = m_context->GetConstantBufferAllocator();
-        auto entry = allocator.Allocate( constantBuffer, size );
-        token.offset = uint64_t( entry.offset ) | ( uint64_t( entry.page ) << 32 );
-        token.frame = frameNo;
-        page = entry.page;
-        offset = entry.offset;
-    }
-    else
-    {
-        uint64_t offs = token.offset;
-        
-        page = uint32_t( offs >> 32 );
-        offset = uint32_t( offs & 0xffffffff );
-    }
-	if( bufferSlot.offset != offset || bufferSlot.page != page )
+    uint64_t offs = token.offset;
+    
+    page = uint32_t( offs >> 32 );
+    offset = uint32_t( offs & 0xffffffff );
+
+    if( bufferSlot.offset != offset || bufferSlot.page != page )
 	{
         if( bufferSlot.page != page )
         {
@@ -2317,6 +2318,18 @@ void MetalWorkQueue::SetConstants( Tr2RenderContextEnum::ShaderType shaderType, 
 		m_dirtyConstBuffersMask[shaderType] |= flag;
 	}
 	m_activeConstBuffersMask[shaderType] |= flag;
+}
+
+void MetalWorkQueue::UploadConstants( const void* constantBuffer, uint32_t size, ConstantBufferToken& token )
+{
+    auto frameNo = m_context->GetRecordingFrameNumber();
+    if( token.frame != frameNo )
+    {
+        auto& allocator = m_context->GetConstantBufferAllocator();
+        auto entry = allocator.Allocate( constantBuffer, size );
+        token.offset = uint64_t( entry.offset ) | ( uint64_t( entry.page ) << 32 );
+        token.frame = frameNo;
+    }
 }
 
 void MetalWorkQueue::SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask, id<MTLBuffer> heapView, uint32_t heapViewMask )

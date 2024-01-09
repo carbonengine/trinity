@@ -287,7 +287,9 @@ namespace TrinityALImpl
         void EndRenderPassHint();
 
 		void SetConstants( Tr2RenderContextEnum::ShaderType shaderType, const void* constantBuffer, uint32_t size, ConstantBufferToken& token, uint32_t constantIndex );
-		void SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask, id<MTLBuffer> heapView, uint32_t heapViewMask );
+        void UploadConstants( const void* constantBuffer, uint32_t size, ConstantBufferToken& token );
+
+        void SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask, id<MTLBuffer> heapView, uint32_t heapViewMask );
 		void SetTextures( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLTexture>* textures, NSRange texturesRange );
 		void SetSamplers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLSamplerState>* samplers, NSRange samplersRange );
 		void ResetBuffers( Tr2RenderContextEnum::ShaderType shaderType );
@@ -352,8 +354,10 @@ namespace TrinityALImpl
         MTLVertexDescriptor* GetCachedVertexDescriptor( Tr2VertexLayoutAL* layout, size_t inputHash, uint8_t& streamMask, bool& needsDummyStream ) const;
         void CacheVertexDescriptor( Tr2VertexLayoutAL* layout, size_t inputHash, MTLVertexDescriptor* descriptor, uint8_t streamMask, bool needsDummyStream );
         void FlushCachedVertexDescriptors();
+        bool EmitRenderEncoderState();
         
         uint64_t GetCurrentEncoderIndex() const;
+        void MarkConstantBuffersDirty();
 	private:
 		void CreateClearFunctions();
 		void ResetWorkQueue();
@@ -365,7 +369,6 @@ namespace TrinityALImpl
 		void SetCurrentEncoder(MetalEncoderType encoderType, NSString *encoderLabel = nil);
 		void SetupVertexDescriptors();
 		bool EmitRenderPipelineState();
-		bool EmitRenderEncoderState();
 		bool EmitComputePipelineState();
 		bool EmitComputeEncoderState();
 		void SetVertexBufferBindings();

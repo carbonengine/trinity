@@ -157,6 +157,9 @@ public:
 		uint32_t registerIndex,
 		uint32_t maxRegisterCount = 0 );
 
+    uint64_t UploadConstants( const void* data, size_t size );
+    uint64_t UploadConstants( const Tr2ConstantBufferAL& buffer );
+
 	// Helper function to clear the current primary backbuffer, depth and/or stencil.
 	ALResult Clear(
 		uint32_t clearFlags,
@@ -271,8 +274,6 @@ protected:
 	};
 
 	MetalPrimitiveInfo                 m_metalPrimitiveInfo;
-	MTLIndexType                       m_metalIndexType;
-	id<MTLBuffer>                      m_metalIndexBuffer;
 	MTLCompareFunction                 m_depthCompareFunction;
 	CAMetalLayer                      *m_caMetalLayer;
 	
@@ -298,11 +299,15 @@ protected:
 	
 	uint32_t m_queueIndex;
 
-	void CheckDrawResources();
 	void SetAsPrimary();
 
 public:
-	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
+    void CheckDrawResources();
+
+    MTLIndexType                       m_metalIndexType;
+    id<MTLBuffer>                      m_metalIndexBuffer;
+
+    TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 };
 
 #endif

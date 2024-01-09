@@ -541,7 +541,7 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 
 	currentMode = Tr2EffectStateManager::RM_ANY;
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_METAL
 	if( g_gdrEnabled )
 	{
 		Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
@@ -552,7 +552,11 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 			s_buffer.Create( 1024 * 1024 );
 		}
 
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
 		s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetCurrentFrameIndexDx12(), primaryContext->GetPrimaryRenderContext().GetCompletedFrameIndexDx12() );
+#else
+        s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetMetalContext()->GetRecordingFrameNumber(), primaryContext->GetPrimaryRenderContext().GetMetalContext()->GetRenderedFrameNumber() );
+#endif
 
 		struct Bin
 		{
@@ -638,8 +642,9 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 
 					const char* effectPath = dynamic_cast<Tr2Effect*>( firstBatch.m_material )->GetEffectPathName();
 					CCP_STATS_ZONE( effectPath );
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
 					GPU_REGION( *renderContext, effectPath );
-
+#endif
 					m_esm.ApplyVertexDeclaration( firstBatch.m_vertexDeclaration );
 					if( firstBatch.m_vertexStreams[0] )
 					{
@@ -653,8 +658,12 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 
 					firstBatch.m_shader->ApplyAllStateForPass( bin.technique, bin.pass, *renderContext );
 					firstBatch.m_material->ApplyMaterialDataForPass( bin.technique, bin.pass, *renderContext );
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
 					renderContext->SetAllState();
 					renderContext->FlushGraphicsBarriersDx12();
+#elif TRINITY_PLATFORM == TRINITY_METAL
+                    renderContext->CheckDrawResources();
+#endif
 				}
 				s_buffer.Submit( bin.writer );
 				drawCalls += bin.endIndex - bin.firstIndex;
