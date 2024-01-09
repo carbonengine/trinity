@@ -486,7 +486,7 @@ void Tr2RenderContextAL::CheckDrawResources()
 	}
 	else
 	{
-		m_workQueue->SetCurrentVertexDescriptor( nil, 0 );
+		m_workQueue->SetCurrentVertexDescriptor( nil, 0, 0 );
 	}
 }
 

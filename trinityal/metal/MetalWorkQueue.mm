@@ -58,6 +58,7 @@ MetalWorkQueue::MetalWorkQueue()
 	, m_shaderResourceMasks( nullptr )
 	, m_currentVertexDescriptor( nil )
 	, m_currentVertexStreamMask( 0 )
+    , m_currentVertexDescriptorBaseHash( 0 )
 	, m_hasPendingRenderPassHint( false )
 	, m_hasPendingRenderTargetBarrier( false )
 	, m_pendingClear( false )
@@ -1426,27 +1427,13 @@ size_t MetalWorkQueue::CalculateVertexDescriptorHash()
 	size_t hashVal = 0;
 	if( m_currentVertexDescriptor )
 	{
+        hash_combine( hashVal, m_currentVertexDescriptorBaseHash );
 		unsigned int mask = m_currentVertexStreamMask;
-		for( int i = 0; mask && i < METAL_MAX_VERTEX_ATTRIBUTES; ++i )
-		{
-			auto stream = m_currentVertexDescriptor.attributes[i].bufferIndex;
-			unsigned int flag = ( 1 << stream );
-			if( mask & flag )
-			{
-				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.attributes[i].bufferIndex );
-				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.attributes[i].offset );
-				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.attributes[i].format );
-			}
-		}
-
-		mask = m_currentVertexStreamMask;
 		for( int i = 0; mask && i < METAL_VERTEX_STREAM_BUFFER_COUNT; ++i )
 		{
 			unsigned int flag = ( 1 << i );
 			if( mask & flag )
 			{
-				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.layouts[i].stepFunction );
-				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.layouts[i].stepRate );
 				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.layouts[i].stride );
 
 				mask = mask & ~flag;
@@ -2478,12 +2465,13 @@ void MetalWorkQueue::SetVertexStream( uint32 stream, id<MTLBuffer> buffer, uint3
 	}
 }
 
-void MetalWorkQueue::SetCurrentVertexDescriptor( MTLVertexDescriptor* vertexDescriptor, uint8_t vertexStreamMask )
+void MetalWorkQueue::SetCurrentVertexDescriptor( MTLVertexDescriptor* vertexDescriptor, uint8_t vertexStreamMask, size_t baseHash )
 {
 	if( m_currentVertexDescriptor != vertexDescriptor || m_currentVertexStreamMask != vertexStreamMask )
 	{
 		m_currentVertexDescriptor = vertexDescriptor;
 		m_currentVertexStreamMask = vertexStreamMask;
+        m_currentVertexDescriptorBaseHash = baseHash;
 
 		m_dirtyRenderEncoderState |= METAL_RENDERENCODERDIRTYSTATE_VERTEXDESCRIPTOR;
 	}
@@ -3119,6 +3107,7 @@ void MetalWorkQueue::BeginParallelEncoding( MetalWorkQueue* primaryQueue )
 	
 	m_currentVertexDescriptor = [primaryQueue->m_currentVertexDescriptor copy];
 	m_currentVertexDescriptorHash = primaryQueue->m_currentVertexDescriptorHash;
+    m_currentVertexDescriptorBaseHash = primaryQueue->m_currentVertexDescriptorBaseHash;
 	m_currentVertexStreamMask = primaryQueue->m_currentVertexStreamMask;
 	
 	for( int i = 0; i < METAL_VERTEX_STREAM_BUFFER_COUNT; ++i )

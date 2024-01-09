@@ -295,7 +295,7 @@ namespace TrinityALImpl
 		void ResetSamplers( Tr2RenderContextEnum::ShaderType shaderType );
 
 		void SetVertexStream( uint32 stream, id<MTLBuffer> buffer, uint32 stride, uint32 offset );
-		void SetCurrentVertexDescriptor( MTLVertexDescriptor* vertexDescriptor, uint8_t vertexStreamMask );
+		void SetCurrentVertexDescriptor( MTLVertexDescriptor* vertexDescriptor, uint8_t vertexStreamMask, size_t baseHash );
 
 		void ClearAttachment( MTLClearColor *clearColor, float *clearDepth, uint32_t *clearStencil, uint32_t attachmentIndex );
 
@@ -484,6 +484,8 @@ namespace TrinityALImpl
 		VertexStream                  m_boundVertexStreams[METAL_VERTEX_STREAM_BUFFER_COUNT];
 		MTLVertexDescriptor          *m_currentVertexDescriptor;
 		uint8_t                       m_currentVertexStreamMask;
+        size_t m_currentVertexDescriptorBaseHash;
+
 		
 		MetalRenderPassHint m_pendingRenderPassHint;
 		bool m_hasPendingRenderPassHint;
