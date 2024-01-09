@@ -34,6 +34,7 @@ MetalWorkQueue::MetalWorkQueue()
     , m_isPrimary( true )
 	, m_dirtyRenderEncoderState( METAL_RENDERENCODERDIRTYSTATE_ALL )
     , m_numCommands( 0 )
+    , m_encoderIndex( 1 )
 	, m_encoderInUse( false )
 	, m_encoderEnded( false )
 	, m_encoderHasWork( false )
@@ -851,6 +852,8 @@ void MetalWorkQueue::SetCurrentEncoder( MetalEncoderType encoderType, NSString *
 
 		// We should remove any clear state just processed by this render encoder
 		ResetClearState();
+        
+        ++m_encoderIndex;
 
 		break;
 	}
@@ -874,6 +877,8 @@ void MetalWorkQueue::SetCurrentEncoder( MetalEncoderType encoderType, NSString *
 		m_dirtyBuffersMask[COMPUTE_SHADER] = ~0u;
 		m_dirtyTexturesMask[COMPUTE_SHADER] = ~0u;
 		m_dirtySamplersMask[COMPUTE_SHADER] = ~0u;
+        
+        ++m_encoderIndex;
 
 		break;
 	}
@@ -882,6 +887,8 @@ void MetalWorkQueue::SetCurrentEncoder( MetalEncoderType encoderType, NSString *
 		m_currentBlitEncoder = [m_commandBuffer blitCommandEncoder];
 		m_currentBlitEncoder.label = encoderLabel ? encoderLabel : @"Standard blit encoder";
 		METAL_LOG(@"Log:SetCurrentEncoder(Blit) %@", m_currentBlitEncoder.label);
+        
+        ++m_encoderIndex;
 		break;
 	}
 	case MTLENCODERTYPE_NONE:
@@ -3226,6 +3233,11 @@ void MetalWorkQueue::FlushCachedVertexDescriptors()
         desc.layout->AddVertexDescriptor( desc.inputHash, desc.descriptor, desc.streamMask, desc.needsDummyStream );
     }
     m_cachedVertexLayouts.clear();
+}
+
+uint64_t MetalWorkQueue::GetCurrentEncoderIndex() const
+{
+    return m_encoderIndex;
 }
 
 } // TrinityALImpl

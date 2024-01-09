@@ -75,11 +75,14 @@ namespace TrinityALImpl
         uint32_t m_srvHeapIndices[2];
 		std::vector<id<MTLTexture>>  m_mtlTextureUAV;
         std::vector<uint32_t> m_uavHeapIndices;
+        
+        uint64_t m_usedInEncoder;
 
 		MetalContext   *m_metalContext;
 		std::string m_name;
 		Tr2MemoryCounterAL m_memory;
 		bool            m_wrappedTexture;
+        friend class ::Tr2RenderContextAL;
 	};
 }
 

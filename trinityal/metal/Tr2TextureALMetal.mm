@@ -20,6 +20,7 @@ namespace TrinityALImpl
 		, m_mtlTexture( nil )
 		, m_mtlTextureSRGBView( nil )
 		, m_metalContext( nullptr )
+        , m_usedInEncoder( 0 )
 		, m_wrappedTexture( false )
 	{
             m_srvHeapIndices[0] = m_srvHeapIndices[1] = 0xffffffff;
@@ -281,7 +282,8 @@ namespace TrinityALImpl
 	}
 
 	void Tr2TextureAL::Destroy()
-{
+    {
+        m_usedInEncoder = 0;
         if( m_mtlTexture )
         {
             m_metalContext->DeallocateHeapIndex( m_srvHeapIndices[0] );

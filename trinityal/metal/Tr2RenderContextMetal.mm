@@ -1307,25 +1307,28 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
     }
     if( @available( macOS 13.0, * ) )
     {
-        std::vector<id<MTLTexture>> textures;
+        auto encoder = m_workQueue->GetRenderEncoder();
+        auto encoderIndex = m_workQueue->GetCurrentEncoderIndex();
+
+        std::vector<__unsafe_unretained id<MTLTexture>> textures;
         textures.reserve( resources.m_textures.size() * 2 );
         for( auto& tex : resources.m_textures )
         {
-            if( tex->IsValid() )
+            if( tex->IsValid() && tex->m_usedInEncoder != encoderIndex )
             {
-                auto t0 = tex->GetMetalTexture();
+                tex->m_usedInEncoder = encoderIndex;
+                __unsafe_unretained auto t0 = tex->m_mtlTexture;
                 if( t0 )
                 {
                     textures.push_back( t0 );
                 }
-                auto t1 = tex->GetSRGBViewMetalTexture();
+                __unsafe_unretained auto t1 = tex->m_mtlTextureSRGBView;
                 if( t1 && t1 != t0 )
                 {
                     textures.push_back( t1 );
                 }
             }
         }
-        auto encoder = m_workQueue->GetRenderEncoder();
         [encoder useResources:textures.data()
                         count:NSUInteger( textures.size())
                         usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite : MTLResourceUsageRead];
