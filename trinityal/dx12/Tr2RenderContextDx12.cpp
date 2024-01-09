@@ -1547,7 +1547,7 @@ void Tr2RenderContextAL::PushGpuMarker( const char* marker )
 	if( g_requestDebugMarkers )
 	{
 		// + 1 to include the NULL terminator
-		m_commandList->BeginEvent(1, marker, strlen(marker) + 1);
+		m_commandList->BeginEvent( 1, marker, UINT( strlen( marker ) + 1 ) );
 	}
 }
 

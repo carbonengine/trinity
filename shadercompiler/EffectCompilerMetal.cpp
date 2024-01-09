@@ -3852,7 +3852,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 						CompilerInputStream os( state, ShadingLanguage::MSL );
 						os << MSL{ state.GetTree(), &state.GetSymbolTable() };
-						shaderCacheKey = std::string( os.str(), os.str() + os.pcount() );
+						shaderCacheKey = os.str();
 						state.GetSymbolTable().ResetUsedFlag();
 				}
 
@@ -3909,7 +3909,7 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				std::string patchEntryPoint = entryPoint;
 				state.ResetPragmaUsage();
 
-				std::string code( os.str(), os.str() + os.pcount() );
+				std::string code = os.str();
 
 				std::string stageName = "ps";
 				if( stage.type == VERTEX_STAGE )
