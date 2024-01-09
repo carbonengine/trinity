@@ -2658,7 +2658,7 @@ namespace
 			case OP_UINT:
 			case OP_INT:
 				result.type = ANNOTATION_TYPE_INT;
-				result.intValue = ParseNumber( annotation.value.stringValue.start, annotation.value.stringValue.end );
+				result.intValue = int32_t( ParseNumber( annotation.value.stringValue.start, annotation.value.stringValue.end ) );
 				return true;
 
 			case OP_BOOL:
@@ -2809,7 +2809,7 @@ namespace
 				int32_t* intValues = (int32_t*)outDefaultValues;
 				for ( size_t i = 0; i < count; ++i )
 				{
-					*intValues++ = value[i].intValue;
+					*intValues++ = int32_t( value[i].intValue );
 				}
 			}
 			else
@@ -3594,7 +3594,7 @@ namespace
 #ifdef _WIN32
 					sprintf_s( name, 32, "MatrixRow%dLH<%d>", matrixType.height, matrixType.width );
 #else
-					sprintf( name, "MatrixRow%dLH<%d>", matrixType.height, matrixType.width );
+					snprintf( name, 32, "MatrixRow%dLH<%d>", matrixType.height, matrixType.width );
 #endif
 					ScannerToken callToken = ScannerToken::ID( MakeInlineString( name ), node->GetLocation() );
 					node->SetToken( &callToken );

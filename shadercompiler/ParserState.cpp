@@ -879,21 +879,21 @@ char* ParserState::AllocateString( size_t size )
 	return string;
 }
 
-void ParserState::ShowMessage( const FileLocation& location, ErrorCode errorCode, ... )
+void ParserState::ShowMessage( const FileLocation& location, int32_t errorCode, ... )
 {
 	va_list args;
 	va_start( args, errorCode );
 	ShowMessageImpl( location, errorCode, args );
 }
 
-void ParserState::ShowMessage( const ScannerToken& token, ErrorCode errorCode, ... )
+void ParserState::ShowMessage( const ScannerToken& token, int32_t errorCode, ... )
 {
 	va_list args;
 	va_start( args, errorCode );
 	ShowMessageImpl( token.fileLocation, errorCode, args );
 }
 
-void ParserState::ShowMessage( ErrorCode errorCode, ... )
+void ParserState::ShowMessage( int32_t errorCode, ... )
 {
 	va_list args;
 	va_start( args, errorCode );
@@ -1036,7 +1036,7 @@ const std::map<const char*, Symbol*>& ParserState::GetDX9Functions()
 	return m_dx9Functions;
 }
 
-void ParserState::ShowMessageImpl( const FileLocation& location, ErrorCode errorCode, va_list args )
+void ParserState::ShowMessageImpl( const FileLocation& location, int32_t errorCode, va_list args )
 {
 	static const char* errorMessages[] = {
 		"unexpected token \'%s\'",

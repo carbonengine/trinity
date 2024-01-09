@@ -592,7 +592,7 @@ std:
 				{
 					--c;
 				}
-				state.GetCurrentLocation().lineNumber = ParseNumber( c, end + 1 ) - 1;
+				state.GetCurrentLocation().lineNumber = unsigned( ParseNumber( c, end + 1 ) - 1 );
 			}
 			continue;
 		}
@@ -607,7 +607,7 @@ std:
 				{
 					--c;
 				}
-				state.GetCurrentLocation().lineNumber = ParseNumber( c, YYCURSOR ) - 1;
+				state.GetCurrentLocation().lineNumber = unsigned( ParseNumber( c, YYCURSOR ) - 1 );
 			}
 			continue;
 		}
@@ -800,6 +800,8 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 		RETURN( OP_FLOAT_CONST );
 	case PPT_STRING_CONST:
 		RETURN( OP_STRING_CONST );
+    default:
+        break;
 	}
 
 	while( YYCURSOR < YYLIMIT )
