@@ -588,6 +588,25 @@ ALResult Tr2RenderContextAL::SetConstants(
 	return S_OK;
 }
 
+uint64_t Tr2RenderContextAL::UploadConstants( const void* data, size_t size )
+{
+    TrinityALImpl::ConstantBufferToken token;
+    token.frame = 0;
+    token.offset = 0;
+    GetMetalWorkQueue()->UploadConstants( data, uint32_t( size ), token );
+    return token.offset;
+}
+
+uint64_t Tr2RenderContextAL::UploadConstants( const Tr2ConstantBufferAL& buffer )
+{
+    if( buffer.m_buffer->m_buffer )
+    {
+        GetMetalWorkQueue()->UploadConstants( buffer.m_buffer->m_buffer, buffer.m_buffer->m_size, buffer.m_buffer->m_token );
+        return buffer.m_buffer->m_token.offset;
+    }
+    return 0;
+}
+
 void Tr2RenderContextAL::SetReadOnlyDepth( bool enable )
 {
 	if( m_readOnlyDepth == enable )
