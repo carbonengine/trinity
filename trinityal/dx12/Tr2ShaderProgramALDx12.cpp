@@ -197,12 +197,12 @@ namespace TrinityALImpl
 
 		for( size_t i = 0; i < count; ++i )
 		{
-			AddCbvParameters( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, ranges, true );
+			AddCbvParameters( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, true );
 		}
 
 		for( size_t i = 0; i < count; ++i )
 		{
-			AddCbvParameters( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, ranges, false );
+			AddCbvParameters( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, false );
 		}
 
 		m_srvUavParameterOffset = uint32_t( parameters.size() );
@@ -460,7 +460,6 @@ namespace TrinityALImpl
 		ShaderType shaderType,
 		const Tr2ShaderSignatureAL& signature,
 		std::vector<D3D12_ROOT_PARAMETER1>& parameters,
-		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE1>>& ranges,
 		bool dynamicBuffers )
 	{
 		for( auto& reg : signature.registers )

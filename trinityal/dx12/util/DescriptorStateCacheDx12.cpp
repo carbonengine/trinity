@@ -13,7 +13,7 @@
 #include "../Tr2PrimaryRenderContextDx12.h"
 
 /** */
-DescriptorStateCache::DescriptorStateCache(CComPtr<ID3D12Device> device, Tr2PrimaryRenderContextAL* context, uint32_t pageSizeSampler, uint32_t pageSizeUploadDefault, uint32_t pageSizeUploadSpill) :
+DescriptorStateCache::DescriptorStateCache( CComPtr<ID3D12Device> device, Tr2PrimaryRenderContextAL* context, uint32_t pageSizeSampler ) :
 	m_allocatorSampler(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, pageSizeSampler),
 	m_primaryContext(context),
 	m_device(device),

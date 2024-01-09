@@ -36,14 +36,6 @@ namespace
 
 		DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE = 1024,
 
-		/*
-		* NOTE: The cache will allocate additional constant buffer pages if it runs out of room but these will be freed
-		*		once they are no longer used to ensure the upload heap usage is kept to a minimum. A warning is output
-		*		when this occurs, if it happens a lot then consider increasing the default page size.
-		*/
-		DESCRIPTOR_CACHE_UPLOAD_DEFAULT_PAGE_SIZE = 4 * 1024 * 1024,
-		DESCRIPTOR_CACHE_UPLOAD_SPILL_PAGE_SIZE = 2 * 1024 * 1024,
-
 	};
 
 
@@ -155,9 +147,7 @@ ALResult Tr2RenderContextAL::CreateDx12( ID3D12CommandAllocator* commandAllocato
 		m_descriptorCache.push_back( std::make_shared<DescriptorStateCache>( 
 			renderContext.m_device, 
 			&renderContext,
-			DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE, 
-			DESCRIPTOR_CACHE_UPLOAD_DEFAULT_PAGE_SIZE, 
-			DESCRIPTOR_CACHE_UPLOAD_SPILL_PAGE_SIZE ) );
+			DESCRIPTOR_CACHE_SAMPLER_PAGE_SIZE ) );
 	}
 	m_ownerDevice = &renderContext;
 	return S_OK;

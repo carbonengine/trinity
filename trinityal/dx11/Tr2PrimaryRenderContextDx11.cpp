@@ -511,7 +511,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateBackBuffers( const Tr2PresentParameter
 
 	SetRenderTarget( m_defaultBackBuffer );
 
-	m_dirtyFlag.flags = 0xffffffff;
+	m_dirtyFlag.mask = 0xffffffff;
 
 	return S_OK;
 }

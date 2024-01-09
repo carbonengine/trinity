@@ -37,7 +37,7 @@ namespace
 		}
 	}
 
-	ALResult Create1D( CComPtr<ID3D11Resource>& texture, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
+	ALResult Create1D( CComPtr<ID3D11Resource>& texture, const Tr2BitmapDimensions& desc, const Tr2MsaaDesc&, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		D3D11_TEXTURE1D_DESC desc1D;
 		memset( &desc1D, 0, sizeof( desc1D ) );
