@@ -128,7 +128,7 @@ ALResult Tr2PipelineStatsQueryAL::End( Tr2RenderContextAL& renderContext )
 	return S_OK;
 }
 
-ALResult Tr2PipelineStatsQueryAL::GetStats( Tr2PipelineStatsDataAL& data, Tr2RenderContextAL& renderContext )
+ALResult Tr2PipelineStatsQueryAL::GetStats( Tr2PipelineStatsDataAL& data, Tr2RenderContextAL& )
 {
 	if( !m_result )
 	{
@@ -147,17 +147,17 @@ ALResult Tr2PipelineStatsQueryAL::GetStats( Tr2PipelineStatsDataAL& data, Tr2Ren
 	return S_OK;
 }
 
-size_t Tr2PipelineStatsQueryAL::GetValueCount( const Tr2PipelineStatsDataAL& data )
+size_t Tr2PipelineStatsQueryAL::GetValueCount( const Tr2PipelineStatsDataAL& )
 {
 	return sizeof( s_fields ) / sizeof( s_fields[0] );
 }
 
-const char* Tr2PipelineStatsQueryAL::GetLabel( const Tr2PipelineStatsDataAL& data, size_t index )
+const char* Tr2PipelineStatsQueryAL::GetLabel( const Tr2PipelineStatsDataAL&, size_t index )
 {
 	return s_fields[index].label;
 }
 
-const char* Tr2PipelineStatsQueryAL::GetDescription( const Tr2PipelineStatsDataAL& data, size_t index )
+const char* Tr2PipelineStatsQueryAL::GetDescription( const Tr2PipelineStatsDataAL&, size_t index )
 {
 	return s_fields[index].description;
 }

@@ -26,10 +26,10 @@ struct Tr2PresentParametersAL;
 class Tr2BindlessResourcesAL
 {
 public:
-	void Add( const Tr2TextureAL& texture )
+	void Add( const Tr2TextureAL& )
 	{
 	}
-	void Add( const Tr2BindlessResourcesAL& resources )
+	void Add( const Tr2BindlessResourcesAL& )
 	{
 	}
 	void Clear()
