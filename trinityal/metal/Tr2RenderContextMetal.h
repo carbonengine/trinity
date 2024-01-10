@@ -238,6 +238,9 @@ public:
 
     bool SupportsBindlessTextures() const;
 
+	uint64_t GetRecordingFrameNumber() const;
+	uint64_t GetRenderedFrameNumber() const;
+
 protected:
 	bool                               m_isValid;
 

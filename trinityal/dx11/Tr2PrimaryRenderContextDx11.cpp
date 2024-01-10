@@ -36,6 +36,8 @@ namespace Tr2RenderContextImpl {
 
 Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 	: m_usingEXDevice( false ), 
+	m_recodingFrame( 1 ),
+	m_renderedFrame( 0 ),
 	m_vsyncInterval( 0 ), 
 	m_adapterVendorId( 0 ), 
 	m_deviceStatisticsQueryEmpty( false )
@@ -61,6 +63,8 @@ void Tr2PrimaryRenderContextAL::Destroy()
 
 	m_memory.Reset();
 
+	m_frameFences.clear();
+
 	m_defaultBackBuffer.m_texture->Destroy();
 
 	m_usingEXDevice		= false;
@@ -81,6 +85,9 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	m_zeroVertexBuffer = Tr2BufferAL();
 
 	m_adapterVendorId = 0;
+
+	m_recodingFrame = 0;
+	m_renderedFrame = 0;
 }
 
 namespace {
@@ -567,6 +574,33 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 		}
 	}
 
+	{
+		bool foundFence = false;
+		for( auto& fence : m_frameFences )
+		{
+			if( !fence.recordedFrame )
+			{
+				m_context->End( fence.query );
+				fence.recordedFrame = m_recodingFrame;
+				foundFence = true;
+				break;
+			}
+		}
+		if( !foundFence )
+		{
+			FrameFence fence;
+			fence.recordedFrame = m_recodingFrame;
+
+			D3D11_QUERY_DESC desc;
+			desc.Query = D3D11_QUERY_EVENT;
+			desc.MiscFlags = 0;
+			m_d3dDevice11->CreateQuery( &desc, &fence.query );
+			m_context->End( fence.query );
+
+			m_frameFences.push_back( fence );
+		}
+	}
+
 	if( m_swapChain )
 	{
 		m_swapChain->Present( m_vsyncInterval, 0 );
@@ -574,6 +608,20 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 		m_context->Flush();
 	}
 
+	++m_recodingFrame;
+
+	for( auto& fence : m_frameFences )
+	{
+		if( fence.recordedFrame )
+		{
+			HRESULT hr = m_context->GetData( fence.query, nullptr, 0, D3D11_ASYNC_GETDATA_DONOTFLUSH );
+			if( hr != S_FALSE )
+			{
+				m_renderedFrame = std::max( m_renderedFrame, fence.recordedFrame );
+				fence.recordedFrame = 0;
+			}
+		}
+	}
 
 	CComQIPtr<ID3D11InfoQueue> queue( m_d3dDevice11 );
 	if( queue )
@@ -631,5 +679,16 @@ bool Tr2PrimaryRenderContextAL::SupportsBindlessTextures() const
 {
 	return false;
 }
+
+uint64_t Tr2PrimaryRenderContextAL::GetRecordingFrameNumber() const
+{
+	return m_recodingFrame;
+}
+
+uint64_t Tr2PrimaryRenderContextAL::GetRenderedFrameNumber() const
+{
+	return m_renderedFrame;
+}
+
 
 #endif	//DX11?

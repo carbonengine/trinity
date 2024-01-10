@@ -552,11 +552,7 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 			s_buffer.Create( 1024 * 1024 );
 		}
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
-		s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetCurrentFrameIndexDx12(), primaryContext->GetPrimaryRenderContext().GetCompletedFrameIndexDx12() );
-#else
-        s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetMetalContext()->GetRecordingFrameNumber(), primaryContext->GetPrimaryRenderContext().GetMetalContext()->GetRenderedFrameNumber() );
-#endif
+		s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetRecordingFrameNumber(), primaryContext->GetPrimaryRenderContext().GetRenderedFrameNumber() );
 
 		struct Bin
 		{

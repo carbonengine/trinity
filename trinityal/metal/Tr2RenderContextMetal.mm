@@ -1369,6 +1369,15 @@ bool Tr2RenderContextAL::SupportsBindlessTextures() const
     return false;
 }
 
+uint64_t Tr2RenderContextAL::GetRecordingFrameNumber() const
+{
+	return m_metalContext->GetRecordingFrameNumber();
+}
+
+uint64_t Tr2RenderContextAL::GetRenderedFrameNumber() const
+{
+	return m_metalContext->GetRenderedFrameNumber();
+}
 
 
 

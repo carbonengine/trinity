@@ -143,7 +143,7 @@ void DescriptorStateCache::SetSamplers(uint32_t startSlot, uint32_t numViews, st
 /** Set a constantbuffer */
 void DescriptorStateCache::SetConstantBuffers(Tr2RenderContextEnum::ShaderType shaderStage, uint32_t slot, const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer)
 {
-	uint64_t frameNr = m_primaryContext->GetCompletedFrameIndexDx12();
+	uint64_t frameNr = m_primaryContext->GetRenderedFrameNumber();
 	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
 	
 	// CB isn't resident
@@ -168,7 +168,7 @@ void DescriptorStateCache::SetConstantBuffers(Tr2RenderContextEnum::ShaderType s
 
 D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer )
 {
-	uint64_t frameNr = m_primaryContext->GetCompletedFrameIndexDx12();
+	uint64_t frameNr = m_primaryContext->GetRenderedFrameNumber();
 	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
 
 	// CB isn't resident

@@ -1036,7 +1036,7 @@ namespace TrinityALImpl
 		m_cpuUsage = cpuUsage;
 		if( HasFlag( cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) && scratch )
 		{
-			WriteScratch s = { scratch, writeScratchSize, renderContext.GetCurrentFrameIndexDx12() };
+			WriteScratch s = { scratch, writeScratchSize, renderContext.GetRecordingFrameNumber() };
 			m_writeScratches.push_back( s );
 		}
 
@@ -1363,7 +1363,7 @@ namespace TrinityALImpl
 		uint32_t myPitch = 0;
 		GetRegionSize( region, myPitch, requiredSize );
 
-		auto completed = m_owner->GetCompletedFrameIndexDx12();
+		auto completed = m_owner->GetRenderedFrameNumber();
 		m_mappedScratch = m_writeScratches.end();
 		for( auto it = begin( m_writeScratches ); it != end( m_writeScratches ); ++it )
 		{
@@ -1387,7 +1387,7 @@ namespace TrinityALImpl
 				nullptr,
 				IID_PPV_ARGS( &scratch.scratch ) ) );
 			scratch.size = requiredSize;
-			scratch.frameIndex = m_owner->GetCurrentFrameIndexDx12();
+			scratch.frameIndex = m_owner->GetRecordingFrameNumber();
 			m_writeScratches.push_back( scratch );
 			m_mappedScratch = m_writeScratches.begin() + ( m_writeScratches.size() - 1 );
 		}
@@ -1454,7 +1454,7 @@ namespace TrinityALImpl
 		renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( texture, D3D12_RESOURCE_STATE_COPY_DEST, m_defaultState ) );
 		FlushBarriersMaybe( *this, renderContext );
 
-		m_mappedScratch->frameIndex = m_owner->GetCurrentFrameIndexDx12();
+		m_mappedScratch->frameIndex = m_owner->GetRecordingFrameNumber();
 
 		m_mappedRegion = Tr2TextureSubresource();
 		m_mappedScratch = m_writeScratches.end();

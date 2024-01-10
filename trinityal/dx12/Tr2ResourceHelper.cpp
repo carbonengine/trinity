@@ -70,7 +70,7 @@ namespace TrinityALImpl
 				}
 				else
 				{
-					Resource r = { scratch, renderContext.GetCurrentFrameIndexDx12(), nullptr, 0 };
+					Resource r = { scratch, renderContext.GetRecordingFrameNumber(), nullptr, 0 };
 					D3D12_RANGE readRange = { 0, 0 };
 					CR_RETURN_HR( scratch->Map( 0, &readRange, &r.cpuAddress ) );
 
@@ -78,7 +78,7 @@ namespace TrinityALImpl
 				}
 			}
 			m_gpuResource.resource = buffer;
-			m_gpuResource.frameIndex = renderContext.GetCurrentFrameIndexDx12();
+			m_gpuResource.frameIndex = renderContext.GetRecordingFrameNumber();
 			m_gpuResource.cpuAddress = nullptr;
 			m_gpuResource.gpuAddress = buffer->GetGPUVirtualAddress();
 		}
@@ -94,7 +94,7 @@ namespace TrinityALImpl
 				state,
 				nullptr,
 				IID_PPV_ARGS( &buffer ) ) );
-			Resource r = { buffer, renderContext.GetCurrentFrameIndexDx12(), nullptr, buffer->GetGPUVirtualAddress() };
+			Resource r = { buffer, renderContext.GetRecordingFrameNumber(), nullptr, buffer->GetGPUVirtualAddress() };
 			D3D12_RANGE readRange = { 0, 0 };
 			CR_RETURN_HR( buffer->Map( 0, &readRange, &r.cpuAddress ) );
 			if( initialDataCount )
@@ -141,7 +141,7 @@ namespace TrinityALImpl
 		D3D12_RANGE readRange = { 0, 0 };
 		CR_RETURN_HR( buffer->Map( 0, &readRange, &resource.cpuAddress ) );
 		resource.resource = buffer;
-		resource.frameIndex = renderContext.GetCurrentFrameIndexDx12();
+		resource.frameIndex = renderContext.GetRecordingFrameNumber();
 		resource.gpuAddress = buffer->GetGPUVirtualAddress();
 		if( !m_name.empty() )
 		{
@@ -158,7 +158,7 @@ namespace TrinityALImpl
 			{
 				if( it->resource == m_gpuResource.resource )
 				{
-					it->frameIndex = renderContext.GetCurrentFrameIndexDx12();
+					it->frameIndex = renderContext.GetRecordingFrameNumber();
 					break;
 				}
 			}
@@ -174,13 +174,13 @@ namespace TrinityALImpl
 		}
 		else
 		{
-			auto completed = renderContext.GetCompletedFrameIndexDx12();
+			auto completed = renderContext.GetRenderedFrameNumber();
 
 			for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
 			{
 				if( completed >= it->frameIndex )
 				{
-					it->frameIndex = renderContext.GetCurrentFrameIndexDx12();
+					it->frameIndex = renderContext.GetRecordingFrameNumber();
 					m_mapped = *it;
 					data = m_mapped.cpuAddress;
 					return S_OK;

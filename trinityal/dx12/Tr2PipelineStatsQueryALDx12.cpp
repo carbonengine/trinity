@@ -124,7 +124,7 @@ ALResult Tr2PipelineStatsQueryAL::End( Tr2RenderContextAL& renderContext )
 	}
 	renderContext.m_commandList->EndQuery( m_query, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0 );
 	renderContext.m_commandList->ResolveQueryData( m_query, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0, 1, m_result, 0 );
-	m_frameIndex = m_owner->GetCurrentFrameIndexDx12();
+	m_frameIndex = m_owner->GetRecordingFrameNumber();
 	return S_OK;
 }
 
@@ -134,7 +134,7 @@ ALResult Tr2PipelineStatsQueryAL::GetStats( Tr2PipelineStatsDataAL& data, Tr2Ren
 	{
 		return E_INVALIDCALL;
 	}
-	if( m_owner->GetCompletedFrameIndexDx12() < m_frameIndex )
+	if( m_owner->GetRenderedFrameNumber() < m_frameIndex )
 	{
 		return S_FALSE;
 	}
