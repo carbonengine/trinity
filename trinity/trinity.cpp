@@ -113,6 +113,9 @@ const char* InitializeForPython()
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
 extern bool g_gpuTimersEnabled;
+bool g_bindlessRenderingEnabled = true;
+TRI_REGISTER_SETTING( "bindlessRenderingEnabled", g_bindlessRenderingEnabled );
+extern bool g_gdrEnabled;
 
 #if TRINITY_PLATFORM == TRINITY_METAL
 extern bool g_enableMetalCounters;
@@ -179,6 +182,18 @@ void InitializeTrinity()
 		g_gpuTimersEnabled = timers != L"0";
 	}
 
+	auto bindlessRendering = BeOS->GetStartupArgValue( L"bindlessRendering" );
+	if( !bindlessRendering.empty() )
+	{
+		g_bindlessRenderingEnabled = bindlessRendering != L"0";
+	}
+
+	auto gdpr = BeOS->GetStartupArgValue( L"gdpr" );
+	if( !gdpr.empty() )
+	{
+		g_gdrEnabled = gdpr != L"0";
+	}
+
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );
 
 	Tr2FontManager::Initialize();
@@ -187,12 +202,6 @@ void InitializeTrinity()
 
 	// Make sure noise table is initialized before we start calling noise functions from multiple threads
 	PerlinNoise1D( 0.0, 1.0, 1.0, 1 );
-
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
-	std::vector<Tr2ShaderOption> changes;
-	changes.push_back( { BlueSharedString("BINDLESS_RENDERING"), BlueSharedString("BINDLESS_RENDERING_ENABLED") } );
-	ModifyGlobalEffectOptions( changes );
-#endif
 }
 
 static void StartDLL()

@@ -70,6 +70,8 @@ public:
 	void AddShaderBinaryToCrashTracker(const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath);
 	void UnRegisterFromCrashTracker(ID3D12GraphicsCommandList2* commandList);
 
+	bool SupportsBindlessTextures() const;
+
 public:
 	Tr2TextureAL m_defaultBackBuffer;
 

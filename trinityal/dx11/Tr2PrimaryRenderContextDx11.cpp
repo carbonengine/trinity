@@ -627,4 +627,9 @@ const Tr2CapsAL& Tr2PrimaryRenderContextAL::GetCaps() const
 	return m_caps;
 }
 
+bool Tr2PrimaryRenderContextAL::SupportsBindlessTextures() const
+{
+	return false;
+}
+
 #endif	//DX11?

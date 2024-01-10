@@ -38,6 +38,8 @@ public:
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
 
+	bool SupportsBindlessTextures() const;
+
 public:
 	bool m_usingEXDevice;
 

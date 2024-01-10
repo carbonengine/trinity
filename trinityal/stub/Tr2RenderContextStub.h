@@ -241,6 +241,8 @@ public:
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
 
+	bool SupportsBindlessTextures() const;
+
 private:
 	enum { MAX_RENDER_TARGET = 8 };
 	Tr2TextureAL m_boundRenderTarget[MAX_RENDER_TARGET];

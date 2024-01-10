@@ -1207,4 +1207,9 @@ std::shared_ptr<UnorderedAccessViewDx12> Tr2PrimaryRenderContextAL::GetNullUavDx
 	return m_nullUav[RegisterTypeIndex( type )];
 }
 
+bool Tr2PrimaryRenderContextAL::SupportsBindlessTextures() const
+{
+	return true;
+}
+
 #endif
