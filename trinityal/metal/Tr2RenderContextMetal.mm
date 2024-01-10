@@ -1356,6 +1356,19 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
 	return S_OK;
 }
 
+bool Tr2RenderContextAL::SupportsBindlessTextures() const
+{
+    if( @available( macOS 13.0, * ) )
+    {
+        if( !m_metalContext || !m_metalContext->GetDevice() )
+        {
+            return false;
+        }
+        return m_metalContext->GetDevice().argumentBuffersSupport == MTLArgumentBuffersTier2;
+    }
+    return false;
+}
+
 
 
 

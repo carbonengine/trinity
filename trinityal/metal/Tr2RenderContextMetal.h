@@ -236,6 +236,8 @@ public:
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
 
+    bool SupportsBindlessTextures() const;
+
 protected:
 	bool                               m_isValid;
 
