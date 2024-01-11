@@ -67,12 +67,16 @@ private:
 	Quaternion m_currentValue;
 	float m_timeScale;
 	float m_randomConstant;
-	mutable float m_time;
-
-	float m_input1;
-	float m_input2;
-	float m_input3;
-	float m_input4;
+    
+    struct Arguments
+    {
+        mutable float m_time = 0;
+        
+        float m_input1 = 0;
+        float m_input2 = 0;
+        float m_input3 = 0;
+        float m_input4 = 0;
+    } m_arguments;
 };
 
 TYPEDEF_BLUECLASS( Tr2CurveEulerRotationExpression );

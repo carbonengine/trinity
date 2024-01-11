@@ -294,6 +294,8 @@ ALResult Tr2MainWindow::SetState( bool adjustWindow, const Tr2MainWindowState::S
 	{
 		AdjustWindow( state );
 	}
+#else
+    (void)justCreatedWindow;
 #endif
 
 	m_isResizing = false;
