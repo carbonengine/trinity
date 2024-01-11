@@ -28,8 +28,8 @@ bool Type::FromToken( const ScannerToken& token )
 	// TODO: check if token.type is a type name
 	symbol = nullptr;
 	builtInType = token.type;
-	width = std::max( token.intValue & 0xf, 1L );
-	height = std::max( token.intValue >> 8, 1L );
+	width = int( std::max( token.intValue & 0xf, 1L ) );
+	height = int( std::max( token.intValue >> 8, 1L ) );
 	templateParameter = nullptr;
 	modifier = 0;
 	storageClass = 0;

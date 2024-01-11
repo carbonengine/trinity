@@ -14,7 +14,7 @@ const char* GetStringForUsageCode( int usageCode )
 		"BLENDWEIGHT"
 	};
 
-	assert( 0 <= usageCode && usageCode < sizeof( str ) / sizeof( *str ) );
+	assert( 0 <= usageCode && usageCode < int( sizeof( str ) / sizeof( *str ) ) );
 	return str[ usageCode ];
 }
 
