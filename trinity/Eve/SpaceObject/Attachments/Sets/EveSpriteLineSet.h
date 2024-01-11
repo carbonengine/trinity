@@ -16,7 +16,6 @@
 BLUE_DECLARE( EveSpriteLineSet );
 BLUE_DECLARE( Tr2QuadRenderer );
 BLUE_DECLARE( Tr2Effect );
-BLUE_DECLARE_VECTOR( Tr2Light );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -41,6 +40,7 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength );
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount );
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
@@ -51,7 +51,7 @@ public:
 	void Setup( Tr2EffectPtr effect, bool isSkinned );
 	void Add( EveSpriteLineSetItemPtr newItem );
 
-	void AddLight( Tr2Light* light ) override;
+	void AddLight( const EveSpriteLight& light );
 	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
 
 	// rebuild resources
@@ -65,7 +65,8 @@ private:
 	bool m_display;
 	bool m_skinned;
 
-	PTr2LightVector m_lights;
+	std::vector<EveSpriteLight> m_lights;
+	float m_activationStrength;
 
 	// shader
 	unsigned int m_effectHash;

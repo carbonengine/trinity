@@ -487,19 +487,20 @@ EveSOFDataHullAnimation::EveSOFDataHullAnimation( IRoot* lockobj ) :
 EveSOFDataPointLightAttachment::EveSOFDataPointLightAttachment( IRoot* lockobj ) :
 	m_saturation( 1.0f ),
 	m_intensity( 1.0f ),
-	m_offset( 0.0f, 0.0f, 0.0f ),
+	m_translation( 0.0f, 0.0f, 0.0f ),
 	m_innerScaleMultiplier( 1.0f ),
 	m_outerScaleMultiplier( 2.0f ),
 	m_noiseAmplitude( 0.0 ),
 	m_noiseFrequency( 1.0 ),
 	m_noiseOctaves( 1 ),
-	m_texturePath( L"" )
+	m_lightProfilePath( L"" ),
+	m_rotation( Quaternion( 0, 0, 0, 1 ) )
 {}
 
 EveSOFDataSpotLightAttachment::EveSOFDataSpotLightAttachment( IRoot* lockobj ) :
 	m_saturation( 1.0f ),
 	m_intensity( 1.0f ),
-	m_offset( 0.0f, 0.0f, 0.0f ),
+	m_translation( 0.0f, 0.0f, 0.0f ),
 	m_innerAngleMultiplier( 0.5f ),
 	m_outerAngleMultiplier( 1.0f ),
 	m_innerScaleMultiplier( 1.0f ),
@@ -507,7 +508,7 @@ EveSOFDataSpotLightAttachment::EveSOFDataSpotLightAttachment( IRoot* lockobj ) :
 	m_noiseAmplitude( 0.0 ),
 	m_noiseFrequency( 1.0 ),
 	m_noiseOctaves( 1 ),
-	m_texturePath( L"" )
+	m_lightProfilePath( L"" )
 {}
 
 EveSOFDataHullSpotlightSet::EveSOFDataHullSpotlightSet( IRoot* lockobj ) :

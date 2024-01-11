@@ -13,6 +13,8 @@
 #include "Tr2QuadRenderer.h"
 #include "Tr2PickingHelperBatch.h"
 #include "Tr2DebugRenderer.h"
+#include <TriMath.h>
+#include "Resources/Tr2LightProfileRes.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -59,18 +61,37 @@ const int SPRITE_QUAD_COUNT = 2;
 
 }
 
+EveSpotlightLight::EveSpotlightLight() :
+	lightData( LightData() ),
+	index( 0 ),
+	boneMatrix( IdentityMatrix() )
+{
+
+}
+
+EveSpotlightLight::EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring profilePath ) :
+	lightData( lightData ),
+	index( index ),
+	boneMatrix( IdentityMatrix() )
+{
+	if( !profilePath.empty() )
+	{
+		BeResMan->GetResource( profilePath, L"lp", lightProfile );
+	}
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Initialize data members, set everything to invalid/empty
 // --------------------------------------------------------------------------------
 EveSpotlightSet::EveSpotlightSet( IRoot* lockobj ) :
 	PARENTLOCK( m_spotlightItems ),
-	PARENTLOCK( m_lights ),
 	m_display( true ),
 	m_skinned( false ),
 	m_intensity( 1.0f ),
 	m_coneEffectHash( 0 ),
 	m_glowEffectHash( 0 ),
+	m_activationStrength( 0 ),
 	m_coneBuffer( "EveSpotlightSet::m_coneBuffer" ),
 	m_glowBuffer( "EveSpotlightSet::m_glowBuffer" ),
 	m_spotlightData( "EveSpotlightSet::m_spotlightData" )
@@ -127,6 +148,18 @@ bool EveSpotlightSet::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	aabb.Transform( parentTransform );
 
 	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
+}
+
+void EveSpotlightSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength )
+{
+	for( auto& light : m_lights ) 
+	{
+		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
+		{
+			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+		}
+	}
+	m_activationStrength = activationStrength;
 }
 
 // --------------------------------------------------------------------------------------
@@ -422,20 +455,21 @@ void EveSpotlightSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Spotlight Sets" );
 	options.insert( "Spotlight Sets Bounds" );
-	options.insert( "Lights" );
+	options.insert( "Spotlight Sets Lights" );
 }
 
 void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
 	if( renderer.HasOption( GetRawRoot(), "Spotlight Sets" ) )
 	{
+		auto offset = Matrix( XMMatrixRotationX( -XM_PI / 2 ) ) * Matrix( XMMatrixTranslation( 0, 0, 0.5f ) );
 		for( auto it = m_spotlightItems.begin(); it != m_spotlightItems.end(); ++it )
 		{
 			auto& transform = ( *it )->m_transform;
 
 			renderer.DrawCone(
 				*it,
-				Matrix( XMMatrixRotationX( -XM_PI / 2 ) ) * Matrix( XMMatrixTranslation( 0, 0, 0.5f ) ) * transform * parentTransform,
+				offset * transform * parentTransform,
 				0.5f,
 				1.f,
 				10,
@@ -444,7 +478,7 @@ void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 
 			renderer.DrawCone(
 				*it,
-				Matrix( XMMatrixRotationX( -XM_PI / 2 ) ) * Matrix( XMMatrixTranslation( 0, 0, 0.5f ) ) * transform * parentTransform,
+				offset * transform * parentTransform,
 				0.5f,
 				1.f,
 				10,
@@ -465,24 +499,56 @@ void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 			0xff00ff00 );
 	}
 
-	if( renderer.HasOption( this, "Lights" ) )
+	if( renderer.HasOption( this, "Spotlight Sets Lights" ) )
 	{
 		for( auto& l : m_lights )
 		{
-			l->RenderDebugInfo( renderer, parentTransform );
+			Matrix t = RotationMatrix( l.lightData.rotation ) * TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+			Color c = l.lightData.color;
+
+			c.a = 0.2;
+			auto spotlightItem = l.index > m_spotlightItems.size() ? nullptr : m_spotlightItems[l.index];
+
+			renderer.DrawCone(
+				spotlightItem,
+				t,
+				l.lightData.innerRadius,
+				TRI_2PI * l.lightData.outerAngle / 360.f,
+				10,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+			c.a = 0.1;
+			renderer.DrawCone(
+				spotlightItem,
+				t,
+				l.lightData.radius,
+				TRI_2PI * l.lightData.outerAngle / 360.f,
+				10,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
 		}
 	}
 }
 
-void EveSpotlightSet::AddLight( Tr2Light* light )
+void EveSpotlightSet::AddLight( const EveSpotlightLight& light )
 {
-	m_lights.Append( light->GetRawRoot() );
+	m_lights.push_back( light );
 }
 
 void EveSpotlightSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
 {
+	LightFeatures features = LightFeatures();
+	features.parentBrightness = m_activationStrength;
+
 	for( auto& light : m_lights )
 	{
-		light->AddLight( lightManager, parentTransform, 1.0f );
+		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
+
+		auto perLightData = light.lightData.AsPerSpotLightData( light.boneMatrix * parentTransform, features );
+		lightManager.AddLight( perLightData );
 	}
 }

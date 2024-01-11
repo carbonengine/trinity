@@ -720,6 +720,8 @@ void EveSOF::SetupSpriteSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSO
 				// set skinned or unskinned shader
 				spriteSet->SetEffect( m_spriteSetEffect );
 				spriteSet->SetSkinned( spriteSetData->skinned && buildFlags != EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT );
+				uint32_t index = 0;
+
 				for( auto& offset : offsets )
 				{
 					// add all the individual items
@@ -748,18 +750,15 @@ void EveSOF::SetupSpriteSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSO
 
 						if( itemData->light )
 						{
-							auto lightData = itemData->light->AsLightData();
+							auto saturatedColor = Saturate( spriteSetItem->m_color, itemData->light->saturation );
+							auto lightData = itemData->light->AsLightData( saturatedColor, 1.0f);
 							lightData.position += spriteSetItem->m_position;
 							lightData.boneIndex = spriteSetItem->m_boneIndex;
-							lightData.color = Saturate( spriteSetItem->m_color, itemData->light->saturation );
 
-							Tr2PointLightPtr pointLight;
-							pointLight.CreateInstance();
-							pointLight->SetLightData( lightData );
-							pointLight->SetBlinkingBehavior( itemData->blinkRate, itemData->blinkPhase, itemData->minScale, itemData->maxScale );
-							spriteSet->AddLight( pointLight );
+							EveSpriteLight light( lightData, itemData->blinkPhase, itemData->blinkRate, itemData->minScale, itemData->maxScale, index, itemData->light->lightProfilePath );
+							spriteSet->AddLight( light );
 						}
-
+						index++;
 						spriteSet->Add(spriteSetItem);
 					}
 				}
@@ -832,6 +831,7 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 			spotlightSet->SetConeEffect( coneEffect );
 			spotlightSet->SetGlowEffect( glowEffect );
 			spotlightSet->SetSkinned( spotlightSetData.skinned && buildFlags != EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT );
+			uint32_t index = 0;
 
 			for( auto& offset: offsets)
 			{
@@ -878,37 +878,41 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 					TriMatrixTranslate( &spotlightSetItem->m_transform, &transformed, &hullOffset );
 
 					if( ssiit.light ) {
-						auto data = ssiit.light->AsLightData();
-
-						data.boneIndex = ssiit.boneIndex;
-						data.color = Saturate( factionSpotlightData->coneColor, ssiit.light->saturation );
-						
 						Quaternion rotation;
 						Vector3 pos;
 						Vector3 scale;
 						Decompose( scale, rotation, pos, spotlightSetItem->m_transform );
-						
+
 						scale.x = abs( scale.x );
 						scale.y = abs( scale.y );
 						scale.z = abs( scale.z );
 
-						data.innerRadius *= scale.z;
-						data.radius *= scale.z;
+						float innerAngle = 0.0f;
+						float outerAngle = 0.0f;
+						if( scale.z > 0.f ) {
+							innerAngle = 45.0f * atanf( max( scale.x, scale.y ) / scale.z );
+							outerAngle = 45.0f * atanf( max( scale.x, scale.y ) / scale.z );
+						}
+
+						auto saturatedColor = Saturate( spotlightSetItem->m_coneColor, ssiit.light->saturation );
+						auto data = ssiit.light->AsLightData(saturatedColor, scale.z, innerAngle, outerAngle );
+
+						data.boneIndex = ssiit.boneIndex;
 						data.position = (TranslationMatrix(data.position) * RotationMatrix(rotation) * TranslationMatrix(pos)).GetTranslation();
 						data.rotation = rotation;
 						data.brightness *= ssiit.coneIntensity;
 
-						if( scale.z > 0.f ) {
-							data.innerAngle *= 45.0f * atanf( max( scale.x, scale.y ) / scale.z );
-							data.outerAngle *= 45.0f * atanf( max( scale.x, scale.y ) / scale.z );
+						EveSpotlightLight light = EveSpotlightLight();
+						light.lightData = data;
+						light.index = index;
+
+						if( !ssiit.light->lightProfilePath.empty() ) {
+							BeResMan->GetResource( ssiit.light->lightProfilePath, L"lp", light.lightProfile );
 						}
 
-						Tr2SpotLightPtr spotlight;
-						spotlight.CreateInstance();
-						spotlight->SetLightData( data );
-
-						spotlightSet->AddLight( spotlight );
+						spotlightSet->AddLight( light );
 					}
+					index++;
 
 					// add it
 					spotlightSet->AddSpotlightItem( spotlightSetItem );
@@ -963,14 +967,23 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 			auto isSkinned = planeSetData.skinned && buildFlags != EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT;
 			planeEffect->SetEffectPathName( GetPlaneSetEffectPath( planeSetData.usage, isSkinned ) );
 
+			TriTextureParameterPtr imageMap;
+
 			// Select the planeset's data based on the usage
 			switch( planeSetData.usage )
 			{
 			case EveSOFDataHullPlaneSet::USAGE_SPACE_VIDEO:
-				planeEffect->AddResourceTexture2D( BlueSharedString( "ImageMap" ), "dynamic:/inspacevideos" );
+				imageMap.CreateInstance();
+				imageMap->SetParameterName( BlueSharedString( "ImageMap" ) );
+				imageMap->SetResourcePath( "dynamic:/inspacevideos" );
+				planeEffect->AddResource( imageMap );
 				break;
 			case EveSOFDataHullPlaneSet::USAGE_HANGAR_VIDEO:
-				planeEffect->AddResourceTexture2D( BlueSharedString( "ImageMap" ), "dynamic:/hangarvideos" );
+				imageMap.CreateInstance();
+				imageMap->SetParameterName( BlueSharedString( "ImageMap" ) );
+				imageMap->SetResourcePath( "dynamic:/hangarvideos" );
+				planeEffect->AddResource( imageMap );
+
 				// Set the pickbuffer so we can pick the videos in the client
 				planeSet->SetPickBufferID( PICKABLE_HANGARVIEO_BUFFER_ID );
 				break;
@@ -989,7 +1002,8 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 			// finish up shader and set it
 			planeEffect->EndUpdate();
 			planeSet->SetEffect( planeEffect );
-
+			uint32_t index = 0;
+			
 			for( auto& offset : offsets )
 			{
 				// add all individual items
@@ -1033,39 +1047,27 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 					if( psiit.light )
 					{
 						float maxScale = max( psiit.scaling.x, max( psiit.scaling.y, psiit.scaling.z ) );
-						auto lightData = psiit.light->AsLightData();
+						auto saturatedColor = Saturate( planeSetItem->m_color, psiit.light->saturation );
+						auto lightData = psiit.light->AsLightData(saturatedColor, maxScale);
 						lightData.position += planeSetItem->m_position;
-						lightData.boneIndex = planeSetItem->m_boneIndex;
-						lightData.radius *= maxScale;
-						lightData.innerRadius *= maxScale;
-						lightData.color = Saturate( planeSetItem->m_color, psiit.light->saturation );
+						lightData.rotation = Normalize( lightData.rotation * planeSetItem->m_rotation );
 
-						Tr2LightPtr light;
+						lightData.boneIndex = planeSetItem->m_boneIndex;
+
 
 						if( planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_SPACE_VIDEO ) {
-							Tr2TexturedPointLightPtr l;
-							l.CreateInstance();
-							l->SetSaturation( psiit.light->saturation );
-							light = l;
-							lightData.texturePath = std::wstring( L"dynamic:/inspacevideos" );
+							planeSet->SetPrimaryTextureParameter( imageMap );
 						}
 						else if( planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_HANGAR_VIDEO ) {
-							Tr2TexturedPointLightPtr l;
-							l.CreateInstance();
-							l->SetSaturation( psiit.light->saturation );
-							light = l;
-							lightData.texturePath = std::wstring( L"dynamic:/hangarvideos" );
+							planeSet->SetPrimaryTextureParameter( imageMap );
 						}
-						else {
-							Tr2PointLightPtr pointLight;
-							pointLight.CreateInstance();
-							light = pointLight;
-						}
-						light->SetLightData( lightData );
+
+						EvePlaneLight light(lightData, psiit.light->saturation, index, psiit.light->lightProfilePath);
 
 						planeSet->AddLight( light );
 					}
 
+					index++;
 					// add it
 					planeSet->AddPlaneItem( planeSetItem );
 				}
@@ -1112,6 +1114,7 @@ void EveSOF::SetupSpriteLineSets( IEveSpaceObjectAttachmentOwnerPtr obj, const E
 				spriteLineSet.CreateInstance();
 				// set shader
 				spriteLineSet->Setup( m_spriteSetEffect, spriteLineSetData->skinned && buildFlags != EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT );
+				uint32_t index = 0;
 
 				for( auto& offset : offsets )
 				{
@@ -1149,21 +1152,35 @@ void EveSOF::SetupSpriteLineSets( IEveSpaceObjectAttachmentOwnerPtr obj, const E
 
 						if( itemData->light )
 						{
-							auto lightData = itemData->light->AsLightData();
+							auto saturatedColor = Saturate( spriteLineSetItem->m_color, itemData->light->saturation );
+							auto lightData = itemData->light->AsLightData( saturatedColor, 1.0);
 							lightData.boneIndex = spriteLineSetItem->m_boneIndex;
-							lightData.color = Saturate( spriteLineSetItem->m_color, itemData->light->saturation );
-							
-							unsigned index = 0;
+
+							Tr2LightProfileRes* profile = nullptr;
+							if( !itemData->light->lightProfilePath.empty() ) 
+							{
+								BeResMan->GetResource( itemData->light->lightProfilePath, L"lp", profile );
+							}
+
+							unsigned spriteInSetIndex = 0;
 							for( auto& pos : spriteLineSetItem->GetPositions() )
 							{
-								lightData.position = itemData->light->offset + pos;
-								Tr2PointLightPtr pointLight;
-								pointLight.CreateInstance();
-								pointLight->SetLightData( lightData );
-								pointLight->SetBlinkingBehavior( itemData->blinkRate, itemData->blinkPhase + itemData->blinkPhaseShift * index++, itemData->minScale, itemData->maxScale );
-								spriteLineSet->AddLight( pointLight );
+								lightData.position = itemData->light->translation + pos + spriteLineSetItem->m_position;
+								lightData.rotation = Normalize( lightData.rotation * spriteLineSetItem->m_rotation );
+
+								EveSpriteLight light = EveSpriteLight();
+								light.index = index;
+								light.lightProfile = profile;
+								light.lightData = lightData;
+								light.blinkRate = itemData->blinkRate;
+								light.blinkPhase = itemData->blinkPhase + itemData->blinkPhaseShift * spriteInSetIndex++;
+								light.minScale = itemData->minScale;
+								light.maxScale = itemData->maxScale;
+
+								spriteLineSet->AddLight( light );
 							}
 						}
+						index++;
 
 						// put it into spriteset
 						spriteLineSet->Add( spriteLineSetItem );
@@ -1228,6 +1245,8 @@ void EveSOF::SetupHazeSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOFD
 					hazeSet->Setup( m_hazeSetEffectHalfSpherical );
 					break;
 				}
+
+				uint32_t index = 0;
 				for( auto& offset: offsets )
 				{
 					// add all the individual items
@@ -1258,22 +1277,22 @@ void EveSOF::SetupHazeSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOFD
 						
 						if( itemData->light )
 						{
+							auto saturatedColor = Saturate( color, itemData->light->saturation );
 							Vector3 scale = hazeSetItem->m_scaling;
 							float maxScale = max( scale.x, max( scale.y, scale.z ) );
-							auto lightData = itemData->light->AsLightData();
-							lightData.position += itemData->position;
+
+							auto lightData = itemData->light->AsLightData(saturatedColor, maxScale);
+							lightData.position += hazeSetItem->m_position;
+							lightData.rotation = Normalize( lightData.rotation * hazeSetItem->m_rotation );
+
 							lightData.boneIndex = itemData->boneIndex;
-							lightData.radius *= maxScale;
-							lightData.innerRadius *= maxScale;
-							lightData.color = Saturate( color, itemData->light->saturation );
 
-							Tr2PointLightPtr pointLight;
-							pointLight.CreateInstance();
-							pointLight->SetLightData( lightData );
+							EveHazeSetLight hazeSetLight(lightData, index, itemData->light->lightProfilePath );
 
-							hazeSet->AddLight( pointLight );
+							hazeSet->AddLight( hazeSetLight );
 						}
 
+						index++;
 						// put it into hazeset
 						hazeSet->AddHazeItem( hazeSetItem );
 					}
@@ -1310,6 +1329,7 @@ void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const
 			auto& bannerData = *hbit;
 
 			EveBannerSetPtr bannerSet;
+			uint32_t index = 0;
 
 			for( auto hbiit = begin( bannerData.items ); hbiit != end( bannerData.items ); ++hbiit )
 			{
@@ -1325,19 +1345,16 @@ void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const
 					bannerSet.CreateInstance();
 				}
 				
-				for( auto& offset: offsets)
+				for( auto& offset : offsets )
 				{
 					auto modifiedData = EveBannerItem( itemData.item );
-					
+
 					// set up the position data
 					Vector3 tmp;
 					Matrix m = TransformationMatrix( Vector3( 1.0f, 1.0f, 1.0f ), modifiedData.rotation, modifiedData.position + hullOffset ) * offset;
 					Decompose( tmp, modifiedData.rotation, modifiedData.position, m );
 
 					bannerSet->AddBanner( modifiedData );
-					// create the light
-					Tr2PointLightPtr light;
-					light.CreateInstance();
 
 					LightData data;
 					data.position = modifiedData.position;
@@ -1347,16 +1364,19 @@ void EveSOF::SetupBanners( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, const
 					float innerRad = ( rad * itemData.bannerLight.innerRadiusMultiplier );
 					data.radius = rad;
 					data.innerRadius = innerRad;
-				
+
 					data.color = Color( 0.0, 0.0, 0.0, 0.0 );
 					data.brightness = itemData.bannerLight.brightness;
 					data.noiseAmplitude = itemData.bannerLight.noiseAmplitude;
 					data.noiseFrequency = itemData.bannerLight.noiseFrequency;
 					data.noiseOctaves = itemData.bannerLight.noiseOctaves;
-					light->SetLightData( data );
-					bannerSet->AddLight( light );
-
-					bannerSet->SetLightColorSaturation( itemData.bannerLight.saturation );
+					
+					EveBannerLight bannerLight;
+					bannerLight.lightData = data;
+					bannerLight.saturation = itemData.bannerLight.saturation;
+					bannerLight.index = index;
+					bannerSet->AddLight( bannerLight );
+					index++;
 				}
 			}
 
@@ -1475,6 +1495,7 @@ void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, co
 				auto usage = hbtit->first;
 				auto banners = hbtit->second;
 				EveBannerSetPtr bannerSet;
+				uint32_t index = 0;
 
 				for( auto b = begin( banners ); b != end( banners ); ++b )
 				{
@@ -1499,19 +1520,17 @@ void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, co
 
 							Vector3 scale = banner.item.scaling;
 							float maxScale = max( scale.x, max( scale.y, scale.z ) );
-							auto lightData = banner.light->AsLightData();
+							auto black = Color( 0, 0, 0, 0 );
+							auto lightData = banner.light->AsLightData( black, maxScale );
 							lightData.position += modifiedItem.position;
-							lightData.boneIndex = modifiedItem.bone;
-							lightData.color = Color( 0, 0, 0, 0 );
+							lightData.rotation = Normalize(lightData.rotation * modifiedItem.rotation);
 
-							Tr2PointLightPtr pointLight;
-							pointLight.CreateInstance();
-							pointLight->SetLightData( lightData );
+							EveBannerLight bannerLight( lightData, banner.light->saturation, index, banner.light->lightProfilePath );
 
-							bannerSet->AddLight( pointLight );
-							bannerSet->SetLightColorSaturation( banner.light->saturation );
+							bannerSet->AddLight( bannerLight );
 						}
 					}
+					index++;
 				}
 
 				// if no banners in set, then ignore it...
@@ -1584,6 +1603,7 @@ void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, co
 				{
 					externalParamName = names[usage];
 				}
+
 
 				Tr2ExternalParameterPtr externalParameter;
 				externalParameter.CreateInstance();

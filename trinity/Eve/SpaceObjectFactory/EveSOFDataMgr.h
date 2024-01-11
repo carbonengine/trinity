@@ -209,21 +209,23 @@ public:
 
 	struct PointLightAttachment {
 		explicit PointLightAttachment( const EveSOFDataPointLightAttachment& light );
-		LightData AsLightData() const;
+		LightData AsLightData( Color& color, float scale ) const;
+		Vector3 translation;
+		Quaternion rotation;
 		float saturation;
 		float intensity;
-		Vector3 offset;
 		float innerScaleMultiplier;
 		float outerScaleMultiplier;
 		float noiseAmplitude;
 		float noiseFrequency;
 		int32_t noiseOctaves;
-		std::wstring texturePath;
+		std::wstring lightProfilePath;
 	};
 
 	struct SpotLightAttachment {
 		explicit SpotLightAttachment( const EveSOFDataSpotLightAttachment& light );
-		LightData AsLightData() const;
+		LightData AsLightData( Color& color, float scale, float innerAngle, float outerAngle ) const;
+		Vector3 translation;
 		float saturation;
 		float intensity;
 		Vector3 offset;
@@ -234,7 +236,7 @@ public:
 		float noiseAmplitude;
 		float noiseFrequency;
 		int32_t noiseOctaves;
-		std::wstring texturePath;
+		std::wstring lightProfilePath;
 	};
 
 	struct HullSpotlightSetItemData

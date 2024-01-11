@@ -12,6 +12,7 @@
 #include "Utilities/MatrixUtils.h"
 #include "Shader/Tr2Effect.h"
 #include "Utilities/BoundingSphere.h"
+#include "Resources/Tr2LightProfileRes.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -21,10 +22,10 @@ using namespace Tr2RenderContextEnum;
 // --------------------------------------------------------------------------------
 EveSpriteLineSet::EveSpriteLineSet( IRoot* lockobj ) :
 	PARENTLOCK( m_spriteLines ),
-	PARENTLOCK( m_lights ),
 	m_display( true ),
 	m_skinned( false ),
 	m_effectHash( 0 ),
+	m_activationStrength( 0 ),
 	m_buffer( "EveSpriteLineSet::m_buffer" ),
 	m_spriteData( "EveSpriteLineSet::m_spriteData" )
 {
@@ -148,6 +149,18 @@ bool EveSpriteLineSet::UpdateVisibility( const TriFrustum& frustum, const Matrix
 	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
+void EveSpriteLineSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength )
+{
+	for( auto& light : m_lights ) 
+	{
+		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
+		{
+			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+		}
+	}
+	m_activationStrength = activationStrength;
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Get bounding box surrounding sprite lines
@@ -227,7 +240,7 @@ void EveSpriteLineSet::SetShaderOption( const BlueSharedString& name, const Blue
 void EveSpriteLineSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Sprite Line Sets" );
-	options.insert( "Lights" );
+	options.insert( "Sprite Line Sets Lights" );
 }
 
 void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
@@ -285,24 +298,58 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 		}
 	}
 
-	if( renderer.HasOption( this, "Lights" ) )
+	if( renderer.HasOption( this, "Sprite Line Sets Lights" ) )
 	{
 		for( auto& l : m_lights )
 		{
-			l->RenderDebugInfo( renderer, parentTransform );
+			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+
+			Color c = l.lightData.color;
+			float blinkScale = EveSpriteLightUtils::Blink( l.blinkRate, l.blinkPhase, l.minScale, l.maxScale );
+			
+			c.a = 0.2;
+
+			auto spriteLine = l.index > m_spriteLines.size() ? nullptr : m_spriteLines[l.index];
+
+			renderer.DrawSphere(
+				spriteLine,
+				t,
+				l.lightData.innerRadius * blinkScale,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+			c.a = 0.1;
+			renderer.DrawSphere(
+				spriteLine,
+				t,
+				l.lightData.radius * blinkScale,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
 		}
 	}
 }
 
-void EveSpriteLineSet::AddLight( Tr2Light* light )
+void EveSpriteLineSet::AddLight( const EveSpriteLight& light )
 {
-	m_lights.Append( light->GetRawRoot() );
+	m_lights.push_back( light );
 }
 
 void EveSpriteLineSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
 {
+	LightFeatures features = LightFeatures();
+	features.parentBrightness = m_activationStrength;
+
 	for( auto& light : m_lights )
 	{
-		light->AddLight( lightManager, parentTransform, 1.0f );
+		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
+
+		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		float blinkScale = EveSpriteLightUtils::Blink( light.blinkRate, light.blinkPhase, light.minScale, light.maxScale );
+		data.radius *= blinkScale;
+		data.innerRadius = Float_16( float( data.innerRadius ) * blinkScale );
+		lightManager.AddLight( data );
 	}
 }

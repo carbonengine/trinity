@@ -509,13 +509,14 @@ public:
 
 	float m_saturation;
 	float m_intensity;
-	Vector3 m_offset;
+	Vector3 m_translation;
+	Quaternion m_rotation;
 	float m_innerScaleMultiplier;
 	float m_outerScaleMultiplier;
 	float m_noiseAmplitude;
 	float m_noiseFrequency;
 	int32_t m_noiseOctaves;
-	std::wstring m_texturePath;
+	std::wstring m_lightProfilePath;
 };
 TYPEDEF_BLUECLASS(EveSOFDataPointLightAttachment);
 
@@ -529,7 +530,7 @@ public:
 
 	float m_saturation;
 	float m_intensity;
-	Vector3 m_offset;
+	Vector3 m_translation;
 	float m_innerAngleMultiplier;
 	float m_outerAngleMultiplier;
 	float m_innerScaleMultiplier;
@@ -537,7 +538,7 @@ public:
 	float m_noiseAmplitude;
 	float m_noiseFrequency;
 	int32_t m_noiseOctaves;
-	std::wstring m_texturePath;
+	std::wstring m_lightProfilePath;
 };
 TYPEDEF_BLUECLASS(EveSOFDataSpotLightAttachment);
 

@@ -96,24 +96,25 @@ EveSOFDataMgr::PointLightAttachment::PointLightAttachment( const EveSOFDataPoint
 	this->noiseAmplitude = light.m_noiseAmplitude;
 	this->noiseFrequency = light.m_noiseFrequency;
 	this->noiseOctaves = light.m_noiseOctaves;
-	this->offset = light.m_offset;
+	this->translation = light.m_translation;
 	this->outerScaleMultiplier = light.m_outerScaleMultiplier;
 	this->saturation = light.m_saturation;
-	this->texturePath = light.m_texturePath;
+	this->lightProfilePath = light.m_lightProfilePath;
+	this->rotation = light.m_rotation;
 }
 
-LightData EveSOFDataMgr::PointLightAttachment::AsLightData() const {
+LightData EveSOFDataMgr::PointLightAttachment::AsLightData( Color& color, float scale ) const {
 	LightData data;
-	data.position = this->offset;
-	data.radius = this->outerScaleMultiplier;
-	data.innerRadius = this->innerScaleMultiplier;
+	data.color = color;
+	data.position = this->translation;
+	data.rotation = this->rotation;
+	data.radius = this->outerScaleMultiplier * scale;
+	data.innerRadius = this->innerScaleMultiplier * scale;
 
 	data.brightness = this->intensity;
 	data.noiseAmplitude = this->noiseAmplitude;
 	data.noiseFrequency = this->noiseFrequency;
 	data.noiseOctaves = this->noiseOctaves;
-
-	data.texturePath = this->texturePath;
 	return data;
 }
 
@@ -123,27 +124,28 @@ EveSOFDataMgr::SpotLightAttachment::SpotLightAttachment( const EveSOFDataSpotLig
 	this->noiseAmplitude = light.m_noiseAmplitude;
 	this->noiseFrequency = light.m_noiseFrequency;
 	this->noiseOctaves = light.m_noiseOctaves;
-	this->offset = light.m_offset;
+	this->translation = light.m_translation;
 	this->outerAngleMultiplier = light.m_outerAngleMultiplier;
 	this->saturation = light.m_saturation;
 	this->innerScaleMultiplier = light.m_innerScaleMultiplier;
 	this->outerScaleMultiplier = light.m_outerScaleMultiplier;
-	this->texturePath = light.m_texturePath;
+	this->lightProfilePath = light.m_lightProfilePath;
 }
 
-LightData EveSOFDataMgr::SpotLightAttachment::AsLightData() const {
+LightData EveSOFDataMgr::SpotLightAttachment::AsLightData( Color& color, float scale, float innerAngle, float outerAngle ) const {
 	LightData data;
+	data.color = color;
 	data.position = this->offset;
-	data.innerAngle = this->innerAngleMultiplier;
-	data.outerAngle = this->outerAngleMultiplier;
-	data.innerRadius = this->innerScaleMultiplier;
-	data.radius = this->outerScaleMultiplier;
+	data.innerAngle = this->innerAngleMultiplier * innerAngle;
+	data.outerAngle = this->outerAngleMultiplier * outerAngle;
+	data.innerRadius = this->innerScaleMultiplier * scale;
+	data.radius = this->outerScaleMultiplier * scale;
 
 	data.brightness = this->intensity;
 	data.noiseAmplitude = this->noiseAmplitude;
 	data.noiseFrequency = this->noiseFrequency;
 	data.noiseOctaves = this->noiseOctaves;
-	data.texturePath = this->texturePath;
+	data.texturePath = this->lightProfilePath;
 
 	return data;
 }

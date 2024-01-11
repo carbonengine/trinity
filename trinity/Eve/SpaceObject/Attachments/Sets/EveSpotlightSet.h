@@ -23,7 +23,17 @@ BLUE_DECLARE( EveSpotlightSet );
 BLUE_DECLARE_VECTOR( EveSpotlightSet );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2DebugRenderer );
-BLUE_DECLARE_VECTOR( Tr2Light );
+
+struct EveSpotlightLight {
+	EveSpotlightLight();	
+	EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring profilePath );
+
+	LightData lightData;
+	Matrix boneMatrix;
+	Tr2LightProfileResPtr lightProfile;
+
+	uint32_t index;
+};
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -47,12 +57,13 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength );
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount );
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo(ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount);
 
-	void AddLight( Tr2Light* light ) override;
+	void AddLight( const EveSpotlightLight& light );
 	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
 
 	/////////////////////////////////////////////////////////////////////////////////////
@@ -141,7 +152,9 @@ private:
 	AxisAlignedBoundingBox m_aabb;
 	// bounding boxes are grouped together by bone index
 	std::vector<std::pair<int, AxisAlignedBoundingBox>> m_boundingBoxes;
-	PTr2LightVector m_lights;
+
+	std::vector<EveSpotlightLight> m_lights;
+	float m_activationStrength;
 };
 
 TYPEDEF_BLUECLASS( EveSpotlightSet );

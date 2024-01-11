@@ -67,14 +67,6 @@ const Be::ClassInfo* EveSpotlightSet::ExposeToBlue()
 			Be::READ | Be::PERSIST
 		)
 
-		MAP_ATTRIBUTE
-		(
-			"lights",
-			m_lights,
-			"",
-			Be::READ | Be::PERSIST
-		)
-
 		MAP_METHOD_AND_WRAP( "Rebuild", Rebuild, "Rebuild resources after adding/removing/changing individual items" )
 
 
