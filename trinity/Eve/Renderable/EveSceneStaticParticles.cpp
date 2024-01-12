@@ -227,12 +227,10 @@ void EveSceneStaticParticles::Rebuild()
 	instanceData->SetLayout( particleBufferVtxDef );
 
 	// need total radius and a center for all clusters
-	float totalRadius = 0.f;
 	m_centerOfClusters = Vector3d( 0.0, 0.0, 0.0 );
 	for( auto it = m_clusters.begin(); it != m_clusters.end(); ++it )
 	{
 		const ClusterData* clusterData = &(*it);
-		totalRadius += clusterData->radius;
 		m_centerOfClusters += Vector3d( (double)clusterData->position.x, (double)clusterData->position.y, (double)clusterData->position.z );
 	}
 	m_centerOfClusters /= (double)m_clusters.size();

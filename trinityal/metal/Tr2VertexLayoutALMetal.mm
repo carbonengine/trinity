@@ -36,8 +36,6 @@ namespace TrinityALImpl
 		m_renderContext = &renderContext;
 		MetalContext* metalContext = m_renderContext->GetMetalContext();
 
-		uint32_t streamMask = 0;
-
 		for( const auto& src : definition.m_items )
 		{
 			MTLVertexStepFunction metalStepFunction;
@@ -67,8 +65,6 @@ namespace TrinityALImpl
 			dst.m_stepRate = stepRate;
 
 			m_items.push_back( dst );
-
-			streamMask |= ( 1 << src.m_stream );
 		};
 
 		return S_OK;

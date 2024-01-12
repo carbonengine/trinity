@@ -62,6 +62,24 @@ CcpParser::Constant s_constants[] = {
 	{ "pi", 3.1415926f },
 	{ "pi2", 2.0f * 3.1415926f },
 };
+
+struct VariableBuffer
+{
+    float m_time;
+    float m_value;
+    float m_leftTangent;
+    float m_rightTangent;
+    
+    float m_inputVar1;
+    float m_inputVar2;
+    float m_inputVar3;
+    float m_inputVar4;
+
+    float m_randomConstant;
+
+    float m_prevKeyTime;
+    float m_prevKeyValue;
+};
 }
 
 // --------------------------------------------------------------------------------------
@@ -130,8 +148,21 @@ bool Tr2ScalarExprKey::OnModified( Be::Var* value )
 	{
 		SetExpression( m_rightTangentParser, m_rightTangentExpression );
 	}
+    
+    VariableBuffer buffer;
+    buffer.m_time = m_time;
+    buffer.m_value = m_value;
+    buffer.m_leftTangent = m_leftTangent;
+    buffer.m_rightTangent = m_rightTangent;
+    buffer.m_inputVar1 = m_inputVar1;
+    buffer.m_inputVar2 = m_inputVar2;
+    buffer.m_inputVar3 = m_inputVar3;
+    buffer.m_inputVar4 = m_inputVar4;
+    buffer.m_randomConstant = m_randomConstant;
+    buffer.m_prevKeyTime = m_prevKeyTime;
+    buffer.m_prevKeyValue = m_prevKeyValue;
 
-	void* buffers[] = { this };
+	void* buffers[] = { &buffer };
 	if( !m_timeExpression.empty() && m_timeParser )
 	{
 		m_time = m_timeParser.Eval( buffers, m_tempArena.data() );
@@ -166,17 +197,17 @@ void Tr2ScalarExprKey::SetExpression( CcpParser::Program& parser, std::string& e
 		return;
 	}
 	CcpParser::Variable s_variables[] = {
-		{ "value", 0, offsetof( Tr2ScalarExprKey, m_time ) },
-		{ "time", 0, offsetof( Tr2ScalarExprKey, m_time ) },
-		{ "input1", 0, offsetof( Tr2ScalarExprKey, m_inputVar1 ) },
-		{ "input2", 0, offsetof( Tr2ScalarExprKey, m_inputVar2 ) },
-		{ "input3", 0, offsetof( Tr2ScalarExprKey, m_inputVar3 ) },
-		{ "input4", 0, offsetof( Tr2ScalarExprKey, m_inputVar4 ) },
-		{ "randomConstant", 0, offsetof( Tr2ScalarExprKey, m_randomConstant ) },
-		{ "leftTangent", 0, offsetof( Tr2ScalarExprKey, m_leftTangent ) },
-		{ "rightTangent", 0, offsetof( Tr2ScalarExprKey, m_rightTangent ) },
-		{ "prevKeyTime", 0, offsetof( Tr2ScalarExprKey, m_prevKeyTime ) },
-		{ "prevKeyValue", 0, offsetof( Tr2ScalarExprKey, m_prevKeyValue ) },
+		{ "value", 0, offsetof( VariableBuffer, m_value ) },
+		{ "time", 0, offsetof( VariableBuffer, m_time ) },
+		{ "input1", 0, offsetof( VariableBuffer, m_inputVar1 ) },
+		{ "input2", 0, offsetof( VariableBuffer, m_inputVar2 ) },
+		{ "input3", 0, offsetof( VariableBuffer, m_inputVar3 ) },
+		{ "input4", 0, offsetof( VariableBuffer, m_inputVar4 ) },
+		{ "randomConstant", 0, offsetof( VariableBuffer, m_randomConstant ) },
+		{ "leftTangent", 0, offsetof( VariableBuffer, m_leftTangent ) },
+		{ "rightTangent", 0, offsetof( VariableBuffer, m_rightTangent ) },
+		{ "prevKeyTime", 0, offsetof( VariableBuffer, m_prevKeyTime ) },
+		{ "prevKeyValue", 0, offsetof( VariableBuffer, m_prevKeyValue ) },
 	};
 
 	CcpParser::FunctionView functionView[] = { s_functions };
@@ -231,7 +262,21 @@ void Tr2ScalarExprKey::UpdateValues( Tr2ScalarExprKey* previousKey )
 		m_prevKeyTime = 0.0f;
 		m_prevKeyValue = 0.0f;
 	}
-	void* buffers[] = { this };
+    
+    VariableBuffer buffer;
+    buffer.m_time = m_time;
+    buffer.m_value = m_value;
+    buffer.m_leftTangent = m_leftTangent;
+    buffer.m_rightTangent = m_rightTangent;
+    buffer.m_inputVar1 = m_inputVar1;
+    buffer.m_inputVar2 = m_inputVar2;
+    buffer.m_inputVar3 = m_inputVar3;
+    buffer.m_inputVar4 = m_inputVar4;
+    buffer.m_randomConstant = m_randomConstant;
+    buffer.m_prevKeyTime = m_prevKeyTime;
+    buffer.m_prevKeyValue = m_prevKeyValue;
+
+	void* buffers[] = { &buffer };
 	if( !m_timeExpression.empty() && m_timeParser )
 	{
 		m_time = m_timeParser.Eval( buffers, m_tempArena.data() );
