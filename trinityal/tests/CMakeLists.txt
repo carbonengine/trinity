@@ -15,6 +15,7 @@ set(_SOURCES
     Fence.cpp
     GPUTimer.cpp
     OcclusionQuery.cpp
+    Raytracing.cpp
     RenderContext.cpp
     RenderContextCreation.cpp
     RenderTarget.cpp
