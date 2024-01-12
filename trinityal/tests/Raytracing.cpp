@@ -1,55 +1,78 @@
 #include "StdAfx.h"
+
 #include "WithValidRenderContextFixture.h"
 
 #if TRINITY_PLATFORM_SUPPORTS_RAY_TRACING
 
 struct Raytracing : public WithValidRenderContext {};
-
 namespace
 {
-	struct Vector3
-	{
-		float x, y, z;
+    struct Vector3
+    {
+        float x, y, z;
 
-		Vector3()
-		{
-		}
+        Vector3()
+        {
+        }
 
-		Vector3( float x_, float y_, float z_ )
-			:x( x_ ),
-			y( y_ ),
-			z( z_ )
-		{
-		}
-	};
+        Vector3( float x_, float y_, float z_ )
+            :x( x_ ),
+            y( y_ ),
+            z( z_ )
+        {
+        }
+    };
 
-	Vector3 cubeVertices[] = {
-		Vector3( -1, -1, 1 ),
-		Vector3( 1, -1, 1 ),
-		Vector3( 1, 1, 1 ),
-		Vector3( -1, 1, 1 ),
-		Vector3( -1, -1, -1 ),
-		Vector3( 1, -1, -1 ),
-		Vector3( 1, 1, -1 ),
-		Vector3( -1, 1, -1 ),
-	};
+    Vector3 cubeVertices[] = {
+        Vector3( -1, -1, 1 ),
+        Vector3( 1, -1, 1 ),
+        Vector3( 1, 1, 1 ),
+        Vector3( -1, 1, 1 ),
+        Vector3( -1, -1, -1 ),
+        Vector3( 1, -1, -1 ),
+        Vector3( 1, 1, -1 ),
+        Vector3( -1, 1, -1 ),
+    };
 
-	uint16_t cubeIndices[] = {
-		0, 1, 2,
-		2, 3, 0,
-		1, 5, 6,
-		6, 2, 1,
-		7, 6, 5,
-		5, 4, 7,
-		4, 0, 3,
-		3, 7, 4,
-		4, 5, 1,
-		1, 0, 4,
-		3, 2, 6,
-		6, 7, 3
-	};
+    uint16_t cubeIndices[] = {
+        0, 1, 2,
+        2, 3, 0,
+        1, 5, 6,
+        6, 2, 1,
+        7, 6, 5,
+        5, 4, 7,
+        4, 0, 3,
+        3, 7, 4,
+        4, 5, 1,
+        1, 0, 4,
+        3, 2, 6,
+        6, 7, 3
+    };
 }
 
+#if defined(__APPLE__) && TRINITY_PLATFORM != TRINITY_STUB
+TEST_F( Raytracing, BLASIsInvalidBeforeCreation )
+{
+    Tr2RtBottomLevelAccelerationStructureAL blas;
+    EXPECT_FALSE( blas.IsValid() );
+}
+
+TEST_F( Raytracing, BLASIsValidAfterCreation )
+{
+    Tr2BufferAL vb, ib;
+    ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeVertices, *renderContext ) );
+    ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
+
+    Tr2RtBottomLevelAccelerationStructureAL blas;
+    ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
+
+    ASSERT_TRUE( blas.IsValid() );
+}
+
+#endif
+
+
+#if !defined(__APPLE__)
 /************* blas *************/
 
 TEST_F( Raytracing, BLASIsInvalidBeforeCreation )
@@ -863,4 +886,5 @@ TEST_F( Raytracing, CanUseLocalTextures )
 }
 
 
+#endif
 #endif
