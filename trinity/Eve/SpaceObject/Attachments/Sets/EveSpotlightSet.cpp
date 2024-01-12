@@ -506,20 +506,20 @@ void EveSpotlightSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matri
 			Matrix t = RotationMatrix( l.lightData.rotation ) * TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
 			Color c = l.lightData.color;
 
-			c.a = 0.2;
+			c.a = 0.5;
 			auto spotlightItem = l.index > m_spotlightItems.size() ? nullptr : m_spotlightItems[l.index];
 
 			renderer.DrawCone(
 				spotlightItem,
 				t,
 				l.lightData.innerRadius,
-				TRI_2PI * l.lightData.outerAngle / 360.f,
+				TRI_2PI * l.lightData.innerAngle / 360.f,
 				10,
 				10,
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
 
-			c.a = 0.1;
+			c.a = 0.3;
 			renderer.DrawCone(
 				spotlightItem,
 				t,

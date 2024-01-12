@@ -29,8 +29,9 @@ EveSOFDataMgr::HullSpotlightSetItemData::HullSpotlightSetItemData( const EveSOFD
 	spriteIntensity( item.m_spriteIntensity ),
 	light( nullptr )
 {
-	if (item.m_light) {
-		light = new SpotLightAttachment( *item.m_light );
+	if (item.m_light) 
+	{	
+		light = std::make_unique<SpotLightAttachment>( *item.m_light );
 	}
 }
 
@@ -68,8 +69,9 @@ EveSOFDataMgr::HullPlaneSetItemData::HullPlaneSetItemData( const EveSOFDataHullP
 	blinkMode( item.m_blinkMode ),
 	light( nullptr )
 {
-	if (item.m_light) {
-		light = new PointLightAttachment(*item.m_light);
+	if (item.m_light) 
+	{
+		light = std::make_unique<PointLightAttachment>( *item.m_light );
 	}
 }
 
@@ -120,11 +122,11 @@ LightData EveSOFDataMgr::PointLightAttachment::AsLightData( Color& color, float 
 
 EveSOFDataMgr::SpotLightAttachment::SpotLightAttachment( const EveSOFDataSpotLightAttachment& light ) {
 	this->innerAngleMultiplier = light.m_innerAngleMultiplier;
+	this->translation = light.m_translation;
 	this->intensity = light.m_intensity;
 	this->noiseAmplitude = light.m_noiseAmplitude;
 	this->noiseFrequency = light.m_noiseFrequency;
 	this->noiseOctaves = light.m_noiseOctaves;
-	this->translation = light.m_translation;
 	this->outerAngleMultiplier = light.m_outerAngleMultiplier;
 	this->saturation = light.m_saturation;
 	this->innerScaleMultiplier = light.m_innerScaleMultiplier;
@@ -135,7 +137,7 @@ EveSOFDataMgr::SpotLightAttachment::SpotLightAttachment( const EveSOFDataSpotLig
 LightData EveSOFDataMgr::SpotLightAttachment::AsLightData( Color& color, float scale, float innerAngle, float outerAngle ) const {
 	LightData data;
 	data.color = color;
-	data.position = this->offset;
+	data.position = this->translation;
 	data.innerAngle = this->innerAngleMultiplier * innerAngle;
 	data.outerAngle = this->outerAngleMultiplier * outerAngle;
 	data.innerRadius = this->innerScaleMultiplier * scale;
@@ -358,7 +360,7 @@ bool EveSOFDataMgr::UpdateHull( const char* hullName, EveSOFDataHull* hullData )
 	GenerateHullData( hd, hullData );
 
 	// set it to the main map
-	m_hullData[hullName] = hd;
+	m_hullData[hullName] = std::move( hd );
 
 	return true;
 }
@@ -645,7 +647,7 @@ bool EveSOFDataMgr::LoadHullData( EveSOFDataPtr srcData )
 		GenerateHullData( hd, hullData );
 
 		// put it into the main map
-		m_hullData[( *it )->m_name] = hd;
+		m_hullData[( *it )->m_name] = std::move( hd );
 	}
 	return true;
 }
@@ -723,12 +725,13 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hssid.intensity = spriteSetItemData->m_intensity;
 			hssid.colorType = spriteSetItemData->m_colorType;
 			hssid.light = nullptr;
-			if( spriteSetItemData->m_light ) {
-				hssid.light = new PointLightAttachment( *spriteSetItemData->m_light );
+			if( spriteSetItemData->m_light ) 
+			{
+				hssid.light = std::make_unique<PointLightAttachment>( PointLightAttachment( *spriteSetItemData->m_light ));
 			}
-			hssd.items.push_back( hssid );
+			hssd.items.push_back( std::move( hssid ) );
 		}
-		hd.spriteSets.push_back( hssd );
+		hd.spriteSets.push_back( std::move( hssd ) );
 	}
 
 	// spotlightsets
@@ -776,14 +779,13 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hslsid.isCircle = spriteLineSetItemData->m_isCircle;
 			hslsid.intensity = spriteLineSetItemData->m_intensity;
 			hslsid.colorType = spriteLineSetItemData->m_colorType;
-			hslsid.light = nullptr;
 			if( spriteLineSetItemData->m_light )
 			{
-				hslsid.light = new PointLightAttachment( *spriteLineSetItemData->m_light );
+				hslsid.light = std::make_unique<PointLightAttachment>( *spriteLineSetItemData->m_light );
 			}
-			hslsd.items.push_back( hslsid );
+			hslsd.items.push_back( std::move( hslsid ) );
 		}
-		hd.spriteLineSets.push_back( hslsd );
+		hd.spriteLineSets.push_back( std::move( hslsd ) );
 	}
 
 	// hazesets
@@ -815,13 +817,14 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hhsid.boosterGainInfluence = hazeSetItemData->m_boosterGainInfluence;
 			hhsid.light = nullptr;
 
-			if( hazeSetItemData->m_light ) {
-				hhsid.light = new PointLightAttachment( *hazeSetItemData->m_light );
+			if( hazeSetItemData->m_light ) 
+			{
+				hhsid.light = std::make_unique<PointLightAttachment>( *hazeSetItemData->m_light );
 			}
-			hhsd.items.push_back( hhsid );
+			hhsd.items.push_back( std::move( hhsid ) );
 		}
 
-		hd.hazeSets.push_back( hhsd );
+		hd.hazeSets.push_back( std::move( hhsd ) );
 	}
 
 	hd.banners.clear();
@@ -884,13 +887,6 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 		for( auto hsiit = begin( sourceBannerSet->m_banners ); hsiit != end( sourceBannerSet->m_banners ); ++hsiit )
 		{
 			auto bannerItem = *hsiit;
-			std::vector<HullBannerSetItemData> bannerItems;
-
-			auto bannerEntry = set.bannerTypes.find( bannerItem->m_usage );
-			if( bannerEntry == set.bannerTypes.end() )
-			{
-				set.bannerTypes.insert( std::pair<EveSOFDataHullBannerSetItem::Usage, std::vector<HullBannerSetItemData>>( bannerItem->m_usage, std::vector<HullBannerSetItemData>() ) );
-			}
 
 			HullBannerSetItemData data;
 			data.item.position = bannerItem->m_position;
@@ -901,13 +897,14 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			data.item.bone = bannerItem->m_boneIndex;
 			data.item.reference = bannerIndex++;
 			data.light = nullptr;
-			if( bannerItem->m_light ) {
-				data.light = new PointLightAttachment( *bannerItem->m_light );
+			if( bannerItem->m_light ) 
+			{
+				data.light = std::make_shared<PointLightAttachment>( *bannerItem->m_light );
 			}
 
-			set.bannerTypes[bannerItem->m_usage].push_back( data );
+			set.bannerTypes[bannerItem->m_usage].push_back( std::move( data) );
 		}
-		hd.bannerSets.push_back( set );
+		hd.bannerSets.push_back( std::move( set ) );
 	}
 
 	// default hull pattern

@@ -228,7 +228,6 @@ public:
 		Vector3 translation;
 		float saturation;
 		float intensity;
-		Vector3 offset;
 		float innerAngleMultiplier;
 		float outerAngleMultiplier;
 		float innerScaleMultiplier;
@@ -242,14 +241,13 @@ public:
 	struct HullSpotlightSetItemData
 	{
 		explicit HullSpotlightSetItemData( const EveSOFDataHullSpotlightSetItem& item );
-
 		Matrix transform;
 		int boneIndex, groupIndex;
 		bool boosterGainInfluence;
 		SOFDataFactionColorChooser::ColorType colorType;
 		Vector3 spriteScale;
 		float coneIntensity, flareIntensity, spriteIntensity;
-		SpotLightAttachment* light;
+		std::unique_ptr<SpotLightAttachment> light;
 	};
 
 	struct HullSpotlightSetData
@@ -279,7 +277,7 @@ public:
 		// BlinkData - combined into a float4 in the vertex buffer;
 		float rate, phase, dutyCycle;
 		int blinkMode; // selector
-		PointLightAttachment* light;
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullPlaneSetData
@@ -302,7 +300,7 @@ public:
 		float blinkRate, blinkPhase, minScale, maxScale, falloff, intensity;
 		int boneIndex;
 		SOFDataFactionColorChooser::ColorType colorType;
-		PointLightAttachment* light;
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullSpriteSetData
@@ -320,7 +318,7 @@ public:
 		int boneIndex;
 		bool isCircle;
 		SOFDataFactionColorChooser::ColorType colorType;
-		PointLightAttachment* light;
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullSpriteLineSetData
@@ -338,7 +336,7 @@ public:
 		SOFDataFactionColorChooser::ColorType colorType;
 		float hazeBrightness, hazeFalloff, sourceSize, sourceBrightness;
 		bool boosterGainInfluence;
-		PointLightAttachment* light;
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullHazeSetData
@@ -377,7 +375,9 @@ public:
 	struct HullBannerSetItemData
 	{
 		EveBannerItem item;
-		PointLightAttachment* light;
+		// storing this as a shared pointer because it "needs" to be copyable 
+		// for the map that stores HullBannerSetItemData
+		std::shared_ptr<PointLightAttachment> light;
 	};
 
 	struct HullBannerSetData
@@ -508,6 +508,11 @@ public:
 
 	struct HullData
 	{
+		HullData() = default;
+		HullData( const HullData& ) = delete;
+		HullData(  HullData&& ) = default;
+		HullData& operator = ( HullData&& ) = default;
+
 		EveSOFDataHull::BuildClass buildClass;
 		std::string geometryResFilePath;
 		CcpMath::Sphere boundingSphere;

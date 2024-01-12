@@ -311,7 +311,7 @@ void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 				c = GetAverageColor();
 			}
 
-			c.a = 0.2;
+			c.a = 0.5;
 			
 			renderer.DrawSphere(
 				Tr2DebugObjectReference( m_banners.GetRawRoot(), l.index ),
@@ -321,7 +321,7 @@ void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
 
-			c.a = 0.1;
+			c.a = 0.3;
 			renderer.DrawSphere(
 				Tr2DebugObjectReference( m_banners.GetRawRoot(), l.index ),
 				t,

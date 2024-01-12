@@ -445,7 +445,7 @@ void EveSpriteSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 			Color c = l.lightData.color;
 			float blinkScale = EveSpriteLightUtils::Blink( l.blinkRate, l.blinkPhase, l.minScale, l.maxScale );
 
-			c.a = 0.2;
+			c.a = 0.5;
 
 			auto sprite = l.index > m_sprites.size() ? nullptr : m_sprites[l.index];
 
@@ -457,7 +457,7 @@ void EveSpriteSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
 
-			c.a = 0.1;
+			c.a = 0.3;
 			renderer.DrawSphere(
 				sprite,
 				t,

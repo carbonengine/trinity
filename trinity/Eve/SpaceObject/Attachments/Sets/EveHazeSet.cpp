@@ -374,7 +374,7 @@ void EveHazeSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& pa
 
 			Color c = l.lightData.color;
 
-			c.a = 0.2;
+			c.a = 0.5;
 
 			auto hazeItem = l.index > m_hazes.size() ? nullptr : m_hazes[l.index];
 
@@ -386,7 +386,7 @@ void EveHazeSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& pa
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
 
-			c.a = 0.1;
+			c.a = 0.3;
 			renderer.DrawSphere(
 				hazeItem,
 				t,
