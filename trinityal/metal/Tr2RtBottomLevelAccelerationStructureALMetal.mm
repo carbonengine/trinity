@@ -24,6 +24,48 @@ namespace  TrinityALImpl {
         
     }
 
+    // NOTE: this has no compaction
+    id<MTLAccelerationStructure> Tr2RtBottomLevelAccelerationStructureAL::BuildAccelerationStructure(MTLAccelerationStructureDescriptor* descriptor, id<MTLDevice> device, MetalContext* metalContext)
+    {
+        // Query for the sizes needed to store and build the acceleration structure.
+        MTLAccelerationStructureSizes accelSizes = [device accelerationStructureSizesWithDescriptor:descriptor];
+
+        // Allocate an acceleration structure large enough for this descriptor. This method
+        // doesn't actually build the acceleration structure, but rather allocates memory.
+        id <MTLAccelerationStructure> accelerationStructure = [device newAccelerationStructureWithSize:accelSizes.accelerationStructureSize];
+
+        
+        // Allocate scratch space Metal uses to build the acceleration structure.
+        // Use MTLResourceStorageModePrivate for the best performance because the sample
+        // doesn't need access to buffer's contents.
+        id <MTLBuffer> scratchBuffer = [device newBufferWithLength:accelSizes.buildScratchBufferSize options:MTLResourceStorageModePrivate];
+
+        // Create a command buffer that performs the acceleration structure build.
+        id <MTLCommandBuffer> commandBuffer = [metalContext->GetCommandQueue() commandBuffer];
+
+        // Create an acceleration structure command encoder.
+        id <MTLAccelerationStructureCommandEncoder> commandEncoder = [commandBuffer accelerationStructureCommandEncoder];
+
+        // Allocate a buffer for Metal to write the compacted accelerated structure's size into.
+        id <MTLBuffer> compactedSizeBuffer = [device newBufferWithLength:sizeof(uint32_t) options:MTLResourceStorageModeShared];
+
+        // Schedule the actual acceleration structure build.
+        [commandEncoder buildAccelerationStructure:accelerationStructure
+                                        descriptor:descriptor
+                                     scratchBuffer:scratchBuffer
+                               scratchBufferOffset:0];
+        
+        // End encoding, and commit the command buffer so the GPU can start building the
+        // acceleration structure.
+        [commandEncoder endEncoding];
+
+        [commandBuffer commit];
+        
+        
+        return accelerationStructure;
+    }
+
+    // Function to build a singular BLAS, list of BLAS to be kept elsewhere
     ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
     {
         if (@available(macOS 11.0, *)) {
@@ -43,7 +85,7 @@ namespace  TrinityALImpl {
             MetalContext *metalContext = renderContext.GetMetalContext();
             
             
-            _primitiveAccelerationStructures = [[NSMutableArray alloc] init];
+            //_primitiveAccelerationStructures = [[NSMutableArray alloc] init];
             
             // GEOMETRY DESCRIPTOR
             MTLAccelerationStructureTriangleGeometryDescriptor *geomDesc = [MTLAccelerationStructureTriangleGeometryDescriptor descriptor];
@@ -67,58 +109,16 @@ namespace  TrinityALImpl {
             accelerationStructureDesc.geometryDescriptors = @[geomDesc];
             
             id<MTLDevice> device = metalContext->GetDevice();
-            // Query for the sizes of the acceleration structure
-            MTLAccelerationStructureSizes accelSize = [ device accelerationStructureSizesWithDescriptor:accelerationStructureDesc];
             
-            // Allocate an acceleration structure large enough for this descriptor. This method
-            // doesn't actually build the acceleration structure, but rather allocates memory.
-            id<MTLAccelerationStructure> accelerationStructure = [device newAccelerationStructureWithSize:accelSize.accelerationStructureSize];
-            
-            // Allocate scratch space Metal uses to build the acceleration structure.
-            // Use MTLResourceStorageModePrivate for the best performance because the sample
-            // doesn't need access to buffer's contents.
-            id<MTLBuffer> scratchBuffer = [device newBufferWithLength:accelSize.buildScratchBufferSize options:MTLResourceStorageModePrivate];
-            
-            // Create a command buffer that performs the acceleration structure build
-            id<MTLCommandBuffer> commandBuffer = [metalContext->GetCommandQueue() commandBuffer];
-            
-            // Create an acceleration structure command encoder
-            id<MTLAccelerationStructureCommandEncoder> commandEncoder = [commandBuffer accelerationStructureCommandEncoder];
-            
-            // Allocate a buffer for metal to write the compacted accelerated structure's size into.
-            id<MTLBuffer> sizeBuffer = [device newBufferWithLength:sizeof(uint32_t) options:MTLResourceStorageModeShared];
-            
-            // Schedule the actual acceleration structure build
-            [commandEncoder buildAccelerationStructure:accelerationStructure
-                                            descriptor:accelerationStructureDesc
-                                         scratchBuffer:scratchBuffer
-                                   scratchBufferOffset:0];
-            
-            
-            // Compute and write the scratch size acceleration structure size into the buffer
-            //[commandEncoder writeCompactedAccelerationStructureSize:accelerationStructure
-            //                                               toBuffer:sizeBuffer
-            //                                               offset:0];
-            
-            // End encoding, and commit the command buffer so the GPU can start building the
-            // acceleration structure.
-            [commandEncoder endEncoding];
+            id<MTLAccelerationStructure> primitiveAccelerationStructure = BuildAccelerationStructure(accelerationStructureDesc, device, metalContext);
 
-            [commandBuffer commit];
-            
-            // NOTE: If we want to compact the AS we should do it here, that is call commandBuffer waitUntilCompleted
-            // and then read the compactedSize then allocate that size to the AS.
-            // but we need CPU/GPU synchronization for compaction, also we don't want to compact AS that we rebuild every frame
+            m_primitiveAccelerationStructure = primitiveAccelerationStructure;
 
-                    
-            
-            // AFTER BUILDING Add the acceleration structure to the array of primitive acceleration structures.
-            [_primitiveAccelerationStructures addObject:accelerationStructure];
             return S_OK;
         }
         else
         {
-            return S_OK;
+            return E_FAIL;
         }
     }
 
@@ -136,10 +136,6 @@ namespace  TrinityALImpl {
     bool Tr2RtBottomLevelAccelerationStructureAL::IsValid() const
     {
         return true;
-       // if( m_primitiveAccelerationStructures )
-        //{
-       //     return true;
-       // }
     }
 
     Tr2ALMemoryType Tr2RtBottomLevelAccelerationStructureAL::GetMemoryClass() const

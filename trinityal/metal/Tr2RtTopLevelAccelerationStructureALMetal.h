@@ -12,11 +12,17 @@
 #if TRINITY_PLATFORM == TRINITY_METAL
 
 #include "../include/Tr2RtTopLevelAccelerationStructureAL.h"
+#include "Tr2RtBottomLevelAccelerationStructureALMetal.h"
+#include <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
 
+
+@interface AccelerationStructureBuilder : NSObject
+@end
 
 namespace TrinityALImpl
 {
-    class Tr2RtTopLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2RtTopLevelAccelerationStructureAL>
+class API_AVAILABLE(macos(11.0)) Tr2RtTopLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2RtTopLevelAccelerationStructureAL>
     {
     public:
         Tr2RtTopLevelAccelerationStructureAL();
@@ -35,8 +41,16 @@ namespace TrinityALImpl
         size_t GetCapacity() const;
         
     private:
+        id<MTLBuffer> m_instanceBuffer;
+        
+        // just starting with this to get error free
         ::Tr2BufferAL m_buffer;
-
+        NSMutableArray *m_primitiveAccelerationStructures;
+        
+        id <MTLAccelerationStructure> m_instanceAccelerationStructure;
+        
+        id <MTLAccelerationStructure> BuildAccelerationStructure(MTLAccelerationStructureDescriptor* descriptor, id<MTLDevice> device,  MetalContext* metalContext );
+        
     };
 }
 
