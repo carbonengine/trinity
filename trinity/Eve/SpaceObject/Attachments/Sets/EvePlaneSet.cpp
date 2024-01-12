@@ -475,7 +475,7 @@ void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& p
 				c = GetAverageColor();
 			}
 
-			c.a = 0.2;
+			c.a = 0.5;
 			auto planeItem = l.index > m_planes.size() ? nullptr : m_planes[l.index];
 
 			renderer.DrawSphere(
@@ -486,7 +486,7 @@ void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& p
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
 
-			c.a = 0.1;
+			c.a = 0.3;
 			renderer.DrawSphere(
 				planeItem,
 				t,

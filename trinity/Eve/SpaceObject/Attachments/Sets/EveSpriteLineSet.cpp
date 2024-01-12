@@ -307,7 +307,7 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 			Color c = l.lightData.color;
 			float blinkScale = EveSpriteLightUtils::Blink( l.blinkRate, l.blinkPhase, l.minScale, l.maxScale );
 			
-			c.a = 0.2;
+			c.a = 0.5;
 
 			auto spriteLine = l.index > m_spriteLines.size() ? nullptr : m_spriteLines[l.index];
 
@@ -319,7 +319,7 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
 
-			c.a = 0.1;
+			c.a = 0.3;
 			renderer.DrawSphere(
 				spriteLine,
 				t,

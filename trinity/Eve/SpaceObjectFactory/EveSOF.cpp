@@ -853,6 +853,7 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 					// create it
 					EveSpotlightSetItemPtr spotlightSetItem;
 					spotlightSetItem.CreateInstance();
+					Color lightColor = Color( 0, 0, 0, 0 );
 
 					if( dna->UsingSof6() )
 					{
@@ -860,6 +861,7 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 						spotlightSetItem->m_coneColor = ssiit.coneIntensity * ModifyColor( colorSet[ssiit.colorType], 0.75f, 0.5f );
 						spotlightSetItem->m_flareColor = ssiit.flareIntensity * ModifyColor( colorSet[ssiit.colorType], 1.0f, 1.0f );
 						spotlightSetItem->m_spriteColor = ssiit.spriteIntensity * ModifyColor( colorSet[ssiit.colorType], 0.9f, 0.75f );
+						lightColor = colorSet[ssiit.colorType];
 					}
 					else
 					{
@@ -867,6 +869,7 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 						spotlightSetItem->m_coneColor = ssiit.coneIntensity * factionSpotlightData->coneColor;
 						spotlightSetItem->m_flareColor = ssiit.flareIntensity * factionSpotlightData->flareColor;
 						spotlightSetItem->m_spriteColor = ssiit.spriteIntensity * factionSpotlightData->spriteColor;
+						lightColor = factionSpotlightData->coneColor;
 					}
 
 					// set it up the per-hull data
@@ -890,11 +893,11 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 						float innerAngle = 0.0f;
 						float outerAngle = 0.0f;
 						if( scale.z > 0.f ) {
-							innerAngle = 45.0f * atanf( max( scale.x, scale.y ) / scale.z );
-							outerAngle = 45.0f * atanf( max( scale.x, scale.y ) / scale.z );
+							innerAngle = atanf( max( scale.x, scale.y ) / ( 2.0f * scale.z ) ) * 180.0f / TRI_PI;
+							outerAngle = atanf( max( scale.x, scale.y ) / ( 2.0f * scale.z ) ) * 180.0f / TRI_PI;
 						}
 
-						auto saturatedColor = Saturate( spotlightSetItem->m_coneColor, ssiit.light->saturation );
+						auto saturatedColor = Saturate( lightColor, ssiit.light->saturation );
 						auto data = ssiit.light->AsLightData(saturatedColor, scale.z, innerAngle, outerAngle );
 
 						data.boneIndex = ssiit.boneIndex;
@@ -1156,7 +1159,7 @@ void EveSOF::SetupSpriteLineSets( IEveSpaceObjectAttachmentOwnerPtr obj, const E
 							auto lightData = itemData->light->AsLightData( saturatedColor, 1.0);
 							lightData.boneIndex = spriteLineSetItem->m_boneIndex;
 
-							Tr2LightProfileRes* profile = nullptr;
+							Tr2LightProfileResPtr profile = nullptr;
 							if( !itemData->light->lightProfilePath.empty() ) 
 							{
 								BeResMan->GetResource( itemData->light->lightProfilePath, L"lp", profile );
@@ -1499,7 +1502,7 @@ void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, co
 
 				for( auto b = begin( banners ); b != end( banners ); ++b )
 				{
-					auto banner = *b;
+					auto& banner = *b;
 					if( !bannerSet )
 					{
 						bannerSet.CreateInstance();
