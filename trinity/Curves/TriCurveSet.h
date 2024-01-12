@@ -12,6 +12,7 @@ BLUE_DECLARE( TriValueBinding );
 BLUE_DECLARE_INTERFACE( ITriFunction );
 BLUE_DECLARE_IVECTOR( ITriFunction );
 BLUE_DECLARE_IVECTOR( ITr2ValueBinding );
+BLUE_DECLARE_INTERFACE( ICurveSetDriver );
 
 
 BLUE_CLASS( Tr2CurveSetRange ): public IRoot
@@ -99,6 +100,7 @@ private:
 	PITr2ValueBindingVector m_bindings;
 	PITriFunctionVector m_curves;
 	PTr2CurveSetRangeVector m_ranges;
+	ICurveSetDriverPtr m_driver;
 
 	bool m_isPlaying;
 	bool m_stopOnNextFrame;
