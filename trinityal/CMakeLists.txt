@@ -1,9 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-if(APPLE)
-    set(CMAKE_OSX_DEPLOYMENT_TARGET 10.15 CACHE STRING "The minimum macOS version we target." FORCE)
-endif()
-
 project(TrinityAL VERSION 1.0.0)
 
 set(PUBLIC_HEADER_FILES

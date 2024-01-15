@@ -2,6 +2,7 @@
 #include "TriCurveSet.h"
 #include "ITr2CurveSetOwner.h"
 
+BLUE_DEFINE_INTERFACE( ICurveSetDriver );
 BLUE_DEFINE_INTERFACE( ITr2CurveSetOwner );
 
 BLUE_DEFINE( Tr2CurveSetRange );
@@ -48,6 +49,13 @@ const Be::ClassInfo* TriCurveSet::ExposeToBlue()
 			m_bindings, 
 			"List of bindings. Note that a single curve can have multiple bindings.", 
 			Be::READ | Be::PERSIST
+		)
+		MAP_ATTRIBUTE
+		( 
+			"driver", 
+			m_driver, 
+			"The type of object you want driving the the values of curves in this curve set. If not set then this curve set will be driven by time.", 
+			Be::READWRITE | Be::PERSIST
 		)
 		MAP_ATTRIBUTE
 		(
