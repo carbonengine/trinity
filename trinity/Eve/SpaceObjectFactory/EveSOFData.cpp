@@ -484,6 +484,32 @@ EveSOFDataHullAnimation::EveSOFDataHullAnimation( IRoot* lockobj ) :
 	m_endRate( -1 )
 {}
 
+EveSOFDataPointLightAttachment::EveSOFDataPointLightAttachment( IRoot* lockobj ) :
+	m_saturation( 1.0f ),
+	m_intensity( 1.0f ),
+	m_translation( 0.0f, 0.0f, 0.0f ),
+	m_innerScaleMultiplier( 1.0f ),
+	m_outerScaleMultiplier( 2.0f ),
+	m_noiseAmplitude( 0.0 ),
+	m_noiseFrequency( 1.0 ),
+	m_noiseOctaves( 1 ),
+	m_lightProfilePath( L"" ),
+	m_rotation( Quaternion( 0, 0, 0, 1 ) )
+{}
+
+EveSOFDataSpotLightAttachment::EveSOFDataSpotLightAttachment( IRoot* lockobj ) :
+	m_saturation( 1.0f ),
+	m_intensity( 1.0f ),
+	m_translation( 0.0f, 0.0f, 0.0f ),
+	m_innerAngleMultiplier( 0.5f ),
+	m_outerAngleMultiplier( 1.0f ),
+	m_innerScaleMultiplier( 1.0f ),
+	m_outerScaleMultiplier( 1.0f ),
+	m_noiseAmplitude( 0.0 ),
+	m_noiseFrequency( 1.0 ),
+	m_noiseOctaves( 1 ),
+	m_lightProfilePath( L"" )
+{}
 
 EveSOFDataHullSpotlightSet::EveSOFDataHullSpotlightSet( IRoot* lockobj ) :
 	PARENTLOCK( m_items ),
@@ -503,6 +529,7 @@ EveSOFDataHullSpotlightSetItem::EveSOFDataHullSpotlightSetItem( IRoot* lockobj )
 	m_transform( IdentityMatrix() ), 
 	m_colorType( SOFDataFactionColorChooser::TYPE_HULL )
 {
+	m_light = nullptr;
 }
 
 
@@ -535,6 +562,7 @@ EveSOFDataHullPlaneSetItem::EveSOFDataHullPlaneSetItem( IRoot* lockobj ) :
 	m_dutyCycle( 1.f ),
 	m_blinkMode( 0 )
 {
+	m_light = nullptr;
 }
 
 
@@ -550,7 +578,9 @@ EveSOFDataHullSpriteSetItem::EveSOFDataHullSpriteSetItem( IRoot* lockobj ) :
 	m_blinkRate( 0.1f ), m_blinkPhase( 0.f ), m_minScale( 1.f ), m_maxScale( 10.f ), m_falloff( 0.f ), m_intensity( 1.f ),
 	m_boneIndex( 0 ),
 	m_colorType( SOFDataFactionColorChooser::TYPE_PRIMARY )
-{}
+{
+	m_light = nullptr;
+}
 
 
 EveSOFDataHullSpriteLineSet::EveSOFDataHullSpriteLineSet( IRoot* lockobj ) :
@@ -566,7 +596,9 @@ EveSOFDataHullSpriteLineSetItem::EveSOFDataHullSpriteLineSetItem( IRoot* lockobj
 	m_boneIndex( 0 ),
 	m_isCircle( false ),
 	m_colorType( SOFDataFactionColorChooser::TYPE_PRIMARY )
-{}
+{
+	m_light = nullptr;
+}
 
 EveSOFDataHullHazeSet::EveSOFDataHullHazeSet( IRoot* lockobj ) :
 	PARENTLOCK( m_items ),
@@ -582,7 +614,9 @@ EveSOFDataHullHazeSetItem::EveSOFDataHullHazeSetItem( IRoot* lockobj ) :
 	m_colorType( SOFDataFactionColorChooser::TYPE_PRIMARY ),
 	m_hazeBrightness( 1.f ), m_hazeFalloff( 6.f ), m_sourceSize( 0.2f ), m_sourceBrightness( 2.f ),
 	m_boosterGainInfluence( false )
-{}
+{
+	m_light = nullptr;
+}
 
 /// <summary>
 /// Banners
@@ -721,7 +755,7 @@ EveSOFDataHullBannerSetItem::EveSOFDataHullBannerSetItem( IRoot* ) :
 	m_boneIndex( -1 ),
 	m_maintainAspectRatio( true )
 {
-	m_lightOverride.CreateInstance();
+	m_light = nullptr;
 }
 
 float EveSOFDataHullBannerSetItem::GetTargetAspectRatio() const

@@ -22,7 +22,7 @@ const Be::ClassInfo* EvePlaneSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "pickBufferID", m_pickBufferID, "A user-specified ID which is used for click detection (acts as areaID)", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "planes", m_planes, "The list of all plane items", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "effect", m_effect, "Effect to use for rendering planes", Be::READWRITE | Be::PERSIST )
-
+		
 		MAP_METHOD_AND_WRAP( "Rebuild", Rebuild, "Rebuild resources after adding/removing/changing individual items" )
 
     EXPOSURE_END()
