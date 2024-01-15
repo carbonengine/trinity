@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "TriCurveSet.h"
 #include "TriValueBinding.h"
+#include <ICurveSetDriver.h>
 #include "include/ITriDuration.h"
 #include "include/ITriFunction.h"
 #include "include/ITriCurveLength.h"
@@ -17,6 +18,7 @@ TriCurveSet::TriCurveSet( IRoot* lockobj ) :
 	PARENTLOCK( m_curves ),
 	PARENTLOCK( m_bindings ),
 	PARENTLOCK( m_ranges ),
+	m_driver(),
 	m_isPlaying( false ),
 	m_stopOnNextFrame( false ),
 	m_playOnLoad( true ),
@@ -74,6 +76,11 @@ void TriCurveSet::Update( double time )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 
+	if ( m_driver != nullptr )
+	{
+		time = m_driver->GetCurveSetTime( time );
+	}
+
 	if( m_endTime < 0.0 )
 	{
 		// StopAfter sets m_endTime to the negative value. Subtracting it here
@@ -85,8 +92,15 @@ void TriCurveSet::Update( double time )
 	{
 		if( m_startTime < 0.0 )
 		{
-			// Negative start time means it hasn't been set - set it to the current time.
-			m_startTime = time;
+			if ( m_driver != nullptr ) 
+			{
+				m_startTime = 0;
+			}
+			else
+			{
+				// Negative start time means it hasn't been set - set it to the current time.
+				m_startTime = time;
+			}
 		}
 
 		double now = time - m_startTime;
