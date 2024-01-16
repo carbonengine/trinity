@@ -20,9 +20,24 @@ BLUE_DECLARE( EvePlaneSet );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2DebugRenderer );
+BLUE_DECLARE( TriTextureParameter );
+
 struct ViewDistanceInfo;
 
 class Tr2PerObjectData;
+
+struct EvePlaneLight 
+{
+	EvePlaneLight();
+	EvePlaneLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring profilePath );
+
+	LightData lightData;
+	float saturation;
+	Tr2LightProfileResPtr lightProfile;
+
+	uint32_t index;
+	Matrix boneMatrix;
+};
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -69,9 +84,15 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength );
 	virtual void GetBatches( ITriRenderBatchAccumulator * accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = Tr2RenderReason::TR2RENDERREASON_NORMAL );
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+
+	void AddLight( const EvePlaneLight& light ) ;
+	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
+
+	void SetPrimaryTextureParameter( TriTextureParameterPtr primaryTextureParameter );
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
@@ -91,6 +112,9 @@ public:
 
 	EvePlaneSetItemVector* GetPlanes();
 private:
+
+	Color GetAverageColor() const;
+
 	// toggle visibility
 	bool m_display;
 	bool m_hideOnLowQuality;
@@ -119,6 +143,10 @@ private:
 	unsigned int m_vertexDeclHandle;
 	unsigned int m_vertexCount;
 	Tr2BufferAL m_vertexBuffer;
+
+	std::vector<EvePlaneLight> m_lights;
+	TriTextureParameterPtr m_primaryTextureParameter;
+	float m_activationStrength;
 };
 
 TYPEDEF_BLUECLASS( EvePlaneSet );

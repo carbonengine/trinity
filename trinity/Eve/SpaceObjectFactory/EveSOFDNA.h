@@ -40,7 +40,6 @@ public:
 		CMD_CLASS,
 		CMD_PATTERN,
 		CMD_LAYOUT,
-		CMD_EXPERIMENTAL,
 		CMD_MAX
 	}; 
 
@@ -150,8 +149,7 @@ public:
 	const char* GetImpactShieldShader() const;
 	unsigned int GetHighestMeshAreaIndex( TriBatchType areaType, size_t n = 0 ) const;
 
-	bool IsUsingExperimentalFeatures() const;
-	bool IsHullUsingExperimentalFeatures() const;
+	bool UsingSof6() const;
 	EntityComponents::ReflectionMode GetReflectionMode() const;
 
 	BlueSharedString GetFactionName() const;
@@ -201,8 +199,6 @@ private:
 
 	// We may have a skinned hull, but used in non skinned situations, like layouts
 	bool m_isSkinned;
-
-	bool m_experimental;
 };
 
 TYPEDEF_BLUECLASS( EveSOFDNA );

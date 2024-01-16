@@ -207,16 +207,47 @@ public:
 		std::vector<HullBoosterItemData> items;
 	};
 
+	struct PointLightAttachment {
+		explicit PointLightAttachment( const EveSOFDataPointLightAttachment& light );
+		LightData AsLightData( Color& color, float scale ) const;
+		Vector3 translation;
+		Quaternion rotation;
+		float saturation;
+		float intensity;
+		float innerScaleMultiplier;
+		float outerScaleMultiplier;
+		float noiseAmplitude;
+		float noiseFrequency;
+		int32_t noiseOctaves;
+		std::wstring lightProfilePath;
+	};
+
+	struct SpotLightAttachment {
+		explicit SpotLightAttachment( const EveSOFDataSpotLightAttachment& light );
+		LightData AsLightData( Color& color, float scale, float innerAngle, float outerAngle ) const;
+		Vector3 translation;
+		float saturation;
+		float intensity;
+		float innerAngleMultiplier;
+		float outerAngleMultiplier;
+		float innerScaleMultiplier;
+		float outerScaleMultiplier;
+		float noiseAmplitude;
+		float noiseFrequency;
+		int32_t noiseOctaves;
+		std::wstring lightProfilePath;
+	};
+
 	struct HullSpotlightSetItemData
 	{
 		explicit HullSpotlightSetItemData( const EveSOFDataHullSpotlightSetItem& item );
-
 		Matrix transform;
 		int boneIndex, groupIndex;
 		bool boosterGainInfluence;
 		SOFDataFactionColorChooser::ColorType colorType;
 		Vector3 spriteScale;
 		float coneIntensity, flareIntensity, spriteIntensity;
+		std::unique_ptr<SpotLightAttachment> light;
 	};
 
 	struct HullSpotlightSetData
@@ -246,6 +277,7 @@ public:
 		// BlinkData - combined into a float4 in the vertex buffer;
 		float rate, phase, dutyCycle;
 		int blinkMode; // selector
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullPlaneSetData
@@ -268,6 +300,7 @@ public:
 		float blinkRate, blinkPhase, minScale, maxScale, falloff, intensity;
 		int boneIndex;
 		SOFDataFactionColorChooser::ColorType colorType;
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullSpriteSetData
@@ -285,6 +318,7 @@ public:
 		int boneIndex;
 		bool isCircle;
 		SOFDataFactionColorChooser::ColorType colorType;
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullSpriteLineSetData
@@ -302,6 +336,7 @@ public:
 		SOFDataFactionColorChooser::ColorType colorType;
 		float hazeBrightness, hazeFalloff, sourceSize, sourceBrightness;
 		bool boosterGainInfluence;
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullHazeSetData
@@ -340,7 +375,9 @@ public:
 	struct HullBannerSetItemData
 	{
 		EveBannerItem item;
-		HullBannerSetItemLightData bannerLight;
+		// storing this as a shared pointer because it "needs" to be copyable 
+		// for the map that stores HullBannerSetItemData
+		std::shared_ptr<PointLightAttachment> light;
 	};
 
 	struct HullBannerSetData
@@ -471,6 +508,11 @@ public:
 
 	struct HullData
 	{
+		HullData() = default;
+		HullData( const HullData& ) = delete;
+		HullData(  HullData&& ) = default;
+		HullData& operator = ( HullData&& ) = default;
+
 		EveSOFDataHull::BuildClass buildClass;
 		std::string geometryResFilePath;
 		CcpMath::Sphere boundingSphere;

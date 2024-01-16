@@ -7,7 +7,7 @@ Tr2FactionLight::Tr2FactionLight( IRoot* lockobj ):
     m_selectedColor( -1 ),
 	m_isSpotlight( false ),
 	m_parentColorSet( nullptr ),
-	m_saturation( 1 )
+	m_saturation( 1.0f )
 {
 	m_type = POINT_LIGHT; // POINT_LIGHT or SPOT_LIGHT
 }
@@ -41,13 +41,7 @@ void Tr2FactionLight::SetLightColorFromFactionColor()
 
 	if( m_selectedColor >= 0 && m_selectedColor < SOFDataFactionColorChooser::TYPE_MAX )
 	{
-		Color out = m_parentColorSet[m_selectedColor];
-		// color intensity
-		float i = ( out.r * 0.299f ) + ( out.g * 0.587f ) + ( out.b * 0.114f );
-
-		out = Lerp( Color(i,i,i,i), out, max( 0.0f, m_saturation ) );
-
-		m_lightData.color = out;
+		m_lightData.color = Saturate( m_parentColorSet[m_selectedColor], m_saturation );
 	}
 }
 
@@ -62,9 +56,8 @@ void Tr2FactionLight::SetInheritProperties( const Color* colorSet )
 
 Color Tr2FactionLight::GetSelectedColor() const
 {
-        return m_lightData.color;
+	return m_lightData.color;
 }
-
 
 void Tr2FactionLight::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& worldMatrix, const granny_matrix_3x4* bones, size_t boneCount )
 {
