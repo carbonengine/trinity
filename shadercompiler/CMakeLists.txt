@@ -8,6 +8,8 @@ else()
     set(TELEMETRY_DEFAULT ON)
 endif()
 
+cmake_policy(SET CMP0119 OLD)
+
 option(WITH_TELEMETRY "Enable integration with RAD Game tools Telemetry SDK" ${TELEMETRY_DEFAULT})
 
 set(GENERATED_SOURCES_DIR ${CMAKE_CURRENT_BINARY_DIR}/GeneratedSources)
