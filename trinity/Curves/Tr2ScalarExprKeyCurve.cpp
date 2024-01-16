@@ -65,20 +65,20 @@ CcpParser::Constant s_constants[] = {
 
 struct VariableBuffer
 {
-    float m_time;
-    float m_value;
-    float m_leftTangent;
-    float m_rightTangent;
+	float m_time;
+	float m_value;
+	float m_leftTangent;
+	float m_rightTangent;
     
-    float m_inputVar1;
-    float m_inputVar2;
-    float m_inputVar3;
-    float m_inputVar4;
+	float m_inputVar1;
+	float m_inputVar2;
+	float m_inputVar3;
+	float m_inputVar4;
 
-    float m_randomConstant;
+	float m_randomConstant;
 
-    float m_prevKeyTime;
-    float m_prevKeyValue;
+	float m_prevKeyTime;
+	float m_prevKeyValue;
 };
 }
 
@@ -149,18 +149,18 @@ bool Tr2ScalarExprKey::OnModified( Be::Var* value )
 		SetExpression( m_rightTangentParser, m_rightTangentExpression );
 	}
     
-    VariableBuffer buffer;
-    buffer.m_time = m_time;
-    buffer.m_value = m_value;
-    buffer.m_leftTangent = m_leftTangent;
-    buffer.m_rightTangent = m_rightTangent;
-    buffer.m_inputVar1 = m_inputVar1;
-    buffer.m_inputVar2 = m_inputVar2;
-    buffer.m_inputVar3 = m_inputVar3;
-    buffer.m_inputVar4 = m_inputVar4;
-    buffer.m_randomConstant = m_randomConstant;
-    buffer.m_prevKeyTime = m_prevKeyTime;
-    buffer.m_prevKeyValue = m_prevKeyValue;
+	VariableBuffer buffer;
+	buffer.m_time = m_time;
+	buffer.m_value = m_value;
+	buffer.m_leftTangent = m_leftTangent;
+	buffer.m_rightTangent = m_rightTangent;
+	buffer.m_inputVar1 = m_inputVar1;
+	buffer.m_inputVar2 = m_inputVar2;
+	buffer.m_inputVar3 = m_inputVar3;
+	buffer.m_inputVar4 = m_inputVar4;
+	buffer.m_randomConstant = m_randomConstant;
+	buffer.m_prevKeyTime = m_prevKeyTime;
+	buffer.m_prevKeyValue = m_prevKeyValue;
 
 	void* buffers[] = { &buffer };
 	if( !m_timeExpression.empty() && m_timeParser )
@@ -263,18 +263,18 @@ void Tr2ScalarExprKey::UpdateValues( Tr2ScalarExprKey* previousKey )
 		m_prevKeyValue = 0.0f;
 	}
     
-    VariableBuffer buffer;
-    buffer.m_time = m_time;
-    buffer.m_value = m_value;
-    buffer.m_leftTangent = m_leftTangent;
-    buffer.m_rightTangent = m_rightTangent;
-    buffer.m_inputVar1 = m_inputVar1;
-    buffer.m_inputVar2 = m_inputVar2;
-    buffer.m_inputVar3 = m_inputVar3;
-    buffer.m_inputVar4 = m_inputVar4;
-    buffer.m_randomConstant = m_randomConstant;
-    buffer.m_prevKeyTime = m_prevKeyTime;
-    buffer.m_prevKeyValue = m_prevKeyValue;
+	VariableBuffer buffer;
+	buffer.m_time = m_time;
+	buffer.m_value = m_value;
+	buffer.m_leftTangent = m_leftTangent;
+	buffer.m_rightTangent = m_rightTangent;
+	buffer.m_inputVar1 = m_inputVar1;
+	buffer.m_inputVar2 = m_inputVar2;
+	buffer.m_inputVar3 = m_inputVar3;
+	buffer.m_inputVar4 = m_inputVar4;
+	buffer.m_randomConstant = m_randomConstant;
+	buffer.m_prevKeyTime = m_prevKeyTime;
+	buffer.m_prevKeyValue = m_prevKeyValue;
 
 	void* buffers[] = { &buffer };
 	if( !m_timeExpression.empty() && m_timeParser )

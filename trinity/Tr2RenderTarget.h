@@ -33,7 +33,7 @@ public:
 		Tr2RenderContextEnum::ExFlag flags,
 		Tr2RenderContextEnum::TextureType type );
 
-    int32_t Create( 
+	int32_t Create( 
 		unsigned width, 
 		unsigned height, 
 		unsigned mipLevelCount,

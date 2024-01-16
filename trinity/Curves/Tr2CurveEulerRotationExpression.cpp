@@ -122,7 +122,7 @@ Quaternion Tr2CurveEulerRotationExpression::GetValue( double time ) const
 	Vector3 result( 0, 0, 0 );
 	float* components = &result.x;
 
-    m_arguments.m_time = float( time / m_timeScale );
+	m_arguments.m_time = float( time / m_timeScale );
 	auto self = this;
 	void* buffers[] = { (void*)&m_arguments, (void*)&self };
 
