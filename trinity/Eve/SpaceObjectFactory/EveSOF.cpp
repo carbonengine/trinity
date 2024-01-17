@@ -3112,7 +3112,8 @@ void EveSOF::ProcessPlacementDistributionOrGroup( EveSOFDataMgr::ExtensionPlacem
 
 	EveSOFDNAPtr placementDna;
 	placementDna.CreateInstance();
-	placementDna->Setup( placement.name, placement.descriptor, dna, &m_dataMgr );
+	auto layout = dna->GetLayoutData(layoutIdx);
+	placementDna->Setup( layout->name, placement.descriptor, dna, &m_dataMgr );
 	if( placement.isInstanced )
 	{
 		placementDna->DisableAnimation();

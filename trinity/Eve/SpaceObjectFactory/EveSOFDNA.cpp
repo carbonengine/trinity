@@ -353,7 +353,7 @@ void EveSOFDNA::Setup( const BlueSharedString layoutName, const EveSOFDataMgr::D
 		const EveSOFDataMgr::HullData* h = m_dataMgr->GetHullData( hullName.c_str() );
 		if( h == nullptr )
 		{
-			CCP_LOGERR( "Couldn't find the requested hull for layout: %s", hullName.c_str() );
+			CCP_LOGERR( "Couldn't find the requested hull: %s for layout: %s", hullName.c_str(), layoutName.c_str() );
 			return;
 		}
 		m_hullDatas.push_back( h );		
@@ -372,14 +372,14 @@ void EveSOFDNA::Setup( const BlueSharedString layoutName, const EveSOFDataMgr::D
 	m_factionData = m_dataMgr->GetFactionData( m_factionName.c_str() );
 	if( m_factionData == nullptr )
 	{
-		CCP_LOGERR( "Couldn't find the requested faction for layout: %s", layoutName.c_str() );
+		CCP_LOGERR( "Couldn't find the requested faction: %s for layout: %s", m_factionName.c_str(), layoutName.c_str() );
 		return;
 	}
 	// make sure we find this race
 	m_raceData = m_dataMgr->GetRaceData( m_raceName.c_str() );
 	if( m_raceData == nullptr )
 	{
-		CCP_LOGERR( "Couldn't find the requested race for layout: %s", layoutName.c_str() );
+		CCP_LOGERR( "Couldn't find the requested race: %s for layout: %s", m_raceName.c_str(), layoutName.c_str() );
 		return;
 	}
 
