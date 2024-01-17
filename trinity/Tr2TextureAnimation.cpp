@@ -195,6 +195,8 @@ void Tr2TextureAnimation::AdvanceTime( float dt )
 			m_restartState = NotRestarting;
 		}
 		return;
+	default:
+		break;
 	}
 
 	if( !m_paused )

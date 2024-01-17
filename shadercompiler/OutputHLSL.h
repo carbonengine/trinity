@@ -10,7 +10,7 @@ enum class ShadingLanguage
 	MSL
 };
 
-class CodeStream : public std::ostrstream
+class CodeStream : public std::stringstream
 {
 public:
 	explicit CodeStream( const ShadingLanguage lang )

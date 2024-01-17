@@ -81,9 +81,6 @@ template<> const char* BeGetErrorMessage( const Be::Result<HRESULT>& result )
 	auto found = s_errorMessages.find( result );
 	if( found == s_errorMessages.end() )
 	{
-		const char* name = "<Unknown>";
-		const char* message = "<No description>";
-
 		static char buffer[1024];
 		sprintf_s( buffer, "ALResult: %lx", result.GetResult() );
 		s_errorMessages[result] = buffer;

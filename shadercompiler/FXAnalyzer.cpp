@@ -1172,7 +1172,7 @@ bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, Expressi
 				state.ShowMessage( node->GetToken()->fileLocation, EC_INT_TYPE_REQUIRED );
 				return false;
 			}
-			if( !GetElementType( leftType, index[0].intValue, type ) )
+			if( !GetElementType( leftType, unsigned( index[0].intValue ), type ) )
 			{
 				state.ShowMessage( node->GetToken()->fileLocation, EC_INDEX_OUT_OF_RANGE, index[0].intValue );
 				return false;
@@ -1743,5 +1743,5 @@ int EvaluateIntegerExpression( ParserState& state, ASTNode* node, int defaultVal
 		state.ShowMessage( node->GetToken()->fileLocation, EC_INVALID_IMPLICIT_CAST );
 		return defaultValue;
 	}
-	return value[0].intValue;
+	return int( value[0].intValue );
 }

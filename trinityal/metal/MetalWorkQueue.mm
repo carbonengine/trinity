@@ -1349,7 +1349,7 @@ void MetalWorkQueue::ResolveMsaa( id<MTLTexture> source, id<MTLTexture> destinat
 		for( uint32_t i = 0; i < numOldColorAttachments; ++i )
 		{
 			oldColorAttachments[i] = m_currentRenderPassDescriptor.colorAttachments[i].texture;
-			oldAttachmentSlice[i] = m_currentRenderPassDescriptor.colorAttachments[i].depthPlane;
+			oldAttachmentSlice[i] = uint32_t( m_currentRenderPassDescriptor.colorAttachments[i].depthPlane );
 			SetRenderAttachments( nil, i );
 		}
 
@@ -1393,7 +1393,7 @@ id<MTLDepthStencilState> MetalWorkQueue::GetCachedDepthStencilState( MTLDepthSte
 	if( m_depthStencilDescriptor.frontFaceStencil.stencilCompareFunction == MTLCompareFunctionAlways &&
 		m_depthStencilDescriptor.backFaceStencil.stencilCompareFunction == MTLCompareFunctionAlways )
 	{
-		index = descriptor.depthCompareFunction * 2 + ( descriptor.depthWriteEnabled ? 1 : 0 );
+		index = int( descriptor.depthCompareFunction * 2 + ( descriptor.depthWriteEnabled ? 1 : 0 ) );
 		CCP_ASSERT( index < METAL_DEPTHSTENCIL_CACHE_SIZE );
 
 		result = m_depthStencilStateCache[index];
@@ -1426,7 +1426,7 @@ size_t MetalWorkQueue::CalculateVertexDescriptorHash()
 		unsigned int mask = m_currentVertexStreamMask;
 		for( int i = 0; mask && i < METAL_MAX_VERTEX_ATTRIBUTES; ++i )
 		{
-			int stream = m_currentVertexDescriptor.attributes[i].bufferIndex;
+			int stream = int( m_currentVertexDescriptor.attributes[i].bufferIndex );
 			unsigned int flag = ( 1 << stream );
 			if( mask & flag )
 			{
