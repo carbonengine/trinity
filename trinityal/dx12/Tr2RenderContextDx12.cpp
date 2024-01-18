@@ -820,6 +820,14 @@ ALResult Tr2RenderContextAL::SetAllState()
 
 	if( m_psoDescription.m_shaderProgram.IsValid() )
 	{
+
+		/*
+		Since all SRVs are set as DATA_STATIC_WHILE_SET_AT_EXECUTE in the root table, we need to make
+		sure all resourcesare in the right resource state BEFORE we bind descriptors of those resources,
+		so make sure we flush all pending barriers here before we Commit().
+		*/
+		FlushBarriersDx12();
+
 		uint32_t bufferIndex = GetPrimaryRenderContextPointer()->GetCurrentBackBufferIndex();
 		m_descriptorCache[bufferIndex]->Commit( m_commandList, GetPrimaryRenderContextPointer()->GetGlobalSrvUavHeap(), m_psoDescription.m_shaderProgram.m_program.get() );
 	}
