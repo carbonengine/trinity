@@ -823,7 +823,7 @@ ALResult Tr2RenderContextAL::SetAllState()
 
 		/*
 		Since all SRVs are set as DATA_STATIC_WHILE_SET_AT_EXECUTE in the root table, we need to make
-		sure all resourcesare in the right resource state BEFORE we bind descriptors of those resources,
+		sure all resources are in the right resource state BEFORE we bind descriptors of those resources,
 		so make sure we flush all pending barriers here before we Commit().
 		*/
 		FlushBarriersDx12();
