@@ -297,19 +297,20 @@ Vector3 TriColor::PyGetHSV()
 	return hsv;
 }
 
-void TriColor::PyFromInt( int color )
+void TriColor::PyFromInt( int32_t color )
 {
-	// couldn't get the casting to work, so....
-	::Color t(color);
+	// For legacy reasons, Python expects a signed integer value
+	uint32_t unsignedColor = static_cast<uint32_t>(color);
+	::Color t(unsignedColor);
 	r = t.r;
 	g = t.g;
 	b = t.b;
 	a = t.a;
 }
 
-uint32_t TriColor::PyAsInt()
+int32_t TriColor::PyAsInt()
 {
-	return (uint32_t)*this;
+	return static_cast<int32_t>(*this);
 }
 
 
