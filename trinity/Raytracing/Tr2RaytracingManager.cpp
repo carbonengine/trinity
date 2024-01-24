@@ -52,12 +52,12 @@ Tr2RaytracingGeometry& Tr2RaytracingManager::GetGeometry()
 	return *m_geometry;
 }
 
-void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, const Vector3& sunDirection, Tr2RenderContext& renderContext )
+void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, Tr2RenderContext& renderContext )
 {
 	renderContext.AddGpuMarker( __FUNCTION__ );
 	GPU_REGION( renderContext, "Raytraced shadows" );
 	CCP_STATS_ZONE( __FUNCTION__ );
-	
+
 	auto depthTex = depth->GetTexture();
 	if( !depthTex )
 	{
@@ -76,7 +76,8 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, const Vect
 
 	// texture uav
 	m_shadowEffect->SetParameter( BlueSharedString( "ShadowDest" ), m_destTex );
-	
+	m_shadowEffect->SetParameter( BlueSharedString( "NormalBuffer" ), normal );
+
 	// scene srv
 	m_shadowEffect->SetParameter( BlueSharedString( "Scene" ), m_geometry );
 
@@ -102,16 +103,19 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, const Vect
 	m_pipelineManager.AddLibrary( rayGenName, missName, m_shadowEffect, BlueSharedString( "RtShadow" ) );
 
 	auto pipelineState = m_pipelineManager.GetPipelineState( renderContext );
-	
+
 	if( !pipelineState.IsValid() )
 	{
 		return;
 	}
 
 	auto& shaderTableDesc = m_geometry->m_shaderTableDesc;
-	shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
-	shaderTableDesc.AddMissShader( missName.c_str() );
-	m_shadowShaderTable.Create( shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+	{
+		CCP_STATS_ZONE( "Create shader table" );
+		shaderTableDesc.AddRayGenShader( rayGenName.c_str() );
+		shaderTableDesc.AddMissShader( missName.c_str() );
+		m_shadowShaderTable.Create( shaderTableDesc, pipelineState, renderContext.GetPrimaryRenderContext() );
+	}
 
 	if( !m_shadowPerFrameData.IsValid() )
 	{
@@ -135,12 +139,12 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, const Vect
 	}
 
 	const float clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	renderContext.ClearUav( *m_destTex->GetTexture(), 0, clearValue);
-	
+	renderContext.ClearUav( *m_destTex->GetTexture(), 0, clearValue );
+
 	m_shadowEffect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
 
 	renderContext.SetConstants( m_shadowPerFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, 2 );
-	renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1);
+	renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );
 
 	if( m_denoiser && m_applyDenoiser )
 	{

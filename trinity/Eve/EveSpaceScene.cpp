@@ -2005,7 +2005,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	if( m_rtManager && m_enableRaytracing && m_depthMap->IsValid() )
 	{
 		renderContext.SetReadOnlyDepth( true );
-		m_rtManager->RenderShadows( m_depthMap, m_sunData.DirWorld, renderContext );
+		m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, renderContext );
 		renderContext.SetReadOnlyDepth( false );
 	}
 	
