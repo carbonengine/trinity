@@ -64,15 +64,17 @@ const int SPRITE_QUAD_COUNT = 2;
 EveSpotlightLight::EveSpotlightLight() :
 	lightData( LightData() ),
 	index( 0 ),
-	boneMatrix( IdentityMatrix() )
+	boneMatrix( IdentityMatrix() ), 
+	boosterGainInfluence( false )
 {
 
 }
 
-EveSpotlightLight::EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring profilePath ) :
+EveSpotlightLight::EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring profilePath, bool boosterGainInfluence ) :
 	lightData( lightData ),
 	index( index ),
-	boneMatrix( IdentityMatrix() )
+	boneMatrix( IdentityMatrix() ),
+	boosterGainInfluence( boosterGainInfluence )
 {
 	if( !profilePath.empty() )
 	{
@@ -92,6 +94,7 @@ EveSpotlightSet::EveSpotlightSet( IRoot* lockobj ) :
 	m_coneEffectHash( 0 ),
 	m_glowEffectHash( 0 ),
 	m_activationStrength( 0 ),
+	m_boosterGain( 0 ),
 	m_coneBuffer( "EveSpotlightSet::m_coneBuffer" ),
 	m_glowBuffer( "EveSpotlightSet::m_glowBuffer" ),
 	m_spotlightData( "EveSpotlightSet::m_spotlightData" )
@@ -150,7 +153,7 @@ bool EveSpotlightSet::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EveSpotlightSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength )
+void EveSpotlightSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights ) 
 	{
@@ -160,6 +163,7 @@ void EveSpotlightSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneC
 		}
 	}
 	m_activationStrength = activationStrength;
+	m_boosterGain = boosterGain;
 }
 
 // --------------------------------------------------------------------------------------
@@ -542,10 +546,13 @@ void EveSpotlightSet::AddLight( const EveSpotlightLight& light )
 void EveSpotlightSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
 {
 	LightFeatures features = LightFeatures();
-	features.parentBrightness = m_activationStrength;
 
 	for( auto& light : m_lights )
 	{
+		features.parentBrightness = m_activationStrength;
+		if( light.boosterGainInfluence ) {
+			features.parentBrightness *= m_boosterGain;
+		}
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
 		auto perLightData = light.lightData.AsPerSpotLightData( light.boneMatrix * parentTransform, features );

@@ -1536,7 +1536,7 @@ const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetFactionalPatternAppli
 const EveSOFDataMgr::PatternApplicationData* EveSOFDNA::GetHullPatternApplicationData() const
 {
 	// TODO PHASE-6
-	if( UsingSof6() )
+	if( m_patternData->sof6 )
 	{
 		auto finder = m_patternData->applicationData.find( BlueSharedString( m_hullNames[0] ) );
 		if( finder != m_patternData->applicationData.end() )

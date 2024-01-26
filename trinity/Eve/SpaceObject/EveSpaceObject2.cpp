@@ -558,7 +558,7 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 
 		for( auto& attachment : m_attachments )
 		{
-			attachment->UpdateLights( bones, boneCount, m_activationStrength );
+			attachment->UpdateLights( bones, boneCount, m_spaceObjectShipData.y, m_spaceObjectShipData.x );
 		}
 	}
 

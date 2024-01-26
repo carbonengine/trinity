@@ -738,7 +738,6 @@ void EveSOF::SetupSpriteSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSO
 
 						// set it up the colorset data
 						spriteSetItem->m_color = itemData->intensity * colorSet[itemData->colorType];
-
 						// set it up the per-hull data
 						spriteSetItem->m_blinkPhase = itemData->blinkPhase;
 						spriteSetItem->m_blinkRate = itemData->blinkRate;
@@ -748,17 +747,22 @@ void EveSOF::SetupSpriteSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSO
 						spriteSetItem->m_minScale = itemData->minScale;
 						spriteSetItem->m_position = XMVector3TransformCoord( itemData->position + hullOffset, offset );
 
-						if( itemData->light )
+						if( dna->UsingSof6() )
 						{
-							auto saturatedColor = Saturate( spriteSetItem->m_color, itemData->light->saturation );
-							auto lightData = itemData->light->AsLightData( saturatedColor, 1.0f);
-							lightData.position += spriteSetItem->m_position;
-							lightData.boneIndex = spriteSetItem->m_boneIndex;
+							spriteSetItem->m_color = Saturate( spriteSetItem->m_color, itemData->saturation );
 
-							EveSpriteLight light( lightData, itemData->blinkPhase, itemData->blinkRate, itemData->minScale, itemData->maxScale, index, itemData->light->lightProfilePath );
-							spriteSet->AddLight( light );
+							if( itemData->light )
+							{
+								auto saturatedColor = Saturate( spriteSetItem->m_color, itemData->light->saturation );
+								auto lightData = itemData->light->AsLightData( saturatedColor, 1.0f);
+								lightData.position += spriteSetItem->m_position;
+								lightData.boneIndex = spriteSetItem->m_boneIndex;
+
+								EveSpriteLight light( lightData, itemData->blinkPhase, itemData->blinkRate, itemData->minScale, itemData->maxScale, index, itemData->light->lightProfilePath );
+								spriteSet->AddLight( light );
+							}
+							index++;
 						}
-						index++;
 						spriteSet->Add(spriteSetItem);
 					}
 				}
@@ -858,9 +862,9 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 					if( dna->UsingSof6() )
 					{
 						auto colorSet = dna->GetColorSet();
-						spotlightSetItem->m_coneColor = ssiit.coneIntensity * ModifyColor( colorSet[ssiit.colorType], 0.75f, 0.5f );
-						spotlightSetItem->m_flareColor = ssiit.flareIntensity * ModifyColor( colorSet[ssiit.colorType], 1.0f, 1.0f );
-						spotlightSetItem->m_spriteColor = ssiit.spriteIntensity * ModifyColor( colorSet[ssiit.colorType], 0.9f, 0.75f );
+						spotlightSetItem->m_coneColor = ssiit.coneIntensity * ModifyColor( colorSet[ssiit.colorType], ssiit.saturation * 0.75f, 0.5f );
+						spotlightSetItem->m_flareColor = ssiit.flareIntensity * ModifyColor( colorSet[ssiit.colorType], ssiit.saturation, 1.0f );
+						spotlightSetItem->m_spriteColor = ssiit.spriteIntensity * ModifyColor( colorSet[ssiit.colorType], ssiit.saturation * 0.9f, 0.75f );
 						lightColor = colorSet[ssiit.colorType];
 					}
 					else
@@ -879,43 +883,38 @@ void EveSOF::SetupSpotlightSets( IEveSpaceObjectAttachmentOwnerPtr obj, const Ev
 
 					Matrix transformed = XMMatrixMultiply( XMMatrixMultiply(ssiit.transform, TranslationMatrix(hullOffset)), offset );
 					TriMatrixTranslate( &spotlightSetItem->m_transform, &transformed, &hullOffset );
+					
+					if( dna->UsingSof6() )
+					{
+						if( ssiit.light ) {
+							Quaternion rotation;
+							Vector3 pos;
+							Vector3 scale;
+							Decompose( scale, rotation, pos, spotlightSetItem->m_transform );
 
-					if( ssiit.light ) {
-						Quaternion rotation;
-						Vector3 pos;
-						Vector3 scale;
-						Decompose( scale, rotation, pos, spotlightSetItem->m_transform );
+							scale.x = abs( scale.x );
+							scale.y = abs( scale.y );
+							scale.z = abs( scale.z );
 
-						scale.x = abs( scale.x );
-						scale.y = abs( scale.y );
-						scale.z = abs( scale.z );
+							float innerAngle = 0.0f;
+							float outerAngle = 0.0f;
+							if( scale.z > 0.f ) {
+								innerAngle = atanf( max( scale.x, scale.y ) / ( 2.0f * scale.z ) ) * 180.0f / TRI_PI;
+								outerAngle = atanf( max( scale.x, scale.y ) / ( 2.0f * scale.z ) ) * 180.0f / TRI_PI;
+							}
 
-						float innerAngle = 0.0f;
-						float outerAngle = 0.0f;
-						if( scale.z > 0.f ) {
-							innerAngle = atanf( max( scale.x, scale.y ) / ( 2.0f * scale.z ) ) * 180.0f / TRI_PI;
-							outerAngle = atanf( max( scale.x, scale.y ) / ( 2.0f * scale.z ) ) * 180.0f / TRI_PI;
+							auto saturatedColor = Saturate( lightColor, ssiit.saturation * ssiit.light->saturation );
+							auto data = ssiit.light->AsLightData( saturatedColor, scale.z, innerAngle, outerAngle );
+
+							data.boneIndex = ssiit.boneIndex;
+							data.position = ( TranslationMatrix( data.position ) * RotationMatrix( rotation ) * TranslationMatrix( pos ) ).GetTranslation();
+							data.rotation = rotation;
+							data.brightness *= ssiit.coneIntensity;
+
+							spotlightSet->AddLight( EveSpotlightLight( data, index, ssiit.light->lightProfilePath, ssiit.boosterGainInfluence ) );
 						}
-
-						auto saturatedColor = Saturate( lightColor, ssiit.light->saturation );
-						auto data = ssiit.light->AsLightData(saturatedColor, scale.z, innerAngle, outerAngle );
-
-						data.boneIndex = ssiit.boneIndex;
-						data.position = (TranslationMatrix(data.position) * RotationMatrix(rotation) * TranslationMatrix(pos)).GetTranslation();
-						data.rotation = rotation;
-						data.brightness *= ssiit.coneIntensity;
-
-						EveSpotlightLight light = EveSpotlightLight();
-						light.lightData = data;
-						light.index = index;
-
-						if( !ssiit.light->lightProfilePath.empty() ) {
-							BeResMan->GetResource( ssiit.light->lightProfilePath, L"lp", light.lightProfile );
-						}
-
-						spotlightSet->AddLight( light );
-					}
-					index++;
+						index++;
+					}					
 
 					// add it
 					spotlightSet->AddSpotlightItem( spotlightSetItem );
@@ -1036,7 +1035,7 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 					if( dna->UsingSof6() )
 					{
 						auto colorSet = dna->GetColorSet();
-						planeSetItem->m_color = psiit.intensity * colorSet[psiit.colorType];
+						planeSetItem->m_color = Saturate( psiit.intensity * colorSet[psiit.colorType], psiit.saturation );
 					}
 					else
 					{
@@ -1049,30 +1048,32 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 						}
 					}
 
-					if( psiit.light )
+					if( dna->UsingSof6() )
 					{
-						float maxScale = max( psiit.scaling.x, max( psiit.scaling.y, psiit.scaling.z ) );
-						auto saturatedColor = Saturate( planeSetItem->m_color, psiit.light->saturation );
-						auto lightData = psiit.light->AsLightData(saturatedColor, maxScale);
-						lightData.position += planeSetItem->m_position;
-						lightData.rotation = Normalize( lightData.rotation * planeSetItem->m_rotation );
 
-						lightData.boneIndex = planeSetItem->m_boneIndex;
+						for( auto& pslight : psiit.lights ) {
+							float maxScale = max( psiit.scaling.x, max( psiit.scaling.y, psiit.scaling.z ) );
+							auto saturatedColor = Saturate( planeSetItem->m_color, pslight.saturation );
+							auto lightData = pslight.AsLightData( saturatedColor, maxScale );
+							lightData.position += planeSetItem->m_position;
+							lightData.rotation = Normalize( lightData.rotation * planeSetItem->m_rotation );
 
+							lightData.boneIndex = planeSetItem->m_boneIndex;
 
-						if( planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_SPACE_VIDEO ) {
-							planeSet->SetPrimaryTextureParameter( imageMap );
+							if( planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_SPACE_VIDEO ) {
+								planeSet->SetPrimaryTextureParameter( imageMap );
+							}
+							else if( planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_HANGAR_VIDEO ) {
+								planeSet->SetPrimaryTextureParameter( imageMap );
+							}
+
+							EvePlaneLight light( lightData, pslight.saturation, index, pslight.lightProfilePath );
+
+							planeSet->AddLight( light );
 						}
-						else if( planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_HANGAR_VIDEO ) {
-							planeSet->SetPrimaryTextureParameter( imageMap );
-						}
 
-						EvePlaneLight light(lightData, psiit.light->saturation, index, psiit.light->lightProfilePath);
-
-						planeSet->AddLight( light );
+						index++;
 					}
-
-					index++;
 					// add it
 					planeSet->AddPlaneItem( planeSetItem );
 				}
@@ -1155,37 +1156,41 @@ void EveSOF::SetupSpriteLineSets( IEveSpaceObjectAttachmentOwnerPtr obj, const E
 						spriteLineSetItem->m_spacing = itemData->spacing;
 						spriteLineSetItem->m_isCircle = itemData->isCircle;
 
-						if( itemData->light )
+						if( dna->UsingSof6() )
 						{
-							auto saturatedColor = Saturate( spriteLineSetItem->m_color, itemData->light->saturation );
-							auto lightData = itemData->light->AsLightData( saturatedColor, 1.0);
-							lightData.boneIndex = spriteLineSetItem->m_boneIndex;
-
-							Tr2LightProfileResPtr profile = nullptr;
-							if( !itemData->light->lightProfilePath.empty() ) 
+							spriteLineSetItem->m_color = Saturate( spriteLineSetItem->m_color, itemData->saturation );
+							if( itemData->light )
 							{
-								BeResMan->GetResource( itemData->light->lightProfilePath, L"lp", profile );
+								auto saturatedColor = Saturate( spriteLineSetItem->m_color, itemData->light->saturation );
+								auto lightData = itemData->light->AsLightData( saturatedColor, 1.0 );
+								lightData.boneIndex = spriteLineSetItem->m_boneIndex;
+
+								Tr2LightProfileResPtr profile = nullptr;
+								if( !itemData->light->lightProfilePath.empty() )
+								{
+									BeResMan->GetResource( itemData->light->lightProfilePath, L"lp", profile );
+								}
+
+								unsigned spriteInSetIndex = 0;
+								for( auto& pos : spriteLineSetItem->GetPositions() )
+								{
+									lightData.position = itemData->light->translation + pos + spriteLineSetItem->m_position;
+									lightData.rotation = Normalize( lightData.rotation * spriteLineSetItem->m_rotation );
+
+									EveSpriteLight light = EveSpriteLight();
+									light.index = index;
+									light.lightProfile = profile;
+									light.lightData = lightData;
+									light.blinkRate = itemData->blinkRate;
+									light.blinkPhase = itemData->blinkPhase + itemData->blinkPhaseShift * spriteInSetIndex++;
+									light.minScale = itemData->minScale;
+									light.maxScale = itemData->maxScale;
+
+									spriteLineSet->AddLight( light );
+								}
 							}
-
-							unsigned spriteInSetIndex = 0;
-							for( auto& pos : spriteLineSetItem->GetPositions() )
-							{
-								lightData.position = itemData->light->translation + pos + spriteLineSetItem->m_position;
-								lightData.rotation = Normalize( lightData.rotation * spriteLineSetItem->m_rotation );
-
-								EveSpriteLight light = EveSpriteLight();
-								light.index = index;
-								light.lightProfile = profile;
-								light.lightData = lightData;
-								light.blinkRate = itemData->blinkRate;
-								light.blinkPhase = itemData->blinkPhase + itemData->blinkPhaseShift * spriteInSetIndex++;
-								light.minScale = itemData->minScale;
-								light.maxScale = itemData->maxScale;
-
-								spriteLineSet->AddLight( light );
-							}
+							index++;
 						}
-						index++;
 
 						// put it into spriteset
 						spriteLineSet->Add( spriteLineSetItem );
@@ -1280,22 +1285,27 @@ void EveSOF::SetupHazeSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOFD
 						hazeSetItem->m_boneIndex = itemData->boneIndex;
 						hazeSetItem->m_hazeData = Vector4( itemData->hazeFalloff, itemData->sourceSize, itemData->sourceBrightness, itemData->boosterGainInfluence ? 1.f : 0.f );
 						
-						if( itemData->light )
+						if( dna->UsingSof6() )
 						{
-							auto saturatedColor = Saturate( color, itemData->light->saturation );
-							Vector3 scale = hazeSetItem->m_scaling;
-							float maxScale = max( scale.x, max( scale.y, scale.z ) );
+							hazeSetItem->m_color = Saturate( hazeSetItem->m_color, itemData->saturation );
+							if( itemData->light )
+							{
+								auto saturatedColor = Saturate( color, itemData->light->saturation );
+								Vector3 scale = hazeSetItem->m_scaling;
+								float maxScale = max( scale.x, max( scale.y, scale.z ) );
 
-							auto lightData = itemData->light->AsLightData(saturatedColor, maxScale);
-							lightData.position += hazeSetItem->m_position;
-							lightData.rotation = Normalize( lightData.rotation * hazeSetItem->m_rotation );
+								auto lightData = itemData->light->AsLightData( saturatedColor, maxScale );
+								lightData.position += hazeSetItem->m_position;
+								lightData.rotation = Normalize( lightData.rotation * hazeSetItem->m_rotation );
 
-							lightData.boneIndex = itemData->boneIndex;
+								lightData.boneIndex = itemData->boneIndex;
 
-							EveHazeSetLight hazeSetLight(lightData, index, itemData->light->lightProfilePath );
+								EveHazeSetLight hazeSetLight( lightData, index, itemData->light->lightProfilePath, itemData->boosterGainInfluence );
 
-							hazeSet->AddLight( hazeSetLight );
+								hazeSet->AddLight( hazeSetLight );
+							}
 						}
+						
 
 						index++;
 						// put it into hazeset

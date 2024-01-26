@@ -40,7 +40,10 @@ EveSOFDataArea::EveSOFDataArea( IRoot* lockobj )
 
 EveSOFDataFactionColorSet::EveSOFDataFactionColorSet( IRoot* lockobj )
 {
-	memset( m_colors, 0, SOFDataFactionColorChooser::TYPE_MAX * sizeof( Color ) );
+	std::fill( std::begin( m_colors ), std::end( m_colors ), Color( 0, 0, 0, 1 ) );
+
+	// set default colors
+	m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_BILLBOARD] = Color( 2.5f, 2.5f, 2.5f, 2.5f ); // default white with 2.5 in hdr
 }
 
 EveSOFDataLogo::EveSOFDataLogo( IRoot* lockobj ):
@@ -360,7 +363,8 @@ EveSOFDataPatternTransform::EveSOFDataPatternTransform( IRoot* lockobj ) :
 
 EveSOFDataPattern::EveSOFDataPattern( IRoot* lockobj ) :
 	PARENTLOCK( m_projections ),
-	PARENTLOCK( m_applicationGroups )
+	PARENTLOCK( m_applicationGroups ),
+	m_sof6( false )
 {
 }
 
@@ -526,7 +530,8 @@ EveSOFDataHullSpotlightSetItem::EveSOFDataHullSpotlightSetItem( IRoot* lockobj )
 	m_coneIntensity( 0.f ),
 	m_flareIntensity( 0.f ),
 	m_spriteIntensity( 0.f ),
-	m_transform( IdentityMatrix() ), 
+	m_saturation( 1.f ),
+	m_transform( IdentityMatrix() ),
 	m_colorType( SOFDataFactionColorChooser::TYPE_HULL )
 {
 	m_light = nullptr;
@@ -543,12 +548,14 @@ EveSOFDataHullPlaneSet::EveSOFDataHullPlaneSet( IRoot* lockobj ) :
 
 
 EveSOFDataHullPlaneSetItem::EveSOFDataHullPlaneSetItem( IRoot* lockobj ) :
+	PARENTLOCK( m_lights ),
 	m_position( 0.f, 0.f, 0.f ),
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
 	m_scaling( 1.f, 1.f, 1.f ),
 	m_color( 1.f, 1.f, 1.f, 1.f ),
 	m_colorType( SOFDataFactionColorChooser::TYPE_PRIMARY ),
 	m_intensity( 1.f ),
+	m_saturation( 1.f ),
 	m_layer1Transform( 0.f, 0.f, 0.f, 0.f ),
 	m_layer2Transform( 0.f, 0.f, 0.f, 0.f ),
 	m_layer1Scroll( 0.f, 0.f, 0.f, 0.f ),
@@ -562,7 +569,6 @@ EveSOFDataHullPlaneSetItem::EveSOFDataHullPlaneSetItem( IRoot* lockobj ) :
 	m_dutyCycle( 1.f ),
 	m_blinkMode( 0 )
 {
-	m_light = nullptr;
 }
 
 
@@ -576,6 +582,7 @@ EveSOFDataHullSpriteSet::EveSOFDataHullSpriteSet( IRoot* lockobj ) :
 EveSOFDataHullSpriteSetItem::EveSOFDataHullSpriteSetItem( IRoot* lockobj ) :
 	m_position( 0.f, 0.f, 0.f ),
 	m_blinkRate( 0.1f ), m_blinkPhase( 0.f ), m_minScale( 1.f ), m_maxScale( 10.f ), m_falloff( 0.f ), m_intensity( 1.f ),
+	m_saturation( 1.f ),
 	m_boneIndex( 0 ),
 	m_colorType( SOFDataFactionColorChooser::TYPE_PRIMARY )
 {
@@ -593,6 +600,7 @@ EveSOFDataHullSpriteLineSetItem::EveSOFDataHullSpriteLineSetItem( IRoot* lockobj
 	m_position( 0.f, 0.f, 0.f ), m_scaling( 1.f, 1.f, 1.f ),
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
 	m_spacing( 1.f ), m_blinkRate( 0.1f ), m_blinkPhase( 0.f ), m_blinkPhaseShift( 0.f ), m_minScale( 1.f ), m_maxScale( 10.f ), m_falloff( 0.f ), m_intensity( 1.f ),
+	m_saturation( 1.f ),
 	m_boneIndex( 0 ),
 	m_isCircle( false ),
 	m_colorType( SOFDataFactionColorChooser::TYPE_PRIMARY )
@@ -613,6 +621,7 @@ EveSOFDataHullHazeSetItem::EveSOFDataHullHazeSetItem( IRoot* lockobj ) :
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
 	m_colorType( SOFDataFactionColorChooser::TYPE_PRIMARY ),
 	m_hazeBrightness( 1.f ), m_hazeFalloff( 6.f ), m_sourceSize( 0.2f ), m_sourceBrightness( 2.f ),
+	m_saturation( 1.f ),
 	m_boosterGainInfluence( false )
 {
 	m_light = nullptr;

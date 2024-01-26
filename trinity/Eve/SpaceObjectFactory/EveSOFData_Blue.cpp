@@ -34,6 +34,9 @@ const Be::VarChooser EveSOFDataFactionColorSetTypeChooser[] =
                 { "SecondaryLight", BeCast( TYPE_SECONDARY_LIGHT ), "Secondary light color" },
                 { "TertiaryLight", BeCast( TYPE_TERTIARY_LIGHT ), "Tertiary light color" },
                 { "WhiteLight", BeCast( TYPE_WHITE_LIGHT ), "White light color" },
+                { "PrimarySpotlight", BeCast( TYPE_PRIMARY_SPOTLIGHT ), "Primary spotlight color" },
+                { "SecondarySpotlight", BeCast( TYPE_SECONDARY_SPOTLIGHT ), "Secondary spotlight color" },
+                { "TertiarySpotlight", BeCast( TYPE_TERTIARY_SPOTLIGHT ), "Tertiary spotlight color" },
                 { "PrimaryHologram", BeCast( TYPE_PRIMARY_HOLOGRAM ), "Primary Hologram"},
                 { "SecondaryHologram", BeCast( TYPE_SECONDARY_HOLOGRAM ), "Secondary Hologram color" },
                 { "TertiaryHologram", BeCast( TYPE_TERTIARY_HOLOGRAM ), "Tertiary Hologram color" },
@@ -46,6 +49,7 @@ const Be::VarChooser EveSOFDataFactionColorSetTypeChooser[] =
                 { "PrimaryForcefield", BeCast( TYPE_PRIMARY_FORCEFIELD ), "Primary Forcefield color" },
                 { "SecondaryForcefield", BeCast( TYPE_SECONDARY_FORCEFIELD ), "Secondary Forcefield color" },
                 { "PrimaryBanner", BeCast( TYPE_PRIMARY_BANNER ), "Primary Banner color" },
+                { "PrimaryBillboard", BeCast( TYPE_PRIMARY_BILLBOARD ), "Primary Billboard color" },
                 { "PrimaryFx", BeCast( TYPE_PRIMARY_FX ), "Primary Fx color" },
                 { "SecondaryFx", BeCast( TYPE_SECONDARY_FX ), "Secondary Fx color" },
 				{ 0 }
@@ -177,6 +181,9 @@ const Be::ClassInfo* EveSOFDataFactionColorSet::ExposeToBlue()
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_LIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_LIGHT], ":jessica-group:Light Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_TERTIARY_LIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_TERTIARY_LIGHT], ":jessica-group:Light Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_WHITE_LIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_WHITE_LIGHT], ":jessica-group:Light Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_SPOTLIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_SPOTLIGHT], ":jessica-group:Spotlight Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_SPOTLIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_SPOTLIGHT], ":jessica-group:Spotlight Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_TERTIARY_SPOTLIGHT].mKey, m_colors[SOFDataFactionColorChooser::TYPE_TERTIARY_SPOTLIGHT], ":jessica-group:Spotlight Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_HOLOGRAM].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_HOLOGRAM], ":jessica-group:Hologram Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_HOLOGRAM].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_HOLOGRAM], ":jessica-group:Hologram Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_TERTIARY_HOLOGRAM].mKey, m_colors[SOFDataFactionColorChooser::TYPE_TERTIARY_HOLOGRAM], ":jessica-group:Hologram Colors", Be::READWRITE | Be::PERSIST )
@@ -188,7 +195,8 @@ const Be::ClassInfo* EveSOFDataFactionColorSet::ExposeToBlue()
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_STATE_INVULNERABLE].mKey, m_colors[SOFDataFactionColorChooser::TYPE_STATE_INVULNERABLE], ":jessica-group:State Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_FORCEFIELD].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_FORCEFIELD], ":jessica-group:Forcefield Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_FORCEFIELD].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_FORCEFIELD], ":jessica-group:Forcefield Colors", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_BANNER].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_BANNER], ":jessica-group:Banner Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_BANNER].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_BANNER], ":jessica-group:Planeset Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_BILLBOARD].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_BILLBOARD], ":jessica-group:Planeset Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_FX].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_FX], ":jessica-group:FX Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_FX].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_FX], ":jessica-group:FX Colors", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_END()
@@ -318,7 +326,8 @@ const Be::ClassInfo* EveSOFDataHullSpotlightSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "coneIntensity", m_coneIntensity, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "flareIntensity", m_flareIntensity, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "spriteIntensity", m_spriteIntensity, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "light", m_light, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "saturation", m_saturation, "Used with SOF-6", Be::READWRITE | Be::PERSIST)
+		MAP_ATTRIBUTE( "light", m_light, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
     EXPOSURE_END()
 }
 
@@ -354,6 +363,7 @@ const Be::ClassInfo* EveSOFDataHullPlaneSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "color", m_color, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_colorType, "Used with SOF-6", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
 		MAP_ATTRIBUTE( "intensity", m_intensity, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "saturation", m_saturation, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "layer1Transform", m_layer1Transform, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "layer1Scroll", m_layer1Scroll, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "layer2Transform", m_layer2Transform, "", Be::READWRITE | Be::PERSIST )
@@ -364,7 +374,7 @@ const Be::ClassInfo* EveSOFDataHullPlaneSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "blinkRate", m_rate, "rate (Hz)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "blinkPhase", m_phase, "phase (0.-1.)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "blinkMode", m_blinkMode, "", Be::READWRITE | Be::PERSIST | Be::ENUM, EveSOFDataPlaneSetBlinkTypeChooser )
-		MAP_ATTRIBUTE( "light", m_light, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lights", m_lights, "Used with SOF-6", Be::READ | Be::PERSIST )
 
 	EXPOSURE_END()
 }
@@ -459,9 +469,10 @@ const Be::ClassInfo* EveSOFDataHullSpriteSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "intensity", m_intensity, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_colorType, "", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
+		MAP_ATTRIBUTE( "saturation", m_saturation, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST)
-		MAP_ATTRIBUTE( "light", m_light, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "light", m_light, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_END()
 }
 
@@ -502,7 +513,8 @@ const Be::ClassInfo* EveSOFDataHullSpriteLineSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "isCircle", m_isCircle, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_colorType, "", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
-		MAP_ATTRIBUTE( "light", m_light, "", Be::READWRITE | Be::PERSIST)
+		MAP_ATTRIBUTE( "saturation", m_saturation, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "light", m_light, "Used with SOF-6", Be::READWRITE | Be::PERSIST)
 		EXPOSURE_END()
 }
 
@@ -534,12 +546,13 @@ const Be::ClassInfo* EveSOFDataHullHazeSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_colorType, "", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
+		MAP_ATTRIBUTE( "saturation", m_saturation, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "hazeBrightness", m_hazeBrightness, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "hazeFalloff", m_hazeFalloff, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sourceBrightness", m_sourceBrightness, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sourceSize", m_sourceSize, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boosterGainInfluence", m_boosterGainInfluence, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "light", m_light, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "light", m_light, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
 
 		EXPOSURE_END()
 }

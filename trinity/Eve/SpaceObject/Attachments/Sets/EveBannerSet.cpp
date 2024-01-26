@@ -191,7 +191,7 @@ bool EveBannerSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 	return m_isVisible;
 }
 
-void EveBannerSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength )
+void EveBannerSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights ) 
 	{

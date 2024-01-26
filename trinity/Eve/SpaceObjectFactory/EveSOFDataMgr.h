@@ -95,6 +95,8 @@ public:
 
 	struct PatternData
 	{
+		bool sof6;
+
 		// remove - temporary conversion of things (but need to be able to use new pipeline)
 		std::map<BlueSharedString, PatternApplicationData> old_applicationData;
 
@@ -246,7 +248,7 @@ public:
 		bool boosterGainInfluence;
 		SOFDataFactionColorChooser::ColorType colorType;
 		Vector3 spriteScale;
-		float coneIntensity, flareIntensity, spriteIntensity;
+		float coneIntensity, flareIntensity, spriteIntensity, saturation;
 		std::unique_ptr<SpotLightAttachment> light;
 	};
 
@@ -271,13 +273,13 @@ public:
 		Quaternion rotation;
 		Color color;
 		SOFDataFactionColorChooser::ColorType colorType;
-		float intensity;
+		float intensity, saturation;
 		Vector4 layer1Transform, layer2Transform, layer1Scroll, layer2Scroll;
 		int boneIndex, groupIndex, maskMapAtlasIndex;
 		// BlinkData - combined into a float4 in the vertex buffer;
 		float rate, phase, dutyCycle;
 		int blinkMode; // selector
-		std::unique_ptr<PointLightAttachment> light;
+		std::vector<PointLightAttachment> lights;
 	};
 
 	struct HullPlaneSetData
@@ -297,7 +299,7 @@ public:
 	struct HullSpriteSetItemData
 	{
 		Vector3 position;
-		float blinkRate, blinkPhase, minScale, maxScale, falloff, intensity;
+		float blinkRate, blinkPhase, minScale, maxScale, falloff, intensity, saturation;
 		int boneIndex;
 		SOFDataFactionColorChooser::ColorType colorType;
 		std::unique_ptr<PointLightAttachment> light;
@@ -314,7 +316,7 @@ public:
 	{
 		Vector3 position, scaling;
 		Quaternion rotation;
-		float spacing, blinkRate, blinkPhase, blinkPhaseShift, minScale, maxScale, falloff, intensity;
+		float spacing, blinkRate, blinkPhase, blinkPhaseShift, minScale, maxScale, falloff, intensity, saturation;
 		int boneIndex;
 		bool isCircle;
 		SOFDataFactionColorChooser::ColorType colorType;
@@ -334,7 +336,7 @@ public:
 		int boneIndex;
 		Quaternion rotation;
 		SOFDataFactionColorChooser::ColorType colorType;
-		float hazeBrightness, hazeFalloff, sourceSize, sourceBrightness;
+		float hazeBrightness, hazeFalloff, sourceSize, sourceBrightness, saturation;
 		bool boosterGainInfluence;
 		std::unique_ptr<PointLightAttachment> light;
 	};

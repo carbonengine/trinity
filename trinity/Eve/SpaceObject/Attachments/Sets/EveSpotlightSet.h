@@ -26,11 +26,12 @@ BLUE_DECLARE( Tr2DebugRenderer );
 
 struct EveSpotlightLight {
 	EveSpotlightLight();	
-	EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring profilePath );
+	EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring profilePath, bool boosterGainInfluence );
 
 	LightData lightData;
 	Matrix boneMatrix;
 	Tr2LightProfileResPtr lightProfile;
+	bool boosterGainInfluence;
 
 	uint32_t index;
 };
@@ -57,7 +58,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
-	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength );
+	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount );
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
@@ -155,6 +156,7 @@ private:
 
 	std::vector<EveSpotlightLight> m_lights;
 	float m_activationStrength;
+	float m_boosterGain;
 };
 
 TYPEDEF_BLUECLASS( EveSpotlightSet );

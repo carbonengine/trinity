@@ -27,6 +27,7 @@ EveSOFDataMgr::HullSpotlightSetItemData::HullSpotlightSetItemData( const EveSOFD
 	coneIntensity( item.m_coneIntensity ),
 	flareIntensity( item.m_flareIntensity ),
 	spriteIntensity( item.m_spriteIntensity ),
+	saturation( item.m_saturation ),
 	light( nullptr )
 {
 	if (item.m_light) 
@@ -67,11 +68,12 @@ EveSOFDataMgr::HullPlaneSetItemData::HullPlaneSetItemData( const EveSOFDataHullP
 	phase( item.m_phase ),
 	dutyCycle( item.m_dutyCycle ),
 	blinkMode( item.m_blinkMode ),
-	light( nullptr )
+	saturation( item.m_saturation )
 {
-	if (item.m_light) 
+	lights.reserve( item.m_lights.size() );
+	for( auto& l : item.m_lights ) 
 	{
-		light = std::make_unique<PointLightAttachment>( *item.m_light );
+		lights.push_back( PointLightAttachment( *l ) );
 	}
 }
 
@@ -723,6 +725,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hssid.minScale = spriteSetItemData->m_minScale;
 			hssid.position = spriteSetItemData->m_position;
 			hssid.intensity = spriteSetItemData->m_intensity;
+			hssid.saturation = spriteSetItemData->m_saturation;
 			hssid.colorType = spriteSetItemData->m_colorType;
 			hssid.light = nullptr;
 			if( spriteSetItemData->m_light ) 
@@ -778,6 +781,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hslsid.spacing = spriteLineSetItemData->m_spacing;
 			hslsid.isCircle = spriteLineSetItemData->m_isCircle;
 			hslsid.intensity = spriteLineSetItemData->m_intensity;
+			hslsid.saturation = spriteLineSetItemData->m_saturation;
 			hslsid.colorType = spriteLineSetItemData->m_colorType;
 			if( spriteLineSetItemData->m_light )
 			{
@@ -815,6 +819,7 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hhsid.sourceBrightness = hazeSetItemData->m_sourceBrightness;
 			hhsid.sourceSize = hazeSetItemData->m_sourceSize;
 			hhsid.boosterGainInfluence = hazeSetItemData->m_boosterGainInfluence;
+			hhsid.saturation = hazeSetItemData->m_saturation;
 			hhsid.light = nullptr;
 
 			if( hazeSetItemData->m_light ) 
@@ -1512,6 +1517,8 @@ bool EveSOFDataMgr::LoadMaterialData( EveSOFDataPtr srcData )
 void EveSOFDataMgr::GeneratePatternData( PatternData& pd, EveSOFDataPatternPtr srcData ) const
 {
 	pd.applicationData.clear();
+	pd.sof6 = srcData->m_sof6;
+	
 	// per-layer data
 	PatternLayerData pld1, pld2;
 

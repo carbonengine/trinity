@@ -171,7 +171,7 @@ bool EveSpriteSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
-void EveSpriteSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength )
+void EveSpriteSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
 {
 	for( auto& light : m_lights )
 	{
