@@ -548,6 +548,18 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 		}
 	}
 
+	if( !m_attachments.empty() )
+	{
+		size_t boneCount = 0;
+		const granny_matrix_3x4* bones = nullptr;
+		Tr2GrannyAnimationUtils::GetBoneList( m_animationUpdater, bones, boneCount );
+
+		for( auto& attachment : m_attachments )
+		{
+			attachment->UpdateLights( bones, boneCount, m_spaceObjectShipData.y, m_spaceObjectShipData.x );
+		}
+	}
+
 	if( m_impactOverlay )
 	{
 		m_impactOverlay->UpdateAsyncronous( updateContext, this );

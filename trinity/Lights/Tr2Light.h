@@ -11,8 +11,18 @@
 
 BLUE_DECLARE( Tr2LightProfileRes );
 
+struct LightFeatures {
+	LightFeatures();
+
+	int16_t profileIndex;
+	float parentScale;
+	float parentBrightness;
+};
+
 struct LightData {
 	LightData();
+	Tr2LightManager::PerLightData AsPerPointLightData( CXMMATRIX transform, LightFeatures& features ) const;
+	Tr2LightManager::PerLightData AsPerSpotLightData( CXMMATRIX transform, LightFeatures& features ) const;
 
 	Vector3 position;
 	Color color;
@@ -34,7 +44,10 @@ struct LightData {
 	int32_t boneIndex;
 
 	uint16_t flags;
+
+	Be::Time startTime;
 };
+
 
 /*
 	This class contains all different forms of lights that can be added to the light manager.

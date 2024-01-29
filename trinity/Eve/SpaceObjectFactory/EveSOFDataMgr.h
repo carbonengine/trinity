@@ -95,6 +95,8 @@ public:
 
 	struct PatternData
 	{
+		bool sof6;
+
 		// remove - temporary conversion of things (but need to be able to use new pipeline)
 		std::map<BlueSharedString, PatternApplicationData> old_applicationData;
 
@@ -207,16 +209,47 @@ public:
 		std::vector<HullBoosterItemData> items;
 	};
 
+	struct PointLightAttachment {
+		explicit PointLightAttachment( const EveSOFDataPointLightAttachment& light );
+		LightData AsLightData( Color& color, float scale ) const;
+		Vector3 translation;
+		Quaternion rotation;
+		float saturation;
+		float intensity;
+		float innerScaleMultiplier;
+		float outerScaleMultiplier;
+		float noiseAmplitude;
+		float noiseFrequency;
+		int32_t noiseOctaves;
+		std::wstring lightProfilePath;
+	};
+
+	struct SpotLightAttachment {
+		explicit SpotLightAttachment( const EveSOFDataSpotLightAttachment& light );
+		LightData AsLightData( Color& color, float scale, float innerAngle, float outerAngle ) const;
+		Vector3 translation;
+		float saturation;
+		float intensity;
+		float innerAngleMultiplier;
+		float outerAngleMultiplier;
+		float innerScaleMultiplier;
+		float outerScaleMultiplier;
+		float noiseAmplitude;
+		float noiseFrequency;
+		int32_t noiseOctaves;
+		std::wstring lightProfilePath;
+	};
+
 	struct HullSpotlightSetItemData
 	{
 		explicit HullSpotlightSetItemData( const EveSOFDataHullSpotlightSetItem& item );
-
 		Matrix transform;
 		int boneIndex, groupIndex;
 		bool boosterGainInfluence;
 		SOFDataFactionColorChooser::ColorType colorType;
 		Vector3 spriteScale;
-		float coneIntensity, flareIntensity, spriteIntensity;
+		float coneIntensity, flareIntensity, spriteIntensity, saturation;
+		std::unique_ptr<SpotLightAttachment> light;
 	};
 
 	struct HullSpotlightSetData
@@ -240,12 +273,13 @@ public:
 		Quaternion rotation;
 		Color color;
 		SOFDataFactionColorChooser::ColorType colorType;
-		float intensity;
+		float intensity, saturation;
 		Vector4 layer1Transform, layer2Transform, layer1Scroll, layer2Scroll;
 		int boneIndex, groupIndex, maskMapAtlasIndex;
 		// BlinkData - combined into a float4 in the vertex buffer;
 		float rate, phase, dutyCycle;
 		int blinkMode; // selector
+		std::vector<PointLightAttachment> lights;
 	};
 
 	struct HullPlaneSetData
@@ -265,9 +299,10 @@ public:
 	struct HullSpriteSetItemData
 	{
 		Vector3 position;
-		float blinkRate, blinkPhase, minScale, maxScale, falloff, intensity;
+		float blinkRate, blinkPhase, minScale, maxScale, falloff, intensity, saturation;
 		int boneIndex;
 		SOFDataFactionColorChooser::ColorType colorType;
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullSpriteSetData
@@ -281,10 +316,11 @@ public:
 	{
 		Vector3 position, scaling;
 		Quaternion rotation;
-		float spacing, blinkRate, blinkPhase, blinkPhaseShift, minScale, maxScale, falloff, intensity;
+		float spacing, blinkRate, blinkPhase, blinkPhaseShift, minScale, maxScale, falloff, intensity, saturation;
 		int boneIndex;
 		bool isCircle;
 		SOFDataFactionColorChooser::ColorType colorType;
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullSpriteLineSetData
@@ -300,8 +336,9 @@ public:
 		int boneIndex;
 		Quaternion rotation;
 		SOFDataFactionColorChooser::ColorType colorType;
-		float hazeBrightness, hazeFalloff, sourceSize, sourceBrightness;
+		float hazeBrightness, hazeFalloff, sourceSize, sourceBrightness, saturation;
 		bool boosterGainInfluence;
+		std::unique_ptr<PointLightAttachment> light;
 	};
 
 	struct HullHazeSetData
@@ -340,7 +377,9 @@ public:
 	struct HullBannerSetItemData
 	{
 		EveBannerItem item;
-		HullBannerSetItemLightData bannerLight;
+		// storing this as a shared pointer because it "needs" to be copyable 
+		// for the map that stores HullBannerSetItemData
+		std::shared_ptr<PointLightAttachment> light;
 	};
 
 	struct HullBannerSetData
@@ -471,6 +510,11 @@ public:
 
 	struct HullData
 	{
+		HullData() = default;
+		HullData( const HullData& ) = delete;
+		HullData(  HullData&& ) = default;
+		HullData& operator = ( HullData&& ) = default;
+
 		EveSOFDataHull::BuildClass buildClass;
 		std::string geometryResFilePath;
 		CcpMath::Sphere boundingSphere;

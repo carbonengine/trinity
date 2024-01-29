@@ -17,6 +17,25 @@ class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 class Tr2QuadRenderer;
 
+namespace EveSpriteLightUtils {
+	float Blink( float blinkRate, float blinkPhase, float minScale, float maxScale );
+}
+
+struct EveSpriteLight {
+	EveSpriteLight();
+	EveSpriteLight( const LightData& lightData, float blinkPhase, float blinkRate, float minScale, float maxScale, uint32_t index, const std::wstring profilePath );
+
+	LightData lightData;
+	float blinkPhase;
+	float blinkRate;
+	float minScale;
+	float maxScale;
+	Tr2LightProfileResPtr lightProfile;
+
+	uint32_t index;
+	Matrix boneMatrix;
+};
+
 BLUE_CLASS( EveSpriteSet ):
 	public IEveSpaceObjectAttachment,
 	public IInitialize
@@ -64,11 +83,15 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
 	virtual void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer );
 	virtual void AddToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& parentTransform, float activation, float boosterGain, const granny_matrix_3x4* bones, size_t boneCount );
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
+
+	void AddLight( const EveSpriteLight& light );
+	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
 
 	void AddBoosterGlowToQuadRenderer( Tr2QuadRenderer& quadRenderer, const Matrix& world, float boosterGain, float warpIntensity );
 
@@ -108,6 +131,9 @@ private:
 	AxisAlignedBoundingBox m_aabb;
 	// bounding boxes are grouped together by bone index
 	std::vector<std::pair<int, AxisAlignedBoundingBox>> m_boundingBoxes;
+
+	std::vector<EveSpriteLight> m_lights;
+	float m_activationStrength;
 };
 
 TYPEDEF_BLUECLASS( EveSpriteSet );

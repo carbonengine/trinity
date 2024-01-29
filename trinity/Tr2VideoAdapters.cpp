@@ -223,8 +223,9 @@ std::string Tr2VideoAdapter::GetDeviceIdentifierString() const
 	}
 #else
     char buffer[128];
-    sprintf(
+    snprintf(
             buffer,
+             128,
             "%08x-%04x-%04x-%02xhh%02xhh-%02xhh%02xhh%02xhh%02xhh%02xhh%02xhh",
             unsigned( m_info.deviceIdentifier.data1 ),
             unsigned( m_info.deviceIdentifier.data2 ),

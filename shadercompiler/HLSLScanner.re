@@ -800,8 +800,8 @@ bool ConvertToScannerToken( ParserState &state, const PreprocessorToken& ppToken
 		RETURN( OP_FLOAT_CONST );
 	case PPT_STRING_CONST:
 		RETURN( OP_STRING_CONST );
-    default:
-        break;
+	default:
+		break;
 	}
 
 	while( YYCURSOR < YYLIMIT )

@@ -20,6 +20,19 @@ struct ViewDistanceInfo;
 
 class Tr2PerObjectData;
 
+struct EveHazeSetLight 
+{
+	EveHazeSetLight();	
+	EveHazeSetLight( const LightData& lightData, uint32_t index, const std::wstring profilePath, bool boosterGainInfluence );
+
+	LightData lightData;
+	Tr2LightProfileResPtr lightProfile;
+	uint32_t index;
+	bool boosterGainInfluence;
+
+	Matrix boneMatrix;
+};
+
 // --------------------------------------------------------------------------------
 // Description:
 //   This class is for rendering all of one ship's haze sets.
@@ -51,10 +64,14 @@ public:
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachment
 	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
 	virtual void GetBatches( ITriRenderBatchAccumulator * accumulator, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = Tr2RenderReason::TR2RENDERREASON_NORMAL );
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
 	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
+
+	void AddLight( const EveHazeSetLight& light );
+	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
 
 	// setup
 	void Setup( Tr2EffectPtr effect );
@@ -88,6 +105,10 @@ private:
 	// bounding box around static items
 	AxisAlignedBoundingBox m_aabb;
 	std::vector<std::pair<int, CcpMath::AxisAlignedBox>> m_boundingBoxes;
+
+	std::vector<EveHazeSetLight> m_lights;
+	float m_activationStrength;
+	float m_boosterGain;
 
 	void CreateBoundingBox();
 };

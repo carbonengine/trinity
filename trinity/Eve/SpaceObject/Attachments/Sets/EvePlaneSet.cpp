@@ -13,7 +13,49 @@
 #include "Tr2DebugRenderer.h"
 #include "Tr2Renderer.h"
 #include "Utilities/MatrixUtils.h"
+#include "Shader/Parameter/TriTextureParameter.h"
+#include "Resources/TriTextureRes.h"
+#include "Resources/Tr2LightProfileRes.h"
 #include "Tr2QuadRenderer.h"
+
+EvePlaneLight::EvePlaneLight() :
+	lightData( LightData() ),
+	index( 0 ),
+	saturation( 1.0f ),
+	boneMatrix( IdentityMatrix() )
+{
+}
+
+EvePlaneLight::EvePlaneLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring profilePath ) :
+	lightData( lightData ),
+	saturation( saturation ),
+	index( index ),
+	boneMatrix( IdentityMatrix() )
+{
+	if( !profilePath.empty() )
+	{
+		BeResMan->GetResource( profilePath, L"lp", lightProfile );
+	}
+}
+
+// vertex layout struct
+struct PlaneVertex
+{
+	Vector4 transform1;
+	Vector4 transform2;
+	Vector4 transform3;
+	Vector4 color;
+	Vector4 layer1Transform;
+	Vector4 layer2Transform;
+	Vector4 layer1Scroll;
+	Vector4 layer2Scroll;
+	uint8_t index;
+	uint8_t boneIndex;
+	uint8_t maskMapAtlasIndex;
+	uint8_t pickBufferID;
+	Vector4 blinkData;
+};
+
 
 
 using namespace Tr2RenderContextEnum;
@@ -28,6 +70,7 @@ EvePlaneSet::EvePlaneSet( IRoot* lockobj ) :
 	m_hideOnLowQuality( false ),
 	m_isSkinned( false ),
 	m_pickBufferID( 0 ),
+	m_activationStrength( 0 ),
 	m_effectHash( 0 )
 {
 }
@@ -181,6 +224,18 @@ bool EvePlaneSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& par
 	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
+void EvePlaneSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+{
+	for( auto& light : m_lights ) 
+	{
+		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
+		{
+			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+		}
+	}
+	m_activationStrength = activationStrength;
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Get bounding box surrounding planes
@@ -290,6 +345,7 @@ void EvePlaneSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Plane Sets" );
 	options.insert( "Plane Sets Bounds" );
+	options.insert( "Plane Sets Lights" );
 }
 
 void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
@@ -340,6 +396,42 @@ void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& p
 			Tr2DebugRenderer::Wireframe,
 			0xff00ff00 );
 	}
+
+	if( renderer.HasOption( this, "Plane Sets Lights" ) )
+	{
+		for( auto& l : m_lights )
+		{
+			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+
+			Color c = Saturate( l.lightData.color, l.saturation );
+
+			if( nullptr != m_primaryTextureParameter ) 
+			{
+				c = GetAverageColor();
+			}
+
+			c.a = 0.5;
+			auto planeItem = l.index > m_planes.size() ? nullptr : m_planes[l.index];
+
+			renderer.DrawSphere(
+				planeItem,
+				t,
+				l.lightData.innerRadius,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+			c.a = 0.3;
+			renderer.DrawSphere(
+				planeItem,
+				t,
+				l.lightData.radius,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+		}
+	}
 }
 
 void EvePlaneSet::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
@@ -347,5 +439,64 @@ void EvePlaneSet::SetShaderOption( const BlueSharedString& name, const BlueShare
 	if( nullptr != m_effect )
 	{
 		m_effect->SetOption( name, value );
+	}
+}
+
+void EvePlaneSet::SetPrimaryTextureParameter( TriTextureParameterPtr primaryTextureParameter )
+{
+	m_primaryTextureParameter = primaryTextureParameter;
+}
+
+Color EvePlaneSet::GetAverageColor() const
+{
+	if( nullptr == m_primaryTextureParameter || nullptr == m_primaryTextureParameter->GetResource() )
+	{
+		return Color( 0, 0, 0, 0 );
+	}
+
+	auto resource = dynamic_cast<TriTextureRes*>( m_primaryTextureParameter->GetResource() );
+	if( nullptr == resource )
+	{
+		return Color( 0, 0, 0, 0 );
+	}
+
+	return resource->GetAverageColor();
+}
+
+void EvePlaneSet::AddLight( const EvePlaneLight& light )
+{
+	m_lights.push_back( light );
+}
+
+void EvePlaneSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+{
+	bool useAverageColor = m_primaryTextureParameter != nullptr;
+	LightFeatures features = LightFeatures();
+
+	features.parentBrightness = m_activationStrength;
+
+	if( useAverageColor ) 
+	{
+		Color aveageColor = GetAverageColor();
+
+		for( auto light : m_lights )
+		{
+			auto lightDataCopy = light.lightData;
+			lightDataCopy.color = Saturate( aveageColor, light.saturation );
+			features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
+
+			auto perLightData = lightDataCopy.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+			lightManager.AddLight( perLightData );
+		}
+	}
+	else
+	{
+		for( auto& light : m_lights )
+		{
+			features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
+
+			auto perLightData = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+			lightManager.AddLight( perLightData );
+		}
 	}
 }

@@ -484,16 +484,9 @@ void Tr2TextureAtlas::CollapseFreeAreas()
 
 	bool restartLoop = true;
 
-	// CCP_LOGNOTICE( "Tr2TextureAtlas::CollapseFreeAreas starting - %d free areas", m_freeAreas.size() );
-	int restartCount = 0;
-	int collapseAttempts = 0;
-
 	while( restartLoop )
 	{
 		restartLoop = false;
-		++restartCount;
-
-		int collapseCount = 0;
 
 		m_freeAreas.sort( FreeAreasLeftToRight() );
 
@@ -516,8 +509,6 @@ void Tr2TextureAtlas::CollapseFreeAreas()
 				{
 					break;
 				}
-
-				++collapseAttempts;
 
 				Tr2Rect newRect;
 				bool isAdjacent = false;
@@ -550,7 +541,6 @@ void Tr2TextureAtlas::CollapseFreeAreas()
 					candidate = m_freeAreas.erase( candidate );
 
 					restartLoop = true;
-					++collapseCount;
 				}
 				else
 				{
@@ -580,8 +570,6 @@ void Tr2TextureAtlas::CollapseFreeAreas()
 				{
 					break;
 				}
-
-				++collapseAttempts;
 
 				Tr2Rect newRect;
 				bool isAdjacent = false;
@@ -614,7 +602,6 @@ void Tr2TextureAtlas::CollapseFreeAreas()
 					candidate = m_freeAreas.erase( candidate );
 
 					restartLoop = true;
-					++collapseCount;
 				}
 				else
 				{
@@ -622,10 +609,7 @@ void Tr2TextureAtlas::CollapseFreeAreas()
 				}
 			}
 		}
-		// CCP_LOG( "Tr2TextureAtlas::CollapseFreeAreas collapsed %d times", collapseCount );
 	}
-
-	// CCP_LOGNOTICE( "Tr2TextureAtlas::CollapseFreeAreas restarted %d times, %d collapse attempts", restartCount, collapseAttempts );
 
 	//update our cached value for largest free area
 	UpdateFreeMaxima();

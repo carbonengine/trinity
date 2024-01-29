@@ -13,6 +13,7 @@
 #include "Tr2DebugRenderer.h"
 #include "Tr2Renderer.h"
 #include "Utilities/MatrixUtils.h"
+#include "Resources/Tr2LightProfileRes.h"
 #include "Resources/TriGeometryRes.h"
 
 
@@ -35,6 +36,26 @@ struct HazeVertex
 	uint8_t padding1;
 };
 
+EveHazeSetLight::EveHazeSetLight() :
+	lightData( LightData() ),
+	index( 0 ),
+	boneMatrix( IdentityMatrix() ),
+	boosterGainInfluence( false )
+{
+
+}
+
+EveHazeSetLight::EveHazeSetLight( const LightData& lightData, uint32_t index, const std::wstring profilePath, bool boosterGainInfluence ) :
+	lightData( lightData ),
+	index( index ),
+	boneMatrix( IdentityMatrix() ),
+	boosterGainInfluence( boosterGainInfluence )
+{
+	if( !profilePath.empty() )
+	{
+		BeResMan->GetResource( profilePath, L"lp", lightProfile );
+	}
+}
 
 using namespace Tr2RenderContextEnum;
 
@@ -46,6 +67,8 @@ EveHazeSet::EveHazeSet( IRoot* lockobj ) :
 	PARENTLOCK( m_hazes ),
 	m_display( true ),
 	m_vertexCount( 0 ),
+	m_activationStrength( 0 ),
+	m_boosterGain( false ),
 	m_vertexDeclHandle( Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
 {
 }
@@ -194,6 +217,19 @@ bool EveHazeSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pare
 	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
 }
 
+void EveHazeSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+{
+	for( auto& light : m_lights )
+	{
+		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
+		{
+			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+		}
+	}
+	m_activationStrength = activationStrength;
+	m_boosterGain = boosterGain;
+}
+
 // --------------------------------------------------------------------------------------
 // Description:
 //   Create a bounding box around all HazeSetItems
@@ -273,6 +309,7 @@ void EveHazeSet::AddHazeItem( EveHazeSetItemPtr item )
 void EveHazeSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Haze Sets" );
+	options.insert( "Haze Sets Lights" );
 }
 
 // --------------------------------------------------------------------------------
@@ -300,6 +337,38 @@ void EveHazeSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& pa
 			renderer.DrawBox( haze, t * parentTransform, Vector3( -0.5f, -0.5f, -0.5f ), Vector3( 0.5f, 0.5f, 0.5f ), Tr2DebugRenderer::Solid, 0 );
 		}
 	}
+
+	if( renderer.HasOption( this, "Haze Sets Lights" ) )
+	{
+		for( auto& l : m_lights )
+		{
+			Matrix t =  TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+
+			Color c = l.lightData.color;
+
+			c.a = 0.5;
+
+			auto hazeItem = l.index > m_hazes.size() ? nullptr : m_hazes[l.index];
+
+			renderer.DrawSphere(
+				hazeItem,
+				t,
+				l.lightData.innerRadius,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+			c.a = 0.3;
+			renderer.DrawSphere(
+				hazeItem,
+				t,
+				l.lightData.radius,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+		}
+	}
 }
 
 void EveHazeSet::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
@@ -307,5 +376,28 @@ void EveHazeSet::SetShaderOption( const BlueSharedString& name, const BlueShared
 	if( nullptr != m_effect )
 	{
 		m_effect->SetOption( name, value );
+	}
+}
+
+
+void EveHazeSet::AddLight( const EveHazeSetLight& light )
+{
+	m_lights.push_back( light );
+}
+
+void EveHazeSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+{
+	LightFeatures features = LightFeatures();
+	
+
+	for( auto& light : m_lights )
+	{
+		features.parentBrightness = m_activationStrength;
+		if( light.boosterGainInfluence ) {
+			features.parentBrightness *= m_boosterGain;
+		}
+		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
+		auto perLightData = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		lightManager.AddLight( perLightData );
 	}
 }
