@@ -4,7 +4,8 @@
 
 
 Tr2TexturedPointLight::Tr2TexturedPointLight( IRoot* lockobj ) :
-	Tr2PointLight( lockobj )
+	Tr2PointLight( lockobj ),
+	m_saturation( 1.0f )
 {
 	m_isDynamic = true;
 	m_type = POINT_LIGHT;
@@ -31,6 +32,10 @@ void Tr2TexturedPointLight::SetTexturePath( std::wstring path )
 	BeResMan->GetResource( path, L"", m_texture );
 }
 
+void Tr2TexturedPointLight::SetSaturation( float saturation ) {
+	m_saturation = saturation;
+}
+
 bool Tr2TexturedPointLight::OnModified( Be::Var* value )
 {
 	if( IsMatch( value, m_lightData.texturePath ) )
@@ -44,6 +49,6 @@ void Tr2TexturedPointLight::Update()
 {
 	if( m_texture )
 	{
-		m_lightData.color = m_texture->GetAverageColor();
+		m_lightData.color = Saturate( m_texture->GetAverageColor(), m_saturation );
 	}
 }

@@ -921,7 +921,7 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 		os << Children<HLSL>( hlsl, "" );
 		break;
 	case NT_BRACKET_LIST:
-		for( int i = 0; i < node->GetChildrenCount(); i++ )
+		for( int i = 0; i < int( node->GetChildrenCount() ); i++ )
 		{
 			os << "[";
 			if( node->GetChildOrNull( i ) )
@@ -1574,7 +1574,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		os << Children<MSL>( msl, "" );
 		break;
 	case NT_BRACKET_LIST:
-		for( int i = 0; i < node->GetChildrenCount(); i++ )
+		for( int i = 0; i < int( node->GetChildrenCount() ); i++ )
 		{
 			os << "[";
 			if( node->GetChildOrNull( i ) )

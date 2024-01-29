@@ -71,7 +71,7 @@ void Tr2RenderTarget::py__init__(
 	}		
 }
 
-long Tr2RenderTarget::Create(	
+int32_t Tr2RenderTarget::Create(	
 	unsigned width, 
 	unsigned height, 
 	unsigned mipLevelCount, 
@@ -123,7 +123,7 @@ long Tr2RenderTarget::Create(
 	return hr;
 }
 
-long Tr2RenderTarget::CreateManual(	
+int32_t Tr2RenderTarget::CreateManual(
 	unsigned width, 
 	unsigned height, 
 	unsigned mipLevelCount, 

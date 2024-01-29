@@ -192,11 +192,12 @@ const Be::ClassInfo* EveSOFDataPattern::ExposeToBlue()
 	EXPOSURE_BEGIN( EveSOFDataPattern, "" )
 		MAP_INTERFACE( EveSOFDataPattern )
 
+		MAP_ATTRIBUTE( "sof6", m_sof6, "Used with SOF6", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "name", m_name, "The pattern name. This functions as an ID.", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "layer1", m_layer1, "Pattern data for layer #1.", Be::READWRITE | Be::PERSIST)
 		MAP_ATTRIBUTE( "layer2", m_layer2, "Pattern data for layer #2.", Be::READWRITE | Be::PERSIST)
 		MAP_ATTRIBUTE( "projections", m_projections, "", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "applicationGroups", m_applicationGroups, "Groups that define how the pattern is applied to its hulls\n :jessica-sub-group: WIP", Be::READ | Be::PERSIST )
+		MAP_ATTRIBUTE( "applicationGroups", m_applicationGroups, "Groups that define how the pattern is applied to its hulls", Be::READ | Be::PERSIST )
 
 	EXPOSURE_END()
 }

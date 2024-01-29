@@ -531,7 +531,7 @@ void Tr2ControllerExpression::Clear()
 {
 	if( m_controller )
 	{
-		m_program = std::move( CcpParser::Program() );
+		m_program = CcpParser::Program();
 	}
 	m_stateMachine = nullptr;
 	m_controller = nullptr;

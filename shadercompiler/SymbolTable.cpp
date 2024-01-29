@@ -300,7 +300,7 @@ Symbol* ScopeSymbolTable::LookupFunction( const InlineString& name, ASTNode* cal
 	}
 	else if( !bestOverride )
 	{
-		std::strstream s;
+		std::stringstream s;
 		s << "\n  called with " << name << "(";
 		for( size_t i = 0; i < callNode->GetChildrenCount(); ++i )
 		{
