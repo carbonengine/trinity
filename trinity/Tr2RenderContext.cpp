@@ -555,13 +555,9 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 
 	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
 
-	Tr2EffectStateManager::RenderingMode currentMode = Tr2EffectStateManager::RM_ANY;
-
 	renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
 
 	auto& gdprBatches = batches->GetGdprBatches();
-
-	currentMode = Tr2EffectStateManager::RM_ANY;
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_METAL
 	if( g_gdrEnabled )
