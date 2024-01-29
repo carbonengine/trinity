@@ -34,9 +34,6 @@ const Be::VarChooser EveSOFDataFactionColorSetTypeChooser[] =
                 { "SecondaryLight", BeCast( TYPE_SECONDARY_LIGHT ), "Secondary light color" },
                 { "TertiaryLight", BeCast( TYPE_TERTIARY_LIGHT ), "Tertiary light color" },
                 { "WhiteLight", BeCast( TYPE_WHITE_LIGHT ), "White light color" },
-                { "PrimarySpotlight", BeCast( TYPE_PRIMARY_SPOTLIGHT ), "Primary spotlight color" },
-                { "SecondarySpotlight", BeCast( TYPE_SECONDARY_SPOTLIGHT ), "Secondary spotlight color" },
-                { "TertiarySpotlight", BeCast( TYPE_TERTIARY_SPOTLIGHT ), "Tertiary spotlight color" },
                 { "PrimaryHologram", BeCast( TYPE_PRIMARY_HOLOGRAM ), "Primary Hologram"},
                 { "SecondaryHologram", BeCast( TYPE_SECONDARY_HOLOGRAM ), "Secondary Hologram color" },
                 { "TertiaryHologram", BeCast( TYPE_TERTIARY_HOLOGRAM ), "Tertiary Hologram color" },
@@ -49,10 +46,13 @@ const Be::VarChooser EveSOFDataFactionColorSetTypeChooser[] =
                 { "PrimaryForcefield", BeCast( TYPE_PRIMARY_FORCEFIELD ), "Primary Forcefield color" },
                 { "SecondaryForcefield", BeCast( TYPE_SECONDARY_FORCEFIELD ), "Secondary Forcefield color" },
                 { "PrimaryBanner", BeCast( TYPE_PRIMARY_BANNER ), "Primary Banner color" },
-                { "PrimaryBillboard", BeCast( TYPE_PRIMARY_BILLBOARD ), "Primary Billboard color" },
                 { "PrimaryFx", BeCast( TYPE_PRIMARY_FX ), "Primary Fx color" },
                 { "SecondaryFx", BeCast( TYPE_SECONDARY_FX ), "Secondary Fx color" },
-				{ 0 }
+                { "PrimarySpotlight", BeCast( TYPE_PRIMARY_SPOTLIGHT ), "Primary spotlight color" },
+                { "SecondarySpotlight", BeCast( TYPE_SECONDARY_SPOTLIGHT ), "Secondary spotlight color" },
+                { "TertiarySpotlight", BeCast( TYPE_TERTIARY_SPOTLIGHT ), "Tertiary spotlight color" },
+                { "PrimaryBillboard", BeCast( TYPE_PRIMARY_BILLBOARD ), "Primary Billboard color" },
+                { 0 }
         };
 BLUE_REGISTER_ENUM_EX( "EveSOFDataFactionColorSetType", ColorType, EveSOFDataFactionColorSetTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 }
