@@ -241,7 +241,7 @@ namespace TrinityALImpl
 
     void Tr2VertexLayoutAL::AddVertexDescriptor( size_t inputHash, MTLVertexDescriptor* descriptor, uint8_t streamMask, bool needsDummyStream )
     {
-        auto& desc = m_metalVertexDescriptors[inputHash] = { descriptor, streamMask, needsDummyStream };
+        auto& desc = m_metalVertexDescriptors[inputHash] = { descriptor, inputHash, streamMask, needsDummyStream };
         CalculateHash( desc );
     }
 }
