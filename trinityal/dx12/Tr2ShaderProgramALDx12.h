@@ -46,18 +46,18 @@ namespace TrinityALImpl
 		void AddSrvUavParameters(
 			Tr2RenderContextEnum::ShaderType shaderType,
 			const Tr2ShaderSignatureAL& signature,
-			std::vector<D3D12_ROOT_PARAMETER1>& parameters,
-			std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE1>>& ranges );
+			std::vector<D3D12_ROOT_PARAMETER>& parameters,
+			std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>>& ranges );
 		void AddCbvParameters(
 			Tr2RenderContextEnum::ShaderType shaderType,
 			const Tr2ShaderSignatureAL& signature,
-			std::vector<D3D12_ROOT_PARAMETER1>& parameters,
+			std::vector<D3D12_ROOT_PARAMETER>& parameters,
 			bool dynamicBuffers
 			);
 		void AddSamplerRanges(
 			Tr2RenderContextEnum::ShaderType shaderType,
 			const Tr2ShaderSignatureAL& signature,
-			std::vector<D3D12_DESCRIPTOR_RANGE1>& samplerRanges );
+			std::vector<D3D12_DESCRIPTOR_RANGE>& samplerRanges );
 		static D3D12_SHADER_BYTECODE MakeShaderBytecode( const ::Tr2ShaderAL& shader );
 
 		struct CbRegister

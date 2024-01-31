@@ -34,8 +34,6 @@ BLUE_DEFINE_INTERFACE( IBlueObjectProxy );
 #include "Eve/IEveSpaceObject2.h"
 #include "Eve/SpaceObject/Children/IEveSpaceObjectChild.h"
 
-#include "Resources/Tr2EffectRes.h"
-
 #ifndef TRINITYNAME
 #error Please add TRINITYNAME=<PythonModuleName> to compiler preprocessor definitions (/D)
 #endif

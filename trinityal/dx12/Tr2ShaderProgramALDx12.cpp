@@ -39,14 +39,13 @@ D3D12_SHADER_VISIBILITY ShaderVisibility( Tr2RenderContextEnum::ShaderType type 
 	}
 }
 
-D3D12_DESCRIPTOR_RANGE1 CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE rangeType, uint32_t registerIndex, uint32_t registerSpace, uint32_t arrayCount, D3D12_DESCRIPTOR_RANGE_FLAGS flags, uint32_t offset = 0 )
+D3D12_DESCRIPTOR_RANGE CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE rangeType, uint32_t registerIndex, uint32_t registerSpace, uint32_t arrayCount, uint32_t offset = 0 )
 {
-	D3D12_DESCRIPTOR_RANGE1 range;
+	D3D12_DESCRIPTOR_RANGE range;
 	range.RangeType = rangeType;
 	range.NumDescriptors = arrayCount ? arrayCount : UINT_MAX;
 	range.BaseShaderRegister = registerIndex;
 	range.RegisterSpace = registerSpace;
-	range.Flags = flags;
 	range.OffsetInDescriptorsFromTableStart = offset;
 	return range;
 }
@@ -155,10 +154,7 @@ namespace TrinityALImpl
 
 		m_shaders.reserve( count );
 
-		D3D12_VERSIONED_ROOT_SIGNATURE_DESC versionedDesc;
-		versionedDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
-
-		D3D12_ROOT_SIGNATURE_DESC1& signatureDesc = versionedDesc.Desc_1_1;
+		D3D12_ROOT_SIGNATURE_DESC signatureDesc;
 		memset( &signatureDesc, 0, sizeof( signatureDesc ) );
 
 		for( size_t i = 0; i < count; ++i )
@@ -192,8 +188,8 @@ namespace TrinityALImpl
 			m_shaders.push_back( shaders[i] );
 		}
 
-		std::vector<D3D12_ROOT_PARAMETER1> parameters;
-		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE1>> ranges;
+		std::vector<D3D12_ROOT_PARAMETER> parameters;
+		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>> ranges;
 
 		for( size_t i = 0; i < count; ++i )
 		{
@@ -211,7 +207,7 @@ namespace TrinityALImpl
 			AddSrvUavParameters( shaders[i].GetType(), shaders[i].m_shader->m_signature, parameters, ranges );
 		}
 
-		std::vector<D3D12_DESCRIPTOR_RANGE1> samplerRanges;
+		std::vector<D3D12_DESCRIPTOR_RANGE> samplerRanges;
 		for( size_t i = 0; i < count; ++i )
 		{
 			AddSamplerRanges( shaders[i].GetType(), shaders[i].m_shader->m_signature, samplerRanges );
@@ -219,7 +215,7 @@ namespace TrinityALImpl
 
 		if( !samplerRanges.empty() )
 		{
-			D3D12_ROOT_PARAMETER1 parameter;
+			D3D12_ROOT_PARAMETER parameter;
 			parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 			parameter.DescriptorTable.NumDescriptorRanges = UINT( samplerRanges.size() );
 			parameter.DescriptorTable.pDescriptorRanges = &samplerRanges[0];
@@ -248,10 +244,9 @@ namespace TrinityALImpl
 		signatureDesc.NumStaticSamplers = UINT( samplers.size() );
 		signatureDesc.pStaticSamplers = samplers.data();
 
-
 		CComPtr<ID3DBlob> rootSignatureBlob;
 		CComPtr<ID3DBlob> errorBlob;
-		auto hr = D3D12SerializeVersionedRootSignature( &versionedDesc, &rootSignatureBlob, &errorBlob );
+		auto hr = D3D12SerializeRootSignature( &signatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_0, &rootSignatureBlob, &errorBlob );
 		if( FAILED( hr ) )
 		{
 			if( errorBlob )
@@ -419,8 +414,8 @@ namespace TrinityALImpl
 	void Tr2ShaderProgramAL::AddSrvUavParameters(
 		ShaderType shaderType,
 		const Tr2ShaderSignatureAL& signature,
-		std::vector<D3D12_ROOT_PARAMETER1>& parameters,
-		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE1>>& ranges )
+		std::vector<D3D12_ROOT_PARAMETER>& parameters,
+		std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>>& ranges )
 	{
 		for( auto& reg : signature.registers )
 		{
@@ -429,26 +424,22 @@ namespace TrinityALImpl
 			{
 				CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( parameters.size() ), reg.registerType };
 				D3D12_DESCRIPTOR_RANGE_TYPE rangeType;
-				D3D12_DESCRIPTOR_RANGE_FLAGS flags;
 				if( isSrv )
 				{
 					m_srvRegisters.push_back( cbr );
 					rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-					flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC_WHILE_SET_AT_EXECUTE; //Not constant on CPU timeline bind, but guaranteed to be constant on the GPU timeline from the point we bind the texture
 				}
 				else
 				{
 					m_uavRegisters.push_back( cbr );
 					rangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
-					flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_VOLATILE; //Writable, so fully volatile
 				}
-				ranges.push_back( std::make_unique<D3D12_DESCRIPTOR_RANGE1>( CreateRange( rangeType, reg.registerIndex, reg.registerSpace, reg.arrayCount, flags ) ) );
+				ranges.push_back( std::make_unique<D3D12_DESCRIPTOR_RANGE>( CreateRange( rangeType, reg.registerIndex, reg.registerSpace, reg.arrayCount ) ) );
 
-				D3D12_ROOT_PARAMETER1 parameter;
+				D3D12_ROOT_PARAMETER parameter;
 				parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 				parameter.DescriptorTable.NumDescriptorRanges = 1;
 				parameter.DescriptorTable.pDescriptorRanges = ranges.back().get();
-
 				parameter.ShaderVisibility = ShaderVisibility( shaderType );
 				parameters.push_back( parameter );
 				m_srvUavParameterCount++;
@@ -459,7 +450,7 @@ namespace TrinityALImpl
 	void Tr2ShaderProgramAL::AddCbvParameters(
 		ShaderType shaderType,
 		const Tr2ShaderSignatureAL& signature,
-		std::vector<D3D12_ROOT_PARAMETER1>& parameters,
+		std::vector<D3D12_ROOT_PARAMETER>& parameters,
 		bool dynamicBuffers )
 	{
 		for( auto& reg : signature.registers )
@@ -469,11 +460,10 @@ namespace TrinityALImpl
 				continue;
 			}
 
-			D3D12_ROOT_PARAMETER1 parameter;
+			D3D12_ROOT_PARAMETER parameter;
 			parameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 			parameter.Descriptor.RegisterSpace = reg.registerSpace;
 			parameter.Descriptor.ShaderRegister = reg.registerIndex;
-			parameter.Descriptor.Flags = D3D12_ROOT_DESCRIPTOR_FLAG_DATA_STATIC; //Written by CPU, so constant from the point we bind it on the CPU timeline.
 			parameter.ShaderVisibility = ShaderVisibility( shaderType );
 
 			CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( parameters.size() ), reg.registerType, reg.dynamic };
@@ -486,7 +476,7 @@ namespace TrinityALImpl
 	void Tr2ShaderProgramAL::AddSamplerRanges(
 		ShaderType shaderType,
 		const Tr2ShaderSignatureAL& signature,
-		std::vector<D3D12_DESCRIPTOR_RANGE1>& samplerRanges )
+		std::vector<D3D12_DESCRIPTOR_RANGE>& samplerRanges )
 	{
 		for( auto& reg : signature.registers )
 		{
@@ -494,7 +484,7 @@ namespace TrinityALImpl
 			{
 				CbRegister cbr = { uint32_t( shaderType ), reg.registerIndex, uint32_t( samplerRanges.size() ), reg.registerType };
 				m_samplerRegisters.push_back( cbr );
-				samplerRanges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, reg.registerIndex, reg.registerSpace, reg.arrayCount, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND ) );
+				samplerRanges.push_back( CreateRange( D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, reg.registerIndex, reg.registerSpace, reg.arrayCount, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND ) );
 			}
 		}
 	}
