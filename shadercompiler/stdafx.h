@@ -238,7 +238,7 @@ enum D3D11_FILL_MODE
 #include <set>
 #include <sstream>
 #include <string>
-#include <strstream>
+#include <sstream>
 #include <vector>
 #include <regex>
 

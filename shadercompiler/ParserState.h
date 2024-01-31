@@ -217,9 +217,9 @@ public:
 	InlineString AllocateNameWithPrefix( const InlineString& prefix );
 	char* AllocateString( size_t size );
 
-	void ShowMessage( const FileLocation& location, ErrorCode errorCode, ... );
-	void ShowMessage( const ScannerToken& token, ErrorCode errorCode, ... );
-	void ShowMessage( ErrorCode errorCode, ... );
+	void ShowMessage( const FileLocation& location, int32_t errorCode, ... );
+	void ShowMessage( const ScannerToken& token, int32_t errorCode, ... );
+	void ShowMessage( int32_t errorCode, ... );
 
 	void AddOfflineStatement( ASTNode* node );
 	void MoveOfflineStatements( ASTNode* to );
@@ -255,7 +255,7 @@ public:
 	ASTNode* NewNode( int nodeType, const ScannerToken& token );
 
 private:
-	void ShowMessageImpl( const FileLocation& location, ErrorCode errorCode, va_list args );
+	void ShowMessageImpl( const FileLocation& location, int32_t errorCode, va_list args );
 	bool FindConcatOperator( size_t depth );
 	bool ParseMacroArguments( std::vector<InlineString>& arguments );
 	void AddIntrinsics();

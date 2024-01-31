@@ -110,7 +110,7 @@ uint32_t Tr2RenderContext::BeginParallelEncoding( uint32_t count )
 			m_parallelContexts.push_back( context );
 		}
 		
-		for( size_t i = 0; i < available; ++i )
+		for( uint32_t i = 0; i < available; ++i )
 		{
 			PrepareParallelContext( i, *m_parallelContexts[i] );
 			m_parallelContextsPool.push_back( m_parallelContexts[i] );

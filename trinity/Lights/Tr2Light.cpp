@@ -24,10 +24,55 @@ LightData::LightData() :
 	outerAngle( 0.0f ),
 	texturePath( L"" ),
 	boneIndex( -1 ),
-	flags( Tr2LightManager::FLAG_DEFAULT )
+	flags( Tr2LightManager::FLAG_DEFAULT ),
+	startTime( BeOS->GetCurrentFrameTime() )
 {
 }
 
+LightFeatures::LightFeatures() :
+	parentBrightness( 1.0f ),
+	parentScale( 1.0f ),
+	profileIndex( 0 ) 
+{
+}
+
+Tr2LightManager::PerLightData LightData::AsPerPointLightData( CXMMATRIX transform, LightFeatures& features ) const 
+{
+
+	Tr2LightManager::PerLightData data;
+
+	float composedBrightness = brightness * features.parentBrightness;
+	if( noiseAmplitude != 0.f )
+	{
+		float noise = float( PerlinNoise1D( TimeAsDouble( BeOS->GetCurrentFrameTime() - startTime ) * noiseFrequency, 2.f, 2.f, noiseOctaves ) );
+		composedBrightness *= ( ( noise + 1.0f ) / 2.0f ) * noiseAmplitude;
+	}
+	data.color = ( Vector4( color ) * composedBrightness ).GetXYZ();
+	data.radius = radius * features.parentScale;
+	data.innerRadius = Float_16( innerRadius * features.parentScale );
+	int16_t profile = features.profileIndex;
+	data.flags = flags | ( profile << 4 );
+	data.position = Vector3( XMVector3TransformCoord( position, transform ) );
+
+	Matrix lightRotation = RotationMatrix( rotation ) * transform;
+	data.direction = Vector3_16( Normalize( Transform( Vector4( 0.0, 0.0, -1, 0.0 ), lightRotation ).GetXYZ() ) );
+
+	data.outerAngle = Float_16( 0.0f );
+	data.innerAngle = Float_16( 0.0f );
+		
+	return data;
+}
+
+
+Tr2LightManager::PerLightData LightData::AsPerSpotLightData( CXMMATRIX transform, LightFeatures& features ) const
+{
+	auto data = AsPerPointLightData( transform, features );
+
+	data.outerAngle = Float_16( cos( TRI_2PI * outerAngle / 360.0f ) );
+	data.innerAngle = Float_16( cos( TRI_2PI * innerAngle / 360.0f ) );
+
+	return data;
+}
 
 Tr2Light::Tr2Light( IRoot* lockobj ) :
 	m_isDynamic( false ),
@@ -80,42 +125,22 @@ void Tr2Light::AddLight( Tr2LightManager& lightManager, CXMMATRIX transform, flo
 
 	SetBoneMatrix( bones, boneCount );
 	XMMATRIX lightTransform = XMMatrixMultiply( m_boneTransform, transform );
+	LightFeatures features;
+	features.parentBrightness = m_brightnessMultiplier;
+	features.parentScale = scale;
 
-	Tr2LightManager::PerLightData data;
+	features.profileIndex = m_lightProfile ? m_lightProfile->GetTextureIndex() + 1 : 0;
 
-	float brightness = m_lightData.brightness * m_brightnessMultiplier;
-	if( m_lightData.noiseAmplitude != 0.f )
+	if( m_type == Tr2Light::POINT_LIGHT )
 	{
-		float noise = float( PerlinNoise1D( TimeAsDouble( BeOS->GetCurrentFrameTime() - m_startTime ) * m_lightData.noiseFrequency, 2.f, 2.f, m_lightData.noiseOctaves ) );
-		brightness *= ( ( noise + 1.0f ) / 2.0f ) * m_lightData.noiseAmplitude;
+		auto data = m_lightData.AsPerPointLightData( lightTransform, features );
+		lightManager.AddLight( data );
 	}
-	data.color = ( Vector4( m_lightData.color ) * brightness ).GetXYZ();
-	data.radius = m_lightData.radius * scale;
-	data.innerRadius = Float_16( m_lightData.innerRadius * scale );
-	int16_t profile = 0;
-	if( m_lightProfile )
+	else if( m_type == Tr2Light::SPOT_LIGHT )
 	{
-		profile = m_lightProfile->GetTextureIndex() + 1;
+		auto data = m_lightData.AsPerSpotLightData( lightTransform, features );
+		lightManager.AddLight( data );
 	}
-	data.flags = m_lightData.flags | ( profile << 4 );
-	data.position = Vector3( XMVector3TransformCoord( m_lightData.position, lightTransform ) );
-
-	Matrix lightRotation = RotationMatrix( m_lightData.rotation ) * lightTransform;
-	data.direction = Vector3_16( Normalize( Transform( Vector4( 0.0, 0.0, -1, 0.0 ), lightRotation ).GetXYZ() ) );
-	switch( m_type )
-	{
-	case SPOT_LIGHT:
-		// rotate the direction
-		data.outerAngle = Float_16( cos( TRI_2PI * m_lightData.outerAngle / 360.0f ) );
-		data.innerAngle = Float_16( cos(TRI_2PI * m_lightData.innerAngle / 360.0f) );
-		break;
-	default:
-		data.outerAngle = Float_16( 0.0f );
-		data.innerAngle = Float_16( 0.0f );
-		break;
-	}
-
-	lightManager.AddLight( data );
 }
 	
 

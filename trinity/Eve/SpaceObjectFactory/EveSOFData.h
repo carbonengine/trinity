@@ -161,9 +161,24 @@ namespace SOFDataFactionColorChooser
         TYPE_SECONDARY_LIGHT,
         TYPE_TERTIARY_LIGHT,
         TYPE_WHITE_LIGHT,
-		TYPE_FORCE_FIELD,
-		TYPE_HAZE,
-
+        TYPE_PRIMARY_HOLOGRAM,
+        TYPE_SECONDARY_HOLOGRAM,
+        TYPE_TERTIARY_HOLOGRAM,
+        TYPE_STATE_0,
+        TYPE_STATE_1,
+        TYPE_STATE_2,
+        TYPE_STATE_3,
+        TYPE_STATE_VULNERABLE,
+        TYPE_STATE_INVULNERABLE,
+        TYPE_PRIMARY_FORCEFIELD,
+        TYPE_SECONDARY_FORCEFIELD,
+        TYPE_PRIMARY_BANNER, 
+        TYPE_PRIMARY_FX,
+        TYPE_SECONDARY_FX,
+        TYPE_PRIMARY_SPOTLIGHT,
+        TYPE_SECONDARY_SPOTLIGHT,
+        TYPE_TERTIARY_SPOTLIGHT,
+        TYPE_PRIMARY_BILLBOARD,
         TYPE_MAX,
     };
 
@@ -477,6 +492,8 @@ public:
 	// pattern placement per hull
 	PEveSOFDataPatternPerHullVector m_projections;
 	PEveSOFDataPatternApplicationGroupVector m_applicationGroups;
+
+	bool m_sof6;
 };
 TYPEDEF_BLUECLASS( EveSOFDataPattern );
 BLUE_DECLARE_VECTOR( EveSOFDataPattern );
@@ -487,6 +504,53 @@ BLUE_DECLARE_VECTOR( EveSOFDataPattern );
 // --------------------------------------------------------------------------------
 // All data storage classes for per-hull data
 // --------------------------------------------------------------------------------
+BLUE_CLASS( EveSOFDataPointLightAttachment ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataPointLightAttachment( IRoot* lockobj = NULL );
+	~EveSOFDataPointLightAttachment() {}
+
+	float m_saturation;
+	float m_intensity;
+	Vector3 m_translation;
+	Quaternion m_rotation;
+	float m_innerScaleMultiplier;
+	float m_outerScaleMultiplier;
+	float m_noiseAmplitude;
+	float m_noiseFrequency;
+	int32_t m_noiseOctaves;
+	std::wstring m_lightProfilePath;
+};
+TYPEDEF_BLUECLASS( EveSOFDataPointLightAttachment ); 
+BLUE_DECLARE_VECTOR( EveSOFDataPointLightAttachment );
+
+
+BLUE_CLASS( EveSOFDataSpotLightAttachment ) :
+	public IRoot
+{
+public:
+	EXPOSE_TO_BLUE();
+	EveSOFDataSpotLightAttachment( IRoot* lockobj = NULL );
+	~EveSOFDataSpotLightAttachment() {}
+
+	float m_saturation;
+	float m_intensity;
+	Vector3 m_translation;
+	float m_innerAngleMultiplier;
+	float m_outerAngleMultiplier;
+	float m_innerScaleMultiplier;
+	float m_outerScaleMultiplier;
+	float m_noiseAmplitude;
+	float m_noiseFrequency;
+	int32_t m_noiseOctaves;
+	std::wstring m_lightProfilePath;
+};
+TYPEDEF_BLUECLASS( EveSOFDataSpotLightAttachment );
+BLUE_DECLARE_VECTOR( EveSOFDataSpotLightAttachment );
+
+
 BLUE_CLASS( EveSOFDataHullSpotlightSetItem ) :
 	public IRoot
 {
@@ -500,8 +564,9 @@ public:
 	int32_t m_boneIndex, m_groupIndex;
 	bool m_boosterGainInfluence;
 	Vector3 m_spriteScale;
-	float m_flareIntensity, m_spriteIntensity, m_coneIntensity;
+	float m_flareIntensity, m_spriteIntensity, m_coneIntensity, m_saturation;
 	SOFDataFactionColorChooser::ColorType m_colorType;
+	EveSOFDataSpotLightAttachmentPtr m_light;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullSpotlightSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullSpotlightSetItem );
@@ -544,12 +609,15 @@ public:
 	Color m_color;
 	SOFDataFactionColorChooser::ColorType m_colorType;
 	float m_intensity;
+	float m_saturation;
 	Vector4 m_layer1Transform, m_layer2Transform, m_layer1Scroll, m_layer2Scroll;
 	int32_t m_boneIndex, m_groupIndex, m_maskMapAtlasIndex;
 	
 	// Blink data parameters
 	float m_rate, m_phase, m_dutyCycle; 
 	int32_t m_blinkMode;
+
+	PEveSOFDataPointLightAttachmentVector m_lights;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullPlaneSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullPlaneSetItem );
@@ -587,7 +655,6 @@ public:
 TYPEDEF_BLUECLASS( EveSOFDataHullPlaneSet );
 BLUE_DECLARE_VECTOR( EveSOFDataHullPlaneSet );
 
-
 BLUE_CLASS( EveSOFDataHullSpriteSetItem ) :
 	public IRoot
 {
@@ -598,9 +665,11 @@ public:
 
 	// per-hull data of a spriteset
 	Vector3 m_position;
-	float m_blinkRate, m_blinkPhase, m_minScale, m_maxScale, m_falloff, m_intensity;
+	float m_blinkRate, m_blinkPhase, m_minScale, m_maxScale, m_falloff, m_intensity, m_saturation;
 	int32_t m_boneIndex;
     SOFDataFactionColorChooser::ColorType m_colorType;
+
+	EveSOFDataPointLightAttachmentPtr m_light;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullSpriteSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullSpriteSetItem );
@@ -621,6 +690,7 @@ public:
 	bool m_skinned;
 	// items
 	PEveSOFDataHullSpriteSetItemVector m_items;
+
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullSpriteSet );
 BLUE_DECLARE_VECTOR( EveSOFDataHullSpriteSet );
@@ -637,10 +707,11 @@ public:
 	// per-hull data of a sprite line set
 	Vector3 m_position, m_scaling;
 	Quaternion m_rotation;
-	float m_spacing, m_blinkRate, m_blinkPhase, m_blinkPhaseShift, m_minScale, m_maxScale, m_falloff, m_intensity;
+	float m_spacing, m_blinkRate, m_blinkPhase, m_blinkPhaseShift, m_minScale, m_maxScale, m_falloff, m_intensity, m_saturation;
 	int32_t m_boneIndex;
 	bool m_isCircle;
     SOFDataFactionColorChooser::ColorType m_colorType;
+	EveSOFDataPointLightAttachmentPtr m_light;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullSpriteLineSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullSpriteLineSetItem );
@@ -681,8 +752,10 @@ public:
 
 	Quaternion m_rotation;
     SOFDataFactionColorChooser::ColorType m_colorType;
-	float m_hazeBrightness, m_hazeFalloff, m_sourceSize, m_sourceBrightness;
+	float m_hazeBrightness, m_hazeFalloff, m_sourceSize, m_sourceBrightness, m_saturation;
 	bool m_boosterGainInfluence;
+
+	EveSOFDataPointLightAttachmentPtr m_light;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullHazeSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullHazeSetItem );
@@ -792,7 +865,7 @@ public:
 
 	Vector3 m_position, m_scaling;
 	Quaternion m_rotation;
-	EveSOFDataHullBannerLightPtr m_lightOverride;
+	EveSOFDataPointLightAttachmentPtr m_light;
 
 	float m_angleX;
 	float m_angleY;

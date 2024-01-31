@@ -66,22 +66,22 @@ const Be::ClassInfo* Tr2CurveVector3Expression::ExposeToBlue()
 
 		MAP_ATTRIBUTE(
 			"input1",
-			m_input1,
+			m_arguments.m_input1,
 			"Input variable",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"input2",
-			m_input2,
+			m_arguments.m_input2,
 			"Input variable",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"input3",
-			m_input3,
+			m_arguments.m_input3,
 			"Input variable",
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE(
 			"input4",
-			m_input4,
+			m_arguments.m_input4,
 			"Input variable",
 			Be::READWRITE | Be::PERSIST )
 

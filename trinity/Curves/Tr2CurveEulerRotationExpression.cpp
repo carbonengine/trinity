@@ -90,12 +90,7 @@ Tr2CurveEulerRotationExpression::Tr2CurveEulerRotationExpression( IRoot* lockobj
 	:PARENTLOCK( m_inputs ),
 	m_currentValue( 0, 0, 0, 1 ),
 	m_timeScale( 1 ),
-	m_randomConstant( float( rand() ) / RAND_MAX ),
-	m_time( 0 ),
-	m_input1( 0 ),
-	m_input2( 0 ),
-	m_input3( 0 ),
-	m_input4( 0 )
+	m_randomConstant( float( rand() ) / RAND_MAX )
 {
 }
 
@@ -127,9 +122,9 @@ Quaternion Tr2CurveEulerRotationExpression::GetValue( double time ) const
 	Vector3 result( 0, 0, 0 );
 	float* components = &result.x;
 
-	m_time = float( time / m_timeScale );
+	m_arguments.m_time = float( time / m_timeScale );
 	auto self = this;
-	void* buffers[] = { (void*)this, (void*)&self };
+	void* buffers[] = { (void*)&m_arguments, (void*)&self };
 
 	for( size_t i = 0; i < 3; ++i )
 	{
@@ -158,11 +153,11 @@ void Tr2CurveEulerRotationExpression::SetExpression( size_t index, const std::st
 	}
 
 	CcpParser::Variable s_variables[] = {
-		{ "time", 0, offsetof( Tr2CurveEulerRotationExpression, m_time ) },
-		{ "input1", 0, offsetof( Tr2CurveEulerRotationExpression, m_input1 ) },
-		{ "input2", 0, offsetof( Tr2CurveEulerRotationExpression, m_input2 ) },
-		{ "input3", 0, offsetof( Tr2CurveEulerRotationExpression, m_input3 ) },
-		{ "input4", 0, offsetof( Tr2CurveEulerRotationExpression, m_input4 ) },
+		{ "time", 0, offsetof( Arguments, m_time ) },
+		{ "input1", 0, offsetof( Arguments, m_input1 ) },
+		{ "input2", 0, offsetof( Arguments, m_input2 ) },
+		{ "input3", 0, offsetof( Arguments, m_input3 ) },
+		{ "input4", 0, offsetof( Arguments, m_input4 ) },
 	};
 
 	CcpParser::FunctionView functionView[] = { s_functions };
@@ -239,7 +234,7 @@ float Tr2CurveEulerRotationExpression::GetInputValue( int index ) const
 	{
 		return 0;
 	}
-	return const_cast<ITriScalarFunction*>( m_inputs[index] )->GetValueAt( m_time );
+	return const_cast<ITriScalarFunction*>( m_inputs[index] )->GetValueAt( m_arguments.m_time );
 }
 
 // --------------------------------------------------------------------------------
@@ -337,11 +332,11 @@ std::vector<Tr2ExpressionTermInfoPtr> Tr2CurveEulerRotationExpression::GetExpres
 BlueStdResult Tr2CurveEulerRotationExpression::EvaluateExpression( const char* expression, float& value ) const
 {
 	CcpParser::Variable s_variables[] = {
-		{ "time", 0, offsetof( Tr2CurveEulerRotationExpression, m_time ) },
-		{ "input1", 0, offsetof( Tr2CurveEulerRotationExpression, m_input1 ) },
-		{ "input2", 0, offsetof( Tr2CurveEulerRotationExpression, m_input2 ) },
-		{ "input3", 0, offsetof( Tr2CurveEulerRotationExpression, m_input3 ) },
-		{ "input4", 0, offsetof( Tr2CurveEulerRotationExpression, m_input4 ) },
+		{ "time", 0, offsetof( Arguments, m_time ) },
+		{ "input1", 0, offsetof( Arguments, m_input1 ) },
+		{ "input2", 0, offsetof( Arguments, m_input2 ) },
+		{ "input3", 0, offsetof( Arguments, m_input3 ) },
+		{ "input4", 0, offsetof( Arguments, m_input4 ) },
 	};
 
 	CcpParser::FunctionView functionView[] = { s_functions };
@@ -360,7 +355,7 @@ BlueStdResult Tr2CurveEulerRotationExpression::EvaluateExpression( const char* e
 	}
 	std::unique_ptr<uint8_t[]> tempArena( new uint8_t[program.GetTempArenaSize()] );
 	auto self = this;
-	void* buffers[] = { (void*)this, (void*)&self };
+	void* buffers[] = { (void*)&m_arguments, (void*)&self };
 	value = program.Eval( buffers, tempArena.get() );
 	return BlueStdResult();
 }
