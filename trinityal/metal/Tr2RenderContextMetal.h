@@ -15,7 +15,10 @@
 #include "../include/Tr2RenderPassAL.h"
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2AdapterStructures.h"
+#include "../include/Tr2RtTopLevelAccelerationStructureAL.h"
 #include "MetalContext.h"
+#include <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
 
 class Tr2ConstantBufferAL;
 class Tr2ShaderAL;
@@ -148,11 +151,8 @@ public:
 	ALResult RunComputeShader( unsigned groupDimX, unsigned groupDimY, unsigned groupDimZ );
 	ALResult RunComputeShaderIndirect( Tr2BufferAL& indirectParams, unsigned offset );
 
-	ALResult DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
-	{
-		return E_FAIL;
-	}
-
+    ALResult DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtTopLevelAccelerationStructureAL& tlas, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth );
+    
 	ALResult SetVertexLayout( const Tr2VertexLayoutAL& layout );
 
 	ALResult SetRenderState( Tr2RenderContextEnum::RenderState state, uint32_t value );
@@ -239,6 +239,7 @@ public:
 	ALResult ForkContext( Tr2RenderContextAL* context, uint32_t index ) const;
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
+    ALResult UseAccelerationStructure( NSMutableArray *primitiveAccelerationStructures );
 
 protected:
 	bool                               m_isValid;

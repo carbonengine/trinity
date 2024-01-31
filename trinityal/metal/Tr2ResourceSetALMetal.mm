@@ -8,6 +8,7 @@
 #include "Tr2SamplerStateALMetal.h"
 #include "Tr2TextureALMetal.h"
 #include "Tr2ShaderProgramALMetal.h"
+#include "Tr2RtPipelineStateALMetal.h"
 #include "ALLog.h"
 
 static_assert(
@@ -41,12 +42,22 @@ namespace TrinityALImpl
 		Destroy();
 	}
 
-    ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
+    ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2RtPipelineStateAL &pipeline, Tr2PrimaryRenderContextAL& renderContext )
     {
-        return S_OK;
+        Destroy();
+
+        if( !renderContext.IsValid() || !pipeline.IsValid() )
+        {
+            return E_INVALIDARG;
+        }
+        
+        const auto program = pipeline.m_pipeline->GetShaderProgram();
+        
+        return Create(description, program, renderContext);
+        
     }
 
-	ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL &program, Tr2PrimaryRenderContextAL& renderContext )
+    ALResult Tr2ResourceSetAL::Create( const Tr2ResourceSetDescriptionAL& description, const ::Tr2ShaderProgramAL& program, Tr2PrimaryRenderContextAL& renderContext )
 	{
 		Destroy();
 

@@ -18,7 +18,7 @@ struct PerObjectVSData
 	float2 position;
 };
 
-vertex VS_OUTPUT mainVS( VS_INPUT input [[ stage_in ]], constant PerObjectVSData& PerObjectVS [[ CBUFFER(0) ]] SHADOW_PS_DECL )
+vertex VS_OUTPUT mainVS( VS_INPUT input [[ stage_in ]], constant PerObjectVSData& PerObjectVS [[ CBUFFER(0) ]] )
 {
 	VS_OUTPUT Output;
 	Output.Position = float4(input.Position + float3( PerObjectVS.position, 0 ), 1);

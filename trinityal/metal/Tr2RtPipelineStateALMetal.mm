@@ -12,42 +12,8 @@
 #include "Tr2RtPipelineStateALMetal.h"
 #include "Tr2PrimaryRenderContextMetal.h"
 #include "../ALLog.h"
-/*
-namespace
-{
-    class DataStoreCache
-    {
-    public:
-        DataStoreCache()
-            :m_dataOffset( PAGE_SIZE )
-        {
-        }
-        void* AddData( size_t size )
-        {
-            if( m_dataOffset + size > PAGE_SIZE )
-            {
-                std::unique_ptr<uint8_t[]> page( new uint8_t[std::max( size, PAGE_SIZE )] );
-                m_dataPages.emplace_back( std::move( page ) );
-                m_dataOffset = size;
-                return m_dataPages.back().get();
-            }
-            auto result = m_dataPages.back().get() + m_dataOffset;
-            m_dataOffset += size;
-            return result;
-        }
+#include "MetalShaderStrings.h"
 
-        template <typename T>
-        T* AddData( size_t count = 1)
-        {
-            return static_cast<T*>(AddData( sizeof( T ) * count ));
-        }
-    private:
-        std::vector<std::unique_ptr<uint8_t[]>> m_dataPages;
-        static const size_t PAGE_SIZE = 1024;
-        size_t m_dataOffset;
-    };
-}
-*/
 
 namespace TrinityALImpl
 {
@@ -59,9 +25,53 @@ namespace TrinityALImpl
     {
     }
 
+
     ALResult Tr2RtPipelineStateAL::CreateRtPipelineState( const Tr2RtPipelineStateDescriptionAL& desc, Tr2PrimaryRenderContextAL& renderContext )
     {
+        m_shaderProgram = desc.m_shaderProgram;
+        
+        id<MTLDevice> device = renderContext.GetMetalContext()->GetDevice();
+        // Maps intersection function names to actual MTLFunctions.
+        
+        // Fill out a dictionary of function constant values.
+        MTLFunctionConstantValues *constants = [[MTLFunctionConstantValues alloc] init];
+        // Each intersection function has its own set of resources. Determine the maximum size over all
+        // intersection functions. This size becomes the stride that intersection functions use to find
+        // the starting address for their resources.
+        
+        
+        
+        //id <MTLFunction> shadowFunction = [self specializedFunctionWithName:@"shadowRaytracingKernel"];
+        MTLComputePipelineDescriptor *descriptor = [[MTLComputePipelineDescriptor alloc] init];
+        
+        
+        // Set to YES to allow compiler to make certain optimizations
+        descriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = YES;
+        
+        NSError *error = nullptr;
+    
+        descriptor.computeFunction = m_shaderProgram.TrinityALImpl_GetObject()->GetComputeKernel();
+        
+        // Create compute pipelines will execute code on the GPU
+        // Create the compute pipeline state which does all the raytracing
+       
+        m_shadowPipeline = [device newComputePipelineStateWithDescriptor:descriptor
+                                                                 options:0
+                                                              reflection:nil
+                                                                   error:&error];
+        
+        if( !m_shadowPipeline )
+        {
+            CCP_LOGERR("SOMETHING WENT WRONG WITH CREATING THE SHADOW PIPELINE FOR RAYTRACING");
+        }
+        
+        
         return S_OK;
+    }
+
+    const ::Tr2ShaderProgramAL& Tr2RtPipelineStateAL::GetShaderProgram() const
+    {
+        return m_shaderProgram;
     }
 
     bool Tr2RtPipelineStateAL::IsValid() const

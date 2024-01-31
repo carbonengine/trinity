@@ -9,6 +9,7 @@
 #include "../ALResult.h"
 #include "../Tr2DeviceResourceAL.h"
 #include "Tr2ShaderAL.h"
+#include "Tr2ShaderProgramAL.h"
 
 namespace TrinityALImpl
 {
@@ -19,7 +20,8 @@ class Tr2RtPipelineStateDescriptionAL
 {
 public:
 	~Tr2RtPipelineStateDescriptionAL();
-
+    
+    void AddShader( Tr2ShaderAL& shader, const wchar_t* exportName, const wchar_t* name, Tr2ShaderProgramAL shaderProgram );
 	void AddShader( const wchar_t* exportName, const Tr2ShaderBytecodeAL& bytecode, const wchar_t* name, uint32_t payloadSize );
 	void AddShaders( size_t count, const wchar_t** exportNames, const Tr2ShaderBytecodeAL& bytecode, const wchar_t** names, uint32_t payloadSize );
 	void AddShaders( size_t count, const wchar_t** exportNames, const Tr2ShaderBytecodeAL& bytecode, const wchar_t** names, uint32_t payloadSize, const Tr2ShaderSignatureAL& signature );
@@ -58,6 +60,7 @@ private:
 	std::vector<HitGroup> m_hitGroups;
 	Tr2ShaderSignatureAL m_globalSignature;
 	std::vector<Tr2ShaderSignatureAL> m_localSignatures;
+    Tr2ShaderProgramAL m_shaderProgram;
 
 	friend class TrinityALImpl::Tr2RtPipelineStateAL;
 };
@@ -71,6 +74,9 @@ public:
 	bool IsValid() const;
 
 	TrinityALImpl::Tr2RtPipelineStateAL* TrinityALImpl_GetObject() const;
+    
 private:
-	std::shared_ptr<TrinityALImpl::Tr2RtPipelineStateAL> m_pipeline;
+    std::shared_ptr<TrinityALImpl::Tr2RtPipelineStateAL> m_pipeline;
+    
+    friend class TrinityALImpl::Tr2ResourceSetAL;
 };

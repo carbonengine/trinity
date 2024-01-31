@@ -15,18 +15,19 @@
 
 namespace
 {
-	std::shared_ptr<TrinityALImpl::Tr2RtTopLevelAccelerationStructureAL> NullTlas()
+API_AVAILABLE(macos(11.0))
+std::shared_ptr<TrinityALImpl::Tr2RtTopLevelAccelerationStructureAL> NullTlas()
 	{
 		static std::shared_ptr<TrinityALImpl::Tr2RtTopLevelAccelerationStructureAL> nullTlas = std::make_shared<TrinityALImpl::Tr2RtTopLevelAccelerationStructureAL>();
 		return nullTlas;
 	}
 }
-
+API_AVAILABLE(macos(11.0))
 Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
 	:m_tlas( NullTlas() )
 {
 }
-
+API_AVAILABLE(macos(11.0))
 ALResult Tr2RtTopLevelAccelerationStructureAL::Create( const size_t count, const Tr2RtInstanceAL* instances, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
 {
 	m_tlas = std::make_shared<TrinityALImpl::Tr2RtTopLevelAccelerationStructureAL>();
@@ -57,7 +58,7 @@ size_t Tr2RtTopLevelAccelerationStructureAL::GetCapacity() const
 {
 	return m_tlas->GetCapacity();
 }
-
+API_AVAILABLE(macos(11.0))
 TrinityALImpl::Tr2RtTopLevelAccelerationStructureAL* Tr2RtTopLevelAccelerationStructureAL::TrinityALImpl_GetObject() const
 {
 	return m_tlas.get();

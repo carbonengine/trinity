@@ -17,6 +17,8 @@ namespace TrinityALImpl
 	class MetalContext;
     class Tr2PipelineStatsQueryAL;
     class Tr2VertexLayoutAL;
+    class Tr2RtPipelineStateAL;
+    
 	
 	// Values below must be synchronized with (propagated to) ShaderCompiler/EffectCompilerMetal.cpp
 	// and TrinityALTest/Shaders.metal/MetalDefines.h (CBUFFER, SRV, UAV, UAVT).
@@ -325,7 +327,9 @@ namespace TrinityALImpl
 
 		void Dispatch( uint32_t groupDimX, uint32_t groupDimY, uint32_t groupDimZ );
 		void Dispatch( id<MTLBuffer> indirectBuffer, uint32_t indirectBufferOffset );
-
+        void DispatchRays( Tr2RtPipelineStateAL* pipeline, uint32_t width, uint32_t height );
+        void SetRaytracingPipelineState( Tr2RtPipelineStateAL* pipeline );
+        
 		void CreateVisibilityQueryBuffer(uint64_t maxNumQueries);
 		uint64_t StartVisibilityQuery();
 		void EndVisibilityQuery(uint64_t queryNumber);

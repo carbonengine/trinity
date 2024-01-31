@@ -38,7 +38,7 @@ namespace  TrinityALImpl {
         // Allocate scratch space Metal uses to build the acceleration structure.
         // Use MTLResourceStorageModePrivate for the best performance because the sample
         // doesn't need access to buffer's contents.
-        id <MTLBuffer> scratchBuffer = [device newBufferWithLength:accelSizes.buildScratchBufferSize options:MTLResourceStorageModePrivate];
+        id <MTLBuffer> scratchBuffer = [device newBufferWithLength:accelSizes.buildScratchBufferSize options:MTLResourceStorageModeShared];
 
         // Create a command buffer that performs the acceleration structure build.
         id <MTLCommandBuffer> commandBuffer = [metalContext->GetCommandQueue() commandBuffer];
@@ -47,7 +47,7 @@ namespace  TrinityALImpl {
         id <MTLAccelerationStructureCommandEncoder> commandEncoder = [commandBuffer accelerationStructureCommandEncoder];
 
         // Allocate a buffer for Metal to write the compacted accelerated structure's size into.
-        id <MTLBuffer> compactedSizeBuffer = [device newBufferWithLength:sizeof(uint32_t) options:MTLResourceStorageModeShared];
+        //id <MTLBuffer> compactedSizeBuffer = [device newBufferWithLength:sizeof(uint32_t) options:MTLResourceStorageModeShared];
 
         // Schedule the actual acceleration structure build.
         [commandEncoder buildAccelerationStructure:accelerationStructure
@@ -61,6 +61,7 @@ namespace  TrinityALImpl {
 
         [commandBuffer commit];
         
+        m_buffer = scratchBuffer;
         
         return accelerationStructure;
     }
@@ -90,7 +91,7 @@ namespace  TrinityALImpl {
             // GEOMETRY DESCRIPTOR
             MTLAccelerationStructureTriangleGeometryDescriptor *geomDesc = [MTLAccelerationStructureTriangleGeometryDescriptor descriptor];
 
-            geomDesc.indexBuffer = indices.m_indexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
+            geomDesc.indexBuffer = indices.m_indexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer(); //indexCount = 72
             geomDesc.indexType = indices.m_stride == 2 ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32;
             geomDesc.indexBufferOffset = indices.m_stride * indices.m_indexOffset;
             
@@ -99,7 +100,9 @@ namespace  TrinityALImpl {
             //geomDesc.vertexFormat = metalContext->m_utils->GetMTLPixelFormat(positions.m_positionFormat);
             geomDesc.vertexBufferOffset = positions.m_vertexOffset;
             
-            geomDesc.triangleCount = indices.m_indexBuffer.GetSize() / 3;
+            geomDesc.triangleCount = indices.m_indexBuffer.GetSize() / 3 / indices.m_stride;//48
+            
+            //`Number of indices to read (triangle count multiplied by 3) (144) times index stride (2) plus index buffer offset (0) must be less than or equal to index buffer length (144)'
             
             
             // AS DESCRIPTOR ( a descriptor for descriptors)
@@ -135,7 +138,7 @@ namespace  TrinityALImpl {
 
     bool Tr2RtBottomLevelAccelerationStructureAL::IsValid() const
     {
-        return true;
+        return m_buffer != nullptr;
     }
 
     Tr2ALMemoryType Tr2RtBottomLevelAccelerationStructureAL::GetMemoryClass() const
@@ -145,7 +148,7 @@ namespace  TrinityALImpl {
         
     void Tr2RtBottomLevelAccelerationStructureAL::Destroy()
     {
-        
+        m_buffer = nullptr;
     }
 
 void Tr2RtBottomLevelAccelerationStructureAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const

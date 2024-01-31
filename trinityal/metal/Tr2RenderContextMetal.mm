@@ -14,7 +14,8 @@
 #include "Tr2ShaderProgramALMetal.h"
 #include "Tr2TextureALMetal.h"
 #include "Tr2SwapChainALMetal.h"
-
+#include "Tr2RtPipelineStateALMetal.h"
+#include "Tr2RtTopLevelAccelerationStructureALMetal.h"
 
 #include "MetalContext.h"
 
@@ -572,6 +573,22 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectPara
 	m_workQueue->Dispatch( indirectParams.m_buffer->GetMetalBuffer(), offset );
 
 	return S_OK;
+}
+
+ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtTopLevelAccelerationStructureAL& tlas, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
+{
+    if( !pipeline.IsValid() )
+    {
+        return E_FAIL;
+    }
+    
+//    m_workQueue->SetRaytracingPipelineState( pipeline.TrinityALImpl_GetObject() );
+    
+    UseAccelerationStructure(tlas.TrinityALImpl_GetObject()->m_primitiveAccelerationStructures);
+    
+    m_workQueue->DispatchRays(  pipeline.TrinityALImpl_GetObject() , width, height );
+    
+    return S_OK;
 }
 
 ALResult Tr2RenderContextAL::SetConstants(
@@ -1331,7 +1348,17 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
 	return S_OK;
 }
 
-
+ALResult Tr2RenderContextAL::UseAccelerationStructure( NSMutableArray *primitiveAccelerationStructures )
+{
+    auto computeEncoder = m_workQueue->GetRenderEncoder();
+    
+    // mark primitive acceleration structures as used since only the instance acceleration
+    // structure references them.
+    for (id <MTLAccelerationStructure> primitiveAccelerationStructure in primitiveAccelerationStructures)
+        [computeEncoder useResource:primitiveAccelerationStructure usage:MTLResourceUsageRead];
+    
+    return S_OK;
+}
 
 
 void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )

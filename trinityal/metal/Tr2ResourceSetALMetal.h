@@ -4,6 +4,9 @@
 
 #include "../include/Tr2ResourceSetAL.h"
 #include "MetalContext.h"
+#include "../include/Tr2RtPipelineStateAL.h"
+#include "../include/Tr2ShaderProgramAL.h"
+
 
 namespace TrinityALImpl
 {
@@ -37,6 +40,7 @@ namespace TrinityALImpl
 		bool m_isValid;
 
 		friend class ::Tr2RenderContextAL;
+        friend class ::Tr2RtPipelineStateAL;
 	};
 }
 

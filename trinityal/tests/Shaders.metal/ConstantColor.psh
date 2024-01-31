@@ -8,7 +8,7 @@ struct VS_OUTPUT
 	float4 Position [[position]];
 };
 
-fragment float4 mainPS(VS_OUTPUT In [[stage_in]] SHADOW_PS_DECL)
+fragment float4 mainPS(VS_OUTPUT In [[stage_in]] )
 {
     float4 color = float4( 1, 0, 0, 1 );
     return color;

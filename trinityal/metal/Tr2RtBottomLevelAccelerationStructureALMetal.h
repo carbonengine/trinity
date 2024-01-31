@@ -40,6 +40,8 @@ class API_AVAILABLE(macos(11.0)) Tr2RtBottomLevelAccelerationStructureAL : publi
         //NSMutableArray *_primitiveAccelerationStructures;
         
         id <MTLAccelerationStructure> BuildAccelerationStructure(MTLAccelerationStructureDescriptor* descriptor, id<MTLDevice> device,  MetalContext* metalContext );
+        
+        id <MTLBuffer> m_buffer;
     };
 }
 

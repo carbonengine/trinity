@@ -17,7 +17,7 @@ namespace TrinityALImpl
 
     
 
-    Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
+Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
     {
     }
 
@@ -36,11 +36,10 @@ namespace TrinityALImpl
         // doesn't actually build the acceleration structure, but rather allocates memory.
         id <MTLAccelerationStructure> accelerationStructure = [device newAccelerationStructureWithSize:accelSizes.accelerationStructureSize];
 
-        
         // Allocate scratch space Metal uses to build the acceleration structure.
         // Use MTLResourceStorageModePrivate for the best performance because the sample
         // doesn't need access to buffer's contents.
-        id <MTLBuffer> scratchBuffer = [device newBufferWithLength:accelSizes.buildScratchBufferSize options:MTLResourceStorageModePrivate];
+        id <MTLBuffer> scratchBuffer = [device newBufferWithLength:accelSizes.buildScratchBufferSize options:MTLResourceStorageModeShared];
 
         // Create a command buffer that performs the acceleration structure build.
         id <MTLCommandBuffer> commandBuffer = [metalContext->GetCommandQueue() commandBuffer];
@@ -49,13 +48,14 @@ namespace TrinityALImpl
         id <MTLAccelerationStructureCommandEncoder> commandEncoder = [commandBuffer accelerationStructureCommandEncoder];
 
         // Allocate a buffer for Metal to write the compacted accelerated structure's size into.
-        id <MTLBuffer> compactedSizeBuffer = [device newBufferWithLength:sizeof(uint32_t) options:MTLResourceStorageModeShared];
+        //id <MTLBuffer> compactedSizeBuffer = [device newBufferWithLength:sizeof(uint32_t) options:MTLResourceStorageModeShared];
 
         // Schedule the actual acceleration structure build.
         [commandEncoder buildAccelerationStructure:accelerationStructure
                                         descriptor:descriptor
                                      scratchBuffer:scratchBuffer
                                scratchBufferOffset:0];
+        
         
         // End encoding, and commit the command buffer so the GPU can start building the
         // acceleration structure.
@@ -78,16 +78,20 @@ namespace TrinityALImpl
                 return E_INVALIDARG;
             }
             
+            m_primitiveAccelerationStructures = [[NSMutableArray alloc] init];
+            
             MetalContext *metalContext = renderContext.GetMetalContext();
             id<MTLDevice> device = metalContext->GetDevice();
-            
+      
             // Allocate a buffer of acceleration structure instance descriptors. Each descriptor represents
             // an instance of one of the primitive acceleration structures created above, with its own
             // transformation matrix.
+            
+            // maybe the option should be MTLResourceStorageModePrivate
             m_instanceBuffer = [device newBufferWithLength:sizeof(MTLAccelerationStructureInstanceDescriptor) * count options:MTLResourceStorageModeShared];
             
             MTLAccelerationStructureInstanceDescriptor *instanceDescriptors = (MTLAccelerationStructureInstanceDescriptor *)m_instanceBuffer.contents;
-            
+
             // Fill out instance descriptors.
             for (NSUInteger instanceIndex = 0; instanceIndex < count; instanceIndex++) {
                 
@@ -96,21 +100,20 @@ namespace TrinityALImpl
                     return E_INVALIDARG;
                 }
                 
-                
                 // TODO: FIX THIS
                 // it's supposed to map the instance to its acceleration structure.
                 instanceDescriptors[instanceIndex].accelerationStructureIndex = (uint32_t)instanceIndex;
 
                 // Mark the instance as opaque so that the
                 // ray intersector doesn't attempt to execute a function that doesn't exist.
-                instanceDescriptors[instanceIndex].options = 0;
+                instanceDescriptors[instanceIndex].options = MTLAccelerationStructureInstanceOptionOpaque;
 
                 
                 // Metal adds the geometry intersection function table offset and instance intersection
                 // function table offset together to determine which intersection function to execute.
                 // The sample mapped geometries directly to their intersection functions above, so it
                 // sets the instance's table offset to 0.
-                instanceDescriptors[instanceIndex].intersectionFunctionTableOffset = 0;
+                instanceDescriptors[instanceIndex].intersectionFunctionTableOffset = instanceIndex;
                 
                 // Set the instance mask, which the sample uses to filter out intersections between rays
                 // and geometry. For example, it uses masks to prevent light sources from being visible
@@ -129,10 +132,8 @@ namespace TrinityALImpl
                 id<MTLAccelerationStructure> blas = instances[instanceIndex].blas.TrinityALImpl_GetObject()->m_primitiveAccelerationStructure;
                 //gather all the BLAS in one list
                 [m_primitiveAccelerationStructures addObject:blas];
-                
-                
             }
-            
+                
             // Create an instance acceleration structure descriptor
             MTLInstanceAccelerationStructureDescriptor *accelDescriptor = [MTLInstanceAccelerationStructureDescriptor descriptor];
             
@@ -140,9 +141,22 @@ namespace TrinityALImpl
             accelDescriptor.instanceCount = count;
             accelDescriptor.instanceDescriptorBuffer = m_instanceBuffer;
             
-            
             // Create the instance acceleration structure that contains all instances in the scene.
             m_instanceAccelerationStructure = BuildAccelerationStructure(accelDescriptor, device, metalContext);
+            
+            // add vector of contents
+            // gpu usage is probs srv and cpu none
+            if (@available(macOS 13.0, *)) {
+                Tr2BufferDescriptionAL bufferDesc = Tr2BufferDescriptionAL(1, sizeof(m_instanceAccelerationStructure.gpuResourceID), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE);
+                
+                auto gpuID = m_instanceAccelerationStructure.gpuResourceID;
+                
+                m_buffer.Create(bufferDesc, &gpuID, renderContext);
+                m_buffer.SetName("TLASBuffer");
+            }
+            
+            id <MTLComputeCommandEncoder> computeEncoder = metalContext->GetPrimaryWorkQueue()->GetComputeEncoder();
+            [computeEncoder setAccelerationStructure:m_instanceAccelerationStructure atBufferIndex:5];
             
             return S_OK;
         }
@@ -150,8 +164,6 @@ namespace TrinityALImpl
         {
             return E_FAIL;
         }
-        
-        
         
     }
 
@@ -162,13 +174,13 @@ namespace TrinityALImpl
 
     bool Tr2RtTopLevelAccelerationStructureAL::IsValid() const
     {
-        return false;
+        return m_instanceBuffer != nullptr;
     }
     
     const ::Tr2BufferAL& Tr2RtTopLevelAccelerationStructureAL::GetBuffer() const
     {
         return m_buffer;
-        //return m_instanceBuffer;
+        //return nullptr;
     }
 
     size_t Tr2RtTopLevelAccelerationStructureAL::GetCapacity() const

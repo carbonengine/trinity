@@ -11,6 +11,7 @@
 #include "MetalShaderStrings.h"
 #include "Tr2PipelineStatsQueryALMetal.h"
 #include "Tr2VertexLayoutALMetal.h"
+#include "Tr2RtPipelineStateALMetal.h"
 #include "ALLog.h"
 
 // NOTE: If you spot any rendering artifacts - try disabling render/compute state cashing.
@@ -2944,7 +2945,46 @@ void MetalWorkQueue::Dispatch( id<MTLBuffer> indirectBuffer, uint32_t indirectBu
 	}
 	ReleaseEncoder( false );
 }
-	
+
+void MetalWorkQueue::SetRaytracingPipelineState( Tr2RtPipelineStateAL* pipeline )
+{
+    CCP_ASSERT( m_isPrimary );
+    id<MTLComputeCommandEncoder> computeEncoder = GetComputeEncoder();
+    
+    // Bind the required buffers and textures.
+    SetComputeBufferBindings();
+    
+    [computeEncoder setComputePipelineState: pipeline->GetRtPipeline() ];
+    //ReleaseEncoder( false );
+}
+
+void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, uint32_t width, uint32_t height )
+{
+    CCP_ASSERT( m_isPrimary );
+    id<MTLComputeCommandEncoder> computeEncoder = GetComputeEncoder();
+    
+    // Bind the required buffers and textures.
+    SetComputeBufferBindings();
+    
+    [computeEncoder setComputePipelineState: pipeline->GetRtPipeline() ];
+    // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
+    // pixel. The sample needs to align the number of threads to a multiple of the threadgroup
+    // size, because earlier, when it created the pipeline objects, it declared that the pipeline
+    // would always use a threadgroup size that's a multiple of the thread execution width
+    // (SIMD group size). An 8x8 threadgroup is a safe threadgroup size and small enough to be
+    // supported on most devices. A more advanced app would choose the threadgroup size dynamically.
+    MTLSize threadsPerThreadgroup = MTLSizeMake(8, 8, 1);
+    MTLSize threadgroups = MTLSizeMake((width  + threadsPerThreadgroup.width  - 1) / threadsPerThreadgroup.width,
+                                       (height + threadsPerThreadgroup.height - 1) / threadsPerThreadgroup.height,
+                                       1);
+    
+    // Dispatch the compute kernel to perform ray tracing.
+    [computeEncoder dispatchThreadgroups:threadgroups threadsPerThreadgroup:threadsPerThreadgroup];
+    
+    ReleaseEncoder( false );
+}
+
+
 bool MetalWorkQueue::SampleCounter( id buffer, NSUInteger index, CounterType counter )
 {
 	CCP_ASSERT( m_isPrimary );

@@ -9,7 +9,7 @@ struct VS_OUTPUT
 	float2 TexCoord;
 };
 
-fragment float4 mainPS(VS_OUTPUT In [[ stage_in ]] SHADOW_PS_DECL)
+fragment float4 mainPS(VS_OUTPUT In [[ stage_in ]])
 {
     float4 color = float4( In.TexCoord, 0, 1 );
     return color;

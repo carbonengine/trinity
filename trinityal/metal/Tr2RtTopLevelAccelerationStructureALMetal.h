@@ -17,9 +17,6 @@
 #import <MetalKit/MetalKit.h>
 
 
-@interface AccelerationStructureBuilder : NSObject
-@end
-
 namespace TrinityALImpl
 {
 class API_AVAILABLE(macos(11.0)) Tr2RtTopLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2RtTopLevelAccelerationStructureAL>
@@ -39,13 +36,12 @@ class API_AVAILABLE(macos(11.0)) Tr2RtTopLevelAccelerationStructureAL : public T
 
         const ::Tr2BufferAL& GetBuffer() const;
         size_t GetCapacity() const;
-        
+        NSMutableArray *m_primitiveAccelerationStructures;
     private:
         id<MTLBuffer> m_instanceBuffer;
         
-        // just starting with this to get error free
         ::Tr2BufferAL m_buffer;
-        NSMutableArray *m_primitiveAccelerationStructures;
+        
         
         id <MTLAccelerationStructure> m_instanceAccelerationStructure;
         
