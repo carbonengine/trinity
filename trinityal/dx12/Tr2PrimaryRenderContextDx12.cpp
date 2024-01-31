@@ -326,19 +326,25 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	if( g_requestDebugMarkers )
 	{
-		if( HMODULE amdD3dDl2 = LoadLibrary( "amdxc64.dll" ) )
+		DXGI_ADAPTER_DESC adapterDesc;
+		if( SUCCEEDED( dxgiAdapter->GetDesc( &adapterDesc ) ) && adapterDesc.VendorId == 4098 )
 		{
-			auto amdExtD3dCreateFunc = (PFNAmdExtD3DCreateInterface)GetProcAddress( amdD3dDl2, "AmdExtD3DCreateInterface" );
-
-			if( amdExtD3dCreateFunc )
+			if( HMODULE amdD3dDl2 = LoadLibrary( "amdxc64.dll" ) )
 			{
-				IAmdExtD3DFactory* amdExtObject = nullptr;
-				amdExtD3dCreateFunc( m_device, __uuidof( IAmdExtD3DFactory ), reinterpret_cast<void**>( &amdExtObject ) );
+				auto amdExtD3dCreateFunc = (PFNAmdExtD3DCreateInterface)GetProcAddress( amdD3dDl2, "AmdExtD3DCreateInterface" );
 
-				if( amdExtObject )
+				if( amdExtD3dCreateFunc )
 				{
-					amdExtObject->CreateInterface( m_device, __uuidof( IAmdExtD3DDevice1 ), &m_amdExtDeviceObject );
+					IAmdExtD3DFactory* amdExtObject = nullptr;
+					amdExtD3dCreateFunc( m_device, __uuidof( IAmdExtD3DFactory ), reinterpret_cast<void**>( &amdExtObject ) );
+
+					if( amdExtObject )
+					{
+						amdExtObject->CreateInterface( m_device, __uuidof( IAmdExtD3DDevice1 ), &m_amdExtDeviceObject );
+						amdExtObject->Release();
+					}
 				}
+				FreeLibrary( amdD3dDl2 );
 			}
 		}
 	}
