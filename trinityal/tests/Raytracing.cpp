@@ -350,9 +350,9 @@ TEST_F( Raytracing, TraceRays )
         ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( rs ) );
         ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( shaderProgram ) );
 
-        //renderContext->UseAccelerationStructure(tlas.TrinityALImpl_GetObject()->m_primitiveAccelerationStructures);
+        renderContext->UseAccelerationStructure(tlas.TrinityALImpl_GetObject()->GetPrimitiveAccelerationStructures());
         
-        ASSERT_HRESULT_SUCCEEDED( renderContext->DispatchRays( state, tlas, shaderTable, L"RayGen_12", WIDTH, HEIGHT, 1 ) );
+        ASSERT_HRESULT_SUCCEEDED( renderContext->DispatchRays( state, shaderTable, L"RayGen_12", WIDTH, HEIGHT, 1 ) );
 
         ASSERT_HRESULT_SUCCEEDED( quadRenderer.Render( renderContext ) );
 

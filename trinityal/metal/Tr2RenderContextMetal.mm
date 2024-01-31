@@ -575,18 +575,14 @@ ALResult Tr2RenderContextAL::RunComputeShaderIndirect( Tr2BufferAL& indirectPara
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtTopLevelAccelerationStructureAL& tlas, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
+ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2RtShaderTableAL& shaderTable, const wchar_t* rayGenShader, uint32_t width, uint32_t height, uint32_t depth )
 {
     if( !pipeline.IsValid() )
     {
         return E_FAIL;
     }
     
-//    m_workQueue->SetRaytracingPipelineState( pipeline.TrinityALImpl_GetObject() );
-    
-    UseAccelerationStructure(tlas.TrinityALImpl_GetObject()->m_primitiveAccelerationStructures);
-    
-    m_workQueue->DispatchRays(  pipeline.TrinityALImpl_GetObject() , width, height );
+    m_workQueue->DispatchRays( pipeline.TrinityALImpl_GetObject(), width, height );
     
     return S_OK;
 }
@@ -1350,7 +1346,7 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
 
 ALResult Tr2RenderContextAL::UseAccelerationStructure( NSMutableArray *primitiveAccelerationStructures )
 {
-    auto computeEncoder = m_workQueue->GetRenderEncoder();
+    auto computeEncoder = m_workQueue->GetComputeEncoder();
     
     // mark primitive acceleration structures as used since only the instance acceleration
     // structure references them.

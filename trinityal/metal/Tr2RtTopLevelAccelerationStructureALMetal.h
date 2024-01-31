@@ -36,13 +36,13 @@ class API_AVAILABLE(macos(11.0)) Tr2RtTopLevelAccelerationStructureAL : public T
 
         const ::Tr2BufferAL& GetBuffer() const;
         size_t GetCapacity() const;
-        NSMutableArray *m_primitiveAccelerationStructures;
+        NSMutableArray *GetPrimitiveAccelerationStructures(){ return m_primitiveAccelerationStructures; }
     private:
         id<MTLBuffer> m_instanceBuffer;
         
         ::Tr2BufferAL m_buffer;
         
-        
+        NSMutableArray* m_primitiveAccelerationStructures;
         id <MTLAccelerationStructure> m_instanceAccelerationStructure;
         
         id <MTLAccelerationStructure> BuildAccelerationStructure(MTLAccelerationStructureDescriptor* descriptor, id<MTLDevice> device,  MetalContext* metalContext );

@@ -113,7 +113,7 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
                 // function table offset together to determine which intersection function to execute.
                 // The sample mapped geometries directly to their intersection functions above, so it
                 // sets the instance's table offset to 0.
-                instanceDescriptors[instanceIndex].intersectionFunctionTableOffset = instanceIndex;
+                instanceDescriptors[instanceIndex].intersectionFunctionTableOffset = 0;
                 
                 // Set the instance mask, which the sample uses to filter out intersections between rays
                 // and geometry. For example, it uses masks to prevent light sources from being visible
@@ -142,7 +142,7 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
             accelDescriptor.instanceDescriptorBuffer = m_instanceBuffer;
             
             // Create the instance acceleration structure that contains all instances in the scene.
-            m_instanceAccelerationStructure = BuildAccelerationStructure(accelDescriptor, device, metalContext);
+            m_instanceAccelerationStructure = BuildAccelerationStructure( accelDescriptor, device, metalContext );
             
             // add vector of contents
             // gpu usage is probs srv and cpu none
