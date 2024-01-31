@@ -5,7 +5,7 @@
 //
 #pragma once
 
-#include "ITr2Upscaling.h" 
+#include "ITr2Upscaling.h"
 #include "Tr2UpscalingUtils.h"
 #include "Shader/Tr2Effect.h"
 
@@ -14,7 +14,8 @@
 
 BLUE_DECLARE( Tr2Effect );
 
-BLUE_CLASS( Tr2XeSSUpscaling ) : public ITr2Upscaling, INotify
+BLUE_CLASS( Tr2XeSSUpscaling ) :
+	public ITr2Upscaling, INotify
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -39,6 +40,9 @@ public:
 
 	bool NeedsExposureTexture() const override;
 	bool NeedsReactiveTexture() const override;
+
+	static void Initialize();
+	static void Shutdown();
 
 private:
 	xess_context_handle_t CreateContext( Tr2RenderContext& renderContext ) const;
@@ -66,7 +70,7 @@ private:
 	float m_jitterOffsetYScale;
 	bool m_reset;
 
-	xess_context_handle_t m_context;
+	static xess_context_handle_t s_context;
 	_xess_quality_settings_t m_xessSetting;
 
 	const char* ResultToString( xess_result_t result ) const;
@@ -79,6 +83,7 @@ private:
 	bool m_setup;
 	bool m_initialized;
 	bool m_useReactive;
+	static bool s_initialized;
 };
 TYPEDEF_BLUECLASS( Tr2XeSSUpscaling );
 #else
@@ -91,6 +96,9 @@ public:
 	EXPOSE_TO_BLUE();
 	Tr2XeSSUpscaling( IRoot* lockobj = NULL ){};
 	~Tr2XeSSUpscaling(){};
+
+	static void Initialize(){};
+	static void Shutdown(){};
 	bool IsApplicable() const
 	{
 		return false;

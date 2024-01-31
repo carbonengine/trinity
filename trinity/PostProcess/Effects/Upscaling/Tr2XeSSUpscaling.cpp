@@ -14,85 +14,12 @@
 #include "../trinityal/dx12/Utilities.h"
 
 Tr2XeSSUpscaling::Availability Tr2XeSSUpscaling::s_availability = Tr2XeSSUpscaling::Availability::XESS_AVAILABILITY_UNKNOWN;
+xess_context_handle_t Tr2XeSSUpscaling::s_context = nullptr;
 uint32_t Tr2XeSSUpscaling::s_creationNodeMask = 0;
 
-void LogXeSS( const char* message, xess_logging_level_t loggingLevel )
+namespace XessUtils
 {
-	switch( loggingLevel )
-	{
-	case xess_logging_level_t::XESS_LOGGING_LEVEL_DEBUG:
-		CCP_LOGNOTICE( "DEBUG: %s", message );
-		break;
-
-	case xess_logging_level_t::XESS_LOGGING_LEVEL_INFO:
-		CCP_LOGNOTICE( "%s", message );
-		break;
-
-	case xess_logging_level_t::XESS_LOGGING_LEVEL_WARNING:
-		CCP_LOGWARN( "%s", message );
-		break;
-
-	case xess_logging_level_t::XESS_LOGGING_LEVEL_ERROR:
-		CCP_LOGERR( "%s", message );
-		break;
-	}
-}
-
-Tr2XeSSUpscaling::Tr2XeSSUpscaling( IRoot* lockobj ) :
-	m_renderWidth( 0 ),
-	m_renderHeight( 0 ),
-	m_displayWidth( 0 ),
-	m_displayHeight( 0 ),
-	m_jitterIndex( 0 ),
-	m_jitterX( 0.0f ),
-	m_jitterY( 0.0f ),
-	m_jitterXScale( 2.0f ),
-	m_jitterYScale( 2.0f ),
-	m_jitterOffsetXScale( 1.0f ),
-	m_jitterOffsetYScale( 1.0f ),
-	m_reset( true ),
-	m_dirty( true ),
-	m_setup( false ),
-	m_initialized( false ),
-	m_useReactive( false ),
-	m_context( nullptr )
-{
-}
-
-Tr2XeSSUpscaling::~Tr2XeSSUpscaling()
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-	if( m_context )
-	{
-		xessDestroyContext( m_context );
-		CCP_LOGNOTICE( "XeSS context destroyed" );
-	}
-
-	m_context = nullptr;
-}
-
-xess_context_handle_t Tr2XeSSUpscaling::CreateContext( Tr2RenderContext& renderContext ) const
-{
-	CCP_STATS_ZONE( __FUNCTION__ );
-	xess_context_handle_t context;
-	
-	auto status = xessD3D12CreateContext( renderContext.GetPrimaryRenderContext().m_device, &context );
-	if( status != XESS_RESULT_SUCCESS )
-	{
-		CCP_LOGNOTICE( "XeSS: XeSS is not supported on this device. Result - %s.", ResultToString( status ) );
-		return nullptr;
-	}
-
-	if( XESS_RESULT_WARNING_OLD_DRIVER == xessIsOptimalDriver( context ) )
-	{
-		CCP_LOGNOTICE( "XeSS: Please install the latest graphics driver from your vendor for optimal Intel(R) XeSS performance and visual quality" );
-		return nullptr;
-	}
-	CCP_LOGNOTICE( "XeSS context created" );
-	return context;
-}
-
-const char* Tr2XeSSUpscaling::ResultToString( xess_result_t result ) const
+const char* ResultToString( xess_result_t result )
 {
 	switch( result )
 	{
@@ -130,6 +57,93 @@ const char* Tr2XeSSUpscaling::ResultToString( xess_result_t result ) const
 	}
 }
 
+void LogXeSS( const char* message, xess_logging_level_t loggingLevel )
+{
+	switch( loggingLevel )
+	{
+	case xess_logging_level_t::XESS_LOGGING_LEVEL_DEBUG:
+		CCP_LOGNOTICE( "DEBUG: %s", message );
+		break;
+
+	case xess_logging_level_t::XESS_LOGGING_LEVEL_INFO:
+		CCP_LOGNOTICE( "%s", message );
+		break;
+
+	case xess_logging_level_t::XESS_LOGGING_LEVEL_WARNING:
+		CCP_LOGWARN( "%s", message );
+		break;
+
+	case xess_logging_level_t::XESS_LOGGING_LEVEL_ERROR:
+		CCP_LOGERR( "%s", message );
+		break;
+	}
+}
+}
+
+
+
+void Tr2XeSSUpscaling::Initialize()
+{
+
+	CCP_STATS_ZONE( __FUNCTION__ );
+	if( !s_context )
+	{
+
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		auto status = xessD3D12CreateContext( renderContext.GetPrimaryRenderContext().m_device, &s_context );
+		if( status != XESS_RESULT_SUCCESS )
+		{
+			s_context = nullptr;
+			CCP_LOGNOTICE( "XeSS: XeSS is not supported on this device. Result - %s.", XessUtils::ResultToString( status ) );
+			return;
+		}
+
+		if( XESS_RESULT_WARNING_OLD_DRIVER == xessIsOptimalDriver( s_context ) )
+		{
+			CCP_LOGNOTICE( "XeSS: Please install the latest graphics driver from your vendor for optimal Intel(R) XeSS performance and visual quality" );
+			return;
+		}
+		CCP_LOGNOTICE( "XeSS context created" );
+	}
+}
+
+void Tr2XeSSUpscaling::Shutdown()
+{
+	if( s_context )
+	{
+
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		renderContext.FlushAndSyncDx12( renderContext );
+
+		xessDestroyContext( s_context );
+		s_context = nullptr;
+	}
+}
+
+Tr2XeSSUpscaling::Tr2XeSSUpscaling( IRoot* lockobj ) :
+	m_renderWidth( 0 ),
+	m_renderHeight( 0 ),
+	m_displayWidth( 0 ),
+	m_displayHeight( 0 ),
+	m_jitterIndex( 0 ),
+	m_jitterX( 0.0f ),
+	m_jitterY( 0.0f ),
+	m_jitterXScale( 2.0f ),
+	m_jitterYScale( 2.0f ),
+	m_jitterOffsetXScale( 1.0f ),
+	m_jitterOffsetYScale( 1.0f ),
+	m_reset( true ),
+	m_dirty( true ),
+	m_setup( false ),
+	m_initialized( false ),
+	m_useReactive( false )
+{
+}
+
+Tr2XeSSUpscaling::~Tr2XeSSUpscaling()
+{
+}
+
 bool Tr2XeSSUpscaling::OnModified( Be::Var* value )
 {
 	m_dirty = true;
@@ -145,14 +159,13 @@ bool Tr2XeSSUpscaling::IsApplicable() const
 {
 	if( s_availability == Availability::XESS_AVAILABILITY_UNKNOWN )
 	{
-		// try to create a context
+		s_availability = Availability::XESS_AVAILABILITY_UNAVAILABLE;
+
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		if( CreateContext( renderContext ) == nullptr )
+		xess_context_handle_t c;
+		if( xessD3D12CreateContext( renderContext.m_device, &c ) == xess_result_t::XESS_RESULT_SUCCESS )
 		{
-			s_availability = Availability::XESS_AVAILABILITY_UNAVAILABLE;
-		}
-		else
-		{
+			xessDestroyContext( c );
 			s_availability = Availability::XESS_AVAILABILITY_AVAILABLE;
 		}
 	}
@@ -189,7 +202,7 @@ float Tr2XeSSUpscaling::GetMipLevelBias() const
 	return log2( 1.0f / m_upscaling ) - 1.0f;
 }
 
-void Tr2XeSSUpscaling::GetRenderSize(uint32_t& width, uint32_t& height) const
+void Tr2XeSSUpscaling::GetRenderSize( uint32_t& width, uint32_t& height ) const
 {
 	width = m_renderWidth;
 	height = m_renderHeight;
@@ -202,7 +215,7 @@ Tr2Upscaling::UpscalingType Tr2XeSSUpscaling::GetUpscalingType() const
 
 const std::vector<Tr2Upscaling::Setting> Tr2XeSSUpscaling::GetAvailableSettings() const
 {
-	static std::vector<Tr2Upscaling::Setting> availableSettings = { 
+	static std::vector<Tr2Upscaling::Setting> availableSettings = {
 		Tr2Upscaling::ULTRA_QUALITY,
 		Tr2Upscaling::QUALITY,
 		Tr2Upscaling::BALANCED,
@@ -217,24 +230,12 @@ ID3D12Resource* Tr2XeSSUpscaling::GetTexture( ITr2TextureProvider* textureProvid
 	{
 		return textureProvider->GetTexture()->TrinityALImpl_GetObject()->GetResourceDx12();
 	}
-	return nullptr;	
+	return nullptr;
 }
 
 void Tr2XeSSUpscaling::ApplySetting( const Tr2Upscaling::Setting& setting, uint32_t displayWidth, uint32_t displayHeight )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-
-	if( m_context == nullptr )
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		m_context = CreateContext(renderContext);
-	}
-
-	if( m_context == nullptr )
-	{
-		return;
-	}
-
 
 	m_xessSetting = XESS_QUALITY_SETTING_PERFORMANCE;
 	switch( setting )
@@ -264,10 +265,10 @@ void Tr2XeSSUpscaling::ApplySetting( const Tr2Upscaling::Setting& setting, uint3
 	xess_2d_t inputMaxRes = { 1, 1 };
 	xess_2d_t outputRes = { displayWidth, displayHeight };
 
-	auto ret = xessGetOptimalInputResolution( m_context, &outputRes, m_xessSetting, &inputRes, &inputMinRes, &inputMaxRes );
+	auto ret = xessGetOptimalInputResolution( s_context, &outputRes, m_xessSetting, &inputRes, &inputMinRes, &inputMaxRes );
 	if( ret != XESS_RESULT_SUCCESS )
 	{
-		CCP_LOGERR( "XeSS: Could not get input resolution. Result - %s.", ResultToString( ret ) );
+		CCP_LOGERR( "XeSS: Could not get input resolution. Result - %s.", XessUtils::ResultToString( ret ) );
 		return;
 	}
 
@@ -275,13 +276,13 @@ void Tr2XeSSUpscaling::ApplySetting( const Tr2Upscaling::Setting& setting, uint3
 	m_renderHeight = inputRes.y;
 
 	m_upscaling = (float)m_displayWidth / (float)m_renderWidth;
-	m_jitterSequence = Jitter::GenerateHaltonSequence( 8 * (uint32_t)powf( ceilf( m_upscaling ), 2.0f ), 2, 3);
+	m_jitterSequence = Jitter::GenerateHaltonSequence( 8 * (uint32_t)powf( ceilf( m_upscaling ), 2.0f ), 2, 3 );
 
 	CCP_LOGNOTICE( "XeSS: Initialized." );
 	m_initialized = true;
 }
 
-void Tr2XeSSUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, Tr2RenderContext& renderContext)
+void Tr2XeSSUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, Tr2RenderContext& renderContext )
 {
 	m_dirty = false;
 	m_setup = false;
@@ -300,21 +301,22 @@ void Tr2XeSSUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, 
 	}
 
 	params.pPipelineLibrary = nullptr;
-	renderContext.FlushBarriersDx12();
+	renderContext.FlushAndSyncDx12();
+	renderContext.DirtyDescriptorCache();
 
-	xess_result_t ret = xessD3D12Init( m_context, &params );
+	xess_result_t ret = xessD3D12Init( s_context, &params );
 	if( ret != XESS_RESULT_SUCCESS )
 	{
-		CCP_LOGERR( "XeSS: Could not initialize. Result - %s.", ResultToString( ret ) );
+		CCP_LOGERR( "XeSS: Could not initialize. Result - %s.", XessUtils::ResultToString( ret ) );
 		return;
 	}
-	
+
 	// Get version of XeSS
 	xess_version_t ver;
 	ret = xessGetVersion( &ver );
 	if( ret != XESS_RESULT_SUCCESS )
 	{
-		CCP_LOGERR( "XeSS: Could not get version information. Result - %s.", ResultToString( ret ) );
+		CCP_LOGERR( "XeSS: Could not get version information. Result - %s.", XessUtils::ResultToString( ret ) );
 		return;
 	}
 
@@ -323,12 +325,10 @@ void Tr2XeSSUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, 
 #if DEBUG
 	// Set logging callback here.
 	ret = xessSetLoggingCallback( m_context, XESS_LOGGING_LEVEL_DEBUG, LogXeSS );
-	;
 	if( ret != XESS_RESULT_SUCCESS )
 	{
-		CCP_LOGERR( "XeSS: Could not set logging callback Result - %s.", ResultToString( ret ) );
+		CCP_LOGERR( "XeSS: Could not set logging callback Result - %s.", XessUtils::ResultToString( ret ) );
 		return;
-
 	}
 #endif
 
@@ -350,18 +350,14 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 		}
 	};
 
-	auto transitioner = []( Tr2RenderContext& renderContext, ITr2TextureProvider* texture, D3D12_RESOURCE_STATES newState, bool transitionTo ) {
+	auto transitioner = []( Tr2RenderContext& renderContext, ITr2TextureProvider* texture, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState ) {
 		if( texture && texture->GetTexture() && texture->GetTexture()->TrinityALImpl_GetObject() )
 		{
 			auto tex = texture->GetTexture()->TrinityALImpl_GetObject();
-			auto defaultState = tex->GetResourceState();
-			if( newState == defaultState )
+			if( newState == oldState )
 				return;
 
-			if( transitionTo )
-				renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( tex->GetResourceDx12(), defaultState, newState ) );
-			else
-				renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( tex->GetResourceDx12(), newState, defaultState ) );
+			renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( tex->GetResourceDx12(), oldState, newState ) );
 		}
 	};
 	namer( textures.input, "xess input" );
@@ -370,17 +366,25 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 	namer( textures.motion, "xess motion" );
 	namer( textures.exposure, "xess exposure" );
 	namer( textures.opaqueOnly, "xess opaqueOnly" );
+	namer( textures.reactive, "xess reative" );
 
-	// flush all barriers before handing control over to XeSS
+	// flush all barriers before changing the state of the textures
 	renderContext.FlushBarriersDx12();
 
-	// transition from common to unordered access view, since the output texture must be in that state
-	transitioner( renderContext, textures.output, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true );
-	transitioner( renderContext, textures.input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, true );
-	transitioner( renderContext, textures.exposure, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, false );
-	transitioner( renderContext, textures.exposure, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, true );
+	const D3D12_RESOURCE_STATES output_state = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+	const D3D12_RESOURCE_STATES input_state = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_ALL_SHADER_RESOURCE;
+	const D3D12_RESOURCE_STATES exposure_state = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+	const D3D12_RESOURCE_STATES reactive_state = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 
-	// flush all barriers before handing control over to XeSS
+	// transition from common to unordered access view, since the output texture must be in that state
+	transitioner( renderContext, textures.output, output_state, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
+	transitioner( renderContext, textures.input, input_state, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
+	transitioner( renderContext, textures.exposure, exposure_state, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
+	if( m_useReactive )
+	{
+		transitioner( renderContext, textures.reactive, reactive_state, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
+	}
+	// flush all barriers before handing control over to XeSS, so the states are applied
 	renderContext.FlushBarriersDx12();
 
 	xess_d3d12_execute_params_t params{};
@@ -391,14 +395,14 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 	params.resetHistory = m_reset ? 1 : 0;
 	params.exposureScale = 1.0f;
 
-	params.pColorTexture = GetTexture(textures.input);
-	params.pVelocityTexture = GetTexture(textures.motion);
-	params.pOutputTexture = GetTexture(textures.output);
-	params.pDepthTexture = GetTexture(textures.depth);
-	params.pExposureScaleTexture = GetTexture(textures.exposure);
+	params.pColorTexture = GetTexture( textures.input );
+	params.pVelocityTexture = GetTexture( textures.motion );
+	params.pOutputTexture = GetTexture( textures.output );
+	params.pDepthTexture = GetTexture( textures.depth );
+	params.pExposureScaleTexture = GetTexture( textures.exposure );
 	params.pResponsivePixelMaskTexture = m_useReactive ? GetTexture( textures.reactive ) : nullptr;
 
-	xess_result_t ret = xessD3D12Execute( m_context, renderContext.m_commandList, &params );
+	xess_result_t ret = xessD3D12Execute( s_context, renderContext.m_commandList, &params );
 
 	// Trigger error report once.
 	if( ret != XESS_RESULT_SUCCESS )
@@ -407,18 +411,22 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 		if( !s_Reported )
 		{
 			s_Reported = true;
-			CCP_LOGERR( "XeSS: Failed to execute. Result - %s.", ResultToString( ret ) );
+			CCP_LOGERR( "XeSS: Failed to execute. Result - %s.", XessUtils::ResultToString( ret ) );
 		}
 	}
 	// the descriptor cache is dirty, mark it so
 	renderContext.DirtyDescriptorCache();
 	m_reset = false;
 
-	// transition back to common
-	transitioner( renderContext, textures.output, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, false );
-	transitioner( renderContext, textures.input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, false );
-	transitioner( renderContext, textures.exposure, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, false );
-	transitioner( renderContext, textures.exposure, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, true );
+	// transition back to what it was
+	transitioner( renderContext, textures.output, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, output_state );
+	transitioner( renderContext, textures.input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, input_state );
+	transitioner( renderContext, textures.exposure, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, exposure_state );
+	if( m_useReactive )
+	{
+		transitioner( renderContext, textures.reactive, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, reactive_state );
+	}
+	renderContext.FlushBarriersDx12();
 }
 
 bool Tr2XeSSUpscaling::NeedsExposureTexture() const

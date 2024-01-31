@@ -43,7 +43,7 @@ public:
 
 	void GetRenderSize( uint32_t& width, uint32_t& height );
 	void GetDisplaySize( uint32_t& width, uint32_t& height );
-	
+
 	void GetJitter( float& x, float& y );
 	void GetJitterOffset( float& x, float& y );
 
@@ -57,7 +57,8 @@ public:
 	bool HasUpscaling() const;
 	bool HasSharpening() const;
 
-	void Render( Tr2RenderContext& renderContext, Tr2PostProcessRenderInfo& renderInfo, Tr2Upscaling::Textures& textures, const Tr2Upscaling::SceneInformation& sceneInformation  );
+	void Render( Tr2RenderContext& renderContext, Tr2PostProcessRenderInfo& renderInfo, Tr2Upscaling::Textures& textures, const Tr2Upscaling::SceneInformation& sceneInformation );
+	void SetHudlessResource( Tr2TextureAL* hudlessResource, Tr2RenderContext& renderContext );
 
 	bool NeedsExposureTexture() const;
 	bool NeedsReactiveTexture() const;

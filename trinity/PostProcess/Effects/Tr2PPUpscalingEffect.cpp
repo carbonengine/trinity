@@ -57,16 +57,21 @@ void Tr2PPUpscalingEffect::Setup( Tr2Upscaling::UpscalingSetupContext setupConte
 
 void Tr2PPUpscalingEffect::SetUpscalingTechnique( Tr2Upscaling::Technique technique, bool frameGeneration )
 {
-	if( technique != m_currentUpscalingTechnique || m_frameGeneration != frameGeneration )
+	bool techniqueChanged = technique != m_currentUpscalingTechnique;
+	if( techniqueChanged || m_frameGeneration != frameGeneration )
 	{
-		auto adapter = gTriDev->GetAdapter();
-		if( m_currentUpscalingTechnique == Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS && technique != Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS )
+		if( m_currentUpscalingTechnique == Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS && techniqueChanged )
 		{
+			auto adapter = gTriDev->GetAdapter();
 			Tr2Streamline::Toggle( StreamlineUtils::SP_DLSS, adapter, false );
 			if( m_frameGeneration )
 			{
 				Tr2Streamline::Toggle( StreamlineUtils::SP_DLSSG, adapter, false );
 			}
+		}
+		else if( m_currentUpscalingTechnique == Tr2Upscaling::UPSCALING_TECHNIQUE_XESS && techniqueChanged )
+		{
+			Tr2XeSSUpscaling::Shutdown();
 		}
 
 		m_upscalingEffect = nullptr;
@@ -91,31 +96,33 @@ void Tr2PPUpscalingEffect::SetUpscalingTechnique( Tr2Upscaling::Technique techni
 		}
 		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_XESS )
 		{
+			Tr2XeSSUpscaling::Initialize();
 			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2XeSSUpscaling>::Class() );
 		}
 		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS )
 		{
+			auto adapter = gTriDev->GetAdapter();
 			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2DlssUpscaling>::Class() );
 			m_upscalingEffect->SetUseFrameGeneration( frameGeneration );
 			Tr2Streamline::Toggle( StreamlineUtils::SP_DLSS, adapter, true );
 			if( m_frameGeneration != frameGeneration )
 			{
-				Tr2Streamline::Toggle( StreamlineUtils::SP_DLSSG, adapter, frameGeneration );
+				Tr2Streamline::Toggle( StreamlineUtils::SP_DLSSG, adapter, m_frameGeneration );
 			}
 		}
 		else
 		{
 			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2NoopUpscaling>::Class() );
-		}	
-		
+		}
+
 		m_currentUpscalingTechnique = technique;
 		m_frameGeneration = frameGeneration;
 
 		if( !m_upscalingEffect->IsApplicable() )
 		{
-			std::string upscalingName = std::string("");
+			std::string upscalingName = std::string( "" );
 
-			switch(technique)
+			switch( technique )
 			{
 			case Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS:
 				upscalingName = "DLSS";
@@ -138,14 +145,13 @@ void Tr2PPUpscalingEffect::SetUpscalingTechnique( Tr2Upscaling::Technique techni
 			default:
 				upscalingName = "UNKNOWN";
 				break;
-
 			}
 			CCP_LOGWARN( "%s upscaling is not available, defaulting to no upscaling.", upscalingName.c_str() );
-            m_upscalingEffect = nullptr;
+			m_upscalingEffect = nullptr;
 			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2NoopUpscaling>::Class() );
 			m_currentUpscalingTechnique = Tr2Upscaling::UPSCALING_TECHNIQUE_NONE;
 		}
-		
+
 		if( m_currentUpscalingTechnique != Tr2Upscaling::UPSCALING_TECHNIQUE_NONE )
 		{
 			SetSharpeningTechnique( Tr2Sharpening::SHARPENING_TECHNIQUE_NONE );
@@ -185,7 +191,7 @@ void Tr2PPUpscalingEffect::SetSharpeningTechnique( Tr2Sharpening::Technique tech
 
 void Tr2PPUpscalingEffect::ApplySetting( Tr2Upscaling::Setting setting, uint32_t displayWidth, uint32_t displayHeight )
 {
-	if(m_currentSetting != setting || displayWidth != m_displayWidth || displayHeight != m_displayHeight )
+	if( m_currentSetting != setting || displayWidth != m_displayWidth || displayHeight != m_displayHeight )
 	{
 		m_displayWidth = displayWidth;
 		m_displayHeight = displayHeight;
@@ -198,7 +204,7 @@ void Tr2PPUpscalingEffect::ApplySetting( Tr2Upscaling::Setting setting, uint32_t
 
 float Tr2PPUpscalingEffect::GetUpscalingAmount() const
 {
-	return float(m_displayWidth) / float(m_renderWidth);
+	return float( m_displayWidth ) / float( m_renderWidth );
 }
 
 float Tr2PPUpscalingEffect::GetMipLodBias()
@@ -206,7 +212,7 @@ float Tr2PPUpscalingEffect::GetMipLodBias()
 	return m_upscalingEffect->GetMipLevelBias();
 }
 
-void Tr2PPUpscalingEffect::GetRenderSize( uint32_t& width, uint32_t& height)
+void Tr2PPUpscalingEffect::GetRenderSize( uint32_t& width, uint32_t& height )
 {
 	width = m_renderWidth;
 	height = m_renderHeight;
@@ -274,7 +280,7 @@ void Tr2PPUpscalingEffect::Render( Tr2RenderContext& renderContext, Tr2PostProce
 {
 	if( m_debugRenderSize )
 	{
-		// need to undo the jittering 
+		// need to undo the jittering
 		// render only the actual size of the input
 		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
 		renderContext.m_esm.PushRenderTarget( *textures.output->GetTexture() );
