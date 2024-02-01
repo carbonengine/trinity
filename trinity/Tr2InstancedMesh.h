@@ -81,6 +81,12 @@ public:
 					 float screenSize = std::numeric_limits<float>::max() ) const override;
 
 
+	void GetBatches( ITriRenderBatchAccumulator * batches,
+					 const Tr2MeshAreaVector* areas,
+					 const Tr2PerObjectData* data,
+					 float screenSize,
+					 bool reverseAreas ) const;
+
 	CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr ) const override;
 	CcpMath::AxisAlignedBox GetAreaBounds( unsigned int areaIx, const Matrix* boneTransforms = nullptr ) const override;
 
@@ -94,6 +100,8 @@ public:
 	void SetDynamicScaledBounds( float maxScale );
 
 	unsigned int GetVertexDeclaration() const;
+	void UpdateVertexDeclaration();
+
 private:
 
 	void CreateVertexDeclaration() const;
