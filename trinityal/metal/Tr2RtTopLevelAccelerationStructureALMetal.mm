@@ -48,7 +48,7 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
         id <MTLAccelerationStructureCommandEncoder> commandEncoder = [commandBuffer accelerationStructureCommandEncoder];
 
         // Allocate a buffer for Metal to write the compacted accelerated structure's size into.
-        //id <MTLBuffer> compactedSizeBuffer = [device newBufferWithLength:sizeof(uint32_t) options:MTLResourceStorageModeShared];
+        id <MTLBuffer> compactedSizeBuffer = [device newBufferWithLength:sizeof(uint32_t) options:MTLResourceStorageModeShared];
 
         // Schedule the actual acceleration structure build.
         [commandEncoder buildAccelerationStructure:accelerationStructure
@@ -56,6 +56,15 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
                                      scratchBuffer:scratchBuffer
                                scratchBufferOffset:0];
         
+        // Compute and write the compacted acceleration structure size into the buffer. You
+        // must already have a built acceleration structure because Metal determines the compacted
+        // size based on the final size of the acceleration structure. Compacting an acceleration
+        // structure can potentially reclaim significant amounts of memory because Metal must
+        // create the initial structure using a conservative approach.
+
+        [commandEncoder writeCompactedAccelerationStructureSize:accelerationStructure
+                                                       toBuffer:compactedSizeBuffer
+                                                         offset:0];
         
         // End encoding, and commit the command buffer so the GPU can start building the
         // acceleration structure.
@@ -63,7 +72,38 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
 
         [commandBuffer commit];
         
-        return accelerationStructure;
+        // Note: Don't wait for Metal to finish executing the command buffer if you aren't compacting
+        // the acceleration structure, as doing so requires CPU/GPU synchronization. You don't have
+        // to compact acceleration structures, but do so when creating large static acceleration
+        // structures, such as static scene geometry. Avoid compacting acceleration structures that
+        // you rebuild every frame, as the synchronization cost may be significant.
+
+        [commandBuffer waitUntilCompleted];
+        
+        uint32_t compactedSize = *(uint32_t *)compactedSizeBuffer.contents;
+        
+        // Allocate a smaller acceleration structure based on the returned size.
+        id <MTLAccelerationStructure> compactedAccelerationStructure = [device newAccelerationStructureWithSize:compactedSize];
+        
+        
+        // Create a new command buffer that performs the acceleration structure build.
+        commandBuffer = [metalContext->GetCommandQueue() commandBuffer];
+        commandEncoder = [commandBuffer accelerationStructureCommandEncoder];
+        
+        // Encode the command to copy and compact the acceleration structure into the
+        // smaller acceleration structure.
+        [commandEncoder copyAndCompactAccelerationStructure:accelerationStructure
+                                    toAccelerationStructure:compactedAccelerationStructure];
+        
+        // End encoding and commit the command buffer. You don't need to wait for Metal to finish
+        // executing this command buffer as long as you synchronize any ray-intersection work
+        // to run after this command buffer completes. The sample relies on Metal's default
+        // dependency tracking on resources to automatically synchronize access to the new
+        // compacted acceleration structure.
+        [commandEncoder endEncoding];
+        [commandBuffer commit];
+
+        return compactedAccelerationStructure;
     }
 
     ALResult Tr2RtTopLevelAccelerationStructureAL::Create( size_t count, const Tr2RtInstanceAL* instances, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
@@ -157,6 +197,8 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
             
             id <MTLComputeCommandEncoder> computeEncoder = metalContext->GetPrimaryWorkQueue()->GetComputeEncoder();
             [computeEncoder setAccelerationStructure:m_instanceAccelerationStructure atBufferIndex:5];
+            
+            metalContext->GetPrimaryWorkQueue()->ReleaseEncoder( false );
             
             return S_OK;
         }

@@ -1341,6 +1341,7 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
                         count:NSUInteger( textures.size())
                         usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageWrite | MTLResourceUsageWrite : MTLResourceUsageRead];
     }
+    
 	return S_OK;
 }
 
@@ -1352,6 +1353,8 @@ ALResult Tr2RenderContextAL::UseAccelerationStructure( NSMutableArray *primitive
     // structure references them.
     for (id <MTLAccelerationStructure> primitiveAccelerationStructure in primitiveAccelerationStructures)
         [computeEncoder useResource:primitiveAccelerationStructure usage:MTLResourceUsageRead];
+    
+    m_workQueue->ReleaseEncoder(false);
     
     return S_OK;
 }
