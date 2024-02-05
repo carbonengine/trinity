@@ -100,7 +100,6 @@ public:
 	void SetDynamicScaledBounds( float maxScale );
 
 	unsigned int GetVertexDeclaration() const;
-	void UpdateVertexDeclaration();
 
 private:
 

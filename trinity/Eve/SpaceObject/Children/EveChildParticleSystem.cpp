@@ -209,7 +209,6 @@ void EveChildParticleSystem::UpdateSyncronous( EveUpdateContext& updateContext, 
 {
 	if( m_mesh )
 	{
-		m_mesh->UpdateVertexDeclaration();
 		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
 		{
 			m_mesh->ReverseIndexBuffers();
