@@ -205,32 +205,6 @@ void Tr2InstancedMesh::SetInstanceGeometryRes( ITr2InstanceData* res )
 	CreateVertexDeclaration();
 }
 
-void Tr2InstancedMesh::UpdateVertexDeclaration()
-{
-	if( !GetDisplay() || g_brokenMacOSNvidiaDrivers )
-	{
-		return;
-	}
-
-	auto geometryResource = GetGeometryResource();
-	if( !geometryResource || !geometryResource->IsGood() )
-	{
-		return;
-	}
-
-	auto instanceGeometryResource = GetInstanceGeometryResource();
-	if( !instanceGeometryResource || !instanceGeometryResource->IsInstanceDataReady() )
-	{
-		return;
-	}
-
-	bool rebuild = m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION || m_instanceDeclaration != instanceGeometryResource->GetInstanceBufferVertexDeclaration( m_instanceMeshIndex );
-	if( rebuild )
-	{
-		CreateVertexDeclaration();
-	}
-}
-
 // --------------------------------------------------------------------------------------
 // Description:
 //   Collects render batches from this instanced mesh.
@@ -274,7 +248,11 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 	bool rebuild = m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION || m_instanceDeclaration != instanceGeometryResource->GetInstanceBufferVertexDeclaration( m_instanceMeshIndex );
 	if( rebuild )
 	{
-		return;
+		CreateVertexDeclaration();
+		if( m_vertexDeclaration == Tr2EffectStateManager::UNINITIALIZED_DECLARATION )
+		{
+			return;
+		}
 	}
 
 	auto mesh = geometryResource->GetMeshData( m_meshIndex );
