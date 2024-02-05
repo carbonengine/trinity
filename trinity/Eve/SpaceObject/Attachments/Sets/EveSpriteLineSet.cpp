@@ -128,6 +128,7 @@ bool EveSpriteLineSet::ReallocateResources()
 			++spr;
 			index += 1.0f;
 		}
+		totalBufferidx = totalBufferSize;
 	}
 
 	return true;
