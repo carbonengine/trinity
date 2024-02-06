@@ -21,7 +21,7 @@ namespace TrinityALImpl
 		Tr2RenderContextEnum::ShaderType type,
 		const Tr2ShaderBytecodeAL& bytecode,
 		const Tr2ShaderSignatureAL& signature,
-		const char* shaderPath,
+		const char*,
 		Tr2PrimaryRenderContextAL &renderContext )
 	{
 		ReleaseShader();

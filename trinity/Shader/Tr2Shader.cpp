@@ -229,13 +229,8 @@ void Tr2Shader::ProcessEffect()
 		m_sortValue = (numPasses << 30) | (ps << 20) | (vs << 10) | states;
 	}
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_METAL
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-
-	Tr2ConstantBufferRegisterAL perFrameData[] = {
-		{ Tr2RenderContextEnum::VERTEX_SHADER, Tr2Renderer::GetPerFrameVSStartRegister() },
-		{ Tr2RenderContextEnum::PIXEL_SHADER, Tr2Renderer::GetPerFramePSStartRegister() },
-	};
 
 	for( auto& t : m_effect.techniques )
 	{

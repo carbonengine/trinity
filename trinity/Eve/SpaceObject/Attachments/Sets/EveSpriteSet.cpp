@@ -5,6 +5,8 @@
 #include "Utilities/MatrixUtils.h"
 #include "Tr2QuadRenderer.h"
 #include "Tr2DebugRenderer.h"
+#include <Tr2Renderer.h>
+#include "Resources/Tr2LightProfileRes.h"
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 
@@ -27,12 +29,72 @@ const Tr2VertexDefinition& EveSpriteSet::PoolVertex::GetDefinition()
 	return s_spriteVertexDecl;
 }
 
+EveSpriteLight::EveSpriteLight() :
+	lightData( LightData() ),
+	index( 0 ),
+	blinkRate( 0 ),
+	blinkPhase( 0 ),
+	minScale( 0 ),
+	maxScale( 0 ),
+	boneMatrix( IdentityMatrix() )
+{
+
+}
+
+EveSpriteLight::EveSpriteLight( const LightData& lightData, float blinkPhase, float blinkRate, float minScale, float maxScale, uint32_t index, const std::wstring profilePath ) :
+	lightData( lightData ),
+	index( index ),
+	blinkRate( blinkRate ),
+	blinkPhase( blinkPhase ),
+	minScale( minScale ),
+	maxScale( maxScale ),
+	boneMatrix( IdentityMatrix() )
+{
+	if( !profilePath.empty() )
+	{
+		BeResMan->GetResource( profilePath, L"lp", lightProfile );
+	}
+}
+
+namespace EveSpriteLightUtils {
+	float Blink( float blinkRate, float blinkPhase, float minScale, float maxScale )
+	{
+		const float FLASH_PEAK_TIME = 0.05f;
+		float intPart;
+		float f = modf( Tr2Renderer::GetAnimationTime() * blinkRate + blinkPhase, &intPart );
+
+		float peak = FLASH_PEAK_TIME * blinkRate;
+		float result = 0.0f;
+		float end = peak * 4.0f;
+
+		auto lerp = [] ( float a, float b, float f ) {
+			return a + f * ( b - a );
+		};
+
+		if( peak < 0.0001f )
+		{
+			peak = 1.0f;
+		}
+		if( f < peak )
+		{
+			result = lerp( 0.0f, 1.0f, f / peak );
+		}
+		else if( f < end )
+		{
+			result = lerp( 1.0f, 0.0f, ( f - peak ) / ( end - peak ) );
+		}
+		return ( maxScale - minScale ) * result + minScale;
+	}
+}
+
+
 EveSpriteSet::EveSpriteSet( IRoot* lockobj ) :
 	PARENTLOCK( m_sprites ),
 	m_display( true ),
 	m_skinned( false ),
 	m_effectHash( 0 ),
 	m_intensity( 1.f ),
+	m_activationStrength( 0 ),
 	m_buffer( "EveSpriteSet::m_buffer" ),
 	m_spriteData( "EveSpriteSet::m_spriteData" )
 {
@@ -106,6 +168,18 @@ bool EveSpriteSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 	aabb.Transform( parentTransform );
 
 	return frustum.IsBoxVisible( aabb.m_min, aabb.m_max );
+}
+
+void EveSpriteSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+{
+	for( auto& light : m_lights )
+	{
+		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
+		{
+			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+		}
+	}
+	m_activationStrength = activationStrength;
 }
 
 AxisAlignedBoundingBox EveSpriteSet::GetAabb( const granny_matrix_3x4* bones, size_t boneCount ) const
@@ -294,6 +368,7 @@ void EveSpriteSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
 	options.insert( "Sprite Sets" );
 	options.insert( "Sprite Sets Bounds" );
+	options.insert( "Sprite Sets Lights" );
 }
 
 void EveSpriteSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
@@ -340,6 +415,39 @@ void EveSpriteSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 			Tr2DebugRenderer::Wireframe,
 			0xff00ff00 );
 	}
+
+	if( renderer.HasOption( this, "Sprite Sets Lights" ) )
+	{
+		for( auto& l : m_lights )
+		{
+			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+
+			Color c = l.lightData.color;
+			float blinkScale = EveSpriteLightUtils::Blink( l.blinkRate, l.blinkPhase, l.minScale, l.maxScale );
+
+			c.a = 0.5;
+
+			auto sprite = l.index > m_sprites.size() ? nullptr : m_sprites[l.index];
+
+			renderer.DrawSphere(
+				sprite,
+				t,
+				l.lightData.innerRadius * blinkScale,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+			c.a = 0.3;
+			renderer.DrawSphere(
+				sprite,
+				t,
+				l.lightData.radius * blinkScale,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+		}
+	}
 }
 
 void EveSpriteSet::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
@@ -349,5 +457,27 @@ void EveSpriteSet::SetShaderOption( const BlueSharedString& name, const BlueShar
 		m_effect->SetOption( name, value );
 		m_effectHash = m_effect->GetHashValue();
 		RegisterWithQuadRenderer( *Tr2QuadRenderer::Instance() );		
+	}
+}
+
+void EveSpriteSet::AddLight( const EveSpriteLight& light )
+{
+	m_lights.push_back( light );
+}
+
+void EveSpriteSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
+{
+	LightFeatures features = LightFeatures();
+	features.parentBrightness = m_activationStrength;
+
+	for( auto& light : m_lights )
+	{
+		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
+
+		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		float blinkScale = EveSpriteLightUtils::Blink( light.blinkRate, light.blinkPhase, light.minScale, light.maxScale );
+		data.radius *= blinkScale;
+		data.innerRadius = Float_16( float( data.innerRadius ) * blinkScale );
+		lightManager.AddLight(data);
 	}
 }

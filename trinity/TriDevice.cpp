@@ -1000,7 +1000,7 @@ bool TriDevice::Render()
 
 	Tr2Renderer::BeginRenderContext();
 	
-	Tr2Renderer::GetQuadListIndexBuffer( 16384 );
+	Tr2Renderer::GetQuadListIndexBuffer( std::numeric_limits<uint16_t>::max() / 6 );
 
 	if( m_renderJobs )
 	{		

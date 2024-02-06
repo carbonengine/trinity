@@ -200,7 +200,7 @@ struct Tr2Pass
 	unsigned int shaderProgram;
 	Tr2ResourceSetDescriptionAL resourceSetDesc;
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_METAL
 	Tr2IndirectDrawBufferLayout indirectLayout;
 #endif
 };

@@ -31,7 +31,8 @@ Tr2PrimaryRenderContextAL*& GetPrimaryRenderContextPointer()
 
 Tr2RenderContextAL::Tr2RenderContextAL()
 	: m_isValid(false),
-	m_events( nullptr )
+	m_events( nullptr ),
+	m_frameNumber( 0 )
 {
 	::GetPrimaryRenderContextPointer() = this;
 }
@@ -273,6 +274,7 @@ ALResult Tr2RenderContextAL::EndScene()
 
 ALResult Tr2RenderContextAL::Present()
 {
+	++m_frameNumber;
 	return S_OK;
 }
 
@@ -435,5 +437,21 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type, const Tr2BindlessRe
 {
 	return S_OK;
 }
+
+bool Tr2RenderContextAL::SupportsBindlessTextures() const
+{
+	return false;
+}
+
+uint64_t Tr2RenderContextAL::GetRecordingFrameNumber() const 
+{
+	return m_frameNumber + 1;
+} 
+
+uint64_t Tr2RenderContextAL::GetRenderedFrameNumber() const
+{
+	return m_frameNumber;
+}
+
 
 #endif

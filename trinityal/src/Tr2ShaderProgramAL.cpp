@@ -34,6 +34,8 @@ ALResult Tr2ShaderProgramAL::CreateCommandSignatures( Tr2IndirectBufferLayoutAL&
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	return m_program->CreateCommandSignatures( bufferLayout, renderContext );
 #else
+	(void)bufferLayout;
+	(void)renderContext;
 	return E_FAIL;
 #endif
 }

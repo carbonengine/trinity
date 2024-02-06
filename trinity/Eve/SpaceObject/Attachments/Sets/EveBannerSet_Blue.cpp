@@ -23,7 +23,6 @@ const Be::ClassInfo* EveBannerSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "isPickable", m_isPickable, "", Be::READWRITE | Be::PERSIST )
 
 		MAP_ATTRIBUTE( "banners", m_banners, "", Be::READ | Be::PERSIST )
-		MAP_ATTRIBUTE( "lights", m_lights, "", Be::READ | Be::PERSIST )
 
 		MAP_METHOD_AND_WRAP( "Rebuild", Rebuild, "Rebuild internal buffers" )
 		MAP_METHOD_AND_WRAP( 

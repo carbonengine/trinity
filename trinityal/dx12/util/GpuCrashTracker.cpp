@@ -187,7 +187,7 @@ namespace TrinityALImpl
 		setShaderDebugInfo(i_debugInfo->second.data(), uint32_t(i_debugInfo->second.size()));
 	}
 
-	void GpuCrashTracker::OnShaderLookup( const GFSDK_Aftermath_ShaderHash& shaderHash, PFN_GFSDK_Aftermath_SetData setShaderBinary)
+	void GpuCrashTracker::OnShaderLookup( const GFSDK_Aftermath_ShaderHash& shaderHash, PFN_GFSDK_Aftermath_SetData )
 	{
 		// store the crashed shader so we can report it!
 		auto shaderPath = m_shaderHashToPath.find(shaderHash);

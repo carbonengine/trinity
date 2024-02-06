@@ -512,19 +512,39 @@ namespace
 				return;
 #endif
 			case OP_TEXTURE1D:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture1d<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE1DARRAY:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture1d_array<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE:
 			case OP_TEXTURE2D:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture2d<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE2DARRAY:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture2d_array<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE3D:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture3d<" << MslTextureTemplateType( type ) << '>';
 				return;
 #if 0
@@ -534,16 +554,32 @@ namespace
 				return;
 #endif
 			case OP_TEXTURECUBE:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texturecube<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURECUBEARRAY:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texturecube_array<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_TEXTURE2DMS:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture2d_ms<" << MslTextureTemplateType( type ) << '>';
 				return;
 			// Supported since Metal 2.0 (macOS) and Metal 1.0 (iOS).
 			case OP_TEXTURE2DMSARRAY:
+				if( type.arrayDimensions > 0 )
+				{
+					os << "const ";
+				}
 				os << "texture2d_ms_array<" << MslTextureTemplateType( type ) << '>';
 				return;
 			case OP_BUFFER:
@@ -938,7 +974,7 @@ CodeStream& operator<<( CodeStream& os, const HLSL& hlsl )
 		os << Children<HLSL>( hlsl, "" );
 		break;
 	case NT_BRACKET_LIST:
-		for( int i = 0; i < node->GetChildrenCount(); i++ )
+		for( int i = 0; i < int( node->GetChildrenCount() ); i++ )
 		{
 			os << "[";
 			if( node->GetChildOrNull( i ) )
@@ -1715,7 +1751,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 		os << Children<MSL>( msl, "" );
 		break;
 	case NT_BRACKET_LIST:
-		for( int i = 0; i < node->GetChildrenCount(); i++ )
+		for( int i = 0; i < int( node->GetChildrenCount() ); i++ )
 		{
 			os << "[";
 			if( node->GetChildOrNull( i ) )

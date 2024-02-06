@@ -28,10 +28,10 @@ struct Tr2PresentParametersAL;
 class Tr2BindlessResourcesAL
 {
 public:
-	void Add( const Tr2TextureAL& texture )
+	void Add( const Tr2TextureAL& )
 	{
 	}
-	void Add( const Tr2BindlessResourcesAL& resources )
+	void Add( const Tr2BindlessResourcesAL& )
 	{
 	}
 	void Clear()
@@ -248,6 +248,11 @@ public:
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
 
+	bool SupportsBindlessTextures() const;
+
+	uint64_t GetRecordingFrameNumber() const;
+	uint64_t GetRenderedFrameNumber() const;
+
 private:
 	enum { MAX_RENDER_TARGET = 8 };
 	Tr2TextureAL m_boundRenderTarget[MAX_RENDER_TARGET];
@@ -255,6 +260,8 @@ private:
 	Tr2TextureAL m_defaultBackBuffer;
 	Tr2Viewport m_viewport;
 	TrackableStdStack<Tr2TextureAL>	m_stackRT[MAX_RENDER_TARGET];
+	uint64_t m_frameNumber;
+
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 };

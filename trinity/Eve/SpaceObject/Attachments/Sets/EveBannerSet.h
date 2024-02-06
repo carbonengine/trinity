@@ -13,8 +13,6 @@
 
 
 BLUE_DECLARE( Tr2Effect );
-BLUE_DECLARE( Tr2Light );
-BLUE_DECLARE_VECTOR( Tr2Light );
 BLUE_DECLARE( TriTextureParameter );
 
 
@@ -29,6 +27,19 @@ struct EveBannerItem
 	float angleX;
 	float angleY;
 	int32_t reference;
+};
+
+struct EveBannerLight 
+{
+	EveBannerLight();
+	EveBannerLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring profilePath );
+
+	LightData lightData;
+	float saturation;
+	Tr2LightProfileResPtr lightProfile;
+
+	uint32_t index;
+	Matrix boneMatrix;
 };
 
 BLUE_DECLARE_STRUCTURE_LIST( EveBannerItem );
@@ -48,6 +59,7 @@ public:
 	virtual bool Initialize();
 
 	virtual bool UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount );
+	virtual void UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float parentStrength, float boosterGain );
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
 
 	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
@@ -56,8 +68,9 @@ public:
 
 	void AddBanner( const EveBannerItem& banner );
 	void SetEffect( Tr2Effect* effect );
-	void SetPrimaryTextureParameter( TriTextureParameter * primaryTextureParameter );
-	void AddLight( Tr2Light* light );
+	void SetPrimaryTextureParameter( TriTextureParameterPtr primaryTextureParameter );
+	void AddLight( const EveBannerLight& light );
+	
 	void SetKey( int32_t key );
 	void Rebuild();
 
@@ -68,8 +81,7 @@ public:
 	static float GetBannerAspectRatio( const EveBannerItem& banner );
 
 	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const;
-	Color GetSaturatedLightColor() const;
-	void SetLightColorSaturation(float saturation);
+	Color GetAverageColor() const;
 
 protected:
 	virtual void ReleaseResources( TriStorage s );
@@ -101,8 +113,9 @@ private:
 
 	float m_maxBannerRadius;
 
-	PTr2LightVector m_lights;
+	std::vector<EveBannerLight> m_lights;
 	float m_colorSaturation;
+	float m_activationStrength;
 	
 	bool m_display;
 	bool m_isPickable;

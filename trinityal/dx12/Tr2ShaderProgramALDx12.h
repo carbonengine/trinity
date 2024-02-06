@@ -83,7 +83,6 @@ namespace TrinityALImpl
 			Tr2RenderContextEnum::ShaderType shaderType,
 			const Tr2ShaderSignatureAL& signature,
 			std::vector<D3D12_ROOT_PARAMETER>& parameters,
-			std::vector<std::unique_ptr<D3D12_DESCRIPTOR_RANGE>>& ranges,
 			bool dynamicBuffers
 			);
 		void AddSamplerRanges(

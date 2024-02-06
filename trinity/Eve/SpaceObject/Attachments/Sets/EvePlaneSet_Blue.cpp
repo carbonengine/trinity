@@ -23,7 +23,7 @@ const Be::ClassInfo* EvePlaneSet::ExposeToBlue()
 		MAP_ATTRIBUTE( "skinned", m_isSkinned, "Is the plane set skinned (requires that the owner object is skinned)", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "planes", m_planes, "The list of all plane items", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "effect", m_effect, "Effect to use for rendering planes", Be::READWRITE | Be::PERSIST )
-
+		
 		MAP_METHOD_AND_WRAP( "Rebuild", Rebuild, "Rebuild resources after adding/removing/changing individual items" )
 
     EXPOSURE_END()

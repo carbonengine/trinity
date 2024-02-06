@@ -170,27 +170,7 @@ void EveChildParticleSystem::GetBatches( ITriRenderBatchAccumulator* batches, Tr
 {
 	if( m_display && m_mesh && m_mesh->GetAreas(batchType)->size() != 0 )
 	{
-		if( reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION )
-		{
-			// rendering into the reflection cubemap is lefthanded, so we need to reverse all the areas 
-			auto areas = m_mesh->GetAreas( batchType );
-			for( auto it = areas->begin(); it != areas->end(); ++it )
-			{
-				( *it )->SetReversed( !( *it )->IsReversed() );
-			}
-		}
-
-		m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData );
-
-		if( reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION )
-		{
-			// reverse them again!
-			auto areas = m_mesh->GetAreas( batchType );
-			for( auto it = areas->begin(); it != areas->end(); ++it )
-			{
-				( *it )->SetReversed( !( *it )->IsReversed() );
-			}
-		}
+		m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, std::numeric_limits<float>::max(), reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION );
 	}
 }
 
@@ -219,6 +199,13 @@ Tr2PerObjectData* EveChildParticleSystem::GetPerObjectData( ITriRenderBatchAccum
 
 void EveChildParticleSystem::UpdateSyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& )
 {
+	if( m_mesh )
+	{
+		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
+		{
+			m_mesh->ReverseIndexBuffers();
+		}
+	}
 }
 
 void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )

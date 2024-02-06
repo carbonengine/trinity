@@ -529,7 +529,7 @@ bool MatchShaderInputOutput( ID3D11ShaderReflection* output, ID3D11ShaderReflect
 
 std::string PrintPrettyCode( const char* code, const char* indent )
 {
-	std::strstream os;
+	std::stringstream os;
 	while( *code )
 	{
 		const char* end = code;
@@ -1141,7 +1141,7 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 					return false;
 				}
 				state.ResetPragmaUsage();
-				std::string code( os.str(), os.str() + os.pcount() );
+				std::string code = os.str();
 
 				bool hasCompiled = false;
 				{

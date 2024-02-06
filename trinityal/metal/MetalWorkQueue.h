@@ -289,7 +289,9 @@ namespace TrinityALImpl
         void EndRenderPassHint();
 
 		void SetConstants( Tr2RenderContextEnum::ShaderType shaderType, const void* constantBuffer, uint32_t size, ConstantBufferToken& token, uint32_t constantIndex );
-		void SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask, id<MTLBuffer> heapView, uint32_t heapViewMask );
+        void UploadConstants( const void* constantBuffer, uint32_t size, ConstantBufferToken& token );
+
+        void SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask, id<MTLBuffer> heapView, uint32_t heapViewMask );
 		void SetTextures( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLTexture>* textures, NSRange texturesRange );
 		void SetSamplers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLSamplerState>* samplers, NSRange samplersRange );
 		void ResetBuffers( Tr2RenderContextEnum::ShaderType shaderType );
@@ -297,7 +299,7 @@ namespace TrinityALImpl
 		void ResetSamplers( Tr2RenderContextEnum::ShaderType shaderType );
 
 		void SetVertexStream( uint32 stream, id<MTLBuffer> buffer, uint32 stride, uint32 offset );
-		void SetCurrentVertexDescriptor( MTLVertexDescriptor* vertexDescriptor, uint8_t vertexStreamMask );
+		void SetCurrentVertexDescriptor( MTLVertexDescriptor* vertexDescriptor, uint8_t vertexStreamMask, size_t baseHash );
 
 		void ClearAttachment( MTLClearColor *clearColor, float *clearDepth, uint32_t *clearStencil, uint32_t attachmentIndex );
 
@@ -356,6 +358,10 @@ namespace TrinityALImpl
         MTLVertexDescriptor* GetCachedVertexDescriptor( Tr2VertexLayoutAL* layout, size_t inputHash, uint8_t& streamMask, bool& needsDummyStream ) const;
         void CacheVertexDescriptor( Tr2VertexLayoutAL* layout, size_t inputHash, MTLVertexDescriptor* descriptor, uint8_t streamMask, bool needsDummyStream );
         void FlushCachedVertexDescriptors();
+        bool EmitRenderEncoderState();
+        
+        uint64_t GetCurrentEncoderIndex() const;
+        void MarkConstantBuffersDirty();
 	private:
 		void CreateClearFunctions();
 		void ResetWorkQueue();
@@ -367,7 +373,6 @@ namespace TrinityALImpl
 		void SetCurrentEncoder(MetalEncoderType encoderType, NSString *encoderLabel = nil);
 		void SetupVertexDescriptors();
 		bool EmitRenderPipelineState();
-		bool EmitRenderEncoderState();
 		bool EmitComputePipelineState();
 		bool EmitComputeEncoderState();
 		void SetVertexBufferBindings();
@@ -404,6 +409,8 @@ namespace TrinityALImpl
 		MTLRenderPassDescriptor     *m_currentRenderPassDescriptor;
 
 		id<MTLCaptureScope>          m_captureScopeFullFrame;
+        
+        uint64_t m_encoderIndex;
 
 		uint32_t m_numRenderAttachments;
 		uint32_t m_dirtyRenderEncoderState;
@@ -476,6 +483,7 @@ namespace TrinityALImpl
 		uint32_t m_activeConstBuffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		uint32_t m_activeBuffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		uint32_t m_dirtyConstBuffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
+        uint32_t m_dirtyConstBufferPageMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		uint32_t m_dirtyBuffersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		uint32_t m_dirtyTexturesMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 		uint32_t m_dirtySamplersMask[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
@@ -487,6 +495,8 @@ namespace TrinityALImpl
 		VertexStream                  m_boundVertexStreams[METAL_VERTEX_STREAM_BUFFER_COUNT];
 		MTLVertexDescriptor          *m_currentVertexDescriptor;
 		uint8_t                       m_currentVertexStreamMask;
+        size_t m_currentVertexDescriptorBaseHash;
+
 		
 		MetalRenderPassHint m_pendingRenderPassHint;
 		bool m_hasPendingRenderPassHint;

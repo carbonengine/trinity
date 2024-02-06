@@ -25,7 +25,7 @@ class DescriptorStateCache
 public:
 
 	/** */
-	DescriptorStateCache(CComPtr<ID3D12Device> device, class Tr2PrimaryRenderContextAL* context, uint32_t pageSizeSampler, uint32_t pageSizeUploadDefault, uint32_t pageSizeUploadSpill);
+	DescriptorStateCache( CComPtr<ID3D12Device> device, class Tr2PrimaryRenderContextAL* context, uint32_t pageSizeSampler );
 
 	/** Dirty all states and reset internal allocators */
 	void Reset();

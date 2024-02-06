@@ -35,6 +35,7 @@ MetalWorkQueue::MetalWorkQueue()
     , m_isPrimary( true )
 	, m_dirtyRenderEncoderState( METAL_RENDERENCODERDIRTYSTATE_ALL )
     , m_numCommands( 0 )
+    , m_encoderIndex( 1 )
 	, m_encoderInUse( false )
 	, m_encoderEnded( false )
 	, m_encoderHasWork( false )
@@ -59,6 +60,7 @@ MetalWorkQueue::MetalWorkQueue()
 	, m_shaderResourceMasks( nullptr )
 	, m_currentVertexDescriptor( nil )
 	, m_currentVertexStreamMask( 0 )
+    , m_currentVertexDescriptorBaseHash( 0 )
 	, m_hasPendingRenderPassHint( false )
 	, m_hasPendingRenderTargetBarrier( false )
 	, m_pendingClear( false )
@@ -776,14 +778,28 @@ void MetalWorkQueue::SetRenderStatesDirty()
 	m_dirtyRenderEncoderState = METAL_RENDERENCODERDIRTYSTATE_ALL;
 
 	m_dirtyConstBuffersMask[VERTEX_SHADER] = ~0u;
+    m_dirtyConstBufferPageMask[VERTEX_SHADER] = ~0u;
 	m_dirtyBuffersMask[VERTEX_SHADER] = ~0u;
 	m_dirtyTexturesMask[VERTEX_SHADER] = ~0u;
 	m_dirtySamplersMask[VERTEX_SHADER] = ~0u;
 
 	m_dirtyConstBuffersMask[PIXEL_SHADER] = ~0u;
+    m_dirtyConstBufferPageMask[PIXEL_SHADER] = ~0u;
 	m_dirtyBuffersMask[PIXEL_SHADER] = ~0u;
 	m_dirtyTexturesMask[PIXEL_SHADER] = ~0u;
 	m_dirtySamplersMask[PIXEL_SHADER] = ~0u;
+}
+
+void MetalWorkQueue::MarkConstantBuffersDirty()
+{
+    m_dirtyConstBuffersMask[VERTEX_SHADER] = ~0u;
+    m_dirtyConstBufferPageMask[VERTEX_SHADER] = ~0u;
+
+    m_dirtyConstBuffersMask[PIXEL_SHADER] = ~0u;
+    m_dirtyConstBufferPageMask[PIXEL_SHADER] = ~0u;
+
+    m_dirtyConstBuffersMask[COMPUTE_SHADER] = ~0u;
+    m_dirtyConstBufferPageMask[COMPUTE_SHADER] = ~0u;
 }
 
 void MetalWorkQueue::SetCurrentEncoder( MetalEncoderType encoderType, NSString *encoderLabel )
@@ -849,6 +865,8 @@ void MetalWorkQueue::SetCurrentEncoder( MetalEncoderType encoderType, NSString *
 
 		// We should remove any clear state just processed by this render encoder
 		ResetClearState();
+        
+        ++m_encoderIndex;
 
 		break;
 	}
@@ -867,10 +885,13 @@ void MetalWorkQueue::SetCurrentEncoder( MetalEncoderType encoderType, NSString *
 		m_currentComputeEncoder.label = encoderLabel ? encoderLabel : @"Standard compute encoder";
 		METAL_LOG(@"Log:SetCurrentEncoder(Compute) %@", m_currentBlitEncoder.label);
 
-		m_dirtyConstBuffersMask[COMPUTE_SHADER] = ~0u;
+        m_dirtyConstBuffersMask[COMPUTE_SHADER] = ~0u;
+        m_dirtyConstBufferPageMask[COMPUTE_SHADER] = ~0u;
 		m_dirtyBuffersMask[COMPUTE_SHADER] = ~0u;
 		m_dirtyTexturesMask[COMPUTE_SHADER] = ~0u;
 		m_dirtySamplersMask[COMPUTE_SHADER] = ~0u;
+        
+        ++m_encoderIndex;
 
 		break;
 	}
@@ -879,6 +900,8 @@ void MetalWorkQueue::SetCurrentEncoder( MetalEncoderType encoderType, NSString *
 		m_currentBlitEncoder = [m_commandBuffer blitCommandEncoder];
 		m_currentBlitEncoder.label = encoderLabel ? encoderLabel : @"Standard blit encoder";
 		METAL_LOG(@"Log:SetCurrentEncoder(Blit) %@", m_currentBlitEncoder.label);
+        
+        ++m_encoderIndex;
 		break;
 	}
 	case MTLENCODERTYPE_NONE:
@@ -1424,27 +1447,13 @@ size_t MetalWorkQueue::CalculateVertexDescriptorHash()
 	size_t hashVal = 0;
 	if( m_currentVertexDescriptor )
 	{
+        hash_combine( hashVal, m_currentVertexDescriptorBaseHash );
 		unsigned int mask = m_currentVertexStreamMask;
-		for( int i = 0; mask && i < METAL_MAX_VERTEX_ATTRIBUTES; ++i )
-		{
-			auto stream = m_currentVertexDescriptor.attributes[i].bufferIndex;
-			unsigned int flag = ( 1 << stream );
-			if( mask & flag )
-			{
-				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.attributes[i].bufferIndex );
-				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.attributes[i].offset );
-				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.attributes[i].format );
-			}
-		}
-
-		mask = m_currentVertexStreamMask;
 		for( int i = 0; mask && i < METAL_VERTEX_STREAM_BUFFER_COUNT; ++i )
 		{
 			unsigned int flag = ( 1 << i );
 			if( mask & flag )
 			{
-				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.layouts[i].stepFunction );
-				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.layouts[i].stepRate );
 				hash_combine( hashVal, (uint32_t)m_currentVertexDescriptor.layouts[i].stride );
 
 				mask = mask & ~flag;
@@ -2293,30 +2302,35 @@ void MetalWorkQueue::SetConstants( Tr2RenderContextEnum::ShaderType shaderType, 
 	ConstantBuffer& bufferSlot = m_constBuffers[shaderType][bufferIndex];
 	uint32_t flag = (1 << bufferIndex);
 
-    auto frameNo = m_context->GetRecordingFrameNumber();
+    UploadConstants( constantBuffer, size, token );
     uint32_t page, offset;
+    uint64_t offs = token.offset;
+    
+    page = uint32_t( offs >> 32 );
+    offset = uint32_t( offs & 0xffffffff );
+
+    if( bufferSlot.offset != offset || bufferSlot.page != page )
+	{
+        if( bufferSlot.page != page )
+        {
+            m_dirtyConstBufferPageMask[shaderType] |= flag;
+        }
+		bufferSlot = { page, offset };
+		m_dirtyConstBuffersMask[shaderType] |= flag;
+	}
+	m_activeConstBuffersMask[shaderType] |= flag;
+}
+
+void MetalWorkQueue::UploadConstants( const void* constantBuffer, uint32_t size, ConstantBufferToken& token )
+{
+    auto frameNo = m_context->GetRecordingFrameNumber();
     if( token.frame != frameNo )
     {
         auto& allocator = m_context->GetConstantBufferAllocator();
         auto entry = allocator.Allocate( constantBuffer, size );
         token.offset = uint64_t( entry.offset ) | ( uint64_t( entry.page ) << 32 );
         token.frame = frameNo;
-        page = entry.page;
-        offset = entry.offset;
     }
-    else
-    {
-        uint64_t offs = token.offset;
-        
-        page = uint32_t( offs >> 32 );
-        offset = uint32_t( offs & 0xffffffff );
-    }
-	if( bufferSlot.offset != offset || bufferSlot.page != page )
-	{
-		bufferSlot = { page, offset };
-		m_dirtyConstBuffersMask[shaderType] |= flag;
-	}
-	m_activeConstBuffersMask[shaderType] |= flag;
 }
 
 void MetalWorkQueue::SetBuffers( Tr2RenderContextEnum::ShaderType shaderType, const id<MTLBuffer>* buffers, uint32_t buffersMask, id<MTLBuffer> heapView, uint32_t heapViewMask )
@@ -2420,6 +2434,7 @@ void MetalWorkQueue::ResetBuffers( Tr2RenderContextEnum::ShaderType shaderType )
 	m_activeConstBuffersMask[shaderType] = 0;
 	m_activeBuffersMask[shaderType] = 0;
 	m_dirtyConstBuffersMask[shaderType] = ~0u;
+    m_dirtyConstBufferPageMask[shaderType] = ~0u;
 	m_dirtyBuffersMask[shaderType] = ~0u;
 }
 
@@ -2471,12 +2486,13 @@ void MetalWorkQueue::SetVertexStream( uint32 stream, id<MTLBuffer> buffer, uint3
 	}
 }
 
-void MetalWorkQueue::SetCurrentVertexDescriptor( MTLVertexDescriptor* vertexDescriptor, uint8_t vertexStreamMask )
+void MetalWorkQueue::SetCurrentVertexDescriptor( MTLVertexDescriptor* vertexDescriptor, uint8_t vertexStreamMask, size_t baseHash )
 {
 	if( m_currentVertexDescriptor != vertexDescriptor || m_currentVertexStreamMask != vertexStreamMask )
 	{
 		m_currentVertexDescriptor = vertexDescriptor;
 		m_currentVertexStreamMask = vertexStreamMask;
+        m_currentVertexDescriptorBaseHash = baseHash;
 
 		m_dirtyRenderEncoderState |= METAL_RENDERENCODERDIRTYSTATE_VERTEXDESCRIPTOR;
 	}
@@ -2497,7 +2513,8 @@ void MetalWorkQueue::SetVertexBufferBindings()
 		mask &= ~flag;
 		m_dirtyBuffersMask[VERTEX_SHADER] &= ~flag;
 		m_dirtyConstBuffersMask[VERTEX_SHADER] |= flag;
-		
+        m_dirtyConstBufferPageMask[VERTEX_SHADER] |= flag;
+
 		[m_currentRenderEncoder setVertexBuffer:m_buffers[VERTEX_SHADER][i].buffer
 										 offset:m_buffers[VERTEX_SHADER][i].offset
 										atIndex:i];
@@ -2517,9 +2534,17 @@ void MetalWorkQueue::SetVertexBufferBindings()
 		m_dirtyBuffersMask[VERTEX_SHADER] |= flag;
 
         auto& cbd = m_constBuffers[VERTEX_SHADER][i];
-        [m_currentRenderEncoder setVertexBuffer:allocator.GetPage( cbd.page )
-                                         offset:cbd.offset
-                                        atIndex:i];
+        if( ( m_dirtyConstBufferPageMask[VERTEX_SHADER] & flag ) != 0 )
+        {
+            m_dirtyConstBufferPageMask[VERTEX_SHADER] &= ~flag;
+            [m_currentRenderEncoder setVertexBuffer:allocator.GetPage( cbd.page )
+                                             offset:cbd.offset
+                                            atIndex:i];
+        }
+        else
+        {
+            [m_currentRenderEncoder setVertexBufferOffset:cbd.offset atIndex:i];
+        }
 	}
 
 	dirtyMask = m_dirtyTexturesMask[VERTEX_SHADER];
@@ -2565,7 +2590,8 @@ void MetalWorkQueue::SetFragmentBufferBindings()
 
 		mask &= ~flag;
 		m_dirtyBuffersMask[PIXEL_SHADER] &= ~flag;
-		m_dirtyConstBuffersMask[PIXEL_SHADER] |= flag;
+        m_dirtyConstBuffersMask[PIXEL_SHADER] |= flag;
+        m_dirtyConstBufferPageMask[PIXEL_SHADER] |= flag;
 
 		[m_currentRenderEncoder setFragmentBuffer:m_buffers[PIXEL_SHADER][i].buffer
 										   offset:m_buffers[PIXEL_SHADER][i].offset
@@ -2586,9 +2612,17 @@ void MetalWorkQueue::SetFragmentBufferBindings()
 		m_dirtyBuffersMask[PIXEL_SHADER] |= flag;
 
         auto& cbd = m_constBuffers[PIXEL_SHADER][i];
-        [m_currentRenderEncoder setFragmentBuffer:allocator.GetPage( cbd.page )
-                                           offset:cbd.offset
-                                          atIndex:i];
+        if( ( m_dirtyConstBufferPageMask[PIXEL_SHADER] & flag ) != 0 )
+        {
+            m_dirtyConstBufferPageMask[PIXEL_SHADER] &= ~flag;
+            [m_currentRenderEncoder setFragmentBuffer:allocator.GetPage( cbd.page )
+                                               offset:cbd.offset
+                                              atIndex:i];
+        }
+        else
+        {
+            [m_currentRenderEncoder setFragmentBufferOffset:cbd.offset atIndex:i];
+        }
 	}
 
 	dirtyMask = m_dirtyTexturesMask[PIXEL_SHADER];
@@ -2636,6 +2670,7 @@ void MetalWorkQueue::SetComputeBufferBindings()
 		mask &= ~flag;
 		m_dirtyBuffersMask[COMPUTE_SHADER] &= ~flag;
 		m_dirtyConstBuffersMask[COMPUTE_SHADER] |= flag;
+        m_dirtyConstBufferPageMask[COMPUTE_SHADER] |= flag;
 
 		[m_currentComputeEncoder setBuffer:m_buffers[COMPUTE_SHADER][i].buffer
 									offset:m_buffers[COMPUTE_SHADER][i].offset
@@ -2656,9 +2691,17 @@ void MetalWorkQueue::SetComputeBufferBindings()
 		m_dirtyBuffersMask[COMPUTE_SHADER] |= flag;
 
         auto& cbd = m_constBuffers[COMPUTE_SHADER][i];
-        [m_currentComputeEncoder setBuffer:allocator.GetPage( cbd.page )
-                                    offset:cbd.offset
-                                   atIndex:i];
+        if( ( m_dirtyConstBufferPageMask[COMPUTE_SHADER] & flag ) != 0 )
+        {
+            m_dirtyConstBufferPageMask[COMPUTE_SHADER] &= ~flag;
+            [m_currentComputeEncoder setBuffer:allocator.GetPage( cbd.page )
+                                        offset:cbd.offset
+                                       atIndex:i];
+        }
+        else
+        {
+            [m_currentComputeEncoder setBufferOffset:cbd.offset atIndex:i];
+        }
 	}
 
 	dirtyMask = m_dirtyTexturesMask[COMPUTE_SHADER];
@@ -3124,6 +3167,7 @@ void MetalWorkQueue::BeginParallelEncoding( MetalWorkQueue* primaryQueue )
 	
 	m_currentVertexDescriptor = [primaryQueue->m_currentVertexDescriptor copy];
 	m_currentVertexDescriptorHash = primaryQueue->m_currentVertexDescriptorHash;
+    m_currentVertexDescriptorBaseHash = primaryQueue->m_currentVertexDescriptorBaseHash;
 	m_currentVertexStreamMask = primaryQueue->m_currentVertexStreamMask;
 	
 	for( int i = 0; i < METAL_VERTEX_STREAM_BUFFER_COUNT; ++i )
@@ -3242,6 +3286,11 @@ void MetalWorkQueue::FlushCachedVertexDescriptors()
         desc.layout->AddVertexDescriptor( desc.inputHash, desc.descriptor, desc.streamMask, desc.needsDummyStream );
     }
     m_cachedVertexLayouts.clear();
+}
+
+uint64_t MetalWorkQueue::GetCurrentEncoderIndex() const
+{
+    return m_encoderIndex;
 }
 
 } // TrinityALImpl

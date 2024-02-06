@@ -14,6 +14,7 @@ namespace {
 
 	typedef std::vector<std::pair<Tr2VertexDefinition, Tr2VertexLayoutAL*>>	VertexLayoutMap_t;
 	VertexLayoutMap_t	s_vertexLayoutMap;
+	std::mutex s_vertexLayoutMutex;
 
 	std::vector<Tr2ShaderAL*> s_shaders;
 	std::vector<Tr2ShaderBytecodeAL*> s_shaderLibraries;
@@ -709,6 +710,8 @@ bool Tr2EffectStateManager::IsDepthTestInverted( void ) const
 
 uint32_t Tr2EffectStateManager::GetVertexDeclarationHandle( const Tr2VertexDefinition& vertexDefinition )
 {
+	std::scoped_lock lock( s_vertexLayoutMutex );
+
 	for( size_t i = 0; i != s_vertexLayoutMap.size(); ++i )
 	{
 		if( s_vertexLayoutMap[i].first == vertexDefinition )
@@ -756,6 +759,8 @@ void Tr2EffectStateManager::ApplyVertexDeclaration( uint32_t declaration )
 
 bool Tr2EffectStateManager::GetVertexDeclarationElements( uint32_t declaration, Tr2VertexDefinition& definition )
 {
+	std::scoped_lock lock( s_vertexLayoutMutex );
+
 	CCP_ASSERT( declaration < s_vertexLayoutMap.size() || declaration == UNINITIALIZED_DECLARATION );
 	if( declaration < s_vertexLayoutMap.size() )
 	{

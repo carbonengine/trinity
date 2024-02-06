@@ -20,10 +20,16 @@ namespace TrinityALImpl
 		, m_mtlTexture( nil )
 		, m_mtlTextureSRGBView( nil )
 		, m_metalContext( nullptr )
+        , m_usedInEncoder( 0 )
 		, m_wrappedTexture( false )
 	{
             m_srvHeapIndices[0] = m_srvHeapIndices[1] = 0xffffffff;
 	}
+
+    Tr2TextureAL::~Tr2TextureAL()
+    {
+        Destroy();
+    }
 
 	ALResult Tr2TextureAL::Create( const Tr2BitmapDimensions& desc, const Tr2MsaaDesc& msaa, Tr2GpuUsage::Type gpuUsage, Tr2CpuUsage::Type cpuUsage, Tr2SubresourceData* initialData, Tr2PrimaryRenderContextAL& renderContext )
 	{
@@ -222,7 +228,14 @@ namespace TrinityALImpl
         if( HasFlag( gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) )
         {
             m_srvHeapIndices[0] = metalContext->AllocateHeapIndex( m_mtlTexture );
-            m_srvHeapIndices[1] = metalContext->AllocateHeapIndex( m_mtlTextureSRGBView );
+            if( m_mtlTextureSRGBView == m_mtlTexture )
+            {
+                m_srvHeapIndices[1] = m_srvHeapIndices[0];
+            }
+            else
+            {
+                m_srvHeapIndices[1] = metalContext->AllocateHeapIndex( m_mtlTextureSRGBView );
+            }
         }
         m_memory.Set( Tr2MemoryCounterAL::TEXTURE, realDesc, msaa );
 
@@ -231,10 +244,10 @@ namespace TrinityALImpl
 		m_gpuUsage      = gpuUsage;
 		m_cpuUsage      = cpuUsage;
 		m_msaa          = msaa;
-		m_mtlTextureUAV.resize( desc.GetTrueMipCount() );
-        m_uavHeapIndices.resize( desc.GetTrueMipCount() );
         if( HasFlag( gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
         {
+            m_mtlTextureUAV.resize( desc.GetTrueMipCount() );
+            m_uavHeapIndices.resize( desc.GetTrueMipCount() );
             for( uint32_t i = 0; i < desc.GetTrueMipCount(); ++i )
             {
                 m_mtlTextureUAV[i] = m_metalContext->CreateUAVOfMetalTexture( m_mtlTexture, i );
@@ -269,7 +282,8 @@ namespace TrinityALImpl
 	}
 
 	void Tr2TextureAL::Destroy()
-{
+    {
+        m_usedInEncoder = 0;
         if( m_mtlTexture )
         {
             m_metalContext->DeallocateHeapIndex( m_srvHeapIndices[0] );
@@ -277,18 +291,23 @@ namespace TrinityALImpl
         }
         if( m_mtlTextureSRGBView )
         {
-            m_metalContext->DeallocateHeapIndex( m_srvHeapIndices[1] );
+            if( m_srvHeapIndices[1] != m_srvHeapIndices[0] )
+            {
+                m_metalContext->DeallocateHeapIndex( m_srvHeapIndices[1] );
+            }
             m_metalContext->DestroyMetalTexture(m_mtlTextureSRGBView);
         }
         m_srvHeapIndices[0] = m_srvHeapIndices[1] = 0xffffffff;
-        size_t i = 0;
+        for( auto& idx : m_uavHeapIndices )
+        {
+            m_metalContext->DeallocateHeapIndex( idx );
+        }
+        m_uavHeapIndices.clear();
         for( auto texture : m_mtlTextureUAV )
         {
-            m_metalContext->DeallocateHeapIndex( m_uavHeapIndices[i++] );
 			m_metalContext->DestroyMetalTexture( texture );
 		}
 		m_mtlTextureUAV.clear();
-        m_uavHeapIndices.clear();
         if( m_mtlReadBackBuffer )
         {
             m_metalContext->DestroyMetalBuffer(m_mtlReadBackBuffer);

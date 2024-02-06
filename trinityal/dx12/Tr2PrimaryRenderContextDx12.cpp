@@ -311,7 +311,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	m_completedFrameIndex = 0;
 	m_fenceValue = 1;
-	m_srvUavAllocator->SetFrameIndices( GetCurrentFrameIndexDx12(), GetCompletedFrameIndexDx12() );
+	m_srvUavAllocator->SetFrameIndices( GetRecordingFrameNumber(), GetRenderedFrameNumber() );
 	m_frameFenceValues.clear();
 	m_frameFenceValues.resize( backBufferCount, 0 );
 	m_pendingRelease.resize( backBufferCount );
@@ -607,7 +607,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	{
 		it->clear();
 	}
-	m_srvUavAllocator->SetFrameIndices( GetCurrentFrameIndexDx12(), GetCompletedFrameIndexDx12() );
+	m_srvUavAllocator->SetFrameIndices( GetRecordingFrameNumber(), GetRenderedFrameNumber() );
 
 	auto value = m_frameFenceValues[m_currentBackBufferIndex];
 	m_frameFenceValues.clear();
@@ -691,10 +691,10 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 			m_commandList->EndQuery( m_statsQuery, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0 );
 			m_commandList->ResolveQueryData( m_statsQuery, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0, 1, m_statsResult, 0 );
 			m_statsStatus = STAT_END_ISSUED;
-			m_statsQueryFrameIndex = GetCurrentFrameIndexDx12();
+			m_statsQueryFrameIndex = GetRecordingFrameNumber();
 		}
 
-		if( m_statsStatus == STAT_END_ISSUED && GetCompletedFrameIndexDx12() >= m_statsQueryFrameIndex )
+		if( m_statsStatus == STAT_END_ISSUED && GetRenderedFrameNumber() >= m_statsQueryFrameIndex )
 		{
 			D3D12_QUERY_DATA_PIPELINE_STATISTICS stats;
 			void* data;
@@ -750,7 +750,7 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	WaitForFenceDx12( m_frameFenceValues[m_currentBackBufferIndex] );
 
 	PopPendingRelease( m_currentBackBufferIndex );
-	m_srvUavAllocator->SetFrameIndices( GetCurrentFrameIndexDx12(), GetCompletedFrameIndexDx12() );
+	m_srvUavAllocator->SetFrameIndices( GetRecordingFrameNumber(), GetRenderedFrameNumber() );
 
 	// JB: As with creation, if additional render contexts are added, this will need to be in that contexts reset function
 	m_descriptorCache[m_currentBackBufferIndex]->Reset();
@@ -907,12 +907,12 @@ void Tr2PrimaryRenderContextAL::FlushPendingRelease()
 	}
 }
 
-uint64_t Tr2PrimaryRenderContextAL::GetCurrentFrameIndexDx12() const
+uint64_t Tr2PrimaryRenderContextAL::GetRecordingFrameNumber() const
 {
 	return m_fenceValue + 1;
 }
 
-uint64_t Tr2PrimaryRenderContextAL::GetCompletedFrameIndexDx12() const
+uint64_t Tr2PrimaryRenderContextAL::GetRenderedFrameNumber() const
 {
 	return m_completedFrameIndex;
 }
@@ -970,7 +970,7 @@ ALResult Tr2PrimaryRenderContextAL::FlushAndSyncDx12( Tr2RenderContextAL& render
 	m_pendingPresents.erase(
 		std::remove_if( begin( m_pendingPresents ), end( m_pendingPresents ), []( const PendingPresent& p )->bool { return !p.backBuffer.IsValid(); } ),
 		end( m_pendingPresents ) );
-	m_srvUavAllocator->SetFrameIndices( GetCurrentFrameIndexDx12(), GetCompletedFrameIndexDx12() );
+	m_srvUavAllocator->SetFrameIndices( GetRecordingFrameNumber(), GetRenderedFrameNumber() );
 
 	// Reduce the pending releases 
 	for( auto index = 0; index < m_pendingRelease.size(); ++index )
@@ -1227,6 +1227,11 @@ std::shared_ptr<ShaderResourceViewDx12> Tr2PrimaryRenderContextAL::GetNullSrvDx1
 std::shared_ptr<UnorderedAccessViewDx12> Tr2PrimaryRenderContextAL::GetNullUavDx12( Tr2ShaderRegisterAL::RegisterType type ) const
 {
 	return m_nullUav[RegisterTypeIndex( type )];
+}
+
+bool Tr2PrimaryRenderContextAL::SupportsBindlessTextures() const
+{
+	return true;
 }
 
 #endif

@@ -32,10 +32,10 @@ struct Tr2Viewport;
 class Tr2BindlessResourcesAL
 {
 public:
-	void Add( const Tr2TextureAL& texture )
+	void Add( const Tr2TextureAL& )
 	{
 	}
-	void Add( const Tr2BindlessResourcesAL& resources )
+	void Add( const Tr2BindlessResourcesAL& )
 	{
 	}
 	void Clear()
@@ -224,8 +224,8 @@ private:
 			bool blend : 1;
 			bool depthStencil : 1;
 			bool rasterizer : 1;
-		};
-		uint32_t flags;
+		} flags;
+		uint32_t mask;
 	} m_dirtyFlag;
 public:
 	CComPtr<ID3D11DeviceContext>	m_context;

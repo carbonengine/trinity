@@ -105,17 +105,17 @@ ALResult Tr2PipelineStatsQueryAL::GetStats( Tr2PipelineStatsDataAL& data, Tr2Ren
 	return renderContext.m_context->GetData( m_query, (void*)&data.data, sizeof( data.data ), D3D11_ASYNC_GETDATA_DONOTFLUSH );
 }
 
-size_t Tr2PipelineStatsQueryAL::GetValueCount( const Tr2PipelineStatsDataAL& data )
+size_t Tr2PipelineStatsQueryAL::GetValueCount( const Tr2PipelineStatsDataAL& )
 {
 	return sizeof( s_fields ) / sizeof( s_fields[0] );
 }
 
-const char* Tr2PipelineStatsQueryAL::GetLabel( const Tr2PipelineStatsDataAL& data, size_t index )
+const char* Tr2PipelineStatsQueryAL::GetLabel( const Tr2PipelineStatsDataAL&, size_t index )
 {
 	return s_fields[index].label;
 }
 
-const char* Tr2PipelineStatsQueryAL::GetDescription( const Tr2PipelineStatsDataAL& data, size_t index )
+const char* Tr2PipelineStatsQueryAL::GetDescription( const Tr2PipelineStatsDataAL&, size_t index )
 {
 	return s_fields[index].description;
 }

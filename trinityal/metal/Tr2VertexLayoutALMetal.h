@@ -34,6 +34,7 @@ namespace TrinityALImpl
 		struct MetalVertexDescriptor
 		{
 			MTLVertexDescriptor* descriptor;
+            size_t baseHash;
 			uint8_t streamMask;
 			bool needsDummyStream;
 		};
@@ -51,6 +52,7 @@ namespace TrinityALImpl
 		};
 		
 		MetalVertexDescriptor GenerateVertexDescriptor( const std::vector<Tr2ShaderPipelineInputAL>& shaderInputs ) const;
+        void CalculateHash( MetalVertexDescriptor& result ) const;
 
 		std::vector<Item> m_items;
 		Tr2RenderContextAL  *m_renderContext;

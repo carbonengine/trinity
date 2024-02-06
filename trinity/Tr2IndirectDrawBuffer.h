@@ -14,6 +14,9 @@ struct Tr2IndirectDrawBufferLayout
 	uint32_t m_perObjectDataOffsets[Tr2RenderContextEnum::SHADER_TYPE_COUNT];
 	uint32_t m_drawOffset = 0;
 	uint32_t m_stride = 0;
+#elif TRINITY_PLATFORM == TRINITY_METAL
+    bool m_hasMaterialData[2];
+    bool m_hasPerObjectData[2];
 #endif
 };
 
@@ -32,15 +35,31 @@ public:
 	bool IsValid() const;
 	void Create( uint32_t size );
 
+#if TRINITY_PLATFORM == TRINITY_METAL
+    struct DP
+    {
+        uint64_t material[2];
+        uint64_t perObject[2];
+        uint32_t indexCountPerInstance;
+        uint32_t instanceCount;
+        uint32_t startIndexLocation;
+        uint32_t baseVertexLocation;
+        uint32_t startInstanceLocation;
+    };
+#endif
+
 	struct Allocation
 	{
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 		CComPtr<ID3D12Resource> buffer;
-		void* baseAddress;
-		void* address;
+        void* baseAddress;
+        void* address;
+#elif TRINITY_PLATFORM == TRINITY_METAL
+        DP* address;
 #endif
 	};
 	Allocation Allocate( uint32_t size );
+	void CopyArguments();
 	void SetFrameNumbers( uint64_t recordingFrame, uint64_t completedFrame );
 	void Submit( const Tr2IndirectDrawBufferWriter& writer );
 
@@ -51,9 +70,10 @@ protected:
 
 private:
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
-	void Resize();
+	void Resize( uint32_t newSize );
 
-	CComPtr<ID3D12Resource> m_buffer;
+	CComPtr<ID3D12Resource> m_uploadBuffer;
+	CComPtr<ID3D12Resource> m_defaultBuffer;
 	uint8_t* m_cpuAddr = nullptr;
 	int32_t m_size = 0;
 	int32_t m_head = 0;
@@ -63,10 +83,17 @@ private:
 	struct Region
 	{
 		uint64_t frame;
-		int32_t tail;
+		int32_t start;
+		int32_t end;
+		bool copied;
 	};
 
 	std::vector<Region> m_regions;
+#elif TRINITY_PLATFORM == TRINITY_METAL
+    std::vector<std::unique_ptr<DP[]>> m_pages;
+    uint32_t m_page = 0;
+    uint32_t m_pageOffset = 0;
+    uint32_t m_pageSize = 1024;
 #endif
 };
 
@@ -93,6 +120,9 @@ private:
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	Tr2IndirectDrawBuffer::Allocation m_allocation;
 	uint8_t* m_buffer;
+#elif TRINITY_PLATFORM == TRINITY_METAL
+    Tr2IndirectDrawBuffer::Allocation m_allocation;
+    Tr2IndirectDrawBuffer::DP* m_buffer;
 #endif
 	friend class Tr2IndirectDrawBuffer;
 };

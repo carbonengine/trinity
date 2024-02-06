@@ -1418,6 +1418,11 @@ const Tr2TextureAL& Tr2Renderer::GetFallbackTexture( Tr2EffectResource::Type tex
 void Tr2Renderer::InitializeSystemShaderOptions()
 {
 	ModifyGlobalEffectOptions( { { BlueSharedString( "GEOMETRY_SHADER_SUPPORT" ), BlueSharedString( GetGeometryShaderSupport() ? "SUPPORTED" : "UNSUPPORTED" ) } } );
+
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	extern bool g_bindlessRenderingEnabled;
+
+	ModifyGlobalEffectOptions( { { BlueSharedString( "BINDLESS_RENDERING" ), BlueSharedString( ( g_bindlessRenderingEnabled && renderContext.SupportsBindlessTextures() ) ? "BINDLESS_RENDERING_ENABLED" : "BINDLESS_RENDERING_DISABLED" ) } } );
 }
 
 bool Tr2Renderer::GetGeometryShaderSupport()

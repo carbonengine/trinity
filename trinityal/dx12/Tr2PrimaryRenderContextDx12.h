@@ -70,6 +70,11 @@ public:
 	void AddShaderBinaryToCrashTracker(const Tr2ShaderBytecodeAL& bytecode, const char* shaderPath);
 	void UnRegisterFromCrashTracker(ID3D12GraphicsCommandList2* commandList);
 
+	bool SupportsBindlessTextures() const;
+
+	uint64_t GetRecordingFrameNumber() const;
+	uint64_t GetRenderedFrameNumber() const;
+
 public:
 	Tr2TextureAL m_defaultBackBuffer;
 
@@ -100,9 +105,6 @@ public:
 	void ReleaseLater(IUnknown* resource);
 #endif
 	void FlushPendingRelease();
-
-	uint64_t GetCurrentFrameIndexDx12() const;
-	uint64_t GetCompletedFrameIndexDx12() const;
 
 	void OnShaderProgramDestroyedDx12( TrinityALImpl::Tr2ShaderProgramAL* sp );
 	void OnVertexLayoutDestroyedDx12( TrinityALImpl::Tr2VertexLayoutAL* vl );

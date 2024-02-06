@@ -15,6 +15,8 @@
 #include "Tr2Renderer.h"
 #include "TriSettingsRegistrar.h"
 
+#include "Shader/Tr2Effect.h"
+
 
 bool g_gdrEnabled = true;
 
@@ -34,6 +36,10 @@ void UseTextures( ITriRenderBatchAccumulator* batches, const BlueSharedString& t
 #if TRINITY_PLATFORM_SUPPORTS_HEAP_VIEW
 	CCP_STATS_ZONE( __FUNCTION__ );
 	Tr2BindlessResourcesAL usedTextures;
+
+	usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_2D, "" ) );
+	usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_3D, "" ) );
+	usedTextures.Add( Tr2Renderer::GetFallbackTexture( Tr2EffectResource::TEXTURE_CUBE, "" ) );
 
 	auto ProcessBatch = [&usedTextures, &techniqueName]( auto& batch ) {
 		uint32_t technique;
@@ -84,23 +90,23 @@ void SubmitGeometry( const Tr2RenderBatch& batch, Tr2RenderContext& renderContex
 
 }
 
-Tr2RenderContextBase::Tr2RenderContextBase( Tr2RenderContext& renderContext )
-	:m_esm( renderContext )
+Tr2RenderContextBase::Tr2RenderContextBase( Tr2RenderContext& renderContext ) :
+	m_esm( renderContext )
 {
 	m_esm.Initialize();
 #if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 	m_backBuffer.CreateInstance();
 	m_backBuffer->SetName( "backbuffer" );
 #endif
-	m_objectIdVariable		= GlobalStore().RegisterVariable( "objectId",	0.0f );
-	m_areaIdVariable		= GlobalStore().RegisterVariable( "areaId",		0.0f );
+	m_objectIdVariable = GlobalStore().RegisterVariable( "objectId", 0.0f );
+	m_areaIdVariable = GlobalStore().RegisterVariable( "areaId", 0.0f );
 }
 
 using namespace Tr2RenderContextEnum;
 
 // --------------------------------------------------------------------------------------
 // Description:
-//   Called by Tr2RenderContextAL when a primary or secondary context is created. 
+//   Called by Tr2RenderContextAL when a primary or secondary context is created.
 //   Initializes Tr2EffectStateManager instance.
 // Arguments:
 //   renderContext - AL render context created
@@ -115,10 +121,10 @@ void Tr2RenderContextBase::OnContextCreated( Tr2PrimaryRenderContextAL& renderCo
 #if !TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
 // --------------------------------------------------------------------------------------
 // Description:
-//   Returns back buffer render target as Blue-exposed Tr2RenderTarget. Exposed to 
+//   Returns back buffer render target as Blue-exposed Tr2RenderTarget. Exposed to
 //   script.
 // Return Value:
-//   Back buffer render target 
+//   Back buffer render target
 // --------------------------------------------------------------------------------------
 Tr2RenderTargetPtr Tr2RenderContextBase::GetBackBuffer()
 {
@@ -127,8 +133,8 @@ Tr2RenderTargetPtr Tr2RenderContextBase::GetBackBuffer()
 #endif
 
 
-Tr2RenderContext::Tr2RenderContext()
-	:Tr2RenderContextBase( *this ),
+Tr2RenderContext::Tr2RenderContext() :
+	Tr2RenderContextBase( *this ),
 	m_parallelContextMutex( "Tr2RenderContext", "m_parallelContextMutex" ),
 	m_parallelContextSemaphore( 0, 1024 )
 {
@@ -160,7 +166,7 @@ uint32_t Tr2RenderContext::BeginParallelEncoding( uint32_t count )
 {
 #if TRINITY_PLATFORM_SUPPORTS_PARALLEL_CONTEXTS
 	CCP_STATS_ZONE( __FUNCTION__ );
-	
+
 	CCP_ASSERT( m_parallelContextsPool.empty() );
 
 	uint32_t available = 0;
@@ -171,7 +177,7 @@ uint32_t Tr2RenderContext::BeginParallelEncoding( uint32_t count )
 	if( available )
 	{
 		m_esm.SetupContextResources();
-		
+
 		for( size_t i = m_parallelContexts.size(); i < available; ++i )
 		{
 			Tr2RenderContextPtr context;
@@ -179,7 +185,7 @@ uint32_t Tr2RenderContext::BeginParallelEncoding( uint32_t count )
 			m_parallelContexts.push_back( context );
 		}
 		
-		for( size_t i = 0; i < available; ++i )
+		for( uint32_t i = 0; i < available; ++i )
 		{
 			PrepareParallelContext( i, *m_parallelContexts[i] );
 			m_parallelContextsPool.push_back( m_parallelContexts[i] );
@@ -197,14 +203,14 @@ Tr2RenderContext* Tr2RenderContext::Fork()
 	while( true )
 	{
 		m_parallelContextSemaphore.Wait();
-		
+
 		CcpAutoMutex lock( m_parallelContextMutex );
-		
+
 		if( m_parallelContextsPool.empty() )
 		{
 			continue;
 		}
-		
+
 		auto ctx = m_parallelContextsPool.back();
 		m_parallelContextsPool.pop_back();
 		return ctx.Detach();
@@ -228,7 +234,7 @@ void Tr2RenderContext::EndParallelEncoding()
 		CCP_STATS_ZONE( "Tr2RenderContextAL::EndParallelEncoding" );
 		Tr2RenderContextAL::EndParallelEncoding();
 	}
-	
+
 	// Reset semaphore to 0
 	for( size_t i = 0; i < m_parallelContextsPool.size(); ++i )
 	{
@@ -240,8 +246,8 @@ void Tr2RenderContext::EndParallelEncoding()
 
 
 #if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
-Tr2PrimaryRenderContext::Tr2PrimaryRenderContext()
-	:Tr2RenderContextBase( *reinterpret_cast<Tr2RenderContext*>( this ) )
+Tr2PrimaryRenderContext::Tr2PrimaryRenderContext() :
+	Tr2RenderContextBase( *reinterpret_cast<Tr2RenderContext*>( this ) )
 {
 	m_backBuffer.CreateInstance();
 	m_backBuffer->SetName( "backbuffer" );
@@ -268,14 +274,15 @@ Tr2RenderTargetPtr Tr2PrimaryRenderContext::GetBackBuffer()
 #endif
 
 
-namespace {
+namespace
+{
 #if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT
-	Tr2PrimaryRenderContextPtr	s_mainThreadRenderContext;
+Tr2PrimaryRenderContextPtr s_mainThreadRenderContext;
 #else
-	Tr2RenderContextPtr s_mainThreadRenderContext;
+Tr2RenderContextPtr s_mainThreadRenderContext;
 #endif
 }
-	
+
 void Tr2RenderContext::DestroyMainThreadRenderContext()
 {
 	if( s_mainThreadRenderContext )
@@ -325,14 +332,17 @@ const char* GetPassName( size_t passIndex )
 
 void Tr2RenderContextBase::RenderBatchesInOrder( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
 {
-	CCP_STATS_ZONE( __FUNCTION__ );
 	D3DPERF_EVENT( L"Tr2RenderContext::RenderBatchesInOrder" );
 
 	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
 
+	CCP_STATS_ZONE( "Direct drawing (sorted)" );
+	GPU_REGION( *renderContext, "Direct drawing (sorted)" );
+
+
 	UseTextures( batches, techniqueName, *renderContext );
 
-	Tr2ConstantBufferAL*	perObjectConstantBuffers[CBUFFER_COUNT];
+	Tr2ConstantBufferAL* perObjectConstantBuffers[CBUFFER_COUNT];
 	for( uint32_t i = 0; i != CBUFFER_COUNT; ++i )
 	{
 		perObjectConstantBuffers[i] = &m_perObjectConstantBuffers[i];
@@ -366,6 +376,13 @@ void Tr2RenderContextBase::RenderBatchesInOrder( ITriRenderBatchAccumulator* bat
 			lastShader = batch.m_shader;
 		}
 
+		const char* effectPath = dynamic_cast<Tr2Effect*>( batch.m_material )->GetEffectPathName();
+		CCP_STATS_ZONE( effectPath );
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+		GPU_REGION( *renderContext, effectPath );
+#endif
+
 		if( batch.m_objectData && ( batch.m_objectData != curPerObjectData ) )
 		{
 			batch.m_objectData->SetPerObjectDataToDevice( perObjectConstantBuffers, shaderMask, *renderContext );
@@ -391,6 +408,7 @@ void Tr2RenderContextBase::RenderBatchesInOrder( ITriRenderBatchAccumulator* bat
 
 void Tr2RenderContextBase::RenderBatchGroup( std::vector<Tr2RenderBatch>::const_iterator startBatch, const BlueSharedString& techniqueName, Tr2ConstantBufferAL** buffers, Tr2RenderContext& renderContext )
 {
+
 	auto& firstBatch = *startBatch;
 	auto endBatch = startBatch + firstBatch.m_groupCount;
 
@@ -410,6 +428,13 @@ void Tr2RenderContextBase::RenderBatchGroup( std::vector<Tr2RenderBatch>::const_
 	{
 		return;
 	}
+
+	const char* effectPath = dynamic_cast<Tr2Effect*>( startBatch->m_material )->GetEffectPathName();
+	CCP_STATS_ZONE( effectPath );
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	GPU_REGION( renderContext, effectPath );
+#endif
+
 	const auto currentShaderMask = currentShader->GetShaderTypeMask( technique );
 
 	m_esm.ApplyVertexDeclaration( firstBatch.m_vertexDeclaration );
@@ -460,8 +485,17 @@ void Tr2RenderContextBase::RenderBatchGroup( std::vector<Tr2RenderBatch>::const_
 
 void Tr2RenderContextBase::RenderSortedBatches( const std::vector<Tr2RenderBatch>& batches, const BlueSharedString& techniqueName, Tr2RenderContext& renderContext )
 {
-#if TRINITY_PLATFORM_SUPPORTS_PARALLEL_CONTEXTS
 	size_t batchCount = batches.size();
+
+	if( batchCount == 0 )
+	{
+		return;
+	}
+
+	CCP_STATS_ZONE( "Direct drawing" );
+	GPU_REGION( renderContext, "Direct drawing" );
+
+#if TRINITY_PLATFORM_SUPPORTS_PARALLEL_CONTEXTS
 	extern bool g_useParallelEncoding;
 	if( g_useParallelEncoding && batchCount > 256 && !Tr2GpuProfiler::GetProfiler().IsCapturing() )
 	{
@@ -516,21 +550,21 @@ void Tr2RenderContextBase::RenderSortedBatches( const std::vector<Tr2RenderBatch
 
 void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
 {
+
 	CCP_STATS_ZONE( __FUNCTION__ );
 
 	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
-
-	Tr2EffectStateManager::RenderingMode currentMode = Tr2EffectStateManager::RM_ANY;
 
 	renderContext->SetTopology( Tr2RenderContextEnum::TOP_TRIANGLES );
 
 	auto& gdprBatches = batches->GetGdprBatches();
 
-	currentMode = Tr2EffectStateManager::RM_ANY;
-
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_METAL
 	if( g_gdrEnabled )
 	{
+		CCP_STATS_ZONE( "Indirect drawing" );
+		GPU_REGION( *renderContext, "Indirect drawing" );
+		
 		Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
 
 		static Tr2IndirectDrawBuffer s_buffer;
@@ -538,10 +572,8 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 		{
 			s_buffer.Create( 1024 * 1024 );
 		}
-		else
-		{
-			s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetCurrentFrameIndexDx12(), primaryContext->GetPrimaryRenderContext().GetCompletedFrameIndexDx12() );
-		}
+
+		s_buffer.SetFrameNumbers( primaryContext->GetPrimaryRenderContext().GetRecordingFrameNumber(), primaryContext->GetPrimaryRenderContext().GetRenderedFrameNumber() );
 
 		struct Bin
 		{
@@ -611,6 +643,7 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 			Tr2ParallelDo( begin( writers ), end( writers ), RecordBin );
 		}
 
+		s_buffer.CopyArguments();
 
 		{
 			CCP_STATS_ZONE( "Submit" );
@@ -618,27 +651,36 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 			uint32_t drawCalls = 0;
 			for( auto& bin : writers )
 			{
-				//CCP_STATS_ZONE( "Execute" );
-				//GPU_REGION( *renderContext, "Execute" );
+
+				auto& firstBatch = gdprBatches[bin.firstIndex];
+
+				const char* effectPath = dynamic_cast<Tr2Effect*>( firstBatch.m_material )->GetEffectPathName();
+				CCP_STATS_ZONE( effectPath );
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+				GPU_REGION( *renderContext, effectPath );
+#endif
+
 				if( bin.binStart )
 				{
-					auto& firstBatch = gdprBatches[bin.firstIndex];
-
-				m_esm.ApplyVertexDeclaration( firstBatch.m_vertexDeclaration );
-				if( firstBatch.m_vertexStreams[0] )
-				{
-					m_esm.ApplyStreamSource( 0, *firstBatch.m_vertexStreams[0], 0, firstBatch.m_stride[0] );
-				}
-				if( firstBatch.m_vertexStreams[1] )
-				{
-					m_esm.ApplyStreamSource( 1, *firstBatch.m_vertexStreams[1], 0, firstBatch.m_stride[1] );
-				}
-				m_esm.ApplyIndexBuffer( *firstBatch.m_indexBuffer, firstBatch.m_indexStride );
+					m_esm.ApplyVertexDeclaration( firstBatch.m_vertexDeclaration );
+					if( firstBatch.m_vertexStreams[0] )
+					{
+						m_esm.ApplyStreamSource( 0, *firstBatch.m_vertexStreams[0], 0, firstBatch.m_stride[0] );
+					}
+					if( firstBatch.m_vertexStreams[1] )
+					{
+						m_esm.ApplyStreamSource( 1, *firstBatch.m_vertexStreams[1], 0, firstBatch.m_stride[1] );
+					}
+					m_esm.ApplyIndexBuffer( *firstBatch.m_indexBuffer, firstBatch.m_indexStride );
 
 					firstBatch.m_shader->ApplyAllStateForPass( bin.technique, bin.pass, *renderContext );
 					firstBatch.m_material->ApplyMaterialDataForPass( bin.technique, bin.pass, *renderContext );
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
 					renderContext->SetAllState();
 					renderContext->FlushGraphicsBarriersDx12();
+#elif TRINITY_PLATFORM == TRINITY_METAL
+                    renderContext->CheckDrawResources();
+#endif
 				}
 				s_buffer.Submit( bin.writer );
 				drawCalls += bin.endIndex - bin.firstIndex;
@@ -657,7 +699,7 @@ void Tr2RenderContextBase::RenderGdprBatches( ITriRenderBatchAccumulator* batche
 void Tr2RenderContextBase::RenderBatchesSortedByEffect( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	D3DPERF_EVENT(L"Tr2EffectStateManager::RenderBatchesSortedByEffect");
+	D3DPERF_EVENT( L"Tr2EffectStateManager::RenderBatchesSortedByEffect" );
 
 	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
 	UseTextures( batches, techniqueName, *primaryContext );
@@ -700,13 +742,13 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
 	UseTextures( batches, techniqueName, *renderContext );
 
-	Tr2ConstantBufferAL*	perObjectConstantBuffers[CBUFFER_COUNT];
+	Tr2ConstantBufferAL* perObjectConstantBuffers[CBUFFER_COUNT];
 	for( uint32_t i = 0; i != CBUFFER_COUNT; ++i )
 	{
 		perObjectConstantBuffers[i] = &m_perObjectConstantBuffers[i];
 	}
 
-	auto overrideMaterial =  overrideEffect;
+	auto overrideMaterial = overrideEffect;
 
 	for( auto& batch : batches->GetBatches() )
 	{
@@ -746,7 +788,7 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 void Tr2RenderContextBase::RenderBatchesForPicking( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	D3DPERF_EVENT(L"Tr2EffectStateManager::RenderBatchesForPicking");
+	D3DPERF_EVENT( L"Tr2EffectStateManager::RenderBatchesForPicking" );
 
 
 	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
@@ -754,7 +796,7 @@ void Tr2RenderContextBase::RenderBatchesForPicking( ITriRenderBatchAccumulator* 
 
 	const Tr2PerObjectData* curPerObjectData = nullptr;
 
-	Tr2ConstantBufferAL*	perObjectConstantBuffers[CBUFFER_COUNT];
+	Tr2ConstantBufferAL* perObjectConstantBuffers[CBUFFER_COUNT];
 	for( uint32_t i = 0; i != CBUFFER_COUNT; ++i )
 	{
 		perObjectConstantBuffers[i] = &m_perObjectConstantBuffers[i];
@@ -772,7 +814,7 @@ void Tr2RenderContextBase::RenderBatchesForPicking( ITriRenderBatchAccumulator* 
 		{
 			if( batch.m_objectData != curPerObjectData )
 			{
-				D3DPERF_EVENT(L"Set per-object data to device");
+				D3DPERF_EVENT( L"Set per-object data to device" );
 				batch.m_objectData->SetPerObjectDataToDevice( perObjectConstantBuffers, batch.m_shader->GetShaderTypeMask( technique ), *renderContext );
 				curPerObjectData = batch.m_objectData;
 			}
@@ -800,6 +842,5 @@ void Tr2RenderContextBase::RenderBatchesForPicking( ITriRenderBatchAccumulator* 
 		Tr2GpuProfiler::GetProfiler().End( *renderContext );
 
 		CCP_STATS_INC( batchCount );
-
 	}
 }

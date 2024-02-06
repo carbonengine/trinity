@@ -25,6 +25,7 @@ void ConstantBufferAllocator::Initialize( ID3D12Device* device )
 	m_device = device;
 	CreatePage( m_page );
 	m_offset = 0;
+	m_spillOffset = m_page.size;
 }
 
 void ConstantBufferAllocator::Reset( std::vector<CComPtr<ID3D12Resource>>& releaseLater )
@@ -37,8 +38,8 @@ void ConstantBufferAllocator::Reset( std::vector<CComPtr<ID3D12Resource>>& relea
 
 		m_page = m_spillPage;
 		m_spillPage.buffer = nullptr;
-		m_spillOffset = m_page.size;
 	}
+	m_spillOffset = m_page.size;
 	m_offset = 0;
 }
 

@@ -1302,7 +1302,7 @@ register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_LEFT_BR
 	{
 		parserState->ShowMessage( B, EC_INVALID_REGISTER );
 	}
-	A.subComponent = ParseNumber( D.stringValue.start, D.stringValue.end );
+	A.subComponent = int( ParseNumber( D.stringValue.start, D.stringValue.end ) );
 }
 
 register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_COMA OP_ID(T) OP_RIGHT_PAREN.
@@ -1345,7 +1345,7 @@ register_specifier(A) ::= OP_COLON OP_REGISTER OP_LEFT_PAREN OP_ID(B) OP_COMA OP
 		parserState->ShowMessage( T, EC_INVALID_REGISTER );
 	}
 	A.shaderProfile = B.stringValue;
-	A.subComponent = ParseNumber( D.stringValue.start, D.stringValue.end );
+	A.subComponent = int( ParseNumber( D.stringValue.start, D.stringValue.end ) );
 }
 
 
@@ -1919,7 +1919,7 @@ type_specifier(A) ::= OP_TEXTURE2DMS(B) OP_LESS type_specifier(C) OP_COMA OP_INT
 {
 	A.FromToken( B );
 	A.templateParameter = new Type( C );
-	A.templateSamples = ParseNumber( D.stringValue.start, D.stringValue.end );
+	A.templateSamples = int( ParseNumber( D.stringValue.start, D.stringValue.end ) );
 }
 
 type_specifier(A) ::= OP_TEXTURE2DMS(B) OP_LESS type_specifier(C) OP_MORE.
@@ -1933,7 +1933,7 @@ type_specifier(A) ::= OP_TEXTURE2DMSARRAY(B) OP_LESS type_specifier(C) OP_COMA O
 {
 	A.FromToken( B );
 	A.templateParameter = new Type( C );
-	A.templateSamples = ParseNumber( D.stringValue.start, D.stringValue.end );
+	A.templateSamples = int( ParseNumber( D.stringValue.start, D.stringValue.end ) );
 }
 
 type_specifier(A) ::= OP_TEXTURE2DMSARRAY(B) OP_LESS type_specifier(C) OP_MORE.
@@ -1970,14 +1970,14 @@ type_specifier(A) ::= OP_INPUTPATCH(B) OP_LESS type_specifier(C) OP_COMA OP_INT_
 {
 	A.FromToken( B );
 	A.templateParameter = new Type( C );
-	A.templateSamples = ParseNumber( D.stringValue.start, D.stringValue.end );
+	A.templateSamples = int( ParseNumber( D.stringValue.start, D.stringValue.end ) );
 }
 
 type_specifier(A) ::= OP_OUTPUTPATCH(B) OP_LESS type_specifier(C) OP_COMA OP_INT_CONST(D) OP_MORE.
 {
 	A.FromToken( B );
 	A.templateParameter = new Type( C );
-	A.templateSamples = ParseNumber( D.stringValue.start, D.stringValue.end );
+	A.templateSamples = int( ParseNumber( D.stringValue.start, D.stringValue.end ) );
 }
 
 type_specifier(A) ::= OP_RWBUFFER(B) OP_LESS type_specifier(C) OP_MORE.

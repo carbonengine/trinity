@@ -13,7 +13,7 @@
 #include "../Tr2PrimaryRenderContextDx12.h"
 
 /** */
-DescriptorStateCache::DescriptorStateCache(CComPtr<ID3D12Device> device, Tr2PrimaryRenderContextAL* context, uint32_t pageSizeSampler, uint32_t pageSizeUploadDefault, uint32_t pageSizeUploadSpill) :
+DescriptorStateCache::DescriptorStateCache( CComPtr<ID3D12Device> device, Tr2PrimaryRenderContextAL* context, uint32_t pageSizeSampler ) :
 	m_allocatorSampler(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, pageSizeSampler),
 	m_primaryContext(context),
 	m_device(device),
@@ -143,7 +143,7 @@ void DescriptorStateCache::SetSamplers(uint32_t startSlot, uint32_t numViews, st
 /** Set a constantbuffer */
 /*void DescriptorStateCache::SetConstantBuffers(Tr2RenderContextEnum::ShaderType shaderStage, uint32_t slot, const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer)
 {
-	uint64_t frameNr = m_primaryContext->GetCompletedFrameIndexDx12();
+	uint64_t frameNr = m_primaryContext->GetRenderedFrameNumber();
 	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
 
 	// CB isn't resident
@@ -199,7 +199,7 @@ D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstantBuffer( const Trin
 
 D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer )
 {
-	uint64_t frameNr = m_primaryContext->GetCompletedFrameIndexDx12();
+	uint64_t frameNr = m_primaryContext->GetRenderedFrameNumber();
 	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
 
 	// CB isn't resident

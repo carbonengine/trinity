@@ -38,6 +38,11 @@ public:
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
 
+	bool SupportsBindlessTextures() const;
+
+	uint64_t GetRecordingFrameNumber() const;
+	uint64_t GetRenderedFrameNumber() const;
+
 public:
 	bool m_usingEXDevice;
 
@@ -51,6 +56,9 @@ public:
 private:
 	ALResult CreateBackBuffers( const Tr2PresentParametersAL& presentationParameters );
 
+	uint64_t m_recodingFrame;
+	uint64_t m_renderedFrame;
+
 	uint32_t			m_vsyncInterval;
 
 	// Device statistics
@@ -61,6 +69,13 @@ private:
 
 	// Device statistics
 	CComPtr<ID3D11Query> m_deviceStatistics;
+
+	struct FrameFence
+	{
+		uint64_t recordedFrame;
+		CComPtr<ID3D11Query> query;
+	};
+	std::vector<FrameFence> m_frameFences;
 	bool m_deviceStatisticsQueryEmpty;
 	Tr2GpuTimerAL m_frameTimer;
 

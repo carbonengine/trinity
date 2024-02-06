@@ -214,9 +214,19 @@ void Tr2InstancedMesh::SetInstanceGeometryRes( ITr2InstanceData* res )
 //   data - Per-object data
 // --------------------------------------------------------------------------------------
 void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
-					const Tr2MeshAreaVector* areas, 
-					const Tr2PerObjectData* data,
-					float screenSize ) const
+								   const Tr2MeshAreaVector* areas,
+								   const Tr2PerObjectData* data,
+								   float screenSize ) const
+{
+	GetBatches( batches, areas, data, screenSize, false );
+}
+
+
+void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
+								   const Tr2MeshAreaVector* areas,
+								   const Tr2PerObjectData* data,
+								   float screenSize, 
+								   bool reverseAreas ) const
 {
 	if( !GetDisplay() || g_brokenMacOSNvidiaDrivers )
 	{
@@ -277,7 +287,12 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 		{
 			continue;
 		}
-		if( area->GetReversed() && !mesh->m_reversedIndicesValid )
+		auto reversed = area->GetReversed();
+		if( reverseAreas )
+		{
+			reversed = !reversed;
+		}
+		if( reversed && !mesh->m_reversedIndicesValid )
 		{
 			continue;
 		}
@@ -289,9 +304,9 @@ void Tr2InstancedMesh::GetBatches( ITriRenderBatchAccumulator* batches,
 		batch.SetGeometry( m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
 		batch.SetStreamSource( 1, instanceData.buffer, instanceData.stride );
 
-		auto& indices = area->GetReversed() ? mesh->m_reversedIndexAllocation : mesh->m_indexAllocation;
+		auto& indices = reversed ? mesh->m_reversedIndexAllocation : mesh->m_indexAllocation;
 		uint32_t startIndex;
-		if( area->GetReversed() )
+		if( reversed )
 		{
 			startIndex = indices.GetStartIndex() + mesh->m_primitiveCount * 3 - meshArea.m_firstIndex - primCount * 3;
 		}

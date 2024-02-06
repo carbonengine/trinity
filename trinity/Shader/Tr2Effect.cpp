@@ -739,7 +739,7 @@ void Tr2Effect::RebuildCachedDataInternal()
 							continue;
 						}
 						auto& input = pp.m_stageInput[i];
-						MapPassParameters( Tr2RenderContextEnum::ShaderType( i ), input, pp.m_reroutedParameters, stage, desc, pp.m_usedResources, renderContext );
+						MapPassParameters( Tr2RenderContextEnum::ShaderType( i ), input, pp, stage, desc, renderContext );
 
 						if( !stage.resources.empty() )
 						{
@@ -772,11 +772,12 @@ void Tr2Effect::RebuildCachedDataInternal()
 
 					bool compatibleWithGdr = true; //we don't care
 
+					// GLOBAL INPUT
 					{
 						auto& stage = desc.techniques[technique].libraries[libIx].globalInput;
 						auto& input = lib.m_globalInput;
 
-						MapPassParameters( Tr2RenderContextEnum::COMPUTE_SHADER, input, lib.m_reroutedParameters, stage, desc, lib.m_usedResources, renderContext );
+						MapPassParameters( Tr2RenderContextEnum::COMPUTE_SHADER, input, lib, stage, desc, renderContext );
 
 						if( !stage.resources.empty() )
 						{
@@ -787,12 +788,13 @@ void Tr2Effect::RebuildCachedDataInternal()
 							MapPassResources( stage.uavs, input.m_uavs, compatibleWithGdr );
 						}
 					}
+					// LOCAL INPUT
 					{
 						auto& stage = desc.techniques[technique].libraries[libIx].localInput;
 						auto& input = lib.m_localInput;
 
 
-						MapPassParameters( Tr2RenderContextEnum::COMPUTE_SHADER, input, lib.m_reroutedParameters, stage, desc, lib.m_usedResources, renderContext );
+						MapPassParameters( Tr2RenderContextEnum::COMPUTE_SHADER, input, lib, stage, desc, renderContext );
 
 						if( !stage.resources.empty() )
 						{
@@ -1006,6 +1008,39 @@ bool Tr2Effect::PopulateParameters()
 					if( hasParameter( constant->name.c_str() ) )
 					{
 						continue;
+					}
+
+					if( constant->type == Tr2EffectConstant::UINT )
+					{
+						if( auto annotations = m_shader->GetParameterAnnotations( constant->name.c_str() ) )
+						{
+							auto value = std::find_if( annotations->begin(), annotations->end(), [&]( const auto& a ) { return strcmp( a.name, "BindlessHandleType" ) == 0; } );
+							if( value != annotations->end() && value->type == Tr2EffectParameterAnnotation::INT )
+							{
+								switch( value->intValue )
+								{
+								case Tr2EffectResource::TEXTURE_CUBE:
+								case Tr2EffectResource::TEXTURE_1D:
+								case Tr2EffectResource::TEXTURE_2D:
+								case Tr2EffectResource::TEXTURE_3D:
+								case Tr2EffectResource::TEXTURE_TYPELESS: {
+									OTriTextureParameter* newTex2D = new OTriTextureParameter();
+									newTex2D->SetParameterName( BlueSharedString( constant->name ) );
+									resourceAdder( newTex2D );
+									newTex2D->Unlock();
+								}
+								break;
+								default: {
+									OTr2GeometryBufferParameter* newBuffer = new OTr2GeometryBufferParameter();
+									newBuffer->m_name = BlueSharedString( constant->name );
+									resourceAdder( newBuffer );
+									newBuffer->Unlock();
+								}
+								break;
+								}
+								continue;
+							}
+						}
 					}
 
 					ConvertEffectConstant( *constant, input.constantValues, paramAdder );
@@ -1705,10 +1740,9 @@ bool GetBindlessFallbackTextureIndex( const Tr2EffectDescription& desc, const Tr
 void Tr2Effect::MapPassParameters( 
 	Tr2RenderContextEnum::ShaderType stage,
 	Tr2MaterialStageInput& stageInput,
-	std::vector<ITriReroutable*>& reroutables,
+	PassParametersOwner& ppOwner,
 	const Tr2EffectStageInput& stageInputDesc,
 	const Tr2EffectDescription& descriptionDesc,
-	std::vector<ITr2EffectValuePtr>& usedResources,
 	Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
@@ -1750,7 +1784,6 @@ void Tr2Effect::MapPassParameters(
 		ITr2EffectValue* paramAsEffectValue = NULL;
 		if( !foundConstant )
 		{
-
 			// First search in effect parameter list and see if we have a match
 			if( ITriEffectParameter* p = FindParameterByName( constantIx->name.c_str() ) )
 			{
@@ -1760,7 +1793,7 @@ void Tr2Effect::MapPassParameters(
 			{
 				paramAsEffectValue = r;
 				AddLoddable( r, constantIx->name.c_str() );
-				usedResources.push_back( r );
+				ppOwner.AddUsedResource( r );
 			}
 			// Fallback to variable store
 			else if( TriVariable* v = variableStore.FindVariable( constantIx->name.c_str() ) )
@@ -1937,7 +1970,7 @@ void Tr2Effect::MapPassParameters(
 							}
 							else
 							{
-								reroutables.push_back( paramAsReroutable.Detach() );
+								ppOwner.AddReroutable( paramAsReroutable.Detach() );
 							}
 						}
 					}

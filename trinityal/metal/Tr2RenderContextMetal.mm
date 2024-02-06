@@ -489,7 +489,7 @@ void Tr2RenderContextAL::CheckDrawResources()
 	}
 	else
 	{
-		m_workQueue->SetCurrentVertexDescriptor( nil, 0 );
+		m_workQueue->SetCurrentVertexDescriptor( nil, 0, 0 );
 	}
 }
 
@@ -601,6 +601,25 @@ ALResult Tr2RenderContextAL::SetConstants(
 	buffer.m_buffer->SetConstants( shaderType, registerIndex, *this );
 
 	return S_OK;
+}
+
+uint64_t Tr2RenderContextAL::UploadConstants( const void* data, size_t size )
+{
+    TrinityALImpl::ConstantBufferToken token;
+    token.frame = 0;
+    token.offset = 0;
+    GetMetalWorkQueue()->UploadConstants( data, uint32_t( size ), token );
+    return token.offset;
+}
+
+uint64_t Tr2RenderContextAL::UploadConstants( const Tr2ConstantBufferAL& buffer )
+{
+    if( buffer.m_buffer->m_buffer )
+    {
+        GetMetalWorkQueue()->UploadConstants( buffer.m_buffer->m_buffer, buffer.m_buffer->m_size, buffer.m_buffer->m_token );
+        return buffer.m_buffer->m_token.offset;
+    }
+    return 0;
 }
 
 void Tr2RenderContextAL::SetReadOnlyDepth( bool enable )
@@ -1327,19 +1346,32 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
     }
     if( @available( macOS 13.0, * ) )
     {
-        std::vector<id<MTLTexture>> textures;
-        textures.reserve( resources.m_textures.size() );
+        auto encoder = m_workQueue->GetRenderEncoder();
+        auto encoderIndex = m_workQueue->GetCurrentEncoderIndex();
+
+        std::vector<__unsafe_unretained id<MTLTexture>> textures;
+        textures.reserve( resources.m_textures.size() * 2 );
         for( auto& tex : resources.m_textures )
         {
-            if( tex->IsValid() )
+            if( tex->IsValid() && tex->m_usedInEncoder != encoderIndex )
             {
-                textures.push_back( tex->GetMetalTexture() );
+                tex->m_usedInEncoder = encoderIndex;
+                __unsafe_unretained auto t0 = tex->m_mtlTexture;
+                if( t0 )
+                {
+                    textures.push_back( t0 );
+                }
+                __unsafe_unretained auto t1 = tex->m_mtlTextureSRGBView;
+                if( t1 && t1 != t0 )
+                {
+                    textures.push_back( t1 );
+                }
             }
         }
-        auto encoder = m_workQueue->GetRenderEncoder();
         [encoder useResources:textures.data()
                         count:NSUInteger( textures.size())
-                        usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageWrite | MTLResourceUsageWrite : MTLResourceUsageRead];
+                        usage:usage == Tr2GpuUsage::UNORDERED_ACCESS ? MTLResourceUsageRead | MTLResourceUsageWrite : MTLResourceUsageRead];
+        m_workQueue->ReleaseEncoder( false );
     }
     
 	return S_OK;
@@ -1358,6 +1390,30 @@ ALResult Tr2RenderContextAL::UseAccelerationStructure( NSMutableArray *primitive
     
     return S_OK;
 }
+
+bool Tr2RenderContextAL::SupportsBindlessTextures() const
+{
+    if( @available( macOS 13.0, * ) )
+    {
+        if( !m_metalContext || !m_metalContext->GetDevice() )
+        {
+            return false;
+        }
+        return m_metalContext->GetDevice().argumentBuffersSupport == MTLArgumentBuffersTier2;
+    }
+    return false;
+}
+
+uint64_t Tr2RenderContextAL::GetRecordingFrameNumber() const
+{
+	return m_metalContext->GetRecordingFrameNumber();
+}
+
+uint64_t Tr2RenderContextAL::GetRenderedFrameNumber() const
+{
+	return m_metalContext->GetRenderedFrameNumber();
+}
+
 
 
 void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )

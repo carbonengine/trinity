@@ -111,6 +111,9 @@ const char* InitializeForPython()
 extern bool g_requestDeviceDebugLayer;
 extern bool g_requestDebugMarkers;
 extern bool g_gpuTimersEnabled;
+bool g_bindlessRenderingEnabled = true;
+TRI_REGISTER_SETTING( "bindlessRenderingEnabled", g_bindlessRenderingEnabled );
+extern bool g_gdrEnabled;
 
 #if TRINITY_PLATFORM == TRINITY_METAL
 extern bool g_enableMetalCounters;
@@ -175,6 +178,18 @@ void InitializeTrinity()
 	if( !timers.empty() )
 	{
 		g_gpuTimersEnabled = timers != L"0";
+	}
+
+	auto bindlessRendering = BeOS->GetStartupArgValue( L"bindlessRendering" );
+	if( !bindlessRendering.empty() )
+	{
+		g_bindlessRenderingEnabled = bindlessRendering != L"0";
+	}
+
+	auto gdpr = BeOS->GetStartupArgValue( L"gdpr" );
+	if( !gdpr.empty() )
+	{
+		g_gdrEnabled = gdpr != L"0";
 	}
 
 	GrannySetAllocator( Tr2GrannyAllocate, Tr2GrannyDeallocate );

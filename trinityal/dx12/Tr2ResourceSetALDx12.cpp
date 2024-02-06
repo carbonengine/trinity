@@ -159,7 +159,6 @@ namespace TrinityALImpl
 		{
 			auto& reg = *it;
 			auto& resource = description.m_uav[description.m_registerMap.uavs[reg.stage][reg.index]];
-			auto stateFlag = reg.stage == PIXEL_SHADER ? D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE : D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
 			m_resourceCount = std::max( reg.parameter + 1, m_resourceCount );
 			m_uavMask |= 1 << reg.parameter;
 			switch( resource.type )

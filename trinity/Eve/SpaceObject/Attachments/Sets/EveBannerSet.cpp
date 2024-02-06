@@ -15,6 +15,7 @@
 #include "Resources/TriTextureRes.h"
 #include "Lights/Tr2Light.h"
 #include "Shader/Parameter/TriTextureParameter.h"
+#include "Resources/Tr2LightProfileRes.h"
 #include "Resources/TriGeometryRes.h"
 
 
@@ -48,6 +49,26 @@ EveBannerItem::EveBannerItem()
 {
 }
 
+EveBannerLight::EveBannerLight() :
+	lightData( LightData() ),
+	saturation( 1.0f ),
+	index( 0 ),
+	boneMatrix( IdentityMatrix() )
+{
+}
+
+EveBannerLight::EveBannerLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring profilePath ) :
+	lightData( lightData ),
+	saturation( saturation ),
+	index( index ),
+	boneMatrix( IdentityMatrix() )
+{
+	if( !profilePath.empty() )
+	{
+		BeResMan->GetResource( profilePath, L"lp", lightProfile );
+	}
+}
+
 
 struct EveBannerSet::Vertex
 {
@@ -72,14 +93,13 @@ struct EveBannerSet::Vertex
 
 EveBannerSet::EveBannerSet( IRoot* lockobj )
 	:PARENTLOCK( m_banners ),
-	PARENTLOCK( m_lights ),
 	m_key( 0 ),
 	m_vertexDeclaration( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_maxBannerRadius( 0 ),
+	m_activationStrength( 0 ),
 	m_display( true ),
 	m_isPickable( false ),
-	m_isVisible( true ),
-	m_colorSaturation( 1 )
+	m_isVisible( true )
 {
 	m_banners.SetStructureDefinition( s_bannerStructureDef );
 	m_banners.SetDefaultValue( &s_defaultBannerItem );
@@ -146,6 +166,18 @@ bool EveBannerSet::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 	return m_isVisible;
 }
 
+void EveBannerSet::UpdateLights( const granny_matrix_3x4* bones, size_t boneCount, float activationStrength, float boosterGain )
+{
+	for( auto& light : m_lights ) 
+	{
+		if( light.lightData.boneIndex > 0 && light.lightData.boneIndex < boneCount )
+		{
+			TriMatrixCopyFrom3x4( &( light.boneMatrix ), &bones[light.lightData.boneIndex] );
+		}
+	}
+	m_activationStrength = activationStrength;
+}
+
 void EveBannerSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason )
 {
 	if( batchType != TRIBATCHTYPE_ADDITIVE && batchType != TRIBATCHTYPE_PICKING )
@@ -182,13 +214,14 @@ void EveBannerSet::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType
 
 void EveBannerSet::GetDebugOptions( Tr2DebugRendererOptions& options )
 {
-	options.insert( "Banners" );
-	options.insert( "Banner Bounds" );
+	options.insert( "Banner Sets" );
+	options.insert( "Banner Sets Bounds" );
+	options.insert( "Banner Sets Lights" );
 }
 
 void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& parentTransform, const granny_matrix_3x4* bones, size_t boneCount )
 {
-	if( renderer.HasOption( GetRawRoot(), "Banners" ) )
+	if( renderer.HasOption( GetRawRoot(), "Banner Sets" ) )
 	{
 		uint32_t index = 0;
 		for( auto it = m_banners.begin(); it != m_banners.end(); ++it, ++index )
@@ -226,7 +259,7 @@ void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 				0 );
 		}
 	}
-	if( renderer.HasOption( GetRawRoot(), "Banner Bounds" ) )
+	if( renderer.HasOption( GetRawRoot(), "Banner Sets Bounds" ) )
 	{
 		auto aabb = GetAabb( bones, boneCount );
 		renderer.DrawBox(
@@ -237,11 +270,40 @@ void EveBannerSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 			Tr2DebugRenderer::Wireframe,
 			0xff00ff00 );
 	}
-	if( renderer.HasOption( this, "Lights" ) )
+	if( renderer.HasOption( this, "Banner Sets Lights" ) )
 	{
-		for( auto l = begin( m_lights ); l != end( m_lights ); ++l )
+		for( auto& l : m_lights )
 		{
-			( *l )->RenderDebugInfo( renderer, parentTransform );
+			Quaternion q = Quaternion(0, 0, 0, 1);
+			Vector3 scale = Vector3( 1, 1, 1 );
+			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
+
+			Color c = Saturate(l.lightData.color, l.saturation);
+
+			if( nullptr != m_primaryTextureParameter ) 
+			{
+				c = GetAverageColor();
+			}
+
+			c.a = 0.5;
+			
+			renderer.DrawSphere(
+				Tr2DebugObjectReference( m_banners.GetRawRoot(), l.index ),
+				t,
+				l.lightData.innerRadius,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
+			c.a = 0.3;
+			renderer.DrawSphere(
+				Tr2DebugObjectReference( m_banners.GetRawRoot(), l.index ),
+				t,
+				l.lightData.radius,
+				10,
+				Tr2DebugRenderer::Solid,
+				Tr2DebugColor( c ) );
+
 		}
 	}
 }
@@ -269,12 +331,12 @@ void EveBannerSet::SetKey( int32_t key )
 	m_key = key;
 }
 
-void EveBannerSet::AddLight( Tr2Light* light )
+void EveBannerSet::AddLight( const EveBannerLight& light )
 {
-	m_lights.Append( light->GetRawRoot() );
+	m_lights.push_back(light);
 }
 
-void EveBannerSet::SetPrimaryTextureParameter( TriTextureParameter* primaryTextureParameter )
+void EveBannerSet::SetPrimaryTextureParameter( TriTextureParameterPtr primaryTextureParameter )
 {
 	m_primaryTextureParameter = primaryTextureParameter;
 }
@@ -373,60 +435,46 @@ void EveBannerSet::Rebuild()
 	}
 }
 
-Color EveBannerSet::GetSaturatedLightColor() const
+Color EveBannerSet::GetAverageColor() const
 {
-	if( !m_primaryTextureParameter )
+	if( nullptr == m_primaryTextureParameter || nullptr == m_primaryTextureParameter->GetResource() )
 	{
-		return Color( 0.0, 0.0, 0.0, 0.0 );
+		return Color( 0, 0, 0, 0 );
 	}
 
-	TriTextureRes* resource = dynamic_cast<TriTextureRes*>( m_primaryTextureParameter->GetResource() );
-
-	if( !resource )
+	auto resource = dynamic_cast<TriTextureRes*>( m_primaryTextureParameter->GetResource() );
+	if( nullptr == resource )
 	{
-		return Color( 0.0, 0.0, 0.0, 0.0 );
+		return Color( 0, 0, 0, 0 );
 	}
 
-	Color c = resource->GetAverageColor();
-
-	Color c2 = Color( c.r * c.a, c.g * c.a, c.b * c.a, c.a );
-	
-	if( m_colorSaturation == 1.f )
-	{
-		return c2;
-	} 
-
-	// intencity (the magic numbers are values based on how strongly our eyes perceive each color)
-	float i = ( c2.r * 0.299f ) + ( c2.g * 0.587f ) + (c2.b * 0.114f);
-
-	Color finalC = Lerp( Color(i,i,i,i), c2, max( 0.0f, m_colorSaturation ) );
-
-	return  finalC;
-}
-
-void EveBannerSet::SetLightColorSaturation(float saturation )
-{
-	m_colorSaturation = saturation;
+	return resource->GetAverageColor();
 }
 
 void EveBannerSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
 {
-	if( !m_display )
+	if( !m_display || m_lights.size() == 0 )
 	{
 		return;
 	}
 
-	Color c = GetSaturatedLightColor();
-
-	if( c.a == 0.0f )
+	auto averageColor = GetAverageColor();
+	if( averageColor.a == 0.0f )
 	{
 		return;
 	}
 
-	for( auto b = m_lights.begin(); b != m_lights.end(); ++b )
+	auto lightFeatures = LightFeatures();
+	lightFeatures.parentBrightness = m_activationStrength;
+
+	for( auto light: m_lights )
 	{
-		( *b )->ChangeLightColor( c );
-		( *b )->AddLight( lightManager, parentTransform, 1.0f );
+		light.lightData.color = Saturate(averageColor, light.saturation);
+		lightFeatures.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
+
+		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, lightFeatures );
+		
+		lightManager.AddLight( data );
 	}
 }
 
