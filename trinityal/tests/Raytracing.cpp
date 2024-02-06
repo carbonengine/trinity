@@ -146,7 +146,6 @@ struct QuadRenderer
             0.0f ),
             *renderContext ) );
 
-        
         Tr2ResourceSetDescriptionAL resourceSetDescription( m_shaderProgram );
         resourceSetDescription.SetSrv( Tr2RenderContextEnum::PIXEL_SHADER, 0, texture );
         resourceSetDescription.SetSampler( Tr2RenderContextEnum::PIXEL_SHADER, 0, sampl );
@@ -353,7 +352,8 @@ TEST_F( Raytracing, TraceRays )
         ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( rs ) );
         ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( shaderProgram ) );
 
-        renderContext->UseAccelerationStructure(tlas.TrinityALImpl_GetObject()->GetPrimitiveAccelerationStructures());
+        renderContext->UseAccelerationStructure( tlas.TrinityALImpl_GetObject()->GetInstanceAccelerationStructure() );
+        renderContext->UseAccelerationStructure( tlas.TrinityALImpl_GetObject()->GetPrimitiveAccelerationStructures() );
         
         ASSERT_HRESULT_SUCCEEDED( renderContext->DispatchRays( state, shaderTable, L"RayGen_12", WIDTH, HEIGHT, 1 ) );
 

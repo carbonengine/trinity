@@ -1349,6 +1349,8 @@ ALResult Tr2RenderContextAL::UseAccelerationStructure( NSMutableArray *primitive
 {
     auto computeEncoder = m_workQueue->GetComputeEncoder();
     
+    
+    
     // mark primitive acceleration structures as used since only the instance acceleration
     // structure references them.
     for (id <MTLAccelerationStructure> primitiveAccelerationStructure in primitiveAccelerationStructures)
@@ -1358,6 +1360,18 @@ ALResult Tr2RenderContextAL::UseAccelerationStructure( NSMutableArray *primitive
     
     return S_OK;
 }
+
+ALResult Tr2RenderContextAL::UseAccelerationStructure( id<MTLAccelerationStructure> accelerationStructure )
+{
+    auto computeEncoder = m_workQueue->GetComputeEncoder();
+    
+    [computeEncoder useResource:accelerationStructure usage:MTLResourceUsageRead];
+    
+    m_workQueue->ReleaseEncoder(false);
+    
+    return S_OK;
+}
+
 
 
 void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )

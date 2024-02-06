@@ -240,6 +240,7 @@ public:
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
     ALResult UseAccelerationStructure( NSMutableArray *primitiveAccelerationStructures );
+    ALResult UseAccelerationStructure( id<MTLAccelerationStructure> accelerationStructure );
 
 protected:
 	bool                               m_isValid;
