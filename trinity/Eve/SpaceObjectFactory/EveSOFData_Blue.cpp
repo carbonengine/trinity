@@ -470,8 +470,6 @@ const Be::ClassInfo* EveSOFDataHullSpriteSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_colorType, "", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
 		MAP_ATTRIBUTE( "saturation", m_saturation, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST)
 		MAP_ATTRIBUTE( "light", m_light, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_END()
 }
