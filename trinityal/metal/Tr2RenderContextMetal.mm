@@ -1413,8 +1413,17 @@ uint64_t Tr2RenderContextAL::GetRenderedFrameNumber() const
 {
 	return m_metalContext->GetRenderedFrameNumber();
 }
-
-
+	 
+ALResult Tr2RenderContextAL::UseAccelerationStructure( id<MTLAccelerationStructure> accelerationStructure )
+{
+    auto computeEncoder = m_workQueue->GetComputeEncoder();
+    
+    [computeEncoder useResource:accelerationStructure usage:MTLResourceUsageRead];
+    
+    m_workQueue->ReleaseEncoder(false);
+    
+    return S_OK;
+}
 
 void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )
 {

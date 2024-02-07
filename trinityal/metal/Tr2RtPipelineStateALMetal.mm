@@ -33,23 +33,17 @@ namespace TrinityALImpl
         id<MTLDevice> device = renderContext.GetMetalContext()->GetDevice();
         // Maps intersection function names to actual MTLFunctions.
         
-        // Fill out a dictionary of function constant values.
-        MTLFunctionConstantValues *constants = [[MTLFunctionConstantValues alloc] init];
-        // Each intersection function has its own set of resources. Determine the maximum size over all
-        // intersection functions. This size becomes the stride that intersection functions use to find
-        // the starting address for their resources.
-        
-        
-        
-        //id <MTLFunction> shadowFunction = [self specializedFunctionWithName:@"shadowRaytracingKernel"];
         MTLComputePipelineDescriptor *descriptor = [[MTLComputePipelineDescriptor alloc] init];
-        
         
         // Set to YES to allow compiler to make certain optimizations
         descriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = YES;
+        if (@available(macOS 11.0, *)) {
+            descriptor.linkedFunctions = nil;
+        }
         
         NSError *error = nullptr;
-    
+        
+        //id <MTLFunction> raytracingFunction = [self specializedFunctionWithName:@"raytracingKernel"];
         descriptor.computeFunction = m_shaderProgram.TrinityALImpl_GetObject()->GetComputeKernel();
         
         // Create compute pipelines will execute code on the GPU
@@ -64,7 +58,6 @@ namespace TrinityALImpl
         {
             CCP_LOGERR("SOMETHING WENT WRONG WITH CREATING THE SHADOW PIPELINE FOR RAYTRACING");
         }
-        
         
         return S_OK;
     }

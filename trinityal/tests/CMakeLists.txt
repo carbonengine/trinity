@@ -127,7 +127,7 @@ elseif(APPLE)
 
     #GTest
     set_target_properties(TrinityALTest_metal PROPERTIES FOLDER "TestsMetal")
-    gtest_discover_tests(TrinityALTest_metal myListOfTests)
+    gtest_discover_tests(TrinityALTest_metal myListOfTests DISCOVERY_MODE PRE_TEST)
 endif()
 
 
