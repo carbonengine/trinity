@@ -52,9 +52,6 @@ namespace
     };
 }
 
-// WHEN PIPELINE IS DONE THIS SHOULD BE SAFE TO REMOVE
-
-#if defined(__APPLE__) && TRINITY_PLATFORM != TRINITY_STUB
 TEST_F( Raytracing, BLASIsInvalidBeforeCreation )
 {
     Tr2RtBottomLevelAccelerationStructureAL blas;
@@ -235,7 +232,7 @@ void Transpose( float viewMatrix[4][4] )
     std::swap( viewMatrix[2][3], viewMatrix[3][2] );
 }
 
-
+#if TRINITY_PLATFORM == TRINITY_METAL
 /************* render test *************/
 
 TEST_F( Raytracing, TraceRays )
@@ -352,8 +349,10 @@ TEST_F( Raytracing, TraceRays )
         ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( rs ) );
         ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( shaderProgram ) );
 
+
         renderContext->UseAccelerationStructure( tlas.TrinityALImpl_GetObject()->GetInstanceAccelerationStructure() );
         renderContext->UseAccelerationStructure( tlas.TrinityALImpl_GetObject()->GetPrimitiveAccelerationStructures() );
+
         
         ASSERT_HRESULT_SUCCEEDED( renderContext->DispatchRays( state, shaderTable, L"RayGen_12", WIDTH, HEIGHT, 1 ) );
 
@@ -368,10 +367,10 @@ TEST_F( Raytracing, TraceRays )
     RunLoop( frame );
 }
 
+#endif
 
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
 
-
-/*
 TEST_F( Raytracing, CanCreateStateObject )
 {
 	uint8_t rayGenCode[] = {
@@ -479,8 +478,136 @@ TEST_F( Raytracing, ShaderTableCreationFailsWithInvalidShaderName )
 	Tr2RtShaderTableAL shaderTable;
 	ASSERT_HRESULT_FAILED( shaderTable.Create( shaderTableDesc, state, *renderContext ) );
 }
-*/
-/*
+
+/************* render test *************/
+
+TEST_F( Raytracing, TraceRays )
+{
+	uint8_t rayGenCode[] = {
+#include INCLUDE_SHADER_CODE( RayGen.rs )
+	};
+
+	uint8_t missCode[] = {
+#include INCLUDE_SHADER_CODE( Miss.rs )
+	};
+
+	uint8_t closestHitCode[] = {
+#include INCLUDE_SHADER_CODE( ClosestHit.rs )
+	};
+
+	Tr2ShaderSignatureAL signature;
+	signature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
+	signature.Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 );
+	signature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 );
+
+	const uint32_t PAYLOAD_SIZE = 4 * sizeof( float );
+
+	Tr2RtPipelineStateDescriptionAL stateDesc;
+	stateDesc.AddShader( L"RayGen_12", Tr2ShaderBytecodeAL( rayGenCode ), L"RayGen", PAYLOAD_SIZE );
+	stateDesc.AddShader( L"Miss_5", Tr2ShaderBytecodeAL( missCode ), L"Miss", PAYLOAD_SIZE );
+	stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHit", PAYLOAD_SIZE );
+	stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr );
+	stateDesc.AddGlobalSignature( signature );
+
+
+	Tr2RtPipelineStateAL state;
+	ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, *renderContext ) );
+
+	Tr2RtShaderTableDescriptionAL shaderTableDesc;
+	shaderTableDesc.AddRayGenShader( L"RayGen_12" );
+	shaderTableDesc.AddMissShader( L"Miss_5" );
+	shaderTableDesc.AddHitGroup( L"HitGroup" );
+
+	Tr2RtShaderTableAL shaderTable;
+	ASSERT_HRESULT_SUCCEEDED( shaderTable.Create( shaderTableDesc, state, *renderContext ) );
+
+	const uint32_t WIDTH = 512;
+	const uint32_t HEIGHT = 512;
+
+	Tr2ConstantBufferAL cb;
+	cb.Create( 6 * 4 * sizeof( float ), *renderContext );
+
+	// create output texture for shader
+	Tr2TextureAL result;
+	result.Create( Tr2BitmapDimensions( WIDTH, HEIGHT, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM ), Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, *renderContext );
+
+	Tr2BufferAL vb, ib;
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeVertices, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
+
+	Tr2RtBottomLevelAccelerationStructureAL blas;
+	ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
+
+	Tr2RtInstanceAL instance;
+	instance.blas = blas;
+	memset( instance.transform, 0, sizeof( instance.transform ) );
+	instance.transform[0][0] = 1;
+	instance.transform[1][1] = 1;
+	instance.transform[2][2] = 1;
+	instance.materialIndex = 0;
+
+	Tr2RtTopLevelAccelerationStructureAL tlas;
+	ASSERT_HRESULT_SUCCEEDED( tlas.Create( 1, &instance, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
+
+	auto shaderType = Tr2RenderContextEnum::COMPUTE_SHADER;
+	Tr2RegisterMapAL registerMap = Tr2RegisterMapAL( &shaderType, &signature, 1 );
+
+	// We need to insert a UAV barrier before using the acceleration structures in a raytracing 
+	Tr2ResourceSetDescriptionAL rsDesc( registerMap );
+	rsDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, tlas.GetBuffer() );
+	rsDesc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, result );
+
+	Tr2ResourceSetAL rs;
+	rs.Create( rsDesc, state, *renderContext );
+
+	QuadRenderer quadRenderer;
+	ASSERT_HRESULT_SUCCEEDED( quadRenderer.Create( result, renderContext ) );
+
+
+	uint32_t g = 127;
+
+	auto frame = [&] {
+		ASSERT_HRESULT_SUCCEEDED( renderContext->BeginScene() );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Clear( Tr2RenderContextEnum::CLEARFLAGS_TARGET, 0xff000000 | ((g & 0xff) << 8), 1.0f ) );
+
+		float angle = float( g - 127 ) * 0.01f;
+
+		RayGenData* cbData;
+		ASSERT_HRESULT_SUCCEEDED( cb.Lock( (void**)&cbData, *renderContext ) );
+		memset( cbData, 0, cb.GetSize() );
+		cbData->viewMatrix[0][0] = 1;
+		cbData->viewMatrix[1][1] = 1;
+		cbData->viewMatrix[2][2] = 1;
+		cbData->viewMatrix[3][3] = 1;
+		cbData->viewOrigin[2] = -3;
+		Rotate( cbData->viewMatrix[0], angle );
+		Rotate( cbData->viewMatrix[2], angle );
+		Rotate( cbData->viewOrigin, angle );
+		Transpose( cbData->viewMatrix );
+		cbData->tanHalfFOV = 1;
+		cbData->width = float( WIDTH );
+		cbData->height = float( HEIGHT );
+		cb.Unlock( *renderContext );
+
+		float clearColor[] = { 0, 0, float( g & 0xff ) / 255.f, 0 };
+		ASSERT_HRESULT_SUCCEEDED( renderContext->ClearUav( result, 0, clearColor ) );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::COMPUTE_SHADER, 0 ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( rs ) );
+		ASSERT_HRESULT_SUCCEEDED( renderContext->DispatchRays( state, shaderTable, L"RayGen_12", WIDTH, HEIGHT, 1 ) );
+
+		ASSERT_HRESULT_SUCCEEDED( quadRenderer.Render( renderContext ) );
+
+		ASSERT_HRESULT_SUCCEEDED( renderContext->EndScene() );
+		MakeTestScreenShot();
+		ASSERT_HRESULT_SUCCEEDED( renderContext->Present() );
+		g++;
+		};
+
+	RunLoop( frame );
+}
+
+
 TEST_F( Raytracing, CanUseLocalConstants )
 {
 	uint8_t rayGenCode[] = {
@@ -832,6 +959,6 @@ TEST_F( Raytracing, CanUseLocalTextures )
 	RunLoop( frame );
 }
 
-*/
 #endif
 #endif
+

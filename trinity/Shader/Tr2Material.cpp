@@ -105,6 +105,17 @@ Tr2EffectLibraryParameters::Tr2EffectLibraryParameters()
 {
 }
 
+void Tr2EffectLibraryParameters::AddUsedResource( ITr2EffectValuePtr resource )
+{
+	m_usedResources.push_back( resource );
+}
+
+void Tr2EffectLibraryParameters::AddReroutable( ITriReroutable* reroutable )
+{
+	m_reroutedParameters.push_back( reroutable );
+}
+
+
 Tr2EffectPassParameters::Tr2EffectPassParameters()
 	:m_resourceSetDirty( true ),
 	m_compatibleWithGdr( true ),
@@ -119,6 +130,17 @@ Tr2EffectPassParameters::~Tr2EffectPassParameters()
 		( *it )->SetDestination( NULL, 0 );
 		( *it )->Unlock();
 	}
+}
+
+void Tr2EffectPassParameters::AddUsedResource( ITr2EffectValuePtr resource )
+{
+	m_usedResources.push_back( resource );
+	m_usedTexturesDirty = true;
+}
+
+void Tr2EffectPassParameters::AddReroutable( ITriReroutable* reroutable )
+{
+	m_reroutedParameters.push_back( reroutable );
 }
 
 void Tr2EffectPassParameters::AllocateConstantMirror( Tr2RenderContextEnum::ShaderType type, unsigned int size )

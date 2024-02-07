@@ -174,7 +174,7 @@ void DescriptorStateCache::SetConstantBuffers( Tr2RenderContextEnum::ShaderType 
 
 D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstantBuffer( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer )
 {
-	uint64_t frameNr = m_primaryContext->GetCompletedFrameIndexDx12();
+	uint64_t frameNr = m_primaryContext->GetRenderedFrameNumber();
 	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
 
 	// CB isn't resident

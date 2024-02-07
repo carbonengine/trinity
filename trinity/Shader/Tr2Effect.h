@@ -193,10 +193,9 @@ protected:
 	void MapPassParameters(
 		Tr2RenderContextEnum::ShaderType stage,
 		Tr2MaterialStageInput& stageInput,
-		std::vector<ITriReroutable*>& reroutedParameters,
+		PassParametersOwner& ppOwner,
 		const Tr2EffectStageInput& stageInputDesc,
 		const Tr2EffectDescription& descriptionDesc,
-		std::vector<ITr2EffectValuePtr>& usedResources,
 		Tr2RenderContext& renderContext );
 	void AddLoddable( ITriEffectParameter* param, const char* name );
 

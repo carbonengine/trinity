@@ -146,7 +146,7 @@ namespace TrinityALImpl
 
 		m_buffer = buffer;
 		m_scratch = scratch;
-		UploadBuffer ub = { uploadBuffer, renderContext.GetCurrentFrameIndexDx12() };
+		UploadBuffer ub = { uploadBuffer, renderContext.GetRecordingFrameNumber() };
 		m_capacity = capacity;
 		m_buildFlags = buildFlags;
 		m_owner = &renderContext;
@@ -178,13 +178,13 @@ namespace TrinityALImpl
 		}
 
 		CComPtr<ID3D12Resource> uploadBuffer;
-		auto completed = m_owner->GetCompletedFrameIndexDx12();
+		auto completed = m_owner->GetRenderedFrameNumber();
 		for( auto it = begin( m_uploadBuffers ); it != end( m_uploadBuffers ); ++it )
 		{
 			if( completed >= it->frameIndex )
 			{
 				uploadBuffer = it->uploadBuffer;
-				it->frameIndex = m_owner->GetCurrentFrameIndexDx12();
+				it->frameIndex = m_owner->GetRecordingFrameNumber();
 				break;
 			}
 		}
@@ -200,7 +200,7 @@ namespace TrinityALImpl
 				nullptr,
 				IID_PPV_ARGS( &uploadBuffer ) ) );
 
-			UploadBuffer ub = { uploadBuffer, m_owner->GetCurrentFrameIndexDx12() };
+			UploadBuffer ub = { uploadBuffer, m_owner->GetRecordingFrameNumber() };
 			m_uploadBuffers.push_back( ub );
 		}
 

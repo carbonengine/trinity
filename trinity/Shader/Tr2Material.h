@@ -113,6 +113,13 @@ struct Tr2MaterialStageInput
 	void GetSharedConstantBuffer( const void* contents, uint32_t size );
 };
 
+class PassParametersOwner {
+
+public:
+	virtual void AddUsedResource( ITr2EffectValuePtr resource ) = 0;
+	virtual void AddReroutable( ITriReroutable* reroutable ) = 0;
+};
+
 // Tr2EffectPassParameters holds information on parameters for the effect pass.
 // * For each vertex/pixel shader parameter there is a Tr2EffectParam instance
 //   describing where the value comes from.
@@ -120,7 +127,7 @@ struct Tr2MaterialStageInput
 // * Optionally, there is a block of Vector4 values with the default values
 //   for any vertex/pixel shader constants. This is needed when constants are
 //   given values in the .fx file.
-class Tr2EffectPassParameters
+class Tr2EffectPassParameters : public PassParametersOwner
 {
 public:
 	Tr2EffectPassParameters();
@@ -141,9 +148,12 @@ public:
 	bool m_resourceSetDirty;
 	bool m_compatibleWithGdr;
 	bool m_usedTexturesDirty;
+
+	void AddUsedResource( ITr2EffectValuePtr resource ) override;
+	void AddReroutable( ITriReroutable* reroutable ) override;
 };
 
-struct Tr2EffectLibraryParameters
+struct Tr2EffectLibraryParameters : public PassParametersOwner
 {
 	Tr2EffectLibraryParameters();
 
@@ -156,6 +166,9 @@ struct Tr2EffectLibraryParameters
 	std::vector<ITriReroutable*> m_reroutedParameters;
 	std::vector<ITr2EffectValuePtr> m_usedResources;
 	bool m_globalResourceSetDirty;
+
+	void AddUsedResource( ITr2EffectValuePtr resource ) override;
+	void AddReroutable( ITriReroutable* reroutable ) override;
 };
 
 struct Tr2EffectTechniqueInputs
