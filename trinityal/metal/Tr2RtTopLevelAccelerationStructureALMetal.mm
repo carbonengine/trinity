@@ -158,16 +158,14 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
                 // Set the instance mask, which the sample uses to filter out intersections between rays
                 // and geometry. For example, it uses masks to prevent light sources from being visible
                 // to secondary rays, which would result in their contribution being double-counted.
-                instanceDescriptors[instanceIndex].mask = 0;
-                
-                MTLPackedFloat4x3 mtlTransform;
+                instanceDescriptors[instanceIndex].mask = 3;
                 
                 // Copy the first three rows of the instance transformation matrix. Metal
                 // assumes that the bottom row is (0, 0, 0, 1), which allows the renderer to
                 // tightly pack instance descriptors in memory.
                 for(int column = 0; column < 4; column++)
                     for(int row = 0; row < 3; row++)
-                        instanceDescriptors[instanceIndex].transformationMatrix.columns[column][row] = instances[instanceIndex].transform[column][row];
+                        instanceDescriptors[instanceIndex].transformationMatrix.columns[column][row] = instances[instanceIndex].transform[row][column];
                 
                 id<MTLAccelerationStructure> blas = instances[instanceIndex].blas.TrinityALImpl_GetObject()->m_primitiveAccelerationStructure;
                 //gather all the BLAS in one list
