@@ -32,23 +32,14 @@ kernel void mainCS(           uint2 tid                                         
 
     if((int)tid.x < uniforms.resolution.x && (int)tid.y < uniforms.resolution.y)
     {
-
- 
         // The ray to cast.
         ray shadowRay;
         
         uint2 LaunchIndex = tid;
         
-        // map pixel coordinates to -1..1
-        float2 pixel = (float2)tid;
-     
         float2 d = (((float2(LaunchIndex.xy) + 0.5f) / uniforms.resolution.xy) * 2.f - 1.f);
         
-        // maybe it needs to be (uniforms.resolution.x + 0.5f
-        float2 uv = float2(pixel) / float2(uniforms.resolution.x, uniforms.resolution.y);
         float aspectRatio = (uniforms.resolution.x / uniforms.resolution.y);
-        
-        //uv = uv * 2.0f - 1.0f;
 
         shadowRay.origin = uniforms.viewOriginAndTanHalfFovY.xyz;
         //shadowRay.direction = normalize((uv.x * uniforms.ViewMat[0].xyz * uniforms.viewOriginAndTanHalfFovY.w * aspectRatio) - (uv.y * uniforms.ViewMat[1].xyz * uniforms.viewOriginAndTanHalfFovY.w) + uniforms.ViewMat[2].xyz);
@@ -56,11 +47,11 @@ kernel void mainCS(           uint2 tid                                         
         // Use the MPSRayIntersection intersectionDataType property to return the
         // intersection distance for this kernel only. You don't need the other fields, so
         // you'll save memory bandwidth.
-        shadowRay.min_distance = 0.1f;
-        shadowRay.max_distance = 1000000.f;
+        shadowRay.min_distance = 0.f;
+        shadowRay.max_distance = 10000.f;
         
 
-    // INTERSECTORS
+        // INTERSECTORS
 
         // Create an intersector to test for intersection between the ray and the geometry in the scene.
         intersector<triangle_data, instancing> i;
