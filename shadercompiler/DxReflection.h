@@ -211,7 +211,7 @@ namespace DxReflection
 		}
 	};
 
-	inline uint8_t GetSpaceFromDesc( const D3D11_SHADER_INPUT_BIND_DESC& desc )
+	inline uint8_t GetSpaceFromDesc( const D3D11_SHADER_INPUT_BIND_DESC& )
 	{
 		return 0;
 	}

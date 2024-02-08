@@ -1391,7 +1391,8 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			CComPtr<IDxcBlobEncoding> src;
 
 			//m_dxilLibrary->CreateBlobWithEncodingFromPinned( os.str(), UINT32( os.pcount() ), CP_UTF8, &src );
-			m_dxilUtils->CreateBlobFromPinned( os.str(), UINT32( os.pcount() ), CP_UTF8, &src );
+			std::string code = os.str();
+			m_dxilUtils->CreateBlobFromPinned( code.c_str(), UINT32(os.str().size() ), CP_UTF8, &src);
 
 			CComPtr<IDxcCompiler> compiler;
 			DxcCreateInstance( CLSID_DxcCompiler, IID_PPV_ARGS( &compiler ) );
@@ -1457,7 +1458,9 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 			{
 				listing.literal( "profile" ).literal( "lib_6_3" );
 				listing.literal( "original" ).dict();
-				listing.literal( "source" ).literal( SanitizeCode( std::string( os.str(), os.str() + os.pcount() ) ) );
+				std::string osSrc;
+				osSrc.reserve( os.str().size() );
+				listing.literal( "source" ).literal( SanitizeCode( std::string( os.str(), osSrc.size() ) ) );
 				CComPtr<IDxcBlobEncoding> disassembly;
 				if( SUCCEEDED( compiler->Disassemble( compiled, &disassembly ) ) )
 				{
