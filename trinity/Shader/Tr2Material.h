@@ -116,6 +116,7 @@ struct Tr2MaterialStageInput
 class PassParametersOwner {
 
 public:
+    virtual ~PassParametersOwner() {};
 	virtual void AddUsedResource( ITr2EffectValuePtr resource ) = 0;
 	virtual void AddReroutable( ITriReroutable* reroutable ) = 0;
 };
@@ -156,6 +157,7 @@ public:
 struct Tr2EffectLibraryParameters : public PassParametersOwner
 {
 	Tr2EffectLibraryParameters();
+    //~Tr2EffectLibraryParameters();
 
 	Tr2MaterialStageInput m_localInput;
 	Tr2ResourceSetDescriptionAL m_localResourceSetDesc;
@@ -181,13 +183,15 @@ struct Tr2EffectTechniqueInputs
 		std::swap( passes, other.passes );
 		std::swap( libraries, other.libraries );
 	}
+    ~Tr2EffectTechniqueInputs(){}
+    
 	Tr2EffectTechniqueInputs& operator=( Tr2EffectTechniqueInputs&& other )
 	{
 		std::swap( passes, other.passes );
 		std::swap( libraries, other.libraries );
 		return *this;
 	}
-
+    
 	std::vector<std::unique_ptr<Tr2EffectPassParameters>> passes;
 	std::vector<std::unique_ptr<Tr2EffectLibraryParameters>> libraries;
 };

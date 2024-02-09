@@ -105,6 +105,10 @@ Tr2EffectLibraryParameters::Tr2EffectLibraryParameters()
 {
 }
 
+//Tr2EffectLibraryParameters::~Tr2EffectLibraryParameters()
+//{
+//}
+
 void Tr2EffectLibraryParameters::AddUsedResource( ITr2EffectValuePtr resource )
 {
 	m_usedResources.push_back( resource );
