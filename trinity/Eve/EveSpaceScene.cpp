@@ -528,7 +528,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		CCP_STATS_ZONE( "GetShadowCasterInfo" );
 		unsigned int shadowMapSize = m_cascadedShadowMap->GetShadowMapSize();
 
-		m_componentRegistry->ProcessComponents<IEveShadowCaster>( [this, &indices, shadowMapSize, &perObjectData]( IEveShadowCaster* caster ) -> void {
+		m_componentRegistry->ProcessComponents<IEveShadowCaster>( [this, &indices, shadowMapSize]( IEveShadowCaster* caster ) -> void {
 			float radius;
 
 			for( size_t index : indices )
