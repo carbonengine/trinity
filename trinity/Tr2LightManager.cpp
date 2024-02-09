@@ -105,6 +105,7 @@ void Tr2LightManager::ResetVariableStore()
 
 	GlobalStore().RegisterVariable( "LightBuffer", empty );
 	GlobalStore().RegisterVariable( "LightIndexBuffer", empty );
+	GlobalStore().RegisterVariable( "LightProfileArray", &GetLightProfileArray() );
 }
 
 Tr2LightManager* Tr2LightManager::GetOrCreateInstance( const char* effectPath )

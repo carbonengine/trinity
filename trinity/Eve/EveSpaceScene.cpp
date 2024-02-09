@@ -37,6 +37,7 @@
 #include "Tr2SSAO.h"
 #include "Lights/ITr2LightOwner.h"
 #include "../Tr2VolumetricsRenderer.h"
+#include "../Tr2BoneTransformBuffer.h"
 #include <ScopedBlockTrap.h>
 
 using namespace Tr2RenderContextEnum;
@@ -210,6 +211,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	// register variable handle to texture
 	m_envMapHandle = GlobalStore().RegisterVariable( "EveSpaceSceneEnvMap", (ITr2TextureProvider*)nullptr );
 	m_ssaoMapHandle = GlobalStore().RegisterVariable( "SSAOMap", (ITr2TextureProvider*)nullptr );
+	GlobalStore().RegisterVariable( "BoneTransforms", &Tr2BoneTransformBuffer::GetInstance() );
 
 	// Picking batches
 	m_pickingBatches = CCP_NEW( "EveSpaceScene/m_pickingBatches" ) TriRenderBatchAccumulator<>( allocator );
@@ -333,6 +335,11 @@ bool EveSpaceScene::OnPrepareResources()
 void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
+
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		Tr2BoneTransformBuffer::GetInstance().SetFrameNumbers( renderContext.GetRecordingFrameNumber(), renderContext.GetRenderedFrameNumber() );
+	}
 
 	if( !m_update )
 	{

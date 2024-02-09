@@ -76,9 +76,7 @@ public:
 	void UnmapForReading( Tr2RenderContextAL& renderContext );
 
 	template <typename T> ALResult MapForWriting( T*& data, Tr2RenderContextAL& renderContext );
-	template <typename T> ALResult MapForWriting( T*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext );
 	ALResult MapForWriting( void*& data, Tr2RenderContextAL& renderContext );
-	ALResult MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext );
 	void UnmapForWriting( Tr2RenderContextAL& renderContext );
 
 	ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL& renderContext );
@@ -110,11 +108,4 @@ template <typename T>
 ALResult Tr2BufferAL::MapForWriting( T*& data, Tr2RenderContextAL& renderContext )
 {
 	return MapForWriting( *reinterpret_cast<void**>( &data ), renderContext );
-}
-
-
-template <typename T>
-ALResult Tr2BufferAL::MapForWriting( T*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
-{
-	return MapForWriting( *reinterpret_cast<void**>( &data ), lockType, renderContext );
 }
