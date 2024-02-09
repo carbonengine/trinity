@@ -1246,17 +1246,17 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
 	GatherBatches( renderContext );
 
-    if (@available(macOS 11.0, *)) {
-        if( m_rtManager && m_enableRaytracing && m_enableShadows )
+
+    if( m_rtManager && m_enableRaytracing && m_enableShadows )
+    {
+        m_rtManager->GetGeometry().BeginSceneUpdate();
+        for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
         {
-            m_rtManager->GetGeometry().BeginSceneUpdate();
-            for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
-            {
-                (*it)->PushRtGeometry( *m_rtManager );
-            }
-            m_rtManager->GetGeometry().EndSceneUpdate( renderContext );
+            (*it)->PushRtGeometry( *m_rtManager );
         }
+        m_rtManager->GetGeometry().EndSceneUpdate( renderContext );
     }
+
 
 	UpdatePostProcessPSData();
 	UpdateVariableStore();
