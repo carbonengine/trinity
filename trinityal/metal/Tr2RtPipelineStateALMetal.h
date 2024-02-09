@@ -10,8 +10,8 @@
 
 
 //#include "StdAfx.h"
-#include "../include/Tr2RtPipelineStateAL.h"
 #include "Tr2ShaderProgramALMetal.h"
+#include "../include/Tr2RtPipelineStateAL.h"
 #include <Metal/Metal.h>
 
 namespace TrinityALImpl
