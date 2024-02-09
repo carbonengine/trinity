@@ -72,13 +72,12 @@ TrinityALImpl::Tr2RtPipelineStateAL* Tr2RtPipelineStateAL::TrinityALImpl_GetObje
 
 #endif
 
+Tr2RtPipelineStateDescriptionAL::Shader::~Shader()
+{
+}
 
 Tr2RtPipelineStateDescriptionAL::~Tr2RtPipelineStateDescriptionAL()
 {
-	for( auto it = begin( m_shaders ); it != end( m_shaders ); ++it )
-	{
-		delete[] it->bytecode.bytecode;
-	}
 }
 
 void Tr2RtPipelineStateDescriptionAL::AddShader( Tr2ShaderAL& shader, const wchar_t* exportName, const wchar_t* name, Tr2ShaderProgramAL shaderProgram )

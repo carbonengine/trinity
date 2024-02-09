@@ -40,6 +40,7 @@ private:
 	};
 	struct Shader
 	{
+        ~Shader();
 		std::vector<ShaderName> names;
 		Tr2ShaderBytecodeAL bytecode;
 		uint32_t payloadSize;

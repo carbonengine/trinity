@@ -508,7 +508,7 @@ void Tr2EffectStateManager::Shutdown()
 
 	for( auto it = s_shaderLibraries.begin(); it != s_shaderLibraries.end(); ++it )
 	{
-		delete[]( *it )->bytecode;
+		//delete[]( *it )->bytecode;
 		delete* it;
 	}
 	s_shaderLibraries.clear();

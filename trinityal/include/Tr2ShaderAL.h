@@ -11,13 +11,15 @@ struct Tr2ShaderBytecodeAL
 {
 	Tr2ShaderBytecodeAL();
 	Tr2ShaderBytecodeAL( const void* bytecode, size_t size );
-
+    
 	template <typename T, size_t Size>
 	Tr2ShaderBytecodeAL( const T( &bytecode_ )[Size] )
 		:bytecode( bytecode_ ),
 		size( Size * sizeof( T ) )
 	{
 	}
+    
+    ~Tr2ShaderBytecodeAL();
 
 	const void* bytecode;
 	size_t size;

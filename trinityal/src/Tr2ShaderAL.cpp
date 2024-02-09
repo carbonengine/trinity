@@ -25,6 +25,10 @@ Tr2ShaderBytecodeAL::Tr2ShaderBytecodeAL( const void* bytecode_, size_t size_ )
 {
 }
 
+Tr2ShaderBytecodeAL::~Tr2ShaderBytecodeAL()
+{
+    bytecode = nullptr;
+}
 
 Tr2ShaderPipelineInputAL::Tr2ShaderPipelineInputAL()
 {
