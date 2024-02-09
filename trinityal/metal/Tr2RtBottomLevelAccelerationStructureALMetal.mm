@@ -34,7 +34,6 @@ namespace  TrinityALImpl {
         // doesn't actually build the acceleration structure, but rather allocates memory.
         id <MTLAccelerationStructure> accelerationStructure = [device newAccelerationStructureWithSize:accelSizes.accelerationStructureSize];
 
-        
         // Allocate scratch space Metal uses to build the acceleration structure.
         // Use MTLResourceStorageModePrivate for the best performance because the sample
         // doesn't need access to buffer's contents.

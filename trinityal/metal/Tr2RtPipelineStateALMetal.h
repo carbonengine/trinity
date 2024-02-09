@@ -10,13 +10,13 @@
 
 
 //#include "StdAfx.h"
-#include "../include/Tr2RtPipeLineStateAL.h"
+#include "../include/Tr2RtPipelineStateAL.h"
 #include "Tr2ShaderProgramALMetal.h"
 #include <Metal/Metal.h>
 
 namespace TrinityALImpl
 {
-    class Tr2RtPipelineStateAL : public Tr2DeviceResourceAL<Tr2RtPipelineStateAL>
+class Tr2RtPipelineStateAL : public Tr2DeviceResourceAL<Tr2RtPipelineStateAL>
 {
 public:
     Tr2RtPipelineStateAL();
@@ -35,7 +35,7 @@ public:
 private:
     id <MTLComputePipelineState> m_shadowPipeline;
     ::Tr2ShaderProgramAL m_shaderProgram;
-    id<MTLIntersectionFunctionTable> _intersectionFunctionTable;
+    //id<MTLIntersectionFunctionTable> _intersectionFunctionTable;
     
 };
 }
