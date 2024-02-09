@@ -1288,12 +1288,6 @@ uint32_t EveSpaceObject2::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType
 	}
 	else
 	{
-		int boneCount = 0;
-		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
-		{
-			boneCount = m_animationUpdater->GetMeshBoneCount();
-		}
-
 		return sizeof( m_vsData );
 	}
 }
