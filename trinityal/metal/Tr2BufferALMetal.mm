@@ -69,7 +69,7 @@ namespace TrinityALImpl
 		// Default to managed storage.
 		m_resourceMode = MTLResourceStorageModeManaged;
 
-        if ( !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) && !HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
+        if ( !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) && !HasFlag( desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
 		{
 			// No point keeping a copy on the CPU side if they'll never be modified.
 			// JM - this needs support in the API to do a blit upload of the data so disabling for now
