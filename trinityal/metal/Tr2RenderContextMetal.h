@@ -243,6 +243,8 @@ public:
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
     ALResult UseAccelerationStructure( NSMutableArray *primitiveAccelerationStructures );
+    
+    API_AVAILABLE(macos(11.0))
     ALResult UseAccelerationStructure( id<MTLAccelerationStructure> accelerationStructure );
 
     bool SupportsBindlessTextures() const;

@@ -393,10 +393,10 @@ namespace TrinityALImpl
         {
             return 0xffffffff;
         }
-        if( @available( macOS 13.0, * ) )
-        {
+       // if( @available( macOS 13.0, * ) )
+        //{
             //return 0xffffffff;//m_resourceHeap.Allocate( buffer.gpuAddress );
-        }
+        //}
         else
         {
             return 0xffffffff;

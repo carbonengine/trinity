@@ -29,14 +29,13 @@ namespace TrinityALImpl
         Tr2ALMemoryType GetMemoryClass() const;
         void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 
-        uint64_t GetEntrySize() const;
+        /*uint64_t GetEntrySize() const;
         uint64_t GetMissShaderTableSize() const;
         uint64_t GetHitGroupTableSize() const;
-
+         */
     private:
         Tr2RtShaderTableDescriptionAL m_desc;
-        Tr2PrimaryRenderContextAL* m_owner;
-        uint64_t m_entrySize;
+        //uint64_t m_entrySize;
     };
 }
 

@@ -53,8 +53,6 @@ namespace
 namespace TrinityALImpl
 {
     Tr2RtShaderTableAL::Tr2RtShaderTableAL()
-        :m_owner( nullptr ),
-        m_entrySize( 0 )
     {
     }
 
@@ -97,12 +95,7 @@ namespace TrinityALImpl
     {
         description["type"] = "Tr2RtShaderTableAL";
     }
-
-    uint64_t Tr2RtShaderTableAL::GetEntrySize() const
-    {
-        return m_entrySize;
-    }
-
+/*
     uint64_t Tr2RtShaderTableAL::GetMissShaderTableSize() const
     {
         return GetEntrySize() * m_desc.m_missNames.size();
@@ -111,7 +104,7 @@ namespace TrinityALImpl
     uint64_t Tr2RtShaderTableAL::GetHitGroupTableSize() const
     {
         return GetEntrySize() * m_desc.m_hitGroupNames.size();
-    }
+    }*/
 }
 
 

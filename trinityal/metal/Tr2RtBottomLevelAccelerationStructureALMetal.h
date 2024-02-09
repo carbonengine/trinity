@@ -18,7 +18,7 @@
 
 namespace TrinityALImpl
 {
-class API_AVAILABLE(macos(11.0)) Tr2RtBottomLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2RtBottomLevelAccelerationStructureAL>
+class Tr2RtBottomLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2RtBottomLevelAccelerationStructureAL>
     {
     public:
         Tr2RtBottomLevelAccelerationStructureAL();
@@ -33,12 +33,14 @@ class API_AVAILABLE(macos(11.0)) Tr2RtBottomLevelAccelerationStructureAL : publi
         void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
         Tr2ALMemoryType GetMemoryClass() const;
         
+        API_AVAILABLE(macos(11.0)) 
         id <MTLAccelerationStructure> m_primitiveAccelerationStructure;
         
     private:
         //BLAS
         //NSMutableArray *_primitiveAccelerationStructures;
         
+        API_AVAILABLE(macos(11.0)) 
         id <MTLAccelerationStructure> BuildAccelerationStructure(MTLAccelerationStructureDescriptor* descriptor, id<MTLDevice> device,  MetalContext* metalContext );
         
         id <MTLBuffer> m_buffer;

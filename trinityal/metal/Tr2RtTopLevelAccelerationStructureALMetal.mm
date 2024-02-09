@@ -83,27 +83,31 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
         uint32_t compactedSize = *(uint32_t *)compactedSizeBuffer.contents;
         
         // Allocate a smaller acceleration structure based on the returned size.
-        id <MTLAccelerationStructure> compactedAccelerationStructure = [device newAccelerationStructureWithSize:compactedSize];
-        
-        
-        // Create a new command buffer that performs the acceleration structure build.
-        commandBuffer = [metalContext->GetCommandQueue() commandBuffer];
-        commandEncoder = [commandBuffer accelerationStructureCommandEncoder];
-        
-        // Encode the command to copy and compact the acceleration structure into the
-        // smaller acceleration structure.
-        [commandEncoder copyAndCompactAccelerationStructure:accelerationStructure
-                                    toAccelerationStructure:compactedAccelerationStructure];
-        
-        // End encoding and commit the command buffer. You don't need to wait for Metal to finish
-        // executing this command buffer as long as you synchronize any ray-intersection work
-        // to run after this command buffer completes. The sample relies on Metal's default
-        // dependency tracking on resources to automatically synchronize access to the new
-        // compacted acceleration structure.
-        [commandEncoder endEncoding];
-        [commandBuffer commit];
-
-        return compactedAccelerationStructure;
+        if (@available(macOS 11.0, *)) {
+            id <MTLAccelerationStructure> compactedAccelerationStructure = [device newAccelerationStructureWithSize:compactedSize];
+            
+            
+            // Create a new command buffer that performs the acceleration structure build.
+            commandBuffer = [metalContext->GetCommandQueue() commandBuffer];
+            commandEncoder = [commandBuffer accelerationStructureCommandEncoder];
+            
+            // Encode the command to copy and compact the acceleration structure into the
+            // smaller acceleration structure.
+            [commandEncoder copyAndCompactAccelerationStructure:accelerationStructure
+                                        toAccelerationStructure:compactedAccelerationStructure];
+            
+            // End encoding and commit the command buffer. You don't need to wait for Metal to finish
+            // executing this command buffer as long as you synchronize any ray-intersection work
+            // to run after this command buffer completes. The sample relies on Metal's default
+            // dependency tracking on resources to automatically synchronize access to the new
+            // compacted acceleration structure.
+            [commandEncoder endEncoding];
+            [commandBuffer commit];
+            
+            return compactedAccelerationStructure;
+        } else {
+            // Fallback on earlier versions
+        }
     }
 
     ALResult Tr2RtTopLevelAccelerationStructureAL::Create( size_t count, const Tr2RtInstanceAL* instances, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )

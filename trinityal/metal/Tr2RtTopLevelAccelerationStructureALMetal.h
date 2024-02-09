@@ -6,7 +6,6 @@
 //  Created by Iris Dogg Skarphedinsdottir on 3.1.2024.
 //
 
-
 #pragma once
 
 #if TRINITY_PLATFORM == TRINITY_METAL
@@ -16,10 +15,9 @@
 #include <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
-
 namespace TrinityALImpl
 {
-class API_AVAILABLE(macos(11.0)) Tr2RtTopLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2RtTopLevelAccelerationStructureAL>
+class Tr2RtTopLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2RtTopLevelAccelerationStructureAL>
     {
     public:
         Tr2RtTopLevelAccelerationStructureAL();
@@ -37,15 +35,21 @@ class API_AVAILABLE(macos(11.0)) Tr2RtTopLevelAccelerationStructureAL : public T
         const ::Tr2BufferAL& GetBuffer() const;
         size_t GetCapacity() const;
         NSMutableArray *GetPrimitiveAccelerationStructures(){ return m_primitiveAccelerationStructures; }
+        
+        API_AVAILABLE(macos(11.0))
         id <MTLAccelerationStructure> GetInstanceAccelerationStructure(){ return m_instanceAccelerationStructure; }
+        
     private:
         id<MTLBuffer> m_instanceBuffer;
         
         ::Tr2BufferAL m_buffer;
         
         NSMutableArray* m_primitiveAccelerationStructures;
+        
+        API_AVAILABLE(macos(11.0))
         id <MTLAccelerationStructure> m_instanceAccelerationStructure;
         
+        API_AVAILABLE(macos(11.0))
         id <MTLAccelerationStructure> BuildAccelerationStructure(MTLAccelerationStructureDescriptor* descriptor, id<MTLDevice> device,  MetalContext* metalContext );
         
     };
