@@ -152,19 +152,33 @@ namespace TrinityALImpl
 
 	ALResult Tr2ResourceHelper::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2PrimaryRenderContextAL& renderContext )
 	{
-		if( lockType == Tr2LockType::NON_SYNCHRONIZED && m_strategy == DYNAMIC )
+		if( lockType == Tr2LockType::NON_SYNCHRONIZED )
 		{
-			for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
+			if( m_strategy == DYNAMIC )
 			{
-				if( it->resource == m_gpuResource.resource )
+				for( auto it = begin( m_resources ); it != end( m_resources ); ++it )
 				{
-					it->frameIndex = renderContext.GetRecordingFrameNumber();
-					break;
+					if( it->resource == m_gpuResource.resource )
+					{
+						it->frameIndex = renderContext.GetRecordingFrameNumber();
+						break;
+					}
 				}
+				m_mapped = m_gpuResource;
+				data = m_mapped.cpuAddress;
+				return S_OK;
 			}
-			m_mapped = m_gpuResource;
-			data = m_mapped.cpuAddress;
-			return S_OK;
+			else
+			{
+				if( m_resources.empty() )
+				{
+					FORWARD_HR( CreateScratch( m_mapped, renderContext ) );
+					m_resources.push_back( m_mapped );
+				}
+				m_mapped = m_resources.front();
+				data = m_mapped.cpuAddress;
+				return S_OK;
+			}
 		}
 		if( m_strategy == STATIC )
 		{
@@ -227,14 +241,14 @@ namespace TrinityALImpl
 		m_mapped = Resource();
 	}
 
-	ALResult Tr2ResourceHelper::UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL & renderContext )
+	ALResult Tr2ResourceHelper::UpdateBuffer( Tr2LockType::Type lockType, uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL& renderContext )
 	{
 		if( m_strategy == DYNAMIC )
 		{
 			return E_FAIL;
 		}
 
-		if( m_strategy == STATIC )
+		if( lockType == Tr2LockType::SYNCHRONIZED && m_strategy == STATIC )
 		{
 
 			FORWARD_HR( CreateScratch( m_mapped, *renderContext.m_ownerDevice, size ) );
@@ -260,25 +274,20 @@ namespace TrinityALImpl
 		}
 
 		void* dst = nullptr;
-		FORWARD_HR( MapForWriting( dst, Tr2LockType::SYNCHRONIZED, *renderContext.m_ownerDevice ) );
-		memcpy( dst, data, size );
+		FORWARD_HR( MapForWriting( dst, lockType, *renderContext.m_ownerDevice ) );
+		memcpy( static_cast<uint8_t*>( dst ) + offset, data, size );
 
 		auto barrier = Transition( m_gpuResource.resource, m_defaultState, D3D12_RESOURCE_STATE_COPY_DEST );
 		renderContext.ResourceBarrierDx12( barrier );
 		renderContext.FlushBarriersDx12( m_gpuResource.resource );
 
-		renderContext.m_commandList->CopyBufferRegion( m_gpuResource.resource, offset, m_mapped.resource, 0, size );
+		renderContext.m_commandList->CopyBufferRegion( m_gpuResource.resource, offset, m_mapped.resource, offset, size );
 
 		std::swap( barrier.Transition.StateAfter, barrier.Transition.StateBefore );
 		renderContext.ResourceBarrierDx12( barrier );
 		if( m_requiresImmediateBarriers )
 		{
 			renderContext.FlushBarriersDx12( m_gpuResource.resource );
-		}
-
-		if( m_strategy == STATIC )
-		{
-			RELEASE_LATER( renderContext.m_ownerDevice, m_mapped.resource );
 		}
 		m_mapped = Resource();
 		return S_OK;

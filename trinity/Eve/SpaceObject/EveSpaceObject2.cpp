@@ -31,6 +31,8 @@
 #include "Controllers/ITr2Controller.h"
 #include "Eve/SpaceObject/Children/EveChildInheritProperties.h"
 
+#include "../../Tr2BoneTransformBuffer.h"
+
 #include <limits>
 
 
@@ -479,6 +481,9 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
+
+	m_bonesUploaded = false;
+	m_previousFrameBoneOffset = m_currentFrameBoneOffset;
 
 	float prevActivationStrength = m_spaceObjectShipData.y;
 	PrepareShaderData( updateContext );
@@ -1248,6 +1253,23 @@ void EveSpaceObject2::ClearShLighting()
 // --------------------------------------------------------------------------------
 Tr2PerObjectData* EveSpaceObject2::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
+	if( !m_bonesUploaded )
+	{
+		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
+		{
+			auto boneCount = m_animationUpdater->GetMeshBoneCount();
+			//m_vsData.boneOffsets[2] = boneCount;
+			m_currentFrameBoneOffset = Tr2BoneTransformBuffer::GetInstance().UploadTransforms( reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+			if( m_previousFrameBoneOffset == 0xffffffff )
+			{
+				m_previousFrameBoneOffset = m_currentFrameBoneOffset;
+			}
+		}
+		m_bonesUploaded = true;
+	}
+	//m_vsData.boneOffsets[0] = m_currentFrameBoneOffset;
+	//m_vsData.boneOffsets[1] = m_previousFrameBoneOffset;
+
 	Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>>();
 	if( !perObjectData )
 	{
@@ -1272,8 +1294,7 @@ uint32_t EveSpaceObject2::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType
 			boneCount = m_animationUpdater->GetMeshBoneCount();
 		}
 
-		return sizeof( m_vsData ) +
-			boneCount * 3 * 16; // m_vsBonesMatrix (3x4)
+		return sizeof( m_vsData );
 	}
 }
 
@@ -1289,15 +1310,7 @@ void EveSpaceObject2::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType sh
 	}
 	else
 	{
-		uint8_t* perObjectVS = (uint8_t*)data;
-		memcpy( perObjectVS, &m_vsData, sizeof( m_vsData ) );
-		perObjectVS += sizeof( m_vsData );
-
-		size -= sizeof( m_vsData );
-		if( size )
-		{
-			memcpy( perObjectVS, m_animationUpdater->GetMeshBoneMatrixList(), size );
-		}
+		memcpy( data, &m_vsData, sizeof( m_vsData ) );
 	}
 }
 
