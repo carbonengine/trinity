@@ -86,7 +86,6 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
         if (@available(macOS 11.0, *)) {
             id <MTLAccelerationStructure> compactedAccelerationStructure = [device newAccelerationStructureWithSize:compactedSize];
             
-            
             // Create a new command buffer that performs the acceleration structure build.
             commandBuffer = [metalContext->GetCommandQueue() commandBuffer];
             commandEncoder = [commandBuffer accelerationStructureCommandEncoder];
@@ -105,8 +104,9 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
             [commandBuffer commit];
             
             return compactedAccelerationStructure;
-        } else {
-            // Fallback on earlier versions
+        }
+        else{
+            return nil;
         }
     }
 
