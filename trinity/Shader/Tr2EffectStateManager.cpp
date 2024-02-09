@@ -855,7 +855,7 @@ void Tr2EffectStateManager::ReleaseDeviceResources( TriStorage s )
 		s_shaderPrograms.clear();
 		for( auto it = s_shaderLibraries.begin(); it != s_shaderLibraries.end(); ++it )
 		{
-			delete[]( *it )->bytecode;
+			//delete[]( *it )->bytecode;
 			delete* it;
 		}
 		s_shaderLibraries.clear();
