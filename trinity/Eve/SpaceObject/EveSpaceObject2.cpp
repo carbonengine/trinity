@@ -1258,7 +1258,7 @@ Tr2PerObjectData* EveSpaceObject2::GetPerObjectData( ITriRenderBatchAccumulator*
 		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 		{
 			auto boneCount = m_animationUpdater->GetMeshBoneCount();
-			//m_vsData.boneOffsets[2] = boneCount;
+			m_vsData.boneOffsets[2] = boneCount;
 			m_currentFrameBoneOffset = Tr2BoneTransformBuffer::GetInstance().UploadTransforms( reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
 			if( m_previousFrameBoneOffset == 0xffffffff )
 			{
@@ -1267,8 +1267,8 @@ Tr2PerObjectData* EveSpaceObject2::GetPerObjectData( ITriRenderBatchAccumulator*
 		}
 		m_bonesUploaded = true;
 	}
-	//m_vsData.boneOffsets[0] = m_currentFrameBoneOffset;
-	//m_vsData.boneOffsets[1] = m_previousFrameBoneOffset;
+	m_vsData.boneOffsets[0] = m_currentFrameBoneOffset;
+	m_vsData.boneOffsets[1] = m_previousFrameBoneOffset;
 
 	Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>>();
 	if( !perObjectData )
