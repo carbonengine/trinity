@@ -5,6 +5,7 @@
 #include "Tr2RenderContextAL.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11 || TRINITY_PLATFORM == TRINITY_DIRECTX12
+
 #define STREAMLINE_AVAILABLE
 
 #include <sl.h>
@@ -161,10 +162,10 @@ public:
 	void EnableFrameGeneration( bool enable );
 
 protected:
-	uint32_t m_id;
 	bool m_framegeneration;
 
 #ifdef STREAMLINE_AVAILABLE
+	uint32_t m_id;
 	sl::ViewportHandle m_view;
 	sl::DLSSGOptions m_dlssgOptions;
 	sl::DLSSGState m_dlssgState;
@@ -187,9 +188,8 @@ public:
 	void Dispatch( Tr2RenderContextAL& renderContext );
 
 private:
-	uint32_t m_id;
-
 #ifdef STREAMLINE_AVAILABLE
+	uint32_t m_id;
 	sl::ViewportHandle m_view;
 #endif //STREAMLINE_AVAILABLE
 };
@@ -237,7 +237,7 @@ namespace Tr2Streamline
 	template <typename T>
 	void CheckForProxy( T thing, const std::string& message )
 	{
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_DIRECTX11
+#ifdef STREAMLINE_AVAILABLE
 
 	// Use special GUID to to obtain the underlying native interface if SL proxy is used, returns null otherwise
 	IID riid;
@@ -255,10 +255,10 @@ namespace Tr2Streamline
 	{
 		CCP_LOG( "%s - is not a proxy!", message );
 	}
-#endif //TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_DIRECTX11
+#endif //STREAMLINE_AVAILABLE
 	};
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_DIRECTX11
+#ifdef STREAMLINE_AVAILABLE
 
 	HRESULT SlCreateDXGIFactory( REFIID id, void** factory );
 	HRESULT SlCreateDXGIFactory1( REFIID id, void** factory1 );
@@ -303,6 +303,6 @@ namespace Tr2Streamline
 		CCP_ASSERT( native != nullptr );
 		return native;
 	};
-#endif //TRINITY_PLATFORM == TRINITY_DIRECTX12 || TRINITY_PLATFORM == TRINITY_DIRECTX11
+#endif //STREAMLINE_AVAILABLE
 	
 };

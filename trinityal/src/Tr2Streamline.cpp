@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "./include/Tr2Streamline.h"
 
-#if TRINITY_PLATFORM != TRINITY_DIRECTX11 && TRINITY_PLATFORM != TRINITY_DIRECTX12
+#ifndef STREAMLINE_AVAILABLE
 namespace Tr2Streamline
 {
 
