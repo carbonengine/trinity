@@ -54,3 +54,20 @@ private:
 };
 
 TYPEDEF_BLUECLASS( Tr2BoneTransformBuffer );
+
+
+class Tr2BoneTransformOffsets
+{
+public:
+	uint32_t GetCurrentFrameOffset() const;
+	uint32_t GetPreviousFrameOffset() const;
+
+	void UploadTransforms( Tr2BoneTransformBuffer& buffer, const Tr2BoneTransformBuffer::Float4x3* transforms, uint32_t count );
+	void AdvanceFrame();
+
+private:
+	static const uint32_t INVALID_OFFSET = 0xffffffff;
+
+	uint32_t m_currentFrameOffset = INVALID_OFFSET;
+	uint32_t m_previousFrameOffset = INVALID_OFFSET;
+};

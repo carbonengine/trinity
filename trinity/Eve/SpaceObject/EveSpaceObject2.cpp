@@ -467,6 +467,8 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 
 void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 {
+	m_boneOffsets.AdvanceFrame();
+
 	if( !m_update )
 	{
 		return;
@@ -481,9 +483,6 @@ void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
-
-	m_bonesUploaded = false;
-	m_previousFrameBoneOffset = m_currentFrameBoneOffset;
 
 	float prevActivationStrength = m_spaceObjectShipData.y;
 	PrepareShaderData( updateContext );
@@ -1253,22 +1252,14 @@ void EveSpaceObject2::ClearShLighting()
 // --------------------------------------------------------------------------------
 Tr2PerObjectData* EveSpaceObject2::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
-	if( !m_bonesUploaded )
+	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
 	{
-		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
-		{
-			auto boneCount = m_animationUpdater->GetMeshBoneCount();
-			m_vsData.boneOffsets[2] = boneCount;
-			m_currentFrameBoneOffset = Tr2BoneTransformBuffer::GetInstance().UploadTransforms( reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
-			if( m_previousFrameBoneOffset == 0xffffffff )
-			{
-				m_previousFrameBoneOffset = m_currentFrameBoneOffset;
-			}
-		}
-		m_bonesUploaded = true;
+		auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
+		m_vsData.boneOffsets[2] = boneCount;
+		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
 	}
-	m_vsData.boneOffsets[0] = m_currentFrameBoneOffset;
-	m_vsData.boneOffsets[1] = m_previousFrameBoneOffset;
+	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
+	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
 
 	Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>>();
 	if( !perObjectData )

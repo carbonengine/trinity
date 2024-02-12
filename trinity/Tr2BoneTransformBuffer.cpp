@@ -91,7 +91,7 @@ void Tr2BoneTransformBuffer::Resize( uint32_t size )
 	m_tail = m_size;
 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	m_buffer.Create( sizeof( Float4x3 ), size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, renderContext );
+	m_buffer.Create( sizeof( Float4x3 ), size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, renderContext );
 	m_buffer.SetName( "Bone transforms" );
 }
 
@@ -119,7 +119,7 @@ bool Tr2BoneTransformBuffer::OnPrepareResources()
 	if( !m_mirror.empty() && !m_buffer.IsValid() )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		m_buffer.Create( sizeof( Float4x3 ), m_size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, m_mirror.data(), renderContext );
+		m_buffer.Create( sizeof( Float4x3 ), m_size, Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, m_mirror.data(), renderContext );
 		m_buffer.SetName( "Bone transforms" );
 	}
 	return true;
@@ -127,12 +127,31 @@ bool Tr2BoneTransformBuffer::OnPrepareResources()
 
 
 
-
-BLUE_DEFINE_NONEXPOSED( Tr2BoneTransformBuffer );
-
-const Be::ClassInfo* Tr2BoneTransformBuffer::ExposeToBlue()
+uint32_t Tr2BoneTransformOffsets::GetCurrentFrameOffset() const
 {
-	EXPOSURE_BEGIN( Tr2BoneTransformBuffer, "" )
-		MAP_INTERFACE( Tr2BoneTransformBuffer )
-	EXPOSURE_END()
+	return m_currentFrameOffset;
+}
+
+uint32_t Tr2BoneTransformOffsets::GetPreviousFrameOffset() const
+{
+	return m_previousFrameOffset;
+}
+
+void Tr2BoneTransformOffsets::UploadTransforms( Tr2BoneTransformBuffer& buffer, const Tr2BoneTransformBuffer::Float4x3* transforms, uint32_t count )
+{
+	if( m_currentFrameOffset != INVALID_OFFSET )
+	{
+		return;
+	}
+	m_currentFrameOffset = buffer.UploadTransforms( transforms, count );
+	if( m_previousFrameOffset == INVALID_OFFSET )
+	{
+		m_previousFrameOffset = m_currentFrameOffset;
+	}
+}
+
+void Tr2BoneTransformOffsets::AdvanceFrame()
+{
+	m_previousFrameOffset = m_currentFrameOffset;
+	m_currentFrameOffset = 0xffffffff;
 }

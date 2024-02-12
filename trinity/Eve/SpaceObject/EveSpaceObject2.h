@@ -35,6 +35,7 @@
 #include "Eve/EveEntity.h"
 #include "Lights/ITr2LightOwner.h"
 #include "Tr2GrannyAnimation.h"
+#include "Tr2BoneTransformBuffer.h"
 
 
 // consts
@@ -666,9 +667,7 @@ protected:
 
 	EntityComponents::ReflectionMode m_reflectionMode;
 
-	bool m_bonesUploaded;
-	uint32_t m_currentFrameBoneOffset;
-	uint32_t m_previousFrameBoneOffset;
+	Tr2BoneTransformOffsets m_boneOffsets;
 };
 
 TYPEDEF_BLUECLASS( EveSpaceObject2 );
