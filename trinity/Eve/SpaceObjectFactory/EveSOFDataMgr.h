@@ -338,7 +338,7 @@ public:
 		SOFDataFactionColorChooser::ColorType colorType;
 		float hazeBrightness, hazeFalloff, sourceSize, sourceBrightness, saturation;
 		bool boosterGainInfluence;
-		std::unique_ptr<PointLightAttachment> light;
+		std::vector<PointLightAttachment> lights;
 	};
 
 	struct HullHazeSetData

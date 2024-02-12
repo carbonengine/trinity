@@ -82,7 +82,7 @@ EveBannerLight::EveBannerLight() :
 {
 }
 
-EveBannerLight::EveBannerLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring profilePath ) :
+EveBannerLight::EveBannerLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring& profilePath ) :
 	lightData( lightData ),
 	saturation( saturation ),
 	index( index ),

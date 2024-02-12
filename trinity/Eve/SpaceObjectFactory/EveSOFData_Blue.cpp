@@ -52,6 +52,10 @@ const Be::VarChooser EveSOFDataFactionColorSetTypeChooser[] =
                 { "SecondarySpotlight", BeCast( TYPE_SECONDARY_SPOTLIGHT ), "Secondary spotlight color" },
                 { "TertiarySpotlight", BeCast( TYPE_TERTIARY_SPOTLIGHT ), "Tertiary spotlight color" },
                 { "PrimaryBillboard", BeCast( TYPE_PRIMARY_BILLBOARD ), "Primary Billboard color" },
+                { "PrimaryWarpFx", BeCast( TYPE_PRIMARY_WARP_FX ), "Primary Warp FX color" },
+                { "PrimaryAttackFX", BeCast( TYPE_PRIMARY_ATTACK_FX ), "Primary Attack FX color" },
+                { "PrimarySiegeFX", BeCast( TYPE_PRIMARY_SIEGE_FX ), "Primary Siege FX color" },
+                { "PrimaryDockedFX", BeCast( TYPE_PRIMARY_DOCKED_FX ), "Primary Docked FX color" },
                 { 0 }
         };
 BLUE_REGISTER_ENUM_EX( "EveSOFDataFactionColorSetType", ColorType, EveSOFDataFactionColorSetTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
@@ -199,6 +203,10 @@ const Be::ClassInfo* EveSOFDataFactionColorSet::ExposeToBlue()
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_BILLBOARD].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_BILLBOARD], ":jessica-group:Planeset Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_FX].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_FX], ":jessica-group:FX Colors", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_SECONDARY_FX].mKey, m_colors[SOFDataFactionColorChooser::TYPE_SECONDARY_FX], ":jessica-group:FX Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_WARP_FX].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_WARP_FX], ":jessica-group:FX Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_ATTACK_FX].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_ATTACK_FX], ":jessica-group:FX Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_SIEGE_FX].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_SIEGE_FX], ":jessica-group:FX Colors", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser[SOFDataFactionColorChooser::TYPE_PRIMARY_DOCKED_FX].mKey, m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_DOCKED_FX], ":jessica-group:FX Colors", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_END()
 }
 
@@ -470,8 +478,6 @@ const Be::ClassInfo* EveSOFDataHullSpriteSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE_WITH_CHOOSER( "colorType", m_colorType, "", Be::READWRITE | Be::PERSIST | Be::ENUM, SOFDataFactionColorChooser::EveSOFDataFactionColorSetTypeChooser )
 		MAP_ATTRIBUTE( "saturation", m_saturation, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE( "boneIndex", m_boneIndex, ":jessica-widget: boneindex", Be::READWRITE | Be::PERSIST)
 		MAP_ATTRIBUTE( "light", m_light, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
 	EXPOSURE_END()
 }
@@ -552,7 +558,7 @@ const Be::ClassInfo* EveSOFDataHullHazeSetItem::ExposeToBlue()
 		MAP_ATTRIBUTE( "sourceBrightness", m_sourceBrightness, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "sourceSize", m_sourceSize, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "boosterGainInfluence", m_boosterGainInfluence, "", Be::READWRITE | Be::PERSIST )
-		MAP_ATTRIBUTE( "light", m_light, "Used with SOF-6", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "lights", m_lights, "Used with SOF-6", Be::READ | Be::PERSIST )
 
 		EXPOSURE_END()
 }
