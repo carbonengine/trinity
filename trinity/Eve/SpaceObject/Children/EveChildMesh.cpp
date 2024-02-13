@@ -305,6 +305,15 @@ float EveChildMesh::GetSortValue()
 
 Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
+	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
+	{
+		auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
+		m_vsData.boneOffsets[2] = boneCount;
+		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	}
+	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
+	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
+
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
 	if( !perObjectData )
 	{
@@ -328,13 +337,7 @@ uint32_t EveChildMesh::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType sh
 	}
 	else
 	{
-		int boneCount = 0;
-		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
-		{
-			boneCount = m_animationUpdater->GetMeshBoneCount();
-		}
-
-		return sizeof( m_vsData ) + boneCount * 3 * 16; // m_vsBonesMatrix (3x4)
+		return sizeof( m_vsData );
 	}
 }
 
@@ -342,25 +345,18 @@ void EveChildMesh::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType shade
 {
 	if( shaderType == Tr2RenderContextEnum::PIXEL_SHADER )
 	{
-		uint8_t* perObjectPS = (uint8_t*)data;
-		memcpy( perObjectPS, &m_psData, sizeof( m_psData ) );
+		memcpy( data, &m_psData, sizeof( m_psData ) );
 	}
 	else
 	{
-		uint8_t* perObjectVS = (uint8_t*)data;
-		memcpy( perObjectVS, &m_vsData, sizeof( m_vsData ) );
-		perObjectVS += sizeof( m_vsData );
-
-		size -= sizeof( m_vsData );
-		if( size )
-		{
-			memcpy( perObjectVS, m_animationUpdater->GetMeshBoneMatrixList(), size );
-		}
+		memcpy( data, &m_vsData, sizeof( m_vsData ) );
 	}
 }
 
 void EveChildMesh::UpdateAsyncronous( EveUpdateContext& updateContext, const EveChildUpdateParams& params )
 {
+	m_boneOffsets.AdvanceFrame();
+
 	m_perObjectDataVs.InvalidateBufferData();
 	m_perObjectDataPs.InvalidateBufferData();
 

@@ -440,6 +440,7 @@ namespace Tr2CpuUsage
 		WRITE = 1 << 1,
 		READ_OFTEN = READ | ( 1 << 2 ),
 		WRITE_OFTEN = WRITE | ( 1 << 3 ),
+		NON_SYNCRONIZED_WRITE = 1 << 4,
 	};
 
 	inline Type operator|( Type a, Type b )

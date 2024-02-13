@@ -256,7 +256,7 @@ namespace TrinityALImpl
 		return m_desc;
 	}
 
-	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
+	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2RenderContextAL& renderContext )
 	{
 		if( !IsValid() )
 		{
@@ -270,7 +270,7 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDCALL;
 		}
-		return m_buffer.MapForWriting( data, lockType, *m_owner );
+		return m_buffer.MapForWriting( data, HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) ? Tr2LockType::NON_SYNCHRONIZED : Tr2LockType::SYNCHRONIZED, *m_owner );
 	}
 
 	void Tr2BufferAL::UnmapForWriting( Tr2RenderContextAL& )
@@ -295,7 +295,7 @@ namespace TrinityALImpl
 			size = m_desc.count * stride;
 		}
 
-		return m_buffer.UpdateBuffer( offset, size, data, renderContext );
+		return m_buffer.UpdateBuffer( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) ? Tr2LockType::NON_SYNCHRONIZED : Tr2LockType::SYNCHRONIZED, offset, size, data, renderContext );
 	}
 
 	ALResult Tr2BufferAL::MapForReading( const void*& data, Tr2RenderContextAL& renderContext )

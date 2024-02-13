@@ -36,6 +36,7 @@
 #include "Lights/ITr2LightOwner.h"
 #include "Tr2GrannyAnimation.h"
 #include "Raytracing/Tr2RaytracingManager.h"
+#include "Tr2BoneTransformBuffer.h"
 
 
 // consts
@@ -103,11 +104,8 @@ struct EveSpaceObjectVSData
 	Vector4 ellpsoidCenter;
 	Matrix customMaskMatrix[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
 	Vector4 customMaskData[ EVE_SPACEOBJECT_CUSTOWMASK_MAX ];
-	// following this is a variable size array of 4x3 bone matrices
-	static const size_t MAX_BONE_COUNT = 58;
+	uint32_t boneOffsets[4];
 };
-
-static const size_t EVE_SPACE_OBJECT_VS_DATA_MAX_SIZE = sizeof( EveSpaceObjectVSData ) + EveSpaceObjectVSData::MAX_BONE_COUNT * 12 * sizeof( float );
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -669,6 +667,9 @@ protected:
 
 	void UpdateRtMesh();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+
+	Tr2BoneTransformOffsets m_boneOffsets;
+
 };
 
 TYPEDEF_BLUECLASS( EveSpaceObject2 );

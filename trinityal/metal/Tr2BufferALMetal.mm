@@ -69,7 +69,7 @@ namespace TrinityALImpl
 		// Default to managed storage.
 		m_resourceMode = MTLResourceStorageModeManaged;
 
-        if ( !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+        if ( !HasFlag( desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) && !HasFlag( desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
 		{
 			// No point keeping a copy on the CPU side if they'll never be modified.
 			// JM - this needs support in the API to do a blit upload of the data so disabling for now
@@ -151,7 +151,7 @@ namespace TrinityALImpl
         }
 	}
 
-	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
+	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2RenderContextAL& renderContext )
 	{
 		if( !renderContext.IsValid() || !IsValid() )
 		{
@@ -163,7 +163,7 @@ namespace TrinityALImpl
 			return E_INVALIDCALL;
 		}
 
-		if( lockType == Tr2LockType::NON_SYNCHRONIZED )
+		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
 		{
 			if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 			{
@@ -181,7 +181,9 @@ namespace TrinityALImpl
 			}
 			else
 			{
-				return E_INVALIDARG;
+				m_mappedBuffer = m_mtlBuffer;
+				data = m_mappedBuffer.contents;
+				return S_OK;
 			}
 		}
 
@@ -222,7 +224,11 @@ namespace TrinityALImpl
 			return;
 		}
 		m_metalContext->IndicateBufferModified( m_mappedBuffer, 0, m_mtlBuffer.length );
-		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
+		{
+			m_mappedBuffer = nil;
+		}
+		else if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
 			if( HasFlag( m_desc.gpuUsage, Tr2GpuUsage::SHADER_RESOURCE ) || HasFlag( m_desc.gpuUsage, Tr2GpuUsage::UNORDERED_ACCESS ) )
 			{
@@ -259,12 +265,12 @@ namespace TrinityALImpl
 			return S_OK;
 		}
 
-		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
+		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) || HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) )
 		{
 			void* dest;
-			CR_RETURN_HR( MapForWriting( dest, Tr2LockType::SYNCHRONIZED, renderContext ) );
+			CR_RETURN_HR( MapForWriting( dest, renderContext ) );
 			uint8_t* dst = static_cast<uint8_t*>( dest ) + offset;
-			const uint8_t* src = static_cast<const uint8_t*>( data ) + offset;
+			const uint8_t* src = static_cast<const uint8_t*>( data );
 			memcpy( dst, src, size );
 			UnmapForWriting( renderContext );
 		}

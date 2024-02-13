@@ -28,7 +28,7 @@ namespace TrinityALImpl
 		ALResult MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2PrimaryRenderContextAL& renderContext );
 		void UnmapForWriting( Tr2PrimaryRenderContextAL& renderContext );
 
-		ALResult UpdateBuffer( uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL& renderContext );
+		ALResult UpdateBuffer( Tr2LockType::Type lockType, uint32_t offset, uint32_t size, const void* data, Tr2RenderContextAL& renderContext );
 
 		ID3D12Resource* GetResource() const;
 		D3D12_GPU_VIRTUAL_ADDRESS GetGpuView() const;

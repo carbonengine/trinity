@@ -75,12 +75,10 @@ ALResult Tr2DynamicRingBuffer::PutData(
 	auto allocationSize = size + alignment;
 	uint32_t allocationOffset;
 
-	Tr2LockType::Type lockType;
 	if( !GetUnusedRegion( allocationSize, allocationOffset ) )
 	{
 		CCP_STATS_ZONE( "Tr2DynamicRingBuffer full buffer lock" );
 		allocationOffset = 0;
-		lockType = Tr2LockType::SYNCHRONIZED;
 		RemoveRegions( m_regions.begin(), m_regions.end() );
 		if( m_bufferSize < allocationSize + m_sizeIncrement )
 		{
@@ -100,15 +98,20 @@ ALResult Tr2DynamicRingBuffer::PutData(
 			}
 			m_bufferSize += m_sizeIncrement;
 		}
-	}
-	else
-	{
-		lockType = Tr2LockType::NON_SYNCHRONIZED;
+		else
+		{
+			CR_RETURN_HR( CreateBuffer( m_bufferSize * 2 ) );
+			if( !m_name.empty() )
+			{
+				m_buffer.SetName( m_name.c_str() );
+			}
+			m_bufferSize *= 2;
+		}
 	}
 
 	bufferOffset = Align( allocationOffset, alignment );
 
-	CR_RETURN_HR( UpdateBuffer( data, bufferOffset, size, lockType, renderContext ) );
+	CR_RETURN_HR( UpdateBuffer( data, bufferOffset, size, renderContext ) );
 
 	BufferRegion region;
 	region.offset = allocationOffset;
@@ -366,7 +369,6 @@ Tr2BufferAL& Tr2DynamicRingBuffer::GetBuffer()
 //   data - Pointer to data
 //   offset - Offset into the buffer in bytes where the data needs to be stored
 //   size - Size of the data in bytes
-//   lockType - Type of buffer lock
 //   renderContext - Current render context
 // Return Value:
 //   AL result code
@@ -375,11 +377,10 @@ ALResult Tr2DynamicRingBuffer::UpdateBuffer(
 	const void* data, 
 	uint32_t offset, 
 	uint32_t size, 
-	Tr2LockType::Type lockType,
 	Tr2RenderContext& renderContext )
 {
 	uint8_t* bufferData = nullptr;
-	CR_RETURN_HR( m_buffer.MapForWriting( bufferData, lockType, renderContext ) );
+	CR_RETURN_HR( m_buffer.MapForWriting( bufferData, renderContext ) );
 	if( !bufferData )
 	{
 		return E_FAIL;
@@ -421,7 +422,7 @@ ALResult Tr2RingVertexBuffer::CreateBuffer( uint32_t size )
 		1, 
 		size, 
 		Tr2GpuUsage::VERTEX_BUFFER, 
-		Tr2CpuUsage::WRITE_OFTEN, 
+		Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, 
 		nullptr, 
 		renderContext );
 }
@@ -466,7 +467,7 @@ ALResult Tr2RingIndexBuffer::CreateBuffer( uint32_t size )
 		m_indexSize,
 		size / m_indexSize,
 		Tr2GpuUsage::INDEX_BUFFER, 
-		Tr2CpuUsage::WRITE_OFTEN, 
+		Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, 
 		nullptr, 
 		renderContext );
 }

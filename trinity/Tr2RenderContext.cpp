@@ -14,6 +14,7 @@
 #include "TbbStub.h"
 #include "Tr2Renderer.h"
 #include "TriSettingsRegistrar.h"
+#include "Tr2BoneTransformBuffer.h"
 
 #include "Shader/Tr2Effect.h"
 
@@ -332,6 +333,9 @@ const char* GetPassName( size_t passIndex )
 
 void Tr2RenderContextBase::RenderBatchesInOrder( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
 {
+	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( *primaryContext );
+
 	D3DPERF_EVENT( L"Tr2RenderContext::RenderBatchesInOrder" );
 
 	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );
@@ -702,6 +706,8 @@ void Tr2RenderContextBase::RenderBatchesSortedByEffect( ITriRenderBatchAccumulat
 	D3DPERF_EVENT( L"Tr2EffectStateManager::RenderBatchesSortedByEffect" );
 
 	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( *primaryContext );
+
 	UseTextures( batches, techniqueName, *primaryContext );
 
 
@@ -711,6 +717,9 @@ void Tr2RenderContextBase::RenderBatchesSortedByEffect( ITriRenderBatchAccumulat
 
 void Tr2RenderContextBase::RenderBatches( ITriRenderBatchAccumulator* batches, const BlueSharedString& techniqueName )
 {
+	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( *primaryContext );
+
 	if( batches->IsChainedByEffect() )
 	{
 		RenderBatchesSortedByEffect( batches, techniqueName );
@@ -730,6 +739,9 @@ void Tr2RenderContextBase::RenderBatchesWithOverride( ITriRenderBatchAccumulator
 		RenderBatches( batches, techniqueName );
 		return;
 	}
+
+	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( *primaryContext );
 
 	D3DPERF_EVENT( L"Tr2RenderContextBase::RenderBatchesWithOverride" );
 
@@ -789,6 +801,9 @@ void Tr2RenderContextBase::RenderBatchesForPicking( ITriRenderBatchAccumulator* 
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
 	D3DPERF_EVENT( L"Tr2EffectStateManager::RenderBatchesForPicking" );
+
+	Tr2RenderContext* primaryContext = reinterpret_cast<Tr2RenderContext*>( this );
+	Tr2BoneTransformBuffer::GetInstance().PrepareBuffer( *primaryContext );
 
 
 	Tr2RenderContext* renderContext = reinterpret_cast<Tr2RenderContext*>( this );

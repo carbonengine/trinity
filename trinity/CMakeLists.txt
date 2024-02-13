@@ -1286,6 +1286,9 @@ set(_SOURCES
     Tr2BindingVector3_Blue.cpp
     Tr2Blitter.cpp
     Tr2Blitter.h
+    Tr2BoneTransformBuffer.cpp
+    Tr2BoneTransformBuffer.h
+    Tr2BoneTransformBuffer_Blue.cpp
     Tr2BoundingLineSet.cpp
     Tr2BoundingLineSet.h
     Tr2BoundingLineSet_Blue.cpp

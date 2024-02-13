@@ -272,7 +272,7 @@ namespace TrinityALImpl
 		}
 	}
 
-	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2LockType::Type lockType, Tr2RenderContextAL& renderContext )
+	ALResult Tr2BufferAL::MapForWriting( void*& data, Tr2RenderContextAL& renderContext )
 	{
 		data = nullptr;
 		if( !renderContext.IsValid() || !IsValid() )
@@ -283,8 +283,7 @@ namespace TrinityALImpl
 		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
 			D3D11_MAPPED_SUBRESOURCE ms = { nullptr, 0, 0 };
-			auto noSyncronization = lockType == Tr2LockType::NON_SYNCHRONIZED;
-			auto mapType = noSyncronization ? D3D11_MAP_WRITE_NO_OVERWRITE : D3D11_MAP_WRITE_DISCARD;
+			auto mapType = HasFlag( m_desc.cpuUsage, Tr2CpuUsage::NON_SYNCRONIZED_WRITE ) ? D3D11_MAP_WRITE_NO_OVERWRITE : D3D11_MAP_WRITE_DISCARD;
 			auto hr = renderContext.m_context->Map( m_buffer, 0, mapType, 0, &ms );
 			if( FAILED( hr ) )
 			{
@@ -374,10 +373,10 @@ namespace TrinityALImpl
 		if( HasFlag( m_desc.cpuUsage, Tr2CpuUsage::WRITE_OFTEN ) )
 		{
 			void* ptr;
-			CR_RETURN_HR( MapForWriting( ptr, Tr2LockType::SYNCHRONIZED, renderContext ) );
+			CR_RETURN_HR( MapForWriting( ptr, renderContext ) );
 
 			uint8_t* dst = static_cast<uint8_t*>( ptr ) + offset;
-			const uint8_t* src = static_cast<const uint8_t*>( data ) + offset;
+			const uint8_t* src = static_cast<const uint8_t*>( data );
 
 			memcpy( dst, src, size );
 			UnmapForWriting( renderContext );

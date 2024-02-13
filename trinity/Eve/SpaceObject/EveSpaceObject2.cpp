@@ -32,6 +32,8 @@
 #include "Eve/SpaceObject/Children/EveChildInheritProperties.h"
 #include "Shader/Tr2Shader.h"
 
+#include "../../Tr2BoneTransformBuffer.h"
+
 #include <limits>
 
 
@@ -518,6 +520,8 @@ void EveSpaceObject2::UpdateRtMesh()
 
 void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 {
+	m_boneOffsets.AdvanceFrame();
+
 	if( !m_update )
 	{
 		return;
@@ -1300,6 +1304,15 @@ void EveSpaceObject2::ClearShLighting()
 // --------------------------------------------------------------------------------
 Tr2PerObjectData* EveSpaceObject2::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
+	if( m_animationUpdater && m_animationUpdater->IsInitialized() )
+	{
+		auto boneCount = uint32_t( m_animationUpdater->GetMeshBoneCount() );
+		m_vsData.boneOffsets[2] = boneCount;
+		m_boneOffsets.UploadTransforms( Tr2BoneTransformBuffer::GetInstance(), reinterpret_cast<const Tr2BoneTransformBuffer::Float4x3*>( m_animationUpdater->GetMeshBoneMatrixList() ), boneCount );
+	}
+	m_vsData.boneOffsets[0] = m_boneOffsets.GetCurrentFrameOffset();
+	m_vsData.boneOffsets[1] = m_boneOffsets.GetPreviousFrameOffset();
+
 	Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveSpaceObject2>>();
 	if( !perObjectData )
 	{
@@ -1318,14 +1331,7 @@ uint32_t EveSpaceObject2::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType
 	}
 	else
 	{
-		int boneCount = 0;
-		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
-		{
-			boneCount = m_animationUpdater->GetMeshBoneCount();
-		}
-
-		return sizeof( m_vsData ) +
-			boneCount * 3 * 16; // m_vsBonesMatrix (3x4)
+		return sizeof( m_vsData );
 	}
 }
 
@@ -1341,15 +1347,7 @@ void EveSpaceObject2::UpdatePerObjectBuffer( Tr2RenderContextEnum::ShaderType sh
 	}
 	else
 	{
-		uint8_t* perObjectVS = (uint8_t*)data;
-		memcpy( perObjectVS, &m_vsData, sizeof( m_vsData ) );
-		perObjectVS += sizeof( m_vsData );
-
-		size -= sizeof( m_vsData );
-		if( size )
-		{
-			memcpy( perObjectVS, m_animationUpdater->GetMeshBoneMatrixList(), size );
-		}
+		memcpy( data, &m_vsData, sizeof( m_vsData ) );
 	}
 }
 
@@ -3541,6 +3539,7 @@ void EveSpaceObject2::SetInheritProperties( const Color* colorSet )
 		}
 	}
 }
+
 void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 {
 	if( !m_mesh || !m_display )
@@ -3585,3 +3584,4 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		}
 	}
 }
+

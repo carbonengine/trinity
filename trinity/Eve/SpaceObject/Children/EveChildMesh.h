@@ -150,6 +150,7 @@ protected:
 	float m_sortValueScale;
 
 	// per-object data
+	Tr2BoneTransformOffsets m_boneOffsets;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataVs;
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataPs;
 	EveSpaceObjectPSData m_psData;
