@@ -42,8 +42,6 @@ BLUE_DECLARE( TriObserverLocal );
 // constants
 // maximum number of single turrets per turret set
 const unsigned int EVE_MAX_TURRETS_PER_SET = 24;
-// maximum number of bones in all of the turret set
-const unsigned int EVE_MAX_TURRET_SET_BONES = EVE_MAX_TURRETS_PER_SET * 3;
 // maximum time offset for turret firing
 const float EVE_TURRET_RANDOM_DELAY_MAX = 0.6f;
 
@@ -51,14 +49,15 @@ struct EveTurretSetVSData {
     Vector4 m_baseCutoffData;
     Vector4 m_turretSetData;
     Matrix m_shipMatrix;
+	Matrix m_prevShipMatrix;
+
+	uint32_t m_currentBoneOffset;
+	uint32_t m_prevBoneOffset;
+	uint32_t _unused[2];
 
     // per turret data
     Vector4 m_turretTranslation[EVE_MAX_TURRETS_PER_SET];
     Quaternion m_turretRotation[EVE_MAX_TURRETS_PER_SET];
-
-    // pose information
-    // For each turret we have a position (Vector4) and then quaternion (and then position and then quaternion etc.)
-    float m_turretPosAndRotationBuffer[4 * 2 * EVE_MAX_TURRET_SET_BONES];
 };
 
 struct EveTurretSetPSData {
@@ -295,8 +294,6 @@ private:
 	// calc best suited turret and target's locator
 	bool GetClosestTurretAndLocator( unsigned int& closestTurretIx, int& closestLocatorIx ) const;
 
-	void SetTurretBonePose( EveTurretSetPerObjectData* perObjectData, int boneIndex, const Vector3& poseTranslation, const Quaternion& poseRotation );
-
 	// name
 	std::string m_name;
 	// toggle display
@@ -304,8 +301,6 @@ private:
 	bool m_displayEffects;
 	bool m_isOnline;
 	bool m_updatePitchPose;
-	// how many turrets can actually be displayed, due to bone count
-	unsigned int m_possibleTurretDisplayAmount;
 	// how many turrets visible in this frame?
 	unsigned int m_visibleCount;
 	// what is the highest onscreen size?
@@ -322,6 +317,7 @@ private:
 
 	// parent ship data
 	IEveSpaceObject2::ParentData m_parentData;
+	Matrix m_shipTransformPrev;
 	const Vector4* m_parentShLighting;
 
 	// keep a vector of data on each pair of the turret
@@ -458,6 +454,8 @@ private:
 	TriObserverLocalPtr m_turretMovementObserver;
 	std::wstring m_idleToTargetingMovementAudioEvent;
 	std::wstring m_targetingToIdleMovementAudioEvent;
+
+	Tr2BoneTransformOffsets m_boneOffsets;
 };
 
 TYPEDEF_BLUECLASS( EveTurretSet );
