@@ -188,9 +188,10 @@ public:
 	void Dispatch( Tr2RenderContextAL& renderContext );
 
 private:
+
 #ifdef STREAMLINE_AVAILABLE
-	uint32_t m_id;
-	sl::ViewportHandle m_view;
+    uint32_t m_id;
+    sl::ViewportHandle m_view;
 #endif //STREAMLINE_AVAILABLE
 };
 
