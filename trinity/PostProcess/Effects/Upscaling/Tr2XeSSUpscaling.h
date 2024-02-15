@@ -70,7 +70,6 @@ private:
 	float m_jitterOffsetYScale;
 	bool m_reset;
 
-	static xess_context_handle_t s_context;
 	_xess_quality_settings_t m_xessSetting;
 
 	const char* ResultToString( xess_result_t result ) const;
@@ -83,7 +82,6 @@ private:
 	bool m_setup;
 	bool m_initialized;
 	bool m_useReactive;
-	static bool s_initialized;
 };
 TYPEDEF_BLUECLASS( Tr2XeSSUpscaling );
 #else

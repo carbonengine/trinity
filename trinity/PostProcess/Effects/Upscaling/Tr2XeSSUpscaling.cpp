@@ -14,7 +14,6 @@
 #include "../trinityal/dx12/Utilities.h"
 
 Tr2XeSSUpscaling::Availability Tr2XeSSUpscaling::s_availability = Tr2XeSSUpscaling::Availability::XESS_AVAILABILITY_UNKNOWN;
-xess_context_handle_t Tr2XeSSUpscaling::s_context = nullptr;
 uint32_t Tr2XeSSUpscaling::s_creationNodeMask = 0;
 
 namespace XessUtils
@@ -80,44 +79,88 @@ void LogXeSS( const char* message, xess_logging_level_t loggingLevel )
 }
 }
 
+namespace
+{
+
+class XessContext : public Tr2DeviceResource
+{
+public:
+	~XessContext()
+	{
+		DestroyContext();
+	}
+
+	xess_context_handle_t GetContext()
+	{
+		if( !m_context )
+		{
+			CCP_STATS_ZONE( __FUNCTION__ );
+
+			USE_MAIN_THREAD_RENDER_CONTEXT();
+			auto status = xessD3D12CreateContext( renderContext.m_device, &m_context );
+			if( status != XESS_RESULT_SUCCESS )
+			{
+				m_context = nullptr;
+				CCP_LOGNOTICE( "XeSS: XeSS is not supported on this device. Result - %s.", XessUtils::ResultToString( status ) );
+			}
+			else if( XESS_RESULT_WARNING_OLD_DRIVER == xessIsOptimalDriver( m_context ) )
+			{
+				CCP_LOGNOTICE( "XeSS: Please install the latest graphics driver from your vendor for optimal Intel(R) XeSS performance and visual quality" );
+			}
+			else
+			{
+				CCP_LOGNOTICE( "XeSS context created" );
+			}
+		}
+		return m_context;
+	}
+
+protected:
+	void DestroyContext()
+	{
+		if( m_context )
+		{
+			USE_MAIN_THREAD_RENDER_CONTEXT();
+			renderContext.FlushAndSyncDx12( renderContext );
+
+			xessDestroyContext( m_context );
+			m_context = nullptr;
+		}
+	}
+
+	void ReleaseResources( TriStorage s ) override
+	{
+		if( ( s & TRISTORAGE_MANAGEDMEMORY ) != 0 )
+		{
+			DestroyContext();
+		}
+	}
+
+	bool OnPrepareResources() override
+	{
+		return true;
+	}
+
+	xess_context_handle_t m_context = nullptr;
+};
+
+XessContext* s_context = nullptr;
+
+}
 
 
 void Tr2XeSSUpscaling::Initialize()
 {
-
-	CCP_STATS_ZONE( __FUNCTION__ );
 	if( !s_context )
 	{
-
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		auto status = xessD3D12CreateContext( renderContext.GetPrimaryRenderContext().m_device, &s_context );
-		if( status != XESS_RESULT_SUCCESS )
-		{
-			s_context = nullptr;
-			CCP_LOGNOTICE( "XeSS: XeSS is not supported on this device. Result - %s.", XessUtils::ResultToString( status ) );
-			return;
-		}
-
-		if( XESS_RESULT_WARNING_OLD_DRIVER == xessIsOptimalDriver( s_context ) )
-		{
-			CCP_LOGNOTICE( "XeSS: Please install the latest graphics driver from your vendor for optimal Intel(R) XeSS performance and visual quality" );
-			return;
-		}
-		CCP_LOGNOTICE( "XeSS context created" );
+		s_context = new XessContext();
 	}
 }
 
 void Tr2XeSSUpscaling::Shutdown()
 {
-	if( s_context )
-	{
-
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		renderContext.FlushAndSyncDx12( renderContext );
-
-		xessDestroyContext( s_context );
-		s_context = nullptr;
-	}
+	delete s_context;
+	s_context = nullptr;
 }
 
 Tr2XeSSUpscaling::Tr2XeSSUpscaling( IRoot* lockobj ) :
@@ -265,7 +308,7 @@ void Tr2XeSSUpscaling::ApplySetting( const Tr2Upscaling::Setting& setting, uint3
 	xess_2d_t inputMaxRes = { 1, 1 };
 	xess_2d_t outputRes = { displayWidth, displayHeight };
 
-	auto ret = xessGetOptimalInputResolution( s_context, &outputRes, m_xessSetting, &inputRes, &inputMinRes, &inputMaxRes );
+	auto ret = xessGetOptimalInputResolution( s_context->GetContext(), &outputRes, m_xessSetting, &inputRes, &inputMinRes, &inputMaxRes );
 	if( ret != XESS_RESULT_SUCCESS )
 	{
 		CCP_LOGERR( "XeSS: Could not get input resolution. Result - %s.", XessUtils::ResultToString( ret ) );
@@ -304,7 +347,7 @@ void Tr2XeSSUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, 
 	renderContext.FlushAndSyncDx12();
 	renderContext.DirtyDescriptorCache();
 
-	xess_result_t ret = xessD3D12Init( s_context, &params );
+	xess_result_t ret = xessD3D12Init( s_context->GetContext(), &params );
 	if( ret != XESS_RESULT_SUCCESS )
 	{
 		CCP_LOGERR( "XeSS: Could not initialize. Result - %s.", XessUtils::ResultToString( ret ) );
@@ -401,7 +444,7 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 	params.pExposureScaleTexture = GetTexture( textures.exposure );
 	params.pResponsivePixelMaskTexture = m_useReactive ? GetTexture( textures.reactive ) : nullptr;
 
-	xess_result_t ret = xessD3D12Execute( s_context, renderContext.m_commandList, &params );
+	xess_result_t ret = xessD3D12Execute( s_context->GetContext(), renderContext.m_commandList, &params );
 
 	// Trigger error report once.
 	if( ret != XESS_RESULT_SUCCESS )
