@@ -17,7 +17,6 @@ namespace MetalUpscalingUtils {
     float GetUpscalingBasedOnSetting( const Tr2Upscaling::Setting& setting );
 }
 
-
 BLUE_CLASS( Tr2MetalFxSpatialUpscaling ) : public ITr2Upscaling
 {
 public:
@@ -41,6 +40,7 @@ public:
     void Dispatch( Tr2RenderContext& renderContext, Tr2PostProcessRenderInfo& renderInfo, Tr2Upscaling::Textures& textures, const Tr2Upscaling::SceneInformation& sceneInformation );
 
 private:
+    API_AVAILABLE(macos(13.0))
     id<MTLFXSpatialScaler> m_mfxSpatialScaler;
     float m_upscaling;
     uint32_t m_displayWidth;
@@ -48,7 +48,6 @@ private:
     uint32_t m_renderWidth;
     uint32_t m_renderHeight;
 };
-
 
 BLUE_CLASS( Tr2MetalFxTemporalUpscaling ) : public ITr2Upscaling
 {
@@ -73,11 +72,12 @@ public:
     void Dispatch( Tr2RenderContext& renderContext, Tr2PostProcessRenderInfo& renderInfo, Tr2Upscaling::Textures& textures, const Tr2Upscaling::SceneInformation& sceneInformation );
 
 private:
+    API_AVAILABLE(macos(13.0))
     id<MTLFXTemporalScaler> m_mfxTemporalScaler;
     float m_upscaling;
     
     uint32_t m_jitterIndex;
-    Jitter::JitterSequence m_jitterSequence;
+    std::vector<std::pair<float, float>> m_jitterSequence;
     float m_jitterX;
     float m_jitterY;
     uint32_t m_renderWidth;

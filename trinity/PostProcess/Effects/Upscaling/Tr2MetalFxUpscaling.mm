@@ -5,7 +5,6 @@
 //
 #include "StdAfx.h"
 #include "Tr2MetalFxUpscaling.h"
-#include "Tr2UpscalingUtils.h"
 
 #if TRINITY_PLATFORM == TRINITY_METAL
 
@@ -13,6 +12,7 @@
 #include "../trinityal/metal/Tr2RenderContextMetal.h"
 #include "../trinityal/metal/MetalContext.h"
 #include "../trinityal/metal/Tr2TextureALMetal.h"
+#include "Tr2UpscalingUtils.h"
 
 namespace MetalUpscalingUtils {
     id<MTLTexture> GetMetalTexture(ITr2TextureProvider* texture)
@@ -49,14 +49,20 @@ namespace MetalUpscalingUtils {
 }
 
 Tr2MetalFxSpatialUpscaling::Tr2MetalFxSpatialUpscaling( IRoot* lockobj ):
-    m_upscaling(1.0),
-    m_mfxSpatialScaler(nil)
+    m_upscaling(1.0)
 {
+    if( @available(macOS 13.0, *))
+    {
+        m_mfxSpatialScaler = nil;
+    }
 }
 
 Tr2MetalFxSpatialUpscaling::~Tr2MetalFxSpatialUpscaling()
 {
-    m_mfxSpatialScaler = nil;
+    if( @available(macOS 13.0, *))
+    {
+        m_mfxSpatialScaler = nil;
+    }
 }
 
 bool Tr2MetalFxSpatialUpscaling::IsApplicable() const
@@ -155,17 +161,20 @@ void Tr2MetalFxSpatialUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setu
 
 void Tr2MetalFxSpatialUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcessRenderInfo& renderInfo, Tr2Upscaling::Textures& textures, const Tr2Upscaling::SceneInformation& sceneInformation )
 {
-    if( m_mfxSpatialScaler == nil )
+    if( @available(macOS 13.0, *))
     {
-        CCP_LOGERR("Trying to render with a nil MetalFX Spatial Scaler");
-        return;
+        if( m_mfxSpatialScaler == nil )
+        {
+            CCP_LOGERR("Trying to render with a nil MetalFX Spatial Scaler");
+            return;
+        }
+        auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
+        
+        m_mfxSpatialScaler.colorTexture = MetalUpscalingUtils::GetMetalTexture(textures.input);
+        m_mfxSpatialScaler.outputTexture = MetalUpscalingUtils::GetMetalTexture(textures.output);
+        
+        [m_mfxSpatialScaler encodeToCommandBuffer:queue->GetCommandBuffer()];
     }
-    auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
-    
-    m_mfxSpatialScaler.colorTexture = MetalUpscalingUtils::GetMetalTexture(textures.input);
-    m_mfxSpatialScaler.outputTexture = MetalUpscalingUtils::GetMetalTexture(textures.output);
-    
-    [m_mfxSpatialScaler encodeToCommandBuffer:queue->GetCommandBuffer()];
 }
 
 
@@ -176,14 +185,21 @@ Tr2MetalFxTemporalUpscaling::Tr2MetalFxTemporalUpscaling( IRoot* lockobj ):
     m_jitterY(0.0f),
     m_renderWidth(0.0f),
     m_renderHeight(0.0f),
-    m_reset(false),
-    m_mfxTemporalScaler(nil)
+    m_reset(false)
 {
+    if( @available(macOS 13.0, *))
+    {
+        m_mfxTemporalScaler = nil;
+    }
+
 }
 
 Tr2MetalFxTemporalUpscaling::~Tr2MetalFxTemporalUpscaling()
 {
-    m_mfxTemporalScaler = nil;
+    if( @available(macOS 13.0, *))
+    {
+        m_mfxTemporalScaler = nil;
+    }
 }
 
 bool Tr2MetalFxTemporalUpscaling::IsApplicable() const
@@ -297,26 +313,30 @@ void Tr2MetalFxTemporalUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext set
 
 void Tr2MetalFxTemporalUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcessRenderInfo& renderInfo, Tr2Upscaling::Textures& textures, const Tr2Upscaling::SceneInformation& sceneInformation )
 {
-    if( m_mfxTemporalScaler == nil )
+    if( @available(macOS 13.0, *))
     {
-        CCP_LOGERR("Trying to render with a nil MetalFX Temporal Scaler");
-        return;
+        
+        if( m_mfxTemporalScaler == nil )
+        {
+            CCP_LOGERR("Trying to render with a nil MetalFX Temporal Scaler");
+            return;
+        }
+        
+        auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
+        
+        m_mfxTemporalScaler.reset = m_reset;
+        m_mfxTemporalScaler.colorTexture = MetalUpscalingUtils::GetMetalTexture(textures.input);
+        m_mfxTemporalScaler.depthTexture = MetalUpscalingUtils::GetMetalTexture(textures.depth);
+        m_mfxTemporalScaler.motionTexture = MetalUpscalingUtils::GetMetalTexture(textures.motion);
+        m_mfxTemporalScaler.outputTexture = MetalUpscalingUtils::GetMetalTexture(textures.output);
+        m_mfxTemporalScaler.depthReversed = true;
+        m_mfxTemporalScaler.jitterOffsetX = m_jitterX;
+        m_mfxTemporalScaler.jitterOffsetY = m_jitterY;
+        
+        [m_mfxTemporalScaler encodeToCommandBuffer:queue->GetCommandBuffer()];
+        
+        m_reset = false;
     }
-    
-    auto queue = renderContext.GetPrimaryRenderContext().GetMetalWorkQueue();
-
-    m_mfxTemporalScaler.reset = m_reset;
-    m_mfxTemporalScaler.colorTexture = MetalUpscalingUtils::GetMetalTexture(textures.input);
-    m_mfxTemporalScaler.depthTexture = MetalUpscalingUtils::GetMetalTexture(textures.depth);
-    m_mfxTemporalScaler.motionTexture = MetalUpscalingUtils::GetMetalTexture(textures.motion);
-    m_mfxTemporalScaler.outputTexture = MetalUpscalingUtils::GetMetalTexture(textures.output);
-    m_mfxTemporalScaler.depthReversed = true;
-    m_mfxTemporalScaler.jitterOffsetX = m_jitterX;
-    m_mfxTemporalScaler.jitterOffsetY = m_jitterY;
-    
-    [m_mfxTemporalScaler encodeToCommandBuffer:queue->GetCommandBuffer()];
-
-    m_reset = false;
 }
 
 
