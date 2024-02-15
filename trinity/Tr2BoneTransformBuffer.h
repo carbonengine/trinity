@@ -13,6 +13,9 @@ public:
 
 	struct Float4x3
 	{
+		Float4x3() = default;
+		explicit Float4x3( const Matrix& m );
+
 		float elements[12];
 	};
 

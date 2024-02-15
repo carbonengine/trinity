@@ -6,6 +6,23 @@ namespace
 constexpr uint32_t INITIAL_SIZE = 16 * 1024;
 }
 
+Tr2BoneTransformBuffer::Float4x3::Float4x3( const Matrix& m )
+{
+	elements[0] = m._11;
+	elements[1] = m._21;
+	elements[2] = m._31;
+	elements[3] = m._41;
+	elements[4] = m._12;
+	elements[5] = m._22;
+	elements[6] = m._32;
+	elements[7] = m._42;
+	elements[8] = m._13;
+	elements[9] = m._23;
+	elements[10] = m._33;
+	elements[11] = m._43;
+}
+
+
 uint32_t Tr2BoneTransformBuffer::UploadTransforms( const Float4x3* data, uint32_t matrixCount )
 {
 	if( m_head >= m_tail )

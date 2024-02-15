@@ -3212,7 +3212,7 @@ TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
 
 	uint32_t capacity = 30;
 
-	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride * capacity, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE_OFTEN, nullptr, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( vb.Create( vbStride, sizeof( vertices ) / vbStride * capacity, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, *renderContext ) );
 
 	Tr2VertexDefinition definition;
 	definition.Add( Tr2VertexDefinition::FLOAT32_3, Tr2VertexDefinition::POSITION );
@@ -3234,15 +3234,8 @@ TEST_F( Rendering, CanWriteToDynamicVBWithoutSynchronization )
 		}
 
 		void* vbData;
-		if( g % 5 == 0 )
-		{
-			// just to make it harder
-			ASSERT_HRESULT_SUCCEEDED( vb.MapForWriting( vbData, Tr2LockType::SYNCHRONIZED, *renderContext ) );
-		}
-		else
-		{
-			ASSERT_HRESULT_SUCCEEDED( vb.MapForWriting( vbData, Tr2LockType::NON_SYNCHRONIZED, *renderContext ) );
-		}
+		ASSERT_HRESULT_SUCCEEDED( vb.MapForWriting( vbData, *renderContext ) );
+
 		vertices[3] = -0.5f + float( g & 0xff ) / 255;
 		memcpy( static_cast<uint8_t*>( vbData ) + offset, vertices, sizeof( vertices ) );
 		vb.UnmapForWriting( *renderContext );

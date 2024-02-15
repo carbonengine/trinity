@@ -145,10 +145,10 @@ TEST_F( Buffer, CanLockDynamicBufferForWritingWithoutSynchronization )
 {
 	ENSURE_GPU_OR_SKIP
 	Tr2BufferAL buffer;
-	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE_OFTEN, nullptr, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( buffer.Create( sizeof( float ), 4, Tr2GpuUsage::VERTEX_BUFFER, Tr2CpuUsage::WRITE_OFTEN | Tr2CpuUsage::NON_SYNCRONIZED_WRITE, nullptr, *renderContext ) );
 
 	float* locked;
-	ASSERT_HRESULT_SUCCEEDED( buffer.MapForWriting( locked, Tr2LockType::NON_SYNCHRONIZED, *renderContext ) );
+	ASSERT_HRESULT_SUCCEEDED( buffer.MapForWriting( locked, *renderContext ) );
 	buffer.UnmapForWriting( *renderContext );
 }
 
