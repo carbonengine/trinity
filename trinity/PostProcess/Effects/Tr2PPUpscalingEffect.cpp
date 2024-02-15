@@ -271,6 +271,11 @@ bool Tr2PPUpscalingEffect::NeedsExposureTexture() const
 	return m_upscalingEffect->NeedsExposureTexture();
 }
 
+bool Tr2PPUpscalingEffect::UsesExposureTexture() const
+{
+	return m_upscalingEffect->UsesExposureTexture();
+}
+
 bool Tr2PPUpscalingEffect::NeedsReactiveTexture() const
 {
 	return m_upscalingEffect->NeedsReactiveTexture();

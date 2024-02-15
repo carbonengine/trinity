@@ -61,6 +61,7 @@ public:
 	void SetHudlessResource( Tr2TextureAL* hudlessResource, Tr2RenderContext& renderContext );
 
 	bool NeedsExposureTexture() const;
+	bool UsesExposureTexture() const;
 	bool NeedsReactiveTexture() const;
 
 private:

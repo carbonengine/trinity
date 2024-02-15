@@ -935,16 +935,25 @@ void TriStepRenderPostProcess::RenderDynamicExposure( Tr2RenderTarget* dest, Tr2
 }
 
 
-Tr2Upscaling::UpscalingType TriStepRenderPostProcess::ProcessUpscaling( Tr2PPUpscalingEffect* upscaling, Tr2RenderContext & renderContext )
+Tr2Upscaling::UpscalingType TriStepRenderPostProcess::ProcessUpscaling( Tr2PPUpscalingEffect* upscaling, Tr2RenderContext& renderContext )
 {
 	if( upscaling && upscaling->IsActive() )
 	{ 
+		bool hasExposure = m_exposureTexture != nullptr;
+		if( !upscaling->IsDirty() && upscaling->NeedsExposureTexture() )
+		{
+			if( hasExposure != upscaling->UsesExposureTexture() )
+			{
+				upscaling->SetDirty( true );
+			}
+		}
 		if( upscaling->IsDirty() )
 		{
 			Tr2Upscaling::UpscalingSetupContext setupContext = {};
 			setupContext.sourcePixelFormat = m_renderInfo->GetSourceBuffer()->GetFormat();
 			setupContext.depthPixelFormat = Tr2RenderContextEnum::ConvertDepthStencilFormat( m_scene->GetDepth() ? m_scene->GetDepth()->GetFormat() : Tr2RenderContextEnum::DSFMT_UNKNOWN );
 			setupContext.motionVectorPixelFormat = m_filledVelocity->GetFormat();
+			setupContext.hasExposureTexture = hasExposure;
             
 			upscaling->Setup( setupContext, renderContext );
 			upscaling->SetDirty( false );

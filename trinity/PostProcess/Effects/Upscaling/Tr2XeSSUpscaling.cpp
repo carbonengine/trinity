@@ -87,7 +87,13 @@ class XessContext : public Tr2DeviceResource
 public:
 	~XessContext()
 	{
-		DestroyContext();
+		if( m_context )
+		{
+			USE_MAIN_THREAD_RENDER_CONTEXT();
+			renderContext.FlushAndSyncDx12( renderContext );
+
+			xessDestroyContext( m_context );
+		}
 	}
 
 	xess_context_handle_t GetContext()
@@ -116,23 +122,13 @@ public:
 	}
 
 protected:
-	void DestroyContext()
-	{
-		if( m_context )
-		{
-			USE_MAIN_THREAD_RENDER_CONTEXT();
-			renderContext.FlushAndSyncDx12( renderContext );
-
-			xessDestroyContext( m_context );
-			m_context = nullptr;
-		}
-	}
 
 	void ReleaseResources( TriStorage s ) override
 	{
-		if( ( s & TRISTORAGE_MANAGEDMEMORY ) != 0 )
+		if( m_context && ( s & TRISTORAGE_MANAGEDMEMORY ) != 0 )
 		{
-			DestroyContext();
+			xessDestroyContext( m_context );
+			m_context = nullptr;
 		}
 	}
 
@@ -179,7 +175,8 @@ Tr2XeSSUpscaling::Tr2XeSSUpscaling( IRoot* lockobj ) :
 	m_dirty( true ),
 	m_setup( false ),
 	m_initialized( false ),
-	m_useReactive( false )
+	m_useReactive( false ),
+	m_useExposureTexture( false )
 {
 }
 
@@ -334,16 +331,18 @@ void Tr2XeSSUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, 
 	params.outputResolution.x = m_displayWidth;
 	params.outputResolution.y = m_displayHeight;
 	params.qualitySetting = m_xessSetting;
-	params.visibleNodeMask = s_creationNodeMask;
-	params.creationNodeMask = s_creationNodeMask++;
-	params.initFlags = XESS_INIT_FLAG_INVERTED_DEPTH | XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE | XESS_INIT_FLAG_USE_NDC_VELOCITY;
+	params.initFlags = XESS_INIT_FLAG_INVERTED_DEPTH | XESS_INIT_FLAG_USE_NDC_VELOCITY;
+	if( setupContext.hasExposureTexture )
+	{
+		params.initFlags |= XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE;
+	}
+	m_useExposureTexture = setupContext.hasExposureTexture;
 
 	if( m_useReactive )
 	{
 		params.initFlags |= XESS_INIT_FLAG_RESPONSIVE_PIXEL_MASK;
 	}
 
-	params.pPipelineLibrary = nullptr;
 	renderContext.FlushAndSyncDx12();
 	renderContext.DirtyDescriptorCache();
 
@@ -393,16 +392,22 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 		}
 	};
 
-	auto transitioner = []( Tr2RenderContext& renderContext, ITr2TextureProvider* texture, D3D12_RESOURCE_STATES oldState, D3D12_RESOURCE_STATES newState ) {
+	auto TransitionTo = []( Tr2RenderContext& renderContext, ITr2TextureProvider* texture, D3D12_RESOURCE_STATES newState ) {
 		if( texture && texture->GetTexture() && texture->GetTexture()->TrinityALImpl_GetObject() )
 		{
 			auto tex = texture->GetTexture()->TrinityALImpl_GetObject();
-			if( newState == oldState )
-				return;
-
-			renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( tex->GetResourceDx12(), oldState, newState ) );
+			renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( tex->GetResourceDx12(), tex->GetResourceState(), newState ) );
 		}
 	};
+
+	auto TransitionFrom = []( Tr2RenderContext& renderContext, ITr2TextureProvider* texture, D3D12_RESOURCE_STATES oldState ) {
+		if( texture && texture->GetTexture() && texture->GetTexture()->TrinityALImpl_GetObject() )
+		{
+			auto tex = texture->GetTexture()->TrinityALImpl_GetObject();
+			renderContext.ResourceBarrierDx12( TrinityALImpl::Transition( tex->GetResourceDx12(), oldState, tex->GetResourceState() ) );
+		}
+	};
+
 	namer( textures.input, "xess input" );
 	namer( textures.output, "xess output" );
 	namer( textures.depth, "xess depth" );
@@ -412,19 +417,16 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 	namer( textures.reactive, "xess reative" );
 
 	// flush all barriers before changing the state of the textures
+	renderContext.SetResourceSet( Tr2ResourceSetAL() );
 	renderContext.FlushBarriersDx12();
-	const D3D12_RESOURCE_STATES output_state = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	const D3D12_RESOURCE_STATES input_state = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-	const D3D12_RESOURCE_STATES exposure_state = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-	const D3D12_RESOURCE_STATES reactive_state = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
 
 	// transition from common to unordered access view, since the output texture must be in that state
-	transitioner( renderContext, textures.output, output_state, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
-	transitioner( renderContext, textures.input, input_state, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
-	transitioner( renderContext, textures.exposure, exposure_state, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
+	TransitionTo( renderContext, textures.output, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
+	TransitionTo( renderContext, textures.input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
+	TransitionTo( renderContext, textures.exposure, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
 	if( m_useReactive )
 	{
-		transitioner( renderContext, textures.reactive, reactive_state, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
+		TransitionTo( renderContext, textures.reactive, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
 	}
 	// flush all barriers before handing control over to XeSS, so the states are applied
 	renderContext.FlushBarriersDx12();
@@ -461,19 +463,23 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 	m_reset = false;
 
 	// transition back to what it was
-	transitioner( renderContext, textures.output, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, output_state );
-	transitioner( renderContext, textures.input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, input_state );
-	transitioner( renderContext, textures.exposure, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, exposure_state );
+	TransitionFrom( renderContext, textures.output, D3D12_RESOURCE_STATE_UNORDERED_ACCESS );
+	TransitionFrom( renderContext, textures.input, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
+	TransitionFrom( renderContext, textures.exposure, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
 	if( m_useReactive )
 	{
-		transitioner( renderContext, textures.reactive, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, reactive_state );
+		TransitionFrom( renderContext, textures.reactive, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE );
 	}
-	renderContext.FlushBarriersDx12();
 }
 
 bool Tr2XeSSUpscaling::NeedsExposureTexture() const
 {
 	return true;
+}
+
+bool Tr2XeSSUpscaling::UsesExposureTexture() const
+{
+	return m_useExposureTexture;
 }
 
 bool Tr2XeSSUpscaling::NeedsReactiveTexture() const

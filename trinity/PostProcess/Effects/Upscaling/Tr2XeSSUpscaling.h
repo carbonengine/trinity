@@ -39,6 +39,7 @@ public:
 	void Dispatch( Tr2RenderContext& renderContext, Tr2PostProcessRenderInfo& renderInfo, Tr2Upscaling::Textures& textures, const Tr2Upscaling::SceneInformation& sceneInformation );
 
 	bool NeedsExposureTexture() const override;
+	bool UsesExposureTexture() const override;
 	bool NeedsReactiveTexture() const override;
 
 	static void Initialize();
@@ -82,6 +83,7 @@ private:
 	bool m_setup;
 	bool m_initialized;
 	bool m_useReactive;
+	bool m_useExposureTexture;
 };
 TYPEDEF_BLUECLASS( Tr2XeSSUpscaling );
 #else

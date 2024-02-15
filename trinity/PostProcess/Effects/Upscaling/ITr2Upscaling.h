@@ -66,6 +66,7 @@ namespace Tr2Upscaling
         Tr2RenderContextEnum::PixelFormat sourcePixelFormat;
         Tr2RenderContextEnum::PixelFormat motionVectorPixelFormat;
         Tr2RenderContextEnum::PixelFormat depthPixelFormat;
+		bool hasExposureTexture;
     };
 
 	extern Be::VarChooser UpscalingTypeChooser[];
@@ -92,6 +93,7 @@ public:
 	
 	virtual bool IsApplicable() const = 0;
 	virtual bool NeedsExposureTexture() const { return false; }
+	virtual bool UsesExposureTexture() const { return false; }
 	virtual bool NeedsReactiveTexture() const { return false; }
 	virtual const std::vector<Tr2Upscaling::Setting> GetAvailableSettings() const = 0;
 
