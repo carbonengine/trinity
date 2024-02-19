@@ -467,26 +467,8 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 
 	if( g_eveSpaceSceneRaytracedShadows )
 	{
-		if( m_animationUpdater && m_animationUpdater->IsInitialized() )
-		{
-			auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-			if( !areas->empty() )
-			{
-				for( auto it = begin( *areas ); it != end( *areas ); ++it )
-				{
-					auto meshAreaIndex = (*it)->GetIndex();
-					auto meshIndex = m_mesh->GetMeshIndex();
-					auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
-					auto rtMesh = m_mesh->GetRtMesh();
-					if( meshData->m_areas[meshAreaIndex].m_isSkinned && rtMesh )
-					{
-						rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList() );
-					}
-				}
-			}
-		}
-
 		UpdateRtMesh();
+		UpdateRtSkeleton();
 	}
 }
 
@@ -516,7 +498,56 @@ void EveSpaceObject2::UpdateRtMesh()
 			(*it)->GetOrCreateRtMeshArea();
 		}
 	}
-}
+ }
+
+ void EveSpaceObject2::UpdateRtSkeleton()
+ {
+	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
+	{
+		return;
+	}
+
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	auto rtMesh = m_mesh->GetRtMesh();
+	if( areas->empty() || !rtMesh )
+	{
+		return; //no areas at all or no RT mesh
+	}
+
+	auto meshIndex = m_mesh->GetMeshIndex();
+	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
+
+	bool hasSkinned = false;
+
+	for( auto it = begin( *areas ); it != end( *areas ); ++it )
+	{
+		if( meshData->m_areas[( *it )->GetIndex()].m_isSkinned )
+		{
+			hasSkinned = true;
+			break;
+		}
+	}
+
+	if( !hasSkinned )
+	{
+		return; //no skinned areas
+	}
+
+	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList() );
+
+	if (skeletonChanged)
+	{
+		//Skeleton has changed, so mark all area BLAS's as out-of-date.
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		{
+			auto meshAreaIndex = ( *it )->GetIndex();
+			if( meshData->m_areas[meshAreaIndex].m_isSkinned )
+			{
+				( *it )->GetRtMeshArea()->MarkBlasOutdated();
+			}
+		}
+	}
+ }
 
 void EveSpaceObject2::UpdateAsyncronous( EveUpdateContext& updateContext )
 {
@@ -3584,4 +3615,3 @@ void EveSpaceObject2::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		}
 	}
 }
-

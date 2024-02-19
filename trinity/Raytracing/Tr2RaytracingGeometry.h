@@ -58,10 +58,10 @@ public:
 	Tr2RaytracingMesh();
 
 	void SetMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize );
-	void SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms );
+	bool SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms );
 
 	bool IsGood() const;
-	bool IsDirty() const;
+	bool GetAndResetDirtyFlag();
 
 	TriGeometryResMeshData* GetMeshData() const;
 	size_t GetTransformsSize() const;
@@ -88,10 +88,13 @@ public:
 	const Tr2RtBottomLevelAccelerationStructureAL& BuildBlas( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
 	const Tr2ConstantBufferAL& GetGeometryConstants( Tr2RaytracingMesh& mesh, Tr2RenderContext& renderContext );
 	uint32_t GetAreaIndex(){ return m_areaIndex; }
+	void MarkBlasOutdated() { m_blasOutdated = true; }
 
 private:
-	Tr2RtBottomLevelAccelerationStructureAL m_blas;
 	uint32_t m_areaIndex;
+
+	Tr2RtBottomLevelAccelerationStructureAL m_blas;
+	bool m_blasOutdated;
 };
 
 BLUE_CLASS( Tr2RaytracingGeometry ) : public ITr2GpuBuffer
@@ -137,7 +140,7 @@ private:
 
 	VtxOffsets FindOffsets( unsigned declHandle );
 	
-	std::vector<Geometry> m_meshAreas;
+	std::vector<Geometry> m_geometries;
 	Tr2RtTopLevelAccelerationStructureAL m_tlas;
 
 	Tr2EffectPtr m_skinVerticesEffect;

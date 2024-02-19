@@ -666,6 +666,7 @@ protected:
 	EntityComponents::ReflectionMode m_reflectionMode;
 
 	void UpdateRtMesh();
+	void UpdateRtSkeleton();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 
 	Tr2BoneTransformOffsets m_boneOffsets;

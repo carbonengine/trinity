@@ -674,13 +674,12 @@ void TriGeometryRes::DetermineAreaBones( TriGeometryResAreaData& area, granny_me
 bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* myMesh, int bytesPerVertex )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	bool isSkinned = false;
 	// offset to boneindex
 	int boneIndexOffset = GetVertexComponentOffset( myMesh, GrannyVertexBoneIndicesName );
 	// if there are no bone-indices , we are done
 	if( boneIndexOffset == -1 )
 	{
-		return isSkinned;
+		return false;
 	}
 
 	// pointers to bone indices
@@ -715,7 +714,8 @@ bool TriGeometryRes::IsAreaSkinned( TriGeometryResAreaData& area, granny_mesh* m
 			return true;
 		}
 	}
-	return isSkinned;
+	// if we reach this point, then no vertices have any valid bone indices
+	return false;
 }
 
 bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
@@ -823,10 +823,6 @@ bool TriGeometryRes::SetupMeshes( granny_file_info* gi )
 				pMesh->m_primitiveCount += area.m_primitiveCount;
 
 				area.m_isSkinned = IsAreaSkinned( area, myMesh, bytesPerVertex );
-				if( area.m_isSkinned )
-				{
-					bool yes = 1;
-				}
 
 				// only re-map the bone indices if there is a skeleton...
 				if( gi->SkeletonCount )
