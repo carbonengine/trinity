@@ -303,7 +303,8 @@ const Tr2RtBottomLevelAccelerationStructureAL& Tr2RaytracingMeshArea::BuildBlas(
 		{
 			if( FAILED( m_blas.Update( positions, indices, renderContext.GetPrimaryRenderContext() ) ) )
 			{
-				CCP_LOGERR( "Failed to update BLAS, recreating it instead" );
+				//This will fail gracefully whenever the LOD changes, so fall back to rebuild in this case.
+				//CCP_LOGERR( "Failed to update BLAS, recreating it instead" );
 				rebuild = true; //update failed, so rebuild it instead
 			}
 		}
