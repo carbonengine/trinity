@@ -487,8 +487,14 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		}
 
 		Tr2RaytracingMesh* mesh = it->mesh;
-		if( mesh->GetAndResetDirtyFlag() && mesh->GetMeshData()->m_areas[it->area->GetAreaIndex()].m_isSkinned )
+		if( mesh->GetMeshData()->m_areas[it->area->GetAreaIndex()].m_isSkinned )
 		{
+
+			if( !mesh->GetAndResetDirtyFlag() )
+			{
+				continue;
+			}
+
 			outdatedMeshes.push_back( mesh );
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
