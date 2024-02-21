@@ -46,9 +46,12 @@ using namespace Tr2RenderContextEnum;
 class TriPoolAllocator;
 
 CCP_STATS_DECLARE( shadowsRendered, "Trinity/EveSpaceScene/shadowsRendered", true, CST_COUNTER_LOW, "How many times are shadows rendered per frame?" );
+CCP_STATS_DECLARE( raytracedShadowsTime, "Trinity/EveSpaceScene/raytracedShadowsTime", true, CST_TIME, "Time it took to set up raytraced shadows" );
 CCP_STATS_DECLARE( shLightingUpdateTime, "Trinity/EveSpaceScene/shLightingUpdateTime", true, CST_TIME, "Time took to update SH lighting for EveSpaceScene" );
 CCP_STATS_DECLARE( gatherDynamicLights, "Trinity/EveSpaceScene/gatherDynamicLights", true, CST_TIME, "Time took to gather dynamic lights for EveSpaceScene" );
 CCP_STATS_DECLARE( updateDynamicLightLists, "Trinity/EveSpaceScene/updateDynamicLights", true, CST_TIME, "Time took to gather dynamic lights for EveSpaceScene" );
+
+
 
 bool g_eveIsSpaceObjectResourceUnloadingEnabled = true;
 TRI_REGISTER_SETTING( "eveIsSpaceObjectResourceUnloadingEnabled", g_eveIsSpaceObjectResourceUnloadingEnabled );
@@ -180,7 +183,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_hasBackgroundDistortionBatches( false ),
 	m_hasForegroundDistortionBatches( false ),
 	m_freezeFrustum( false ),
-	m_enableRaytracing( true ),
+	m_enableRaytracing( false ),
 	m_virtualCameraSystem(),
 	m_shadowView( IdentityMatrix() )
 {
@@ -1256,6 +1259,8 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
     if( m_rtManager && m_enableRaytracing && m_enableShadows )
     {
+		CCP_STATS_SCOPED_TIME( raytracedShadowsTime );
+
         m_rtManager->GetGeometry().BeginSceneUpdate();
         for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
         {
