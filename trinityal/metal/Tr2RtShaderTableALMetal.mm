@@ -66,17 +66,21 @@ namespace TrinityALImpl
     {
         //setOpaqueTriangleIntersectionFunction
         
-        MTLIntersectionFunctionTableDescriptor *intersectionFunctionTableDescriptor = [[MTLIntersectionFunctionTableDescriptor alloc] init];
-        intersectionFunctionTableDescriptor.functionCount = desc.m_hitGroupNames.size();
-
-        // Create a table large enough to hold all of the intersection functions. Metal
-        // links intersection functions into the compute pipeline state, potentially with
-        // a different address for each compute pipeline. Therefore, the intersection
-        // function table is specific to the compute pipeline state that created it, and you
-        // can use it with only that pipeline.
-        m_pipeline = pipeline.TrinityALImpl_GetObject()->GetRtPipeline();
-        m_intersectionFunctionTable = [m_pipeline newIntersectionFunctionTableWithDescriptor:intersectionFunctionTableDescriptor];
-        
+        if (@available(macOS 11.0, *)) {
+            
+            MTLIntersectionFunctionTableDescriptor *intersectionFunctionTableDescriptor = [[MTLIntersectionFunctionTableDescriptor alloc] init];
+            intersectionFunctionTableDescriptor.functionCount = desc.m_hitGroupNames.size();
+            
+            // Create a table large enough to hold all of the intersection functions. Metal
+            // links intersection functions into the compute pipeline state, potentially with
+            // a different address for each compute pipeline. Therefore, the intersection
+            // function table is specific to the compute pipeline state that created it, and you
+            // can use it with only that pipeline.
+            m_pipeline = pipeline.TrinityALImpl_GetObject()->GetRtPipeline();
+            
+            m_intersectionFunctionTable = [m_pipeline newIntersectionFunctionTableWithDescriptor:intersectionFunctionTableDescriptor];
+        }
+            
         // add functions to the dictionary
         // in shaderTable for each hit group map into the dict and get index -> add to handle
         // then in TLAS the index would be the same somehow???
@@ -112,18 +116,21 @@ namespace TrinityALImpl
 
     void Tr2RtShaderTableAL::AddFunctionToTable( id <MTLFunction> fn, int index )
     {
-        // Create a handle to the copy of the intersection function linked into the
-        // ray-tracing compute pipeline state. Create a different handle for each pipeline
-        // it is linked with.
-        id <MTLFunctionHandle> handle = [m_pipeline functionHandleWithFunction:fn];
-        
-        if( handle == nil )
-        {
-            return;
+        if (@available(macOS 11.0, *)) {
+            // Create a handle to the copy of the intersection function linked into the
+            // ray-tracing compute pipeline state. Create a different handle for each pipeline
+            // it is linked with.
+            id <MTLFunctionHandle> handle = [m_pipeline functionHandleWithFunction:fn];
+            
+            if( handle == nil )
+            {
+                return;
+            }
+            // Insert the handle into the intersection function table, which ultimately maps the
+            // geometry's index to its intersection function.
+            [m_intersectionFunctionTable setFunction:handle atIndex:index];
+            
         }
-        // Insert the handle into the intersection function table, which ultimately maps the
-        // geometry's index to its intersection function.
-        [m_intersectionFunctionTable setFunction:handle atIndex:index];
     }
 
     void Tr2RtShaderTableAL::Destroy()

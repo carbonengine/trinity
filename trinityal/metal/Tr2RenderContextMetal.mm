@@ -582,10 +582,12 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
     {
         return E_FAIL;
     }
+    if (@available(macOS 11.0, *)) {
+        // pass on shaderTable to bind it to the RayGen shader
+        SetShaderProgram( pipeline.TrinityALImpl_GetObject()->GetShaderProgram() );
     
-    // pass on shaderTable to bind it to the RayGen shader
-    SetShaderProgram( pipeline.TrinityALImpl_GetObject()->GetShaderProgram() );
-    m_workQueue->DispatchRays( pipeline.TrinityALImpl_GetObject(), shaderTable.TrinityALImpl_GetObject(), width, height );
+        m_workQueue->DispatchRays( pipeline.TrinityALImpl_GetObject(), shaderTable.TrinityALImpl_GetObject(), width, height );
+    }
     
     return S_OK;
 }

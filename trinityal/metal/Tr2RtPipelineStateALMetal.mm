@@ -148,17 +148,19 @@ namespace TrinityALImpl
         descriptor.computeFunction = shaderProgram.TrinityALImpl_GetObject()->GetComputeKernel();
         
         // add the functions to the pipeline
-        MTLLinkedFunctions *mtlLinkedFunctions = nil;
-
-        // Attach the additional functions to an MTLLinkedFunctions object
-        mtlLinkedFunctions = [[MTLLinkedFunctions alloc] init];
-
-        mtlLinkedFunctions.functions = linkedFunctions;
-        
-        descriptor.linkedFunctions = mtlLinkedFunctions;
-        
-        // Set to YES to allow the compiler to make certain optimizations.
-        descriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = YES;
+        if (@available(macOS 11.0, *)) {
+            MTLLinkedFunctions *mtlLinkedFunctions = nil;
+            
+            // Attach the additional functions to an MTLLinkedFunctions object
+            mtlLinkedFunctions = [[MTLLinkedFunctions alloc] init];
+            
+            mtlLinkedFunctions.functions = linkedFunctions;
+            
+            descriptor.linkedFunctions = mtlLinkedFunctions;
+            
+            // Set to YES to allow the compiler to make certain optimizations.
+            descriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = YES;
+        }
         
         // Create compute pipelines will execute code on the GPU
         // Create the compute pipeline state which does all the raytracing
