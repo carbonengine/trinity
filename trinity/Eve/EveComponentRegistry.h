@@ -5,24 +5,76 @@
 //
 #pragma once
 
-BLUE_DECLARE_INTERFACE( ITr2Renderable );
-BLUE_DECLARE_INTERFACE( IEveSpaceObjectChild );
-BLUE_DECLARE_INTERFACE( ITr2LightOwner );
-BLUE_DECLARE_INTERFACE( ITr2VolumetricRenderable );
 BLUE_DECLARE( EveEntity );
+BLUE_DECLARE( EveComponentRegistry );
 
-struct RegistrationState
+typedef int32_t RegistrationState;
+
+#include "EveEntity.h"
+#include <shared_mutex>
+
+// Yes templated false, see comment in GetComponentName
+template <typename T>
+struct workAroundForCppStandard : std::false_type
 {
-	bool reflectionRenderable;
-	bool volumetricRenderable;
-	bool lightOwner;
 };
 
-enum ComponentType
+template <typename T>
+inline const char* GetComponentName()
 {
-	REFLECTION_RENDERABLE,
-	VOLUMETRIC_RENDERABLE,
-	COUNT
+	/*
+	We cannot use normal false values here due to the fact that the compiler might use this method
+	before it knows of an templated (or registered) function...
+	So we use a templated false value forcing the compiler to evaluate this when all the templating has been done ( I think )
+	*/
+	static_assert( workAroundForCppStandard<T>::value, "Type being used as a component which hasn't been registered via REGISTER_COMPONENT_TYPE" );
+}
+
+#define REGISTER_COMPONENT_TYPE( name, componentType )	\
+					                                  \
+	template <>       \
+	inline const char* GetComponentName<componentType>()         \
+	{                         \
+	     return name;                   \
+	};
+
+class IEveComponentCollection
+{
+public:
+	virtual ~IEveComponentCollection() = default;
+
+	virtual void Add( EveEntity* entity ) = 0;
+	virtual void Remove( EveEntity* entity ) = 0;
+	virtual void Clear() = 0;
+
+	virtual bool HasState( RegistrationState state ) const = 0;
+	virtual void AddState( RegistrationState& state ) = 0;
+	virtual void RemoveState( RegistrationState& state ) = 0;
+
+	virtual size_t Size() const = 0;
+};
+
+template <typename T>
+class EveComponentCollection : public IEveComponentCollection
+{
+public:
+	EveComponentCollection( uint32_t id, const char* name );
+	~EveComponentCollection();
+
+	void Add( EveEntity* entity ) override;
+	void Remove( EveEntity* entity ) override;
+	void Clear() override;
+	size_t Size() const override;
+
+	bool HasState( RegistrationState state ) const override;
+	void AddState( RegistrationState& state ) override;
+	void RemoveState( RegistrationState& state ) override;
+
+private:
+	const char* m_name;
+	int32_t m_bitfield;
+	std::vector<T*> m_collection;
+	friend class EveComponentRegistry;
 };
 
 
@@ -32,43 +84,248 @@ BLUE_CLASS( EveComponentRegistry ) :
 public:
 	EXPOSE_TO_BLUE();
 
-	
 	EveComponentRegistry( IRoot* lockobj = NULL );
 	~EveComponentRegistry();
 
+	// Registers a specific components for a specific entity, creates a component collection if it doesn´t exist
+	template <typename T>
+	void RegisterComponent( EveEntity* entity );
+
+	// UnRegisters a single component for a specific entity
+	template <typename T>
+	void UnRegisterComponent( EveEntity* entity );
+
+	// UnRegisters all components for a specific entity
+	void UnRegisterAllComponents( EveEntity* entity );
+
 	void Clear();
 
-	void RegisterComponent( ComponentType type, EveEntity * entity, RegistrationState & state );
-	void UnRegisterComponent( ComponentType type, EveEntity * entity, RegistrationState & state, bool silent = false );
+	// Runs over all the components and calls the processor to process it, returns true/false if it ran the processor
+	template <typename T, typename R>
+	void ProcessComponents( R processor ) const;
 
-	void ReRegister( EveEntity * entity );
+	// Runs over the components until the function returns true
+	template <typename T, typename R>
+	void ProcessComponentsUntil( R processor ) const;
 
-	const std::vector<ITr2LightOwner*>& GetLightOwners() const
-	{
-		return m_lightOwners;
-	};
+	template<typename T>
+	const std::vector<T*>& GetComponents(); 
 
-	const std::vector<ITr2Renderable*>& GetReflectionRenderables() const
-	{
-		return m_reflectionRenderables;
-	}
+	template<typename T>
+	size_t ComponentCount() const;
 
-	const std::vector<ITr2VolumetricRenderable*>& GetVolumetricRenderables() const
-	{
-		return m_volumetricRenderables;
-	}
-
-	size_t GetLightOwnerCount() const;
-	size_t GetReflectionRenderableCount() const;
-
-	bool HasComponent( ComponentType type, RegistrationState & state );
+	void ReRegister( EveEntity* entity );
 
 private:
-	std::vector<ITr2Renderable*> m_reflectionRenderables;
-	std::vector<ITr2VolumetricRenderable*> m_volumetricRenderables;
-	std::vector<ITr2LightOwner*> m_lightOwners;
+	IEveComponentCollection* GetComponentCollection( const char* componentName ) const;
 
-	CcpMutex* m_entityReregisterMutex;
+	void AddToCollection( IEveComponentCollection* collection, EveEntity* entity );
+	void RemoveFromCollection( IEveComponentCollection* collection, EveEntity* entity );
+
+	template<typename T>
+	IEveComponentCollection* AddCollection( const char* componentName );
+
+	std::vector<std::pair<const char*, size_t>> GetComponentInfo() const;
+
+	// this m_componentCollections is a map of componentType to different EveComponentCollection<T>
+	std::vector<std::pair<const char*, std::unique_ptr<IEveComponentCollection>>> m_componentCollections;
+	mutable std::shared_mutex m_componentCollectionLoopGuard;
 };
-
 TYPEDEF_BLUECLASS( EveComponentRegistry );
+
+
+template <typename T>
+EveComponentCollection<T>::EveComponentCollection( uint32_t id, const char* name ) :
+	m_bitfield( 1 << id ),
+	m_collection( std::vector<T*>() ),
+	m_name( name )
+{
+}
+
+template <typename T>
+EveComponentCollection<T>::~EveComponentCollection()
+{
+}
+
+template <typename T>
+void EveComponentCollection<T>::Add( EveEntity* entity )
+{
+	if( T* component = dynamic_cast<T*>( entity ) )
+	{
+		m_collection.push_back( component );
+	}
+	else
+	{
+		CCP_LOGERR( "EveComponentCollection: Register entity is not %s", m_name );
+	}
+
+}
+
+template <typename T>
+void EveComponentCollection<T>::Remove( EveEntity* entity )
+{
+	if( T* component = dynamic_cast<T*>( entity ) )
+	{
+		auto it = std::find( m_collection.begin(), m_collection.end(), component );
+		if( it != m_collection.end() )
+		{
+			m_collection.erase( it );
+		}
+	}
+	else
+	{
+		CCP_LOGERR( "EveComponentCollection: UnRegister entity is not %s", m_name );
+	}
+}
+
+template <typename T>
+void EveComponentCollection<T>::Clear()
+{
+	m_collection.clear();
+}
+
+template <typename T>
+bool EveComponentCollection<T>::HasState( RegistrationState state ) const
+{
+	return ( state & m_bitfield ) != 0;
+}
+
+template <typename T>
+void EveComponentCollection<T>::AddState( RegistrationState& state )
+{
+	state |= m_bitfield;
+}
+
+template <typename T>
+void EveComponentCollection<T>::RemoveState( RegistrationState& state )
+{
+	state &= ~m_bitfield;
+}
+
+template <typename T>
+size_t EveComponentCollection<T>::Size() const
+{
+	return m_collection.size();
+}
+
+// Registers a specific components for a specific entity, creates a component collection if it doesn´t exist
+template <typename T>
+void EveComponentRegistry::RegisterComponent( EveEntity* entity )
+{
+	const char* componentName = GetComponentName<T>();
+
+	std::unique_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+
+	IEveComponentCollection* collection = GetComponentCollection( componentName );
+
+	if( collection == nullptr )
+	{
+		collection = AddCollection<T>( componentName );
+	}
+
+	AddToCollection( collection, entity );
+}
+
+// UnRegisters a single components for a specific entity
+template <typename T>
+void EveComponentRegistry::UnRegisterComponent( EveEntity* entity )
+{
+	const char* componentName = GetComponentName<T>();
+
+	std::unique_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+
+	auto collection = GetComponentCollection( componentName );
+
+	if( collection == nullptr )
+	{
+		CCP_LOGERR( "EveComponentRegistry: RemoveFromCollection '%s' has not been registered as a component", GetComponentName<T>() );
+		return;
+	}
+
+	RemoveFromCollection( collection, entity );
+}
+
+template <typename T, typename R>
+void EveComponentRegistry::ProcessComponents( R processor ) const
+{
+	const char* componentName = GetComponentName<T>();
+
+	std::shared_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+
+	auto collection = GetComponentCollection( componentName );
+
+	if( collection == nullptr )
+	{
+		return;
+	}
+
+	for( auto& component : static_cast<EveComponentCollection<T>*>( collection )->m_collection )
+	{
+		processor( component );
+	}
+}
+
+template <typename T, typename R>
+void EveComponentRegistry::ProcessComponentsUntil( R processor ) const
+{
+	const char* componentName = GetComponentName<T>();
+
+	std::shared_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+
+	auto collection = GetComponentCollection( componentName );
+
+	if( collection == nullptr )
+	{
+		return;
+	}
+
+	for( auto& component : static_cast<EveComponentCollection<T>*>( collection )->m_collection )
+	{
+		if( processor( component ) )
+		{
+			return;
+		}
+	}
+}
+
+template <typename T>
+const std::vector<T*>& EveComponentRegistry::GetComponents()
+{
+	const char* componentName = GetComponentName<T>();
+
+	std::shared_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+
+	auto collection = GetComponentCollection( componentName );
+
+	if( collection == nullptr )
+	{
+		static auto v = std::vector<T*>();
+		return v;
+	}
+	return static_cast<EveComponentCollection<T>*>( collection )->m_collection;
+}
+
+template <typename T>
+size_t EveComponentRegistry::ComponentCount() const
+{
+	const char* componentName = GetComponentName<T>();
+	auto collection = GetComponentCollection( componentName );
+
+	if( collection == nullptr )
+	{
+		return 0;
+	}
+
+	return collection->Size();
+}
+
+template <typename T>
+IEveComponentCollection* EveComponentRegistry::AddCollection( const char* componentName )
+{
+	int32_t componentCollectionIndex = (int32_t) m_componentCollections.size();
+	// no more than 32 EveComponentCollections can exist, since we use a bitwise comparison in the entity m_state
+	CCP_ASSERT( componentCollectionIndex < 32 );
+
+	m_componentCollections.push_back( { componentName, std::make_unique<EveComponentCollection<T>>( componentCollectionIndex, componentName ) } );
+	return m_componentCollections.back().second.get();
+}

@@ -144,7 +144,6 @@ private:
 	// shared
 	Tr2EffectPtr m_hazeSetEffectSpherical, m_skinnedHazeSetEffectSpherical, m_hazeSetEffectHalfSpherical;
 	Tr2EffectPtr m_spriteSetEffect;
-	Tr2EffectPtr m_shadowEffect, m_shadowEffectSkinned;
 	BlueSharedString m_depthOnlyEffectName, m_decalsEffectName[EveSOFDataHullDecalSetItem::USAGE_MAX];
 
 	mutable std::unordered_map<std::string, bool> m_existingFilesCache;

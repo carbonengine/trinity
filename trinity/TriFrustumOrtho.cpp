@@ -58,7 +58,7 @@ bool TriFrustumOrtho::IsSphereVisibleAndInsideNearPlane( const Vector3& center, 
 	return true;
 }
 
-float TriFrustumOrtho::GetPixelSize( Vector4 sphere, uint16_t textureSize )
+float TriFrustumOrtho::GetPixelSize( Vector4 sphere, uint16_t textureSize ) const
 {
 	Vector4 d = sphere;
 	float frustumWidth = m_boundsMax.x - m_boundsMin.x;
@@ -71,4 +71,9 @@ float TriFrustumOrtho::GetPixelSize( Vector4 sphere, uint16_t textureSize )
 
 	float shadowPixelSize = ( larger * textureSize );
 	return shadowPixelSize;
+}
+
+const Vector3& TriFrustumOrtho::GetEyePos() const
+{
+	return m_view.GetTranslation();
 }

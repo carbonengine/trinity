@@ -7,6 +7,8 @@
 #include "Utilities/BoundingSphere.h"
 #include "Tr2InstancedMesh.h"
 #include "Tr2GrannyAnimation.h"
+#include "TriFrustumOrtho.h"
+#include "Utilities/BoundingBox.h"
 
 extern float g_eveSpaceSceneLODFactor;
 extern float g_eveSpaceSceneVisibilityThreshold;
@@ -18,9 +20,12 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	PARENTLOCK( m_lights ),
 	m_display( true ),
 	m_isVisible( false ),
+	m_instancesVisible( false ),
+	m_castShadow( false ),
 	m_lowestLodVisible( TR2_LOD_LOW ),
 	m_minScreenSize( 0.f ),
 	m_currentScreenSize( -1.f ),
+	m_currentInstanceScreenSize( -1.f ),
 	m_sortValueOffset( 0 ),
 	m_sortValueScale( 1 ),
 	m_useSpaceObjectData( true ),
@@ -58,7 +63,7 @@ bool EveChildMesh::Initialize()
 
 bool EveChildMesh::OnModified( Be::Var* val )
 {
-	if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display) || IsMatch( val, m_mesh) )
+	if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display) || IsMatch( val, m_mesh) || IsMatch( val, m_castShadow ) )
 	{
 		ReRegister();
 	}
@@ -105,20 +110,62 @@ void EveChildMesh::InitializeAnimation()
 void EveChildMesh::RegisterComponents()
 {
 	auto registry = this->GetComponentRegistry();
-	if( registry && m_display && m_mesh != nullptr)
+	if( registry && m_display && m_mesh != nullptr )
 	{
 		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
 		{
-			registry->RegisterComponent( ComponentType::REFLECTION_RENDERABLE, this, this->m_state );
+			registry->RegisterComponent<ITr2Renderable>( this );
+		}
+		if( m_castShadow )
+		{
+			registry->RegisterComponent<IEveShadowCaster>( this );
 		}
 	}
 }
 
+// --------------------------------------------------------------------------------
+// Description:
+//   Check if the object is casting a shadow in the camera/shadow frustums
+bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
+{
+	if( !m_display || !m_castShadow )
+	{
+		return false;
+	}
+
+	Vector4 bs;
+	GetBoundingSphere( bs );
+	sizeInShadow = 0;
+
+	if( bs.w <= 0.0f )
+	{
+		return false;
+	}
+
+	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, bs ) )
+	{
+		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+		{
+			auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( shadowFrustum.GetEyePos(), m_worldTransform.GetTranslation() );
+			auto instanceSphere = CcpMath::Sphere( instanceBounds );
+			auto sphereAsVector = Vector4( instanceSphere.center, instanceSphere.radius );
+
+			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, sphereAsVector );
+		}
+		else
+		{
+			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, bs );	
+		}
+	}
+	return sizeInShadow > 5.f;
+}
 
 void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& parentTransform, Tr2Lod parentLod )
 {
 	m_isVisible = false;
 	m_currentScreenSize = -1;
+	m_instancesVisible = false;
+	m_currentInstanceScreenSize = -1.0f;
 
 	if( m_mesh )
 	{
@@ -126,10 +173,26 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 		bounds.Transform( m_worldTransform );
 
 		m_currentScreenSize = frustum.GetPixelSizeAccross( bounds );
-		m_mesh->UseWithScreenSize( m_currentScreenSize, CcpMath::Sphere(bounds).radius);
+
+		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+		{
+			auto istanceBounds = instanced->GetInstanceBoundsClosestToPoint( frustum.m_viewPos, m_worldTransform.GetTranslation() );
+			m_currentInstanceScreenSize = frustum.GetPixelSizeAccross( istanceBounds );
+			m_mesh->UseWithScreenSize( m_currentInstanceScreenSize, CcpMath::Sphere( istanceBounds ).radius );
+		}
+		else
+		{
+			m_currentInstanceScreenSize = std::numeric_limits<float>::max();
+			m_mesh->UseWithScreenSize( m_currentScreenSize, CcpMath::Sphere( bounds ).radius );
+		}
+
+		m_currentScreenSize /= g_eveSpaceSceneLODFactor;
+		m_currentInstanceScreenSize /= g_eveSpaceSceneLODFactor;
+
 		if( frustum.IsBoxVisible( bounds ) )
 		{
-			m_isVisible = parentLod >= m_lowestLodVisible && m_currentScreenSize >= m_minScreenSize * g_eveSpaceSceneLODFactor;
+			m_isVisible = parentLod >= m_lowestLodVisible && m_currentScreenSize >= m_minScreenSize;
+			m_instancesVisible = m_isVisible && m_currentInstanceScreenSize >= m_minScreenSize;
 		}
 	}
 
@@ -162,23 +225,28 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {
 	if( m_isVisible )
 	{
-		renderables.push_back( this );
 		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) ) 
 		{
-			TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
-
-			if( geometryRes )
+			if( m_instancesVisible )
 			{
-				// runn over every decal and update it
-				for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+				renderables.push_back( this );
+
+				TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
+
+				if( geometryRes )
 				{
-					// now prep to get the renderables
-					( *it )->GetInstancedRenderables( renderables, instanced );
+					// runn over every decal and update it
+					for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
+					{
+						// now prep to get the renderables
+						( *it )->GetInstancedRenderables( renderables, instanced, m_currentInstanceScreenSize );
+					}
 				}
 			}
 		}
 		else
 		{
+			renderables.push_back( this );
 			TriGeometryResPtr geometryRes = m_mesh->GetGeometryResource();
 
 			if( geometryRes )
@@ -240,7 +308,7 @@ void EveChildMesh::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType
 	{
 		if( m_mesh )
 		{
-			m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, m_currentScreenSize );
+			m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, min( m_currentInstanceScreenSize, m_currentScreenSize ) );
 		}
 		
 		if( m_activationStrength != 0.0 )
@@ -259,7 +327,7 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	// Fix asap <Logi 27. aug 2015>
 	if( m_display && m_mesh )
 	{
-		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData );
+		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData, shadowPixelSize );
 	}
 }
 
@@ -268,6 +336,11 @@ float EveChildMesh::GetSortValue()
 	Vector3 d = Tr2Renderer::GetViewPosition() - m_worldTransform.GetTranslation();
 	float distance = Length( d );
 	return distance * m_sortValueScale + m_sortValueOffset;
+}
+
+Tr2PerObjectData* EveChildMesh::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
+{
+	return GetPerObjectData( accumulator );
 }
 
 Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
@@ -285,7 +358,7 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 		perObjectData->m_worldInverseTranspose = Inverse( m_worldTransform );
 		return perObjectData;
 	}
-	
+
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
 	if( !perObjectData )
 	{
@@ -621,4 +694,18 @@ void EveChildMesh::ClearLights()
 void EveChildMesh::SetReflectionMode( EntityComponents::ReflectionMode mode )
 {
 	m_reflectionMode = mode;
+	if( GetComponentRegistry() )
+	{
+		ReRegister();
+	}
+}
+
+void EveChildMesh::SetCastShadow( bool castShadow )
+{
+	m_castShadow = castShadow;
+}
+
+void EveChildMesh::SetMinScreenSize( float minScreenSize )
+{
+	m_minScreenSize = minScreenSize;
 }

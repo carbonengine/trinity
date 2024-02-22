@@ -273,14 +273,6 @@ void Tr2Transform::GetBatches( ITriRenderBatchAccumulator* batches,
 	}
 }
 
-void Tr2Transform::GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize )
-{
-	if( m_display && m_mesh )
-	{
-		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData );
-	}
-}
-
 float Tr2Transform::GetSortValue()
 {
 	Vector3 d = Tr2Renderer::GetViewPosition() - m_worldTransform.GetTranslation();

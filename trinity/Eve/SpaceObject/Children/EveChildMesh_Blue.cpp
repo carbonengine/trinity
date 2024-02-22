@@ -16,10 +16,12 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 		MAP_INTERFACE( ITr2GrannyAnimationOwner )
 		MAP_INTERFACE( IEveSpaceObjectAttachmentOwner )
 		MAP_INTERFACE( ITr2LightOwner )
+		MAP_INTERFACE( IEveShadowCaster )
 
 		MAP_ATTRIBUTE( "name", m_name, "", Be::READWRITE | Be::PERSIST	)
 		MAP_ATTRIBUTE( "display", m_display, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "useSpaceObjectData", m_useSpaceObjectData, "", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "castShadow", m_castShadow, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 		MAP_ATTRIBUTE( "mesh", m_mesh, "", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
 
 		MAP_ATTRIBUTE(
@@ -34,6 +36,7 @@ const Be::ClassInfo* EveChildMesh::ExposeToBlue()
 			"Minimal size of object on screen, objects smaller than this size are not rendered.\n:jessica-group: LOD", 
 			Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "currentScreenSize", m_currentScreenSize, "Screen size for last frame\n:jessica-group: LOD", Be::READ)
+		MAP_ATTRIBUTE( "currentInstanceScreenSize", m_currentInstanceScreenSize, "Screen size of instances for last frame\n:jessica-group: LOD", Be::READ )
 		MAP_ATTRIBUTE( "rotation", m_rotation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "translation", m_translation, "", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "scaling", m_scaling,"", Be::READWRITE | Be::PERSIST )
