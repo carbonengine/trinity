@@ -9,6 +9,7 @@
 #include "../include/Tr2CapsAL.h"
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2RenderPassAL.h"
+#include "../include/Tr2RtTopLevelAccelerationStructureAL.h"
 #include "../Tr2HalHelperStructures.h"
 
 class Tr2ConstantBufferAL;

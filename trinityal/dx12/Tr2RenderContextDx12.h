@@ -16,6 +16,7 @@
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2VertexLayoutAL.h"
 #include "../include/Tr2RenderPassAL.h"
+#include "../include/Tr2RtTopLevelAccelerationStructureAL.h"
 
 #include "./util/DescriptorStateCacheDx12.h"
 #include "./util/PsoDescription.h"
@@ -227,7 +228,7 @@ public:
 	void FlushComputeBarriersDx12( ID3D12Resource* resource = nullptr );
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& textures );
-    ALResult UseAccelerationStructure(Tr2RtTopLevelAccelerationStructureAL tlas );
+    ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
     
 	ALResult SetAllState();
 protected:

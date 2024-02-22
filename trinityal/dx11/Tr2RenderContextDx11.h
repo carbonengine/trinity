@@ -12,6 +12,7 @@
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2VertexLayoutAL.h"
 #include "../include/Tr2RenderPassAL.h"
+#include "../include/Tr2RtTopLevelAccelerationStructureAL.h"
 
 
 class Tr2ConstantBufferAL;
