@@ -247,7 +247,8 @@ public:
 		uint32_t& mips ) const;
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
-
+    ALResult UseAccelerationStructure(Tr2RtTopLevelAccelerationStructureAL tlas );
+    
 	bool SupportsBindlessTextures() const;
 
 	uint64_t GetRecordingFrameNumber() const;

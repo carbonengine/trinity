@@ -242,10 +242,7 @@ public:
 	ALResult ForkContext( Tr2RenderContextAL* context, uint32_t index ) const;
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
-    ALResult UseAccelerationStructure( NSMutableArray *primitiveAccelerationStructures );
-    
-    API_AVAILABLE(macos(11.0))
-    ALResult UseAccelerationStructure( id<MTLAccelerationStructure> accelerationStructure );
+    ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
 
     bool SupportsBindlessTextures() const;
 

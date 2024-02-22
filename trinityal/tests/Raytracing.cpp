@@ -240,37 +240,41 @@ TEST_F( Raytracing, TraceRays )
     uint8_t rayGenCode[] = {
 #include INCLUDE_SHADER_CODE( RayGen.rs )
     };
+    uint8_t missCode[] = {
+#include INCLUDE_SHADER_CODE( Miss.rs )
+    };
+    uint8_t closestHitCode[] = {
+#include INCLUDE_SHADER_CODE( ClosestHit.rs )
+    };
     
     const uint32_t PAYLOAD_SIZE = 4 * sizeof( float );
-
-    // Create shader inputs
-    auto input = Tr2ShaderSignatureAL()
-        .Add( Tr2ShaderRegisterAL::SRV_BUFFER, 1 )// accelerationStructure
-        .Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 ) // uniforms
-        .Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 ); // RTOutput
-
-    // Setup shader bytecode
-    Tr2ShaderAL shader;
-    shader.Create(Tr2RenderContextEnum::COMPUTE_SHADER, rayGenCode, input, "", *renderContext);
-    shader.SetName("RayGen");
-    
-    Tr2ShaderProgramAL shaderProgram;
-    shaderProgram.Create( &shader, 1, *renderContext );
+     
+    Tr2ShaderSignatureAL signature;
+    signature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 ); //uniforms
+    signature.Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 ); // RTOutput
+    signature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 1 ); // accelStruct, set as 1 because of metal compute buffer binding (4+1)
     
     Tr2RtPipelineStateDescriptionAL stateDesc;
-    stateDesc.AddShader(shader, L"RayGen_12", L"RayGen", shaderProgram);
+    stateDesc.AddShader( L"RayGen_12", Tr2ShaderBytecodeAL( rayGenCode ), L"RayGen", PAYLOAD_SIZE );
+    stateDesc.AddShader( L"Miss_5", Tr2ShaderBytecodeAL( missCode ), L"Miss", PAYLOAD_SIZE );
+    stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHit", PAYLOAD_SIZE );
+    stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr );
+    stateDesc.AddGlobalSignature( signature );
     
-    //stateDesc.AddShader( L"RayGen_12", Tr2ShaderBytecodeAL( rayGenCode ), L"RayGen", PAYLOAD_SIZE );
+    
+    // key (dict) ['HitGroup']
+    // value (array){'', 'ClosestHit_76', ''}
     
     Tr2RtPipelineStateAL state;
     ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, *renderContext ) );
+
+    Tr2RtShaderTableDescriptionAL shaderTableDesc;
+    shaderTableDesc.AddRayGenShader( L"RayGen_12" );
+    shaderTableDesc.AddMissShader( L"Miss_5" );
+    shaderTableDesc.AddHitGroup( L"HitGroup" );
     
-    //Tr2RtShaderTableDescriptionAL shaderTableDesc;
-    //shaderTableDesc.AddRayGenShader( L"RayGen_12" );
-
-
     Tr2RtShaderTableAL shaderTable;
-   // ASSERT_HRESULT_SUCCEEDED( shaderTable.Create( shaderTableDesc, state, *renderContext ) );
+    ASSERT_HRESULT_SUCCEEDED( shaderTable.Create( shaderTableDesc, state, *renderContext ) );
 
     const uint32_t WIDTH = 512;
     const uint32_t HEIGHT = 512;
@@ -282,13 +286,18 @@ TEST_F( Raytracing, TraceRays )
     Tr2TextureAL resultTex;
     ASSERT_HRESULT_SUCCEEDED(resultTex.Create( Tr2BitmapDimensions( WIDTH, HEIGHT, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM ), Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
     
-    //Tr2TextureAL rt;
-    //ASSERT_HRESULT_SUCCEEDED( rt.Create( Tr2BitmapDimensions( 128, 64, 1, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM ), Tr2GpuUsage::RENDER_TARGET | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
-
     Tr2BufferAL vb, ib;
+    // UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE
+#if TRINITY_PLATFORM == TRINITY_METAL
     ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeVertices, *renderContext ) );
     ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeIndices, *renderContext ) );
 
+#else
+    ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeVertices, *renderContext ) );
+    ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
+#endif
+    
+    
     Tr2RtBottomLevelAccelerationStructureAL blas;
     ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
     
@@ -304,7 +313,7 @@ TEST_F( Raytracing, TraceRays )
     ASSERT_HRESULT_SUCCEEDED( tlas.Create( 1, &instance, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
     
     auto shaderType = Tr2RenderContextEnum::COMPUTE_SHADER;
-    Tr2RegisterMapAL registerMap = Tr2RegisterMapAL( &shaderType, &input, 1 );
+    Tr2RegisterMapAL registerMap = Tr2RegisterMapAL( &shaderType, &signature, 1 );
 
     // We need to insert a UAV barrier before using the acceleration structures in a raytracing
     Tr2ResourceSetDescriptionAL rsDesc( registerMap );
@@ -347,13 +356,10 @@ TEST_F( Raytracing, TraceRays )
 
         ASSERT_HRESULT_SUCCEEDED( renderContext->SetConstants( cb, Tr2RenderContextEnum::COMPUTE_SHADER, 0) );
         ASSERT_HRESULT_SUCCEEDED( renderContext->SetResourceSet( rs ) );
-        ASSERT_HRESULT_SUCCEEDED( renderContext->SetShaderProgram( shaderProgram ) );
-
-        if (@available(macOS 11.0, *)) {
-            renderContext->UseAccelerationStructure( tlas.TrinityALImpl_GetObject()->GetInstanceAccelerationStructure() );
-            renderContext->UseAccelerationStructure( tlas.TrinityALImpl_GetObject()->GetPrimitiveAccelerationStructures() );
-        }
-
+            
+        // mac specific
+        renderContext->UseAccelerationStructure( tlas );
+        
         ASSERT_HRESULT_SUCCEEDED( renderContext->DispatchRays( state, shaderTable, L"RayGen_12", WIDTH, HEIGHT, 1 ) );
 
         ASSERT_HRESULT_SUCCEEDED( quadRenderer.Render( renderContext ) );
@@ -508,7 +514,6 @@ TEST_F( Raytracing, TraceRays )
 	stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHit", PAYLOAD_SIZE );
 	stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr );
 	stateDesc.AddGlobalSignature( signature );
-
 
 	Tr2RtPipelineStateAL state;
 	ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, *renderContext ) );

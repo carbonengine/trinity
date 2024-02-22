@@ -150,14 +150,13 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
 
                 // Mark the instance as opaque so that the
                 // ray intersector doesn't attempt to execute a function that doesn't exist.
-                instanceDescriptors[instanceIndex].options = MTLAccelerationStructureInstanceOptionOpaque;
+                instanceDescriptors[instanceIndex].options = 0;//MTLAccelerationStructureInstanceOptionOpaque;
 
-                
                 // Metal adds the geometry intersection function table offset and instance intersection
                 // function table offset together to determine which intersection function to execute.
-                // The sample mapped geometries directly to their intersection functions above, so it
-                // sets the instance's table offset to 0.
-                instanceDescriptors[instanceIndex].intersectionFunctionTableOffset = 0;
+                
+                // Assign each piece of geometry a consecutive slot in the intersection function table.
+                instanceDescriptors[instanceIndex].intersectionFunctionTableOffset = instances[instanceIndex].materialIndex;
                 
                 // Set the instance mask, which the sample uses to filter out intersections between rays
                 // and geometry. For example, it uses masks to prevent light sources from being visible

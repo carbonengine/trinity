@@ -55,13 +55,10 @@ private:
 		uint32_t localSignature;
 	};
 
-	
-
 	std::vector<Shader> m_shaders;
 	std::vector<HitGroup> m_hitGroups;
 	Tr2ShaderSignatureAL m_globalSignature;
 	std::vector<Tr2ShaderSignatureAL> m_localSignatures;
-    Tr2ShaderProgramAL m_shaderProgram;
 
 	friend class TrinityALImpl::Tr2RtPipelineStateAL;
 };

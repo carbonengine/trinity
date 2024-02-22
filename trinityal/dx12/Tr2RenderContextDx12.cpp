@@ -1851,12 +1851,10 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
 	return S_OK;
 }
 
-
-
-
-
-
-
+ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas )
+{
+    return S_OK;
+}
 
 void Tr2BindlessResourcesAL::Add( const Tr2TextureAL& texture )
 {

@@ -80,28 +80,6 @@ Tr2RtPipelineStateDescriptionAL::~Tr2RtPipelineStateDescriptionAL()
 {
 }
 
-void Tr2RtPipelineStateDescriptionAL::AddShader( Tr2ShaderAL& shader, const wchar_t* exportName, const wchar_t* name, Tr2ShaderProgramAL shaderProgram )
-{
-    ShaderName shaderName;
-    shaderName.exportName = exportName;
-    shaderName.name = name;
-    
-    Shader pipelineShader;
-    pipelineShader.names.push_back(shaderName);
-    
-    shader.GetBytecode(pipelineShader.bytecode);
-    pipelineShader.localSignature = NO_SIGNATURE;
-    pipelineShader.payloadSize = 0;
-    
-   // auto code = new uint8_t[pipelineShader.bytecode.size];
-   // memcpy(code, pipelineShader.bytecode.bytecode, pipelineShader.bytecode.size);
-    //pipelineShader.bytecode = Tr2ShaderBytecodeAL( code, bytecode.size );
-    
-    m_shaders.emplace_back( std::move( pipelineShader ) );
-    
-    m_shaderProgram = shaderProgram;
-}
-
 void Tr2RtPipelineStateDescriptionAL::AddShader( const wchar_t* exportName, const Tr2ShaderBytecodeAL& bytecode, const wchar_t* name, uint32_t payloadSize )
 {
 	ShaderName sn;

@@ -2,13 +2,7 @@
 
 #include <metal_stdlib>
 
-#define GEOMETRY_MASK_TRIANGLE 1
-#define GEOMETRY_MASK_SPHERE   2
-#define GEOMETRY_MASK_GEOMETRY (GEOMETRY_MASK_TRIANGLE | GEOMETRY_MASK_SPHERE)
-
-
 using namespace metal;
-
 using namespace raytracing;
 
 struct Uniforms{
@@ -24,10 +18,11 @@ struct TestStruct
 
 // Checks if a shadow ray hit something on the way to the light source. If not, the point the
 // shadow ray started from was not in shadow so it's color should be added to the output image.
-kernel void mainCS(           uint2 tid                                                         [[thread_position_in_grid]],
-                              constant Uniforms &uniforms                                       [[CBUFFER(0)]],
-                              device const TestStruct &accelerationStructure                    [[buffer(5)]],
-                              texture2d<float, access::write> RTOutput                          [[UAVT(0)]] )
+kernel void mainCS(           uint2 tid                                                                         [[thread_position_in_grid]],
+                              constant Uniforms &uniforms                                                       [[CBUFFER(0)]],
+                              device const TestStruct &accelerationStructure                                    [[buffer(5)]],
+                              texture2d<float, access::write> RTOutput                                          [[UAVT(0)]],
+                              intersection_function_table<triangle_data, instancing> intersectionFunctionTable  [[buffer(12)]])
 {
 
     if((int)tid.x < uniforms.resolution.x && (int)tid.y < uniforms.resolution.y)
@@ -59,17 +54,18 @@ kernel void mainCS(           uint2 tid                                         
         // If the sample isn't using intersection functions, provide some hints to Metal for
         // better performance.
         i.assume_geometry_type(geometry_type::triangle);
-        i.force_opacity(forced_opacity::opaque);
         
         typename intersector<triangle_data, instancing>::result_type intersection;
-        i.accept_any_intersection(false);
+        i.accept_any_intersection(true);
         
-        intersection = i.intersect(shadowRay, accelerationStructure.accelerationStructure[0]);
+        float3 colorPayload = float3( 0, 1, 0 );
+        
+        // NOTE: payload will be changed even if we accept the intersection or not!!
+        intersection = i.intersect(shadowRay, accelerationStructure.accelerationStructure[0], intersectionFunctionTable, colorPayload);
 
         float3 color = float3(1.0f,1.0f,1.0f);
-
-        // If there was no intersection, then the light source is visible from the original
-        // intersection point.
+    
+        // if we don't hit anything then color it red, if we do hit something, color it blue
         if (intersection.type == intersection_type::none)
         {
             color = float3(1.0, 0.0, 0.0);
@@ -79,6 +75,6 @@ kernel void mainCS(           uint2 tid                                         
             color = float3(0.0, 0.0, 1.0);
         }
 
-        RTOutput.write(float4(color, 1.0f), tid);
+        RTOutput.write(float4(colorPayload, 1.0f), tid);
     }
 }

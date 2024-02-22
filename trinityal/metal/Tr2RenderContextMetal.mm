@@ -15,6 +15,7 @@
 #include "Tr2TextureALMetal.h"
 #include "Tr2SwapChainALMetal.h"
 #include "Tr2RtPipelineStateALMetal.h"
+#include "Tr2RtShaderTableALMetal.h"
 #include "Tr2RtTopLevelAccelerationStructureALMetal.h"
 
 #include "MetalContext.h"
@@ -582,7 +583,9 @@ ALResult Tr2RenderContextAL::DispatchRays( Tr2RtPipelineStateAL& pipeline, Tr2Rt
         return E_FAIL;
     }
     
-    m_workQueue->DispatchRays( pipeline.TrinityALImpl_GetObject(), width, height );
+    // pass on shaderTable to bind it to the RayGen shader
+    SetShaderProgram( pipeline.TrinityALImpl_GetObject()->GetShaderProgram() );
+    m_workQueue->DispatchRays( pipeline.TrinityALImpl_GetObject(), shaderTable.TrinityALImpl_GetObject(), width, height );
     
     return S_OK;
 }
@@ -1377,32 +1380,21 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2Bind
 	return S_OK;
 }
 
-ALResult Tr2RenderContextAL::UseAccelerationStructure( NSMutableArray *primitiveAccelerationStructures )
+ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas  )
 {
-    if (@available(macOS 11.0, *)) {
+    if( @available( macOS 11.0, * ) )
+    {
+        id<MTLAccelerationStructure> accelerationStructure =  tlas.TrinityALImpl_GetObject()->GetInstanceAccelerationStructure();
+        
         auto computeEncoder = m_workQueue->GetComputeEncoder();
-    
-        // mark primitive acceleration structures as used since only the instance acceleration
-        // structure references them.
-        for (id <MTLAccelerationStructure> primitiveAccelerationStructure in primitiveAccelerationStructures)
-            [computeEncoder useResource:primitiveAccelerationStructure usage:MTLResourceUsageRead];
+        
+        [computeEncoder useResource:accelerationStructure usage:MTLResourceUsageRead];
         
         m_workQueue->ReleaseEncoder(false);
         
         return S_OK;
     }
     return E_FAIL;
-}
-
-ALResult Tr2RenderContextAL::UseAccelerationStructure( id<MTLAccelerationStructure> accelerationStructure )
-{
-    auto computeEncoder = m_workQueue->GetComputeEncoder();
-    
-    [computeEncoder useResource:accelerationStructure usage:MTLResourceUsageRead];
-    
-    m_workQueue->ReleaseEncoder(false);
-    
-    return S_OK;
 }
 
 bool Tr2RenderContextAL::SupportsBindlessTextures() const

@@ -12,6 +12,7 @@
 #include "Tr2PipelineStatsQueryALMetal.h"
 #include "Tr2VertexLayoutALMetal.h"
 #include "Tr2RtPipelineStateALMetal.h"
+#include "Tr2RtShaderTableALMetal.h"
 #include "ALLog.h"
 
 // NOTE: If you spot any rendering artifacts - try disabling render/compute state cashing.
@@ -2989,7 +2990,7 @@ void MetalWorkQueue::Dispatch( id<MTLBuffer> indirectBuffer, uint32_t indirectBu
 	ReleaseEncoder( false );
 }
 
-void MetalWorkQueue::SetRaytracingPipelineState( Tr2RtPipelineStateAL* pipeline )
+void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTableAL* shaderTable, uint32_t width, uint32_t height )
 {
     CCP_ASSERT( m_isPrimary );
     id<MTLComputeCommandEncoder> computeEncoder = GetComputeEncoder();
@@ -2998,18 +2999,8 @@ void MetalWorkQueue::SetRaytracingPipelineState( Tr2RtPipelineStateAL* pipeline 
     SetComputeBufferBindings();
     
     [computeEncoder setComputePipelineState: pipeline->GetRtPipeline() ];
-    //ReleaseEncoder( false );
-}
-
-void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, uint32_t width, uint32_t height )
-{
-    CCP_ASSERT( m_isPrimary );
-    id<MTLComputeCommandEncoder> computeEncoder = GetComputeEncoder();
+    [computeEncoder setIntersectionFunctionTable: shaderTable->GetIntersectionFunctionTable() atBufferIndex:12];
     
-    // Bind the required buffers and textures.
-    SetComputeBufferBindings();
-    
-    [computeEncoder setComputePipelineState: pipeline->GetRtPipeline() ];
     // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
     // pixel. The sample needs to align the number of threads to a multiple of the threadgroup
     // size, because earlier, when it created the pipeline objects, it declared that the pipeline

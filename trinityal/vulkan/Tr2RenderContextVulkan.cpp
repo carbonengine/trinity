@@ -619,4 +619,10 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type, size_t, Tr2TextureA
 	return S_OK;
 }
 
+ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas )
+{
+    return S_OK;
+}
+
+
 #endif

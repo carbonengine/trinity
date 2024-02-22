@@ -297,7 +297,9 @@ public:
 	}
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, size_t count, Tr2TextureAL* textures );
+    ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
 
+    
 private:
 	ALResult SetPass();
 	ALResult CreateRenderPass( VkRenderPass& renderPass );

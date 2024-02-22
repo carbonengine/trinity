@@ -227,7 +227,8 @@ public:
 	void FlushComputeBarriersDx12( ID3D12Resource* resource = nullptr );
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& textures );
-
+    ALResult UseAccelerationStructure(Tr2RtTopLevelAccelerationStructureAL tlas );
+    
 	ALResult SetAllState();
 protected:
 	ID3D12PipelineState* GetPipelineState();

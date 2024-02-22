@@ -2186,6 +2186,11 @@ ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type, const Tr2BindlessRe
 	return S_OK;
 }
 
+ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas )
+{
+    return S_OK;
+}
+
 void TrinityALImpl::SetDebugName( ID3D11DeviceChild* resource, const char* name )
 {
 	if( resource )

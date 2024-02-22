@@ -12,6 +12,7 @@
 //#include "StdAfx.h"
 #include "Tr2ShaderProgramALMetal.h"
 #include "../include/Tr2RtPipelineStateAL.h"
+#include "Tr2ShaderAL.h"
 #include <Metal/Metal.h>
 
 namespace TrinityALImpl
@@ -26,17 +27,31 @@ public:
     void Destroy();
     bool IsValid() const;
     
+    struct HitGroupFunctions
+    {
+        id <MTLFunction> closestHit;
+        id <MTLFunction> intersection;
+        id <MTLFunction> anyHit;
+    };
+    
     Tr2ALMemoryType GetMemoryClass() const;
     void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
-    id <MTLComputePipelineState> GetRtPipeline() { return m_shadowPipeline; }
-    const ::Tr2ShaderProgramAL& GetShaderProgram() const;
-    
-    
+    id <MTLComputePipelineState> GetRtPipeline() { return m_raytracingPipeline; }
+    ::Tr2ShaderProgramAL& GetShaderProgram();
+    std::unordered_map<std::wstring, id <MTLFunction>> GetFunctionMap();
+    std::unordered_map<std::wstring, HitGroupFunctions> GetHitGroupMap();
+    NSString* NSStringFromWchar( std::wstring name );
+
+
 private:
-    id <MTLComputePipelineState> m_shadowPipeline;
+    id <MTLFunction> CreateFunction( std::wstring name, id<MTLDevice> device, dispatch_data_t shaderData );
+    std::unordered_map<std::wstring, id <MTLFunction>> m_intersectionFunctions;
+    std::unordered_map<std::wstring, HitGroupFunctions> m_hitGroupMap;
+    id <MTLComputePipelineState> m_raytracingPipeline;
     ::Tr2ShaderProgramAL m_shaderProgram;
-    //id<MTLIntersectionFunctionTable> _intersectionFunctionTable;
     
+    
+    void AddToHitGroupDict();
 };
 }
 
