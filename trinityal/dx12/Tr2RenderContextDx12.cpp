@@ -98,7 +98,8 @@ Tr2RenderContextAL::Tr2RenderContextAL() throw( )
 	m_dynamicIB( false ),
 	m_separateAlphaBlendEnabled( false ),
 	m_srgbWriteEnable( false ),
-	m_topology( Tr2RenderContextEnum::TOP_TRIANGLES )
+	m_topology( Tr2RenderContextEnum::TOP_TRIANGLES ),
+	m_uavBarriersDisabledCounter(0)
 {
 	std::fill( std::begin( m_vertexBuffers ), std::end( m_vertexBuffers ), VB() );
 }
@@ -1642,6 +1643,18 @@ void Tr2RenderContextAL::ReApplyStateDx12()
 	DirtyDescriptorCache();
 }
 
+void Tr2RenderContextAL::PushDisableUAVBarriersDx12()
+{
+	CCP_ASSERT( m_uavBarriersDisabledCounter < 10 ); //sanity check
+	m_uavBarriersDisabledCounter++;
+}
+
+void Tr2RenderContextAL::PopDisableUAVBarriersDx12()
+{
+	CCP_ASSERT( m_uavBarriersDisabledCounter > 0 );
+	m_uavBarriersDisabledCounter--;
+}
+
 void Tr2RenderContextAL::ResourceBarrierDx12( size_t count, const D3D12_RESOURCE_BARRIER* barriers )
 {
 	for( size_t i = 0; i < count; ++i )
@@ -1676,7 +1689,7 @@ void Tr2RenderContextAL::ResourceBarrierDx12( size_t count, const D3D12_RESOURCE
 				CCP_ASSERT( it->Transition.StateAfter == barrier.Transition.StateBefore );
 				if( it->Transition.StateBefore == barrier.Transition.StateAfter )
 				{
-					if( ( it->Transition.StateBefore & D3D12_RESOURCE_STATE_UNORDERED_ACCESS ) != 0 )
+					if( !m_uavBarriersDisabledCounter && ( it->Transition.StateBefore & D3D12_RESOURCE_STATE_UNORDERED_ACCESS ) != 0 )
 					{
 						D3D12_RESOURCE_BARRIER uavBarrier = { D3D12_RESOURCE_BARRIER_TYPE_UAV, D3D12_RESOURCE_BARRIER_FLAG_NONE };
 						uavBarrier.UAV.pResource = it->Transition.pResource;

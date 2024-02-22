@@ -213,6 +213,8 @@ public:
 	void DirtyDescriptorCache();
 	void ReApplyStateDx12();
 
+	void PushDisableUAVBarriersDx12();
+	void PopDisableUAVBarriersDx12();
 
 	void ResourceBarrierDx12( size_t count, const D3D12_RESOURCE_BARRIER* barriers );
 	void ResourceBarrierDx12( const D3D12_RESOURCE_BARRIER& barrier );
@@ -292,6 +294,7 @@ protected:
 	TrinityALImpl::Tr2DrawUPHelper m_drawUPHelper;
 private:
 
+	int32_t m_uavBarriersDisabledCounter;
 	std::vector<D3D12_RESOURCE_BARRIER> m_barriers;
 
 	Tr2RenderContextAL( const Tr2RenderContextAL& ) /* = delete */;

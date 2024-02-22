@@ -477,6 +477,10 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	GPU_REGION( renderContext, "TransformMeshes" );
 	CCP_STATS_ZONE( __FUNCTION__ );
 
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	renderContext.PushDisableUAVBarriersDx12();
+#endif
+
 	std::vector<Tr2RaytracingMesh*> outdatedMeshes;
 
 	for( auto it = begin( m_geometries ); it != end( m_geometries ); ++it )
@@ -569,6 +573,10 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		Tr2Renderer::RunComputeShader( m_skinVerticesEffect, ( vertexCount + 63 ) / 64, 1, 1, renderContext );
 	}
 	renderContext.SetResourceSet( Tr2ResourceSetAL() );
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+	renderContext.PopDisableUAVBarriersDx12();
+#endif
 }
 
 void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& renderContext )
@@ -610,7 +618,7 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 	}
 	else
 	{
-		m_tlas.Create( instances.size(), instances.data(), Tr2RtBuildFlags::PREFER_FAST_BUILD, renderContext.GetPrimaryRenderContext() );
+		m_tlas.Create( instances.size(), instances.data(), Tr2RtBuildFlags::PREFER_FAST_TRACE, renderContext.GetPrimaryRenderContext() );
 	}
 }
 

@@ -464,12 +464,6 @@ void EveSpaceObject2::UpdateSyncronous( EveUpdateContext& updateContext )
 			m_secondaryLightingSphereRadius = pow( boxVolume / 4.f * 3.f / TRI_PI, 1.0f / 3.0f );
 		}
 	}
-
-	if( g_eveSpaceSceneRaytracedShadows )
-	{
-		UpdateRtMesh();
-		UpdateRtSkeleton();
-	}
 }
 
 
@@ -1590,6 +1584,12 @@ void EveSpaceObject2::UpdateVisibility( const TriFrustum& frustum, const Matrix&
 	{
 		auto size = frustum.GetPixelSizeAccrossEst( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius );
 		m_mesh->UseWithScreenSize( size, m_boundingSphereWorldRadius );
+	}
+
+	if( g_eveSpaceSceneRaytracedShadows )
+	{
+		UpdateRtMesh();
+		UpdateRtSkeleton();
 	}
 }
 
