@@ -29,17 +29,20 @@ namespace TrinityALImpl
         Tr2ALMemoryType GetMemoryClass() const;
         void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
         API_AVAILABLE( macos(11.0) )
-        id <MTLIntersectionFunctionTable> GetIntersectionFunctionTable() { return m_intersectionFunctionTable; }
+        id <MTLIntersectionFunctionTable> GetHitGroupFunctionTable() { return m_hitGroupFunctionTable; }
+        id <MTLVisibleFunctionTable> GetMissShaderFunctionTable() { return m_missShaderFunctionTable; }
         /*uint64_t GetEntrySize() const;
         uint64_t GetMissShaderTableSize() const;
         uint64_t GetHitGroupTableSize() const;
          */
     private:
-        void AddFunctionToTable( id <MTLFunction> fn, int index );
+        void AddFunctionToIntersectionTable( id <MTLFunction> fn, int index );
+        void AddFunctionToVisibleTable( id <MTLFunction> fn, int index );
         Tr2RtShaderTableDescriptionAL m_desc;
         //uint64_t m_entrySize;
         API_AVAILABLE( macos(11.0) )
-        id <MTLIntersectionFunctionTable> m_intersectionFunctionTable;
+        id <MTLIntersectionFunctionTable> m_hitGroupFunctionTable;
+        id <MTLVisibleFunctionTable> m_missShaderFunctionTable;
         id <MTLComputePipelineState> m_pipeline;
         
     };

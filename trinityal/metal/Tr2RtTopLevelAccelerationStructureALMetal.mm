@@ -155,7 +155,8 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
                 // Metal adds the geometry intersection function table offset and instance intersection
                 // function table offset together to determine which intersection function to execute.
                 
-                // Assign each piece of geometry a consecutive slot in the intersection function table.
+                // Metal adds the geometry intersection function table offset and instance intersection
+                // function table offset together to determine which intersection function to execute.
                 instanceDescriptors[instanceIndex].intersectionFunctionTableOffset = instances[instanceIndex].materialIndex;
                 
                 // Set the instance mask, which the sample uses to filter out intersections between rays

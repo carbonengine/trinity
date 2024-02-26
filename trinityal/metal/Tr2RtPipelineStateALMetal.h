@@ -40,12 +40,14 @@ public:
     ::Tr2ShaderProgramAL& GetShaderProgram();
     std::unordered_map<std::wstring, id <MTLFunction>> GetFunctionMap();
     std::unordered_map<std::wstring, HitGroupFunctions> GetHitGroupMap();
+    std::unordered_map<std::wstring, int> GetFunctionIndexMap();
     NSString* NSStringFromWchar( std::wstring name );
 
 
 private:
     id <MTLFunction> CreateFunction( std::wstring name, id<MTLDevice> device, dispatch_data_t shaderData );
     std::unordered_map<std::wstring, id <MTLFunction>> m_intersectionFunctions;
+    std::unordered_map<std::wstring, int> m_functionIndexMap;
     std::unordered_map<std::wstring, HitGroupFunctions> m_hitGroupMap;
     id <MTLComputePipelineState> m_raytracingPipeline;
     ::Tr2ShaderProgramAL m_shaderProgram;

@@ -90,23 +90,17 @@ namespace  TrinityALImpl {
             // GEOMETRY DESCRIPTOR
             MTLAccelerationStructureTriangleGeometryDescriptor *geomDesc = [MTLAccelerationStructureTriangleGeometryDescriptor descriptor];
 
-            geomDesc.indexBuffer = indices.m_indexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer(); //indexCount = 72
+            geomDesc.indexBuffer = indices.m_indexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
             geomDesc.indexType = indices.m_stride == 2 ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32;
             geomDesc.indexBufferOffset = indices.m_stride * indices.m_indexOffset;
             
             geomDesc.vertexBuffer = positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
             geomDesc.vertexStride = positions.m_stride;
-            //geomDesc.vertexFormat = metalContext->m_utils->GetMTLPixelFormat(positions.m_positionFormat);
             geomDesc.vertexBufferOffset = positions.m_vertexOffset;
+             
+            geomDesc.triangleCount = indices.m_indexBuffer.GetSize() / 3 / indices.m_stride;
             
-            geomDesc.triangleCount = indices.m_indexBuffer.GetSize() / 3 / indices.m_stride;//48
-            
-            //`Number of indices to read (triangle count multiplied by 3) (144) times index stride (2) plus index buffer offset (0) must be less than or equal to index buffer length (144)'
-            
-            
-            // AS DESCRIPTOR ( a descriptor for descriptors)
-            // Create a primitive acceleration structure descriptor to contain the single piece
-            // of acceleration structure geometry.
+            // Acceleration structure descriptor ( a descriptor for descriptors )
             MTLPrimitiveAccelerationStructureDescriptor *accelerationStructureDesc = [MTLPrimitiveAccelerationStructureDescriptor descriptor];
             accelerationStructureDesc.geometryDescriptors = @[geomDesc];
             

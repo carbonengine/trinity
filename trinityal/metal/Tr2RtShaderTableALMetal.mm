@@ -63,14 +63,15 @@ namespace TrinityALImpl
 
     // Shader tables contain shader records. Shader records contain a shader identifier and root arguments used to look up resources
     ALResult Tr2RtShaderTableAL::Create( const Tr2RtShaderTableDescriptionAL& desc, const ::Tr2RtPipelineStateAL& pipeline, Tr2PrimaryRenderContextAL& renderContext )
-    {
-        //setOpaqueTriangleIntersectionFunction
-        
+    {        
         if (@available(macOS 11.0, *)) {
             
-            MTLIntersectionFunctionTableDescriptor *intersectionFunctionTableDescriptor = [[MTLIntersectionFunctionTableDescriptor alloc] init];
-            intersectionFunctionTableDescriptor.functionCount = desc.m_hitGroupNames.size();
+            MTLVisibleFunctionTableDescriptor *missFunctionTableDescriptor = [[MTLVisibleFunctionTableDescriptor alloc] init];
+            missFunctionTableDescriptor.functionCount = desc.m_missNames.size();
             
+            
+            MTLIntersectionFunctionTableDescriptor *hitGroupFunctionTableDescriptor = [[MTLIntersectionFunctionTableDescriptor alloc] init];
+            hitGroupFunctionTableDescriptor.functionCount = desc.m_hitGroupNames.size();
             // Create a table large enough to hold all of the intersection functions. Metal
             // links intersection functions into the compute pipeline state, potentially with
             // a different address for each compute pipeline. Therefore, the intersection
@@ -78,7 +79,8 @@ namespace TrinityALImpl
             // can use it with only that pipeline.
             m_pipeline = pipeline.TrinityALImpl_GetObject()->GetRtPipeline();
             
-            m_intersectionFunctionTable = [m_pipeline newIntersectionFunctionTableWithDescriptor:intersectionFunctionTableDescriptor];
+            m_missShaderFunctionTable = [m_pipeline newVisibleFunctionTableWithDescriptor:missFunctionTableDescriptor];
+            m_hitGroupFunctionTable = [m_pipeline newIntersectionFunctionTableWithDescriptor:hitGroupFunctionTableDescriptor];
         }
             
         // add functions to the dictionary
@@ -86,8 +88,23 @@ namespace TrinityALImpl
         // then in TLAS the index would be the same somehow???
         auto intersectionFunctions = pipeline.TrinityALImpl_GetObject()->GetFunctionMap();
         auto hitGroupMap = pipeline.TrinityALImpl_GetObject()->GetHitGroupMap();
+        auto funcIndexMap = pipeline.TrinityALImpl_GetObject()->GetFunctionIndexMap();
         
         int index = 0;
+        
+        for( auto names : desc.m_missNames )
+        {
+            auto found = intersectionFunctions.find( names.name );
+            // if we found nothing then the table is invalid
+            if( found != end( intersectionFunctions ) )
+            {
+                AddFunctionToVisibleTable( found->second, index++ );
+            }
+        }
+        
+        // reset the index for the hit group shader table
+        index = 0;
+        
         //Map each piece of scene hit group to its intersection function.
         for( auto names : desc.m_hitGroupNames )
         {
@@ -97,26 +114,31 @@ namespace TrinityALImpl
             {
                 if( found->second.anyHit )
                 {
-                    AddFunctionToTable( found->second.anyHit, index++ );
+                    AddFunctionToIntersectionTable( found->second.anyHit, index++ );
                 }
                 if( found->second.intersection )
                 {
-                    AddFunctionToTable( found->second.intersection, index++ );
+                    AddFunctionToIntersectionTable( found->second.intersection, index++ );
                 }
                 if( found->second.closestHit )
                 {
-                    AddFunctionToTable( found->second.closestHit, index++ );
+                    AddFunctionToIntersectionTable( found->second.closestHit, index++ );
                 }
                 index++;
+            }
+            else
+            {
+                return E_FAIL;
             }
         }
 
         return S_OK;
     }
 
-    void Tr2RtShaderTableAL::AddFunctionToTable( id <MTLFunction> fn, int index )
+    void Tr2RtShaderTableAL::AddFunctionToIntersectionTable( id <MTLFunction> fn, int index )
     {
-        if (@available(macOS 11.0, *)) {
+        if (@available(macOS 11.0, *)) 
+        {
             // Create a handle to the copy of the intersection function linked into the
             // ray-tracing compute pipeline state. Create a different handle for each pipeline
             // it is linked with.
@@ -128,8 +150,27 @@ namespace TrinityALImpl
             }
             // Insert the handle into the intersection function table, which ultimately maps the
             // geometry's index to its intersection function.
-            [m_intersectionFunctionTable setFunction:handle atIndex:index];
+            [m_hitGroupFunctionTable setFunction:handle atIndex:index];
+        }
+    }
+
+
+    void Tr2RtShaderTableAL::AddFunctionToVisibleTable( id <MTLFunction> fn, int index )
+    {
+        if (@available(macOS 11.0, *))
+        {
+            // Create a handle to the copy of the intersection function linked into the
+            // ray-tracing compute pipeline state. Create a different handle for each pipeline
+            // it is linked with.
+            id <MTLFunctionHandle> handle = [m_pipeline functionHandleWithFunction:fn];
             
+            if( handle == nil )
+            {
+                return;
+            }
+            // Insert the handle into the intersection function table, which ultimately maps the
+            // geometry's index to its intersection function.
+            [m_missShaderFunctionTable setFunction:handle atIndex:index];
         }
     }
 

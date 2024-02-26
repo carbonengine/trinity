@@ -87,7 +87,7 @@ namespace TrinityALImpl
         
         NSMutableArray *linkedFunctions = [[NSMutableArray alloc]init];
         
-        // now create intersection function table for hit shaders (0 index is reserved for RayGen shader)
+        // now create intersection function table for shaders, skipping over raygen for now
         for( int shaderIndex = 1; shaderIndex < desc.m_shaders.size(); ++shaderIndex )
         {
             for( int nameIndex = 0; nameIndex < desc.m_shaders[shaderIndex].names.size(); ++nameIndex )
@@ -95,7 +95,7 @@ namespace TrinityALImpl
                 auto shader = desc.m_shaders[shaderIndex];
                 
                 std::wstring shaderName = desc.m_shaders[shaderIndex].names[nameIndex].name.c_str();
-                std::wstring exportName =desc.m_shaders[shaderIndex].names[nameIndex].exportName.c_str();
+                std::wstring exportName = desc.m_shaders[shaderIndex].names[nameIndex].exportName.c_str();
                 
                 dispatch_data_t shaderData = dispatch_data_create(
                                                   shader.bytecode.bytecode,
@@ -108,12 +108,18 @@ namespace TrinityALImpl
                 id<MTLLibrary> mtlLib = [mtlDevice newLibraryWithData:shaderData error:&error];
                 id <MTLFunction> fn = CreateFunction( shaderName, mtlDevice, shaderData );
                 
+                if( fn == nil )
+                {
+                    return E_FAIL;
+                }
+                
                 // add function to the dict
                 m_intersectionFunctions[exportName] = fn;
-                
+                m_functionIndexMap[exportName] = shaderIndex;
                 [linkedFunctions addObject:fn];
             }
         }
+        
         if( m_intersectionFunctions.size() == 0 )
         {
             return E_FAIL;
@@ -210,6 +216,11 @@ namespace TrinityALImpl
     std::unordered_map<std::wstring, Tr2RtPipelineStateAL::HitGroupFunctions> Tr2RtPipelineStateAL::GetHitGroupMap()
     {
         return m_hitGroupMap;
+    }
+
+    std::unordered_map<std::wstring, int> Tr2RtPipelineStateAL::GetFunctionIndexMap()
+    {
+        return m_functionIndexMap;
     }
     
 }

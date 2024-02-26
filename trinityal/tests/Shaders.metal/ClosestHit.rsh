@@ -10,18 +10,13 @@ struct ReturnTypeIntersection {
     bool accept    [[accept_intersection]]; // Whether to accept or reject the intersection.
 };
 
-struct Foo {
-    float3 a;
-    float4 b;
-};
-
-[[intersection(triangle, triangle_data, instancing)]]
+[[intersection(triangle, instancing)]]
 ReturnTypeIntersection ClosestHit(ray_data float3 & color [[payload]])
 {
     ReturnTypeIntersection ret;
-    ret.accept = false;
+    ret.accept = true;
     
-    color = float3(1.f, 0.f, 1.f);
+    color = float3(0.f, 1.f, 0.f);
     
     return ret;
 }

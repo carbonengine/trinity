@@ -61,8 +61,15 @@ TEST_F( Raytracing, BLASIsInvalidBeforeCreation )
 TEST_F( Raytracing, BLASIsValidAfterCreation )
 {
     Tr2BufferAL vb, ib;
+    // UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE, need to have leave it like this for now because of possible metal bug w. buffers
+#if TRINITY_PLATFORM == TRINITY_METAL
+    ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeVertices, *renderContext ) );
+    ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeIndices, *renderContext ) );
+
+#else
     ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeVertices, *renderContext ) );
-    ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
+    ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
+#endif
 
     Tr2RtBottomLevelAccelerationStructureAL blas;
     ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
@@ -79,8 +86,15 @@ TEST_F( Raytracing, TLASIsInvalidBeforeCreation )
 TEST_F( Raytracing, TLASIsValidAfterCreation )
 {
     Tr2BufferAL vb, ib;
+    // UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE, need to have leave it like this for now because of possible metal bug w. buffers
+#if TRINITY_PLATFORM == TRINITY_METAL
+    ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeVertices, *renderContext ) );
+    ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeIndices, *renderContext ) );
+
+#else
     ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeVertices, *renderContext ) );
     ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
+#endif
 
     Tr2RtBottomLevelAccelerationStructureAL blas;
     ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
@@ -97,6 +111,111 @@ TEST_F( Raytracing, TLASIsValidAfterCreation )
     ASSERT_HRESULT_SUCCEEDED( tlas.Create( 1, &instance, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
 
     ASSERT_TRUE( tlas.IsValid() );
+}
+
+TEST_F( Raytracing, CanCreateStateObject )
+{
+    uint8_t rayGenCode[] = {
+#include INCLUDE_SHADER_CODE( RayGen.rs )
+    };
+
+    uint8_t missCode[] = {
+#include INCLUDE_SHADER_CODE( Miss.rs )
+    };
+
+    uint8_t closestHitCode[] = {
+#include INCLUDE_SHADER_CODE( ClosestHit.rs )
+    };
+
+    Tr2ShaderSignatureAL signature;
+    signature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
+    signature.Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 );
+    signature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 );
+
+    Tr2RtPipelineStateDescriptionAL stateDesc;
+    stateDesc.AddShader( L"RayGen_12", Tr2ShaderBytecodeAL( rayGenCode ), L"RayGen", 4 * sizeof( float ) );
+    stateDesc.AddShader( L"Miss_5", Tr2ShaderBytecodeAL( missCode ), L"Miss", 4 * sizeof( float ) );
+    stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHit", 4 * sizeof( float ) );
+    stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr );
+    stateDesc.AddGlobalSignature( signature );
+
+    Tr2RtPipelineStateAL state;
+    ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, renderContext->GetPrimaryRenderContext() ) );
+}
+
+TEST_F( Raytracing, CanCreateShaderTable )
+{
+    uint8_t rayGenCode[] = {
+#include INCLUDE_SHADER_CODE( RayGen.rs )
+    };
+
+    uint8_t missCode[] = {
+#include INCLUDE_SHADER_CODE( Miss.rs )
+    };
+
+    uint8_t closestHitCode[] = {
+#include INCLUDE_SHADER_CODE( ClosestHit.rs )
+    };
+
+    Tr2ShaderSignatureAL signature;
+    signature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
+    signature.Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 );
+    signature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 );
+
+    Tr2RtPipelineStateDescriptionAL stateDesc;
+    stateDesc.AddShader( L"RayGen_12", Tr2ShaderBytecodeAL( rayGenCode ), L"RayGen", 4 * sizeof( float ) );
+    stateDesc.AddShader( L"Miss_5", Tr2ShaderBytecodeAL( missCode ), L"Miss", 4 * sizeof( float ) );
+    stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHit", 4 * sizeof( float ) );
+    stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr );
+    stateDesc.AddGlobalSignature( signature );
+
+    Tr2RtPipelineStateAL state;
+    ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, renderContext->GetPrimaryRenderContext() ) );
+
+    Tr2RtShaderTableDescriptionAL shaderTableDesc;
+    shaderTableDesc.AddRayGenShader( L"RayGen_12" );
+    shaderTableDesc.AddMissShader( L"Miss_5" );
+    shaderTableDesc.AddHitGroup( L"HitGroup" );
+
+    Tr2RtShaderTableAL shaderTable;
+    ASSERT_HRESULT_SUCCEEDED( shaderTable.Create( shaderTableDesc, state, *renderContext ) );
+}
+
+TEST_F( Raytracing, ShaderTableCreationFailsWithInvalidShaderName )
+{
+    uint8_t rayGenCode[] = {
+#include INCLUDE_SHADER_CODE( RayGen.rs )
+    };
+
+    uint8_t missCode[] = {
+#include INCLUDE_SHADER_CODE( Miss.rs )
+    };
+
+    uint8_t closestHitCode[] = {
+#include INCLUDE_SHADER_CODE( ClosestHit.rs )
+    };
+
+    Tr2ShaderSignatureAL signature;
+    signature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
+    signature.Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 );
+    signature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 );
+
+    Tr2RtPipelineStateDescriptionAL stateDesc;
+    stateDesc.AddShader( L"RayGen_12", Tr2ShaderBytecodeAL( rayGenCode ), L"RayGen", 4 * sizeof( float ) );
+    stateDesc.AddShader( L"Miss_5", Tr2ShaderBytecodeAL( missCode ), L"Miss", 4 * sizeof( float ) );
+    stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHit", 4 * sizeof( float ) );
+    stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr );
+    stateDesc.AddGlobalSignature( signature );
+
+
+    Tr2RtPipelineStateAL state;
+    ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, renderContext->GetPrimaryRenderContext() ) );
+
+    Tr2RtShaderTableDescriptionAL shaderTableDesc;
+    shaderTableDesc.AddRayGenShader( L"Blah" );
+
+    Tr2RtShaderTableAL shaderTable;
+    ASSERT_HRESULT_FAILED( shaderTable.Create( shaderTableDesc, state, *renderContext ) );
 }
 
 /************* renderer *************/
@@ -261,10 +380,6 @@ TEST_F( Raytracing, TraceRays )
     stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr );
     stateDesc.AddGlobalSignature( signature );
     
-    
-    // key (dict) ['HitGroup']
-    // value (array){'', 'ClosestHit_76', ''}
-    
     Tr2RtPipelineStateAL state;
     ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, *renderContext ) );
 
@@ -287,7 +402,7 @@ TEST_F( Raytracing, TraceRays )
     ASSERT_HRESULT_SUCCEEDED(resultTex.Create( Tr2BitmapDimensions( WIDTH, HEIGHT, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM ), Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
     
     Tr2BufferAL vb, ib;
-    // UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE
+    // UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE, need to have leave it like this for now because of possible metal bug w. buffers
 #if TRINITY_PLATFORM == TRINITY_METAL
     ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeVertices, *renderContext ) );
     ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeIndices, *renderContext ) );
@@ -375,115 +490,8 @@ TEST_F( Raytracing, TraceRays )
 
 #endif
 
+
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
-
-TEST_F( Raytracing, CanCreateStateObject )
-{
-	uint8_t rayGenCode[] = {
-#include INCLUDE_SHADER_CODE( RayGen.rs )
-	};
-
-	uint8_t missCode[] = {
-#include INCLUDE_SHADER_CODE( Miss.rs )
-	};
-
-	uint8_t closestHitCode[] = {
-#include INCLUDE_SHADER_CODE( ClosestHit.rs )
-	};
-
-	Tr2ShaderSignatureAL signature;
-	signature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
-	signature.Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 );
-	signature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 );
-
-	Tr2RtPipelineStateDescriptionAL stateDesc;
-	stateDesc.AddShader( L"RayGen_12", Tr2ShaderBytecodeAL( rayGenCode ), L"RayGen", 4 * sizeof( float ) );
-	stateDesc.AddShader( L"Miss_5", Tr2ShaderBytecodeAL( missCode ), L"Miss", 4 * sizeof( float ) );
-	stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHit", 4 * sizeof( float ) );
-	stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr );
-	stateDesc.AddGlobalSignature( signature );
-
-	Tr2RtPipelineStateAL state;
-	ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, renderContext->GetPrimaryRenderContext() ) );
-}
-
-
-TEST_F( Raytracing, CanCreateShaderTable )
-{
-
-	uint8_t rayGenCode[] = {
-#include INCLUDE_SHADER_CODE( RayGen.rs )
-	};
-
-	uint8_t missCode[] = {
-#include INCLUDE_SHADER_CODE( Miss.rs )
-	};
-
-	uint8_t closestHitCode[] = {
-#include INCLUDE_SHADER_CODE( ClosestHit.rs )
-	};
-
-	Tr2ShaderSignatureAL signature;
-	signature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
-	signature.Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 );
-	signature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 );
-
-	Tr2RtPipelineStateDescriptionAL stateDesc;
-	stateDesc.AddShader( L"RayGen_12", Tr2ShaderBytecodeAL( rayGenCode ), L"RayGen", 4 * sizeof( float ) );
-	stateDesc.AddShader( L"Miss_5", Tr2ShaderBytecodeAL( missCode ), L"Miss", 4 * sizeof( float ) );
-	stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHit", 4 * sizeof( float ) );
-	stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr );
-	stateDesc.AddGlobalSignature( signature );
-
-
-	Tr2RtPipelineStateAL state;
-	ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, renderContext->GetPrimaryRenderContext() ) );
-
-	Tr2RtShaderTableDescriptionAL shaderTableDesc;
-	shaderTableDesc.AddRayGenShader( L"RayGen_12" );
-	shaderTableDesc.AddMissShader( L"Miss_5" );
-	shaderTableDesc.AddHitGroup( L"HitGroup" );
-
-	Tr2RtShaderTableAL shaderTable;
-	ASSERT_HRESULT_SUCCEEDED( shaderTable.Create( shaderTableDesc, state, *renderContext ) );
-}
-
-TEST_F( Raytracing, ShaderTableCreationFailsWithInvalidShaderName )
-{
-	uint8_t rayGenCode[] = {
-#include INCLUDE_SHADER_CODE( RayGen.rs )
-	};
-
-	uint8_t missCode[] = {
-#include INCLUDE_SHADER_CODE( Miss.rs )
-	};
-
-	uint8_t closestHitCode[] = {
-#include INCLUDE_SHADER_CODE( ClosestHit.rs )
-	};
-
-	Tr2ShaderSignatureAL signature;
-	signature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
-	signature.Add( Tr2ShaderRegisterAL::UAV_TEXTURE2D, 0 );
-	signature.Add( Tr2ShaderRegisterAL::SRV_BUFFER, 0 );
-
-	Tr2RtPipelineStateDescriptionAL stateDesc;
-	stateDesc.AddShader( L"RayGen_12", Tr2ShaderBytecodeAL( rayGenCode ), L"RayGen", 4 * sizeof( float ) );
-	stateDesc.AddShader( L"Miss_5", Tr2ShaderBytecodeAL( missCode ), L"Miss", 4 * sizeof( float ) );
-	stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHit", 4 * sizeof( float ) );
-	stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr );
-	stateDesc.AddGlobalSignature( signature );
-
-
-	Tr2RtPipelineStateAL state;
-	ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, renderContext->GetPrimaryRenderContext() ) );
-
-	Tr2RtShaderTableDescriptionAL shaderTableDesc;
-	shaderTableDesc.AddRayGenShader( L"Blah" );
-
-	Tr2RtShaderTableAL shaderTable;
-	ASSERT_HRESULT_FAILED( shaderTable.Create( shaderTableDesc, state, *renderContext ) );
-}
 
 /************* render test *************/
 
