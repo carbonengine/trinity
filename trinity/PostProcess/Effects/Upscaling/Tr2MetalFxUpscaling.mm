@@ -14,6 +14,11 @@
 #include "../trinityal/metal/Tr2TextureALMetal.h"
 #include "Tr2UpscalingUtils.h"
 
+float Tr2MetalFxSpatialUpscaling::s_debugUpscaling[] = {2.0f, 1.75f, 1.5f, 1.25f, 1.0f};
+bool Tr2MetalFxSpatialUpscaling::s_debugMode = false;
+float Tr2MetalFxTemporalUpscaling::s_debugUpscaling[] = {2.0f, 1.75f, 1.5f, 1.25f, 1.0f};
+bool Tr2MetalFxTemporalUpscaling::s_debugMode = false;
+
 namespace MetalUpscalingUtils {
     id<MTLTexture> GetMetalTexture(ITr2TextureProvider* texture)
     {
@@ -49,7 +54,8 @@ namespace MetalUpscalingUtils {
 }
 
 Tr2MetalFxSpatialUpscaling::Tr2MetalFxSpatialUpscaling( IRoot* lockobj ):
-    m_upscaling(1.0)
+    m_upscaling(1.0),
+    m_setting(Tr2Upscaling::BALANCED)
 {
     if( @available(macOS 13.0, *))
     {
@@ -102,11 +108,6 @@ float Tr2MetalFxSpatialUpscaling::GetMipLevelBias() const
     return log2f(1.0/m_upscaling);
 }
 
-float Tr2MetalFxSpatialUpscaling::GetUpscaling() const
-{
-    return m_upscaling;
-}
-
 void Tr2MetalFxSpatialUpscaling::GetRenderSize(uint32_t& width, uint32_t& height) const{
     width = m_renderWidth;
     height = m_renderHeight;
@@ -124,9 +125,10 @@ const std::vector<Tr2Upscaling::Setting> Tr2MetalFxSpatialUpscaling::GetAvailabl
 
 void Tr2MetalFxSpatialUpscaling::ApplySetting( const Tr2Upscaling::Setting& setting, uint32_t displayWidth, uint32_t displayHeight )
 {
+    m_setting = setting;
     m_displayWidth = displayWidth;
     m_displayHeight = displayHeight;
-    m_upscaling = MetalUpscalingUtils::GetUpscalingBasedOnSetting(setting);
+    m_upscaling = Tr2MetalFxSpatialUpscaling::s_debugMode ? Tr2MetalFxSpatialUpscaling::s_debugUpscaling[m_setting] : MetalUpscalingUtils::GetUpscalingBasedOnSetting(m_setting);
     m_renderWidth = UpscalingUtils::ConvertDisplaySizeToRenderSize(m_displayWidth, m_upscaling);
     m_renderHeight = UpscalingUtils::ConvertDisplaySizeToRenderSize(m_displayHeight, m_upscaling);
 }
@@ -185,13 +187,13 @@ Tr2MetalFxTemporalUpscaling::Tr2MetalFxTemporalUpscaling( IRoot* lockobj ):
     m_jitterY(0.0f),
     m_renderWidth(0.0f),
     m_renderHeight(0.0f),
-    m_reset(false)
+    m_reset(false),
+    m_setting(Tr2Upscaling::BALANCED)
 {
     if( @available(macOS 13.0, *))
     {
         m_mfxTemporalScaler = nil;
     }
-
 }
 
 Tr2MetalFxTemporalUpscaling::~Tr2MetalFxTemporalUpscaling()
@@ -244,11 +246,6 @@ float Tr2MetalFxTemporalUpscaling::GetMipLevelBias() const
     return log2f(1.0/m_upscaling) - 1.0f;
 }
 
-float Tr2MetalFxTemporalUpscaling::GetUpscaling() const
-{
-    return m_upscaling;
-}
-
 void Tr2MetalFxTemporalUpscaling::GetRenderSize(uint32_t& width, uint32_t& height) const{
     width = m_renderWidth;
     height = m_renderHeight;
@@ -270,7 +267,7 @@ void Tr2MetalFxTemporalUpscaling::ApplySetting( const Tr2Upscaling::Setting& set
 {
     m_displayWidth = displayWidth;
     m_displayHeight = displayHeight;
-    m_upscaling = MetalUpscalingUtils::GetUpscalingBasedOnSetting(setting);
+    m_upscaling = s_debugMode ? Tr2MetalFxTemporalUpscaling::s_debugUpscaling[setting] : MetalUpscalingUtils::GetUpscalingBasedOnSetting(setting);
     m_renderWidth = UpscalingUtils::ConvertDisplaySizeToRenderSize(m_displayWidth, m_upscaling);
     m_renderHeight = UpscalingUtils::ConvertDisplaySizeToRenderSize(m_displayHeight, m_upscaling);
     m_jitterSequence = Jitter::GenerateHaltonSequence(32, 2, 3);
@@ -315,7 +312,6 @@ void Tr2MetalFxTemporalUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2
 {
     if( @available(macOS 13.0, *))
     {
-        
         if( m_mfxTemporalScaler == nil )
         {
             CCP_LOGERR("Trying to render with a nil MetalFX Temporal Scaler");

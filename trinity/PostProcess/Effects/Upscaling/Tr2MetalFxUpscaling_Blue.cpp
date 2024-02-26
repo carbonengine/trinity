@@ -21,6 +21,15 @@ const Be::ClassInfo* Tr2MetalFxSpatialUpscaling::ExposeToBlue()
         MAP_PROPERTY_READONLY( "isApplicable", IsApplicable, "Is it applicable" )
         MAP_METHOD_AND_WRAP( "GetAvailableSettings", GetAvailableSettings, "Returns all applicable settings" )
         MAP_PROPERTY_READONLY( "supportsFrameGeneration", SupportsFrameGeneration, "Does it have frame generation\n:jessica-group: Frame Generation" )
+    
+#if TRINITY_PLATFORM == TRINITY_METAL
+        MAP_PROPERTY( "debugMode", GetDebugMode, SetDebugMode, "Enter debug mode for upscaling amount" )
+        MAP_PROPERTY( "ultraQualityDebugValue", GetUltraQualityDebugValue, SetUltraQualityDebugValue, "Enter debug mode for upscaling amount" )
+        MAP_PROPERTY( "qualityDebugValue", GetQualityDebugValue, SetQualityDebugValue, "Enter debug mode for upscaling amount")
+        MAP_PROPERTY( "balancedDebugValue", GetBalancedDebugValue, SetBalancedDebugValue, "Enter debug mode for upscaling amount")
+        MAP_PROPERTY( "performanceDebugValue", GetPerformanceDebugValue, SetPerformanceDebugValue, "Enter debug mode for upscaling amount")
+        MAP_PROPERTY( "ultraPerformanceDebugValue", GetUltraPerformanceDebugValue, SetUltraPerformanceDebugValue, "Enter debug mode for upscaling amount")
+#endif
 
     EXPOSURE_END()
 }
@@ -37,6 +46,13 @@ const Be::ClassInfo* Tr2MetalFxTemporalUpscaling::ExposeToBlue()
         MAP_PROPERTY_READONLY( "supportsFrameGeneration", SupportsFrameGeneration, "Does it have frame generation\n:jessica-group: Frame Generation" )
 
 #if TRINITY_PLATFORM == TRINITY_METAL
+        MAP_PROPERTY( "debugMode", GetDebugMode, SetDebugMode, "Enter debug mode for upscaling amount" )
+        MAP_PROPERTY( "ultraQualityDebugValue", GetUltraQualityDebugValue, SetUltraQualityDebugValue, "Enter debug mode for upscaling amount" )
+        MAP_PROPERTY( "qualityDebugValue", GetQualityDebugValue, SetQualityDebugValue, "Enter debug mode for upscaling amount")
+        MAP_PROPERTY( "balancedDebugValue", GetBalancedDebugValue, SetBalancedDebugValue, "Enter debug mode for upscaling amount")
+        MAP_PROPERTY( "performanceDebugValue", GetPerformanceDebugValue, SetPerformanceDebugValue, "Enter debug mode for upscaling amount")
+        MAP_PROPERTY( "ultraPerformanceDebugValue", GetUltraPerformanceDebugValue, SetUltraPerformanceDebugValue, "Enter debug mode for upscaling amount")
+
         MAP_ATTRIBUTE("jitterX", m_jitterX, "shows the jittering in x direction", Be::READ)
         MAP_ATTRIBUTE("jitterY", m_jitterX, "shows the jittering in y direction", Be::READ)
 #endif
