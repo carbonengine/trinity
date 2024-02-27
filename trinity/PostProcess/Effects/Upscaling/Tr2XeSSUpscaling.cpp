@@ -414,7 +414,7 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 	namer( textures.motion, "xess motion" );
 	namer( textures.exposure, "xess exposure" );
 	namer( textures.opaqueOnly, "xess opaqueOnly" );
-	namer( textures.reactive, "xess reative" );
+	namer( textures.reactive, "xess reactive" );
 
 	// flush all barriers before changing the state of the textures
 	renderContext.SetResourceSet( Tr2ResourceSetAL() );
@@ -431,6 +431,7 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 	// flush all barriers before handing control over to XeSS, so the states are applied
 	renderContext.FlushBarriersDx12();
 
+
 	xess_d3d12_execute_params_t params{};
 	params.jitterOffsetX = m_jitterX;
 	params.jitterOffsetY = m_jitterY;
@@ -445,6 +446,11 @@ void Tr2XeSSUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 	params.pDepthTexture = GetTexture( textures.depth );
 	params.pExposureScaleTexture = GetTexture( textures.exposure );
 	params.pResponsivePixelMaskTexture = m_useReactive ? GetTexture( textures.reactive ) : nullptr;
+
+	//Our motion vectors are in normalized texture coordinates (0 to 1), with a flipped Y-axis.
+	//We have configured XeSS to expect motion vectors in NDC coordinates (-1 to +1).
+	//As such, we need to multiply our motion vectors 2.0f and flip to match XeSS's expectations!
+	xessSetVelocityScale( s_context->GetContext(), 2.0f, -2.0f );
 
 	xess_result_t ret = xessD3D12Execute( s_context->GetContext(), renderContext.m_commandList, &params );
 
