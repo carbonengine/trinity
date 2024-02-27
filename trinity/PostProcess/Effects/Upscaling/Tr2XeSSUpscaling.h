@@ -83,7 +83,7 @@ private:
 	bool m_setup;
 	bool m_initialized;
 	bool m_useReactive;
-	bool m_useExposureTexture;
+	bool m_usingExposure;
 };
 TYPEDEF_BLUECLASS( Tr2XeSSUpscaling );
 #else

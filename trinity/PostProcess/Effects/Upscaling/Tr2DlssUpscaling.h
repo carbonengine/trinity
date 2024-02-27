@@ -39,6 +39,7 @@ public:
 	bool GetUseFrameGeneration( ) const override;
 
 	bool NeedsExposureTexture() const override;
+	bool UsesExposureTexture() const override;
 	bool NeedsReactiveTexture() const override;
 	bool SupportsFrameGeneration() const;
 
@@ -68,7 +69,7 @@ private:
 	uint32_t m_minWidthHeight;
 	uint32_t m_actualFrames;
 
-	bool m_useExposure;
+	bool m_usingExposure;
 	bool m_dirty;
 };
 

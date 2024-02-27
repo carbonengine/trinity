@@ -39,6 +39,7 @@ public:
 	void Dispatch( Tr2RenderContext& renderContext, Tr2PostProcessRenderInfo& renderInfo, Tr2Upscaling::Textures& textures, const Tr2Upscaling::SceneInformation& sceneInformation );
 
 	bool NeedsExposureTexture() const;
+	bool UsesExposureTexture() const override;
 
 private:
 	void ClearFsrResources();
@@ -80,7 +81,7 @@ private:
 	bool m_cancelMotionVectorJittering;
 
 	bool m_dirty;
-	bool m_useExposure;
+	bool m_usingExposure;
 };
 TYPEDEF_BLUECLASS( Tr2Fsr2Upscaling );
 #else
