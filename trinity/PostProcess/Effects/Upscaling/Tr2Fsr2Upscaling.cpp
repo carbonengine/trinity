@@ -24,6 +24,7 @@ Tr2Fsr2Upscaling::Tr2Fsr2Upscaling( IRoot* lockobj ) :
 	m_jitterY( 0.0f ),
 	m_jitterXScale( 2.0f ),
 	m_jitterYScale( -2.0f ),
+	m_usingExposure( false ),
 	m_reset( true ),
 	m_generateReactiveMap( true ),
 	m_generateTransparencyMap( false ),
@@ -189,7 +190,7 @@ void Tr2Fsr2Upscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, 
 	{
 		CCP_LOGERR( "FSR2 setup could not create interface %d", errorCode );
 	}
-
+	m_usingExposure = setupContext.hasExposureTexture;
 	m_initializationParameters.device = ffxGetDeviceDX12( device );
 	m_initializationParameters.maxRenderSize.width = m_renderWidth;
 	m_initializationParameters.maxRenderSize.height = m_renderHeight;
@@ -317,6 +318,11 @@ void Tr2Fsr2Upscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 
 bool Tr2Fsr2Upscaling::NeedsExposureTexture() const
 {
-	return m_useExposure;
+	return true;
+}
+
+bool Tr2Fsr2Upscaling::UsesExposureTexture() const
+{
+	return m_usingExposure;
 }
 #endif

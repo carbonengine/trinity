@@ -18,9 +18,6 @@ const Be::ClassInfo* Tr2DlssUpscaling::ExposeToBlue()
 		MAP_PROPERTY_READONLY( "mipLevelBias", GetMipLevelBias, "The mip level bias" )
 		MAP_PROPERTY_READONLY( "upscalingType", GetUpscalingType, "The upscaling type" )
 		MAP_PROPERTY_READONLY( "isApplicable", IsApplicable, "Is it applicable" )
-		
-
-		MAP_ATTRIBUTE( "useExposure", m_useExposure, "", Be::READWRITE | Be::NOTIFY )
 
 		MAP_ATTRIBUTE( "useSharpening", m_useSharpening, ":jessica-group: Sharpening", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "sharpeningAmount", m_sharpeningAmount, ":jessica-group: Sharpening", Be::READWRITE | Be::NOTIFY )

@@ -176,7 +176,7 @@ Tr2XeSSUpscaling::Tr2XeSSUpscaling( IRoot* lockobj ) :
 	m_setup( false ),
 	m_initialized( false ),
 	m_useReactive( false ),
-	m_useExposureTexture( false )
+	m_usingExposure( false )
 {
 }
 
@@ -336,7 +336,7 @@ void Tr2XeSSUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, 
 	{
 		params.initFlags |= XESS_INIT_FLAG_EXPOSURE_SCALE_TEXTURE;
 	}
-	m_useExposureTexture = setupContext.hasExposureTexture;
+	m_usingExposure = setupContext.hasExposureTexture;
 
 	if( m_useReactive )
 	{
@@ -479,7 +479,7 @@ bool Tr2XeSSUpscaling::NeedsExposureTexture() const
 
 bool Tr2XeSSUpscaling::UsesExposureTexture() const
 {
-	return m_useExposureTexture;
+	return m_usingExposure;
 }
 
 bool Tr2XeSSUpscaling::NeedsReactiveTexture() const
