@@ -43,7 +43,6 @@ const Be::ClassInfo* Tr2Fsr2Upscaling::ExposeToBlue()
 
 		MAP_ATTRIBUTE( "useHDR", m_useHDR, "", Be::READWRITE | Be::NOTIFY )
 		MAP_ATTRIBUTE( "cancelMotionVectorJittering", m_cancelMotionVectorJittering, "", Be::READWRITE | Be::NOTIFY )
-		MAP_ATTRIBUTE( "useExposure", m_useExposure, "", Be::READWRITE | Be::NOTIFY )
 
 		MAP_ATTRIBUTE( "generateTransparencyMap", m_generateTransparencyMap, "", Be::READWRITE )
 #endif

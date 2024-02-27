@@ -19,8 +19,8 @@ Tr2DlssUpscaling::Tr2DlssUpscaling( IRoot* lockobj ):
 	m_jitterX( 0 ),
 	m_optimalSettings( {} ),
 	m_options( {} ),
-	m_useExposure( true ),
 	m_useSharpening( true ),
+	m_usingExposure( false ),
 	m_currentSetting( Tr2Upscaling::Setting::COUNT ),
 	m_useFrameGeneration( false ),
 	m_vramUsage( 0 ),
@@ -185,6 +185,7 @@ bool Tr2DlssUpscaling::GetUseFrameGeneration( ) const
 
 void Tr2DlssUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, Tr2RenderContext& renderContext )
 {
+	m_usingExposure = setupContext.hasExposureTexture;
 	if( Tr2Streamline::IsRunning() )
 	{
 		Tr2DlssPlugin dlss;
@@ -377,8 +378,14 @@ void Tr2DlssUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2PostProcess
 
 bool Tr2DlssUpscaling::NeedsExposureTexture() const
 {
-	return m_useExposure;
+	return true;
 }
+
+bool Tr2DlssUpscaling::UsesExposureTexture() const
+{
+	return m_usingExposure;
+}
+
 
 bool Tr2DlssUpscaling::NeedsReactiveTexture() const
 {
