@@ -986,7 +986,12 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 
 			// parameters
 			float angularFadeOut = planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_HAZE ? 1.f : 0.f;
-			Vector4 planeData( angularFadeOut, (float)planeSetData.atlasSize, 0.f, 0.f );
+			Vector4 planeData( 
+				angularFadeOut,
+				(float)planeSetData.atlasSize,
+				std::floor( planeSetData.atlasAspectRatio.x ),
+				std::floor( planeSetData.atlasAspectRatio.y )
+			);
 			planeEffect->AddParameterVector4( BlueSharedString( "PlaneData" ), &planeData );
 
 			// finish up shader and set it
