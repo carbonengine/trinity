@@ -7,6 +7,7 @@
 #include "StdAfx.h"
 #include "Tr2PPUpscalingEffect.h"
 
+#include "Upscaling/Tr2Fsr3Upscaling.h"
 #include "Upscaling/Tr2Fsr2Upscaling.h"
 #include "Upscaling/Tr2Fsr1Upscaling.h"
 #include "Upscaling/Tr2NoopUpscaling.h"
@@ -85,6 +86,10 @@ void Tr2PPUpscalingEffect::SetUpscalingTechnique( Tr2Upscaling::Technique techni
 		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_FSR2 )
 		{
 			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2Fsr2Upscaling>::Class() );
+		}
+		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_FSR3 )
+		{
+			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2Fsr3Upscaling>::Class() );
 		}
 		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_METALFX_SPATIAL )
 		{

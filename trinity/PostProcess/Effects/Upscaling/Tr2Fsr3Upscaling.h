@@ -7,20 +7,19 @@
 
 #include "ITr2Upscaling.h" 
 #include "Tr2UpscalingUtils.h"
-#include "Shader/Tr2Effect.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
-#include <FidelityFX/host/ffx_fsr2.h>
-#include <FidelityFX/host/backends/dx12/ffx_dx12.h>
+#include <FidelityFX/host/ffx_fsr3.h>
+
 
 BLUE_DECLARE( Tr2Effect );
 
-BLUE_CLASS( Tr2Fsr2Upscaling ) : public ITr2Upscaling, INotify
+BLUE_CLASS( Tr2Fsr3Upscaling ) : public ITr2Upscaling, INotify
 {
 public:
 	EXPOSE_TO_BLUE();
-	Tr2Fsr2Upscaling( IRoot* lockobj = NULL );
-	~Tr2Fsr2Upscaling();
+	Tr2Fsr3Upscaling( IRoot* lockobj = NULL );
+	~Tr2Fsr3Upscaling();
 
 	bool OnModified( Be::Var * value ) override;
 	bool IsDirty() const override;
@@ -44,9 +43,9 @@ public:
 private:
 	void ClearFsrResources();
 
-	FfxResource ConvertTextureToFfxResource( ITr2TextureProvider* texture, const BlueSharedStringW& textureName, FfxResourceStates state = FFX_RESOURCE_STATE_COMPUTE_READ );
-	FfxFsr2ContextDescription m_initializationParameters = {};
-	FfxFsr2Context m_context;
+	FfxResource ConvertTextureToFfxResource( Tr2RenderContext& renderContext, ITr2TextureProvider* texture, const wchar_t* textureName, FfxResourceStates state = FfxResourceStates::FFX_RESOURCE_STATE_COMPUTE_READ);
+	FfxFsr3ContextDescription m_initializationParameters = {};
+	FfxFsr3Context m_context;
 	bool m_isSetup;
 
 	uint32_t m_renderWidth;
@@ -70,23 +69,33 @@ private:
 
 	bool m_dirty;
 	bool m_usingExposure;
+
+	typedef enum Fsr3BackendTypes : uint32_t
+	{
+		FSR3_BACKEND_SHARED_RESOURCES,
+		FSR3_BACKEND_UPSCALING,
+		FSR3_BACKEND_FRAME_INTERPOLATION,
+		FSR3_BACKEND_COUNT
+	} Fsr3BackendTypes;
+	FfxInterface m_ffxFsr3Backends[FSR3_BACKEND_COUNT] = {};
+
 };
-TYPEDEF_BLUECLASS( Tr2Fsr2Upscaling );
+TYPEDEF_BLUECLASS( Tr2Fsr3Upscaling );
 #else
 
 #include "Tr2NoopUpscaling.h"
-BLUE_CLASS( Tr2Fsr2Upscaling ) : public Tr2NoopUpscaling
+BLUE_CLASS( Tr2Fsr3Upscaling ) : public Tr2NoopUpscaling
 {
 public:
 	EXPOSE_TO_BLUE();
-	Tr2Fsr2Upscaling( IRoot* lockobj = NULL ){};
-	~Tr2Fsr2Upscaling(){};
+	Tr2Fsr3Upscaling( IRoot* lockobj = NULL ){};
+	~Tr2Fsr3Upscaling(){};
 	bool IsApplicable() const
 	{
 		return false;
 	};
 };
 
-TYPEDEF_BLUECLASS( Tr2Fsr2Upscaling );
+TYPEDEF_BLUECLASS( Tr2Fsr3Upscaling );
 
 #endif
