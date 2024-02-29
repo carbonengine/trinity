@@ -18,6 +18,7 @@ BLUE_DECLARE_INTERFACE( ITr2Upscaling );
 
 BLUE_DECLARE( Tr2MetalFxSpatialUpscaling );
 BLUE_DECLARE( Tr2MetalFxTemporalUpscaling );
+BLUE_DECLARE( Tr2Fsr3Upscaling );
 BLUE_DECLARE( Tr2Fsr2Upscaling );
 BLUE_DECLARE( Tr2Fsr1Upscaling );
 BLUE_DECLARE( Tr2NoopUpscaling );

@@ -4,7 +4,7 @@ project(trinity VERSION 1.0.0)
 find_package(libSquish REQUIRED)
 find_package(FidelityFX REQUIRED)
 find_package(FidelityFX_FSR REQUIRED)
-find_package(FidelityFX_FSR2 REQUIRED)
+find_package(FidelityFX_FSR3 REQUIRED)
 find_package(IntelXeSS REQUIRED)
 find_package(CACAO REQUIRED)
 find_package(IntelTBB REQUIRED)
@@ -848,6 +848,9 @@ set(_SOURCES
     PostProcess/Effects/Upscaling/Tr2Fsr2Upscaling.cpp
     PostProcess/Effects/Upscaling/Tr2Fsr2Upscaling.h
     PostProcess/Effects/Upscaling/Tr2Fsr2Upscaling_Blue.cpp
+    PostProcess/Effects/Upscaling/Tr2Fsr3Upscaling.cpp
+    PostProcess/Effects/Upscaling/Tr2Fsr3Upscaling.h
+    PostProcess/Effects/Upscaling/Tr2Fsr3Upscaling_Blue.cpp
     PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling.mm
     PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling.h
     PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling_Blue.cpp
@@ -1742,7 +1745,7 @@ if(WIN32)
             TRINITY_PLATFORM=TRINITY_DIRECTX12
             TRINITYNAME=_trinity_dx12
     )
-    target_link_libraries(trinity_dx12 PRIVATE AMD::FidelityFX_FSR2 INTEL::xess TrinityAL_dx12 )
+    target_link_libraries(trinity_dx12 PRIVATE AMD::FidelityFX_FSR3 INTEL::xess TrinityAL_dx12 )
     set_shared_trinity_properties(trinity_dx12)
 elseif(APPLE)
     enable_language(OBJCXX)
