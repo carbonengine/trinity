@@ -70,10 +70,6 @@ void Tr2PPUpscalingEffect::SetUpscalingTechnique( Tr2Upscaling::Technique techni
 				Tr2Streamline::Toggle( StreamlineUtils::SP_DLSSG, adapter, false );
 			}
 		}
-		else if( m_currentUpscalingTechnique == Tr2Upscaling::UPSCALING_TECHNIQUE_XESS && techniqueChanged )
-		{
-			Tr2XeSSUpscaling::Shutdown();
-		}
 
 		m_upscalingEffect = nullptr;
 		// reset the setting since it guards the applysetting bit
@@ -101,7 +97,6 @@ void Tr2PPUpscalingEffect::SetUpscalingTechnique( Tr2Upscaling::Technique techni
 		}
 		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_XESS )
 		{
-			Tr2XeSSUpscaling::Initialize();
 			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2XeSSUpscaling>::Class() );
 		}
 		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS )

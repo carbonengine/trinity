@@ -219,9 +219,6 @@ TriStepRenderPostProcess::TriStepRenderPostProcess( IRoot* lockobj ) :
 
 	m_tonemappingEffect->EndUpdate();
 
-	m_velocityFillEffect.CreateInstance();
-	m_velocityFillEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/VelocityFill.fx" );
-
 	m_reactiveMaskEffect.CreateInstance();
 	m_reactiveMaskEffect->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/ReactiveMask.fx" );
 }
@@ -268,10 +265,6 @@ void TriStepRenderPostProcess::SetupVelocityMap()
 		m_velocityBuffer.CreateInstance();
 		m_velocityBuffer->SetName( "VelocityMap" );
 		m_velocityBuffer->Create( sourceBuffer->GetWidth(), sourceBuffer->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16_FLOAT, sourceBuffer->GetMsaaType(), 0 );
-		
-		m_filledVelocity.CreateInstance();
-		m_filledVelocity->SetName( "VelocityMap" );
-		m_filledVelocity->Create( sourceBuffer->GetWidth(), sourceBuffer->GetHeight(), 1, Tr2RenderContextEnum::PIXEL_FORMAT_R16G16_FLOAT, sourceBuffer->GetMsaaType(), 0 );
 	}
 }
 
@@ -952,7 +945,7 @@ Tr2Upscaling::UpscalingType TriStepRenderPostProcess::ProcessUpscaling( Tr2PPUps
 			Tr2Upscaling::UpscalingSetupContext setupContext = {};
 			setupContext.sourcePixelFormat = m_renderInfo->GetSourceBuffer()->GetFormat();
 			setupContext.depthPixelFormat = Tr2RenderContextEnum::ConvertDepthStencilFormat( m_scene->GetDepth() ? m_scene->GetDepth()->GetFormat() : Tr2RenderContextEnum::DSFMT_UNKNOWN );
-			setupContext.motionVectorPixelFormat = m_filledVelocity->GetFormat();
+			setupContext.motionVectorPixelFormat = m_velocityBuffer->GetFormat();
 			setupContext.hasExposureTexture = hasExposure;
             
 			upscaling->Setup( setupContext, renderContext );
@@ -973,15 +966,6 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 	GPU_REGION( renderContext, "Upscaling" );
 
 	renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_FULLSCREEN );
-	
-	if( upscaling->IsTemporal() )
-	{
-		GPU_REGION( renderContext, "VelocityBufferFill" );
-		m_scene->GetPostProcessPSBuffer()->ApplyBuffer( renderContext );
-		m_velocityFillEffect->SetParameter( BlueSharedString( "VelocityMap" ), m_velocityBuffer );
-
-		DrawInto( *m_filledVelocity, Tr2LoadAction::DONT_CARE, m_velocityFillEffect, renderContext );
-	}
 	uint32_t w, h;
 	upscaling->GetDisplaySize( w, h );
 	auto dest = m_renderInfo->GetTempTexture( w, h, Tr2RenderContextEnum::EX_BIND_UNORDERED_ACCESS );
@@ -1014,7 +998,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 		m_opaqueColorBuffer,
 		dest,
 		(ITr2TextureProvider*)m_scene->GetDepth(),
-		upscaling->IsTemporal() ? m_filledVelocity : m_velocityBuffer,
+		m_velocityBuffer,
 		m_exposureTexture,
 		m_reactiveMask
 	};

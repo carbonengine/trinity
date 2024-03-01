@@ -209,8 +209,6 @@ private:
 	// Velocity Map
 	void SetupVelocityMap();
 	Tr2RenderTargetPtr m_velocityBuffer;
-	Tr2EffectPtr m_velocityFillEffect;
-	Tr2RenderTargetPtr m_filledVelocity;
 
 	// Common
 	void Blur( Tr2RenderTarget& dest, Tr2RenderTarget& src, Tr2RenderContext& renderContext, PostProcessBlur::BlurContext& blurContext );

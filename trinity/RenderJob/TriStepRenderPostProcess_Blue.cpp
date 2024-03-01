@@ -55,7 +55,6 @@ const Be::ClassInfo* TriStepRenderPostProcess::ExposeToBlue()
 			":param scene: an ITr2Scene object\n"
 			":param source: an Tr2RenderTarget object"
 		)
-	        MAP_ATTRIBUTE( "filledVelocity", m_filledVelocity, "Velocity map with filled information for background things", Be::READ )
 
 		EXPOSURE_CHAINTO( TriRenderStep )
 }

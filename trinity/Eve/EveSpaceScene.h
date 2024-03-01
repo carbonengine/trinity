@@ -251,9 +251,7 @@ protected:
 		Vector4 SplitInfo;
 		Matrix ProjectionInverseMat;
 	};
-	double m_viewProjectLastD[16];
-	double m_viewProjectLastSkyBoxD[16];
-	Matrix m_viewLast;
+	Matrix m_viewLast, m_projectionLast;
 	Matrix m_jitterMatrix;
 
 	// Per-frame vertex constants for rendering scene
@@ -268,6 +266,7 @@ protected:
 		Matrix EnvMapRotationMat;
 		Matrix ViewProjectionLast;
 		Matrix ViewLast;
+		Matrix ProjLast;
 
 		// pass sun data to vertexshader, so certain lighting-calculations can be done per-vertex and not per-pixel
 		SunData Sun;
@@ -301,14 +300,16 @@ protected:
 
 	struct PostProcessPSData
 	{
-		Matrix ReprojectionMatrix;
-		Matrix ReprojectionMatSkyBox;
 		Vector3 OriginShift;
 		float DeltaT;
 	};
 
+
 	PostProcessPSData m_postProcessPSData;
 	Tr2ShaderBufferPtr m_postProcessPSBuffer;
+
+	Matrix m_reprojectionMatSkyBox;
+
 	void UpdatePostProcessPSData();
 
 	void PopulatePerFrameVSData( PerFrameVSData & data, Tr2RenderContext & renderContext );
