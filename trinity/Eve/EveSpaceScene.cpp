@@ -1010,9 +1010,12 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 
 void EveSpaceScene::UpdatePostProcessPSData()
 {
-	Matrix currentProj;
+	Matrix currentView = Tr2Renderer::GetViewTransform();
+	Matrix currentProj = m_projection;
 
-	currentProj = m_projection;
+	Matrix prevView = m_viewLast;
+	Matrix prevProj = m_projectionLast;
+
 
 	// if we are using TAA we need to make the projection use inverse depth so we get the correct velocity
 	// however we don't want that when using upscaling
@@ -1020,51 +1023,21 @@ void EveSpaceScene::UpdatePostProcessPSData()
 	{
 		currentProj._33 = -currentProj._33 - 1.f;
 		currentProj._43 = -currentProj._43;
-	}
 
-	// Find the current inverse view projection
-	double viewTransform[16];
-	double currentProjection[16];
-	Matrix4dFromMatrix( viewTransform, Tr2Renderer::GetViewTransform() );
-	Matrix4dFromMatrix( currentProjection, currentProj );
-	
-	//Reprojection matrix for objects inside the view frustrum.
-	{
-		double currentViewProjD[16];
-		Matrix4dMultiply( currentViewProjD, viewTransform, currentProjection );
-
-		double invViewProjD[16];
-		Matrix4dInvert( invViewProjD, currentViewProjD );
-
-		// Now construct the reprojection matrix
-		double reprojection[16];
-		Matrix4dMultiply( reprojection, invViewProjD, m_viewProjectLastD );
-		Matrix repro = Matrix4dToMatrix( reprojection );
-		m_postProcessPSData.ReprojectionMatrix = Transpose( repro );
-
-		memcpy( m_viewProjectLastD, currentViewProjD, 128 );
+		prevProj._33 = -prevProj._33 - 1.f;
+		prevProj._43 = -prevProj._43;
 	}
 
 	//Reprojection matrix for objects infinitely far away.
 	//This only takes the camera's rotation into account, completely ignoring any camera translation.
-	{
-		viewTransform[12] = viewTransform[13] = viewTransform[14] = 0.0; //Force translation component to (0, 0, 0)
 
-		double currentViewProjSkyBoxD[16];
-		Matrix4dMultiply( currentViewProjSkyBoxD, viewTransform, currentProjection );
+	currentView._41 = currentView._42 = currentView._43 = 0.0; //Force translation component to (0, 0, 0)
+	prevView._41 = prevView._42 = prevView._43 = 0.0; //Force translation component to (0, 0, 0)
+	
+	Matrix reprojectionMatrix = Inverse( currentProj ) * Inverse( currentView ) * prevView * prevProj;
 
-		double invViewProjSkyBoxD[16];
-		Matrix4dInvert( invViewProjSkyBoxD, currentViewProjSkyBoxD );
-
-		// Now construct the reprojection matrix
-		double reprojectionSkyBox[16];
-		Matrix4dMultiply( reprojectionSkyBox, invViewProjSkyBoxD, m_viewProjectLastSkyBoxD );
-		Matrix reproSkyBox = Matrix4dToMatrix( reprojectionSkyBox );
-		m_postProcessPSData.ReprojectionMatSkyBox = Transpose( reproSkyBox );
-
-		memcpy( m_viewProjectLastSkyBoxD, currentViewProjSkyBoxD, 128 );
-
-	}
+	//TODO: This variable is calculated here for legacy purposes. It should be removed or at least modified to fit its current use!
+	m_reprojectionMatSkyBox = Transpose( reprojectionMatrix );
 
 	m_postProcessPSData.DeltaT = m_updateContext.GetDeltaT();
 	m_postProcessPSData.OriginShift = m_updateContext.GetOriginShift();
@@ -2108,6 +2081,7 @@ void EveSpaceScene::EndRender( Tr2RenderContext& renderContext )
 	}
 	// Store the view transform from this frame
 	m_viewLast = Tr2Renderer::GetViewTransform();
+	m_projectionLast = m_projection;
 
 	ClearVariableStore();
 
@@ -2311,8 +2285,11 @@ void EveSpaceScene::PopulatePerFrameVSData( PerFrameVSData& data, Tr2RenderConte
 	data.ViewProjectionMat = Transpose( viewProject );
 	// attention: need the transposed, but shader also needs column_major, so it is transpose(transpose(m)) == m
 	data.ViewInverseTransposeMat = Tr2Renderer::GetInverseViewTransform();
-	data.ViewProjectionLast = Transpose( m_viewLast * m_jitteredProjection );
+
+	Matrix lastProjection = m_projectionLast * m_jitterMatrix;
+	data.ViewProjectionLast = Transpose( m_viewLast * lastProjection );
 	data.ViewLast = Transpose( m_viewLast );
+	data.ProjLast = Transpose( lastProjection );
 
 	// each scene has a nebula and that can be rotated and inverted (via scaling)
 	data.EnvMapRotationMat = Transpose( RotationMatrix( m_envMapRotation ) );
@@ -2924,8 +2901,10 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 
 	Matrix lastPlanetViewMatrix = CreatePlanetViewMatrix( m_viewLast );
 	Tr2Renderer::SetViewTransform( CreatePlanetViewMatrix( Tr2Renderer::GetViewTransform() ));
-
-	Matrix planetProjection = EveCamera::ModifyClipPlanes( Tr2Renderer::GetProjectionTransform(), 0.01f, 1e5f ) * m_jitterMatrix;
+	
+	Matrix planetProjection = EveCamera::ModifyClipPlanes( m_projection, 0.01f, 1e5f ) * m_jitterMatrix;
+	Matrix lastPlanetProjection = EveCamera::ModifyClipPlanes( m_projectionLast, 0.01f, 1e5f ) * m_jitterMatrix; //apply the same transformations and jitter to both so that they all cancel out.
+	
 	Tr2Renderer::SetProjectionTransform( planetProjection );
 
 	std::vector<ITr2Renderable*> planetRenderables;
@@ -2943,7 +2922,7 @@ void EveSpaceScene::RenderPlanets( Tr2RenderContext& renderContext )
 	// Need to populate per frame data again as view/projection matrices changed
 	PopulatePerFramePSData( m_perFramePS, renderContext );
 	PopulatePerFrameVSData( m_perFrameVS, renderContext );
-	m_perFrameVS.ViewProjectionLast = Transpose( lastPlanetViewMatrix * planetProjection );
+	m_perFrameVS.ViewProjectionLast = Transpose( lastPlanetViewMatrix * lastPlanetProjection );
 	ApplyPerFrameData( renderContext );
 
 	Tr2RenderableSortList renderablesWithTransparencies;
@@ -3186,5 +3165,5 @@ Tr2DepthStencil* EveSpaceScene::GetDepth()
 
 Matrix EveSpaceScene::GetReprojectionMatrix()
 {
-	return m_postProcessPSData.ReprojectionMatSkyBox;
+	return m_reprojectionMatSkyBox;
 }

@@ -42,11 +42,8 @@ public:
 	bool UsesExposureTexture() const override;
 	bool NeedsReactiveTexture() const override;
 
-	static void Initialize();
-	static void Shutdown();
-
 private:
-	xess_context_handle_t CreateContext( Tr2RenderContext& renderContext ) const;
+
 	ID3D12Resource* GetTexture( ITr2TextureProvider* textureProvider ) const;
 
 	enum Availability
@@ -55,6 +52,7 @@ private:
 		XESS_AVAILABILITY_AVAILABLE,
 		XESS_AVAILABILITY_UNAVAILABLE,
 	};
+	xess_context_handle_t m_context;
 
 	uint32_t m_renderWidth;
 	uint32_t m_renderHeight;
@@ -97,8 +95,6 @@ public:
 	Tr2XeSSUpscaling( IRoot* lockobj = NULL ){};
 	~Tr2XeSSUpscaling(){};
 
-	static void Initialize(){};
-	static void Shutdown(){};
 	bool IsApplicable() const
 	{
 		return false;
