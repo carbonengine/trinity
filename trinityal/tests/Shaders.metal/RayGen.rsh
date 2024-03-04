@@ -16,6 +16,8 @@ struct TestStruct
      instance_acceleration_structure accelerationStructure[1];
 };
 
+constant bool useIntersectionFunctions [[function_constant(0)]];
+
 // Checks if a shadow ray hit something on the way to the light source. If not, the point the
 // shadow ray started from was not in shadow so it's color should be added to the output image.
 kernel void mainCS(           uint2 tid                                                                         [[thread_position_in_grid]],
@@ -23,7 +25,7 @@ kernel void mainCS(           uint2 tid                                         
                               device const TestStruct &accelerationStructure                                    [[buffer(5)]],
                               texture2d<float, access::write> RTOutput                                          [[UAVT(0)]],
                               intersection_function_table<instancing> HitGroupFunctionTable                     [[buffer(12)]],
-                              visible_function_table<void(thread float3&)> MissShaderFunctionTable              [[buffer(13)]])
+                              visible_function_table<void(thread float4&)> MissShaderFunctionTable              [[buffer(13)]])
 {
 
     if((int)tid.x < uniforms.resolution.x && (int)tid.y < uniforms.resolution.y)
@@ -58,7 +60,7 @@ kernel void mainCS(           uint2 tid                                         
         typename intersector<instancing>::result_type intersection;
         i.accept_any_intersection(true);
         
-        float3 colorPayload = float3( 0, 0, 0 );
+        float4 colorPayload = float4( 0, 0, 0, 0 );
         
         // NOTE: payload will be changed even if we accept the intersection or not!!
         intersection = i.intersect(ray, accelerationStructure.accelerationStructure[0], HitGroupFunctionTable, colorPayload);
@@ -72,6 +74,6 @@ kernel void mainCS(           uint2 tid                                         
             //missIntersection = nistanceIntersector.intersect(ray, accelerationStructure.accelerationStructure[0], MissShaderFunctionTable, colorPayload);
         }
 
-        RTOutput.write(float4(colorPayload, 1.0f), tid);
+        RTOutput.write(colorPayload, tid);
     }
 }

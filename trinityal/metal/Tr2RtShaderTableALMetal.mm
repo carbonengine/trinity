@@ -15,39 +15,6 @@
 #include "Tr2BufferALMetal.h"
 #include "Tr2TextureALMetal.h"
 #include "Tr2SamplerStateALMetal.h"
-/*
-namespace
-{
-    uintptr_t Align( uintptr_t offset, size_t alignment )
-    {
-        return (offset + (alignment - 1)) & ~(alignment - 1);
-    }
-
-    size_t GetSignatureSize( const TrinityALImpl::Tr2RootSignatureAL* signature )
-    {
-        if( !signature )
-        {
-            return 0;
-        }
-        size_t size = signature->m_cbRegisters.size() * sizeof( D3D12_GPU_DESCRIPTOR_HANDLE );
-        if( signature->m_samplerTableSize )
-        {
-            size += sizeof( D3D12_GPU_DESCRIPTOR_HANDLE );
-        }
-        return size;
-    }
-
-    size_t GetMaxElementSize( const ::Tr2RtPipelineStateAL& pipeline )
-    {
-        size_t signatureSize = 0;
-        auto& localSignatures = pipeline.TrinityALImpl_GetObject()->GetLocalSignatures();
-        for( auto it = begin( localSignatures ); it != end( localSignatures ); ++it )
-        {
-            signatureSize = std::max( signatureSize, GetSignatureSize( *it ) );
-        }
-        return signatureSize;
-    }
-}*/
 
 
 namespace TrinityALImpl
@@ -81,61 +48,137 @@ namespace TrinityALImpl
             
             m_missShaderFunctionTable = [m_pipeline newVisibleFunctionTableWithDescriptor:missFunctionTableDescriptor];
             m_hitGroupFunctionTable = [m_pipeline newIntersectionFunctionTableWithDescriptor:hitGroupFunctionTableDescriptor];
-        }
             
-        // add functions to the dictionary
-        // in shaderTable for each hit group map into the dict and get index -> add to handle
-        // then in TLAS the index would be the same somehow???
-        auto intersectionFunctions = pipeline.TrinityALImpl_GetObject()->GetFunctionMap();
-        auto hitGroupMap = pipeline.TrinityALImpl_GetObject()->GetHitGroupMap();
-        auto funcIndexMap = pipeline.TrinityALImpl_GetObject()->GetFunctionIndexMap();
-        
-        int index = 0;
-        
-        for( auto names : desc.m_missNames )
-        {
-            auto found = intersectionFunctions.find( names.name );
-            // if we found nothing then the table is invalid
-            if( found != end( intersectionFunctions ) )
+            
+            // add functions to the dictionary
+            auto intersectionFunctions = pipeline.TrinityALImpl_GetObject()->GetFunctionMap();
+            auto hitGroupMap = pipeline.TrinityALImpl_GetObject()->GetHitGroupMap();
+            auto funcIndexMap = pipeline.TrinityALImpl_GetObject()->GetFunctionIndexMap();
+            
+            int index = 0;
+            
+            // TODO: generalize so this can use the lambda function as well
+            for( auto names : desc.m_missNames )
             {
-                AddFunctionToVisibleTable( found->second, index++ );
+                auto found = intersectionFunctions.find( names.name );
+                // if we found nothing then the table is invalid
+                if( found != end( intersectionFunctions ) )
+                {
+                    AddFunctionToVisibleTable( found->second, index++ );
+                }
             }
+            
+            // reset the index for the hit group shader table
+            index = 0;
+            
+            // a vector of offsets
+            std::vector<uint64_t> ptrs;
+            ptrs.reserve( desc.m_missNames.size() + desc.m_hitGroupNames.size() );
+            
+            auto FillTable = [&](const wchar_t* name, id <MTLFunction> fn, const Tr2RtLocalMaterialDescriptionAL& material, int index)->ALResult
+            {
+                if (@available(macOS 11.0, *))
+                {
+                    // Create a handle to the copy of the intersection function linked into the
+                    // ray-tracing compute pipeline state. Create a different handle for each pipeline
+                    // it is linked with.
+                    id <MTLFunctionHandle> handle = [m_pipeline functionHandleWithFunction:fn];
+                    
+                    if( handle == nil )
+                    {
+                        return E_FAIL;
+                    }
+    
+                    // Insert the handle into the intersection function table, which ultimately maps the
+                    // geometry's index to its intersection function.
+                    [m_hitGroupFunctionTable setFunction:handle atIndex:index];
+                    
+                    // m_constants array[8]
+                    //for(int idx = 0; i < material.m_constants; ++i )
+                    for( auto constant : material.m_constants )
+                    {
+                        auto& cb = constant;
+                        if( cb.IsValid() )
+                        {
+                            uint64_t offset = renderContext.UploadConstants( cb );
+                            
+                            uint32_t page = uint32_t( offset >> 32 );
+                            // have a vector of offsets (gpu address + addr) so for each instance it has it's own pointer into a large buffer.
+                            // then bind that vector to the shadertable
+                            id<MTLBuffer> cBuffer = renderContext.GetMetalContext()->GetConstantBufferAllocator().GetPage( uint32_t( page ) );
+                            
+                            renderContext.UseConstantBuffer(cBuffer);
+                            
+                            if( cBuffer.length != 0 )
+                            {
+                                if( @available(macOS 13.0, *) ) {
+                                    ptrs.insert( ptrs.begin() + index, cBuffer.gpuAddress + offset );
+                                }
+                            }
+                        }
+                    }
+                    
+                    
+                    
+                    
+                    
+                    
+                }
+                
+                return S_OK;
+            };
+            
+            //Map each piece of scene hit group to its intersection function.
+            for( auto hitGroup : desc.m_hitGroupNames )
+            {
+                auto found = hitGroupMap.find( hitGroup.name );
+                
+                // if hit group is found, then get the function name (ClosestHit)
+                if( found != end( hitGroupMap ) )
+                {
+                    if( found->second.anyHit )
+                    {
+                        CR_RETURN_HR( FillTable( found->first.c_str(), found->second.anyHit, hitGroup.material, index++ ) );
+                    }
+                    if( found->second.intersection )
+                    {
+                        CR_RETURN_HR( FillTable( found->first.c_str(), found->second.intersection, hitGroup.material, index++ ) );
+                    }
+                    if( found->second.closestHit )
+                    {
+                        CR_RETURN_HR( FillTable( found->first.c_str(), found->second.closestHit, hitGroup.material, index++ ) );
+                    }
+                }
+                else
+                {
+                    return E_FAIL;
+                }
+            }
+            
+            if( ptrs.size() != 0 )
+            {
+                id<MTLDevice> device = renderContext.GetMetalContext()->GetDevice();
+                
+                id<MTLBuffer> cBuffer = [device newBufferWithBytes: ptrs.data()
+                                                length:ptrs.size() * sizeof(uint64_t)
+                                                options:MTLResourceStorageModeShared];
+                
+                cBuffer.label = [NSString stringWithUTF8String:"IFT constant buffer"];
+                [m_hitGroupFunctionTable setBuffer:cBuffer offset:0 atIndex:0];
+                
+                // uncomment to debug the cbuffer
+                //renderContext.UseConstantBuffer( cBuffer );
+            }
+            
+            return S_OK;
         }
-        
-        // reset the index for the hit group shader table
-        index = 0;
-        
-        //Map each piece of scene hit group to its intersection function.
-        for( auto names : desc.m_hitGroupNames )
+        else
         {
-            auto found = hitGroupMap.find( names.name );
-            // if hit group is found, then get the function name (ClosestHit)
-            if( found != end( hitGroupMap ) )
-            {
-                if( found->second.anyHit )
-                {
-                    AddFunctionToIntersectionTable( found->second.anyHit, index++ );
-                }
-                if( found->second.intersection )
-                {
-                    AddFunctionToIntersectionTable( found->second.intersection, index++ );
-                }
-                if( found->second.closestHit )
-                {
-                    AddFunctionToIntersectionTable( found->second.closestHit, index++ );
-                }
-                index++;
-            }
-            else
-            {
-                return E_FAIL;
-            }
+            return E_FAIL;
         }
-
-        return S_OK;
     }
 
-    void Tr2RtShaderTableAL::AddFunctionToIntersectionTable( id <MTLFunction> fn, int index )
+    void Tr2RtShaderTableAL::AddFunctionToIntersectionTable( id <MTLFunction> fn, const Tr2RtLocalMaterialDescriptionAL& material, int index )
     {
         if (@available(macOS 11.0, *)) 
         {
@@ -148,6 +191,8 @@ namespace TrinityALImpl
             {
                 return;
             }
+            
+            auto m = material;
             // Insert the handle into the intersection function table, which ultimately maps the
             // geometry's index to its intersection function.
             [m_hitGroupFunctionTable setFunction:handle atIndex:index];

@@ -69,7 +69,7 @@ namespace  TrinityALImpl {
     ALResult Tr2RtBottomLevelAccelerationStructureAL::Create( const Tr2RtPositionStreamAL& positions, const Tr2RtIndicesStreamAL& indices, int numObjects, Tr2RtBuildFlags::Type buildFlags, Tr2PrimaryRenderContextAL& renderContext )
     {
         if (@available(macOS 11.0, *)) {
-            //MTLResourceOptions options = getManagedBufferStorageMode();
+
             if( !renderContext.IsValid() || !renderContext.GetCaps().SupportsRaytracing() )
             {
                 return E_INVALIDCALL;
@@ -83,9 +83,6 @@ namespace  TrinityALImpl {
                 return E_INVALIDARG;
             }
             MetalContext *metalContext = renderContext.GetMetalContext();
-            
-            
-            //_primitiveAccelerationStructures = [[NSMutableArray alloc] init];
             
             // GEOMETRY DESCRIPTOR
             MTLAccelerationStructureTriangleGeometryDescriptor *geomDesc = [MTLAccelerationStructureTriangleGeometryDescriptor descriptor];

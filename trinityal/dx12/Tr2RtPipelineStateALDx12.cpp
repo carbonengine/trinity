@@ -252,7 +252,7 @@ namespace TrinityALImpl
 
 		// device5 = dxrDevice
 		CR_RETURN_HR( renderContext.m_device5->CreateStateObject( &pipelineDesc, IID_PPV_ARGS( &m_state ) ) );
-		m_state.QueryInterface( &m_stateInfo );
+		.QueryInterface( &m_stateInfo );
 		m_globalSignature = rootSignature;
 		m_localSignatures = localSignatures;
 		localSignatures.clear();

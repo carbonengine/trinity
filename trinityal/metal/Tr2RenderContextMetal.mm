@@ -1392,7 +1392,22 @@ ALResult Tr2RenderContextAL::UseAccelerationStructure( Tr2RtTopLevelAcceleration
         
         [computeEncoder useResource:accelerationStructure usage:MTLResourceUsageRead];
         
-        m_workQueue->ReleaseEncoder(false);
+        m_workQueue->ReleaseEncoder( false );
+        
+        return S_OK;
+    }
+    return E_FAIL;
+}
+
+ALResult Tr2RenderContextAL::UseConstantBuffer( id<MTLBuffer> constantBuffer )
+{
+    if( @available( macOS 11.0, * ) )
+    {
+        auto computeEncoder = m_workQueue->GetComputeEncoder();
+        
+        [computeEncoder useResource:constantBuffer usage:MTLResourceUsageRead];
+        
+        m_workQueue->ReleaseEncoder( false );
         
         return S_OK;
     }

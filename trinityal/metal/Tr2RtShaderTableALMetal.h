@@ -36,7 +36,7 @@ namespace TrinityALImpl
         uint64_t GetHitGroupTableSize() const;
          */
     private:
-        void AddFunctionToIntersectionTable( id <MTLFunction> fn, int index );
+        void AddFunctionToIntersectionTable( id <MTLFunction> fn, const Tr2RtLocalMaterialDescriptionAL& material, int index );
         void AddFunctionToVisibleTable( id <MTLFunction> fn, int index );
         Tr2RtShaderTableDescriptionAL m_desc;
         //uint64_t m_entrySize;

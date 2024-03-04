@@ -243,6 +243,7 @@ public:
 
 	ALResult UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources );
     ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
+    ALResult UseConstantBuffer( id<MTLBuffer> constantBuffer );
 
     bool SupportsBindlessTextures() const;
 

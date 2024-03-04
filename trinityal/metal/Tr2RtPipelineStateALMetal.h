@@ -12,6 +12,7 @@
 //#include "StdAfx.h"
 #include "Tr2ShaderProgramALMetal.h"
 #include "../include/Tr2RtPipelineStateAL.h"
+#include "../include/Tr2ResourceSetAL.h"
 #include "Tr2ShaderAL.h"
 #include <Metal/Metal.h>
 
@@ -42,7 +43,7 @@ public:
     std::unordered_map<std::wstring, HitGroupFunctions> GetHitGroupMap();
     std::unordered_map<std::wstring, int> GetFunctionIndexMap();
     NSString* NSStringFromWchar( std::wstring name );
-
+    const Tr2ShaderSignatureAL* GetLocalSignature(const wchar_t* name) const;
 
 private:
     id <MTLFunction> CreateFunction( std::wstring name, id<MTLDevice> device, dispatch_data_t shaderData );
@@ -52,6 +53,8 @@ private:
     id <MTLComputePipelineState> m_raytracingPipeline;
     ::Tr2ShaderProgramAL m_shaderProgram;
     
+    std::map<std::wstring, Tr2ShaderSignatureAL*> m_signatureForName;
+
     
     void AddToHitGroupDict();
 };

@@ -56,7 +56,14 @@ namespace TrinityALImpl
         }
 
         NSString* NSname = NSStringFromWchar( name );
-        id<MTLFunction> fn = [mtlLib newFunctionWithName:NSname];
+        
+        // Fill out a dictionary of function constant values.
+       // MTLFunctionConstantValues *constants = [[MTLFunctionConstantValues alloc] init];
+        // The second constant turns the use of intersection functions on and off.
+        //bool _useIntersectionFunctions = true;
+        //[constants setConstantValue:&_useIntersectionFunctions type:MTLDataTypeBool atIndex:0];
+        
+        id<MTLFunction> fn = [mtlLib newFunctionWithName:NSname]; //constantValues:constants error:&error];
         
         return fn;
         
@@ -117,6 +124,12 @@ namespace TrinityALImpl
                 m_intersectionFunctions[exportName] = fn;
                 m_functionIndexMap[exportName] = shaderIndex;
                 [linkedFunctions addObject:fn];
+                
+                if( shader.localSignature != Tr2RtPipelineStateDescriptionAL::NO_SIGNATURE )
+                {
+                    Tr2ShaderSignatureAL shaderSignature = desc.m_localSignatures[shader.localSignature];
+                    m_signatureForName[exportName] = &shaderSignature;
+                }
             }
         }
         
@@ -129,6 +142,13 @@ namespace TrinityALImpl
         for( int hitGroupIdx = 0; hitGroupIdx < desc.m_hitGroups.size(); ++hitGroupIdx)
         {
             auto& hGroup = desc.m_hitGroups[hitGroupIdx];
+            
+            if( hGroup.localSignature != Tr2RtPipelineStateDescriptionAL::NO_SIGNATURE )
+            {
+                Tr2ShaderSignatureAL shaderSignature = desc.m_localSignatures[hGroup.localSignature];
+                m_signatureForName[hGroup.exportName] = &shaderSignature;
+            }
+            
             if( !hGroup.anyHit.empty() )
             {
                 m_hitGroupMap[hGroup.exportName].anyHit = m_intersectionFunctions[hGroup.anyHit];
@@ -223,6 +243,15 @@ namespace TrinityALImpl
         return m_functionIndexMap;
     }
     
+    const Tr2ShaderSignatureAL* Tr2RtPipelineStateAL::GetLocalSignature(const wchar_t* name) const
+    {
+        auto found = m_signatureForName.find(name);
+        if( found == m_signatureForName.end() )
+        {
+            return nullptr;
+        }
+        return found->second;
+    }
 }
 
 #endif
