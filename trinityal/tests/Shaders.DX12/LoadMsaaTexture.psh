@@ -1,0 +1,15 @@
+struct VS_OUTPUT
+{
+	float4 Position : SV_Position;
+	float2 TexCoord : TEXCOORD;
+};
+
+Texture2DMS<float4> tex0: register( t0, space1 );
+
+float4 main(VS_OUTPUT In) : SV_Target
+{
+    uint w, h, s;
+    tex0.GetDimensions( w, h, s );
+    float4 color = tex0.Load( int2( In.TexCoord * float2( w, h ) ), 0 );
+    return color;
+}

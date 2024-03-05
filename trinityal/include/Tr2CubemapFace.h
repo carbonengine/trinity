@@ -1,0 +1,21 @@
+#pragma once
+#ifndef Tr2CubemapFace_H
+#define Tr2CubemapFace_H
+
+namespace Tr2RenderContextEnum
+{
+enum CubemapFace
+{
+	CUBEMAP_FACE_POSITIVE_X = 0,
+	CUBEMAP_FACE_NEGATIVE_X = 1,
+	CUBEMAP_FACE_POSITIVE_Y = 2,
+	CUBEMAP_FACE_NEGATIVE_Y = 3,
+	CUBEMAP_FACE_POSITIVE_Z = 4,
+	CUBEMAP_FACE_NEGATIVE_Z = 5,
+
+	CUBEMAP_FACE_COUNT,
+	CUBEMAP_FACE_FIRST = CUBEMAP_FACE_POSITIVE_X
+};
+}
+
+#endif

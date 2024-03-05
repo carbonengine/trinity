@@ -1,0 +1,19 @@
+struct VS_OUTPUT
+{
+	float4 Position : SV_Position;
+	float2 TexCoord : TEXCOORD;
+};
+
+struct PerObjectPSData
+{
+    float lod;
+} PerObjectPS: register( ps, c0 );
+
+Texture2D tex0: register( t0 );
+SamplerState sampl: register( s0 );
+
+float4 main(VS_OUTPUT In) : SV_Target
+{
+    float4 color = tex0.SampleLevel( sampl, In.TexCoord, PerObjectPS.lod );
+    return color;
+}
