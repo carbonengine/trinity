@@ -440,23 +440,29 @@ void TriDevice::ReleaseDeviceResources( TriStorage s )
 		auto gil = PyGILState_Ensure();
 		ON_BLOCK_EXIT( [&gil] { PyGILState_Release( gil ); } );
 
-		BluePySeq keys = BluePy( PyObject_CallMethod( m_pyResourceSet, const_cast<char*>( "keys" ), 0 ) );
-        if( !keys )
-        {
-            CCP_LOGERR( "TriDev: Python callback failed in \"ReleaseDeviceResources\"" );
-            PyOS->PyError();
-        }
-		Py_ssize_t n = keys.Size();
-		for( Py_ssize_t i = 0; i<n; i++ ) 
+		BluePy keys( PyObject_CallMethod( m_pyResourceSet, "keys", 0 ) );
+		if( !keys )
 		{
-			BluePy item(keys.Get(i));
-			if( !PyObject_HasAttrString( item.o, "OnInvalidate" ) )
+			CCP_LOGERR( "keys() method failed on resource set in \"ReleaseDeviceResources\"" );
+			PyOS->PyError();
+			return;
+		}
+		if( !PyIter_Check( keys.o ) )
+		{
+			CCP_LOGERR("Could not iterate through resource set keys in \"ReleaseDeviceResources\"");
+			return;
+		}
+
+		while( PyObject* next = PyIter_Next( keys ) )
+		{
+			BluePy item( next );
+			if( !PyObject_HasAttrString( next, "OnInvalidate" ) )
 			{
 				// OnInvalidate method is optional, often not needed
 				continue;
 			}
-			BluePy result( PyOS->CallMethodWithTrap(item, "OnInvalidate", "OnInvalidate", "(i)", (int)s) );
-			if (!result) 
+			BluePy result( PyOS->CallMethodWithTrap( item, "OnInvalidate", "OnInvalidate", "(i)", (int)s) );
+			if( !result )
 			{
 				PyOS->PyError();
 			}
@@ -479,18 +485,25 @@ void TriDevice::RebuildDeviceResourcesInPython()
 		auto gil = PyGILState_Ensure();
 		ON_BLOCK_EXIT( [&gil] { PyGILState_Release( gil ); } );
 
-		BluePySeq keys = BluePy( PyObject_CallMethod( m_pyResourceSet, const_cast<char*>( "keys" ), 0 ) );
-        if (!keys)
-        {
-            CCP_LOGERR( "TriDev: Python callback failed in \"RebuildDeviceResourcesInPython\"" );
-            PyOS->PyError();
-        }
-		Py_ssize_t n = keys.Size();
-		for( Py_ssize_t i = 0; i<n; i++ )
+		BluePy keys( PyObject_CallMethod( m_pyResourceSet, "keys", 0 ) );
+
+		if( !keys )
 		{
-			BluePy item(keys.Get(i));
-			BluePy result(PyOS->CallMethodWithTrap(item, "OnCreate", "OnCreate", "(N)", PyOS->WrapBlueObject(GetRawRoot())));
-			if (!result) 
+			CCP_LOGERR("keys() method failed on resource set in \"RebuildDeviceResourcesInPython\".");
+			PyOS->PyError();
+			return;
+		}
+		if( !PyIter_Check( keys.o ) )
+		{
+			CCP_LOGERR("Could not iterate through resource set keys in \"RebuildDeviceResourcesInPython\".");
+			return;
+		}
+
+		while( PyObject* next = PyIter_Next( keys ) )
+		{
+			BluePy item( next );
+			BluePy result( PyOS->CallMethodWithTrap( item, "OnCreate", "OnCreate", "(N)", PyOS->WrapBlueObject( GetRawRoot() ) ) );
+			if( !result )
 			{
 				PyOS->PyError();
 			}

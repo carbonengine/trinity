@@ -25,7 +25,7 @@ Tr2SBitWrapper::~Tr2SBitWrapper()
 }
 
 #if BLUE_WITH_PYTHON
-void Tr2SBitWrapper::ToBuffer( PyObject* dest, int width, int height, int pitch, int x, int y, uint32_t color )
+void Tr2SBitWrapper::ToBuffer( PyObject* dest, int width, int height, int pitch, int x, int y, int32_t color )
 {
     Py_buffer buf;
     if(PyObject_GetBuffer(dest, &buf, PyBUF_SIMPLE) == -1)
@@ -37,7 +37,7 @@ void Tr2SBitWrapper::ToBuffer( PyObject* dest, int width, int height, int pitch,
     PyBuffer_Release(&buf);
 }
 
-void Tr2SBitWrapper::ToBufferWithUnderline( PyObject* dest, int width, int height, int pitch, int x, int y, uint32_t color, int extraSpace )
+void Tr2SBitWrapper::ToBufferWithUnderline( PyObject* dest, int width, int height, int pitch, int x, int y, int32_t color, int extraSpace )
 {
     Py_buffer buf;
     if(PyObject_GetBuffer(dest, &buf, PyBUF_SIMPLE) == -1)
