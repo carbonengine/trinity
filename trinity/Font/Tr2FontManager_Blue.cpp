@@ -27,7 +27,7 @@ PyObject* PyClearBuffer(PyObject *self, PyObject *args)
 		return nullptr;
 	}
     void *destPtr = buf.buf;
-    int destLen = buf.len;
+    Py_ssize_t destLen = buf.len;
 
 	if( width*4 > pitch )
 	{
