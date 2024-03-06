@@ -243,6 +243,11 @@ protected:
 		float Upscaling;
 		float GammaBrightness;
 
+		uint32_t FrameIndex;
+		uint32_t Jittering; //0 if off, 1 if on
+		uint32_t unused3;
+		uint32_t unused4;
+
 		float VolumetricSlices[4];
 
 		// Cascaded shadow maps
@@ -251,6 +256,7 @@ protected:
 		Vector4 SplitInfo;
 		Matrix ProjectionInverseMat;
 	};
+
 	Matrix m_viewLast, m_projectionLast;
 	Matrix m_jitterMatrix;
 

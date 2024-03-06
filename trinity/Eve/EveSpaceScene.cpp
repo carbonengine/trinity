@@ -174,6 +174,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_virtualCameraSystem(),
 	m_shadowView( IdentityMatrix() ),
 	m_projection( IdentityMatrix() ),
+	m_projectionLast( IdentityMatrix() ),
 	m_jitteredProjection( IdentityMatrix() ),
 	m_jitter( 0.f, 0.f, 0.f, 0.f )
 {
@@ -2371,6 +2372,9 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 
 	data.Time = Tr2Renderer::GetAnimationTime();
 	data.Upscaling = m_postProcess ? m_postProcess->GetUpscalingAmount() : 1.0f;
+
+	data.FrameIndex = (uint32_t) Tr2Renderer::GetCurrentFrameCounter();
+	data.Jittering = m_jitter != Vector4(0, 0, 0, 0);
 
 	data.ShadowMapSettings = Vector4( 1.f, 1.f, 0.f, 0.f );
 	
