@@ -36,7 +36,6 @@ namespace TrinityALImpl
             MTLVisibleFunctionTableDescriptor *missFunctionTableDescriptor = [[MTLVisibleFunctionTableDescriptor alloc] init];
             missFunctionTableDescriptor.functionCount = desc.m_missNames.size();
             
-            
             MTLIntersectionFunctionTableDescriptor *hitGroupFunctionTableDescriptor = [[MTLIntersectionFunctionTableDescriptor alloc] init];
             hitGroupFunctionTableDescriptor.functionCount = desc.m_hitGroupNames.size();
             // Create a table large enough to hold all of the intersection functions. Metal
@@ -48,13 +47,11 @@ namespace TrinityALImpl
             
             m_missShaderFunctionTable = [m_pipeline newVisibleFunctionTableWithDescriptor:missFunctionTableDescriptor];
             m_hitGroupFunctionTable = [m_pipeline newIntersectionFunctionTableWithDescriptor:hitGroupFunctionTableDescriptor];
-            
-            
+             
             // add functions to the dictionary
             auto intersectionFunctions = pipeline.TrinityALImpl_GetObject()->GetFunctionMap();
             auto hitGroupMap = pipeline.TrinityALImpl_GetObject()->GetHitGroupMap();
-            auto funcIndexMap = pipeline.TrinityALImpl_GetObject()->GetFunctionIndexMap();
-            
+        
             int index = 0;
             
             // TODO: generalize so this can use the lambda function as well
@@ -78,7 +75,7 @@ namespace TrinityALImpl
             auto FillTable = [&](const wchar_t* name, id <MTLFunction> fn, const Tr2RtLocalMaterialDescriptionAL& material, int index)->ALResult
             {
                 if (@available(macOS 11.0, *))
-                {
+                {                    
                     // Create a handle to the copy of the intersection function linked into the
                     // ray-tracing compute pipeline state. Create a different handle for each pipeline
                     // it is linked with.
@@ -93,8 +90,6 @@ namespace TrinityALImpl
                     // geometry's index to its intersection function.
                     [m_hitGroupFunctionTable setFunction:handle atIndex:index];
                     
-                    // m_constants array[8]
-                    //for(int idx = 0; i < material.m_constants; ++i )
                     for( auto constant : material.m_constants )
                     {
                         auto& cb = constant;
@@ -111,24 +106,19 @@ namespace TrinityALImpl
                             
                             if( cBuffer.length != 0 )
                             {
-                                if( @available(macOS 13.0, *) ) {
+                                if( @available(macOS 13.0, *) ) 
+                                {
                                     ptrs.insert( ptrs.begin() + index, cBuffer.gpuAddress + offset );
                                 }
                             }
                         }
                     }
-                    
-                    
-                    
-                    
-                    
-                    
                 }
                 
                 return S_OK;
             };
             
-            //Map each piece of scene hit group to its intersection function.
+            // Map each piece of scene hit group to its intersection function.
             for( auto hitGroup : desc.m_hitGroupNames )
             {
                 auto found = hitGroupMap.find( hitGroup.name );
@@ -163,7 +153,6 @@ namespace TrinityALImpl
                                                 length:ptrs.size() * sizeof(uint64_t)
                                                 options:MTLResourceStorageModeShared];
                 
-                cBuffer.label = [NSString stringWithUTF8String:"IFT constant buffer"];
                 [m_hitGroupFunctionTable setBuffer:cBuffer offset:0 atIndex:0];
                 
                 // uncomment to debug the cbuffer
@@ -220,21 +209,22 @@ namespace TrinityALImpl
     }
 
     void Tr2RtShaderTableAL::Destroy()
-    {/*
-        if( m_owner )
+    {
+        if( @available(macOS 11.0, *) )
         {
-            m_owner = nullptr;
-            m_table = nullptr;
-            m_desc = Tr2RtShaderTableDescriptionAL();
-            m_entrySize = 0;
+            m_hitGroupFunctionTable = nullptr;
+            m_missShaderFunctionTable = nullptr;
         }
-    */
+        m_pipeline = nullptr;
     }
 
     bool Tr2RtShaderTableAL::IsValid() const
     {
-        return true;
-        //return m_table != nullptr;
+        if( @available(macOS 11.0, *) )
+        {
+            return m_hitGroupFunctionTable != nullptr || m_missShaderFunctionTable != nullptr;
+        }
+        return false;
     }
 
     Tr2ALMemoryType Tr2RtShaderTableAL::GetMemoryClass() const
@@ -246,16 +236,6 @@ namespace TrinityALImpl
     {
         description["type"] = "Tr2RtShaderTableAL";
     }
-/*
-    uint64_t Tr2RtShaderTableAL::GetMissShaderTableSize() const
-    {
-        return GetEntrySize() * m_desc.m_missNames.size();
-    }
-
-    uint64_t Tr2RtShaderTableAL::GetHitGroupTableSize() const
-    {
-        return GetEntrySize() * m_desc.m_hitGroupNames.size();
-    }*/
 }
 
 

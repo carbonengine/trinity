@@ -587,7 +587,6 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	renderContext.FlushBarriersDx12();
 #endif
-
 	std::vector<Tr2RtInstanceAL> instances;
 	instances.reserve( m_geometries.size() );
 	for( auto it = begin( m_geometries ); it != end( m_geometries ); ++it )

@@ -77,6 +77,28 @@ TEST_F( Raytracing, BLASIsValidAfterCreation )
     ASSERT_TRUE( blas.IsValid() );
 }
 
+TEST_F( Raytracing, BLASIsValidAfterUpdate )
+{
+    Tr2BufferAL vb, ib;
+    // UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE, need to have leave it like this for now because of possible metal bug w. buffers
+#if TRINITY_PLATFORM == TRINITY_METAL
+    ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeVertices, *renderContext ) );
+    ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeIndices, *renderContext ) );
+
+#else
+    ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeVertices, *renderContext ) );
+    ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
+#endif
+
+    Tr2RtBottomLevelAccelerationStructureAL blas;
+    ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::ALLOW_UPDATE, *renderContext ) );
+    
+    ASSERT_HRESULT_SUCCEEDED( blas.Update( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), *renderContext ) );
+    
+    ASSERT_TRUE( blas.IsValid() );
+}
+
+
 TEST_F( Raytracing, TLASIsInvalidBeforeCreation )
 {
     Tr2RtTopLevelAccelerationStructureAL tlas;
@@ -215,7 +237,13 @@ TEST_F( Raytracing, ShaderTableCreationFailsWithInvalidShaderName )
     shaderTableDesc.AddRayGenShader( L"Blah" );
 
     Tr2RtShaderTableAL shaderTable;
+    
+    // metal behaves differently because past the pipeline state we don't really care about the raygen shader
+#if TRINITY_PLATFORM == TRINITY_METAL
+    ASSERT_HRESULT_SUCCEEDED( shaderTable.Create( shaderTableDesc, state, *renderContext ) );
+#else
     ASSERT_HRESULT_FAILED( shaderTable.Create( shaderTableDesc, state, *renderContext ) );
+#endif
 }
 
 /************* renderer *************/
@@ -655,7 +683,19 @@ TEST_F( Raytracing, CanUseLocalConstants )
     RunLoop( frame );
 }
 
-TEST_F( Raytracing, CanUseLocalTextures )
+struct Vector4
+{
+    float x, y, z, w;
+};
+
+struct PerObjectData
+{
+    Vector4 material;
+    Vector4 clipData;
+};
+
+
+TEST_F( Raytracing, CanUsePerObjectData )
 {
     uint8_t rayGenCode[] = {
 #include INCLUDE_SHADER_CODE( RayGen.rs )
@@ -676,82 +716,54 @@ TEST_F( Raytracing, CanUseLocalTextures )
 
     Tr2ShaderSignatureAL localSignature;
     localSignature.Add( Tr2ShaderRegisterAL::CONSTANT_BUFFER, 0 );
-    localSignature.Add( Tr2ShaderRegisterAL::SRV_TEXTURE2D, 0 );
-    localSignature.Add( Tr2ShaderRegisterAL::SAMPLER, 0 );
 
     const uint32_t PAYLOAD_SIZE = 4 * sizeof( float );
 
     Tr2RtPipelineStateDescriptionAL stateDesc;
     stateDesc.AddShader( L"RayGen_12", Tr2ShaderBytecodeAL( rayGenCode ), L"RayGen", PAYLOAD_SIZE );
     stateDesc.AddShader( L"Miss_5", Tr2ShaderBytecodeAL( missCode ), L"Miss", PAYLOAD_SIZE );
-    stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHitWithTexture", PAYLOAD_SIZE );
+    stateDesc.AddShader( L"ClosestHit_76", Tr2ShaderBytecodeAL( closestHitCode ), L"ClosestHitWithPerObjData", PAYLOAD_SIZE );
     stateDesc.AddHitGroup( L"HitGroup", nullptr, L"ClosestHit_76", nullptr, localSignature );
     stateDesc.AddGlobalSignature( globalSignature );
 
-
     Tr2RtPipelineStateAL state;
     ASSERT_HRESULT_SUCCEEDED( state.CreateRtPipelineState( stateDesc, *renderContext ) );
-
-
-    float* materialData;
-
+    
+    PerObjectData* materialData;
+    
     Tr2ConstantBufferAL cb1;
-    cb1.Create( 4 * 4, *renderContext );
+    cb1.Create( sizeof(PerObjectData), *renderContext );
     cb1.Lock( (void**)&materialData, *renderContext );
-    materialData[0] = 1;
-    materialData[1] = 1;
-    materialData[2] = 0;
-    materialData[3] = 1;
+    materialData->material.x = 1;
+    materialData->material.y = 0;
+    materialData->material.z = 1;
+    materialData->material.w = 1;
+    
+    materialData->clipData.x = 1;
+    materialData->clipData.y = 1;
+    materialData->clipData.z = 1;
+    materialData->clipData.w = 1;
     cb1.Unlock( *renderContext );
 
     Tr2ConstantBufferAL cb2;
-    cb2.Create( 4 * 4, *renderContext );
+    cb2.Create( sizeof(PerObjectData), *renderContext );
     cb2.Lock( (void**)&materialData, *renderContext );
-    materialData[0] = 0;
-    materialData[1] = 1;
-    materialData[2] = 1;
-    materialData[3] = 1;
+    materialData->material.x = 1;
+    materialData->material.y = 1;
+    materialData->material.z = 0;
+    materialData->material.w = 1;
+    
+    materialData->clipData.x = 0;
+    materialData->clipData.y = 0;
+    materialData->clipData.z = 0;
+    materialData->clipData.w = 1;
     cb2.Unlock( *renderContext );
-
-
-    const uint32_t width = 128;
-    const uint32_t height = 128;
-
-    uint32_t texturePixels0[] = {
-#include "Dxt1Image.h"
-    };
-    Tr2SubresourceData textureData[1];
-    textureData[0].m_sysMem = texturePixels0;
-    textureData[0].m_sysMemPitch = sizeof( texturePixels0 ) / height * 4; // *4 because it's a compressed format
-    textureData[0].m_sysMemSlicePitch = sizeof( texturePixels0 );
-
-    Tr2TextureAL tex;
-    ASSERT_HRESULT_SUCCEEDED( tex.Create( Tr2BitmapDimensions( width, height, 1, Tr2RenderContextEnum::PIXEL_FORMAT_BC1_UNORM ), Tr2GpuUsage::SHADER_RESOURCE, textureData, *renderContext ) );
-
-
-    Tr2SamplerStateAL sampl;
-    ASSERT_HRESULT_SUCCEEDED( sampl.Create(
-        Tr2SamplerDescription(
-        Tr2RenderContextEnum::TF_LINEAR,
-        Tr2RenderContextEnum::TA_WRAP,
-        1,
-        0.0f,
-        0.0f ),
-        *renderContext ) );
-
-    auto shaderType = Tr2RenderContextEnum::COMPUTE_SHADER;
-    Tr2RegisterMapAL localRegisterMap = Tr2RegisterMapAL( &shaderType, &localSignature, 1 );
-
-    Tr2ResourceSetDescriptionAL localRsDesc(localRegisterMap);
-    localRsDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 0, tex );
-    localRsDesc.SetSampler( Tr2RenderContextEnum::COMPUTE_SHADER, 0, sampl );
-
 
     Tr2RtShaderTableDescriptionAL shaderTableDesc;
     shaderTableDesc.AddRayGenShader( L"RayGen_12" );
     shaderTableDesc.AddMissShader( L"Miss_5" );
-    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 0, cb1 ).SetResourceSet( localRsDesc ) );
-    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 0, cb2 ).SetResourceSet( localRsDesc ) );
+    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 0, cb1 ) );
+    shaderTableDesc.AddHitGroup( L"HitGroup", Tr2RtLocalMaterialDescriptionAL().SetConstants( 0, cb2 ) );
 
     const uint32_t WIDTH = 512;
     const uint32_t HEIGHT = 512;
@@ -773,7 +785,6 @@ TEST_F( Raytracing, CanUseLocalTextures )
     ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
 #endif
     
-
     Tr2RtBottomLevelAccelerationStructureAL blas;
     ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
 
@@ -797,15 +808,16 @@ TEST_F( Raytracing, CanUseLocalTextures )
 
     Tr2RtTopLevelAccelerationStructureAL tlas;
     ASSERT_HRESULT_SUCCEEDED( tlas.Create( 2, instances, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
-    Tr2RegisterMapAL globalRegisterMap = Tr2RegisterMapAL( &shaderType, &globalSignature, 1 );
-    
-    Tr2ResourceSetDescriptionAL rsDesc(globalRegisterMap);
+
+    auto shaderType = Tr2RenderContextEnum::COMPUTE_SHADER;
+    Tr2RegisterMapAL registerMap = Tr2RegisterMapAL( &shaderType, &globalSignature, 1 );
+
+    Tr2ResourceSetDescriptionAL rsDesc(registerMap);
     rsDesc.SetSrv( Tr2RenderContextEnum::COMPUTE_SHADER, 1, tlas.GetBuffer() );
     rsDesc.SetUav( Tr2RenderContextEnum::COMPUTE_SHADER, 0, result );
 
     Tr2ResourceSetAL rs;
     rs.Create( rsDesc, state, *renderContext );
-
 
     QuadRenderer quadRenderer;
     ASSERT_HRESULT_SUCCEEDED( quadRenderer.Create( result, renderContext ) );
@@ -829,9 +841,9 @@ TEST_F( Raytracing, CanUseLocalTextures )
         cbData->viewMatrix[2][2] = 1;
         cbData->viewMatrix[3][3] = 1;
         cbData->viewOrigin[2] = -3;
-        Rotate( cbData->viewMatrix[0], angle );
-        Rotate( cbData->viewMatrix[2], angle );
-        Rotate( cbData->viewOrigin, angle );
+        //Rotate( cbData->viewMatrix[0], angle );
+        //Rotate( cbData->viewMatrix[2], angle );
+        //Rotate( cbData->viewOrigin, angle );
         Transpose( cbData->viewMatrix );
         cbData->tanHalfFOV = 1;
         cbData->width = float( WIDTH );

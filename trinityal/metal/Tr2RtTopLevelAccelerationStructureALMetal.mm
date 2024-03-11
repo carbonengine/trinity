@@ -137,7 +137,7 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
             MTLAccelerationStructureInstanceDescriptor *instanceDescriptors = (MTLAccelerationStructureInstanceDescriptor *)m_instanceBuffer.contents;
 
             // Fill out instance descriptors.
-            for (NSUInteger instanceIndex = 0; instanceIndex < count; instanceIndex++) {
+            for( NSUInteger instanceIndex = 0; instanceIndex < count; ++instanceIndex ) {
                 
                 if( !instances[instanceIndex].blas.IsValid())
                 {
@@ -172,8 +172,12 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
                         instanceDescriptors[instanceIndex].transformationMatrix.columns[column][row] = instances[instanceIndex].transform[row][column];
                 
                 id<MTLAccelerationStructure> blas = instances[instanceIndex].blas.TrinityALImpl_GetObject()->m_primitiveAccelerationStructure;
-                //gather all the BLAS in one list
-                [m_primitiveAccelerationStructures addObject:blas];
+                
+                if( blas != nil )
+                {
+                    //gather all the BLAS in one list
+                    [m_primitiveAccelerationStructures addObject:blas];
+                }
             }
                 
             // Create an instance acceleration structure descriptor

@@ -10,35 +10,6 @@
 
 namespace TrinityALImpl
 {
-
-    struct Tr2RootSignatureAL
-    {
-        Tr2RootSignatureAL();
-        void Destroy( Tr2PrimaryRenderContextAL& owner );
-
-        struct CbRegister
-        {
-            uint32_t stage;
-            uint32_t index;
-            uint32_t parameter;
-            Tr2ShaderRegisterAL::RegisterType registerType;
-            bool dynamic;
-        };
-        std::vector<CbRegister> m_cbRegisters;
-        std::vector<CbRegister> m_srvRegisters;
-        std::vector<CbRegister> m_uavRegisters;
-        std::vector<CbRegister> m_samplerRegisters;
-
-        Tr2RegisterMapAL m_registerMap;
-
-        uint32_t m_srvUavParameterCount;
-        uint32_t m_srvUavParameterOffset;
-        uint32_t m_samplerTableSize;
-        uint32_t m_samplerParameter;
-
-        bool m_isCompute;
-    };
-
 	class Tr2ShaderProgramAL : public Tr2DeviceResourceAL<Tr2ShaderProgramAL>
 	{
 	public:

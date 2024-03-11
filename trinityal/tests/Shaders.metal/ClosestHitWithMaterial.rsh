@@ -12,8 +12,7 @@ struct Attributes
 struct PerObjectData
 {
 	float4 material;
-	texture2d<float> tex;
-	sampler sampl;
+	float4 Clipdata1;
 };
 
 struct PerObjectDataPtr
@@ -41,14 +40,19 @@ bool ClosestHit( ray_data float4 & color 				[[ payload ]],
 
 
 [[intersection(triangle, instancing)]]
-bool ClosestHitWithTexture(	ray_data float4 & color 			[[ payload ]],
-                 			unsigned int geometryIndex     		[[ instance_intersection_function_table_offset ]],
-                 			constant Attributes& attrib 		[[ CBUFFER(0) ]],
-							device PerObjectDataPtr *resources  [[ buffer(0) ]] )
+bool ClosestHitWithPerObjData(	ray_data float4 & color 			[[ payload ]],
+	                            float3 origin                   	[[ origin ]],
+                                float3 direction                	[[ direction ]],
+                 				unsigned int geometryIndex     		[[ instance_intersection_function_table_offset ]],
+                 				constant Attributes& attrib 		[[ CBUFFER(0) ]],
+								device PerObjectDataPtr *resources  [[ buffer(0) ]] )
 {
-    PerObjectData perObjectData = resources[geometryIndex].perObjectData[0];
-    color = perObjectData.tex.sample(perObjectData.sampl, attrib.uv, 0) * perObjectData.material;
-    return 1;
+
+	PerObjectData perObjectData = resources[geometryIndex].perObjectData[0];
+
+	color = perObjectData.material * perObjectData.Clipdata1;
+
+	return 1;
 }
 
                               

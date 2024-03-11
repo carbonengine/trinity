@@ -119,17 +119,9 @@ namespace TrinityALImpl
                 {
                     return E_FAIL;
                 }
-                
-                // add function to the dict
+
                 m_intersectionFunctions[exportName] = fn;
-                m_functionIndexMap[exportName] = shaderIndex;
                 [linkedFunctions addObject:fn];
-                
-                if( shader.localSignature != Tr2RtPipelineStateDescriptionAL::NO_SIGNATURE )
-                {
-                    Tr2ShaderSignatureAL shaderSignature = desc.m_localSignatures[shader.localSignature];
-                    m_signatureForName[exportName] = &shaderSignature;
-                }
             }
         }
         
@@ -138,16 +130,9 @@ namespace TrinityALImpl
             return E_FAIL;
         }
         
-        
         for( int hitGroupIdx = 0; hitGroupIdx < desc.m_hitGroups.size(); ++hitGroupIdx)
         {
             auto& hGroup = desc.m_hitGroups[hitGroupIdx];
-            
-            if( hGroup.localSignature != Tr2RtPipelineStateDescriptionAL::NO_SIGNATURE )
-            {
-                Tr2ShaderSignatureAL shaderSignature = desc.m_localSignatures[hGroup.localSignature];
-                m_signatureForName[hGroup.exportName] = &shaderSignature;
-            }
             
             if( !hGroup.anyHit.empty() )
             {
@@ -164,13 +149,11 @@ namespace TrinityALImpl
         }
 
         id<MTLDevice> device = renderContext.GetMetalContext()->GetDevice();
-        // Maps intersection function names to actual MTLFunctions.
         
         MTLComputePipelineDescriptor *descriptor = [[MTLComputePipelineDescriptor alloc] init];
         
         NSError *error = nullptr;
         
-        //id <MTLFunction> raytracingFunction = [self specializedFunctionWithName:@"raytracingKernel"];
         descriptor.computeFunction = shaderProgram.TrinityALImpl_GetObject()->GetComputeKernel();
         
         // add the functions to the pipeline
@@ -210,7 +193,7 @@ namespace TrinityALImpl
 
     bool Tr2RtPipelineStateAL::IsValid() const
     {
-        return true;
+        return m_raytracingPipeline != nullptr;
     }
 
     Tr2ALMemoryType Tr2RtPipelineStateAL::GetMemoryClass() const
@@ -218,9 +201,17 @@ namespace TrinityALImpl
         return AL_MEMORY_MANAGED;
     }
 
+    id <MTLComputePipelineState> Tr2RtPipelineStateAL::GetRtPipeline()
+    {
+        return m_raytracingPipeline;
+    }
+
     void Tr2RtPipelineStateAL::Destroy()
     {
-        
+        m_intersectionFunctions.clear();
+        m_hitGroupMap.clear();
+        m_raytracingPipeline = nullptr;
+        m_shaderProgram = ::Tr2ShaderProgramAL();
     }
     
     void Tr2RtPipelineStateAL::Describe( Tr2DeviceResourceDescriptionAL& description ) const
@@ -236,21 +227,6 @@ namespace TrinityALImpl
     std::unordered_map<std::wstring, Tr2RtPipelineStateAL::HitGroupFunctions> Tr2RtPipelineStateAL::GetHitGroupMap()
     {
         return m_hitGroupMap;
-    }
-
-    std::unordered_map<std::wstring, int> Tr2RtPipelineStateAL::GetFunctionIndexMap()
-    {
-        return m_functionIndexMap;
-    }
-    
-    const Tr2ShaderSignatureAL* Tr2RtPipelineStateAL::GetLocalSignature(const wchar_t* name) const
-    {
-        auto found = m_signatureForName.find(name);
-        if( found == m_signatureForName.end() )
-        {
-            return nullptr;
-        }
-        return found->second;
     }
 }
 
