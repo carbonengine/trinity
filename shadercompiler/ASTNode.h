@@ -112,6 +112,7 @@ public:
 	void AddChild( ASTNode* child );
 	void InsertChild( size_t place, ASTNode* child );
 	void ReplaceChild( size_t place, ASTNode* child );
+    void ReplaceChild( ASTNode* old, ASTNode* child );
 	void RemoveChild( size_t place );
 
 	ASTNodeType GetNodeType() const;

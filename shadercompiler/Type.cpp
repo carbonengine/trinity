@@ -658,10 +658,12 @@ Type TypeFromSymbol( const Symbol* symbol )
     return t;
 }
 
-Type TypeFromTokenType( int type )
+Type TypeFromTokenType( int type, int width, int height )
 {
     Type t;
     t.FromTokenType( type );
+    t.width = width;
+    t.height = height;
     return t;
 }
 
@@ -733,4 +735,32 @@ int GetNumericTypePrecedence( int type )
 		}
 	}
 	return -1;
+}
+
+
+
+namespace hlsl {
+
+const Type void_t = TypeFromTokenType( OP_VOID );
+
+const Type bool_t = TypeFromTokenType( OP_BOOL );
+const Type int_t = TypeFromTokenType( OP_INT );
+const Type uint_t = TypeFromTokenType( OP_UINT );
+const Type float_t = TypeFromTokenType( OP_FLOAT );
+
+const Type bool2_t = TypeFromTokenType( OP_BOOL, 2 );
+const Type int2_t = TypeFromTokenType( OP_INT, 2 );
+const Type uint2_t = TypeFromTokenType( OP_UINT, 2 );
+const Type float2_t = TypeFromTokenType( OP_FLOAT, 2 );
+
+const Type bool3_t = TypeFromTokenType( OP_BOOL, 3 );
+const Type int3_t = TypeFromTokenType( OP_INT, 3 );
+const Type uint3_t = TypeFromTokenType( OP_UINT, 3 );
+const Type float3_t = TypeFromTokenType( OP_FLOAT, 3 );
+
+const Type bool4_t = TypeFromTokenType( OP_BOOL, 4 );
+const Type int4_t = TypeFromTokenType( OP_INT, 4 );
+const Type uint4_t = TypeFromTokenType( OP_UINT, 4 );
+const Type float4_t = TypeFromTokenType( OP_FLOAT, 4 );
+
 }

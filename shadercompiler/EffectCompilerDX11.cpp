@@ -919,35 +919,6 @@ bool ParseShaderName( const InlineString& name, InputStageType& type )
 	return true;
 }
 
-bool ParseRtShaderName( const InlineString& name, RtShaderType& type )
-{
-	if( _stricmp( ToString( name ).c_str(), "raygenshader" ) == 0 )
-	{
-		type = RtShaderType::RAY_GEN;
-	}
-	else if( _stricmp( ToString( name ).c_str(), "missshader" ) == 0 )
-	{
-		type = RtShaderType::MISS;
-	}
-	else if( _stricmp( ToString( name ).c_str(), "closesthitshader" ) == 0 )
-	{
-		type = RtShaderType::CLOSEST_HIT;
-	}
-	else if( _stricmp( ToString( name ).c_str(), "anyhitshader" ) == 0 )
-	{
-		type = RtShaderType::ANY_HIT;
-	}
-	else if( _stricmp( ToString( name ).c_str(), "intersectionshader" ) == 0 )
-	{
-		type = RtShaderType::INTERSECTION;
-	}
-	else
-	{
-		return false;
-	}
-	return true;
-}
-
 bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength, const std::vector<Macro>& defines, EffectData& result )
 {
 	return CompileEffect( source, sourceLength, defines, result, { nullptr, false } );
@@ -1337,7 +1308,11 @@ bool EffectCompilerDX11::CompileEffect( const char* source, size_t sourceLength,
 				if( childNode->GetNodeType() == NT_SHADER_ASSIGNMENT )
 				{
 					ShaderExport shaderExport;
-					if( !ParseRtShaderName( childNode->GetToken()->stringValue, shaderExport.type ) )
+                    if( auto parsed = ParseRtShaderName( childNode->GetToken()->stringValue ) )
+                    {
+                        shaderExport.type = parsed.value();
+                    }
+                    else
 					{
 						state.ShowMessage( childNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( childNode->GetToken()->stringValue ).c_str() );
 						return false;
