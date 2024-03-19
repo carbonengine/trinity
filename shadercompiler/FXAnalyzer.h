@@ -1,5 +1,8 @@
 #pragma once
 
+#include "EffectData.h"
+
+
 class ASTNode;
 struct Sampler;
 struct StaticSampler;
@@ -50,3 +53,5 @@ bool EvaluateExpression( ParserState& state, ASTNode* node, Type& type, Expressi
 bool EvaluateInitializer( ParserState& state, ASTNode* node, Type& type, ExpressionValue& value, StateValue* stateValues );
 bool CastExpressionValue( ExpressionValue& value, const Type& from, const Type& to );
 int EvaluateIntegerExpression( ParserState& state, ASTNode* node, int defaultValue );
+
+std::optional<RtShaderType> ParseRtShaderName( const InlineString& name );

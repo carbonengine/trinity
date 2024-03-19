@@ -62,6 +62,15 @@ void ASTNode::ReplaceChild( size_t place, ASTNode* child )
 	m_children[place] = child;
 }
 
+void ASTNode::ReplaceChild( ASTNode* old, ASTNode* child )
+{
+    auto found = find( begin( m_children ), end( m_children ), old );
+    if( found != end( m_children ) )
+    {
+        *found = child;
+    }
+}
+
 void ASTNode::RemoveChild( size_t place )
 {
 	m_children.erase( m_children.begin() + place );

@@ -895,7 +895,7 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 				cast->AddChild( dot );
 				dot = cast;
 			}
-			call->ReplaceChild( 0 , dot );
+			call->ReplaceChild( size_t( 0 ), dot );
 
 			swizzle = ScannerToken::ID( MakeInlineString( xyzw + coord->GetType().width - 1, xyzw + coord->GetType().width ) );
 			dot = new ASTNode( NT_POSTFIX_EXPRESSION, coord->GetLocation(), coord->GetScope(), &swizzle );
@@ -911,7 +911,7 @@ ASTNode* PatchMetalTextureCall( ASTNode* node )
 			castType.builtInType = OP_UINT;
 			cast->SetType( castType );
 			cast->AddChild( coord );
-			call->ReplaceChild( 0, cast );
+			call->ReplaceChild( size_t( 0 ), cast );
 		}
 		SplitCoordVec( call, textureType, 0 );
 	}
@@ -1005,7 +1005,7 @@ ASTNode* PatchMetalTextureCalls( ParserState& state, ASTNode* node, bool rightHa
 				castType.builtInType = OP_UINT;
 				cast->SetType( castType );
 				cast->AddChild( coord );
-				call->ReplaceChild( 0, cast );
+				call->ReplaceChild( size_t( 0 ), cast );
 			}
 
 			auto textureType = node->GetChild( 0 )->GetType();

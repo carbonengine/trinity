@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "FXAnalyzer.h"
-#include "EffectData.h"
 #include "ASTNode.h"
 #include "HLSLParser.h"
 #include "ParserUtils.h"
@@ -1795,4 +1794,33 @@ int EvaluateIntegerExpression( ParserState& state, ASTNode* node, int defaultVal
 		return defaultValue;
 	}
 	return int( value[0].intValue );
+}
+
+
+std::optional<RtShaderType> ParseRtShaderName( const InlineString& name )
+{
+    if( EqualsCaseInsensitive( name, "raygenshader" ) )
+    {
+        return RtShaderType::RAY_GEN;
+    }
+    else if( EqualsCaseInsensitive( name, "missshader" ) )
+    {
+        return RtShaderType::MISS;
+    }
+    else if( EqualsCaseInsensitive( name, "closesthitshader" ) )
+    {
+        return RtShaderType::CLOSEST_HIT;
+    }
+    else if( EqualsCaseInsensitive( name, "anyhitshader" ) )
+    {
+        return RtShaderType::ANY_HIT;
+    }
+    else if( EqualsCaseInsensitive( name, "intersectionshader" ) )
+    {
+        return RtShaderType::INTERSECTION;
+    }
+    else
+    {
+        return {};
+    }
 }
