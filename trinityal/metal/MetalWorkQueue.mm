@@ -2999,9 +2999,12 @@ void MetalWorkQueue::DispatchRays( Tr2RtPipelineStateAL* pipeline, Tr2RtShaderTa
     SetComputeBufferBindings();
     
     [computeEncoder setComputePipelineState: pipeline->GetRtPipeline() ];
-    [computeEncoder setIntersectionFunctionTable: shaderTable->GetHitGroupFunctionTable() atBufferIndex:12];
+    [computeEncoder setIntersectionFunctionTable: shaderTable->GetAnyHitFunctionTable() atBufferIndex:12];
     [computeEncoder setVisibleFunctionTable: shaderTable->GetMissShaderFunctionTable() atBufferIndex:13];
-    
+    [computeEncoder setVisibleFunctionTable: shaderTable->GetClosestHitFunctionTable() atBufferIndex:14];
+    [computeEncoder setBuffer:shaderTable->GetMaterialBuffer() offset:0 atIndex:15];
+    [computeEncoder setBuffer:shaderTable->GetMaterialBuffer() offset:shaderTable->GetMissMaterialOffset() atIndex:16];
+
     // Launch a rectangular grid of threads on the GPU to perform ray tracing, with one thread per
     // pixel. The sample needs to align the number of threads to a multiple of the threadgroup
     // size, because earlier, when it created the pipeline objects, it declared that the pipeline
