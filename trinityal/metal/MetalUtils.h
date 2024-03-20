@@ -15,7 +15,7 @@
 #define METAL_VISIBILITY_RESULT_SIZE_IN_BYTES 8
 
 // Remove for prodcution code
-#define METAL_LOG_OUTPUT 1
+#define METAL_LOG_OUTPUT 0
 #if METAL_LOG_OUTPUT
 #define METAL_LOG(...) NSLog(__VA_ARGS__)
 #else
