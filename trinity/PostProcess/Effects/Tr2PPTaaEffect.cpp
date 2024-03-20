@@ -13,7 +13,7 @@ Tr2PPTaaEffect::Tr2PPTaaEffect( IRoot* lockobj ) :
 	m_applyMipBias( true ),
 	m_showMotionVectors( false ),
 	m_showEarlyOutMask( false ),
-	m_earlyOutThreshold( 0.04 ),
+	m_earlyOutThreshold( 0.01 ),
 	m_jitterX( 0.0f ),
 	m_jitterY( 0.0f )
 {
@@ -34,6 +34,6 @@ void Tr2PPTaaEffect::GetJitter( uint32_t renderWidth, uint32_t renderHeight, flo
 	m_jitterX = m_samplingPatterns[m_samplingIndex].x;
 	m_jitterY = m_samplingPatterns[m_samplingIndex].y;
 
-	x = m_jitterX / ( float ) renderWidth;
-	y = m_jitterY / ( float ) renderHeight;
+	x = 2.0f * m_jitterX / (float)renderWidth;
+	y = 2.0f * m_jitterY / (float)renderHeight;
 }

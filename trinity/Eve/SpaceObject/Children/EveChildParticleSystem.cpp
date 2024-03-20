@@ -220,6 +220,7 @@ Tr2PerObjectData* EveChildParticleSystem::GetPerObjectData( ITriRenderBatchAccum
 
 	// column_major for shaders
 	data->m_world = Transpose( m_worldTransform );
+	data->m_worldLast = Transpose( m_worldTransformLast );
 	data->m_worldInverseTranspose = Inverse( m_worldTransform );
 
 	return data;
@@ -244,6 +245,9 @@ void EveChildParticleSystem::UpdateAsyncronous( EveUpdateContext& updateContext,
 	{
 		return;
 	}
+
+	m_worldTransformLast = m_worldTransform;
+
 	UpdateTransform( localToWorldTransform );
 	for( auto it = m_transformModifiers.begin(); it != m_transformModifiers.end(); ++it )
 	{
