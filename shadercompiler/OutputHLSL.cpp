@@ -633,6 +633,12 @@ namespace
 			case OP_BINDLESSHANDLETEXTURECUBE:
 				os << "uint";
 				return;
+            case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+                os << "RaytracingAccelerationStructure";
+                return;
+            case OP_RAY_DESC:
+                os << "RayDesc";
+                return;
 #if 0
 			// There is no "texture3d_array" in MSL.
 			case OP_RWTEXTURE3DARRAY:
@@ -1536,6 +1542,9 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 			case AddressSpace::Threadgroup:
 				os << "threadgroup ";
 				break;
+            case AddressSpace::RayData:
+                os << "ray_data ";
+                break;
 			default:
 				break;
 		}
@@ -1939,7 +1948,7 @@ CodeStream& operator<<( CodeStream& os, const MSL& msl )
 	case NT_FUNCTION_ATTRIBUTE:
 		{
 			auto attrib = ToString( node->GetToken()->stringValue );
-			if( attrib == "vertex" || attrib == "fragment" || attrib == "kernel" )
+			if( attrib == "vertex" || attrib == "fragment" || attrib == "kernel" || ( attrib.length() > 4 && attrib.substr( 0, 2 ) == "[[") )
 			{
 				os << ' ' << attrib << ' ';
 			}

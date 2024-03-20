@@ -202,8 +202,11 @@ void MarkUsedSymbols( ASTNode* entryPoint, SymbolTable& symbols )
 	}
 	if( entryPoint->GetSymbol() )
 	{
-		MarkUsedSymbols( entryPoint->GetSymbol()->definition, symbols );
-		if( entryPoint->GetSymbol()->type.symbol )
+        if( entryPoint->GetSymbol()->definition )
+        {
+            MarkUsedSymbols( entryPoint->GetSymbol()->definition, symbols );
+        }
+		if( entryPoint->GetSymbol()->type.symbol && entryPoint->GetSymbol()->type.symbol->definition )
 		{
 			MarkUsedSymbols( entryPoint->GetSymbol()->type.symbol->definition, symbols );
 		}
@@ -991,6 +994,21 @@ ASTNode* NewLiteralConst( ParserState& state, float value )
 	return result;
 }
 
+ASTNode* NewLiteralConst( ParserState& state, uint32_t value )
+{
+    ScannerToken token = { OP_UINT, 0, state.AllocateName( std::to_string( value ).c_str() ), {} };
+    auto result = state.NewNode( NT_CONSTANT, token );
+    result->SetType( TypeFromTokenType( OP_UINT ) );
+    return result;
+}
+
+ASTNode* NewLiteralConst( ParserState& state, bool value )
+{
+    auto result = state.NewNode( NT_CONSTANT, { OP_BOOL_CONST, 1, MakeInlineString( value ? "true" : "false" ), {} } );
+    result->SetType( hlsl::bool_t );
+    return result;
+}
+
 ASTNode* NewDot( ParserState& state, ASTNode* expr, Symbol* field )
 {
 	auto access = state.NewNode( NT_POSTFIX_EXPRESSION, ScannerToken::ID( field->name ) );
@@ -1063,6 +1081,45 @@ ASTNode* NewVarDeclaration( ParserState& state, const Type& type, const InlineSt
 	return declList;
 }
 
+ASTNode* NewVarDeclaration( ParserState& state, Symbol* symbol, ASTNode* initializer )
+{
+    auto nameDecl = state.NewNode( NT_NAME_DECLARATION );
+    nameDecl->SetSymbol( symbol );
+    nameDecl->SetType( symbol->type );
+
+    auto declList = state.NewNode( NT_VAR_DECLARATION_LIST );
+    declList->AddChild( nameDecl );
+    declList->SetType( symbol->type );
+    
+    if( initializer )
+    {
+        nameDecl->AddChild( nullptr );
+        nameDecl->AddChild( initializer );
+    }
+    return declList;
+}
+
+ASTNode* NewFunctionCall( ParserState& state, const Type& type, const char* name, const std::vector<ASTNode*>& args )
+{
+    ScannerToken token = ScannerToken::ID( MakeInlineString( name ) );
+    auto ctr = state.NewNode( NT_FUNCTION_CALL );
+    ctr->SetToken( &token );
+    ctr->SetType( type );
+    for( auto arg : args )
+    {
+        ctr->AddChild( arg );
+    }
+    return ctr;
+}
+
+ASTNode* NewCastExpression( ParserState& state, const Type& type, ASTNode* child )
+{
+    auto cast = state.NewNode( NT_CAST_EXPRESSION );
+    cast->SetType( type );
+    cast->AddChild( child );
+    return cast;
+}
+
 ASTNode* NewExpressionStatement( ParserState& state, ASTNode* expr )
 {
 	auto statement = state.NewNode( NT_EXPRESSION_STATEMENT );
@@ -1100,3 +1157,17 @@ ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const Inlin
 	}
 	return param;
 }
+
+
+ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const char* name )
+{
+    return NewFunctionParameter( state, type, state.AllocateName( name ) );
+}
+
+ASTNode* NewFunctionParameter( ParserState& state, const Type& type, const char* name, const RegisterSpecifier& reg )
+{
+    auto arg = NewFunctionParameter( state, type, state.AllocateName( name ) );
+    arg->GetSymbol()->registerSpecifier[MakeInlineString( "" )] = reg;
+    return arg;
+}
+
