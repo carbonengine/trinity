@@ -379,7 +379,7 @@ namespace TrinityALImpl
         }
         if( @available( macOS 13.0, * ) )
         {
-            return 0xffffffff;//m_resourceHeap.Allocate( texture.gpuResourceID._impl );
+            return m_resourceHeap.Allocate( texture.gpuResourceID._impl );
         }
         else
         {
@@ -393,10 +393,10 @@ namespace TrinityALImpl
         {
             return 0xffffffff;
         }
-       // if( @available( macOS 13.0, * ) )
-        //{
-            //return 0xffffffff;//m_resourceHeap.Allocate( buffer.gpuAddress );
-        //}
+        if( @available( macOS 13.0, * ) )
+        {
+            return m_resourceHeap.Allocate( buffer.gpuAddress );
+        }
         else
         {
             return 0xffffffff;
