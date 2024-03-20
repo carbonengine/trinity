@@ -44,6 +44,12 @@ const char MSL_INCLUDE[] =
 #define METAL_UAV_TEXTURE_COUNT 7
 	static_assert( METAL_SRV_TEXTURE_COUNT + METAL_UAV_TEXTURE_COUNT <= METAL_MAX_BOUND_TEXTURES, "texture overflow" );
 
+#define METAL_INTERSECTION_FUNCTION_TABLE_SLOT 8
+#define METAL_MISS_FUNCTION_TABLE_SLOT 9
+#define METAL_CLOSEST_HIT_FUNCTION_TABLE_SLOT 10
+#define METAL_HIT_MATERIAL_SLOT 11
+#define METAL_MISS_MATERIAL_SLOT 12
+
 extern CompileMessageQueue g_messages;
 extern StringTable g_stringTable;
 extern bool g_printWarnings;
@@ -407,6 +413,7 @@ namespace
 			Symbol* symbol = node->GetScope()->AddSymbol( globalsName, DISALOW_OVERRIDES );
 			symbol->type.FromSymbol( typeSymbol );
 			symbol->addressSpace = AddressSpace::Constant;
+            symbol->registerSpecifier = typeSymbol->registerSpecifier;
 
 			token.fileLocation = header->GetLocation();
 
@@ -536,6 +543,7 @@ namespace
 						case OP_STRUCTUREDBUFFER:
 						case OP_RWBUFFER:
 						case OP_RWSTRUCTUREDBUFFER:
+                        case OP_RAYTRACING_ACCELERATION_STRUCTURE:
 							symbol->addressSpace = AddressSpace::Device;
 							break;
 						default:
@@ -609,11 +617,40 @@ namespace
 
 		std::set<Symbol*> globalsStructMembers;
 		std::set<Symbol*> uiStructMembers;
+        std::vector<ASTNode*> cbuffers;
 
 		// Move all globals to the new buffer.
-		for( size_t i = 0, n = root->GetChildrenCount(); i < n; ++i )
+		for( size_t i = 0; i < root->GetChildrenCount(); ++i )
 		{
 			ASTNode* node = root->GetChild( i );
+            if( node && node->GetNodeType() == NT_CBUFFER )
+            {
+                auto cbufferStruct = new ASTNode( NT_STRUCT, node->GetLocation(), node->GetScope(), nullptr );
+
+                Symbol* globalsSymbol = node->GetSymbol();
+                globalsSymbol->isTypeName = true;
+                globalsSymbol->definition = cbufferStruct;
+                if( globalsSymbol->registerSpecifier.empty() )
+                {
+                    globalsSymbol->registerSpecifier[MakeInlineString( "" )] = RegisterSpecifier::Register( MetalRegister::CBuffer, 0 );
+                }
+                else
+                {
+                    globalsSymbol->registerSpecifier.begin()->second.registerType = MetalRegister::CBuffer;
+                }
+
+                cbufferStruct->SetSymbol( globalsSymbol );
+
+                for( size_t j = 0; j < node->GetChildrenCount(); ++j )
+                {
+                    node->GetChild( j )->SetNodeType( NT_STRUCT_MEMBER );
+                    cbufferStruct->AddChild( node->GetChild( j ) );
+                }
+
+                state.GetTree()->ReplaceChild( i, cbufferStruct );
+                cbuffers.push_back( cbufferStruct );
+                continue;
+            }
 			if( node && node->GetNodeType() == NT_VAR_DECLARATION_LIST )
 			{
 				ASTNode* childNode = node->GetChildOrNull( 0 );
@@ -633,7 +670,6 @@ namespace
 						globals.push_back(childNode);
 						root->RemoveChild( i );
 						--i;
-						--n;
 					}
 					else if( symbol->name == "g_uiTransforms" )
 					{
@@ -672,7 +708,6 @@ namespace
 
 							root->RemoveChild( i );
 							--i;
-							--n;
 						}
 
 						uiStructMembers.insert( symbol );
@@ -699,12 +734,12 @@ namespace
 
 							root->RemoveChild( i );
 							--i;
-							--n;
 						}
 						else if( type.builtInType == OP_BUFFER ||
 							type.builtInType == OP_STRUCTUREDBUFFER ||
 							type.builtInType == OP_RWBUFFER ||
 							type.builtInType == OP_RWSTRUCTUREDBUFFER ||
+                            type.builtInType == OP_RAYTRACING_ACCELERATION_STRUCTURE ||
 							type.builtInType == OP_TEXTURE ||
 							type.builtInType == OP_TEXTURE1D ||
 							type.builtInType == OP_TEXTURE1DARRAY ||
@@ -728,7 +763,6 @@ namespace
 
 							root->RemoveChild( i );
 							--i;
-							--n;
 						}
 						else if( type.IsSampler() )
 						{
@@ -753,7 +787,6 @@ namespace
 
 								root->RemoveChild( i );
 								--i;
-								--n;
 							}
 							else
 							{
@@ -797,7 +830,6 @@ namespace
 
 								root->RemoveChild( i );
 								--i;
-								--n;
 							}
 
 							globalsStructMembers.insert( symbol );
@@ -820,6 +852,20 @@ namespace
 
 			StripSemanticsInsideStucts( uiStruct );
 		}
+        
+        for( auto cbuffer : cbuffers )
+        {
+            std::set<Symbol*> members;
+            for( auto child : cbuffer->GetChildren() )
+            {
+                for( auto name : child->GetChildren() )
+                {
+                    members.insert( name->GetSymbol() );
+                }
+            }
+            
+            PatchGlobalsInFunctions( functions, cbuffer->GetSymbol(), state.AllocateNameWithPrefix( "cbuffer" ), members );
+        }
 	}
 
 	void PrintAnnotations( YamlOutput& listing, const std::map<StringReference, Annotation>& annotations )
@@ -862,7 +908,7 @@ namespace
 		listing.end();
 	}
 
-	void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectData& result )
+    void PrintStageInfo( YamlOutput& listing, const StageData& stage, const EffectData& result )
 	{
 		if( !listing.enabled() )
 		{
@@ -957,22 +1003,6 @@ namespace
 			}
 			listing.end();
 		}
-		if( !stage.pipelineInputs.empty() )
-		{
-			listing.literal( "inputs" ).list();
-			for( auto it = stage.pipelineInputs.begin(); it != stage.pipelineInputs.end(); ++it )
-			{
-				listing.dict()
-					.literal( "register" ).literal( it->registerIndex )
-					.literal( "name" ).literal( it->name )
-					.literal( "index" ).literal( it->index )
-					.literal( "usedMask" ).literal( it->usedMask )
-					.literal( "type" ).literal( ToString( it->type ) )
-					.literal( "dimension" ).literal( it->dimension )
-					.end();
-			}
-			listing.end();
-		}
 		if( !stage.registerInputs.empty() )
 		{
 			listing.literal( "registers" ).list();
@@ -986,6 +1016,27 @@ namespace
 			listing.end();
 		}
 	}
+
+    void PrintStageInfo( YamlOutput& listing, const StageInput& stage, const EffectData& result )
+    {
+        PrintStageInfo( listing, static_cast<const StageData&>( stage ), result );
+        if( !stage.pipelineInputs.empty() )
+        {
+            listing.literal( "inputs" ).list();
+            for( auto it = stage.pipelineInputs.begin(); it != stage.pipelineInputs.end(); ++it )
+            {
+                listing.dict()
+                    .literal( "register" ).literal( it->registerIndex )
+                    .literal( "name" ).literal( it->name )
+                    .literal( "index" ).literal( it->index )
+                    .literal( "usedMask" ).literal( it->usedMask )
+                    .literal( "type" ).literal( ToString( it->type ) )
+                    .literal( "dimension" ).literal( it->dimension )
+                    .end();
+            }
+            listing.end();
+        }
+    }
 
 	std::string SanitizeCode( const std::string& src )
 	{
@@ -1709,6 +1760,7 @@ namespace
 			{
 			case OP_BUFFER:
 			case OP_STRUCTUREDBUFFER:
+            case OP_RAYTRACING_ACCELERATION_STRUCTURE:
 			{
 				int index = existingReg.registerNumber;
 				if( existingReg.registerType == MetalRegister::CBuffer )
@@ -1870,6 +1922,7 @@ namespace
 			{
 			case OP_BUFFER:
 			case OP_STRUCTUREDBUFFER:
+            case OP_RAYTRACING_ACCELERATION_STRUCTURE:
 			{
 				reg.registerType = MetalRegister::SRV;
 				if( FindUnusedRegister( nextFreeSRV, METAL_SRV_BUFFER_COUNT, srvs, reg.registerNumber ) )
@@ -2113,6 +2166,11 @@ namespace
 			{
 				continue;
 			}
+            
+            if( !params[i] )
+            {
+                continue;
+            }
 
 			if( symbol->type.IsStruct() )
 			{
@@ -2301,6 +2359,77 @@ namespace
 		}
 	}
 
+    enum class PatchShaderType
+    {
+        VERTEX,
+        PIXEL,
+        COMPUTE,
+
+        RAY_GEN,
+        MISS,
+        CLOSEST_HIT,
+        ANY_HIT,
+    };
+
+    InlineString GetEntryPointName( PatchShaderType shaderType, ASTNode* callNode )
+    {
+        switch ( shaderType )
+        {
+        case PatchShaderType::VERTEX:
+            return MakeInlineString( "mainVS" );
+        case PatchShaderType::PIXEL:
+            return MakeInlineString( "mainPS" );
+        case PatchShaderType::COMPUTE:
+            return MakeInlineString( "mainCS" );
+        default:
+            return callNode->GetSymbol()->name;
+        }
+    }
+
+    InlineString GetShaderAttribute( PatchShaderType shaderType )
+    {
+        switch ( shaderType )
+        {
+        case PatchShaderType::VERTEX:
+            return MakeInlineString( "vertex" );
+        case PatchShaderType::PIXEL:
+            return MakeInlineString( "fragment" );
+        case PatchShaderType::COMPUTE:
+            return MakeInlineString( "kernel" );
+        case PatchShaderType::RAY_GEN:
+            return MakeInlineString( "kernel" );
+        case PatchShaderType::MISS:
+        case PatchShaderType::CLOSEST_HIT:
+            return MakeInlineString( "[[visible]]" );
+        case PatchShaderType::ANY_HIT:
+            return MakeInlineString( "[[intersection(triangle, instancing, triangle_data)]]" );
+        default:
+            return MakeInlineString( "" );
+        }
+
+    }
+
+    void FindCallsToSymbol( ASTNode* node, Symbol* symbol, std::vector<ASTNode*>& calls )
+    {
+        if( node->GetNodeType() == NT_FUNCTION_CALL )
+        {
+            if( node->GetSymbol() == symbol )
+            {
+                calls.push_back( node );
+            }
+            if( node->GetSymbol() && node->GetSymbol()->definition )
+            {
+                FindCallsToSymbol( node->GetSymbol()->definition, symbol, calls );
+            }
+        }
+        for( auto& child : node->GetChildren() )
+        {
+            if( child )
+            {
+                FindCallsToSymbol( child, symbol, calls );
+            }
+        }
+    }
 
 	// Creates a new shader functions with all the inputs/outputs layed out for Metal:
 	// - all [[stage_in]] inputs are put into a new flat struct
@@ -2308,7 +2437,7 @@ namespace
 	// - uniform arguments are moved to local variables inside the shader
 	// - all the other arguments from the original entry point are passed as is
 	// Returns new entry point function definition (added to AST root)
-	ASTNode* PatchShader( InputStageType shaderType, ASTNode* callNode, ParserState& state )
+	ASTNode* PatchShader( PatchShaderType shaderType, ASTNode* callNode, ParserState& state )
 	{
 		tmFunction( 0, 0 );
 
@@ -2324,27 +2453,7 @@ namespace
 			return nullptr;
 		}
 
-		InlineString shaderAttribute;
-		ScannerToken shaderName = {};
-		shaderName.type = OP_ID;
-		switch ( shaderType )
-		{
-		case VERTEX_STAGE:
-			shaderName.stringValue = MakeInlineString( "mainVS" );
-			shaderAttribute = MakeInlineString( "vertex" );
-			break;
-		case PIXEL_STAGE:
-			shaderName.stringValue = MakeInlineString( "mainPS" );
-			shaderAttribute = MakeInlineString( "fragment" );
-			break;
-		case COMPUTE_STAGE:
-			shaderName.stringValue = MakeInlineString( "mainCS" );
-			shaderAttribute = MakeInlineString( "kernel" );
-			break;
-		default:
-			state.ShowMessage( callNode->GetLocation(), EC_CUSTOM_ERROR, "Shader type %i is not supported by Metal", int( shaderType ) );
-			return nullptr;
-		}
+		ScannerToken shaderName = ScannerToken::ID( GetEntryPointName( shaderType, callNode ) );
 
 		state.GetCurrentLocation().fileName = shaderName.stringValue;
 		state.GetCurrentLocation().lineNumber = 1;
@@ -2382,6 +2491,13 @@ namespace
 				params.push_back( nullptr );
 				continue;
 			}
+            
+            auto isUniform = IsUniformInputArgument( sourceArg );
+            if( shaderType >= PatchShaderType::RAY_GEN && !isUniform )
+            {
+                params.push_back( nullptr );
+                continue;
+            }
 
 			auto declList = NewVarDeclaration( state,
 					sourceArg->GetType(),
@@ -2393,7 +2509,7 @@ namespace
 
 			params.push_back( nameSymbol );
 
-			if( IsUniformInputArgument( sourceArg ) )
+			if( isUniform )
 			{
 				// uniform arguments are initialized with whatever was passed in the call node
 
@@ -2417,7 +2533,7 @@ namespace
 			return nullptr;
 		}
 
-		bool hasReturnType = functionHeader->GetType() != TypeFromTokenType( OP_VOID );
+		bool hasReturnType = functionHeader->GetType() != hlsl::void_t;
 		if( hasReturnType )
 		{
 			// Local variable for return value
@@ -2475,7 +2591,7 @@ namespace
 				argumentAccessors.push_back( NewDot( state, NewVarIdentifier( state, stageInSymbol ), inputsStruct->GetChild( i )->GetChild( 0 )->GetSymbol() ) );
 			}
 
-			if( shaderType == PIXEL_STAGE )
+			if( shaderType == PatchShaderType::PIXEL )
 			{
 				if( !PatchVpos( state, inputsStruct, argumentAccessors ) )
 				{
@@ -2514,6 +2630,50 @@ namespace
 			}
 		}
 
+        if( shaderType == PatchShaderType::RAY_GEN )
+        {
+            header->AddChild( NewFunctionParameter( state, hlsl::uint3_t, "__dispatchRaysIndex", MetalSystemSemantics( MetalSystemSemanticsType::thread_position_in_grid ) ) );
+            header->AddChild( NewFunctionParameter( state, hlsl::uint3_t, "__dispatchRaysDimensions", MetalSystemSemantics( MetalSystemSemanticsType::threads_per_grid ) ) );
+
+            std::vector<ASTNode*> traceRay;
+            FindCallsToSymbol( entryPointSymbol->definition, state.GetSymbolTable().Lookup( MakeInlineString( "TraceRay" ) ), traceRay );
+            
+            if( !traceRay.empty() )
+            {
+                auto payload = traceRay[0]->GetChild( 7 );
+                if( traceRay.size() > 1 && payload )
+                {
+                    for( size_t i = 1; i < traceRay.size(); ++i )
+                    {
+                        if( traceRay[i]->GetChild( 7 ) && traceRay[i]->GetChild( 7 )->GetType() != payload->GetType() )
+                        {
+                            state.ShowMessage( traceRay[i]->GetChild( 7 )->GetLocation(), EC_CUSTOM_ERROR, "Metal does not support RayGen shaders that use multiple TraceRay calls with different payloads" );
+                            return nullptr;
+                        }
+                    }
+                }
+                
+                auto t = state.GetSymbolTable().AddSymbol( MakeInlineString( "intersection_function_table<__INTERSECION_TAGS>" ) );
+                t->isTypeName = true;
+                header->AddChild( NewFunctionParameter( state, TypeFromSymbol( t ), "__intersectionTable", RegisterSpecifier::Register( MetalRegister::SRV, METAL_INTERSECTION_FUNCTION_TABLE_SLOT ) ) );
+                
+                CompilerInputStream os( state, ShadingLanguage::MSL );
+                os << "visible_function_table<void(thread " << traceRay[0]->GetChild( 7 )->GetType() << "&, __MetalHitSV, device __RtLocalMaterial*)>";
+                
+                t = state.GetSymbolTable().AddSymbol( state.AllocateName( os.str().c_str() ) );
+                t->isTypeName = true;
+
+                header->AddChild( NewFunctionParameter( state, TypeFromSymbol( t ), "__missShaderFunctionTable", RegisterSpecifier::Register( MetalRegister::SRV, METAL_MISS_FUNCTION_TABLE_SLOT ) ) );
+                header->AddChild( NewFunctionParameter( state, TypeFromSymbol( t ), "__hitShaderFunctionTable", RegisterSpecifier::Register( MetalRegister::SRV, METAL_CLOSEST_HIT_FUNCTION_TABLE_SLOT ) ) );
+
+                t = state.GetSymbolTable().AddSymbol( MakeInlineString( "device __RtLocalMaterial*" ) );
+                t->isTypeName = true;
+
+                header->AddChild( NewFunctionParameter( state, TypeFromSymbol( t ), "__missMaterials", RegisterSpecifier::Register( MetalRegister::SRV, METAL_MISS_MATERIAL_SLOT ) ) );
+                header->AddChild( NewFunctionParameter( state, TypeFromSymbol( t ), "__hitMaterials", RegisterSpecifier::Register( MetalRegister::SRV, METAL_HIT_MATERIAL_SLOT ) ) );
+            }
+        }
+        
 		if( inputsStruct )
 		{
 			for( size_t i = 0; i < inputAccessors.size(); ++i )
@@ -2527,67 +2687,78 @@ namespace
 				shaderBody->AddChild( NewExpressionStatement( state, assignment ) );
 			}
 		}
-
-		// Call the original function
-		auto call = state.NewNode( NT_FUNCTION_CALL, ScannerToken::ID( entryPointSymbol->name ) );
-		call->SetSymbol( entryPointSymbol );
-		call->SetType( functionHeader->GetType() );
-		for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
-		{
-			if( params[i]->type.IsTexture() && params[i]->type.arrayDimensions > 0 )
-			{
-				auto cast = state.NewNode( NT_CAST_EXPRESSION );
-				cast->SetType( params[i]->type );
-				cast->AddChild( NewVarIdentifier( state, params[i] ) );
-				call->AddChild( cast );
-				cast->SetSymbol( params[i] );
-			}
-			else
-			{
-				call->AddChild( NewVarIdentifier( state, params[i] ) );
-			}
-		}
-		if( hasReturnType )
-		{
-			auto assignment = NewBinaryExpression(
-					state,
-					OP_EQUAL,
-					NewVarIdentifier( state, params.back() ),
-					call );
-
-			shaderBody->AddChild( NewExpressionStatement( state, assignment ) );
-		}
-		else
-		{
-			shaderBody->AddChild( NewExpressionStatement( state, call ) );
-		}
-
-		if( outputsStruct )
-		{
-			header->SetType( TypeFromSymbol( outputsStruct->GetSymbol() ) );
-
-			// Create a local variable for outputs
-			auto resultDeclList = NewVarDeclaration( state, TypeFromSymbol( outputsStruct->GetSymbol() ), state.AllocateNameWithPrefix( "stageOut" ) );
-			auto resultSymbol = resultDeclList->GetChild( 0 )->GetSymbol();
-			shaderBody->AddChild( resultDeclList );
-
-			for( size_t i = 0; i < outputsStruct->GetChildrenCount(); ++i )
-			{
-				// Add assignments for all fields in the output struct
-				auto assignment = NewBinaryExpression(
-						state,
-						OP_EQUAL,
-						NewDot( state, NewVarIdentifier( state, resultSymbol ), outputsStruct->GetChild( i )->GetChild( 0 )->GetSymbol() ),
-						outputAccessors[i] );
-				shaderBody->AddChild( NewExpressionStatement( state, assignment ) );
-			}
-
-			shaderBody->AddChild( NewReturn( state, NewVarIdentifier( state, resultSymbol ) ) );
-		}
-		else
-		{
-			header->SetType( TypeFromTokenType( OP_VOID ) );
-		}
+        if( shaderType >= PatchShaderType::RAY_GEN )
+        {
+            auto& statements = entryPointSymbol->definition->GetChild( 1 )->GetChildren();
+            for( auto& stmt : statements )
+            {
+                shaderBody->AddChild( stmt->Copy() );
+            }
+            header->SetType( hlsl::void_t );
+        }
+        else
+        {
+            // Call the original function
+            auto call = state.NewNode( NT_FUNCTION_CALL, ScannerToken::ID( entryPointSymbol->name ) );
+            call->SetSymbol( entryPointSymbol );
+            call->SetType( functionHeader->GetType() );
+            for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
+            {
+                if( params[i]->type.IsTexture() && params[i]->type.arrayDimensions > 0 )
+                {
+                    auto cast = state.NewNode( NT_CAST_EXPRESSION );
+                    cast->SetType( params[i]->type );
+                    cast->AddChild( NewVarIdentifier( state, params[i] ) );
+                    call->AddChild( cast );
+                    cast->SetSymbol( params[i] );
+                }
+                else
+                {
+                    call->AddChild( NewVarIdentifier( state, params[i] ) );
+                }
+            }
+            if( hasReturnType )
+            {
+                auto assignment = NewBinaryExpression(
+                                                      state,
+                                                      OP_EQUAL,
+                                                      NewVarIdentifier( state, params.back() ),
+                                                      call );
+                
+                shaderBody->AddChild( NewExpressionStatement( state, assignment ) );
+            }
+            else
+            {
+                shaderBody->AddChild( NewExpressionStatement( state, call ) );
+            }
+            
+            if( outputsStruct )
+            {
+                header->SetType( TypeFromSymbol( outputsStruct->GetSymbol() ) );
+                
+                // Create a local variable for outputs
+                auto resultDeclList = NewVarDeclaration( state, TypeFromSymbol( outputsStruct->GetSymbol() ), state.AllocateNameWithPrefix( "stageOut" ) );
+                auto resultSymbol = resultDeclList->GetChild( 0 )->GetSymbol();
+                shaderBody->AddChild( resultDeclList );
+                
+                for( size_t i = 0; i < outputsStruct->GetChildrenCount(); ++i )
+                {
+                    // Add assignments for all fields in the output struct
+                    auto assignment = NewBinaryExpression(
+                                                          state,
+                                                          OP_EQUAL,
+                                                          NewDot( state, NewVarIdentifier( state, resultSymbol ), outputsStruct->GetChild( i )->GetChild( 0 )->GetSymbol() ),
+                                                          outputAccessors[i] );
+                    shaderBody->AddChild( NewExpressionStatement( state, assignment ) );
+                }
+                
+                shaderBody->AddChild( NewReturn( state, NewVarIdentifier( state, resultSymbol ) ) );
+            }
+            else
+            {
+                header->SetType( TypeFromTokenType( OP_VOID ) );
+            }
+        }
 
 		state.GetSymbolTable().LeaveScope();
 
@@ -2598,7 +2769,7 @@ namespace
 		shader->AddChild( shaderBody );
 
 		auto attribList = state.NewNode( NT_FUNCTION_ATTRIBUTE_LIST );
-		attribList->AddChild( state.NewNode( NT_FUNCTION_ATTRIBUTE, ScannerToken::ID( shaderAttribute ) ) );
+        attribList->AddChild( state.NewNode( NT_FUNCTION_ATTRIBUTE, ScannerToken::ID( GetShaderAttribute( shaderType ) ) ) );
 		shader->AddChild( attribList );
 		state.GetTree()->AddChild( shader );
 
@@ -2643,6 +2814,210 @@ namespace
 
 		return shader;
 	}
+
+    ASTNode* PatchRtShader( PatchShaderType shaderType, ASTNode* callNode, ParserState& state, std::vector<Symbol*>& rtConstantBuffers )
+    {
+        tmFunction( 0, 0 );
+
+        Symbol* entryPointSymbol = callNode->GetSymbol();
+        if( !entryPointSymbol || !entryPointSymbol->definition )
+        {
+            return nullptr;
+        }
+
+        ASTNode* functionHeader = entryPointSymbol->definition->GetChildOrNull( 0 );
+        if( !functionHeader )
+        {
+            return nullptr;
+        }
+
+        ScannerToken shaderName = ScannerToken::ID( GetEntryPointName( shaderType, callNode ) );
+
+        state.GetCurrentLocation().fileName = shaderName.stringValue;
+        state.GetCurrentLocation().lineNumber = 1;
+
+        auto header = state.NewNode( NT_FUNCTION_HEADER, shaderName );
+        auto shaderSymbol = state.GetSymbolTable().AddSymbol( shaderName.stringValue, ALLOW_OVERRIDES );
+        shaderSymbol->isFunction = true;
+        header->SetSymbol( shaderSymbol );
+
+        state.GetSymbolTable().EnterScope();
+
+        auto shaderBody = state.NewNode( NT_BLOCK );
+
+        ASTNode* payloadArg = nullptr;
+        ASTNode* attributeArg = nullptr;
+        
+        for( size_t i = 0; i < functionHeader->GetChildrenCount(); ++i )
+        {
+            // Add parameters for the rest of original shader inputs
+            ASTNode* sourceArg = functionHeader->GetChild( i );
+            Symbol* sourceSymbol = sourceArg->GetSymbol();
+            
+            bool isPayload = sourceArg->GetType().IsStruct() && sourceSymbol->addressSpace == AddressSpace::None && !payloadArg;
+            bool isAttribute = sourceArg->GetType().IsStruct() && sourceSymbol->addressSpace == AddressSpace::None && payloadArg;
+
+            auto arg = NewFunctionParameter( state, sourceArg->GetType(), state.AllocateName( sourceSymbol->name ) );
+            arg->GetSymbol()->addressSpace = sourceSymbol->addressSpace;
+            arg->GetSymbol()->registerSpecifier.swap( sourceSymbol->registerSpecifier );
+
+            if( isPayload )
+            {
+                ScannerToken ref = {};
+                ref.type = OP_INOUT;
+                arg->SetToken( &ref );
+
+                payloadArg = arg;
+            }
+            if( isAttribute )
+            {
+                attributeArg = arg;
+            }
+
+            header->AddChild( arg );
+        }
+
+        {
+            auto t = state.GetSymbolTable().AddSymbol( MakeInlineString( "device __RtLocalMaterial*" ) );
+            t->isTypeName = true;
+            
+            auto materials = NewFunctionParameter( state, TypeFromSymbol( t ), "__rtMaterials", RegisterSpecifier::Register( MetalRegister::SRV, 0 ) );
+            
+            for( size_t i = 0; i < header->GetChildrenCount(); ++i )
+            {
+                auto arg = header->GetChild( i );
+                if( arg != payloadArg && arg != attributeArg )
+                {
+                    if( !arg->GetType().IsStruct() || arg->GetSymbol()->registerSpecifier.empty() )
+                    {
+                        continue;
+                    }
+                    
+                    shaderBody->AddChild( NewVarDeclaration( state, arg->GetSymbol() ) );
+                    auto registerNumber = uint32_t( arg->GetSymbol()->registerSpecifier.begin()->second.registerNumber );
+                    
+                    if( rtConstantBuffers.size() <= registerNumber )
+                    {
+                        rtConstantBuffers.resize( registerNumber + 1 );
+                        rtConstantBuffers[registerNumber] = arg->GetSymbol();
+                    }
+                    
+                    auto ctr = NewFunctionCall( state, hlsl::void_t, "__GetLocalRTBuffer", {
+                        NewLiteralConst( state, registerNumber ),
+                        NewVarIdentifier( state, materials->GetSymbol() )
+                    } );
+                    shaderBody->AddChild( NewExpressionStatement( state, ctr ) );
+
+                    arg->GetSymbol()->registerSpecifier.clear();
+                    arg->GetSymbol()->addressSpace = AddressSpace::None;
+                    
+                    header->RemoveChild( i-- );
+                }
+            }
+
+            header->AddChild( materials );
+        }
+
+        if( shaderType == PatchShaderType::ANY_HIT )
+        {
+            if( payloadArg )
+            {
+                payloadArg->GetSymbol()->addressSpace = AddressSpace::RayData;
+                payloadArg->GetSymbol()->registerSpecifier[MakeInlineString( "" )] = MetalSystemSemantics( MetalSystemSemanticsType::payload );
+            }
+
+            if( attributeArg )
+            {
+                auto arg = NewFunctionParameter( state, hlsl::float2_t, "__barycentricCoords", MetalSystemSemantics( MetalSystemSemanticsType::barycentric_coord ) );
+                
+                auto cast = NewCastExpression( state, attributeArg->GetSymbol()->type, NewVarIdentifier( state, arg->GetSymbol() ) );
+                shaderBody->AddChild( NewVarDeclaration( state, attributeArg->GetSymbol(), cast ) );
+                
+                header->ReplaceChild( attributeArg, arg );
+            }
+            
+            auto metalHitSVt = state.GetSymbolTable().AddSymbol( MakeInlineString( "__MetalHitSV" ) );
+            metalHitSVt->isTypeName = true;
+
+            auto metalHitSVDecl = NewVarDeclaration( state, TypeFromSymbol( metalHitSVt ), MakeInlineString( "__metalHitSV" ) );
+            shaderBody->AddChild( metalHitSVDecl );
+            auto metalHitSV = metalHitSVDecl->GetChild( 0 )->GetSymbol();
+            
+            auto AddSystemValue = [&state, shaderBody, metalHitSV, header]( Type t, MetalSystemSemanticsType::Enum semantics ) {
+                auto name = MetalSystemSemanticsType::GetString( semantics );
+                auto arg = NewFunctionParameter( state, t, ( "__" + std::string( name ) ).c_str(), MetalSystemSemantics( semantics ) );
+                header->AddChild( arg );
+
+                auto left = NewDot( state, NewVarIdentifier( state, metalHitSV ), state.GetSymbolTable().AddSymbol( MakeInlineString( name ) ) );
+                left->SetType( arg->GetSymbol()->type );
+                auto right = NewVarIdentifier( state, arg->GetSymbol() );
+                right->SetType( arg->GetSymbol()->type );
+                shaderBody->AddChild( NewExpressionStatement( state, NewBinaryExpression( state, OP_EQUAL, left, right  ) ) );
+
+            };
+            
+            AddSystemValue( hlsl::uint_t, MetalSystemSemanticsType::instance_id );
+            AddSystemValue( hlsl::float3_t, MetalSystemSemanticsType::origin );
+            AddSystemValue( hlsl::float3_t, MetalSystemSemanticsType::direction );
+            AddSystemValue( hlsl::float_t, MetalSystemSemanticsType::min_distance );
+            AddSystemValue( hlsl::float_t, MetalSystemSemanticsType::distance );
+
+        }
+        else
+        {
+            auto metalHitSVt = state.GetSymbolTable().AddSymbol( MakeInlineString( "__MetalHitSV" ) );
+            metalHitSVt->isTypeName = true;
+            
+            auto arg = NewFunctionParameter( state, TypeFromSymbol( metalHitSVt ), "__metalHitSV" );
+            
+            if( attributeArg )
+            {
+                auto dot = NewDot( state, NewVarIdentifier( state, arg->GetSymbol() ), state.GetSymbolTable().AddSymbol( MakeInlineString( "barycentric_coord" ) ) );
+                dot->SetType( hlsl::float2_t );
+
+                auto declList = NewVarDeclaration( state, attributeArg->GetSymbol(), NewCastExpression( state, attributeArg->GetSymbol()->type, dot ) );
+                shaderBody->AddChild( declList );
+                
+                header->ReplaceChild( attributeArg, arg );
+            }
+            else
+            {
+                header->AddChild( arg );
+            }
+        }
+        
+        {
+            auto& statements = entryPointSymbol->definition->GetChild( 1 )->GetChildren();
+            for( auto& stmt : statements )
+            {
+                shaderBody->AddChild( stmt->Copy() );
+            }
+            if( shaderType == PatchShaderType::ANY_HIT )
+            {
+                header->SetType( hlsl::bool_t );
+                shaderBody->AddChild( NewReturn( state, NewLiteralConst( state, true ) ) );
+            }
+            else
+            {
+                header->SetType( hlsl::void_t );
+            }
+        }
+
+        state.GetSymbolTable().LeaveScope();
+
+        auto shader = state.NewNode( NT_FUNCTION_DEFINITION );
+        shaderSymbol->type = header->GetType();
+        shaderSymbol->definition = shader;
+        shader->AddChild( header );
+        shader->AddChild( shaderBody );
+
+        auto attribList = state.NewNode( NT_FUNCTION_ATTRIBUTE_LIST );
+        attribList->AddChild( state.NewNode( NT_FUNCTION_ATTRIBUTE, ScannerToken::ID( GetShaderAttribute( shaderType ) ) ) );
+        shader->AddChild( attribList );
+        state.GetTree()->AddChild( shader );
+
+        return shader;
+    }
 
 	bool MakeEffectAnnotationFromSymbolAnnotation( const SymbolAnnotation& annotation, Annotation& result, bool& isSRGB, bool& isAutoregister )
 	{
@@ -2825,7 +3200,7 @@ namespace
 		return false;
 	}
 
-	bool CollectConstants( ParserState& state, StageInput& stage, ASTNode* node, std::map<StringReference, ParameterAnnotation>& annotations )
+	bool CollectConstants( ParserState& state, StageData& stage, ASTNode* node, std::map<StringReference, ParameterAnnotation>& annotations )
 	{
 		assert( node->GetNodeType() == NT_STRUCT );
 
@@ -2972,6 +3347,7 @@ namespace
 		switch( type.builtInType )
 		{
 		case OP_BUFFER:
+        case OP_RAYTRACING_ACCELERATION_STRUCTURE:
 			return RT_SRV_BUFFER;
 		case OP_STRUCTUREDBUFFER:
 			return RT_SRV_STRUCTURED_BUFFER;
@@ -3050,6 +3426,8 @@ namespace
 		case OP_STRUCTUREDBUFFER:
 		case OP_RWSTRUCTUREDBUFFER:
 			return TEX_TYPE_STRUCTURED_BUFFER;
+        case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+            return TEX_TYPE_RAYTRACING_ACCELERATION_STRUCTURE;
 		default:
 			return TEX_TYPE_INVALID;
 		}
@@ -3086,27 +3464,72 @@ namespace
 		return !paramAnnotations.annotations.empty();
 	}
 
-	bool GetStageData( ParserState& state, StageInput& stage, ASTNode* callNode, std::map<StringReference, ParameterAnnotation>& annotations )
-	{
-		const InlineString globalsStructName = MakeInlineString( "GlobalsData" );
+    bool CollectConstants( ParserState& state, StageData& stage, std::map<StringReference, ParameterAnnotation>& annotations )
+    {
+        const InlineString globalsStructName = MakeInlineString( "GlobalsData" );
 
-		ASTNode* root = state.GetTree();
-		if( root )
-		{
-			// Find "GlobalsData" struct.
-			for( size_t i = 0, n = root->GetChildrenCount(); i < n; ++i )
-			{
-				ASTNode* node = root->GetChild( i );
-				if( node && node->GetNodeType() == NT_STRUCT &&
-					node->GetSymbol() && node->GetSymbol()->name == globalsStructName )
-				{
-					if( !CollectConstants( state, stage, node, annotations ) )
-					{
-						return false;
-					}
-				}
-			}
-		}
+        ASTNode* root = state.GetTree();
+        if( root )
+        {
+            // Find "GlobalsData" struct.
+            for( size_t i = 0, n = root->GetChildrenCount(); i < n; ++i )
+            {
+                ASTNode* node = root->GetChild( i );
+                if( node && node->GetNodeType() == NT_STRUCT &&
+                    node->GetSymbol() && node->GetSymbol()->name == globalsStructName )
+                {
+                    if( !CollectConstants( state, stage, node, annotations ) )
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    bool GetStageData( ParserState& state, StageData& stage, std::vector<Symbol*> rtConstantBuffers, std::map<StringReference, ParameterAnnotation>& annotations )
+    {
+        if( !CollectConstants( state, stage, annotations ) )
+        {
+            return false;
+        }
+
+        for( auto cb : rtConstantBuffers )
+        {
+            if( !cb || !cb->type.symbol )
+            {
+                continue;
+            }
+            if( cb->type.symbol->registerSpecifier.empty() )
+            {
+                assert( false );
+                continue;
+            }
+            const RegisterSpecifier& reg = cb->type.symbol->registerSpecifier.cbegin()->second;
+
+            if( reg.registerType == MetalRegister::CBuffer )
+            {
+                RegisterInputDescription r = { RT_CONSTANT_BUFFER, (uint32_t)reg.registerNumber, 1, 0 };
+                if( find( begin( stage.registerInputs ), end( stage.registerInputs ), r ) == end( stage.registerInputs ) )
+                {
+                    stage.registerInputs.push_back( r );
+                }
+            }
+            else
+            {
+                assert( false );
+            }
+        }
+        return true;
+    }
+
+	bool GetStageData( ParserState& state, StageData& stage, ASTNode* callNode, std::map<StringReference, ParameterAnnotation>& annotations )
+	{
+        if( !CollectConstants( state, stage, annotations ) )
+        {
+            return false;
+        }
 
 		Symbol* entryPointSymbol = callNode->GetSymbol();
 		if( !entryPointSymbol || !entryPointSymbol->definition )
@@ -3193,7 +3616,9 @@ namespace
 				switch( type.builtInType )
 				{
 				case OP_BUFFER:
-				case OP_STRUCTUREDBUFFER: {
+				case OP_STRUCTUREDBUFFER: 
+                case OP_RAYTRACING_ACCELERATION_STRUCTURE:
+                {
 					assert( reg.registerType == MetalRegister::CBuffer ||
 							reg.registerType == MetalRegister::SRV );
 
@@ -3635,6 +4060,179 @@ namespace
 			PatchMatrixRows( state, child, node, rvalue, assignment );
 		}
 	}
+
+    std::vector<uint8_t> CompileCode( const std::string& code, const std::vector<Macro>& defines, bool forceOldVersion = true )
+    {
+        std::vector<uint8_t> compiledCode;
+        
+        bool shaderWriteSucceeded = false;
+        bool shaderCompileSucceeded = false;
+
+        // "mktemp" function calls to "arc4random" which is not reentrant. So, we need to sync
+        // our threads here to avoid parallel execution of this function.
+        s_fileMutex.lock();
+
+    #ifdef _WIN32
+        char srcFilenameTemplate[] = "mtl_tmpXXXXXXX";
+        char binFilenameTemplate[] = "air_tmpXXXXXXX";
+
+        _mktemp_s( srcFilenameTemplate );
+        _mktemp_s( binFilenameTemplate );
+
+        char* srcFilename = srcFilenameTemplate;
+        char* binFilename = binFilenameTemplate;
+    #else
+        char srcFilenameTemplate[] = "src_XXXXXXX.metal";
+        char binFilenameTemplate[] = "bin_XXXXXXX.air";
+
+        char* srcFilename = nullptr;
+        char* binFilename = nullptr;
+
+        {
+            int srcFd = mkstemps( srcFilenameTemplate, 6 );
+            int binFd = mkstemps( binFilenameTemplate, 4 );
+
+            srcFilename = ( srcFd != -1 ) ? srcFilenameTemplate : nullptr;
+            binFilename = ( binFd != -1 ) ? binFilenameTemplate : nullptr;
+
+            close( srcFd );
+            close( binFd );
+        }
+    #endif
+        s_fileMutex.unlock();
+
+        if( !srcFilename || !binFilename )
+        {
+            // Failed to generate a name for temporary file(s).
+            return compiledCode;
+        }
+
+        do
+        {
+            // Write shader source into temp file.
+            {
+                tmZone( 0, 0, "Write Source" );
+
+                std::lock_guard withFileMutex( s_fileMutex );
+                FILE* file = nullptr;
+                if( fopen_s( &file, srcFilename, "w" ) != 0 )
+                {
+                    // Failed to create shader source file.
+                    break;
+                }
+                size_t bytesWritten = fwrite( code.c_str(), 1, code.length(), file );
+                fclose( file );
+                file = nullptr;
+
+                if( bytesWritten != code.length() )
+                {
+                    // Failed to write shader source file.
+                    break;
+                }
+            }
+
+            shaderWriteSucceeded = true;
+
+            // Compile shader.
+            {
+                tmZone( 0, 0, "Call compiler" );
+
+                std::ostringstream cmd;
+                cmd << MetalTool( "metal" ) << " -x metal ";
+                if( forceOldVersion )
+                {
+                    cmd << "-std=macos-metal2.1 -mmacos-version-min=10.14 ";
+                }
+                // This switch should probably be done in runtime via a command-line argument to ShaderCompiler.
+    #if 1
+                // Disable shader debug information.
+                cmd << "-Wno-unused-variable -Wno-missing-braces 2>&1";
+    #else
+                // Enable shader debug information.
+                cmd << "-frecord-sources=yes -gline-tables-only -Wno-unused-variable -Wno-missing-braces 2>&1";
+    #endif
+                for( auto& it : defines )
+                {
+                    cmd << " -D" << it.name << '=' << it.value;
+                }
+                cmd << " " << srcFilename << " -o " << binFilename;
+                // g_messages.AddMessage( "Compile shader: %s", cmd.str().c_str() );
+
+                auto compilerOutput = RunProcess( cmd.str().c_str() );
+                if( !compilerOutput.second.empty() )
+                {
+                    g_messages.AddMessage( "%s", compilerOutput.second.c_str() );
+                }
+                if( compilerOutput.first != 0 )
+                {
+                    // Shader compilation failed.
+                    break;
+                }
+
+                // Disabled unused arguments detection because it provides nothing more than noise
+                // DetectUnusedArguments( binFilename, state, shaderNode );
+            }
+
+            shaderCompileSucceeded = true;
+
+            // Read shader binary.
+            {
+                tmZone( 0, 0, "Read binary" );
+
+                std::lock_guard withFileMutex( s_fileMutex );
+                FILE* file = nullptr;
+                if( fopen_s( &file, binFilename, "rb" ) != 0 )
+                {
+                    // Failed to open compiled shader file.
+                    break;
+                }
+
+                fseek( file, 0, SEEK_END );
+                fpos_t pos = 0;
+                fgetpos( file, &pos );
+                fseek( file, 0, SEEK_SET );
+
+                size_t dataSize = pos;
+                compiledCode.resize( dataSize );
+
+                size_t readBytes = fread( compiledCode.data(), 1, dataSize, file );
+
+                fclose( file );
+                file = nullptr;
+
+                if( readBytes != dataSize )
+                {
+                    // Failed to read compiled shader binary from file.
+                    compiledCode.clear();
+                    break;
+                }
+            }
+        } while( false );
+
+        // Remove temp files.
+        if( shaderWriteSucceeded )
+        {
+            std::lock_guard withFileMutex( s_fileMutex );
+            int removeResult = remove( srcFilename );
+            if( removeResult != 0 )
+            {
+                // Can't delete shader source file.
+                // return false;
+            }
+        }
+
+        if( shaderCompileSucceeded )
+        {
+            std::lock_guard withFileMutex( s_fileMutex );
+            int removeResult = remove( binFilename );
+            if( removeResult != 0 )
+            {
+                // Can't delete compiled shader file.
+                // return false;
+            }
+        }
+        return compiledCode;
+    }
 }
 
 const char* MetalSystemSemanticsType::GetString( int type )
@@ -3662,7 +4260,14 @@ const char* MetalSystemSemanticsType::GetString( int type )
 		"thread_position_in_threadgroup",
 		"thread_index_in_threadgroup",
 		"threadgroup_position_in_grid",
-		"sample_id"
+		"sample_id",
+        "threads_per_grid",
+        "payload",
+        "barycentric_coord",
+        "origin",
+        "direction",
+        "min_distance",
+        "distance",
 	};
 
 	const int typeCount = sizeof( strings ) / sizeof( strings[0] );
@@ -3776,9 +4381,13 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 		for( size_t passIx = 0; passIx < techniqueNode->GetChildrenCount(); ++passIx )
 		{
-			listing.list();
-			Pass outPass;
 			ASTNode* passNode = techniqueNode->GetChild( passIx );
+            if( passNode->GetNodeType() != NT_PASS )
+            {
+                continue;
+            }
+            listing.list();
+            Pass outPass;
 			for( size_t stateIx = 0; stateIx < passNode->GetChildrenCount(); ++stateIx )
 			{
 				if( passNode->GetChild( stateIx )->GetNodeType() == NT_STATE_ASSIGNMENT )
@@ -3855,8 +4464,24 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 						shaderCacheKey = os.str();
 						state.GetSymbolTable().ResetUsedFlag();
 				}
+                PatchShaderType patchShaderType;
+                switch ( stage.type )
+                {
+                case VERTEX_STAGE:
+                    patchShaderType = PatchShaderType::VERTEX;
+                    break;
+                case PIXEL_STAGE:
+                    patchShaderType = PatchShaderType::PIXEL;
+                    break;
+                case COMPUTE_STAGE:
+                    patchShaderType = PatchShaderType::COMPUTE;
+                    break;
+                default:
+                    state.ShowMessage( shaderNode->GetLocation(), EC_CUSTOM_ERROR, "Shader type %i is not supported by Metal", int( stage.type ) );
+                    return false;
+                }
 
-				auto patchedShader = PatchShader( stage.type, shaderNode->GetChild( 1 ), state );
+				auto patchedShader = PatchShader( patchShaderType, shaderNode->GetChild( 1 ), state );
 				if( !patchedShader )
 				{
 						return false;
@@ -3885,238 +4510,52 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				// don't have any register assigned already.
 				if( !AutoAssignRegisters( state, shaderNode->GetChild( 1 ) ) )
 				{
-						return false;
+                    return false;
 				}
 
 				state.GetSymbolTable().ResetUsedFlag();
+                state.ResetPragmaUsage();
 				MarkUsedSymbols( shaderNode->GetChild( 1 ), state );
 
 				CompilerInputStream os( state, ShadingLanguage::MSL );
-
 				os << MSL_INCLUDE;
-
 				os << AtomicFn{ "add", "Add" };
 				os << AtomicFn{ "max", "Max" };
 				os << AtomicFn{ "min", "Min" };
 				os << AtomicFn{ "and", "And" };
 				os << AtomicFn{ "or", "Or" };
 				os << AtomicFn{ "xor", "Xor" };
-
 				os << MSL{ state.GetTree(), &state.GetSymbolTable() };
-
-				std::string entryPoint = ToString( shaderNode->GetChild( 1 )->GetSymbol()->name );
-
-				std::string patchEntryPoint = entryPoint;
-				state.ResetPragmaUsage();
-
-				std::string code = os.str();
-
-				std::string stageName = "ps";
-				if( stage.type == VERTEX_STAGE )
-				{
-						stageName = "vs";
-				}
 
 				bool hasCompiled = false;
 				{
-						std::lock_guard scope( m_compiledCS );
-						auto found = m_compiled.find( shaderCacheKey );
-						if( found != end( m_compiled ) )
-						{
-							if( found->second.empty() )
-							{
-								return false;
-							}
+                    std::lock_guard scope( m_compiledCS );
+                    auto found = m_compiled.find( shaderCacheKey );
+                    if( found != end( m_compiled ) )
+                    {
+                        if( found->second.empty() )
+                        {
+                            return false;
+                        }
 
-							stage.shaderSize = uint32_t( found->second.size() );
-							stage.shaderDataStr = g_stringTable.AddString( found->second.data(), found->second.size() );
-							hasCompiled = true;
-						}
+                        stage.shaderSize = uint32_t( found->second.size() );
+                        stage.shaderDataStr = g_stringTable.AddString( found->second.data(), found->second.size() );
+                        hasCompiled = true;
+                    }
 				}
 				if( !hasCompiled )
 				{
-						bool shaderWriteSucceeded = false;
-						bool shaderCompileSucceeded = false;
-						bool shaderBinaryReady = false;
-
-						// "mktemp" function calls to "arc4random" which is not reentrant. So, we need to sync
-						// our threads here to avoid parallel execution of this function.
-						s_fileMutex.lock();
-
-#ifdef _WIN32
-						char srcFilenameTemplate[] = "mtl_tmpXXXXXXX";
-						char binFilenameTemplate[] = "air_tmpXXXXXXX";
-
-						_mktemp_s( srcFilenameTemplate );
-						_mktemp_s( binFilenameTemplate );
-
-						char* srcFilename = srcFilenameTemplate;
-						char* binFilename = binFilenameTemplate;
-#else
-						char srcFilenameTemplate[] = "src_XXXXXXX.metal";
-						char binFilenameTemplate[] = "bin_XXXXXXX.air";
-
-						char* srcFilename = nullptr;
-						char* binFilename = nullptr;
-
-						{
-							int srcFd = mkstemps( srcFilenameTemplate, 6 );
-							int binFd = mkstemps( binFilenameTemplate, 4 );
-
-							srcFilename = ( srcFd != -1 ) ? srcFilenameTemplate : nullptr;
-							binFilename = ( binFd != -1 ) ? binFilenameTemplate : nullptr;
-
-							close( srcFd );
-							close( binFd );
-						}
-#endif
-						s_fileMutex.unlock();
-
-						if( !srcFilename || !binFilename )
-						{
-							// Failed to generate a name for temporary file(s).
-							return false;
-						}
-
-						do
-						{
-							// Write shader source into temp file.
-							{
-								tmZone( 0, 0, "Write Source" );
-
-								std::lock_guard withFileMutex( s_fileMutex );
-								FILE* file = nullptr;
-								if( fopen_s( &file, srcFilename, "w" ) != 0 )
-								{
-									// Failed to create shader source file.
-									break;
-								}
-								size_t bytesWritten = fwrite( code.c_str(), 1, code.length(), file );
-								fclose( file );
-								file = nullptr;
-
-								if( bytesWritten != code.length() )
-								{
-									// Failed to write shader source file.
-									break;
-								}
-							}
-
-							shaderWriteSucceeded = true;
-
-							// Compile shader.
-							{
-								tmZone( 0, 0, "Call compiler" );
-
-								std::ostringstream cmd;
-								cmd << MetalTool( "metal" ) << " -x metal -std=macos-metal2.1 -mmacos-version-min=10.14 ";
-								// This switch should probably be done in runtime via a command-line argument to ShaderCompiler.
-#if 1
-								// Disable shader debug information.
-								cmd << "-Wno-unused-variable -Wno-missing-braces 2>&1";
-#else
-								// Enable shader debug information.
-								cmd << "-frecord-sources=yes -gline-tables-only -Wno-unused-variable -Wno-missing-braces 2>&1";
-#endif
-								for( auto& it : defines )
-								{
-									cmd << " -D" << it.name << '=' << it.value;
-								}
-								cmd << " " << srcFilename << " -o " << binFilename;
-								// g_messages.AddMessage( "Compile shader: %s", cmd.str().c_str() );
-
-								auto compilerOutput = RunProcess( cmd.str().c_str() );
-								if( !compilerOutput.second.empty() )
-								{
-									g_messages.AddMessage( "%s", compilerOutput.second.c_str() );
-								}
-								if( compilerOutput.first != 0 )
-								{
-									// Shader compilation failed.
-									break;
-								}
-
-								// Disabled unused arguments detection because it provides nothing more than noise
-								// DetectUnusedArguments( binFilename, state, shaderNode );
-							}
-
-							shaderCompileSucceeded = true;
-
-							// Read shader binary.
-							{
-								tmZone( 0, 0, "Read binary" );
-
-								std::lock_guard withFileMutex( s_fileMutex );
-								FILE* file = nullptr;
-								if( fopen_s( &file, binFilename, "rb" ) != 0 )
-								{
-									// Failed to open compiled shader file.
-									break;
-								}
-
-								fseek( file, 0, SEEK_END );
-								fpos_t pos = 0;
-								fgetpos( file, &pos );
-								fseek( file, 0, SEEK_SET );
-
-								size_t dataSize = pos;
-								std::vector<uint8_t> compiledCode( dataSize );
-
-								size_t readBytes = fread( compiledCode.data(), 1, dataSize, file );
-
-								fclose( file );
-								file = nullptr;
-
-								if( readBytes != dataSize )
-								{
-									// Failed to read compiled shader binary from file.
-									break;
-								}
-
-								stage.shaderSize = uint32_t( compiledCode.size() );
-								stage.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
-								// printf( "shader size: %lu\n", (size_t)stage.shaderSize );
-
-								{
-									std::lock_guard scope( m_compiledCS );
-									m_compiled[shaderCacheKey] = compiledCode;
-								}
-							}
-
-							shaderBinaryReady = true;
-						} while( false );
-
-						// Remove temp files.
-						if( shaderWriteSucceeded )
-						{
-							std::lock_guard withFileMutex( s_fileMutex );
-							int removeResult = remove( srcFilename );
-							if( removeResult != 0 )
-							{
-								// Can't delete shader source file.
-								// return false;
-							}
-						}
-
-						if( shaderCompileSucceeded )
-						{
-							std::lock_guard withFileMutex( s_fileMutex );
-							int removeResult = remove( binFilename );
-							if( removeResult != 0 )
-							{
-								// Can't delete compiled shader file.
-								// return false;
-							}
-						}
-
-						if( !shaderBinaryReady )
-						{
-							{
-								std::lock_guard scope( m_compiledCS );
-								m_compiled[code] = std::vector<uint8_t>();
-							}
-							return false;
-						}
+                    auto compiledCode = CompileCode( os.str(), defines );
+                    {
+                        std::lock_guard scope( m_compiledCS );
+                        m_compiled[shaderCacheKey] = compiledCode;
+                    }
+                    if( compiledCode.empty() )
+                    {
+                        return false;
+                    }
+                    stage.shaderSize = uint32_t( compiledCode.size() );
+                    stage.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
 				}
 
 				if( !GetStageData( state, stage, shaderNode->GetChild( 1 ), result.annotations ) )
@@ -4153,8 +4592,8 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 				listing.dict()
 					.literal( "profile" ).literal( profile )
 					.literal( "original" ).dict()
-					.literal( "entryPoint" ).literal( patchEntryPoint )
-					.literal( "source" ).literal( SanitizeCode( code ) );
+					.literal( "entryPoint" ).literal( ToString( shaderNode->GetChild( 1 )->GetSymbol()->name ) )
+					.literal( "source" ).literal( SanitizeCode( os.str() ) );
 				// TODO
 				// PrintShaderOutListing( listing, effectData, reflection );
 				listing.end();
@@ -4177,8 +4616,181 @@ bool EffectCompilerMetal::CompileEffect( const char* source, size_t sourceLength
 
 			listing.end(); // stages list
 		}
+        listing.end(); // pases list
+
+        listing.dict().literal( "libraries" ).list();
+
+        for( size_t passIx = 0; passIx < techniqueNode->GetChildrenCount(); ++passIx )
+        {
+            ASTNode* libNode = techniqueNode->GetChild( passIx );
+            if( libNode->GetNodeType() != NT_LIBRARY )
+            {
+                continue;
+            }
+            listing.dict()
+                .literal( "name" ).literal( libNode->GetToken()->stringValue )
+                .literal( "exports" ).list();
+            
+            Library library;
+            library.payloadSize = 0;
+            library.hitGroupName = g_stringTable.AddString( "" );
+            library.globalInputs.defaultValuesStr = INVALID_REFERENCE;
+            library.localInputs.defaultValuesStr = INVALID_REFERENCE;
+
+            std::map<std::string, std::string> shaders;
+
+            state.GetSymbolTable().ResetUsedFlag();
+            for( size_t i = 0; i < libNode->GetChildrenCount(); ++i )
+            {
+                auto childNode = libNode->GetChild( i );
+                if( childNode->GetNodeType() == NT_SHADER_ASSIGNMENT )
+                {
+                    ShaderExport shaderExport;
+                    if( auto parsed = ParseRtShaderName( childNode->GetToken()->stringValue ) )
+                    {
+                        shaderExport.type = parsed.value();
+                    }
+                    else
+                    {
+                        state.ShowMessage( childNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( childNode->GetToken()->stringValue ).c_str() );
+                        return false;
+                    }
+                    listing.literal( childNode->GetChild( 1 )->GetSymbol()->name );
+                    PatchShaderType patchShaderType;
+                    switch ( shaderExport.type )
+                    {
+                    case RtShaderType::RAY_GEN:
+                        patchShaderType = PatchShaderType::RAY_GEN;
+                        break;
+                    case RtShaderType::MISS:
+                        patchShaderType = PatchShaderType::MISS;
+                        break;
+                    case RtShaderType::CLOSEST_HIT:
+                        patchShaderType = PatchShaderType::CLOSEST_HIT;
+                        break;
+                    case RtShaderType::ANY_HIT:
+                        patchShaderType = PatchShaderType::ANY_HIT;
+                        break;
+                    default:
+                        state.ShowMessage( childNode->GetLocation(), EC_CUSTOM_ERROR, "Shader type %i is not supported by Metal", int( shaderExport.type.operator RtShaderType() ) );
+                        return false;
+                    }
+                    
+                    std::vector<Symbol*> rtConstantBuffers;
+                    
+                    ASTNode* shader;
+                    if( patchShaderType == PatchShaderType::RAY_GEN )
+                    {
+                        shader = PatchShader( patchShaderType, childNode->GetChild( 1 ), state );
+                    }
+                    else
+                    {
+                        shader = PatchRtShader( patchShaderType, childNode->GetChild( 1 ), state, rtConstantBuffers );
+                    }
+                    
+                    childNode->GetChild( 1 )->SetSymbol( shader->GetChild( 0 )->GetSymbol() );
+
+                    ApplyPackedModifiersToConstantBuffers( shader );
+
+                    MarkUsedSymbols( shader, state );
+                    if( patchShaderType == PatchShaderType::RAY_GEN )
+                    {
+                        // Ray gen is just a compute shader
+                        if( !AutoAssignRegisters( state, childNode->GetChild( 1 ) ) )
+                        {
+                            return false;
+                        }
+                        if( !GetStageData( state, library.globalInputs, childNode->GetChild( 1 ), result.annotations ) )
+                        {
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        if( !GetStageData( state, library.localInputs, rtConstantBuffers, result.annotations ) )
+                        {
+                            return false;
+                        }
+                    }
+                    if( !library.globalInputs.defaultValues.empty() )
+                    {
+                        library.globalInputs.defaultValuesStr = g_stringTable.AddString( &library.globalInputs.defaultValues[0], library.globalInputs.defaultValues.size() );
+                    }
+                    if( !library.localInputs.defaultValues.empty() )
+                    {
+                        library.localInputs.defaultValuesStr = g_stringTable.AddString( &library.localInputs.defaultValues[0], library.localInputs.defaultValues.size() );
+                    }
+
+                    shaderExport.name = g_stringTable.AddString( ToString( childNode->GetChild( 1 )->GetSymbol()->name ).c_str() );
+                    library.exports.push_back( shaderExport );
+                }
+                else if( childNode->GetNodeType() == NT_STATE_ASSIGNMENT )
+                {
+                    auto name = childNode->GetToken()->stringValue;
+                    if( EqualsCaseInsensitive( name, "payloadsize" ) )
+                    {
+                        Type type;
+                        type.FromTokenType( OP_UINT );
+                        ExpressionValue value;
+                        if( !EvaluateExpression( state, childNode->GetChildOrNull( 0 ), type, value, nullptr ) )
+                        {
+                            state.ShowMessage( childNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( name ).c_str() );
+                            return false;
+                        }
+                        library.payloadSize = uint32_t( value[0].intValue );
+                    }
+                    else if( EqualsCaseInsensitive( name, "hitgroupname" ) )
+                    {
+                        Type type;
+                        type.FromTokenType( OP_STRING );
+                        ExpressionValue value;
+                        if( !EvaluateExpression( state, childNode->GetChildOrNull( 0 ), type, value, nullptr ) )
+                        {
+                            state.ShowMessage( childNode->GetToken()->fileLocation, EC_INVALID_STATE, ToString( name ).c_str() );
+                            return false;
+                        }
+                        library.hitGroupName = g_stringTable.AddString( value[0].stringValue.c_str() );
+                    }
+                }
+            }
+            listing.end(); // exports list
+            
+            CompilerInputStream os( state, ShadingLanguage::MSL );
+            os << MSL_INCLUDE;
+            os << AtomicFn{ "add", "Add" };
+            os << AtomicFn{ "max", "Max" };
+            os << AtomicFn{ "min", "Min" };
+            os << AtomicFn{ "and", "And" };
+            os << AtomicFn{ "or", "Or" };
+            os << AtomicFn{ "xor", "Xor" };
+
+            os << MSL{ state.GetTree(), &state.GetSymbolTable() };
+            //printf( "%s\n", SanitizeCode( os.str() ).c_str() );
+
+            auto compiledCode = CompileCode( os.str(), defines, false );
+            if( compiledCode.empty() )
+            {
+                return false;
+            }
+            library.shaderSize = uint32_t( compiledCode.size() );
+            library.shaderDataStr = g_stringTable.AddString( compiledCode.data(), compiledCode.size() );
+
+            technique.libraries.push_back( library );
+
+            if( listing.enabled() )
+            {
+                listing.literal( "profile" ).literal( "lib" );
+                listing.literal( "original" ).dict();
+                listing.literal( "source" ).literal( SanitizeCode( os.str() ) );
+                listing.end();
+                PrintStageInfo( listing, library.globalInputs, result );
+            }
+            listing.end();
+
+        }
+        listing.end(); // libraries list
+
 		result.techniques.push_back( technique );
-		listing.end(); // pases list
 		listing.end(); // technique dict
 	}
 	listing.end(); // technique list

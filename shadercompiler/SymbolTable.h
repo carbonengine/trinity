@@ -49,6 +49,7 @@ enum class AddressSpace
 	Threadgroup_imageblock,
 
 	Constexpr,
+    RayData,
 };
 
 typedef std::vector<SymbolAnnotation> SymbolAnnotations;
