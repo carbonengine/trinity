@@ -39,8 +39,8 @@ public:
     void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
     id <MTLComputePipelineState> GetRtPipeline();
     ::Tr2ShaderProgramAL& GetShaderProgram();
-    std::unordered_map<std::wstring, id <MTLFunction>> GetFunctionMap();
-    std::unordered_map<std::wstring, HitGroupFunctions> GetHitGroupMap();
+    const std::unordered_map<std::wstring, id <MTLFunction>>& GetFunctionMap();
+    const std::unordered_map<std::wstring, HitGroupFunctions>& GetHitGroupMap();
     NSString* NSStringFromWchar( std::wstring name );
 
 private:

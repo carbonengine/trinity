@@ -30,22 +30,32 @@ namespace TrinityALImpl
         void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
         
         API_AVAILABLE( macos(11.0) )
-        id <MTLIntersectionFunctionTable> GetHitGroupFunctionTable() { return m_hitGroupFunctionTable; }
+        id <MTLIntersectionFunctionTable> GetAnyHitFunctionTable() { return m_anyHitFunctionTable; }
         
         API_AVAILABLE( macos(11.0) )
+        id <MTLVisibleFunctionTable> GetClosestHitFunctionTable() { return m_closestHitFunctionTable; }
+
+        API_AVAILABLE( macos(11.0) )
         id <MTLVisibleFunctionTable> GetMissShaderFunctionTable() { return m_missShaderFunctionTable; }
+        
+        id<MTLBuffer> GetMaterialBuffer() const;
+        NSUInteger GetMissMaterialOffset() const;
 
     private:
-        void AddFunctionToIntersectionTable( id <MTLFunction> fn, const Tr2RtLocalMaterialDescriptionAL& material, int index );
-        void AddFunctionToVisibleTable( id <MTLFunction> fn, int index );
         Tr2RtShaderTableDescriptionAL m_desc;
 
         API_AVAILABLE( macos(11.0) )
-        id <MTLIntersectionFunctionTable> m_hitGroupFunctionTable;
-        
+        id <MTLIntersectionFunctionTable> m_anyHitFunctionTable;
+
+        API_AVAILABLE( macos(11.0) )
+        id <MTLVisibleFunctionTable> m_closestHitFunctionTable;
+
         API_AVAILABLE( macos(11.0) )
         id <MTLVisibleFunctionTable> m_missShaderFunctionTable;
         
+        id<MTLBuffer> m_materialBuffer;
+        NSUInteger m_missMaterialOffset = 0;
+
         id <MTLComputePipelineState> m_pipeline;
         
     };

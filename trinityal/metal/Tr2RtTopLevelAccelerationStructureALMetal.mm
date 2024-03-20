@@ -135,6 +135,11 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
             m_instanceBuffer = [device newBufferWithLength:sizeof(MTLAccelerationStructureInstanceDescriptor) * count options:MTLResourceStorageModeShared];
             
             MTLAccelerationStructureInstanceDescriptor *instanceDescriptors = (MTLAccelerationStructureInstanceDescriptor *)m_instanceBuffer.contents;
+            
+            std::vector<uint32_t> offsets;
+            offsets.reserve( 2 + count );
+            offsets.push_back( 0 );
+            offsets.push_back( 0 );
 
             // Fill out instance descriptors.
             for( NSUInteger instanceIndex = 0; instanceIndex < count; ++instanceIndex ) {
@@ -177,6 +182,7 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
                 {
                     //gather all the BLAS in one list
                     [m_primitiveAccelerationStructures addObject:blas];
+                    offsets.push_back( instances[instanceIndex].materialIndex );
                 }
             }
                 
@@ -193,11 +199,13 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
             // add vector of contents
             // gpu usage is probs srv and cpu none
             if (@available(macOS 13.0, *)) {
-                Tr2BufferDescriptionAL bufferDesc = Tr2BufferDescriptionAL(1, sizeof(m_instanceAccelerationStructure.gpuResourceID), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE);
+                Tr2BufferDescriptionAL bufferDesc = Tr2BufferDescriptionAL(1, uint32_t( offsets.size() * sizeof( uint32_t ) ), Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE);
                 
                 auto gpuID = m_instanceAccelerationStructure.gpuResourceID;
                 
-                m_buffer.Create(bufferDesc, &gpuID, renderContext);
+                memcpy( offsets.data(), &gpuID, sizeof( gpuID ) );
+                
+                m_buffer.Create(bufferDesc, offsets.data(), renderContext);
                 m_buffer.SetName("TLASBuffer");
             }
             

@@ -17,14 +17,8 @@ struct ReturnTypeIntersection {
     bool accept    [[accept_intersection]]; // Whether to accept or reject the intersection.
 };
 
-[[intersection(triangle, instancing)]]
-ReturnTypeIntersection ClosestHit(	ray_data float4 & color [[payload]],
-									constant Attributes& attrib [[ CBUFFER(0) ]] )
+[[visible]]
+void ClosestHit(	thread float4 & color, device void * )
 {
-    ReturnTypeIntersection ret;
-    ret.accept = true;
-
     color = float4(0.f, 1.f, 0.f, 1.0f);
-    
-    return ret;
 }

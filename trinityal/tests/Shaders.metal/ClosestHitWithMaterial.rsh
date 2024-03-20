@@ -23,36 +23,28 @@ struct PerObjectDataPtr
 //constant bool useIntersectionFunctions [[function_constant(0)]];
 
 
-[[intersection(triangle, instancing)]]
-bool ClosestHit( ray_data float4 & color 				[[ payload ]],
-                 unsigned int geometryIndex     		[[ instance_intersection_function_table_offset ]],
-				 device PerObjectDataPtr *resources    	[[ buffer(0) ]] )
+[[visible]]
+void ClosestHit( thread float4 & color ,
+				 device void *resources )
 { 
 
 	// this is a buffer of pointers (materials -> constantBuffer)
-	PerObjectData perObjectData = resources[geometryIndex].perObjectData[0];
+	PerObjectData perObjectData = ((device PerObjectDataPtr*)resources)[0].perObjectData[0];
 	//PrimitiveData ppd = *primitiveData;
 	//color = ppd.material;
 
 	color = perObjectData.material;
-    return 1;
 }
 
 
-[[intersection(triangle, instancing)]]
-bool ClosestHitWithPerObjData(	ray_data float4 & color 			[[ payload ]],
-	                            float3 origin                   	[[ origin ]],
-                                float3 direction                	[[ direction ]],
-                 				unsigned int geometryIndex     		[[ instance_intersection_function_table_offset ]],
-                 				constant Attributes& attrib 		[[ CBUFFER(0) ]],
-								device PerObjectDataPtr *resources  [[ buffer(0) ]] )
+[[visible]]
+void ClosestHitWithPerObjData(	thread float4 & color,
+								device void *resources  )
 {
 
-	PerObjectData perObjectData = resources[geometryIndex].perObjectData[0];
+	PerObjectData perObjectData = ((device PerObjectDataPtr*)resources)[0].perObjectData[0];
 
-	color = perObjectData.material * perObjectData.Clipdata1;
-
-	return 1;
+	color = perObjectData.material;// * perObjectData.Clipdata1;
 }
 
                               

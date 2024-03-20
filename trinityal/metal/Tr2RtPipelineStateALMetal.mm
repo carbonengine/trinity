@@ -219,12 +219,12 @@ namespace TrinityALImpl
         description["type"] = "Tr2RtPipelineStateAL";
     }
 
-    std::unordered_map<std::wstring, id <MTLFunction>> Tr2RtPipelineStateAL::GetFunctionMap()
+    const std::unordered_map<std::wstring, id <MTLFunction>>& Tr2RtPipelineStateAL::GetFunctionMap()
     {
         return m_intersectionFunctions;
     }
 
-    std::unordered_map<std::wstring, Tr2RtPipelineStateAL::HitGroupFunctions> Tr2RtPipelineStateAL::GetHitGroupMap()
+    const std::unordered_map<std::wstring, Tr2RtPipelineStateAL::HitGroupFunctions>& Tr2RtPipelineStateAL::GetHitGroupMap()
     {
         return m_hitGroupMap;
     }
