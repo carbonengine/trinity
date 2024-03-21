@@ -2986,6 +2986,13 @@ namespace
             }
         }
         
+        if( shaderType == PatchShaderType::MISS )
+        {
+            // order matters
+            assert( header->GetChildrenCount() == 3 );
+            std::swap( header->GetChildren()[1], header->GetChildren()[2] );
+        }
+        
         {
             auto& statements = entryPointSymbol->definition->GetChild( 1 )->GetChildren();
             for( auto& stmt : statements )
