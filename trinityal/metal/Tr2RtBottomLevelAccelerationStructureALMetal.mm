@@ -97,7 +97,7 @@ namespace  TrinityALImpl {
             m_geomDesc.vertexStride = positions.m_stride;
             m_geomDesc.vertexBufferOffset = positions.m_vertexOffset;
              
-            m_geomDesc.triangleCount = indices.m_indexBuffer.GetSize() / 3 / indices.m_stride;
+            m_geomDesc.triangleCount = indices.m_indexCount / 3;
             
             // Acceleration structure descriptor ( a descriptor for descriptors )
             m_accelerationStructureDesc = [MTLPrimitiveAccelerationStructureDescriptor descriptor];
