@@ -115,7 +115,7 @@ namespace TrinityALImpl
                     }
                     else
                     {
-                        [m_anyHitFunctionTable setOpaqueTriangleIntersectionFunctionWithSignature:MTLIntersectionFunctionSignatureNone atIndex:groupIndex];
+                        [m_anyHitFunctionTable setOpaqueTriangleIntersectionFunctionWithSignature:MTLIntersectionFunctionSignatureInstancing atIndex:groupIndex];
                     }
                     if( found->second.closestHit )
                     {

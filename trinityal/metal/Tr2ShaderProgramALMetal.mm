@@ -64,6 +64,8 @@ namespace TrinityALImpl
 			auto shaderType = shader->GetType();
 
 			m_resourceMask[shaderType] = shader->m_shader->m_resourceMask;
+            
+            NSString* entryPointOverride = shader->m_shader->m_entryPointNameOverride;
 
 			switch( shaderType )
 			{
@@ -72,7 +74,7 @@ namespace TrinityALImpl
 				{
 					return E_INVALIDARG;
 				}
-				m_vertexFunction = CompileShader(*shader, @"mainVS", renderContext);
+				m_vertexFunction = CompileShader(*shader, entryPointOverride ? entryPointOverride : @"mainVS", renderContext);
 				if( !m_vertexFunction )
 				{
 					CCP_AL_LOGERR( "Tr2ShaderProgramAL: Vertex shader creation failed." );
@@ -85,7 +87,7 @@ namespace TrinityALImpl
 				{
 					return E_INVALIDARG;
 				}
-				m_fragmentFunction = CompileShader(*shader, @"mainPS", renderContext);
+				m_fragmentFunction = CompileShader(*shader, entryPointOverride ? entryPointOverride : @"mainPS", renderContext);
 				if( !m_fragmentFunction )
 				{
 					CCP_AL_LOGERR( "Tr2ShaderProgramAL: Fragment shader creation failed." );
@@ -97,7 +99,7 @@ namespace TrinityALImpl
 				{
 					return E_INVALIDARG;
 				}
-				m_computeFunction = CompileShader(*shader, @"mainCS", renderContext);
+				m_computeFunction = CompileShader(*shader, entryPointOverride ? entryPointOverride : @"mainCS", renderContext);
 				if( !m_computeFunction )
 				{
 					CCP_AL_LOGERR( "Tr2ShaderProgramAL: Compute shader creation failed." );

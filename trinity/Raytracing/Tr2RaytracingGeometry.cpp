@@ -644,6 +644,11 @@ bool Tr2RaytracingGeometry::HasGeometry() const
 	return m_tlas.IsValid();
 }
 
+Tr2RtTopLevelAccelerationStructureAL Tr2RaytracingGeometry::GetTLAS() const
+{
+    return m_tlas;
+}
+
 Tr2RaytracingGeometry::VtxOffsets Tr2RaytracingGeometry::FindOffsets( unsigned declHandle )
 {
 	auto found = m_offsets.find( declHandle );

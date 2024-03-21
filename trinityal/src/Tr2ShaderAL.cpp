@@ -195,3 +195,8 @@ ALResult Tr2ShaderAL::SetName( const char* name )
 	}
 	return m_shader->SetName( name );
 }
+
+TrinityALImpl::Tr2ShaderAL* Tr2ShaderAL::TrinityALImpl_GetObject() const
+{
+    return m_shader.get();
+}

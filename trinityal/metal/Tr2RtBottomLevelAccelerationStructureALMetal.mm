@@ -83,19 +83,19 @@ namespace  TrinityALImpl {
         }
         
         if (@available(macOS 11.0, *)) {
-
+            
             MetalContext *metalContext = renderContext.GetMetalContext();
             
             // GEOMETRY DESCRIPTOR
             m_geomDesc = [MTLAccelerationStructureTriangleGeometryDescriptor descriptor];
-
+            
             m_geomDesc.indexBuffer = indices.m_indexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
             m_geomDesc.indexType = indices.m_stride == 2 ? MTLIndexTypeUInt16 : MTLIndexTypeUInt32;
             m_geomDesc.indexBufferOffset = indices.m_stride * indices.m_indexOffset;
             
             m_geomDesc.vertexBuffer = positions.m_vertexBuffer.TrinityALImpl_GetObject()->GetMetalBuffer();
             m_geomDesc.vertexStride = positions.m_stride;
-            m_geomDesc.vertexBufferOffset = positions.m_vertexOffset;
+            m_geomDesc.vertexBufferOffset = positions.m_vertexOffset * positions.m_stride + positions.m_positionOffset;
              
             m_geomDesc.triangleCount = indices.m_indexCount / 3;
             

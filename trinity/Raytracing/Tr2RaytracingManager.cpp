@@ -142,6 +142,8 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 	renderContext.ClearUav( *m_destTex->GetTexture(), 0, clearValue );
 
 	m_shadowEffect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
+    
+    renderContext.UseAccelerationStructure( m_geometry->GetTLAS() );
 
 	renderContext.SetConstants( m_shadowPerFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, 2 );
 	renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );

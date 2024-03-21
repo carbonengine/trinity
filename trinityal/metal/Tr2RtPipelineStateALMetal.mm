@@ -70,94 +70,139 @@ namespace TrinityALImpl
     }
 
     ALResult Tr2RtPipelineStateAL::CreateRtPipelineState( const Tr2RtPipelineStateDescriptionAL& desc, Tr2PrimaryRenderContextAL& renderContext )
-{
-        if( !renderContext.IsValid() )
+    {
+        if (@available(macOS 11.0, *)) 
         {
-            return E_INVALIDCALL;
-        }
-        
-        if( desc.m_shaders.empty() )
-        {
-            return E_INVALIDCALL;
-        }
-        
-        // create shader program for ray gen shader
-        ::Tr2ShaderProgramAL shaderProgram;
-        
-        ::Tr2ShaderAL rayGenShader;
-        rayGenShader.Create(Tr2RenderContextEnum::COMPUTE_SHADER, desc.m_shaders[0].bytecode, desc.m_globalSignature, "", renderContext);
-        
-        shaderProgram.Create( &rayGenShader, 1, renderContext );
-        m_shaderProgram = shaderProgram;
-        
-        id<MTLDevice> mtlDevice = renderContext.GetMetalContext()->GetDevice();
-        
-        NSMutableArray *linkedFunctions = [[NSMutableArray alloc]init];
-        
-        // now create intersection function table for shaders, skipping over raygen for now
-        for( int shaderIndex = 1; shaderIndex < desc.m_shaders.size(); ++shaderIndex )
-        {
-            for( int nameIndex = 0; nameIndex < desc.m_shaders[shaderIndex].names.size(); ++nameIndex )
+            if( !renderContext.IsValid() )
             {
-                auto shader = desc.m_shaders[shaderIndex];
-                
-                std::wstring shaderName = desc.m_shaders[shaderIndex].names[nameIndex].name.c_str();
-                std::wstring exportName = desc.m_shaders[shaderIndex].names[nameIndex].exportName.c_str();
-                
-                dispatch_data_t shaderData = dispatch_data_create(
-                                                  shader.bytecode.bytecode,
-                                                  shader.bytecode.size,
-                                                  dispatch_get_global_queue(0, 0),
-                                                  DISPATCH_DATA_DESTRUCTOR_DEFAULT );
-                
-                NSError* error = nullptr;
-                
-                id<MTLLibrary> mtlLib = [mtlDevice newLibraryWithData:shaderData error:&error];
-                id <MTLFunction> fn = CreateFunction( shaderName, mtlDevice, shaderData );
-                
-                if( fn == nil )
+                return E_INVALIDCALL;
+            }
+            
+            if( desc.m_shaders.empty() )
+            {
+                return E_INVALIDCALL;
+            }
+            
+            // create shader program for ray gen shader
+            ::Tr2ShaderProgramAL shaderProgram;
+            
+            ::Tr2ShaderAL rayGenShader;
+            
+            for( auto& shader : desc.m_shaders )
+            {
+                for( auto& name : shader.names )
                 {
+                    if( name.name == L"RayGen" )
+                    {
+                        rayGenShader.Create(Tr2RenderContextEnum::COMPUTE_SHADER, shader.bytecode, desc.m_globalSignature, "", renderContext);
+                        rayGenShader.TrinityALImpl_GetObject()->m_entryPointNameOverride = NSStringFromWchar( name.name );
+                    }
+                }
+            }
+            
+            if( !rayGenShader.IsValid() )
+            {
+                return E_FAIL;
+            }
+            
+            shaderProgram.Create( &rayGenShader, 1, renderContext );
+            
+            if( !shaderProgram.IsValid() )
+            {
+                return E_FAIL;
+            }
+            
+            m_shaderProgram = shaderProgram;
+            
+            id<MTLDevice> mtlDevice = renderContext.GetMetalContext()->GetDevice();
+            
+            NSMutableArray *linkedFunctions = [[NSMutableArray alloc]init];
+            
+            for( auto& shader : desc.m_shaders )
+            {
+                dispatch_data_t shaderData = dispatch_data_create(
+                                                                  shader.bytecode.bytecode,
+                                                                  shader.bytecode.size,
+                                                                  dispatch_get_global_queue(0, 0),
+                                                                  DISPATCH_DATA_DESTRUCTOR_DEFAULT );
+                NSError* error = nullptr;
+                id<MTLLibrary> mtlLib = [mtlDevice newLibraryWithData:shaderData error:&error];
+                if( !mtlLib )
+                {
+                    CCP_AL_LOGERR( "Tr2RtPipelineStateAL: Failed to create Metal shader library. Error: %s", error.localizedDescription.UTF8String );
                     return E_FAIL;
                 }
-
-                m_intersectionFunctions[exportName] = fn;
-                [linkedFunctions addObject:fn];
+                
+                for( auto& name : shader.names )
+                {
+                    if( name.name == L"RayGen" )
+                    {
+                        continue;
+                    }
+                    auto descriptor = [MTLFunctionDescriptor functionDescriptor];
+                    descriptor.name = NSStringFromWchar( name.name );
+                    descriptor.specializedName = NSStringFromWchar( name.exportName );
+                    
+                    error = nullptr;
+                    id<MTLFunction> fn = [mtlLib newFunctionWithDescriptor:descriptor error:&error];
+                    if( fn == nil )
+                    {
+                        CCP_AL_LOGERR( "Tr2RtPipelineStateAL: Failed to get function %S from Metal shader library. Error: %s", name.name.c_str(), error.localizedDescription.UTF8String );
+                        return E_FAIL;
+                    }
+                    
+                    m_intersectionFunctions[name.exportName] = fn;
+                    [linkedFunctions addObject:fn];
+                }
             }
-        }
-        
-        if( m_intersectionFunctions.size() == 0 )
-        {
-            return E_FAIL;
-        }
-        
-        for( int hitGroupIdx = 0; hitGroupIdx < desc.m_hitGroups.size(); ++hitGroupIdx)
-        {
-            auto& hGroup = desc.m_hitGroups[hitGroupIdx];
             
-            if( !hGroup.anyHit.empty() )
+            if( m_intersectionFunctions.size() == 0 )
             {
-                m_hitGroupMap[hGroup.exportName].anyHit = m_intersectionFunctions[hGroup.anyHit];
+                return E_FAIL;
             }
-            if( !hGroup.intersection.empty() )
+            
+            for( int hitGroupIdx = 0; hitGroupIdx < desc.m_hitGroups.size(); ++hitGroupIdx)
             {
-                m_hitGroupMap[hGroup.exportName].intersection = m_intersectionFunctions[hGroup.intersection];
+                auto& hGroup = desc.m_hitGroups[hitGroupIdx];
+                
+                if( !hGroup.anyHit.empty() )
+                {
+                    auto found = m_intersectionFunctions.find( hGroup.anyHit );
+                    if( found == end( m_intersectionFunctions ) )
+                    {
+                        return E_INVALIDARG;
+                    }
+                    m_hitGroupMap[hGroup.exportName].anyHit = found->second;
+                }
+                if( !hGroup.intersection.empty() )
+                {
+                    auto found = m_intersectionFunctions.find( hGroup.intersection );
+                    if( found == end( m_intersectionFunctions ) )
+                    {
+                        return E_INVALIDARG;
+                    }
+                    m_hitGroupMap[hGroup.exportName].intersection = found->second;
+                }
+                if( !hGroup.closestHit.empty() )
+                {
+                    auto found = m_intersectionFunctions.find( hGroup.closestHit );
+                    if( found == end( m_intersectionFunctions ) )
+                    {
+                        return E_INVALIDARG;
+                    }
+                    m_hitGroupMap[hGroup.exportName].closestHit = found->second;
+                }
             }
-            if( !hGroup.closestHit.empty() )
-            {
-                m_hitGroupMap[hGroup.exportName].closestHit = m_intersectionFunctions[hGroup.closestHit];
-            }
-        }
-
-        id<MTLDevice> device = renderContext.GetMetalContext()->GetDevice();
-        
-        MTLComputePipelineDescriptor *descriptor = [[MTLComputePipelineDescriptor alloc] init];
-        
-        NSError *error = nullptr;
-        
-        descriptor.computeFunction = shaderProgram.TrinityALImpl_GetObject()->GetComputeKernel();
-        
-        // add the functions to the pipeline
-        if (@available(macOS 11.0, *)) {
+            
+            id<MTLDevice> device = renderContext.GetMetalContext()->GetDevice();
+            
+            MTLComputePipelineDescriptor *descriptor = [[MTLComputePipelineDescriptor alloc] init];
+            
+            NSError *error = nullptr;
+            
+            descriptor.computeFunction = shaderProgram.TrinityALImpl_GetObject()->GetComputeKernel();
+            
+            // add the functions to the pipeline
             MTLLinkedFunctions *mtlLinkedFunctions = nil;
             
             // Attach the additional functions to an MTLLinkedFunctions object
@@ -169,21 +214,25 @@ namespace TrinityALImpl
             
             // Set to YES to allow the compiler to make certain optimizations.
             descriptor.threadGroupSizeIsMultipleOfThreadExecutionWidth = YES;
+            
+            // Create compute pipelines will execute code on the GPU
+            // Create the compute pipeline state which does all the raytracing
+            m_raytracingPipeline = [device newComputePipelineStateWithDescriptor:descriptor
+                                                                         options:0
+                                                                      reflection:nil
+                                                                           error:&error];
+            
+            if( !m_raytracingPipeline )
+            {
+                CCP_LOGERR("SOMETHING WENT WRONG WITH CREATING THE SHADOW PIPELINE FOR RAYTRACING");
+            }
+            
+            return S_OK;
         }
-        
-        // Create compute pipelines will execute code on the GPU
-        // Create the compute pipeline state which does all the raytracing
-        m_raytracingPipeline = [device newComputePipelineStateWithDescriptor:descriptor
-                                                                 options:0
-                                                              reflection:nil
-                                                                   error:&error];
-        
-        if( !m_raytracingPipeline )
+        else
         {
-            CCP_LOGERR("SOMETHING WENT WRONG WITH CREATING THE SHADOW PIPELINE FOR RAYTRACING");
+            return E_FAIL;
         }
-        
-        return S_OK;
     }
 
     ::Tr2ShaderProgramAL& Tr2RtPipelineStateAL::GetShaderProgram()

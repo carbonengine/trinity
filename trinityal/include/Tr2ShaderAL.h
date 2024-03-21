@@ -176,6 +176,8 @@ public:
 
 	ALResult SetName( const char* name );
 
+    TrinityALImpl::Tr2ShaderAL* TrinityALImpl_GetObject() const;
+
 private:
 	Tr2ShaderAL( std::shared_ptr<TrinityALImpl::Tr2ShaderAL> shader );
 

@@ -25,7 +25,7 @@ constant bool useIntersectionFunctions [[function_constant(0)]];
 
 // Checks if a shadow ray hit something on the way to the light source. If not, the point the
 // shadow ray started from was not in shadow so it's color should be added to the output image.
-kernel void mainCS(           uint2 tid                                                                         [[thread_position_in_grid]],
+kernel void RayGen(           uint2 tid                                                                         [[thread_position_in_grid]],
                               constant Uniforms &uniforms                                                       [[CBUFFER(0)]],
                               device const TestStruct *accelerationStructure                                    [[buffer(5)]],
                               texture2d<float, access::write> RTOutput                                          [[UAVT(0)]],
