@@ -4150,6 +4150,10 @@ namespace
                 {
                     cmd << "-std=macos-metal2.1 -mmacos-version-min=10.14 ";
                 }
+				else
+				{
+					cmd << "-std=metal3.0 ";
+				}
                 // This switch should probably be done in runtime via a command-line argument to ShaderCompiler.
     #if 1
                 // Disable shader debug information.
