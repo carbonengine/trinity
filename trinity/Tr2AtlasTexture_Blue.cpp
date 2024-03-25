@@ -59,7 +59,7 @@ static PyObject* PyLockBufferAndMargin( PyObject* self, PyObject* args )
 		const int height = pThis->GetHeight() + margin * 2;
 		const int width = pThis->GetWidth() + margin * 2;
 
-        PyObject *buffer = PyMemoryView_FromMemory( (char*)data, pThis->GetHeight() * pitch, PyBUF_READ);
+		PyObject* buffer = PyMemoryView_FromMemory( (char*)data, height * pitch, PyBUF_WRITE );
 
 		PyObject *result = PyTuple_New(5);
 		if (!result) {
