@@ -373,7 +373,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	float middleValue = dynamicExposure ? dynamicExposure->m_middleValue : 0.0f;
 	SetupExposureConversion( enableExposureConversion, middleValue );
 
-	auto upscalingType = ProcessUpscaling( upscaling, renderContext );
+	Tr2Upscaling::UpscalingType upscalingType = ProcessUpscaling( upscaling, renderContext );
 	
 	// Always copy
 	auto nonMsaaSource = m_renderInfo->GetTempTexture();
@@ -391,7 +391,9 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	if( ProcessDepthOfField( renderContext, dof ) )
 	{
-		RenderDepthOfField( nonMsaaSource, renderContext, dof, taa && taa->IsActive() );
+		bool temporal = upscalingType == Tr2Upscaling::UpscalingType::UT_TEMPORAL || ( taa && taa->IsActive() );
+		float upscalingRatio = upscaling ? upscaling->GetUpscalingAmount() : 1.0f; 
+		RenderDepthOfField( nonMsaaSource, renderContext, dof, temporal, upscalingRatio );
 	}
 
 	if( ProcessTaa( taa ) )
@@ -1502,6 +1504,7 @@ bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderCont
 			m_depthOfFieldBokehTAAShader->SetEffectPathName( "res:/Graphics/Effect/Managed/Space/PostProcess/BokehTAA.fx" );
 			m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "CoCMap" ), PLACEHOLDER );
 			m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
+			m_depthOfFieldBokehTAAShader->SetOption( BlueSharedString( "BOKEH_SHAPE" ), fx->GetBokehShapeString() );
 			m_depthOfFieldBokehTAAShader->EndUpdate();
 
 			m_depthOfFieldCoCShader.CreateInstance();
@@ -1528,6 +1531,10 @@ bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderCont
 			m_depthOfFieldBokehFillShader->StartUpdate();
 			m_depthOfFieldBokehFillShader->SetOption( BlueSharedString( "BOKEH_SHAPE" ), fx->GetBokehShapeString() );
 			m_depthOfFieldBokehFillShader->EndUpdate();
+
+			m_depthOfFieldBokehTAAShader->StartUpdate();
+			m_depthOfFieldBokehTAAShader->SetOption( BlueSharedString( "BOKEH_SHAPE" ), fx->GetBokehShapeString() );
+			m_depthOfFieldBokehTAAShader->EndUpdate();
 		}
 		fx->SetDirty( false );
 	}
@@ -1545,7 +1552,7 @@ bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderCont
 	return fx && fx->IsActive();
 }
 
-void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* depthOfField, bool taa )
+void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* depthOfField, bool temporal, float upscalingAmount )
 {
 	GPU_REGION( renderContext, "DepthOfField" );
 	{
@@ -1594,20 +1601,35 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 				}
 			}
 
-			if( taa && depthOfField->m_useTAAFriendlyBokeh )
+			float adjustedScale = depthOfField->m_scale / upscalingAmount;
+
+			if( depthOfField->m_useTAAFriendlyBokeh )
 			{
 
-				//Animate the bokeh to let TAA accumulate samples.
-				//m_BokehFrameCounter is only incremented when TAA is enabled.
-				int rotation = ( m_bokehFrameCounter++ * 4 ) % 9;
+				float GOLDEN_ANGLE = TRI_PI * ( 3.0f - sqrt( 5.0f ) );
+				float angle = 0;
+				float samplesPerPixel = 2.0 / 5.0;
 
-				float angle = (float)rotation * TRI_2PI / 9.0f;
+				if (temporal)
+				{
+					//Vary between 4 different rotations, so that it has the same period as the TAA jitter
+					//This allows it to detect some kinds of flickering and remove it.
+					if( ( m_bokehFrameCounter & 1 ) != 0 )
+						angle += TRI_PI;
+					if( ( m_bokehFrameCounter & 2 ) != 0 )
+						angle += 0.5f * GOLDEN_ANGLE;
+					m_bokehFrameCounter++;
+
+					//Also, reduce the target quality, so that we get more noise and the 3x3 neighborhood clamping can reduce shimmer/flicker!
+					//In practice, we'll be accumulating 4x as many samples thanks to the rotation above, so this is fine.
+					samplesPerPixel = 1.0 / 5.0;
+				}
 
 				{
 					GPU_REGION( renderContext, "Bokeh" );
 					m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
 					m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "CoCMap" ), coc );
-					m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( depthOfField->m_scale, cos( angle ), sin( angle ), 0.0 ) );
+					m_depthOfFieldBokehTAAShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( adjustedScale, angle, samplesPerPixel, 0.0f ) );
 					DrawInto( *blur, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehTAAShader, renderContext );
 				}
 				{
@@ -1623,7 +1645,7 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 					GPU_REGION( renderContext, "Bokeh Blend" );
 					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
 					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "CoCMap" ), coc );
-					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( depthOfField->m_scale, 0.0f, 0.0f, 0.0f ) );
+					m_depthOfFieldBokehBlurShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( adjustedScale, 0.0f, 0.0f, 0.0f ) );
 					DrawInto( *blur, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehBlurShader, renderContext );
 					if( depthOfField->m_debug == Tr2PPDepthOfFieldEffect::DofDebug_BokehBlend )
 					{
@@ -1635,7 +1657,7 @@ void TriStepRenderPostProcess::RenderDepthOfField( Tr2RenderTarget* dest, Tr2Ren
 					GPU_REGION( renderContext, "Bokeh Fill" );
 					m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "BlitCurrent" ), blur );
 					m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "CoCMap" ), coc );
-					m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( depthOfField->m_scale, 0.0f, 0.0f, 0.0f ) );
+					m_depthOfFieldBokehFillShader->SetParameter( BlueSharedString( "BokehInfo" ), Vector4( adjustedScale, 0.0f, 0.0f, 0.0f ) );
 					DrawInto( *dest, Tr2LoadAction::DONT_CARE, m_depthOfFieldBokehFillShader, renderContext );
 				}
 			}

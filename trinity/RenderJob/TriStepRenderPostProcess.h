@@ -142,7 +142,7 @@ private:
 
 	// depth of field
 	bool ProcessDepthOfField( Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* fx );
-	void RenderDepthOfField( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* depthOfField, bool taa );	
+	void RenderDepthOfField( Tr2RenderTarget * dest, Tr2RenderContext & renderContext, Tr2PPDepthOfFieldEffect * depthOfField, bool temporal, float upscalingAmount );	
 	Tr2EffectPtr m_depthOfFieldCoCShader;
 	Tr2EffectPtr m_depthOfFieldBokehBlurShader;
 	Tr2EffectPtr m_depthOfFieldBokehFillShader;
