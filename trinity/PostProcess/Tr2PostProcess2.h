@@ -56,6 +56,9 @@ public:
 	Tr2PPDesaturateEffectPtr GetDesaturate() { return m_desaturate; }
 	Tr2PPFadeEffectPtr GetFade() { return m_fade; }
 	Tr2PPLutEffectPtr GetLut() { return m_lut; }
+	Tr2PPLutEffectPtr GetAdditionalLut1() { return m_additionalLut1; }
+	Tr2PPLutEffectPtr GetAdditionalLut2() { return m_additionalLut2; }
+	Tr2PPLutEffectPtr GetAdditionalLut3() { return m_additionalLut3; }
 	Tr2PPVignetteEffectPtr GetVignette() { return m_vignette; }
 	Tr2PPFogEffectPtr GetFog() { return m_fog; }
 	Tr2PPTaaEffectPtr GetTaa() { return m_taa; }
@@ -74,6 +77,9 @@ private:
 	Tr2PPDesaturateEffectPtr m_desaturate;
 	Tr2PPFadeEffectPtr m_fade;
 	Tr2PPLutEffectPtr m_lut;
+	Tr2PPLutEffectPtr m_additionalLut1;
+	Tr2PPLutEffectPtr m_additionalLut2;
+	Tr2PPLutEffectPtr m_additionalLut3;
 	Tr2PPVignetteEffectPtr m_vignette;
 	Tr2PPFogEffectPtr m_fog;
 	Tr2PPTaaEffectPtr m_taa;
