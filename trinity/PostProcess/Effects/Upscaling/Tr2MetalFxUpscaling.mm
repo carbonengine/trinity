@@ -270,7 +270,7 @@ void Tr2MetalFxTemporalUpscaling::ApplySetting( const Tr2Upscaling::Setting& set
     m_upscaling = s_debugMode ? Tr2MetalFxTemporalUpscaling::s_debugUpscaling[setting] : MetalUpscalingUtils::GetUpscalingBasedOnSetting(setting);
     m_renderWidth = UpscalingUtils::ConvertDisplaySizeToRenderSize(m_displayWidth, m_upscaling);
     m_renderHeight = UpscalingUtils::ConvertDisplaySizeToRenderSize(m_displayHeight, m_upscaling);
-    m_jitterSequence = Jitter::GenerateHaltonSequence(32, 2, 3);
+    m_jitterSequence = Jitter::GenerateHaltonSequence( 8 * m_upscaling * m_upscaling, 2, 3);
 }
 
 void Tr2MetalFxTemporalUpscaling::Setup( Tr2Upscaling::UpscalingSetupContext setupContext, Tr2RenderContext& renderContext )
