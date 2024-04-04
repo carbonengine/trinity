@@ -355,10 +355,10 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		SetDirtyIfNotNull( filmGrain );
 		SetDirtyIfNotNull( desaturate );
 		SetDirtyIfNotNull( fade );
-		SetDirtyIfNotNull( luts[0] );
-		SetDirtyIfNotNull( luts[1] );
-		SetDirtyIfNotNull( luts[2] );
-		SetDirtyIfNotNull( luts[3] );
+		for( auto& lut : luts )
+		{
+			SetDirtyIfNotNull( lut );
+		}
 		SetDirtyIfNotNull( vignette );
 		SetDirtyIfNotNull( fog );
 		SetDirtyIfNotNull( taa );
