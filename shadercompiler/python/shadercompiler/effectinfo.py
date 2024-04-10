@@ -258,9 +258,52 @@ class StaticSampler(object):
         self.max_lod = stream.read_float()
 
 
+class LibraryInput(object):
+    def __init__(self, stream, string_table, version):
+        self.registers = []
+        for input_index in xrange(stream.read_uint8()):
+            self.registers.append(ShaderRegister(stream, version, 0))
+
+        self.static_samplers = []
+        for sampler_index in xrange(stream.read_uint8()):
+            self.static_samplers.append(StaticSampler(stream))
+
+        self.constants = []
+        for i in xrange(stream.read_uint32()):
+            self.constants.append(Constant(stream, string_table, version))
+
+        constant_value_size = stream.read_uint32()
+        constant_value_offset = stream.read_uint32()
+        const_data = string_table.get_blob(constant_value_offset, constant_value_size)
+        for const in self.constants:
+            const.read_default_value(const_data)
+
+        self.resources = []
+        for i in xrange(stream.read_uint8()):
+            self.resources.append(Resource(stream, string_table, version))
+
+        self.samplers = []
+        for i in xrange(stream.read_uint8()):
+            self.samplers.append(Sampler(stream, string_table, version))
+
+        self.uavs = []
+        for i in xrange(stream.read_uint8()):
+            self.uavs.append(UAV(stream, string_table, version))
+
+        self.annotations = {}
+        for j in xrange(stream.read_uint8()):
+            annotation = Annotation(stream, string_table)
+            self.annotations[annotation.name] = annotation
+
+
 class Stage(object):
     def __init__(self, stream, string_table, version):
         self.stage = stream.read_uint8()
+
+        if version >= 15:
+            stream.read_uint32()
+            stream.read_uint32()
+            self.thread_group_size = stream.read_uint32(), stream.read_uint32(), stream.read_uint32()
 
         self.inputs = []
         for input_index in xrange(stream.read_uint8()):
@@ -278,14 +321,14 @@ class Stage(object):
         if version < 5:
             stream.seek(stream.read_uint32() + stream.offset())
             stream.seek(stream.read_uint32() + stream.offset())
-        else:
+        elif version < 15:
             stream.read_uint32()
             stream.read_uint32()
             if version < 12:
                 stream.read_uint32()
                 stream.read_uint32()
 
-        if version >= 3:
+        if 3 <= version < 15:
             self.thread_group_size = stream.read_uint32(), stream.read_uint32(), stream.read_uint32()
         else:
             self.thread_group_size = None, None, None
@@ -325,6 +368,25 @@ class Stage(object):
                 self.annotations[annotation.name] = annotation
 
 
+class Export(object):
+    def __init__(self, stream, string_table):
+        self.type = stream.read_uint8()
+        self.name = string_table.get_string(stream.read_uint32())
+
+
+class ShaderLibrary(object):
+    def __init__(self, stream, string_table, version):
+        self.payload_size = stream.read_uint32()
+        stream.read_uint32()
+        stream.read_uint32()
+        self.exports = []
+        for i in range(stream.read_uint32()):
+            self.exports.append(Export(stream, string_table))
+        self.hit_group = string_table.get_string(stream.read_uint32())
+        self.global_inputs = LibraryInput(stream, string_table, version)
+        self.local_inputs = LibraryInput(stream, string_table, version)
+
+
 class Pass(object):
     def __init__(self, stream, string_table, version):
         self.stages = {}
@@ -356,6 +418,9 @@ class Technique(object):
         pass_count = stream.read_uint8()
         for i in xrange(pass_count):
             self.passes.append(Pass(stream, string_table, version))
+        self.libraries = []
+        for i in range(stream.read_uint8()):
+            self.libraries.append(ShaderLibrary(stream, string_table, version))
 
 
 class AnnotationType(object):
