@@ -21,6 +21,30 @@ namespace
 	{
 		return (offset + (alignment - 1)) & ~(alignment - 1);
 	}
+
+	ALResult UploadInstanceData( ID3D12Resource* uploadBuffer, const size_t count, const Tr2RtInstanceAL* instances )
+	{
+		D3D12_RAYTRACING_INSTANCE_DESC* data;
+		CR_RETURN_HR( uploadBuffer->Map( 0, nullptr, reinterpret_cast<void**>( &data ) ) );
+		for( size_t i = 0; i < count; ++i )
+		{
+			if( !instances[i].blas.IsValid() )
+			{
+				uploadBuffer->Unmap( 0, nullptr );
+				return E_INVALIDARG;
+			}
+			D3D12_RAYTRACING_INSTANCE_DESC d;
+			d.InstanceID = i;
+			d.InstanceContributionToHitGroupIndex = instances[i].materialIndex;
+			d.InstanceMask = 0xff;
+			memcpy( d.Transform, instances[i].transform, 12 * sizeof( float ) );
+			d.AccelerationStructure = instances[i].blas.TrinityALImpl_GetObject()->GetGPUVirtualAddress();
+			d.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE | instances[i].flags;
+			memcpy( data + i, &d, sizeof( d ) );
+		}
+		uploadBuffer->Unmap( 0, nullptr );
+		return S_OK;
+	}
 }
 
 
@@ -56,21 +80,6 @@ namespace TrinityALImpl
 		uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 		renderContext.m_commandList->ResourceBarrier( 1, &uavBarrier );
 
-		std::unique_ptr<D3D12_RAYTRACING_INSTANCE_DESC[]> instanceDesc( new D3D12_RAYTRACING_INSTANCE_DESC[count] );
-		for( size_t i = 0; i < count; ++i )
-		{
-			auto& d = instanceDesc[i];
-			if( !instances[i].blas.IsValid() )
-			{
-				return E_INVALIDARG;
-			}
-			d.InstanceID = i;
-			d.InstanceContributionToHitGroupIndex = instances[i].materialIndex;
-			d.InstanceMask = 0xff;
-			memcpy( d.Transform, instances[i].transform, 12 * sizeof( float ) );
-			d.AccelerationStructure = instances[i].blas.TrinityALImpl_GetObject()->GetBuffer()->GetGPUVirtualAddress();
-			d.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE | instances[i].flags;
-		}
 		size_t capacity = Align( count, 128 );
 
 		auto uploadHeap = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_UPLOAD );
@@ -84,17 +93,14 @@ namespace TrinityALImpl
 			nullptr,
 			IID_PPV_ARGS( &uploadBuffer ) ) );
 
-		void* data;
-		CR_RETURN_HR( uploadBuffer->Map( 0, nullptr, &data ) );
-		memcpy( data, instanceDesc.get(), sizeof( D3D12_RAYTRACING_INSTANCE_DESC ) * count );
-		uploadBuffer->Unmap( 0, nullptr );
+		CR_RETURN_HR( UploadInstanceData( uploadBuffer, count, instances ) );
 
 		// Describe the work being requested
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS ASInputs = {};
 		ASInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
 		ASInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 		ASInputs.InstanceDescs = uploadBuffer->GetGPUVirtualAddress();
-		ASInputs.NumDescs = UINT( count );
+		ASInputs.NumDescs = UINT( capacity );
 		ASInputs.Flags = (D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS)buildFlags;
 
 		D3D12_RAYTRACING_ACCELERATION_STRUCTURE_PREBUILD_INFO ASBuildInfo = {};
@@ -104,6 +110,7 @@ namespace TrinityALImpl
 		{
 			return E_INVALIDCALL;
 		}
+		ASInputs.NumDescs = UINT( count );
 
 		CComPtr<ID3D12Resource> scratch;
 		auto heap = TrinityALImpl::HeapDesc( D3D12_HEAP_TYPE_DEFAULT );
@@ -177,6 +184,13 @@ namespace TrinityALImpl
 			return E_INVALIDARG;
 		}
 
+		//if this causes problems then create an array of all the instances.blas buffers fill the uav barrier with that
+		D3D12_RESOURCE_BARRIER uavBarrier;
+		uavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+		uavBarrier.UAV.pResource = nullptr;
+		uavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		renderContext.m_commandList->ResourceBarrier( 1, &uavBarrier );
+
 		CComPtr<ID3D12Resource> uploadBuffer;
 		auto completed = m_owner->GetRenderedFrameNumber();
 		for( auto it = begin( m_uploadBuffers ); it != end( m_uploadBuffers ); ++it )
@@ -204,33 +218,18 @@ namespace TrinityALImpl
 			m_uploadBuffers.push_back( ub );
 		}
 
-		std::unique_ptr<D3D12_RAYTRACING_INSTANCE_DESC[]> instanceDesc( new D3D12_RAYTRACING_INSTANCE_DESC[count] );
-		for( size_t i = 0; i < count; ++i )
-		{
-			auto& d = instanceDesc[i];
-			if( !instances[i].blas.IsValid() )
-			{
-				return E_INVALIDARG;
-			}
-			d.InstanceID = i;
-			d.InstanceContributionToHitGroupIndex = instances[i].materialIndex;
-			d.InstanceMask = 0xff;
-			memcpy( d.Transform, instances[i].transform, 12 * sizeof( float ) );
-			d.AccelerationStructure = instances[i].blas.TrinityALImpl_GetObject()->GetBuffer()->GetGPUVirtualAddress();
-			d.Flags = D3D12_RAYTRACING_INSTANCE_FLAG_TRIANGLE_FRONT_COUNTERCLOCKWISE | instances[i].flags;
-		}
-
-		void* data;
-		CR_RETURN_HR( uploadBuffer->Map( 0, nullptr, &data ) );
-		memcpy( data, instanceDesc.get(), sizeof( D3D12_RAYTRACING_INSTANCE_DESC ) * count );
-		uploadBuffer->Unmap( 0, nullptr );
+		CR_RETURN_HR( UploadInstanceData( uploadBuffer, count, instances ) );
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_INPUTS ASInputs = {};
 		ASInputs.Type = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_TYPE_TOP_LEVEL;
 		ASInputs.DescsLayout = D3D12_ELEMENTS_LAYOUT_ARRAY;
 		ASInputs.InstanceDescs = uploadBuffer->GetGPUVirtualAddress();
 		ASInputs.NumDescs = UINT( count );
-		ASInputs.Flags = D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE | ((D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS)m_buildFlags);
+		ASInputs.Flags = (D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAGS)m_buildFlags;
+		if( HasFlag( m_buildFlags, Tr2RtBuildFlags::ALLOW_UPDATE ) )
+		{
+			ASInputs.Flags |= D3D12_RAYTRACING_ACCELERATION_STRUCTURE_BUILD_FLAG_PERFORM_UPDATE;
+		}
 
 		D3D12_BUILD_RAYTRACING_ACCELERATION_STRUCTURE_DESC desc = {};
 		desc.Inputs = ASInputs;
@@ -243,6 +242,13 @@ namespace TrinityALImpl
 		desc.DestAccelerationStructureData = m_buffer.TrinityALImpl_GetObject()->GetGpuView();
 
 		renderContext.m_commandList4->BuildRaytracingAccelerationStructure( &desc, 0, nullptr );
+
+		D3D12_RESOURCE_BARRIER topLevelUavBarrier;
+		topLevelUavBarrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+		topLevelUavBarrier.UAV.pResource = m_buffer.TrinityALImpl_GetObject()->GetGpuResource();
+		topLevelUavBarrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		renderContext.m_commandList->ResourceBarrier( 1, &topLevelUavBarrier );
+
 		return S_OK;
 	}
 

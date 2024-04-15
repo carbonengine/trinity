@@ -153,6 +153,7 @@ namespace TrinityALImpl
 		{
 			renderContext.ReleaseLater( scratch );
 		}
+		m_bufferAddress = m_buffer->GetGPUVirtualAddress();
 
 		return S_OK;
 	}
@@ -284,6 +285,7 @@ namespace TrinityALImpl
 			m_owner = nullptr;
 			m_scratch = nullptr;
 			m_buffer = nullptr;
+			m_bufferAddress = {};
 		}
 	}
 
@@ -295,6 +297,11 @@ namespace TrinityALImpl
 	ID3D12Resource* Tr2RtBottomLevelAccelerationStructureAL::GetBuffer() const
 	{
 		return m_buffer;
+	}
+
+	D3D12_GPU_VIRTUAL_ADDRESS Tr2RtBottomLevelAccelerationStructureAL::GetGPUVirtualAddress() const
+	{
+		return m_bufferAddress;
 	}
 
 	Tr2ALMemoryType Tr2RtBottomLevelAccelerationStructureAL::GetMemoryClass() const

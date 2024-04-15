@@ -615,7 +615,7 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 	{
 		m_tlas = Tr2RtTopLevelAccelerationStructureAL();
 	}
-	else
+	else if( FAILED( m_tlas.Update( instances.size(), instances.data(), renderContext ) ) )
 	{
 		m_tlas.Create( instances.size(), instances.data(), Tr2RtBuildFlags::PREFER_FAST_TRACE, renderContext.GetPrimaryRenderContext() );
 	}

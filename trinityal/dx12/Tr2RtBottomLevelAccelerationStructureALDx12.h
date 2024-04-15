@@ -28,10 +28,12 @@ namespace TrinityALImpl
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 
 		ID3D12Resource* GetBuffer() const;
+		D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress() const;
 	
 	private:
 		CComPtr<ID3D12Resource> m_buffer;
 		CComPtr<ID3D12Resource> m_scratch;
+		D3D12_GPU_VIRTUAL_ADDRESS m_bufferAddress;
 		D3D12_RAYTRACING_GEOMETRY_DESC m_geometryDesc;
 		Tr2RtBuildFlags::Type m_buildFlags;
 		Tr2PrimaryRenderContextAL* m_owner;
