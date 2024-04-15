@@ -264,7 +264,7 @@ void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, 
 		return;
 	}
 
-	Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
 
 	if (!geomRes || !geomRes->IsGood())
 	{
