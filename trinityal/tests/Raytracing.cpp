@@ -434,16 +434,8 @@ TEST_F( Raytracing, TraceRays )
     ASSERT_HRESULT_SUCCEEDED(resultTex.Create( Tr2BitmapDimensions( WIDTH, HEIGHT, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R8G8B8A8_UNORM ), Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, *renderContext ) );
     
     Tr2BufferAL vb, ib;
-    // UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE, need to have leave it like this for now because of possible metal bug w. buffers
-#if TRINITY_PLATFORM == TRINITY_METAL
-    ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeVertices, *renderContext ) );
-    ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeIndices, *renderContext ) );
-
-#else
     ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeVertices, *renderContext ) );
     ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
-#endif
-    
     
     Tr2RtBottomLevelAccelerationStructureAL blas;
     ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );
@@ -591,15 +583,8 @@ TEST_F( Raytracing, CanUseLocalConstants )
     result.Create( Tr2BitmapDimensions( WIDTH, HEIGHT, 1, Tr2RenderContextEnum::PIXEL_FORMAT_R32G32B32A32_FLOAT ), Tr2GpuUsage::UNORDERED_ACCESS | Tr2GpuUsage::SHADER_RESOURCE, *renderContext );
 
     Tr2BufferAL vb, ib;
-    // UNSURE ABOUT CPUUSAGE AND HOW TO NAVIGATE THAT ONE, need to have leave it like this for now because of possible metal bug w. buffers
-#if TRINITY_PLATFORM == TRINITY_METAL
-    ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeVertices, *renderContext ) );
-    ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::WRITE_OFTEN, cubeIndices, *renderContext ) );
-
-#else
     ASSERT_HRESULT_SUCCEEDED( vb.Create( sizeof( Vector3 ), 8, Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeVertices, *renderContext ) );
     ASSERT_HRESULT_SUCCEEDED( ib.Create( Tr2RenderContextEnum::PIXEL_FORMAT_R16_UINT, sizeof( cubeIndices ) / sizeof( cubeIndices[0] ), Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE, Tr2CpuUsage::NONE, cubeIndices, *renderContext ) );
-#endif
     
     Tr2RtBottomLevelAccelerationStructureAL blas;
     ASSERT_HRESULT_SUCCEEDED( blas.Create( Tr2RtPositionStreamAL( vb ), Tr2RtIndicesStreamAL( ib ), Tr2RtBlasGeometryFlags::OPAQUE_GEOMETRY, Tr2RtBuildFlags::PREFER_FAST_TRACE, *renderContext ) );

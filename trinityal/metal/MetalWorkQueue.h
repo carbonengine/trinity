@@ -59,7 +59,8 @@ namespace TrinityALImpl
 		MTLENCODERTYPE_NONE,
 		MTLENCODERTYPE_RENDER,
 		MTLENCODERTYPE_COMPUTE,
-		MTLENCODERTYPE_BLIT
+		MTLENCODERTYPE_BLIT,
+        MTLENCODERTYPE_ACCELERATION_STRUCTURE
 	};
 
 	enum MetalWorkQueueType
@@ -190,6 +191,8 @@ namespace TrinityALImpl
 		id<MTLComputeCommandEncoder> GetComputeEncoder( NSString *encoderLabel = nil );
 		id<MTLRenderCommandEncoder>  GetRenderEncoder( NSString *encoderLabel = nil );
 		id<MTLParallelRenderCommandEncoder> GetParallelEncoder( NSString *encoderLabel = nil );
+        API_AVAILABLE(macos(11.0))
+        id<MTLAccelerationStructureCommandEncoder> GetAccelerationStructureEncoder( NSString *encoderLabel = nil );
 
 		void ReleaseEncoder( bool endEncoding );
 
@@ -402,6 +405,8 @@ namespace TrinityALImpl
 		id<MTLRenderCommandEncoder>  m_currentRenderEncoder;
 		id<MTLParallelRenderCommandEncoder> m_currentParallelEncoder;
 		id<MTLComputeCommandEncoder> m_currentComputeEncoder;
+        API_AVAILABLE(macos(11.0))
+        id<MTLAccelerationStructureCommandEncoder> m_currentAccelerationStructureEncoder;
 		MTLRenderPipelineDescriptor *m_presentBlitPipelineDesciptor;
 		id<MTLRenderPipelineState>   m_presentBlitPipeline;
 		MTLRenderPassDescriptor     *m_drawRenderPassDescriptor;

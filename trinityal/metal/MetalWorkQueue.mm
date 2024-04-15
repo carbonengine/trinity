@@ -731,6 +731,18 @@ void MetalWorkQueue::ReleaseEncoder( bool endEncoding )
 			m_currentBlitEncoder = nil;
 			break;
 		}
+        case MTLENCODERTYPE_ACCELERATION_STRUCTURE:
+        {
+            if (@available(macOS 11.0, *))
+            {
+                CCP_ASSERT( m_isPrimary );
+                
+                METAL_LOG(@"Log:Releasing and ending acceleration structure encoder %@",  m_currentAccelerationStructureEncoder.label);
+                [m_currentAccelerationStructureEncoder endEncoding];
+                m_currentAccelerationStructureEncoder = nil;
+            }
+            break;
+        }
 		case MTLENCODERTYPE_NONE:
 		default:
 				CCP_ASSERT( m_isPrimary );
@@ -905,6 +917,18 @@ void MetalWorkQueue::SetCurrentEncoder( MetalEncoderType encoderType, NSString *
         ++m_encoderIndex;
 		break;
 	}
+    case MTLENCODERTYPE_ACCELERATION_STRUCTURE:
+    {
+        if( @available( macOS 11.0, * ) )
+        {
+            m_currentAccelerationStructureEncoder = [m_commandBuffer accelerationStructureCommandEncoder];
+            m_currentAccelerationStructureEncoder.label = encoderLabel ? encoderLabel : @"Standard acceleration structure encoder";
+            METAL_LOG(@"Log:SetCurrentEncoder(AccelerationStructure) %@", m_currentAccelerationStructureEncoder.label);
+            
+            ++m_encoderIndex;
+        }
+        break;
+    }
 	case MTLENCODERTYPE_NONE:
 	default:
 		CCP_AL_LOGERR( "Invalid encoder type!" );
@@ -945,6 +969,12 @@ id<MTLRenderCommandEncoder> MetalWorkQueue::GetRenderEncoder( NSString *encoderL
 {
 	SetCurrentEncoder( MTLENCODERTYPE_RENDER, encoderLabel );
 	return m_currentRenderEncoder;
+}
+
+id<MTLAccelerationStructureCommandEncoder> MetalWorkQueue::GetAccelerationStructureEncoder( NSString *encoderLabel )
+{
+    SetCurrentEncoder( MTLENCODERTYPE_ACCELERATION_STRUCTURE, encoderLabel );
+    return m_currentAccelerationStructureEncoder;
 }
 
 id<MTLParallelRenderCommandEncoder> MetalWorkQueue::GetParallelEncoder( NSString *encoderLabel )

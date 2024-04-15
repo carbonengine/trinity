@@ -40,11 +40,7 @@ namespace  TrinityALImpl {
         // doesn't need access to buffer's contents.
         id <MTLBuffer> scratchBuffer = [device newBufferWithLength:accelSizes.buildScratchBufferSize options:MTLResourceStorageModeShared];
 
-        // Create a command buffer that performs the acceleration structure build.
-        id <MTLCommandBuffer> commandBuffer = [metalContext->GetCommandQueue() commandBuffer];
-
-        // Create an acceleration structure command encoder.
-        id <MTLAccelerationStructureCommandEncoder> commandEncoder = [commandBuffer accelerationStructureCommandEncoder];
+        auto commandEncoder = metalContext->GetPrimaryWorkQueue()->GetAccelerationStructureEncoder();
 
         // Allocate a buffer for Metal to write the compacted accelerated structure's size into.
         //id <MTLBuffer> compactedSizeBuffer = [device newBufferWithLength:sizeof(uint32_t) options:MTLResourceStorageModeShared];
@@ -54,13 +50,7 @@ namespace  TrinityALImpl {
                                         descriptor:descriptor
                                      scratchBuffer:scratchBuffer
                                scratchBufferOffset:0];
-        
-        // End encoding, and commit the command buffer so the GPU can start building the
-        // acceleration structure.
-        [commandEncoder endEncoding];
-
-        [commandBuffer commit];
-        
+        metalContext->GetPrimaryWorkQueue()->ReleaseEncoder( false );
         m_buffer = scratchBuffer;
         
         return accelerationStructure;
