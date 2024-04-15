@@ -1000,6 +1000,12 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 	}
 	int meshIx = m_mesh->GetMeshIndex();
 
+	auto mesh = geomRes->GetMeshData( meshIx, shadowPixelSize );
+	if( !mesh || !mesh->m_allocationsValid )
+	{
+		return;
+	}
+
 	auto& shadowAreas = m_shadowMeshAreas.m_areaBlockVector;
 	Tr2Material* shadowShader = m_shadowMeshAreas.m_shaderMaterial;
 	for( auto& areaBlock : shadowAreas )
