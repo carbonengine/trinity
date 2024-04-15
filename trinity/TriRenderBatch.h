@@ -30,6 +30,19 @@ public:
 	unsigned int m_count;
 };
 
+class TriRenderBatchAreaBlocksWithSharedMaterial : public TriRenderBatchAreaBlock
+{
+public:
+	TriRenderBatchAreaBlocksWithSharedMaterial();
+	TriRenderBatchAreaBlocksWithSharedMaterial( std::vector<TriRenderBatchAreaBlock>& areaBlockVector, Tr2Material* shader );
+	void Optimize();
+	void Clear();
+
+	Tr2MaterialPtr m_shaderMaterial;
+	std::vector<TriRenderBatchAreaBlock> m_areaBlockVector;
+
+};
+
 // --------------------------------------------------------------------------------------
 // Description
 //   Enumeration of batch sorting algorithms.

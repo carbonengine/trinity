@@ -34,7 +34,6 @@ PARENTLOCK( m_decals )
 EveSwarmRenderable::~EveSwarmRenderable()
 {
 	m_owner = nullptr;
-	m_shadowEffect = nullptr;
 	m_mesh = nullptr;
 }
 
@@ -54,39 +53,6 @@ void EveSwarmRenderable::GetBatches( ITriRenderBatchAccumulator* batches, TriBat
 	else
 	{
 		GetSortedBatchesFromMeshAreaVector( areas, batches, perObjectData, m_mesh, std::numeric_limits<float>::max(), &m_worldTransform );
-	}
-}
-
-void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize )
-{
-	if( !m_shadowEffect )
-	{
-		return;
-	}
-
-	if( !m_mesh || !m_mesh->GetDisplay() )
-	{
-		return;
-	}
-
-	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
-	if( !geomRes || !geomRes->IsGood() )
-	{
-		return;
-	}
-	int meshIx = m_mesh->GetMeshIndex();
-	auto grannyMesh = geomRes->GetMeshData( meshIx, shadowPixelSize );
-	if( !grannyMesh )
-	{
-		return;
-	}
-
-	Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-	for( auto& area : *areas )
-	{
-		Tr2RenderBatch batch = CreateGeometryBatch( grannyMesh, area, perObjectData );
-		batch.SetMaterial( m_shadowEffect );
-		batches->Commit( batch );
 	}
 }
 
@@ -145,11 +111,10 @@ bool EveSwarmRenderable::HasTransparentBatches()
 	return false;
 }
 
-void EveSwarmRenderable::InitializeRenderable( EveSwarm* owner, Tr2MeshBase* mesh, Tr2Effect* shadowEffect )
+void EveSwarmRenderable::InitializeRenderable( EveSwarm* owner, Tr2MeshBase* mesh )
 {
 	m_mesh = mesh;
 	m_owner = owner;
-	m_shadowEffect = shadowEffect;
 }
 
 void EveSwarmRenderable::SetWorldTransform( const Matrix& transform )
@@ -262,17 +227,83 @@ void EveSwarmRenderable::GetPickingBatches( ITriRenderBatchAccumulator* batches,
 
 void EveSwarmRenderable::SetShaderOption( const BlueSharedString& name, const BlueSharedString& value )
 {
-	if( nullptr != m_shadowEffect )
-	{
-		m_shadowEffect->SetOption( name, value );
-	}
-
 	if( nullptr != m_mesh )
 	{
 		m_mesh->SetShaderOption( name, value );
 	}
 }
 
+//////////////////////////////////////////////////////////////////////////////////////
+// IEveShadowCaster
+bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
+{
+	Vector4 boundingSphere;
+	if( !m_owner )
+	{
+		return false;
+	}
+
+	if( m_owner->GetBoundingSphere( boundingSphere ) )
+	{
+		boundingSphere.GetXYZ() = m_worldTransform.GetTranslation();
+		sizeInShadow = 0;
+
+		if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, boundingSphere ) )
+		{
+			sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, boundingSphere );
+		}
+		return sizeInShadow > 15.f;
+	}
+	return false;
+}
+
+void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize )
+{
+	if( !m_mesh || !m_mesh->GetDisplay() )
+	{
+		return;
+	}
+
+	Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+
+	if (!geomRes || !geomRes->IsGood())
+	{
+		return;
+	}
+	int meshIx = m_mesh->GetMeshIndex();
+	auto grannyMesh = geomRes->GetMeshData(meshIx, shadowPixelSize);
+	if (!grannyMesh)
+	{
+		return;
+	}
+
+	Tr2MeshAreaVector* areas = m_mesh->GetAreas(TRIBATCHTYPE_OPAQUE);
+	for (auto& area : *areas)
+	{
+		if( !area->GetDisplay() )
+		{
+			continue;
+		}
+		Tr2RenderBatch batch = CreateGeometryBatch(grannyMesh, area, perObjectData);
+		batches->Commit(batch);
+	}
+
+}
+
+Tr2PerObjectData* EveSwarmRenderable::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
+{
+	return GetPerObjectData( accumulator );
+}
+
+
+void EveSwarmRenderable::RegisterComponents()
+{
+	auto reg = GetComponentRegistry();
+	if( reg )
+	{
+		reg->RegisterComponent<IEveShadowCaster>( this );
+	}
+}
 
 EveSwarm::EveSwarm( IRoot* lockobj ) :
 	PARENTLOCK( m_renderables ),
@@ -335,7 +366,7 @@ void EveSwarm::RebuildCachedData( BlueAsyncRes* p )
 	EveShip2::RebuildCachedData( p );
 	for( auto it = m_renderables.begin(); it != m_renderables.end(); ++it )
 	{
-		(*it)->InitializeRenderable( this, m_mesh, m_shadowEffect );
+		(*it)->InitializeRenderable( this, m_mesh );
 	}
 }
 
@@ -741,30 +772,6 @@ void EveSwarm::EstimatePixelDiameter( const TriFrustum& frustum )
 
 
 // --------------------------------------------------------------------------------
-bool EveSwarm::GetRenderablesCastingShadow( bool isSelf, const TriFrustumOrtho& frustum, std::vector<ITr2Renderable*>& renderables )
-{
-	if( !m_display )
-	{
-		return false;
-	}
-
-	Vector4 bs;
-	BoundingSphereFromBox( bs, m_squadBoundsMin, m_squadBoundsMax );
-	if( bs.w > 0.0f  )
-	{
-		if( frustum.IsSphereVisibleAndInsideNearPlane( &bs ) )
-		{
-			for( auto it = m_renderables.begin(); it != m_renderables.end(); ++it )
-			{
-				renderables.push_back( *it );
-			}
-			return true;
-		}
-	}
-	return false;
-}
-
-// --------------------------------------------------------------------------------
 void EveSwarm::UpdateWorldBounds()
 {
 	Vector4 bs;
@@ -891,10 +898,18 @@ bool EveSwarm::OnModified( Be::Var* val )
 // --------------------------------------------------------------------------------
 void EveSwarm::AddSwarmer()
 {
+	auto componentRegistry = GetComponentRegistry();
+
 	EveSwarmRenderablePtr renderable;
 	renderable.CreateInstance();
-	renderable->InitializeRenderable( this, m_mesh, m_shadowEffect );
+	renderable->InitializeRenderable( this, m_mesh );
 	renderable->InitDecals( m_decals );
+
+	if( componentRegistry )
+	{
+		renderable->Register( componentRegistry );
+	}
+
 	m_renderables.Append( renderable->GetRawRoot() );
 	SwarmVehicle v;
 	v.position = m_worldPosition;
@@ -925,7 +940,14 @@ Vector3 EveSwarm::RemoveSwarmer()
 	SwarmVehicle v = m_vehicles[m_targetIndex];
 	m_vehicles[m_targetIndex] = m_vehicles.back();
 	m_vehicles.pop_back();
-        m_renderables[m_targetIndex]->InitializeRenderable( nullptr, nullptr, nullptr );
+	m_renderables[m_targetIndex]->InitializeRenderable( nullptr, nullptr );
+
+	auto componentRegistry = GetComponentRegistry();
+	if( componentRegistry )
+	{
+		m_renderables[m_targetIndex]->UnRegister( componentRegistry );
+	}
+
 	m_renderables.Remove( m_targetIndex );
 	if( m_debugShowForces )
 	{
@@ -958,6 +980,30 @@ void EveSwarm::SetCount( int count )
 			AddSwarmer();
 		}
 		m_targetIndex = TriRandInt( m_count );
+	}
+}
+
+void EveSwarm::RegisterComponents()
+{
+	auto reg = GetComponentRegistry();
+	if( reg )
+	{
+		for( auto& renderable : m_renderables )
+		{
+			renderable->RegisterComponents();
+		}
+	}
+}
+
+void EveSwarm::UnRegisterComponents()
+{
+	auto reg = GetComponentRegistry();
+	if( reg )
+	{
+		for( auto& renderable : m_renderables )
+		{
+			renderable->UnRegister( reg );
+		}
 	}
 }
 
@@ -1173,6 +1219,3 @@ Vector3 EveSwarm::Calculate_Wander( SwarmVehicle& s, float wanderDistance, float
 	target = target * wanderDistance + s.wanderTarget;
 	return target;
 }
-
-
-

@@ -12,6 +12,8 @@ const Be::ClassInfo* EveSwarmRenderable::ExposeToBlue()
 {
     EXPOSURE_BEGIN( EveSwarmRenderable, "" )
 		MAP_INTERFACE( ITr2Pickable )
+		MAP_INTERFACE( EveEntity )
+		MAP_INTERFACE( IEveShadowCaster )
     EXPOSURE_END()
 }
 
@@ -24,6 +26,8 @@ const Be::ClassInfo* EveSwarm::ExposeToBlue()
 		MAP_INTERFACE( IEveSpaceObject2 )
 		MAP_INTERFACE( IInitialize )
 		MAP_INTERFACE( INotify )
+		MAP_INTERFACE( EveEntity )
+		MAP_INTERFACE( IEveShadowCaster )
 
 		MAP_ATTRIBUTE( "count", m_count, ":jessica-group: Swarm", Be::READ | Be::PERSIST )
 		MAP_ATTRIBUTE( "swarmingEnabled", m_swarmingEnabled, ":jessica-group: Swarm", Be::READ | Be::PERSIST )

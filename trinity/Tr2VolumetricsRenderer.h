@@ -11,6 +11,7 @@
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2TextureReference );
 BLUE_DECLARE( Tr2DepthStencil );
+BLUE_DECLARE( EveComponentRegistry );
 class TriFrustum;
 class ITriRenderBatchAccumulator;
 
@@ -21,15 +22,18 @@ BLUE_CLASS( Tr2VolumetricsRenderer ) :
 public:
 	Tr2VolumetricsRenderer( IRoot* lockobj = nullptr );
 
-	void RenderVolumetrics( 
-		const std::vector<ITr2VolumetricRenderable*>& volumetrics, 
-		const TriFrustum& frustum, 
+	void RenderVolumetrics(
+		const EveComponentRegistry& registry,
+		const TriFrustum& frustum,
 		Tr2DepthStencil& sceneDepth,
 		const Vector3& sunDirection,
 		const float depthSlices[4],
 		Tr2RenderContext& renderContext );
 	void UpdateVariableStore();
-	void RenderShadows( const std::vector<ITr2VolumetricRenderable*>& volumetrics, ITr2TextureProvider* shadowMap, Tr2RenderContext& renderContext );
+	void RenderShadows(
+		const EveComponentRegistry& registry,
+		ITr2TextureProvider* shadowMap,
+		Tr2RenderContext& renderContext );
 
 	EXPOSE_TO_BLUE();
 

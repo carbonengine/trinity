@@ -17,13 +17,9 @@ class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 class Tr2QuadRenderer;
 
-namespace EveSpriteLightUtils {
-	float Blink( float blinkRate, float blinkPhase, float minScale, float maxScale );
-}
-
 struct EveSpriteLight {
 	EveSpriteLight();
-	EveSpriteLight( const LightData& lightData, float blinkPhase, float blinkRate, float minScale, float maxScale, uint32_t index, const std::wstring profilePath );
+	EveSpriteLight( const LightData& lightData, float blinkPhase, float blinkRate, float minScale, float maxScale, uint32_t index, const std::wstring& profilePath );
 
 	LightData lightData;
 	float blinkPhase;

@@ -7,6 +7,7 @@
 #include "Tr2DebugRenderer.h"
 #include <Tr2Renderer.h>
 #include "Resources/Tr2LightProfileRes.h"
+#include "EveSpaceObjectAttachmentUtils.h"
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 
@@ -41,7 +42,7 @@ EveSpriteLight::EveSpriteLight() :
 
 }
 
-EveSpriteLight::EveSpriteLight( const LightData& lightData, float blinkPhase, float blinkRate, float minScale, float maxScale, uint32_t index, const std::wstring profilePath ) :
+EveSpriteLight::EveSpriteLight( const LightData& lightData, float blinkPhase, float blinkRate, float minScale, float maxScale, uint32_t index, const std::wstring& profilePath ) :
 	lightData( lightData ),
 	index( index ),
 	blinkRate( blinkRate ),
@@ -55,38 +56,6 @@ EveSpriteLight::EveSpriteLight( const LightData& lightData, float blinkPhase, fl
 		BeResMan->GetResource( profilePath, L"lp", lightProfile );
 	}
 }
-
-namespace EveSpriteLightUtils {
-	float Blink( float blinkRate, float blinkPhase, float minScale, float maxScale )
-	{
-		const float FLASH_PEAK_TIME = 0.05f;
-		float intPart;
-		float f = modf( Tr2Renderer::GetAnimationTime() * blinkRate + blinkPhase, &intPart );
-
-		float peak = FLASH_PEAK_TIME * blinkRate;
-		float result = 0.0f;
-		float end = peak * 4.0f;
-
-		auto lerp = [] ( float a, float b, float f ) {
-			return a + f * ( b - a );
-		};
-
-		if( peak < 0.0001f )
-		{
-			peak = 1.0f;
-		}
-		if( f < peak )
-		{
-			result = lerp( 0.0f, 1.0f, f / peak );
-		}
-		else if( f < end )
-		{
-			result = lerp( 1.0f, 0.0f, ( f - peak ) / ( end - peak ) );
-		}
-		return ( maxScale - minScale ) * result + minScale;
-	}
-}
-
 
 EveSpriteSet::EveSpriteSet( IRoot* lockobj ) :
 	PARENTLOCK( m_sprites ),
@@ -423,7 +392,7 @@ void EveSpriteSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& 
 			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
 
 			Color c = l.lightData.color;
-			float blinkScale = EveSpriteLightUtils::Blink( l.blinkRate, l.blinkPhase, l.minScale, l.maxScale );
+			float blinkScale = EveSpaceObjectAttachmentUtils::Blink( l.blinkRate, l.blinkPhase, l.minScale, l.maxScale );
 
 			c.a = 0.5;
 
@@ -475,7 +444,7 @@ void EveSpriteSet::GetLights( Tr2LightManager& lightManager, const Matrix& paren
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
 		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
-		float blinkScale = EveSpriteLightUtils::Blink( light.blinkRate, light.blinkPhase, light.minScale, light.maxScale );
+		float blinkScale = EveSpaceObjectAttachmentUtils::Blink( light.blinkRate, light.blinkPhase, light.minScale, light.maxScale );
 		data.radius *= blinkScale;
 		data.innerRadius = Float_16( float( data.innerRadius ) * blinkScale );
 		lightManager.AddLight(data);

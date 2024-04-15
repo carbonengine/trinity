@@ -152,7 +152,6 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_impostorMode( false ),
 	m_display( true ),
 	m_update( true ),
-	m_enableShadow( true ),
 	m_allowLodSelection( true ),
 	m_isPickable( true ),
 	m_activationStrength( 1.0f ),
@@ -989,11 +988,6 @@ void EveSpaceObject2::GetBatches( ITriRenderBatchAccumulator* batches, TriBatchT
 
 void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize )
 {
-	if( !m_shadowEffect || !m_shadowEffect->GetShaderStateInterface() )
-	{
-		return;
-	}
-
 	if( !m_mesh || !m_mesh->GetDisplay() )
 	{
 		return;
@@ -1006,19 +1000,14 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 	}
 	int meshIx = m_mesh->GetMeshIndex();
 
-	auto mesh = geomRes->GetMeshData( meshIx, shadowPixelSize );
-	if( !mesh || !mesh->m_allocationsValid )
-	{
-		return;
-	}
-
-	auto& opaqueAreaBlocks = m_overlayMeshAreaBlocks[EveMeshOverlayEffect::TYPE_OPAQUEONLY];
-	for( auto& areaBlock : opaqueAreaBlocks )
+	auto& shadowAreas = m_shadowMeshAreas.m_areaBlockVector;
+	Tr2Material* shadowShader = m_shadowMeshAreas.m_shaderMaterial;
+	for( auto& areaBlock : shadowAreas )
 	{
 		if( auto primCount = GetPrimitiveCount( *mesh, areaBlock.m_startIndex, areaBlock.m_count ) )
 		{
 			Tr2RenderBatch batch;
-			batch.SetMaterial( m_shadowEffect );
+			batch.SetMaterial( shadowShader );
 			batch.SetGeometry( mesh->m_vertexDeclaration, mesh->m_vertexAllocation, mesh->m_indexAllocation );
 			batch.SetPerObjectData( perObjectData );
 			batch.SetDrawIndexedInstanced(
@@ -1030,6 +1019,10 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 			batches->Commit( batch );
 		}
 	}
+}
+
+Tr2PerObjectData* EveSpaceObject2::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) {
+	return GetPerObjectData( accumulator );
 }
 
 float EveSpaceObject2::GetSortValue()
@@ -1615,81 +1608,24 @@ void EveSpaceObject2::AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2Quad
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Gets shadow caster renderables.
-//   Warning: this function can be called on different threads, so it needs to be
-//   thread-safe.
+//   Check if the object is casting a shadow in the camera/shadow frustums
 // --------------------------------------------------------------------------------
-bool EveSpaceObject2::GetRenderablesCastingShadow( bool isSelf, const TriFrustumOrtho& frustum, std::vector<ITr2Renderable*>& renderables )
+bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
 {
-	if( !m_display || !m_mesh )
+	if( !m_display || m_boundingSphereWorldRadius <= 0.0 )
 	{
 		return false;
 	}
 
-	if( m_boundingSphereWorldRadius > 0.0f )
-	{
-		if( frustum.IsSphereVisibleAndInsideNearPlane( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) )
-		{
-			renderables.push_back( this );
-			return true;
-		}
-	}
-	return false;
-}
+	Vector4 bs = Vector4( m_boundingSphereWorldCenter, m_boundingSphereRadius );
 
-// --------------------------------------------------------------------------------
-// Description:
-//   Go through all the frustums and if object is in an ortho frustum and not "behind" any camera frustum plane
-//  then we push back the frustum index and the shadowSize to the sortedShadowCasters vector
-// --------------------------------------------------------------------------------
-void EveSpaceObject2::GatherShadowRenderables( std::vector<std::vector<ShadowCasterInfo>>& shadowCasters, TriFrustum* splitCameraFrustums, TriFrustumOrtho* shadowFrustums, const size_t arraySize, const unsigned int shadowMapSize, const Vector3 sunDir )
-{
-	if( !m_display )
-	{
-		return;
-	}
+	sizeInShadow = 0;
 
-	float shadowSize = 0.0f;
-
-	if( m_boundingSphereWorldRadius > 0.0f )
+	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, bs ) )
 	{
- 		for( size_t i = 0; i < arraySize; ++i )
-		{
-			bool inView = true;
-			if( shadowFrustums[i].IsSphereVisibleAndInsideNearPlane( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ) )
-			{	
-				for( unsigned int j = 0; j < 6; ++j )
-				{ 
-					// first check if sun direction is perpendicular of the plane
-					float d = DotNormal( splitCameraFrustums[i].m_planes[j], sunDir );
-					// if it's not perpendicular then check if the object is "behind" the plane
-					if( d < 0 )
-					{
-						auto val = DotCoord( splitCameraFrustums[i].m_planes[j], -m_boundingSphereWorldCenter );
-						if( DotCoord( splitCameraFrustums[i].m_planes[j], m_boundingSphereWorldCenter ) < -m_boundingSphereWorldRadius )
-						{
-							CCP_STATS_INC( objectsCulledCount );
-							inView = false;
-						}
-					}
-				}
-				if( inView )
-				{
-					// if the object is in frustum
-					shadowSize = shadowFrustums[i].GetPixelSize( Vector4( m_boundingSphereWorldCenter, m_boundingSphereWorldRadius ), shadowMapSize );
-					
-					// if the shadow pixel size is too small don't bother to render it into the split
-					if( shadowSize > 15.f )
-					{
-						ShadowCasterInfo s;
-						s.renderable = this;
-						s.shadowSize = shadowSize;
-						shadowCasters[i].push_back( s );
-					}
-				}
-			}
-		}
+		sizeInShadow = EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, bs );
 	}
+	return sizeInShadow > 15.f;
 }
 
 void EveSpaceObject2::SetMesh( Tr2MeshBase* mesh )
@@ -1775,6 +1711,7 @@ void EveSpaceObject2::ReleaseCachedData( BlueAsyncRes* p )
 	{
 		m_overlayMeshAreaBlocks[i].clear();
 	}
+	m_shadowMeshAreas.Clear();
 }
 
 void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
@@ -1791,6 +1728,9 @@ void EveSpaceObject2::RebuildCachedData( BlueAsyncRes* p )
 		{
 			TriRenderBatchAreaBlock::Optimize( m_overlayMeshAreaBlocks[i] );
 		}
+
+		m_mesh->CollectAreaBlocksWithSharedMaterial( m_shadowMeshAreas, TRIBATCHTYPE_OPAQUE );
+		m_shadowMeshAreas.Optimize();
 	}
 
 	// If we already have a model we don't want to go through here
@@ -1840,7 +1780,7 @@ bool EveSpaceObject2::OnModified( Be::Var* val )
 		m_oldClipSphereFactor = m_clipSphereFactor;
 		SetControllerVariable( "ClipSphereFactor", m_clipSphereFactor );
 	}
-	else if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display ) )
+	else if( IsMatch( val, m_reflectionMode ) || IsMatch( val, m_display ) || IsMatch( val, m_castShadow ) )
 	{
 		ReRegister();
 	}
@@ -1888,15 +1828,17 @@ bool EveSpaceObject2::GetBoundingSphere( Vector4& sphere, BoundingSphereQuery qu
 
 bool EveSpaceObject2::IsAnimated() const
 {
-	if( !m_shadowEffect )
-	{
-		CCP_LOGWARN( "EveSpaceObject2::IsAnimated No shadow effect found for %s, returning false", m_name.c_str() );
-		return false;
-	}
+	return m_isAnimated;
+}
 
-	// I don't like this, but we will need to do this while we don't have everything in the SOF
-	// (because the isSkinned parameter is stored in the sofHull) - Oli
-	return StringFind( m_shadowEffect->GetEffectPathName(), "skinned" );
+void EveSpaceObject2::SetIsAnimated( bool isAnimated )
+{
+	m_isAnimated = isAnimated;
+}
+
+void EveSpaceObject2::SetCastsShadow( bool castShadow )
+{
+	m_castShadow = castShadow;
 }
 
 void EveSpaceObject2::PlayAnimation( const char* animName, bool replace, int loopCount, float delay, float speed )
@@ -2422,11 +2364,6 @@ void EveSpaceObject2::UpdateWorldTransform( Be::Time time )
 	m_invWorldTransform = Inverse( m_worldTransform );
 }
 
-bool EveSpaceObject2::IsShadowReceiveEnabled()
-{
-	return m_enableShadow && m_shadowEffect;
-}
-
 void EveSpaceObject2::GetModelCenterWorldPosition( Vector3& position ) const
 {
 	// This version of the function does not perform an update on the object
@@ -2640,15 +2577,6 @@ void EveSpaceObject2::AddLocatorSet( const char* name, const Locator* locators, 
 void EveSpaceObject2::ClearLocatorSets()
 {
 	m_locatorSets.Clear();
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Set the shadow shader of this object from the outside
-// --------------------------------------------------------------------------------
-void EveSpaceObject2::SetShadowEffect( Tr2EffectPtr newShadowEffect )
-{
-	m_shadowEffect = newShadowEffect;
 }
 
 // --------------------------------------------------------------------------------
@@ -3243,7 +3171,12 @@ void EveSpaceObject2::RegisterComponents()
 	{
 		if( EntityComponents::ShouldReflect( m_reflectionMode ) )
 		{
-			registry->RegisterComponent( ComponentType::REFLECTION_RENDERABLE, this, this->m_state );
+			registry->RegisterComponent<ITr2Renderable>( this );
+		}
+
+		if( m_castShadow )
+		{
+			registry->RegisterComponent<IEveShadowCaster>( this );
 		}
 
 		for( auto it = begin( m_effectChildren ); it != end( m_effectChildren ); ++it )
@@ -3430,11 +3363,6 @@ void EveSpaceObject2::SetShaderOption( const BlueSharedString& name, const BlueS
 	if( nullptr != m_mesh )
 	{
 		m_mesh->SetShaderOption( name, value );
-	}
-
-	if( m_shadowEffect )
-	{
-		m_shadowEffect->SetOption( name, value );
 	}
 
 	for( auto it = m_overlayEffects.begin(); it != m_overlayEffects.end(); ++it )

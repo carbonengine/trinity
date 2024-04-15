@@ -2,6 +2,8 @@
 #ifndef ITr2Renderable_H
 #define ITr2Renderable_H
 
+#include "Eve/EveComponentRegistry.h"
+
 class ITriRenderBatchAccumulator;
 class Tr2PerObjectData;
 class TriPoolAllocator;
@@ -44,13 +46,13 @@ BLUE_INTERFACE( ITr2Renderable ) :
 		return true;
 	}
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL ) = 0;
-	virtual void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) {}
 
-    virtual bool HasTransparentBatches() = 0;
-    virtual float GetSortValue() = 0; 
+	virtual bool HasTransparentBatches() = 0;
+	virtual float GetSortValue() = 0; 
 
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator ) = 0;
 };
+REGISTER_COMPONENT_TYPE( "ReflectionRenderable", ITr2Renderable );
 
 struct ITr2RenderableEntry
 {

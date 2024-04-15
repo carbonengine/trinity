@@ -8,6 +8,7 @@
 #include "Tr2InstancedMesh.h"
 #include "Resources/TriGeometryRes.h"
 #include "Tr2Renderer.h"
+#include "Utilities/BoundingBox.h"
 
 
 CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
@@ -347,13 +348,12 @@ CcpMath::AxisAlignedBox Tr2InstancedMesh::GetBounds( const Matrix* boneTransform
 		{
 			return aabb;
 		}
-
+	
 		auto instanceSize = m_maxInstanceSize;
 		if( m_boundsMethod == DYNAMIC_SCALED )
 		{
-			auto geometryResource = GetGeometryResource();
-			CcpMath::AxisAlignedBox instance;
-			if( geometryResource && geometryResource->GetBoundingBox( m_meshIndex, instance.m_min, instance.m_max ) )
+			CcpMath::AxisAlignedBox instance = GetInstanceBounds();
+			if( instance )
 			{
 				float radius = 0;
 				instance.EnumerateVertices( [&radius]( const Vector3& vtx ) {
@@ -365,6 +365,31 @@ CcpMath::AxisAlignedBox Tr2InstancedMesh::GetBounds( const Matrix* boneTransform
 		aabb.Grow( instanceSize );
 		return aabb;
 	}
+}
+
+CcpMath::AxisAlignedBox Tr2InstancedMesh::GetInstanceBounds() const
+{
+	auto geometryResource = GetGeometryResource();
+	CcpMath::AxisAlignedBox instance;
+	if( geometryResource && geometryResource->GetBoundingBox( m_meshIndex, instance.m_min, instance.m_max ) )
+	{
+		return instance;
+	}
+	return CcpMath::AxisAlignedBox();
+}
+
+
+CcpMath::AxisAlignedBox Tr2InstancedMesh::GetInstanceBoundsClosestToPoint( const Vector3& point, Vector3 worldPos ) const
+{
+	auto instanceBounds = GetInstanceBounds();
+	auto outerBounds = GetBounds();
+	outerBounds.m_min -= instanceBounds.m_min;
+	outerBounds.m_max -= instanceBounds.m_max;
+	outerBounds.Offset( worldPos );
+	
+	Vector3 closestPoint = ClosestPointToBoundingBox( outerBounds.m_min, outerBounds.m_max, point );
+	instanceBounds.Offset( closestPoint );
+	return instanceBounds;
 }
 
 CcpMath::AxisAlignedBox Tr2InstancedMesh::GetAreaBounds( unsigned int, const Matrix* boneTransforms ) const
@@ -518,17 +543,20 @@ void Tr2InstancedMesh::RenderDebugInfo( const Matrix& worldTransform, ITr2DebugR
 		}
 		else
 		{
-			if( m_instanceGeometryResource )
+			auto parentBounds = GetBounds(); 
+			if( parentBounds )
 			{
-				if( auto aabb = m_instanceGeometryResource->GetInstanceBufferBoundingBox( m_instanceMeshIndex ) )
+				if( m_instanceGeometryResource )
 				{
-					renderer.DrawBox( this, worldTransform, aabb.m_min, aabb.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xff008888, 0x22008888 ) );
+					auto aabb = GetInstanceBoundsClosestToPoint( Tr2Renderer::GetViewPosition(), worldTransform.GetTranslation() );
+					if( aabb && !parentBounds.IsPointInside( Tr2Renderer::GetViewPosition() ) )
+					{
+						renderer.DrawBox( this, worldTransform, aabb.m_min, aabb.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xff008888, 0x22008888 ) );
+					}
 				}
+				renderer.DrawBox( this, worldTransform, parentBounds.m_min, parentBounds.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xff888888, 0x22888888 ) );
 			}
-			if( auto aabb = GetBounds() )
-			{
-				renderer.DrawBox( this, worldTransform, aabb.m_min, aabb.m_max, Tr2DebugRenderer::Wireframe, Tr2DebugColor( 0xff888888, 0x22888888 ) );
-			}
+			
 		}
 	}
 }

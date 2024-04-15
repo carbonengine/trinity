@@ -44,6 +44,10 @@ EveSOFDataFactionColorSet::EveSOFDataFactionColorSet( IRoot* lockobj )
 
 	// set default colors
 	m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_BILLBOARD] = Color( 2.5f, 2.5f, 2.5f, 2.5f ); // default white with 2.5 in hdr
+	m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_WARP_FX] = Color( uint32_t( 0xFFFF6333 ) ); // Artist authored default value
+	m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_DOCKED_FX] = Color( uint32_t( 0xFF4C82E2 ) ); // Artist authored default value
+	m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_ATTACK_FX] = Color( uint32_t( 0xFFFF180B ) ); // Artist authored default value
+	m_colors[SOFDataFactionColorChooser::TYPE_PRIMARY_SIEGE_FX] = Color( uint32_t( 0xFFFF5E2D ) ); // Artist authored default value
 }
 
 EveSOFDataLogo::EveSOFDataLogo( IRoot* lockobj ):
@@ -543,7 +547,8 @@ EveSOFDataHullPlaneSet::EveSOFDataHullPlaneSet( IRoot* lockobj ) :
 	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP ),
 	m_skinned( false ),
 	m_usage( USAGE_STANDARD ),
-	m_atlasSize( 1 )
+	m_atlasSize( 1 ),
+	m_atlasAspectRatio( 1, 1 )
 {}
 
 
@@ -616,6 +621,7 @@ EveSOFDataHullHazeSet::EveSOFDataHullHazeSet( IRoot* lockobj ) :
 {}
 
 EveSOFDataHullHazeSetItem::EveSOFDataHullHazeSetItem( IRoot* lockobj ) :
+	PARENTLOCK( m_lights ),
 	m_position( 0.f, 0.f, 0.f ), m_scaling( 1.f, 1.f, 1.f ), 
 	m_boneIndex( -1 ),
 	m_rotation( 0.f, 0.f, 0.f, 1.f ),
@@ -624,7 +630,6 @@ EveSOFDataHullHazeSetItem::EveSOFDataHullHazeSetItem( IRoot* lockobj ) :
 	m_saturation( 1.f ),
 	m_boosterGainInfluence( false )
 {
-	m_light = nullptr;
 }
 
 /// <summary>

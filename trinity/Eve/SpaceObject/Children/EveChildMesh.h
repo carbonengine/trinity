@@ -39,14 +39,15 @@ BLUE_CLASS( EveChildMesh ) :
 	public INotify,
 	public IEveSpaceObjectDecalOwner,
 	public IEveSpaceObjectAttachmentOwner,
-	public ITr2LightOwner
+	public ITr2LightOwner,
+	public IEveShadowCaster
 {
 public:
 	EXPOSE_TO_BLUE();
 
 	EveChildMesh( IRoot* lockobj = NULL );
 	~EveChildMesh();
-	
+
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectChild
 	const char* GetName() const;
@@ -63,10 +64,10 @@ public:
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 	void SetScale( const Vector3& scale );
 	void AddTransformModifier( IEveChildTransformModifier* modifier ) override;
-	void RegisterWithQuadRenderer( Tr2QuadRenderer & quadRenderer ) override;
+	void RegisterWithQuadRenderer( Tr2QuadRenderer& quadRenderer ) override;
 	void AddQuadsToQuadRenderer( const TriFrustum& frustum, Tr2QuadRenderer& quadRenderer ) const override;
 
-	
+
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
@@ -79,7 +80,6 @@ public:
 	// ITr2Renderable
 	virtual bool HasTransparentBatches();
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize );
 	virtual float GetSortValue();
 	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
 	virtual bool IsVisible( const TriFrustum& frustum ) const;
@@ -90,7 +90,7 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// INotify
-	bool OnModified( Be::Var * value );
+	bool OnModified( Be::Var* value );
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// IEveSpaceObjectAttachmentOwner
@@ -102,6 +102,12 @@ public:
 	virtual void GetLights( Tr2LightManager& lightManager ) const;
 	virtual void AddLight( Tr2Light* newLight );
 	virtual void ClearLights();
+
+	/////////////////////////////////////////////////////////////////////////////////////
+	// IEveShadowCaster
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
+	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
@@ -115,6 +121,8 @@ public:
 	void SetMesh( Tr2MeshBase* mesh );
 	void SetOrigin( Origin origin );
 	void SetReflectionMode( EntityComponents::ReflectionMode reflectionMode );
+	void SetCastShadow( bool castShadow );
+	void SetMinScreenSize( float minScreenSize );
 
 	Tr2GrannyAnimation* GetAnimationController() const override;
 	void SetAnimationController( Tr2GrannyAnimation* animation );
@@ -122,6 +130,8 @@ public:
 protected:
 	void InitializeAnimation();
 	bool ShouldReflect() const;
+
+	bool DisplayDecals() const;
 
 
 	// general data
@@ -138,6 +148,7 @@ protected:
 
 	float m_minScreenSize;
 	float m_currentScreenSize;
+	float m_currentInstanceScreenSize;
 
 	float m_sortValueOffset;
 	float m_sortValueScale;
@@ -148,9 +159,12 @@ protected:
 	Tr2PersistentPerObjectData<EveChildMesh> m_perObjectDataPs;
 	EveSpaceObjectPSData m_psData;
 	EveSpaceObjectVSData m_vsData;
-	
+
 	bool m_display;
 	bool m_isVisible;
+	bool m_instancesVisible;
+	bool m_castShadow;
+
 	float m_activationStrength;
 
 	Origin m_origin;

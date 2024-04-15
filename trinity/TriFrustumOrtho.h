@@ -10,7 +10,8 @@ public:
 	void DeriveFrustum( const Matrix& view, const Vector3& minBounds, const Vector3& maxBounds );
 	bool IsSphereVisibleAndInsideNearPlane( const Vector4* sphere ) const;
 	bool IsSphereVisibleAndInsideNearPlane( const Vector3& center, float radius ) const;
-	float GetPixelSize( Vector4 sphere, uint16_t textureSize );
+	float GetPixelSize( Vector4 sphere, uint16_t textureSize ) const;
+	const Vector3& GetEyePos() const;
 
 private:
 	Matrix m_view;

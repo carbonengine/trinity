@@ -26,6 +26,7 @@ EveChildLink::EveChildLink( IRoot* lockobj ) :
 	m_linkBarrier( 1.f ),
 	m_targetRadius( 0.5f )
 {
+	m_castShadow = false;
 }
 
 // --------------------------------------------------------------------------------

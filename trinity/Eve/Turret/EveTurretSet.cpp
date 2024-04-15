@@ -53,9 +53,6 @@ static std::string s_systemBoneSkeletonNames[] = {
 const unsigned int INVALID_BONE_INDEX = 0xffffffff;
 const unsigned int INVALID_TURRET_INDEX = 0xffffffff;
 
-// shadow for turrets shader
-static const char* SHADOW_EFFECT_PATH = "res:/Graphics/Effect/Managed/Space/Turret/Shadow.fx";
-
 // use options visibility threshold when to turn off turret rendering, NOT the firingeffect
 extern float g_eveSpaceSceneVisibilityThreshold;
 
@@ -139,10 +136,6 @@ EveTurretSet::EveTurretSet( IRoot* lockobj ) :
 		m_systemBoneID[i] = INVALID_BONE_INDEX;
 	}
 
-	// create shaders for shadow-map rendering
-	m_shadowEffect.CreateInstance();
-	m_shadowEffect->SetEffectPathName( SHADOW_EFFECT_PATH );
-
 	// create target data
 	m_target.CreateInstance();
 
@@ -192,8 +185,12 @@ bool EveTurretSet::Initialize()
 // --------------------------------------------------------------------------------
 bool EveTurretSet::OnModified( Be::Var* value )
 {
-	if( IsMatch( value, m_geomResPath ) )
+	if( IsMatch( value, m_display ) ) {
+		ReRegister();
+	}
+	else if( IsMatch( value, m_geomResPath ) )
 	{
+		ReRegister();
 		// new gr2 file specified -> reload!
 		InitializeGeometryResource();
 	}
@@ -216,6 +213,20 @@ bool EveTurretSet::OnModified( Be::Var* value )
 		InitializeDynamicBounds( nullptr, nullptr );
 	}
 	return true;
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Registers itself and its children with the scene registration container.
+//    This is so we don't have to traverse the tree every frame
+// --------------------------------------------------------------------------------
+void EveTurretSet::RegisterComponents()
+{
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display )
+	{
+		registry->RegisterComponent<IEveShadowCaster>( this );
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -1532,89 +1543,33 @@ int EveTurretSet::GetState() const
 
 // --------------------------------------------------------------------------------
 // Description:
-//   Use a more specialized ::GetRenderables() function to get this renderable. We
-//   need a special culling method for orthogonal frustum
-//   And do not get the renderables from the fire effects for shadows!
-// Arguments:
-//   frustum - the current shadow frustum
-//   renderables - a vector for all the renderable we want to render into shadowmap
-// SeeAlso:
-//   ITr2Renderable
+//   Check if the object is casting a shadow in the camera/shadow frustums
 // --------------------------------------------------------------------------------
-void EveTurretSet::GetRenderablesCastingShadow( const TriFrustumOrtho& frustum, std::vector<ITr2Renderable*>& renderables )
+bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
 {
 	if( !m_display || !m_geometryResource )
 	{
-		return;
+		return false;
 	}
 
-	// check visibility for each turret
-	bool renderForShadow = false;
-	for( std::vector<SingleTurretData>::iterator it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
+	sizeInShadow = 0;
+
+	for( auto& turret : m_singleTurrets )
 	{
-		// transform bounding sphere into world space to check against frustum
 		Vector4 transformedBoundingSphere = m_boundingSphere;
-		BoundingSphereTransform( it->worldMatrix, transformedBoundingSphere );
-		bool insideLightFrustum = frustum.IsSphereVisibleAndInsideNearPlane( &transformedBoundingSphere );
-		// if it is visible and needed for this shadowmap, render it
-		renderForShadow |= ( it->visible && insideLightFrustum );
-	}
+		// transform bounding sphere into world space to check against frustum
+		BoundingSphereTransform( turret.worldMatrix, transformedBoundingSphere );
 
-	// add this object (which is a renderable), if it is needed
-	if( renderForShadow )
-	{
-		if( m_turretEffect )
+		if( transformedBoundingSphere.w > 0.0f )
 		{
-			renderables.push_back( this );
-		}
-	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Go through all the frustums and if object is in an ortho frustum and not "behind" any camera frustum plane
-//  then we push back the frustum index and the shadowSize to the frustumInfo vector
-// --------------------------------------------------------------------------------
-void EveTurretSet::GatherShadowRenderables( std::vector<std::vector<ShadowCasterInfo>>& shadowCasters, TriFrustum* splitCameraFrustums, TriFrustumOrtho* shadowFrustums, const size_t arraySize, const unsigned int shadowMapSize, const Vector3 sunDir )
-{	
-	if( !m_display || !m_geometryResource )
-	{
-		return;
-	}
-
-	// check visibility for each turret
-	float shadowSize = 0.0f;
-	for( size_t i = 0; i < arraySize; ++i )
-	{
-		// For each turret transform its boundingSphere and then check if it's visible
-		for( std::vector<SingleTurretData>::iterator it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
-		{
-			Vector4 transformedBoundingSphere = m_boundingSphere;
-			// transform bounding sphere into world space to check against frustum
-			BoundingSphereTransform( it->worldMatrix, transformedBoundingSphere );
-
-			if( transformedBoundingSphere.w > 0.0f )
+			if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, transformedBoundingSphere ) )
 			{
-				if( shadowFrustums[i].IsSphereVisibleAndInsideNearPlane( transformedBoundingSphere.GetXYZ(), transformedBoundingSphere.w ) )
-				{
-					// if the object is in frustum
-					shadowSize = shadowFrustums[i].GetPixelSize( Vector4( transformedBoundingSphere.GetXYZ(), transformedBoundingSphere.w ), shadowMapSize );
-
-					// if the shadow pixel size is too small don't bother to render it into the split
-					if( shadowSize > 5.f )
-					{
-						// if we find a single turret that is visible we can quit early
-						ShadowCasterInfo s;
-						s.renderable = this;
-						s.shadowSize = shadowSize;
-						shadowCasters[i].push_back( s );
-					}
-				}
+				sizeInShadow = max( sizeInShadow, EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, transformedBoundingSphere ) );
 			}
 		}
 	}
+	return sizeInShadow > 5.f;
 }
-
 
 void EveTurretSet::UpdateVisibility( const TriFrustum& frustum )
 {
@@ -1798,7 +1753,7 @@ void EveTurretSet::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	}
 
 	Tr2RenderBatch batch;
-	batch.SetMaterial( m_shadowEffect );
+	batch.SetMaterial( m_turretEffect );
 	batch.SetGeometry( m_vertexDeclHandle, meshData->m_vertexAllocation, m_instanceBuffer, meshData->m_indexAllocation );
 	batch.SetPerObjectData( perObjectData );
 
@@ -1943,6 +1898,11 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	}
 
 	return perObjectData;
+}
+
+Tr2PerObjectData* EveTurretSet::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
+{
+	return GetPerObjectData( accumulator );
 }
 
 // --------------------------------------------------------------------------------
@@ -3010,10 +2970,6 @@ void EveTurretSet::SetShaderOption( const BlueSharedString& name, const BlueShar
 	if( nullptr != m_turretEffect )
 	{
 		m_turretEffect->SetOption( name, value );
-	}
-	if( nullptr != m_shadowEffect )
-	{
-		m_shadowEffect->SetOption( name, value );
 	}
 
 	auto ambientEffect = GetAmbientEffect();

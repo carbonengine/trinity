@@ -68,7 +68,7 @@ void EveChildParticleSystem::RegisterComponents()
 	{
 		if( EntityComponents::ShouldReflect( m_reflectionMode ) && m_display )
 		{
-			registry->RegisterComponent( ComponentType::REFLECTION_RENDERABLE, this, this->m_state );
+			registry->RegisterComponent<ITr2Renderable>( this );
 		}
 	}
 }
@@ -171,14 +171,6 @@ void EveChildParticleSystem::GetBatches( ITriRenderBatchAccumulator* batches, Tr
 	if( m_display && m_mesh && m_mesh->GetAreas(batchType)->size() != 0 )
 	{
 		m_mesh->GetBatches( batches, m_mesh->GetAreas( batchType ), perObjectData, std::numeric_limits<float>::max(), reason == Tr2RenderReason::TR2RENDERREASON_REFLECTION );
-	}
-}
-
-void EveChildParticleSystem::GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize )
-{
-	if( m_display && m_mesh )
-	{
-		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData );
 	}
 }
 

@@ -60,6 +60,7 @@
 namespace
 {
 const float MIN_DECAL_SCREEN_SIZE = 10.f;
+const float MIN_INSTANCED_MESH_SCREEN_SIZE = 2.5f;
 const uint8_t PICKABLE_HANGARVIEO_BUFFER_ID = 100;
 
 const char* GetPlaneSetEffectPath( EveSOFDataHullPlaneSet::Usage usage, bool isSkinned )
@@ -140,11 +141,6 @@ EveSOF::EveSOF( IRoot* lockobj ) :
 	m_hazeSetEffectHalfSpherical->StartUpdate();
 	m_hazeSetEffectHalfSpherical->SetEffectPathName( "res:/graphics/effect/managed/space/spaceobject/fx/hazehalfspherical.fx" );
 	m_hazeSetEffectHalfSpherical->EndUpdate();
-
-	m_shadowEffect.CreateInstance();
-	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/spaceobject/shadow/shadow.fx" );
-	m_shadowEffectSkinned.CreateInstance();
-	m_shadowEffectSkinned->SetEffectPathName( "res:/graphics/effect/managed/space/spaceobject/shadow/skinned_shadow.fx" );
 }
 
 // --------------------------------------------------------------------------------
@@ -459,18 +455,8 @@ void EveSOF::SetupMesh( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 	obj->SetShapeEllipsoid( dna->GetHullShapeEllipsoid() );
 	obj->EnableDynamicBoundingSphere( dna->DynamicBoundingSphereEnabled() );
 
-	// shadow caster?
-	if( dna->CastShadow() )
-	{
-		if( dna->IsHullAnimated() )
-		{
-			obj->SetShadowEffect( m_shadowEffectSkinned );
-		}
-		else
-		{
-			obj->SetShadowEffect( m_shadowEffect );
-		}
-	}
+	obj->SetCastsShadow( dna->CastShadow() );
+	obj->SetIsAnimated( dna->IsHullAnimated() );
 
 	// assign mesh to ship
 	obj->SetMesh( CreateMesh( dna ) );
@@ -969,23 +955,23 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 			auto isSkinned = planeSetData.skinned && buildFlags != EveSOFDataHullBuildFilter::INSTANCED_PLACEMENT;
 			planeEffect->SetEffectPathName( GetPlaneSetEffectPath( planeSetData.usage, isSkinned ) );
 
-			TriTextureParameterPtr imageMap;
+			TriTextureParameterPtr imageMap, layer1, layer2, mask;
+
+			auto CreateTextureParameter = []( const char* name, const char* path, TriTextureParameterPtr &param ) {
+				param.CreateInstance();
+				param->SetParameterName( BlueSharedString( name ) );
+				param->SetResourcePath( path );
+				return param;
+			};
 
 			// Select the planeset's data based on the usage
 			switch( planeSetData.usage )
 			{
 			case EveSOFDataHullPlaneSet::USAGE_SPACE_VIDEO:
-				imageMap.CreateInstance();
-				imageMap->SetParameterName( BlueSharedString( "ImageMap" ) );
-				imageMap->SetResourcePath( "dynamic:/inspacevideos" );
-				planeEffect->AddResource( imageMap );
+				planeEffect->AddResource( CreateTextureParameter( "ImageMap", "dynamic:/inspacevideos", imageMap ) );
 				break;
 			case EveSOFDataHullPlaneSet::USAGE_HANGAR_VIDEO:
-				imageMap.CreateInstance();
-				imageMap->SetParameterName( BlueSharedString( "ImageMap" ) );
-				imageMap->SetResourcePath( "dynamic:/hangarvideos" );
-				planeEffect->AddResource( imageMap );
-
+				planeEffect->AddResource( CreateTextureParameter( "ImageMap", "dynamic:/hangarvideos", imageMap ) );
 				// Set the pickbuffer so we can pick the videos in the client
 				planeSet->SetPickBufferID( PICKABLE_HANGARVIEO_BUFFER_ID );
 				break;
@@ -993,14 +979,19 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 				break;
 			}
 
-			// textures
-			planeEffect->AddResourceTexture2D( BlueSharedString( "Layer1Map" ), planeSetData.layer1MapResPath.c_str() );
-			planeEffect->AddResourceTexture2D( BlueSharedString( "Layer2Map" ), planeSetData.layer2MapResPath.c_str() );
-			planeEffect->AddResourceTexture2D( BlueSharedString( "MaskMap" ), planeSetData.maskMapResPath.c_str() );
+			// textures 
+			planeEffect->AddResource( CreateTextureParameter( "Layer1Map", planeSetData.layer1MapResPath.c_str(), layer1 ) );
+			planeEffect->AddResource( CreateTextureParameter( "Layer2Map", planeSetData.layer2MapResPath.c_str(), layer2 ) );
+			planeEffect->AddResource( CreateTextureParameter( "MaskMap", planeSetData.maskMapResPath.c_str(), mask ) );
 
 			// parameters
 			float angularFadeOut = planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_HAZE ? 1.f : 0.f;
-			Vector4 planeData( angularFadeOut, (float)planeSetData.atlasSize, 0.f, 0.f );
+			Vector4 planeData( 
+				angularFadeOut,
+				(float)planeSetData.atlasSize,
+				std::floor( planeSetData.atlasAspectRatio.x ),
+				std::floor( planeSetData.atlasAspectRatio.y )
+			);
 			planeEffect->AddParameterVector4( BlueSharedString( "PlaneData" ), &planeData );
 
 			// finish up shader and set it
@@ -1054,25 +1045,23 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 					if( dna->UsingSof6() )
 					{
 
+						if( psiit.lights.size() > 0 )
+						{
+							planeSet->SetImageMapParameter( imageMap );
+							planeSet->SetLayerMap1Parameter( layer1 );
+							planeSet->SetLayerMap2Parameter( layer2 );
+							planeSet->SetMaskMapParameter( mask );
+						}
+
 						for( auto& pslight : psiit.lights ) {
 							float maxScale = max( psiit.scaling.x, max( psiit.scaling.y, psiit.scaling.z ) );
 							auto saturatedColor = Saturate( planeSetItem->m_color, pslight.saturation );
 							auto lightData = pslight.AsLightData( saturatedColor, maxScale );
-							lightData.position += planeSetItem->m_position;
+							lightData.position = Transform( lightData.position, RotationMatrix( planeSetItem->m_rotation ) ) + planeSetItem->m_position;
 							lightData.rotation = Normalize( lightData.rotation * planeSetItem->m_rotation );
-
 							lightData.boneIndex = planeSetItem->m_boneIndex;
 
-							if( planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_SPACE_VIDEO ) {
-								planeSet->SetPrimaryTextureParameter( imageMap );
-							}
-							else if( planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_HANGAR_VIDEO ) {
-								planeSet->SetPrimaryTextureParameter( imageMap );
-							}
-
-							EvePlaneLight light( lightData, pslight.saturation, index, pslight.lightProfilePath );
-
-							planeSet->AddLight( light );
+							planeSet->AddLight( EvePlaneLight( lightData, pslight.saturation, index, pslight.lightProfilePath, (EveSpaceObjectAttachmentUtils::FadeType) psiit.blinkMode, psiit.phase, psiit.rate ) );
 						}
 
 						index++;
@@ -1291,19 +1280,19 @@ void EveSOF::SetupHazeSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOFD
 						if( dna->UsingSof6() )
 						{
 							hazeSetItem->m_color = Saturate( hazeSetItem->m_color, itemData->saturation );
-							if( itemData->light )
+							for( auto& light : itemData->lights )
 							{
-								auto saturatedColor = Saturate( color, itemData->light->saturation );
+								auto saturatedColor = Saturate( color, light.saturation );
 								Vector3 scale = hazeSetItem->m_scaling;
 								float maxScale = max( scale.x, max( scale.y, scale.z ) );
 
-								auto lightData = itemData->light->AsLightData( saturatedColor, maxScale );
-								lightData.position += hazeSetItem->m_position;
+								auto lightData = light.AsLightData( saturatedColor, maxScale );
+								lightData.position = Transform( lightData.position, RotationMatrix( hazeSetItem->m_rotation ) ) + hazeSetItem->m_position;
 								lightData.rotation = Normalize( lightData.rotation * hazeSetItem->m_rotation );
 
 								lightData.boneIndex = itemData->boneIndex;
 
-								EveHazeSetLight hazeSetLight( lightData, index, itemData->light->lightProfilePath, itemData->boosterGainInfluence );
+								EveHazeSetLight hazeSetLight( lightData, index, light.lightProfilePath, itemData->boosterGainInfluence );
 
 								hazeSet->AddLight( hazeSetLight );
 							}
@@ -1540,9 +1529,9 @@ void EveSOF::SetupBannerSets( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna, co
 							float maxScale = max( scale.x, max( scale.y, scale.z ) );
 							auto black = Color( 0, 0, 0, 0 );
 							auto lightData = banner.light->AsLightData( black, maxScale );
-							lightData.position += modifiedItem.position;
-							lightData.rotation = Normalize(lightData.rotation * modifiedItem.rotation);
-
+							lightData.position = Transform( lightData.position, RotationMatrix( modifiedItem.rotation ) ) + modifiedItem.position;
+							lightData.rotation = Normalize( lightData.rotation * modifiedItem.rotation );
+							
 							EveBannerLight bannerLight( lightData, banner.light->saturation, index, banner.light->lightProfilePath );
 
 							bannerSet->AddLight( bannerLight );
@@ -2236,6 +2225,8 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		}
 
 		childMesh->SetMesh( instancedMesh );
+		childMesh->SetMinScreenSize( MIN_INSTANCED_MESH_SCREEN_SIZE );
+		childMesh->SetCastShadow( dna->CastShadow() );
 		childMesh->Setup( nullptr, nullptr, nullptr, him->lowestLodVisible );
 
 		if( him->displayModifier != EveChildContainer::DisplayQualityModifier::SHADER_ALL )
@@ -3447,6 +3438,7 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 				auto mesh = CreateMesh( extensionDna );
 				child->SetMesh( mesh );
 				child->SetReflectionMode( extensionDna->GetReflectionMode() );
+				child->SetCastShadow( extensionDna->CastShadow() );
 
 				if( extensionDna->IsHullAnimated() )
 				{ 
@@ -3505,6 +3497,8 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 
 		// Set the reflectionMode based on the category
 		child->SetReflectionMode( extensionDna->GetReflectionMode() );
+		child->SetCastShadow( extensionDna->CastShadow() );
+		child->SetMinScreenSize( MIN_INSTANCED_MESH_SCREEN_SIZE );
 
 		SetupDecalSets( BlueCastPtr( child->GetRawRoot() ), extensionDna );
 		// do this last so it sets all the needed shaders as instanced
