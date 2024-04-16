@@ -163,7 +163,6 @@ protected:
 	bool m_display;
 	bool m_isVisible;
 	bool m_instancesVisible;
-	bool m_useSpaceObjectData;
 	bool m_castShadow;
 
 	float m_activationStrength;

@@ -16,6 +16,7 @@
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2AdapterStructures.h"
 #include "MetalContext.h"
+#include <Tr2UpscalingAL.h>
 
 class Tr2ConstantBufferAL;
 class Tr2ShaderAL;
@@ -205,6 +206,16 @@ public:
 	void EndParallelEncoding();
 	
 	ALResult ForkContext( Tr2RenderContextAL* context, uint32_t index ) const;
+	
+	
+	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration );
+	Tr2UpscalingAL::Result SetupUpscaling();
+	Tr2UpscalingContext* GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+	Tr2UpscalingContext* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+	bool GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY );
+
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
+
 protected:
 	bool                               m_isValid;
 

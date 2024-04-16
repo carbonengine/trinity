@@ -190,24 +190,4 @@ private:
 };
 #else
 
-#include "Tr2NoopUpscaling.h"
-BLUE_CLASS( Tr2MetalFxSpatialUpscaling ) : public Tr2NoopUpscaling
-{
-public:
-    EXPOSE_TO_BLUE();
-    Tr2MetalFxSpatialUpscaling( IRoot* lockobj = NULL ){};
-    ~Tr2MetalFxSpatialUpscaling(){};
-    bool IsApplicable() const;
-};
-
-BLUE_CLASS( Tr2MetalFxTemporalUpscaling ) : public Tr2NoopUpscaling
-{
-public:
-    EXPOSE_TO_BLUE();
-    Tr2MetalFxTemporalUpscaling( IRoot* lockobj = NULL ){};
-    ~Tr2MetalFxTemporalUpscaling(){};
-    bool IsApplicable() const;
-};
 #endif
-TYPEDEF_BLUECLASS( Tr2MetalFxSpatialUpscaling );
-TYPEDEF_BLUECLASS( Tr2MetalFxTemporalUpscaling );

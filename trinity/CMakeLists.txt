@@ -3,8 +3,6 @@ project(trinity VERSION 1.0.0)
 
 find_package(libSquish REQUIRED)
 find_package(FidelityFX REQUIRED)
-find_package(FidelityFX_FSR REQUIRED)
-find_package(FidelityFX_FSR3 REQUIRED)
 find_package(IntelXeSS REQUIRED)
 find_package(CACAO REQUIRED)
 find_package(IntelTBB REQUIRED)
@@ -838,30 +836,11 @@ set(_SOURCES
     PostProcess/Effects/Sharpening/Tr2NoopSharpening.cpp
     PostProcess/Effects/Sharpening/Tr2NoopSharpening.h
     PostProcess/Effects/Sharpening/Tr2NoopSharpening_Blue.cpp
-    PostProcess/Effects/Upscaling/ITr2Upscaling.h
-    PostProcess/Effects/Upscaling/Tr2DlssUpscaling.cpp
-    PostProcess/Effects/Upscaling/Tr2DlssUpscaling.h
-    PostProcess/Effects/Upscaling/Tr2DlssUpscaling_Blue.cpp
-    PostProcess/Effects/Upscaling/Tr2Fsr1Upscaling.cpp
-    PostProcess/Effects/Upscaling/Tr2Fsr1Upscaling.h
-    PostProcess/Effects/Upscaling/Tr2Fsr1Upscaling_Blue.cpp
-    PostProcess/Effects/Upscaling/Tr2Fsr2Upscaling.cpp
-    PostProcess/Effects/Upscaling/Tr2Fsr2Upscaling.h
-    PostProcess/Effects/Upscaling/Tr2Fsr2Upscaling_Blue.cpp
-    PostProcess/Effects/Upscaling/Tr2Fsr3Upscaling.cpp
-    PostProcess/Effects/Upscaling/Tr2Fsr3Upscaling.h
-    PostProcess/Effects/Upscaling/Tr2Fsr3Upscaling_Blue.cpp
     PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling.mm
     PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling.h
     PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling_Blue.cpp
-    PostProcess/Effects/Upscaling/Tr2NoopUpscaling.cpp
-    PostProcess/Effects/Upscaling/Tr2NoopUpscaling.h
-    PostProcess/Effects/Upscaling/Tr2NoopUpscaling_Blue.cpp    
     PostProcess/Effects/Upscaling/Tr2UpscalingUtils.cpp
     PostProcess/Effects/Upscaling/Tr2UpscalingUtils.h
-    PostProcess/Effects/Upscaling/Tr2XeSSUpscaling.cpp
-    PostProcess/Effects/Upscaling/Tr2XeSSUpscaling.h
-    PostProcess/Effects/Upscaling/Tr2XeSSUpscaling_Blue.cpp   
     PostProcess/Effects/Tr2PPBloomEffect.cpp
     PostProcess/Effects/Tr2PPBloomEffect.h
     PostProcess/Effects/Tr2PPBloomEffect_Blue.cpp
@@ -1646,7 +1625,6 @@ function(set_shared_trinity_properties target)
             Freetype::Freetype
             SQUISH::SQUISH
             AMD::FidelityFX
-            AMD::FidelityFX_FSR
             AMD::CACAO
             RadGameTools::Granny
             Intel::TBB
@@ -1745,7 +1723,7 @@ if(WIN32)
             TRINITY_PLATFORM=TRINITY_DIRECTX12
             TRINITYNAME=_trinity_dx12
     )
-    target_link_libraries(trinity_dx12 PRIVATE AMD::FidelityFX_FSR3 INTEL::xess TrinityAL_dx12 )
+    target_link_libraries(trinity_dx12 PRIVATE TrinityAL_dx12 )
     set_shared_trinity_properties(trinity_dx12)
 elseif(APPLE)
     enable_language(OBJCXX)

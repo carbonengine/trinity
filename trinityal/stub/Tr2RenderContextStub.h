@@ -10,6 +10,7 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2RenderPassAL.h"
 #include "../Tr2HalHelperStructures.h"
+#include "../include/upscaling/Tr2UpscalingAL.h"
 
 class Tr2ConstantBufferAL;
 class Tr2VertexLayoutAL;
@@ -210,6 +211,15 @@ public:
 		uint32_t& height,
 		uint32_t& depth,
 		uint32_t& mips ) const;
+
+	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
+	Tr2UpscalingAL::Result SetupUpscaling();
+	Tr2UpscalingContext* GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+	Tr2UpscalingContext* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+	bool GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY );
+
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
+
 private:
 	enum { MAX_RENDER_TARGET = 8 };
 	Tr2TextureAL m_boundRenderTarget[MAX_RENDER_TARGET];

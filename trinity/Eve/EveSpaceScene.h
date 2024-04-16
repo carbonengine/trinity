@@ -508,8 +508,6 @@ private:
 
 	bool HasReflectionProbe() const;
 
-	float GetUpscalingAmount() const;
-
 	Be::Time m_updateTime;
 	EveSpaceObject2Ptr m_egoBall;
 
@@ -584,6 +582,9 @@ private:
 
 	Tr2ShLightingManagerPtr m_shLightingManager;
 
+	float m_upscalingAmount;
+	float m_mipLevelBias;
+	bool m_usingUpscaling; 
 	Vector4 m_jitter; // xy: projection offset, zw: pixel offset
 
 	bool m_hasBackgroundDistortionBatches;

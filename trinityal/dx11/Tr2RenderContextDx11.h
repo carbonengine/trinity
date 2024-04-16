@@ -183,6 +183,7 @@ public:
 		uint32_t& height, 
 		uint32_t& depth, 
 		uint32_t& mips ) const;
+
 private:
 	union
 	{
@@ -291,7 +292,6 @@ private:
 	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;
 
 public:
-	CComPtr<ID3D11CommandList>		m_commandList;
 	ITr2RenderContextEvents* m_events;
 };
 

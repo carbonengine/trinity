@@ -17,6 +17,7 @@
 #include "../include/Tr2VertexLayoutAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2RenderPassAL.h"
+#include "../include/Tr2UpscalingAL.h"
 
 
 class Tr2ConstantBufferAL;
@@ -289,6 +290,35 @@ public:
 	{
 		return E_NOTIMPL;
 	}
+
+	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter )
+	{
+		return Tr2UpscalingAL::PLATFORM_NOT_SUPPORTED;
+	}
+
+	Tr2UpscalingAL::Result SetupUpscaling()
+	{
+		return Tr2UpscalingAL::PLATFORM_NOT_SUPPORTED;
+	}
+
+	Tr2UpscalingContext* GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+	{
+		return nullptr;
+	}
+	Tr2UpscalingContext* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+	{
+		return nullptr;
+	}
+
+	bool GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
+	{
+		return false;
+	}
+
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
+	{
+	}
+
 private:
 	ALResult SetPass();
 	ALResult CreateRenderPass( VkRenderPass& renderPass );
