@@ -9,7 +9,7 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2GpuTimerAL.h"
-#include "../include/Tr2Streamline.h"
+#include "upscaling/Tr2UpscalingAL.h"
 
 
 struct Tr2PresentParametersAL;
@@ -38,6 +38,15 @@ public:
 	bool IsValid();
 
 	Tr2RenderContextEnum::PixelFormat GetBackBufferFormat() const;
+
+	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
+	Tr2UpscalingAL::Result SetupUpscaling();
+	Tr2UpscalingContext* GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+	Tr2UpscalingContext* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+
+	bool GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY );
+
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
 
 public:
 	bool m_usingEXDevice;
@@ -71,6 +80,8 @@ private:
 	Tr2CapsAL m_caps;
 
 	Tr2MemoryCounterAL m_memory;
+	TrinityALImpl::Tr2UpscalingTechniqueDx11* m_upscalingTechnique;
+
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 

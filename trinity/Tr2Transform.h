@@ -45,7 +45,6 @@ public:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2Renderable
 	virtual void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	virtual void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize );
 
 	virtual bool HasTransparentBatches();
 	virtual float GetSortValue();

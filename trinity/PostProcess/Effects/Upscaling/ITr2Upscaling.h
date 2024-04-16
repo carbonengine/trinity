@@ -5,7 +5,7 @@
 //
 #pragma once
 #include "../../Tr2PostProcessRenderInfo.h"
-#include "../trinityal/include/Tr2Streamline.h"
+//#include "../trinityal/include/Tr2Streamline.h"
 
 namespace Tr2Upscaling
 {
@@ -29,6 +29,14 @@ namespace Tr2Upscaling
 		UPSCALING_TECHNIQUE_XESS,
 		UPSCALING_TECHNIQUE_METALFX_SPATIAL,
 		UPSCALING_TECHNIQUE_METALFX_TEMPORAL
+	};
+
+	enum Result
+	{
+		OK, 
+		PLATFORM_NOT_SUPPORTED,
+		HARDWARE_NOT_SUPPORTED,
+		FRAME_GENERATION_TURNED_OFF
 	};
 
 	struct Textures

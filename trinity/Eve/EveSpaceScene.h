@@ -189,19 +189,26 @@ protected:
 	};
 	FrameData m_frameData;
 
-	
-	// Per-frame vertex constants for rendering shadows
-	struct ShadowPerFrameVSData
-	{
-		Matrix ViewProjectionMat;
-	};
-	
 	// Per-frame pixel constants for rendering scene
 	struct SunData
 	{
 		Vector3 DirWorld;
 		float unused_pad0;
 		Color DiffuseColor;
+	};
+
+	struct ShadowInfo
+	{
+		ShadowInfo( float radius, IEveShadowCaster* caster, Tr2PerObjectData* perObjectData ):
+			radius( radius ),
+			caster( caster ),
+			perObjectData( perObjectData )
+		{
+		}
+
+		float radius;
+		IEveShadowCaster* caster;
+		Tr2PerObjectData* perObjectData;
 	};
 
 	// Per-frame pixel constants for rendering scene
@@ -501,8 +508,6 @@ private:
 
 	bool HasReflectionProbe() const;
 
-	float GetUpscalingAmount() const;
-
 	Be::Time m_updateTime;
 	EveSpaceObject2Ptr m_egoBall;
 
@@ -511,7 +516,6 @@ private:
 	Tr2ConstantBufferAL	m_shadowPerFrameVSBuffer;
 
 	// Cascaded shadows
-	void GetShadowCasters();
 	void SetupCascadedShadows( Tr2RenderContext & renderContext );
 	void DisableShadows();
 
@@ -578,6 +582,9 @@ private:
 
 	Tr2ShLightingManagerPtr m_shLightingManager;
 
+	float m_upscalingAmount;
+	float m_mipLevelBias;
+	bool m_usingUpscaling; 
 	Vector4 m_jitter; // xy: projection offset, zw: pixel offset
 
 	bool m_hasBackgroundDistortionBatches;
@@ -608,7 +615,6 @@ private:
 
 	bool m_dynamicObjectReflectionEnabled;
 
-	std::vector<std::vector<ShadowCasterInfo>> m_shadowCasters;
 	ShadowMap::SplitSetup m_splitSetup[SHADOW_FRUSTUM_COUNT];
 
 	// Cascaded shadow debugging

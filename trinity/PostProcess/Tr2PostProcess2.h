@@ -60,16 +60,13 @@ public:
 	Tr2PPFogEffectPtr GetFog() { return m_fog; }
 	Tr2PPTaaEffectPtr GetTaa() { return m_taa; }
 	Tr2PPDepthOfFieldEffectPtr GetDepthOfField() { return m_depthOfField; }
-	Tr2PPUpscalingEffectPtr GetUpscalingEffect() { return m_upscaling; }
 
 	// Helper method for scenes to decide on miplodbias
 	float GetMipLodBias() const;
 
-	float GetUpscalingAmount() const;
 
 	// Jittering
 	void GetJitter( uint32_t renderWidth, uint32_t renderHeight, float& x, float& y );
-	void GetJitterOffset( float& x, float& y );
 
 private:
 	Tr2PPSignalLossEffectPtr m_signalLoss;
@@ -84,7 +81,6 @@ private:
 	Tr2PPFogEffectPtr m_fog;
 	Tr2PPTaaEffectPtr m_taa;
 	Tr2PPDepthOfFieldEffectPtr m_depthOfField;
-	Tr2PPUpscalingEffectPtr m_upscaling;
 };
 TYPEDEF_BLUECLASS( Tr2PostProcess2 );
 

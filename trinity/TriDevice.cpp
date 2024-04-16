@@ -32,7 +32,7 @@ namespace {
 		const Tr2PresentParametersAL& pPresentationParameters )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-
+		
 #ifdef _WIN32
 		HANDLE heapsBefore[256];
 		const uint32_t countBefore = ::GetProcessHeaps( 256, heapsBefore );	
@@ -116,7 +116,11 @@ TriDevice::TriDevice(IRoot* lockobj) :
 	m_mipLevelSkipCount( 0U ),
 	PARENTLOCK( m_curveSets ),
 	m_throttlingState( 0 ),
-	m_allowThrottling( true )
+	m_allowThrottling( true ),
+	m_upscalingChanged(false),
+	m_upscalingTechnique( Tr2UpscalingAL::Technique::NONE ),
+	m_upscalingSetting( Tr2UpscalingAL::Setting::BALANCED ),
+	m_upscalingWithFrameGeneration( false )
 {	
 	Tr2DisplayModeInfo empty = {0};
 	mDisplayMode = empty;
@@ -303,6 +307,16 @@ bool TriDevice::ChangeDevice(
 		Tr2RenderContext::DestroyMainThreadRenderContext();	
 	}
 
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	auto upscalingResult = renderContext.EnableUpscaling( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration, mAdapter );
+	if( upscalingResult != Tr2UpscalingAL::Result::OK )
+	{
+		CCP_LOGWARN( "Could not enable upscaling, setting to none" );
+		m_upscalingTechnique = Tr2UpscalingAL::Technique::NONE;
+	}
+	renderContext.SetupUpscaling();
+
+	m_upscalingChanged = false;
 	if( FAILED( CreateDeviceInt( adapter, hWnd, *pp ) ) )
 	{
 		return false;
@@ -328,7 +342,7 @@ bool TriDevice::ChangeDevice(
 	}
 
 	InitD3DDevice();
-		
+
 	PrepareDeviceResources(); //call python to recreate its stuff.
 
 	return true;
@@ -1108,4 +1122,36 @@ bool TriDevice::IsVariableRefreshRateSupported() const
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	return renderContext.GetCaps().SupportsVariableRefreshRate();
+}
+
+void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration )
+{
+	m_upscalingChanged = true;
+	m_upscalingTechnique = technique;
+	m_upscalingSetting = setting;
+	m_upscalingWithFrameGeneration = frameGeneration;
+}
+
+void TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	renderContext.CreateUpscalingContext( displayWidth, displayHeight );
+}
+
+Vector2 TriDevice::GetRenderResolution( uint32_t displayWidth, uint32_t displayHeight )
+{
+	uint32_t renderWidth = displayWidth;
+	uint32_t renderHeight = displayHeight;
+
+	if( m_upscalingTechnique != Tr2UpscalingAL::Technique::NONE )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		auto upscalingContext = renderContext.GetUpscalingContext( displayWidth, displayHeight );
+
+		if( upscalingContext != nullptr )
+		{
+			upscalingContext->GetRenderDimensions( renderWidth, renderHeight );
+		}
+	}
+	return Vector2( float(renderWidth), float(renderHeight) );
 }

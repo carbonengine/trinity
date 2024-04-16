@@ -64,7 +64,6 @@ public:
 	// ITr2Renderable
 	bool HasTransparentBatches();
 	void GetBatches( ITriRenderBatchAccumulator* batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
-	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize );
 	float GetSortValue();
 	Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator* accumulator );
 	bool IsVisible( const TriFrustum& frustum ) const;

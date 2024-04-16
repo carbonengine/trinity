@@ -40,10 +40,10 @@ namespace Tr2SwapChainUtils
 		Tr2WindowHandle focusWindow,
 		const Tr2PresentParametersAL& presentationParameters,
 		ID3D12CommandQueue* commandQueue,
-		IDXGIOutput* output )
+		IDXGIOutput* output,
+		Tr2PrimaryRenderContextAL& renderContext )
 	{
-		CComPtr<IDXGIFactory4> proxyFactory;
-		CComPtr<IDXGIFactory4> nativeFactory;
+		CComPtr<IDXGIFactory4> factory;
 
 		UINT createFactoryFlags = 0;
 		if( g_requestDeviceDebugLayer )
@@ -51,8 +51,10 @@ namespace Tr2SwapChainUtils
 			createFactoryFlags = DXGI_CREATE_FACTORY_DEBUG;
 		}
 
-		CR_RETURN_HR( Tr2Streamline::SlCreateDXGIFactory2( createFactoryFlags, IID_PPV_ARGS( &proxyFactory ) ) );
-		nativeFactory = Tr2Streamline::CreateNative( proxyFactory );
+		CR_RETURN_HR( renderContext.CreateFactory2( createFactoryFlags, factory ) );
+
+		//CR_RETURN_HR( Tr2Streamline::SlCreateDXGIFactory2( createFactoryFlags, IID_PPV_ARGS( &proxyFactory ) ) );
+		//nativeFactory = Tr2Streamline::CreateNative( proxyFactory );
 
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 		swapChainDesc.Width = presentationParameters.mode.width;
@@ -81,16 +83,10 @@ namespace Tr2SwapChainUtils
 
 		CComPtr<IDXGISwapChain1> swapChain1;
 		
-		CR_RETURN_HR( proxyFactory->CreateSwapChainForHwnd(
-			commandQueue,
-			wnd,
-			&swapChainDesc,
-			nullptr,
-			output,
-			&swapChain1 ) );
+		CR_RETURN_HR( renderContext.CreateSwapChainForHwnd( factory, commandQueue, wnd, &swapChainDesc, nullptr, output, &swapChain1 ) );
 		
 		CR_RETURN_HR( swapChain1.QueryInterface( &swapChain ) );
-		CR_RETURN_HR( nativeFactory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER ) );
+		CR_RETURN_HR( factory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER ) );
 		return S_OK;
 	}
 
@@ -156,7 +152,7 @@ namespace TrinityALImpl
 	ALResult Tr2SwapChainAL::CreateDx12( const Tr2PresentParametersAL& presentationParameters, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext )
 	{
 		CComPtr<IDXGISwapChain3> swapChain;
-		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output ) );
+		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output, renderContext ) );
 
 		std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 		std::vector<CComPtr<ID3D12Resource>> backBuffers;

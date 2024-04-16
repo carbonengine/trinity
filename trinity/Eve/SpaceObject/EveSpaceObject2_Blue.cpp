@@ -183,10 +183,17 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 
 		MAP_ATTRIBUTE
 		(
-			"enableShadow",
-			m_enableShadow,
+			"castShadow",
+			m_castShadow,
 			"If set, shadow is enabled",
-			Be::READWRITE
+			Be::READWRITE | Be::NOTIFY | Be::PERSIST
+		)
+
+		MAP_ATTRIBUTE(
+			"isAnimated",
+			m_isAnimated,
+			"If set, we have animations",
+			Be::READWRITE | Be::PERSIST 
 		)
 
 		MAP_ATTRIBUTE
@@ -210,14 +217,6 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			"meshLod",
 			m_mesh,
 			"Mesh with levels-of-detail for rendering space object\n:jessica-hidden: True",
-			Be::READWRITE | Be::PERSIST
-		)
-
-		MAP_ATTRIBUTE
-		(
-			"shadowEffect",
-			m_shadowEffect,
-			"Effect used to render into shadow map. If not set, object can't cast shadows.",
 			Be::READWRITE | Be::PERSIST
 		)
 

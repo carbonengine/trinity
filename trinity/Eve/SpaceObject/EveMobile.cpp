@@ -64,6 +64,20 @@ void EveMobile::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* va
 		switch( event & BELIST_EVENTMASK )
 		{
 		case BELIST_INSERTED:
+			if( theList == &m_turretSets && value )
+			{
+				EveTurretSetPtr turretSet( BlueCastPtr( value ) );
+				if( turretSet )
+				{
+					RebuildTurretPositions();
+
+					if( IsInRegistry() )
+					{
+						turretSet->Register( this->GetComponentRegistry() );
+					}
+				}
+			}
+			break;
 		case BELIST_REMOVED:
 			if( theList == &m_turretSets && value )
 			{
@@ -71,9 +85,57 @@ void EveMobile::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* va
 				if( turretSet )
 				{
 					RebuildTurretPositions();
+					turretSet->UnRegister( this->GetComponentRegistry() );
 				}
 			}
 			break;
+		case BELIST_UNLOADSTART:
+			if( IsInRegistry() )
+			{
+				for( ssize_t i = 0; i < theList->GetSize(); ++i )
+				{
+					if( EveEntityPtr entity = BlueCastPtr( theList->GetAt( i ) ) )
+					{
+						entity->UnRegister( GetComponentRegistry() );
+					}
+				}
+			}
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Registers itself and its children with the scene registration container.
+//    This is so we don't have to traverse the tree every frame
+// --------------------------------------------------------------------------------
+void EveMobile::RegisterComponents()
+{
+	EveSpaceObject2::RegisterComponents();
+	auto registry = this->GetComponentRegistry();
+	if( registry && m_display )
+	{
+		for( auto& turretSet : m_turretSets )
+		{
+			turretSet->RegisterComponents();
+		}
+	}
+}
+
+// --------------------------------------------------------------------------------
+// Description:
+//    Unregisters itself and its children with the scene registration container.
+// --------------------------------------------------------------------------------
+void EveMobile::UnRegisterComponents()
+{
+	EveSpaceObject2::UnRegisterComponents();
+
+	auto registry = this->GetComponentRegistry();
+	if( registry )
+	{
+		for( auto& turretSet : m_turretSets )
+		{
+			turretSet->UnRegister( registry );
 		}
 	}
 }
@@ -227,51 +289,6 @@ void EveMobile::GetRenderables( std::vector<ITr2Renderable*>& renderables, Tr2Im
 	for( auto it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
 	{
 		( *it )->GetRenderables( renderables, m_psData.shLightingCoefficients );
-	}
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Override base ::GetRenderablesCastingShadow() function, so we can draw shadows!
-//   Warning: this function can be called on different threads, so it needs to be
-//   thread-safe.
-// --------------------------------------------------------------------------------
-bool EveMobile::GetRenderablesCastingShadow( bool isSelf, const TriFrustumOrtho& frustum, std::vector<ITr2Renderable*>& renderables )
-{
-	if( !m_display )
-	{
-		return false;
-	}
-	if( EveSpaceObject2::GetRenderablesCastingShadow( isSelf, frustum, renderables ) )
-	{
-		for( auto it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
-		{
-			// use the turretset's ::GetRenderablesCastingShadow() function cause we need the special "ortho" culling
-			( *it )->GetRenderablesCastingShadow( frustum, renderables );
-		}
-		return true;
-	}
-	return false;
-}
-
-// --------------------------------------------------------------------------------
-// Description:
-//   Go through all the frustums and if object is in an ortho frustum and not "behind" any camera frustum plane
-//  then we push back the frustum index and the shadowSize to the frustumInfo vector
-// --------------------------------------------------------------------------------
-void EveMobile::GatherShadowRenderables( std::vector<std::vector<ShadowCasterInfo>>& shadowCasters, TriFrustum* splitCameraFrustums, TriFrustumOrtho* shadowFrustums, const size_t arraySize, const unsigned int shadowMapSize, const Vector3 sunDir )
-{
-	if( !m_display )
-	{
-		return;
-	}
-
-	// get base object frustum indices so we can append to that list
-	EveSpaceObject2::GatherShadowRenderables( shadowCasters, splitCameraFrustums, shadowFrustums, arraySize, shadowMapSize, sunDir );
-
-	for( auto it = m_turretSets.begin(); it != m_turretSets.end(); ++it )
-	{
-		( *it )->GatherShadowRenderables( shadowCasters, splitCameraFrustums, shadowFrustums, arraySize, shadowMapSize, sunDir );
 	}
 }
 

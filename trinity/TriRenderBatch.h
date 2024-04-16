@@ -116,7 +116,7 @@ protected:
 	const Tr2PerObjectData* m_objectData;
 
 private:
-	Tr2MaterialPtr m_shaderMaterial;
+	Tr2Material* m_shaderMaterial;
 
 	// User data, for generating arbitrary sort keys
 	int64_t m_userData;
@@ -146,6 +146,19 @@ public:
 
 	unsigned int m_startIndex;
 	unsigned int m_count;
+};
+
+class TriRenderBatchAreaBlocksWithSharedMaterial : public TriRenderBatchAreaBlock
+{
+public:
+	TriRenderBatchAreaBlocksWithSharedMaterial();
+	TriRenderBatchAreaBlocksWithSharedMaterial( std::vector<TriRenderBatchAreaBlock>& areaBlockVector, Tr2Material* shader );
+	void Optimize();
+	void Clear();
+
+	Tr2MaterialPtr m_shaderMaterial;
+	std::vector<TriRenderBatchAreaBlock> m_areaBlockVector;
+
 };
 
 // --------------------------------------------------------------------------------------

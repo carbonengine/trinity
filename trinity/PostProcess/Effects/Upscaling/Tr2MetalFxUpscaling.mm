@@ -337,13 +337,4 @@ void Tr2MetalFxTemporalUpscaling::Dispatch( Tr2RenderContext& renderContext, Tr2
 
 
 #else
-bool Tr2MetalFxSpatialUpscaling::IsApplicable() const
-{
-    return false;
-}
-
-bool Tr2MetalFxTemporalUpscaling::IsApplicable() const
-{
-    return false;
-}
 #endif

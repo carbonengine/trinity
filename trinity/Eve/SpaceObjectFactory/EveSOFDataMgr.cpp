@@ -83,6 +83,7 @@ EveSOFDataMgr::HullPlaneSetData::HullPlaneSetData( const EveSOFDataHullPlaneSet&
 	maskMapResPath( planeSet.m_maskMapResPath ),
 	visibilityGroup( GetVisibilityGroupHash( planeSet.m_visibilityGroup ) ),
 	atlasSize( planeSet.m_atlasSize ),
+	atlasAspectRatio( planeSet.m_atlasAspectRatio ),
 	skinned( planeSet.m_skinned ),
 	usage( planeSet.m_usage )
 {
