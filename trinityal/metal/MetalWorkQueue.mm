@@ -308,6 +308,10 @@ void MetalWorkQueue::ResetWorkQueue()
 	m_currentBlitEncoder       = nil;
 	m_currentRenderEncoder     = nil;
 	m_currentComputeEncoder    = nil;
+    if (@available(macOS 11.0, *))
+    {
+        m_currentAccelerationStructureEncoder = nil;
+    }
 	m_generatesEndOfQueueEvent = false;
 	m_pendingClear             = false;
 

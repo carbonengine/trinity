@@ -15,7 +15,7 @@ using namespace Tr2RenderContextEnum;
 
 CCP_STATS_DECLARE( geometryResBytes, "Trinity/geometryResBytes", false, CST_MEMORY, "Size of memory occupied by geometry resources." );
 
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+#if TRINITY_PLATFORM != TRINITY_DIRECTX11
 const auto gpuUsage = Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::INDEX_BUFFER | Tr2GpuUsage::SHADER_RESOURCE;
 #else
 const auto gpuUsage = Tr2GpuUsage::VERTEX_BUFFER | Tr2GpuUsage::INDEX_BUFFER;

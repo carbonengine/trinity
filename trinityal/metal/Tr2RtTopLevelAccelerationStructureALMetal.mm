@@ -149,11 +149,6 @@ Tr2RtTopLevelAccelerationStructureAL::Tr2RtTopLevelAccelerationStructureAL()
                 m_buffer.SetName("TLASBuffer");
             }
             
-            id <MTLComputeCommandEncoder> computeEncoder = metalContext->GetPrimaryWorkQueue()->GetComputeEncoder();
-            [computeEncoder setAccelerationStructure:m_instanceAccelerationStructure atBufferIndex:5];
-            
-            metalContext->GetPrimaryWorkQueue()->ReleaseEncoder( false );
-            
             return S_OK;
         }
         else

@@ -37,21 +37,12 @@ class Tr2RtBottomLevelAccelerationStructureAL : public Tr2DeviceResourceAL<Tr2Rt
         id <MTLAccelerationStructure> m_primitiveAccelerationStructure;
         
     private:
-        //BLAS
-        //NSMutableArray *_primitiveAccelerationStructures;
-        
-        API_AVAILABLE(macos(11.0)) 
-        id <MTLAccelerationStructure> BuildAccelerationStructure(MTLAccelerationStructureDescriptor* descriptor, id<MTLDevice> device,  MetalContext* metalContext );
-        
         API_AVAILABLE(macos(11.0))
         MTLAccelerationStructureTriangleGeometryDescriptor* m_geomDesc;
         
         API_AVAILABLE(macos(11.0)) 
         MTLPrimitiveAccelerationStructureDescriptor* m_accelerationStructureDesc;
-        id <MTLBuffer> m_buffer;
-        
-        Tr2RtPositionStreamAL m_positions;
-        Tr2RtIndicesStreamAL m_indices;
+        id<MTLBuffer> m_scratchBuffer;
     };
 }
 
