@@ -547,7 +547,8 @@ EveSOFDataHullPlaneSet::EveSOFDataHullPlaneSet( IRoot* lockobj ) :
 	m_visibilityGroup( PRIMARY_VISIBILITY_GROUP ),
 	m_skinned( false ),
 	m_usage( USAGE_STANDARD ),
-	m_atlasSize( 1 )
+	m_atlasSize( 1 ),
+	m_atlasAspectRatio( 1, 1 )
 {}
 
 

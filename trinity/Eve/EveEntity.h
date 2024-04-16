@@ -27,7 +27,7 @@ namespace EntityComponents
 
 	bool ShouldReflect( ReflectionMode mode );
 
-	extern const Be::VarChooser ReflectionModeChooser[] ;
+	extern const Be::VarChooser ReflectionModeChooser[];
 }
 
 BLUE_CLASS( EveEntity ) :
@@ -39,26 +39,23 @@ public:
 	EveEntity( IRoot* lockobj = NULL );
 	~EveEntity();
 
-	void Register( EveComponentRegistry * registry );
-	void UnRegister( EveComponentRegistry * registry );
-	
-	bool IsInRegistry() const
-	{
-		return m_registry != nullptr;
-	};
+	void Register( EveComponentRegistry* registry );
+	void UnRegister( EveComponentRegistry* registry );
+
+	bool IsInRegistry() const;
 
 protected:
 	void ReRegister();
 
-	virtual void RegisterComponents(){};
-	virtual void UnRegisterComponents(){};
+	virtual void RegisterComponents() {};
+	virtual void UnRegisterComponents() {};
 
 	EveComponentRegistry* GetComponentRegistry() const;
 
-	RegistrationState m_state;
-
 private:
 	EveComponentRegistry* m_registry;
+	RegistrationState m_state;
+	friend class EveComponentRegistry;
 };
 
 TYPEDEF_BLUECLASS( EveEntity );

@@ -60,6 +60,7 @@
 namespace
 {
 const float MIN_DECAL_SCREEN_SIZE = 10.f;
+const float MIN_INSTANCED_MESH_SCREEN_SIZE = 2.5f;
 const uint8_t PICKABLE_HANGARVIEO_BUFFER_ID = 100;
 
 const char* GetPlaneSetEffectPath( EveSOFDataHullPlaneSet::Usage usage, bool isSkinned )
@@ -140,11 +141,6 @@ EveSOF::EveSOF( IRoot* lockobj ) :
 	m_hazeSetEffectHalfSpherical->StartUpdate();
 	m_hazeSetEffectHalfSpherical->SetEffectPathName( "res:/graphics/effect/managed/space/spaceobject/fx/hazehalfspherical.fx" );
 	m_hazeSetEffectHalfSpherical->EndUpdate();
-
-	m_shadowEffect.CreateInstance();
-	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/spaceobject/shadow/shadow.fx" );
-	m_shadowEffectSkinned.CreateInstance();
-	m_shadowEffectSkinned->SetEffectPathName( "res:/graphics/effect/managed/space/spaceobject/shadow/skinned_shadow.fx" );
 }
 
 // --------------------------------------------------------------------------------
@@ -459,18 +455,8 @@ void EveSOF::SetupMesh( EveSpaceObject2Ptr obj, const EveSOFDNAPtr dna ) const
 	obj->SetShapeEllipsoid( dna->GetHullShapeEllipsoid() );
 	obj->EnableDynamicBoundingSphere( dna->DynamicBoundingSphereEnabled() );
 
-	// shadow caster?
-	if( dna->CastShadow() )
-	{
-		if( dna->IsHullAnimated() )
-		{
-			obj->SetShadowEffect( m_shadowEffectSkinned );
-		}
-		else
-		{
-			obj->SetShadowEffect( m_shadowEffect );
-		}
-	}
+	obj->SetCastsShadow( dna->CastShadow() );
+	obj->SetIsAnimated( dna->IsHullAnimated() );
 
 	// assign mesh to ship
 	obj->SetMesh( CreateMesh( dna ) );
@@ -1000,7 +986,12 @@ void EveSOF::SetupPlaneSets( IEveSpaceObjectAttachmentOwnerPtr obj, const EveSOF
 
 			// parameters
 			float angularFadeOut = planeSetData.usage == EveSOFDataHullPlaneSet::USAGE_HAZE ? 1.f : 0.f;
-			Vector4 planeData( angularFadeOut, (float)planeSetData.atlasSize, 0.f, 0.f );
+			Vector4 planeData( 
+				angularFadeOut,
+				(float)planeSetData.atlasSize,
+				std::floor( planeSetData.atlasAspectRatio.x ),
+				std::floor( planeSetData.atlasAspectRatio.y )
+			);
 			planeEffect->AddParameterVector4( BlueSharedString( "PlaneData" ), &planeData );
 
 			// finish up shader and set it
@@ -2231,6 +2222,8 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		}
 
 		childMesh->SetMesh( instancedMesh );
+		childMesh->SetMinScreenSize( MIN_INSTANCED_MESH_SCREEN_SIZE );
+		childMesh->SetCastShadow( dna->CastShadow() );
 		childMesh->Setup( nullptr, nullptr, nullptr, him->lowestLodVisible );
 
 		if( him->displayModifier != EveChildContainer::DisplayQualityModifier::SHADER_ALL )
@@ -3442,6 +3435,7 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 				auto mesh = CreateMesh( extensionDna );
 				child->SetMesh( mesh );
 				child->SetReflectionMode( extensionDna->GetReflectionMode() );
+				child->SetCastShadow( extensionDna->CastShadow() );
 
 				if( extensionDna->IsHullAnimated() )
 				{ 
@@ -3500,6 +3494,8 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 
 		// Set the reflectionMode based on the category
 		child->SetReflectionMode( extensionDna->GetReflectionMode() );
+		child->SetCastShadow( extensionDna->CastShadow() );
+		child->SetMinScreenSize( MIN_INSTANCED_MESH_SCREEN_SIZE );
 
 		SetupDecalSets( BlueCastPtr( child->GetRawRoot() ), extensionDna );
 		// do this last so it sets all the needed shaders as instanced

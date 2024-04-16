@@ -34,7 +34,7 @@ public:
 	{
 		STATIC,
 		DYNAMIC,
-		DYNAMIC_SCALED,
+		DYNAMIC_SCALED
 	};
 
 	Tr2InstancedMesh( IRoot* lockobj = NULL );
@@ -84,6 +84,8 @@ public:
 
 	CcpMath::AxisAlignedBox GetBounds( const Matrix* boneTransforms = nullptr ) const override;
 	CcpMath::AxisAlignedBox GetAreaBounds( unsigned int areaIx, const Matrix* boneTransforms = nullptr ) const override;
+	CcpMath::AxisAlignedBox GetInstanceBounds( ) const;
+	CcpMath::AxisAlignedBox GetInstanceBoundsClosestToPoint( const Vector3& point, Vector3 worldPos ) const;
 
 	void SetBoundingBox( const Vector3& min, const Vector3& max );
 	bool IsLoading() const;

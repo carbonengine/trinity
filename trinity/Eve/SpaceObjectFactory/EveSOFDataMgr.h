@@ -293,6 +293,7 @@ public:
 		EveSOFDataHullPlaneSet::Usage usage;
 		uint32_t visibilityGroup;
 		uint32_t atlasSize;
+		Vector2 atlasAspectRatio;
 		std::vector<HullPlaneSetItemData> items;
 	};
 
