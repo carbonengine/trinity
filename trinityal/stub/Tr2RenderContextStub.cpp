@@ -406,4 +406,38 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Col
 {
 }
 
+
+Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
+{
+	return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+}
+
+Tr2UpscalingAL::Result Tr2RenderContextAL::SetupUpscaling()
+{
+	return Tr2UpscalingAL::Result::OK;
+}
+
+Tr2UpscalingContext* Tr2RenderContextAL::GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+{
+	return nullptr;
+}
+
+Tr2UpscalingContext* Tr2RenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+{
+	return nullptr;
+}
+
+bool Tr2RenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
+{
+	upscalingAmount = 1.0f;
+	mipLevelBias = 0.0f;
+	jitterX = 0.0f;
+	jitterY = 0.0f;
+	
+	return false;
+}
+
+void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
+{
+}
 #endif

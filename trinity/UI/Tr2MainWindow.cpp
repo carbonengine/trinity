@@ -205,7 +205,6 @@ Tr2MainWindow::Tr2MainWindow()
 	m_isResizing( false ),
     m_inSetState( false )
 {
-	Tr2Streamline::Initialize();
 	m_minimumSize.width = m_minimumSize.height = 100;
 	BeOS->RegisterForTicks( this, nullptr );
 }
@@ -215,7 +214,6 @@ Tr2MainWindow::~Tr2MainWindow()
 	BeOS->UnregisterForTicks( this, nullptr );
 
 	DestroyOSWindow();
-	Tr2Streamline::Shutdown();
 }
 
 ALResult Tr2MainWindow::SetState( bool adjustWindow, const Tr2MainWindowState::State& newState )

@@ -176,7 +176,10 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_projection( IdentityMatrix() ),
 	m_projectionLast( IdentityMatrix() ),
 	m_jitteredProjection( IdentityMatrix() ),
-	m_jitter( 0.f, 0.f, 0.f, 0.f )
+	m_jitter( 0.f, 0.f, 0.f, 0.f ),
+	m_upscalingAmount( 1.0f ),
+	m_mipLevelBias( 0.0f ),
+	m_usingUpscaling( false )
 {
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
 	m_primaryBatches[TRIBATCHTYPE_OPAQUE] = CCP_NEW( "EveSpaceScene/m_batches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
@@ -986,14 +989,17 @@ void EveSpaceScene::Jitter( Tr2RenderContext& renderContext )
 {
 	m_projection = Tr2Renderer::GetProjectionTransform();
 
-	if( m_postProcess )
+	if( m_usingUpscaling )
+	{
+		m_jitterMatrix = TranslationMatrix( Vector3( m_jitter.x, m_jitter.y, 0 ) );
+		m_jitteredProjection = m_projection * m_jitterMatrix;
+	}
+	else if( m_postProcess )
 	{
 		auto rtWidth = renderContext.m_esm.GetRenderTargetWidth();
 		auto rtHeight = renderContext.m_esm.GetRenderTargetHeight();
 
 		m_postProcess->GetJitter( rtWidth, rtHeight, m_jitter.x, m_jitter.y );
-		m_postProcess->GetJitterOffset( m_jitter.z, m_jitter.w );
-
 		auto currJitterOffset = Vector3( m_jitter.x, m_jitter.y, 0 );
 
 		m_jitterMatrix = TranslationMatrix( currJitterOffset );
@@ -1017,7 +1023,7 @@ void EveSpaceScene::UpdatePostProcessPSData()
 
 	// if we are using TAA we need to make the projection use inverse depth so we get the correct velocity
 	// however we don't want that when using upscaling
-	if( m_postProcess && m_postProcess->GetUpscalingAmount() == 1.0f )
+	if( m_usingUpscaling )
 	{
 		currentProj._33 = -currentProj._33 - 1.f;
 		currentProj._43 = -currentProj._43;
@@ -1063,6 +1069,11 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	}
 
 	renderContext.AddGpuMarker( __FUNCTION__ );
+
+	uint32_t w, h;
+	Tr2Renderer::GetBackBufferDimensions( w, h );
+
+	m_usingUpscaling = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( w, h, m_upscalingAmount, m_mipLevelBias, m_jitter.x, m_jitter.y );
 
 	if( m_visualizeMethod != VM_NONE )
 	{
@@ -2320,7 +2331,7 @@ void EveSpaceScene::PopulatePerFrameVSData( PerFrameVSData& data, Tr2RenderConte
 	data.ViewportAdjustment.z = deviceViewport.m_width / viewport.width;
 	data.ViewportAdjustment.w = deviceViewport.m_height / viewport.height;
 	data.Time = Tr2Renderer::GetAnimationTime();
-	data.Upscaling = m_postProcess ? m_postProcess->GetUpscalingAmount() : 1.0f;
+	data.Upscaling = m_upscalingAmount;
 
 	data.ViewportSize.x = renderContext.m_esm.GetDeviceViewport().m_width;
 	data.ViewportSize.y = renderContext.m_esm.GetDeviceViewport().m_height;
@@ -2366,8 +2377,8 @@ void EveSpaceScene::PopulatePerFramePSData( PerFramePSData& data, Tr2RenderConte
 	data.ViewportSize.y = renderContext.m_esm.GetDeviceViewport().m_height;
 
 	data.Time = Tr2Renderer::GetAnimationTime();
-	data.Upscaling = m_postProcess ? m_postProcess->GetUpscalingAmount() : 1.0f;
-
+	data.Upscaling = m_upscalingAmount;
+	
 	data.FrameIndex = (uint32_t) Tr2Renderer::GetCurrentFrameCounter();
 	data.Jittering = m_jitter != Vector4(0, 0, 0, 0);
 
@@ -3147,14 +3158,6 @@ void EveSpaceScene::ClearComponentRegistry()
 		}
 	}
 	m_componentRegistry = nullptr;
-}
-
-float EveSpaceScene::GetUpscalingAmount() const {
-	if (m_postProcess)
-	{
-		return m_postProcess->GetUpscalingAmount();
-	}
-	return 1.0f;
 }
 
 Tr2DepthStencil* EveSpaceScene::GetDepth()

@@ -7,13 +7,7 @@
 #include "StdAfx.h"
 #include "Tr2PPUpscalingEffect.h"
 
-#include "Upscaling/Tr2Fsr3Upscaling.h"
-#include "Upscaling/Tr2Fsr2Upscaling.h"
-#include "Upscaling/Tr2Fsr1Upscaling.h"
-#include "Upscaling/Tr2NoopUpscaling.h"
 #include "Upscaling/Tr2MetalFxUpscaling.h"
-#include "Upscaling/Tr2DlssUpscaling.h"
-#include "Upscaling/Tr2XeSSUpscaling.h"
 
 #include "Sharpening/Tr2FidelityFxCas.h"
 #include "Sharpening/Tr2NoopSharpening.h"
@@ -29,10 +23,8 @@ Tr2PPUpscalingEffect::Tr2PPUpscalingEffect( IRoot* lockobj ) :
 	m_displayHeight( 0 ),
 	m_debugRenderSize( false )
 {
-	m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2NoopUpscaling>::Class() );
 	m_sharpeningEffect.CreateInstance( BlueClassTypeTraits<Tr2FidelityFxCas>::Class() );
 
-	m_currentUpscalingTechnique = Tr2Upscaling::UPSCALING_TECHNIQUE_NONE;
 	m_currentSharpeningTechnique = Tr2Sharpening::SHARPENING_TECHNIQUE_CAS;
 }
 
@@ -42,7 +34,7 @@ Tr2PPUpscalingEffect::~Tr2PPUpscalingEffect()
 
 bool Tr2PPUpscalingEffect::IsActive()
 {
-	return m_display && ( HasSharpening() || HasUpscaling() );
+	return m_display && HasSharpening();
 }
 
 bool Tr2PPUpscalingEffect::IsDirty()
@@ -61,7 +53,7 @@ void Tr2PPUpscalingEffect::SetUpscalingTechnique( Tr2Upscaling::Technique techni
 	bool techniqueChanged = technique != m_currentUpscalingTechnique;
 	if( techniqueChanged || m_frameGeneration != frameGeneration )
 	{
-		if( m_currentUpscalingTechnique == Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS && techniqueChanged )
+		/*if( m_currentUpscalingTechnique == Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS && techniqueChanged )
 		{
 			auto adapter = gTriDev->GetAdapter();
 			Tr2Streamline::Toggle( StreamlineUtils::SP_DLSS, adapter, false );
@@ -69,97 +61,7 @@ void Tr2PPUpscalingEffect::SetUpscalingTechnique( Tr2Upscaling::Technique techni
 			{
 				Tr2Streamline::Toggle( StreamlineUtils::SP_DLSSG, adapter, false );
 			}
-		}
-
-		m_upscalingEffect = nullptr;
-		// reset the setting since it guards the applysetting bit
-		m_currentSetting = Tr2Upscaling::Setting::COUNT;
-
-		if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_FSR1 )
-		{
-			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2Fsr1Upscaling>::Class() );
-		}
-		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_FSR2 )
-		{
-			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2Fsr2Upscaling>::Class() );
-		}
-		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_FSR3 )
-		{
-			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2Fsr3Upscaling>::Class() );
-		}
-		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_METALFX_SPATIAL )
-		{
-			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2MetalFxSpatialUpscaling>::Class() );
-		}
-		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_METALFX_TEMPORAL )
-		{
-			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2MetalFxTemporalUpscaling>::Class() );
-		}
-		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_XESS )
-		{
-			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2XeSSUpscaling>::Class() );
-		}
-		else if( technique == Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS )
-		{
-			auto adapter = gTriDev->GetAdapter();
-			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2DlssUpscaling>::Class() );
-			m_upscalingEffect->SetUseFrameGeneration( frameGeneration );
-			Tr2Streamline::Toggle( StreamlineUtils::SP_DLSS, adapter, true );
-			if( m_frameGeneration != frameGeneration )
-			{
-				Tr2Streamline::Toggle( StreamlineUtils::SP_DLSSG, adapter, m_frameGeneration );
-			}
-		}
-		else
-		{
-			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2NoopUpscaling>::Class() );
-		}
-
-		m_currentUpscalingTechnique = technique;
-		m_frameGeneration = frameGeneration;
-
-		if( !m_upscalingEffect->IsApplicable() )
-		{
-			std::string upscalingName = std::string( "" );
-
-			switch( technique )
-			{
-			case Tr2Upscaling::UPSCALING_TECHNIQUE_DLSS:
-				upscalingName = "DLSS";
-				break;
-			case Tr2Upscaling::UPSCALING_TECHNIQUE_FSR1:
-				upscalingName = "FSR1";
-				break;
-			case Tr2Upscaling::UPSCALING_TECHNIQUE_FSR2:
-				upscalingName = "FSR2";
-				break;
-			case Tr2Upscaling::UPSCALING_TECHNIQUE_XESS:
-				upscalingName = "XeSS";
-				break;
-			case Tr2Upscaling::UPSCALING_TECHNIQUE_METALFX_SPATIAL:
-				upscalingName = "MetalFX Spatial";
-				break;
-			case Tr2Upscaling::UPSCALING_TECHNIQUE_METALFX_TEMPORAL:
-				upscalingName = "MetalFX Temporal";
-				break;
-			default:
-				upscalingName = "UNKNOWN";
-				break;
-			}
-			CCP_LOGWARN( "%s upscaling is not available, defaulting to no upscaling.", upscalingName.c_str() );
-			m_upscalingEffect = nullptr;
-			m_upscalingEffect.CreateInstance( BlueClassTypeTraits<Tr2NoopUpscaling>::Class() );
-			m_currentUpscalingTechnique = Tr2Upscaling::UPSCALING_TECHNIQUE_NONE;
-		}
-
-		if( m_currentUpscalingTechnique != Tr2Upscaling::UPSCALING_TECHNIQUE_NONE )
-		{
-			SetSharpeningTechnique( Tr2Sharpening::SHARPENING_TECHNIQUE_NONE );
-		}
-		else
-		{
-			SetSharpeningTechnique( Tr2Sharpening::SHARPENING_TECHNIQUE_CAS );
-		}
+		}*/
 
 		m_isDirty = true;
 	}
@@ -248,17 +150,17 @@ void Tr2PPUpscalingEffect::GetJitterOffset( float& x, float& y )
 
 Tr2Upscaling::UpscalingType Tr2PPUpscalingEffect::GetUpscalingType()
 {
-	return m_upscalingEffect->GetUpscalingType();
+	return Tr2Upscaling::UpscalingType::UT_SPATIAL;
 }
 
 bool Tr2PPUpscalingEffect::IsTemporal() const
 {
-	return m_upscalingEffect->GetUpscalingType() == Tr2Upscaling::UT_TEMPORAL;
+	return false;
 }
 
 bool Tr2PPUpscalingEffect::HasUpscaling() const
 {
-	return m_currentUpscalingTechnique != Tr2Upscaling::Technique::UPSCALING_TECHNIQUE_NONE;
+	return false;
 }
 
 bool Tr2PPUpscalingEffect::HasSharpening() const
@@ -268,33 +170,20 @@ bool Tr2PPUpscalingEffect::HasSharpening() const
 
 bool Tr2PPUpscalingEffect::NeedsExposureTexture() const
 {
-	return m_upscalingEffect->NeedsExposureTexture();
+	return false;
 }
 
 bool Tr2PPUpscalingEffect::UsesExposureTexture() const
 {
-	return m_upscalingEffect->UsesExposureTexture();
+	return false;
 }
 
 bool Tr2PPUpscalingEffect::NeedsReactiveTexture() const
 {
-	return m_upscalingEffect->NeedsReactiveTexture();
+	return false;
 }
 
 void Tr2PPUpscalingEffect::Render( Tr2RenderContext& renderContext, Tr2PostProcessRenderInfo& renderInfo, Tr2Upscaling::Textures& textures, const Tr2Upscaling::SceneInformation& sceneInformation )
 {
-	if( m_debugRenderSize )
-	{
-		// need to undo the jittering
-		// render only the actual size of the input
-		renderContext.RenderPassHint( { Tr2LoadAction::DONT_CARE, Tr2StoreAction::STORE }, {} );
-		renderContext.m_esm.PushRenderTarget( *textures.output->GetTexture() );
-		float upscaling = GetUpscalingAmount();
-		Tr2Renderer::DrawTexture( renderContext, *textures.input->GetTexture(), Vector2( 0, 0 ), Vector2( upscaling, upscaling ), Tr2Blitter::FILTER_LINEAR );
-		renderContext.m_esm.PopRenderTarget();
-		return;
-	}
-
-	m_upscalingEffect->Dispatch( renderContext, renderInfo, textures, sceneInformation );
 	m_sharpeningEffect->Dispatch( renderContext, renderInfo, textures );
 }

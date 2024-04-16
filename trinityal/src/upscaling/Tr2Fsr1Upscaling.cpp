@@ -1,0 +1,8 @@
+////////////////////////////////////////////////////////////////////////////////
+//
+// Created:		April 2024
+// Copyright:	CCP 2024
+//
+#include "StdAfx.h"
+#include "include/upscaling/Tr2Fsr1Upscaling.h"
+

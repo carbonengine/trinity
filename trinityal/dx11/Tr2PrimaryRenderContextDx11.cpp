@@ -46,6 +46,10 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 
 Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
 {
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->Destroy(*this);
+	}
 	Destroy();
 }
 
@@ -213,7 +217,11 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 
 	if( SUCCEEDED( HR ) )		
 	{
-		Tr2Streamline::Attach( m_d3dDevice11 );
+		if( m_upscalingTechnique )
+		{
+			m_upscalingTechnique->AttachToDevice( m_d3dDevice11 );
+		}
+		//Tr2Streamline::Attach( m_d3dDevice11 );
 		CCP_AL_LOG( "DX11: device created succesfully" );
 	}
 	else		
@@ -259,6 +267,10 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 			if( SUCCEEDED( HR ) )
 			{
 				CCP_AL_LOGWARN( "DX11: Created device without DEVICE_DEBUG flag, no error logging will be available" );
+				if( m_upscalingTechnique )
+				{
+					m_upscalingTechnique->AttachToDevice( m_d3dDevice11 );
+				}
 			}
 			else
 			{
@@ -629,6 +641,87 @@ const Tr2CapsAL& Tr2PrimaryRenderContextAL::GetCaps() const
 	return m_caps;
 }
 
+
+Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
+{
+	if( tech == Tr2UpscalingAL::Technique::NONE )
+	{
+		m_upscalingTechnique = nullptr;
+		return Tr2UpscalingAL::Result::OK;
+	}
+
+	// find the technique
+	auto supportedTechnique = std::find( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.begin(), TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end(), tech );
+	if( supportedTechnique == TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end() )
+	{
+		m_upscalingTechnique = nullptr;
+		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	}
+
+	m_upscalingTechnique = TrinityALImpl::CreateUpscalingTechnique( tech, setting, frameGeneration, adapter );
+	if( m_upscalingTechnique == nullptr )
+	{
+		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	}
+	return Tr2UpscalingAL::Result::OK;
+}
+
+Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::SetupUpscaling()
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return Tr2UpscalingAL::Result::OK;
+	}
+
+	return m_upscalingTechnique->Setup();
+}
+
+Tr2UpscalingContext* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return nullptr;
+	}
+
+	return m_upscalingTechnique->GetContext( *this, displayWidth, displayHeight );
+}
+
+Tr2UpscalingContext* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return nullptr;
+	}
+
+	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight );
+}
+
+bool Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
+{
+	auto context = GetUpscalingContext( displayWidth, displayHeight );
+	if( context == nullptr )
+	{
+		upscalingAmount = 1.0f;
+		mipLevelBias = 0.0f;
+		jitterX = 0.0f;
+		jitterY = 0.0f;
+	}
+	else
+	{
+		upscalingAmount = context->GetUpscalingAmount();
+		mipLevelBias = context->GetMipLevelBias();
+		context->GetJitter( jitterX, jitterY );
+	}
+	return context != nullptr;
+}
+
+void Tr2PrimaryRenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
+{
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->MarkFrameEvent( frameEvent );
+	}
+}
 
 
 #endif	//DX11?

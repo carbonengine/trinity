@@ -344,20 +344,6 @@ Tr2PerObjectData* EveChildMesh::GetShadowPerObjectData( ITriRenderBatchAccumulat
 
 Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
-	if( !m_useSpaceObjectData )
-	{
-		EveBasicPerObjectData* perObjectData = accumulator->Allocate<EveBasicPerObjectData>();
-
-		if( !perObjectData )
-		{
-			return nullptr;
-		}
-
-		perObjectData->m_world = m_vsData.worldTransform;
-		perObjectData->m_worldInverseTranspose = Inverse( m_worldTransform );
-		return perObjectData;
-	}
-
 	Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>* perObjectData = accumulator->Allocate<Tr2PerObjectDataWithPersistentBuffers<EveChildMesh>>();
 	if( !perObjectData )
 	{

@@ -28,6 +28,7 @@
 
 #include "include/ITriDevice.h"
 #include "TriViewport.h"
+#include <upscaling/Tr2UpscalingAL.h>
 
 BLUE_DECLARE_INTERFACE( ITr2Scene );
 BLUE_DECLARE_INTERFACE( ITr2Updateable );
@@ -227,6 +228,9 @@ private:
 	bool ResetDevice( unsigned adapter, const Tr2PresentParametersAL* pp );
 
 	void HandleRenderTick( Be::Time realTime, Be::Time simTime );
+	void SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	void CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+	Vector2 GetRenderResolution( uint32_t displayWidth, uint32_t displayHeight );
 
 	bool SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& pp );
 
@@ -261,6 +265,11 @@ private:
 	void RebuildDeviceResourcesInPython(); 
 
 	bool mDeviceLost;
+
+	bool m_upscalingChanged;
+	Tr2UpscalingAL::Technique m_upscalingTechnique;
+	Tr2UpscalingAL::Setting m_upscalingSetting;
+	bool m_upscalingWithFrameGeneration;
 
 	float m_animationTime;
 	float m_animationTimeScale;

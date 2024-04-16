@@ -226,6 +226,27 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			Be::READWRITE 
 		)
 
+		MAP_ATTRIBUTE(
+			"upscalingTechnique",
+			m_upscalingTechnique,
+			"Upscaling technique.\n"
+			":jessica-group: Upscaling\n",
+			Be::READ )
+
+		MAP_ATTRIBUTE(
+			"upscalingSetting",
+			m_upscalingSetting,
+			"Upscaling setting.\n"
+			":jessica-group: Upscaling\n",
+			Be::READ )
+
+		MAP_ATTRIBUTE(
+			"frameGeneration",
+			m_upscalingWithFrameGeneration,
+			"upscaling With Frame Generation.\n"
+			":jessica-group: Upscaling\n",
+			Be::READ )
+
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets that are update each frame. Finished curve sets are removed automatically.", Be::READ | Be::PERSIST ) 
 		
 		MAP_ATTRIBUTE( "animationTime", m_animationTime, "Time (in seconds) used for animations", Be::READWRITE ) 
@@ -371,6 +392,28 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			"IsVariableRefreshRateSupported",
 			IsVariableRefreshRateSupported,
 			"Returns True if the device support variable refresh rate (gsync, freesync)"
+		)
+		MAP_METHOD_AND_WRAP(
+			"SetUpscaling",
+			SetUpscaling,
+			"Sets an upscaling technique on the device with the requested setting and framegeneration\n"
+			":param technique: the technique to use (type Tr2UpscalingAL::Technique)\n" 
+			":param setting: the setting to use (type Tr2UpscalingAL::Setting)\n" 
+			":param frameGeneration: framegeneration on/off (type bool)" 
+		)
+		MAP_METHOD_AND_WRAP(
+			"CreateUpscalingContext",
+			CreateUpscalingContext,
+			"Creates an upscaling context for the display resolution, if there is upscaling enabled\n"
+			":param displayWidth: the width of the display\n"
+			":param displayHeight: the height of the display\n" 
+		)
+		MAP_METHOD_AND_WRAP(
+			"GetRenderResolution",
+			GetRenderResolution,
+			"Gets the render resolution for the provided display resolution\n"
+			":param displayWidth: the width of the display\n" 
+			":param displayHeight: the height of the display\n" 
 		)
 
     EXPOSURE_END()

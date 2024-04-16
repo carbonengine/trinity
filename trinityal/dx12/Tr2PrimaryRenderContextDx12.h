@@ -21,8 +21,7 @@
 #include "./util/DescriptorHeapViewDx12.h"
 #include "./util/GpuMarkerBuffer.h"
 #include "./util/GpuCrashTracker.h"
-#include "../include/Tr2Streamline.h"
-
+#include "upscaling/Tr2UpscalingALDx12.h"
 
 #define USE_BORDERLESS_WINDOW 1
 
@@ -81,7 +80,6 @@ public:
 	ITr2RenderContextEvents* m_events;
 
 	TrinityALImpl::GenerateMipsResources* m_genMipsResources;
-
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 
@@ -146,8 +144,28 @@ public:
 	bool FormatIsUAVCompatibleDx12( DXGI_FORMAT format ) const;
 	std::shared_ptr<ShaderResourceViewDx12> GetNullSrvDx12( Tr2ShaderRegisterAL::RegisterType type ) const;
 	std::shared_ptr<UnorderedAccessViewDx12> GetNullUavDx12( Tr2ShaderRegisterAL::RegisterType type ) const;
+	
+	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
+	Tr2UpscalingAL::Result SetupUpscaling();
+	Tr2UpscalingContext* GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+	Tr2UpscalingContext* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+	bool GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY );
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
+	
+	HRESULT CreateSwapChainForHwnd(
+		CComPtr<IDXGIFactory4>& factory4,
+		IUnknown* pDevice,
+		HWND hWnd,
+		const DXGI_SWAP_CHAIN_DESC1* pDesc,
+		const DXGI_SWAP_CHAIN_FULLSCREEN_DESC* pFullscreenDesc,
+		IDXGIOutput* pRestrictToOutput,
+		IDXGISwapChain1** ppSwapChain );
+	HRESULT CreateDevice( IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device ) const;
+	HRESULT CreateCommandQueue( CComPtr<ID3D12Device>& device, D3D12_COMMAND_QUEUE_DESC* desc, CComPtr<ID3D12CommandQueue>& commandQueue ) const;
+	HRESULT CreateFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) const;
 
 private:
+
 	void ResetRenderTargets();
 
 	Tr2PrimaryRenderContextAL( const Tr2PrimaryRenderContextAL& ) /* = delete */;
@@ -270,6 +288,7 @@ private:
 	Tr2PresentParametersAL m_presentationParameters;
 	uint32_t m_adapter;
 	Tr2WindowHandle m_focusWindow;
+	TrinityALImpl::Tr2UpscalingTechniqueDx12* m_upscalingTechnique;
 
 public:
 	CComPtr<ID3D12Device> m_device;
