@@ -74,7 +74,8 @@ void Tr2ActionAnimateCurveSet::Update( Be::Time realTime, Be::Time simTime )
 		return;
 	}
 	float stateTime = TimeAsFloat( simTime - m_startTime );
-	auto value = m_evaluator.Eval( &stateTime );
+	auto timePtr = &stateTime;
+	auto value = m_evaluator.Eval( &timePtr );
 	if( value.first )
 	{
 		m_curveSet->ApplyTime( value.second );
@@ -133,7 +134,8 @@ BlueStdResult Tr2ActionAnimateCurveSet::EvaluateExpression( const char* expressi
 		return BlueStdResult( BLUE_STD_RESULT_VALUE_ERROR, error.c_str() );
 	}
 	float stateTime = TimeAsFloat( m_lastSimTime - m_startTime );
-	auto result = expr.Eval( &stateTime );
+	auto timePtr = &stateTime;
+	auto result = expr.Eval( &timePtr );
 	if( !result.first )
 	{
 		return BlueStdResult( BLUE_STD_RESULT_RUNTIME_ERROR, "error evaluating expression" );
