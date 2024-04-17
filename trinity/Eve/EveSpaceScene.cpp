@@ -1256,19 +1256,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
 	GatherBatches( renderContext );
 
-
-    if( m_rtManager && m_enableRaytracing && m_enableShadows )
-    {
-		CCP_STATS_SCOPED_TIME( raytracedShadowsTime );
-
-        m_rtManager->GetGeometry().BeginSceneUpdate();
-        for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
-        {
-            (*it)->PushRtGeometry( *m_rtManager );
-        }
-        m_rtManager->GetGeometry().EndSceneUpdate( renderContext );
-    }
-
+	PrepareRaytracedShadows( renderContext );
 
 	UpdatePostProcessPSData();
 	UpdateVariableStore();
@@ -1402,6 +1390,23 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 	FinalizeBatches( m_primaryBatches );
 
 	UpdateShLighting( allObjects );
+}
+
+void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
+{
+
+	if( !m_rtManager || !m_enableRaytracing || !m_enableShadows || m_objects.empty() )
+	{
+		return;
+	}
+
+	CCP_STATS_SCOPED_TIME( raytracedShadowsTime );
+	m_rtManager->GetGeometry().BeginSceneUpdate();
+	for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
+	{
+		( *it )->PushRtGeometry( *m_rtManager );
+	}
+	m_rtManager->GetGeometry().EndSceneUpdate( renderContext );
 }
 
 void EveSpaceScene::UpdateImpostors( Tr2RenderContext& renderContext )
@@ -2009,7 +2014,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	renderContext.m_esm.EndManagedRendering();
 	
 	
-	if( m_rtManager && m_enableRaytracing && m_depthMap->IsValid() )
+	if( m_rtManager && m_enableRaytracing && m_depthMap->IsValid() && !m_objects.empty())
 	{
 		renderContext.SetReadOnlyDepth( true );
 		m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, renderContext );

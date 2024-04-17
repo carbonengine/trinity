@@ -523,7 +523,6 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 	for( auto it = begin( outdatedMeshes ); it != end( outdatedMeshes ); ++it )
 	{
-
 		Tr2RaytracingMesh* mesh = *it;
 		TriGeometryResMeshData* meshData = mesh->GetMeshData();
 

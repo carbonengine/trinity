@@ -133,6 +133,7 @@ public:
 	void PopulateAndApplyPerFrameData( Tr2RenderContext & renderContext );
 
 	void GatherBatches( Tr2RenderContext & renderContext );
+	void PrepareRaytracedShadows( Tr2RenderContext & renderContext );
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize
