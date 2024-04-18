@@ -329,8 +329,11 @@ class TriDeviceLock : public RootRefLock<TriDevice>
 public:
 	TriDeviceLock()
 	{
-		if (!gTriDev)
+		if( !gTriDev )
+		{
+			Lock();
 			gTriDev = this;
+		}
 	}
 };
 
