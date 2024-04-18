@@ -75,6 +75,9 @@ private:
 
 	std::vector<Tr2MeshBase*> m_ownerMeshes;
 
+	// mesh used for raytracing
+	std::unique_ptr<Tr2RaytracingMeshArea> m_rtMeshArea;
+
 	bool m_display;
 	// Request reversed order of rendering triangles and reversed cull order 
 	bool m_reversed;
@@ -88,7 +91,6 @@ private:
 	unsigned int m_jointCount;
 	unsigned int* m_jointMappingAnimRig;
 
-	std::unique_ptr<Tr2RaytracingMeshArea> m_rtMeshArea;
 public:
 	EXPOSE_TO_BLUE();
 };

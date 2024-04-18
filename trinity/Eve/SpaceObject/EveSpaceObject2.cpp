@@ -511,18 +511,18 @@ void EveSpaceObject2::UpdateRtMesh()
 	auto meshIndex = m_mesh->GetMeshIndex();
 	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
 
-	// skinned mesh areas as a vector for use later so we don't have to loop over it all twice
-	std::vector<Tr2RaytracingMeshArea*> skinnedMeshAreas;
+	bool hasSkinned = false;
 
 	for( auto it = begin( *areas ); it != end( *areas ); ++it )
 	{
 		if( meshData->m_areas[( *it )->GetIndex()].m_isSkinned )
 		{
-			skinnedMeshAreas.emplace_back( ( *it )->GetRtMeshArea() );
+			hasSkinned = true;
+			break;
 		}
 	}
 
-	if( skinnedMeshAreas.empty() )
+	if( !hasSkinned )
 	{
 		return; //no skinned areas
 	}
@@ -532,9 +532,13 @@ void EveSpaceObject2::UpdateRtMesh()
 	if( skeletonChanged )
 	{
 		//Skeleton has changed, so mark all area BLAS's as out-of-date.
-		for( auto it = begin( skinnedMeshAreas ); it != end( skinnedMeshAreas ); ++it )
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
 		{
-			( *it )->MarkBlasOutdated();
+			auto meshAreaIndex = ( *it )->GetIndex();
+			if (meshData->m_areas[meshAreaIndex].m_isSkinned)
+			{
+				( *it )->GetRtMeshArea()->MarkBlasOutdated();
+			}
 		}
 	}
  }

@@ -23,6 +23,9 @@ namespace
 	};
 
 	const BlueSharedString RtShadowTechniqueName = BlueSharedString( "RtShadow" );
+	const BlueSharedString RtShadowMapTechniqueName = BlueSharedString( "ShadowDest" );
+	const BlueSharedString NormalBufferTechniqueName = BlueSharedString( "NormalBuffer" );
+	const BlueSharedString RtSceneTechniqueName = BlueSharedString( "Scene" );
 }
 
 //***********************************************************
@@ -75,13 +78,11 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 	}
 
 	// texture uav
-	m_shadowEffect->SetParameter( BlueSharedString( "ShadowDest" ), m_destTex );
-	m_shadowEffect->SetParameter( BlueSharedString( "NormalBuffer" ), normal );
+	m_shadowEffect->SetParameter( RtShadowMapTechniqueName, m_destTex );
+	m_shadowEffect->SetParameter( NormalBufferTechniqueName, normal );
 
 	// scene srv
-	m_shadowEffect->SetParameter( BlueSharedString( "Scene" ), m_geometry );
-
-	GlobalStore().RegisterVariable( "ShadowDest", m_destTex );
+	m_shadowEffect->SetParameter( RtSceneTechniqueName, m_geometry );
 
 	if( !m_shadowEffect->GetEffectRes() || !m_shadowEffect->GetEffectRes()->IsGood() )
 	{
@@ -94,13 +95,13 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 	}
 
 	uint32_t techniqueIndex;
-	if( !m_shadowEffect->GetShaderStateInterface()->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
+	if( !m_shadowEffect->GetShaderStateInterface()->GetTechniqueIndex( RtShadowTechniqueName, techniqueIndex ) )
 	{
 		return;
 	}
 
 	std::wstring rayGenName, missName;
-	m_pipelineManager.AddLibrary( rayGenName, missName, m_shadowEffect, BlueSharedString( "RtShadow" ) );
+	m_pipelineManager.AddLibrary( rayGenName, missName, m_shadowEffect, RtShadowTechniqueName );
 
 	auto pipelineState = m_pipelineManager.GetPipelineState( renderContext );
 
@@ -139,7 +140,7 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 	}
 
 	const float clearValue[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-	renderContext.ClearUav( *m_destTex->GetTexture(), 0, clearValue );
+	renderContext.ClearUav( *destTex, 0, clearValue );
 
 	m_shadowEffect->ApplyMaterialDataForRtState( techniqueIndex, pipelineState, renderContext );
     

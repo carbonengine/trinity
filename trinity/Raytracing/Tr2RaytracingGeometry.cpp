@@ -158,6 +158,8 @@ void Tr2RaytracingMesh::SetMesh( TriGeometryRes* geometry, uint32_t meshIndex, f
 		m_meshIndex = meshIndex;
 		m_screenSize = screenSize;
 
+		m_meshData = m_geometry->GetMeshData( m_meshIndex, m_screenSize );
+
 		m_transforms.clear();
 
 		m_isDirty = true;
@@ -165,17 +167,18 @@ void Tr2RaytracingMesh::SetMesh( TriGeometryRes* geometry, uint32_t meshIndex, f
 	else if( m_screenSize != screenSize )
 	{
 		//screen size has changed, so check if we've changed to a different LOD
-		bool lodChanged = m_geometry->GetMeshData( m_meshIndex, m_screenSize ) != m_geometry->GetMeshData( m_meshIndex, screenSize );
+
+		bool lodChanged = m_meshData != m_geometry->GetMeshData( m_meshIndex, screenSize );
 		if( lodChanged )
 		{
 			m_isDirty = true;
+			m_meshData = m_geometry->GetMeshData( m_meshIndex, screenSize );
 		}
 
 		m_screenSize = screenSize;
 	}
 }
 
-// this should be for each mesh area I think
 bool Tr2RaytracingMesh::SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms )
 {
 	auto newSize = count * 3 * 4;
@@ -211,7 +214,7 @@ bool Tr2RaytracingMesh::GetAndResetDirtyFlag()
 
 TriGeometryResMeshData* Tr2RaytracingMesh::GetMeshData() const
 {
-	return m_geometry->GetMeshData( m_meshIndex, m_screenSize );
+	return m_meshData;
 }
 
 size_t Tr2RaytracingMesh::GetTransformsSize() const
@@ -226,7 +229,7 @@ const void* Tr2RaytracingMesh::GetTransforms() const
 
 Tr2BufferAL Tr2RaytracingMesh::GetSkinnedVertexBuffer( Tr2RenderContext& renderContext )
 {
-	auto mesh = m_geometry->GetMeshData( m_meshIndex, m_screenSize );
+	auto mesh = m_meshData;
 	auto vertexCount = mesh->m_vertexCount;
 
 	const uint32_t vertexSize = 3 * sizeof( float );
@@ -239,12 +242,12 @@ Tr2BufferAL Tr2RaytracingMesh::GetSkinnedVertexBuffer( Tr2RenderContext& renderC
 
 const Tr2BufferAL& Tr2RaytracingMesh::GetVertexBuffer() const
 {
-	return GetMeshData()->m_vertexAllocation.GetBuffer();
+	return m_meshData->m_vertexAllocation.GetBuffer();
 }
 
 const Tr2BufferAL& Tr2RaytracingMesh::GetIndexBuffer() const
 {
-	return GetMeshData()->m_indexAllocation.GetBuffer();
+	return m_meshData->m_indexAllocation.GetBuffer();
 }
 
 // ***************** Tr2RaytracingMeshArea *****************
@@ -393,7 +396,7 @@ Tr2BufferAL* Tr2RaytracingGeometry::GetGpuBuffer( unsigned )
 
 void Tr2RaytracingGeometry::BeginSceneUpdate()
 {
-	m_geometries.clear();
+	m_geometryData.clear();
 }
 
 
@@ -412,7 +415,8 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 	std::map<uint32_t, std::pair<std::wstring, uint32_t>> seenLibraries;
 
 	uint32_t materialIndex = 0;
-	for( auto it = begin( m_geometries ); it != end( m_geometries ); ++it )
+	Tr2RtLocalMaterialDescriptionAL material;
+	for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
 	{
 		if( !it->material )
 		{
@@ -424,7 +428,7 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 			continue;
 		}
 		uint32_t techniqueIndex;
-		if( !shader->GetTechniqueIndex( BlueSharedString( "RtShadow" ), techniqueIndex ) )
+		if( !shader->GetTechniqueIndex( m_rtShadowTechniqueName, techniqueIndex ) )
 		{
 			continue;
 		}
@@ -445,7 +449,6 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 			seenLibraries[lib.libraryHandle] = std::make_pair( hitGroupName, materialIndex );
 
 			it->materialIndex = materialIndex++;
-			Tr2RtLocalMaterialDescriptionAL material;
 			if( it->perObjectData )
 			{
 				material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
@@ -456,7 +459,6 @@ void Tr2RaytracingGeometry::PrepareShaderTableDescription( Tr2RenderContext& ren
 		else if( !lib.localInput.signature.registers.empty() )
 		{
 			it->materialIndex = materialIndex++;
-			Tr2RtLocalMaterialDescriptionAL material;
 			if( it->perObjectData )
 			{
 				material.SetConstants( Tr2Renderer::GetPerObjectPSStartRegister(), *it->perObjectData );
@@ -483,7 +485,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 
 	std::vector<Tr2RaytracingMesh*> outdatedMeshes;
 
-	for( auto it = begin( m_geometries ); it != end( m_geometries ); ++it )
+	for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
 	{
 		if( it->materialIndex == INVALID_MATERIAL )
 		{
@@ -493,7 +495,6 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		Tr2RaytracingMesh* mesh = it->mesh;
 		if( mesh->GetMeshData()->m_areas[it->area->GetAreaIndex()].m_isSkinned )
 		{
-
 			if( !mesh->GetAndResetDirtyFlag() )
 			{
 				continue;
@@ -521,6 +522,34 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	renderContext.FlushBarriersDx12();
 #endif
 
+	CTr2RuntimeGpuBuffer inVB;
+	CTr2RuntimeGpuBuffer outVB;
+
+	auto perObjVSRegister = Tr2Renderer::GetPerObjectVSStartRegister();
+	
+	// compute shader stuff
+	auto shader = m_skinVerticesEffect->GetShaderStateInterface();
+	auto& shaderDesc = shader->GetEffectDescription();
+	unsigned mask = shader->GetShaderTypeMask( 0 );
+	auto pp = m_skinVerticesEffect->GetPassDescription( 0, 0 );
+	bool descChanged = pp->m_resourceSetDirty;
+
+	auto& input = pp->m_stageInput[Tr2RenderContextEnum::COMPUTE_SHADER];
+
+	// unsure how far I should take this.........
+	// risking the unreadability for a small performance gain?
+	// but I'm at the part where I'm potentially breaking apart the ApplyMaterialDataForPass
+
+	// we know we only have one pass
+	auto pass = shaderDesc.techniques[0].passes[0];
+	auto stage = pass.stageInputs[Tr2RenderContextEnum::COMPUTE_SHADER];
+
+
+
+	// "flatten" out this loop, so what we don't need to be looped take that out of the loop
+	// then for the compute shader part, instead of calling that function with that overhead
+	// take out parts of the Tr2Renderer::RunComputeShader() that we actually need then
+	// do some dx12 magic of the 3 buffers that we need
 	for( auto it = begin( outdatedMeshes ); it != end( outdatedMeshes ); ++it )
 	{
 		Tr2RaytracingMesh* mesh = *it;
@@ -541,14 +570,13 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		reinterpret_cast<uint32_t*>( constData )[2] = offsets.positionOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
 		reinterpret_cast<uint32_t*>( constData )[3] = offsets.boneOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
 
+		//memcpy( constData + 4 * sizeof( uint32_t ), mesh->GetTransforms(), mesh->GetTransformsSize() );
 		memcpy( constData + 4, mesh->GetTransforms(), mesh->GetTransformsSize() );
 
 		m_skinVerticesData.Unlock( renderContext );
 
-		renderContext.SetConstants( m_skinVerticesData, Tr2RenderContextEnum::COMPUTE_SHADER, Tr2Renderer::GetPerObjectVSStartRegister() );
+		renderContext.SetConstants( m_skinVerticesData, Tr2RenderContextEnum::COMPUTE_SHADER, perObjVSRegister );
 
-		CTr2RuntimeGpuBuffer inVB;
-		CTr2RuntimeGpuBuffer outVB;
 		inVB.m_buffer = meshData->m_vertexAllocation.GetBuffer();
 		outVB.m_buffer = mesh->GetSkinnedVertexBuffer( renderContext );
 
@@ -565,11 +593,28 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		renderContext.ResourceBarrierDx12( 1, &barrier );
 #endif
 
+		m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, &inVB );
+		m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, &outVB );
 
-		m_skinVerticesEffect->SetParameter( BlueSharedString( "InVB" ), &inVB );
-		m_skinVerticesEffect->SetParameter( BlueSharedString( "OutVB" ), &outVB );
+		// cheat a bit instead of calling RunComputeShader() to make things more performant
+		if( !shader )
+		{
+			return;
+		}
+		
+		if( stage.m_exists )
+		{
+			// ApplyAllStateForPass(0, i)
+			renderContext.m_esm.ApplyShaderProgram( pass.shaderProgram );
+			renderContext.m_esm.ApplyRenderStates( pass.renderStates );
+			
+			// ApplyMaterialDataForPass(0, i) -- maybe split this more up as well
+			m_skinVerticesEffect->ApplyMaterialDataForPass( 0, 0, renderContext );
+			renderContext.RunComputeShader( ( vertexCount + 63 ) / 64, 1, 1 );
+		}
 
-		Tr2Renderer::RunComputeShader( m_skinVerticesEffect, ( vertexCount + 63 ) / 64, 1, 1, renderContext );
+
+		//Tr2Renderer::RunComputeShader( m_skinVerticesEffect, ( vertexCount + 63 ) / 64, 1, 1, renderContext );
 	}
 	renderContext.SetResourceSet( Tr2ResourceSetAL() );
 
@@ -587,8 +632,8 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 	renderContext.FlushBarriersDx12();
 #endif
 	std::vector<Tr2RtInstanceAL> instances;
-	instances.reserve( m_geometries.size() );
-	for( auto it = begin( m_geometries ); it != end( m_geometries ); ++it )
+	instances.reserve( m_geometryData.size() );
+	for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
 	{
 		if( it->materialIndex == INVALID_MATERIAL )
 		{
@@ -627,7 +672,7 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 		return;
 	}
 
-	Geometry obj;
+	GeometryData obj;
 	obj.mesh = &mesh;
 	obj.area = &area;
 	obj.material = material;
@@ -635,7 +680,7 @@ void Tr2RaytracingGeometry::AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingM
 	obj.worldTransform = worldTransform;
 	obj.materialIndex = INVALID_MATERIAL;
 	obj.isTransparent = false;
-	m_geometries.push_back( obj );
+	m_geometryData.push_back( obj );
 }
 
 bool Tr2RaytracingGeometry::HasGeometry() const

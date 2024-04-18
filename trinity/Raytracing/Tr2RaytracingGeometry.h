@@ -77,6 +77,7 @@ private:
 	std::vector<float> m_transforms;
 	bool m_isDirty;
 	float m_screenSize;
+	TriGeometryResMeshData* m_meshData;
 
 	friend class Tr2RaytracingGeometry;
 };
@@ -115,6 +116,8 @@ public:
 	Tr2RaytracingPipelineStateManager* m_pipelineManager;
 	Tr2RtShaderTableDescriptionAL m_shaderTableDesc;
 
+	const BlueSharedString m_rtShadowTechniqueName = BlueSharedString( "RtShadow" );
+
 private:
 	struct VtxOffsets
 	{
@@ -122,7 +125,7 @@ private:
 		uint32_t boneOffset;
 	};
 
-	struct Geometry
+	struct GeometryData
 	{
 		Tr2RaytracingMesh* mesh;
 		Tr2RaytracingMeshArea* area;
@@ -132,8 +135,9 @@ private:
 		uint32_t materialIndex;
 		bool isTransparent;
 	};
-
-	const BlueSharedString RtShadowTechniqueName = BlueSharedString( "RtShadow" );
+	
+	const BlueSharedString m_inVertexBufferTechniqueName = BlueSharedString( "InVB" );
+	const BlueSharedString m_outVertexBufferTechniqueName = BlueSharedString( "OutVB" );
 	static const uint32_t INVALID_MATERIAL = 0xffffffff;
 
 	void PrepareShaderTableDescription( Tr2RenderContext& renderContext );
@@ -142,7 +146,7 @@ private:
 
 	VtxOffsets FindOffsets( unsigned declHandle );
 	
-	std::vector<Geometry> m_geometries;
+	std::vector<GeometryData> m_geometryData;
 	Tr2RtTopLevelAccelerationStructureAL m_tlas;
 
 	Tr2EffectPtr m_skinVerticesEffect;
