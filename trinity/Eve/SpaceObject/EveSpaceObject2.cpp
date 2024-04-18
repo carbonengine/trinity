@@ -173,6 +173,8 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_lodLevelWithChildren( TR2_LOD_UNSPECIFIED ),
 	m_isVisible( false ),
 	m_isMeshVisible( false ),
+	m_isAnimated( false ),
+	m_castShadow( false ),
 	m_clipSphereFactor( 0.f ),
 	m_oldClipSphereFactor( 0.f ),
 	m_clipSphereCenter( 0.f, 0.f, 0.f ),
