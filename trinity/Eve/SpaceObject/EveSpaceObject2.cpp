@@ -193,7 +193,9 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_worldTransform( XMMatrixIdentity() ),
 	m_invWorldTransform( XMMatrixIdentity() ),
 	m_controllerVariables( "EveSpaceObject2::m_controllerVariables" ),
-	m_reflectionMode( EntityComponents::REFLECT_NEVER )
+	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
+	m_isAnimated( false ),
+	m_castShadow( false )
 {
 	m_positionDelta.CreateInstance();
 
