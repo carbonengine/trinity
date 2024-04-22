@@ -521,102 +521,85 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	renderContext.FlushBarriersDx12();
 #endif
-
-	CTr2RuntimeGpuBuffer inVB;
-	CTr2RuntimeGpuBuffer outVB;
-
-	auto perObjVSRegister = Tr2Renderer::GetPerObjectVSStartRegister();
-	
-	// compute shader stuff
-	auto shader = m_skinVerticesEffect->GetShaderStateInterface();
-	auto& shaderDesc = shader->GetEffectDescription();
-	unsigned mask = shader->GetShaderTypeMask( 0 );
-	auto pp = m_skinVerticesEffect->GetPassDescription( 0, 0 );
-	bool descChanged = pp->m_resourceSetDirty;
-
-	auto& input = pp->m_stageInput[Tr2RenderContextEnum::COMPUTE_SHADER];
-
-	// unsure how far I should take this.........
-	// risking the unreadability for a small performance gain?
-	// but I'm at the part where I'm potentially breaking apart the ApplyMaterialDataForPass
-
-	// we know we only have one pass
-	auto pass = shaderDesc.techniques[0].passes[0];
-	auto stage = pass.stageInputs[Tr2RenderContextEnum::COMPUTE_SHADER];
-
-
-
-	// "flatten" out this loop, so what we don't need to be looped take that out of the loop
-	// then for the compute shader part, instead of calling that function with that overhead
-	// take out parts of the Tr2Renderer::RunComputeShader() that we actually need then
-	// do some dx12 magic of the 3 buffers that we need
-	for( auto it = begin( outdatedMeshes ); it != end( outdatedMeshes ); ++it )
+	if( !outdatedMeshes.empty() )
 	{
-		Tr2RaytracingMesh* mesh = *it;
-		TriGeometryResMeshData* meshData = mesh->GetMeshData();
-
-		auto vertexCount = meshData->m_vertexCount;
-		auto constSize = mesh->GetTransformsSize() + 4 * sizeof( uint32_t );
-		if( !m_skinVerticesData.IsValid() || m_skinVerticesData.GetSize() < constSize )
-		{
-			m_skinVerticesData.Create( uint32_t( constSize ), renderContext.GetPrimaryRenderContext() );
-		}
-		float* constData;
-		m_skinVerticesData.Lock( (void**)&constData, renderContext );
-
-		reinterpret_cast<uint32_t*>( constData )[0] = vertexCount;
-		reinterpret_cast<uint32_t*>( constData )[1] = meshData->m_vertexAllocation.GetStride() / 4;
-		auto offsets = FindOffsets( meshData->m_vertexDeclaration );
-		reinterpret_cast<uint32_t*>( constData )[2] = offsets.positionOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
-		reinterpret_cast<uint32_t*>( constData )[3] = offsets.boneOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
-
-		//memcpy( constData + 4 * sizeof( uint32_t ), mesh->GetTransforms(), mesh->GetTransformsSize() );
-		memcpy( constData + 4, mesh->GetTransforms(), mesh->GetTransformsSize() );
-
-		m_skinVerticesData.Unlock( renderContext );
-
-		renderContext.SetConstants( m_skinVerticesData, Tr2RenderContextEnum::COMPUTE_SHADER, perObjVSRegister );
-
-		inVB.m_buffer = meshData->m_vertexAllocation.GetBuffer();
-		outVB.m_buffer = mesh->GetSkinnedVertexBuffer( renderContext );
-
-#if TRINITY_PLATFORM == TRINITY_DIRECTX12
-		auto alBuffer = outVB.m_buffer.TrinityALImpl_GetObject();
-
-		D3D12_RESOURCE_BARRIER barrier;
-		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-		barrier.Transition.pResource = alBuffer->GetGpuResource();
-		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-		barrier.Transition.StateAfter = alBuffer->GetDefaultState();
-		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-		renderContext.ResourceBarrierDx12( 1, &barrier );
-#endif
-
+		CTr2RuntimeGpuBuffer inVB;
+		CTr2RuntimeGpuBuffer outVB;
 		m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, &inVB );
 		m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, &outVB );
 
-		// cheat a bit instead of calling RunComputeShader() to make things more performant
-		if( !shader )
-		{
-			return;
-		}
-		
-		if( stage.m_exists )
-		{
-			// ApplyAllStateForPass(0, i)
-			renderContext.m_esm.ApplyShaderProgram( pass.shaderProgram );
-			renderContext.m_esm.ApplyRenderStates( pass.renderStates );
-			
-			// ApplyMaterialDataForPass(0, i) -- maybe split this more up as well
-			m_skinVerticesEffect->ApplyMaterialDataForPass( 0, 0, renderContext );
-			renderContext.RunComputeShader( ( vertexCount + 63 ) / 64, 1, 1 );
-		}
+		auto perObjVSRegister = Tr2Renderer::GetPerObjectVSStartRegister();
 
+		// compute shader desc
+		auto shader = m_skinVerticesEffect->GetShaderStateInterface();
+		auto& shaderDesc = shader->GetEffectDescription();
+		// the shader only has one pass
+		auto pass = shaderDesc.techniques[0].passes[0];
+		auto stage = pass.stageInputs[Tr2RenderContextEnum::COMPUTE_SHADER];
 
-		//Tr2Renderer::RunComputeShader( m_skinVerticesEffect, ( vertexCount + 63 ) / 64, 1, 1, renderContext );
+		for( auto it = begin( outdatedMeshes ); it != end( outdatedMeshes ); ++it )
+		{
+			Tr2RaytracingMesh* mesh = *it;
+			TriGeometryResMeshData* meshData = mesh->GetMeshData();
+
+			auto vertexCount = meshData->m_vertexCount;
+			auto constSize = mesh->GetTransformsSize() + 4 * sizeof( uint32_t );
+			if( !m_skinVerticesData.IsValid() || m_skinVerticesData.GetSize() < constSize )
+			{
+				m_skinVerticesData.Create( uint32_t( constSize ), renderContext.GetPrimaryRenderContext() );
+			}
+			float* constData;
+			m_skinVerticesData.Lock( (void**)&constData, renderContext );
+
+			reinterpret_cast<uint32_t*>( constData )[0] = vertexCount;
+			reinterpret_cast<uint32_t*>( constData )[1] = meshData->m_vertexAllocation.GetStride() / 4;
+			auto offsets = FindOffsets( meshData->m_vertexDeclaration );
+			reinterpret_cast<uint32_t*>( constData )[2] = offsets.positionOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
+			reinterpret_cast<uint32_t*>( constData )[3] = offsets.boneOffset / 4 + meshData->m_vertexAllocation.GetOffset() / 4;
+
+			memcpy( constData + 4, mesh->GetTransforms(), mesh->GetTransformsSize() );
+
+			m_skinVerticesData.Unlock( renderContext );
+
+			renderContext.SetConstants( m_skinVerticesData, Tr2RenderContextEnum::COMPUTE_SHADER, perObjVSRegister );
+
+			inVB.m_buffer = meshData->m_vertexAllocation.GetBuffer();
+			outVB.m_buffer = mesh->GetSkinnedVertexBuffer( renderContext );
+
+#if TRINITY_PLATFORM == TRINITY_DIRECTX12
+			auto alBuffer = outVB.m_buffer.TrinityALImpl_GetObject();
+
+			D3D12_RESOURCE_BARRIER barrier;
+			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+			barrier.Transition.pResource = alBuffer->GetGpuResource();
+			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+			barrier.Transition.StateAfter = alBuffer->GetDefaultState();
+			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+			renderContext.ResourceBarrierDx12( 1, &barrier );
+#endif
+			// cheat a bit instead of calling RunComputeShader() to make things more performant
+			if( !shader )
+			{
+				return;
+			}
+
+			if( stage.m_exists )
+			{
+				// ApplyAllStateForPass(0, i)
+				renderContext.m_esm.ApplyShaderProgram( pass.shaderProgram );
+				renderContext.m_esm.ApplyRenderStates( pass.renderStates );
+
+				// for future performance:
+				// to speed things up is we could skip the ApplyMaterialDataForPass()
+				// and instead shove the two buffers in via m_descriptorCache in renderContextDx12
+				// this would save some performance but cost us having ugly code
+				m_skinVerticesEffect->ApplyMaterialDataForPass( 0, 0, renderContext );
+				renderContext.RunComputeShader( ( vertexCount + 63 ) / 64, 1, 1 );
+			}
+		}
+		renderContext.SetResourceSet( Tr2ResourceSetAL() );
 	}
-	renderContext.SetResourceSet( Tr2ResourceSetAL() );
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	renderContext.PopDisableUAVBarriersDx12();
@@ -631,6 +614,8 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	renderContext.FlushBarriersDx12();
 #endif
+	Tr2RtInstanceAL instance;
+
 	std::vector<Tr2RtInstanceAL> instances;
 	instances.reserve( m_geometryData.size() );
 	for( auto it = begin( m_geometryData ); it != end( m_geometryData ); ++it )
@@ -639,7 +624,7 @@ void Tr2RaytracingGeometry::BuildAccelerationStructures( Tr2RenderContext& rende
 		{
 			continue;
 		}
-		Tr2RtInstanceAL instance;
+		
 		instance.flags = it->isTransparent ? Tr2RtInstanceAL::FORCE_NON_OPAQUE : Tr2RtInstanceAL::NONE;
 		instance.materialIndex = it->materialIndex;
 		instance.blas = it->area->BuildBlas( *it->mesh, renderContext );

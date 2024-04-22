@@ -1394,7 +1394,6 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 
 void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 {
-
 	if( !m_rtManager || !m_enableRaytracing || !m_enableShadows || m_objects.empty() )
 	{
 		return;
