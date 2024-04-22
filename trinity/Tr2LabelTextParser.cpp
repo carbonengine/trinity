@@ -167,10 +167,10 @@ PyObject* ParseAttribs( wchar_t *&curPos, const wchar_t *keyAlreadyParsed = NULL
                     {
                         goto error;
                     }
-
-                    value = PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( curPos + 1 ), endOfValue - curPos - 1 );
-                    curPos = endOfValue + 1;
-                }
+					// Get string value without begin/end quotes then advance the current position after the end quote.
+					value = PyUnicode_FromWideChar( reinterpret_cast<const wchar_t*>( curPos + 1 ), ( endOfValue - curPos - 1 ) );
+					curPos = endOfValue + 1;
+				}
                 else
                 {
                     // Not a quoted string...go until we find > or whitespace.
@@ -195,10 +195,10 @@ PyObject* ParseAttribs( wchar_t *&curPos, const wchar_t *keyAlreadyParsed = NULL
                         }
                     }
 
-                    value = PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( startOfValue ), curPos - startOfValue );
-                }
+					value = PyUnicode_FromWideChar( reinterpret_cast<const wchar_t*>( startOfValue ), ( curPos - startOfValue ) );
+				}
 
-                PyObject* keyThunked = PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( key ), wcslen( key ) );
+                PyObject* keyThunked = PyUnicode_FromWideChar( reinterpret_cast<const wchar_t*>( key ), -1 );
                 PyDict_SetItem( result, keyThunked, value );
 
                 astate = ASTATE_WHITEOREND;
@@ -239,7 +239,7 @@ error:
     if( stringBeingBuilt.empty( ) )                                                                 \
     {                                                                                               \
         /* Simple case, we haven't done any substitutions. */                                       \
-        newString = PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( marker ), curPos - marker );                               \
+        newString = PyUnicode_FromWideChar( reinterpret_cast<const wchar_t*>( marker ), ( curPos - marker ) );                               \
     }                                                                                               \
     else                                                                                            \
     {                                                                                               \
@@ -248,7 +248,7 @@ error:
         {                                                                                           \
             stringBeingBuilt.append( marker, curPos - marker );                                     \
         }                                                                                           \
-        newString = PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( stringBeingBuilt.c_str( ) ), stringBeingBuilt.size( ) );   \
+        newString = PyUnicode_FromWideChar( reinterpret_cast<const wchar_t*>( stringBeingBuilt.c_str( ) ), stringBeingBuilt.size( ) );   \
         stringBeingBuilt.clear( );                                                                  \
     }                                                                                               \
                                                                                                     \
@@ -769,8 +769,8 @@ static PyObject* PyParseLabelText( PyObject* self, PyObject* args )
                     {
                         PyObject* unknownTag = PyTuple_New( 2 );
                         PyTuple_SetItem( unknownTag, 0, PyLong_FromLong( 3 ) );
-                        PyTuple_SetItem( unknownTag, 1, PyUnicode_FromUnicode( reinterpret_cast<const Py_UNICODE*>( curPos ), closeTag - curPos ) );
-                        PyList_Append( currentTab, unknownTag );
+						PyTuple_SetItem( unknownTag, 1, PyUnicode_FromWideChar( reinterpret_cast<const wchar_t*>( curPos ), ( closeTag - curPos ) ) );
+						PyList_Append( currentTab, unknownTag );
 						Py_DECREF( unknownTag );
 
                         curPos = closeTag + 1;
