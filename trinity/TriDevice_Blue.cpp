@@ -176,6 +176,7 @@ Be::VarChooser Tr2UpsclaingAL_UpscalingTechnique_Chooser[] = {
 };
 
 Be::VarChooser Tr2UpsclaingAL_UpscalingSetting_Chooser[] = {
+	{ "NATIVE", BeCast( Tr2UpscalingAL::Setting::NATIVE ), "" },
 	{ "ULTRA_QUALITY", BeCast( Tr2UpscalingAL::Setting::ULTRA_QUALITY ), "" },
 	{ "QUALITY", BeCast( Tr2UpscalingAL::Setting::QUALITY ), "" },
 	{ "BALANCED", BeCast( Tr2UpscalingAL::Setting::BALANCED ), "" },
