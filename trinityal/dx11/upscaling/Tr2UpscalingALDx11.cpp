@@ -14,8 +14,8 @@
 namespace TrinityALImpl
 {
 
-	Tr2UpscalingTechniqueDx11::Tr2UpscalingTechniqueDx11( Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter  ) : 
-	Tr2UpscalingTechniqueAL( setting, frameGeneration )
+	Tr2UpscalingTechniqueDx11::Tr2UpscalingTechniqueDx11( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter ) : 
+	Tr2UpscalingTechniqueAL( technique, setting, frameGeneration )
 	{
 	}
 	
@@ -23,13 +23,21 @@ namespace TrinityALImpl
 	{
 	}
 
-	Tr2UpscalingTechniqueDx11* CreateUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
+	Tr2UpscalingTechniqueDx11* CreateUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
 	{
+		TrinityALImpl::Tr2UpscalingTechniqueDx11* techniqueImpl = nullptr;
 		switch( technique )
 		{
 		case Tr2UpscalingAL::DLSS:
-			return new Tr2DlssUpscalingTechnique( setting, frameGeneration, adapter );
+			return new Tr2DlssUpscalingTechnique( technique, setting, frameGeneration, adapter );
+			break;
 		}
+		if( techniqueImpl && techniqueImpl->IsAvailable( renderContext, adapter ) )
+		{
+			return techniqueImpl;
+		}
+		delete techniqueImpl;
+		techniqueImpl = nullptr;
 		return nullptr;
 	}
 }

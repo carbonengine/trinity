@@ -307,39 +307,6 @@ BLUE_REGISTER_ENUM_EX(
     ENUM_REG_ENUM_OBJECT_ON_MODULE
 );
 
-const Be::VarChooser Tr2UpsclaingAL_UpscalingTechnique_Chooser[] = {
-	{ "NONE", BeCast( Tr2UpscalingAL::Technique::NONE ), "" },
-	{ "FSR1", BeCast( Tr2UpscalingAL::Technique::FSR1 ), "" },
-	{ "FSR2", BeCast( Tr2UpscalingAL::Technique::FSR2 ), "" },
-	{ "FSR3", BeCast( Tr2UpscalingAL::Technique::FSR3 ), "" },
-	{ "DLSS", BeCast( Tr2UpscalingAL::Technique::DLSS ), "" },
-	{ "XESS", BeCast( Tr2UpscalingAL::Technique::XESS ), "" },
-	{ "METALFX", BeCast( Tr2UpscalingAL::Technique::METALFX ), "" },
-	{ 0 }
-};
-
-const Be::VarChooser Tr2UpsclaingAL_UpscalingSetting_Chooser[] = {
-	{ "ULTRA_QUALITY", BeCast( Tr2UpscalingAL::Setting::ULTRA_QUALITY ), "" },
-	{ "QUALITY", BeCast( Tr2UpscalingAL::Setting::QUALITY ), "" },
-	{ "BALANCED", BeCast( Tr2UpscalingAL::Setting::BALANCED ), "" },
-	{ "PERFORMANCE", BeCast( Tr2UpscalingAL::Setting::PERFORMANCE ), "" },
-	{ "ULTRA_PERFORMANCE", BeCast( Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE ), "" },
-	{ 0 }
-};
-
-BLUE_REGISTER_ENUM_EX( 
-    "UPSCALING_TECHNIQUE", 
-	Tr2UpscalingAL::Technique, 
-    Tr2UpsclaingAL_UpscalingTechnique_Chooser,
-    ENUM_REG_ENUM_OBJECT_ON_MODULE
-);
-
-BLUE_REGISTER_ENUM_EX(
-	"UPSCALING_SETTING",
-	Tr2UpscalingAL::Setting,
-	Tr2UpsclaingAL_UpscalingSetting_Chooser,
-	ENUM_REG_ENUM_OBJECT_ON_MODULE );
-
 BLUE_DEFINE( Tr2RenderContext );
 
 #if TRINITY_PLATFORM_HAS_PRIMARY_CONTEXT

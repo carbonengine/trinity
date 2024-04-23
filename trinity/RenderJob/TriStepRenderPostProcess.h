@@ -182,7 +182,7 @@ private:
 	void ProcessVignette( Tr2PPVignetteEffect* vignette);
 
 	//Tr2Upscaling::UpscalingType ProcessUpscaling( Tr2PPUpscalingEffect * upscaling, Tr2RenderContext & renderContext );
-	Tr2PostProcessRenderInfo::Texture RenderUpscaling( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2UpscalingContext* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure );
+	Tr2PostProcessRenderInfo::Texture RenderUpscaling( Tr2RenderTarget* dest, Tr2RenderContext& renderContext, Tr2UpscalingContextAL* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure );
 
 	// tonemapping
 	Tr2EffectPtr m_tonemappingEffect;

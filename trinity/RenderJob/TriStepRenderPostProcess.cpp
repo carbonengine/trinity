@@ -964,7 +964,7 @@ void TriStepRenderPostProcess::RenderDynamicExposure( Tr2RenderTarget* dest, Tr2
 //	return Tr2Upscaling::UT_NOT_APPLICABLE;
 //}
 
-Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2RenderTarget* source, Tr2RenderContext& renderContext, Tr2UpscalingContext* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure )
+Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2RenderTarget* source, Tr2RenderContext& renderContext, Tr2UpscalingContextAL* upscalingContext, Tr2PPDynamicExposureEffect* dynamicExposure )
 {
 	GPU_REGION( renderContext, "Upscaling" );
 	if( upscalingContext->IsTemporal() )
@@ -1040,7 +1040,6 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderUpscaling( Tr2
 		GPU_REGION( renderContext, "UpscalingTechnique" );
 
 		upscalingContext->Dispatch( renderContext, dispatchParameters );
-		//upscaling->Render( renderContext, *m_renderInfo, textures, sceneInfo );
 	}
 	return dest;
 }

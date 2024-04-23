@@ -19,21 +19,22 @@ namespace Fsr3Utils
 class Tr2Fsr3UpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
 {
 public:
-	Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
 	~Tr2Fsr3UpscalingTechnique();
 
+	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 	virtual Tr2UpscalingAL::Result Setup() override;
 
 private:
-	virtual Tr2UpscalingContext* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight ) override;
+	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
 };
 
 
-class Tr2Fsr3UpscalingContext : public Tr2UpscalingContext
+class Tr2Fsr3UpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	~Tr2Fsr3UpscalingContext();
 
 	virtual bool IsTemporal() const override;

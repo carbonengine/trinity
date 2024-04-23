@@ -43,9 +43,10 @@ namespace Fsr3Utils
 	}
 }
 
-Tr2Fsr3UpscalingTechnique::Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
-	TrinityALImpl::Tr2UpscalingTechniqueDx12( setting, frameGeneration )
+Tr2Fsr3UpscalingTechnique::Tr2Fsr3UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
+	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration )
 {
+	SanitizeState();
 }
 
 Tr2Fsr3UpscalingTechnique::~Tr2Fsr3UpscalingTechnique()
@@ -62,18 +63,28 @@ void Tr2Fsr3UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 	}
 }
 
+std::vector<Tr2UpscalingAL::Setting> Tr2Fsr3UpscalingTechnique::GetAvailableSettings() const
+{
+	return {
+		Tr2UpscalingAL::Setting::QUALITY,
+		Tr2UpscalingAL::Setting::BALANCED,
+		Tr2UpscalingAL::Setting::PERFORMANCE,
+		Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE
+	};
+}
+
 Tr2UpscalingAL::Result Tr2Fsr3UpscalingTechnique::Setup()
 {
 	return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 }
 
-Tr2UpscalingContext* Tr2Fsr3UpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingContextAL* Tr2Fsr3UpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
-	return new Tr2Fsr3UpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration );
+	return new Tr2Fsr3UpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration, sourceFormat, depthFormat );
 }	
 
-Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
-	Tr2UpscalingContext( displayWidth, displayHeight, setting, frameGeneration ),
+Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
+	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, frameGeneration, sourceFormat, depthFormat ),
 	m_setup( false )
 {
 	switch( setting )
@@ -93,13 +104,12 @@ Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_
 	case Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE:
 		m_upscaling = ffxFsr3GetUpscaleRatioFromQualityMode( FfxFsr3QualityMode::FFX_FSR3_QUALITY_MODE_ULTRA_PERFORMANCE );
 		break;
+	default:
+		CCP_LOGERR( "Invalid upscaling setting applied: %d. Upscaling amount will be forced to 1.0" );
 	}
 
 	m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );
 	m_renderHeight = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayHeight, m_upscaling );
-
-	m_jitterXScale = 2.0f;
-	m_jitterYScale = -2.0f;
 }
 
 Tr2Fsr3UpscalingContext::~Tr2Fsr3UpscalingContext()

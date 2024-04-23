@@ -25,12 +25,12 @@ namespace Tr2UpscalingAL
 
 	enum Setting
 	{
-		NATIVE,
-		ULTRA_QUALITY,
-		QUALITY,
-		BALANCED,
-		PERFORMANCE,
-		ULTRA_PERFORMANCE
+		NATIVE = 1 << 0,
+		ULTRA_QUALITY = 1 << 1,
+		QUALITY = 1 << 2,
+		BALANCED = 1 << 3,
+		PERFORMANCE = 1 << 4,
+		ULTRA_PERFORMANCE = 1 << 5
 	};
 
 	enum Result
@@ -67,11 +67,11 @@ namespace Tr2UpscalingAL
 	
 	enum DispatchRequirements
 	{
-		VELOCITY = 1 >> 0,
-		OPAQUE_ONLY = 1 >>1,
-		DEPTH = 1 >> 2,
-		REACTIVE = 1 >> 3, 
-		OPTIONAL_EXPOSURE = 1 >> 4,
+		VELOCITY = 1 << 0,
+		OPAQUE_ONLY = 1 << 1,
+		DEPTH = 1 << 2,
+		REACTIVE = 1 << 3, 
+		OPTIONAL_EXPOSURE = 1 << 4,
 	};
 
 	typedef std::vector<std::pair<float, float>> JitterSequence;
@@ -82,33 +82,42 @@ namespace Tr2UpscalingAL
 }
 
 // forward
-class Tr2UpscalingContext;
+class Tr2UpscalingContextAL;
 
 class Tr2UpscalingTechniqueAL
 {
 public:
-	Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
 
 	virtual Tr2UpscalingAL::Result Setup() = 0;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) = 0;
 	virtual void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent );
 
-	Tr2UpscalingContext* GetContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight );
-	Tr2UpscalingContext* CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight );
+	void SanitizeState();
+
+	virtual bool IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const;
+	virtual bool SupportsFrameGeneration( ) const;
+	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const = 0;
+
+	Tr2UpscalingContextAL* GetContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight );
+	Tr2UpscalingContextAL* CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+
+	void GetState( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& frameGeneration );
 
 protected:
-	virtual Tr2UpscalingContext* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight ) = 0;
+	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) = 0;
 
-	std::map<uint32_t, std::unique_ptr<Tr2UpscalingContext>> m_contexts;
+	std::map<uint32_t, std::unique_ptr<Tr2UpscalingContextAL>> m_contexts;
 	bool m_frameGeneration;
 	Tr2UpscalingAL::Setting m_setting;
+	Tr2UpscalingAL::Technique m_technique;
 };
 
 
-class Tr2UpscalingContext
+class Tr2UpscalingContextAL
 {
 public:
-	Tr2UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	
 	// after setup is called, we must know the size of the render targets!
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) = 0;
@@ -144,6 +153,9 @@ protected:
 	float m_jitterY;
 	float m_jitterXScale;
 	float m_jitterYScale;
+
+	Tr2RenderContextEnum::PixelFormat m_sourceFormat;
+	Tr2RenderContextEnum::DepthStencilFormat m_depthFormat;
 };
 
 

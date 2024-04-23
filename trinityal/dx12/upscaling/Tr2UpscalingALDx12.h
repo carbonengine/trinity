@@ -10,7 +10,7 @@
 
 namespace TrinityALImpl
 {
-	static const std::vector<Tr2UpscalingAL::Technique> AVAILABLE_UPSCALING_TECHNIQUES = {
+	const std::vector<Tr2UpscalingAL::Technique> AVAILABLE_UPSCALING_TECHNIQUES = {
 		Tr2UpscalingAL::Technique::DLSS,
 		Tr2UpscalingAL::Technique::FSR2,
 		Tr2UpscalingAL::Technique::FSR3,
@@ -20,7 +20,7 @@ namespace TrinityALImpl
 	class Tr2UpscalingTechniqueDx12 : public Tr2UpscalingTechniqueAL
 	{
 	public: 
-		Tr2UpscalingTechniqueDx12( Tr2UpscalingAL::Setting setting, bool frameGeneration );
+		Tr2UpscalingTechniqueDx12( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
 
 		virtual bool OverridesSwapChainCreation() const;
 		virtual bool OverridesDeviceCreation() const;
@@ -38,7 +38,7 @@ namespace TrinityALImpl
 		virtual HRESULT CreateDXGIFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) ;
 	};
 
-	TrinityALImpl::Tr2UpscalingTechniqueDx12* CreateUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
+	TrinityALImpl::Tr2UpscalingTechniqueDx12* CreateUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 
 }
 

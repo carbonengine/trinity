@@ -79,9 +79,10 @@ void LogXeSS( const char* message, xess_logging_level_t loggingLevel )
 }
 
 
-Tr2XessUpscalingTechnique::Tr2XessUpscalingTechnique( Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
-	TrinityALImpl::Tr2UpscalingTechniqueDx12( setting, frameGeneration )
+Tr2XessUpscalingTechnique::Tr2XessUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
+	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration )
 {
+	SanitizeState();
 }
 
 Tr2XessUpscalingTechnique::~Tr2XessUpscalingTechnique()
@@ -102,13 +103,31 @@ Tr2UpscalingAL::Result Tr2XessUpscalingTechnique::Setup()
 	return Tr2UpscalingAL::Result::OK;
 }
 
-Tr2UpscalingContext* Tr2XessUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight )
+std::vector<Tr2UpscalingAL::Setting> Tr2XessUpscalingTechnique::GetAvailableSettings() const
 {
-	return new Tr2XessUpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration );
+	return {
+		Tr2UpscalingAL::Setting::ULTRA_QUALITY,
+		Tr2UpscalingAL::Setting::QUALITY,
+		Tr2UpscalingAL::Setting::BALANCED,
+		Tr2UpscalingAL::Setting::PERFORMANCE
+	};
 }
 
-Tr2XessUpscalingContext::Tr2XessUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
-	Tr2UpscalingContext( displayWidth, displayHeight, setting, frameGeneration ),
+bool Tr2XessUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const
+{
+	xess_context_handle_t context;
+	auto status = xessD3D12CreateContext( renderContext.m_ownerDevice->m_device, &context );
+	context = nullptr;
+	return status == XESS_RESULT_SUCCESS;
+}
+
+Tr2UpscalingContextAL* Tr2XessUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+{
+	return new Tr2XessUpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration, sourceFormat, depthFormat );
+}
+
+Tr2XessUpscalingContext::Tr2XessUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
+	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, frameGeneration, sourceFormat, depthFormat ),
 	m_context( nullptr ),
 	m_setup( false ),
 	m_setupWithExposure( true )
@@ -132,9 +151,6 @@ Tr2XessUpscalingContext::Tr2XessUpscalingContext( uint32_t displayWidth, uint32_
 		CCP_LOGERR( "Invalid Setting Applied to Tr2XeSSUpscaling: %d", setting );
 		break;
 	}
-
-	m_jitterXScale = 2.0f;
-	m_jitterYScale = -2.0f;
 }
 
 Tr2XessUpscalingContext::~Tr2XessUpscalingContext()

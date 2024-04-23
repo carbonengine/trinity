@@ -61,11 +61,47 @@ namespace Tr2UpscalingAL
 }
 
 
-Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Setting setting, bool frameGeneration ):
+Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ):
+	m_technique( technique ),
 	m_setting(setting),
 	m_frameGeneration( frameGeneration )
 {
-	
+	m_contexts = std::map<uint32_t, std::unique_ptr<Tr2UpscalingContextAL>>();
+}
+
+void Tr2UpscalingTechniqueAL::SanitizeState()
+{
+	const auto& availableSettings = GetAvailableSettings();
+	m_frameGeneration = m_frameGeneration && SupportsFrameGeneration();
+	if( availableSettings.size() > 0 && std::find( availableSettings.begin(), availableSettings.end(), m_setting ) == availableSettings.end() )
+	{
+		// find the closest setting, without going into higher quality
+		// start by setting the bestCandidate as the lowest quality setting
+		Tr2UpscalingAL::Setting bestCandidate = *availableSettings.begin();
+		uint32_t leastDistance = std::numeric_limits<uint32_t>().max();
+		for( auto& availableSetting : availableSettings )
+		{
+			uint32_t currentDistance = m_setting - availableSetting;
+			if( leastDistance <= currentDistance )
+			{
+				bestCandidate = availableSetting;
+				leastDistance = currentDistance;
+			}
+		}
+		m_setting = bestCandidate;
+	}
+}
+
+std::vector<Tr2UpscalingAL::Setting> Tr2UpscalingTechniqueAL::GetAvailableSettings() const
+{
+	return std::vector<Tr2UpscalingAL::Setting>();
+}
+
+void Tr2UpscalingTechniqueAL::GetState( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& frameGeneration )
+{
+	technique = m_technique;
+	setting = m_setting;
+	frameGeneration = m_frameGeneration;
 }
 
 void Tr2UpscalingTechniqueAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent )
@@ -81,7 +117,7 @@ void Tr2UpscalingTechniqueAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& 
 }
 
 
-Tr2UpscalingContext* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight )
 {
 	uint32_t key = displayWidth + displayHeight;
 
@@ -94,25 +130,31 @@ Tr2UpscalingContext* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& re
 	return m_contexts[key].get();
 }
 
-Tr2UpscalingContext* Tr2UpscalingTechniqueAL::CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
 	uint32_t key = displayWidth + displayHeight;
 
 	if( m_contexts.find( key ) == m_contexts.end() )
 	{
-		auto context = CreateContextInstance( displayWidth, displayHeight );
+		auto context = CreateContextInstance( displayWidth, displayHeight, sourceFormat, depthFormat );
 		context->Setup( renderContext );
 		m_contexts[key].reset( context );
-	}
-	else
-	{
-		CCP_LOGERR( "Tr2UpscalingTechniqueAL:CreateContext Context already existed for (%d, %d)", displayWidth, displayHeight );
 	}
 
 	return m_contexts[key].get();
 }
 
-Tr2UpscalingContext::Tr2UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
+bool Tr2UpscalingTechniqueAL::IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const
+{
+	return true;
+}
+
+bool Tr2UpscalingTechniqueAL::SupportsFrameGeneration( ) const
+{
+	return false;
+}
+
+Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
 	m_setting(setting),
 	m_frameGeneration( frameGeneration ),
 	m_displayWidth( displayWidth ),
@@ -124,45 +166,47 @@ Tr2UpscalingContext::Tr2UpscalingContext( uint32_t displayWidth, uint32_t displa
 	m_jitterIndex( 0 ),
 	m_jitterX( 0.0f ),
 	m_jitterY( 0.0f ),
-	m_jitterXScale( 1.0f ),
-	m_jitterYScale( -1.0f )
+	m_jitterXScale( 2.0f ),
+	m_jitterYScale( -2.0f ), 
+	m_sourceFormat( sourceFormat ),
+	m_depthFormat( depthFormat )
 {
 }
 
-void Tr2UpscalingContext::GetRenderDimensions( uint32_t& width, uint32_t& height ) const
+void Tr2UpscalingContextAL::GetRenderDimensions( uint32_t& width, uint32_t& height ) const
 {
 	width = m_renderWidth;
 	height = m_renderHeight;
 }
 
-void Tr2UpscalingContext::GetDisplayDimensions( uint32_t& width, uint32_t& height ) const
+void Tr2UpscalingContextAL::GetDisplayDimensions( uint32_t& width, uint32_t& height ) const
 {
 	width = m_displayWidth;
 	height = m_displayHeight;
 }
 
-void Tr2UpscalingContext::GetJitter( float& x, float& y ) const
+void Tr2UpscalingContextAL::GetJitter( float& x, float& y ) const
 {
 	x = m_jitterXScale * m_jitterX / (float)m_renderWidth;
 	y = m_jitterYScale * m_jitterY / (float)m_renderHeight;
 }
 
-float Tr2UpscalingContext::GetMipLevelBias() const
+float Tr2UpscalingContextAL::GetMipLevelBias() const
 {
 	return log2( 1.0f / m_upscaling ) - 1.0f;
 }
 
-float Tr2UpscalingContext::GetUpscalingAmount() const
+float Tr2UpscalingContextAL::GetUpscalingAmount() const
 {
 	return m_upscaling;
 }
 
-void Tr2UpscalingContext::Reset()
+void Tr2UpscalingContextAL::Reset()
 {
 	m_reset = true;
 }
 
-bool Tr2UpscalingContext::AreDisplayParametersValid( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) const
+bool Tr2UpscalingContextAL::AreDisplayParametersValid( Tr2UpscalingAL::DispatchParameters& dispatchParameters ) const
 {
 	bool valid = true;
 	if( dispatchParameters.input == nullptr )

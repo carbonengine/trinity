@@ -10,20 +10,21 @@
 class Tr2Fsr1UpscalingTechnique : public Tr2UpscalingTechniqueAL
 {
 public:
-	Tr2Fsr1UpscalingTechnique( Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2Fsr1UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
 	~Tr2Fsr1UpscalingTechnique();
+	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const;
 
 	virtual Tr2UpscalingAL::Result Setup() override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
 private:
-	virtual Tr2UpscalingContext* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight ) override;
+	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
 };
 
-class Tr2Fsr1UpscalingContext : public Tr2UpscalingContext
+class Tr2Fsr1UpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2Fsr1UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2Fsr1UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	~Tr2Fsr1UpscalingContext();
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;

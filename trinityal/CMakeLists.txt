@@ -199,7 +199,8 @@ set(_SOURCES
     include/Tr2ResourceSetAL.h
     include/Tr2SamplerStateAL.h
     include/Tr2ShaderAL.h
-    include/Tr2ShaderProgramAL.h
+    include/Tr2ShaderProgramAL.h    
+    include/Tr2StreamlineAL.h    
     include/Tr2SwapChainAL.h
     include/Tr2TextureAL.h
     include/Tr2TextureType.h
@@ -266,6 +267,7 @@ set(_SOURCES
     src/Tr2SamplerStateAL.cpp
     src/Tr2ShaderAL.cpp
     src/Tr2ShaderProgramAL.cpp    
+    src/Tr2StreamlineAL.cpp    
     src/Tr2SwapChainAL.cpp
     src/Tr2TextureAL.cpp
     src/Tr2VertexLayoutAL.cpp

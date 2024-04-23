@@ -14,6 +14,7 @@
 #include "Tr2ShaderProgramALMetal.h"
 #include "Tr2TextureALMetal.h"
 #include "Tr2SwapChainALMetal.h"
+#include "upscaling/Tr2UpscalingALMetal.h"
 
 
 #include "MetalContext.h"
@@ -1270,18 +1271,10 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
-	return Tr2UpscalingAL::Result::OK;
-}
-
-Tr2UpscalingAL::Result Tr2RenderContextAL::SetupUpscaling()
-{
-	if( m_upscalingTechnique == nullptr )
-	{
-		return Tr2UpscalingAL::Result::OK;
-	}
 
 	return m_upscalingTechnique->Setup();
 }
+
 
 Tr2UpscalingContext* Tr2RenderContextAL::GetUpscalingContext( Tr2UpscalingAL::SetupInformation setupInfo )
 {
@@ -1302,6 +1295,22 @@ Tr2UpscalingContext* Tr2RenderContextAL::CreateUpscalingContext( Tr2UpscalingAL:
 
 	return m_upscalingTechnique->CreateContext( *this, setupInfo );
 }
+
+std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter ){
+	return Tr2UpscalingALMetal::AVAILABLE_UPSCALING_TECHNIQUES;
+}
+
+void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+{
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->GetState( technique, setting, framegeneration );
+	}
+	technique = Tr2UpscalingAL::Technique::NONE;
+	setting = Tr2UpscalingAL::Setting::NATIVE;
+	framegeneration = false;
+}
+
 
 void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
 {

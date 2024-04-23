@@ -160,10 +160,6 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	CR_RETURN_HR( TrinityALImpl::GetVideoAdapter( adapter, &dxgiAdapter, &output ) );
 	CR_RETURN_HR( CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, device ) );
 
-	/*CR_RETURN_HR( Tr2Streamline::SlD3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS( &proxyDevice ) ) );
-	nativeDevice = Tr2Streamline::CreateNative( proxyDevice );
-	Tr2Streamline::Attach( nativeDevice );*/
-
 	if( !m_gpuCrashTracker->IsValid() )
 	{
 		m_gpuCrashTracker = nullptr;
@@ -1288,26 +1284,15 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 		m_upscalingTechnique = nullptr;
 	}
 
-	m_upscalingTechnique = TrinityALImpl::CreateUpscalingTechnique( tech, setting, frameGeneration, adapter );
+	m_upscalingTechnique = TrinityALImpl::CreateUpscalingTechnique( *this, tech, setting, frameGeneration, adapter );
 	if( m_upscalingTechnique == nullptr )
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
-
-	return Tr2UpscalingAL::Result::OK;
-}
-
-Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::SetupUpscaling()
-{
-	if( m_upscalingTechnique == nullptr )
-	{
-		return Tr2UpscalingAL::Result::OK;
-	}
-
 	return m_upscalingTechnique->Setup();
 }
 
-Tr2UpscalingContext* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
 {
 	if( m_upscalingTechnique == nullptr )
 	{
@@ -1317,14 +1302,14 @@ Tr2UpscalingContext* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t di
 	return m_upscalingTechnique->GetContext( *this, displayWidth, displayHeight );
 }
 
-Tr2UpscalingContext* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
 	if( m_upscalingTechnique == nullptr )
 	{
 		return nullptr;
 	}
 
-	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight );
+	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight, sourceFormat, depthFormat );
 }
 
 bool Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
@@ -1345,6 +1330,42 @@ bool Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_
 	}
 	return context != nullptr;
 }
+
+std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
+{
+	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
+	for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
+	{
+		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::BALANCED, false, adapter );
+		if( tech )
+		{
+			uint32_t allSettings = 0;
+
+			for( auto& setting : tech->GetAvailableSettings() )
+			{
+				allSettings |= setting;
+			}
+
+			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
+			tech->Destroy( *this );
+			tech = nullptr;
+		}
+	}
+	return supportedTechniques;
+}
+
+void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+{
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->GetState( technique, setting, framegeneration );
+		return;
+	}
+	technique = Tr2UpscalingAL::Technique::NONE;
+	setting = Tr2UpscalingAL::Setting::NATIVE;
+	framegeneration = false;
+}
+
 
 void Tr2PrimaryRenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
 {

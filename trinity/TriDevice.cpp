@@ -24,7 +24,8 @@ extern std::vector<HANDLE> g_D3DCreatedHeaps;
 extern int g_windowResized;
 #endif
 
-namespace {
+namespace
+{
 
 	HRESULT CreateDeviceInt(
 		uint32_t Adapter,
@@ -65,6 +66,16 @@ namespace {
 
 		return hr;
 	}
+
+	BlueStructureDefinition Tr2UpscalingTechniqueInfoDefinition[] = {
+		{ "technique", Be::UINT32_1, 0, Tr2UpsclaingAL_UpscalingTechnique_Chooser },
+		{ "supportedSettings", Be::UINT32_1, 4, Tr2UpsclaingAL_UpscalingSetting_Chooser },
+		{ "framegeneration", Be::BOOL8_1, 8 },
+		{ 0 }
+	};
+
+	const Tr2UpscalingTechniqueInfo s_defaultUpscalingTechniqueInfo = { Tr2UpscalingAL::Technique::NONE, 0, false };
+
 }
 
 
@@ -98,6 +109,7 @@ bool TriDevice::s_iteratingForRelease = false;
 const char* TRINITY = "Trinity"; //cookie for the tick
 
 TriDevice::TriDevice(IRoot* lockobj) : 
+	PARENTLOCK( m_supportedUpscalingTechniques ),
 	mHwnd             ( 0 ),
 	mHeight           ( 0 ),
 	mWidth            ( 0 ),
@@ -122,6 +134,10 @@ TriDevice::TriDevice(IRoot* lockobj) :
 	m_upscalingSetting( Tr2UpscalingAL::Setting::BALANCED ),
 	m_upscalingWithFrameGeneration( false )
 {	
+	
+	m_supportedUpscalingTechniques.SetStructureDefinition( Tr2UpscalingTechniqueInfoDefinition );
+	m_supportedUpscalingTechniques.SetDefaultValue( &s_defaultUpscalingTechniqueInfo );
+
 	Tr2DisplayModeInfo empty = {0};
 	mDisplayMode = empty;
 	// At this point, in the constructor, we are just setting defaults.  We really 
@@ -213,6 +229,7 @@ bool TriDevice::CreateSimpleDevice(
 	// Set default settings
 	uint32_t adapterToUse = adapter;
 
+	PrepareUpscalingTechnique( adapter );
 	CreateDeviceInt( adapterToUse, hwnd, pp );
 
 	if( !DeviceExists() )
@@ -234,6 +251,7 @@ bool TriDevice::CreateSimpleDevice(
 	{
 		return false;
 	}
+
 
 	if( !InitD3DDevice() )
 	{
@@ -283,7 +301,8 @@ bool TriDevice::ChangeDevice(
 		const Tr2PresentParametersAL* pp )
 {
 	bool resetOnly = true;
-	if( !DeviceExists()	||  hWnd != mHwnd || Tr2VideoAdapterInfo::AreAdaptersDifferent( adapter, mAdapter ) )
+	bool adaptersChanged = Tr2VideoAdapterInfo::AreAdaptersDifferent( adapter, mAdapter );
+	if( !DeviceExists()	||  hWnd != mHwnd || adaptersChanged )
 	{
 		resetOnly = false;	// reset is not enough, we need to recreate the device.
 	}
@@ -307,16 +326,8 @@ bool TriDevice::ChangeDevice(
 		Tr2RenderContext::DestroyMainThreadRenderContext();	
 	}
 
-	USE_MAIN_THREAD_RENDER_CONTEXT();
-	auto upscalingResult = renderContext.EnableUpscaling( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration, mAdapter );
-	if( upscalingResult != Tr2UpscalingAL::Result::OK )
-	{
-		CCP_LOGWARN( "Could not enable upscaling, setting to none" );
-		m_upscalingTechnique = Tr2UpscalingAL::Technique::NONE;
-	}
-	renderContext.SetupUpscaling();
+	PrepareUpscalingTechnique( adapter );
 
-	m_upscalingChanged = false;
 	if( FAILED( CreateDeviceInt( adapter, hWnd, *pp ) ) )
 	{
 		return false;
@@ -1124,18 +1135,43 @@ bool TriDevice::IsVariableRefreshRateSupported() const
 	return renderContext.GetCaps().SupportsVariableRefreshRate();
 }
 
+void TriDevice::PrepareUpscalingTechnique( uint32_t adapter )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	m_supportedUpscalingTechniques.clear();
+
+	for( auto& techInfo : renderContext.GetSupportedUpscalingTechniques( adapter ) )
+	{
+		Tr2UpscalingTechniqueInfo technique{};
+		std::tie( technique.technique, technique.supportedSettings, technique.framegen ) = techInfo;
+		m_supportedUpscalingTechniques.Append( &technique );
+	}
+
+	auto upscalingResult = renderContext.EnableUpscaling( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration, adapter );
+	if( upscalingResult != Tr2UpscalingAL::Result::OK )
+	{
+		CCP_LOGWARN( "Could not enable upscaling" );
+	}
+
+	// if setting up failed, or we pass in incorrect technique or setting or framegen then this will let us know what was actually applied
+	renderContext.GetUpscalingSetup( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration );
+
+	m_upscalingChanged = false;
+}
+
 void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration )
 {
-	m_upscalingChanged = true;
+	m_upscalingChanged = technique != m_upscalingTechnique || setting != m_upscalingSetting || frameGeneration != m_upscalingWithFrameGeneration;
 	m_upscalingTechnique = technique;
 	m_upscalingSetting = setting;
 	m_upscalingWithFrameGeneration = frameGeneration;
 }
 
-void TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+void TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	renderContext.CreateUpscalingContext( displayWidth, displayHeight );
+	renderContext.CreateUpscalingContext( displayWidth, displayHeight, sourceFormat, depthFormat );
 }
 
 Vector2 TriDevice::GetRenderResolution( uint32_t displayWidth, uint32_t displayHeight )

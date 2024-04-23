@@ -25,13 +25,19 @@ namespace DlssUtils
 class Tr2DlssUpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
 {
 public:
-	Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
+	Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	~Tr2DlssUpscalingTechnique();
+
+	// Tr2UpscalingTechniqueAL overrides
+	virtual bool IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const override;
+	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
+	virtual bool SupportsFrameGeneration( ) const override;
 
 	virtual void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
 	virtual Tr2UpscalingAL::Result Setup() override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
+	// TrinityALImpl::Tr2UpscalingTechniqueDx12 overrides
 	virtual bool OverridesDeviceCreation() const override;
 	virtual bool OverridesCommandQueueCreation() const override;
 	virtual bool OverridesFactory2Creation() const override;
@@ -41,26 +47,46 @@ public:
 	virtual HRESULT CreateDXGIFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) override;
 
 private:
-	virtual Tr2UpscalingContext* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight ) override;
+	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
 
-	bool InitializeStreamline();
-	bool IsPluginAvailable( sl::Feature feature, uint32_t adapter );
 	bool TogglePlugin( sl::Feature feature, bool enable );
 
 	CComPtr<ID3D12Device> m_proxyDevice;
 	bool m_available;
 
 	uint32_t m_adapter;
+	
 	HMODULE m_streamlineModule;
+	bool m_isAvailable;
+	bool m_supportsFrameGeneration;
+
+	bool m_streamlineSetup;
 	sl::FrameToken* m_frameToken;
+
+	// a few functions from the streamline module.
+	PFun_slGetFeatureFunction* m_slGetFeatureFunction;
+	PFun_slReflexSetOptions* m_slReflexSetOptions;
+	PFun_slSetFeatureLoaded* m_slSetFeatureLoaded;
+	PFun_slReflexSetMarker* m_slReflexSetMarker;
+	PFun_slGetNewFrameToken* m_slGetNewFrameToken;
+	bool m_attachedToDevice;
 
 	uint32_t m_contextIndex;
 };
 
-class Tr2DlssUpscalingContext : public Tr2UpscalingContext
+class Tr2DlssUpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2DlssUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t contextNumber, HMODULE streamlineModule, sl::FrameToken* frameToken );
+	Tr2DlssUpscalingContext( 
+		uint32_t displayWidth, 
+		uint32_t displayHeight, 
+		Tr2UpscalingAL::Setting setting, 
+		bool frameGeneration, 
+		Tr2RenderContextEnum::PixelFormat sourceFormat, 
+		Tr2RenderContextEnum::DepthStencilFormat depthFormat,
+		uint32_t contextNumber, 
+		HMODULE streamlineModule, 
+		sl::FrameToken* frameToken );
 	~Tr2DlssUpscalingContext();
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
@@ -97,6 +123,16 @@ private:
 	uint64_t m_vramUsage;
 	uint32_t m_minWidthHeight;
 	uint32_t m_actualFrames;
+
+	// a few functions from the streamline module.
+	PFun_slDLSSGetOptimalSettings* m_slDLSSGetOptimalSettings;
+	PFun_slDLSSSetOptions* m_slDLSSSetOptions;
+	PFun_slDLSSGSetOptions* m_slDLSSGSetOptions;
+	PFun_slSetConstants* m_slSetConstants;
+	PFun_slEvaluateFeature* m_slEvaluateFeature;
+	PFun_slFreeResources* m_slFreeResources;
+	PFun_slDLSSGGetState* m_slDLSSGGetState;
+	PFun_slSetTag* m_slSetTag;
 
 	friend class Tr2DlssUpscalingTechnique;
 };

@@ -12,20 +12,22 @@
 class Tr2XessUpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
 {
 public:
-	Tr2XessUpscalingTechnique( Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2XessUpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
 	~Tr2XessUpscalingTechnique();
+
+	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
+	virtual bool IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const override;
+	virtual Tr2UpscalingAL::Result Setup() override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
-	virtual Tr2UpscalingAL::Result Setup() override;
-
 private:
-	virtual Tr2UpscalingContext* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight ) override;
+	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
 };
 
-class Tr2XessUpscalingContext : public Tr2UpscalingContext
+class Tr2XessUpscalingContext : public Tr2UpscalingContextAL
 {
 public:
-	Tr2XessUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration );
+	Tr2XessUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
 
 	~Tr2XessUpscalingContext();

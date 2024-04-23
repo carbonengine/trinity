@@ -38,6 +38,17 @@ BLUE_DECLARE_VECTOR( TriCurveSet );
 BLUE_DECLARE( Tr2RenderJobs );
 BLUE_DECLARE( Tr2RenderTargetGrabber );
 
+struct Tr2UpscalingTechniqueInfo
+{
+	uint32_t technique;
+	uint32_t supportedSettings;
+	bool framegen;
+};
+
+BLUE_DECLARE_STRUCTURE_LIST( Tr2UpscalingTechniqueInfo );
+
+extern Be::VarChooser Tr2UpsclaingAL_UpscalingTechnique_Chooser[];
+extern Be::VarChooser Tr2UpsclaingAL_UpscalingSetting_Chooser[];
 extern const Be::VarChooser TriDeviceTypeChooser[];
 
 BLUE_CLASS( TriDevice ):
@@ -228,9 +239,12 @@ private:
 	bool ResetDevice( unsigned adapter, const Tr2PresentParametersAL* pp );
 
 	void HandleRenderTick( Be::Time realTime, Be::Time simTime );
+
+	void PrepareUpscalingTechnique( uint32_t adapter );
 	void SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
-	void CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+	void CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	Vector2 GetRenderResolution( uint32_t displayWidth, uint32_t displayHeight );
+	PTr2UpscalingTechniqueInfoStructureList m_supportedUpscalingTechniques;
 
 	bool SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& pp );
 

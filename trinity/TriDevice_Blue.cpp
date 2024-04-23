@@ -164,6 +164,39 @@ BLUE_REGISTER_ENUM_EX( "TriDeviceType",
 					   TriDeviceTypeChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
 
+Be::VarChooser Tr2UpsclaingAL_UpscalingTechnique_Chooser[] = {
+	{ "NONE", BeCast( Tr2UpscalingAL::Technique::NONE ), "" },
+	{ "FSR1", BeCast( Tr2UpscalingAL::Technique::FSR1 ), "" },
+	{ "FSR2", BeCast( Tr2UpscalingAL::Technique::FSR2 ), "" },
+	{ "FSR3", BeCast( Tr2UpscalingAL::Technique::FSR3 ), "" },
+	{ "DLSS", BeCast( Tr2UpscalingAL::Technique::DLSS ), "" },
+	{ "XESS", BeCast( Tr2UpscalingAL::Technique::XESS ), "" },
+	{ "METALFX", BeCast( Tr2UpscalingAL::Technique::METALFX ), "" },
+	{ 0 }
+};
+
+Be::VarChooser Tr2UpsclaingAL_UpscalingSetting_Chooser[] = {
+	{ "ULTRA_QUALITY", BeCast( Tr2UpscalingAL::Setting::ULTRA_QUALITY ), "" },
+	{ "QUALITY", BeCast( Tr2UpscalingAL::Setting::QUALITY ), "" },
+	{ "BALANCED", BeCast( Tr2UpscalingAL::Setting::BALANCED ), "" },
+	{ "PERFORMANCE", BeCast( Tr2UpscalingAL::Setting::PERFORMANCE ), "" },
+	{ "ULTRA_PERFORMANCE", BeCast( Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE ), "" },
+	{ 0 }
+};
+
+BLUE_REGISTER_ENUM_EX(
+	"UPSCALING_TECHNIQUE",
+	Tr2UpscalingAL::Technique,
+	Tr2UpsclaingAL_UpscalingTechnique_Chooser,
+	ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
+BLUE_REGISTER_ENUM_EX(
+	"UPSCALING_SETTING",
+	Tr2UpscalingAL::Setting,
+	Tr2UpsclaingAL_UpscalingSetting_Chooser,
+	ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
+
 const Be::ClassInfo* TriDevice::ExposeToBlue()
 {
 	/////////////////////////////////////////
@@ -246,6 +279,13 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			"upscaling With Frame Generation.\n"
 			":jessica-group: Upscaling\n",
 			Be::READ )
+
+		MAP_ATTRIBUTE(
+			"supportedUpscalingTechniques",
+			m_supportedUpscalingTechniques,
+			"List of the supported upscaling techniques.\n",
+			Be::READ 
+		)
 
 		MAP_ATTRIBUTE( "curveSets", m_curveSets, "Curve sets that are update each frame. Finished curve sets are removed automatically.", Be::READ | Be::PERSIST ) 
 		

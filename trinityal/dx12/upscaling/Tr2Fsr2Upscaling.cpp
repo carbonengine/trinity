@@ -43,9 +43,10 @@ namespace Fsr2Utils
 	}
 }
 
-Tr2Fsr2UpscalingTechnique::Tr2Fsr2UpscalingTechnique( Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
-	TrinityALImpl::Tr2UpscalingTechniqueDx12( setting, frameGeneration )
+Tr2Fsr2UpscalingTechnique::Tr2Fsr2UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
+	TrinityALImpl::Tr2UpscalingTechniqueDx12( technique, setting, frameGeneration )
 {
+	SanitizeState();
 }
 
 Tr2Fsr2UpscalingTechnique::~Tr2Fsr2UpscalingTechnique()
@@ -67,14 +68,23 @@ void Tr2Fsr2UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 	}
 }
 
-
-Tr2UpscalingContext* Tr2Fsr2UpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight )
+std::vector<Tr2UpscalingAL::Setting> Tr2Fsr2UpscalingTechnique::GetAvailableSettings() const
 {
-	return new Tr2Fsr2UpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration );;
+	return {
+		Tr2UpscalingAL::Setting::QUALITY,
+		Tr2UpscalingAL::Setting::BALANCED,
+		Tr2UpscalingAL::Setting::PERFORMANCE,
+		Tr2UpscalingAL::Setting::ULTRA_PERFORMANCE
+	};
 }
 
-Tr2Fsr2UpscalingContext::Tr2Fsr2UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
-	Tr2UpscalingContext( displayWidth, displayHeight, setting, frameGeneration ),
+Tr2UpscalingContextAL* Tr2Fsr2UpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+{
+	return new Tr2Fsr2UpscalingContext( displayWidth, displayHeight, m_setting, m_frameGeneration, sourceFormat, depthFormat );
+}
+
+Tr2Fsr2UpscalingContext::Tr2Fsr2UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) :
+	Tr2UpscalingContextAL( displayWidth, displayHeight, setting, frameGeneration, sourceFormat, depthFormat ),
 	m_initializationParameters( {} ),
 	m_setup( false )
 {
@@ -99,9 +109,6 @@ Tr2Fsr2UpscalingContext::Tr2Fsr2UpscalingContext( uint32_t displayWidth, uint32_
 
 	m_renderWidth = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayWidth, m_upscaling );
 	m_renderHeight = Tr2UpscalingAL::ConvertDisplaySizeToRenderSize( m_displayHeight, m_upscaling );
-
-	m_jitterXScale = 2.0f;
-	m_jitterYScale = -2.0f;
 }
 
 Tr2Fsr2UpscalingContext::~Tr2Fsr2UpscalingContext()

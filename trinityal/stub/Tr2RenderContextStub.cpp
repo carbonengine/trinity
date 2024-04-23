@@ -412,17 +412,12 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 	return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 }
 
-Tr2UpscalingAL::Result Tr2RenderContextAL::SetupUpscaling()
-{
-	return Tr2UpscalingAL::Result::OK;
-}
-
-Tr2UpscalingContext* Tr2RenderContextAL::GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
 {
 	return nullptr;
 }
 
-Tr2UpscalingContext* Tr2RenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
 	return nullptr;
 }
@@ -436,6 +431,19 @@ bool Tr2RenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displ
 	
 	return false;
 }
+
+void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+{
+	technique = Tr2UpscalingAL::Technique::NONE;
+	setting = Tr2UpscalingAL::Setting::NATIVE;
+	framegeneration = false;
+}
+
+std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
+{
+	return std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>>();
+}
+
 
 void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
 {

@@ -296,18 +296,25 @@ public:
 		return Tr2UpscalingAL::PLATFORM_NOT_SUPPORTED;
 	}
 
-	Tr2UpscalingAL::Result SetupUpscaling()
+	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
 	{
-		return Tr2UpscalingAL::PLATFORM_NOT_SUPPORTED;
+		return nullptr;
+	}
+	Tr2UpscalingContextAL* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+	{
+		return nullptr;
 	}
 
-	Tr2UpscalingContext* GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter )
 	{
-		return nullptr;
+		return std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>>();
 	}
-	Tr2UpscalingContext* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+
+	void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
 	{
-		return nullptr;
+		technique = Tr2UpscalingAL::Technique::NONE;
+		setting = Tr2UpscalingAL::Setting::NATIVE;
+		framegeneration = false;
 	}
 
 	bool GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
