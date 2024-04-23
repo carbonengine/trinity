@@ -52,13 +52,6 @@ public:
 	Tr2ShadowMap( IRoot* lockobj = 0 );
 	~Tr2ShadowMap();
 
-	enum ShadowQuality
-	{
-		DISABLED,
-		LOW,
-		HIGH
-	};
-
 	//////////////////////////////////////////////////////////////////////////
 	// INotify
 	bool OnModified( Be::Var* val );
@@ -90,6 +83,8 @@ public:
 
 	uint32_t GetDebugColors( int switchCase ) const;
 
+	void ShouldUseDenoiser( bool value );
+
 	struct PerSplitData
 	{
 		Vector4 ShadowMapValues[4]; // x = zFar value[0], y = zFar value[1], z = zFar value[2], w = zFar value[3]..etc
@@ -114,9 +109,7 @@ private:
 		Vector3( 1, -1, 1 )
 	};
 
-	ShadowQuality m_quality;
-
-	void SetHighSettingSplitValues();
+	void SetSplitValues();
 	void SetLowSettingSplitValues();
 	void CreateShadowMaps();
 
@@ -138,6 +131,7 @@ private:
 
 	// denoiser
 	Tr2DenoiserPtr m_denoiser;
+	bool m_useDenoiser;
 
 	// shadow shader
 	Tr2EffectPtr m_shadowEffect;

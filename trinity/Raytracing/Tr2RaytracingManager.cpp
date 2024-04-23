@@ -48,6 +48,7 @@ Tr2RaytracingManager::Tr2RaytracingManager( IRoot* lockobj ) :
 
 Tr2RaytracingManager::~Tr2RaytracingManager()
 {
+	ReleaseResources( TRISTORAGE_ALL );
 }
 
 Tr2RaytracingGeometry& Tr2RaytracingManager::GetGeometry()
@@ -157,5 +158,20 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 	else
 	{
 		GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_destTex );
+	}
+}
+
+void Tr2RaytracingManager::ReleaseResources( TriStorage s )
+{
+	m_geometry->ReleaseResources( s );
+
+	m_geometry = nullptr;
+	m_shadowEffect = nullptr;
+	m_destTex = Tr2RenderTargetPtr();
+	m_denoiser = nullptr;	
+	
+	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
+	{
+		m_shadowPerFrameData = Tr2ConstantBufferAL();
 	}
 }

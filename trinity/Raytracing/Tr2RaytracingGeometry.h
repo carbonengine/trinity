@@ -110,6 +110,8 @@ public:
 	void EndSceneUpdate( Tr2RenderContext& renderContext );
 	void AddGeometry( Tr2RaytracingMesh& mesh, Tr2RaytracingMeshArea& area, Tr2Material* material, const Tr2ConstantBufferAL* perObjectData, const Matrix& worldTransform );
 	bool HasGeometry() const;
+
+	void ReleaseResources( TriStorage s );
     
     Tr2RtTopLevelAccelerationStructureAL GetTLAS() const;
 

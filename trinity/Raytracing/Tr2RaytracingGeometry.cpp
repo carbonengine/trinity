@@ -705,3 +705,12 @@ Tr2RaytracingGeometry::VtxOffsets Tr2RaytracingGeometry::FindOffsets( unsigned d
 	m_offsets[declHandle] = offsets;
 	return offsets;
 }
+
+void Tr2RaytracingGeometry::ReleaseResources( TriStorage s )
+{
+	if( (s & TRISTORAGE_ALL) == TRISTORAGE_ALL )
+	{
+		m_skinVerticesData = Tr2ConstantBufferAL();
+	}
+}
+	

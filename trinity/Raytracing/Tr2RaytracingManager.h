@@ -17,8 +17,8 @@ public:
 	Tr2RaytracingGeometry& GetGeometry();
 
 	void RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, Tr2RenderContext& renderContext );
-
-	// add in some time capture functions in here
+	
+	void ReleaseResources( TriStorage s );
 
 private:
 		 

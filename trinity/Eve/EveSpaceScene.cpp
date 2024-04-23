@@ -148,8 +148,10 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	PARENTLOCK( m_externalParameters ),
 	m_display( true ),
 	m_update( true ),
-	m_enableShadows( true ),
+	m_shadowQuality( SHADOW_HIGH ),
 	m_displayShadowMap( false ),
+	m_shadowView( IdentityMatrix() ),
+	m_enableRaytracing( false ),
 	m_visualizeMethod( VM_NONE ),
 	m_perFrameDebug( 0.f ),
 	m_pickBuffer( NULL, Tr2RenderContextEnum::PIXEL_FORMAT_B8G8R8A8_UNORM, 1 ),
@@ -183,9 +185,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_hasBackgroundDistortionBatches( false ),
 	m_hasForegroundDistortionBatches( false ),
 	m_freezeFrustum( false ),
-	m_enableRaytracing( false ),
-	m_virtualCameraSystem(),
-	m_shadowView( IdentityMatrix() )
+	m_virtualCameraSystem()
 {
 	TriPoolAllocator* allocator = Tr2Renderer::GetPoolAllocator();
 	m_primaryBatches[TRIBATCHTYPE_OPAQUE] = CCP_NEW( "EveSpaceScene/m_batches" ) TriRenderBatchAccumulator<EffectKeyGenerator>( allocator );
@@ -645,14 +645,10 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		}
 	}
 }
-	
 
 void EveSpaceScene::DisableShadows()
 {
-	if( m_cascadedShadowMap )
-	{
-		m_cascadedShadowMap->SetNoShadow();
-	}
+	//GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", BeResMan->GetResource( "res:/texture/global/white.dds") );
 }
 
 void EveSpaceScene::ApplyPerFrameData( Tr2RenderContext& renderContext )
@@ -1256,7 +1252,10 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
 	GatherBatches( renderContext );
 
-	PrepareRaytracedShadows( renderContext );
+	if( m_shadowQuality == SHADOW_RAYTRACED )
+	{
+		PrepareRaytracedShadows( renderContext );
+	}
 
 	UpdatePostProcessPSData();
 	UpdateVariableStore();
@@ -1394,9 +1393,14 @@ void EveSpaceScene::GatherBatches( Tr2RenderContext& renderContext )
 
 void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 {
-	if( !m_rtManager || !m_enableRaytracing || !m_enableShadows || m_objects.empty() )
+	if( m_objects.empty() )
 	{
 		return;
+	}
+
+	if( !m_rtManager )
+	{
+		m_rtManager.CreateInstance();
 	}
 
 	CCP_STATS_SCOPED_TIME( raytracedShadowsTime );
@@ -2013,7 +2017,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	renderContext.m_esm.EndManagedRendering();
 	
 	
-	if( m_rtManager && m_enableRaytracing && m_depthMap->IsValid() && !m_objects.empty())
+	if( m_rtManager && m_shadowQuality == SHADOW_RAYTRACED && m_depthMap->IsValid() && !m_objects.empty())
 	{
 		renderContext.SetReadOnlyDepth( true );
 		m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, renderContext );
@@ -2056,7 +2060,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		return;
 	}
 	
-	if( !m_freezeFrustum && m_enableShadows && !m_enableRaytracing )
+	if( !m_freezeFrustum && m_shadowQuality == SHADOW_LOW || m_shadowQuality == SHADOW_HIGH )
 	{
 		m_shadowView = Tr2Renderer::GetInverseViewTransform();
 		SetupCascadedShadows( renderContext );
@@ -2688,20 +2692,65 @@ bool EveSpaceScene::OnModified( Be::Var* value )
 		m_reflectionProbe->SetBackLightContrast( m_reflectionBackLightingContrast );
 	}
 
-	if( IsMatch( value, m_enableRaytracing ) )
+	if( IsMatch( value, m_shadowQuality ) )
 	{
-		g_eveSpaceSceneRaytracedShadows = m_enableRaytracing;
-		for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
+		bool spaceObjDirty = true;
+		g_eveSpaceSceneRaytracedShadows = m_shadowQuality == SHADOW_RAYTRACED;
+		if( m_shadowQuality == SHADOW_DISABLED )
 		{
-			if( EveSpaceObject2Ptr spaceObj = BlueCastPtr( *it ) )
+			spaceObjDirty = false;
+		}
+		else if( g_eveSpaceSceneRaytracedShadows )
+		{
+			if( m_shadowAlgorithm == BlueSharedString( "SHADOW_RT" ) )
 			{
-				if( m_enableRaytracing )
+				spaceObjDirty = false;
+
+			}
+			else
+			{
+				m_shadowAlgorithm = BlueSharedString( "SHADOW_RT" );
+			}
+			
+			if( !m_rtManager )
+			{
+				m_rtManager.CreateInstance();
+			}
+		}
+		else
+		{
+			if( m_shadowAlgorithm == BlueSharedString( "SHADOW_CASCADED" ) )
+			{
+				spaceObjDirty = false;
+			}
+			else
+			{
+				m_shadowAlgorithm = BlueSharedString( "SHADOW_CASCADED" );
+			}
+
+			if( m_shadowQuality == SHADOW_LOW )
+			{
+				if( m_cascadedShadowMap )
 				{
-					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_RT" ) );
+					m_cascadedShadowMap->ShouldUseDenoiser( false );
+				}	
+			}
+			else
+			{
+				if( m_cascadedShadowMap )
+				{
+					m_cascadedShadowMap->ShouldUseDenoiser( true );
 				}
-				else
+			}
+		}
+	
+		if( spaceObjDirty )
+		{
+			for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
+			{
+				if( EveSpaceObject2Ptr spaceObj = BlueCastPtr( *it ) )
 				{
-					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_CASCADED" ) );
+					spaceObj->SetShaderOption( m_shadowAlgorithmName, m_shadowAlgorithm );
 				}
 			}
 		}
@@ -2828,11 +2877,11 @@ void EveSpaceScene::OnListModified(
 
 			if( EveSpaceObject2Ptr spaceObj = BlueCastPtr( value ) )
 			{
-				if( m_enableRaytracing )
+				if( m_shadowQuality == SHADOW_RAYTRACED )
 				{
 					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_RT" ) );
 				}
-				else
+				else if( m_shadowQuality == SHADOW_LOW || m_shadowQuality == SHADOW_HIGH )
 				{
 					spaceObj->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_CASCADED" ) );
 				}
@@ -3269,7 +3318,6 @@ void EveSpaceScene::RenderDebugInfo( Tr2RenderContext& renderContext )
 		{
 			SetupCascadedShadows( renderContext );
 		}
-
 
 		m_debugRenderer->EndRender( renderContext );
 

@@ -52,7 +52,6 @@ Tr2DepthStencilPtr GetShadowAtlas( uint32_t width, uint32_t height )
 
 using namespace Tr2RenderContextEnum;
 Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
-	m_quality( HIGH ),
 	m_size( SHADOW_MAP_SIZE ),
 	m_height( 2 ),
 	m_width( 8 ),
@@ -75,7 +74,7 @@ Tr2ShadowMap::Tr2ShadowMap( IRoot* lockobj ) :
 	
 	PrepareResources();
 
-	SetHighSettingSplitValues();
+	SetSplitValues();
 }
 
 Tr2ShadowMap::~Tr2ShadowMap()
@@ -103,22 +102,6 @@ bool Tr2ShadowMap::OnModified( Be::Var* value )
 		PrepareResources();
 	}
 
-	if( IsMatch( value, m_quality ) )
-	{
-		// if high settings then setup the denoiser
-		if( m_quality == HIGH )
-		{
-			if( !m_denoiser )
-			{
-				m_denoiser.CreateInstance();
-			}
-		}
-		else
-		{
-			m_denoiser = nullptr;
-		}
-	}
-
 	return true;
 }
 
@@ -136,6 +119,8 @@ void Tr2ShadowMap::ReleaseResources( TriStorage s )
 
 	m_cascadedShadowMapDS = Tr2DepthStencilPtr();
 	m_shadowMapResultRT = Tr2RenderTargetPtr();
+
+	m_denoiser = nullptr;
 
 	SetNoShadow();
 }
@@ -184,6 +169,11 @@ void Tr2ShadowMap::SetNoShadow()
 	{
 		m_shadowMapHandle->SetValue( m_whiteTexture );
 	}
+}
+
+void Tr2ShadowMap::ShouldUseDenoiser( bool val )
+{
+	m_useDenoiser = val;
 }
 
 // --------------------------------------------------------------------------------
@@ -368,7 +358,7 @@ void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2T
 
 		{
 			CCP_STATS_ZONE( "DO_DENOISER" );
-			if( m_denoiser )
+			if( m_denoiser && m_useDenoiser )
 			{
 				m_denoiser->Apply( *m_shadowMapResultRT, *depthMap, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), renderContext );
 			}
@@ -376,7 +366,7 @@ void Tr2ShadowMap::DrawToShadowMapResult( Tr2RenderContext& renderContext, ITr2T
 
 		if( m_shadowMapHandle )
 		{
-			if( m_denoiser )
+			if( m_denoiser && m_useDenoiser )
 			{
 				m_shadowMapHandle->SetValue( m_denoiser->GetTexture() );
 			}
@@ -441,7 +431,7 @@ bool Tr2ShadowMap::GetDebugSplitValue() const
 	return m_debugColorSplit;
 }
 
-void Tr2ShadowMap::SetHighSettingSplitValues()
+void Tr2ShadowMap::SetSplitValues()
 {
 	m_splitValues[0] = 25.f;
 	m_splitValues[1] = 75.f;

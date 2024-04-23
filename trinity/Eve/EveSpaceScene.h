@@ -198,6 +198,15 @@ public:
 	Tr2ShaderBufferPtr GetPostProcessPSBuffer();
 	void SetupTAA( Tr2RenderTargetPtr velocityMap, float pixelOffsetScale, TAASampling sampling );
 
+
+	enum ShadowQuality
+	{
+		SHADOW_DISABLED,
+		SHADOW_LOW,
+		SHADOW_HIGH,
+		SHADOW_RAYTRACED
+	};
+
 protected:
 	// Data shared between the different rendering method chunks
 	struct FrameData
@@ -378,7 +387,6 @@ protected:
 protected:
 	bool m_display;
 	bool m_update;
-	bool m_enableShadows;
 	bool m_displayShadowMap;
 	bool m_backgroundRenderingEnabled;
 	TriFrustumOrtho m_shadowFrustums[SHADOW_FRUSTUM_COUNT];
@@ -618,14 +626,19 @@ private:
 
 	bool m_dynamicObjectReflectionEnabled;
 
+	// Shadows
+	// Cascaded shadows
+	ShadowQuality m_shadowQuality;
 	std::vector<std::vector<EveShadowCaster::Info>> m_shadowCasters;
 	ShadowMap::SplitSetup m_splitSetup[SHADOW_FRUSTUM_COUNT];
-
 	// Cascaded shadow debugging
 	bool m_freezeFrustum;
 	Matrix m_shadowView;
 
-	// Raytracing
+	BlueSharedString m_shadowAlgorithm;
+	const BlueSharedString m_shadowAlgorithmName = BlueSharedString( "SHADOW_ALGORITHM" );
+
+	// Raytring
 	Tr2RaytracingManagerPtr m_rtManager;
 	bool m_enableRaytracing;
 
