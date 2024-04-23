@@ -43,6 +43,24 @@ Be::VarChooser EveVisualizerChooser[] =
 	};
 BLUE_REGISTER_ENUM_EX( "EveVisualizeMethod", EveSpaceScene::EveVisualizeMethod, EveVisualizerChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
 
+Be::VarChooser ShadowVisualizerChooser[] = {
+	{ "Disabled",
+	  BeCast( EveSpaceScene::SHADOW_DISABLED ),
+	  "No shadows" },
+	{ "Low",
+	  BeCast( EveSpaceScene::SHADOW_LOW ),
+	  "Cascaded shadows but no denoiser" },
+	{ "High",
+	  BeCast( EveSpaceScene::SHADOW_HIGH ),
+	  "Cascaded shadows with denoising" },
+	{ "Raytraced",
+	  BeCast( EveSpaceScene::SHADOW_RAYTRACED ),
+	  "Raytraced shadows" },
+	{ 0 }
+};
+BLUE_REGISTER_ENUM_EX( "ShadowVisualizeMethod", EveSpaceScene::ShadowQuality, ShadowVisualizerChooser, ENUM_REG_ENUM_OBJECT_ON_MODULE );
+
+
 
 #if BLUE_WITH_PYTHON
 PyObject* PyPickObjectAndAreaID( PyObject* self, PyObject* args )
@@ -126,32 +144,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			m_update,
 			"If update is off, scene is not updated (may still be rendered)",
 			Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE(
-			"enableShadows",
-			m_enableShadows,
-			"If true, generate shadow map for scene\n"
-			":jessica-group: Shadows",
-			Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE(
-			"freezeFrustum",
-			m_freezeFrustum,
-			"If true, zoom out to see the frustum split\n"
-			":jessica-group: Shadows",
-			Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE(
-			"displayShadowMap",
-			m_displayShadowMap,
-			"Displays the shadowmap on top of the screen (unfiltered).\n"
-			":jessica-group: Shadows",
-			Be::READWRITE )
-
-		MAP_METHOD_AND_WRAP(
-			"DisableShadows",
-			DisableShadows,
-			"Set to disable shadows" )
 
 		MAP_ATTRIBUTE(
 			"backgroundEffect",
@@ -334,22 +326,52 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"depthTexture",
 			m_depthMap,
 			".",
-			Be::READWRITE 
-		)
+			Be::READWRITE )
+		MAP_ATTRIBUTE(
+			"cascadedShadowMap",
+			m_cascadedShadowMap,
+			"This should get created in python.",
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE_WITH_CHOOSER(
+			"shadowQualitySetting",
+			m_shadowQuality,
+			"Set quality for shadows, low, high or raytraced\n"
+			":jessica-group: Shadows",
+			Be::READWRITE | Be::ENUM | Be::NOTIFY,
+			ShadowVisualizerChooser )
+		MAP_ATTRIBUTE(
+			"freezeFrustum",
+			m_freezeFrustum,
+			"If true, zoom out to see the frustum split\n"
+			":jessica-group: Shadows",
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"displayShadowMap",
+			m_displayShadowMap,
+			"Displays the shadowmap on top of the screen (unfiltered).\n"
+			":jessica-group: Shadows",
+			Be::READWRITE )
+		MAP_ATTRIBUTE( 
+			"raytracingManager",
+			m_rtManager,
+			"Raytracing manager\n"
+			": jessica - group : Raytracing ",
+			Be::READWRITE )
+		MAP_METHOD_AND_WRAP(
+			"DisableShadows",
+			DisableShadows,
+			"Set to disable shadows" )
 		MAP_ATTRIBUTE(
 			"colorTexture",
 			m_colorMap,
 			".",
-			Be::READWRITE 
-		)
+			Be::READWRITE )
 		MAP_ATTRIBUTE(
 			"opaqueColorTexture",
 			m_opaqueColorMap,
 			".",
-			Be::READWRITE 
-		)
-		MAP_ATTRIBUTE
-		(
+			Be::READWRITE )
+		MAP_ATTRIBUTE(
 			"normalTexture",
 			m_normalMap,
 			".",
@@ -418,11 +440,6 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 		MAP_ATTRIBUTE( "fogStart", m_fogStart, "Depth at which fogging starts.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fogEnd", m_fogEnd, "Depth at which the fog does not get thicker.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fogMax", m_fogMax, "Maximum strength of fog at end depth, range [0,1].\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE( "cascadedShadowMap", m_cascadedShadowMap, "This should get created in python.", Be::READWRITE | Be::PERSIST )
-
-		MAP_ATTRIBUTE( "enableRaytracing", m_enableRaytracing, "enable raytracing.\n:jessica-group: Raytracing", Be::READWRITE | Be::PERSIST | Be::NOTIFY )
-		MAP_ATTRIBUTE( "raytracingManager", m_rtManager, "Raytracing manager\n:jessica-group: Raytracing", Be::READWRITE | Be::NOTIFY )
 
 		MAP_ATTRIBUTE_WITH_CHOOSER(
 			"visualizeMethod",

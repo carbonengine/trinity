@@ -10,12 +10,6 @@ const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 		MAP_INTERFACE( INotify )
 
 		MAP_ATTRIBUTE(
-			"shadowQuality",
-			m_quality,
-			"Shadow quality",
-			Be::READWRITE | Be::NOTIFY )
-
-		MAP_ATTRIBUTE(
 			"size",
 			m_size,
 			"The size of the shadow map, is always quadric",
