@@ -75,7 +75,7 @@ std::vector<Tr2UpscalingAL::Setting> Tr2Fsr3UpscalingTechnique::GetAvailableSett
 
 Tr2UpscalingAL::Result Tr2Fsr3UpscalingTechnique::Setup()
 {
-	return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	return Tr2UpscalingAL::Result::OK;
 }
 
 Tr2UpscalingContextAL* Tr2Fsr3UpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )

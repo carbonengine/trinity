@@ -1272,7 +1272,13 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
 
-	return m_upscalingTechnique->Setup();
+	auto result = m_upscalingTechnique->Setup();
+	if( result != Tr2UpscalingAL::Result::OK )
+	{
+		delete m_upscalingTechnique;
+		m_upscalingTechnique = nullptr;
+	}
+	return result;
 }
 
 
