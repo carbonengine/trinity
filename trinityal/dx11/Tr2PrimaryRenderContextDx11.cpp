@@ -700,23 +700,21 @@ void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& te
 	framegeneration = false;
 }
 
-bool Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
+Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight )
 {
 	auto context = GetUpscalingContext( displayWidth, displayHeight );
-	if( context == nullptr )
+	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
+
+	if( context != nullptr )
 	{
-		upscalingAmount = 1.0f;
-		mipLevelBias = 0.0f;
-		jitterX = 0.0f;
-		jitterY = 0.0f;
+		info.upscalingAmount = context->GetUpscalingAmount();
+		info.mipLevelBias = context->GetMipLevelBias();
+		info.temporal = context->IsTemporal();
+		context->GetJitter( info.jitterX, info.jitterY );
+		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
+		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
 	}
-	else
-	{
-		upscalingAmount = context->GetUpscalingAmount();
-		mipLevelBias = context->GetMipLevelBias();
-		context->GetJitter( jitterX, jitterY );
-	}
-	return context != nullptr;
+	return info;
 }
 
 void Tr2PrimaryRenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )

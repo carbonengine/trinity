@@ -1073,7 +1073,12 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	uint32_t w, h;
 	Tr2Renderer::GetBackBufferDimensions( w, h );
 
-	m_usingUpscaling = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( w, h, m_upscalingAmount, m_mipLevelBias, m_jitter.x, m_jitter.y );
+	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( w, h );
+	m_usingUpscaling = upscalingInfo.technique != Tr2UpscalingAL::NONE;
+	m_jitter.x = upscalingInfo.jitterX;
+	m_jitter.y = upscalingInfo.jitterY;
+	m_mipLevelBias = upscalingInfo.mipLevelBias;
+	m_upscalingAmount = upscalingInfo.upscalingAmount;
 
 	if( m_visualizeMethod != VM_NONE )
 	{

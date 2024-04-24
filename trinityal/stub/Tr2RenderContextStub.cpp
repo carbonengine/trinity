@@ -422,14 +422,9 @@ Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( uint32_t disp
 	return nullptr;
 }
 
-bool Tr2RenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
+Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight )
 {
-	upscalingAmount = 1.0f;
-	mipLevelBias = 0.0f;
-	jitterX = 0.0f;
-	jitterY = 0.0f;
-	
-	return false;
+	return Tr2UpscalingAL::UpscalingInfo();
 }
 
 void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )

@@ -317,9 +317,9 @@ public:
 		framegeneration = false;
 	}
 
-	bool GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight );
 	{
-		return false;
+		return Tr2UpscalingAL::UpscalingInfo();
 	}
 
 	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )

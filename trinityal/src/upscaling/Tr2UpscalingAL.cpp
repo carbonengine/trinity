@@ -58,6 +58,65 @@ namespace Tr2UpscalingAL
 		uint32_t addition = displaySize % 2 != renderSize % 2;
 		return renderSize + addition;
 	}
+
+	UpscalingInfo::UpscalingInfo():
+		displayWidth( 0 ),
+		displayHeight( 0 ),
+		renderWidth( 0 ),
+		renderHeight( 0 ),
+		technique( Tr2UpscalingAL::Technique::NONE ),
+		setting( Tr2UpscalingAL::Setting::NATIVE ),
+		frameGeneration( false ),
+		temporal(false),
+		upscalingAmount( 1.0f ),
+		jitterX( 0.0f ),
+		jitterY( 0.0f ),
+		mipLevelBias( 0.0f )
+	{}
+
+
+	const char* GetTechniqueName( Technique technique )
+	{
+		switch( technique )
+		{
+		case NONE:
+			return "None";
+		case FSR1:
+			return "FSR1";
+		case FSR2:
+			return "FSR2";
+		case FSR3:
+			return "FSR3";
+		case DLSS:
+			return "DLSS";
+		case METALFX:
+			return "MetalFx";
+		case XESS:
+			return "XeSS";
+		}
+		return "Unknown";
+	}
+	
+	const char* GetSettingName( Setting setting )
+	{
+		switch( setting )
+		{
+		case NATIVE:
+			return "Native";
+		case ULTRA_QUALITY:
+			return "UltraQuality";
+		case QUALITY:
+			return "Quality";
+		case BALANCED:
+			return "Balanced";
+		case PERFORMANCE:
+			return "Performance";
+		case ULTRA_PERFORMANCE:
+			return "UltraPerformance";
+		}
+		return "Unknown";
+	}
+
 }
 
 

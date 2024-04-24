@@ -79,6 +79,28 @@ namespace Tr2UpscalingAL
 	float Halton( uint32_t index, uint32_t base );
 
 	uint32_t ConvertDisplaySizeToRenderSize( uint32_t displaySize, float upscaling );
+
+	struct UpscalingInfo
+	{
+		UpscalingInfo();
+
+		uint32_t displayWidth;
+		uint32_t displayHeight;
+		uint32_t renderWidth;
+		uint32_t renderHeight;
+		Technique technique;
+		Setting setting;
+		bool frameGeneration;
+		bool temporal;
+		float upscalingAmount;
+		float jitterX;
+		float jitterY;
+		float mipLevelBias;
+	};
+
+	const char* GetTechniqueName( Technique technique );
+	const char* GetSettingName( Setting setting );
+
 }
 
 // forward

@@ -1300,15 +1300,22 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderCont
 	return Tr2UpscalingALMetal::AVAILABLE_UPSCALING_TECHNIQUES;
 }
 
-void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight )
 {
-	if( m_upscalingTechnique )
+	auto context = GetUpscalingContext( displayWidth, displayHeight );
+	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
+
+	if( context != nullptr )
 	{
-		m_upscalingTechnique->GetState( technique, setting, framegeneration );
+		info.upscalingAmount = context->GetUpscalingAmount();
+		info.mipLevelBias = context->GetMipLevelBias();
+				info.temporal = context->IsTemporal();
+
+		context->GetJitter( info.jitterX, info.jitterY );
+		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
+		m_upscalingTechnique->GetState( info.technique, info.setting, info.framegeneration );
 	}
-	technique = Tr2UpscalingAL::Technique::NONE;
-	setting = Tr2UpscalingAL::Setting::NATIVE;
-	framegeneration = false;
+	return info;
 }
 
 

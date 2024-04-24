@@ -1312,23 +1312,20 @@ Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32
 	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight, sourceFormat, depthFormat );
 }
 
-bool Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
+Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight )
 {
 	auto context = GetUpscalingContext( displayWidth, displayHeight );
-	if( context == nullptr )
+	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
+
+	if( context != nullptr )
 	{
-		upscalingAmount = 1.0f;
-		mipLevelBias = 0.0f;
-		jitterX = 0.0f;
-		jitterY = 0.0f;
+		info.upscalingAmount = context->GetUpscalingAmount();
+		info.mipLevelBias = context->GetMipLevelBias();
+		context->GetJitter( info.jitterX, info.jitterY );
+		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
+		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
 	}
-	else
-	{
-		upscalingAmount = context->GetUpscalingAmount();
-		mipLevelBias = context->GetMipLevelBias();
-		context->GetJitter( jitterX, jitterY );
-	}
-	return context != nullptr;
+	return info;
 }
 
 std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
