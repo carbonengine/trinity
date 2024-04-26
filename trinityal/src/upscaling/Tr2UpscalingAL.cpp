@@ -23,6 +23,14 @@ namespace Tr2UpscalingAL
 		case HARDWARE_NOT_SUPPORTED:
 			CCP_LOGWARN( "Tr2Upscaling: Hardware is not supported" );
 			break;
+        case CONTEXT_SETUP_FAILED:
+            CCP_LOGWARN( "Tr2Upscaling: Context setup failed" );
+            break;
+        case INCORRECT_INPUT:
+            CCP_LOGWARN( "Tr2Upscaling: Incorrect input" );
+            break;
+                
+            
 		}
 	}
 
@@ -128,6 +136,16 @@ Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique tech
 	m_contexts = std::map<uint32_t, std::unique_ptr<Tr2UpscalingContextAL>>();
 }
 
+Tr2UpscalingTechniqueAL::~Tr2UpscalingTechniqueAL()
+{
+    for( auto& context : m_contexts )
+    {
+        context.second.release();
+    }
+    
+    m_contexts.clear();
+}
+
 void Tr2UpscalingTechniqueAL::SanitizeState()
 {
 	const auto& availableSettings = GetAvailableSettings();
@@ -229,6 +247,10 @@ Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t di
 	m_jitterYScale( -2.0f ), 
 	m_sourceFormat( sourceFormat ),
 	m_depthFormat( depthFormat )
+{
+}
+
+Tr2UpscalingContextAL::~Tr2UpscalingContextAL()
 {
 }
 

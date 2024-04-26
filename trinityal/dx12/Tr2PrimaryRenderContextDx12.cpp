@@ -1340,7 +1340,7 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
 	for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
 	{
-		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::BALANCED, false, adapter );
+		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
 		if( tech )
 		{
 			uint32_t allSettings = 0;

@@ -12,7 +12,7 @@ class Tr2Fsr1UpscalingTechnique : public Tr2UpscalingTechniqueAL
 public:
 	Tr2Fsr1UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
 	~Tr2Fsr1UpscalingTechnique();
-	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const;
+	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 
 	virtual Tr2UpscalingAL::Result Setup() override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;

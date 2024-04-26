@@ -177,15 +177,19 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 		" Render Res: %11s\n";
 		
 		std::string techniqueName( Tr2UpscalingAL::GetTechniqueName( upscalingInfo.technique ) );
-		std::string settingName( Tr2UpscalingAL::GetSettingName( upscalingInfo.setting ) );
+        techniqueName = techniqueName.substr( 0, std::min((size_t)11, techniqueName.length()) ).c_str();
+        std::string settingName( Tr2UpscalingAL::GetSettingName( upscalingInfo.setting ) );
+        settingName = settingName.substr( 0, std::min( (size_t)11, settingName.length() ) );
+        std::string renderRes = std::to_string( upscalingInfo.renderWidth ) + "x" + std::to_string( upscalingInfo.renderHeight );
+
 		sprintf_s(
 			upscalingBuffer,
 			formattedUpscalingText.c_str(),
-			techniqueName.substr( 0, std::min((size_t)11, techniqueName.length()) ),
-			settingName.substr( 0, std::min( (size_t)11, settingName.length() ) ),
+            techniqueName.c_str(),
+            settingName.c_str(),
 			upscalingInfo.temporal ? "Yes" : "No",
 			upscalingInfo.frameGeneration ? "Yes" : "No",
-			std::to_string( upscalingInfo.renderWidth ) + "x" + std::to_string( upscalingInfo.renderHeight ) );
+            renderRes.c_str() );
  	}
 	else
 	{

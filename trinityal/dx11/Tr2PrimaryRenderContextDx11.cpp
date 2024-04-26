@@ -221,6 +221,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 		{
 			m_upscalingTechnique->AttachToDevice( m_d3dDevice11 );
 		}
+		//Tr2Streamline::Attach( m_d3dDevice11 );
 		CCP_AL_LOG( "DX11: device created succesfully" );
 	}
 	else		
@@ -734,7 +735,7 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
 	for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
 	{
-		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::BALANCED, false, adapter );
+		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
 		if( tech )
 		{
 			uint32_t allSettings = 0;
@@ -743,11 +744,8 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 			{
 				allSettings |= setting;
 			}
-			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
 
-			tech->Destroy( *this );
-			delete tech;
-			tech = nullptr;
+			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
 		}
 	}
 	return supportedTechniques;

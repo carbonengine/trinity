@@ -3,8 +3,6 @@
 // Created:		April 2024
 // Copyright:	CCP 2024
 //
-#pragma once
-
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
@@ -264,8 +262,6 @@ void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
 	// toggle plugin needs to have the pipeline clean before it is called
 	renderContext.FlushAndSyncDx12();
-
-	m_contexts.clear();
 
 	TogglePlugin( sl::kFeatureDLSS, false );
 	TogglePlugin( sl::kFeatureDLSS_G, false );

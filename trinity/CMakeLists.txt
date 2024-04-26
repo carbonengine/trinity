@@ -836,9 +836,7 @@ set(_SOURCES
     PostProcess/Effects/Sharpening/Tr2NoopSharpening.cpp
     PostProcess/Effects/Sharpening/Tr2NoopSharpening.h
     PostProcess/Effects/Sharpening/Tr2NoopSharpening_Blue.cpp
-    PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling.mm
-    PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling.h
-    PostProcess/Effects/Upscaling/Tr2MetalFxUpscaling_Blue.cpp
+    PostProcess/Effects/Upscaling/ITr2Upscaling.h
     PostProcess/Effects/Upscaling/Tr2UpscalingUtils.cpp
     PostProcess/Effects/Upscaling/Tr2UpscalingUtils.h
     PostProcess/Effects/Tr2PPBloomEffect.cpp

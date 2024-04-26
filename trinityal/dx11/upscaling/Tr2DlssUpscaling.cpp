@@ -3,8 +3,6 @@
 // Created:		April 2024
 // Copyright:	CCP 2024
 //
-#pragma once
-
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
@@ -136,11 +134,6 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingTechnique::Setup()
 
 void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
-	for( auto& context : m_contexts )
-	{
-		context.second.release();
-	}
-	m_contexts.clear();
 	if( m_attachedToDevice )
 	{
 		TogglePlugin( sl::kFeatureDLSS, false );

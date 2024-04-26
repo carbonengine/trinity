@@ -3,8 +3,6 @@
 // Created:		April 2024
 // Copyright:	CCP 2024
 //
-#pragma once
-
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
@@ -56,7 +54,6 @@ Tr2Fsr3UpscalingTechnique::~Tr2Fsr3UpscalingTechnique()
 
 void Tr2Fsr3UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
-	renderContext.FlushAndSyncDx12( );
 	for( auto& item : m_contexts )
 	{
 		((Tr2Fsr3UpscalingContext*)item.second.get())->Destroy( renderContext );
@@ -114,25 +111,21 @@ Tr2Fsr3UpscalingContext::Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_
 
 Tr2Fsr3UpscalingContext::~Tr2Fsr3UpscalingContext()
 {
-}
+    if( m_setup )
+    {
+        renderContext.FlushAndSyncDx12();
+        auto errorCode = ffxFsr3ContextDestroy( &m_context );
+        if( errorCode != FFX_OK )
+        {
+            CCP_LOGERR( "FSR3 could not clear the context %d", errorCode );
+        }
 
-void Tr2Fsr3UpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
-{
-	if( m_setup )
-	{
-		renderContext.FlushAndSyncDx12( );
-		auto errorCode = ffxFsr3ContextDestroy( &m_context );
-		if( errorCode != FFX_OK )
-		{
-			CCP_LOGERR( "FSR3 could not clear the context %d", errorCode );
-		}
-
-		for( auto& buffer : m_ffxFsr3Backends )
-		{
-			CCP_FREE( buffer.scratchBuffer );
-			buffer.scratchBuffer = nullptr;
-		}
-	}
+        for( auto& buffer : m_ffxFsr3Backends )
+        {
+            CCP_FREE( buffer.scratchBuffer );
+            buffer.scratchBuffer = nullptr;
+        }
+    }
 }
 
 bool Tr2Fsr3UpscalingContext::IsTemporal() const
