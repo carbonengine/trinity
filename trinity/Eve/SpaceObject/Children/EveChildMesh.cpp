@@ -11,6 +11,7 @@
 
 extern float g_eveSpaceSceneLODFactor;
 extern float g_eveSpaceSceneVisibilityThreshold;
+extern bool g_eveSpaceSceneRaytracedShadows;
 
 EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	PARENTLOCK( m_transformModifiers ),
@@ -185,6 +186,38 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 			}
 			( *it )->UpdateVisibility( frustum, &m_parentData );
 		}
+
+		if( g_eveSpaceSceneRaytracedShadows )
+		{
+			UpdateRtMesh();
+		}
+	}
+}
+
+void EveChildMesh::UpdateRtMesh()
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	if( !renderContext.GetCaps().SupportsRaytracing() )
+	{
+		return;
+	}
+
+	if( !m_mesh )
+	{
+		return;
+	}
+
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	if( !areas->empty() )
+	{
+		auto rtMesh = m_mesh->GetOrCreateRtMesh();
+		// todo: dbl check with using currScreenSize
+		rtMesh->UpdateRtMesh( m_mesh->GetGeometryResource(), m_mesh->GetMeshIndex(), m_currentScreenSize );
+
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		{
+			( *it )->GetOrCreateRtMeshArea();
+		}
 	}
 }
 
@@ -293,6 +326,41 @@ void EveChildMesh::GetShadowBatches( ITriRenderBatchAccumulator* batches, const 
 	if( m_display && m_mesh )
 	{
 		m_mesh->GetBatches( batches, m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE ), perObjectData );
+	}
+}
+
+void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
+{
+	if( !m_display || !m_mesh || !m_castShadow || !g_eveSpaceSceneRaytracedShadows )
+	{
+		return;
+	}
+
+	auto rtMesh = m_mesh->GetRtMesh();
+
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	if( !m_rtPerObjectData.IsValid() )
+	{
+		m_rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
+	}
+	EveSpaceObjectPSData* perObjectData;
+	m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
+	*perObjectData = m_psData;
+	m_rtPerObjectData.Unlock( renderContext );
+
+	const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
+	{
+		auto area = *it;
+		if( area->GetDisplay() )
+		{
+			auto geometry = area->GetRtMeshArea();
+			if( geometry )
+			{
+				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, m_worldTransform );
+			}
+		}
 	}
 }
 

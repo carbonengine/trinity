@@ -5,6 +5,7 @@
 #include "TriFrustumOrtho.h"
 #include "TriFrustum.h"
 
+
 CCP_STATS_DECLARED_ELSEWHERE( objectsCulledCount );
 
 class TriFrustum;
@@ -49,6 +50,8 @@ struct Info
 
 }
 
+BLUE_DECLARE( Tr2RaytracingManager );
+
 BLUE_INTERFACE( IEveShadowCaster ) :
 	public IRoot
 {
@@ -56,6 +59,8 @@ BLUE_INTERFACE( IEveShadowCaster ) :
 	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const = 0;
 	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) = 0;
 	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) = 0;
+	// raytraced shadows
+	virtual void PushRtGeometry( Tr2RaytracingManager& ) const{ }
 };
 
 REGISTER_COMPONENT_TYPE( "ShadowCaster", IEveShadowCaster );

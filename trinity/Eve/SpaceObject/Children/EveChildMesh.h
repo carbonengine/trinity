@@ -21,7 +21,7 @@
 #include "Resources/Tr2LodResource.h"
 #include "TransformModifiers/IEveChildTransformModifier.h"
 #include "Tr2DebugRenderer.h"
-
+#include "Raytracing/Tr2RaytracingManager.h"
 
 BLUE_DECLARE( TriFrustum );
 BLUE_DECLARE( Tr2MeshBase );
@@ -108,6 +108,7 @@ public:
 	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
 	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
+	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
 
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
@@ -169,6 +170,10 @@ protected:
 	PEveSpaceObjectDecalVector m_decals;
 	PIEveSpaceObjectAttachmentVector m_attachments;
 	PTr2LightVector m_lights;
+
+	void UpdateRtMesh();
+	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+
 };
 
 TYPEDEF_BLUECLASS( EveChildMesh );

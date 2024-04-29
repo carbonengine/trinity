@@ -148,7 +148,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	PARENTLOCK( m_externalParameters ),
 	m_display( true ),
 	m_update( true ),
-	m_shadowQuality( SHADOW_HIGH ),
+	m_shadowQuality( SHADOW_RAYTRACED ),
 	m_enableShadows( true ),
 	m_displayShadowMap( false ),
 	m_shadowView( IdentityMatrix() ),
@@ -1406,10 +1406,16 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 
 	CCP_STATS_SCOPED_TIME( raytracedShadowsTime );
 	m_rtManager->GetGeometry().BeginSceneUpdate();
+
+	m_componentRegistry->ProcessComponents<IEveShadowCaster>([this]( IEveShadowCaster* caster ) -> void {
+		caster->PushRtGeometry( *m_rtManager );
+	} );
+
+	/*
 	for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
 	{
 		( *it )->PushRtGeometry( *m_rtManager );
-	}
+	}*/
 	m_rtManager->GetGeometry().EndSceneUpdate( renderContext );
 }
 

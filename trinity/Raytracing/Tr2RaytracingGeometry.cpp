@@ -149,7 +149,7 @@ Tr2RaytracingMesh::Tr2RaytracingMesh() :
 {
 }
 
-void Tr2RaytracingMesh::SetMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize )
+void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize )
 {
 	if( m_geometry != geometry || m_meshIndex != meshIndex )
 	{
@@ -167,14 +167,7 @@ void Tr2RaytracingMesh::SetMesh( TriGeometryRes* geometry, uint32_t meshIndex, f
 	else if( m_screenSize != screenSize )
 	{
 		//screen size has changed, so check if we've changed to a different LOD
-
-		bool lodChanged = m_meshData != m_geometry->GetMeshData( m_meshIndex, screenSize );
-		if( lodChanged )
-		{
-			m_isDirty = true;
-			m_meshData = m_geometry->GetMeshData( m_meshIndex, screenSize );
-		}
-
+		m_isDirty = ( m_meshData = m_geometry->GetMeshData( m_meshIndex, screenSize ) ) ? true : false;
 		m_screenSize = screenSize;
 	}
 }

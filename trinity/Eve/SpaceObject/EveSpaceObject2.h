@@ -229,13 +229,13 @@ public:
 	virtual void SetProceduralContainerVariable( const char *name, float value ) override;
 	virtual bool IsPickable() const;
 	virtual void GetParentData( IEveSpaceObject2::ParentData * pd ) const;
-	void PushRtGeometry( Tr2RaytracingManager& rtManager ) const override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
 	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
 	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
+	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IInitialize

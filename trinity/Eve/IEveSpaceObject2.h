@@ -13,7 +13,6 @@ class EveUpdateContext;
 class Tr2QuadRenderer;
 class Tr2LightManager;
 class Tr2ImpostorManager;
-BLUE_DECLARE( Tr2RaytracingManager );
 
 BLUE_INTERFACE( IEveSpaceObject2 ) : public IRoot
 {
@@ -59,8 +58,6 @@ BLUE_INTERFACE( IEveSpaceObject2 ) : public IRoot
     virtual void SetProceduralContainerVariable( const char *name, float value ) {}
 
 	virtual void GetParentData( IEveSpaceObject2::ParentData * pd ) const {};
-
-	virtual void PushRtGeometry( Tr2RaytracingManager& ) const { }
 };
 
 BLUE_DECLARE_IVECTOR( IEveSpaceObject2 );

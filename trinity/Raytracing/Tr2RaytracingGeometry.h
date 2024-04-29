@@ -57,7 +57,7 @@ class Tr2RaytracingMesh
 public:
 	Tr2RaytracingMesh();
 
-	void SetMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize );
+	void UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshIndex, float screenSize );
 	bool SetBoneTransforms( size_t count, const granny_matrix_3x4* transforms );
 
 	bool IsGood() const;
