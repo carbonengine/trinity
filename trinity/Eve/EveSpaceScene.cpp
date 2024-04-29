@@ -149,6 +149,7 @@ EveSpaceScene::EveSpaceScene( IRoot* lockobj ) :
 	m_display( true ),
 	m_update( true ),
 	m_shadowQuality( SHADOW_HIGH ),
+	m_enableShadows( true ),
 	m_displayShadowMap( false ),
 	m_shadowView( IdentityMatrix() ),
 	m_enableRaytracing( false ),
@@ -648,7 +649,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 
 void EveSpaceScene::DisableShadows()
 {
-	//GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", BeResMan->GetResource( "res:/texture/global/white.dds") );
+	m_enableShadows = false;
 }
 
 void EveSpaceScene::ApplyPerFrameData( Tr2RenderContext& renderContext )
@@ -1252,7 +1253,7 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 
 	GatherBatches( renderContext );
 
-	if( m_shadowQuality == SHADOW_RAYTRACED )
+	if( m_shadowQuality == SHADOW_RAYTRACED && m_enableShadows )
 	{
 		PrepareRaytracedShadows( renderContext );
 	}
@@ -2017,7 +2018,7 @@ void EveSpaceScene::RenderDepthPass( Tr2RenderContext& renderContext )
 	renderContext.m_esm.EndManagedRendering();
 	
 	
-	if( m_rtManager && m_shadowQuality == SHADOW_RAYTRACED && m_depthMap->IsValid() && !m_objects.empty())
+	if( m_rtManager && m_shadowQuality == SHADOW_RAYTRACED && m_depthMap->IsValid() && !m_objects.empty() && m_enableShadows )
 	{
 		renderContext.SetReadOnlyDepth( true );
 		m_rtManager->RenderShadows( m_depthMap, m_normalMap, m_sunData.DirWorld, renderContext );
@@ -2060,7 +2061,7 @@ void EveSpaceScene::RenderMainPass( Tr2RenderContext& renderContext, CullMode cu
 		return;
 	}
 	
-	if( !m_freezeFrustum && m_shadowQuality == SHADOW_LOW || m_shadowQuality == SHADOW_HIGH )
+	if( !m_freezeFrustum && m_enableShadows && m_shadowQuality == SHADOW_LOW || m_shadowQuality == SHADOW_HIGH )
 	{
 		m_shadowView = Tr2Renderer::GetInverseViewTransform();
 		SetupCascadedShadows( renderContext );

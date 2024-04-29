@@ -634,6 +634,8 @@ private:
 	// Cascaded shadow debugging
 	bool m_freezeFrustum;
 	Matrix m_shadowView;
+	// for "fake" scenes like ship fitting etc
+	bool m_enableShadows;
 
 	BlueSharedString m_shadowAlgorithm;
 	const BlueSharedString m_shadowAlgorithmName = BlueSharedString( "SHADOW_ALGORITHM" );
