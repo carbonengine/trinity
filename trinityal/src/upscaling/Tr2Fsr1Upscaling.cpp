@@ -5,6 +5,7 @@
 //
 #include "StdAfx.h"
 #include "include/upscaling/Tr2Fsr1Upscaling.h"
+#include "Tr2TextureAL.h"
 
 Tr2Fsr1UpscalingTechnique::Tr2Fsr1UpscalingTechnique( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration ) :
 	Tr2UpscalingTechniqueAL( technique, setting, frameGeneration )
@@ -22,7 +23,7 @@ std::vector<Tr2UpscalingAL::Setting> Tr2Fsr1UpscalingTechnique::GetAvailableSett
 
 Tr2UpscalingAL::Result Tr2Fsr1UpscalingTechnique::Setup()
 {
-	return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	return Tr2UpscalingAL::Result::OK;
 }
 
 void Tr2Fsr1UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
@@ -47,6 +48,7 @@ Tr2Fsr1UpscalingContext::~Tr2Fsr1UpscalingContext()
 
 Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Setup(Tr2RenderContextAL& renderContext)
 {
+	// create a rendertarget for the intermediate render
 	return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 }
 
@@ -71,5 +73,6 @@ uint32_t Tr2Fsr1UpscalingContext::GetDispatchRequirements() const
 
 Tr2UpscalingAL::Result Tr2Fsr1UpscalingContext::Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters )
 {
-	return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+
+	return Tr2UpscalingAL::Result::OK;
 }

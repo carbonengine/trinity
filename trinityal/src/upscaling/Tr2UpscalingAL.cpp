@@ -181,7 +181,7 @@ void Tr2UpscalingTechniqueAL::GetState( Tr2UpscalingAL::Technique& technique, Tr
 	frameGeneration = m_frameGeneration;
 }
 
-void Tr2UpscalingTechniqueAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent )
+void Tr2UpscalingTechniqueAL::MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent )
 {
 	if( frameEvent == Tr2RenderContextEnum::FrameEvent::FRAME_EVENT_RENDERING_STARTED )
 	{
@@ -200,7 +200,7 @@ Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& 
 
 	if( m_contexts.find( key ) == m_contexts.end() )
 	{
-		CCP_LOGERR( "Tr2UpscalingTechniqueAL:GetContext Context does not exist for (%d, %d)", displayWidth, displayHeight );
+		CCP_LOGWARN( "Tr2UpscalingTechniqueAL:GetContext Context does not exist for (%d, %d)", displayWidth, displayHeight );
 		return nullptr;
 	}
 

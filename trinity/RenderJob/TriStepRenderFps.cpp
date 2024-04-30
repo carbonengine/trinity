@@ -186,9 +186,9 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 			upscalingBuffer,
 			formattedUpscalingText.c_str(),
             techniqueName.c_str(),
-            settingName.c_str(),
-			upscalingInfo.temporal ? "Yes" : "No",
+			settingName.c_str(),
 			upscalingInfo.frameGeneration ? "Yes" : "No",
+			upscalingInfo.temporal ? "Yes" : "No",
             renderRes.c_str() );
  	}
 	else

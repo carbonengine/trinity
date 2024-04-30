@@ -113,7 +113,7 @@ public:
     virtual ~Tr2UpscalingTechniqueAL();
 	virtual Tr2UpscalingAL::Result Setup() = 0;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) = 0;
-	virtual void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent );
+	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent );
 
 	void SanitizeState();
 

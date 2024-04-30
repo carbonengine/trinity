@@ -57,8 +57,6 @@ public:
 	~Tr2PrimaryRenderContextAL();
 
 	ALResult CreateDevice( uint32_t adapter, Tr2WindowHandle  focusWindow, const Tr2PresentParametersAL& presentationParameters );
-	ALResult DeleteSwapchain();
-	ALResult CreateSwapchain();
 
 	void Destroy();
 	bool IsValid() const;
@@ -156,12 +154,12 @@ public:
 	
 	HRESULT CreateSwapChainForHwnd(
 		CComPtr<IDXGIFactory4>& factory4,
-		IUnknown* pDevice,
+		ID3D12CommandQueue* commandQueue,
 		HWND hWnd,
 		const DXGI_SWAP_CHAIN_DESC1* pDesc,
 		const DXGI_SWAP_CHAIN_FULLSCREEN_DESC* pFullscreenDesc,
 		IDXGIOutput* pRestrictToOutput,
-		IDXGISwapChain1** ppSwapChain );
+		CComPtr<IDXGISwapChain4>& swapchain );
 	HRESULT CreateDevice( IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device ) const;
 	HRESULT CreateCommandQueue( CComPtr<ID3D12Device>& device, D3D12_COMMAND_QUEUE_DESC* desc, CComPtr<ID3D12CommandQueue>& commandQueue ) const;
 	HRESULT CreateFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) const;
@@ -294,7 +292,7 @@ private:
 
 public:
 	CComPtr<ID3D12Device> m_device;
-	CComPtr<IDXGISwapChain3> m_swapchain;
+	CComPtr<IDXGISwapChain4> m_swapchain;
 	CComPtr<ID3D12CommandQueue> m_commandQueue;
 
 	D3D_ROOT_SIGNATURE_VERSION m_rootSignatureVersion;

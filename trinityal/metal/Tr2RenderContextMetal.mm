@@ -1253,7 +1253,11 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 {	
 	if( tech == Tr2UpscalingAL::Technique::NONE )
 	{
-		m_upscalingTechnique = nullptr;
+		if( m_upscalingTechnique )
+		{
+			m_upscalingTechnique->Destroy( *this );
+			m_upscalingTechnique = nullptr;
+		}
 		return Tr2UpscalingAL::Result::OK;
 	}
 
@@ -1360,6 +1364,6 @@ void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameE
 		return;
 	}
 
-	m_upscalingTechnique->MarkFrameEvent( frameEvent );
+	return m_upscalingTechnique->MarkFrameEvent( *this, frameEvent );
 }
 #endif

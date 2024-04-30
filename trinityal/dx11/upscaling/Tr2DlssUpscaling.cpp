@@ -106,9 +106,9 @@ bool Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
 	return false;
 }
 
-void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent )
+void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent )
 {
-	Tr2UpscalingTechniqueDx11::MarkFrameEvent( frameEvent );
+	Tr2UpscalingTechniqueDx11::MarkFrameEvent( renderContext, frameEvent );
 	if( frameEvent == Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED )
 	{
 		if( SL_FAILED( res, m_slGetNewFrameToken( m_frameToken, nullptr ) ) )

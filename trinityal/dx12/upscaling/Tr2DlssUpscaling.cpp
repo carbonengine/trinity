@@ -205,9 +205,9 @@ HRESULT Tr2DlssUpscalingTechnique::CreateDXGIFactory2( UINT flags, CComPtr<IDXGI
 	return slCreateDXGIFactory2( flags, IID_PPV_ARGS( &factory ) );
 }
 
-void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent )
+void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent )
 {
-	Tr2UpscalingTechniqueDx12::MarkFrameEvent( frameEvent );
+	Tr2UpscalingTechniqueDx12::MarkFrameEvent( renderContext, frameEvent );
 	
 	sl::ReflexMarker slEvent = (sl::ReflexMarker)0;
 
@@ -233,7 +233,8 @@ void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent
 		}
 		for( auto& context : m_contexts )
 		{
-			( (Tr2DlssUpscalingContext*)( context.second.get() ) )->SetFrameToken( m_frameToken );
+			auto dlssContext = (Tr2DlssUpscalingContext*)( context.second.get() );
+			dlssContext->SetFrameToken( m_frameToken );
 		}
 		break;
 	case Tr2RenderContextEnum::FRAME_EVENT_RENDERING_FINISHED:
