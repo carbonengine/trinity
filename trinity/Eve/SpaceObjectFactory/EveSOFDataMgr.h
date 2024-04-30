@@ -293,6 +293,7 @@ public:
 		EveSOFDataHullPlaneSet::Usage usage;
 		uint32_t visibilityGroup;
 		uint32_t atlasSize;
+		Vector2 atlasAspectRatio;
 		std::vector<HullPlaneSetItemData> items;
 	};
 
@@ -338,7 +339,7 @@ public:
 		SOFDataFactionColorChooser::ColorType colorType;
 		float hazeBrightness, hazeFalloff, sourceSize, sourceBrightness, saturation;
 		bool boosterGainInfluence;
-		std::unique_ptr<PointLightAttachment> light;
+		std::vector<PointLightAttachment> lights;
 	};
 
 	struct HullHazeSetData

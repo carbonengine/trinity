@@ -442,6 +442,6 @@ public:
 
 Tr2VariableStore& GlobalStore()
 {
-	static RootNoLock<Tr2GlobalVariableStore> variableStore;
-	return variableStore;
+	static RootNoLock<Tr2GlobalVariableStore>* variableStore = new RootNoLock<Tr2GlobalVariableStore>();
+	return *variableStore;
 }

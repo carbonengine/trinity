@@ -242,7 +242,7 @@ bool EveSwarmRenderable::IsCastingShadow( const TriFrustum& cameraFrustum, const
 	{
 		return false;
 	}
-	
+
 	if( m_owner->GetBoundingSphere( boundingSphere ) )
 	{
 		boundingSphere.GetXYZ() = m_worldTransform.GetTranslation();
@@ -276,14 +276,18 @@ void EveSwarmRenderable::GetShadowBatches( ITriRenderBatchAccumulator* batches, 
 		return;
 	}
 
-	Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-	for( auto& area : *areas )
+	Tr2MeshAreaVector* areas = m_mesh->GetAreas(TRIBATCHTYPE_OPAQUE);
+	for (auto& area : *areas)
 	{
-		Tr2RenderBatch batch = CreateGeometryBatch( grannyMesh, area, perObjectData );
-		batches->Commit( batch );
+		if( !area->GetDisplay() )
+		{
+			continue;
+		}
+		Tr2RenderBatch batch = CreateGeometryBatch(grannyMesh, area, perObjectData);
+		batches->Commit(batch);
 	}
-}
 
+}
 
 Tr2PerObjectData* EveSwarmRenderable::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
@@ -296,19 +300,9 @@ void EveSwarmRenderable::RegisterComponents()
 	auto reg = GetComponentRegistry();
 	if( reg )
 	{
-		reg->RegisterComponent<IEveShadowCaster>(this);
+		reg->RegisterComponent<IEveShadowCaster>( this );
 	}
 }
-
-void EveSwarmRenderable::UnRegisterComponents()
-{
-	auto reg = GetComponentRegistry();
-	if( reg )
-	{
-		reg->UnRegisterComponent<IEveShadowCaster>( this );
-	}
-}
-
 
 EveSwarm::EveSwarm( IRoot* lockobj ) :
 	PARENTLOCK( m_renderables ),
@@ -905,6 +899,7 @@ bool EveSwarm::OnModified( Be::Var* val )
 void EveSwarm::AddSwarmer()
 {
 	auto componentRegistry = GetComponentRegistry();
+
 	EveSwarmRenderablePtr renderable;
 	renderable.CreateInstance();
 	renderable->InitializeRenderable( this, m_mesh );
@@ -954,7 +949,6 @@ Vector3 EveSwarm::RemoveSwarmer()
 		m_renderables[m_targetIndex]->UnRegister( componentRegistry );
 	}
 
-
 	m_renderables.Remove( m_targetIndex );
 	if( m_debugShowForces )
 	{
@@ -993,13 +987,12 @@ void EveSwarm::SetCount( int count )
 void EveSwarm::RegisterComponents()
 {
 	EveShip2::RegisterComponents();
-
-	auto registry = this->GetComponentRegistry();
-	if( registry && m_display )
+	auto reg = GetComponentRegistry();
+	if( reg )
 	{
 		for( auto& renderable : m_renderables )
 		{
-			renderable->Register( registry );
+			renderable->Register( reg );
 		}
 	}
 }
@@ -1007,13 +1000,12 @@ void EveSwarm::RegisterComponents()
 void EveSwarm::UnRegisterComponents()
 {
 	EveShip2::UnRegisterComponents();
-
 	auto reg = GetComponentRegistry();
 	if( reg )
 	{
 		for( auto& renderable : m_renderables )
 		{
-			renderable->UnRegister(reg);
+			renderable->UnRegister( reg );
 		}
 	}
 }
@@ -1230,4 +1222,3 @@ Vector3 EveSwarm::Calculate_Wander( SwarmVehicle& s, float wanderDistance, float
 	target = target * wanderDistance + s.wanderTarget;
 	return target;
 }
-

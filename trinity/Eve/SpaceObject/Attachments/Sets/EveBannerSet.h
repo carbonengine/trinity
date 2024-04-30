@@ -32,7 +32,7 @@ struct EveBannerItem
 struct EveBannerLight 
 {
 	EveBannerLight();
-	EveBannerLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring profilePath );
+	EveBannerLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring& profilePath );
 
 	LightData lightData;
 	float saturation;

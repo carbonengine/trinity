@@ -10,7 +10,7 @@
 // setting from EveSpaceScene
 extern int g_eveReflectionMode;
 
-namespace EntityComponents 
+namespace EntityComponents
 {
 
 	bool ShouldReflect( ReflectionMode mode )
@@ -36,9 +36,9 @@ namespace EntityComponents
 	}
 }
 
-EveEntity::EveEntity(IRoot* root):
-	m_registry(nullptr),
-	m_state(0)
+EveEntity::EveEntity( IRoot* root ) :
+	m_registry( nullptr ),
+	m_state( 0 )
 {}
 
 EveEntity::~EveEntity()
@@ -78,7 +78,7 @@ void EveEntity::Register( EveComponentRegistry* registry )
 /// Unregisteres the entity, but only if it is registered with the registry, else we just ignore this call
 void EveEntity::UnRegister( EveComponentRegistry* registry )
 {
-	if(m_registry != registry || registry == nullptr)
+	if( m_registry != registry || registry == nullptr )
 	{
 		// can't unregister from a registry that is not the registry that we are registered to...
 		return;
@@ -92,11 +92,11 @@ void EveEntity::UnRegister( EveComponentRegistry* registry )
 	m_registry = nullptr;
 }
 
-void EveEntity::ReRegister() 
+void EveEntity::ReRegister()
 {
 	if( m_registry )
 	{
-		m_registry->ReRegister( this );	
+		m_registry->ReRegister( this );
 	}
 }
 

@@ -41,7 +41,7 @@ public:
 	Tr2MeshAreaVector* GetAreas( TriBatchType areaType );
 	const Tr2MeshAreaVector* GetAreas( TriBatchType areaType ) const;
 	void CollectAreaBlocks( std::vector<TriRenderBatchAreaBlock>& areaBlockVector, TriBatchType areaType ) const;
-	void CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksWithSharedMaterial & collector, TriBatchType areaType ) const;
+	void CollectAreaBlocksWithSharedMaterial( TriRenderBatchAreaBlocksWithSharedMaterial& collector, TriBatchType areaType ) const;
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value );
 

@@ -13,6 +13,7 @@
 #include "Shader/Tr2Effect.h"
 #include "Utilities/BoundingSphere.h"
 #include "Resources/Tr2LightProfileRes.h"
+#include "EveSpaceObjectAttachmentUtils.h"
 
 using namespace Tr2RenderContextEnum;
 
@@ -128,6 +129,7 @@ bool EveSpriteLineSet::ReallocateResources()
 			++spr;
 			index += 1.0f;
 		}
+		totalBufferidx = totalBufferSize;
 	}
 
 	return true;
@@ -305,7 +307,7 @@ void EveSpriteLineSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matr
 			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
 
 			Color c = l.lightData.color;
-			float blinkScale = EveSpriteLightUtils::Blink( l.blinkRate, l.blinkPhase, l.minScale, l.maxScale );
+			float blinkScale = EveSpaceObjectAttachmentUtils::Blink( l.blinkRate, l.blinkPhase, l.minScale, l.maxScale );
 			
 			c.a = 0.5;
 
@@ -347,7 +349,7 @@ void EveSpriteLineSet::GetLights( Tr2LightManager& lightManager, const Matrix& p
 		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
 		auto data = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
-		float blinkScale = EveSpriteLightUtils::Blink( light.blinkRate, light.blinkPhase, light.minScale, light.maxScale );
+		float blinkScale = EveSpaceObjectAttachmentUtils::Blink( light.blinkRate, light.blinkPhase, light.minScale, light.maxScale );
 		data.radius *= blinkScale;
 		data.innerRadius = Float_16( float( data.innerRadius ) * blinkScale );
 		lightManager.AddLight( data );

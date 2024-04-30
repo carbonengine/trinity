@@ -62,18 +62,16 @@ public:
 	void GetPickingBatches( ITriRenderBatchAccumulator* batches, Tr2PickTypes pickTypes, const Tr2PerObjectData* perObjectData ) override;
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
-
+	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// IEveShadowCaster
 	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
-	void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
-	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) override;
+	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
-	void UnRegisterComponents() override;
-
 private:
 	Tr2MeshBasePtr m_mesh;
 	BlueWeakRef<EveSwarm> m_owner;
@@ -238,14 +236,13 @@ public:
 
 	/////////////////////////////////////////////////////////////////////////////////////
 	// ITr2DebugRenderable
-    virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
-    virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
-
+	virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
+	virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
+	
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
 	void RegisterComponents() override;
 	void UnRegisterComponents() override;
-
 protected:
 	/////////////////////////////////////////////////////////////////////////////////////
 	// Object space damage locator information

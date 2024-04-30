@@ -270,6 +270,8 @@ set(_SOURCES
     Eve/SpaceObject/Attachments/Sets/EvePlaneSetItem.cpp
     Eve/SpaceObject/Attachments/Sets/EvePlaneSetItem.h
     Eve/SpaceObject/Attachments/Sets/EvePlaneSetItem_Blue.cpp
+    Eve/SpaceObject/Attachments/Sets/EveSpaceObjectAttachmentUtils.cpp
+    Eve/SpaceObject/Attachments/Sets/EveSpaceObjectAttachmentUtils.h
     Eve/SpaceObject/Attachments/Sets/EveSpotlightSet.cpp
     Eve/SpaceObject/Attachments/Sets/EveSpotlightSet.h
     Eve/SpaceObject/Attachments/Sets/EveSpotlightSet_Blue.cpp

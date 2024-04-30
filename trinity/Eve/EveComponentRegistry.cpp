@@ -7,9 +7,8 @@
 #include "EveComponentRegistry.h"
 #include "../ITr2VolumetricRenderable.h"
 
-EveComponentRegistry::EveComponentRegistry(IRoot* lockobj):
-	m_componentCollectionLoopGuard( "EveComponentRegistry", "m_componentCollectionLoopGuard" )
-{	 
+EveComponentRegistry::EveComponentRegistry( IRoot* lockobj )
+{
 	m_componentCollections = std::vector<std::pair<const char*, std::unique_ptr<IEveComponentCollection>>>();
 }
 
@@ -20,8 +19,8 @@ EveComponentRegistry::~EveComponentRegistry()
 void EveComponentRegistry::Clear()
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	CcpAutoMutex lock( m_componentCollectionLoopGuard );
-	
+	std::unique_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+
 	for( auto& it : m_componentCollections )
 	{
 		it.second->Clear();
@@ -40,7 +39,8 @@ void EveComponentRegistry::ReRegister( EveEntity* entity )
 void EveComponentRegistry::UnRegisterAllComponents( EveEntity* entity )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	CcpAutoMutex lock( m_componentCollectionLoopGuard );
+
+	std::unique_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
 
 	for( auto& it : m_componentCollections )
 	{
@@ -55,8 +55,6 @@ void EveComponentRegistry::UnRegisterAllComponents( EveEntity* entity )
 IEveComponentCollection* EveComponentRegistry::GetComponentCollection( const char* componentName ) const
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	CcpAutoMutex lock( m_componentCollectionLoopGuard );
-	IEveComponentCollection* collection = nullptr;
 
 	for( auto& pair : m_componentCollections )
 	{
@@ -89,7 +87,7 @@ void EveComponentRegistry::RemoveFromCollection( IEveComponentCollection* collec
 
 std::vector<std::pair<const char*, size_t>> EveComponentRegistry::GetComponentInfo() const
 {
-	CcpAutoMutex lock( m_componentCollectionLoopGuard );
+	std::shared_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
 
 	auto info = std::vector<std::pair<const char*, size_t>>();
 	for( auto& pair : m_componentCollections )

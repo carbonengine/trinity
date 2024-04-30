@@ -39,6 +39,7 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_invDecalMatrix( IdentityMatrix() ),
 	m_parentBoneMatrix( IdentityMatrix() ),
 	m_minScreenSize( 0 ),
+	m_instanceScreenSize( -1 ),
 	m_vertexDeclarationOverride( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_instanceData( nullptr ),
 	m_minBounds( 0, 0, 0 ),
@@ -218,9 +219,10 @@ void EveSpaceObjectDecal::GetRenderables( std::vector<ITr2Renderable*>& renderab
 	renderables.push_back( this );
 }
 
-void EveSpaceObjectDecal::GetInstancedRenderables( std::vector<ITr2Renderable*>& renderables, const Tr2InstancedMesh* instancedMesh )
+void EveSpaceObjectDecal::GetInstancedRenderables( std::vector<ITr2Renderable*>& renderables, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize )
 {
-	GetRenderables( renderables, instancedMesh->GetGeometryResource(), std::numeric_limits<float>::max() );
+	GetRenderables( renderables, instancedMesh->GetGeometryResource(), instanceScreenSize );
+	m_instanceScreenSize = instanceScreenSize;
 	m_instanceData = instancedMesh->GetInstanceGeometryResource();
 	m_vertexDeclarationOverride = instancedMesh->GetVertexDeclaration();
 	instancedMesh->GetBoundingBox( m_minBounds, m_maxBounds );

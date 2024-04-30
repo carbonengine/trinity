@@ -23,7 +23,7 @@ class Tr2PerObjectData;
 struct EveHazeSetLight 
 {
 	EveHazeSetLight();	
-	EveHazeSetLight( const LightData& lightData, uint32_t index, const std::wstring profilePath, bool boosterGainInfluence );
+	EveHazeSetLight( const LightData& lightData, uint32_t index, const std::wstring& profilePath, bool boosterGainInfluence );
 
 	LightData lightData;
 	Tr2LightProfileResPtr lightProfile;

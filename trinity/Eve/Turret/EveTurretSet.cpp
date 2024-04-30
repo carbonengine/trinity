@@ -185,7 +185,7 @@ bool EveTurretSet::Initialize()
 // --------------------------------------------------------------------------------
 bool EveTurretSet::OnModified( Be::Var* value )
 {
-	if( IsMatch(value, m_display) ) {
+	if( IsMatch( value, m_display ) ) {
 		ReRegister();
 	}
 	else if( IsMatch( value, m_geomResPath ) )
@@ -228,7 +228,6 @@ void EveTurretSet::RegisterComponents()
 		registry->RegisterComponent<IEveShadowCaster>( this );
 	}
 }
-
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -1565,13 +1564,12 @@ bool EveTurretSet::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFr
 		{
 			if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, transformedBoundingSphere ) )
 			{
-				sizeInShadow = max(sizeInShadow, EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, transformedBoundingSphere ) );
+				sizeInShadow = max( sizeInShadow, EveShadowCaster::GetSizeInShadow( shadowFrustum, shadowMapSize, transformedBoundingSphere ) );
 			}
 		}
 	}
 	return sizeInShadow > 5.f;
 }
-
 
 void EveTurretSet::UpdateVisibility( const TriFrustum& frustum )
 {
@@ -1904,7 +1902,7 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 
 Tr2PerObjectData* EveTurretSet::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
-	return GetPerObjectData(accumulator);
+	return GetPerObjectData( accumulator );
 }
 
 // --------------------------------------------------------------------------------

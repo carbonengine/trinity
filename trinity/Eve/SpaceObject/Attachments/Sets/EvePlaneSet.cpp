@@ -22,15 +22,21 @@ EvePlaneLight::EvePlaneLight() :
 	lightData( LightData() ),
 	index( 0 ),
 	saturation( 1.0f ),
-	boneMatrix( IdentityMatrix() )
+	boneMatrix( IdentityMatrix() ),
+	fadeType( EveSpaceObjectAttachmentUtils::FT_NONE ),
+	blinkPhase( 0.0f ),
+	blinkRate( 0.0f )
 {
 }
 
-EvePlaneLight::EvePlaneLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring profilePath ) :
+EvePlaneLight::EvePlaneLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring& profilePath, EveSpaceObjectAttachmentUtils::FadeType fade, float blinkPhase, float blinkRate ) :
 	lightData( lightData ),
 	saturation( saturation ),
 	index( index ),
-	boneMatrix( IdentityMatrix() )
+	boneMatrix( IdentityMatrix() ),
+	fadeType( fade ),
+	blinkPhase( blinkPhase ),
+	blinkRate( blinkRate )
 {
 	if( !profilePath.empty() )
 	{
@@ -399,18 +405,23 @@ void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& p
 
 	if( renderer.HasOption( this, "Plane Sets Lights" ) )
 	{
+		Color averageColor = Color( 0 );
+		if( m_lights.size() > 0 )
+		{
+			averageColor = GetAverageColor();
+		}
+
 		for( auto& l : m_lights )
 		{
 			Matrix t = TranslationMatrix( l.lightData.position ) * l.boneMatrix * parentTransform;
 
-			Color c = Saturate( l.lightData.color, l.saturation );
+			Color c = l.lightData.color;
+			float fade = EveSpaceObjectAttachmentUtils::Fade( l.fadeType, l.blinkRate, l.blinkPhase );
 
-			if( nullptr != m_primaryTextureParameter ) 
-			{
-				c = GetAverageColor();
-			}
+			c = Color( c.r * averageColor.r, c.g * averageColor.g, c.b * averageColor.b, c.a * averageColor.a );
+			c = Saturate( c, l.saturation );
 
-			c.a = 0.5;
+			c.a = 0.5f * fade;
 			auto planeItem = l.index > m_planes.size() ? nullptr : m_planes[l.index];
 
 			renderer.DrawSphere(
@@ -421,7 +432,7 @@ void EvePlaneSet::RenderDebugInfo( ITr2DebugRenderer2& renderer, const Matrix& p
 				Tr2DebugRenderer::Solid,
 				Tr2DebugColor( c ) );
 
-			c.a = 0.3;
+			c.a = 0.3f * fade;
 			renderer.DrawSphere(
 				planeItem,
 				t,
@@ -442,22 +453,52 @@ void EvePlaneSet::SetShaderOption( const BlueSharedString& name, const BlueShare
 	}
 }
 
-void EvePlaneSet::SetPrimaryTextureParameter( TriTextureParameterPtr primaryTextureParameter )
+void EvePlaneSet::SetImageMapParameter( TriTextureParameterPtr imageMap )
 {
-	m_primaryTextureParameter = primaryTextureParameter;
+	m_imageMapParameter = imageMap;
+}
+
+void EvePlaneSet::SetLayerMap1Parameter( TriTextureParameterPtr layerMap1 )
+{
+	m_layerMap1Parameter = layerMap1;
+}
+
+void EvePlaneSet::SetLayerMap2Parameter( TriTextureParameterPtr layerMap2 )
+{
+	m_layerMap2Parameter = layerMap2;
+}
+
+void EvePlaneSet::SetMaskMapParameter( TriTextureParameterPtr maskMap )
+{
+	m_maskMapParameter = maskMap;
 }
 
 Color EvePlaneSet::GetAverageColor() const
 {
-	if( nullptr == m_primaryTextureParameter || nullptr == m_primaryTextureParameter->GetResource() )
+	Color layer1, layer2, image, mask;
+
+	layer1 = GetAverageColor( m_layerMap1Parameter );
+	layer2 = GetAverageColor( m_layerMap2Parameter );
+	image = GetAverageColor( m_imageMapParameter );
+	mask = GetAverageColor( m_maskMapParameter );
+
+	return Color( layer1.r * layer2.r * image.r * mask.r, 
+					layer1.g * layer2.g * image.g * mask.g,
+					layer1.b * layer2.b * image.b * mask.b, 
+					layer1.a * layer2.a * image.a * mask.a );
+}
+
+Color EvePlaneSet::GetAverageColor( const TriTextureParameterPtr& map ) const
+{
+	if( nullptr == map || nullptr == map->GetResource() )
 	{
-		return Color( 0, 0, 0, 0 );
+		return Color( 1, 1, 1, 1 );
 	}
 
-	auto resource = dynamic_cast<TriTextureRes*>( m_primaryTextureParameter->GetResource() );
+	auto resource = dynamic_cast<TriTextureRes*>( map->GetResource() );
 	if( nullptr == resource )
 	{
-		return Color( 0, 0, 0, 0 );
+		return Color( 1, 1, 1, 1 );
 	}
 
 	return resource->GetAverageColor();
@@ -470,33 +511,26 @@ void EvePlaneSet::AddLight( const EvePlaneLight& light )
 
 void EvePlaneSet::GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const
 {
-	bool useAverageColor = m_primaryTextureParameter != nullptr;
 	LightFeatures features = LightFeatures();
 
 	features.parentBrightness = m_activationStrength;
-
-	if( useAverageColor ) 
+	Color averageColor = Color( 0 );
+	if( m_lights.size() > 0 )
 	{
-		Color aveageColor = GetAverageColor();
-
-		for( auto light : m_lights )
-		{
-			auto lightDataCopy = light.lightData;
-			lightDataCopy.color = Saturate( aveageColor, light.saturation );
-			features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
-
-			auto perLightData = lightDataCopy.AsPerPointLightData( light.boneMatrix * parentTransform, features );
-			lightManager.AddLight( perLightData );
-		}
+		averageColor = GetAverageColor();
 	}
-	else
-	{
-		for( auto& light : m_lights )
-		{
-			features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
 
-			auto perLightData = light.lightData.AsPerPointLightData( light.boneMatrix * parentTransform, features );
-			lightManager.AddLight( perLightData );
-		}
+	for( auto light : m_lights )
+	{
+		auto lightDataCopy = light.lightData;
+		Color c = light.lightData.color;
+		lightDataCopy.color = Color( c.r * averageColor.r, c.g * averageColor.g, c.b * averageColor.b, c.a * averageColor.a );
+		lightDataCopy.color = Saturate( lightDataCopy.color, light.saturation );
+		features.profileIndex = light.lightProfile == nullptr ? 0 : light.lightProfile->GetTextureIndex();
+
+		float fade = EveSpaceObjectAttachmentUtils::Fade( light.fadeType, light.blinkRate, light.blinkPhase );
+		lightDataCopy.brightness *= fade;
+		auto perLightData = lightDataCopy.AsPerPointLightData( light.boneMatrix * parentTransform, features );
+		lightManager.AddLight( perLightData );
 	}
 }

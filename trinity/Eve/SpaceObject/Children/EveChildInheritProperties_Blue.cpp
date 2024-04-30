@@ -59,6 +59,10 @@ const Be::ClassInfo* EveChildInheritProperties::ExposeToBlue()
 		COLOR_DEFINE( PrimaryBillboard, PRIMARY_BILLBOARD )
 		COLOR_DEFINE( PrimaryFx, PRIMARY_FX )
 		COLOR_DEFINE( SecondaryFx, SECONDARY_FX )
+		COLOR_DEFINE( PrimaryWarpFx, PRIMARY_WARP_FX )
+		COLOR_DEFINE( PrimaryAttackFx, PRIMARY_ATTACK_FX )
+		COLOR_DEFINE( PrimarySiegeFx, PRIMARY_SIEGE_FX )
+		COLOR_DEFINE( PrimaryDockedFx, PRIMARY_DOCKED_FX )
 
 #undef COLOR_DEFINE
 

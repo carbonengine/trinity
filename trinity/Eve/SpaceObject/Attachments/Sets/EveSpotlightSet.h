@@ -25,7 +25,7 @@ BLUE_DECLARE( Tr2DebugRenderer );
 
 struct EveSpotlightLight {
 	EveSpotlightLight();	
-	EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring profilePath, bool boosterGainInfluence );
+	EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring& profilePath, bool boosterGainInfluence );
 
 	LightData lightData;
 	Matrix boneMatrix;

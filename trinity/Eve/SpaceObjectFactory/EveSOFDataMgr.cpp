@@ -83,6 +83,7 @@ EveSOFDataMgr::HullPlaneSetData::HullPlaneSetData( const EveSOFDataHullPlaneSet&
 	maskMapResPath( planeSet.m_maskMapResPath ),
 	visibilityGroup( GetVisibilityGroupHash( planeSet.m_visibilityGroup ) ),
 	atlasSize( planeSet.m_atlasSize ),
+	atlasAspectRatio( planeSet.m_atlasAspectRatio ),
 	skinned( planeSet.m_skinned ),
 	usage( planeSet.m_usage )
 {
@@ -820,11 +821,12 @@ void EveSOFDataMgr::GenerateHullData( HullData& hd, EveSOFDataHullPtr srcData ) 
 			hhsid.sourceSize = hazeSetItemData->m_sourceSize;
 			hhsid.boosterGainInfluence = hazeSetItemData->m_boosterGainInfluence;
 			hhsid.saturation = hazeSetItemData->m_saturation;
-			hhsid.light = nullptr;
+			hhsid.lights = std::vector<PointLightAttachment>();
+			hhsid.lights.reserve( hazeSetItemData->m_lights.size() );
 
-			if( hazeSetItemData->m_light ) 
+			for( auto& light:  hazeSetItemData->m_lights ) 
 			{
-				hhsid.light = std::make_unique<PointLightAttachment>( *hazeSetItemData->m_light );
+				hhsid.lights.push_back( PointLightAttachment( *light ) );
 			}
 			hhsd.items.push_back( std::move( hhsid ) );
 		}

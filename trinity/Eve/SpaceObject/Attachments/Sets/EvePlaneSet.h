@@ -11,6 +11,7 @@
 #include "ITr2Renderable.h"
 #include "Tr2GrannyAnimation.h"
 #include "Utilities/BoundingBox.h"
+#include "EveSpaceObjectAttachmentUtils.h"
 
 #include "EvePlaneSetItem.h"
 
@@ -27,16 +28,22 @@ class Tr2PerObjectData;
 
 struct EvePlaneLight 
 {
+
 	EvePlaneLight();
-	EvePlaneLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring profilePath );
+	EvePlaneLight( const LightData& lightData, float saturation, uint32_t index, const std::wstring& profilePath, EveSpaceObjectAttachmentUtils::FadeType fadeType, float blinkPhase, float blinkRate );
 
 	LightData lightData;
 	float saturation;
 	Tr2LightProfileResPtr lightProfile;
 
+	EveSpaceObjectAttachmentUtils::FadeType fadeType;
+	float blinkPhase;
+	float blinkRate;
+
 	uint32_t index;
 	Matrix boneMatrix;
 };
+
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -80,7 +87,10 @@ public:
 	void AddLight( const EvePlaneLight& light ) ;
 	void GetLights( Tr2LightManager& lightManager, const Matrix& parentTransform ) const override;
 
-	void SetPrimaryTextureParameter( TriTextureParameterPtr primaryTextureParameter );
+	void SetImageMapParameter( TriTextureParameterPtr imageMapParameter );
+	void SetLayerMap1Parameter( TriTextureParameterPtr layerMap1Parameter );
+	void SetLayerMap2Parameter( TriTextureParameterPtr layerMap2Parameter );
+	void SetMaskMapParameter( TriTextureParameterPtr maskMapParameter );
 
 	void SetShaderOption( const BlueSharedString& name, const BlueSharedString& value ) override;
 
@@ -100,8 +110,8 @@ public:
 
 	EvePlaneSetItemVector* GetPlanes();
 private:
-
-	Color GetAverageColor() const;
+	Color GetAverageColor(  ) const;
+	Color GetAverageColor( const TriTextureParameterPtr& ) const;
 
 	struct PlaneVertex
 	{
@@ -153,7 +163,12 @@ private:
 	// this shader renders or picks them all
 	Tr2EffectPtr m_effect;
 	std::vector<EvePlaneLight> m_lights;
-	TriTextureParameterPtr m_primaryTextureParameter;
+
+	TriTextureParameterPtr m_imageMapParameter;
+	TriTextureParameterPtr m_layerMap1Parameter;
+	TriTextureParameterPtr m_layerMap2Parameter;
+	TriTextureParameterPtr m_maskMapParameter;
+
 	float m_activationStrength;
 };
 

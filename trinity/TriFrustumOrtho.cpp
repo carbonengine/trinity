@@ -72,3 +72,8 @@ float TriFrustumOrtho::GetPixelSize( Vector4 sphere, uint16_t textureSize ) cons
 	float shadowPixelSize = ( larger * textureSize );
 	return shadowPixelSize;
 }
+
+const Vector3& TriFrustumOrtho::GetEyePos() const
+{
+	return m_view.GetTranslation();
+}

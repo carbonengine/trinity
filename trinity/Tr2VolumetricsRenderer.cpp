@@ -141,17 +141,16 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 	sceneInfo.receiveShadows = m_receiveShadows;
 	sceneInfo.castShadows = m_castShadows;
 
-	registry.ProcessComponents<ITr2VolumetricRenderable>( [&sceneInfo]( ITr2VolumetricRenderable* volumetric ) -> void {
+	registry.ProcessComponents<ITr2VolumetricRenderable>( [&sceneInfo] ( ITr2VolumetricRenderable* volumetric ) -> void {
 		volumetric->SetSceneInformation( sceneInfo );
-	} ); 
+		} );
 
 	{
 		GPU_REGION( renderContext, "Lightmaps" );
-		registry.ProcessComponentsUntil<ITr2VolumetricRenderable>( [&renderContext]( ITr2VolumetricRenderable* volumetric ) -> bool {
+		registry.ProcessComponentsUntil<ITr2VolumetricRenderable>( [&renderContext] ( ITr2VolumetricRenderable* volumetric ) -> bool {
 			return volumetric->UpdateVolumetricLightmap( renderContext );
-		} );
+			} );
 	}
-
 	if( !volumeSlices.IsValid() || volumeSlices.GetWidth() != width || volumeSlices.GetHeight() != height )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
@@ -245,9 +244,9 @@ void Tr2VolumetricsRenderer::RenderVolumetrics(
 
 	std::vector<std::pair<ITr2VolumetricRenderable*, float>> renderables;
 	renderables.reserve( volumetricsCount );
-	registry.ProcessComponents<ITr2VolumetricRenderable>( [&renderables, &frustum]( ITr2VolumetricRenderable* renderable ) -> void {
+	registry.ProcessComponents<ITr2VolumetricRenderable>( [&renderables, &frustum] ( ITr2VolumetricRenderable* renderable ) -> void {
 		renderables.push_back( { renderable, renderable->GetSortValue( frustum ) } );
-	} );
+		} );
 
 	std::stable_sort( begin( renderables ), end( renderables ), []( auto x, auto y ) { return x.second > y.second; } );
 
@@ -311,8 +310,9 @@ void Tr2VolumetricsRenderer::RenderShadows(
 	}
 	auto accumulator = m_batches.get();
 
-	registry.ProcessComponents<ITr2VolumetricRenderable>( [&accumulator]( ITr2VolumetricRenderable* volumetric ) -> void { volumetric->GetVolumetricShadowBatches( accumulator ); } );
-	
+	registry.ProcessComponents<ITr2VolumetricRenderable>( [&accumulator] ( ITr2VolumetricRenderable* volumetric ) { 
+		volumetric->GetVolumetricShadowBatches( accumulator ); } );
+
 	if( m_batches->GetBatchCount() )
 	{
 		GPU_REGION( renderContext, "Volumetric Shadows" );

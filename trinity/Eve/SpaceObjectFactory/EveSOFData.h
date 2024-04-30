@@ -179,6 +179,10 @@ namespace SOFDataFactionColorChooser
         TYPE_SECONDARY_SPOTLIGHT,
         TYPE_TERTIARY_SPOTLIGHT,
         TYPE_PRIMARY_BILLBOARD,
+        TYPE_PRIMARY_WARP_FX,
+        TYPE_PRIMARY_ATTACK_FX,
+        TYPE_PRIMARY_SIEGE_FX,
+        TYPE_PRIMARY_DOCKED_FX,
         TYPE_MAX,
     };
 
@@ -649,6 +653,7 @@ public:
 	std::string m_maskMapResPath;
 	Usage m_usage;
 	uint32_t m_atlasSize;
+	Vector2 m_atlasAspectRatio;
 	// items
 	PEveSOFDataHullPlaneSetItemVector m_items;
 };
@@ -755,7 +760,7 @@ public:
 	float m_hazeBrightness, m_hazeFalloff, m_sourceSize, m_sourceBrightness, m_saturation;
 	bool m_boosterGainInfluence;
 
-	EveSOFDataPointLightAttachmentPtr m_light;
+	PEveSOFDataPointLightAttachmentVector m_lights;
 };
 TYPEDEF_BLUECLASS( EveSOFDataHullHazeSetItem );
 BLUE_DECLARE_VECTOR( EveSOFDataHullHazeSetItem );
