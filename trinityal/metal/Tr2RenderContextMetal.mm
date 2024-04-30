@@ -1250,14 +1250,15 @@ ALResult Tr2RenderContextAL::ForkContext( Tr2RenderContextAL* context, uint32_t 
 }
 
 Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
-{	
-	if( tech == Tr2UpscalingAL::Technique::NONE )
+{
+    if( m_upscalingTechnique )
+    {
+        m_upscalingTechnique->Destroy( *this );
+        m_upscalingTechnique = nullptr;
+    }
+	
+    if( tech == Tr2UpscalingAL::Technique::NONE )
 	{
-		if( m_upscalingTechnique )
-		{
-			m_upscalingTechnique->Destroy( *this );
-			m_upscalingTechnique = nullptr;
-		}
 		return Tr2UpscalingAL::Result::OK;
 	}
 
