@@ -79,6 +79,28 @@ namespace Tr2UpscalingAL
 	float Halton( uint32_t index, uint32_t base );
 
 	uint32_t ConvertDisplaySizeToRenderSize( uint32_t displaySize, float upscaling );
+
+	struct UpscalingInfo
+	{
+		UpscalingInfo();
+
+		uint32_t displayWidth;
+		uint32_t displayHeight;
+		uint32_t renderWidth;
+		uint32_t renderHeight;
+		Technique technique;
+		Setting setting;
+		bool frameGeneration;
+		bool temporal;
+		float upscalingAmount;
+		float jitterX;
+		float jitterY;
+		float mipLevelBias;
+	};
+
+	const char* GetTechniqueName( Technique technique );
+	const char* GetSettingName( Setting setting );
+
 }
 
 // forward
@@ -88,10 +110,10 @@ class Tr2UpscalingTechniqueAL
 {
 public:
 	Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
-
+    virtual ~Tr2UpscalingTechniqueAL();
 	virtual Tr2UpscalingAL::Result Setup() = 0;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) = 0;
-	virtual void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent );
+	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent );
 
 	void SanitizeState();
 
@@ -118,7 +140,8 @@ class Tr2UpscalingContextAL
 {
 public:
 	Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
-	
+    virtual ~Tr2UpscalingContextAL();
+
 	// after setup is called, we must know the size of the render targets!
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) = 0;
 	void GetRenderDimensions( uint32_t& width, uint32_t& height ) const;
@@ -157,21 +180,6 @@ protected:
 	Tr2RenderContextEnum::PixelFormat m_sourceFormat;
 	Tr2RenderContextEnum::DepthStencilFormat m_depthFormat;
 };
-
-
-
-
-// Globally available upscaling techniques
-
-//class Tr2Fsr1UpscalingTechnique : public Tr2UpscalingTechniqueAL
-//{
-//public:
-//	Tr2Fsr1UpscalingTechnique();
-//	~Tr2Fsr1UpscalingTechnique();
-//
-//	virtual Tr2UpscalingAL::Result Setup() override;
-//	virtual Tr2UpscalingContext* GetContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight );
-//};
 
 
 #include TRINITY_AL_PLATFORM_INCLUDE( upscaling/Tr2UpscalingAL )

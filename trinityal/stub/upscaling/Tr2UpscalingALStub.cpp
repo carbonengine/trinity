@@ -3,8 +3,6 @@
 // Created:		April 2024
 // Copyright:	CCP 2024
 //
-#pragma once
-
 #include "StdAfx.h"
 #include "Tr2UpscalingALStub.h"
 

@@ -3,8 +3,6 @@
 // Created:		April 2024
 // Copyright:	CCP 2024
 //
-#pragma once
-
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX11
@@ -108,9 +106,9 @@ bool Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
 	return false;
 }
 
-void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent )
+void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent )
 {
-	Tr2UpscalingTechniqueDx11::MarkFrameEvent( frameEvent );
+	Tr2UpscalingTechniqueDx11::MarkFrameEvent( renderContext, frameEvent );
 	if( frameEvent == Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED )
 	{
 		if( SL_FAILED( res, m_slGetNewFrameToken( m_frameToken, nullptr ) ) )
@@ -136,11 +134,6 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingTechnique::Setup()
 
 void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
-	for( auto& context : m_contexts )
-	{
-		context.second.release();
-	}
-	m_contexts.clear();
 	if( m_attachedToDevice )
 	{
 		TogglePlugin( sl::kFeatureDLSS, false );

@@ -23,6 +23,14 @@ namespace Tr2UpscalingAL
 		case HARDWARE_NOT_SUPPORTED:
 			CCP_LOGWARN( "Tr2Upscaling: Hardware is not supported" );
 			break;
+        case CONTEXT_SETUP_FAILED:
+            CCP_LOGWARN( "Tr2Upscaling: Context setup failed" );
+            break;
+        case INCORRECT_INPUT:
+            CCP_LOGWARN( "Tr2Upscaling: Incorrect input" );
+            break;
+                
+            
 		}
 	}
 
@@ -58,6 +66,65 @@ namespace Tr2UpscalingAL
 		uint32_t addition = displaySize % 2 != renderSize % 2;
 		return renderSize + addition;
 	}
+
+	UpscalingInfo::UpscalingInfo():
+		displayWidth( 0 ),
+		displayHeight( 0 ),
+		renderWidth( 0 ),
+		renderHeight( 0 ),
+		technique( Tr2UpscalingAL::Technique::NONE ),
+		setting( Tr2UpscalingAL::Setting::NATIVE ),
+		frameGeneration( false ),
+		temporal(false),
+		upscalingAmount( 1.0f ),
+		jitterX( 0.0f ),
+		jitterY( 0.0f ),
+		mipLevelBias( 0.0f )
+	{}
+
+
+	const char* GetTechniqueName( Technique technique )
+	{
+		switch( technique )
+		{
+		case NONE:
+			return "None";
+		case FSR1:
+			return "FSR1";
+		case FSR2:
+			return "FSR2";
+		case FSR3:
+			return "FSR3";
+		case DLSS:
+			return "DLSS";
+		case METALFX:
+			return "MetalFx";
+		case XESS:
+			return "XeSS";
+		}
+		return "Unknown";
+	}
+	
+	const char* GetSettingName( Setting setting )
+	{
+		switch( setting )
+		{
+		case NATIVE:
+			return "Native";
+		case ULTRA_QUALITY:
+			return "UltraQuality";
+		case QUALITY:
+			return "Quality";
+		case BALANCED:
+			return "Balanced";
+		case PERFORMANCE:
+			return "Performance";
+		case ULTRA_PERFORMANCE:
+			return "UltraPerformance";
+		}
+		return "Unknown";
+	}
+
 }
 
 
@@ -67,6 +134,16 @@ Tr2UpscalingTechniqueAL::Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique tech
 	m_frameGeneration( frameGeneration )
 {
 	m_contexts = std::map<uint32_t, std::unique_ptr<Tr2UpscalingContextAL>>();
+}
+
+Tr2UpscalingTechniqueAL::~Tr2UpscalingTechniqueAL()
+{
+    for( auto& context : m_contexts )
+    {
+        context.second.release();
+    }
+    
+    m_contexts.clear();
 }
 
 void Tr2UpscalingTechniqueAL::SanitizeState()
@@ -104,7 +181,7 @@ void Tr2UpscalingTechniqueAL::GetState( Tr2UpscalingAL::Technique& technique, Tr
 	frameGeneration = m_frameGeneration;
 }
 
-void Tr2UpscalingTechniqueAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent )
+void Tr2UpscalingTechniqueAL::MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent )
 {
 	if( frameEvent == Tr2RenderContextEnum::FrameEvent::FRAME_EVENT_RENDERING_STARTED )
 	{
@@ -123,7 +200,7 @@ Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& 
 
 	if( m_contexts.find( key ) == m_contexts.end() )
 	{
-		CCP_LOGERR( "Tr2UpscalingTechniqueAL:GetContext Context does not exist for (%d, %d)", displayWidth, displayHeight );
+		CCP_LOGWARN( "Tr2UpscalingTechniqueAL:GetContext Context does not exist for (%d, %d)", displayWidth, displayHeight );
 		return nullptr;
 	}
 
@@ -170,6 +247,10 @@ Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t di
 	m_jitterYScale( -2.0f ), 
 	m_sourceFormat( sourceFormat ),
 	m_depthFormat( depthFormat )
+{
+}
+
+Tr2UpscalingContextAL::~Tr2UpscalingContextAL()
 {
 }
 

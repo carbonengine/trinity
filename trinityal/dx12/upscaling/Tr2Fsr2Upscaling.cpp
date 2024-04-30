@@ -3,8 +3,6 @@
 // Created:		April 2024
 // Copyright:	CCP 2024
 //
-#pragma once
-
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
@@ -61,7 +59,6 @@ Tr2UpscalingAL::Result Tr2Fsr2UpscalingTechnique::Setup()
 
 void Tr2Fsr2UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
-	renderContext.FlushAndSyncDx12();
 	for( auto& item : m_contexts )
 	{
 		( (Tr2Fsr2UpscalingContext*)item.second.get() )->Destroy( renderContext );

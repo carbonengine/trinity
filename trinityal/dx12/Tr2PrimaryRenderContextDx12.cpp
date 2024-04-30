@@ -122,11 +122,6 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL() :
 Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
 {
 	Destroy();
-	if( m_upscalingTechnique )
-	{
-		m_upscalingTechnique->Destroy( *this );
-		m_upscalingTechnique = nullptr;
-	}
 }
 
 
@@ -208,7 +203,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	const bool isWindowless = ( focusWindow == 0 ) && presentationParameters.software;
 
-	CComPtr<IDXGISwapChain3> swapchain;
+	CComPtr<IDXGISwapChain4> swapchain;
 	uint32_t backBufferCount = 1;
 	if( !isWindowless )
 	{
@@ -447,63 +442,6 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	m_frameTimer.Create( *this );
 
-	return S_OK;
-}
-
-ALResult Tr2PrimaryRenderContextAL::DeleteSwapchain()
-{
-	CCP_LOGNOTICE( "Destroying swapchain" );
-	
-	if( m_statsQuery && m_statsStatus == STAT_BEGIN_ISSUED )
-	{
-		m_commandList->EndQuery( m_statsQuery, D3D12_QUERY_TYPE_PIPELINE_STATISTICS, 0 );
-		m_statsStatus = STAT_READY;
-	}
-	m_frameTimer.End( *this );
-	FlushBarriersDx12();
-
-	CR_RETURN_HR( m_commandList->Close() );
-	ID3D12CommandList* const commandLists[] = { m_commandList };
-	m_commandQueue->ExecuteCommandLists( _countof( commandLists ), commandLists );
-
-	WaitForFenceDx12( SignalDx12() );
-
-	auto value = m_frameFenceValues[m_currentBackBufferIndex];
-	m_frameFenceValues.clear();
-	m_frameFenceValues.resize( Tr2SwapChainUtils::BACK_BUFFER_COUNT, m_fenceValue );
-
-	//Tr2Streamline::FreeResources();
-	m_pendingPresents.clear();
-	m_defaultBackBuffer.m_texture->Destroy();
-
-	FlushPendingRelease();
-
-	m_swapchain = nullptr;
-	CCP_LOGNOTICE( "Swapchain destroyed" );
-	return S_OK;
-}
-
-ALResult Tr2PrimaryRenderContextAL::CreateSwapchain()
-{
-	CCP_LOGNOTICE( "Creating swapchain" );
-	FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( m_swapchain, m_focusWindow, m_presentationParameters, m_commandQueue, m_output, *this ));
-
-	std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
-	std::vector<CComPtr<ID3D12Resource>> backBuffers;
-
-	FORWARD_HR( TrinityALImpl::Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, m_swapchain ) );
-
-	m_currentBackBufferIndex = m_swapchain->GetCurrentBackBufferIndex();
-	m_defaultBackBuffer.m_texture->AssignFromSwapChainDx12( backBuffers, rtvs, *this );
-	m_defaultBackBuffer.m_texture->SetSwapChainBufferIndexDx12( m_currentBackBufferIndex );
-
-	auto commandAllocator = m_commandAllocators[m_commandAllocatorIndex++ % m_commandAllocators.size()];
-	commandAllocator->Reset();
-	m_commandList->Reset( commandAllocator, nullptr );
-	m_frameTimer.Begin( *this );
-
-	ReApplyStateDx12();
-	CCP_LOGNOTICE( "Swapchain created" );
 	return S_OK;
 }
 
@@ -1266,7 +1204,11 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 {
 	if( tech == Tr2UpscalingAL::Technique::NONE )
 	{
-		m_upscalingTechnique = nullptr;
+		if( m_upscalingTechnique )
+		{
+			m_upscalingTechnique->Destroy( *this );
+			m_upscalingTechnique = nullptr;
+		}
 		return Tr2UpscalingAL::Result::OK;
 	}
 
@@ -1289,7 +1231,14 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
-	return m_upscalingTechnique->Setup();
+
+	auto result = m_upscalingTechnique->Setup();
+	if( result != Tr2UpscalingAL::Result::OK )
+	{
+		delete m_upscalingTechnique;
+		m_upscalingTechnique = nullptr;
+	}
+	return result;
 }
 
 Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
@@ -1312,23 +1261,23 @@ Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32
 	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight, sourceFormat, depthFormat );
 }
 
-bool Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
+Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight )
 {
 	auto context = GetUpscalingContext( displayWidth, displayHeight );
-	if( context == nullptr )
+	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
+
+	if( context != nullptr )
 	{
-		upscalingAmount = 1.0f;
-		mipLevelBias = 0.0f;
-		jitterX = 0.0f;
-		jitterY = 0.0f;
+		info.upscalingAmount = context->GetUpscalingAmount();
+		info.mipLevelBias = context->GetMipLevelBias();
+		info.temporal = context->IsTemporal();
+		context->GetJitter( info.jitterX, info.jitterY );
+		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
+		info.displayWidth = displayWidth;
+		info.displayHeight = displayHeight;
+		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
 	}
-	else
-	{
-		upscalingAmount = context->GetUpscalingAmount();
-		mipLevelBias = context->GetMipLevelBias();
-		context->GetJitter( jitterX, jitterY );
-	}
-	return context != nullptr;
+	return info;
 }
 
 std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
@@ -1336,7 +1285,7 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
 	for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
 	{
-		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::BALANCED, false, adapter );
+		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
 		if( tech )
 		{
 			uint32_t allSettings = 0;
@@ -1371,24 +1320,35 @@ void Tr2PrimaryRenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent
 {
 	if( m_upscalingTechnique )
 	{
-		m_upscalingTechnique->MarkFrameEvent( frameEvent );
+		m_upscalingTechnique->MarkFrameEvent( *this, frameEvent );
 	}
 }
 
 HRESULT Tr2PrimaryRenderContextAL::CreateSwapChainForHwnd(
 	CComPtr<IDXGIFactory4>& factory4,
-	IUnknown* pDevice,
+	ID3D12CommandQueue* commandQueue,
 	HWND hWnd,
 	const DXGI_SWAP_CHAIN_DESC1* pDesc,
 	const DXGI_SWAP_CHAIN_FULLSCREEN_DESC* pFullscreenDesc,
 	IDXGIOutput* pRestrictToOutput,
-	IDXGISwapChain1** ppSwapChain)
+	CComPtr<IDXGISwapChain4>& swapchain )
 {
-	if( m_upscalingTechnique && m_upscalingTechnique->OverridesSwapChainCreation() )
+	CComPtr<IDXGISwapChain1> swapChain1;
+	CR_RETURN_HR( factory4->CreateSwapChainForHwnd(
+		commandQueue,
+		hWnd,
+		pDesc,
+		pFullscreenDesc,
+		pRestrictToOutput,
+		&swapChain1 ) );
+
+	CR_RETURN_HR( swapChain1.QueryInterface( &swapchain ) );
+
+	if( m_upscalingTechnique && m_upscalingTechnique->ReplacesSwapchain() )
 	{
-		return m_upscalingTechnique->CreateSwapChainForHwnd( pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain );
+		m_upscalingTechnique->ReplaceSwapchain( swapchain, hWnd, commandQueue );
 	}
-	return factory4->CreateSwapChainForHwnd( pDevice, hWnd, pDesc, pFullscreenDesc, pRestrictToOutput, ppSwapChain );
+	return S_OK;
 }
 
 HRESULT Tr2PrimaryRenderContextAL::CreateDevice(IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device) const

@@ -16,7 +16,7 @@
 #include "../Tr2HalHelperStructures.h"
 #include "../Tr2AdapterStructures.h"
 #include "MetalContext.h"
-#include <Tr2UpscalingAL.h>
+#include "../include/upscaling/Tr2UpscalingAL.h"
 
 class Tr2ConstantBufferAL;
 class Tr2ShaderAL;
@@ -208,10 +208,10 @@ public:
 	ALResult ForkContext( Tr2RenderContextAL* context, uint32_t index ) const;
 	
 	
-	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration );
+    Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );
 	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
 	Tr2UpscalingContextAL* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
-	bool GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY );
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight );
 	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration );
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
 
@@ -284,6 +284,7 @@ protected:
 
 	void CheckDrawResources();
 	void SetAsPrimary();
+    Tr2UpscalingTechniqueAL* m_upscalingTechnique;
 
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;

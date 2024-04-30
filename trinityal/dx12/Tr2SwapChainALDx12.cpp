@@ -36,7 +36,7 @@ namespace Tr2SwapChainUtils
 	}
 
 	ALResult CreateSwapChain(
-		CComPtr<IDXGISwapChain3>& swapChain,
+		CComPtr<IDXGISwapChain4>& swapChain,
 		Tr2WindowHandle focusWindow,
 		const Tr2PresentParametersAL& presentationParameters,
 		ID3D12CommandQueue* commandQueue,
@@ -80,12 +80,9 @@ namespace Tr2SwapChainUtils
 		{
 			wnd = focusWindow;
 		}
-
-		CComPtr<IDXGISwapChain1> swapChain1;
 		
-		CR_RETURN_HR( renderContext.CreateSwapChainForHwnd( factory, commandQueue, wnd, &swapChainDesc, nullptr, output, &swapChain1 ) );
+		CR_RETURN_HR( renderContext.CreateSwapChainForHwnd( factory, commandQueue, wnd, &swapChainDesc, nullptr, output, swapChain ) );
 		
-		CR_RETURN_HR( swapChain1.QueryInterface( &swapChain ) );
 		CR_RETURN_HR( factory->MakeWindowAssociation( wnd, DXGI_MWA_NO_ALT_ENTER ) );
 		return S_OK;
 	}
@@ -151,7 +148,7 @@ namespace TrinityALImpl
 
 	ALResult Tr2SwapChainAL::CreateDx12( const Tr2PresentParametersAL& presentationParameters, IDXGIOutput* output, ID3D12CommandQueue* commandQueue, Tr2PrimaryRenderContextAL &renderContext )
 	{
-		CComPtr<IDXGISwapChain3> swapChain;
+		CComPtr<IDXGISwapChain4> swapChain;
 		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapChain, presentationParameters.outputWindow, presentationParameters, commandQueue, output, renderContext ) );
 
 		std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;

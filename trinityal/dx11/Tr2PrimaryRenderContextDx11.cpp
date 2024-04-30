@@ -221,6 +221,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(	uint32_t  adapter,
 		{
 			m_upscalingTechnique->AttachToDevice( m_d3dDevice11 );
 		}
+		//Tr2Streamline::Attach( m_d3dDevice11 );
 		CCP_AL_LOG( "DX11: device created succesfully" );
 	}
 	else		
@@ -645,7 +646,11 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 {
 	if( tech == Tr2UpscalingAL::Technique::NONE )
 	{
-		m_upscalingTechnique = nullptr;
+		if( m_upscalingTechnique )
+		{
+			m_upscalingTechnique->Destroy( *this );
+			m_upscalingTechnique = nullptr;
+		}
 		return Tr2UpscalingAL::Result::OK;
 	}
 
@@ -662,9 +667,13 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
-	m_upscalingTechnique->Setup();
-
-	return Tr2UpscalingAL::Result::OK;
+	auto result = m_upscalingTechnique->Setup();
+	if( result != Tr2UpscalingAL::Result::OK )
+	{
+		delete m_upscalingTechnique;
+		m_upscalingTechnique = nullptr;
+	}
+	return result;
 }
 
 
@@ -700,30 +709,28 @@ void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& te
 	framegeneration = false;
 }
 
-bool Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight, float& upscalingAmount, float& mipLevelBias, float& jitterX, float& jitterY )
+Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight )
 {
 	auto context = GetUpscalingContext( displayWidth, displayHeight );
-	if( context == nullptr )
+	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
+
+	if( context != nullptr )
 	{
-		upscalingAmount = 1.0f;
-		mipLevelBias = 0.0f;
-		jitterX = 0.0f;
-		jitterY = 0.0f;
+		info.upscalingAmount = context->GetUpscalingAmount();
+		info.mipLevelBias = context->GetMipLevelBias();
+		info.temporal = context->IsTemporal();
+		context->GetJitter( info.jitterX, info.jitterY );
+		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
+		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
 	}
-	else
-	{
-		upscalingAmount = context->GetUpscalingAmount();
-		mipLevelBias = context->GetMipLevelBias();
-		context->GetJitter( jitterX, jitterY );
-	}
-	return context != nullptr;
+	return info;
 }
 
 void Tr2PrimaryRenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
 {
 	if( m_upscalingTechnique )
 	{
-		m_upscalingTechnique->MarkFrameEvent( frameEvent );
+		m_upscalingTechnique->MarkFrameEvent( *this, frameEvent );
 	}
 }
 
@@ -732,7 +739,7 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
 	for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
 	{
-		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::BALANCED, false, adapter );
+		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
 		if( tech )
 		{
 			uint32_t allSettings = 0;
@@ -741,11 +748,8 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 			{
 				allSettings |= setting;
 			}
-			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
 
-			tech->Destroy( *this );
-			delete tech;
-			tech = nullptr;
+			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
 		}
 	}
 	return supportedTechniques;

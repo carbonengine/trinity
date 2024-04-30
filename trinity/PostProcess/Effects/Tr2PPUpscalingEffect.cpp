@@ -7,8 +7,6 @@
 #include "StdAfx.h"
 #include "Tr2PPUpscalingEffect.h"
 
-#include "Upscaling/Tr2MetalFxUpscaling.h"
-
 #include "Sharpening/Tr2FidelityFxCas.h"
 #include "Sharpening/Tr2NoopSharpening.h"
 

@@ -33,7 +33,7 @@ public:
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 	virtual bool SupportsFrameGeneration( ) const override;
 
-	virtual void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
+	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
 	virtual Tr2UpscalingAL::Result Setup() override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 

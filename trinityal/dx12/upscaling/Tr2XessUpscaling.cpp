@@ -3,8 +3,6 @@
 // Created:		April 2024
 // Copyright:	CCP 2024
 //
-#pragma once
-
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
@@ -91,7 +89,6 @@ Tr2XessUpscalingTechnique::~Tr2XessUpscalingTechnique()
 
 void Tr2XessUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
-	renderContext.FlushAndSyncDx12();
 	for( auto& item : m_contexts )
 	{
 		( (Tr2XessUpscalingContext*)item.second.get() )->Destroy( renderContext );
@@ -115,7 +112,10 @@ std::vector<Tr2UpscalingAL::Setting> Tr2XessUpscalingTechnique::GetAvailableSett
 
 bool Tr2XessUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const
 {
-	return true;
+	xess_context_handle_t context;
+	auto status = xessD3D12CreateContext( renderContext.m_ownerDevice->m_device, &context );
+	context = nullptr;
+	return status == XESS_RESULT_SUCCESS;
 }
 
 Tr2UpscalingContextAL* Tr2XessUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
@@ -158,6 +158,7 @@ bool Tr2XessUpscalingContext::IsTemporal() const
 {
 	return true;
 }
+
 uint32_t Tr2XessUpscalingContext::GetDispatchRequirements() const
 {
 	return Tr2UpscalingAL::DispatchRequirements::VELOCITY | Tr2UpscalingAL::DispatchRequirements::DEPTH | Tr2UpscalingAL::DispatchRequirements::OPTIONAL_EXPOSURE;

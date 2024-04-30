@@ -3,8 +3,6 @@
 // Created:		April 2024
 // Copyright:	CCP 2024
 //
-#pragma once
-
 #include "StdAfx.h"
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
@@ -49,7 +47,7 @@ namespace TrinityALImpl
 	{
 	}
 
-	bool Tr2UpscalingTechniqueDx12::OverridesSwapChainCreation() const
+	bool Tr2UpscalingTechniqueDx12::ReplacesSwapchain() const
 	{
 		return false;
 	}
@@ -69,14 +67,8 @@ namespace TrinityALImpl
 		return false;
 	}
 
-	HRESULT Tr2UpscalingTechniqueDx12::CreateSwapChainForHwnd( IUnknown* pDevice,
-									 HWND hWnd,
-									 const DXGI_SWAP_CHAIN_DESC1* pDesc,
-									 const DXGI_SWAP_CHAIN_FULLSCREEN_DESC* pFullscreenDesc,
-									 IDXGIOutput* pRestrictToOutput,
-							 IDXGISwapChain1** ppSwapChain )
+	void Tr2UpscalingTechniqueDx12::ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swapchain, Tr2WindowHandle hwnd, ID3D12CommandQueue* commandQueue )
 	{
-		return S_FALSE;
 	}
 
 	HRESULT Tr2UpscalingTechniqueDx12::D3D12CreateDevice( IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device ) 

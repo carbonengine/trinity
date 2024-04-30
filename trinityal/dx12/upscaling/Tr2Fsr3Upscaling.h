@@ -14,6 +14,7 @@ namespace Fsr3Utils
 {
 	void LogFsr3Message( FfxMsgType type, const wchar_t* message );
 	FfxResource ConvertTextureToFfxResource( Tr2TextureAL* texture, const wchar_t* textureName, FfxResourceStates state );
+	FfxSurfaceFormat GetFfxSurfaceFormat( Tr2RenderContextEnum::PixelFormat format );
 }
 
 class Tr2Fsr3UpscalingTechnique : public TrinityALImpl::Tr2UpscalingTechniqueDx12
@@ -25,6 +26,11 @@ public:
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 	virtual Tr2UpscalingAL::Result Setup() override;
+	virtual bool SupportsFrameGeneration() const override;
+	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
+
+	virtual bool ReplacesSwapchain() const override;
+	virtual void ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swapchain, Tr2WindowHandle hwnd, ID3D12CommandQueue* commandQueue ) override;
 
 private:
 	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
@@ -40,6 +46,7 @@ public:
 	virtual bool IsTemporal() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
+	void GenerateFrame( Tr2RenderContextAL& renderContext );
 
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
@@ -49,6 +56,7 @@ private:
 
 	FfxFsr3ContextDescription m_initializationParameters = {};
 	FfxFsr3Context m_context;
+	FfxFrameGenerationConfig m_frameGenerationConfig = {};
 
 	typedef enum Fsr3BackendTypes : uint32_t
 	{

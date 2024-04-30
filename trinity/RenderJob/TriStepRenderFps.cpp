@@ -154,42 +154,72 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 	flavor = flavor.substr( 1 );
 #endif
 
-	auto bitcount = "x" + std::to_string( CcpGetProcessBitCount() );
 	int dpCount = m_dpCount ? int( m_dpCount->GetValue() ) : 0;
 	int vertCount = static_cast<int>( CCP_STATS_GET( vertexCount ) );
+	
+	uint32_t displayWidth, displayHeight;
+	Tr2UpscalingAL::UpscalingInfo upscalingInfo;
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		renderContext.GetRenderTargetSize( displayWidth, displayHeight );
+		upscalingInfo = renderContext.GetUpscalingInfo( displayWidth, displayHeight );
+	}
+	std::string displayResolution = std::to_string( displayWidth ) + "x" + std::to_string( displayHeight );
+
+	char upscalingBuffer[256];
+	if( upscalingInfo.technique != Tr2UpscalingAL::Technique::NONE )
+	{
+		std::string formattedUpscalingText = 
+		"   Upscaler: %11s\n"
+		"    Setting: %11s\n"
+		"   FrameGen: %11s\n"
+		"   Temporal: %11s\n"
+		" Render Res: %11s\n";
+		
+		std::string techniqueName( Tr2UpscalingAL::GetTechniqueName( upscalingInfo.technique ) );
+        techniqueName = techniqueName.substr( 0, std::min((size_t)11, techniqueName.length()) ).c_str();
+        std::string settingName( Tr2UpscalingAL::GetSettingName( upscalingInfo.setting ) );
+        settingName = settingName.substr( 0, std::min( (size_t)11, settingName.length() ) );
+        std::string renderRes = std::to_string( upscalingInfo.renderWidth ) + "x" + std::to_string( upscalingInfo.renderHeight );
+
+		sprintf_s(
+			upscalingBuffer,
+			formattedUpscalingText.c_str(),
+            techniqueName.c_str(),
+			settingName.c_str(),
+			upscalingInfo.frameGeneration ? "Yes" : "No",
+			upscalingInfo.temporal ? "Yes" : "No",
+            renderRes.c_str() );
+ 	}
+	else
+	{
+		sprintf_s( upscalingBuffer, "" );
+	}
 
 	std::string str =
-		"Build Date: %11s\n"
-		"Build Time: %11s\n"
-		"  Platform: %11s\n"
-		"    Flavor: %11s\n"
-		"   Bitness: %11s\n"
-		"   Toolset: %11s\n"
-		"Resolution: %11s\n"
-		"     Frame: %11.0lld\n"
-		"       FPS: %11.2f\n"
-		"        MS: %11.2f\n"
-		"Draw Calls: %11.0d\n"
-		"Vert Count: %11.0d";
+		" Build Date: %11s\n"
+		" Build Time: %11s\n"
+		"   Platform: %11s\n"
+		"     Flavor: %11s\n"
+		"%s" // This is upscaling information
+		"Display Res: %11s\n"
+		"      Frame: %11.0lld\n"
+		"        FPS: %11.2f\n"
+		"         MS: %11.2f\n"
+		" Draw Calls: %11.0d\n"
+		" Vert Count: %11.0d";
 
 #if __APPLE__
-    str += "\n   Rosetta: %11s";
+	str += "\n   Rosetta: %11s";
 #endif
 
 	if( PDM::IsWine() )
 	{
 		str += "\n      Wine: %11s";
 	}
-
+	
 	const int bufferSize = 512; // Make sure to increase this as necessary
 	char fpsBuffer[bufferSize];
-	
-	Tr2BitmapDimensions bbDesc;
-	{
-		USE_MAIN_THREAD_RENDER_CONTEXT();
-		bbDesc = renderContext.GetDefaultBackBuffer().GetDesc();
-	}
-	std::string resolution = std::to_string( bbDesc.GetWidth() ) + "x" + std::to_string( bbDesc.GetHeight() );
 
 	sprintf_s
 	(
@@ -199,9 +229,8 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 		GetTime(),
 		TRINITY_PLATFORM_NAME,
 		flavor.c_str(),
-		bitcount.c_str(),
-		CcpGetPlatformToolset(),
-		resolution.c_str(),
+		upscalingBuffer,
+		displayResolution.c_str(),
 		Tr2Renderer::GetCurrentFrameCounter(),
 		m_averageFPS,
 		m_averageMSPerFrame,
