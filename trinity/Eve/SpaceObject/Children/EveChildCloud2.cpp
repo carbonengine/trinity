@@ -127,7 +127,7 @@ void EveChildCloud2::RegisterComponents()
 	if( registry )
 	{
 		registry->RegisterComponent<ITr2VolumetricRenderable>( this );
-		if( EntityComponents::ShouldReflect( m_reflectionMode ) && m_display && m_reflectionEffect)
+		if( EntityComponents::ShouldReflect( m_reflectionMode ) && m_display && m_reflectionEffect )
 		{
 			registry->RegisterComponent<ITr2Renderable>( this );
 		}

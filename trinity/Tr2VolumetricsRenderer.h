@@ -24,7 +24,7 @@ public:
 
 	void RenderVolumetrics(
 		const EveComponentRegistry& registry,
-		const TriFrustum& frustum, 
+		const TriFrustum& frustum,
 		Tr2DepthStencil& sceneDepth,
 		const Vector3& sunDirection,
 		const float depthSlices[4],

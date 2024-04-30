@@ -189,11 +189,13 @@ const Be::ClassInfo* EveSpaceObject2::ExposeToBlue()
 			Be::READWRITE | Be::NOTIFY | Be::PERSIST
 		)
 
-		MAP_ATTRIBUTE(
+		MAP_ATTRIBUTE
+		(
 			"isAnimated",
 			m_isAnimated,
 			"If set, we have animations",
-			Be::READWRITE | Be::PERSIST )
+			Be::READWRITE | Be::PERSIST 
+		)
 
 		MAP_ATTRIBUTE
 		(

@@ -11,6 +11,7 @@ BLUE_DECLARE( EveComponentRegistry );
 typedef int32_t RegistrationState;
 
 #include "EveEntity.h"
+#include <shared_mutex>
 
 // Yes templated false, see comment in GetComponentName
 template <typename T>
@@ -18,9 +19,9 @@ struct workAroundForCppStandard : std::false_type
 {
 };
 
-template <typename T>                           
-inline const char* GetComponentName()		
-{			
+template <typename T>
+inline const char* GetComponentName()
+{
 	/*
 	We cannot use normal false values here due to the fact that the compiler might use this method
 	before it knows of an templated (or registered) function...
@@ -88,14 +89,14 @@ public:
 
 	// Registers a specific components for a specific entity, creates a component collection if it doesn´t exist
 	template <typename T>
-	void RegisterComponent( EveEntity * entity );
+	void RegisterComponent( EveEntity* entity );
 
 	// UnRegisters a single component for a specific entity
 	template <typename T>
-	void UnRegisterComponent( EveEntity * entity );
+	void UnRegisterComponent( EveEntity* entity );
 
 	// UnRegisters all components for a specific entity
-	void UnRegisterAllComponents( EveEntity * entity );
+	void UnRegisterAllComponents( EveEntity* entity );
 
 	void Clear();
 
@@ -108,15 +109,18 @@ public:
 	void ProcessComponentsUntil( R processor ) const;
 
 	template<typename T>
+	const std::vector<T*>& GetComponents(); 
+
+	template<typename T>
 	size_t ComponentCount() const;
 
-	void ReRegister( EveEntity * entity );
+	void ReRegister( EveEntity* entity );
 
 private:
 	IEveComponentCollection* GetComponentCollection( const char* componentName ) const;
 
-	void AddToCollection( IEveComponentCollection* collection, EveEntity * entity );
-	void RemoveFromCollection( IEveComponentCollection * collection, EveEntity * entity );
+	void AddToCollection( IEveComponentCollection* collection, EveEntity* entity );
+	void RemoveFromCollection( IEveComponentCollection* collection, EveEntity* entity );
 
 	template<typename T>
 	IEveComponentCollection* AddCollection( const char* componentName );
@@ -125,7 +129,7 @@ private:
 
 	// this m_componentCollections is a map of componentType to different EveComponentCollection<T>
 	std::vector<std::pair<const char*, std::unique_ptr<IEveComponentCollection>>> m_componentCollections;
-	mutable CcpMutex m_componentCollectionLoopGuard;
+	mutable std::shared_mutex m_componentCollectionLoopGuard;
 };
 TYPEDEF_BLUECLASS( EveComponentRegistry );
 
@@ -208,9 +212,9 @@ size_t EveComponentCollection<T>::Size() const
 template <typename T>
 void EveComponentRegistry::RegisterComponent( EveEntity* entity )
 {
-	CcpAutoMutex lock( m_componentCollectionLoopGuard );
-
 	const char* componentName = GetComponentName<T>();
+
+	std::unique_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
 
 	IEveComponentCollection* collection = GetComponentCollection( componentName );
 
@@ -226,9 +230,11 @@ void EveComponentRegistry::RegisterComponent( EveEntity* entity )
 template <typename T>
 void EveComponentRegistry::UnRegisterComponent( EveEntity* entity )
 {
-	CcpAutoMutex lock( m_componentCollectionLoopGuard );
+	const char* componentName = GetComponentName<T>();
 
-	auto collection = GetComponentCollection( GetComponentName<T>() );
+	std::unique_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+
+	auto collection = GetComponentCollection( componentName );
 
 	if( collection == nullptr )
 	{
@@ -242,9 +248,10 @@ void EveComponentRegistry::UnRegisterComponent( EveEntity* entity )
 template <typename T, typename R>
 void EveComponentRegistry::ProcessComponents( R processor ) const
 {
-	CcpAutoMutex lock( m_componentCollectionLoopGuard );
-
 	const char* componentName = GetComponentName<T>();
+
+	std::shared_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+
 	auto collection = GetComponentCollection( componentName );
 
 	if( collection == nullptr )
@@ -261,9 +268,10 @@ void EveComponentRegistry::ProcessComponents( R processor ) const
 template <typename T, typename R>
 void EveComponentRegistry::ProcessComponentsUntil( R processor ) const
 {
-	CcpAutoMutex lock( m_componentCollectionLoopGuard );
-
 	const char* componentName = GetComponentName<T>();
+
+	std::shared_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+
 	auto collection = GetComponentCollection( componentName );
 
 	if( collection == nullptr )
@@ -281,9 +289,25 @@ void EveComponentRegistry::ProcessComponentsUntil( R processor ) const
 }
 
 template <typename T>
+const std::vector<T*>& EveComponentRegistry::GetComponents()
+{
+	const char* componentName = GetComponentName<T>();
+
+	std::shared_lock<std::shared_mutex> lock( m_componentCollectionLoopGuard );
+
+	auto collection = GetComponentCollection( componentName );
+
+	if( collection == nullptr )
+	{
+		static auto v = std::vector<T*>();
+		return v;
+	}
+	return static_cast<EveComponentCollection<T>*>( collection )->m_collection;
+}
+
+template <typename T>
 size_t EveComponentRegistry::ComponentCount() const
 {
-	CcpAutoMutex lock( m_componentCollectionLoopGuard );
 	const char* componentName = GetComponentName<T>();
 	auto collection = GetComponentCollection( componentName );
 
@@ -298,7 +322,7 @@ size_t EveComponentRegistry::ComponentCount() const
 template <typename T>
 IEveComponentCollection* EveComponentRegistry::AddCollection( const char* componentName )
 {
-	int32_t componentCollectionIndex = (int32_t)m_componentCollections.size();
+	int32_t componentCollectionIndex = (int32_t) m_componentCollections.size();
 	// no more than 32 EveComponentCollections can exist, since we use a bitwise comparison in the entity m_state
 	CCP_ASSERT( componentCollectionIndex < 32 );
 

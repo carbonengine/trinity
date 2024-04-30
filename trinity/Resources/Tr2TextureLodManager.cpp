@@ -61,8 +61,8 @@ Tr2TextureLodManager::Tr2TextureLodManager() :
 
 Tr2TextureLodManager& Tr2TextureLodManager::Instance()
 {
-	static CTr2TextureLodManager s_manager;
-	return s_manager;
+	static CTr2TextureLodManager* s_manager = new CTr2TextureLodManager();
+	return *s_manager;
 }
 
 void Tr2TextureLodManager::OnTick( Be::Time, Be::Time, void* )

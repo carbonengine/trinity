@@ -175,6 +175,8 @@ EveSpaceObject2::EveSpaceObject2( IRoot* lockobj ) :
 	m_lodLevelWithChildren( TR2_LOD_UNSPECIFIED ),
 	m_isVisible( false ),
 	m_isMeshVisible( false ),
+	m_isAnimated( false ),
+	m_castShadow( false ),
 	m_clipSphereFactor( 0.f ),
 	m_oldClipSphereFactor( 0.f ),
 	m_clipSphereCenter( 0.f, 0.f, 0.f ),
@@ -1710,7 +1712,7 @@ bool EveSpaceObject2::IsCastingShadow( const TriFrustum& cameraFrustum, const Tr
 
 	Vector4 bs = Vector4( m_boundingSphereWorldCenter, m_boundingSphereRadius );
 
-	sizeInShadow = 0; 
+	sizeInShadow = 0;
 
 	if( EveShadowCaster::IsVisible( cameraFrustum, shadowFrustum, sunDir, bs ) )
 	{
@@ -1922,7 +1924,7 @@ bool EveSpaceObject2::IsAnimated() const
 	return m_isAnimated;
 }
 
-void EveSpaceObject2::SetIsAnimated(bool isAnimated)
+void EveSpaceObject2::SetIsAnimated( bool isAnimated )
 {
 	m_isAnimated = isAnimated;
 }

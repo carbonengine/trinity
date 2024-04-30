@@ -218,19 +218,26 @@ protected:
 	};
 	FrameData m_frameData;
 
-	
-	// Per-frame vertex constants for rendering shadows
-	struct ShadowPerFrameVSData
-	{
-		Matrix ViewProjectionMat;
-	};
-	
 	// Per-frame pixel constants for rendering scene
 	struct SunData
 	{
 		Vector3 DirWorld;
 		float unused_pad0;
 		Color DiffuseColor;
+	};
+
+	struct ShadowInfo
+	{
+		ShadowInfo( float radius, IEveShadowCaster* caster, Tr2PerObjectData* perObjectData ):
+			radius( radius ),
+			caster( caster ),
+			perObjectData( perObjectData )
+		{
+		}
+
+		float radius;
+		IEveShadowCaster* caster;
+		Tr2PerObjectData* perObjectData;
 	};
 
 	// Per-frame pixel constants for rendering scene
@@ -626,10 +633,6 @@ private:
 
 	bool m_dynamicObjectReflectionEnabled;
 
-	// Shadows
-	// Cascaded shadows
-	ShadowQuality m_shadowQuality;
-	std::vector<std::vector<EveShadowCaster::Info>> m_shadowCasters;
 	ShadowMap::SplitSetup m_splitSetup[SHADOW_FRUSTUM_COUNT];
 	// Cascaded shadow debugging
 	bool m_freezeFrustum;

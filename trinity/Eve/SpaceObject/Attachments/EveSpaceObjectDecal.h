@@ -115,7 +115,7 @@ public:
 	// access
 	void UpdateVisibility( const TriFrustum& frustum, const IEveSpaceObject2::ParentData* parentData );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, TriGeometryRes* geomRes, float screensize );
-	void GetInstancedRenderables( std::vector<ITr2Renderable*> & renderables, const Tr2InstancedMesh* instancedMesh );
+	void GetInstancedRenderables( std::vector<ITr2Renderable*>& renderables, const Tr2InstancedMesh* instancedMesh, float instanceScreenSize = std::numeric_limits<float>::max() );
 
 	// access position etc.
 	const Vector3& GetPosition() const;
@@ -186,6 +186,7 @@ private:
 	bool m_rebuildIndexBuffers;
 	float m_isVisible;
 	float m_minScreenSize;
+	float m_instanceScreenSize;
 
 	unsigned int m_vertexDeclarationOverride;
 	ITr2InstanceData* m_instanceData;

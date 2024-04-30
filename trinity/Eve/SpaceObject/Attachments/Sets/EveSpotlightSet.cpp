@@ -69,7 +69,7 @@ EveSpotlightLight::EveSpotlightLight() :
 
 }
 
-EveSpotlightLight::EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring profilePath, bool boosterGainInfluence ) :
+EveSpotlightLight::EveSpotlightLight( const LightData& lightData, uint32_t index, const std::wstring& profilePath, bool boosterGainInfluence ) :
 	lightData( lightData ),
 	index( index ),
 	boneMatrix( IdentityMatrix() ),

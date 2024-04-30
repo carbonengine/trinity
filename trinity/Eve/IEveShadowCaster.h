@@ -12,41 +12,34 @@ struct IEveShadowCaster;
 
 namespace EveShadowCaster
 {
-inline bool IsVisible( const TriFrustum& camera, const TriFrustumOrtho& shadow, const Vector3 sunDir, const Vector4 boundingSphere )
-{
-	bool sphereIsVisible = shadow.IsSphereVisibleAndInsideNearPlane( &boundingSphere );
-	if( sphereIsVisible )
+	inline bool IsVisible( const TriFrustum& camera, const TriFrustumOrtho& shadow, const Vector3 sunDir, const Vector4 boundingSphere )
 	{
-		for( unsigned int j = 0; j < 6; ++j )
+		bool sphereIsVisible = shadow.IsSphereVisibleAndInsideNearPlane( &boundingSphere );
+		if( sphereIsVisible )
 		{
-			// first check if sun direction is perpendicular of the plane
-			float d = DotNormal( camera.m_planes[j], sunDir );
-			// if it's not perpendicular then check if the object is "behind" the plane
-			if( d < 0 )
+			for( unsigned int j = 0; j < 6; ++j )
 			{
-				auto val = DotCoord( camera.m_planes[j], -boundingSphere.GetXYZ() );
-				if( DotCoord( camera.m_planes[j], boundingSphere.GetXYZ() ) < -boundingSphere.w )
+				// first check if sun direction is perpendicular of the plane
+				float d = DotNormal( camera.m_planes[j], sunDir );
+				// if it's not perpendicular then check if the object is "behind" the plane
+				if( d < 0 )
 				{
-					CCP_STATS_INC( objectsCulledCount );
-					return false;
+					auto val = DotCoord( camera.m_planes[j], -boundingSphere.GetXYZ() );
+					if( DotCoord( camera.m_planes[j], boundingSphere.GetXYZ() ) < -boundingSphere.w )
+					{
+						CCP_STATS_INC( objectsCulledCount );
+						return false;
+					}
 				}
 			}
 		}
+		return sphereIsVisible;
 	}
-	return sphereIsVisible;
-}
 
-inline float GetSizeInShadow( const TriFrustumOrtho& shadow, const uint32_t shadowMapSize, const Vector4 boundingSphere )
-{
-	return shadow.GetPixelSize( boundingSphere, shadowMapSize );
-}
-
-struct Info
-{
-	IEveShadowCaster* caster;
-	float size;
-};
-
+	inline float GetSizeInShadow( const TriFrustumOrtho& shadow, const uint32_t shadowMapSize, const Vector4 boundingSphere )
+	{
+		return shadow.GetPixelSize( boundingSphere, shadowMapSize );
+	}
 }
 
 BLUE_INTERFACE( IEveShadowCaster ) :
@@ -54,8 +47,8 @@ BLUE_INTERFACE( IEveShadowCaster ) :
 {
 	// Used for cascaded shadow map
 	virtual bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const = 0;
-	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) = 0;
-	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator * accumulator ) = 0;
+	virtual void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) = 0;
+	virtual Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) = 0;
 };
 
 REGISTER_COMPONENT_TYPE( "ShadowCaster", IEveShadowCaster );

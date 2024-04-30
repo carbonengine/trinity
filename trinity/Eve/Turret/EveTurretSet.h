@@ -150,6 +150,16 @@ public:
 	// ITr2DebugRenderable
 	void GetDebugOptions( Tr2DebugRendererOptions& options ) override;
 	void RenderDebugInfo( ITr2DebugRenderer2& renderer ) override;
+	
+	//////////////////////////////////////////////////////////////////////////////////////
+	// EveEntity
+	void RegisterComponents() override;
+
+	//////////////////////////////////////////////////////////////////////////////////////
+	// IEveShadowCaster
+	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
+	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
+	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
 
 	//////////////////////////////////////////////////////////////////////////////////////
 	// EveEntity
@@ -178,7 +188,7 @@ public:
 	// rendering
 	void UpdateVisibility( const TriFrustum& frustum );
 	void GetRenderables( std::vector<ITr2Renderable*>& renderables, const Vector4* shLighting );
-
+	
 	// rebuild the bounding sphere size
 	void RebuildBoundingSphere();
 	// disable LODing
