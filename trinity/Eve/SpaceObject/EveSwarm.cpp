@@ -944,7 +944,6 @@ Vector3 EveSwarm::RemoveSwarmer()
 	m_vehicles.pop_back();
 	m_renderables[m_targetIndex]->InitializeRenderable( nullptr, nullptr );
 
-	auto componentRegistry = GetComponentRegistry();
 	if( componentRegistry )
 	{
 		m_renderables[m_targetIndex]->UnRegister( componentRegistry );

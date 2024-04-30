@@ -640,6 +640,8 @@ private:
 	// for "fake" scenes like ship fitting etc
 	bool m_enableShadows;
 
+	ShadowQuality m_shadowQuality;
+
 	BlueSharedString m_shadowAlgorithm;
 	const BlueSharedString m_shadowAlgorithmName = BlueSharedString( "SHADOW_ALGORITHM" );
 

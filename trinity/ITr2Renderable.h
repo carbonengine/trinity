@@ -54,8 +54,6 @@ BLUE_INTERFACE( ITr2Renderable ) :
 };
 REGISTER_COMPONENT_TYPE( "ReflectionRenderable", ITr2Renderable );
 
-REGISTER_COMPONENT_TYPE( "ReflectionRenderable", ITr2Renderable );
-
 struct ITr2RenderableEntry
 {
     ITr2Renderable* m_object;

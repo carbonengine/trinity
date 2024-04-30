@@ -121,15 +121,6 @@ void EveChildMesh::RegisterComponents()
 		}
 	}
 }
-// --------------------------------------------------------------------------------
-// Description:
-//   Check if the object is casting a shadow in the camera/shadow frustums
-bool EveChildMesh::IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const
-{
-	if( !m_display || !m_castShadow )
-	{
-		return false;
-	}
 
 // --------------------------------------------------------------------------------
 // Description:
@@ -372,11 +363,6 @@ Tr2PerObjectData* EveChildMesh::GetPerObjectData( ITriRenderBatchAccumulator* ac
 	perObjectData->Initialize( this, &m_perObjectDataVs, &m_perObjectDataPs );
 
 	return perObjectData;
-}
-
-Tr2PerObjectData* EveChildMesh::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
-{
-	return GetPerObjectData( accumulator );
 }
 
 uint32_t EveChildMesh::GetPerObjectDataSize( Tr2RenderContextEnum::ShaderType shaderType ) const

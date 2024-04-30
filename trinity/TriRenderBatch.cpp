@@ -70,23 +70,6 @@ void TriRenderBatchAreaBlocksWithSharedMaterial::Clear()
 	m_areaBlockVector.clear();
 }
 
-
-TriRenderBatchAreaBlocksWithSharedMaterial::TriRenderBatchAreaBlocksWithSharedMaterial()
-{
-}
-
-
-void TriRenderBatchAreaBlocksWithSharedMaterial::Optimize()
-{
-	TriRenderBatchAreaBlock::Optimize(m_areaBlockVector);
-}
-
-void TriRenderBatchAreaBlocksWithSharedMaterial::Clear()
-{
-	m_areaBlockVector.clear();
-}
-
-
 void Tr2RenderBatch::SetMaterial( Tr2Material* material )
 {
 	m_material = material;

@@ -471,7 +471,6 @@ void EveSpaceScene::Update( Be::Time realTime, Be::Time simTime )
 void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 {
 	CCP_STATS_ZONE( __FUNCTION__ );
-	GPU_REGION( renderContext, "Cascaded shadows" );
 
 	if( !m_cascadedShadowMap || !m_componentRegistry )
 	{
@@ -520,9 +519,6 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 		return;
 	}
 
-	std::vector<std::vector<Tr2PerObjectData*>> perObjectData;
-	perObjectData.resize( SHADOW_FRUSTUM_COUNT );
-
 	// Get shadow batches in parallel
 	std::vector<size_t> indices;
 
@@ -532,35 +528,13 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 	for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 	{
 		indices.push_back( i );
-		perObjectData[i].reserve( shadowCasterCount );
-	}
-
-	{
-		CCP_STATS_ZONE( "GetShadowCasterInfo" );
-		unsigned int shadowMapSize = m_cascadedShadowMap->GetShadowMapSize();
-
-		m_componentRegistry->ProcessComponents<IEveShadowCaster>( [this, &indices, shadowMapSize]( IEveShadowCaster* caster ) -> void {
-			float radius;
-
-			for( size_t index : indices )
-			{
-				if( caster->IsCastingShadow( m_cameraFrustums[index], m_shadowFrustums[index], shadowMapSize, m_sunData.DirWorld, radius ) )
-				{
-					EveShadowCaster::Info i;
-					i.caster = caster;
-					i.size = radius;
-					m_shadowCasters[index].push_back( i );
-				}
-			}
-		} 
-		);
 	}
 
 	{
 		CCP_STATS_ZONE( "GetBatches" );
 		unsigned int shadowMapSize = m_cascadedShadowMap->GetShadowMapSize();
 		auto shadowCasters = m_componentRegistry->GetComponents<IEveShadowCaster>();
-	
+
 		{
 			CCP_STATS_ZONE( "Find shadow casters" );
 			Tr2ParallelDo( begin( indices ), end( indices ), [&]( size_t frustumIndex ) {
@@ -592,7 +566,7 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 				auto batches = m_shadowBatches[frustumIndex].get();
 				for( auto& info : shadowCasterInfo[frustumIndex] )
 				{
-					info.perObjectData = info.caster->GetShadowPerObjectData(batches);
+					info.perObjectData = info.caster->GetShadowPerObjectData( batches );
 				}
 			}
 		}
@@ -611,56 +585,56 @@ void EveSpaceScene::SetupCascadedShadows( Tr2RenderContext& renderContext )
 	}
 
 	{
-		GPU_REGION(renderContext, "Cascaded shadow maps");
+		GPU_REGION( renderContext, "Cascaded shadow maps" );
 
 		{
-			GPU_REGION(renderContext, "Cascade rendering");
+			GPU_REGION( renderContext, "Cascade rendering" );
 
-			for (unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i)
+			for( unsigned int i = 0; i < SHADOW_FRUSTUM_COUNT; ++i )
 			{
-				if (shadowCasterInfo[i].empty())
+				if( shadowCasterInfo[i].empty() )
 				{
 					continue;
 				}
 
-				m_cascadedShadowMap->BeginShadowRendering(renderContext, i);
+				m_cascadedShadowMap->BeginShadowRendering( renderContext, i );
 
 				// column_major for shaders
 				PerFrameVSData data;
-				data.ViewProjectionMat = Transpose(m_splitSetup[i].lightViewProjection);
+				data.ViewProjectionMat = Transpose( m_splitSetup[i].lightViewProjection );
 
 				static const unsigned perFrameVsMask =
-					(1 << VERTEX_SHADER) |
-					SHADER_TYPE_EXISTS(COMPUTE_SHADER) |
-					SHADER_TYPE_EXISTS(GEOMETRY_SHADER) |
-					SHADER_TYPE_EXISTS(HULL_SHADER) |
-					SHADER_TYPE_EXISTS(DOMAIN_SHADER);
-				FillAndSetConstants(m_shadowPerFrameVSBuffer, &data, sizeof(data), perFrameVsMask, Tr2Renderer::GetPerFrameVSStartRegister(), renderContext);
+					( 1 << VERTEX_SHADER ) |
+					SHADER_TYPE_EXISTS( COMPUTE_SHADER ) |
+					SHADER_TYPE_EXISTS( GEOMETRY_SHADER ) |
+					SHADER_TYPE_EXISTS( HULL_SHADER ) |
+					SHADER_TYPE_EXISTS( DOMAIN_SHADER );
+				FillAndSetConstants( m_shadowPerFrameVSBuffer, &data, sizeof( data ), perFrameVsMask, Tr2Renderer::GetPerFrameVSStartRegister(), renderContext );
 
 				//***** Do the actual shadow rendering to the atlas (cascaded shadow depth map)
 				{
-					CCP_STATS_ZONE("ShadowRendering");
+					CCP_STATS_ZONE( "ShadowRendering" );
 
-					renderContext.m_esm.SetInvertedDepthTest(false);
-					ON_BLOCK_EXIT([&] { renderContext.m_esm.SetInvertedDepthTest(true); });
-					renderContext.m_esm.ApplyStandardStates(Tr2EffectStateManager::RM_OPAQUE);
-					renderContext.RenderBatches(m_shadowBatches[i].get(), BlueSharedString("Shadow"));
+					renderContext.m_esm.SetInvertedDepthTest( false );
+					ON_BLOCK_EXIT( [&] { renderContext.m_esm.SetInvertedDepthTest( true ); } );
+					renderContext.m_esm.ApplyStandardStates( Tr2EffectStateManager::RM_OPAQUE );
+					renderContext.RenderBatches( m_shadowBatches[i].get(), BlueSharedString( "Shadow" ) );
 				}
 
 				m_shadowBatches[i]->Clear();
 				m_shadowAllocators[i].Clear();
 			}
-			m_cascadedShadowMap->EndShadowRendering(renderContext);
+			m_cascadedShadowMap->EndShadowRendering( renderContext );
 		}
 
-		PopulatePerFramePSData(m_perFramePS, renderContext);
-		ApplyPerFrameData(renderContext);
-		SetupPlanetsAsShadowCaster(renderContext);
-		m_cascadedShadowMap->DrawToShadowMapResult(renderContext, m_depthMap);
+		PopulatePerFramePSData( m_perFramePS, renderContext );
+		ApplyPerFrameData( renderContext );
+		SetupPlanetsAsShadowCaster( renderContext );
+		m_cascadedShadowMap->DrawToShadowMapResult( renderContext, m_depthMap );
 
-		if (m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0)
+		if( m_componentRegistry && m_volumetricsRenderer && volumetricCount > 0 )
 		{
-			m_volumetricsRenderer->RenderShadows(*m_componentRegistry, m_cascadedShadowMap->GetShadowMap(), renderContext);
+			m_volumetricsRenderer->RenderShadows( *m_componentRegistry, m_cascadedShadowMap->GetShadowMap(), renderContext );
 		}
 	}
 }
