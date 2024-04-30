@@ -1348,7 +1348,6 @@ HRESULT Tr2PrimaryRenderContextAL::CreateSwapChainForHwnd(
 	{
 		m_upscalingTechnique->ReplaceSwapchain( swapchain, hWnd, commandQueue );
 	}
-	swapChain
 	return S_OK;
 }
 

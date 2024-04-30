@@ -3,7 +3,6 @@
 // Created:		April 2024
 // Copyright:	CCP 2024
 //
-#pragma once
 
 #include "StdAfx.h"
 
@@ -111,8 +110,8 @@ bool Tr2Fsr3UpscalingTechnique::ReplacesSwapchain() const
 void Tr2Fsr3UpscalingTechnique::ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swapchain, Tr2WindowHandle hwnd, ID3D12CommandQueue* commandQueue )
 {
 	// Create frameinterpolation swapchain
-	auto dx12Swapchain = swapchain;
-	FfxSwapchain ffxSwapChain = ffxGetSwapchainDX12( swapchain );
+	auto dx12Swapchain = swapchain.Detach();
+	FfxSwapchain ffxSwapChain = ffxGetSwapchainDX12( dx12Swapchain );
 
 	// make sure swapchain is not holding a ref to real swapchain
 	//GetFramework()->GetSwapChain()->GetImpl()->SetDXGISwapChain( nullptr );
