@@ -5,6 +5,7 @@
 
 class Tr2RtShaderTableAL;
 
+BLUE_DECLARE( TriTextureRes );
 
 BLUE_CLASS( Tr2RaytracingManager ) : public IRoot
 {
@@ -18,7 +19,10 @@ public:
 
 	void RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, Tr2RenderContext& renderContext );
 	
+	bool OnPrepareResources();
 	void ReleaseResources( TriStorage s );
+
+	void SetBlankTexture();
 
 private:
 		 
@@ -38,6 +42,9 @@ private:
 	float m_sunAngle;
 	// debug
 	bool m_applyDenoiser;
+
+	// White texture for no shadow
+	TriTextureResPtr m_whiteTexture;
 };
 
 TYPEDEF_BLUECLASS( Tr2RaytracingManager );

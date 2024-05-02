@@ -128,6 +128,8 @@ public:
 	Tr2GrannyAnimation* GetAnimationController() const override;
 	void SetAnimationController( Tr2GrannyAnimation* animation );
 
+	void SetInstanceCount( unsigned int count );
+
 protected:
 	void InitializeAnimation();
 	bool ShouldReflect() const;
@@ -178,6 +180,8 @@ protected:
 
 	void UpdateRtMesh();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+	std::vector<Matrix> m_instanceTransforms;
+	unsigned int m_instanceCount;
 
 };
 

@@ -1,8 +1,7 @@
 #include "StdAfx.h"
 #include "Tr2RaytracingManager.h"
-
 #include "Shader/Tr2Shader.h"
-
+#include "Resources/TriTextureRes.h"
 #include "ITr2TextureProvider.h"
 #include "Tr2RenderTarget.h"
 #include "Tr2Renderer.h"
@@ -44,6 +43,7 @@ Tr2RaytracingManager::Tr2RaytracingManager( IRoot* lockobj ) :
 	m_shadowEffect->SetEffectPathName( "res:/graphics/effect/managed/space/system/raytracing/rtshadows.fx" );
 
 	m_denoiser.CreateInstance();
+	m_whiteTexture.CreateInstance();
 }
 
 Tr2RaytracingManager::~Tr2RaytracingManager()
@@ -54,6 +54,40 @@ Tr2RaytracingManager::~Tr2RaytracingManager()
 Tr2RaytracingGeometry& Tr2RaytracingManager::GetGeometry()
 {
 	return *m_geometry;
+}
+
+bool Tr2RaytracingManager::OnPrepareResources()
+{
+	if( !m_whiteTexture->IsValid() )
+	{
+		BeResMan->GetResource( "res:/texture/global/white.dds", "", m_whiteTexture );
+	}
+
+	return true;
+}
+
+void Tr2RaytracingManager::ReleaseResources( TriStorage s )
+{
+	m_geometry->ReleaseResources( s );
+
+	m_geometry = nullptr;
+	m_shadowEffect = nullptr;
+	m_destTex = Tr2RenderTargetPtr();
+	m_denoiser = nullptr;
+	m_whiteTexture = nullptr;
+
+	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
+	{
+		m_shadowPerFrameData = Tr2ConstantBufferAL();
+	}
+}
+
+void Tr2RaytracingManager::SetBlankTexture()
+{
+	if( m_whiteTexture->IsValid() )
+	{
+		GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_whiteTexture );
+	}
 }
 
 void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2TextureProvider* normal, const Vector3& sunDirection, Tr2RenderContext& renderContext )
@@ -158,20 +192,5 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 	else
 	{
 		GlobalStore().RegisterVariable( "EveSpaceSceneShadowMap", m_destTex );
-	}
-}
-
-void Tr2RaytracingManager::ReleaseResources( TriStorage s )
-{
-	m_geometry->ReleaseResources( s );
-
-	m_geometry = nullptr;
-	m_shadowEffect = nullptr;
-	m_destTex = Tr2RenderTargetPtr();
-	m_denoiser = nullptr;	
-	
-	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
-	{
-		m_shadowPerFrameData = Tr2ConstantBufferAL();
 	}
 }

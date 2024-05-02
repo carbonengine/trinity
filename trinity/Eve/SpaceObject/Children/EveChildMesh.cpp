@@ -32,6 +32,7 @@ EveChildMesh::EveChildMesh( IRoot* lockobj ):
 	m_activationStrength( 1.0f ),
 	m_origin( SPACE ),
 	m_reflectionMode( EntityComponents::REFLECT_NEVER ),
+	m_instanceCount( 0 ),
 	EveChildTransform(),
 	EveEntity( lockobj )
 {
@@ -176,9 +177,9 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 
 		if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 		{
-			auto istanceBounds = instanced->GetInstanceBoundsClosestToPoint( frustum.m_viewPos, m_worldTransform.GetTranslation() );
-			m_currentInstanceScreenSize = frustum.GetPixelSizeAccross( istanceBounds );
-			m_mesh->UseWithScreenSize( m_currentInstanceScreenSize, CcpMath::Sphere( istanceBounds ).radius );
+			auto instanceBounds = instanced->GetInstanceBoundsClosestToPoint( frustum.m_viewPos, m_worldTransform.GetTranslation() );
+			m_currentInstanceScreenSize = frustum.GetPixelSizeAccross( instanceBounds );
+			m_mesh->UseWithScreenSize( m_currentInstanceScreenSize, CcpMath::Sphere( instanceBounds ).radius );
 		}
 		else
 		{
@@ -222,6 +223,7 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 		if( g_eveSpaceSceneRaytracedShadows )
 		{
 			UpdateRtMesh();
+			// add update rt animation 
 		}
 	}
 }
@@ -268,7 +270,7 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 
 					if (geometryRes)
 					{
-						// runn over every decal and update it
+						// run over every decal and update it
 						for (EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it)
 						{
 							// now prep to get the renderables
@@ -285,7 +287,7 @@ void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 
 			if( geometryRes )
 			{
-				// runn over every decal and update it
+				// run over every decal and update it
 				for( EveSpaceObjectDecalVector::const_iterator it = m_decals.begin(); it != m_decals.end(); ++it )
 				{
 					// now prep to get the renderables
@@ -380,11 +382,28 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	{
 		m_rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
 	}
-	EveSpaceObjectPSData* perObjectData;
-	m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
-	*perObjectData = m_psData;
-	m_rtPerObjectData.Unlock( renderContext );
 
+
+	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
+	{
+		if( !instanced->GetDisplay() )
+		{
+			return;
+		}
+
+		for( auto it = m_instanceTransforms.begin(); it != m_instanceTransforms.end(); ++it )
+		{
+
+		}
+
+	}
+	else
+	{
+		EveSpaceObjectPSData* perObjectData;
+		m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
+		*perObjectData = m_psData;
+		m_rtPerObjectData.Unlock( renderContext );
+	}
 	const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
 	for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
 	{
@@ -398,6 +417,12 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 			}
 		}
 	}
+}
+
+void EveChildMesh::SetInstanceCount( unsigned int count )
+{
+	m_instanceCount = count;
+	m_instanceTransforms.reserve( m_instanceCount );
 }
 
 float EveChildMesh::GetSortValue()

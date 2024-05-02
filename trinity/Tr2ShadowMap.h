@@ -79,7 +79,7 @@ public:
 	const unsigned int GetShadowMapSize() const;
 	Tr2EffectPtr GetShadowEffect() const;
 	bool GetDebugSplitValue() const;
-	void SetNoShadow();
+	void SetBlankTexture();
 
 	uint32_t GetDebugColors( int switchCase ) const;
 
