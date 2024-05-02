@@ -41,7 +41,6 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 	m_slSetFeatureLoaded( nullptr ),
 	m_slReflexSetMarker( nullptr ),
 	m_slGetNewFrameToken( nullptr ),
-	m_isAvailable( false ),
 	m_supportsFrameGeneration( false )
 {
 	m_streamlineSetup = false;
@@ -252,7 +251,7 @@ void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContex
 
 Tr2UpscalingAL::Result Tr2DlssUpscalingTechnique::Setup()
 {
-	if( !m_available || !m_streamlineSetup )
+	if( !m_isAvailable || !m_streamlineSetup )
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}

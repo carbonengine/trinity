@@ -52,7 +52,6 @@ private:
 	bool TogglePlugin( sl::Feature feature, bool enable );
 
 	CComPtr<ID3D12Device> m_proxyDevice;
-	bool m_available;
 
 	uint32_t m_adapter;
 	
