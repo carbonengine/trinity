@@ -317,8 +317,11 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 
 	INITIALIZE_SL_FEATURE_FUNC( slDLSSGetOptimalSettings, sl::kFeatureDLSS );
 	INITIALIZE_SL_FEATURE_FUNC( slDLSSSetOptions, sl::kFeatureDLSS );
-	INITIALIZE_SL_FEATURE_FUNC( slDLSSGGetState, sl::kFeatureDLSS_G );
-	INITIALIZE_SL_FEATURE_FUNC( slDLSSGSetOptions, sl::kFeatureDLSS_G );
+	if( frameGeneration )
+	{
+		INITIALIZE_SL_FEATURE_FUNC( slDLSSGGetState, sl::kFeatureDLSS_G );
+		INITIALIZE_SL_FEATURE_FUNC( slDLSSGSetOptions, sl::kFeatureDLSS_G );
+	}
 
 	INITIALIZE_SL_FUNC( streamlineModule, slSetTag );
 	INITIALIZE_SL_FUNC( streamlineModule, slSetConstants );
