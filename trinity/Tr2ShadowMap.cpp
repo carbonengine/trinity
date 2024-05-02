@@ -122,7 +122,7 @@ void Tr2ShadowMap::ReleaseResources( TriStorage s )
 
 	m_denoiser = nullptr;
 
-	SetNoShadow();
+	SetBlankTexture();
 }
 
 
@@ -158,12 +158,12 @@ bool Tr2ShadowMap::OnPrepareResources()
 		BeResMan->GetResource( "res:/texture/global/white.dds", "", m_whiteTexture );
 	}
 
-	SetNoShadow();
+	SetBlankTexture();
 
 	return true;
 }
 
-void Tr2ShadowMap::SetNoShadow()
+void Tr2ShadowMap::SetBlankTexture()
 {
 	if( m_shadowMapHandle )
 	{

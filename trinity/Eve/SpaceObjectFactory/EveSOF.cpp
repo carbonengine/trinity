@@ -2137,6 +2137,8 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		
 		EveChildMeshPtr childMesh;
 		childMesh.CreateInstance();
+
+		childMesh->SetInstanceCount( him->instances.size() );
 		
 		std::vector<EveSOFDataMgr::HullMeshInstance> instances;
 		// propogate the instances to the offsets and resize the bounds
@@ -2168,7 +2170,8 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		{
 			instances = him->instances;
 		}
-		
+		// Upload instances to evechildmesh
+
 		auto instancedMesh = CreateInstancedMesh( instances, him->geometryResPath );
 
 		Tr2MeshAreaVector* areas = instancedMesh->GetAreas( TRIBATCHTYPE_OPAQUE );

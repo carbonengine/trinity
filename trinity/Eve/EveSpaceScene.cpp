@@ -643,7 +643,7 @@ void EveSpaceScene::DisableShadows()
 {
 	if( m_cascadedShadowMap )
 	{
-		m_cascadedShadowMap->SetNoShadow();
+		m_cascadedShadowMap->SetBlankTexture();
 	}
 }
 
@@ -1406,11 +1406,6 @@ void EveSpaceScene::PrepareRaytracedShadows( Tr2RenderContext& renderContext )
 		caster->PushRtGeometry( *m_rtManager );
 	} );
 
-	/*
-	for( auto it = m_objects.begin(); it != m_objects.end(); ++it )
-	{
-		( *it )->PushRtGeometry( *m_rtManager );
-	}*/
 	m_rtManager->GetGeometry().EndSceneUpdate( renderContext );
 }
 
@@ -1647,7 +1642,12 @@ void EveSpaceScene::RenderReflectionPass( Tr2RenderContext& renderContext )
 	// disable shadows
 	if( m_cascadedShadowMap )
 	{
-		m_cascadedShadowMap->SetNoShadow();
+		m_cascadedShadowMap->SetBlankTexture();
+	}
+
+	if( m_rtManager )
+	{
+		m_rtManager->SetBlankTexture();
 	}
 
 	m_reflectionProbe->InitRenderPass( renderContext );

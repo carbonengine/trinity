@@ -58,11 +58,6 @@ const Be::ClassInfo* Tr2ShadowMap::ExposeToBlue()
 			"If enabled color pixels based on splits",
 			Be::READWRITE | Be::NOTIFY )
 
-		MAP_METHOD_AND_WRAP(
-			"SetNoShadow",
-			SetNoShadow,
-			"Set to disable shadows" )
-
 		MAP_ATTRIBUTE(
 			"SplitNr0",
 			m_splitValues[0],
