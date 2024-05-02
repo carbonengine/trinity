@@ -162,7 +162,7 @@ TriStepResult TriStepRenderFps::Execute( Be::Time realTime, Be::Time simTime, Tr
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
 		renderContext.GetRenderTargetSize( displayWidth, displayHeight );
-		upscalingInfo = renderContext.GetUpscalingInfo( displayWidth, displayHeight );
+		upscalingInfo = renderContext.GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
 	}
 	std::string displayResolution = std::to_string( displayWidth ) + "x" + std::to_string( displayHeight );
 

@@ -368,7 +368,8 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	m_scene->SetVelocityMap( nullptr );
 	uint32_t w, h;
 	Tr2Renderer::GetBackBufferDimensions( w, h );
-	auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext(w, h);
+
+	auto upscalingContext = renderContext.GetPrimaryRenderContext().GetUpscalingContext( Tr2Renderer::GetUpscalingContextID() );
 	auto upscalingEnabled = upscalingContext != nullptr;
 	if( upscalingEnabled )
 	{

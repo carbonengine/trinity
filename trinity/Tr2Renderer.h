@@ -168,6 +168,9 @@ public:
 	static float GetAnimationTime();
 	static float GetAnimationTimeElapsed( float startTime );
 
+	static uint32_t GetUpscalingContextID();
+	static void SetUpscalingContextID( uint32_t upscalingContextID );
+
 	// Text output for debugging purposes.
 	// Calls to Printf gather up text - text is rendered on RenderDebugInfo.
 	// This allows calls to Printf outside the rendering phase.

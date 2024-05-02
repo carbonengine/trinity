@@ -38,6 +38,7 @@ namespace
 	unsigned int s_perObjectPSStartRegister = 4;
 	unsigned int s_perObjectVSGUIStartRegister = 6;
 
+	uint32_t s_upscalingContextID = 0;
 
 	TriPoolAllocator* s_poolAllocator = NULL;
 	// keep an array of directories which are to exclude from texture-sizing
@@ -572,6 +573,17 @@ Vector3 Tr2Renderer::GetViewLookAt()
 	v.y = s_viewTransform._23;
 	v.z = s_viewTransform._33;
 	return v;
+}
+
+
+uint32_t Tr2Renderer::GetUpscalingContextID()
+{
+	return s_upscalingContextID;
+}
+
+void Tr2Renderer::SetUpscalingContextID( uint32_t upscalingContextID )
+{
+	s_upscalingContextID = upscalingContextID;
 }
 
 Vector4 ColorToVec4( uint32_t color )

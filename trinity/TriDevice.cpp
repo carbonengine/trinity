@@ -1168,26 +1168,30 @@ void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingA
 	m_upscalingWithFrameGeneration = frameGeneration;
 }
 
-void TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
-	renderContext.CreateUpscalingContext( displayWidth, displayHeight, sourceFormat, depthFormat );
+	auto context = renderContext.CreateUpscalingContext( displayWidth, displayHeight, sourceFormat, depthFormat );
+	if( context )
+	{
+		return context->GetID();
+	}
+	return 0;
 }
 
-Vector2 TriDevice::GetRenderResolution( uint32_t displayWidth, uint32_t displayHeight )
+Vector2 TriDevice::GetRenderResolution( uint32_t upscalingContextId )
 {
-	uint32_t renderWidth = displayWidth;
-	uint32_t renderHeight = displayHeight;
-
 	if( m_upscalingTechnique != Tr2UpscalingAL::Technique::NONE )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-		auto upscalingContext = renderContext.GetUpscalingContext( displayWidth, displayHeight );
+		auto upscalingContext = renderContext.GetUpscalingContext( upscalingContextId );
 
 		if( upscalingContext != nullptr )
 		{
+			uint32_t renderWidth, renderHeight;
 			upscalingContext->GetRenderDimensions( renderWidth, renderHeight );
+			return Vector2( float( renderWidth ), float( renderHeight ) );
 		}
 	}
-	return Vector2( float(renderWidth), float(renderHeight) );
+	return Vector2( -1.0f, -1.0 );
 }

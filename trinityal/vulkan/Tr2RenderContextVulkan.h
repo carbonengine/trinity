@@ -296,7 +296,7 @@ public:
 		return Tr2UpscalingAL::PLATFORM_NOT_SUPPORTED;
 	}
 
-	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID )
 	{
 		return nullptr;
 	}
@@ -317,7 +317,7 @@ public:
 		framegeneration = false;
 	}
 
-	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight );
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID );
 	{
 		return Tr2UpscalingAL::UpscalingInfo();
 	}

@@ -121,7 +121,7 @@ public:
 	virtual bool SupportsFrameGeneration( ) const;
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const = 0;
 
-	Tr2UpscalingContextAL* GetContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight );
+	Tr2UpscalingContextAL* GetContext( Tr2RenderContextAL& renderContext, uint32_t upscalingContextID );
 	Tr2UpscalingContextAL* CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 
 	void GetState( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& frameGeneration );
@@ -156,6 +156,8 @@ public:
 	float GetMipLevelBias() const;
 	void Reset();
 
+	uint32_t GetID() const;
+
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) = 0;
 
 protected:
@@ -179,6 +181,9 @@ protected:
 
 	Tr2RenderContextEnum::PixelFormat m_sourceFormat;
 	Tr2RenderContextEnum::DepthStencilFormat m_depthFormat;
+
+private:
+	uint32_t m_id;
 };
 
 

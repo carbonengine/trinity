@@ -1285,14 +1285,14 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 	return result;
 }
 
-Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscalingContextID )
 {
 	if( m_upscalingTechnique == nullptr )
 	{
 		return nullptr;
 	}
 
-	return m_upscalingTechnique->GetContext( *this, displayWidth, displayHeight );
+	return m_upscalingTechnique->GetContext( *this, upscalingContextID );
 }
 
 Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat)
@@ -1328,9 +1328,9 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderCont
     return supportedTechniques;
 }
 
-Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
 {
-	auto context = GetUpscalingContext( displayWidth, displayHeight );
+	auto context = GetUpscalingContext( upscalingContextID );
 	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
 
 	if( context != nullptr )
@@ -1341,6 +1341,7 @@ Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t dis
 
 		context->GetJitter( info.jitterX, info.jitterY );
 		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
+		context->GetDisplayDimensions( info.displayWidth, info.displayHeight );
 		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
 	}
 	return info;

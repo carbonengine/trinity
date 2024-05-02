@@ -412,7 +412,7 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 	return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 }
 
-Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscalingContextID )
 {
 	return nullptr;
 }
@@ -422,7 +422,7 @@ Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( uint32_t disp
 	return nullptr;
 }
 
-Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
 {
 	return Tr2UpscalingAL::UpscalingInfo();
 }

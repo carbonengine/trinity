@@ -1020,6 +1020,9 @@ set(_SOURCES
     RenderJob/TriStepSetStandardRenderStates.cpp
     RenderJob/TriStepSetStandardRenderStates.h
     RenderJob/TriStepSetStandardRenderStates_Blue.cpp
+    RenderJob/TriStepSetUpscalingContextID.cpp
+    RenderJob/TriStepSetUpscalingContextID.h
+    RenderJob/TriStepSetUpscalingContextID_Blue.cpp
     RenderJob/TriStepSetVariableStore.cpp
     RenderJob/TriStepSetVariableStore.h
     RenderJob/TriStepSetVariableStore_Blue.cpp

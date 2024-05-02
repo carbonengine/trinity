@@ -368,7 +368,6 @@ void Tr2Fsr3UpscalingContext::GenerateFrame( Tr2RenderContextAL& renderContext )
 		m_frameGeneration = false;
 		return;
 	}
-	CCP_LOGERR( "FSR3 configured frame gen" );
 
 	renderContext.DirtyDescriptorCache();
 }
@@ -430,7 +429,6 @@ Tr2UpscalingAL::Result Tr2Fsr3UpscalingContext::Dispatch( Tr2RenderContextAL& re
 
 	// the descriptor cache is dirty, mark it so
 	renderContext.DirtyDescriptorCache();
-	CCP_LOGERR( "FSR3 dispatched" );
 
 	return Tr2UpscalingAL::Result::OK;
 }

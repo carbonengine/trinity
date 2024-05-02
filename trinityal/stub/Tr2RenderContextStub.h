@@ -213,9 +213,9 @@ public:
 		uint32_t& mips ) const;
 
 	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
-	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t displayWidth, uint32_t displayHeight );
+	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID );
 	Tr2UpscalingContextAL* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
-	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t displayWidth, uint32_t displayHeight );
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID );
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
 	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration );
 	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );

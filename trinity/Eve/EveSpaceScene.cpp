@@ -1069,11 +1069,8 @@ void EveSpaceScene::BeginRender( Tr2RenderContext& renderContext )
 	}
 
 	renderContext.AddGpuMarker( __FUNCTION__ );
+	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( Tr2Renderer::GetUpscalingContextID() );
 
-	uint32_t w, h;
-	Tr2Renderer::GetBackBufferDimensions( w, h );
-
-	auto upscalingInfo = renderContext.GetPrimaryRenderContext().GetUpscalingInfo( w, h );
 	m_usingUpscaling = upscalingInfo.technique != Tr2UpscalingAL::NONE;
 	m_jitter.x = upscalingInfo.jitterX;
 	m_jitter.y = upscalingInfo.jitterY;

@@ -194,31 +194,24 @@ void Tr2UpscalingTechniqueAL::MarkFrameEvent( Tr2RenderContextAL& renderContext,
 }
 
 
-Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight )
+Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& renderContext, uint32_t upscalingContextID )
 {
-	uint32_t key = displayWidth + displayHeight;
-
-	if( m_contexts.find( key ) == m_contexts.end() )
+	if( m_contexts.find( upscalingContextID ) == m_contexts.end() )
 	{
-		CCP_LOGWARN( "Tr2UpscalingTechniqueAL:GetContext Context does not exist for (%d, %d)", displayWidth, displayHeight );
+		CCP_LOGWARN( "Tr2UpscalingTechniqueAL:GetContext Context does not exist for id %d", upscalingContextID );
 		return nullptr;
 	}
 
-	return m_contexts[key].get();
+	return m_contexts[upscalingContextID].get();
 }
 
 Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 {
-	uint32_t key = displayWidth + displayHeight;
+	auto context = CreateContextInstance( displayWidth, displayHeight, sourceFormat, depthFormat );
+	context->Setup( renderContext );
+	m_contexts[context->GetID()].reset( context );
 
-	if( m_contexts.find( key ) == m_contexts.end() )
-	{
-		auto context = CreateContextInstance( displayWidth, displayHeight, sourceFormat, depthFormat );
-		context->Setup( renderContext );
-		m_contexts[key].reset( context );
-	}
-
-	return m_contexts[key].get();
+	return context;
 }
 
 bool Tr2UpscalingTechniqueAL::IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const
@@ -248,10 +241,17 @@ Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t di
 	m_sourceFormat( sourceFormat ),
 	m_depthFormat( depthFormat )
 {
+	static uint32_t CONTEXT_ID = 0; 
+	m_id = CONTEXT_ID++;
 }
 
 Tr2UpscalingContextAL::~Tr2UpscalingContextAL()
 {
+}
+
+uint32_t Tr2UpscalingContextAL::GetID() const
+{
+	return m_id;
 }
 
 void Tr2UpscalingContextAL::GetRenderDimensions( uint32_t& width, uint32_t& height ) const

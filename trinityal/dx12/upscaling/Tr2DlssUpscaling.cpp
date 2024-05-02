@@ -409,6 +409,12 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Setup( Tr2RenderContextAL& rende
 	m_renderWidth = m_optimalSettings.optimalRenderWidth;
 	m_renderHeight = m_optimalSettings.optimalRenderHeight;
 
+	if( m_renderWidth == 0 || m_renderHeight == 0 )
+	{
+		m_renderWidth = m_displayWidth;
+		m_renderHeight = m_displayHeight;
+	}
+
 	m_upscaling = (float)m_options.outputHeight / (float)m_renderHeight;
 
 	m_jitterSequence = Tr2UpscalingAL::GenerateHaltonSequence( 8 * (uint32_t)powf( m_upscaling, 2.0f ), 2, 3 );
@@ -468,10 +474,13 @@ bool Tr2DlssUpscalingContext::IsTemporal() const
 
 void Tr2DlssUpscalingContext::UpdateJitter()
 {
-	m_jitterX = m_jitterSequence[m_jitterIndex].first;
-	m_jitterY = m_jitterSequence[m_jitterIndex].second;
+	if( m_setup )
+	{
+		m_jitterX = m_jitterSequence[m_jitterIndex].first;
+		m_jitterY = m_jitterSequence[m_jitterIndex].second;
 
-	m_jitterIndex = ++m_jitterIndex % m_jitterSequence.size();
+		m_jitterIndex = ++m_jitterIndex % m_jitterSequence.size();
+	}
 }
 
 uint32_t Tr2DlssUpscalingContext::GetDispatchRequirements() const

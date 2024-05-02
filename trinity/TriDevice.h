@@ -242,8 +242,9 @@ private:
 
 	void PrepareUpscalingTechnique( uint32_t adapter );
 	void SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
-	void CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
-	Vector2 GetRenderResolution( uint32_t displayWidth, uint32_t displayHeight );
+
+	uint32_t CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	Vector2 GetRenderResolution( uint32_t upscalingContextId );
 	PTr2UpscalingTechniqueInfoStructureList m_supportedUpscalingTechniques;
 
 	bool SetPresentParameters( unsigned adapter, const Tr2PresentParametersAL& pp );
