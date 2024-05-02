@@ -28,14 +28,9 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 
     if( m_upscalingChanged )
     {
-        CCP_LOGNOTICE( "Metal device removed, reason: upscaler changed" );
-
-        ReleaseDeviceResources( TRISTORAGE_ALL );
-        
-        mDeviceLost = true;
-        Tr2RenderContext::DestroyMainThreadRenderContext();
-        m_upscalingChanged = false;
-        LogAllLiveResources();
+        CCP_LOGNOTICE( "Resetting device - Upscaler changed" );
+        PrepareUpscalingTechnique(mAdapter);
+        ResetDevice();
         return;
     }
     
