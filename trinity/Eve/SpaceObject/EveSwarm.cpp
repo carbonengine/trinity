@@ -985,18 +985,20 @@ void EveSwarm::SetCount( int count )
 
 void EveSwarm::RegisterComponents()
 {
+	EveShip2::RegisterComponents();
 	auto reg = GetComponentRegistry();
 	if( reg )
 	{
 		for( auto& renderable : m_renderables )
 		{
-			renderable->RegisterComponents();
+			renderable->Register( reg );
 		}
 	}
 }
 
 void EveSwarm::UnRegisterComponents()
 {
+	EveShip2::UnRegisterComponents();
 	auto reg = GetComponentRegistry();
 	if( reg )
 	{
