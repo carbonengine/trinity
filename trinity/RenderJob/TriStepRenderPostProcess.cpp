@@ -167,7 +167,7 @@ TriStepRenderPostProcess::TriStepRenderPostProcess(IRoot* lockobj) :
 	m_mergeHistogramXDim(0),
 	m_desaturateEnabled(false),
 	m_fadeEnabled(false),
-	m_lutEnabled(false),
+	m_lutsEnabled(0),
 	m_vignetteEnabled(false),
 	m_sceneDirty( false )
 {
@@ -195,14 +195,20 @@ TriStepRenderPostProcess::TriStepRenderPostProcess(IRoot* lockobj) :
 	m_tonemappingEffect->SetOption(BlueSharedString("FILM_GRAIN_TOGGLE"), BlueSharedString("FILM_GRAIN_DISABLED"));
 	m_tonemappingEffect->SetParameter(BlueSharedString("ExposureMiddleValue"), 0.5f);
 	m_tonemappingEffect->SetParameter(BlueSharedString("VignetteDetailSize"), Vector4(16.0, 16.0, 16.0, 16.0));
-	m_tonemappingEffect->SetParameter(BlueSharedString("LUTInfluence"), 0.0f);
+	m_tonemappingEffect->SetParameter(BlueSharedString("LUTInfluence_0"), 0.0f);
+	m_tonemappingEffect->SetParameter(BlueSharedString("LUTInfluence_1"), 0.0f);
+	m_tonemappingEffect->SetParameter(BlueSharedString("LUTInfluence_2"), 0.0f);
+	m_tonemappingEffect->SetParameter(BlueSharedString("LUTInfluence_3"), 0.0f);
 	m_tonemappingEffect->SetParameter(BlueSharedString("VignetteSineFrequency"), 1.0f);
 	m_tonemappingEffect->SetParameter(BlueSharedString("ExposureInfluence"), 1.0f);
 	m_tonemappingEffect->SetParameter(BlueSharedString("BloomBrightness"), 0.20000000298f);
 	m_tonemappingEffect->SetParameter(BlueSharedString("VignetteIntensity"), Vector4(0.0, 0.0, 0.0, 0.0));
 	m_tonemappingEffect->SetParameter(BlueSharedString("SaturationFactor"), 1.0f);
 	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("Grime"), "res:/texture/global/black.dds");
-	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("TexLUT"), "res:/dx9/scene/postprocess/LUTdefault.dds");
+	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("TexLUT_0"), "res:/dx9/scene/postprocess/LUTdefault.dds");
+	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("TexLUT_1"), "res:/dx9/scene/postprocess/LUTdefault.dds");
+	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("TexLUT_2"), "res:/dx9/scene/postprocess/LUTdefault.dds");
+	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("TexLUT_3"), "res:/dx9/scene/postprocess/LUTdefault.dds");
 	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("VignetteDetail"), "res:/texture/global/white.dds");
 	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("VignetteShape"), "res:/texture/global/black.dds");
 	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
@@ -286,7 +292,8 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	Tr2PPFilmGrainEffectPtr filmGrain = nullptr;
 	Tr2PPDesaturateEffectPtr desaturate = nullptr;
 	Tr2PPFadeEffectPtr fade = nullptr;
-	Tr2PPLutEffectPtr lut = nullptr;
+	std::vector<Tr2PPLutEffect*> luts = std::vector<Tr2PPLutEffect*>();
+	luts.reserve( 4 );
 	Tr2PPVignetteEffectPtr vignette = nullptr;
 	Tr2PPFogEffectPtr fog = nullptr;
 	Tr2PPTaaEffectPtr taa = nullptr;
@@ -305,7 +312,10 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		case MEDIUM:
 			bloom = postProcess->GetBloom();
 			desaturate = postProcess->GetDesaturate();
-			lut = postProcess->GetLut();
+			luts.push_back( postProcess->GetLut() );
+			luts.push_back( postProcess->GetAdditionalLut1() );
+			luts.push_back( postProcess->GetAdditionalLut2() );
+			luts.push_back( postProcess->GetAdditionalLut3() );
 			vignette = postProcess->GetVignette();
 		case LOW:
 			signalLoss = postProcess->GetSignalLoss();
@@ -345,7 +355,10 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		SetDirtyIfNotNull( filmGrain );
 		SetDirtyIfNotNull( desaturate );
 		SetDirtyIfNotNull( fade );
-		SetDirtyIfNotNull( lut );
+		for( auto& lut : luts )
+		{
+			SetDirtyIfNotNull( lut );
+		}
 		SetDirtyIfNotNull( vignette );
 		SetDirtyIfNotNull( fog );
 		SetDirtyIfNotNull( taa );
@@ -383,8 +396,6 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		RenderDynamicExposure( nonMsaaSource, renderContext, dynamicExposure );
 	}
 
-	
-
 	// this needs to be after dynamic exposure, since bloom can be exposure dependent
 	Tr2PostProcessRenderInfo::Texture bloomTexture;
 	if( ProcessBloom( bloom, dynamicExposure ) )
@@ -397,7 +408,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 
 	ProcessDesaturate(desaturate);
 	ProcessFade(fade);
-	ProcessLut(lut);
+	ProcessLut(luts);
 	ProcessVignette(vignette);
 	
 
@@ -1102,47 +1113,79 @@ void TriStepRenderPostProcess::ProcessFade(Tr2PPFadeEffect* fade)
 	}
 }
 
-void TriStepRenderPostProcess::ProcessLut(Tr2PPLutEffect* lut)
+void TriStepRenderPostProcess::ProcessLut( std::vector<Tr2PPLutEffect*> luts )
 {
-	if (lut && lut->IsActive())
+	bool tomeppingEffectUpdating = false;
+	uint8_t lutsActive = 0;
+	for( const auto& lut : luts )
 	{
-		if (lut->IsDirty())
+		if( lut && lut->IsActive() )
 		{
 			// we only need to update the tonemapping buffer
-			m_tonemappingEffect->StartUpdate();
-			m_tonemappingEffect->SetParameter(BlueSharedString("LUTInfluence"), lut->m_influence);
-			auto resource = m_tonemappingEffect->GetResourceByName("TexLUT");
-			if (!resource)
+			if( lut->IsDirty() )
 			{
-				m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("TexLUT"), lut->m_path.c_str());
-			}
-			else
-			{
-				const auto param = dynamic_cast<TriTextureParameter*>(resource);
-				const auto currPath = param->GetResourcePath();
-				const std::string possibleNewPathStr = lut->m_path.c_str();
+				std::string influenceParam = std::string( "LUTInfluence_" ) + std::to_string( lutsActive );
+				std::string textureParam = std::string( "TexLUT_" ) + std::to_string( lutsActive );
 
-				const std::wstring possibleNewPathWstr(possibleNewPathStr.begin(), possibleNewPathStr.end());
-
-				if (currPath != possibleNewPathWstr)
+				if( !tomeppingEffectUpdating )
 				{
-					param->SetResourcePath(lut->m_path.c_str());
+					m_tonemappingEffect->StartUpdate();
+					tomeppingEffectUpdating = true;
 				}
-			}
-			m_tonemappingEffect->SetOption(BlueSharedString("LUT_TOGGLE"), BlueSharedString("LUT_ENABLED"));
-			m_tonemappingEffect->EndUpdate();
 
-			lut->SetDirty(false);
-			m_lutEnabled = true;
+				m_tonemappingEffect->SetParameter( BlueSharedString( influenceParam ), lut->m_influence );
+				auto resource = m_tonemappingEffect->GetResourceByName( textureParam.c_str() );
+				if( !resource )
+				{
+					m_tonemappingEffect->AddResourceTexture2D( BlueSharedString( textureParam ), lut->m_path.c_str() );
+				}
+				else
+				{
+					const auto param = dynamic_cast<TriTextureParameter*>( resource );
+					const auto currPath = param->GetResourcePath();
+					const std::string possibleNewPathStr = lut->m_path.c_str();
+
+					const std::wstring possibleNewPathWstr( possibleNewPathStr.begin(), possibleNewPathStr.end() );
+
+					if( currPath != possibleNewPathWstr )
+					{
+						param->SetResourcePath( lut->m_path.c_str() );
+					}
+				}
+				m_tonemappingEffect->SetOption( BlueSharedString( "LUT_TOGGLE" ), BlueSharedString( "LUT_ENABLED" ) );
+
+				lut->SetDirty( false );
+			}
+			lutsActive++;
 		}
 	}
-	else if (m_lutEnabled)
+
+	if( m_lutsEnabled > lutsActive )
+	{
+		// need to remove all luts that may have been removed
+		if( !tomeppingEffectUpdating )
+		{
+			m_tonemappingEffect->StartUpdate();
+			tomeppingEffectUpdating = true;
+		}
+
+		std::string influenceParam = std::string( "LUTInfluence_" ) + std::to_string( lutsActive );
+		m_tonemappingEffect->SetParameter( BlueSharedString( influenceParam ), 0.0f );
+	}
+
+	if( tomeppingEffectUpdating )
+	{
+		m_tonemappingEffect->EndUpdate();
+	}
+	
+	if( lutsActive == 0 && m_lutsEnabled > 0 )
 	{
 		m_tonemappingEffect->StartUpdate();
 		m_tonemappingEffect->SetOption(BlueSharedString("LUT_TOGGLE"), BlueSharedString("LUT_DISABLED"));
 		m_tonemappingEffect->EndUpdate();
-		m_lutEnabled = false;
 	}
+
+	m_lutsEnabled = lutsActive;
 }
 
 void TriStepRenderPostProcess::ProcessVignette(Tr2PPVignetteEffect* vignette)
