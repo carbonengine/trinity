@@ -2137,9 +2137,8 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		
 		EveChildMeshPtr childMesh;
 		childMesh.CreateInstance();
+		std::vector<Matrix> instanceTransforms;
 
-		childMesh->SetInstanceCount( him->instances.size() );
-		
 		std::vector<EveSOFDataMgr::HullMeshInstance> instances;
 		// propogate the instances to the offsets and resize the bounds
 		if( offsets.size() > 1 || offsets[0] != IdentityMatrix() )
@@ -2163,7 +2162,6 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 
 					return i;
 				} );
-
 			}
 		}
 		else
@@ -2171,6 +2169,18 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 			instances = him->instances;
 		}
 		// Upload instances to evechildmesh
+		for( auto instance = instances.begin(); instance != instances.end(); ++instance )
+		{
+			Matrix m;
+;
+			memcpy( &instance->transform0, &m.GetX(), 4 * sizeof( float ) );
+			memcpy( &instance->transform1, &m.GetY(), 4 * sizeof( float ) );
+			memcpy( &instance->transform2, &m.GetZ(), 4 * sizeof( float ) );
+
+			instanceTransforms.push_back( m );
+		}
+
+		childMesh->SetInstanceTransforms( instanceTransforms );
 
 		auto instancedMesh = CreateInstancedMesh( instances, him->geometryResPath );
 

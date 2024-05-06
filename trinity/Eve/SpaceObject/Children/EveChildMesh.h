@@ -128,7 +128,7 @@ public:
 	Tr2GrannyAnimation* GetAnimationController() const override;
 	void SetAnimationController( Tr2GrannyAnimation* animation );
 
-	void SetInstanceCount( unsigned int count );
+	void SetInstanceTransforms( std::vector<Matrix> instances );
 
 protected:
 	void InitializeAnimation();

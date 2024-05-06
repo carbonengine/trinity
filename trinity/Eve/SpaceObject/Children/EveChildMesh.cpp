@@ -383,6 +383,10 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		m_rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
 	}
 
+	EveSpaceObjectPSData* perObjectData;
+	m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
+	*perObjectData = m_psData;
+	m_rtPerObjectData.Unlock( renderContext );
 
 	if( Tr2InstancedMeshPtr instanced = BlueCastPtr( m_mesh ) )
 	{
@@ -393,36 +397,44 @@ void EveChildMesh::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 
 		for( auto it = m_instanceTransforms.begin(); it != m_instanceTransforms.end(); ++it )
 		{
+			const Matrix transform = *it;
 
+			const Tr2MeshAreaVector* areas = instanced->GetAreas( TRIBATCHTYPE_OPAQUE );
+			for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
+			{
+				auto area = *it;
+				if( area->GetDisplay() )
+				{
+					auto geometry = area->GetRtMeshArea();
+					if( geometry )
+					{
+						rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, transform );
+					}
+				}
+			}
 		}
-
 	}
 	else
 	{
-		EveSpaceObjectPSData* perObjectData;
-		m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
-		*perObjectData = m_psData;
-		m_rtPerObjectData.Unlock( renderContext );
-	}
-	const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
-	for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
-	{
-		auto area = *it;
-		if( area->GetDisplay() )
+		const Tr2MeshAreaVector* areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+		for( Tr2MeshAreaVector::const_iterator it = areas->begin(); it != areas->end(); ++it )
 		{
-			auto geometry = area->GetRtMeshArea();
-			if( geometry )
+			auto area = *it;
+			if( area->GetDisplay() )
 			{
-				rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, m_worldTransform );
+				auto geometry = area->GetRtMeshArea();
+				if( geometry )
+				{
+					rtManager.GetGeometry().AddGeometry( *rtMesh, *geometry, area->GetMaterialInterface(), &m_rtPerObjectData, m_worldTransform );
+				}
 			}
 		}
 	}
 }
 
-void EveChildMesh::SetInstanceCount( unsigned int count )
+void EveChildMesh::SetInstanceTransforms( std::vector<Matrix> instances )
 {
-	m_instanceCount = count;
-	m_instanceTransforms.reserve( m_instanceCount );
+	m_instanceTransforms = instances;
 }
 
 float EveChildMesh::GetSortValue()
