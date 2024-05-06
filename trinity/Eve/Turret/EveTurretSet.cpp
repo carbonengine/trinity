@@ -1628,6 +1628,8 @@ void EveTurretSet::UpdateVisibility( const TriFrustum& frustum )
 
 		ambientEffect->UpdateVisibility( frustum, m_parentData.transform, currentLod );
 	}
+
+	UpdateRtMesh();
 }
 
 // --------------------------------------------------------------------------------
@@ -1903,6 +1905,28 @@ Tr2PerObjectData* EveTurretSet::GetPerObjectData( ITriRenderBatchAccumulator* ac
 Tr2PerObjectData* EveTurretSet::GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator )
 {
 	return GetPerObjectData( accumulator );
+}
+
+void EveTurretSet::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
+{
+	if( !m_display )
+	{
+		return;
+	}
+
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	if( !m_rtPerObjectData.IsValid() )
+	{
+		m_rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
+	}
+
+	//EveTurretSetPSData* perObjectData;
+	//m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
+	//*perObjectData = m_psData;
+	//m_rtPerObjectData.Unlock( renderContext );
+
+	
 }
 
 // --------------------------------------------------------------------------------
@@ -2679,6 +2703,32 @@ bool EveTurretSet::GetClosestTurretAndLocator( unsigned int& closestTurretIx, in
 	return true;
 }
 
+void EveTurretSet::UpdateRtMesh()
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	if( !renderContext.GetCaps().SupportsRaytracing() )
+	{
+		return;
+	}
+
+	if( !m_visibleCount )
+	{
+		return;
+	}
+	if( !m_instanceBuffer.IsValid() )
+	{
+		return;
+	}
+	if( !m_geometryResource || !m_geometryResource->IsGood() )
+	{
+		return;
+	}
+	
+	GetOrCreateRtMesh();
+
+	m_rtMesh->UpdateRtMesh( m_geometryResource, 0, m_estimatedPixelDiameter );		
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Make the shader accessable to the outside (const version)
@@ -2993,4 +3043,18 @@ void EveTurretSetPerObjectData::ApplyConstantBuffers( Tr2IndirectDrawBufferWrite
 {
 	writer.SetPerObjectData( VERTEX_SHADER, &m_vsData, sizeof( EveTurretSetVSData ) );
 	writer.SetPerObjectData( PIXEL_SHADER, &m_psData, sizeof( EveTurretSetPSData ) );
+}
+
+Tr2RaytracingMesh* EveTurretSet::GetOrCreateRtMesh()
+{
+	if( !m_rtMesh )
+	{
+		m_rtMesh.reset( new Tr2RaytracingMesh() );
+	}
+	return m_rtMesh.get();
+}
+
+Tr2RaytracingMesh* EveTurretSet::GetRtMesh() const
+{
+	return m_rtMesh.get();
 }

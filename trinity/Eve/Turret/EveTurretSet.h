@@ -17,6 +17,7 @@
 #include "Controllers/ITr2ControllerOwner.h"
 #include "Eve/SpaceObject/Children/EveChildInstanceContainer.h"
 #include "Eve/SpaceObject/EveSpaceObject2.h"
+#include "Raytracing/Tr2RaytracingManager.h"
 
 // needed for override
 #include "Tr2PerObjectData.h"
@@ -29,6 +30,7 @@ struct ITr2Renderable;
 struct ViewDistanceInfo;
 class EveUpdateContext;
 class Tr2LightManager;
+class Tr2RaytracingMesh;
 
 BLUE_DECLARE( Tr2Mesh );
 BLUE_DECLARE( Tr2Effect );
@@ -160,6 +162,7 @@ public:
 	bool IsCastingShadow( const TriFrustum& cameraFrustum, const TriFrustumOrtho& shadowFrustum, const uint32_t shadowMapSize, const Vector3 sunDir, float& sizeInShadow ) const override;
 	void GetShadowBatches( ITriRenderBatchAccumulator* batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize ) override;
 	Tr2PerObjectData* GetShadowPerObjectData( ITriRenderBatchAccumulator* accumulator ) override;
+	void PushRtGeometry( Tr2RaytracingManager & rtManager ) const override;
 
 	int GetState() const;
 
@@ -300,6 +303,14 @@ private:
 	void CalcRandomDelay();
 	// calc best suited turret and target's locator
 	bool GetClosestTurretAndLocator( unsigned int& closestTurretIx, int& closestLocatorIx ) const;
+
+	// Update raytracing mesh info
+	void UpdateRtMesh();
+	Tr2RaytracingMesh* GetOrCreateRtMesh();
+	Tr2RaytracingMesh* GetRtMesh() const;
+	mutable Tr2ConstantBufferAL m_rtPerObjectData;
+
+
 
 	// name
 	std::string m_name;
@@ -461,6 +472,8 @@ private:
 	std::wstring m_targetingToIdleMovementAudioEvent;
 
 	Tr2BoneTransformOffsets m_boneOffsets;
+
+	std::unique_ptr<Tr2RaytracingMesh> m_rtMesh;
 };
 
 TYPEDEF_BLUECLASS( EveTurretSet );

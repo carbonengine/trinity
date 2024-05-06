@@ -2137,7 +2137,6 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		
 		EveChildMeshPtr childMesh;
 		childMesh.CreateInstance();
-		std::vector<Matrix> instanceTransforms;
 
 		std::vector<EveSOFDataMgr::HullMeshInstance> instances;
 		// propogate the instances to the offsets and resize the bounds
@@ -2168,19 +2167,6 @@ void EveSOF::SetupInstancedMeshes( EveSpaceObject2Ptr newObj, const EveSOFDNAPtr
 		{
 			instances = him->instances;
 		}
-		// Upload instances to evechildmesh
-		for( auto instance = instances.begin(); instance != instances.end(); ++instance )
-		{
-			Matrix m;
-;
-			memcpy( &instance->transform0, &m.GetX(), 4 * sizeof( float ) );
-			memcpy( &instance->transform1, &m.GetY(), 4 * sizeof( float ) );
-			memcpy( &instance->transform2, &m.GetZ(), 4 * sizeof( float ) );
-
-			instanceTransforms.push_back( m );
-		}
-
-		childMesh->SetInstanceTransforms( instanceTransforms );
 
 		auto instancedMesh = CreateInstancedMesh( instances, him->geometryResPath );
 
@@ -3517,6 +3503,8 @@ EveChildContainerPtr EveSOF::CreatePlacement( EveSpaceObject2Ptr parent, EveSOFD
 		SetupDecalSets( BlueCastPtr( child->GetRawRoot() ), extensionDna );
 		// do this last so it sets all the needed shaders as instanced
 		child->SetShaderOption( BlueSharedString( "SPACE_OBJECT_INSTANCED_ATTACHMENT" ), BlueSharedString( "SOIA_ENABLED" ) );
+
+		child->SetInstanceTransforms( placementOffsets );
 		
 		SetupAttachments( BlueCastPtr( container->GetRawRoot() ), extensionDna, placementOffsets, buildFlags );
 

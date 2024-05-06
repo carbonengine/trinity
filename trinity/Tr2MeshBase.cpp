@@ -599,7 +599,9 @@ void Tr2MeshBase::UseWithScreenSize( float screenSize, float worldRadius ) const
 			}
 		}
 	}
-}Tr2RaytracingMesh* Tr2MeshBase::GetOrCreateRtMesh()
+}
+
+Tr2RaytracingMesh* Tr2MeshBase::GetOrCreateRtMesh()
 {
 	if( !m_rtMesh )
 	{
