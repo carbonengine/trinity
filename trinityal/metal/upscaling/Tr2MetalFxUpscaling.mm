@@ -41,7 +41,7 @@ void Tr2MetalFxUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
 }
 
- bool Tr2MetalFxUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext )
+ bool Tr2MetalFxUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const
 {
     if( @available(macOS 13.0, *) )
     {

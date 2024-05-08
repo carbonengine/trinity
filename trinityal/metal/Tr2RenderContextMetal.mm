@@ -60,6 +60,7 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_separateAlphaBlendEnabled( false )
 	, m_srgbWriteEnable( false )
     , m_isPrimary( false )
+    , m_upscalingTechnique( nullptr )
 {
 }
 
