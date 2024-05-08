@@ -91,13 +91,8 @@ void Tr2XessUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
 	for( auto& item : m_contexts )
 	{
-		( (Tr2XessUpscalingContext*)item.second.get() )->Destroy( renderContext );
+		item.second.get()->Destroy( renderContext );
 	}
-}
-
-Tr2UpscalingAL::Result Tr2XessUpscalingTechnique::Setup()
-{
-	return Tr2UpscalingAL::Result::OK;
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2XessUpscalingTechnique::GetAvailableSettings() const
@@ -110,12 +105,9 @@ std::vector<Tr2UpscalingAL::Setting> Tr2XessUpscalingTechnique::GetAvailableSett
 	};
 }
 
-bool Tr2XessUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const
+bool Tr2XessUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const
 {
-	xess_context_handle_t context;
-	auto status = xessD3D12CreateContext( renderContext.m_ownerDevice->m_device, &context );
-	context = nullptr;
-	return status == XESS_RESULT_SUCCESS;
+	return true;
 }
 
 Tr2UpscalingContextAL* Tr2XessUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
@@ -177,6 +169,7 @@ void Tr2XessUpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
 	{
 		renderContext.FlushAndSyncDx12( );
 		xessDestroyContext( m_context );
+		m_context = nullptr;
 	}
 }
 

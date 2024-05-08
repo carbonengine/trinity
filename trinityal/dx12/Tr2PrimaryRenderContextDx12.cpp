@@ -466,6 +466,11 @@ void Tr2PrimaryRenderContextAL::Destroy()
 		m_amdExtDeviceObject = nullptr;
 	}
 
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->Destroy( *this );
+	}
+
 	m_pendingPresents.clear();
 
 	m_statsQuery = nullptr;
@@ -1202,13 +1207,14 @@ std::shared_ptr<UnorderedAccessViewDx12> Tr2PrimaryRenderContextAL::GetNullUavDx
 
 Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
 {
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->Destroy( *this );
+		m_upscalingTechnique = nullptr;
+	}
+
 	if( tech == Tr2UpscalingAL::Technique::NONE )
 	{
-		if( m_upscalingTechnique )
-		{
-			m_upscalingTechnique->Destroy( *this );
-			m_upscalingTechnique = nullptr;
-		}
 		return Tr2UpscalingAL::Result::OK;
 	}
 
@@ -1216,14 +1222,7 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 	auto supportedTechnique = std::find( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.begin(), TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end(), tech );
 	if( supportedTechnique == TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end() )
 	{
-		m_upscalingTechnique = nullptr;
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
-	}
-
-	if( m_upscalingTechnique )
-	{
-		m_upscalingTechnique->Destroy( *this );
-		m_upscalingTechnique = nullptr;
 	}
 
 	m_upscalingTechnique = TrinityALImpl::CreateUpscalingTechnique( *this, tech, setting, frameGeneration, adapter );
@@ -1232,13 +1231,7 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
 
-	auto result = m_upscalingTechnique->Setup();
-	if( result != Tr2UpscalingAL::Result::OK )
-	{
-		delete m_upscalingTechnique;
-		m_upscalingTechnique = nullptr;
-	}
-	return result;
+	return Tr2UpscalingAL::Result::OK;
 }
 
 Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t upscalingContextId )
@@ -1259,6 +1252,17 @@ Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32
 	}
 
 	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight, sourceFormat, depthFormat );
+}
+
+
+void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return;
+	}
+
+	return m_upscalingTechnique->DeleteContext( *this, contextID );
 }
 
 Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
@@ -1295,6 +1299,10 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 			}
 
 			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
+		}
+
+		if( tech )
+		{
 			tech->Destroy( *this );
 			tech = nullptr;
 		}
@@ -1352,29 +1360,33 @@ HRESULT Tr2PrimaryRenderContextAL::CreateSwapChainForHwnd(
 
 HRESULT Tr2PrimaryRenderContextAL::CreateDevice(IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device) const
 {
-	if( m_upscalingTechnique && m_upscalingTechnique->OverridesDeviceCreation() )
+	CR_RETURN_HR( D3D12CreateDevice( adapter, featureLevel, IID_PPV_ARGS( &device ) ) );
+
+	if( m_upscalingTechnique && m_upscalingTechnique->ReplacesDevice() )
 	{
-		return m_upscalingTechnique->D3D12CreateDevice( adapter, D3D_FEATURE_LEVEL_12_0, device );
+		device = m_upscalingTechnique->ReplaceDevice( device );
 	}
-	return D3D12CreateDevice( adapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS( &device ) );
+	return S_OK;
 }
 
 HRESULT Tr2PrimaryRenderContextAL::CreateCommandQueue( CComPtr<ID3D12Device>& device, D3D12_COMMAND_QUEUE_DESC* desc, CComPtr<ID3D12CommandQueue>& commandQueue ) const
 {
-	if( m_upscalingTechnique && m_upscalingTechnique->OverridesCommandQueueCreation() )
+	CR_RETURN_HR( device->CreateCommandQueue( desc, IID_PPV_ARGS( &commandQueue ) ) );
+	if( m_upscalingTechnique && m_upscalingTechnique->ReplacesCommandQueue() )
 	{
-		return m_upscalingTechnique->CreateCommandQueue( device, desc, commandQueue );
+		commandQueue = m_upscalingTechnique->ReplaceCommandQueue( commandQueue );
 	}
-	return device->CreateCommandQueue( desc, IID_PPV_ARGS( &commandQueue ) );
+	return S_OK;
 }
 
 HRESULT Tr2PrimaryRenderContextAL::CreateFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) const
 {
-	if( m_upscalingTechnique && m_upscalingTechnique->OverridesFactory2Creation() )
+	CR_RETURN_HR( CreateDXGIFactory2( flags, IID_PPV_ARGS( &factory ) ) );
+	if( m_upscalingTechnique && m_upscalingTechnique->ReplacesFactory() )
 	{
-		return m_upscalingTechnique->CreateDXGIFactory2( flags, factory );
+		factory = m_upscalingTechnique->ReplaceFactory( factory );
 	}
-	return CreateDXGIFactory2( flags, IID_PPV_ARGS( &factory ) );
+	return S_OK;
 }
 
 #endif

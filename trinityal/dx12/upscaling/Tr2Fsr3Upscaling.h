@@ -25,7 +25,6 @@ public:
 
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
-	virtual Tr2UpscalingAL::Result Setup() override;
 	virtual bool SupportsFrameGeneration() const override;
 	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
 
@@ -43,6 +42,9 @@ public:
 	Tr2Fsr3UpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	~Tr2Fsr3UpscalingContext();
 
+	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
+	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
+
 	virtual bool IsTemporal() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
@@ -51,8 +53,6 @@ public:
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
 private:
-	Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext );
-	void Destroy( Tr2RenderContextAL& renderContext );
 
 	FfxFsr3ContextDescription m_initializationParameters = {};
 	FfxFsr3Context m_context;

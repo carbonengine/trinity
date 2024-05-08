@@ -229,7 +229,7 @@ bool TriDevice::CreateSimpleDevice(
 	// Set default settings
 	uint32_t adapterToUse = adapter;
 
-	PrepareUpscalingTechnique( adapter );
+	CreateUpscalingTechnique( adapter );
 	CreateDeviceInt( adapterToUse, hwnd, pp );
 
 	if( !DeviceExists() )
@@ -258,6 +258,7 @@ bool TriDevice::CreateSimpleDevice(
 		return false;
 	}
 
+	UpdateAvailableUpscalingTechniques();
 	PrepareDeviceResources();
 
 	BeOS->RegisterForTicks(this, (void*)TRINITY);
@@ -326,7 +327,7 @@ bool TriDevice::ChangeDevice(
 		Tr2RenderContext::DestroyMainThreadRenderContext();	
 	}
 
-	PrepareUpscalingTechnique( adapter );
+	CreateUpscalingTechnique( adapter );
 
 	if( FAILED( CreateDeviceInt( adapter, hWnd, *pp ) ) )
 	{
@@ -353,7 +354,7 @@ bool TriDevice::ChangeDevice(
 	}
 
 	InitD3DDevice();
-
+	UpdateAvailableUpscalingTechniques();
 	PrepareDeviceResources(); //call python to recreate its stuff.
 
 	return true;
@@ -1135,18 +1136,24 @@ bool TriDevice::IsVariableRefreshRateSupported() const
 	return renderContext.GetCaps().SupportsVariableRefreshRate();
 }
 
-void TriDevice::PrepareUpscalingTechnique( uint32_t adapter )
+void TriDevice::UpdateAvailableUpscalingTechniques()
 {
+	// this method needs to be called after a device has been called 
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	m_supportedUpscalingTechniques.clear();
 
-	for( auto& techInfo : renderContext.GetSupportedUpscalingTechniques( adapter ) )
+	for( auto& techInfo : renderContext.GetSupportedUpscalingTechniques( mAdapter ) )
 	{
 		Tr2UpscalingTechniqueInfo technique{};
 		std::tie( technique.technique, technique.supportedSettings, technique.framegen ) = techInfo;
 		m_supportedUpscalingTechniques.Append( &technique );
 	}
+}
+
+void TriDevice::CreateUpscalingTechnique( uint32_t adapter )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
 
 	auto upscalingResult = renderContext.EnableUpscaling( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration, adapter );
 	if( upscalingResult != Tr2UpscalingAL::Result::OK )
@@ -1177,6 +1184,12 @@ uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t disp
 		return context->GetID();
 	}
 	return 0;
+}
+
+void TriDevice::DeleteUpscalingContext( uint32_t contextID )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	renderContext.DeleteUpscalingContext( contextID );
 }
 
 Vector2 TriDevice::GetRenderResolution( uint32_t upscalingContextId )

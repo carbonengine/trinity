@@ -409,7 +409,7 @@ void Tr2RenderContextAL::RenderPassHint( const Tr2ColorAttachment&, const Tr2Col
 
 Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
 {
-	return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	return Tr2UpscalingAL::Result::OK;
 }
 
 Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscalingContextID )
@@ -421,6 +421,9 @@ Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( uint32_t disp
 {
 	return nullptr;
 }
+
+void Tr2RenderContextAL::DeleteUpscalingContext( uint32_t contextID )
+{}
 
 Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
 {

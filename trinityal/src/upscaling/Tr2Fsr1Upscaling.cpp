@@ -21,11 +21,6 @@ std::vector<Tr2UpscalingAL::Setting> Tr2Fsr1UpscalingTechnique::GetAvailableSett
 	return std::vector<Tr2UpscalingAL::Setting>();
 }
 
-Tr2UpscalingAL::Result Tr2Fsr1UpscalingTechnique::Setup()
-{
-	return Tr2UpscalingAL::Result::OK;
-}
-
 void Tr2Fsr1UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
 }

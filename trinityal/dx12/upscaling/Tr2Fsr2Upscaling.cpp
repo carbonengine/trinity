@@ -51,17 +51,11 @@ Tr2Fsr2UpscalingTechnique::~Tr2Fsr2UpscalingTechnique()
 {
 }
 
-
-Tr2UpscalingAL::Result Tr2Fsr2UpscalingTechnique::Setup()
-{
-	return Tr2UpscalingAL::Result::OK;
-}
-
 void Tr2Fsr2UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
 	for( auto& item : m_contexts )
 	{
-		( (Tr2Fsr2UpscalingContext*)item.second.get() )->Destroy( renderContext );
+		item.second.get()->Destroy( renderContext );
 	}
 }
 
@@ -133,10 +127,10 @@ Tr2UpscalingAL::Result Tr2Fsr2UpscalingContext::Setup( Tr2RenderContextAL& rende
 	m_initializationParameters.displaySize.height = m_displayHeight;
 	m_initializationParameters.flags = FFX_FSR2_ENABLE_DEPTH_INVERTED | FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE;
 
-	//#if TRINITYDEV
+	#ifndef _NDEBUG
 	m_initializationParameters.flags |= FFX_FSR2_ENABLE_DEBUG_CHECKING;
 	m_initializationParameters.fpMessage = &Fsr2Utils::LogFsr2Message;
-	//#endif
+	#endif
 
 	errorCode = ffxFsr2ContextCreate( &m_context, &m_initializationParameters );
 	m_setup = errorCode == FFX_OK;
@@ -164,6 +158,7 @@ void Tr2Fsr2UpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
 			CCP_FREE( m_initializationParameters.backendInterface.scratchBuffer );
 			m_initializationParameters.backendInterface.scratchBuffer = nullptr;
 		}
+		m_setup = false;
 	}
 }
 bool Tr2Fsr2UpscalingContext::IsTemporal() const

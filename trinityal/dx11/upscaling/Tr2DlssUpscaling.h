@@ -10,8 +10,6 @@
 #include <sl.h>
 #include <sl_consts.h>
 #include <sl_dlss.h>
-#include <sl_dlss_g.h>
-#include <sl_reflex.h>
 #include <sl_nis.h>
 
 namespace DlssUtils
@@ -28,11 +26,10 @@ public:
 	~Tr2DlssUpscalingTechnique();
 
 	// Tr2UpscalingTechniqueAL overrides
-	virtual bool IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const override;
+	virtual bool IsAvailable( Tr2RenderContextAL& renderContext ) const override;
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 
 	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
-	virtual Tr2UpscalingAL::Result Setup() override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
 	// TrinityALImpl::Tr2UpscalingTechniqueDx11 overrides
@@ -75,7 +72,6 @@ public:
 	~Tr2DlssUpscalingContext();
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
-	void Destroy();
 	virtual bool IsTemporal() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;

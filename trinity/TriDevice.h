@@ -240,10 +240,12 @@ private:
 
 	void HandleRenderTick( Be::Time realTime, Be::Time simTime );
 
-	void PrepareUpscalingTechnique( uint32_t adapter );
+	void UpdateAvailableUpscalingTechniques( );
+	void CreateUpscalingTechnique( uint32_t adapter );
 	void SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
 
 	uint32_t CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	void DeleteUpscalingContext( uint32_t contextID );
 	Vector2 GetRenderResolution( uint32_t upscalingContextId );
 	PTr2UpscalingTechniqueInfoStructureList m_supportedUpscalingTechniques;
 

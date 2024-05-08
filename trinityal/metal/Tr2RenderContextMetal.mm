@@ -1266,7 +1266,6 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 	auto supportedTechnique = std::find( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.begin(), TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end(), tech );
 	if( supportedTechnique == TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end() )
 	{
-		m_upscalingTechnique = nullptr;
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
 
@@ -1275,14 +1274,8 @@ Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Tech
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
-
-	auto result = m_upscalingTechnique->Setup();
-	if( result != Tr2UpscalingAL::Result::OK )
-	{
-		delete m_upscalingTechnique;
-		m_upscalingTechnique = nullptr;
-	}
-	return result;
+	
+	return Tr2UpscalingAL::Result::OK;
 }
 
 Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscalingContextID )
@@ -1305,6 +1298,16 @@ Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( uint32_t disp
 	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight, sourceFormat, depthFormat );
 }
 
+void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return;
+	}
+
+	return m_upscalingTechnique->DeleteContext( *this, contextID );
+}
+
 std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
 {
     std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
@@ -1324,6 +1327,12 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderCont
             tech->Destroy( *this );
             tech = nullptr;
         }
+		
+		if( tech )
+		{
+			tech->Destroy(*this);
+			tech = nullptr;
+		}
     }
     return supportedTechniques;
 }

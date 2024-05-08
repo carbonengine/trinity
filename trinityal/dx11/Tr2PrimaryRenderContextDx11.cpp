@@ -46,15 +46,16 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 
 Tr2PrimaryRenderContextAL::~Tr2PrimaryRenderContextAL()
 {
-	if( m_upscalingTechnique )
-	{
-		m_upscalingTechnique->Destroy(*this);
-	}
 	Destroy();
 }
 
 void Tr2PrimaryRenderContextAL::Destroy()
 {
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->Destroy( *this );
+	}
+
 	m_samplerStateFactory.Clear();
 
 	// People say we need to switch to windowed mode before destroying a device
@@ -644,13 +645,14 @@ const Tr2CapsAL& Tr2PrimaryRenderContextAL::GetCaps() const
 
 Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
 {
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->Destroy( *this );
+		m_upscalingTechnique = nullptr;
+	}
+
 	if( tech == Tr2UpscalingAL::Technique::NONE )
 	{
-		if( m_upscalingTechnique )
-		{
-			m_upscalingTechnique->Destroy( *this );
-			m_upscalingTechnique = nullptr;
-		}
 		return Tr2UpscalingAL::Result::OK;
 	}
 
@@ -658,7 +660,6 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 	auto supportedTechnique = std::find( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.begin(), TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end(), tech );
 	if( supportedTechnique == TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end() )
 	{
-		m_upscalingTechnique = nullptr;
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
 
@@ -667,15 +668,9 @@ Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingA
 	{
 		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
 	}
-	auto result = m_upscalingTechnique->Setup();
-	if( result != Tr2UpscalingAL::Result::OK )
-	{
-		delete m_upscalingTechnique;
-		m_upscalingTechnique = nullptr;
-	}
-	return result;
-}
 
+	return Tr2UpscalingAL::Result::OK;
+}
 
 Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t upscalingContextId )
 {
@@ -696,6 +691,18 @@ Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32
 
 	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight, sourceFormat, depthFormat );
 }
+
+
+void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return;
+	}
+
+	return m_upscalingTechnique->DeleteContext( *this, contextID );
+}
+
 
 void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
 {
@@ -750,6 +757,11 @@ std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRen
 			}
 
 			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
+		}
+		if( tech )
+		{
+			tech->Destroy(*this);
+			tech = nullptr;
 		}
 	}
 	return supportedTechniques;

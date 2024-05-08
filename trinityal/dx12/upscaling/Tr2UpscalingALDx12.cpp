@@ -33,7 +33,8 @@ namespace TrinityALImpl
 			techniqueImpl = new Tr2XessUpscalingTechnique( technique, setting, frameGeneration );
 			break;
 		}
-		if( techniqueImpl && techniqueImpl->IsAvailable( renderContext, adapter ) )
+
+		if( techniqueImpl && techniqueImpl->IsAvailable( renderContext ) )
 		{
 			return techniqueImpl;
 		}
@@ -50,19 +51,19 @@ namespace TrinityALImpl
 	bool Tr2UpscalingTechniqueDx12::ReplacesSwapchain() const
 	{
 		return false;
-	}
-	
-	bool Tr2UpscalingTechniqueDx12::OverridesDeviceCreation() const
+	} 
+
+	bool Tr2UpscalingTechniqueDx12::ReplacesDevice() const
 	{
 		return false;
 	}
 	
-	bool Tr2UpscalingTechniqueDx12::OverridesCommandQueueCreation() const
+	bool Tr2UpscalingTechniqueDx12::ReplacesCommandQueue() const
 	{
 		return false;
 	}
 	
-	bool Tr2UpscalingTechniqueDx12::OverridesFactory2Creation() const
+	bool Tr2UpscalingTechniqueDx12::ReplacesFactory() const
 	{
 		return false;
 	}
@@ -71,19 +72,19 @@ namespace TrinityALImpl
 	{
 	}
 
-	HRESULT Tr2UpscalingTechniqueDx12::D3D12CreateDevice( IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device ) 
+	CComPtr<ID3D12Device> Tr2UpscalingTechniqueDx12::ReplaceDevice( CComPtr<ID3D12Device>& device ) 
 	{
-		return S_FALSE;
+		return device;
 	}
 
-	HRESULT Tr2UpscalingTechniqueDx12::CreateCommandQueue( CComPtr<ID3D12Device>& device, D3D12_COMMAND_QUEUE_DESC* desc, CComPtr<ID3D12CommandQueue>& commandQueue ) 
+	CComPtr<ID3D12CommandQueue> Tr2UpscalingTechniqueDx12::ReplaceCommandQueue( CComPtr<ID3D12CommandQueue>& commandQueue ) 
 	{
-		return S_FALSE;
+		return commandQueue;
 	}
 	
-	HRESULT Tr2UpscalingTechniqueDx12::CreateDXGIFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) 
+	CComPtr<IDXGIFactory4> Tr2UpscalingTechniqueDx12::ReplaceFactory( CComPtr<IDXGIFactory4>& factory )
 	{
-		return S_FALSE;
+		return factory;
 	}
 }
 

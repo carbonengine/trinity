@@ -16,8 +16,7 @@ public:
 	~Tr2XessUpscalingTechnique();
 
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
-	virtual bool IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const override;
-	virtual Tr2UpscalingAL::Result Setup() override;
+	virtual bool IsAvailable( Tr2RenderContextAL& renderContext ) const override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
 private:
@@ -29,6 +28,7 @@ class Tr2XessUpscalingContext : public Tr2UpscalingContextAL
 public:
 	Tr2XessUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2UpscalingAL::Setting setting, bool frameGeneration, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
+	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
 	~Tr2XessUpscalingContext();
 
@@ -39,7 +39,6 @@ public:
 	virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
 private:
-	void Destroy( Tr2RenderContextAL& renderContext );
 
 	xess_context_handle_t m_context;
 	_xess_quality_settings_t m_xessSetting;

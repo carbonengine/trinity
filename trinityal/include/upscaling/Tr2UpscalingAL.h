@@ -111,18 +111,18 @@ class Tr2UpscalingTechniqueAL
 public:
 	Tr2UpscalingTechniqueAL( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
     virtual ~Tr2UpscalingTechniqueAL();
-	virtual Tr2UpscalingAL::Result Setup() = 0;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) = 0;
 	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent );
 
 	void SanitizeState();
 
-	virtual bool IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const;
+	virtual bool IsAvailable( Tr2RenderContextAL& renderContext ) const;
 	virtual bool SupportsFrameGeneration( ) const;
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const = 0;
 
 	Tr2UpscalingContextAL* GetContext( Tr2RenderContextAL& renderContext, uint32_t upscalingContextID );
 	Tr2UpscalingContextAL* CreateContext( Tr2RenderContextAL& renderContext, uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	void DeleteContext( Tr2RenderContextAL& renderContext, uint32_t contextID );
 
 	void GetState( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& frameGeneration );
 
@@ -144,6 +144,7 @@ public:
 
 	// after setup is called, we must know the size of the render targets!
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) = 0;
+	virtual void Destroy( Tr2RenderContextAL& renderContext );
 	void GetRenderDimensions( uint32_t& width, uint32_t& height ) const;
 	void GetDisplayDimensions( uint32_t& width, uint32_t& height ) const;
 	void GetJitter( float& x, float& y ) const;

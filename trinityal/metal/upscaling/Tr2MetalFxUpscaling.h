@@ -16,7 +16,7 @@ public:
     ~Tr2MetalFxUpscalingTechnique();
     virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
-    virtual Tr2UpscalingAL::Result Setup() override;
+    virtual bool IsAvailable( Tr2RenderContextAL& renderContext ) const override;
     virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 
 private:

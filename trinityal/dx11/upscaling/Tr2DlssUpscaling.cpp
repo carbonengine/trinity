@@ -81,7 +81,7 @@ Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
 }
 
-bool Tr2DlssUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const
+bool Tr2DlssUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const
 {
 	return m_isAvailable;
 }
@@ -121,15 +121,6 @@ void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContex
 			( (Tr2DlssUpscalingContext*)( context.second.get() ) )->SetFrameToken( m_frameToken );
 		}
 	}
-}
-
-Tr2UpscalingAL::Result Tr2DlssUpscalingTechnique::Setup()
-{
-	if( !m_isAvailable || !m_streamlineSetup )
-	{
-		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
-	}
-	return Tr2UpscalingAL::Result::OK;
 }
 
 void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )

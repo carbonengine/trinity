@@ -6,13 +6,16 @@
 #include <filesystem>
 #include <sl_security.h>
 
+
+
 namespace Tr2StreamlineAL
 {
+	static HMODULE STREAMLINE_MODULE = nullptr;
+	static bool STREAMLINE_INITIALIZED = false;
+	static sl::Result STREAMLINE_INITIALIZATION_RESULT = sl::Result::eOk;
+
 	HMODULE GetStreamlineModule( )
 	{
-		// we only need to do this once!
-		static HMODULE STREAMLINE_MODULE;
-		
 		if( STREAMLINE_MODULE )
 		{
 			return STREAMLINE_MODULE;
@@ -90,15 +93,11 @@ namespace Tr2StreamlineAL
 
 	sl::Result InitializeStreamline( HMODULE streamlineModule )
 	{
-		// guards against initializing streamline multiple times...
-		static bool SETUP = false;
-		static sl::Result SL_INIT_RESULT;
-
-		if( SETUP )
+		if( STREAMLINE_INITIALIZED )
 		{
-			CCP_LOGNOTICE( "Streamline already initialized with result code %d", SL_INIT_RESULT );
+			CCP_LOGNOTICE( "Streamline already initialized with result code %d", STREAMLINE_INITIALIZATION_RESULT );
 			
-			return SL_INIT_RESULT;
+			return STREAMLINE_INITIALIZATION_RESULT;
 		}
 		// now set it up
 		sl::Preferences pref{};
@@ -120,10 +119,11 @@ namespace Tr2StreamlineAL
 			sl::kFeatureDLSS, // dlss module
 			sl::kFeatureNIS // image sharpening module
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
-			,sl::kFeatureDLSS_G, // framegeneration is only available on dx12
-			sl::kFeatureReflex // dlssg requires reflex
+			,sl::kFeatureDLSS_G // framegeneration is only available on dx12
+			,sl::kFeatureReflex // dlssg requires reflex
+			,sl::kFeaturePCL
 #ifndef NDEBUG
-			,sl::kFeatureImGUI // imgui is only availabe with reflex and dlssg
+//			,sl::kFeatureImGUI // imgui is only availabe with reflex and dlssg
 #endif
 #endif
 		};
@@ -139,24 +139,23 @@ namespace Tr2StreamlineAL
 
 		pref.applicationId = EVE_ONLINE_APP_ID;
 		pref.engine = sl::EngineType::eCustom;
-		pref.flags |= sl::PreferenceFlags::eAllowOTA;
 		pref.flags |= sl::PreferenceFlags::eUseManualHooking;
-		SL_INIT_RESULT = reinterpret_cast<PFun_slInit*>( GetProcAddress( streamlineModule, "slInit" ) )( pref, sl::kSDKVersion );
+		STREAMLINE_INITIALIZATION_RESULT = reinterpret_cast<PFun_slInit*>( GetProcAddress( streamlineModule, "slInit" ) )( pref, sl::kSDKVersion );
 
-		if( SL_INIT_RESULT != sl::Result::eOk )
+		if( STREAMLINE_INITIALIZATION_RESULT != sl::Result::eOk )
 		{
-			CCP_LOGERR( "NVidia Streamline NOT initialized. Error code: %d", SL_INIT_RESULT );
+			CCP_LOGERR( "NVidia Streamline NOT initialized. Error code: %d", STREAMLINE_INITIALIZATION_RESULT );
 		}
 
-		SETUP = true;
+		STREAMLINE_INITIALIZED = true;
 		CCP_LOGNOTICE( "NVidia Streamline successfully initialized" );
 
-		return SL_INIT_RESULT;
+		return STREAMLINE_INITIALIZATION_RESULT;
 	}
 
-	void ReleaseStreamline( HMODULE streamlineModule )
+	void ReleaseStreamline( )
 	{
-		if( SL_FAILED( res, reinterpret_cast<PFun_slShutdown*>( GetProcAddress( streamlineModule, "slShutdown" ) )() ) )
+		if( SL_FAILED( res, reinterpret_cast<PFun_slShutdown*>( GetProcAddress( STREAMLINE_MODULE, "slShutdown" ) )() ) )
 		{
 			CCP_LOGNOTICE( "Could not release streamline %d", res );
 		}

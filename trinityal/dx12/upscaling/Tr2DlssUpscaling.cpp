@@ -11,6 +11,7 @@
 #include "../Tr2RenderContextDx12.h"
 #include "../Tr2PrimaryRenderContextDx12.h"
 #include "../Tr2VideoAdapterInfoALDx12.h"
+#include "../Utilities.h"
 #include "include/Tr2StreamlineAL.h"
 
 namespace DlssUtils
@@ -39,10 +40,11 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 	m_slGetFeatureFunction( nullptr ),
 	m_slReflexSetOptions( nullptr ),
 	m_slSetFeatureLoaded( nullptr ),
-	m_slReflexSetMarker( nullptr ),
+	m_slPCLSetMarker( nullptr ),
 	m_slGetNewFrameToken( nullptr ),
 	m_supportsFrameGeneration( false )
 {
+	m_isAvailable = false;
 	m_streamlineSetup = false;
 	m_streamlineModule = Tr2StreamlineAL::GetStreamlineModule();
 
@@ -60,9 +62,10 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 	INITIALIZE_SL_FUNC( m_streamlineModule, slGetFeatureFunction );
 	INITIALIZE_SL_FUNC( m_streamlineModule, slSetFeatureLoaded );
 	INITIALIZE_SL_FUNC( m_streamlineModule, slGetNewFrameToken );
+	INITIALIZE_SL_FUNC( m_streamlineModule, slUpgradeInterface );
 
 	INITIALIZE_SL_FEATURE_FUNC( slReflexSetOptions, sl::kFeatureReflex );
-	INITIALIZE_SL_FEATURE_FUNC( slReflexSetMarker, sl::kFeatureReflex );
+	INITIALIZE_SL_FEATURE_FUNC( slPCLSetMarker, sl::kFeaturePCL );
 
 	
 	Tr2AdapterInfo videoAdapterInfo;
@@ -97,21 +100,29 @@ Tr2DlssUpscalingTechnique::Tr2DlssUpscalingTechnique( Tr2UpscalingAL::Technique 
 
 	m_streamlineSetup = true;
 	SanitizeState();
+
+	TogglePlugin( sl::kFeatureDLSS, m_isAvailable );
+	TogglePlugin( sl::kFeatureDLSS_G, m_supportsFrameGeneration && m_frameGeneration );
+	TogglePlugin( sl::kFeatureNIS, m_isAvailable );
+#ifndef NDEBUG
+	TogglePlugin( sl::kFeatureImGUI, m_supportsFrameGeneration && m_frameGeneration );
+#endif
+	TogglePlugin( sl::kFeatureReflex, m_supportsFrameGeneration && m_frameGeneration );
+	TogglePlugin( sl::kFeaturePCL, m_frameGeneration );
 }
 
 Tr2DlssUpscalingTechnique::~Tr2DlssUpscalingTechnique()
 {
 }
 
-bool Tr2DlssUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const 
+bool Tr2DlssUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext ) const 
 {
-	return m_isAvailable;
+	return m_isAvailable && m_streamlineSetup;
 }
 
 std::vector<Tr2UpscalingAL::Setting> Tr2DlssUpscalingTechnique::GetAvailableSettings() const
 {
 	return {
-		Tr2UpscalingAL::Setting::ULTRA_QUALITY,
 		Tr2UpscalingAL::Setting::QUALITY,
 		Tr2UpscalingAL::Setting::BALANCED,
 		Tr2UpscalingAL::Setting::PERFORMANCE,
@@ -139,42 +150,35 @@ bool Tr2DlssUpscalingTechnique::TogglePlugin( sl::Feature feature, bool enable )
 	return true;
 }
 
-bool Tr2DlssUpscalingTechnique::OverridesDeviceCreation() const
+bool Tr2DlssUpscalingTechnique::ReplacesDevice() const
 {
 	return true;
 }
 
-bool Tr2DlssUpscalingTechnique::OverridesCommandQueueCreation() const
+bool Tr2DlssUpscalingTechnique::ReplacesCommandQueue() const
+{
+	return false;
+}
+
+bool Tr2DlssUpscalingTechnique::ReplacesFactory() const
 {
 	return true;
 }
 
-bool Tr2DlssUpscalingTechnique::OverridesFactory2Creation() const
+CComPtr<ID3D12Device> Tr2DlssUpscalingTechnique::ReplaceDevice( CComPtr<ID3D12Device>& nativeDevice )
 {
-	return true;
-}
-
-HRESULT Tr2DlssUpscalingTechnique::D3D12CreateDevice( IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device )
-{
-	typedef HRESULT( WINAPI * PFunD3D12CreateDevice )( IUnknown*, D3D_FEATURE_LEVEL, REFIID, void** );
-
-	static auto slD3D12CreateDevice = reinterpret_cast<PFunD3D12CreateDevice>( GetProcAddress( m_streamlineModule, "D3D12CreateDevice" ) );
-	CR_RETURN_HR( slD3D12CreateDevice( adapter, featureLevel, IID_PPV_ARGS( &m_proxyDevice ) ) );
-	DECLARE_SL_FUNC( m_streamlineModule, slGetNativeInterface );
-
-	if( SL_FAILED( res, m_slGetNativeInterface( m_proxyDevice.p, (void**)&device.p ) ) )
-	{
-		CCP_LOGWARN( "Could not get native interface from proxy device (%d)", res );
-	}
-
-	CCP_ASSERT( device != nullptr );
-
 	DECLARE_SL_FUNC( m_streamlineModule, slSetD3DDevice );
 
-	if( SL_FAILED( res, m_slSetD3DDevice( device ) ) )
+	if( SL_FAILED( res, m_slSetD3DDevice( nativeDevice ) ) )
 	{
 		CCP_LOGWARN( "Could not attach NVidia Streamline to device (%d)", res );
-		return S_FALSE;
+		return nativeDevice;
+	}
+	CComPtr<ID3D12Device> proxy = nativeDevice;
+	if( SL_FAILED( res, m_slUpgradeInterface( (void**)&proxy.p ) ) )
+	{
+		CCP_LOGWARN( "Could not upgrade device to sl proxy device (%d)", res );
+		return nativeDevice;
 	}
 
 	auto reflexConst = sl::ReflexOptions{};
@@ -187,45 +191,57 @@ HRESULT Tr2DlssUpscalingTechnique::D3D12CreateDevice( IUnknown* adapter, D3D_FEA
 	{
 		CCP_LOGERR( "Reflex failed to set options (%d)", result );
 	}
-	m_attachedToDevice = true;
-	return S_OK;
+
+	return proxy;
 }
 
-HRESULT Tr2DlssUpscalingTechnique::CreateCommandQueue( CComPtr<ID3D12Device>& device, D3D12_COMMAND_QUEUE_DESC* desc, CComPtr<ID3D12CommandQueue>& commandQueue )
+CComPtr<ID3D12CommandQueue> Tr2DlssUpscalingTechnique::ReplaceCommandQueue( CComPtr<ID3D12CommandQueue>& native )
 {
-	// device is an unused parameter in this case, since we are using our own proxy device
-	return m_proxyDevice->CreateCommandQueue( desc, IID_PPV_ARGS( &commandQueue ) );
+	CComPtr<ID3D12CommandQueue> proxy = native;
+
+	if( SL_FAILED( res, m_slUpgradeInterface( (void**)&proxy.p ) ) )
+	{
+		CCP_LOGWARN( "Could not upgrade device to sl proxy device (%d)", res );
+		return native;
+	}
+	return proxy;
 }
 
-HRESULT Tr2DlssUpscalingTechnique::CreateDXGIFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory )
+CComPtr<IDXGIFactory4> Tr2DlssUpscalingTechnique::ReplaceFactory( CComPtr<IDXGIFactory4>& native )
 {
-	typedef HRESULT( WINAPI * PFunCreateDXGIFactory2 )( UINT, REFIID, void** );
-	static auto slCreateDXGIFactory2 = reinterpret_cast<PFunCreateDXGIFactory2>( GetProcAddress( m_streamlineModule, "CreateDXGIFactory2" ) );
-	return slCreateDXGIFactory2( flags, IID_PPV_ARGS( &factory ) );
+	CComPtr<IDXGIFactory4> proxy = native;
+
+	if( SL_FAILED( res, m_slUpgradeInterface( (void**)&proxy.p ) ) )
+	{
+		CCP_LOGWARN( "Could not upgrade device to sl proxy device (%d)", res );
+		return native;
+	}
+	return proxy;
 }
+
 
 void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent )
 {
 	Tr2UpscalingTechniqueDx12::MarkFrameEvent( renderContext, frameEvent );
 	
-	sl::ReflexMarker slEvent = (sl::ReflexMarker)0;
+	sl::PCLMarker slEvent = (sl::PCLMarker)0;
 
 	switch( frameEvent )
 	{
 	case Tr2RenderContextEnum::FRAME_EVENT_PRESENT_STARTED:
-		slEvent = sl::ReflexMarker::ePresentStart;
+		slEvent = sl::PCLMarker::ePresentStart;
 		break;
 	case Tr2RenderContextEnum::FRAME_EVENT_PRESENT_FINISHED:
-		slEvent = sl::ReflexMarker::ePresentEnd;
+		slEvent = sl::PCLMarker::ePresentEnd;
 		break;
 	case Tr2RenderContextEnum::FRAME_EVENT_UPDATE_STARTED:
-		slEvent = sl::ReflexMarker::eSimulationStart;
+		slEvent = sl::PCLMarker::eSimulationStart;
 		break;
 	case Tr2RenderContextEnum::FRAME_EVENT_UPDATE_FINISHED:
-		slEvent = sl::ReflexMarker::eSimulationEnd;
+		slEvent = sl::PCLMarker::eSimulationEnd;
 		break;
 	case Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED:
-		slEvent = sl::ReflexMarker::eRenderSubmitStart;
+		slEvent = sl::PCLMarker::eRenderSubmitStart;
 		if( SL_FAILED( res, m_slGetNewFrameToken( m_frameToken, nullptr ) ) )
 		{
 			CCP_LOGERR( "Could not get new frame token for Nvidia Streamline (%d)", res );
@@ -237,25 +253,16 @@ void Tr2DlssUpscalingTechnique::MarkFrameEvent( Tr2RenderContextAL& renderContex
 		}
 		break;
 	case Tr2RenderContextEnum::FRAME_EVENT_RENDERING_FINISHED:
-		slEvent = sl::ReflexMarker::eRenderSubmitEnd;
+		slEvent = sl::PCLMarker::eRenderSubmitEnd;
 		break;
 	}
 	if( m_frameToken )
 	{
-		if( SL_FAILED( result, m_slReflexSetMarker( slEvent, *m_frameToken ) ) )
+		if( SL_FAILED( result, m_slPCLSetMarker( slEvent, *m_frameToken ) ) )
 		{
 			CCP_LOGERR( "Reflex failed to set marker %d (%d)", slEvent, result );
 		}
 	}
-}
-
-Tr2UpscalingAL::Result Tr2DlssUpscalingTechnique::Setup()
-{
-	if( !m_isAvailable || !m_streamlineSetup )
-	{
-		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
-	}
-	return Tr2UpscalingAL::Result::OK;
 }
 
 void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
@@ -266,7 +273,10 @@ void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 	TogglePlugin( sl::kFeatureDLSS, false );
 	TogglePlugin( sl::kFeatureDLSS_G, false );
 	TogglePlugin( sl::kFeatureNIS, false );
-	TogglePlugin( sl::kFeatureImGUI, false );
+#ifndef NDEBUG
+	//TogglePlugin( sl::kFeatureImGUI, false );
+#endif
+	TogglePlugin( sl::kFeaturePCL, false );
 
 	if( m_attachedToDevice )
 	{
@@ -276,7 +286,10 @@ void Tr2DlssUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 		{
 			CCP_LOGERR( "Reflex failed to set options (%d)", result );
 		}
+
 		TogglePlugin( sl::kFeatureReflex, false );
+
+		m_attachedToDevice = false;
 	}
 }
 
@@ -327,6 +340,7 @@ Tr2DlssUpscalingContext::Tr2DlssUpscalingContext(
 	INITIALIZE_SL_FUNC( streamlineModule, slSetConstants );
 	INITIALIZE_SL_FUNC( streamlineModule, slEvaluateFeature );
 	INITIALIZE_SL_FUNC( streamlineModule, slFreeResources );
+	INITIALIZE_SL_FUNC( streamlineModule, slAllocateResources );
 }
 
 Tr2DlssUpscalingContext::~Tr2DlssUpscalingContext()
@@ -452,6 +466,7 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Setup( Tr2RenderContextAL& rende
 	m_options.colorBuffersHDR = sl::eTrue;
 	m_options.mode = m_dlssMode;
 	m_options.useAutoExposure = sl::eFalse;
+	m_options.alphaUpscalingEnabled = sl::eFalse;
 
 	if( SL_FAILED( res, m_slDLSSSetOptions( m_viewHandle, m_options ) ) )
 	{
@@ -575,21 +590,24 @@ Tr2UpscalingAL::Result Tr2DlssUpscalingContext::Dispatch( Tr2RenderContextAL& re
 		return Tr2UpscalingAL::Result::INCORRECT_INPUT;
 	}
 
-	// the descriptor cache is dirty, mark it so
 	SetCommonConstants( dispatchParameters );
 
 	const sl::BaseStructure* handle[] = { &m_viewHandle };
 
+	auto commandBuffer = ( sl::CommandBuffer* ) renderContext.m_commandList;
 	if( m_frameGeneration )
 	{
+		m_slAllocateResources( commandBuffer, sl::kFeatureDLSS_G, m_viewHandle );
 		UpdateDlssG();
 	}
-	
-	if( SL_FAILED( result, m_slEvaluateFeature( sl::kFeatureDLSS, *m_frameToken, handle, _countof( handle ), (sl::CommandBuffer*)renderContext.m_commandList ) ) )
+	m_slAllocateResources( commandBuffer, sl::kFeatureNIS, m_viewHandle );
+	m_slAllocateResources( commandBuffer, sl::kFeatureDLSS, m_viewHandle );
+
+	if( SL_FAILED( result, m_slEvaluateFeature( sl::kFeatureDLSS, *m_frameToken, handle, _countof( handle ), commandBuffer ) ) )
 	{
 		CCP_LOGERR( "DLSS Failed to Dispatch (%d)", result );
 	}
-	
+
 	// the descriptor cache is dirty, mark it so
 	renderContext.DirtyDescriptorCache();
 	renderContext.FlushBarriersDx12();

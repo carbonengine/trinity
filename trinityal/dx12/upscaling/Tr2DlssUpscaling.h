@@ -12,6 +12,7 @@
 #include <sl_dlss.h>
 #include <sl_dlss_g.h>
 #include <sl_reflex.h>
+#include <sl_pcl.h>
 #include <sl_nis.h>
 
 namespace DlssUtils
@@ -29,29 +30,26 @@ public:
 	~Tr2DlssUpscalingTechnique();
 
 	// Tr2UpscalingTechniqueAL overrides
-	virtual bool IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const override;
+	virtual bool IsAvailable( Tr2RenderContextAL& renderContext ) const override;
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 	virtual bool SupportsFrameGeneration( ) const override;
 
 	virtual void MarkFrameEvent( Tr2RenderContextAL& renderContext, Tr2RenderContextEnum::FrameEvent& frameEvent ) override;
-	virtual Tr2UpscalingAL::Result Setup() override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
 	// TrinityALImpl::Tr2UpscalingTechniqueDx12 overrides
-	virtual bool OverridesDeviceCreation() const override;
-	virtual bool OverridesCommandQueueCreation() const override;
-	virtual bool OverridesFactory2Creation() const override;
+	virtual bool ReplacesDevice() const override;
+	virtual bool ReplacesCommandQueue() const override;
+	virtual bool ReplacesFactory() const override;
 
-	virtual HRESULT D3D12CreateDevice( IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device ) override;
-	virtual HRESULT CreateCommandQueue( CComPtr<ID3D12Device>& device, D3D12_COMMAND_QUEUE_DESC* desc, CComPtr<ID3D12CommandQueue>& commandQueue ) override;
-	virtual HRESULT CreateDXGIFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) override;
+	virtual CComPtr<ID3D12Device> ReplaceDevice( CComPtr<ID3D12Device>& device ) override;
+	virtual CComPtr<ID3D12CommandQueue> ReplaceCommandQueue( CComPtr<ID3D12CommandQueue>& commandQueue ) override;
+	virtual CComPtr<IDXGIFactory4> ReplaceFactory( CComPtr<IDXGIFactory4>& factory ) override;
 
 private:
 	virtual Tr2UpscalingContextAL* CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat ) override;
 
 	bool TogglePlugin( sl::Feature feature, bool enable );
-
-	CComPtr<ID3D12Device> m_proxyDevice;
 
 	uint32_t m_adapter;
 	
@@ -66,8 +64,10 @@ private:
 	PFun_slGetFeatureFunction* m_slGetFeatureFunction;
 	PFun_slReflexSetOptions* m_slReflexSetOptions;
 	PFun_slSetFeatureLoaded* m_slSetFeatureLoaded;
-	PFun_slReflexSetMarker* m_slReflexSetMarker;
+	PFun_slPCLSetMarker* m_slPCLSetMarker;
 	PFun_slGetNewFrameToken* m_slGetNewFrameToken;
+	PFun_slUpgradeInterface* m_slUpgradeInterface;
+
 	bool m_attachedToDevice;
 
 	uint32_t m_contextIndex;
@@ -89,7 +89,6 @@ public:
 	~Tr2DlssUpscalingContext();
 
 	virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
-	void Destroy();
 	virtual bool IsTemporal() const override;
 	virtual void UpdateJitter() override;
 	virtual uint32_t GetDispatchRequirements() const override;
@@ -132,6 +131,7 @@ private:
 	PFun_slFreeResources* m_slFreeResources;
 	PFun_slDLSSGGetState* m_slDLSSGGetState;
 	PFun_slSetTag* m_slSetTag;
+	PFun_slAllocateResources* m_slAllocateResources;
 
 	friend class Tr2DlssUpscalingTechnique;
 };

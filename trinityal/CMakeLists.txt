@@ -415,6 +415,7 @@ if(WIN32)
     find_package(NvidiaDlssPlugin REQUIRED)
     find_package(NvidiaNisPlugin REQUIRED)
     find_package(NvidiaReflexPlugin REQUIRED)
+    find_package(NvidiaPclPlugin REQUIRED)
 
     ccp_add_library(TrinityAL_dx11 STATIC)
     target_compile_definitions(TrinityAL_dx11 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX11)
@@ -425,7 +426,6 @@ if(WIN32)
                                                 NVIDIA::Streamline 
                                                 NVIDIA::dlss_sl_plugin 
                                                 NVIDIA::nis_sl_plugin 
-                                                NVIDIA::reflex_sl_plugin 
                                                 AMD::FidelityFX
                                                 AMD::FidelityFX_FSR
                                                 legacy_stdio_definitions)
@@ -441,6 +441,7 @@ if(WIN32)
                                                 NVIDIA::dlss_sl_plugin 
                                                 NVIDIA::nis_sl_plugin 
                                                 NVIDIA::reflex_sl_plugin 
+                                                NVIDIA::pcl_sl_plugin 
                                                 AMD::FidelityFX_FSR3 
                                                 AMD::FidelityFX
                                                 AMD::FidelityFX_FSR

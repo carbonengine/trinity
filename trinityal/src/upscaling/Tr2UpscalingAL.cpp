@@ -198,7 +198,6 @@ Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::GetContext( Tr2RenderContextAL& 
 {
 	if( m_contexts.find( upscalingContextID ) == m_contexts.end() )
 	{
-		CCP_LOGWARN( "Tr2UpscalingTechniqueAL:GetContext Context does not exist for id %d", upscalingContextID );
 		return nullptr;
 	}
 
@@ -214,7 +213,20 @@ Tr2UpscalingContextAL* Tr2UpscalingTechniqueAL::CreateContext( Tr2RenderContextA
 	return context;
 }
 
-bool Tr2UpscalingTechniqueAL::IsAvailable( Tr2RenderContextAL& renderContext, uint32_t adapter ) const
+void Tr2UpscalingTechniqueAL::DeleteContext( Tr2RenderContextAL& renderContext, uint32_t contextID )
+{
+	auto context = m_contexts.find( contextID );
+	if( context == m_contexts.end() )
+	{
+		// cant find it...
+		return;
+	}
+
+	context->second.get()->Destroy( renderContext );
+	m_contexts.erase( context );
+}
+
+bool Tr2UpscalingTechniqueAL::IsAvailable( Tr2RenderContextAL& renderContext ) const
 {
 	return true;
 }
@@ -246,6 +258,10 @@ Tr2UpscalingContextAL::Tr2UpscalingContextAL( uint32_t displayWidth, uint32_t di
 }
 
 Tr2UpscalingContextAL::~Tr2UpscalingContextAL()
+{
+}
+
+void Tr2UpscalingContextAL::Destroy( Tr2RenderContextAL& renderContext )
 {
 }
 

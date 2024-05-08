@@ -27,10 +27,10 @@ namespace TrinityALImpl
 		switch( technique )
 		{
 		case Tr2UpscalingAL::DLSS:
-			return new Tr2DlssUpscalingTechnique( technique, setting, frameGeneration, adapter );
+			techniqueImpl = new Tr2DlssUpscalingTechnique( technique, setting, frameGeneration, adapter );
 			break;
 		}
-		if( techniqueImpl && techniqueImpl->IsAvailable( renderContext, adapter ) )
+		if( techniqueImpl && techniqueImpl->IsAvailable( renderContext ) )
 		{
 			return techniqueImpl;
 		}

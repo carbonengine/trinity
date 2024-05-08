@@ -23,14 +23,14 @@ namespace TrinityALImpl
 		Tr2UpscalingTechniqueDx12( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration );
 
 		virtual bool ReplacesSwapchain() const;
-		virtual bool OverridesDeviceCreation() const;
-		virtual bool OverridesCommandQueueCreation() const;
-		virtual bool OverridesFactory2Creation() const;
+		virtual bool ReplacesDevice() const;
+		virtual bool ReplacesCommandQueue() const;
+		virtual bool ReplacesFactory() const;
 
 		virtual void ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swapchain, Tr2WindowHandle hwnd, ID3D12CommandQueue* commandQueue );
-		virtual HRESULT D3D12CreateDevice( IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device ) ;
-		virtual HRESULT CreateCommandQueue( CComPtr<ID3D12Device>& device, D3D12_COMMAND_QUEUE_DESC* desc, CComPtr<ID3D12CommandQueue>& commandQueue ) ;
-		virtual HRESULT CreateDXGIFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) ;
+		virtual CComPtr<ID3D12Device> ReplaceDevice( CComPtr<ID3D12Device>& device );
+		virtual CComPtr<ID3D12CommandQueue> ReplaceCommandQueue( CComPtr<ID3D12CommandQueue>& commandQueue );
+		virtual CComPtr<IDXGIFactory4> ReplaceFactory( CComPtr<IDXGIFactory4>& factory );
 	};
 
 	TrinityALImpl::Tr2UpscalingTechniqueDx12* CreateUpscalingTechnique( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter );

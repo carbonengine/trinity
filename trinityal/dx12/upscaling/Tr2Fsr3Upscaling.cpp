@@ -114,7 +114,6 @@ void Tr2Fsr3UpscalingTechnique::ReplaceSwapchain( CComPtr<IDXGISwapChain4>& swap
 	FfxSwapchain ffxSwapChain = ffxGetSwapchainDX12( dx12Swapchain );
 
 	// make sure swapchain is not holding a ref to real swapchain
-	//GetFramework()->GetSwapChain()->GetImpl()->SetDXGISwapChain( nullptr );
 	FfxCommandQueue ffxGameQueue = ffxGetCommandQueueDX12( commandQueue );
 	dx12Swapchain->Release();
 
@@ -154,7 +153,7 @@ void Tr2Fsr3UpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 	renderContext.FlushAndSyncDx12( );
 	for( auto& item : m_contexts )
 	{
-		((Tr2Fsr3UpscalingContext*)item.second.get())->Destroy( renderContext );
+		item.second.get()->Destroy( renderContext );
 	}
 }
 
@@ -168,10 +167,6 @@ std::vector<Tr2UpscalingAL::Setting> Tr2Fsr3UpscalingTechnique::GetAvailableSett
 	};
 }
 
-Tr2UpscalingAL::Result Tr2Fsr3UpscalingTechnique::Setup()
-{
-	return Tr2UpscalingAL::Result::OK;
-}
 
 bool Tr2Fsr3UpscalingTechnique::SupportsFrameGeneration() const
 {
@@ -258,6 +253,7 @@ void Tr2Fsr3UpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
 			CCP_FREE( buffer.scratchBuffer );
 			buffer.scratchBuffer = nullptr;
 		}
+		m_setup = false;
 	}
 }
 

@@ -53,9 +53,6 @@ namespace Tr2SwapChainUtils
 
 		CR_RETURN_HR( renderContext.CreateFactory2( createFactoryFlags, factory ) );
 
-		//CR_RETURN_HR( Tr2Streamline::SlCreateDXGIFactory2( createFactoryFlags, IID_PPV_ARGS( &proxyFactory ) ) );
-		//nativeFactory = Tr2Streamline::CreateNative( proxyFactory );
-
 		DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
 		swapChainDesc.Width = presentationParameters.mode.width;
 		swapChainDesc.Height = presentationParameters.mode.height;

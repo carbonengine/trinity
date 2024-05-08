@@ -19,10 +19,10 @@ namespace TrinityALImpl
                 tech = new Tr2MetalFxUpscalingTechnique( technique, setting, frameGeneration );
                 break;
             default:
-                return nullptr;
+                break;
         }
-        
-        if( tech && !tech->IsAvailable( renderContext, adapter) )
+
+         if( tech && !tech->IsAvailable( renderContext ) )
         {
             delete tech;
             tech = nullptr;

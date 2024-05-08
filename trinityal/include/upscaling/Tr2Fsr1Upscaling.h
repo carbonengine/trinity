@@ -14,7 +14,6 @@ public:
 	~Tr2Fsr1UpscalingTechnique();
 	virtual std::vector<Tr2UpscalingAL::Setting> GetAvailableSettings() const override;
 
-	virtual Tr2UpscalingAL::Result Setup() override;
 	virtual void Destroy( Tr2RenderContextAL& renderContext ) override;
 
 private:

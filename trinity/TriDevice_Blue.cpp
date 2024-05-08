@@ -450,6 +450,12 @@ const Be::ClassInfo* TriDevice::ExposeToBlue()
 			":param displayHeight: the height of the display\n" 
 		)
 		MAP_METHOD_AND_WRAP(
+			"DeleteUpscalingContext",
+			DeleteUpscalingContext,
+			"Deletes an upscaling context \n"
+			":param upscalingContextID: the id of the context to delete\n")
+
+		MAP_METHOD_AND_WRAP(
 			"GetRenderResolution",
 			GetRenderResolution,
 			"Gets the render resolution for the provided display resolution\n"

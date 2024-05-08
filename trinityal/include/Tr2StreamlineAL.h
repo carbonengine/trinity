@@ -24,7 +24,7 @@ namespace Tr2StreamlineAL
 
 	HMODULE GetStreamlineModule();
 	sl::Result InitializeStreamline( HMODULE streamlineModule );
-	void ReleaseStreamline( HMODULE streamlineModule );
+	void ReleaseStreamline( );
 	sl::Result CheckForAvailability( HMODULE streamlineModule, sl::Feature feature, sl::AdapterInfo adapterInfo );
 	}
 #endif

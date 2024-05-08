@@ -41,13 +41,14 @@ void Tr2MetalFxUpscalingTechnique::Destroy( Tr2RenderContextAL& renderContext )
 {
 }
 
-Tr2UpscalingAL::Result Tr2MetalFxUpscalingTechnique::Setup()
+ bool Tr2MetalFxUpscalingTechnique::IsAvailable( Tr2RenderContextAL& renderContext )
 {
-    if( @available(macOS 13.0, *))
+    if( @available(macOS 13.0, *) )
     {
-        return Tr2UpscalingAL::Result::OK;
+        return true;
     }
-    return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+    CCP_LOGNOTICE( "MetalFX upscaling is not supported for MacOS < 13.0" );
+    return false;
 } 
 
 Tr2UpscalingContextAL* Tr2MetalFxUpscalingTechnique::CreateContextInstance( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
@@ -220,7 +221,8 @@ void Tr2MetalFxUpscalingContext::UpdateJitter()
 
 uint32_t Tr2MetalFxUpscalingContext::GetDispatchRequirements() const
 {
-    if( m_temporal ){
+    if( m_temporal )
+    {
         return Tr2UpscalingAL::DispatchRequirements::VELOCITY & Tr2UpscalingAL::DispatchRequirements::DEPTH;
     }
     return 0;

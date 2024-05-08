@@ -293,16 +293,21 @@ public:
 
 	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter )
 	{
-		return Tr2UpscalingAL::PLATFORM_NOT_SUPPORTED;
+		return Tr2UpscalingAL::Result::OK;
 	}
 
 	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID )
 	{
 		return nullptr;
 	}
+
 	Tr2UpscalingContextAL* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
 	{
 		return nullptr;
+	}
+
+	void DeleteUpscalingContext( uint32_t contextID )
+	{
 	}
 
 	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter )
