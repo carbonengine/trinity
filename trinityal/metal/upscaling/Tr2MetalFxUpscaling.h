@@ -32,7 +32,7 @@ public:
     virtual Tr2UpscalingAL::Result Setup( Tr2RenderContextAL& renderContext ) override;
     virtual bool IsTemporal() const override;
     virtual void UpdateJitter() override;
-    virtual uint32_t GetDispatchRequirements() const override;
+	virtual uint32_t GetDispatchRequirements() const override;
     
     virtual Tr2UpscalingAL::Result Dispatch( Tr2RenderContextAL& renderContext, Tr2UpscalingAL::DispatchParameters& dispatchParameters ) override;
 
@@ -49,7 +49,6 @@ private:
     bool m_temporal;
     Tr2UpscalingAL::JitterSequence m_jitterSequence;
 
-    void Destroy( Tr2RenderContextAL& renderContext );
     friend class Tr2MetalFxUpscalingTechnique;
 };
 #endif

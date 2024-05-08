@@ -267,8 +267,4 @@ Tr2UpscalingAL::Result Tr2MetalFxUpscalingContext::Dispatch( Tr2RenderContextAL&
     return Tr2UpscalingAL::Result::OK;
 }
 
-void Tr2MetalFxUpscalingContext::Destroy( Tr2RenderContextAL& renderContext )
-{
-}
-
 #endif
