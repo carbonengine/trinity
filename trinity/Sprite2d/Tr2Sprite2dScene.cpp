@@ -1118,27 +1118,24 @@ void Tr2Sprite2dScene::IssueDrawCall()
 			}
 			else
 			{
-                if(m_effect)
+                if( auto desc = m_effect->GetPassDescription( 0, 0 ) )
                 {
-                    if( auto desc = m_effect->GetPassDescription( 0, 0 ) )
+                    for( uint32_t i = 0; i < 2; ++i )
                     {
-                        for( uint32_t i = 0; i < 2; ++i )
+                        Tr2TextureAL* texAL = nullptr;
+                        if( m_texture[i] )
                         {
-                            Tr2TextureAL* texAL = nullptr;
-                            if( m_texture[i] )
+                            texAL = m_texture[i]->GetTexture();
+                            if( !texAL )
                             {
-                                texAL = m_texture[i]->GetTexture();
-                                if( !texAL )
+                                if( m_texture[i]->GetRenderTarget() )
                                 {
-                                    if( m_texture[i]->GetRenderTarget() )
-                                    {
-                                        texAL = m_texture[i]->GetRenderTarget();
-                                    }
+                                    texAL = m_texture[i]->GetRenderTarget();
                                 }
                             }
-                            auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
-                            desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
                         }
+                        auto colorSpace = m_useLinearColorSpace ? Tr2RenderContextEnum::COLOR_SPACE_SRGB : Tr2RenderContextEnum::COLOR_SPACE_LINEAR;
+                        desc->m_resourceSetDirty |= desc->m_resourceSetDesc.SetSrv( PIXEL_SHADER, m_textureRegisters[i], texAL ? *texAL : Tr2TextureAL(), colorSpace );
                     }
                 }
 

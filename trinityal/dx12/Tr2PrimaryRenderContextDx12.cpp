@@ -153,17 +153,17 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 		D3D12_FEATURE_DATA_D3D12_OPTIONS5 caps = {};
 		if( FAILED( device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &caps, sizeof( caps ) ) ) || caps.RaytracingTier < D3D12_RAYTRACING_TIER_1_0 )
 		{
-			CCP_LOGERR( "DirectX device or driver does not support raytracing" );
+			CCP_LOGNOTICE( "DirectX device or driver does not support raytracing" );
 		}
 		else
 		{
-			CCP_LOGERR( "Successfully created DirectX 12.1 device, ray tracing will be available" );
+			CCP_LOGNOTICE( "Successfully created DirectX 12.1 device, ray tracing will be available" );
 			dxrAvailable = true;
 		}
 	}
 	else
 	{
-		CCP_LOGERR( "Failed to create DirectX 12.1 device, now creating DirectX 12.0 device instead" );
+		CCP_LOGNOTICE( "Failed to create DirectX 12.1 device, now creating DirectX 12.0 device instead" );
 		CR_RETURN_HR( D3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS( &device ) ) );
 	}
 
@@ -524,6 +524,7 @@ void Tr2PrimaryRenderContextAL::Destroy()
 		m_allocators[idx] = nullptr;
 	}
 
+	m_device5 = nullptr;
 	m_device = nullptr;
 
 	if( m_presentFenceEvent )

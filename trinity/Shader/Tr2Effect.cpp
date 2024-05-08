@@ -305,20 +305,24 @@ Tr2Effect::~Tr2Effect()
 
 void Tr2Effect::ReleaseResources( TriStorage s )
 {
-	/*
 	if( ( s & TRISTORAGE_ALL ) == TRISTORAGE_ALL )
 	{
-		for( auto it = m_parametersForPasses.begin(); it != m_parametersForPasses.end(); ++it )
+		for( auto& technique : m_parametersForPasses )
 		{
-			for( auto jt = it->begin(); jt != it->end(); ++jt )
+			for( auto& pass : technique.passes )
 			{
-				for( unsigned i = 0; i != SHADER_TYPE_COUNT; ++i )
+				for( auto& stage : pass->m_stageInput )
 				{
-					( *jt )->m_stageInput[i].m_constantBuffer = Tr2ConstantBufferAL();
+					stage.m_constantBuffer = Tr2ConstantBufferAL();
 				}
 			}
+			for (auto& library : technique.libraries)
+			{
+				library->m_globalInput.m_constantBuffer = Tr2ConstantBufferAL();
+				library->m_localInput.m_constantBuffer = Tr2ConstantBufferAL();
+			}
 		}
-	}*/
+	}
 }
 
 bool Tr2Effect::OnPrepareResources()

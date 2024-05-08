@@ -47,9 +47,6 @@ public:
 	D3D12_GPU_VIRTUAL_ADDRESS UploadConstants( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer );
 	D3D12_GPU_VIRTUAL_ADDRESS UploadConstants( const void* data, uint32_t size );
 
-	/** Upload constantbuffer */
-	D3D12_GPU_VIRTUAL_ADDRESS UploadConstantBuffer( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer );
-
 	/** Set an array or UnorderedAccessViews */
 	void SetUnorderedAccessViews(uint32_t startSlot, uint32_t numViews, std::shared_ptr<UnorderedAccessViewDx12>* unorderedAccessViews);
 

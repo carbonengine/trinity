@@ -140,61 +140,9 @@ void DescriptorStateCache::SetSamplers(uint32_t startSlot, uint32_t numViews, st
 	}
 }
 
-/** Set a constantbuffer */
-/*void DescriptorStateCache::SetConstantBuffers(Tr2RenderContextEnum::ShaderType shaderStage, uint32_t slot, const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer)
-{
-	uint64_t frameNr = m_primaryContext->GetRenderedFrameNumber();
-	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
-
-	// CB isn't resident
-	if( constantBuffer.m_token.m_frameNumber != frameNr )
-	{
-		auto entry = m_allocatorUpload.Allocate( constantBuffer.GetDataPtr(), constantBuffer.GetSize() );
-		if( entry.m_cpuAddr != nullptr )
-		{
-			addr = entry.m_gpuAddr;
-		}
-
-		constantBuffer.m_token.m_address = addr;
-		constantBuffer.m_token.m_frameNumber = frameNr;
-	}
-	else
-	{
-		addr = constantBuffer.m_token.m_address;
-	}
-
-	m_cbv[shaderStage][slot] = addr;
-}*/
-
-/** Set a constantbuffer */
 void DescriptorStateCache::SetConstantBuffers( Tr2RenderContextEnum::ShaderType shaderStage, uint32_t slot, const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer )
 {
-	m_cbv[shaderStage][slot] = UploadConstantBuffer( constantBuffer );
-}
-
-D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstantBuffer( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer )
-{
-	uint64_t frameNr = m_primaryContext->GetRenderedFrameNumber();
-	D3D12_GPU_VIRTUAL_ADDRESS addr = 0;
-
-	// CB isn't resident
-	if( constantBuffer.m_token.m_frameNumber != frameNr )
-	{
-		auto entry = m_allocatorUpload.Allocate( constantBuffer.GetDataPtr(), constantBuffer.GetSize() );
-		if( entry.m_cpuAddr != nullptr )
-		{
-			addr = entry.m_gpuAddr;
-		}
-
-		constantBuffer.m_token.m_address = addr;
-		constantBuffer.m_token.m_frameNumber = frameNr;
-	}
-	else
-	{
-		addr = constantBuffer.m_token.m_address;
-	}
-
-	return addr;
+	m_cbv[shaderStage][slot] = UploadConstants( constantBuffer );
 }
 
 D3D12_GPU_VIRTUAL_ADDRESS DescriptorStateCache::UploadConstants( const TrinityALImpl::Tr2ConstantBufferAL& constantBuffer )

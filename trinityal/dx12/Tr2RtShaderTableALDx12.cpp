@@ -127,7 +127,7 @@ namespace TrinityALImpl
 					D3D12_GPU_VIRTUAL_ADDRESS addr;
 					if( cb.IsValid() )
 					{
-						addr = descriptorCache.UploadConstantBuffer( *cb.TrinityALImpl_GetObject() );
+						addr = descriptorCache.UploadConstants( *cb.TrinityALImpl_GetObject() );
 					}
 					else
 					{
