@@ -28,6 +28,7 @@ CCP_STATS_DECLARED_ELSEWHERE( primitiveCount );
 
 using namespace Tr2RenderContextEnum;
 extern bool g_brokenMacOSNvidiaDrivers;
+extern bool g_eveSpaceSceneRaytracedShadows;
 
 
 // names of system bones like they are in the granny file
@@ -130,6 +131,9 @@ EveTurretSet::EveTurretSet( IRoot* lockobj ) :
 	memset( &m_parentData, 0, sizeof( EveSpaceObject2::ParentData ) );
 	m_parentData.transform = IdentityMatrix();
 	m_shipTransformPrev = IdentityMatrix();
+
+	//m_rtMeshArea.reset( new Tr2RaytracingMeshArea( 0 ) );
+	//m_rtMesh.reset( new Tr2RaytracingMesh() );
 
 	for( unsigned int i = 0; i < SYSBONE_MAX; ++i )
 	{
@@ -1081,6 +1085,7 @@ void EveTurretSet::UpdateAsyncronous( EveUpdateContext& updateContext, const IEv
 								Matrix id = IdentityMatrix();
 								GrannyBuildWorldPose( it->grnSkeleton, 0, it->grnSkeleton->BoneCount, it->grnLocalPose, &id.m[0][0], it->grnWorldPose );
 								granny_real32* boneWorldTransform = GrannyGetWorldPose4x4( it->grnWorldPose, m_systemBoneID[bone] );
+
 								localTransform = *reinterpret_cast<const Matrix*>( boneWorldTransform ) * id;
 								localTransformPtr = &localTransform;
 							}
@@ -1224,7 +1229,7 @@ Matrix EveTurretSet::GetTurretBoneTransform( uint32_t closestTurret, uint32_t bo
 	{
 		return lowLodTransform * m;
 	}
-
+	
 	// valid granny pose? (bone positions are stored "in" that thing)
 	if( m_singleTurrets[closestTurret].grnWorldPose )
 	{
@@ -1629,7 +1634,11 @@ void EveTurretSet::UpdateVisibility( const TriFrustum& frustum )
 		ambientEffect->UpdateVisibility( frustum, m_parentData.transform, currentLod );
 	}
 
-	UpdateRtMesh();
+	if( g_eveSpaceSceneRaytracedShadows )
+	{
+		UpdateRtMesh();
+		UpdateRtSkeleton();
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -1778,6 +1787,55 @@ float EveTurretSet::GetSortValue()
 	return 1.f;
 }
 
+void EveTurretSet::CalculateBoneIndices()
+{
+	// fill with data
+	if( !m_singleTurrets.empty() )
+	{
+		unsigned int defaultBonesPerTurret = 3;
+		// to-bone-index-mapping for the shader (is the same for all turrets of the set)
+		const int* toBoneIndices = m_grnMeshBinding ? GrannyGetMeshBindingToBoneIndices( m_grnMeshBinding ) : NULL;
+		unsigned int boneCount = m_grnMeshBinding ? GrannyGetMeshBindingBoneCount( m_grnMeshBinding ) : defaultBonesPerTurret;
+
+		// Index of the bone in the big translation and rotation
+		unsigned int turretIndex = 0;
+		uint32_t boneIndex = 0;
+		
+		static Tr2BoneTransformBuffer::Float4x3* transforms = nullptr;
+		if( !transforms )
+		{
+			transforms = new Tr2BoneTransformBuffer::Float4x3;
+		}
+
+		// put all single turret's positions and rotations in the array
+		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
+		{
+			if( m_singleTurrets[i].visible )
+			{
+				// get animation matrices here, they are not the same for all turrets of the set
+				const Matrix* compositeMatrixArray = m_singleTurrets[i].grnWorldPose ?
+					reinterpret_cast<const Matrix*>( GrannyGetWorldPoseComposite4x4Array( m_singleTurrets[i].grnWorldPose ) ) :
+					nullptr;
+
+				// Construct all turret bone translations and rotations
+				for( unsigned int j = 0; j < boneCount; ++j )
+				{
+					Matrix bone;
+					if( m_singleTurrets[i].valid && toBoneIndices && compositeMatrixArray )
+					{
+						bone = compositeMatrixArray[toBoneIndices[j]];
+					}
+					else
+					{
+						bone = IdentityMatrix();
+					}
+					//transforms[boneIndex++] = Tr2BoneTransformBuffer::Float4x3( bone );
+				}
+			}
+		}
+	}
+}
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Fill the per-object data. First the world matrix of the parent-ship, then
@@ -1921,12 +1979,32 @@ void EveTurretSet::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 		m_rtPerObjectData.Create( sizeof( EveSpaceObjectPSData ), renderContext );
 	}
 
-	//EveTurretSetPSData* perObjectData;
-	//m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
-	//*perObjectData = m_psData;
-	//m_rtPerObjectData.Unlock( renderContext );
+	EveTurretSetPSData* perObjectData;
 
+	m_rtPerObjectData.Lock( (void**)&perObjectData, renderContext );
+
+	perObjectData->m_shipData = m_parentData.shipData;
+	perObjectData->m_clipData1 = m_parentData.clipData;
+	if( m_parentShLighting )
+	{
+		memcpy( perObjectData->m_shLightingCoefficients, m_parentShLighting, sizeof( perObjectData->m_shLightingCoefficients ) );
+	}
+	else
+	{
+		memset( perObjectData->m_shLightingCoefficients, 0, sizeof( perObjectData->m_shLightingCoefficients ) );
+	}
 	
+	m_rtPerObjectData.Unlock( renderContext );
+
+	if( !m_rtMesh || !m_rtMeshArea )
+	{
+		return;
+	}
+	
+	for( auto it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
+	{
+		rtManager.GetGeometry().AddGeometry( *m_rtMesh, *m_rtMeshArea, m_turretEffect, &m_rtPerObjectData, it->worldMatrix );
+	}
 }
 
 // --------------------------------------------------------------------------------
@@ -2719,14 +2797,96 @@ void EveTurretSet::UpdateRtMesh()
 	{
 		return;
 	}
-	if( !m_geometryResource || !m_geometryResource->IsGood() )
+	if( !m_geometryResource || !m_geometryResource->IsGood() || !m_turretEffect )
 	{
 		return;
 	}
 	
-	GetOrCreateRtMesh();
+	auto rtMesh = GetOrCreateRtMesh();
 
-	m_rtMesh->UpdateRtMesh( m_geometryResource, 0, m_estimatedPixelDiameter );		
+	rtMesh->UpdateRtMesh( m_geometryResource, 0, m_estimatedPixelDiameter );
+	
+	GetOrCreateRtMeshArea();
+}
+
+void EveTurretSet::UpdateRtSkeleton()
+{
+	// if we don't have a geometry or a shader, animation is useless and probably unwanted
+	if( !m_geometryResource || !m_geometryResource->IsGood() || !m_turretEffect )
+	{
+		return;
+	}
+
+	// fill with data
+	if( !m_singleTurrets.empty() )
+	{
+		unsigned int defaultBonesPerTurret = 3;
+		// to-bone-index-mapping for the shader (is the same for all turrets of the set)
+		const int* toBoneIndices = m_grnMeshBinding ? GrannyGetMeshBindingToBoneIndices( m_grnMeshBinding ) : NULL;
+		unsigned int boneCount = m_grnMeshBinding ? GrannyGetMeshBindingBoneCount( m_grnMeshBinding ) : defaultBonesPerTurret;
+
+		// Index of the bone in the big translation and rotation
+		//unsigned int turretIndex = 0;
+		uint32_t boneIndex = 0;
+
+		static Tr2BoneTransformBuffer::Float4x3* transforms = nullptr;
+		if( !transforms )
+		{
+			transforms = new Tr2BoneTransformBuffer::Float4x3;
+		}
+		std::vector<granny_matrix_3x4*> boneTransformList;
+		// put all single turret's positions and rotations in the array
+		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
+		{
+			if( m_singleTurrets[i].visible )
+			{
+				// get animation matrices here, they are not the same for all turrets of the set
+				const Matrix* compositeMatrixArray = m_singleTurrets[i].grnWorldPose ?
+					reinterpret_cast<const Matrix*>( GrannyGetWorldPoseComposite4x4Array( m_singleTurrets[i].grnWorldPose ) ) :
+					nullptr;
+
+				// Construct all turret bone translations and rotations
+				for( unsigned int j = 0; j < boneCount; ++j )
+				{
+					Matrix bone;
+					if( m_singleTurrets[i].valid && toBoneIndices && compositeMatrixArray )
+					{
+						bone = compositeMatrixArray[toBoneIndices[j]];
+					}
+					else
+					{
+						bone = IdentityMatrix();
+					}
+					transforms[boneIndex] = Tr2BoneTransformBuffer::Float4x3( bone );
+
+					granny_matrix_3x4* in;
+					*in[0][0] = transforms[boneIndex].elements[0];
+					( *in )[0][1] = transforms[boneIndex].elements[1];
+					( *in )[0][2] = transforms[boneIndex].elements[2];
+					( *in )[0][3] = transforms[boneIndex].elements[3];
+					( *in )[1][0] = transforms[boneIndex].elements[4];
+					( *in )[1][1] = transforms[boneIndex].elements[5];
+					( *in )[1][2] = transforms[boneIndex].elements[6];
+					( *in )[1][3] = transforms[boneIndex].elements[7];
+					( *in )[2][0] = transforms[boneIndex].elements[8];
+					( *in )[2][1] = transforms[boneIndex].elements[9];
+					( *in )[2][2] = transforms[boneIndex].elements[10];
+					( *in )[2][3] = transforms[boneIndex].elements[11];
+
+					boneTransformList.emplace_back( in );
+
+					boneIndex++;
+				}
+			}
+		}
+		
+		auto rtMesh = GetOrCreateRtMesh();
+		rtMesh->SetBoneTransforms( boneCount, *boneTransformList.data() );
+	}
+
+	auto rtMeshArea = GetOrCreateRtMeshArea();
+	// let's just assume that we should update the blas every frame
+	rtMeshArea->MarkBlasOutdated();
 }
 
 // --------------------------------------------------------------------------------
@@ -3057,4 +3217,18 @@ Tr2RaytracingMesh* EveTurretSet::GetOrCreateRtMesh()
 Tr2RaytracingMesh* EveTurretSet::GetRtMesh() const
 {
 	return m_rtMesh.get();
+}
+
+Tr2RaytracingMeshArea* EveTurretSet::GetOrCreateRtMeshArea()
+{
+	if( !m_rtMeshArea )
+	{
+		m_rtMeshArea.reset( new Tr2RaytracingMeshArea( 0 ) );
+	}
+	return m_rtMeshArea.get();
+}
+
+Tr2RaytracingMeshArea* EveTurretSet::GetRtMeshArea() const
+{
+	return m_rtMeshArea.get();
 }

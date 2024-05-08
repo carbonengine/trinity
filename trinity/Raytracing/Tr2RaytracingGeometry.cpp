@@ -518,8 +518,6 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	{
 		CTr2RuntimeGpuBuffer inVB;
 		CTr2RuntimeGpuBuffer outVB;
-		m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, &inVB );
-		m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, &outVB );
 
 		auto perObjVSRegister = Tr2Renderer::GetPerObjectVSStartRegister();
 
@@ -536,6 +534,7 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			TriGeometryResMeshData* meshData = mesh->GetMeshData();
 
 			auto vertexCount = meshData->m_vertexCount;
+
 			auto constSize = mesh->GetTransformsSize() + 4 * sizeof( uint32_t );
 			if( !m_skinVerticesData.IsValid() || m_skinVerticesData.GetSize() < constSize )
 			{
@@ -571,6 +570,9 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			renderContext.ResourceBarrierDx12( 1, &barrier );
 #endif
+
+			m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, &inVB );
+			m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, &outVB );
 			// cheat a bit instead of calling RunComputeShader() to make things more performant
 			if( !shader )
 			{
