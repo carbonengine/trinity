@@ -151,7 +151,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	if( SUCCEEDED( D3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS( &device ) ) ) )
 	{	
 		D3D12_FEATURE_DATA_D3D12_OPTIONS5 caps = {};
-		if( FAILED( device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &caps, sizeof( caps ) ) ) || caps.RaytracingTier < D3D12_RAYTRACING_TIER_1_0 )
+		if( FAILED( device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &caps, sizeof( caps ) ) ) || caps.RaytracingTier < D3D12_RAYTRACING_TIER_1_1 )
 		{
 			CCP_LOGNOTICE( "DirectX device or driver does not support raytracing" );
 		}
