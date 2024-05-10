@@ -1787,55 +1787,6 @@ float EveTurretSet::GetSortValue()
 	return 1.f;
 }
 
-void EveTurretSet::CalculateBoneIndices()
-{
-	// fill with data
-	if( !m_singleTurrets.empty() )
-	{
-		unsigned int defaultBonesPerTurret = 3;
-		// to-bone-index-mapping for the shader (is the same for all turrets of the set)
-		const int* toBoneIndices = m_grnMeshBinding ? GrannyGetMeshBindingToBoneIndices( m_grnMeshBinding ) : NULL;
-		unsigned int boneCount = m_grnMeshBinding ? GrannyGetMeshBindingBoneCount( m_grnMeshBinding ) : defaultBonesPerTurret;
-
-		// Index of the bone in the big translation and rotation
-		unsigned int turretIndex = 0;
-		uint32_t boneIndex = 0;
-		
-		static Tr2BoneTransformBuffer::Float4x3* transforms = nullptr;
-		if( !transforms )
-		{
-			transforms = new Tr2BoneTransformBuffer::Float4x3;
-		}
-
-		// put all single turret's positions and rotations in the array
-		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
-		{
-			if( m_singleTurrets[i].visible )
-			{
-				// get animation matrices here, they are not the same for all turrets of the set
-				const Matrix* compositeMatrixArray = m_singleTurrets[i].grnWorldPose ?
-					reinterpret_cast<const Matrix*>( GrannyGetWorldPoseComposite4x4Array( m_singleTurrets[i].grnWorldPose ) ) :
-					nullptr;
-
-				// Construct all turret bone translations and rotations
-				for( unsigned int j = 0; j < boneCount; ++j )
-				{
-					Matrix bone;
-					if( m_singleTurrets[i].valid && toBoneIndices && compositeMatrixArray )
-					{
-						bone = compositeMatrixArray[toBoneIndices[j]];
-					}
-					else
-					{
-						bone = IdentityMatrix();
-					}
-					//transforms[boneIndex++] = Tr2BoneTransformBuffer::Float4x3( bone );
-				}
-			}
-		}
-	}
-}
-
 // --------------------------------------------------------------------------------
 // Description:
 //   Fill the per-object data. First the world matrix of the parent-ship, then
@@ -2817,6 +2768,8 @@ void EveTurretSet::UpdateRtSkeleton()
 		return;
 	}
 
+	bool isDirty = false;
+
 	// fill with data
 	if( !m_singleTurrets.empty() )
 	{
@@ -2825,16 +2778,11 @@ void EveTurretSet::UpdateRtSkeleton()
 		const int* toBoneIndices = m_grnMeshBinding ? GrannyGetMeshBindingToBoneIndices( m_grnMeshBinding ) : NULL;
 		unsigned int boneCount = m_grnMeshBinding ? GrannyGetMeshBindingBoneCount( m_grnMeshBinding ) : defaultBonesPerTurret;
 
-		// Index of the bone in the big translation and rotation
-		//unsigned int turretIndex = 0;
-		uint32_t boneIndex = 0;
+		//std::vector<EveTurretBoneData> boneTransformList;
+		std::vector<Tr2BoneTransformBuffer::Float4x3> boneTransformList;
 
-		static Tr2BoneTransformBuffer::Float4x3* transforms = nullptr;
-		if( !transforms )
-		{
-			transforms = new Tr2BoneTransformBuffer::Float4x3;
-		}
-		std::vector<granny_matrix_3x4*> boneTransformList;
+		boneTransformList.reserve( boneCount );
+
 		// put all single turret's positions and rotations in the array
 		for( unsigned int i = 0; i < m_singleTurrets.size(); ++i )
 		{
@@ -2857,36 +2805,22 @@ void EveTurretSet::UpdateRtSkeleton()
 					{
 						bone = IdentityMatrix();
 					}
-					transforms[boneIndex] = Tr2BoneTransformBuffer::Float4x3( bone );
 
-					granny_matrix_3x4* in;
-					*in[0][0] = transforms[boneIndex].elements[0];
-					( *in )[0][1] = transforms[boneIndex].elements[1];
-					( *in )[0][2] = transforms[boneIndex].elements[2];
-					( *in )[0][3] = transforms[boneIndex].elements[3];
-					( *in )[1][0] = transforms[boneIndex].elements[4];
-					( *in )[1][1] = transforms[boneIndex].elements[5];
-					( *in )[1][2] = transforms[boneIndex].elements[6];
-					( *in )[1][3] = transforms[boneIndex].elements[7];
-					( *in )[2][0] = transforms[boneIndex].elements[8];
-					( *in )[2][1] = transforms[boneIndex].elements[9];
-					( *in )[2][2] = transforms[boneIndex].elements[10];
-					( *in )[2][3] = transforms[boneIndex].elements[11];
-
-					boneTransformList.emplace_back( in );
-
-					boneIndex++;
+					boneTransformList.push_back( Tr2BoneTransformBuffer::Float4x3( bone ) );
 				}
 			}
 		}
 		
 		auto rtMesh = GetOrCreateRtMesh();
-		rtMesh->SetBoneTransforms( boneCount, *boneTransformList.data() );
+		isDirty = rtMesh->SetBoneTransforms( boneCount, reinterpret_cast<const granny_matrix_3x4*>( boneTransformList.data() ) );
 	}
 
 	auto rtMeshArea = GetOrCreateRtMeshArea();
-	// let's just assume that we should update the blas every frame
-	rtMeshArea->MarkBlasOutdated();
+
+	if( isDirty )
+	{
+		rtMeshArea->MarkBlasOutdated();
+	}
 }
 
 // --------------------------------------------------------------------------------

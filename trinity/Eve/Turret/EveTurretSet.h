@@ -381,8 +381,6 @@ private:
 	// instance vertex stream
 	Tr2SuballocatedBuffer::Allocation m_instanceBuffer;
 
-	void CalculateBoneIndices();
-
 	// Assign the target object
 	void SetTargetObject( IRoot* target );
 	ITriTargetablePtr GetTargetObject();
@@ -479,8 +477,6 @@ private:
 
 	std::unique_ptr<Tr2RaytracingMesh> m_rtMesh;
 	std::unique_ptr<Tr2RaytracingMeshArea> m_rtMeshArea;
-
-	granny_matrix_3x4 m_boneMatrices[3][4];
 };
 
 TYPEDEF_BLUECLASS( EveTurretSet );
