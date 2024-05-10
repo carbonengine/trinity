@@ -31,6 +31,7 @@ namespace TrinityALImpl
 
 		void Describe( Tr2DeviceResourceDescriptionAL& description ) const;
 		ALResult SetName( const char* name );
+		ID3D11Buffer* GetGpuResource() const;
 
 		uint32_t GetSrvIndexInHeap() const;
 		uint32_t GetUavIndexInHeap() const;

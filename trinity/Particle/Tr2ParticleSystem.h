@@ -239,6 +239,9 @@ private:
 	// Is this a global particle system?
 	bool m_isGlobal;
 
+	// Is the previous data outdated?
+	bool m_previousDataOutdated;
+
 	// Did last call to UpdateElementDeclaration succeeded
 	bool m_isValid;
 	// Previous sorting reference point (only used during sorting)

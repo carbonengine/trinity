@@ -94,6 +94,8 @@ private:
 	PTr2ParticleSystemVector m_particleSystems;
 	PIEveChildTransformModifierVector m_transformModifiers;
 
+	Matrix m_worldTransformLast;
+
 	// Lodding
 	bool m_useDynamicLod;
 	float m_lodFactorMedium;

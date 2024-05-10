@@ -128,6 +128,10 @@ namespace TrinityALImpl
 
 			desc.NumRenderTargets = m_renderTargetCount;
 			memcpy( desc.RTVFormats, m_renderTargetFormats, sizeof( desc.RTVFormats ) );
+
+			// fill the rest with unknowns
+			std::fill( std::begin(desc.RTVFormats) + m_renderTargetCount, std::end(desc.RTVFormats), (DXGI_FORMAT)Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
+
 			desc.DSVFormat = DXGI_FORMAT( m_depthStencilFormat );
 			desc.SampleDesc.Count = m_sampleDesc.samples;
 			desc.SampleDesc.Quality = m_sampleDesc.quality;

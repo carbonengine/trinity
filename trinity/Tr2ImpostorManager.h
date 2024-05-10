@@ -40,6 +40,8 @@ BLUE_INTERFACE( ITr2ImpostorSource )
 	virtual float GetRenderPriority( const ImpostorHash& oldHash, const ImpostorHash& newHash ) const = 0;
 	// Returns object bounding sphere
 	virtual bool GetImpostorBoundingSphere( Vector4& sphere ) const = 0;
+	// Returns object last frame bounding sphere
+	virtual void GetLastImpostorBoundingSphere( Vector4 & sphere ) const = 0;
 };
 
 

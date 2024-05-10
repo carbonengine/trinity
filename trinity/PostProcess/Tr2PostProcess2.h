@@ -22,13 +22,13 @@
 #include "Effects/Tr2PPFogEffect.h"
 #include "Effects/Tr2PPTaaEffect.h"
 #include "Effects/Tr2PPDepthOfFieldEffect.h"
+#include "Effects/Tr2PPUpscalingEffect.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2PPSignalLossEffect );
 BLUE_DECLARE( Tr2PPGodRaysEffect );
 BLUE_DECLARE( Tr2PPBloomEffect );
 BLUE_DECLARE( Tr2PPDynamicExposureEffect );
-BLUE_DECLARE( Tr2PPFidelityFXEffect );
 BLUE_DECLARE( Tr2PPFilmGrainEffect );
 BLUE_DECLARE( Tr2PPDesaturateEffect );
 BLUE_DECLARE( Tr2PPFadeEffect );
@@ -37,6 +37,7 @@ BLUE_DECLARE( Tr2PPVignetteEffect );
 BLUE_DECLARE( Tr2PPFogEffect );
 BLUE_DECLARE( Tr2PPTaaEffect );
 BLUE_DECLARE( Tr2PPDepthOfFieldEffect );
+BLUE_DECLARE( Tr2PPUpscalingEffect );
 
 BLUE_CLASS( Tr2PostProcess2 ) :
 	public IRoot
@@ -51,7 +52,6 @@ public:
 	Tr2PPGodRaysEffectPtr GetGodRays() { return m_godRays; }
 	Tr2PPBloomEffectPtr GetBloom() { return m_bloom; }
 	Tr2PPDynamicExposureEffectPtr GetDynamicExposure() { return m_dynamicExposure; }
-	Tr2PPFidelityFXEffectPtr GetFidelityFX() { return m_fidelityFX; }
 	Tr2PPFilmGrainEffectPtr GetFilmGrain() { return m_filmGrain; }
 	Tr2PPDesaturateEffectPtr GetDesaturate() { return m_desaturate; }
 	Tr2PPFadeEffectPtr GetFade() { return m_fade; }
@@ -64,12 +64,15 @@ public:
 	// Helper method for scenes to decide on miplodbias
 	float GetMipLodBias() const;
 
+
+	// Jittering
+	void GetJitter( uint32_t renderWidth, uint32_t renderHeight, float& x, float& y );
+
 private:
 	Tr2PPSignalLossEffectPtr m_signalLoss;
 	Tr2PPGodRaysEffectPtr m_godRays;
 	Tr2PPBloomEffectPtr m_bloom;
 	Tr2PPDynamicExposureEffectPtr m_dynamicExposure;
-	Tr2PPFidelityFXEffectPtr m_fidelityFX;
 	Tr2PPFilmGrainEffectPtr m_filmGrain;
 	Tr2PPDesaturateEffectPtr m_desaturate;
 	Tr2PPFadeEffectPtr m_fade;

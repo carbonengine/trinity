@@ -3,7 +3,7 @@ project(trinity VERSION 1.0.0)
 
 find_package(libSquish REQUIRED)
 find_package(FidelityFX REQUIRED)
-find_package(FidelityFX_FSR REQUIRED)
+find_package(IntelXeSS REQUIRED)
 find_package(CACAO REQUIRED)
 find_package(IntelTBB REQUIRED)
 find_package(NanoVDB REQUIRED)
@@ -836,6 +836,16 @@ set(_SOURCES
     Particle/Tr2StaticEmitter.cpp
     Particle/Tr2StaticEmitter.h
     Particle/Tr2StaticEmitter_Blue.cpp
+    PostProcess/Effects/Sharpening/ITr2Sharpening.h
+    PostProcess/Effects/Sharpening/Tr2FidelityFxCas.cpp
+    PostProcess/Effects/Sharpening/Tr2FidelityFxCas.h
+    PostProcess/Effects/Sharpening/Tr2FidelityFxCas_Blue.cpp
+    PostProcess/Effects/Sharpening/Tr2NoopSharpening.cpp
+    PostProcess/Effects/Sharpening/Tr2NoopSharpening.h
+    PostProcess/Effects/Sharpening/Tr2NoopSharpening_Blue.cpp
+    PostProcess/Effects/Upscaling/ITr2Upscaling.h
+    PostProcess/Effects/Upscaling/Tr2UpscalingUtils.cpp
+    PostProcess/Effects/Upscaling/Tr2UpscalingUtils.h
     PostProcess/Effects/Tr2PPBloomEffect.cpp
     PostProcess/Effects/Tr2PPBloomEffect.h
     PostProcess/Effects/Tr2PPBloomEffect_Blue.cpp
@@ -854,9 +864,6 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPFadeEffect.cpp
     PostProcess/Effects/Tr2PPFadeEffect.h
     PostProcess/Effects/Tr2PPFadeEffect_Blue.cpp
-    PostProcess/Effects/Tr2PPFidelityFXEffect.cpp
-    PostProcess/Effects/Tr2PPFidelityFXEffect.h
-    PostProcess/Effects/Tr2PPFidelityFXEffect_Blue.cpp
     PostProcess/Effects/Tr2PPFilmGrainEffect.cpp
     PostProcess/Effects/Tr2PPFilmGrainEffect.h
     PostProcess/Effects/Tr2PPFilmGrainEffect_Blue.cpp
@@ -875,6 +882,9 @@ set(_SOURCES
     PostProcess/Effects/Tr2PPTaaEffect.cpp
     PostProcess/Effects/Tr2PPTaaEffect.h
     PostProcess/Effects/Tr2PPTaaEffect_Blue.cpp
+    PostProcess/Effects/Tr2PPUpscalingEffect.cpp
+    PostProcess/Effects/Tr2PPUpscalingEffect.h
+    PostProcess/Effects/Tr2PPUpscalingEffect_Blue.cpp
     PostProcess/Effects/Tr2PPVignetteEffect.cpp
     PostProcess/Effects/Tr2PPVignetteEffect.h
     PostProcess/Effects/Tr2PPVignetteEffect_Blue.cpp
@@ -1017,6 +1027,9 @@ set(_SOURCES
     RenderJob/TriStepSetStandardRenderStates.cpp
     RenderJob/TriStepSetStandardRenderStates.h
     RenderJob/TriStepSetStandardRenderStates_Blue.cpp
+    RenderJob/TriStepSetUpscalingContextID.cpp
+    RenderJob/TriStepSetUpscalingContextID.h
+    RenderJob/TriStepSetUpscalingContextID_Blue.cpp
     RenderJob/TriStepSetVariableStore.cpp
     RenderJob/TriStepSetVariableStore.h
     RenderJob/TriStepSetVariableStore_Blue.cpp
@@ -1633,7 +1646,6 @@ function(set_shared_trinity_properties target)
             Freetype::Freetype
             SQUISH::SQUISH
             AMD::FidelityFX
-            AMD::FidelityFX_FSR
             AMD::CACAO
             RadGameTools::Granny
             Intel::TBB
@@ -1734,7 +1746,7 @@ if(WIN32)
             TRINITY_PLATFORM=TRINITY_DIRECTX12
             TRINITYNAME=_trinity_dx12
     )
-    target_link_libraries(trinity_dx12 PRIVATE TrinityAL_dx12)
+    target_link_libraries(trinity_dx12 PRIVATE TrinityAL_dx12 )
     set_shared_trinity_properties(trinity_dx12)
 elseif(APPLE)
     enable_language(OBJCXX)
@@ -1753,6 +1765,7 @@ elseif(APPLE)
             "-framework Carbon"
             "-framework GameController"
             "-framework Metal"
+            "-framework MetalFX"
             "-framework IOKit"
             "-framework QuartzCore"
     )

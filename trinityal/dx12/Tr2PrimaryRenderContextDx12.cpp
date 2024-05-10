@@ -11,7 +11,6 @@
 #include "Tr2PrimaryRenderContextDx12.h"
 #include "ALLog.h"
 #include "Tr2VideoAdapterInfoALDx12.h"
-#include "Tr2AdapterStructures.h"
 #include "ITr2RenderContextEvents.h"
 #include "Utilities.h"
 #include "Tr2SwapChainALDx12.h"
@@ -95,8 +94,8 @@ namespace
 }
 
 
-Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
-	:m_events( nullptr ),
+Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL() :
+	m_events( nullptr ),
 	m_currentBackBufferIndex( 0 ),
 	m_presentFenceEvent( nullptr ),
 	m_syncInterval( 0 ),
@@ -108,7 +107,12 @@ Tr2PrimaryRenderContextAL::Tr2PrimaryRenderContextAL()
 	m_statsStatus( STAT_READY ),
 	m_completedFrameIndex( 0 ),
 	m_amdExtDeviceObject( 0 ),
-	m_gpuCrashTracker( nullptr )
+	m_gpuCrashTracker( nullptr ),
+	m_presentationParameters( {} ),
+	m_adapter( 0 ),
+	m_focusWindow( 0 ),
+	m_upscalingTechnique( nullptr )
+
 {
 	m_ownerDevice = this;
 	m_defaultBackBuffer.m_texture = std::make_shared<TrinityALImpl::Tr2TextureAL>();
@@ -127,9 +131,12 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	const Tr2PresentParametersAL& pp )
 {
 	Destroy();
-	
-	Tr2PresentParametersAL presentationParameters = pp;
+	auto presentationParameters = pp;
 	presentationParameters.variableRefreshRateSupported = m_supportsVariableRefreshRate;
+	m_presentationParameters = presentationParameters;
+	m_focusWindow = focusWindow;
+	m_adapter = adapter;
+
 	bool hasDebugLayer = false;
 	if( g_requestDeviceDebugLayer )
 	{
@@ -148,7 +155,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	
 	bool dxrAvailable = false;
 	// Create directX 12.1 device for raytracing, if it fails fall back to 12.0
-	if( SUCCEEDED( D3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_1, IID_PPV_ARGS( &device ) ) ) )
+	if( SUCCEEDED( CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_1, device ) ) )
 	{	
 		D3D12_FEATURE_DATA_D3D12_OPTIONS5 caps = {};
 		if( FAILED( device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS5, &caps, sizeof( caps ) ) ) || caps.RaytracingTier < D3D12_RAYTRACING_TIER_1_0 )
@@ -164,7 +171,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	else
 	{
 		CCP_LOGNOTICE( "Failed to create DirectX 12.1 device, now creating DirectX 12.0 device instead" );
-		CR_RETURN_HR( D3D12CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS( &device ) ) );
+		CR_RETURN_HR(CreateDevice( dxgiAdapter, D3D_FEATURE_LEVEL_12_0, device ) );
 	}
 
 	if( !m_gpuCrashTracker->IsValid() )
@@ -173,7 +180,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	}
 	else
 	{
-		m_gpuCrashTracker->Initialize(device);
+		m_gpuCrashTracker->Initialize( device );
 	}
 
 	if( hasDebugLayer )
@@ -199,7 +206,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	{
 		CCP_ASSERT(heapLayout[idx].m_type == D3D12_DESCRIPTOR_HEAP_TYPE(idx));
 
-		m_allocators[idx] = std::make_shared<GlobalDescriptorHeapAllocator>(device, heapLayout[idx].m_numPages, heapLayout[idx].m_pageSize, heapLayout[idx].m_type);
+		m_allocators[idx] = std::make_shared<GlobalDescriptorHeapAllocator>( device, heapLayout[idx].m_numPages, heapLayout[idx].m_pageSize, heapLayout[idx].m_type );
 		CCP_ASSERT(m_allocators[idx].get() != nullptr);
 	}
 
@@ -217,16 +224,16 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	desc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	desc.NodeMask = 0;
 
-	CR_RETURN_HR( device->CreateCommandQueue( &desc, IID_PPV_ARGS( &commandQueue ) ) );
+	CR_RETURN_HR( CreateCommandQueue( device, &desc, commandQueue ) );
 
 	const bool isWindowless = ( focusWindow == 0 ) && presentationParameters.software;
 
-	CComPtr<IDXGISwapChain3> swapChain;
+	CComPtr<IDXGISwapChain4> swapchain;
 	uint32_t backBufferCount = 1;
 	if( !isWindowless )
 	{
 		backBufferCount = Tr2SwapChainUtils::BACK_BUFFER_COUNT;
-		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapChain, focusWindow, presentationParameters, commandQueue, output ) );
+		FORWARD_HR( Tr2SwapChainUtils::CreateSwapChain( swapchain, focusWindow, presentationParameters, commandQueue, output, *this) );
 	}
 
 	
@@ -236,7 +243,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	{
 		// JB: Not pretty, but createRenderTargetView requires a valid device!
 		m_device = device;
-		HRESULT hr = TrinityALImpl::Tr2SwapChainAL::GetBackBuffers(this, backBuffers, rtvs, swapChain);
+		HRESULT hr = TrinityALImpl::Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, swapchain );
 		m_device = nullptr;
 
 		FORWARD_HR(hr);
@@ -251,9 +258,9 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	}
 
 	uint32_t currentBackBufferIndex;
-	if( swapChain )
+	if( swapchain )
 	{
-		currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
+		currentBackBufferIndex = swapchain->GetCurrentBackBufferIndex();
 	}
 	else
 	{
@@ -297,7 +304,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	m_device = device;
 	device.QueryInterface( &m_device5 );
 	m_commandQueue = commandQueue;
-	m_swapChain = swapChain;
+	m_swapchain = swapchain;
 	m_output = output;
 
 	m_commandAllocators = commandAllocators;
@@ -332,7 +339,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
 	featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-	if( SUCCEEDED( device->CheckFeatureSupport( D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof( featureData ) ) ) )
+	if( SUCCEEDED( m_device->CheckFeatureSupport( D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof( featureData ) ) ) )
 	{
 		m_rootSignatureVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
 	}
@@ -343,19 +350,25 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 
 	if( g_requestDebugMarkers )
 	{
-		if( HMODULE amdD3dDl2 = LoadLibrary( "amdxc64.dll" ) )
+		DXGI_ADAPTER_DESC adapterDesc;
+		if( SUCCEEDED( dxgiAdapter->GetDesc( &adapterDesc ) ) && adapterDesc.VendorId == 4098 )
 		{
-			auto amdExtD3dCreateFunc = (PFNAmdExtD3DCreateInterface)GetProcAddress( amdD3dDl2, "AmdExtD3DCreateInterface" );
-
-			if( amdExtD3dCreateFunc )
+			if( HMODULE amdD3dDl2 = LoadLibrary( "amdxc64.dll" ) )
 			{
-				IAmdExtD3DFactory* amdExtObject = nullptr;
-				amdExtD3dCreateFunc( m_device, __uuidof( IAmdExtD3DFactory ), reinterpret_cast<void**>( &amdExtObject ) );
+				auto amdExtD3dCreateFunc = (PFNAmdExtD3DCreateInterface)GetProcAddress( amdD3dDl2, "AmdExtD3DCreateInterface" );
 
-				if( amdExtObject )
+				if( amdExtD3dCreateFunc )
 				{
-					amdExtObject->CreateInterface( m_device, __uuidof( IAmdExtD3DDevice1 ), &m_amdExtDeviceObject );
+					IAmdExtD3DFactory* amdExtObject = nullptr;
+					amdExtD3dCreateFunc( m_device, __uuidof( IAmdExtD3DFactory ), reinterpret_cast<void**>( &amdExtObject ) );
+
+					if( amdExtObject )
+					{
+						amdExtObject->CreateInterface( m_device, __uuidof( IAmdExtD3DDevice1 ), &m_amdExtDeviceObject );
+						amdExtObject->Release();
+					}
 				}
+				FreeLibrary( amdD3dDl2 );
 			}
 		}
 	}
@@ -391,7 +404,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	}
 
     m_options = {};
-	device->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS, &m_options, sizeof( m_options ) );
+	m_device->CheckFeatureSupport( D3D12_FEATURE_D3D12_OPTIONS, &m_options, sizeof( m_options ) );
 
 
 	{
@@ -461,6 +474,7 @@ ALResult Tr2PrimaryRenderContextAL::CreateDevice(
 	return S_OK;
 }
 
+
 void Tr2PrimaryRenderContextAL::Destroy()
 {
 	if( IsValid() )
@@ -479,6 +493,11 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	{
 		static_cast<IAmdExtD3DDevice1*>( m_ownerDevice->m_amdExtDeviceObject )->Release();
 		m_amdExtDeviceObject = nullptr;
+	}
+
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->Destroy( *this );
 	}
 
 	m_pendingPresents.clear();
@@ -508,12 +527,13 @@ void Tr2PrimaryRenderContextAL::Destroy()
 	m_commandAllocators.clear();
 
 	m_commandQueue = nullptr;
+	FlushPendingRelease();
 
-	if( m_swapChain )
+	if( m_swapchain )
 	{
-		CR( m_swapChain->SetFullscreenState( FALSE, nullptr ) );
+		CR( m_swapchain->SetFullscreenState( FALSE, nullptr ) );
 	}
-	m_swapChain = nullptr;
+	m_swapchain = nullptr;
 
 	// JB: Forcing the destruction of samplers because they now hold a SamplerStateDx12 object
 	m_samplerStateFactory.Clear();
@@ -556,7 +576,7 @@ bool Tr2PrimaryRenderContextAL::IsValid() const
 
 ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, const Tr2PresentParametersAL& presentationParameters )
 {
-	if( !m_swapChain )
+	if( !m_swapchain )
 	{
 		return E_FAIL;
 	}
@@ -622,7 +642,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 	}
 
 	// Dx12 is never in proper fullscreen
-	CR( m_swapChain->ResizeBuffers( Tr2SwapChainUtils::BACK_BUFFER_COUNT,
+	CR( m_swapchain->ResizeBuffers( Tr2SwapChainUtils::BACK_BUFFER_COUNT,
 		presentationParameters.mode.width,
 		presentationParameters.mode.height,
 		fmt,
@@ -632,7 +652,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 
 	std::vector<std::shared_ptr<RenderTargetViewDx12>> rtvs;
 	std::vector<CComPtr<ID3D12Resource>> backBuffers;
-	hr = TrinityALImpl::Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, m_swapChain );
+	hr = TrinityALImpl::Tr2SwapChainAL::GetBackBuffers( this, backBuffers, rtvs, m_swapchain );
 	if( FAILED( hr ) )
 	{
 		auto commandAllocator = m_commandAllocators[m_commandAllocatorIndex++ % m_commandAllocators.size()];
@@ -642,7 +662,7 @@ ALResult Tr2PrimaryRenderContextAL::SetPresentParameters( uint32_t adapter, cons
 		return hr;
 	}
 
-	m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+	m_currentBackBufferIndex = m_swapchain->GetCurrentBackBufferIndex();
 	m_defaultBackBuffer.m_texture->AssignFromSwapChainDx12( backBuffers, rtvs, *this );
 	m_defaultBackBuffer.m_texture->SetSwapChainBufferIndexDx12( m_currentBackBufferIndex );
 
@@ -741,13 +761,13 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 
 	auto presentFlag = (m_syncInterval == Tr2RenderContextEnum::PRESENT_INTERVAL_IMMEDIATE && m_supportsVariableRefreshRate) ? DXGI_PRESENT_ALLOW_TEARING : 0;
 
-	CR(m_swapChain->Present( m_syncInterval, presentFlag ) );
+	CR( m_swapchain->Present( m_syncInterval, presentFlag ) );
 	for( auto it = begin( m_pendingPresents ); it != end( m_pendingPresents ); ++it )
 	{
 		it->swapChain->Present( it->presentInterval, 0 );
 	}
 
-	m_currentBackBufferIndex = m_swapChain->GetCurrentBackBufferIndex();
+	m_currentBackBufferIndex = m_swapchain->GetCurrentBackBufferIndex();
 	WaitForFenceDx12( m_frameFenceValues[m_currentBackBufferIndex] );
 
 	PopPendingRelease( m_currentBackBufferIndex );
@@ -822,7 +842,6 @@ ALResult Tr2PrimaryRenderContextAL::Present()
 	}
 
 	SetRenderTarget( m_defaultBackBuffer );
-
 	return S_OK;
 }
 
@@ -1228,6 +1247,190 @@ std::shared_ptr<ShaderResourceViewDx12> Tr2PrimaryRenderContextAL::GetNullSrvDx1
 std::shared_ptr<UnorderedAccessViewDx12> Tr2PrimaryRenderContextAL::GetNullUavDx12( Tr2ShaderRegisterAL::RegisterType type ) const
 {
 	return m_nullUav[RegisterTypeIndex( type )];
+}
+
+Tr2UpscalingAL::Result Tr2PrimaryRenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
+{
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->Destroy( *this );
+		m_upscalingTechnique = nullptr;
+	}
+
+	if( tech == Tr2UpscalingAL::Technique::NONE )
+	{
+		return Tr2UpscalingAL::Result::OK;
+	}
+
+	// find the technique
+	auto supportedTechnique = std::find( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.begin(), TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end(), tech );
+	if( supportedTechnique == TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end() )
+	{
+		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	}
+
+	m_upscalingTechnique = TrinityALImpl::CreateUpscalingTechnique( *this, tech, setting, frameGeneration, adapter );
+	if( m_upscalingTechnique == nullptr )
+	{
+		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	}
+
+	return Tr2UpscalingAL::Result::OK;
+}
+
+Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::GetUpscalingContext( uint32_t upscalingContextId )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return nullptr;
+	}
+
+	return m_upscalingTechnique->GetContext( *this, upscalingContextId );
+}
+
+Tr2UpscalingContextAL* Tr2PrimaryRenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return nullptr;
+	}
+
+	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight, sourceFormat, depthFormat );
+}
+
+
+void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return;
+	}
+
+	return m_upscalingTechnique->DeleteContext( *this, contextID );
+}
+
+Tr2UpscalingAL::UpscalingInfo Tr2PrimaryRenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
+{
+	auto context = GetUpscalingContext( upscalingContextID );
+	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
+
+	if( context != nullptr )
+	{
+		info.upscalingAmount = context->GetUpscalingAmount();
+		info.mipLevelBias = context->GetMipLevelBias();
+		info.temporal = context->IsTemporal();
+		context->GetJitter( info.jitterX, info.jitterY );
+		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
+		context->GetDisplayDimensions( info.displayWidth, info.displayHeight );
+		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
+	}
+	return info;
+}
+
+std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2PrimaryRenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
+{
+	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
+	for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
+	{
+		auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
+		if( tech )
+		{
+			uint32_t allSettings = 0;
+
+			for( auto& setting : tech->GetAvailableSettings() )
+			{
+				allSettings |= setting;
+			}
+
+			supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
+		}
+
+		if( tech )
+		{
+			tech->Destroy( *this );
+			tech = nullptr;
+		}
+	}
+	return supportedTechniques;
+}
+
+void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+{
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->GetState( technique, setting, framegeneration );
+		return;
+	}
+	technique = Tr2UpscalingAL::Technique::NONE;
+	setting = Tr2UpscalingAL::Setting::NATIVE;
+	framegeneration = false;
+}
+
+
+void Tr2PrimaryRenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
+{
+	if( m_upscalingTechnique )
+	{
+		m_upscalingTechnique->MarkFrameEvent( *this, frameEvent );
+	}
+}
+
+HRESULT Tr2PrimaryRenderContextAL::CreateSwapChainForHwnd(
+	CComPtr<IDXGIFactory4>& factory4,
+	ID3D12CommandQueue* commandQueue,
+	HWND hWnd,
+	const DXGI_SWAP_CHAIN_DESC1* pDesc,
+	const DXGI_SWAP_CHAIN_FULLSCREEN_DESC* pFullscreenDesc,
+	IDXGIOutput* pRestrictToOutput,
+	CComPtr<IDXGISwapChain4>& swapchain )
+{
+	CComPtr<IDXGISwapChain1> swapChain1;
+	CR_RETURN_HR( factory4->CreateSwapChainForHwnd(
+		commandQueue,
+		hWnd,
+		pDesc,
+		pFullscreenDesc,
+		pRestrictToOutput,
+		&swapChain1 ) );
+
+	CR_RETURN_HR( swapChain1.QueryInterface( &swapchain ) );
+
+	if( m_upscalingTechnique && m_upscalingTechnique->ReplacesSwapchain() )
+	{
+		m_upscalingTechnique->ReplaceSwapchain( swapchain, hWnd, commandQueue );
+	}
+	return S_OK;
+}
+
+HRESULT Tr2PrimaryRenderContextAL::CreateDevice(IUnknown* adapter, D3D_FEATURE_LEVEL featureLevel, CComPtr<ID3D12Device>& device) const
+{
+	CR_RETURN_HR( D3D12CreateDevice( adapter, featureLevel, IID_PPV_ARGS( &device ) ) );
+
+	if( m_upscalingTechnique && m_upscalingTechnique->ReplacesDevice() )
+	{
+		device = m_upscalingTechnique->ReplaceDevice( device );
+	}
+	return S_OK;
+}
+
+HRESULT Tr2PrimaryRenderContextAL::CreateCommandQueue( CComPtr<ID3D12Device>& device, D3D12_COMMAND_QUEUE_DESC* desc, CComPtr<ID3D12CommandQueue>& commandQueue ) const
+{
+	CR_RETURN_HR( device->CreateCommandQueue( desc, IID_PPV_ARGS( &commandQueue ) ) );
+	if( m_upscalingTechnique && m_upscalingTechnique->ReplacesCommandQueue() )
+	{
+		commandQueue = m_upscalingTechnique->ReplaceCommandQueue( commandQueue );
+	}
+	return S_OK;
+}
+
+HRESULT Tr2PrimaryRenderContextAL::CreateFactory2( UINT flags, CComPtr<IDXGIFactory4>& factory ) const
+{
+	CR_RETURN_HR( CreateDXGIFactory2( flags, IID_PPV_ARGS( &factory ) ) );
+	if( m_upscalingTechnique && m_upscalingTechnique->ReplacesFactory() )
+	{
+		factory = m_upscalingTechnique->ReplaceFactory( factory );
+	}
+	return S_OK;
 }
 
 bool Tr2PrimaryRenderContextAL::SupportsBindlessTextures() const

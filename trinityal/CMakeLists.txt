@@ -1,5 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
+find_package(FidelityFX REQUIRED)
+find_package(FidelityFX_FSR REQUIRED)
+find_package(FidelityFX_FSR3 REQUIRED)
+find_package(IntelXeSS REQUIRED)
+
 project(TrinityAL VERSION 1.0.0)
 
 set(PUBLIC_HEADER_FILES
@@ -108,7 +113,11 @@ set(_SOURCES
     dx11/Tr2VertexLayoutALDx11.cpp
     dx11/Tr2VertexLayoutALDx11.h
     dx11/Tr2VideoAdapterInfoALDx11.cpp
-    dx11/Tr2VideoAdapterInfoALDx11.h
+    dx11/Tr2VideoAdapterInfoALDx11.h    
+    dx11/upscaling/Tr2DlssUpscaling.cpp 
+    dx11/upscaling/Tr2DlssUpscaling.h
+    dx11/upscaling/Tr2UpscalingALDx11.cpp
+    dx11/upscaling/Tr2UpscalingALDx11.h
     dx12/Tr2BufferALDx12.cpp
     dx12/Tr2BufferALDx12.h
     dx12/Tr2CapsALDx12.h
@@ -154,6 +163,16 @@ set(_SOURCES
     dx12/Tr2VideoAdapterInfoALDx12.h
     dx12/Utilities.cpp
     dx12/Utilities.h
+    dx12/upscaling/Tr2DlssUpscaling.cpp 
+    dx12/upscaling/Tr2DlssUpscaling.h 
+    dx12/upscaling/Tr2Fsr2Upscaling.cpp 
+    dx12/upscaling/Tr2Fsr2Upscaling.h 
+    dx12/upscaling/Tr2Fsr3Upscaling.cpp 
+    dx12/upscaling/Tr2Fsr3Upscaling.h 
+    dx12/upscaling/Tr2UpscalingALDx12.cpp
+    dx12/upscaling/Tr2UpscalingALDx12.h
+    dx12/upscaling/Tr2XessUpscaling.cpp   
+    dx12/upscaling/Tr2XessUpscaling.h  
     dx12/util/AmdExtDevice.h
     dx12/util/DescriptorHeapViewDx12.cpp
     dx12/util/DescriptorHeapViewDx12.h
@@ -192,7 +211,8 @@ set(_SOURCES
     include/Tr2ResourceSetAL.h
     include/Tr2SamplerStateAL.h
     include/Tr2ShaderAL.h
-    include/Tr2ShaderProgramAL.h
+    include/Tr2ShaderProgramAL.h    
+    include/Tr2StreamlineAL.h    
     include/Tr2SwapChainAL.h
     include/Tr2TextureAL.h
     include/Tr2TextureType.h
@@ -200,6 +220,8 @@ set(_SOURCES
     include/Tr2VideoAdapterInfoAL.h
     include/TrinityAL.h
     include/TrinityALForward.h
+    include//upscaling/Tr2Fsr1Upscaling.h
+    include//upscaling/Tr2UpscalingAL.h
     metal/MetalContext.h
     metal/MetalContext.mm
     metal/MetalResourceArray.h
@@ -253,6 +275,10 @@ set(_SOURCES
     metal/Tr2VertexLayoutALMetal.mm
     metal/Tr2VideoAdapterInfoALMetal.h
     metal/Tr2VideoAdapterInfoALMetal.mm
+    metal/upscaling/Tr2MetalFxUpscaling.h 
+    metal/upscaling/Tr2MetalFxUpscaling.mm
+    metal/upscaling/Tr2UpscalingALMetal.h
+    metal/upscaling/Tr2UpscalingALMetal.mm
     src/Tr2BufferAL.cpp
     src/Tr2ConstantBufferAL.cpp
     src/Tr2FenceAL.cpp
@@ -266,10 +292,13 @@ set(_SOURCES
     src/Tr2RtTopLevelAccelerationStructureAL.cpp
     src/Tr2SamplerStateAL.cpp
     src/Tr2ShaderAL.cpp
-    src/Tr2ShaderProgramAL.cpp
+    src/Tr2ShaderProgramAL.cpp    
+    src/Tr2StreamlineAL.cpp    
     src/Tr2SwapChainAL.cpp
     src/Tr2TextureAL.cpp
     src/Tr2VertexLayoutAL.cpp
+    src/upscaling/Tr2Fsr1Upscaling.cpp
+    src/upscaling/Tr2UpscalingAL.cpp
     stub/Tr2BufferALStub.cpp
     stub/Tr2BufferALStub.h
     stub/Tr2CapsALStub.cpp
@@ -303,6 +332,8 @@ set(_SOURCES
     stub/Tr2VertexLayoutALStub.h
     stub/Tr2VideoAdapterInfoALStub.cpp
     stub/Tr2VideoAdapterInfoALStub.h
+    stub/upscaling/Tr2UpscalingALStub.cpp
+    stub/upscaling/Tr2UpscalingALStub.h
     vulkan/Tr2BufferALVulkan.cpp
     vulkan/Tr2BufferALVulkan.h
     vulkan/Tr2CapsALVulkan.h
@@ -332,6 +363,8 @@ set(_SOURCES
     vulkan/Tr2VertexLayoutALVulkan.h
     vulkan/Tr2VideoAdapterInfoALVulkan.cpp
     vulkan/Tr2VideoAdapterInfoALVulkan.h
+    vulkan/upscaling/Tr2UpscalingALVulkan.cpp
+    vulkan/upscaling/Tr2UpscalingALVulkan.h
     vulkan/UtilitiesVulkan.cpp
     vulkan/UtilitiesVulkan.h
     vulkan/VkResult.h
@@ -403,25 +436,49 @@ if(WIN32)
 endif()
 
 if(WIN32)
-    # required for 11
     find_package(NvidiaAftermath REQUIRED)
+    find_package(NvidiaStreamline REQUIRED)
+    find_package(NvidiaDlssPlugin REQUIRED)
+    find_package(NvidiaNisPlugin REQUIRED)
+    find_package(NvidiaReflexPlugin REQUIRED)
+    find_package(NvidiaPclPlugin REQUIRED)
 
     ccp_add_library(TrinityAL_dx11 STATIC)
     target_compile_definitions(TrinityAL_dx11 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX11)
-    target_link_libraries(TrinityAL_dx11 PUBLIC Nvidia::Aftermath d3d11 dxgi dxguid legacy_stdio_definitions)
+    target_link_libraries(TrinityAL_dx11 PUBLIC d3d11 
+                                                dxgi
+                                                dxguid
+                                                Nvidia::Aftermath  
+                                                NVIDIA::Streamline 
+                                                NVIDIA::dlss_sl_plugin 
+                                                NVIDIA::nis_sl_plugin 
+                                                AMD::FidelityFX
+                                                AMD::FidelityFX_FSR
+                                                legacy_stdio_definitions)
     set_shared_trinityal_properties(dx11)
 
     ccp_add_library(TrinityAL_dx12 STATIC)
     target_compile_definitions(TrinityAL_dx12 PUBLIC TRINITY_PLATFORM=TRINITY_DIRECTX12)
-    target_link_libraries(TrinityAL_dx12 PUBLIC Nvidia::Aftermath d3d12 dxgi dxguid)
+    target_link_libraries(TrinityAL_dx12 PUBLIC d3d12 
+                                                dxgi 
+                                                dxguid 
+                                                Nvidia::Aftermath  
+                                                NVIDIA::Streamline 
+                                                NVIDIA::dlss_sl_plugin 
+                                                NVIDIA::nis_sl_plugin 
+                                                NVIDIA::reflex_sl_plugin 
+                                                NVIDIA::pcl_sl_plugin 
+                                                AMD::FidelityFX_FSR3 
+                                                AMD::FidelityFX
+                                                AMD::FidelityFX_FSR
+                                                INTEL::xess)
     set_shared_trinityal_properties(dx12)
 elseif(APPLE)
     enable_language(OBJCXX)
     ccp_add_library(TrinityAL_metal STATIC)
     target_compile_definitions(TrinityAL_metal PUBLIC TRINITY_PLATFORM=TRINITY_METAL)
     set_shared_trinityal_properties(metal)
-    target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework IOKit" "-framework QuartzCore")
-    target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework IOKit" "-framework QuartzCore")
+    target_link_libraries(TrinityAL_metal PUBLIC "-framework Metal" "-framework MetalFX" "-framework IOKit" "-framework QuartzCore")
     #[[
         FIXME because we're mixing objective-c++ and c++ headers in our precompiled headers then we need to force
         one specific language for macOS. This can be fixed once we revisit our usage of precompiled headers, which is

@@ -39,7 +39,7 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 		Throttle();
 		return;
 	}
-
+	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_UPDATE_STARTED );
 	HRESULT hr = Tr2RenderContext_GetMainThreadRenderContext().m_device->GetDeviceRemovedReason();
 	if( FAILED( hr ) || g_emulateDriverReset )
 	{
@@ -107,6 +107,19 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 		}
 	}
 
+	if( m_upscalingChanged )
+	{
+		CCP_LOGNOTICE( "DX12 device removed, reason: upscaler changed" );
+
+		ReleaseDeviceResources( TRISTORAGE_ALL );
+
+		mDeviceLost = true;
+		Tr2RenderContext::DestroyMainThreadRenderContext();
+
+		LogAllLiveResources();
+		return;
+	}
+
 	if( mDeviceLost )
 	{
 		return;
@@ -118,6 +131,7 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 	}
 
 	m_postUpdateCallbacks->Update();
+	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_UPDATE_FINISHED );
 
 	// Present the backbuffer from the last renderering to the front buffer.
 	// it is more efficient to do it like this (revers order), because there is some
@@ -125,13 +139,17 @@ void TriDevice::HandleRenderTick( Be::Time realTime, Be::Time simTime )
 	// and do all the other stuff between we get a degree of paralization
 	{
 		CCP_STATS_SCOPED_TIME( presentTime );
+		Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_STARTED );
 		CR_RETURN( Tr2RenderContext_GetMainThreadRenderContext().Present() );
+		Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_PRESENT_FINISHED );
 	}
 
+	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_RENDERING_STARTED );
 	if( !Render() )
 	{
 		CCP_LOGERR( "Failed to render a frame" );
 	}
+	Tr2RenderContext_GetMainThreadRenderContext().MarkFrameEvent( Tr2RenderContextEnum::FRAME_EVENT_RENDERING_FINISHED );
 }
 
 // -- Smaller helpers to enable big methods like TriDevice::Render to be mostly API neutral.

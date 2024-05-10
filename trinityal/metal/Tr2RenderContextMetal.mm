@@ -17,6 +17,7 @@
 #include "Tr2RtPipelineStateALMetal.h"
 #include "Tr2RtShaderTableALMetal.h"
 #include "Tr2RtTopLevelAccelerationStructureALMetal.h"
+#include "upscaling/Tr2UpscalingALMetal.h"
 
 #include "MetalContext.h"
 
@@ -63,7 +64,7 @@ Tr2RenderContextAL::Tr2RenderContextAL()
 	, m_srgbWriteEnable( false )
     , m_isPrimary( false )
     , m_caps()
-    
+    , m_upscalingTechnique( nullptr )
 {
 }
 
@@ -1343,6 +1344,134 @@ ALResult Tr2RenderContextAL::ForkContext( Tr2RenderContextAL* context, uint32_t 
 	return S_OK;
 }
 
+Tr2UpscalingAL::Result Tr2RenderContextAL::EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool frameGeneration, uint32_t adapter )
+{
+    if( m_upscalingTechnique )
+    {
+        m_upscalingTechnique->Destroy( *this );
+        m_upscalingTechnique = nullptr;
+    }
+	
+    if( tech == Tr2UpscalingAL::Technique::NONE )
+	{
+		return Tr2UpscalingAL::Result::OK;
+	}
+
+	// find the technique
+	auto supportedTechnique = std::find( TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.begin(), TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end(), tech );
+	if( supportedTechnique == TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES.end() )
+	{
+		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	}
+
+	m_upscalingTechnique = TrinityALImpl::CreateUpscalingTechnique( *this, tech, setting, frameGeneration, adapter );
+	if( m_upscalingTechnique == nullptr )
+	{
+		return Tr2UpscalingAL::Result::TECHNIQUE_NOT_SUPPORTED;
+	}
+	
+	return Tr2UpscalingAL::Result::OK;
+}
+
+Tr2UpscalingContextAL* Tr2RenderContextAL::GetUpscalingContext( uint32_t upscalingContextID )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return nullptr;
+	}
+
+	return m_upscalingTechnique->GetContext( *this, upscalingContextID );
+}
+
+Tr2UpscalingContextAL* Tr2RenderContextAL::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat)
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return nullptr;
+	}
+
+	return m_upscalingTechnique->CreateContext( *this, displayWidth, displayHeight, sourceFormat, depthFormat );
+}
+
+void Tr2PrimaryRenderContextAL::DeleteUpscalingContext( uint32_t contextID )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return;
+	}
+
+	return m_upscalingTechnique->DeleteContext( *this, contextID );
+}
+
+std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> Tr2RenderContextAL::GetSupportedUpscalingTechniques( uint32_t adapter )
+{
+    std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> supportedTechniques;
+    for( auto& technique : TrinityALImpl::AVAILABLE_UPSCALING_TECHNIQUES )
+    {
+        auto tech = TrinityALImpl::CreateUpscalingTechnique( *this, technique, Tr2UpscalingAL::Setting::NATIVE, false, adapter );
+        if( tech )
+        {
+            uint32_t allSettings = 0;
+
+            for( auto& setting : tech->GetAvailableSettings() )
+            {
+                allSettings |= setting;
+            }
+
+            supportedTechniques.push_back( { technique, allSettings, tech->SupportsFrameGeneration() } );
+            tech->Destroy( *this );
+            tech = nullptr;
+        }
+		
+		if( tech )
+		{
+			tech->Destroy(*this);
+			tech = nullptr;
+		}
+    }
+    return supportedTechniques;
+}
+
+Tr2UpscalingAL::UpscalingInfo Tr2RenderContextAL::GetUpscalingInfo( uint32_t upscalingContextID )
+{
+	auto context = GetUpscalingContext( upscalingContextID );
+	Tr2UpscalingAL::UpscalingInfo info = Tr2UpscalingAL::UpscalingInfo();
+
+	if( context != nullptr )
+	{
+		info.upscalingAmount = context->GetUpscalingAmount();
+		info.mipLevelBias = context->GetMipLevelBias();
+				info.temporal = context->IsTemporal();
+
+		context->GetJitter( info.jitterX, info.jitterY );
+		context->GetRenderDimensions( info.renderWidth, info.renderHeight );
+		context->GetDisplayDimensions( info.displayWidth, info.displayHeight );
+		m_upscalingTechnique->GetState( info.technique, info.setting, info.frameGeneration );
+	}
+	return info;
+}
+
+void Tr2RenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+{
+    if( m_upscalingTechnique )
+    {
+        m_upscalingTechnique->GetState( technique, setting, framegeneration );
+        return;
+    }
+    technique = Tr2UpscalingAL::Technique::NONE;
+    setting = Tr2UpscalingAL::Setting::NATIVE;
+    framegeneration = false;
+}
+
+void Tr2RenderContextAL::MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
+{
+	if( m_upscalingTechnique == nullptr )
+	{
+		return;
+	}
+
+	return m_upscalingTechnique->MarkFrameEvent( *this, frameEvent );
+}
 ALResult Tr2RenderContextAL::UseTextures( Tr2GpuUsage::Type usage, const Tr2BindlessResourcesAL& resources )
 {
     if( resources.m_textures.empty() )

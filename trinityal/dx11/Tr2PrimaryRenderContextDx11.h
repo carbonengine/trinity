@@ -9,6 +9,7 @@
 #include "../include/Tr2SamplerStateAL.h"
 #include "../include/Tr2TextureAL.h"
 #include "../include/Tr2GpuTimerAL.h"
+#include "upscaling/Tr2UpscalingAL.h"
 
 
 struct Tr2PresentParametersAL;
@@ -43,10 +44,21 @@ public:
 	uint64_t GetRecordingFrameNumber() const;
 	uint64_t GetRenderedFrameNumber() const;
 
+	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter );
+	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID );
+	Tr2UpscalingContextAL* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat );
+	void DeleteUpscalingContext( uint32_t contextID );
+	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter );
+	void GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration );
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID );
+
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent );
+
 public:
 	bool m_usingEXDevice;
 
 	CComPtr<ID3D11Device>			m_d3dDevice11;
+
 	CComPtr<IDXGISwapChain>			m_swapChain;
 	CComPtr<IDXGIFactory>			m_dxgiFactory;
 	CComPtr<IDXGIOutput>			m_dxgiOutput;
@@ -84,6 +96,8 @@ private:
 	Tr2CapsAL m_caps;
 
 	Tr2MemoryCounterAL m_memory;
+	TrinityALImpl::Tr2UpscalingTechniqueDx11* m_upscalingTechnique;
+
 public:
 	TrinityALImpl::Tr2SamplerStateALFactory m_samplerStateFactory;
 

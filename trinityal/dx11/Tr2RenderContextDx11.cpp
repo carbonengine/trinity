@@ -610,8 +610,6 @@ void Tr2RenderContextAL::Destroy() throw()
 		m_aftermathContext = nullptr;
 	}
 	m_context.Attach( &Tr2RenderContextImpl::s_nullContext );
-
-	m_commandList		= nullptr;
 		
 	m_boundDepthStencil	= Tr2TextureAL();
 

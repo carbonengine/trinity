@@ -17,6 +17,7 @@
 #include "../include/Tr2VertexLayoutAL.h"
 #include "../include/Tr2ShaderProgramAL.h"
 #include "../include/Tr2RenderPassAL.h"
+#include "../include/Tr2UpscalingAL.h"
 
 
 class Tr2ConstantBufferAL;
@@ -300,6 +301,47 @@ public:
     ALResult UseAccelerationStructure( Tr2RtTopLevelAccelerationStructureAL tlas );
 
     
+
+	Tr2UpscalingAL::Result EnableUpscaling( Tr2UpscalingAL::Technique tech, Tr2UpscalingAL::Setting setting, bool framegeneration, uint32_t adapter )
+	{
+		return Tr2UpscalingAL::Result::OK;
+	}
+
+	Tr2UpscalingContextAL* GetUpscalingContext( uint32_t upscalingContextID )
+	{
+		return nullptr;
+	}
+
+	Tr2UpscalingContextAL* CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+	{
+		return nullptr;
+	}
+
+	void DeleteUpscalingContext( uint32_t contextID )
+	{
+	}
+
+	std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>> GetSupportedUpscalingTechniques( uint32_t adapter )
+	{
+		return std::vector<std::tuple<Tr2UpscalingAL::Technique, uint32_t, bool>>();
+	}
+
+	void Tr2PrimaryRenderContextAL::GetUpscalingSetup( Tr2UpscalingAL::Technique& technique, Tr2UpscalingAL::Setting& setting, bool& framegeneration )
+	{
+		technique = Tr2UpscalingAL::Technique::NONE;
+		setting = Tr2UpscalingAL::Setting::NATIVE;
+		framegeneration = false;
+	}
+
+	Tr2UpscalingAL::UpscalingInfo GetUpscalingInfo( uint32_t upscalingContextID );
+	{
+		return Tr2UpscalingAL::UpscalingInfo();
+	}
+
+	void MarkFrameEvent( Tr2RenderContextEnum::FrameEvent frameEvent )
+	{
+	}
+
 private:
 	ALResult SetPass();
 	ALResult CreateRenderPass( VkRenderPass& renderPass );

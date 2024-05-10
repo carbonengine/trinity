@@ -362,6 +362,9 @@ namespace TrinityALImpl
         MTLVertexDescriptor* GetCachedVertexDescriptor( Tr2VertexLayoutAL* layout, size_t inputHash, uint8_t& streamMask, bool& needsDummyStream ) const;
         void CacheVertexDescriptor( Tr2VertexLayoutAL* layout, size_t inputHash, MTLVertexDescriptor* descriptor, uint8_t streamMask, bool needsDummyStream );
         void FlushCachedVertexDescriptors();
+        
+        id<MTLCommandBuffer> GetCommandBuffer() {return m_commandBuffer;}
+        
         bool EmitRenderEncoderState();
         
         uint64_t GetCurrentEncoderIndex() const;

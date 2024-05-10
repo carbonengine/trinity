@@ -259,6 +259,7 @@ ALResult Tr2VideoAdapterInfo::GetAdapterInfo( unsigned adapterIndex,
 	info.deviceID = desc.DeviceId;
 	info.subSystemID = desc.SubSysId;
 	info.revision = desc.Revision;
+	memcpy(info.luid, &desc.AdapterLuid, sizeof(LUID));
 	memset( &info.deviceIdentifier, 0, sizeof( info.deviceIdentifier ) );
 
 	return S_OK;

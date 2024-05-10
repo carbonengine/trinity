@@ -326,7 +326,6 @@ private:
 	Tr2RenderContextAL& operator=( const Tr2RenderContextAL& ) /* = delete */;
 
 public:
-	CComPtr<ID3D11CommandList>		m_commandList;
 	ITr2RenderContextEvents* m_events;
 };
 

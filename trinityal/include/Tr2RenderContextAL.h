@@ -2,7 +2,6 @@
 
 #include TRINITY_AL_PLATFORM_INCLUDE( Tr2RenderContext )
 
-
 class Tr2GpuRegion
 {
 public:

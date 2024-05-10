@@ -12,8 +12,11 @@ namespace Tr2Bokeh
 	enum Shape
 	{
 		Disk,
+		Triangle,
 		Rectangle,
-		Triangle
+		Pentagon,
+		Hexagon,
+		Heart
 	};
 }
 

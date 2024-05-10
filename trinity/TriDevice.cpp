@@ -25,7 +25,8 @@ extern std::vector<HANDLE> g_D3DCreatedHeaps;
 extern int g_windowResized;
 #endif
 
-namespace {
+namespace
+{
 
 	HRESULT CreateDeviceInt(
 		uint32_t Adapter,
@@ -33,7 +34,7 @@ namespace {
 		const Tr2PresentParametersAL& pPresentationParameters )
 	{
 		USE_MAIN_THREAD_RENDER_CONTEXT();
-
+		
 #ifdef _WIN32
 		HANDLE heapsBefore[256];
 		const uint32_t countBefore = ::GetProcessHeaps( 256, heapsBefore );	
@@ -67,6 +68,16 @@ namespace {
 
 		return hr;
 	}
+
+	BlueStructureDefinition Tr2UpscalingTechniqueInfoDefinition[] = {
+		{ "technique", Be::UINT32_1, 0, Tr2UpsclaingAL_UpscalingTechnique_Chooser },
+		{ "supportedSettings", Be::UINT32_1, 4, Tr2UpsclaingAL_UpscalingSetting_Chooser },
+		{ "framegeneration", Be::BOOL8_1, 8 },
+		{ 0 }
+	};
+
+	const Tr2UpscalingTechniqueInfo s_defaultUpscalingTechniqueInfo = { Tr2UpscalingAL::Technique::NONE, 0, false };
+
 }
 
 
@@ -100,6 +111,7 @@ bool TriDevice::s_iteratingForRelease = false;
 const char* TRINITY = "Trinity"; //cookie for the tick
 
 TriDevice::TriDevice(IRoot* lockobj) : 
+	PARENTLOCK( m_supportedUpscalingTechniques ),
 	mHwnd             ( 0 ),
 	mHeight           ( 0 ),
 	mWidth            ( 0 ),
@@ -118,8 +130,16 @@ TriDevice::TriDevice(IRoot* lockobj) :
 	m_mipLevelSkipCount( 0U ),
 	PARENTLOCK( m_curveSets ),
 	m_throttlingState( 0 ),
-	m_allowThrottling( true )
+	m_allowThrottling( true ),
+	m_upscalingChanged(false),
+	m_upscalingTechnique( Tr2UpscalingAL::Technique::NONE ),
+	m_upscalingSetting( Tr2UpscalingAL::Setting::BALANCED ),
+	m_upscalingWithFrameGeneration( false )
 {	
+	
+	m_supportedUpscalingTechniques.SetStructureDefinition( Tr2UpscalingTechniqueInfoDefinition );
+	m_supportedUpscalingTechniques.SetDefaultValue( &s_defaultUpscalingTechniqueInfo );
+
 	Tr2DisplayModeInfo empty = {0};
 	mDisplayMode = empty;
 	// At this point, in the constructor, we are just setting defaults.  We really 
@@ -165,7 +185,6 @@ TriDevice::TriDevice(IRoot* lockobj) :
 TriDevice::~TriDevice()
 {
     m_scene = (ITr2Scene*)NULL;
-
 	BeOS->UnregisterForSimTimeRebase( this );
 }
 
@@ -213,6 +232,7 @@ bool TriDevice::CreateSimpleDevice(
 	// Set default settings
 	uint32_t adapterToUse = adapter;
 
+	CreateUpscalingTechnique( adapter );
 	CreateDeviceInt( adapterToUse, hwnd, pp );
 
 	if( !DeviceExists() )
@@ -235,11 +255,13 @@ bool TriDevice::CreateSimpleDevice(
 		return false;
 	}
 
+
 	if( !InitD3DDevice() )
 	{
 		return false;
 	}
 
+	UpdateAvailableUpscalingTechniques();
 	PrepareDeviceResources();
 
 	BeOS->RegisterForTicks(this, (void*)TRINITY);
@@ -283,7 +305,8 @@ bool TriDevice::ChangeDevice(
 		const Tr2PresentParametersAL* pp )
 {
 	bool resetOnly = true;
-	if( !DeviceExists()	||  hWnd != mHwnd || Tr2VideoAdapterInfo::AreAdaptersDifferent( adapter, mAdapter ) )
+	bool adaptersChanged = Tr2VideoAdapterInfo::AreAdaptersDifferent( adapter, mAdapter );
+	if( !DeviceExists()	||  hWnd != mHwnd || adaptersChanged )
 	{
 		resetOnly = false;	// reset is not enough, we need to recreate the device.
 	}
@@ -308,6 +331,8 @@ bool TriDevice::ChangeDevice(
 	}
 
 	Tr2SyncToGpu::GetInstance().Flush();
+
+	CreateUpscalingTechnique( adapter );
 
 	if( FAILED( CreateDeviceInt( adapter, hWnd, *pp ) ) )
 	{
@@ -334,7 +359,7 @@ bool TriDevice::ChangeDevice(
 	}
 
 	InitD3DDevice();
-		
+	UpdateAvailableUpscalingTechniques();
 	PrepareDeviceResources(); //call python to recreate its stuff.
 
 	return true;
@@ -1117,4 +1142,77 @@ bool TriDevice::IsVariableRefreshRateSupported() const
 {
 	USE_MAIN_THREAD_RENDER_CONTEXT();
 	return renderContext.GetCaps().SupportsVariableRefreshRate();
+}
+
+void TriDevice::UpdateAvailableUpscalingTechniques()
+{
+	// this method needs to be called after a device has been called 
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	m_supportedUpscalingTechniques.clear();
+
+	for( auto& techInfo : renderContext.GetSupportedUpscalingTechniques( mAdapter ) )
+	{
+		Tr2UpscalingTechniqueInfo technique{};
+		std::tie( technique.technique, technique.supportedSettings, technique.framegen ) = techInfo;
+		m_supportedUpscalingTechniques.Append( &technique );
+	}
+}
+
+void TriDevice::CreateUpscalingTechnique( uint32_t adapter )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+
+	auto upscalingResult = renderContext.EnableUpscaling( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration, adapter );
+	if( upscalingResult != Tr2UpscalingAL::Result::OK )
+	{
+		CCP_LOGWARN( "Could not enable upscaling" );
+	}
+
+	// if setting up failed, or we pass in incorrect technique or setting or framegen then this will let us know what was actually applied
+	renderContext.GetUpscalingSetup( m_upscalingTechnique, m_upscalingSetting, m_upscalingWithFrameGeneration );
+
+	m_upscalingChanged = false;
+}
+
+void TriDevice::SetUpscaling( Tr2UpscalingAL::Technique technique, Tr2UpscalingAL::Setting setting, bool frameGeneration )
+{
+	m_upscalingChanged = technique != m_upscalingTechnique || setting != m_upscalingSetting || frameGeneration != m_upscalingWithFrameGeneration;
+	m_upscalingTechnique = technique;
+	m_upscalingSetting = setting;
+	m_upscalingWithFrameGeneration = frameGeneration;
+}
+
+uint32_t TriDevice::CreateUpscalingContext( uint32_t displayWidth, uint32_t displayHeight, Tr2RenderContextEnum::PixelFormat sourceFormat, Tr2RenderContextEnum::DepthStencilFormat depthFormat )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	auto context = renderContext.CreateUpscalingContext( displayWidth, displayHeight, sourceFormat, depthFormat );
+	if( context )
+	{
+		return context->GetID();
+	}
+	return 0;
+}
+
+void TriDevice::DeleteUpscalingContext( uint32_t contextID )
+{
+	USE_MAIN_THREAD_RENDER_CONTEXT();
+	renderContext.DeleteUpscalingContext( contextID );
+}
+
+Vector2 TriDevice::GetRenderResolution( uint32_t upscalingContextId )
+{
+	if( m_upscalingTechnique != Tr2UpscalingAL::Technique::NONE )
+	{
+		USE_MAIN_THREAD_RENDER_CONTEXT();
+		auto upscalingContext = renderContext.GetUpscalingContext( upscalingContextId );
+
+		if( upscalingContext != nullptr )
+		{
+			uint32_t renderWidth, renderHeight;
+			upscalingContext->GetRenderDimensions( renderWidth, renderHeight );
+			return Vector2( float( renderWidth ), float( renderHeight ) );
+		}
+	}
+	return Vector2( -1.0f, -1.0 );
 }

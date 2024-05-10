@@ -55,9 +55,11 @@ public:
 	bool Setup( Tr2RenderContext & renderContext );
 	void SetSourceBuffer( Tr2RenderTarget* sourceBuffer );
 
-	Texture GetTempTexture( float sizeFactor = 1.f, Tr2RenderContextEnum::ExFlag exFlag = Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PixelFormat pixelFormat = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
+	Texture GetTempTexture( uint32_t width, uint32_t height, Tr2RenderContextEnum::ExFlag exFlag = Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PixelFormat pixelFormat = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
+	Texture GetTempTexture( float sizeFactor=1.0f, Tr2RenderContextEnum::ExFlag exFlag = Tr2RenderContextEnum::EX_NONE, Tr2RenderContextEnum::PixelFormat pixelFormat = Tr2RenderContextEnum::PIXEL_FORMAT_UNKNOWN );
 	Texture GetSourceBuffer();
 	Texture GetBlackTexture();
+	void SetRenderSize( uint32_t renderWidth, uint32_t renderHeight );
 
 	std::vector<Tr2RenderTargetPtr> GetAllTempTextures() const;
 private:
@@ -69,7 +71,8 @@ private:
 	struct TempTexture
 	{
 		Tr2RenderTargetPtr texture;
-		float sizeFactor;
+		uint32_t width;
+		uint32_t height;
 		Tr2RenderContextEnum::ExFlag exFlag;
 		int32_t lockCount;
 		Tr2RenderContextEnum::PixelFormat pixelFormat;
@@ -78,6 +81,8 @@ private:
 	std::vector<TempTexture> m_tempTextures;
 	Tr2RenderTargetPtr m_sourceBuffer;
 	Tr2RenderTargetPtr m_black;
+	uint32_t m_renderWidth;
+	uint32_t m_renderHeight;
 };
 
 TYPEDEF_BLUECLASS( Tr2PostProcessRenderInfo );

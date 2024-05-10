@@ -105,7 +105,7 @@ if(WIN32)
             $<TARGET_FILE_DIR:TrinityALTest_dx11>)
 
     #GTest
-    set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "TestsDX11")
+    set_target_properties(TrinityALTest_dx11 PROPERTIES FOLDER "Tests")
     gtest_discover_tests(TrinityALTest_dx11 myListOfTests)
 
     ccp_add_executable(TrinityALTest_dx12 ${_SOURCES})
@@ -113,8 +113,22 @@ if(WIN32)
     target_compile_definitions(TrinityALTest_dx12 PRIVATE TRINITY_PLATFORM=TRINITY_DIRECTX12)
     set_shared_trinityaltest_properties(TrinityALTest_dx12)
 
+    get_target_property(_FSR_LIB AMD::FidelityFX_FSR3 INTERFACE_LINK_LIBRARIES)
+    foreach(CurrentLib IN LISTS _FSR_LIB)
+        add_custom_command(
+                    TARGET TrinityALTest_dx12 POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${AMD_FIDELITY_FSR3_BIN_DIRECTORY}${CurrentLib}.dll" $<TARGET_FILE_DIR:TrinityALTest_dx12>)
+    endforeach()
+    get_target_property(_XESS_DIR INTEL::xess INTERFACE_LINK_DIRECTORIES)
+    get_target_property(_XESS_LIB INTEL::xess INTERFACE_LINK_LIBRARIES)
+    add_custom_command(TARGET TrinityALTest_dx12 POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            "${_XESS_DIR}/${_XESS_LIB}.dll"
+            $<TARGET_FILE_DIR:TrinityALTest_dx11>)
+
+
     #GTest
-    set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "TestsDX12")
+    set_target_properties(TrinityALTest_dx12 PROPERTIES FOLDER "Tests")
     gtest_discover_tests(TrinityALTest_dx12 myListOfTests)
 
 elseif(APPLE)
@@ -126,7 +140,7 @@ elseif(APPLE)
     set_shared_trinityaltest_properties(TrinityALTest_metal)
 
     #GTest
-    set_target_properties(TrinityALTest_metal PROPERTIES FOLDER "TestsMetal")
+    set_target_properties(TrinityALTest_metal PROPERTIES FOLDER "Tests")
     gtest_discover_tests(TrinityALTest_metal myListOfTests DISCOVERY_MODE PRE_TEST)
 endif()
 

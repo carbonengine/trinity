@@ -3371,6 +3371,16 @@ bool EveSpaceObject2::GetImpostorBoundingSphere( Vector4& sphere ) const
 	return GetBoundingSphere( sphere );
 }
 
+void EveSpaceObject2::GetLastImpostorBoundingSphere( Vector4& sphere ) const
+{
+	// Get the normal boundingsphere
+	GetImpostorBoundingSphere( sphere );
+	// remove the current world transform
+	sphere.GetXYZ() -= Vector3( m_vsData.worldTransform._14, m_vsData.worldTransform._24, m_vsData.worldTransform._34 );
+	// and add the last world transform
+	sphere.GetXYZ() += Vector3( m_vsData.worldTransformLast._14, m_vsData.worldTransformLast._24, m_vsData.worldTransformLast._34 );
+}
+
 void EveSpaceObject2::SetControllerVariable( const char* name, float value )
 {
 	m_controllerVariables[name] = value;

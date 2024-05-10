@@ -23,7 +23,8 @@ BLUE_DECLARE( Tr2InstancedMesh );
 // --------------------------------------------------------------------------------
 BLUE_CLASS( EveSceneStaticParticles ) :
 	public IInitialize,
-	public ITr2DebugRenderable
+	public ITr2DebugRenderable,
+	public ITr2Renderable
 {
 public:
 	EXPOSE_TO_BLUE();
@@ -57,6 +58,15 @@ public:
     virtual void GetDebugOptions( Tr2DebugRendererOptions& options );
     virtual void RenderDebugInfo( ITr2DebugRenderer2& renderer );
 
+	/////////////////////////////////////////////////////////////////////////////////////
+	// ITr2Renderable
+	virtual void GetBatches( ITriRenderBatchAccumulator * batches, TriBatchType batchType, const Tr2PerObjectData* perObjectData, Tr2RenderReason reason = TR2RENDERREASON_NORMAL );
+	virtual void GetShadowBatches( ITriRenderBatchAccumulator * batches, const Tr2PerObjectData* perObjectData, float shadowPixelSize );
+	virtual Tr2PerObjectData* GetPerObjectData( ITriRenderBatchAccumulator * accumulator );
+	virtual bool HasTransparentBatches();
+	virtual float GetSortValue();
+	virtual bool IsVisible( const TriFrustum& frustum ) const;
+	
 	// update & render
 	void Update( EveUpdateContext& updateContext );
 	void GetRenderables( const TriFrustum& frustum, std::vector<ITr2Renderable*>& renderables );
@@ -69,7 +79,6 @@ public:
 private:
 	// helper functions to access the right places in the loaded data
 	Tr2RuntimeInstanceData* GetInstanceDataObject();
-	Tr2InstancedMesh* GetInstanceMeshObject();
 
 	// general data of this whole system
 	float m_minSize;
@@ -77,6 +86,7 @@ private:
 	size_t m_maxParticleCount;
 	float m_clusterParticleDensity;
 	float m_clusterParticleDensityAdjust;
+	float m_estimatedSize;
 
 	// keep a list of all clusers we have
 	std::vector<ClusterData> m_clusters;
@@ -84,12 +94,31 @@ private:
 	// data for positioning
 	Vector3d m_centerOfClusters;
 	Matrix m_worldMatrix;
+	Matrix m_lastWorldMatrix;
+	Vector3 m_center;
 
 	// bounding sphere
 	Vector4 m_boundingSphere;
 
-	// the actual rendering object
-	EveTransformPtr m_transform;
+	// the actual rendering object	
+	Tr2InstancedMeshPtr m_mesh;
+	bool m_visible;
+};
+
+class EveSceneStaticParticlesPerObjectData : public Tr2PerObjectData
+{
+public:
+	virtual void SetPerObjectDataToDevice( Tr2ConstantBufferAL** buffers, unsigned constantTypeMask, Tr2RenderContext& renderContext ) const
+	{
+		FillAndSetConstants( *buffers[Tr2RenderContextEnum::VERTEX_SHADER],
+							 &m_world,
+							 sizeof( EveSceneStaticParticlesPerObjectData ),
+							 Tr2RenderContextEnum::VERTEX_SHADER,
+							 Tr2Renderer::GetPerObjectVSStartRegister(),
+							 renderContext );
+	}
+	Matrix m_world;
+	Matrix m_lastWorld;
 };
 
 TYPEDEF_BLUECLASS( EveSceneStaticParticles );

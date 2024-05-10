@@ -4,6 +4,7 @@
 #include "ALLog.h"
 
 bool g_requestDebugMarkers = false;
+bool g_skipNvidiaStreamline = false;
 bool g_brokenMacOSNvidiaDrivers = false;
 
 using namespace Tr2RenderContextEnum;
