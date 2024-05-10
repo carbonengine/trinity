@@ -595,6 +595,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		}
 		renderContext.SetResourceSet( Tr2ResourceSetAL() );
 	}
+	m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
+	m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	renderContext.PopDisableUAVBarriersDx12();
