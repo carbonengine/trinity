@@ -722,8 +722,17 @@ ALResult Tr2RenderContextAL::CreateDevice(
     
     if( @available( macOS 11.0, * ) )
     {
-        bool raytracingAvailable = m_metalContext->GetDevice().supportsRaytracing;
+        auto device = m_metalContext->GetDevice();
+        bool raytracingAvailable = device.supportsRaytracing || ([device supportsFamily:MTLGPUFamilyMac2] && [device supportsFamily:MTLGPUFamilyApple7]);
         m_caps.m_supportsRaytracing = raytracingAvailable;
+        if( m_caps.m_supportsRaytracing )
+        {
+            CCP_LOGNOTICE( "Device supports raytracing" );
+        }
+        else
+        {
+            CCP_LOGNOTICE( "Device does not support raytracing" );
+        }
     }
 	return S_OK;
 }
