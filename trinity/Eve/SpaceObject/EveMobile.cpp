@@ -128,7 +128,7 @@ void EveMobile::RegisterComponents()
 	{
 		for( auto& turretSet : m_turretSets )
 		{
-			turretSet->RegisterComponents();
+			turretSet->Register( registry );
 		}
 	}
 }
