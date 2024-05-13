@@ -998,7 +998,7 @@ void EveSpaceObject2::GetShadowBatches( ITriRenderBatchAccumulator* batches, con
 	}
 	
 	TriGeometryRes* geomRes = m_mesh->GetGeometryResource();
-	if( !geomRes->IsGood() )
+	if( !geomRes || !geomRes->IsGood() )
 	{
 		return;
 	}
