@@ -9,6 +9,7 @@
 #include "Tr2GrannyAnimation.h"
 #include "TriFrustumOrtho.h"
 #include "Utilities/BoundingBox.h"
+#include "Resources/TriGeometryRes.h"
 
 extern float g_eveSpaceSceneLODFactor;
 extern float g_eveSpaceSceneVisibilityThreshold;
@@ -223,7 +224,7 @@ void EveChildMesh::UpdateVisibility( const TriFrustum& frustum, const Matrix& pa
 		if( g_eveSpaceSceneRaytracedShadows )
 		{
 			UpdateRtMesh();
-			// add update rt animation 
+			UpdateRtSkeleton();
 		}
 	}
 }
@@ -254,6 +255,56 @@ void EveChildMesh::UpdateRtMesh()
 		}
 	}
 }
+
+void EveChildMesh::UpdateRtSkeleton()
+{
+	if( !m_animationUpdater || !m_animationUpdater->IsInitialized() )
+	{
+		return;
+	}
+
+	auto areas = m_mesh->GetAreas( TRIBATCHTYPE_OPAQUE );
+	auto rtMesh = m_mesh->GetRtMesh();
+	if( areas->empty() || !rtMesh )
+	{
+		return; //no areas at all or no RT mesh
+	}
+
+	auto meshIndex = m_mesh->GetMeshIndex();
+	auto meshData = m_mesh->GetGeometryResource()->GetMeshData( meshIndex );
+
+	bool hasSkinned = false;
+
+	for( auto it = begin( *areas ); it != end( *areas ); ++it )
+	{
+		if( meshData->m_areas[( *it )->GetIndex()].m_isSkinned )
+		{
+			hasSkinned = true;
+			break;
+		}
+	}
+
+	if( !hasSkinned )
+	{
+		return; //no skinned areas
+	}
+
+	bool skeletonChanged = rtMesh->SetBoneTransforms( m_animationUpdater->GetMeshBoneCount(), m_animationUpdater->GetMeshBoneMatrixList() );
+
+	if( skeletonChanged )
+	{
+		//Skeleton has changed, so mark all area BLAS's as out-of-date.
+		for( auto it = begin( *areas ); it != end( *areas ); ++it )
+		{
+			auto meshAreaIndex = ( *it )->GetIndex();
+			if( meshData->m_areas[meshAreaIndex].m_isSkinned )
+			{
+				( *it )->GetRtMeshArea()->MarkBlasOutdated();
+			}
+		}
+	}
+}
+
 
 void EveChildMesh::GetRenderables( std::vector<ITr2Renderable*>& renderables )
 {

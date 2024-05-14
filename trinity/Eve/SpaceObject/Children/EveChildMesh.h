@@ -179,6 +179,7 @@ protected:
 	PTr2LightVector m_lights;
 
 	void UpdateRtMesh();
+	void UpdateRtSkeleton();
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
 	std::vector<Matrix> m_instanceTransforms;
 	unsigned int m_instanceCount;
