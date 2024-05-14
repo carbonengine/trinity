@@ -22,6 +22,7 @@
 #include "Effects/Tr2PPFogEffect.h"
 #include "Effects/Tr2PPTaaEffect.h"
 #include "Effects/Tr2PPDepthOfFieldEffect.h"
+#include "Effects/Tr2PPTonemappingEffect.h"
 
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( Tr2PPSignalLossEffect );
@@ -37,6 +38,7 @@ BLUE_DECLARE( Tr2PPVignetteEffect );
 BLUE_DECLARE( Tr2PPFogEffect );
 BLUE_DECLARE( Tr2PPTaaEffect );
 BLUE_DECLARE( Tr2PPDepthOfFieldEffect );
+BLUE_DECLARE( Tr2PPTonemappingEffect );
 
 BLUE_CLASS( Tr2PostProcess2 ) :
 	public IRoot
@@ -63,6 +65,8 @@ public:
 	Tr2PPFogEffectPtr GetFog() { return m_fog; }
 	Tr2PPTaaEffectPtr GetTaa() { return m_taa; }
 	Tr2PPDepthOfFieldEffectPtr GetDepthOfField() { return m_depthOfField; }
+	Tr2PPTonemappingEffectPtr GetTonemapping() { return m_tonemapping; }
+
 
 	// Helper method for scenes to decide on miplodbias
 	float GetMipLodBias() const;
@@ -84,6 +88,7 @@ private:
 	Tr2PPFogEffectPtr m_fog;
 	Tr2PPTaaEffectPtr m_taa;
 	Tr2PPDepthOfFieldEffectPtr m_depthOfField;
+	Tr2PPTonemappingEffectPtr m_tonemapping;
 };
 TYPEDEF_BLUECLASS( Tr2PostProcess2 );
 

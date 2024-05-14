@@ -414,6 +414,20 @@ const Be::ClassInfo* EveSpaceScene::ExposeToBlue()
 			"How intense is the nebula\n"
 			":jessica-group: Lighting",
 			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"backgroundReflectionIntensity",
+			m_backgroundReflectionIntensity,
+			"How intense is the background in the refletions?\n"
+			":jessica-group: Lighting",
+			Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE(
+			"defaultDiffuseRoughness",
+			m_defaultDiffuseRoughness,
+			"Default diffuse roughness which is used when calculating diffuse environment lighting (1 very rough, 0 very smooth)\n"
+			"In the end this will control which environment map mip will be used (1 will use the lowest mip, 0 will use the highest mip)\n"
+			":jessica-group: Lighting",
+			Be::READWRITE | Be::PERSIST )
+		
 		MAP_ATTRIBUTE( "fogColor", m_fogColor, ":jessica-group: Fog\n:jessica-tuple-type: linearcolor", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fogStart", m_fogStart, "Depth at which fogging starts.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "fogEnd", m_fogEnd, "Depth at which the fog does not get thicker.\n:jessica-group: Fog", Be::READWRITE | Be::PERSIST )

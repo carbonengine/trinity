@@ -211,18 +211,6 @@ TriStepRenderPostProcess::TriStepRenderPostProcess(IRoot* lockobj) :
 	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("TexLUT_3"), "res:/dx9/scene/postprocess/LUTdefault.dds");
 	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("VignetteDetail"), "res:/texture/global/white.dds");
 	m_tonemappingEffect->AddResourceTexture2D(BlueSharedString("VignetteShape"), "res:/texture/global/black.dds");
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), PLACEHOLDER );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), PLACEHOLDER );
-
-	m_tonemappingEffect->SetParameter( BlueSharedString( "ShoulderStrength" ), 0.125f );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "LinearStrength" ), 0.25f );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "LinearAngle" ), 0.1f );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "ToeStrength" ), 0.15f );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "ToeNumerator" ), 0.021f );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "ToeDenominator" ), 0.3f );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "WhiteScale" ), 2.5f );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "SplitScreenRatio" ), 1.0f ); // TODO: review. 1.0 == new settings. we may want to remove this once we've found settings that we're happy with
-	m_tonemappingEffect->SetParameter( BlueSharedString( "AutoSwipe" ), Vector4( 0.0, 1000.0, 0.0, 0.0 ) );
 
 	m_tonemappingEffect->EndUpdate();
 }
@@ -298,6 +286,7 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 	Tr2PPFogEffectPtr fog = nullptr;
 	Tr2PPTaaEffectPtr taa = nullptr;
 	Tr2PPDepthOfFieldEffectPtr dof = nullptr;
+	Tr2PPTonemappingEffectPtr tonemapping = nullptr;
 
 	if( postProcess != nullptr )
 	{
@@ -312,12 +301,13 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		case MEDIUM:
 			bloom = postProcess->GetBloom();
 			desaturate = postProcess->GetDesaturate();
+			vignette = postProcess->GetVignette();
+		case LOW:
+			tonemapping = postProcess->GetTonemapping();
 			luts.push_back( postProcess->GetLut() );
 			luts.push_back( postProcess->GetAdditionalLut1() );
 			luts.push_back( postProcess->GetAdditionalLut2() );
 			luts.push_back( postProcess->GetAdditionalLut3() );
-			vignette = postProcess->GetVignette();
-		case LOW:
 			signalLoss = postProcess->GetSignalLoss();
 			fade = postProcess->GetFade();
 			fidelity = postProcess->GetFidelityFX();
@@ -333,6 +323,12 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		{
 			dof = postProcess->GetDepthOfField();
 		}
+	}
+
+	if( tonemapping == nullptr || !tonemapping->IsActive() )
+	{
+		tonemapping = nullptr;
+		tonemapping.CreateInstance();
 	}
 
 	// fsr is enabled on all quality levels, but sharpening is only for high
@@ -403,17 +399,15 @@ TriStepResult TriStepRenderPostProcess::Execute( Be::Time realTime, Be::Time sim
 		bloomTexture = RenderBloom( nonMsaaSource, renderContext, bloom );
 	}
 
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), bloomTexture ? bloomTexture.GetRenderTarget() : m_renderInfo->GetBlackTexture() );
-	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), nonMsaaSource );
-
 	ProcessDesaturate(desaturate);
 	ProcessFade(fade);
 	ProcessLut(luts);
 	ProcessVignette(vignette);
-	
 
 	bool doFidelity = ProcessFidelityFX( renderContext, fidelity );
 	bool doGrain = ProcessFilmGrain( filmGrain );
+
+	ProcessTonemapping( tonemapping, bloomTexture ? bloomTexture.GetRenderTarget() : m_renderInfo->GetBlackTexture(), nonMsaaSource );
 
 	if( doFidelity || doGrain )
 	{
@@ -598,7 +592,7 @@ Tr2PostProcessRenderInfo::Texture TriStepRenderPostProcess::RenderBloom( Tr2Rend
 	m_bloomHighPassFilter->SetParameter( BlueSharedString( "BlitCurrent" ), dest );
 	DrawInto( *rt1, Tr2LoadAction::DONT_CARE, m_bloomHighPassFilter, renderContext );
 
-	auto blurContext = PostProcessBlur::CreateBlurContext( 0.5f );
+	auto blurContext = PostProcessBlur::CreateBlurContext(1.0f );
 	Blur( *rt1, *rt1, renderContext, blurContext);
 
 	return rt1;
@@ -1499,6 +1493,24 @@ void TriStepRenderPostProcess::RenderTaa( Tr2RenderTarget* dest, Tr2RenderContex
 	m_taaCopyEffect->SetParameter( BlueSharedString( "AccumulationBuffer" ), output );
 
 	DrawInto( *dest, Tr2LoadAction::DONT_CARE, m_taaCopyEffect, renderContext );
+}
+
+void TriStepRenderPostProcess::ProcessTonemapping( Tr2PPTonemappingEffect* tonemapping, Tr2RenderTarget* blitCurrent, Tr2RenderTarget* blitOriginal )
+{
+	if( tonemapping->IsDirty() )
+	{
+		m_tonemappingEffect->StartUpdate();
+		m_tonemappingEffect->SetParameter( BlueSharedString( "ShoulderStrength" ), tonemapping->m_shoulderStrength );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "LinearStrength" ), tonemapping->m_linearStrength );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "LinearAngle" ), tonemapping->m_linearAngle );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "ToeStrength" ), tonemapping->m_toeStrength );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "ToeNumerator" ), tonemapping->m_toeNumerator );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "ToeDenominator" ), tonemapping->m_toeDenominator );
+		m_tonemappingEffect->SetParameter( BlueSharedString( "WhiteScale" ), tonemapping->m_whiteScale );
+		m_tonemappingEffect->EndUpdate();
+	}
+	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitCurrent" ), blitCurrent );
+	m_tonemappingEffect->SetParameter( BlueSharedString( "BlitOriginal" ), blitOriginal );
 }
 
 bool TriStepRenderPostProcess::ProcessDepthOfField( Tr2RenderContext& renderContext, Tr2PPDepthOfFieldEffect* fx )
