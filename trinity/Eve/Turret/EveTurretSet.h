@@ -32,7 +32,7 @@ class EveUpdateContext;
 class Tr2LightManager;
 class Tr2RaytracingMesh;
 
-BLUE_DECLARE( Tr2Mesh );
+//BLUE_DECLARE( Tr2Mesh );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( EveTurretFiringFX );
@@ -306,11 +306,13 @@ private:
 
 	// Update raytracing mesh info
 	void UpdateRtMesh();
+	void UpdateRtSkeleton();
 	Tr2RaytracingMesh* GetOrCreateRtMesh();
 	Tr2RaytracingMesh* GetRtMesh() const;
+	Tr2RaytracingMeshArea* GetOrCreateRtMeshArea();
+	Tr2RaytracingMeshArea* GetRtMeshArea() const;
+
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
-
-
 
 	// name
 	std::string m_name;
@@ -474,6 +476,7 @@ private:
 	Tr2BoneTransformOffsets m_boneOffsets;
 
 	std::unique_ptr<Tr2RaytracingMesh> m_rtMesh;
+	std::unique_ptr<Tr2RaytracingMeshArea> m_rtMeshArea;
 };
 
 TYPEDEF_BLUECLASS( EveTurretSet );
