@@ -1954,7 +1954,10 @@ void EveTurretSet::PushRtGeometry( Tr2RaytracingManager& rtManager ) const
 	
 	for( auto it = m_singleTurrets.begin(); it != m_singleTurrets.end(); ++it )
 	{
-		rtManager.GetGeometry().AddGeometry( *m_rtMesh, *m_rtMeshArea, m_turretEffect, &m_rtPerObjectData, it->worldMatrix );
+		if( it->visible && it->valid )
+		{
+			rtManager.GetGeometry().AddGeometry( *m_rtMesh, *m_rtMeshArea, m_turretEffect, &m_rtPerObjectData, it->worldMatrix );
+		}
 	}
 }
 
