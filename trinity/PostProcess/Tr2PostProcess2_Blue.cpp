@@ -31,6 +31,7 @@ const Be::ClassInfo* Tr2PostProcess2::ExposeToBlue()
 		MAP_ATTRIBUTE( "fog", m_fog, "Accesses the fog effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "depthOfField", m_depthOfField, "Accesses the dof effect", Be::READWRITE | Be::PERSIST )
 		MAP_ATTRIBUTE( "taa", m_taa, "Accesses the temporal antialiasing effect", Be::READWRITE | Be::PERSIST )
+		MAP_ATTRIBUTE( "tonemapping", m_tonemapping, "Accesses the tonemapping effect", Be::READWRITE | Be::PERSIST )
 
     EXPOSURE_END()
 }
