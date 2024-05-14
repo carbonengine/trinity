@@ -40,6 +40,7 @@ EveSpaceObjectDecal::EveSpaceObjectDecal( IRoot* lockobj ) :
 	m_parentBoneMatrix( IdentityMatrix() ),
 	m_minScreenSize( 0 ),
 	m_instanceScreenSize( -1 ),
+	m_batchType( TRIBATCHTYPE_DECAL ),
 	m_vertexDeclarationOverride( Tr2EffectStateManager::UNINITIALIZED_DECLARATION ),
 	m_instanceData( nullptr ),
 	m_minBounds( 0, 0, 0 ),
@@ -247,7 +248,7 @@ void EveSpaceObjectDecal::GetBatches( ITriRenderBatchAccumulator* batches,
 									  const Tr2PerObjectData* perObjectData,
 									  Tr2RenderReason reason )
 {
-	if( batchType != TRIBATCHTYPE_DECAL )
+	if( batchType != m_batchType )
 	{
 		return;
 	}
@@ -837,7 +838,7 @@ void EveSpaceObjectDecal::GetPickingBatches( ITriRenderBatchAccumulator* batches
 	{
 		return;
 	}
-	GetBatches( batches, TRIBATCHTYPE_DECAL, perObjectData );
+	GetBatches( batches, m_batchType, perObjectData );
 }
 
 std::vector<uint32_t> EveSpaceObjectDecal::GetDecalPrimitiveCounts() const
@@ -848,6 +849,11 @@ std::vector<uint32_t> EveSpaceObjectDecal::GetDecalPrimitiveCounts() const
 		counts.push_back( buffer.m_primitiveCount );
 	}
 	return counts;
+}
+
+void EveSpaceObjectDecal::SetBatchType( TriBatchType batchType )
+{
+	m_batchType = batchType;
 }
 
 // --------------------------------------------------------------------------------

@@ -2018,6 +2018,7 @@ void EveSOFDataMgr::GenerateGenericData( GenericData& gd, EveSOFDataGenericPtr s
 			EveSOFDataGenericStringPtr paramData = ( *spit );
 			gdsd.parameters.push_back( BlueSharedString( paramData->m_str ) );
 		}
+		gdsd.additive = shaderData->m_additive;
 
 		gd.decalShaderData[shaderData->m_shader] = gdsd;
 	}

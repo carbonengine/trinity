@@ -761,6 +761,7 @@ public:
 		std::map<BlueSharedString, TextureData> defaultTextures;
 		// parent textures from the hull
 		std::vector<BlueSharedString> parentTextures;
+		bool additive;
 	};
 
 	struct VariantData

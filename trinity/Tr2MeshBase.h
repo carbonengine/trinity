@@ -113,6 +113,7 @@ protected:
 	PTr2MeshAreaVector m_geometryEraserAreas;
 	PTr2MeshAreaVector m_flareAreas;
 	PTr2MeshAreaVector m_distortionAreas;
+	PTr2MeshAreaVector m_decalAdditiveAreas;
 
 	PTr2MeshAreaVector* m_areaLookupArray[ TRIBATCHTYPE_COUNT_OF_BATCH_TYPES ];
 

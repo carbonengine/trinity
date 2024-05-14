@@ -140,6 +140,8 @@ public:
 
 	void SetHighDetailDecalState( bool isFrozen );
 
+	void SetBatchType( TriBatchType batchType );
+
 private:
 	// create
 	void CreateDecalIndexBuffers( TriGeometryResPtr geomRes );
@@ -187,6 +189,7 @@ private:
 	float m_isVisible;
 	float m_minScreenSize;
 	float m_instanceScreenSize;
+	TriBatchType m_batchType;
 
 	unsigned int m_vertexDeclarationOverride;
 	ITr2InstanceData* m_instanceData;
