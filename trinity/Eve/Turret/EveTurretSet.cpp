@@ -2810,6 +2810,11 @@ void EveTurretSet::UpdateRtSkeleton()
 				}
 			}
 		}
+
+		if( boneTransformList.size() == 0 )
+		{
+			return;
+		}
 		
 		auto rtMesh = GetOrCreateRtMesh();
 		isDirty = rtMesh->SetBoneTransforms( boneCount, reinterpret_cast<const granny_matrix_3x4*>( boneTransformList.data() ) );
