@@ -32,7 +32,7 @@ class EveUpdateContext;
 class Tr2LightManager;
 class Tr2RaytracingMesh;
 
-BLUE_DECLARE( Tr2Mesh );
+//BLUE_DECLARE( Tr2Mesh );
 BLUE_DECLARE( Tr2Effect );
 BLUE_DECLARE( TriGeometryRes );
 BLUE_DECLARE( EveTurretFiringFX );
@@ -306,11 +306,9 @@ private:
 
 	// Update raytracing mesh info
 	void UpdateRtMesh();
-	Tr2RaytracingMesh* GetOrCreateRtMesh();
-	Tr2RaytracingMesh* GetRtMesh() const;
+	void UpdateRtSkeleton();
+
 	mutable Tr2ConstantBufferAL m_rtPerObjectData;
-
-
 
 	// name
 	std::string m_name;
@@ -354,6 +352,9 @@ private:
 		granny_model_instance*	grnModelInstance;
 		granny_local_pose*		grnLocalPose;
 		granny_world_pose*		grnWorldPose;
+
+		std::unique_ptr<Tr2RaytracingMesh> rtMesh;
+		std::unique_ptr<Tr2RaytracingMeshArea> rtMeshArea;
 	};
 	std::vector<SingleTurretData> m_singleTurrets;
 	std::vector<GrannyBoneBindingBounds> m_boneBounds;
@@ -473,7 +474,6 @@ private:
 
 	Tr2BoneTransformOffsets m_boneOffsets;
 
-	std::unique_ptr<Tr2RaytracingMesh> m_rtMesh;
 };
 
 TYPEDEF_BLUECLASS( EveTurretSet );

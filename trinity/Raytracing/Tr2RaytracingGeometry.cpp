@@ -168,7 +168,9 @@ void Tr2RaytracingMesh::UpdateRtMesh( TriGeometryRes* geometry, uint32_t meshInd
 	else if( m_screenSize != screenSize )
 	{
 		//screen size has changed, so check if we've changed to a different LOD
-		m_isDirty = ( m_meshData = m_geometry->GetMeshData( m_meshIndex, screenSize ) ) ? true : false;
+		auto meshData = m_geometry->GetMeshData( m_meshIndex, screenSize );
+		m_isDirty = m_meshData == meshData;
+		m_meshData = meshData;
 		m_screenSize = screenSize;
 	}
 }
@@ -530,8 +532,6 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 	{
 		CTr2RuntimeGpuBuffer inVB;
 		CTr2RuntimeGpuBuffer outVB;
-		m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, &inVB );
-		m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, &outVB );
 
 		auto perObjVSRegister = Tr2Renderer::GetPerObjectVSStartRegister();
 
@@ -581,6 +581,9 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 			barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 			renderContext.ResourceBarrierDx12( 1, &barrier );
 #endif
+
+			m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, &inVB );
+			m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, &outVB );
 			// cheat a bit instead of calling RunComputeShader() to make things more performant
 			if( !shader )
 			{
@@ -603,6 +606,8 @@ void Tr2RaytracingGeometry::TransformMeshes( Tr2RenderContext& renderContext )
 		}
 		renderContext.SetResourceSet( Tr2ResourceSetAL() );
 	}
+	m_skinVerticesEffect->SetParameter( m_inVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
+	m_skinVerticesEffect->SetParameter( m_outVertexBufferTechniqueName, static_cast<ITr2GpuBuffer*>( nullptr ) );
 
 #if TRINITY_PLATFORM == TRINITY_DIRECTX12
 	renderContext.PopDisableUAVBarriersDx12();

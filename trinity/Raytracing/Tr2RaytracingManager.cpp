@@ -183,7 +183,7 @@ void Tr2RaytracingManager::RenderShadows( ITr2TextureProvider* depth, ITr2Textur
 
 	renderContext.SetConstants( m_shadowPerFrameData, Tr2RenderContextEnum::COMPUTE_SHADER, 2 );
 	renderContext.DispatchRays( pipelineState, m_shadowShaderTable, rayGenName.c_str(), destTex->GetWidth(), destTex->GetHeight(), 1 );
-
+	
 	if( m_denoiser && m_applyDenoiser )
 	{
 		m_denoiser->Apply( *m_destTex, *depth, NULL, Tr2Renderer::GetReversedDepthProjectionTransform(), renderContext );

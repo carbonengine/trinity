@@ -14,6 +14,8 @@
 #include "Eve/EveUpdateContext.h"
 #include "Utilities/BoundingBox.h"
 
+extern bool g_eveSpaceSceneRaytracedShadows;
+
 // --------------------------------------------------------------------------------
 // Description:
 //   Initialize data members
@@ -75,6 +77,15 @@ void EveMobile::OnListModified( long event, ssize_t key, ssize_t key2, IRoot* va
 					{
 						turretSet->Register( this->GetComponentRegistry() );
 					}
+
+					if( g_eveSpaceSceneRaytracedShadows )
+					{
+						turretSet->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_RT" ) );
+					}
+					else
+					{
+						turretSet->SetShaderOption( BlueSharedString( "SHADOW_ALGORITHM" ), BlueSharedString( "SHADOW_CASCADED" ) );
+					}
 				}
 			}
 			break;
@@ -117,7 +128,7 @@ void EveMobile::RegisterComponents()
 	{
 		for( auto& turretSet : m_turretSets )
 		{
-			turretSet->RegisterComponents();
+			turretSet->Register( registry );
 		}
 	}
 }
